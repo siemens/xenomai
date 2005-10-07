@@ -1,0 +1,11 @@
+noinst_LIBRARIES = libadapter.a
+
+libadapter_a_SOURCES = adapter.cc
+
+INCLUDES = \
+	-D__XENO_SIM__ \
+	@MVM_CXXFLAGS@ \
+	-I$(srcdir)/../include \
+	-I$(srcdir)/.. \
+	-I@XENO_INSTALLDIR@/include \
+	-I@XENO_INSTALLDIR@/source/include

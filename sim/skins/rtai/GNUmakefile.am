@@ -1,0 +1,28 @@
+vpath %.c @XENO_INSTALLDIR@/source/skins/rtai
+
+CC = $(top_builddir)/gcic/gcic
+
+override CFLAGS = -g
+
+if CONFIG_XENO_MVM_ATOMIC_CORE
+atomic_core := --no-inst -O2
+endif
+
+AM_CPPFLAGS = \
+	-D__IN_XENO__ \
+	--gcic-backend=$(prefix)/libexec/gcic \
+	--skin-code \
+	$(atomic_core) \
+	-I$(srcdir)/.. \
+	-I$(top_srcdir)/include \
+	-I@XENO_INSTALLDIR@/source/skins \
+	-I@XENO_INSTALLDIR@/source/include
+
+lib_LIBRARIES = librtai_s.a
+
+nodist_librtai_s_a_SOURCES = \
+	intr.c \
+	module.c \
+	sem.c \
+	task.c \
+	timer.c

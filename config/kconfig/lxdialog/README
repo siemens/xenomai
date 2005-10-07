@@ -1,0 +1,5 @@
+This is NOT the official version of dialog.  This version has been
+lifted from the Linux kernel build system, and significantly modified
+from the original.  It is for use by the Xenomai configuration
+system.  Please do not bother Savio Lam with questions about this
+program.

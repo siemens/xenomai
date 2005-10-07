@@ -1,0 +1,16 @@
+includedir = $(prefix)/include/nucleus/asm-ppc64
+
+include_HEADERS = \
+		atomic.h \
+		calibration.h \
+		hal.h \
+		system.h \
+		syscall.h
+
+install-data-local:
+	$(mkinstalldirs) $(DESTDIR)$(includedir)
+	rm -f $(DESTDIR)$(includedir)/../asm
+	$(LN_S) asm-ppc64 $(DESTDIR)$(includedir)/../asm
+
+uninstall-local:
+	$(RM) $(DESTDIR)$(includedir)/../asm

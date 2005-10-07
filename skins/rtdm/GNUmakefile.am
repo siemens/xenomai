@@ -1,0 +1,56 @@
+moduledir = $(DESTDIR)@XENO_MODULE_DIR@
+includedir = $(prefix)/include/rtdm
+
+modext = @XENO_MODULE_EXT@
+
+CROSS_COMPILE = @CROSS_COMPILE@
+
+libmodule_SRC = \
+	core.c \
+	device.c \
+	drvlib.c \
+	module.c \
+	proc.c \
+	syscall.c
+
+include_HEADERS = \
+	rtdm.h \
+	rtdm_driver.h \
+	rtserial.h
+
+noinst_HEADERS = \
+	core.h \
+	device.h \
+	proc.h \
+	syscall.h
+
+xeno_rtdm$(modext): @XENO_KBUILD_ENV@
+xeno_rtdm$(modext): $(libmodule_SRC) FORCE
+	@XENO_KBUILD_CMD@ xeno_extradef="@XENO_KMOD_CFLAGS@"
+
+clean-local:
+	@XENO_KBUILD_CLEAN@
+
+distclean-local:
+	@XENO_KBUILD_DISTCLEAN@
+
+all-local: xeno_rtdm$(modext)
+if CONFIG_XENO_OLD_FASHIONED_BUILD
+	$(mkinstalldirs) $(top_srcdir)/modules
+	$(INSTALL_DATA) $^ $(top_srcdir)/modules
+endif
+
+install-exec-local: xeno_rtdm$(modext)
+	$(mkinstalldirs) $(moduledir) $(DESTDIR)$(includedir)
+	$(INSTALL_DATA) $< $(moduledir)
+
+uninstall-local:
+	$(RM) $(moduledir)/xeno_rtdm$(modext)
+
+.PHONY: FORCE
+
+EXTRA_DIST = $(libmodule_SRC) Kbuild Kconfig
+
+if CONFIG_XENO_OPT_PERVASIVE
+SUBDIRS = lib
+endif

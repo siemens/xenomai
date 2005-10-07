@@ -1,0 +1,8 @@
+config XENO_SKIN_RTDM
+	bool "Real-Time Driver Model"
+	default y
+	help
+
+	This API skin allows to write real-time drivers against a common
+	light weight interface in kernel mode, but use them across all other
+	skins in both kernel and user mode.

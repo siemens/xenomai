@@ -1,0 +1,45 @@
+moduledir = $(DESTDIR)@XENO_MODULE_DIR@
+includedir = $(prefix)/include/uvm
+
+modext = @XENO_MODULE_EXT@
+
+CROSS_COMPILE = @CROSS_COMPILE@
+
+libmodule_SRC = \
+	module.c \
+	syscall.c
+
+include_HEADERS = \
+	uvm.h
+
+noinst_HEADERS = \
+	syscall.h
+
+xeno_uvm$(modext): @XENO_KBUILD_ENV@
+xeno_uvm$(modext): $(libmodule_SRC) FORCE
+	@XENO_KBUILD_CMD@ xeno_extradef="@XENO_KMOD_CFLAGS@"
+
+clean-local:
+	@XENO_KBUILD_CLEAN@
+
+distclean-local:
+	@XENO_KBUILD_DISTCLEAN@
+
+all-local: xeno_uvm$(modext)
+if CONFIG_XENO_OLD_FASHIONED_BUILD
+	$(mkinstalldirs) $(top_srcdir)/modules
+	$(INSTALL_DATA) $^ $(top_srcdir)/modules
+endif
+
+install-exec-local: xeno_uvm$(modext)
+	$(mkinstalldirs) $(moduledir)
+	$(INSTALL_DATA) $< $(moduledir)
+
+uninstall-local:
+	$(RM) $(moduledir)/xeno_uvm$(modext)
+
+.PHONY: FORCE
+
+EXTRA_DIST = $(libmodule_SRC) Kbuild
+
+SUBDIRS = lib

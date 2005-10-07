@@ -1,0 +1,36 @@
+moduledir = $(DESTDIR)@XENO_MODULE_DIR@
+
+modext = @XENO_MODULE_EXT@
+
+CROSS_COMPILE = @CROSS_COMPILE@
+
+libmodule_SRC = 16550A.c
+
+distfiles = $(libmodule_SRC)
+
+xeno_16550A$(modext): @XENO_KBUILD_ENV@
+xeno_16550A$(modext): $(libmodule_SRC) FORCE
+	@XENO_KBUILD_CMD@ xeno_extradef="@XENO_KMOD_CFLAGS@"
+
+clean-local:
+	@XENO_KBUILD_CLEAN@
+
+distclean-local:
+	@XENO_KBUILD_DISTCLEAN@
+
+all-local: xeno_16550A$(modext)
+if CONFIG_XENO_OLD_FASHIONED_BUILD
+	$(mkinstalldirs) $(top_srcdir)/modules
+	$(INSTALL_DATA) $^ $(top_srcdir)/modules
+endif
+
+install-exec-local: xeno_16550A$(modext)
+	$(mkinstalldirs) $(moduledir)
+	$(INSTALL_DATA) $< $(moduledir)
+
+uninstall-local:
+	$(RM) $(moduledir)/xeno_16550A$(modext)
+
+.PHONY: FORCE
+
+EXTRA_DIST = $(distfiles) Kbuild Kconfig

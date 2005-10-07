@@ -1,0 +1,79 @@
+This file documents externally visible changes of the native API. Make
+sure you read it carefully when upgrading versions of this software.
+
+___________________________________________________________________
+
+
+0.6.9 -> 0.7
+
+	o mlockall() is no longer implicitely issued by the
+	rt_task_create() service in user-space. Applications should 
+	make sure to lock the memory pages appropriately by
+	themselves (--rpm 2005-02-22).
+
+	o The skin now uses an increasing priority scale for
+	tasks which is the same as the Linux one for the SCHED_FIFO
+	scheduling class, i.e. 1 - 99 with 1 being the lowest
+	effective priority level (--rpm 2005-03-13).
+
+	o The default task stack size in user-space is now
+	PTHREAD_STACK_MIN * 4. A mininum size of PTHREAD_STACK_MIN
+	is enforced in rt_task_create().
+
+___________________________________________________________________
+
+
+0.7.2 -> 0.7.3
+
+	o Added basic message-passing support: rt_task_send(),
+	rt_task_receive(), rt_task_reply(). Those work the QNX way.
+
+___________________________________________________________________
+
+0.7.3 -> 0.7.4
+
+	o Renames:
+	  rt_pipe_open() -> rt_pipe_create()
+	  rt_pipe_close() -> rt_pipe_delete()
+	  rt_pipe_read() -> rt_pipe_receive()
+	  rt_pipe_write() -> rt_pipe_send()
+
+	o Added "name" parameter to rt_pipe_create() as 2nd argument,
+	so that message pipe objects can be registered for naming
+	support.
+
+	o New implementations of rt_pipe_write() and rt_pipe_read()
+	taking raw data buffers instead of canned message buffers.
+
+___________________________________________________________________
+
+0.8.2 -> 0.8.3
+
+	o Added "iack" parameter to rt_intr_create() from the
+	kernel-space API, so that a specific acknowledge routine for
+	the interrupt can be installed.
+
+        o Fixed rt_timer_ns2ticks and rt_timer_ticks2ns behaviour,
+        so that calling rt_task_sleep(rt_timer_ns2ticks(2000000000))
+        will sleep two seconds whatever the timer mode is.
+
+        o Added rt_timer_ns2tsc and rt_timer_tsc2ns to convert 
+        between nanoseconds and values returned by rt_timer_tsc.
+
+___________________________________________________________________
+
+0.8.3 -> 0.9
+
+	o Added a timeout parameter to rt_mutex_lock(). Calling
+	rt_mutex_lock(mutex,TM_INFINITE) is equivalent to the former
+	single-parameter syntax.
+
+	o Added a timeout parameter to all rt_*_bind()
+	services. Calling rt_*_bind(descp,name,TM_INFINITE) is equivalent
+	to the former syntax.
+
+        o rt_task_set_periodic requires the value passed as a start time
+        to be obtained using rt_timer_read().
+
+        o the timer rt_timer_info structure has a "tsc" member, whose value is
+         synchronized with the value of the date member.

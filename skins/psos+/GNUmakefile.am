@@ -1,0 +1,84 @@
+moduledir = $(DESTDIR)@XENO_MODULE_DIR@
+includedir = $(prefix)/include/psos+
+
+modext = @XENO_MODULE_EXT@
+
+CROSS_COMPILE = @CROSS_COMPILE@
+
+libmodule_SRC = \
+	module.c \
+	asr.c \
+	event.c \
+	pt.c \
+	queue.c \
+	rn.c \
+	task.c \
+	tm.c \
+	sem.c
+
+include_HEADERS = \
+	psos.h
+
+noinst_HEADERS = \
+	asr.h \
+	defs.h \
+	event.h \
+	pt.h \
+	queue.h \
+	rn.h \
+	task.h \
+	tm.h \
+	sem.h
+
+xeno_psos$(modext): @XENO_KBUILD_ENV@
+xeno_psos$(modext): $(libmodule_SRC) FORCE
+	@XENO_KBUILD_CMD@ xeno_extradef="@XENO_KMOD_CFLAGS@"
+
+clean-local:
+	@XENO_KBUILD_CLEAN@
+
+distclean-local:
+	@XENO_KBUILD_DISTCLEAN@
+
+all-local: xeno_psos$(modext)
+if CONFIG_XENO_OLD_FASHIONED_BUILD
+	$(mkinstalldirs) $(top_srcdir)/modules
+	$(INSTALL_DATA) $^ $(top_srcdir)/modules
+endif
+
+install-exec-local: xeno_psos$(modext)
+	$(mkinstalldirs) $(moduledir)
+	$(INSTALL_DATA) $< $(moduledir)
+
+uninstall-local:
+	$(RM) $(moduledir)/xeno_psos$(modext)
+
+if CONFIG_XENO_OPT_UVM
+
+lib_LIBRARIES = libpsos.a
+
+nodist_libpsos_a_SOURCES = \
+	module.c \
+	asr.c \
+	event.c \
+	pt.c \
+	queue.c \
+	rn.c \
+	task.c \
+	tm.c \
+	sem.c
+
+libpsos_a_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ -D__XENO_UVM__ \
+	-I$(srcdir)/.. \
+	-I$(top_srcdir)/include \
+	-I../../include \
+	-I@XENO_LINUX_DIR@/include
+
+libpsos_a_AR = $(CROSS_COMPILE)ar cru
+
+endif
+
+.PHONY: FORCE
+
+EXTRA_DIST = $(libmodule_SRC) doc Kbuild Kconfig demos

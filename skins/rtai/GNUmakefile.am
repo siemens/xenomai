@@ -1,0 +1,85 @@
+moduledir = $(DESTDIR)@XENO_MODULE_DIR@
+includedir = $(prefix)/include/rtai
+
+modext = @XENO_MODULE_EXT@
+
+CROSS_COMPILE = @CROSS_COMPILE@
+
+libmodule_SRC = \
+	intr.c \
+	module.c \
+	task.c \
+	timer.c
+
+include_HEADERS = \
+		intr.h \
+		task.h \
+		timer.h \
+		types.h \
+		rtai.h \
+		rtai_fifos.h \
+		rtai_hal.h \
+		rtai_nam2num.h \
+		rtai_proc_fs.h \
+		rtai_sched.h \
+		rtai_sem.h \
+		rtai_shm.h \
+		rtai_types.h \
+		rt_mem_mgr.h
+
+distfiles = $(libmodule_SRC)
+
+if CONFIG_XENO_OPT_RTAI_FIFO
+libmodule_SRC += fifo.c
+include_HEADERS += fifo.h
+endif
+distfiles += fifo.c fifo.h
+
+if CONFIG_XENO_OPT_RTAI_SEM
+libmodule_SRC += sem.c
+include_HEADERS += sem.h
+endif
+distfiles += sem.c sem.h
+
+if CONFIG_XENO_OPT_RTAI_SHM
+libmodule_SRC += shm.c
+include_HEADERS += shm.h
+endif
+distfiles += shm.c shm.h
+
+if CONFIG_XENO_OPT_PERVASIVE
+libmodule_SRC += syscall.c
+noinst_HEADERS = syscall.h
+endif
+distfiles += syscall.c syscall.h
+
+xeno_rtai$(modext): @XENO_KBUILD_ENV@
+xeno_rtai$(modext): $(libmodule_SRC) FORCE
+	@XENO_KBUILD_CMD@ xeno_extradef="@XENO_KMOD_CFLAGS@"
+
+clean-local:
+	@XENO_KBUILD_CLEAN@
+
+distclean-local:
+	@XENO_KBUILD_DISTCLEAN@
+
+all-local: xeno_rtai$(modext)
+if CONFIG_XENO_OLD_FASHIONED_BUILD
+	$(mkinstalldirs) $(top_srcdir)/modules
+	$(INSTALL_DATA) $^ $(top_srcdir)/modules
+endif
+
+install-exec-local: xeno_rtai$(modext)
+	$(mkinstalldirs) $(moduledir)
+	$(INSTALL_DATA) $< $(moduledir)
+
+uninstall-local:
+	$(RM) $(moduledir)/xeno_rtai$(modext)
+
+.PHONY: FORCE
+
+EXTRA_DIST = $(distfiles) Kbuild Kconfig
+
+if CONFIG_XENO_OPT_PERVASIVE
+SUBDIRS = lib
+endif

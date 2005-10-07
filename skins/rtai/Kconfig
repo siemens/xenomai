@@ -1,0 +1,33 @@
+config XENO_SKIN_RTAI
+	bool "RTAI emulator"
+	default n
+	help
+
+	An emulator of the RTAI system.
+
+config XENO_OPT_RTAI_FIFO
+	bool "Fifos"
+	depends on XENO_OPT_PIPE && XENO_SKIN_COMPAT
+	default y
+	help
+	
+	Fifos are uni-directional communication channels allowing data
+	exchange between real-time tasks in kernel-space and regular
+	user-space processes.
+
+config XENO_OPT_RTAI_SEM
+	bool "Semaphores"
+	depends on XENO_SKIN_COMPAT
+	default y
+	help
+	
+	Semaphores are synchronization objects granting RTAI
+	tasks a concurrent access to a given number of resources.
+
+config XENO_OPT_RTAI_SHM
+	bool "Shared Memory"
+	depends on XENO_SKIN_COMPAT
+	default y
+	help
+	
+	SHM are Shared Memory objects across RTAI tasks.

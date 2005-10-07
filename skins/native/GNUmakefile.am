@@ -1,0 +1,116 @@
+moduledir = $(DESTDIR)@XENO_MODULE_DIR@
+includedir = $(prefix)/include/native
+
+modext = @XENO_MODULE_EXT@
+
+CROSS_COMPILE = @CROSS_COMPILE@
+
+libmodule_SRC = \
+	module.c \
+	task.c \
+	timer.c
+
+include_HEADERS = \
+		task.h \
+		timer.h \
+		types.h
+
+distfiles = $(libmodule_SRC)
+
+if CONFIG_XENO_OPT_PERVASIVE
+libmodule_SRC += syscall.c
+noinst_HEADERS = syscall.h
+include_HEADERS += misc.h
+endif
+distfiles += syscall.c syscall.h misc.h
+
+if CONFIG_XENO_OPT_NATIVE_REGISTRY
+libmodule_SRC += registry.c
+include_HEADERS += registry.h
+endif
+distfiles += registry.c registry.h
+
+if CONFIG_XENO_OPT_NATIVE_PIPE
+libmodule_SRC += pipe.c
+include_HEADERS += pipe.h
+endif
+distfiles += pipe.c pipe.h
+
+if CONFIG_XENO_OPT_NATIVE_SEM
+libmodule_SRC += sem.c
+include_HEADERS += sem.h
+endif
+distfiles += sem.c sem.h
+
+if CONFIG_XENO_OPT_NATIVE_EVENT
+libmodule_SRC += event.c
+include_HEADERS += event.h
+endif
+distfiles += event.c event.h
+
+if CONFIG_XENO_OPT_NATIVE_MUTEX
+libmodule_SRC += mutex.c
+include_HEADERS += mutex.h
+endif
+distfiles += mutex.c mutex.h
+
+if CONFIG_XENO_OPT_NATIVE_COND
+libmodule_SRC += cond.c
+include_HEADERS += cond.h
+endif
+distfiles += cond.c cond.h
+
+if CONFIG_XENO_OPT_NATIVE_QUEUE
+libmodule_SRC += queue.c
+include_HEADERS += queue.h
+endif
+distfiles += queue.c queue.h
+
+if CONFIG_XENO_OPT_NATIVE_HEAP
+libmodule_SRC += heap.c
+include_HEADERS += heap.h
+endif
+distfiles += heap.c heap.h
+
+if CONFIG_XENO_OPT_NATIVE_ALARM
+libmodule_SRC += alarm.c
+include_HEADERS += alarm.h
+endif
+distfiles += alarm.c alarm.h
+
+if CONFIG_XENO_OPT_NATIVE_INTR
+libmodule_SRC += intr.c
+include_HEADERS += intr.h
+endif
+distfiles += intr.c intr.h
+
+xeno_native$(modext): @XENO_KBUILD_ENV@
+xeno_native$(modext): $(libmodule_SRC) FORCE
+	@XENO_KBUILD_CMD@ xeno_extradef="@XENO_KMOD_CFLAGS@"
+
+clean-local:
+	@XENO_KBUILD_CLEAN@
+
+distclean-local:
+	@XENO_KBUILD_DISTCLEAN@
+
+all-local: xeno_native$(modext)
+if CONFIG_XENO_OLD_FASHIONED_BUILD
+	$(mkinstalldirs) $(top_srcdir)/modules
+	$(INSTALL_DATA) $^ $(top_srcdir)/modules
+endif
+
+install-exec-local: xeno_native$(modext)
+	$(mkinstalldirs) $(moduledir)
+	$(INSTALL_DATA) $< $(moduledir)
+
+uninstall-local:
+	$(RM) $(moduledir)/xeno_native$(modext)
+
+.PHONY: FORCE
+
+EXTRA_DIST = $(distfiles) Kbuild Kconfig snippets demos API.CHANGES
+
+if CONFIG_XENO_OPT_PERVASIVE
+SUBDIRS = lib
+endif
