@@ -1,0 +1,4 @@
+includedir = $(prefix)/include/sim/nucleus
+
+nobase_include_HEADERS = \
+		asm/system.h

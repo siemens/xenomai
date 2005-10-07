@@ -1,0 +1,112 @@
+
+The fusion4linux project has its roots in both the Xenomai [1] and
+RTAI [2] projects, which combined their skills in order to produce a
+pervasive and highly integrated real-time framework for the GNU/Linux
+environment. The resulting development effort started in April 2004
+has been initially hosted as an experimental branch of the RTAI
+project, called RTAI/fusion. Since October 2005, this effort is
+independently led by its original major contributors as the
+fusion4linux project [3].
+
+This file is an attempt to give proper credit to the people who have
+contributed to this project so far. List entries are sorted by name
+and provide the usual tags for automated processing.
+
+[1] http://www.xenomai.org/
+[2] http://www.rtai.org/
+[3] http://www.fusion4linux.org/
+
+-- Philippe
+
+N: Dmitry Adamushko
+E: dmitry.adamushko@gmail.com
+D: Various fixes in the nucleus and the native skin.
+D: Scalable scheduler implementation and other optimizations.
+D: Message pipes sanitization.
+
+N: Edelhard Becker
+E: ebecker@software-manufaktur.de
+D: Debian package for RTAI/fusion. 80486 fixes.
+
+N: Alexis Berlemont
+E: berlemont.hauw@free.fr
+D: LTT support maintainer. ia64 port. Comedi over fusion.
+
+N: Marco Cavallini
+E: rtai@koansoftware.com
+D: VxWorks demo.
+
+N: Gilles Chanteperdrix
+E: gilles.chanteperdrix@laposte.net
+D: POSIX and VxWorks skins author and maintainer. Autoconfiscation
+D: janitor. SMP support. ia64 port. Fixes and improvements all over
+D: the map.
+
+N: Jim Cromie
+E: jcromie@divsol.com
+D: Comprehensive statistics collection for the testsuite.
+Validation test script.
+
+N: Pierre Ficheux
+E: contact@ficheux.com
+D: Quick Installation guide.
+
+N: Stephane Fillod
+E: stephane.fillod@thomson.net
+D: Compatibility skin fixes and extensions.
+
+N: Philippe Gerum
+E: rpm@xenomai.org
+D: Core stuff here and there.
+
+N: Panagiotis Issaris
+E: panagiotis.issaris@mech.kuleuven.ac.be
+D: RTAI LiveCD author and maintainer. Code sanity checks.
+D: Documentation proof-reading.
+W: http://issaris.org/rtai/
+
+N: Jan Kiszka
+E: kiszka@rts.uni-hannover.de
+D: RTDM author and maintainer. 16550A UART driver over RTDM.
+D: Various cleanups and fixes.
+
+N: Marc Kleine-Budde
+E: kleine-budde@gmx.de
+D: Miscellaneous nucleus updates.
+
+N: Max Krasnyansky
+E: maxk@qualcomm.com
+D: Context-switch time determination test.
+
+N: Heikki Lindholm
+E: holindho@cs.helsinki.fi
+D: ppc64 port author and maintainer.
+
+N: Hannes Mayer
+E: h.mayer@inode.at
+D: Maintainer of various programming resources.
+W: http://www.captain.at/programming-index.php
+
+N: Andrew Noren
+E: Andrew.Noren@xerox.com
+D: User-space POSIX tortur^H^H^H^H^H^Hesting.
+
+N: Julien Pinon
+D: VRTX skin author.
+
+N: Ivan Raikov
+E: raikov@cc.gatech.edu
+D: Autoconf and script-related fixes.
+
+N: Bruno Rouchouse
+E: bsd@neuf.fr
+D: WEB site author and documentation maintainer.
+W: http://www.fusion4linux.org/
+
+N: Evgeny Sinelnikov
+E: linux4sin@mail.ru
+D: Autoconf-related fixes.
+
+N: Frederic Villeneuve
+E: frederic.villeneuve@laposte.net
+D: udev support for message pipes.

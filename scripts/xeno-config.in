@@ -1,0 +1,143 @@
+#! /bin/bash
+
+staging=${DESTDIR}
+prefix="@prefix@"
+exec_prefix="@exec_prefix@"
+libdir="@libdir@"
+datadir="@datadir@"
+pkgdatadir="${datadir}/@PACKAGE@"
+includedir="@includedir@"
+
+XENO_VERSION="@PACKAGE_VERSION@"
+XENO_PREFIX="${staging}${prefix}"
+XENO_CC="@CC@"
+XENO_TARGET_ARCH="@XENO_TARGET_ARCH@"
+XENO_TARGET_SUBARCH="@XENO_TARGET_SUBARCH@"
+XENO_CONFIG="${staging}${pkgdatadir}/config-xeno-${XENO_VERSION}"
+XENO_LINUX_DIR="@XENO_LINUX_DIR@"
+XENO_LINUX_VERSION="@XENO_LINUX_VERSION@"
+XENO_KERNEL_CFLAGS="-I. -I${staging}${includedir} @XENO_KMOD_APP_CFLAGS@ @XENO_FP_CFLAGS@"
+XENO_MODULE_DIR="${staging}@XENO_MODULE_DIR@"
+XENO_SYMBOL_DIR="${staging}@XENO_SYMBOL_DIR@"
+XENO_BASE_CFLAGS="-I. -I${staging}${includedir} @XENO_USER_APP_CFLAGS@"
+XENO_BASE_LDFLAGS="-L${staging}${libdir} -lpthread"
+XENO_POSIX_CFLAGS="-I. -I${staging}${includedir} -I${staging}${includedir}/posix @XENO_USER_APP_CFLAGS@"
+XENO_POSIX_LDFLAGS="-L${staging}${libdir} -lpthread_rt -lpthread -lrt"
+XENO_POSIX_WRAPPERS="${staging}${libdir}/posix.wrappers"
+XENO_UVM_CFLAGS="-I. -I${staging}${includedir} @XENO_USER_APP_CFLAGS@ -D__XENO_UVM__"
+XENO_UVM_LDFLAGS="-u__xeno_skin_init -L${staging}${libdir} -luvm -lnucleus -lpthread"
+XENO_LIBRARY_DIR="${staging}${libdir}"
+CROSS_COMPILE="@CROSS_COMPILE@"
+
+unset prefix exec_prefix libdir datadir pkgdatadir includedir
+
+usage ()
+{
+cat <<EOF
+Usage xeno-config OPTIONS
+Options :
+        --help
+        --version
+        --cc
+        --cross-compile
+        --arch
+        --subarch
+        --prefix
+        --config
+        --module-cflags
+        --module-cxxflags
+        --xeno-cflags
+        --xeno-ldflags
+        --posix-cflags
+        --posix-ldflags
+        --uvm-cflags
+        --uvm-ldflags
+        --linux-dir
+        --linux-version
+        --module-dir
+        --symbol-dir
+        --library-dir
+EOF
+    exit $1
+}
+
+if test $# -eq 0; then
+    usage 1 1>&2
+fi
+
+while test $# -gt 0; do
+    case "$1" in
+        --version)
+            echo ${XENO_VERSION}
+            ;;
+        --cc)
+            echo $XENO_CC
+            ;;
+        --cross-compile)
+            echo $CROSS_COMPILE
+            ;;
+        --arch)
+            echo $XENO_TARGET_ARCH
+            ;;
+        --subarch)
+            echo $XENO_TARGET_SUBARCH
+            ;;
+        --prefix)
+            echo $XENO_PREFIX
+            ;;
+        --config)
+            echo $XENO_CONFIG
+            ;;
+        --mod*-cflags|--kernel-cflags)
+            echo $XENO_KERNEL_CFLAGS
+            ;;
+        --fusion-cflags|--xeno-cflags)
+            echo $XENO_BASE_CFLAGS
+            ;;
+        --fusion-ldflags|--xeno-ldflags)
+            echo $XENO_BASE_LDFLAGS
+            ;;
+        --posix-cflags)
+            echo $XENO_POSIX_CFLAGS
+            ;;
+        --posix-ldflags)
+            if test \! -r $XENO_POSIX_WRAPPERS; then
+	       echo "POSIX support is not available" >&2
+	       exit 1
+	    fi
+	    wrappers=`cat $XENO_POSIX_WRAPPERS | \
+	    while read symbol; do \
+                echo -n "-Wl,--wrap -Wl,$symbol " ; \
+	     done`
+            echo "$wrappers $XENO_POSIX_LDFLAGS"
+            ;;
+        --uvm-cflags)
+            echo $XENO_UVM_CFLAGS
+            ;;
+        --uvm-ldflags)
+            echo $XENO_UVM_LDFLAGS
+            ;;
+        --mod*-dir)
+            echo $XENO_MODULE_DIR
+            ;;
+        --sym*-dir)
+            echo $XENO_SYMBOL_DIR
+            ;;
+        --lib*-dir|--libdir|--user-libdir)
+            echo $XENO_LIBRARY_DIR
+            ;;
+        --linux-dir|--linux)
+            echo $XENO_LINUX_DIR
+            ;;
+        --linux-ver*)
+            echo $XENO_LINUX_VERSION
+            ;;
+        --help)
+            usage 0 1>&2
+            ;;
+        *)
+         usage 1 1>&2
+         ;;
+    esac
+    shift
+done

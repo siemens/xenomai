@@ -1,0 +1,73 @@
+Quick Xenomai installation
+==========================
+
+Xenomai is exclusively Adeos-based, so the general steps include
+adding the Adeos support to a vanilla Linux kernel first, then build
+Xenomai against the resulting kernel tree. Here is how to do this:
+
+>1. patch and build a vanilla Linux kernel tree with the Adeos support.
+    For instance, Adeos patches for x86 are available from
+    <xeno-src-dir>/arch/i386/patches/. Apply only one of them
+    that matches the Linux kernel version, like this:
+    $ cd <linux-src-dir>
+    $ patch -p1 < arch/<arch>/patches/adeos-linux-<version>.patch
+
+>2. validate Adeos support in the patched kernel then compile+install it 
+    then reboot the system on this new Adeos compatible kernel. If you
+    run it on a 2.4 based distribution, you need to upgrade 
+    module-init-tools (insmod, modprobe, etc.) to version 3.0 or greater.
+    You can get it from: 
+
+    ftp://ftp.kernel.org/pub/linux/kernel/people/rusty/modules
+
+    	
+>3  Once you have rebooted, you can create a build directory and compile Xenomai.
+
+    $ mkdir build
+    $ cd build 
+    $ make -f <xeno-src-dir>/makefile menuconfig (or 'xconfig' or 'gconfig')
+
+    In case you get error about missing 'xeno_srctree' (gmake version < 3.80)
+    you should add "xeno_srctree=<xeno-src-dir>" to the command line.
+
+
+>4. a GUI should pop up, allowing you to configure Xenomai:
+    o default settings should be ok for most platforms
+    o in the "General" section, set your site values for the Xenomai
+      installation directory (defaults to /usr/realtime) and
+      Linux kernel tree (defaults to the current running kernel).
+
+    o save and exit.
+
+--
+
+At this point, you should see the typical output of a GNU configure
+script. Your Xenomai settings are being used to setup the
+autoconf/automake-based build system.
+
+--
+
+>5. $ make install
+
+Xenomai will be compiled then installed under the directory you
+specified at configuration time (ensure that your shell can write to
+the destination directory).
+
+Remember to add <install-dir>/bin to your shell PATH variable, where
+<install-dir> is your site value for the Xenomai installation directory.
+
+>6. $ cd <install-dir>/testsuite/latency
+
+>7. $ ./run
+
+If "sudo" is installed on your box, the application loader script
+(xeno-load) will attempt to use it for running privileged commands
+(e.g. insmod, rmmod et al.) If sudo is not available, just "su"
+manually before running the run script. You should then see the
+typical output of the latency calibration program running in kernel
+space.  Hit ^C to stop it.
+
+--
+<rpm@xenomai.org>
+<pierre@ficheux.com>
+10/22/2004

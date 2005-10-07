@@ -1,0 +1,51 @@
+lib_LTLIBRARIES = libnative.la
+
+libnative_la_LDFLAGS = -module -version-info 0:0:0
+
+libnative_la_SOURCES = \
+	init.c \
+	misc.c \
+	task.c \
+	timer.c
+
+if CONFIG_XENO_OPT_NATIVE_SEM
+libnative_la_SOURCES += sem.c
+endif
+
+if CONFIG_XENO_OPT_NATIVE_EVENT
+libnative_la_SOURCES += event.c
+endif
+
+if CONFIG_XENO_OPT_NATIVE_MUTEX
+libnative_la_SOURCES += mutex.c
+endif
+
+if CONFIG_XENO_OPT_NATIVE_COND
+libnative_la_SOURCES += cond.c
+endif
+
+if CONFIG_XENO_OPT_NATIVE_QUEUE
+libnative_la_SOURCES += queue.c
+endif
+
+if CONFIG_XENO_OPT_NATIVE_HEAP
+libnative_la_SOURCES += heap.c
+endif
+
+if CONFIG_XENO_OPT_NATIVE_ALARM
+libnative_la_SOURCES += alarm.c
+endif
+
+if CONFIG_XENO_OPT_NATIVE_INTR
+libnative_la_SOURCES += intr.c
+endif
+
+if CONFIG_XENO_OPT_NATIVE_PIPE
+libnative_la_SOURCES += pipe.c
+endif
+
+libnative_la_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ \
+	-I../../../include \
+	-I$(top_srcdir)/include \
+	-I$(srcdir)/../..

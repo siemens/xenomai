@@ -1,0 +1,71 @@
+mainmenu "Xenomai/powerpc configuration"
+
+source Kconfig
+
+source "nucleus/Kconfig"
+
+menu "Machine (powerpc)"
+
+config XENO_HW_FPU
+	bool "Enable FPU support"
+	default y
+	help
+	The FPU executes instructions from the processor's normal
+	instruction stream. It can handle the types of high-precision
+	floating-point processing operations commonly found in
+	scientific, engineering, and business applications.
+	If your target system has no FPU, say NO here; otherwise,
+	enabling FPU support when the hardware is available may
+	greatly improve	performance.
+
+config XENO_HW_PERIODIC_TIMER
+	bool "Enable periodic timer support"
+	default y
+	help
+	On this architecture, the nucleus provides both aperiodic and
+	periodic timing modes. In aperiodic mode, timing accuracy is
+	higher - since it is not rounded to a constant time slice - at
+	the expense of a lesser efficicency when many timers are
+	simultaneously active. The aperiodic mode gives better results
+	in configuration involving a few threads requesting timing
+	services over different time scales that cannot be easily
+	expressed as multiples of a single base tick, or would lead to
+	a waste of high frequency periodic ticks. You can disable
+	the periodic support for this architecture to save a few
+	hundreds bytes if you plan to use the system timer in
+	aperiodic mode only.
+
+config XENO_HW_TIMER_LATENCY
+	depends on XENO_OPT_EXPERT
+	string "Timer tuning latency (ns)"
+	default 0
+	help
+	This parameter accounts for the time (in nanoseconds) needed
+	to program the underlying time source in one-shot timing mode.
+	This value will be used to reduce the scheduling jitter induced
+	by the time needed to setup the timer for its next shot. A
+	default value of 0 (recommended) will cause this value to be
+	estimated by the nucleus at startup.
+
+config XENO_HW_SCHED_LATENCY
+	depends on XENO_OPT_EXPERT
+	string "Scheduling latency (ns)"
+	default 0
+	help
+	Scheduling latency is the time between the termination of an
+	interrupt handler and the execution of the first instruction
+	of the real-time thread this handler resumes. A
+	default value of 0 (recommended) will cause this value to be
+	estimated by the nucleus at startup.
+
+endmenu
+
+source "skins/Kconfig"
+
+menu "Drivers"
+
+source "drivers/Kconfig"
+
+endmenu
+
+source "sim/Kconfig"

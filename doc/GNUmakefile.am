@@ -1,0 +1,10 @@
+SUBDIRS=docbook doxygen
+
+GENERATE_DOC=$(top_srcdir)/scripts/maint/generate-doc
+
+generate-doc:
+	@if test \! -e $(GENERATE_DOC) -o \! -e $(srcdir)/CVS; then \
+		echo $@ may only be run in a CVS checkout tree.; \
+	else \
+		srcdir=$(srcdir) $(GENERATE_DOC); \
+	fi

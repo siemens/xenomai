@@ -1,0 +1,80 @@
+moduledir = $(DESTDIR)@XENO_MODULE_DIR@
+includedir = $(prefix)/include/posix
+
+modext = @XENO_MODULE_EXT@
+
+CROSS_COMPILE = @CROSS_COMPILE@
+
+libmodule_SRC = \
+	sched.c \
+	thread_attr.c \
+	thread.c \
+	mutex_attr.c \
+	mutex.c \
+	cond_attr.c \
+	cond.c \
+	sem.c \
+	cancel.c \
+	once.c \
+	signal.c \
+	tsd.c \
+	clock.c \
+	timer.c \
+	registry.c \
+	mq.c \
+	module.c
+
+include_HEADERS = \
+	posix.h
+
+noinst_HEADERS = \
+	cancel.h \
+	cond.h \
+	jhash.h \
+	mutex.h \
+	mq.h \
+	sem.h \
+	signal.h \
+	thread.h \
+	timer.h \
+	tsd.h \
+	internal.h \
+	registry.h
+
+if CONFIG_XENO_OPT_PERVASIVE
+libmodule_SRC += syscall.c intr.c
+noinst_HEADERS += syscall.h intr.h
+endif
+distfiles = syscall.c syscall.h intr.c intr.h
+
+xeno_posix$(modext): @XENO_KBUILD_ENV@
+xeno_posix$(modext): $(libmodule_SRC) FORCE
+	@XENO_KBUILD_CMD@ xeno_extradef="@XENO_KMOD_CFLAGS@"
+
+clean-local:
+	@XENO_KBUILD_CLEAN@
+
+distclean-local:
+	@XENO_KBUILD_DISTCLEAN@
+
+all-local: xeno_posix$(modext)
+if CONFIG_XENO_OLD_FASHIONED_BUILD
+	$(mkinstalldirs) $(top_srcdir)/modules
+	$(INSTALL_DATA) $^ $(top_srcdir)/modules
+endif
+
+install-exec-local: xeno_posix$(modext)
+	$(mkinstalldirs) $(moduledir)
+	$(INSTALL_DATA) $< $(moduledir)
+
+uninstall-local:
+	$(RM) $(moduledir)/xeno_posix$(modext)
+	$(RM) $(symboldir)/xeno_posix.mod
+
+.PHONY: FORCE
+
+EXTRA_DIST = $(distfiles) $(libmodule_SRC) doc Kbuild Kconfig demos
+
+if CONFIG_XENO_OPT_PERVASIVE
+SUBDIRS = lib
+endif

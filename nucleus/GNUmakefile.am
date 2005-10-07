@@ -1,0 +1,114 @@
+moduledir = $(DESTDIR)@XENO_MODULE_DIR@
+
+modext = @XENO_MODULE_EXT@
+
+CROSS_COMPILE = @CROSS_COMPILE@
+
+libmodule_SRC = \
+		heap.c \
+		intr.c \
+		module.c \
+		pod.c \
+		synch.c \
+		thread.c \
+		timer.c
+
+if CONFIG_XENO_OPT_PERVASIVE
+libmodule_SRC += shadow.c core.c
+endif
+
+if CONFIG_XENO_OPT_PIPE
+libmodule_SRC += pipe.c
+endif
+
+if CONFIG_LTT
+libmodule_SRC += ltt.c
+endif
+
+if CONFIG_XENO_OPT_CONFIG_GZ
+libmodule_SRC += config.c
+
+bin2c: $(top_srcdir)/config/kconfig/bin2c.c
+	$(CC_FOR_BUILD) -O2 -o $@ $<
+
+config_data.h: $(top_builddir)/.xeno_config
+	@(echo "static const char xeno_config_data[] = XENO_MAGIC_START"; gzip -c $< | ./bin2c; echo "XENO_MAGIC_END;") > $@
+
+config_gz: bin2c config_data.h
+else
+config_gz:
+endif
+
+xeno_nucleus$(modext): @XENO_KBUILD_ENV@
+xeno_nucleus$(modext): $(libmodule_SRC) FORCE
+	@XENO_KBUILD_CMD@ xeno_extradef="@XENO_KMOD_CFLAGS@"
+
+all-local: config_gz xeno_nucleus$(modext)
+if CONFIG_XENO_OLD_FASHIONED_BUILD
+	$(mkinstalldirs) $(top_srcdir)/modules
+	$(INSTALL_DATA) xeno_nucleus$(modext) $(top_srcdir)/modules
+endif
+
+clean-local:
+	@XENO_KBUILD_CLEAN@
+	$(RM) bin2c
+
+distclean-local:
+	@XENO_KBUILD_DISTCLEAN@
+	@rm -f config_data.h
+
+install-exec-local: xeno_nucleus$(modext)
+	$(mkinstalldirs) $(moduledir)
+	$(INSTALL_DATA) $< $(moduledir)
+
+uninstall-local:
+	$(RM) $(moduledir)/xeno_nucleus$(modext)
+
+devices:
+if CONFIG_XENO_OPT_UDEV
+	if test -r $(DESTDIR)/etc/udev/udev.rules; then \
+	   for f in $(srcdir)/udev/*.rules; do \
+	   b=`basename $$f` ; \
+	   grep -q Xenomai:`basename $$b .rules` $(DESTDIR)/etc/udev/udev.rules || \
+	   $$sudo sh -c "( echo ; cat $$f ) >> $(DESTDIR)/etc/udev/udev.rules" ; \
+	   done ; \
+	fi
+else
+	$(mkinstalldirs) $(DESTDIR)/dev; \
+	for n in `seq 0 @XENO_PIPE_NRDEV@`; do \
+	   f="$(DESTDIR)/dev/rtp$$n"; \
+	   if test \! -c $$f; then \
+	      $$sudo mknod -m 666 $$f c 150 $$n; \
+	   fi; \
+	done ; \
+	if test \! -c $(DESTDIR)/dev/rtheap; then \
+	  $$sudo mknod -m 666 $(DESTDIR)/dev/rtheap c 10 254; \
+	fi
+endif
+
+if CONFIG_XENO_OPT_UVM
+
+lib_LIBRARIES = libnucleus.a
+
+nodist_libnucleus_a_SOURCES = \
+			heap.c \
+			intr.c \
+			module.c \
+			pod.c \
+			synch.c \
+			thread.c \
+			timer.c
+
+libnucleus_a_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ -D__XENO_UVM__ \
+	-I$(srcdir)/../include \
+	-I$(srcdir)/../skins \
+	-I../include
+
+libnucleus_a_AR = $(CROSS_COMPILE)ar cru
+
+endif
+
+.PHONY: FORCE config_gz devices
+
+EXTRA_DIST = $(libmodule_SRC) ltt.c Kbuild Kconfig udev

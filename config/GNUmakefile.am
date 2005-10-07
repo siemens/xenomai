@@ -1,0 +1,5 @@
+EXTRA_DIST= \
+	kconfig \
+	autoconf/acinclude.m4 \
+	autoconf/arch2host.sh \
+	autoconf/docbook.m4

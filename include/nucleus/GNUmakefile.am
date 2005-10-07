@@ -1,0 +1,43 @@
+includedir = $(prefix)/include/nucleus
+
+if CONFIG_X86
+ARCHDIR = asm-i386
+endif
+
+if CONFIG_PPC
+ARCHDIR = asm-ppc
+endif
+
+if CONFIG_PPC64
+ARCHDIR = asm-ppc64
+endif
+
+if CONFIG_IA64
+ARCHDIR = asm-ia64
+endif
+
+include_HEADERS = \
+		core.h \
+		heap.h \
+		intr.h \
+		ltt.h \
+		module.h \
+		pipe.h \
+		pod.h \
+		queue.h \
+		shadow.h \
+		synch.h \
+		system.h \
+		thread.h \
+		timer.h \
+		types.h \
+		version.h \
+		xenomai.h
+
+SUBDIRS = asm-generic $(ARCHDIR)
+
+if CONFIG_XENO_OPT_UVM
+SUBDIRS += asm-uvm
+endif
+
+DISTCLEANFILES = asm
