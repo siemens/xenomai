@@ -34,6 +34,7 @@
 #include <linux/list.h>
 
 #include <nucleus/xenomai.h>
+#include <nucleus/core.h>
 #include <nucleus/heap.h>
 #include <nucleus/pod.h>
 #include <nucleus/synch.h>
