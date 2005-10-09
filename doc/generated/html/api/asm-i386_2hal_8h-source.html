@@ -217,7 +217,7 @@
 00241 
 00242 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_ADEOS_CORE &amp;&amp; !CONFIG_ADEOS_NOTHREADS */</span>
 00243 
-00244 <span class="preprocessor">#ifdef CONFIG_XENO_HW_NMI</span>
+00244 <span class="preprocessor">#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY</span>
 00245 <span class="preprocessor"></span><span class="keywordtype">int</span> rthal_nmi_request(<span class="keywordtype">void</span> (*emergency)(<span class="keyword">struct</span> pt_regs *));
 00246 
 00247 <span class="keywordtype">void</span> rthal_nmi_release(<span class="keywordtype">void</span>);
@@ -225,7 +225,7 @@
 00249 <span class="keywordtype">void</span> rthal_nmi_arm(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> delay);
 00250 
 00251 <span class="keywordtype">void</span> rthal_nmi_disarm(<span class="keywordtype">void</span>);
-00252 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_HW_NMI */</span>
+00252 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */</span>
 00253 
 00254 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rthal_timer_program_shot (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> delay)
 00255 {
@@ -287,7 +287,7 @@
 00311 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; !__cplusplus */</span>
 00312 
 00313 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_ASM_I386_HAL_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Oct 3 21:11:18 2005 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Oct 10 00:13:34 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

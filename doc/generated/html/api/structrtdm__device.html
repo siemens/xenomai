@@ -73,19 +73,22 @@ int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o12">device_sub_class</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Device sub-class, see RTDM_SUBCLASS_xxx definition in the <a class="el" href="group__profiles.html">Device Profiles</a>. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">const char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o13">driver_name</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o13" doxytag="rtdm_device::driver_name"></a>
+const char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o13">driver_name</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Informational driver name (reported via /proc e.g.  <a href="#o13"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Informational driver name (reported via /proc). <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o14" doxytag="rtdm_device::driver_version"></a>
 int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o14">driver_version</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Driver version, see <a class="el" href="rtdm__driver_8h.html#versioning">Versioning</a> defines. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">const char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o15">peripheral_name</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o15" doxytag="rtdm_device::peripheral_name"></a>
+const char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o15">peripheral_name</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Informational peripheral name the device is attached to (reported via /proc e.g.  <a href="#o15"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">const char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o16">provider_name</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Informational peripheral name the device is attached to (reported via /proc). <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o16" doxytag="rtdm_device::provider_name"></a>
+const char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o16">provider_name</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Informational driver provider name (reported via /proc e.g.  <a href="#o16"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Informational driver provider name (reported via /proc). <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o17" doxytag="rtdm_device::proc_name"></a>
 const char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o17">proc_name</a></td></tr>
 
@@ -93,7 +96,7 @@ const char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o18" doxytag="rtdm_device::proc_entry"></a>
 proc_dir_entry *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o18">proc_entry</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set to device's /proc root entry after registration, no not modify. <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set to device's /proc root entry after registration, do not modify. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o19" doxytag="rtdm_device::device_id"></a>
 int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o19">device_id</a></td></tr>
 
@@ -103,85 +106,9 @@ rtdm_dev_reserved&nbsp;</td><td class="memItemRight" valign="bottom"><a class="e
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Data stored by RTDM inside a registered device (internal use only). <br></td></tr>
 </table>
-<hr><h2>Field Documentation</h2>
-<a class="anchor" name="o13" doxytag="rtdm_device::driver_name"></a><p>
-<table class="mdTable" cellpadding="2" cellspacing="0">
-  <tr>
-    <td class="mdRow">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td class="md" nowrap valign="top">const char* <a class="el" href="structrtdm__device.html#o13">rtdm_device::driver_name</a>          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table cellspacing="5" cellpadding="0" border="0">
-  <tr>
-    <td>
-      &nbsp;
-    </td>
-    <td>
-
-<p>
-Informational driver name (reported via /proc e.g. 
-<p>
-)     </td>
-  </tr>
-</table>
-<a class="anchor" name="o15" doxytag="rtdm_device::peripheral_name"></a><p>
-<table class="mdTable" cellpadding="2" cellspacing="0">
-  <tr>
-    <td class="mdRow">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td class="md" nowrap valign="top">const char* <a class="el" href="structrtdm__device.html#o15">rtdm_device::peripheral_name</a>          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table cellspacing="5" cellpadding="0" border="0">
-  <tr>
-    <td>
-      &nbsp;
-    </td>
-    <td>
-
-<p>
-Informational peripheral name the device is attached to (reported via /proc e.g. 
-<p>
-)     </td>
-  </tr>
-</table>
-<a class="anchor" name="o16" doxytag="rtdm_device::provider_name"></a><p>
-<table class="mdTable" cellpadding="2" cellspacing="0">
-  <tr>
-    <td class="mdRow">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td class="md" nowrap valign="top">const char* <a class="el" href="structrtdm__device.html#o16">rtdm_device::provider_name</a>          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table cellspacing="5" cellpadding="0" border="0">
-  <tr>
-    <td>
-      &nbsp;
-    </td>
-    <td>
-
-<p>
-Informational driver provider name (reported via /proc e.g. 
-<p>
-)     </td>
-  </tr>
-</table>
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>skins/rtdm/<a class="el" href="rtdm__driver_8h-source.html">rtdm_driver.h</a></ul>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Oct 3 21:11:19 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Oct 10 00:13:35 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
