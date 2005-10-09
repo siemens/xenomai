@@ -267,7 +267,7 @@
 00257     <span class="keywordflow">if</span> (!testbits(thread-&gt;status,XNDELAY))
 00258         <span class="keywordflow">return</span> 0LL;
 00259 
-00260     timeout = (<a class="code" href="group__timer.html#ga30">xntimer_get_date</a>(&amp;thread-&gt;rtimer) ? : <a class="code" href="group__timer.html#ga30">xntimer_get_date</a>(&amp;thread-&gt;ptimer));
+00260     timeout = (<a class="code" href="group__timer.html#ga18">xntimer_get_date</a>(&amp;thread-&gt;rtimer) ? : <a class="code" href="group__timer.html#ga18">xntimer_get_date</a>(&amp;thread-&gt;ptimer));
 00261 
 00262     <span class="keywordflow">if</span> (timeout &lt;= now)
 00263         <span class="keywordflow">return</span> 1;
@@ -282,7 +282,7 @@
 00272 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
 00273 
 00274 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_THREAD_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Oct 3 21:11:19 2005 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Oct 10 00:13:34 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

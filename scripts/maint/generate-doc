@@ -31,7 +31,7 @@ fi
 
 echo -n 'Looking for removed files...'
 : > tmp-dist/removed
-{ cd "$abs_srcdir" && find generated -name CVS -prune -o -type f -print ; } | {
+{ cd "$abs_srcdir" && find generated -name .svn -prune -o -type f -print ; } | {
 cd tmp-dist/doc && while read -a file; do
     if ! [ -f "${file[*]}" ]; then
         echo "${file[*]}" >> ../removed
@@ -66,18 +66,18 @@ cd "$abs_srcdir"
 echo -n 'Removing files...'
 cat "$builddir/tmp-dist/removed" | while read -a file; do
     rm "${file[*]}"
-    cvs remove "${file[*]}"
+    svn remove "${file[*]}"
 done
 echo `cat "$builddir/tmp-dist/removed"` done.
 
 echo -n 'Adding new directories...'
 cat "$builddir/tmp-dist/added_dirs" | while read -a dir; do
-    cvs add "${dir[*]}"
+    svn add "${dir[*]}"
 done
 echo `cat "$builddir/tmp-dist/added_dirs"` done.
 
 echo -n 'Adding new files...'
     cat "$builddir/tmp-dist/added_files" | while read -a file; do
-    cvs add "${file[*]}"
+    svn add "${file[*]}"
 done
 echo `cat "$builddir/tmp-dist/added_files"` done.

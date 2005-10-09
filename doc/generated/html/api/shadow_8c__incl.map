@@ -4,7 +4,7 @@ rect $include_2nucleus_2heap_8h-source.html 565,346 677,370
 rect $synch_8h-source.html 562,394 680,418
 rect $module_8h-source.html 376,445 501,469
 rect $shadow_8h-source.html 185,496 313,520
-rect $f4lin_8h-source.html 196,566 302,590
+rect $include_2nucleus_2core_8h-source.html 194,566 304,590
 rect $ltt_8h-source.html 741,516 834,540
 rect $thread_8h-source.html 378,296 498,320
 rect $include_2nucleus_2intr_8h-source.html 570,248 672,272
