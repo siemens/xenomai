@@ -1,3 +1,8 @@
+2005-10-10  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
+
+	* skins/native/syscall.c (__rt_queue_bind, __rt_heap_bind):
+	Sanitize by relying on a single binding call.
+
 2005-10-10  Jan Kiszka <jan.kiszka@web.de>
 
 	* drivers/16550A: Check calling context in ioctl() support.
