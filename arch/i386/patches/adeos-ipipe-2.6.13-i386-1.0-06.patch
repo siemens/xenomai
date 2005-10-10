@@ -25,8 +25,8 @@ diff -uNrp 2.6.13/include/linux/hardirq.h 2.6.13-ipipe/include/linux/hardirq.h
  static inline void account_user_vtime(struct task_struct *tsk)
 diff -uNrp 2.6.13/include/linux/ipipe.h 2.6.13-ipipe/include/linux/ipipe.h
 --- 2.6.13/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.13-ipipe/include/linux/ipipe.h	2005-10-03 21:42:33.000000000 +0200
-@@ -0,0 +1,744 @@
++++ 2.6.13-ipipe/include/linux/ipipe.h	2005-10-10 17:40:16.000000000 +0200
+@@ -0,0 +1,743 @@
 +/*   -*- linux-c -*-
 + *   include/linux/ipipe.h
 + *
@@ -57,10 +57,10 @@ diff -uNrp 2.6.13/include/linux/ipipe.h 2.6.13-ipipe/include/linux/ipipe.h
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING     "1.0-05"
++#define IPIPE_ARCH_STRING     "1.0-06"
 +#define IPIPE_MAJOR_NUMBER    1
 +#define IPIPE_MINOR_NUMBER    0
-+#define IPIPE_PATCH_NUMBER    5
++#define IPIPE_PATCH_NUMBER    6
 +
 +#define IPIPE_VERSION_STRING  IPIPE_ARCH_STRING
 +#define IPIPE_RELEASE_NUMBER  ((IPIPE_MAJOR_NUMBER<<16)|(IPIPE_MINOR_NUMBER<<8)|(IPIPE_PATCH_NUMBER))
@@ -135,7 +135,6 @@ diff -uNrp 2.6.13/include/linux/ipipe.h 2.6.13-ipipe/include/linux/ipipe.h
 +#else /* !CONFIG_SMP */
 +
 +#define IPIPE_NR_CPUS           1
-+#define ipipe_processor_id()    0
 +#define ipipe_declare_cpuid     const int cpuid = 0
 +#define ipipe_load_cpuid()	do { } while(0)
 +#define ipipe_lock_cpu(flags)   local_irq_save_hw(flags)
@@ -773,7 +772,7 @@ diff -uNrp 2.6.13/include/linux/ipipe.h 2.6.13-ipipe/include/linux/ipipe.h
 +#endif	/* !__LINUX_IPIPE_H */
 diff -uNrp 2.6.13/include/linux/preempt.h 2.6.13-ipipe/include/linux/preempt.h
 --- 2.6.13/include/linux/preempt.h	2005-08-29 01:41:01.000000000 +0200
-+++ 2.6.13-ipipe/include/linux/preempt.h	2005-09-07 13:24:50.000000000 +0200
++++ 2.6.13-ipipe/include/linux/preempt.h	2005-10-10 17:26:11.000000000 +0200
 @@ -13,36 +13,54 @@
    extern void fastcall add_preempt_count(int val);
    extern void fastcall sub_preempt_count(int val);
@@ -801,7 +800,7 @@ diff -uNrp 2.6.13/include/linux/preempt.h 2.6.13-ipipe/include/linux/preempt.h
 +extern struct ipipe_domain *ipipe_percpu_domain[],
 +                           *ipipe_root_domain;
 +
-+#define ipipe_preempt_guard()  (ipipe_current_domain == ipipe_root_domain)
++#define ipipe_preempt_guard()  (ipipe_percpu_domain[ipipe_processor_id()] == ipipe_root_domain)
 +#else
 +#define ipipe_preempt_guard()  1
 +#endif
@@ -4784,8 +4783,8 @@ diff -uNrp 2.6.13/mm/vmalloc.c 2.6.13-ipipe/mm/vmalloc.c
  #define shutdown_level_ioapic	mask_IO_APIC_irq
  #define enable_level_ioapic	unmask_IO_APIC_irq
 --- 2.6.13/include/asm-i386/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.13-ipipe/include/asm-i386/ipipe.h	2005-10-03 21:30:36.000000000 +0200
-@@ -0,0 +1,200 @@
++++ 2.6.13-ipipe/include/asm-i386/ipipe.h	2005-10-10 17:23:24.000000000 +0200
+@@ -0,0 +1,202 @@
 +/*   -*- linux-c -*-
 + *   include/asm-i386/ipipe.h
 + *
@@ -4879,7 +4878,8 @@ diff -uNrp 2.6.13/mm/vmalloc.c 2.6.13-ipipe/mm/vmalloc.c
 +#define IPIPE_CRITICAL_VECTOR  0xf9	/* Used by ipipe_critical_enter/exit() */
 +#define IPIPE_CRITICAL_IPI     (IPIPE_CRITICAL_VECTOR - FIRST_EXTERNAL_VECTOR)
 +
-+static inline int ipipe_processor_id(void) {
++static inline int ipipe_processor_id(void)
++{
 +	extern int (*__ipipe_logical_cpuid)(void);
 +	return __ipipe_logical_cpuid();
 +}
@@ -4894,6 +4894,7 @@ diff -uNrp 2.6.13/mm/vmalloc.c 2.6.13-ipipe/mm/vmalloc.c
 +#else	/* !CONFIG_SMP */
 +
 +#define ipipe_note_apicid(apicid,cpu)  do { } while(0)
++#define ipipe_processor_id()    0
 +
 +#endif	/* CONFIG_SMP */
 +
