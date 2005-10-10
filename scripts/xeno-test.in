@@ -37,6 +37,7 @@ EOF
 set -o notify	# see dd's finish immediately.(or not!)
 
 loudly() {
+    [ "$1" = "" ] && return
     # run task after announcing it
     echo;  date;
     echo running: $*
@@ -86,7 +87,7 @@ boxstatus() {
     # get dynamic status (bogomips, cpuMhz change with CPU_FREQ)
     loudly cat /proc/interrupts
     loudly cat /proc/loadavg
-    [ -n "$prepost" ] && $prepost
+    [ -n "$prepost" ] && loudly $prepost
     loudly top -bn1c | head -$(( 12 + $workload ))
 }
 
@@ -96,14 +97,14 @@ run_w_load() {
     [ "$opts"  = '' ] && opts='-q -s -T 10'
 
     boxinfo
-    generate_loads $workload
+    loudly generate_loads $workload
     boxstatus
     (
 	cd ../testsuite/latency
 	#loudly ./run -- -T 10 -s -l 5
 	loudly ./run -- -h $opts
 
-	[ -n "$prepost" ] && $prepost
+	[ -n "$prepost" ] && loudly $prepost
 	
 	cd ../klatency
 	#loudly ./run -- -T 10 -s -l 5
