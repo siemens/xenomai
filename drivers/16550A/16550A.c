@@ -516,8 +516,8 @@ int rt_16550_close(struct rtdm_dev_context *context,
 }
 
 
-int rt_16550_ioctl_rt(struct rtdm_dev_context *context,
-                      rtdm_user_info_t *user_info, int request, void *arg)
+int rt_16550_ioctl(struct rtdm_dev_context *context,
+                   rtdm_user_info_t *user_info, int request, void *arg)
 {
     struct rt_16550_context *ctx;
     int                     ret = 0;
@@ -638,6 +638,9 @@ int rt_16550_ioctl_rt(struct rtdm_dev_context *context,
             struct rtser_event  ev = { rxpend_timestamp: 0 };
             rtdm_lockctx_t      lock_ctx;
             rtdm_toseq_t        timeout_seq;
+
+            if (!rtdm_in_rt_context())
+                return -EPERM;
 
             /* only one waiter allowed, stop any further attempts here */
             if (test_and_set_bit(0, &ctx->ioc_event_lock))
@@ -980,8 +983,8 @@ static const struct rtdm_device __initdata device_tmpl = {
         close_rt:       rt_16550_close,
         close_nrt:      rt_16550_close,
 
-        ioctl_rt:       rt_16550_ioctl_rt,
-        ioctl_nrt:      rt_16550_ioctl_rt,
+        ioctl_rt:       rt_16550_ioctl,
+        ioctl_nrt:      rt_16550_ioctl,
 
         read_rt:        rt_16550_read,
         read_nrt:       NULL,
@@ -999,7 +1002,7 @@ static const struct rtdm_device __initdata device_tmpl = {
     device_class:       RTDM_CLASS_SERIAL,
     device_sub_class:   RTDM_SUBCLASS_16550A,
     driver_name:        "rt_16550A",
-    driver_version:     RTDM_DRIVER_VER(1, 1, 0),
+    driver_version:     RTDM_DRIVER_VER(1, 1, 1),
     peripheral_name:    "UART 16550A",
     provider_name:      "Jan Kiszka",
 };
