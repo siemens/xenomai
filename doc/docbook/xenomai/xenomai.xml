@@ -36,7 +36,7 @@
       GNU/Linux called RTAI/fusion, on top of Xenomai's abstract RTOS
       core. Eventually, the RTAI/fusion effort became independent from
       RTAI in 2005 as the <ulink
-      url="http://www.gna.org/projects/fusion4linux/">fusion4linux
+      url="http://www.gna.org/projects/xenomai/">xenomai
       project</ulink>. </para>
 
       <para>Linux is a registered trademark of Linus Torvalds. Other
