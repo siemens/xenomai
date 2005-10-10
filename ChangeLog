@@ -1,3 +1,7 @@
+2005-10-10  Jan Kiszka <jan.kiszka@web.de>
+
+	* drivers/16550A: Check calling context in ioctl() support.
+
 2005-10-04  Jan Kiszka <jan.kiszka@web.de>
 
 	* drivers/16550A (rt_16550_interrupt): Fix locking issue.
