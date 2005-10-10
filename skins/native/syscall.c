@@ -2029,27 +2029,6 @@ static int __rt_queue_bind (struct task_struct *curr, struct pt_regs *regs)
 
     xnlock_get_irqsave(&nklock,s);
 
-    /* First, wait for the queue to appear in the registry. */
-
-    err = __rt_bind_helper(curr,regs,&ph.opaque,XENO_QUEUE_MAGIC,(void **)&q);
-
-    if (err)
-	goto unlock_and_exit;
-
-    xnlock_put_irqrestore(&nklock,s);
-
-    /* We might need to migrate to secondary mode now for mapping the
-       pool memory to user-space; since this syscall is conforming, we
-       might have entered it in primary mode. */
-
-    if (xnpod_primary_p())
-	xnshadow_relax(0);
-
-    xnlock_get_irqsave(&nklock,s);
-
-    /* Search for the queue again since we released the lock while
-       migrating. */
-
     err = __rt_bind_helper(curr,regs,&ph.opaque,XENO_QUEUE_MAGIC,(void **)&q);
 
     if (err)
@@ -2058,7 +2037,18 @@ static int __rt_queue_bind (struct task_struct *curr, struct pt_regs *regs)
     ph.opaque2 = &q->bufpool;
     ph.mapsize = xnheap_size(&q->bufpool);
 
+    xnlock_put_irqrestore(&nklock,s);
+
     __xn_copy_to_user(curr,(void __user *)__xn_reg_arg1(regs),&ph,sizeof(ph));
+
+    /* We might need to migrate to secondary mode now for mapping the
+       pool memory to user-space; since this syscall is conforming, we
+       might have entered it in primary mode. */
+
+    if (xnpod_primary_p())
+	xnshadow_relax(0);
+
+    return err;
 
  unlock_and_exit:
 
@@ -2459,27 +2449,6 @@ static int __rt_heap_bind (struct task_struct *curr, struct pt_regs *regs)
 
     xnlock_get_irqsave(&nklock,s);
 
-    /* First, wait for the heap to appear in the registry. */
-
-    err = __rt_bind_helper(curr,regs,&ph.opaque,XENO_HEAP_MAGIC,(void **)&heap);
-
-    if (err)
-	goto unlock_and_exit;
-
-    xnlock_put_irqrestore(&nklock,s);
-
-    /* We might need to migrate to secondary mode now for mapping the
-       heap memory to user-space; since this syscall is conforming, we
-       might have entered it in primary mode. */
-
-    if (xnpod_primary_p())
-	xnshadow_relax(0);
-
-    xnlock_get_irqsave(&nklock,s);
-
-    /* Search for the heap again since we released the lock while
-       migrating. */
-
     err = __rt_bind_helper(curr,regs,&ph.opaque,XENO_HEAP_MAGIC,(void **)&heap);
 
     if (err)
@@ -2488,7 +2457,18 @@ static int __rt_heap_bind (struct task_struct *curr, struct pt_regs *regs)
     ph.opaque2 = &heap->heap_base;
     ph.mapsize = xnheap_size(&heap->heap_base);
 
+    xnlock_put_irqrestore(&nklock,s);
+
     __xn_copy_to_user(curr,(void __user *)__xn_reg_arg1(regs),&ph,sizeof(ph));
+
+    /* We might need to migrate to secondary mode now for mapping the
+       heap memory to user-space; since this syscall is conforming, we
+       might have entered it in primary mode. */
+
+    if (xnpod_primary_p())
+	xnshadow_relax(0);
+
+    return err;
 
  unlock_and_exit:
 
