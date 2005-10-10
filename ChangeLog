@@ -1,3 +1,7 @@
+2005-10-10  Philippe Gerum  <rpm@xenomai.org>
+
+	* arch/i386/patches: Upgrade to Adeos newgen 1.0-06.
+
 2005-10-10  Jim Cromie <jcromie@divsol.com>
 
 	* scripts/xeno-test.in: Uniformly use loudly() function to emit

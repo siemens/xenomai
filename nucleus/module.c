@@ -38,7 +38,6 @@
 #include <nucleus/core.h>
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 #include <nucleus/ltt.h>
-#include <linux/seq_file.h>
 
 MODULE_DESCRIPTION("Xenomai nucleus");
 MODULE_AUTHOR("rpm@xenomai.org");
@@ -77,6 +76,7 @@ void xnmod_alloc_glinks (xnqueue_t *freehq)
 
 #if defined(CONFIG_PROC_FS) && defined(__KERNEL__)
 
+#include <linux/seq_file.h>
 #include <linux/proc_fs.h>
 #include <linux/ctype.h>
 
