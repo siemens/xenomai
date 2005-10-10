@@ -1,12 +1,12 @@
 
-The fusion4linux project has its roots in both the Xenomai [1] and
+The new Xenomai project has its roots in both the old Xenomai [1] and
 RTAI [2] projects, which combined their skills in order to produce a
 pervasive and highly integrated real-time framework for the GNU/Linux
 environment. The resulting development effort started in April 2004
 has been initially hosted as an experimental branch of the RTAI
 project, called RTAI/fusion. Since October 2005, this effort is
 independently led by its original major contributors as the
-fusion4linux project [3].
+revamped Xenomai project [1].
 
 This file is an attempt to give proper credit to the people who have
 contributed to this project so far. List entries are sorted by name
@@ -14,7 +14,6 @@ and provide the usual tags for automated processing.
 
 [1] http://www.xenomai.org/
 [2] http://www.rtai.org/
-[3] http://www.fusion4linux.org/
 
 -- Philippe
 
@@ -101,7 +100,7 @@ D: Autoconf and script-related fixes.
 N: Bruno Rouchouse
 E: bsd@neuf.fr
 D: WEB site author and documentation maintainer.
-W: http://www.fusion4linux.org/
+W: http://www.xenomai.org/
 
 N: Evgeny Sinelnikov
 E: linux4sin@mail.ru
