@@ -36,7 +36,7 @@
 #include <linux/interrupt.h>
 #include <linux/kallsyms.h>
 
-#define RTHAL_DOMAIN_ID		0x52544149
+#define RTHAL_DOMAIN_ID		0x58454e4f
 
 #define RTHAL_TIMER_FREQ	(rthal_tunables.timer_freq)
 #define RTHAL_CPU_FREQ		(rthal_tunables.cpu_freq)
