@@ -1,17 +1,19 @@
-prefix := $(shell xeno-config --prefix)
+# Allow overriding xeno-config on make command line
+XENO_CONFIG=xeno-config
+prefix := $(shell $(XENO_CONFIG) --prefix)
 
 ifeq ($(prefix),)
 $(error Please add <xenomai-install-path>/bin to your PATH variable)
 endif
 
-STD_CFLAGS  := $(shell xeno-config --xeno-cflags)
-STD_LDFLAGS := $(shell xeno-config --xeno-ldflags) -lnative
-STD_TARGETS := satch
+STD_CFLAGS  := $(shell $(XENO_CONFIG) --xeno-cflags)
+STD_LDFLAGS := $(shell $(XENO_CONFIG) --xeno-ldflags) -lnative
+STD_TARGETS := satch latency
 
 GCIC := $(prefix)/bin/gcic
 SIM_CFLAGS  := -g
 SIM_LDFLAGS := -lnative_s
-SIM_TARGETS := satch_s
+SIM_TARGETS := satch_s latency_s
 
 # "std" makes all demos running natively in user-space.
 # "sim" makes all demos running over the RTOS simulator.
