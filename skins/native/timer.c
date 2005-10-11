@@ -54,6 +54,9 @@
  * - User-space task
  *
  * Rescheduling: never.
+ *
+ * @note The system timer need to have been started with
+ * rt_timer_start() for this service to work properly.
  */
 
 SRTIME rt_timer_ns2ticks (SRTIME ns)
@@ -98,7 +101,7 @@ SRTIME rt_timer_ns2tsc (SRTIME ns)
  * Convert a count of internal clock ticks to nanoseconds.
  * This routine operates on signed tick values.
  *
- * @param ticks The count of loca CPU clock ticks to convert.
+ * @param ticks The count of internal clock ticks to convert.
  *
  * @return The corresponding value expressed in nanoseconds.
  *
@@ -112,6 +115,9 @@ SRTIME rt_timer_ns2tsc (SRTIME ns)
  * - User-space task
  *
  * Rescheduling: never.
+ *
+ * @note The system timer need to have been started with
+ * rt_timer_start() for this service to work properly.
  */
 
 SRTIME rt_timer_ticks2ns (SRTIME ticks)
@@ -127,7 +133,7 @@ SRTIME rt_timer_ticks2ns (SRTIME ticks)
  * Convert a local CPU clock ticks to nanoseconds.
  * This routine operates on signed tick values.
  *
- * @param ticks The count of internal clock ticks to convert.
+ * @param ticks The count of local CPU clock ticks to convert.
  *
  * @return The corresponding value expressed in nanoseconds.
  *
