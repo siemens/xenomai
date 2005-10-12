@@ -32,7 +32,7 @@ static inline unsigned long xnarch_get_sched_latency (void)
 #define __sched_latency CONFIG_XENO_HW_SCHED_LATENCY
 #else
 
-#define __sched_latency 18500
+#define __sched_latency 1000
 
 #endif /* CONFIG_XENO_HW_SCHED_LATENCY */
 
