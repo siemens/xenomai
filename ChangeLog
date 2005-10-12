@@ -1,3 +1,8 @@
+2005-10-11  Heikki Lindholm <holindho@cs.helsinki.fi>
+
+	* arch/ppc64/include/calibration.h: Reduce default calibration
+	value to 1 us.
+	
 2005-10-11  Jim Cromie <jcromie@divsol.com>
 	
 	* scripts/xeno-config.in: Add --verbose option.
