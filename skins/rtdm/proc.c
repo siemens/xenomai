@@ -322,7 +322,7 @@ void rtdm_proc_cleanup(void)
     remove_proc_entry("open_fildes", rtdm_proc_root);
     remove_proc_entry("protocol_devices", rtdm_proc_root);
     remove_proc_entry("named_devices", rtdm_proc_root);
-    remove_proc_entry("Xenomai/rtdm", NULL);
+    remove_proc_entry("xenomai/rtdm", NULL);
 }
 
 #endif /* CONFIG_PROC_FS */
