@@ -285,7 +285,7 @@ int __init rtdm_proc_init(void)
 
 
     /* Initialise /proc entries */
-    rtdm_proc_root = create_proc_entry("Xenomai/rtdm", S_IFDIR, NULL);
+    rtdm_proc_root = create_proc_entry("xenomai/rtdm", S_IFDIR, NULL);
     if (!rtdm_proc_root)
         return -EAGAIN;
 
