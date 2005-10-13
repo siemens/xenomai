@@ -1,8 +1,12 @@
+2005-10-13  Heikki Lindholm <holindho@cs.helsinki.fi>
+
+	* arch/ppc64/patches: Upgrade to Adeos 2.6.10-ppc64-r2.
+
 2005-10-12  Sebastian Smolorz <Sebastian.Smolorz@stud.uni-hannover.de>
 
 	* skins/rtdm/proc.c (rtdm_proc_init): Fix root proc file name.
 
-2005-10-11  Heikki Lindholm <holindho@cs.helsinki.fi>
+2005-10-11  
 
 	* arch/ppc64/include/calibration.h: Reduce default calibration
 	value to 1 us.
