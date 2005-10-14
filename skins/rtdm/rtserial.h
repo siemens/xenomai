@@ -113,7 +113,7 @@
 
 /*!
  * @anchor RTSER_xxx_PARITY   @name RTSER_xxx_PARITY
- * Number of parity bits @anchor RTSER_xxx_PARITY
+ * Number of parity bits
  * @{ */
 #define RTSER_NO_PARITY             0x00
 #define RTSER_ODD_PARITY            0x01
