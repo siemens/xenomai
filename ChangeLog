@@ -1,8 +1,13 @@
+2005-10-14  Sebastian Smolorz <Sebastian.Smolorz@stud.uni-hannover.de>
+
+	* drivers/16550A/16550A.c (rt_16550_ioctl): Check for memory
+	allocation error.
+
 2005-10-13  Heikki Lindholm <holindho@cs.helsinki.fi>
 
 	* arch/ppc64/patches: Upgrade to Adeos 2.6.10-ppc64-r2.
 
-2005-10-12  Sebastian Smolorz <Sebastian.Smolorz@stud.uni-hannover.de>
+2005-10-12  
 
 	* skins/rtdm/proc.c (rtdm_proc_init): Fix root proc file name.
 
