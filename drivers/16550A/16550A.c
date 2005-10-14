@@ -568,6 +568,9 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
                 } else
                     hist_buf =
                         rtdm_malloc(IN_BUFFER_SIZE * sizeof(__u64));
+
+                if (!hist_buf)
+                    return -ENOMEM;
             }
 
             rt_16550_set_config(ctx, config, &hist_buf);
