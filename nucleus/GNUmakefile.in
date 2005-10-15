@@ -336,6 +336,7 @@ modext = @XENO_MODULE_EXT@
 libmodule_SRC = heap.c intr.c module.c pod.c synch.c thread.c timer.c \
 	$(am__append_1) $(am__append_2) $(am__append_3) \
 	$(am__append_4)
+distfiles = $(libmodule_SRC) shadow.c core.c pipe.c ltt.c config.c
 @CONFIG_XENO_OPT_UVM_TRUE@lib_LIBRARIES = libnucleus.a
 @CONFIG_XENO_OPT_UVM_TRUE@nodist_libnucleus_a_SOURCES = \
 @CONFIG_XENO_OPT_UVM_TRUE@			heap.c \
@@ -353,7 +354,7 @@ libmodule_SRC = heap.c intr.c module.c pod.c synch.c thread.c timer.c \
 @CONFIG_XENO_OPT_UVM_TRUE@	-I../include
 
 @CONFIG_XENO_OPT_UVM_TRUE@libnucleus_a_AR = $(CROSS_COMPILE)ar cru
-EXTRA_DIST = $(libmodule_SRC) ltt.c Kbuild Kconfig udev
+EXTRA_DIST = $(libmodule_SRC) $(distfiles) Kbuild Kconfig udev
 all: all-am
 
 .SUFFIXES:

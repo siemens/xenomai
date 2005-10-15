@@ -13,18 +13,24 @@ libmodule_SRC = \
 		thread.c \
 		timer.c
 
+distfiles = $(libmodule_SRC)
+
+distfiles += shadow.c core.c
 if CONFIG_XENO_OPT_PERVASIVE
 libmodule_SRC += shadow.c core.c
 endif
 
+distfiles += pipe.c
 if CONFIG_XENO_OPT_PIPE
 libmodule_SRC += pipe.c
 endif
 
+distfiles += ltt.c
 if CONFIG_LTT
 libmodule_SRC += ltt.c
 endif
 
+distfiles += config.c
 if CONFIG_XENO_OPT_CONFIG_GZ
 libmodule_SRC += config.c
 
@@ -111,4 +117,4 @@ endif
 
 .PHONY: FORCE config_gz devices
 
-EXTRA_DIST = $(libmodule_SRC) ltt.c Kbuild Kconfig udev
+EXTRA_DIST = $(libmodule_SRC) $(distfiles) Kbuild Kconfig udev
