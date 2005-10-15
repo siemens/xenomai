@@ -1,3 +1,15 @@
+2005-10-15  Philippe Gerum  <rpm@xenomai.org>
+
+	* arch/ppc/patches: Upgrade to Adeos newgen 1.0-00.
+
+	* arch/i386/patches: Upgrade to Adeos newgen 1.0-07.
+
+2005-10-14  Philippe Gerum  <rpm@xenomai.org>
+
+	* arch/ppc/include/calibration.h: Reduce default calibration value
+	to 9500 ns (currently aligned on Freescale's IceCube
+	performances for user-space latency).
+
 2005-10-14  Sebastian Smolorz <Sebastian.Smolorz@stud.uni-hannover.de>
 
 	* drivers/16550A/16550A.c (rt_16550_ioctl): Check for memory
