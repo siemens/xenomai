@@ -30,7 +30,7 @@
  * final version. E.g., all definitions need to be reviewed if they do not
  * contain too much 16550A-specifics or if significant features are missing.
  * Feel free to comment on this profile via the Xenomai mailing list
- * (Xenomai-main@gna.org) or directly to the author (jan.kiszka@web.de). @n
+ * (Xenomai-help@gna.org) or directly to the author (jan.kiszka@web.de). @n
  * @n
  *
  * @par Device Characteristics
