@@ -150,7 +150,9 @@ This service can be called from:<p>
 <ul>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
-Rescheduling: never.     </td>
+Rescheduling: never.<p>
+<dl compact><dt><b>Note:</b></dt><dd>The system timer need to have been started with <a class="el" href="group__native__timer.html#ga8">rt_timer_start()</a> for this service to work properly. </dd></dl>
+    </td>
   </tr>
 </table>
 <a class="anchor" name="ga1" doxytag="timer.c::rt_timer_ns2tsc"></a><p>
@@ -391,7 +393,7 @@ Convert internal clock ticks to nanoseconds.
 Convert a count of internal clock ticks to nanoseconds. This routine operates on signed tick values.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>ticks</em>&nbsp;</td><td>The count of loca CPU clock ticks to convert.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>ticks</em>&nbsp;</td><td>The count of internal clock ticks to convert.</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>The corresponding value expressed in nanoseconds.</dd></dl>
@@ -400,7 +402,9 @@ This service can be called from:<p>
 <ul>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
-Rescheduling: never.     </td>
+Rescheduling: never.<p>
+<dl compact><dt><b>Note:</b></dt><dd>The system timer need to have been started with <a class="el" href="group__native__timer.html#ga8">rt_timer_start()</a> for this service to work properly. </dd></dl>
+    </td>
   </tr>
 </table>
 <a class="anchor" name="ga6" doxytag="timer.c::rt_timer_tsc"></a><p>
@@ -470,7 +474,7 @@ Convert local CPU clock ticks to nanoseconds.
 Convert a local CPU clock ticks to nanoseconds. This routine operates on signed tick values.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>ticks</em>&nbsp;</td><td>The count of internal clock ticks to convert.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>ticks</em>&nbsp;</td><td>The count of local CPU clock ticks to convert.</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>The corresponding value expressed in nanoseconds.</dd></dl>
@@ -482,7 +486,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Oct 10 23:55:07 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Oct 15 16:41:18 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

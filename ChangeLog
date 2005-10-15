@@ -1,3 +1,7 @@
+2005-10-15  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* configure.in: Moved the package version number to config/version.
+
 2005-10-15  Philippe Gerum  <rpm@xenomai.org>
 
 	* arch/ppc/patches: Upgrade to Adeos newgen 1.0-00.
