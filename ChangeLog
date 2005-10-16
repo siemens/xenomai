@@ -1,3 +1,7 @@
+2005-10-16  Philippe Gerum  <rpm@xenomai.org>
+
+	* arch/ppc/hal/switch.S: Do not include <asm/offsets.h> uselessly.
+
 2005-10-15  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* configure.in: Moved the package version number to config/version.
