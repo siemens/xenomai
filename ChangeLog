@@ -1,3 +1,7 @@
+2005-10-18  Philippe Gerum  <rpm@xenomai.org>
+
+	* arch/ppc/patches: Upgrade to Adeos newgen 1.0-01.
+
 2005-10-18  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* configure.in: Get IPIPE_ARCH_STRING from include/asm-*/ipipe.h,
