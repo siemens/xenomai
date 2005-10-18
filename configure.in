@@ -307,7 +307,7 @@ cat > .xeno_display_archflags/Makefile <<EOF
 hostprogs-y := display_archflags
 always := display_archflags
 
-HOST_EXTRACFLAGS += -DXENO_CFLAGS="\"\$(CFLAGS)\""
+HOST_EXTRACFLAGS += -DXENO_CFLAGS="\"\$(CC) \$(CFLAGS)\""
 EOF
 make -s -C $XENO_LINUX_DIR CC="$CC" ARCH=$XENO_TARGET_ARCH \
         CROSS_COMPILE=$CROSS_COMPILE M=$PWD/.xeno_display_archflags >& /dev/null
