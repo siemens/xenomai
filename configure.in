@@ -312,7 +312,7 @@ EOF
 make -s -C $XENO_LINUX_DIR CC="$CC" ARCH=$XENO_TARGET_ARCH \
         CROSS_COMPILE=$CROSS_COMPILE M=$PWD/.xeno_display_archflags >& /dev/null
 for flag in `.xeno_display_archflags/display_archflags`; do case $flag in
-    -march*|-mcpu*|-mtune*|-Wa,-me500|-EB|-EL)
+    -march*|-mcpu*|-mtune*|-m32|-Wa,-me500|-EB|-EL)
         XENO_ARCH_FLAGS="$XENO_ARCH_FLAGS $flag";;
     *);; 
 esac; done

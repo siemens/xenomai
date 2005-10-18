@@ -6,6 +6,7 @@
 
 	* configure.in: Get IPIPE_ARCH_STRING from include/asm-*/ipipe.h,
 	not include/linux/ipipe.h.
+	Add -m32 to ARCH_FLAGS.
 
 	* Kbuild -> Makefile; 2.6.9 did not support makefiles named Kbuild
 	yet.
