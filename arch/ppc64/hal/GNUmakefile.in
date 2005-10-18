@@ -295,7 +295,7 @@ moduledir = $(DESTDIR)@XENO_MODULE_DIR@
 modext = @XENO_MODULE_EXT@
 libhal_SRC = ppc64.c switch.S $(am__append_1)
 distfiles = fpu.S
-EXTRA_DIST = $(libhal_SRC) $(distfiles) Kbuild
+EXTRA_DIST = $(libhal_SRC) $(distfiles) Makefile
 all: all-am
 
 .SUFFIXES:

@@ -326,7 +326,7 @@ include_HEADERS = \
 noinst_HEADERS = cancel.h cond.h jhash.h mutex.h mq.h sem.h signal.h \
 	thread.h timer.h tsd.h internal.h registry.h $(am__append_2)
 distfiles = syscall.c syscall.h intr.c intr.h
-EXTRA_DIST = $(distfiles) $(libmodule_SRC) doc Kbuild Kconfig demos
+EXTRA_DIST = $(distfiles) $(libmodule_SRC) doc Makefile Kconfig demos
 @CONFIG_XENO_OPT_PERVASIVE_TRUE@SUBDIRS = lib
 all: all-recursive
 

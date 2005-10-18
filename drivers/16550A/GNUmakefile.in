@@ -294,7 +294,7 @@ moduledir = $(DESTDIR)@XENO_MODULE_DIR@
 modext = @XENO_MODULE_EXT@
 libmodule_SRC = 16550A.c
 distfiles = $(libmodule_SRC)
-EXTRA_DIST = $(distfiles) Kbuild Kconfig
+EXTRA_DIST = $(distfiles) Makefile Kconfig
 all: all-am
 
 .SUFFIXES:

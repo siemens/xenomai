@@ -98,4 +98,4 @@ endif
 
 .PHONY: FORCE
 
-EXTRA_DIST = $(libmodule_SRC) doc Kbuild Kconfig demos
+EXTRA_DIST = $(libmodule_SRC) doc Makefile Kconfig demos

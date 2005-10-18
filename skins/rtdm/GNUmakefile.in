@@ -331,7 +331,7 @@ noinst_HEADERS = \
 	proc.h \
 	syscall.h
 
-EXTRA_DIST = $(libmodule_SRC) Kbuild Kconfig
+EXTRA_DIST = $(libmodule_SRC) Makefile Kconfig
 @CONFIG_XENO_OPT_PERVASIVE_TRUE@SUBDIRS = lib
 all: all-recursive
 

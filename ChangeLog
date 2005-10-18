@@ -1,3 +1,11 @@
+2005-10-18  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* configure.in: Get IPIPE_ARCH_STRING from include/asm-*/ipipe.h,
+	not include/linux/ipipe.h.
+
+	* Kbuild -> Makefile; 2.6.9 did not support makefiles named Kbuild
+	yet.
+
 2005-10-18   Romain Lenglet <rlenglet@users.forge.objectweb.org>
 
 	* doc/man/xeno-config.man: Add man page.

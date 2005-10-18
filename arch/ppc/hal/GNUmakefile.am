@@ -30,4 +30,4 @@ install-exec-local: xeno_hal$(modext)
 
 .PHONY: FORCE
 
-EXTRA_DIST = $(libhal_SRC) $(distfiles) Kbuild
+EXTRA_DIST = $(libhal_SRC) $(distfiles) Makefile

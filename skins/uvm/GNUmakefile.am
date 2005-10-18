@@ -40,6 +40,6 @@ uninstall-local:
 
 .PHONY: FORCE
 
-EXTRA_DIST = $(libmodule_SRC) Kbuild
+EXTRA_DIST = $(libmodule_SRC) Makefile
 
 SUBDIRS = lib

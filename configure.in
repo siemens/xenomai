@@ -1408,19 +1408,19 @@ fi
 
 AC_CONFIG_LINKS(arch/$XENO_TARGET_ARCH/hal/generic.c:arch/generic/hal/generic.c)
 if test "x$CONFIG_XENO_OLD_FASHIONED_BUILD" = x; then
-   AC_CONFIG_LINKS(arch/$XENO_TARGET_ARCH/hal/Kbuild)
-   AC_CONFIG_LINKS(nucleus/Kbuild)
-   AC_CONFIG_LINKS(skins/uvm/Kbuild)
-   AC_CONFIG_LINKS(skins/posix/Kbuild)
-   AC_CONFIG_LINKS(skins/native/Kbuild)
-   AC_CONFIG_LINKS(skins/psos+/Kbuild)
-   AC_CONFIG_LINKS(skins/uitron/Kbuild)
-   AC_CONFIG_LINKS(skins/vrtx/Kbuild)
-   AC_CONFIG_LINKS(skins/vxworks/Kbuild)
-   AC_CONFIG_LINKS(skins/rtdm/Kbuild)
-   AC_CONFIG_LINKS(skins/rtai/Kbuild)
-   AC_CONFIG_LINKS(testsuite/klatency/Kbuild)
-   AC_CONFIG_LINKS(drivers/16550A/Kbuild)
+   AC_CONFIG_LINKS(arch/$XENO_TARGET_ARCH/hal/Makefile)
+   AC_CONFIG_LINKS(nucleus/Makefile)
+   AC_CONFIG_LINKS(skins/uvm/Makefile)
+   AC_CONFIG_LINKS(skins/posix/Makefile)
+   AC_CONFIG_LINKS(skins/native/Makefile)
+   AC_CONFIG_LINKS(skins/psos+/Makefile)
+   AC_CONFIG_LINKS(skins/uitron/Makefile)
+   AC_CONFIG_LINKS(skins/vrtx/Makefile)
+   AC_CONFIG_LINKS(skins/vxworks/Makefile)
+   AC_CONFIG_LINKS(skins/rtdm/Makefile)
+   AC_CONFIG_LINKS(skins/rtai/Makefile)
+   AC_CONFIG_LINKS(testsuite/klatency/Makefile)
+   AC_CONFIG_LINKS(drivers/16550A/Makefile)
 fi
 
 dnl

@@ -117,4 +117,4 @@ endif
 
 .PHONY: FORCE config_gz devices
 
-EXTRA_DIST = $(libmodule_SRC) $(distfiles) Kbuild Kconfig udev
+EXTRA_DIST = $(libmodule_SRC) $(distfiles) Makefile Kconfig udev
