@@ -364,7 +364,7 @@ include_HEADERS = \
 @CONFIG_XENO_OPT_UVM_TRUE@	-I@XENO_LINUX_DIR@/include
 
 @CONFIG_XENO_OPT_UVM_TRUE@libuitron_a_AR = $(CROSS_COMPILE)ar cru
-EXTRA_DIST = $(libmodule_SRC) doc Kbuild Kconfig
+EXTRA_DIST = $(libmodule_SRC) doc Makefile Kconfig
 all: all-am
 
 .SUFFIXES:

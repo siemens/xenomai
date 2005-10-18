@@ -23314,31 +23314,31 @@ fi
           ac_config_links="$ac_config_links arch/$XENO_TARGET_ARCH/hal/generic.c:arch/generic/hal/generic.c"
 
 if test "x$CONFIG_XENO_OLD_FASHIONED_BUILD" = x; then
-             ac_config_links="$ac_config_links arch/$XENO_TARGET_ARCH/hal/Kbuild"
+             ac_config_links="$ac_config_links arch/$XENO_TARGET_ARCH/hal/Makefile"
 
-             ac_config_links="$ac_config_links nucleus/Kbuild"
+             ac_config_links="$ac_config_links nucleus/Makefile"
 
-             ac_config_links="$ac_config_links skins/uvm/Kbuild"
+             ac_config_links="$ac_config_links skins/uvm/Makefile"
 
-             ac_config_links="$ac_config_links skins/posix/Kbuild"
+             ac_config_links="$ac_config_links skins/posix/Makefile"
 
-             ac_config_links="$ac_config_links skins/native/Kbuild"
+             ac_config_links="$ac_config_links skins/native/Makefile"
 
-             ac_config_links="$ac_config_links skins/psos+/Kbuild"
+             ac_config_links="$ac_config_links skins/psos+/Makefile"
 
-             ac_config_links="$ac_config_links skins/uitron/Kbuild"
+             ac_config_links="$ac_config_links skins/uitron/Makefile"
 
-             ac_config_links="$ac_config_links skins/vrtx/Kbuild"
+             ac_config_links="$ac_config_links skins/vrtx/Makefile"
 
-             ac_config_links="$ac_config_links skins/vxworks/Kbuild"
+             ac_config_links="$ac_config_links skins/vxworks/Makefile"
 
-             ac_config_links="$ac_config_links skins/rtdm/Kbuild"
+             ac_config_links="$ac_config_links skins/rtdm/Makefile"
 
-             ac_config_links="$ac_config_links skins/rtai/Kbuild"
+             ac_config_links="$ac_config_links skins/rtai/Makefile"
 
-             ac_config_links="$ac_config_links testsuite/klatency/Kbuild"
+             ac_config_links="$ac_config_links testsuite/klatency/Makefile"
 
-             ac_config_links="$ac_config_links drivers/16550A/Kbuild"
+             ac_config_links="$ac_config_links drivers/16550A/Makefile"
 
 fi
 
@@ -24320,19 +24320,19 @@ do
   "doc/docbook/xenomai/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES doc/docbook/xenomai/GNUmakefile" ;;
   "include/nucleus/asm" ) CONFIG_LINKS="$CONFIG_LINKS include/nucleus/asm:include/nucleus/asm-$XENO_TARGET_ARCH" ;;
   "arch/$XENO_TARGET_ARCH/hal/generic.c" ) CONFIG_LINKS="$CONFIG_LINKS arch/$XENO_TARGET_ARCH/hal/generic.c:arch/generic/hal/generic.c" ;;
-  "arch/$XENO_TARGET_ARCH/hal/Kbuild" ) CONFIG_LINKS="$CONFIG_LINKS arch/$XENO_TARGET_ARCH/hal/Kbuild" ;;
-  "nucleus/Kbuild" ) CONFIG_LINKS="$CONFIG_LINKS nucleus/Kbuild" ;;
-  "skins/uvm/Kbuild" ) CONFIG_LINKS="$CONFIG_LINKS skins/uvm/Kbuild" ;;
-  "skins/posix/Kbuild" ) CONFIG_LINKS="$CONFIG_LINKS skins/posix/Kbuild" ;;
-  "skins/native/Kbuild" ) CONFIG_LINKS="$CONFIG_LINKS skins/native/Kbuild" ;;
-  "skins/psos+/Kbuild" ) CONFIG_LINKS="$CONFIG_LINKS skins/psos+/Kbuild" ;;
-  "skins/uitron/Kbuild" ) CONFIG_LINKS="$CONFIG_LINKS skins/uitron/Kbuild" ;;
-  "skins/vrtx/Kbuild" ) CONFIG_LINKS="$CONFIG_LINKS skins/vrtx/Kbuild" ;;
-  "skins/vxworks/Kbuild" ) CONFIG_LINKS="$CONFIG_LINKS skins/vxworks/Kbuild" ;;
-  "skins/rtdm/Kbuild" ) CONFIG_LINKS="$CONFIG_LINKS skins/rtdm/Kbuild" ;;
-  "skins/rtai/Kbuild" ) CONFIG_LINKS="$CONFIG_LINKS skins/rtai/Kbuild" ;;
-  "testsuite/klatency/Kbuild" ) CONFIG_LINKS="$CONFIG_LINKS testsuite/klatency/Kbuild" ;;
-  "drivers/16550A/Kbuild" ) CONFIG_LINKS="$CONFIG_LINKS drivers/16550A/Kbuild" ;;
+  "arch/$XENO_TARGET_ARCH/hal/Makefile" ) CONFIG_LINKS="$CONFIG_LINKS arch/$XENO_TARGET_ARCH/hal/Makefile" ;;
+  "nucleus/Makefile" ) CONFIG_LINKS="$CONFIG_LINKS nucleus/Makefile" ;;
+  "skins/uvm/Makefile" ) CONFIG_LINKS="$CONFIG_LINKS skins/uvm/Makefile" ;;
+  "skins/posix/Makefile" ) CONFIG_LINKS="$CONFIG_LINKS skins/posix/Makefile" ;;
+  "skins/native/Makefile" ) CONFIG_LINKS="$CONFIG_LINKS skins/native/Makefile" ;;
+  "skins/psos+/Makefile" ) CONFIG_LINKS="$CONFIG_LINKS skins/psos+/Makefile" ;;
+  "skins/uitron/Makefile" ) CONFIG_LINKS="$CONFIG_LINKS skins/uitron/Makefile" ;;
+  "skins/vrtx/Makefile" ) CONFIG_LINKS="$CONFIG_LINKS skins/vrtx/Makefile" ;;
+  "skins/vxworks/Makefile" ) CONFIG_LINKS="$CONFIG_LINKS skins/vxworks/Makefile" ;;
+  "skins/rtdm/Makefile" ) CONFIG_LINKS="$CONFIG_LINKS skins/rtdm/Makefile" ;;
+  "skins/rtai/Makefile" ) CONFIG_LINKS="$CONFIG_LINKS skins/rtai/Makefile" ;;
+  "testsuite/klatency/Makefile" ) CONFIG_LINKS="$CONFIG_LINKS testsuite/klatency/Makefile" ;;
+  "drivers/16550A/Makefile" ) CONFIG_LINKS="$CONFIG_LINKS drivers/16550A/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   "include/xeno_config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS include/xeno_config.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5

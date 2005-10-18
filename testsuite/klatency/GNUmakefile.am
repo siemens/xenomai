@@ -56,4 +56,4 @@ run: all
 
 .PHONY: FORCE
 
-EXTRA_DIST = $(libmodule_SRC) Kbuild runinfo
+EXTRA_DIST = $(libmodule_SRC) Makefile runinfo

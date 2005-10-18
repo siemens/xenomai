@@ -333,7 +333,7 @@ include_HEADERS = intr.h task.h timer.h types.h rtai.h rtai_fifos.h \
 distfiles = $(libmodule_SRC) fifo.c fifo.h sem.c sem.h shm.c shm.h \
 	syscall.c syscall.h
 @CONFIG_XENO_OPT_PERVASIVE_TRUE@noinst_HEADERS = syscall.h
-EXTRA_DIST = $(distfiles) Kbuild Kconfig
+EXTRA_DIST = $(distfiles) Makefile Kconfig
 @CONFIG_XENO_OPT_PERVASIVE_TRUE@SUBDIRS = lib
 all: all-recursive
 

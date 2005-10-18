@@ -297,7 +297,7 @@ modext = @XENO_MODULE_EXT@
 abs_srcdir = @abs_srcdir@
 libhal_SRC = x86.c usercopy.c $(am__append_1) $(am__append_2)
 distfiles = nmi.c smi.c smi.h
-EXTRA_DIST = $(libhal_SRC) $(distfiles) Kbuild
+EXTRA_DIST = $(libhal_SRC) $(distfiles) Makefile
 all: all-am
 
 .SUFFIXES:

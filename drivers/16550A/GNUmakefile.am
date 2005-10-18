@@ -33,4 +33,4 @@ uninstall-local:
 
 .PHONY: FORCE
 
-EXTRA_DIST = $(distfiles) Kbuild Kconfig
+EXTRA_DIST = $(distfiles) Makefile Kconfig

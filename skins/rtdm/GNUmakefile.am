@@ -49,7 +49,7 @@ uninstall-local:
 
 .PHONY: FORCE
 
-EXTRA_DIST = $(libmodule_SRC) Kbuild Kconfig
+EXTRA_DIST = $(libmodule_SRC) Makefile Kconfig
 
 if CONFIG_XENO_OPT_PERVASIVE
 SUBDIRS = lib

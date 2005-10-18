@@ -354,7 +354,7 @@ distfiles = $(libmodule_SRC) shadow.c core.c pipe.c ltt.c config.c
 @CONFIG_XENO_OPT_UVM_TRUE@	-I../include
 
 @CONFIG_XENO_OPT_UVM_TRUE@libnucleus_a_AR = $(CROSS_COMPILE)ar cru
-EXTRA_DIST = $(libmodule_SRC) $(distfiles) Kbuild Kconfig udev
+EXTRA_DIST = $(libmodule_SRC) $(distfiles) Makefile Kconfig udev
 all: all-am
 
 .SUFFIXES:

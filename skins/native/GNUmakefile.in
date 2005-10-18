@@ -353,7 +353,7 @@ distfiles = $(libmodule_SRC) syscall.c syscall.h misc.h registry.c \
 	mutex.h cond.c cond.h queue.c queue.h heap.c heap.h alarm.c \
 	alarm.h intr.c intr.h
 @CONFIG_XENO_OPT_PERVASIVE_TRUE@noinst_HEADERS = syscall.h
-EXTRA_DIST = $(distfiles) Kbuild Kconfig snippets demos API.CHANGES
+EXTRA_DIST = $(distfiles) Makefile Kconfig snippets demos API.CHANGES
 @CONFIG_XENO_OPT_PERVASIVE_TRUE@SUBDIRS = lib
 all: all-recursive
 
