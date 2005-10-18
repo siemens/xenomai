@@ -1,3 +1,9 @@
+2005-10-18   Romain Lenglet <rlenglet@users.forge.objectweb.org>
+
+	* doc/man/xeno-config.man: Add man page.
+
+	* scripts/xeno-config.in: Fix --verbose option.
+
 2005-10-17  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/asm-generic/system.h (xnarch_set_irq_affinity):
