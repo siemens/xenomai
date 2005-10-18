@@ -37,6 +37,7 @@ cat <<EOF
 Usage xeno-config OPTIONS
 Options :
         --help
+        --v,--verbose
         --version
         --cc
         --cross-compile
@@ -44,19 +45,18 @@ Options :
         --subarch
         --prefix
         --config
-        --module-cflags,--kernel-cflags
-        --module-cxxflags,--kernel-cxxflags
+        --mod*-cflags,--kernel-cflags
         --xeno-cflags,--fusion-cflags
         --xeno-ldflags,--fusion-ldflags
         --posix-cflags
         --posix-ldflags
         --uvm-cflags
         --uvm-ldflags
-        --linux-dir
-        --linux-version
-        --module-dir
-        --symbol-dir
-        --library-dir
+        --linux-dir,--linux
+        --linux-ver*
+        --mod*-dir
+        --sym*-dir
+        --lib*-dir,--libdir,--user-libdir
 EOF
     exit $1
 }
@@ -81,11 +81,11 @@ verbose ()
     echo "   " --uvm-cflags="\"=$XENO_UVM_CFLAGS \""
     echo "   " --uvm-ldflags="\"=$XENO_UVM_LDFLAGS\""
 
-    echo "   " --mod*-dir="\"=$XENO_MODULE_DIR\""
-    echo "   " --sym*-dir="\"$XENO_SYMBOL_DIR\""
-    echo "   " --libdir="\"$XENO_LIBRARY_DIR\""
+    echo "   " --module-dir="\"=$XENO_MODULE_DIR\""
+    echo "   " --symbol-dir="\"$XENO_SYMBOL_DIR\""
+    echo "   " --library-dir="\"$XENO_LIBRARY_DIR\""
     echo "   " --linux-dir="\"$XENO_LINUX_DIR\""
-    echo "   " --linux-ver*="\"$XENO_LINUX_VERSION\""
+    echo "   " --linux-version="\"$XENO_LINUX_VERSION\""
 }
 
 if test $# -eq 0; then

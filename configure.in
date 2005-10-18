@@ -226,7 +226,7 @@ dnl
 AC_MSG_CHECKING([for interrupt pipeline extension])
 
 if test -r $XENO_LINUX_SRCDIR/include/linux/ipipe.h; then
-   v=`grep '^#define.*IPIPE_ARCH_STRING.*"' $XENO_LINUX_SRCDIR/include/linux/ipipe.h|sed -e 's,.*"\(.*\)"$,\1,'`
+   v=`grep '^#define.*IPIPE_ARCH_STRING.*"' $XENO_LINUX_SRCDIR/include/asm-*/ipipe.h|sed -e 's,.*"\(.*\)"$,\1,'`
    AC_MSG_RESULT([Adeos newgen (I-pipe $v)])
    if test x${CONFIG_IPIPE} = x; then
       AC_MSG_ERROR([Please activate the Adeos support in $XENO_LINUX_DIR and rebuild your kernel])
@@ -1474,6 +1474,7 @@ AC_CONFIG_FILES([ \
 	include/nucleus/asm-ppc64/GNUmakefile \
 	include/nucleus/asm-ia64/GNUmakefile \
 	include/nucleus/asm-uvm/GNUmakefile \
+	doc/man/GNUmakefile \
 	nucleus/GNUmakefile \
 	scripts/GNUmakefile \
 	scripts/xeno-config \
