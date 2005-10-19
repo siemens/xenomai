@@ -7,7 +7,7 @@ config XENO_SKIN_RTAI
 
 config XENO_OPT_RTAI_FIFO
 	bool "Fifos"
-	depends on XENO_OPT_PIPE && XENO_SKIN_COMPAT
+	depends on XENO_OPT_PIPE && XENO_SKIN_RTAI
 	default y
 	help
 	
@@ -17,7 +17,7 @@ config XENO_OPT_RTAI_FIFO
 
 config XENO_OPT_RTAI_SEM
 	bool "Semaphores"
-	depends on XENO_SKIN_COMPAT
+	depends on XENO_SKIN_RTAI
 	default y
 	help
 	
@@ -26,7 +26,7 @@ config XENO_OPT_RTAI_SEM
 
 config XENO_OPT_RTAI_SHM
 	bool "Shared Memory"
-	depends on XENO_SKIN_COMPAT
+	depends on XENO_SKIN_RTAI
 	default y
 	help
 	
