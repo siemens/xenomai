@@ -1,3 +1,9 @@
+2005-10-19  Philippe Gerum  <rpm@xenomai.org>
+
+	* skins/native/timer.c (rt_timer_start): Check for actual timer
+	setup conflict instead of bluntly bailing out on error even for
+	compatible settings.
+
 2005-10-18  Philippe Gerum  <rpm@xenomai.org>
 
 	* arch/ppc/patches: Upgrade to Adeos newgen 1.0-01.

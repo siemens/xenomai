@@ -370,6 +370,15 @@ void rt_timer_spin (RTIME ns)
 int rt_timer_start (RTIME nstick)
 
 {
+    if (testbits(nkpod->status,XNTIMED))
+	{
+	if ((nstick == TM_ONESHOT && xnpod_get_tickval() == 1) ||
+	    (nstick != TM_ONESHOT && xnpod_get_tickval() == nstick))
+	    return 0;
+
+	xnpod_stop_timer();
+	}
+
     return xnpod_start_timer(nstick,XNPOD_DEFAULT_TICKHANDLER);
 }
 
