@@ -16,9 +16,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifdef __KERNEL__
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 #include <nucleus/shadow.h>
-#endif /* __KERNEL__ */
+#endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE*/
 #include <nucleus/asm/system.h> /* For xnlock. */
 #include <posix/timer.h>        /* For pse51_timer_notified. */
 #include <posix/signal.h>
@@ -213,13 +213,13 @@ void pse51_sigqueue_inner (pthread_t thread, pse51_siginfo_t *si)
         thread->threadbase.signals = 1;
         }
 
-#ifdef __KERNEL__
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     /* POSIX shadow signals ping: in order to send a signal to a user-space
        POSIX thread, we get it back to primary mode. */
     if (testbits(thread->threadbase.status, XNRELAX) &&
          xnthread_user_task(&thread->threadbase))
         xnshadow_suspend(&thread->threadbase);
-#endif /* __KERNEL__ */
+#endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE*/
 
     if (thread == pse51_current_thread()
         || xnpod_unblock_thread(&thread->threadbase))
@@ -694,7 +694,7 @@ static void pse51_dispatch_signals (xnsigmask_t sigs)
     xnlock_put_irqrestore(&nklock, s);
 }
 
-#ifdef __KERNEL__
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 /* The way signals are handled for shadows has not much in common with the way
    they are handled for kernel-space threads. We hence use a different
    function. */
@@ -747,7 +747,7 @@ static void pse51_dispatch_shadow_signals (xnsigmask_t sigs)
 
     return;
 }
-#endif /* __KERNEL__ */
+#endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE*/
     
 void pse51_signal_init_thread (pthread_t newthread, const pthread_t parent)
 
@@ -763,11 +763,11 @@ void pse51_signal_init_thread (pthread_t newthread, const pthread_t parent)
     else
         emptyset(&newthread->sigmask);
 
-#ifdef __KERNEL__
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     if (testbits(newthread->threadbase.status, XNSHADOW))
         newthread->threadbase.asr = &pse51_dispatch_shadow_signals;
     else
-#endif /* __KERNEL__ */
+#endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE*/
         newthread->threadbase.asr = &pse51_dispatch_signals;
 
     newthread->threadbase.asrmode = 0;

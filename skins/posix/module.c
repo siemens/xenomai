@@ -55,12 +55,12 @@ static void pse51_shutdown(int xtype)
 
     pse51_thread_pkg_cleanup();
     pse51_timer_pkg_cleanup();
-    pse51_intr_pkg_cleanup();
     pse51_tsd_pkg_cleanup();
     pse51_cond_pkg_cleanup();
     pse51_sem_pkg_cleanup();
     pse51_mutex_pkg_cleanup();
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    pse51_intr_pkg_cleanup();
     pse51_syscall_cleanup();
     xncore_detach();
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
@@ -129,7 +129,9 @@ int __xeno_skin_init(void)
     pse51_tsd_pkg_init();
     pse51_cond_pkg_init();
     pse51_mq_pkg_init();
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     pse51_intr_pkg_init();
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
     pse51_timer_pkg_init();
 
     pse51_thread_pkg_init(module_param_value(time_slice_arg));

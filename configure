@@ -20787,7 +20787,7 @@ always := display_archflags
 
 HOST_EXTRACFLAGS += -DXENO_CFLAGS="\"\$(CC) \$(CFLAGS)\""
 EOF
-make -s -C $XENO_LINUX_DIR CC="$CC" ARCH=$XENO_TARGET_ARCH \
+CC="$CC" make -s -C $XENO_LINUX_DIR ARCH=$XENO_TARGET_ARCH \
         CROSS_COMPILE=$CROSS_COMPILE M=$PWD/.xeno_display_archflags >& /dev/null
 for flag in `.xeno_display_archflags/display_archflags`; do case $flag in
     -march*|-mcpu*|-mtune*|-m32|-Wa,-me500|-EB|-EL)
@@ -23162,7 +23162,7 @@ fi
 XENO_MODULE_EXT=.ko
 XENO_KBUILD_ENV='src2obj = $(patsubst %.$(1),%.o,$(filter %.$(1),$(call notdir,$(2))))'
 XENO_KBUILD_CMD="@for src in \$(filter-out FORCE, \$^); do if test \\! -r \`basename \$\$src\`; then \$(LN_S) \$\$src; fi; done; \
-                    \$(MAKE) -C $XENO_LINUX_DIR CROSS_COMPILE=\$(CROSS_COMPILE) CC=\"$CC\" ARCH=$XENO_TARGET_ARCH \
+                    CC=\"$CC\" \$(MAKE) -C $XENO_LINUX_DIR CROSS_COMPILE=\$(CROSS_COMPILE) ARCH=$XENO_TARGET_ARCH \
 		    M=\$\$PWD xeno_srctree=\`cd \$(top_srcdir) && pwd\` xeno_srcdir=\`cd \$(srcdir) && pwd\` V=\$(V) MODVERDIR=$top_builddir/symbols modules \
 		    xeno_objs='\$(call src2obj,c,\$^) \$(call src2obj,S,\$^) \$(call src2obj,cc,\$^) \$(call src2obj,cpp,\$^)' xeno_target=\$(basename \$@)"
 
