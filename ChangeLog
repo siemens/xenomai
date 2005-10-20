@@ -1,3 +1,9 @@
+2005-10-21  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* configure.in: Pass CC variable to Kbuild in environment instead
+	of command line in order to allow Kbuild makefiles to extend the
+	value of this variable. Fixes bug #4546.
+
 2005-10-10  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
 
 	* skins/native: Properly handle creation of anonymous user-space
