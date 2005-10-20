@@ -4,6 +4,19 @@
 	setup conflict instead of bluntly bailing out on error even for
 	compatible settings.
 
+2005-10-19   Romain Lenglet <rlenglet@users.forge.objectweb.org>
+
+	* doc/man/runinfo.man.in: Add man page.
+	* doc/man/xeno-info.man.in: Add man page.
+	* doc/man/xeno-load.man.in: Add man page.
+	* doc/man/xeno-test.man.in: Add man page.
+	* doc/man/xeno-config.man.in: Renamed xeno-config.man into
+	xeno-config.man.in, so that the Xenomai version number is
+	automatically updated by configure.
+
+	* scripts/xeno-config.in: Fix --verbose output (too many "="s).
+	* scripts/xeno-test.in: Fix usage output for -N option.
+
 2005-10-18  Philippe Gerum  <rpm@xenomai.org>
 
 	* arch/ppc/patches: Upgrade to Adeos newgen 1.0-01.

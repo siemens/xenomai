@@ -1,0 +1,113 @@
+'\" t
+.\" ** The above line should force tbl to be a preprocessor **
+.\" Man page for xeno-test
+.\"
+.\" Copyright (C) 2005 Romain Lenglet <rlenglet@users.forge.objectweb.org>
+.\"
+.\" You may distribute under the terms of the GNU General Public
+.\" License as specified in the file COPYING that comes with the
+.\" Xenomai distribution.
+.\"
+.pc
+.TH XENO-TEST 1 "2005-10-19" "@PACKAGE_VERSION@" "Xenomai"
+.SH NAME
+xeno\-test \- Tests and mesures the performance of a Xenomai installation
+.SH SYNOPSIS
+\fBxeno\-test\fP [\fB\-w\fP \fIworkloads\fP] [\fB\-d\fP \fIdevice\fP] [\fB\-W\fP \fIcommand\fP] [\fB\-p\fP \fIcommand\fP] [\fB\-L\fP [\fB\-N\fP \fIprefix\fP]] [\fB\-s\fP] [\fB\-l\fP \fIsamples\fP] [\fB\-h\fP [\fB\-H\fP \fIcategories\fP] [\fB\-B\fP \fIgranularity\fP]] [\fB\-T\fP \fIseconds\fP [\fB\-q\fP]] [\fB\-\-\fP] [\fIargs\fP] ...
+.SH DESCRIPTION
+\fBxeno\-test\fP measures the performance of Xenomai, by executing Xenomai's \fBlatency\fP and \fBklatency\fP tests while generating a high workload on the system.
+The default command that is executed to simulate workload (if no alternate command is specified with a \fB-W\fP \fIcommand\fP option) is:
+.RS
+.sp
+.B dd if=/dev/zero of=/dev/null
+.sp
+.RE
+The executed \fBlatency\fP and \fBklatency\fP tests periodically (every second) sample and print out the minimum, average, and maximum latency.
+However, by default, if no option is specified to \fBxeno\-test\fP, those tests are executed with the \fB\-q\fP option (see below), which disables the printing of samples.
+If the \fB\-q\fP option is not specified, samples are printed in groups separated by headers.
+In addition, \fBlatency\fP and \fBklatency\fP print statistics for all samples before terminating, and can also optionally print statistics for every group of samples (see the \fB\-s\fP option), and distribution histograms (see the \fB\-h\fP option).
+
+If an invalid option is specified, \fBxeno\-test\fP prints out an usage help message and exits.
+
+.SH OPTIONS
+These following options are specific to \fBxeno\-test\fP:
+.TP
+\fB\-w\fP \fIworkloads\fP
+The number of workload commands to execute simultaneously. By default, this number is \fB1\fP.
+.TP
+\fB\-d\fP \fIdevice\fP
+If the default workload command is to be executed, sets the input device to be read by \fBdd\fP to \fIdevice\fP instead of \fB/dev/zero\fP.
+For instance, specifying the device of a real hard-drive (e.g. \fB/dev/hda/\fP) is useful for generating interrupts with I/O.
+The specified \fIdevice\fP must be mounted, and cannot be an NFS mount.
+.TP
+\fB\-W\fP \fIcommand\fP
+Executes the specified \fIcommand\fP to generate workload, instead of the default \fBdd if=/dev/zero of=/dev/null\fP command.
+
+If the command requires arguments, the command and its arguments must be quoted and passed as a single \fIcommand\fP argument.
+In addition to such static arguments, the \fIargs\fP optional arguments passed to \fBxeno\-test\fP are appended to \fIcommand\fP to execute it. 
+.TP
+\fB\-p\fP \fIcommand\fP
+Makes \fBxeno\-test\fP execute the specified \fIcommand\fP before, between and after the \fBlatency\fP and \fBklatency\fP tests.
+.TP
+\fB\-L\fP
+Activates logging. The log file is created in the current directory, and is named \fBtest\-\fP\fIkernel_release\fP, where \fIkernel_release\fP is the release number of the running Linux kernel (as determined by executing \fBuname \-r\fP).
+.TP
+\fB\-N\fP \fIprefix\fP
+Prepends \fIprefix\fP\fB\-\fP to the log file name, hence if the \fB\-L\fP option is also specified the log file name is \fIprefix\fP\fB\-test\-\fP\fIkernel_release\fP.
+This option is useful to create the log file in a different directory, by specifying a \fIprefix\fP that starts with the relative path to that directory.
+.PP
+The following options are directly passed to the \fBlatency\fP and \fBklatency\fP test commands executed by \fBxeno\-test\fP.
+If no such options are specified, the \fB\-s \-T 10 \-q\fP options are passed by default by \fBxeno\-test\fP.
+.TP
+\fB\-s\fP
+Displays statistics (minimum, average, and maximum latencies) for every group of samples.
+The number of samples in each group is determined by the \fB\-l\fP \fIsamples\fP option (default is \fB21\fP samples).
+.TP
+\fB\-l\fP \fIsamples\fP
+The number of samples in every group of samples.
+This number is the number of sample lines displayed between every header line, and is the number of samples used to calculate intermediate statistics if the \fB\-s\fP option is specified.
+By default, this number is \fB21\fP.
+.TP
+\fB\-h\fP
+Displays histograms of all sampled data, at the end of tests.
+The number of categories - or value intervals - of each histogram is determined by the \fB\-H\fP \fIcategories\fP option (default is \fB100\fP categories).
+The granularity - or bucket size -, used to separate latency samples into categories, is determined by the \fB\-B\fP \fIgranularity\fP option (default is \fB1000\fP ns).
+.TP
+\fB\-H\fP \fIcategories\fP
+The number of categories - or value intervals - of histograms to display if the \fB\-h\fP option is specified.
+By default, this number is \fB100\fP. 
+.TP
+\fB\-B\fP \fIgranularity\fP
+The granularity - or bucket size -, in nanoseconds, used to discriminate between the categories of latency samples in histograms (to be printed if the \fB\-h\fP option is specified).
+By default, this number is \fB1000\fP ns.
+.TP
+\fB\-T\fP \fIseconds\fP
+The period, in seconds, during which \fBlatency\fP and \fBklatency\fP tests are respectively executed.
+If that option is not specified, the tests execute infinitely until the user types \fBCONTROL-C\fP (i.e. sends a SIGINT signal to them).
+.TP
+\fB\-q\fP
+Disables the printing of samples and sample group statistics (hence this overrides the \fB\-s\fP option), and only global statistics and histograms are being printed.
+The default behaviour, if this option is not specified, is to display every sample (measured minimum, average, and maximum latency) and optionally sample group statistics (if \fB\-s\fP is specified).
+.TP
+.B \-\-
+Indicates the end of options.
+This must be specified before \fIargs\fP arguments if the first argument starts with \fB\-\fP, so that it is not considered as an option.
+.PP
+.SH "RETURN CODES"
+.TP
+.B 0
+The tests executed successfully.
+.TP
+.B 1
+An invalid option was specified.
+.SH KNOWN BUGS
+\fBxeno\-test\fP allows to specify the \fB\-N\fP \fIlogprefix\fP option without the \fB\-L\fP option, in which case the log file name is: \fIlogprefix\fP\fB\-\fP.
+
+\fBlatency\fP and \fBklatency\fP allow to specify the \fB\-H\fP \fIcategories\fP and \fB\-B\fP \fIgranularity\fP options without the \fB\-h\fP option, in which case they have no effect.
+
+It is not possible to specify the period between samples (default is \fB1 second\fP) since this is not configurable for \fBklatency\fP, although this may be configured for \fBlatency\fP through this command's \fB\-p\fP option.
+.SH "SEE ALSO"
+.BR xeno\-load (1),
+.BR uname (1)
+.SH HISTORY
+2005-10-19 \- Written by Romain Lenglet <rlenglet@users.forge.objectweb.org>

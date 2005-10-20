@@ -1475,6 +1475,11 @@ AC_CONFIG_FILES([ \
 	include/nucleus/asm-ia64/GNUmakefile \
 	include/nucleus/asm-uvm/GNUmakefile \
 	doc/man/GNUmakefile \
+	doc/man/runinfo.man \
+	doc/man/xeno-config.man \
+	doc/man/xeno-info.man \
+	doc/man/xeno-load.man \
+	doc/man/xeno-test.man \
 	nucleus/GNUmakefile \
 	scripts/GNUmakefile \
 	scripts/xeno-config \

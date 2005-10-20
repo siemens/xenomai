@@ -517,7 +517,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/arch/generic/hal $(distdir)/config $(distdir)/config/autoconf $(distdir)/doc/docbook $(distdir)/doc/docbook/custom-stylesheets/xsl/html $(distdir)/doc/doxygen $(distdir)/scripts
+	$(mkdir_p) $(distdir)/arch/generic/hal $(distdir)/config $(distdir)/config/autoconf $(distdir)/doc/docbook $(distdir)/doc/docbook/custom-stylesheets/xsl/html $(distdir)/doc/doxygen $(distdir)/doc/man $(distdir)/scripts
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

@@ -78,10 +78,10 @@ verbose ()
     echo "   " --xeno-ldflags="\"$XENO_BASE_LDFLAGS\""
     echo "   " --posix-cflags="\"$XENO_POSIX_CFLAGS\""
     echo "   " --posix-ldflags="\"$XENO_POSIX_LDFLAGS\""
-    echo "   " --uvm-cflags="\"=$XENO_UVM_CFLAGS \""
-    echo "   " --uvm-ldflags="\"=$XENO_UVM_LDFLAGS\""
+    echo "   " --uvm-cflags="\"$XENO_UVM_CFLAGS \""
+    echo "   " --uvm-ldflags="\"$XENO_UVM_LDFLAGS\""
 
-    echo "   " --module-dir="\"=$XENO_MODULE_DIR\""
+    echo "   " --module-dir="\"$XENO_MODULE_DIR\""
     echo "   " --symbol-dir="\"$XENO_SYMBOL_DIR\""
     echo "   " --library-dir="\"$XENO_LIBRARY_DIR\""
     echo "   " --linux-dir="\"$XENO_LINUX_DIR\""
