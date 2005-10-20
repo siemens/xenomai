@@ -168,9 +168,20 @@ int rt_cond_create (RT_COND *cond,
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
-    if (name && *name)
+    if (name)
         {
-        err = rt_registry_enter(cond->name,cond,&cond->handle,&__cond_pnode);
+	RT_OBJECT_PROCNODE *pnode = &__cond_pnode;
+	
+	if (!*name)
+	    {
+	    /* Since this is an anonymous object (empty name on entry)
+	       from user-space, it gets registered under an unique
+	       internal name but is not exported through /proc. */
+	    xnobject_create_name(cond->name,sizeof(cond->name),(void*)cond);
+	    pnode = NULL;
+	    }
+	    
+        err = rt_registry_enter(cond->name,cond,&cond->handle,pnode);
 
         if (err)
             rt_cond_delete(cond);

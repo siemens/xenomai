@@ -91,6 +91,12 @@ static inline void xnobject_copy_name (char *dst,
 	*dst = '\0';
 }
 
+static inline int xnobject_create_name(
+		    char *dst, size_t n, void *obj)
+{
+    return snprintf(dst, n, "%p", obj);
+}
+
 #define minval(a,b) ((a) < (b) ? (a) : (b))
 #define maxval(a,b) ((a) > (b) ? (a) : (b))
 

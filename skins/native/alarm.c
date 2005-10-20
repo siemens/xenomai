@@ -208,9 +208,20 @@ int rt_alarm_create (RT_ALARM *alarm,
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
-    if (name && *name)
+    if (name)
         {
-        err = rt_registry_enter(alarm->name,alarm,&alarm->handle,&__alarm_pnode);
+	RT_OBJECT_PROCNODE *pnode = &__alarm_pnode;
+	
+	if (!*name)
+	    {
+	    /* Since this is an anonymous object (empty name on entry)
+	       from user-space, it gets registered under an unique
+	       internal name but is not exported through /proc. */
+	    xnobject_create_name(alarm->name,sizeof(alarm->name),(void*)alarm);
+	    pnode = NULL;
+	    }
+	    
+        err = rt_registry_enter(alarm->name,alarm,&alarm->handle,pnode);
 
         if (err)
             rt_alarm_delete(alarm);

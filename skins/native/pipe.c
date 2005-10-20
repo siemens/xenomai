@@ -257,9 +257,20 @@ int rt_pipe_create (RT_PIPE *pipe,
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
-    if (name && *name)
+    if (name)
         {
-        err = rt_registry_enter(pipe->name,pipe,&pipe->handle,&__pipe_pnode);
+	RT_OBJECT_PROCNODE *pnode = &__pipe_pnode;
+	
+	if (!*name)
+	    {
+	    /* Since this is an anonymous object (empty name on entry)
+	       from user-space, it gets registered under an unique
+	       internal name but is not exported through /proc. */
+	    xnobject_create_name(pipe->name,sizeof(pipe->name),(void*)pipe);
+	    pnode = NULL;
+	    }
+	    
+        err = rt_registry_enter(pipe->name,pipe,&pipe->handle,pnode);
 
         if (err)
             rt_pipe_delete(pipe);
