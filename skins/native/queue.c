@@ -281,9 +281,20 @@ int rt_queue_create (RT_QUEUE *q,
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
-    if (name && *name)
+    if (name)
         {
-        err = rt_registry_enter(q->name,q,&q->handle,&__queue_pnode);
+	RT_OBJECT_PROCNODE *pnode = &__queue_pnode;
+	
+	if (!*name)
+	    {
+	    /* Since this is an anonymous object (empty name on entry)
+	       from user-space, it gets registered under an unique
+	       internal name but is not exported through /proc. */
+	    xnobject_create_name(q->name,sizeof(q->name),(void*)q);
+	    pnode = NULL;
+	    }
+	    
+        err = rt_registry_enter(q->name,q,&q->handle,pnode);
 
         if (err)
             rt_queue_delete(q);

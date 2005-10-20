@@ -287,9 +287,20 @@ int rt_heap_create (RT_HEAP *heap,
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
-    if (name && *name)
+    if (name)
         {
-        err = rt_registry_enter(heap->name,heap,&heap->handle,&__heap_pnode);
+	RT_OBJECT_PROCNODE *pnode = &__heap_pnode;
+	
+	if (!*name)
+	    {
+	    /* Since this is an anonymous object (empty name on entry)
+	       from user-space, it gets registered under an unique
+	       internal name but is not exported through /proc. */
+	    xnobject_create_name(heap->name,sizeof(heap->name),(void*)heap);
+	    pnode = NULL;
+	    }
+
+        err = rt_registry_enter(heap->name,heap,&heap->handle,pnode);
 
         if (err)
             rt_heap_delete(heap);

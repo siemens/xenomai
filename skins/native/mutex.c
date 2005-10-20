@@ -181,9 +181,20 @@ int rt_mutex_create (RT_MUTEX *mutex,
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
-    if (name && *name)
+    if (name)
         {
-        err = rt_registry_enter(mutex->name,mutex,&mutex->handle,&__mutex_pnode);
+	RT_OBJECT_PROCNODE *pnode = &__mutex_pnode;
+	
+	if (!*name)
+	    {
+	    /* Since this is an anonymous object (empty name on entry)
+	       from user-space, it gets registered under an unique
+	       internal name but is not exported through /proc. */
+	    xnobject_create_name(mutex->name,sizeof(mutex->name),(void*)mutex);
+	    pnode = NULL;
+	    }
+	    
+        err = rt_registry_enter(mutex->name,mutex,&mutex->handle,pnode);
 
         if (err)
             rt_mutex_delete(mutex);
