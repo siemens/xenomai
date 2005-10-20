@@ -26,12 +26,6 @@
 int __rtdm_muxid;
 
 
-int rtdm_no_support(void)
-{
-    return -ENOSYS;
-}
-
-
 static int sys_rtdm_fdcount(struct task_struct *curr, struct pt_regs *regs)
 {
     return fd_count;

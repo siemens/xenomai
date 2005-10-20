@@ -30,7 +30,6 @@
 
 #include <rtdm/device.h>
 #include <rtdm/proc.h>
-#include <rtdm/syscall.h>
 
 
 #define SET_DEFAULT_OP(device, operation)                               \
@@ -66,6 +65,12 @@ DECLARE_MUTEX(nrt_dev_lock);
 #ifdef CONFIG_SMP
 xnlock_t             rt_dev_lock = XNARCH_LOCK_UNLOCKED;
 #endif /* CONFIG_SMP */
+
+
+int rtdm_no_support(void)
+{
+    return -ENOSYS;
+}
 
 
 static inline int get_name_hash(const char *str, int limit, int hashkey_mask)

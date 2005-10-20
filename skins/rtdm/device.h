@@ -40,6 +40,8 @@ extern struct list_head *rtdm_named_devices;
 extern struct list_head *rtdm_protocol_devices;
 
 
+int rtdm_no_support(void);
+
 struct rtdm_device *get_named_device(const char *name);
 struct rtdm_device *get_protocol_device(int protocol_family, int socket_type);
 

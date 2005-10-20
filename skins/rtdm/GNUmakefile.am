@@ -10,8 +10,11 @@ libmodule_SRC = \
 	device.c \
 	drvlib.c \
 	module.c \
-	proc.c \
-	syscall.c
+	proc.c
+
+if CONFIG_XENO_OPT_PERVASIVE
+libmodule_SRC += syscall.c
+endif
 
 include_HEADERS = \
 	rtdm.h \

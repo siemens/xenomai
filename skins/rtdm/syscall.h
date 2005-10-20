@@ -46,8 +46,6 @@ extern "C" {
 extern int __rtdm_muxid;
 
 
-int rtdm_no_support(void);
-
 int __init rtdm_syscall_init(void);
 
 static inline void rtdm_syscall_cleanup(void)

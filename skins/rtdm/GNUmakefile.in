@@ -37,6 +37,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
+@CONFIG_XENO_OPT_PERVASIVE_TRUE@am__append_1 = syscall.c
 subdir = skins/rtdm
 DIST_COMMON = $(include_HEADERS) $(noinst_HEADERS) \
 	$(srcdir)/GNUmakefile.am $(srcdir)/GNUmakefile.in
@@ -312,14 +313,8 @@ target_os = @target_os@
 target_vendor = @target_vendor@
 moduledir = $(DESTDIR)@XENO_MODULE_DIR@
 modext = @XENO_MODULE_EXT@
-libmodule_SRC = \
-	core.c \
-	device.c \
-	drvlib.c \
-	module.c \
-	proc.c \
-	syscall.c
-
+libmodule_SRC = core.c device.c drvlib.c module.c proc.c \
+	$(am__append_1)
 include_HEADERS = \
 	rtdm.h \
 	rtdm_driver.h \
