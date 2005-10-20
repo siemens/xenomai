@@ -335,7 +335,7 @@ int rtdm_task_sleep_until(__u64 wakeup_time)
  * - Kernel-based task
  * - User-space task (RT, non-RT)
  *
- * Rescheduling: always.
+ * Rescheduling: never.
  */
 void rtdm_task_busy_sleep(__u64 delay)
 {
