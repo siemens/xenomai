@@ -76,26 +76,16 @@ typedef atomic_flags_t xnflags_t;
 
 #define XNOBJECT_NAME_LEN 32
 
-static inline void xnobject_copy_name (char *dst,
-				       const char *src)
-{
-    if (src)
-	{
-	const char *rp = src;
-	char *wp = dst;
-	do
-	    *wp++ = *rp;
-	while (*rp && rp++ - src < XNOBJECT_NAME_LEN);
-	}
-    else
-	*dst = '\0';
-}
+#define xnobject_copy_name(dst, src) \
+do { \
+    if (src) \
+        strncpy(dst, src, XNOBJECT_NAME_LEN); \
+    else \
+        *dst = '\0'; \
+} while (0)
 
-static inline int xnobject_create_name(
-		    char *dst, size_t n, void *obj)
-{
-    return snprintf(dst, n, "%p", obj);
-}
+#define xnobject_create_name(dst, n, obj) \
+    snprintf(dst, n, "%p", obj)
 
 #define minval(a,b) ((a) < (b) ? (a) : (b))
 #define maxval(a,b) ((a) > (b) ? (a) : (b))
