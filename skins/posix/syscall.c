@@ -458,6 +458,23 @@ int __sem_wait (struct task_struct *curr, struct pt_regs *regs)
     return sem_wait(sem) == 0 ? 0 : -thread_get_errno();
 }
 
+int __sem_timedwait (struct task_struct *curr, struct pt_regs *regs)
+
+{
+    sem_t *sem = __sem_get_ptr(curr, (sem_t *)__xn_reg_arg1(regs));
+    struct timespec ts;
+
+    if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg2(regs),sizeof(ts)))
+	return -EFAULT;
+
+    __xn_copy_from_user(curr,
+			&ts,
+			(void __user *)__xn_reg_arg2(regs),
+			sizeof(ts));
+
+    return sem_timedwait(sem, &ts) == 0 ? : -thread_get_errno();
+}
+
 int __sem_trywait (struct task_struct *curr, struct pt_regs *regs)
 
 {
@@ -1577,8 +1594,9 @@ static xnsysent_t __systab[] = {
     [__pse51_sem_destroy] = { &__sem_destroy, __xn_exec_any },
     [__pse51_sem_post] = { &__sem_post, __xn_exec_any },
     [__pse51_sem_wait] = { &__sem_wait, __xn_exec_primary },
+    [__pse51_sem_timedwait] = { &__sem_timedwait, __xn_exec_primary },
     [__pse51_sem_trywait] = { &__sem_trywait, __xn_exec_primary },
-    [__pse51_sem_getvalue] = { &__sem_getvalue, __xn_exec_primary },
+    [__pse51_sem_getvalue] = { &__sem_getvalue, __xn_exec_any },
     [__pse51_sem_open] = { &__sem_open, __xn_exec_any },
     [__pse51_sem_close] = { &__sem_close, __xn_exec_any },
     [__pse51_sem_unlink] = { &__sem_unlink, __xn_exec_any },

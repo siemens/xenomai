@@ -92,6 +92,23 @@ int __wrap_sem_wait (sem_t *sem)
     return -1;
 }
 
+int __wrap_sem_timedwait (sem_t *sem, const struct timespec *ts)
+
+{
+    int err;
+
+    err = -XENOMAI_SKINCALL2(__pse51_muxid,
+			     __pse51_sem_timedwait,
+			     sem,
+                             ts);
+    if (!err)
+	return 0;
+
+    errno = err;
+
+    return -1;
+}
+
 int __wrap_sem_trywait (sem_t *sem)
 
 {
