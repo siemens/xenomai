@@ -40,9 +40,9 @@ int test_loops = 0;             /* outer loop count */
 #define WARMUP_TIME 1
 #define HISTOGRAM_CELLS 100
 int histogram_size = HISTOGRAM_CELLS;
-unsigned long *histogram_avg = NULL,
-    *histogram_max = NULL,
-    *histogram_min = NULL;
+long *histogram_avg = NULL,
+     *histogram_max = NULL,
+     *histogram_min = NULL;
 
 int do_histogram = 0, do_stats = 0, finished = 0;
 int bucketsize = 1000;  /* default = 1000ns, -B <size> to override */

@@ -12,9 +12,9 @@
 
 #define HISTOGRAM_CELLS 200
 int histogram_size = HISTOGRAM_CELLS;
-unsigned long *histogram_avg = NULL,
-              *histogram_max = NULL,
-              *histogram_min = NULL;
+long *histogram_avg = NULL,
+     *histogram_max = NULL,
+     *histogram_min = NULL;
 
 int do_histogram = 0, do_stats = 0, finished = 0;
 int bucketsize = 1000;		/* bucketsize */
