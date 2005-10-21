@@ -1,3 +1,13 @@
+2005-10-21  Jan Kiszka <jan.kiszka@web.de>
+
+	* skins/rtdm: Account for CONFIG_XENO_OPT_PERVASIVE.
+
+	* testsuite/*latency: Fix signedness issue with GCC 4.0.
+
+	* include/nucleus/types.h: Macro-ize users of string/formatting
+	routines so that this file can still be included with minimal
+	dependencies for grabbing types and constants.
+
 2005-10-21  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* configure.in: Pass CC variable to Kbuild in environment instead
