@@ -1,3 +1,8 @@
+2005-10-21  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* skins/posix/syscall.c (__sem_timedwait): wrap the sem_timedwait
+	call. Change the flags of sem_getvalue to __xn_exec_any.
+
 2005-10-21  Jan Kiszka <jan.kiszka@web.de>
 
 	* skins/rtdm: Account for CONFIG_XENO_OPT_PERVASIVE.

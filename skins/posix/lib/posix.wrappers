@@ -6,6 +6,7 @@ sched_yield
 sem_init
 sem_destroy
 sem_post
+sem_timedwait
 sem_wait
 sem_trywait
 sem_getvalue
