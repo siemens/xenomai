@@ -518,8 +518,8 @@
 00508     <a class="code" href="group__hal.html#ga50">rthal_irq_host_pend</a>(irq);
 00509 }
 00510 
-00511 <span class="keyword">static</span> <span class="keyword">inline</span> cpumask_t xnarch_set_irq_affinity (<span class="keywordtype">unsigned</span> irq,
-00512                                                  xnarch_cpumask_t affinity)
+00511 <span class="keyword">static</span> <span class="keyword">inline</span> xnarch_cpumask_t xnarch_set_irq_affinity (<span class="keywordtype">unsigned</span> irq,
+00512                                                         xnarch_cpumask_t affinity)
 00513 {
 00514     <span class="keywordflow">return</span> rthal_set_irq_affinity(irq,affinity);
 00515 }
@@ -572,7 +572,7 @@
 00562 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
 00563 
 00564 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_ASM_GENERIC_SYSTEM_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Oct 15 16:41:12 2005 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:15 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

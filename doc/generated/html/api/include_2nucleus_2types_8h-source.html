@@ -86,54 +86,50 @@
 00076 <span class="preprocessor"></span>
 00077 <span class="preprocessor">#define XNOBJECT_NAME_LEN 32</span>
 00078 <span class="preprocessor"></span>
-00079 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnobject_copy_name (<span class="keywordtype">char</span> *dst,
-00080                                        <span class="keyword">const</span> <span class="keywordtype">char</span> *src)
-00081 {
-00082     <span class="keywordflow">if</span> (src)
-00083         {
-00084         <span class="keyword">const</span> <span class="keywordtype">char</span> *rp = src;
-00085         <span class="keywordtype">char</span> *wp = dst;
-00086         <span class="keywordflow">do</span>
-00087             *wp++ = *rp;
-00088         <span class="keywordflow">while</span> (*rp &amp;&amp; rp++ - src &lt; XNOBJECT_NAME_LEN);
-00089         }
-00090     <span class="keywordflow">else</span>
-00091         *dst = <span class="charliteral">'\0'</span>;
-00092 }
-00093 
-00094 <span class="preprocessor">#define minval(a,b) ((a) &lt; (b) ? (a) : (b))</span>
-00095 <span class="preprocessor"></span><span class="preprocessor">#define maxval(a,b) ((a) &gt; (b) ? (a) : (b))</span>
-00096 <span class="preprocessor"></span>
-00097 <span class="preprocessor">#if !defined(__KERNEL__) &amp;&amp; !defined(BITS_PER_LONG)</span>
-00098 <span class="preprocessor"></span><span class="preprocessor">#include &lt;stdint.h&gt;</span>
-00099 <span class="preprocessor">#define BITS_PER_LONG __WORDSIZE</span>
-00100 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !__KERNEL__ */</span>
-00101 
-00102 <span class="preprocessor">#ifdef __cplusplus</span>
-00103 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-00104 <span class="preprocessor">#endif</span>
-00105 <span class="preprocessor"></span>
-00106 <span class="keyword">const</span> <span class="keywordtype">char</span> *xnpod_fatal_helper(<span class="keyword">const</span> <span class="keywordtype">char</span> *format, ...);
+00079 <span class="preprocessor">#define xnobject_copy_name(dst, src) \</span>
+00080 <span class="preprocessor">do { \</span>
+00081 <span class="preprocessor">    if (src) \</span>
+00082 <span class="preprocessor">        strncpy(dst, src, XNOBJECT_NAME_LEN); \</span>
+00083 <span class="preprocessor">    else \</span>
+00084 <span class="preprocessor">        *dst = '\0'; \</span>
+00085 <span class="preprocessor">} while (0)</span>
+00086 <span class="preprocessor"></span>
+00087 <span class="preprocessor">#define xnobject_create_name(dst, n, obj) \</span>
+00088 <span class="preprocessor">    snprintf(dst, n, "%p", obj)</span>
+00089 <span class="preprocessor"></span>
+00090 <span class="preprocessor">#define minval(a,b) ((a) &lt; (b) ? (a) : (b))</span>
+00091 <span class="preprocessor"></span><span class="preprocessor">#define maxval(a,b) ((a) &gt; (b) ? (a) : (b))</span>
+00092 <span class="preprocessor"></span>
+00093 <span class="preprocessor">#if !defined(__KERNEL__) &amp;&amp; !defined(BITS_PER_LONG)</span>
+00094 <span class="preprocessor"></span><span class="preprocessor">#include &lt;stdint.h&gt;</span>
+00095 <span class="preprocessor">#define BITS_PER_LONG __WORDSIZE</span>
+00096 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !__KERNEL__ */</span>
+00097 
+00098 <span class="preprocessor">#ifdef __cplusplus</span>
+00099 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+00100 <span class="preprocessor">#endif</span>
+00101 <span class="preprocessor"></span>
+00102 <span class="keyword">const</span> <span class="keywordtype">char</span> *xnpod_fatal_helper(<span class="keyword">const</span> <span class="keywordtype">char</span> *format, ...);
+00103 
+00104 <span class="keywordtype">int</span> __xeno_user_init(<span class="keywordtype">void</span>);
+00105 
+00106 <span class="keywordtype">void</span> __xeno_user_exit(<span class="keywordtype">void</span>);
 00107 
-00108 <span class="keywordtype">int</span> __xeno_user_init(<span class="keywordtype">void</span>);
-00109 
-00110 <span class="keywordtype">void</span> __xeno_user_exit(<span class="keywordtype">void</span>);
-00111 
-00112 <span class="preprocessor">#ifdef __cplusplus</span>
-00113 <span class="preprocessor"></span>}
-00114 <span class="preprocessor">#endif</span>
-00115 <span class="preprocessor"></span>
-00116 <span class="preprocessor">#define xnpod_fatal(format,args...) \</span>
-00117 <span class="preprocessor">do { \</span>
-00118 <span class="preprocessor">   const char *panic = xnpod_fatal_helper(format,##args); \</span>
-00119 <span class="preprocessor">   xnarch_halt(panic); \</span>
-00120 <span class="preprocessor">} while (0)</span>
-00121 <span class="preprocessor"></span>
-00122 <span class="preprocessor">#define root_thread_init __xeno_user_init</span>
-00123 <span class="preprocessor"></span><span class="preprocessor">#define root_thread_exit __xeno_user_exit</span>
-00124 <span class="preprocessor"></span>
-00125 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_TYPES_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Oct 15 16:41:13 2005 for Xenomai API by&nbsp;
+00108 <span class="preprocessor">#ifdef __cplusplus</span>
+00109 <span class="preprocessor"></span>}
+00110 <span class="preprocessor">#endif</span>
+00111 <span class="preprocessor"></span>
+00112 <span class="preprocessor">#define xnpod_fatal(format,args...) \</span>
+00113 <span class="preprocessor">do { \</span>
+00114 <span class="preprocessor">   const char *panic = xnpod_fatal_helper(format,##args); \</span>
+00115 <span class="preprocessor">   xnarch_halt(panic); \</span>
+00116 <span class="preprocessor">} while (0)</span>
+00117 <span class="preprocessor"></span>
+00118 <span class="preprocessor">#define root_thread_init __xeno_user_init</span>
+00119 <span class="preprocessor"></span><span class="preprocessor">#define root_thread_exit __xeno_user_exit</span>
+00120 <span class="preprocessor"></span>
+00121 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_TYPES_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:16 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

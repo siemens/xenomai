@@ -135,7 +135,7 @@ This service can be called from:<p>
 <ul>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine (but you should rather avoid this...)</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
 <p>
-Rescheduling: always.     </td>
+Rescheduling: never.     </td>
   </tr>
 </table>
 <a class="anchor" name="ga8" doxytag="drvlib.c::rtdm_task_current"></a><p>
@@ -609,7 +609,7 @@ This service can be called from:<p>
 Rescheduling: always, unless a timer overrun occured.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Oct 15 16:41:20 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:23 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
