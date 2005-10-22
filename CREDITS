@@ -77,6 +77,10 @@ N: Max Krasnyansky
 E: maxk@qualcomm.com
 D: Context-switch time determination test.
 
+N: Romain Lenglet
+E: <rlenglet@users.forge.objectweb.org>
+D: Man pages.
+
 N: Heikki Lindholm
 E: holindho@cs.helsinki.fi
 D: ppc64 port author and maintainer.
