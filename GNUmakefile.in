@@ -332,7 +332,7 @@ SUBDIRS = \
 	$(subdirs) \
 	config
 
-EXTRA_DIST = CREDITS makefile Kconfig README.INSTALL README.QUICKINSTALL TROUBLESHOOTING @XENO_MAYBE_SIMDIR@
+EXTRA_DIST = CREDITS makefile Kconfig README.FUSION2XENO README.INSTALL README.QUICKINSTALL TROUBLESHOOTING @XENO_MAYBE_SIMDIR@
 DISTCLEANFILES = .xeno_config .xeno_config.old .cfok .cfchanged
 DISTCHECK_CONFIGURE_FLAGS = --with-kconfig-file=$(top_srcdir)/arch/i386/xeno_config.distcheck
 all: all-recursive
