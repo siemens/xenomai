@@ -56,23 +56,21 @@
 00046 <span class="keyword">extern</span> <span class="keywordtype">int</span> __rtdm_muxid;
 00047 
 00048 
-00049 <span class="keywordtype">int</span> rtdm_no_support(<span class="keywordtype">void</span>);
+00049 <span class="keywordtype">int</span> __init rtdm_syscall_init(<span class="keywordtype">void</span>);
 00050 
-00051 <span class="keywordtype">int</span> __init rtdm_syscall_init(<span class="keywordtype">void</span>);
-00052 
-00053 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_syscall_cleanup(<span class="keywordtype">void</span>)
-00054 {
-00055     xnshadow_unregister_interface(__rtdm_muxid);
-00056 }
-00057 
-00058 <span class="preprocessor">#ifdef __cplusplus</span>
-00059 <span class="preprocessor"></span>}
-00060 <span class="preprocessor">#endif</span>
-00061 <span class="preprocessor"></span>
-00062 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
-00063 
-00064 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_SYSCALL_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Oct 15 16:41:12 2005 for Xenomai API by&nbsp;
+00051 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_syscall_cleanup(<span class="keywordtype">void</span>)
+00052 {
+00053     xnshadow_unregister_interface(__rtdm_muxid);
+00054 }
+00055 
+00056 <span class="preprocessor">#ifdef __cplusplus</span>
+00057 <span class="preprocessor"></span>}
+00058 <span class="preprocessor">#endif</span>
+00059 <span class="preprocessor"></span>
+00060 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
+00061 
+00062 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_SYSCALL_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:15 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

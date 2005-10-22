@@ -50,24 +50,26 @@
 00040 <span class="keyword">extern</span> <span class="keyword">struct </span>list_head *rtdm_protocol_devices;
 00041 
 00042 
-00043 <span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a> *get_named_device(<span class="keyword">const</span> <span class="keywordtype">char</span> *name);
-00044 <span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a> *get_protocol_device(<span class="keywordtype">int</span> <a class="code" href="structrtdm__device.html#o4">protocol_family</a>, <span class="keywordtype">int</span> <a class="code" href="structrtdm__device.html#o5">socket_type</a>);
-00045 
-00046 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_dereference_device(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device)
-00047 {
-00048     atomic_dec(&amp;device-&gt;<a class="code" href="structrtdm__device.html#o20">reserved</a>.refcount);
-00049 }
-00050 
-00051 <span class="keywordtype">int</span> __init rtdm_dev_init(<span class="keywordtype">void</span>);
+00043 <span class="keywordtype">int</span> rtdm_no_support(<span class="keywordtype">void</span>);
+00044 
+00045 <span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a> *get_named_device(<span class="keyword">const</span> <span class="keywordtype">char</span> *name);
+00046 <span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a> *get_protocol_device(<span class="keywordtype">int</span> <a class="code" href="structrtdm__device.html#o4">protocol_family</a>, <span class="keywordtype">int</span> <a class="code" href="structrtdm__device.html#o5">socket_type</a>);
+00047 
+00048 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_dereference_device(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device)
+00049 {
+00050     atomic_dec(&amp;device-&gt;<a class="code" href="structrtdm__device.html#o20">reserved</a>.refcount);
+00051 }
 00052 
-00053 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_dev_cleanup(<span class="keywordtype">void</span>)
-00054 {
-00055     kfree(rtdm_named_devices);
-00056     kfree(rtdm_protocol_devices);
-00057 }
-00058 
-00059 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DEVICE_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Oct 15 16:41:13 2005 for Xenomai API by&nbsp;
+00053 <span class="keywordtype">int</span> __init rtdm_dev_init(<span class="keywordtype">void</span>);
+00054 
+00055 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_dev_cleanup(<span class="keywordtype">void</span>)
+00056 {
+00057     kfree(rtdm_named_devices);
+00058     kfree(rtdm_protocol_devices);
+00059 }
+00060 
+00061 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DEVICE_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:16 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
