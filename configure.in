@@ -226,7 +226,7 @@ dnl
 AC_MSG_CHECKING([for interrupt pipeline extension])
 
 if test -r $XENO_LINUX_SRCDIR/include/linux/ipipe.h; then
-   v=`grep '^#define.*IPIPE_ARCH_STRING.*"' $XENO_LINUX_SRCDIR/include/asm-*/ipipe.h|sed -e 's,.*"\(.*\)"$,\1,'`
+   v=`grep '^#define.*IPIPE_ARCH_STRING.*"' $XENO_LINUX_SRCDIR/include/asm-$XENO_TARGET_ARCH/ipipe.h|sed -e 's,.*"\(.*\)"$,\1,'`
    AC_MSG_RESULT([Adeos newgen (I-pipe $v)])
    if test x${CONFIG_IPIPE} = x; then
       AC_MSG_ERROR([Please activate the Adeos support in $XENO_LINUX_DIR and rebuild your kernel])
@@ -235,7 +235,7 @@ if test -r $XENO_LINUX_SRCDIR/include/linux/ipipe.h; then
       AC_MSG_ERROR([Please re-patch your kernel with the Adeos support])
    fi
 elif test -r $XENO_LINUX_SRCDIR/include/linux/adeos.h; then
-   v=`grep '^#define.*ADEOS_ARCH_STRING.*"' $XENO_LINUX_SRCDIR/include/asm-*/adeos.h|sed -e 's,.*"\(.*\)"$,\1,'`
+   v=`grep '^#define.*ADEOS_ARCH_STRING.*"' $XENO_LINUX_SRCDIR/include/asm-$XENO_TARGET_ARCH/adeos.h|sed -e 's,.*"\(.*\)"$,\1,'`
    AC_MSG_RESULT([Adeos oldgen ($v)])
    if test x${CONFIG_ADEOS_CORE} = x; then
       AC_MSG_ERROR([Please activate the Adeos support in $XENO_LINUX_DIR and rebuild your kernel])
