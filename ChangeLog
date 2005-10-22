@@ -1,3 +1,8 @@
+2005-10-22  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* GNUmakefile.am (dist-hook): Remove the .svn directories from the
+	distributed files.
+
 2005-10-21  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* skins/posix/syscall.c (__sem_timedwait): wrap the sem_timedwait
