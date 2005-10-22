@@ -1,0 +1,61 @@
+
+MIGRATING FROM RTAI/fusion TO Xenomai
+-------------------------------------
+
+This files enumerates the changes required for migrating from the
+legacy RTAI/fusion to the Xenomai environment. As one would expect,
+those updates are almost always related to the locations where the
+name of the project is involved.
+
+Sections 1, 5 and 6 are of a particular concern for Makefiles, whilst
+section 2 will have an impact on source files. Changes exhibited by
+sections 1, 3, 4, 7 and 8 should be taken in account by scripts.
+
+In any case, there has been no change in the documented APIs.
+
+--
+
+1. Scripts and commands in <installdir>/bin
+
+   rtai-config -> xeno-config
+   rtai-test   -> xeno-test
+   rtai-load   -> xeno-load
+
+2. Header files in <installdir>/include
+
+   rtai_config.h    -> xeno_config.h
+   nucleus/fusion.h -> nucleus/core.h
+   rtai/*.h         -> native/*.h
+   compat/*.h       -> rtai/*.h
+
+3. Kernel modules in <installdir>/modules
+
+   modules/rtai_*.ko -> modules/xeno_*.ko
+
+4. Shared data files in <installdir>/share
+
+   share/doc/rtai-*         -> share/doc/xenomai-*
+   share/rtai/config-rtai-* -> share/xenomai/config-xenomai-*
+
+5. Libraries in <installdir>/lib
+
+   librtai.*   -> libnative.*
+   libcompat.* -> librtai.*
+
+6. Predefined preprocessor symbols
+
+   -D__FUSION__ -> -D__XENO__
+
+7. /proc information
+
+   /proc/rtai              -> /proc/xenomai
+   /proc/rtai/skins/compat -> /proc/xenomai/skins/rtai
+
+8. Manual configuration switches
+
+   --enable-fusion      -> --enable-pervasive
+   --enable-compat-skin -> --enable-rtai-skin
+
+
+
+rpm -- Sat Oct 22 17:43:03 CEST 2005
