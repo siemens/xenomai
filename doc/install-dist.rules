@@ -55,7 +55,7 @@ dist-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
             cd $$dir || exit 1; \
 	    for f in * ; do \
 		case $$f in \
-		    *~|CVS|[mM]akefile*|GNUmakefile*);; \
+		    *~|CVS|.svn|[mM]akefile*|GNUmakefile*);; \
 		    *) $(INSTALL_DATA) $$f $$abs_dest/$$f;; \
 	        esac; \
 	    done; cd $$abs_builddir; \

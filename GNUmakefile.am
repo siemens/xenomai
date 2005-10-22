@@ -79,7 +79,7 @@ install-exec-local: devices
 dist-hook:
 	$(MAKE) -C $(distdir)/config/kconfig \
 	-f Makefile.kconfig distclean srctree=$(distdir)
-	rm -fr `find $(distdir) -name CVS  -o -name '.#*' \
+	rm -fr `find $(distdir) -name '.svn' -o -name CVS  -o -name '.#*' \
 		-o -name '*~' -o -name autom4te.cache`
 	test -e $(srcdir)/doc || rm -rf $(distdir)/doc
 
