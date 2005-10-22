@@ -1,3 +1,7 @@
+2005-10-22  Philippe Gerum  <rpm@xenomai.org>
+
+	* arch/i386/patches: Upgrade to Adeos newgen 1.0-08.
+
 2005-10-22  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* GNUmakefile.am (dist-hook): Remove the .svn directories from the
