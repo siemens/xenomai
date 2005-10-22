@@ -598,7 +598,7 @@ install-dbx-htmldocs: $(DBX_ALL_HTML:%=$(HTML_DOCSDIR)%)
             { cd $$dir || exit 1; \
 	    for f in * ; do \
 	        case $$f in \
-		    *~|CVS|[mM]akefile*|GNUmakefile*);; \
+		    *~|CVS|.svn|[mM]akefile*|GNUmakefile*);; \
 		    *.html|*.htm) $(DBX_HTML_TRANSFORM) $$f > $$abs_dest/$$f;; \
 		    *) $(INSTALL_DATA) $$f $$abs_dest/$$f;; \
 	        esac; \
@@ -613,7 +613,7 @@ dist-dbx-htmldocs: $(DBX_ALL_HTML:%=$(HTML_DOCSDIR)%)
             { cd $$dir || exit 1; \
 	    for f in * ; do \
 		case $$f in \
-		    *~|CVS|[mM]akefile*|GNUmakefile*);; \
+		    *~|CVS|.svn|[mM]akefile*|GNUmakefile*);; \
 		    *.html|*.htm) $(DBX_HTML_TRANSFORM) $$f > $$abs_dest/$$f;; \
 		    *) $(INSTALL_DATA) $$f $$abs_dest/$$f;; \
 	        esac; \
