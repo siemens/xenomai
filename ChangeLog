@@ -1,3 +1,7 @@
+2005-10-25  Jan Kiszka <jan.kiszka@web.de>
+
+	* skins/rtdm/rtdm_driver.h: Abstract task priority increment.
+
 2005-10-22  Philippe Gerum  <rpm@xenomai.org>
 
 	* arch/i386/patches: Upgrade to Adeos newgen 1.0-08.
