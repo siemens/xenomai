@@ -315,8 +315,9 @@ static int __vm_thread_activate (struct task_struct *curr, struct pt_regs *regs)
 
     if (!testbits(next->status,XNSTARTED))
 	{
+	/* First, make sure it won't preempt us. */
+	xnpod_suspend_thread(next,XNSUSP,XN_INFINITE,NULL);
 	err = xnpod_start_thread(next,0,0,XNPOD_ALL_CPUS,NULL,NULL);
-	goto out;
 	}
 
     xnpod_resume_thread(next,XNSUSP);
