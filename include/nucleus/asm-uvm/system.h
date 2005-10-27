@@ -86,9 +86,6 @@ typedef unsigned long xnlock_t;
 #define XNARCH_THREAD_STACKSZ 0 /* Use the default POSIX value. */
 #define XNARCH_ROOT_STACKSZ   0	/* Only a placeholder -- no stack */
 
-#define xnarch_alloc_stack xnmalloc
-#define xnarch_free_stack  xnfree
-
 #define XNARCH_PROMPT "Xenomai/uvm: "
 #define xnarch_loginfo(fmt,args...)  fprintf(stdout, XNARCH_PROMPT fmt , ##args)
 #define xnarch_logwarn(fmt,args...)  fprintf(stderr, XNARCH_PROMPT fmt , ##args)
@@ -163,7 +160,7 @@ static inline unsigned long long xnarch_ulldiv (unsigned long long ull,
     return ull / uld;
 }
 
-#define xnarch_stack_size(tcb)    ((tcb)->stacksize)
+#define xnarch_stack_size(tcb)    0
 #define xnarch_fpu_ptr(tcb)       (NULL)
 #define xnarch_user_task(tcb)     (NULL)
 #define xnarch_user_pid(tcb)      0
@@ -181,11 +178,6 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
     jmp_buf rstenv;             /* Restart context info */
     pthread_t thid;
     xncompletion_t completion;
-
-    /* The following fields are not used by the Fusion skin, however
-       they are set by the nucleus. */
-    unsigned stacksize;		/* Aligned size of stack (bytes) */
-    unsigned long *stackbase;	/* Stack space */
 
 } xnarchtcb_t;
 
@@ -701,6 +693,9 @@ static inline void xnarch_init_tcb (xnarchtcb_t *tcb) {
     tcb->khandle = NULL;
 }
 
+#define xnarch_alloc_stack(tcb,stacksize) 0
+#define xnarch_free_stack(tcb)            do { } while(0)
+
 #endif /* XENO_THREAD_MODULE */
 
 extern xnsysinfo_t uvm_info;
@@ -755,9 +750,6 @@ static inline void xnarch_sysfree (void *chunk, u_long bytes) {
 #define xnarch_declare_cpuid  const int cpuid = 0
 #define xnarch_get_cpu(x)     do  { (x) = (x); } while(0)
 #define xnarch_put_cpu(x)     do { } while(0)
-
-#define xnarch_alloc_stack xnmalloc
-#define xnarch_free_stack  xnfree
 
 #ifdef __cplusplus
 }
