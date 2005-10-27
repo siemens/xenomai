@@ -29,13 +29,15 @@ int __xeno_skin_init(void)
 {
     int err = xncore_attach();
 
-    if (!err)
-	err = __uvm_syscall_init();
+    if (err)
+	return err;
+
+    err = __uvm_syscall_init();
 
     if (err)
         xnpod_shutdown(err);    
-
-    xnprintf("starting UVM services.\n");
+    else
+	xnprintf("starting UVM services.\n");
 
     return err;
 }
