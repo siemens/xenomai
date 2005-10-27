@@ -43,7 +43,13 @@ MODULE_DESCRIPTION("Xenomai nucleus");
 MODULE_AUTHOR("rpm@xenomai.org");
 MODULE_LICENSE("GPL");
 
+u_long sysheap_size_arg = XNPOD_HEAPSIZE / 1024;
+module_param_named(sysheap_size,sysheap_size_arg,ulong,0444);
+MODULE_PARM_DESC(sysheap_size,"System heap size (Kb)");
+
 xnqueue_t xnmod_glink_queue;
+
+u_long xnmod_sysheap_size;
 
 void xnmod_alloc_glinks (xnqueue_t *freehq)
 
@@ -723,6 +729,8 @@ int __init __xeno_sys_init (void)
 
 {
     int err;
+
+    xnmod_sysheap_size = module_param_value(sysheap_size_arg) * 1024;
 
     nkmsgbuf = xnarch_sysalloc(XNPOD_FATAL_BUFSZ);
 
