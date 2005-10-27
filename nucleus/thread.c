@@ -50,6 +50,8 @@ int xnthread_init (xnthread_t *thread,
 		   xnflags_t flags,
 		   unsigned stacksize)
 {
+    int err;
+
     xntimer_init(&thread->rtimer,&xnthread_timeout_handler,thread);
     xntimer_set_priority(&thread->rtimer,XNTIMER_HIPRIO);
     xntimer_init(&thread->ptimer,&xnthread_periodic_handler,thread);
@@ -60,20 +62,17 @@ int xnthread_init (xnthread_t *thread,
 
     xnarch_init_tcb(xnthread_archtcb(thread));
 
-    if (!(flags & XNSHADOW) && stacksize > 0)
-	{
-	/* Align stack on a word boundary */
-	stacksize &= ~(sizeof(int) - 1);
-
-	thread->tcb.stackbase = (unsigned long *)xnarch_alloc_stack(stacksize);
-
-	if (!thread->tcb.stackbase)
-	    return -ENOMEM;
-	}
+    if (flags & XNSHADOW)
+	stacksize = 0;
     else
-	thread->tcb.stackbase = NULL;
+	/* Align stack size on a natural word boundary */
+	stacksize &= ~(sizeof(long) - 1);
 
-    thread->tcb.stacksize = stacksize;
+    err = xnarch_alloc_stack(xnthread_archtcb(thread),stacksize);
+
+    if (err)
+	return err;
+
     thread->status = flags;
     thread->signals = 0;
     thread->asrmode = 0;
@@ -123,12 +122,9 @@ int xnthread_init (xnthread_t *thread,
 void xnthread_cleanup_tcb (xnthread_t *thread)
 
 {
-    xnarchtcb_t *tcb = xnthread_archtcb(thread);
-
     /* Does not wreck the TCB, only releases the held resources. */
 
-    if (tcb->stackbase)
-	xnarch_free_stack((void *) tcb->stackbase);
+    xnarch_free_stack(xnthread_archtcb(thread));
 
     thread->magic = 0;
 }

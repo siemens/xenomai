@@ -46,11 +46,12 @@
 #define xnarch_user_task(tcb)   ((tcb)->user_task)
 #define xnarch_user_pid(tcb)    ((tcb)->user_task->pid)
 
-void *xnarch_alloc_stack(unsigned long stacksize);
-void xnarch_free_stack(void *block);
-
 struct xnthread;
 struct task_struct;
+
+typedef struct xnarch_stack {
+    struct xnarch_stack *next;
+} xnarch_stack_t;
 
 typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
 
@@ -65,7 +66,7 @@ typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
                                      are needed. */
     
     unsigned stacksize;         /* Aligned size of stack (bytes) */
-    unsigned long *stackbase;   /* Stack space */
+    xnarch_stack_t *stackbase;   /* Stack space */
     unsigned long esp;          /* Saved ESP for kernel-based threads */
 
     /* User mode side */
@@ -77,6 +78,11 @@ typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
 #define xnarch_fpu_ptr(tcb)     ((tcb)->fpup)
 
 } xnarchtcb_t;
+
+int xnarch_alloc_stack(xnarchtcb_t *tcb,
+		       unsigned stacksize);
+
+void xnarch_free_stack(xnarchtcb_t *tcb);
 
 typedef struct xnarch_fltinfo {
 
@@ -513,10 +519,6 @@ void xnpod_schedule_handler(void);
 
 static rthal_trap_handler_t xnarch_old_trap_handler;
 
-typedef struct xnarch_stack {
-    struct xnarch_stack *next;
-} xnarch_stack_t;
-
 #ifdef CONFIG_SMP
 static xnlock_t xnarch_stacks_lock = XNARCH_LOCK_UNLOCKED;
 #endif
@@ -576,14 +578,21 @@ static inline xnarch_stack_t *stacksq_pop(xnarch_stack_t *q)
     return stack;
 }
 
-void *xnarch_alloc_stack(unsigned long stacksize)
+int xnarch_alloc_stack(xnarchtcb_t *tcb, unsigned stacksize)
 
 {
     xnarch_stack_t *stack;
     spl_t s;
 
     if (stacksize > KERNEL_STACK_SIZE)
-        return NULL;
+        return -EINVAL;
+
+    tcb->stacksize = stacksize;
+
+    if (stacksize == 0) {
+    	tcb->stackbase = NULL;
+	return 0;
+    }
 
     if (rthal_current_domain == rthal_root_domain &&
         atomic_read(&xnarch_free_stacks_count) <= CONFIG_XENO_HW_IA64_STACK_POOL)
@@ -594,7 +603,7 @@ void *xnarch_alloc_stack(unsigned long stacksize)
         if(stack)
             atomic_inc(&xnarch_allocated_stacks);
 
-        return stack;
+        goto done;
         }
 
     xnlock_get_irqsave(&xnarch_stacks_lock, s);
@@ -604,13 +613,17 @@ void *xnarch_alloc_stack(unsigned long stacksize)
     if (stack)
         atomic_dec(&xnarch_free_stacks_count);
 
-    return stack;
+ done:
+
+    tcb->stackbase = stack;
+
+    return stack ? 0 : -ENOMEM;
 }
 
-void xnarch_free_stack(void *block)
+void xnarch_free_stack(xnarchtcb_t *tcb)
 
 {
-    xnarch_stack_t *stack = (xnarch_stack_t *) block;
+    xnarch_stack_t *stack = tcb->stackbase;
     spl_t s;
 
     if (!stack)
@@ -620,10 +633,8 @@ void xnarch_free_stack(void *block)
         && atomic_read(&xnarch_free_stacks_count) > CONFIG_XENO_HW_IA64_STACK_POOL)
         {
         atomic_dec(&xnarch_allocated_stacks);
-            
-        free_pages((unsigned long) block,KERNEL_STACK_SIZE_ORDER);
-
-        return ;
+        free_pages((unsigned long) stack,KERNEL_STACK_SIZE_ORDER);
+        return;
         }
 
     xnlock_get_irqsave(&xnarch_stacks_lock, s);
@@ -638,12 +649,12 @@ static int xnarch_stack_pool_init(void)
 {
     while (atomic_read(&xnarch_free_stacks_count) < CONFIG_XENO_HW_IA64_STACK_POOL)
         {
-        void *stack = xnarch_alloc_stack(KERNEL_STACK_SIZE);
+	xnarchtcb_t tcb; /* Fake TCB only to allocate and recycle stacks. */
 
-        if(!stack)
+        if (xnarch_alloc_stack(&tcb,KERNEL_STACK_SIZE))
             return -ENOMEM;
 
-        xnarch_free_stack(stack);
+        xnarch_free_stack(&tcb);
         }
 
     return 0;

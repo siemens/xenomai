@@ -43,9 +43,6 @@
 #define xnarch_user_task(tcb)   ((tcb)->user_task)
 #define xnarch_user_pid(tcb)    ((tcb)->user_task->pid)
 
-#define xnarch_alloc_stack xnmalloc
-#define xnarch_free_stack  xnfree
-
 struct xnthread;
 struct task_struct;
 
@@ -371,6 +368,26 @@ static inline void xnarch_init_tcb (xnarchtcb_t *tcb) {
 #endif /* CONFIG_XENO_HW_FPU */
     /* Must be followed by xnarch_init_thread(). */
 }
+
+#define xnarch_alloc_stack(tcb,stacksize) \
+({ \
+    int __err; \
+    (tcb)->stacksize = stacksize; \
+    if (stacksize == 0) { \
+        (tcb)->stackbase = NULL; \
+	__err = 0; \
+    } else { \
+        (tcb)->stackbase = xnmalloc(stacksize); \
+        __err = (tcb)->stackbase ? 0 : -ENOMEM; \
+    } \
+    __err; \
+})
+
+#define xnarch_free_stack(tcb) \
+do { \
+      if ((tcb)->stackbase) \
+	  xnfree((tcb)->stackbase); \
+} while(0)
 
 #endif /* XENO_THREAD_MODULE */
 
