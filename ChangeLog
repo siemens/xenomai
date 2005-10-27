@@ -1,3 +1,25 @@
+2005-10-27  Philippe Gerum  <rpm@xenomai.org>
+
+	* arch/i386/patches: Upgrade to Adeos newgen 1.0-09.
+
+	* arch/ppc/patches: Upgrade to Adeos newgen 1.0-05.
+
+	* skins/uvm/module.c (__xeno_skin_init): Fix error path.
+
+	* nucleus/core.c (xncore_attach): Fix error return.
+
+	* nucleus/module.c: Make the system heap size dynamically
+	configurable.
+
+	* skins/uvm/syscall.c (__vm_thread_activate): Fix auto-start: we
+	_must_ suspend the previous thread including in that case.
+
+	* nucleus/thread.c, include/nucleus/asm-*/system.h: Move stack
+	allocation/deallocation to the arch-dep sections.
+
+	* nucleus/thread.c (xnthread_init): Align stack size on natural
+	long and fix comment.
+
 2005-10-25  Jan Kiszka <jan.kiszka@web.de>
 
 	* skins/rtdm/rtdm_driver.h: Abstract task priority increment.
