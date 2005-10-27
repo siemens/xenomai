@@ -3,4 +3,5 @@ config XENO_DRIVERS_16550A
 	bool "16550A UART driver"
 	default n
 	help
-	Real-time UART driver for 16550A compatible controllers.
+	Real-time UART driver for 16550A compatible controllers. See
+	drivers/16550A/README for more details.

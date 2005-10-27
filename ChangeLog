@@ -1,3 +1,9 @@
+2005-10-27  Jan Kiszka <jan.kiszka@web.de>
+
+	* drivers/16550A (rt_16550_ioctl): Have RTSER_RTIOC_EVENT_WAIT
+	auto-switch to RT when applicable and fix memory leak in error
+	path from RTSER_RTIOC_SET_CONFIG. Add README.
+	
 2005-10-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* arch/i386/patches: Upgrade to Adeos newgen 1.0-09.

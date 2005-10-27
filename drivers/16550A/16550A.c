@@ -556,18 +556,24 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
                 config = &config_buf;
             }
 
-            if (testbits(config->config_mask, RTSER_SET_TIMESTAMP_HISTORY) &&
-                testbits(config->timestamp_history,
-                         RTSER_RX_TIMESTAMP_HISTORY)) {
-                if (test_bit(RTDM_CREATED_IN_NRT, &context->context_flags)) {
-                    if (rtdm_in_rt_context())
-                        return -EPERM;
+            if (testbits(config->config_mask, RTSER_SET_TIMESTAMP_HISTORY)) {
+                if (test_bit(RTDM_CREATED_IN_NRT, &context->context_flags) &&
+                    rtdm_in_rt_context()) {
+                    /* already fail if we MAY allocate or release a non-RT
+                     * buffer in RT context */
+                    return -EPERM;
+                }
 
-                    hist_buf = kmalloc(IN_BUFFER_SIZE * sizeof(__u64),
-                                       GFP_KERNEL);
-                } else
-                    hist_buf =
-                        rtdm_malloc(IN_BUFFER_SIZE * sizeof(__u64));
+                if (testbits(config->timestamp_history,
+                             RTSER_RX_TIMESTAMP_HISTORY)) {
+                    if (test_bit(RTDM_CREATED_IN_NRT,
+                                 &context->context_flags))
+                        hist_buf = kmalloc(IN_BUFFER_SIZE * sizeof(__u64),
+                                           GFP_KERNEL);
+                    else
+                        hist_buf =
+                            rtdm_malloc(IN_BUFFER_SIZE * sizeof(__u64));
+                }
 
                 if (!hist_buf)
                     return -ENOMEM;
@@ -643,7 +649,7 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
             rtdm_toseq_t        timeout_seq;
 
             if (!rtdm_in_rt_context())
-                return -EPERM;
+                return -ENOSYS;
 
             /* only one waiter allowed, stop any further attempts here */
             if (test_and_set_bit(0, &ctx->ioc_event_lock))
@@ -1005,7 +1011,7 @@ static const struct rtdm_device __initdata device_tmpl = {
     device_class:       RTDM_CLASS_SERIAL,
     device_sub_class:   RTDM_SUBCLASS_16550A,
     driver_name:        "rt_16550A",
-    driver_version:     RTDM_DRIVER_VER(1, 1, 1),
+    driver_version:     RTDM_DRIVER_VER(1, 1, 2),
     peripheral_name:    "UART 16550A",
     provider_name:      "Jan Kiszka",
 };
