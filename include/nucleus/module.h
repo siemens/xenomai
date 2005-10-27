@@ -37,4 +37,6 @@ void xnmod_alloc_glinks(xnqueue_t *freehq);
 
 extern xnqueue_t xnmod_glink_queue;
 
+extern u_long xnmod_sysheap_size;
+
 #endif /* !_XENO_NUCLEUS_MODULE_H */
