@@ -20875,9 +20875,9 @@ echo "${ECHO_T}${XENO_ARCH_FLAGS:-none}" >&6
 
 echo "$as_me:$LINENO: checking for pervasive real-time support in user-space" >&5
 echo $ECHO_N "checking for pervasive real-time support in user-space... $ECHO_C" >&6
-# Check whether --enable-full or --disable-full was given.
-if test "${enable_full+set}" = set; then
-  enableval="$enable_full"
+# Check whether --enable-pervasive or --disable-pervasive was given.
+if test "${enable_pervasive+set}" = set; then
+  enableval="$enable_pervasive"
   case "$enableval" in
 	y | yes) CONFIG_XENO_OPT_PERVASIVE=y ;;
 	*) unset CONFIG_XENO_OPT_PERVASIVE ;;
