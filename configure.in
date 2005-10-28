@@ -3,9 +3,9 @@ AC_PREREQ(2.59)
 
 AC_INIT([Xenomai],m4_normalize(m4_include([config/version])),xenomai-help@gna.org)
 
-CONFIG_XENO_VERSION_MAJOR=`expr $PACKAGE_VERSION : '\([0-9]*\)'`
-CONFIG_XENO_VERSION_MINOR=`expr $PACKAGE_VERSION : '[0-9]*\.\([0-9]*\)'`
-CONFIG_XENO_REVISION_LEVEL=`expr $PACKAGE_VERSION : '[0-9]*\.[0-9]*\.\([0-9]*\)'`
+CONFIG_XENO_VERSION_MAJOR=`expr $PACKAGE_VERSION : '\([[0-9]]*\)'`
+CONFIG_XENO_VERSION_MINOR=`expr $PACKAGE_VERSION : '[[0-9]]*\.\([[0-9]]*\)'`
+CONFIG_XENO_REVISION_LEVEL=`expr $PACKAGE_VERSION : '[[0-9]]*\.[[0-9]]*\.\([[0-9]]*\)'`
 test "x$CONFIG_XENO_REVISION_LEVEL" = "x" && CONFIG_XENO_REVISION_LEVEL=0
 
 AC_CONFIG_HEADERS(include/xeno_config.h)
