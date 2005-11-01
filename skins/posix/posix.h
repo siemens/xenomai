@@ -43,7 +43,7 @@ typedef unsigned mqd_t;
 #include <nucleus/xenomai.h>
 
 #ifndef BEGIN_C_DECLS
-#if __cplusplus
+#ifdef __cplusplus
 #define BEGIN_C_DECLS extern "C" {
 #define END_C_DECLS   }
 #else
