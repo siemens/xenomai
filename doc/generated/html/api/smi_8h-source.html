@@ -15,7 +15,7 @@
 00028 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
 00029 <span class="preprocessor">#endif</span>
 00030 <span class="preprocessor"></span>
-00031 <span class="preprocessor">#if CONFIG_XENO_HW_SMI_DETECT &amp;&amp; CONFIG_XENO_HW_SMI_WORKAROUND</span>
+00031 <span class="preprocessor">#if defined(CONFIG_XENO_HW_SMI_DETECT) &amp;&amp; defined(CONFIG_XENO_HW_SMI_WORKAROUND)</span>
 00032 <span class="preprocessor"></span>
 00033 <span class="keywordtype">void</span> rthal_smi_disable(<span class="keywordtype">void</span>);
 00034 
@@ -27,9 +27,9 @@
 00040 <span class="preprocessor"></span>
 00041 <span class="preprocessor">#define rthal_smi_restore()</span>
 00042 <span class="preprocessor"></span>
-00043 <span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_HW_SMI_DETECT || !CONFIG_XENO_HW_SMI_WORKAROUND */</span>
+00043 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_HW_SMI_DETECT &amp;&amp; CONFIG_XENO_HW_SMI_WORKAROUND */</span>
 00044 
-00045 <span class="preprocessor">#if CONFIG_XENO_HW_SMI_DETECT</span>
+00045 <span class="preprocessor">#ifdef CONFIG_XENO_HW_SMI_DETECT</span>
 00046 <span class="preprocessor"></span>
 00047 <span class="keywordtype">void</span> rthal_smi_init(<span class="keywordtype">void</span>);
 00048 
@@ -37,12 +37,12 @@
 00050 
 00051 <span class="preprocessor">#define rthal_smi_init()</span>
 00052 <span class="preprocessor"></span>
-00053 <span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_HW_SMI_DETECT */</span>
+00053 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_HW_SMI_DETECT */</span>
 00054 
 00055 <span class="preprocessor">#ifdef __cplusplus</span>
 00056 <span class="preprocessor"></span>}
 00057 <span class="preprocessor">#endif</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:15 2005 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:14 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

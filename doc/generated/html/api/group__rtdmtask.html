@@ -27,6 +27,14 @@ Collaboration diagram for Task Services:<center><table><tr><td><img src="group__
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga14" doxytag="rtdmtask::RTDM_TASK_HIGHEST_PRIORITY"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_TASK_HIGHEST_PRIORITY</b>&nbsp;&nbsp;&nbsp;XNCORE_HIGH_PRIO</td></tr>
 
+<tr><td colspan="2"><br><h2>Task Priority Modification</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="changetaskprio"></a> Raise or lower task priorities by one level <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga15" doxytag="rtdmtask::RTDM_TASK_RAISE_PRIORITY"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_TASK_RAISE_PRIORITY</b>&nbsp;&nbsp;&nbsp;(+1)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga16" doxytag="rtdmtask::RTDM_TASK_LOWER_PRIORITY"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_TASK_LOWER_PRIORITY</b>&nbsp;&nbsp;&nbsp;(-1)</td></tr>
+
 <tr><td colspan="2"><br><h2>Typedefs</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">typedef void(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga1">rtdm_task_proc_t</a> )(void *arg)</td></tr>
 
@@ -609,7 +617,7 @@ This service can be called from:<p>
 Rescheduling: always, unless a timer overrun occured.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:23 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:33 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
