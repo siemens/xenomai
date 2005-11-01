@@ -41,6 +41,17 @@
 #define unlikely(x)	__builtin_expect(!!(x), 0)
 #endif /* !likely */
 
+#define read_cr4() ({ \
+	unsigned int __dummy; \
+	__asm__( \
+		"movl %%cr4,%0\n\t" \
+		:"=r" (__dummy)); \
+	__dummy; \
+})
+
+#define write_cr4(x) \
+	__asm__ __volatile__("movl %0,%%cr4": :"r" (x));
+
 #include <asm/atomic.h>
 
 struct __xeno_xchg_dummy { unsigned long a[100]; };
