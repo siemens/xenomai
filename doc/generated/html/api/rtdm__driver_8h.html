@@ -178,31 +178,39 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga14" doxytag="rtdm_driver.h::RTDM_TASK_HIGHEST_PRIORITY"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_TASK_HIGHEST_PRIORITY</b>&nbsp;&nbsp;&nbsp;XNCORE_HIGH_PRIO</td></tr>
 
+<tr><td colspan="2"><br><h2>Task Priority Modification</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="changetaskprio"></a> Raise or lower task priorities by one level <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga15" doxytag="rtdm_driver.h::RTDM_TASK_RAISE_PRIORITY"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_TASK_RAISE_PRIORITY</b>&nbsp;&nbsp;&nbsp;(+1)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga16" doxytag="rtdm_driver.h::RTDM_TASK_LOWER_PRIORITY"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_TASK_LOWER_PRIORITY</b>&nbsp;&nbsp;&nbsp;(-1)</td></tr>
+
 <tr><td colspan="2"><br><h2>Operation Handler Prototypes</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a52">rtdm_open_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int oflag)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a54">rtdm_open_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int oflag)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Named device open handler.  <a href="#a52"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a53">rtdm_socket_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int protocol)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Named device open handler.  <a href="#a54"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a55">rtdm_socket_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int protocol)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Socket creation handler for protocol devices.  <a href="#a53"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a54">rtdm_close_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Socket creation handler for protocol devices.  <a href="#a55"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a56">rtdm_close_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Close handler.  <a href="#a54"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a55">rtdm_ioctl_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int request, void *arg)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Close handler.  <a href="#a56"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a57">rtdm_ioctl_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int request, void *arg)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">IOCTL handler.  <a href="#a55"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef ssize_t(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a56">rtdm_read_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, void *buf, size_t nbyte)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">IOCTL handler.  <a href="#a57"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef ssize_t(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a58">rtdm_read_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, void *buf, size_t nbyte)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read handler.  <a href="#a56"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef ssize_t(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a57">rtdm_write_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, const void *buf, size_t nbyte)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read handler.  <a href="#a58"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef ssize_t(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a59">rtdm_write_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, const void *buf, size_t nbyte)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Write handler.  <a href="#a57"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef ssize_t(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a58">rtdm_recvmsg_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, struct msghdr *msg, int flags)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Write handler.  <a href="#a59"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef ssize_t(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a60">rtdm_recvmsg_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, struct msghdr *msg, int flags)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive message handler.  <a href="#a58"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef ssize_t(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a59">rtdm_sendmsg_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, const struct msghdr *msg, int flags)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive message handler.  <a href="#a60"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef ssize_t(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a61">rtdm_sendmsg_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, const struct msghdr *msg, int flags)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Transmit message handler.  <a href="#a59"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Transmit message handler.  <a href="#a61"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>Defines</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmirq.html#ga8">rtdm_irq_get_arg</a>(irq_handle, type)&nbsp;&nbsp;&nbsp;((type *)irq_handle-&gt;cookie)</td></tr>
 
@@ -268,13 +276,13 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release a mutex.  <a href="group__rtdmsync.html#ga19"></a><br></td></tr>
 </table>
 <hr><h2>Typedef Documentation</h2>
-<a class="anchor" name="a54" doxytag="rtdm_driver.h::rtdm_close_handler_t"></a><p>
+<a class="anchor" name="a56" doxytag="rtdm_driver.h::rtdm_close_handler_t"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">typedef int(* <a class="el" href="rtdm__driver_8h.html#a54">rtdm_close_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info)          </td>
+          <td class="md" nowrap valign="top">typedef int(* <a class="el" href="rtdm__driver_8h.html#a56">rtdm_close_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info)          </td>
         </tr>
       </table>
     </td>
@@ -301,13 +309,13 @@ Close handler.
     </td>
   </tr>
 </table>
-<a class="anchor" name="a55" doxytag="rtdm_driver.h::rtdm_ioctl_handler_t"></a><p>
+<a class="anchor" name="a57" doxytag="rtdm_driver.h::rtdm_ioctl_handler_t"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">typedef int(* <a class="el" href="rtdm__driver_8h.html#a55">rtdm_ioctl_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int request, void *arg)          </td>
+          <td class="md" nowrap valign="top">typedef int(* <a class="el" href="rtdm__driver_8h.html#a57">rtdm_ioctl_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int request, void *arg)          </td>
         </tr>
       </table>
     </td>
@@ -336,13 +344,13 @@ IOCTL handler.
     </td>
   </tr>
 </table>
-<a class="anchor" name="a52" doxytag="rtdm_driver.h::rtdm_open_handler_t"></a><p>
+<a class="anchor" name="a54" doxytag="rtdm_driver.h::rtdm_open_handler_t"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">typedef int(* <a class="el" href="rtdm__driver_8h.html#a52">rtdm_open_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int oflag)          </td>
+          <td class="md" nowrap valign="top">typedef int(* <a class="el" href="rtdm__driver_8h.html#a54">rtdm_open_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int oflag)          </td>
         </tr>
       </table>
     </td>
@@ -370,13 +378,13 @@ Named device open handler.
     </td>
   </tr>
 </table>
-<a class="anchor" name="a56" doxytag="rtdm_driver.h::rtdm_read_handler_t"></a><p>
+<a class="anchor" name="a58" doxytag="rtdm_driver.h::rtdm_read_handler_t"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">typedef ssize_t(* <a class="el" href="rtdm__driver_8h.html#a56">rtdm_read_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, void *buf, size_t nbyte)          </td>
+          <td class="md" nowrap valign="top">typedef ssize_t(* <a class="el" href="rtdm__driver_8h.html#a58">rtdm_read_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, void *buf, size_t nbyte)          </td>
         </tr>
       </table>
     </td>
@@ -405,13 +413,13 @@ Read handler.
     </td>
   </tr>
 </table>
-<a class="anchor" name="a58" doxytag="rtdm_driver.h::rtdm_recvmsg_handler_t"></a><p>
+<a class="anchor" name="a60" doxytag="rtdm_driver.h::rtdm_recvmsg_handler_t"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">typedef ssize_t(* <a class="el" href="rtdm__driver_8h.html#a58">rtdm_recvmsg_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, struct msghdr *msg, int flags)          </td>
+          <td class="md" nowrap valign="top">typedef ssize_t(* <a class="el" href="rtdm__driver_8h.html#a60">rtdm_recvmsg_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, struct msghdr *msg, int flags)          </td>
         </tr>
       </table>
     </td>
@@ -440,13 +448,13 @@ Receive message handler.
     </td>
   </tr>
 </table>
-<a class="anchor" name="a59" doxytag="rtdm_driver.h::rtdm_sendmsg_handler_t"></a><p>
+<a class="anchor" name="a61" doxytag="rtdm_driver.h::rtdm_sendmsg_handler_t"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">typedef ssize_t(* <a class="el" href="rtdm__driver_8h.html#a59">rtdm_sendmsg_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, const struct msghdr *msg, int flags)          </td>
+          <td class="md" nowrap valign="top">typedef ssize_t(* <a class="el" href="rtdm__driver_8h.html#a61">rtdm_sendmsg_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, const struct msghdr *msg, int flags)          </td>
         </tr>
       </table>
     </td>
@@ -475,13 +483,13 @@ Transmit message handler.
     </td>
   </tr>
 </table>
-<a class="anchor" name="a53" doxytag="rtdm_driver.h::rtdm_socket_handler_t"></a><p>
+<a class="anchor" name="a55" doxytag="rtdm_driver.h::rtdm_socket_handler_t"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">typedef int(* <a class="el" href="rtdm__driver_8h.html#a53">rtdm_socket_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int protocol)          </td>
+          <td class="md" nowrap valign="top">typedef int(* <a class="el" href="rtdm__driver_8h.html#a55">rtdm_socket_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int protocol)          </td>
         </tr>
       </table>
     </td>
@@ -509,13 +517,13 @@ Socket creation handler for protocol devices.
     </td>
   </tr>
 </table>
-<a class="anchor" name="a57" doxytag="rtdm_driver.h::rtdm_write_handler_t"></a><p>
+<a class="anchor" name="a59" doxytag="rtdm_driver.h::rtdm_write_handler_t"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">typedef ssize_t(* <a class="el" href="rtdm__driver_8h.html#a57">rtdm_write_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, const void *buf, size_t nbyte)          </td>
+          <td class="md" nowrap valign="top">typedef ssize_t(* <a class="el" href="rtdm__driver_8h.html#a59">rtdm_write_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, const void *buf, size_t nbyte)          </td>
         </tr>
       </table>
     </td>
@@ -544,7 +552,7 @@ Write handler.
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:16 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:16 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
