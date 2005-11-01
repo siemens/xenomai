@@ -1,3 +1,11 @@
+2005-11-01  Philippe Gerum  <rpm@xenomai.org>
+
+	* arch/i386/patches, arch/ppc/patches: Upgrade base Adeos port to
+	2.6.14.
+
+	* arch/i386/hal/smi.h, skins/posix/posix.h, skins/rtdm/drvlib.c,
+	skins/rtdm/core.c: Fix #if -> #ifdef issues.
+
 2005-10-30  Jan Kiszka <jan.kiszka@web.de>
 
 	* drivers/16550A/README: Clarify documentation.
@@ -37,6 +45,10 @@
 2005-10-25  Jan Kiszka <jan.kiszka@web.de>
 
 	* skins/rtdm/rtdm_driver.h: Abstract task priority increment.
+
+2005-10-23  Philippe Gerum  <rpm@xenomai.org>
+
+ 	* RELEASE: Xenomai 2.0 (Surfing With The Alien)
 
 2005-10-22  Philippe Gerum  <rpm@xenomai.org>
 
