@@ -443,7 +443,7 @@ int __init rtdm_core_init(void)
 }
 
 
-#if DOXYGEN_CPP /* Only used for doxygen doc generation */
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 
 /**
  * @brief Increment context reference counter

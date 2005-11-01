@@ -28,7 +28,7 @@
 extern "C" {
 #endif
 
-#if CONFIG_XENO_HW_SMI_DETECT && CONFIG_XENO_HW_SMI_WORKAROUND
+#if defined(CONFIG_XENO_HW_SMI_DETECT) && defined(CONFIG_XENO_HW_SMI_WORKAROUND)
 
 void rthal_smi_disable(void);
 
@@ -40,9 +40,9 @@ void rthal_smi_restore(void);
 
 #define rthal_smi_restore()
 
-#endif /* !CONFIG_XENO_HW_SMI_DETECT || !CONFIG_XENO_HW_SMI_WORKAROUND */
+#endif /* CONFIG_XENO_HW_SMI_DETECT && CONFIG_XENO_HW_SMI_WORKAROUND */
 
-#if CONFIG_XENO_HW_SMI_DETECT
+#ifdef CONFIG_XENO_HW_SMI_DETECT
 
 void rthal_smi_init(void);
 
@@ -50,7 +50,7 @@ void rthal_smi_init(void);
 
 #define rthal_smi_init()
 
-#endif /* !CONFIG_XENO_HW_SMI_DETECT */
+#endif /* CONFIG_XENO_HW_SMI_DETECT */
 
 #ifdef __cplusplus
 }
