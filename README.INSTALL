@@ -1,0 +1,87 @@
+Installing Xenomai
+==================
+
+0. Introduction.
+----------------
+
+Starting with version 2.1, Xenomai follows a split source model,
+decoupling the kernel space support from the user-space libraries used
+in accessing the former.
+
+To this end, kernel and user-space Xenomai components are respectively
+available under the ksrc/ and src/ sub-trees.
+
+The ksrc/ sub-tree providing the kernel space support is seen as a
+built-in extension of the Linux kernel, and no more as a collection of
+separate out-of-tree modules. A direct benefit of such approach is the
+ability to build the Xenomai real-time subsystem statically into the
+target kernel, or as loadable modules as with earlier versions.
+Additionally, the usual Linux kernel configuration process will be
+normally used to define the various settings for the Xenomai kernel
+components.
+
+The src/ sub-tree contains the various user-space libraries and
+commands provided by the Xenomai framework.
+
+1. Installation steps
+---------------------
+
+1.1 Preparing the target kernel
+-------------------------------
+
+Xenomai provides a real-time sub-system seamlessly integrated to
+Linux, therefore the first step is to build it as part of the target
+kernel. To this end, scripts/prepare-kernel.sh is a shell script which
+sets up the target kernel properly. The syntax is as follows:
+
+$ scripts/prepare-kernel.sh --linux=<linux-srctree>
+[--adeos=<adeos-patch>] [--arch=<target-arch>]
+
+    --linux specifies the path of the target kernel source tree. Such
+    kernel tree being configured or not makes no different and is
+    valid either way.
+
+    --adeos specifies the path of the Adeos patch to apply against the
+    kernel tree. This parameter can be omitted if Adeos has already
+    been patched in. In any case, the script will not try to apply it
+    again whenever a former patch is detected.
+
+    --arch tells the script about the target architecture. If
+    unspecified, the build system architecture is used.
+
+For instance, the following command would prepare the Linux tree
+located at /usr/src/linux-2.6.14-ipipe in order to include the Xenomai
+support:
+
+$ cd xenomai-2.1
+$ scripts/prepare-kernel.sh
+  --linux=/usr/src/linux-2.6.14-ipipe
+  --adeos=/tmp/adeos-ipipe-2.6.14-i386-1.0-09.patch
+  --arch=i386
+
+Note: The script will infere the location of the Xenomai kernel code
+from its own location within the Xenomai source tree. In other words,
+if /usr/src/xenomai-2.0/script/prepare-kernel.sh is executing, then
+Xenomai's kernel support available from /usr/src/xenomai-2.0/ksrc will
+be bound to the target kernel.
+
+1.2 Configuring and building the target kernel
+----------------------------------------------
+
+Once the target kernel has been prepared, all Xenomai configuration
+options are available from the "Real-time subsystem" toplevel menu.
+
+Once configured, the kernel should be built as usual.
+
+2. Configure script options
+---------------------------
+
+The options listed below only affect the libraries compiled as part of
+Xenomai's user-space support, and in any case, never impact the
+kernel-level support.
+
+--enable-uvm            Build UVM support (default: enabled)
+--enable-debug          Enable debug symbols in programs (default: disabled)
+--enable-smp            Enable SMP support (default: disabled)
+--enable-x86-sep        Enable x86 SEP instructions for issuing syscalls (default: disabled)
+--enable-x86-tsc        Enable x86 TSC for timings (default: disabled)

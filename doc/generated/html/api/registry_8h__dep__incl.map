@@ -1,0 +1,14 @@
+base referer
+rect $alarm_8c.html 214,8 353,32
+rect $cond_8c.html 217,56 350,80
+rect $event_8c.html 214,104 353,128
+rect $skins_2native_2heap_8c.html 216,152 352,176
+rect $skins_2native_2intr_8c.html 221,200 346,224
+rect $skins_2native_2module_8c.html 209,248 358,272
+rect $mutex_8c.html 213,296 354,320
+rect $skins_2native_2pipe_8c.html 218,344 349,368
+rect $queue_8c.html 213,392 354,416
+rect $registry_8c.html 209,440 358,464
+rect $sem_8c.html 218,488 349,512
+rect $native_2syscall_8c.html 210,536 357,560
+rect $task_8c.html 218,584 349,608

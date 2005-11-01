@@ -1,0 +1,6 @@
+config XENO_DRIVERS_16550A
+	depends on XENO_SKIN_RTDM
+	tristate "16550A UART driver"
+	default n
+	help
+	Real-time UART driver for 16550A compatible controllers.

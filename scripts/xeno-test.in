@@ -1,0 +1,233 @@
+#!/bin/bash
+
+myusage() {
+    cat >&1 <<EOF
+xeno-test [options]
+  runs latency and klatency tests
+  -w <number>	spawn N workloads (dd if=/dev/zero of=/dev/null) default=1
+  -d <device>	used as alternate src in workload (dd if=$device ..)
+		The device must be mounted, and (unfortunately) cannot
+		be an NFS mount a real device (ex /dev/hda) will
+		generate interrupts
+  -W <script>   script is an alternate workload.  If you need to pass args
+		to your program, use quotes.  The program must clean
+		up its children when it gets a SIGTERM
+  -p <cmd>	cmd is run before, between and after latency, klatency tests
+		(forex: 'ntpdate -b <host>' or 'ntpq -p')
+  -L	     	writes to logfile (default "test-`uname -r`") (via script)
+  -N <name>	same as -L, but prepend "$name-" (without -L, logname="$name-")
+		prepending allows you to give a full path.
+
+  # following options are passed thru to latency, klatency
+  -s	print statistics of sampled data (default on)
+  -h	print histogram of sampled data (default on)
+  -q	quiet, dont print 1 sec sampled data (default on, off if !-T)
+  -T <sec test>	(default: 10 sec, for demo purposes)
+  -l <data/header lines>
+  -H <bucketcount>
+  -B <bucketsize ns>
+EOF
+    # NB: many defaults are coded in latency, klatency
+    exit 1
+}
+
+#set -e	# ctrl-C's should end everything, not just subshells. 
+	# commenting it out may help to debug stuff.
+
+set -o notify	# see dd's finish immediately.(or not!)
+
+loudly() {
+    [ "$1" = "" ] && return
+    # run task after announcing it
+    echo;  date;
+    echo running: $*
+    $* &
+    wait $!
+}
+
+# defaults for cpu workload 
+device=/dev/zero	
+typeset -a dd_jobs
+dd_jobs=()
+
+# used in generate-loads
+mkload() { exec dd if=$device of=/dev/null $* ; }
+
+generate_loads() {
+    local jobsct=$1; shift;
+
+    reaper() { echo something died $*; }
+    trap reaper CHLD
+    trap cleanup_load EXIT	# under all exit conditions
+    
+    for (( ; $jobsct ; jobsct-- )) ; do
+	mkload &
+	dd_jobs[${#dd_jobs[*]}]=$!
+    done;
+
+    echo dd workload started, pids ${dd_jobs[*]}
+}
+
+cleanup_load() {
+    # kill the workload
+    echo killing workload pids ${dd_jobs[*]}
+    kill ${dd_jobs[*]};
+    unset dd_jobs;
+}
+
+boxinfo() {
+    # static info, show once
+    loudly cat /proc/cpuinfo | egrep -v 'bug|wp'
+    loudly cat /proc/meminfo
+    [ -d /proc/adeos ] && for f in /proc/adeos/*; do loudly cat $f; done
+    [ -d /proc/ipipe ] && for f in /proc/ipipe/*; do loudly cat $f; done
+}
+
+boxstatus() {
+    # get dynamic status (bogomips, cpuMhz change with CPU_FREQ)
+    loudly cat /proc/interrupts
+    loudly cat /proc/loadavg
+    [ -n "$prepost" ] && loudly $prepost
+    loudly top -bn1c | head -$(( 12 + $workload ))
+}
+
+
+run_w_load() {
+    local opts="$*";
+    [ "$opts"  = '' ] && opts='-q -s -T 10'
+
+    boxinfo
+    loudly generate_loads $workload
+    boxstatus
+    (
+	cd ../testsuite/latency
+	#loudly ./run -- -T 10 -s -l 5
+	loudly ./run -- -h $opts
+
+	[ -n "$prepost" ] && loudly $prepost
+	
+	cd ../klatency
+	#loudly ./run -- -T 10 -s -l 5
+	loudly ./run -- -h $opts;
+    )
+    boxstatus
+}
+
+
+
+if [ -f /proc/config.gz ] ; then
+
+    # check/warn on problem configs
+    
+    eval `zgrep CONFIG_CPU_FREQ /proc/config.gz`;
+    if [ ! -z "$CONFIG_CPU_FREQ" ] ; then
+	echo "warning: CONFIG_CPU_FREQ=$CONFIG_CPU_FREQ may be problematic"
+    fi
+
+fi
+
+workload=1	# default = 1 job
+
+# *pass get all legit options, except -N, -L
+pass=		# pass thru to latency, klatency
+loadpass=	# pass thru to subshell, not to actual tests
+
+# if both empty means no logging
+logfile=	#
+logprefix=
+prepost=	# command to run pre, and post test (ex ntpq -p)
+
+while getopts 'd:shqT:l:H:B:uLN:w:W:p:' FOO ; do
+
+    case $FOO in
+	s|h|q)
+	    pass="$pass -$FOO" ;;
+	T|l|H|B)
+	    pass="$pass -$FOO $OPTARG" ;;
+	d) 
+	    device=$OPTARG    
+	    echo creating workload using dd if=$device
+	    if !(mount | grep -q ^$device) ; then
+		echo d option must be a block device, ie one of:
+		mount | cut -d\  -f1 | egrep -ve 'sysfs|proc|depts'
+		exit;
+	    fi
+	    loadpass="$loadpass -d $device"
+	    ;;
+	L)
+	    logfile=test-`uname -r`  ;;
+	N)
+	    logprefix=$OPTARG ;;
+	w)
+	    workload=$OPTARG
+	    loadpass="$loadpass -w $OPTARG"  ;;
+	W)
+	    altwork=$OPTARG
+	    loadpass="$loadpass -W '$OPTARG'"  ;;
+	p)
+	    prepost=$OPTARG 
+	    loadpass="$loadpass -p '$OPTARG'"  ;;
+	?)
+	    myusage ;;
+    esac
+done
+
+# all args have been handled, and split into 2 passthrus
+shift $(($OPTIND - 1));
+
+
+if [ "$logprefix$logfile" != "" ]; then
+    # restart inside a script invocation, passing all
+    date=`date +%y%m%d.%H%M%S`
+    script -c "./xeno-test $loadpass $pass $*" "$logprefix$logfile-$date"
+else
+    if [ "$altwork" != "" ]; then
+	mkload() { exec $altwork; }
+    fi
+    echo running $0 $pass $*
+    run_w_load $pass $*
+fi
+
+exit;
+
+#################################################
+
+DONE:
+
+1. added -W <program invocation>
+
+The program should generate a load that is appropriately demanding
+upon cpu, interrupts, devices, etc.
+
+It should also work when invoked more than once, and scale the loads
+reasonably linearly (since the -w will count by N).
+
+Also, if it spawns subtasks, it should end them all when it gets SIGTERM.
+
+
+2. added timestamp to the output filename to avoid overwriting
+   previous results.
+
+3. added -p 'command', which runs command before, between, and after
+   the latency and klatency tests.
+
+
+TODO:
+
+1. get workload child reaper to work when child is killed from
+separate window, or when it finishes.  Forex, 'dd if=/dev/hda ...'
+will eventually finish, and should be restarted to keep the load up.
+Figure out why killall didnt work properly.
+
+2. Much more testing.  Heres a weak start..
+
+#!/bin/bash
+PATH=.:$PATH
+xeno-test -L
+xeno-test -N foo -T 18 -l 6 -s
+xeno-test -L -N foo1-
+xeno-test -N foo0 -w0 -l 5 -T 30 -h
+xeno-test -L -N foo4- -w4
+xeno-test -L -N foo4W- -w4 -W 'dd if=/dev/hda1 of=/dev/null'
+
+3.

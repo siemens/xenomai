@@ -1,0 +1,7 @@
+config XENO_SKIN_VXWORKS
+	depends on XENO_OPT_NUCLEUS
+	tristate "VxWorks emulator"
+	default n
+	help
+
+	This API skin emulates WindRiver's VxWorks operating system.

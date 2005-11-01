@@ -1,0 +1,389 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_PREREQ(2.59)
+
+AC_INIT([Xenomai],m4_normalize(m4_include([config/version])),xenomai-help@gna.org)
+
+CONFIG_XENO_VERSION_MAJOR=`expr $PACKAGE_VERSION : '\([[0-9]]*\)'`
+CONFIG_XENO_VERSION_MINOR=`expr $PACKAGE_VERSION : '[[0-9]]*\.\([[0-9]]*\)'`
+CONFIG_XENO_REVISION_LEVEL=`expr $PACKAGE_VERSION : '[[0-9]]*\.[[0-9]]*\.\([[0-9]]*\)'`
+test "x$CONFIG_XENO_REVISION_LEVEL" = "x" && CONFIG_XENO_REVISION_LEVEL=0
+
+AC_CONFIG_HEADERS(src/include/xeno_config.h)
+AC_CONFIG_AUX_DIR(config)
+AC_CONFIG_SRCDIR(src/skins/native/task.c)
+AC_PREFIX_DEFAULT(/usr/xenomai)
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+AC_PROG_INSTALL
+
+AC_ARG_WITH(cc,
+    AS_HELP_STRING([--with-cc=compiler],[use specific C compiler]),
+    [
+	case "$withval" in
+	"" | y | ye | yes | n | no)
+	    AC_MSG_ERROR([You must supply an argument to --with-cc.])
+	  ;;
+	esac
+	CC="$withval"
+    ])
+AC_PROG_CC
+CFLAGS=""
+
+AC_PROG_CC_FOR_BUILD
+
+AC_DEFINE_UNQUOTED(CONFIG_XENO_BUILD_STRING,"$build",[Build system alias])
+XENO_BUILD_STRING="$build"
+AC_DEFINE_UNQUOTED(CONFIG_XENO_HOST_STRING,"$host",[Host system alias])
+XENO_HOST_STRING="$host"
+AC_DEFINE_UNQUOTED(CONFIG_XENO_COMPILER,"`$CC -v 2>&1 | tail -n 1`",[Compiler])
+
+AM_INIT_AUTOMAKE([foreign no-exeext dist-bzip2])
+AM_MAINTAINER_MODE
+AC_PROG_LIBTOOL
+AM_PROG_AS
+AM_PROG_LEX
+
+AC_MSG_CHECKING([for target architecture])
+
+case "$host" in
+ i*86*-*)
+	XENO_TARGET_ARCH=i386
+        ;;
+ powerpc-*|ppc-*)
+	XENO_TARGET_ARCH=powerpc
+        ;;
+ powerpc64-*|ppc64-*)
+	XENO_TARGET_ARCH=powerpc
+        ;;
+ ia64-*)
+	XENO_TARGET_ARCH=ia64
+        ;;
+ *) echo ""
+   echo "*******************************************"
+   echo "Still unsupported target: $host -- Sorry."
+   echo "*******************************************"
+   echo ""
+   exit 1;;
+esac
+
+AC_MSG_RESULT([$XENO_TARGET_ARCH])
+
+dnl
+dnl Parse options
+dnl
+
+dnl UVM support (default: on)
+
+CONFIG_XENO_UVM=y
+AC_MSG_CHECKING(for UVM support)
+AC_ARG_ENABLE(uvm,
+	AS_HELP_STRING([--enable-uvm], [Build UVM support]),
+	[case "$enableval" in
+	y | yes) CONFIG_XENO_UVM=y ;;
+	*) unset CONFIG_XENO_UVM ;;
+	esac])
+AC_MSG_RESULT(${CONFIG_XENO_UVM:-no})
+
+dnl Debug build (default: off)
+
+debug_symbols=
+AC_MSG_CHECKING(for debug symbols)
+AC_ARG_ENABLE(debug,
+	AS_HELP_STRING([--enable-debug], [Enable debug symbols in programs]),
+	[case "$enableval" in
+	y | yes) debug_symbols=y ;;
+	*) unset debug_symbols ;;
+	esac])
+AC_MSG_RESULT(${debug_symbols:-no})
+
+dnl SMP support (default: off)
+
+CONFIG_SMP=
+AC_MSG_CHECKING(for SMP support)
+AC_ARG_ENABLE(smp,
+	AS_HELP_STRING([--enable-smp], [Enable SMP support]),
+	[case "$enableval" in
+	y | yes) CONFIG_SMP=y ;;
+	*) unset CONFIG_SMP ;;
+	esac])
+AC_MSG_RESULT(${CONFIG_SMP:-no})
+
+dnl SEP enabling and TSC for x86 (default: off)
+
+CONFIG_XENO_X86_SEP=
+CONFIG_X86_TSC=
+
+if test $XENO_TARGET_ARCH = i386; then
+  AC_MSG_CHECKING(for x86 SEP instructions in syscalls)
+  AC_ARG_ENABLE(x86-sep,
+	AS_HELP_STRING([--enable-x86-sep], [Enable x86 SEP instructions for issuing syscalls]),
+	[case "$enableval" in
+	y | yes) CONFIG_XENO_X86_SEP=y ;;
+	*) unset CONFIG_XENO_X86_SEP ;;
+	esac])
+  AC_MSG_RESULT(${CONFIG_XENO_X86_SEP:-no})
+
+  AC_MSG_CHECKING(for x86 TSC support)
+  AC_ARG_ENABLE(x86-tsc,
+	AS_HELP_STRING([--enable-x86-tsc], [Enable x86 TSC for timings]),
+	[case "$enableval" in
+	y | yes) CONFIG_X86_TSC=y ;;
+	*) unset CONFIG_X86_TSC ;;
+	esac])
+  AC_MSG_RESULT(${CONFIG_X86_TSC:-no})
+fi
+
+dnl Documentation package.
+
+if test \! -d $srcdir/doc; then 
+    unset XENO_MAYBE_DOCDIR
+else
+    XENO_MAYBE_DOCDIR=doc
+fi
+AC_SUBST(XENO_MAYBE_DOCDIR)
+
+AC_MSG_CHECKING(for Doxygen documentation)
+AC_ARG_ENABLE(doc,
+	AS_HELP_STRING([--enable-dox-doc], [Build Doxygen documentation]),
+	[case "$enableval" in
+	y | yes) CONFIG_XENO_DOC_DOX=y ;;
+	*) unset CONFIG_XENO_DOC_DOX ;;
+	esac])
+
+if test \! -d $srcdir/doc; then
+    if test x$CONFIG_XENO_DOC_DOX = xy ; 
+    then
+        AC_MSG_ERROR([documentation tree is missing.])
+    fi
+    AC_MSG_RESULT([not present])
+else
+    AC_MSG_RESULT(${CONFIG_XENO_DOC_DOX:-no})
+fi
+
+AC_CHECK_PROG(DOXYGEN, doxygen, doxygen)
+
+if test x${CONFIG_XENO_DOC_DOX} = xy -a x"$DOXYGEN" = x; then
+   AC_MSG_ERROR([Missing the Doxygen tools to generate the documentation.])
+fi
+
+AC_CHECK_PROG(DOXYGEN_HAVE_DOT, dot, YES, NO)
+if test x"$DOXYGEN_HAVE_DOT" = xYES; then
+   DOXYGEN_SHOW_INCLUDE_FILES=NO
+else
+   DOXYGEN_SHOW_INCLUDE_FILES=YES
+fi
+
+case "$CONFIG_XENO_DOC_DBX" in
+y | ye | yes)
+    DBX_DOC=yes;;
+*)
+    DBX_DOC="";;
+esac
+DBX_NET="$CONFIG_XENO_DBX_NET"
+DBX_ROOT="$CONFIG_XENO_DBX_ROOT"
+DBX_XSL_ROOT="$CONFIG_XENO_DBX_XSL_ROOT"
+DBX_DOC_INIT(doc/docbook, doc/generated, 4.2)
+
+AC_MSG_CHECKING(whether using LaTeX non-stop mode)
+AC_ARG_ENABLE(verbose-latex,
+        AS_HELP_STRING([--enable-verbose-latex], [Uses LaTeX non-stop mode]),
+        [case "$enableval" in
+        y | yes) CONFIG_XENO_DOC_LATEX_NONSTOP=y ;;
+        *) unset CONFIG_XENO_DOC_LATEX_NONSTOP ;;
+        esac])
+AC_MSG_RESULT(${CONFIG_XENO_DOC_LATEX_NONSTOP:-no})
+
+if test x${CONFIG_XENO_DOC_LATEX_NONSTOP} = xy; then
+   LATEX_BATCHMODE=NO
+   LATEX_MODE=nonstopmode
+else
+   LATEX_BATCHMODE=YES
+   LATEX_MODE=batchmode
+fi
+
+dnl Determine whether some specific headers are present on this system.
+AC_CHECK_HEADERS(mqueue.h)
+
+dnl
+dnl Produce the info needed to build xeno_config.h
+dnl
+
+AC_DEFINE_UNQUOTED(CONFIG_XENO_VERSION_MAJOR,$CONFIG_XENO_VERSION_MAJOR,[config])
+AC_DEFINE_UNQUOTED(CONFIG_XENO_VERSION_MINOR,$CONFIG_XENO_VERSION_MINOR,[config])
+AC_DEFINE_UNQUOTED(CONFIG_XENO_REVISION_LEVEL,$CONFIG_XENO_REVISION_LEVEL,[config])
+
+dnl
+dnl Features we enabled and likely want to find at kernel level.
+dnl When applicable, we reuse the kernel option symbol so that we
+dnl don't need to make particular cases with kernel code which may
+dnl also be compiled in user-space libs.
+dnl
+
+test x$CONFIG_XENO_X86_SEP = xy && AC_DEFINE(CONFIG_XENO_X86_SEP,1,[config])
+test x$CONFIG_SMP = xy && AC_DEFINE(CONFIG_SMP,1,[config])
+test x$CONFIG_X86_TSC = xy && AC_DEFINE(CONFIG_X86_TSC,1,[config])
+
+dnl CAUTION: We need to have the CONFIG_XENO_XX symbols always
+dnl defined when the configuration header is read, but we want the
+dnl Autoconf-produced symbols to be defined only when compiling
+dnl Xenomai. This way, we won't pollute the namespace with the latter
+dnl when our configuration header is indirectly included by a client
+dnl application. To achieve this, we ask autoheader to produce the
+dnl following header structure:
+dnl #define CONFIG_XX
+dnl #define CONFIG_XX ...
+dnl #ifdef __IN_XENO__
+dnl <Autoconf-defined symbols>
+dnl #endif /* __IN_XENO__ */
+dnl This is quite a hack since we have to rely on the fact that
+dnl all Autoconf-generated symbols are lexicographically sorted
+dnl after CONFIG_XENO_XX ones, but, well...
+dnl Use a key which will cause the verbatim string to be put after
+dnl all CONFIG_XENO_XX symbols, but still before any Autoconf-generated
+dnl symbol, hence CONFIG_XENO___.
+AH_VERBATIM(CONFIG_XENO___,[#ifdef __IN_XENO__])
+
+dnl Now we can close the conditional section, right after all
+dnl Autoconf-generated symbols have been listed.
+AH_BOTTOM([#endif /* __IN_XENO__ */])
+
+dnl
+dnl Produce automake conditionals.
+dnl
+
+dnl UVM support.
+AM_CONDITIONAL(CONFIG_XENO_UVM,[test "$CONFIG_XENO_UVM" = y])
+
+dnl Documentation.
+AM_CONDITIONAL(CONFIG_XENO_DOC_DOX,[test "$CONFIG_XENO_DOC_DOX" = y])
+
+AC_MSG_CHECKING([for specific GCC switches])
+AC_CACHE_VAL(ac_cv_gcc_wnoalias,
+AC_LANG_SAVE
+AC_LANG_C
+save_CFLAGS="$CFLAGS"
+CFLAGS="-Wno-strict-aliasing -Werror"
+[AC_TRY_COMPILE([],
+[return 0;],
+[ac_cv_gcc_wnoalias=yes],
+[ac_cv_gcc_wnoalias=no])]
+CFLAGS="$save_CFLAGS"
+AC_LANG_RESTORE)
+if [[ $ac_cv_gcc_wnoalias = no ]]; then
+  gcc_w_noalias=
+else
+  gcc_w_noalias="-Wno-strict-aliasing"
+fi
+AC_MSG_RESULT([done])
+
+XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -D__XENO__"
+
+case $XENO_TARGET_ARCH in
+ i386)
+	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -fstrict-aliasing $gcc_w_noalias"
+        ;;
+ powerpc)
+	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
+        ;;
+ ia64)
+	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
+        ;;
+esac
+
+if test x$debug_symbols = xy; then
+   XENO_USER_CFLAGS="-g $XENO_USER_CFLAGS"
+else
+   XENO_USER_CFLAGS="-O2 $XENO_USER_CFLAGS"
+fi
+
+XENO_USER_APP_CFLAGS=$XENO_USER_CFLAGS
+XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__IN_XENO__ -Wstrict-prototypes"
+
+dnl
+dnl Build the Makefiles
+dnl
+
+AC_SUBST(DOXYGEN_SHOW_INCLUDE_FILES)
+AC_SUBST(DOXYGEN_HAVE_DOT)
+AC_SUBST(DOXYGEN)
+AC_SUBST(LATEX_BATCHMODE)
+AC_SUBST(LATEX_MODE)
+
+AC_SUBST(XENO_TARGET_ARCH)
+AC_SUBST(XENO_BUILD_STRING)
+AC_SUBST(XENO_HOST_STRING)
+AC_SUBST(XENO_USER_CFLAGS)
+AC_SUBST(XENO_USER_APP_CFLAGS)
+
+base=include
+AC_CONFIG_LINKS([src/include/xenomai:$base])
+base=asm-$XENO_TARGET_ARCH
+AC_CONFIG_LINKS([src/include/asm/xenomai:include/$base])
+base=asm-generic
+AC_CONFIG_LINKS([src/include/$base/xenomai:include/$base])
+AC_CONFIG_LINKS([src/include/asm-uvm/system.h])
+
+AC_CONFIG_FILES([ \
+	Makefile \
+	config/Makefile \
+	scripts/Makefile \
+	scripts/xeno-config \
+	scripts/xeno-load \
+	scripts/xeno-test \
+	src/Makefile \
+	src/skins/Makefile \
+       	src/skins/uvm/Makefile \
+       	src/skins/posix/Makefile \
+       	src/skins/native/Makefile \
+       	src/skins/psos+/Makefile \
+       	src/skins/uitron/Makefile \
+       	src/skins/vrtx/Makefile \
+       	src/skins/vxworks/Makefile \
+       	src/skins/rtdm/Makefile \
+       	src/skins/rtai/Makefile \
+	src/include/Makefile \
+	src/include/asm-uvm/Makefile \
+       	src/testsuite/Makefile \
+       	src/testsuite/latency/Makefile \
+       	src/testsuite/switch/Makefile \
+       	include/Makefile \
+       	include/asm-generic/Makefile \
+       	include/asm-i386/Makefile \
+       	include/asm-powerpc/Makefile \
+       	include/asm-ia64/Makefile \
+       	include/native/Makefile \
+       	include/nucleus/Makefile \
+       	include/posix/Makefile \
+       	include/psos+/Makefile \
+       	include/rtai/Makefile \
+       	include/rtdm/Makefile \
+       	include/uitron/Makefile \
+       	include/uvm/Makefile \
+       	include/vrtx/Makefile \
+       	include/vxworks/Makefile \
+	])
+
+if test \! x$XENO_MAYBE_DOCDIR = x; then
+      AC_CONFIG_FILES([ \
+	doc/Makefile \
+	doc/man/Makefile \
+	doc/man/runinfo.man \
+	doc/man/xeno-config.man \
+	doc/man/xeno-info.man \
+	doc/man/xeno-load.man \
+	doc/man/xeno-test.man \
+	doc/doxygen/Makefile \
+	doc/doxygen/Doxyfile \
+	doc/docbook/Makefile \
+	doc/docbook/catalog \
+	doc/docbook/custom-stylesheets/Makefile \
+	doc/docbook/custom-stylesheets/xsl/Makefile \
+	doc/docbook/custom-stylesheets/xsl/common/Makefile \
+	doc/docbook/custom-stylesheets/xsl/fo/Makefile \
+	doc/docbook/custom-stylesheets/xsl/html/Makefile \
+	doc/docbook/custom-stylesheets/xsl/html/chunk.xsl \
+	doc/docbook/xenomai/Makefile \
+      ])
+fi
+
+AC_OUTPUT()

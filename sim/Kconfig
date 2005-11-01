@@ -1,0 +1,66 @@
+menu "Simulator"
+
+config XENO_MVM
+	bool "Minute Virtual Machine"
+	default n
+	help
+
+	Xenomai includes an event-driven simulator dubbed "the
+	Minute Virtual Machine" (MVM).
+
+	Using the MVM to run your real-time applications has a lot of
+	advantages: it is faster, it does not require
+	cross-development tools, gives extended debugging, monitoring
+	and tracing features and provides an easy way to stress the
+	application under test with run-time situations otherwise
+	barely conceivable on a real target (e.g. bursts of simulated
+	interrupts generated at a very unreasonable rate!).
+
+	The application shall not contain target-dependent code, such
+	as assembly code, because it runs as a regular executable
+	compiled by GCC on a GNU/Linux workstation. It cannot be
+	possible to use the MVM to collect accurate performance
+	footprints of your system, but it may show you precisely how
+	the multiple threads running in your system work together
+	sharing the resources of the real-time interface.
+
+config XENO_MVM_GCC_TARBALL
+	string "GCC tarball"
+	depends on XENO_MVM
+	default "/tmp/gcc-2.95.3.tar.bz2"
+	help
+	
+	In order to be able to instrument your code and debug it using
+	the Minute Virtual Machine (MVM), you need a special compiler
+	called gcic. This particular tool is based on a patched gcc
+	whose archive directory has to be specified here.
+	The default value is /tmp/gcc-2.95.3.tar.bz2.
+
+config XENO_MVM_DEBUG
+	bool "MVM debug support"
+	depends on XENO_MVM
+	default n
+	help
+	
+	This option activates runtime checking of the event-driven
+	simulator state. Do not activate it unless you really intend
+	to debug the Minute Virtual Machine.
+
+config XENO_MVM_ATOMIC_CORE
+	bool "Disable core instrumentation"
+	depends on XENO_MVM
+	default n
+	help
+	
+	This option suppresses the instrumentation of the nucleus and
+	skin sources so that the resulting simulation is suitable for
+	performance analysis through the Valgrind/Cachegrind/Callgrind
+	toolsuite. Enabling this option prevents those portions of
+	code from being debugged interactively using the Xenoscope
+	though.
+
+config XENO_HW_PERIODIC_TIMER
+	bool
+	default y
+
+endmenu

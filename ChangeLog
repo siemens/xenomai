@@ -1,0 +1,5 @@
+2005-10-22  Philippe Gerum  <rpm@xenomai.org>
+
+	* trunk: Implement a split source model, decoupling the kernel
+	space support from the user-space libraries used in accessing the
+	former.

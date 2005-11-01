@@ -1,0 +1,1 @@
+source "drivers/xenomai/16550A/Kconfig"
