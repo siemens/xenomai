@@ -25,8 +25,8 @@ diff -uNrp 2.6.14/include/linux/hardirq.h 2.6.14-ipipe/include/linux/hardirq.h
  static inline void account_user_vtime(struct task_struct *tsk)
 diff -uNrp 2.6.14/include/linux/ipipe.h 2.6.14-ipipe/include/linux/ipipe.h
 --- 2.6.14/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/include/linux/ipipe.h	2005-10-31 10:15:18.000000000 +0100
-@@ -0,0 +1,747 @@
++++ 2.6.14-ipipe/include/linux/ipipe.h	2005-11-02 15:24:34.000000000 +0100
+@@ -0,0 +1,748 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -239,29 +239,30 @@ diff -uNrp 2.6.14/include/linux/ipipe.h 2.6.14-ipipe/include/linux/ipipe.h
 +	} \
 +} while(0)
 +
-+#ifdef RAW_SPIN_LOCK_UNLOCKED	/* PREEMPT_RT kernel */
-+#define spin_lock_hw(x)		__raw_spin_lock(x)
-+#define spin_unlock_hw(x)	__raw_spin_unlock(x)
-+#define spin_trylock_hw(x)	__raw_spin_trylock(x)
-+#define write_lock_hw(x)	__raw_write_lock(x)
-+#define write_unlock_hw(x)	__raw_write_unlock(x)
-+#define write_trylock_hw(x)	__raw_write_trylock(x)
-+#define read_lock_hw(x)		__raw_read_lock(x)
-+#define read_unlock_hw(x)	__raw_read_unlock(x)
-+#else	/* !RAW_SPIN_LOCK_UNLOCKED */
-+#define spin_lock_hw(x)		_spin_lock(x)
-+#define spin_unlock_hw(x)	_spin_unlock(x)
-+#define spin_trylock_hw(x)	_spin_trylock(x)
-+#define write_lock_hw(x)	_write_lock(x)
-+#define write_unlock_hw(x)	_write_unlock(x)
-+#define write_trylock_hw(x)	_write_trylock(x)
-+#define read_lock_hw(x)		_read_lock(x)
-+#define read_unlock_hw(x)	_read_unlock(x)
-+#define raw_spinlock_t		spinlock_t
-+#define RAW_SPIN_LOCK_UNLOCKED	SPIN_LOCK_UNLOCKED
-+#define raw_rwlock_t		rwlock_t
-+#define RAW_RW_LOCK_UNLOCKED	RW_LOCK_UNLOCKED
-+#endif	/* RAW_SPIN_LOCK_UNLOCKED */
++#ifdef __RAW_SPIN_LOCK_UNLOCKED
++#define spin_lock_hw(x)			_raw_spin_lock(x)
++#define spin_unlock_hw(x)		_raw_spin_unlock(x)
++#define spin_trylock_hw(x)		_raw_spin_trylock(x)
++#define write_lock_hw(x)		_raw_write_lock(x)
++#define write_unlock_hw(x)		_raw_write_unlock(x)
++#define write_trylock_hw(x)		_raw_write_trylock(x)
++#define read_lock_hw(x)			_raw_read_lock(x)
++#define read_unlock_hw(x)		_raw_read_unlock(x)
++#else	/* !__RAW_SPIN_LOCK_UNLOCKED */
++#define spin_lock_hw(x)			_spin_lock(x)
++#define spin_unlock_hw(x)		_spin_unlock(x)
++#define spin_trylock_hw(x)		_spin_trylock(x)
++#define write_lock_hw(x)		_write_lock(x)
++#define write_unlock_hw(x)		_write_unlock(x)
++#define write_trylock_hw(x)		_write_trylock(x)
++#define read_lock_hw(x)			_read_lock(x)
++#define read_unlock_hw(x)		_read_unlock(x)
++#endif	/* __RAW_SPIN_LOCK_UNLOCKED */
++
++typedef spinlock_t			ipipe_spinlock_t;
++typedef rwlock_t			ipipe_rwlock_t;
++#define IPIPE_SPIN_LOCK_UNLOCKED	SPIN_LOCK_UNLOCKED
++#define IPIPE_RW_LOCK_UNLOCKED		RW_LOCK_UNLOCKED
 +
 +#define spin_lock_irqsave_hw(x,flags)		\
 +do {						\
@@ -319,7 +320,7 @@ diff -uNrp 2.6.14/include/linux/ipipe.h 2.6.14-ipipe/include/linux/ipipe.h
 +
 +extern struct list_head __ipipe_pipeline;
 +
-+extern raw_spinlock_t __ipipe_pipelock;
++extern ipipe_spinlock_t __ipipe_pipelock;
 +
 +extern int __ipipe_event_monitors[];
 +
@@ -965,7 +966,7 @@ diff -uNrp 2.6.14/kernel/fork.c 2.6.14-ipipe/kernel/fork.c
  	if (retval)
 diff -uNrp 2.6.14/kernel/ipipe/Kconfig 2.6.14-ipipe/kernel/ipipe/Kconfig
 --- 2.6.14/kernel/ipipe/Kconfig	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/kernel/ipipe/Kconfig	2005-10-31 10:15:18.000000000 +0100
++++ 2.6.14-ipipe/kernel/ipipe/Kconfig	2005-09-07 14:30:42.000000000 +0200
 @@ -0,0 +1,18 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
@@ -987,13 +988,13 @@ diff -uNrp 2.6.14/kernel/ipipe/Kconfig 2.6.14-ipipe/kernel/ipipe/Kconfig
 +	def_bool IPIPE
 diff -uNrp 2.6.14/kernel/ipipe/Makefile 2.6.14-ipipe/kernel/ipipe/Makefile
 --- 2.6.14/kernel/ipipe/Makefile	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/kernel/ipipe/Makefile	2005-10-31 10:15:18.000000000 +0100
++++ 2.6.14-ipipe/kernel/ipipe/Makefile	2005-09-07 13:17:29.000000000 +0200
 @@ -0,0 +1,2 @@
 +
 +obj-$(CONFIG_IPIPE)	+= core.o generic.o
 diff -uNrp 2.6.14/kernel/ipipe/core.c 2.6.14-ipipe/kernel/ipipe/core.c
 --- 2.6.14/kernel/ipipe/core.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/kernel/ipipe/core.c	2005-10-31 10:15:18.000000000 +0100
++++ 2.6.14-ipipe/kernel/ipipe/core.c	2005-11-02 12:51:53.000000000 +0100
 @@ -0,0 +1,678 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
@@ -1034,7 +1035,7 @@ diff -uNrp 2.6.14/kernel/ipipe/core.c 2.6.14-ipipe/kernel/ipipe/core.c
 +struct ipipe_domain *ipipe_percpu_domain[IPIPE_NR_CPUS] =
 +	{[0 ... IPIPE_NR_CPUS - 1] = &ipipe_root };
 +
-+raw_spinlock_t __ipipe_pipelock = RAW_SPIN_LOCK_UNLOCKED;
++ipipe_spinlock_t __ipipe_pipelock = IPIPE_SPIN_LOCK_UNLOCKED;
 +
 +struct list_head __ipipe_pipeline;
 +
@@ -1675,7 +1676,7 @@ diff -uNrp 2.6.14/kernel/ipipe/core.c 2.6.14-ipipe/kernel/ipipe/core.c
 +EXPORT_SYMBOL(__ipipe_virtual_irq_map);
 diff -uNrp 2.6.14/kernel/ipipe/generic.c 2.6.14-ipipe/kernel/ipipe/generic.c
 --- 2.6.14/kernel/ipipe/generic.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/kernel/ipipe/generic.c	2005-10-31 10:15:18.000000000 +0100
++++ 2.6.14-ipipe/kernel/ipipe/generic.c	2005-10-16 23:28:19.000000000 +0200
 @@ -0,0 +1,390 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/generic.c
@@ -2109,14 +2110,14 @@ diff -uNrp 2.6.14/kernel/irq/handle.c 2.6.14-ipipe/kernel/irq/handle.c
  	 * WAITING is used by probe to mark irqs that are being tested
 diff -uNrp 2.6.14/kernel/printk.c 2.6.14-ipipe/kernel/printk.c
 --- 2.6.14/kernel/printk.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/kernel/printk.c	2005-10-31 10:15:18.000000000 +0100
++++ 2.6.14-ipipe/kernel/printk.c	2005-11-02 12:51:25.000000000 +0100
 @@ -507,6 +507,66 @@ __attribute__((weak)) unsigned long long
   * is inspected when the actual printing occurs.
   */
  
 +#ifdef CONFIG_IPIPE
 +
-+static raw_spinlock_t __ipipe_printk_lock = RAW_SPIN_LOCK_UNLOCKED;
++static ipipe_spinlock_t __ipipe_printk_lock = IPIPE_SPIN_LOCK_UNLOCKED;
 +
 +static int __ipipe_printk_fill;
 +
@@ -2690,7 +2691,7 @@ diff -uNrp 2.6.14/mm/vmalloc.c 2.6.14-ipipe/mm/vmalloc.c
  
  #if defined(CONFIG_SYSCTL) && defined(CONFIG_6xx)
 --- 2.6.14/arch/ppc/kernel/ipipe-core.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/arch/ppc/kernel/ipipe-core.c	2005-10-31 10:15:17.000000000 +0100
++++ 2.6.14-ipipe/arch/ppc/kernel/ipipe-core.c	2005-11-02 12:52:32.000000000 +0100
 @@ -0,0 +1,533 @@
 +/* -*- linux-c -*-
 + * linux/arch/ppc/kernel/ipipe-core.c
@@ -2758,7 +2759,7 @@ diff -uNrp 2.6.14/mm/vmalloc.c 2.6.14-ipipe/mm/vmalloc.c
 +
 +static cpumask_t __ipipe_cpu_lock_map;
 +
-+static spinlock_t __ipipe_cpu_barrier = SPIN_LOCK_UNLOCKED;
++static ipipe_spinlock_t __ipipe_cpu_barrier = IPIPE_SPIN_LOCK_UNLOCKED;
 +
 +static atomic_t __ipipe_critical_count = ATOMIC_INIT(0);
 +
@@ -3990,7 +3991,7 @@ diff -uNrp 2.6.14/mm/vmalloc.c 2.6.14-ipipe/mm/vmalloc.c
  
  #define mask_irq(irq) ({if (irq_desc[irq].handler && irq_desc[irq].handler->disable) irq_desc[irq].handler->disable(irq);})
 --- 2.6.14/include/asm-ppc/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/include/asm-ppc/ipipe.h	2005-10-31 10:15:18.000000000 +0100
++++ 2.6.14-ipipe/include/asm-ppc/ipipe.h	2005-11-02 16:59:27.000000000 +0100
 @@ -0,0 +1,174 @@
 +/* -*- linux-c -*-
 + * include/asm-ppc/ipipe.h
@@ -4027,10 +4028,10 @@ diff -uNrp 2.6.14/mm/vmalloc.c 2.6.14-ipipe/mm/vmalloc.c
 +#include <linux/cpumask.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.0-05"
++#define IPIPE_ARCH_STRING	"1.0-06"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	0
-+#define IPIPE_PATCH_NUMBER	5
++#define IPIPE_PATCH_NUMBER	6
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
