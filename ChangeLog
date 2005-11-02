@@ -1,3 +1,8 @@
+2005-11-02  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* configure.in: Revert commit r53, passing CC variable to Kbuild
+	through environment does not seem to work.
+
 2005-11-01  Philippe Gerum  <rpm@xenomai.org>
 
 	* arch/i386/patches, arch/ppc/patches: Upgrade base Adeos port to
