@@ -2298,6 +2298,91 @@ diff -uNrp 2.6.14/lib/smp_processor_id.c 2.6.14-ipipe/lib/smp_processor_id.c
  	if (likely(preempt_count))
  		goto out;
  
+diff -uNrp 2.6.14/lib/spinlock_debug.c 2.6.14-ipipe/lib/spinlock_debug.c
+--- 2.6.14/lib/spinlock_debug.c	2005-10-28 02:02:08.000000000 +0200
++++ 2.6.14-ipipe/lib/spinlock_debug.c	2005-11-02 19:21:20.000000000 +0100
+@@ -10,6 +10,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/interrupt.h>
+ #include <linux/delay.h>
++#include <linux/module.h>
+ 
+ static void spin_bug(spinlock_t *lock, const char *msg)
+ {
+@@ -93,6 +94,8 @@ void _raw_spin_lock(spinlock_t *lock)
+ 	debug_spin_lock_after(lock);
+ }
+ 
++EXPORT_SYMBOL(_raw_spin_lock);
++
+ int _raw_spin_trylock(spinlock_t *lock)
+ {
+ 	int ret = __raw_spin_trylock(&lock->raw_lock);
+@@ -108,12 +111,16 @@ int _raw_spin_trylock(spinlock_t *lock)
+ 	return ret;
+ }
+ 
++EXPORT_SYMBOL(_raw_spin_trylock);
++
+ void _raw_spin_unlock(spinlock_t *lock)
+ {
+ 	debug_spin_unlock(lock);
+ 	__raw_spin_unlock(&lock->raw_lock);
+ }
+ 
++EXPORT_SYMBOL(_raw_spin_unlock);
++
+ static void rwlock_bug(rwlock_t *lock, const char *msg)
+ {
+ 	static long print_once = 1;
+@@ -162,6 +169,8 @@ void _raw_read_lock(rwlock_t *lock)
+ 		__read_lock_debug(lock);
+ }
+ 
++EXPORT_SYMBOL(_raw_read_lock);
++
+ int _raw_read_trylock(rwlock_t *lock)
+ {
+ 	int ret = __raw_read_trylock(&lock->raw_lock);
+@@ -175,12 +184,16 @@ int _raw_read_trylock(rwlock_t *lock)
+ 	return ret;
+ }
+ 
++EXPORT_SYMBOL(_raw_read_trylock);
++
+ void _raw_read_unlock(rwlock_t *lock)
+ {
+ 	RWLOCK_BUG_ON(lock->magic != RWLOCK_MAGIC, lock, "bad magic");
+ 	__raw_read_unlock(&lock->raw_lock);
+ }
+ 
++EXPORT_SYMBOL(_raw_read_unlock);
++
+ static inline void debug_write_lock_before(rwlock_t *lock)
+ {
+ 	RWLOCK_BUG_ON(lock->magic != RWLOCK_MAGIC, lock, "bad magic");
+@@ -235,6 +248,8 @@ void _raw_write_lock(rwlock_t *lock)
+ 	debug_write_lock_after(lock);
+ }
+ 
++EXPORT_SYMBOL(_raw_write_lock);
++
+ int _raw_write_trylock(rwlock_t *lock)
+ {
+ 	int ret = __raw_write_trylock(&lock->raw_lock);
+@@ -250,8 +265,12 @@ int _raw_write_trylock(rwlock_t *lock)
+ 	return ret;
+ }
+ 
++EXPORT_SYMBOL(_raw_write_trylock);
++
+ void _raw_write_unlock(rwlock_t *lock)
+ {
+ 	debug_write_unlock(lock);
+ 	__raw_write_unlock(&lock->raw_lock);
+ }
++
++EXPORT_SYMBOL(_raw_write_unlock);
 diff -uNrp 2.6.14/mm/vmalloc.c 2.6.14-ipipe/mm/vmalloc.c
 --- 2.6.14/mm/vmalloc.c	2005-10-28 02:02:08.000000000 +0200
 +++ 2.6.14-ipipe/mm/vmalloc.c	2005-10-31 10:15:18.000000000 +0100
