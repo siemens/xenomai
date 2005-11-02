@@ -1,3 +1,9 @@
+2005-11-02  Philippe Gerum  <rpm@xenomai.org>
+
+	* arch/i386/patches: Upgrade to Adeos newgen 1.0-10.
+
+	* arch/ppc/patches: Upgrade to Adeos newgen 1.0-06.
+
 2005-11-02  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* configure.in: Revert commit r53, passing CC variable to Kbuild
