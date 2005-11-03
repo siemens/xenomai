@@ -42,12 +42,22 @@ xenomai_root=`cd $xenomai_root && pwd`
 
 # Check the Linux tree
 
-if test \! -x "$linux_tree"; then
-   echo "$me: cannot access Linux tree in $linux_tree"
-   exit 2
-else
-   linux_tree=`cd $linux_tree && pwd`
-fi
+default_linux_tree=/lib/modules/`uname -r`/source
+
+while test x$linux_tree = x; do
+   echo -n "Linux tree [default $default_linux_tree]: "
+   read linux_tree
+   if test x$linux_tree = x; then
+      linux_tree=$default_linux_tree
+   fi
+   if test \! -x "$linux_tree"; then
+      echo "$me: cannot access Linux tree in $linux_tree"
+      linux_tree=
+   else
+      linux_tree=`cd $linux_tree && pwd`
+      break
+   fi
+done
 
 if test \! -r $linux_tree/Makefile; then
    echo "$me: $linux_tree is not a valid Linux kernel tree"
@@ -58,12 +68,18 @@ fi
 
 if test x$linux_arch = x; then
    build_arch=`$xenomai_root/config/config.guess`
-   linux_arch=`echo $build_arch|cut -f1 -d-`
+   default_linux_arch=`echo $build_arch|cut -f1 -d-`
 fi
 
-# Canonicalize the Xenomai architecture name
-
-case "$linux_arch" in
+while : ; do
+   if test x$linux_arch = x; then
+      echo -n "Target architecture [default $default_linux_arch]: "
+      read linux_arch
+      if test x$linux_arch = x; then
+         linux_arch=$default_linux_arch
+      fi
+   fi
+   case "$linux_arch" in
    i*86)
       linux_arch=i386
       xenomai_arch=i386
@@ -81,14 +97,14 @@ case "$linux_arch" in
       xenomai_arch=ia64
       ;;
    *)
-      xenomai_arch=unknown
+      echo "$me: unsupported architecture: $linux_arch"
+      linux_arch=
       ;;
-esac
-
-if test \! -x $xenomai_root/ksrc/arch/$xenomai_arch; then
-   echo "$me: unsupported architecture: $linux_arch"
-   exit 2
-fi
+   esac
+   if test \! x$linux_arch = x; then
+      break
+   fi
+done
 
 # Some kernel versions have merged 32/64 bit powperpc trees:
 # canonicalize if needed.
@@ -109,13 +125,25 @@ echo "Preparing kernel $linux_version in $linux_tree..."
 if test -r $linux_tree/include/linux/ipipe.h \
      -o -r $linux_tree/include/linux/adeos.h; then
     echo "Adeos/$linux_arch patch already applied - bypassing patch."
-elif test x$adeos_patch = x; then
-    echo "$me: Adeos patch unspecified and missing"
-    echo "$usage"
-    exit 2
 else
-    cat $adeos_patch | (cd $linux_tree && patch -p1 )
+   if test x$adeos_patch = x; then
+      default_adeos_patch=`( ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-ipipe-*|sort -r; \
+		             ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-linux-*|sort -r) | head -1`
+   fi
+   while test x$adeos_patch = x; do
+      echo -n "Adeos patch [default $default_adeos_patch]: "
+      read adeos_patch
+      if test x$adeos_patch = x; then
+         adeos_patch=$default_adeos_patch
+      fi
+      if test \! -r "$adeos_patch"; then
+         echo "$me: cannot read Adeos patch from $adeos_patch"
+         adeos_patch=
+      fi
+   done
+   cat $adeos_patch | (cd $linux_tree && patch -p1 )
 fi
+
 if test -r $linux_tree/include/linux/ipipe.h; then
    adeos_version=`grep '^#define.*IPIPE_ARCH_STRING.*"' $linux_tree/include/asm-$linux_arch/ipipe.h|sed -e 's,.*"\(.*\)"$,\1,'`
    adeos_gen=newgen
