@@ -25,7 +25,6 @@
 
 #define XENO_MAIN_MODULE 1
 
-#include <xeno_config.h>
 #include <xenomai/nucleus/module.h>
 #include <xenomai/nucleus/pod.h>
 #include <xenomai/nucleus/timer.h>
@@ -509,7 +508,7 @@ static int version_read_proc (char *page,
 {
     int len;
 
-    len = sprintf(page,"%s\n",PACKAGE_VERSION);
+    len = sprintf(page,"%s\n",XENO_VERSION_STRING);
     len -= off;
     if (len <= off + count) *eof = 1;
     *start = page + off;
@@ -775,7 +774,7 @@ int __init __xeno_sys_init (void)
 #endif /* __KERNEL__ */
 
     xnloginfo("real-time nucleus v%s (%s) loaded.\n",
-	      PACKAGE_VERSION,
+	      XENO_VERSION_STRING,
 	      XENO_VERSION_NAME);
 
     return 0;
