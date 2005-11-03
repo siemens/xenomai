@@ -46,10 +46,6 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
     void (*entry)(void *);	/* Thread entry */
     void *cookie;		/* Thread cookie passed on entry */
     int imask;			/* Initial interrupt mask */
-    /* The following fields are not used by the Minute VM, however
-       they are set by the nucleus. */
-    unsigned stacksize;		/* Aligned size of stack (bytes) */
-    unsigned long *stackbase;	/* Stack space */
 
 } xnarchtcb_t;
 
@@ -84,9 +80,6 @@ typedef unsigned long xnlock_t;
 
 #define XNARCH_THREAD_STACKSZ 0 /* Let the simulator choose. */
 #define XNARCH_ROOT_STACKSZ   0	/* Only a placeholder -- no stack */
-
-#define xnarch_alloc_stack xnmalloc
-#define xnarch_free_stack  xnfree
 
 #define XNARCH_PROMPT "Xenomai/sim: "
 #define xnarch_loginfo(fmt,args...)  fprintf(stdout, XNARCH_PROMPT fmt , ##args)
@@ -172,7 +165,7 @@ static inline unsigned long ffnz (unsigned long word) {
     return ffs((int)word) - 1;
 }
 
-#define xnarch_stack_size(tcb)    ((tcb)->stacksize)
+#define xnarch_stack_size(tcb)    0
 #define xnarch_fpu_ptr(tcb)       (NULL)
 #define xnarch_user_task(tcb)     (NULL)
 #define xnarch_user_pid(tcb)      0
@@ -489,8 +482,6 @@ int main (int argc, char *argv[])
     tcb.kthread = NULL;
     tcb.vmthread = NULL;
     tcb.imask = 0;
-    tcb.stacksize = 0;
-    tcb.stackbase = NULL;
 
     return mvm_run(&tcb,(void *)&mvm_root);
 }
@@ -625,6 +616,9 @@ static inline void xnarch_init_tcb (xnarchtcb_t *tcb)
     tcb->vmthread = NULL;
 }
 
+#define xnarch_alloc_stack(tcb,stacksize) 0
+#define xnarch_free_stack(tcb)            do { } while(0)
+
 #endif /* XENO_THREAD_MODULE */
 
 static inline unsigned long long xnarch_tsc_to_ns (unsigned long long ts) {
@@ -658,9 +652,6 @@ static inline void *xnarch_sysalloc (u_long bytes) {
 static inline void xnarch_sysfree (void *chunk, u_long bytes) {
     free(chunk);
 }
-
-#define xnarch_alloc_stack xnmalloc
-#define xnarch_free_stack  xnfree
 
 #define xnarch_current_cpu()  0
 #define xnarch_declare_cpuid  const int cpuid = 0

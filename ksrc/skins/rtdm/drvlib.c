@@ -41,7 +41,7 @@
  * @{
  */
 
-#if DOXYGEN_CPP /* Only used for doxygen doc generation */
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Get system time
  *
@@ -69,7 +69,7 @@ __u64 rtdm_clock_read(void);
  * @{
  */
 
-#if DOXYGEN_CPP /* Only used for doxygen doc generation */
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Intialise and start a real-time task
  *
@@ -381,7 +381,7 @@ void _rtdm_synch_flush(xnsynch_t *synch, unsigned long reason)
  * @{
  */
 
-#if DOXYGEN_CPP /* Only used for doxygen doc generation */
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Initialise a timeout sequence
  *
@@ -440,7 +440,7 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, __s64 timeout);
  * @{
  */
 
-#if DOXYGEN_CPP /* Only used for doxygen doc generation */
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Initialise an event
  *
@@ -696,7 +696,7 @@ int rtdm_event_timedwait(rtdm_event_t *event, __s64 timeout,
  * @{
  */
 
-#if DOXYGEN_CPP /* Only used for doxygen doc generation */
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Initialise a semaphore
  *
@@ -914,7 +914,7 @@ void rtdm_sem_up(rtdm_sem_t *sem)
  * @{
  */
 
-#if DOXYGEN_CPP /* Only used for doxygen doc generation */
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Initialise a mutex
  *
@@ -1120,7 +1120,7 @@ void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
 /** @} Synchronisation services */
 
 
-#if DOXYGEN_CPP /* Only used for doxygen doc generation */
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 
 /*!
  * @ingroup driverapi

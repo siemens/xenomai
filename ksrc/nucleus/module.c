@@ -25,7 +25,7 @@
 
 #define XENO_MAIN_MODULE 1
 
-#include <linux/config.h>
+#include <xeno_config.h>
 #include <xenomai/nucleus/module.h>
 #include <xenomai/nucleus/pod.h>
 #include <xenomai/nucleus/timer.h>
@@ -43,7 +43,13 @@ MODULE_DESCRIPTION("Xenomai nucleus");
 MODULE_AUTHOR("rpm@xenomai.org");
 MODULE_LICENSE("GPL");
 
+u_long sysheap_size_arg = XNPOD_HEAPSIZE / 1024;
+module_param_named(sysheap_size,sysheap_size_arg,ulong,0444);
+MODULE_PARM_DESC(sysheap_size,"System heap size (Kb)");
+
 xnqueue_t xnmod_glink_queue;
+
+u_long xnmod_sysheap_size;
 
 void xnmod_alloc_glinks (xnqueue_t *freehq)
 
@@ -503,7 +509,7 @@ static int version_read_proc (char *page,
 {
     int len;
 
-    len = sprintf(page,"%s\n",XENO_VERSION_STRING);
+    len = sprintf(page,"%s\n",PACKAGE_VERSION);
     len -= off;
     if (len <= off + count) *eof = 1;
     *start = page + off;
@@ -724,6 +730,8 @@ int __init __xeno_sys_init (void)
 {
     int err;
 
+    xnmod_sysheap_size = module_param_value(sysheap_size_arg) * 1024;
+
     nkmsgbuf = xnarch_sysalloc(XNPOD_FATAL_BUFSZ);
 
     if (!nkmsgbuf)
@@ -767,7 +775,7 @@ int __init __xeno_sys_init (void)
 #endif /* __KERNEL__ */
 
     xnloginfo("real-time nucleus v%s (%s) loaded.\n",
-	      XENO_VERSION_STRING,
+	      PACKAGE_VERSION,
 	      XENO_VERSION_NAME);
 
     return 0;

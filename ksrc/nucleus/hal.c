@@ -87,7 +87,7 @@ static unsigned long rthal_apc_map;
 
 static unsigned long rthal_apc_pending[RTHAL_NR_CPUS];
 
-static raw_spinlock_t rthal_apc_lock = RAW_SPIN_LOCK_UNLOCKED;
+static rthal_spinlock_t rthal_apc_lock = RTHAL_SPIN_LOCK_UNLOCKED;
 
 static atomic_t rthal_sync_count = ATOMIC_INIT(1);
 

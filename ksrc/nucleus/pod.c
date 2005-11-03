@@ -358,10 +358,10 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
 
     xnlock_put_irqrestore(&nklock,s);
 
-    heapaddr = xnarch_sysalloc(XNPOD_HEAPSIZE);
+    heapaddr = xnarch_sysalloc(xnmod_sysheap_size);
 
     if (!heapaddr ||
-        xnheap_init(&kheap,heapaddr,XNPOD_HEAPSIZE,XNPOD_PAGESIZE) != 0)
+	xnheap_init(&kheap,heapaddr,xnmod_sysheap_size,XNPOD_PAGESIZE) != 0)
         {
         rc = -ENOMEM;
         goto fail;

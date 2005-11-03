@@ -65,6 +65,25 @@
 
 typedef struct ipipe_domain rthal_pipeline_stage_t;
 
+#ifdef IPIPE_RW_LOCK_UNLOCKED
+typedef ipipe_spinlock_t rthal_spinlock_t;
+#define RTHAL_SPIN_LOCK_UNLOCKED IPIPE_SPIN_LOCK_UNLOCKED
+typedef ipipe_rwlock_t rthal_rwlock_t;
+#define RTHAL_RW_LOCK_UNLOCKED   IPIPE_RW_LOCK_UNLOCKED
+#else /* !IPIPE_RW_LOCK_UNLOCKED */
+#ifdef RAW_RW_LOCK_UNLOCKED
+typedef raw_spinlock_t rthal_spinlock_t;
+#define RTHAL_SPIN_LOCK_UNLOCKED RAW_SPIN_LOCK_UNLOCKED
+typedef raw_rwlock_t rthal_rwlock_t;
+#define RTHAL_RW_LOCK_UNLOCKED RAW_RW_LOCK_UNLOCKED
+#else /* !RAW_RW_LOCK_UNLOCKED */
+typedef spinlock_t rthal_spinlock_t;
+#define RTHAL_SPIN_LOCK_UNLOCKED SPIN_LOCK_UNLOCKED
+typedef rwlock_t rthal_rwlock_t;
+#define RTHAL_RW_LOCK_UNLOCKED RW_LOCK_UNLOCKED
+#endif /* RAW_RW_LOCK_UNLOCKED */
+#endif /* IPIPE_RW_LOCK_UNLOCKED */
+
 #define rthal_local_irq_disable()	ipipe_stall_pipeline_from(&rthal_domain)
 #define rthal_local_irq_enable()	ipipe_unstall_pipeline_from(&rthal_domain)
 #define rthal_local_irq_save(x)		((x) = !!ipipe_test_and_stall_pipeline_from(&rthal_domain))
@@ -223,6 +242,18 @@ extern void rthal_domain_entry(void);
 #define RTHAL_CRITICAL_IPI	ADEOS_CRITICAL_IPI
 
 typedef adomain_t rthal_pipeline_stage_t;
+
+#ifdef RAW_RW_LOCK_UNLOCKED
+typedef raw_spinlock_t rthal_spinlock_t;
+#define RTHAL_SPIN_LOCK_UNLOCKED RAW_SPIN_LOCK_UNLOCKED
+typedef raw_rwlock_t rthal_rwlock_t;
+#define RTHAL_RW_LOCK_UNLOCKED RAW_RW_LOCK_UNLOCKED
+#else /* !RAW_RW_LOCK_UNLOCKED */
+typedef spinlock_t rthal_spinlock_t;
+#define RTHAL_SPIN_LOCK_UNLOCKED SPIN_LOCK_UNLOCKED
+typedef rwlock_t rthal_rwlock_t;
+#define RTHAL_RW_LOCK_UNLOCKED RW_LOCK_UNLOCKED
+#endif /* RAW_RW_LOCK_UNLOCKED */
 
 #define rthal_local_irq_disable()	adeos_stall_pipeline_from(&rthal_domain)
 #define rthal_local_irq_enable()	adeos_unstall_pipeline_from(&rthal_domain)

@@ -3,4 +3,5 @@ config XENO_DRIVERS_16550A
 	tristate "16550A UART driver"
 	default n
 	help
-	Real-time UART driver for 16550A compatible controllers.
+	Real-time UART driver for 16550A compatible controllers. See
+	doc/txt/16550A-driver.txt for more details.

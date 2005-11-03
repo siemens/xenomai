@@ -831,6 +831,14 @@ typedef void (*rtdm_task_proc_t)(void *arg);
 #define RTDM_TASK_HIGHEST_PRIORITY  XNCORE_HIGH_PRIO
 /** @} */
 
+/*!
+ * @anchor changetaskprio @name Task Priority Modification
+ * Raise or lower task priorities by one level
+ * @{ */
+#define RTDM_TASK_RAISE_PRIORITY    (+1)
+#define RTDM_TASK_LOWER_PRIORITY    (-1)
+/** @} */
+
 /** @} */
 
 static inline int rtdm_task_init(rtdm_task_t *task, const char *name,

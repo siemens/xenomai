@@ -136,7 +136,7 @@ static rthal_pipeline_stage_t irq_shield;
 static cpumask_t shielded_cpus,
                  unshielded_cpus;
 
-static raw_rwlock_t shield_lock = RAW_RW_LOCK_UNLOCKED;
+static rthal_rwlock_t shield_lock = RTHAL_RW_LOCK_UNLOCKED;
 
 static inline void engage_irq_shield (void)
 

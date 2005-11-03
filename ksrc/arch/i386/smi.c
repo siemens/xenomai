@@ -196,7 +196,7 @@ void __devinit rthal_smi_init(void)
         return ;
         }
 
-#if CONFIG_XENO_HW_SMI_WORKAROUND
+#ifdef CONFIG_XENO_HW_SMI_WORKAROUND
 
     printk("Xenomai: Intel chipset found, enabling SMI workaround.\n");
     rthal_smi_en_addr = get_smi_en_addr(dev);

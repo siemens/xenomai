@@ -78,9 +78,13 @@ typedef atomic_t atomic_counter_t;
 
 #else /* !__KERNEL__ */
 
+#ifndef __powerpc64__
 /* Always enable the work-around for 405 boards in user-space for
    now. */
 #define PPC405_ERR77(ra,rb)	"dcbt " #ra "," #rb ";"
+#else /* __powerpc64__ */
+#define PPC405_ERR77(ra,rb)
+#endif /* !__powerpc64__ */
 
 #ifdef CONFIG_SMP
 #define EIEIO_ON_SMP    "eieio\n"
