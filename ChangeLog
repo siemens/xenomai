@@ -1,5 +1,8 @@
 2005-11-05  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/i386/patches: Deprecate oldgen patches, and upgrade to
+	2.6.14.
+
 	* ksrc/nucleus/shadow.c: Return feature sets (present, requested,
 	mandatory and missing) in symbolic form upon skin binding.
 
