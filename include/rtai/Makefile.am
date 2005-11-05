@@ -1,6 +1,6 @@
 includedir = $(prefix)/include/rtai
 
-noinst_HEADERS = \
+include_HEADERS = \
 	fifo.h \
 	intr.h \
 	rt_mem_mgr.h \

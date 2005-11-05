@@ -1,5 +1,9 @@
 2005-11-05  Philippe Gerum  <rpm@xenomai.org>
 
+	* v2.1: Install all interface headers so that kernel modules could
+	be built against those without requiring a complete Xenomai source
+	distribution.
+
 	* configure.in: Allow in-tree builds.
 
 2005-11-03  Philippe Gerum  <rpm@xenomai.org>

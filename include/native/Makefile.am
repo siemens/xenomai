@@ -12,8 +12,7 @@ include_HEADERS = \
 	queue.h \
 	registry.h \
 	sem.h \
+	syscall.h \
 	task.h \
 	timer.h \
 	types.h
-
-noinst_HEADERS = syscall.h

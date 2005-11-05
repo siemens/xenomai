@@ -1,5 +1,3 @@
 includedir = $(prefix)/include/asm-ia64
 
-include_HEADERS = atomic.h features.h syscall.h
-
-noinst_HEADERS = calibration.h hal.h system.h
+include_HEADERS = atomic.h calibration.h features.h hal.h syscall.h system.h

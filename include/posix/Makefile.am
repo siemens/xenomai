@@ -1,6 +1,6 @@
 includedir = $(prefix)/include/posix
 
-noinst_HEADERS = \
+include_HEADERS = \
 	cancel.h \
 	cond.h \
 	internal.h \
