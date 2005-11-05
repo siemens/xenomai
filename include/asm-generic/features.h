@@ -36,4 +36,14 @@
 
 #define __xn_feat_generic_mask  __xn_feat_smp_mask
 
+static inline const char *get_generic_feature_label (unsigned feature)
+{
+    switch (feature) {
+    	case __xn_feat_smp:
+	    return "smp";
+    	default:
+	    return 0;
+    }
+}
+
 #endif /* !_XENO_ASM_GENERIC_FEATURES_H */

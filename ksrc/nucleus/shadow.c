@@ -895,16 +895,66 @@ void xnshadow_suspend (xnthread_t *thread)
     schedule_linux_call(LO_SIGNAL_REQ,p,SIGCHLD);
 }
 
+static void stringify_feature_set (u_long fset, char *buf, int size)
+{
+    unsigned long feature;
+    int nc, nfeat;
+
+    *buf = '\0';
+
+    for (feature = 1, nc = nfeat = 0; fset != 0 && size > 0; feature <<= 1)
+	{
+	if (fset & feature)
+	    {
+	    nc = snprintf(buf,size,"%s%s",
+			  nfeat > 0 ? " " : "",
+			  get_feature_label(feature));
+	    nfeat++;
+	    size -= nc;
+	    buf += nc;
+	    fset &= ~feature;
+	    }
+	}
+}
+
 static int bind_to_interface (struct task_struct *curr,
 			      unsigned magic,
 			      u_long featdep,
-			      u_long abirev)
+			      u_long abirev,
+			      u_long infarg)
 {
+    xnfeatinfo_t finfo;
+    u_long featmis;
     int muxid;
     spl_t s;
 
-    if (!check_feature_dependencies(featdep))
-	return -ENXIO;
+    featmis = (~XENOMAI_FEAT_DEP & (featdep & XENOMAI_FEAT_MAN));
+
+    if (infarg)
+	{
+	if (!__xn_access_ok(curr,VERIFY_WRITE,infarg,sizeof(finfo)))
+	    return -EFAULT;
+
+	/* Pass back the supported feature set and the ABI revision
+	   level to user-space. */
+
+	finfo.feat_all = XENOMAI_FEAT_DEP;
+	stringify_feature_set(XENOMAI_FEAT_DEP,finfo.feat_all_s,sizeof(finfo.feat_all_s));
+	finfo.feat_man = featdep & XENOMAI_FEAT_MAN;
+	stringify_feature_set(XENOMAI_FEAT_MAN,finfo.feat_man_s,sizeof(finfo.feat_man_s));
+	finfo.feat_mis = featmis;
+	stringify_feature_set(featmis,finfo.feat_mis_s,sizeof(finfo.feat_mis_s));
+	finfo.feat_req = featdep;
+	stringify_feature_set(featdep,finfo.feat_req_s,sizeof(finfo.feat_req_s));
+	finfo.abirev = XENOMAI_ABI_REV;
+
+	__xn_copy_to_user(curr,(void *)infarg,&finfo,sizeof(finfo));
+	}
+
+    if (featmis)
+	/* Some mandatory features the user-space interface relies on
+	   are missing at kernel level; cannot go further. */
+	return -EINVAL;
 
     if (!check_abi_revision(abirev))
 	return -ENOEXEC;
@@ -959,6 +1009,9 @@ static int get_system_info (struct task_struct *curr,
 {
     xnsysinfo_t info;
 
+    if (!__xn_access_ok(curr,VERIFY_WRITE,infarg,sizeof(info)))
+	return -EFAULT;
+
     info.cpufreq = xnarch_get_cpu_freq();
     info.tickval = xnpod_get_tickval();
     __xn_copy_to_user(curr,(void *)infarg,&info,sizeof(info));
@@ -1007,7 +1060,8 @@ static void exec_nucleus_syscall (int muxop, struct pt_regs *regs)
                                bind_to_interface(current,
 						 __xn_reg_arg1(regs),
 						 __xn_reg_arg2(regs),
-						 __xn_reg_arg3(regs)));
+						 __xn_reg_arg3(regs),
+						 __xn_reg_arg4(regs)));
 	    break;
 		
 	case __xn_sys_info:

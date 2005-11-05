@@ -17,6 +17,7 @@
  */
 
 #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <xenomai/rtdm/syscall.h>
 
@@ -25,16 +26,39 @@ int __rtdm_muxid = -1;
 static __attribute__((constructor)) void __init_rtdm_interface(void)
 
 {
+    xnfeatinfo_t finfo;
     int muxid;
 
     muxid = XENOMAI_SYSBIND(RTDM_SKIN_MAGIC,
 			    XENOMAI_FEAT_DEP,
-			    XENOMAI_ABI_REV);
-    if (muxid < 0) {
-        fprintf(stderr,"Xenomai: RTDM skin or user-space support unavailable.\n");
-        fprintf(stderr,"(Did you load the xeno_rtdm.ko module?)\n");
-        exit(1);
-    }
+			    XENOMAI_ABI_REV,
+			    &finfo);
+    switch (muxid)
+	{
+	case -EINVAL:
 
-    __rtdm_muxid = muxid;
+	    fprintf(stderr,"Xenomai: incompatible feature set\n");
+	    fprintf(stderr,"(required=\"%s\", present=\"%s\", missing=\"%s\").\n",
+		    finfo.feat_man_s,finfo.feat_all_s,finfo.feat_mis_s);
+	    exit(1);
+
+	case -ENOEXEC:
+
+	    fprintf(stderr,"Xenomai: incompatible ABI revision level\n");
+	    fprintf(stderr,"(needed=%lu, current=%lu).\n",
+		    XENOMAI_ABI_REV,finfo.abirev);
+	    exit(1);
+
+	case -ENOSYS:
+	case -ESRCH:
+
+	    fprintf(stderr,"Xenomai: RTDM skin or CONFIG_XENO_PERVASIVE disabled.\n");
+	    fprintf(stderr,"(modprobe xeno_rtdm.ko?)\n");
+	    exit(1);
+
+	default:
+
+	    __rtdm_muxid = muxid;
+	    break;
+	}
 }

@@ -22,19 +22,20 @@
 #include <asm-generic/xenomai/features.h>
 
 /* The ABI revision level we use on this arch. */
-#define XENOMAI_ABI_REV   1
+#define XENOMAI_ABI_REV   1UL
 
 #define XENOMAI_FEAT_DEP  __xn_feat_generic_mask
 
-static inline int check_feature_dependencies(unsigned long featdep)
-{
-    const unsigned long featreq = 0;
-    return (XENOMAI_FEAT_DEP & featreq) == (featdep & featreq);
-}
+#define XENOMAI_FEAT_MAN  0
 
 static inline int check_abi_revision(unsigned long abirev)
 {
     return abirev == XENOMAI_ABI_REV;
+}
+
+static inline const char *get_feature_label (unsigned feature)
+{
+    return get_generic_feature_label(feature);
 }
 
 #endif /* !_XENO_ASM_IA64_FEATURES_H */

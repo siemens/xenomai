@@ -1,11 +1,22 @@
 2005-11-05  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/shadow.c: Return feature sets (present, requested,
+	mandatory and missing) in symbolic form upon skin binding.
+
+	* src/skins/*/init.c (constructor): Explain binding errors.
+
+	* include/asm-generic/syscall.h: Remove obsolete xninquiry_t.
+
 	* v2.1: Install all interface headers so that kernel modules could
 	be built against those without requiring a complete Xenomai source
 	distribution.
 
 	* configure.in: Allow in-tree builds.
 
+2005-11-03  Heikki Lindholm <holindho@cs.helsinki.fi>
+
+	* ksrc/arch: Merge ppc and ppc64 trees, in preparation for 2.6.15.
+	
 2005-11-03  Philippe Gerum  <rpm@xenomai.org>
 
 	* scripts/prepare-kernel.sh: Read unspec arguments interactively.

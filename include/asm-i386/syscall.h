@@ -219,7 +219,7 @@ asm (".L__X'%ebx = 1\n\t"
 #define XENOMAI_SYSCALL3(op,a1,a2,a3)       XENOMAI_SYS_MUX(3,op,a1,a2,a3)
 #define XENOMAI_SYSCALL4(op,a1,a2,a3,a4)    XENOMAI_SYS_MUX(4,op,a1,a2,a3,a4)
 #define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5) XENOMAI_SYS_MUX(5,op,a1,a2,a3,a4,a5)
-#define XENOMAI_SYSBIND(a1,a2,a3)           XENOMAI_SYS_MUX_SAFE(3,__xn_sys_bind,a1,a2,a3)
+#define XENOMAI_SYSBIND(a1,a2,a3,a4)        XENOMAI_SYS_MUX_SAFE(4,__xn_sys_bind,a1,a2,a3,a4)
 
 #define XENOMAI_SKINCALL0(id,op)                XENOMAI_SKIN_MUX(0,id,op)
 #define XENOMAI_SKINCALL1(id,op,a1)             XENOMAI_SKIN_MUX(1,id,op,a1)

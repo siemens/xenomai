@@ -37,25 +37,47 @@ static void __flush_tsd (void *tsd)
 static __attribute__((constructor)) void __init_xeno_interface(void)
 
 {
+    xnfeatinfo_t finfo;
     int muxid;
 
     muxid = XENOMAI_SYSBIND(XENO_SKIN_MAGIC,
 			    XENOMAI_FEAT_DEP,
-			    XENOMAI_ABI_REV);
-    if (muxid < 0)
+			    XENOMAI_ABI_REV,
+			    &finfo);
+    switch (muxid)
 	{
-	fprintf(stderr,"Xenomai: native skin or user-space support unavailable.\n");
-	fprintf(stderr,"(did you load the xeno_native.ko module?)\n");
-	exit(1);
+	case -EINVAL:
+
+	    fprintf(stderr,"Xenomai: incompatible feature set\n");
+	    fprintf(stderr,"(required=\"%s\", present=\"%s\", missing=\"%s\").\n",
+		    finfo.feat_man_s,finfo.feat_all_s,finfo.feat_mis_s);
+	    exit(1);
+
+	case -ENOEXEC:
+
+	    fprintf(stderr,"Xenomai: incompatible ABI revision level\n");
+	    fprintf(stderr,"(needed=%lu, current=%lu).\n",
+		    XENOMAI_ABI_REV,finfo.abirev);
+	    exit(1);
+
+	case -ENOSYS:
+	case -ESRCH:
+
+	    fprintf(stderr,"Xenomai: native skin or CONFIG_XENO_PERVASIVE disabled.\n");
+	    fprintf(stderr,"(modprobe xeno_native.ko?)\n");
+	    exit(1);
+
+	default:
+
+	    /* Allocate a TSD key for indexing self task pointers. */
+
+	    if (pthread_key_create(&__native_tskey,&__flush_tsd) != 0)
+		{
+		fprintf(stderr,"Xenomai: failed to allocate new TSD key?!\n");
+		exit(1);
+		}
+
+	    __native_muxid = muxid;
+	    break;
 	}
-
-    /* Allocate a TSD key for indexing self task pointers. */
-
-    if (pthread_key_create(&__native_tskey,&__flush_tsd) != 0)
-	{
-	fprintf(stderr,"Xenomai: failed to allocate new TSD key?!\n");
-	exit(1);
-	}
-
-    __native_muxid = muxid;
 }

@@ -37,7 +37,7 @@
 #define __xn_feat_x86_tsc 0x00000002
 
 /* The ABI revision level we use on this arch. */
-#define XENOMAI_ABI_REV   1
+#define XENOMAI_ABI_REV   1UL
 
 #ifdef CONFIG_X86_TSC
 #define __xn_feat_x86_tsc_mask __xn_feat_x86_tsc
@@ -55,15 +55,24 @@
 			   __xn_feat_x86_sep_mask | \
 			   __xn_feat_x86_tsc_mask)
 
-static inline int check_feature_dependencies(unsigned long featdep)
-{
-    const unsigned long featreq = (__xn_feat_x86_sep_mask|__xn_feat_x86_tsc_mask);
-    return (XENOMAI_FEAT_DEP & featreq) == (featdep & featreq);
-}
+#define XENOMAI_FEAT_MAN  (__xn_feat_x86_sep_mask | \
+			   __xn_feat_x86_tsc_mask)
 
 static inline int check_abi_revision(unsigned long abirev)
 {
     return abirev == XENOMAI_ABI_REV;
+}
+
+static inline const char *get_feature_label (unsigned feature)
+{
+    switch (feature) {
+    	case __xn_feat_x86_sep:
+	    return "sep";
+    	case __xn_feat_x86_tsc:
+	    return "tsc";
+    	default:
+	    return get_generic_feature_label(feature);
+    }
 }
 
 #endif /* !_XENO_ASM_I386_FEATURES_H */

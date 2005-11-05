@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <limits.h>
 #include <xenomai/posix/posix.h>
 #include <xenomai/posix/syscall.h>
@@ -30,23 +31,46 @@ int __rtdm_fd_start = INT_MAX;
 static __attribute__((constructor)) void __init_posix_interface(void)
 
 {
+    xnfeatinfo_t finfo;
     int muxid;
 
     muxid = XENOMAI_SYSBIND(PSE51_SKIN_MAGIC,
 			    XENOMAI_FEAT_DEP,
-			    XENOMAI_ABI_REV);
-    if (muxid < 0)
+			    XENOMAI_ABI_REV,
+			    &finfo);
+    switch (muxid)
 	{
-	fprintf(stderr,"Xenomai: POSIX skin or user-space support unavailable.\n");
-	fprintf(stderr,"(did you load the xeno_posix.ko module?)\n");
-	exit(1);
-	}
+	case -EINVAL:
 
-    __pse51_muxid = muxid;
+	    fprintf(stderr,"Xenomai: incompatible feature set\n");
+	    fprintf(stderr,"(required=\"%s\", present=\"%s\", missing=\"%s\").\n",
+		    finfo.feat_man_s,finfo.feat_all_s,finfo.feat_mis_s);
+	    exit(1);
+
+	case -ENOEXEC:
+
+	    fprintf(stderr,"Xenomai: incompatible ABI revision level\n");
+	    fprintf(stderr,"(needed=%lu, current=%lu).\n",
+		    XENOMAI_ABI_REV,finfo.abirev);
+	    exit(1);
+
+	case -ENOSYS:
+	case -ESRCH:
+
+	    fprintf(stderr,"Xenomai: POSIX skin or CONFIG_XENO_PERVASIVE disabled.\n");
+	    fprintf(stderr,"(modprobe xeno_posix.ko?)\n");
+	    exit(1);
+
+	default:
+
+	    __pse51_muxid = muxid;
+	    break;
+	}
 
     muxid = XENOMAI_SYSBIND(RTDM_SKIN_MAGIC,
 			    XENOMAI_FEAT_DEP,
-			    XENOMAI_ABI_REV);
+			    XENOMAI_ABI_REV,
+			    NULL);
     if (muxid > 0)
         {
         __rtdm_muxid    = muxid;

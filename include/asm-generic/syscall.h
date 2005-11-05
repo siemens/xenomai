@@ -32,22 +32,29 @@
 #define XENOMAI_LINUX_DOMAIN  0
 #define XENOMAI_XENO_DOMAIN   1
 
+typedef struct xnfeatinfo {
+
+#define XNFEAT_STRING_LEN 64
+
+    unsigned long feat_all;	/* Available feature set. */
+    char feat_all_s[XNFEAT_STRING_LEN];
+    unsigned long feat_man;	/* Mandatory features (when requested). */
+    char feat_man_s[XNFEAT_STRING_LEN];
+    unsigned long feat_req;	/* Requested feature set. */
+    char feat_req_s[XNFEAT_STRING_LEN];
+    unsigned long feat_mis;	/* Missing features. */
+    char feat_mis_s[XNFEAT_STRING_LEN];
+
+    unsigned long abirev;	/* ABI revision level. */
+
+} xnfeatinfo_t;
+
 typedef struct xnsysinfo {
 
     unsigned long long cpufreq;	/* CPU frequency */
     unsigned long tickval;	/* Tick duration (ns) */
 
 } xnsysinfo_t;
-
-typedef struct xninquiry {
-
-    char name[32];
-    int prio;
-    unsigned long status;
-    void *khandle;
-    void *uhandle;
-
-} xninquiry_t;
 
 #ifdef __KERNEL__
 
@@ -86,7 +93,7 @@ typedef struct _xnsysent {
 /* Short-hand for shadow syscall in Linux space. */
 #define __xn_exec_secondary (__xn_exec_shadow|__xn_exec_lostage)
 
-    u_long flags;
+    unsigned long flags;
 
 } xnsysent_t;
 

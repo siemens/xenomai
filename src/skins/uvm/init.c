@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <xenomai/uvm/syscall.h>
 
 int __uvm_muxid = -1;
@@ -27,19 +28,40 @@ xnsysinfo_t __uvm_info;
 static __attribute__((constructor)) void __init_uvm_interface(void)
 
 {
+    xnfeatinfo_t finfo;
     int muxid;
 
     muxid = XENOMAI_SYSBIND(UVM_SKIN_MAGIC,
 			    XENOMAI_FEAT_DEP,
-			    XENOMAI_ABI_REV);
-    if (muxid < 0)
+			    XENOMAI_ABI_REV,
+			    &finfo);
+    switch (muxid)
 	{
-	fprintf(stderr,"Xenomai: UVM skin or user-space support unavailable.\n");
-	fprintf(stderr,"(did you load the xeno_uvm.ko module?)\n");
-	exit(1);
+	case -EINVAL:
+
+	    fprintf(stderr,"Xenomai: incompatible feature set\n");
+	    fprintf(stderr,"(required=\"%s\", present=\"%s\", missing=\"%s\").\n",
+		    finfo.feat_man_s,finfo.feat_all_s,finfo.feat_mis_s);
+	    exit(1);
+
+	case -ENOEXEC:
+
+	    fprintf(stderr,"Xenomai: incompatible ABI revision level\n");
+	    fprintf(stderr,"(needed=%lu, current=%lu).\n",
+		    XENOMAI_ABI_REV,finfo.abirev);
+	    exit(1);
+
+	case -ENOSYS:
+	case -ESRCH:
+
+	    fprintf(stderr,"Xenomai: UVM skin or CONFIG_XENO_PERVASIVE disabled.\n");
+	    fprintf(stderr,"(modprobe xeno_uvm.ko?)\n");
+	    exit(1);
+
+	default:
+
+	    XENOMAI_SYSCALL2(__xn_sys_info,muxid,&__uvm_info);
+	    __uvm_muxid = muxid;
+	    break;
 	}
-
-    XENOMAI_SYSCALL2(__xn_sys_info,muxid,&__uvm_info);
-
-    __uvm_muxid = muxid;
 }

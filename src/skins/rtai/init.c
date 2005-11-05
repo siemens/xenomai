@@ -25,17 +25,39 @@ int __rtai_muxid = -1;
 static __attribute__((constructor)) void __init_rtai_interface(void)
 
 {
+    xnfeatinfo_t finfo;
     int muxid;
 
     muxid = XENOMAI_SYSBIND(RTAI_SKIN_MAGIC,
 			    XENOMAI_FEAT_DEP,
-			    XENOMAI_ABI_REV);
-    if (muxid < 0)
+			    XENOMAI_ABI_REV,
+			    &finfo);
+    switch (muxid)
 	{
-	fprintf(stderr,"Xenomai: RTAI skin or user-space support unavailable.\n");
-	fprintf(stderr,"(did you load the xeno_rtai.ko module?)\n");
-	exit(1);
-	}
+	case -EINVAL:
 
-    __rtai_muxid = muxid;
+	    fprintf(stderr,"Xenomai: incompatible feature set\n");
+	    fprintf(stderr,"(required=\"%s\", present=\"%s\", missing=\"%s\").\n",
+		    finfo.feat_man_s,finfo.feat_all_s,finfo.feat_mis_s);
+	    exit(1);
+
+	case -ENOEXEC:
+
+	    fprintf(stderr,"Xenomai: incompatible ABI revision level\n");
+	    fprintf(stderr,"(needed=%lu, current=%lu).\n",
+		    XENOMAI_ABI_REV,finfo.abirev);
+	    exit(1);
+
+	case -ENOSYS:
+	case -ESRCH:
+
+	    fprintf(stderr,"Xenomai: RTAI skin or CONFIG_XENO_PERVASIVE disabled.\n");
+	    fprintf(stderr,"(modprobe xeno_rtai.ko?)\n");
+	    exit(1);
+
+	default:
+
+	    __rtai_muxid = muxid;
+	    break;
+	}
 }
