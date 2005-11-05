@@ -323,6 +323,7 @@ base=asm-generic
 AC_CONFIG_LINKS([src/include/$base/xenomai:include/$base])
 
 dnl Don't link this one if building in the source tree.
+top_builddir=`pwd`
 abs_srcdir=`cd "$srcdir" && pwd`
 if test \! "$abs_srcdir" = $top_builddir; then
    AC_CONFIG_LINKS([src/include/asm-uvm/system.h])

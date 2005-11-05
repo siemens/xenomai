@@ -21388,6 +21388,7 @@ base=asm-generic
           ac_config_links="$ac_config_links src/include/$base/xenomai:include/$base"
 
 
+top_builddir=`pwd`
 abs_srcdir=`cd "$srcdir" && pwd`
 if test \! "$abs_srcdir" = $top_builddir; then
              ac_config_links="$ac_config_links src/include/asm-uvm/system.h"
