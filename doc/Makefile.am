@@ -1,4 +1,4 @@
-SUBDIRS=docbook doxygen man
+SUBDIRS=docbook doxygen man txt
 
 GENERATE_DOC=$(top_srcdir)/scripts/maint/generate-doc
 
@@ -8,3 +8,6 @@ generate-doc:
 	else \
 		srcdir=$(srcdir) $(GENERATE_DOC); \
 	fi
+
+dist-hook:
+	find $(distdir) -name .svn -depth -exec rm -fr \{\} \;

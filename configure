@@ -21399,7 +21399,7 @@ fi
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x; then
-                                                                                                                                                                                          ac_config_files="$ac_config_files doc/Makefile doc/man/Makefile doc/man/runinfo.man doc/man/xeno-config.man doc/man/xeno-info.man doc/man/xeno-load.man doc/man/xeno-test.man doc/doxygen/Makefile doc/doxygen/Doxyfile doc/docbook/Makefile doc/docbook/catalog doc/docbook/custom-stylesheets/Makefile doc/docbook/custom-stylesheets/xsl/Makefile doc/docbook/custom-stylesheets/xsl/common/Makefile doc/docbook/custom-stylesheets/xsl/fo/Makefile doc/docbook/custom-stylesheets/xsl/html/Makefile doc/docbook/custom-stylesheets/xsl/html/chunk.xsl doc/docbook/xenomai/Makefile"
+                                                                                                                                                                                                    ac_config_files="$ac_config_files doc/Makefile doc/txt/Makefile doc/man/Makefile doc/man/runinfo.man doc/man/xeno-config.man doc/man/xeno-info.man doc/man/xeno-load.man doc/man/xeno-test.man doc/doxygen/Makefile doc/doxygen/Doxyfile doc/docbook/Makefile doc/docbook/catalog doc/docbook/custom-stylesheets/Makefile doc/docbook/custom-stylesheets/xsl/Makefile doc/docbook/custom-stylesheets/xsl/common/Makefile doc/docbook/custom-stylesheets/xsl/fo/Makefile doc/docbook/custom-stylesheets/xsl/html/Makefile doc/docbook/custom-stylesheets/xsl/html/chunk.xsl doc/docbook/xenomai/Makefile"
 
 fi
 
@@ -22035,6 +22035,7 @@ do
   "include/vrtx/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/vrtx/Makefile" ;;
   "include/vxworks/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/vxworks/Makefile" ;;
   "doc/Makefile" ) CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
+  "doc/txt/Makefile" ) CONFIG_FILES="$CONFIG_FILES doc/txt/Makefile" ;;
   "doc/man/Makefile" ) CONFIG_FILES="$CONFIG_FILES doc/man/Makefile" ;;
   "doc/man/runinfo.man" ) CONFIG_FILES="$CONFIG_FILES doc/man/runinfo.man" ;;
   "doc/man/xeno-config.man" ) CONFIG_FILES="$CONFIG_FILES doc/man/xeno-config.man" ;;
