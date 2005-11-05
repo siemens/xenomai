@@ -1,3 +1,7 @@
+2005-11-05  Philippe Gerum  <rpm@xenomai.org>
+
+	* configure.in: Allow in-tree builds.
+
 2005-11-03  Philippe Gerum  <rpm@xenomai.org>
 
 	* scripts/prepare-kernel.sh: Read unspec arguments interactively.

@@ -321,7 +321,12 @@ base=asm-$XENO_TARGET_ARCH
 AC_CONFIG_LINKS([src/include/asm/xenomai:include/$base])
 base=asm-generic
 AC_CONFIG_LINKS([src/include/$base/xenomai:include/$base])
-AC_CONFIG_LINKS([src/include/asm-uvm/system.h])
+
+dnl Don't link this one if building in the source tree.
+abs_srcdir=`cd "$srcdir" && pwd`
+if test \! "$abs_srcdir" = $top_builddir; then
+   AC_CONFIG_LINKS([src/include/asm-uvm/system.h])
+fi
 
 AC_CONFIG_FILES([ \
 	Makefile \

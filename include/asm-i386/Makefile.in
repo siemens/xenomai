@@ -206,7 +206,7 @@ target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
 include_HEADERS = atomic.h features.h syscall.h
-noinst_HEADERS = calibration.h hal.h system.h
+noinst_HEADERS = calibration.h hal.h smi.h system.h
 all: all-am
 
 .SUFFIXES:

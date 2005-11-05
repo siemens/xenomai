@@ -21387,8 +21387,12 @@ base=asm-$XENO_TARGET_ARCH
 base=asm-generic
           ac_config_links="$ac_config_links src/include/$base/xenomai:include/$base"
 
-          ac_config_links="$ac_config_links src/include/asm-uvm/system.h"
 
+abs_srcdir=`cd "$srcdir" && pwd`
+if test \! "$abs_srcdir" = $top_builddir; then
+             ac_config_links="$ac_config_links src/include/asm-uvm/system.h"
+
+fi
 
                                                                                                                                                                                                                                                                                                                                                                                   ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno-load scripts/xeno-test src/Makefile src/skins/Makefile src/skins/uvm/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/psos+/Makefile src/skins/uitron/Makefile src/skins/vrtx/Makefile src/skins/vxworks/Makefile src/skins/rtdm/Makefile src/skins/rtai/Makefile src/include/Makefile src/include/asm-uvm/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/switch/Makefile include/Makefile include/asm-generic/Makefile include/asm-i386/Makefile include/asm-powerpc/Makefile include/asm-ia64/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/psos+/Makefile include/rtai/Makefile include/rtdm/Makefile include/uitron/Makefile include/uvm/Makefile include/vrtx/Makefile include/vxworks/Makefile"
 
