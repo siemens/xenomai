@@ -1,3 +1,7 @@
+2005-11-06  Philippe Gerum  <rpm@xenomai.org>
+
+ 	* RELEASE: Xenomai 2.0.1 (Crushing Day)
+
 2005-11-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* arch/i386/patches: Upgrade to Adeos newgen 1.0-10.
