@@ -1,3 +1,7 @@
+2005-11-08  Ulrich Schwab  <schwab@inmess.de>
+
+	* skins/native/task.c (rt_task_receive): Fix documentation.
+
 2005-11-06  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.0.1 (Crushing Day)
