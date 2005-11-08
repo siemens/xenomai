@@ -29,9 +29,9 @@
 #define IN_BUFFER_SIZE      4096
 #define OUT_BUFFER_SIZE     4096
 
+#define DEFAULT_BAUD_BASE   115200
 #define DEFAULT_TX_FIFO     16
 
-#define BAUD_MASK           0xFFFF
 #define PARITY_MASK         0x03
 #define DATA_BITS_MASK      0x03
 #define STOP_BITS_MASK      0x01
@@ -84,7 +84,7 @@ struct rt_16550_context {
     rtdm_event_t            in_event;
     char                    in_buf[IN_BUFFER_SIZE];
     volatile unsigned long  in_lock;
-    u64                     *in_history;
+    uint64_t                *in_history;
 
     int                     out_head;
     int                     out_tail;
@@ -93,7 +93,7 @@ struct rt_16550_context {
     char                    out_buf[OUT_BUFFER_SIZE];
     rtdm_mutex_t            out_lock;
 
-    u64                     last_timestamp;
+    uint64_t                last_timestamp;
     volatile int            ioc_events;
     rtdm_event_t            ioc_event;
     volatile unsigned long  ioc_event_lock;
@@ -117,6 +117,8 @@ static unsigned long        ioaddr[MAX_DEVICES];
 static int                  ioaddr_c;
 static unsigned int         irq[MAX_DEVICES];
 static int                  irq_c;
+static unsigned int         baud_base[MAX_DEVICES];
+static int                  baud_base_c;
 static int                  tx_fifo[MAX_DEVICES];
 static int                  tx_fifo_c;
 static unsigned int         start_index;
@@ -125,6 +127,9 @@ module_param_array(ioaddr, ulong, &ioaddr_c, 0400);
 MODULE_PARM_DESC(ioaddr, "I/O addresses of the serial devices");
 module_param_array(irq, uint, &irq_c, 0400);
 MODULE_PARM_DESC(irq, "IRQ numbers of the serial devices");
+module_param_array(baud_base, uint, &baud_base_c, 0400);
+MODULE_PARM_DESC(baud_base,
+    "Maximum baud rate of the serial device (internal clock rate / 16)");
 module_param_array(tx_fifo, int, &tx_fifo_c, 0400);
 MODULE_PARM_DESC(tx_fifo, "Transmitter FIFO size");
 module_param(start_index, uint, 0400);
@@ -135,7 +140,7 @@ MODULE_AUTHOR("jan.kiszka@web.de");
 
 
 static inline int rt_16550_rx_interrupt(struct rt_16550_context *ctx,
-                                        u64 *timestamp)
+                                        uint64_t *timestamp)
 {
     int dev_id = ctx->dev_id;
     int rbytes = 0;
@@ -219,7 +224,7 @@ static int rt_16550_interrupt(rtdm_irq_t *irq_context)
     struct rt_16550_context *ctx;
     int                     dev_id;
     int                     iir;
-    u64                     timestamp = rtdm_clock_read();
+    uint64_t                timestamp = rtdm_clock_read();
     int                     rbytes = 0;
     int                     events = 0;
     int                     modem;
@@ -297,11 +302,12 @@ static int rt_16550_interrupt(rtdm_irq_t *irq_context)
 
 static int rt_16550_set_config(struct rt_16550_context *ctx,
                                const struct rtser_config *config,
-                               u64 **in_history_ptr)
+                               uint64_t **in_history_ptr)
 {
     rtdm_lockctx_t  lock_ctx;
     int             dev_id;
     int             ret = 0;
+    int             baud_div = 0;
 
 
     dev_id = ctx->dev_id;
@@ -310,11 +316,12 @@ static int rt_16550_set_config(struct rt_16550_context *ctx,
     rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
 
     if (testbits(config->config_mask, RTSER_SET_BAUD)) {
-        ctx->config.baud_rate = config->baud_rate & BAUD_MASK;
-
-        outb(LCR_DLAB,                           LCR(dev_id));
-        outb(ctx->config.baud_rate & 0xff, DLL(dev_id));
-        outb(ctx->config.baud_rate >> 8,   DLM(dev_id));
+        ctx->config.baud_rate = config->baud_rate;
+        baud_div = (baud_base[dev_id] + (ctx->config.baud_rate >> 1)) /
+                   ctx->config.baud_rate;
+        outb(LCR_DLAB,        LCR(dev_id));
+        outb(baud_div & 0xff, DLL(dev_id));
+        outb(baud_div >> 8,   DLM(dev_id));
     }
 
     if (testbits(config->config_mask, RTSER_SET_PARITY))
@@ -423,7 +430,7 @@ int rt_16550_open(struct rtdm_dev_context *context,
     struct rt_16550_context *ctx;
     int                     dev_id = context->device->device_id;
     int                     ret;
-    __u64                   *dummy;
+    uint64_t                *dummy;
 
 
     ctx = (struct rt_16550_context *)context->dev_private;
@@ -473,7 +480,7 @@ int rt_16550_close(struct rtdm_dev_context *context,
 {
     struct rt_16550_context *ctx;
     int                     dev_id;
-    u64                     *in_history;
+    uint64_t                *in_history;
     rtdm_lockctx_t          lock_ctx;
 
 
@@ -521,6 +528,7 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 {
     struct rt_16550_context *ctx;
     int                     ret = 0;
+    int                     dev_id = context->device->device_id;
 
 
     ctx = (struct rt_16550_context *)context->dev_private;
@@ -541,7 +549,7 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
         case RTSER_RTIOC_SET_CONFIG: {
             struct rtser_config *config;
             struct rtser_config config_buf;
-            __u64               *hist_buf = NULL;
+            uint64_t            *hist_buf = NULL;
 
             config = (struct rtser_config *)arg;
 
@@ -556,6 +564,12 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
                 config = &config_buf;
             }
 
+            if (testbits(config->config_mask, RTSER_SET_BAUD) &&
+                (config->baud_rate > baud_base[dev_id])) {
+                /* the baudrate is to high for this port */
+                return -EINVAL;
+            }
+
             if (testbits(config->config_mask, RTSER_SET_TIMESTAMP_HISTORY)) {
                 if (test_bit(RTDM_CREATED_IN_NRT, &context->context_flags) &&
                     rtdm_in_rt_context()) {
@@ -568,11 +582,11 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
                              RTSER_RX_TIMESTAMP_HISTORY)) {
                     if (test_bit(RTDM_CREATED_IN_NRT,
                                  &context->context_flags))
-                        hist_buf = kmalloc(IN_BUFFER_SIZE * sizeof(__u64),
+                        hist_buf = kmalloc(IN_BUFFER_SIZE * sizeof(uint64_t),
                                            GFP_KERNEL);
                     else
                         hist_buf =
-                            rtdm_malloc(IN_BUFFER_SIZE * sizeof(__u64));
+                            rtdm_malloc(IN_BUFFER_SIZE * sizeof(uint64_t));
                 }
 
                 if (!hist_buf)
@@ -1011,7 +1025,7 @@ static const struct rtdm_device __initdata device_tmpl = {
     device_class:       RTDM_CLASS_SERIAL,
     device_sub_class:   RTDM_SUBCLASS_16550A,
     driver_name:        "rt_16550A",
-    driver_version:     RTDM_DRIVER_VER(1, 1, 2),
+    driver_version:     RTDM_DRIVER_VER(1, 2, 0),
     peripheral_name:    "UART 16550A",
     provider_name:      "Jan Kiszka",
 };
@@ -1042,6 +1056,9 @@ int __init init_module(void)
         ret = -EBUSY;
         if (!request_region(ioaddr[i], 8, dev->device_name))
             goto kfree_out;
+
+        if (baud_base[i] == 0)
+            baud_base[i] = DEFAULT_BAUD_BASE;
 
         if (tx_fifo[i] == 0)
             tx_fifo[i] = DEFAULT_TX_FIFO;

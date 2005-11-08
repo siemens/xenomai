@@ -381,7 +381,7 @@ struct rtdm_device {
     /** Size of driver defined appendix to struct rtdm_dev_context */
     size_t                          context_size;
 
-    /** Named device identification */
+    /** Named device identification (orthogonal to Linux device name space) */
     char                            device_name[RTDM_MAX_DEVNAME_LEN+1];
 
     /** Protocol device identification: protocol family (PF_xxx) */
@@ -477,7 +477,7 @@ static inline void rtdm_context_unlock(struct rtdm_dev_context *context)
 
 
 /* --- clock services --- */
-static inline __u64 rtdm_clock_read(void)
+static inline uint64_t rtdm_clock_read(void)
 {
     return xnpod_ticks2ns(xnpod_get_time());
 }
@@ -500,7 +500,7 @@ static inline __u64 rtdm_clock_read(void)
  * Generally, it is illegal to suspend the current task by calling
  * rtdm_task_sleep(), rtdm_event_wait(), etc. while holding a spinlock. In
  * contrast, this macro allows to combine several operations including
- * potentially rescheduling calls to an atomic code block with respect to
+ * a potentially rescheduling call to an atomic code block with respect to
  * other RTDM_EXECUTE_ATOMICALLY() blocks. The macro is a light-weight
  * alternative for protecting code blocks via mutexes, and it can even be used
  * to synchronise real-time and non-real-time contexts.
@@ -511,7 +511,9 @@ static inline __u64 rtdm_clock_read(void)
  * @c break, @c return, @c goto, etc. This would leave the global lock held
  * during the code block execution in an inconsistent state. Moreover, do not
  * embed complex operations into the code bock. Consider that they will be
- * executed under preemption lock with interrupts switched-off.
+ * executed under preemption lock with interrupts switched-off. Also note that
+ * invocation of rescheduling calls may break the atomicity until the task
+ * gains the CPU again.
  *
  * Environments:
  *
@@ -841,28 +843,9 @@ typedef void (*rtdm_task_proc_t)(void *arg);
 
 /** @} */
 
-static inline int rtdm_task_init(rtdm_task_t *task, const char *name,
-                                 rtdm_task_proc_t task_proc, void *arg,
-                                 int priority, __u64 period)
-{
-    int res;
-
-    res = xnpod_init_thread(task, name, priority, 0, 0);
-    if (res)
-        goto done;
-
-    if (!__builtin_constant_p(period) || (period != XN_INFINITE)) {
-        res = xnpod_set_thread_periodic(task, XN_INFINITE,
-                                        xnpod_ns2ticks(period));
-        if (res)
-            goto done;
-    }
-
-    res = xnpod_start_thread(task, 0, 0, XNPOD_ALL_CPUS, task_proc, arg);
-
-  done:
-    return res;
-}
+int rtdm_task_init(rtdm_task_t *task, const char *name,
+                   rtdm_task_proc_t task_proc, void *arg,
+                   int priority, uint64_t period);
 
 static inline void rtdm_task_destroy(rtdm_task_t *task)
 {
@@ -877,7 +860,7 @@ static inline void rtdm_task_set_priority(rtdm_task_t *task, int priority)
     xnpod_schedule();
 }
 
-static inline int rtdm_task_set_period(rtdm_task_t *task, __u64 period)
+static inline int rtdm_task_set_period(rtdm_task_t *task, uint64_t period)
 {
     return xnpod_set_thread_periodic(task, XN_INFINITE,
                                      xnpod_ns2ticks(period));
@@ -901,16 +884,16 @@ static inline int rtdm_task_wait_period(void)
     return xnpod_wait_thread_period();
 }
 
-int rtdm_task_sleep(__u64 delay);
-int rtdm_task_sleep_until(__u64 wakeup_time);
-void rtdm_task_busy_sleep(__u64 delay);
+int rtdm_task_sleep(uint64_t delay);
+int rtdm_task_sleep_until(uint64_t wakeup_time);
+void rtdm_task_busy_sleep(uint64_t delay);
 
 
 /* --- timeout sequences */
 
-typedef __u64                       rtdm_toseq_t;
+typedef uint64_t                    rtdm_toseq_t;
 
-static inline void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, __s64 timeout)
+static inline void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, int64_t timeout)
 {
     *timeout_seq = xnpod_get_time() + xnpod_ns2ticks(timeout);
 }
@@ -937,7 +920,7 @@ static inline void rtdm_event_destroy(rtdm_event_t *event)
 }
 
 int rtdm_event_wait(rtdm_event_t *event);
-int rtdm_event_timedwait(rtdm_event_t *event, __s64 timeout,
+int rtdm_event_timedwait(rtdm_event_t *event, int64_t timeout,
                          rtdm_toseq_t *timeout_seq);
 void rtdm_event_signal(rtdm_event_t *event);
 
@@ -971,7 +954,7 @@ static inline void rtdm_sem_destroy(rtdm_sem_t *sem)
 }
 
 int rtdm_sem_down(rtdm_sem_t *sem);
-int rtdm_sem_timeddown(rtdm_sem_t *sem, __s64 timeout,
+int rtdm_sem_timeddown(rtdm_sem_t *sem, int64_t timeout,
                        rtdm_toseq_t *timeout_seq);
 void rtdm_sem_up(rtdm_sem_t *sem);
 
@@ -995,7 +978,7 @@ static inline void rtdm_mutex_destroy(rtdm_mutex_t *mutex)
 }
 
 int rtdm_mutex_lock(rtdm_mutex_t *mutex);
-int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, __s64 timeout,
+int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, int64_t timeout,
                          rtdm_toseq_t *timeout_seq);
 void rtdm_mutex_unlock(rtdm_mutex_t *mutex);
 

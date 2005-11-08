@@ -81,34 +81,10 @@
 #include <xenomai/rtdm/rtdm.h>
 
 /*!
- * @anchor RTSER_xxx_BAUD   @name RTSER_xxx_BAUD
- * Baud rates
+ * @anchor RTSER_DEF_BAUD   @name RTSER_DEF_BAUD
+ * Default baud rate
  * @{ */
-#define RTSER_50_BAUD               2304
-#define RTSER_75_BAUD               1536
-#define RTSER_110_BAUD              1047
-#define RTSER_134_5_BAUD            857
-#define RTSER_150_BAUD              768
-#define RTSER_300_BAUD              384
-#define RTSER_600_BAUD              192
-#define RTSER_1200_BAUD             96
-#define RTSER_2400_BAUD             48
-#define RTSER_3600_BAUD             32
-#define RTSER_4800_BAUD             24
-#define RTSER_7200_BAUD             16
-#define RTSER_9600_BAUD             12
-#define RTSER_19200_BAUD            6
-#define RTSER_38400_BAUD            3
-#define RTSER_57600_BAUD            2
-#define RTSER_115200_BAUD           1
-#define RTSER_DEF_BAUD              RTSER_9600_BAUD
-
-/** Generate customised baud rate code
- * @param base UART clock base
- * @param rate baud rate
- */
-#define RTSER_CUSTOM_BAUD(base, rate) \
-    ((base + (rate >> 1)) / rate)
+#define RTSER_DEF_BAUD              9600
 /** @} */
 
 /*!
@@ -259,7 +235,7 @@
 typedef struct rtser_config {
     int     config_mask;        /**< mask specifying valid fields,
                                  *   see @ref RTSER_SET_xxx */
-    int     baud_rate;          /**< baud rate, see @ref RTSER_xxx_BAUD */
+    int     baud_rate;          /**< baud rate, default @ref RTSER_DEF_BAUD */
     int     parity;             /**< number of parity bits, see
                                  *   @ref RTSER_xxx_PARITY */
     int     data_bits;          /**< number of data bits, see
@@ -270,13 +246,13 @@ typedef struct rtser_config {
                                  *   @ref RTSER_xxx_HAND */
     int     fifo_depth;         /**< reception FIFO interrupt threshold, see
                                  *   @ref RTSER_FIFO_xxx */
-    __s64   rx_timeout;         /**< reception timeout in ns, see
+    int64_t rx_timeout;         /**< reception timeout in ns, see
                                  *   @ref RTSER_TIMEOUT_xxx for special
                                  *   values */
-    __s64   tx_timeout;         /**< transmission timeout in ns, see
+    int64_t tx_timeout;         /**< transmission timeout in ns, see
                                  *   @ref RTSER_TIMEOUT_xxx for special
                                  *   values */
-    __s64   event_timeout;      /**< event timeout in ns, see
+    int64_t event_timeout;      /**< event timeout in ns, see
                                  *   @ref RTSER_TIMEOUT_xxx for special
                                  *   values */
     int     timestamp_history;  /**< enable timestamp history, see
@@ -303,9 +279,9 @@ typedef struct rtser_event {
     int     events;             /**< signalled events, see
                                  *   @ref RTSER_EVENT_xxx */
     int     rx_pending;         /**< number of pending input characters */
-    __u64   last_timestamp;     /**< last interrupt timestamp (absolute time
+    uint64_t last_timestamp;    /**< last interrupt timestamp (absolute time
                                  *   in ns) */
-    __u64   rxpend_timestamp;   /**< reception timestamp (absolute time in ns)
+    uint64_t rxpend_timestamp;  /**< reception timestamp (absolute time in ns)
                                  *   of oldest character in input queue */
 } rtser_event_t;
 

@@ -1788,6 +1788,9 @@ ssize_t rt_task_send (RT_TASK *task,
  * and no remote task is currently waiting for sending a message to
  * the caller.
  *
+ * - -ETIMEDOUT is returned if no message was received within the @a
+ * timeout.
+ *
  * - -EINTR is returned if rt_task_unblock() has been called for the
  * caller before any message was available.
  *
