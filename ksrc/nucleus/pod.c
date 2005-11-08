@@ -1005,12 +1005,12 @@ void xnpod_restart_thread (xnthread_t *thread)
  * - XNSHIELD enables the interrupt shield for the current user-space
  * task. When engaged, the interrupt shield protects the shadow task
  * running in secondary mode from any preemption by the regular Linux
- * interrupt handlers, without delaying in any way the Xenomai's
- * interrupt handling. The shield is operated on a per-task basis at
- * each context switch, depending on the setting of this flag. This
- * feature is only available if the CONFIG_XENO_OPT_ISHIELD option
- * has been enabled at configuration time; otherwise, this flag is
- * simply ignored.
+ * interrupt handlers, without delaying in any way Xenomai's interrupt
+ * handling. The shield is operated on a per-task basis at each
+ * context switch, depending on the setting of this flag. This feature
+ * is only available if the CONFIG_XENO_OPT_ISHIELD option has been
+ * enabled at configuration time; otherwise, this flag is simply
+ * ignored.
  *
  * Environments:
  *
@@ -2214,7 +2214,7 @@ static inline void xnpod_preempt_current_thread (xnsched_t *sched)
  * needed. xnpod_schedule() actually switches threads if:
  *
  * - the running thread has been blocked or deleted.
- * - or, the running thread has become less priority than the first
+ * - or, the running thread has a lower priority than the first
  *   ready to run thread.
  * - or, the running thread does not lead no more the ready threads
  * (round-robin).
@@ -2228,7 +2228,7 @@ static inline void xnpod_preempt_current_thread (xnsched_t *sched)
  * be applied. In other words, multiple changes on the scheduler state
  * can be done in a row, waking threads up, blocking others, without
  * being immediately translated into the corresponding context
- * switches, like it would be necessary would it appear that a more
+ * switches, like it would be necessary would it appear that a higher
  * priority thread than the current one became runnable for
  * instance. When all changes have been applied, the rescheduling
  * procedure is then called to consider those changes, and possibly

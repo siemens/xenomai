@@ -6,8 +6,3 @@ xeno_hal-y := hal.o usercopy.o
 xeno_hal-$(CONFIG_XENO_HW_NMI_DEBUG_LATENCY) += nmi.o
 
 xeno_hal-$(CONFIG_XENO_HW_SMI_DETECT) += smi.o
-
-clean-files := $(patsubst $(obj)/%,%,		\
-		$(wildcard $(obj)/*.o)		\
-		$(wildcard $(obj)/.*.d)		\
-		$(wildcard $(obj)/.*.cmd))

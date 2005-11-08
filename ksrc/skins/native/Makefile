@@ -24,12 +24,3 @@ xeno_native-$(CONFIG_XENO_OPT_NATIVE_HEAP) += heap.o
 xeno_native-$(CONFIG_XENO_OPT_NATIVE_ALARM) += alarm.o
 
 xeno_native-$(CONFIG_XENO_OPT_NATIVE_INTR) += intr.o
-
-extra-clean := $(obj-) $(xeno_native-) $(xeno_native-y) xeno_native.mod.o built-in.o
-
-clean-files := $(patsubst $(obj)/%,%,		\
-		$(wildcard $(obj)/*.o)		\
-		$(wildcard $(obj)/.*.d)		\
-		$(wildcard $(obj)/.*.cmd)	\
-		$(wildcard $(obj)/*.mod.c)	\
-		$(wildcard $(obj)/*.ko))

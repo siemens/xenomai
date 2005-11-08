@@ -10,8 +10,3 @@ else
 xeno_hal-$(CONFIG_PPC) += switch.o
 xeno_hal-$(CONFIG_XENO_HW_FPU) += fpu.o
 endif
-
-clean-files := $(patsubst $(obj)/%,%,		\
-		$(wildcard $(obj)/*.o)		\
-		$(wildcard $(obj)/.*.d)		\
-		$(wildcard $(obj)/.*.cmd))

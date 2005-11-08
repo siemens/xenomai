@@ -1,6 +1,16 @@
 #! /bin/bash
 set -e
 
+do_links() {
+    rm -fr $2
+    ( cd $1 &&
+      find . \( -name Makefile -o -name Kconfig -o -name '*.[ch]' \) |
+      while read f; do
+        d=`dirname $f`
+	mkdir -p $2/$d && ln -s $1/$f $2/$f
+      done )
+}
+
 usage='usage: prepare-kernel --linux=<linux-tree> --adeos=<adeos-patch> [--arch=<arch>]'
 me=`basename $0`
 
@@ -54,10 +64,11 @@ while test x$linux_tree = x; do
       echo "$me: cannot access Linux tree in $linux_tree"
       linux_tree=
    else
-      linux_tree=`cd $linux_tree && pwd`
       break
    fi
 done
+
+linux_tree=`cd $linux_tree && pwd`
 
 if test \! -r $linux_tree/Makefile; then
    echo "$me: $linux_tree is not a valid Linux kernel tree"
@@ -144,10 +155,10 @@ else
    cat $adeos_patch | (cd $linux_tree && patch -p1 )
 fi
 
-if test -r $linux_tree/include/linux/ipipe.h; then
+if test -r $linux_tree/include/asm-$linux_arch/ipipe.h; then
    adeos_version=`grep '^#define.*IPIPE_ARCH_STRING.*"' $linux_tree/include/asm-$linux_arch/ipipe.h|sed -e 's,.*"\(.*\)"$,\1,'`
    adeos_gen=newgen
-elif test -r $linux_tree/include/linux/adeos.h; then
+elif test -r $linux_tree/include/asm-$linux_arch/adeos.h; then
    adeos_version=`grep '^#define.*ADEOS_ARCH_STRING.*"' $linux_tree/include/asm-$linux_arch/adeos.h|sed -e 's,.*"\(.*\)"$,\1,'`
    adeos_gen=oldgen
 fi
@@ -155,20 +166,17 @@ if test \! x$adeos_version = x; then
    echo "Adeos/$linux_arch $adeos_version ($adeos_gen) installed."
 fi
 
-# Do not use ln -sf here, we must first remove then possibly relink.
+# Create local directories then symlink to the source files from
+# there, so that we don't pollute the Xenomai source tree with
+# compilation files.
 
-rm -f $linux_tree/arch/$linux_arch/xenomai
-ln -s $xenomai_root/ksrc/arch/$xenomai_arch $linux_tree/arch/$linux_arch/xenomai
-rm -f $linux_tree/include/asm-$linux_arch/xenomai
-ln -s $xenomai_root/include/asm-$xenomai_arch $linux_tree/include/asm-$linux_arch/xenomai
-rm -f $linux_tree/include/asm-generic/xenomai
-ln -s $xenomai_root/include/asm-generic $linux_tree/include/asm-generic/xenomai
-rm -f $linux_tree/include/xenomai
-ln -s $xenomai_root/include $linux_tree/include/xenomai
-rm -f $linux_tree/kernel/xenomai
-ln -s $xenomai_root/ksrc $linux_tree/kernel/xenomai
-rm -f $linux_tree/drivers/xenomai
-ln -s $xenomai_root/ksrc/drivers $linux_tree/drivers/xenomai
+do_links $xenomai_root/ksrc/arch/$xenomai_arch $linux_tree/arch/$linux_arch/xenomai
+do_links $xenomai_root/ksrc $linux_tree/kernel/xenomai
+do_links $xenomai_root/ksrc/drivers $linux_tree/drivers/xenomai
+do_links $xenomai_root/include/asm-$xenomai_arch $linux_tree/include/asm-$linux_arch/xenomai
+do_links $xenomai_root/include/asm-generic $linux_tree/include/asm-generic/xenomai
+do_links $xenomai_root/include $linux_tree/include/xenomai
+
 echo 'Links installed.'
 
 if ! grep -q XENOMAI $linux_tree/init/Kconfig; then

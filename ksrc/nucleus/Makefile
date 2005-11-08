@@ -8,10 +8,3 @@ xeno_nucleus-$(CONFIG_XENO_OPT_PERVASIVE) += shadow.o core.o
 xeno_nucleus-$(CONFIG_XENO_OPT_PIPE) += pipe.o
 
 xeno_nucleus-$(CONFIG_LTT) += ltt.o
-
-clean-files := $(patsubst $(obj)/%,%,		\
-		$(wildcard $(obj)/*.o)		\
-		$(wildcard $(obj)/.*.d)		\
-		$(wildcard $(obj)/.*.cmd)	\
-		$(wildcard $(obj)/*.mod.c)	\
-		$(wildcard $(obj)/*.ko))
