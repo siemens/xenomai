@@ -1,3 +1,16 @@
+2005-11-08  Jan Kiszka <jan.kiszka@web.de>
+
+	* skins/rtdm (rtdm_task_init): Fix a cleanup-on-error problem and
+	move this call into drvlib.
+
+	* skins/rtdm: Get rid of __u64 and __s64 usages in favour of
+	uint64_t and int64_t. Improve the documentation of
+	rtdm_device.device_name and RTDM_EXECUTE_ATOMICALLY. Move
+	EXPORT_SYMBOLs to their related functions.
+
+	* drivers/16550A: Allow for the baud rate to be provided as an
+	integer token instead of the previous low-level encoded value.
+
 2005-11-08  Ulrich Schwab  <schwab@inmess.de>
 
 	* skins/native/task.c (rt_task_receive): Fix documentation.
