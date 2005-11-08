@@ -289,6 +289,15 @@ static void lostage_handler (void *cookie)
 		    set_cpus_allowed(p, cpumask_of_cpu(cpuid));
 #endif /* CONFIG_SMP */
 
+		/* We need to downgrade the root thread priority
+		   whenever the APC runs over a non-shadow, so that
+		   the temporary boost we applied in xnshadow_relax()
+		   is not spuriously inherited by the latter until the
+		   relaxed shadow actually resumes in secondary
+		   mode. */
+
+		if (!xnshadow_thread(current))
+		    xnpod_renice_root(XNPOD_ROOT_PRIO_BASE);
  do_wakeup:
 
 #ifdef CONFIG_XENO_OPT_ISHIELD
@@ -298,6 +307,10 @@ static void lostage_handler (void *cookie)
 #endif /* CONFIG_XENO_OPT_ISHIELD */
 
 		wake_up_process(p);
+
+		if (xnsched_resched_p())
+		    xnpod_schedule();
+
 		break;
 
 	    case LO_RENICE_REQ:
