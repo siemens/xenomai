@@ -430,7 +430,7 @@ int rt_heap_delete (RT_HEAP *heap)
  * heap is shared (i.e. H_SHARED mode) and @a size is non-zero but
  * does not match the actual heap size passed to rt_heap_create().
  *
- * - -EIDRM is returned if @a q is a deleted heap descriptor.
+ * - -EIDRM is returned if @a heap is a deleted heap descriptor.
  *
  * - -ETIMEDOUT is returned if @a timeout is different from
  * TM_NONBLOCK and no block is available within the specified amount
