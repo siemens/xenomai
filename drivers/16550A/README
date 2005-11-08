@@ -1,6 +1,9 @@
 Real-Time Serial Driver for 16550A-Compatible Devices
 =====================================================
 
+Driver revision: 1.2.0
+
+
 Preparation
 -----------
  - decide which serial ports are to be managed by the real-time driver
@@ -18,6 +21,7 @@ Invocation
 ----------
 
 modprobe xeno_16550A ioaddr=<io1>[,<io2>...] irq=<irq1>[,<irq2>...]
+                     [baud_base=<base1>[,<base2>...]]
                      [tx_fifo=<len1>[,<len2>...]] [start_index=<index>]
 
 Arguments:
@@ -25,6 +29,8 @@ Arguments:
                   (e.g. "0x3f8,0x2f8")
     irq         - interrupt numbers of the devices, comma separated
                   (e.g. "4,3")
+    baud_base   - Maximum baud rates of the devices, comma separated, default
+                  is 115200
     tx_fifo     - Transmitter FIFO sizes of the devices in bytes, comma
                   separated, default is 16
     start_index - First device instance number to be used, default is 0
