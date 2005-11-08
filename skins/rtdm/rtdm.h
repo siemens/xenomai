@@ -48,6 +48,7 @@ typedef struct task_struct          rtdm_user_info_t;
 #else  /* !__KERNEL__ */
 
 #include <fcntl.h>
+#include <inttypes.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 

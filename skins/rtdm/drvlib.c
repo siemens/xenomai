@@ -58,7 +58,7 @@
  *
  * Rescheduling: never.
  */
-__u64 rtdm_clock_read(void);
+uint64_t rtdm_clock_read(void);
 #endif /* DOXYGEN_CPP */
 /** @} */
 
@@ -69,7 +69,6 @@ __u64 rtdm_clock_read(void);
  * @{
  */
 
-#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Intialise and start a real-time task
  *
@@ -96,8 +95,40 @@ __u64 rtdm_clock_read(void);
  */
 int rtdm_task_init(rtdm_task_t *task, const char *name,
                    rtdm_task_proc_t task_proc, void *arg,
-                   int priority, __u64 period);
+                   int priority, uint64_t period)
+{
+    int res;
 
+
+    res = xnpod_init_thread(task, name, priority, 0, 0);
+    if (res)
+        goto error_out;
+
+    if (period != XN_INFINITE) {
+        res = xnpod_set_thread_periodic(task, XN_INFINITE,
+                                        xnpod_ns2ticks(period));
+        if (res)
+            goto cleanup_out;
+    }
+
+    res = xnpod_start_thread(task, 0, 0, XNPOD_ALL_CPUS, task_proc, arg);
+    if (res)
+        goto cleanup_out;
+
+    return res;
+
+
+ cleanup_out:
+    xnpod_delete_thread(task);
+
+ error_out:
+    return res;
+}
+
+EXPORT_SYMBOL(rtdm_task_init);
+
+
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Destroy a real-time task
  *
@@ -153,7 +184,7 @@ void rtdm_task_set_priority(rtdm_task_t *task, int priority);
  *
  * Rescheduling: possible.
  */
-int rtdm_task_set_period(rtdm_task_t *task, __u64 period);
+int rtdm_task_set_period(rtdm_task_t *task, uint64_t period);
 
 /**
  * @brief Wait on next real-time task period
@@ -246,6 +277,8 @@ void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay)
     xnlock_put_irqrestore(&nklock, s);
 }
 
+EXPORT_SYMBOL(rtdm_task_join_nrt);
+
 
 /**
  * @brief Sleep a specified amount of time
@@ -266,7 +299,7 @@ void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay)
  *
  * Rescheduling: always.
  */
-int rtdm_task_sleep(__u64 delay)
+int rtdm_task_sleep(uint64_t delay)
 {
     xnthread_t  *thread = xnpod_current_thread();
 
@@ -275,6 +308,8 @@ int rtdm_task_sleep(__u64 delay)
 
     return xnthread_test_flags(thread, XNBREAK) ? -EINTR : 0;
 }
+
+EXPORT_SYMBOL(rtdm_task_sleep);
 
 
 /**
@@ -296,7 +331,7 @@ int rtdm_task_sleep(__u64 delay)
  *
  * Rescheduling: always, unless the specified time already passed.
  */
-int rtdm_task_sleep_until(__u64 wakeup_time)
+int rtdm_task_sleep_until(uint64_t wakeup_time)
 {
     xnthread_t  *thread = xnpod_current_thread();
     xnsticks_t  delay;
@@ -320,6 +355,8 @@ int rtdm_task_sleep_until(__u64 wakeup_time)
     return err;
 }
 
+EXPORT_SYMBOL(rtdm_task_sleep_until);
+
 
 /**
  * @brief Busy-wait a specified amount of time
@@ -337,13 +374,15 @@ int rtdm_task_sleep_until(__u64 wakeup_time)
  *
  * Rescheduling: never.
  */
-void rtdm_task_busy_sleep(__u64 delay)
+void rtdm_task_busy_sleep(uint64_t delay)
 {
     xnticks_t wakeup = xnarch_get_cpu_tsc() + xnarch_ns_to_tsc(delay);
 
     while (xnarch_get_cpu_tsc() < wakeup)
         cpu_relax();
 }
+
+EXPORT_SYMBOL(rtdm_task_busy_sleep);
 /** @} */
 
 
@@ -367,6 +406,8 @@ void _rtdm_synch_flush(xnsynch_t *synch, unsigned long reason)
 
     xnlock_put_irqrestore(&nklock, s);
 }
+
+EXPORT_SYMBOL(_rtdm_synch_flush);
 
 
 
@@ -431,7 +472,7 @@ int device_service_routine(...)
  *
  * Rescheduling: never.
  */
-void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, __s64 timeout);
+void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, int64_t timeout);
 #endif /* DOXYGEN_CPP */
 /** @} */
 
@@ -552,6 +593,8 @@ void rtdm_event_signal(rtdm_event_t *event)
     xnlock_put_irqrestore(&nklock, s);
 }
 
+EXPORT_SYMBOL(rtdm_event_signal);
+
 
 /**
  * @brief Wait on event occurrence
@@ -605,6 +648,8 @@ int rtdm_event_wait(rtdm_event_t *event)
     return err;
 }
 
+EXPORT_SYMBOL(rtdm_event_wait);
+
 
 /**
  * @brief Wait on event occurrence with timeout
@@ -638,7 +683,7 @@ int rtdm_event_wait(rtdm_event_t *event)
  *
  * Rescheduling: possible.
  */
-int rtdm_event_timedwait(rtdm_event_t *event, __s64 timeout,
+int rtdm_event_timedwait(rtdm_event_t *event, int64_t timeout,
                          rtdm_toseq_t *timeout_seq)
 {
     xnthread_t  *thread;
@@ -687,6 +732,8 @@ int rtdm_event_timedwait(rtdm_event_t *event, __s64 timeout,
 
     return err;
 }
+
+EXPORT_SYMBOL(rtdm_event_timedwait);
 /** @} */
 
 
@@ -787,6 +834,8 @@ int rtdm_sem_down(rtdm_sem_t *sem)
     return err;
 }
 
+EXPORT_SYMBOL(rtdm_sem_down);
+
 
 /**
  * @brief Decrement a semaphore with timeout
@@ -823,7 +872,7 @@ int rtdm_sem_down(rtdm_sem_t *sem)
  *
  * Rescheduling: possible.
  */
-int rtdm_sem_timeddown(rtdm_sem_t *sem, __s64 timeout,
+int rtdm_sem_timeddown(rtdm_sem_t *sem, int64_t timeout,
                        rtdm_toseq_t *timeout_seq)
 {
     xnthread_t  *thread;
@@ -871,6 +920,8 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, __s64 timeout,
     return err;
 }
 
+EXPORT_SYMBOL(rtdm_sem_timeddown);
+
 
 /**
  * @brief Increment a semaphore
@@ -905,6 +956,8 @@ void rtdm_sem_up(rtdm_sem_t *sem)
 
     xnlock_put_irqrestore(&nklock, s);
 }
+
+EXPORT_SYMBOL(rtdm_sem_up);
 /** @} */
 
 
@@ -1001,6 +1054,8 @@ int rtdm_mutex_lock(rtdm_mutex_t *mutex)
     return err;
 }
 
+EXPORT_SYMBOL(rtdm_mutex_lock);
+
 
 /**
  * @brief Request a mutex with timeout
@@ -1036,7 +1091,7 @@ int rtdm_mutex_lock(rtdm_mutex_t *mutex)
  *
  * Rescheduling: possible.
  */
-int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, __s64 timeout,
+int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, int64_t timeout,
                          rtdm_toseq_t *timeout_seq)
 {
     xnthread_t  *thread;
@@ -1084,6 +1139,8 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, __s64 timeout,
     return err;
 }
 
+EXPORT_SYMBOL(rtdm_mutex_timedlock);
+
 
 /**
  * @brief Release a mutex
@@ -1115,6 +1172,8 @@ void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
 
     xnlock_put_irqrestore(&nklock, s);
 }
+
+EXPORT_SYMBOL(rtdm_mutex_unlock);
 /** @} */
 
 /** @} Synchronisation services */
@@ -1520,19 +1579,3 @@ int rtdm_in_rt_context(void);
 /** @} */
 
 #endif /* DOXYGEN_CPP */
-
-
-EXPORT_SYMBOL(rtdm_task_join_nrt);
-EXPORT_SYMBOL(rtdm_task_sleep);
-EXPORT_SYMBOL(rtdm_task_sleep_until);
-EXPORT_SYMBOL(rtdm_task_busy_sleep);
-EXPORT_SYMBOL(_rtdm_synch_flush);
-EXPORT_SYMBOL(rtdm_event_wait);
-EXPORT_SYMBOL(rtdm_event_timedwait);
-EXPORT_SYMBOL(rtdm_event_signal);
-EXPORT_SYMBOL(rtdm_sem_down);
-EXPORT_SYMBOL(rtdm_sem_timeddown);
-EXPORT_SYMBOL(rtdm_sem_up);
-EXPORT_SYMBOL(rtdm_mutex_lock);
-EXPORT_SYMBOL(rtdm_mutex_timedlock);
-EXPORT_SYMBOL(rtdm_mutex_unlock);
