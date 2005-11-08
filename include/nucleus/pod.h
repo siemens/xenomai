@@ -311,8 +311,10 @@ static inline void xnpod_renice_root (int prio)
 
     xnlock_get_irqsave(&nklock,s);
     rootcb = &nkpod->sched[xnarch_current_cpu()].rootcb;
-    rootcb->cprio = prio;
-    xnpod_schedule_runnable(rootcb,XNPOD_SCHEDLIFO|XNPOD_NOSWITCH);
+    if (rootcb->cprio != prio) { /* No round-robin effect. */
+    	rootcb->cprio = prio;
+	xnpod_schedule_runnable(rootcb,XNPOD_SCHEDLIFO|XNPOD_NOSWITCH);
+    }
     xnlock_put_irqrestore(&nklock,s);
 }
 
