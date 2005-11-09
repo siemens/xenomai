@@ -28,6 +28,6 @@
 					    CONFIG_XENO_VERSION_MINOR, \
 					    CONFIG_XENO_REVISION_LEVEL)
 
-#define XENO_VERSION_NAME  "Crushing Day"
+#define XENO_VERSION_NAME  "Ceremony"
 
 #endif /* _XENO_NUCLEUS_VERSION_H */

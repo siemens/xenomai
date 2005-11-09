@@ -1,3 +1,9 @@
+2005-11-09  Philippe Gerum  <rpm@xenomai.org>
+
+	* nucleus/pipe.c (xnpipe_disconnect): Flush the output queue
+	upon closure. Issue spotted by Sebastian Smolorz.
+	(xnpipe_release): Flush the input queue upon closure.
+
 2005-11-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* nucleus/shadow.c (lostage_handler): Fix thread priority
