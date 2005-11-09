@@ -298,6 +298,12 @@ int xnpipe_disconnect (int minor)
 		xnfree(link2mh(holder));
 	    }
 
+	if (state->output_handler != NULL)
+	    {
+	    while ((holder = getq(&state->outq)) != NULL)
+		state->output_handler(minor,link2mh(holder),-EPIPE,state->cookie);
+	    }
+
 	if (xnsynch_destroy(&state->synchbase) == XNSYNCH_RESCHED)
 	    xnpod_schedule();
 
@@ -599,6 +605,14 @@ static int xnpipe_release (struct inode *inode,
 	    {
 	    while ((holder = getq(&state->outq)) != NULL)
 		state->output_handler(minor,link2mh(holder),-EPIPE,state->cookie);
+	    }
+
+	while ((holder = getq(&state->inq)) != NULL)
+	    {
+	    if (state->input_handler != NULL)
+		state->input_handler(minor,link2mh(holder),-EPIPE,state->cookie);
+	    else if (state->alloc_handler == NULL)
+		xnfree(link2mh(holder));
 	    }
 
 	/* If a real-time kernel thread is waiting on this object,
