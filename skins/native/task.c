@@ -491,7 +491,7 @@ int rt_task_resume (RT_TASK *task)
  *   only if @a task is non-NULL.
  *
  * - Kernel-based task
- * - User-space task (switches to primary mode)
+ * - Any user-space context (comforming call)
  *
  * Rescheduling: always if @a task is NULL.
  */
