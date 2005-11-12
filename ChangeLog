@@ -1,3 +1,7 @@
+2005-11-12  Sebastian Smolorz  <Sebastian.Smolorz@stud.uni-hannover.de>
+
+	* skins/rtdm/syscall.c (sys_rtdm_recvmsg): Fix error checking.
+
 2005-11-09  Philippe Gerum  <rpm@xenomai.org>
 
 	* nucleus/pipe.c (xnpipe_disconnect): Flush the output queue
