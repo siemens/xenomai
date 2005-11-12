@@ -4,7 +4,7 @@
  *
  *   Adeos-based Real-Time Abstraction Layer for x86.
  *
- *   Original RTAI/x86 layer implementation: \n
+ *   Inspired from original RTAI/x86 HAL interface: \n
  *   Copyright &copy; 2000 Paolo Mantegazza, \n
  *   Copyright &copy; 2000 Steve Papacharalambous, \n
  *   Copyright &copy; 2000 Stuart Hughes, \n
