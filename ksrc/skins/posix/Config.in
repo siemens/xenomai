@@ -2,4 +2,4 @@
 # Xenomai nucleus configuration for Linux v2.4
 #
 
-tristate 'POSIX-compliant skin' CONFIG_XENO_SKIN_POSIX
+dep_tristate 'POSIX-compliant skin' CONFIG_XENO_SKIN_POSIX $CONFIG_XENO_OPT_NUCLEUS

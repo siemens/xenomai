@@ -1,5 +1,5 @@
 #
-# Xenomai nucleus configuration for Linux v2.4
+# Xenomai configuration for Linux v2.4
 #
 
-tristate 'User-space VM support' CONFIG_XENO_SKIN_UVM
+dep_tristate 'User-space VM support' CONFIG_XENO_SKIN_UVM $CONFIG_XENO_OPT_NUCLEUS

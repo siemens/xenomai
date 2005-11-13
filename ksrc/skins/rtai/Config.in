@@ -1,8 +1,8 @@
 #
-# Xenomai nucleus configuration for Linux v2.4
+# Xenomai configuration for Linux v2.4
 #
 
-tristate 'RTAI emulator' CONFIG_XENO_SKIN_RTAI
+dep_tristate 'RTAI emulator' CONFIG_XENO_SKIN_RTAI $CONFIG_XENO_OPT_NUCLEUS
 
 if [ "$CONFIG_XENO_SKIN_RTAI" != "n" ]; then
 	mainmenu_option next_comment

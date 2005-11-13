@@ -1,5 +1,5 @@
 #
-# Xenomai nucleus configuration for Linux v2.4
+# Xenomai configuration for Linux v2.4
 #
 
-tristate 'VRTX emulator' CONFIG_XENO_SKIN_VRTX
+dep_tristate 'VRTX emulator' CONFIG_XENO_SKIN_VRTX $CONFIG_XENO_OPT_NUCLEUS

@@ -2,7 +2,7 @@
 # Xenomai configuration for Linux v2.4
 #
 
-if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
+if [ "$CONFIG_XENOMAI" = "y" -a "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 mainmenu_option next_comment
 comment 'Interfaces'
 source kernel/xenomai/skins/native/Config.in

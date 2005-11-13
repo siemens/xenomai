@@ -1,8 +1,8 @@
 #
-# Xenomai nucleus configuration for Linux v2.4
+# Xenomai configuration for Linux v2.4
 #
 
-tristate 'Native skin' CONFIG_XENO_SKIN_NATIVE
+dep_tristate 'Native skin' CONFIG_XENO_SKIN_NATIVE $CONFIG_XENO_OPT_NUCLEUS
 
 if [ "$CONFIG_XENO_SKIN_NATIVE" != "n" ]; then
 	mainmenu_option next_comment

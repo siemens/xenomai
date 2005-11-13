@@ -4,9 +4,11 @@
 
 if [ "$CONFIG_XENOMAI" = "y" ]; then
 
-tristate 'Nucleus' CONFIG_XENO_OPT_NUCLEUS
+dep_tristate 'Nucleus' CONFIG_XENO_OPT_NUCLEUS $CONFIG_XENOMAI
 
 if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
+	mainmenu_option next_comment
+	comment 'Nucleus options'
 	bool 'Pervasive real-time support in user-space' CONFIG_XENO_OPT_PERVASIVE
 	bool 'Message pipes' CONFIG_XENO_OPT_PIPE
 	int 'Number of pipe devices' CONFIG_XENO_OPT_PIPE_NRDEV 32
@@ -32,6 +34,7 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 			bool 'Disable all tracepoints' CONFIG_XENO_OPT_FILTER_EVALL
 		endmenu
 	fi
+	endmenu
 fi
 
 fi

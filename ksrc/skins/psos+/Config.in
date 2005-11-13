@@ -1,5 +1,5 @@
 #
-# Xenomai nucleus configuration for Linux v2.4
+# Xenomai configuration for Linux v2.4
 #
 
-tristate 'pSOS+ emulator' CONFIG_XENO_SKIN_PSOS
+dep_tristate 'pSOS+ emulator' CONFIG_XENO_SKIN_PSOS $CONFIG_XENO_OPT_NUCLEUS

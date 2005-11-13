@@ -1,6 +1,8 @@
 2005-11-13  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc: Fix module compilation rules.
+	* ksrc (Config.in): Fix module dependencies for v2.4.
+	
+	* ksrc (Makefile): Fix module compilation rules for v2.4.
 
 	* ksrc: Backport infrastructure to Linux v2.4.
 
