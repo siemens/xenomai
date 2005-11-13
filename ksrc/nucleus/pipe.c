@@ -47,15 +47,7 @@ xnqueue_t xnpipe_sleepq, xnpipe_asyncq;
 
 int xnpipe_wakeup_apc;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,13)
-   static struct class *xnpipe_class;
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-   static struct class_simple *xnpipe_class;
-   #define class_create class_simple_create
-   #define class_device_create class_simple_device_add
-   #define class_device_destroy(a,b) class_simple_device_remove(b)
-   #define class_destroy class_simple_destroy
-#endif
+static DECLARE_DEVCLASS(xnpipe_class);
 
 /* Get nklock locked before using this macro */
 

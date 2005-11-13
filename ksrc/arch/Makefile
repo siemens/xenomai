@@ -2,13 +2,13 @@ ifeq ($(PATCHLEVEL),6)
 
 # Makefile frag for Linux v2.6
 
-obj-$(CONFIG_XENOMAI) += arch/ nucleus/ skins/
+obj-$(CONFIG_XENOMAI) += generic/
 
 else
 
 # Makefile frag for Linux v2.4
 
-subdir-$(CONFIG_XENOMAI) += arch nucleus skins
+subdir-$(CONFIG_XENOMAI) += generic
 
 include $(TOPDIR)/Rules.make
 

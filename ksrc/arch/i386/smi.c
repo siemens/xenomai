@@ -178,7 +178,7 @@ static unsigned short __devinit get_smi_en_addr(struct pci_dev *dev)
 
 #endif /* CONFIG_XENO_HW_SMI_WORKAROUND */
 
-void __devinit rthal_smi_init(void)
+void rthal_smi_init(void)
 {
     struct pci_dev *dev = NULL;
     struct pci_device_id *id;
@@ -210,6 +210,15 @@ void __devinit rthal_smi_init(void)
 
 #endif /* ! CONFIG_XENO_HW_SMI_WORKAROUND */
 }
+
+#ifdef CONFIG_XENO_HW_SMI_DETECT
+EXPORT_SYMBOL(rthal_smi_init);
+#endif /* CONFIG_XENO_HW_SMI_DETECT */
+
+#if defined(CONFIG_XENO_HW_SMI_DETECT) && defined(CONFIG_XENO_HW_SMI_WORKAROUND)
+EXPORT_SYMBOL(rthal_smi_disable);
+EXPORT_SYMBOL(rthal_smi_restore);
+#endif /* !CONFIG_XENO_HW_SMI_DETECT || !CONFIG_XENO_HW_SMI_WORKAROUND */
 
 /*
 

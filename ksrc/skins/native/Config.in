@@ -1,0 +1,28 @@
+#
+# Xenomai nucleus configuration for Linux v2.4
+#
+
+tristate 'Native skin' CONFIG_XENO_SKIN_NATIVE
+
+if [ "$CONFIG_XENO_SKIN_NATIVE" != "n" ]; then
+	mainmenu_option next_comment
+	comment 'Native interface options'
+	bool 'Registry support' CONFIG_XENO_OPT_NATIVE_REGISTRY
+	int 'Number of registry slots' CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS 512
+	bool 'Message pipes' CONFIG_XENO_OPT_NATIVE_PIPE
+	if [ "$CONFIG_XENO_OPT_NATIVE_PIPE" != "n" ]; then
+		int 'Bytes in buffer space' CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ 4096
+	fi
+	bool 'Counting semaphores' CONFIG_XENO_OPT_NATIVE_SEM
+	bool 'Event flags' CONFIG_XENO_OPT_NATIVE_EVENT
+	bool 'Mutexes' CONFIG_XENO_OPT_NATIVE_MUTEX
+	if [ "$CONFIG_XENO_OPT_NATIVE_MUTEX" != "n" ]; then
+		bool 'Condition variables' CONFIG_XENO_OPT_NATIVE_COND
+	fi
+	bool 'Message queues' CONFIG_XENO_OPT_NATIVE_QUEUE
+	bool 'Memory heaps' CONFIG_XENO_OPT_NATIVE_HEAP
+	bool 'Alarms' CONFIG_XENO_OPT_NATIVE_ALARM
+	bool 'Message passing support' CONFIG_XENO_OPT_NATIVE_MPS
+	bool 'Interrupts' CONFIG_XENO_OPT_NATIVE_INTR
+	endmenu
+fi

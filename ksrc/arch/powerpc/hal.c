@@ -38,7 +38,6 @@
 #include <linux/interrupt.h>
 #include <linux/irq.h>
 #include <linux/console.h>
-#include <linux/kallsyms.h>
 #include <asm/system.h>
 #include <asm/hardirq.h>
 #include <asm/hw_irq.h>

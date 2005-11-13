@@ -539,11 +539,7 @@ static inline int xnarch_remap_page_range(struct vm_area_struct *vma,
 					  unsigned long size,
 					  pgprot_t prot)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,10)
-    return remap_pfn_range(vma,uvaddr,paddr >> PAGE_SHIFT,size,prot);
-#else /* Linux version < 2.6.10 */
-    return remap_page_range(vma,uvaddr,paddr,size,prot);
-#endif /* Linux version >= 2.6.10 */
+    return wrap_remap_page_range(vma,uvaddr,paddr,size,prot);
 }
 
 #endif /* XENO_HEAP_MODULE */

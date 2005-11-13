@@ -1,0 +1,37 @@
+#
+# Xenomai nucleus configuration for Linux v2.4
+#
+
+if [ "$CONFIG_XENOMAI" = "y" ]; then
+
+tristate 'Nucleus' CONFIG_XENO_OPT_NUCLEUS
+
+if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
+	bool 'Pervasive real-time support in user-space' CONFIG_XENO_OPT_PERVASIVE
+	bool 'Message pipes' CONFIG_XENO_OPT_PIPE
+	int 'Number of pipe devices' CONFIG_XENO_OPT_PIPE_NRDEV 32
+	int 'Size of the system heap (Kb)' CONFIG_XENO_OPT_SYS_HEAPSZ 128
+	bool 'Interrupt shield support' CONFIG_XENO_OPT_ISHIELD
+	bool 'Statistics collection' CONFIG_XENO_OPT_STATS
+	bool 'Debug support' CONFIG_XENO_OPT_DEBUG
+	bool 'Watchdog support' CONFIG_XENO_OPT_WATCHDOG
+
+	mainmenu_option next_comment
+	comment 'Scalability options'
+		bool 'O(1) scheduler' CONFIG_XENO_OPT_SCALABLE_SCHED
+	if [ "$CONFIG_XENO_OPT_SCALABLE_SCHED" != "n" ]; then
+		int 'Number of priority levels' CONFIG_XENO_OPT_SCALABLE_PRIOS 256
+	fi
+	endmenu
+	if [ "$CONFIG_LTT" != "n" ]; then
+		mainmenu_option next_comment
+		comment 'LTT tracepoints filtering'
+			bool 'Disable IRQ-related tracepoints' CONFIG_XENO_OPT_FILTER_EVIRQ
+			bool 'Disable thread-related tracepoints' CONFIG_XENO_OPT_FILTER_EVTHR
+			bool 'Disable syscall-related tracepoints' CONFIG_XENO_OPT_FILTER_EVSYS
+			bool 'Disable all tracepoints' CONFIG_XENO_OPT_FILTER_EVALL
+		endmenu
+	fi
+fi
+
+fi

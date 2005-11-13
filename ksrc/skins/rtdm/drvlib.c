@@ -1167,7 +1167,7 @@ void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
     xnlock_get_irqsave(&nklock, s);
 
     __clear_bit(0, &mutex->locked);
-    if (likely(xnsynch_wakeup_one_sleeper(&mutex->synch_base)))
+    if (likely(xnsynch_wakeup_one_sleeper(&mutex->synch_base) != NULL))
         xnpod_schedule();
 
     xnlock_put_irqrestore(&nklock, s);

@@ -355,10 +355,12 @@ static int gatekeeper_thread (void *data)
     DECLARE_WAITQUEUE(wait,this_task);
     int cpu = gk - &gatekeeper[0];
     xnthread_t *thread;
+    cpumask_t cpumask;
     spl_t s;
     
     sigfillset(&this_task->blocked);
-    set_cpus_allowed(this_task, cpumask_of_cpu(cpu));
+    cpumask = cpumask_of_cpu(cpu);
+    set_cpus_allowed(this_task, cpumask);
 #ifdef CONFIG_PREEMPT_RT
     /* FIXME -- PREEMPT_RT badly changes the semantics of
        wake_up_interruptible_sync(), we need to work around this. */
@@ -1498,13 +1500,9 @@ static inline void do_schedule_event (struct task_struct *next)
 		{
 		sigset_t pending;
 
-		spin_lock(&next->sighand->siglock); /* Already interrupt-safe. */
-
-		sigorsets(&pending,
-			  &next->pending.signal,
-			  &next->signal->shared_pending.signal);
-
-		spin_unlock(&next->sighand->siglock);
+		spin_lock(&wrap_sighand_lock(next)); /* Already interrupt-safe. */
+		wrap_get_sigpending(&pending,next);
+		spin_unlock(&wrap_sighand_lock(next));
 
 		if (sigismember(&pending,SIGSTOP) ||
 		    sigismember(&pending,SIGINT))
@@ -1591,10 +1589,9 @@ static inline void do_sigwake_event (struct task_struct *p)
     if ((p->ptrace & PT_PTRACED) && !testbits(thread->status,XNDEBUG))
 	{
 	sigset_t pending;
-
-	sigorsets(&pending,	/* We already own the siglock. */
-		  &p->pending.signal,
-		  &p->signal->shared_pending.signal);
+	
+	/* We already own the siglock. */
+	wrap_get_sigpending(&pending,p);
 
 	if (sigismember(&pending,SIGTRAP) ||
 	    sigismember(&pending,SIGSTOP) ||

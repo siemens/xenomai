@@ -802,15 +802,7 @@ void xnheap_finalize_free_inner (xnheap_t *heap)
 #include <linux/vmalloc.h>
 #include <linux/mm.h>
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,13)
-   static struct class *xnheap_class;
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-   static struct class_simple *xnheap_class;
-   #define class_create class_simple_create
-   #define class_device_create class_simple_device_add
-   #define class_device_destroy(a,b) class_simple_device_remove(b)
-   #define class_destroy class_simple_destroy
-#endif
+static DECLARE_DEVCLASS(xnheap_class);
 
 static DECLARE_XNQUEUE(kheapq);	/* Shared heap queue. */
 

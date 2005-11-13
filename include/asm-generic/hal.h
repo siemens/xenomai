@@ -37,6 +37,8 @@
 #include <linux/sched.h>
 #include <linux/interrupt.h>
 #include <linux/kallsyms.h>
+#include <linux/init.h>
+#include <asm/xenomai/wrappers.h>
 
 #define RTHAL_DOMAIN_ID		0x58454e4f
 

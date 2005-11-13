@@ -99,7 +99,7 @@ static int sys_rtdm_recvmsg(struct task_struct *curr, struct pt_regs *regs)
 
     ret = _rtdm_recvmsg(curr, __xn_reg_arg1(regs), &krnl_msg,
                         __xn_reg_arg3(regs));
-    if (!ret)
+    if (ret >= 0)
         __xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &krnl_msg,
                           sizeof(krnl_msg));
 

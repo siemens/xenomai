@@ -1275,3 +1275,6 @@ EXPORT_SYMBOL(rthal_cpu_realtime);
 #ifdef CONFIG_PROC_FS
 EXPORT_SYMBOL(rthal_proc_root);
 #endif /* CONFIG_PROC_FS */
+
+EXPORT_SYMBOL(rthal_init);
+EXPORT_SYMBOL(rthal_exit);

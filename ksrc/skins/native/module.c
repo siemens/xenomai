@@ -30,6 +30,7 @@
 
 #include <xenomai/nucleus/pod.h>
 #ifdef __KERNEL__
+#include <linux/init.h>
 #include <xenomai/native/syscall.h>
 #endif /* __KERNEL__ */
 #include <xenomai/native/task.h>

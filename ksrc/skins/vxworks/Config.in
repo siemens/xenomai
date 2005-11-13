@@ -1,0 +1,5 @@
+#
+# Xenomai nucleus configuration for Linux v2.4
+#
+
+tristate 'VxWorks emulator' CONFIG_XENO_SKIN_VXWORKS

@@ -1,4 +1,7 @@
+ifeq ($(PATCHLEVEL),6)
 
 obj-$(CONFIG_XENO_DRIVERS_16550A) += xeno_16550A.o
 
 xeno_16550A-y := 16550A.o
+
+endif

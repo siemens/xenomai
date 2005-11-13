@@ -1,0 +1,5 @@
+#
+# Xenomai nucleus configuration for Linux v2.4
+#
+
+tristate 'Real-Time Driver Model' CONFIG_XENO_SKIN_RTDM
