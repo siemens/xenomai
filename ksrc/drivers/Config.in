@@ -1,0 +1,10 @@
+#
+# Xenomai configuration for Linux v2.4
+#
+
+if [ "$CONFIG_XENO_SKIN_RTDM" != "n" ]; then
+mainmenu_option next_comment
+comment 'Real-time drivers'
+	source drivers/xenomai/16550A/Config.in
+endmenu
+fi

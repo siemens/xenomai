@@ -12,7 +12,7 @@ else
 
 O_TARGET := xeno_vrtx.o
 
-obj-y := event.o heap.o mb.o module.o mx.o pt.o queue.o sem.o task.o time.o
+obj-$(CONFIG_XENO_SKIN_VRTX) := event.o heap.o mb.o module.o mx.o pt.o queue.o sem.o task.o time.o
 
 export-objs := $(obj-y) $(obj-m)
 

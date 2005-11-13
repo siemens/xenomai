@@ -34,7 +34,7 @@ else
 
 O_TARGET := xeno_native.o
 
-obj-y := module.o task.o timer.o
+obj-$(CONFIG_XENO_OPT_NUCLEUS) := module.o task.o timer.o
 
 obj-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
 

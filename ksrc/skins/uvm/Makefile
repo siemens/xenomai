@@ -12,7 +12,7 @@ else
 
 O_TARGET := xeno_uvm.o
 
-obj-y := module.o syscall.o
+obj-$(CONFIG_XENO_SKIN_UVM) := module.o syscall.o
 
 export-objs := $(obj-y) $(obj-m)
 

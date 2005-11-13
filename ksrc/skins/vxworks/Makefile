@@ -12,7 +12,7 @@ else
 
 O_TARGET := xeno_vxworks.o
 
-obj-y :=  errnoLib.o intLib.o kernelLib.o module.o msgQLib.o semLib.o \
+obj-$(CONFIG_XENO_SKIN_VXWORKS) :=  errnoLib.o intLib.o kernelLib.o module.o msgQLib.o semLib.o \
 	sysLib.o taskHookLib.o taskInfo.o taskLib.o tickLib.o wdLib.o
 
 export-objs := $(obj-y) $(obj-m)

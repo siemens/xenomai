@@ -1,5 +1,7 @@
 2005-11-13  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc: Fix module compilation rules.
+
 	* ksrc: Backport infrastructure to Linux v2.4.
 
 2005-11-12  Sebastian Smolorz  <Sebastian.Smolorz@stud.uni-hannover.de>

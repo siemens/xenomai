@@ -12,7 +12,7 @@ else
 
 O_TARGET := xeno_psos.o
 
-obj-y := module.o asr.o event.o pt.o queue.o rn.o task.o tm.o sem.o
+obj-$(CONFIG_XENO_SKIN_PSOS) := module.o asr.o event.o pt.o queue.o rn.o task.o tm.o sem.o
 
 export-objs := $(obj-y) $(obj-m)
 

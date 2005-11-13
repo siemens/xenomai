@@ -14,7 +14,7 @@ else
 
 O_TARGET := xeno_rtdm.o
 
-obj-y := core.o device.o drvlib.o module.o proc.o
+obj-$(CONFIG_XENO_SKIN_RTDM) := core.o device.o drvlib.o module.o proc.o
 
 obj-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
 

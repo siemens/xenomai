@@ -20,7 +20,7 @@ else
 
 O_TARGET := xeno_rtai.o
 
-obj-y := intr.o module.o task.o timer.o
+obj-$(CONFIG_XENO_SKIN_RTAI) := intr.o module.o task.o timer.o
 
 obj-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
 

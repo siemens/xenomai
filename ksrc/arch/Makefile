@@ -8,7 +8,7 @@ else
 
 # Makefile frag for Linux v2.4
 
-subdir-$(CONFIG_XENOMAI) += generic
+subdir-y += generic
 
 include $(TOPDIR)/Rules.make
 

@@ -4,3 +4,4 @@
 
 source kernel/xenomai/nucleus/Config.in
 source kernel/xenomai/skins/Config.in
+source drivers/xenomai/Config.in

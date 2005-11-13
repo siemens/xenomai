@@ -16,8 +16,6 @@ else
 
 # Makefile frag for Linux v2.4
 
-USE_STANDARD_AS_RULE := true
-
 O_TARGET := xeno_nucleus.o
 
 obj-$(CONFIG_XENO_OPT_NUCLEUS) := heap.o intr.o module.o pod.o synch.o thread.o timer.o

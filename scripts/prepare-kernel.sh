@@ -179,24 +179,34 @@ do_links $xenomai_root/include $linux_tree/include/xenomai
 
 echo 'Links installed.'
 
-if ! grep -q XENOMAI $linux_tree/init/Kconfig; then
-   sed -e "s,@LINUX_ARCH@,$linux_arch,g" $xenomai_root/scripts/Kconfig.frag >> $linux_tree/init/Kconfig
-fi
+case $linux_VERSION.$linux_PATCHLEVEL in
 
-if ! grep -q CONFIG_XENOMAI $linux_tree/arch/$linux_arch/Makefile; then
-   p="drivers-\$(CONFIG_XENOMAI)		+= arch/$linux_arch/xenomai/"
-   ( echo ; echo $p ) >> $linux_tree/arch/$linux_arch/Makefile
-fi
+    2.4)
+	;;
 
-if ! grep -q CONFIG_XENOMAI $linux_tree/drivers/Makefile; then
-   p="obj-\$(CONFIG_XENOMAI)		+= xenomai/"
-   ( echo ; echo $p ) >> $linux_tree/drivers/Makefile
-fi
+    2.6)
 
-if ! grep -q CONFIG_XENOMAI $linux_tree/kernel/Makefile; then
-   p="obj-\$(CONFIG_XENOMAI)		+= xenomai/"
-   ( echo ; echo $p ) >> $linux_tree/kernel/Makefile
-fi
+    if ! grep -q XENOMAI $linux_tree/init/Kconfig; then
+	sed -e "s,@LINUX_ARCH@,$linux_arch,g" $xenomai_root/scripts/Kconfig.frag >> $linux_tree/init/Kconfig
+    fi
+
+    if ! grep -q CONFIG_XENOMAI $linux_tree/arch/$linux_arch/Makefile; then
+	p="drivers-\$(CONFIG_XENOMAI)		+= arch/$linux_arch/xenomai/"
+	( echo ; echo $p ) >> $linux_tree/arch/$linux_arch/Makefile
+    fi
+
+    if ! grep -q CONFIG_XENOMAI $linux_tree/drivers/Makefile; then
+	p="obj-\$(CONFIG_XENOMAI)		+= xenomai/"
+	( echo ; echo $p ) >> $linux_tree/drivers/Makefile
+    fi
+
+    if ! grep -q CONFIG_XENOMAI $linux_tree/kernel/Makefile; then
+	p="obj-\$(CONFIG_XENOMAI)		+= xenomai/"
+	( echo ; echo $p ) >> $linux_tree/kernel/Makefile
+    fi
+    ;;
+esac
+
 echo 'Build system updated.'
 
 echo Done.
