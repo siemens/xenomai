@@ -31,10 +31,12 @@
 #include <linux/config.h>
 #include <linux/ptrace.h>
 
+#ifdef CONFIG_ADEOS_CORE
 #if ADEOS_RELEASE_NUMBER < 0x02060201
 #error "Adeos 2.6r2c1/ppc64 or above is required to run this software; please upgrade."
 #error "See http://download.gna.org/adeos/patches/v2.6/ppc64/"
 #endif
+#endif /* CONFIG_ADEOS_CORE */
 
 #define XNARCH_DEFAULT_TICK     1000000 /* ns, i.e. 1ms */
 #define XNARCH_HOST_TICK        (1000000000UL/HZ)
@@ -102,11 +104,19 @@ typedef struct xnarch_fltinfo {
 
 /* The following predicates are only usable over a regular Linux stack
  *    context. */
+#ifdef CONFIG_ADEOS_CORE
 #define xnarch_fault_pf_p(fi)   ((fi)->exception == ADEOS_ACCESS_TRAP)
 #define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
 				((fi)->exception == ADEOS_IABR_TRAP || \
 				(fi)->exception == ADEOS_SSTEP_TRAP || \
 				(fi)->exception == ADEOS_PERFMON_TRAP))
+#else /* !CONFIG_ADEOS_CORE */
+#define xnarch_fault_pf_p(fi)   ((fi)->exception == IPIPE_TRAP_ACCESS)
+#define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
+				((fi)->exception == IPIPE_TRAP_IABR || \
+				(fi)->exception == IPIPE_TRAP_SSTEP || \
+				(fi)->exception == IPIPE_TRAP_PERFMON))
+#endif /* CONFIG_ADEOS_CORE */
 
 #define xnarch_fault_notify(fi) (!xnarch_fault_bp_p(fi))
 

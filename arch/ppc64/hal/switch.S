@@ -26,7 +26,6 @@
 #include <asm/processor.h>
 #include <asm/cputable.h>
 #include <asm/page.h>
-#include <asm/offsets.h>
 #include <asm/ppc_asm.h>
 #include <xeno_config.h> 
 

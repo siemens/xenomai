@@ -98,7 +98,11 @@ static inline  __attribute_const__ unsigned long ffnz (unsigned long ul) {
 #include <nucleus/asm/atomic.h>
 #include <asm/processor.h>
 
+#ifdef CONFIG_ADEOS_CORE
 #define RTHAL_TIMER_IRQ   ADEOS_TIMER_VIRQ
+#else /* !CONFIG_ADEOS_CORE */
+#define RTHAL_TIMER_IRQ   IPIPE_TIMER_VIRQ
+#endif /* CONFIG_ADEOS_CORE */
 
 #define rthal_irq_descp(irq)	(&irq_desc[(irq)])
 

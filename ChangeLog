@@ -1,3 +1,7 @@
+2005-11-14  Heikki Lindholm <holindho@cs.helsinki.fi>
+	
+	* arch/ppc64, include/asm-ppc64: Make I-pipe compliant.
+
 2005-11-12  Sebastian Smolorz  <Sebastian.Smolorz@stud.uni-hannover.de>
 
 	* skins/rtdm/syscall.c (sys_rtdm_recvmsg): Fix error checking.
