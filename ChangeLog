@@ -1,5 +1,8 @@
 2005-11-14  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/native/pipe.h: Declare rt_pipe_flush() in kernel
+	section.
+
 	* src/skins/*/init.c (constructor): Make sure we properly
 	intercept all binding errors.
 
