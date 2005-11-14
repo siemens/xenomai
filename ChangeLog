@@ -1,3 +1,7 @@
+2005-11-14  Philippe Gerum  <rpm@xenomai.org>
+
+	* skins/native/pipe.h: Declare rt_pipe_flush() in kernel section.
+
 2005-11-14  Heikki Lindholm <holindho@cs.helsinki.fi>
 	
 	* arch/ppc64/patches: Upgrade to Adeos 2.6.10-ppc64-r3.

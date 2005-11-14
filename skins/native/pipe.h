@@ -115,6 +115,8 @@ RT_PIPE_MSG *rt_pipe_alloc(size_t size);
 
 int rt_pipe_free(RT_PIPE_MSG *msg);
 
+ssize_t rt_pipe_flush(RT_PIPE *pipe);
+
 int __pipe_pkg_init(void);
 
 void __pipe_pkg_cleanup(void);
