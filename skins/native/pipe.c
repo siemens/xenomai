@@ -1050,5 +1050,6 @@ EXPORT_SYMBOL(rt_pipe_send);
 EXPORT_SYMBOL(rt_pipe_read);
 EXPORT_SYMBOL(rt_pipe_write);
 EXPORT_SYMBOL(rt_pipe_stream);
+EXPORT_SYMBOL(rt_pipe_flush);
 EXPORT_SYMBOL(rt_pipe_alloc);
 EXPORT_SYMBOL(rt_pipe_free);
