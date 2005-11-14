@@ -60,6 +60,12 @@ static __attribute__((constructor)) void __init_uvm_interface(void)
 
 	default:
 
+	    if (muxid < 0)
+		{
+		fprintf(stderr,"Xenomai: binding failed: %s.\n",strerror(-muxid));
+		exit(1);
+		}
+
 	    XENOMAI_SYSCALL2(__xn_sys_info,muxid,&__uvm_info);
 	    __uvm_muxid = muxid;
 	    break;

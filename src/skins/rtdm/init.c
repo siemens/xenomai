@@ -58,6 +58,12 @@ static __attribute__((constructor)) void __init_rtdm_interface(void)
 
 	default:
 
+	    if (muxid < 0)
+		{
+		fprintf(stderr,"Xenomai: binding failed: %s.\n",strerror(-muxid));
+		exit(1);
+		}
+
 	    __rtdm_muxid = muxid;
 	    break;
 	}

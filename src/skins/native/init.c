@@ -69,6 +69,12 @@ static __attribute__((constructor)) void __init_xeno_interface(void)
 
 	default:
 
+	    if (muxid < 0)
+		{
+		fprintf(stderr,"Xenomai: binding failed: %s.\n",strerror(-muxid));
+		exit(1);
+		}
+
 	    /* Allocate a TSD key for indexing self task pointers. */
 
 	    if (pthread_key_create(&__native_tskey,&__flush_tsd) != 0)

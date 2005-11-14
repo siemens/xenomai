@@ -66,7 +66,7 @@ static void *rt_task_trampoline (void *cookie)
     bulk.a3 = (u_long)iargs->prio;
     bulk.a4 = (u_long)iargs->mode;
     bulk.a5 = (u_long)pthread_self();
-
+    printf("calling mux %d\n",__native_muxid);
     err = XENOMAI_SKINCALL2(__native_muxid,
 			    __native_task_create,
 			    &bulk,
