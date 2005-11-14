@@ -1,3 +1,8 @@
+2005-11-14  Philippe Gerum  <rpm@xenomai.org>
+
+	* src/skins/*/init.c (constructor): Make sure we properly
+	intercept all binding errors.
+
 2005-11-13  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc (Config.in): Fix module dependencies for v2.4.

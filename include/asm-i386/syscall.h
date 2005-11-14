@@ -57,13 +57,7 @@
 #define __xn_get_user(task,dst,srcP)           __get_user(dst,srcP)
 #define __xn_strncpy_from_user(task,dstP,srcP,n)    rthal_strncpy_from_user(dstP,srcP,n)
 
-#define __xn_range_ok(task,addr,size) ({ \
-	unsigned long flag,sum; \
-	asm("addl %3,%1 ; sbbl %0,%0; cmpl %1,%4; sbbl $0,%0" \
-		:"=&r" (flag), "=r" (sum) \
-	        :"1" (addr),"g" ((int)(size)),"g" ((task)->thread_info->addr_limit.seg)); \
-	flag == 0; })
-
+#define __xn_range_ok(task,addr,size)    wrap_range_ok(task,addr,size)
 /* WP bit must work for using the shadow support, so we only need
    trivial range checking here. */
 #define __xn_access_ok(task,type,addr,size)    (__xn_range_ok(task,addr,size))

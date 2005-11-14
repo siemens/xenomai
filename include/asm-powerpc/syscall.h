@@ -60,16 +60,7 @@
 #define __xn_get_user(task,dst,srcP)           __get_user(dst,srcP)
 #define __xn_strncpy_from_user(task,dstP,srcP,n)    __strncpy_from_user(dstP,srcP,n)
 
-#ifdef CONFIG_PPC64
-#define __xn_range_ok(task,addr,size) \
-		__access_ok(((__force unsigned long)(addr)),(size),(task->thread.fs))
-#else
-#define __xn_range_ok(task,addr,size) \
-        ((unsigned long)(addr) <= (task)->thread.fs.seg \
-	 && ((size) == 0 || (size) - 1 <= (task)->thread.fs.seg - (unsigned long)(addr)))
-#endif
-
-#define __xn_access_ok(task,type,addr,size)  __xn_range_ok((task),(addr),(size))
+#define __xn_access_ok(task,type,addr,size)  wrap_range_ok(task,addr,size)
 
 /* Purposedly used inlines and not macros for the following routines
    so that we don't risk spurious side-effects on the value arg. */

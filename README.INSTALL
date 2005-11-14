@@ -21,7 +21,9 @@ normally used to define the various settings for the Xenomai kernel
 components.
 
 The src/ sub-tree contains the various user-space libraries and
-commands provided by the Xenomai framework.
+commands provided by the Xenomai framework. This tree can be built
+separately from the kernel support, even if the latter is absent from
+the build system.
 
 1. Installation steps
 ---------------------
@@ -47,7 +49,8 @@ $ scripts/prepare-kernel.sh --linux=<linux-srctree>
     again whenever a former patch is detected.
 
     --arch tells the script about the target architecture. If
-    unspecified, the build system architecture is used.
+    unspecified, the build system architecture is detected and
+    suggested as a reasonable default.
 
 For instance, the following command would prepare the Linux tree
 located at /usr/src/linux-2.6.14-ipipe in order to include the Xenomai
@@ -78,7 +81,7 @@ Once configured, the kernel should be built as usual.
 
 The options listed below only affect the libraries compiled as part of
 Xenomai's user-space support, and in any case, never impact the
-kernel-level support.
+kernel-based support.
 
 --enable-uvm            Build UVM support (default: enabled)
 --enable-debug          Enable debug symbols in programs (default: disabled)

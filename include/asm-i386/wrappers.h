@@ -26,4 +26,24 @@
 
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+
+#define wrap_range_ok(task,addr,size) ({ \
+	unsigned long flag,sum; \
+	asm("addl %3,%1 ; sbbl %0,%0; cmpl %1,%4; sbbl $0,%0" \
+		:"=&r" (flag), "=r" (sum) \
+	        :"1" (addr),"g" ((int)(size)),"g" ((task)->addr_limit.seg)); \
+	flag == 0; })
+
+#else /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)  */
+
+#define wrap_range_ok(task,addr,size) ({ \
+	unsigned long flag,sum; \
+	asm("addl %3,%1 ; sbbl %0,%0; cmpl %1,%4; sbbl $0,%0" \
+		:"=&r" (flag), "=r" (sum) \
+	        :"1" (addr),"g" ((int)(size)),"g" ((task)->thread_info->addr_limit.seg)); \
+	flag == 0; })
+
+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
+
 #endif /* _XENO_ASM_I386_WRAPPERS_H */

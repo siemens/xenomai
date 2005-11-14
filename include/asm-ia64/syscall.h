@@ -60,10 +60,7 @@
 #define __xn_get_user(task,dst,srcP)          __get_user(dst,srcP)
 #define __xn_strncpy_from_user(task,dstP,srcP,n)   __strncpy_from_user(dstP,srcP,n)
 
-#define __xn_get_fs(task) (((task)->thread_info)->addr_limit)
-
-#define __xn_access_ok(task,type,addr,size) \
-    __access_ok((addr),(size), __xn_get_fs(task))
+#define __xn_access_ok(task,type,addr,size)  wrap_access_ok(task,addr,size)
 
 /* Purposedly used inlines and not macros for the following routines
    so that we don't risk spurious side-effects on the value arg. */

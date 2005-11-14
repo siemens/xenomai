@@ -31,6 +31,20 @@
 #define atomic_inc_and_test(v) (atomic_inc_return(v) == 0)
 #define show_stack(p,sp)       print_backtrace(sp) /* Only works for current. */
 
+#define wrap_range_ok(task,addr,size) \
+    (segment_eq((task)->thread.fs, KERNEL_DS) || __user_ok((unsigned long)(addr),(size)))
+
+#else /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)  */
+
+#ifdef CONFIG_PPC64
+#define wrap_range_ok(task,addr,size) \
+    __access_ok(((__force unsigned long)(addr)),(size),(task->thread.fs))
+#else
+#define wrap_range_ok(task,addr,size) \
+    ((unsigned long)(addr) <= (task)->thread.fs.seg			\
+     && ((size) == 0 || (size) - 1 <= (task)->thread.fs.seg - (unsigned long)(addr)))
+#endif
+
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
 
 #endif /* _XENO_ASM_POWERPC_WRAPPERS_H */
