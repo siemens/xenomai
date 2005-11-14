@@ -3454,6 +3454,26 @@ static int __rt_pipe_stream (struct task_struct *curr, struct pt_regs *regs)
     return err;
 }
 
+/*
+ * int __rt_pipe_flush(RT_PIPE_PLACEHOLDER *ph)
+ */
+
+static int __rt_pipe_flush (struct task_struct *curr, struct pt_regs *regs)
+
+{
+    RT_PIPE_PLACEHOLDER ph;
+    RT_PIPE *pipe;
+
+    if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg1(regs),sizeof(ph)))
+	return -EFAULT;
+
+    __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
+
+    pipe = (RT_PIPE *)rt_registry_fetch(ph.opaque);
+
+    return pipe ? rt_pipe_flush(pipe) : -ESRCH;
+}
+
 #else /* !CONFIG_XENO_OPT_NATIVE_PIPE */
 
 #define __rt_pipe_create   __rt_call_not_available
@@ -3462,6 +3482,7 @@ static int __rt_pipe_stream (struct task_struct *curr, struct pt_regs *regs)
 #define __rt_pipe_read     __rt_call_not_available
 #define __rt_pipe_write    __rt_call_not_available
 #define __rt_pipe_stream   __rt_call_not_available
+#define __rt_pipe_flush    __rt_call_not_available
 
 #endif /* CONFIG_XENO_OPT_NATIVE_PIPE */
 
@@ -3601,6 +3622,7 @@ static xnsysent_t __systab[] = {
     [__native_pipe_read ] = { &__rt_pipe_read, __xn_exec_primary },
     [__native_pipe_write ] = { &__rt_pipe_write, __xn_exec_any },
     [__native_pipe_stream ] = { &__rt_pipe_stream, __xn_exec_any },
+    [__native_pipe_flush ] = { &__rt_pipe_flush, __xn_exec_any },
     [__native_misc_get_io_region ] = { &__rt_misc_get_io_region, __xn_exec_lostage },
     [__native_misc_put_io_region ] = { &__rt_misc_put_io_region, __xn_exec_lostage },
     [__native_timer_ns2tsc ] = { &__rt_timer_ns2tsc, __xn_exec_any },

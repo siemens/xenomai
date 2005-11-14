@@ -100,6 +100,9 @@ ssize_t rt_pipe_write(RT_PIPE *pipe,
 ssize_t rt_pipe_stream(RT_PIPE *pipe,
 		       const void *buf,
 		       size_t size);
+
+ssize_t rt_pipe_flush(RT_PIPE *pipe);
+
 #ifdef __KERNEL__
 
 ssize_t rt_pipe_receive(RT_PIPE *pipe,
@@ -114,8 +117,6 @@ ssize_t rt_pipe_send(RT_PIPE *pipe,
 RT_PIPE_MSG *rt_pipe_alloc(size_t size);
 
 int rt_pipe_free(RT_PIPE_MSG *msg);
-
-ssize_t rt_pipe_flush(RT_PIPE *pipe);
 
 int __native_pipe_pkg_init(void);
 

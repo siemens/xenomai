@@ -112,10 +112,11 @@
 #define __native_pipe_read          86
 #define __native_pipe_write         87
 #define __native_pipe_stream        88
-#define __native_misc_get_io_region 89
-#define __native_misc_put_io_region 90
-#define __native_timer_ns2tsc       91
-#define __native_timer_tsc2ns       92
+#define __native_pipe_flush         89
+#define __native_misc_get_io_region 90
+#define __native_misc_put_io_region 91
+#define __native_timer_ns2tsc       92
+#define __native_timer_tsc2ns       93
 
 struct rt_arg_bulk {
 
