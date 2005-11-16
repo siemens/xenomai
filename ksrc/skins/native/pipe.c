@@ -193,7 +193,13 @@ void __native_pipe_pkg_cleanup (void)
  * is picked up dynamically using an adaptive algorithm, depending on
  * the current system configuration.
  *
- * @param minor The minor number of the device associated with the pipe.
+ * @param minor The minor number of the device associated with the
+ * pipe.  Passing P_MINOR_AUTO causes the minor number to be
+ * auto-allocated. In such a case, the @a name parameter must be valid
+ * so that user-space processes may subsequently follow the symbolic
+ * link that will be automatically created from
+ * /proc/xenomai/registry/pipes/@a name to the allocated pipe device
+ * entry (i.e. /dev/rtp*).
  *
  * @return 0 is returned upon success. Otherwise:
  *
@@ -204,8 +210,9 @@ void __native_pipe_pkg_cleanup (void)
  * - -EEXIST is returned if the @a name is already in use by some
  * registered object.
  *
- * - -ENODEV is returned if @a minor is not a valid minor number for
- * the pipe special device (i.e. /dev/rtp*).
+ * - -ENODEV is returned if @a minor is different from P_MINOR_AUTO
+ * and is not a valid minor number for the pipe special device either
+ * (i.e. /dev/rtp*).
  *
  * - -EBUSY is returned if @a minor is already open.
  *
@@ -227,12 +234,11 @@ int rt_pipe_create (RT_PIPE *pipe,
 		    const char *name,
 		    int minor)
 {
-    int err;
+    int err = 0;
 
     if (xnpod_asynch_p())
 	return -EPERM;
 
-    pipe->minor = minor;
     pipe->buffer = NULL;
     pipe->fillsz = 0;
     pipe->flushable = 0;
@@ -240,13 +246,16 @@ int rt_pipe_create (RT_PIPE *pipe,
     pipe->magic = XENO_PIPE_MAGIC;
     xnobject_copy_name(pipe->name,name);
 
-    err = xnpipe_connect(minor,
+    minor = xnpipe_connect(minor,
 			 &__pipe_output_handler,
 			 NULL,
 			 &__pipe_alloc_handler,
 			 pipe);
-    if (err)
-	return err;
+
+    if (minor < 0)
+	return minor;
+
+    pipe->minor = minor;
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
     pipe->cpid = 0;
@@ -598,7 +607,11 @@ ssize_t rt_pipe_read (RT_PIPE *pipe,
  *
  * @param size The size in bytes of the message (payload data
  * only). Zero is a valid value, in which case the service returns
- * immediately without sending any message.
+ * immediately without sending any message. This parameter allows
+ * you to actually send less data than you reserved using the
+ * rt_pipe_alloc() service, which may be the case if you did not
+ * know how much space you needed at the time of allocation. In all
+ * other cases it may be more convenient to just pass P_MSGSIZE(msg).
  *
  * Additionally, rt_pipe_send() causes any data buffered by
  * rt_pipe_stream() to be flushed prior to sending the message. For

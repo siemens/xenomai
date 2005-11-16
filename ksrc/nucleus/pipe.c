@@ -43,11 +43,45 @@ static xnpipe_session_handler *xnpipe_open_handler,
 
 xnpipe_state_t xnpipe_states[XNPIPE_NDEVS];
 
+#define XNPIPE_BITMAP_SIZE	((XNPIPE_NDEVS + BITS_PER_LONG - 1) / BITS_PER_LONG)
+static unsigned long xnpipe_bitmap[XNPIPE_BITMAP_SIZE];
+
 xnqueue_t xnpipe_sleepq, xnpipe_asyncq;
 
 int xnpipe_wakeup_apc;
 
 static DECLARE_DEVCLASS(xnpipe_class);
+
+/* Allocation of minor values */
+
+static inline int xnpipe_minor_alloc(int minor)
+{
+    spl_t s;
+
+    if ((minor < 0 && minor != XNPIPE_MINOR_AUTO) || minor >= XNPIPE_NDEVS)
+	return -ENODEV;
+
+    xnlock_get_irqsave(&nklock,s);
+
+    if (minor == XNPIPE_MINOR_AUTO)
+	minor = find_first_zero_bit(xnpipe_bitmap,XNPIPE_NDEVS);
+
+    if (minor == XNPIPE_NDEVS || testbits(xnpipe_bitmap[minor / BITS_PER_LONG], 1 << (minor % BITS_PER_LONG)))
+        minor = -EBUSY;
+    else    
+	__setbits(xnpipe_bitmap[minor / BITS_PER_LONG], 1 << (minor % BITS_PER_LONG));
+
+    xnlock_put_irqrestore(&nklock,s);
+    return minor;
+}
+
+static inline void xnpipe_minor_free(int minor)
+{
+    if (minor < 0 || minor >= XNPIPE_NDEVS)
+	return;
+
+    clrbits(xnpipe_bitmap[minor / BITS_PER_LONG], 1 << (minor % BITS_PER_LONG));
+}
 
 /* Get nklock locked before using this macro */
 
@@ -207,8 +241,9 @@ int xnpipe_connect (int minor,
     int need_sched = 0;
     spl_t s;
 
-    if (minor < 0 || minor >= XNPIPE_NDEVS)
-	return -ENODEV;
+    minor = xnpipe_minor_alloc(minor);
+    if (minor < 0)
+	return minor;
 
     state = &xnpipe_states[minor];
 
@@ -216,12 +251,6 @@ int xnpipe_connect (int minor,
        to prevent using a partially created object */
     xnlock_get_irqsave(&nklock,s);
 
-    if (testbits(state->status,XNPIPE_KERN_CONN))
-	{
-	xnlock_put_irqrestore(&nklock,s);
-	return -EBUSY;
-	}
-    
     setbits(state->status,XNPIPE_KERN_CONN);
     
     xnsynch_init(&state->synchbase,XNSYNCH_FIFO);
@@ -253,7 +282,7 @@ int xnpipe_connect (int minor,
     if (need_sched)
         xnpipe_schedule_request();
 
-    return 0;
+    return minor;
 }
 
 int xnpipe_disconnect (int minor)
@@ -314,6 +343,8 @@ int xnpipe_disconnect (int minor)
 	    need_sched = 1;
 	    }
 	}
+
+    xnpipe_minor_free(minor);
 
     xnlock_put_irqrestore(&nklock,s);
 
