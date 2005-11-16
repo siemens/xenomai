@@ -1,3 +1,7 @@
+2005-11-16  Heikki Lindholm <holindho@cs.helsinki.fi>
+
+	* scripts/prepare-kernel.sh: Link .S files too.
+
 2005-11-14  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/syscall.c (__rt_pipe_flush): Export

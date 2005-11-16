@@ -4,7 +4,7 @@ set -e
 do_links() {
     rm -fr $2
     ( cd $1 &&
-      find . \( -name Makefile -o -name Kconfig -o -name '*.[ch]' \) |
+      find . \( -name Makefile -o -name Kconfig -o -name '*.[chS]' \) |
       while read f; do
         d=`dirname $f`
 	mkdir -p $2/$d && ln -s $1/$f $2/$f
