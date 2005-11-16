@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 #include <xenomai/rtdm/syscall.h>
 
 int __rtdm_muxid = -1;

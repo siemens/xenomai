@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <xenomai/rtai/syscall.h>
 
 int __rtai_muxid = -1;

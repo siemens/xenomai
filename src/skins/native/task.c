@@ -224,18 +224,11 @@ int rt_task_set_periodic (RT_TASK *task,
 			  RTIME period)
 
 {
-    int err = XENOMAI_SKINCALL3(__native_muxid,
-                                __native_task_set_periodic,
-                                task,
-                                &idate,
-                                &period);
-    if(err == -ETIMEDOUT)
-        fprintf(stderr,
-                "WARNING: starting with Xenomai 0.9, the start time passed\n"
-                "to rt_task_set_periodic() should use rt_timer_read() as a time"
-                "base.\n");
-
-    return err;
+    return XENOMAI_SKINCALL3(__native_muxid,
+			     __native_task_set_periodic,
+			     task,
+			     &idate,
+			     &period);
 }
 
 int rt_task_wait_period (void)
