@@ -1,3 +1,13 @@
+2005-11-16  Dmitry Adamushko <dmitry.adamushko@gmail.com>
+
+	* nucleus/pipe.c, skins/native/pipe.c: Support for auto-allocation
+	of minor values for the pipe objects. Passing P_MINOR_AUTO as a
+	third argument to the rt_pipe_create() causes the minor value to
+	be auto-allocated. In such a case, standard linux processes must
+	make use of the valid pipe name exported through the registry
+	interface in order to get connected to the pipe
+	(i.e. /proc/xenomai/registry/pipes/*).
+
 2005-11-14  Philippe Gerum  <rpm@xenomai.org>
 
 	* skins/native/pipe.h: Declare rt_pipe_flush() in kernel section.

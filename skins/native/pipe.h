@@ -29,6 +29,8 @@
 #define P_NORMAL  XNPIPE_NORMAL
 #define P_URGENT  XNPIPE_URGENT
 
+#define P_MINOR_AUTO	XNPIPE_MINOR_AUTO
+
 typedef struct rt_pipe_placeholder {
     rt_handle_t opaque;
 } RT_PIPE_PLACEHOLDER;

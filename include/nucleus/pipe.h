@@ -30,6 +30,8 @@
 #define XNPIPE_NORMAL 0x0
 #define XNPIPE_URGENT 0x1
 
+#define XNPIPE_MINOR_AUTO	-1
+
 #ifdef __KERNEL__
 
 #include <nucleus/queue.h>
