@@ -1,3 +1,0 @@
-includedir = $(prefix)/include/nucleus/asm-generic
-
-include_HEADERS = hal.h system.h syscall.h

@@ -20,7 +20,7 @@
 #ifndef _XENO_NUCLEUS_QUEUE_H
 #define _XENO_NUCLEUS_QUEUE_H
 
-#include <nucleus/types.h>
+#include <xenomai/nucleus/types.h>
 
 /* Basic element holder */
 
@@ -575,6 +575,8 @@ static inline int countgq (xngqueue_t *gqslot)
     return countpq(&gqslot->gqueue);
 }
 
+#ifdef CONFIG_XENO_OPT_SCALABLE_SCHED
+
 /* Multi-level priority queue */
 
 #define XNSPQUEUE_PRIOS      (CONFIG_XENO_OPT_SCALABLE_PRIOS + 1)
@@ -738,5 +740,7 @@ static inline xnpholder_t* getspq(xnspqueue_t *spqslot)
     
     return (xnpholder_t *)holder;
 }
+
+#endif /* CONFIG_XENO_OPT_SCALABLE_SCHED */
 
 #endif /* !_XENO_NUCLEUS_QUEUE_H */

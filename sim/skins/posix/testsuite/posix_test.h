@@ -22,7 +22,7 @@
 
 #include <string.h>             /* For strerror */
 #include "xntest.h"
-#include <posix/posix.h>
+#include <xenomai/posix/posix.h>
 
 #ifdef TEST_ASSERT_OK
 #undef TEST_ASSERT_OK

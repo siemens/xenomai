@@ -1,6 +1,0 @@
-config XENO_SKIN_UITRON
-	bool "uITRON API"
-	default n
-	help
-
-	This API skin emulates the uITRON API. 

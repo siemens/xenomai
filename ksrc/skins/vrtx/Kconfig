@@ -1,0 +1,8 @@
+config XENO_SKIN_VRTX
+	depends on XENO_OPT_NUCLEUS
+	tristate "VRTX emulator"
+	default n
+	help
+
+	This API skin emulates Mentor Graphics's VRTX operating
+	system.

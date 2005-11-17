@@ -1,0 +1,9 @@
+lib_LTLIBRARIES = libuvm.la
+
+libuvm_la_LDFLAGS = -module -version-info 0:0:0
+
+libuvm_la_SOURCES = \
+	init.c \
+	uvm.c
+
+libuvm_la_CPPFLAGS = @XENO_USER_CFLAGS@

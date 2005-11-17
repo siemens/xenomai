@@ -7075,5 +7075,5 @@ AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
-m4_include([config/autoconf/ac_prog_cc_for_build.m4])
-m4_include([config/autoconf/docbook.m4])
+m4_include([config/ac_prog_cc_for_build.m4])
+m4_include([config/docbook.m4])

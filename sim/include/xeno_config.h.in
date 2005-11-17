@@ -3,55 +3,52 @@
 /* Build system alias */
 #undef CONFIG_XENO_MVM_BUILD_STRING
 
-/* Kconfig */
+/* config */
 #undef CONFIG_XENO_MVM_DEBUG
 
 /* Host system alias */
 #undef CONFIG_XENO_MVM_HOST_STRING
 
-/* Kconfig */
+/* config */
 #undef CONFIG_XENO_OPT_DEBUG
 
-/* Kconfig */
+/* config */
 #undef CONFIG_XENO_OPT_NATIVE_ALARM
 
-/* Kconfig */
+/* config */
 #undef CONFIG_XENO_OPT_NATIVE_COND
 
-/* Kconfig */
+/* config */
 #undef CONFIG_XENO_OPT_NATIVE_EVENT
 
-/* Kconfig */
+/* config */
 #undef CONFIG_XENO_OPT_NATIVE_HEAP
 
-/* Kconfig */
+/* config */
 #undef CONFIG_XENO_OPT_NATIVE_MPS
 
-/* Kconfig */
+/* config */
 #undef CONFIG_XENO_OPT_NATIVE_MUTEX
 
-/* Kconfig */
+/* config */
 #undef CONFIG_XENO_OPT_NATIVE_QUEUE
 
-/* Kconfig */
+/* config */
 #undef CONFIG_XENO_OPT_NATIVE_REGISTRY
 
-/* Kconfig */
+/* config */
 #undef CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS
 
-/* Kconfig */
+/* config */
 #undef CONFIG_XENO_OPT_NATIVE_SEM
 
-/* Kconfig */
+/* config */
 #undef CONFIG_XENO_OPT_RTAI_SEM
 
-/* Kconfig */
+/* config */
 #undef CONFIG_XENO_OPT_SCALABLE_PRIOS
 
-/* Kconfig */
-#undef CONFIG_XENO_OPT_STATS
-
-/* Kconfig */
+/* config */
 #undef CONFIG_XENO_OPT_SYS_HEAPSZ
 
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
@@ -114,10 +111,10 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Kconfig */
+/* config */
 #undef HAVE_LIBDL
 
-/* Kconfig */
+/* config */
 #undef HAVE_LIBELF
 
 /* Define to 1 if you have the <libelf.h> header file. */
@@ -126,10 +123,10 @@
 /* Define to 1 if you have the <libelf/libelf.h> header file. */
 #undef HAVE_LIBELF_LIBELF_H
 
-/* Kconfig */
+/* config */
 #undef HAVE_LIBNSL
 
-/* Kconfig */
+/* config */
 #undef HAVE_LIBSOCKET
 
 /* Define to 1 if you have the <limits.h> header file. */
@@ -150,7 +147,7 @@
 /* Define to 1 if you have a working `mmap' system call. */
 #undef HAVE_MMAP
 
-/* Kconfig */
+/* config */
 #undef HAVE_NETINET_TCP
 
 /* Kconfig */

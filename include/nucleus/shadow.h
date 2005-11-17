@@ -20,8 +20,8 @@
 #ifndef _XENO_NUCLEUS_SHADOW_H
 #define _XENO_NUCLEUS_SHADOW_H
 
-#include <nucleus/asm/atomic.h>
-#include <nucleus/asm/syscall.h>
+#include <asm/xenomai/atomic.h>
+#include <asm/xenomai/syscall.h>
 #ifdef CONFIG_PROC_FS
 #include <linux/proc_fs.h>
 #endif /* CONFIG_PROC_FS */

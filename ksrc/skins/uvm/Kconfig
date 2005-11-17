@@ -1,0 +1,11 @@
+config XENO_SKIN_UVM
+	depends on XENO_OPT_NUCLEUS && XENO_OPT_PERVASIVE
+	tristate "User-space VM support"
+	default n
+	help
+
+	This feature provides support for running applications based
+	on legacy RTOS APIs inside virtual machines in user-space
+	with hard real-time capabilities. The application and the RTOS
+	will be self-contained and sandboxed in a single regular Linux
+	process.

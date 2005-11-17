@@ -20,8 +20,6 @@
 #ifndef _XENO_NUCLEUS_CORE_H
 #define _XENO_NUCLEUS_CORE_H
 
-#include <xeno_config.h>
-
 /* Thread priority levels. */
 #define XNCORE_LOW_PRIO     1
 #define XNCORE_HIGH_PRIO    99
@@ -32,6 +30,8 @@
 #define XNCORE_MAX_PRIO     XNCORE_IRQ_PRIO
 
 #ifdef __KERNEL__
+
+#include <linux/config.h>
 
 #ifdef __cplusplus
 extern "C" {
