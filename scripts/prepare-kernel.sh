@@ -4,7 +4,7 @@ set -e
 do_links() {
     rm -fr $2
     ( cd $1 &&
-      find . \( -name Makefile -o -name Kconfig -o -name '*.[chS]' \) |
+      find . \( -name Makefile -o -name $config_file -o -name '*.[chS]' \) |
       while read f; do
         d=`dirname $f`
 	mkdir -p $2/$d && ln -s $1/$f $2/$f
@@ -135,11 +135,11 @@ echo "Preparing kernel $linux_version in $linux_tree..."
 
 if test -r $linux_tree/include/linux/ipipe.h \
      -o -r $linux_tree/include/linux/adeos.h; then
-    echo "Adeos/$linux_arch patch already applied - bypassing patch."
+    echo "Adeos found - bypassing patch."
 else
    if test x$adeos_patch = x; then
-      default_adeos_patch=`( ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-ipipe-*|sort -r; \
-		             ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-linux-*|sort -r) | head -1`
+      default_adeos_patch=`( ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-ipipe-$linux_VERSION.$linux_PATCHLEVEL*|sort -r; \
+		             ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-linux-$linux_VERSION.$linux_PATCHLEVEL*|sort -r) | head -1`
    fi
    while test x$adeos_patch = x; do
       echo -n "Adeos patch [default $default_adeos_patch]: "
@@ -164,27 +164,20 @@ elif test -r $linux_tree/include/asm-$linux_arch/adeos.h; then
 fi
 if test \! x$adeos_version = x; then
    echo "Adeos/$linux_arch $adeos_version ($adeos_gen) installed."
+else
+   echo "$me: $linux_tree has no Adeos support for $linux_arch"
+   exit 2
 fi
-
-# Create local directories then symlink to the source files from
-# there, so that we don't pollute the Xenomai source tree with
-# compilation files.
-
-do_links $xenomai_root/ksrc/arch/$xenomai_arch $linux_tree/arch/$linux_arch/xenomai
-do_links $xenomai_root/ksrc $linux_tree/kernel/xenomai
-do_links $xenomai_root/ksrc/drivers $linux_tree/drivers/xenomai
-do_links $xenomai_root/include/asm-$xenomai_arch $linux_tree/include/asm-$linux_arch/xenomai
-do_links $xenomai_root/include/asm-generic $linux_tree/include/asm-generic/xenomai
-do_links $xenomai_root/include $linux_tree/include/xenomai
-
-echo 'Links installed.'
 
 case $linux_VERSION.$linux_PATCHLEVEL in
 
-    2.4)
-	;;
+    #
+    #  Linux v2.6 section
+    #
 
     2.6)
+
+    config_file=Kconfig
 
     if ! grep -q XENOMAI $linux_tree/init/Kconfig; then
 	sed -e "s,@LINUX_ARCH@,$linux_arch,g" $xenomai_root/scripts/Kconfig.frag >> $linux_tree/init/Kconfig
@@ -205,10 +198,97 @@ case $linux_VERSION.$linux_PATCHLEVEL in
 	( echo ; echo $p ) >> $linux_tree/kernel/Makefile
     fi
     ;;
+
+    #
+    #  Linux v2.4 section
+    #
+
+    2.4)
+
+    config_file=Config.in
+
+    if ! grep -q CONFIG_XENO $linux_tree/Makefile; then
+	ed -s $linux_tree/Makefile > /dev/null <<EOF
+/DRIVERS := \$(DRIVERS-y)
+^r $xenomai_root/scripts/Modules.frag
+
+.
+wq
+EOF
+    fi
+    if ! grep -q CONFIG_XENO $linux_tree/arch/$linux_arch/Makefile; then
+	ed -s $linux_tree/arch/$linux_arch/Makefile > /dev/null <<EOF
+$
+a
+
+ifdef CONFIG_XENOMAI
+SUBDIRS += arch/ppc/xenomai
+DRIVERS += arch/ppc/xenomai/xenomai.o
+endif
+.
+wq
+EOF
+    fi
+    if ! grep -q CONFIG_XENO $linux_tree/drivers/Makefile; then
+	ed -s $linux_tree/drivers/Makefile > /dev/null <<EOF
+/include \$(TOPDIR)\/Rules.make
+i
+mod-subdirs := xenomai
+subdir-\$(CONFIG_XENOMAI) += xenomai
+
+.
+wq
+EOF
+    fi
+    if ! grep -q CONFIG_XENO $linux_tree/kernel/Makefile; then
+	ed -s $linux_tree/kernel/Makefile > /dev/null <<EOF
+/include \$(TOPDIR)\/Rules.make
+i
+mod-subdirs := xenomai
+subdir-\$(CONFIG_XENOMAI) += xenomai
+obj-\$(CONFIG_XENOMAI) += xenomai/arch/generic/xenomai.o
+
+.
+wq
+EOF
+    fi
+    if ! grep -iq xenomai $linux_tree/arch/$linux_arch/config.in; then
+	ed -s $linux_tree/arch/$linux_arch/config.in > /dev/null <<EOF
+$
+a
+
+source arch/ppc/xenomai/Config.in
+.
+wq
+EOF
+    fi
+    ;;
+
+    #
+    #  Paranoid section
+    #
+
+    *)
+
+    echo "$me: Unsupported kernel version $linux_VERSION.$linux_PATCHLEVEL.x"
+    exit 2
+    ;;
+
 esac
 
-echo 'Build system updated.'
+# Create local directories then symlink to the source files from
+# there, so that we don't pollute the Xenomai source tree with
+# compilation files.
 
-echo Done.
+do_links $xenomai_root/ksrc/arch/$xenomai_arch $linux_tree/arch/$linux_arch/xenomai
+do_links $xenomai_root/ksrc $linux_tree/kernel/xenomai
+do_links $xenomai_root/ksrc/drivers $linux_tree/drivers/xenomai
+do_links $xenomai_root/include/asm-$xenomai_arch $linux_tree/include/asm-$linux_arch/xenomai
+do_links $xenomai_root/include/asm-generic $linux_tree/include/asm-generic/xenomai
+do_links $xenomai_root/include $linux_tree/include/xenomai
+
+echo 'Links installed.'
+
+echo 'Build system ready.'
 
 exit 0

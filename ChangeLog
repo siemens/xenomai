@@ -1,3 +1,10 @@
+2005-11-17  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Add Adeos support for 2.4.25 based on
+	Denx's linuxppc_2_4_devel tree.
+
+	* scripts/prepare-kernel.sh: Update for 2.4 kernel preparation.
+
 2005-11-16  Dmitry Adamushko <dmitry.adamushko@gmail.com>
 
 	* nucleus/pipe.c, skins/native/pipe.c: Support for auto-allocation
