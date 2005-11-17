@@ -1,0 +1,29 @@
+-- arch/powerpc/patches
+
+Xenomai needs special kernel support to deliver fast and deterministic
+response time to external interrupts, and also to provide real-time
+services highly integrated with the standard Linux kernel.
+
+This support is provided by the Adeos real-time enabler [1], in the
+form of a kernel patch you have to apply to a vanilla kernel tree,
+before you attempt to compile the Xenomai codebase against the latter
+kernel.
+
+On the PowerPC architecture, Xenomai is supported on both the v2.4 and
+v2.6 Linux kernel series, for which the appropriate Adeos patches
+exist. The v2.4 kernel tree of reference for Xenomai/PowerPC is
+available from Denx's public CVS tree as the "linuxppc_2_4_devel"
+branch.  For the v2.6 series, the vanilla kernel versions as published
+by kernel.org are used [3].
+
+Additionally, Xenomai can run over the former and the new generation
+of Adeos patches, namely adeos-linux-* and adeos-ipipe-*, that one can
+find in this directory. However, the 64-bit PowerPC architecture does
+not yet support the new generation Adeos variant. Just apply one of
+those patches to the corresponding kernel release. You may want to
+have a look at the README.*INSTALL guides at the top of the Xenomai
+tree for more information.
+
+[1] http://www.gna.org/projects/adeos/
+[2] http://www.denx.de/en/Software/CVS/
+[3] ftp://ftp.kernel.org/pub/linux/kernel/v2.6/

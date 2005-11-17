@@ -57,7 +57,7 @@ Q: Any Xenomai syscall invoked by my user-space application fails with
 error code -38 (-ENOSYS).
 
 A1: Did you load the required modules?
-e.g. xeno_hal.ko + xeno_nucleus.ko + xeno_native.ko? Normally, you
+e.g. xeno_nucleus.ko + xeno_native.ko? Normally, you
 should be using a run script (see xeno-load) that does this for you;
 but if you don't, make sure to load this modules by hand before
 launching your application.
@@ -113,9 +113,10 @@ before the tracedaemon exits.
 
 ======================================================================
 
-Q: When inserting xeno_hal.ko, I get a message in the console saying :
-"Xenomai: Intel chipset found and SMI workaround not enabled, you may
-encounter high interrupt latencies." What should I do?
+Q: When looking at the kernel message log, I get a message in the
+console saying : "Xenomai: Intel chipset found and SMI workaround not
+enabled, you may encounter high interrupt latencies." What should I
+do?
 
 A: First you should run the latency test under some load and see if
 you experience any pathological latency ("pathological" meaning more
@@ -184,14 +185,14 @@ the same move.
 
 ______________________________________________________________________
 
-Q: Insmod'ing xeno_hal.ko fails with error: -1 no such device
+Q: Xenomai HAL's initialization fails with error: -1 no such device
 
 A: Dumping the kernel message log using "dmesg" will likely give you
 the reason.
 
 ______________________________________________________________________
 
-Q: Upon insmod'ing xeno_hal.ko, the kernel message log says:
+Q: The kernel message log says:
    "Xenomai: Local APIC absent or disabled!
     Disable APIC support or pass "lapic" as bootparam."
 

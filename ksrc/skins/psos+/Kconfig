@@ -1,0 +1,7 @@
+config XENO_SKIN_PSOS
+	depends on XENO_OPT_NUCLEUS
+	tristate "pSOS+ emulator"
+	default n
+	help
+
+	This API skin emulates WindRiver's pSOS+ operating system.

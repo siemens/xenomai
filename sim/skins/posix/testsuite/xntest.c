@@ -13,7 +13,7 @@
  * Written by Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>.
  */
 
-#include <nucleus/xenomai.h>
+#include <xenomai/nucleus/xenomai.h>
 #include "xntest.h"
 #include <stdarg.h>
 

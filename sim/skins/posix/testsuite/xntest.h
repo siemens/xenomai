@@ -16,7 +16,7 @@
 #ifndef xntest_h
 #define xntest_h
 
-#include <nucleus/pod.h>
+#include <xenomai/nucleus/pod.h>
 
 #ifdef TEST_START
 #undef TEST_START

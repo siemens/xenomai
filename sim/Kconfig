@@ -38,7 +38,7 @@ config XENO_MVM_GCC_TARBALL
 
 config XENO_MVM_DEBUG
 	bool "MVM debug support"
-	depends on XENO_MVM && XENO_OPT_EXPERT
+	depends on XENO_MVM
 	default n
 	help
 	
@@ -48,7 +48,7 @@ config XENO_MVM_DEBUG
 
 config XENO_MVM_ATOMIC_CORE
 	bool "Disable core instrumentation"
-	depends on XENO_MVM && XENO_OPT_EXPERT
+	depends on XENO_MVM
 	default n
 	help
 	

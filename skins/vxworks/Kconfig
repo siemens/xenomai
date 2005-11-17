@@ -1,6 +1,0 @@
-config XENO_SKIN_VXWORKS
-	bool "VxWorks emulator"
-	default n
-	help
-
-	This API skin emulates WindRiver's VxWorks operating system.

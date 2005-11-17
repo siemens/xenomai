@@ -8,10 +8,10 @@ CONFIG_XENO_VERSION_MINOR=`expr $PACKAGE_VERSION : '[[0-9]]*\.\([[0-9]]*\)'`
 CONFIG_XENO_REVISION_LEVEL=`expr $PACKAGE_VERSION : '[[0-9]]*\.[[0-9]]*\.\([[0-9]]*\)'`
 test "x$CONFIG_XENO_REVISION_LEVEL" = "x" && CONFIG_XENO_REVISION_LEVEL=0
 
-AC_CONFIG_HEADERS(include/xeno_config.h)
-AC_CONFIG_AUX_DIR(config/autoconf)
-AC_CONFIG_SRCDIR(nucleus/module.c)
-AC_PREFIX_DEFAULT(/usr/realtime)
+AC_CONFIG_HEADERS(src/include/xeno_config.h)
+AC_CONFIG_AUX_DIR(config)
+AC_CONFIG_SRCDIR(src/skins/native/task.c)
+AC_PREFIX_DEFAULT(/usr/xenomai)
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 AC_PROG_INSTALL
@@ -43,1051 +43,95 @@ AC_PROG_LIBTOOL
 AM_PROG_AS
 AM_PROG_LEX
 
-arch_have_sim=
+AC_MSG_CHECKING([for target architecture])
 
 case "$host" in
  i*86*-*)
 	XENO_TARGET_ARCH=i386
-	wanted_kernel_arch=CONFIG_X86
-	arch_have_sim=y
         ;;
  powerpc-*|ppc-*)
-	XENO_TARGET_ARCH=ppc
-	wanted_kernel_arch=CONFIG_PPC
-	arch_have_sim=y
+	XENO_TARGET_ARCH=powerpc
         ;;
  powerpc64-*|ppc64-*)
-	XENO_TARGET_ARCH=ppc64
-	wanted_kernel_arch=CONFIG_PPC64
-	arch_have_sim=y
+	XENO_TARGET_ARCH=powerpc
         ;;
  ia64-*)
 	XENO_TARGET_ARCH=ia64
-	wanted_kernel_arch=CONFIG_IA64
-	arch_have_sim=y
         ;;
  *) echo ""
    echo "*******************************************"
-   echo "Still unsupported host: $host -- Sorry."
+   echo "Still unsupported target: $host -- Sorry."
    echo "*******************************************"
    echo ""
    exit 1;;
 esac
 
-dnl
-dnl Load the configuration.
-dnl
-
-XENO_KCONFIG_FILE=$srcdir/arch/$XENO_TARGET_ARCH/defconfig
-kconfig_type=default
-
-AC_ARG_WITH(kconfig-file,
-    AS_HELP_STRING([--with-kconfig-file=<kconfig-file>], [KConfig parameter file]),
-    [
-	case "$withval" in
-	"" | y | ye | yes | n | no)
-	    AC_MSG_ERROR([You must supply an argument to --with-kconfig-file.])
-	  ;;
-	esac
-	XENO_KCONFIG_FILE="$withval"
-	kconfig_type=supplied
-    ])
-
-AC_MSG_CHECKING([for Xenomai Kconfig file])
-if test \! -f $XENO_KCONFIG_FILE; then
-    AC_MSG_ERROR([Kconfig-file $XENO_KCONFIG_FILE not found -- --with-kconfig-file sets Kconfig file])
-fi
-. $XENO_KCONFIG_FILE
-AC_MSG_RESULT([$XENO_KCONFIG_FILE ($kconfig_type)])
+AC_MSG_RESULT([$XENO_TARGET_ARCH])
 
 dnl
-dnl Installation directory for modules
+dnl Parse options
 dnl
 
-AC_MSG_CHECKING([for module installation directory])
+dnl UVM support (default: on)
 
-AC_ARG_WITH(module-dir,
-    AS_HELP_STRING([--with-module-dir=<module-dir>],[Installation directory for modules]),
-    [
-	case "$withval" in
-	"" | y | ye | yes | n | no)
-	    AC_MSG_ERROR([You must supply an argument to --with-module-dir.])
-	  ;;
-	esac
-	XENO_MODULE_DIR="$withval"
-    ])
+CONFIG_XENO_UVM=y
+AC_MSG_CHECKING(for UVM support)
+AC_ARG_ENABLE(uvm,
+	AS_HELP_STRING([--enable-uvm], [Build UVM support]),
+	[case "$enableval" in
+	y | yes) CONFIG_XENO_UVM=y ;;
+	*) unset CONFIG_XENO_UVM ;;
+	esac])
+AC_MSG_RESULT(${CONFIG_XENO_UVM:-no})
 
-top_builddir=`pwd`
+dnl Debug build (default: off)
 
-dnl Are we building into the source tree?
+debug_symbols=
+AC_MSG_CHECKING(for debug symbols)
+AC_ARG_ENABLE(debug,
+	AS_HELP_STRING([--enable-debug], [Enable debug symbols in programs]),
+	[case "$enableval" in
+	y | yes) debug_symbols=y ;;
+	*) unset debug_symbols ;;
+	esac])
+AC_MSG_RESULT(${debug_symbols:-no})
 
-dnl Set a default module dir if unspecified
-if test "x" = "x$XENO_MODULE_DIR"
-then
-   XENO_MODULE_DIR='${exec_prefix}/modules'
-else
-   XENO_MODULE_DIR="`/bin/bash -c \"echo $XENO_MODULE_DIR\"`"
+dnl SMP support (default: off)
+
+CONFIG_SMP=
+AC_MSG_CHECKING(for SMP support)
+AC_ARG_ENABLE(smp,
+	AS_HELP_STRING([--enable-smp], [Enable SMP support]),
+	[case "$enableval" in
+	y | yes) CONFIG_SMP=y ;;
+	*) unset CONFIG_SMP ;;
+	esac])
+AC_MSG_RESULT(${CONFIG_SMP:-no})
+
+dnl SEP enabling and TSC for x86 (default: off)
+
+CONFIG_XENO_X86_SEP=
+CONFIG_X86_TSC=
+
+if test $XENO_TARGET_ARCH = i386; then
+  AC_MSG_CHECKING(for x86 SEP instructions in syscalls)
+  AC_ARG_ENABLE(x86-sep,
+	AS_HELP_STRING([--enable-x86-sep], [Enable x86 SEP instructions for issuing syscalls]),
+	[case "$enableval" in
+	y | yes) CONFIG_XENO_X86_SEP=y ;;
+	*) unset CONFIG_XENO_X86_SEP ;;
+	esac])
+  AC_MSG_RESULT(${CONFIG_XENO_X86_SEP:-no})
+
+  AC_MSG_CHECKING(for x86 TSC support)
+  AC_ARG_ENABLE(x86-tsc,
+	AS_HELP_STRING([--enable-x86-tsc], [Enable x86 TSC for timings]),
+	[case "$enableval" in
+	y | yes) CONFIG_X86_TSC=y ;;
+	*) unset CONFIG_X86_TSC ;;
+	esac])
+  AC_MSG_RESULT(${CONFIG_X86_TSC:-no})
 fi
-
-AC_MSG_RESULT([$XENO_MODULE_DIR])
-
-dnl A place to export module symbols
-XENO_SYMBOL_DIR='${exec_prefix}/symbols'
-
-dnl Determine whether we are building in the source tree; we will
-dnl need this info later.
-abs_srcdir=`cd "$srcdir" && pwd`
-if test "$abs_srcdir" = $top_builddir; then
-   CONFIG_XENO_OLD_FASHIONED_BUILD=y
-else
-   CONFIG_XENO_OLD_FASHIONED_BUILD=
-fi
-
-dnl
-dnl Process the Linux kernel configuration
-dnl
-
-AC_MSG_CHECKING([for Linux build tree])
-
-dnl CONFIG_MODULES has been forcibly set in Xenomai's configuration
-dnl file, therefore we must unset it before later checking if the kernel
-dnl actually defined it as required too.
-unset CONFIG_MODULES
-
-XENO_LINUX_DIR=$CONFIG_XENO_LINUXDIR
-
-AC_ARG_WITH(linux-dir,
-    AS_HELP_STRING([--with-linux-dir=<linux-dir>], 
-                   [Adeos-enabled Linux kernel build tree]),
-    [
-	case "$withval" in
-	"" )
-	    if test x${CONFIG_XENO_LINUXDIR} = x; then
-		AC_MSG_ERROR([You must supply an argument to --with-linux-dir.])
-	    else
-		withval=${CONFIG_XENO_LINUXDIR}
-	    fi
-	  ;;
-	y | ye | yes | n | no)
-	    AC_MSG_ERROR([You must supply an argument to --with-linux-dir.])
-	  ;;
-	esac
-	XENO_LINUX_DIR="$withval"
-    ])
-
-if test x${XENO_LINUX_DIR} = x; then
-   if test -f /lib/modules/`uname -r`/build/Makefile; then
-        XENO_LINUX_DIR=/lib/modules/`uname -r`/build
-   else
-        echo
-        AC_MSG_ERROR([Linux kernel tree not specified -- use --with-linux-dir])
-   fi
-else
-   XENO_LINUX_DIR="`/bin/bash -c \"echo $XENO_LINUX_DIR\"`"
-fi
-XENO_LINUX_DIR=`cd "$XENO_LINUX_DIR" 2>/dev/null && pwd \
-                || echo "$XENO_LINUX_DIR"`
-
-if test \! -r ${XENO_LINUX_DIR}/Makefile; then
-   echo
-   AC_MSG_ERROR([No Linux kernel build tree in ${XENO_LINUX_DIR}])
-fi
-
-dnl XENO_LINUX_DIR contains the Linux kernel build tree, try to deduce the
-dnl kernel source tree from the build directory top Makefile from the variable
-dnl KERNELSRC defined there. If this variable is not defined, we suppose that
-dnl the kernel was built in its source tree.
-XENO_LINUX_SRCDIR=`sed -e 's,KERNELSRC *:= *\(.*\)$,\1,;t;d' \
-        "${XENO_LINUX_DIR}/Makefile"`
-test -z "$XENO_LINUX_SRCDIR" && XENO_LINUX_SRCDIR="${XENO_LINUX_DIR}"
-eval linux_`grep '^EXTRAVERSION =' $XENO_LINUX_SRCDIR/Makefile | sed -e 's, ,,g'`
-eval linux_`grep '^PATCHLEVEL =' $XENO_LINUX_SRCDIR/Makefile | sed -e 's, ,,g'`
-eval linux_`grep '^SUBLEVEL =' $XENO_LINUX_SRCDIR/Makefile | sed -e 's, ,,g'`
-eval linux_`grep '^VERSION =' $XENO_LINUX_SRCDIR/Makefile | sed -e 's, ,,g'`
-
-dnl Load Linux kernel configuration now, before config symbols are tested.
-if test \! -r ${XENO_LINUX_DIR}/.config; then
-   AC_MSG_RESULT([invalid])
-   AC_MSG_ERROR([$XENO_LINUX_DIR is not configured -- --with-linux-dir sets linux-dir])
-fi
-
-. $XENO_LINUX_DIR/.config
-
-XENO_LINUX_VERSION="$linux_VERSION.$linux_PATCHLEVEL.$linux_SUBLEVEL$linux_EXTRAVERSION"
-AC_MSG_RESULT([$XENO_LINUX_DIR (kernel ${XENO_LINUX_VERSION}${CONFIG_SMP:+-SMP})])
-
-AC_MSG_CHECKING([for Linux source tree])
-AC_MSG_RESULT([$XENO_LINUX_SRCDIR])
-
-dnl
-dnl Check for an interrupt pipeline extension.
-dnl
-
-AC_MSG_CHECKING([for interrupt pipeline extension])
-
-if test -r $XENO_LINUX_SRCDIR/include/linux/ipipe.h; then
-   v=`grep '^#define.*IPIPE_ARCH_STRING.*"' $XENO_LINUX_SRCDIR/include/asm-$XENO_TARGET_ARCH/ipipe.h|sed -e 's,.*"\(.*\)"$,\1,'`
-   AC_MSG_RESULT([Adeos newgen (I-pipe $v)])
-   if test x${CONFIG_IPIPE} = x; then
-      AC_MSG_ERROR([Please activate the Adeos support in $XENO_LINUX_DIR and rebuild your kernel])
-   fi
-   if test x${CONFIG_IPIPE_EXTENDED} = x; then
-      AC_MSG_ERROR([Please re-patch your kernel with the Adeos support])
-   fi
-elif test -r $XENO_LINUX_SRCDIR/include/linux/adeos.h; then
-   v=`grep '^#define.*ADEOS_ARCH_STRING.*"' $XENO_LINUX_SRCDIR/include/asm-$XENO_TARGET_ARCH/adeos.h|sed -e 's,.*"\(.*\)"$,\1,'`
-   AC_MSG_RESULT([Adeos oldgen ($v)])
-   if test x${CONFIG_ADEOS_CORE} = x; then
-      AC_MSG_ERROR([Please activate the Adeos support in $XENO_LINUX_DIR and rebuild your kernel])
-   fi
-else
-   AC_MSG_ERROR([No interrupt pipeline extension enabled in your kernel.
-	You need to apply an Adeos patch first.])
-fi
-
-dnl
-dnl We need Linux 2.6.
-dnl
-
-case "$XENO_LINUX_VERSION" in
-  2.6.*)
-    ;;
-  *) 
-    AC_MSG_ERROR([Unsupported kernel version $XENO_LINUX_VERSION])
-esac
-
-dnl
-dnl Perform a few sanity checks.
-dnl
-
-arch_select=`eval echo \\$$wanted_kernel_arch`
-if test x$arch_select = x; then
-   echo
-   echo "************************************************************"
-   echo " The target Xenomai architecture ($XENO_TARGET_ARCH) does not match"
-   echo " the kernel architecture selected in $XENO_LINUX_DIR"
-   echo " (i.e. $wanted_kernel_arch is undefined)"
-   echo "************************************************************"
-   exit 1
-fi
-
-if test x${CONFIG_MODULES} = x ; then
-  AC_MSG_ERROR([Please set CONFIG_MODULES for $XENO_LINUX_DIR and rebuild your kernel])
-fi
-
-CONFIG_XENO_LINUXDIR=$XENO_LINUX_DIR
-
-dnl Some sanity checks again. We are only rearranging defaults and
-dnl discarding preposterous settings here, previous user selection
-dnl is kept as long as it is sane.
-
-if test "$CONFIG_X86" = y; then
-   if test x$CONFIG_X86_EMU486 = x -a x$CONFIG_X86_CMPXCHG = x; then
-       AC_MSG_ERROR([Xenomai won't work on legacy i386 platforms (cmpxchg() is missing, need >= CONFIG_M486)])
-   fi
-   if test x$CONFIG_X86_WP_WORKS_OK = x; then
-      AC_MSG_ERROR([Xenomai won't work on legacy i386 platforms (cannot rely on WP bit, need >= CONFIG_M486)])
-   fi
-fi
-
-dnl Extract GCC architecture specific flags from KBUILD Makefiles.
-
-AC_MSG_CHECKING(for GCC architecture specific flags)
-mkdir -p .xeno_display_archflags
-cat > .xeno_display_archflags/display_archflags.c <<EOF
-#include <stdio.h>
-int main(void)
-{
-    char *str = XENO_CFLAGS;
-    printf("%s\n", str);
-    return 0;
-}
-EOF
-cat > .xeno_display_archflags/Makefile <<EOF
-hostprogs-y := display_archflags
-always := display_archflags
-
-HOST_EXTRACFLAGS += -DXENO_CFLAGS="\"\$(CC) \$(CFLAGS)\""
-EOF
-make -s -C $XENO_LINUX_DIR CC="$CC" ARCH=$XENO_TARGET_ARCH \
-        CROSS_COMPILE=$CROSS_COMPILE M=$PWD/.xeno_display_archflags >& /dev/null
-for flag in `.xeno_display_archflags/display_archflags`; do case $flag in
-    -march*|-mcpu*|-mtune*|-m32|-Wa,-me500|-EB|-EL)
-        XENO_ARCH_FLAGS="$XENO_ARCH_FLAGS $flag";;
-    *);; 
-esac; done
-rm -Rf .xeno_display_archflags
-AC_MSG_RESULT(${XENO_ARCH_FLAGS:-none})
-
-AC_MSG_CHECKING(for pervasive real-time support in user-space)
-AC_ARG_ENABLE(pervasive,
-	AS_HELP_STRING([--enable-pervasive], [Enable pervasive real-time support in user-space]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_PERVASIVE=y ;;
-	*) unset CONFIG_XENO_OPT_PERVASIVE ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_PERVASIVE:-no})
-
-AC_MSG_CHECKING(for message pipe support)
-AC_ARG_ENABLE(nucleus-pipe,
-	AS_HELP_STRING([--enable-nucleus-pipe],	[Enable message pipe support in nucleus]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_PIPE=y ;;
-	*) unset CONFIG_XENO_OPT_PIPE ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_PIPE:-no})
-
-if test x$CONFIG_XENO_OPT_PIPE = xy; then
-AC_MSG_CHECKING(for maximum number of pipe devices)
-AC_ARG_ENABLE(nucleus-pipe-nrdev,
-	AS_HELP_STRING([--enable-nucleus-pipe-nrdev], [Set maximum number of pipe devices]),
-	[case "$enableval" in
-	[[0-9]]*) CONFIG_XENO_OPT_PIPE_NRDEV=$enableval ;;
-	*) AC_MSG_ERROR([Bad argument to option: --enable-nucleus-pipe-nrdev=<number>]) ;;
-	esac])
-if test x$CONFIG_XENO_OPT_PIPE_NRDEV = x ; then
-  # Use a reasonable default if unset
-  CONFIG_XENO_OPT_PIPE_NRDEV=32
-fi
-AC_MSG_RESULT($CONFIG_XENO_OPT_PIPE_NRDEV)
-XENO_PIPE_NRDEV=`expr $CONFIG_XENO_OPT_PIPE_NRDEV - 1`
-if test x`expr $XENO_PIPE_NRDEV \< 0` = x1; then
-   AC_MSG_ERROR([Bad argument to option: --enable-nucleus-pipe-nrdev=<number>])
-fi
-else
-  # No pipe support
-  XENO_PIPE_NRDEV=-1
-fi
-
-AC_MSG_CHECKING(for the system heap size)
-AC_ARG_ENABLE(nucleus-heap-size,
-	AS_HELP_STRING([--enable-nucleus-heap-size], [Set size of the system heap (Kb)]),
-	[case "$enableval" in
-	[[0-9]]*) CONFIG_XENO_OPT_SYS_HEAPSZ=$enableval ;;
-	*) AC_MSG_ERROR([Bad argument to option: --enable-nucleus-heap-size=<number>]) ;;
-	esac])
-if test x$CONFIG_XENO_OPT_SYS_HEAPSZ = x ; then
-  # Use a reasonable default if unset
-  CONFIG_XENO_OPT_SYS_HEAPSZ=128
-fi
-AC_MSG_RESULT([$CONFIG_XENO_OPT_SYS_HEAPSZ Kbytes])
-
-AC_MSG_CHECKING(for scalable scheduler)
-AC_ARG_ENABLE(nucleus-scalable-sched,
-	AS_HELP_STRING([--enable-nucleus-scalable-sched], 
-                        [Enable scalable scheduler in nucleus]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_SCALABLE_SCHED=y ;;
-	*) unset CONFIG_XENO_OPT_SCALABLE_SCHED ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_SCALABLE_SCHED:-no})
-
-if test x$CONFIG_XENO_OPT_SCALABLE_SCHED = xy; then
-AC_MSG_CHECKING(for maximum number of priority levels)
-AC_ARG_ENABLE(nucleus-scalable-prios,
-	AS_HELP_STRING([--enable-nucleus-scalable-prios], [Set maximum number of priority levels]),
-	[case "$enableval" in
-	[[0-9]]*) CONFIG_XENO_OPT_SCALABLE_PRIOS=$enableval ;;
-	*) AC_MSG_ERROR([Bad argument to option: --enable-nucleus-scalable-prios=<number>]) ;;
-	esac])
-fi
-if test x$CONFIG_XENO_OPT_SCALABLE_PRIOS = x ; then
-  # Use a reasonable default if unset
-  CONFIG_XENO_OPT_SCALABLE_PRIOS=256
-fi
-if test x$CONFIG_XENO_OPT_SCALABLE_SCHED = xy; then
-AC_MSG_RESULT($CONFIG_XENO_OPT_SCALABLE_PRIOS)
-fi
-
-AC_MSG_CHECKING(for interrupt shield support)
-AC_ARG_ENABLE(nucleus-ishield,
-	AS_HELP_STRING([--enable-nucleus-ishield], [Enable interrupt shield]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_ISHIELD=y ;;
-	*) unset CONFIG_XENO_OPT_ISHIELD ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_ISHIELD:-no})
-
-AC_MSG_CHECKING(for statistics collection in nucleus)
-AC_ARG_ENABLE(nucleus-stats,
-	AS_HELP_STRING([--enable-nucleus-stats], [Enable statistics collection in nucleus]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_STATS=y ;;
-	*) unset CONFIG_XENO_OPT_STATS ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_STATS:-no})
-
-AC_MSG_CHECKING(for debug support in nucleus)
-AC_ARG_ENABLE(nucleus-debug,
-	AS_HELP_STRING([--enable-nucleus-debug], [Enable debug support in nucleus]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_DEBUG=y ;;
-	*) unset CONFIG_XENO_OPT_DEBUG ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_DEBUG:-no})
-
-AC_MSG_CHECKING(for watchdog support)
-AC_ARG_ENABLE(nucleus-debug,
-	AS_HELP_STRING([--enable-nucleus-watchdog], [Enable watchdog support in nucleus]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_WATCHDOG=y ;;
-	*) unset CONFIG_XENO_OPT_WATCHDOG ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_WATCHDOG:-no})
-
-AC_MSG_CHECKING(for FPU support)
-AC_ARG_ENABLE(fpu,
-	AS_HELP_STRING([--enable-fpu],	[Enable FPU support]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_HW_FPU=y ;;
-	*) unset CONFIG_XENO_HW_FPU ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_HW_FPU:-no})
-
-AC_MSG_CHECKING(for udev support)
-AC_ARG_ENABLE(udev,
-	AS_HELP_STRING([--enable-udev], [Enable udev support]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_UDEV=y ;;
-	*) unset CONFIG_XENO_OPT_UDEV ;;
-	esac])
-if test x$CONFIG_XENO_OPT_UDEV = xy -a x$CONFIG_HOTPLUG = x; then
-   unset CONFIG_XENO_OPT_UDEV
-   AC_MSG_RESULT([no hotplug support])
-else
-   AC_MSG_RESULT(${CONFIG_XENO_OPT_UDEV:-no})
-fi
-
-AC_MSG_CHECKING(for gzipped config file support)
-AC_ARG_ENABLE(nucleus-config-gz,
-	AS_HELP_STRING([--enable-nucleus-config-gz],	[Make gzipped config file available from /proc]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_CONFIG_GZ=y ;;
-	*) unset CONFIG_XENO_OPT_CONFIG_GZ ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_CONFIG_GZ:-no})
-
-AC_MSG_CHECKING(for periodic timer support)
-AC_ARG_ENABLE(periodic-timer,
-	AS_HELP_STRING([--enable-periodic-timer], [Enable periodic timer support]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_HW_PERIODIC_TIMER=y ;;
-	*) unset CONFIG_XENO_HW_PERIODIC_TIMER ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_HW_PERIODIC_TIMER:-no})
-
-AC_MSG_CHECKING(for debug symbols in kernel modules)
-AC_ARG_ENABLE(module-debug,
-	AS_HELP_STRING([--enable-module-debug], [Enable debug information in kernel modules]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_KSYMS=y ;;
-	*) unset CONFIG_XENO_OPT_KSYMS ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_KSYMS:-no})
-
-AC_MSG_CHECKING(for debug symbols in user-space programs)
-AC_ARG_ENABLE(user-debug,
-	AS_HELP_STRING([--enable-user-debug], [Enable debug information in user-space programs]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_USYMS=y ;;
-	*) unset CONFIG_XENO_OPT_USYMS ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_USYMS:-no})
-
-AC_MSG_CHECKING(for POSIX skin)
-AC_ARG_ENABLE(posix-skin,
-	AS_HELP_STRING([--enable-posix-skin], [Build POSIX skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_SKIN_POSIX=y ;;
-	*) unset CONFIG_XENO_SKIN_POSIX ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_SKIN_POSIX:-no})
-
-AC_MSG_CHECKING(for native skin)
-AC_ARG_ENABLE(rtai-skin,
-	AS_HELP_STRING([--enable-native-skin], [Build native skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_SKIN_NATIVE=y ;;
-	*) unset CONFIG_XENO_SKIN_NATIVE ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_SKIN_NATIVE:-no})
-
-AC_MSG_CHECKING(for native registry support)
-AC_ARG_ENABLE(native-registry,
-	AS_HELP_STRING([--enable-native-registry], [Enable registry support in native skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_NATIVE_REGISTRY=y ;;
-	*) unset CONFIG_XENO_OPT_NATIVE_REGISTRY ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_NATIVE_REGISTRY:-no})
-
-if test x$CONFIG_XENO_OPT_NATIVE_REGISTRY = xy; then
-AC_MSG_CHECKING(for native registry slots)
-AC_ARG_ENABLE(native-registry-slots,
-	AS_HELP_STRING([--enable-native-registry-slots], [Set maximum number of registry slots]),
-	[case "$enableval" in
-	[[0-9]]*) CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS=$enableval ;;
-	*) AC_MSG_ERROR([Bad argument to option: --enable-native-registry-slots=<number>]) ;;
-	esac])
-if test x$CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS = x ; then
-  # Use a reasonable default if unset
-  CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS=512
-fi
-AC_MSG_RESULT($CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS)
-fi
-
-AC_MSG_CHECKING(for native message pipe support)
-AC_ARG_ENABLE(native-pipe,
-	AS_HELP_STRING([--enable-native-pipe], [Enable pipe support in native skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_NATIVE_PIPE=y ;;
-	*) unset CONFIG_XENO_OPT_NATIVE_PIPE ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_NATIVE_PIPE:-no})
-
-if test x$CONFIG_XENO_OPT_NATIVE_PIPE = xy; then
-AC_MSG_CHECKING(for size of native pipe fill space)
-AC_ARG_ENABLE(native-pipe-bufsz,
-	AS_HELP_STRING([--enable-native-pipe-bufsz], [Set size of pipe fill space]),
-	[case "$enableval" in
-	[[0-9]]*) CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ=$enableval ;;
-	*) AC_MSG_ERROR([Bad argument to option: --enable-native-pipe-bufsz=<number>]) ;;
-	esac])
-if test x$CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ = x ; then
-  # Use a reasonable default if unset
-  CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ=4096
-fi
-AC_MSG_RESULT($CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ)
-fi
-
-AC_MSG_CHECKING(for native semaphore support)
-AC_ARG_ENABLE(native-sem,
-	AS_HELP_STRING([--enable-native-sem], [Enable semaphore support in native skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_NATIVE_SEM=y ;;
-	*) unset CONFIG_XENO_OPT_NATIVE_SEM ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_NATIVE_SEM:-no})
-
-AC_MSG_CHECKING(for native event flag support)
-AC_ARG_ENABLE(native-event,
-	AS_HELP_STRING([--enable-native-event], [Enable event flag support in native skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_NATIVE_EVENT=y ;;
-	*) unset CONFIG_XENO_OPT_NATIVE_EVENT ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_NATIVE_EVENT:-no})
-
-AC_MSG_CHECKING(for native mutex support)
-AC_ARG_ENABLE(native-mutex,
-	AS_HELP_STRING([--enable-native-mutex], [Enable mutex support in native skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_NATIVE_MUTEX=y ;;
-	*) unset CONFIG_XENO_OPT_NATIVE_MUTEX ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_NATIVE_MUTEX:-no})
-
-AC_MSG_CHECKING(for native condition variable support)
-AC_ARG_ENABLE(native-cond,
-	AS_HELP_STRING([--enable-native-cond], [Enable condition variable support in native skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_NATIVE_COND=y ;;
-	*) unset CONFIG_XENO_OPT_NATIVE_COND ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_NATIVE_COND:-no})
-
-AC_MSG_CHECKING(for native message queue support)
-AC_ARG_ENABLE(native-queue,
-	AS_HELP_STRING([--enable-native-queue], [Enable message queue support in native skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_NATIVE_QUEUE=y ;;
-	*) unset CONFIG_XENO_OPT_NATIVE_QUEUE ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_NATIVE_QUEUE:-no})
-
-AC_MSG_CHECKING(for native memory heap support)
-AC_ARG_ENABLE(native-heap,
-	AS_HELP_STRING([--enable-native-heap], [Enable memory heap support in native skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_NATIVE_HEAP=y ;;
-	*) unset CONFIG_XENO_OPT_NATIVE_HEAP ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_NATIVE_HEAP:-no})
-
-AC_MSG_CHECKING(for native alarm support)
-AC_ARG_ENABLE(native-alarm,
-	AS_HELP_STRING([--enable-native-alarm], [Enable alarm support in native skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_NATIVE_ALARM=y ;;
-	*) unset CONFIG_XENO_OPT_NATIVE_ALARM ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_NATIVE_ALARM:-no})
-
-AC_MSG_CHECKING(for native message passing support)
-AC_ARG_ENABLE(native-mps,
-	AS_HELP_STRING([--enable-native-mps], [Enable message passing support in native skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_NATIVE_MPS=y ;;
-	*) unset CONFIG_XENO_OPT_NATIVE_MPS ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_NATIVE_MPS:-no})
-
-AC_MSG_CHECKING(for native interrupt API)
-AC_ARG_ENABLE(native-intr,
-	AS_HELP_STRING([--enable-native-intr], [Enable interrupt API in native skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_NATIVE_INTR=y ;;
-	*) unset CONFIG_XENO_OPT_NATIVE_INTR ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_NATIVE_INTR:-no})
-
-AC_MSG_CHECKING(for pSOS+ skin)
-AC_ARG_ENABLE(psos-skin,
-	AS_HELP_STRING([--enable-psos-skin], [Build pSOS+ emulator]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_SKIN_PSOS=y ;;
-	*) unset CONFIG_XENO_SKIN_PSOS ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_SKIN_PSOS:-no})
-
-AC_MSG_CHECKING(for VxWorks skin)
-AC_ARG_ENABLE(vxworks-skin,
-	AS_HELP_STRING([--enable-vxworks-skin],	[Build VxWorks emulator]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_SKIN_VXWORKS=y ;;
-	*) unset CONFIG_XENO_SKIN_VXWORKS ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_SKIN_VXWORKS:-no})
-
-AC_MSG_CHECKING(for VRTX skin)
-AC_ARG_ENABLE(vrtx-skin,
-	AS_HELP_STRING([--enable-vrtx-skin], [Build VRTX emulator]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_SKIN_VRTX=y ;;
-	*) unset CONFIG_XENO_SKIN_VRTX ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_SKIN_VRTX:-no})
-
-AC_MSG_CHECKING(for uITRON skin)
-AC_ARG_ENABLE(uitron-skin,
-	AS_HELP_STRING([--enable-uitron-skin], [Build uITRON API skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_SKIN_UITRON=y ;;
-	*) unset CONFIG_XENO_SKIN_UITRON ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_SKIN_UITRON:-no})
-
-AC_MSG_CHECKING(for virtual machines in user-space)
-AC_ARG_ENABLE(user-vm,
-	AS_HELP_STRING([--enable-user-vm], [Build user-space VMs]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_UVM=y ;;
-	*) unset CONFIG_XENO_OPT_UVM ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_UVM:-no})
-
-AC_MSG_CHECKING(for RTDM skin)
-AC_ARG_ENABLE(rtdm-skin,
-	AS_HELP_STRING([--enable-rtdm-skin], [Build Real-Time Driver Model skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_SKIN_RTDM=y ;;
-	*) unset CONFIG_XENO_SKIN_RTDM ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_SKIN_RTDM:-no})
-
-AC_MSG_CHECKING(for RTAI emulator)
-AC_ARG_ENABLE(rtai-skin,
-	AS_HELP_STRING([--enable-rtai-skin], [Build RTAI skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_SKIN_RTAI=y ;;
-	*) unset CONFIG_XENO_SKIN_RTAI ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_SKIN_RTAI:-no})
-
-AC_MSG_CHECKING(for RTAI semaphore support)
-AC_ARG_ENABLE(rtai-sem,
-	AS_HELP_STRING([--enable-rtai-sem], [Enable semaphore support in RTAI skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_RTAI_SEM=y ;;
-	*) unset CONFIG_XENO_OPT_RTAI_SEM ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_RTAI_SEM:-no})
-
-AC_MSG_CHECKING(for RTAI FIFO support)
-AC_ARG_ENABLE(rtai-fifo,
-	AS_HELP_STRING([--enable-rtai-fifo], [Enable FIFO support in RTAI skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_RTAI_FIFO=y ;;
-	*) unset CONFIG_XENO_OPT_RTAI_FIFO ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_RTAI_FIFO:-no})
-
-AC_MSG_CHECKING(for RTAI shared memory support)
-AC_ARG_ENABLE(rtai-shm,
-	AS_HELP_STRING([--enable-rtai-shm], [Enable shared memory support in RTAI skin]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_RTAI_SHM=y ;;
-	*) unset CONFIG_XENO_OPT_RTAI_SHM ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_RTAI_SHM:-no})
-
-AC_MSG_CHECKING(for 16550A UART support)
-AC_ARG_ENABLE(uart-16550A,
-	AS_HELP_STRING([--enable-uart-16550A], [Build 16550A UART driver]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_DRIVERS_16550A=y ;;
-	*) unset CONFIG_XENO_DRIVERS_16550A ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_DRIVERS_16550A:-no})
-
-case $XENO_TARGET_ARCH in
- i386)
-	if test "$CONFIG_X86_LOCAL_APIC" = y; then
-           timer_type="APIC timer"
-	else
-	   timer_type="8254 PIT"
-	fi
-	AC_MSG_CHECKING(for SEP support)
-	AC_ARG_ENABLE(x86-sep,
-	AS_HELP_STRING([--enable-x86-sep],	[Enable SEP instructions for syscalls]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_HW_X86_SEP=y ;;
-	*) unset CONFIG_XENO_HW_X86_SEP ;;
-	esac])
-	AC_MSG_RESULT(${CONFIG_XENO_HW_X86_SEP:-no})
-	test \! x$CONFIG_XENO_HW_X86_SEP = x && AC_DEFINE(CONFIG_XENO_HW_X86_SEP,1,[Kconfig])
-        ;;
- ppc|ppc64)
-	timer_type=decrementer
-        ;;
- ia64)
-	timer_type=counter
-
-	AC_MSG_CHECKING(for number of pre-allocated stacks)
-	AC_ARG_ENABLE(ia64-kernel-stacks,
-	AS_HELP_STRING([--enable-ia64-kernel-stacks], [Set number of pre-allocated kernel stacks]),
-	[case "$enableval" in
-	[[0-9]]*) CONFIG_XENO_HW_IA64_STACK_POOL=$enableval ;;
-	*) AC_MSG_ERROR([Bad argument to option: --enable-ia64-kernel-stacks=<number>]) ;;
-	esac])
-	if test x$CONFIG_XENO_HW_IA64_STACK_POOL = x ; then
-	# Use a reasonable default if unset
-	CONFIG_XENO_HW_STACK_POOL=8
-	fi
-	AC_MSG_RESULT([$CONFIG_XENO_HW_IA64_STACK_POOL])
-	AC_DEFINE_UNQUOTED(CONFIG_XENO_HW_IA64_STACK_POOL,$CONFIG_XENO_HW_IA64_STACK_POOL,[Kconfig])
-        ;;
-esac
-
-AC_MSG_CHECKING(for $timer_type tuning latency)
-AC_ARG_ENABLE(timer-latency,
-	AS_HELP_STRING([--enable-timer-latency], [Set timer tuning latency]),
-	[case "$enableval" in
-	[[0-9]]*) CONFIG_XENO_HW_TIMER_LATENCY=$enableval ;;
-	*) AC_MSG_ERROR([Bad argument to option: --enable-timer-latency=<nanoseconds>]) ;;
-	esac])
-if test x$CONFIG_XENO_HW_TIMER_LATENCY = x ; then
-    # Force auto-calibration
-    CONFIG_XENO_HW_TIMER_LATENCY=0
-fi
-if test $CONFIG_XENO_HW_TIMER_LATENCY = 0; then
-   AC_MSG_RESULT(autocalibration)
-else
-   AC_MSG_RESULT($CONFIG_XENO_HW_TIMER_LATENCY ns)
-fi
-
-AC_MSG_CHECKING(for scheduling latency)
-AC_ARG_ENABLE(sched-latency,
-	AS_HELP_STRING([--enable-sched-latency], [Set scheduling latency]),
-	[case "$enableval" in
-	[[0-9]]*) CONFIG_XENO_HW_SCHED_LATENCY=$enableval ;;
-	*) AC_MSG_ERROR([Bad argument to option: --enable-sched-latency=<nanoseconds>]) ;;
-	esac])
-if test x$CONFIG_XENO_HW_SCHED_LATENCY = x ; then
-  # Force auto-calibration
-  CONFIG_XENO_HW_SCHED_LATENCY=0
-fi
-if test $CONFIG_XENO_HW_SCHED_LATENCY = 0; then
-   AC_MSG_RESULT(autocalibration)
-else
-   AC_MSG_RESULT($CONFIG_XENO_HW_SCHED_LATENCY ns)
-fi
-
-dnl NMI bits
-AC_MSG_CHECKING(for NMI watchdog)
-AC_ARG_ENABLE(nmi-max-latency,
-        AS_HELP_STRING([--enable-nmi-max-latency=value], [Use NMI watchdog to debug timer latency spots above <value> microseconds]),
-        [case "$enableval" in
-        [[0-9]]*) CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX=$enableval ;;
-        *) AC_MSG_ERROR([Bad argument to option: --enable-nmi-latency=<microseconds>]) ;;
-        esac])
-
-if test -n "$CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX"; then
-   AC_DEFINE_UNQUOTED(CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX,$CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX,[Kconfig])
-   CONFIG_XENO_HW_NMI_DEBUG_LATENCY=y
-   AC_DEFINE(CONFIG_XENO_HW_NMI_DEBUG_LATENCY, 1, [Kconfig])
-
-   if test x$CONFIG_X86_LOCAL_APIC != xy; then
-        AC_MSG_ERROR([NMI watchdog may only be enabled if Local APIC
-        configuration is enabled in Linux.])
-   fi
-fi
-AM_CONDITIONAL(CONFIG_XENO_HW_NMI_DEBUG_LATENCY, [test -n "$CONFIG_XENO_HW_NMI_DEBUG_LATENCY"])
-
-if test x$CONFIG_XENO_HW_NMI_DEBUG_LATENCY = xy; then
-    AC_MSG_RESULT(detect latencies above $CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX microseconds)
-else
-    AC_MSG_RESULT(no)
-fi
-
-dnl SMI workaround bits
-
-CONFIG_XENO_HW_SMI_DETECT=y
-AC_MSG_CHECKING(for SMI detection)
-AC_ARG_ENABLE(smi-detection,
-        AS_HELP_STRING([--disable-smi-detection], [Disable SMI detection]),
-	[case "$enableval" in
-	n | no) unset CONFIG_XENO_HW_SMI_DETECT ;;
-	*) CONFIG_XENO_HW_SMI_DETECT=y ;;
-	esac;])
-AC_MSG_RESULT(${CONFIG_XENO_HW_SMI_DETECT:-no})
-test x$CONFIG_XENO_HW_SMI_DETECT = xy && \
-    AC_DEFINE(CONFIG_XENO_HW_SMI_DETECT, 1, [Kconfig])
-AM_CONDITIONAL(CONFIG_XENO_HW_SMI_DETECT,[test -n "$CONFIG_XENO_HW_SMI_DETECT"])
-
-
-AC_MSG_CHECKING(for SMI workaround)
-AC_ARG_ENABLE(smi-workaround,
-        AS_HELP_STRING([--enable-smi-workaround], [Enable SMI workaround]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_HW_SMI_WORKAROUND=y ;;
-	*) unset CONFIG_XENO_HW_SMI_WORKAROUND ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_HW_SMI_WORKAROUND:-no})
-if test x$CONFIG_XENO_HW_SMI_WORKAROUND = xy \
-        -a ! x$CONFIG_XENO_HW_SMI_DETECT = xy; then
-   AC_MSG_ERROR([SMI workaround can not be enabled without SMI detection.])
-fi
-test x$CONFIG_XENO_HW_SMI_WORKAROUND = xy && \
-    AC_DEFINE(CONFIG_XENO_HW_SMI_WORKAROUND, 1, [Kconfig])
-
-
-AC_MSG_CHECKING(for global SMI masking)
-AC_ARG_ENABLE(global-smi,
-        AS_HELP_STRING([--enable-global-smi], 
-                       [Enable global SMI sources masking]),
-        [case "$enableval" in
-	y | yes) CONFIG_XENO_HW_SMI_ALL=y ;;
-	*) unset CONFIG_XENO_HW_SMI_ALL ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_HW_SMI_ALL:-no})
-if test x$CONFIG_XENO_HW_SMI_ALL = xy \
-        -a ! x$CONFIG_XENO_HW_SMI_WORKAROUND = xy; then
-   AC_MSG_ERROR([Global SMI masking can not be enabled without SMI workaround.])
-fi
-test x$CONFIG_XENO_HW_SMI_ALL = xy && \
-        AC_DEFINE(CONFIG_XENO_HW_SMI_ALL, 1, [Kconfig])
-
-
-AC_MSG_CHECKING(for Intel-specific USB2 SMI)
-AC_ARG_ENABLE(intel-usb2-smi,
-        AS_HELP_STRING([--enable-intel-usb2-smi], 
-                        [Enable Intel-specific USB2 SMI]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_HW_SMI_INTEL_USB2=y ;;
-	*) unset CONFIG_XENO_HW_SMI_INTEL_USB2;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_HW_SMI_INTEL_USB2:-no})
-if test x$CONFIG_XENO_HW_SMI_INTEL_USB2 = xy; then
-   if test ! x$CONFIG_XENO_HW_SMI_WORKAROUND = xy; then
-      AC_MSG_ERROR([Intel USB2 SMI can not be enabled without SMI workaround.])
-   fi
-   if test x$CONFIG_XENO_HW_SMI_ALL = xy; then
-      AC_MSG_ERROR([Intel USB2 SMI can not be enabled with SMI globally masked.])
-   fi
-fi
-test x$CONFIG_XENO_HW_SMI_INTEL_USB2 = xy && \
-        AC_DEFINE(CONFIG_XENO_HW_SMI_INTEL_USB2, 1, [Kconfig])
-
-
-AC_MSG_CHECKING(for Legacy USB2 SMI)
-AC_ARG_ENABLE(legacy-usb2-smi,
-        AS_HELP_STRING([--enable-legacy-usb2-smi], 
-                        [Enable legacy USB2 SMI]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_HW_SMI_LEGACY_USB2=y ;;
-	*) unset CONFIG_XENO_HW_SMI_LEGACY_USB2;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_HW_SMI_LEGACY_USB2:-no})
-if test x$CONFIG_XENO_HW_SMI_LEGACY_USB2 = xy; then
-   if test ! x$CONFIG_XENO_HW_SMI_WORKAROUND = xy; then
-      AC_MSG_ERROR([Legacy USB2 SMI can not be enabled without SMI workaround.])
-   fi
-   if test x$CONFIG_XENO_HW_SMI_ALL = xy; then
-      AC_MSG_ERROR([Legacy USB2 SMI can not be enabled with SMI globally masked.])
-   fi
-fi
-test x$CONFIG_XENO_HW_SMI_LEGACY_USB2 = xy && \
-        AC_DEFINE(CONFIG_XENO_HW_SMI_LEGACY_USB2, 1, [Kconfig])
-
-
-AC_MSG_CHECKING(for periodic SMI)
-AC_ARG_ENABLE(periodic-smi,
-        AS_HELP_STRING([--enable-periodic-smi], 
-                        [Enable periodic SMI]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_HW_SMI_PERIODIC=y ;;
-	*) unset CONFIG_XENO_HW_SMI_PERIODIC;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_HW_SMI_PERIODIC:-no})
-if test x$CONFIG_XENO_HW_SMI_PERIODIC = xy; then
-   if test ! x$CONFIG_XENO_HW_SMI_WORKAROUND = xy; then
-      AC_MSG_ERROR([Periodic SMI can not be enabled without SMI workaround.])
-   fi
-   if test x$CONFIG_XENO_HW_SMI_ALL = xy; then
-      AC_MSG_ERROR([Periodic SMI can not be enabled with SMI globally masked.])
-   fi
-fi
-test x$CONFIG_XENO_HW_SMI_PERIODIC = xy && \
-        AC_DEFINE(CONFIG_XENO_HW_SMI_PERIODIC, 1, [Kconfig])
-
-
-AC_MSG_CHECKING(for TCO SMI)
-AC_ARG_ENABLE(tco-smi,
-        AS_HELP_STRING([--enable-tco-smi], 
-                        [Enable TCO SMI]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_HW_SMI_TCO=y ;;
-	*) unset CONFIG_XENO_HW_SMI_TCO;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_HW_SMI_TCO:-no})
-if test x$CONFIG_XENO_HW_SMI_TCO = xy; then
-   if test ! x$CONFIG_XENO_HW_SMI_WORKAROUND = xy; then
-      AC_MSG_ERROR([TCO SMI can not be enabled without SMI workaround.])
-   fi
-   if test x$CONFIG_XENO_HW_SMI_ALL = xy; then
-      AC_MSG_ERROR([TCO SMI can not be enabled with SMI globally masked.])
-   fi
-fi
-test x$CONFIG_XENO_HW_SMI_TCO = xy && \
-        AC_DEFINE(CONFIG_XENO_HW_SMI_TCO, 1, [Kconfig])
-
-
-AC_MSG_CHECKING(for microcontroller SMI)
-AC_ARG_ENABLE(mc-smi,
-        AS_HELP_STRING([--enable-mc-smi], 
-                        [Enable microcontroller SMI]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_HW_SMI_MC=y ;;
-	*) unset CONFIG_XENO_HW_SMI_MC;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_HW_SMI_MC:-no})
-if test x$CONFIG_XENO_HW_SMI_MC = xy; then
-   if test ! x$CONFIG_XENO_HW_SMI_WORKAROUND = xy; then
-      AC_MSG_ERROR([microcontroller SMI can not be enabled without SMI workaround.])
-   fi
-   if test x$CONFIG_XENO_HW_SMI_ALL = xy; then
-      AC_MSG_ERROR([microcontroller SMI can not be enabled with SMI globally masked.])
-   fi
-fi
-test x$CONFIG_XENO_HW_SMI_MC = xy && \
-        AC_DEFINE(CONFIG_XENO_HW_SMI_MC, 1, [Kconfig])
-
-
-AC_MSG_CHECKING(for APM SMI)
-AC_ARG_ENABLE(apmc-smi,
-        AS_HELP_STRING([--enable-apmc-smi], 
-                        [Enable APM SMI]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_HW_SMI_APMC=y ;;
-	*) unset CONFIG_XENO_HW_SMI_APMC;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_HW_SMI_APMC:-no})
-if test x$CONFIG_XENO_HW_SMI_APMC = xy; then
-   if test ! x$CONFIG_XENO_HW_SMI_WORKAROUND = xy; then
-      AC_MSG_ERROR([APM SMI can not be enabled without SMI workaround.])
-   fi
-   if test x$CONFIG_XENO_HW_SMI_ALL = xy; then
-      AC_MSG_ERROR([APM SMI can not be enabled with SMI globally masked.])
-   fi
-fi
-test x$CONFIG_XENO_HW_SMI_APMC = xy && \
-        AC_DEFINE(CONFIG_XENO_HW_SMI_APMC, 1, [Kconfig])
-
-
-AC_MSG_CHECKING(for legacy USB SMI)
-AC_ARG_ENABLE(legacy-usb-smi,
-        AS_HELP_STRING([--enable-legacy-usb-smi], 
-                        [Enable legacy USB SMI]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_HW_SMI_LEGACY_USB=y ;;
-	*) unset CONFIG_XENO_HW_SMI_LEGACY_USB;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_HW_SMI_LEGACY_USB:-no})
-if test x$CONFIG_XENO_HW_SMI_LEGACY_USB = xy; then
-   if test ! x$CONFIG_XENO_HW_SMI_WORKAROUND = xy; then
-      AC_MSG_ERROR([Legacy USB SMI can not be enabled without SMI workaround.])
-   fi
-   if test x$CONFIG_XENO_HW_SMI_ALL = xy; then
-      AC_MSG_ERROR([Legacy USB SMI can not be enabled with SMI globally masked.])
-   fi
-fi
-test x$CONFIG_XENO_HW_SMI_LEGACY_USB = xy && \
-        AC_DEFINE(CONFIG_XENO_HW_SMI_LEGACY_USB, 1, [Kconfig])
-
-
-AC_MSG_CHECKING(for ACPI BIOS SMI)
-AC_ARG_ENABLE(bios-smi,
-        AS_HELP_STRING([--enable-bios-smi], 
-                        [Enable ACPI BIOS SMI]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_HW_SMI_BIOS=y ;;
-	*) unset CONFIG_XENO_HW_SMI_BIOS;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_HW_SMI_BIOS:-no})
-if test x$CONFIG_XENO_HW_SMI_BIOS = xy; then
-   if test ! x$CONFIG_XENO_HW_SMI_WORKAROUND = xy; then
-      AC_MSG_ERROR([ACPI BIOS SMI can not be enabled without SMI workaround.])
-   fi
-   if test x$CONFIG_XENO_HW_SMI_ALL = xy; then
-      AC_MSG_ERROR([ACPI BIOS SMI can not be enabled with SMI globally masked.])
-   fi
-fi
-test x$CONFIG_XENO_HW_SMI_BIOS = xy && \
-        AC_DEFINE(CONFIG_XENO_HW_SMI_BIOS, 1, [Kconfig])
-
-dnl Catch sub-package flags
-
-AC_MSG_CHECKING(for simulator)
-AC_ARG_ENABLE(sim,
-	AS_HELP_STRING([--enable-sim], [Build simulator]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_MVM=y ;;
-	*) unset CONFIG_XENO_MVM ;;
-	esac])
-
-unset XENO_MAYBE_SIMDIR
-if test \! -d $srcdir/sim; then
-    if test x$CONFIG_XENO_MVM = xy; then
-        AC_MSG_ERROR([simulator is missing.])
-    fi
-    AC_MSG_RESULT([not present])
-else
-    if test x$CONFIG_XENO_MVM = xy; then
-	export CONFIG_XENO_MVM_DEBUG
-    	export CONFIG_XENO_MVM_GCC_TARBALL
-    	export CONFIG_XENO_MVM_ATOMIC_CORE
-	export CONFIG_XENO_OPT_DEBUG
-	export CONFIG_XENO_OPT_STATS
-    else
-	XENO_MAYBE_SIMDIR=sim
-    fi
-    AC_MSG_RESULT(${CONFIG_XENO_MVM:-no})
-fi
-if test x$arch_have_sim = x -a x$CONFIG_XENO_MVM = xy; then
-   AC_MSG_ERROR([simulator is not available on this architecture.])
-fi
-AC_SUBST(XENO_MAYBE_SIMDIR)
 
 dnl Documentation package.
 
@@ -1157,22 +201,6 @@ else
    LATEX_MODE=batchmode
 fi
 
-dnl We need to know this before building the APIC support
-dnl into the SMP scheduler for the x86 platform. Autoconf imposes
-dnl us to define all Automake conditionals...unconditionally. e.g.
-dnl regardless of the current architecture setup.
-AM_CONDITIONAL(CONFIG_X86_LOCAL_APIC,[test -n "$CONFIG_X86_LOCAL_APIC"])
-
-dnl
-dnl Build a Kconfig file corresponding to the current configuration
-dnl if none exists.
-dnl
-
-if test \! -r .xeno_config; then
-   set | grep -e '^CONFIG_XENO' -e '^CONFIG_MODULES' | \
-   sed -e 's,\(.*\)=\(.*\)$,\1=\"\2\",' > .xeno_config
-fi
-
 dnl Determine whether some specific headers are present on this system.
 AC_CHECK_HEADERS(mqueue.h)
 
@@ -1180,51 +208,20 @@ dnl
 dnl Produce the info needed to build xeno_config.h
 dnl
 
-AC_DEFINE_UNQUOTED(CONFIG_XENO_VERSION_MAJOR,$CONFIG_XENO_VERSION_MAJOR,[Kconfig])
-AC_DEFINE_UNQUOTED(CONFIG_XENO_VERSION_MINOR,$CONFIG_XENO_VERSION_MINOR,[Kconfig])
-AC_DEFINE_UNQUOTED(CONFIG_XENO_REVISION_LEVEL,$CONFIG_XENO_REVISION_LEVEL,[Kconfig])
+AC_DEFINE_UNQUOTED(CONFIG_XENO_VERSION_MAJOR,$CONFIG_XENO_VERSION_MAJOR,[config])
+AC_DEFINE_UNQUOTED(CONFIG_XENO_VERSION_MINOR,$CONFIG_XENO_VERSION_MINOR,[config])
+AC_DEFINE_UNQUOTED(CONFIG_XENO_REVISION_LEVEL,$CONFIG_XENO_REVISION_LEVEL,[config])
 
-AC_DEFINE_UNQUOTED(CONFIG_XENO_HW_TIMER_LATENCY,$CONFIG_XENO_HW_TIMER_LATENCY,[Kconfig])
-AC_DEFINE_UNQUOTED(CONFIG_XENO_HW_SCHED_LATENCY,$CONFIG_XENO_HW_SCHED_LATENCY,[Kconfig])
-test \! x$CONFIG_XENO_HW_FPU = x && AC_DEFINE(CONFIG_XENO_HW_FPU,1,[Kconfig])
-test \! x$CONFIG_XENO_HW_PERIODIC_TIMER = x && AC_DEFINE(CONFIG_XENO_HW_PERIODIC_TIMER,1,[Kconfig])
+dnl
+dnl Features we enabled and likely want to find at kernel level.
+dnl When applicable, we reuse the kernel option symbol so that we
+dnl don't need to make particular cases with kernel code which may
+dnl also be compiled in user-space libs.
+dnl
 
-test x$CONFIG_XENO_OPT_UDEV = xy && AC_DEFINE(CONFIG_XENO_OPT_UDEV,1,[Kconfig])
-test x$CONFIG_XENO_OPT_SCALABLE_SCHED = xy && AC_DEFINE(CONFIG_XENO_OPT_SCALABLE_SCHED,1,[Kconfig])
-test x$CONFIG_XENO_OPT_ISHIELD = xy && AC_DEFINE(CONFIG_XENO_OPT_ISHIELD,1,[Kconfig])
-test x$CONFIG_XENO_OPT_STATS = xy && AC_DEFINE(CONFIG_XENO_OPT_STATS,1,[Kconfig])
-test x$CONFIG_XENO_OPT_DEBUG = xy && AC_DEFINE(CONFIG_XENO_OPT_DEBUG,1,[Kconfig])
-test x$CONFIG_XENO_OPT_WATCHDOG = xy && AC_DEFINE(CONFIG_XENO_OPT_WATCHDOG,1,[Kconfig])
-test x$CONFIG_XENO_OPT_PERVASIVE = xy && AC_DEFINE(CONFIG_XENO_OPT_PERVASIVE,1,[Kconfig])
-test x$CONFIG_XENO_OPT_PIPE = xy && AC_DEFINE(CONFIG_XENO_OPT_PIPE,1,[Kconfig])
-AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_PIPE_NRDEV,$CONFIG_XENO_OPT_PIPE_NRDEV,[Kconfig])
-AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_SCALABLE_PRIOS,$CONFIG_XENO_OPT_SCALABLE_PRIOS,[Kconfig])
-AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_SYS_HEAPSZ,$CONFIG_XENO_OPT_SYS_HEAPSZ,[Kconfig])
-test x$CONFIG_XENO_OPT_CONFIG_GZ = xy && AC_DEFINE(CONFIG_XENO_OPT_CONFIG_GZ,1,[Kconfig])
-test x$CONFIG_XENO_OPT_FILTER_EVIRQ = xy && AC_DEFINE(CONFIG_XENO_OPT_FILTER_EVIRQ,1,[Kconfig])
-test x$CONFIG_XENO_OPT_FILTER_EVTHR = xy && AC_DEFINE(CONFIG_XENO_OPT_FILTER_EVTHR,1,[Kconfig])
-test x$CONFIG_XENO_OPT_FILTER_EVSYS = xy && AC_DEFINE(CONFIG_XENO_OPT_FILTER_EVSYS,1,[Kconfig])
-test x$CONFIG_XENO_OPT_FILTER_EVALL = xy && AC_DEFINE(CONFIG_XENO_OPT_FILTER_EVALL,1,[Kconfig])
-
-dnl Native skin options
-test \! x$CONFIG_XENO_OPT_NATIVE_REGISTRY = x && AC_DEFINE(CONFIG_XENO_OPT_NATIVE_REGISTRY,1,[Kconfig])
-AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS,$CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS,[Kconfig])
-test \! x$CONFIG_XENO_OPT_NATIVE_PIPE = x && AC_DEFINE(CONFIG_XENO_OPT_NATIVE_PIPE,1,[Kconfig])
-AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ,$CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ,[Kconfig])
-test \! x$CONFIG_XENO_OPT_NATIVE_SEM = x && AC_DEFINE(CONFIG_XENO_OPT_NATIVE_SEM,1,[Kconfig])
-test \! x$CONFIG_XENO_OPT_NATIVE_EVENT = x && AC_DEFINE(CONFIG_XENO_OPT_NATIVE_EVENT,1,[Kconfig])
-test \! x$CONFIG_XENO_OPT_NATIVE_MUTEX = x && AC_DEFINE(CONFIG_XENO_OPT_NATIVE_MUTEX,1,[Kconfig])
-test \! x$CONFIG_XENO_OPT_NATIVE_COND = x && AC_DEFINE(CONFIG_XENO_OPT_NATIVE_COND,1,[Kconfig])
-test \! x$CONFIG_XENO_OPT_NATIVE_QUEUE = x && AC_DEFINE(CONFIG_XENO_OPT_NATIVE_QUEUE,1,[Kconfig])
-test \! x$CONFIG_XENO_OPT_NATIVE_HEAP = x && AC_DEFINE(CONFIG_XENO_OPT_NATIVE_HEAP,1,[Kconfig])
-test \! x$CONFIG_XENO_OPT_NATIVE_ALARM = x && AC_DEFINE(CONFIG_XENO_OPT_NATIVE_ALARM,1,[Kconfig])
-test \! x$CONFIG_XENO_OPT_NATIVE_MPS = x && AC_DEFINE(CONFIG_XENO_OPT_NATIVE_MPS,1,[Kconfig])
-test \! x$CONFIG_XENO_OPT_NATIVE_INTR = x && AC_DEFINE(CONFIG_XENO_OPT_NATIVE_INTR,1,[Kconfig])
-
-dnl RTAI skin options
-test \! x$CONFIG_XENO_OPT_RTAI_SEM = x && AC_DEFINE(CONFIG_XENO_OPT_RTAI_SEM,1,[Kconfig])
-test \! x$CONFIG_XENO_OPT_RTAI_FIFO = x && AC_DEFINE(CONFIG_XENO_OPT_RTAI_FIFO,1,[Kconfig])
-test \! x$CONFIG_XENO_OPT_RTAI_SHM = x && AC_DEFINE(CONFIG_XENO_OPT_RTAI_SHM,1,[Kconfig])
+test x$CONFIG_XENO_X86_SEP = xy && AC_DEFINE(CONFIG_XENO_X86_SEP,1,[config])
+test x$CONFIG_SMP = xy && AC_DEFINE(CONFIG_SMP,1,[config])
+test x$CONFIG_X86_TSC = xy && AC_DEFINE(CONFIG_X86_TSC,1,[config])
 
 dnl CAUTION: We need to have the CONFIG_XENO_XX symbols always
 dnl defined when the configuration header is read, but we want the
@@ -1250,85 +247,15 @@ dnl Now we can close the conditional section, right after all
 dnl Autoconf-generated symbols have been listed.
 AH_BOTTOM([#endif /* __IN_XENO__ */])
 
-AH_BOTTOM([#include <linux/config.h>])
-
 dnl
 dnl Produce automake conditionals.
 dnl
 
-dnl Kernel setup
-AM_CONDITIONAL(CONFIG_X86,[test "$CONFIG_X86" = y])
-AM_CONDITIONAL(CONFIG_PPC,[test "$CONFIG_PPC" = y])
-AM_CONDITIONAL(CONFIG_PPC64,[test "$CONFIG_PPC64" = y])
-AM_CONDITIONAL(CONFIG_IA64,[test "$CONFIG_IA64" = y])
-AM_CONDITIONAL(CONFIG_SMP,[test "$CONFIG_SMP" = y])
-AM_CONDITIONAL(CONFIG_LTT,[test "$CONFIG_LTT" = y])
-AM_CONDITIONAL(CONFIG_XENO_OPT_UDEV,[test x$CONFIG_XENO_OPT_UDEV = xy])
-
-dnl Hardware specifics
-AM_CONDITIONAL(CONFIG_XENO_HW_FPU,[test "$CONFIG_XENO_HW_FPU" = y])
-
-dnl Nucleus options
-AM_CONDITIONAL(CONFIG_XENO_OPT_PERVASIVE,[test x$CONFIG_XENO_OPT_PERVASIVE = xy])
-AM_CONDITIONAL(CONFIG_XENO_OPT_PIPE,[test x$CONFIG_XENO_OPT_PIPE = xy])
-AM_CONDITIONAL(CONFIG_XENO_OPT_CONFIG_GZ,[test x$CONFIG_XENO_OPT_CONFIG_GZ = xy])
-
-dnl Supported skins
-AM_CONDITIONAL(CONFIG_XENO_SKIN_POSIX,[test x$CONFIG_XENO_SKIN_POSIX = xy])
-AM_CONDITIONAL(CONFIG_XENO_SKIN_NATIVE,[test x$CONFIG_XENO_SKIN_NATIVE = xy])
-AM_CONDITIONAL(CONFIG_XENO_SKIN_PSOS,[test x$CONFIG_XENO_SKIN_PSOS = xy])
-AM_CONDITIONAL(CONFIG_XENO_SKIN_VXWORKS,[test x$CONFIG_XENO_SKIN_VXWORKS = xy])
-AM_CONDITIONAL(CONFIG_XENO_SKIN_VRTX,[test x$CONFIG_XENO_SKIN_VRTX = xy])
-AM_CONDITIONAL(CONFIG_XENO_SKIN_UITRON,[test x$CONFIG_XENO_SKIN_UITRON = xy])
-AM_CONDITIONAL(CONFIG_XENO_SKIN_RTDM,[test x$CONFIG_XENO_SKIN_RTDM = xy])
-AM_CONDITIONAL(CONFIG_XENO_SKIN_RTAI,[test x$CONFIG_XENO_SKIN_RTAI = xy])
-AM_CONDITIONAL(CONFIG_XENO_OPT_UVM,[test x$CONFIG_XENO_OPT_UVM = xy])
-
-dnl Supported drivers
-AM_CONDITIONAL(CONFIG_XENO_DRIVERS_16550A,[test x$CONFIG_XENO_DRIVERS_16550A = xy])
-
-dnl Native skin options
-AM_CONDITIONAL(CONFIG_XENO_OPT_NATIVE_REGISTRY,[test x$CONFIG_XENO_OPT_NATIVE_REGISTRY = xy])
-AM_CONDITIONAL(CONFIG_XENO_OPT_NATIVE_PIPE,[test x$CONFIG_XENO_OPT_NATIVE_PIPE = xy])
-AM_CONDITIONAL(CONFIG_XENO_OPT_NATIVE_SEM,[test x$CONFIG_XENO_OPT_NATIVE_SEM = xy])
-AM_CONDITIONAL(CONFIG_XENO_OPT_NATIVE_EVENT,[test x$CONFIG_XENO_OPT_NATIVE_EVENT = xy])
-AM_CONDITIONAL(CONFIG_XENO_OPT_NATIVE_MUTEX,[test x$CONFIG_XENO_OPT_NATIVE_MUTEX = xy])
-AM_CONDITIONAL(CONFIG_XENO_OPT_NATIVE_COND,[test x$CONFIG_XENO_OPT_NATIVE_COND = xy])
-AM_CONDITIONAL(CONFIG_XENO_OPT_NATIVE_QUEUE,[test x$CONFIG_XENO_OPT_NATIVE_QUEUE = xy])
-AM_CONDITIONAL(CONFIG_XENO_OPT_NATIVE_HEAP,[test x$CONFIG_XENO_OPT_NATIVE_HEAP = xy])
-AM_CONDITIONAL(CONFIG_XENO_OPT_NATIVE_ALARM,[test x$CONFIG_XENO_OPT_NATIVE_ALARM = xy])
-AM_CONDITIONAL(CONFIG_XENO_OPT_NATIVE_INTR,[test x$CONFIG_XENO_OPT_NATIVE_INTR = xy])
-
-dnl RTAI skin options
-AM_CONDITIONAL(CONFIG_XENO_OPT_RTAI_SEM,[test x$CONFIG_XENO_OPT_RTAI_SEM = xy])
-AM_CONDITIONAL(CONFIG_XENO_OPT_RTAI_FIFO,[test x$CONFIG_XENO_OPT_RTAI_FIFO = xy])
-AM_CONDITIONAL(CONFIG_XENO_OPT_RTAI_SHM,[test x$CONFIG_XENO_OPT_RTAI_SHM = xy])
+dnl UVM support.
+AM_CONDITIONAL(CONFIG_XENO_UVM,[test "$CONFIG_XENO_UVM" = y])
 
 dnl Documentation.
 AM_CONDITIONAL(CONFIG_XENO_DOC_DOX,[test "$CONFIG_XENO_DOC_DOX" = y])
-
-dnl Maintenance symbols and profiles
-AM_CONDITIONAL(CONFIG_XENO_MAINT,[test "$CONFIG_XENO_MAINT" = y])
-AM_CONDITIONAL(CONFIG_XENO_MAINT_GCH,[test "$CONFIG_XENO_MAINT_GCH" = y])
-AM_CONDITIONAL(CONFIG_XENO_MAINT_PGM,[test "$CONFIG_XENO_MAINT_PGM" = y])
-AM_CONDITIONAL(CONFIG_XENO_OLD_FASHIONED_BUILD,[test "$CONFIG_XENO_OLD_FASHIONED_BUILD" = y])
-
-dnl
-dnl Define arch-specific CFLAGS and links
-dnl
-
-XENO_MODULE_EXT=.ko
-XENO_KBUILD_ENV='src2obj = $(patsubst %.$(1),%.o,$(filter %.$(1),$(call notdir,$(2))))'
-XENO_KBUILD_CMD="@for src in \$(filter-out FORCE, \$^); do if test \\! -r \`basename \$\$src\`; then \$(LN_S) \$\$src; fi; done; \
-                    \$(MAKE) -C $XENO_LINUX_DIR CROSS_COMPILE=\$(CROSS_COMPILE) CC=\"$CC\" ARCH=$XENO_TARGET_ARCH \
-		    M=\$\$PWD xeno_srctree=\`cd \$(top_srcdir) && pwd\` xeno_srcdir=\`cd \$(srcdir) && pwd\` V=\$(V) MODVERDIR=$top_builddir/symbols modules \
-		    xeno_objs='\$(call src2obj,c,\$^) \$(call src2obj,S,\$^) \$(call src2obj,cc,\$^) \$(call src2obj,cpp,\$^)' xeno_target=\$(basename \$@)"
-
-XENO_KBUILD_CLEAN='rm -f *.ko *.mod.c .*.cmd *.o'
-XENO_KBUILD_DISTCLEAN='rm -Rf .tmp_versions'
-
-AC_MSG_CHECKING([for kernel module extension])
-AC_MSG_RESULT([$XENO_MODULE_EXT])
 
 AC_MSG_CHECKING([for specific GCC switches])
 AC_CACHE_VAL(ac_cv_gcc_wnoalias,
@@ -1349,185 +276,121 @@ else
 fi
 AC_MSG_RESULT([done])
 
-AC_MSG_CHECKING([for target architecture])
-
-
-XENO_USER_CFLAGS="-I$XENO_LINUX_SRCDIR/include -D_GNU_SOURCE -D_REENTRANT -D__XENO__"
-if test x"$XENO_LINUX_DIR" != x"$XENO_LINUX_SRCDIR"; then
-  XENO_USER_CFLAGS="-I$XENO_LINUX_DIR/include2 $XENO_USER_CFLAGS"
-  XENO_USER_CFLAGS="-I$XENO_LINUX_DIR/include $XENO_USER_CFLAGS"
-fi
-XENO_USER_CFLAGS="$XENO_USER_CFLAGS $XENO_ARCH_FLAGS"
+XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -D__XENO__"
 
 case $XENO_TARGET_ARCH in
  i386)
-	XENO_TARGET_SUBARCH=
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -fstrict-aliasing $gcc_w_noalias"
-	XENO_FP_CFLAGS="-ffast-math -mhard-float"
         ;;
- ppc)
-	XENO_TARGET_SUBARCH=
+ powerpc)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
-	XENO_FP_CFLAGS="-ffast-math -mhard-float"
-        ;;
- ppc64)
-	XENO_TARGET_SUBARCH=
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -Wstrict-prototypes -pipe"
-	XENO_FP_CFLAGS="-ffast-math -mhard-float"
         ;;
  ia64)
-	XENO_TARGET_SUBARCH=
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
-	XENO_FP_CFLAGS="-ffast-math"
         ;;
 esac
 
-XENO_KMOD_CFLAGS=-D__XENO__
-if test x$CONFIG_XENO_OPT_KSYMS = xy; then
-   XENO_KMOD_CFLAGS="-g $XENO_KMOD_CFLAGS"
-fi
-
-if test x$CONFIG_XENO_OPT_USYMS = xy; then
+if test x$debug_symbols = xy; then
    XENO_USER_CFLAGS="-g $XENO_USER_CFLAGS"
 else
    XENO_USER_CFLAGS="-O2 $XENO_USER_CFLAGS"
 fi
 
-XENO_KMOD_APP_CFLAGS=$XENO_KMOD_CFLAGS
 XENO_USER_APP_CFLAGS=$XENO_USER_CFLAGS
-XENO_KMOD_CFLAGS="$XENO_KMOD_CFLAGS -D__IN_XENO__"
 XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__IN_XENO__ -Wstrict-prototypes"
-
-AC_CONFIG_LINKS(include/nucleus/asm:include/nucleus/asm-$XENO_TARGET_ARCH)
-
-if test x$XENO_TARGET_SUBARCH = x; then
-   AC_MSG_RESULT([$XENO_TARGET_ARCH])
-else
-   AC_MSG_RESULT([$XENO_TARGET_ARCH ($XENO_TARGET_SUBARCH)])
-fi
-
-AC_CONFIG_LINKS(arch/$XENO_TARGET_ARCH/hal/generic.c:arch/generic/hal/generic.c)
-if test "x$CONFIG_XENO_OLD_FASHIONED_BUILD" = x; then
-   AC_CONFIG_LINKS(arch/$XENO_TARGET_ARCH/hal/Makefile)
-   AC_CONFIG_LINKS(nucleus/Makefile)
-   AC_CONFIG_LINKS(skins/uvm/Makefile)
-   AC_CONFIG_LINKS(skins/posix/Makefile)
-   AC_CONFIG_LINKS(skins/native/Makefile)
-   AC_CONFIG_LINKS(skins/psos+/Makefile)
-   AC_CONFIG_LINKS(skins/uitron/Makefile)
-   AC_CONFIG_LINKS(skins/vrtx/Makefile)
-   AC_CONFIG_LINKS(skins/vxworks/Makefile)
-   AC_CONFIG_LINKS(skins/rtdm/Makefile)
-   AC_CONFIG_LINKS(skins/rtai/Makefile)
-   AC_CONFIG_LINKS(testsuite/klatency/Makefile)
-   AC_CONFIG_LINKS(drivers/16550A/Makefile)
-fi
 
 dnl
 dnl Build the Makefiles
 dnl
 
-AC_SUBST(CROSS_COMPILE)
 AC_SUBST(DOXYGEN_SHOW_INCLUDE_FILES)
 AC_SUBST(DOXYGEN_HAVE_DOT)
 AC_SUBST(DOXYGEN)
 AC_SUBST(LATEX_BATCHMODE)
 AC_SUBST(LATEX_MODE)
 
+AC_SUBST(XENO_TARGET_ARCH)
 AC_SUBST(XENO_BUILD_STRING)
 AC_SUBST(XENO_HOST_STRING)
-AC_SUBST(XENO_TARGET_ARCH)
-AC_SUBST(XENO_TARGET_SUBARCH)
-AC_SUBST(XENO_KMOD_CFLAGS)
 AC_SUBST(XENO_USER_CFLAGS)
-AC_SUBST(XENO_KMOD_APP_CFLAGS)
 AC_SUBST(XENO_USER_APP_CFLAGS)
-AC_SUBST(XENO_FP_CFLAGS)
-AC_SUBST(XENO_LINUX_DIR)
-AC_SUBST(XENO_LINUX_VERSION)
-AC_SUBST(XENO_MODULE_DIR)
-AC_SUBST(XENO_MODULE_EXT)
-AC_SUBST(XENO_SYMBOL_DIR)
-AC_SUBST(XENO_KBUILD_ENV)
-AC_SUBST(XENO_KBUILD_CMD)
-AC_SUBST(XENO_KBUILD_CLEAN)
-AC_SUBST(XENO_KBUILD_DISTCLEAN)
-AC_SUBST(XENO_PIPE_NRDEV)
+
+base=include
+AC_CONFIG_LINKS([src/include/xenomai:$base])
+base=asm-$XENO_TARGET_ARCH
+AC_CONFIG_LINKS([src/include/asm/xenomai:include/$base])
+base=asm-generic
+AC_CONFIG_LINKS([src/include/$base/xenomai:include/$base])
+
+dnl Don't link this one if building in the source tree.
+top_builddir=`pwd`
+abs_srcdir=`cd "$srcdir" && pwd`
+if test \! "$abs_srcdir" = $top_builddir; then
+   AC_CONFIG_LINKS([src/include/asm-uvm/system.h])
+fi
 
 AC_CONFIG_FILES([ \
-	GNUmakefile \
-	config/GNUmakefile \
-	arch/GNUmakefile \
-        arch/i386/GNUmakefile \
-	arch/i386/hal/GNUmakefile \
-        arch/ppc/GNUmakefile \
-	arch/ppc/hal/GNUmakefile \
-        arch/ppc64/GNUmakefile \
-	arch/ppc64/hal/GNUmakefile \
-        arch/ia64/GNUmakefile \
-	arch/ia64/hal/GNUmakefile \
-	include/GNUmakefile \
-	include/nucleus/GNUmakefile \
-	include/nucleus/asm-generic/GNUmakefile \
-	include/nucleus/asm-i386/GNUmakefile \
-	include/nucleus/asm-ppc/GNUmakefile \
-	include/nucleus/asm-ppc64/GNUmakefile \
-	include/nucleus/asm-ia64/GNUmakefile \
-	include/nucleus/asm-uvm/GNUmakefile \
-	doc/man/GNUmakefile \
+	Makefile \
+	config/Makefile \
+	scripts/Makefile \
+	scripts/xeno-config \
+	scripts/xeno-load \
+	scripts/xeno-test \
+	src/Makefile \
+	src/skins/Makefile \
+       	src/skins/uvm/Makefile \
+       	src/skins/posix/Makefile \
+       	src/skins/native/Makefile \
+       	src/skins/psos+/Makefile \
+       	src/skins/uitron/Makefile \
+       	src/skins/vrtx/Makefile \
+       	src/skins/vxworks/Makefile \
+       	src/skins/rtdm/Makefile \
+       	src/skins/rtai/Makefile \
+	src/include/Makefile \
+	src/include/asm-uvm/Makefile \
+       	src/testsuite/Makefile \
+       	src/testsuite/latency/Makefile \
+       	src/testsuite/switch/Makefile \
+       	include/Makefile \
+       	include/asm-generic/Makefile \
+       	include/asm-i386/Makefile \
+       	include/asm-powerpc/Makefile \
+       	include/asm-ia64/Makefile \
+       	include/native/Makefile \
+       	include/nucleus/Makefile \
+       	include/posix/Makefile \
+       	include/psos+/Makefile \
+       	include/rtai/Makefile \
+       	include/rtdm/Makefile \
+       	include/uitron/Makefile \
+       	include/uvm/Makefile \
+       	include/vrtx/Makefile \
+       	include/vxworks/Makefile \
+	])
+
+if test \! x$XENO_MAYBE_DOCDIR = x; then
+      AC_CONFIG_FILES([ \
+	doc/Makefile \
+	doc/txt/Makefile \
+	doc/man/Makefile \
 	doc/man/runinfo.man \
 	doc/man/xeno-config.man \
 	doc/man/xeno-info.man \
 	doc/man/xeno-load.man \
 	doc/man/xeno-test.man \
-	nucleus/GNUmakefile \
-	scripts/GNUmakefile \
-	scripts/xeno-config \
-	scripts/xeno-load \
-	scripts/xeno-test \
-	testsuite/GNUmakefile \
-	testsuite/latency/GNUmakefile \
-	testsuite/klatency/GNUmakefile \
-	testsuite/cruncher/GNUmakefile \
-        testsuite/switch/GNUmakefile \
-	skins/GNUmakefile \
-       	skins/uvm/GNUmakefile \
-       	skins/uvm/lib/GNUmakefile \
-       	skins/posix/GNUmakefile \
-       	skins/posix/lib/GNUmakefile \
-       	skins/native/GNUmakefile \
-       	skins/native/lib/GNUmakefile \
-       	skins/psos+/GNUmakefile \
-       	skins/uitron/GNUmakefile \
-       	skins/vrtx/GNUmakefile \
-       	skins/vxworks/GNUmakefile \
-       	skins/rtdm/GNUmakefile \
-       	skins/rtdm/lib/GNUmakefile \
-       	skins/rtai/GNUmakefile \
-       	skins/rtai/lib/GNUmakefile \
-       	drivers/GNUmakefile \
-       	drivers/16550A/GNUmakefile \
-	])
-
-if test \! x$XENO_MAYBE_DOCDIR = x; then
-      AC_CONFIG_FILES([ \
-	   doc/GNUmakefile \
-	   doc/doxygen/GNUmakefile \
-	   doc/doxygen/Doxyfile \
-	   doc/docbook/GNUmakefile \
-	   doc/docbook/catalog \
-	   doc/docbook/custom-stylesheets/GNUmakefile \
-	   doc/docbook/custom-stylesheets/xsl/GNUmakefile \
-	   doc/docbook/custom-stylesheets/xsl/common/GNUmakefile \
-	   doc/docbook/custom-stylesheets/xsl/fo/GNUmakefile \
-	   doc/docbook/custom-stylesheets/xsl/html/GNUmakefile \
-	   doc/docbook/custom-stylesheets/xsl/html/chunk.xsl \
-	   doc/docbook/xenomai/GNUmakefile \
+	doc/doxygen/Makefile \
+	doc/doxygen/Doxyfile \
+	doc/docbook/Makefile \
+	doc/docbook/catalog \
+	doc/docbook/custom-stylesheets/Makefile \
+	doc/docbook/custom-stylesheets/xsl/Makefile \
+	doc/docbook/custom-stylesheets/xsl/common/Makefile \
+	doc/docbook/custom-stylesheets/xsl/fo/Makefile \
+	doc/docbook/custom-stylesheets/xsl/html/Makefile \
+	doc/docbook/custom-stylesheets/xsl/html/chunk.xsl \
+	doc/docbook/xenomai/Makefile \
       ])
-fi
-
-if test x$CONFIG_XENO_MVM = xy; then
-   AC_CONFIG_SUBDIRS(sim)
 fi
 
 AC_OUTPUT()

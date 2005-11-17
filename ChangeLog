@@ -1,3 +1,112 @@
+2005-11-17  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Add Adeos support for 2.4.25 based on
+	Denx's linuxppc_2_4_devel tree.
+
+	* scripts/prepare-kernel.sh: Update for 2.4 kernel preparation.
+
+2005-11-16  Dmitry Adamushko <dmitry.adamushko@gmail.com>
+
+	* nucleus/pipe.c, skins/native/pipe.c: Support for auto-allocation
+	of minor values for the pipe objects. Passing P_MINOR_AUTO as a
+	third argument to the rt_pipe_create() causes the minor value to
+	be auto-allocated. In such a case, standard linux processes must
+	make use of the valid pipe name exported through the registry
+	interface in order to get connected to the pipe
+	(i.e. /proc/xenomai/registry/pipes/*).
+
+2005-11-16  Heikki Lindholm <holindho@cs.helsinki.fi>
+
+	* scripts/prepare-kernel.sh: Link .S files too.
+
+2005-11-14  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/syscall.c (__rt_pipe_flush): Export
+	rt_pipe_flush() to user-space.
+
+	* include/native/pipe.h: Declare rt_pipe_flush() in kernel
+	section.
+
+	* src/skins/*/init.c (constructor): Make sure we properly
+	intercept all binding errors.
+
+2005-11-13  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc (Config.in): Fix module dependencies for v2.4.
+	
+	* ksrc (Makefile): Fix module compilation rules for v2.4.
+
+	* ksrc: Backport infrastructure to Linux v2.4.
+
+2005-11-12  Sebastian Smolorz  <Sebastian.Smolorz@stud.uni-hannover.de>
+
+	* ksrc/skins/rtdm/syscall.c (sys_rtdm_recvmsg): Fix error checking.
+
+2005-11-09  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pipe.c (xnpipe_disconnect): Flush the output queue
+	upon closure.
+	(xnpipe_release): Flush the input queue upon closure.
+
+2005-11-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* nucleus/shadow.c (lostage_handler): Fix thread priority
+	transition while relaxing a shadow by downgrading the root thread
+	priority to its base one whenever, we happen to run the APC over a
+	non-shadow. This prevents the temporary priority boost from
+	leaking to some current regular thread before the shadow actually
+	resumes.
+
+2005-11-08  Jan Kiszka <jan.kiszka@web.de>
+
+	* skins/rtdm (rtdm_task_init): Fix a cleanup-on-error problem and
+	move this call into drvlib.
+
+	* skins/rtdm: Get rid of __u64 and __s64 usages in favour of
+	uint64_t and int64_t. Improve the documentation of
+	rtdm_device.device_name and RTDM_EXECUTE_ATOMICALLY. Move
+	EXPORT_SYMBOLs to their related functions.
+
+	* drivers/16550A: Allow for the baud rate to be provided as an
+	integer token instead of the previous low-level encoded value.
+
+2005-11-08  Ulrich Schwab  <schwab@inmess.de>
+
+	* skins/native/task.c (rt_task_receive): Fix documentation.
+
+2005-11-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* scripts/prepare-kernel.sh, ksrc: Make Xenomai compilation
+	directories local to the kernel tree.
+
+2005-11-05  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Deprecate oldgen patches, and upgrade to
+	2.6.14.
+
+	* ksrc/nucleus/shadow.c: Return feature sets (present, requested,
+	mandatory and missing) in symbolic form upon skin binding.
+
+	* src/skins/*/init.c (constructor): Explain binding errors.
+
+	* include/asm-generic/syscall.h: Remove obsolete xninquiry_t.
+
+	* v2.1: Install all interface headers so that kernel modules could
+	be built against those without requiring a complete Xenomai source
+	distribution.
+
+	* configure.in: Allow in-tree builds.
+
+2005-11-03  Heikki Lindholm <holindho@cs.helsinki.fi>
+
+	* ksrc/arch: Merge ppc and ppc64 trees, in preparation for 2.6.15.
+	
+2005-11-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* scripts/prepare-kernel.sh: Read unspec arguments interactively.
+
+	* v2.1: Merge trunk updates.
+
 2005-11-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* arch/i386/patches: Upgrade to Adeos newgen 1.0-10.
@@ -60,6 +169,12 @@
 2005-10-23  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.0 (Surfing With The Alien)
+
+2005-10-22  Philippe Gerum  <rpm@xenomai.org>
+
+	* v2.1: Implement a split source model, decoupling the kernel
+	space support from the user-space libraries used in accessing the
+	former.
 
 2005-10-22  Philippe Gerum  <rpm@xenomai.org>
 

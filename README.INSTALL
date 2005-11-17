@@ -1,282 +1,90 @@
 Installing Xenomai
 ==================
 
-1. How to build
-===============
+0. Introduction.
+----------------
 
-1.1 Standard procedure
-----------------------
+Starting with version 2.1, Xenomai follows a split source model,
+decoupling the kernel space support from the user-space libraries used
+in accessing the former.
 
-1.1.1 Interactive configuration
+To this end, kernel and user-space Xenomai components are respectively
+available under the ksrc/ and src/ sub-trees.
+
+The ksrc/ sub-tree providing the kernel space support is seen as a
+built-in extension of the Linux kernel, and no more as a collection of
+separate out-of-tree modules. A direct benefit of such approach is the
+ability to build the Xenomai real-time subsystem statically into the
+target kernel, or as loadable modules as with earlier versions.
+Additionally, the usual Linux kernel configuration process will be
+normally used to define the various settings for the Xenomai kernel
+components.
+
+The src/ sub-tree contains the various user-space libraries and
+commands provided by the Xenomai framework. This tree can be built
+separately from the kernel support, even if the latter is absent from
+the build system.
+
+1. Installation steps
+---------------------
+
+1.1 Preparing the target kernel
 -------------------------------
 
-From a fresh build directory, either run:
+Xenomai provides a real-time sub-system seamlessly integrated to
+Linux, therefore the first step is to build it as part of the target
+kernel. To this end, scripts/prepare-kernel.sh is a shell script which
+sets up the target kernel properly. The syntax is as follows:
 
-$ make -f $source_tree/makefile xconfig # (Qt-based)
-$ make -f $source_tree/makefile gconfig # (GTK-based)
-$ make -f $source_tree/makefile menuconfig # (Dialog-based)
+$ scripts/prepare-kernel.sh --linux=<linux-srctree>
+[--adeos=<adeos-patch>] [--arch=<target-arch>]
 
-If "make" complains about not being able to locate the source tree
-(make_version < 3.80), simply add "xeno_srctree=$source_tree" to the
-command above.
+    --linux specifies the path of the target kernel source tree. Such
+    kernel tree being configured or not makes no different and is
+    valid either way.
 
-1.1.2 Non-interactive configuration
------------------------------------
+    --adeos specifies the path of the Adeos patch to apply against the
+    kernel tree. This parameter can be omitted if Adeos has already
+    been patched in. In any case, the script will not try to apply it
+    again whenever a former patch is detected.
 
-People needing automatic non-interactive configuration can directly
-use the provided GNU configure script for this purpose. The available
-configuration switches can be listed by running ./configure
---help. The xeno-specific switches are:
+    --arch tells the script about the target architecture. If
+    unspecified, the build system architecture is detected and
+    suggested as a reasonable default.
 
- --enable-pervasive        	Enable pervasive real-time support in user-space
- --enable-native-skin		Build native skin
- --enable-native-registry-slots=<val> Set maximum number of registry slots
- --enable-native-pipe	 	Enable pipe support in native skin
- --enable-native-pipe-bufsz	Set the size of the pipe fill space
- --enable-native-sem		Enable semaphore support in native skin
- --enable-native-event		Enable event flag support in native skin
- --enable-native-mutex		Enable mutex support in native skin
- --enable-native-cond		Enable condition variable support in native skin
- --enable-native-heap		Enable heap support in native skin
- --enable-native-queue		Enable queue support in native skin
- --enable-native-alarm		Enable alarm support in native skin
- --enable-native-mps		Enable message passing support in native skin
- --enable-native-intr		Enable interrupt API in native skin
- --enable-uart-16550A		Build 16550A UART driver
- --enable-psos-skin		Build pSOS+ emulator
- --enable-posix-skin		Build POSIX skin
- --enable-vxworks-skin		Build VxWorks emulator
- --enable-vrtx-skin		Build VRTX emulator
- --enable-uitron-skin		Build uITRON API skin
- --enable-rtai-skin		Build RTAI skin
- --enable-user-vm		Build user-space VMs
- --enable-nucleus-heap-size	Set the size of the system heap (Kb)
- --enable-nucleus-stats		Enable nucleus statistics collection
- --enable-nucleus-ishield	Enable interrupt shield
- --enable-nucleus-debug		Enable debug support in nucleus
- --enable-nucleus-watchdog	Enable nucleus watchdog support
- --enable-nucleus-scalable-sched	Enable the scalable O(1) scheduler
- --enable-nucleus-scalable-prios	Set the maximum number of priority levels
- --enable-nucleus-config-gz	Make gzipped config file available from /proc
- --enable-fpu			Enable FPU support
- --enable-udev			Enable UDEV support
- --enable-periodic_timer	Enable periodic timer support
- --enable-module-debug		Enable debug information in kernel modules
- --enable-user-debug		Enable debug information in user-space programs
- --enable-timer-latency		Set timer tuning latency (0=autocalibrate)
- --enable-sched-latency		Set scheduling latency (0=autocalibrate)
- --enable-sim			Build simulator
- --enable-dox-doc		Build Doxygen documentation
- --enable-dbx			Build Docbook XML documentation.
- --enable-dbx-network		Access Docbook DTD and XSL stylesheets through
-				the network
- --enable-latex-doc		Build LaTeX documentation
- --enable-verbose-latex 	Uses LaTeX non-stop mode
+For instance, the following command would prepare the Linux tree
+located at /usr/src/linux-2.6.14-ipipe in order to include the Xenomai
+support:
 
- --enable-x86-sep		Enable SEP instructions for syscalls
+$ cd xenomai-2.1
+$ scripts/prepare-kernel.sh
+  --linux=/usr/src/linux-2.6.14-ipipe
+  --adeos=/tmp/adeos-ipipe-2.6.14-i386-1.0-09.patch
+  --arch=i386
 
-1.1.3 Recycling a configuration file
-------------------------------------
+Note: The script will infere the location of the Xenomai kernel code
+from its own location within the Xenomai source tree. In other words,
+if /usr/src/xenomai-2.0/script/prepare-kernel.sh is executing, then
+Xenomai's kernel support available from /usr/src/xenomai-2.0/ksrc will
+be bound to the target kernel.
 
-You can also recycle an existing .xeno_config file from a previous
-build by running:
+1.2 Configuring and building the target kernel
+----------------------------------------------
 
-$ cp -p $old_builddir/.xeno_config $new_builddir
-$ cd $new_builddir
-$ make -f $source_tree/makefile xeno_srctree=$source_tree oldconfig
+Once the target kernel has been prepared, all Xenomai configuration
+options are available from the "Real-time subsystem" toplevel menu.
 
-1.1.4 Selecting alternate compilers
------------------------------------
+Once configured, the kernel should be built as usual.
 
-Compiler selection must be done at _configuration_ time. One only
-needs to pass the right values for the standard environment variables
-CC and CXX, respectively for compiling C and C++ source files. In any
-case, using a GCC toolchain is mandatory. When unspecified, these
-variables's values respectively default to "gcc" and "g++".
-
-WARNING: this selection is not aimed at toggling the cross-compilation
-mode on. In order to do so, please refer to 1.2.
-
-Examples:
-
-# Start configuring using the Qt-based GUI with alternate compilers
-$ make xconfig CC=/my/favourite/c/compiler CXX=/my/favourite/c++/compiler
-
-# Reconfiguring a previous build tree, changing the compilers on-the-fly.
-$ make reconfig CC=/my/favourite/c/compiler CXX=/my/favourite/c++/compiler
-
-# Rebuild all [and optionally install]
-$ make [all [install]]
-
-CAVEAT: Since the autoconf-based engine needs to analyze the
-compilers's features and crams the CC and CXX values into the
-Makefiles it produces, passing CC and CXX variables at build time
-simply does _not_ work for the purpose of selecting alternate compiler
-toolchains. Again, you need to let the configuration engine know about
-these new settings as explained above.
-
-1.2 Cross-compilation support
------------------------------
-
-Simply add ARCH and CROSS_COMPILE variables as usual to the standard
-command lines, e.g.
-
-$ make -f $source_tree/makefile ARCH=arm CROSS_COMPILE=arm-linux-
-
-Names of available architectures can be found under arch/*.
-
-1.3 Installing the software
+2. Configure script options
 ---------------------------
 
-When the standard (or cross-) compilation has finished:
+The options listed below only affect the libraries compiled as part of
+Xenomai's user-space support, and in any case, never impact the
+kernel-based support.
 
-$ cd $builddir
-$ make install
-
-Everything needed to use the Xenomai distribution will be copied there
-out of the build tree. From now on, you should be able to refer to the
-installation directory as the root of a complete standalone binary
-Xenomai distribution.
-
-One may also choose to install the Xenomai programs under a temporary
-staging tree by passing the standard DESTDIR variable to "make" while
-installing. e.g.
-
-$ make install DESTDIR=/mnt/target
-
-will create a standard Xenomai hierarchy under /mnt/target, keeping the
-original prefix information unmodified. If the installation directory
-selected at configuration time was "/usr/realtime", then the command
-above will put the Xenomai binary distribution under
-/mnt/target/usr/realtime.
-
-WARNING: running "make install" is required to run several standard
-Xenomai programs correctly. Xenomai enforces the actual split between the
-source distribution tree, the build tree where it is going to be
-compiled, and the final installation directory where Xenomai programs
-can be run eventually. In any case, you should only rely on the
-installation directory contents to run Xenomai programs.
-
-When installing Xenomai, a few devices nodes are created, using the
-"mknod" command. This command requires root privileges, so "make
-install" will try hard to get these privileges, using the sudo command
-if necessary. If the "sudo" command is installed but will not grant
-root privileges to the current user, the devices nodes are not be
-created, a warning is issued, and the installation will continue
-normally.
-
-To avoid the creation of these nodes, use :
-
-$ make install-nodev
-
-But be careful: Xenomai tests and examples WILL NOT WORK if these
-devices nodes do not exit, unless udev is available on your target
-system, in which case these devices entries will be created
-dynamically as needed by Xenomai's kernel modules.
-
-1.4 Compiling parts of the tree
--------------------------------
-
-Xenomai developers may want to recompile parts of the tree from
-times to times. This automake-based build system allows it: just go to
-the proper directory level, then issue "make", as usual. This process
-will recurse as needed.
-
-The "makefile" (small caps) found in the root source directory is used
-to bootstrap the build system when it is about to be configured for
-the first time. After the first configuration has been successful, one
-just need to run "make xconfig|gconfig|menuconfig|..." as usual.
-
-1.5 Changing the configuration
-------------------------------
-
-Each time you want to change your configuration, just run "make
-xconfig|gconfig|menuconfig" in your build dir, then "make" (or "make
-all").
-
-If you only want to rerun the "configure" script using the current
-Xenomai configuration, just run "make reconfig", there is no need to
-restart any GUI for that.
-
-When invoked for the first time in an empty build directory, the
-default "make" goal is "menuconfig" in a regular terminal, or
-"xconfig" in an emacs-term.
-
-1.6 Modifying the autotool template files
------------------------------------------
-
-If you have to change some template files used by any of the autotools
-(i.e. Makefile.am, configure.in, acinclude.m4), then you will need the
-following pack to rebuild the derived files:
-
-o autoconf 2.59
-o automake 1.9.5
-o aclocal 1.9.5
-o libtool 1.5.6
-
-Note: the above is _not_ needed unless you want to change Xenomai's
-internal build directives, which you don't for normal use.
-
-2. Bootstrapping with Xenomai in 7 steps
-=============================================
-
-Xenomai is exclusively Adeos-based, so the general steps include
-adding the Adeos support to a vanilla Linux kernel first, then build
-Xenomai against the resulting kernel tree. Here is how to do this:
-
->1. patch and build a vanilla Linux kernel tree with the Adeos support.
-    For instance, Adeos patches for x86 are available from
-    Xenomai/arch/i386/patches/. Apply only one of them
-    that matches the Linux kernel version, like this:
-    $ cd $linux-src-dir
-    $ patch -p1 < arch/$arch/patches/adeos-linux-$version.patch
-
->2. $ mkdir $builddir && cd $builddir
-
->3. $ make -f ../xenomai/makefile
-
->4. a GUI should pop up, allowing you to configure Xenomai:
-    o default settings should be ok for most platforms
-    o in the "General" section, set your site values for the Xenomai
-      installation directory (defaults to /usr/realtime) and
-      Linux kernel tree (defaults to /usr/src/linux).
-    o save and exit.
-
---
-
-At this point, you should see the typical output of a GNU configure
-script. Your Xenomai settings are being used to setup the
-autoconf/automake-based build system.
-
-You may reboot on the Adeos-enabled kernel before or after Xenomai has
-been built, the exact order of operations has no incidence.
-
---
-
->5. $ make install
-
-Xenomai will be compiled then installed under the directory you specified
-at configuration time (ensure that your shell can write to the
-destination directory).
-
-Remember to add $installdir/bin to your shell PATH variable, where
-$installdir is your site value for the Xenomai installation directory.
-
---
-
-Once you have rebooted on the Adeos-enabled kernel:
-
->6. $ cd $installdir/testsuite/latency
-
->7. $ ./run
-
-If "sudo" is installed on your box, the application loader script
-(xeno-load) will attempt to use it for running privileged commands
-(e.g. insmod, rmmod et al.) If sudo is not available, just "su"
-manually before running the run script. You should then see the
-typical output of the latency calibration program running in kernel
-space.  Hit ^C to stop it.
-
---
-<rpm@xenomai.org>
-10/17/2004
+--enable-uvm            Build UVM support (default: enabled)
+--enable-debug          Enable debug symbols in programs (default: disabled)
+--enable-smp            Enable SMP support (default: disabled)
+--enable-x86-sep        Enable x86 SEP instructions for issuing syscalls (default: disabled)
+--enable-x86-tsc        Enable x86 TSC for timings (default: disabled)

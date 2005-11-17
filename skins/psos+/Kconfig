@@ -1,6 +1,0 @@
-config XENO_SKIN_PSOS
-	bool "pSOS+ emulator"
-	default n
-	help
-
-	This API skin emulates WindRiver's pSOS+ operating system.

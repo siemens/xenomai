@@ -9,7 +9,7 @@ exec_prefix="@exec_prefix@"
 insmod=/sbin/insmod
 modprobe=/sbin/modprobe
 rmmod=/sbin/rmmod
-modext=@XENO_MODULE_EXT@
+modext=.ko
 verbose=0
 spc=" 	"
 
@@ -75,7 +75,7 @@ xeno_moddir=`grep "^[$spc]*xeno_moddir[$spc]*=" $run_info_file`
 user_moddir=`grep "^[$spc]*user_moddir[$spc]*=" $run_info_file`
 
 if test "x$xeno_moddir" = x; then
-  eval xeno_moddir='${DESTDIR}@XENO_MODULE_DIR@'
+  eval xeno_moddir='@XENO_MODULE_DIR@' #FIXME
 else
   eval $xeno_moddir
 fi
@@ -87,8 +87,11 @@ if `$modprobe -nq adeos >& /dev/null`; then
 else
    target_deps=
 fi
+if `$modprobe -nq xeno_nucleus >& /dev/null`; then
+   target_deps="${target_deps}xeno_nucleus+"
+fi
 
-target_deps="${target_deps}hal+nucleus+`echo $stanza | cut -d: -f2`"
+target_deps="${target_deps}`echo $stanza | cut -d: -f2`"
 target_info=`echo $stanza | cut -d: -f3`
 target_mesg=`echo $stanza | cut -s -d: -f4`
 

@@ -1,0 +1,23 @@
+
+lib_LIBRARIES = libvxworks.a
+
+nodist_libvxworks_a_SOURCES = \
+	errnoLib.c \
+	intLib.c \
+	kernelLib.c \
+	module.c \
+	msgQLib.c \
+	semLib.c \
+	sysLib.c \
+	taskHookLib.c \
+	taskInfo.c \
+	taskLib.c \
+	tickLib.c \
+	wdLib.c
+
+AM_CPPFLAGS = @XENO_USER_CFLAGS@ -D__XENO_UVM__
+
+CLEANFILES = $(nodist_libvxworks_a_SOURCES)
+
+$(nodist_libvxworks_a_SOURCES): Makefile
+	$(LN_S) -f $(top_srcdir)/ksrc/skins/vxworks/$@
