@@ -188,7 +188,7 @@ int rthal_arch_init (void)
 	}
 
     if (rthal_timerfreq_arg == 0)
-	rthal_timerfreq_arg = rthal_tunables.cpu_freq;
+	rthal_timerfreq_arg = rthal_cpufreq_arg;
 
     return 0;
 }

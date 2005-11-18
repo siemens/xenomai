@@ -1,3 +1,8 @@
+2005-11-18  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/{ppc*,ia64}/hal.c: Fix default value for
+	rthal_timerfreq_arg.
+
 2005-11-16  Dmitry Adamushko <dmitry.adamushko@gmail.com>
 
 	* nucleus/pipe.c, skins/native/pipe.c: Support for auto-allocation
