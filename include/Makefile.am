@@ -1,6 +1,7 @@
 
 SUBDIRS = \
 	asm-generic \
+	asm-bfinnommu \
 	asm-i386 \
 	asm-ia64 \
 	asm-powerpc \
