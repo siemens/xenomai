@@ -1,3 +1,8 @@
+2005-11-18  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/{powerpc,ia64}/hal.c: Fix default value for
+	rthal_timerfreq_arg.
+
 2005-11-17  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Add Adeos support for 2.4.25 based on
