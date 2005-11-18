@@ -512,7 +512,8 @@ int rthal_arch_init (void)
         /* FIXME: 4Ghz barrier is close... */
         rthal_cpufreq_arg = rthal_get_cpufreq();
 #else /* ! CONFIG_X86_TSC */
-    rthal_cpufreq_arg = CLOCK_TICK_RATE;
+        rthal_cpufreq_arg = CLOCK_TICK_RATE;
+
     rthal_setup_8254_tsc();
 #endif /* CONFIG_X86_TSC */
 
