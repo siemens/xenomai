@@ -64,8 +64,8 @@ $ scripts/prepare-kernel.sh
 
 Note: The script will infere the location of the Xenomai kernel code
 from its own location within the Xenomai source tree. In other words,
-if /usr/src/xenomai-2.0/script/prepare-kernel.sh is executing, then
-Xenomai's kernel support available from /usr/src/xenomai-2.0/ksrc will
+if /usr/src/xenomai-2.1/script/prepare-kernel.sh is executing, then
+Xenomai's kernel support available from /usr/src/xenomai-2.1/ksrc will
 be bound to the target kernel.
 
 1.2 Configuring and building the target kernel
@@ -76,15 +76,80 @@ options are available from the "Real-time subsystem" toplevel menu.
 
 Once configured, the kernel should be built as usual.
 
-2. Configure script options
----------------------------
+1.3 Building the user-space support
+-----------------------------------
 
-The options listed below only affect the libraries compiled as part of
-Xenomai's user-space support, and in any case, never impact the
+A regular autoconf script is provided in order to prepare for building
+the user-space support. The options listed below can be passed to this
+script. Those options only affect the libraries compiled as part of
+Xenomai's user-space support, but in any case, they never impact the
 kernel-based support.
 
---enable-uvm            Build UVM support (default: enabled)
---enable-debug          Enable debug symbols in programs (default: disabled)
---enable-smp            Enable SMP support (default: disabled)
---enable-x86-sep        Enable x86 SEP instructions for issuing syscalls (default: disabled)
---enable-x86-tsc        Enable x86 TSC for timings (default: disabled)
+1.3.1 Feature conflict resolution
+---------------------------------
+
+Because of the strong decoupling between the kernel and user-space
+build procedures, Xenomai needs to make sure that all user-space
+options selected at configuration time will be consistent with the
+actual support the runtime libraries will get from the target
+kernel. For instance, enabling TSC support in user-space for x86
+albeit the kernel has been compiled with CONFIG_X86_TSC disabled would
+certainly lead to runtime problems if uncaught, since Xenomai and the
+application would not agree on the high precision clock to use for
+their timings.
+
+In order to solve those potential issues, each Xenomai architecture
+port defines a set of critical features which is tested for
+consistency, each time a user-space application binds itself to a
+real-time interface in kernel space. Unresolvable conflicts are
+reported and the execution stops immediately in such a case.
+
+Options that need perfect matching between both sides are marked as
+"strong" in the following lists, others that may differ are marked as
+"weak". The way Xenomai deals with tolerated discrepancies is decided
+on a case-by-case basis, depending on the option considered. When
+not applicable, the binding type remains unspecified.
+
+1.3.2 Generic options
+---------------------
+
+NAME                DESCRIPTION                      [BINDING,]DEFAULT
+
+--prefix            Installation directory           /usr/xenomai
+--enable-uvm        Build UVM support                enabled
+--enable-debug      Enable debug symbols (-g)        disabled
+--enable-smp        Enable SMP support               weak,disabled
+
+1.3.3 Arch-specific options
+---------------------------
+
+NAME                DESCRIPTION                      [BINDING,]DEFAULT
+
+--enable-x86-sep    Enable x86 SEP instructions      strong,disabled
+                    for issuing syscalls
+--enable-x86-tsc    Enable x86 TSC for timings       strong,disabled
+
+2. Typical installation procedure
+---------------------------------
+
+Let's say we want to build Xenomai for a Pentium-based x86 platform
+running a 2.6.14 kernel, using the native host toolchain; the typical
+steps would be as follows:
+
+# $linux_tree = path to the target kernel sources
+# $xenomai_root = path to the Xenomai sources
+# $build_root = path to a clean build directory
+
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=i386 \
+  --adeos=$xenomai_root/ksrc/arch/i386/patches/adeos-ipipe-2.6.14-i386-X.Y-ZZ.patch \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ make xconfig/gconfig/menuconfig # select the kernel and Xenomai options
+$ make bzImage modules # then install as needed
+$ mkdir $build_root && cd $build_root
+$ $xenomai_root/configure --enable-x86-sep --enable-x86-tsc
+$ make install
+
+Once the compilation has completed, /usr/xenomai should contain the
+user-space librairies and header files one would use to build
+applications that call Xenomai's real-time support in kernel space.
