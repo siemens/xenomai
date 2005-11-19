@@ -37,7 +37,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = include/asm-powerpc
+subdir = include/asm-bfinnommu
 DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -186,7 +186,7 @@ host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
-includedir = $(prefix)/include/asm-powerpc
+includedir = $(prefix)/include/asm-bfinnommu
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
@@ -205,7 +205,9 @@ target_alias = @target_alias@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
-include_HEADERS = atomic.h calibration.h features.h hal.h syscall.h system.h
+include_HEADERS = atomic.h calibration.h features.h hal.h \
+		syscall.h system.h wrappers.h
+
 all: all-am
 
 .SUFFIXES:
@@ -218,9 +220,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  include/asm-powerpc/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  include/asm-bfinnommu/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  include/asm-powerpc/Makefile
+	  $(AUTOMAKE) --foreign  include/asm-bfinnommu/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
