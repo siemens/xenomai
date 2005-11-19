@@ -1,5 +1,7 @@
 2005-11-19  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/powerpc/Config.in: Add missing machine-level options.
+
 	* arch/ppc/patches: Upgrade to Adeos 2.4.25/0.9-03.
 
 2005-11-18  Philippe Gerum  <rpm@xenomai.org>
