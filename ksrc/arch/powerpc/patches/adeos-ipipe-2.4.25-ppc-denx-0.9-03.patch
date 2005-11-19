@@ -195,6 +195,35 @@ diff -uNrp 2.4.25-ppc/arch/ppc/kernel/head_4xx.S 2.4.25-ppc-ipipe/arch/ppc/kerne
  	.long	ret_from_intercept
  
  #if 0
+diff -uNrp 2.4.25-ppc/arch/ppc/kernel/head_8xx.S 2.4.25-ppc-ipipe/arch/ppc/kernel/head_8xx.S
+--- 2.4.25-ppc/arch/ppc/kernel/head_8xx.S	2005-02-13 21:04:14.000000000 +0100
++++ 2.4.25-ppc-ipipe/arch/ppc/kernel/head_8xx.S	2005-11-19 19:02:03.000000000 +0100
+@@ -231,7 +231,11 @@ HardwareInterrupt:
+ 	bl	transfer_to_handler
+ 	.globl	do_IRQ_intercept
+ do_IRQ_intercept:
+-	.long	do_IRQ;
++#ifdef CONFIG_IPIPE
++	.long   __ipipe_grab_irq
++#else /* !CONFIG_IPIPE */
++	.long	do_IRQ
++#endif /* CONFIG_IPIPE */
+ 	.long	ret_from_intercept
+ 
+ /* Alignment exception */
+@@ -268,7 +272,11 @@ Decrementer:
+ 	bl	transfer_to_handler
+ 	.globl	timer_interrupt_intercept
+ timer_interrupt_intercept:
+-	.long	timer_interrupt
++#ifdef CONFIG_IPIPE
++	.long   __ipipe_grab_timer
++#else /* !CONFIG_IPIPE */
++	.long   timer_interrupt
++#endif /* CONFIG_IPIPE */
+ 	.long	ret_from_intercept
+ 
+ 	STD_EXCEPTION(0xa00, Trap_0a, UnknownException)
 diff -uNrp 2.4.25-ppc/arch/ppc/kernel/head_e500.S 2.4.25-ppc-ipipe/arch/ppc/kernel/head_e500.S
 --- 2.4.25-ppc/arch/ppc/kernel/head_e500.S	2005-03-16 00:12:45.000000000 +0100
 +++ 2.4.25-ppc-ipipe/arch/ppc/kernel/head_e500.S	2005-11-09 15:15:31.000000000 +0100
@@ -1491,7 +1520,7 @@ diff -uNrp 2.4.25-ppc/include/asm-ppc/hw_irq.h 2.4.25-ppc-ipipe/include/asm-ppc/
  #define mask_irq(irq) ({if (irq_desc[irq].handler && irq_desc[irq].handler->disable) irq_desc[irq].handler->disable(irq);})
 diff -uNrp 2.4.25-ppc/include/asm-ppc/ipipe.h 2.4.25-ppc-ipipe/include/asm-ppc/ipipe.h
 --- 2.4.25-ppc/include/asm-ppc/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.4.25-ppc-ipipe/include/asm-ppc/ipipe.h	2005-11-17 16:29:42.000000000 +0100
++++ 2.4.25-ppc-ipipe/include/asm-ppc/ipipe.h	2005-11-19 19:03:15.000000000 +0100
 @@ -0,0 +1,176 @@
 +/* -*- linux-c -*-
 + * include/asm-ppc/ipipe.h
@@ -1527,10 +1556,10 @@ diff -uNrp 2.4.25-ppc/include/asm-ppc/ipipe.h 2.4.25-ppc-ipipe/include/asm-ppc/i
 +#include <linux/list.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"0.9-02"
++#define IPIPE_ARCH_STRING	"0.9-03"
 +#define IPIPE_MAJOR_NUMBER	0
 +#define IPIPE_MINOR_NUMBER	9
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
