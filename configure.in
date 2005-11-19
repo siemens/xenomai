@@ -354,6 +354,7 @@ AC_CONFIG_FILES([ \
        	src/testsuite/switch/Makefile \
        	include/Makefile \
        	include/asm-generic/Makefile \
+       	include/asm-bfinnommu/Makefile \
        	include/asm-i386/Makefile \
        	include/asm-powerpc/Makefile \
        	include/asm-ia64/Makefile \
