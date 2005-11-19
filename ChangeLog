@@ -1,4 +1,12 @@
+2005-11-19  Philippe Gerum  <rpm@xenomai.org>
+
+	* arch/ppc/patches: Upgrade to Adeos 2.4.25/0.9-03.
+
 2005-11-18  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/bfinnommu, include/asm-bfinnommu: Add preliminary
+	support for the Blackfin DSP architecture. Based on a uClinux port
+	from ADS (http://blackfin.uclinux.org/).
 
 	* ksrc/arch/{powerpc,ia64}/hal.c: Fix default value for
 	rthal_timerfreq_arg.
