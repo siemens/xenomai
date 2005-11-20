@@ -1,3 +1,10 @@
+2005-11-18  Heikki Lindholm <holindho@cs.helsinki.fi>
+
+	* include/asm-powerpc/system.h, ksrc/arch/powerpc/switch_64.S: Add
+	ppc64 I-pipe kernel support.
+
+	* include/asm-powerpc/atomic.h: Fix merge regression.
+	
 2005-11-18  Dmitry Adamushko <dmitry.adamushko@gmail.com>
 
 	* nucleus/pipe.c (xnpipe_cleanup_user_conn): Clear
