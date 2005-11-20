@@ -1,3 +1,9 @@
+2005-11-18  Dmitry Adamushko <dmitry.adamushko@gmail.com>
+
+	* nucleus/pipe.c (xnpipe_cleanup_user_conn): Clear
+	XNPIPE_USER_CONN flag and cleanup the associated data queues in
+	one atomic step.
+	
 2005-11-19  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/Config.in: Add missing machine-level options.
