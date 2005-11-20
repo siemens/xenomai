@@ -127,10 +127,17 @@ typedef struct xnarch_fltinfo {
 #endif /* CONFIG_PPC64 */
 #else /* !CONFIG_ADEOS_CORE */
 #define xnarch_fault_pf_p(fi)   ((fi)->exception == IPIPE_TRAP_ACCESS)
+#ifdef CONFIG_PPC64
+#define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
+				 ((fi)->exception == IPIPE_TRAP_IABR || \
+				  (fi)->exception == IPIPE_TRAP_SSTEP || \
+				  (fi)->exception == IPIPE_TRAP_PERFMON))
+#else /* !CONFIG_PPC64 */
 #define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
 				 ((fi)->exception == IPIPE_TRAP_IABR || \
 				  (fi)->exception == IPIPE_TRAP_SSTEP || \
 				  (fi)->exception == IPIPE_TRAP_DEBUG))
+#endif /* CONFIG_PPC64 */
 #endif /* CONFIG_ADEOS_CORE */
 
 #define xnarch_fault_notify(fi) (!xnarch_fault_bp_p(fi))

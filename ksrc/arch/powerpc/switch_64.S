@@ -24,7 +24,6 @@
 #include <asm/processor.h>
 #include <asm/cputable.h>
 #include <asm/page.h>
-#include <asm/offsets.h>
 #include <asm/ppc_asm.h>
 
 #define RTHAL_SAVEREG(reg, pos)	std reg,STACK_FRAME_OVERHEAD+8*(pos)(r1)

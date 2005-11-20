@@ -210,6 +210,7 @@ static __inline__ int atomic_dec_return(atomic_counter_t *v)
     return t;
 }
 
+#ifndef __powerpc64__
 static __inline__ void atomic_set_mask(unsigned long mask,
 				       unsigned long *ptr)
 {
@@ -237,6 +238,7 @@ static __inline__ void atomic_clear_mask(unsigned long mask,
 	: "r" (ptr), "r" (mask)
 	: "r5", "cc", "memory");
 }
+#endif /* __powerpc64__ */
 
 #define xnarch_atomic_xchg(ptr,v)   atomic_xchg(ptr,v)
 #define xnarch_memory_barrier()     __asm__ __volatile__("": : :"memory")
