@@ -3325,7 +3325,7 @@ static int __rt_pipe_read (struct task_struct *curr, struct pt_regs *regs)
 	return err;
 
     if (size < P_MSGSIZE(msg))
-	err = -ENOSPC;
+	err = -ENOBUFS;
     else if (P_MSGSIZE(msg) > 0)
 	__xn_copy_to_user(curr,(void __user *)__xn_reg_arg2(regs),P_MSGPTR(msg),P_MSGSIZE(msg));
 

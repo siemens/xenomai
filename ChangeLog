@@ -1,3 +1,15 @@
+2005-11-21  Philippe Gerum  <rpm@xenomai.org>
+
+	* skins/native, nucleus/pipe.c: Globally replace ENOSPC by
+	ENOBUFS.
+
+2005-11-21  Dmitry Adamushko <dmitry.adamushko@gmail.com>
+
+	* ksrc/nucleus/pipe.c (xnpipe_send): Return -ENOBUFS instead of
+	-ENOSPC when a given buffer is not big enough for the entire
+	message to be written in. perror() gives a, hopefully,
+	more-precise and less-confusing description for the former one.
+
 2005-11-18  Heikki Lindholm <holindho@cs.helsinki.fi>
 
 	* include/asm-powerpc/system.h, ksrc/arch/powerpc/switch_64.S: Add

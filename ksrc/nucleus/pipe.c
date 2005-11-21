@@ -749,7 +749,7 @@ static ssize_t xnpipe_read (struct file *file,
 	    }
 	else
 	    /* Return buffer is too small - message is lost. */
-	    ret = -ENOSPC;
+	    ret = -ENOBUFS;
 
 	if (handler != NULL)
 	    ret = handler(xnminor_from_state(state),mh,ret,cookie);
