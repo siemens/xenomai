@@ -492,7 +492,7 @@ ssize_t rt_pipe_receive (RT_PIPE *pipe,
  *
  * @param size The count of bytes from the received message to read up
  * into @a buf. If @a size is lower than the actual message size,
- * -ENOSPC is returned since the incompletely received message would
+ * -ENOBUFS is returned since the incompletely received message would
  * be lost. If @a size is zero, this call returns immediately with no
  * other action.
  *
@@ -525,7 +525,7 @@ ssize_t rt_pipe_receive (RT_PIPE *pipe,
  * from a context which cannot sleep (e.g. interrupt, non-realtime or
  * scheduler locked).
  *
- * - -ENOSPC is returned if @a size is not large enough to collect the
+ * - -ENOBUFS is returned if @a size is not large enough to collect the
  * message data.
  *
  * Environments:
@@ -565,7 +565,7 @@ ssize_t rt_pipe_read (RT_PIPE *pipe,
 	return nbytes;
 
     if (size < P_MSGSIZE(msg))
-	nbytes = -ENOSPC;
+	nbytes = -ENOBUFS;
     else if (P_MSGSIZE(msg) > 0)
 	memcpy(buf,P_MSGPTR(msg),P_MSGSIZE(msg));
 

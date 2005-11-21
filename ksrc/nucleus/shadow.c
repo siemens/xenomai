@@ -1705,7 +1705,7 @@ int xnshadow_register_interface (const char *name,
 
     xnlock_put_irqrestore(&nklock,s);
     
-    return -ENOSPC;
+    return -ENOBUFS;
 }
 
 /*
