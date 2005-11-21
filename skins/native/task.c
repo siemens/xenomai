@@ -1558,7 +1558,7 @@ int rt_task_slice (RT_TASK *task, RTIME quantum)
  * @param mcb_r The address of an optional message control block
  * referring to the reply message area. If @a mcb_r is NULL and a
  * reply is sent back by the remote task, the reply message will be
- * discarded, and -ENOSPC will be returned to the caller. When @a
+ * discarded, and -ENOBUFS will be returned to the caller. When @a
  * mcb_r is valid, the fields from this control block should be set as
  * follows:
  *
@@ -1567,7 +1567,7 @@ int rt_task_slice (RT_TASK *task, RTIME quantum)
  *
  * - mcb_r->size should contain the size in bytes of the buffer space
  * pointed at by mcb_r->data. If mcb_r->size is lower than the actual
- * size of the reply message, no data copy takes place and -ENOSPC is
+ * size of the reply message, no data copy takes place and -ENOBUFS is
  * returned to the caller. See note.
  *
  * Upon return, mcb_r->opcode will contain the status code sent back
@@ -1587,7 +1587,7 @@ int rt_task_slice (RT_TASK *task, RTIME quantum)
  * on entry, or that no actual message was passed to the remote call
  * to rt_task_reply(). Otherwise:
  *
- * - -ENOSPC is returned if @a mcb_r does not point at a message area
+ * - -ENOBUFS is returned if @a mcb_r does not point at a message area
  * large enough to collect the remote task's reply. This includes the
  * case where @a mcb_r is NULL on entry albeit the remote task
  * attempts to send a reply message.
@@ -1717,7 +1717,7 @@ ssize_t rt_task_send (RT_TASK *task,
 		err = (ssize_t)rsize;
 		}
 	    else
-		err = -ENOSPC;
+		err = -ENOBUFS;
 	    }
 	else
 	    err = 0; /* i.e. message processed, no reply expected or sent. */
@@ -1763,7 +1763,7 @@ ssize_t rt_task_send (RT_TASK *task,
  *
  * - mcb_r->size should contain the size in bytes of the buffer space
  * pointed at by mcb_r->data. If mcb_r->size is lower than the actual
- * size of the received message, no data copy takes place and -ENOSPC
+ * size of the received message, no data copy takes place and -ENOBUFS
  * is returned to the caller. See note.
  *
  * Upon return, mcb_r->opcode will contain the operation code sent
@@ -1781,7 +1781,7 @@ ssize_t rt_task_send (RT_TASK *task,
  * token should be passed to rt_task_reply(), in order to send back a
  * reply to and unblock the remote task appropriately. Otherwise:
  *
- * - -ENOSPC is returned if @a mcb_r does not point at a message area
+ * - -ENOBUFS is returned if @a mcb_r does not point at a message area
  * large enough to collect the remote task's message.
  *
  * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
@@ -1893,7 +1893,7 @@ int rt_task_receive (RT_TASK_MCB *mcb_r,
 	err = sender->wait_args.mps.mcb_s.flowid;
 	}
     else
-	err = -ENOSPC;
+	err = -ENOBUFS;
 
     mcb_r->opcode = sender->wait_args.mps.mcb_s.opcode;
     mcb_r->size = rsize;
@@ -2031,7 +2031,7 @@ int rt_task_reply (int flowid, RT_TASK_MCB *mcb_s)
     else
 	/* The receiver will get the same error code. Falldown
 	   through the rescheduling is wanted. */
-	err = -ENOSPC;
+	err = -ENOBUFS;
 
     /* Copy back the actual size of the reply data, */
     receiver->wait_args.mps.mcb_r.size = rsize;

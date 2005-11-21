@@ -260,7 +260,7 @@ int rtf_get (unsigned minor,
        user-space in a single call to write(). */
 
     if (count < xnpipe_m_size(msg))
-	nbytes = -ENOSPC;
+	nbytes = -ENOBUFS;
     else if (xnpipe_m_size(msg) > 0)
 	memcpy(buf,xnpipe_m_data(msg),xnpipe_m_size(msg));
 
