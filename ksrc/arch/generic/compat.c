@@ -40,8 +40,8 @@ static void kthread_trampoline(void *data)
     struct kthread_arg_block *bp = data;
     int (*threadfn)(void *data);
     sigset_t blocked;
+    int ret = -EINTR;
     void *tdata;
-    int ret;
 
     daemonize();
 

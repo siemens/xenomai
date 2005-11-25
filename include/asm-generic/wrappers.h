@@ -49,6 +49,10 @@
 /* VM */
 #define wrap_remap_page_range(vma,from,to,size,prot) \
     remap_page_range(from,to,size,prot)
+#define wrap_switch_mm(prev,next,task)	\
+    switch_mm(prev,next,task,(task)->processor)
+#define wrap_enter_lazy_tlb(mm,task)	\
+    enter_lazy_tlb(mm,task,(task)->processor)
 #define pte_offset_kernel(pmd,addr)	pte_offset(pmd,addr)
 #define __copy_to_user_inatomic		__copy_to_user
 #define __copy_from_user_inatomic	__copy_from_user
@@ -141,6 +145,10 @@ void show_stack(struct task_struct *task,
 #define wrap_remap_page_range(vma,from,to,size,prot)  \
     remap_page_range(vma,from,to,size,prot)
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,10) */
+#define wrap_switch_mm(prev,next,task)	\
+    switch_mm(prev,next,task)
+#define wrap_enter_lazy_tlb(mm,task)	\
+    enter_lazy_tlb(mm,task)
 
 /* Device registration */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,13)

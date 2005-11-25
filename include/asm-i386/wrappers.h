@@ -35,6 +35,23 @@
 	        :"1" (addr),"g" ((int)(size)),"g" ((task)->addr_limit.seg)); \
 	flag == 0; })
 
+#define wrap_test_fpu_used(task)  \
+   ((task)->flags & PF_USEDFPU)
+#define wrap_set_fpu_used(task)   \
+do {				  \
+    (task)->flags |= PF_USEDFPU;  \
+} while(0)
+#define wrap_clear_fpu_used(task) \
+do {				  \
+    (task)->flags &= ~PF_USEDFPU; \
+} while(0)
+
+/* Since the jon is done in the vanilla __switch_to() we call, the
+   following routine is a nop on 2.4 kernels. */
+#define wrap_switch_iobitmap(p)   do { } while(0)
+
+#define wrap_strncpy_from_user(dstP,srcP,n) __strncpy_from_user(dstP,srcP,n)
+
 #else /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)  */
 
 #define wrap_range_ok(task,addr,size) ({ \
@@ -43,6 +60,42 @@
 		:"=&r" (flag), "=r" (sum) \
 	        :"1" (addr),"g" ((int)(size)),"g" ((task)->thread_info->addr_limit.seg)); \
 	flag == 0; })
+
+#define wrap_test_fpu_used(task)  \
+   ((task)->thread_info->status & TS_USEDFPU)
+#define wrap_set_fpu_used(task)   \
+do { \
+   (task)->thread_info->status |= TS_USEDFPU; \
+} while(0)
+#define wrap_clear_fpu_used(task) \
+do { \
+   (task)->thread_info->status &= ~TS_USEDFPU; \
+} while(0)
+
+static inline void wrap_switch_iobitmap (struct task_struct *p)
+{
+    struct thread_struct *thread = &p->thread;
+
+    if (thread->io_bitmap_ptr) {
+
+    	struct tss_struct *tss = &per_cpu(init_tss, rthal_processor_id());
+
+	if (tss->io_bitmap_base == INVALID_IO_BITMAP_OFFSET_LAZY) {
+                
+		memcpy(tss->io_bitmap, thread->io_bitmap_ptr,thread->io_bitmap_max);
+
+		if (thread->io_bitmap_max < tss->io_bitmap_max)
+		    memset((char *) tss->io_bitmap +
+			   thread->io_bitmap_max, 0xff,
+			   tss->io_bitmap_max - thread->io_bitmap_max);
+	
+		tss->io_bitmap_max = thread->io_bitmap_max;
+		tss->io_bitmap_base = IO_BITMAP_OFFSET;
+	}
+    }
+}
+
+#define wrap_strncpy_from_user(dstP,srcP,n) rthal_strncpy_from_user(dstP,srcP,n)
 
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
 
