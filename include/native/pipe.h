@@ -23,6 +23,7 @@
 #define _XENO_PIPE_H
 
 #include <xenomai/nucleus/pipe.h>
+#include <xenomai/nucleus/heap.h>
 #include <xenomai/native/types.h>
 
 /* Operation flags. */
@@ -57,6 +58,10 @@ typedef struct rt_pipe {
 
     RT_PIPE_MSG *buffer;	/* !< Buffer used in byte stream mode. */
 
+    xnheap_t *bufpool;         /* !< Current buffer pool. */
+
+    xnheap_t privpool;         /* !< Private buffer pool. */
+
     size_t fillsz;		/* !< Bytes written to the buffer.  */
 
     u_long flushable;		/* !< Flush request flag. */
@@ -85,7 +90,8 @@ extern "C" {
 
 int rt_pipe_create(RT_PIPE *pipe,
 		   const char *name,
-		   int minor);
+		   int minor,
+		   size_t poolsize);
 
 int rt_pipe_delete(RT_PIPE *pipe);
 
@@ -116,9 +122,11 @@ ssize_t rt_pipe_send(RT_PIPE *pipe,
 		     size_t size,
 		     int mode);
 
-RT_PIPE_MSG *rt_pipe_alloc(size_t size);
+RT_PIPE_MSG *rt_pipe_alloc(RT_PIPE *pipe,
+                           size_t size);
 
-int rt_pipe_free(RT_PIPE_MSG *msg);
+int rt_pipe_free(RT_PIPE *pipe,
+                 RT_PIPE_MSG *msg);
 
 int __native_pipe_pkg_init(void);
 

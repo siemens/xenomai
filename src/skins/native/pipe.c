@@ -23,13 +23,15 @@ extern int __native_muxid;
 
 int rt_pipe_create (RT_PIPE *pipe,
 		    const char *name,
-		    int minor)
+		    int minor,
+		    size_t poolsize)
 {
-    return XENOMAI_SKINCALL3(__native_muxid,
+    return XENOMAI_SKINCALL4(__native_muxid,
 			     __native_pipe_create,
 			     pipe,
 			     name,
-			     minor);
+			     minor,
+			     poolsize);
 }
 
 int rt_pipe_bind (RT_PIPE *pipe,
