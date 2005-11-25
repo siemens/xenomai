@@ -17,8 +17,8 @@
  * 02111-1307, USA.
  */
 
-#ifndef _UVM_SYSCALL_H
-#define _UVM_SYSCALL_H
+#ifndef _XENO_ASM_UVM_SYSCALL_H
+#define _XENO_ASM_UVM_SYSCALL_H
 
 #include <asm/xenomai/syscall.h>
 
@@ -47,4 +47,4 @@ void __uvm_syscall_cleanup(void);
 
 #endif /* __KERNEL__ */
 
-#endif /* !_UVM_SYSCALL_H */
+#endif /* !_XENO_ASM_UVM_SYSCALL_H */

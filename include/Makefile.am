@@ -14,7 +14,6 @@ SUBDIRS = \
 	rtai \
 	rtdm \
 	uitron \
-	uvm \
 	vrtx \
 	vxworks
 

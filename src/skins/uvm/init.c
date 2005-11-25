@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <xenomai/uvm/syscall.h>
+#include <xenomai/asm-uvm/syscall.h>
 
 int __uvm_muxid = -1;
 

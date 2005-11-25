@@ -1,3 +1,8 @@
+2005-11-25  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-uvm: Group all UVM-related headers; deprecate
+	include/uvm.
+
 2005-11-24  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/nucleus/Makefile.am: Build the nucleus in UVM mode.
