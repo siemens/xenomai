@@ -219,6 +219,7 @@ SUBDIRS = \
 	vrtx \
 	vxworks
 
+EXTRA_DIST = compat
 all: all-recursive
 
 .SUFFIXES:

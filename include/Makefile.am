@@ -32,3 +32,5 @@ uninstall-local:
 	rm -f $(DESTDIR)$(includedir)/xenomai
 	rm -f $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
 	rm -f $(DESTDIR)$(includedir)/asm-generic/xenomai
+
+EXTRA_DIST = compat
