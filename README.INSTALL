@@ -128,7 +128,7 @@ NAME                DESCRIPTION                      [BINDING,]DEFAULT
 
 --enable-x86-sep    Enable x86 SEP instructions      strong,disabled
                     for issuing syscalls
---enable-x86-tsc    Enable x86 TSC for timings       strong,disabled
+--enable-x86-tsc    Enable x86 TSC for timings       strong,enabled
 
 2. Typical installation procedure
 ---------------------------------
