@@ -223,7 +223,7 @@ sharedstatedir = @sharedstatedir@
 subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = vmutils vm include adapter gcic tkimg scope nucleus skins
+SUBDIRS = include vmutils vm adapter gcic tkimg scope nucleus skins
 EXTRA_DIST = Kconfig doc
 all: all-recursive
 

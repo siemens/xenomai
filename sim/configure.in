@@ -391,17 +391,16 @@ dnl
 
 base=include
 AC_CONFIG_LINKS([include/xenomai:../$base])
-base=asm-mvm
-AC_CONFIG_LINKS([include/asm/xenomai:include/$base])
+base=asm-sim
+AC_CONFIG_LINKS([include/asm/xenomai:../include/$base])
 
 AC_CONFIG_SUBDIRS(tkimg)
 
 AC_CONFIG_FILES([ \
      Makefile \
+     include/Makefile \
      vmutils/Makefile \
      vm/Makefile \
-     include/Makefile \
-     include/asm-mvm/Makefile \
      adapter/Makefile \
      skins/Makefile \
      nucleus/Makefile \
