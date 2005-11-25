@@ -1,3 +1,11 @@
+2005-11-25  Jan Kiszka <jan.kiszka@web.de>
+
+	* ksrc/skins/native/{pipe.c,syscall.c}, src/skins/native/pipe.c,
+	include/native/pipe.h: Added poolsize parameter to rt_pipe_create
+	for setting up pipes with private buffer pools of user-defined
+	size. Also, the addressed pipe has to be passed to rt_pipe_alloc
+	and rt_pipe_free now.
+
 2005-11-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* configure.in: Enable x86-tsc by default.

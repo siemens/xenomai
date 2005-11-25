@@ -50,8 +50,6 @@
 #include <xenomai/native/registry.h>
 #include <xenomai/native/pipe.h>
 
-static xnheap_t *__pipe_heap = &kheap;
-
 static int __pipe_flush_apc;
 
 static DECLARE_XNQUEUE(__pipe_flush_q);
@@ -82,6 +80,15 @@ static RT_OBJECT_PROCNODE __pipe_pnode = {
 };
 
 #endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+
+static void __pipe_flush_pool (xnheap_t *heap,
+                               void *poolmem,
+                               u_long poolsize,
+                               void *cookie)
+{
+    xnarch_sysfree(poolmem,poolsize);
+}
+
 
 static inline ssize_t __pipe_flush (RT_PIPE *pipe)
 
@@ -122,8 +129,10 @@ static void *__pipe_alloc_handler (int bminor,
 				   size_t size,
 				   void *cookie)
 {
+    RT_PIPE *pipe = (RT_PIPE *)cookie;
+
     /* Allocate memory for the incoming message. */
-    return xnheap_alloc(__pipe_heap,size);
+    return xnheap_alloc(pipe->bufpool,size);
 }
 
 static int __pipe_output_handler (int bminor,
@@ -131,8 +140,10 @@ static int __pipe_output_handler (int bminor,
 				  int retval,
 				  void *cookie)
 {
+    RT_PIPE *pipe = (RT_PIPE *)cookie;
+
     /* Free memory from output/discarded message. */
-    xnheap_free(__pipe_heap,mh);
+    xnheap_free(pipe->bufpool,mh);
     return retval;
 }
 
@@ -154,7 +165,7 @@ void __native_pipe_pkg_cleanup (void)
 }
 
 /**
- * @fn int rt_pipe_create(RT_PIPE *pipe,const char *name,int minor)
+ * @fn int rt_pipe_create(RT_PIPE *pipe,const char *name,int minor, size_t poolsize)
  * @brief Create a message pipe.
  *
  * This service opens a bi-directional communication channel allowing
@@ -201,6 +212,10 @@ void __native_pipe_pkg_cleanup (void)
  * /proc/xenomai/registry/pipes/@a name to the allocated pipe device
  * entry (i.e. /dev/rtp*).
  *
+ * @param poolsize Specifies the size of a dedicated buffer pool for the
+ * pipe. Passing 0 means that all message allocations for this pipe are
+ * performed on the system heap.
+ *
  * @return 0 is returned upon success. Otherwise:
  *
  * - -ENOMEM is returned if the system fails to get enough dynamic
@@ -232,19 +247,55 @@ void __native_pipe_pkg_cleanup (void)
 
 int rt_pipe_create (RT_PIPE *pipe,
 		    const char *name,
-		    int minor)
+		    int minor,
+		    size_t poolsize)
 {
     int err = 0;
+    void *poolmem;
 
-    if (xnpod_asynch_p())
+    if (!xnpod_root_p())
 	return -EPERM;
 
     pipe->buffer = NULL;
+    pipe->bufpool = &kheap;
     pipe->fillsz = 0;
     pipe->flushable = 0;
     pipe->handle = 0;    /* i.e. (still) unregistered pipe. */
     pipe->magic = XENO_PIPE_MAGIC;
     xnobject_copy_name(pipe->name,name);
+
+    if (poolsize > 0)
+        {
+        /* Make sure we won't hit trivial argument errors when calling
+           xnheap_init(). */
+
+        if (poolsize < 2 * PAGE_SIZE)
+            poolsize = 2 * PAGE_SIZE;
+
+        /* Account for the overhead so that the actual free space is large
+           enough to match the requested size. */
+
+        poolsize += xnheap_overhead(poolsize,PAGE_SIZE);
+        poolsize = PAGE_ALIGN(poolsize);
+
+        poolmem = xnarch_sysalloc(poolsize);
+
+        if (!poolmem)
+            return -ENOMEM;
+
+        err = xnheap_init(&pipe->privpool,
+                          poolmem,
+                          poolsize,
+                          PAGE_SIZE); /* Use natural page size */
+        if (err)
+            {
+            xnarch_sysfree(poolmem,poolsize);
+            return err;
+            }
+
+        pipe->bufpool = &pipe->privpool;
+        }
+
 
     minor = xnpipe_connect(minor,
 			 &__pipe_output_handler,
@@ -253,8 +304,12 @@ int rt_pipe_create (RT_PIPE *pipe,
 			 pipe);
 
     if (minor < 0)
-	return minor;
+        {
+        if (pipe->bufpool == &pipe->privpool)
+            xnheap_destroy(&pipe->privpool,__pipe_flush_pool,NULL);
 
+        return minor;
+        }
     pipe->minor = minor;
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
@@ -337,14 +392,15 @@ int rt_pipe_delete (RT_PIPE *pipe)
     if (!pipe)
 	{
 	err = xeno_handle_error(pipe,XENO_PIPE_MAGIC,RT_PIPE);
-	goto unlock_and_exit;
+       xnlock_put_irqrestore(&nklock,s);
+       return err;
 	}
 
     if (__test_and_clear_bit(0,&pipe->flushable))
 	{
 	/* Purge data waiting for flush. */
 	removeq(&__pipe_flush_q,&pipe->link);
-	rt_pipe_free(pipe->buffer);
+       rt_pipe_free(pipe,pipe->buffer);
 	}
 
     err = xnpipe_disconnect(pipe->minor);
@@ -356,9 +412,10 @@ int rt_pipe_delete (RT_PIPE *pipe)
 
     xeno_mark_deleted(pipe);
 
- unlock_and_exit:
-
     xnlock_put_irqrestore(&nklock,s);
+
+    if (pipe->bufpool == &pipe->privpool)
+       xnheap_destroy(&pipe->privpool,__pipe_flush_pool,NULL);
 
     return err;
 }
@@ -572,7 +629,7 @@ ssize_t rt_pipe_read (RT_PIPE *pipe,
     /* Zero-sized messages are allowed, so we still need to free the
        message buffer even if no data copy took place. */
 
-    rt_pipe_free(msg);
+    rt_pipe_free(pipe,msg);
 
     return nbytes;
 }
@@ -767,8 +824,8 @@ ssize_t rt_pipe_write (RT_PIPE *pipe,
 	/* Try flushing the streaming buffer in any case. */
 	return rt_pipe_send(pipe,NULL,0,mode);
 
-    msg = rt_pipe_alloc(size);
-	
+    msg = rt_pipe_alloc(pipe,size);
+
     if (!msg)
 	return -ENOMEM;
 
@@ -779,7 +836,7 @@ ssize_t rt_pipe_write (RT_PIPE *pipe,
     if (nbytes != size)
 	/* If the operation failed, we need to free the message buffer
 	   by ourselves. */
-	rt_pipe_free(msg);
+       rt_pipe_free(pipe,msg);
 
     return nbytes;
 }
@@ -886,7 +943,7 @@ ssize_t rt_pipe_stream (RT_PIPE *pipe,
 
 	if (pipe->buffer == NULL)
 	    {
-	    pipe->buffer = rt_pipe_alloc(CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ);
+           pipe->buffer = rt_pipe_alloc(pipe,CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ);
 
 	    if (pipe->buffer == NULL)
 		{
@@ -984,14 +1041,16 @@ ssize_t rt_pipe_flush (RT_PIPE *pipe)
 }
 
 /**
- * @fn RT_PIPE_MSG *rt_pipe_alloc(size_t size)
+ * @fn RT_PIPE_MSG *rt_pipe_alloc(RT_PIPE *pipe,size_t size)
  *
  * @brief Allocate a message pipe buffer.
  *
- * This service allocates a message buffer from the system heap which
+ * This service allocates a message buffer from the pipe's heap which
  * can be subsequently filled by the caller then passed to
  * rt_pipe_send() for sending. The beginning of the available data
  * area of @a size contiguous bytes is accessible from P_MSGPTR(msg).
+ *
+ * @param pipe The descriptor address of the affected pipe.
  *
  * @param size The requested size in bytes of the buffer. This value
  * should represent the size of the payload data.
@@ -1010,10 +1069,10 @@ ssize_t rt_pipe_flush (RT_PIPE *pipe)
  * Rescheduling: never.
  */
 
-RT_PIPE_MSG *rt_pipe_alloc (size_t size)
-
+RT_PIPE_MSG *rt_pipe_alloc (RT_PIPE *pipe,
+                            size_t size)
 {
-    RT_PIPE_MSG *msg = (RT_PIPE_MSG *)xnheap_alloc(__pipe_heap,size + sizeof(RT_PIPE_MSG));
+    RT_PIPE_MSG *msg = (RT_PIPE_MSG *)xnheap_alloc(pipe->bufpool,size + sizeof(RT_PIPE_MSG));
 
     if (msg)
 	{
@@ -1025,12 +1084,14 @@ RT_PIPE_MSG *rt_pipe_alloc (size_t size)
 }
 
 /**
- * @fn int rt_pipe_free(RT_PIPE_MSG *msg)
+ * @fn int rt_pipe_free(RT_PIPE *pipe,RT_PIPE_MSG *msg)
  *
  * @brief Free a message pipe buffer.
  *
  * This service releases a message buffer returned by
- * rt_pipe_receive() to the system heap.
+ * rt_pipe_receive() to the pipe's heap.
+ *
+ * @param pipe The descriptor address of the affected pipe.
  *
  * @param msg The address of the message buffer to free.
  *
@@ -1049,9 +1110,9 @@ RT_PIPE_MSG *rt_pipe_alloc (size_t size)
  * Rescheduling: never.
  */
 
-int rt_pipe_free (RT_PIPE_MSG *msg)
+int rt_pipe_free (RT_PIPE *pipe,RT_PIPE_MSG *msg)
 {
-    return xnheap_free(__pipe_heap,msg);
+    return xnheap_free(pipe->bufpool,msg);
 }
 
 /*@}*/

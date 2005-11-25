@@ -3194,6 +3194,7 @@ static int __rt_pipe_create (struct task_struct *curr, struct pt_regs *regs)
     char name[XNOBJECT_NAME_LEN];
     RT_PIPE_PLACEHOLDER ph;
     int err, minor;
+    size_t poolsize;
     RT_PIPE *pipe;
 
     if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg1(regs),sizeof(ph)))
@@ -3213,12 +3214,15 @@ static int __rt_pipe_create (struct task_struct *curr, struct pt_regs *regs)
     /* Device minor. */
     minor = (int)__xn_reg_arg3(regs);
 
+    /* Buffer pool size. */
+    poolsize = (size_t)__xn_reg_arg4(regs);
+
     pipe = (RT_PIPE *)xnmalloc(sizeof(*pipe));
 
     if (!pipe)
 	return -ENOMEM;
 
-    err = rt_pipe_create(pipe,name,minor);
+    err = rt_pipe_create(pipe,name,minor,poolsize);
 
     if (err == 0)
 	{
@@ -3332,7 +3336,7 @@ static int __rt_pipe_read (struct task_struct *curr, struct pt_regs *regs)
     /* Zero-sized messages are allowed, so we still need to free the
        message buffer even if no data copy took place. */
 
-    rt_pipe_free(msg);
+    rt_pipe_free(pipe,msg);
 
     return err;
 }
@@ -3374,8 +3378,8 @@ static int __rt_pipe_write (struct task_struct *curr, struct pt_regs *regs)
     if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg2(regs),size))
 	return -EFAULT;
 
-    msg = rt_pipe_alloc(size);
-	
+    msg = rt_pipe_alloc(pipe,size);
+
     if (!msg)
 	return -ENOMEM;
 
@@ -3386,7 +3390,7 @@ static int __rt_pipe_write (struct task_struct *curr, struct pt_regs *regs)
     if (err != size)
 	/* If the operation failed, we need to free the message buffer
 	   by ourselves. */
-	rt_pipe_free(msg);
+       rt_pipe_free(pipe,msg);
 
     return err;
 }
@@ -3436,8 +3440,8 @@ static int __rt_pipe_stream (struct task_struct *curr, struct pt_regs *regs)
 	}
     else
 	{
-	msg = rt_pipe_alloc(size);
-	
+       msg = rt_pipe_alloc(pipe,size);
+
 	if (!msg)
 	    return -ENOMEM;
 
@@ -3449,7 +3453,7 @@ static int __rt_pipe_stream (struct task_struct *curr, struct pt_regs *regs)
     err = rt_pipe_stream(pipe,buf,size);
 
     if (msg)
-	rt_pipe_free(msg);
+       rt_pipe_free(pipe,msg);
 
     return err;
 }
@@ -3616,7 +3620,7 @@ static xnsysent_t __systab[] = {
     [__native_intr_enable ] = { &__rt_intr_enable, __xn_exec_any },
     [__native_intr_disable ] = { &__rt_intr_disable, __xn_exec_any },
     [__native_intr_inquire ] = { &__rt_intr_inquire, __xn_exec_any },
-    [__native_pipe_create ] = { &__rt_pipe_create, __xn_exec_any },
+    [__native_pipe_create ] = { &__rt_pipe_create, __xn_exec_lostage },
     [__native_pipe_bind ] = { &__rt_pipe_bind, __xn_exec_conforming },
     [__native_pipe_delete ] = { &__rt_pipe_delete, __xn_exec_any },
     [__native_pipe_read ] = { &__rt_pipe_read, __xn_exec_primary },
