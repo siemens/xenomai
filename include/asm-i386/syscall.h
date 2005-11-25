@@ -55,7 +55,7 @@
     ({ int err = __copy_to_user_inatomic(dstP,srcP,n); err; })
 #define __xn_put_user(task,src,dstP)           __put_user(src,dstP)
 #define __xn_get_user(task,dst,srcP)           __get_user(dst,srcP)
-#define __xn_strncpy_from_user(task,dstP,srcP,n)    rthal_strncpy_from_user(dstP,srcP,n)
+#define __xn_strncpy_from_user(task,dstP,srcP,n)    wrap_strncpy_from_user(dstP,srcP,n)
 
 #define __xn_range_ok(task,addr,size)    wrap_range_ok(task,addr,size)
 /* WP bit must work for using the shadow support, so we only need

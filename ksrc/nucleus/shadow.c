@@ -1761,7 +1761,7 @@ void xnshadow_release_events (void)
     rthal_catch_setsched(NULL);
 }
 
-int __init xnshadow_mount (void)
+int xnshadow_mount (void)
 
 {
     int cpu;
@@ -1797,7 +1797,7 @@ int __init xnshadow_mount (void)
     return 0;
 }
 
-void __exit xnshadow_cleanup (void)
+void xnshadow_cleanup (void)
 
 {
     int cpu;

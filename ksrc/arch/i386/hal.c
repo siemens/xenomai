@@ -61,7 +61,6 @@
 #ifdef CONFIG_PROC_FS
 #include <linux/proc_fs.h>
 #endif /* CONFIG_PROC_FS */
-#include <asm/nmi.h>
 #include <stdarg.h>
 
 extern struct desc_struct idt_table[];

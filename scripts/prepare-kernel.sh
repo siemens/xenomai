@@ -91,7 +91,7 @@ while : ; do
       fi
    fi
    case "$linux_arch" in
-   i*86)
+   x86|i*86)
       linux_arch=i386
       xenomai_arch=i386
       ;;
@@ -205,6 +205,7 @@ case $linux_VERSION.$linux_PATCHLEVEL in
 
     2.4)
 
+    export linux_arch
     config_file=Config.in
 
     if ! grep -q CONFIG_XENO $linux_tree/Makefile; then
@@ -222,8 +223,8 @@ $
 a
 
 ifdef CONFIG_XENOMAI
-SUBDIRS += arch/ppc/xenomai
-DRIVERS += arch/ppc/xenomai/xenomai.o
+SUBDIRS += arch/$linux_arch/xenomai
+DRIVERS += arch/$linux_arch/xenomai/xenomai.o
 endif
 .
 wq
@@ -257,7 +258,7 @@ EOF
 $
 a
 
-source arch/ppc/xenomai/Config.in
+source arch/$linux_arch/xenomai/Config.in
 .
 wq
 EOF

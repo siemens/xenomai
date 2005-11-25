@@ -247,7 +247,7 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
     struct task_struct *inproc = in_tcb->user_task;
     unsigned long fs, gs;
 
-    if (inproc && outproc->thread_info->status & TS_USEDFPU)
+    if (inproc && wrap_test_fpu_used(outproc))
         /* __switch_to will try and use __unlazy_fpu, so we need to
            clear the ts bit. */
         clts();
@@ -258,10 +258,10 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
         {
         struct mm_struct *oldmm = outproc->active_mm;
 
-        switch_mm(oldmm,inproc->active_mm,inproc);
+        wrap_switch_mm(oldmm,inproc->active_mm,inproc);
 
         if (!inproc->mm)
-            enter_lazy_tlb(oldmm,inproc);
+            wrap_enter_lazy_tlb(oldmm,inproc);
         }
 
     if (out_tcb->user_task) {
@@ -276,8 +276,6 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
 
     if (xnarch_shadow_p(out_tcb,outproc)) {
 
-        struct thread_struct *thread = &outproc->thread;
-
 	loadsegment(fs, fs);
 	loadsegment(gs, gs);
 
@@ -290,22 +288,7 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
            explicitely told the kernel that they would need to perform
            raw I/O ops. */
 
-        if (thread->io_bitmap_ptr) {
-            struct tss_struct *tss = &per_cpu(init_tss, rthal_processor_id());
-
-            if (tss->io_bitmap_base == INVALID_IO_BITMAP_OFFSET_LAZY) {
-                
-                memcpy(tss->io_bitmap, thread->io_bitmap_ptr,thread->io_bitmap_max);
-
-                if (thread->io_bitmap_max < tss->io_bitmap_max)
-                    memset((char *) tss->io_bitmap +
-                           thread->io_bitmap_max, 0xff,
-                           tss->io_bitmap_max - thread->io_bitmap_max);
-
-                tss->io_bitmap_max = thread->io_bitmap_max;
-                tss->io_bitmap_base = IO_BITMAP_OFFSET;
-            }
-        }
+	wrap_switch_iobitmap(outproc);
     }
 
     stts();
@@ -394,11 +377,12 @@ static inline void xnarch_init_fpu (xnarchtcb_t *tcb)
 
     if(task)
         {
-        /* Real-time shadow FPU initialization: tell Linux that this thread
-          initialized its FPU hardware. The TS_USEDFPU bit is necessary for
-          xnarch_save_fpu to save the FPU state at next switch. */
+        /* Real-time shadow FPU initialization: tell Linux that this
+          thread initialized its FPU hardware. The fpu usage bit is
+          necessary for xnarch_save_fpu to save the FPU state at next
+          switch. */
         xnarch_set_fpu_init(task);
-        task->thread_info->status |= TS_USEDFPU;
+        wrap_set_fpu_used(task);
         }   
 }
 
@@ -409,12 +393,12 @@ static inline void xnarch_save_fpu (xnarchtcb_t *tcb)
     
     if(task)
         {
-        if(!(task->thread_info->status & TS_USEDFPU))
+        if (!wrap_test_fpu_used(task))
             return;
 
-        /* Tell Linux that we already saved the state of the FPU hardware
-           of this task. */
-        task->thread_info->status &= ~TS_USEDFPU;
+        /* Tell Linux that we already saved the state of the FPU
+           hardware of this task. */
+        wrap_clear_fpu_used(task);
         }
 
     clts();
@@ -440,7 +424,7 @@ static inline void xnarch_restore_fpu (xnarchtcb_t *tcb)
 
         /* Tell Linux that this task has altered the state of the FPU
            hardware. */
-        task->thread_info->status |= TS_USEDFPU;
+        wrap_set_fpu_used(task);
         }
 
     /* Restore the FPU hardware with valid fp registers from a
@@ -458,7 +442,7 @@ static inline void xnarch_enable_fpu(xnarchtcb_t *tcb)
 {
     struct task_struct *task = tcb->user_task;
 
-    if (task && !(task->thread_info->status & TS_USEDFPU))
+    if (task && !wrap_test_fpu_used(task))
         return;
 
     clts();

@@ -20,7 +20,11 @@ O_TARGET := xenomai.o
 
 obj-y := hal.o
 
-export-objs := hal.o
+obj-$(CONFIG_XENO_HW_NMI_DEBUG_LATENCY) += nmi.o
+
+obj-$(CONFIG_XENO_HW_SMI_DETECT) += smi.o
+
+export-objs := $(obj-y) $(obj-m)
 
 EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
 
