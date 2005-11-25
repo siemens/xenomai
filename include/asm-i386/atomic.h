@@ -50,6 +50,8 @@ typedef atomic_t atomic_counter_t;
 
 typedef struct { volatile int counter; } atomic_counter_t;
 
+#define xnarch_atomic_set(v,i)  (((v)->counter) = (i))
+
 struct __xeno_xchg_dummy { unsigned long a[100]; };
 #define __xeno_xg(x) ((struct __xeno_xchg_dummy *)(x))
 

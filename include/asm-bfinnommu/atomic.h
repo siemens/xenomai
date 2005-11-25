@@ -152,6 +152,7 @@ static __inline__ void atomic_clear_mask(unsigned long mask,
 #define xnarch_atomic_xchg(ptr,v)   atomic_xchg(ptr,v)
 #define xnarch_memory_barrier()     __asm__ __volatile__("": : :"memory")
 
+#define xnarch_atomic_set(v,i)                 (((v)->counter) = (i))
 #define xnarch_atomic_inc(pcounter)            atomic_inc(pcounter)
 #define xnarch_atomic_dec_and_test(pcounter)   (atomic_sub_return(1,pcounter) == 0)
 #define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask,pflags)
