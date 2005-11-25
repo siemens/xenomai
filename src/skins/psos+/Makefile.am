@@ -12,7 +12,10 @@ nodist_libpsos_a_SOURCES = \
 	tm.c \
 	sem.c
 
-AM_CPPFLAGS = @XENO_USER_CFLAGS@ -D__XENO_UVM__
+AM_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/include \
+	-D__XENO_UVM__
 
 CLEANFILES = $(nodist_libpsos_a_SOURCES)
 

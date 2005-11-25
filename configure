@@ -1051,6 +1051,7 @@ Optional Features:
   --enable-uvm            Build UVM support
   --enable-debug          Enable debug symbols in programs
   --enable-smp            Enable SMP support
+  --enable-uvm-heapsz     Set system heap size for UVMs
   --enable-x86-sep        Enable x86 SEP instructions for issuing syscalls
   --enable-x86-tsc        Enable x86 TSC for timings
   --enable-dox-doc        Build Doxygen documentation
@@ -5003,7 +5004,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5006 "configure"' > conftest.$ac_ext
+  echo '#line 5007 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -6341,7 +6342,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6344:" \
+echo "$as_me:6345:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -7391,11 +7392,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7394: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7395: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7398: \$? = $ac_status" >&5
+   echo "$as_me:7399: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7634,11 +7635,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7637: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7638: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7641: \$? = $ac_status" >&5
+   echo "$as_me:7642: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7694,11 +7695,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7697: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7698: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7701: \$? = $ac_status" >&5
+   echo "$as_me:7702: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9879,7 +9880,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9882 "configure"
+#line 9883 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9977,7 +9978,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9980 "configure"
+#line 9981 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12166,11 +12167,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12169: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12170: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12173: \$? = $ac_status" >&5
+   echo "$as_me:12174: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -12226,11 +12227,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12229: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12230: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12233: \$? = $ac_status" >&5
+   echo "$as_me:12234: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13587,7 +13588,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13590 "configure"
+#line 13591 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13685,7 +13686,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13688 "configure"
+#line 13689 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -14522,11 +14523,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14525: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14526: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14529: \$? = $ac_status" >&5
+   echo "$as_me:14530: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -14582,11 +14583,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14585: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14586: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14589: \$? = $ac_status" >&5
+   echo "$as_me:14590: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16617,11 +16618,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16620: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16621: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16624: \$? = $ac_status" >&5
+   echo "$as_me:16625: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16860,11 +16861,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16863: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16864: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16867: \$? = $ac_status" >&5
+   echo "$as_me:16868: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16920,11 +16921,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16923: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16924: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16927: \$? = $ac_status" >&5
+   echo "$as_me:16928: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -19105,7 +19106,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 19108 "configure"
+#line 19109 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -19203,7 +19204,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 19206 "configure"
+#line 19207 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -20576,6 +20577,23 @@ echo "$as_me:$LINENO: result: ${CONFIG_SMP:-no}" >&5
 echo "${ECHO_T}${CONFIG_SMP:-no}" >&6
 
 
+CONFIG_XENO_OPT_SYS_HEAPSZ=128
+echo "$as_me:$LINENO: checking for size of system heap" >&5
+echo $ECHO_N "checking for size of system heap... $ECHO_C" >&6
+# Check whether --enable-uvm-heapsz or --disable-uvm-heapsz was given.
+if test "${enable_uvm_heapsz+set}" = set; then
+  enableval="$enable_uvm_heapsz"
+  case "$enableval" in
+	[0-9]*) CONFIG_XENO_OPT_SYS_HEAPSZ=$enableval ;;
+	*) { { echo "$as_me:$LINENO: error: Bad argument to option: --enable-uvm-heapsz=<Kbytes>" >&5
+echo "$as_me: error: Bad argument to option: --enable-uvm-heapsz=<Kbytes>" >&2;}
+   { (exit 1); exit 1; }; } ;;
+	esac
+fi;
+echo "$as_me:$LINENO: result: $CONFIG_XENO_OPT_SYS_HEAPSZ Kb" >&5
+echo "${ECHO_T}$CONFIG_XENO_OPT_SYS_HEAPSZ Kb" >&6
+
+
 CONFIG_XENO_X86_SEP=
 CONFIG_X86_TSC=
 
@@ -21236,6 +21254,11 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 
+cat >>confdefs.h <<_ACEOF
+#define CONFIG_XENO_OPT_SYS_HEAPSZ $CONFIG_XENO_OPT_SYS_HEAPSZ
+_ACEOF
+
+
 
 
 
@@ -21388,14 +21411,7 @@ base=asm-generic
           ac_config_links="$ac_config_links src/include/$base/xenomai:include/$base"
 
 
-top_builddir=`pwd`
-abs_srcdir=`cd "$srcdir" && pwd`
-if test \! "$abs_srcdir" = $top_builddir; then
-             ac_config_links="$ac_config_links src/include/asm-uvm/system.h"
-
-fi
-
-                                                                                                                                                                                                                                                                                                                                                                                            ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno-load scripts/xeno-test src/Makefile src/skins/Makefile src/skins/uvm/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/psos+/Makefile src/skins/uitron/Makefile src/skins/vrtx/Makefile src/skins/vxworks/Makefile src/skins/rtdm/Makefile src/skins/rtai/Makefile src/include/Makefile src/include/asm-uvm/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/switch/Makefile include/Makefile include/asm-generic/Makefile include/asm-bfinnommu/Makefile include/asm-i386/Makefile include/asm-powerpc/Makefile include/asm-ia64/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/psos+/Makefile include/rtai/Makefile include/rtdm/Makefile include/uitron/Makefile include/uvm/Makefile include/vrtx/Makefile include/vxworks/Makefile"
+                                                                                                                                                                                                                                                                                                                                                                                                                ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno-load scripts/xeno-test src/Makefile src/nucleus/Makefile src/skins/Makefile src/skins/uvm/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/psos+/Makefile src/skins/uitron/Makefile src/skins/vrtx/Makefile src/skins/vxworks/Makefile src/skins/rtdm/Makefile src/skins/rtai/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/switch/Makefile include/Makefile include/asm-generic/Makefile include/asm-bfinnommu/Makefile include/asm-i386/Makefile include/asm-powerpc/Makefile include/asm-ia64/Makefile include/asm-uvm/Makefile include/asm-sim/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/psos+/Makefile include/rtai/Makefile include/rtdm/Makefile include/uitron/Makefile include/uvm/Makefile include/vrtx/Makefile include/vxworks/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x; then
@@ -22004,6 +22020,7 @@ do
   "scripts/xeno-load" ) CONFIG_FILES="$CONFIG_FILES scripts/xeno-load" ;;
   "scripts/xeno-test" ) CONFIG_FILES="$CONFIG_FILES scripts/xeno-test" ;;
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+  "src/nucleus/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/nucleus/Makefile" ;;
   "src/skins/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/skins/Makefile" ;;
   "src/skins/uvm/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/skins/uvm/Makefile" ;;
   "src/skins/posix/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/skins/posix/Makefile" ;;
@@ -22015,7 +22032,6 @@ do
   "src/skins/rtdm/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/skins/rtdm/Makefile" ;;
   "src/skins/rtai/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/skins/rtai/Makefile" ;;
   "src/include/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/include/Makefile" ;;
-  "src/include/asm-uvm/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/include/asm-uvm/Makefile" ;;
   "src/testsuite/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/testsuite/Makefile" ;;
   "src/testsuite/latency/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/testsuite/latency/Makefile" ;;
   "src/testsuite/switch/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/testsuite/switch/Makefile" ;;
@@ -22025,6 +22041,8 @@ do
   "include/asm-i386/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-i386/Makefile" ;;
   "include/asm-powerpc/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-powerpc/Makefile" ;;
   "include/asm-ia64/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-ia64/Makefile" ;;
+  "include/asm-uvm/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-uvm/Makefile" ;;
+  "include/asm-sim/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-sim/Makefile" ;;
   "include/native/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/native/Makefile" ;;
   "include/nucleus/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/nucleus/Makefile" ;;
   "include/posix/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/posix/Makefile" ;;
@@ -22057,7 +22075,6 @@ do
   "src/include/xenomai" ) CONFIG_LINKS="$CONFIG_LINKS src/include/xenomai:$base" ;;
   "src/include/asm/xenomai" ) CONFIG_LINKS="$CONFIG_LINKS src/include/asm/xenomai:include/$base" ;;
   "src/include/$base/xenomai" ) CONFIG_LINKS="$CONFIG_LINKS src/include/$base/xenomai:include/$base" ;;
-  "src/include/asm-uvm/system.h" ) CONFIG_LINKS="$CONFIG_LINKS src/include/asm-uvm/system.h" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   "src/include/xeno_config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS src/include/xeno_config.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5

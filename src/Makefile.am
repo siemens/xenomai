@@ -1,1 +1,1 @@
-SUBDIRS = include skins testsuite
+SUBDIRS = include nucleus skins testsuite
