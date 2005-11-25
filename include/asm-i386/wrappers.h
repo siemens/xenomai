@@ -48,7 +48,7 @@ do {				  \
 
 /* Since the jon is done in the vanilla __switch_to() we call, the
    following routine is a nop on 2.4 kernels. */
-#define wrap_switch_iobitmap(p)   do { } while(0)
+#define wrap_switch_iobitmap(p,cpu)   do { } while(0)
 
 #define wrap_strncpy_from_user(dstP,srcP,n) __strncpy_from_user(dstP,srcP,n)
 
@@ -72,13 +72,13 @@ do { \
    (task)->thread_info->status &= ~TS_USEDFPU; \
 } while(0)
 
-static inline void wrap_switch_iobitmap (struct task_struct *p)
+static inline void wrap_switch_iobitmap (struct task_struct *p, int cpu)
 {
     struct thread_struct *thread = &p->thread;
 
     if (thread->io_bitmap_ptr) {
 
-    	struct tss_struct *tss = &per_cpu(init_tss, rthal_processor_id());
+    	struct tss_struct *tss = &per_cpu(init_tss, cpu);
 
 	if (tss->io_bitmap_base == INVALID_IO_BITMAP_OFFSET_LAZY) {
                 
