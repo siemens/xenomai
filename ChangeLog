@@ -1,3 +1,8 @@
+2005-11-25  Jan Kiszka <jan.kiszka@web.de>
+
+	* drivers/16550A/16550A.c (RTSER_RTIOC_SET_CONFIG): Fix ENOMEM detection
+        (once again). Found by Paolo Mantegazza through cross-usage.
+
 2005-11-21  Philippe Gerum  <rpm@xenomai.org>
 
 	* skins/native, nucleus/pipe.c: Globally replace ENOSPC by
