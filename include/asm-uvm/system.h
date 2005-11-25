@@ -34,7 +34,7 @@
 #include <pthread.h>
 #include <asm/xenomai/atomic.h>
 #include <asm/xenomai/syscall.h>
-#include <xenomai/uvm/uvm.h>
+#include <xenomai/asm-uvm/uvm.h>
 
 /* Module arg macros */
 #define vartype(var)               var ## _ ## tYpE

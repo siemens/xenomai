@@ -1,3 +1,3 @@
 includedir = $(prefix)/include/asm-uvm
 
-include_HEADERS = system.h
+include_HEADERS = syscall.h system.h uvm.h

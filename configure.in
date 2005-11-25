@@ -373,7 +373,6 @@ AC_CONFIG_FILES([ \
        	include/rtai/Makefile \
        	include/rtdm/Makefile \
        	include/uitron/Makefile \
-       	include/uvm/Makefile \
        	include/vrtx/Makefile \
        	include/vxworks/Makefile \
 	])

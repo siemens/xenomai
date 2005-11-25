@@ -17,8 +17,8 @@
  * 02111-1307, USA.
  */
 
-#ifndef _XENO_SKIN_UVM_H
-#define _XENO_SKIN_UVM_H
+#ifndef _XENO_ASM_UVM_UVM_H
+#define _XENO_ASM_UVM_UVM_H
 
 typedef unsigned long long nanotime_t;
 
@@ -84,4 +84,4 @@ int uvm_timer_tsc2ns(nanostime_t tsc,
 
 #endif /* !__KERNEL__ */
 
-#endif /* !_XENO_SKIN_UVM_H */
+#endif /* !_XENO_ASM_UVM_UVM_H */

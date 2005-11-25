@@ -19,7 +19,7 @@
 
 #include <xenomai/nucleus/pod.h>
 #include <xenomai/nucleus/core.h>
-#include <xenomai/uvm/syscall.h>
+#include <xenomai/asm-uvm/syscall.h>
 
 MODULE_DESCRIPTION("UVM skin");
 MODULE_AUTHOR("rpm@xenomai.org");
