@@ -1,3 +1,14 @@
+2005-11-24  Philippe Gerum  <rpm@xenomai.org>
+
+	* src/nucleus/Makefile.am: Build the nucleus in UVM mode.
+
+	* include/nucleus/types.h: Map SKIN_INIT to __xeno_skin_init in
+	the UVM case.
+
+	* src/include/asm-uvm, sim/include/asm-mvm: Move to
+	include/asm-{uvm,sim}, since both actually depend on the system
+	interface specification.
+
 2005-11-21  Philippe Gerum  <rpm@xenomai.org>
 
 	* skins/native, nucleus/pipe.c: Globally replace ENOSPC by

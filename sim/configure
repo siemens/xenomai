@@ -27039,7 +27039,7 @@ base=asm-sim
 subdirs="$subdirs tkimg"
 
 
-                                                                                                                                                                          ac_config_files="$ac_config_files Makefile include/Makefile vmutils/Makefile vm/Makefile adapter/Makefile skins/Makefile nucleus/Makefile skins/psos+/Makefile skins/vxworks/Makefile skins/vrtx/Makefile skins/uitron/Makefile skins/posix/Makefile skins/posix/testsuite/Makefile skins/native/Makefile skins/rtai/Makefile gcic/Makefile scope/Makefile"
+                                                                                                                                                                ac_config_files="$ac_config_files Makefile vmutils/Makefile vm/Makefile adapter/Makefile skins/Makefile nucleus/Makefile skins/psos+/Makefile skins/vxworks/Makefile skins/vrtx/Makefile skins/uitron/Makefile skins/posix/Makefile skins/posix/testsuite/Makefile skins/native/Makefile skins/rtai/Makefile gcic/Makefile scope/Makefile"
 
 
 cat >confcache <<\_ACEOF
@@ -27623,7 +27623,6 @@ do
   case "$ac_config_target" in
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
-  "include/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
   "vmutils/Makefile" ) CONFIG_FILES="$CONFIG_FILES vmutils/Makefile" ;;
   "vm/Makefile" ) CONFIG_FILES="$CONFIG_FILES vm/Makefile" ;;
   "adapter/Makefile" ) CONFIG_FILES="$CONFIG_FILES adapter/Makefile" ;;

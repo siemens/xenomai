@@ -8,7 +8,10 @@ nodist_libuitron_a_SOURCES = \
 	sem.c \
 	task.c
 
-AM_CPPFLAGS = @XENO_USER_CFLAGS@ -D__XENO_UVM__
+AM_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/include \
+	-D__XENO_UVM__
 
 CLEANFILES = $(nodist_libuitron_a_SOURCES)
 
