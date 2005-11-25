@@ -2218,9 +2218,6 @@ static inline void xnpod_preempt_current_thread (xnsched_t *sched)
  *   ready to run thread.
  * - or, the running thread does not lead no more the ready threads
  * (round-robin).
- * - or, a real-time thread became ready to run, ending the
- *   scheduler idle state (i.e. The root thread was
- *   running so far).
  *
  * The nucleus implements a lazy rescheduling scheme so that most
  * of the services affecting the threads state MUST be followed by a
@@ -2232,7 +2229,7 @@ static inline void xnpod_preempt_current_thread (xnsched_t *sched)
  * priority thread than the current one became runnable for
  * instance. When all changes have been applied, the rescheduling
  * procedure is then called to consider those changes, and possibly
- * replace the current thread by another.
+ * replace the current thread by another one.
  *
  * As a notable exception to the previous principle however, every
  * action which ends up suspending or deleting the current thread
