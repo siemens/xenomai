@@ -120,10 +120,10 @@ AC_ARG_ENABLE(uvm-heapsz,
 	esac])
 AC_MSG_RESULT([$CONFIG_XENO_OPT_SYS_HEAPSZ Kb])
 
-dnl SEP enabling and TSC for x86 (default: off)
+dnl SEP (default: disabled) and TSC support for x86 (default: enabled)
 
 CONFIG_XENO_X86_SEP=
-CONFIG_X86_TSC=
+CONFIG_X86_TSC=y
 
 if test $XENO_TARGET_ARCH = i386; then
   AC_MSG_CHECKING(for x86 SEP instructions in syscalls)

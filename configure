@@ -20595,7 +20595,7 @@ echo "${ECHO_T}$CONFIG_XENO_OPT_SYS_HEAPSZ Kb" >&6
 
 
 CONFIG_XENO_X86_SEP=
-CONFIG_X86_TSC=
+CONFIG_X86_TSC=y
 
 if test $XENO_TARGET_ARCH = i386; then
   echo "$as_me:$LINENO: checking for x86 SEP instructions in syscalls" >&5

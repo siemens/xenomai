@@ -1,5 +1,7 @@
 2005-11-25  Philippe Gerum  <rpm@xenomai.org>
 
+	* configure.in: Enable x86-tsc by default.
+
 	* ksrc: Groundwork for backporting to 2.4/x86.
 
 	* ksrc/arch/generic/compat.c (kthread_trampoline): Fix
