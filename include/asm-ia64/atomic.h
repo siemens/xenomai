@@ -47,6 +47,7 @@ typedef atomic_t atomic_counter_t;
 
 typedef struct { volatile int counter; } atomic_counter_t;
 
+#define atomic_set(v,i)         (((v)->counter) = (i))
 #define atomic_read(v)	        ((v)->counter)
 #define atomic_inc(v)	        atomic_add(1, (v))
 #define atomic_dec_and_test(v)	(atomic_sub_return(1, (v)) == 0)
@@ -135,6 +136,7 @@ static inline void atomic_clear_mask(unsigned mask, unsigned long *addr)
     } while (atomic_cmpxchg8_acq(m, new, old) != old);
 }
 
+#define xnarch_atomic_set(v,i)                 atomic_set(pcounter)
 #define xnarch_atomic_inc(pcounter)            atomic_inc(pcounter)
 #define xnarch_atomic_dec_and_test(pcounter)   atomic_dec_and_test(pcounter)
 #define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask,pflags)
