@@ -212,7 +212,7 @@ static inline void xnarch_init_thread (xnarchtcb_t *tcb,
 
     ksp = (unsigned long *)((unsigned long)tcb->stackbase + tcb->stacksize - sizeof(regs));
     tcb->ksp = (unsigned long)ksp;
-    memcpy(ksp,&regs);
+    memcpy(ksp,&regs,sizeof(regs));
     
     tcb->entry = entry;
     tcb->cookie = cookie;

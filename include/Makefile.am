@@ -5,6 +5,8 @@ SUBDIRS = \
 	asm-i386 \
 	asm-ia64 \
 	asm-powerpc \
+	asm-uvm \
+	asm-sim \
 	native \
 	nucleus \
 	posix \
