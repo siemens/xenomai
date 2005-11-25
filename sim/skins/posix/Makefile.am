@@ -1,6 +1,6 @@
 vpath %.c $(top_srcdir)/../ksrc/skins/posix
 
-includedir = $(prefix)/include/sim
+includedir = $(prefix)/include/asm-sim
 
 CC = $(top_builddir)/gcic/gcic
 

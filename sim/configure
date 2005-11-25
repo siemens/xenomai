@@ -27030,8 +27030,8 @@ fi
 base=include
           ac_config_links="$ac_config_links include/xenomai:../$base"
 
-base=asm-mvm
-          ac_config_links="$ac_config_links include/asm/xenomai:include/$base"
+base=asm-sim
+          ac_config_links="$ac_config_links include/asm/xenomai:../include/$base"
 
 
 
@@ -27039,7 +27039,7 @@ base=asm-mvm
 subdirs="$subdirs tkimg"
 
 
-                                                                                                                                                                                    ac_config_files="$ac_config_files Makefile vmutils/Makefile vm/Makefile include/Makefile include/asm-mvm/Makefile adapter/Makefile skins/Makefile nucleus/Makefile skins/psos+/Makefile skins/vxworks/Makefile skins/vrtx/Makefile skins/uitron/Makefile skins/posix/Makefile skins/posix/testsuite/Makefile skins/native/Makefile skins/rtai/Makefile gcic/Makefile scope/Makefile"
+                                                                                                                                                                          ac_config_files="$ac_config_files Makefile include/Makefile vmutils/Makefile vm/Makefile adapter/Makefile skins/Makefile nucleus/Makefile skins/psos+/Makefile skins/vxworks/Makefile skins/vrtx/Makefile skins/uitron/Makefile skins/posix/Makefile skins/posix/testsuite/Makefile skins/native/Makefile skins/rtai/Makefile gcic/Makefile scope/Makefile"
 
 
 cat >confcache <<\_ACEOF
@@ -27623,10 +27623,9 @@ do
   case "$ac_config_target" in
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+  "include/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
   "vmutils/Makefile" ) CONFIG_FILES="$CONFIG_FILES vmutils/Makefile" ;;
   "vm/Makefile" ) CONFIG_FILES="$CONFIG_FILES vm/Makefile" ;;
-  "include/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
-  "include/asm-mvm/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-mvm/Makefile" ;;
   "adapter/Makefile" ) CONFIG_FILES="$CONFIG_FILES adapter/Makefile" ;;
   "skins/Makefile" ) CONFIG_FILES="$CONFIG_FILES skins/Makefile" ;;
   "nucleus/Makefile" ) CONFIG_FILES="$CONFIG_FILES nucleus/Makefile" ;;
@@ -27641,7 +27640,7 @@ do
   "gcic/Makefile" ) CONFIG_FILES="$CONFIG_FILES gcic/Makefile" ;;
   "scope/Makefile" ) CONFIG_FILES="$CONFIG_FILES scope/Makefile" ;;
   "include/xenomai" ) CONFIG_LINKS="$CONFIG_LINKS include/xenomai:../$base" ;;
-  "include/asm/xenomai" ) CONFIG_LINKS="$CONFIG_LINKS include/asm/xenomai:include/$base" ;;
+  "include/asm/xenomai" ) CONFIG_LINKS="$CONFIG_LINKS include/asm/xenomai:../include/$base" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   "include/xeno_config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS include/xeno_config.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5

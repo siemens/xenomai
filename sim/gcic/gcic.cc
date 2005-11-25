@@ -850,7 +850,7 @@ int main (int argc, char **argv)
 	incDir += Prefix;
 	incDir += "/include";
 
-	argStage0.append(new LString(incDir + "/sim"));
+	argStage0.append(new LString(incDir + "/asm-sim"));
 	argStage0.append(new LString(incDir));
 
 	for (LString *ls = sourceList.first();
