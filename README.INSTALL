@@ -113,12 +113,13 @@ not applicable, the binding type remains unspecified.
 1.3.2 Generic options
 ---------------------
 
-NAME                DESCRIPTION                      [BINDING,]DEFAULT
+NAME                 DESCRIPTION                     [BINDING,]DEFAULT
 
---prefix            Installation directory           /usr/xenomai
---enable-uvm        Build UVM support                enabled
---enable-debug      Enable debug symbols (-g)        disabled
---enable-smp        Enable SMP support               weak,disabled
+--prefix             Installation directory          /usr/xenomai
+--enable-uvm         Build UVM support               enabled
+--enable-uvm-heapsz  system heap size for UVMs       enabled
+--enable-debug       Enable debug symbols (-g)       disabled
+--enable-smp         Enable SMP support              weak,disabled
 
 1.3.3 Arch-specific options
 ---------------------------
