@@ -288,7 +288,7 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
            explicitely told the kernel that they would need to perform
            raw I/O ops. */
 
-	wrap_switch_iobitmap(outproc);
+	wrap_switch_iobitmap(outproc,rthal_processor_id());
     }
 
     stts();
