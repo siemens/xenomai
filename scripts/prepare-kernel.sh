@@ -217,6 +217,20 @@ case $linux_VERSION.$linux_PATCHLEVEL in
 wq
 EOF
     fi
+    defconfig_file=$linux_tree/arch/$linux_arch/defconfig
+    if test \! -r $defconfig_file; then
+       defconfig_file=.config
+    fi
+    if test -w $defconfig_file; then
+       if ! grep -q CONFIG_XENO $defconfig_file; then
+	   ed -s $linux_tree/arch/$linux_arch/defconfig > /dev/null <<EOF
+$
+r $xenomai_root/scripts/defconfig.frag
+.
+wq
+EOF
+       fi
+    fi
     if ! grep -q CONFIG_XENO $linux_tree/arch/$linux_arch/Makefile; then
 	ed -s $linux_tree/arch/$linux_arch/Makefile > /dev/null <<EOF
 $
