@@ -15,4 +15,6 @@ uninstall-local:
 	$(RM) $(DESTDIR)$(bindir)/xeno-config
 	$(RM) $(DESTDIR)$(bindir)/xeno-test
 
-EXTRA_DIST = xeno-info bootstrap prepare-kernel.sh Kconfig.frag Modules.frag $(wildcard postinstall.sh)
+EXTRA_DIST = xeno-info bootstrap prepare-kernel.sh \
+	Kconfig.frag Modules.frag defconfig.frag \
+	$(wildcard postinstall.sh)
