@@ -12,16 +12,26 @@ else
 
 # Makefile frag for Linux v2.4
 
-O_TARGET := xeno_rtdm.o
+O_TARGET := built-in.o
 
-obj-$(CONFIG_XENO_SKIN_RTDM) := core.o device.o drvlib.o module.o proc.o
+obj-$(CONFIG_XENO_SKIN_RTDM) := xeno_rtdm.o
 
-obj-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
+list-multi := xeno_rtdm.o
 
-export-objs := $(obj-y) $(obj-m)
+xeno_rtdm-objs := core.o device.o drvlib.o module.o proc.o
+
+opt_objs-y :=
+opt_objs-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
+
+xeno_rtdm-objs += $(opt_objs-y)
+
+export-objs := $(xeno_rtdm-objs)
 
 EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
+
+xeno_rtdm.o: $(xeno_rtdm-objs)
+	$(LD) -r -o $@ $(xeno_rtdm-objs)
 
 endif

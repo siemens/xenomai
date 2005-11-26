@@ -20,7 +20,7 @@ else
 
 USE_STANDARD_AS_RULE := true
 
-O_TARGET := xenomai.o
+O_TARGET := built-in.o
 
 obj-y := hal.o
 

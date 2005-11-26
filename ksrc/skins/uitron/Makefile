@@ -10,14 +10,21 @@ else
 
 # Makefile frag for Linux v2.4
 
-O_TARGET := xeno_uitron.o
+O_TARGET := built-in.o
 
-obj-$(CONFIG_XENO_SKIN_UITRON) := flag.o mbx.o module.o sem.o task.o
+obj-$(CONFIG_XENO_SKIN_UITRON) := xeno_uitron.o
 
-export-objs := $(obj-y) $(obj-m)
+list-multi := xeno_uitron.o
+
+xeno_uitron-objs := flag.o mbx.o module.o sem.o task.o
+
+export-objs := $(xeno_uitron-objs)
 
 EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
+
+xeno_uitron.o: $(xeno_uitron-objs)
+	$(LD) -r -o $@ $(xeno_uitron-objs)
 
 endif

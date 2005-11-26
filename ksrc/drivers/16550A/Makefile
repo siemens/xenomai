@@ -10,14 +10,21 @@ else
 
 # Makefile frag for Linux v2.4
 
-O_TARGET := xeno_16550A.o
+O_TARGET := built-in.o
 
-obj-$(CONFIG_XENO_DRIVERS_16550A) := 16550A.o
+obj-$(CONFIG_XENO_SKIN_16550A) := xeno_16550A.o
 
-export-objs := $(obj-y) $(obj-m)
+list-multi := xeno_16550A.o
+
+xeno_16550A-objs := 16550A.o
+
+export-objs := $(xeno_16550A-objs)
 
 EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
+
+xeno_16550A.o: $(xeno_16550A-objs)
+	$(LD) -r -o $@ $(xeno_16550A-objs)
 
 endif
