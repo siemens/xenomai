@@ -53,7 +53,7 @@ static __attribute__((constructor)) void __init_rtdm_interface(void)
 	case -ENOSYS:
 	case -ESRCH:
 
-	    fprintf(stderr,"Xenomai: RTDM skin or CONFIG_XENO_PERVASIVE disabled.\n");
+	    fprintf(stderr,"Xenomai: RTDM skin or CONFIG_XENO_OPT_PERVASIVE disabled.\n");
 	    fprintf(stderr,"(modprobe xeno_rtdm.ko?)\n");
 	    exit(1);
 

@@ -64,7 +64,7 @@ static __attribute__((constructor)) void __init_xeno_interface(void)
 	case -ENOSYS:
 	case -ESRCH:
 
-	    fprintf(stderr,"Xenomai: native skin or CONFIG_XENO_PERVASIVE disabled.\n");
+	    fprintf(stderr,"Xenomai: native skin or CONFIG_XENO_OPT_PERVASIVE disabled.\n");
 	    fprintf(stderr,"(modprobe xeno_native.ko?)\n");
 	    exit(1);
 
