@@ -194,7 +194,10 @@ target_alias = @target_alias@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
-EXTRA_DIST = xeno-info bootstrap prepare-kernel.sh Kconfig.frag Modules.frag $(wildcard postinstall.sh)
+EXTRA_DIST = xeno-info bootstrap prepare-kernel.sh \
+	Kconfig.frag Modules.frag defconfig.frag \
+	$(wildcard postinstall.sh)
+
 all: all-am
 
 .SUFFIXES:

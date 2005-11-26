@@ -139,7 +139,10 @@ if test -r $linux_tree/include/linux/ipipe.h \
 else
    if test x$adeos_patch = x; then
       default_adeos_patch=`( ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-ipipe-$linux_VERSION.$linux_PATCHLEVEL*|sort -r; \
-		             ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-linux-$linux_VERSION.$linux_PATCHLEVEL*|sort -r) | head -1`
+		             ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-linux-$linux_VERSION.$linux_PATCHLEVEL*|sort -r) 2>/dev/null | head -1`
+   fi
+   if test x$default_adeos_patch = x; then
+      default_adeos_patch=/dev/null
    fi
    while test x$adeos_patch = x; do
       echo -n "Adeos patch [default $default_adeos_patch]: "
@@ -217,20 +220,18 @@ case $linux_VERSION.$linux_PATCHLEVEL in
 wq
 EOF
     fi
-    defconfig_file=$linux_tree/arch/$linux_arch/defconfig
-    if test \! -r $defconfig_file; then
-       defconfig_file=.config
-    fi
-    if test -w $defconfig_file; then
-       if ! grep -q CONFIG_XENO $defconfig_file; then
-	   ed -s $linux_tree/arch/$linux_arch/defconfig > /dev/null <<EOF
+    for defconfig_file in .config $linux_tree/arch/$linux_arch/defconfig; do
+       if test -w $defconfig_file; then
+          if ! grep -q CONFIG_XENO $defconfig_file; then
+	      ed -s $defconfig_file > /dev/null <<EOF
 $
 r $xenomai_root/scripts/defconfig.frag
 .
 wq
 EOF
+          fi
        fi
-    fi
+    done
     if ! grep -q CONFIG_XENO $linux_tree/arch/$linux_arch/Makefile; then
 	ed -s $linux_tree/arch/$linux_arch/Makefile > /dev/null <<EOF
 $
