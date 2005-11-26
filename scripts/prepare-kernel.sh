@@ -224,7 +224,7 @@ a
 
 ifdef CONFIG_XENOMAI
 SUBDIRS += arch/$linux_arch/xenomai
-DRIVERS += arch/$linux_arch/xenomai/xenomai.o
+DRIVERS += arch/$linux_arch/xenomai/built-in.o
 endif
 .
 wq
@@ -247,7 +247,7 @@ EOF
 i
 mod-subdirs := xenomai
 subdir-\$(CONFIG_XENOMAI) += xenomai
-obj-\$(CONFIG_XENOMAI) += xenomai/arch/generic/xenomai.o
+obj-\$(CONFIG_XENOMAI) += xenomai/arch/generic/built-in.o
 
 .
 wq

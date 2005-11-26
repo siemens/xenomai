@@ -10,14 +10,21 @@ else
 
 # Makefile frag for Linux v2.4
 
-O_TARGET := xeno_uvm.o
+O_TARGET := built-in.o
 
-obj-$(CONFIG_XENO_SKIN_UVM) := module.o syscall.o
+obj-$(CONFIG_XENO_SKIN_UVM) := xeno_uvm.o
 
-export-objs := $(obj-y) $(obj-m)
+list-multi := xeno_uvm.o
+
+xeno_uvm-objs := module.o syscall.o
+
+export-objs := $(xeno_uvm-objs)
 
 EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
+
+xeno_uvm.o: $(xeno_uvm-objs)
+	$(LD) -r -o $@ $(xeno_uvm-objs)
 
 endif

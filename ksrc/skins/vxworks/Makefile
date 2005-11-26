@@ -10,15 +10,22 @@ else
 
 # Makefile frag for Linux v2.4
 
-O_TARGET := xeno_vxworks.o
+O_TARGET := built-in.o
 
-obj-$(CONFIG_XENO_SKIN_VXWORKS) :=  errnoLib.o intLib.o kernelLib.o module.o msgQLib.o semLib.o \
-	sysLib.o taskHookLib.o taskInfo.o taskLib.o tickLib.o wdLib.o
+obj-$(CONFIG_XENO_SKIN_VXWORKS) := xeno_vxworks.o
 
-export-objs := $(obj-y) $(obj-m)
+list-multi := xeno_vxworks.o
+
+xeno_vxworks-objs := errnoLib.o intLib.o kernelLib.o module.o msgQLib.o semLib.o \
+		sysLib.o taskHookLib.o taskInfo.o taskLib.o tickLib.o wdLib.o
+
+export-objs := $(xeno_vxworks-objs)
 
 EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
+
+xeno_vxworks.o: $(xeno_vxworks-objs)
+	$(LD) -r -o $@ $(xeno_vxworks-objs)
 
 endif

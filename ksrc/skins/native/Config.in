@@ -9,7 +9,7 @@ if [ "$CONFIG_XENO_SKIN_NATIVE" != "n" ]; then
 	comment 'Native interface options'
 	bool 'Registry support' CONFIG_XENO_OPT_NATIVE_REGISTRY
 	int 'Number of registry slots' CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS 512
-	bool 'Message pipes' CONFIG_XENO_OPT_NATIVE_PIPE
+	dep_bool 'Message pipes' CONFIG_XENO_OPT_NATIVE_PIPE $CONFIG_XENO_OPT_PIPE
 	if [ "$CONFIG_XENO_OPT_NATIVE_PIPE" != "n" ]; then
 		int 'Bytes in buffer space' CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ 4096
 	fi

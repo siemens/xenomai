@@ -32,36 +32,34 @@ else
 
 # Makefile frag for Linux v2.4
 
-O_TARGET := xeno_native.o
+O_TARGET := built-in.o
 
-obj-$(CONFIG_XENO_OPT_NUCLEUS) := module.o task.o timer.o
+obj-$(CONFIG_XENO_OPT_NUCLEUS) := xeno_native.o
 
-obj-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
+xeno_native-objs := module.o task.o timer.o
 
-obj-$(CONFIG_XENO_OPT_NATIVE_REGISTRY) += registry.o
+opt_objs-y :=
+opt_objs-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
+opt_objs-$(CONFIG_XENO_OPT_NATIVE_REGISTRY) += registry.o
+opt_objs-$(CONFIG_XENO_OPT_NATIVE_PIPE) += pipe.o
+opt_objs-$(CONFIG_XENO_OPT_NATIVE_SEM) += sem.o
+opt_objs-$(CONFIG_XENO_OPT_NATIVE_EVENT) += event.o
+opt_objs-$(CONFIG_XENO_OPT_NATIVE_MUTEX) += mutex.o
+opt_objs-$(CONFIG_XENO_OPT_NATIVE_COND) += cond.o
+opt_objs-$(CONFIG_XENO_OPT_NATIVE_QUEUE) += queue.o
+opt_objs-$(CONFIG_XENO_OPT_NATIVE_HEAP) += heap.o
+opt_objs-$(CONFIG_XENO_OPT_NATIVE_ALARM) += alarm.o
+opt_objs-$(CONFIG_XENO_OPT_NATIVE_INTR) += intr.o
 
-obj-$(CONFIG_XENO_OPT_NATIVE_PIPE) += pipe.o
+xeno_native-objs += $(opt_objs-y)
 
-obj-$(CONFIG_XENO_OPT_NATIVE_SEM) += sem.o
-
-obj-$(CONFIG_XENO_OPT_NATIVE_EVENT) += event.o
-
-obj-$(CONFIG_XENO_OPT_NATIVE_MUTEX) += mutex.o
-
-obj-$(CONFIG_XENO_OPT_NATIVE_COND) += cond.o
-
-obj-$(CONFIG_XENO_OPT_NATIVE_QUEUE) += queue.o
-
-obj-$(CONFIG_XENO_OPT_NATIVE_HEAP) += heap.o
-
-obj-$(CONFIG_XENO_OPT_NATIVE_ALARM) += alarm.o
-
-obj-$(CONFIG_XENO_OPT_NATIVE_INTR) += intr.o
-
-export-objs := $(obj-y) $(obj-m)
+export-objs := $(xeno_native-objs)
 
 EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
+
+xeno_native.o: $(xeno_native-objs)
+	$(LD) -r -o $@ $(xeno_native-objs)
 
 endif

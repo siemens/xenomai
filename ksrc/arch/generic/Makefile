@@ -10,7 +10,7 @@ else
 
 # Makefile frag for Linux v2.4
 
-O_TARGET := xenomai.o
+O_TARGET := built-in.o
 
 obj-y := hal.o compat.o
 
