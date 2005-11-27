@@ -66,7 +66,6 @@ struct sched_param {
 #define pthread_cond_wait pse51_cond_wait
 #define signal pse51_signal
 #define pthread_cond_broadcast pse51_cond_broadcast
-#define sem_init pse51_sem_init
 #define sem_destroy pse51_sem_destroy
 #define sem_post pse51_sem_post
 #define sem_trywait pse51_sem_trywait

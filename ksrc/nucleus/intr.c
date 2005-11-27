@@ -308,8 +308,7 @@ int xnintr_disable (xnintr_t *intr)
 }
 
 /*! 
- * xnarch_cpumask_t xnintr_affinity (xnintr_t *intr,
-                                     xnarch_cpumask_t cpumask)
+ * \fn xnarch_cpumask_t xnintr_affinity (xnintr_t *intr, xnarch_cpumask_t cpumask)
  * \brief Set interrupt's processor affinity.
  *
  * Causes the IRQ associated with the interrupt object @a intr to be

@@ -228,7 +228,7 @@ xnarch_read_environ (const char *name, const char **ptype, void *pvar)
     return 1;
 }
 
-static int inline xnarch_lock_irq (void)
+static inline int xnarch_lock_irq (void)
 {
     return xnarch_atomic_xchg(&uvm_irqlock,1);
 }
