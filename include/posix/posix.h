@@ -373,9 +373,12 @@ typedef struct pse51_sem {
 
 BEGIN_C_DECLS
 
-int sem_init(sem_t *sem,
-	     int pshared,
-	     unsigned int value);
+#undef sem_init
+#define sem_init(s,p,v) pse51_sem_init((s),(p),(v))
+
+int pse51_sem_init(sem_t *sem,
+                   int pshared,
+                   unsigned int value);
 
 int sem_destroy(sem_t *sem);
 

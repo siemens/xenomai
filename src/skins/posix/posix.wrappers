@@ -3,7 +3,6 @@ pthread_detach
 pthread_setschedparam
 pthread_yield
 sched_yield
-sem_init
 sem_destroy
 sem_post
 sem_timedwait

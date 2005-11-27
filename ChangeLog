@@ -1,3 +1,19 @@
+2005-11-27  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* include/Makefile.am (nodist_include_HEADERS): Install
+	xeno_config.h in include zone.
+
+	* Makefile.am (ACLOCAL_AMFLAGS): Have maintainer mode work.
+
+	* ksrc/nucleus/intr.c: Fix doxygen comment.
+
+	* include/vxworks/defs.h (wind_errnoset): Handle correctly the
+	case wind_current_task() == NULL.
+
+	* ksrc/skins/posix/sem.c (pse51_sem_init): Avoid clash between
+	POSIX skin sem_init function and SYSV semaphores initialization
+	routine.
+
 2005-11-25  Jan Kiszka <jan.kiszka@web.de>
 
 	* ksrc/skins/native/{pipe.c,syscall.c}, src/skins/native/pipe.c,

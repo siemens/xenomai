@@ -214,7 +214,7 @@ int sem_getvalue (sem_t *sem, int *value)
     return 0;
 }
 
-int sem_init (sem_t *sem, int pshared, unsigned int value)
+int pse51_sem_init (sem_t *sem, int pshared, unsigned int value)
 
 {
     spl_t s;
@@ -448,7 +448,7 @@ void pse51_sem_pkg_cleanup (void)
     xnlock_put_irqrestore(&nklock, s);
 }
 
-EXPORT_SYMBOL(sem_init);
+EXPORT_SYMBOL(pse51_sem_init);
 EXPORT_SYMBOL(sem_destroy);
 EXPORT_SYMBOL(sem_post);
 EXPORT_SYMBOL(sem_trywait);

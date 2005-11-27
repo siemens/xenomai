@@ -55,7 +55,11 @@ typedef struct wind_task wind_task_t;
 {                                                                       \
     if(!xnpod_asynch_p() &&                                             \
        xnthread_test_flags(xnpod_current_thread(), IS_WIND_TASK))       \
-        wind_current_task()->errorStatus = value;                       \
+        {                                                               \
+        wind_task_t *_cur = wind_current_task();                        \
+        if (_cur)                                                       \
+            _cur->errorStatus = value;                                  \
+        }                                                               \
 } while(0)
 
 
