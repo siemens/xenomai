@@ -23,9 +23,9 @@
  *   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <linux/version.h>
 #include <linux/pci.h>
 #include <linux/pci_ids.h>
 #include <linux/reboot.h>
@@ -57,6 +57,11 @@ pci.ids database, ICH5-M ?)
 */
 
 #define DEVFN        0xf8 /* device 31, function 0 */
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
+#define pci_get_device(v,d,f) pci_find_device((v),(d),(f))
+#define pci_dev_put(d)        do { } while(0)
+#endif
 
 #ifdef CONFIG_XENO_HW_SMI_WORKAROUND
     
