@@ -113,7 +113,7 @@ not applicable, the binding type remains unspecified.
 1.3.2 Generic options
 ---------------------
 
-NAME                 DESCRIPTION                     [BINDING,]DEFAULT
+NAME                 DESCRIPTION                     [BINDING,]DEFAULT(*)
 
 --prefix             Installation directory          /usr/xenomai
 --enable-uvm         Build UVM support               enabled
@@ -124,11 +124,14 @@ NAME                 DESCRIPTION                     [BINDING,]DEFAULT
 1.3.3 Arch-specific options
 ---------------------------
 
-NAME                DESCRIPTION                      [BINDING,]DEFAULT
+NAME                DESCRIPTION                      [BINDING,]DEFAULT(*)
 
 --enable-x86-sep    Enable x86 SEP instructions      strong,disabled
                     for issuing syscalls
 --enable-x86-tsc    Enable x86 TSC for timings       strong,enabled
+
+(*) Each option enabled by default can be forcibly disabled by passing
+--disable-<option> to the configure script.
 
 2. Typical installation procedure
 ---------------------------------
@@ -148,7 +151,7 @@ $ cd $linux_tree
 $ make xconfig/gconfig/menuconfig # select the kernel and Xenomai options
 $ make bzImage modules # then install as needed
 $ mkdir $build_root && cd $build_root
-$ $xenomai_root/configure --enable-x86-sep --enable-x86-tsc
+$ $xenomai_root/configure --enable-x86-sep
 $ make install
 
 Once the compilation has completed, /usr/xenomai should contain the
