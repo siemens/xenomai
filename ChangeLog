@@ -1,3 +1,7 @@
+2005-11-28  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-i386/features.h: Fix mandatory feature set.
+
 2005-11-27  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* include/Makefile.am (nodist_include_HEADERS): Install

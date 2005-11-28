@@ -27,7 +27,8 @@
  * The kernel will deal dynamically with the actual SEP support
  * whether the CPU provides it or not; we just need to make sure that
  * VSYSCALL is supported by the current kernel here. The user-space
- * side extracts this information from the xeno_config.h header.
+ * side extracts this information from the xeno_config.h header
+ * included from asm-generic/xenomai/features.h.
  */
 #define CONFIG_XENO_X86_SEP  1
 #endif /* KERNEL_VERSION >= 2.6.0 */
@@ -51,12 +52,12 @@
 #define __xn_feat_x86_sep_mask 0
 #endif
 
-#define XENOMAI_FEAT_DEP  (__xn_feat_generic_mask | \
-			   __xn_feat_x86_sep_mask | \
+#define XENOMAI_FEAT_DEP  (__xn_feat_generic_mask| \
+			   __xn_feat_x86_sep_mask| \
 			   __xn_feat_x86_tsc_mask)
 
-#define XENOMAI_FEAT_MAN  (__xn_feat_x86_sep_mask | \
-			   __xn_feat_x86_tsc_mask)
+#define XENOMAI_FEAT_MAN  (__xn_feat_x86_sep| \
+			   __xn_feat_x86_tsc)
 
 static inline int check_abi_revision(unsigned long abirev)
 {
