@@ -175,6 +175,8 @@ unsigned long rthal_timer_calibrate (void)
 }
 
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
+#include <asm/nmi.h>
+
 unsigned long rthal_maxlat_tsc;
 EXPORT_SYMBOL(rthal_maxlat_tsc);
 
