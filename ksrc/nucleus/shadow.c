@@ -1087,6 +1087,15 @@ static void exec_nucleus_syscall (int muxop, struct pt_regs *regs)
 					       __xn_reg_arg2(regs)));
 	    break;
 		
+	case __xn_sys_arch:
+
+	    /* A special syscall channel, available for implementing
+	       arch-dependent system calls (see asm-<arch>/system.h
+	       for local implementations). */
+
+	    __xn_status_return(regs,xnarch_local_syscall(regs));
+	    break;
+		
 	default:
 
 	    printk(KERN_WARNING "Xenomai: Unknown nucleus syscall #%d\n",muxop);
@@ -1156,6 +1165,12 @@ static inline int do_hisyscall_event (unsigned event, unsigned domid, void *data
 	    else
 		__xn_error_return(regs,-EINVAL);
 
+	    return RTHAL_EVENT_STOP;
+
+	case __xn_sys_arch:
+
+	    /* We don't want to switch mode here. */
+	    __xn_status_return(regs,xnarch_local_syscall(regs));
 	    return RTHAL_EVENT_STOP;
 
 	case __xn_sys_bind:

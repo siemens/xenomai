@@ -512,6 +512,8 @@ do { \
 
 #ifdef XENO_SHADOW_MODULE
 
+#include <asm/xenomai/syscall.h>
+
 static inline void xnarch_init_shadow_tcb (xnarchtcb_t *tcb,
                                            struct xnthread *thread,
                                            const char *name)
@@ -590,6 +592,11 @@ static inline void xnarch_unlock_xirqs (rthal_pipeline_stage_t *ipd, int cpuid)
         }
 }
 
+static inline int xnarch_local_syscall (struct pt_regs *regs)
+{
+    return -ENOSYS;
+}
+
 #endif /* XENO_SHADOW_MODULE */
 
 #ifdef XENO_TIMER_MODULE
@@ -602,9 +609,11 @@ static inline void xnarch_program_timer_shot (unsigned long delay)
        handler would simply occur after 4 billions ticks. */
     rthal_timer_program_shot(rthal_imuldiv(delay,RTHAL_TIMER_FREQ,RTHAL_CPU_FREQ));
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-    extern unsigned long rthal_maxlat_tsc;
-    if (delay <= (ULONG_MAX - rthal_maxlat_tsc))
-        rthal_nmi_arm(delay + rthal_maxlat_tsc);
+    {
+        extern unsigned long rthal_maxlat_tsc;
+        if (delay <= (ULONG_MAX - rthal_maxlat_tsc))
+            rthal_nmi_arm(delay + rthal_maxlat_tsc);
+    }
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 }
 

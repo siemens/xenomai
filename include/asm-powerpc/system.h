@@ -563,6 +563,11 @@ static inline void xnarch_unlock_xirqs (rthal_pipeline_stage_t *ipd, int cpuid)
     rthal_unlock_irq(ipd,RTHAL_TIMER_IRQ);
 }
 
+static inline int xnarch_local_syscall (struct pt_regs *regs)
+{
+    return -ENOSYS;
+}
+
 #endif /* XENO_SHADOW_MODULE */
 
 #ifdef XENO_TIMER_MODULE

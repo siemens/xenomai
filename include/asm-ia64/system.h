@@ -396,6 +396,8 @@ static inline void xnarch_init_tcb (xnarchtcb_t *tcb)
 
 #ifdef XENO_SHADOW_MODULE
 
+#include <asm/xenomai/syscall.h>
+
 static inline void xnarch_init_shadow_tcb (xnarchtcb_t *tcb,
                                            struct xnthread *thread,
                                            const char *name)
@@ -473,6 +475,11 @@ static inline void xnarch_unlock_xirqs (adomain_t *adp, int cpuid)
                 rthal_unlock_irq(adp,irq);
             }
         }
+}
+
+static inline int xnarch_local_syscall (struct pt_regs *regs)
+{
+    return -ENOSYS;
 }
 
 #endif /* XENO_SHADOW_MODULE */
