@@ -81,8 +81,8 @@ config XENO_HW_NMI_DEBUG_LATENCY
 
 config XENO_HW_NMI_DEBUG_LATENCY_MAX
         depends XENO_HW_NMI_DEBUG_LATENCY
-        string "NMI watchdog latency threshold (us)"
-        default "100"
+        int "NMI watchdog latency threshold (us)"
+        default 100
         help
         When the timer interrupt latency goes above this threshold, the
         NMI watchdog pulls the handbrake.

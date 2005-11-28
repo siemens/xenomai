@@ -1,4 +1,15 @@
+2005-11-28  Jan Kiszka <jan.kiszka@web.de>
+ 
+ 	* ksrc/arch/i386/Kconfig: Fixed XENO_HW_NMI_DEBUG_LATENCY_MAX
+ 	kconfig type.
+ 
+ 	* include/asm-i386/system.h, ksrc/arch/i386/hal.c: Fixed
+ 	harmless compiler warnings.
+ 
 2005-11-28  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (exec_nucleus_syscall): Plan for local
+	arch-dependent syscalls.
 
 	* ksrc: Finalize backport to 2.4/x86.
 
