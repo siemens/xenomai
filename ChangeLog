@@ -1,5 +1,7 @@
 2005-11-28  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc: Finalize backport to 2.4/x86.
+
 	* include/asm-i386/features.h: Fix mandatory feature set.
 
 2005-11-27  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
