@@ -96,6 +96,8 @@ typedef atomic_t atomic_counter_t;
 
 typedef struct { volatile int counter; } atomic_counter_t;
 
+#define xnarch_atomic_set(v,i)  (((v)->counter) = (i))
+
 /*
  * Atomic exchange
  *
