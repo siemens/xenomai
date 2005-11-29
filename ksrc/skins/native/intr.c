@@ -198,6 +198,10 @@ static RT_OBJECT_PROCNODE __intr_pnode = {
  * - Kernel-based task
  *
  * Rescheduling: possible.
+ *
+ * @note The interrupt source associated to the interrupt descriptor
+ * remains masked upon creation. rt_intr_enable() should be called for
+ * the new interrupt object to unmask it.
  */
 
 int rt_intr_create (RT_INTR *intr,
@@ -554,6 +558,10 @@ int rt_intr_inquire (RT_INTR *intr,
  * - User-space task
  *
  * Rescheduling: possible.
+ *
+ * @note The interrupt source associated to the interrupt descriptor
+ * remains masked upon creation. rt_intr_enable() should be called for
+ * the new interrupt object to unmask it.
  */
 
 /**
