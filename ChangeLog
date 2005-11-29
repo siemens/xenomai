@@ -1,3 +1,16 @@
+2005-11-29  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/arch/i386/hal.c (die_nmi): Provide replacement for Linux
+	2.6 functions missing in Linux 2.4.
+
+	* ksrc/arch/i386/nmi.c: Provide replacement for Linux 2.6
+	functions missing in Linux 2.4.
+
+2005-11-28  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/arch/i386/smi.c (pci_get_device): Fix compilation for 2.4
+	kernels.
+
 2005-11-28  Jan Kiszka <jan.kiszka@web.de>
  
  	* ksrc/arch/i386/Kconfig: Fixed XENO_HW_NMI_DEBUG_LATENCY_MAX

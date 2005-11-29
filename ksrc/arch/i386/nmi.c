@@ -5,7 +5,8 @@
  *   NMI watchdog for x86.
  *
  *   Adapted by Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net> from
- *   Linux NMI watchdog.
+ *   linux/arch/i386/kernel/nmi.c, credited to :
+ *   Ingo Molnar, Mikael Pettersson, Pavel Machek.
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -24,8 +25,11 @@
  */
 
 #include <linux/module.h>
+#include <linux/version.h>
 #include <linux/nmi.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 #include <asm/nmi.h>
+#endif /* Linux < 2.6 */
 #include <asm/msr.h>
 #include <asm/xenomai/hal.h>
 
@@ -55,17 +59,27 @@ typedef struct {
     unsigned long perfctr_msr;
     unsigned long long next_linux_check;
     unsigned int p4_cccr_val;
-
-    /* Linux NMI watchdog data. */
-    unsigned last_irq_sums;
-    unsigned alert_counter;
 } rthal_nmi_wd_t ____cacheline_aligned;
 
 static rthal_nmi_wd_t rthal_nmi_wds[NR_CPUS];
 static unsigned long rthal_nmi_perfctr_msr;
 static unsigned int rthal_nmi_p4_cccr_val;
 static void (*rthal_nmi_emergency) (struct pt_regs *);
-static void (*rthal_saved_tick) (struct pt_regs *);
+static void (*rthal_linux_nmi_tick) (struct pt_regs *);
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
+#define MSR_P4_IQ_CCCR0		0x36C
+#define nmi_active (nmi_watchdog != NMI_NONE)
+static inline void wrmsrl (unsigned long msr, unsigned long long val)
+{
+	unsigned long lo, hi;
+	lo = (unsigned long) val;
+	hi = val >> 32;
+	wrmsr (msr, lo, hi);
+}
+#else  /* Linux >= 2.6 */
+extern int nmi_active;
+#endif  /* Linux >= 2.6 */
 
 static void rthal_touch_nmi_watchdog (void)
 {
@@ -79,7 +93,6 @@ static void rthal_touch_nmi_watchdog (void)
 
         wd->perfctr_msr = rthal_nmi_perfctr_msr;
         wd->p4_cccr_val = rthal_nmi_p4_cccr_val;
-        wd->alert_counter = 0;
         wd->armed = 0;
         wd->next_linux_check = next_linux_check;
     }
@@ -97,20 +110,8 @@ static void rthal_nmi_watchdog_tick (struct pt_regs *regs)
     now = rthal_rdtsc();
 
     if ((long long) (now - wd->next_linux_check) >= 0) {
-        int sum = per_cpu(irq_stat, cpu).apic_timer_irqs;
 
-        if (wd->last_irq_sums == sum) {
-            /*
-             * Ayiee, looks like this CPU is stuck ...
-             * wait a few IRQs (5 seconds) before doing the oops ...
-             */
-            wd->alert_counter++;
-            if (wd->alert_counter == 5)
-                die_nmi(regs, "NMI Watchdog detected LOCKUP");
-        } else {
-            wd->last_irq_sums = sum;
-            wd->alert_counter = 0;
-        }
+        rthal_linux_nmi_tick(regs);
 
         do {
             wd->next_linux_check += RTHAL_CPU_FREQ;
@@ -140,12 +141,10 @@ static void rthal_nmi_watchdog_tick (struct pt_regs *regs)
 
 int rthal_nmi_request (void (*emergency)(struct pt_regs *))
 {
-    extern int nmi_active;
-    
     if (!nmi_active || !nmi_watchdog_tick)
         return -ENODEV;
 
-    if (rthal_saved_tick)
+    if (rthal_linux_nmi_tick)
         return -EBUSY;
 
     switch (boot_cpu_data.x86_vendor) {
@@ -175,7 +174,7 @@ int rthal_nmi_request (void (*emergency)(struct pt_regs *))
 
     rthal_nmi_emergency = emergency;
     rthal_touch_nmi_watchdog();
-    rthal_saved_tick = nmi_watchdog_tick;
+    rthal_linux_nmi_tick = nmi_watchdog_tick;
     wmb();
     nmi_watchdog_tick = &rthal_nmi_watchdog_tick;
     return 0;
@@ -183,14 +182,14 @@ int rthal_nmi_request (void (*emergency)(struct pt_regs *))
 
 void rthal_nmi_release (void)
 {
-    if (!rthal_saved_tick)
+    if (!rthal_linux_nmi_tick)
         return;
 
     wrmsrl(rthal_nmi_perfctr_msr, 0 - RTHAL_CPU_FREQ);
     touch_nmi_watchdog();
     wmb();
-    nmi_watchdog_tick = rthal_saved_tick;
-    rthal_saved_tick = NULL;
+    nmi_watchdog_tick = rthal_linux_nmi_tick;
+    rthal_linux_nmi_tick = NULL;
 }
 
 void rthal_nmi_arm (unsigned long delay)
