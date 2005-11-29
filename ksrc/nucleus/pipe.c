@@ -423,7 +423,6 @@ ssize_t xnpipe_recv (int minor,
     xnpipe_state_t *state;
     xnthread_t *thread;
     xnholder_t *holder;
-    xnticks_t stime;
     ssize_t ret;
     spl_t s;
 
@@ -443,31 +442,12 @@ ssize_t xnpipe_recv (int minor,
 	goto unlock_and_exit;
 	}
 
-    stime = xnpod_get_time();
-
     while ((holder = getq(&state->inq)) == NULL)
 	{
 	if (timeout == XN_NONBLOCK)
 	    {
 	    ret = -EWOULDBLOCK;
 	    goto unlock_and_exit;
-	    }
-
-	if (timeout != XN_INFINITE)
-	    {
-	    xnticks_t now = xnpod_get_time();
-
-	    /* Compute the remaining time until the timeout
-	       expires, bailing out if it has just elapsed. */
-
-	    if (stime + timeout >= now)
-		{
-		ret = -ETIMEDOUT;
-		goto unlock_and_exit;
-		}
-
-	    timeout -= (now - stime);
-	    stime = now;
 	    }
 
 	xnsynch_sleep_on(&state->synchbase,timeout);
