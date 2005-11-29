@@ -63,6 +63,7 @@ config XENO_HW_SCHED_LATENCY
 menu "NMI watchdog"
 
 config XENO_HW_NMI_DEBUG_LATENCY
+        depends on X86_LOCAL_APIC
         bool "Enable NMI watchdog"
         default n
         help
