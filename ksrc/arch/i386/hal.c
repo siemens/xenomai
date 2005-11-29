@@ -11,6 +11,8 @@
  *
  *   RTAI/x86 rewrite over Adeos: \n
  *   Copyright &copy; 2002 Philippe Gerum.
+ *   NMI watchdog, SMI workaround: \n
+ *   Copyright &copy; 2004 Gilles Chanteperdrix.
  *
  *   Xenomai is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU General Public License as

@@ -2,11 +2,12 @@
  *   @ingroup hal
  *   @file
  *
- *   NMI watchdog for x86.
+ *   NMI watchdog for x86, from linux/arch/i386/kernel/nmi.c
  *
- *   Adapted by Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net> from
- *   linux/arch/i386/kernel/nmi.c, credited to :
+ *   Original authors:
  *   Ingo Molnar, Mikael Pettersson, Pavel Machek.
+ *
+ *   Adaptation to Xenomai by Gilles Chanteperdrix
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
