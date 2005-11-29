@@ -25,8 +25,8 @@ diff -uNrp 2.6.14/include/linux/hardirq.h 2.6.14-ipipe/include/linux/hardirq.h
  static inline void account_user_vtime(struct task_struct *tsk)
 diff -uNrp 2.6.14/include/linux/ipipe.h 2.6.14-ipipe/include/linux/ipipe.h
 --- 2.6.14/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/include/linux/ipipe.h	2005-11-02 15:24:34.000000000 +0100
-@@ -0,0 +1,748 @@
++++ 2.6.14-ipipe/include/linux/ipipe.h	2005-11-29 11:55:00.000000000 +0100
+@@ -0,0 +1,757 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -72,7 +72,6 @@ diff -uNrp 2.6.14/include/linux/ipipe.h 2.6.14-ipipe/include/linux/ipipe.h
 +
 +/* Global domain flags */
 +#define IPIPE_SPRINTK_FLAG	0	/* Synchronous printk() allowed */
-+#define IPIPE_PPRINTK_FLAG	1	/* Asynchronous printk() request pending */
 +
 +#define IPIPE_STALL_FLAG	0	/* Stalls a pipeline stage */
 +#define IPIPE_SYNC_FLAG		1	/* The interrupt syncer is running for the domain */
@@ -241,13 +240,23 @@ diff -uNrp 2.6.14/include/linux/ipipe.h 2.6.14-ipipe/include/linux/ipipe.h
 +
 +#ifdef __RAW_SPIN_LOCK_UNLOCKED
 +#define spin_lock_hw(x)			_raw_spin_lock(x)
-+#define spin_unlock_hw(x)		_raw_spin_unlock(x)
 +#define spin_trylock_hw(x)		_raw_spin_trylock(x)
++#define spin_unlock_hw(x)		_raw_spin_unlock(x)
++#if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
 +#define write_lock_hw(x)		_raw_write_lock(x)
-+#define write_unlock_hw(x)		_raw_write_unlock(x)
 +#define write_trylock_hw(x)		_raw_write_trylock(x)
++#define write_unlock_hw(x)		_raw_write_unlock(x)
 +#define read_lock_hw(x)			_raw_read_lock(x)
++#define read_trylock_hw(x)		_raw_read_trylock(x)
 +#define read_unlock_hw(x)		_raw_read_unlock(x)
++#else /* UP non-debug */
++#define write_lock_hw(lock)		do { (void)(lock); } while (0)
++#define write_trylock_hw(lock)		({ (void)(lock); 1; })
++#define write_unlock_hw(lock)		do { (void)(lock); } while (0)
++#define read_lock_hw(lock)		do { (void)(lock); } while (0)
++#define read_trylock_hw(lock)		({ (void)(lock); 1; })
++#define read_unlock_hw(lock)		do { (void)(lock); } while (0)
++#endif /* CONFIG_SMP || CONFIG_DEBUG_SPINLOCK */
 +#else	/* !__RAW_SPIN_LOCK_UNLOCKED */
 +#define spin_lock_hw(x)			_spin_lock(x)
 +#define spin_unlock_hw(x)		_spin_unlock(x)
@@ -881,7 +890,7 @@ diff -uNrp 2.6.14/include/linux/sched.h 2.6.14-ipipe/include/linux/sched.h
  static inline pid_t process_group(struct task_struct *tsk)
 diff -uNrp 2.6.14/init/Kconfig 2.6.14-ipipe/init/Kconfig
 --- 2.6.14/init/Kconfig	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/init/Kconfig	2005-10-31 10:15:18.000000000 +0100
++++ 2.6.14-ipipe/init/Kconfig	2005-11-29 14:10:16.000000000 +0100
 @@ -69,6 +69,7 @@ menu "General setup"
  
  config LOCALVERSION
@@ -926,7 +935,7 @@ diff -uNrp 2.6.14/init/main.c 2.6.14-ipipe/init/main.c
  	sock_init();
 diff -uNrp 2.6.14/kernel/Makefile 2.6.14-ipipe/kernel/Makefile
 --- 2.6.14/kernel/Makefile	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/kernel/Makefile	2005-10-31 10:15:18.000000000 +0100
++++ 2.6.14-ipipe/kernel/Makefile	2005-11-29 13:39:58.000000000 +0100
 @@ -32,6 +32,7 @@ obj-$(CONFIG_DETECT_SOFTLOCKUP) += softl
  obj-$(CONFIG_GENERIC_HARDIRQS) += irq/
  obj-$(CONFIG_CRASH_DUMP) += crash_dump.o
@@ -2110,8 +2119,8 @@ diff -uNrp 2.6.14/kernel/irq/handle.c 2.6.14-ipipe/kernel/irq/handle.c
  	 * WAITING is used by probe to mark irqs that are being tested
 diff -uNrp 2.6.14/kernel/printk.c 2.6.14-ipipe/kernel/printk.c
 --- 2.6.14/kernel/printk.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/kernel/printk.c	2005-11-02 12:51:25.000000000 +0100
-@@ -507,6 +507,66 @@ __attribute__((weak)) unsigned long long
++++ 2.6.14-ipipe/kernel/printk.c	2005-11-16 13:56:00.000000000 +0100
+@@ -507,6 +507,78 @@ __attribute__((weak)) unsigned long long
   * is inspected when the actual printing occurs.
   */
  
@@ -2126,23 +2135,34 @@ diff -uNrp 2.6.14/kernel/printk.c 2.6.14-ipipe/kernel/printk.c
 +void __ipipe_flush_printk (unsigned virq)
 +{
 +	char *p = __ipipe_printk_buf;
-+	int out = 0, len;
++	int len, lmax, out = 0;
++	unsigned long flags;
 +
-+	clear_bit(IPIPE_PPRINTK_FLAG,&ipipe_root_domain->flags);
++	goto start;
 +
-+	while (out < __ipipe_printk_fill) {
-+		len = strlen(p) + 1;
-+		printk("%s",p);
-+		p += len;
-+		out += len;
++	do {
++		spin_unlock_irqrestore_hw(&__ipipe_printk_lock,flags);
++ start:
++		lmax = __ipipe_printk_fill;
++		while (out < lmax) {
++			len = strlen(p) + 1;
++			printk("%s",p);
++			p += len;
++			out += len;
++		}
++		spin_lock_irqsave_hw(&__ipipe_printk_lock,flags);
 +	}
++	while (__ipipe_printk_fill != lmax);
++
 +	__ipipe_printk_fill = 0;
++
++	spin_unlock_irqrestore_hw(&__ipipe_printk_lock,flags);
 +}
 +
 +asmlinkage int printk(const char *fmt, ...)
 +{
-+	unsigned long flags;
-+	int r, fbytes;
++	int r, fbytes, oldcount;
++    	unsigned long flags;
 +	va_list args;
 +
 +	va_start(args, fmt);
@@ -2156,7 +2176,8 @@ diff -uNrp 2.6.14/kernel/printk.c 2.6.14-ipipe/kernel/printk.c
 +
 +	spin_lock_irqsave_hw(&__ipipe_printk_lock,flags);
 +
-+	fbytes = __LOG_BUF_LEN - __ipipe_printk_fill;
++	oldcount = __ipipe_printk_fill;
++	fbytes = __LOG_BUF_LEN - oldcount;
 +
 +	if (fbytes > 1)	{
 +		r = vscnprintf(__ipipe_printk_buf + __ipipe_printk_fill,
@@ -2167,7 +2188,7 @@ diff -uNrp 2.6.14/kernel/printk.c 2.6.14-ipipe/kernel/printk.c
 +
 +	spin_unlock_irqrestore_hw(&__ipipe_printk_lock,flags);
 +
-+	if (!test_and_set_bit(IPIPE_PPRINTK_FLAG,&ipipe_root_domain->flags))
++	if (oldcount == 0)
 +		ipipe_trigger_irq(__ipipe_printk_virq);
 +out: 
 +	va_end(args);
@@ -2178,7 +2199,7 @@ diff -uNrp 2.6.14/kernel/printk.c 2.6.14-ipipe/kernel/printk.c
  asmlinkage int printk(const char *fmt, ...)
  {
  	va_list args;
-@@ -518,6 +578,7 @@ asmlinkage int printk(const char *fmt, .
+@@ -518,6 +590,7 @@ asmlinkage int printk(const char *fmt, .
  
  	return r;
  }
@@ -2469,7 +2490,7 @@ diff -uNrp 2.6.14/mm/vmalloc.c 2.6.14-ipipe/mm/vmalloc.c
  	/* see sw-dev-man vol 3, chapter 7.4.13.5 */
  	printk(KERN_INFO "spurious APIC interrupt on CPU#%d, should never happen.\n",
 --- 2.6.14/arch/i386/kernel/entry.S	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/arch/i386/kernel/entry.S	2005-10-31 10:40:46.000000000 +0100
++++ 2.6.14-ipipe/arch/i386/kernel/entry.S	2005-11-26 20:19:57.000000000 +0100
 @@ -48,6 +48,7 @@
  #include <asm/smp.h>
  #include <asm/page.h>
@@ -2486,7 +2507,7 @@ diff -uNrp 2.6.14/mm/vmalloc.c 2.6.14-ipipe/mm/vmalloc.c
 +#define CLI                     call __ipipe_stall_root	;  sti
 +#define STI                     call __ipipe_unstall_root
 +#define STI_COND_HW             sti
-+#define EMULATE_ROOT_IRET(bypass)	\
++#define EMULATE_ROOT_IRET(bypass) \
 +				call __ipipe_unstall_iret_root ; \
 +				bypass: \
 +				movl EAX(%esp),%eax
@@ -3882,8 +3903,8 @@ diff -uNrp 2.6.14/mm/vmalloc.c 2.6.14-ipipe/mm/vmalloc.c
 +EXPORT_SYMBOL(ipipe_get_sysinfo);
 +EXPORT_SYMBOL(ipipe_tune_timer);
 --- 2.6.14/arch/i386/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/arch/i386/kernel/ipipe-root.c	2005-10-18 08:57:25.000000000 +0200
-@@ -0,0 +1,607 @@
++++ 2.6.14-ipipe/arch/i386/kernel/ipipe-root.c	2005-11-22 12:01:18.000000000 +0100
+@@ -0,0 +1,602 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/i386/kernel/ipipe-root.c
 + *
@@ -4145,11 +4166,6 @@ diff -uNrp 2.6.14/mm/vmalloc.c 2.6.14-ipipe/mm/vmalloc.c
 +	}
 +
 +	ipipe_put_cpu(flags);
-+}
-+
-+asmlinkage void __ipipe_if_fixup_root(struct pt_regs regs)
-+{
-+	__fixup_if(&regs);
 +}
 +
 +/*  Check the interrupt flag to make sure the existing preemption
@@ -4917,7 +4933,7 @@ diff -uNrp 2.6.14/mm/vmalloc.c 2.6.14-ipipe/mm/vmalloc.c
  #define shutdown_level_ioapic	mask_IO_APIC_irq
  #define enable_level_ioapic	unmask_IO_APIC_irq
 --- 2.6.14/include/asm-i386/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/include/asm-i386/ipipe.h	2005-11-02 15:24:53.000000000 +0100
++++ 2.6.14-ipipe/include/asm-i386/ipipe.h	2005-11-29 13:39:06.000000000 +0100
 @@ -0,0 +1,194 @@
 +/*   -*- linux-c -*-
 + *   include/asm-i386/ipipe.h
@@ -4950,10 +4966,10 @@ diff -uNrp 2.6.14/mm/vmalloc.c 2.6.14-ipipe/mm/vmalloc.c
 +#include <linux/threads.h>
 +#include <irq_vectors.h>
 +
-+#define IPIPE_ARCH_STRING	"1.0-10"
++#define IPIPE_ARCH_STRING	"1.0-11"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	0
-+#define IPIPE_PATCH_NUMBER	10
++#define IPIPE_PATCH_NUMBER	11
 +
 +#ifdef CONFIG_X86_LOCAL_APIC
 +/* We want to cover the whole IRQ space when the APIC is enabled. */
