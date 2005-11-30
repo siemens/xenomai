@@ -67,8 +67,8 @@ static inline unsigned long long rthal_ulldiv (unsigned long long ull,
 
 #define rthal_uldivrem(ull,ul,rp) ((u_long) rthal_ulldiv((ull),(ul),(rp)))
 
-static inline int rthal_imuldiv (int i, int mult, int div) {
-
+static inline int rthal_imuldiv (int i, int mult, int div)
+{
     /* Returns (int)i = (unsigned long long)i*(u_long)(mult)/(u_long)div. */
     const unsigned long long ull = rthal_ullmul(i, mult);
     return rthal_uldivrem(ull, div, NULL);
@@ -104,17 +104,17 @@ static inline long long rthal_llimd (long long op,
     return __rthal_ullimd(op, m, d);
 }
 
-static inline __attribute_const__ unsigned long ffnz (unsigned long ul) {
-    __asm__ ("cntlzw %0, %1" : "=r" (ul) : "r" (ul & (-ul)));
-    return 31 - ul;
+static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
+{
+    return ffs(ul) - 1;
 }
 
 #ifndef __cplusplus
+#include <asm/irqchip.h>
 #include <asm/system.h>
-#include <asm/time.h>
-#include <asm/timex.h>
-#include <asm/xenomai/atomic.h>
+#include <asm/mach/blackfin.h>
 #include <asm/processor.h>
+#include <asm/xenomai/atomic.h>
 
 #define RTHAL_TIMER_IRQ   IPIPE_TIMER_IRQ
 
@@ -123,17 +123,20 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul) {
 #define rthal_grab_control()     do { } while(0)
 #define rthal_release_control()  do { } while(0)
 
-static inline unsigned long long rthal_rdtsc (void) {
+static inline unsigned long long rthal_rdtsc (void)
+{
     unsigned long long t;
     rthal_read_tsc(t);
     return t;
 }
 
-static inline struct task_struct *rthal_root_host_task (int cpuid) {
+static inline struct task_struct *rthal_root_host_task (int cpuid)
+{
     return current;
 }
 
-static inline struct task_struct *rthal_current_host_task (int cpuid) {
+static inline struct task_struct *rthal_current_host_task (int cpuid)
+{
     return current;
 }
 

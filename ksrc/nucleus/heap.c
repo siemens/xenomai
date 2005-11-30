@@ -881,6 +881,8 @@ static int xnheap_ioctl (struct inode *inode,
     return err;
 }
 
+#ifdef CONFIG_MMU
+
 static unsigned long __va_to_kva (unsigned long va)
 
 {
@@ -915,6 +917,8 @@ static unsigned long __va_to_kva (unsigned long va)
     return kva;
 }
 
+#endif /* CONFIG_MMU */
+
 static int xnheap_mmap (struct file *file,
 			struct vm_area_struct *vma)
 {
@@ -946,16 +950,12 @@ static int xnheap_mmap (struct file *file,
 
     vaddr = (unsigned long)heap->archdep.heapbase;
 
-    if (heap->archdep.kmflags)
-	{
-	if (xnarch_remap_page_range(vma,
-				    vma->vm_start,
-				    virt_to_phys((void *)vaddr),
-				    size,
-				    PAGE_SHARED))
-	    return -ENXIO;
-	}
-    else
+    /* MMU-less vmalloc() is a wrapper to kmalloc(), so it always
+       provides contiguous memory, and we always ask for kmalloc-based
+       heaps in such context. */
+
+#ifdef CONFIG_MMU
+    if (!heap->archdep.kmflags)
 	{
 	unsigned long maddr = vma->vm_start;
 
@@ -973,6 +973,14 @@ static int xnheap_mmap (struct file *file,
 	    size -= PAGE_SIZE;
 	    }
 	}
+    else
+#endif /* CONFIG_MMU */
+	if (xnarch_remap_page_range(vma,
+				    vma->vm_start,
+				    virt_to_phys((void *)vaddr),
+				    size,
+				    PAGE_SHARED))
+	    return -ENXIO;
 
     atomic_inc(&heap->archdep.numaps);
 
@@ -1036,19 +1044,8 @@ static inline void *__alloc_and_reserve_heap (size_t size, int kmflags)
 
     /* Size must be page-aligned. */
 
-    if (kmflags)
-	{
-        ptr = kmalloc(size,kmflags);
-
-	if (!ptr)
-	    return NULL;
-
-        vabase = (unsigned long)ptr;
-
-	for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
-	    SetPageReserved(virt_to_page(vaddr));
-	}
-    else /* Otherwise, we have been asked for some vmalloc() space. */
+#ifdef CONFIG_MMU
+    if (!kmflags)
 	{
 	ptr = vmalloc(size);
 
@@ -1059,6 +1056,19 @@ static inline void *__alloc_and_reserve_heap (size_t size, int kmflags)
 
         for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
 	    SetPageReserved(virt_to_page(__va_to_kva(vaddr)));
+	}
+    else /* Otherwise, we have been asked for some vmalloc() space. */
+#endif /* CONFIG_MMU */
+	{
+        ptr = kmalloc(size,kmflags);
+
+	if (!ptr)
+	    return NULL;
+
+        vabase = (unsigned long)ptr;
+
+	for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
+	    SetPageReserved(virt_to_page(vaddr));
 	}
 
     return ptr;
@@ -1073,19 +1083,21 @@ static inline void __unreserve_and_free_heap (void *ptr, size_t size, int kmflag
 
     vabase = (unsigned long)ptr;
 
-    if (kmflags)
-	{
-	for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
-	    ClearPageReserved(virt_to_page(vaddr));
-
-	kfree(ptr);
-	}
-    else
+#ifdef CONFIG_MMU
+    if (!kmflags)
 	{
         for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
 	    ClearPageReserved(virt_to_page(__va_to_kva(vaddr)));
 
 	vfree(ptr);
+	}
+    else
+#endif /* CONFIG_MMU */
+	{
+	for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
+	    ClearPageReserved(virt_to_page(vaddr));
+
+	kfree(ptr);
 	}
 }
 
@@ -1097,6 +1109,9 @@ int xnheap_init_shared (xnheap_t *heap,
     spl_t s;
     int err;
 
+#ifndef CONFIG_MMU
+    memflags = memflags ?: GFP_USER;
+#endif /* CONFIG_MMU */
     heapsize = PAGE_ALIGN(heapsize);
     heapbase = __alloc_and_reserve_heap(heapsize,memflags);
 

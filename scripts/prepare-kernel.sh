@@ -107,6 +107,10 @@ while : ; do
       linux_arch=ia64
       xenomai_arch=ia64
       ;;
+   bfin|bfinnommu|blackfin)
+      linux_arch=bfinnommu
+      xenomai_arch=bfinnommu
+      ;;
    *)
       echo "$me: unsupported architecture: $linux_arch"
       linux_arch=

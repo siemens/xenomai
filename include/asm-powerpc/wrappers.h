@@ -28,6 +28,8 @@
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
 
+#define CONFIG_MMU 1
+
 #define atomic_inc_and_test(v) (atomic_inc_return(v) == 0)
 #define show_stack(p,sp)       print_backtrace(sp) /* Only works for current. */
 

@@ -150,9 +150,10 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
 
     in_tcb->active_task = next ?: prev;
 
-    if (next && next != prev)
+    if (next && next != prev) {
 	/* Switch to user-space thread. */
 	switch_to(prev, next, prev);
+    }
     else
         /* Kernel-to-kernel context switch. */
         rthal_switch_context(out_tcb->kspp,in_tcb->kspp);
@@ -279,6 +280,8 @@ do { \
 
 #ifdef XENO_SHADOW_MODULE
 
+#include <asm/xenomai/syscall.h>
+
 static inline void xnarch_init_shadow_tcb (xnarchtcb_t *tcb,
 					   struct xnthread *thread,
 					   const char *name)
@@ -366,6 +369,34 @@ static inline void xnarch_unlock_xirqs (rthal_pipeline_stage_t *ipd, int cpuid)
 	}
 
     rthal_unlock_irq(ipd,RTHAL_TIMER_IRQ);
+}
+
+static inline int xnarch_local_syscall (struct pt_regs *regs)
+{
+    unsigned long ptr, x, r, flags;
+    int err = 0;
+
+    local_irq_save_hw(flags);
+
+    switch (__xn_reg_arg1(regs))
+	{
+	case __xn_lsys_xchg:
+
+	    /* lsys_xchg(ptr,newval,&oldval) */
+	    ptr = __xn_reg_arg2(regs);
+	    x = __xn_reg_arg3(regs);
+	    r = xchg((unsigned long *)ptr,x);
+	    __xn_put_user(current,r,(unsigned long *)__xn_reg_arg4(regs));
+	    break;
+
+	default:
+
+	    err = -ENOSYS;
+	}
+
+    local_irq_restore_hw(flags);
+
+    return err;
 }
 
 #endif /* XENO_SHADOW_MODULE */

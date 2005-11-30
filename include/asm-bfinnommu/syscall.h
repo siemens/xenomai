@@ -26,7 +26,12 @@
    marker. Note: watch out for the p0 sign convention used by Linux
    (i.e. negative syscall number in orig_p0 meaning "non-syscall
    entry"). */
-#define __xn_mux_code(id,op)        ((id << 24)|((op << 16) & 0xff0000)|(__xn_sys_mux & 0xffff))
+#define __xn_mux_code(id,op)   ((id << 24)|((op << 16) & 0xff0000)|(__xn_sys_mux & 0xffff))
+
+/* Local syscalls -- the braindamage thing about this arch is the
+   absence of atomic ops usable from user-space; so we export what
+   we need as syscalls implementing those ops from kernel space. Sigh... */
+#define __xn_lsys_xchg        0
 
 #ifdef __KERNEL__
 
@@ -59,9 +64,9 @@
     ({ int err = __copy_to_user_inatomic(dstP,srcP,n); err; })
 #define __xn_put_user(task,src,dstP)           __put_user(src,dstP)
 #define __xn_get_user(task,dst,srcP)           __get_user(dst,srcP)
-#define __xn_strncpy_from_user(task,dstP,srcP,n)    __strncpy_from_user(dstP,srcP,n)
+#define __xn_strncpy_from_user(task,dstP,srcP,n)    strncpy_from_user(dstP,srcP,n)
 
-#define __xn_access_ok(task,type,addr,size)  wrap_range_ok(task,addr,size)
+#define __xn_access_ok(task,type,addr,size)  wrap_access_ok(task,addr,size)
 
 /* Purposedly used inlines and not macros for the following routines
    so that we don't risk spurious side-effects on the value arg. */

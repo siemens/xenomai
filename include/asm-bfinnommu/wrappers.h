@@ -26,6 +26,6 @@
 
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
 
-#define wrap_access_ok(task,addr,size) _access_ok((addr),(size))
+#define wrap_access_ok(task,addr,size) _access_ok((unsigned long)(addr),(size))
 
 #endif /* _XENO_ASM_BFINNOMMU_WRAPPERS_H */

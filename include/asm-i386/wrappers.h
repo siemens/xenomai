@@ -28,6 +28,8 @@
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
 
+#define CONFIG_MMU 1
+
 #define wrap_range_ok(task,addr,size) ({ \
 	unsigned long flag,sum; \
 	asm("addl %3,%1 ; sbbl %0,%0; cmpl %1,%4; sbbl $0,%0" \
