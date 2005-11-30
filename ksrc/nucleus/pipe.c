@@ -66,7 +66,8 @@ static inline int xnpipe_minor_alloc(int minor)
     if (minor == XNPIPE_MINOR_AUTO)
 	minor = find_first_zero_bit(xnpipe_bitmap,XNPIPE_NDEVS);
 
-    if (minor == XNPIPE_NDEVS || testbits(xnpipe_bitmap[minor / BITS_PER_LONG], 1 << (minor % BITS_PER_LONG)))
+    if (minor == XNPIPE_NDEVS ||
+	testbits(xnpipe_bitmap[minor / BITS_PER_LONG], 1 << (minor % BITS_PER_LONG)))
         minor = -EBUSY;
     else    
 	__setbits(xnpipe_bitmap[minor / BITS_PER_LONG], 1 << (minor % BITS_PER_LONG));
