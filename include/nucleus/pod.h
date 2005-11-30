@@ -191,7 +191,7 @@ struct xnpod {
 
     xnqueue_t threadq;          /*!< All existing threads. */
 
-    atomic_counter_t schedlck;  /*!< Scheduler lock count. */
+    volatile u_long schedlck;	/*!< Scheduler lock count. */
 
     xnqueue_t tstartq,          /*!< Thread start hook queue. */
               tswitchq,         /*!< Thread switch hook queue. */
@@ -209,7 +209,9 @@ struct xnpod {
 
     int refcnt;			/*!< Reference count.  */
 
+#ifdef __KERNEL__
     atomic_counter_t timerlck;	/*!< Timer lock depth.  */
+#endif /* __KERNEL__ */
 
     struct {
         void (*settime)(xnticks_t newtime); /*!< Clock setting hook. */
@@ -450,30 +452,29 @@ void xnpod_dispatch_signals(void);
 
 static inline void xnpod_lock_sched (void)
 {
-    /* Don't swap these two lines... */
-    xnarch_atomic_inc(&nkpod->schedlck);
-    __setbits(xnpod_current_sched()->runthread->status,XNLOCK);
+    spl_t s;
+
+    xnlock_get_irqsave(&nklock,s);
+
+    if (nkpod->schedlck++ == 0)
+	__setbits(xnpod_current_sched()->runthread->status,XNLOCK);
+
+    xnlock_put_irqrestore(&nklock,s);
 }
 
 static inline void xnpod_unlock_sched (void)
 {
-    if (xnarch_atomic_dec_and_test(&nkpod->schedlck))
+    spl_t s;
+
+    xnlock_get_irqsave(&nklock,s);
+
+    if (--nkpod->schedlck == 0)
         {
         __clrbits(xnpod_current_sched()->runthread->status,XNLOCK);
         xnpod_schedule();
         }
-}
 
-static inline void xnpod_lock_timers (void)
-{
-    xnarch_atomic_inc(&nkpod->timerlck);
-    setbits(nkpod->status,XNTLOCK);
-}
-
-static inline void xnpod_unlock_timers (void)
-{
-    if (xnarch_atomic_dec_and_test(&nkpod->timerlck))
-	clrbits(nkpod->status,XNTLOCK);
+    xnlock_put_irqrestore(&nklock,s);
 }
 
 int xnpod_announce_tick(struct xnintr *intr);

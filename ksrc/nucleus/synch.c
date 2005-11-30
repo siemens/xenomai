@@ -174,13 +174,13 @@ void xnsynch_sleep_on (xnsynch_t *synch,
 	    if (!testbits(owner->status,XNBOOST))
 		{
 		owner->bprio = owner->cprio;
-		setbits(owner->status,XNBOOST);
+		__setbits(owner->status,XNBOOST);
 		}
 
 	    if (testbits(synch->status,XNSYNCH_CLAIMED))
 		removepq(&owner->claimq,&synch->link);
 	    else
-		setbits(synch->status,XNSYNCH_CLAIMED);
+		__setbits(synch->status,XNSYNCH_CLAIMED);
 
 	    insertpqf(&owner->claimq,&synch->link,thread->cprio);
 
@@ -208,6 +208,8 @@ void xnsynch_sleep_on (xnsynch_t *synch,
  *
  * @param owner The descriptor address of the thread which
  * currently owns the synchronization object.
+ *
+ * @note This routine must be entered nklock locked, interrupts off.
  */
 
 static void xnsynch_clear_boost (xnsynch_t *synch,
@@ -216,11 +218,11 @@ static void xnsynch_clear_boost (xnsynch_t *synch,
     int downprio;
 
     removepq(&lastowner->claimq,&synch->link);
-    clrbits(synch->status,XNSYNCH_CLAIMED);
+    __clrbits(synch->status,XNSYNCH_CLAIMED);
     downprio = lastowner->bprio;
 
     if (countpq(&lastowner->claimq) == 0)
-	clrbits(lastowner->status,XNBOOST);
+	__clrbits(lastowner->status,XNBOOST);
     else
 	{
 	/* Find the highest priority needed to enforce the PIP. */
@@ -471,7 +473,7 @@ int xnsynch_flush (xnsynch_t *synch, xnflags_t reason)
     while ((holder = getpq(&synch->pendq)) != NULL)
 	{
 	xnthread_t *sleeper = link2thread(holder,plink);
-	setbits(sleeper->status,reason);
+	__setbits(sleeper->status,reason);
 	sleeper->wchan = NULL;
 	xnpod_resume_thread(sleeper,XNPEND);
 	}
@@ -506,6 +508,8 @@ int xnsynch_flush (xnsynch_t *synch, xnflags_t reason)
  * whenever no thread remains blocked on it. The real-time interfaces
  * must ensure that such condition (i.e. EMPTY/IDLE) is mapped to
  * state #0.
+ *
+ * @note This routine must be entered nklock locked, interrupts off.
  */
 
 void xnsynch_forget_sleeper (xnthread_t *thread)
@@ -515,7 +519,7 @@ void xnsynch_forget_sleeper (xnthread_t *thread)
 
     xnltt_log_event(xeno_ev_syncforget,thread->name,synch);
 
-    clrbits(thread->status,XNPEND);
+    __clrbits(thread->status,XNPEND);
     thread->wchan = NULL;
     removepq(&synch->pendq,&thread->plink);
 

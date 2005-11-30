@@ -23,7 +23,28 @@
 #ifndef _XENO_ASM_POWERPC_ATOMIC_H
 #define _XENO_ASM_POWERPC_ATOMIC_H
 
-#if defined(__powerpc64__) || defined(CONFIG_PPC64)
+#ifdef __KERNEL__
+
+#include <linux/bitops.h>
+#include <asm/atomic.h>
+#include <asm/system.h>
+
+#define atomic_xchg(ptr,v)       xchg(ptr,v)
+#define xnarch_memory_barrier()  smp_mb()
+
+#ifdef CONFIG_PPC64
+static __inline__ void atomic_clear_mask(unsigned long mask,
+					 unsigned long *ptr)
+{
+    __asm__ __volatile__ ("\n\
+1:	ldarx	5,0,%0 \n\
+	andc	5,5,%1\n"
+"	stdcx.	5,0,%0 \n\
+	bne-	1b"
+	: /*no output*/
+	: "r" (ptr), "r" (mask)
+	: "r5", "cc", "memory");
+}
 
 static __inline__ void atomic_set_mask(unsigned long mask,
 				       unsigned long *ptr)
@@ -37,33 +58,11 @@ static __inline__ void atomic_set_mask(unsigned long mask,
 	: "r" (ptr), "r" (mask)
 	: "r5", "cc", "memory");
 }
-
-static __inline__ void atomic_clear_mask(unsigned long mask,
-					 unsigned long *ptr)
-{
-    __asm__ __volatile__ ("\n\
-1:	ldarx	5,0,%0 \n\
-	andc	5,5,%1\n"
-"	stdcx.	5,0,%0 \n\
-	bne-	1b"
-	: /*no output*/
-	: "r" (ptr), "r" (mask)
-	: "r5", "cc", "memory");
-}
-#endif /* __powerpc64__ || CONFIG_PPC64 */
-
-#ifdef __KERNEL__
-
-#include <linux/bitops.h>
-#include <asm/atomic.h>
-#include <asm/system.h>
-
-#define atomic_xchg(ptr,v)       xchg(ptr,v)
-#define xnarch_memory_barrier()  smp_mb()
-
+#else /* !CONFIG_PPC64 */
  /* These are defined in arch/ppc/kernel/misc.S on 32-bit PowerPC */
 void atomic_set_mask(unsigned long mask, unsigned long *ptr);
 void atomic_clear_mask(unsigned long mask, unsigned long *ptr);
+#endif /* CONFIG_PPC64 */
 
 #define xnarch_atomic_set(pcounter,i)          atomic_set(pcounter,i)
 #define xnarch_atomic_get(pcounter)            atomic_read(pcounter)
@@ -93,10 +92,6 @@ typedef atomic_t atomic_counter_t;
 #define EIEIO_ON_SMP
 #define ISYNC_ON_SMP
 #endif
-
-typedef struct { volatile int counter; } atomic_counter_t;
-
-#define xnarch_atomic_set(v,i)  (((v)->counter) = (i))
 
 /*
  * Atomic exchange
@@ -174,81 +169,8 @@ static __inline__ unsigned long
 	(__typeof__(*(ptr))) __xchg((ptr), (unsigned long)_x_, sizeof(*(ptr)));\
     })
 
-/*
- * Atomic operations lifted from linux/include/asm-powerpc/atomic.h 
- */
-
-static __inline__ void atomic_inc(atomic_counter_t *v)
-{
-    int t;
-
-    __asm__ __volatile__(
-"1: lwarx	%0,0,%2		# atomic_inc\n\
-    addic	%0,%0,1\n"
-    PPC405_ERR77(0,%2)
-"   stwcx.	%0,0,%2 \n\
-    bne-	1b"
-    : "=&r" (t), "=m" (v->counter)
-    : "r" (&v->counter), "m" (v->counter)
-    : "cc");
-}
-
-static __inline__ int atomic_dec_return(atomic_counter_t *v)
-{
-    int t;
-
-    __asm__ __volatile__(
-    EIEIO_ON_SMP
-"1: lwarx	%0,0,%1		# atomic_dec_return\n\
-    addic	%0,%0,-1\n"
-    PPC405_ERR77(0,%1)
-"   stwcx.	%0,0,%1\n\
-    bne-	1b"
-    ISYNC_ON_SMP
-    : "=&r" (t)
-    : "r" (&v->counter)
-    : "cc", "memory");
-
-    return t;
-}
-
-#ifndef __powerpc64__
-static __inline__ void atomic_set_mask(unsigned long mask,
-				       unsigned long *ptr)
-{
-    __asm__ __volatile__ ("\n\
-1:	lwarx	5,0,%0 \n\
-	or	5,5,%1\n"
-	PPC405_ERR77(0,%0) \
-"	stwcx.	5,0,%0 \n\
-	bne-	1b"
-	: /*no output*/
-	: "r" (ptr), "r" (mask)
-	: "r5", "cc", "memory");
-}
-
-static __inline__ void atomic_clear_mask(unsigned long mask,
-					 unsigned long *ptr)
-{
-    __asm__ __volatile__ ("\n\
-1:	lwarx	5,0,%0 \n\
-	andc	5,5,%1\n"
-	PPC405_ERR77(0,%0) \
-"	stwcx.	5,0,%0 \n\
-	bne-	1b"
-	: /*no output*/
-	: "r" (ptr), "r" (mask)
-	: "r5", "cc", "memory");
-}
-#endif /* __powerpc64__ */
-
 #define xnarch_atomic_xchg(ptr,v)   atomic_xchg(ptr,v)
 #define xnarch_memory_barrier()     __asm__ __volatile__("": : :"memory")
-
-#define xnarch_atomic_inc(pcounter)            atomic_inc(pcounter)
-#define xnarch_atomic_dec_and_test(pcounter)   (atomic_dec_return(pcounter) == 0)
-#define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask,pflags)
-#define xnarch_atomic_clear_mask(pflags,mask)  atomic_clear_mask(mask,pflags)
 
 #define cpu_relax()  xnarch_memory_barrier()
 

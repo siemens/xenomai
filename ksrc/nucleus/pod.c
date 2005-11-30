@@ -78,7 +78,7 @@ const char *xnpod_fatal_helper (const char *format, ...)
     if (!nkpod || testbits(nkpod->status,XNFATAL|XNPIDLE))
         goto out;
 
-    setbits(nkpod->status,XNFATAL);
+    __setbits(nkpod->status,XNFATAL);
     now = nktimer->get_jiffies();
 
     p += snprintf(p,XNPOD_FATAL_BUFSZ - (p - nkmsgbuf),
@@ -315,7 +315,7 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
         for (n = 0; n < XNTIMER_WHEELSIZE; n++)
             initq(&pod->sched[cpu].timerwheel[n]);
 
-    xnarch_atomic_set(&pod->schedlck,0);
+    pod->schedlck = 0;
     pod->minpri = minpri;
     pod->maxpri = maxpri;
     pod->jiffies = 0;
@@ -323,7 +323,9 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
     pod->tickvalue = XNARCH_DEFAULT_TICK;
     pod->ticks2sec = 1000000000/ XNARCH_DEFAULT_TICK;
     pod->refcnt = 0;
+#ifdef __KERNEL__
     xnarch_atomic_set(&pod->timerlck,0);
+#endif /* __KERNEL__ */
 
     pod->svctable.settime = &xnpod_set_time;
     pod->svctable.faulthandler = &xnpod_fault_handler;
@@ -421,9 +423,9 @@ fail:
 
     xnarch_hook_ipi(&xnpod_schedule_handler);
 
+    __clrbits(pod->status,XNPIDLE);
+
     xnarch_memory_barrier();
-    
-    clrbits(pod->status,XNPIDLE);
 
     xnarch_notify_ready();
 
@@ -503,7 +505,7 @@ void xnpod_shutdown (int xtype)
 
     xnpod_schedule();
 
-    setbits(nkpod->status,XNPIDLE);
+    __setbits(nkpod->status,XNPIDLE);
 
     xnlock_put_irqrestore(&nklock,s);
 
@@ -947,7 +949,7 @@ void xnpod_restart_thread (xnthread_t *thread)
         if (testbits(thread->status,XNLOCK))
             {
             __clrbits(thread->status,XNLOCK);
-            xnarch_atomic_set(&nkpod->schedlck,0);
+            nkpod->schedlck = 0;
             }
 
         __setbits(thread->status,XNRESTART);
@@ -1052,7 +1054,7 @@ xnflags_t xnpod_set_thread_mode (xnthread_t *thread,
                 xnpod_lock_sched();
             }
         else if (!testbits(thread->status,XNLOCK))
-            xnarch_atomic_set(&nkpod->schedlck,0);
+            nkpod->schedlck = 0;
         }
 
     if (!(oldmode & XNRRB) && testbits(thread->status,XNRRB))
@@ -1149,7 +1151,7 @@ void xnpod_delete_thread (xnthread_t *thread)
     if (testbits(thread->status,XNLOCK))
         {
         __clrbits(thread->status,XNLOCK);
-        xnarch_atomic_set(&nkpod->schedlck,0);
+        nkpod->schedlck = 0;
         }
 
     if (testbits(thread->status,XNPEND))
@@ -1831,7 +1833,7 @@ int xnpod_migrate_thread (int cpu)
     if(testbits(thread->status, XNREADY))
         {
         sched_removepq(&thread->sched->readyq, &thread->rlink);
-        clrbits(thread->status, XNREADY);
+        __clrbits(thread->status, XNREADY);
         }
 
     xnsched_set_resched(thread->sched);
@@ -2624,7 +2626,7 @@ void xnpod_set_time (xnticks_t newtime)
     xnlock_get_irqsave(&nklock,s);
     xnltt_log_event(xeno_ev_timeset,newtime);
     nkpod->wallclock_offset += newtime - xnpod_get_time();
-    setbits(nkpod->status,XNTMSET);
+    __setbits(nkpod->status,XNTMSET);
     xnlock_put_irqrestore(&nklock,s);
 }
 
@@ -2988,7 +2990,7 @@ int xnpod_start_timer (u_long nstick, xnisr_t tickhandler)
 #ifdef CONFIG_XENO_HW_PERIODIC_TIMER
     if (nstick != XN_APERIODIC_TICK) /* Periodic mode. */
         {
-        setbits(nkpod->status,XNTMPER);
+        __setbits(nkpod->status,XNTMPER);
         /* Pre-calculate the number of ticks per second. */
         nkpod->tickvalue = nstick;
         nkpod->ticks2sec = 1000000000 / nstick;
@@ -2997,7 +2999,7 @@ int xnpod_start_timer (u_long nstick, xnisr_t tickhandler)
     else /* Periodic setup. */
 #endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
         {
-        clrbits(nkpod->status,XNTMPER);
+        __clrbits(nkpod->status,XNTMPER);
         nkpod->tickvalue = 1; /* Virtually the highest precision: 1ns */
         nkpod->ticks2sec = 1000000000;
 	xntimer_set_aperiodic_mode();
@@ -3026,7 +3028,7 @@ unlock_and_exit:
 
     xnintr_init(&nkclock,0,tickhandler,NULL,0);
 
-    setbits(nkpod->status,XNTIMED);
+    __setbits(nkpod->status,XNTIMED);
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
     nkpod->watchdog_reload = xnarch_ns_to_tsc(4000000000LL);
@@ -3102,7 +3104,7 @@ void xnpod_stop_timer (void)
 
     if (testbits(nkpod->status,XNTIMED))
         {
-        clrbits(nkpod->status,XNTIMED|XNTMPER);
+        __clrbits(nkpod->status,XNTIMED|XNTMPER);
         /* NOTE: The nkclock interrupt object is not destroyed on
            purpose since this would be redundant with
            xnarch_stop_timer() called when freezing timers. In any
