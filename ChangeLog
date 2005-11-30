@@ -1,4 +1,15 @@
+2005-11-30  Jan Kiszka <jan.kiszka@web.de>
+
+	* ksrc/arch/i386/smi.c: Remove __initdata from rthal_smi_pci_tbl
+	to make table persistent.
+
+	* ksrc/nucleus/module.c (__xeno_sys_exit): Reorder proc-fs
+	cleanup to avoid stalled entries.
+
 2005-11-29  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/atomic.h: Add missing xnarch_atomic_set() in
+	user-space.
 
 	* ksrc/nucleus/pipe.c (xnpipe_recv): Remove superfluous timeout
 	computation.
@@ -623,7 +634,7 @@
 
 	* nucleus/module.c: Revamp /proc/xenomai/{sched,stat} output format.
 
-2005-08-31  Stéphane Fillod  <stephane.fillod@thomson.net>
+2005-08-31  Stephane Fillod  <stephane.fillod@thomson.net>
 
 	* skins/rtai/fifo.c (__fifo_pkg_init): fix missing init of flush
 	queue handles.
