@@ -817,6 +817,10 @@ void __exit __xeno_sys_exit (void)
 {
     xnpod_shutdown(XNPOD_NORMAL_EXIT);
 
+#if defined(__KERNEL__) && defined(CONFIG_PROC_FS)
+    xnpod_delete_proc();
+#endif /* __KERNEL__ && CONFIG_PROC_FS */
+
     xnarch_exit();
 
 #ifdef __KERNEL__
@@ -830,9 +834,6 @@ void __exit __xeno_sys_exit (void)
 #ifdef CONFIG_LTT
     xnltt_umount();
 #endif /* CONFIG_LTT */
-#ifdef CONFIG_PROC_FS
-    xnpod_delete_proc();
-#endif /* CONFIG_PROC_FS */
 #endif /* __KERNEL__ */
 
     if (nkmsgbuf)
