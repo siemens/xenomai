@@ -67,6 +67,13 @@
 
 extern struct desc_struct idt_table[];
 
+static struct {
+
+    unsigned long flags;
+    int count;
+
+} rthal_linux_irq[IPIPE_NR_XIRQS];
+
 #ifdef CONFIG_X86_LOCAL_APIC
 
 static long long rthal_timers_sync_time;
@@ -461,6 +468,81 @@ rthal_time_t rthal_get_8254_tsc (void)
 }
 
 #endif /* !CONFIG_X86_TSC */
+
+int rthal_irq_host_request (unsigned irq,
+			    irqreturn_t (*handler)(int irq,
+						   void *dev_id,
+						   struct pt_regs *regs), 
+			    char *name,
+			    void *dev_id)
+{
+    unsigned long flags;
+
+    if (irq >= IPIPE_NR_XIRQS || !handler)
+	return -EINVAL;
+
+    spin_lock_irqsave(&rthal_irq_descp(irq)->lock,flags);
+
+    if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action)
+	{
+	rthal_linux_irq[irq].flags = rthal_irq_descp(irq)->action->flags;
+	rthal_irq_descp(irq)->action->flags |= SA_SHIRQ;
+	}
+
+    spin_unlock_irqrestore(&rthal_irq_descp(irq)->lock,flags);
+
+    return request_irq(irq,handler,SA_SHIRQ,name,dev_id);
+}
+
+int rthal_irq_host_release (unsigned irq, void *dev_id)
+
+{
+    unsigned long flags;
+
+    if (irq >= IPIPE_NR_XIRQS || rthal_linux_irq[irq].count == 0)
+	return -EINVAL;
+
+    free_irq(irq,dev_id);
+
+    spin_lock_irqsave(&rthal_irq_descp(irq)->lock,flags);
+
+    if (--rthal_linux_irq[irq].count == 0 && rthal_irq_descp(irq)->action)
+	rthal_irq_descp(irq)->action->flags = rthal_linux_irq[irq].flags;
+
+    spin_unlock_irqrestore(&rthal_irq_descp(irq)->lock,flags);
+
+    return 0;
+}
+
+int rthal_irq_enable (unsigned irq)
+
+{
+    if (irq >= IPIPE_NR_XIRQS)
+	return -EINVAL;
+
+    if (rthal_irq_descp(irq)->handler == NULL ||
+	rthal_irq_descp(irq)->handler->enable == NULL)
+	return -ENODEV;
+
+    rthal_irq_descp(irq)->handler->enable(irq);
+
+    return 0;
+}
+
+int rthal_irq_disable (unsigned irq)
+{
+
+    if (irq >= IPIPE_NR_XIRQS)
+	return -EINVAL;
+
+    if (rthal_irq_descp(irq)->handler == NULL ||
+	rthal_irq_descp(irq)->handler->disable == NULL)
+	return -ENODEV;
+
+    rthal_irq_descp(irq)->handler->disable(irq);
+
+    return 0;
+}
 
 static inline int do_exception_event (unsigned event, unsigned domid, void *data)
 

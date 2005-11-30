@@ -1,5 +1,19 @@
 2005-11-30  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/bfinnommu, include/asm-bfinnommu: Finalize groundwork
+	for the Blackfin port.
+
+	* ksrc/nucleus/heap.c: Provide support for !CONFIG_MMU.
+
+	* ksrc/arch/powerpc/patches: Upgrade to Adeos
+	2.4.25-denx-0.9-04, 2.6.10-ppc64-r3.patch.
+
+2005-11-30  Ignacio García Pérez <iggarpe@terra.es>
+
+	* ksrc/nucleus/timer.c: Make internal routines static.
+
+2005-11-30  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/nucleus, include/asm-*/atomic.h, include/nucleus: Reduce
 	need for atomic op support in user-space to the bare minimum.
 

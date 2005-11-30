@@ -26,7 +26,7 @@
  *
  * r0=out_kspp, r1=in_kspp
  */
-ENTRY(rthal_switch_thread)
+ENTRY(rthal_switch_context)
 
 	SAVE_ALL_SYS
 	p0 = r0;

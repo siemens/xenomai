@@ -33,7 +33,6 @@
 #include <linux/errno.h>
 #include <linux/module.h>
 #include <linux/interrupt.h>
-#include <linux/irq.h>
 #include <linux/console.h>
 #include <linux/kallsyms.h>
 #include <asm/system.h>
@@ -62,13 +61,6 @@ static struct {
     unsigned long hits[RTHAL_NR_CPUS];
 
 } rthal_realtime_irq[IPIPE_NR_IRQS];
-
-static struct {
-
-    unsigned long flags;
-    int count;
-
-} rthal_linux_irq[IPIPE_NR_XIRQS];
 
 static struct {
 
@@ -261,94 +253,6 @@ int rthal_irq_release (unsigned irq)
 }
 
 /**
- * @fn int rthal_irq_enable(unsigned irq)
- *                           
- * @brief Enable an interrupt source.
- *
- * Enables an interrupt source at PIC level. Since Adeos masks and
- * acknowledges the associated interrupt source upon IRQ receipt, this
- * action is usually needed whenever the HAL handler does not
- * propagate the IRQ event to the Linux domain, thus preventing the
- * regular Linux interrupt handling code from re-enabling said
- * source. After this call has returned, IRQs from the given source
- * will be enabled again.
- *
- * @param irq The interrupt source to enable.  This value is
- * architecture-dependent.
- *
- * @return 0 is returned upon success. Otherwise:
- *
- * - -EINVAL is returned if @a irq is invalid.
- *
- * - Other error codes might be returned in case some internal error
- * happens at the Adeos level. Such error might caused by conflicting
- * Adeos requests made by third-party code.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any domain context.
- */
-
-int rthal_irq_enable (unsigned irq)
-
-{
-    if (irq >= IPIPE_NR_XIRQS)
-	return -EINVAL;
-
-    if (rthal_irq_descp(irq)->handler == NULL ||
-	rthal_irq_descp(irq)->handler->enable == NULL)
-	return -ENODEV;
-
-    rthal_irq_descp(irq)->handler->enable(irq);
-
-    return 0;
-}
-
-/**
- * @fn int rthal_irq_disable(unsigned irq)
- *                           
- * @brief Disable an interrupt source.
- *
- * Disables an interrupt source at PIC level. After this call has
- * returned, no more IRQs from the given source will be allowed, until
- * the latter is enabled again using rthal_irq_enable().
- *
- * @param irq The interrupt source to disable.  This value is
- * architecture-dependent.
- *
- * @return 0 is returned upon success. Otherwise:
- *
- * - -EINVAL is returned if @a irq is invalid.
- *
- * - Other error codes might be returned in case some internal error
- * happens at the Adeos level. Such error might caused by conflicting
- * Adeos requests made by third-party code.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any domain context.
- */
-
-int rthal_irq_disable (unsigned irq)
-{
-
-    if (irq >= IPIPE_NR_XIRQS)
-	return -EINVAL;
-
-    if (rthal_irq_descp(irq)->handler == NULL ||
-	rthal_irq_descp(irq)->handler->disable == NULL)
-	return -ENODEV;
-
-    rthal_irq_descp(irq)->handler->disable(irq);
-
-    return 0;
-}
-
-/**
  * @fn int rthal_irq_host_request (unsigned irq,irqreturn_t (*handler)(int irq,void *dev_id,struct pt_regs *regs),char *name,void *dev_id)
  *                           
  * @brief Install a shared Linux interrupt handler.
@@ -384,31 +288,6 @@ int rthal_irq_disable (unsigned irq)
  * - Linux domain context.
  */
 
-int rthal_irq_host_request (unsigned irq,
-			    irqreturn_t (*handler)(int irq,
-						   void *dev_id,
-						   struct pt_regs *regs), 
-			    char *name,
-			    void *dev_id)
-{
-    unsigned long flags;
-
-    if (irq >= IPIPE_NR_XIRQS || !handler)
-	return -EINVAL;
-
-    spin_lock_irqsave(&rthal_irq_descp(irq)->lock,flags);
-
-    if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action)
-	{
-	rthal_linux_irq[irq].flags = rthal_irq_descp(irq)->action->flags;
-	rthal_irq_descp(irq)->action->flags |= SA_SHIRQ;
-	}
-
-    spin_unlock_irqrestore(&rthal_irq_descp(irq)->lock,flags);
-
-    return request_irq(irq,handler,SA_SHIRQ,name,dev_id);
-}
-
 /**
  * @fn int rthal_irq_host_release (unsigned irq,void *dev_id)
  *                           
@@ -438,26 +317,6 @@ int rthal_irq_host_request (unsigned irq,
  *
  * - Linux domain context.
  */
-
-int rthal_irq_host_release (unsigned irq, void *dev_id)
-
-{
-    unsigned long flags;
-
-    if (irq >= IPIPE_NR_XIRQS || rthal_linux_irq[irq].count == 0)
-	return -EINVAL;
-
-    free_irq(irq,dev_id);
-
-    spin_lock_irqsave(&rthal_irq_descp(irq)->lock,flags);
-
-    if (--rthal_linux_irq[irq].count == 0 && rthal_irq_descp(irq)->action)
-	rthal_irq_descp(irq)->action->flags = rthal_linux_irq[irq].flags;
-
-    spin_unlock_irqrestore(&rthal_irq_descp(irq)->lock,flags);
-
-    return 0;
-}
 
 /**
  * @fn int rthal_irq_host_pend (unsigned irq)
@@ -1189,6 +1048,64 @@ void rthal_exit (void)
 
     rthal_arch_cleanup();
 }
+
+/**
+ * @fn int rthal_irq_enable(unsigned irq)
+ *                           
+ * @brief Enable an interrupt source.
+ *
+ * Enables an interrupt source at PIC level. Since Adeos masks and
+ * acknowledges the associated interrupt source upon IRQ receipt, this
+ * action is usually needed whenever the HAL handler does not
+ * propagate the IRQ event to the Linux domain, thus preventing the
+ * regular Linux interrupt handling code from re-enabling said
+ * source. After this call has returned, IRQs from the given source
+ * will be enabled again.
+ *
+ * @param irq The interrupt source to enable.  This value is
+ * architecture-dependent.
+ *
+ * @return 0 is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a irq is invalid.
+ *
+ * - Other error codes might be returned in case some internal error
+ * happens at the Adeos level. Such error might caused by conflicting
+ * Adeos requests made by third-party code.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Any domain context.
+ */
+
+/**
+ * @fn int rthal_irq_disable(unsigned irq)
+ *                           
+ * @brief Disable an interrupt source.
+ *
+ * Disables an interrupt source at PIC level. After this call has
+ * returned, no more IRQs from the given source will be allowed, until
+ * the latter is enabled again using rthal_irq_enable().
+ *
+ * @param irq The interrupt source to disable.  This value is
+ * architecture-dependent.
+ *
+ * @return 0 is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a irq is invalid.
+ *
+ * - Other error codes might be returned in case some internal error
+ * happens at the Adeos level. Such error might caused by conflicting
+ * Adeos requests made by third-party code.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Any domain context.
+ */
 
 /*! 
  * \fn int rthal_timer_request(void (*handler)(void),unsigned long nstick)

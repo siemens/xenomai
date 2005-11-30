@@ -29,14 +29,14 @@
  *
  *@{*/
 
+#include <linux/config.h>
 #include <linux/version.h>
 #include <linux/slab.h>
 #include <linux/errno.h>
 #include <linux/module.h>
-#include <linux/interrupt.h>
 #include <asm/system.h>
-#include <asm/hardirq.h>
-#include <asm/irq.h>
+#include <asm/atomic.h>
+#include <asm/irqchip.h>
 #include <asm/io.h>
 #include <asm/uaccess.h>
 #include <asm/unistd.h>
@@ -45,6 +45,13 @@
 #include <linux/proc_fs.h>
 #endif /* CONFIG_PROC_FS */
 #include <stdarg.h>
+
+static struct {
+
+    unsigned long flags;
+    int count;
+
+} rthal_linux_irq[IPIPE_NR_XIRQS];
 
 static int rthal_periodic_p;
 
@@ -107,6 +114,67 @@ unsigned long rthal_timer_calibrate (void)
     return 1000000000 / RTHAL_CPU_FREQ;
 }
 
+int rthal_irq_enable (unsigned irq)
+
+{
+    if (irq >= IPIPE_NR_XIRQS)
+	return -EINVAL;
+
+    if (rthal_irq_descp(irq)->chip->unmask == NULL)
+	return -ENODEV;
+
+    rthal_irq_descp(irq)->chip->unmask(irq);
+
+    return 0;
+}
+
+int rthal_irq_disable (unsigned irq)
+{
+
+    if (irq >= IPIPE_NR_XIRQS)
+	return -EINVAL;
+
+    if (rthal_irq_descp(irq)->chip->mask == NULL)
+	return -ENODEV;
+
+    rthal_irq_descp(irq)->chip->mask(irq);
+
+    return 0;
+}
+
+int rthal_irq_host_request (unsigned irq,
+			    irqreturn_t (*handler)(int irq,
+						   void *dev_id,
+						   struct pt_regs *regs), 
+			    char *name,
+			    void *dev_id)
+{
+    if (irq >= IPIPE_NR_XIRQS || !handler)
+	return -EINVAL;
+
+    if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action)
+	{
+	rthal_linux_irq[irq].flags = rthal_irq_descp(irq)->action->flags;
+	rthal_irq_descp(irq)->action->flags |= SA_SHIRQ;
+	}
+
+    return request_irq(irq,handler,SA_SHIRQ,name,dev_id);
+}
+
+int rthal_irq_host_release (unsigned irq, void *dev_id)
+
+{
+    if (irq >= IPIPE_NR_XIRQS || rthal_linux_irq[irq].count == 0)
+	return -EINVAL;
+
+    free_irq(irq,dev_id);
+
+    if (--rthal_linux_irq[irq].count == 0 && rthal_irq_descp(irq)->action)
+	rthal_irq_descp(irq)->action->flags = rthal_linux_irq[irq].flags;
+
+    return 0;
+}
+
 static inline int do_exception_event (unsigned event, unsigned domid, void *data)
 
 {
@@ -119,7 +187,7 @@ static inline int do_exception_event (unsigned event, unsigned domid, void *data
 	rthal_realtime_faults[cpuid][event]++;
 
 	if (rthal_trap_handler != NULL &&
-	    test_bit(cpuid,&rthal_cpu_realtime) &&
+	    test_bit(cpuid,(void *)&rthal_cpu_realtime) &&
 	    rthal_trap_handler(event,domid,data) != 0)
 	    return RTHAL_EVENT_STOP;
 	}
