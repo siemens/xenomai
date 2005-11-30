@@ -48,39 +48,8 @@ typedef atomic_t atomic_counter_t;
 #define LOCK_PREFIX ""
 #endif
 
-typedef struct { volatile int counter; } atomic_counter_t;
-
-#define xnarch_atomic_set(v,i)  (((v)->counter) = (i))
-
 struct __xeno_xchg_dummy { unsigned long a[100]; };
 #define __xeno_xg(x) ((struct __xeno_xchg_dummy *)(x))
-
-static __inline__ void xnarch_atomic_inc(atomic_counter_t *v)
-{
-	__asm__ __volatile__(
-		LOCK_PREFIX "incl %0"
-		:"=m" (v->counter)
-		:"m" (v->counter));
-}
-
-static __inline__ int xnarch_atomic_dec_and_test(atomic_counter_t *v)
-{
-	unsigned char c;
-
-	__asm__ __volatile__(
-		LOCK_PREFIX "decl %0; sete %1"
-		:"=m" (v->counter), "=qm" (c)
-		:"m" (v->counter) : "memory");
-	return c != 0;
-}
-
-#define xnarch_atomic_clear_mask(addr, mask)	\
-__asm__ __volatile__(LOCK_PREFIX "andl %0,%1" \
-: : "r" (~(mask)),"m" (*addr) : "memory")
-
-#define xnarch_atomic_set_mask(addr, mask) \
-__asm__ __volatile__(LOCK_PREFIX "orl %0,%1" \
-: : "r" (mask),"m" (*(addr)) : "memory")
 
 static inline unsigned long xnarch_atomic_xchg (volatile void *ptr,
 						unsigned long x)

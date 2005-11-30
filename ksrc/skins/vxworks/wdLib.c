@@ -73,9 +73,8 @@ WDOG_ID wdCreate (void)
     inith(&wd->link);
     wd->magic = WIND_WD_MAGIC;
 
-    setbits(wd->timerbase.status, WIND_WD_INITIALIZED);
-    
     xnlock_get_irqsave(&nklock, s);
+    __setbits(wd->timerbase.status, WIND_WD_INITIALIZED);
     appendq(&wind_wd_q,&wd->link);
     xnlock_put_irqrestore(&nklock, s);
 
@@ -120,7 +119,7 @@ STATUS wdStart ( WDOG_ID handle,
     check_OBJ_ID_ERROR(handle, wind_wd_t, wd, WIND_WD_MAGIC, goto error);
 
     if(testbits(wd->timerbase.status, WIND_WD_INITIALIZED))
-        clrbits(wd->timerbase.status, WIND_WD_INITIALIZED);
+        __clrbits(wd->timerbase.status, WIND_WD_INITIALIZED);
     else
         if(xntimer_running_p(&wd->timerbase))
             xntimer_stop(&wd->timerbase);

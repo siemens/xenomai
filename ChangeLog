@@ -1,3 +1,8 @@
+2005-11-30  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus, include/asm-*/atomic.h, include/nucleus: Reduce
+	need for atomic op support in user-space to the bare minimum.
+
 2005-11-30  Jan Kiszka <jan.kiszka@web.de>
 
 	* ksrc/arch/i386/smi.c: Remove __initdata from rthal_smi_pci_tbl

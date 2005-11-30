@@ -39,6 +39,34 @@ typedef atomic_t atomic_counter_t;
 #define atomic_xchg(ptr,v)                     ia64_xchg8(ptr,v)
 #define atomic_cmpxchg8_acq(ptr,o,n)           cmpxchg_acq(ptr,o,n)
 
+static inline void atomic_set_mask(unsigned mask, unsigned long *addr)
+{
+    uint32_t old, new;
+    volatile uint32_t *m;
+        
+    m = (volatile uint32_t *) addr;
+    do {
+        old = *m;
+        new = old | mask;
+    } while (atomic_cmpxchg8_acq(m, new, old) != old);
+}
+
+#define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask,pflags)
+
+static inline void atomic_clear_mask(unsigned mask, unsigned long *addr)
+{
+    uint32_t old, new;
+    volatile uint32_t *m;
+        
+    m = (volatile uint32_t *) addr;
+    do {
+        old = *m;
+        new = old & ~mask;
+    } while (atomic_cmpxchg8_acq(m, new, old) != old);
+}
+
+#define xnarch_atomic_clear_mask(pflags,mask)  atomic_clear_mask(mask,pflags)
+
 #else /* !__KERNEL__ */
 
 #include <sys/types.h>
@@ -112,35 +140,9 @@ typedef unsigned long atomic_flags_t;
 /* These functions actually only work on the first 32 bits word of the
    64 bits status word whose address is addr. But the bit fields used
    by the nucleus have to work on 32 bits architectures anyway. */
-static inline void atomic_set_mask(unsigned mask, unsigned long *addr)
-{
-    uint32_t old, new;
-    volatile uint32_t *m;
-        
-    m = (volatile uint32_t *) addr;
-    do {
-        old = *m;
-        new = old | mask;
-    } while (atomic_cmpxchg8_acq(m, new, old) != old);
-}
-
-static inline void atomic_clear_mask(unsigned mask, unsigned long *addr)
-{
-    uint32_t old, new;
-    volatile uint32_t *m;
-        
-    m = (volatile uint32_t *) addr;
-    do {
-        old = *m;
-        new = old & ~mask;
-    } while (atomic_cmpxchg8_acq(m, new, old) != old);
-}
-
-#define xnarch_atomic_set(v,i)                 atomic_set(pcounter)
+#define xnarch_atomic_set(pcounter,i)          atomic_set(pcounter,i)
 #define xnarch_atomic_inc(pcounter)            atomic_inc(pcounter)
 #define xnarch_atomic_dec_and_test(pcounter)   atomic_dec_and_test(pcounter)
-#define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask,pflags)
-#define xnarch_atomic_clear_mask(pflags,mask)  atomic_clear_mask(mask,pflags)
 #define xnarch_atomic_xchg(ptr,x)              atomic_xchg(ptr,x)
 
 #endif /* !_XENO_ASM_IA64_ATOMIC_H */

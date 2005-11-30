@@ -129,6 +129,18 @@ static inline void set_linux_task_priority (struct task_struct *p, int prio)
 	printk(KERN_WARNING "Xenomai: invalid Linux priority level: %d, task=%s\n",prio,p->comm);
 }
 
+static inline void lock_timers (void)
+{
+    xnarch_atomic_inc(&nkpod->timerlck);
+    setbits(nkpod->status,XNTLOCK);
+}
+
+static inline void unlock_timers (void)
+{
+    if (xnarch_atomic_dec_and_test(&nkpod->timerlck))
+	clrbits(nkpod->status,XNTLOCK);
+}
+
 #ifdef CONFIG_XENO_OPT_ISHIELD
 
 static rthal_pipeline_stage_t irq_shield;
@@ -1525,7 +1537,7 @@ static inline void do_schedule_event (struct task_struct *next)
 		}
 
 	    clrbits(threadin->status,XNDEBUG);
-	    xnpod_unlock_timers();
+	    unlock_timers();
 	    }
 
  no_ptrace:
@@ -1613,7 +1625,7 @@ static inline void do_sigwake_event (struct task_struct *p)
 	    sigismember(&pending,SIGINT))
 	    {
 	    __setbits(thread->status,XNDEBUG);
-	    xnpod_lock_timers();
+	    lock_timers();
 	    }
 	}
 
@@ -1624,12 +1636,12 @@ static inline void do_sigwake_event (struct task_struct *p)
 	xnsched_set_resched(thread->sched);
 
     if (xnpod_unblock_thread(thread))
-	setbits(thread->status,XNKICKED);
+	__setbits(thread->status,XNKICKED);
 
     if (testbits(thread->status,XNSUSP))
 	{
 	xnpod_resume_thread(thread,XNSUSP);
-	setbits(thread->status,XNKICKED);
+	__setbits(thread->status,XNKICKED);
 	}
 
     /* If we are kicking a shadow thread, make sure Linux won't
