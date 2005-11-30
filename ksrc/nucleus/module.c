@@ -429,32 +429,6 @@ EXPORT_SYMBOL(xnlock_stats);
 
 #endif /* CONFIG_XENO_OPT_STATS */
 
-#ifdef CONFIG_XENO_OPT_CONFIG_GZ
-
-extern int xeno_config_data_size;
-
-int config_copy_data(char *buf, size_t len, loff_t pos);
-
-static ssize_t config_read_proc (struct file *file,
-				 char *buf,
-				 size_t len,
-				 loff_t *offp)
-{
-    ssize_t count = config_copy_data(buf,len,*offp);
-
-    if (count > 0)
-	*offp += count;
-
-    return count;
-}
-
-static struct file_operations config_file_operations = {
-    .owner = THIS_MODULE,
-    .read = config_read_proc
-};
-
-#endif /* CONFIG_XENO_OPT_CONFIG_GZ */
-
 static int latency_read_proc (char *page,
 			      char **start,
 			      off_t off,
@@ -622,13 +596,6 @@ void xnpod_init_proc (void)
 
 #endif /* CONFIG_XENO_OPT_STATS */
 
-#ifdef CONFIG_XENO_OPT_CONFIG_GZ
-    add_proc_fops("config.gz",
-		  &config_file_operations,
-		  xeno_config_data_size,
-		  rthal_proc_root);
-#endif /* CONFIG_XENO_OPT_CONFIG_GZ */
-
     add_proc_leaf("latency",
 		  &latency_read_proc,
 		  &latency_write_proc,
@@ -666,9 +633,6 @@ void xnpod_delete_proc (void)
 
     remove_proc_entry("interfaces",rthal_proc_root);
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
-#ifdef CONFIG_XENO_OPT_CONFIG_GZ
-    remove_proc_entry("config.gz",rthal_proc_root);
-#endif /* CONFIG_XENO_OPT_CONFIG_GZ */
     remove_proc_entry("timer",rthal_proc_root);
     remove_proc_entry("version",rthal_proc_root);
     remove_proc_entry("latency",rthal_proc_root);
