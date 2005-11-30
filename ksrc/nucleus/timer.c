@@ -118,7 +118,7 @@ static inline void xntimer_next_remote_shot (xnsched_t *sched)
     xnarch_send_timer_ipi(xnarch_cpumask_of_cpu(xnsched_cpu(sched)));
 }
 
-void xntimer_do_start_aperiodic (xntimer_t *timer,
+static void xntimer_do_start_aperiodic (xntimer_t *timer,
 				 xnticks_t value,
 				 xnticks_t interval)
 {
@@ -146,7 +146,7 @@ void xntimer_do_start_aperiodic (xntimer_t *timer,
         }
 }
 
-void xntimer_do_stop_aperiodic (xntimer_t *timer)
+static void xntimer_do_stop_aperiodic (xntimer_t *timer)
 
 {
     int heading;
@@ -165,13 +165,13 @@ void xntimer_do_stop_aperiodic (xntimer_t *timer)
     xnlock_put_irqrestore(&nklock,s);
 }
 
-xnticks_t xntimer_get_date_aperiodic (xntimer_t *timer)
+static xnticks_t xntimer_get_date_aperiodic (xntimer_t *timer)
 
 {
     return xnarch_tsc_to_ns(xntimer_date(timer));
 }
 
-xnticks_t xntimer_get_timeout_aperiodic (xntimer_t *timer)
+static xnticks_t xntimer_get_timeout_aperiodic (xntimer_t *timer)
 
 {
     xnticks_t tsc = xnarch_get_cpu_tsc();
@@ -215,7 +215,7 @@ static const char *xntimer_get_type_aperiodic (void)
  * @note Only active timers are inserted into the timer wheel.
  */
 
-void xntimer_do_tick_aperiodic (void)
+static void xntimer_do_tick_aperiodic (void)
 
 {
     xnsched_t *sched = xnpod_current_sched();
@@ -274,7 +274,7 @@ void xntimer_do_tick_aperiodic (void)
     xntimer_next_local_shot(sched);
 }
 
-void xntimer_set_remote_aperiodic (xntimer_t *timer)
+static void xntimer_set_remote_aperiodic (xntimer_t *timer)
 
 {
     xntimer_enqueue_aperiodic(timer);
@@ -302,7 +302,7 @@ static inline void xntimer_dequeue_periodic (xntimer_t *timer)
     __setbits(timer->status,XNTIMER_DEQUEUED);
 }
 
-void xntimer_do_start_periodic (xntimer_t *timer,
+static void xntimer_do_start_periodic (xntimer_t *timer,
 				xnticks_t value,
 				xnticks_t interval)
 {
@@ -322,7 +322,7 @@ void xntimer_do_start_periodic (xntimer_t *timer,
         }
 }
 
-void xntimer_do_stop_periodic (xntimer_t *timer)
+static void xntimer_do_stop_periodic (xntimer_t *timer)
 
 {
     spl_t s;
@@ -332,13 +332,13 @@ void xntimer_do_stop_periodic (xntimer_t *timer)
     xnlock_put_irqrestore(&nklock,s);
 }
 
-xnticks_t xntimer_get_date_periodic (xntimer_t *timer)
+static xnticks_t xntimer_get_date_periodic (xntimer_t *timer)
 
 {
     return xntimer_date(timer);
 }
 
-xnticks_t xntimer_get_timeout_periodic (xntimer_t *timer)
+static xnticks_t xntimer_get_timeout_periodic (xntimer_t *timer)
 
 {
     return xntimer_date(timer) - nkpod->jiffies;
@@ -375,7 +375,7 @@ static const char *xntimer_get_type_periodic (void)
  * @note Only active timers are inserted into the timer wheel.
  */
 
-void xntimer_do_tick_periodic (void)
+static void xntimer_do_tick_periodic (void)
 
 {
     xnsched_t *sched = xnpod_current_sched();
@@ -428,7 +428,7 @@ void xntimer_do_tick_periodic (void)
         }
 }
 
-void xntimer_set_remote_periodic (xntimer_t *timer)
+static void xntimer_set_remote_periodic (xntimer_t *timer)
 
 {
     xntimer_enqueue_periodic(timer);
