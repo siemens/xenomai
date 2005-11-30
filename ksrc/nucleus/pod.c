@@ -1120,6 +1120,9 @@ void xnpod_delete_thread (xnthread_t *thread)
 
     xnlock_get_irqsave(&nklock,s);
 
+    if (testbits(thread->status,XNZOMBIE))
+	goto unlock_and_exit;	/* No double-deletion. */
+
     xnltt_log_event(xeno_ev_thrdelete,thread->name);
 
     sched = thread->sched;
@@ -1191,6 +1194,8 @@ void xnpod_delete_thread (xnthread_t *thread)
 
         xnarch_finalize_no_switch(xnthread_archtcb(thread));
         }
+
+ unlock_and_exit:
 
     xnlock_put_irqrestore(&nklock,s);
 }

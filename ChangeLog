@@ -1,5 +1,7 @@
 2005-11-30  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/pod.c (xnpod_delete_thread): Prevent double-deletion.
+
 	* ksrc/arch/bfinnommu, include/asm-bfinnommu: Finalize groundwork
 	for the Blackfin port.
 
