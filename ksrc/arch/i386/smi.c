@@ -31,7 +31,7 @@
 #include <linux/reboot.h>
 #include <asm/xenomai/smi.h>
 
-static struct pci_device_id rthal_smi_pci_tbl[] __initdata = {
+static struct pci_device_id rthal_smi_pci_tbl[] = {
 { PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801AA_0) },
 { PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801AB_0) },
 { PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801BA_0) },
