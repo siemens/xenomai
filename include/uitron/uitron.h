@@ -58,7 +58,7 @@ typedef unsigned short VH;      /* unpredictable data type (16-bit size) */
 typedef unsigned char VB;	/* unpredictable data type (8-bit size) */
 
 typedef void *VP;		/* pointer to an unpredictable data type */
-typedef void (*FP)(void);	/* program start address */
+typedef void (*FPTR)(void);	/* program start address -- should be FP, but conflicts */
 
 typedef W INT;
 typedef UW UINT;
@@ -80,7 +80,7 @@ typedef struct t_ctsk {
 
     VP    exinf;     /* extended information */
     ATR   tskatr;    /* task attributes */
-    FP    task;      /* task start address */
+    FPTR  task;      /* task start address */
     PRI   itskpri;   /* initial task priority */
     INT   stksz;     /* stack size */
 
@@ -117,7 +117,7 @@ typedef struct t_rtsk {
     INT    wupcnt;    /* wakeup request count */
     INT    suscnt;    /* SUSPEND request count */
     ATR    tskatr;    /* task attributes */
-    FP     task;      /* task start address */
+    FPTR   task;      /* task start address */
     PRI    itskpri;   /* initial task priority */
     INT    stksz;     /* stack size */
 
@@ -292,7 +292,7 @@ typedef struct t_rpor {
 
 typedef struct t_dint {
     ATR   intatr;   /* interrupt handler attributes */
-    FP    inthdr;   /* interrupt handler address */
+    FPTR  inthdr;   /* interrupt handler address */
 
     /* Implementation-dependent part */
 
@@ -352,7 +352,7 @@ typedef struct t_systime {
 typedef struct t_dcyc {
     VP        exinf;    /* extended information */
     ATR       cycatr;   /* cyclic handler attributes */
-    FP        cychdr;   /* cyclic handler address */
+    FPTR      cychdr;   /* cyclic handler address */
     UINT      cycact;   /* cyclic handler activation */
     CYCTIME   cyctim;   /* cyclic startup period */
 } T_DCYC;
@@ -373,7 +373,7 @@ typedef struct t_rcyc {
 typedef struct t_dalm {
     VP        exinf;    /* extended information */
     ATR       almatr;   /* alarm handler attributes */
-    FP        almhdr;   /* alarm handler address */
+    FPTR      almhdr;   /* alarm handler address */
     UINT      tmmode;   /* start time specification mode */
     ALMTIME   almtim;   /* handler startup time */
 } T_DALM;
@@ -425,7 +425,7 @@ typedef struct t_rcfg {
 
 typedef struct t_dsvc {
     ATR   svcatr;   /* extended SVC handler attributes */
-    FP    svchdr;   /* extended SVC handler address */
+    FPTR  svchdr;   /* extended SVC handler address */
 
     /* Implementation-dependent part */
 
@@ -433,7 +433,7 @@ typedef struct t_dsvc {
 
 typedef struct t_dexc {
     ATR   excatr;   /* exception handler attributes */
-    FP    exchdr;   /* exception handler address */
+    FPTR  exchdr;   /* exception handler address */
 
     /* Implementation-dependent part */
 
