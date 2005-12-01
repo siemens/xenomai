@@ -250,6 +250,11 @@ rtdm_task_t *rtdm_task_current(void);
  * @param[in,out] task Task handle as returned by rtdm_task_init()
  * @param[in] poll_delay Polling delay in milliseconds
  *
+ * @note It is not required to call rtdm_task_destroy() for a task which has
+ * been passed to rtdm_task_join_nrt(). Moreover, don't forget to inform the
+ * targeted task that it has to terminate. Otherwise, this function will never
+ * return.
+ *
  * Environments:
  *
  * This service can be called from:
