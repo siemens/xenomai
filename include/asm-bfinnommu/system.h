@@ -28,7 +28,16 @@
 #include <asm/system.h>
 
 #define XNARCH_DEFAULT_TICK     1000000 /* ns, i.e. 1ms */
-#define XNARCH_HOST_TICK        (1000000000UL/HZ)
+#ifdef CONFIG_XENO_HW_PERIODIC_TIMER
+/* If the periodic timing support is compiled in, we need a dynamic
+   information about the current timer mode in order to determine the
+   hist tick setup. Ask the HAL for this. */
+#define XNARCH_HOST_TICK        rthal_timer_host_freq()
+#else /* !CONFIG_XENO_HW_PERIODIC_TIMER */
+/* If the periodic timing support is not compiled in, we need to relay
+   the host tick in any case; just define the period constant. */
+#define XNARCH_HOST_TICK        RTHAL_HOST_PERIOD
+#endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
 
 #define XNARCH_THREAD_STACKSZ   8192
 
@@ -91,25 +100,19 @@ extern "C" {
 static inline void *xnarch_sysalloc (u_long bytes)
 
 {
-    if (bytes >= 128*1024)
-	return vmalloc(bytes);
-
     return kmalloc(bytes,GFP_KERNEL);
 }
 
 static inline void xnarch_sysfree (void *chunk, u_long bytes)
 
 {
-    if (bytes >= 128*1024)
-	vfree(chunk);
-    else
-	kfree(chunk);
+    kfree(chunk);
 }
 
 static inline void xnarch_relay_tick (void)
 
 {
-    rthal_irq_host_pend(RTHAL_TIMER_IRQ);
+    rthal_irq_host_pend(IRQ_CORETMR);
 }
 
 #ifdef XENO_POD_MODULE
@@ -310,16 +313,6 @@ static inline void xnarch_grab_xirqs (void (*handler)(unsigned irq))
 			     handler,
 			     NULL,
 			     IPIPE_DYNAMIC_MASK);
-
-    /* On this arch, the decrementer trap is not an external IRQ but
-       it is instead mapped to a virtual IRQ, so we must grab it
-       individually. */
-
-    rthal_virtualize_irq(rthal_current_domain,
-			 RTHAL_TIMER_IRQ,
-			 handler,
-			 NULL,
-			 IPIPE_DYNAMIC_MASK);
 }
 
 static inline void xnarch_lock_xirqs (rthal_pipeline_stage_t *ipd, int cpuid)
@@ -343,8 +336,6 @@ static inline void xnarch_lock_xirqs (rthal_pipeline_stage_t *ipd, int cpuid)
 		rthal_lock_irq(ipd,cpuid,irq);
 	    }
 	}
-
-    rthal_lock_irq(ipd,cpuid,RTHAL_TIMER_IRQ);
 }
 
 static inline void xnarch_unlock_xirqs (rthal_pipeline_stage_t *ipd, int cpuid)
@@ -367,8 +358,6 @@ static inline void xnarch_unlock_xirqs (rthal_pipeline_stage_t *ipd, int cpuid)
 		rthal_unlock_irq(ipd,irq);
 	    }
 	}
-
-    rthal_unlock_irq(ipd,RTHAL_TIMER_IRQ);
 }
 
 static inline int xnarch_local_syscall (struct pt_regs *regs)

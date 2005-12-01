@@ -20519,6 +20519,14 @@ case "$host" in
  ia64-*)
 	XENO_TARGET_ARCH=ia64
         ;;
+ bfin-*|bfinnommu-*|blackfin-*)
+	XENO_TARGET_ARCH=bfinnommu
+	if test x$enable_shared = xyes; then
+	   { { echo "$as_me:$LINENO: error: Shared libraries unsupported -- use --disable-shared" >&5
+echo "$as_me: error: Shared libraries unsupported -- use --disable-shared" >&2;}
+   { (exit 1); exit 1; }; }
+	fi
+        ;;
  *) echo ""
    echo "*******************************************"
    echo "Still unsupported target: $host -- Sorry."
@@ -21375,6 +21383,9 @@ case $XENO_TARGET_ARCH in
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
         ;;
  ia64)
+	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
+        ;;
+ bfinnommu)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
         ;;
 esac

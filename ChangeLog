@@ -1,3 +1,12 @@
+2005-12-01  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/bfinnommu/hal.c: Implement timer support.
+
+	* include/asm-bfinnommu/syscall.h: Finalize for user-space build.
+
+	* ksrc/skins/rtai/task.c (rt_task_init): Make proper cleanup upon
+	xnpod_start_thread() failure.
+
 2005-12-01  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/rtdm/drvlib.c (rtdm_task_join_nrt): Clarify doc.

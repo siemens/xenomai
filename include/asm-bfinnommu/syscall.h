@@ -103,7 +103,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs) {
   "excpt 0;\n\t" 							\
   "%0=r0;\n\t"								\
   : "=da" (__res) 							\
-  : "i" (muxcode)							\
+  : "d" (muxcode)							\
   : "CC", "P0");							\
   __res;								\
 })
@@ -117,7 +117,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs) {
   "excpt 0;\n\t" 							\
   "%0=r0;\n\t"								\
         : "=da" (__res)							\
-        : "i" (muxcode),						\
+        : "d" (muxcode),						\
 	  "a" ((long)(a1))						\
 	: "CC", "R0", "P0");						\
   __res;								\
@@ -133,7 +133,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs) {
   "excpt 0;\n\t" 							\
   "%0=r0;\n\t"								\
         : "=da" (__res)							\
-        : "i" (muxcode),						\
+        : "d" (muxcode),						\
 	  "a" ((long)(a1)),						\
 	  "a" ((long)(a2))						\
 	: "CC", "R0","R1", "P0");					\
@@ -151,7 +151,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs) {
   "excpt 0;\n\t" 							\
   "%0=r0;\n\t"								\
         : "=da" (__res)							\
-        : "i"   (muxcode),						\
+        : "d"   (muxcode),						\
 	  "a"   ((long)(a1)),						\
 	  "a"   ((long)(a2)),						\
 	  "a"   ((long)(a3))						\
@@ -173,7 +173,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs) {
   "%0=r0;\n\t"								\
   "r3 = [sp++];\n\t"							\
   	: "=da" (__res)							\
-  	: "i"  (muxcode),						\
+  	: "d"  (muxcode),						\
 	  "a"  ((long)(a1)),						\
 	  "a"  ((long)(a2)),						\
 	  "a"  ((long)(a3)),						\
@@ -199,7 +199,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs) {
   "r3 = [sp++];\n\t" 							\
   "r4 = [sp++];\n\t"                                                    \
   	: "=da" (__res)							\
-  	: "i"  (muxcode),						\
+  	: "d"  (muxcode),						\
 	  "rm"  ((long)(a1)),						\
 	  "rm"  ((long)(a2)),						\
 	  "rm"  ((long)(a3)),						\
@@ -209,10 +209,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs) {
   __res;								\
 })
 
-#define XENOMAI_DO_SYSCALL(nr, id, op, args...)			\
-  ({								\
-	__emit_syscall##nr(__xn_mux_code(id,op), args);		\
-  })
+#define XENOMAI_DO_SYSCALL(nr, id, op, args...)	__emit_syscall##nr(__xn_mux_code(id,op), ##args)
 
 #define XENOMAI_SYSCALL0(op)                XENOMAI_DO_SYSCALL(0,0,op)
 #define XENOMAI_SYSCALL1(op,a1)             XENOMAI_DO_SYSCALL(1,0,op,a1)
@@ -232,6 +229,10 @@ static inline int __xn_interrupted_p(struct pt_regs *regs) {
 /* Cannot read the CYCLES/CYCLES2 counters safely from
    non-supervisor mode. Sigh... */
 #undef CONFIG_XENO_HW_DIRECT_TSC
+
+/* uClibc does not provide any dummy mlockall() call for this arch;
+   nullify it here. */
+#define mlockall(flags)  ({ (void)(flags); 0; })
 
 #endif /* __KERNEL__ */
 
