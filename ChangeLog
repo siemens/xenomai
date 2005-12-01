@@ -1,5 +1,9 @@
 2005-12-01  Philippe Gerum  <rpm@xenomai.org>
 
+	* configure.in, src/testsuite, scripts/xeno-config.in: Introduce
+	*USER_LDFLAGS so that we can ask for flat executables when linking
+	for uClinux.
+
 	* ksrc/bfinnommu/hal.c: Implement timer support.
 
 	* include/asm-bfinnommu/syscall.h: Finalize for user-space build.

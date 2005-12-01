@@ -296,6 +296,7 @@ fi
 AC_MSG_RESULT([done])
 
 XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -D__XENO__"
+XENO_USER_LDFLAGS=
 
 case $XENO_TARGET_ARCH in
  i386)
@@ -309,6 +310,9 @@ case $XENO_TARGET_ARCH in
         ;;
  bfinnommu)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
+	# uClinux wants flat format executables; assume that our
+	# source format is ELF.
+	XENO_USER_LDFLAGS="-Wl,-elf2flt"
         ;;
 esac
 
@@ -320,6 +324,7 @@ fi
 
 XENO_USER_APP_CFLAGS=$XENO_USER_CFLAGS
 XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__IN_XENO__ -Wstrict-prototypes"
+XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
 
 dnl
 dnl Build the Makefiles
@@ -335,7 +340,9 @@ AC_SUBST(XENO_TARGET_ARCH)
 AC_SUBST(XENO_BUILD_STRING)
 AC_SUBST(XENO_HOST_STRING)
 AC_SUBST(XENO_USER_CFLAGS)
+AC_SUBST(XENO_USER_LDFLAGS)
 AC_SUBST(XENO_USER_APP_CFLAGS)
+AC_SUBST(XENO_USER_APP_LDFLAGS)
 
 base=include
 AC_CONFIG_LINKS([src/include/xenomai:$base])

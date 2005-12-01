@@ -6,6 +6,8 @@ latency_SOURCES = latency.c
 
 latency_CPPFLAGS = @XENO_USER_CFLAGS@
 
+latency_LDFLAGS = @XENO_USER_LDFLAGS@
+
 latency_LDADD = \
 	../../skins/native/libnative.la \
 	-lpthread -lm
