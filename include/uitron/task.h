@@ -40,7 +40,7 @@ typedef struct uitask {
 
     ID tskid;
 
-    FP entry;
+    FPTR entry;
 
     INT stacd;
 
