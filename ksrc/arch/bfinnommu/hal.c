@@ -59,27 +59,33 @@ int rthal_timer_request (void (*handler)(void),
 			 unsigned long nstick)
 {
     unsigned long flags;
+    unsigned irq;
     int err;
 
     flags = rthal_critical_enter(NULL);
 
     if (nstick > 0)
 	{
-	/* Periodic setup --
-	   Use the built-in Adeos service directly. */
+	/* Periodic setup -- Use the built-in Adeos service directly
+	   which relies on the core timer. */
 	err = rthal_set_timer(nstick);
+	irq = RTHAL_PERIODIC_TIMER_IRQ;
 	rthal_periodic_p = 1;
 	}
     else
 	{
-	/* Oneshot setup. */
+	/* Oneshot setup. We use TIMER0 in PWM_OUT, single pulse mode. */
+	*pTIMER_DISABLE = 1;	/* Disable TIMER0 for now. */
+	__builtin_bfin_csync();
+	*pTIMER0_CONFIG = 0x11;	/* IRQ enable, single pulse, PWM_OUT */
+	__builtin_bfin_csync();
+	irq = RTHAL_ONESHOT_TIMER_IRQ;
 	rthal_periodic_p = 0;
-	/* FIXME */
 	}
 
-    rthal_irq_release(RTHAL_TIMER_IRQ);
+    rthal_irq_release(irq);
 
-    err = rthal_irq_request(RTHAL_TIMER_IRQ,
+    err = rthal_irq_request(irq,
 			    (rthal_irq_handler_t)handler,
 			    NULL,
 			    NULL);
@@ -93,17 +99,23 @@ void rthal_timer_release (void)
 
 {
     unsigned long flags;
+    unsigned irq;
 
     flags = rthal_critical_enter(NULL);
 
     if (rthal_periodic_p)
+	{
 	rthal_reset_timer();
+	irq = RTHAL_PERIODIC_TIMER_IRQ;
+	}
     else
 	{
-	/* FIXME */
+	*pTIMER_DISABLE = 1;	/* Disable TIMER0. */
+	__builtin_bfin_csync();
+	irq = RTHAL_ONESHOT_TIMER_IRQ;
 	}
 
-    rthal_irq_release(RTHAL_TIMER_IRQ);
+    rthal_irq_release(irq);
 
     rthal_critical_exit(flags);
 }
@@ -111,7 +123,7 @@ void rthal_timer_release (void)
 unsigned long rthal_timer_calibrate (void)
 
 {
-    return 1000000000 / RTHAL_CPU_FREQ;
+    return (1000000000 / RTHAL_CPU_FREQ) * 100;	/* 100 CPU cycles */
 }
 
 int rthal_irq_enable (unsigned irq)
@@ -173,6 +185,16 @@ int rthal_irq_host_release (unsigned irq, void *dev_id)
 	rthal_irq_descp(irq)->action->flags = rthal_linux_irq[irq].flags;
 
     return 0;
+}
+
+unsigned long rthal_timer_host_freq (void)
+{
+    /* In periodic timing, we divert the core timer for our own
+       ticking, so we need to relay a Linux timer tick according to
+       the HZ frequency. In aperiodic timing, we use TIMER0, leaving
+       the core timer untouched, so we don't need to relay any host
+       tick since we don't divert it in the first place. */
+    return rthal_periodic_p ? RTHAL_HOST_PERIOD : 0;
 }
 
 static inline int do_exception_event (unsigned event, unsigned domid, void *data)
