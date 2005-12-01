@@ -131,21 +131,25 @@ int rt_task_init (RT_TASK *task,
 
     xnlock_get_irqsave(&nklock,s);
 
-    task->magic = RTAI_TASK_MAGIC;
-    appendq(&__rtai_task_q,&task->link);
-
     err = xnpod_start_thread(&task->thread_base,
 			     XNSUSP, /* Suspend on startup. */
 			     0,
 			     task->affinity,
 			     &rt_task_trampoline,
 			     task);
+    if (err)
+	goto unlock_and_exit;
+
+    task->magic = RTAI_TASK_MAGIC;
+    appendq(&__rtai_task_q,&task->link);
 
     /* Add a switch hook only if a signal function has been declared
        at least once for some created task. */
 
-    if (sigfn != NULL && !err && __rtai_task_sig++ == 0)
+    if (sigfn != NULL && __rtai_task_sig++ == 0)
 	xnpod_add_hook(XNHOOK_THREAD_SWITCH,&__task_switch_hook);
+
+ unlock_and_exit:
 
     xnlock_put_irqrestore(&nklock,s);
 
