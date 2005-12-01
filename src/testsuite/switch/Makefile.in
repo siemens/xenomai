@@ -166,7 +166,9 @@ XENO_HOST_STRING = @XENO_HOST_STRING@
 XENO_MAYBE_DOCDIR = @XENO_MAYBE_DOCDIR@
 XENO_TARGET_ARCH = @XENO_TARGET_ARCH@
 XENO_USER_APP_CFLAGS = @XENO_USER_APP_CFLAGS@
+XENO_USER_APP_LDFLAGS = @XENO_USER_APP_LDFLAGS@
 XENO_USER_CFLAGS = @XENO_USER_CFLAGS@
+XENO_USER_LDFLAGS = @XENO_USER_LDFLAGS@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CC_FOR_BUILD = @ac_ct_CC_FOR_BUILD@
@@ -217,9 +219,8 @@ target_os = @target_os@
 target_vendor = @target_vendor@
 testdir = $(prefix)/testsuite/switch
 switch_SOURCES = switch.c
-switch_CPPFLAGS = \
-	@XENO_USER_CFLAGS@
-
+switch_CPPFLAGS = @XENO_USER_CFLAGS@
+switch_LDFLAGS = @XENO_USER_LDFLAGS@
 switch_LDADD = \
 	../../skins/native/libnative.la \
 	-lpthread
