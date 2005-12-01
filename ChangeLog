@@ -1,3 +1,7 @@
+2005-12-01  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/rtdm/drvlib.c (rtdm_task_join_nrt): Clarify doc.
+
 2005-11-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pod.c (xnpod_delete_thread): Prevent double-deletion.
@@ -10,7 +14,7 @@
 	* ksrc/arch/powerpc/patches: Upgrade to Adeos
 	2.4.25-denx-0.9-04, 2.6.10-ppc64-r3.patch.
 
-2005-11-30  Ignacio García Pérez <iggarpe@terra.es>
+2005-11-30  Ignacio Garcia Perez <iggarpe@terra.es>
 
 	* ksrc/nucleus/timer.c: Make internal routines static.
 
