@@ -145,6 +145,32 @@ static inline void xnarch_enter_root (xnarchtcb_t *rootcb) {
     __clear_bit(xnarch_current_cpu(),&rthal_cpu_realtime);
 }
 
+asmlinkage void resume(void);
+#define __do_switch_to(prev,next) do { \
+  __asm__ __volatile__(							\
+  			"[--sp] = r4;\n\t"				\
+  			"[--sp] = r5;\n\t"				\
+  			"[--sp] = r6;\n\t"				\
+  			"[--sp] = r7;\n\t"				\
+  			"[--sp] = p3;\n\t"				\
+  			"[--sp] = p4;\n\t"				\
+  			"[--sp] = p5;\n\t"				\
+  			"r0 = %0;\n\t"					\
+			"r1 = %1;\n\t"					\
+			"call resume;\n\t" 				\
+  			"p5 = [sp++];\n\t"				\
+  			"p4 = [sp++];\n\t"				\
+  			"p3 = [sp++];\n\t"				\
+  			"r7 = [sp++];\n\t"				\
+  			"r6 = [sp++];\n\t"				\
+  			"r5 = [sp++];\n\t"				\
+  			"r4 = [sp++];\n\t"				\
+			: /*no output*/					\
+			: "d" (prev),					\
+			  "d" (next)					\
+			: "CC", "R0", "R1", "P0", "P1");		\
+} while(0)
+
 static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
 				     xnarchtcb_t *in_tcb)
 {
@@ -155,7 +181,7 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
 
     if (next && next != prev) {
 	/* Switch to user-space thread. */
-	switch_to(prev, next, prev);
+	__do_switch_to(prev, next);
     }
     else
         /* Kernel-to-kernel context switch. */
