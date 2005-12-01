@@ -1,5 +1,8 @@
 2005-12-01  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/asm-bfinnommu/system.h (xnarch_switch_to): Protect all
+	caller-saved registers across user-space switches.
+
 	* configure.in, src/testsuite, scripts/xeno-config.in: Introduce
 	*USER_LDFLAGS so that we can ask for flat executables when linking
 	for uClinux.
