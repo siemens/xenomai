@@ -54,18 +54,18 @@
 /*
   Must follow the declaration order of the above bits. Status symbols
   are defined as follows:
-  'S' -> forcibly suspended.
-  'w'/'W' -> waiting for a resource, with or without timeout.
-  'D' -> delayed (without any other wait condition).
-  'R' -> runnable.
-  'U' -> unstarted or dormant.
+  'S' -> Forcibly suspended.
+  'w'/'W' -> Waiting for a resource, with or without timeout.
+  'D' -> Delayed (without any other wait condition).
+  'R' -> Runnable.
+  'U' -> Unstarted or dormant.
   'X' -> Relaxed shadow.
   'b' -> Priority boost undergoing.
-  'T' -> ptraced and stopped.
-  'l' -> locks scheduler.
-  'r' -> undergoes round-robin .
-  's' -> interrupt shield enabled.
-  't' -> mode switches trapped.
+  'T' -> Ptraced and stopped.
+  'l' -> Locks scheduler.
+  'r' -> Undergoes round-robin .
+  's' -> Interrupt shield enabled.
+  't' -> Mode switches trapped.
   'f' -> FPU enabled (for kernel threads).
 */
 #define XNTHREAD_SLABEL_INIT { \
