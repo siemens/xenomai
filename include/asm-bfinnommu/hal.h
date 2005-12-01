@@ -29,6 +29,8 @@
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 #include <asm/div64.h>
 
+#define RTHAL_HOST_PERIOD      (1000000000UL/HZ)
+
 typedef unsigned long long rthal_time_t;
 
 #define __rthal_u64tou32(ull, h, l) ({                  \
@@ -116,7 +118,8 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #include <asm/processor.h>
 #include <asm/xenomai/atomic.h>
 
-#define RTHAL_TIMER_IRQ   IPIPE_TIMER_IRQ
+#define RTHAL_PERIODIC_TIMER_IRQ   IRQ_CORETMR
+#define RTHAL_ONESHOT_TIMER_IRQ    IRQ_TMR0
 
 #define rthal_irq_descp(irq)	(&irq_desc[(irq)])
 
@@ -142,11 +145,24 @@ static inline struct task_struct *rthal_current_host_task (int cpuid)
 
 static inline void rthal_timer_program_shot (unsigned long delay)
 {
-    if(!delay) delay = 1;
-    /* FIXME */
+    if(!delay) delay = 10;
+
+    if (*pTIMER_ENABLE & 1) {
+    	/* The oneshot timer is enabled (and running);
+	   force disable before reprogramming it. */
+    	*pTIMER_DISABLE = 1;
+    	*pTIMER_STATUS = 0x1000;
+	__builtin_bfin_csync();
+    }
+
+    *pTIMER0_WIDTH = delay;
+    *pTIMER_ENABLE = 1;	/* Enable TIMER0. */
+    __builtin_bfin_csync();
 }
 
     /* Private interface -- Internal use only */
+
+unsigned long rthal_timer_host_freq(void);
 
 void rthal_switch_context(unsigned long *out_kspp,
 			  unsigned long *in_kspp);
