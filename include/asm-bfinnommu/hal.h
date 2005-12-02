@@ -140,7 +140,6 @@ static inline struct task_struct *rthal_current_host_task (int cpuid)
     return current;
 }
 
-#if 0
 static inline void rthal_timer_program_shot (unsigned long delay)
 {
     if(!delay) delay = 10;
@@ -157,9 +156,6 @@ static inline void rthal_timer_program_shot (unsigned long delay)
     *pTIMER_ENABLE = 1;	/* Enable TIMER0. */
     __builtin_bfin_csync();
 }
-#else
-void rthal_timer_program_shot (unsigned long delay);
-#endif
 
     /* Private interface -- Internal use only */
 
