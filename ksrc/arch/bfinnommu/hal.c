@@ -46,6 +46,17 @@
 #endif /* CONFIG_PROC_FS */
 #include <stdarg.h>
 
+#ifdef CONFIG_XENO_HW_PERIODIC_TIMER
+int rthal_periodic_p;
+
+static inline void rthal_set_aperiodic(void)
+{
+    rthal_periodic_p = 0;
+}
+#else /* !CONFIG_XENO_HW_PERIODIC_TIMER */
+#define rthal_set_aperiodic() do { } while(0)
+#endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
+
 static struct {
 
     unsigned long flags;
@@ -53,7 +64,15 @@ static struct {
 
 } rthal_linux_irq[IPIPE_NR_XIRQS];
 
-static int rthal_periodic_p;
+static int rthal_timer_ack (unsigned irq)
+{
+    if (irq == RTHAL_APERIODIC_TIMER_IRQ) {
+    	/* Clear TIMER0 interrupt and re-enable IRQ channel. */
+    	*pTIMER_STATUS = 1;
+	__builtin_bfin_csync();
+    }
+    return 1;	/* Tell Adeos that we acknowledged the timer IRQ. */
+}
 
 int rthal_timer_request (void (*handler)(void),
 			 unsigned long nstick)
@@ -64,13 +83,16 @@ int rthal_timer_request (void (*handler)(void),
 
     flags = rthal_critical_enter(NULL);
 
-    if (nstick > 0)
-	{
+    if (nstick > 0) {
+#ifdef CONFIG_XENO_HW_PERIODIC_TIMER
 	/* Periodic setup -- Use the built-in Adeos service directly
 	   which relies on the core timer. */
 	err = rthal_set_timer(nstick);
 	irq = RTHAL_PERIODIC_TIMER_IRQ;
 	rthal_periodic_p = 1;
+#else /* !CONFIG_XENO_HW_PERIODIC_TIMER */
+        return -ENOSYS;
+#endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
 	}
     else
 	{
@@ -79,16 +101,16 @@ int rthal_timer_request (void (*handler)(void),
 	__builtin_bfin_csync();
 	*pTIMER0_CONFIG = 0x11;	/* IRQ enable, single pulse, PWM_OUT, SCLKed */
 	__builtin_bfin_csync();
-	irq = RTHAL_ONESHOT_TIMER_IRQ;
+	irq = RTHAL_APERIODIC_TIMER_IRQ;
 	rthal_irq_enable(irq);
-	rthal_periodic_p = 0;
+	rthal_set_aperiodic();
 	}
 
     rthal_irq_release(irq);
 
     err = rthal_irq_request(irq,
 			    (rthal_irq_handler_t)handler,
-			    NULL,
+			    &rthal_timer_ack,
 			    NULL);
 
     rthal_critical_exit(flags);
@@ -113,7 +135,7 @@ void rthal_timer_release (void)
 	{
 	*pTIMER_DISABLE = 1;	/* Disable TIMER0. */
 	__builtin_bfin_csync();
-	irq = RTHAL_ONESHOT_TIMER_IRQ;
+	irq = RTHAL_APERIODIC_TIMER_IRQ;
 	rthal_irq_disable(irq);
 	}
 

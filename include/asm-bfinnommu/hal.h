@@ -116,7 +116,7 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #include <asm/xenomai/atomic.h>
 
 #define RTHAL_PERIODIC_TIMER_IRQ   IRQ_CORETMR
-#define RTHAL_ONESHOT_TIMER_IRQ    IRQ_TMR0
+#define RTHAL_APERIODIC_TIMER_IRQ  IRQ_TMR0
 
 #define rthal_irq_descp(irq)	(&irq_desc[(irq)])
 
@@ -159,17 +159,16 @@ static inline void rthal_timer_program_shot (unsigned long delay)
 
     /* Private interface -- Internal use only */
 
+#ifdef CONFIG_XENO_HW_PERIODIC_TIMER
+extern int rthal_periodic_p;
+#else /* !CONFIG_XENO_HW_PERIODIC_TIMER */
+#define rthal_periodic_p  0
+#endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
+
 unsigned long rthal_timer_host_freq(void);
 
 void rthal_switch_context(unsigned long *out_kspp,
 			  unsigned long *in_kspp);
-
-static inline void rthal_timer_clear_tick(void)
-{
-    	/* Clear TIMER0 interrupt. */
-    	*pTIMER_STATUS = 1;
-	__builtin_bfin_csync();
-}
 
 static const char *const rthal_fault_labels[] = {
     [1] = "Single step",
