@@ -140,6 +140,7 @@ static inline struct task_struct *rthal_current_host_task (int cpuid)
     return current;
 }
 
+#if 0
 static inline void rthal_timer_program_shot (unsigned long delay)
 {
     if(!delay) delay = 10;
@@ -156,6 +157,9 @@ static inline void rthal_timer_program_shot (unsigned long delay)
     *pTIMER_ENABLE = 1;	/* Enable TIMER0. */
     __builtin_bfin_csync();
 }
+#else
+void rthal_timer_program_shot (unsigned long delay);
+#endif
 
     /* Private interface -- Internal use only */
 
@@ -163,6 +167,13 @@ unsigned long rthal_timer_host_freq(void);
 
 void rthal_switch_context(unsigned long *out_kspp,
 			  unsigned long *in_kspp);
+
+static inline void rthal_timer_clear_tick(void)
+{
+    	/* Clear TIMER0 interrupt. */
+    	*pTIMER_STATUS = 1;
+	__builtin_bfin_csync();
+}
 
 static const char *const rthal_fault_labels[] = {
     [1] = "Single step",

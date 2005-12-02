@@ -124,16 +124,6 @@ static inline void xnarch_sysfree (void *chunk, u_long bytes)
         kfree(chunk);
 }
 
-static inline void xnarch_relay_tick (void)
-
-{
-#ifdef CONFIG_SMP
-    rthal_send_ipi(RTHAL_HOST_TIMER_IRQ, cpu_online_map);
-#else /* ! CONFIG_SMP */
-    rthal_trigger_irq(RTHAL_HOST_TIMER_IRQ);
-#endif
-}
-
 #ifdef XENO_POD_MODULE
 
 void xnpod_welcome_thread(struct xnthread *);
@@ -507,6 +497,25 @@ static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask)
 }
 
 #endif /* XENO_TIMER_MODULE */
+
+#ifdef XENO_INTR_MODULE
+
+static inline void xnarch_relay_tick (void)
+
+{
+#ifdef CONFIG_SMP
+    rthal_send_ipi(RTHAL_HOST_TIMER_IRQ, cpu_online_map);
+#else /* ! CONFIG_SMP */
+    rthal_trigger_irq(RTHAL_HOST_TIMER_IRQ);
+#endif
+}
+
+static inline void xnarch_announce_tick(unsigned irq)
+{
+    /* empty */
+}
+
+#endif /* XENO_INTR_MODULE */
 
 #ifdef XENO_MAIN_MODULE
 
