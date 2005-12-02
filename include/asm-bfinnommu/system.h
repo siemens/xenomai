@@ -419,7 +419,7 @@ static inline int xnarch_local_syscall (struct pt_regs *regs)
 #ifdef XENO_TIMER_MODULE
 
 static inline void xnarch_program_timer_shot (unsigned long delay) {
-    rthal_timer_program_shot(delay);
+    rthal_timer_program_shot(rthal_imuldiv(delay,RTHAL_TIMER_FREQ,RTHAL_CPU_FREQ));
 }
 
 static inline void xnarch_stop_timer (void) {
