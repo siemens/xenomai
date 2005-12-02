@@ -18,22 +18,26 @@
  */
 
 #include <linux/linkage.h>
-#include <asm/blackfin.h>
-#include <asm/entry.h>
 
 /*
  * Switch context routine for kernel-based Xenomai threads.
+ * Simple and easy: we basically see kernel threads as co-routines.
  *
  * r0=out_kspp, r1=in_kspp
  */
 ENTRY(rthal_switch_context)
 
-	SAVE_ALL_SYS
 	p0 = r0;
 	p1 = r1;
+	[--sp] = rets;
+	[--sp] = fp;
+	[--sp] = r0;
 
+	/* Exchange stacks. */
 	[p0] = sp;
 	sp = [p1];
 
-	RESTORE_ALL_SYS
+	r0 = [sp++];
+	fp = [sp++];
+	rets = [sp++];
 	rts;
