@@ -337,9 +337,7 @@ xnarch_cpumask_t xnintr_affinity (xnintr_t *intr, xnarch_cpumask_t cpumask)
 void xnintr_clock_handler (void)
 
 {
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-    xnarch_wd_disarm();
-#endif /* !CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
+    xnarch_announce_tick(nkclock.irq);
     xnintr_irq_handler(nkclock.irq,&nkclock);
 }
 

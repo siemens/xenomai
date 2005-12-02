@@ -308,7 +308,15 @@ static inline unsigned long xnarch_set_irq_affinity (unsigned irq,
     return 0;
 }
 
-#define xnarch_relay_tick()  /* Nullified. */
+static inline void xnarch_relay_tick(void)
+{
+    /* empty */
+}
+
+static inline void xnarch_announce_tick(unsigned irq)
+{
+    /* empty */
+}
 
 #endif /* XENO_INTR_MODULE */
 

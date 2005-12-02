@@ -122,19 +122,6 @@ static inline int xnarch_shadow_p (xnarchtcb_t *tcb, struct task_struct *task)
     return tcb->espp == &task->thread.esp; /* Sign of shadow... */
 }
 
-static inline void xnarch_relay_tick (void)
-
-{
-    rthal_irq_host_pend(RTHAL_8254_IRQ);
-}
-
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-static inline void xnarch_wd_disarm(void)
-{
-    rthal_nmi_disarm();
-}
-#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
-
 #ifdef XENO_POD_MODULE
 
 void xnpod_welcome_thread(struct xnthread *);
@@ -632,6 +619,22 @@ static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask)
 }
 
 #endif /* XENO_TIMER_MODULE */
+
+#ifdef XENO_INTR_MODULE
+
+static inline void xnarch_relay_tick (void)
+{
+    rthal_irq_host_pend(RTHAL_8254_IRQ);
+}
+
+static inline void xnarch_announce_tick(unsigned irq)
+{
+#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
+    rthal_nmi_disarm();
+#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
+}
+
+#endif /* XENO_INTR_MODULE */
 
 #ifdef XENO_MAIN_MODULE
 

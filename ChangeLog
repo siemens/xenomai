@@ -1,5 +1,9 @@
 2005-12-02  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/intr.c, include/asm-*/system.h
+	(xnarch_announce_tick): Provide for arch-dependent clock tick
+	clearance.
+
 	* ksrc/arch/bfinnommu/hal.c (rthal_arch_init): Define
 	RTHAL_TIMER_FREQ as SCLK frequency.
 

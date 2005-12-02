@@ -168,12 +168,6 @@ static inline void xnarch_sysfree (void *chunk, u_long bytes)
 	kfree(chunk);
 }
 
-static inline void xnarch_relay_tick (void)
-
-{
-    rthal_irq_host_pend(RTHAL_TIMER_IRQ);
-}
-
 #ifdef XENO_POD_MODULE
 
 void xnpod_welcome_thread(struct xnthread *);
@@ -597,6 +591,21 @@ static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask)
 }
 
 #endif /* XENO_TIMER_MODULE */
+
+#ifdef XENO_INTR_MODULE
+
+static inline void xnarch_relay_tick (void)
+
+{
+    rthal_irq_host_pend(RTHAL_TIMER_IRQ);
+}
+
+static inline void xnarch_announce_tick(unsigned irq)
+{
+    /* empty */
+}
+
+#endif /* XENO_INTR_MODULE */
 
 #ifdef XENO_MAIN_MODULE
 
