@@ -225,18 +225,13 @@ static inline void xnarch_init_thread (xnarchtcb_t *tcb,
 				       struct xnthread *thread,
 				       char *name)
 {
-    struct pt_regs regs;
     unsigned long *ksp;
 
-    memset(&regs, 0, sizeof(regs));
-    regs.r0 = (unsigned long)tcb;
-    regs.pc = (unsigned long)&xnarch_thread_trampoline;
-    regs.ipend = 0x8002;
-    __asm__ __volatile__ ("%0 = syscfg;" : "=da" (regs.syscfg) : );
-
-    ksp = (unsigned long *)((unsigned long)tcb->stackbase + tcb->stacksize - sizeof(regs));
+    ksp = (unsigned long *)(((unsigned long)tcb->stackbase + tcb->stacksize - 16) & ~0xf);
     tcb->ksp = (unsigned long)ksp;
-    memcpy(ksp,&regs,sizeof(regs));
+    ksp[0] = (unsigned long)tcb; /* r0 */
+    ksp[1] = 0; /* fp */
+    ksp[2] = (unsigned long)&xnarch_thread_trampoline; /* rets */
     
     tcb->entry = entry;
     tcb->cookie = cookie;
@@ -439,10 +434,9 @@ static inline void xnarch_relay_tick (void)
     rthal_irq_host_pend(IRQ_CORETMR);
 }
 
-static inline void xnarch_announce_tick(unsigned irq)
+static inline void xnarch_announce_tick(void)
 {
-    if (irq == RTHAL_ONESHOT_TIMER_IRQ)
-	rthal_timer_clear_tick();
+    /* empty */
 }
 
 #endif /* XENO_INTR_MODULE */

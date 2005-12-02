@@ -627,7 +627,7 @@ static inline void xnarch_relay_tick (void)
     rthal_irq_host_pend(RTHAL_8254_IRQ);
 }
 
-static inline void xnarch_announce_tick(unsigned irq)
+static inline void xnarch_announce_tick(void)
 {
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
     rthal_nmi_disarm();

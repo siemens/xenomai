@@ -337,7 +337,7 @@ xnarch_cpumask_t xnintr_affinity (xnintr_t *intr, xnarch_cpumask_t cpumask)
 void xnintr_clock_handler (void)
 
 {
-    xnarch_announce_tick(nkclock.irq);
+    xnarch_announce_tick();
     xnintr_irq_handler(nkclock.irq,&nkclock);
 }
 
