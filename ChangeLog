@@ -1,3 +1,14 @@
+2005-12-02  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/bfinnommu/hal.c (rthal_arch_init): Define
+	RTHAL_TIMER_FREQ as SCLK frequency.
+
+	* include/asm-bfinnommu/system.h (xnarch_program_timer_shot):
+	Convert CCLK to SCLK units.
+	
+	* include/asm-bfinnommu/hal.h (__rthal_u64fromu32,
+	__rthal_u64tou32): Fix endianness issue.
+
 2005-12-01  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-bfinnommu/system.h (xnarch_switch_to): Protect all
