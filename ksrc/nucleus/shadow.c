@@ -405,11 +405,11 @@ static int gatekeeper_thread (void *data)
 
 	if (xnthread_user_task(thread)->state == TASK_INTERRUPTIBLE) {
 #ifdef CONFIG_SMP
-	    /* If the Xenomai task changed its CPU while in secondary
-	       mode, change the shadow CPU too. We do not migrate the
-	       thread timers here, it would not work. For a "full"
-	       migration comprising timers, using xnpod_migrate is
-	       required. */
+	    /* If the task changed its CPU while in secondary mode,
+	       change the CPU of the underlying Xenomai shadow too. We
+	       do not migrate the thread timers here, it would not
+	       work. For a "full" migration comprising timers, using
+	       xnpod_thread_migrate is required. */
 	    thread->sched = xnpod_sched_slot(cpu);
 #endif /* CONFIG_SMP */
 	    xnpod_resume_thread(thread,XNRELAX);
