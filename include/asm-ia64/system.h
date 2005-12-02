@@ -510,7 +510,7 @@ static inline void xnarch_relay_tick (void)
 #endif
 }
 
-static inline void xnarch_announce_tick(unsigned irq)
+static inline void xnarch_announce_tick(void)
 {
     /* empty */
 }

@@ -600,7 +600,7 @@ static inline void xnarch_relay_tick (void)
     rthal_irq_host_pend(RTHAL_TIMER_IRQ);
 }
 
-static inline void xnarch_announce_tick(unsigned irq)
+static inline void xnarch_announce_tick(void)
 {
     /* empty */
 }

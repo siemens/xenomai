@@ -1,5 +1,14 @@
 2005-12-02  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/bfinnommu/hal.c (rthal_timer_ack): Acknowledge timer
+	interrupts immediately from the Adeos prologue.
+
+	* ksrc/arch/bfinnommu/switch.S: Improved context switch routine
+	for kernel threads; well, basically, this one works.
+
+	* include/asm-bfinnommu/system.h (xnarch_init_thread): Update
+	bootstrap code for new context switch code.
+
 	* ksrc/nucleus/intr.c, include/asm-*/system.h
 	(xnarch_announce_tick): Provide for arch-dependent clock tick
 	clearance.
