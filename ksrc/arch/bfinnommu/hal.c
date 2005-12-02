@@ -77,7 +77,7 @@ int rthal_timer_request (void (*handler)(void),
 	/* Oneshot setup. We use TIMER0 in PWM_OUT, single pulse mode. */
 	*pTIMER_DISABLE = 1;	/* Disable TIMER0 for now. */
 	__builtin_bfin_csync();
-	*pTIMER0_CONFIG = 0x11;	/* IRQ enable, single pulse, PWM_OUT */
+	*pTIMER0_CONFIG = 0x11;	/* IRQ enable, single pulse, PWM_OUT, SCLKed */
 	__builtin_bfin_csync();
 	irq = RTHAL_ONESHOT_TIMER_IRQ;
 	rthal_periodic_p = 0;
@@ -236,11 +236,16 @@ RTHAL_DECLARE_DOMAIN(rthal_domain_entry);
 int rthal_arch_init (void)
 
 {
+    unsigned long get_sclk(void);	/* System clock freq (HZ) */
+
     if (rthal_cpufreq_arg == 0)
 	rthal_cpufreq_arg = (unsigned long)rthal_get_cpufreq();
 
     if (rthal_timerfreq_arg == 0)
-	rthal_timerfreq_arg = rthal_cpufreq_arg;
+	/* Define the global timer frequency as being the one of the
+	   aperiodic timer (TIMER0), which is running at the system
+	   clock (SCLK) rate. */
+	rthal_timerfreq_arg = get_sclk();
 
     return 0;
 }
