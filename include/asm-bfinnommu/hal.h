@@ -35,7 +35,7 @@ typedef unsigned long long rthal_time_t;
 
 #define __rthal_u64tou32(ull, h, l) ({                  \
         union { unsigned long long _ull;                \
-            struct { u_long _h; u_long _l; } _s; } _u;  \
+            struct { u_long _l; u_long _h; } _s; } _u;  \
         _u._ull = (ull);                                \
         (h) = _u._s._h;                                 \
         (l) = _u._s._l;                                 \
@@ -43,7 +43,7 @@ typedef unsigned long long rthal_time_t;
 
 #define __rthal_u64fromu32(h, l) ({                     \
         union { unsigned long long _ull;                \
-            struct { u_long _h; u_long _l; } _s; } _u;  \
+            struct { u_long _l; u_long _h; } _s; } _u;  \
         _u._s._h = (h);                                 \
         _u._s._l = (l);                                 \
         _u._ull;                                        \
@@ -60,10 +60,7 @@ static inline unsigned long long rthal_ulldiv (unsigned long long ull,
 					       unsigned long *const rp)
 {
     const unsigned long r = __div64_32(&ull, uld);
-
-    if (rp)
-	*rp = r;
-
+    if (rp) *rp = r;
     return ull;
 }
 
