@@ -80,6 +80,7 @@ int rthal_timer_request (void (*handler)(void),
 	*pTIMER0_CONFIG = 0x11;	/* IRQ enable, single pulse, PWM_OUT, SCLKed */
 	__builtin_bfin_csync();
 	irq = RTHAL_ONESHOT_TIMER_IRQ;
+	rthal_irq_enable(irq);
 	rthal_periodic_p = 0;
 	}
 
@@ -113,6 +114,7 @@ void rthal_timer_release (void)
 	*pTIMER_DISABLE = 1;	/* Disable TIMER0. */
 	__builtin_bfin_csync();
 	irq = RTHAL_ONESHOT_TIMER_IRQ;
+	rthal_irq_disable(irq);
 	}
 
     rthal_irq_release(irq);
