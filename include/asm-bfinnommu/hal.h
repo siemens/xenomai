@@ -167,8 +167,11 @@ extern int rthal_periodic_p;
 
 unsigned long rthal_timer_host_freq(void);
 
-void rthal_switch_context(unsigned long *out_kspp,
-			  unsigned long *in_kspp);
+void rthal_kcontext_switch(unsigned long *out_kspp,
+			   unsigned long *in_kspp);
+
+void rthal_ucontext_switch(struct task_struct *prev,
+			   struct task_struct *next);
 
 static const char *const rthal_fault_labels[] = {
     [1] = "Single step",
