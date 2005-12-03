@@ -1,3 +1,8 @@
+2005-12-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/bfinnommu/switch.S (rthal_ucontext_switch): Rewrite
+	user-space context switch routine as plain assembly code.
+
 2005-12-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/bfinnommu/hal.c (rthal_timer_ack): Acknowledge timer

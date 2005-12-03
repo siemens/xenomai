@@ -23,9 +23,9 @@
  * Switch context routine for kernel-based Xenomai threads.
  * Simple and easy: we basically see kernel threads as co-routines.
  *
- * r0=out_kspp, r1=in_kspp
+ * rthal_kcontext_switch(unsigned long *out_kspp, unsigned long *in_kspp)
  */
-ENTRY(rthal_switch_context)
+ENTRY(rthal_kcontext_switch)
 
 	p0 = r0;
 	p1 = r1;
@@ -41,3 +41,30 @@ ENTRY(rthal_switch_context)
 	fp = [sp++];
 	rets = [sp++];
 	rts;
+
+/*
+ * Switch context routine for user-space Xenomai shadow threads.
+ * We protect all caller-saved registers across switches.
+ * 
+ * rthal_ucontext_switch(struct task_struct *prev, struct task_struct *next)
+ */
+ENTRY(rthal_ucontext_switch)
+
+	[--sp] = rets;
+	[--sp] = r4;
+	[--sp] = r5;
+  	[--sp] = r6;
+  	[--sp] = r7;
+	[--sp] = p3;
+	[--sp] = p4;
+	[--sp] = p5;
+	call resume;
+	p5 = [sp++];
+	p4 = [sp++];
+	p3 = [sp++];
+	r7 = [sp++];
+	r6 = [sp++];
+	r5 = [sp++];
+	r4 = [sp++];
+	rets = [sp++];
+	rts
