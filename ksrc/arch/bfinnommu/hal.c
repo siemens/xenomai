@@ -64,14 +64,20 @@ static struct {
 
 } rthal_linux_irq[IPIPE_NR_XIRQS];
 
+/* Acknowledge the timer IRQ. In periodic mode, this routine does
+   nothing, except preventing Linux to mask the core timer IRQ; in
+   aperiodic mode, we additionally make sure to deassert the interrupt
+   bit for TIMER0. In either case, the interrupt channel is always
+   kept unmasked. */
+
 static int rthal_timer_ack (unsigned irq)
 {
-    if (irq == RTHAL_APERIODIC_TIMER_IRQ) {
+    if (!rthal_periodic_p) {
     	/* Clear TIMER0 interrupt and re-enable IRQ channel. */
     	*pTIMER_STATUS = 1;
 	__builtin_bfin_csync();
     }
-    return 1;	/* Tell Adeos that we acknowledged the timer IRQ. */
+    return 1;
 }
 
 int rthal_timer_request (void (*handler)(void),
@@ -147,7 +153,7 @@ void rthal_timer_release (void)
 unsigned long rthal_timer_calibrate (void)
 
 {
-    return (1000000000 / RTHAL_CPU_FREQ) * 100;	/* 100 CPU cycles */
+    return (1000000000 / RTHAL_CPU_FREQ) * 100;	/* 100 CPU cycles -- FIXME */
 }
 
 int rthal_irq_enable (unsigned irq)
