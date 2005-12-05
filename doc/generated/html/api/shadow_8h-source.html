@@ -7,7 +7,7 @@
 <div class="qindex">  <form class="search" action="search.php" method="get">
 <a class="qindex" href="main.html">Main&nbsp;Page</a> | <a class="qindex" href="modules.html">Modules</a> | <a class="qindex" href="annotated.html">Data&nbsp;Structures</a> | <a class="qindex" href="dirs.html">Directories</a> | <a class="qindex" href="files.html">File&nbsp;List</a> | <a class="qindex" href="functions.html">Data&nbsp;Fields</a> | <a class="qindex" href="globals.html">Globals</a>  | <span class="search"><u>S</u>earch&nbsp;for&nbsp;<input class="search" type="text" name="query" value="" size="20" accesskey="s"/></span></form></div>
 <div class="nav">
-<a class="el" href="dir_000011.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000012.html">nucleus</a></div>
+<a class="el" href="dir_000000.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000003.html">nucleus</a></div>
 <h1>shadow.h</h1><div class="fragment"><pre class="fragment">00001 <span class="comment">/*</span>
 00002 <span class="comment"> * Copyright (C) 2001,2002,2003 Philippe Gerum &lt;rpm@xenomai.org&gt;.</span>
 00003 <span class="comment"> *</span>
@@ -30,8 +30,8 @@
 00020 <span class="preprocessor">#ifndef _XENO_NUCLEUS_SHADOW_H</span>
 00021 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_NUCLEUS_SHADOW_H</span>
 00022 <span class="preprocessor"></span>
-00023 <span class="preprocessor">#include &lt;nucleus/asm/atomic.h&gt;</span>
-00024 <span class="preprocessor">#include &lt;nucleus/asm/syscall.h&gt;</span>
+00023 <span class="preprocessor">#include &lt;asm/xenomai/atomic.h&gt;</span>
+00024 <span class="preprocessor">#include &lt;asm/xenomai/syscall.h&gt;</span>
 00025 <span class="preprocessor">#ifdef CONFIG_PROC_FS</span>
 00026 <span class="preprocessor"></span><span class="preprocessor">#include &lt;linux/proc_fs.h&gt;</span>
 00027 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_PROC_FS */</span>
@@ -73,14 +73,14 @@
 00063 
 00064 <span class="keywordtype">void</span> xnshadow_release_events(<span class="keywordtype">void</span>);
 00065 
-00066 <span class="keywordtype">int</span> <a class="code" href="group__shadow.html#ga19">xnshadow_map</a>(<span class="keyword">struct</span> xnthread *thread,
+00066 <span class="keywordtype">int</span> <a class="code" href="group__shadow.html#ga57">xnshadow_map</a>(<span class="keyword">struct</span> xnthread *thread,
 00067                  xncompletion_t __user *u_completion);
 00068 
 00069 <span class="keywordtype">void</span> xnshadow_unmap(<span class="keyword">struct</span> xnthread *thread);
 00070 
-00071 <span class="keywordtype">int</span> <a class="code" href="group__shadow.html#ga14">xnshadow_harden</a>(<span class="keywordtype">void</span>);
+00071 <span class="keywordtype">int</span> <a class="code" href="group__shadow.html#ga55">xnshadow_harden</a>(<span class="keywordtype">void</span>);
 00072 
-00073 <span class="keywordtype">void</span> <a class="code" href="group__shadow.html#ga15">xnshadow_relax</a>(<span class="keywordtype">int</span> notify);
+00073 <span class="keywordtype">void</span> <a class="code" href="group__shadow.html#ga56">xnshadow_relax</a>(<span class="keywordtype">int</span> notify);
 00074 
 00075 <span class="keywordtype">void</span> xnshadow_renice(<span class="keyword">struct</span> xnthread *thread);
 00076 
@@ -125,7 +125,7 @@
 00115 <span class="preprocessor">#endif</span>
 00116 <span class="preprocessor"></span>
 00117 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SHADOW_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:16 2005 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 17:17:20 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

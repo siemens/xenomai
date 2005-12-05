@@ -1,5 +1,0 @@
-base referer
-rect $asm-i386_2hal_8h.html 285,8 490,32
-rect $asm-ia64_2hal_8h.html 285,56 490,80
-rect $asm-ppc_2hal_8h.html 288,104 488,128
-rect $asm-ppc64_2hal_8h.html 280,152 496,176

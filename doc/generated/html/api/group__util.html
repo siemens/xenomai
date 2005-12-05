@@ -109,7 +109,7 @@ Copy user-space memory block to specified buffer.
 <ul>
 <li>-EFAULT is returned if an invalid memory area was accessed.</li></ul>
 <p>
-<dl compact><dt><b>Note:</b></dt><dd>Before invoking this service, verify via <a class="el" href="group__util.html#ga3">rtdm_read_user_ok()</a> that the provided user-space address can securely be accessed.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>Before invoking this service, verify via rtdm_read_user_ok() that the provided user-space address can securely be accessed.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -178,7 +178,7 @@ Copy specified buffer to user-space memory block.
 <ul>
 <li>-EFAULT is returned if an invalid memory area was accessed.</li></ul>
 <p>
-<dl compact><dt><b>Note:</b></dt><dd>Before invoking this service, verify via <a class="el" href="group__util.html#ga4">rtdm_rw_user_ok()</a> that the provided user-space address can securely be accessed.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>Before invoking this service, verify via rtdm_rw_user_ok() that the provided user-space address can securely be accessed.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -216,7 +216,7 @@ Release real-time memory block.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>ptr</em>&nbsp;</td><td>Pointer to memory block as returned by <a class="el" href="group__util.html#ga1">rtdm_malloc()</a></td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>ptr</em>&nbsp;</td><td>Pointer to memory block as returned by rtdm_malloc()</td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -531,7 +531,7 @@ Copy user-space string to specified buffer.
 <ul>
 <li>-EFAULT is returned if an invalid memory area was accessed.</li></ul>
 <p>
-<dl compact><dt><b>Note:</b></dt><dd>This services already includes a check of the source address, calling <a class="el" href="group__util.html#ga3">rtdm_read_user_ok()</a> for <em>src</em> explicitly is not required.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>This services already includes a check of the source address, calling rtdm_read_user_ok() for <em>src</em> explicitly is not required.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -540,7 +540,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:24 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 17:17:28 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

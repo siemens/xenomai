@@ -23,125 +23,37 @@ Xenomai memory heaps are built over the nucleus's heap objects, which in turn pr
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Files</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="skins_2native_2heap_8c.html">heap.c</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="ksrc_2skins_2native_2heap_8c.html">heap.c</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">This file is part of the Xenomai project. <br></td></tr>
 
 <p>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#ga2">rt_heap_create</a> (RT_HEAP *heap, const char *name, size_t heapsize, int mode)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#ga13">rt_heap_bind</a> (RT_HEAP *heap, const char *name, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a memory heap or a shared memory segment.  <a href="#ga2"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#ga3">rt_heap_delete</a> (RT_HEAP *heap)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a shared heap.  <a href="#ga13"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#ga14">rt_heap_unbind</a> (RT_HEAP *heap)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a real-time heap.  <a href="#ga3"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#ga4">rt_heap_alloc</a> (RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unbind from a shared heap.  <a href="#ga14"></a><br></td></tr>
+<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#ga8">rt_heap_create</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a block or return the shared memory base.  <a href="#ga4"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#ga5">rt_heap_free</a> (RT_HEAP *heap, void *block)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a memory heap or a shared memory segment.  <a href="#ga8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#ga9">rt_heap_delete</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free a block.  <a href="#ga5"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#ga6">rt_heap_inquire</a> (RT_HEAP *heap, RT_HEAP_INFO *info)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a real-time heap.  <a href="#ga9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#ga10">rt_heap_alloc</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about a heap.  <a href="#ga6"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#ga9">rt_heap_bind</a> (RT_HEAP *heap, const char *name, RTIME timeout)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a block or return the shared memory base.  <a href="#ga10"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#ga11">rt_heap_free</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a shared heap.  <a href="#ga9"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#ga10">rt_heap_unbind</a> (RT_HEAP *heap)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free a block.  <a href="#ga11"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#ga12">rt_heap_inquire</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unbind from a shared heap.  <a href="#ga10"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about a heap.  <a href="#ga12"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="ga4" doxytag="heap.c::rt_heap_alloc"></a><p>
-<table class="mdTable" cellpadding="2" cellspacing="0">
-  <tr>
-    <td class="mdRow">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td class="md" nowrap valign="top">int rt_heap_alloc           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">RT_HEAP *&nbsp;</td>
-          <td class="mdname" nowrap> <em>heap</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>size_t&nbsp;</td>
-          <td class="mdname" nowrap> <em>size</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>RTIME&nbsp;</td>
-          <td class="mdname" nowrap> <em>timeout</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>void **&nbsp;</td>
-          <td class="mdname" nowrap> <em>blockp</em></td>
-        </tr>
-        <tr>
-          <td class="md"></td>
-          <td class="md">)&nbsp;</td>
-          <td class="md" colspan="2"></td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table cellspacing="5" cellpadding="0" border="0">
-  <tr>
-    <td>
-      &nbsp;
-    </td>
-    <td>
-
-<p>
-Allocate a block or return the shared memory base. 
-<p>
-This service allocates a block from the heap's internal pool, or return the address of the shared memory segment in the caller's address space if the heap is shared. Tasks may wait for some requested amount of memory to become available from local heaps.<p>
-<dl compact><dt><b>Parameters:</b></dt><dd>
-  <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>heap</em>&nbsp;</td><td>The descriptor address of the heap to allocate a block from.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>size</em>&nbsp;</td><td>The requested size in bytes of the block. If the heap is shared, this value can be either zero, or the same value given to <a class="el" href="group__native__heap.html#ga2">rt_heap_create()</a>. In any case, the same block covering the entire heap space will always be returned to all callers of this service.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>The number of clock ticks to wait for a block of sufficient size to be available from a local heap (see note). Passing TM_INFINITE causes the caller to block indefinitely until some block is eventually available. Passing TM_NONBLOCK causes the service to return immediately without waiting if no block is available on entry. This parameter has no influence if the heap is shared since the entire shared memory space is always available.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>blockp</em>&nbsp;</td><td>A pointer to a memory location which will be written upon success with the address of the allocated block, or the start address of the shared memory segment. In the former case, the block should be freed using <a class="el" href="group__native__heap.html#ga5">rt_heap_free()</a>.</td></tr>
-  </table>
-</dl>
-<dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
-<ul>
-<li>-EINVAL is returned if <em>heap</em> is not a heap descriptor, or <em>heap</em> is shared (i.e. H_SHARED mode) and <em>size</em> is non-zero but does not match the actual heap size passed to <a class="el" href="group__native__heap.html#ga2">rt_heap_create()</a>.</li></ul>
-<p>
-<ul>
-<li>-EIDRM is returned if <em>q</em> is a deleted heap descriptor.</li></ul>
-<p>
-<ul>
-<li>-ETIMEDOUT is returned if <em>timeout</em> is different from TM_NONBLOCK and no block is available within the specified amount of time.</li></ul>
-<p>
-<ul>
-<li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and no block is immediately available on entry.</li></ul>
-<p>
-<ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga15">rt_task_unblock()</a> has been called for the waiting task before any block was available.</li></ul>
-<p>
-<ul>
-<li>-EPERM is returned if this service should block but was called from a context which cannot sleep (e.g. interrupt, non-realtime or scheduler locked).</li></ul>
-<p>
-Environments:<p>
-This service can be called from:<p>
-<ul>
-<li>Kernel module initialization/cleanup code</li><li>Interrupt service routine only if <em>timeout</em> is equal to TM_NONBLOCK, or the heap is shared.</li></ul>
-<p>
-<ul>
-<li>Kernel-based task</li><li>User-space task (switches to primary mode)</li></ul>
-<p>
-Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation. Operations on shared heaps never start the rescheduling procedure.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__native__timer.html#ga8">rt_timer_start()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
-    </td>
-  </tr>
-</table>
-<a class="anchor" name="ga9" doxytag="heap.h::rt_heap_bind"></a><p>
+<a class="anchor" name="ga13" doxytag="heap.h::rt_heap_bind"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -196,7 +108,7 @@ This user-space only service retrieves the uniform descriptor of a given shared 
 <li>-EFAULT is returned if <em>heap</em> or <em>name</em> is referencing invalid memory.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga15">rt_task_unblock()</a> has been called for the waiting task before the retrieval has completed.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga35">rt_task_unblock()</a> has been called for the waiting task before the retrieval has completed.</li></ul>
 <p>
 <ul>
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and the searched object is not registered on entry.</li></ul>
@@ -213,43 +125,123 @@ This service can be called from:<p>
 <li>User-space task (switches to primary mode)</li></ul>
 <p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__native__timer.html#ga8">rt_timer_start()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__native__timer.html#ga18">rt_timer_start()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga2" doxytag="heap.c::rt_heap_create"></a><p>
+<a class="anchor" name="ga14" doxytag="heap.h::rt_heap_unbind"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int rt_heap_create           </td>
+          <td class="md" nowrap valign="top">int rt_heap_unbind           </td>
           <td class="md" valign="top">(&nbsp;</td>
           <td class="md" nowrap valign="top">RT_HEAP *&nbsp;</td>
-          <td class="mdname" nowrap> <em>heap</em>, </td>
+          <td class="mdname1" valign="top" nowrap> <em>heap</em>          </td>
+          <td class="md" valign="top">&nbsp;)&nbsp;</td>
+          <td class="md" nowrap></td>
         </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Unbind from a shared heap. 
+<p>
+This user-space only service unbinds the calling task from the heap object previously retrieved by a call to <a class="el" href="group__native__heap.html#ga13">rt_heap_bind()</a>.<p>
+Unbinding from a heap when it is no more needed is especially important in order to properly release the mapping resources used to attach the shared heap memory to the caller's address space.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>heap</em>&nbsp;</td><td>The address of a heap descriptor to unbind from.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 is always returned.</dd></dl>
+This service can be called from:<p>
+<ul>
+<li>User-space task.</li></ul>
+<p>
+Rescheduling: never.     </td>
+  </tr>
+</table>
+<hr><h2>Variable Documentation</h2>
+<a class="anchor" name="ga10" doxytag="heap.c::rt_heap_alloc"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>const char *&nbsp;</td>
-          <td class="mdname" nowrap> <em>name</em>, </td>
+          <td class="md" nowrap valign="top">int rt_heap_alloc          </td>
         </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Allocate a block or return the shared memory base. 
+<p>
+This service allocates a block from the heap's internal pool, or return the address of the shared memory segment in the caller's address space if the heap is shared. Tasks may wait for some requested amount of memory to become available from local heaps.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>heap</em>&nbsp;</td><td>The descriptor address of the heap to allocate a block from.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>size</em>&nbsp;</td><td>The requested size in bytes of the block. If the heap is shared, this value can be either zero, or the same value given to <a class="el" href="group__native__heap.html#ga8">rt_heap_create()</a>. In any case, the same block covering the entire heap space will always be returned to all callers of this service.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>The number of clock ticks to wait for a block of sufficient size to be available from a local heap (see note). Passing TM_INFINITE causes the caller to block indefinitely until some block is eventually available. Passing TM_NONBLOCK causes the service to return immediately without waiting if no block is available on entry. This parameter has no influence if the heap is shared since the entire shared memory space is always available.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>blockp</em>&nbsp;</td><td>A pointer to a memory location which will be written upon success with the address of the allocated block, or the start address of the shared memory segment. In the former case, the block should be freed using <a class="el" href="group__native__heap.html#ga11">rt_heap_free()</a>.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
+<ul>
+<li>-EINVAL is returned if <em>heap</em> is not a heap descriptor, or <em>heap</em> is shared (i.e. H_SHARED mode) and <em>size</em> is non-zero but does not match the actual heap size passed to <a class="el" href="group__native__heap.html#ga8">rt_heap_create()</a>.</li></ul>
+<p>
+<ul>
+<li>-EIDRM is returned if <em>heap</em> is a deleted heap descriptor.</li></ul>
+<p>
+<ul>
+<li>-ETIMEDOUT is returned if <em>timeout</em> is different from TM_NONBLOCK and no block is available within the specified amount of time.</li></ul>
+<p>
+<ul>
+<li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and no block is immediately available on entry.</li></ul>
+<p>
+<ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga35">rt_task_unblock()</a> has been called for the waiting task before any block was available.</li></ul>
+<p>
+<ul>
+<li>-EPERM is returned if this service should block but was called from a context which cannot sleep (e.g. interrupt, non-realtime or scheduler locked).</li></ul>
+<p>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Interrupt service routine only if <em>timeout</em> is equal to TM_NONBLOCK, or the heap is shared.</li></ul>
+<p>
+<ul>
+<li>Kernel-based task</li><li>User-space task (switches to primary mode)</li></ul>
+<p>
+Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation. Operations on shared heaps never start the rescheduling procedure.<p>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__native__timer.html#ga18">rt_timer_start()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+    </td>
+  </tr>
+</table>
+<a class="anchor" name="ga8" doxytag="heap.c::rt_heap_create"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>size_t&nbsp;</td>
-          <td class="mdname" nowrap> <em>heapsize</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>int&nbsp;</td>
-          <td class="mdname" nowrap> <em>mode</em></td>
-        </tr>
-        <tr>
-          <td class="md"></td>
-          <td class="md">)&nbsp;</td>
-          <td class="md" colspan="2"></td>
+          <td class="md" nowrap valign="top">int rt_heap_create          </td>
         </tr>
       </table>
     </td>
@@ -267,7 +259,7 @@ Create a memory heap or a shared memory segment.
 <p>
 Initializes a memory heap suitable for time-bounded allocation requests of dynamic memory. Memory heaps can be local to the kernel space, or shared between kernel and user-space.<p>
 In their simplest form, heaps are only accessible from kernel space, and are merely usable as regular memory allocators.<p>
-In the shared case, heaps are used as shared memory segments. All allocation requests made through <a class="el" href="group__native__heap.html#ga4">rt_heap_alloc()</a> will then return the same memory block, which will point at the beginning of the heap memory, and cover the entire heap space. This operating mode is specified by passing the H_SHARED flag into the <em>mode</em> parameter. By the proper use of a common <em>name</em>, all tasks can bind themselves to the same heap and thus share the same memory space, which start address should be subsequently retrieved by a call to <a class="el" href="group__native__heap.html#ga4">rt_heap_alloc()</a>.<p>
+In the shared case, heaps are used as shared memory segments. All allocation requests made through <a class="el" href="group__native__heap.html#ga10">rt_heap_alloc()</a> will then return the same memory block, which will point at the beginning of the heap memory, and cover the entire heap space. This operating mode is specified by passing the H_SHARED flag into the <em>mode</em> parameter. By the proper use of a common <em>name</em>, all tasks can bind themselves to the same heap and thus share the same memory space, which start address should be subsequently retrieved by a call to <a class="el" href="group__native__heap.html#ga10">rt_heap_alloc()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>heap</em>&nbsp;</td><td>The address of a heap descriptor Xenomai will use to store the heap-related data. This descriptor must always be valid while the heap is active therefore it must be allocated in permanent memory.</td></tr>
@@ -312,18 +304,13 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga3" doxytag="heap.c::rt_heap_delete"></a><p>
+<a class="anchor" name="ga9" doxytag="heap.c::rt_heap_delete"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int rt_heap_delete           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">RT_HEAP *&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap> <em>heap</em>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
+          <td class="md" nowrap valign="top">int rt_heap_delete          </td>
         </tr>
       </table>
     </td>
@@ -339,7 +326,7 @@ Rescheduling: possible.     </td>
 <p>
 Delete a real-time heap. 
 <p>
-Destroy a heap and release all the tasks currently pending on it. A heap exists in the system since <a class="el" href="group__native__heap.html#ga2">rt_heap_create()</a> has been called to create it, so this service must be called in order to destroy it afterwards.<p>
+Destroy a heap and release all the tasks currently pending on it. A heap exists in the system since <a class="el" href="group__native__heap.html#ga8">rt_heap_create()</a> has been called to create it, so this service must be called in order to destroy it afterwards.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>heap</em>&nbsp;</td><td>The descriptor address of the affected heap.</td></tr>
@@ -363,27 +350,13 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga5" doxytag="heap.c::rt_heap_free"></a><p>
+<a class="anchor" name="ga11" doxytag="heap.c::rt_heap_free"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int rt_heap_free           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">RT_HEAP *&nbsp;</td>
-          <td class="mdname" nowrap> <em>heap</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>void *&nbsp;</td>
-          <td class="mdname" nowrap> <em>block</em></td>
-        </tr>
-        <tr>
-          <td class="md"></td>
-          <td class="md">)&nbsp;</td>
-          <td class="md" colspan="2"></td>
+          <td class="md" nowrap valign="top">int rt_heap_free          </td>
         </tr>
       </table>
     </td>
@@ -407,7 +380,7 @@ If the heap is shared (i.e. H_SHARED mode), this service leads to a null-effect 
     <tr><td valign="top"></td><td valign="top"><em>block</em>&nbsp;</td><td>The address of the block to free.</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success, or -EINVAL if <em>block</em> is not a valid block previously allocated by the <a class="el" href="group__native__heap.html#ga4">rt_heap_alloc()</a> service.</dd></dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success, or -EINVAL if <em>block</em> is not a valid block previously allocated by the <a class="el" href="group__native__heap.html#ga10">rt_heap_alloc()</a> service.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -416,27 +389,13 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga6" doxytag="heap.c::rt_heap_inquire"></a><p>
+<a class="anchor" name="ga12" doxytag="heap.c::rt_heap_inquire"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int rt_heap_inquire           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">RT_HEAP *&nbsp;</td>
-          <td class="mdname" nowrap> <em>heap</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>RT_HEAP_INFO *&nbsp;</td>
-          <td class="mdname" nowrap> <em>info</em></td>
-        </tr>
-        <tr>
-          <td class="md"></td>
-          <td class="md">)&nbsp;</td>
-          <td class="md" colspan="2"></td>
+          <td class="md" nowrap valign="top">int rt_heap_inquire          </td>
         </tr>
       </table>
     </td>
@@ -474,49 +433,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga10" doxytag="heap.h::rt_heap_unbind"></a><p>
-<table class="mdTable" cellpadding="2" cellspacing="0">
-  <tr>
-    <td class="mdRow">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td class="md" nowrap valign="top">int rt_heap_unbind           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">RT_HEAP *&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap> <em>heap</em>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table cellspacing="5" cellpadding="0" border="0">
-  <tr>
-    <td>
-      &nbsp;
-    </td>
-    <td>
-
-<p>
-Unbind from a shared heap. 
-<p>
-This user-space only service unbinds the calling task from the heap object previously retrieved by a call to <a class="el" href="group__native__heap.html#ga9">rt_heap_bind()</a>.<p>
-Unbinding from a heap when it is no more needed is especially important in order to properly release the mapping resources used to attach the shared heap memory to the caller's address space.<p>
-<dl compact><dt><b>Parameters:</b></dt><dd>
-  <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>heap</em>&nbsp;</td><td>The address of a heap descriptor to unbind from.</td></tr>
-  </table>
-</dl>
-<dl compact><dt><b>Returns:</b></dt><dd>0 is always returned.</dd></dl>
-This service can be called from:<p>
-<ul>
-<li>User-space task.</li></ul>
-<p>
-Rescheduling: never.     </td>
-  </tr>
-</table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:20 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 17:17:23 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -42,56 +42,42 @@ The data structures hierarchy is as follows:<p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Files</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="nucleus_2heap_8c.html">heap.c</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="ksrc_2nucleus_2heap_8c.html">heap.c</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Dynamic memory allocation services. <br></td></tr>
 
 <p>
-<tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga2">xnheap_init</a> (xnheap_t *heap, void *heapaddr, u_long heapsize, u_long pagesize)</td></tr>
+<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga12">xnheap_init</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a memory heap.  <a href="#ga2"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga3">xnheap_destroy</a> (xnheap_t *heap, void(*flushfn)(xnheap_t *heap, void *extaddr, u_long extsize, void *cookie), void *cookie)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a memory heap.  <a href="#ga12"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga13">xnheap_destroy</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroys a memory heap.  <a href="#ga3"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga5">xnheap_alloc</a> (xnheap_t *heap, u_long size)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroys a memory heap.  <a href="#ga13"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga14">xnheap_alloc</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a memory block from a memory heap.  <a href="#ga5"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga6">xnheap_test_and_free</a> (xnheap_t *heap, void *block, int(*ckfn)(void *block))</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a memory block from a memory heap.  <a href="#ga14"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga15">xnheap_test_and_free</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Test and release a memory block to a memory heap.  <a href="#ga6"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga7">xnheap_free</a> (xnheap_t *heap, void *block)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Test and release a memory block to a memory heap.  <a href="#ga15"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga16">xnheap_free</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release a memory block to a memory heap.  <a href="#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga8">xnheap_extend</a> (xnheap_t *heap, void *extaddr, u_long extsize)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release a memory block to a memory heap.  <a href="#ga16"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga17">xnheap_extend</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Extend a memory heap.  <a href="#ga8"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga9">xnheap_schedule_free</a> (xnheap_t *heap, void *block, xnholder_t *link)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Extend a memory heap.  <a href="#ga17"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga18">xnheap_schedule_free</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Schedule a memory block for release.  <a href="#ga9"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Schedule a memory block for release.  <a href="#ga18"></a><br></td></tr>
 </table>
-<hr><h2>Function Documentation</h2>
-<a class="anchor" name="ga5" doxytag="heap.c::xnheap_alloc"></a><p>
+<hr><h2>Variable Documentation</h2>
+<a class="anchor" name="ga14" doxytag="heap.c::xnheap_alloc"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void * xnheap_alloc           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">xnheap_t *&nbsp;</td>
-          <td class="mdname" nowrap> <em>heap</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>u_long&nbsp;</td>
-          <td class="mdname" nowrap> <em>size</em></td>
-        </tr>
-        <tr>
-          <td class="md"></td>
-          <td class="md">)&nbsp;</td>
-          <td class="md" colspan="2"></td>
+          <td class="md" nowrap valign="top">void * xnheap_alloc          </td>
         </tr>
       </table>
     </td>
@@ -123,33 +109,13 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga3" doxytag="heap.c::xnheap_destroy"></a><p>
+<a class="anchor" name="ga13" doxytag="heap.c::xnheap_destroy"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void xnheap_destroy           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">xnheap_t *&nbsp;</td>
-          <td class="mdname" nowrap> <em>heap</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>void(*)(xnheap_t *heap, void *extaddr, u_long extsize, void *cookie)&nbsp;</td>
-          <td class="mdname" nowrap> <em>flushfn</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>void *&nbsp;</td>
-          <td class="mdname" nowrap> <em>cookie</em></td>
-        </tr>
-        <tr>
-          <td class="md"></td>
-          <td class="md">)&nbsp;</td>
-          <td class="md" colspan="2"></td>
+          <td class="md" nowrap valign="top">void xnheap_destroy          </td>
         </tr>
       </table>
     </td>
@@ -182,33 +148,13 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga8" doxytag="heap.c::xnheap_extend"></a><p>
+<a class="anchor" name="ga17" doxytag="heap.c::xnheap_extend"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int xnheap_extend           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">xnheap_t *&nbsp;</td>
-          <td class="mdname" nowrap> <em>heap</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>void *&nbsp;</td>
-          <td class="mdname" nowrap> <em>extaddr</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>u_long&nbsp;</td>
-          <td class="mdname" nowrap> <em>extsize</em></td>
-        </tr>
-        <tr>
-          <td class="md"></td>
-          <td class="md">)&nbsp;</td>
-          <td class="md" colspan="2"></td>
+          <td class="md" nowrap valign="top">int xnheap_extend          </td>
         </tr>
       </table>
     </td>
@@ -229,7 +175,7 @@ Add a new extent to an existing memory heap.<p>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>heap</em>&nbsp;</td><td>The descriptor address of the heap to add an extent to.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>extaddr</em>&nbsp;</td><td>The address of the extent memory.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>extsize</em>&nbsp;</td><td>The size of the extent memory (in bytes). In the current implementation, this size must match the one of the initial extent passed to <a class="el" href="group__heap.html#ga2">xnheap_init()</a>.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>extsize</em>&nbsp;</td><td>The size of the extent memory (in bytes). In the current implementation, this size must match the one of the initial extent passed to <a class="el" href="group__heap.html#ga12">xnheap_init()</a>.</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success, or -EINVAL is returned if <em>extsize</em> differs from the initial extent's size.</dd></dl>
@@ -241,27 +187,13 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga7" doxytag="heap.c::xnheap_free"></a><p>
+<a class="anchor" name="ga16" doxytag="heap.c::xnheap_free"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int xnheap_free           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">xnheap_t *&nbsp;</td>
-          <td class="mdname" nowrap> <em>heap</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>void *&nbsp;</td>
-          <td class="mdname" nowrap> <em>block</em></td>
-        </tr>
-        <tr>
-          <td class="md"></td>
-          <td class="md">)&nbsp;</td>
-          <td class="md" colspan="2"></td>
+          <td class="md" nowrap valign="top">int xnheap_free          </td>
         </tr>
       </table>
     </td>
@@ -293,39 +225,13 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga2" doxytag="heap.c::xnheap_init"></a><p>
+<a class="anchor" name="ga12" doxytag="heap.c::xnheap_init"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">xnheap_init           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">xnheap_t *&nbsp;</td>
-          <td class="mdname" nowrap> <em>heap</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>void *&nbsp;</td>
-          <td class="mdname" nowrap> <em>heapaddr</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>u_long&nbsp;</td>
-          <td class="mdname" nowrap> <em>heapsize</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>u_long&nbsp;</td>
-          <td class="mdname" nowrap> <em>pagesize</em></td>
-        </tr>
-        <tr>
-          <td class="md"></td>
-          <td class="md">)&nbsp;</td>
-          <td class="md" colspan="2"></td>
+          <td class="md" nowrap valign="top">xnheap_init          </td>
         </tr>
       </table>
     </td>
@@ -364,33 +270,13 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga9" doxytag="heap.c::xnheap_schedule_free"></a><p>
+<a class="anchor" name="ga18" doxytag="heap.c::xnheap_schedule_free"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int xnheap_schedule_free           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">xnheap_t *&nbsp;</td>
-          <td class="mdname" nowrap> <em>heap</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>void *&nbsp;</td>
-          <td class="mdname" nowrap> <em>block</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>xnholder_t *&nbsp;</td>
-          <td class="mdname" nowrap> <em>link</em></td>
-        </tr>
-        <tr>
-          <td class="md"></td>
-          <td class="md">)&nbsp;</td>
-          <td class="md" colspan="2"></td>
+          <td class="md" nowrap valign="top">int xnheap_schedule_free          </td>
         </tr>
       </table>
     </td>
@@ -422,33 +308,13 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga6" doxytag="heap.c::xnheap_test_and_free"></a><p>
+<a class="anchor" name="ga15" doxytag="heap.c::xnheap_test_and_free"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int xnheap_test_and_free           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">xnheap_t *&nbsp;</td>
-          <td class="mdname" nowrap> <em>heap</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>void *&nbsp;</td>
-          <td class="mdname" nowrap> <em>block</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>int(*)(void *block)&nbsp;</td>
-          <td class="mdname" nowrap> <em>ckfn</em></td>
-        </tr>
-        <tr>
-          <td class="md"></td>
-          <td class="md">)&nbsp;</td>
-          <td class="md" colspan="2"></td>
+          <td class="md" nowrap valign="top">int xnheap_test_and_free          </td>
         </tr>
       </table>
     </td>
@@ -481,7 +347,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:16 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 17:17:21 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -7,7 +7,7 @@
 <div class="qindex">  <form class="search" action="search.php" method="get">
 <a class="qindex" href="main.html">Main&nbsp;Page</a> | <a class="qindex" href="modules.html">Modules</a> | <a class="qindex" href="annotated.html">Data&nbsp;Structures</a> | <a class="qindex" href="dirs.html">Directories</a> | <a class="qindex" href="files.html">File&nbsp;List</a> | <a class="qindex" href="functions.html">Data&nbsp;Fields</a> | <a class="qindex" href="globals.html">Globals</a>  | <span class="search"><u>S</u>earch&nbsp;for&nbsp;<input class="search" type="text" name="query" value="" size="20" accesskey="s"/></span></form></div>
 <div class="nav">
-<a class="el" href="dir_000011.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000012.html">nucleus</a></div>
+<a class="el" href="dir_000000.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000003.html">nucleus</a></div>
 <h1>thread.h</h1><div class="fragment"><pre class="fragment">00001 <span class="comment">/*</span>
 00002 <span class="comment"> * Copyright (C) 2001,2002,2003 Philippe Gerum &lt;rpm@xenomai.org&gt;.</span>
 00003 <span class="comment"> *</span>
@@ -30,7 +30,7 @@
 00020 <span class="preprocessor">#ifndef _XENO_NUCLEUS_THREAD_H</span>
 00021 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_NUCLEUS_THREAD_H</span>
 00022 <span class="preprocessor"></span>
-00023 <span class="preprocessor">#include &lt;nucleus/timer.h&gt;</span>
+00023 <span class="preprocessor">#include &lt;xenomai/nucleus/timer.h&gt;</span>
 00024 
 00025 <span class="comment">/* Status flags */</span>
 00026 <span class="preprocessor">#define XNSUSP    0x00000001    </span><span class="comment">/* Suspended */</span>
@@ -64,18 +64,18 @@
 00054 <span class="comment">/*</span>
 00055 <span class="comment">  Must follow the declaration order of the above bits. Status symbols</span>
 00056 <span class="comment">  are defined as follows:</span>
-00057 <span class="comment">  'S' -&gt; forcibly suspended.</span>
-00058 <span class="comment">  'w'/'W' -&gt; waiting for a resource, with or without timeout.</span>
-00059 <span class="comment">  'D' -&gt; delayed (without any other wait condition).</span>
-00060 <span class="comment">  'R' -&gt; runnable.</span>
-00061 <span class="comment">  'U' -&gt; unstarted or dormant.</span>
+00057 <span class="comment">  'S' -&gt; Forcibly suspended.</span>
+00058 <span class="comment">  'w'/'W' -&gt; Waiting for a resource, with or without timeout.</span>
+00059 <span class="comment">  'D' -&gt; Delayed (without any other wait condition).</span>
+00060 <span class="comment">  'R' -&gt; Runnable.</span>
+00061 <span class="comment">  'U' -&gt; Unstarted or dormant.</span>
 00062 <span class="comment">  'X' -&gt; Relaxed shadow.</span>
 00063 <span class="comment">  'b' -&gt; Priority boost undergoing.</span>
-00064 <span class="comment">  'T' -&gt; ptraced and stopped.</span>
-00065 <span class="comment">  'l' -&gt; locks scheduler.</span>
-00066 <span class="comment">  'r' -&gt; undergoes round-robin .</span>
-00067 <span class="comment">  's' -&gt; interrupt shield enabled.</span>
-00068 <span class="comment">  't' -&gt; mode switches trapped.</span>
+00064 <span class="comment">  'T' -&gt; Ptraced and stopped.</span>
+00065 <span class="comment">  'l' -&gt; Locks scheduler.</span>
+00066 <span class="comment">  'r' -&gt; Undergoes round-robin .</span>
+00067 <span class="comment">  's' -&gt; Interrupt shield enabled.</span>
+00068 <span class="comment">  't' -&gt; Mode switches trapped.</span>
 00069 <span class="comment">  'f' -&gt; FPU enabled (for kernel threads).</span>
 00070 <span class="comment">*/</span>
 00071 <span class="preprocessor">#define XNTHREAD_SLABEL_INIT { \</span>
@@ -267,7 +267,7 @@
 00257     <span class="keywordflow">if</span> (!testbits(thread-&gt;status,XNDELAY))
 00258         <span class="keywordflow">return</span> 0LL;
 00259 
-00260     timeout = (<a class="code" href="group__timer.html#ga30">xntimer_get_date</a>(&amp;thread-&gt;rtimer) ? : <a class="code" href="group__timer.html#ga30">xntimer_get_date</a>(&amp;thread-&gt;ptimer));
+00260     timeout = (<a class="code" href="group__timer.html#ga26">xntimer_get_date</a>(&amp;thread-&gt;rtimer) ? : <a class="code" href="group__timer.html#ga26">xntimer_get_date</a>(&amp;thread-&gt;ptimer));
 00261 
 00262     <span class="keywordflow">if</span> (timeout &lt;= now)
 00263         <span class="keywordflow">return</span> 1;
@@ -282,7 +282,7 @@
 00272 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
 00273 
 00274 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_THREAD_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:16 2005 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 17:17:20 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

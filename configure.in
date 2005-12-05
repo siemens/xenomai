@@ -161,7 +161,7 @@ fi
 AC_SUBST(XENO_MAYBE_DOCDIR)
 
 AC_MSG_CHECKING(for Doxygen documentation)
-AC_ARG_ENABLE(doc,
+AC_ARG_ENABLE(dox-doc,
 	AS_HELP_STRING([--enable-dox-doc], [Build Doxygen documentation]),
 	[case "$enableval" in
 	y | yes) CONFIG_XENO_DOC_DOX=y ;;
