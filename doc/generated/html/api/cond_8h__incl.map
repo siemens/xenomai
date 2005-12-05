@@ -1,6 +1,1 @@
 base referer
-rect $synch_8h-source.html 349,78 466,102
-rect $mutex_8h.html 192,128 301,152
-rect $include_2nucleus_2queue_8h-source.html 514,80 634,104
-rect $include_2nucleus_2types_8h-source.html 682,104 797,128
-rect $skins_2native_2types_8h.html 522,128 626,152

@@ -21,56 +21,51 @@ Timer-related services allow to control the Xenomai system timer which is used i
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Files</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="skins_2native_2timer_8c.html">timer.c</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="ksrc_2skins_2native_2timer_8c.html">timer.c</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">This file is part of the Xenomai project. <br></td></tr>
 
 <p>
-<tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">SRTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga0">rt_timer_ns2ticks</a> (SRTIME ns)</td></tr>
+<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga10">rt_timer_ns2ticks</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert nanoseconds to internal clock ticks.  <a href="#ga0"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">SRTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga1">rt_timer_ns2tsc</a> (SRTIME ns)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert nanoseconds to internal clock ticks.  <a href="#ga10"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga11">rt_timer_ns2tsc</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert nanoseconds to local CPU clock ticks.  <a href="#ga1"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">SRTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga2">rt_timer_ticks2ns</a> (SRTIME ticks)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert nanoseconds to local CPU clock ticks.  <a href="#ga11"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga12">rt_timer_ticks2ns</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert internal clock ticks to nanoseconds.  <a href="#ga2"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">SRTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga3">rt_timer_tsc2ns</a> (SRTIME ticks)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert internal clock ticks to nanoseconds.  <a href="#ga12"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga13">rt_timer_tsc2ns</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert local CPU clock ticks to nanoseconds.  <a href="#ga3"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga4">rt_timer_inquire</a> (RT_TIMER_INFO *info)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert local CPU clock ticks to nanoseconds.  <a href="#ga13"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga14">rt_timer_inquire</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about the timer.  <a href="#ga4"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">RTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga5">rt_timer_read</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about the timer.  <a href="#ga14"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga15">rt_timer_read</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the current system time.  <a href="#ga5"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">RTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga6">rt_timer_tsc</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the current system time.  <a href="#ga15"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga16">rt_timer_tsc</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the current TSC value.  <a href="#ga6"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga7">rt_timer_spin</a> (RTIME ns)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the current TSC value.  <a href="#ga16"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga17">rt_timer_spin</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Busy wait burning CPU cycles.  <a href="#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga8">rt_timer_start</a> (RTIME nstick)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Busy wait burning CPU cycles.  <a href="#ga17"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga18">rt_timer_start</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start the system timer.  <a href="#ga8"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga9">rt_timer_stop</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start the system timer.  <a href="#ga18"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga19">rt_timer_stop</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stop the system timer.  <a href="#ga9"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stop the system timer.  <a href="#ga19"></a><br></td></tr>
 </table>
-<hr><h2>Function Documentation</h2>
-<a class="anchor" name="ga4" doxytag="timer.c::rt_timer_inquire"></a><p>
+<hr><h2>Variable Documentation</h2>
+<a class="anchor" name="ga14" doxytag="timer.c::rt_timer_inquire"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int rt_timer_inquire           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">RT_TIMER_INFO *&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap> <em>info</em>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
+          <td class="md" nowrap valign="top">int rt_timer_inquire          </td>
         </tr>
       </table>
     </td>
@@ -95,7 +90,7 @@ Return various information about the status of the system timer.<p>
 <dl compact><dt><b>Returns:</b></dt><dd>This service always returns 0.</dd></dl>
 The information block returns the period and the current system date. The period can have the following values:<p>
 <ul>
-<li>TM_UNSET is a special value indicating that the system timer is inactive. A call to <a class="el" href="group__native__timer.html#ga8">rt_timer_start()</a> activates it.</li></ul>
+<li>TM_UNSET is a special value indicating that the system timer is inactive. A call to <a class="el" href="group__native__timer.html#ga18">rt_timer_start()</a> activates it.</li></ul>
 <p>
 <ul>
 <li>TM_ONESHOT is a special value indicating that the timer has been set up in oneshot mode.</li></ul>
@@ -111,18 +106,13 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga0" doxytag="timer.c::rt_timer_ns2ticks"></a><p>
+<a class="anchor" name="ga10" doxytag="timer.c::rt_timer_ns2ticks"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">SRTIME rt_timer_ns2ticks           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">SRTIME&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap> <em>ns</em>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
+          <td class="md" nowrap valign="top">SRTIME rt_timer_ns2ticks          </td>
         </tr>
       </table>
     </td>
@@ -151,22 +141,17 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never.<p>
-<dl compact><dt><b>Note:</b></dt><dd>The system timer need to have been started with <a class="el" href="group__native__timer.html#ga8">rt_timer_start()</a> for this service to work properly. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>The system timer need to have been started with <a class="el" href="group__native__timer.html#ga18">rt_timer_start()</a> for this service to work properly. </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga1" doxytag="timer.c::rt_timer_ns2tsc"></a><p>
+<a class="anchor" name="ga11" doxytag="timer.c::rt_timer_ns2tsc"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">SRTIME rt_timer_ns2tsc           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">SRTIME&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap> <em>ns</em>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
+          <td class="md" nowrap valign="top">SRTIME rt_timer_ns2tsc          </td>
         </tr>
       </table>
     </td>
@@ -197,18 +182,13 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga5" doxytag="timer.c::rt_timer_read"></a><p>
+<a class="anchor" name="ga15" doxytag="timer.c::rt_timer_read"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">RTIME rt_timer_read           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">void&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
+          <td class="md" nowrap valign="top">RTIME rt_timer_read          </td>
         </tr>
       </table>
     </td>
@@ -232,22 +212,17 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__native__timer.html#ga8">rt_timer_start()</a> service. In periodic mode, clock ticks are expressed as periodic jiffies. In oneshot mode, clock ticks are expressed as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__native__timer.html#ga18">rt_timer_start()</a> service. In periodic mode, clock ticks are expressed as periodic jiffies. In oneshot mode, clock ticks are expressed as nanoseconds. </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga7" doxytag="timer.c::rt_timer_spin"></a><p>
+<a class="anchor" name="ga17" doxytag="timer.c::rt_timer_spin"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void rt_timer_spin           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">RTIME&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap> <em>ns</em>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
+          <td class="md" nowrap valign="top">void rt_timer_spin          </td>
         </tr>
       </table>
     </td>
@@ -278,18 +253,13 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga8" doxytag="timer.c::rt_timer_start"></a><p>
+<a class="anchor" name="ga18" doxytag="timer.c::rt_timer_start"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int rt_timer_start           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">RTIME&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap> <em>nstick</em>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
+          <td class="md" nowrap valign="top">int rt_timer_start          </td>
         </tr>
       </table>
     </td>
@@ -305,7 +275,7 @@ Rescheduling: never.     </td>
 <p>
 Start the system timer. 
 <p>
-The real-time kernel needs a time source to provide the time-related services to the Xenomai tasks. <a class="el" href="group__native__timer.html#ga8">rt_timer_start()</a> sets the current operation mode of the system timer. On architectures that provide a oneshot-programmable time source, the system timer can operate either in oneshot or periodic mode. In oneshot mode, the underlying hardware will be reprogrammed after each clock tick so that the next one occurs after a (possibly non-constant) specified interval, at the expense of a larger overhead due to hardware programming duties. Periodic mode provides timing services at a lower programming cost when the underlying hardware is a true PIT (and not a simple decrementer), but at the expense of a lower precision since all delays are rounded up to the constant interval value used to program the timer.<p>
+The real-time kernel needs a time source to provide the time-related services to the Xenomai tasks. <a class="el" href="group__native__timer.html#ga18">rt_timer_start()</a> sets the current operation mode of the system timer. On architectures that provide a oneshot-programmable time source, the system timer can operate either in oneshot or periodic mode. In oneshot mode, the underlying hardware will be reprogrammed after each clock tick so that the next one occurs after a (possibly non-constant) specified interval, at the expense of a larger overhead due to hardware programming duties. Periodic mode provides timing services at a lower programming cost when the underlying hardware is a true PIT (and not a simple decrementer), but at the expense of a lower precision since all delays are rounded up to the constant interval value used to program the timer.<p>
 This service defines the time unit which will be relevant when specifying time intervals to the services taking timeout or delays as input parameters. In periodic mode, clock ticks will represent periodic jiffies. In oneshot mode, clock ticks will represent nanoseconds.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -314,7 +284,7 @@ This service defines the time unit which will be relevant when specifying time i
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned on success. Otherwise:</dd></dl>
 <ul>
-<li>-EBUSY is returned if the timer has already been set. <a class="el" href="group__native__timer.html#ga9">rt_timer_stop()</a> must be issued before <a class="el" href="group__native__timer.html#ga8">rt_timer_start()</a> is called again.</li></ul>
+<li>-EBUSY is returned if the timer has already been set. <a class="el" href="group__native__timer.html#ga19">rt_timer_stop()</a> must be issued before <a class="el" href="group__native__timer.html#ga18">rt_timer_start()</a> is called again.</li></ul>
 <p>
 <ul>
 <li>-ENODEV is returned if the underlying architecture does not support the requested periodic timing.</li></ul>
@@ -327,18 +297,13 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga9" doxytag="timer.c::rt_timer_stop"></a><p>
+<a class="anchor" name="ga19" doxytag="timer.c::rt_timer_stop"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void rt_timer_stop           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">void&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
+          <td class="md" nowrap valign="top">void rt_timer_stop          </td>
         </tr>
       </table>
     </td>
@@ -354,7 +319,7 @@ Rescheduling: never.     </td>
 <p>
 Stop the system timer. 
 <p>
-This service stops the system timer previously started by a call to <a class="el" href="group__native__timer.html#ga8">rt_timer_start()</a>. Calling <a class="el" href="group__native__timer.html#ga9">rt_timer_stop()</a> whilst the system timer has not been started leads to a null-effect.<p>
+This service stops the system timer previously started by a call to <a class="el" href="group__native__timer.html#ga18">rt_timer_start()</a>. Calling <a class="el" href="group__native__timer.html#ga19">rt_timer_stop()</a> whilst the system timer has not been started leads to a null-effect.<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -363,18 +328,13 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga2" doxytag="timer.c::rt_timer_ticks2ns"></a><p>
+<a class="anchor" name="ga12" doxytag="timer.c::rt_timer_ticks2ns"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">SRTIME rt_timer_ticks2ns           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">SRTIME&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap> <em>ticks</em>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
+          <td class="md" nowrap valign="top">SRTIME rt_timer_ticks2ns          </td>
         </tr>
       </table>
     </td>
@@ -403,22 +363,17 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never.<p>
-<dl compact><dt><b>Note:</b></dt><dd>The system timer need to have been started with <a class="el" href="group__native__timer.html#ga8">rt_timer_start()</a> for this service to work properly. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>The system timer need to have been started with <a class="el" href="group__native__timer.html#ga18">rt_timer_start()</a> for this service to work properly. </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga6" doxytag="timer.c::rt_timer_tsc"></a><p>
+<a class="anchor" name="ga16" doxytag="timer.c::rt_timer_tsc"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">RTIME rt_timer_tsc           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">void&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
+          <td class="md" nowrap valign="top">RTIME rt_timer_tsc          </td>
         </tr>
       </table>
     </td>
@@ -444,18 +399,13 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga3" doxytag="timer.c::rt_timer_tsc2ns"></a><p>
+<a class="anchor" name="ga13" doxytag="timer.c::rt_timer_tsc2ns"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">SRTIME rt_timer_tsc2ns           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">SRTIME&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap> <em>ticks</em>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
+          <td class="md" nowrap valign="top">SRTIME rt_timer_tsc2ns          </td>
         </tr>
       </table>
     </td>
@@ -486,7 +436,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:22 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 17:17:25 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

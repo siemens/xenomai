@@ -136,7 +136,7 @@ Collaboration diagram for Inter-Driver API:<center><table><tr><td><img src="grou
 <p>
 Accept a connection requests. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga15">rt_dev_accept()</a> for parameters and return values<p>
+Refer to rt_dev_accept() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -184,7 +184,7 @@ Rescheduling: possible.     </td>
 <p>
 Bind to local address. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga12">rt_dev_bind()</a> for parameters and return values<p>
+Refer to rt_dev_bind() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -217,7 +217,7 @@ Rescheduling: possible.     </td>
 <p>
 Close a device or socket. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga2">rt_dev_close()</a> for parameters and return values<p>
+Refer to rt_dev_close() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -265,7 +265,7 @@ Rescheduling: possible.     </td>
 <p>
 Connect to remote address. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga13">rt_dev_connect()</a> for parameters and return values<p>
+Refer to rt_dev_connect() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -304,7 +304,7 @@ Resolve file descriptor to device context.
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>Pointer to associated device context, or NULL on error</dd></dl>
-<dl compact><dt><b>Note:</b></dt><dd>The device context has to be unlocked using <a class="el" href="group__interdrv.html#ga20">rtdm_context_unlock()</a> when it is no longer referenced.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>The device context has to be unlocked using rtdm_context_unlock() when it is no longer referenced.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -345,7 +345,7 @@ Increment context reference counter.
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>context</em>&nbsp;</td><td>Device context</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Note:</b></dt><dd><a class="el" href="group__interdrv.html#ga7">rtdm_context_get()</a> automatically increments the lock counter. You only need to call this function in special scenrios.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>rtdm_context_get() automatically increments the lock counter. You only need to call this function in special scenrios.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -386,7 +386,7 @@ Decrement context reference counter.
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>context</em>&nbsp;</td><td>Device context</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Note:</b></dt><dd>Every successful call to <a class="el" href="group__interdrv.html#ga7">rtdm_context_get()</a> must be matched by a <a class="el" href="group__interdrv.html#ga20">rtdm_context_unlock()</a> invocation.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>Every successful call to rtdm_context_get() must be matched by a rtdm_context_unlock() invocation.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -437,7 +437,7 @@ Rescheduling: never.     </td>
 <p>
 Get socket destination address. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga20">rt_dev_getpeername()</a> for parameters and return values<p>
+Refer to rt_dev_getpeername() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -485,7 +485,7 @@ Rescheduling: possible.     </td>
 <p>
 Get local socket address. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga19">rt_dev_getsockname()</a> for parameters and return values<p>
+Refer to rt_dev_getsockname() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -545,7 +545,7 @@ Rescheduling: possible.     </td>
 <p>
 Get socket option. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga17">rt_dev_getsockopt()</a> for parameters and return values<p>
+Refer to rt_dev_getsockopt() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -593,7 +593,7 @@ Rescheduling: possible.     </td>
 <p>
 Issue an IOCTL. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga3">rt_dev_ioctl()</a> for parameters and return values<p>
+Refer to rt_dev_ioctl() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -635,7 +635,7 @@ Rescheduling: possible.     </td>
 <p>
 Listen for incomming connection requests. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga14">rt_dev_listen()</a> for parameters and return values<p>
+Refer to rt_dev_listen() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -683,7 +683,7 @@ Rescheduling: possible.     </td>
 <p>
 Open a device. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga0">rt_dev_open()</a> for parameters and return values<p>
+Refer to rt_dev_open() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -731,7 +731,7 @@ Rescheduling: possible.     </td>
 <p>
 Read from device. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga4">rt_dev_read()</a> for parameters and return values<p>
+Refer to rt_dev_read() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -785,7 +785,7 @@ Rescheduling: possible.     </td>
 <p>
 Receive message from socket. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga8">rt_dev_recv()</a> for parameters and return values<p>
+Refer to rt_dev_recv() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -851,7 +851,7 @@ Rescheduling: possible.     </td>
 <p>
 Receive message from socket. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga7">rt_dev_recvfrom()</a> for parameters and return values<p>
+Refer to rt_dev_recvfrom() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -899,7 +899,7 @@ Rescheduling: possible.     </td>
 <p>
 Receive message from socket. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga6">rt_dev_recvmsg()</a> for parameters and return values<p>
+Refer to rt_dev_recvmsg() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -953,7 +953,7 @@ Rescheduling: possible.     </td>
 <p>
 Transmit message to socket. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga11">rt_dev_send()</a> for parameters and return values<p>
+Refer to rt_dev_send() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -1001,7 +1001,7 @@ Rescheduling: possible.     </td>
 <p>
 Transmit message to socket. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga9">rt_dev_sendmsg()</a> for parameters and return values<p>
+Refer to rt_dev_sendmsg() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -1067,7 +1067,7 @@ Rescheduling: possible.     </td>
 <p>
 Transmit message to socket. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga10">rt_dev_sendto()</a> for parameters and return values<p>
+Refer to rt_dev_sendto() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -1127,7 +1127,7 @@ Rescheduling: possible.     </td>
 <p>
 Set socket option. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga18">rt_dev_setsockopt()</a> for parameters and return values<p>
+Refer to rt_dev_setsockopt() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -1169,7 +1169,7 @@ Rescheduling: possible.     </td>
 <p>
 Shut down parts of a connection. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga16">rt_dev_shutdown()</a> for parameters and return values<p>
+Refer to rt_dev_shutdown() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -1217,7 +1217,7 @@ Rescheduling: possible.     </td>
 <p>
 Create a socket. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> for parameters and return values<p>
+Refer to rt_dev_socket() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
@@ -1265,13 +1265,13 @@ Rescheduling: possible.     </td>
 <p>
 Write to device. 
 <p>
-Refer to <a class="el" href="group__userapi.html#ga5">rt_dev_write()</a> for parameters and return values<p>
+Refer to rt_dev_write() for parameters and return values<p>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:23 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 17:17:26 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

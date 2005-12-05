@@ -22,7 +22,7 @@ int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o1" doxytag="rtser_config::baud_rate"></a>
 int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtser__config.html#o1">baud_rate</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">baud rate, see <a class="el" href="group__rtserial.html#RTSER_xxx_BAUD">RTSER_xxx_BAUD</a> <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">baud rate, default <a class="el" href="group__rtserial.html#RTSER_DEF_BAUD">RTSER_DEF_BAUD</a> <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o2" doxytag="rtser_config::parity"></a>
 int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtser__config.html#o2">parity</a></td></tr>
 
@@ -44,15 +44,15 @@ int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">reception FIFO interrupt threshold, see <a class="el" href="group__rtserial.html#RTSER_FIFO_xxx">RTSER_FIFO_xxx</a> <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o7" doxytag="rtser_config::rx_timeout"></a>
-__s64&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtser__config.html#o7">rx_timeout</a></td></tr>
+int64_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtser__config.html#o7">rx_timeout</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">reception timeout in ns, see <a class="el" href="group__rtserial.html#RTSER_TIMEOUT_xxx">RTSER_TIMEOUT_xxx</a> for special values <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o8" doxytag="rtser_config::tx_timeout"></a>
-__s64&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtser__config.html#o8">tx_timeout</a></td></tr>
+int64_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtser__config.html#o8">tx_timeout</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">transmission timeout in ns, see <a class="el" href="group__rtserial.html#RTSER_TIMEOUT_xxx">RTSER_TIMEOUT_xxx</a> for special values <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o9" doxytag="rtser_config::event_timeout"></a>
-__s64&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtser__config.html#o9">event_timeout</a></td></tr>
+int64_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtser__config.html#o9">event_timeout</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">event timeout in ns, see <a class="el" href="group__rtserial.html#RTSER_TIMEOUT_xxx">RTSER_TIMEOUT_xxx</a> for special values <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o10" doxytag="rtser_config::timestamp_history"></a>
@@ -62,11 +62,11 @@ int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o11" doxytag="rtser_config::event_mask"></a>
 int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtser__config.html#o11">event_mask</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">event mask to be used with <a class="el" href="group__rtserial.html#ga93">RTSER_RTIOC_WAIT_EVENT</a>, see <a class="el" href="group__rtserial.html#RTSER_EVENT_xxx">RTSER_EVENT_xxx</a> <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">event mask to be used with <a class="el" href="group__rtserial.html#ga75">RTSER_RTIOC_WAIT_EVENT</a>, see <a class="el" href="group__rtserial.html#RTSER_EVENT_xxx">RTSER_EVENT_xxx</a> <br></td></tr>
 </table>
 <hr>The documentation for this struct was generated from the following file:<ul>
-<li>skins/rtdm/<a class="el" href="rtserial_8h-source.html">rtserial.h</a></ul>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:16 2005 for Xenomai API by&nbsp;
+<li>include/rtdm/<a class="el" href="rtserial_8h-source.html">rtserial.h</a></ul>
+<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 17:17:21 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

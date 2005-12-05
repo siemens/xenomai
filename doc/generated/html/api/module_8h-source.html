@@ -7,7 +7,7 @@
 <div class="qindex">  <form class="search" action="search.php" method="get">
 <a class="qindex" href="main.html">Main&nbsp;Page</a> | <a class="qindex" href="modules.html">Modules</a> | <a class="qindex" href="annotated.html">Data&nbsp;Structures</a> | <a class="qindex" href="dirs.html">Directories</a> | <a class="qindex" href="files.html">File&nbsp;List</a> | <a class="qindex" href="functions.html">Data&nbsp;Fields</a> | <a class="qindex" href="globals.html">Globals</a>  | <span class="search"><u>S</u>earch&nbsp;for&nbsp;<input class="search" type="text" name="query" value="" size="20" accesskey="s"/></span></form></div>
 <div class="nav">
-<a class="el" href="dir_000011.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000012.html">nucleus</a></div>
+<a class="el" href="dir_000000.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000003.html">nucleus</a></div>
 <h1>module.h</h1><div class="fragment"><pre class="fragment">00001 <span class="comment">/*</span>
 00002 <span class="comment"> * Copyright (C) 2001,2002,2003 Philippe Gerum &lt;rpm@xenomai.org&gt;.</span>
 00003 <span class="comment"> *</span>
@@ -30,7 +30,7 @@
 00020 <span class="preprocessor">#ifndef _XENO_NUCLEUS_MODULE_H</span>
 00021 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_NUCLEUS_MODULE_H</span>
 00022 <span class="preprocessor"></span>
-00023 <span class="preprocessor">#include &lt;nucleus/queue.h&gt;</span>
+00023 <span class="preprocessor">#include &lt;xenomai/nucleus/queue.h&gt;</span>
 00024 
 00025 <span class="preprocessor">#define XNMOD_GHOLDER_REALLOC   128 </span><span class="comment">/* Realloc count */</span>
 00026 <span class="preprocessor">#define XNMOD_GHOLDER_THRESHOLD 64  </span><span class="comment">/* Safety threshold */</span>
@@ -47,8 +47,10 @@
 00037 <span class="preprocessor"></span>
 00038 <span class="keyword">extern</span> xnqueue_t xnmod_glink_queue;
 00039 
-00040 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_MODULE_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Oct 22 17:44:15 2005 for Xenomai API by&nbsp;
+00040 <span class="keyword">extern</span> u_long xnmod_sysheap_size;
+00041 
+00042 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_MODULE_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 17:17:20 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

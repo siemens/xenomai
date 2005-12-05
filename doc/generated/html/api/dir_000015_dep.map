@@ -1,6 +1,5 @@
 base referer
-rect dir_000015.html 29,54 106,102
-rect dir_000013.html 20,150 116,198
-rect dir_000015_000013.html 72,125 80,138
-rect dir_000015_000013.html 64,146 72,154
-rect dir_000012.html 18,18 117,113
+rect dir_000018.html 136,76 208,124
+rect dir_000016.html 40,76 112,124
+rect dir_000015.html 29,54 314,134
+rect dir_000004.html 18,18 325,145
