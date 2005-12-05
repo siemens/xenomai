@@ -118,11 +118,11 @@
 00128 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
 00129 <span class="preprocessor">#endif</span>
 00130 <span class="preprocessor"></span>
-00131 <span class="keywordtype">int</span> <a class="code" href="group__native__queue.html#ga12">rt_queue_bind</a>(RT_QUEUE *q,
+00131 <span class="keywordtype">int</span> <a class="code" href="group__native__queue.html#ga19">rt_queue_bind</a>(RT_QUEUE *q,
 00132                   <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
 00133                   RTIME timeout);
 00134 
-00135 <span class="keywordtype">int</span> <a class="code" href="group__native__queue.html#ga13">rt_queue_unbind</a>(RT_QUEUE *q);
+00135 <span class="keywordtype">int</span> <a class="code" href="group__native__queue.html#ga20">rt_queue_unbind</a>(RT_QUEUE *q);
 00136 
 00137 <span class="preprocessor">#ifdef __cplusplus</span>
 00138 <span class="preprocessor"></span>}
@@ -136,30 +136,30 @@
 00146 <span class="preprocessor"></span>
 00147 <span class="comment">/* Public interface. */</span>
 00148 
-00149 <span class="keywordtype">int</span> <a class="code" href="group__native__queue.html#ga2">rt_queue_create</a>(RT_QUEUE *q,
+00149 <span class="keywordtype">int</span> <a class="code" href="group__native__queue.html#ga12">rt_queue_create</a>(RT_QUEUE *q,
 00150                     <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
 00151                     size_t poolsize,
 00152                     size_t qlimit,
 00153                     <span class="keywordtype">int</span> mode);
 00154 
-00155 <span class="keywordtype">int</span> <a class="code" href="group__native__queue.html#ga3">rt_queue_delete</a>(RT_QUEUE *q);
+00155 <span class="keywordtype">int</span> <a class="code" href="group__native__queue.html#ga13">rt_queue_delete</a>(RT_QUEUE *q);
 00156 
-00157 <span class="keywordtype">void</span> *<a class="code" href="group__native__queue.html#ga4">rt_queue_alloc</a>(RT_QUEUE *q,
+00157 <span class="keywordtype">void</span> *<a class="code" href="group__native__queue.html#ga14">rt_queue_alloc</a>(RT_QUEUE *q,
 00158                      size_t size);
 00159 
-00160 <span class="keywordtype">int</span> <a class="code" href="group__native__queue.html#ga6">rt_queue_free</a>(RT_QUEUE *q,
+00160 <span class="keywordtype">int</span> <a class="code" href="group__native__queue.html#ga15">rt_queue_free</a>(RT_QUEUE *q,
 00161                   <span class="keywordtype">void</span> *buf);
 00162 
-00163 <span class="keywordtype">int</span> <a class="code" href="group__native__queue.html#ga7">rt_queue_send</a>(RT_QUEUE *q,
+00163 <span class="keywordtype">int</span> <a class="code" href="group__native__queue.html#ga16">rt_queue_send</a>(RT_QUEUE *q,
 00164                   <span class="keywordtype">void</span> *buf,
 00165                   size_t size,
 00166                   <span class="keywordtype">int</span> mode);
 00167 
-00168 ssize_t <a class="code" href="group__native__queue.html#ga8">rt_queue_recv</a>(RT_QUEUE *q,
+00168 ssize_t <a class="code" href="group__native__queue.html#ga17">rt_queue_recv</a>(RT_QUEUE *q,
 00169                       <span class="keywordtype">void</span> **bufp,
 00170                       RTIME timeout);
 00171 
-00172 <span class="keywordtype">int</span> <a class="code" href="group__native__queue.html#ga9">rt_queue_inquire</a>(RT_QUEUE *q,
+00172 <span class="keywordtype">int</span> <a class="code" href="group__native__queue.html#ga18">rt_queue_inquire</a>(RT_QUEUE *q,
 00173                      RT_QUEUE_INFO *info);
 00174 
 00175 <span class="preprocessor">#ifdef __cplusplus</span>
@@ -167,7 +167,7 @@
 00177 <span class="preprocessor">#endif</span>
 00178 <span class="preprocessor"></span>
 00179 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_QUEUE_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:14 2005 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 16:47:16 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

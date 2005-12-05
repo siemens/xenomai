@@ -75,11 +75,11 @@
 00085 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
 00086 <span class="preprocessor">#endif</span>
 00087 <span class="preprocessor"></span>
-00088 <span class="keywordtype">int</span> <a class="code" href="group__mutex.html#ga8">rt_mutex_bind</a>(RT_MUTEX *mutex,
+00088 <span class="keywordtype">int</span> <a class="code" href="group__mutex.html#ga13">rt_mutex_bind</a>(RT_MUTEX *mutex,
 00089                   <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
 00090                   RTIME timeout);
 00091 
-<a name="l00092"></a><a class="code" href="group__mutex.html#ga9">00092</a> <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__mutex.html#ga9">rt_mutex_unbind</a> (RT_MUTEX *mutex)
+<a name="l00092"></a><a class="code" href="group__mutex.html#ga14">00092</a> <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__mutex.html#ga14">rt_mutex_unbind</a> (RT_MUTEX *mutex)
 00093 
 00094 {
 00095     mutex-&gt;opaque = RT_HANDLE_INVALID;
@@ -98,17 +98,17 @@
 00108 <span class="preprocessor"></span>
 00109 <span class="comment">/* Public interface. */</span>
 00110 
-00111 <span class="keywordtype">int</span> <a class="code" href="group__mutex.html#ga1">rt_mutex_create</a>(RT_MUTEX *mutex,
+00111 <span class="keywordtype">int</span> <a class="code" href="group__mutex.html#ga8">rt_mutex_create</a>(RT_MUTEX *mutex,
 00112                     <span class="keyword">const</span> <span class="keywordtype">char</span> *name);
 00113 
-00114 <span class="keywordtype">int</span> <a class="code" href="group__mutex.html#ga2">rt_mutex_delete</a>(RT_MUTEX *mutex);
+00114 <span class="keywordtype">int</span> <a class="code" href="group__mutex.html#ga9">rt_mutex_delete</a>(RT_MUTEX *mutex);
 00115 
-00116 <span class="keywordtype">int</span> <a class="code" href="group__mutex.html#ga3">rt_mutex_lock</a>(RT_MUTEX *mutex,
+00116 <span class="keywordtype">int</span> <a class="code" href="group__mutex.html#ga10">rt_mutex_lock</a>(RT_MUTEX *mutex,
 00117                   RTIME timeout);
 00118 
-00119 <span class="keywordtype">int</span> <a class="code" href="group__mutex.html#ga4">rt_mutex_unlock</a>(RT_MUTEX *mutex);
+00119 <span class="keywordtype">int</span> <a class="code" href="group__mutex.html#ga11">rt_mutex_unlock</a>(RT_MUTEX *mutex);
 00120 
-00121 <span class="keywordtype">int</span> <a class="code" href="group__mutex.html#ga5">rt_mutex_inquire</a>(RT_MUTEX *mutex,
+00121 <span class="keywordtype">int</span> <a class="code" href="group__mutex.html#ga12">rt_mutex_inquire</a>(RT_MUTEX *mutex,
 00122                      RT_MUTEX_INFO *info);
 00123 
 00124 <span class="preprocessor">#ifdef __cplusplus</span>
@@ -116,7 +116,7 @@
 00126 <span class="preprocessor">#endif</span>
 00127 <span class="preprocessor"></span>
 00128 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_MUTEX_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:14 2005 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 16:47:16 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

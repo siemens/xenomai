@@ -33,67 +33,27 @@ The current implementation assumes that the maximum number of outstanding timers
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timer.html#ga24">xntimer_do_tick_periodic</a> (void)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Process a timer tick in periodic mode.  <a href="#ga24"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timer.html#ga27">xntimer_init</a> (xntimer_t *timer, void(*handler)(void *cookie), void *cookie)</td></tr>
+<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timer.html#ga35">xntimer_init</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a timer object.  <a href="#ga27"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timer.html#ga28">xntimer_destroy</a> (xntimer_t *timer)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a timer object.  <a href="#ga35"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timer.html#ga36">xntimer_destroy</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release a timer object.  <a href="#ga28"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timer.html#ga29">xntimer_start</a> (xntimer_t *timer, xnticks_t value, xnticks_t interval)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release a timer object.  <a href="#ga36"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timer.html#ga37">xntimer_start</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Arm a timer.  <a href="#ga29"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">xnticks_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timer.html#ga30">xntimer_get_date</a> (xntimer_t *timer)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Arm a timer.  <a href="#ga37"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timer.html#ga38">xntimer_get_date</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the absolute expiration date.  <a href="#ga30"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">xnticks_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timer.html#ga31">xntimer_get_timeout</a> (xntimer_t *timer)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the absolute expiration date.  <a href="#ga38"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timer.html#ga39">xntimer_get_timeout</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the relative expiration date.  <a href="#ga31"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timer.html#ga32">xntimer_freeze</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the relative expiration date.  <a href="#ga39"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timer.html#ga40">xntimer_freeze</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Freeze all timers.  <a href="#ga32"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Freeze all timers.  <a href="#ga40"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="ga28" doxytag="timer.c::xntimer_destroy"></a><p>
-<table class="mdTable" cellpadding="2" cellspacing="0">
-  <tr>
-    <td class="mdRow">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td class="md" nowrap valign="top">void xntimer_destroy           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">xntimer_t *&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap> <em>timer</em>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table cellspacing="5" cellpadding="0" border="0">
-  <tr>
-    <td>
-      &nbsp;
-    </td>
-    <td>
-
-<p>
-Release a timer object. 
-<p>
-Destroys a timer. After it has been destroyed, all resources associated with the timer have been released. The timer is automatically deactivated before deletion if active on entry.<p>
-<dl compact><dt><b>Parameters:</b></dt><dd>
-  <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>timer</em>&nbsp;</td><td>The address of a valid timer descriptor.</td></tr>
-  </table>
-</dl>
-Environments:<p>
-This service can be called from:<p>
-<ul>
-<li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
-<p>
-Rescheduling: never.     </td>
-  </tr>
-</table>
 <a class="anchor" name="ga14" doxytag="timer.c::xntimer_do_tick_aperiodic"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
@@ -176,18 +136,50 @@ Rescheduling: never.<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga32" doxytag="timer.c::xntimer_freeze"></a><p>
+<hr><h2>Variable Documentation</h2>
+<a class="anchor" name="ga36" doxytag="timer.c::xntimer_destroy"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void xntimer_freeze           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">void&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
+          <td class="md" nowrap valign="top">void xntimer_destroy          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Release a timer object. 
+<p>
+Destroys a timer. After it has been destroyed, all resources associated with the timer have been released. The timer is automatically deactivated before deletion if active on entry.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>timer</em>&nbsp;</td><td>The address of a valid timer descriptor.</td></tr>
+  </table>
+</dl>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
+<p>
+Rescheduling: never.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga40" doxytag="timer.c::xntimer_freeze"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">void xntimer_freeze          </td>
         </tr>
       </table>
     </td>
@@ -217,18 +209,13 @@ Rescheduling: never.<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga30" doxytag="timer.c::xntimer_get_date"></a><p>
+<a class="anchor" name="ga38" doxytag="timer.c::xntimer_get_date"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">xnticks_t xntimer_get_date           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">xntimer_t *&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap> <em>timer</em>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
+          <td class="md" nowrap valign="top">xnticks_t xntimer_get_date          </td>
         </tr>
       </table>
     </td>
@@ -257,22 +244,17 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__pod.html#ga25">xnpod_start_timer()</a> service. In periodic mode, clock ticks are expressed as periodic jiffies. In oneshot mode, clock ticks are expressed as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__pod.html#ga170">xnpod_start_timer()</a> service. In periodic mode, clock ticks are expressed as periodic jiffies. In oneshot mode, clock ticks are expressed as nanoseconds. </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga31" doxytag="timer.c::xntimer_get_timeout"></a><p>
+<a class="anchor" name="ga39" doxytag="timer.c::xntimer_get_timeout"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">xnticks_t xntimer_get_timeout           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">xntimer_t *&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap> <em>timer</em>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
+          <td class="md" nowrap valign="top">xnticks_t xntimer_get_timeout          </td>
         </tr>
       </table>
     </td>
@@ -301,37 +283,17 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__pod.html#ga25">xnpod_start_timer()</a> service. In periodic mode, clock ticks are expressed as periodic jiffies. In oneshot mode, clock ticks are expressed as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__pod.html#ga170">xnpod_start_timer()</a> service. In periodic mode, clock ticks are expressed as periodic jiffies. In oneshot mode, clock ticks are expressed as nanoseconds. </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga27" doxytag="timer.c::xntimer_init"></a><p>
+<a class="anchor" name="ga35" doxytag="timer.c::xntimer_init"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void xntimer_init           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">xntimer_t *&nbsp;</td>
-          <td class="mdname" nowrap> <em>timer</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>void(*)(void *cookie)&nbsp;</td>
-          <td class="mdname" nowrap> <em>handler</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>void *&nbsp;</td>
-          <td class="mdname" nowrap> <em>cookie</em></td>
-        </tr>
-        <tr>
-          <td class="md"></td>
-          <td class="md">)&nbsp;</td>
-          <td class="md" colspan="2"></td>
+          <td class="md" nowrap valign="top">void xntimer_init          </td>
         </tr>
       </table>
     </td>
@@ -347,7 +309,7 @@ Rescheduling: never.<p>
 <p>
 Initialize a timer object. 
 <p>
-Creates a timer. When created, a timer is left disarmed; it must be started using <a class="el" href="group__timer.html#ga29">xntimer_start()</a> in order to be activated.<p>
+Creates a timer. When created, a timer is left disarmed; it must be started using <a class="el" href="group__timer.html#ga37">xntimer_start()</a> in order to be activated.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>timer</em>&nbsp;</td><td>The address of a timer descriptor the nucleus will use to store the object-specific data. This descriptor must always be valid while the object is active therefore it must be allocated in permanent memory.</td></tr>
@@ -364,33 +326,13 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga29" doxytag="timer.c::xntimer_start"></a><p>
+<a class="anchor" name="ga37" doxytag="timer.c::xntimer_start"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void xntimer_start           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">xntimer_t *&nbsp;</td>
-          <td class="mdname" nowrap> <em>timer</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>xnticks_t&nbsp;</td>
-          <td class="mdname" nowrap> <em>value</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>xnticks_t&nbsp;</td>
-          <td class="mdname" nowrap> <em>interval</em></td>
-        </tr>
-        <tr>
-          <td class="md"></td>
-          <td class="md">)&nbsp;</td>
-          <td class="md" colspan="2"></td>
+          <td class="md" nowrap valign="top">void xntimer_start          </td>
         </tr>
       </table>
     </td>
@@ -406,7 +348,7 @@ Rescheduling: never.     </td>
 <p>
 Arm a timer. 
 <p>
-Activates a timer so that the associated timeout handler will be fired after each expiration time. A timer can be either periodic or single-shot, depending on the reload value passed to this routine. The given timer must have been previously initialized by a call to <a class="el" href="group__timer.html#ga27">xntimer_init()</a>.<p>
+Activates a timer so that the associated timeout handler will be fired after each expiration time. A timer can be either periodic or single-shot, depending on the reload value passed to this routine. The given timer must have been previously initialized by a call to <a class="el" href="group__timer.html#ga35">xntimer_init()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>timer</em>&nbsp;</td><td>The address of a valid timer descriptor.</td></tr>
@@ -421,11 +363,11 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__pod.html#ga25">xnpod_start_timer()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__pod.html#ga170">xnpod_start_timer()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:23 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 16:47:18 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

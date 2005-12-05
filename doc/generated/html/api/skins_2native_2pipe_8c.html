@@ -34,39 +34,39 @@ Include dependency graph for pipe.c:<p><center><img src="skins_2native_2pipe_8c_
 </map>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
-<tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga10">rt_pipe_create</a> (RT_PIPE *pipe, const char *name, int minor)</td></tr>
+<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga20">rt_pipe_create</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a message pipe.  <a href="group__pipe.html#ga10"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga11">rt_pipe_delete</a> (RT_PIPE *pipe)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a message pipe.  <a href="group__pipe.html#ga20"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga21">rt_pipe_delete</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a message pipe.  <a href="group__pipe.html#ga11"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga12">rt_pipe_receive</a> (RT_PIPE *pipe, RT_PIPE_MSG **msgp, RTIME timeout)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a message pipe.  <a href="group__pipe.html#ga21"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga22">rt_pipe_receive</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive a message from a pipe.  <a href="group__pipe.html#ga12"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga13">rt_pipe_read</a> (RT_PIPE *pipe, void *buf, size_t size, RTIME timeout)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive a message from a pipe.  <a href="group__pipe.html#ga22"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga24">rt_pipe_send</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read a message from a pipe.  <a href="group__pipe.html#ga13"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga14">rt_pipe_send</a> (RT_PIPE *pipe, RT_PIPE_MSG *msg, size_t size, int mode)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Send a message through a pipe.  <a href="group__pipe.html#ga24"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga23">rt_pipe_read</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Send a message through a pipe.  <a href="group__pipe.html#ga14"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga15">rt_pipe_write</a> (RT_PIPE *pipe, const void *buf, size_t size, int mode)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read a message from a pipe.  <a href="group__pipe.html#ga23"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga25">rt_pipe_write</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Write a message to a pipe.  <a href="group__pipe.html#ga15"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga16">rt_pipe_stream</a> (RT_PIPE *pipe, const void *buf, size_t size)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Write a message to a pipe.  <a href="group__pipe.html#ga25"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga26">rt_pipe_stream</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stream bytes to a pipe.  <a href="group__pipe.html#ga16"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga17">rt_pipe_flush</a> (RT_PIPE *pipe)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stream bytes to a pipe.  <a href="group__pipe.html#ga26"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga27">rt_pipe_flush</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Flush the pipe.  <a href="group__pipe.html#ga17"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">RT_PIPE_MSG *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga18">rt_pipe_alloc</a> (size_t size)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Flush the pipe.  <a href="group__pipe.html#ga27"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga28">rt_pipe_alloc</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a message pipe buffer.  <a href="group__pipe.html#ga18"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga19">rt_pipe_free</a> (RT_PIPE_MSG *msg)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a message pipe buffer.  <a href="group__pipe.html#ga28"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga29">rt_pipe_free</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free a message pipe buffer.  <a href="group__pipe.html#ga19"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free a message pipe buffer.  <a href="group__pipe.html#ga29"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:15 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 16:47:16 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

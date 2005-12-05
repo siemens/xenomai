@@ -136,7 +136,7 @@
 00126 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnarch_relay_tick (<span class="keywordtype">void</span>)
 00127 
 00128 {
-00129     <a class="code" href="group__hal.html#ga50">rthal_irq_host_pend</a>(RTHAL_8254_IRQ);
+00129     <a class="code" href="group__hal.html#ga81">rthal_irq_host_pend</a>(RTHAL_8254_IRQ);
 00130 }
 00131 
 00132 <span class="preprocessor">#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY</span>
@@ -148,14 +148,14 @@
 00138 
 00139 <span class="preprocessor">#ifdef XENO_POD_MODULE</span>
 00140 <span class="preprocessor"></span>
-00141 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#ga67">xnpod_welcome_thread</a>(<span class="keyword">struct</span> xnthread *);
+00141 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#ga161">xnpod_welcome_thread</a>(<span class="keyword">struct</span> xnthread *);
 00142 
-00143 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#ga31">xnpod_delete_thread</a>(<span class="keyword">struct</span> xnthread *);
+00143 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#ga152">xnpod_delete_thread</a>(<span class="keyword">struct</span> xnthread *);
 00144 
 00145 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnarch_start_timer (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ns,
 00146                                       <span class="keywordtype">void</span> (*tickhandler)(<span class="keywordtype">void</span>))
 00147 {
-00148     <span class="keywordflow">return</span> <a class="code" href="group__hal.html#ga60">rthal_timer_request</a>(tickhandler,ns);
+00148     <span class="keywordflow">return</span> <a class="code" href="group__hal.html#ga87">rthal_timer_request</a>(tickhandler,ns);
 00149 }
 00150 
 00151 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnarch_leave_root (xnarchtcb_t *rootcb)
@@ -353,9 +353,9 @@
 00343     <span class="comment">/* xnpod_welcome_thread() will do clts() if needed. */</span>
 00344     stts();
 00345     rthal_local_irq_restore(!!imask);
-00346     <a class="code" href="group__pod.html#ga67">xnpod_welcome_thread</a>(<span class="keyword">self</span>);
+00346     <a class="code" href="group__pod.html#ga161">xnpod_welcome_thread</a>(<span class="keyword">self</span>);
 00347     entry(cookie);
-00348     <a class="code" href="group__pod.html#ga31">xnpod_delete_thread</a>(<span class="keyword">self</span>);
+00348     <a class="code" href="group__pod.html#ga152">xnpod_delete_thread</a>(<span class="keyword">self</span>);
 00349 }
 00350 
 00351 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnarch_init_thread (xnarchtcb_t *tcb,
@@ -637,7 +637,7 @@
 00627 
 00628 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnarch_stop_timer (<span class="keywordtype">void</span>)
 00629 {
-00630     <a class="code" href="group__hal.html#ga61">rthal_timer_release</a>();
+00630     <a class="code" href="group__hal.html#ga88">rthal_timer_release</a>();
 00631 }
 00632 
 00633 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnarch_send_timer_ipi (xnarch_cpumask_t mask)
@@ -662,7 +662,7 @@
 00652 
 00653 <span class="keywordtype">int</span> xnarch_escalation_virq;
 00654 
-00655 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#ga70">xnpod_trap_fault</a>(xnarch_fltinfo_t *fltinfo);
+00655 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#ga169">xnpod_trap_fault</a>(xnarch_fltinfo_t *fltinfo);
 00656 
 00657 <span class="keywordtype">void</span> xnpod_schedule_handler(<span class="keywordtype">void</span>);
 00658 
@@ -677,7 +677,7 @@
 00667     fltinfo.errcode = regs-&gt;orig_eax;
 00668     fltinfo.regs = regs;
 00669 
-00670     <span class="keywordflow">return</span> <a class="code" href="group__pod.html#ga70">xnpod_trap_fault</a>(&amp;fltinfo);
+00670     <span class="keywordflow">return</span> <a class="code" href="group__pod.html#ga169">xnpod_trap_fault</a>(&amp;fltinfo);
 00671 }
 00672 
 00673 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> xnarch_calibrate_timer (<span class="keywordtype">void</span>)
@@ -736,7 +736,7 @@
 00726                          NULL,
 00727                          IPIPE_HANDLE_MASK);
 00728 
-00729     xnarch_old_trap_handler = <a class="code" href="group__hal.html#ga52">rthal_trap_catch</a>(&amp;xnarch_trap_fault);
+00729     xnarch_old_trap_handler = <a class="code" href="group__hal.html#ga83">rthal_trap_catch</a>(&amp;xnarch_trap_fault);
 00730 
 00731 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_PERVASIVE</span>
 00732 <span class="preprocessor"></span>    err = xnshadow_mount();
@@ -744,7 +744,7 @@
 00734 
 00735     <span class="keywordflow">if</span> (err)
 00736         {
-00737         <a class="code" href="group__hal.html#ga52">rthal_trap_catch</a>(xnarch_old_trap_handler);
+00737         <a class="code" href="group__hal.html#ga83">rthal_trap_catch</a>(xnarch_old_trap_handler);
 00738         rthal_free_virq(xnarch_escalation_virq);
 00739         }
 00740 
@@ -757,7 +757,7 @@
 00747 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_PERVASIVE</span>
 00748 <span class="preprocessor"></span>    xnshadow_cleanup();
 00749 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE */</span>
-00750     <a class="code" href="group__hal.html#ga52">rthal_trap_catch</a>(xnarch_old_trap_handler);
+00750     <a class="code" href="group__hal.html#ga83">rthal_trap_catch</a>(xnarch_old_trap_handler);
 00751     rthal_free_virq(xnarch_escalation_virq);
 00752 }
 00753 
@@ -775,7 +775,7 @@
 00765 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
 00766 
 00767 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_ASM_I386_SYSTEM_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:14 2005 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 16:47:16 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

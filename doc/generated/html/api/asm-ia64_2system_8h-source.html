@@ -147,14 +147,14 @@
 00137 
 00138 <span class="preprocessor">#ifdef XENO_POD_MODULE</span>
 00139 <span class="preprocessor"></span>
-00140 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#ga67">xnpod_welcome_thread</a>(<span class="keyword">struct</span> xnthread *);
+00140 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#ga161">xnpod_welcome_thread</a>(<span class="keyword">struct</span> xnthread *);
 00141 
-00142 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#ga31">xnpod_delete_thread</a>(<span class="keyword">struct</span> xnthread *);
+00142 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#ga152">xnpod_delete_thread</a>(<span class="keyword">struct</span> xnthread *);
 00143 
 00144 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnarch_start_timer (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ns,
 00145                                       <span class="keywordtype">void</span> (*tickhandler)(<span class="keywordtype">void</span>))
 00146 {
-00147     <span class="keywordtype">int</span> err = <a class="code" href="group__hal.html#ga60">rthal_timer_request</a>(tickhandler,ns);
+00147     <span class="keywordtype">int</span> err = <a class="code" href="group__hal.html#ga87">rthal_timer_request</a>(tickhandler,ns);
 00148     rthal_declare_cpuid;
 00149     <span class="keywordtype">long</span> <span class="keywordtype">long</span> delta;
 00150 
@@ -349,9 +349,9 @@
 00339     ia64_fph_disable();
 00340     rthal_local_irq_restore(!!imask);
 00341     rthal_local_irq_enable_hw();
-00342     <a class="code" href="group__pod.html#ga67">xnpod_welcome_thread</a>(<span class="keyword">self</span>);
+00342     <a class="code" href="group__pod.html#ga161">xnpod_welcome_thread</a>(<span class="keyword">self</span>);
 00343     entry(cookie);
-00344     <a class="code" href="group__pod.html#ga31">xnpod_delete_thread</a>(<span class="keyword">self</span>);
+00344     <a class="code" href="group__pod.html#ga152">xnpod_delete_thread</a>(<span class="keyword">self</span>);
 00345 }
 00346 
 00347 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnarch_init_thread (xnarchtcb_t *tcb,
@@ -497,7 +497,7 @@
 00487 
 00488 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnarch_stop_timer (<span class="keywordtype">void</span>)
 00489 {
-00490     <a class="code" href="group__hal.html#ga61">rthal_timer_release</a>();
+00490     <a class="code" href="group__hal.html#ga88">rthal_timer_release</a>();
 00491 }
 00492 
 00493 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnarch_send_timer_ipi (xnarch_cpumask_t mask)
@@ -523,7 +523,7 @@
 00513 
 00514 <span class="keywordtype">int</span> xnarch_escalation_virq;
 00515 
-00516 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#ga70">xnpod_trap_fault</a>(xnarch_fltinfo_t *fltinfo);
+00516 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#ga169">xnpod_trap_fault</a>(xnarch_fltinfo_t *fltinfo);
 00517 
 00518 <span class="keywordtype">void</span> xnpod_schedule_handler(<span class="keywordtype">void</span>);
 00519 
@@ -544,7 +544,7 @@
 00534     fltinfo.trap = event;
 00535     fltinfo.ia64 = *(ia64trapinfo_t *)data;
 00536 
-00537     <span class="keywordflow">return</span> <a class="code" href="group__pod.html#ga70">xnpod_trap_fault</a>(&amp;fltinfo);
+00537     <span class="keywordflow">return</span> <a class="code" href="group__pod.html#ga169">xnpod_trap_fault</a>(&amp;fltinfo);
 00538 }
 00539 
 00540 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> xnarch_calibrate_timer (<span class="keywordtype">void</span>)
@@ -721,7 +721,7 @@
 00711                          NULL,
 00712                          IPIPE_HANDLE_MASK);
 00713 
-00714     xnarch_old_trap_handler = <a class="code" href="group__hal.html#ga52">rthal_trap_catch</a>(&amp;xnarch_trap_fault);
+00714     xnarch_old_trap_handler = <a class="code" href="group__hal.html#ga83">rthal_trap_catch</a>(&amp;xnarch_trap_fault);
 00715 
 00716 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_PERVASIVE</span>
 00717 <span class="preprocessor"></span>    err = xnshadow_mount();
@@ -740,7 +740,7 @@
 00730 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE */</span>
 00731 
 00732  release_trap:
-00733     <a class="code" href="group__hal.html#ga52">rthal_trap_catch</a>(xnarch_old_trap_handler);
+00733     <a class="code" href="group__hal.html#ga83">rthal_trap_catch</a>(xnarch_old_trap_handler);
 00734     rthal_free_virq(xnarch_escalation_virq);
 00735 
 00736     <span class="keywordflow">return</span> err;
@@ -752,7 +752,7 @@
 00742 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_PERVASIVE</span>
 00743 <span class="preprocessor"></span>    xnshadow_cleanup();
 00744 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE */</span>
-00745     <a class="code" href="group__hal.html#ga52">rthal_trap_catch</a>(xnarch_old_trap_handler);
+00745     <a class="code" href="group__hal.html#ga83">rthal_trap_catch</a>(xnarch_old_trap_handler);
 00746     rthal_free_virq(xnarch_escalation_virq);
 00747     xnarch_stack_pool_destroy();
 00748 }
@@ -771,7 +771,7 @@
 00761 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
 00762 
 00763 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_ASM_IA64_SYSTEM_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:14 2005 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 16:47:16 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

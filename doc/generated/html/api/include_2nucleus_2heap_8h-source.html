@@ -163,33 +163,33 @@
 00153 
 00154 <span class="comment">/* Public interface. */</span>
 00155 
-00156 <span class="keywordtype">int</span> <a class="code" href="group__heap.html#ga2">xnheap_init</a>(xnheap_t *heap,
+00156 <span class="keywordtype">int</span> <a class="code" href="group__heap.html#ga12">xnheap_init</a>(xnheap_t *heap,
 00157                 <span class="keywordtype">void</span> *heapaddr,
 00158                 u_long heapsize,
 00159                 u_long pagesize);
 00160 
-00161 <span class="keywordtype">int</span> <a class="code" href="group__heap.html#ga3">xnheap_destroy</a>(xnheap_t *heap,
+00161 <span class="keywordtype">int</span> <a class="code" href="group__heap.html#ga13">xnheap_destroy</a>(xnheap_t *heap,
 00162                    <span class="keywordtype">void</span> (*flushfn)(xnheap_t *heap,
 00163                                    <span class="keywordtype">void</span> *extaddr,
 00164                                    u_long extsize,
 00165                                    <span class="keywordtype">void</span> *cookie),
 00166                    <span class="keywordtype">void</span> *cookie);
 00167 
-00168 <span class="keywordtype">int</span> <a class="code" href="group__heap.html#ga8">xnheap_extend</a>(xnheap_t *heap,
+00168 <span class="keywordtype">int</span> <a class="code" href="group__heap.html#ga17">xnheap_extend</a>(xnheap_t *heap,
 00169                   <span class="keywordtype">void</span> *extaddr,
 00170                   u_long extsize);
 00171 
-00172 <span class="keywordtype">void</span> *<a class="code" href="group__heap.html#ga5">xnheap_alloc</a>(xnheap_t *heap,
+00172 <span class="keywordtype">void</span> *<a class="code" href="group__heap.html#ga14">xnheap_alloc</a>(xnheap_t *heap,
 00173                    u_long size);
 00174 
-00175 <span class="keywordtype">int</span> <a class="code" href="group__heap.html#ga6">xnheap_test_and_free</a>(xnheap_t *heap,
+00175 <span class="keywordtype">int</span> <a class="code" href="group__heap.html#ga15">xnheap_test_and_free</a>(xnheap_t *heap,
 00176                          <span class="keywordtype">void</span> *block,
 00177                          <span class="keywordtype">int</span> (*ckfn)(<span class="keywordtype">void</span> *block));
 00178 
-00179 <span class="keywordtype">int</span> <a class="code" href="group__heap.html#ga7">xnheap_free</a>(xnheap_t *heap,
+00179 <span class="keywordtype">int</span> <a class="code" href="group__heap.html#ga16">xnheap_free</a>(xnheap_t *heap,
 00180                 <span class="keywordtype">void</span> *block);
 00181 
-00182 <span class="keywordtype">void</span> <a class="code" href="group__heap.html#ga9">xnheap_schedule_free</a>(xnheap_t *heap,
+00182 <span class="keywordtype">void</span> <a class="code" href="group__heap.html#ga18">xnheap_schedule_free</a>(xnheap_t *heap,
 00183                           <span class="keywordtype">void</span> *block,
 00184                           xnholder_t *link);
 00185 
@@ -210,7 +210,7 @@
 00200 <span class="preprocessor">#define XNHEAP_DEV_NAME  "/dev/rtheap"</span>
 00201 <span class="preprocessor"></span>
 00202 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_HEAP_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:14 2005 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 16:47:16 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

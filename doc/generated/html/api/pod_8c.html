@@ -35,23 +35,96 @@ Include dependency graph for pod.c:<p><center><img src="pod_8c__incl.png" border
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga66">xnpod_suspend_thread</a> (xnthread_t *thread, xnflags_t mask, xnticks_t timeout, xnsynch_t *wchan)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Suspend a thread.  <a href="group__pod.html#ga66"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga67">xnpod_welcome_thread</a> (xnthread_t *thread)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Thread prologue.  <a href="group__pod.html#ga67"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga69">xnpod_preempt_current_thread</a> (<a class="el" href="structxnsched.html">xnsched_t</a> *sched)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Preempts the current thread.  <a href="group__pod.html#ga69"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga70">xnpod_trap_fault</a> (void *fltinfo)</td></tr>
+<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga159">xnpod_activate_rr</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Default fault handler.  <a href="group__pod.html#ga70"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga71">xnpod_announce_tick</a> (xnintr_t *intr)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Globally activate the round-robin scheduling.  <a href="group__pod.html#ga159"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga166">xnpod_add_hook</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Announce a new clock tick.  <a href="group__pod.html#ga71"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a nucleus hook.  <a href="group__pod.html#ga166"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga172">xnpod_announce_tick</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Announce a new clock tick.  <a href="group__pod.html#ga172"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga160">xnpod_deactivate_rr</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Globally deactivate the round-robin scheduling.  <a href="group__pod.html#ga160"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga152">xnpod_delete_thread</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a thread.  <a href="group__pod.html#ga152"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga165">xnpod_get_time</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the nucleus idea of time.  <a href="group__pod.html#ga165"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga146">xnpod_init</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a new pod.  <a href="group__pod.html#ga146"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga148">xnpod_init_thread</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a new thread.  <a href="group__pod.html#ga148"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga157">xnpod_migrate_thread</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Migrate the current thread.  <a href="group__pod.html#ga157"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga167">xnpod_remove_hook</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Remove a nucleus hook.  <a href="group__pod.html#ga167"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga156">xnpod_renice_thread</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change the base priority of a thread.  <a href="group__pod.html#ga156"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga150">xnpod_restart_thread</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Restart a thread.  <a href="group__pod.html#ga150"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga154">xnpod_resume_thread</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Resume a thread.  <a href="group__pod.html#ga154"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga158">xnpod_rotate_readyq</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Rotate a priority level in the ready queue.  <a href="group__pod.html#ga158"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga162">xnpod_schedule</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Rescheduling procedure entry point.  <a href="group__pod.html#ga162"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga163">xnpod_schedule_runnable</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Hidden rescheduling procedure.  <a href="group__pod.html#ga163"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga151">xnpod_set_thread_mode</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change a thread's control mode.  <a href="group__pod.html#ga151"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga173">xnpod_set_thread_periodic</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Make a thread periodic.  <a href="group__pod.html#ga173"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga164">xnpod_set_time</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the nucleus idea of time.  <a href="group__pod.html#ga164"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga147">xnpod_shutdown</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Shutdown the current pod.  <a href="group__pod.html#ga147"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga149">xnpod_start_thread</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initial start of a newly created thread.  <a href="group__pod.html#ga149"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga170">xnpod_start_timer</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start the system timer.  <a href="group__pod.html#ga170"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga171">xnpod_stop_timer</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stop the system timer.  <a href="group__pod.html#ga171"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga153">xnpod_suspend_thread</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Suspend a thread.  <a href="group__pod.html#ga153"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga169">xnpod_trap_fault</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Default fault handler.  <a href="group__pod.html#ga169"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga155">xnpod_unblock_thread</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unblock a thread.  <a href="group__pod.html#ga155"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga174">xnpod_wait_thread_period</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next periodic release point.  <a href="group__pod.html#ga174"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga161">xnpod_welcome_thread</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Thread prologue.  <a href="group__pod.html#ga161"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:15 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 16:47:16 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

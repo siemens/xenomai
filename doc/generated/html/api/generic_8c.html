@@ -21,45 +21,51 @@ You should have received a copy of the GNU General Public License along with thi
 Include dependency graph for generic.c:<p><center><img src="generic_8c__incl.png" border="0" usemap="#arch/generic/hal/generic.c_map" alt=""></center>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
-<tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga44">rthal_irq_request</a> (unsigned irq, void(*handler)(unsigned irq, void *cookie), int(*ackfn)(unsigned irq), void *cookie)</td></tr>
+<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga75">rthal_irq_request</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a real-time interrupt handler.  <a href="group__hal.html#ga44"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga45">rthal_irq_release</a> (unsigned irq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a real-time interrupt handler.  <a href="group__hal.html#ga75"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga76">rthal_irq_release</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Uninstall a real-time interrupt handler.  <a href="group__hal.html#ga45"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga46">rthal_irq_enable</a> (unsigned irq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Uninstall a real-time interrupt handler.  <a href="group__hal.html#ga76"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga77">rthal_irq_enable</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Enable an interrupt source.  <a href="group__hal.html#ga46"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga47">rthal_irq_disable</a> (unsigned irq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Enable an interrupt source.  <a href="group__hal.html#ga77"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga78">rthal_irq_disable</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disable an interrupt source.  <a href="group__hal.html#ga47"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga48">rthal_irq_host_request</a> (unsigned irq, irqreturn_t(*handler)(int irq, void *dev_id, struct pt_regs *regs), char *name, void *dev_id)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disable an interrupt source.  <a href="group__hal.html#ga78"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga79">rthal_irq_host_request</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a shared Linux interrupt handler.  <a href="group__hal.html#ga48"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga49">rthal_irq_host_release</a> (unsigned irq, void *dev_id)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a shared Linux interrupt handler.  <a href="group__hal.html#ga79"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga80">rthal_irq_host_release</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Uninstall a shared Linux interrupt handler.  <a href="group__hal.html#ga49"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga50">rthal_irq_host_pend</a> (unsigned irq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Uninstall a shared Linux interrupt handler.  <a href="group__hal.html#ga80"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga81">rthal_irq_host_pend</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Propagate an IRQ event to Linux.  <a href="group__hal.html#ga50"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga51">rthal_irq_affinity</a> (unsigned irq, cpumask_t cpumask, cpumask_t *oldmask)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Propagate an IRQ event to Linux.  <a href="group__hal.html#ga81"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga82">rthal_irq_affinity</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set/Get processor affinity for external interrupt.  <a href="group__hal.html#ga51"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">rthal_trap_handler_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga52">rthal_trap_catch</a> (rthal_trap_handler_t handler)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set/Get processor affinity for external interrupt.  <a href="group__hal.html#ga82"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga83">rthal_trap_catch</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Installs a fault handler.  <a href="group__hal.html#ga52"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga54">rthal_apc_alloc</a> (const char *name, void(*handler)(void *cookie), void *cookie)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Installs a fault handler.  <a href="group__hal.html#ga83"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga87">rthal_timer_request</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate an APC slot.  <a href="group__hal.html#ga54"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga55">rthal_apc_free</a> (int apc)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Grab the hardware timer.  <a href="group__hal.html#ga87"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga88">rthal_timer_release</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Releases an APC slot.  <a href="group__hal.html#ga55"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga56">rthal_apc_schedule</a> (int apc)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release the hardware timer.  <a href="group__hal.html#ga88"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga84">rthal_apc_alloc</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Schedule an APC invocation.  <a href="group__hal.html#ga56"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate an APC slot.  <a href="group__hal.html#ga84"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga85">rthal_apc_free</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Releases an APC slot.  <a href="group__hal.html#ga85"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga86">rthal_apc_schedule</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Schedule an APC invocation.  <a href="group__hal.html#ga86"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:15 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 16:47:16 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -20,104 +20,131 @@ Collaboration diagram for Synchronisation Services:<center><table><tr><td><img s
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Global Lock across Scheduler Invocation</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga20">RTDM_EXECUTE_ATOMICALLY</a>(code_block)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga29">RTDM_EXECUTE_ATOMICALLY</a>(code_block)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Execute code block atomically.  <a href="#ga20"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Execute code block atomically.  <a href="#ga29"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>Spinlock with Preemption Deactivation</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga21" doxytag="rtdmsync::RTDM_LOCK_UNLOCKED"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga21">RTDM_LOCK_UNLOCKED</a>&nbsp;&nbsp;&nbsp;SPIN_LOCK_UNLOCKED</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga30" doxytag="rtdmsync::RTDM_LOCK_UNLOCKED"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga30">RTDM_LOCK_UNLOCKED</a>&nbsp;&nbsp;&nbsp;SPIN_LOCK_UNLOCKED</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Static lock initialisation. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga22">rtdm_lock_init</a>(lock)&nbsp;&nbsp;&nbsp;spin_lock_init(lock)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga31">rtdm_lock_init</a>(lock)&nbsp;&nbsp;&nbsp;spin_lock_init(lock)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Dynamic lock initialisation.  <a href="#ga22"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga23">rtdm_lock_get</a>(lock)&nbsp;&nbsp;&nbsp;rthal_spin_lock(lock)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Dynamic lock initialisation.  <a href="#ga31"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga32">rtdm_lock_get</a>(lock)&nbsp;&nbsp;&nbsp;rthal_spin_lock(lock)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Acquire lock from non-preemptible contexts.  <a href="#ga23"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga24">rtdm_lock_put</a>(lock)&nbsp;&nbsp;&nbsp;rthal_spin_unlock(lock)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Acquire lock from non-preemptible contexts.  <a href="#ga32"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga33">rtdm_lock_put</a>(lock)&nbsp;&nbsp;&nbsp;rthal_spin_unlock(lock)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release lock without preemption restoration.  <a href="#ga24"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga25">rtdm_lock_get_irqsave</a>(lock, context)&nbsp;&nbsp;&nbsp;rthal_spin_lock_irqsave(lock, context)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release lock without preemption restoration.  <a href="#ga33"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga34">rtdm_lock_get_irqsave</a>(lock, context)&nbsp;&nbsp;&nbsp;rthal_spin_lock_irqsave(lock, context)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Acquire lock and disable preemption.  <a href="#ga25"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga26">rtdm_lock_put_irqrestore</a>(lock, context)&nbsp;&nbsp;&nbsp;rthal_spin_unlock_irqrestore(lock, context)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Acquire lock and disable preemption.  <a href="#ga34"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga35">rtdm_lock_put_irqrestore</a>(lock, context)&nbsp;&nbsp;&nbsp;rthal_spin_unlock_irqrestore(lock, context)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release lock and restore preemption state.  <a href="#ga26"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga27">rtdm_lock_irqsave</a>(context)&nbsp;&nbsp;&nbsp;rthal_local_irq_save(context)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release lock and restore preemption state.  <a href="#ga35"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga36">rtdm_lock_irqsave</a>(context)&nbsp;&nbsp;&nbsp;rthal_local_irq_save(context)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disable preemption locally.  <a href="#ga27"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga28">rtdm_lock_irqrestore</a>(context)&nbsp;&nbsp;&nbsp;rthal_local_irq_restore(context)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disable preemption locally.  <a href="#ga36"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga37">rtdm_lock_irqrestore</a>(context)&nbsp;&nbsp;&nbsp;rthal_local_irq_restore(context)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Restore preemption state.  <a href="#ga28"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga0" doxytag="rtdmsync::rtdm_lock_t"></a>
-typedef spinlock_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga0">rtdm_lock_t</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Restore preemption state.  <a href="#ga37"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga9" doxytag="rtdmsync::rtdm_lock_t"></a>
+typedef spinlock_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga9">rtdm_lock_t</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Lock variable. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga1" doxytag="rtdmsync::rtdm_lockctx_t"></a>
-typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga1">rtdm_lockctx_t</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga10" doxytag="rtdmsync::rtdm_lockctx_t"></a>
+typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga10">rtdm_lockctx_t</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Variable to save the context while holding a lock. <br></td></tr>
 <tr><td colspan="2"><br><h2>Timeout Sequence Management</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga2">rtdm_toseq_init</a> (rtdm_toseq_t *timeout_seq, __s64 timeout)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga11">rtdm_toseq_init</a> (rtdm_toseq_t *timeout_seq, int64_t timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a timeout sequence.  <a href="#ga2"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a timeout sequence.  <a href="#ga11"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>Event Services</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga3">rtdm_event_init</a> (rtdm_event_t *event, unsigned long pending)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga12">rtdm_event_init</a> (rtdm_event_t *event, unsigned long pending)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise an event.  <a href="#ga3"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga4">rtdm_event_destroy</a> (rtdm_event_t *event)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise an event.  <a href="#ga12"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga13">rtdm_event_destroy</a> (rtdm_event_t *event)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy an event.  <a href="#ga4"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga5">rtdm_event_pulse</a> (rtdm_event_t *event)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy an event.  <a href="#ga13"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga14">rtdm_event_pulse</a> (rtdm_event_t *event)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Signal an event occurrence to currently listening waiters.  <a href="#ga5"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga6">rtdm_event_clear</a> (rtdm_event_t *event)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Signal an event occurrence to currently listening waiters.  <a href="#ga14"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga15">rtdm_event_clear</a> (rtdm_event_t *event)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Clear event state.  <a href="#ga6"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga7">rtdm_event_signal</a> (rtdm_event_t *event)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Clear event state.  <a href="#ga15"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga16">rtdm_event_signal</a> (rtdm_event_t *event)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Signal an event occurrence.  <a href="#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga8">rtdm_event_wait</a> (rtdm_event_t *event)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Signal an event occurrence.  <a href="#ga16"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga17">rtdm_event_wait</a> (rtdm_event_t *event)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on event occurrence.  <a href="#ga8"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga9">rtdm_event_timedwait</a> (rtdm_event_t *event, __s64 timeout, rtdm_toseq_t *timeout_seq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on event occurrence.  <a href="#ga17"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga18">rtdm_event_timedwait</a> (rtdm_event_t *event, int64_t timeout, rtdm_toseq_t *timeout_seq)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on event occurrence with timeout.  <a href="#ga9"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on event occurrence with timeout.  <a href="#ga18"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga0">rtdm_event_signal</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise an event.  <a href="#ga0"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga1">rtdm_event_wait</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise an event.  <a href="#ga1"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga2">rtdm_event_timedwait</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise an event.  <a href="#ga2"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>Semaphore Services</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga10">rtdm_sem_init</a> (rtdm_sem_t *sem, unsigned long value)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga19">rtdm_sem_init</a> (rtdm_sem_t *sem, unsigned long value)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a semaphore.  <a href="#ga10"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga11">rtdm_sem_destroy</a> (rtdm_sem_t *sem)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a semaphore.  <a href="#ga19"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga20">rtdm_sem_destroy</a> (rtdm_sem_t *sem)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy a semaphore.  <a href="#ga11"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga12">rtdm_sem_down</a> (rtdm_sem_t *sem)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy a semaphore.  <a href="#ga20"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga21">rtdm_sem_down</a> (rtdm_sem_t *sem)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement a semaphore.  <a href="#ga12"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga13">rtdm_sem_timeddown</a> (rtdm_sem_t *sem, __s64 timeout, rtdm_toseq_t *timeout_seq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement a semaphore.  <a href="#ga21"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga22">rtdm_sem_timeddown</a> (rtdm_sem_t *sem, int64_t timeout, rtdm_toseq_t *timeout_seq)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement a semaphore with timeout.  <a href="#ga13"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga14">rtdm_sem_up</a> (rtdm_sem_t *sem)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement a semaphore with timeout.  <a href="#ga22"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga23">rtdm_sem_up</a> (rtdm_sem_t *sem)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Increment a semaphore.  <a href="#ga14"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Increment a semaphore.  <a href="#ga23"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga3">rtdm_sem_down</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a semaphore.  <a href="#ga3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga4">rtdm_sem_timeddown</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a semaphore.  <a href="#ga4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga5">rtdm_sem_up</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a semaphore.  <a href="#ga5"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>Mutex Services</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga15">rtdm_mutex_init</a> (rtdm_mutex_t *mutex)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga24">rtdm_mutex_init</a> (rtdm_mutex_t *mutex)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a mutex.  <a href="#ga15"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga16">rtdm_mutex_destroy</a> (rtdm_mutex_t *mutex)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a mutex.  <a href="#ga24"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga25">rtdm_mutex_destroy</a> (rtdm_mutex_t *mutex)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy a mutex.  <a href="#ga16"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga17">rtdm_mutex_lock</a> (rtdm_mutex_t *mutex)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy a mutex.  <a href="#ga25"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga26">rtdm_mutex_lock</a> (rtdm_mutex_t *mutex)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex.  <a href="#ga17"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga18">rtdm_mutex_timedlock</a> (rtdm_mutex_t *mutex, __s64 timeout, rtdm_toseq_t *timeout_seq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex.  <a href="#ga26"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga27">rtdm_mutex_timedlock</a> (rtdm_mutex_t *mutex, int64_t timeout, rtdm_toseq_t *timeout_seq)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex with timeout.  <a href="#ga18"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga19">rtdm_mutex_unlock</a> (rtdm_mutex_t *mutex)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex with timeout.  <a href="#ga27"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga28">rtdm_mutex_unlock</a> (rtdm_mutex_t *mutex)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release a mutex.  <a href="#ga19"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release a mutex.  <a href="#ga28"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga6">rtdm_mutex_lock</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a mutex.  <a href="#ga6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga7">rtdm_mutex_timedlock</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a mutex.  <a href="#ga7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga8">rtdm_mutex_unlock</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a mutex.  <a href="#ga8"></a><br></td></tr>
 </table>
 <hr><h2>Define Documentation</h2>
-<a class="anchor" name="ga20" doxytag="rtdm_driver.h::RTDM_EXECUTE_ATOMICALLY"></a><p>
+<a class="anchor" name="ga29" doxytag="rtdm_driver.h::RTDM_EXECUTE_ATOMICALLY"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -151,13 +178,13 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 }
 </pre></div>Execute code block atomically. 
 <p>
-Generally, it is illegal to suspend the current task by calling <a class="el" href="group__rtdmtask.html#ga10">rtdm_task_sleep()</a>, <a class="el" href="group__rtdmsync.html#ga8">rtdm_event_wait()</a>, etc. while holding a spinlock. In contrast, this macro allows to combine several operations including potentially rescheduling calls to an atomic code block with respect to other <a class="el" href="group__rtdmsync.html#ga20">RTDM_EXECUTE_ATOMICALLY()</a> blocks. The macro is a light-weight alternative for protecting code blocks via mutexes, and it can even be used to synchronise real-time and non-real-time contexts.<p>
+Generally, it is illegal to suspend the current task by calling rtdm_task_sleep(), <a class="el" href="group__rtdmsync.html#ga1">rtdm_event_wait()</a>, etc. while holding a spinlock. In contrast, this macro allows to combine several operations including a potentially rescheduling call to an atomic code block with respect to other <a class="el" href="group__rtdmsync.html#ga29">RTDM_EXECUTE_ATOMICALLY()</a> blocks. The macro is a light-weight alternative for protecting code blocks via mutexes, and it can even be used to synchronise real-time and non-real-time contexts.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>code_block</em>&nbsp;</td><td>Commands to be executed atomically</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Note:</b></dt><dd>It is not allowed to leave the code block explicitely by using <code>break</code>, <code>return</code>, <code>goto</code>, etc. This would leave the global lock held during the code block execution in an inconsistent state. Moreover, do not embed complex operations into the code bock. Consider that they will be executed under preemption lock with interrupts switched-off.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>It is not allowed to leave the code block explicitely by using <code>break</code>, <code>return</code>, <code>goto</code>, etc. This would leave the global lock held during the code block execution in an inconsistent state. Moreover, do not embed complex operations into the code bock. Consider that they will be executed under preemption lock with interrupts switched-off. Also note that invocation of rescheduling calls may break the atomicity until the task gains the CPU again.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -166,7 +193,7 @@ This service can be called from:<p>
 Rescheduling: possible, depends on functions called within <em>code_block</em>.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga23" doxytag="rtdm_driver.h::rtdm_lock_get"></a><p>
+<a class="anchor" name="ga32" doxytag="rtdm_driver.h::rtdm_lock_get"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -206,7 +233,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga25" doxytag="rtdm_driver.h::rtdm_lock_get_irqsave"></a><p>
+<a class="anchor" name="ga34" doxytag="rtdm_driver.h::rtdm_lock_get_irqsave"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -250,7 +277,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga22" doxytag="rtdm_driver.h::rtdm_lock_init"></a><p>
+<a class="anchor" name="ga31" doxytag="rtdm_driver.h::rtdm_lock_init"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -290,7 +317,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga28" doxytag="rtdm_driver.h::rtdm_lock_irqrestore"></a><p>
+<a class="anchor" name="ga37" doxytag="rtdm_driver.h::rtdm_lock_irqrestore"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -330,7 +357,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga27" doxytag="rtdm_driver.h::rtdm_lock_irqsave"></a><p>
+<a class="anchor" name="ga36" doxytag="rtdm_driver.h::rtdm_lock_irqsave"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -370,7 +397,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga24" doxytag="rtdm_driver.h::rtdm_lock_put"></a><p>
+<a class="anchor" name="ga33" doxytag="rtdm_driver.h::rtdm_lock_put"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -410,7 +437,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga26" doxytag="rtdm_driver.h::rtdm_lock_put_irqrestore"></a><p>
+<a class="anchor" name="ga35" doxytag="rtdm_driver.h::rtdm_lock_put_irqrestore"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -455,7 +482,7 @@ Rescheduling: possible.     </td>
   </tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="ga6" doxytag="drvlib.c::rtdm_event_clear"></a><p>
+<a class="anchor" name="ga15" doxytag="drvlib.c::rtdm_event_clear"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -484,7 +511,7 @@ Clear event state.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga3">rtdm_event_init()</a></td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga12">rtdm_event_init()</a></td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -495,7 +522,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga4" doxytag="drvlib.c::rtdm_event_destroy"></a><p>
+<a class="anchor" name="ga13" doxytag="drvlib.c::rtdm_event_destroy"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -524,7 +551,7 @@ Destroy an event.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga3">rtdm_event_init()</a></td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga12">rtdm_event_init()</a></td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -535,7 +562,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga3" doxytag="drvlib.c::rtdm_event_init"></a><p>
+<a class="anchor" name="ga12" doxytag="drvlib.c::rtdm_event_init"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -585,7 +612,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga5" doxytag="drvlib.c::rtdm_event_pulse"></a><p>
+<a class="anchor" name="ga14" doxytag="drvlib.c::rtdm_event_pulse"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -612,10 +639,10 @@ Rescheduling: never.     </td>
 <p>
 Signal an event occurrence to currently listening waiters. 
 <p>
-This function wakes up all current waiters of the given event, but it does not change the event state. Subsequently callers of <a class="el" href="group__rtdmsync.html#ga8">rtdm_event_wait()</a> or rtdm_event_wait_until() will therefore be blocked first.<p>
+This function wakes up all current waiters of the given event, but it does not change the event state. Subsequently callers of <a class="el" href="group__rtdmsync.html#ga1">rtdm_event_wait()</a> or rtdm_event_wait_until() will therefore be blocked first.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga3">rtdm_event_init()</a></td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga12">rtdm_event_init()</a></td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -626,7 +653,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga7" doxytag="drvlib.c::rtdm_event_signal"></a><p>
+<a class="anchor" name="ga16" doxytag="drvlib.c::rtdm_event_signal"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -653,10 +680,10 @@ Rescheduling: possible.     </td>
 <p>
 Signal an event occurrence. 
 <p>
-This function sets the given event and wakes up all current waiters. If no waiter is presently registered, the next call to <a class="el" href="group__rtdmsync.html#ga8">rtdm_event_wait()</a> or rtdm_event_wait_until() will return immediately.<p>
+This function sets the given event and wakes up all current waiters. If no waiter is presently registered, the next call to <a class="el" href="group__rtdmsync.html#ga1">rtdm_event_wait()</a> or rtdm_event_wait_until() will return immediately.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga3">rtdm_event_init()</a></td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga12">rtdm_event_init()</a></td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -667,7 +694,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga9" doxytag="drvlib.c::rtdm_event_timedwait"></a><p>
+<a class="anchor" name="ga18" doxytag="drvlib.c::rtdm_event_timedwait"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -681,7 +708,7 @@ Rescheduling: possible.     </td>
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
-          <td class="md" nowrap>__s64&nbsp;</td>
+          <td class="md" nowrap>int64_t&nbsp;</td>
           <td class="mdname" nowrap> <em>timeout</em>, </td>
         </tr>
         <tr>
@@ -712,9 +739,9 @@ Wait on event occurrence with timeout.
 This function waits or tests for the occurence of the given event, taking the provided timeout into account. On successful return, the event is reset.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga3">rtdm_event_init()</a> </td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga12">rtdm_event_init()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>timeout</em>&nbsp;</td><td>Relative timeout in nanoseconds, 0 for infinite, or any negative value for non-blocking (test for event occurrence) </td></tr>
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by <a class="el" href="group__rtdmsync.html#ga2">rtdm_toseq_init()</a> or rtdm_toseq_absinit(), or NULL</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by <a class="el" href="group__rtdmsync.html#ga11">rtdm_toseq_init()</a> or rtdm_toseq_absinit(), or NULL</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
@@ -722,7 +749,7 @@ This function waits or tests for the occurence of the given event, taking the pr
 <li>-ETIMEDOUT is returned if the if the request has not been satisfied within the specified amount of time.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ga7">rtdm_task_unblock()</a>.</li></ul>
+<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ga12">rtdm_task_unblock()</a>.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>event</em> has been destroyed.</li></ul>
@@ -735,7 +762,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga8" doxytag="drvlib.c::rtdm_event_wait"></a><p>
+<a class="anchor" name="ga17" doxytag="drvlib.c::rtdm_event_wait"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -762,15 +789,15 @@ Rescheduling: possible.     </td>
 <p>
 Wait on event occurrence. 
 <p>
-This is the light-weight version of <a class="el" href="group__rtdmsync.html#ga9">rtdm_event_timedwait()</a>, implying an infinite timeout.<p>
+This is the light-weight version of <a class="el" href="group__rtdmsync.html#ga2">rtdm_event_timedwait()</a>, implying an infinite timeout.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga3">rtdm_event_init()</a></td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga12">rtdm_event_init()</a></td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
 <ul>
-<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ga7">rtdm_task_unblock()</a>.</li></ul>
+<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ga12">rtdm_task_unblock()</a>.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>event</em> has been destroyed.</li></ul>
@@ -783,7 +810,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga16" doxytag="drvlib.c::rtdm_mutex_destroy"></a><p>
+<a class="anchor" name="ga25" doxytag="drvlib.c::rtdm_mutex_destroy"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -812,7 +839,7 @@ Destroy a mutex.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by <a class="el" href="group__rtdmsync.html#ga15">rtdm_mutex_init()</a></td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by <a class="el" href="group__rtdmsync.html#ga24">rtdm_mutex_init()</a></td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -823,7 +850,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga15" doxytag="drvlib.c::rtdm_mutex_init"></a><p>
+<a class="anchor" name="ga24" doxytag="drvlib.c::rtdm_mutex_init"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -864,7 +891,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga17" doxytag="drvlib.c::rtdm_mutex_lock"></a><p>
+<a class="anchor" name="ga26" doxytag="drvlib.c::rtdm_mutex_lock"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -891,10 +918,10 @@ Rescheduling: never.     </td>
 <p>
 Request a mutex. 
 <p>
-This is the light-weight version of <a class="el" href="group__rtdmsync.html#ga18">rtdm_mutex_timedlock()</a>, implying an infinite timeout.<p>
+This is the light-weight version of <a class="el" href="group__rtdmsync.html#ga7">rtdm_mutex_timedlock()</a>, implying an infinite timeout.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by <a class="el" href="group__rtdmsync.html#ga15">rtdm_mutex_init()</a></td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by <a class="el" href="group__rtdmsync.html#ga24">rtdm_mutex_init()</a></td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
@@ -909,7 +936,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga18" doxytag="drvlib.c::rtdm_mutex_timedlock"></a><p>
+<a class="anchor" name="ga27" doxytag="drvlib.c::rtdm_mutex_timedlock"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -923,7 +950,7 @@ Rescheduling: possible.     </td>
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
-          <td class="md" nowrap>__s64&nbsp;</td>
+          <td class="md" nowrap>int64_t&nbsp;</td>
           <td class="mdname" nowrap> <em>timeout</em>, </td>
         </tr>
         <tr>
@@ -954,9 +981,9 @@ Request a mutex with timeout.
 This function tries to acquire the given mutex. If it is not available, the caller is blocked unless non-blocking operation was selected.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by <a class="el" href="group__rtdmsync.html#ga15">rtdm_mutex_init()</a> </td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by <a class="el" href="group__rtdmsync.html#ga24">rtdm_mutex_init()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>timeout</em>&nbsp;</td><td>Relative timeout in nanoseconds, 0 for infinite, or any negative value for non-blocking operation </td></tr>
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by <a class="el" href="group__rtdmsync.html#ga2">rtdm_toseq_init()</a> or rtdm_toseq_absinit(), or NULL</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by <a class="el" href="group__rtdmsync.html#ga11">rtdm_toseq_init()</a> or rtdm_toseq_absinit(), or NULL</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
@@ -967,7 +994,7 @@ This function tries to acquire the given mutex. If it is not available, the call
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is negative and the semaphore value is currently not positive.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ga7">rtdm_task_unblock()</a>.</li></ul>
+<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ga12">rtdm_task_unblock()</a>.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>mutex</em> has been destroyed.</li></ul>
@@ -980,7 +1007,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga19" doxytag="drvlib.c::rtdm_mutex_unlock"></a><p>
+<a class="anchor" name="ga28" doxytag="drvlib.c::rtdm_mutex_unlock"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1007,10 +1034,10 @@ Rescheduling: possible.     </td>
 <p>
 Release a mutex. 
 <p>
-This function releases the given mutex, waking up a potential waiter which was blocked upon <a class="el" href="group__rtdmsync.html#ga17">rtdm_mutex_lock()</a> or <a class="el" href="group__rtdmsync.html#ga18">rtdm_mutex_timedlock()</a>.<p>
+This function releases the given mutex, waking up a potential waiter which was blocked upon <a class="el" href="group__rtdmsync.html#ga6">rtdm_mutex_lock()</a> or <a class="el" href="group__rtdmsync.html#ga7">rtdm_mutex_timedlock()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by <a class="el" href="group__rtdmsync.html#ga15">rtdm_mutex_init()</a></td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by <a class="el" href="group__rtdmsync.html#ga24">rtdm_mutex_init()</a></td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -1021,7 +1048,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga11" doxytag="drvlib.c::rtdm_sem_destroy"></a><p>
+<a class="anchor" name="ga20" doxytag="drvlib.c::rtdm_sem_destroy"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1050,7 +1077,7 @@ Destroy a semaphore.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by <a class="el" href="group__rtdmsync.html#ga10">rtdm_sem_init()</a></td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by <a class="el" href="group__rtdmsync.html#ga19">rtdm_sem_init()</a></td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -1061,7 +1088,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga12" doxytag="drvlib.c::rtdm_sem_down"></a><p>
+<a class="anchor" name="ga21" doxytag="drvlib.c::rtdm_sem_down"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1088,15 +1115,15 @@ Rescheduling: possible.     </td>
 <p>
 Decrement a semaphore. 
 <p>
-This is the light-weight version of <a class="el" href="group__rtdmsync.html#ga13">rtdm_sem_timeddown()</a>, implying an infinite timeout.<p>
+This is the light-weight version of <a class="el" href="group__rtdmsync.html#ga4">rtdm_sem_timeddown()</a>, implying an infinite timeout.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by <a class="el" href="group__rtdmsync.html#ga10">rtdm_sem_init()</a></td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by <a class="el" href="group__rtdmsync.html#ga19">rtdm_sem_init()</a></td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
 <ul>
-<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ga7">rtdm_task_unblock()</a>.</li></ul>
+<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ga12">rtdm_task_unblock()</a>.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>sem</em> has been destroyed.</li></ul>
@@ -1109,7 +1136,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga10" doxytag="drvlib.c::rtdm_sem_init"></a><p>
+<a class="anchor" name="ga19" doxytag="drvlib.c::rtdm_sem_init"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1159,7 +1186,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga13" doxytag="drvlib.c::rtdm_sem_timeddown"></a><p>
+<a class="anchor" name="ga22" doxytag="drvlib.c::rtdm_sem_timeddown"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1173,7 +1200,7 @@ Rescheduling: never.     </td>
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
-          <td class="md" nowrap>__s64&nbsp;</td>
+          <td class="md" nowrap>int64_t&nbsp;</td>
           <td class="mdname" nowrap> <em>timeout</em>, </td>
         </tr>
         <tr>
@@ -1204,9 +1231,9 @@ Decrement a semaphore with timeout.
 This function tries to decrement the given semphore's value if it is positive on entry. If not, the caller is blocked unless non-blocking operation was selected.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by <a class="el" href="group__rtdmsync.html#ga10">rtdm_sem_init()</a> </td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by <a class="el" href="group__rtdmsync.html#ga19">rtdm_sem_init()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>timeout</em>&nbsp;</td><td>Relative timeout in nanoseconds, 0 for infinite, or any negative value for non-blocking operation </td></tr>
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by <a class="el" href="group__rtdmsync.html#ga2">rtdm_toseq_init()</a> or rtdm_toseq_absinit(), or NULL</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by <a class="el" href="group__rtdmsync.html#ga11">rtdm_toseq_init()</a> or rtdm_toseq_absinit(), or NULL</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
@@ -1217,7 +1244,7 @@ This function tries to decrement the given semphore's value if it is positive on
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is negative and the semaphore value is currently not positive.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ga7">rtdm_task_unblock()</a>.</li></ul>
+<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ga12">rtdm_task_unblock()</a>.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>sem</em> has been destroyed.</li></ul>
@@ -1230,7 +1257,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga14" doxytag="drvlib.c::rtdm_sem_up"></a><p>
+<a class="anchor" name="ga23" doxytag="drvlib.c::rtdm_sem_up"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1257,10 +1284,10 @@ Rescheduling: possible.     </td>
 <p>
 Increment a semaphore. 
 <p>
-This function increments the given semphore's value, waking up a potential waiter which was blocked upon <a class="el" href="group__rtdmsync.html#ga12">rtdm_sem_down()</a>.<p>
+This function increments the given semphore's value, waking up a potential waiter which was blocked upon <a class="el" href="group__rtdmsync.html#ga3">rtdm_sem_down()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by <a class="el" href="group__rtdmsync.html#ga10">rtdm_sem_init()</a></td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by <a class="el" href="group__rtdmsync.html#ga19">rtdm_sem_init()</a></td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -1271,7 +1298,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga2" doxytag="drvlib.c::rtdm_toseq_init"></a><p>
+<a class="anchor" name="ga11" doxytag="drvlib.c::rtdm_toseq_init"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1285,7 +1312,7 @@ Rescheduling: possible.     </td>
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
-          <td class="md" nowrap>__s64&nbsp;</td>
+          <td class="md" nowrap>int64_t&nbsp;</td>
           <td class="mdname" nowrap> <em>timeout</em></td>
         </tr>
         <tr>
@@ -1319,10 +1346,10 @@ Application Scenario: <div class="fragment"><pre class="fragment"><span class="k
     rtdm_toseq_t timeout_seq;
     ...
 
-    <a class="code" href="group__rtdmsync.html#ga2">rtdm_toseq_init</a>(&amp;timeout_seq, timeout);
+    <a class="code" href="group__rtdmsync.html#ga11">rtdm_toseq_init</a>(&amp;timeout_seq, timeout);
     ...
     <span class="keywordflow">while</span> (received &lt; requested) {
-        ret = <a class="code" href="group__rtdmsync.html#ga9">rtdm_event_timedwait</a>(&amp;data_available, timeout, &amp;timeout_seq);
+        ret = <a class="code" href="group__rtdmsync.html#ga2">rtdm_event_timedwait</a>(&amp;data_available, timeout, &amp;timeout_seq);
         <span class="keywordflow">if</span> (ret &lt; 0)    <span class="comment">// including -ETIMEDOUT</span>
             <span class="keywordflow">break</span>;
 
@@ -1331,7 +1358,7 @@ Application Scenario: <div class="fragment"><pre class="fragment"><span class="k
     }
     ...
 }
-</pre></div> Using a timeout sequence in such a scenario avoids that the user-provided relative <code>timeout</code> is restarted on every call to <a class="el" href="group__rtdmsync.html#ga9">rtdm_event_timedwait()</a>, potentially causing an overall delay that is larger than specified by <code>timeout</code>. Moreover, all functions supporting timeout sequences also interpret special timeout values (infinite and non-blocking), disburdening the driver developer from handling them separately.<p>
+</pre></div> Using a timeout sequence in such a scenario avoids that the user-provided relative <code>timeout</code> is restarted on every call to <a class="el" href="group__rtdmsync.html#ga2">rtdm_event_timedwait()</a>, potentially causing an overall delay that is larger than specified by <code>timeout</code>. Moreover, all functions supporting timeout sequences also interpret special timeout values (infinite and non-blocking), disburdening the driver developer from handling them separately.<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -1340,7 +1367,332 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:33 2005 for Xenomai API by&nbsp;
+<hr><h2>Variable Documentation</h2>
+<a class="anchor" name="ga0" doxytag="drvlib.c::rtdm_event_signal"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">rtdm_event_signal          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Initialise an event. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>pending</em>&nbsp;</td><td>Non-zero if event shall be initialised as set, 0 otherwise</td></tr>
+  </table>
+</dl>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
+<p>
+Rescheduling: never.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga2" doxytag="drvlib.c::rtdm_event_timedwait"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">rtdm_event_timedwait          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Initialise an event. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>pending</em>&nbsp;</td><td>Non-zero if event shall be initialised as set, 0 otherwise</td></tr>
+  </table>
+</dl>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
+<p>
+Rescheduling: never.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga1" doxytag="drvlib.c::rtdm_event_wait"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">rtdm_event_wait          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Initialise an event. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>pending</em>&nbsp;</td><td>Non-zero if event shall be initialised as set, 0 otherwise</td></tr>
+  </table>
+</dl>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
+<p>
+Rescheduling: never.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga6" doxytag="drvlib.c::rtdm_mutex_lock"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">rtdm_mutex_lock          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Initialise a mutex. 
+<p>
+This function initalises a basic mutex with priority inversion protection. "Basic", as it does not allow a mutex owner to recursively lock the same mutex again.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle</td></tr>
+  </table>
+</dl>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
+<p>
+Rescheduling: never.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga7" doxytag="drvlib.c::rtdm_mutex_timedlock"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">rtdm_mutex_timedlock          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Initialise a mutex. 
+<p>
+This function initalises a basic mutex with priority inversion protection. "Basic", as it does not allow a mutex owner to recursively lock the same mutex again.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle</td></tr>
+  </table>
+</dl>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
+<p>
+Rescheduling: never.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga8" doxytag="drvlib.c::rtdm_mutex_unlock"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">rtdm_mutex_unlock          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Initialise a mutex. 
+<p>
+This function initalises a basic mutex with priority inversion protection. "Basic", as it does not allow a mutex owner to recursively lock the same mutex again.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle</td></tr>
+  </table>
+</dl>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
+<p>
+Rescheduling: never.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga3" doxytag="drvlib.c::rtdm_sem_down"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">rtdm_sem_down          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Initialise a semaphore. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>value</em>&nbsp;</td><td>Initial value of the semaphore</td></tr>
+  </table>
+</dl>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
+<p>
+Rescheduling: never.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga4" doxytag="drvlib.c::rtdm_sem_timeddown"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">rtdm_sem_timeddown          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Initialise a semaphore. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>value</em>&nbsp;</td><td>Initial value of the semaphore</td></tr>
+  </table>
+</dl>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
+<p>
+Rescheduling: never.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga5" doxytag="drvlib.c::rtdm_sem_up"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">rtdm_sem_up          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Initialise a semaphore. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>value</em>&nbsp;</td><td>Initial value of the semaphore</td></tr>
+  </table>
+</dl>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
+<p>
+Rescheduling: never.     </td>
+  </tr>
+</table>
+<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 16:47:23 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

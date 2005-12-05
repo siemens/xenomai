@@ -31,30 +31,30 @@ Include dependency graph for heap.c:<p><center><img src="nucleus_2heap_8c__incl.
 </map>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
-<tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga2">xnheap_init</a> (xnheap_t *heap, void *heapaddr, u_long heapsize, u_long pagesize)</td></tr>
+<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga14">xnheap_alloc</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a memory heap.  <a href="group__heap.html#ga2"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga3">xnheap_destroy</a> (xnheap_t *heap, void(*flushfn)(xnheap_t *heap, void *extaddr, u_long extsize, void *cookie), void *cookie)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a memory block from a memory heap.  <a href="group__heap.html#ga14"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga13">xnheap_destroy</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroys a memory heap.  <a href="group__heap.html#ga3"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga5">xnheap_alloc</a> (xnheap_t *heap, u_long size)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroys a memory heap.  <a href="group__heap.html#ga13"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga17">xnheap_extend</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a memory block from a memory heap.  <a href="group__heap.html#ga5"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga6">xnheap_test_and_free</a> (xnheap_t *heap, void *block, int(*ckfn)(void *block))</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Extend a memory heap.  <a href="group__heap.html#ga17"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga15">xnheap_test_and_free</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Test and release a memory block to a memory heap.  <a href="group__heap.html#ga6"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga7">xnheap_free</a> (xnheap_t *heap, void *block)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Test and release a memory block to a memory heap.  <a href="group__heap.html#ga15"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga16">xnheap_free</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release a memory block to a memory heap.  <a href="group__heap.html#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga8">xnheap_extend</a> (xnheap_t *heap, void *extaddr, u_long extsize)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release a memory block to a memory heap.  <a href="group__heap.html#ga16"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga12">xnheap_init</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Extend a memory heap.  <a href="group__heap.html#ga8"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga9">xnheap_schedule_free</a> (xnheap_t *heap, void *block, xnholder_t *link)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a memory heap.  <a href="group__heap.html#ga12"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#ga18">xnheap_schedule_free</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Schedule a memory block for release.  <a href="group__heap.html#ga9"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Schedule a memory block for release.  <a href="group__heap.html#ga18"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:15 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 16:47:16 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -92,11 +92,11 @@
 00102 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
 00103 <span class="preprocessor">#endif</span>
 00104 <span class="preprocessor"></span>
-00105 <span class="keywordtype">int</span> <a class="code" href="group__native__heap.html#ga9">rt_heap_bind</a>(RT_HEAP *heap,
+00105 <span class="keywordtype">int</span> <a class="code" href="group__native__heap.html#ga14">rt_heap_bind</a>(RT_HEAP *heap,
 00106                  <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
 00107                  RTIME timeout);
 00108 
-00109 <span class="keywordtype">int</span> <a class="code" href="group__native__heap.html#ga10">rt_heap_unbind</a>(RT_HEAP *heap);
+00109 <span class="keywordtype">int</span> <a class="code" href="group__native__heap.html#ga15">rt_heap_unbind</a>(RT_HEAP *heap);
 00110 
 00111 <span class="preprocessor">#ifdef __cplusplus</span>
 00112 <span class="preprocessor"></span>}
@@ -110,22 +110,22 @@
 00120 <span class="preprocessor"></span>
 00121 <span class="comment">/* Public interface. */</span>
 00122 
-00123 <span class="keywordtype">int</span> <a class="code" href="group__native__heap.html#ga2">rt_heap_create</a>(RT_HEAP *heap,
+00123 <span class="keywordtype">int</span> <a class="code" href="group__native__heap.html#ga9">rt_heap_create</a>(RT_HEAP *heap,
 00124                    <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
 00125                    size_t heapsize,
 00126                    <span class="keywordtype">int</span> mode);
 00127 
-00128 <span class="keywordtype">int</span> <a class="code" href="group__native__heap.html#ga3">rt_heap_delete</a>(RT_HEAP *heap);
+00128 <span class="keywordtype">int</span> <a class="code" href="group__native__heap.html#ga10">rt_heap_delete</a>(RT_HEAP *heap);
 00129 
-00130 <span class="keywordtype">int</span> <a class="code" href="group__native__heap.html#ga4">rt_heap_alloc</a>(RT_HEAP *heap,
+00130 <span class="keywordtype">int</span> <a class="code" href="group__native__heap.html#ga11">rt_heap_alloc</a>(RT_HEAP *heap,
 00131                   size_t size,
 00132                   RTIME timeout,
 00133                   <span class="keywordtype">void</span> **blockp);
 00134 
-00135 <span class="keywordtype">int</span> <a class="code" href="group__native__heap.html#ga5">rt_heap_free</a>(RT_HEAP *heap,
+00135 <span class="keywordtype">int</span> <a class="code" href="group__native__heap.html#ga12">rt_heap_free</a>(RT_HEAP *heap,
 00136                  <span class="keywordtype">void</span> *block);
 00137 
-00138 <span class="keywordtype">int</span> <a class="code" href="group__native__heap.html#ga6">rt_heap_inquire</a>(RT_HEAP *heap,
+00138 <span class="keywordtype">int</span> <a class="code" href="group__native__heap.html#ga13">rt_heap_inquire</a>(RT_HEAP *heap,
 00139                     RT_HEAP_INFO *info);
 00140 
 00141 <span class="preprocessor">#ifdef __cplusplus</span>
@@ -133,7 +133,7 @@
 00143 <span class="preprocessor">#endif</span>
 00144 <span class="preprocessor"></span>
 00145 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_HEAP_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:14 2005 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 16:47:16 2005 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

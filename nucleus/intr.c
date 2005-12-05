@@ -308,8 +308,7 @@ int xnintr_disable (xnintr_t *intr)
 }
 
 /*! 
- * xnarch_cpumask_t xnintr_affinity (xnintr_t *intr,
-                                     xnarch_cpumask_t cpumask)
+ * \fn xnarch_cpumask_t xnintr_affinity (xnintr_t *intr, xnarch_cpumask_t cpumask)
  * \brief Set interrupt's processor affinity.
  *
  * Causes the IRQ associated with the interrupt object @a intr to be
@@ -338,9 +337,9 @@ xnarch_cpumask_t xnintr_affinity (xnintr_t *intr, xnarch_cpumask_t cpumask)
 void xnintr_clock_handler (void)
 
 {
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
+#if defined(__KERNEL__) && defined(CONFIG_XENO_HW_NMI_DEBUG_LATENCY)
     xnarch_wd_disarm();
-#endif /* !CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
+#endif /* __KERNEL__ && CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
     xnintr_irq_handler(nkclock.irq,&nkclock);
 }
 

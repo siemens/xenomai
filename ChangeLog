@@ -4,6 +4,13 @@
 
 	* arch/i386/patches: Upgrade to Adeos 2.6.14-1.0-11.
 
+2005-11-27  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* nucleus/intr.c: Fix Doxygen comment.
+
+	* skins/vxworks/defs.h (wind_errnoset): Handle correctly the
+	case wind_current_task() == NULL.
+
 2005-11-25  Jan Kiszka <jan.kiszka@web.de>
 
 	* drivers/16550A/16550A.c (RTSER_RTIOC_SET_CONFIG): Fix ENOMEM detection
