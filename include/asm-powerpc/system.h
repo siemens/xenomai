@@ -581,12 +581,11 @@ static inline void xnarch_stop_timer (void) {
 }
 
 static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask)
-
 {
 #ifdef CONFIG_SMP
-    return -1;		/* FIXME */
+	return rthal_send_ipi(RTHAL_TIMER_IPI, mask);
 #else /* ! CONFIG_SMP */
-    return 0;
+	return 0;
 #endif /* CONFIG_SMP */
 }
 
@@ -595,9 +594,12 @@ static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask)
 #ifdef XENO_INTR_MODULE
 
 static inline void xnarch_relay_tick (void)
-
 {
-    rthal_irq_host_pend(RTHAL_TIMER_IRQ);
+#ifdef CONFIG_SMP
+	rthal_send_ipi(RTHAL_HOST_TIMER_IPI, cpu_online_map);
+#else /* !CONFIG_SMP */
+	rthal_irq_host_pend(RTHAL_TIMER_IRQ);
+#endif /* CONFIG_SMP */
 }
 
 static inline void xnarch_announce_tick(void)

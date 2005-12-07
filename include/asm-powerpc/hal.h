@@ -138,6 +138,10 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul) {
 #define RTHAL_TIMER_IRQ   ADEOS_TIMER_VIRQ
 #else /* !CONFIG_ADEOS_CORE */
 #define RTHAL_TIMER_IRQ   IPIPE_TIMER_VIRQ
+#ifdef CONFIG_SMP
+#define RTHAL_TIMER_IPI		IPIPE_SERVICE_IPI3
+#define RTHAL_HOST_TIMER_IPI	IPIPE_SERVICE_IPI4
+#endif /* CONFIG_SMP */
 #endif /* CONFIG_ADEOS_CORE */
 
 #define rthal_irq_descp(irq)	(&irq_desc[(irq)])
@@ -204,7 +208,7 @@ static inline void rthal_timer_program_shot (unsigned long delay)
 #ifdef CONFIG_40x
     mtspr(SPRN_PIT,delay);
 #else /* !CONFIG_40x */
-    set_dec(delay);
+    set_dec((int)delay); /* decrementer is only 32-bits */
 #endif /* CONFIG_40x */
 }
 
