@@ -31,6 +31,8 @@
  *
  *@{*/
 
+#undef DEBUG
+
 #include <linux/version.h>
 #include <linux/slab.h>
 #include <linux/errno.h>
@@ -51,6 +53,12 @@
 #endif /* CONFIG_PROC_FS */
 #include <stdarg.h>
 
+#ifdef DEBUG
+#define DBG(fmt...) udbg_printf(fmt)
+#else
+#define DBG(fmt...)
+#endif
+
 static struct {
 
     unsigned long flags;
@@ -58,69 +66,215 @@ static struct {
 
 } rthal_linux_irq[IPIPE_NR_XIRQS];
 
-static int rthal_periodic_p;
+static int rthal_periodic_p[RTHAL_NR_CPUS];
 
-int rthal_timer_request (void (*handler)(void),
-			 unsigned long nstick)
+/* the following two functions are very much alike to the I-pipe tune_timer
+ * implementation, but tuned for crtitical_enter/exit usage
+ * 
+ * rthal_set_local_timer might come useful with processor hotplug events
+ */
+static void rthal_set_local_cpu_timer(void)
 {
-    unsigned long flags;
-    int err;
+	long ticks;
+	rthal_declare_cpuid;
 
-    flags = rthal_critical_enter(NULL);
+	rthal_load_cpuid();
 
-    if (nstick > 0)
-	{
-	/* Periodic setup --
-	   Use the built-in Adeos service directly. */
-	err = rthal_set_timer(nstick);
-	rthal_periodic_p = 1;
-	}
-    else
-	{
-	/* Oneshot setup. */
-	disarm_decr[rthal_processor_id()] = 1;
-	rthal_periodic_p = 0;
+	disarm_decr[cpuid] = (__ipipe_decr_ticks != tb_ticks_per_jiffy);
 #ifdef CONFIG_40x
-        mtspr(SPRN_TCR,mfspr(SPRN_TCR) & ~TCR_ARE); /* Auto-reload off. */
-#endif /* CONFIG_40x */
-	rthal_timer_program_shot(tb_ticks_per_jiffy);
+	/* Enable and set auto-reload. */
+	mtspr(SPRN_TCR, mfspr(SPRN_TCR) | TCR_ARE);
+	mtspr(SPRN_PIT, __ipipe_decr_ticks);
+#else	/* !CONFIG_40x */
+	ticks = (long)(__ipipe_decr_next[cpuid] - __ipipe_read_timebase());
+	set_dec(ticks > 0 ? ticks : 0);
+#endif	/* CONFIG_40x */
+	DBG("rthal_set_local_cpu_timer(%d): %ld\n", cpuid, ticks);
+}
+
+static int rthal_set_cpu_timers_unsafe(unsigned long ns)
+{
+	unsigned long ticks;
+	unsigned long offset, previous_tb;
+	int i;
+	rthal_declare_cpuid;
+
+	DBG("rthal_set_cpu_timers_unsafe: %lu\n", ns);
+	
+	if (ns == 0)
+		ticks = tb_ticks_per_jiffy;
+	else {
+		ticks = ns * tb_ticks_per_jiffy / (1000000000 / HZ);
+
+		if (ticks > tb_ticks_per_jiffy) {
+			DBG("rthal_set_cpu_timers_unsafe: -EINVAL (%lu)\n", ticks);
+			return -EINVAL;
+		}
 	}
 
-    rthal_irq_release(RTHAL_TIMER_IRQ);
+	/* space timers on SMP to prevent lock contention in the handler */
+	rthal_load_cpuid();
+	offset = ticks/cpus_weight(cpu_possible_map);
+	DBG("rthal_set_cpu_timers_unsafe(%d): ticks=%lu offset=%lu\n", cpuid, ticks, offset);
 
-    err = rthal_irq_request(RTHAL_TIMER_IRQ,
-			    (rthal_irq_handler_t)handler,
-			    NULL,
-			    NULL);
+	previous_tb = __ipipe_read_timebase() + ticks;
+	__ipipe_decr_next[cpuid] = previous_tb;
+	for_each_cpu(i) {
+		if (i != cpuid) {
+			__ipipe_decr_next[i] = previous_tb + offset;
+			previous_tb = __ipipe_decr_next[i];
+		}
+	}
+	__ipipe_decr_ticks = ticks;
 
-    rthal_critical_exit(flags);
+	return 0;
+}
 
-    return err;
+static void rthal_critical_sync(void) {
+	rthal_declare_cpuid;
+	
+	rthal_load_cpuid();
+	switch (rthal_sync_op) {
+		case 1:
+			/* timer_request */
+			if (rthal_periodic_p[cpuid]) 
+				rthal_set_local_cpu_timer();
+			
+			break;
+		case 2:
+			/* timer_release */
+			if (rthal_periodic_p[cpuid])
+				rthal_set_local_cpu_timer();
+			else
+				set_dec(tb_ticks_per_jiffy);
+			
+			break;
+		case 3:
+			/* cancel action */
+			break;
+	}
+}
+
+static void rthal_smp_relay_tick(unsigned irq, void *cookie)
+{
+	rthal_irq_host_pend(RTHAL_TIMER_IRQ);
+}
+
+int rthal_timer_request (void (*handler)(void), 
+		unsigned long nstick)
+{
+	unsigned long flags;
+	int err = 0;
+	int i;
+	rthal_declare_cpuid;
+
+	flags = rthal_critical_enter(&rthal_critical_sync);
+
+	rthal_sync_op = 1;
+
+	if (nstick > 0) {
+		/* Periodic setup --
+		 * Use the built-in Adeos service directly. */
+		err = rthal_set_cpu_timers_unsafe(nstick);
+		for_each_present_cpu(i) {
+			rthal_periodic_p[i] = 1;
+		}
+	}
+	else {
+		/* Oneshot setup. */
+		for_each_present_cpu(i) {
+			disarm_decr[i] = 1;
+			rthal_periodic_p[i] = 0;
+		}
+#ifdef CONFIG_40x
+		mtspr(SPRN_TCR,mfspr(SPRN_TCR) & ~TCR_ARE); /* Auto-reload off. */
+#endif /* CONFIG_40x */
+		rthal_timer_program_shot(tb_ticks_per_jiffy);
+	}
+	if (err) 
+		goto out;
+	
+	rthal_load_cpuid();
+
+	rthal_irq_release(RTHAL_TIMER_IRQ);
+	if ((err = rthal_irq_request(RTHAL_TIMER_IRQ,
+			(rthal_irq_handler_t)handler,
+			NULL,
+			NULL)) < 0) {
+		goto out;
+	}
+
+#ifdef CONFIG_SMP
+	rthal_irq_release(RTHAL_TIMER_IPI);
+	if ((err = rthal_irq_request(RTHAL_TIMER_IPI,
+			(rthal_irq_handler_t)handler,
+			NULL,
+			NULL)) < 0) {
+		rthal_irq_release(RTHAL_TIMER_IRQ);
+		goto out;
+	}
+	rthal_irq_release(RTHAL_HOST_TIMER_IPI);
+	if ((err = rthal_irq_request(RTHAL_HOST_TIMER_IPI,
+			&rthal_smp_relay_tick,
+			NULL,
+			NULL)) < 0) {
+		rthal_irq_release(RTHAL_TIMER_IRQ);
+		goto out;
+	}
+#endif /* CONFIG_SMP */
+	
+	if (rthal_periodic_p[cpuid])
+		rthal_set_local_cpu_timer();
+	
+out:
+	if (err) {
+		rthal_sync_op = 3;
+		__ipipe_decr_ticks = tb_ticks_per_jiffy;
+		for_each_present_cpu(i) {
+			disarm_decr[i] = 0;
+		}
+	}
+	rthal_critical_exit(flags);
+	
+	return err;
 }
 
 void rthal_timer_release (void)
-
 {
-    unsigned long flags;
+	unsigned long flags;
+	rthal_declare_cpuid;
 
-    flags = rthal_critical_enter(NULL);
+	flags = rthal_critical_enter(&rthal_critical_sync);
+    
+	rthal_sync_op = 2;
 
-    if (rthal_periodic_p)
-	rthal_reset_timer();
-    else
-	{
-	disarm_decr[rthal_processor_id()] = 0;
+	rthal_load_cpuid();
+    
+	if (rthal_periodic_p[cpuid])
+		rthal_set_cpu_timers_unsafe(0);
+	else {
+		int i;
+		for_each_present_cpu(i) {
+			disarm_decr[i] = 0;
+		}
 #ifdef CONFIG_40x
-	mtspr(SPRN_TCR,mfspr(SPRN_TCR)|TCR_ARE); /* Auto-reload on. */
-	mtspr(SPRN_PIT,tb_ticks_per_jiffy);
+		mtspr(SPRN_TCR,mfspr(SPRN_TCR)|TCR_ARE); /* Auto-reload on. */
+		mtspr(SPRN_PIT,tb_ticks_per_jiffy);
 #else /* !CONFIG_40x */
-	set_dec(tb_ticks_per_jiffy);
+		set_dec(tb_ticks_per_jiffy);
 #endif /* CONFIG_40x */
 	}
 
-    rthal_irq_release(RTHAL_TIMER_IRQ);
+#ifdef CONFIG_SMP
+	rthal_irq_release(RTHAL_HOST_TIMER_IPI);
+	rthal_irq_release(RTHAL_TIMER_IPI);
+#endif /* CONFIG_SMP */
+	rthal_irq_release(RTHAL_TIMER_IRQ);
 
-    rthal_critical_exit(flags);
+	if (rthal_periodic_p[cpuid])
+		rthal_set_local_cpu_timer();
+    
+	rthal_critical_exit(flags);
 }
 
 unsigned long rthal_timer_calibrate (void)
