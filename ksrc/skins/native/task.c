@@ -136,6 +136,11 @@ void __native_task_pkg_cleanup (void)
  * - T_CPU(cpuid) makes the new task affine to CPU # @b cpuid. CPU
  * identifiers range from 0 to RTHAL_NR_CPUS - 1 (inclusive).
  *
+ * - T_JOINABLE (user-space only) allows another task to wait on the
+ * termination of the new task. This implies that rt_task_join() is
+ * actually called for this task to clean up any user-space located
+ * resources after its termination.
+ *
  * Passing T_FPU|T_CPU(1) in the @a mode parameter thus creates a task
  * with FPU support enabled and which will be affine to CPU #1.
  *
@@ -2265,6 +2270,31 @@ int rt_task_reply (int flowid, RT_TASK_MCB *mcb_s)
  * - User-space task.
  *
  * Rescheduling: never.
+ */
+
+/**
+ * @fn int rt_task_join(RT_TASK *task)
+ *
+ * @brief Wait on the termination of a real-time task.
+ *
+ * This user-space only service blocks the caller in non-real-time context
+ * until @a task has terminated. Note that the specified task must have
+ * been created with the T_JOINABLE mode flag set.
+ *
+ * @param task The address of a task descriptor to join.
+ *
+ * @return 0 is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if the task was not created with T_JOINABLE set or
+ * some other task is already waiting on the termination.
+ *
+ * - -EDEADLK is returned if @a task refers to the caller.
+ *
+ * This service can be called from:
+ *
+ * - User-space task.
+ *
+ * Rescheduling: always unless the task was already terminated.
  */
 
 /*@}*/
