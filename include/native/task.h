@@ -35,18 +35,19 @@
 #define T_CPUMASK  0xff000000
 
 /* Status/mode flags. */
-#define T_BLOCKED XNPEND
-#define T_DELAYED XNDELAY
-#define T_READY   XNREADY
-#define T_DORMANT XNDORMANT
-#define T_STARTED XNSTARTED
-#define T_BOOST   XNBOOST
-#define T_LOCK    XNLOCK
-#define T_RRB     XNRRB
-#define T_NOSIG   XNASDI
-#define T_SHIELD  XNSHIELD
-#define T_WARNSW  XNTRAPSW
-#define T_PRIMARY XNTHREAD_SPARE0
+#define T_BLOCKED  XNPEND
+#define T_DELAYED  XNDELAY
+#define T_READY    XNREADY
+#define T_DORMANT  XNDORMANT
+#define T_STARTED  XNSTARTED
+#define T_BOOST    XNBOOST
+#define T_LOCK     XNLOCK
+#define T_RRB      XNRRB
+#define T_NOSIG    XNASDI
+#define T_SHIELD   XNSHIELD
+#define T_WARNSW   XNTRAPSW
+#define T_PRIMARY  XNTHREAD_SPARE0
+#define T_JOINABLE XNTHREAD_SPARE1
 
 /* Task hook types. */
 #define T_HOOK_START  XNHOOK_THREAD_START
@@ -205,6 +206,8 @@ static inline int rt_task_unbind (RT_TASK *task)
     task->opaque = RT_HANDLE_INVALID;
     return 0;
 }
+
+int rt_task_join(RT_TASK *task);
 
 #ifdef __cplusplus
 }
