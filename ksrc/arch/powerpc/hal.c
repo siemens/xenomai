@@ -131,6 +131,7 @@ static int rthal_set_cpu_timers_unsafe(unsigned long ns)
 }
 
 static void rthal_critical_sync(void) {
+#ifdef CONFIG_SMP
 	rthal_declare_cpuid;
 	
 	rthal_load_cpuid();
@@ -139,20 +140,24 @@ static void rthal_critical_sync(void) {
 			/* timer_request */
 			if (rthal_periodic_p[cpuid]) 
 				rthal_set_local_cpu_timer();
-			
+			else
+				disarm_decr[cpuid] = 1;
 			break;
 		case 2:
 			/* timer_release */
 			if (rthal_periodic_p[cpuid])
 				rthal_set_local_cpu_timer();
 			else
+				disarm_decr[cpuid] = 0;
 				set_dec(tb_ticks_per_jiffy);
 			
 			break;
 		case 3:
 			/* cancel action */
+			disarm_decr[cpuid] = 0;
 			break;
 	}
+#endif /* CONFIG_SMP */
 }
 
 static void rthal_smp_relay_tick(unsigned irq, void *cookie)
@@ -183,7 +188,6 @@ int rthal_timer_request (void (*handler)(void),
 	else {
 		/* Oneshot setup. */
 		for_each_present_cpu(i) {
-			disarm_decr[i] = 1;
 			rthal_periodic_p[i] = 0;
 		}
 #ifdef CONFIG_40x
@@ -191,10 +195,10 @@ int rthal_timer_request (void (*handler)(void),
 #endif /* CONFIG_40x */
 		rthal_timer_program_shot(tb_ticks_per_jiffy);
 	}
+	rthal_load_cpuid();
+
 	if (err) 
 		goto out;
-	
-	rthal_load_cpuid();
 
 	rthal_irq_release(RTHAL_TIMER_IRQ);
 	if ((err = rthal_irq_request(RTHAL_TIMER_IRQ,
@@ -225,14 +229,14 @@ int rthal_timer_request (void (*handler)(void),
 	
 	if (rthal_periodic_p[cpuid])
 		rthal_set_local_cpu_timer();
+	else
+		disarm_decr[cpuid] = 1;
 	
 out:
 	if (err) {
 		rthal_sync_op = 3;
 		__ipipe_decr_ticks = tb_ticks_per_jiffy;
-		for_each_present_cpu(i) {
-			disarm_decr[i] = 0;
-		}
+		disarm_decr[cpuid] = 0;
 	}
 	rthal_critical_exit(flags);
 	
@@ -253,10 +257,6 @@ void rthal_timer_release (void)
 	if (rthal_periodic_p[cpuid])
 		rthal_set_cpu_timers_unsafe(0);
 	else {
-		int i;
-		for_each_present_cpu(i) {
-			disarm_decr[i] = 0;
-		}
 #ifdef CONFIG_40x
 		mtspr(SPRN_TCR,mfspr(SPRN_TCR)|TCR_ARE); /* Auto-reload on. */
 		mtspr(SPRN_PIT,tb_ticks_per_jiffy);
@@ -273,6 +273,8 @@ void rthal_timer_release (void)
 
 	if (rthal_periodic_p[cpuid])
 		rthal_set_local_cpu_timer();
+	else
+		disarm_decr[cpuid] = 0;
     
 	rthal_critical_exit(flags);
 }
