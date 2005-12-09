@@ -609,7 +609,7 @@ int rthal_arch_init (void)
     if (!test_bit(X86_FEATURE_APIC,boot_cpu_data.x86_capability))
     {
         printk("Xenomai: Local APIC absent or disabled!\n"
-               "         Disable APIC support or pass \"lapic\" as bootparam.\n");
+               "         Disable APIC support or pass \"lapic=1\" as bootparam.\n");
         rthal_smi_restore();
         return -ENODEV;
     }
