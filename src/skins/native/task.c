@@ -127,7 +127,8 @@ int rt_task_create (RT_TASK *task,
 	stksize = PTHREAD_STACK_MIN;
 
     pthread_attr_setstacksize(&thattr,stksize);
-    pthread_attr_setdetachstate(&thattr,PTHREAD_CREATE_DETACHED);
+    if (!(mode & T_JOINABLE))
+	pthread_attr_setdetachstate(&thattr,PTHREAD_CREATE_DETACHED);
     pthread_attr_setschedpolicy(&thattr,SCHED_FIFO);
     param.sched_priority = sched_get_priority_max(SCHED_FIFO);
     pthread_attr_setschedparam(&thattr,&param);
@@ -203,11 +204,17 @@ int rt_task_resume (RT_TASK *task)
 int rt_task_delete (RT_TASK *task)
 
 {
-    int err = XENOMAI_SKINCALL1(__native_muxid,
-				__native_task_delete,
-				task);
-    if (!err)
-	pthread_cancel((pthread_t)task->opaque2);
+    int err;
+
+    err = pthread_cancel((pthread_t)task->opaque2)
+    if (err)
+        return -err;
+
+    err = XENOMAI_SKINCALL1(__native_muxid,
+			    __native_task_delete,
+			    task);
+    if (err == -ESRCH)
+	return 0;
 
     return err;
 }
@@ -329,6 +336,11 @@ int rt_task_slice (RT_TASK *task,
 			     __native_task_slice,
 			     task,
 			     &quantum);
+}
+
+int rt_task_join (RT_TASK *task)
+{
+    return -pthread_join((pthread_t)task->opaque2, NULL);
 }
 
 #ifdef CONFIG_XENO_OPT_NATIVE_MPS
