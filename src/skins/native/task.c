@@ -206,9 +206,11 @@ int rt_task_delete (RT_TASK *task)
 {
     int err;
 
-    err = pthread_cancel((pthread_t)task->opaque2)
-    if (err)
-        return -err;
+    if (task) {
+	err = pthread_cancel((pthread_t)task->opaque2);
+	if (err)
+	    return -err;
+    }
 
     err = XENOMAI_SKINCALL1(__native_muxid,
 			    __native_task_delete,
