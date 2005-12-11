@@ -104,7 +104,10 @@ void latency (void *cookie)
             if (err)
                 {
                 if (err != -ETIMEDOUT)
+		    {
+		    fprintf(stderr,"latency: wait period failed, code %d\n",err);
                     rt_task_delete(NULL); /* Timer stopped. */
+		    }
 
                 overrun++;
                 }
