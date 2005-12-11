@@ -357,18 +357,9 @@ int rt_heap_delete (RT_HEAP *heap)
     if (!heap)
         {
         err = xeno_handle_error(heap,XENO_HEAP_MAGIC,RT_HEAP);
-        goto unlock_and_exit;
+	xnlock_put_irqrestore(&nklock,s);
+        return err;
         }
-
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    if (heap->mode & H_SHARED)
-	err = xnheap_destroy_shared(&heap->heap_base);
-    else
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-	err = xnheap_destroy(&heap->heap_base,&__heap_flush_private,NULL);
-
-    if (err)
-	goto unlock_and_exit;
 
     rc = xnsynch_destroy(&heap->synch_base);
 
@@ -379,14 +370,29 @@ int rt_heap_delete (RT_HEAP *heap)
 
     xeno_mark_deleted(heap);
 
+    xnpod_lock_sched();
+
+    /* Get out of the nklocked section before releasing the heap
+       memory, since we are about to invoke Linux kernel services. We
+       hold the scheduler lock until we are done, so that we could not
+       get killed before the housekeeping chores are entirely
+       performed, since task deletion is a synchronous op. */
+
+    xnlock_put_irqrestore(&nklock,s);
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    if (heap->mode & H_SHARED)
+	err = xnheap_destroy_shared(&heap->heap_base);
+    else
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+	err = xnheap_destroy(&heap->heap_base,&__heap_flush_private,NULL);
+
+    xnpod_unlock_sched();
+
     if (rc == XNSYNCH_RESCHED)
         /* Some task has been woken up as a result of the deletion:
            reschedule now. */
         xnpod_schedule();
-
- unlock_and_exit:
-
-    xnlock_put_irqrestore(&nklock,s);
 
     return err;
 }
