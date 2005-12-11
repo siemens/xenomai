@@ -128,7 +128,6 @@ static int __rt_task_create (struct task_struct *curr, struct pt_regs *regs)
     RT_TASK_PLACEHOLDER ph;
     int err, prio, mode;
     RT_TASK *task;
-    spl_t s;
 
     if (xnshadow_thread(curr))
 	return -EBUSY;
@@ -177,15 +176,11 @@ static int __rt_task_create (struct task_struct *curr, struct pt_regs *regs)
 	   inter-CPU request requires the target CPU to accept IPIs,
 	   and we won't. */
 
-	splhigh(s);
-
 	/* Copy back the registry handle to the ph struct. */
 	ph.opaque = task->handle;
 	ph.opaque2 = bulk.a5;	/* hidden pthread_t identifier. */
 	__xn_copy_to_user(curr,(void __user *)bulk.a1,&ph,sizeof(ph));
 	err = xnshadow_map(&task->thread_base,u_completion);
-
-	splexit(s);
 	}
     else
 	{
@@ -375,8 +370,8 @@ static int __rt_task_set_periodic (struct task_struct *curr, struct pt_regs *reg
  * int __rt_task_wait_period(void)
  */
 
-static int __rt_task_wait_period (struct task_struct *curr, struct pt_regs *regs) {
-
+static int __rt_task_wait_period (struct task_struct *curr, struct pt_regs *regs)
+{
     return rt_task_wait_period();
 }
 
@@ -2067,31 +2062,23 @@ static int __rt_queue_delete (struct task_struct *curr, struct pt_regs *regs)
     RT_QUEUE_PLACEHOLDER ph;
     RT_QUEUE *q;
     int err = 0;
-    spl_t s;
 
     if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg1(regs),sizeof(ph)))
 	return -EFAULT;
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    xnlock_get_irqsave(&nklock,s);
-
     q = (RT_QUEUE *)rt_registry_fetch(ph.opaque);
 
     if (!q)
-	{
 	err = -ESRCH;
-	goto unlock_and_exit;
+    else
+	{
+	err = rt_queue_delete(q); /* Callee will check the queue
+				     descriptor for validity again. */
+	if (!err && q->cpid)
+	    xnfree(q);
 	}
-
-    err = rt_queue_delete(q);
-
-    if (!err && q->cpid)
-	xnfree(q);
-
- unlock_and_exit:
-
-    xnlock_put_irqrestore(&nklock,s);
 
     return err;
 }
@@ -2487,31 +2474,23 @@ static int __rt_heap_delete (struct task_struct *curr, struct pt_regs *regs)
     RT_HEAP_PLACEHOLDER ph;
     RT_HEAP *heap;
     int err = 0;
-    spl_t s;
 
     if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg1(regs),sizeof(ph)))
 	return -EFAULT;
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    xnlock_get_irqsave(&nklock,s);
-
     heap = (RT_HEAP *)rt_registry_fetch(ph.opaque);
 
     if (!heap)
-	{
 	err = -ESRCH;
-	goto unlock_and_exit;
+    else
+	{
+	err = rt_heap_delete(heap); /* Callee will check the heap
+				       descriptor for validity again. */
+	if (!err && heap->cpid)
+	    xnfree(heap);
 	}
-
-    err = rt_heap_delete(heap);
-
-    if (!err && heap->cpid)
-	xnfree(heap);
-
- unlock_and_exit:
-
-    xnlock_put_irqrestore(&nklock,s);
 
     return err;
 }
