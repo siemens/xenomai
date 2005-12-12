@@ -352,7 +352,7 @@ target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
 lib_LTLIBRARIES = libnative.la
-libnative_la_LDFLAGS = -module -version-info 0:0:0
+libnative_la_LDFLAGS = -module -version-info 0:0:0 -lpthread
 libnative_la_SOURCES = init.c misc.c task.c timer.c $(am__append_1) \
 	$(am__append_2) $(am__append_3) $(am__append_4) \
 	$(am__append_5) $(am__append_6) $(am__append_7) \

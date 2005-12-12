@@ -328,7 +328,7 @@ target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
 lib_LTLIBRARIES = libpthread_rt.la
-libpthread_rt_la_LDFLAGS = -module -version-info 0:0:0
+libpthread_rt_la_LDFLAGS = -module -version-info 0:0:0 -lpthread
 libpthread_rt_la_SOURCES = \
 	init.c \
 	thread.c \

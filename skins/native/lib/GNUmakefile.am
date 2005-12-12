@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libnative.la
 
-libnative_la_LDFLAGS = -module -version-info 0:0:0
+libnative_la_LDFLAGS = -module -version-info 0:0:0 -lpthread
 
 libnative_la_SOURCES = \
 	init.c \

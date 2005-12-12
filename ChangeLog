@@ -1,3 +1,23 @@
+2005-12-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* nucleus/shadow.c (do_schedule_event): Do not trigger a fatal
+	error for unstarted Xenomai shadows. A Linux preemption could
+	occur on the return path from xnshadow_map() to the wait barrier
+	syscall from user-space.
+
+2005-12-09  Jan Kiszka  <jan.kiszka@web.de>
+	
+	* skins/native/lib/GNUmakefile.am, skins/posix/lib/GNUmakefile.am:
+	Add -pthread to LDFLAGS.
+
+2005-12-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* skins/uvm/syscall.c (__vm_shadow_helper): 
+	* skins/native/syscall.c (__rt_task_create): Do not stall the
+	Xenomai domain during shadow mapping; this is useless and induces
+	jitter since we end up locking the interrupts out across Linux
+	schedulings. Issue spotted by Jan Kiszka.
+
 2005-12-06  Philippe Gerum  <rpm@xenomai.org>
 
 	* arch/ppc/patches: Discontinue support for kernel 2.6.10.
