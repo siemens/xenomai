@@ -446,20 +446,6 @@ static inline void xnarch_notify_shutdown(void)
     xnarch_release_ipi();
 }
 
-static inline int xnarch_escalate (void)
-
-{
-    extern int xnarch_escalation_virq;
-
-    if (rthal_current_domain == rthal_root_domain)
-        {
-        rthal_trigger_irq(xnarch_escalation_virq);
-        return 1;
-        }
-
-    return 0;
-}
-
 static void xnarch_notify_ready (void)
 
 {

@@ -147,10 +147,9 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
 
     in_tcb->active_task = next ?: prev;
 
-    if (next && next != prev) {
+    if (next && next != prev)
 	/* Switch to user-space thread. */
 	rthal_ucontext_switch(prev, next);
-    }
     else
         /* Kernel-to-kernel context switch. */
         rthal_kcontext_switch(out_tcb->kspp,in_tcb->kspp);
@@ -234,6 +233,49 @@ static inline void xnarch_save_fpu (xnarchtcb_t *tcb)
 static inline void xnarch_restore_fpu (xnarchtcb_t *tcb)
 
 {
+}
+
+static inline int xnarch_escalate (void)
+
+{
+    extern int xnarch_escalation_virq;
+
+    /* The following Blackfin-specific check is likely the most
+     * braindamage stuff we need to do for this arch, i.e. deferring
+     * Xenomai's rescheduling procedure whenever:
+
+     * 1. ILAT tells us that a deferred syscall (EVT15) is pending, so
+     * that we don't later execute this syscall over the wrong thread
+     * context. This could happen whenever a user-space task (plain or
+     * Xenomai) gets preempted by a high priority interrupt right
+     * after the deferred syscall event is raised (EVT15) but before
+     * the evt_system_call ISR could run. In case of deferred Xenomai
+     * rescheduling, the pending rescheduling opportunity will be
+     * checked at the beginning of Xenomai's do_hisyscall_event which
+     * intercepts any incoming syscall, and we know it will happen
+     * shortly after. Since kernel-based Xenomai threads should always
+     * run at higher interrupt priority than the low priority EVT15
+     * and never issue syscalls, we just don't care for them and never
+     * defer switch.
+     *
+     * 2. the context we will switch back to belongs to the Linux
+     * kernel code, so that we don't inadvertently cause the CPU to
+     * switch to user operating mode as a result of returning from an
+     * interrupt stack frame over the incoming thread through RTI. In
+     * the latter case, the preempted kernel code will be diverted
+     * shortly before resumption in order to run the rescheduling
+     * procedure (see __ipipe_irq_tail backdoor).
+    */
+
+    if (rthal_defer_switch_p())
+	return 1;
+
+    if (rthal_current_domain == rthal_root_domain) {
+        rthal_trigger_irq(xnarch_escalation_virq);
+        return 1;
+    }
+
+    return 0;
 }
 
 #endif /* XENO_POD_MODULE */
@@ -381,8 +423,17 @@ static inline int xnarch_local_syscall (struct pt_regs *regs)
 
 #ifdef XENO_TIMER_MODULE
 
-static inline void xnarch_program_timer_shot (unsigned long delay) {
-    rthal_timer_program_shot(rthal_imuldiv(delay,RTHAL_TIMER_FREQ,RTHAL_CPU_FREQ));
+static inline void xnarch_program_timer_shot (unsigned long delay)
+{
+    delay = rthal_imuldiv(delay,RTHAL_TIMER_FREQ,RTHAL_CPU_FREQ);
+    rthal_timer_program_shot(delay);
+#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
+    {
+    extern unsigned long rthal_maxlat_ticks;
+    if (delay <= ULONG_MAX - rthal_maxlat_ticks)
+	rthal_nmi_arm(delay + rthal_maxlat_ticks);
+    }
+#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 }
 
 static inline void xnarch_stop_timer (void) {
@@ -410,7 +461,9 @@ static inline void xnarch_relay_tick (void)
 
 static inline void xnarch_announce_tick(void)
 {
-    /* empty */
+#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
+    rthal_nmi_disarm();
+#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 }
 
 #endif /* XENO_INTR_MODULE */
@@ -429,6 +482,8 @@ int xnarch_escalation_virq;
 int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo);
 
 void xnpod_schedule_handler(void);
+
+void xnpod_schedule_deferred(void);
 
 static rthal_trap_handler_t xnarch_old_trap_handler;
 
@@ -469,6 +524,8 @@ static inline int xnarch_init (void)
 
 {
     int err;
+
+    __ipipe_irq_tail = (unsigned long)&xnpod_schedule_deferred;
 
     err = rthal_init();
 
@@ -515,6 +572,7 @@ static inline int xnarch_init (void)
 static inline void xnarch_exit (void)
 
 {
+    __ipipe_irq_tail = 0;
 #ifdef CONFIG_XENO_OPT_PERVASIVE
     xnshadow_cleanup();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */

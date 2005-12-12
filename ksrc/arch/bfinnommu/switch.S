@@ -18,12 +18,15 @@
  */
 
 #include <linux/linkage.h>
+#include <asm/blackfin.h>
+#include <asm/entry.h>
+#include <asm/asm-offsets.h>
 
 /*
  * Switch context routine for kernel-based Xenomai threads.
  * Simple and easy: we basically see kernel threads as co-routines.
  *
- * rthal_kcontext_switch(unsigned long *out_kspp, unsigned long *in_kspp)
+ * void rthal_kcontext_switch(unsigned long *out_kspp, unsigned long *in_kspp)
  */
 ENTRY(rthal_kcontext_switch)
 
@@ -46,7 +49,7 @@ ENTRY(rthal_kcontext_switch)
  * Switch context routine for user-space Xenomai shadow threads.
  * We protect all caller-saved registers across switches.
  * 
- * rthal_ucontext_switch(struct task_struct *prev, struct task_struct *next)
+ * void rthal_ucontext_switch(struct task_struct *prev, struct task_struct *next)
  */
 ENTRY(rthal_ucontext_switch)
 
@@ -68,3 +71,45 @@ ENTRY(rthal_ucontext_switch)
 	r4 = [sp++];
 	rets = [sp++];
 	rts
+
+/*
+ * Check for a pending syscall event. On this arch, syscalls start as
+ * exceptions, which are deferred to low priority interrupts for
+ * processing them. Returns true if the syscall has been deferred.
+ * 
+ * int rthal_defer_switch_p(void)
+ */
+
+ENTRY(rthal_defer_switch_p)
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	p2.l = lo(ILAT);
+        p2.h = hi(ILAT);
+        r0 = [p2];
+	r1 = EVT_IVG15 (z);
+        r0 = r0 & r1;
+	cc = r0 == 0;
+	if !cc jump 1f; 
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+	p2.l = lo(IPEND);
+        p2.h = hi(IPEND);
+	csync;
+        r2 = [p2];
+        r1 = 1;
+        r1 = r2 - r1;
+        r0 = r2 & r1;
+1:
+	rts
+
+#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
+
+ENTRY(rthal_nmi_handler)
+	SAVE_CONTEXT
+	r0 = sp;
+	SP += -12;	
+	call rthal_nmi_tick
+	SP += 12;	
+	RESTORE_CONTEXT
+	rtn; 
+		
+#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX */

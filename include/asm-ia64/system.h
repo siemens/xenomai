@@ -369,6 +369,20 @@ static inline void xnarch_init_thread (xnarchtcb_t *tcb,
     tcb->esp -= 16 ;    /* Provide for the (bloody) scratch area... */
 }
 
+static inline int xnarch_escalate (void)
+
+{
+    extern int xnarch_escalation_virq;
+
+    if (rthal_current_domain == rthal_root_domain)
+        {
+        rthal_trigger_irq(xnarch_escalation_virq);
+        return 1;
+        }
+
+    return 0;
+}
+
 #endif /* XENO_POD_MODULE */
 
 #ifdef XENO_THREAD_MODULE

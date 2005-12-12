@@ -1,5 +1,7 @@
 2005-12-12  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/bfinnommu/nmi.c: Add NMI watchdog support.
+
 	* ksrc/nucleus/shadow.c (do_schedule_event): Do not trigger a
 	fatal error for unstarted Xenomai shadows. A Linux preemption
 	could occur on the return path from xnshadow_map() to the wait
