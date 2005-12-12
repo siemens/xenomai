@@ -1450,6 +1450,7 @@ static inline void do_schedule_event (struct task_struct *next)
         if (!(next->ptrace & PT_PTRACED) &&
 	    /* Allow ptraced threads to run shortly in order to
 	       properly recover from a stopped state. */
+	    testbits(status,XNSTARTED) &&
 	    testbits(status,XNTHREAD_BLOCK_BITS))
 	    {
 	    show_stack(xnthread_user_task(threadin),NULL);
