@@ -140,6 +140,16 @@ static inline struct task_struct *rthal_current_host_task (int cpuid)
     return current;
 }
 
+#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
+int rthal_nmi_request(void (*emergency)(struct pt_regs *));
+
+void rthal_nmi_release(void);
+
+void rthal_nmi_arm(unsigned long delay);
+
+void rthal_nmi_disarm(void);
+#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
+
 static inline void rthal_timer_program_shot (unsigned long delay)
 {
     if(!delay) delay = 10;
@@ -167,11 +177,13 @@ extern int rthal_periodic_p;
 
 unsigned long rthal_timer_host_freq(void);
 
-void rthal_kcontext_switch(unsigned long *out_kspp,
-			   unsigned long *in_kspp);
+asmlinkage void rthal_kcontext_switch(unsigned long *out_kspp,
+				      unsigned long *in_kspp);
 
-void rthal_ucontext_switch(struct task_struct *prev,
-			   struct task_struct *next);
+asmlinkage void rthal_ucontext_switch(struct task_struct *prev,
+				      struct task_struct *next);
+
+asmlinkage int rthal_defer_switch_p(void);
 
 static const char *const rthal_fault_labels[] = {
     [1] = "Single step",

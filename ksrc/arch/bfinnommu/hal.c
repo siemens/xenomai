@@ -5,6 +5,8 @@
  *   Adeos-based Real-Time Abstraction Layer for the Blackfin
  *   architecture.
  *
+ *   Copyright (C) 2005 Philippe Gerum.
+ *
  *   Xenomai is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU General Public License as
  *   published by the Free Software Foundation, Inc., 675 Mass Ave,
@@ -41,10 +43,6 @@
 #include <asm/uaccess.h>
 #include <asm/unistd.h>
 #include <asm/xenomai/hal.h>
-#ifdef CONFIG_PROC_FS
-#include <linux/proc_fs.h>
-#endif /* CONFIG_PROC_FS */
-#include <stdarg.h>
 
 #ifdef CONFIG_XENO_HW_PERIODIC_TIMER
 int rthal_periodic_p;
@@ -73,12 +71,32 @@ static struct {
 static int rthal_timer_ack (unsigned irq)
 {
     if (!rthal_periodic_p) {
-    	/* Clear TIMER0 interrupt and re-enable IRQ channel. */
+    	/* Clear TIMER0 interrupt. IRQ channel is never masked. */
     	*pTIMER_STATUS = 1;
 	__builtin_bfin_csync();
     }
     return 1;
 }
+
+#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
+
+asmlinkage void irq_panic(int reason, struct pt_regs *regs);
+
+unsigned long rthal_maxlat_ticks;
+EXPORT_SYMBOL(rthal_maxlat_ticks);
+
+static unsigned rthal_maxlat_us = CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX;
+
+static void rthal_latency_above_max(struct pt_regs *regs)
+{
+    rthal_emergency_console();
+    printk("NMI watchdog detected timer latency above %u us\n",
+	   rthal_maxlat_us);
+    dump_stack();
+    irq_panic(IRQ_NMI,regs);
+}
+
+#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX */
 
 int rthal_timer_request (void (*handler)(void),
 			 unsigned long nstick)
@@ -99,9 +117,8 @@ int rthal_timer_request (void (*handler)(void),
 #else /* !CONFIG_XENO_HW_PERIODIC_TIMER */
         return -ENOSYS;
 #endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
-	}
-    else
-	{
+    }
+    else {
 	/* Oneshot setup. We use TIMER0 in PWM_OUT, single pulse mode. */
 	*pTIMER_DISABLE = 1;	/* Disable TIMER0 for now. */
 	__builtin_bfin_csync();
@@ -110,7 +127,7 @@ int rthal_timer_request (void (*handler)(void),
 	irq = RTHAL_APERIODIC_TIMER_IRQ;
 	rthal_irq_enable(irq);
 	rthal_set_aperiodic();
-	}
+    }
 
     rthal_irq_release(irq);
 
@@ -121,6 +138,21 @@ int rthal_timer_request (void (*handler)(void),
 
     rthal_critical_exit(flags);
 
+#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
+    if (nstick == 0) {	/* This only works in aperiodic mode. */
+        rthal_maxlat_ticks = rthal_llimd(rthal_maxlat_us * 1000ULL,
+					 RTHAL_TIMER_FREQ,
+					 1000000000);
+        rthal_nmi_release();
+    
+        if (rthal_nmi_request(rthal_latency_above_max))
+            printk("Xenomai: NMI watchdog not available.\n");
+        else
+            printk("Xenomai: NMI watchdog started (threshold=%u us).\n",
+		   rthal_maxlat_us);
+    }
+#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
+
     return err;
 }
 
@@ -129,6 +161,10 @@ void rthal_timer_release (void)
 {
     unsigned long flags;
     unsigned irq;
+
+#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
+    rthal_nmi_release();
+#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 
     flags = rthal_critical_enter(NULL);
 
@@ -139,8 +175,12 @@ void rthal_timer_release (void)
 	}
     else
 	{
-	*pTIMER_DISABLE = 1;	/* Disable TIMER0. */
-	__builtin_bfin_csync();
+	if (*pTIMER_ENABLE & 1) {
+	    *pTIMER_DISABLE = 1;
+	    *pTIMER_STATUS = 0x1000;
+	    __builtin_bfin_csync();
+	}
+
 	irq = RTHAL_APERIODIC_TIMER_IRQ;
 	rthal_irq_disable(irq);
 	}
@@ -283,7 +323,6 @@ int rthal_arch_init (void)
 void rthal_arch_cleanup (void)
 
 {
-    /* Nothing to cleanup so far. */
     printk(KERN_INFO "Xenomai: hal/blackfin stopped.\n");
 }
 
@@ -293,3 +332,4 @@ EXPORT_SYMBOL(rthal_arch_init);
 EXPORT_SYMBOL(rthal_arch_cleanup);
 EXPORT_SYMBOL(rthal_kcontext_switch);
 EXPORT_SYMBOL(rthal_ucontext_switch);
+EXPORT_SYMBOL(rthal_defer_switch_p);

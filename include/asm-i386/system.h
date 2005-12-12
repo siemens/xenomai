@@ -461,6 +461,20 @@ static inline void xnarch_enable_fpu (xnarchtcb_t *tcb)
 
 #endif /* CONFIG_XENO_HW_FPU */
 
+static inline int xnarch_escalate (void)
+
+{
+    extern int xnarch_escalation_virq;
+
+    if (rthal_current_domain == rthal_root_domain)
+        {
+        rthal_trigger_irq(xnarch_escalation_virq);
+        return 1;
+        }
+
+    return 0;
+}
+
 #endif /* XENO_POD_MODULE */
 
 #ifdef XENO_THREAD_MODULE

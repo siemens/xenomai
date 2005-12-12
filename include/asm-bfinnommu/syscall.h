@@ -193,7 +193,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs) {
   "r2=%4;\n\t"								\
   "r1=%3;\n\t"								\
   "r0=%2;\n\t"								\
-  "P0=%1;\n\t"								\
+  "p0=%1;\n\t"								\
   "excpt 0;\n\t" 							\
   "%0=r0;\n\t"								\
   "r3 = [sp++];\n\t" 							\
@@ -226,9 +226,31 @@ static inline int __xn_interrupted_p(struct pt_regs *regs) {
 #define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,id,op,a1,a2,a3,a4)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
 
-/* Cannot read the CYCLES/CYCLES2 counters safely from
-   non-supervisor mode. Sigh... */
-#undef CONFIG_XENO_HW_DIRECT_TSC
+#define CONFIG_XENO_HW_DIRECT_TSC 1
+
+static inline unsigned long long __xn_rdtsc (void)
+
+{
+    union {
+	struct {
+	    unsigned long l;
+	    unsigned long h;
+	} s;
+	unsigned long long t;
+    } u;
+    unsigned long cy2;
+
+    __asm__ __volatile__ (	"1: %0 = CYCLES2\n"
+				"%1 = CYCLES\n"
+				"%2 = CYCLES2\n"
+				"CC = %2 == %0\n"
+				"if !cc jump 1b\n"
+				:"=r" (u.s.h),
+				"=r" (u.s.l),
+				"=r" (cy2)
+				: /*no input*/ : "cc");
+    return u.t;
+}
 
 /* uClibc does not provide any dummy mlockall() call for this arch;
    nullify it here. */
