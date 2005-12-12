@@ -1,3 +1,69 @@
+2005-12-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (do_schedule_event): Do not trigger a
+	fatal error for unstarted Xenomai shadows. A Linux preemption
+	could occur on the return path from xnshadow_map() to the wait
+	barrier syscall from user-space.
+
+2005-12-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/syscall.c (__rt_queue_delete,
+	__rt_heap_delete): Call the heap deletion routine out of any
+	nklocked section.
+
+	* ksrc/skins/native/queue.c (rt_queue_delete): 
+	* ksrc/skins/native/heap.c (rt_heap_delete): Move indirect calls
+	to Linux kernel services out of any nklocked section
+	(xnheap_destroy[_shared]).
+
+2005-12-09  Heikki Lindholm <holindho@cs.helsinki.fi>
+
+	* ksrc/arch/powerpc/hal.c: Let each processor set its own
+	disarm_decr. Additionally, cuts down unused code from UP build.
+
+2005-12-09  Jan Kiszka  <jan.kiszka@web.de>
+	
+	* src/skins/native/Makefile.am, src/skins/posix/Makefile.am: Add
+	-pthread to LDFLAGS.
+
+ 	* src/skins/native/task.c, include/native/task.h: Add
+	rt_task_join() and the related T_JOINABLE mode flag.
+ 
+2005-12-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/bfinnommu/hal.c (rthal_timer_release): Properly stop
+	the running aperiodic timer using the associated TRUN bit.
+
+2005-12-07  Heikki Lindholm <holindho@cs.helsinki.fi>
+	
+	* ksrc/arch/powerpc/patches: Upgrade to Adeos/ppc64 0.9-02.
+	
+	* ksrc/arch/powerpc/hal.c, include/asm-powerpc/system.h,
+	include/asm-powerpc/hal.h: Add SMP support.
+	
+2005-12-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/uvm/syscall.c (__vm_shadow_helper): 
+	* ksrc/skins/native/syscall.c (__rt_task_create): Do not stall the
+	Xenomai domain during shadow mapping; this is useless and induces
+	jitter since we end up locking the interrupts out across Linux
+	schedulings. Issue spotted by Jan Kiszka.
+
+2005-12-04  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/bfinnommu/switch.S (rthal_defer_switch_p): Add
+	predicate to check for any pending syscall event.
+
+	* ksrc/nucleus/shadow.c (do_hisyscall_event): Check for a
+	rescheduling opportunity early when processing a pipelined
+	syscall: some archs might delay them until a pending syscall is
+	actually taken (e.g. Blackfin).
+
+	* include/asm-generic/system.h (xnarch_escalate): Move the escalation
+	service in the arch-dependent section, since archs may have
+	different sets of criteria for deferring the rescheduling
+	procedure.
+
 2005-12-05  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* configure.in, doc/doxygen/Doxyfile.in: Fix compilation of
