@@ -128,7 +128,6 @@ static int __rt_task_create (struct task_struct *curr, struct pt_regs *regs)
     RT_TASK_PLACEHOLDER ph;
     int err, prio, mode;
     RT_TASK *task;
-    spl_t s;
 
     if (xnshadow_thread(curr))
 	return -EBUSY;
@@ -170,22 +169,11 @@ static int __rt_task_create (struct task_struct *curr, struct pt_regs *regs)
 
     if (err == 0)
 	{
-	/* We don't want some funny guy to rip the new TCB off while
-	   two user-space threads are being synchronized on it, so
-	   enter a critical section. Do *not* take the big lock here:
-	   this is useless since deleting a thread through an
-	   inter-CPU request requires the target CPU to accept IPIs,
-	   and we won't. */
-
-	splhigh(s);
-
 	/* Copy back the registry handle to the ph struct. */
 	ph.opaque = task->handle;
 	ph.opaque2 = bulk.a5;	/* hidden pthread_t identifier. */
 	__xn_copy_to_user(curr,(void __user *)bulk.a1,&ph,sizeof(ph));
 	err = xnshadow_map(&task->thread_base,u_completion);
-
-	splexit(s);
 	}
     else
 	{
