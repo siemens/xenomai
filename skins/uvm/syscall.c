@@ -50,8 +50,6 @@ static int __vm_shadow_helper (struct task_struct *curr,
 {
     char name[XNOBJECT_NAME_LEN];
     xnthread_t *thread;
-    spl_t s;
-    int err;
 
     if (curr->policy != SCHED_FIFO)
 	return -EPERM;
@@ -103,18 +101,12 @@ static int __vm_shadow_helper (struct task_struct *curr,
        useless since deleting a thread through an inter-CPU request
        requires the target CPU to accept IPIs. */
 
-    splhigh(s);
-
     if (__xn_reg_arg2(regs))
 	__xn_copy_to_user(curr,(void __user *)__xn_reg_arg2(regs),&thread,sizeof(thread));
 
     xnthread_extended_info(thread) = (void *)__xn_reg_arg3(regs);
 
-    err = xnshadow_map(thread,u_completion);
-
-    splexit(s);
-
-    return err;
+    return xnshadow_map(thread,u_completion);
 }
 
 static int __vm_thread_shadow (struct task_struct *curr, struct pt_regs *regs)
