@@ -1,12 +1,12 @@
 
-The new Xenomai project has its roots in both the old Xenomai [1] and
-RTAI [2] projects, which combined their skills in order to produce a
-pervasive and highly integrated real-time framework for the GNU/Linux
-environment. The resulting development effort started in April 2004
-has been initially hosted as an experimental branch of the RTAI
-project, called RTAI/fusion. Since October 2005, this effort is
-independently led by its original major contributors as the
-revamped Xenomai project [1].
+The new Xenomai project has its roots in both the original Xenomai [1]
+and RTAI [2] projects, which combined their skills in order to produce
+a pervasive and highly integrated real-time framework for the
+GNU/Linux environment. The resulting development effort started in
+April 2004 has been initially hosted as an experimental branch of the
+RTAI project, called RTAI/fusion. Since October 2005, this effort is
+independently led by its original major contributors as the revamped
+Xenomai project [1].
 
 This file is an attempt to give proper credit to the people who have
 contributed to this project so far. List entries are sorted by name
