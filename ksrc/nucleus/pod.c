@@ -215,6 +215,13 @@ void xnpod_schedule_handler (void)
     xnpod_schedule();
 }
 
+void xnpod_schedule_deferred (void)
+
+{
+    if (nkpod && xnsched_resched_p())
+	xnpod_schedule();
+}
+
 /*! 
  * \fn int xnpod_init(xnpod_t *pod,int minpri,int maxpri,xnflags_t flags)
  * \brief Initialize a new pod.
