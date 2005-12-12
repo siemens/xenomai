@@ -306,7 +306,8 @@ int rthal_timer_request (void (*handler)(void),
         if (rthal_nmi_request(rthal_latency_above_max))
             printk("Xenomai: NMI watchdog not available.\n");
         else
-            printk("Xenomai: NMI watchdog started.\n");
+            printk("Xenomai: NMI watchdog started (threshold=%u us).\n",
+		   rthal_maxlat_us);
     }
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 
