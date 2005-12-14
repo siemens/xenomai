@@ -28,17 +28,11 @@
 #include <asm/system.h>
 
 #define XNARCH_DEFAULT_TICK     1000000 /* ns, i.e. 1ms */
-#ifdef CONFIG_XENO_HW_PERIODIC_TIMER
-/* If the periodic timing support is compiled in, we need a dynamic
-   information about the current timer mode in order to determine the
-   hist tick setup. Ask the HAL for this. */
-#define XNARCH_HOST_TICK        rthal_timer_host_freq()
-#else /* !CONFIG_XENO_HW_PERIODIC_TIMER */
-/* If the periodic timing support is not compiled in, we need to relay
-   the host tick in any case; just define the period constant. */
-#define XNARCH_HOST_TICK        RTHAL_HOST_PERIOD
-#endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
-
+/* The I-pipe frees the Blackfin core timer for us, therefore we don't
+   need any host tick relay service since the regular Linux time
+   source is still ticking in parallel at the normal pace through
+   TIMER0. */
+#define XNARCH_HOST_TICK        0
 #define XNARCH_THREAD_STACKSZ   8192
 
 #define xnarch_stack_size(tcb)  ((tcb)->stacksize)
@@ -425,11 +419,13 @@ static inline int xnarch_local_syscall (struct pt_regs *regs)
 
 static inline void xnarch_program_timer_shot (unsigned long delay)
 {
-    delay = rthal_imuldiv(delay,RTHAL_TIMER_FREQ,RTHAL_CPU_FREQ);
+    /* The core timer runs at the core clock rate -- therefore no
+       conversion is needed between TSC and delay values. */
     rthal_timer_program_shot(delay);
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
     {
     extern unsigned long rthal_maxlat_ticks;
+    delay = rthal_imuldiv(delay,get_sclk(),RTHAL_CPU_FREQ);
     if (delay <= ULONG_MAX - rthal_maxlat_ticks)
 	rthal_nmi_arm(delay + rthal_maxlat_ticks);
     }
