@@ -45,6 +45,10 @@
 #include <asm/xenomai/hal.h>
 
 #ifdef CONFIG_XENO_HW_PERIODIC_TIMER
+
+#define PERIODIC_TIME_SCALE 10
+#define CLOCKS_PER_TICK(hz) (get_cclk() / (hz) / PERIODIC_TIME_SCALE)
+
 int rthal_periodic_p;
 
 static inline void rthal_set_aperiodic(void)
@@ -62,19 +66,11 @@ static struct {
 
 } rthal_linux_irq[IPIPE_NR_XIRQS];
 
-/* Acknowledge the timer IRQ. In periodic mode, this routine does
-   nothing, except preventing Linux to mask the core timer IRQ; in
-   aperiodic mode, we additionally make sure to deassert the interrupt
-   bit for TIMER0. In either case, the interrupt channel is always
-   kept unmasked. */
+/* Acknowledge the core timer IRQ. This routine does nothing, except
+   preventing Linux to mask the IRQ. */
 
 static int rthal_timer_ack (unsigned irq)
 {
-    if (!rthal_periodic_p) {
-    	/* Clear TIMER0 interrupt. IRQ channel is never masked. */
-    	*pTIMER_STATUS = 1;
-	__builtin_bfin_csync();
-    }
     return 1;
 }
 
@@ -102,46 +98,53 @@ int rthal_timer_request (void (*handler)(void),
 			 unsigned long nstick)
 {
     unsigned long flags;
-    unsigned irq;
     int err;
 
     flags = rthal_critical_enter(NULL);
 
     if (nstick > 0) {
 #ifdef CONFIG_XENO_HW_PERIODIC_TIMER
-	/* Periodic setup -- Use the built-in Adeos service directly
-	   which relies on the core timer. */
-	err = rthal_set_timer(nstick);
-	irq = RTHAL_PERIODIC_TIMER_IRQ;
+	/* Periodic setup. */
+	*pTCNTL = 1;
+	__builtin_bfin_csync();
+	*pTSCALE = (PERIODIC_TIME_SCALE - 1);
+	*pTCOUNT = *pTPERIOD = CLOCKS_PER_TICK(1000000000L / nstick) - 1;
+	__builtin_bfin_csync();
+	*pTCNTL = 7;		/* Auto-reload on. */
 	rthal_periodic_p = 1;
 #else /* !CONFIG_XENO_HW_PERIODIC_TIMER */
         return -ENOSYS;
 #endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
     }
     else {
-	/* Oneshot setup. We use TIMER0 in PWM_OUT, single pulse mode. */
-	*pTIMER_DISABLE = 1;	/* Disable TIMER0 for now. */
+	/* Oneshot setup. We still use the core timer, but without
+	   auto-reload. */
+	*pTCNTL = 1;	/* Power up the timer, but leave it disabled. */
 	__builtin_bfin_csync();
-	*pTIMER0_CONFIG = 0x11;	/* IRQ enable, single pulse, PWM_OUT, SCLKed */
+	*pTSCALE = 0;
 	__builtin_bfin_csync();
-	irq = RTHAL_APERIODIC_TIMER_IRQ;
-	rthal_irq_enable(irq);
 	rthal_set_aperiodic();
     }
 
-    rthal_irq_release(irq);
+    rthal_irq_release(RTHAL_TIMER_IRQ);
 
-    err = rthal_irq_request(irq,
+    err = rthal_irq_request(RTHAL_TIMER_IRQ,
 			    (rthal_irq_handler_t)handler,
 			    &rthal_timer_ack,
 			    NULL);
 
     rthal_critical_exit(flags);
 
+    if (err)
+	return err;
+
+    rthal_irq_enable(RTHAL_TIMER_IRQ);
+
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
     if (nstick == 0) {	/* This only works in aperiodic mode. */
+        /* The watchdog timer is clocked by the system clock. */
         rthal_maxlat_ticks = rthal_llimd(rthal_maxlat_us * 1000ULL,
-					 RTHAL_TIMER_FREQ,
+					 get_sclk(),
 					 1000000000);
         rthal_nmi_release();
     
@@ -153,41 +156,18 @@ int rthal_timer_request (void (*handler)(void),
     }
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 
-    return err;
+    return 0;
 }
 
 void rthal_timer_release (void)
 
 {
-    unsigned long flags;
-    unsigned irq;
-
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
     rthal_nmi_release();
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
-
-    flags = rthal_critical_enter(NULL);
-
-    if (rthal_periodic_p)
-	{
-	rthal_reset_timer();
-	irq = RTHAL_PERIODIC_TIMER_IRQ;
-	}
-    else
-	{
-	if (*pTIMER_ENABLE & 1) {
-	    *pTIMER_DISABLE = 1;
-	    *pTIMER_STATUS = 0x1000;
-	    __builtin_bfin_csync();
-	}
-
-	irq = RTHAL_APERIODIC_TIMER_IRQ;
-	rthal_irq_disable(irq);
-	}
-
-    rthal_irq_release(irq);
-
-    rthal_critical_exit(flags);
+    *pTCNTL = 0;	/* Power down the core timer. */
+    rthal_irq_disable(RTHAL_TIMER_IRQ);
+    rthal_irq_release(RTHAL_TIMER_IRQ);
 }
 
 unsigned long rthal_timer_calibrate (void)
@@ -257,16 +237,6 @@ int rthal_irq_host_release (unsigned irq, void *dev_id)
     return 0;
 }
 
-unsigned long rthal_timer_host_freq (void)
-{
-    /* In periodic timing, we divert the core timer for our own
-       ticking, so we need to relay a Linux timer tick according to
-       the HZ frequency. In aperiodic timing, we use TIMER0, leaving
-       the core timer untouched, so we don't need to relay any host
-       tick since we don't divert it in the first place. */
-    return rthal_periodic_p ? RTHAL_HOST_PERIOD : 0;
-}
-
 static inline int do_exception_event (unsigned event, unsigned domid, void *data)
 
 {
@@ -306,16 +276,14 @@ RTHAL_DECLARE_DOMAIN(rthal_domain_entry);
 int rthal_arch_init (void)
 
 {
-    unsigned long get_sclk(void);	/* System clock freq (HZ) */
-
     if (rthal_cpufreq_arg == 0)
 	rthal_cpufreq_arg = (unsigned long)rthal_get_cpufreq();
 
     if (rthal_timerfreq_arg == 0)
 	/* Define the global timer frequency as being the one of the
-	   aperiodic timer (TIMER0), which is running at the system
-	   clock (SCLK) rate. */
-	rthal_timerfreq_arg = get_sclk();
+	   core timer, which is running at the core clock (CCLK)
+	   rate. */
+	rthal_timerfreq_arg = get_cclk();
 
     return 0;
 }
