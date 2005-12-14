@@ -29,8 +29,6 @@
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 #include <asm/div64.h>
 
-#define RTHAL_HOST_PERIOD      (1000000000UL/HZ)
-
 typedef unsigned long long rthal_time_t;
 
 #define __rthal_u64tou32(ull, h, l) ({                  \
@@ -115,8 +113,7 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #include <asm/processor.h>
 #include <asm/xenomai/atomic.h>
 
-#define RTHAL_PERIODIC_TIMER_IRQ   IRQ_CORETMR
-#define RTHAL_APERIODIC_TIMER_IRQ  IRQ_TMR0
+#define RTHAL_TIMER_IRQ   IRQ_CORETMR
 
 #define rthal_irq_descp(irq)	(&irq_desc[(irq)])
 
@@ -152,18 +149,10 @@ void rthal_nmi_disarm(void);
 
 static inline void rthal_timer_program_shot (unsigned long delay)
 {
-    if(!delay) delay = 10;
-
-    if (*pTIMER_ENABLE & 1) {
-    	/* The oneshot timer is enabled (and running);
-	   force disable before reprogramming it. */
-    	*pTIMER_DISABLE = 1;
-    	*pTIMER_STATUS = 0x1000;
-	__builtin_bfin_csync();
-    }
-
-    *pTIMER0_WIDTH = delay;
-    *pTIMER_ENABLE = 1;	/* Enable TIMER0. */
+    if (!delay) delay = 10;
+    *pTCOUNT = delay - 1;
+    __builtin_bfin_csync();
+    *pTCNTL = 3; /* Oneshot mode, no auto-reload. */
     __builtin_bfin_csync();
 }
 
@@ -174,8 +163,6 @@ extern int rthal_periodic_p;
 #else /* !CONFIG_XENO_HW_PERIODIC_TIMER */
 #define rthal_periodic_p  0
 #endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
-
-unsigned long rthal_timer_host_freq(void);
 
 asmlinkage void rthal_kcontext_switch(unsigned long *out_kspp,
 				      unsigned long *in_kspp);
