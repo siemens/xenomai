@@ -345,8 +345,6 @@ int rt_task_join (RT_TASK *task)
     return -pthread_join((pthread_t)task->opaque2, NULL);
 }
 
-#ifdef CONFIG_XENO_OPT_NATIVE_MPS
-
 ssize_t rt_task_send (RT_TASK *task,
 		      RT_TASK_MCB *mcb_s,
 		      RT_TASK_MCB *mcb_r,
@@ -377,5 +375,3 @@ int rt_task_reply (int flowid,
 			     flowid,
 			     mcb_s);
 }
-
-#endif /* CONFIG_XENO_OPT_NATIVE_MPS */
