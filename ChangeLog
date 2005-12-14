@@ -1,3 +1,11 @@
+2005-12-14  Philippe Gerum  <rpm@xenomai.org>
+
+	* src/skins/native/task.c: Compile message-passing support
+	unconditionally.
+
+	* ksrc/nucleus/shadow.c (xnshadow_relax): Make the root priority
+	boost and the suspension on XNRELAX an atomic sequence.
+
 2005-12-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/bfinnommu/nmi.c: Add NMI watchdog support.
