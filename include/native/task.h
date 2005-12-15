@@ -271,8 +271,6 @@ RT_TASK *rt_task_self(void);
 int rt_task_slice(RT_TASK *task,
 		  RTIME quantum);
 
-#ifdef CONFIG_XENO_OPT_NATIVE_MPS
-
 ssize_t rt_task_send(RT_TASK *task,
 		     RT_TASK_MCB *mcb_s,
 		     RT_TASK_MCB *mcb_r,
@@ -283,8 +281,6 @@ int rt_task_receive(RT_TASK_MCB *mcb_r,
 
 int rt_task_reply(int flowid,
 		  RT_TASK_MCB *mcb_s);
-
-#endif /* CONFIG_XENO_OPT_NATIVE_MPS */
 
 static inline int rt_task_spawn(RT_TASK *task,
 				const char *name,
