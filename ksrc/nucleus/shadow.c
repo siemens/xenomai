@@ -473,18 +473,18 @@ int xnshadow_harden (void)
         /* On non-preemptible kernels, we always enter this code,
 	   since there is no preemption opportunity before we
 	   explicitely call schedule(). On preemptible kernels, we
-	   might have been switched out on behalf of
-	   wake_up_interruptible() already, and scheduled back after
-	   the gatekeeper kicked the Xenomai scheduler. In such a
-	   case, we need to check the current Adeos domain: if this is
-	   Xenomai, then the switch has already taken place and the
-	   current task is already running in primary mode; if it's
-	   not, then we need to call schedule() in order to force the
-	   current task out and let the gatekeeper switch us back in
-	   primary mode. The small race window between the test and
-	   the call to schedule() is closed by the latter routine,
-	   which denies rescheduling over non-root domains (I-pipe
-	   patches >= 1.0-08 for ppc, or 1.0-12 for x86). */
+	   might have been switched out on our way in/out
+	   wake_up_interruptible_sync(), and scheduled back after the
+	   gatekeeper kicked the Xenomai scheduler. In such a case, we
+	   need to check the current Adeos domain: if this is Xenomai,
+	   then the switch has already taken place and the current
+	   task is already running in primary mode; if it's not, then
+	   we need to call schedule() in order to force the current
+	   task out and let the gatekeeper switch us back in primary
+	   mode. The small race window between the test and the call
+	   to schedule() is closed by the latter routine, which denies
+	   rescheduling over non-root domains (I-pipe patches >=
+	   1.0-08 for ppc, or 1.0-12 for x86). */
 
 	schedule();
 
