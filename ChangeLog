@@ -6,8 +6,7 @@
 
 	* ksrc/nucleus/shadow.c (xnshadow_harden): Fix potential lockups
 	caused by a bad scheduling sequence between the gatekeeper and the
-	hardening task (using wake_up_interruptible_sync() was not that
-	synchronous over preemptible kernels actually).
+	hardening task.
 
 2005-12-14  Philippe Gerum  <rpm@xenomai.org>
 

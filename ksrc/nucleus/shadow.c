@@ -466,7 +466,7 @@ int xnshadow_harden (void)
 
     gk->thread = thread;
     set_current_state(TASK_INTERRUPTIBLE);
-    wake_up_interruptible(&gk->waitq);
+    wake_up_interruptible_sync(&gk->waitq);
 
     if (rthal_current_domain == rthal_root_domain) {
 
