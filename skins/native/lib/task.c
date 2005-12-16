@@ -211,8 +211,8 @@ int rt_task_delete (RT_TASK *task)
 	    return -err;
     }
 
-    err = XENOMAI_SKINCALL1(__native_muxid,
-			    __native_task_delete,
+    err = XENOMAI_SKINCALL1(__xeno_muxid,
+			    __xeno_task_delete,
 			    task);
     if (err == -ESRCH)
 	return 0;
