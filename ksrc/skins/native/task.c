@@ -117,7 +117,7 @@ void __native_task_pkg_cleanup (void)
  *
  * @param stksize The size of the stack (in bytes) for the new
  * task. If zero is passed, a reasonable pre-defined size will be
- * substituted. This parameter is ignored for user-space tasks.
+ * substituted.
  *
  * @param prio The base priority of the new task. This value must
  * range from [1 .. 99] (inclusive) where 1 is the lowest effective
@@ -2078,7 +2078,7 @@ int rt_task_reply (int flowid, RT_TASK_MCB *mcb_s)
  *
  * @param stksize The size of the stack (in bytes) for the new
  * task. If zero is passed, a reasonable pre-defined size will be
- * substituted. This parameter is ignored for user-space tasks.
+ * substituted.
  *
  * @param prio The base priority of the new task. This value must
  * range from [1 .. 99] (inclusive) where 1 is the lowest effective
