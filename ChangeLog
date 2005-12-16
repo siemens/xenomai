@@ -1,3 +1,15 @@
+2005-12-16  Philippe Gerum  <rpm@xenomai.org>
+
+	* nucleus/shadow.c (xnshadow_harden): Fix potential lockups caused
+	by a bad scheduling sequence between the gatekeeper and the
+	hardening task (using wake_up_interruptible_sync() was not that
+	synchronous over preemptible kernels actually).
+
+2005-12-14  Philippe Gerum  <rpm@xenomai.org>
+
+	* nucleus/shadow.c (xnshadow_relax): Make the root priority boost
+	and the suspension on XNRELAX an atomic sequence.
+
 2005-12-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* nucleus/shadow.c (do_schedule_event): Do not trigger a fatal
