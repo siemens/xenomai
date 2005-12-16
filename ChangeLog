@@ -1,4 +1,18 @@
+2005-12-16  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/ppc/patches: Upgrade to Adeos 2.6.14-1.0-08.
+
+	* ksrc/arch/i386/patches: Upgrade to Adeos 2.6.14-1.0-12.
+
+	* ksrc/nucleus/shadow.c (xnshadow_harden): Fix potential lockups
+	caused by a bad scheduling sequence between the gatekeeper and the
+	hardening task (using wake_up_interruptible_sync() was not that
+	synchronous over preemptible kernels actually).
+
 2005-12-14  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/bfinnommu/hal.c: Use the Blackfin core timer as the
+	only time source for all modes.
 
 	* src/skins/native/task.c: Compile message-passing support
 	unconditionally.
