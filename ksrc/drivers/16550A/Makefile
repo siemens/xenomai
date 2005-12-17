@@ -12,7 +12,7 @@ else
 
 O_TARGET := built-in.o
 
-obj-$(CONFIG_XENO_SKIN_16550A) := xeno_16550A.o
+obj-$(CONFIG_XENO_DRIVERS_16550A) := xeno_16550A.o
 
 list-multi := xeno_16550A.o
 

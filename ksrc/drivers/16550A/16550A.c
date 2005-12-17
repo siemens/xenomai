@@ -1025,7 +1025,7 @@ static const struct rtdm_device __initdata device_tmpl = {
 
     device_class:       RTDM_CLASS_SERIAL,
     device_sub_class:   RTDM_SUBCLASS_16550A,
-    driver_name:        "rt_16550A",
+    driver_name:        "xeno_16550A",
     driver_version:     RTDM_DRIVER_VER(1, 2, 1),
     peripheral_name:    "UART 16550A",
     provider_name:      "Jan Kiszka",
