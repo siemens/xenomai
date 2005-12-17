@@ -384,7 +384,6 @@ static int gatekeeper_thread (void *data)
 	set_current_state(TASK_INTERRUPTIBLE);
 	up(&gk->sync); /* Make the request token available. */
 	schedule();
-	splnone();
 
 	if (kthread_should_stop())
 	    break;
