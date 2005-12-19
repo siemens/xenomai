@@ -60,11 +60,11 @@ depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
 am__depfiles_maybe = depfiles
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-LTCXXCOMPILE = $(LIBTOOL) --mode=compile --tag=CXX $(CXX) $(DEFS) \
+LTCXXCOMPILE = $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) \
 	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
 	$(AM_CXXFLAGS) $(CXXFLAGS)
 CXXLD = $(CXX)
-CXXLINK = $(LIBTOOL) --mode=link --tag=CXX $(CXXLD) $(AM_CXXFLAGS) \
+CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(gcic_SOURCES)
 DIST_SOURCES = $(gcic_SOURCES)
@@ -520,9 +520,9 @@ $(GCCTOP)/.gcic-patched: $(GCCTOP)/.gcic-untarred
 	@( cd $(GCCTOP)* && @MVM_PROG_PATCH@ -p1 ) <\
 	$(srcdir)/gcc-$(GCCVER).patch && touch $@
 
-gcc-build/.gcic-configured: $(GCCTOP)/.gcic-patched
+gcc-build/.gcic-configured: $(GCCTOP)/.gcic-patched $(top_builddir)/config.status
 	@( $(RM) -Rf gcc-build; mkdir gcc-build && cd gcc-build && \
-	LC_ALL=C CC=$(CC) ../$(GCCTOP)/configure --prefix=$(libexecdir)/gcic \
+	LC_ALL=C ../$(GCCTOP)/configure CC=$(CC) --prefix=$(libexecdir)/gcic \
 	--with-gnu-ld --with-gnu-as && cd .. ) && touch $@
 
 gcc-build/.gcic-built: gcc-build/.gcic-configured
