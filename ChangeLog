@@ -1,3 +1,7 @@
+2005-12-17  Philippe Gerum  <rpm@xenomai.org>
+
+ 	* RELEASE: Xenomai 2.0.2 (Ceremony)
+
 2005-12-16  Philippe Gerum  <rpm@xenomai.org>
 
 	* nucleus/pod.c (xnpod_delete_thread): Prevent double deletion.
