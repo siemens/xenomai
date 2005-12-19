@@ -30,9 +30,9 @@ $(GCCTOP)/.gcic-patched: $(GCCTOP)/.gcic-untarred
 	@( cd $(GCCTOP)* && @MVM_PROG_PATCH@ -p1 ) <\
 	$(srcdir)/gcc-$(GCCVER).patch && touch $@
 
-gcc-build/.gcic-configured: $(GCCTOP)/.gcic-patched
+gcc-build/.gcic-configured: $(GCCTOP)/.gcic-patched $(top_builddir)/config.status
 	@( $(RM) -Rf gcc-build; mkdir gcc-build && cd gcc-build && \
-	LC_ALL=C CC=$(CC) ../$(GCCTOP)/configure --prefix=$(libexecdir)/gcic \
+	LC_ALL=C ../$(GCCTOP)/configure CC=$(CC) --prefix=$(libexecdir)/gcic \
 	--with-gnu-ld --with-gnu-as && cd .. ) && touch $@
 
 gcc-build/.gcic-built: gcc-build/.gcic-configured

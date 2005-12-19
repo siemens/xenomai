@@ -170,6 +170,9 @@ static void kroot(mvm_thread_trampoline) (void *tcbarg)
     mvm_set_irqmask(tcb->imask);
 
     tcb->entry(tcb->cookie);
+
+    if (tcb->kthread)
+	xnpod_delete_thread(tcb->kthread);
 }
 
 static void real_dinsn (int tag) {
