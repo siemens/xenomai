@@ -46,7 +46,7 @@
 
 #ifdef CONFIG_XENO_HW_PERIODIC_TIMER
 
-#define PERIODIC_TIME_SCALE 10
+#define PERIODIC_TIME_SCALE 1
 #define CLOCKS_PER_TICK(hz) (get_cclk() / (hz) / PERIODIC_TIME_SCALE)
 
 int rthal_periodic_p;
