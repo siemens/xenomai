@@ -1,3 +1,13 @@
+2005-12-17  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/shadow.c (gatekeeper_thread): Discard useless
+	splnone().
+
+2005-12-16  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/posix/signal.h: Forward inclusion of standard
+	<signal.h>.
+
 2005-12-16  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/ppc/patches: Upgrade to Adeos 2.6.14-1.0-08.
