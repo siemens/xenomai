@@ -207,6 +207,8 @@ static int xnpod_fault_handler (xnarch_fltinfo_t *fltinfo)
     return 0;
 }
 
+#ifdef __KERNEL__
+
 void xnpod_schedule_handler (void)
 
 {
@@ -221,6 +223,8 @@ void xnpod_schedule_deferred (void)
     if (nkpod && xnsched_resched_p())
 	xnpod_schedule();
 }
+
+#endif /* __KERNEL__ */
 
 /*! 
  * \fn int xnpod_init(xnpod_t *pod,int minpri,int maxpri,xnflags_t flags)
