@@ -54,21 +54,9 @@ ENTRY(rthal_kcontext_switch)
 ENTRY(rthal_ucontext_switch)
 
 	[--sp] = rets;
-	[--sp] = r4;
-	[--sp] = r5;
-  	[--sp] = r6;
-  	[--sp] = r7;
-	[--sp] = p3;
-	[--sp] = p4;
-	[--sp] = p5;
+	[--sp] = ( R7:4, P5:3 );
 	call resume;
-	p5 = [sp++];
-	p4 = [sp++];
-	p3 = [sp++];
-	r7 = [sp++];
-	r6 = [sp++];
-	r5 = [sp++];
-	r4 = [sp++];
+	( R7:4, P5:3 ) = [sp++];
 	rets = [sp++];
 	rts
 
@@ -104,12 +92,20 @@ ENTRY(rthal_defer_switch_p)
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
 
 ENTRY(rthal_nmi_handler)
-	SAVE_CONTEXT
+	SAVE_ALL_SYS
 	r0 = sp;
 	SP += -12;	
 	call rthal_nmi_tick
 	SP += 12;	
-	RESTORE_CONTEXT
+	RESTORE_ALL_SYS
 	rtn; 
 		
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX */
+
+ENTRY(rthal_get_ipend)
+
+	p2.l = lo(IPEND);
+        p2.h = hi(IPEND);
+	csync;
+        r0 = [p2];
+	rts
