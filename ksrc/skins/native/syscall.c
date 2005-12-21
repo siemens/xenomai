@@ -169,13 +169,6 @@ static int __rt_task_create (struct task_struct *curr, struct pt_regs *regs)
 
     if (err == 0)
 	{
-	/* We don't want some funny guy to rip the new TCB off while
-	   two user-space threads are being synchronized on it, so
-	   enter a critical section. Do *not* take the big lock here:
-	   this is useless since deleting a thread through an
-	   inter-CPU request requires the target CPU to accept IPIs,
-	   and we won't. */
-
 	/* Copy back the registry handle to the ph struct. */
 	ph.opaque = task->handle;
 	ph.opaque2 = bulk.a5;	/* hidden pthread_t identifier. */
@@ -2061,7 +2054,7 @@ static int __rt_queue_delete (struct task_struct *curr, struct pt_regs *regs)
 {
     RT_QUEUE_PLACEHOLDER ph;
     RT_QUEUE *q;
-    int err = 0;
+    int err;
 
     if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg1(regs),sizeof(ph)))
 	return -EFAULT;
@@ -2473,7 +2466,7 @@ static int __rt_heap_delete (struct task_struct *curr, struct pt_regs *regs)
 {
     RT_HEAP_PLACEHOLDER ph;
     RT_HEAP *heap;
-    int err = 0;
+    int err;
 
     if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg1(regs),sizeof(ph)))
 	return -EFAULT;
