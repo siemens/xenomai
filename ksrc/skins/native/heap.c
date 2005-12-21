@@ -370,13 +370,9 @@ int rt_heap_delete (RT_HEAP *heap)
 
     xeno_mark_deleted(heap);
 
-    xnpod_lock_sched();
-
     /* Get out of the nklocked section before releasing the heap
-       memory, since we are about to invoke Linux kernel services. We
-       hold the scheduler lock until we are done, so that we could not
-       get killed before the housekeeping chores are entirely
-       performed, since task deletion is a synchronous op. */
+       memory, since we are about to invoke Linux kernel
+       services. FIXME: grab safe task mutex. */
 
     xnlock_put_irqrestore(&nklock,s);
 
@@ -387,7 +383,7 @@ int rt_heap_delete (RT_HEAP *heap)
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 	err = xnheap_destroy(&heap->heap_base,&__heap_flush_private,NULL);
 
-    xnpod_unlock_sched();
+    /* FIXME : release safe task mutex */
 
     if (rc == XNSYNCH_RESCHED)
         /* Some task has been woken up as a result of the deletion:

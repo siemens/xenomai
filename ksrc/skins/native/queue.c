@@ -364,13 +364,9 @@ int rt_queue_delete (RT_QUEUE *q)
 
     xeno_mark_deleted(q);
 
-    xnpod_lock_sched();
-
     /* Get out of the nklocked section before releasing the heap
-       memory, since we are about to invoke Linux kernel services. We
-       hold the scheduler lock until we are done, so that we could not
-       get killed before the housekeeping chores are entirely
-       performed, since task deletion is a synchronous op. */
+       memory, since we are about to invoke Linux kernel
+       services. FIXME: grab safe task mutex. */
 
     xnlock_put_irqrestore(&nklock,s);
 
@@ -381,7 +377,7 @@ int rt_queue_delete (RT_QUEUE *q)
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 	err = xnheap_destroy(&q->bufpool,&__queue_flush_private,NULL);
 
-    xnpod_unlock_sched();
+    /* FIXME: release safe taask mutex */
 
     if (rc == XNSYNCH_RESCHED)
         /* Some task has been woken up as a result of the deletion:
