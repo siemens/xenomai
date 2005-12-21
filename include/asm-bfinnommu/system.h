@@ -234,6 +234,11 @@ static inline int xnarch_escalate (void)
 {
     extern int xnarch_escalation_virq;
 
+    if (rthal_current_domain == rthal_root_domain) {
+        rthal_trigger_irq(xnarch_escalation_virq);
+        return 1;
+    }
+
     /* The following Blackfin-specific check is likely the most
      * braindamage stuff we need to do for this arch, i.e. deferring
      * Xenomai's rescheduling procedure whenever:
@@ -247,10 +252,7 @@ static inline int xnarch_escalate (void)
      * rescheduling, the pending rescheduling opportunity will be
      * checked at the beginning of Xenomai's do_hisyscall_event which
      * intercepts any incoming syscall, and we know it will happen
-     * shortly after. Since kernel-based Xenomai threads should always
-     * run at higher interrupt priority than the low priority EVT15
-     * and never issue syscalls, we just don't care for them and never
-     * defer switch.
+     * shortly after.
      *
      * 2. the context we will switch back to belongs to the Linux
      * kernel code, so that we don't inadvertently cause the CPU to
@@ -258,16 +260,14 @@ static inline int xnarch_escalate (void)
      * interrupt stack frame over the incoming thread through RTI. In
      * the latter case, the preempted kernel code will be diverted
      * shortly before resumption in order to run the rescheduling
-     * procedure (see __ipipe_irq_tail backdoor).
+     * procedure (see __ipipe_irq_tail trampoline).
+     *
+     * These additional checks must be performed _after_ the one for
+     * domain escalation.
     */
 
     if (rthal_defer_switch_p())
 	return 1;
-
-    if (rthal_current_domain == rthal_root_domain) {
-        rthal_trigger_irq(xnarch_escalation_virq);
-        return 1;
-    }
 
     return 0;
 }
