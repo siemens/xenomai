@@ -166,9 +166,9 @@ while test -n "$target_deps" ; do
 	   echo "ERROR: cannot load $xeno_moddir/xeno_$mod$modext"
 	   break
         fi
-     elif `$modprobe -n $mod >& /dev/null`; then
-        test $verbose = 1 && echo "+ $modprobe $mod"
-        $sudo $modprobe $mod
+     elif `$sudo $modprobe -n xeno_$mod >& /dev/null`; then
+        test $verbose = 1 && echo "+ $modprobe xeno_$mod"
+        $sudo $modprobe xeno_$mod
         inslist="$mod $inslist"
         loadlist="$loadlist $mod"
      fi
