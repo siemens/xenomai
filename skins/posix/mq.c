@@ -508,11 +508,11 @@ mqd_t mq_open(const char *name, int oflags, ...)
     xnsynch_t done_synch;
     pse51_node_t *node;
     pse51_desc_t *desc;
+    spl_t s, ignored;
     pse51_mq_t *mq;
     mode_t mode;
     va_list ap;
     int err;
-    spl_t s;
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -539,7 +539,7 @@ mqd_t mq_open(const char *name, int oflags, ...)
     err = pse51_node_add_start(&mq->nodebase, name, PSE51_MQ_MAGIC, &done_synch);
     if(err)
         goto error;
-    xnlock_put_irqrestore(&nklock, s);
+    xnlock_clear_irqon(&nklock);
 
     /* Release the global lock while creating the message queue. */
     va_start(ap, oflags);
@@ -549,7 +549,7 @@ mqd_t mq_open(const char *name, int oflags, ...)
 
     err = pse51_mq_init(mq, attr);
 
-    xnlock_get_irqsave(&nklock, s);
+    xnlock_get_irqsave(&nklock, ignored);
     pse51_node_add_finished(&mq->nodebase, err);
     if(err)
         {
@@ -571,9 +571,6 @@ mqd_t mq_open(const char *name, int oflags, ...)
 
     xnlock_put_irqrestore(&nklock, s);
 
-    /* FIXME: need a cancellation point in the case we blocked and were resumed
-     * with XNBREAK set. */
-    
     return (mqd_t) pse51_desc_fd(desc);
 
 
