@@ -82,12 +82,12 @@ fi
 
 eval $user_moddir
 
-if `$modprobe -nq adeos >& /dev/null`; then
+if `$sudo $modprobe -nq adeos >& /dev/null`; then
    target_deps="adeos+"
 else
    target_deps=
 fi
-if `$modprobe -nq xeno_nucleus >& /dev/null`; then
+if `$sudo $modprobe -nq xeno_nucleus >& /dev/null`; then
    target_deps="${target_deps}xeno_nucleus+"
 fi
 
@@ -169,7 +169,7 @@ while test -n "$target_deps" ; do
      elif `$sudo $modprobe -n xeno_$mod >& /dev/null`; then
         test $verbose = 1 && echo "+ $modprobe xeno_$mod"
         $sudo $modprobe xeno_$mod
-        inslist="$mod $inslist"
+        inslist="xeno_$mod $inslist"
         loadlist="$loadlist $mod"
      fi
   fi
