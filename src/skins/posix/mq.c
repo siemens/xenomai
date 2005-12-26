@@ -20,8 +20,8 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <xenomai/posix/syscall.h>
-#include "posix/pthread.h"
-#include "posix/mqueue.h"
+#include <posix/pthread.h>
+#include <posix/mqueue.h>
 
 
 extern int __pse51_muxid;
@@ -212,4 +212,12 @@ ssize_t __wrap_mq_timedreceive (mqd_t q,
     errno = -err;
 
     return -1;
+}
+
+int __wrap_mq_notify(mqd_t mqdes, const struct sigevent *notification)
+{
+    return -XENOMAI_SKINCALL2(__pse51_muxid,
+                              __pse51_mq_notify,
+                              mqdes,
+                              notification);
 }

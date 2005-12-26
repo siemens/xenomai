@@ -73,7 +73,7 @@ int pse51_desc_get(pse51_desc_t **descp, int fd, unsigned magic);
 
 int pse51_desc_destroy(pse51_desc_t *desc);
 
-#define pse51_desc_setflags(desc, fl) ((desc)->flags = fl)
+#define pse51_desc_setflags(desc, fl) ((desc)->flags = (fl))
 
 #define pse51_desc_getflags(desc) ((desc)->flags)
 

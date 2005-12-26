@@ -323,7 +323,10 @@ sem_t *sem_open(const char *name, int oflags, ...)
         err = pse51_node_add(&named_sem->nodebase, name, PSE51_NAMED_SEM_MAGIC);
 
         if (err)
+            {
+            xnfree(named_sem);
             goto error;
+            }
         }
     else
         named_sem = node2sem(node);

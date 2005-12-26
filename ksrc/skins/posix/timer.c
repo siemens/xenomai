@@ -100,7 +100,7 @@ int timer_create (clockid_t clockid,
 
     /* We only support notification via signals. */
     if (evp && (evp->sigev_notify != SIGEV_SIGNAL ||
-                (unsigned) (evp->sigev_signo - 1) > SIGRTMAX))
+                (unsigned) (evp->sigev_signo - 1) > SIGRTMAX - 1))
         {
         err = EINVAL;
         goto error;
@@ -118,6 +118,8 @@ int timer_create (clockid_t clockid,
 
     timer = link2tm(holder);
 
+    timer->owner = pse51_current_thread();
+
     if (evp)
         {
         timer->si.info.si_signo = evp->sigev_signo;
@@ -134,12 +136,10 @@ int timer_create (clockid_t clockid,
     xntimer_init(&timer->timerbase, &pse51_base_timer_handler, timer);
 
     timer->overruns = 0;
-    timer->owner = pse51_current_thread();
 
     if (!timer->owner)
         {
         prependq(&timer_freeq, &timer->link);
-        timer->owner = NULL;    /* Used for debugging. */
         err = EPERM;
         goto unlock_and_error;
         }
