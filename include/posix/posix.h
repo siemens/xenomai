@@ -620,6 +620,8 @@ int mq_timedsend(mqd_t q,
                  unsigned prio,
                  const struct timespec *timeout);
 
+int mq_notify(mqd_t mqdes, const struct sigevent *notification);
+
 mqd_t mq_open(const char *name,
 	      int oflags,
 	      ...);

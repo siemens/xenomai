@@ -1,3 +1,15 @@
+2005-12-26  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/mq.c (mq_notify): Implement mq_notify.
+
+	* src/skins/posix/semaphore.c (__wrap_sem_open)
+	  ksrc/skins/posix/syscall.c (__sem_open): Store the kernel-space
+	pointer in a user-space sem_t structure, for compatibility with
+	__wrap_sem_init.
+
+	* ksrc/skins/posix/signal.c: Use an APC to get signals delivered
+	to user-space threads.
+
 2005-12-17  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus/shadow.c (gatekeeper_thread): Discard useless

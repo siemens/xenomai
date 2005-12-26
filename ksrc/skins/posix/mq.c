@@ -23,6 +23,7 @@
 #include <xenomai/posix/registry.h>
 #include <xenomai/posix/internal.h>     /* Magics, time conversion */
 #include <xenomai/posix/thread.h>       /* errno. */
+#include <xenomai/posix/signal.h>       /* pse51_siginfo_t. */
 
 /* Temporary definitions. */
 struct pse51_mq {
@@ -41,6 +42,10 @@ struct pse51_mq {
 
 #define synch2mq(saddr) \
     ((pse51_mq_t *) (((char *)saddr) - offsetof(pse51_mq_t, synchbase)))
+
+    /* mq_notify */
+    pse51_siginfo_t si;
+    pthread_t target;
 
     struct mq_attr attr;
 
@@ -68,9 +73,9 @@ typedef struct pse51_direct_msg {
     int used;
 } pse51_direct_msg_t;
 
-xnqueue_t pse51_mqq;
+static xnqueue_t pse51_mqq;
 
-pse51_msg_t *pse51_mq_msg_alloc(pse51_mq_t *mq)
+static pse51_msg_t *pse51_mq_msg_alloc(pse51_mq_t *mq)
 {
     xnpholder_t *holder = (xnpholder_t *) getq(&mq->avail);
 
@@ -81,14 +86,14 @@ pse51_msg_t *pse51_mq_msg_alloc(pse51_mq_t *mq)
     return link2msg(holder);
 }
 
-void pse51_mq_msg_free(pse51_mq_t *mq, pse51_msg_t *msg)
+static void pse51_mq_msg_free(pse51_mq_t *mq, pse51_msg_t *msg)
 {
     xnholder_t *holder = (xnholder_t *) (&msg->link);
     inith(holder);
     prependq(&mq->avail, holder); /* For earliest re-use of the block. */
 }
 
-int pse51_mq_init(pse51_mq_t *mq, const struct mq_attr *attr)
+static int pse51_mq_init(pse51_mq_t *mq, const struct mq_attr *attr)
 {
     unsigned i, msgsize, memsize;
     char *mem;
@@ -248,6 +253,14 @@ static int pse51_mq_trysend(pse51_desc_t *desc,
         memcpy(&msg->data[0], buffer, len);
         msg->len = len;
         insertpqf(&mq->queued, &msg->link, prio);
+
+        /* First message and no pending reader, attempt to send a signal if
+           mq_notify was called. */
+        if (!countpq(&mq->queued) && mq->target)
+            {
+            pse51_sigqueue_inner(mq->target, &mq->si);
+            mq->target = NULL;
+            }
         }
 
     if(reader)
@@ -452,6 +465,57 @@ int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
     return 0;
 }
 
+int mq_notify(mqd_t fd, const struct sigevent *evp)
+{
+    pse51_desc_t *desc;
+    spl_t s, ignored;
+    pse51_mq_t *mq;
+    int err;
+
+    if (evp && (evp->sigev_notify != SIGEV_SIVNAL &&
+                evp->sigev_notify != SIGEV_NONE ||
+                (unsigned) (evp->sigev_signo - 1) > SIGRTMAX - 1))
+        {
+        err = EINVAL;
+        goto error;
+        }
+
+    xnlock_get_irqsave(&nklock, s);
+
+    err = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
+
+    if(err)
+        goto unlock_and_error;
+
+    mq = node2mq(pse51_desc_node(desc));
+
+    if (mq->target && mq->target != pse51_current_thread())
+        {
+        err = EBUSY;
+        goto unlock_and_error;
+        }
+
+    if (!evp || evp->sigev_notify == SIGEV_NONE)
+        /* Here, mq->target == pse51_current_thread() or NULL. */
+        mq->target = NULL;
+    else
+        {
+        mq->target = pse51_current_thread();
+        mq->si.info.si_signo = evp->sigev_signo;
+        mq->si.info.si_code = SI_MESGQ;
+        mq->si.info.si_value = evp->sigev_value;
+        }
+
+    xnlock_put_irqrestore(&nklock, s);
+    return 0;
+
+  unlock_and_error:
+    xnlock_put_irqrestore(&nklock, s);
+  error:
+    thread_set_errno(err);
+    return -1;
+}
+
 ssize_t mq_timedreceive(mqd_t fd,
                         char *__restrict__ buffer,
                         size_t len,
@@ -528,7 +592,7 @@ mqd_t mq_open(const char *name, int oflags, ...)
         }
 
     /* Here, we know that we must create a message queue. */
-    mq = xnmalloc(sizeof(*mq));
+    mq = (pse51_mq_t *) xnmalloc(sizeof(*mq));
     
     if(!mq)
         {

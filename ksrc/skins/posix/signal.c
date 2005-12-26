@@ -37,6 +37,33 @@ static xnlock_t pse51_infos_lock;
 #endif
 static xnpqueue_t pse51_infos_free_list;
 
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#define SIG_MAX_REQUESTS 64 /* Must be a ^2 */
+
+static int pse51_signals_apc;
+
+static struct pse51_signals_threadsq_t {
+    int in, out;
+    pthread_t thread [SIG_MAX_REQUESTS];
+} pse51_signals_threadsq [XNARCH_NR_CPUS];
+
+static void pse51_signal_schedule_request (pthread_t thread)
+{
+    int cpuid = rthal_processor_id(), reqnum;
+    struct pse51_signals_threadsq_t *rq = &pse51_signals_threadsq[cpuid];
+    spl_t s;
+
+    /* Signal the APC, to have it delegate signals to Linux. */
+    splhigh(s);
+    reqnum = rq->in;
+    rq->thread[reqnum] = thread;
+    rq->in = (reqnum + 1) & (SIG_MAX_REQUESTS - 1);
+    splexit(s);
+
+    rthal_apc_schedule(pse51_signals_apc);
+}
+#endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE*/
+
 static pse51_siginfo_t *pse51_new_siginfo (int sig, int code, union sigval value)
 {
     xnpholder_t *holder;
@@ -54,7 +81,7 @@ static pse51_siginfo_t *pse51_new_siginfo (int sig, int code, union sigval value
     si->info.si_signo = sig;
     si->info.si_code = code;
     si->info.si_value = value;
-    
+
     return si;
 }
 
@@ -148,10 +175,10 @@ int sigaddset (sigset_t *user_set, int sig)
     pse51_sigset_t *set = user2pse51_sigset(user_set);
     
     if ((unsigned ) (sig - 1) > SIGRTMAX - 1)
-	{
+        {
         thread_set_errno(EINVAL);
         return -1;
-	}
+        }
 
     addset(set, sig);
 
@@ -164,10 +191,10 @@ int sigdelset (sigset_t *user_set, int sig)
     pse51_sigset_t *set = user2pse51_sigset(user_set);
     
     if ((unsigned ) (sig - 1) > SIGRTMAX - 1)
-	{
+        {
         thread_set_errno(EINVAL);
         return -1;
-	}
+        }
 
     delset(set, sig);
 
@@ -180,10 +207,10 @@ int sigismember (const sigset_t *user_set, int sig)
     pse51_sigset_t *set=user2pse51_sigset(user_set);
 
     if ((unsigned ) (sig - 1) > SIGRTMAX - 1)
-	{
+        {
         thread_set_errno(EINVAL);
         return -1;
-	}
+        }
 
     return ismember(set,sig);
 }
@@ -214,11 +241,7 @@ void pse51_sigqueue_inner (pthread_t thread, pse51_siginfo_t *si)
         }
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    /* POSIX shadow signals ping: in order to send a signal to a user-space
-       POSIX thread, we get it back to primary mode. */
-    if (testbits(thread->threadbase.status, XNRELAX) &&
-         xnthread_user_task(&thread->threadbase))
-        xnshadow_suspend(&thread->threadbase);
+    pse51_signal_schedule_request(thread);
 #endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE*/
 
     if (thread == pse51_current_thread()
@@ -292,16 +315,16 @@ int sigaction (int sig, const struct sigaction *action, struct sigaction *old)
     xnpod_check_context(XNPOD_THREAD_CONTEXT);
 
     if ((unsigned) (sig - 1) > SIGRTMAX - 1)
-	{
+        {
         thread_set_errno(EINVAL);
         return -1;
-	}
+        }
 
     if (action && testbits(action->sa_flags, ~SIGACTION_FLAGS))
-	{
+        {
         thread_set_errno(ENOTSUP);
         return -1;
-	}
+        }
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -309,14 +332,14 @@ int sigaction (int sig, const struct sigaction *action, struct sigaction *old)
         *old = actions[sig - 1];
 
     if (action)
-	{
+        {
         struct sigaction *dest_action = &actions[sig - 1];
             
         *dest_action = *action;
 
         if (!(testbits(action->sa_flags, SA_NOMASK)))
             addset(user2pse51_sigset(&dest_action->sa_mask), sig);
-	}
+        }
 
     xnlock_put_irqrestore(&nklock, s);
 
@@ -342,10 +365,10 @@ int sigqueue (pthread_t thread, int sig, union sigval value)
     xnlock_get_irqsave(&nklock, s);    
 
     if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC,struct pse51_thread))
-	{
+        {
         xnlock_put_irqrestore(&nklock, s);
         return ESRCH;
-	}
+        }
 
     if (sig)
         pse51_sigqueue_inner(thread, si);
@@ -374,10 +397,10 @@ int pthread_kill (pthread_t thread, int sig)
     xnlock_get_irqsave(&nklock, s);    
 
     if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC,struct pse51_thread))
-	{
+        {
         xnlock_put_irqrestore(&nklock, s);
         return ESRCH;
-	}
+        }
 
     if (sig)
         pse51_sigqueue_inner(thread, si);
@@ -427,39 +450,39 @@ int pthread_sigmask (int how, const sigset_t *user_set, sigset_t *user_oset)
         *oset = cur->sigmask;
 
     if (!set)
-	goto unlock_and_exit;
+        goto unlock_and_exit;
 
     if (xnthread_signaled_p(&cur->threadbase))
-	/* Call xnpod_schedule to deliver any soon-to-be-blocked pending
+        /* Call xnpod_schedule to deliver any soon-to-be-blocked pending
            signal, after this call, no signal is pending. */
-	xnpod_schedule();
+        xnpod_schedule();
 
     switch (how)
-	{
+        {
 
-	case SIG_BLOCK:
+        case SIG_BLOCK:
 
-	    orset(&cur->sigmask, &cur->sigmask, set);
-	    break;
+            orset(&cur->sigmask, &cur->sigmask, set);
+            break;
 
-	case SIG_UNBLOCK:
-	    /* Mark as pending any signal which was received while
-	       blocked and is going to be unblocked. */
+        case SIG_UNBLOCK:
+            /* Mark as pending any signal which was received while
+               blocked and is going to be unblocked. */
             andset(&unblocked, set, &cur->blocked_received.mask);
             nandset(&cur->sigmask, &cur->pending.mask, &unblocked);
-	    break;
+            break;
 
-	case SIG_SETMASK:
+        case SIG_SETMASK:
 
             nandset(&unblocked, &cur->blocked_received.mask, set);
             cur->sigmask = *set;
-	    break;
+            break;
 
-	default:
+        default:
 
-	    xnlock_put_irqrestore(&nklock, s);
-	    return EINVAL;
-	}
+            xnlock_put_irqrestore(&nklock, s);
+            return EINVAL;
+        }
         
     /* Handle any unblocked signal. */
     if (!isemptyset(&unblocked))
@@ -485,7 +508,7 @@ int pthread_sigmask (int how, const sigset_t *user_set, sigset_t *user_oset)
         /* Let pse51_dispatch_signals do the job. */
         if (cur->threadbase.signals)
             xnpod_schedule();
-	}
+        }
 
  unlock_and_exit:
 
@@ -519,7 +542,7 @@ static int pse51_sigtimedwait_inner (const sigset_t *user_set,
     received = pse51_getsigq(&thread->blocked_received, set, NULL);
     
     if (!received)
-	{
+        {
         err = clock_adjust_timeout(&to, CLOCK_MONOTONIC);
 
         if (err)
@@ -543,7 +566,7 @@ static int pse51_sigtimedwait_inner (const sigset_t *user_set,
             }
         else if (xnthread_test_flags(&thread->threadbase, XNTIMEO))
             err = EAGAIN;
-	}
+        }
 
     if (!err)
         {
@@ -552,6 +575,7 @@ static int pse51_sigtimedwait_inner (const sigset_t *user_set,
             pse51_delete_siginfo(received);
         else if (si->si_code == SI_TIMER)
             pse51_timer_notified(received);
+        /* Nothing to be done for SI_MESQ. */
         }
 
   unlock_and_ret:
@@ -664,6 +688,8 @@ static void pse51_dispatch_signals (xnsigmask_t sigs)
         if (si->info.si_code == SI_QUEUE || si->info.si_code == SI_USER)
             pse51_delete_siginfo(si);
 
+        /* Nothing to be done for SI_MESQ. */
+
         if (action->sa_handler != SIG_IGN)
             {
             siginfo_handler_t *info_handler =
@@ -686,7 +712,7 @@ static void pse51_dispatch_signals (xnsigmask_t sigs)
 
         if (!next)
             break;
-	}
+        }
 
     thread->sigmask = saved_mask;
     thread->threadbase.signals = 0;
@@ -695,60 +721,61 @@ static void pse51_dispatch_signals (xnsigmask_t sigs)
 }
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-/* The way signals are handled for shadows has not much in common with the way
-   they are handled for kernel-space threads. We hence use a different
-   function. */
 static void pse51_dispatch_shadow_signals (xnsigmask_t sigs)
 {
-    pse51_siginfo_t *si;
-    pthread_t thread;
-    spl_t ignored;
-
-    thread = pse51_current_thread();
-    
-    __setbits(thread->threadbase.status, XNASDI);
-
-    /* POSIX shadow signals pong: to get the signals dispatch function executed,
-       we migrated the shadow to primary mode, we are going to migrate back to
-       secondary mode in order to get the signals delivered by Linux.
-       Release the big lock, we do not want to hold it during migration.
-    */
-    xnlock_clear_irqon(&nklock);
+    /* Migrate to secondary mode in order to get the signals delivered by
+       Linux. */
     xnshadow_relax(1);
+}
 
-    xnlock_get_irqsave(&nklock, ignored);
-    
-    thread->threadbase.signals = 0;
+static void pse51_signal_handle_request (void *cookie)
+{
+    int cpuid = smp_processor_id(), reqnum;
+    struct pse51_signals_threadsq_t *rq = &pse51_signals_threadsq[cpuid];
 
-    while ((si = pse51_getsigq(&thread->pending,
-                               &thread->pending.mask,
-                               NULL)))
+    while ((reqnum = rq->out) != rq->in)
         {
-        siginfo_t info = si->info;
-
-        if (si->info.si_code == SI_TIMER)
-            pse51_timer_notified(si);
+        pthread_t thread = rq->thread[reqnum];
+        pse51_siginfo_t *si;
+        spl_t s;
         
-        if (si->info.si_code == SI_QUEUE || si->info.si_code == SI_USER)
-            pse51_delete_siginfo(si);
+        rq->out = (reqnum + 1) & (SIG_MAX_REQUESTS - 1);
 
-        /* Release the big lock, before calling a function which may
-           reschedule. */
-        xnlock_clear_irqon(&nklock);
-
-        send_sig_info(info.si_signo, &info, current);
-
-        xnlock_get_irqsave(&nklock, ignored);
+        xnlock_get_irqsave(&nklock, s);
 
         thread->threadbase.signals = 0;
+
+        while ((si = pse51_getsigq(&thread->pending,
+                                   &thread->pending.mask,
+                                   NULL)))
+            {
+            siginfo_t info = si->info;
+                
+            if (si->info.si_code == SI_TIMER)
+                pse51_timer_notified(si);
+            
+            if (si->info.si_code == SI_QUEUE || si->info.si_code == SI_USER)
+                pse51_delete_siginfo(si);
+            /* Nothing to be done for SI_MESQ. */
+
+            /* Release the big lock, before calling a function which may
+               reschedule. */
+            xnlock_put_irqrestore(&nklock, s);
+            
+            send_sig_info(info.si_signo,
+                          &info,
+                          xnthread_user_task(&thread->threadbase));
+
+            xnlock_get_irqsave(&nklock, s);
+            
+            thread->threadbase.signals = 0;
+            }
+
+        xnlock_put_irqrestore(&nklock, s);
         }
-
-    __clrbits(thread->threadbase.status, XNASDI);
-
-    return;
 }
 #endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE*/
-    
+
 void pse51_signal_init_thread (pthread_t newthread, const pthread_t parent)
 
 {
@@ -790,6 +817,8 @@ void pse51_signal_cleanup_thread (pthread_t thread)
             
             if (si->info.si_code == SI_QUEUE || si->info.si_code == SI_USER)
                 pse51_delete_siginfo(si);
+
+            /* Nothing to be done for SI_MESQ. */
             }
 
         queue = (queue == &thread->pending ? &thread->blocked_received : NULL);
@@ -807,11 +836,20 @@ void pse51_signal_pkg_init (void)
         pse51_delete_siginfo(&pse51_infos_pool[i]);
 
     for (i = 1; i <= SIGRTMAX; i++)
-	{
+        {
         actions[i-1].sa_handler = SIG_DFL;
         emptyset(user2pse51_sigset(&actions[i-1].sa_mask));
         actions[i-1].sa_flags = 0;
-	}
+        }
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    pse51_signals_apc = rthal_apc_alloc("posix_signals_handler",
+                                        &pse51_signal_handle_request,
+                                        NULL);
+
+    if (pse51_signals_apc < 0)
+        printk("Unable to allocate APC: %d !\n", pse51_signals_apc);
+#endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE*/
 }
 
 void pse51_signal_pkg_cleanup (void)
@@ -825,6 +863,10 @@ void pse51_signal_pkg_cleanup (void)
             xnprintf("Posix siginfo structure %p was not freed, freeing now.\n",
                      &pse51_infos_pool[i].info);
 #endif /* CONFIG_XENO_OPT_DEBUG */
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    rthal_apc_free(pse51_signals_apc);
+#endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE*/
 }
 
 static void pse51_default_handler (int sig)

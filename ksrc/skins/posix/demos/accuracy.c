@@ -48,18 +48,18 @@ void *threadA (void *arg)
     pthread_setschedparam(pthread_self(),SCHED_FIFO,&param);
 
     for (;;)
-	{
+        {
         while (sem_wait(&semA) == -1)
-	    if (errno != EINTR)
-		pthread_exit(NULL);
+            if (errno != EINTR)
+                pthread_exit(NULL);
 
-	ts.tv_sec = 0;
-	ts.tv_nsec = sampling_period * 1000;
+        ts.tv_sec = 0;
+        ts.tv_nsec = sampling_period * 1000;
         get_time_us(&t0);
-	clock_nanosleep(CLOCK_MONOTONIC,0,&ts,NULL);
+        clock_nanosleep(CLOCK_MONOTONIC,0,&ts,NULL);
         get_time_us(&t1);
-	sem_post(semB);
-	}
+        sem_post(semB);
+        }
 
     pthread_exit(NULL);
 }
@@ -82,31 +82,31 @@ void *threadB (void *arg)
     start_time = time(NULL);
 
     for (;;)
-	{
-	sem_post(&semA);
-
+        {
+        sem_post(&semA);
+    
         while (sem_wait(semB) == -1)
-	    if (errno != EINTR)
-		pthread_exit(NULL);
+            if (errno != EINTR)
+                pthread_exit(NULL);
 
         get_time_us(&t2);
-	
-	dt = t2 - t1;
+        
+        dt = t2 - t1;
 
-	if (tschedmin > dt)
-	    tschedmin = dt;
+        if (tschedmin > dt)
+            tschedmin = dt;
 
-	if (tschedmax < dt)
-	    tschedmax = dt;
+        if (tschedmax < dt)
+            tschedmax = dt;
 
-	dt = t1 - t0;
+        dt = t1 - t0;
 
-	if (tsleepmin > dt)
-	    tsleepmin = dt;
+        if (tsleepmin > dt)
+            tsleepmin = dt;
 
-	if (tsleepmax < dt)
-	    tsleepmax = dt;
-	}
+        if (tsleepmax < dt)
+            tsleepmax = dt;
+        }
 
     pthread_exit(NULL);
 }
@@ -136,11 +136,11 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
     dt = end_time - start_time;
     
     printf("   test duration: %.2ld:%.2ld:%.2ld\n",
-	   dt / 3600,(dt / 60) % 60,dt % 60);
+           dt / 3600,(dt / 60) % 60,dt % 60);
     printf("   nanosleep accuracy: jitter min = %ld us, jitter max = %ld us\n",
-	   tsleepmin-sampling_period,tsleepmax-sampling_period);
+           tsleepmin-sampling_period,tsleepmax-sampling_period);
     printf("   semaphore wakeup: switch min = %ld us, switch max = %ld us\n",
-	   tschedmin,tschedmax);
+           tschedmin,tschedmax);
 
     /* exit will call cleanup, registered with atexit. */
     exit(EXIT_SUCCESS);
@@ -159,13 +159,13 @@ int main (int argc, char **argv)
 
     while ((c = getopt(argc,argv,"p:")) != EOF)
         switch (c)
-	    {
-	    case 'p':
+            {
+            case 'p':
 
-		sampling_period = atoi(optarg);
+                sampling_period = atoi(optarg);
 
-		if (sampling_period > 0)
-		    break;
+                if (sampling_period > 0)
+                    break;
 
             default:
 
@@ -173,7 +173,7 @@ int main (int argc, char **argv)
                         "  [-p <period_us>]             # sampling period\n",
                         argv[0]);
                 exit(2);
-	    }
+            }
 
     time(&now);
 
@@ -205,7 +205,7 @@ int main (int argc, char **argv)
     err = pthread_create(&thidA,&thattrA,&threadA,NULL);
 
     if (err)
-	goto fail;
+        goto fail;
 
     pthread_attr_init(&thattrB);
     pthread_attr_setdetachstate(&thattrB,PTHREAD_CREATE_DETACHED);
@@ -215,7 +215,7 @@ int main (int argc, char **argv)
     err = pthread_create(&thidB,&thattrB,&threadB,NULL);
 
     if (err)
-	goto fail;
+        goto fail;
 
     pause();
 

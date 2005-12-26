@@ -16,11 +16,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#include <fcntl.h>              /* For O_CREAT. */
+#include <stdlib.h>             /* For malloc & free. */
 #include <stdarg.h>
 #include <errno.h>
+#include <fcntl.h>              /* For O_CREAT. */
 #include <xenomai/posix/syscall.h>
-#include "posix/semaphore.h"
+#include <posix/semaphore.h>
 
 extern int __pse51_muxid;
 
@@ -144,9 +145,9 @@ int __wrap_sem_getvalue (sem_t *sem, int *sval)
 
 sem_t *__wrap_sem_open (const char *name, int oflags, ...)
 {
-    unsigned long handle;
     unsigned value = 0;
     mode_t mode = 0;
+    sem_t *sem;
     va_list ap;
     int err;
 
@@ -158,18 +159,28 @@ sem_t *__wrap_sem_open (const char *name, int oflags, ...)
         va_end(ap);
         }
 
+    sem = (sem_t *) malloc(sizeof(*sem));
+
+    if (!sem)
+        {
+        err = ENOSPC;
+        goto error;
+        }
+
     err = -XENOMAI_SKINCALL5(__pse51_muxid,
                              __pse51_sem_open,
-                             &handle,
+                             sem,
                              name,
                              oflags,
                              mode,
                              value);
+
     if (!err)
-        return (sem_t *) handle;
-
+        return sem;
+    
+    free(sem);
+  error:
     errno = err;
-
     return SEM_FAILED;
 }
 

@@ -75,6 +75,7 @@
 #define __pse51_sem_close             49
 #define __pse51_sem_unlink            50
 #define __pse51_sem_timedwait         51
+#define __pse51_mq_notify             52
 
 #ifdef __KERNEL__
 
