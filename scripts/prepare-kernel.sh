@@ -109,7 +109,7 @@ while : ; do
       ;;
    bfin|bfinnommu|blackfin)
       linux_arch=bfinnommu
-      xenomai_arch=bfinnommu
+      xenomai_arch=blackfin
       ;;
    *)
       echo "$me: unsupported architecture: $linux_arch"

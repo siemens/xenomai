@@ -20520,7 +20520,7 @@ case "$host" in
 	XENO_TARGET_ARCH=ia64
         ;;
  bfin-*|bfinnommu-*|blackfin-*)
-	XENO_TARGET_ARCH=bfinnommu
+	XENO_TARGET_ARCH=blackfin
 	if test x$enable_shared = xyes; then
 	   { { echo "$as_me:$LINENO: error: Shared libraries unsupported -- reconfigure passing --disable-shared" >&5
 echo "$as_me: error: Shared libraries unsupported -- reconfigure passing --disable-shared" >&2;}
@@ -21386,7 +21386,7 @@ case $XENO_TARGET_ARCH in
  ia64)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
         ;;
- bfinnommu)
+ blackfin)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
 	# uClinux wants flat format executables; assume that our
 	# source format is ELF.
@@ -21429,7 +21429,7 @@ base=asm-generic
           ac_config_links="$ac_config_links src/include/$base/xenomai:include/$base"
 
 
-                                                                                                                                                                                                                                                                                                                                                                                                      ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno-load scripts/xeno-test src/Makefile src/nucleus/Makefile src/skins/Makefile src/skins/uvm/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/psos+/Makefile src/skins/uitron/Makefile src/skins/vrtx/Makefile src/skins/vxworks/Makefile src/skins/rtdm/Makefile src/skins/rtai/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/switch/Makefile include/Makefile include/asm-generic/Makefile include/asm-bfinnommu/Makefile include/asm-i386/Makefile include/asm-powerpc/Makefile include/asm-ia64/Makefile include/asm-uvm/Makefile include/asm-sim/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/psos+/Makefile include/rtai/Makefile include/rtdm/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
+                                                                                                                                                                                                                                                                                                                                                                                                      ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno-load scripts/xeno-test src/Makefile src/nucleus/Makefile src/skins/Makefile src/skins/uvm/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/psos+/Makefile src/skins/uitron/Makefile src/skins/vrtx/Makefile src/skins/vxworks/Makefile src/skins/rtdm/Makefile src/skins/rtai/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/switch/Makefile include/Makefile include/asm-generic/Makefile include/asm-blackfin/Makefile include/asm-i386/Makefile include/asm-powerpc/Makefile include/asm-ia64/Makefile include/asm-uvm/Makefile include/asm-sim/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/psos+/Makefile include/rtai/Makefile include/rtdm/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x; then
@@ -22055,7 +22055,7 @@ do
   "src/testsuite/switch/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/testsuite/switch/Makefile" ;;
   "include/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
   "include/asm-generic/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-generic/Makefile" ;;
-  "include/asm-bfinnommu/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-bfinnommu/Makefile" ;;
+  "include/asm-blackfin/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-blackfin/Makefile" ;;
   "include/asm-i386/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-i386/Makefile" ;;
   "include/asm-powerpc/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-powerpc/Makefile" ;;
   "include/asm-ia64/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-ia64/Makefile" ;;

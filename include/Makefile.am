@@ -2,7 +2,7 @@ nodist_include_HEADERS=$(CONFIG_HEADER)
 
 SUBDIRS = \
 	asm-generic \
-	asm-bfinnommu \
+	asm-blackfin \
 	asm-i386 \
 	asm-ia64 \
 	asm-powerpc \
