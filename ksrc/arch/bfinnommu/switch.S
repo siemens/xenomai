@@ -25,6 +25,7 @@
 /*
  * Switch context routine for kernel-based Xenomai threads.
  * Simple and easy: we basically see kernel threads as co-routines.
+ * We protect all caller-saved registers across switches.
  *
  * void rthal_kcontext_switch(unsigned long *out_kspp, unsigned long *in_kspp)
  */
@@ -32,6 +33,7 @@ ENTRY(rthal_kcontext_switch)
 
 	p0 = r0;
 	p1 = r1;
+	[--sp] = ( R7:4, P5:3 );
 	[--sp] = rets;
 	[--sp] = fp;
 	[--sp] = r0;
@@ -43,6 +45,7 @@ ENTRY(rthal_kcontext_switch)
 	r0 = [sp++];
 	fp = [sp++];
 	rets = [sp++];
+	( R7:4, P5:3 ) = [sp++];
 	rts;
 
 /*
@@ -101,11 +104,3 @@ ENTRY(rthal_nmi_handler)
 	rtn; 
 		
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX */
-
-ENTRY(rthal_get_ipend)
-
-	p2.l = lo(IPEND);
-        p2.h = hi(IPEND);
-	csync;
-        r0 = [p2];
-	rts

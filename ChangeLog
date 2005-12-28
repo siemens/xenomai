@@ -1,3 +1,13 @@
+2005-12-28  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/bfinnommu: Finalize support for the Blackfin
+	architecture.
+
+2005-12-27  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/bfinnommu/switch.S (rthal_kcontext_switch): Protect
+	caller-saved registers across switch.
+
 2005-12-16  Jan Kiszka  <jan.kiszka@web.de>
 
 	* src/skins/rtdm: Let applications start even if the kernel

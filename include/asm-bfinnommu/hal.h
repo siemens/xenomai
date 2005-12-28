@@ -149,7 +149,7 @@ void rthal_nmi_disarm(void);
 
 static inline void rthal_timer_program_shot (unsigned long delay)
 {
-    if (!delay) delay = 10;
+    if (delay < 2) delay = 10;
     *pTCOUNT = delay - 1;
     __builtin_bfin_csync();
     *pTCNTL = 3; /* Oneshot mode, no auto-reload. */
