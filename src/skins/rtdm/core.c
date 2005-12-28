@@ -18,6 +18,7 @@
 
 #include <stdarg.h>
 #include <stddef.h>
+#include <errno.h>
 
 #include <xenomai/rtdm/rtdm.h>
 #include <xenomai/rtdm/syscall.h>
@@ -27,19 +28,25 @@ extern int __rtdm_muxid;
 
 int rt_dev_open(const char *path, int oflag, ...)
 {
-  return XENOMAI_SKINCALL2( __rtdm_muxid,
-                            __rtdm_open,
-                            path,
-                            oflag);
+    if (__rtdm_muxid < 0)
+        return -ENODEV;
+
+    return XENOMAI_SKINCALL2( __rtdm_muxid,
+                              __rtdm_open,
+                              path,
+                              oflag);
 }
 
 int rt_dev_socket(int protocol_family, int socket_type, int protocol)
 {
-  return XENOMAI_SKINCALL3( __rtdm_muxid,
-                            __rtdm_socket,
-                            protocol_family,
-                            socket_type,
-                            protocol);
+    if (__rtdm_muxid < 0)
+        return -EAFNOSUPPORT;
+
+    return XENOMAI_SKINCALL3( __rtdm_muxid,
+                              __rtdm_socket,
+                              protocol_family,
+                              socket_type,
+                              protocol);
 }
 
 int rt_dev_close(int fd)
