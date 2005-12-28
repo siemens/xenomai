@@ -128,6 +128,13 @@ if test "$xenomai_arch" = powerpc -a -d $linux_tree/arch/powerpc; then
    linux_arch=powerpc
 fi
 
+# Post-2005R3 blackfin kernels use "blackfin" instead of "bfinnommu":
+# canonicalize if needed.
+
+if test "$xenomai_arch" = blackfin -a -d $linux_tree/arch/blackfin; then
+   linux_arch=blackfin
+fi
+
 eval linux_`grep '^EXTRAVERSION =' $linux_tree/Makefile | sed -e 's, ,,g'`
 eval linux_`grep '^PATCHLEVEL =' $linux_tree/Makefile | sed -e 's, ,,g'`
 eval linux_`grep '^SUBLEVEL =' $linux_tree/Makefile | sed -e 's, ,,g'`
