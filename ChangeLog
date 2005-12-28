@@ -1,11 +1,11 @@
 2005-12-28  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/arch/bfinnommu: Finalize support for the Blackfin
+	* ksrc/arch/blackfin: Finalize support for the Blackfin
 	architecture.
 
 2005-12-27  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/arch/bfinnommu/switch.S (rthal_kcontext_switch): Protect
+	* ksrc/arch/blackfin/switch.S (rthal_kcontext_switch): Protect
 	caller-saved registers across switch.
 
 2005-12-16  Jan Kiszka  <jan.kiszka@web.de>
@@ -47,7 +47,7 @@
 
 2005-12-14  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/arch/bfinnommu/hal.c: Use the Blackfin core timer as the
+	* ksrc/arch/blackfin/hal.c: Use the Blackfin core timer as the
 	only time source for all modes.
 
 	* src/skins/native/task.c: Compile message-passing support
@@ -58,7 +58,7 @@
 
 2005-12-12  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/arch/bfinnommu/nmi.c: Add NMI watchdog support.
+	* ksrc/arch/blackfin/nmi.c: Add NMI watchdog support.
 
 	* ksrc/nucleus/shadow.c (do_schedule_event): Do not trigger a
 	fatal error for unstarted Xenomai shadows. A Linux preemption
@@ -91,7 +91,7 @@
  
 2005-12-07  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/arch/bfinnommu/hal.c (rthal_timer_release): Properly stop
+	* ksrc/arch/blackfin/hal.c (rthal_timer_release): Properly stop
 	the running aperiodic timer using the associated TRUN bit.
 
 2005-12-07  Heikki Lindholm <holindho@cs.helsinki.fi>
@@ -111,7 +111,7 @@
 
 2005-12-04  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/arch/bfinnommu/switch.S (rthal_defer_switch_p): Add
+	* ksrc/arch/blackfin/switch.S (rthal_defer_switch_p): Add
 	predicate to check for any pending syscall event.
 
 	* ksrc/nucleus/shadow.c (do_hisyscall_event): Check for a
@@ -131,45 +131,45 @@
 
 2005-12-03  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/arch/bfinnommu/switch.S (rthal_ucontext_switch): Rewrite
+	* ksrc/arch/blackfin/switch.S (rthal_ucontext_switch): Rewrite
 	user-space context switch routine as plain assembly code.
 
 2005-12-02  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/arch/bfinnommu/hal.c (rthal_timer_ack): Acknowledge timer
+	* ksrc/arch/blackfin/hal.c (rthal_timer_ack): Acknowledge timer
 	interrupts immediately from the Adeos prologue.
 
-	* ksrc/arch/bfinnommu/switch.S: Improved context switch routine
+	* ksrc/arch/blackfin/switch.S: Improved context switch routine
 	for kernel threads; well, basically, this one works.
 
-	* include/asm-bfinnommu/system.h (xnarch_init_thread): Update
+	* include/asm-blackfin/system.h (xnarch_init_thread): Update
 	bootstrap code for new context switch code.
 
 	* ksrc/nucleus/intr.c, include/asm-*/system.h
 	(xnarch_announce_tick): Provide for arch-dependent clock tick
 	clearance.
 
-	* ksrc/arch/bfinnommu/hal.c (rthal_arch_init): Define
+	* ksrc/arch/blackfin/hal.c (rthal_arch_init): Define
 	RTHAL_TIMER_FREQ as SCLK frequency.
 
-	* include/asm-bfinnommu/system.h (xnarch_program_timer_shot):
+	* include/asm-blackfin/system.h (xnarch_program_timer_shot):
 	Convert CCLK to SCLK units.
 	
-	* include/asm-bfinnommu/hal.h (__rthal_u64fromu32,
+	* include/asm-blackfin/hal.h (__rthal_u64fromu32,
 	__rthal_u64tou32): Fix endianness issue.
 
 2005-12-01  Philippe Gerum  <rpm@xenomai.org>
 
-	* include/asm-bfinnommu/system.h (xnarch_switch_to): Protect all
+	* include/asm-blackfin/system.h (xnarch_switch_to): Protect all
 	caller-saved registers across user-space switches.
 
 	* configure.in, src/testsuite, scripts/xeno-config.in: Introduce
 	*USER_LDFLAGS so that we can ask for flat executables when linking
 	for uClinux.
 
-	* ksrc/bfinnommu/hal.c: Implement timer support.
+	* ksrc/blackfin/hal.c: Implement timer support.
 
-	* include/asm-bfinnommu/syscall.h: Finalize for user-space build.
+	* include/asm-blackfin/syscall.h: Finalize for user-space build.
 
 	* ksrc/skins/rtai/task.c (rt_task_init): Make proper cleanup upon
 	xnpod_start_thread() failure.
@@ -182,7 +182,7 @@
 
 	* ksrc/nucleus/pod.c (xnpod_delete_thread): Prevent double-deletion.
 
-	* ksrc/arch/bfinnommu, include/asm-bfinnommu: Finalize groundwork
+	* ksrc/arch/blackfin, include/asm-blackfin: Finalize groundwork
 	for the Blackfin port.
 
 	* ksrc/nucleus/heap.c: Provide support for !CONFIG_MMU.
@@ -334,7 +334,7 @@
 
 2005-11-18  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/arch/bfinnommu, include/asm-bfinnommu: Add preliminary
+	* ksrc/arch/blackfin, include/asm-blackfin: Add preliminary
 	support for the Blackfin DSP architecture. Based on a uClinux port
 	from ADS (http://blackfin.uclinux.org/).
 
