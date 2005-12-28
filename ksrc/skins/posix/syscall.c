@@ -1296,9 +1296,7 @@ int __mq_timedreceive (struct task_struct *curr, struct pt_regs *regs)
 int __mq_notify (struct task_struct *curr, struct pt_regs *regs)
 {
     struct sigevent sev;
-    timer_t tm;
     mqd_t q;
-    int rc;
 
     if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(sev)))
         return -EFAULT;

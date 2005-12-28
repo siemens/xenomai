@@ -468,12 +468,12 @@ int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
 int mq_notify(mqd_t fd, const struct sigevent *evp)
 {
     pse51_desc_t *desc;
-    spl_t s, ignored;
     pse51_mq_t *mq;
     int err;
+    spl_t s;
 
-    if (evp && (evp->sigev_notify != SIGEV_SIVNAL &&
-                evp->sigev_notify != SIGEV_NONE ||
+    if (evp && ((evp->sigev_notify != SIGEV_SIGNAL &&
+		 evp->sigev_notify != SIGEV_NONE) ||
                 (unsigned) (evp->sigev_signo - 1) > SIGRTMAX - 1))
         {
         err = EINVAL;
