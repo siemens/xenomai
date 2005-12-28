@@ -234,11 +234,6 @@ static inline int xnarch_escalate (void)
 {
     extern int xnarch_escalation_virq;
 
-    if (rthal_current_domain == rthal_root_domain) {
-        rthal_trigger_irq(xnarch_escalation_virq);
-        return 1;
-    }
-
     /* The following Blackfin-specific check is likely the most
      * braindamage stuff we need to do for this arch, i.e. deferring
      * Xenomai's rescheduling procedure whenever:
@@ -261,13 +256,19 @@ static inline int xnarch_escalate (void)
      * the latter case, the preempted kernel code will be diverted
      * shortly before resumption in order to run the rescheduling
      * procedure (see __ipipe_irq_tail trampoline).
-     *
-     * These additional checks must be performed _after_ the one for
-     * domain escalation.
-    */
+     */
 
-    if (rthal_defer_switch_p())
+    if (rthal_defer_switch_p()) {
+	__ipipe_lock_root();
 	return 1;
+    }
+
+    __ipipe_unlock_root();
+
+    if (rthal_current_domain == rthal_root_domain) {
+        rthal_trigger_irq(xnarch_escalation_virq);
+        return 1;
+    }
 
     return 0;
 }
@@ -452,7 +453,6 @@ static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask)
 
 static inline void xnarch_relay_tick (void)
 {
-    rthal_irq_host_pend(IRQ_CORETMR);
 }
 
 static inline void xnarch_announce_tick(void)
