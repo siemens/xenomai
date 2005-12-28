@@ -110,6 +110,13 @@ Options that need perfect matching between both sides are marked as
 on a case-by-case basis, depending on the option considered. When
 not applicable, the binding type remains unspecified.
 
+For instance, a kernel providing SMP support can run either UP or SMP
+user-space applications since the SMP option's binding is weak. On the
+other hand, x86-based applications linked against Xenomai libraries
+which have been compiled with the x86-tsc option on, must run on a
+kernel built with CONFIG_X86_TSC set, since the x86-tsc option's
+binding is strong.
+
 1.3.2 Generic options
 ---------------------
 
@@ -133,16 +140,18 @@ NAME                DESCRIPTION                      [BINDING,]DEFAULT(*)
 (*) Each option enabled by default can be forcibly disabled by passing
 --disable-<option> to the configure script.
 
-2. Typical installation procedure
----------------------------------
-
-Let's say we want to build Xenomai for a Pentium-based x86 platform
-running a 2.6.14 kernel, using the native host toolchain; the typical
-steps would be as follows:
+2. Typical installation procedures
+----------------------------------
 
 # $linux_tree = path to the target kernel sources
 # $xenomai_root = path to the Xenomai sources
 # $build_root = path to a clean build directory
+
+2.1 Building for x86
+
+Let's say that we want to build Xenomai for a Pentium-based x86
+platform running a 2.6.14 kernel, using the native host toolchain; the
+typical steps would be as follows:
 
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=i386 \
   --adeos=$xenomai_root/ksrc/arch/i386/patches/adeos-ipipe-2.6.14-i386-X.Y-ZZ.patch \
@@ -157,3 +166,56 @@ $ make install
 Once the compilation has completed, /usr/xenomai should contain the
 user-space librairies and header files one would use to build
 applications that call Xenomai's real-time support in kernel space.
+
+The remaining examples illustrate how to cross-compile Xenomai for
+various architectures. Of course, you will have to install the proper
+cross-compilation toolchain for the target system first, in order to
+build Xenomai.
+
+2.2 Building for the PowerPC architecture
+
+A typical cross-compilation setup, in order to build Xenomai for a
+82xx-based system:
+
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=powerpc \
+  --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-ipipe-2.6.14-ppc-X.Y-ZZ.patch \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ make xconfig/gconfig/menuconfig # select the kernel and Xenomai options
+$ make bzImage modules # then install as needed
+$ mkdir $build_root && cd $build_root
+$ $xenomai_root/configure --build=i686-pc-linux-gnu --host=powerpc-unknown-linux-gnu CC=ppc_82xx-gcc CXX=ppc_82xx-gcc AR=ppc_82xx-ar LD=ppc_82xx-ld
+$ make install
+
+2.3 Building for the IPF
+
+A typical cross-compilation setup, in order to build Xenomai for an
+ia64 system:
+
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=powerpc \
+  --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-linux-2.6.11-ia64-rXcYY.patch \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ make xconfig/gconfig/menuconfig # select the kernel and Xenomai options
+$ make bzImage modules # then install as needed
+$ mkdir $build_root && cd $build_root
+$ $xenomai_root/configure --build=i686-pc-linux-gnu --host=ia64-unknown-linux-gnu CC=ia64-linux-gcc CXX=ia64-linux-gcc AR=ia64-linux-ar LD=ia64-linux-ld
+$ make install
+
+2.4 Building for the Blackfin
+
+The Blackfin is a MMU-less, DSP-type architecture running
+uClinux.
+
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=blackfin \
+  --adeos=$xenomai_root/ksrc/arch/blackfin/patches/adeos-ipipe-2.6.12-bf533-X.Y-ZZ.patch \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ make xconfig/gconfig/menuconfig # select the kernel and Xenomai options
+$ make bzImage modules # then install as needed
+$ mkdir $build_root && cd $build_root
+$ $xenomai_root/configure --build=i686-pc-linux-gnu --host=bfinnommu-unknown-linux-gnu CC=bfin-uclinux-gcc CXX=bfin-uclinux-gcc AR=bfin-uclinux-ar LD=bfin-uclinux-ld --disable-shared
+$ make install
+
+CAUTION: note the --disabled-shared flag configuring out the shared
+library support, which is unavailable for this architecture.
