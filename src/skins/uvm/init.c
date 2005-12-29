@@ -56,7 +56,7 @@ static __attribute__((constructor)) void __init_uvm_interface(void)
 	case -ESRCH:
 
 	    fprintf(stderr,"Xenomai: UVM skin or CONFIG_XENO_OPT_PERVASIVE disabled.\n");
-	    fprintf(stderr,"(modprobe xeno_uvm.ko?)\n");
+	    fprintf(stderr,"(modprobe xeno_uvm?)\n");
 	    exit(1);
 
 	default:

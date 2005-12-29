@@ -59,7 +59,7 @@ static __attribute__((constructor)) void __init_posix_interface(void)
 	case -ESRCH:
 
 	    fprintf(stderr,"Xenomai: POSIX skin or CONFIG_XENO_OPT_PERVASIVE disabled.\n");
-	    fprintf(stderr,"(modprobe xeno_posix.ko?)\n");
+	    fprintf(stderr,"(modprobe xeno_posix?)\n");
 	    exit(1);
 
 	default:
