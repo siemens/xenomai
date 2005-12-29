@@ -53,7 +53,7 @@ static __attribute__((constructor)) void __init_rtai_interface(void)
 	case -ESRCH:
 
 	    fprintf(stderr,"Xenomai: RTAI skin or CONFIG_XENO_OPT_PERVASIVE disabled.\n");
-	    fprintf(stderr,"(modprobe xeno_rtai.ko?)\n");
+	    fprintf(stderr,"(modprobe xeno_rtai?)\n");
 	    exit(1);
 
 	default:
