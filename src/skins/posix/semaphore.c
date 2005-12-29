@@ -193,7 +193,10 @@ int __wrap_sem_close (sem_t *sem)
                              sem);
 
     if (!err)
+        {
+        free(sem);
         return 0;
+        }
 
     errno = err;
 
