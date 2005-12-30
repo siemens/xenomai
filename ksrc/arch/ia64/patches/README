@@ -6,8 +6,8 @@ provide real-time services highly integrated with the standard Linux
 kernel.
 
 This support is provided by the Adeos real-time enabler [1], in the
-form of a kernel patch you have to apply to a vanilla kernel tree,
-before you attempt to compile the Xenomai codebase against the
+form of a kernel patch you have to apply against a vanilla kernel
+tree, before you attempt to compile the Xenomai codebase against the
 latter kernel.
 
 Apply one of the patches found in this directory to the corresponding
