@@ -104,8 +104,8 @@ exit). Since this particular operation is not synchronized with
 Xenomai's activity, some real-time task has probably referred to stale
 memory.
 
-The cure is simple: just make sure to stop all Xenomai activities
-before the tracedaemon exits.
+The cure is to upgrade your combo Adeos+LTT patch since this bug has
+now been fixed.
 
 ======================================================================
 
@@ -215,12 +215,17 @@ A: Xenomai sends this message if the kernel configuration Xenomai was
 
 ======================================================================
 
-                           PowerPC*
+                           PowerPC
 
 ======================================================================
 ======================================================================
 
                            ia64
+
+======================================================================
+======================================================================
+
+                           Blackfin
 
 ======================================================================
 ======================================================================
