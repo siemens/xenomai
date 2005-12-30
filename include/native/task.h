@@ -118,6 +118,12 @@ typedef struct rt_task {
 
     int overrun;
 
+    xnsynch_t safesynch; /* !< Safe synchronization object. */
+
+    u_long safelock;	 /* !< Safe lock count. */
+
+    u_long cstamp;	/* !< Creation stamp. */
+
     xnarch_cpumask_t affinity;
 
     union { /* Saved args for current synch. wait operation. */
@@ -151,7 +157,7 @@ typedef struct rt_task {
     xnsynch_t mrecv,
 	      msendq;
 
-    int flowgen;		/* !< FLow id. generator. */
+    int flowgen;		/* !< Flow id. generator. */
 #endif /* CONFIG_XENO_OPT_NATIVE_MPS */
 
 } RT_TASK;
@@ -166,6 +172,12 @@ static inline RT_TASK *thread2rtask (xnthread_t *t)
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+u_long __native_task_safe(void);
+
+u_long __native_task_unsafe(void);
+
+int __native_task_safewait(RT_TASK *task);
 
 int __native_task_pkg_init(void);
 
