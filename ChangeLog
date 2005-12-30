@@ -1,3 +1,17 @@
+2005-12-30  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/demos/accuracy.c (cleanup_upon_sig): Rework
+	program termination so as to avoid calling sem_post on closed
+	semaphores.
+
+	* src/skins/posix/semaphore.c (__wrap_sem_open): Return the
+	recorded pointer when called for a semaphore which was already
+	opened.
+
+	* ksrc/skins/posix/syscall.c (__sem_open),
+	  ksrc/skins/posix/sem.c (pse51_usem_open): Record user-space
+	addresses of posix named semaphores.
+
 2005-12-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/task.c (__native_task_safe): Implement

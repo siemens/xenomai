@@ -20,9 +20,11 @@ static int sampling_period = SPERIOD;
 static sem_t semA;
 
 suseconds_t t0, t1, t2, tschedmin = 99999999, tschedmax = -99999999,
-                        tsleepmin = 99999999, tsleepmax = -99999999;
+    tsleepmin = 99999999, tsleepmax = -99999999;
 
 time_t start_time;
+
+static volatile int finished = 0;
 
 static inline void get_time_us (suseconds_t *tp)
 
@@ -49,9 +51,14 @@ void *threadA (void *arg)
 
     for (;;)
         {
-        while (sem_wait(&semA) == -1)
-            if (errno != EINTR)
-                pthread_exit(NULL);
+        int err;
+        do
+            {
+            err = sem_wait(&semA);
+            if (finished || (err == -1 && errno != EINTR))
+                goto out;
+            }
+        while (err == -1 && errno == EINTR);
 
         ts.tv_sec = 0;
         ts.tv_nsec = sampling_period * 1000;
@@ -61,6 +68,8 @@ void *threadA (void *arg)
         sem_post(semB);
         }
 
+  out:
+    sem_close(semB);
     pthread_exit(NULL);
 }
 
@@ -77,17 +86,24 @@ void *threadB (void *arg)
         exit(EXIT_FAILURE);
         }
 
+    printf("semB: %p\n", semB);
+
     pthread_setschedparam(pthread_self(),SCHED_FIFO,&param);
 
     start_time = time(NULL);
 
     for (;;)
-        {
+        {           
+        int err;
         sem_post(&semA);
-    
-        while (sem_wait(semB) == -1)
-            if (errno != EINTR)
-                pthread_exit(NULL);
+       
+        do
+            {
+            err = sem_wait(semB);
+            if (finished || (err == -1 && errno != EINTR))
+                goto out;
+            }
+        while (err == -1 && errno == EINTR);
 
         get_time_us(&t2);
         
@@ -108,23 +124,15 @@ void *threadB (void *arg)
             tsleepmax = dt;
         }
 
+
+  out:
+    sem_close(semB);
     pthread_exit(NULL);
 }
 
 void cleanup(void)
 {
-    /* This is more a test than an example, in your application "sem_open" semB
-       only once and make it visible from threaA(), threadB() and cleanup(). */
-    sem_t *semB = sem_open(SEMB_NAME, 0);
-
-    if (semB != SEM_FAILED)
-        {
-        sem_close(semB);
-        sem_close(semB);
-        sem_close(semB);
-        sem_unlink(SEMB_NAME);
-        }
-
+    sem_unlink(SEMB_NAME);
     sem_destroy(&semA);
 }
 
@@ -132,6 +140,7 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
 
 {
     time_t end_time = time(NULL), dt;
+    sem_t *semB;
 
     dt = end_time - start_time;
     
@@ -142,8 +151,14 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
     printf("   semaphore wakeup: switch min = %ld us, switch max = %ld us\n",
            tschedmin,tschedmax);
 
-    /* exit will call cleanup, registered with atexit. */
-    exit(EXIT_SUCCESS);
+    /* This is more a test than an example, in your application "sem_open" semB
+       only once and make it visible from threaA(), threadB() and
+       cleanup_upon_sig(). */
+    semB = sem_open(SEMB_NAME, 0);
+    finished = 1;
+    sem_post(&semA);            /* Unblock threadA (preempt us). */
+    sem_post(semB);             /* Unblock threadB (preempt us). */
+    sem_close(semB);
 }
 
 int main (int argc, char **argv)
@@ -153,6 +168,7 @@ int main (int argc, char **argv)
     struct sched_param paramB = { .sched_priority = 99 };
     pthread_attr_t thattrA, thattrB;
     pthread_t thidA, thidB;
+    sigset_t mask, oldmask;
     struct timespec ts;
     time_t now;
     int err, c;
@@ -186,14 +202,24 @@ int main (int argc, char **argv)
     mlockall(MCL_CURRENT|MCL_FUTURE);
 
     atexit(cleanup);
-    
+
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGINT);
     signal(SIGINT, cleanup_upon_sig);
+    sigaddset(&mask, SIGTERM);
     signal(SIGTERM, cleanup_upon_sig);
+    sigaddset(&mask, SIGHUP);
     signal(SIGHUP, cleanup_upon_sig);
+
+    /* Block signals causing execution of the cleanup function, so that threadA
+       and threadB are created with these signal blocked. Calling sigsuspend()
+       from main will deterministically cause the signal handler to be executed
+       on the main thread. */
+    pthread_sigmask(SIG_BLOCK, &mask, &oldmask);
 
     if (sem_init(&semA,0,0))
         {
-        perror("sem_init");
+        perror("sem_init(semA)");
         exit(EXIT_FAILURE);
         }
 
@@ -217,11 +243,11 @@ int main (int argc, char **argv)
     if (err)
         goto fail;
 
-    pause();
+    sigsuspend(&oldmask);
 
     return 0;
 
- fail:
+  fail:
 
     fprintf(stderr,"failed to create threads: %s\n",strerror(err));
 

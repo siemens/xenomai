@@ -29,6 +29,7 @@
 #include <xenomai/posix/mq.h>
 #include <xenomai/posix/intr.h>
 #include <xenomai/posix/registry.h>     /* For PSE51_MAXNAME. */
+#include <xenomai/posix/sem.h>
 
 static int __muxid;
 
@@ -561,13 +562,21 @@ int __sem_destroy (struct task_struct *curr, struct pt_regs *regs)
 
 int __sem_open (struct task_struct *curr, struct pt_regs *regs)
 {
+    unsigned long handle, uaddr;
     char name[PSE51_MAXNAME];
-    unsigned long handle;
+    sem_t *sem, *usem;
     int oflags;
-    sem_t *sem;
     long len;
     
     if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg1(regs),sizeof(handle)))
+        return -EFAULT;
+
+    __xn_copy_from_user(curr,
+                        &usem,
+                        (void __user *)__xn_reg_arg1(regs),
+                        sizeof(usem));
+    
+    if (!__xn_access_ok(curr,VERIFY_WRITE,(void __user *)usem,sizeof(handle)))
         return -EFAULT;
 
     len = __xn_strncpy_from_user(curr,
@@ -594,17 +603,31 @@ int __sem_open (struct task_struct *curr, struct pt_regs *regs)
     if (sem == SEM_FAILED)
         return -thread_get_errno();
 
-    handle = (unsigned long) sem;
+    uaddr = pse51_usem_open(sem, curr->tgid, (unsigned long) usem);
 
-    __xn_copy_to_user(curr,
-                      (void __user *)__xn_reg_arg1(regs),
-                      &handle,
-                      sizeof(handle));
+    if (uaddr == (unsigned long) usem)
+        {
+        /* First binding by this process. */
+        handle = (unsigned long) sem;
+
+        __xn_copy_to_user(curr,
+                          (void __user *)usem,
+                          &handle,
+                          sizeof(handle));
+        }
+    else
+        /* Semaphore already bound by this process in user-space. */
+        __xn_copy_to_user(curr,
+                          (void __user *)__xn_reg_arg1(regs),
+                          &uaddr,
+                          sizeof(unsigned long));
+
     return 0;
 }
 
 int __sem_close (struct task_struct *curr, struct pt_regs *regs)
 {
+    int closed, err;
     sem_t *sem;
     
     if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(sem)))
@@ -612,10 +635,27 @@ int __sem_close (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,
                         &sem,
-                        (void __user*) __xn_reg_arg1(regs),
+                        (void __user *) __xn_reg_arg1(regs),
                         sizeof(sem));
 
-    return sem_close(sem) == 0 ? 0 : -thread_get_errno();
+    closed = pse51_usem_close(sem, curr->tgid);
+
+    if (closed < 0)
+        return closed;
+
+    err = sem_close(sem);
+
+    if (!err)
+        {
+        __xn_copy_to_user(curr,
+                          (void __user *) __xn_reg_arg2(regs),
+                          &closed,
+                          sizeof(int));
+
+        return 0;
+        }
+
+    return -thread_get_errno();
 }
 
 int __sem_unlink (struct task_struct *curr, struct pt_regs *regs)

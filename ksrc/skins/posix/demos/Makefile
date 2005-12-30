@@ -11,12 +11,12 @@ bin_PROGRAMS= accuracy accuracy_rt satch_rt
 lib_LIBRARIES=
 
 CPPFLAGS= -D_GNU_SOURCE -D_REENTRANT
-CFLAGS= -Wstrict-prototypes -O2 -W -Wall
+CFLAGS= -Wstrict-prototypes -O2 -Wall
 LDFLAGS= -lpthread -lrt
 
-accuracy_rt.o: CPPFLAGS+=-DSPERIOD=100
+accuracy_rt.o: CPPFLAGS=-DSPERIOD=100
 
-accuracy.o: CPPFLAGS=-DSPERIOD=2000
+accuracy.o: CPPFLAGS+=-DSPERIOD=2000
 
 
 # To use this makefile with xeno-config not located in PATH, type :

@@ -29,9 +29,25 @@ typedef struct pse51_named_sem {
     
     pse51_node_t nodebase;
 #define node2sem(naddr) \
-    ((nsem_t *)(((char *)naddr) - offsetof(nsem_t, nodebase)))
+    ((nsem_t *)((char *)(naddr) - offsetof(nsem_t, nodebase)))
 
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    xnqueue_t userq;            /* List of user-space bindings. */
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */    
 } nsem_t;
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+typedef struct pse51_uptr {
+    pid_t pid;
+    unsigned refcnt;
+    unsigned long uaddr;
+
+    xnholder_t link;
+
+#define link2uptr(laddr) \
+    ((pse51_uptr_t *)((char *)(laddr) - offsetof(pse51_uptr_t, link)))
+} pse51_uptr_t;
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */    
 
 static xnqueue_t pse51_semq;
 
@@ -77,10 +93,10 @@ int sem_trywait (sem_t *sem)
     xnlock_put_irqrestore(&nklock, s);
     
     if (err)
-	{
+        {
         thread_set_errno(err);
         return -1;
-	}
+        }
 
     return 0;
 }
@@ -94,7 +110,7 @@ static inline int sem_timedwait_internal (sem_t *sem, xnticks_t to)
     cur = pse51_current_thread();
 
     if ((err = sem_trywait_internal(sem)) == EAGAIN)
-	{
+        {
         if((err = clock_adjust_timeout(&to, CLOCK_REALTIME)))
             return err;
 
@@ -111,7 +127,7 @@ static inline int sem_timedwait_internal (sem_t *sem, xnticks_t to)
         
         if (xnthread_test_flags(&cur->threadbase, XNTIMEO))
             return ETIMEDOUT;
-	}
+        }
 
     return err;
 }
@@ -166,16 +182,16 @@ int sem_post (sem_t *sem)
     xnlock_get_irqsave(&nklock, s);
 
     if (sem->magic != PSE51_SEM_MAGIC && sem->magic != PSE51_NAMED_SEM_MAGIC)
-	{
+        {
         thread_set_errno(EINVAL);
         goto error;
-	}
+        }
 
     if (sem->value == SEM_VALUE_MAX)
         {
         thread_set_errno(EAGAIN);
         goto error;
-	}
+        }
 
     if(xnsynch_wakeup_one_sleeper(&sem->synchbase) != NULL)
         xnpod_schedule();
@@ -201,11 +217,11 @@ int sem_getvalue (sem_t *sem, int *value)
     xnlock_get_irqsave(&nklock, s);
 
     if (sem->magic != PSE51_SEM_MAGIC && sem->magic != PSE51_NAMED_SEM_MAGIC)
-	{
+        {
         xnlock_put_irqrestore(&nklock, s);
         thread_set_errno(EINVAL);
         return -1;
-	}
+        }
 
     *value = sem->value;
 
@@ -224,16 +240,16 @@ int pse51_sem_init (sem_t *sem, int pshared, unsigned int value)
     xnlock_get_irqsave(&nklock, s);
 
     if (pshared)
-	{
+        {
         thread_set_errno(ENOSYS);
         goto error;
-	}
+        }
 
     if (value > SEM_VALUE_MAX)
-	{
+        {
         thread_set_errno(EINVAL);
         goto error;
-	}
+        }
 
     sem->magic = PSE51_SEM_MAGIC;
     inith(&sem->link);
@@ -262,10 +278,10 @@ int sem_destroy (sem_t *sem)
     xnlock_get_irqsave(&nklock, s);
 
     if (sem->magic != PSE51_SEM_MAGIC)
-	{
+        {
         thread_set_errno(EINVAL);
         goto error;
-	}
+        }
 
     sem_destroy_internal(sem);
 
@@ -313,7 +329,7 @@ sem_t *sem_open(const char *name, int oflags, ...)
         value = va_arg(ap, unsigned);
         va_end(ap);
 
-        if (sem_init(&named_sem->sembase, 0, value))
+        if (pse51_sem_init(&named_sem->sembase, 0, value))
             {
             xnfree(named_sem);
             err = thread_get_errno();
@@ -327,6 +343,10 @@ sem_t *sem_open(const char *name, int oflags, ...)
             xnfree(named_sem);
             goto error;
             }
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+        initq(&named_sem->userq);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
         }
     else
         named_sem = node2sem(node);
@@ -420,6 +440,88 @@ int sem_unlink(const char *name)
     return -1;
 }
 
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+unsigned long pse51_usem_open(sem_t *sem, pid_t pid, unsigned long uaddr)
+{
+    nsem_t *nsem = sem2named_sem(sem);
+    xnholder_t *holder;
+    pse51_uptr_t *uptr;
+
+    if (sem->magic != PSE51_NAMED_SEM_MAGIC)
+        return 0;
+
+    for(holder = getheadq(&nsem->userq);
+        holder;
+        holder = nextq(&nsem->userq, holder))
+        {
+        pse51_uptr_t *uptr = link2uptr(holder);
+
+        if (uptr->pid == pid)
+            {
+            ++uptr->refcnt;
+            return uptr->uaddr;
+            }
+        }
+
+    uptr = (pse51_uptr_t *) xnmalloc(sizeof(*uptr));
+    uptr->pid = pid;
+    uptr->uaddr = uaddr;
+    uptr->refcnt = 1;
+    inith(&uptr->link);
+    appendq(&nsem->userq, &uptr->link);
+    return uaddr;
+}
+
+int pse51_usem_close(sem_t *sem, pid_t pid)
+{
+    nsem_t *nsem = sem2named_sem(sem);
+    pse51_uptr_t *uptr = NULL;
+    xnholder_t *holder;
+
+    if (sem->magic != PSE51_NAMED_SEM_MAGIC)
+        return -EINVAL;
+
+    for(holder = getheadq(&nsem->userq);
+        holder;
+        holder = nextq(&nsem->userq, holder))
+        {
+        uptr = link2uptr(holder);
+
+        if (uptr->pid == pid)
+            {
+            if (--uptr->refcnt)
+                return 0;
+            break;
+            }
+        }
+
+    if (!uptr)
+        return -EINVAL;
+
+    removeq(&nsem->userq, &uptr->link);
+    xnfree(uptr);
+    return 1;
+}
+
+void pse51_usems_cleanup(sem_t *sem)
+{
+    nsem_t *nsem = sem2named_sem(sem);
+    xnholder_t *holder;
+    
+    while((holder = getheadq(&nsem->userq)))
+        {
+        pse51_uptr_t *uptr = link2uptr(holder);
+
+#ifdef CONFIG_XENO_OPT_DEBUG
+        xnprintf("POSIX semaphore \"%s\" binding for user process %d"
+                 " discarded.\n", nsem->nodebase.name, uptr->pid);
+#endif /* CONFIG_XENO_OPT_DEBUG */
+
+        removeq(&nsem->userq, &uptr->link);
+        xnfree(uptr);
+        }
+}
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 void pse51_sem_pkg_init (void) {
 
@@ -437,6 +539,12 @@ void pse51_sem_pkg_cleanup (void)
     while ((holder = getheadq(&pse51_semq)) != NULL)
         {
         sem_t *sem = link2sem(holder);
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+        if (sem->magic == PSE51_NAMED_SEM_MAGIC)
+            pse51_usems_cleanup(sem);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
 #ifdef CONFIG_XENO_OPT_DEBUG
         if (sem->magic == PSE51_SEM_MAGIC)
             xnprintf("POSIX semaphore %p discarded.\n",
@@ -461,4 +569,3 @@ EXPORT_SYMBOL(sem_getvalue);
 EXPORT_SYMBOL(sem_open);
 EXPORT_SYMBOL(sem_close);
 EXPORT_SYMBOL(sem_unlink);
-
