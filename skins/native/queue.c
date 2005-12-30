@@ -330,7 +330,7 @@ int rt_queue_create (RT_QUEUE *q,
  * This service can be called from:
  *
  * - Kernel module initialization/cleanup code
- * - User-space task
+ * - User-space task (switches to secondary mode)
  *
  * Rescheduling: possible.
  */

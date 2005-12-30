@@ -1,3 +1,8 @@
+2005-12-30  Philippe Gerum  <rpm@xenomai.org>
+
+	* skins/native/syscall.c: Fix exec modes for rt_queue_delete and
+	rt_heap_delete: those calls must run into the secondary domain.
+
 2005-12-17  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.0.2 (Ceremony)

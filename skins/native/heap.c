@@ -336,7 +336,7 @@ int rt_heap_create (RT_HEAP *heap,
  * This service can be called from:
  *
  * - Kernel module initialization/cleanup code
- * - User-space task
+ * - User-space task (switches to secondary mode)
  *
  * Rescheduling: possible.
  */
