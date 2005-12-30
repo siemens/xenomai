@@ -34,4 +34,7 @@ uninstall-local:
 	rm -f $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
 	rm -f $(DESTDIR)$(includedir)/asm-generic/xenomai
 
+dist-hook:
+	find $(distdir)/compat -name .svn -depth -exec rm -fr \{\} \;
+
 EXTRA_DIST = compat

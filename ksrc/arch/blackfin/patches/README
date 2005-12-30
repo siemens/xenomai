@@ -11,8 +11,8 @@ latter kernel.
 
 On the Blackfin architecture, Xenomai is supported on the uClinux
 kernel series, for which the appropriate Adeos patches exists. The
-current support is based on the uClinux-2005R3 release as published by
-the Blackfin project [2].
+current support is based on the uClinux-2005R3 RC3 release as
+published by the Blackfin project [2].
 
 Just apply the provided patch against the corresponding kernel
 release. You may want to have a look at the README.*INSTALL guides at
