@@ -5,14 +5,14 @@ response time to external interrupts, and also to provide real-time
 services highly integrated with the standard Linux kernel.
 
 This support is provided by the Adeos real-time enabler [1], in the
-form of a kernel patch you have to apply to a vanilla kernel tree,
-before you attempt to compile the Xenomai codebase against the latter
-kernel.
+form of a kernel patch you have to apply against a vanilla kernel
+tree, before you attempt to compile the Xenomai codebase against the
+latter kernel.
 
 On the x86 architecture, Xenomai is supported on both the v2.4 and
 v2.6 Linux kernel series, for which the appropriate Adeos patches
-exist. Just apply one of those patches to the corresponding kernel
-release. You may want to have a look at the README.*INSTALL guides at
-the top of the Xenomai tree for more information.
+exist. Just apply one of those patches against the corresponding
+kernel release. You may want to have a look at the README.*INSTALL
+guides at the top of the Xenomai tree for more information.
 
 [1] http://www.gna.org/projects/adeos/

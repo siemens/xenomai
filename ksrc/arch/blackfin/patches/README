@@ -1,4 +1,4 @@
--- arch/powerpc/patches
+-- arch/blackfin/patches
 
 Xenomai needs special kernel support to deliver fast and deterministic
 response time to external interrupts, and also to provide real-time
@@ -9,17 +9,14 @@ form of a kernel patch you have to apply against a vanilla kernel
 tree, before you attempt to compile the Xenomai codebase against the
 latter kernel.
 
-On the PowerPC 32bit architecture, Xenomai is supported on both the
-v2.4 and v2.6 Linux kernel series, for which the appropriate Adeos
-patches exist. The v2.4 kernel tree of reference for Xenomai/PowerPC
-is available from Denx's public CVS tree as the "linuxppc_2_4_devel"
-branch.  For the v2.6 series, the vanilla kernel versions as published
-by kernel.org are used [3].
+On the Blackfin architecture, Xenomai is supported on the uClinux
+kernel series, for which the appropriate Adeos patches exists. The
+current support is based on the uClinux-2005R3 release as published by
+the Blackfin project [2].
 
-Just apply one of those patches against the corresponding kernel
+Just apply the provided patch against the corresponding kernel
 release. You may want to have a look at the README.*INSTALL guides at
 the top of the Xenomai tree for more information.
 
 [1] http://www.gna.org/projects/adeos/
-[2] http://www.denx.de/en/Software/CVS/
-[3] ftp://ftp.kernel.org/pub/linux/kernel/v2.6/
+[2] http://blackfin.uclinux.org/

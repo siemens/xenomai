@@ -303,8 +303,8 @@ static inline void xntimer_dequeue_periodic (xntimer_t *timer)
 }
 
 static void xntimer_do_start_periodic (xntimer_t *timer,
-				xnticks_t value,
-				xnticks_t interval)
+				       xnticks_t value,
+				       xnticks_t interval)
 {
     if (!testbits(timer->status,XNTIMER_DEQUEUED))
 	xntimer_dequeue_periodic(timer);
