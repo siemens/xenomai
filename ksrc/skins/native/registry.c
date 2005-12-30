@@ -902,19 +902,19 @@ int rt_registry_remove_safe (rt_handle_t handle, RTIME timeout)
 	goto unlock_and_exit;
 	}
 
-    if (object->safelock > 0)
+    if (object->safelock == 0)
+	goto remove;
+
+    if (timeout == TM_NONBLOCK)
 	{
-	if (timeout == TM_NONBLOCK)
-	    {
-	    err = -EWOULDBLOCK;
-	    goto unlock_and_exit;
-	    }
+	err = -EWOULDBLOCK;
+	goto unlock_and_exit;
+	}
 	
-	if (xnpod_unblockable_p())
-	    {
-	    err = -EBUSY;
-	    goto unlock_and_exit;
-	    }
+    if (xnpod_unblockable_p())
+	{
+	err = -EBUSY;
+	goto unlock_and_exit;
 	}
 
     /*
@@ -953,11 +953,16 @@ int rt_registry_remove_safe (rt_handle_t handle, RTIME timeout)
 	}
     while (object->safelock > 0);
 
-    if (object->cstamp == cstamp)
-	err = rt_registry_remove(handle);
-    else
+    if (object->cstamp != cstamp)
+	{
 	/* The caller should silently abort the deletion process. */
 	err = -ESRCH;
+	goto unlock_and_exit;
+	}
+
+ remove:
+
+    err = rt_registry_remove(handle);
 
  unlock_and_exit:
 
@@ -1103,7 +1108,7 @@ u_long rt_registry_put (rt_handle_t handle)
 	(newlock = --object->safelock) == 0 &&
 	xnsynch_nsleepers(&object->safesynch) > 0)
 	{
-	xnsynch_flush(&object->safesynch,XNBREAK);
+	xnsynch_flush(&object->safesynch,0);
 	xnpod_schedule();
 	}
 

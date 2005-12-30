@@ -330,7 +330,7 @@ int rt_queue_create (RT_QUEUE *q,
  * This service can be called from:
  *
  * - Kernel module initialization/cleanup code
- * - User-space task
+ * - User-space task (switches to secondary mode).
  *
  * Rescheduling: possible.
  */
@@ -365,10 +365,14 @@ int rt_queue_delete (RT_QUEUE *q)
     xeno_mark_deleted(q);
 
     /* Get out of the nklocked section before releasing the heap
-       memory, since we are about to invoke Linux kernel
-       services. FIXME: grab safe task mutex. */
+       memory, since we are about to invoke Linux kernel services. */
 
     xnlock_put_irqrestore(&nklock,s);
+
+    /* The queue descriptor has been marked as deleted before we
+       released the superlock thus preventing any sucessful subsequent
+       calls of rt_queue_delete(), so now we can actually destroy the
+       associated heap safely. */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     if (q->mode & Q_SHARED)
@@ -376,8 +380,6 @@ int rt_queue_delete (RT_QUEUE *q)
     else
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 	err = xnheap_destroy(&q->bufpool,&__queue_flush_private,NULL);
-
-    /* FIXME: release safe taask mutex */
 
     if (rc == XNSYNCH_RESCHED)
         /* Some task has been woken up as a result of the deletion:

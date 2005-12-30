@@ -45,6 +45,8 @@
 
 static DECLARE_XNQUEUE(__xeno_task_q);
 
+static u_long __xeno_task_stamp;
+
 static void __task_delete_hook (xnthread_t *thread)
 
 {
@@ -68,12 +70,70 @@ static void __task_delete_hook (xnthread_t *thread)
 	rt_registry_remove(task->handle);
 #endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
 
+    xnsynch_destroy(&task->safesynch);
+
     removeq(&__xeno_task_q,&task->link);
 
     xeno_mark_deleted(task);
 
     if (xnthread_test_flags(&task->thread_base,XNSHADOW))
 	xnfreesafe(&task->thread_base,task,&task->link);
+}
+
+u_long __native_task_safe (void)
+
+{
+    RT_TASK *task = xeno_current_task();
+    return ++task->safelock;
+}
+
+u_long __native_task_unsafe (void)
+
+{
+    /* Must be called nklock locked, interrupts off. */
+    RT_TASK *task = xeno_current_task();
+    u_long safelock;
+
+    if (task->safelock > 0 &&
+	--task->safelock == 0 &&
+	xnsynch_nsleepers(&task->safesynch) > 0)
+	{
+	xnsynch_flush(&task->safesynch,0);
+	xnpod_schedule();
+	}
+
+    safelock = task->safelock;
+
+    return safelock;
+}
+
+int __native_task_safewait (RT_TASK *task)
+
+{
+    /* Must be called nklock locked, interrupts off. */
+    u_long cstamp;
+
+    if (task->safelock == 0)
+	return 0;
+
+    if (task == xeno_current_task())
+	return -EDEADLK;
+    
+    cstamp = task->cstamp;
+
+    do
+	{
+	xnsynch_sleep_on(&task->safesynch,TM_INFINITE);
+
+	if (xnthread_test_flags(&xeno_current_task()->thread_base,XNBREAK))
+	    return -EINTR;
+	}
+    while (task->safelock > 0);
+
+    if (task->cstamp != cstamp)
+	return -EIDRM;
+
+    return 0;
 }
 
 int __native_task_pkg_init (void)
@@ -198,6 +258,9 @@ int rt_task_create (RT_TASK *task,
     inith(&task->link);
     task->suspend_depth = (bflags & XNSUSP) ? 1 : 0;
     task->overrun = -1;
+    task->cstamp = ++__xeno_task_stamp;
+    task->safelock = 0;
+    xnsynch_init(&task->safesynch,XNSYNCH_FIFO);
     task->handle = 0;	/* i.e. (still) unregistered task. */
 
     xnarch_cpus_clear(task->affinity);
@@ -472,6 +535,15 @@ int rt_task_resume (RT_TASK *task)
  * has been called to create it, so this service must be called in
  * order to destroy it afterwards.
  *
+ * Native tasks implement a mechanism by which they are immune from
+ * deletion by other tasks while they run into a deemed safe section
+ * of code. This feature is used internally by the native skin in
+ * order to prevent tasks from being deleted in the middle of a
+ * critical section, without resorting to interrupt masking when the
+ * latter is not an option. For this reason, the caller of
+ * rt_task_delete() might be blocked and a rescheduling take place,
+ * waiting for the target task to exit such critical section.
+ *
  * The DELETE hooks are called on behalf of the calling context (if
  * any). The information stored in the task control block remains
  * valid until all hooks have been called.
@@ -486,6 +558,14 @@ int rt_task_resume (RT_TASK *task)
  * - -EPERM is returned if @a task is NULL but not called from a task
  * context, or this service was called from an asynchronous context.
  *
+ * - -EINTR is returned if rt_task_unblock() has been invoked for the
+ * caller while it was waiting for @a task to exit a safe section. In
+ * such a case, the deletion process has been aborted and @a task
+ * remains unaffected.
+ *
+ * - -EDEADLK is returned if the caller is self-deleting while running
+ * in the middle of a safe section.
+ *
  * - -EIDRM is returned if @a task is a deleted task descriptor.
  *
  * Environments:
@@ -496,9 +576,10 @@ int rt_task_resume (RT_TASK *task)
  *   only if @a task is non-NULL.
  *
  * - Kernel-based task
- * - Any user-space context (comforming call)
+ * - Any user-space context (conforming call)
  *
- * Rescheduling: always if @a task is NULL.
+ * Rescheduling: always if @a task is NULL, and possible if the
+ * deleted task is currently running into a safe section.
  */
 
 int rt_task_delete (RT_TASK *task)
@@ -526,6 +607,12 @@ int rt_task_delete (RT_TASK *task)
 	err = xeno_handle_error(task,XENO_TASK_MAGIC,RT_TASK);
 	goto unlock_and_exit;
 	}
+
+    /* Make sure the target task is out of any safe section. */
+    err = __native_task_safewait(task);
+
+    if (err)
+	goto unlock_and_exit;
     
     /* Does not return if task is current. */
     xnpod_delete_thread(&task->thread_base);

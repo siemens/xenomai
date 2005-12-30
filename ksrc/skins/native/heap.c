@@ -336,7 +336,7 @@ int rt_heap_create (RT_HEAP *heap,
  * This service can be called from:
  *
  * - Kernel module initialization/cleanup code
- * - User-space task
+ * - User-space task (switches to secondary mode).
  *
  * Rescheduling: possible.
  */
@@ -372,9 +372,14 @@ int rt_heap_delete (RT_HEAP *heap)
 
     /* Get out of the nklocked section before releasing the heap
        memory, since we are about to invoke Linux kernel
-       services. FIXME: grab safe task mutex. */
+       services. */
 
     xnlock_put_irqrestore(&nklock,s);
+
+    /* The heap descriptor has been marked as deleted before we
+       released the superlock thus preventing any sucessful subsequent
+       calls of rt_heap_delete(), so now we can actually destroy
+       it safely. */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     if (heap->mode & H_SHARED)
@@ -382,8 +387,6 @@ int rt_heap_delete (RT_HEAP *heap)
     else
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 	err = xnheap_destroy(&heap->heap_base,&__heap_flush_private,NULL);
-
-    /* FIXME : release safe task mutex */
 
     if (rc == XNSYNCH_RESCHED)
         /* Some task has been woken up as a result of the deletion:

@@ -1,3 +1,19 @@
+2005-12-30  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/task.c (__native_task_safe): Implement
+	safe/unsafe barrier.
+
+	* ksrc/skins/native/syscall.c: Fix exec modes for rt_queue_delete
+	and rt_heap_delete: those calls must run into the secondary domain.
+
+	* ksrc/skins/native/registry.c (rt_registry_put): Do not raise the
+	BREAK state when awakening waiters.
+
+2005-12-29  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/registry.c (rt_registry_remove_safe): Rewrite
+	decently.
+
 2005-12-28  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/blackfin: Finalize support for the Blackfin
