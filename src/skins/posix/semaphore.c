@@ -147,7 +147,7 @@ sem_t *__wrap_sem_open (const char *name, int oflags, ...)
 {
     unsigned value = 0;
     mode_t mode = 0;
-    sem_t *sem;
+    sem_t *sem, *rsem;
     va_list ap;
     int err;
 
@@ -159,9 +159,9 @@ sem_t *__wrap_sem_open (const char *name, int oflags, ...)
         va_end(ap);
         }
 
-    sem = (sem_t *) malloc(sizeof(*sem));
+    rsem = sem = (sem_t *) malloc(sizeof(*sem));
 
-    if (!sem)
+    if (!rsem)
         {
         err = ENOSPC;
         goto error;
@@ -169,15 +169,19 @@ sem_t *__wrap_sem_open (const char *name, int oflags, ...)
 
     err = -XENOMAI_SKINCALL5(__pse51_muxid,
                              __pse51_sem_open,
-                             sem,
+                             &rsem,
                              name,
                              oflags,
                              mode,
                              value);
 
     if (!err)
-        return sem;
-    
+        {
+        if (rsem != sem)
+            free(sem);
+        return rsem;
+        }
+
     free(sem);
   error:
     errno = err;
@@ -186,20 +190,21 @@ sem_t *__wrap_sem_open (const char *name, int oflags, ...)
 
 int __wrap_sem_close (sem_t *sem)
 {
-    int err;
+    int err, closed;
 
-    err = -XENOMAI_SKINCALL1(__pse51_muxid,
+    err = -XENOMAI_SKINCALL2(__pse51_muxid,
                              __pse51_sem_close,
-                             sem);
+                             sem,
+			     &closed);
 
     if (!err)
         {
-        free(sem);
+	if(closed)
+            free(sem);
         return 0;
-        }
+	}
 
     errno = err;
-
     return -1;
 }
 
@@ -207,12 +212,13 @@ int __wrap_sem_unlink (const char *name)
 {
     int err;
 
-    err = -XENOMAI_SKINCALL1(__pse51_muxid, __pse51_sem_unlink, name);
+    err = -XENOMAI_SKINCALL1(__pse51_muxid, 
+		    	     __pse51_sem_unlink, 
+			     name);
 
     if (!err)
         return 0;
 
     errno = err;
-
     return -1;
 }

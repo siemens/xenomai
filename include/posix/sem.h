@@ -28,6 +28,9 @@
 #define synch2sem(saddr) \
 ((sem_t *)(((char *)saddr) - (int)(&((sem_t *)0)->synchbase)))
 
+unsigned long pse51_usem_open(sem_t *sem, pid_t pid, unsigned long uaddr);
+
+int pse51_usem_close(sem_t *sem, pid_t pid);
 
 void pse51_sem_pkg_init(void);
 
