@@ -505,7 +505,7 @@ int pse51_usem_close(sem_t *sem, pid_t pid)
     return 1;
 }
 
-/* Should be called nklock locked, irq off. */
+/* Must be called nklock locked, irq off. */
 void pse51_usems_cleanup(sem_t *sem)
 {
     nsem_t *nsem = sem2named_sem(sem);
