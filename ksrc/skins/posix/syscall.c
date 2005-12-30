@@ -567,6 +567,7 @@ int __sem_open (struct task_struct *curr, struct pt_regs *regs)
     sem_t *sem, *usem;
     int oflags;
     long len;
+    spl_t s;
     
     if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg1(regs),sizeof(handle)))
         return -EFAULT;
@@ -592,6 +593,8 @@ int __sem_open (struct task_struct *curr, struct pt_regs *regs)
 
     oflags = __xn_reg_arg3(regs);
 
+    xnlock_get_irqsave(&nklock, s);
+
     if (!(oflags & O_CREAT))
         sem = sem_open(name, oflags);
     else
@@ -601,9 +604,14 @@ int __sem_open (struct task_struct *curr, struct pt_regs *regs)
                        (unsigned) __xn_reg_arg5(regs));
 
     if (sem == SEM_FAILED)
+        {
+        xnlock_put_irqrestore(&nklock, s);
         return -thread_get_errno();
+        }
 
     uaddr = pse51_usem_open(sem, curr->tgid, (unsigned long) usem);
+
+    xnlock_put_irqrestore(&nklock, s);
 
     if (uaddr == (unsigned long) usem)
         {
@@ -629,6 +637,7 @@ int __sem_close (struct task_struct *curr, struct pt_regs *regs)
 {
     int closed, err;
     sem_t *sem;
+    spl_t s;
     
     if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(sem)))
         return -EFAULT;
@@ -638,12 +647,19 @@ int __sem_close (struct task_struct *curr, struct pt_regs *regs)
                         (void __user *) __xn_reg_arg1(regs),
                         sizeof(sem));
 
+    xnlock_get_irqsave(&nklock, s);
+
     closed = pse51_usem_close(sem, curr->tgid);
 
     if (closed < 0)
+        {
+        xnlock_put_irqrestore(&nklock, s);
         return closed;
+        }
 
     err = sem_close(sem);
+
+    xnlock_put_irqrestore(&nklock, s);
 
     if (!err)
         {
