@@ -86,8 +86,6 @@ void *threadB (void *arg)
         exit(EXIT_FAILURE);
         }
 
-    printf("semB: %p\n", semB);
-
     pthread_setschedparam(pthread_self(),SCHED_FIFO,&param);
 
     start_time = time(NULL);

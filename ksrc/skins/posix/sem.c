@@ -441,6 +441,7 @@ int sem_unlink(const char *name)
 }
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+/* Must be called nklock locked, irq off. */
 unsigned long pse51_usem_open(sem_t *sem, pid_t pid, unsigned long uaddr)
 {
     nsem_t *nsem = sem2named_sem(sem);
@@ -472,6 +473,7 @@ unsigned long pse51_usem_open(sem_t *sem, pid_t pid, unsigned long uaddr)
     return uaddr;
 }
 
+/* Must be called nklock locked, irq off. */
 int pse51_usem_close(sem_t *sem, pid_t pid)
 {
     nsem_t *nsem = sem2named_sem(sem);
@@ -503,6 +505,7 @@ int pse51_usem_close(sem_t *sem, pid_t pid)
     return 1;
 }
 
+/* Should be called nklock locked, irq off. */
 void pse51_usems_cleanup(sem_t *sem)
 {
     nsem_t *nsem = sem2named_sem(sem);
