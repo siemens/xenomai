@@ -2640,9 +2640,9 @@ void xnpod_set_time (xnticks_t newtime)
     spl_t s;
 
     xnlock_get_irqsave(&nklock,s);
-    xnltt_log_event(xeno_ev_timeset,newtime);
     nkpod->wallclock_offset += newtime - xnpod_get_time();
     __setbits(nkpod->status,XNTMSET);
+    xnltt_log_event(xeno_ev_timeset,newtime);
     xnlock_put_irqrestore(&nklock,s);
 }
 
@@ -3066,7 +3066,8 @@ unlock_and_exit:
         return -ENODEV;
 
     wallclock = xnpod_ns2ticks(xnarch_get_sys_time());
-    
+    /* Wallclock offset = ns2ticks(gettimeofday + elapsed portion of
+       the current host period) */
     xnpod_set_time(wallclock + XNARCH_HOST_TICK / nkpod->tickvalue - delta);
     
     if (delta == 0)
@@ -3257,9 +3258,9 @@ int xnpod_announce_tick (xnintr_t *intr)
  * delay takes place.
 
  * @param period The period of the thread, expressed in clock ticks
- * (see note). Passing XN_INFINITE attempts to stop the thread's
- * periodic timer; in the latter case, the routine always exits
- * succesfully, regardless of the pervious state of this timer.
+ * (see note). As a side-effect, passing XN_INFINITE attempts to stop
+ * the thread's periodic timer; in the latter case, the routine always
+ * exits succesfully, regardless of the previous state of this timer.
  *
  * @return 0 is returned upon success. Otherwise:
  *
