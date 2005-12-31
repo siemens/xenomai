@@ -562,7 +562,7 @@ int __sem_destroy (struct task_struct *curr, struct pt_regs *regs)
 
 int __sem_open (struct task_struct *curr, struct pt_regs *regs)
 {
-    unsigned long handle, uaddr;
+    unsigned long handle, pid, uaddr;
     char name[PSE51_MAXNAME];
     sem_t *sem, *usem;
     int oflags;
@@ -579,6 +579,8 @@ int __sem_open (struct task_struct *curr, struct pt_regs *regs)
     
     if (!__xn_access_ok(curr,VERIFY_WRITE,(void __user *)usem,sizeof(handle)))
         return -EFAULT;
+
+    __xn_copy_from_user(curr, &pid, (void __user *)usem, sizeof(pid));
 
     len = __xn_strncpy_from_user(curr,
                                  name,
@@ -609,7 +611,7 @@ int __sem_open (struct task_struct *curr, struct pt_regs *regs)
         return -thread_get_errno();
         }
 
-    uaddr = pse51_usem_open(sem, curr->tgid, (unsigned long) usem);
+    uaddr = pse51_usem_open(sem, (pid_t)pid, (unsigned long)usem);
 
     xnlock_put_irqrestore(&nklock, s);
 
