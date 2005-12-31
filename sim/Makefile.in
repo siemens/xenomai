@@ -40,10 +40,10 @@ DIST_COMMON = README $(am__configure_deps) \
 	$(srcdir)/../config/config.sub $(srcdir)/../config/install-sh \
 	$(srcdir)/../config/ltmain.sh $(srcdir)/../config/missing \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(top_srcdir)/configure $(top_srcdir)/include/xeno_config.h.in \
-	../config/INSTALL ../config/compile ../config/config.guess \
-	../config/config.sub ../config/depcomp ../config/install-sh \
-	../config/ltmain.sh ../config/missing COPYING ChangeLog
+	$(top_srcdir)/configure ../config/INSTALL ../config/compile \
+	../config/config.guess ../config/config.sub ../config/depcomp \
+	../config/install-sh ../config/ltmain.sh ../config/missing \
+	COPYING ChangeLog
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
@@ -54,7 +54,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/include/xeno_config.h
-CONFIG_CLEAN_FILES = include/xenomai include/asm/xenomai
+CONFIG_CLEAN_FILES = include/asm/xenomai
 SOURCES =
 DIST_SOURCES =
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
@@ -223,8 +223,8 @@ sharedstatedir = @sharedstatedir@
 subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = vmutils vm adapter gcic tkimg scope nucleus skins
-EXTRA_DIST = Kconfig doc include
+SUBDIRS = include vmutils vm adapter gcic tkimg scope nucleus skins
+EXTRA_DIST = Kconfig doc
 all: all-recursive
 
 .SUFFIXES:
@@ -261,23 +261,6 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(srcdir) && $(AUTOCONF)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
-
-include/xeno_config.h: include/stamp-h1
-	@if test ! -f $@; then \
-	  rm -f include/stamp-h1; \
-	  $(MAKE) include/stamp-h1; \
-	else :; fi
-
-include/stamp-h1: $(top_srcdir)/include/xeno_config.h.in $(top_builddir)/config.status
-	@rm -f include/stamp-h1
-	cd $(top_builddir) && $(SHELL) ./config.status include/xeno_config.h
-$(top_srcdir)/include/xeno_config.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps) 
-	cd $(top_srcdir) && $(AUTOHEADER)
-	rm -f include/stamp-h1
-	touch $@
-
-distclean-hdr:
-	-rm -f include/xeno_config.h include/stamp-h1
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -412,7 +395,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/../config $(distdir)/include
+	$(mkdir_p) $(distdir)/../config
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -454,6 +437,9 @@ distdir: $(DISTFILES)
 	      || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -587,8 +573,8 @@ clean-am: clean-generic clean-libtool mostlyclean-am
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -f Makefile
-distclean-am: clean-am distclean-generic distclean-hdr \
-	distclean-libtool distclean-tags
+distclean-am: clean-am distclean-generic distclean-libtool \
+	distclean-tags
 
 dvi: dvi-recursive
 
@@ -635,18 +621,22 @@ uninstall-info: uninstall-info-recursive
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am am--refresh check \
 	check-am clean clean-generic clean-libtool clean-recursive \
 	ctags ctags-recursive dist dist-all dist-bzip2 dist-gzip \
-	dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-generic distclean-hdr distclean-libtool \
-	distclean-recursive distclean-tags distcleancheck distdir \
-	distuninstallcheck dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am install-man \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-generic \
+	dist-hook dist-shar dist-tarZ dist-zip distcheck distclean \
+	distclean-generic distclean-libtool distclean-recursive \
+	distclean-tags distcleancheck distdir distuninstallcheck dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-exec install-exec-am \
+	install-info install-info-am install-man install-strip \
+	installcheck installcheck-am installdirs installdirs-am \
+	maintainer-clean maintainer-clean-generic \
 	maintainer-clean-recursive mostlyclean mostlyclean-generic \
 	mostlyclean-libtool mostlyclean-recursive pdf pdf-am ps ps-am \
 	tags tags-recursive uninstall uninstall-am uninstall-info-am
 
+
+dist-hook:
+#	rm -fr $(distdir)/include/xenomai $(distdir)/include/asm
+	find $(distdir)/doc $(distdir)/include -name .svn -depth -exec rm -fr \{\} \;
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

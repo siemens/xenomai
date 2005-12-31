@@ -403,6 +403,7 @@ AC_CONFIG_FILES([ \
      adapter/Makefile \
      skins/Makefile \
      nucleus/Makefile \
+     include/Makefile \
      skins/psos+/Makefile \
      skins/vxworks/Makefile \
      skins/vrtx/Makefile \

@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: GNUmakefile.in,v 1.2 2004/10/02 09:05:10 gch Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.2 2004/10/02 09:05:10 gch Exp $
 
 #========================================================================
 # Edit the following few lines when writing a new extension
@@ -339,7 +339,7 @@ clean:
 
 distclean: clean
 	-rm -f *.tab.c
-	-rm -f GNUmakefile $(CONFIG_CLEAN_FILES)
+	-rm -f Makefile $(CONFIG_CLEAN_FILES)
 	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
 	-rm -f config.status
 
@@ -398,7 +398,7 @@ install-bin-binaries: installdirs
 
 .SUFFIXES: .c .o .obj
 
-GNUmakefile: $(srcdir)/GNUmakefile.in  $(top_builddir)/config.status
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
@@ -421,7 +421,7 @@ installdirs:
 	$(mkinstalldirs)  $(DESTDIR)$(pkglibdir)
 
 DISTNAMES = \
-	GNUmakefile.in \
+	Makefile.in \
 	README \
 	acinclude.m4 \
 	aclocal.m4 \

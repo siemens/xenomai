@@ -27039,7 +27039,7 @@ base=asm-sim
 subdirs="$subdirs tkimg"
 
 
-                                                                                                                                                                ac_config_files="$ac_config_files Makefile vmutils/Makefile vm/Makefile adapter/Makefile skins/Makefile nucleus/Makefile skins/psos+/Makefile skins/vxworks/Makefile skins/vrtx/Makefile skins/uitron/Makefile skins/posix/Makefile skins/posix/testsuite/Makefile skins/native/Makefile skins/rtai/Makefile gcic/Makefile scope/Makefile"
+                                                                                                                                                                          ac_config_files="$ac_config_files Makefile vmutils/Makefile vm/Makefile adapter/Makefile skins/Makefile nucleus/Makefile include/Makefile skins/psos+/Makefile skins/vxworks/Makefile skins/vrtx/Makefile skins/uitron/Makefile skins/posix/Makefile skins/posix/testsuite/Makefile skins/native/Makefile skins/rtai/Makefile gcic/Makefile scope/Makefile"
 
 
 cat >confcache <<\_ACEOF
@@ -27628,6 +27628,7 @@ do
   "adapter/Makefile" ) CONFIG_FILES="$CONFIG_FILES adapter/Makefile" ;;
   "skins/Makefile" ) CONFIG_FILES="$CONFIG_FILES skins/Makefile" ;;
   "nucleus/Makefile" ) CONFIG_FILES="$CONFIG_FILES nucleus/Makefile" ;;
+  "include/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
   "skins/psos+/Makefile" ) CONFIG_FILES="$CONFIG_FILES skins/psos+/Makefile" ;;
   "skins/vxworks/Makefile" ) CONFIG_FILES="$CONFIG_FILES skins/vxworks/Makefile" ;;
   "skins/vrtx/Makefile" ) CONFIG_FILES="$CONFIG_FILES skins/vrtx/Makefile" ;;
