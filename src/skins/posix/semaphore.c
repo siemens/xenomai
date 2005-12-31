@@ -24,6 +24,7 @@
 #include <posix/semaphore.h>
 
 extern int __pse51_muxid;
+extern unsigned long __pse51_mainpid;
 
 int __wrap_sem_init (sem_t *sem,
 		     int pshared,
@@ -145,9 +146,9 @@ int __wrap_sem_getvalue (sem_t *sem, int *sval)
 
 sem_t *__wrap_sem_open (const char *name, int oflags, ...)
 {
+    union __xeno_semaphore *sem, *rsem;
     unsigned value = 0;
     mode_t mode = 0;
-    sem_t *sem, *rsem;
     va_list ap;
     int err;
 
@@ -159,13 +160,15 @@ sem_t *__wrap_sem_open (const char *name, int oflags, ...)
         va_end(ap);
         }
 
-    rsem = sem = (sem_t *) malloc(sizeof(*sem));
+    rsem = sem = (union __xeno_semaphore *) malloc(sizeof(*sem));
 
     if (!rsem)
         {
         err = ENOSPC;
         goto error;
         }
+
+    rsem->handle = __pse51_mainpid;
 
     err = -XENOMAI_SKINCALL5(__pse51_muxid,
                              __pse51_sem_open,
@@ -179,7 +182,7 @@ sem_t *__wrap_sem_open (const char *name, int oflags, ...)
         {
         if (rsem != sem)
             free(sem);
-        return rsem;
+        return &rsem->native_sem;
         }
 
     free(sem);
