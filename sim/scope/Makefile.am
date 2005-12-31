@@ -107,3 +107,6 @@ uninstall-local:
 	done
 
 EXTRA_DIST = $(TCL_FILES) $(pkgdata_DATA) tcl/tclIndex icons images
+
+dist-hook:
+	find $(distdir)/icons $(distdir)/images -name .svn -depth -exec rm -fr \{\} \;
