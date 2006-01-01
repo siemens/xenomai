@@ -1,3 +1,7 @@
+2006-01-01  Philippe Gerum  <rpm@xenomai.org>
+
+ 	* RELEASE: Xenomai 2.1-rc1 (Champagne)
+
 2005-12-30  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/demos/accuracy.c (cleanup_upon_sig): Rework
