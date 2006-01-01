@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
 
-AC_INIT([Xenomai simulator],m4_normalize(m4_include([../config/version])),xenomai-help@gna.org,sim)
+AC_INIT([Xenomai simulator],m4_normalize(m4_include([../config/version])),xenomai-help@gna.org,xenosim)
 AC_CONFIG_HEADERS(include/xeno_config.h)
 AC_CONFIG_AUX_DIR(../config)
 AC_CONFIG_SRCDIR(vm/thread.cc)
