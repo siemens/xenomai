@@ -25,7 +25,8 @@ XENO_CONFIG=xeno-config
 prefix := $(shell $(XENO_CONFIG) --prefix)
 
 ifeq ($(prefix),)
-$(error Please add <xenomai-install-path>/bin to your PATH variable)
+$(error Please add <xenomai-install-path>/bin to your PATH variable or type: \
+make XENO_CONFIG=<xenomai-install-path>/bin/xeno-config)
 endif
 
 CC:= $(shell $(XENO_CONFIG) --cc)
