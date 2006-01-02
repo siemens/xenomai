@@ -1,0 +1,7 @@
+config XENO_DRIVERS_TIMERBENCH
+	depends on XENO_SKIN_RTDM
+	tristate "Timer benchmark driver"
+	default n
+	help
+	Kernel-based benchmark driver for timer latency evaluation.
+	See testsuite/latency for a possible front-end.
