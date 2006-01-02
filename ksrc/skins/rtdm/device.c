@@ -233,9 +233,10 @@ int rtdm_dev_register(struct rtdm_device* device)
             return -EINVAL;
     }
 
-    /* Sanity check: any close handler? */
-    if (NO_HANDLER(device->ops, close)) {
-        xnlogerr("RTDM: no close handler\n");
+    /* Sanity check: non-RT close handler?
+     * (Always required for forced cleanup) */
+    if (!device->ops.close_nrt) {
+        xnlogerr("RTDM: no non-RT close handler\n");
         return -EINVAL;
     }
 
