@@ -220,14 +220,11 @@ static void xntimer_do_tick_aperiodic (void)
 {
     xnsched_t *sched = xnpod_current_sched();
     xnqueue_t *timerq = &sched->timerwheel[0];
-    xnholder_t *nextholder, *holder;
+    xnholder_t *holder;
     xntimer_t *timer;
 
-    nextholder = getheadq(timerq);
-
-    while ((holder = nextholder) != NULL)
+    while ((holder = getheadq(timerq)) != NULL)
         {
-        nextholder = nextq(timerq,holder);
         timer = link2timer(holder);
 
 	if (timer->date - nkschedlat > xnarch_get_cpu_tsc())

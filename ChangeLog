@@ -1,3 +1,9 @@
+2006-01-02  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/nucleus/timer.c (xntimer_do_tick_aperiodic): Fix behaviour
+	in case a periodic xntimer object is heading the list after
+	reinsertion and should tick again.
+
 2006-01-01  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.1-rc1 (Champagne)
