@@ -144,13 +144,15 @@ linux_version="$linux_VERSION.$linux_PATCHLEVEL.$linux_SUBLEVEL$linux_EXTRAVERSI
 
 echo "Preparing kernel $linux_version in $linux_tree..."
 
-if test -r $linux_tree/include/linux/ipipe.h \
-     -o -r $linux_tree/include/linux/adeos.h; then
+if test -r $linux_tree/include/linux/ipipe.h; then
     echo "Adeos found - bypassing patch."
+elif test -r $linux_tree/include/linux/adeos.h; then
+   echo "$me: Deprecated Adeos (oldgen) support found in $linux_tree;"
+   echo "Upgrade required to Adeos/I-pipe (newgen)."
+   exit 2
 else
    if test x$adeos_patch = x; then
-      default_adeos_patch=`( ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-ipipe-$linux_VERSION.$linux_PATCHLEVEL*|sort -r; \
-		             ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-linux-$linux_VERSION.$linux_PATCHLEVEL*|sort -r) 2>/dev/null | head -1`
+      default_adeos_patch=`( ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-ipipe-$linux_VERSION.$linux_PATCHLEVEL*|sort -r ) 2>/dev/null | head -1`
    fi
    if test x$default_adeos_patch = x; then
       default_adeos_patch=/dev/null
@@ -169,15 +171,10 @@ else
    cat $adeos_patch | (cd $linux_tree && patch -p1 )
 fi
 
-if test -r $linux_tree/include/asm-$linux_arch/ipipe.h; then
-   adeos_version=`grep '^#define.*IPIPE_ARCH_STRING.*"' $linux_tree/include/asm-$linux_arch/ipipe.h|sed -e 's,.*"\(.*\)"$,\1,'`
-   adeos_gen=newgen
-elif test -r $linux_tree/include/asm-$linux_arch/adeos.h; then
-   adeos_version=`grep '^#define.*ADEOS_ARCH_STRING.*"' $linux_tree/include/asm-$linux_arch/adeos.h|sed -e 's,.*"\(.*\)"$,\1,'`
-   adeos_gen=oldgen
-fi
+adeos_version=`grep '^#define.*IPIPE_ARCH_STRING.*"' $linux_tree/include/asm-$linux_arch/ipipe.h|sed -e 's,.*"\(.*\)"$,\1,'`
+
 if test \! x$adeos_version = x; then
-   echo "Adeos/$linux_arch $adeos_version ($adeos_gen) installed."
+   echo "Adeos/$linux_arch $adeos_version installed."
 else
    echo "$me: $linux_tree has no Adeos support for $linux_arch"
    exit 2

@@ -134,15 +134,11 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul) {
 #include <asm/xenomai/atomic.h>
 #include <asm/processor.h>
 
-#ifdef CONFIG_ADEOS_CORE
-#define RTHAL_TIMER_IRQ   ADEOS_TIMER_VIRQ
-#else /* !CONFIG_ADEOS_CORE */
-#define RTHAL_TIMER_IRQ   IPIPE_TIMER_VIRQ
+#define RTHAL_TIMER_IRQ		IPIPE_TIMER_VIRQ
 #ifdef CONFIG_SMP
 #define RTHAL_TIMER_IPI		IPIPE_SERVICE_IPI3
 #define RTHAL_HOST_TIMER_IPI	IPIPE_SERVICE_IPI4
 #endif /* CONFIG_SMP */
-#endif /* CONFIG_ADEOS_CORE */
 
 #define rthal_irq_descp(irq)	(&irq_desc[(irq)])
 
@@ -154,53 +150,6 @@ static inline unsigned long long rthal_rdtsc (void) {
     rthal_read_tsc(t);
     return t;
 }
-
-#if defined(CONFIG_ADEOS_CORE) && !defined(CONFIG_ADEOS_NOTHREADS)
-
-/* Since real-time interrupt handlers are called on behalf of the
-   Xenomai domain stack, we cannot infere the "current" Linux task
-   address using %esp. We must use the suspended Linux domain's stack
-   pointer instead. */
-
-static inline struct task_struct *rthal_root_host_task (int cpuid) {
-#ifdef CONFIG_PPC64
-    return ((struct thread_info *)(rthal_root_domain->esp[cpuid] & (~(16384UL-1UL))))->task;
-#else
-    return ((struct thread_info *)(rthal_root_domain->esp[cpuid] & (~8191UL)))->task;
-#endif
-}
-
-static inline struct task_struct *rthal_current_host_task (int cpuid)
-
-{
-    register unsigned long esp asm ("r1");
-
-#ifdef CONFIG_PPC64
-    if (esp >= rthal_domain.estackbase[cpuid] && 
-	    esp < rthal_domain.estackbase[cpuid] + 16384)
-	return rthal_root_host_task(cpuid);
-
-    return current;
-#else /* !CONFIG_PPC64 */
-    if (esp >= rthal_domain.estackbase[cpuid] &&
-	    esp < rthal_domain.estackbase[cpuid] + 8192)
-	return rthal_root_host_task(cpuid);
-
-    return current;
-#endif /* CONFIG_PPC64 */
-}
-
-#else /* !CONFIG_ADEOS_CORE || CONFIG_ADEOS_NOTHREADS */
-
-static inline struct task_struct *rthal_root_host_task (int cpuid) {
-    return current;
-}
-
-static inline struct task_struct *rthal_current_host_task (int cpuid) {
-    return current;
-}
-
-#endif /* CONFIG_ADEOS_CORE && !CONFIG_ADEOS_NOTHREADS */
 
 static inline void rthal_timer_program_shot (unsigned long delay)
 {

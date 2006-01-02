@@ -90,14 +90,14 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #include <asm/processor.h>
 #include <asm/delay.h>          /* For ia64_get_itc / ia64_set_itm */
 
-#define RTHAL_TIMER_VECTOR      ADEOS_SERVICE_VECTOR3
-#define RTHAL_TIMER_IRQ         ADEOS_SERVICE_IPI3
+#define RTHAL_TIMER_VECTOR      IPIPE_SERVICE_VECTOR3
+#define RTHAL_TIMER_IRQ         IPIPE_SERVICE_IPI3
 #define RTHAL_HOST_TIMER_VECTOR IA64_TIMER_VECTOR
 #define RTHAL_HOST_TIMER_IRQ    __ia64_local_vector_to_irq(IA64_TIMER_VECTOR)
 
 #define rthal_irq_descp(irq)  irq_descp(irq)
-#define rthal_itm_next        __adeos_itm_next
-#define rthal_tick_irq        __adeos_tick_irq
+#define rthal_itm_next        __ipipe_itm_next
+#define rthal_tick_irq        __ipipe_tick_irq
 
 #define rthal_grab_control()     do { } while(0)
 #define rthal_release_control()  do { } while(0)
@@ -107,16 +107,6 @@ static inline unsigned long long rthal_rdtsc (void)
     unsigned long long t;
     rthal_read_tsc(t);
     return t;
-}
-
-static inline struct task_struct *rthal_root_host_task (int cpuid)
-{
-    return current;
-}
-
-static inline struct task_struct *rthal_current_host_task (int cpuid)
-{
-    return current;
 }
 
 static inline void rthal_timer_program_shot (unsigned long delay)

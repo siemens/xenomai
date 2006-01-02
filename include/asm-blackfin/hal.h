@@ -127,16 +127,6 @@ static inline unsigned long long rthal_rdtsc (void)
     return t;
 }
 
-static inline struct task_struct *rthal_root_host_task (int cpuid)
-{
-    return current;
-}
-
-static inline struct task_struct *rthal_current_host_task (int cpuid)
-{
-    return current;
-}
-
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
 int rthal_nmi_request(void (*emergency)(struct pt_regs *));
 

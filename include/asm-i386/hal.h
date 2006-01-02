@@ -220,44 +220,6 @@ rthal_time_t rthal_get_8254_tsc(void);
 #define rthal_rdtsc() rthal_get_8254_tsc()
 #endif /* CONFIG_X86_TSC */
 
-#if defined(CONFIG_ADEOS_CORE) && !defined(CONFIG_ADEOS_NOTHREADS)
-
-/* Since real-time interrupt handlers are called on behalf of the
-   Xenomai domain stack, we cannot infere the "current" Linux task
-   address using %esp. We must use the suspended Linux domain's stack
-   pointer instead. */
-
-static inline struct task_struct *rthal_root_host_task (int cpuid) {
-    u_long stack = (u_long)rthal_root_domain->esp[cpuid] & ~(THREAD_SIZE - 1);
-    return ((struct thread_info *)(stack))->task;
-}
-
-static inline struct task_struct *rthal_current_host_task (int cpuid)
-{
-    int *esp;
-
-    __asm__ ("movl %%esp, %0" : "=r,?m" (esp));
-
-    if (esp >= rthal_domain.estackbase[cpuid] && esp < rthal_domain.estackbase[cpuid] + 2048)
-        return rthal_root_host_task(cpuid);
-
-    return get_current();
-}
-
-#else /* !CONFIG_ADEOS_CORE || CONFIG_ADEOS_NOTHREADS */
-
-static inline struct task_struct *rthal_root_host_task (int cpuid)
-{
-    return current;
-}
-
-static inline struct task_struct *rthal_current_host_task (int cpuid)
-{
-    return current;
-}
-
-#endif /* CONFIG_ADEOS_CORE && !CONFIG_ADEOS_NOTHREADS */
-
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
 int rthal_nmi_request(void (*emergency)(struct pt_regs *));
 

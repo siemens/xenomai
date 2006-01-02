@@ -49,7 +49,15 @@
 #define RTHAL_EVENT_PROPAGATE   0
 #define RTHAL_EVENT_STOP        1
 
-#ifdef CONFIG_IPIPE
+#ifdef CONFIG_ADEOS_CORE
+#error "Adeos oldgen support has been deprecated; please upgrade to the I-pipe series."
+#error "See http://download.gna.org/adeos/patches/"
+#endif /* CONFIG_ADEOS_CORE */
+
+#ifndef CONFIG_IPIPE
+#error "Adeos kernel support is required to run this software."
+#error "See http://download.gna.org/adeos/patches/"
+#endif /* !CONFIG_IPIPE */
 
 #define RTHAL_NR_CPUS		IPIPE_NR_CPUS
 #define RTHAL_ROOT_PRIO		IPIPE_ROOT_PRIO
@@ -226,200 +234,6 @@ void entry (void)	\
 }
 
 extern void rthal_domain_entry(void);
-
-#else /* !CONFIG_IPIPE, i.e. CONFIG_ADEOS */
-
-#define RTHAL_NR_CPUS		ADEOS_NR_CPUS
-#define RTHAL_ROOT_PRIO		ADEOS_ROOT_PRI
-#define RTHAL_NR_FAULTS		ADEOS_NR_FAULTS
-
-#define RTHAL_SERVICE_IPI0	ADEOS_SERVICE_IPI0
-#define RTHAL_SERVICE_VECTOR0	ADEOS_SERVICE_VECTOR0
-#define RTHAL_SERVICE_IPI1	ADEOS_SERVICE_IPI1
-#define RTHAL_SERVICE_VECTOR1	ADEOS_SERVICE_VECTOR1
-#define RTHAL_SERVICE_IPI2	ADEOS_SERVICE_IPI2
-#define RTHAL_SERVICE_VECTOR2	ADEOS_SERVICE_VECTOR2
-#define RTHAL_SERVICE_IPI3	ADEOS_SERVICE_IPI3
-#define RTHAL_SERVICE_VECTOR3	ADEOS_SERVICE_VECTOR3
-#define RTHAL_CRITICAL_IPI	ADEOS_CRITICAL_IPI
-
-typedef adomain_t rthal_pipeline_stage_t;
-
-#ifdef RAW_RW_LOCK_UNLOCKED
-typedef raw_spinlock_t rthal_spinlock_t;
-#define RTHAL_SPIN_LOCK_UNLOCKED RAW_SPIN_LOCK_UNLOCKED
-typedef raw_rwlock_t rthal_rwlock_t;
-#define RTHAL_RW_LOCK_UNLOCKED RAW_RW_LOCK_UNLOCKED
-#else /* !RAW_RW_LOCK_UNLOCKED */
-typedef spinlock_t rthal_spinlock_t;
-#define RTHAL_SPIN_LOCK_UNLOCKED SPIN_LOCK_UNLOCKED
-typedef rwlock_t rthal_rwlock_t;
-#define RTHAL_RW_LOCK_UNLOCKED RW_LOCK_UNLOCKED
-#endif /* RAW_RW_LOCK_UNLOCKED */
-
-#define rthal_local_irq_disable()	adeos_stall_pipeline_from(&rthal_domain)
-#define rthal_local_irq_enable()	adeos_unstall_pipeline_from(&rthal_domain)
-#define rthal_local_irq_save(x)		((x) = !!adeos_test_and_stall_pipeline_from(&rthal_domain))
-#define rthal_local_irq_restore(x)	adeos_restore_pipeline_from(&rthal_domain,(x))
-#define rthal_local_irq_flags(x)	((x) = !!adeos_test_pipeline_from(&rthal_domain))
-#define rthal_local_irq_test()		(!!adeos_test_pipeline_from(&rthal_domain))
-#define rthal_local_irq_sync(x)		((x) = !!adeos_test_and_unstall_pipeline_from(&rthal_domain))
-#define rthal_stage_irq_enable(dom)	adeos_unstall_pipeline_from(dom)
-#define rthal_local_irq_save_hw(x)	adeos_hw_local_irq_save(x)
-#define rthal_local_irq_restore_hw(x)	adeos_hw_local_irq_restore(x)
-#define rthal_local_irq_enable_hw()	adeos_hw_sti()
-#define rthal_local_irq_disable_hw()	adeos_hw_cli()
-#define rthal_local_irq_flags_hw(x)	adeos_hw_local_irq_flags(x)
-
-#define rthal_write_lock(lock)		adeos_write_lock(lock)
-#define rthal_write_unlock(lock)	adeos_write_unlock(lock)
-#define rthal_read_lock(lock)		adeos_read_lock(lock)
-#define rthal_read_unlock(lock)		adeos_read_unlock(lock)
-#define rthal_spin_lock(lock)		adeos_spin_lock(lock)
-#define rthal_spin_unlock(lock)		adeos_spin_unlock(lock)
-
-#define rthal_root_domain			adp_root
-#define rthal_current_domain			adp_current
-#define rthal_declare_cpuid			adeos_declare_cpuid
-
-#define rthal_load_cpuid()			adeos_load_cpuid()
-#define rthal_suspend_domain()			adeos_suspend_domain()
-#define rthal_grab_superlock(syncfn)		adeos_critical_enter(syncfn)
-#define rthal_release_superlock(x)		adeos_critical_exit(x)
-#define rthal_propagate_irq(irq)		adeos_propagate_irq(irq)
-#define rthal_set_irq_affinity(irq,aff)		adeos_set_irq_affinity(irq,aff)
-#define rthal_schedule_irq(irq)			adeos_schedule_irq(irq)
-#define rthal_virtualize_irq(dom,irq,isr,ackfn,mode) adeos_virtualize_irq_from(dom,irq,isr,ackfn,mode)
-#define rthal_alloc_virq()			adeos_alloc_irq()
-#define rthal_free_virq(irq)			adeos_free_irq(irq)
-#define rthal_trigger_irq(irq)			adeos_trigger_irq(irq)
-#define rthal_get_sysinfo(ibuf)			adeos_get_sysinfo(ibuf)
-#define rthal_alloc_ptdkey()			adeos_alloc_ptdkey()
-#define rthal_free_ptdkey(key)			adeos_free_ptdkey(key)
-#define rthal_send_ipi(irq,cpus)		adeos_send_ipi(irq,cpus)
-#define rthal_lock_irq(dom,cpu,irq)		__adeos_lock_irq(dom,cpu,irq)
-#define rthal_unlock_irq(dom,irq)		__adeos_unlock_irq(dom,irq)
-#ifdef ADEOS_GRAB_TIMER
-#define rthal_set_timer(ns)			adeos_tune_timer(ns,ns ? 0 : ADEOS_GRAB_TIMER)
-#else /* !ADEOS_GRAB_TIMER */
-#define rthal_set_timer(ns)			adeos_tune_timer(ns,0)
-#endif /* ADEOS_GRAB_TIMER */
-#define rthal_reset_timer()			adeos_tune_timer(0,ADEOS_RESET_TIMER)
-
-#define rthal_lock_cpu(x)			adeos_lock_cpu(x)
-#define rthal_unlock_cpu(x)			adeos_unlock_cpu(x)
-#define rthal_get_cpu(x)			adeos_get_cpu(x)
-#define rthal_put_cpu(x)			adeos_put_cpu(x)
-#define rthal_processor_id()			adeos_processor_id()
-
-#define rthal_setsched_root(t,pol,prio)		__adeos_setscheduler_root(t,pol,prio)
-#define rthal_reenter_root(t,pol,prio)		__adeos_reenter_root(t,pol,prio)
-#define rthal_emergency_console()		adeos_set_printk_sync(adp_current)
-#define rthal_read_tsc(v)			adeos_hw_tsc(v)
-
-static inline unsigned long rthal_get_cpufreq(void)
-{
-    adsysinfo_t sysinfo;
-    rthal_get_sysinfo(&sysinfo);
-    return (unsigned long)sysinfo.cpufreq;
-}
-
-#define RTHAL_DECLARE_EVENT(hdlr) \
-static void hdlr (adevinfo_t *p) \
-{ \
-    if (do_##hdlr((p)->event,(p)->domid,(p)->evdata) == RTHAL_EVENT_PROPAGATE)	\
-	adeos_propagate_event(p); \
-}
-
-#define RTHAL_DECLARE_SCHEDULE_EVENT(hdlr) \
-static void hdlr (adevinfo_t *p) \
-{ \
-    struct { \
-	struct task_struct *prev; \
-	struct task_struct *next; \
-    } *ev = (__typeof(ev))(p)->evdata; \
-    do_##hdlr(ev->next);	\
-    adeos_propagate_event(p); \
-}
-
-#define RTHAL_DECLARE_SETSCHED_EVENT(hdlr) \
-static void hdlr (adevinfo_t *p) \
-{ \
-    struct { \
-	struct task_struct *task; \
-	int policy; \
-	struct sched_param *param; \
-    } *ev = (__typeof(ev))(p)->evdata; \
-    do_##hdlr(ev->task,ev->param->sched_priority);	\
-    adeos_propagate_event(p); \
-}
-
-#define RTHAL_DECLARE_SIGWAKE_EVENT(hdlr) \
-static void hdlr (adevinfo_t *p) \
-{ \
-    struct { \
-	struct task_struct *task; \
-    } *ev = (__typeof(ev))(p)->evdata; \
-    do_##hdlr(ev->task);	\
-    adeos_propagate_event(p); \
-}
-
-#define RTHAL_DECLARE_EXIT_EVENT(hdlr) \
-static void hdlr (adevinfo_t *p) \
-{ \
-    struct task_struct *task = (struct task_struct *)p->evdata;	\
-    do_##hdlr(task);	\
-    adeos_propagate_event(p); \
-}
-
-#define rthal_catch_taskexit(hdlr)	\
-    adeos_catch_event_from(adp_root,ADEOS_EXIT_PROCESS,hdlr)
-#define rthal_catch_sigwake(hdlr)	\
-    adeos_catch_event_from(adp_root,ADEOS_KICK_PROCESS,hdlr)
-#define rthal_catch_schedule(hdlr)	\
-    adeos_catch_event_from(adp_root,ADEOS_SCHEDULE_HEAD,hdlr)
-#define rthal_catch_setsched(hdlr)	\
-    adeos_catch_event_from(&rthal_domain,ADEOS_RENICE_PROCESS,hdlr)
-#define rthal_catch_losyscall(hdlr)	\
-    adeos_catch_event_from(adp_root,ADEOS_SYSCALL_PROLOGUE,hdlr)
-#define rthal_catch_hisyscall(hdlr)	\
-    adeos_catch_event_from(&rthal_domain,ADEOS_SYSCALL_PROLOGUE,hdlr)
-#define rthal_catch_exception(ex,hdlr)	\
-    adeos_catch_event_from(&rthal_domain,ex,hdlr)
-
-#define rthal_register_domain(_dom,_name,_id,_prio,_entry)	\
- ({	\
-    adattr_t attr; \
-    adeos_init_attr(&attr); \
-    attr.name = _name;	   \
-    attr.entry = _entry;   \
-    attr.domid = _id;	   \
-    attr.priority = _prio; \
-    adeos_register_domain(_dom,&attr); \
- })
-
-#define rthal_unregister_domain(dom)	adeos_unregister_domain(dom)
-
-#if !defined(CONFIG_ADEOS_NOTHREADS)
-#define RTHAL_DECLARE_DOMAIN(entry)	\
-void entry (int iflag)	\
-{			\
-    if (iflag)		\
-	do_##entry();\
-    for (;;)		\
-	rthal_suspend_domain(); \
-}
-#else /* CONFIG_ADEOS_NOTHREADS */
-#define RTHAL_DECLARE_DOMAIN(entry)	\
-void entry (int iflag)	\
-{			\
-    do_##entry();	\
-}
-#endif /* !CONFIG_ADEOS_NOTHREADS */
-
-extern void rthal_domain_entry(int iflag);
-
-#endif /* !CONFIG_IPIPE */
 
 #define rthal_spin_lock_irq(lock) \
 do {  \

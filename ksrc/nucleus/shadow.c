@@ -36,11 +36,11 @@
 #define XENO_SHADOW_MODULE 1
 
 #include <stdarg.h>
-#include <asm/signal.h>
 #include <linux/unistd.h>
 #include <linux/wait.h>
 #include <linux/init.h>
 #include <linux/kthread.h>
+#include <asm/signal.h>
 #include <xenomai/nucleus/pod.h>
 #include <xenomai/nucleus/heap.h>
 #include <xenomai/nucleus/synch.h>
@@ -95,13 +95,6 @@ static struct task_struct *switch_lock_owner[XNARCH_NR_CPUS];
 void xnpod_declare_iface_proc(struct xnskentry *iface);
 
 void xnpod_discard_iface_proc(struct xnskentry *iface);
-
-static inline struct task_struct *get_calling_task (void)
-{
-    return xnpod_shadow_p()
-	? current
-	: rthal_root_host_task(xnarch_current_cpu());
-}
 
 static inline void request_syscall_restart (xnthread_t *thread, struct pt_regs *regs)
 
@@ -1153,7 +1146,7 @@ static inline int do_hisyscall_event (unsigned event, unsigned domid, void *data
     if (xnsched_resched_p())
 	xnpod_schedule();
 
-    p = get_calling_task();
+    p = current;
     thread = xnshadow_thread(p);
 
     if (!__xn_reg_mux_p(regs))

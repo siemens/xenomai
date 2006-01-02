@@ -29,20 +29,6 @@
 #include <linux/ptrace.h>
 #include <asm-generic/xenomai/system.h>
 
-#ifdef CONFIG_ADEOS_CORE
-#ifdef CONFIG_PPC64
-#if ADEOS_RELEASE_NUMBER < 0x02060201
-#error "Adeos 2.6r2c1/ppc64 or above is required to run this software; please upgrade."
-#error "See http://download.gna.org/adeos/patches/v2.6/ppc64/"
-#endif
-#else /* !CONFIG_PPC64 */
-#if ADEOS_RELEASE_NUMBER < 0x02060703
-#error "Adeos 2.6r7c3/ppc or above is required to run this software; please upgrade."
-#error "See http://download.gna.org/adeos/patches/v2.6/ppc/"
-#endif
-#endif /* CONFIG_PPC64 */
-#endif /* CONFIG_ADEOS_CORE */
-
 #define XNARCH_DEFAULT_TICK     1000000 /* ns, i.e. 1ms */
 #define XNARCH_HOST_TICK        (1000000000UL/HZ)
 
@@ -112,20 +98,6 @@ typedef struct xnarch_fltinfo {
 #define xnarch_fault_fpu_p(fi)  (0)
 /* The following predicates are only usable over a regular Linux stack
    context. */
-#ifdef CONFIG_ADEOS_CORE
-#define xnarch_fault_pf_p(fi)   ((fi)->exception == ADEOS_ACCESS_TRAP)
-#ifdef CONFIG_PPC64
-#define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
-				 ((fi)->exception == ADEOS_IABR_TRAP || \
-				  (fi)->exception == ADEOS_SSTEP_TRAP || \
-				  (fi)->exception == ADEOS_PERFMON_TRAP))
-#else /* !CONFIG_PPC64 */
-#define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
-				 ((fi)->exception == ADEOS_IABR_TRAP || \
-				  (fi)->exception == ADEOS_SSTEP_TRAP || \
-				  (fi)->exception == ADEOS_DEBUG_TRAP))
-#endif /* CONFIG_PPC64 */
-#else /* !CONFIG_ADEOS_CORE */
 #define xnarch_fault_pf_p(fi)   ((fi)->exception == IPIPE_TRAP_ACCESS)
 #ifdef CONFIG_PPC64
 #define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
@@ -138,7 +110,6 @@ typedef struct xnarch_fltinfo {
 				  (fi)->exception == IPIPE_TRAP_SSTEP || \
 				  (fi)->exception == IPIPE_TRAP_DEBUG))
 #endif /* CONFIG_PPC64 */
-#endif /* CONFIG_ADEOS_CORE */
 
 #define xnarch_fault_notify(fi) (!xnarch_fault_bp_p(fi))
 
@@ -191,7 +162,7 @@ static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
        and always inside a critical section. */
     __set_bit(cpuid,&rthal_cpu_realtime);
     /* Remember the preempted Linux task pointer. */
-    rootcb->user_task = rootcb->active_task = rthal_current_host_task(cpuid);
+    rootcb->user_task = rootcb->active_task = current;
 #ifdef CONFIG_XENO_HW_FPU
     rootcb->user_fpu_owner = rthal_get_fpu_owner(rootcb->user_task);
     /* So that xnarch_save_fpu() will operate on the right FPU area. */

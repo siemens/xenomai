@@ -126,7 +126,7 @@ static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
        and always inside a critical section. */
     __set_bit(cpuid,&rthal_cpu_realtime);
     /* Remember the preempted Linux task pointer. */
-    rootcb->user_task = rootcb->active_task = rthal_current_host_task(cpuid);
+    rootcb->user_task = rootcb->active_task = current;
 }
 
 static inline void xnarch_enter_root (xnarchtcb_t *rootcb) {
