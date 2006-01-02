@@ -11,6 +11,7 @@
 #include <xenomai/native/task.h>
 #include <xenomai/native/timer.h>
 #include <xenomai/native/sem.h>
+#include <xenomai/rtdm/rtbenchmark.h>
 
 RT_TASK latency_task, display_task;
 
@@ -29,6 +30,15 @@ long long period_ns = 0;
 int test_duration = 0;  /* sec of testing, via -T <sec>, 0 is inf */
 int data_lines = 21;    /* data lines per header line, -l <lines> to change */
 int quiet = 0;          /* suppress printing of RTH, RTD lines when -T given */
+int benchdev_no = 0;
+int benchdev = -1;
+long freeze_threshold = 0;
+
+#define USER_TASK       0
+#define KERNEL_TASK     1
+#define TIMER_HANDLER   2
+
+int test_mode = USER_TASK;
 
 time_t test_start, test_end;    /* report test duration */
 int test_loops = 0;             /* outer loop count */
@@ -60,14 +70,6 @@ void latency (void *cookie)
     RTIME expected_tsc, period_tsc, start_ticks;
     RT_TIMER_INFO timer_info;
 
-    err = rt_timer_start(TM_ONESHOT);
-
-    if (err)
-        {
-        fprintf(stderr,"latency: cannot start timer, code %d\n",err);
-        return;
-        }
-
     err = rt_timer_inquire(&timer_info);
     
     if (err)
@@ -75,6 +77,9 @@ void latency (void *cookie)
         fprintf(stderr,"latency: rt_timer_inquire, code %d\n",err);
         return;
         }
+
+    if (freeze_threshold > 0)
+        freeze_threshold = rt_timer_ns2tsc(freeze_threshold*1000);
 
     nsamples = ONE_BILLION / period_ns;
     period_tsc = rt_timer_ns2tsc(period_ns);
@@ -117,6 +122,9 @@ void latency (void *cookie)
             if (dt < minj) minj = dt;
             sumj += dt;
 
+            if ((freeze_threshold > 0) && (dt > freeze_threshold))
+                rt_dev_ioctl(benchdev, RTBNCH_RTIOC_FREEZE_TRACE, freeze_threshold);
+
             if (!(finished || warmup) && (do_histogram || do_stats))
                 add_histogram(histogram_avg, dt);
             }
@@ -156,13 +164,42 @@ void display (void *cookie)
     int err, n = 0;
     time_t start;
 
-    err = rt_sem_create(&display_sem,"dispsem",0,S_FIFO);
+    if (test_mode == USER_TASK) {
+        err = rt_sem_create(&display_sem,"dispsem",0,S_FIFO);
 
-    if (err)
-        {
-        fprintf(stderr,"latency: cannot create semaphore: %s\n",strerror(-err));
-        return;
-        }
+        if (err)
+            {
+            fprintf(stderr,"latency: cannot create semaphore: %s\n",strerror(-err));
+            return;
+            }
+
+        printf("== Test mode: periodic userspace task\n");
+
+    } else {
+        struct rtbnch_timerconfig   config;
+
+        if (test_mode == KERNEL_TASK)
+            config.mode = RTBNCH_TIMER_TASK;
+        else
+            config.mode = RTBNCH_TIMER_HANDLER;
+
+        config.period               = period_ns;
+        config.warmup_loops         = WARMUP_TIME;
+        config.histogram_size       = (do_histogram || do_stats) ? histogram_size : 0;
+        config.histogram_bucketsize = bucketsize;
+        config.freeze_threshold     = freeze_threshold;
+
+        err = rt_dev_ioctl(benchdev, RTBNCH_RTIOC_START_TMTEST, &config);
+
+        if (err)
+            {
+            fprintf(stderr,"latency: failed to start in-kernel timer benchmark, code %d\n",err);
+            return;
+            }
+
+        printf("== Test mode: in-kernel %s\n",
+               (test_mode == TIMER_HANDLER) ? "timer handler" : "periodic task");
+    }
 
     time(&start);
 
@@ -172,22 +209,45 @@ void display (void *cookie)
     for (;;)
         {
         long minj, gminj, maxj, gmaxj, avgj;
-        err = rt_sem_p(&display_sem,TM_INFINITE);
 
-        if (err)
-            {
-            if (err != -EIDRM)
-                fprintf(stderr,"latency: failed to pend on semaphore, code %d\n",err);
+        if (test_mode == USER_TASK) {
+            err = rt_sem_p(&display_sem,TM_INFINITE);
 
-            rt_task_delete(NULL);
-            }
+            if (err)
+                {
+                if (err != -EIDRM)
+                    fprintf(stderr,"latency: failed to pend on semaphore, code %d\n",err);
 
-        /* convert jitters to nanoseconds. */
-        minj = rt_timer_tsc2ns(minjitter);
-        gminj = rt_timer_tsc2ns(gminjitter);
-        avgj = rt_timer_tsc2ns(avgjitter);
-        maxj = rt_timer_tsc2ns(maxjitter);
-        gmaxj = rt_timer_tsc2ns(gmaxjitter);
+                return;
+                }
+
+            /* convert jitters to nanoseconds. */
+            minj = rt_timer_tsc2ns(minjitter);
+            gminj = rt_timer_tsc2ns(gminjitter);
+            avgj = rt_timer_tsc2ns(avgjitter);
+            maxj = rt_timer_tsc2ns(maxjitter);
+            gmaxj = rt_timer_tsc2ns(gmaxjitter);
+
+        } else {
+            struct rtbnch_interm_result result;
+
+            err = rt_dev_ioctl(benchdev, RTBNCH_RTIOC_INTERM_RESULT, &result);
+
+            if (err)
+                {
+                if (err != -EIDRM)
+                    fprintf(stderr,"latency: failed to call RTBNCH_RTIOC_INTERM_RESULT, code %d\n",err);
+
+                return;
+                }
+
+            minj = result.last.min;
+            gminj = result.overall.min;
+            avgj = result.last.avg;
+            maxj = result.last.max;
+            gmaxj = result.overall.max;
+            goverrun = result.overall.overruns;
+        }
 
         if (!quiet)
             {
@@ -295,7 +355,32 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
 
     finished = 1;
     rt_timer_stop();
-    rt_sem_delete(&display_sem);
+
+    if (test_mode == USER_TASK) {
+        rt_sem_delete(&display_sem);
+
+        gavgjitter /= (test_loops > 1 ? test_loops : 2)-1;
+
+        gminj = rt_timer_tsc2ns(gminjitter);
+        gmaxj = rt_timer_tsc2ns(gmaxjitter);
+        gavgj = rt_timer_tsc2ns(gavgjitter);
+    } else {
+        struct rtbnch_overall_result overall;
+
+        overall.histogram_min = histogram_min;
+        overall.histogram_max = histogram_max;
+        overall.histogram_avg = histogram_avg;
+
+        rt_dev_ioctl(benchdev, RTBNCH_RTIOC_STOP_TMTEST, &overall);
+
+        gminj    = overall.result.min;
+        gmaxj    = overall.result.max;
+        gavgj    = overall.result.avg;
+        goverrun = overall.result.overruns;
+    }
+
+    if (benchdev >= 0)
+        rt_dev_close(benchdev);
 
     if (do_histogram || do_stats)
         dump_hist_stats();
@@ -303,11 +388,6 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
     time(&test_end);
     actual_duration = test_end - test_start - WARMUP_TIME;
     if (!test_duration) test_duration = actual_duration;
-    gavgjitter /= (test_loops > 1 ? test_loops : 2)-1;
-
-    gminj = rt_timer_tsc2ns(gminjitter);
-    gmaxj = rt_timer_tsc2ns(gmaxjitter);
-    gavgj = rt_timer_tsc2ns(gavgjitter);
 
     printf("---|------------|------------|------------|--------|-------------------------\n"
            "RTS|%12ld|%12ld|%12ld|%8ld|    %.2ld:%.2ld:%.2ld/%.2d:%.2d:%.2d\n",
@@ -333,7 +413,7 @@ int main (int argc, char **argv)
 {
     int c, err;
 
-    while ((c = getopt(argc,argv,"hp:l:T:qH:B:s")) != EOF)
+    while ((c = getopt(argc,argv,"hp:l:T:qH:B:sD:t:f:")) != EOF)
         switch (c)
             {
             case 'h':
@@ -377,6 +457,21 @@ int main (int argc, char **argv)
                 quiet = 1;
                 break;
 
+            case 'D':
+
+                benchdev_no = atoi(optarg);
+                break;
+
+            case 't':
+
+                test_mode = atoi(optarg);
+                break;
+
+            case 'f':
+
+                freeze_threshold = atoi(optarg);
+                break;
+
             default:
 
                 fprintf(stderr, "usage: latency [options]\n"
@@ -387,7 +482,10 @@ int main (int argc, char **argv)
                         "  [-p <period_us>]             # sampling period\n"
                         "  [-l <data-lines per header>] # default=21, 0 to supress headers\n"
                         "  [-T <test_duration_seconds>] # default=0, so ^C to end\n"
-                        "  [-q]                         # supresses RTD, RTH lines if -T is used\n");
+                        "  [-q]                         # supresses RTD, RTH lines if -T is used\n"
+                        "  [-D <benchmark_device_no>]   # number of benchmark device, default=0\n"
+                        "  [-t <test_mode>]             # 0=user task (default), 1=kernel task, 2=timer IRQ\n"
+                        "  [-f <threshold_us>]          # freeze trace on latency exceeding threshold\n");
                 exit(2);
             }
 
@@ -395,6 +493,12 @@ int main (int argc, char **argv)
         {
         fprintf(stderr, "latency: -q only works if -T has been given.\n");
         quiet = 0;
+        }
+
+    if ((test_mode < USER_TASK) || (test_mode > TIMER_HANDLER))
+        {
+        fprintf(stderr, "latency: invalid test mode.\n");
+        exit(2);
         }
 
     time(&test_start);
@@ -420,6 +524,29 @@ int main (int argc, char **argv)
 
     mlockall(MCL_CURRENT|MCL_FUTURE);
 
+    err = rt_timer_start(TM_ONESHOT);
+
+    if (err)
+        {
+        fprintf(stderr,"latency: cannot start timer, code %d\n",err);
+        return 0;
+        }
+
+    if ((test_mode != USER_TASK) || (freeze_threshold > 0))
+        {
+        char devname[RTDM_MAX_DEVNAME_LEN];
+
+        snprintf(devname, RTDM_MAX_DEVNAME_LEN, "rtbenchmark%d", benchdev_no);
+        benchdev = rt_dev_open(devname, O_RDWR);
+
+        if (benchdev < 0)
+            {
+            fprintf(stderr,"latency: failed to open benchmark device, code %d\n"
+                    "(modprobe xeno_timerbench?)\n",benchdev);
+            return 0;
+            }
+        }
+
     err = rt_task_create(&display_task,"display",0,98,0);
 
     if (err)
@@ -436,21 +563,23 @@ int main (int argc, char **argv)
         return 0;
         }
 
-    err = rt_task_create(&latency_task,"sampling",0,99,T_FPU);
+    if (test_mode == USER_TASK) {
+        err = rt_task_create(&latency_task,"sampling",0,99,T_FPU);
 
-    if (err)
-        {
-        fprintf(stderr,"latency: failed to create latency task, code %d\n",err);
-        return 0;
-        }
+        if (err)
+            {
+            fprintf(stderr,"latency: failed to create latency task, code %d\n",err);
+            return 0;
+            }
 
-    err = rt_task_start(&latency_task,&latency,NULL);
+        err = rt_task_start(&latency_task,&latency,NULL);
 
-    if (err)
-        {
-        fprintf(stderr,"latency: failed to start latency task, code %d\n",err);
-        return 0;
-        }
+        if (err)
+            {
+            fprintf(stderr,"latency: failed to start latency task, code %d\n",err);
+            return 0;
+            }
+    }
 
     pause();
 
