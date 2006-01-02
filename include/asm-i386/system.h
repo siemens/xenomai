@@ -28,13 +28,6 @@
 #include <linux/ptrace.h>
 #include <asm-generic/xenomai/system.h>
 
-#ifdef CONFIG_ADEOS_CORE
-#if ADEOS_RELEASE_NUMBER < 0x02060b01
-#error "Adeos 2.6r11c1/x86 or above is required to run this software; please upgrade."
-#error "See http://download.gna.org/adeos/patches/v2.6/i386/"
-#endif
-#endif /* CONFIG_ADEOS_CORE */
-
 #define XNARCH_DEFAULT_TICK          1000000 /* ns, i.e. 1ms */
 #ifdef CONFIG_X86_LOCAL_APIC
 /* When the local APIC is enabled, we do not need to relay the host
@@ -145,7 +138,7 @@ static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
        and always inside a critical section. */
     __set_bit(cpuid,&rthal_cpu_realtime);
     /* Remember the preempted Linux task pointer. */
-    rootcb->user_task = rootcb->active_task = rthal_current_host_task(cpuid);
+    rootcb->user_task = rootcb->active_task = current;
     /* So that xnarch_save_fpu() will operate on the right FPU area. */
     rootcb->fpup = &rootcb->user_task->thread.i387;
 }

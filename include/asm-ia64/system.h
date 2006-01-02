@@ -27,11 +27,6 @@
 #include <linux/ptrace.h>
 #include <asm-generic/xenomai/system.h>
 
-#if ADEOS_RELEASE_NUMBER < 0x0206070b
-#error "Adeos 2.6r7c11/ia64 or above is required to run this software; please upgrade."
-#error "See http://download.gna.org/adeos/patches/v2.6/ia64/"
-#endif
-
 #ifdef CONFIG_IA64_HP_SIM
 #define XNARCH_DEFAULT_TICK    31250000 /* ns, i.e. 31ms */
 #else
@@ -94,12 +89,12 @@ typedef struct xnarch_fltinfo {
 #define xnarch_fault_code(fi)  ((fi)->ia64.isr)
 #define xnarch_fault_pc(fi)    ((fi)->ia64.regs->cr_iip)
 /* Fault is caused by use of FPU while FPU disabled. */
-#define xnarch_fault_fpu_p(fi) ((fi)->trap == ADEOS_FPDIS_TRAP)
+#define xnarch_fault_fpu_p(fi) ((fi)->trap == IPIPE_FPDIS_TRAP)
 /* The following predicates are only usable over a regular Linux stack
    context. */
-#define xnarch_fault_pf_p(fi)   ((fi)->trap == ADEOS_PF_TRAP)
+#define xnarch_fault_pf_p(fi)   ((fi)->trap == IPIPE_PF_TRAP)
 #define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
-                                 (fi)->trap == ADEOS_DEBUG_TRAP)
+                                 (fi)->trap == IPIPE_DEBUG_TRAP)
 #define xnarch_fault_notify(fi) (!xnarch_fault_bp_p(fi))
 
 #ifdef __cplusplus
@@ -157,7 +152,7 @@ static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
 
     __set_bit(cpuid,&rthal_cpu_realtime);
     /* Remember the preempted Linux task pointer. */
-    rootcb->user_task = rootcb->active_task = rthal_root_host_task(cpuid);
+    rootcb->user_task = rootcb->active_task = current;
     /* So that xnarch_save_fpu() will operate on the right FPU area. */
     rootcb->fpup = fpu_owner ? fpu_owner->thread.fph : NULL;
 }
@@ -428,7 +423,7 @@ static inline void xnarch_grab_xirqs (void (*handler)(unsigned irq))
                              IPIPE_DYNAMIC_MASK);
 }
 
-static inline void xnarch_lock_xirqs (adomain_t *adp, int cpuid)
+static inline void xnarch_lock_xirqs (rthal_pipeline_stage_t *ipd, int cpuid)
 
 {
     unsigned irq;
@@ -440,7 +435,7 @@ static inline void xnarch_lock_xirqs (adomain_t *adp, int cpuid)
         switch (vector)
             {
 #ifdef CONFIG_SMP
-            case ADEOS_CRITICAL_VECTOR:
+            case IPIPE_CRITICAL_VECTOR:
             case IA64_IPI_RESCHEDULE:
             case IA64_IPI_VECTOR:
 
@@ -450,12 +445,12 @@ static inline void xnarch_lock_xirqs (adomain_t *adp, int cpuid)
 
             default:
 
-                rthal_lock_irq(adp,cpuid,irq);
+                rthal_lock_irq(ipd,cpuid,irq);
             }
         }
 }
 
-static inline void xnarch_unlock_xirqs (adomain_t *adp, int cpuid)
+static inline void xnarch_unlock_xirqs (rthal_pipeline_stage_t *ipd, int cpuid)
 
 {
     unsigned irq;
@@ -467,7 +462,7 @@ static inline void xnarch_unlock_xirqs (adomain_t *adp, int cpuid)
         switch (vector)
             {
 #ifdef CONFIG_SMP
-            case ADEOS_CRITICAL_VECTOR:
+            case IPIPE_CRITICAL_VECTOR:
             case IA64_IPI_RESCHEDULE:
             case IA64_IPI_VECTOR:
 
@@ -476,7 +471,7 @@ static inline void xnarch_unlock_xirqs (adomain_t *adp, int cpuid)
 
             default:
 
-                rthal_unlock_irq(adp,irq);
+                rthal_unlock_irq(ipd,irq);
             }
         }
 }
