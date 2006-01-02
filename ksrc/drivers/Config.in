@@ -8,5 +8,6 @@ if [ "$CONFIG_XENOMAI" = "y" \
 mainmenu_option next_comment
 comment 'Real-time drivers'
 	source drivers/xenomai/16550A/Config.in
+	source drivers/xenomai/benchmark/Config.in
 endmenu
 fi

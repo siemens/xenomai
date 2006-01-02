@@ -1,5 +1,8 @@
 2005-01-02  Jan Kiszka  <jan.kiszka@web.de>
 
+	* ksrc/drivers/benchmark, src/testsuite/latency: Restore
+	kernel-based latency benchmark app now based on RTDM.
+	
 	* ksrc/skins/rtdm/device.c: Don't permit RTDM devices without NRT
 	closure handlers.
 
