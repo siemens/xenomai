@@ -279,7 +279,7 @@ int rthal_irq_release (unsigned irq)
  *
  * @return 0 is returned upon success. Otherwise:
  *
- * - -EINVAL is returned if @a irq is invalid or @æ handler is NULL.
+ * - -EINVAL is returned if @a irq is invalid or @a handler is NULL.
  *
  * Environments:
  *
@@ -841,11 +841,11 @@ static int apc_read_proc (char *page,
     return len;
 }
 
-static struct proc_dir_entry *add_proc_leaf (const char *name,
-					     read_proc_t rdproc,
-					     write_proc_t wrproc,
-					     void *data,
-					     struct proc_dir_entry *parent)
+struct proc_dir_entry *__rthal_add_proc_leaf (const char *name,
+					      read_proc_t rdproc,
+					      write_proc_t wrproc,
+					      void *data,
+					      struct proc_dir_entry *parent)
 {
     int mode = wrproc ? 0644 : 0444;
     struct proc_dir_entry *entry;
@@ -877,35 +877,39 @@ static int rthal_proc_register (void)
 
     rthal_proc_root->owner = THIS_MODULE;
 
-    add_proc_leaf("hal",
+    __rthal_add_proc_leaf("hal",
 		  &hal_read_proc,
 		  NULL,
 		  NULL,
 		  rthal_proc_root);
 
-    add_proc_leaf("irq",
+    __rthal_add_proc_leaf("irq",
 		  &irq_read_proc,
 		  NULL,
 		  NULL,
 		  rthal_proc_root);
 
-    add_proc_leaf("faults",
+    __rthal_add_proc_leaf("faults",
 		  &faults_read_proc,
 		  NULL,
 		  NULL,
 		  rthal_proc_root);
 
-    add_proc_leaf("apc",
+    __rthal_add_proc_leaf("apc",
 		  &apc_read_proc,
 		  NULL,
 		  NULL,
 		  rthal_proc_root);
+
+    rthal_nmi_proc_register();
+
     return 0;
 }
 
 static void rthal_proc_unregister (void)
 
 {
+    rthal_nmi_proc_unregister();
     remove_proc_entry("hal",rthal_proc_root);
     remove_proc_entry("irq",rthal_proc_root);
     remove_proc_entry("faults",rthal_proc_root);

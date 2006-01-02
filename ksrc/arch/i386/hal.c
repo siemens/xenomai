@@ -216,14 +216,87 @@ static unsigned rthal_maxlat_us = CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX;
 
 static void rthal_latency_above_max(struct pt_regs *regs)
 {
+#ifdef CONFIG_IPIPE_TRACE
+    ipipe_trace_freeze(rthal_maxlat_us);
+#else /* !CONFIG_IPIPE_TRACE */
     char buf[128];
     snprintf(buf,
              sizeof(buf),
              "NMI watchdog detected timer latency above %u us\n",
              rthal_maxlat_us);
     die_nmi(regs, buf);
+#endif /* CONFIG_IPIPE_TRACE */
 }
-#endif
+
+#ifdef CONFIG_PROC_FS
+#include <linux/ctype.h>
+
+static int maxlat_read_proc (char *page,
+                             char **start,
+                             off_t off,
+                             int count,
+                             int *eof,
+                             void *data)
+{
+    int len;
+
+    len = sprintf(page, "%u\n", rthal_maxlat_us);
+    len -= off;
+    if (len <= off + count)
+	*eof = 1;
+    *start = page + off;
+    if (len > count)
+	len = count;
+    if (len < 0)
+	len = 0;
+
+    return len;
+}
+
+static int maxlat_write_proc (struct file *file,
+                              const char __user *buffer,
+                              unsigned long count,
+                              void *data)
+{
+    char *end, buf[16];
+    int val;
+    int n;
+
+    n = (count > sizeof(buf) - 1) ? sizeof(buf) - 1 : count;
+
+    if (copy_from_user(buf, buffer, n))
+	return -EFAULT;
+
+    buf[n] = '\0';
+    val = simple_strtol(buf, &end, 0);
+
+    if (((*end != '\0') && !isspace(*end)) || (val < 0))
+	return -EINVAL;
+
+    rthal_maxlat_us = val;
+    rthal_maxlat_tsc = rthal_llimd(rthal_maxlat_us * 1000ULL,
+                                   RTHAL_CPU_FREQ,
+                                   1000000000);
+
+    return count;
+}
+
+void rthal_nmi_proc_register(void)
+{
+    __rthal_add_proc_leaf("nmi_maxlat",
+		  &maxlat_read_proc,
+		  &maxlat_write_proc,
+		  NULL,
+		  rthal_proc_root);
+}
+
+void rthal_nmi_proc_unregister(void)
+{
+    remove_proc_entry("nmi_maxlat", rthal_proc_root);
+}
+#endif /* CONFIG_PROC_FS */
+
+#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 
 int rthal_timer_request (void (*handler)(void),
                          unsigned long nstick)
