@@ -1,3 +1,9 @@
+2005-01-02  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/arch/i386/hal.c, include/asm-i386/hal.h: export NMI
+	watchdog threshold via /proc, trigger trace freezing instead of
+	die_nmi() if CONFIG_IPIPE_TRACE is enabled.
+	
 2006-01-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* scripts/prepare-kernel.sh, include/asm-generic/hal.h: Deprecate
