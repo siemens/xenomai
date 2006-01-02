@@ -40,7 +40,7 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 subdir = src/skins/rtdm
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in COPYING
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 $(top_srcdir)/config/version \

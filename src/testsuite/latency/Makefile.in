@@ -56,7 +56,8 @@ testPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(test_PROGRAMS)
 am_latency_OBJECTS = latency-latency.$(OBJEXT)
 latency_OBJECTS = $(am_latency_OBJECTS)
-latency_DEPENDENCIES = ../../skins/native/libnative.la
+latency_DEPENDENCIES = ../../skins/native/libnative.la \
+	../../skins/rtdm/librtdm.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/src/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -223,6 +224,7 @@ latency_CPPFLAGS = @XENO_USER_CFLAGS@
 latency_LDFLAGS = @XENO_USER_LDFLAGS@
 latency_LDADD = \
 	../../skins/native/libnative.la \
+	../../skins/rtdm/librtdm.la \
 	-lpthread -lm
 
 EXTRA_DIST = runinfo
