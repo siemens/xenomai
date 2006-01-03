@@ -9,6 +9,8 @@ xeno_posix-y := sched.o thread_attr.o thread.o mutex_attr.o mutex.o cond_attr.o 
 
 xeno_posix-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o intr.o
 
+EXTRA_CFLAGS += -I$(src)/..
+
 else
 
 # Makefile frag for Linux v2.4
@@ -30,7 +32,7 @@ xeno_posix-objs += $(opt_objs-y)
 
 export-objs := $(xeno_posix-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -I.. -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
 

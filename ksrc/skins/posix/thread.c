@@ -17,11 +17,11 @@
  */
 
 
-#include <xenomai/posix/thread.h>
-#include <xenomai/posix/cancel.h>
-#include <xenomai/posix/signal.h>
-#include <xenomai/posix/timer.h>
-#include <xenomai/posix/tsd.h>
+#include <posix/thread.h>
+#include <posix/cancel.h>
+#include <posix/signal.h>
+#include <posix/timer.h>
+#include <posix/tsd.h>
 
 xnticks_t pse51_time_slice;
 

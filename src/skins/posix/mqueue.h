@@ -66,6 +66,8 @@ ssize_t __real_mq_timedreceive(mqd_t q,
 			       size_t len,
 			       unsigned *__restrict__ prio,
 			       const struct timespec *__restrict__ timeout);
+
+int __real_mq_notify(mqd_t mqdes, const struct sigevent *notification);
 #ifdef __cplusplus
 }
 #endif
@@ -121,6 +123,9 @@ ssize_t mq_timedreceive(mqd_t q,
 			size_t len,
 			unsigned *__restrict__ prio,
 			const struct timespec *__restrict__ timeout);
+
+int mq_notify(mqd_t mqdes, const struct sigevent *notification);
+
 #ifdef __cplusplus
 }
 #endif

@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "xenomai/posix/internal.h"
+#include <posix/internal.h>
 
 static const pthread_mutexattr_t default_mutex_attr = {
     magic: PSE51_MUTEX_ATTR_MAGIC,

@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "xenomai/posix/internal.h"
+#include <posix/internal.h>
 
 int pthread_once (pthread_once_t *once, void (*init_routine)(void))
 

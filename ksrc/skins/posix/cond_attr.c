@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <xenomai/posix/internal.h>
+#include <posix/internal.h>
 
 static pthread_condattr_t default_cond_attr = {
 

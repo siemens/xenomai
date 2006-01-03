@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <xenomai/posix/registry.h>
-#include <xenomai/posix/thread.h>
+#include <posix/registry.h>
+#include <posix/thread.h>
 
 struct {
     pse51_node_t **node_buckets;

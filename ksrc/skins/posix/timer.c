@@ -18,8 +18,8 @@
 
 
 #include <xenomai/nucleus/timer.h>
-#include <xenomai/posix/thread.h>
-#include <xenomai/posix/timer.h>
+#include <posix/thread.h>
+#include <posix/timer.h>
 
 #define PSE51_TIMER_MAX  128
 

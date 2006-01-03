@@ -1,5 +1,5 @@
 /*
- * Written by Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>.
+ * Copyright (C) 2005 Philippe Gerum <rpm@xenomai.org>.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -16,26 +16,19 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _POSIX_SEM_H
-#define _POSIX_SEM_H
+#ifndef _POSIX_TIMER_H
+#define _POSIX_TIMER_H
 
-#include <xenomai/posix/thread.h>       /* For pse51_current_thread and
-                                   pse51_thread_t definition. */
+#include <posix/signal.h>        /* For struct itimerspec. */
 
-#define link2sem(laddr) \
-((sem_t *)(((char *)laddr) - (int)(&((sem_t *)0)->link)))
+void pse51_timer_notified(pse51_siginfo_t *si);
 
-#define synch2sem(saddr) \
-((sem_t *)(((char *)saddr) - (int)(&((sem_t *)0)->synchbase)))
+void pse51_timer_init_thread(pthread_t new);
 
-/* Must be called nklock locked, irq off. */
-unsigned long pse51_usem_open(sem_t *sem, pid_t pid, unsigned long uaddr);
+void pse51_timer_cleanup_thread(pthread_t zombie);
 
-/* Must be called nklock locked, irq off. */
-int pse51_usem_close(sem_t *sem, pid_t pid);
+int pse51_timer_pkg_init(void);
 
-void pse51_sem_pkg_init(void);
+void pse51_timer_pkg_cleanup(void);
 
-void pse51_sem_pkg_cleanup(void);
-
-#endif /* !_POSIX_SEM_H */
+#endif /* !_POSIX_TIMER_H */

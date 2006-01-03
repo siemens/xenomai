@@ -20,7 +20,7 @@
 #ifndef _POSIX_THREAD_H
 #define _POSIX_THREAD_H
 
-#include <xenomai/posix/internal.h>
+#include <posix/internal.h>
 
 typedef unsigned long long pse51_sigset_t;
 

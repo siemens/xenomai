@@ -18,7 +18,7 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "xenomai/vxworks/defs.h"
+#include <vxworks/defs.h>
 
 #define ONE_BILLION 1000000000
 

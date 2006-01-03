@@ -17,7 +17,7 @@
  */
 
 
-#include <xenomai/posix/internal.h>
+#include <posix/internal.h>
 
 static const pthread_attr_t default_thread_attr = {
     magic: PSE51_THREAD_ATTR_MAGIC,

@@ -19,18 +19,18 @@
 #ifdef __KERNEL__
 #include <xenomai/posix/syscall.h>
 #endif /* __KERNEL__ */
-#include <xenomai/posix/internal.h>
-#include <xenomai/posix/cond.h>
-#include <xenomai/posix/mutex.h>
 #include <xenomai/posix/posix.h>
-#include <xenomai/posix/sem.h>
-#include <xenomai/posix/signal.h>
-#include <xenomai/posix/thread.h>
-#include <xenomai/posix/tsd.h>
-#include <xenomai/posix/mq.h>
-#include <xenomai/posix/intr.h>
-#include <xenomai/posix/timer.h>
-#include <xenomai/posix/registry.h>
+#include <posix/internal.h>
+#include <posix/cond.h>
+#include <posix/mutex.h>
+#include <posix/sem.h>
+#include <posix/signal.h>
+#include <posix/thread.h>
+#include <posix/tsd.h>
+#include <posix/mq.h>
+#include <posix/intr.h>
+#include <posix/timer.h>
+#include <posix/registry.h>
 
 MODULE_DESCRIPTION("POSIX/PSE51 interface");
 MODULE_AUTHOR("gilles.chanteperdrix@laposte.net");

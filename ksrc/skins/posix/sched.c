@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <xenomai/posix/thread.h>
+#include <posix/thread.h>
 
 int sched_get_priority_min (int policy)
 

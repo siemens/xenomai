@@ -20,8 +20,8 @@
 #include <xenomai/nucleus/shadow.h>
 #endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE*/
 #include <asm/xenomai/system.h> /* For xnlock. */
-#include <xenomai/posix/timer.h>        /* For pse51_timer_notified. */
-#include <xenomai/posix/signal.h>
+#include <posix/timer.h>        /* For pse51_timer_notified. */
+#include <posix/signal.h>
 
 static void pse51_default_handler (int sig);
 

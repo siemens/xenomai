@@ -20,13 +20,7 @@
 #ifndef _POSIX_SIGNAL_H
 #define _POSIX_SIGNAL_H
 
-#if !defined(__KERNEL__) && !defined(__XENO_SIM__)
-
-#include_next <signal.h>
-
-#else /* __KERNEL__ || __XENO_SIM__ */
-
-#include <xenomai/posix/thread.h>
+#include <posix/thread.h>
 
 #define SIGACTION_FLAGS (SA_ONESHOT|SA_NOMASK|SA_SIGINFO)
 
@@ -51,7 +45,5 @@ void pse51_signal_cleanup_thread(pthread_t zombie);
 void pse51_signal_pkg_init(void);
 
 void pse51_signal_pkg_cleanup(void);
-
-#endif /* __KERNEL__ || __XENO_SIM__ */
 
 #endif /* !_POSIX_SIGNAL_H */

@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "xenomai/posix/thread.h"
-#include "xenomai/posix/cancel.h"
+#include <posix/thread.h>
+#include <posix/cancel.h>
 
 typedef void (*cleanup_routine_t) (void *);
 

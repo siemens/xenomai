@@ -20,10 +20,10 @@
 
 #include <xenomai/nucleus/queue.h>
 
-#include <xenomai/posix/registry.h>
-#include <xenomai/posix/internal.h>     /* Magics, time conversion */
-#include <xenomai/posix/thread.h>       /* errno. */
-#include <xenomai/posix/signal.h>       /* pse51_siginfo_t. */
+#include <posix/registry.h>
+#include <posix/internal.h>     /* Magics, time conversion */
+#include <posix/thread.h>       /* errno. */
+#include <posix/signal.h>       /* pse51_siginfo_t. */
 
 /* Temporary definitions. */
 struct pse51_mq {

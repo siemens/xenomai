@@ -21,8 +21,8 @@
 #ifndef _vxworks_defs_h
 #define _vxworks_defs_h
 
-#include "xenomai/nucleus/xenomai.h"
-#include "xenomai/vxworks/vxworks.h"
+#include <xenomai/nucleus/xenomai.h>
+#include <xenomai/vxworks/vxworks.h>
 
 #define WIND_MAGIC(n) (0x8383##n##n)
 #define WIND_TASK_MAGIC WIND_MAGIC(01)
