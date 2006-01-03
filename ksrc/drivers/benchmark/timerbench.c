@@ -224,20 +224,39 @@ int rt_tmbench_close(struct rtdm_dev_context *context,
 
 
 #ifdef CONFIG_IPIPE_TRACE
-int tracer_ioctl(int request, long v)
+int tracer_ioctl(int request, rtdm_user_info_t *user_info, void *arg)
 {
     switch (request) {
         case RTBNCH_RTIOC_BEGIN_TRACE:
-            ipipe_trace_begin(v);
+            ipipe_trace_begin((long)arg);
             break;
 
         case RTBNCH_RTIOC_END_TRACE:
-            ipipe_trace_end(v);
+            ipipe_trace_end((long)arg);
             break;
 
         case RTBNCH_RTIOC_FREEZE_TRACE:
-            ipipe_trace_freeze(v);
+            ipipe_trace_freeze((long)arg);
             break;
+
+        case RTBNCH_RTIOC_SPECIAL_TRACE:
+            ipipe_trace_special((long)arg, 0);
+            break;
+
+        case RTBNCH_RTIOC_SPECIAL_TRACE_EX: {
+            struct rtbnch_trace_special special;
+
+            if (user_info) {
+                if (!rtdm_read_user_ok(user_info, arg,
+                                       sizeof(struct rtbnch_trace_special)) ||
+                    rtdm_copy_from_user(user_info, &special, arg,
+                                        sizeof(struct rtbnch_trace_special)))
+                    return 0;
+            } else
+                special = *(struct rtbnch_trace_special *)arg;
+            ipipe_trace_special(special.id, special.v);
+            break;
+        }
 
         default:
             return 0;
@@ -245,7 +264,7 @@ int tracer_ioctl(int request, long v)
     return 1;
 }
 #else /* !CONFIG_IPIPE_TRACE */
-#define tracer_ioctl(request, v)    (0)
+#define tracer_ioctl(request, user_info, arg)   (0)
 #endif /* CONFIG_IPIPE_TRACE */
 
 
@@ -256,7 +275,7 @@ int rt_tmbench_ioctl_nrt(struct rtdm_dev_context *context,
     int                         ret = 0;
 
 
-    if (tracer_ioctl(request, (long)arg))
+    if (tracer_ioctl(request, user_info, arg))
         return 0;
 
     ctx = (struct rt_tmbench_context *)context->dev_private;
@@ -442,7 +461,7 @@ int rt_tmbench_ioctl_rt(struct rtdm_dev_context *context,
     int                         ret = 0;
 
 
-    if (tracer_ioctl(request, (long)arg))
+    if (tracer_ioctl(request, user_info, arg))
         return 0;
 
     ctx = (struct rt_tmbench_context *)context->dev_private;
