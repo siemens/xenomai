@@ -1,3 +1,14 @@
+2005-01-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/{i386,ppc,ia64}, include/asm-{i386,ppc,ia64,uvm,sim}:
+	Adapt to the new Adeos infrastructure for shared IRQs.
+	
+2006-01-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/generic/nmi.c, ksrc/arch/i386/nmi.c,
+	ksrc/arch/blackfin/nmi.c: Cleanup NMI support among archs,
+	defining a generic support for all common pieces.
+
 2005-01-03  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/16550A/16550A.c: Fix types for 64 bit archs. Fall

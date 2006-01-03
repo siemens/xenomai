@@ -60,9 +60,6 @@
 #include <asm/apic.h>
 #endif /* CONFIG_X86_LOCAL_APIC */
 #include <asm/xenomai/hal.h>
-#ifdef CONFIG_PROC_FS
-#include <linux/proc_fs.h>
-#endif /* CONFIG_PROC_FS */
 #include <stdarg.h>
 
 extern struct desc_struct idt_table[];
@@ -184,6 +181,7 @@ unsigned long rthal_timer_calibrate (void)
 }
 
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
 extern void show_registers(struct pt_regs *regs);
 
@@ -207,12 +205,7 @@ void die_nmi (struct pt_regs *regs, const char *msg)
 }
 #else /* Linux >= 2.6 */
 #include <asm/nmi.h>
-#endif /* Linux >= 2.6 */
-
-unsigned long rthal_maxlat_tsc;
-EXPORT_SYMBOL(rthal_maxlat_tsc);
-
-static unsigned rthal_maxlat_us = CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX;
+#endif /* Linux < 2.6 */
 
 static void rthal_latency_above_max(struct pt_regs *regs)
 {
@@ -227,74 +220,6 @@ static void rthal_latency_above_max(struct pt_regs *regs)
     die_nmi(regs, buf);
 #endif /* CONFIG_IPIPE_TRACE */
 }
-
-#ifdef CONFIG_PROC_FS
-#include <linux/ctype.h>
-
-static int maxlat_read_proc (char *page,
-                             char **start,
-                             off_t off,
-                             int count,
-                             int *eof,
-                             void *data)
-{
-    int len;
-
-    len = sprintf(page, "%u\n", rthal_maxlat_us);
-    len -= off;
-    if (len <= off + count)
-	*eof = 1;
-    *start = page + off;
-    if (len > count)
-	len = count;
-    if (len < 0)
-	len = 0;
-
-    return len;
-}
-
-static int maxlat_write_proc (struct file *file,
-                              const char __user *buffer,
-                              unsigned long count,
-                              void *data)
-{
-    char *end, buf[16];
-    int val;
-    int n;
-
-    n = (count > sizeof(buf) - 1) ? sizeof(buf) - 1 : count;
-
-    if (copy_from_user(buf, buffer, n))
-	return -EFAULT;
-
-    buf[n] = '\0';
-    val = simple_strtol(buf, &end, 0);
-
-    if (((*end != '\0') && !isspace(*end)) || (val < 0))
-	return -EINVAL;
-
-    rthal_maxlat_us = val;
-    rthal_maxlat_tsc = rthal_llimd(rthal_maxlat_us * 1000ULL,
-                                   RTHAL_CPU_FREQ,
-                                   1000000000);
-
-    return count;
-}
-
-void rthal_nmi_proc_register(void)
-{
-    __rthal_add_proc_leaf("nmi_maxlat",
-		  &maxlat_read_proc,
-		  &maxlat_write_proc,
-		  NULL,
-		  rthal_proc_root);
-}
-
-void rthal_nmi_proc_unregister(void)
-{
-    remove_proc_entry("nmi_maxlat", rthal_proc_root);
-}
-#endif /* CONFIG_PROC_FS */
 
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 
@@ -368,21 +293,8 @@ int rthal_timer_request (void (*handler)(void),
                            "rthal_broadcast_timer",
                            &rthal_broadcast_to_local_timers);
 
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-    if (!p->mode) {
-        rthal_maxlat_tsc = rthal_llimd(rthal_maxlat_us * 1000ULL,
-                                       RTHAL_CPU_FREQ,
-                                       1000000000);
-
-        rthal_nmi_release();
-    
-        if (rthal_nmi_request(rthal_latency_above_max))
-            printk("Xenomai: NMI watchdog not available.\n");
-        else
-            printk("Xenomai: NMI watchdog started (threshold=%u us).\n",
-		   rthal_maxlat_us);
-    }
-#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
+    if (!p->mode)	/* This only works in aperiodic mode. */
+	rthal_nmi_init(&rthal_latency_above_max);
 
     return 0;
 }

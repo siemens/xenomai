@@ -56,14 +56,6 @@ module_param_named(timerfreq,rthal_timerfreq_arg,ulong,0444);
 
 static struct {
 
-    void (*handler)(unsigned irq, void *cookie);
-    void *cookie;
-    unsigned long hits[RTHAL_NR_CPUS];
-
-} rthal_realtime_irq[IPIPE_NR_IRQS];
-
-static struct {
-
     void (*handler)(void *cookie);
     void *cookie;
     const char *name;
@@ -115,13 +107,6 @@ void rthal_critical_exit (unsigned long flags)
     rthal_release_superlock(flags);
 }
 
-static void rthal_irq_trampoline (unsigned irq)
-
-{
-    rthal_realtime_irq[irq].hits[rthal_processor_id()]++;
-    rthal_realtime_irq[irq].handler(irq,rthal_realtime_irq[irq].cookie);
-}
-
 /**
  * @fn int rthal_irq_request(unsigned irq, void (*handler)(unsigned irq, void *cookie), int (*ackfn)(unsigned irq), void *cookie)
  *
@@ -171,8 +156,8 @@ static void rthal_irq_trampoline (unsigned irq)
  */
 
 int rthal_irq_request (unsigned irq,
-		       void (*handler)(unsigned irq, void *cookie),
-		       int (*ackfn)(unsigned irq),
+		       rthal_irq_handler_t handler,
+		       rthal_irq_ackfn_t ackfn,
 		       void *cookie)
 {
     unsigned long flags;
@@ -183,7 +168,7 @@ int rthal_irq_request (unsigned irq,
 
     flags = rthal_critical_enter(NULL);
 
-    if (rthal_realtime_irq[irq].handler != NULL)
+    if (rthal_irq_handler(&rthal_domain, irq) != NULL)
 	{
 	err = -EBUSY;
 	goto unlock_and_exit;
@@ -191,14 +176,10 @@ int rthal_irq_request (unsigned irq,
 
     err = rthal_virtualize_irq(&rthal_domain,
 			       irq,
-			       &rthal_irq_trampoline,
+			       handler,
+			       cookie,
 			       ackfn,
 			       IPIPE_DYNAMIC_MASK);
-    if (!err)
-	{
-	rthal_realtime_irq[irq].handler = handler;
-	rthal_realtime_irq[irq].cookie = cookie;
-	}
 
  unlock_and_exit:
 
@@ -245,9 +226,8 @@ int rthal_irq_release (unsigned irq)
 			       irq,
 			       NULL,
 			       NULL,
+			       NULL,
 			       IPIPE_PASS_MASK);
-    if (!err)
-        xchg(&rthal_realtime_irq[irq].handler,NULL);
 
     return err;
 }
@@ -439,8 +419,7 @@ rthal_trap_handler_t rthal_trap_catch (rthal_trap_handler_t handler)
     return (rthal_trap_handler_t)xchg(&rthal_trap_handler,handler);
 }
 
-static void rthal_apc_handler (unsigned virq)
-
+static void rthal_apc_handler (unsigned virq, void *arg)
 {
     void (*handler)(void *), *cookie;
     rthal_declare_cpuid;
@@ -509,7 +488,7 @@ static int rthal_apc_thread (void *data)
     return 0;
 }
 
-void rthal_apc_kicker (unsigned virq)
+void rthal_apc_kicker (unsigned virq, void *cookie)
 
 {
     wake_up_process(rthal_apc_servers[smp_processor_id()]);
@@ -736,13 +715,13 @@ static int irq_read_proc (char *page,
 
     for (irq = 0; irq < IPIPE_NR_IRQS; irq++) {
 
-	if (rthal_realtime_irq[irq].handler == NULL)
+	if (rthal_irq_handler(&rthal_domain, irq) == NULL)
 	    continue;
 
 	p += sprintf(p,"\n%3d:",irq);
 
 	for_each_online_cpu(cpu) {
-	    p += sprintf(p,"%12lu",rthal_realtime_irq[irq].hits[cpu]);
+	    p += sprintf(p,"%12lu",rthal_cpudata_irq_hits(&rthal_domain,cpu,irq));
 	}
     }
 
@@ -955,7 +934,9 @@ int rthal_init (void)
 			       rthal_apc_virq,
 			       &rthal_apc_trampoline,
 			       NULL,
+			       NULL,
 			       IPIPE_HANDLE_MASK);
+
     if (err)
     {
         printk(KERN_ERR "Xenomai: Failed to virtualize IRQ.\n");
@@ -1008,7 +989,7 @@ out_kthread_stop:
       }
     }
 #endif /* CONFIG_PREEMPT_RT */
-    rthal_virtualize_irq(rthal_current_domain,rthal_apc_virq,NULL,NULL,0);
+    rthal_virtualize_irq(rthal_current_domain,rthal_apc_virq,NULL,NULL,NULL,0);
    
 out_free_irq:
     rthal_free_virq(rthal_apc_virq);
@@ -1035,7 +1016,7 @@ void rthal_exit (void)
 
     if (rthal_apc_virq)
 	{
-	rthal_virtualize_irq(rthal_current_domain,rthal_apc_virq,NULL,NULL,0);
+	rthal_virtualize_irq(rthal_current_domain,rthal_apc_virq,NULL,NULL,NULL,0);
 	rthal_free_virq(rthal_apc_virq);
 #ifdef CONFIG_PREEMPT_RT
 	{

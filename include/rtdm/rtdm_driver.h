@@ -793,7 +793,7 @@ static inline int rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig,
     if (*nrt_sig == 0)
         return -EAGAIN;
 
-    rthal_virtualize_irq(rthal_root_domain, *nrt_sig, handler, NULL,
+    rthal_virtualize_irq(rthal_root_domain, *nrt_sig, (rthal_irq_handler_t)handler, NULL, NULL,
                          IPIPE_HANDLE_MASK);
     return 0;
 }

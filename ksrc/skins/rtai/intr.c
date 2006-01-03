@@ -24,7 +24,7 @@ int rt_request_irq (unsigned irq,
 		    void (*handler)(unsigned irq, void *cookie),
 		    void *cookie)
 {
-    return rthal_irq_request(irq,handler,NULL,cookie);
+    return xnarch_hook_irq(irq,handler,NULL,cookie);
 }
 
 int rt_release_irq (unsigned irq)

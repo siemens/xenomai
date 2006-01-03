@@ -349,7 +349,8 @@ static inline int xnarch_hook_ipi (void (*handler)(void))
 {
     return rthal_virtualize_irq(&rthal_domain,
 				RTHAL_SERVICE_IPI0,
-				(void (*)(unsigned)) handler,
+				(rthal_irq_handler_t) handler,
+				NULL,
 				NULL,
 				IPIPE_HANDLE_MASK);
 }
@@ -359,6 +360,7 @@ static inline int xnarch_release_ipi (void)
 {
     return rthal_virtualize_irq(&rthal_domain,
 				RTHAL_SERVICE_IPI0,
+				NULL,
 				NULL,
 				NULL,
 				IPIPE_PASS_MASK);
@@ -387,7 +389,8 @@ static inline void xnarch_notify_halt(void)
 
     rthal_virtualize_irq(rthal_current_domain,
 			 RTHAL_SERVICE_IPI2,
-			 xnarch_finalize_cpu,
+			 (rthal_irq_handler_t)xnarch_finalize_cpu,
+			 NULL,
 			 NULL,
 			 IPIPE_HANDLE_MASK);
 
@@ -401,6 +404,7 @@ static inline void xnarch_notify_halt(void)
     
     rthal_virtualize_irq(rthal_current_domain,
 			 RTHAL_SERVICE_IPI2,
+			 NULL,
 			 NULL,
 			 NULL,
 			 IPIPE_PASS_MASK);
@@ -467,9 +471,8 @@ static inline unsigned long long xnarch_get_sys_time(void)
 #ifdef XENO_INTR_MODULE
 
 static inline int xnarch_hook_irq (unsigned irq,
-				   void (*handler)(unsigned irq,
-						   void *cookie),
-				   int (*ackfn)(unsigned irq),
+				   rthal_irq_handler_t handler,
+				   rthal_irq_ackfn_t ackfn,
 				   void *cookie)
 {
     return rthal_irq_request(irq,handler,ackfn,cookie);

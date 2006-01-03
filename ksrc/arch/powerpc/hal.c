@@ -160,10 +160,12 @@ static void rthal_critical_sync(void) {
 #endif /* CONFIG_SMP */
 }
 
+#ifdef CONFIG_SMP
 static void rthal_smp_relay_tick(unsigned irq, void *cookie)
 {
 	rthal_irq_host_pend(RTHAL_TIMER_IRQ);
 }
+#endif /* CONFIG_SMP */
 
 int rthal_timer_request (void (*handler)(void), 
 		unsigned long nstick)

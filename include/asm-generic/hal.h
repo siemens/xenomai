@@ -94,6 +94,11 @@ typedef rwlock_t rthal_rwlock_t;
 #endif /* RAW_RW_LOCK_UNLOCKED */
 #endif /* IPIPE_RW_LOCK_UNLOCKED */
 
+#define rthal_irq_cookie(ipd,irq)	__ipipe_irq_cookie(ipd,irq)
+#define rthal_irq_handler(ipd,irq)	__ipipe_irq_handler(ipd,irq)
+
+#define rthal_cpudata_irq_hits(ipd,cpu,irq)	__ipipe_cpudata_irq_hits(ipd,cpu,irq)
+
 #define rthal_local_irq_disable()	ipipe_stall_pipeline_from(&rthal_domain)
 #define rthal_local_irq_enable()	ipipe_unstall_pipeline_from(&rthal_domain)
 #define rthal_local_irq_save(x)		((x) = !!ipipe_test_and_stall_pipeline_from(&rthal_domain))
@@ -126,7 +131,7 @@ typedef rwlock_t rthal_rwlock_t;
 #define rthal_propagate_irq(irq)		ipipe_propagate_irq(irq)
 #define rthal_set_irq_affinity(irq,aff)		ipipe_set_irq_affinity(irq,aff)
 #define rthal_schedule_irq(irq)			ipipe_schedule_irq(irq)
-#define rthal_virtualize_irq(dom,irq,isr,ackfn,mode) ipipe_virtualize_irq(dom,irq,isr,ackfn,mode)
+#define rthal_virtualize_irq(dom,irq,isr,cookie,ackfn,mode) ipipe_virtualize_irq(dom,irq,isr,cookie,ackfn,mode)
 #define rthal_alloc_virq()			ipipe_alloc_virq()
 #define rthal_free_virq(irq)			ipipe_free_virq(irq)
 #define rthal_trigger_irq(irq)			ipipe_trigger_irq(irq)
@@ -261,8 +266,8 @@ do {  \
 
 #define rthal_printk	printk
 
-typedef void (*rthal_irq_handler_t)(unsigned irq,
-				    void *cookie);
+typedef ipipe_irq_handler_t rthal_irq_handler_t;
+typedef ipipe_irq_ackfn_t   rthal_irq_ackfn_t;
 
 struct rthal_calibration_data {
 
@@ -300,6 +305,32 @@ unsigned long rthal_critical_enter(void (*synch)(void));
 
 void rthal_critical_exit(unsigned long flags);
 
+#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
+
+extern unsigned rthal_maxlat_us;
+
+extern unsigned long rthal_maxlat_tsc;
+
+void rthal_nmi_init(void (*emergency)(struct pt_regs *));
+
+int rthal_nmi_request(void (*emergency)(struct pt_regs *));
+
+void rthal_nmi_release(void);
+
+void rthal_nmi_arm(unsigned long delay);
+
+void rthal_nmi_disarm(void);
+
+void rthal_nmi_proc_register(void);
+
+void rthal_nmi_proc_unregister(void);
+
+#else /* !CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
+#define rthal_nmi_init(efn)		do { } while(0)
+#define rthal_nmi_proc_register()	do { } while(0)
+#define rthal_nmi_proc_unregister()	do { } while(0)
+#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
+
     /* Public interface */
 
 #ifdef __cplusplus
@@ -311,8 +342,8 @@ int rthal_init(void);
 void rthal_exit(void);
 
 int rthal_irq_request(unsigned irq,
-		      void (*handler)(unsigned irq, void *cookie),
-		      int (*ackfn)(unsigned irq),
+		      rthal_irq_handler_t handler,
+		      rthal_irq_ackfn_t ackfn,
 		      void *cookie);
 
 int rthal_irq_release(unsigned irq);
