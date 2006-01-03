@@ -1,3 +1,14 @@
+2005-01-03  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/drivers/16550A/16550A.c: Fix types for 64 bit archs. Fall
+	back to MODULE_PARM on kernels < 2.6.10.
+
+	* ksrc/drivers/benchmark/timerbench.c, include/rtdm/rtbenchmark.h:
+	Add support for ipipe_trace_special via benchmark device.
+
+	* src/testsuite/latency/latency.c: Fix freezing threshold,
+	improve info display.
+
 2005-01-02  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/benchmark, src/testsuite/latency: Restore
