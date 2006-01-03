@@ -362,10 +362,12 @@ void mvm_tcl_build_pendq(mvm_tcl_listobj_t *tclist,
 
 #ifdef XENO_INTR_MODULE
 
+typedef void (*rthal_irq_handler_t)(unsigned, void *);
+typedef int (*rthal_irq_ackfn_t)(unsigned);
+
 static inline int xnarch_hook_irq (unsigned irq,
-				   void (*handler)(unsigned irq,
-						   void *cookie),
-				   int (*ackfn)(unsigned irq), /* Ignored. */
+				   rthal_irq_handler_t handler,
+				   rthal_irq_ackfn_t ackfn, /* Ignored. */
 				   void *cookie)
 {
     return mvm_hook_irq(irq,handler,cookie);

@@ -470,7 +470,7 @@ static inline void xnarch_init_shadow_tcb (xnarchtcb_t *tcb,
     tcb->name = name;
 }
 
-static inline void xnarch_grab_xirqs (void (*handler)(unsigned irq))
+static inline void xnarch_grab_xirqs (rthal_irq_handler_t handler)
 
 {
     unsigned irq;
@@ -479,6 +479,7 @@ static inline void xnarch_grab_xirqs (void (*handler)(unsigned irq))
 	rthal_virtualize_irq(rthal_current_domain,
 			     irq,
 			     handler,
+			     NULL,
 			     NULL,
 			     IPIPE_DYNAMIC_MASK);
 
@@ -489,6 +490,7 @@ static inline void xnarch_grab_xirqs (void (*handler)(unsigned irq))
     rthal_virtualize_irq(rthal_current_domain,
 			 RTHAL_TIMER_IRQ,
 			 handler,
+			 NULL,
 			 NULL,
 			 IPIPE_DYNAMIC_MASK);
 }
@@ -672,7 +674,8 @@ static inline int xnarch_init (void)
 
     rthal_virtualize_irq(&rthal_domain,
 			 xnarch_escalation_virq,
-			 (void (*)(unsigned))&xnpod_schedule_handler,
+			 (rthal_irq_handler_t)&xnpod_schedule_handler,
+			 NULL,
 			 NULL,
 			 IPIPE_HANDLE_MASK);
 

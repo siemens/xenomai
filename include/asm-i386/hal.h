@@ -193,6 +193,8 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul) {
 #define RTHAL_APIC_ICOUNT          ((RTHAL_TIMER_FREQ + HZ/2)/HZ)
 #endif /* CONFIG_X86_LOCAL_APIC */
 
+#define RTHAL_NMICLK_FREQ	RTHAL_CPU_FREQ
+
 #define rthal_irq_descp(irq)  (irq_desc + irq)
 
 static inline void rthal_grab_control(void)
@@ -219,23 +221,6 @@ void rthal_setup_8254_tsc(void);
 rthal_time_t rthal_get_8254_tsc(void);
 #define rthal_rdtsc() rthal_get_8254_tsc()
 #endif /* CONFIG_X86_TSC */
-
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-int rthal_nmi_request(void (*emergency)(struct pt_regs *));
-
-void rthal_nmi_release(void);
-
-void rthal_nmi_arm(unsigned long delay);
-
-void rthal_nmi_disarm(void);
-
-void rthal_nmi_proc_register(void);
-
-void rthal_nmi_proc_unregister(void);
-#else /* !CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
-# define rthal_nmi_proc_register()
-# define rthal_nmi_proc_unregister()
-#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 
 static inline void rthal_timer_program_shot (unsigned long delay)
 {

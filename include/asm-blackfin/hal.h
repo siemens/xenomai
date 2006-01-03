@@ -113,7 +113,9 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #include <asm/processor.h>
 #include <asm/xenomai/atomic.h>
 
-#define RTHAL_TIMER_IRQ   IRQ_CORETMR
+#define RTHAL_TIMER_IRQ		IRQ_CORETMR
+/* The NMI watchdog timer is clocked by the system clock. */
+#define RTHAL_NMICLK_FREQ	get_sclk()
 
 #define rthal_irq_descp(irq)	(&irq_desc[(irq)])
 
@@ -126,16 +128,6 @@ static inline unsigned long long rthal_rdtsc (void)
     rthal_read_tsc(t);
     return t;
 }
-
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-int rthal_nmi_request(void (*emergency)(struct pt_regs *));
-
-void rthal_nmi_release(void);
-
-void rthal_nmi_arm(unsigned long delay);
-
-void rthal_nmi_disarm(void);
-#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 
 static inline void rthal_timer_program_shot (unsigned long delay)
 {

@@ -78,11 +78,6 @@ static int rthal_timer_ack (unsigned irq)
 
 asmlinkage void irq_panic(int reason, struct pt_regs *regs);
 
-unsigned long rthal_maxlat_ticks;
-EXPORT_SYMBOL(rthal_maxlat_ticks);
-
-static unsigned rthal_maxlat_us = CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX;
-
 static void rthal_latency_above_max(struct pt_regs *regs)
 {
     rthal_emergency_console();
@@ -141,19 +136,8 @@ int rthal_timer_request (void (*handler)(void),
     rthal_irq_enable(RTHAL_TIMER_IRQ);
 
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-    if (nstick == 0) {	/* This only works in aperiodic mode. */
-        /* The watchdog timer is clocked by the system clock. */
-        rthal_maxlat_ticks = rthal_llimd(rthal_maxlat_us * 1000ULL,
-					 get_sclk(),
-					 1000000000);
-        rthal_nmi_release();
-    
-        if (rthal_nmi_request(rthal_latency_above_max))
-            printk("Xenomai: NMI watchdog not available.\n");
-        else
-            printk("Xenomai: NMI watchdog started (threshold=%u us).\n",
-		   rthal_maxlat_us);
-    }
+    if (nstick == 0)	/* This only works in aperiodic mode. */
+	rthal_nmi_init(&rthal_latency_above_max);
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 
     return 0;
