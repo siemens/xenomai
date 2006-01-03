@@ -1,3 +1,8 @@
+2005-01-03  Jan Kiszka  <jan.kiszka@web.de>
+
+	* drivers/16550A/16550A.c: Fix types for 64 bit archs. Fall back
+	to MODULE_PARM on kernels < 2.6.10.
+
 2006-01-03  Philippe Gerum  <rpm@xenomai.org>
 
 	* configure.in: Do not ask for CONFIG_IPIPE_EXTENDED since the
@@ -537,7 +542,7 @@
 
 	* nucleus/module.c: Revamp /proc/xenomai/{sched,stat} output format.
 
-2005-08-31  Stéphane Fillod  <stephane.fillod@thomson.net>
+2005-08-31  Stephane Fillod  <stephane.fillod@thomson.net>
 
 	* skins/rtai/fifo.c (__fifo_pkg_init): fix missing init of flush
 	queue handles.
