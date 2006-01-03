@@ -114,24 +114,34 @@ static const struct rtser_config default_config = {
 static struct rtdm_device   *device[MAX_DEVICES];
 
 static unsigned long        ioaddr[MAX_DEVICES];
-static int                  ioaddr_c;
 static unsigned int         irq[MAX_DEVICES];
-static int                  irq_c;
 static unsigned int         baud_base[MAX_DEVICES];
-static int                  baud_base_c;
 static int                  tx_fifo[MAX_DEVICES];
-static int                  tx_fifo_c;
 static unsigned int         start_index;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,10)
+static int                  ioaddr_c;
+static int                  irq_c;
+static int                  baud_base_c;
+static int                  tx_fifo_c;
+
 module_param_array(ioaddr, ulong, &ioaddr_c, 0400);
-MODULE_PARM_DESC(ioaddr, "I/O addresses of the serial devices");
 module_param_array(irq, uint, &irq_c, 0400);
-MODULE_PARM_DESC(irq, "IRQ numbers of the serial devices");
 module_param_array(baud_base, uint, &baud_base_c, 0400);
+module_param_array(tx_fifo, int, &tx_fifo_c, 0400);
+#else /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10) */
+MODULE_PARM(ioaddr, "1-" __MODULE_STRING(MAX_DEVICES) "i");
+MODULE_PARM(irq, "1-" __MODULE_STRING(MAX_DEVICES) "i");
+MODULE_PARM(baud_base, "1-" __MODULE_STRING(MAX_DEVICES) "i");
+MODULE_PARM(tx_fifo, "1-" __MODULE_STRING(MAX_DEVICES) "i");
+#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,10) */
+
+MODULE_PARM_DESC(ioaddr, "I/O addresses of the serial devices");
+MODULE_PARM_DESC(irq, "IRQ numbers of the serial devices");
 MODULE_PARM_DESC(baud_base,
     "Maximum baud rate of the serial device (internal clock rate / 16)");
-module_param_array(tx_fifo, int, &tx_fifo_c, 0400);
 MODULE_PARM_DESC(tx_fifo, "Transmitter FIFO size");
+
 module_param(start_index, uint, 0400);
 MODULE_PARM_DESC(start_index, "First device instance number to be used");
 
@@ -644,10 +654,10 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 
 
         case RTSER_RTIOC_SET_CONTROL: {
-            int             new_mcr;
+            long            new_mcr;
             rtdm_lockctx_t  lock_ctx;
 
-            new_mcr = (int)arg;
+            new_mcr = (long)arg;
 
             rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
             ctx->mcr_status = new_mcr;
@@ -728,8 +738,8 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 }
 
 
-int rt_16550_read(struct rtdm_dev_context *context,
-                  rtdm_user_info_t *user_info, void *buf, size_t nbyte)
+ssize_t rt_16550_read(struct rtdm_dev_context *context,
+                      rtdm_user_info_t *user_info, void *buf, size_t nbyte)
 {
     struct rt_16550_context *ctx;
     int                     dev_id;
@@ -741,7 +751,7 @@ int rt_16550_read(struct rtdm_dev_context *context,
     int                     in_pos;
     char                    *out_pos = (char *)buf;
     rtdm_toseq_t            timeout_seq;
-    int                     ret = -EAGAIN;  /* for non-blocking read */
+    ssize_t                 ret = -EAGAIN;  /* for non-blocking read */
     int                     nonblocking;
 
 
@@ -872,8 +882,9 @@ int rt_16550_read(struct rtdm_dev_context *context,
 }
 
 
-int rt_16550_write(struct rtdm_dev_context *context,
-                   rtdm_user_info_t *user_info, const void *buf, size_t nbyte)
+ssize_t rt_16550_write(struct rtdm_dev_context *context,
+                       rtdm_user_info_t *user_info, const void *buf,
+                       size_t nbyte)
 {
     struct rt_16550_context *ctx;
     int                     dev_id;
@@ -885,7 +896,7 @@ int rt_16550_write(struct rtdm_dev_context *context,
     int                     out_pos;
     char                    *in_pos = (char *)buf;
     rtdm_toseq_t            timeout_seq;
-    int                     ret;
+    ssize_t                 ret;
 
 
     if (nbyte == 0)
@@ -1023,11 +1034,13 @@ static const struct rtdm_device __initdata device_tmpl = {
 
     device_class:       RTDM_CLASS_SERIAL,
     device_sub_class:   RTDM_SUBCLASS_16550A,
-    driver_name:        "rt_16550A",
-    driver_version:     RTDM_DRIVER_VER(1, 2, 1),
+    driver_name:        "xeno_16550A",
+    driver_version:     RTDM_DRIVER_VER(1, 2, 5),
     peripheral_name:    "UART 16550A",
     provider_name:      "Jan Kiszka",
 };
+
+void cleanup_module(void);
 
 int __init init_module(void)
 {
@@ -1036,10 +1049,15 @@ int __init init_module(void)
     int                 i;
 
 
-    if (irq_c < ioaddr_c)
-        return -EINVAL;
+    for (i = 0; i < MAX_DEVICES; i++) {
+        if (!ioaddr[i])
+            continue;
 
-    for (i = 0; i < ioaddr_c; i++) {
+        ret = -EINVAL;
+        if (!irq[i]) {
+            goto cleanup_out;
+        }
+
         dev = kmalloc(sizeof(struct rtdm_device), GFP_KERNEL);
         ret = -ENOMEM;
         if (!dev)
