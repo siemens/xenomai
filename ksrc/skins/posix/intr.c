@@ -14,8 +14,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "xenomai/posix/internal.h"
-#include "xenomai/posix/intr.h"
+#include <posix/internal.h>
+#include <posix/intr.h>
 
 static xnqueue_t pse51_intrq;
 

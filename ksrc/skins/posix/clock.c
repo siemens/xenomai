@@ -17,7 +17,7 @@
  */
 
 
-#include "xenomai/posix/thread.h"
+#include <posix/thread.h>
 
 int clock_getres (clockid_t clock_id, struct timespec *res)
 

@@ -19,8 +19,8 @@
 #ifndef _POSIX_MUTEX_H
 #define _POSIX_MUTEX_H
 
-#include <xenomai/posix/internal.h>
-#include <xenomai/posix/thread.h>
+#include <posix/internal.h>
+#include <posix/thread.h>
 
 /* must be called with nklock locked, interrupts off. */
 static inline int mutex_trylock_internal(pthread_mutex_t *mutex, pthread_t cur)

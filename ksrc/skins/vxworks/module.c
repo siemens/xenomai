@@ -18,7 +18,7 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "xenomai/vxworks/defs.h"
+#include <vxworks/defs.h>
 
 MODULE_DESCRIPTION("VxWorks(R) virtual machine");
 MODULE_AUTHOR("gilles.chanteperdrix@laposte.net");

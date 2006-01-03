@@ -22,14 +22,14 @@
 
 #include <xenomai/posix/syscall.h>
 #include <xenomai/posix/posix.h>
-#include <xenomai/posix/thread.h>
-#include <xenomai/posix/mutex.h>
-#include <xenomai/posix/cond.h>
-#include <xenomai/posix/jhash.h>
-#include <xenomai/posix/mq.h>
-#include <xenomai/posix/intr.h>
-#include <xenomai/posix/registry.h>     /* For PSE51_MAXNAME. */
-#include <xenomai/posix/sem.h>
+#include <posix/thread.h>
+#include <posix/mutex.h>
+#include <posix/cond.h>
+#include <posix/jhash.h>
+#include <posix/mq.h>
+#include <posix/intr.h>
+#include <posix/registry.h>     /* For PSE51_MAXNAME. */
+#include <posix/sem.h>
 
 static int __muxid;
 

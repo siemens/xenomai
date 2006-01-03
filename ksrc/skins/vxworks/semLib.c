@@ -18,7 +18,7 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "xenomai/vxworks/defs.h"
+#include <vxworks/defs.h>
 
 
 #define WIND_SEMB_OPTION_MASK (SEM_Q_FIFO|SEM_Q_PRIORITY)

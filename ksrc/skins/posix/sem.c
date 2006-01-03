@@ -19,9 +19,9 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-#include <xenomai/posix/registry.h>     /* For named semaphores. */
-#include <xenomai/posix/thread.h>
-#include <xenomai/posix/sem.h>
+#include <posix/registry.h>     /* For named semaphores. */
+#include <posix/thread.h>
+#include <posix/sem.h>
 
 typedef struct pse51_named_sem {
     sem_t sembase;

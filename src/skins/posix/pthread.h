@@ -24,8 +24,6 @@
 #include <signal.h>
 #include <time.h>
 #include_next <pthread.h>
-#include <xenomai/nucleus/thread.h>
-#include <xenomai/nucleus/intr.h>
 
 union __xeno_mutex {
     pthread_mutex_t native_mutex;

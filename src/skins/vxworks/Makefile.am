@@ -22,5 +22,7 @@ AM_CPPFLAGS = \
 
 CLEANFILES = $(nodist_libvxworks_a_SOURCES)
 
-$(nodist_libvxworks_a_SOURCES): Makefile
+libvxworks.a: defs.h
+
+$(nodist_libvxworks_a_SOURCES) defs.h: Makefile
 	$(LN_S) -f $(top_srcdir)/ksrc/skins/vxworks/$@

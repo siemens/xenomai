@@ -17,8 +17,8 @@
  */
 
 
-#include "xenomai/posix/mutex.h"
-#include "xenomai/posix/cond.h"
+#include <posix/mutex.h>
+#include <posix/cond.h>
 
 #define link2cond(laddr) \
     ((pthread_cond_t *)(((char *)laddr) - offsetof(pthread_cond_t, link)))

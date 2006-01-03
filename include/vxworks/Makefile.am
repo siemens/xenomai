@@ -1,3 +1,3 @@
 includedir = $(prefix)/include/vxworks
 
-include_HEADERS = defs.h vxworks.h
+include_HEADERS = vxworks.h

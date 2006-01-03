@@ -17,8 +17,8 @@
  */
 
 
-#include <xenomai/posix/thread.h>
-#include <xenomai/posix/tsd.h>
+#include <posix/thread.h>
+#include <posix/tsd.h>
 
 typedef void (*pse51_key_destructor_t)(void *);
 
