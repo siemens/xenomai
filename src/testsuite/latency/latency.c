@@ -39,6 +39,11 @@ long freeze_threshold = 0;
 #define TIMER_HANDLER   2
 
 int test_mode = USER_TASK;
+const char *test_mode_names[] = {
+    "periodic user-mode task",
+    "in-kernel periodic task",
+    "in-kernel timer handler"
+};
 
 time_t test_start, test_end;    /* report test duration */
 int test_loops = 0;             /* outer loop count */
@@ -78,8 +83,7 @@ void latency (void *cookie)
         return;
         }
 
-    if (freeze_threshold > 0)
-        freeze_threshold = rt_timer_ns2tsc(freeze_threshold*1000);
+    freeze_threshold = rt_timer_ns2tsc(freeze_threshold);
 
     nsamples = ONE_BILLION / period_ns;
     period_tsc = rt_timer_ns2tsc(period_ns);
@@ -122,11 +126,15 @@ void latency (void *cookie)
             if (dt < minj) minj = dt;
             sumj += dt;
 
-            if ((freeze_threshold > 0) && (dt > freeze_threshold))
-                rt_dev_ioctl(benchdev, RTBNCH_RTIOC_FREEZE_TRACE, freeze_threshold);
+            if (!(finished || warmup))
+                {
+                if ((freeze_threshold > 0) && (dt > freeze_threshold))
+                    rt_dev_ioctl(benchdev, RTBNCH_RTIOC_FREEZE_TRACE,
+                                 freeze_threshold);
 
-            if (!(finished || warmup) && (do_histogram || do_stats))
-                add_histogram(histogram_avg, dt);
+                if (do_histogram || do_stats)
+                    add_histogram(histogram_avg, dt);
+                }
             }
 
         if(!warmup)
@@ -173,8 +181,6 @@ void display (void *cookie)
             return;
             }
 
-        printf("== Test mode: periodic userspace task\n");
-
     } else {
         struct rtbnch_timerconfig   config;
 
@@ -196,12 +202,12 @@ void display (void *cookie)
             fprintf(stderr,"latency: failed to start in-kernel timer benchmark, code %d\n",err);
             return;
             }
-
-        printf("== Test mode: in-kernel %s\n",
-               (test_mode == TIMER_HANDLER) ? "timer handler" : "periodic task");
     }
 
     time(&start);
+
+    if (WARMUP_TIME)
+        printf("warming up...\n");
 
     if (quiet)
         fprintf(stderr, "running quietly for %d seconds\n", test_duration);
@@ -256,8 +262,9 @@ void display (void *cookie)
                 time_t now, dt;
                 time(&now);
                 dt = now - start - WARMUP_TIME;
-                printf("RTT|  %.2ld:%.2ld:%.2ld\n",
-                       dt / 3600,(dt / 60) % 60,dt % 60);
+                printf("RTT|  %.2ld:%.2ld:%.2ld  (%s, %Ld us period)\n",
+                       dt / 3600,(dt / 60) % 60,dt % 60,
+                       test_mode_names[test_mode],period_ns / 1000);
                 printf("RTH|%12s|%12s|%12s|%8s|%12s|%12s\n",
                        "-----lat min","-----lat avg","-----lat max","-overrun",
                        "----lat best","---lat worst");
@@ -469,7 +476,7 @@ int main (int argc, char **argv)
 
             case 'f':
 
-                freeze_threshold = atoi(optarg);
+                freeze_threshold = atoi(optarg)*1000;
                 break;
 
             default:
@@ -520,7 +527,10 @@ int main (int argc, char **argv)
 
     setlinebuf(stdout);
 
-    printf("== Sampling period: %Ld us\n",period_ns / 1000);
+    printf("== Sampling period: %Ld us\n"
+           "== Test mode: %s\n",
+           period_ns / 1000,
+           test_mode_names[test_mode]);
 
     mlockall(MCL_CURRENT|MCL_FUTURE);
 
