@@ -231,9 +231,6 @@ if test -r $XENO_LINUX_SRCDIR/include/linux/ipipe.h; then
    if test x${CONFIG_IPIPE} = x; then
       AC_MSG_ERROR([Please activate the Adeos support in $XENO_LINUX_DIR and rebuild your kernel])
    fi
-   if test x${CONFIG_IPIPE_EXTENDED} = x; then
-      AC_MSG_ERROR([Please re-patch your kernel with the Adeos support])
-   fi
 elif test -r $XENO_LINUX_SRCDIR/include/linux/adeos.h; then
    v=`grep '^#define.*ADEOS_ARCH_STRING.*"' $XENO_LINUX_SRCDIR/include/asm-$XENO_TARGET_ARCH/adeos.h|sed -e 's,.*"\(.*\)"$,\1,'`
    AC_MSG_RESULT([Adeos oldgen ($v)])

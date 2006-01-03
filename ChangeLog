@@ -1,3 +1,8 @@
+2006-01-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* configure.in: Do not ask for CONFIG_IPIPE_EXTENDED since the
+	I-pipe 1.1 series doesn't define it anymore.
+
 2005-01-02  Jan Kiszka  <jan.kiszka@web.de>
 
 	* skin/rtdm/core: Fix exclusive open.
