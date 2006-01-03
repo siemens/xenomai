@@ -234,7 +234,7 @@ proc fetchImage {name} {
 	return [set Workspace:imageCache($name)]
     }
     foreach subdir {icons images} {
-	set path $tkbridge_prefixdir/share/sim/$subdir/$name.png
+	set path $tkbridge_prefixdir/share/xenosim/$subdir/$name.png
 	if {[file exists $path]} {
 	    set img [image create photo -file $path]
 	    set Workspace:imageCache($name) $img
