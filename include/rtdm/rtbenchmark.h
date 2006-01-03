@@ -92,6 +92,11 @@ typedef struct rtbnch_overall_result {
     long                    *histogram_max;
 } rtbnch_overall_result_t;
 
+typedef struct rtbnch_trace_special {
+    unsigned char           id;
+    long                    v;
+} rtbnch_trace_special_t;
+
 
 #define RTIOC_TYPE_BENCHMARK        RTDM_CLASS_BENCHMARK
 
@@ -124,7 +129,13 @@ typedef struct rtbnch_overall_result {
     _IOW(RTIOC_TYPE_BENCHMARK, 0x21, long)
 
 #define RTBNCH_RTIOC_FREEZE_TRACE       \
-    _IOW(RTIOC_TYPE_BENCHMARK, 0x22, int)
+    _IOW(RTIOC_TYPE_BENCHMARK, 0x22, long)
+
+#define RTBNCH_RTIOC_SPECIAL_TRACE      \
+    _IOW(RTIOC_TYPE_BENCHMARK, 0x23, unsigned char)
+
+#define RTBNCH_RTIOC_SPECIAL_TRACE_EX   \
+    _IOW(RTIOC_TYPE_BENCHMARK, 0x24, struct rtbnch_trace_special)
 
 /** @} */
 
