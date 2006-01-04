@@ -15,8 +15,8 @@ AM_CPPFLAGS = \
 	--gcic-backend=$(prefix)/libexec/gcic \
 	--skin-code \
 	$(atomic_core) \
-	-I$(srcdir)/../include \
-	-I$(top_srcdir)/../ksrc/skins
+	-I$(top_srcdir)/../ksrc/skins \
+	-I$(srcdir)/../include
 
 lib_LIBRARIES = libposix_s.a
 
