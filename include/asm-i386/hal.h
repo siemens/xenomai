@@ -278,19 +278,6 @@ static const char *const rthal_fault_labels[] = {
 long rthal_strncpy_from_user(char *dst,
 			     const char __user *src,
 			     long count);
-
-#ifdef CONFIG_PROC_FS
-#include <linux/proc_fs.h>
-
-extern struct proc_dir_entry *rthal_proc_root;
-
-struct proc_dir_entry *__rthal_add_proc_leaf (const char *name,
-					      read_proc_t rdproc,
-					      write_proc_t wrproc,
-					      void *data,
-					      struct proc_dir_entry *parent);
-#endif /* CONFIG_PROC_FS */
-
 #endif /* !__cplusplus */
 
 #endif /* !_XENO_ASM_I386_HAL_H */
