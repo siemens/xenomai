@@ -328,7 +328,7 @@ static inline void xnarch_init_shadow_tcb (xnarchtcb_t *tcb,
     tcb->name = name;
 }
 
-static inline void xnarch_grab_xirqs (void (*handler)(unsigned irq))
+static inline void xnarch_grab_xirqs (rthal_irq_handler_t handler)
 
 {
     unsigned irq;
@@ -337,6 +337,7 @@ static inline void xnarch_grab_xirqs (void (*handler)(unsigned irq))
 	rthal_virtualize_irq(rthal_current_domain,
 			     irq,
 			     handler,
+			     NULL,
 			     NULL,
 			     IPIPE_DYNAMIC_MASK);
 }
@@ -425,10 +426,10 @@ static inline void xnarch_program_timer_shot (unsigned long delay)
     rthal_timer_program_shot(delay);
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
     {
-    extern unsigned long rthal_maxlat_ticks;
-    delay = rthal_imuldiv(delay,get_sclk(),RTHAL_CPU_FREQ);
-    if (delay <= ULONG_MAX - rthal_maxlat_ticks)
-	rthal_nmi_arm(delay + rthal_maxlat_ticks);
+    extern unsigned long rthal_maxlat_tsc;
+    delay = rthal_imuldiv(delay,RTHAL_NMICLK_FREQ,RTHAL_CPU_FREQ);
+    if (delay <= ULONG_MAX - rthal_maxlat_tsc)
+	rthal_nmi_arm(delay + rthal_maxlat_tsc);
     }
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 }
@@ -546,7 +547,8 @@ static inline int xnarch_init (void)
 
     rthal_virtualize_irq(&rthal_domain,
 			 xnarch_escalation_virq,
-			 (void (*)(unsigned))&xnpod_schedule_handler,
+			 (rthal_irq_handler_t)&xnpod_schedule_handler,
+			 NULL,
 			 NULL,
 			 IPIPE_HANDLE_MASK);
 
