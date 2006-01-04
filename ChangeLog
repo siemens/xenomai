@@ -1,3 +1,11 @@
+2006-01-04  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/hal.c (rthal_set_cpu_timers_unsafe): Fix for
+	2.4 compilation. Use cpu_online_map instead of cpu_possible_map
+	for computing the timer spacing offset in the SMP case; always
+	enumerate cpus from the cpu_online_map instead of the present
+	map. Make rthal_periodic_p a cpu-independent flag.
+
 2005-01-03  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/{i386,ppc,ia64}, include/asm-{i386,ppc,ia64,uvm,sim}:
