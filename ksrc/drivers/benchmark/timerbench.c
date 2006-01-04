@@ -18,7 +18,9 @@
 
 #include <linux/module.h>
 #include <asm/semaphore.h>
-#include <linux/ipipe_trace.h>
+#ifdef CONFIG_IPIPE_TRACE
+ #include <linux/ipipe_trace.h>
+#endif /* CONFIG_IPIPE_TRACE */
 
 #include <xenomai/rtdm/rtbenchmark.h>
 #include <xenomai/rtdm/rtdm_driver.h>
