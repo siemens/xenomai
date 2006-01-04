@@ -1,5 +1,7 @@
 2006-01-04  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
+	* Makefile.am (dev devices): Install real-time devices.
+
 	* configure.in: Compile UVM nucleus with debug support when
 	--enable-debug is passed to configure.
 

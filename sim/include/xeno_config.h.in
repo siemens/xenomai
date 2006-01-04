@@ -49,7 +49,13 @@
 #undef CONFIG_XENO_OPT_SCALABLE_PRIOS
 
 /* config */
+#undef CONFIG_XENO_OPT_SCALABLE_SCHED
+
+/* config */
 #undef CONFIG_XENO_OPT_SYS_HEAPSZ
+
+/* config */
+#undef CONFIG_XENO_OPT_WATCHDOG
 
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
    systems. This function is required for `alloca.c' support on those systems.

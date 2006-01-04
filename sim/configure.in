@@ -58,6 +58,16 @@ AC_ARG_ENABLE(atomic_core,
 	esac])
 AC_MSG_RESULT(${CONFIG_XENO_MVM_ATOMIC_CORE:-no})
 
+AC_MSG_CHECKING(for scalable scheduler)
+AC_ARG_ENABLE(nucleus-scalable-sched,
+	AS_HELP_STRING([--enable-nucleus-scalable-sched], 
+                        [Enable scalable scheduler in nucleus]),
+	[case "$enableval" in
+	y | yes) CONFIG_XENO_OPT_SCALABLE_SCHED=y ;;
+	*) unset CONFIG_XENO_OPT_SCALABLE_SCHED ;;
+	esac])
+AC_MSG_RESULT(${CONFIG_XENO_OPT_SCALABLE_SCHED:-no})
+
 AC_MSG_CHECKING(for debug support)
 AC_ARG_ENABLE(debug,
 	AS_HELP_STRING([--enable-debug], [Enable debug support]),
@@ -66,6 +76,15 @@ AC_ARG_ENABLE(debug,
 	*) unset CONFIG_XENO_OPT_DEBUG ;;
 	esac])
 AC_MSG_RESULT(${CONFIG_XENO_OPT_DEBUG:-no})
+
+AC_MSG_CHECKING(for watchdog support)
+AC_ARG_ENABLE(nucleus-debug,
+	AS_HELP_STRING([--enable-nucleus-watchdog], [Enable watchdog support in nucleus]),
+	[case "$enableval" in
+	y | yes) CONFIG_XENO_OPT_WATCHDOG=y ;;
+	*) unset CONFIG_XENO_OPT_WATCHDOG ;;
+	esac])
+AC_MSG_RESULT(${CONFIG_XENO_OPT_WATCHDOG:-no})
 
 if test x$CONFIG_XENO_OPT_DEBUG = xy; then
    CXXFLAGS="-g"
@@ -272,10 +291,14 @@ AC_CACHE_CHECK(for usleep declaration, ac_cv_header_usleep,
   ac_cv_header_usleep=yes, ac_cv_header_usleep=no)])
 test $ac_cv_header_usleep = yes && AC_DEFINE(HAVE_USLEEP,1,[Kconfig])
 
+test x$CONFIG_XENO_OPT_SCALABLE_SCHED = xy && AC_DEFINE(CONFIG_XENO_OPT_SCALABLE_SCHED,1,[config])
+
 if test x$CONFIG_XENO_OPT_DEBUG = xy; then
   AC_DEFINE(CONFIG_XENO_OPT_DEBUG,1,[config])
   AC_DEFINE(CONFIG_XENO_MVM_DEBUG,1,[config])
 fi
+
+test x$CONFIG_XENO_OPT_WATCHDOG = xy && AC_DEFINE(CONFIG_XENO_OPT_WATCHDOG,1,[config])
 
 dnl Some required routines.
 AC_FUNC_ALLOCA
