@@ -2456,7 +2456,7 @@ diff -uNrp 2.4.25-ppc/init/main.c 2.4.25-ppc-ipipe/init/main.c
  	 * Ok, at this point all CPU's should be initialized, so
 diff -uNrp 2.4.25-ppc/kernel/Makefile 2.4.25-ppc-ipipe/kernel/Makefile
 --- 2.4.25-ppc/kernel/Makefile	2002-11-28 19:42:24.000000000 +0100
-+++ 2.4.25-ppc-ipipe/kernel/Makefile	2006-01-03 19:33:23.000000000 +0100
++++ 2.4.25-ppc-ipipe/kernel/Makefile	2006-01-04 10:23:56.000000000 +0100
 @@ -16,6 +16,7 @@ obj-y     = sched.o dma.o fork.o exec_do
  	    sysctl.o acct.o capability.o ptrace.o timer.o user.o \
  	    signal.o sys.o kmod.o context.o
@@ -2465,15 +2465,11 @@ diff -uNrp 2.4.25-ppc/kernel/Makefile 2.4.25-ppc-ipipe/kernel/Makefile
  obj-$(CONFIG_UID16) += uid16.o
  obj-$(CONFIG_MODULES) += ksyms.o
  obj-$(CONFIG_PM) += pm.o
-@@ -29,4 +30,10 @@ ifneq ($(CONFIG_IA64),y)
+@@ -29,4 +30,6 @@ ifneq ($(CONFIG_IA64),y)
  CFLAGS_sched.o := $(PROFILING) -fno-omit-frame-pointer
  endif
  
 +subdir-$(CONFIG_IPIPE) += ipipe
-+
-+mod-subdirs := xenomai
-+subdir-$(CONFIG_XENOMAI) += xenomai
-+obj-$(CONFIG_XENOMAI) += xenomai/arch/generic/built-in.o
 +
  include $(TOPDIR)/Rules.make
 diff -uNrp 2.4.25-ppc/kernel/exit.c 2.4.25-ppc-ipipe/kernel/exit.c
