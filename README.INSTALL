@@ -140,6 +140,35 @@ NAME                DESCRIPTION                      [BINDING,]DEFAULT(*)
 (*) Each option enabled by default can be forcibly disabled by passing
 --disable-<option> to the configure script.
 
+1.3.3 Cross-compilation
+-----------------------
+
+Passing a --host option to the configure script allows to select the
+architecture for which the libraries and programs are built. The --build option
+allow to choose the architecture on which the compilation tool are run, i.e. the
+system running the configure script. Using the --build option should not be
+needed, but if you do not use it, configure emit a warning, which may be
+confusing.
+
+Since cross-compiling requires specific tools, such tools are generally prefixed
+with the host architecture name; for example, a compiler for the power PC
+architecture may be named powerpc-linux-gcc.
+
+When this prefix contains the name of the architecture, you may pass this prefix
+to the --host option of configure. For example, if you type :
+configure --host=powerpc-linux
+
+configure will automatically use powerpc-linux- as a prefix too all compilation
+tools names and deduce the architecture name. If configure is unable to deduce
+the architecture name from this prefix, you will have to manually pass the name
+of all compilation tools on configure command line. As in:
+
+configure --build=i686-pc-linux-gnu --host=powerpc-unknown-linux-gnu CC=ppc_82xx-gcc CXX=ppc_82xx-gcc AR=ppc_82xx-ar LD=ppc_82xx-ld
+
+For more details:
+http://sourceware.org/autobook/autobook/autobook_264.html#SEC264
+http://sourceware.org/autobook/autobook/autobook_266.html#SEC266
+
 2. Typical installation procedures
 ----------------------------------
 
