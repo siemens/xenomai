@@ -1,3 +1,12 @@
+2006-01-04  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* configure.in: Compile UVM nucleus with debug support when
+	--enable-debug is passed to configure.
+
+	* scripts/prepare-kernel.sh: Ask no question when applying Adeos
+	patch, fail if unable to apply patch with linux tree left
+	untouched.
+
 2006-01-04  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/hal.c (rthal_set_cpu_timers_unsafe): Fix 2.4
