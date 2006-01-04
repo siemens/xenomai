@@ -95,7 +95,7 @@ dnl Debug build (default: off)
 debug_symbols=
 AC_MSG_CHECKING(for debug symbols)
 AC_ARG_ENABLE(debug,
-	AS_HELP_STRING([--enable-debug], [Enable debug symbols in programs]),
+	AS_HELP_STRING([--enable-debug], [Enable debug support in nucleus and debug symbols in programs]),
 	[case "$enableval" in
 	y | yes) debug_symbols=y ;;
 	*) unset debug_symbols ;;
@@ -115,7 +115,6 @@ AC_ARG_ENABLE(smp,
 AC_MSG_RESULT(${CONFIG_SMP:-no})
 
 dnl Size of system heap for UVMs (default: 128Kb)
-
 CONFIG_XENO_OPT_SYS_HEAPSZ=128
 AC_MSG_CHECKING(for size of system heap)
 AC_ARG_ENABLE(uvm-heapsz,
@@ -240,6 +239,9 @@ dnl
 test x$CONFIG_XENO_X86_SEP = xy && AC_DEFINE(CONFIG_XENO_X86_SEP,1,[config])
 test x$CONFIG_SMP = xy && AC_DEFINE(CONFIG_SMP,1,[config])
 test x$CONFIG_X86_TSC = xy && AC_DEFINE(CONFIG_X86_TSC,1,[config])
+dnl Unconditionnaly define periodic timer for UVMs
+AC_DEFINE_UNQUOTED(CONFIG_XENO_HW_PERIODIC_TIMER,1,[config])
+test x$debug_symbols = xy && AC_DEFINE(CONFIG_XENO_OPT_DEBUG,1,[Kconfig])
 AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_SYS_HEAPSZ,$CONFIG_XENO_OPT_SYS_HEAPSZ,[config])
 
 dnl CAUTION: We need to have the CONFIG_XENO_XX symbols always

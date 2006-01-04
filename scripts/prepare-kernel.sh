@@ -168,7 +168,17 @@ else
          adeos_patch=
       fi
    done
-   cat $adeos_patch | (cd $linux_tree && patch -p1 )
+   patchdir=`dirname $adeos_patch`; 
+   patchdir=`cd $patchdir && pwd`
+   adeos_patch=$patchdir/`basename $adeos_patch`
+   curdir=$PWD
+   cd $linux_tree && patch --dry-run -p1 -f < $adeos_patch || { 
+        cd $curdir;
+        echo "$me: Unable to patch kernel $linux_version with `basename $adeos_patch`."
+        exit 2;
+   }
+   patch -p1 -f -s < $adeos_patch
+   cd $curdir
 fi
 
 adeos_version=`grep '^#define.*IPIPE_ARCH_STRING.*"' $linux_tree/include/asm-$linux_arch/ipipe.h|sed -e 's,.*"\(.*\)"$,\1,'`
