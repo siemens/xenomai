@@ -1,3 +1,7 @@
+2006-01-05  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/*/patches: Upgrade all Adeos patches.
+
 2006-01-04  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* Makefile.am (dev devices): Install real-time devices.
