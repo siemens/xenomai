@@ -1,3 +1,8 @@
+2006-01-06  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-generic/hal.h: Support event self-monitoring option
+	available with the recent I-pipe patches.
+
 2006-01-05  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/*/patches: Upgrade all Adeos patches.

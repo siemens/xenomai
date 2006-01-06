@@ -348,6 +348,8 @@ AC_SUBST(XENO_USER_APP_LDFLAGS)
 
 base=include
 AC_CONFIG_LINKS([src/include/xenomai:$base])
+base=rtdm
+AC_CONFIG_LINKS([src/include/$base:include/$base])
 base=asm-$XENO_TARGET_ARCH
 AC_CONFIG_LINKS([src/include/asm/xenomai:include/$base])
 base=asm-generic
