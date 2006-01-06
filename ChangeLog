@@ -1,5 +1,8 @@
 2006-01-06  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/asm-generic/wrappers.h: Use vanilla moduleparam
+	emulation for 2.4.
+
 	* include/asm-generic/hal.h: Support self event monitoring option
 	available with the recent I-pipe patches.
 
