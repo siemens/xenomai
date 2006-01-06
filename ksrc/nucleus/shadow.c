@@ -227,7 +227,7 @@ static inline void reset_shield (xnthread_t *thread)
 	disengage_irq_shield();
 }
 
-static void shield_handler (unsigned irq)
+static void shield_handler (unsigned irq, void *cookie)
 
 {
 #ifdef CONFIG_SMP
