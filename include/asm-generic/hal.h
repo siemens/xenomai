@@ -204,6 +204,11 @@ static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
     return RTHAL_EVENT_PROPAGATE; \
 }
 
+#ifndef IPIPE_EVENT_SELF
+/* Some early I-pipe versions don't have this. */
+#define IPIPE_EVENT_SELF  0
+#endif /* !IPIPE_EVENT_SELF */
+
 #define rthal_catch_taskexit(hdlr)	\
     ipipe_catch_event(ipipe_root_domain,IPIPE_EVENT_EXIT,hdlr)
 #define rthal_catch_sigwake(hdlr)	\
@@ -217,7 +222,7 @@ static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
 #define rthal_catch_hisyscall(hdlr)	\
     ipipe_catch_event(&rthal_domain,IPIPE_EVENT_SYSCALL,hdlr)
 #define rthal_catch_exception(ex,hdlr)	\
-    ipipe_catch_event(&rthal_domain,ex,hdlr)
+    ipipe_catch_event(&rthal_domain,ex|IPIPE_EVENT_SELF,hdlr)
 
 #define rthal_register_domain(_dom,_name,_id,_prio,_entry)	\
  ({	\
