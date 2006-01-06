@@ -31,6 +31,7 @@
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
 
 #include <linux/wrapper.h>
+#include <linux/moduleparam.h>	/* Use the backport. */
 
 /* Compiler */
 #ifndef __attribute_const__
@@ -40,11 +41,14 @@
 #define __restrict__		/* unimplemented */
 #endif
 
+#if 0
 /* Module params */
 #define ulong "i"
 #define uint  "i"
 #define module_param_named(name,var,type,mode)  MODULE_PARM(var,type)
 #define module_param(var,type,mode)             MODULE_PARM(var,type)
+#endif
+#define module_param_named(name,var,type,mode)  module_param(var,type,mode)
 
 /* VM */
 #define wrap_remap_page_range(vma,from,to,size,prot) \
