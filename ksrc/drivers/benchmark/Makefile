@@ -22,7 +22,7 @@ xeno_timerbench-objs := timerbench.o
 
 export-objs := $(xeno_timerbench-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat -I$(TOPDIR)/include/xenomai
 
 include $(TOPDIR)/Rules.make
 
