@@ -57,8 +57,7 @@
 #ifndef _RTBENCHMARK_H
 #define _RTBENCHMARK_H
 
-#include <asm/types.h>
-#include <xenomai/rtdm/rtdm.h>
+#include <rtdm/rtdm.h>
 
 #define RTBNCH_TIMER_TASK       0
 #define RTBNCH_TIMER_HANDLER    1

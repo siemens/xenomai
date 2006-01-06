@@ -77,8 +77,7 @@
 #ifndef _RTSERIAL_H
 #define _RTSERIAL_H
 
-#include <asm/types.h>
-#include <xenomai/rtdm/rtdm.h>
+#include <rtdm/rtdm.h>
 
 /*!
  * @anchor RTSER_DEF_BAUD   @name RTSER_DEF_BAUD

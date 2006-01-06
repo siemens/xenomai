@@ -2,6 +2,8 @@ ifeq ($(PATCHLEVEL),6)
 
 # Makefile frag for Linux v2.6
 
+EXTRA_CFLAGS += -Iinclude/xenomai
+
 obj-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += xeno_timerbench.o
 
 xeno_timerbench-y := timerbench.o

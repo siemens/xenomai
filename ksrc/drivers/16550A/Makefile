@@ -2,6 +2,8 @@ ifeq ($(PATCHLEVEL),6)
 
 # Makefile frag for Linux v2.6
 
+EXTRA_CFLAGS += -Iinclude/xenomai
+
 obj-$(CONFIG_XENO_DRIVERS_16550A) += xeno_16550A.o
 
 xeno_16550A-y := 16550A.o
