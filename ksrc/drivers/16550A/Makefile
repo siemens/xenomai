@@ -22,7 +22,7 @@ xeno_16550A-objs := 16550A.o
 
 export-objs := $(xeno_16550A-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat -I$(TOPDIR)/include/xenomai
 
 include $(TOPDIR)/Rules.make
 
