@@ -1,6 +1,6 @@
 2006-01-06  Philippe Gerum  <rpm@xenomai.org>
 
-	* include/asm-generic/hal.h: Support event self-monitoring option
+	* include/asm-generic/hal.h: Support self event monitoring option
 	available with the recent I-pipe patches.
 
 2006-01-05  Philippe Gerum  <rpm@xenomai.org>
