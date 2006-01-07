@@ -22,8 +22,8 @@
 #define _XENO_COMPAT_LINUX_DEVICE_H
 
 #define DECLARE_DEVCLASS(clname) void *clname /* Optimized out */
-#define class_create(a,b)			NULL
-#define class_device_create(a,b,c,d,e...)	NULL
+#define class_create(a,b)				NULL
+#define wrap_class_device_create(a,b,c,d,e,args...)	NULL
 #define class_device_destroy(a,b)
 #define class_destroy(a)
 
