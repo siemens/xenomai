@@ -76,7 +76,7 @@ typedef struct rtbnch_timerconfig {
     int                     warmup_loops;
     int                     histogram_size;
     int                     histogram_bucketsize;
-    long                    freeze_threshold;
+    int                     freeze_max;
 } rtbnch_timerconfig_t;
 
 typedef struct rtbnch_interm_result {
@@ -130,11 +130,14 @@ typedef struct rtbnch_trace_special {
 #define RTBNCH_RTIOC_FREEZE_TRACE       \
     _IOW(RTIOC_TYPE_BENCHMARK, 0x22, long)
 
+#define RTBNCH_RTIOC_REFREEZE_TRACE     \
+    _IOW(RTIOC_TYPE_BENCHMARK, 0x23, long)
+
 #define RTBNCH_RTIOC_SPECIAL_TRACE      \
-    _IOW(RTIOC_TYPE_BENCHMARK, 0x23, unsigned char)
+    _IOW(RTIOC_TYPE_BENCHMARK, 0x24, unsigned char)
 
 #define RTBNCH_RTIOC_SPECIAL_TRACE_EX   \
-    _IOW(RTIOC_TYPE_BENCHMARK, 0x24, struct rtbnch_trace_special)
+    _IOW(RTIOC_TYPE_BENCHMARK, 0x25, struct rtbnch_trace_special)
 
 /** @} */
 

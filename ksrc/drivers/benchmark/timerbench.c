@@ -19,7 +19,7 @@
 #include <linux/module.h>
 #include <asm/semaphore.h>
 #ifdef CONFIG_IPIPE_TRACE
- #include <linux/ipipe_trace.h>
+#include <linux/ipipe_trace.h>
 #endif /* CONFIG_IPIPE_TRACE */
 
 #include <xenomai/rtdm/rtbenchmark.h>
@@ -28,7 +28,7 @@
 struct rt_tmbench_context {
     int                         mode;
     unsigned long               period;
-    unsigned long               freeze_threshold;
+    int                         freeze_max;
     int                         warmup_loops;
     int                         samples_per_sec;
     long                        *histogram_min;
@@ -81,8 +81,11 @@ void eval_inner_loop(struct rt_tmbench_context *ctx, long dt)
     ctx->curr.avg += dt;
 
 #ifdef CONFIG_IPIPE_TRACE
-    if ((ctx->freeze_threshold > 0) && (dt > ctx->freeze_threshold))
-        ipipe_trace_freeze(ctx->freeze_threshold);
+    if (ctx->freeze_max && (dt > ctx->result.overall.max) && !ctx->warmup) {
+        ipipe_trace_frozen_reset();
+        ipipe_trace_freeze(dt);
+        ctx->result.overall.max = dt;
+    }
 #endif /* CONFIG_IPIPE_TRACE */
 
     ctx->date += ctx->period;
@@ -237,6 +240,10 @@ int tracer_ioctl(int request, rtdm_user_info_t *user_info, void *arg)
             ipipe_trace_end((long)arg);
             break;
 
+        case RTBNCH_RTIOC_REFREEZE_TRACE:
+            ipipe_trace_frozen_reset();
+            /* fall through */
+
         case RTBNCH_RTIOC_FREEZE_TRACE:
             ipipe_trace_freeze((long)arg);
             break;
@@ -301,11 +308,11 @@ int rt_tmbench_ioctl_nrt(struct rtdm_dev_context *context,
 
             down(&ctx->nrt_mutex);
 
-            ctx->period           = config->period;
-            ctx->warmup_loops     = config->warmup_loops;
-            ctx->samples_per_sec  = 1000000000 / ctx->period;
-            ctx->histogram_size   = config->histogram_size;
-            ctx->freeze_threshold = config->freeze_threshold;
+            ctx->period          = config->period;
+            ctx->warmup_loops    = config->warmup_loops;
+            ctx->samples_per_sec = 1000000000 / ctx->period;
+            ctx->histogram_size  = config->histogram_size;
+            ctx->freeze_max      = config->freeze_max;
 
             if (ctx->histogram_size > 0) {
                 ctx->histogram_min =
