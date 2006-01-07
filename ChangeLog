@@ -3,6 +3,10 @@
 	* include/rtdm: Move all internal headers back to the source area,
 	i.e. unexport them.
 
+	* include/rtdm/rtbenchmark.h, ksrc/drivers/benchmark/timerbench.c,
+	src/testsuite/latency/latency.c: Add re-freeze support and make use
+	of it to back-trace always the max latency during benchmarks.
+
 2006-01-07  Heikki Lindholm <holindho@cs.helsinki.fi>
 
 	* include/asm-powerpc/system.h: Fix FPU preemption bug.
