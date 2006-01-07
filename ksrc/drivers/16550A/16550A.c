@@ -1125,4 +1125,4 @@ void __16550A_exit(void)
 }
 
 module_init(__16550A_init);
-module_init(__16550A_exit);
+module_exit(__16550A_exit);
