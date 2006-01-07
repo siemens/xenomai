@@ -1,11 +1,10 @@
 includedir = $(prefix)/include/rtdm
 
+noinst_HEADERS = \
+	syscall.h
+
 include_HEADERS = \
-	core.h \
-	device.h \
-	proc.h \
 	rtdm.h \
 	rtdm_driver.h \
 	rtserial.h \
-	syscall.h \
 	rtbenchmark.h

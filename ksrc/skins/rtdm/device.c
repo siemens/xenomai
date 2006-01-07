@@ -28,8 +28,8 @@
 #include <linux/module.h>
 #include <linux/delay.h>
 
-#include <xenomai/rtdm/device.h>
-#include <xenomai/rtdm/proc.h>
+#include "device.h"
+#include "proc.h"
 
 
 #define SET_DEFAULT_OP(device, operation)                               \
