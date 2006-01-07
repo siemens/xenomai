@@ -551,7 +551,7 @@ static struct rtdm_device device = {
     proc_name:          device.device_name,
 };
 
-int __init init_module(void)
+int __init __timerbench_init(void)
 {
     snprintf(device.device_name, RTDM_MAX_DEVNAME_LEN, "rtbenchmark%d",
              start_index);
@@ -560,7 +560,11 @@ int __init init_module(void)
 }
 
 
-void cleanup_module(void)
+void __timerbench_exit(void)
 {
     rtdm_dev_unregister(&device, 1000);
 }
+
+
+module_init(__timerbench_init);
+module_exit(__timerbench_exit);

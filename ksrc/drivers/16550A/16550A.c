@@ -1042,7 +1042,7 @@ static const struct rtdm_device __initdata device_tmpl = {
 
 void cleanup_module(void);
 
-int __init init_module(void)
+int __16550A_init(void)
 {
     struct rtdm_device  *dev;
     int                 ret;
@@ -1111,7 +1111,7 @@ int __init init_module(void)
 }
 
 
-void cleanup_module(void)
+void __16550A_exit(void)
 {
     int i;
 
@@ -1123,3 +1123,6 @@ void cleanup_module(void)
             kfree(device[i]);
         }
 }
+
+module_init(__16550A_init);
+module_init(__16550A_exit);
