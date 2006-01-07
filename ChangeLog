@@ -1,7 +1,14 @@
+2006-01-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/compat/linux/device.h, include/asm-generic/wrappers.h:
+	Add wrapper for class_device_create() as required for 2.6.15.
+
 2006-01-07  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/rtdm: Move all internal headers back to the source area,
 	i.e. unexport them.
+
+	* ksrc/arch/i386/hal.c: reset tracer after timer calibration.
 
 	* include/rtdm/rtbenchmark.h, ksrc/drivers/benchmark/timerbench.c,
 	src/testsuite/latency/latency.c: Add re-freeze support and make use
