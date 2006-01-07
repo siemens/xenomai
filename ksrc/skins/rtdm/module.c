@@ -46,9 +46,9 @@
 #include <xenomai/rtdm/syscall.h>
 #endif /* __KERNEL__ */
 
-#include "core.h"
-#include "device.h"
-#include "proc.h"
+#include "rtdm/core.h"
+#include "rtdm/device.h"
+#include "rtdm/proc.h"
 
 
 MODULE_DESCRIPTION("Real-Time Driver Model");
