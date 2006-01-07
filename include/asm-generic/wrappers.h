@@ -41,13 +41,6 @@
 #define __restrict__		/* unimplemented */
 #endif
 
-#if 0
-/* Module params */
-#define ulong "i"
-#define uint  "i"
-#define module_param_named(name,var,type,mode)  MODULE_PARM(var,type)
-#define module_param(var,type,mode)             MODULE_PARM(var,type)
-#endif
 #define module_param_named(name,var,type,mode)  module_param(var,type,mode)
 
 /* VM */
