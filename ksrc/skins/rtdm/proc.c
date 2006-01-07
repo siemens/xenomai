@@ -22,8 +22,9 @@
 #ifdef CONFIG_PROC_FS
 
 #include <linux/proc_fs.h>
-#include <xenomai/rtdm/core.h>
-#include <xenomai/rtdm/device.h>
+
+#include "core.h"
+#include "device.h"
 
 
 /* Derived from Erwin Rol's rtai_proc_fs.h.

@@ -30,10 +30,11 @@
 
 #include <xenomai/nucleus/pod.h>
 #include <xenomai/nucleus/heap.h>
-#include <xenomai/rtdm/rtdm_driver.h>
-#include <xenomai/rtdm/core.h>
-#include <xenomai/rtdm/device.h>
 #include <xenomai/rtdm/syscall.h>
+#include <xenomai/rtdm/rtdm_driver.h>
+
+#include "core.h"
+#include "device.h"
 
 
 unsigned int                fd_count = DEF_FILDES_COUNT;

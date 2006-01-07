@@ -45,9 +45,11 @@
 #include <xenomai/nucleus/core.h>
 #include <xenomai/rtdm/syscall.h>
 #endif /* __KERNEL__ */
-#include <xenomai/rtdm/core.h>
-#include <xenomai/rtdm/device.h>
-#include <xenomai/rtdm/proc.h>
+
+#include "core.h"
+#include "device.h"
+#include "proc.h"
+
 
 MODULE_DESCRIPTION("Real-Time Driver Model");
 MODULE_AUTHOR("jan.kiszka@web.de");

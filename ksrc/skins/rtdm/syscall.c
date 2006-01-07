@@ -19,8 +19,9 @@
 
 #include <xenomai/nucleus/shadow.h>
 #include <xenomai/rtdm/rtdm_driver.h>
-#include <xenomai/rtdm/core.h>
 #include <xenomai/rtdm/syscall.h>
+
+#include "core.h"
 
 
 int __rtdm_muxid;
