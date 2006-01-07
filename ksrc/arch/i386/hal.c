@@ -61,6 +61,9 @@
 #endif /* CONFIG_X86_LOCAL_APIC */
 #include <asm/xenomai/hal.h>
 #include <stdarg.h>
+#ifdef CONFIG_IPIPE_TRACE
+#include <linux/ipipe_trace.h>
+#endif /* CONFIG_IPIPE_TRACE */
 
 extern struct desc_struct idt_table[];
 
@@ -176,6 +179,11 @@ unsigned long rthal_timer_calibrate (void)
     dt = rthal_rdtsc() - t;
 
     rthal_critical_exit(flags);
+
+#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
+    /* reset the max trace, it contains the excessive calibration now */
+    ipipe_trace_max_reset();
+#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
 
     return rthal_imuldiv(dt,100000,RTHAL_CPU_FREQ);
 }
@@ -344,6 +352,11 @@ unsigned long rthal_timer_calibrate (void)
     dt = rthal_rdtsc() - t;
 
     rthal_critical_exit(flags);
+
+#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
+    /* reset the max trace, it contains the excessive calibration now */
+    ipipe_trace_max_reset();
+#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
 
     return rthal_imuldiv(dt,100000,RTHAL_CPU_FREQ);
 }
