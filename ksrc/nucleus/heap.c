@@ -1012,8 +1012,9 @@ int xnheap_mount (void)
        return -EBUSY; 
     }
 
-    cldev = class_device_create(xnheap_class, MKDEV(MISC_MAJOR, XNHEAP_DEV_MINOR),
-				NULL, "rtheap");
+    cldev = wrap_class_device_create(xnheap_class, NULL,
+				     MKDEV(MISC_MAJOR, XNHEAP_DEV_MINOR),
+				     NULL, "rtheap");
     if(IS_ERR(cldev))
 	{
 	xnlogerr("Can't add device class, major=%d, minor=%d, err=%ld\n", 

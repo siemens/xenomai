@@ -1005,8 +1005,9 @@ int xnpipe_mount (void)
     for (i = 0; i < XNPIPE_NDEVS; i++)
     {
        struct class_device* cldev;
-       cldev = class_device_create(xnpipe_class, MKDEV(XNPIPE_DEV_MAJOR, i),
-                                   NULL, "rtp%d", i);
+       cldev = wrap_class_device_create(xnpipe_class, NULL,
+					MKDEV(XNPIPE_DEV_MAJOR, i),
+					NULL, "rtp%d", i);
        if(IS_ERR(cldev))
        {
           xnlogerr("Can't add device class, major=%d, minor=%d, err=%ld\n", 
