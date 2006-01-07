@@ -153,11 +153,11 @@ void show_stack(struct task_struct *task,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15)
 #define wrap_class_device_create class_device_create
 #else /* < 2.6.15 */
-#define wrap_class_device_create(c,p,dt,dv,fmt...) class_device_create(c,dt,dv,fmt , ##args)
+#define wrap_class_device_create(c,p,dt,dv,fmt,args...) class_device_create(c,dt,dv,fmt , ##args)
 #endif /* >= 2.6.15 */
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 #define DECLARE_DEVCLASS(clname) struct class_simple *clname
-#define wrap_class_device_create(c,p,dt,dv,fmt...) class_simple_device_add(c,dt,dv,fmt , ##args)
+#define wrap_class_device_create(c,p,dt,dv,fmt,args...) class_simple_device_add(c,dt,dv,fmt , ##args)
 #define class_create class_simple_create
 #define class_device_destroy(a,b) class_simple_device_remove(b)
 #define class_destroy class_simple_destroy
