@@ -23,8 +23,8 @@
 
 #include <linux/proc_fs.h>
 
-#include "core.h"
-#include "device.h"
+#include "rtdm/core.h"
+#include "rtdm/device.h"
 
 
 /* Derived from Erwin Rol's rtai_proc_fs.h.

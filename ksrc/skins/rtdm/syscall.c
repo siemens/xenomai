@@ -21,7 +21,7 @@
 #include <xenomai/rtdm/rtdm_driver.h>
 #include <xenomai/rtdm/syscall.h>
 
-#include "core.h"
+#include "rtdm/core.h"
 
 
 int __rtdm_muxid;

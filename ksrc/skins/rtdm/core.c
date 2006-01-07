@@ -33,8 +33,8 @@
 #include <xenomai/rtdm/syscall.h>
 #include <xenomai/rtdm/rtdm_driver.h>
 
-#include "core.h"
-#include "device.h"
+#include "rtdm/core.h"
+#include "rtdm/device.h"
 
 
 unsigned int                fd_count = DEF_FILDES_COUNT;

@@ -8,6 +8,8 @@ xeno_rtdm-y := core.o device.o drvlib.o module.o proc.o
 
 xeno_rtdm-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
 
+EXTRA_CFLAGS += -I$(src)/..
+
 else
 
 # Makefile frag for Linux v2.4
@@ -27,7 +29,7 @@ xeno_rtdm-objs += $(opt_objs-y)
 
 export-objs := $(xeno_rtdm-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -I.. -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
 
