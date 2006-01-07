@@ -1040,7 +1040,7 @@ static const struct rtdm_device __initdata device_tmpl = {
     provider_name:      "Jan Kiszka",
 };
 
-void cleanup_module(void);
+void __16550A_exit(void);
 
 int __16550A_init(void)
 {
@@ -1105,7 +1105,7 @@ int __16550A_init(void)
     kfree(dev);
 
  cleanup_out:
-    cleanup_module();
+    __16550A_exit();
 
     return ret;
 }
