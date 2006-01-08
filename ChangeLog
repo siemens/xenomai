@@ -1,3 +1,8 @@
+2006-01-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* skins/native/task.c (rt_task_create): Allow creating anonymous
+	user-space tasks.
+
 2005-01-03  Jan Kiszka  <jan.kiszka@web.de>
 
 	* drivers/16550A/16550A.c: Fix types for 64 bit archs. Fall back
