@@ -233,7 +233,9 @@ int rt_task_create (RT_TASK *task,
 		    int prio,
 		    int mode)
 {
+    char namebuf[XNOBJECT_NAME_LEN];
     int err = 0, cpumask, cpu;
+    const char *regname;
     xnflags_t bflags;
     spl_t s;
 
@@ -244,6 +246,16 @@ int rt_task_create (RT_TASK *task,
 	return -EPERM;
 
     bflags = mode & (XNFPU|XNSHADOW|XNSHIELD|XNSUSP);
+
+    if (name && !*name)
+	{
+	/* i.e. Anonymous object which must be accessible from
+	   user-space. */
+	xnobject_create_name(namebuf,sizeof(namebuf),task);
+	regname = namebuf;
+	}
+    else
+	regname = name;
 
     if (xnpod_init_thread(&task->thread_base,
 			  name,
@@ -287,9 +299,9 @@ int rt_task_create (RT_TASK *task,
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
-    if (name && *name)
+    if (regname)
 	{
-	err = rt_registry_enter(xnthread_name(&task->thread_base),
+	err = rt_registry_enter(regname,
 				task,
 				&task->handle,
 				NULL);
