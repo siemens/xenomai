@@ -51,3 +51,44 @@ install-exec-local: devices
 
 install-nodev:
 	$(MAKE) SUDO=false install
+
+if XENO_BUILD_LINUX
+linux/%: linux/.xenomai-prepared
+	$(top_srcdir)/scripts/prepare-kernel.sh \
+             --adeos="$(ADEOS_PATCH)" --linux=linux \
+	     --arch=$(XENO_LINUX_ARCH) && \
+	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
+	cd linux && $(MAKE) $* \
+		ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross
+
+linux/.xenomai-prepared: config.status
+	./config.status linux
+
+linux/install: linux/all
+	@sudo=; if test x`id -u` != x0 && test \! "x`type $(SUDO)`" = x; then \
+		sudo=$(SUDO); fi && \
+	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
+	$$sudo $(mkinstalldirs) $(DESTDIR)/boot && \
+	cd linux && $$sudo $(MAKE) modules_install install \
+           ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross \
+           INSTALL_PATH=$(DESTDIR)/boot \
+           INSTALL_MOD_PATH=$(DESTDIR)
+
+distclean-linux:
+	@test -e linux/.config && \
+		mv linux/.config linux/.config.saved.xenomai; \
+	$(MAKE) linux/distclean; \
+	test -e linux/.config.saved.xenomai && \
+		mv linux/.config.saved.xenomai linux/.config
+
+config oldconfig mconfig menuconfig gconfig xconfig:
+	$(MAKE) linux/$@
+
+all-recursive: linux/all
+
+clean-recursive: linux/clean
+
+distclean-recursive: distclean-linux
+
+install-recursive: linux/install
+endif

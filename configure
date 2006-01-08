@@ -466,7 +466,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP target target_cpu target_vendor target_os CC CFLAGS CPPFLAGS CC_FOR_BUILD ac_ct_CC_FOR_BUILD CPP CPPFLAGS CPP_FOR_BUILD BUILD_EXEEXT BUILD_OBJEXT CFLAGS_FOR_BUILD CPPFLAGS_FOR_BUILD CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL CCAS CCASFLAGS LEX LEXLIB LEX_OUTPUT_ROOT XENO_MAYBE_DOCDIR DOXYGEN DOXYGEN_HAVE_DOT DBX_DOC_ROOT DBX_DOC_TRUE DBX_DOC_FALSE DBX_GEN_DOC_ROOT DBX_LINT DBX_XSLTPROC DBX_FOP DBX_MAYBE_NONET DBX_ROOT DBX_XSL_ROOT DBX_ABS_SRCDIR_TRUE DBX_ABS_SRCDIR_FALSE CONFIG_XENO_UVM_TRUE CONFIG_XENO_UVM_FALSE CONFIG_XENO_DOC_DOX_TRUE CONFIG_XENO_DOC_DOX_FALSE DOXYGEN_SHOW_INCLUDE_FILES LATEX_BATCHMODE LATEX_MODE XENO_TARGET_ARCH XENO_BUILD_STRING XENO_HOST_STRING XENO_USER_CFLAGS XENO_USER_LDFLAGS XENO_USER_APP_CFLAGS XENO_USER_APP_LDFLAGS LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP target target_cpu target_vendor target_os CC CFLAGS CPPFLAGS CC_FOR_BUILD ac_ct_CC_FOR_BUILD CPP CPPFLAGS CPP_FOR_BUILD BUILD_EXEEXT BUILD_OBJEXT CFLAGS_FOR_BUILD CPPFLAGS_FOR_BUILD CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL CCAS CCASFLAGS LEX LEXLIB LEX_OUTPUT_ROOT ADEOS_PATCH XENO_BUILD_LINUX_TRUE XENO_BUILD_LINUX_FALSE XENO_MAYBE_DOCDIR DOXYGEN DOXYGEN_HAVE_DOT DBX_DOC_ROOT DBX_DOC_TRUE DBX_DOC_FALSE DBX_GEN_DOC_ROOT DBX_LINT DBX_XSLTPROC DBX_FOP DBX_MAYBE_NONET DBX_ROOT DBX_XSL_ROOT DBX_ABS_SRCDIR_TRUE DBX_ABS_SRCDIR_FALSE CONFIG_XENO_UVM_TRUE CONFIG_XENO_UVM_FALSE CONFIG_XENO_DOC_DOX_TRUE CONFIG_XENO_DOC_DOX_FALSE DOXYGEN_SHOW_INCLUDE_FILES LATEX_BATCHMODE LATEX_MODE XENO_TARGET_ARCH XENO_LINUX_ARCH XENO_BUILD_STRING XENO_HOST_STRING XENO_USER_CFLAGS XENO_USER_LDFLAGS XENO_USER_APP_CFLAGS XENO_USER_APP_LDFLAGS LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1055,6 +1055,11 @@ Optional Features:
   --enable-uvm-heapsz     Set system heap size for UVMs
   --enable-x86-sep        Enable x86 SEP instructions for issuing syscalls
   --enable-x86-tsc        Enable x86 TSC for timings
+  --enable-linux-build=<linux-src-dir>
+                          Build Linux in Xenomai build tree, copying sources
+                          in <linux-src-dir>. If no source directory is
+                          passed, use, if not cross-compiling, the sources of
+                          the running kernel or /usr/src/linux.
   --enable-dox-doc        Build Doxygen documentation
   --enable-dbx            Build Docbook XML documentation.
   --enable-dbx-network    Try to access Docbook DTD and XSL stylesheets
@@ -1071,6 +1076,8 @@ Optional Packages:
                           both]
   --with-tags[=TAGS]
                           include additional configurations [automatic]
+  --with-adeos-patch      specify the path to the Adeos patch. Default is to
+                          infer the patch name from Linux kernel version.
   --with-dbx-root         specify the Docbook XML root (that is, the directory
                           where docbookx.dtd should be found). Default is to
                           use well-known locations (or network if
@@ -5005,7 +5012,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5008 "configure"' > conftest.$ac_ext
+  echo '#line 5015 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -6343,7 +6350,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6346:" \
+echo "$as_me:6353:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -7393,11 +7400,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7396: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7403: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7400: \$? = $ac_status" >&5
+   echo "$as_me:7407: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7636,11 +7643,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7639: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7646: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7643: \$? = $ac_status" >&5
+   echo "$as_me:7650: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7696,11 +7703,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7699: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7706: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7703: \$? = $ac_status" >&5
+   echo "$as_me:7710: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9881,7 +9888,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9884 "configure"
+#line 9891 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9979,7 +9986,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9982 "configure"
+#line 9989 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12168,11 +12175,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12171: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12178: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12175: \$? = $ac_status" >&5
+   echo "$as_me:12182: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -12228,11 +12235,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12231: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12238: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12235: \$? = $ac_status" >&5
+   echo "$as_me:12242: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13589,7 +13596,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13592 "configure"
+#line 13599 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13687,7 +13694,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13690 "configure"
+#line 13697 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -14524,11 +14531,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14527: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14534: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14531: \$? = $ac_status" >&5
+   echo "$as_me:14538: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -14584,11 +14591,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14587: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14594: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14591: \$? = $ac_status" >&5
+   echo "$as_me:14598: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16619,11 +16626,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16622: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16629: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16626: \$? = $ac_status" >&5
+   echo "$as_me:16633: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16862,11 +16869,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16865: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16872: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16869: \$? = $ac_status" >&5
+   echo "$as_me:16876: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16922,11 +16929,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16925: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16932: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16929: \$? = $ac_status" >&5
+   echo "$as_me:16936: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -19107,7 +19114,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 19110 "configure"
+#line 19117 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -19205,7 +19212,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 19208 "configure"
+#line 19215 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -20510,18 +20517,27 @@ echo $ECHO_N "checking for target architecture... $ECHO_C" >&6
 case "$host" in
  i*86*-*)
 	XENO_TARGET_ARCH=i386
+        XENO_LINUX_ARCH=i386
+	arch_have_sim=y
         ;;
  powerpc-*|ppc-*)
 	XENO_TARGET_ARCH=powerpc
+        XENO_LINUX_ARCH=ppc
+	arch_have_sim=y
         ;;
  powerpc64-*|ppc64-*)
 	XENO_TARGET_ARCH=powerpc
+        XENO_LINUX_ARCH=ppc64
+	arch_have_sim=y
         ;;
  ia64-*)
 	XENO_TARGET_ARCH=ia64
+        XENO_LINUX_ARCH=ia64
+	arch_have_sim=y
         ;;
  bfin-*|bfinnommu-*|blackfin-*)
 	XENO_TARGET_ARCH=blackfin
+        XENO_LINUX_ARCH=bfinnommu
 	if test x$enable_shared = xyes; then
 	   { { echo "$as_me:$LINENO: error: Shared libraries unsupported -- reconfigure passing --disable-shared" >&5
 echo "$as_me: error: Shared libraries unsupported -- reconfigure passing --disable-shared" >&2;}
@@ -20632,6 +20648,120 @@ fi;
   echo "$as_me:$LINENO: result: ${CONFIG_X86_TSC:-no}" >&5
 echo "${ECHO_T}${CONFIG_X86_TSC:-no}" >&6
 fi
+
+echo "$as_me:$LINENO: checking whether building Linux in Xenomai build tree" >&5
+echo $ECHO_N "checking whether building Linux in Xenomai build tree... $ECHO_C" >&6
+# Check whether --enable-linux-build or --disable-linux-build was given.
+if test "${enable_linux_build+set}" = set; then
+  enableval="$enable_linux_build"
+  case "$enableval" in
+	y | yes) XENO_LINUX_SRCDIR=y ;;
+	n | no) unset XENO_LINUX_SRCDIR ;;
+        *) XENO_LINUX_SRCDIR="`/bin/bash -c \"echo $enableval\"`";;
+	esac
+fi;
+
+if test x"$XENO_LINUX_SRCDIR" = x; then
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+else
+  echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+  echo "$as_me:$LINENO: checking for Linux sources" >&5
+echo $ECHO_N "checking for Linux sources... $ECHO_C" >&6
+  if test x"$XENO_LINUX_SRCDIR" = xy && test x"$cross_compiling" = xno; then
+        XENO_LINUX_SRCDIR=/lib/modules/`uname -r`/source
+        if test ! -r $XENO_LINUX_SRCDIR/Makefile; then
+           XENO_LINUX_SRCDIR=/usr/src/linux
+        fi
+  fi
+  if test x"$XENO_LINUX_SRCDIR" = xy || test ! -r $XENO_LINUX_SRCDIR/Makefile; then
+     if test -e linux/.xenomai-prepared; then
+        echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+        unset XENO_LINUX_SRCDIR
+     else
+        { { echo "$as_me:$LINENO: error: Unable to find Linux kernel sources tree, please pass a valid Linux sources directory to --enable-linux-build" >&5
+echo "$as_me: error: Unable to find Linux kernel sources tree, please pass a valid Linux sources directory to --enable-linux-build" >&2;}
+   { (exit 1); exit 1; }; }
+     fi
+  fi
+
+  if test x"$XENO_LINUX_SRCDIR" != x; then
+     unset linux_EXTRAVERSION
+     unset linux_PATCHLEVEL
+     unset linux_SUBLEVEL
+     unset linux_VERSION
+
+     eval linux_`grep '^EXTRAVERSION =' $XENO_LINUX_SRCDIR/Makefile | sed -e 's, ,,g'`
+     eval linux_`grep '^PATCHLEVEL =' $XENO_LINUX_SRCDIR/Makefile | sed -e 's, ,,g'`
+     eval linux_`grep '^SUBLEVEL =' $XENO_LINUX_SRCDIR/Makefile | sed -e 's, ,,g'`
+     eval linux_`grep '^VERSION =' $XENO_LINUX_SRCDIR/Makefile | sed -e 's, ,,g'`
+
+     linux_base_version="$linux_VERSION.$linux_PATCHLEVEL.$linux_SUBLEVEL"
+     linux_full_version="$linux_base_version$linux_EXTRAVERSION"
+
+     if test x"$linux_PATCHLEVEL" = x -o x"$linux_SUBLEVEL" = x ||
+        test x"$linux_VERSION" = x; then
+        if test -e linux/.xenomai-prepared; then
+           echo "$as_me:$LINENO: result: Unknown version" >&5
+echo "${ECHO_T}Unknown version" >&6
+           unset linux_base_version
+        else
+           { { echo "$as_me:$LINENO: error: Unable to get version of $XENO_LINUX_SRCDIR, aborting." >&5
+echo "$as_me: error: Unable to get version of $XENO_LINUX_SRCDIR, aborting." >&2;}
+   { (exit 1); exit 1; }; }
+        fi
+     else
+        echo "$as_me:$LINENO: result: $XENO_LINUX_SRCDIR (kernel ${linux_full_version})" >&5
+echo "${ECHO_T}$XENO_LINUX_SRCDIR (kernel ${linux_full_version})" >&6
+     fi
+  fi
+
+  echo "$as_me:$LINENO: checking for Adeos patch" >&5
+echo $ECHO_N "checking for Adeos patch... $ECHO_C" >&6
+  unset ADEOS_PATCH
+
+# Check whether --with-adeos-patch or --without-adeos-patch was given.
+if test "${with_adeos_patch+set}" = set; then
+  withval="$with_adeos_patch"
+  ADEOS_PATCH="`/bin/bash -c \"echo $withval\"`"
+fi;
+
+  if test x"$ADEOS_PATCH" = x && test x"$linux_base_version" != x; then
+        set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version-$XENO_LINUX_ARCH-*
+        ADEOS_PATCH=$1
+  fi
+  if test x"$ADEOS_PATCH" = x || test ! -e $ADEOS_PATCH; then
+     if test -e linux/.xenomai-prepared; then
+        echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+        unset ADEOS_PATCH
+     else
+        { { echo "$as_me:$LINENO: error: Unable to find Adeos patch, please use --with-adeos-patch" >&5
+echo "$as_me: error: Unable to find Adeos patch, please use --with-adeos-patch" >&2;}
+   { (exit 1); exit 1; }; }
+     fi
+  else
+     echo "$as_me:$LINENO: result: $ADEOS_PATCH" >&5
+echo "${ECHO_T}$ADEOS_PATCH" >&6
+  fi
+
+
+            ac_config_commands="$ac_config_commands linux"
+
+fi
+
+
+if test \! x"$XENO_LINUX_SRCDIR" = x; then
+  XENO_BUILD_LINUX_TRUE=
+  XENO_BUILD_LINUX_FALSE='#'
+else
+  XENO_BUILD_LINUX_TRUE='#'
+  XENO_BUILD_LINUX_FALSE=
+fi
+
+
 
 
 if test \! -d $srcdir/doc; then
@@ -21429,6 +21559,7 @@ XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
 
 
 
+
 base=include
           ac_config_links="$ac_config_links src/include/xenomai:$base"
 
@@ -21566,6 +21697,13 @@ if test -z "${am__fastdepCXX_TRUE}" && test -z "${am__fastdepCXX_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"am__fastdepCXX\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"am__fastdepCXX\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${XENO_BUILD_LINUX_TRUE}" && test -z "${XENO_BUILD_LINUX_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"XENO_BUILD_LINUX\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"XENO_BUILD_LINUX\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -22034,6 +22172,11 @@ cat >>$CONFIG_STATUS <<_ACEOF
 #
 
 AMDEP_TRUE="$AMDEP_TRUE" ac_aux_dir="$ac_aux_dir"
+XENO_LINUX_SRCDIR=$XENO_LINUX_SRCDIR
+           XENO_TARGET_ARCH=$XENO_TARGET_ARCH
+           XENO_LINUX_ARCH=$XENO_LINUX_ARCH
+           XENO_LINUX_VERSION=$linux_full_version
+         ADEOS_PATCH=$ADEOS_PATCH
 
 _ACEOF
 
@@ -22107,6 +22250,7 @@ do
   "src/include/asm/xenomai" ) CONFIG_LINKS="$CONFIG_LINKS src/include/asm/xenomai:include/$base" ;;
   "src/include/$base/xenomai" ) CONFIG_LINKS="$CONFIG_LINKS src/include/$base/xenomai:include/$base" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
+  "linux" ) CONFIG_COMMANDS="$CONFIG_COMMANDS linux" ;;
   "src/include/xeno_config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS src/include/xeno_config.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
@@ -22283,6 +22427,9 @@ s,@CCASFLAGS@,$CCASFLAGS,;t t
 s,@LEX@,$LEX,;t t
 s,@LEXLIB@,$LEXLIB,;t t
 s,@LEX_OUTPUT_ROOT@,$LEX_OUTPUT_ROOT,;t t
+s,@ADEOS_PATCH@,$ADEOS_PATCH,;t t
+s,@XENO_BUILD_LINUX_TRUE@,$XENO_BUILD_LINUX_TRUE,;t t
+s,@XENO_BUILD_LINUX_FALSE@,$XENO_BUILD_LINUX_FALSE,;t t
 s,@XENO_MAYBE_DOCDIR@,$XENO_MAYBE_DOCDIR,;t t
 s,@DOXYGEN@,$DOXYGEN,;t t
 s,@DOXYGEN_HAVE_DOT@,$DOXYGEN_HAVE_DOT,;t t
@@ -22306,6 +22453,7 @@ s,@DOXYGEN_SHOW_INCLUDE_FILES@,$DOXYGEN_SHOW_INCLUDE_FILES,;t t
 s,@LATEX_BATCHMODE@,$LATEX_BATCHMODE,;t t
 s,@LATEX_MODE@,$LATEX_MODE,;t t
 s,@XENO_TARGET_ARCH@,$XENO_TARGET_ARCH,;t t
+s,@XENO_LINUX_ARCH@,$XENO_LINUX_ARCH,;t t
 s,@XENO_BUILD_STRING@,$XENO_BUILD_STRING,;t t
 s,@XENO_HOST_STRING@,$XENO_HOST_STRING,;t t
 s,@XENO_USER_CFLAGS@,$XENO_USER_CFLAGS,;t t
@@ -23134,6 +23282,61 @@ echo "$as_me: error: cannot create directory $dirpart/$fdir" >&2;}
   done
 done
  ;;
+    linux )
+     if test -e linux/.xenomai-prepared; then
+        . linux/.xenomai-prepared
+        if test x"$XENO_LINUX_VERSION" != x"$PREPARED_LINUX_VERSION" ||
+           test x"`basename $ADEOS_PATCH`" != x"$PREPARED_ADEOS_PATCH"; then
+           echo "*** Warning: built version of linux and requested versions are "
+           echo "*** different. If you want to build the requested version of "
+           echo "*** linux, remove the file: linux/.xenomai-prepared."
+        fi
+        touch linux/.xenomai-prepared
+     else
+           set -e
+           targetdir=$PWD/linux
+           if test \! -e linux || test \! $XENO_LINUX_SRCDIR -ef linux; then
+               if test -e linux; then
+                   test -e linux/.config && mv linux/.config .xenomai.config
+                   echo $ECHO_N "Removing existing linux directory... $ECHO_C"
+                   rm -Rf linux
+                   echo "${ECHO_T}done."
+               fi
+               mkdir linux
+               echo $ECHO_N "Making linux a shadow copy of $XENO_LINUX_SRCDIR... $ECHO_C"
+               cd $XENO_LINUX_SRCDIR
+               find . -! -type d | while read f; do
+                   d=$targetdir/`dirname $f`
+                   mkdir -p $d && ln -sf $XENO_LINUX_SRCDIR/$f $d/`basename $f`
+               done
+               echo "${ECHO_T}done."
+           fi
+           cd $targetdir
+
+           if test -e $XENO_LINUX_SRCDIR/.config; then
+              . $XENO_LINUX_SRCDIR/.config
+              test x"$CONFIG_X86" = xy && cfg_arch=i386 || :
+              test x"$CONFIG_PPC" = xy && cfg_arch=ppc || :
+              test x"$CONFIG_IA64" = xy && cfg_arch=ia64 || :
+              test x"$CONFIG_PPC64" = xy && cfg_arch=ppc64 || :
+              if test $cfg_arch = $XENO_TARGET_ARCH; then
+                 cp $XENO_LINUX_SRCDIR/.config .xenomai.config
+              fi
+              echo "Cleaning linux directory..."
+              make ARCH=$cfg_arch distclean
+              test -e .xenomai.config && mv .xenomai.config .config
+           fi
+           cd ..
+           $srcdir/scripts/prepare-kernel.sh \
+             --adeos="$ADEOS_PATCH" --linux=linux --arch=$XENO_LINUX_ARCH
+           test -e .xenomai.config && mv .xenomai.config linux/.config || :
+           cat > linux/.xenomai-prepared.tmp <<EOF
+PREPARED_LINUX_VERSION=$XENO_LINUX_VERSION
+PREPARED_ADEOS_PATCH=`basename $ADEOS_PATCH`
+EOF
+           mv linux/.xenomai-prepared.tmp linux/.xenomai-prepared
+     fi
+         ;;
   esac
 done
 _ACEOF
