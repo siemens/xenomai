@@ -1,3 +1,11 @@
+2006-01-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-uvm/system.h: Remove #error on CONFIG_SMP.
+
+2006-01-08  Niklaus Giger <niklaus.giger@member.fsf.org>
+	
+	* README.INSTALL: Give better hints for PPC builds.
+
 2006-01-07  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/compat/linux/device.h, include/asm-generic/wrappers.h:
