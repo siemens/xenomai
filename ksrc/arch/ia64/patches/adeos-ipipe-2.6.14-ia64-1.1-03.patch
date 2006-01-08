@@ -2965,8 +2965,8 @@
  }
  #endif /* CONFIG_HOTPLUG */
 --- 2.6.14/arch/ia64/kernel/ipipe-core.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/arch/ia64/kernel/ipipe-core.c	2006-01-04 17:37:45.000000000 +0100
-@@ -0,0 +1,431 @@
++++ 2.6.14-ipipe/arch/ia64/kernel/ipipe-core.c	2006-01-07 23:25:23.000000000 +0100
+@@ -0,0 +1,432 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/ia64/kernel/ipipe-core.c
 + *
@@ -3392,6 +3392,7 @@
 +#endif /* CONFIG_SMP */
 +
 +EXPORT_SYMBOL(__ipipe_sync_stage);
++EXPORT_SYMBOL(__ipipe_itm_next);
 +EXPORT_SYMBOL(__ipipe_tick_irq);
 +EXPORT_SYMBOL(ipipe_critical_enter);
 +EXPORT_SYMBOL(ipipe_critical_exit);
@@ -3399,8 +3400,8 @@
 +EXPORT_SYMBOL(ipipe_get_sysinfo);
 +EXPORT_SYMBOL(ipipe_tune_timer);
 --- 2.6.14/arch/ia64/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/arch/ia64/kernel/ipipe-root.c	2006-01-06 12:42:57.000000000 +0100
-@@ -0,0 +1,284 @@
++++ 2.6.14-ipipe/arch/ia64/kernel/ipipe-root.c	2006-01-07 23:25:23.000000000 +0100
+@@ -0,0 +1,286 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/ia64/kernel/ipipe-root.c
 + *
@@ -3674,6 +3675,8 @@
 +EXPORT_SYMBOL(load_switch_stack);
 +void save_switch_stack(void);
 +EXPORT_SYMBOL(save_switch_stack);
++extern void local_flush_tlb_all (void);
++EXPORT_SYMBOL(local_flush_tlb_all);
 +EXPORT_SYMBOL(ia64_load_extra);
 +EXPORT_SYMBOL(ia64_save_extra);
 +EXPORT_SYMBOL(ia64_switch_to);
@@ -3965,7 +3968,7 @@
  	 * If we're in an interrupt or have no user context, we must not take the fault..
  	 */
 --- 2.6.14/include/asm-ia64/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/include/asm-ia64/ipipe.h	2006-01-07 09:47:56.000000000 +0100
++++ 2.6.14-ipipe/include/asm-ia64/ipipe.h	2006-01-07 23:25:48.000000000 +0100
 @@ -0,0 +1,174 @@
 +/*   -*- linux-c -*-
 + *   include/asm-ia64/ipipe.h
@@ -4003,10 +4006,10 @@
 +#include <linux/list.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.1-02"
++#define IPIPE_ARCH_STRING	"1.1-03"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	1
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#define IPIPE_SERVICE_VECTOR0  0xf1
 +#define IPIPE_SERVICE_IPI0     __ia64_local_vector_to_irq(IPIPE_SERVICE_VECTOR0)
