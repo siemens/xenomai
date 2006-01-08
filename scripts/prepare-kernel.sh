@@ -2,12 +2,17 @@
 set -e
 
 do_links() {
-    rm -fr $2
-    ( cd $1 &&
+    ( if test -x $2; then
+      cd $2 &&
+      find . \( -name Makefile -o -name $config_file -o -name '*.[chS]' \) |
+      while read f; do
+        if test ! -e $1/$f; then rm -f $f; fi
+      done; else true; fi &&
+      cd $1 &&
       find . \( -name Makefile -o -name $config_file -o -name '*.[chS]' \) |
       while read f; do
         d=`dirname $f`
-	mkdir -p $2/$d && ln -s $1/$f $2/$f
+	mkdir -p $2/$d && ln -sf $1/$f $2/$f
       done )
 }
 
