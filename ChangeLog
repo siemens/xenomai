@@ -3,17 +3,12 @@
 	* skins/native/task.c (rt_task_create): Allow creating anonymous
 	user-space tasks.
 
-2005-01-03  Jan Kiszka  <jan.kiszka@web.de>
+2006-01-03  Jan Kiszka  <jan.kiszka@web.de>
 
 	* drivers/16550A/16550A.c: Fix types for 64 bit archs. Fall back
 	to MODULE_PARM on kernels < 2.6.10.
 
-2006-01-03  Philippe Gerum  <rpm@xenomai.org>
-
-	* configure.in: Do not ask for CONFIG_IPIPE_EXTENDED since the
-	I-pipe 1.1 series doesn't define it anymore.
-
-2005-01-02  Jan Kiszka  <jan.kiszka@web.de>
+2006-01-02  Jan Kiszka  <jan.kiszka@web.de>
 
 	* skin/rtdm/core: Fix exclusive open.
 
