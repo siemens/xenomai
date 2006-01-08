@@ -1,5 +1,8 @@
 2006-01-08  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/native/task.c (rt_task_create): Allow creating
+	anonymous user-space tasks.
+
 	* include/asm-uvm/system.h: Remove #error on CONFIG_SMP.
 
 2006-01-08  Niklaus Giger <niklaus.giger@member.fsf.org>
@@ -62,7 +65,7 @@
 	enumerate cpus from the cpu_online_map instead of the present
 	map. Make rthal_periodic_p a cpu-independent flag.
 
-2005-01-03  Philippe Gerum  <rpm@xenomai.org>
+2006-01-03  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/{i386,ppc,ia64}, include/asm-{i386,ppc,ia64,uvm,sim}:
 	Adapt to the new Adeos infrastructure for shared IRQs.
@@ -73,7 +76,7 @@
 	ksrc/arch/blackfin/nmi.c: Cleanup NMI support among archs,
 	defining a generic support for all common pieces.
 
-2005-01-03  Jan Kiszka  <jan.kiszka@web.de>
+2006-01-03  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/16550A/16550A.c: Fix types for 64 bit archs. Fall
 	back to MODULE_PARM on kernels < 2.6.10.
@@ -84,7 +87,7 @@
 	* src/testsuite/latency/latency.c: Fix freezing threshold,
 	improve info display.
 
-2005-01-02  Jan Kiszka  <jan.kiszka@web.de>
+2006-01-02  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/benchmark, src/testsuite/latency: Restore
 	kernel-based latency benchmark app now based on RTDM.
