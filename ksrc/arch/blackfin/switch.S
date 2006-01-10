@@ -64,7 +64,7 @@ switch_point:
 	rets = [sp++];
 	rts;
 
-ENTRY(rthal_thread_init)
+ENTRY(rthal_thread_trampoline)
 	r0 = [sp++]; 
 	jump switch_point
 	

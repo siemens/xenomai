@@ -149,7 +149,7 @@ extern int rthal_periodic_p;
 asmlinkage void rthal_thread_switch(struct thread_struct *prev,
 				    struct thread_struct *next);
 
-asmlinkage void rthal_thread_init(void);
+asmlinkage void rthal_thread_trampoline(void);
 
 asmlinkage int rthal_defer_switch_p(void);
 
