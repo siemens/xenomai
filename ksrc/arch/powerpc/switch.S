@@ -21,99 +21,82 @@
 #include <asm/processor.h>
 #include <asm/cputable.h>
 #include <asm/page.h>
+#include <asm/offsets.h>
 #include <asm/ppc_asm.h>
 
-#define RTHAL_SAVEREG(reg, pos)	stw reg,STACK_FRAME_OVERHEAD+4*(pos)(r1)
-#define RTHAL_LOADREG(reg, pos)	lwz reg,STACK_FRAME_OVERHEAD+4*(pos)(r1)
-
 /*
- * r3=out_kspp, r4=in_kspp
+ * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next)
  */
-_GLOBAL(rthal_switch_context)
+	.align	7
+_GLOBAL(rthal_thread_switch)
+	stwu	r1,-INT_FRAME_SIZE(r1)
+	mflr	r0
+	stw	r0,INT_FRAME_SIZE+4(r1)
+	SAVE_NVGPRS(r1)
+	stw	r0,_NIP(r1)	/* Return to switch caller */
+	mfmsr	r11
+	li	r0,MSR_FP	/* Disable floating-point */
+#ifdef CONFIG_ALTIVEC
+BEGIN_FTR_SECTION
+	oris	r0,r0,MSR_VEC@h	/* Disable altivec */
+	mfspr	r12,SPRN_VRSAVE	/* save vrsave register value */
+	stw	r12,THREAD_VRSAVE(r3)
+END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
+#endif /* CONFIG_ALTIVEC */
+#ifdef CONFIG_SPE
+	oris	r0,r0,MSR_SPE@h	 /* Disable SPE */
+	mfspr	r12,SPRN_SPEFSCR /* save spefscr register value */
+	stw	r12,THREAD_SPEFSCR(r3)
+#endif /* CONFIG_SPE */
+	and.	r0,r0,r11	/* FP or altivec or SPE enabled? */
+	beq+	1f
+	andc	r11,r11,r0
+	MTMSRD(r11)
+	isync
+1:	stw	r11,_MSR(r1)
+	mfcr	r10
+	stw	r10,_CCR(r1)
+	stw	r1,KSP(r3)	/* Set old stack pointer */
 
-        stwu    r1,-124(r1)
+#ifdef CONFIG_SMP
+	sync
+#endif /* CONFIG_SMP */
 
-        /* Save general purpose registers. */
+	lwz	r1,KSP(r4)	/* Load new stack pointer */
 
-	RTHAL_SAVEREG(r31,0)
-	RTHAL_SAVEREG(r30,1)
-	RTHAL_SAVEREG(r29,2)
-	RTHAL_SAVEREG(r28,3)
-	RTHAL_SAVEREG(r27,4)
-	RTHAL_SAVEREG(r26,5)
-	RTHAL_SAVEREG(r25,6)
-	RTHAL_SAVEREG(r24,7)
-	RTHAL_SAVEREG(r23,8)
-	RTHAL_SAVEREG(r22,9)
-	RTHAL_SAVEREG(r21,10)
-	RTHAL_SAVEREG(r20,11)
-	RTHAL_SAVEREG(r19,12)
-	RTHAL_SAVEREG(r18,13)
-	RTHAL_SAVEREG(r17,14)
-	RTHAL_SAVEREG(r16,15)
-	RTHAL_SAVEREG(r15,16)
-	RTHAL_SAVEREG(r14,17)
-	RTHAL_SAVEREG(r13,18)
-	RTHAL_SAVEREG(r3,19)
-	RTHAL_SAVEREG(r2,20)
-	RTHAL_SAVEREG(r0,21)
+	lwz	r0,PGDIR(r4)
+        cmpwi   r0, 0
+        beq- same_current
 
-        /* Save special registers. */
-	
-	mfctr    r2
-	RTHAL_SAVEREG(r2,22)
-        mfcr     r2
-	RTHAL_SAVEREG(r2,23)
-        mfxer    r2
-	RTHAL_SAVEREG(r2,24)
-        mflr     r2
-	RTHAL_SAVEREG(r2,25)
-        mfmsr    r2
-	RTHAL_SAVEREG(r2,26)
+	tophys(r0,r4)
+	CLR_TOP32(r0)
+	mtspr	SPRN_SPRG3,r0	/* Update current THREAD phys addr */
+	addi	r2,r4,-THREAD	/* Update current */
 
-        /* Switch stacks. */
-	
-        stw      r1,0(r3)       /* *out_kspp = sp */
-        lwz      r1,0(r4)       /* sp = *in_kspp */
+same_current:
+		
+#ifdef CONFIG_ALTIVEC
+BEGIN_FTR_SECTION
+	lwz	r0,THREAD_VRSAVE(r4)
+	mtspr	SPRN_VRSAVE,r0		/* if G4, restore VRSAVE reg */
+END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
+#endif /* CONFIG_ALTIVEC */
+#ifdef CONFIG_SPE
+	lwz	r0,THREAD_SPEFSCR(r4)
+	mtspr	SPRN_SPEFSCR,r0		/* restore SPEFSCR reg */
+#endif /* CONFIG_SPE */
 
-        /* Restore special registers. */
+	lwz	r0,_CCR(r1)
+	mtcrf	0xFF,r0
+	REST_NVGPRS(r1)
 
-	RTHAL_LOADREG(r2,26)
-        mtmsr    r2
-	RTHAL_LOADREG(r2,25)
-        mtlr     r2
-	RTHAL_LOADREG(r2,24)
-        mtxer    r2
-	RTHAL_LOADREG(r2,23)
-        mtcr     r2
-	RTHAL_LOADREG(r2,22)
-        mtctr    r2
+	lwz	r4,_NIP(r1)
+	mtlr	r4
+	addi	r1,r1,INT_FRAME_SIZE
+	blr
 
-	/* Restore general purpose registers. */
-	
-	RTHAL_LOADREG(r0,21)
-	RTHAL_LOADREG(r2,20)
-	RTHAL_LOADREG(r3,19)
-	RTHAL_LOADREG(r13,18)
-	RTHAL_LOADREG(r14,17)
-	RTHAL_LOADREG(r15,16)
-	RTHAL_LOADREG(r16,15)
-	RTHAL_LOADREG(r17,14)
-	RTHAL_LOADREG(r18,13)
-	RTHAL_LOADREG(r19,12)
-	RTHAL_LOADREG(r20,11)
-	RTHAL_LOADREG(r21,10)
-	RTHAL_LOADREG(r22,9)
-	RTHAL_LOADREG(r23,8)
-	RTHAL_LOADREG(r24,7)
-	RTHAL_LOADREG(r25,6)
-	RTHAL_LOADREG(r26,5)
-	RTHAL_LOADREG(r27,4)
-	RTHAL_LOADREG(r28,3)
-	RTHAL_LOADREG(r29,2)
-	RTHAL_LOADREG(r30,1)
-	RTHAL_LOADREG(r31,0)
-
-        addi    r1,r1,124
-
-        blr
+_GLOBAL(rthal_thread_trampoline)
+	mtmsr	r14
+	mtlr	r15
+	mr	r3,r16
+	blr

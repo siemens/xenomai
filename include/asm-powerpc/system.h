@@ -68,12 +68,12 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 
     unsigned stacksize;		/* Aligned size of stack (bytes) */
     unsigned long *stackbase;	/* Stack space */
-    unsigned long ksp;		/* Saved KSP for kernel-based threads */
-    unsigned long *kspp;	/* Pointer to saved KSP (&ksp or &user->thread.ksp) */
 
     /* User mode side */
     struct task_struct *user_task;	/* Shadowed user-space task */
     struct task_struct *active_task;	/* Active user-space task */
+    struct thread_struct ts;	/* Holds kernel-based thread context. */
+    struct thread_struct *tsp;	/* Pointer to the active thread struct (&ts or &user->thread). */
 
     /* Init block */
     struct xnthread *self;
@@ -164,6 +164,7 @@ static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
     __set_bit(cpuid,&rthal_cpu_realtime);
     /* Remember the preempted Linux task pointer. */
     rootcb->user_task = rootcb->active_task = current;
+    rootcb->tsp = &current->thread;
 #ifdef CONFIG_XENO_HW_FPU
     rootcb->user_fpu_owner = rthal_get_fpu_owner(rootcb->user_task);
     /* So that xnarch_save_fpu() will operate on the right FPU area. */
@@ -173,7 +174,8 @@ static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
-static inline void xnarch_enter_root (xnarchtcb_t *rootcb) {
+static inline void xnarch_enter_root (xnarchtcb_t *rootcb)
+{
     __clear_bit(xnarch_current_cpu(),&rthal_cpu_realtime);
 }
 
@@ -233,18 +235,13 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
 	next->thread.pgdir = mm->pgd;
 	get_mmu_context(mm);
 	set_context(mm->context,mm->pgd);
-
-	/* _switch expects a valid "current" (r2) for storing
-	 * ALTIVEC and SPE state. */
-	current = prev;
+	current = prev;		/* Make sure r2 is valid. */
 #endif /* CONFIG_PPC64 */
-	_switch(&prev->thread, &next->thread);
-
-	barrier();
 	}
-    else
-        /* Kernel-to-kernel context switch. */
-        rthal_switch_context(out_tcb->kspp,in_tcb->kspp);
+
+    rthal_thread_switch(out_tcb->tsp, in_tcb->tsp);
+
+    barrier();
 }
 
 static inline void xnarch_finalize_and_switch (xnarchtcb_t *dead_tcb,
@@ -265,8 +262,7 @@ static inline void xnarch_init_root_tcb (xnarchtcb_t *tcb,
 {
     tcb->user_task = current;
     tcb->active_task = NULL;
-    tcb->ksp = 0;
-    tcb->kspp = &tcb->ksp;
+    tcb->tsp = &tcb->ts;
 #ifdef CONFIG_XENO_HW_FPU
     tcb->user_fpu_owner = NULL;
     tcb->fpup = NULL;
@@ -295,38 +291,29 @@ static inline void xnarch_init_thread (xnarchtcb_t *tcb,
 				       char *name)
 {
     unsigned long *ksp, flags;
+    struct pt_regs *childregs;
 
     rthal_local_irq_flags_hw(flags);
 
 #ifdef CONFIG_PPC64
-    if (tcb->stackbase) {
-	*tcb->stackbase = 0;
-	
-	ksp = (unsigned long *)(((unsigned long)tcb->stackbase + tcb->stacksize - 16) & ~0xf);
-	*ksp = 0L; /* first stack frame back-chain */
-	ksp = ksp - STACK_FRAME_OVERHEAD; /* first stack frame (entry uses) */
-	*ksp = (unsigned long)ksp+STACK_FRAME_OVERHEAD; /* second back-chain */
-	ksp = ksp - RTHAL_SWITCH_FRAME_SIZE; /* domain context */
-	tcb->ksp = (unsigned long)ksp - STACK_FRAME_OVERHEAD;
-	*((unsigned long *)tcb->ksp) = (unsigned long)ksp + 224; /*back-chain*/
-	/* NOTE: these depend on rthal_switch_context ordering */
-	ksp[18] = (unsigned long)get_paca(); /* r13 needs to hold paca */
-	ksp[19] = (unsigned long)tcb; /* r3 */
-	ksp[20] = ((unsigned long *)&xnarch_thread_trampoline)[1]; /* r2 = TOC base */
-	ksp[25] = ((unsigned long *)&xnarch_thread_trampoline)[0]; /* lr = entry addr. */
-	ksp[26] = flags & ~(MSR_EE | MSR_FP); /* msr */
-    }
-    else {
-	printk("xnarch_init_thread: NULL stackbase!\n");
-    }
+    ksp = (unsigned long *)((unsigned long)tcb->stackbase + tcb->stacksize - RTHAL_SWITCH_FRAME_SIZE - 32);
+    childregs = (struct pt_regs *)ksp;
+    memset(childregs,0,sizeof(*childregs));
+    childregs->nip = (unsigned long)&rthal_thread_trampoline;
+    childregs->gpr[14] = flags & ~(MSR_EE | MSR_FP);
+    childregs->gpr[15] = ((unsigned long *)&xnarch_thread_trampoline)[0]; /* lr = entry addr. */
+    childregs->gpr[16] = ((unsigned long *)&xnarch_thread_trampoline)[1]; /* r2 = TOC base. */
+    childregs->gpr[17] = (unsigned long)tcb;
+    tcb->ts.ksp = (unsigned long)childregs - STACK_FRAME_OVERHEAD;
 #else /* !CONFIG_PPC64 */
-    *tcb->stackbase = 0;
-    ksp = (unsigned long *)((((unsigned long)tcb->stackbase + tcb->stacksize - 0x10) & ~0xf)
-			    - RTHAL_SWITCH_FRAME_SIZE);
-    tcb->ksp = (unsigned long)ksp - STACK_FRAME_OVERHEAD;
-    ksp[19] = (unsigned long)tcb; /* r3 */
-    ksp[25] = (unsigned long)&xnarch_thread_trampoline; /* lr */
-    ksp[26] = flags & ~(MSR_EE | MSR_FP); /* msr */
+    ksp = (unsigned long *)((unsigned long)tcb->stackbase + tcb->stacksize - RTHAL_SWITCH_FRAME_SIZE - 4);
+    childregs = (struct pt_regs *)ksp;
+    memset(childregs,0,sizeof(*childregs));
+    childregs->nip = (unsigned long)&rthal_thread_trampoline;
+    childregs->gpr[14] = flags & ~(MSR_EE | MSR_FP);
+    childregs->gpr[15] = (unsigned long)&xnarch_thread_trampoline;
+    childregs->gpr[16] = (unsigned long)tcb;
+    tcb->ts.ksp = (unsigned long)childregs - STACK_FRAME_OVERHEAD;
 #endif
     
     tcb->entry = entry;
@@ -423,11 +410,13 @@ static inline int xnarch_escalate (void)
 
 #ifdef XENO_THREAD_MODULE
 
-static inline void xnarch_init_tcb (xnarchtcb_t *tcb) {
-
+static inline void xnarch_init_tcb (xnarchtcb_t *tcb)
+{
     tcb->user_task = NULL;
     tcb->active_task = NULL;
-    tcb->kspp = &tcb->ksp;
+    tcb->tsp = &tcb->ts;
+    /* Note: .pgdir(ppc32)/.VSID(ppc64) == NULL for a Xenomai kthread. */
+    memset(&tcb->ts,0,sizeof(tcb->ts));
 #ifdef CONFIG_XENO_HW_FPU
     tcb->user_fpu_owner = NULL;
     tcb->fpup = &tcb->fpuenv;
@@ -467,8 +456,7 @@ static inline void xnarch_init_shadow_tcb (xnarchtcb_t *tcb,
 
     tcb->user_task = task;
     tcb->active_task = NULL;
-    tcb->ksp = 0;
-    tcb->kspp = &task->thread.ksp;
+    tcb->tsp = &task->thread;
 #ifdef CONFIG_XENO_HW_FPU
     tcb->user_fpu_owner = task;
     tcb->fpup = (rthal_fpenv_t *)&task->thread.fpr[0];

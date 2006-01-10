@@ -163,16 +163,12 @@ static inline void rthal_timer_program_shot (unsigned long delay)
 
     /* Private interface -- Internal use only */
 
-/* The following must be kept in sync w/ rthal_switch_context() in
-   switch.S */
-#ifdef CONFIG_PPC64
-#define RTHAL_SWITCH_FRAME_SIZE  224
-#else
-#define RTHAL_SWITCH_FRAME_SIZE  108
-#endif
+#define RTHAL_SWITCH_FRAME_SIZE  (STACK_FRAME_OVERHEAD + sizeof(struct pt_regs))
 
-void rthal_switch_context(unsigned long *out_kspp,
-			  unsigned long *in_kspp);
+asmlinkage void rthal_thread_switch(struct thread_struct *prev,
+				    struct thread_struct *next);
+
+asmlinkage void rthal_thread_trampoline(void);
 
 #ifdef CONFIG_XENO_HW_FPU
 
