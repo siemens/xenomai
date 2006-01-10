@@ -26,6 +26,7 @@
 #include <linux/ptrace.h>
 #include <asm-generic/xenomai/system.h>
 #include <asm/system.h>
+#include <asm/processor.h>
 
 #define XNARCH_DEFAULT_TICK     1000000 /* ns, i.e. 1ms */
 /* The I-pipe frees the Blackfin core timer for us, therefore we don't
@@ -50,12 +51,10 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 
     unsigned stacksize;		/* Aligned size of stack (bytes) */
     unsigned long *stackbase;	/* Stack space */
-    unsigned long ksp;		/* Saved KSP for kernel-based threads */
-    unsigned long *kspp;	/* Pointer to saved KSP (&ksp or &user->thread.ksp) */
 
-    /* User mode side */
-    struct task_struct *user_task;	/* Shadowed user-space task */
-    struct task_struct *active_task;	/* Active user-space task */
+    struct thread_struct ts;	/* Holds kernel-based thread context. */
+    struct task_struct *user_task; /* Shadowed user-space task */
+    struct thread_struct *tsp;	/* Pointer to the active thread struct (&ts or &user->thread). */
 
     /* Init block */
     struct xnthread *self;
@@ -126,27 +125,20 @@ static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
        and always inside a critical section. */
     __set_bit(cpuid,&rthal_cpu_realtime);
     /* Remember the preempted Linux task pointer. */
-    rootcb->user_task = rootcb->active_task = current;
+    rootcb->user_task = current;
+    rootcb->tsp = &current->thread;
 }
 
-static inline void xnarch_enter_root (xnarchtcb_t *rootcb) {
+static inline void xnarch_enter_root (xnarchtcb_t *rootcb)
+
+{
     __clear_bit(xnarch_current_cpu(),&rthal_cpu_realtime);
 }
 
 static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
 				     xnarchtcb_t *in_tcb)
 {
-    struct task_struct *prev = out_tcb->active_task;
-    struct task_struct *next = in_tcb->user_task;
-
-    in_tcb->active_task = next ?: prev;
-
-    if (next && next != prev)
-	/* Switch to user-space thread. */
-	rthal_ucontext_switch(prev, next);
-    else
-        /* Kernel-to-kernel context switch. */
-        rthal_kcontext_switch(out_tcb->kspp,in_tcb->kspp);
+    rthal_thread_switch(out_tcb->tsp, in_tcb->tsp);
 }
 
 static inline void xnarch_finalize_and_switch (xnarchtcb_t *dead_tcb,
@@ -166,9 +158,7 @@ static inline void xnarch_init_root_tcb (xnarchtcb_t *tcb,
 					 const char *name)
 {
     tcb->user_task = current;
-    tcb->active_task = NULL;
-    tcb->ksp = 0;
-    tcb->kspp = &tcb->ksp;
+    tcb->tsp = &tcb->ts;
     tcb->entry = NULL;
     tcb->cookie = NULL;
     tcb->self = thread;
@@ -194,12 +184,16 @@ static inline void xnarch_init_thread (xnarchtcb_t *tcb,
 {
     unsigned long *ksp;
 
-    ksp = (unsigned long *)(((unsigned long)tcb->stackbase + tcb->stacksize - 16) & ~0xf);
-    tcb->ksp = (unsigned long)ksp;
+    ksp = (unsigned long *)(((unsigned long)tcb->stackbase + tcb->stacksize - 40) & ~0xf);
     ksp[0] = (unsigned long)tcb; /* r0 */
-    ksp[1] = 0; /* fp */
-    ksp[2] = (unsigned long)&xnarch_thread_trampoline; /* rets */
+    memset(&ksp[1],0,sizeof(long) * 7); /* ( R7:4, P5:3 ) */
+    ksp[8] = 0; /* fp */
+    ksp[9] = (unsigned long)&xnarch_thread_trampoline; /* rets */
     
+    tcb->ts.ksp = (unsigned long)ksp;
+    tcb->ts.pc = (unsigned long)&rthal_thread_init;
+    tcb->ts.usp = 0;
+
     tcb->entry = entry;
     tcb->cookie = cookie;
     tcb->self = thread;
@@ -280,8 +274,7 @@ static inline int xnarch_escalate (void)
 static inline void xnarch_init_tcb (xnarchtcb_t *tcb) {
 
     tcb->user_task = NULL;
-    tcb->active_task = NULL;
-    tcb->kspp = &tcb->ksp;
+    tcb->tsp = &tcb->ts;
     /* Must be followed by xnarch_init_thread(). */
 }
 
@@ -318,9 +311,7 @@ static inline void xnarch_init_shadow_tcb (xnarchtcb_t *tcb,
     struct task_struct *task = current;
 
     tcb->user_task = task;
-    tcb->active_task = NULL;
-    tcb->ksp = 0;
-    tcb->kspp = &task->thread.ksp;
+    tcb->tsp = &task->thread;
     tcb->entry = NULL;
     tcb->cookie = NULL;
     tcb->self = thread;

@@ -282,6 +282,6 @@ void rthal_arch_cleanup (void)
 
 EXPORT_SYMBOL(rthal_arch_init);
 EXPORT_SYMBOL(rthal_arch_cleanup);
-EXPORT_SYMBOL(rthal_kcontext_switch);
-EXPORT_SYMBOL(rthal_ucontext_switch);
+EXPORT_SYMBOL(rthal_thread_switch);
+EXPORT_SYMBOL(rthal_thread_init);
 EXPORT_SYMBOL(rthal_defer_switch_p);

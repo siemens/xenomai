@@ -23,46 +23,51 @@
 #include <asm/asm-offsets.h>
 
 /*
- * Switch context routine for kernel-based Xenomai threads.
- * Simple and easy: we basically see kernel threads as co-routines.
- * We protect all caller-saved registers across switches.
+ * Switch context routine for Xenomai threads.
+ * Kernel-based threads are basically seen as co-routines.
+ * The context is saved/restored to/from regular thread_structs,
+ * so that hybrid scheduling between kernel and user-space Xenomai
+ * threads is possible.
  *
- * void rthal_kcontext_switch(unsigned long *out_kspp, unsigned long *in_kspp)
+ * We protect all caller-saved registers across switches.
+ * 
+ * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next)
  */
-ENTRY(rthal_kcontext_switch)
+ENTRY(rthal_thread_switch)
+
+	[--sp] = rets;
+	[--sp] = fp;
+	[--sp] = ( R7:4, P5:3 );
 
 	p0 = r0;
 	p1 = r1;
-	[--sp] = ( R7:4, P5:3 );
-	[--sp] = rets;
-	[--sp] = fp;
-	[--sp] = r0;
 
-	/* Exchange stacks. */
-	[p0] = sp;
-	sp = [p1];
+	/* Save context. */
+	p2 = usp;
+	[p0+THREAD_USP] = p2;
+	[p0+THREAD_KSP] = sp;
+	r1.l = switch_point;
+	r1.h = switch_point;
+	[p0+THREAD_PC] = r1;
 
-	r0 = [sp++];
+	/* Restore context. */
+	sp = [p1+THREAD_KSP];
+	p0 = [p1+THREAD_USP];
+	usp = p0;
+	p0 = [p1+THREAD_PC];
+	jump (p0);
+
+switch_point:
+
+	( R7:4, P5:3 ) = [sp++];
 	fp = [sp++];
 	rets = [sp++];
-	( R7:4, P5:3 ) = [sp++];
 	rts;
 
-/*
- * Switch context routine for user-space Xenomai shadow threads.
- * We protect all caller-saved registers across switches.
- * 
- * void rthal_ucontext_switch(struct task_struct *prev, struct task_struct *next)
- */
-ENTRY(rthal_ucontext_switch)
-
-	[--sp] = rets;
-	[--sp] = ( R7:4, P5:3 );
-	call resume;
-	( R7:4, P5:3 ) = [sp++];
-	rets = [sp++];
-	rts
-
+ENTRY(rthal_thread_init)
+	r0 = [sp++]; 
+	jump switch_point
+	
 /*
  * Check for a pending syscall event. On this arch, syscalls start as
  * exceptions, which are deferred to low priority interrupts for

@@ -146,11 +146,10 @@ extern int rthal_periodic_p;
 #define rthal_periodic_p  0
 #endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
 
-asmlinkage void rthal_kcontext_switch(unsigned long *out_kspp,
-				      unsigned long *in_kspp);
+asmlinkage void rthal_thread_switch(struct thread_struct *prev,
+				    struct thread_struct *next);
 
-asmlinkage void rthal_ucontext_switch(struct task_struct *prev,
-				      struct task_struct *next);
+asmlinkage void rthal_thread_init(void);
 
 asmlinkage int rthal_defer_switch_p(void);
 
