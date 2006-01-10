@@ -1,7 +1,10 @@
 2006-01-10  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/powerpc/switch.S, include/asm-powerpc/system.h
+	(ppc32): Fix hybrid (kernel/user-space thread) scheduling.
+
 	* ksrc/arch/blackfin/switch.S, include/asm-blackfin/system.h: Fix
-	hybrid (kernel/user-space thread) scheduling.
+	hybrid scheduling.
 
 2006-01-08  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
