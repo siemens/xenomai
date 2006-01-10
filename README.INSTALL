@@ -62,7 +62,7 @@ $ scripts/prepare-kernel.sh
   --adeos=/tmp/adeos-ipipe-2.6.14-i386-1.0-09.patch
   --arch=i386
 
-Note: The script will infere the location of the Xenomai kernel code
+Note: The script will infer the location of the Xenomai kernel code
 from its own location within the Xenomai source tree. In other words,
 if /usr/src/xenomai-2.1/script/prepare-kernel.sh is executing, then
 Xenomai's kernel support available from /usr/src/xenomai-2.1/ksrc will
@@ -75,6 +75,15 @@ Once the target kernel has been prepared, all Xenomai configuration
 options are available from the "Real-time subsystem" toplevel menu.
 
 Once configured, the kernel should be built as usual.
+
+It might be a good idea to put all the output into a different build
+directory as to build from from linux source several targets. For each
+target add O=../build-<target> to each make invocation. See section 2.2 
+for an example.
+
+In order to cross-compile the Linux kernel, pass an ARCH and
+CROSS_COMPILE variable on make command line. See sections 2.2, 2.3 and
+2.4 for examples.
 
 1.3 Building the user-space support
 -----------------------------------
@@ -140,6 +149,33 @@ NAME                DESCRIPTION                      [BINDING,]DEFAULT(*)
 (*) Each option enabled by default can be forcibly disabled by passing
 --disable-<option> to the configure script.
 
+1.3.3 Cross-compilation
+-----------------------
+
+In order to cross-compile Xenomai user-space support, you will need to
+pass a --host and --build option to the configure script. The --host
+option allow to select the architecture for which the libraries and
+programs are built. The --build option allow to choose the
+architecture on which the compilation tools are run,
+i.e. the system running the configure script.
+
+Since cross-compiling requires specific tools, such tools are
+generally prefixed with the host architecture name; for example, a
+compiler for the power PC architecture may be named
+powerpc-405-linux-gnu-gcc.
+
+The easiest way to build a GNU cross-compiler might involve using Dan
+Kegel crosstools found at http://kegel.com/crosstool.
+
+When passing the option --host=powerpc-405-linux-gnu to configure,
+configure will automatically use powerpc-405-linux-gnu- as a prefix to
+all compilation tools names and infer the host architecture name from
+this prefix. If configure is unable to infer the architecture name
+from the cross-compilation tools prefix, you will have to manually
+pass the name of all compilation tools on configure command line. 
+
+See sections 2.2, 2.3 and 2.4 for examples.
+
 2. Typical installation procedures
 ----------------------------------
 
@@ -148,6 +184,7 @@ NAME                DESCRIPTION                      [BINDING,]DEFAULT(*)
 # $build_root = path to a clean build directory
 
 2.1 Building for x86
+--------------------
 
 Let's say that we want to build Xenomai for a Pentium-based x86
 platform running a 2.6.14 kernel, using the native host toolchain; the
@@ -173,21 +210,26 @@ cross-compilation toolchain for the target system first, in order to
 build Xenomai.
 
 2.2 Building for the PowerPC architecture
+-----------------------------------------
 
 A typical cross-compilation setup, in order to build Xenomai for a
-82xx-based system:
+PowerPC-405-based system:
 
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=powerpc \
   --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-ipipe-2.6.14-ppc-X.Y-ZZ.patch \
   --linux=$linux_tree
 $ cd $linux_tree
-$ make xconfig/gconfig/menuconfig # select the kernel and Xenomai options
-$ make bzImage modules # then install as needed
+$ mkdir ../build-powerpc-405-2.6.14
+$ make ARCH=ppc CROSS_COMPILE=powerpc-405-linux-gnu- O=../build-powerpc-405-2.6.14 xconfig/gconfig/menuconfig 
+# select the kernel and Xenomai options
+$ make ARCH=ppc CROSS_COMPILE=powerpc-405-linux-gnu- O=../build-powerpc-405-2.6.14 bzImage modules 
+# then install as needed
 $ mkdir $build_root && cd $build_root
-$ $xenomai_root/configure --build=i686-pc-linux-gnu --host=powerpc-unknown-linux-gnu CC=ppc_82xx-gcc CXX=ppc_82xx-gcc AR=ppc_82xx-ar LD=ppc_82xx-ld
+$ $xenomai_root/configure --build=i686-linux --host=powerpc-405-linux-gnu
 $ make install
 
 2.3 Building for the IPF
+------------------------
 
 A typical cross-compilation setup, in order to build Xenomai for an
 ia64 system:
@@ -196,13 +238,14 @@ $ $xenomai_root/scripts/prepare-kernel.sh --arch=powerpc \
   --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-linux-2.6.11-ia64-rXcYY.patch \
   --linux=$linux_tree
 $ cd $linux_tree
-$ make xconfig/gconfig/menuconfig # select the kernel and Xenomai options
-$ make bzImage modules # then install as needed
+$ make ARCH=ia64 CROSS_COMPILE=ia64-linux- xconfig/gconfig/menuconfig # select the kernel and Xenomai options
+$ make ARCH=ia64 CROSS_COMPILE=ia64-linux- bzImage modules # then install as needed
 $ mkdir $build_root && cd $build_root
 $ $xenomai_root/configure --build=i686-pc-linux-gnu --host=ia64-unknown-linux-gnu CC=ia64-linux-gcc CXX=ia64-linux-gcc AR=ia64-linux-ar LD=ia64-linux-ld
 $ make install
 
 2.4 Building for the Blackfin
+-----------------------------
 
 The Blackfin is a MMU-less, DSP-type architecture running
 uClinux.
@@ -211,8 +254,8 @@ $ $xenomai_root/scripts/prepare-kernel.sh --arch=blackfin \
   --adeos=$xenomai_root/ksrc/arch/blackfin/patches/adeos-ipipe-2.6.12-bf533-X.Y-ZZ.patch \
   --linux=$linux_tree
 $ cd $linux_tree
-$ make xconfig/gconfig/menuconfig # select the kernel and Xenomai options
-$ make bzImage modules # then install as needed
+$ make ARCH=bfinnommu CROSS_COMPILE=bfin-uclinux- xconfig/gconfig/menuconfig # select the kernel and Xenomai options
+$ make ARCH=bfinnommu CROSS_COMPILE=bfin-uclinux- bzImage modules # then install as needed
 $ mkdir $build_root && cd $build_root
 $ $xenomai_root/configure --build=i686-pc-linux-gnu --host=bfinnommu-unknown-linux-gnu CC=bfin-uclinux-gcc CXX=bfin-uclinux-gcc AR=bfin-uclinux-ar LD=bfin-uclinux-ld --disable-shared
 $ make install
