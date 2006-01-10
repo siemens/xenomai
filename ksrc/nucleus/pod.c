@@ -158,14 +158,14 @@ static int xnpod_fault_handler (xnarch_fltinfo_t *fltinfo)
             }
 #endif /* OPT_PERVASIVE && HW_FPU */
 
-        print_symbol("Xenomai: Invalid use of FPU in Xenomai context at %s\n",
+        print_symbol("invalid use of FPU in Xenomai context at %s\n",
                      xnarch_fault_pc(fltinfo));
         }
 #endif /* __KERNEL__ */
 
     if (!xnpod_userspace_p())
         {
-        xnprintf("Xenomai: suspending kernel thread %p ('%s') at 0x%lx after exception #%u\n",
+        xnprintf("suspending kernel thread %p ('%s') at 0x%lx after exception #%u\n",
                  thread,
                  thread->name,
                  xnarch_fault_pc(fltinfo),
@@ -3180,7 +3180,7 @@ int xnpod_announce_tick (xnintr_t *intr)
     if (xnarch_get_cpu_tsc() >= nkpod->watchdog_trigger) {
         if (!xnpod_root_p() && nkpod->watchdog_armed) {
             xnltt_log_event(xeno_ev_watchdog,xnpod_current_thread()->name);
-            xnprintf("Xenomai: watchdog triggered -- suspending runaway thread '%s'\n",
+            xnprintf("watchdog triggered -- suspending runaway thread '%s'\n",
                      xnpod_current_thread()->name);
             xnpod_suspend_thread(xnpod_current_thread(),XNSUSP,XN_INFINITE,NULL);
         } else {
