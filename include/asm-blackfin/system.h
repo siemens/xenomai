@@ -191,7 +191,7 @@ static inline void xnarch_init_thread (xnarchtcb_t *tcb,
     ksp[9] = (unsigned long)&xnarch_thread_trampoline; /* rets */
     
     tcb->ts.ksp = (unsigned long)ksp;
-    tcb->ts.pc = (unsigned long)&rthal_thread_init;
+    tcb->ts.pc = (unsigned long)&rthal_thread_trampoline;
     tcb->ts.usp = 0;
 
     tcb->entry = entry;
