@@ -144,10 +144,11 @@ static inline void rthal_timer_program_shot (unsigned long delay)
 
     /* Private interface -- Internal use only */
 
-void rthal_switch_context(void *out_tcb,
-			  void *in_tcb);
+void rthal_thread_switch(__u64 *prev_ksp,
+			 __u64 *next_ksp,
+			 int user_p);
 
-void rthal_prepare_stack(unsigned long stackbase);
+void rthal_prepare_stack(__u64 stackbase);
 
 static const char *const rthal_fault_labels[] = {
     [0] = "General exception",

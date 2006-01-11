@@ -58,3 +58,9 @@ config XENO_HW_IA64_STACK_POOL
 endmenu
 
 source "kernel/xenomai/skins/Kconfig"
+
+menu "Drivers"
+
+source "drivers/xenomai/Kconfig"
+
+endmenu
