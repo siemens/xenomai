@@ -1,3 +1,11 @@
+2006-01-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/ia64/switch.S, include/asm-ia64/system.h: Fix hybrid
+	(kernel/user-space thread) scheduling.
+
+	* include/asm-ia64/system.h (XNARCH_THREAD_STACKSZ): Must equal
+	KERNEL_STACK_SIZE, and not KERNEL_STACK_SIZE_ORDER, damnit.
+
 2006-01-10  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/switch.S, include/asm-powerpc/system.h
