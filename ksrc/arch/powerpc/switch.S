@@ -26,6 +26,10 @@
 
 /*
  * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next)
+ *
+ * Most of this code has lifted from the original _switch() routine
+ * from linux/arch/ppc/kernel/entry.S, and adapted to perform hybrid
+ * scheduling between kernel and user-space Xenomai threads.
  */
 	.align	7
 _GLOBAL(rthal_thread_switch)
