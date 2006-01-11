@@ -233,7 +233,7 @@ int rt_task_create (RT_TASK *task,
 
     if (regname)
 	{
-	err = rt_registry_enter(regname,
+	err = rt_registry_enter(xnthread_name(&task->thread_base),
 				task,
 				&task->handle,
 				NULL);
