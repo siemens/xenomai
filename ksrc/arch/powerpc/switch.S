@@ -1,5 +1,9 @@
 /*
- * Copyright (C) 2004 Philippe Gerum.
+ * Most of the following code has been lifted from the original _switch()
+ * routine from linux/arch/ppc/kernel/entry.S, and adapted to perform hybrid
+ * scheduling between kernel and user-space Xenomai threads.
+ *
+ * Xenomai updates Copyright (C) 2004 Philippe Gerum.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,10 +30,6 @@
 
 /*
  * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next)
- *
- * Most of this code has been lifted from the original _switch() routine
- * from linux/arch/ppc/kernel/entry.S, and adapted to perform hybrid
- * scheduling between kernel and user-space Xenomai threads.
  */
 	.align	7
 _GLOBAL(rthal_thread_switch)
