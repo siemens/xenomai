@@ -36,6 +36,8 @@ export-objs := hal.o
 
 EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
 
+EXTRA_AFLAGS += -I$(TOPDIR)/arch/ppc/kernel
+
 include $(TOPDIR)/Rules.make
 
 endif

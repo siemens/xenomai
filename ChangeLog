@@ -1,3 +1,9 @@
+2006-01-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* scripts/Modules.frag: Add missing drivers.
+
+	* ksrc/arch/powerpc/switch.S: Fix 2.4 support.
+	
 2006-01-11  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/ia64/switch.S, include/asm-ia64/system.h: Fix hybrid

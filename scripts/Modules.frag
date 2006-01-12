@@ -8,3 +8,5 @@ DRIVERS-$(CONFIG_XENO_SKIN_VRTX) += kernel/xenomai/skins/vrtx/xeno_vrtx.o
 DRIVERS-$(CONFIG_XENO_SKIN_VXWORKS) += kernel/xenomai/skins/vxworks/xeno_vxworks.o
 DRIVERS-$(CONFIG_XENO_SKIN_UITRON) += kernel/xenomai/skins/uitron/xeno_uitron.o
 DRIVERS-$(CONFIG_XENO_SKIN_RTAI) += kernel/xenomai/skins/rtai/xeno_rtai.o
+DRIVERS-$(CONFIG_XENO_DRIVERS_16550A) += drivers/xenomai/16550A/xeno_16550A.o
+DRIVERS-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += drivers/xenomai/benchmark/xeno_timerbench.o
