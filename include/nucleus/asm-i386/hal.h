@@ -38,6 +38,16 @@
 
 #include <nucleus/asm-generic/hal.h>    /* Read the generic bits. */
 
+#ifndef CONFIG_ADEOS_CORE
+#if IPIPE_RELEASE_NUMBER < 0x010101
+#define rthal_virtualize_irq(dom,irq,isr,ackfn,mode) \
+    ipipe_virtualize_irq(dom,irq,isr,ackfn,mode)
+#else
+#define rthal_virtualize_irq(dom,irq,isr,ackfn,mode) \
+    ipipe_virtualize_irq(dom,irq,(ipipe_irq_handler_t)isr,NULL,(ipipe_irq_ackfn_t)ackfn,mode)
+#endif
+#endif
+
 typedef unsigned long long rthal_time_t;
 
 #define __rthal_u64tou32(ull, h, l) ({          \

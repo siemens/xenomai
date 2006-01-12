@@ -29,6 +29,16 @@
 #include <nucleus/asm-generic/hal.h>	/* Read the generic bits. */
 #include <asm/div64.h>
 
+#ifndef CONFIG_ADEOS_CORE
+#if IPIPE_RELEASE_NUMBER < 0x010100
+#define rthal_virtualize_irq(dom,irq,isr,ackfn,mode) \
+    ipipe_virtualize_irq(dom,irq,isr,ackfn,mode)
+#else
+#define rthal_virtualize_irq(dom,irq,isr,ackfn,mode) \
+    ipipe_virtualize_irq(dom,irq,(ipipe_irq_handler_t)isr,NULL,(ipipe_irq_ackfn_t)ackfn,mode)
+#endif
+#endif
+
 typedef unsigned long long rthal_time_t;
 
 #define __rthal_u64tou32(ull, h, l) ({                  \
@@ -182,12 +192,12 @@ static inline void rthal_timer_program_shot (unsigned long delay)
 
     /* Private interface -- Internal use only */
 
-/* The following must be kept in sync w/ rthal_switch_context() in
-   switch.S */
-#define RTHAL_SWITCH_FRAME_SIZE  108
+#define RTHAL_SWITCH_FRAME_SIZE  (STACK_FRAME_OVERHEAD + sizeof(struct pt_regs))
 
-void rthal_switch_context(unsigned long *out_kspp,
-			  unsigned long *in_kspp);
+asmlinkage void rthal_thread_switch(struct thread_struct *prev,
+				    struct thread_struct *next);
+
+asmlinkage void rthal_thread_trampoline(void);
 
 #ifdef CONFIG_XENO_HW_FPU
 
