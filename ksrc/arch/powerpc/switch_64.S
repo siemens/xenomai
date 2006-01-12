@@ -33,7 +33,7 @@
 #include <asm/mmu.h>
 
 /*
- * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next)
+ * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next, int kernel_thread)
  */
 	.align	7
 _GLOBAL(rthal_thread_switch)
@@ -68,17 +68,12 @@ END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 
 	ld	r8,KSP(r4)	/* new stack pointer */
 
-	lwz	r0,KSP_VSID(r4)
-        cmpwi   r0, 0
-        bne+ change_current
-	mr	r1,r8		/* start using new stack pointer */
-	b same_current
+	cmpwi	cr5,r5,0	/* is it a kernel thread */
+        bne-	cr5,10f		/* if so, don't touch 'current' */
 
-change_current:
-	
 	addi	r6,r4,-THREAD	/* Convert THREAD to 'current' */
 	std	r6,PACACURRENT(r13)	/* Set new 'current' */
-
+10:
 BEGIN_FTR_SECTION
 	clrrdi	r6,r8,28	/* get its ESID */
 	clrrdi	r9,r1,28	/* get current sp ESID */
@@ -98,16 +93,16 @@ BEGIN_FTR_SECTION
 
 2:
 END_FTR_SECTION_IFSET(CPU_FTR_SLB)
+	bne-	cr5,11f		/* kernel thread: don't touch 'current' */
 	clrrdi	r7,r8,THREAD_SHIFT	/* base of new stack */
 	/* Note: this uses SWITCH_FRAME_SIZE rather than INT_FRAME_SIZE
 	   because we don't need to leave the 288-byte ABI gap at the
 	   top of the kernel stack. */
 	addi	r7,r7,THREAD_SIZE-SWITCH_FRAME_SIZE
-
-	mr	r1,r8		/* start using new stack pointer */
 	std	r7,PACAKSAVE(r13)
-
-same_current:
+	
+11:
+	mr	r1,r8		/* start using new stack pointer */
 		
 	ld	r6,_CCR(r1)
 	mtcrf	0xFF,r6
