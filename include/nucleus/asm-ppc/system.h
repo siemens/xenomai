@@ -48,14 +48,20 @@ struct task_struct;
 
 typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 
-    /* Kernel mode side */
+    /* User mode side */
+    struct task_struct *user_task;	/* Shadowed user-space task */
+    struct task_struct *active_task;	/* Active user-space task */
+    struct thread_struct *tsp;	/* Pointer to the active thread struct (&ts or &user->thread). */
 
+    /* Kernel mode side */
+    struct thread_struct ts;	/* Holds kernel-based thread context. */
 #ifdef CONFIG_XENO_HW_FPU
     /* We only care for basic FPU handling in kernel-space; Altivec
        and SPE are not available to kernel-based nucleus threads. */
     rthal_fpenv_t fpuenv  __attribute__ ((aligned (16)));
     rthal_fpenv_t *fpup;	/* Pointer to the FPU backup area */
     struct task_struct *user_fpu_owner;
+    unsigned long user_fpu_owner_prev_msr;
     /* Pointer the the FPU owner in userspace:
        - NULL for RT K threads,
        - last_task_used_math for Linux US threads (only current or NULL when MP)
@@ -68,12 +74,6 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 
     unsigned stacksize;		/* Aligned size of stack (bytes) */
     unsigned long *stackbase;	/* Stack space */
-    unsigned long ksp;		/* Saved KSP for kernel-based threads */
-    unsigned long *kspp;	/* Pointer to saved KSP (&ksp or &user->thread.ksp) */
-
-    /* User mode side */
-    struct task_struct *user_task;	/* Shadowed user-space task */
-    struct task_struct *active_task;	/* Active user-space task */
 
     /* Init block */
     struct xnthread *self;
@@ -171,6 +171,7 @@ static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
     __set_bit(cpuid,&rthal_cpu_realtime);
     /* Remember the preempted Linux task pointer. */
     rootcb->user_task = rootcb->active_task = rthal_current_host_task(cpuid);
+    rootcb->tsp = &rootcb->user_task->thread;
 #ifdef CONFIG_XENO_HW_FPU
     rootcb->user_fpu_owner = rthal_get_fpu_owner(rootcb->user_task);
     /* So that xnarch_save_fpu() will operate on the right FPU area. */
@@ -180,7 +181,8 @@ static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
-static inline void xnarch_enter_root (xnarchtcb_t *rootcb) {
+static inline void xnarch_enter_root (xnarchtcb_t *rootcb)
+{
     __clear_bit(xnarch_current_cpu(),&rthal_cpu_realtime);
 }
 
@@ -199,32 +201,27 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
 	/* Switch the mm context.*/
 
 #ifdef CONFIG_ALTIVEC
-	/* Don't rely on FTR fixups --
-	   they don't work properly in our context. */
-	if (cur_cpu_spec[0]->cpu_features & CPU_FTR_ALTIVEC) {
-	    asm volatile (
-		"dssall;\n"
+	/* The HAL won't let us running on an ALTIVEC-enabled kernel
+	   without proper hardware, so we don't have to care for FTR
+	   fixups here -- which is fortunate, since those would not
+	   work properly in the current context. */
+	asm volatile (
+		      "dssall;\n"
 #ifndef CONFIG_POWER4
-		"sync;\n"
+		      "sync;\n"
 #endif
-		: : );
-	}
+		      : : );
 #endif /* CONFIG_ALTIVEC */
 
 	next->thread.pgdir = mm->pgd;
 	get_mmu_context(mm);
 	set_context(mm->context,mm->pgd);
-
-	/* _switch expects a valid "current" (r2) for storing
-	 * ALTIVEC and SPE state. */
-	current = prev;
-        _switch(&prev->thread, &next->thread);
-
-	barrier();
+	current = prev;		/* Make sure r2 is valid. */
 	}
-    else
-        /* Kernel-to-kernel context switch. */
-        rthal_switch_context(out_tcb->kspp,in_tcb->kspp);
+
+    rthal_thread_switch(out_tcb->tsp,in_tcb->tsp);
+
+    barrier();
 }
 
 static inline void xnarch_finalize_and_switch (xnarchtcb_t *dead_tcb,
@@ -245,8 +242,7 @@ static inline void xnarch_init_root_tcb (xnarchtcb_t *tcb,
 {
     tcb->user_task = current;
     tcb->active_task = NULL;
-    tcb->ksp = 0;
-    tcb->kspp = &tcb->ksp;
+    tcb->tsp = &tcb->ts;
 #ifdef CONFIG_XENO_HW_FPU
     tcb->user_fpu_owner = NULL;
     tcb->fpup = NULL;
@@ -275,16 +271,18 @@ static inline void xnarch_init_thread (xnarchtcb_t *tcb,
 				       char *name)
 {
     unsigned long *ksp, flags;
+    struct pt_regs *childregs;
 
     rthal_local_irq_flags_hw(flags);
 
-    *tcb->stackbase = 0;
-    ksp = (unsigned long *)((((unsigned long)tcb->stackbase + tcb->stacksize - 0x10) & ~0xf)
-			    - RTHAL_SWITCH_FRAME_SIZE);
-    tcb->ksp = (unsigned long)ksp - STACK_FRAME_OVERHEAD;
-    ksp[19] = (unsigned long)tcb; /* r3 */
-    ksp[25] = (unsigned long)&xnarch_thread_trampoline; /* lr */
-    ksp[26] = flags & ~(MSR_EE | MSR_FP); /* msr */
+    ksp = (unsigned long *)((unsigned long)tcb->stackbase + tcb->stacksize - RTHAL_SWITCH_FRAME_SIZE - 4);
+    childregs = (struct pt_regs *)ksp;
+    memset(childregs,0,sizeof(*childregs));
+    childregs->nip = (unsigned long)&rthal_thread_trampoline;
+    childregs->gpr[14] = flags & ~(MSR_EE | MSR_FP);
+    childregs->gpr[15] = (unsigned long)&xnarch_thread_trampoline;
+    childregs->gpr[16] = (unsigned long)tcb;
+    tcb->ts.ksp = (unsigned long)childregs - STACK_FRAME_OVERHEAD;
 
     tcb->entry = entry;
     tcb->cookie = cookie;
@@ -326,7 +324,10 @@ static inline void xnarch_save_fpu (xnarchtcb_t *tcb)
         rthal_save_fpu(tcb->fpup);
 
         if(tcb->user_fpu_owner && tcb->user_fpu_owner->thread.regs)
+            {
+            tcb->user_fpu_owner_prev_msr = tcb->user_fpu_owner->thread.regs->msr;
             tcb->user_fpu_owner->thread.regs->msr &= ~MSR_FP;
+            }
         }   
 
 #endif /* CONFIG_XENO_HW_FPU */
@@ -341,7 +342,13 @@ static inline void xnarch_restore_fpu (xnarchtcb_t *tcb)
         {
         rthal_restore_fpu(tcb->fpup);
 
-        if(tcb->user_fpu_owner && tcb->user_fpu_owner->thread.regs)
+	/* Note: Only enable FP in MSR, if it was enabled when we saved the
+	 * fpu state. We might have preempted Linux when it had disabled FP
+	 * for the thread, but not yet set last_task_used_math to NULL 
+	 */
+        if(tcb->user_fpu_owner && 
+			tcb->user_fpu_owner->thread.regs &&
+			((tcb->user_fpu_owner_prev_msr & MSR_FP) != 0))
             tcb->user_fpu_owner->thread.regs->msr |= MSR_FP;
         }   
 
@@ -357,11 +364,13 @@ static inline void xnarch_restore_fpu (xnarchtcb_t *tcb)
 
 #ifdef XENO_THREAD_MODULE
 
-static inline void xnarch_init_tcb (xnarchtcb_t *tcb) {
-
+static inline void xnarch_init_tcb (xnarchtcb_t *tcb)
+{
     tcb->user_task = NULL;
     tcb->active_task = NULL;
-    tcb->kspp = &tcb->ksp;
+    tcb->tsp = &tcb->ts;
+    /* Note: .pgdir == NULL for a Xenomai kthread. */
+    memset(&tcb->ts,0,sizeof(tcb->ts));
 #ifdef CONFIG_XENO_HW_FPU
     tcb->user_fpu_owner = NULL;
     tcb->fpup = &tcb->fpuenv;
@@ -401,8 +410,7 @@ static inline void xnarch_init_shadow_tcb (xnarchtcb_t *tcb,
 
     tcb->user_task = task;
     tcb->active_task = NULL;
-    tcb->ksp = 0;
-    tcb->kspp = &task->thread.ksp;
+    tcb->tsp = &task->thread;
 #ifdef CONFIG_XENO_HW_FPU
     tcb->user_fpu_owner = task;
     tcb->fpup = (rthal_fpenv_t *)&task->thread.fpr[0];
