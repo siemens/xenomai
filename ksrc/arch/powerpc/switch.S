@@ -22,11 +22,19 @@
  */
 
 #include <linux/config.h> 
+#include <linux/version.h>
 #include <asm/processor.h>
-#include <asm/cputable.h>
 #include <asm/page.h>
-#include <asm/offsets.h>
 #include <asm/ppc_asm.h>
+#include <asm/cputable.h>
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,14)
+#include <asm/offsets.h>
+#else
+#include <asm/asm-offsets.h>
+#endif
 
 /*
  * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next)
@@ -60,7 +68,7 @@ END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 1:	stw	r11,_MSR(r1)
 	mfcr	r10
 	stw	r10,_CCR(r1)
-	stw	r1,KSP(r3)	/* Set old stack pointer */
+	stw	r1,KSP(r3)	/* Save old stack pointer */
 
 #ifdef CONFIG_SMP
 	sync
@@ -98,6 +106,78 @@ END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 	mtlr	r4
 	addi	r1,r1,INT_FRAME_SIZE
 	blr
+
+#else /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) */
+
+#include "ppc_defs.h"
+
+/*
+ * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next)
+ */
+	.align	7
+_GLOBAL(rthal_thread_switch)
+	stwu	r1,-INT_FRAME_SIZE(r1)
+	stw	r0,GPR0(r1)
+	lwz	r0,0(r1)
+	stw	r0,GPR1(r1)
+	SAVE_GPR(2, r1)
+	SAVE_8GPRS(14, r1)
+	SAVE_10GPRS(22, r1)
+	mflr	r20		/* Return to switch caller */
+	stw	r20,INT_FRAME_SIZE+4(r1)
+	mfmsr	r22
+	li	r0,MSR_FP	/* Disable floating-point */
+#ifdef CONFIG_ALTIVEC
+BEGIN_FTR_SECTION
+	oris	r0,r0,MSR_VEC@h	/* Disable altivec */
+END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
+#endif /* CONFIG_ALTIVEC */
+#ifdef CONFIG_SPE
+	oris    r0,r0,MSR_SPE@h /* Disable SPE */
+#endif /* CONFIG_SPE */
+	and.	r0,r0,r22	/* FP or altivec enabled? */
+	beq+	1f
+	andc	r22,r22,r0
+	mtmsr	r22
+	isync
+1:	stw	r20,_NIP(r1)
+	stw	r22,_MSR(r1)
+	stw	r20,_LINK(r1)
+	mfcr	r20
+	mfctr	r22
+	mfspr	r23,XER
+	stw	r20,_CCR(r1)
+	stw	r22,_CTR(r1)
+	stw	r23,_XER(r1)
+	li	r0,0x0ff0
+	stw	r0,TRAP(r1)
+	stw	r1,KSP(r3)	/* Save old stack pointer */
+
+	lwz	r1,KSP(r4)	/* Load new stack pointer */
+		
+	lwz	r0,PGDIR(r4)
+        cmpwi   r0, 0
+        beq- same_current
+
+	tophys(r0,r4)
+	CLR_TOP32(r0)
+	mtspr	SPRG3,r0	/* Update current THREAD phys addr */
+	addi	r2,r4,-THREAD	/* Update current */
+
+same_current:
+	
+	lwz	r0,_CCR(r1)
+	mtcrf	0xFF,r0
+	REST_2GPRS(14, r1)
+	REST_8GPRS(16, r1)
+	REST_8GPRS(24, r1)
+
+	lwz	r4,_NIP(r1)
+	mtlr	r4
+	addi	r1,r1,INT_FRAME_SIZE
+	blr
+
+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) */
 
 _GLOBAL(rthal_thread_trampoline)
 	mtmsr	r14
