@@ -24,7 +24,7 @@ suseconds_t t0, t1, t2, tschedmin = 99999999, tschedmax = -99999999,
 
 time_t start_time;
 
-static volatile int finished = 0;
+pthread_t thidA, thidB;
 
 static inline void get_time_us (suseconds_t *tp)
 
@@ -32,6 +32,11 @@ static inline void get_time_us (suseconds_t *tp)
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC,&ts);
     *tp = ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
+}
+
+void cleanup_sem_close(void *sem)
+{
+    sem_close((sem_t *) sem);
 }
 
 void *threadA (void *arg)
@@ -47,6 +52,7 @@ void *threadA (void *arg)
         exit(EXIT_FAILURE);
         }
 
+    pthread_cleanup_push(cleanup_sem_close, semB);
     pthread_setschedparam(pthread_self(),SCHED_FIFO,&param);
 
     for (;;)
@@ -55,10 +61,13 @@ void *threadA (void *arg)
         do
             {
             err = sem_wait(&semA);
-            if (finished || (err == -1 && errno != EINTR))
-                goto out;
+            if (err == -1 && errno != EINTR)
+                {
+                perror("sem_wait");
+                exit(EXIT_FAILURE);
+                }
             }
-        while (err == -1 && errno == EINTR);
+        while (err == -1);
 
         ts.tv_sec = 0;
         ts.tv_nsec = sampling_period * 1000;
@@ -68,9 +77,7 @@ void *threadA (void *arg)
         sem_post(semB);
         }
 
-  out:
-    sem_close(semB);
-    pthread_exit(NULL);
+    pthread_cleanup_pop(1);
 }
 
 void *threadB (void *arg)
@@ -86,6 +93,7 @@ void *threadB (void *arg)
         exit(EXIT_FAILURE);
         }
 
+    pthread_cleanup_push(cleanup_sem_close, semB);
     pthread_setschedparam(pthread_self(),SCHED_FIFO,&param);
 
     start_time = time(NULL);
@@ -98,10 +106,13 @@ void *threadB (void *arg)
         do
             {
             err = sem_wait(semB);
-            if (finished || (err == -1 && errno != EINTR))
-                goto out;
+            if (err == -1 && errno != EINTR)
+                {
+                perror("sem_wait");
+                exit(EXIT_FAILURE);
+                }
             }
-        while (err == -1 && errno == EINTR);
+        while (err == -1);
 
         get_time_us(&t2);
         
@@ -122,10 +133,7 @@ void *threadB (void *arg)
             tsleepmax = dt;
         }
 
-
-  out:
-    sem_close(semB);
-    pthread_exit(NULL);
+    pthread_cleanup_pop(1);
 }
 
 void cleanup(void)
@@ -134,11 +142,10 @@ void cleanup(void)
     sem_destroy(&semA);
 }
 
-void cleanup_upon_sig(int sig __attribute__((unused)))
+void cleanup_upon_sig(int sig)
 
 {
     time_t end_time = time(NULL), dt;
-    sem_t *semB;
 
     dt = end_time - start_time;
     
@@ -149,14 +156,11 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
     printf("   semaphore wakeup: switch min = %ld us, switch max = %ld us\n",
            tschedmin,tschedmax);
 
-    /* This is more a test than an example, in your application "sem_open" semB
-       only once and make it visible from threaA(), threadB() and
-       cleanup_upon_sig(). */
-    semB = sem_open(SEMB_NAME, 0);
-    finished = 1;
-    sem_post(&semA);            /* Unblock threadA (preempt us). */
-    sem_post(semB);             /* Unblock threadB (preempt us). */
-    sem_close(semB);
+    pthread_cancel(thidA);
+    pthread_cancel(thidB);
+    signal(sig, SIG_DFL);
+    pthread_join(thidA, NULL);
+    pthread_join(thidB, NULL);
 }
 
 int main (int argc, char **argv)
@@ -165,7 +169,6 @@ int main (int argc, char **argv)
     struct sched_param paramA = { .sched_priority = 98 };
     struct sched_param paramB = { .sched_priority = 99 };
     pthread_attr_t thattrA, thattrB;
-    pthread_t thidA, thidB;
     sigset_t mask, oldmask;
     struct timespec ts;
     time_t now;
@@ -222,7 +225,7 @@ int main (int argc, char **argv)
         }
 
     pthread_attr_init(&thattrA);
-    pthread_attr_setdetachstate(&thattrA,PTHREAD_CREATE_DETACHED);
+    pthread_attr_setdetachstate(&thattrA,PTHREAD_CREATE_JOINABLE);
     pthread_attr_setinheritsched(&thattrA,PTHREAD_EXPLICIT_SCHED);
     pthread_attr_setschedpolicy(&thattrA,SCHED_FIFO);
     pthread_attr_setschedparam(&thattrA,&paramA);
@@ -232,7 +235,7 @@ int main (int argc, char **argv)
         goto fail;
 
     pthread_attr_init(&thattrB);
-    pthread_attr_setdetachstate(&thattrB,PTHREAD_CREATE_DETACHED);
+    pthread_attr_setdetachstate(&thattrB,PTHREAD_CREATE_JOINABLE);
     pthread_attr_setinheritsched(&thattrB,PTHREAD_EXPLICIT_SCHED);
     pthread_attr_setschedpolicy(&thattrB,SCHED_FIFO);
     pthread_attr_setschedparam(&thattrB,&paramB);

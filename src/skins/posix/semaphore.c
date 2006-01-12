@@ -20,6 +20,7 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <fcntl.h>              /* For O_CREAT. */
+#include <pthread.h>
 #include <xenomai/posix/syscall.h>
 #include <posix/semaphore.h>
 
@@ -81,11 +82,16 @@ int __wrap_sem_post (sem_t *sem)
 int __wrap_sem_wait (sem_t *sem)
 
 {
-    int err;
+    int err, oldtype;
+
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
     err = -XENOMAI_SKINCALL1(__pse51_muxid,
 			     __pse51_sem_wait,
 			     sem);
+
+    pthread_setcanceltype(oldtype, NULL);
+
     if (!err)
 	return 0;
 
@@ -97,12 +103,17 @@ int __wrap_sem_wait (sem_t *sem)
 int __wrap_sem_timedwait (sem_t *sem, const struct timespec *ts)
 
 {
-    int err;
+    int err, oldtype;
+
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
     err = -XENOMAI_SKINCALL2(__pse51_muxid,
 			     __pse51_sem_timedwait,
 			     sem,
                              ts);
+
+    pthread_setcanceltype(oldtype, NULL);
+
     if (!err)
 	return 0;
 
