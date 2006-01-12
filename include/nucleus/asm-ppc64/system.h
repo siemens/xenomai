@@ -60,6 +60,7 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
     rthal_fpenv_t fpuenv  __attribute__ ((aligned (16)));
     rthal_fpenv_t *fpup;	/* Pointer to the FPU backup area */
     struct task_struct *user_fpu_owner;
+    unsigned long user_fpu_owner_prev_msr;
     /* Pointer the the FPU owner in userspace:
        - NULL for RT K threads,
        - last_task_used_math for Linux US threads (only current or NULL when MP)
@@ -204,13 +205,13 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
 	/* Switch the mm context.*/
 
 #ifdef CONFIG_ALTIVEC
-	/* Don't rely on FTR fixups --
-	   they don't work properly in our context. */
-	if (cur_cpu_spec->cpu_features & CPU_FTR_ALTIVEC) {
-	    asm volatile (
-		"dssall;\n"
-		: : );
-	}
+	/* The HAL won't let us running on an ALTIVEC-enabled kernel
+	   without proper hardware, so we don't have to care for FTR
+	   fixups here -- which is fortunate, since those would not
+	   work properly in the current context. */
+	asm volatile (
+		      "dssall;\n"
+		      : : );
 #endif /* CONFIG_ALTIVEC */
 
 	if (!cpu_isset(smp_processor_id(), mm->cpu_vm_mask)) {
@@ -347,7 +348,10 @@ static inline void xnarch_save_fpu (xnarchtcb_t *tcb)
         rthal_save_fpu(tcb->fpup);
 
         if(tcb->user_fpu_owner && tcb->user_fpu_owner->thread.regs)
+            {
+            tcb->user_fpu_owner_prev_msr = tcb->user_fpu_owner->thread.regs->msr;
             tcb->user_fpu_owner->thread.regs->msr &= ~MSR_FP;
+            }
         }   
 
 #endif /* CONFIG_XENO_HW_FPU */
@@ -362,7 +366,13 @@ static inline void xnarch_restore_fpu (xnarchtcb_t *tcb)
         {
         rthal_restore_fpu(tcb->fpup);
 
-        if(tcb->user_fpu_owner && tcb->user_fpu_owner->thread.regs)
+	/* Note: Only enable FP in MSR, if it was enabled when we saved the
+	 * fpu state. We might have preempted Linux when it had disabled FP
+	 * for the thread, but not yet set last_task_used_math to NULL 
+	 */
+        if(tcb->user_fpu_owner && 
+			tcb->user_fpu_owner->thread.regs &&
+			((tcb->user_fpu_owner_prev_msr & MSR_FP) != 0))
             tcb->user_fpu_owner->thread.regs->msr |= MSR_FP;
         }   
 

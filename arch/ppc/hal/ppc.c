@@ -156,6 +156,14 @@ RTHAL_DECLARE_DOMAIN(rthal_domain_entry);
 int rthal_arch_init (void)
 
 {
+#ifdef CONFIG_ALTIVEC
+    if (!(cur_cpu_spec[0]->cpu_features & CPU_FTR_ALTIVEC)) {
+        printk("Xenomai: ALTIVEC support enabled in kernel but no hardware found.\n"
+               "         Disable CONFIG_ALTIVEC in the kernel configuration.\n");
+	return -ENODEV;
+    }
+#endif /* CONFIG_ALTIVEC */
+
     if (rthal_cpufreq_arg == 0)
 	/* The CPU frequency is expressed as the timebase frequency
 	   for this port. */
@@ -175,7 +183,8 @@ void rthal_arch_cleanup (void)
 
 /*@}*/
 
-EXPORT_SYMBOL(rthal_switch_context);
+EXPORT_SYMBOL(rthal_thread_switch);
+EXPORT_SYMBOL(rthal_thread_trampoline);
 
 #ifdef CONFIG_XENO_HW_FPU
 EXPORT_SYMBOL(rthal_init_fpu);
