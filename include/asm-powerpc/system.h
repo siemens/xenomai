@@ -47,6 +47,12 @@ struct task_struct;
 
 typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 
+    /* User mode side */
+    struct task_struct *user_task;	/* Shadowed user-space task */
+    struct task_struct *active_task;	/* Active user-space task */
+    struct thread_struct ts;	/* Holds kernel-based thread context. */
+    struct thread_struct *tsp;	/* Pointer to the active thread struct (&ts or &user->thread). */
+
     /* Kernel mode side */
 
 #ifdef CONFIG_XENO_HW_FPU
@@ -68,12 +74,6 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 
     unsigned stacksize;		/* Aligned size of stack (bytes) */
     unsigned long *stackbase;	/* Stack space */
-
-    /* User mode side */
-    struct task_struct *user_task;	/* Shadowed user-space task */
-    struct task_struct *active_task;	/* Active user-space task */
-    struct thread_struct ts;	/* Holds kernel-based thread context. */
-    struct thread_struct *tsp;	/* Pointer to the active thread struct (&ts or &user->thread). */
 
     /* Init block */
     struct xnthread *self;
@@ -239,8 +239,13 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
 #endif /* CONFIG_PPC64 */
 	}
 
+#ifdef CONFIG_PPC64
+    rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, 
+		    in_tcb->user_task == NULL ? 1 : 0);
+#else /* !CONFIG_PPC64 */
     rthal_thread_switch(out_tcb->tsp, in_tcb->tsp);
-
+#endif /* CONFIG_PPC64 */
+    
     barrier();
 }
 
@@ -299,12 +304,23 @@ static inline void xnarch_init_thread (xnarchtcb_t *tcb,
     ksp = (unsigned long *)((unsigned long)tcb->stackbase + tcb->stacksize - RTHAL_SWITCH_FRAME_SIZE - 32);
     childregs = (struct pt_regs *)ksp;
     memset(childregs,0,sizeof(*childregs));
-    childregs->nip = (unsigned long)&rthal_thread_trampoline;
+    childregs->nip = ((unsigned long *)&rthal_thread_trampoline)[0];
+    childregs->gpr[2] = ((unsigned long *)&rthal_thread_trampoline)[1];
     childregs->gpr[14] = flags & ~(MSR_EE | MSR_FP);
     childregs->gpr[15] = ((unsigned long *)&xnarch_thread_trampoline)[0]; /* lr = entry addr. */
     childregs->gpr[16] = ((unsigned long *)&xnarch_thread_trampoline)[1]; /* r2 = TOC base. */
     childregs->gpr[17] = (unsigned long)tcb;
     tcb->ts.ksp = (unsigned long)childregs - STACK_FRAME_OVERHEAD;
+    if (cpu_has_feature(CPU_FTR_SLB)) { /* from process.c/copy_thread */
+	    unsigned long sp_vsid = get_kernel_vsid(tcb->ts.ksp);
+	    
+	    sp_vsid <<= SLB_VSID_SHIFT;
+	    sp_vsid |= SLB_VSID_KERNEL;
+	    if (cpu_has_feature(CPU_FTR_16M_PAGE))
+		    sp_vsid |= SLB_VSID_L;
+	    
+	    tcb->ts.ksp_vsid = sp_vsid;
+    }
 #else /* !CONFIG_PPC64 */
     ksp = (unsigned long *)((unsigned long)tcb->stackbase + tcb->stacksize - RTHAL_SWITCH_FRAME_SIZE - 4);
     childregs = (struct pt_regs *)ksp;
@@ -415,7 +431,7 @@ static inline void xnarch_init_tcb (xnarchtcb_t *tcb)
     tcb->user_task = NULL;
     tcb->active_task = NULL;
     tcb->tsp = &tcb->ts;
-    /* Note: .pgdir(ppc32)/.VSID(ppc64) == NULL for a Xenomai kthread. */
+    /* Note: .pgdir(ppc32) == NULL for a Xenomai kthread. */
     memset(&tcb->ts,0,sizeof(tcb->ts));
 #ifdef CONFIG_XENO_HW_FPU
     tcb->user_fpu_owner = NULL;
