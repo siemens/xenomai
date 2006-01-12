@@ -22,10 +22,6 @@
 
 extern int __pse51_muxid;
 
-/* Xenomai only deals with the CLOCK_MONOTONIC clock for
-   now. Calls referring to other clock types are simply routed to the
-   libc. */
-
 int __wrap_clock_getres (clockid_t clock_id, struct timespec *tp)
 
 {
@@ -76,13 +72,19 @@ int __wrap_clock_nanosleep (clockid_t clock_id,
 			    const struct timespec *rqtp,
 			    struct timespec *rmtp)
 {
-    int err = -XENOMAI_SKINCALL4(__pse51_muxid,
-                                 __pse51_clock_nanosleep,
-                                 clock_id,
-                                 flags,
-                                 rqtp,
-                                 rmtp);
+    int err, oldtype;
 
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+    
+    err = -XENOMAI_SKINCALL4(__pse51_muxid,
+                             __pse51_clock_nanosleep,
+                             clock_id,
+                             flags,
+                             rqtp,
+                             rmtp);
+
+    pthread_setcanceltype(oldtype, NULL);
+    
     return err;
 }
 

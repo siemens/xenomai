@@ -129,7 +129,9 @@ int __wrap_mq_send (mqd_t q,
 		    size_t len,
 		    unsigned prio)
 {
-    int err;
+    int err, oldtype;
+
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
     err = XENOMAI_SKINCALL4(__pse51_muxid,
 			    __pse51_mq_send,
@@ -137,6 +139,9 @@ int __wrap_mq_send (mqd_t q,
 			    buffer,
 			    len,
 			    prio);
+
+    pthread_setcanceltype(oldtype, NULL);
+
     if (!err)
 	return 0;
 
@@ -151,7 +156,9 @@ int __wrap_mq_timedsend (mqd_t q,
 			 unsigned prio,
 			 const struct timespec *timeout)
 {
-    int err;
+    int err, oldtype;
+
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
     err = XENOMAI_SKINCALL5(__pse51_muxid,
 			    __pse51_mq_timedsend,
@@ -160,6 +167,9 @@ int __wrap_mq_timedsend (mqd_t q,
 			    len,
 			    prio,
 			    timeout);
+
+    pthread_setcanceltype(oldtype, NULL);
+
     if (!err)
 	return 0;
 
@@ -174,7 +184,9 @@ ssize_t __wrap_mq_receive (mqd_t q,
 			   unsigned *prio)
 {
     ssize_t rlen = (ssize_t)len;
-    int err;
+    int err, oldtype;
+
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
     err = XENOMAI_SKINCALL4(__pse51_muxid,
 			    __pse51_mq_receive,
@@ -182,6 +194,9 @@ ssize_t __wrap_mq_receive (mqd_t q,
 			    buffer,
 			    &rlen,
 			    prio);
+
+    pthread_setcanceltype(oldtype, NULL);
+
     if (!err)
 	return rlen;
 
@@ -197,7 +212,9 @@ ssize_t __wrap_mq_timedreceive (mqd_t q,
 				const struct timespec *__restrict__ timeout)
 {
     ssize_t rlen = (ssize_t)len;
-    int err;
+    int err, oldtype;
+
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
     err = XENOMAI_SKINCALL5(__pse51_muxid,
 			    __pse51_mq_timedreceive,
@@ -206,6 +223,9 @@ ssize_t __wrap_mq_timedreceive (mqd_t q,
 			    &rlen,
 			    prio,
 			    timeout);
+
+    pthread_setcanceltype(oldtype, NULL);
+
     if (!err)
 	return rlen;
 

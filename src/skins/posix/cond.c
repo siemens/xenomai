@@ -57,16 +57,20 @@ int __wrap_pthread_cond_wait (pthread_cond_t *cond,
 {
     union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
     union __xeno_cond *_cond = (union __xeno_cond *)cond;
-    int err;
+    int err, oldtype;
 
     if (_cond->shadow_cond.magic != SHADOW_COND_MAGIC ||
 	_mutex->shadow_mutex.magic != SHADOW_MUTEX_MAGIC)
 	return EINVAL;
 
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
     err = XENOMAI_SKINCALL2(__pse51_muxid,
                             __pse51_cond_wait,
                             _cond->shadow_cond.handle,
                             _mutex->shadow_mutex.handle);
+
+    pthread_setcanceltype(oldtype, NULL);
 
     return err == -EINTR ? 0 : -err;
 }
@@ -77,17 +81,21 @@ int __wrap_pthread_cond_timedwait (pthread_cond_t *cond,
 {
     union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
     union __xeno_cond *_cond = (union __xeno_cond *)cond;
-    int err;
+    int err, oldtype;
 
     if (_cond->shadow_cond.magic != SHADOW_COND_MAGIC ||
 	_mutex->shadow_mutex.magic != SHADOW_MUTEX_MAGIC)
 	return EINVAL;
+
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
     err = XENOMAI_SKINCALL3(__pse51_muxid,
                             __pse51_cond_timedwait,
                             _cond->shadow_cond.handle,
                             _mutex->shadow_mutex.handle,
                             abstime);
+
+    pthread_setcanceltype(oldtype, NULL);
 
     return err == -EINTR ? 0 : -err;
 }

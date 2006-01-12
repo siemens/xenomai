@@ -11,7 +11,7 @@ bin_PROGRAMS= accuracy accuracy_rt satch_rt
 lib_LIBRARIES=
 
 CPPFLAGS= -D_GNU_SOURCE -D_REENTRANT
-CFLAGS= -Wstrict-prototypes -O2 -Wall
+CFLAGS= -Wstrict-prototypes -g -O2 -Wall
 LDFLAGS= -lpthread -lrt
 
 accuracy_rt.o: CPPFLAGS=-DSPERIOD=100
@@ -31,7 +31,7 @@ endif
 
 CC:= $(shell $(XENO_CONFIG) --cc)
 
-CFLAGS_RT:= $(shell $(XENO_CONFIG) --posix-cflags)
+CFLAGS_RT:= $(shell $(XENO_CONFIG) --posix-cflags) -g
 LDFLAGS_RT:= $(shell $(XENO_CONFIG) --posix-ldflags)
 
 all: $(bin_PROGRAMS) $(lib_LIBRARIES)
