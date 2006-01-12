@@ -199,6 +199,7 @@ typedef struct xnhook {
 } xnhook_t;
 
 #define xnthread_name(thread)              ((thread)->name)
+#define xnthread_clear_name(thread)        do { *(thread)->name = 0; } while(0)
 #define xnthread_sched(thread)             ((thread)->sched)
 #define xnthread_start_time(thread)        ((thread)->stime)
 #define xnthread_status_flags(thread)      ((thread)->status)

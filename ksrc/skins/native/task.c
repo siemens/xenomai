@@ -235,7 +235,6 @@ int rt_task_create (RT_TASK *task,
 {
     char namebuf[XNOBJECT_NAME_LEN];
     int err = 0, cpumask, cpu;
-    const char *regname;
     xnflags_t bflags;
     spl_t s;
 
@@ -252,10 +251,8 @@ int rt_task_create (RT_TASK *task,
 	/* i.e. Anonymous object which must be accessible from
 	   user-space. */
 	xnobject_create_name(namebuf,sizeof(namebuf),task);
-	regname = namebuf;
+	name = namebuf;
 	}
-    else
-	regname = name;
 
     if (xnpod_init_thread(&task->thread_base,
 			  name,
@@ -299,7 +296,7 @@ int rt_task_create (RT_TASK *task,
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
-    if (regname)
+    if (name)
 	{
 	err = rt_registry_enter(xnthread_name(&task->thread_base),
 				task,
@@ -307,6 +304,11 @@ int rt_task_create (RT_TASK *task,
 				NULL);
 	if (err)
 	    rt_task_delete(task);
+	else if (name == namebuf)
+	    /* /proc/xenomai/sched will dump no name for the anonymous
+	       task, but the registry still has a stable reference
+	       into the TCB to set up a handle for the task. */
+	    xnthread_clear_name(&task->thread_base);
 	}
 #endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
 
