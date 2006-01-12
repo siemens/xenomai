@@ -1,3 +1,11 @@
+2006-01-12  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/demos/accuracy.c (cleanup_upon_sig): Use
+	pthread_cancel for program termination.
+
+	* src/skins/posix/*.c: Handle cancellation requests for user-space
+	threads.
+
 2006-01-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* scripts/Modules.frag: Add missing drivers.
