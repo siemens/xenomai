@@ -116,6 +116,10 @@ while : ; do
       linux_arch=bfinnommu
       xenomai_arch=blackfin
       ;;
+   arm)
+      linux_arch=arm
+      xenomai_arch=arm
+      ;;
    *)
       echo "$me: unsupported architecture: $linux_arch"
       linux_arch=

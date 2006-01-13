@@ -166,6 +166,13 @@ static inline unsigned long rthal_get_cpufreq(void)
     return (unsigned long)sysinfo.cpufreq;
 }
 
+static inline unsigned long rthal_get_timerfreq(void)
+{
+    struct ipipe_sysinfo sysinfo;
+    rthal_get_sysinfo(&sysinfo);
+    return (unsigned long)sysinfo.archdep.tmfreq;
+}
+
 #define RTHAL_DECLARE_EVENT(hdlr) \
 static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
 { \

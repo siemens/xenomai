@@ -1,3 +1,8 @@
+2006-01-13  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/arm, include/asm-arm: Merge Stelian Pop's port to the
+	Integrator/CP ARM 1136 board.
+
 2006-01-12  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/demos/accuracy.c (cleanup_upon_sig): Use

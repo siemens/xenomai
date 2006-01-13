@@ -144,7 +144,13 @@ NAME                DESCRIPTION                      [BINDING,]DEFAULT(*)
 
 --enable-x86-sep    Enable x86 SEP instructions      strong,disabled
                     for issuing syscalls
+
 --enable-x86-tsc    Enable x86 TSC for timings       strong,enabled
+
+--enable-arm-arch   Define version of the target     strong,"4"
+                    ARM architecture
+
+--enable-arm-sa1100 Enable SA1100 support	     strong,enabled
 
 (*) Each option enabled by default can be forcibly disabled by passing
 --disable-<option> to the configure script.
