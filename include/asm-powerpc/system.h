@@ -50,11 +50,10 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
     /* User mode side */
     struct task_struct *user_task;	/* Shadowed user-space task */
     struct task_struct *active_task;	/* Active user-space task */
-    struct thread_struct ts;	/* Holds kernel-based thread context. */
     struct thread_struct *tsp;	/* Pointer to the active thread struct (&ts or &user->thread). */
 
     /* Kernel mode side */
-
+    struct thread_struct ts;	/* Holds kernel-based thread context. */
 #ifdef CONFIG_XENO_HW_FPU
     /* We only care for basic FPU handling in kernel-space; Altivec
        and SPE are not available to kernel-based nucleus threads. */
@@ -193,30 +192,14 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
 
 	/* Switch the mm context.*/
 
-#ifdef CONFIG_PPC64
 #ifdef CONFIG_ALTIVEC
-	/* Don't rely on FTR fixups --
-	   they don't work properly in our context. */
-	if (cur_cpu_spec->cpu_features & CPU_FTR_ALTIVEC) {
-	    asm volatile (
-		"dssall;\n"
-		: : );
-	}
-#endif /* CONFIG_ALTIVEC */
-#else /* !CONFIG_PPC64 */
-#ifdef CONFIG_ALTIVEC
-	/* Don't rely on FTR fixups --
-	   they don't work properly in our context. */
-	if (cur_cpu_spec[0]->cpu_features & CPU_FTR_ALTIVEC) {
-	    asm volatile (
-		"dssall;\n"
-#ifndef CONFIG_POWER4
-		"sync;\n"
+	asm volatile (
+		      "dssall;\n"
+#if !defined(CONFIG_POWER4) && !defined(CONFIG_PPC64)
+		      "sync;\n"
 #endif
-		: : );
-	}
+		      : : );
 #endif /* CONFIG_ALTIVEC */
-#endif /* CONFIG_PPC64 */
 	
 #ifdef CONFIG_PPC64
 	if (!cpu_isset(smp_processor_id(), mm->cpu_vm_mask)) {
