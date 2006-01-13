@@ -184,7 +184,8 @@ void rthal_arch_cleanup (void)
 
 /*@}*/
 
-EXPORT_SYMBOL(rthal_switch_context);
+EXPORT_SYMBOL(rthal_thread_switch);
+EXPORT_SYMBOL(rthal_thread_trampoline);
 
 #ifdef CONFIG_XENO_HW_FPU
 EXPORT_SYMBOL(rthal_init_fpu);

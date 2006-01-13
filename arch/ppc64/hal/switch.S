@@ -1,11 +1,12 @@
 /*
- * arch/ppc64/hal/switch.S
+ * Most of the following code has been lifted from the original _switch()
+ * routine from linux/arch/ppc64/kernel/entry.S, and adapted to perform hybrid
+ * scheduling between kernel and user-space Xenomai threads.
  *
- * Fusion 64-bit PowerPC adoption
- * Copyright (C) 2005 Taneli Vähäkangas and Heikki Lindholm
- * based on previous work:
+ * Xenomai updates Copyright (C) 2004 Philippe Gerum.
  *
- * Copyright (C) 2004 Philippe Gerum.
+ * 64-bit PowerPC adoption
+ *   copyright (C) 2005 Taneli Vähäkangas and Heikki Lindholm 
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,103 +24,107 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <linux/config.h> 
 #include <asm/processor.h>
 #include <asm/cputable.h>
-#include <asm/page.h>
 #include <asm/ppc_asm.h>
-#include <xeno_config.h> 
-
-#define RTHAL_SAVEREG(reg, pos)	std reg,STACK_FRAME_OVERHEAD+8*(pos)(r1)
-#define RTHAL_LOADREG(reg, pos)	ld reg,STACK_FRAME_OVERHEAD+8*(pos)(r1)
+#include <asm/asm-offsets.h>
+#include <asm/page.h>
+#include <asm/mmu.h>
 
 /*
- * r3=out_kspp, r4=in_kspp
+ * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next, int kernel_thread)
  */
-_GLOBAL(rthal_switch_context)
-        stdu    r1,-224-STACK_FRAME_OVERHEAD(r1)
+	.align	7
+_GLOBAL(rthal_thread_switch)
+	mflr	r0
+	std	r0,16(r1)
+	stdu	r1,-SWITCH_FRAME_SIZE(r1)
+	SAVE_8GPRS(14, r1)
+	SAVE_10GPRS(22, r1)
+	mflr	r20		/* Return to switch caller */
+	mfmsr	r22
+	li	r0, MSR_FP
+#ifdef CONFIG_ALTIVEC
+BEGIN_FTR_SECTION
+	oris	r0,r0,MSR_VEC@h	/* Disable altivec */
+	mfspr	r24,SPRN_VRSAVE	/* save vrsave register value */
+	std	r24,THREAD_VRSAVE(r3)
+END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
+#endif /* CONFIG_ALTIVEC */
+	and.	r0,r0,r22
+	beq+	1f
+	andc	r22,r22,r0
+	mtmsrd	r22
+	isync
+1:	std	r20,_NIP(r1)
+	mfcr	r23
+	std	r23,_CCR(r1)
+	std	r1,KSP(r3)	/* Set old stack pointer */
 
-        /* Save general purpose registers. */
+#ifdef CONFIG_SMP
+	sync
+#endif /* CONFIG_SMP */
 
-	RTHAL_SAVEREG(r31,0)
-	RTHAL_SAVEREG(r30,1)
-	RTHAL_SAVEREG(r29,2)
-	RTHAL_SAVEREG(r28,3)
-	RTHAL_SAVEREG(r27,4)
-	RTHAL_SAVEREG(r26,5)
-	RTHAL_SAVEREG(r25,6)
-	RTHAL_SAVEREG(r24,7)
-	RTHAL_SAVEREG(r23,8)
-	RTHAL_SAVEREG(r22,9)
-	RTHAL_SAVEREG(r21,10)
-	RTHAL_SAVEREG(r20,11)
-	RTHAL_SAVEREG(r19,12)
-	RTHAL_SAVEREG(r18,13)
-	RTHAL_SAVEREG(r17,14)
-	RTHAL_SAVEREG(r16,15)
-	RTHAL_SAVEREG(r15,16)
-	RTHAL_SAVEREG(r14,17)
-	RTHAL_SAVEREG(r13,18)
-	RTHAL_SAVEREG(r3,19)
-	RTHAL_SAVEREG(r2,20)
-	RTHAL_SAVEREG(r0,21)
+	ld	r8,KSP(r4)	/* new stack pointer */
 
-        /* Save special registers. */
+	cmpwi	cr5,r5,0	/* is it a kernel thread */
+        bne-	cr5,10f		/* if so, don't touch 'current' */
+
+	addi	r6,r4,-THREAD	/* Convert THREAD to 'current' */
+	std	r6,PACACURRENT(r13)	/* Set new 'current' */
+10:
+BEGIN_FTR_SECTION
+	clrrdi	r6,r8,28	/* get its ESID */
+	clrrdi	r9,r1,28	/* get current sp ESID */
+	clrldi.	r0,r6,2		/* is new ESID c00000000? */
+	cmpd	cr1,r6,r9	/* or is new ESID the same as current ESID? */
+	cror	eq,4*cr1+eq,eq
+	beq	2f		/* if yes, don't slbie it */
+
+	/* Bolt in the new stack SLB entry */
+	ld	r7,KSP_VSID(r4)	/* Get new stack's VSID */
+	oris	r0,r6,(SLB_ESID_V)@h
+	ori	r0,r0,(SLB_NUM_BOLTED-1)@l
+	slbie	r6
+	slbie	r6		/* Workaround POWER5 < DD2.1 issue */
+	slbmte	r7,r0
+	isync
+
+2:
+END_FTR_SECTION_IFSET(CPU_FTR_SLB)
+	bne-	cr5,11f		/* kernel thread: don't touch 'current' */
+	clrrdi	r7,r8,THREAD_SHIFT	/* base of new stack */
+	/* Note: this uses SWITCH_FRAME_SIZE rather than INT_FRAME_SIZE
+	   because we don't need to leave the 288-byte ABI gap at the
+	   top of the kernel stack. */
+	addi	r7,r7,THREAD_SIZE-SWITCH_FRAME_SIZE
+	std	r7,PACAKSAVE(r13)
 	
-	mfctr    r2
-	RTHAL_SAVEREG(r2,22)
-        mfcr     r2
-	RTHAL_SAVEREG(r2,23)
-        mfxer    r2
-	RTHAL_SAVEREG(r2,24)
-        mflr     r2
-	RTHAL_SAVEREG(r2,25)
-        mfmsr    r2
-	RTHAL_SAVEREG(r2,26)
+11:
+	mr	r1,r8		/* start using new stack pointer */
+		
+	ld	r6,_CCR(r1)
+	mtcrf	0xFF,r6
 
-        /* Switch stacks. */
-	
-        std      r1,0(r3)       /* *out_kspp = sp */
-	/* TODO: VSIDs */
-        ld      r1,0(r4)       /* sp = *in_kspp */
+#ifdef CONFIG_ALTIVEC
+BEGIN_FTR_SECTION
+	ld	r0,THREAD_VRSAVE(r4)
+	mtspr	SPRN_VRSAVE,r0		/* if G4, restore VRSAVE reg */
+END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
+#endif /* CONFIG_ALTIVEC */
 
-        /* Restore special registers. */
+	REST_8GPRS(14, r1)
+	REST_10GPRS(22, r1)
 
-	RTHAL_LOADREG(r2,26)
-        mtmsrd   r2
-	RTHAL_LOADREG(r2,25)
-        mtlr     r2
-	RTHAL_LOADREG(r2,24)
-        mtxer    r2
-	RTHAL_LOADREG(r2,23)
-        mtcr     r2
-	RTHAL_LOADREG(r2,22)
-        mtctr    r2
+	ld	r7,_NIP(r1)
+	mtlr	r7
+	addi	r1,r1,SWITCH_FRAME_SIZE
+	blr
 
-	/* Restore general purpose registers. */
-	
-	RTHAL_LOADREG(r0,21)
-	RTHAL_LOADREG(r2,20)
-	RTHAL_LOADREG(r3,19)
-	RTHAL_LOADREG(r13,18)
-	RTHAL_LOADREG(r14,17)
-	RTHAL_LOADREG(r15,16)
-	RTHAL_LOADREG(r16,15)
-	RTHAL_LOADREG(r17,14)
-	RTHAL_LOADREG(r18,13)
-	RTHAL_LOADREG(r19,12)
-	RTHAL_LOADREG(r20,11)
-	RTHAL_LOADREG(r21,10)
-	RTHAL_LOADREG(r22,9)
-	RTHAL_LOADREG(r23,8)
-	RTHAL_LOADREG(r24,7)
-	RTHAL_LOADREG(r25,6)
-	RTHAL_LOADREG(r26,5)
-	RTHAL_LOADREG(r27,4)
-	RTHAL_LOADREG(r28,3)
-	RTHAL_LOADREG(r29,2)
-	RTHAL_LOADREG(r30,1)
-	RTHAL_LOADREG(r31,0)
-
-        addi    r1,r1,224+STACK_FRAME_OVERHEAD
-
-        blr
+_GLOBAL(rthal_thread_trampoline)
+	mtmsr	r14
+	mtlr	r15
+	mr	r2,r16
+	mr	r3,r17
+	blr
