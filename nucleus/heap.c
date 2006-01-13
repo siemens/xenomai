@@ -803,13 +803,18 @@ void xnheap_finalize_free_inner (xnheap_t *heap)
 #include <linux/mm.h>
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,13)
-   static struct class *xnheap_class;
+static struct class *xnheap_class;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15)
+#define do_class_device_create class_device_create
+#else
+#define do_class_device_create(c,p,dt,dv,fmt,args...) class_device_create(c,dt,dv,fmt , ##args)
+#endif
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-   static struct class_simple *xnheap_class;
-   #define class_create class_simple_create
-   #define class_device_create class_simple_device_add
-   #define class_device_destroy(a,b) class_simple_device_remove(b)
-   #define class_destroy class_simple_destroy
+static struct class_simple *xnheap_class;
+#define class_create class_simple_create
+#define do_class_device_create(c,p,dt,dv,fmt,args...) class_simple_device_add(c,dt,dv,fmt , ##args)
+#define class_device_destroy(a,b) class_simple_device_remove(b)
+#define class_destroy class_simple_destroy
 #endif
 
 static DECLARE_XNQUEUE(kheapq);	/* Shared heap queue. */
@@ -1012,8 +1017,8 @@ int xnheap_mount (void)
        return -EBUSY; 
     }
 
-    cldev = class_device_create(xnheap_class, MKDEV(MISC_MAJOR, XNHEAP_DEV_MINOR),
-				NULL, "rtheap");
+    cldev = do_class_device_create(xnheap_class, NULL, MKDEV(MISC_MAJOR, XNHEAP_DEV_MINOR),
+				   NULL, "rtheap");
     if(IS_ERR(cldev))
 	{
 	xnlogerr("Can't add device class, major=%d, minor=%d, err=%ld\n", 
