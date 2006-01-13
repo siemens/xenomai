@@ -36,11 +36,11 @@
 #define XENO_SHADOW_MODULE 1
 
 #include <stdarg.h>
-#include <asm/signal.h>
 #include <linux/unistd.h>
 #include <linux/wait.h>
 #include <linux/init.h>
 #include <linux/kthread.h>
+#include <asm/signal.h>
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
 #include <nucleus/synch.h>
