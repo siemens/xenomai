@@ -8,6 +8,17 @@
 
 2006-01-12  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/powerpc/hal.c (rthal_arch_init): Whine if
+	CONFIG_ALTIVEC enabled but not hardware found.
+
+2006-01-12  Heikki Lindholm <holindho@cs.helsinki.fi>
+
+	* include/asm-powerpc/hal.h, include/asm-powerpc/system.h,
+	ksrc/arch/powerpc/switch_64.S: Finalize hybrid scheduling for
+	ppc64.
+	
+2006-01-12  Philippe Gerum  <rpm@xenomai.org>
+
 	* scripts/Modules.frag: Add missing drivers.
 
 	* ksrc/arch/powerpc/switch.S: Fix 2.4 support.
