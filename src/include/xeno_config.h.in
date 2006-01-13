@@ -6,6 +6,12 @@
 /* config */
 #undef CONFIG_X86_TSC
 
+/* config */
+#undef CONFIG_XENO_ARM_ARCH
+
+/* config */
+#undef CONFIG_XENO_ARM_SA1100
+
 /* Build system alias */
 #undef CONFIG_XENO_BUILD_STRING
 
