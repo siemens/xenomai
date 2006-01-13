@@ -77,3 +77,9 @@ ___________________________________________________________________
 
         o the timer rt_timer_info structure has a "tsc" member, whose value is
          synchronized with the value of the date member.
+___________________________________________________________________
+
+2.0.1 -> 2.0.2
+
+	o Allow P_MINOR_AUTO to be passed as the third argument of
+	rt_pipe_create(), causing the minor value to be auto-allocated.
