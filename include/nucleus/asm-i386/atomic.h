@@ -27,9 +27,8 @@
 #include <asm/atomic.h>
 #include <asm/system.h>
 
-#define atomic_xchg(ptr,v)       xchg(ptr,v)
-#define atomic_cmpxchg(ptr,o,n)  cmpxchg(ptr,o,n)
-#define xnarch_memory_barrier()  smp_mb()
+#define xnarch_atomic_xchg(ptr,v)	xchg(ptr,v)
+#define xnarch_memory_barrier()		smp_mb()
 
 #else /* !__KERNEL__ */
 
@@ -57,28 +56,14 @@
 struct __xeno_xchg_dummy { unsigned long a[100]; };
 #define __xeno_xg(x) ((struct __xeno_xchg_dummy *)(x))
 
-static inline unsigned long atomic_xchg (volatile void *ptr,
-					 unsigned long x)
+static inline unsigned long xnarch_atomic_xchg (volatile void *ptr,
+						unsigned long x)
 {
     __asm__ __volatile__(LOCK_PREFIX "xchgl %0,%1"
 			 :"=r" (x)
 			 :"m" (*__xeno_xg(ptr)), "0" (x)
 			 :"memory");
     return x;
-}
-
-static inline unsigned long atomic_cmpxchg (volatile void *ptr,
-					    unsigned long o,
-					    unsigned long n)
-{
-    unsigned long prev;
-
-    __asm__ __volatile__(LOCK_PREFIX "cmpxchgl %1,%2"
-			 : "=a"(prev)
-			 : "q"(n), "m" (*__xeno_xg(ptr)), "0" (o)
-			 : "memory");
-
-    return prev;
 }
 
 #define xnarch_memory_barrier()  __asm__ __volatile__("": : :"memory")
@@ -99,7 +84,5 @@ typedef unsigned long atomic_flags_t;
 #define xnarch_atomic_dec_and_test(pcounter)   atomic_dec_and_test(pcounter)
 #define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask,pflags)
 #define xnarch_atomic_clear_mask(pflags,mask)  atomic_clear_mask(mask,pflags)
-
-#define xnarch_atomic_xchg(ptr,x) atomic_xchg(ptr,x)
 
 #endif /* !_XENO_ASM_I386_ATOMIC_H */

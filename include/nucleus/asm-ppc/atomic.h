@@ -27,9 +27,8 @@
 #include <linux/bitops.h>
 #include <asm/system.h>
 
-#define atomic_xchg(ptr,v)       xchg(ptr,v)
-#define atomic_cmpxchg(ptr,o,n)  cmpxchg(ptr,o,n)
-#define xnarch_memory_barrier()  smp_mb()
+#define xnarch_atomic_xchg(ptr,v)       xchg(ptr,v)
+#define xnarch_memory_barrier()  	smp_mb()
 
 void atomic_set_mask(unsigned long mask, /* from arch/ppc/kernel/misc.S */
 		     unsigned long *ptr);
@@ -58,32 +57,8 @@ void atomic_set_mask(unsigned long mask, /* from arch/ppc/kernel/misc.S */
  * and <linux/asm-ppc/atomic.h>
  */
 
-static inline unsigned long atomic_cmpxchg (volatile void *ptr,
-					    unsigned long o,
-					    unsigned long n)
-{
-    unsigned long prev;
-
-    __asm__ __volatile__ ("\n\
-1:	lwarx	%0,0,%2 \n\
-	cmpw	0,%0,%3 \n\
-	bne	2f \n"
-	PPC405_ERR77(0,%2) \
-"	stwcx.	%4,0,%2 \n\
-	bne-	1b\n"
-#ifdef CONFIG_SMP
-"	sync\n"
-#endif /* CONFIG_SMP */
-"2:"
-	: "=&r" (prev), "=m" (*(volatile unsigned long *)ptr)
-	: "r" (ptr), "r" (o), "r" (n), "m" (*(volatile unsigned long *)ptr)
-	: "cc", "memory");
-
-    return prev;
-}
-
-static inline unsigned long atomic_xchg (volatile void *ptr,
-					 unsigned long x)
+static inline unsigned long xnarch_atomic_xchg (volatile void *ptr,
+						unsigned long x)
 {
     unsigned long prev;
 
@@ -222,7 +197,5 @@ static __inline__ void atomic_clear_mask(unsigned long mask,
 
 typedef atomic_t atomic_counter_t;
 typedef unsigned long atomic_flags_t;
-
-#define xnarch_atomic_xchg(ptr,x) atomic_xchg(ptr,x)
 
 #endif /* !_XENO_ASM_PPC_ATOMIC_H */
