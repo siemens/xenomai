@@ -34,30 +34,30 @@
 
 typedef unsigned long long rthal_time_t;
 
-#define __rthal_u64tou32(ull, h, l) ({                  \
-        union { unsigned long long _ull;                \
-            struct { u_long _h; u_long _l; } _s; } _u;  \
-        _u._ull = (ull);                                \
-        (h) = _u._s._h;                                 \
-        (l) = _u._s._l;                                 \
+#define __rthal_u64tou32(ull, h, l) ({                          \
+        union { unsigned long long _ull;                        \
+            struct { unsigned _h; unsigned _l; } _s; } _u;      \
+        _u._ull = (ull);                                        \
+        (h) = _u._s._h;                                         \
+        (l) = _u._s._l;                                         \
         })
 
-#define __rthal_u64fromu32(h, l) ({                     \
-        union { unsigned long long _ull;                \
-            struct { u_long _h; u_long _l; } _s; } _u;  \
-        _u._s._h = (h);                                 \
-        _u._s._l = (l);                                 \
-        _u._ull;                                        \
+#define __rthal_u64fromu32(h, l) ({                             \
+        union { unsigned long long _ull;                        \
+            struct { unsigned _h; unsigned _l; } _s; } _u;      \
+        _u._s._h = (h);                                         \
+        _u._s._l = (l);                                         \
+        _u._ull;                                                \
         })
 
-static inline unsigned long long rthal_ullmul(const unsigned long m0, 
-					      const unsigned long m1)
+static inline unsigned long long rthal_ullmul(const unsigned m0, 
+					      const unsigned m1)
 {
     return (unsigned long long) m0 * m1;
 }
 
 static inline unsigned long long rthal_ulldiv (unsigned long long ull,
-					       const unsigned long uld,
+					       const unsigned uld,
 					       unsigned long *const rp)
 {
 #if BITS_PER_LONG == 32
@@ -75,7 +75,7 @@ static inline unsigned long long rthal_ulldiv (unsigned long long ull,
 
 #define rthal_uldivrem(ull,ul,rp) ((u_long) rthal_ulldiv((ull),(ul),(rp)))
 
-static inline int rthal_imuldiv (int i, int mult, int div) {
+static inline __attribute_const__ int rthal_imuldiv (int i, int mult, int div) {
 
     /* Returns (int)i = (unsigned long long)i*(u_long)(mult)/(u_long)div. */
     const unsigned long long ull = rthal_ullmul(i, mult);
@@ -84,14 +84,12 @@ static inline int rthal_imuldiv (int i, int mult, int div) {
 
 static inline __attribute_const__
 unsigned long long __rthal_ullimd (const unsigned long long op,
-                                   const unsigned long m,
-                                   const unsigned long d)
+                                   const unsigned m,
+                                   const unsigned d)
 {
-#ifdef CONFIG_PPC64
-    return (op*m)/d;
-#else /* !CONFIG_PPC64 */
-    u_long oph, opl, tlh, tll, qh, rh, ql;
+    unsigned oph, opl, tlh, tll, qh, ql;
     unsigned long long th, tl;
+    unsigned long rh;
 
     __rthal_u64tou32(op, oph, opl);
     tl = rthal_ullmul(opl, m);
@@ -103,12 +101,11 @@ unsigned long long __rthal_ullimd (const unsigned long long op,
     th = __rthal_u64fromu32(rh, tll);
     ql = rthal_uldivrem(th, d, NULL);
     return __rthal_u64fromu32(qh, ql);
-#endif /* CONFIG_PPC64 */
 }
 
 static inline long long rthal_llimd (long long op,
-                                     unsigned long m,
-                                     unsigned long d)
+                                     unsigned m,
+                                     unsigned d)
 {
 
     if(op < 0LL)
