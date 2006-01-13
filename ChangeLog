@@ -1,3 +1,7 @@
+2006-01-13  Philippe Gerum  <rpm@xenomai.org>
+
+	* arch/*/patches: Upgrade all Adeos patches.
+
 2006-01-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/asm-*/hal.h: Define rthal_virtualize_irq()
