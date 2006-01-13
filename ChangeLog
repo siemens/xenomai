@@ -1,5 +1,9 @@
 2006-01-13  Philippe Gerum  <rpm@xenomai.org>
 
+ 	* RELEASE: Xenomai 2.1-rc2
+
+2006-01-13  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/arch/arm, include/asm-arm: Merge Stelian Pop's port to the
 	Integrator/CP ARM 1136 board.
 
@@ -169,7 +173,7 @@
 
 2006-01-01  Philippe Gerum  <rpm@xenomai.org>
 
- 	* RELEASE: Xenomai 2.1-rc1 (Champagne)
+ 	* RELEASE: Xenomai 2.1-rc1
 
 2005-12-30  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
