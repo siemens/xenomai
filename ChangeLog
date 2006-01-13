@@ -1,7 +1,25 @@
+2006-01-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/asm-*/hal.h: Define rthal_virtualize_irq()
+	conditionally, depending on the I-pipe patch level.
+
+	* arch/ppc*/hal/ppc*.c (rthal_arch_init): Whine if CONFIG_ALTIVEC
+	enabled but not hardware found.
+
+	* arch/ia64/switch.S, include/asm-ia64/system.h:
+	* arch/ppc64/switch.S, include/asm-ppc64/system.h:
+	* arch/ppc/switch.S, include/asm-ppc/system.h: Fix hybrid
+	(kernel/user-space thread) scheduling.
+
 2006-01-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* skins/native/task.c (rt_task_create): Allow creating anonymous
 	user-space tasks.
+
+2006-01-07  Heikki Lindholm <holindho@cs.helsinki.fi>
+
+	* include/asm-ppc/system.h, include/asm-ppc64/system.h: Fix FPU
+	preemption bug.
 
 2006-01-03  Jan Kiszka  <jan.kiszka@web.de>
 
