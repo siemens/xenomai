@@ -78,7 +78,7 @@ END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 
 	lwz	r0,PGDIR(r4)
         cmpwi   r0, 0
-        beq- same_current
+        beq-	same_current
 
 	tophys(r0,r4)
 	CLR_TOP32(r0)
@@ -157,7 +157,7 @@ END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 		
 	lwz	r0,PGDIR(r4)
         cmpwi   r0, 0
-        beq- same_current
+        beq-	same_current
 
 	tophys(r0,r4)
 	CLR_TOP32(r0)
