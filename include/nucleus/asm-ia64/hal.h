@@ -100,14 +100,21 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #include <asm/processor.h>
 #include <asm/delay.h>          /* For ia64_get_itc / ia64_set_itm */
 
-#define RTHAL_TIMER_VECTOR      ADEOS_SERVICE_VECTOR3
-#define RTHAL_TIMER_IRQ         ADEOS_SERVICE_IPI3
 #define RTHAL_HOST_TIMER_VECTOR IA64_TIMER_VECTOR
 #define RTHAL_HOST_TIMER_IRQ    __ia64_local_vector_to_irq(IA64_TIMER_VECTOR)
-
 #define rthal_irq_descp(irq)  irq_descp(irq)
+
+#ifdef CONFIG_ADEOS_CORE
+#define RTHAL_TIMER_VECTOR      ADEOS_SERVICE_VECTOR3
+#define RTHAL_TIMER_IRQ         ADEOS_SERVICE_IPI3
 #define rthal_itm_next        __adeos_itm_next
 #define rthal_tick_irq        __adeos_tick_irq
+#else /* !CONFIG_ADEOS_CORE */
+#define RTHAL_TIMER_VECTOR      IPIPE_SERVICE_VECTOR3
+#define RTHAL_TIMER_IRQ         IPIPE_SERVICE_IPI3
+#define rthal_itm_next        __ipipe_itm_next
+#define rthal_tick_irq        __ipipe_tick_irq
+#endif /* CONFIG_ADEOS_CORE */
 
 static inline unsigned long long rthal_rdtsc (void)
 {
@@ -137,10 +144,11 @@ static inline void rthal_timer_program_shot (unsigned long delay)
 
     /* Private interface -- Internal use only */
 
-void rthal_switch_context(void *out_tcb,
-			  void *in_tcb);
+void rthal_thread_switch(__u64 *prev_ksp,
+			 __u64 *next_ksp,
+			 int user_p);
 
-void rthal_prepare_stack(unsigned long stackbase);
+void rthal_prepare_stack(__u64 stackbase);
 
 static const char *const rthal_fault_labels[] = {
     [0] = "General exception",

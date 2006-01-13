@@ -181,11 +181,7 @@ int rthal_arch_init (void)
 
 {
     if (rthal_cpufreq_arg == 0)
-	{
-	adsysinfo_t sysinfo;
-	rthal_get_sysinfo(&sysinfo);
-	rthal_cpufreq_arg = (unsigned long)sysinfo.cpufreq;
-	}
+	rthal_cpufreq_arg = (unsigned long)rthal_get_cpufreq();
 
     if (rthal_timerfreq_arg == 0)
 	rthal_timerfreq_arg = rthal_cpufreq_arg;
@@ -201,5 +197,5 @@ void rthal_arch_cleanup (void)
 
 /*@}*/
 
-EXPORT_SYMBOL(rthal_switch_context);
+EXPORT_SYMBOL(rthal_thread_switch);
 EXPORT_SYMBOL(rthal_prepare_stack);

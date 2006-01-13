@@ -28,10 +28,12 @@
 #include <linux/config.h>
 #include <linux/ptrace.h>
 
+#ifdef CONFIG_ADEOS_CORE
 #if ADEOS_RELEASE_NUMBER < 0x0206070b
 #error "Adeos 2.6r7c11/ia64 or above is required to run this software; please upgrade."
 #error "See http://download.gna.org/adeos/patches/v2.6/ia64/"
 #endif
+#endif /* CONFIG_ADEOS_CORE */
 
 #ifdef CONFIG_IA64_HP_SIM
 #define XNARCH_DEFAULT_TICK    31250000 /* ns, i.e. 31ms */
@@ -40,7 +42,7 @@
 #endif
 #define XNARCH_HOST_TICK       (1000000000UL/HZ)
 
-#define XNARCH_THREAD_STACKSZ  (1<<KERNEL_STACK_SIZE_ORDER)
+#define XNARCH_THREAD_STACKSZ  KERNEL_STACK_SIZE
 
 #define xnarch_stack_size(tcb)  ((tcb)->stacksize)
 #define xnarch_user_task(tcb)   ((tcb)->user_task)
@@ -55,27 +57,21 @@ typedef struct xnarch_stack {
 
 typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
 
-    /* Kernel mode side */
-
-    unsigned long *espp;        /* Pointer to ESP backup area (&esp or
-                                   &user->thread.esp).
-                                   DONT MOVE THIS MEMBER,
-                                   switch_to depends on it. */
-
-    struct ia64_fpreg fpuenv[96]; /* FIXME FPU: check if alignment constraints
-                                     are needed. */
-    
-    unsigned stacksize;         /* Aligned size of stack (bytes) */
-    xnarch_stack_t *stackbase;   /* Stack space */
-    unsigned long esp;          /* Saved ESP for kernel-based threads */
+    __u64 *kspp;
+    struct ia64_fpreg *fpup;
+#define xnarch_fpu_ptr(tcb)     ((tcb)->fpup)
 
     /* User mode side */
-
     struct task_struct *user_task;      /* Shadowed user-space task */
     struct task_struct *active_task;    /* Active user-space task */
 
-    struct ia64_fpreg *fpup;
-#define xnarch_fpu_ptr(tcb)     ((tcb)->fpup)
+    /* Kernel mode side */
+    __u64 ksp;
+    struct ia64_fpreg fph[96];	/* FPU backup area for kernel-based tasks. */
+
+    unsigned stacksize;         /* Aligned size of stack (bytes) */
+    xnarch_stack_t *stackbase;	/* Stack space */
+    const char *name;
 
 } xnarchtcb_t;
 
@@ -94,6 +90,7 @@ typedef struct xnarch_fltinfo {
 #define xnarch_fault_trap(fi)  ((fi)->trap)
 #define xnarch_fault_code(fi)  ((fi)->ia64.isr)
 #define xnarch_fault_pc(fi)    ((fi)->ia64.regs->cr_iip)
+#ifdef CONFIG_ADEOS_CORE
 /* Fault is caused by use of FPU while FPU disabled. */
 #define xnarch_fault_fpu_p(fi) ((fi)->trap == ADEOS_FPDIS_TRAP)
 /* The following predicates are only usable over a regular Linux stack
@@ -101,6 +98,16 @@ typedef struct xnarch_fltinfo {
 #define xnarch_fault_pf_p(fi)   ((fi)->trap == ADEOS_PF_TRAP)
 #define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
                                  (fi)->trap == ADEOS_DEBUG_TRAP)
+#else /* !CONFIG_ADEOS_CORE */
+/* Fault is caused by use of FPU while FPU disabled. */
+#define xnarch_fault_fpu_p(fi) ((fi)->trap == IPIPE_FPDIS_TRAP)
+/* The following predicates are only usable over a regular Linux stack
+   context. */
+#define xnarch_fault_pf_p(fi)   ((fi)->trap == IPIPE_PF_TRAP)
+#define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
+                                 (fi)->trap == IPIPE_DEBUG_TRAP)
+#endif /* CONFIG_ADEOS_CORE */
+
 #define xnarch_fault_notify(fi) (!xnarch_fault_bp_p(fi))
 
 #ifdef __cplusplus
@@ -171,6 +178,7 @@ static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
     rootcb->user_task = rootcb->active_task = rthal_root_host_task(cpuid);
     /* So that xnarch_save_fpu() will operate on the right FPU area. */
     rootcb->fpup = fpu_owner ? fpu_owner->thread.fph : NULL;
+    rootcb->kspp = &current->thread.ksp;
 }
 
 static inline void xnarch_enter_root (xnarchtcb_t *rootcb)
@@ -181,35 +189,41 @@ static inline void xnarch_enter_root (xnarchtcb_t *rootcb)
 static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
                                      xnarchtcb_t *in_tcb)
 {
-    struct task_struct *outproc = out_tcb->active_task;
-    struct task_struct *inproc = in_tcb->user_task;
+    struct task_struct *prev = out_tcb->active_task;
+    struct task_struct *next = in_tcb->user_task;
 
-    in_tcb->active_task = inproc ?: outproc;
+    in_tcb->active_task = next ?: prev;
 
-    if (inproc && inproc != outproc)
+    if (next && next != prev)
         {
         /* We are switching to a user task different from the last
            preempted or running user task, so that we can use the
            Linux context switch routine. */
-        struct mm_struct *oldmm = outproc->active_mm;
-        struct task_struct *last;
+        struct mm_struct *oldmm = prev->active_mm;
 
-        switch_mm(oldmm,inproc->active_mm,inproc);
+        switch_mm(oldmm,next->active_mm,next);
 
-        if (!inproc->mm)
-            enter_lazy_tlb(oldmm,inproc);
+        if (!next->mm)
+            enter_lazy_tlb(oldmm,next);
 
-        __switch_to(outproc, inproc, last);
+	if (IA64_HAS_EXTRA_STATE(prev))
+		ia64_save_extra(prev);
+
+	if (IA64_HAS_EXTRA_STATE(next))
+		ia64_load_extra(next);
+
+	ia64_psr(ia64_task_regs(next))->dfh = !ia64_is_local_fpu_owner(next);
+
+        rthal_thread_switch(out_tcb->kspp,in_tcb->kspp,1);
         }
     else
         {
-        /* Use our own light switch routine. */
         unsigned long gp;
 
         ia64_stop();
         gp = ia64_getreg(_IA64_REG_GP);
         ia64_stop();
-        rthal_switch_context(out_tcb,in_tcb);
+        rthal_thread_switch(out_tcb->kspp,in_tcb->kspp,0);
         ia64_stop();
         ia64_setreg(_IA64_REG_GP, gp);
         ia64_stop();
@@ -326,8 +340,9 @@ static inline void xnarch_init_root_tcb (xnarchtcb_t *tcb,
 {
     tcb->user_task = current;
     tcb->active_task = NULL;
-    tcb->espp = &tcb->esp;
     tcb->fpup = current->thread.fph;
+    tcb->kspp = &current->thread.ksp;
+    tcb->name = name;
 }
 
 static void xnarch_thread_trampoline (struct xnthread *self,
@@ -355,19 +370,22 @@ static inline void xnarch_init_thread (xnarchtcb_t *tcb,
     unsigned long stackbase = (unsigned long) tcb->stackbase;
     struct switch_stack *swstack;    
 
-    tcb->esp = 0;
-    
-    /* the stack should have already been allocated */   
+    tcb->ksp = 0;
+    tcb->name = name;
+
+    /* The stack should have already been allocated. */
     rthal_prepare_stack(stackbase+KERNEL_STACK_SIZE);
 
-    /* The value of esp is used as a marker to indicate whether we are
-       initializing a new task or we are back from the context switch. */
+    /* The value of ksp is used as a marker to indicate whether we are
+       initializing a new task or we are back from the context
+       switch. */
 
-    if (tcb->esp != 0)
+    if (tcb->ksp != 0)
+	/* The following statement must be first. */
         xnarch_thread_trampoline(thread, imask, entry, cookie);
 
     child_stack = stackbase + KERNEL_STACK_SIZE - IA64_SWITCH_STACK_SIZE;
-    tcb->esp = child_stack;
+    tcb->ksp = child_stack;
     swstack = (struct switch_stack *)child_stack;
     bspstore = swstack->ar_bspstore;
 
@@ -377,7 +395,7 @@ static inline void xnarch_init_thread (xnarchtcb_t *tcb,
 
     memcpy((void *)child_rbs,(void *)rbs,rbs_size);
     swstack->ar_bspstore = child_rbs + rbs_size;
-    tcb->esp -= 16 ;    /* Provide for the (bloody) scratch area... */
+    tcb->ksp -= 16 ;    /* Provide for the (bloody) scratch area... */
 }
 
 #endif /* XENO_POD_MODULE */
@@ -388,8 +406,8 @@ static inline void xnarch_init_tcb (xnarchtcb_t *tcb)
 {
     tcb->user_task = NULL;
     tcb->active_task = NULL;
-    tcb->espp = &tcb->esp;
-    tcb->fpup = tcb->fpuenv;
+    tcb->fpup = tcb->fph;
+    tcb->kspp = &tcb->ksp;
     /* Must be followed by xnarch_init_thread(). */
 }
 
@@ -405,9 +423,9 @@ static inline void xnarch_init_shadow_tcb (xnarchtcb_t *tcb,
 
     tcb->user_task = task;
     tcb->active_task = NULL;
-    tcb->esp = 0;
-    tcb->espp = &task->thread.ksp;
     tcb->fpup = task->thread.fph;
+    tcb->kspp = &task->thread.ksp;
+    tcb->name = name;
 }
 
 static inline void xnarch_grab_xirqs (void (*handler)(unsigned irq))
@@ -423,7 +441,7 @@ static inline void xnarch_grab_xirqs (void (*handler)(unsigned irq))
                              IPIPE_DYNAMIC_MASK);
 }
 
-static inline void xnarch_lock_xirqs (adomain_t *adp, int cpuid)
+static inline void xnarch_lock_xirqs (rthal_pipeline_stage_t *ipd, int cpuid)
 
 {
     unsigned irq;
@@ -435,7 +453,7 @@ static inline void xnarch_lock_xirqs (adomain_t *adp, int cpuid)
         switch (vector)
             {
 #ifdef CONFIG_SMP
-            case ADEOS_CRITICAL_VECTOR:
+            case RTHAL_CRITICAL_VECTOR:
             case IA64_IPI_RESCHEDULE:
             case IA64_IPI_VECTOR:
 
@@ -445,12 +463,12 @@ static inline void xnarch_lock_xirqs (adomain_t *adp, int cpuid)
 
             default:
 
-                rthal_lock_irq(adp,cpuid,irq);
+                rthal_lock_irq(ipd,cpuid,irq);
             }
         }
 }
 
-static inline void xnarch_unlock_xirqs (adomain_t *adp, int cpuid)
+static inline void xnarch_unlock_xirqs (rthal_pipeline_stage_t *ipd, int cpuid)
 
 {
     unsigned irq;
@@ -462,7 +480,7 @@ static inline void xnarch_unlock_xirqs (adomain_t *adp, int cpuid)
         switch (vector)
             {
 #ifdef CONFIG_SMP
-            case ADEOS_CRITICAL_VECTOR:
+            case RTHAL_CRITICAL_VECTOR:
             case IA64_IPI_RESCHEDULE:
             case IA64_IPI_VECTOR:
 
@@ -471,7 +489,7 @@ static inline void xnarch_unlock_xirqs (adomain_t *adp, int cpuid)
 
             default:
 
-                rthal_unlock_irq(adp,irq);
+                rthal_unlock_irq(ipd,irq);
             }
         }
 }
@@ -593,6 +611,9 @@ int xnarch_alloc_stack(xnarchtcb_t *tcb, unsigned stacksize)
     	tcb->stackbase = NULL;
 	return 0;
     }
+
+    stacksize = KERNEL_STACK_SIZE; /* No matter what, this is what you
+				      will have on this arch. */
 
     if (rthal_current_domain == rthal_root_domain &&
         atomic_read(&xnarch_free_stacks_count) <= CONFIG_XENO_HW_IA64_STACK_POOL)
