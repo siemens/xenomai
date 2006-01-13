@@ -1,5 +1,9 @@
 2006-01-13  Philippe Gerum  <rpm@xenomai.org>
 
+ 	* RELEASE: Xenomai 2.0.3 (Hill Groove)
+
+2006-01-13  Philippe Gerum  <rpm@xenomai.org>
+
 	* arch/*/patches: Upgrade all Adeos patches.
 
 2006-01-12  Philippe Gerum  <rpm@xenomai.org>
