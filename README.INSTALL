@@ -148,9 +148,10 @@ NAME                DESCRIPTION                      [BINDING,]DEFAULT(*)
 --enable-x86-tsc    Enable x86 TSC for timings       strong,enabled
 
 --enable-arm-arch   Define version of the target     strong,"4"
-                    ARM architecture
+                    ARM core architecture
 
---enable-arm-sa1100 Enable SA1100 support	     strong,enabled
+--enable-arm-sa1100 Enable SA1100 specific           strong,disabled
+                    workarounds
 
 (*) Each option enabled by default can be forcibly disabled by passing
 --disable-<option> to the configure script.
