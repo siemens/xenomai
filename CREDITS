@@ -66,7 +66,8 @@ W: http://issaris.org/rtai/
 
 N: Jan Kiszka
 E: kiszka@rts.uni-hannover.de
-D: RTDM author and maintainer. 16550A UART driver over RTDM.
+D: RTDM author and maintainer. 16550A UART driver and
+   benchmark suite over RTDM. Latency tracer.
 D: Various cleanups and fixes.
 
 N: Marc Kleine-Budde
