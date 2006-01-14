@@ -239,7 +239,7 @@
 00229     <span class="keywordflow">return</span> 1;
 00230 }
 00231 
-00232 <span class="keyword">static</span> <span class="keywordtype">int</span> <span class="keyword">inline</span> xnarch_lock_irq (<span class="keywordtype">void</span>)
+00232 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnarch_lock_irq (<span class="keywordtype">void</span>)
 00233 {
 00234     <span class="keywordflow">return</span> xnarch_atomic_xchg(&amp;uvm_irqlock,1);
 00235 }
@@ -774,7 +774,7 @@
 00764 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_post_graph_if(obj,state,cond)</span>
 00765 <span class="preprocessor"></span>
 00766 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_ASM_UVM_SYSTEM_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 16:47:16 2005 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Fri Jan 13 21:37:27 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
