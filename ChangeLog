@@ -1,3 +1,8 @@
+2006-01-14  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* configure.in (linux-build): Look for linux kernel sources in
+	source and build directory, better error handling.
+
 2006-01-13  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.1-rc2
