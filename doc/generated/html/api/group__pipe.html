@@ -345,7 +345,7 @@ Unless otherwise specified, the caller is blocked for a given amount of time if 
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and no data is immediately available on entry.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga35">rt_task_unblock()</a> has been called for the waiting task before any data was available.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been called for the waiting task before any data was available.</li></ul>
 <p>
 <ul>
 <li>-EPERM is returned if this service should block, but was called from a context which cannot sleep (e.g. interrupt, non-realtime or scheduler locked).</li></ul>
@@ -414,7 +414,7 @@ Unless otherwise specified, the caller is blocked for a given amount of time if 
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and no data is immediately available on entry.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga35">rt_task_unblock()</a> has been called for the waiting task before any data was available.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been called for the waiting task before any data was available.</li></ul>
 <p>
 <ul>
 <li>-EPERM is returned if this service should block, but was called from a context which cannot sleep (e.g. interrupt, non-realtime or scheduler locked).</li></ul>
@@ -619,7 +619,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 17:17:24 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jan 14 11:24:48 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

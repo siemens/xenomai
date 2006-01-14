@@ -108,7 +108,7 @@ This user-space only service retrieves the uniform descriptor of a given shared 
 <li>-EFAULT is returned if <em>heap</em> or <em>name</em> is referencing invalid memory.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga35">rt_task_unblock()</a> has been called for the waiting task before the retrieval has completed.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been called for the waiting task before the retrieval has completed.</li></ul>
 <p>
 <ul>
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and the searched object is not registered on entry.</li></ul>
@@ -217,7 +217,7 @@ This service allocates a block from the heap's internal pool, or return the addr
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and no block is immediately available on entry.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga35">rt_task_unblock()</a> has been called for the waiting task before any block was available.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been called for the waiting task before any block was available.</li></ul>
 <p>
 <ul>
 <li>-EPERM is returned if this service should block but was called from a context which cannot sleep (e.g. interrupt, non-realtime or scheduler locked).</li></ul>
@@ -345,7 +345,7 @@ Destroy a heap and release all the tasks currently pending on it. A heap exists 
 Environments:<p>
 This service can be called from:<p>
 <ul>
-<li>Kernel module initialization/cleanup code</li><li>User-space task</li></ul>
+<li>Kernel module initialization/cleanup code</li><li>User-space task (switches to secondary mode).</li></ul>
 <p>
 Rescheduling: possible.     </td>
   </tr>
@@ -433,7 +433,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 17:17:23 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jan 14 11:24:47 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -114,7 +114,7 @@ This user-space only service retrieves the uniform descriptor of a given shared 
 <li>-EFAULT is returned if <em>q</em> or <em>name</em> is referencing invalid memory.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga35">rt_task_unblock()</a> has been called for the waiting task before the retrieval has completed.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been called for the waiting task before the retrieval has completed.</li></ul>
 <p>
 <ul>
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and the searched object is not registered on entry.</li></ul>
@@ -329,7 +329,7 @@ Destroy a message queue and release all the tasks currently pending on it. A que
 Environments:<p>
 This service can be called from:<p>
 <ul>
-<li>Kernel module initialization/cleanup code</li><li>User-space task</li></ul>
+<li>Kernel module initialization/cleanup code</li><li>User-space task (switches to secondary mode).</li></ul>
 <p>
 Rescheduling: possible.     </td>
   </tr>
@@ -460,7 +460,7 @@ This service retrieves the next message available from the given queue. Unless o
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and no message is immediately available on entry.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga35">rt_task_unblock()</a> has been called for the waiting task before any data was available.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been called for the waiting task before any data was available.</li></ul>
 <p>
 <ul>
 <li>-EPERM is returned if this service should block, but was called from a context which cannot sleep (e.g. interrupt, non-realtime or scheduler locked).</li></ul>
@@ -536,7 +536,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 17:17:24 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jan 14 11:24:48 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -28,82 +28,85 @@ The Xenomai scheduler ensures that concurrent tasks are run according to one of 
 
 <p>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga44">rt_task_spawn</a> (RT_TASK *task, const char *name, int stksize, int prio, int mode, void(*entry)(void *cookie), void *cookie)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga48">rt_task_spawn</a> (RT_TASK *task, const char *name, int stksize, int prio, int mode, void(*entry)(void *cookie), void *cookie)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Spawn a new real-time task.  <a href="#ga44"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga45">rt_task_shadow</a> (RT_TASK *task, const char *name, int prio, int mode)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Spawn a new real-time task.  <a href="#ga48"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga49">rt_task_shadow</a> (RT_TASK *task, const char *name, int prio, int mode)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Turns the current Linux task into a native Xenomai task.  <a href="#ga45"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga46">rt_task_bind</a> (RT_TASK *task, const char *name, RTIME timeout)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Turns the current Linux task into a native Xenomai task.  <a href="#ga49"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga50">rt_task_bind</a> (RT_TASK *task, const char *name, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a real-time task.  <a href="#ga46"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga47">rt_task_unbind</a> (RT_TASK *task)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a real-time task.  <a href="#ga50"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga51">rt_task_unbind</a> (RT_TASK *task)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unbind from a real-time task.  <a href="#ga47"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unbind from a real-time task.  <a href="#ga51"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga52">rt_task_join</a> (RT_TASK *task)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on the termination of a real-time task.  <a href="#ga52"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>Variables</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga24">rt_task_create</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga28">rt_task_create</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a new real-time task.  <a href="#ga24"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga25">rt_task_start</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a new real-time task.  <a href="#ga28"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga29">rt_task_start</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start a real-time task.  <a href="#ga25"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga26">rt_task_suspend</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start a real-time task.  <a href="#ga29"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga30">rt_task_suspend</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Suspend a real-time task.  <a href="#ga26"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga27">rt_task_resume</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Suspend a real-time task.  <a href="#ga30"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga31">rt_task_resume</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Resume a real-time task.  <a href="#ga27"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga28">rt_task_delete</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Resume a real-time task.  <a href="#ga31"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga32">rt_task_delete</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a real-time task.  <a href="#ga28"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga29">rt_task_yield</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a real-time task.  <a href="#ga32"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga33">rt_task_yield</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Manual round-robin.  <a href="#ga29"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga30">rt_task_set_periodic</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Manual round-robin.  <a href="#ga33"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga34">rt_task_set_periodic</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Make a real-time task periodic.  <a href="#ga30"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga31">rt_task_wait_period</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Make a real-time task periodic.  <a href="#ga34"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga35">rt_task_wait_period</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next periodic release point.  <a href="#ga31"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga32">rt_task_set_priority</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next periodic release point.  <a href="#ga35"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga36">rt_task_set_priority</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change the base priority of a real-time task.  <a href="#ga32"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga33">rt_task_sleep</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change the base priority of a real-time task.  <a href="#ga36"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga37">rt_task_sleep</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delay the calling task (relative).  <a href="#ga33"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga34">rt_task_sleep_until</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delay the calling task (relative).  <a href="#ga37"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga38">rt_task_sleep_until</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delay the calling task (absolute).  <a href="#ga34"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga35">rt_task_unblock</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delay the calling task (absolute).  <a href="#ga38"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga39">rt_task_unblock</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unblock a real-time task.  <a href="#ga35"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga36">rt_task_inquire</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unblock a real-time task.  <a href="#ga39"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga40">rt_task_inquire</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about a real-time task.  <a href="#ga36"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga37">rt_task_add_hook</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about a real-time task.  <a href="#ga40"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga41">rt_task_add_hook</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a task hook.  <a href="#ga37"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga38">rt_task_remove_hook</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a task hook.  <a href="#ga41"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga42">rt_task_remove_hook</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Remove a task hook.  <a href="#ga38"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga39">rt_task_catch</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Remove a task hook.  <a href="#ga42"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga43">rt_task_catch</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a signal handler.  <a href="#ga39"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga40">rt_task_notify</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a signal handler.  <a href="#ga43"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga44">rt_task_notify</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Send signals to a task.  <a href="#ga40"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga41">rt_task_set_mode</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Send signals to a task.  <a href="#ga44"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga45">rt_task_set_mode</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change task mode bits.  <a href="#ga41"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga42">rt_task_self</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change task mode bits.  <a href="#ga45"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga46">rt_task_self</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Retrieve the current task.  <a href="#ga42"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga43">rt_task_slice</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Retrieve the current task.  <a href="#ga46"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga47">rt_task_slice</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set a task's round-robin quantum.  <a href="#ga43"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set a task's round-robin quantum.  <a href="#ga47"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="ga46" doxytag="task.h::rt_task_bind"></a><p>
+<a class="anchor" name="ga50" doxytag="task.h::rt_task_bind"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -158,7 +161,7 @@ This user-space only service retrieves the uniform descriptor of a given Xenomai
 <li>-EFAULT is returned if <em>task</em> or <em>name</em> is referencing invalid memory.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga35">rt_task_unblock()</a> has been called for the waiting task before the retrieval has completed.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been called for the waiting task before the retrieval has completed.</li></ul>
 <p>
 <ul>
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and the searched object is not registered on entry.</li></ul>
@@ -179,7 +182,54 @@ Rescheduling: always unless the request is immediately satisfied or <em>timeout<
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga45" doxytag="task.h::rt_task_shadow"></a><p>
+<a class="anchor" name="ga52" doxytag="task.h::rt_task_join"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">int rt_task_join           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_TASK *&nbsp;</td>
+          <td class="mdname1" valign="top" nowrap> <em>task</em>          </td>
+          <td class="md" valign="top">&nbsp;)&nbsp;</td>
+          <td class="md" nowrap></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Wait on the termination of a real-time task. 
+<p>
+This user-space only service blocks the caller in non-real-time context until <em>task</em> has terminated. Note that the specified task must have been created with the T_JOINABLE mode flag set.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The address of a task descriptor to join.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
+<ul>
+<li>-EINVAL is returned if the task was not created with T_JOINABLE set or some other task is already waiting on the termination.</li></ul>
+<p>
+<ul>
+<li>-EDEADLK is returned if <em>task</em> refers to the caller.</li></ul>
+<p>
+This service can be called from:<p>
+<ul>
+<li>User-space task.</li></ul>
+<p>
+Rescheduling: always unless the task was already terminated.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga49" doxytag="task.h::rt_task_shadow"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -245,7 +295,7 @@ The current context is switched to primary execution mode and returns immediatel
 <li>T_FPU allows the task to use the FPU whenever available on the platform. This flag is forced for this call, therefore it can be omitted.</li></ul>
 <p>
 <ul>
-<li>T_SUSP causes the task to enter the suspended mode after it has been put under Xenomai's control. In such a case, a call to <a class="el" href="group__task.html#ga27">rt_task_resume()</a> will be needed to wake up the current task.</li></ul>
+<li>T_SUSP causes the task to enter the suspended mode after it has been put under Xenomai's control. In such a case, a call to <a class="el" href="group__task.html#ga31">rt_task_resume()</a> will be needed to wake up the current task.</li></ul>
 <p>
 <ul>
 <li>T_CPU(cpuid) makes the current task affine to CPU # <b>cpuid</b>. CPU identifiers range from 0 to RTHAL_NR_CPUS - 1 (inclusive). The calling task will migrate to another processor before this service returns if the current one is not part of the CPU affinity mask.</li></ul>
@@ -272,7 +322,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga44" doxytag="task.h::rt_task_spawn"></a><p>
+<a class="anchor" name="ga48" doxytag="task.h::rt_task_spawn"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -338,12 +388,12 @@ Rescheduling: possible.     </td>
 <p>
 Spawn a new real-time task. 
 <p>
-Creates and immediately starts a real-time task, either running in a kernel module or in user-space depending on the caller's context. This service is a simple shorthand for <a class="el" href="group__task.html#ga24">rt_task_create()</a> followed by a call to <a class="el" href="group__task.html#ga25">rt_task_start()</a>.<p>
+Creates and immediately starts a real-time task, either running in a kernel module or in user-space depending on the caller's context. This service is a simple shorthand for <a class="el" href="group__task.html#ga28">rt_task_create()</a> followed by a call to <a class="el" href="group__task.html#ga29">rt_task_start()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The address of a task descriptor Xenomai will use to store the task-related data. This descriptor must always be valid while the task is active therefore it must be allocated in permanent memory.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>An ASCII string standing for the symbolic name of the task. When non-NULL and non-empty, this string is copied to a safe place into the descriptor, and passed to the registry package if enabled for indexing the created task.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>stksize</em>&nbsp;</td><td>The size of the stack (in bytes) for the new task. If zero is passed, a reasonable pre-defined size will be substituted. This parameter is ignored for user-space tasks.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>stksize</em>&nbsp;</td><td>The size of the stack (in bytes) for the new task. If zero is passed, a reasonable pre-defined size will be substituted.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>prio</em>&nbsp;</td><td>The base priority of the new task. This value must range from [1 .. 99] (inclusive) where 1 is the lowest effective priority.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>The task creation mode. The following flags can be OR'ed into this bitmask, each of them affecting the new task:</td></tr>
   </table>
@@ -352,7 +402,7 @@ Creates and immediately starts a real-time task, either running in a kernel modu
 <li>T_FPU allows the task to use the FPU whenever available on the platform. This flag is forced for user-space tasks.</li></ul>
 <p>
 <ul>
-<li>T_SUSP causes the task to start in suspended mode. In such a case, the thread will have to be explicitely resumed using the <a class="el" href="group__task.html#ga27">rt_task_resume()</a> service for its execution to actually begin.</li></ul>
+<li>T_SUSP causes the task to start in suspended mode. In such a case, the thread will have to be explicitely resumed using the <a class="el" href="group__task.html#ga31">rt_task_resume()</a> service for its execution to actually begin.</li></ul>
 <p>
 <ul>
 <li>T_CPU(cpuid) makes the new task affine to CPU # <b>cpuid</b>. CPU identifiers range from 0 to RTHAL_NR_CPUS - 1 (inclusive).</li></ul>
@@ -382,7 +432,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga47" doxytag="task.h::rt_task_unbind"></a><p>
+<a class="anchor" name="ga51" doxytag="task.h::rt_task_unbind"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -409,7 +459,7 @@ Rescheduling: possible.     </td>
 <p>
 Unbind from a real-time task. 
 <p>
-This user-space only service unbinds the calling task from the task object previously retrieved by a call to <a class="el" href="group__task.html#ga46">rt_task_bind()</a>.<p>
+This user-space only service unbinds the calling task from the task object previously retrieved by a call to <a class="el" href="group__task.html#ga50">rt_task_bind()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The address of a task descriptor to unbind from.</td></tr>
@@ -424,7 +474,7 @@ Rescheduling: never.     </td>
   </tr>
 </table>
 <hr><h2>Variable Documentation</h2>
-<a class="anchor" name="ga37" doxytag="task.c::rt_task_add_hook"></a><p>
+<a class="anchor" name="ga41" doxytag="task.c::rt_task_add_hook"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -482,7 +532,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga39" doxytag="task.c::rt_task_catch"></a><p>
+<a class="anchor" name="ga43" doxytag="task.c::rt_task_catch"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -504,7 +554,7 @@ Rescheduling: never.     </td>
 <p>
 Install a signal handler. 
 <p>
-This service installs a signal handler for the current task. Signals are discrete events tasks can receive each time they resume execution. When signals are pending upon resumption, <em>handler</em> is fired to process them. Signals can be sent using <a class="el" href="group__task.html#ga40">rt_task_notify()</a>. A task can block the signal delivery by passing the T_NOSIG bit to <a class="el" href="group__task.html#ga41">rt_task_set_mode()</a>.<p>
+This service installs a signal handler for the current task. Signals are discrete events tasks can receive each time they resume execution. When signals are pending upon resumption, <em>handler</em> is fired to process them. Signals can be sent using <a class="el" href="group__task.html#ga44">rt_task_notify()</a>. A task can block the signal delivery by passing the T_NOSIG bit to <a class="el" href="group__task.html#ga45">rt_task_set_mode()</a>.<p>
 Calling this service implicitely unblocks the signal delivery for the caller.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -523,7 +573,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga24" doxytag="task.c::rt_task_create"></a><p>
+<a class="anchor" name="ga28" doxytag="task.c::rt_task_create"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -551,11 +601,11 @@ Creates a real-time task, either running in a kernel module or in user-space dep
     <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The address of a task descriptor Xenomai will use to store the task-related data. This descriptor must always be valid while the task is active therefore it must be allocated in permanent memory.</td></tr>
   </table>
 </dl>
-The task is left in an innocuous state until it is actually started by <a class="el" href="group__task.html#ga25">rt_task_start()</a>.<p>
+The task is left in an innocuous state until it is actually started by <a class="el" href="group__task.html#ga29">rt_task_start()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>An ASCII string standing for the symbolic name of the task. When non-NULL and non-empty, this string is copied to a safe place into the descriptor, and passed to the registry package if enabled for indexing the created task.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>stksize</em>&nbsp;</td><td>The size of the stack (in bytes) for the new task. If zero is passed, a reasonable pre-defined size will be substituted. This parameter is ignored for user-space tasks.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>stksize</em>&nbsp;</td><td>The size of the stack (in bytes) for the new task. If zero is passed, a reasonable pre-defined size will be substituted.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>prio</em>&nbsp;</td><td>The base priority of the new task. This value must range from [1 .. 99] (inclusive) where 1 is the lowest effective priority.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>The task creation mode. The following flags can be OR'ed into this bitmask, each of them affecting the new task:</td></tr>
   </table>
@@ -564,10 +614,13 @@ The task is left in an innocuous state until it is actually started by <a class=
 <li>T_FPU allows the task to use the FPU whenever available on the platform. This flag is forced for user-space tasks.</li></ul>
 <p>
 <ul>
-<li>T_SUSP causes the task to start in suspended mode. In such a case, the thread will have to be explicitely resumed using the <a class="el" href="group__task.html#ga27">rt_task_resume()</a> service for its execution to actually begin.</li></ul>
+<li>T_SUSP causes the task to start in suspended mode. In such a case, the thread will have to be explicitely resumed using the <a class="el" href="group__task.html#ga31">rt_task_resume()</a> service for its execution to actually begin.</li></ul>
 <p>
 <ul>
 <li>T_CPU(cpuid) makes the new task affine to CPU # <b>cpuid</b>. CPU identifiers range from 0 to RTHAL_NR_CPUS - 1 (inclusive).</li></ul>
+<p>
+<ul>
+<li>T_JOINABLE (user-space only) allows another task to wait on the termination of the new task. This implies that <a class="el" href="group__task.html#ga52">rt_task_join()</a> is actually called for this task to clean up any user-space located resources after its termination.</li></ul>
 <p>
 Passing T_FPU|T_CPU(1) in the <em>mode</em> parameter thus creates a task with FPU support enabled and which will be affine to CPU #1.<p>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
@@ -588,7 +641,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga28" doxytag="task.c::rt_task_delete"></a><p>
+<a class="anchor" name="ga32" doxytag="task.c::rt_task_delete"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -610,7 +663,8 @@ Rescheduling: possible.     </td>
 <p>
 Delete a real-time task. 
 <p>
-Terminate a task and release all the real-time kernel resources it currently holds. A task exists in the system since <a class="el" href="group__task.html#ga24">rt_task_create()</a> has been called to create it, so this service must be called in order to destroy it afterwards.<p>
+Terminate a task and release all the real-time kernel resources it currently holds. A task exists in the system since <a class="el" href="group__task.html#ga28">rt_task_create()</a> has been called to create it, so this service must be called in order to destroy it afterwards.<p>
+Native tasks implement a mechanism by which they are immune from deletion by other tasks while they run into a deemed safe section of code. This feature is used internally by the native skin in order to prevent tasks from being deleted in the middle of a critical section, without resorting to interrupt masking when the latter is not an option. For this reason, the caller of <a class="el" href="group__task.html#ga32">rt_task_delete()</a> might be blocked and a rescheduling take place, waiting for the target task to exit such critical section.<p>
 The DELETE hooks are called on behalf of the calling context (if any). The information stored in the task control block remains valid until all hooks have been called.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -625,6 +679,12 @@ The DELETE hooks are called on behalf of the calling context (if any). The infor
 <li>-EPERM is returned if <em>task</em> is NULL but not called from a task context, or this service was called from an asynchronous context.</li></ul>
 <p>
 <ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been invoked for the caller while it was waiting for <em>task</em> to exit a safe section. In such a case, the deletion process has been aborted and <em>task</em> remains unaffected.</li></ul>
+<p>
+<ul>
+<li>-EDEADLK is returned if the caller is self-deleting while running in the middle of a safe section.</li></ul>
+<p>
+<ul>
 <li>-EIDRM is returned if <em>task</em> is a deleted task descriptor.</li></ul>
 <p>
 Environments:<p>
@@ -633,12 +693,12 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code only if <em>task</em> is non-NULL.</li></ul>
 <p>
 <ul>
-<li>Kernel-based task</li><li>Any user-space context (comforming call)</li></ul>
+<li>Kernel-based task</li><li>Any user-space context (conforming call)</li></ul>
 <p>
-Rescheduling: always if <em>task</em> is NULL.     </td>
+Rescheduling: always if <em>task</em> is NULL, and possible if the deleted task is currently running into a safe section.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga36" doxytag="task.c::rt_task_inquire"></a><p>
+<a class="anchor" name="ga40" doxytag="task.c::rt_task_inquire"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -688,7 +748,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga40" doxytag="task.c::rt_task_notify"></a><p>
+<a class="anchor" name="ga44" doxytag="task.c::rt_task_notify"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -710,10 +770,10 @@ Rescheduling: never.     </td>
 <p>
 Send signals to a task. 
 <p>
-This service sends a set of signals to a given task. A task can install a signal handler using the <a class="el" href="group__task.html#ga39">rt_task_catch()</a> service to process them.<p>
+This service sends a set of signals to a given task. A task can install a signal handler using the <a class="el" href="group__task.html#ga43">rt_task_catch()</a> service to process them.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The descriptor address of the affected task which must have been previously created by the <a class="el" href="group__task.html#ga24">rt_task_create()</a> service.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The descriptor address of the affected task which must have been previously created by the <a class="el" href="group__task.html#ga28">rt_task_create()</a> service.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>signals</em>&nbsp;</td><td>The set of signals to make pending for the task. This set is OR'ed with the current set of pending signals for the task; there is no count of occurence maintained for each available signal, which is either pending or cleared.</td></tr>
   </table>
 </dl>
@@ -741,7 +801,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga38" doxytag="task.c::rt_task_remove_hook"></a><p>
+<a class="anchor" name="ga42" doxytag="task.c::rt_task_remove_hook"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -763,7 +823,7 @@ Rescheduling: possible.     </td>
 <p>
 Remove a task hook. 
 <p>
-This service allows to remove a task hook previously registered using <a class="el" href="group__task.html#ga37">rt_task_add_hook()</a>.<p>
+This service allows to remove a task hook previously registered using <a class="el" href="group__task.html#ga41">rt_task_add_hook()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>type</em>&nbsp;</td><td>Defines the kind of hook to uninstall. Possible values are:</td></tr>
@@ -789,7 +849,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga27" doxytag="task.c::rt_task_resume"></a><p>
+<a class="anchor" name="ga31" doxytag="task.c::rt_task_resume"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -811,8 +871,8 @@ Rescheduling: never.     </td>
 <p>
 Resume a real-time task. 
 <p>
-Forcibly resume the execution of a task which has been previously suspended by a call to <a class="el" href="group__task.html#ga26">rt_task_suspend()</a>.<p>
-The suspension nesting count is decremented so that <a class="el" href="group__task.html#ga27">rt_task_resume()</a> will only resume the task if this count falls down to zero as a result of the current invocation.<p>
+Forcibly resume the execution of a task which has been previously suspended by a call to <a class="el" href="group__task.html#ga30">rt_task_suspend()</a>.<p>
+The suspension nesting count is decremented so that <a class="el" href="group__task.html#ga31">rt_task_resume()</a> will only resume the task if this count falls down to zero as a result of the current invocation.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The descriptor address of the affected task.</td></tr>
@@ -833,7 +893,7 @@ This service can be called from:<p>
 Rescheduling: possible if the suspension nesting level falls down to zero as a result of the current invocation.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga42" doxytag="task.c::rt_task_self"></a><p>
+<a class="anchor" name="ga46" doxytag="task.c::rt_task_self"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -868,7 +928,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga41" doxytag="task.c::rt_task_set_mode"></a><p>
+<a class="anchor" name="ga45" doxytag="task.c::rt_task_set_mode"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -890,11 +950,11 @@ Rescheduling: never.     </td>
 <p>
 Change task mode bits. 
 <p>
-Each Xenomai task has a set of internal bits determining various operating conditions; the <a class="el" href="group__task.html#ga41">rt_task_set_mode()</a> service allows to alter three of them, respectively controlling:<p>
+Each Xenomai task has a set of internal bits determining various operating conditions; the <a class="el" href="group__task.html#ga45">rt_task_set_mode()</a> service allows to alter three of them, respectively controlling:<p>
 <ul>
 <li>whether the task locks the rescheduling procedure,</li><li>whether the task undergoes a round-robin scheduling,</li><li>whether the task blocks the delivery of signals.</li></ul>
 <p>
-To this end, <a class="el" href="group__task.html#ga41">rt_task_set_mode()</a> takes a bitmask of mode bits to clear for disabling the corresponding modes, and another one to set for enabling them. The mode bits which were previously in effect can be returned upon request.<p>
+To this end, <a class="el" href="group__task.html#ga45">rt_task_set_mode()</a> takes a bitmask of mode bits to clear for disabling the corresponding modes, and another one to set for enabling them. The mode bits which were previously in effect can be returned upon request.<p>
 The following bits can be part of the bitmask:<p>
 <ul>
 <li>T_LOCK causes the current task to lock the scheduler. Clearing this bit unlocks the scheduler.</li></ul>
@@ -912,7 +972,7 @@ The following bits can be part of the bitmask:<p>
 <li>When set, T_WARNSW causes the SIGXCPU signal to be sent to the current user-space task whenever it switches to the secondary mode. This feature is useful to detect unwanted migrations to the Linux domain.</li></ul>
 <p>
 <ul>
-<li>T_PRIMARY can be passed to switch the current user-space task to primary mode (setmask |= T_PRIMARY), or secondary mode (clrmask |= T_PRIMARY). Upon return from <a class="el" href="group__task.html#ga41">rt_task_set_mode()</a>, the user-space task will run into the specified domain.</li></ul>
+<li>T_PRIMARY can be passed to switch the current user-space task to primary mode (setmask |= T_PRIMARY), or secondary mode (clrmask |= T_PRIMARY). Upon return from <a class="el" href="group__task.html#ga45">rt_task_set_mode()</a>, the user-space task will run into the specified domain.</li></ul>
 <p>
 Normally, this service can only be called on behalf of a regular real-time task, either running in kernel or user-space. However, as a special exception, requests for setting/clearing the T_LOCK bit from asynchronous contexts are silently dropped, and the call returns successfully if no other mode bits have been specified. This is consistent with the fact that Xenomai enforces a scheduler lock until the outer interrupt handler has returned.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
@@ -937,7 +997,7 @@ This service can be called from:<p>
 Rescheduling: possible, if T_LOCK has been passed into <em>clrmask</em> and the calling context is a task.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga30" doxytag="task.c::rt_task_set_periodic"></a><p>
+<a class="anchor" name="ga34" doxytag="task.c::rt_task_set_periodic"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -959,7 +1019,7 @@ Rescheduling: possible, if T_LOCK has been passed into <em>clrmask</em> and the 
 <p>
 Make a real-time task periodic. 
 <p>
-Make a task periodic by programing its first release point and its period in the processor time line. Subsequent calls to <a class="el" href="group__task.html#ga31">rt_task_wait_period()</a> will delay the task until the next periodic release point in the processor timeline is reached.<p>
+Make a task periodic by programing its first release point and its period in the processor time line. Subsequent calls to <a class="el" href="group__task.html#ga35">rt_task_wait_period()</a> will delay the task until the next periodic release point in the processor timeline is reached.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The descriptor address of the affected task. This task is immediately delayed until the first periodic release point is reached. If <em>task</em> is NULL, the current task is set periodic.</td></tr>
@@ -996,7 +1056,7 @@ Rescheduling: always if the operation affects the current task and <em>idate</em
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga32" doxytag="task.c::rt_task_set_priority"></a><p>
+<a class="anchor" name="ga36" doxytag="task.c::rt_task_set_priority"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1053,7 +1113,7 @@ This service can be called from:<p>
 Rescheduling: possible if <em>task</em> is the current one.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga33" doxytag="task.c::rt_task_sleep"></a><p>
+<a class="anchor" name="ga37" doxytag="task.c::rt_task_sleep"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1083,7 +1143,7 @@ Delay the execution of the calling task for a number of internal clock ticks.<p>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success, otherwise:</dd></dl>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga35">rt_task_unblock()</a> has been called for the sleeping task before the sleep time has elapsed.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been called for the sleeping task before the sleep time has elapsed.</li></ul>
 <p>
 <ul>
 <li>-EWOULDBLOCK is returned if the system timer is inactive.</li></ul>
@@ -1101,7 +1161,7 @@ Rescheduling: always unless a null delay is given.<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga34" doxytag="task.c::rt_task_sleep_until"></a><p>
+<a class="anchor" name="ga38" doxytag="task.c::rt_task_sleep_until"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1131,7 +1191,7 @@ Delay the execution of the calling task until a given date is reached.<p>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga35">rt_task_unblock()</a> has been called for the sleeping task before the sleep time has elapsed.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been called for the sleeping task before the sleep time has elapsed.</li></ul>
 <p>
 <ul>
 <li>-ETIMEDOUT is returned if <em>date</em> has already elapsed.</li></ul>
@@ -1152,7 +1212,7 @@ Rescheduling: always unless a date in the past is given.<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga43" doxytag="task.c::rt_task_slice"></a><p>
+<a class="anchor" name="ga47" doxytag="task.c::rt_task_slice"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1174,7 +1234,7 @@ Rescheduling: always unless a date in the past is given.<p>
 <p>
 Set a task's round-robin quantum. 
 <p>
-Set the time credit allotted to a task undergoing the round-robin scheduling. As a side-effect, <a class="el" href="group__task.html#ga43">rt_task_slice()</a> refills the current quantum of the target task.<p>
+Set the time credit allotted to a task undergoing the round-robin scheduling. As a side-effect, <a class="el" href="group__task.html#ga47">rt_task_slice()</a> refills the current quantum of the target task.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The descriptor address of the affected task. If <em>task</em> is NULL, the current task is considered.</td></tr>
@@ -1201,7 +1261,7 @@ Rescheduling: never.<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga25" doxytag="task.c::rt_task_start"></a><p>
+<a class="anchor" name="ga29" doxytag="task.c::rt_task_start"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1224,10 +1284,10 @@ Rescheduling: never.<p>
 Start a real-time task. 
 <p>
 Start a (newly) created task, scheduling it for the first time. This call releases the target task from the dormant state.<p>
-The TSTART hooks are called on behalf of the calling context (if any, see <a class="el" href="group__task.html#ga37">rt_task_add_hook()</a>).<p>
+The TSTART hooks are called on behalf of the calling context (if any, see <a class="el" href="group__task.html#ga41">rt_task_add_hook()</a>).<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The descriptor address of the affected task which must have been previously created by the <a class="el" href="group__task.html#ga24">rt_task_create()</a> service.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The descriptor address of the affected task which must have been previously created by the <a class="el" href="group__task.html#ga28">rt_task_create()</a> service.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>entry</em>&nbsp;</td><td>The address of the task's body routine. In other words, it is the task entry point.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>cookie</em>&nbsp;</td><td>A user-defined opaque cookie the real-time kernel will pass to the emerging task as the sole argument of its entry point.</td></tr>
   </table>
@@ -1253,7 +1313,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga26" doxytag="task.c::rt_task_suspend"></a><p>
+<a class="anchor" name="ga30" doxytag="task.c::rt_task_suspend"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1275,8 +1335,8 @@ Rescheduling: possible.     </td>
 <p>
 Suspend a real-time task. 
 <p>
-Forcibly suspend the execution of a task. This task will not be eligible for scheduling until it is explicitly resumed by a call to <a class="el" href="group__task.html#ga27">rt_task_resume()</a>. In other words, the suspended state caused by a call to <a class="el" href="group__task.html#ga26">rt_task_suspend()</a> is cumulative with respect to the delayed and blocked states caused by other services, and is managed separately from them.<p>
-A nesting count is maintained so that <a class="el" href="group__task.html#ga26">rt_task_suspend()</a> and <a class="el" href="group__task.html#ga27">rt_task_resume()</a> must be used in pairs.<p>
+Forcibly suspend the execution of a task. This task will not be eligible for scheduling until it is explicitly resumed by a call to <a class="el" href="group__task.html#ga31">rt_task_resume()</a>. In other words, the suspended state caused by a call to <a class="el" href="group__task.html#ga30">rt_task_suspend()</a> is cumulative with respect to the delayed and blocked states caused by other services, and is managed separately from them.<p>
+A nesting count is maintained so that <a class="el" href="group__task.html#ga30">rt_task_suspend()</a> and <a class="el" href="group__task.html#ga31">rt_task_resume()</a> must be used in pairs.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The descriptor address of the affected task. If <em>task</em> is NULL, the current task is suspended.</td></tr>
@@ -1303,7 +1363,7 @@ This service can be called from:<p>
 Rescheduling: always if <em>task</em> is NULL.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga35" doxytag="task.c::rt_task_unblock"></a><p>
+<a class="anchor" name="ga39" doxytag="task.c::rt_task_unblock"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1325,7 +1385,7 @@ Rescheduling: always if <em>task</em> is NULL.     </td>
 <p>
 Unblock a real-time task. 
 <p>
-Break the task out of any wait it is currently in. This call clears all delay and/or resource wait condition for the target task. However, <a class="el" href="group__task.html#ga35">rt_task_unblock()</a> does not resume a task which has been forcibly suspended by a previous call to <a class="el" href="group__task.html#ga26">rt_task_suspend()</a>. If all suspensive conditions are gone, the task becomes eligible anew for scheduling.<p>
+Break the task out of any wait it is currently in. This call clears all delay and/or resource wait condition for the target task. However, <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> does not resume a task which has been forcibly suspended by a previous call to <a class="el" href="group__task.html#ga30">rt_task_suspend()</a>. If all suspensive conditions are gone, the task becomes eligible anew for scheduling.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The descriptor address of the affected task.</td></tr>
@@ -1346,7 +1406,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga31" doxytag="task.c::rt_task_wait_period"></a><p>
+<a class="anchor" name="ga35" doxytag="task.c::rt_task_wait_period"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1371,10 +1431,10 @@ Wait for the next periodic release point.
 Make the current task wait for the next periodic release point in the processor time line.<p>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
 <ul>
-<li>-EINVAL is returned if <a class="el" href="group__task.html#ga30">rt_task_set_periodic()</a> has not previously been called for the calling task.</li></ul>
+<li>-EINVAL is returned if <a class="el" href="group__task.html#ga34">rt_task_set_periodic()</a> has not previously been called for the calling task.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga35">rt_task_unblock()</a> has been called for the waiting task before the next periodic release point has been reached. In this case, the overrun counter is reset too.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been called for the waiting task before the next periodic release point has been reached. In this case, the overrun counter is reset too.</li></ul>
 <p>
 <ul>
 <li>-ETIMEDOUT is returned if a timer overrun occurred, which indicates that a previous release point has been missed by the calling task.</li></ul>
@@ -1390,7 +1450,7 @@ This service can be called from:<p>
 Rescheduling: always unless an overrun has been detected. In the latter case, the current task immediately returns from this service without being delayed.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga29" doxytag="task.c::rt_task_yield"></a><p>
+<a class="anchor" name="ga33" doxytag="task.c::rt_task_yield"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1425,7 +1485,7 @@ This service can be called from:<p>
 Rescheduling: always if a next equal-priority task is ready to run, otherwise, this service leads to a no-op.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 17:17:25 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jan 14 11:24:49 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

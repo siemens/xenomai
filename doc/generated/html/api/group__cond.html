@@ -110,7 +110,7 @@ This user-space only service retrieves the uniform descriptor of a given Xenomai
 <li>-EFAULT is returned if <em>cond</em> or <em>name</em> is referencing invalid memory.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga35">rt_task_unblock()</a> has been called for the waiting task before the retrieval has completed.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been called for the waiting task before the retrieval has completed.</li></ul>
 <p>
 <ul>
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and the searched object is not registered on entry.</li></ul>
@@ -435,7 +435,7 @@ Tasks pend on condition variables by priority order.<p>
 <li>-EIDRM is returned if <em>mutex</em> or <em>cond</em> is a deleted object descriptor, including if the deletion occurred while the caller was sleeping on the variable.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga35">rt_task_unblock()</a> has been called for the waiting task before the condition variable has been signaled.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been called for the waiting task before the condition variable has been signaled.</li></ul>
 <p>
 <ul>
 <li>-EWOULDBLOCK is returned if <em>timeout</em> equals TM_NONBLOCK.</li></ul>
@@ -450,7 +450,7 @@ Rescheduling: always unless the request is immediately satisfied or <em>timeout<
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 17:17:23 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jan 14 11:24:47 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

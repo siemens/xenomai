@@ -22,6 +22,13 @@ You should have received a copy of the GNU General Public License along with Xen
 Include dependency graph for rtdm.h:<p><center><img src="rtdm_8h__incl.png" border="0" usemap="#include/rtdm/rtdm.h_map" alt=""></center>
 
 <p>
+This graph shows which files directly or indirectly include this file:<p><center><img src="rtdm_8h__dep__incl.png" border="0" usemap="#include/rtdm/rtdm.hdep_map" alt=""></center>
+<map name="include/rtdm/rtdm.hdep_map">
+<area href="rtbenchmark_8h.html" shape="rect" coords="194,8,378,32" alt="">
+<area href="rtserial_8h.html" shape="rect" coords="212,56,361,80" alt="">
+</map>
+
+<p>
 <a href="rtdm_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>RTDM_CLASS_xxx</h2></td></tr>
@@ -41,22 +48,25 @@ Include dependency graph for rtdm.h:<p><center><img src="rtdm_8h__incl.png" bord
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a5" doxytag="rtdm.h::RTDM_CLASS_RTMAC"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_RTMAC</b>&nbsp;&nbsp;&nbsp;5</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a6" doxytag="rtdm.h::RTDM_CLASS_EXPERIMENTAL"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a6" doxytag="rtdm.h::RTDM_CLASS_BENCHMARK"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_BENCHMARK</b>&nbsp;&nbsp;&nbsp;6</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a7" doxytag="rtdm.h::RTDM_CLASS_EXPERIMENTAL"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_EXPERIMENTAL</b>&nbsp;&nbsp;&nbsp;224</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a7" doxytag="rtdm.h::RTDM_CLASS_MAX"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a8" doxytag="rtdm.h::RTDM_CLASS_MAX"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_MAX</b>&nbsp;&nbsp;&nbsp;255</td></tr>
 
 <tr><td colspan="2"><br><h2>Common IOCTLs</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm_8h.html#a9">RTIOC_PURGE</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_COMMON, 0x10, int)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm_8h.html#a10">RTIOC_PURGE</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_COMMON, 0x10, int)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Purge internal device buffers.  <a href="#a9"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Purge internal device buffers.  <a href="#a10"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>RTDM_PURGE_xxx_BUFFER</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="RTDM_PURGE_xxx_BUFFER"></a> Flags selecting buffers to be purged <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a10" doxytag="rtdm.h::RTDM_PURGE_RX_BUFFER"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a11" doxytag="rtdm.h::RTDM_PURGE_RX_BUFFER"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_PURGE_RX_BUFFER</b>&nbsp;&nbsp;&nbsp;0x0001</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a11" doxytag="rtdm.h::RTDM_PURGE_TX_BUFFER"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a12" doxytag="rtdm.h::RTDM_PURGE_TX_BUFFER"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_PURGE_TX_BUFFER</b>&nbsp;&nbsp;&nbsp;0x0002</td></tr>
 
 <tr><td colspan="2"><br><h2>Defines</h2></td></tr>
@@ -66,7 +76,7 @@ Include dependency graph for rtdm.h:<p><center><img src="rtdm_8h__incl.png" bord
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Maximum length of device names. <br></td></tr>
 </table>
 <hr><h2>Define Documentation</h2>
-<a class="anchor" name="a9" doxytag="rtdm.h::RTIOC_PURGE"></a><p>
+<a class="anchor" name="a10" doxytag="rtdm.h::RTIOC_PURGE"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -96,7 +106,7 @@ Purge internal device buffers.
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 17:17:21 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jan 14 11:24:44 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
