@@ -49,22 +49,18 @@ case "$host" in
  i*86*-*)
 	XENO_TARGET_ARCH=i386
         XENO_LINUX_ARCH=i386
-	arch_have_sim=y
         ;;
  powerpc-*|ppc-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=ppc
-	arch_have_sim=y
         ;;
  powerpc64-*|ppc64-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=ppc64
-	arch_have_sim=y
         ;;
  ia64-*)
 	XENO_TARGET_ARCH=ia64
         XENO_LINUX_ARCH=ia64
-	arch_have_sim=y
         ;;
  bfin-*|bfinnommu-*|blackfin-*)
 	XENO_TARGET_ARCH=blackfin
@@ -75,6 +71,7 @@ case "$host" in
         ;;
  arm-*)
  	XENO_TARGET_ARCH=arm
+ 	XENO_LINUX_ARCH=arm
 	;;
  *) echo ""
    echo "*******************************************"
@@ -193,9 +190,10 @@ dnl Flags for building Linux in Xenomai build tree.
 AC_MSG_CHECKING(whether building Linux in Xenomai build tree)
 AC_ARG_ENABLE(linux-build,
         AS_HELP_STRING([--enable-linux-build=<linux-src-dir>], [Build Linux in
-Xenomai build tree, copying sources in <linux-src-dir>. If no source directory
-is passed, use, if not cross-compiling, the sources of the running kernel or
-/usr/src/linux.]),
+Xenomai build tree, copying sources from <linux-src-dir>. If no source directory
+is passed, look for a valid kernel source tree with a name starting with linux
+under the build tree, then under the source tree, then if not cross-compiling,
+try the sources of the running kernel and finally /usr/src/linux.]),
 	[case "$enableval" in
 	y | yes) XENO_LINUX_SRCDIR=y ;;
 	n | no) unset XENO_LINUX_SRCDIR ;;
@@ -207,43 +205,38 @@ if test x"$XENO_LINUX_SRCDIR" = x; then
 else
   AC_MSG_RESULT(yes)
   AC_MSG_CHECKING(for Linux sources)
-  if test x"$XENO_LINUX_SRCDIR" = xy && test x"$cross_compiling" = xno; then
-        XENO_LINUX_SRCDIR=/lib/modules/`uname -r`/source
-        if test ! -r $XENO_LINUX_SRCDIR/Makefile; then
-           XENO_LINUX_SRCDIR=/usr/src/linux
-        fi
+  if test x"$XENO_LINUX_SRCDIR" = xy; then
+      candidates="linux* $srcdir/linux*"
+      if test x"$cross_compiling" = xno; then
+          candidates="$candidates /lib/modules/`uname -r`/source /usr/src/linux"
+      fi
+      for dir in $candidates; do
+          if test -r $dir/Makefile; then 
+              XENO_LINUX_SRCDIR=$dir
+              break; 
+          fi
+      done
   fi
   if test x"$XENO_LINUX_SRCDIR" = xy || test ! -r $XENO_LINUX_SRCDIR/Makefile; then
-     if test -e linux/.xenomai-prepared; then
-        AC_MSG_RESULT(not found)
-        unset XENO_LINUX_SRCDIR
-     else
-        AC_MSG_ERROR([Unable to find Linux kernel sources tree, please pass a valid Linux sources directory to --enable-linux-build])
-     fi
-  fi
-
-  if test x"$XENO_LINUX_SRCDIR" != x; then
+     AC_MSG_ERROR([Unable to find Linux kernel sources tree, please pass a valid Linux sources directory to --enable-linux-build])
+  else
+     XENO_LINUX_SRCDIR=`cd $XENO_LINUX_SRCDIR && pwd`
      unset linux_EXTRAVERSION
      unset linux_PATCHLEVEL
      unset linux_SUBLEVEL
      unset linux_VERSION
 
-     eval linux_`grep '^EXTRAVERSION =' $XENO_LINUX_SRCDIR/Makefile | sed -e 's, ,,g'`
-     eval linux_`grep '^PATCHLEVEL =' $XENO_LINUX_SRCDIR/Makefile | sed -e 's, ,,g'`
-     eval linux_`grep '^SUBLEVEL =' $XENO_LINUX_SRCDIR/Makefile | sed -e 's, ,,g'`
-     eval linux_`grep '^VERSION =' $XENO_LINUX_SRCDIR/Makefile | sed -e 's, ,,g'`
+     linux_EXTRAVERSION=`sed 's/^EXTRAVERSION = *\(.*\)/\1/;t;d' $XENO_LINUX_SRCDIR/Makefile`
+     linux_PATCHLEVEL=`sed 's/^PATCHLEVEL = *\(.*\)/\1/;t;d' $XENO_LINUX_SRCDIR/Makefile`
+     linux_SUBLEVEL=`sed 's/^SUBLEVEL = *\(.*\)/\1/;t;d' $XENO_LINUX_SRCDIR/Makefile`
+     linux_VERSION=`sed 's/^VERSION = *\(.*\)/\1/;t;d' $XENO_LINUX_SRCDIR/Makefile`
 
      linux_base_version="$linux_VERSION.$linux_PATCHLEVEL.$linux_SUBLEVEL"
      linux_full_version="$linux_base_version$linux_EXTRAVERSION"
 
      if test x"$linux_PATCHLEVEL" = x -o x"$linux_SUBLEVEL" = x || 
         test x"$linux_VERSION" = x; then
-        if test -e linux/.xenomai-prepared; then
-           AC_MSG_RESULT(Unknown version)
-           unset linux_base_version
-        else
-           AC_MSG_ERROR([Unable to get version of $XENO_LINUX_SRCDIR, aborting.])
-        fi
+        AC_MSG_ERROR([Unable to get version of $XENO_LINUX_SRCDIR, aborting.])
      else
         AC_MSG_RESULT([$XENO_LINUX_SRCDIR (kernel ${linux_full_version})])
      fi
@@ -261,12 +254,7 @@ patch. Default is to infer the patch name from Linux kernel version.]),
         ADEOS_PATCH=$1
   fi
   if test x"$ADEOS_PATCH" = x || test ! -e $ADEOS_PATCH; then
-     if test -e linux/.xenomai-prepared; then
-        AC_MSG_RESULT(not found)
-        unset ADEOS_PATCH
-     else
-        AC_MSG_ERROR([Unable to find Adeos patch, please use --with-adeos-patch])
-     fi
+     AC_MSG_ERROR([Unable to find Adeos patch, please use --with-adeos-patch])
   else
      AC_MSG_RESULT([$ADEOS_PATCH])
   fi
