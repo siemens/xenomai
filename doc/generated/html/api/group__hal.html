@@ -14,9 +14,19 @@ Generic Adeos-based hardware abstraction layer.
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Files</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="bfinnommu_2hal_8c.html">hal.c</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="arm_2hal_8c.html">hal.c</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Adeos-based Real-Time Abstraction Layer for PowerPC. <br></td></tr>
+
+<p>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="blackfin_2hal_8c.html">hal.c</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Adeos-based Real-Time Abstraction Layer for the Blackfin architecture. <br></td></tr>
+
+<p>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="blackfin_2nmi_8c.html">nmi.c</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">NMI watchdog support. <br></td></tr>
 
 <p>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="generic_2hal_8c.html">hal.c</a></td></tr>
@@ -24,12 +34,17 @@ Generic Adeos-based hardware abstraction layer.
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Generic Real-Time HAL. <br></td></tr>
 
 <p>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="generic_2nmi_8c.html">nmi.c</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Adeos-based Real-Time Abstraction Layer for x86. <br></td></tr>
+
+<p>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="i386_2hal_8c.html">hal.c</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Adeos-based Real-Time Abstraction Layer for x86. <br></td></tr>
 
 <p>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="nmi_8c.html">nmi.c</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="i386_2nmi_8c.html">nmi.c</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">NMI watchdog for x86, from linux/arch/i386/kernel/nmi.c. <br></td></tr>
 
@@ -50,51 +65,51 @@ Generic Adeos-based hardware abstraction layer.
 
 <p>
 <tr><td colspan="2"><br><h2>Variables</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga78">rthal_irq_request</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga83">rthal_timer_request</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a real-time interrupt handler.  <a href="#ga78"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga79">rthal_irq_release</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Grab the hardware timer.  <a href="#ga83"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga84">rthal_timer_release</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Uninstall a real-time interrupt handler.  <a href="#ga79"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga80">rthal_irq_host_request</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release the hardware timer.  <a href="#ga84"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga86">rthal_irq_enable</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a shared Linux interrupt handler.  <a href="#ga80"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga81">rthal_irq_host_release</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Enable an interrupt source.  <a href="#ga86"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga87">rthal_irq_disable</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Uninstall a shared Linux interrupt handler.  <a href="#ga81"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga82">rthal_irq_host_pend</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disable an interrupt source.  <a href="#ga87"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga88">rthal_irq_host_request</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Propagate an IRQ event to Linux.  <a href="#ga82"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga83">rthal_irq_affinity</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a shared Linux interrupt handler.  <a href="#ga88"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga89">rthal_irq_host_release</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set/Get processor affinity for external interrupt.  <a href="#ga83"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga84">rthal_trap_catch</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Uninstall a shared Linux interrupt handler.  <a href="#ga89"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga92">rthal_irq_request</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Installs a fault handler.  <a href="#ga84"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga85">rthal_apc_alloc</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a real-time interrupt handler.  <a href="#ga92"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga93">rthal_irq_release</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate an APC slot.  <a href="#ga85"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga86">rthal_apc_free</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Uninstall a real-time interrupt handler.  <a href="#ga93"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga94">rthal_irq_host_pend</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Releases an APC slot.  <a href="#ga86"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga87">rthal_apc_schedule</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Propagate an IRQ event to Linux.  <a href="#ga94"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga95">rthal_irq_affinity</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Schedule an APC invocation.  <a href="#ga87"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga88">rthal_irq_enable</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set/Get processor affinity for external interrupt.  <a href="#ga95"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga96">rthal_trap_catch</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Enable an interrupt source.  <a href="#ga88"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga89">rthal_irq_disable</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Installs a fault handler.  <a href="#ga96"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga97">rthal_apc_alloc</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disable an interrupt source.  <a href="#ga89"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga90">rthal_timer_request</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate an APC slot.  <a href="#ga97"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga98">rthal_apc_free</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Grab the hardware timer.  <a href="#ga90"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga91">rthal_timer_release</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Releases an APC slot.  <a href="#ga98"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga99">rthal_apc_schedule</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release the hardware timer.  <a href="#ga91"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Schedule an APC invocation.  <a href="#ga99"></a><br></td></tr>
 </table>
 <hr><h2>Variable Documentation</h2>
-<a class="anchor" name="ga85" doxytag="hal.c::rthal_apc_alloc"></a><p>
+<a class="anchor" name="ga97" doxytag="hal.c::rthal_apc_alloc"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -139,7 +154,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga86" doxytag="hal.c::rthal_apc_free"></a><p>
+<a class="anchor" name="ga98" doxytag="hal.c::rthal_apc_free"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -161,10 +176,10 @@ This service can be called from:<p>
 <p>
 Releases an APC slot. 
 <p>
-This service deallocates an APC slot obtained by <a class="el" href="group__hal.html#ga85">rthal_apc_alloc()</a>.<p>
+This service deallocates an APC slot obtained by <a class="el" href="group__hal.html#ga97">rthal_apc_alloc()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>apc</em>&nbsp;</td><td>The APC id. to release, as returned by a successful call to the <a class="el" href="group__hal.html#ga85">rthal_apc_alloc()</a> service.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>apc</em>&nbsp;</td><td>The APC id. to release, as returned by a successful call to the <a class="el" href="group__hal.html#ga97">rthal_apc_alloc()</a> service.</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
@@ -178,7 +193,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga87" doxytag="hal.c::rthal_apc_schedule"></a><p>
+<a class="anchor" name="ga99" doxytag="hal.c::rthal_apc_schedule"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -218,7 +233,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga83" doxytag="hal.c::rthal_irq_affinity"></a><p>
+<a class="anchor" name="ga95" doxytag="hal.c::rthal_irq_affinity"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -259,7 +274,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga89" doxytag="hal.c::rthal_irq_disable"></a><p>
+<a class="anchor" name="ga87" doxytag="hal.c::rthal_irq_disable"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -281,7 +296,7 @@ This service can be called from:<p>
 <p>
 Disable an interrupt source. 
 <p>
-Disables an interrupt source at PIC level. After this call has returned, no more IRQs from the given source will be allowed, until the latter is enabled again using <a class="el" href="group__hal.html#ga88">rthal_irq_enable()</a>.<p>
+Disables an interrupt source at PIC level. After this call has returned, no more IRQs from the given source will be allowed, until the latter is enabled again using <a class="el" href="group__hal.html#ga86">rthal_irq_enable()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>irq</em>&nbsp;</td><td>The interrupt source to disable. This value is architecture-dependent.</td></tr>
@@ -301,7 +316,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga88" doxytag="hal.c::rthal_irq_enable"></a><p>
+<a class="anchor" name="ga86" doxytag="hal.c::rthal_irq_enable"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -343,7 +358,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga82" doxytag="hal.c::rthal_irq_host_pend"></a><p>
+<a class="anchor" name="ga94" doxytag="hal.c::rthal_irq_host_pend"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -365,7 +380,7 @@ This service can be called from:<p>
 <p>
 Propagate an IRQ event to Linux. 
 <p>
-Causes the given IRQ to be propagated down to the Adeos pipeline to the Linux kernel. This operation is typically used after the given IRQ has been processed into the Xenomai domain by a real-time interrupt handler (see rthal_request_irq()), in case such interrupt must also be handled by the Linux kernel.<p>
+Causes the given IRQ to be propagated down to the Adeos pipeline to the Linux kernel. This operation is typically used after the given IRQ has been processed into the Xenomai domain by a real-time interrupt handler (see <a class="el" href="group__hal.html#ga92">rthal_irq_request()</a>), in case such interrupt must also be handled by the Linux kernel.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>irq</em>&nbsp;</td><td>The interrupt source to detach the shared handler from. This value is architecture-dependent.</td></tr>
@@ -382,7 +397,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga81" doxytag="hal.c::rthal_irq_host_release"></a><p>
+<a class="anchor" name="ga89" doxytag="hal.c::rthal_irq_host_release"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -408,7 +423,7 @@ Uninstalls a shared interrupt handler from the Linux domain for the given interr
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>irq</em>&nbsp;</td><td>The interrupt source to detach the shared handler from. This value is architecture-dependent.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>dev_id</em>&nbsp;</td><td>is a valid device id, identical in essence to the one requested by the free_irq() service provided by the Linux kernel. This value will be used to locate the handler to remove from the chain of existing Linux handlers for the given interrupt source. This parameter must match the device id. passed to <a class="el" href="group__hal.html#ga80">rthal_irq_host_request()</a> for the same handler instance.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>dev_id</em>&nbsp;</td><td>is a valid device id, identical in essence to the one requested by the free_irq() service provided by the Linux kernel. This value will be used to locate the handler to remove from the chain of existing Linux handlers for the given interrupt source. This parameter must match the device id. passed to <a class="el" href="group__hal.html#ga88">rthal_irq_host_request()</a> for the same handler instance.</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
@@ -422,7 +437,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga80" doxytag="hal.c::rthal_irq_host_request"></a><p>
+<a class="anchor" name="ga88" doxytag="hal.c::rthal_irq_host_request"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -455,7 +470,7 @@ Installs a shared interrupt handler in the Linux domain for the given interrupt 
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
 <ul>
-<li>-EINVAL is returned if <em>irq</em> is invalid or @æ handler is NULL.</li></ul>
+<li>-EINVAL is returned if <em>irq</em> is invalid or <em>handler</em> is NULL.</li></ul>
 <p>
 Environments:<p>
 This service can be called from:<p>
@@ -464,7 +479,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga79" doxytag="hal.c::rthal_irq_release"></a><p>
+<a class="anchor" name="ga93" doxytag="hal.c::rthal_irq_release"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -486,7 +501,7 @@ This service can be called from:<p>
 <p>
 Uninstall a real-time interrupt handler. 
 <p>
-Uninstalls an interrupt handler previously attached using the rthal_request_irq() service.<p>
+Uninstalls an interrupt handler previously attached using the <a class="el" href="group__hal.html#ga92">rthal_irq_request()</a> service.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>irq</em>&nbsp;</td><td>The hardware interrupt channel to uninstall a handler from. This value is architecture-dependent.</td></tr>
@@ -506,7 +521,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga78" doxytag="hal.c::rthal_irq_request"></a><p>
+<a class="anchor" name="ga92" doxytag="hal.c::rthal_irq_request"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -539,7 +554,7 @@ Installs an interrupt handler for the specified IRQ line by requesting the appro
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
 <ul>
-<li>-EBUSY is returned if an interrupt handler is already installed. <a class="el" href="group__hal.html#ga79">rthal_irq_release()</a> must be issued first before a handler is installed anew.</li></ul>
+<li>-EBUSY is returned if an interrupt handler is already installed. <a class="el" href="group__hal.html#ga93">rthal_irq_release()</a> must be issued first before a handler is installed anew.</li></ul>
 <p>
 <ul>
 <li>-EINVAL is returned if <em>irq</em> is invalid or <em>handler</em> is NULL.</li></ul>
@@ -554,7 +569,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga91" doxytag="hal.c::rthal_timer_release"></a><p>
+<a class="anchor" name="ga84" doxytag="hal.c::rthal_timer_release"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -576,7 +591,7 @@ This service can be called from:<p>
 <p>
 Release the hardware timer. 
 <p>
-Releases the hardware timer, thus reverting the effect of a previous call to <a class="el" href="group__hal.html#ga90">rthal_timer_request()</a>. In case the timer hardware is shared with Linux, a periodic setup suitable for the Linux kernel will be reset.<p>
+Releases the hardware timer, thus reverting the effect of a previous call to <a class="el" href="group__hal.html#ga83">rthal_timer_request()</a>. In case the timer hardware is shared with Linux, a periodic setup suitable for the Linux kernel will be reset.<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -584,7 +599,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga90" doxytag="hal.c::rthal_timer_request"></a><p>
+<a class="anchor" name="ga83" doxytag="hal.c::rthal_timer_request"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -606,7 +621,7 @@ This service can be called from:<p>
 <p>
 Grab the hardware timer. 
 <p>
-<a class="el" href="group__hal.html#ga90">rthal_timer_request()</a> grabs and tunes the hardware timer so that a user-defined routine is called according to a given frequency. On architectures that provide a oneshot-programmable time source, the hardware timer can operate either in aperiodic or periodic mode. Using the aperiodic mode still allows to run periodic timings over it: the underlying hardware simply needs to be reprogrammed after each tick using the appropriate interval value<p>
+<a class="el" href="group__hal.html#ga83">rthal_timer_request()</a> grabs and tunes the hardware timer so that a user-defined routine is called according to a given frequency. On architectures that provide a oneshot-programmable time source, the hardware timer can operate either in aperiodic or periodic mode. Using the aperiodic mode still allows to run periodic timings over it: the underlying hardware simply needs to be reprogrammed after each tick using the appropriate interval value<p>
 The time interval that elapses between two consecutive invocations of the handler is called a tick. The user-supplied handler will always be invoked on behalf of the Xenomai domain for each incoming tick.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -616,7 +631,7 @@ The time interval that elapses between two consecutive invocations of the handle
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned on success. Otherwise:</dd></dl>
 <ul>
-<li>-EBUSY is returned if the hardware timer has already been grabbed. <a class="el" href="group__hal.html#ga90">rthal_timer_request()</a> must be issued before <a class="el" href="group__hal.html#ga90">rthal_timer_request()</a> is called again.</li></ul>
+<li>-EBUSY is returned if the hardware timer has already been grabbed. <a class="el" href="group__hal.html#ga83">rthal_timer_request()</a> must be issued before <a class="el" href="group__hal.html#ga83">rthal_timer_request()</a> is called again.</li></ul>
 <p>
 Environments:<p>
 This service can be called from:<p>
@@ -625,7 +640,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga84" doxytag="hal.c::rthal_trap_catch"></a><p>
+<a class="anchor" name="ga96" doxytag="hal.c::rthal_trap_catch"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -661,7 +676,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 5 17:17:22 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jan 14 11:24:46 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
