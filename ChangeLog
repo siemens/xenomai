@@ -1,3 +1,10 @@
+2006-01-16  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/native/task.c (rt_task_create): Use a separate string
+	for the thread name displayed in /proc/xenomai/sched, and the key
+	used in register, in order to cope with anonymous user-space
+	tasks.
+
 2006-01-14  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* configure.in (linux-build): Look for linux kernel sources in

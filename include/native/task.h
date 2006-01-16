@@ -114,6 +114,9 @@ typedef struct rt_task {
 
     rt_handle_t handle;	/* !< Handle in registry -- zero if unregistered. */
 
+    char rname[XNOBJECT_NAME_LEN]; /* !< Name in registry. Not the same as
+                                      thread name for anonymous threads. */
+    
     int suspend_depth;
 
     int overrun;
