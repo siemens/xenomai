@@ -562,7 +562,6 @@ static inline unsigned __registry_wakeup_sleepers(const char *key)
  *
  * - Kernel module initialization/cleanup code
  * - Kernel-based task
- * - User-space task
  *
  * Rescheduling: possible.
  */
@@ -679,7 +678,6 @@ int rt_registry_enter (const char *key,
  *   only if @a timeout is equal to TM_NONBLOCK.
  *
  * - Kernel-based task
- * - User-space task (switches to primary mode)
  *
  * Rescheduling: always unless the request is immediately satisfied or
  * @a timeout specifies a non-blocking operation.
@@ -779,7 +777,6 @@ int rt_registry_bind (const char *key,
  *
  * - Kernel module initialization/cleanup code
  * - Kernel-based task
- * - User-space task
  *
  * Rescheduling: never.
  */
@@ -873,7 +870,6 @@ int rt_registry_remove (rt_handle_t handle)
  *   only if @a timeout is equal to TM_NONBLOCK.
  *
  * - Kernel-based task
- * - User-space task
  *
  * Rescheduling: possible if the object to remove is currently locked
  * and the calling context can sleep.
@@ -996,7 +992,6 @@ int rt_registry_remove_safe (rt_handle_t handle, RTIME timeout)
  * only if @a handle is different from RT_REGISTRY_SELF.
  *
  * - Kernel-based task
- * - User-space task
  *
  * Rescheduling: never.
  */
@@ -1069,7 +1064,6 @@ void *rt_registry_get (rt_handle_t handle)
  * only if @a handle is different from RT_REGISTRY_SELF.
  *
  * - Kernel-based task
- * - User-space task
  *
  * Rescheduling: possible if the lock count falls down to zero and
  * some task is currently waiting for the object to be unlocked.
@@ -1143,7 +1137,6 @@ u_long rt_registry_put (rt_handle_t handle)
  * only if @a handle is different from RT_REGISTRY_SELF.
  *
  * - Kernel-based task
- * - User-space task
  *
  * Rescheduling: never.
  */

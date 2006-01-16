@@ -101,7 +101,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine only if <em>timeout</em> is equal to TM_NONBLOCK.</li></ul>
 <p>
 <ul>
-<li>Kernel-based task</li><li>User-space task (switches to primary mode)</li></ul>
+<li>Kernel-based task</li></ul>
 <p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
 <dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__native__timer.html#ga18">rt_timer_start()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
@@ -152,7 +152,7 @@ This service allocates a new registry slot for an associated object, and indexes
 Environments:<p>
 This service can be called from:<p>
 <ul>
-<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
+<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li></ul>
 <p>
 Rescheduling: possible.     </td>
   </tr>
@@ -192,7 +192,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine only if <em>handle</em> is different from RT_REGISTRY_SELF.</li></ul>
 <p>
 <ul>
-<li>Kernel-based task</li><li>User-space task</li></ul>
+<li>Kernel-based task</li></ul>
 <p>
 Rescheduling: never.     </td>
   </tr>
@@ -232,7 +232,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine only if <em>handle</em> is different from RT_REGISTRY_SELF.</li></ul>
 <p>
 <ul>
-<li>Kernel-based task</li><li>User-space task</li></ul>
+<li>Kernel-based task</li></ul>
 <p>
 Rescheduling: never.     </td>
   </tr>
@@ -272,7 +272,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine only if <em>handle</em> is different from RT_REGISTRY_SELF.</li></ul>
 <p>
 <ul>
-<li>Kernel-based task</li><li>User-space task</li></ul>
+<li>Kernel-based task</li></ul>
 <p>
 Rescheduling: possible if the lock count falls down to zero and some task is currently waiting for the object to be unlocked.     </td>
   </tr>
@@ -312,7 +312,7 @@ This service forcibly removes an object from the registry. The removal is perfor
 Environments:<p>
 This service can be called from:<p>
 <ul>
-<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
+<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li></ul>
 <p>
 Rescheduling: never.     </td>
   </tr>
@@ -368,14 +368,14 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine only if <em>timeout</em> is equal to TM_NONBLOCK.</li></ul>
 <p>
 <ul>
-<li>Kernel-based task</li><li>User-space task</li></ul>
+<li>Kernel-based task</li></ul>
 <p>
 Rescheduling: possible if the object to remove is currently locked and the calling context can sleep.<p>
 <dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__native__timer.html#ga18">rt_timer_start()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Jan 14 11:24:49 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:44 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
