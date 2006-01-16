@@ -67,7 +67,7 @@ static void __task_delete_hook (xnthread_t *thread)
 
 #ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
     if (task->handle)
-	rt_registry_remove(task->handle);
+        rt_registry_remove(task->handle);
 #endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
 
     xnsynch_destroy(&task->safesynch);
@@ -233,7 +233,6 @@ int rt_task_create (RT_TASK *task,
 		    int prio,
 		    int mode)
 {
-    char namebuf[XNOBJECT_NAME_LEN];
     int err = 0, cpumask, cpu;
     xnflags_t bflags;
     spl_t s;
@@ -246,13 +245,15 @@ int rt_task_create (RT_TASK *task,
 
     bflags = mode & (XNFPU|XNSHADOW|XNSHIELD|XNSUSP);
 
-    if (name && !*name)
-	{
+    if (name)
+        {
+        if (!*name)
 	/* i.e. Anonymous object which must be accessible from
 	   user-space. */
-	xnobject_create_name(namebuf,sizeof(namebuf),task);
-	name = namebuf;
-	}
+            xnobject_create_name(task->rname,sizeof(task->rname),task);
+        else
+            xnobject_copy_name(task->rname, name);
+        }
 
     if (xnpod_init_thread(&task->thread_base,
 			  name,
@@ -298,13 +299,13 @@ int rt_task_create (RT_TASK *task,
 
     if (name)
 	{
-	err = rt_registry_enter(xnthread_name(&task->thread_base),
+	err = rt_registry_enter(task->rname,
 				task,
 				&task->handle,
 				NULL);
-	if (err)
-	    rt_task_delete(task);
-	else if (name == namebuf)
+        if (err)
+            rt_task_delete(task);
+	else if (!*name)
 	    /* /proc/xenomai/sched will dump no name for the anonymous
 	       task, but the registry still has a stable reference
 	       into the TCB to set up a handle for the task. */
