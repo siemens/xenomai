@@ -249,6 +249,7 @@ nodist_libvxworks_a_SOURCES = \
 
 AM_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/ksrc/skins \
 	-I$(top_srcdir)/include \
 	-D__XENO_UVM__
 
@@ -315,6 +316,10 @@ uninstall-libLIBRARIES:
 
 clean-libLIBRARIES:
 	-test -z "$(lib_LIBRARIES)" || rm -f $(lib_LIBRARIES)
+libvxworks.a: $(libvxworks_a_OBJECTS) $(libvxworks_a_DEPENDENCIES) 
+	-rm -f libvxworks.a
+	$(libvxworks_a_AR) libvxworks.a $(libvxworks_a_OBJECTS) $(libvxworks_a_LIBADD)
+	$(RANLIB) libvxworks.a
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -537,8 +542,6 @@ uninstall-am: uninstall-info-am uninstall-libLIBRARIES
 	tags uninstall uninstall-am uninstall-info-am \
 	uninstall-libLIBRARIES
 
-
-libvxworks.a: defs.h
 
 $(nodist_libvxworks_a_SOURCES) defs.h: Makefile
 	$(LN_S) -f $(top_srcdir)/ksrc/skins/vxworks/$@

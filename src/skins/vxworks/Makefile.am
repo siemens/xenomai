@@ -17,12 +17,11 @@ nodist_libvxworks_a_SOURCES = \
 
 AM_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/ksrc/skins \
 	-I$(top_srcdir)/include \
 	-D__XENO_UVM__
 
 CLEANFILES = $(nodist_libvxworks_a_SOURCES)
-
-libvxworks.a: defs.h
 
 $(nodist_libvxworks_a_SOURCES) defs.h: Makefile
 	$(LN_S) -f $(top_srcdir)/ksrc/skins/vxworks/$@
