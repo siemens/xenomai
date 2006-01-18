@@ -461,8 +461,11 @@ int rt_mutex_unlock (RT_MUTEX *mutex)
     mutex->owner = thread2rtask(xnsynch_wakeup_one_sleeper(&mutex->synch_base));
 
     if (mutex->owner != NULL)
+	{
+	mutex->lockcnt = 1;
 	xnpod_schedule();
-    
+	}
+
  unlock_and_exit:
 
     xnlock_put_irqrestore(&nklock,s);
