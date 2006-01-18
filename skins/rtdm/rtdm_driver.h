@@ -54,10 +54,10 @@ struct rtdm_dev_context;
  *  application. */
 #define RTDM_EXCLUSIVE              0x0001
 
-/** If set, the device is addresses via a clear-text name. */
+/** If set, the device is addressed via a clear-text name. */
 #define RTDM_NAMED_DEVICE           0x0010
 
-/** If set, the device is addresses via a combination of protocol ID and
+/** If set, the device is addressed via a combination of protocol ID and
  *  socket type. */
 #define RTDM_PROTOCOL_DEVICE        0x0020
 
