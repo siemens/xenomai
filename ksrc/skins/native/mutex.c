@@ -390,7 +390,7 @@ int rt_mutex_lock (RT_MUTEX *mutex,
 	err = -ETIMEDOUT; /* Timeout.*/
     else if (xnthread_test_flags(&task->thread_base,XNBREAK))
 	err = -EINTR; /* Unblocked.*/
-
+    
  unlock_and_exit:
 
     xnlock_put_irqrestore(&nklock,s);
@@ -465,6 +465,8 @@ int rt_mutex_unlock (RT_MUTEX *mutex)
 	mutex->lockcnt = 1;
 	xnpod_schedule();
 	}
+    else
+        xnsynch_set_owner(&mutex->synch_base,NULL);
 
  unlock_and_exit:
 
