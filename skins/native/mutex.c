@@ -465,6 +465,8 @@ int rt_mutex_unlock (RT_MUTEX *mutex)
 	mutex->lockcnt = 1;
 	xnpod_schedule();
 	}
+    else
+        xnsynch_set_owner(&mutex->synch_base,NULL);
 
  unlock_and_exit:
 
