@@ -1,3 +1,8 @@
+2006-01-18  Jan Kiszka  <jan.kiszka@web.de>
+ 
+ 	* ksrc/skins/native/mutex.c (rt_mutex_unlock): Fix leaking lockcnt
+ 	on unlock with pending waiters.
+ 
 2006-01-13  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.0.3 (Hill Groove)
