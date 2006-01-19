@@ -688,26 +688,31 @@ echo '*** privileges.'; \
 
 install-exec-local: devices
 
-install-nodev:
+install-user:
 	$(MAKE) SUDO=false install
 
-@XENO_BUILD_LINUX_TRUE@linux/%: linux/.xenomai-prepared
-@XENO_BUILD_LINUX_TRUE@	$(top_srcdir)/scripts/prepare-kernel.sh \
-@XENO_BUILD_LINUX_TRUE@             --adeos="$(ADEOS_PATCH)" --linux=linux \
-@XENO_BUILD_LINUX_TRUE@	     --arch=$(XENO_LINUX_ARCH) && \
-@XENO_BUILD_LINUX_TRUE@	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
-@XENO_BUILD_LINUX_TRUE@	cd linux && $(MAKE) $* \
-@XENO_BUILD_LINUX_TRUE@		ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross
+@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@linux/%: linux/.xenomai-prepared
+@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	$(top_srcdir)/scripts/prepare-kernel.sh \
+@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@             --adeos="$(ADEOS_PATCH)" --linux=linux \
+@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	     --arch=$(XENO_LINUX_ARCH) && \
+@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
+@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	cd linux && $(MAKE) $* \
+@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@		ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross
+@MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@linux/%: linux/.xenomai-prepared
+@MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
+@MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@	cd linux && $(MAKE) $* \
+@MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@		ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross
 
 @XENO_BUILD_LINUX_TRUE@linux/.xenomai-prepared: config.status
 @XENO_BUILD_LINUX_TRUE@	./config.status linux
 
 @XENO_BUILD_LINUX_TRUE@linux/install: linux/all
-@XENO_BUILD_LINUX_TRUE@	@sudo=; if test x`id -u` != x0 && test \! "x`type $(SUDO)`" = x; then \
-@XENO_BUILD_LINUX_TRUE@		sudo=$(SUDO); fi && \
+@XENO_BUILD_LINUX_TRUE@	@targets=modules_install; \
+@XENO_BUILD_LINUX_TRUE@	sudo=; if test x`id -u` != x0 && test \! "x`type $(SUDO)`" = x && \
+@XENO_BUILD_LINUX_TRUE@	$(SUDO) true; then sudo=$(SUDO); targets="$$targets install"; fi && \
 @XENO_BUILD_LINUX_TRUE@	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
 @XENO_BUILD_LINUX_TRUE@	$$sudo $(mkinstalldirs) $(DESTDIR)/boot && \
-@XENO_BUILD_LINUX_TRUE@	cd linux && $$sudo $(MAKE) modules_install install \
+@XENO_BUILD_LINUX_TRUE@	cd linux && $$sudo $(MAKE) $$targets \
 @XENO_BUILD_LINUX_TRUE@           ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross \
 @XENO_BUILD_LINUX_TRUE@           INSTALL_PATH=$(DESTDIR)/boot \
 @XENO_BUILD_LINUX_TRUE@           INSTALL_MOD_PATH=$(DESTDIR)

@@ -49,10 +49,11 @@ echo '*** privileges.'; \
 
 install-exec-local: devices
 
-install-nodev:
+install-user:
 	$(MAKE) SUDO=false install
 
 if XENO_BUILD_LINUX
+if MAINTAINER_MODE
 linux/%: linux/.xenomai-prepared
 	$(top_srcdir)/scripts/prepare-kernel.sh \
              --adeos="$(ADEOS_PATCH)" --linux=linux \
@@ -60,16 +61,23 @@ linux/%: linux/.xenomai-prepared
 	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
 	cd linux && $(MAKE) $* \
 		ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross
+else
+linux/%: linux/.xenomai-prepared
+	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
+	cd linux && $(MAKE) $* \
+		ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross
+endif
 
 linux/.xenomai-prepared: config.status
 	./config.status linux
 
 linux/install: linux/all
-	@sudo=; if test x`id -u` != x0 && test \! "x`type $(SUDO)`" = x; then \
-		sudo=$(SUDO); fi && \
+	@targets=modules_install; \
+	sudo=; if test x`id -u` != x0 && test \! "x`type $(SUDO)`" = x && \
+	$(SUDO) true; then sudo=$(SUDO); targets="$$targets install"; fi && \
 	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
 	$$sudo $(mkinstalldirs) $(DESTDIR)/boot && \
-	cd linux && $$sudo $(MAKE) modules_install install \
+	cd linux && $$sudo $(MAKE) $$targets \
            ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross \
            INSTALL_PATH=$(DESTDIR)/boot \
            INSTALL_MOD_PATH=$(DESTDIR)
