@@ -293,11 +293,9 @@ typedef
 struct rtdm_operations {
     /*! @name Common Operations
      * @{ */
-    /** Close handler for real-time contexts,
-     *  optional if \a close_nrt is non-NULL */
+    /** Close handler for real-time contexts (optional) */
     rtdm_close_handler_t            close_rt;
-    /** Close handler for non-real-time contexts,
-     *  optional if \a close_rt is non-NULL */
+    /** Close handler for non-real-time contexts (required) */
     rtdm_close_handler_t            close_nrt;
     /** IOCTL from real-time context (optional) */
     rtdm_ioctl_handler_t            ioctl_rt;
