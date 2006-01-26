@@ -15,7 +15,8 @@ This skin already contains most basic features :
 - cancellation, cancellation handlers
 - thread specific data
 - message queues
-- timers support.
+- timers support
+- shared memory
 
 The POSIX skin creates real-time threads running either embodied into
 kernel modules, or inside regular applications in user-space.
@@ -60,7 +61,6 @@ described in this specification. Here are the known ones :
   OS.
 
 - message queues:
-  . support for mq_notify is missing;
   . message queues support an "O_DIRECT" flag, which allows to copy messages
   directly from sender to receiver when receiver was suspended before
   sender; 
@@ -68,8 +68,12 @@ described in this specification. Here are the known ones :
 
 - timers:
   . the SIGEV_THREAD and SIGEV_NONE notification mechanism are not implemented.
-  . timer_create attaches the created timer to the caller, in the future, the
+  . timer_settime attaches the started timer to the caller, in the future, the
   Linux/Glibc SIGEV_THREAD_ID may be implemented.
+
+- shared memory services, in kernel-space, are only acessible from modules
+  initialization and cleanup contexts; in user-space, switch their caller to
+  secondary mode.
 
 Use of the POSIX skin from user-space applications
 ==================================================
