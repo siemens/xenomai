@@ -13,6 +13,7 @@ libpthread_rt_la_SOURCES = \
 	cond.c \
 	mq.c \
 	mutex.c \
+	shm.c \
 	interrupt.c \
 	rtdm.c \
 	wrappers.c
@@ -20,7 +21,8 @@ libpthread_rt_la_SOURCES = \
 include_HEADERS = \
 	mqueue.h \
 	pthread.h \
-	semaphore.h
+	semaphore.h \
+	unistd.h
 
 libpthread_rt_la_CPPFLAGS = @XENO_USER_CFLAGS@ -I$(srcdir)/..
 

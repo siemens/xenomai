@@ -14,15 +14,13 @@
 
 @SET_MAKE@
 
-SOURCES = $(gcic_SOURCES)
-
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
-top_builddir = ..
+top_builddir = ../../../..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
 install_sh_DATA = $(install_sh) -c -m 644
@@ -38,41 +36,35 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = gcic$(EXEEXT)
-subdir = gcic
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+target_triplet = @target@
+subdir = src/skins/posix/sys
+DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
-	$(top_srcdir)/../config/version $(top_srcdir)/configure.in
+am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
+	$(top_srcdir)/config/docbook.m4 $(top_srcdir)/config/version \
+	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
-CONFIG_HEADER = $(top_builddir)/include/xeno_config.h
+CONFIG_HEADER = $(top_builddir)/src/include/xeno_config.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)"
-binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
-PROGRAMS = $(bin_PROGRAMS)
-am_gcic_OBJECTS = gcic.$(OBJEXT)
-gcic_OBJECTS = $(am_gcic_OBJECTS)
-gcic_DEPENDENCIES = ../vmutils/libmvmutils.la
-DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
-depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
-am__depfiles_maybe = depfiles
-CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-LTCXXCOMPILE = $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) \
-	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
-	$(AM_CXXFLAGS) $(CXXFLAGS)
-CXXLD = $(CXX)
-CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
-	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(gcic_SOURCES)
-DIST_SOURCES = $(gcic_SOURCES)
+SOURCES =
+DIST_SOURCES =
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+am__installdirs = "$(DESTDIR)$(includedir)"
+includeHEADERS_INSTALL = $(INSTALL_HEADER)
+HEADERS = $(include_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
-ALLOCA = @ALLOCA@
+ADEOS_PATCH = @ADEOS_PATCH@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
@@ -81,22 +73,45 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_EXEEXT = @BUILD_EXEEXT@
+BUILD_OBJEXT = @BUILD_OBJEXT@
 CC = @CC@
+CCAS = @CCAS@
+CCASFLAGS = @CCASFLAGS@
 CCDEPMODE = @CCDEPMODE@
+CC_FOR_BUILD = @CC_FOR_BUILD@
 CFLAGS = @CFLAGS@
-CONFIG_XENO_MVM_ATOMIC_CORE_FALSE = @CONFIG_XENO_MVM_ATOMIC_CORE_FALSE@
-CONFIG_XENO_MVM_ATOMIC_CORE_TRUE = @CONFIG_XENO_MVM_ATOMIC_CORE_TRUE@
-CONFIG_XENO_MVM_TCLWRAP_FALSE = @CONFIG_XENO_MVM_TCLWRAP_FALSE@
-CONFIG_XENO_MVM_TCLWRAP_TRUE = @CONFIG_XENO_MVM_TCLWRAP_TRUE@
+CFLAGS_FOR_BUILD = @CFLAGS_FOR_BUILD@
+CONFIG_XENO_DOC_DOX_FALSE = @CONFIG_XENO_DOC_DOX_FALSE@
+CONFIG_XENO_DOC_DOX_TRUE = @CONFIG_XENO_DOC_DOX_TRUE@
+CONFIG_XENO_UVM_FALSE = @CONFIG_XENO_UVM_FALSE@
+CONFIG_XENO_UVM_TRUE = @CONFIG_XENO_UVM_TRUE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CPPFLAGS_FOR_BUILD = @CPPFLAGS_FOR_BUILD@
+CPP_FOR_BUILD = @CPP_FOR_BUILD@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DBX_ABS_SRCDIR_FALSE = @DBX_ABS_SRCDIR_FALSE@
+DBX_ABS_SRCDIR_TRUE = @DBX_ABS_SRCDIR_TRUE@
+DBX_DOC_FALSE = @DBX_DOC_FALSE@
+DBX_DOC_ROOT = @DBX_DOC_ROOT@
+DBX_DOC_TRUE = @DBX_DOC_TRUE@
+DBX_FOP = @DBX_FOP@
+DBX_GEN_DOC_ROOT = @DBX_GEN_DOC_ROOT@
+DBX_LINT = @DBX_LINT@
+DBX_MAYBE_NONET = @DBX_MAYBE_NONET@
+DBX_ROOT = @DBX_ROOT@
+DBX_XSLTPROC = @DBX_XSLTPROC@
+DBX_XSL_ROOT = @DBX_XSL_ROOT@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DOXYGEN = @DOXYGEN@
+DOXYGEN_HAVE_DOT = @DOXYGEN_HAVE_DOT@
+DOXYGEN_SHOW_INCLUDE_FILES = @DOXYGEN_SHOW_INCLUDE_FILES@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -109,6 +124,8 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LATEX_BATCHMODE = @LATEX_BATCHMODE@
+LATEX_MODE = @LATEX_MODE@
 LDFLAGS = @LDFLAGS@
 LEX = @LEX@
 LEXLIB = @LEXLIB@
@@ -122,15 +139,6 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
-MVM_BUILD_STRING = @MVM_BUILD_STRING@
-MVM_CFLAGS = @MVM_CFLAGS@
-MVM_CXXFLAGS = @MVM_CXXFLAGS@
-MVM_GCCAS = @MVM_GCCAS@
-MVM_GCCLD = @MVM_GCCLD@
-MVM_GCC_TARBALL = @MVM_GCC_TARBALL@
-MVM_HOST_STRING = @MVM_HOST_STRING@
-MVM_LDADD = @MVM_LDADD@
-MVM_PROG_PATCH = @MVM_PROG_PATCH@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -143,38 +151,21 @@ RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-TCL_BIN_DIR = @TCL_BIN_DIR@
-TCL_BUILD_LIB_SPEC = @TCL_BUILD_LIB_SPEC@
-TCL_BUILD_STUB_LIB_SPEC = @TCL_BUILD_STUB_LIB_SPEC@
-TCL_DBGX = @TCL_DBGX@
-TCL_DEFS = @TCL_DEFS@
-TCL_EXTRA_CFLAGS = @TCL_EXTRA_CFLAGS@
-TCL_INCLUDES = @TCL_INCLUDES@
-TCL_LD_FLAGS = @TCL_LD_FLAGS@
-TCL_LIBS = @TCL_LIBS@
-TCL_LIB_FILE = @TCL_LIB_FILE@
-TCL_LIB_SPEC = @TCL_LIB_SPEC@
-TCL_SCRIPT = @TCL_SCRIPT@
-TCL_SHLIB_LD_LIBS = @TCL_SHLIB_LD_LIBS@
-TCL_SRC_DIR = @TCL_SRC_DIR@
-TCL_STUB_LIB_FILE = @TCL_STUB_LIB_FILE@
-TCL_STUB_LIB_SPEC = @TCL_STUB_LIB_SPEC@
-TIX_LIB_SPEC = @TIX_LIB_SPEC@
-TIX_TCL_LIB = @TIX_TCL_LIB@
-TK_BIN_DIR = @TK_BIN_DIR@
-TK_DBGX = @TK_DBGX@
-TK_LIB_FILE = @TK_LIB_FILE@
-TK_LIB_FLAG = @TK_LIB_FLAG@
-TK_LIB_SPEC = @TK_LIB_SPEC@
-TK_SRC_DIR = @TK_SRC_DIR@
 VERSION = @VERSION@
-X11_LIBS = @X11_LIBS@
-X_CFLAGS = @X_CFLAGS@
-X_EXTRA_LIBS = @X_EXTRA_LIBS@
-X_LIBS = @X_LIBS@
-X_PRE_LIBS = @X_PRE_LIBS@
+XENO_BUILD_LINUX_FALSE = @XENO_BUILD_LINUX_FALSE@
+XENO_BUILD_LINUX_TRUE = @XENO_BUILD_LINUX_TRUE@
+XENO_BUILD_STRING = @XENO_BUILD_STRING@
+XENO_HOST_STRING = @XENO_HOST_STRING@
+XENO_LINUX_ARCH = @XENO_LINUX_ARCH@
+XENO_MAYBE_DOCDIR = @XENO_MAYBE_DOCDIR@
+XENO_TARGET_ARCH = @XENO_TARGET_ARCH@
+XENO_USER_APP_CFLAGS = @XENO_USER_APP_CFLAGS@
+XENO_USER_APP_LDFLAGS = @XENO_USER_APP_LDFLAGS@
+XENO_USER_CFLAGS = @XENO_USER_CFLAGS@
+XENO_USER_LDFLAGS = @XENO_USER_LDFLAGS@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
+ac_ct_CC_FOR_BUILD = @ac_ct_CC_FOR_BUILD@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
 ac_ct_RANLIB = @ac_ct_RANLIB@
@@ -201,7 +192,7 @@ host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
-includedir = @includedir@
+includedir = $(prefix)/include/posix/sys
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
@@ -214,28 +205,18 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
-subdirs = @subdirs@
 sysconfdir = @sysconfdir@
+target = @target@
 target_alias = @target_alias@
-gcic_SOURCES = gcic.cc
-gcic_LDADD = \
-	../vmutils/libmvmutils.la \
-	@MVM_LDADD@ \
-	-lm
+target_cpu = @target_cpu@
+target_os = @target_os@
+target_vendor = @target_vendor@
+include_HEADERS = \
+	mman.h
 
-INCLUDES = \
-	-D__XENO_SIM__ \
-	-DMVM_GCC_VERSION=\"$(GCCVER)\" \
-	-I$(srcdir)/..
-
-GCCTOP = $(shell basename @MVM_GCC_TARBALL@ | sed -e 's,^\(.*\)\.tar.*,\1,')
-GCCVER = $(shell basename @MVM_GCC_TARBALL@ | sed -e 's,gcc-\(.*\)\.tar.*,\1,g')
-GCCDEP = $(shell test -r $(libexecdir)/gcic/.gcic-installed || echo $(libexecdir)/gcic/.gcic-installed)
-EXTRA_DIST = gcc-2.95.3.patch make-patch
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .cc .lo .o .obj
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -245,9 +226,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  gcic/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/skins/posix/sys/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  gcic/Makefile
+	  $(AUTOMAKE) --foreign  src/skins/posix/sys/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -265,66 +246,6 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-install-binPROGRAMS: $(bin_PROGRAMS)
-	@$(NORMAL_INSTALL)
-	test -z "$(bindir)" || $(mkdir_p) "$(DESTDIR)$(bindir)"
-	@list='$(bin_PROGRAMS)'; for p in $$list; do \
-	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
-	  if test -f $$p \
-	     || test -f $$p1 \
-	  ; then \
-	    f=`echo "$$p1" | sed 's,^.*/,,;$(transform);s/$$/$(EXEEXT)/'`; \
-	   echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(binPROGRAMS_INSTALL) '$$p' '$(DESTDIR)$(bindir)/$$f'"; \
-	   $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(binPROGRAMS_INSTALL) "$$p" "$(DESTDIR)$(bindir)/$$f" || exit 1; \
-	  else :; fi; \
-	done
-
-uninstall-binPROGRAMS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(bin_PROGRAMS)'; for p in $$list; do \
-	  f=`echo "$$p" | sed 's,^.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
-	  echo " rm -f '$(DESTDIR)$(bindir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(bindir)/$$f"; \
-	done
-
-clean-binPROGRAMS:
-	@list='$(bin_PROGRAMS)'; for p in $$list; do \
-	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
-	  echo " rm -f $$p $$f"; \
-	  rm -f $$p $$f ; \
-	done
-gcic$(EXEEXT): $(gcic_OBJECTS) $(gcic_DEPENDENCIES) 
-	@rm -f gcic$(EXEEXT)
-	$(CXXLINK) $(gcic_LDFLAGS) $(gcic_OBJECTS) $(gcic_LDADD) $(LIBS)
-
-mostlyclean-compile:
-	-rm -f *.$(OBJEXT)
-
-distclean-compile:
-	-rm -f *.tab.c
-
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gcic.Po@am__quote@
-
-.cc.o:
-@am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ $<
-
-.cc.obj:
-@am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ `$(CYGPATH_W) '$<'`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
-
-.cc.lo:
-@am__fastdepCXX_TRUE@	if $(LTCXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Plo"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -335,6 +256,23 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
+install-includeHEADERS: $(include_HEADERS)
+	@$(NORMAL_INSTALL)
+	test -z "$(includedir)" || $(mkdir_p) "$(DESTDIR)$(includedir)"
+	@list='$(include_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(includeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(includedir)/$$f'"; \
+	  $(includeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(includedir)/$$f"; \
+	done
+
+uninstall-includeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(include_HEADERS)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(includedir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(includedir)/$$f"; \
+	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -413,9 +351,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS) all-local
+all-am: Makefile $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)"; do \
+	for dir in "$(DESTDIR)$(includedir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -444,13 +382,12 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
+clean-am: clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
-distclean-am: clean-am distclean-compile distclean-generic \
-	distclean-libtool distclean-local distclean-tags
+distclean-am: clean-am distclean-generic distclean-libtool \
+	distclean-tags
 
 dvi: dvi-am
 
@@ -462,9 +399,9 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-includeHEADERS
 
-install-exec-am: install-binPROGRAMS install-exec-local
+install-exec-am:
 
 install-info: install-info-am
 
@@ -473,14 +410,12 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-am
 
-mostlyclean-am: mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool
+mostlyclean-am: mostlyclean-generic mostlyclean-libtool
 
 pdf: pdf-am
 
@@ -490,61 +425,20 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-info-am uninstall-local
+uninstall-am: uninstall-includeHEADERS uninstall-info-am
 
-.PHONY: CTAGS GTAGS all all-am all-local check check-am clean \
-	clean-binPROGRAMS clean-generic clean-libtool ctags distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-local distclean-tags distdir dvi dvi-am html html-am \
-	info info-am install install-am install-binPROGRAMS \
-	install-data install-data-am install-exec install-exec-am \
-	install-exec-local install-info install-info-am install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
-	pdf pdf-am ps ps-am tags uninstall uninstall-am \
-	uninstall-binPROGRAMS uninstall-info-am uninstall-local
+.PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
+	clean-libtool ctags distclean distclean-generic \
+	distclean-libtool distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-exec install-exec-am \
+	install-includeHEADERS install-info install-info-am \
+	install-man install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
+	ps ps-am tags uninstall uninstall-am uninstall-includeHEADERS \
+	uninstall-info-am
 
-
-all-local: $(GCCDEP)
-
-$(GCCTOP)/.gcic-untarred: @MVM_GCC_TARBALL@
-	@echo "Extracting @MVM_GCC_TARBALL@"
-	@case "`basename @MVM_GCC_TARBALL@ | sed -e 's,^.*\.tar\(.*\),\1,'`" in \
-	.gz) gzip -d < @MVM_GCC_TARBALL@ | tar xpf - ;; \
-	.bz2) bzip2 -d < @MVM_GCC_TARBALL@ | tar xpf - ;; \
-	*) tar xpf @MVM_GCC_TARBALL@ ;; \
-	esac && touch $@ || $(RM) -Rf $(GCCTOP)
-
-$(GCCTOP)/.gcic-patched: $(GCCTOP)/.gcic-untarred
-	@( cd $(GCCTOP)* && @MVM_PROG_PATCH@ -p1 ) <\
-	$(srcdir)/gcc-$(GCCVER).patch && touch $@
-
-gcc-build/.gcic-configured: $(GCCTOP)/.gcic-patched $(top_builddir)/config.status
-	@( $(RM) -Rf gcc-build; mkdir gcc-build && cd gcc-build && \
-	LC_ALL=C CC=$(CC) ../$(GCCTOP)/configure --prefix=$(libexecdir)/gcic \
-	--with-gnu-ld --with-gnu-as && cd .. ) && touch $@
-
-gcc-build/.gcic-built: gcc-build/.gcic-configured
-	( cd gcc-build && $(MAKE) LANGUAGES="c c++" all \
-	&& cd .. ) && touch $@
-
-$(libexecdir)/gcic/.gcic-installed: gcc-build/.gcic-built
-	test -d $(libexecdir) && chmod u+rw $(libexecdir) || :
-	( cd gcc-build && $(MAKE) LANGUAGES="c c++" install \
-	&& cd .. ) && touch $@
-
-distclean-local:
-	rm -rf -- gcc-build $(GCCTOP)
-
-install-exec-local:
-	$(mkinstalldirs) $(libexecdir)/gcic/lib/gcc-lib/$(host_alias)/$(GCCVER)
-	cp @MVM_GCCLD@ $(libexecdir)/gcic/lib/gcc-lib/$(host_alias)/$(GCCVER)
-	cp @MVM_GCCAS@ $(libexecdir)/gcic/lib/gcc-lib/$(host_alias)/$(GCCVER)
-
-uninstall-local:
-	$(RM) $(libexecdir)/gcic/.gcic-installed
-	$(RM) -r $(libexecdir)/gcic
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

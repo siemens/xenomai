@@ -1,0 +1,5 @@
+obj-m += kshm_satch.o
+
+kshm_satch-y := satch.o
+
+EXTRA_CFLAGS += -DPRODUCER -I$(TOPDIR)/include/xenomai

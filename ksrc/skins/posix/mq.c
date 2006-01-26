@@ -98,6 +98,9 @@ static int pse51_mq_init(pse51_mq_t *mq, const struct mq_attr *attr)
     unsigned i, msgsize, memsize;
     char *mem;
 
+    if (xnpod_asynch_p() || !xnpod_root_p())
+        return EPERM;
+
     if(!attr->mq_maxmsg)
         return EINVAL;
 
@@ -666,24 +669,30 @@ int mq_close(mqd_t fd)
     spl_t s;
     int err;
 
+    if (xnpod_asynch_p() || !xnpod_root_p())
+        {
+        err = EPERM;
+        goto error;
+        }
+
     xnlock_get_irqsave(&nklock, s);
 
     err = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
 
     if(err)
-        goto error;
+        goto err_unlock;
 
     mq = node2mq(pse51_desc_node(desc));
     
     err = pse51_desc_destroy(desc);
 
     if(err)
-        goto error;
+        goto err_unlock;
 
     err = pse51_node_put(&mq->nodebase);
 
     if(err)
-        goto error;
+        goto err_unlock;
     
     if(pse51_node_removed_p(&mq->nodebase))
         {
@@ -697,8 +706,9 @@ int mq_close(mqd_t fd)
 
     return 0;
 
-  error:
+  err_unlock:
     xnlock_put_irqrestore(&nklock, s);
+  error:
     thread_set_errno(err);
     return -1;
 }
@@ -709,6 +719,12 @@ int mq_unlink(const char *name)
     pse51_mq_t *mq;
     spl_t s;
     int err;
+
+    if (xnpod_asynch_p() || !xnpod_root_p())
+        {
+        err = EPERM;
+        goto error;
+        }
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -727,6 +743,7 @@ int mq_unlink(const char *name)
 
     if(err)
         {
+error:
         thread_set_errno(err);
         return -1;
         }
@@ -753,11 +770,8 @@ void pse51_mq_pkg_cleanup(void)
                  mq->nodebase.name);
 #endif /* CONFIG_XENO_OPT_DEBUG */
         pse51_node_remove(&node, mq->nodebase.name, PSE51_MQ_MAGIC);
-        if(node == &mq->nodebase)
-            {
-            pse51_mq_destroy(mq);
-            xnfree(mq);
-            }
+        pse51_mq_destroy(mq);
+        xnfree(mq);
         }
 }
 

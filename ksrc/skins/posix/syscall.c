@@ -30,6 +30,7 @@
 #include <posix/intr.h>
 #include <posix/registry.h>     /* For PSE51_MAXNAME. */
 #include <posix/sem.h>
+#include <posix/shm.h>
 
 static int __muxid;
 
@@ -1043,7 +1044,7 @@ int __mq_unlink (struct task_struct *curr, struct pt_regs *regs)
                                  sizeof(name));
     if (len <= 0)
         return -EFAULT;
-    
+
     if (len >= sizeof(name))
         return -ENAMETOOLONG;
     
@@ -1609,6 +1610,259 @@ int __timer_getoverrun (struct task_struct *curr, struct pt_regs *regs)
     return rc >= 0 ? rc : -thread_get_errno();
 }
 
+/* shm_open(name, oflag, mode, pid, ufd) */
+int __shm_open (struct task_struct *curr, struct pt_regs *regs)
+{
+    int ufd, kfd, oflag, err;
+    char name[PSE51_MAXNAME];
+    unsigned len;
+    mode_t mode;
+    pid_t pid;
+
+    len = __xn_strncpy_from_user(curr,
+                                 name,
+                                 (const char __user *)__xn_reg_arg1(regs),
+                                 sizeof(name));
+    if (len <= 0)
+        return -EFAULT;
+
+    if (len >= sizeof(name))
+        return -ENAMETOOLONG;
+
+    oflag = (int) __xn_reg_arg2(regs);
+    mode = (mode_t) __xn_reg_arg3(regs);
+    
+    kfd = shm_open(name, oflag, mode);
+
+    if (kfd == -1)
+        return -thread_get_errno();
+
+    pid = (pid_t) __xn_reg_arg4(regs);
+    ufd = (int) __xn_reg_arg5(regs);
+
+    err = pse51_assoc_create(&pse51_ufds, (u_long) kfd, pid, (u_long) ufd);
+    /* pse51_assoc_create returning an error means that the same pid and user
+       file descriptor are already registered. That is impossible. */
+    BUG_ON(err);
+    return 0;
+}
+
+/* shm_unlink(name) */
+int __shm_unlink (struct task_struct *curr, struct pt_regs *regs)
+{
+    char name[PSE51_MAXNAME];
+    unsigned len;
+    int err;
+
+    len = __xn_strncpy_from_user(curr,
+                                 name,
+                                 (const char __user *)__xn_reg_arg1(regs),
+                                 sizeof(name));
+    if (len <= 0)
+        return -EFAULT;
+
+    if (len >= sizeof(name))
+        return -ENAMETOOLONG;
+
+    err = shm_unlink(name);
+
+    return !err ? 0 : -thread_get_errno();
+}
+
+/* shm_close(pid, ufd) */
+int __shm_close (struct task_struct *curr, struct pt_regs *regs)
+{
+    unsigned long kfd;
+    int ufd, err;
+    pid_t pid;
+
+    pid = (pid_t) __xn_reg_arg1(regs);
+    ufd = (int) __xn_reg_arg2(regs);
+
+    err = pse51_assoc_lookup(&pse51_ufds, &kfd, pid, (u_long) ufd, 1);
+
+    if (err)
+        return err;
+
+    err = close(kfd);
+
+    return !err ? 0 : -thread_get_errno();
+}
+
+/* ftruncate(pid, ufd, len) */
+int __ftruncate (struct task_struct *curr, struct pt_regs *regs)
+{
+    unsigned long kfd;
+    int ufd, err;
+    pid_t pid;
+    off_t len;
+
+    pid = (pid_t) __xn_reg_arg1(regs);
+    ufd = (int) __xn_reg_arg2(regs);
+    len = (off_t) __xn_reg_arg3(regs);
+
+    err = pse51_assoc_lookup(&pse51_ufds, &kfd, pid, (u_long) ufd, 0);
+
+    if (err)
+        return err;
+
+    err = ftruncate(kfd, len);
+
+    return !err ? 0 : -thread_get_errno();
+}
+
+typedef struct {
+    void *kaddr;
+    unsigned long len;
+    xnheap_t *ioctl_cookie;
+    unsigned long heapsize;
+    unsigned long offset;
+} pse51_umap_t;
+
+/* mmap_prologue(len, pid, ufd, off, pse51_umap_t *umap) */
+int __mmap_prologue (struct task_struct *curr, struct pt_regs *regs)
+{
+    unsigned long kfd;
+    pse51_umap_t umap;
+    int ufd, err;
+    size_t len;
+    pid_t pid;
+    off_t off;
+
+    len = (size_t) __xn_reg_arg1(regs);
+    pid = (pid_t) __xn_reg_arg2(regs);
+    ufd = (int) __xn_reg_arg3(regs);
+    off = (off_t) __xn_reg_arg4(regs);
+
+    if(!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg5(regs),sizeof(umap)))
+        return -EFAULT;    
+
+    err = pse51_assoc_lookup(&pse51_ufds, &kfd, pid, (u_long) ufd, 0);
+
+    if (err)
+        return err;
+
+    /* We do not care for the real flags and protection, this mapping is a
+       placeholder. */  
+    umap.kaddr = mmap(NULL,len,PROT_READ | PROT_WRITE,MAP_SHARED,kfd,off);
+
+    if (umap.kaddr == MAP_FAILED)
+        return -thread_get_errno();
+
+    if ((err = pse51_xnheap_get(&umap.ioctl_cookie, umap.kaddr)))
+        {
+        munmap(umap.kaddr, len);
+        return err;
+        }
+
+    umap.len = len;
+    umap.heapsize = xnheap_size(umap.ioctl_cookie);
+    umap.offset = xnheap_shared_offset(umap.ioctl_cookie, umap.kaddr);
+
+    __xn_copy_to_user(curr,
+                      (void __user *)__xn_reg_arg5(regs),
+                      &umap,
+                      sizeof(umap));
+
+    return 0;
+}
+
+/* mmap_epilogue(pid, uaddr, u_long *ioctl_cookie) */
+int __mmap_epilogue (struct task_struct *curr, struct pt_regs *regs)
+{
+    pse51_umap_t umap;
+    void *uaddr;
+    pid_t pid;
+    int err;
+
+    pid = (pid_t) __xn_reg_arg1(regs);
+    uaddr = (void *) __xn_reg_arg2(regs);
+ 
+    if(!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg3(regs),sizeof(umap)))
+        return -EFAULT;
+
+    __xn_copy_from_user(curr,
+                        &umap,
+                        (void __user *)__xn_reg_arg3(regs),
+                        sizeof(umap));
+
+    if (uaddr == MAP_FAILED)
+        {
+        munmap(umap.kaddr, umap.len);
+        return 0;
+        }
+    
+    err = pse51_assoc_create(&pse51_umaps,
+                             (u_long) umap.kaddr,
+                             pid,
+                             (u_long) uaddr);
+    BUG_ON(err);
+    return 0;
+}
+
+/* munmap_prologue(pid, uaddr, len, &unmap) */
+int __munmap_prologue (struct task_struct *curr, struct pt_regs *regs)
+{
+    struct {
+        unsigned long mapsize;
+        unsigned long offset;
+    } uunmap;
+    unsigned long uaddr;
+    xnheap_t *heap;
+    void *kaddr;
+    size_t len;
+    pid_t pid;
+    int err;
+
+    pid = (pid_t) __xn_reg_arg1(regs);
+    uaddr = (unsigned long) __xn_reg_arg2(regs);
+    len = (size_t) __xn_reg_arg3(regs);
+    if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg4(regs),sizeof(uunmap)))
+        return -EFAULT;
+
+    err = pse51_assoc_lookup(&pse51_umaps, (u_long *) &kaddr, pid, uaddr, 0);
+
+    if (err)
+        return err;
+
+    err = pse51_xnheap_get(&heap, kaddr);
+
+    if (err)
+        return err;
+   
+    uunmap.mapsize = xnheap_size(heap);
+    uunmap.offset = xnheap_shared_offset(heap, kaddr);
+    __xn_copy_to_user(curr,
+                      (void __user *)__xn_reg_arg4(regs),
+                      &uunmap,
+                      sizeof(uunmap));
+
+    return 0;
+}
+
+/* munmap_epilogue(pid, uaddr, len) */
+int __munmap_epilogue (struct task_struct *curr, struct pt_regs *regs)
+{
+    unsigned long uaddr;
+    void *kaddr;
+    size_t len;
+    pid_t pid;
+    int err;
+
+    pid = (pid_t) __xn_reg_arg1(regs);
+    uaddr = (unsigned long) __xn_reg_arg2(regs);
+    len = (size_t) __xn_reg_arg3(regs);
+
+    err = pse51_assoc_lookup(&pse51_umaps, (u_long *) &kaddr, pid, uaddr, 1);
+
+    if (err)
+        return err;
+
+    err = munmap(kaddr, len);
+
+    return !err ? 0 : -thread_get_errno();
+}
+
 #if 0
 int __itimer_set (struct task_struct *curr, struct pt_regs *regs)
 {
@@ -1738,11 +1992,19 @@ static xnsysent_t __systab[] = {
     [__pse51_intr_detach] = { &__intr_detach, __xn_exec_any },
     [__pse51_intr_wait] = { &__intr_wait, __xn_exec_primary },
     [__pse51_intr_control] = { &__intr_control, __xn_exec_any },
-    [__pse51_timer_create] = { &__timer_create, __xn_exec_primary },
+    [__pse51_timer_create] = { &__timer_create, __xn_exec_any },
     [__pse51_timer_delete] = { &__timer_delete, __xn_exec_any },
-    [__pse51_timer_settime] = { &__timer_settime, __xn_exec_any },
+    [__pse51_timer_settime] = { &__timer_settime, __xn_exec_primary },
     [__pse51_timer_gettime] = { &__timer_gettime, __xn_exec_any },
-    [__pse51_timer_getoverrun] = { &__timer_getoverrun, __xn_exec_any },    
+    [__pse51_timer_getoverrun] = { &__timer_getoverrun, __xn_exec_any },
+    [__pse51_shm_open] = {&__shm_open, __xn_exec_lostage },
+    [__pse51_shm_unlink] = {&__shm_unlink, __xn_exec_lostage },
+    [__pse51_shm_close] = {&__shm_close, __xn_exec_lostage },
+    [__pse51_ftruncate] = {&__ftruncate, __xn_exec_lostage },
+    [__pse51_mmap_prologue] = {&__mmap_prologue, __xn_exec_lostage },
+    [__pse51_mmap_epilogue] = {&__mmap_epilogue, __xn_exec_lostage },
+    [__pse51_munmap_prologue] = {&__munmap_prologue, __xn_exec_lostage },
+    [__pse51_munmap_epilogue] = {&__munmap_epilogue, __xn_exec_lostage },
 };
 
 static void __shadow_delete_hook (xnthread_t *thread)

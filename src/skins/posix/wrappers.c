@@ -29,6 +29,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
 
 /* pthread */
 int __real_pthread_setschedparam(pthread_t thread,
@@ -215,4 +216,20 @@ int __real_getpeername(int fd, struct sockaddr *name, socklen_t *namelen
 int __real_shutdown(int fd, int how)
 {
     return shutdown(fd, how);
+}
+
+/* shm */
+void *__real_mmap(void *addr, 
+		size_t len, 
+		int prot, 
+		int flags, 
+		int fd, 
+		off_t off)
+{
+    return mmap(addr, len, prot, flags, fd, off);
+}
+
+int __real_munmap(void *addr, size_t len)
+{
+    return munmap(addr, len);
 }

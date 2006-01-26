@@ -546,6 +546,7 @@ AC_CONFIG_FILES([ \
 	src/skins/Makefile \
        	src/skins/uvm/Makefile \
        	src/skins/posix/Makefile \
+       	src/skins/posix/sys/Makefile \
        	src/skins/native/Makefile \
        	src/skins/psos+/Makefile \
        	src/skins/uitron/Makefile \

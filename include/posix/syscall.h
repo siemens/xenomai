@@ -76,6 +76,14 @@
 #define __pse51_sem_unlink            50
 #define __pse51_sem_timedwait         51
 #define __pse51_mq_notify             52
+#define __pse51_shm_open              53
+#define __pse51_shm_unlink            54
+#define __pse51_shm_close             55
+#define __pse51_ftruncate             56
+#define __pse51_mmap_prologue         57
+#define __pse51_mmap_epilogue         58
+#define __pse51_munmap_prologue       59
+#define __pse51_munmap_epilogue       60
 
 #ifdef __KERNEL__
 

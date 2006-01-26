@@ -630,6 +630,42 @@ int mq_unlink(const char *name);
 
 END_C_DECLS
 
+
+/* Shared memory. */
+
+
+/* Protections are chosen from these bits, OR'd together.  The
+   implementation does not necessarily support PROT_EXEC or PROT_WRITE
+   without PROT_READ.  The only guarantees are that no writing will be
+   allowed without PROT_WRITE and no access will be allowed for PROT_NONE. */
+
+#define PROT_READ	0x1		/* Page can be read.  */
+#define PROT_WRITE	0x2		/* Page can be written.  */
+#define PROT_EXEC	0x4		/* Page can be executed.  */
+#define PROT_NONE	0x0		/* Page can not be accessed.  */
+
+/* Sharing types (must choose one and only one of these).  */
+#define MAP_SHARED	0x01		/* Share changes.  */
+
+#define MAP_FAILED ((void *) -1)
+
+BEGIN_C_DECLS
+
+int shm_open(const char *name, int oflag, mode_t mode); 
+
+int shm_unlink(const char *name);
+
+int ftruncate(int fildes, off_t length);
+
+void *mmap(void *addr, size_t len, int prot, int flags,
+        int fildes, off_t off);
+
+int munmap(void *addr, size_t len);
+
+int close(int fildes);
+
+END_C_DECLS
+
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
 #endif /* !_XENO_SKIN_POSIX_H */

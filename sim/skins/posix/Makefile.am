@@ -38,9 +38,11 @@ nodist_libposix_s_a_SOURCES = \
 	intr.c \
 	registry.c \
 	mq.c \
+	shm.c \
 	module.c
 
 include_HEADERS = \
 	posix_overrides.h
 
-SUBDIRS = . testsuite
+SUBDIRS = . testsuite demos
+

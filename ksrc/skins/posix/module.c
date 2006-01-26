@@ -31,6 +31,7 @@
 #include <posix/intr.h>
 #include <posix/timer.h>
 #include <posix/registry.h>
+#include <posix/shm.h>
 
 MODULE_DESCRIPTION("POSIX/PSE51 interface");
 MODULE_AUTHOR("gilles.chanteperdrix@laposte.net");
@@ -53,6 +54,7 @@ static void pse51_shutdown(int xtype)
 {
     xnpod_stop_timer();
 
+    pse51_shm_pkg_cleanup();
     pse51_thread_pkg_cleanup();
     pse51_timer_pkg_cleanup();
     pse51_tsd_pkg_cleanup();
@@ -133,6 +135,7 @@ int SKIN_INIT(posix)
     pse51_intr_pkg_init();
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
     pse51_timer_pkg_init();
+    pse51_shm_pkg_init();
 
     pse51_thread_pkg_init(module_param_value(time_slice_arg));
 

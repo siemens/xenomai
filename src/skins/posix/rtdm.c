@@ -23,8 +23,11 @@
 #include <pthread.h>
 #include <xenomai/rtdm/rtdm.h>
 #include <xenomai/rtdm/syscall.h>
+#include <xenomai/posix/syscall.h>
 
 extern int __rtdm_muxid;
+extern int __pse51_muxid;
+extern unsigned long __pse51_mainpid;
 extern int __rtdm_fd_start;
 
 
@@ -100,15 +103,22 @@ int __wrap_socket(int protocol_family, int socket_type, int protocol)
     return ret;
 }
 
-
 int __wrap_close(int fd)
 {
+    extern int __shm_close(int fd);
+    int ret;
+
     if (fd >= __rtdm_fd_start)
-        return set_errno(XENOMAI_SKINCALL1(__rtdm_muxid,
-                                           __rtdm_close,
-                                           fd - __rtdm_fd_start));
+        ret = set_errno(XENOMAI_SKINCALL1(__rtdm_muxid,
+                                          __rtdm_close,
+                                          fd - __rtdm_fd_start));
     else
+        ret = __shm_close(fd);
+
+    if (ret == -1 && errno == EBADF)
         return __real_close(fd);
+
+    return set_errno(ret);
 }
 
 

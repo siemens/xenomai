@@ -1,3 +1,19 @@
+2006-01-26  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/nucleus/heap.c (xnheap_init_shared, xnheap_destroy_shared):
+	Implementation for simulator. 
+
+	* ksrc/skins/posix/timer.c (timer_settime): Set owner in
+	timer_settime instead of timer_create.
+
+	* ksrc/skins/posix/thread.c (pthread_join): Destroy thread when
+	joining a canceled thread. Return EPERM when joining a running
+	thread from the root thread.
+
+	* ksrc/skins/posix/demos/satch.c: Use shared memory.
+
+	* ksrc/skins/posix/shm.c: Shared memory services.
+
 2006-01-19  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* Makefile.am: Re-run prepare-kernel only when maintainer mode is
