@@ -34,3 +34,5 @@ uninstall-local:
 	$(RM) $(DESTDIR)$(libdir)/posix.wrappers
 
 EXTRA_DIST = posix.wrappers
+
+SUBDIRS=sys
