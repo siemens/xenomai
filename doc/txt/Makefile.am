@@ -1,5 +1,6 @@
+txtdocdir = $(datadir)/doc/$(PACKAGE)-$(VERSION)/txt
 
-EXTRA_DIST = \
+dist_txtdoc_DATA = \
 	16550A-driver.txt \
 	pse51-skin.txt \
 	psos-skin.txt \
