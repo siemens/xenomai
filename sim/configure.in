@@ -433,6 +433,7 @@ AC_CONFIG_FILES([ \
      skins/uitron/Makefile \
      skins/posix/Makefile \
      skins/posix/testsuite/Makefile \
+     skins/posix/demos/Makefile \
      skins/native/Makefile \
      skins/rtai/Makefile \
      gcic/Makefile \

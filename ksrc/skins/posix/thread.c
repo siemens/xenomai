@@ -217,7 +217,7 @@ int pthread_detach (pthread_t thread)
     thread_setdetachstate(thread, PTHREAD_CREATE_DETACHED);
 
     if (xnsynch_flush(&thread->join_synch,
-                      PSE51_JOINEE_DETACHED) == XNSYNCH_RESCHED)
+                      PSE51_JOINED_DETACHED) == XNSYNCH_RESCHED)
 	xnpod_schedule();
 
     xnlock_put_irqrestore(&nklock, s);
@@ -243,7 +243,7 @@ void pthread_exit (void *value_ptr)
 int pthread_join (pthread_t thread, void **value_ptr)
 
 {
-    int is_last_joiner = 0;
+    int is_last_joiner;
     pthread_t cur;
     spl_t s;
     
@@ -272,10 +272,16 @@ int pthread_join (pthread_t thread, void **value_ptr)
         return EINVAL;
 	}
 
+    is_last_joiner = 1;
     while (pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
 	{
-        /* if cur is NULL (joining from the root thread), xnsynch_sleep_on
-           will cause a fatal error. */
+        /* we can not suspend the root thread, return EPERM. */
+        if (!cur)
+            {
+            xnlock_put_irqrestore(&nklock, s);
+            return EPERM;
+            }
+
         xnsynch_sleep_on(&thread->join_synch, XN_INFINITE);
 
         is_last_joiner = xnsynch_wakeup_one_sleeper(&thread->join_synch) == NULL;
@@ -283,7 +289,7 @@ int pthread_join (pthread_t thread, void **value_ptr)
         thread_cancellation_point(cur);
         
         /* In case another thread called pthread_detach. */
-        if (xnthread_test_flags(&cur->threadbase, PSE51_JOINEE_DETACHED))
+        if (xnthread_test_flags(&cur->threadbase, PSE51_JOINED_DETACHED))
 	    {
             xnlock_put_irqrestore(&nklock, s);
             return EINVAL;
@@ -291,7 +297,7 @@ int pthread_join (pthread_t thread, void **value_ptr)
 	}
 
     /* If we reach this point, at least one joiner is going to succeed, we can
-       mark the joinee as detached. */
+       mark the joined thread as detached. */
     thread_setdetachstate(thread, PTHREAD_CREATE_DETACHED);
 
     if (value_ptr)
@@ -421,6 +427,9 @@ extern int __pse51_errptd;
 int *pse51_errno_location (void)
 
 {
+#if !defined(__KERNEL__) || !defined(CONFIG_XENO_OPT_PERVASIVE)
+    static int fallback_errno;
+#endif /* ! __KERNEL__ || !CONFIG_XENO_OPT_PERVASIVE */
     pthread_t thread = pse51_current_thread();
 
     if (thread)
@@ -429,7 +438,7 @@ int *pse51_errno_location (void)
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     return (int *)&pse51_errno_ptd(current);
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-    return NULL;
+    return &fallback_errno;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 }
 
@@ -442,3 +451,4 @@ EXPORT_SYMBOL(pthread_self);
 EXPORT_SYMBOL(sched_yield);
 EXPORT_SYMBOL(pthread_make_periodic_np);
 EXPORT_SYMBOL(pthread_wait_np);
+EXPORT_SYMBOL(pse51_errno_location);

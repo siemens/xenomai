@@ -746,6 +746,37 @@ while(0)
 #define PAGE_ALIGN(addr)  (((addr)+PAGE_SIZE-1)&PAGE_MASK)
 #endif /* !PAGE_ALIGN */
 
+/* Simulator has only one root thread, so Linux semaphores are only faked. */
+struct semaphore {
+    unsigned count;
+};
+#define sema_init(s, v)       ((s)->count = (v))
+#define down(s) ({                              \
+        while (!(s)->count) /* deadlock */      \
+                ;                               \
+        --(s)->count;                           \
+        })
+#define down_interruptible(s) (down(s),0)
+#define up(s)                 (++(s)->count)
+
+/* Copied from linux/err.h */
+#define IS_ERR_VALUE(x) ((x) > (unsigned long)-1000L)
+
+static inline void *ERR_PTR(long error)
+{
+	return (void *) error;
+}
+
+static inline long PTR_ERR(const void *ptr)
+{
+	return (long) ptr;
+}
+
+static inline long IS_ERR(const void *ptr)
+{
+	return IS_ERR_VALUE((unsigned long)ptr);
+}
+
 /* Pre-set config switches. */
 
 #define CONFIG_XENO_HW_PERIODIC_TIMER 1

@@ -18,6 +18,7 @@ accuracy_rt.o: CPPFLAGS=-DSPERIOD=100
 
 accuracy.o: CPPFLAGS+=-DSPERIOD=2000
 
+satch_rt.o: CPPFLAGS=-DCONSUMER
 
 # To use this makefile with xeno-config not located in PATH, type :
 # make XENO_CONFIG=/path/to/xeno-config
@@ -43,4 +44,3 @@ all: $(bin_PROGRAMS) $(lib_LIBRARIES)
 
 clean:
 	$(RM) $(bin_PROGRAMS) $(lib_LIBRARIES) *.o
-

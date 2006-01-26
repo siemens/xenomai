@@ -118,8 +118,6 @@ int timer_create (clockid_t clockid,
 
     timer = link2tm(holder);
 
-    timer->owner = pse51_current_thread();
-
     if (evp)
         {
         timer->si.info.si_signo = evp->sigev_signo;
@@ -136,17 +134,7 @@ int timer_create (clockid_t clockid,
     xntimer_init(&timer->timerbase, &pse51_base_timer_handler, timer);
 
     timer->overruns = 0;
-
-    if (!timer->owner)
-        {
-        prependq(&timer_freeq, &timer->link);
-        err = EPERM;
-        goto unlock_and_error;
-        }
-
-    inith(&timer->link);
-    appendq(&timer->owner->timersq, &timer->link);
-
+    timer->owner = NULL;
     timer->clockid = clockid;
     xnlock_put_irqrestore(&nklock, s);
 
@@ -184,7 +172,8 @@ int timer_delete(timer_t timerid)
         }
     
     xntimer_destroy(&timer->timerbase);
-    removeq(&timer->owner->timersq, &timer->link);
+    if (timer->owner)
+        removeq(&timer->owner->timersq, &timer->link);
     timer->owner = NULL;        /* Used for debugging. */
     prependq(&timer_freeq,&timer->link); /* Favour earliest reuse. */
 
@@ -221,9 +210,17 @@ int timer_settime (timer_t timerid,
                    const struct itimerspec *__restrict__ value,
                    struct itimerspec *__restrict__ ovalue)
 {
+    pthread_t curr = pse51_current_thread();
     struct pse51_timer *timer;
     spl_t s;
+    int err;
 
+    if (xnpod_asynch_p() || !curr)
+        {
+        err = EPERM;
+        goto error;
+        }
+    
     if ((unsigned) timerid >= PSE51_TIMER_MAX)
         goto einval;
 
@@ -249,8 +246,14 @@ int timer_settime (timer_t timerid,
         timer->queued = 0;
         }
 
+    if (timer->owner)
+        removeq(&timer->owner->timersq, &timer->link);
+
     if (value->it_value.tv_nsec == 0 && value->it_value.tv_sec == 0)
+        {
         xntimer_stop(&timer->timerbase);
+	timer->owner = NULL;
+        }
     else
         {
         xnticks_t start = ts2ticks_ceil(&value->it_value) + 1;
@@ -268,6 +271,9 @@ int timer_settime (timer_t timerid,
         xntimer_start(&timer->timerbase,
                       start,
                       ts2ticks_ceil(&value->it_interval));
+        timer->owner = curr;
+        inith(&timer->link);
+        appendq(&timer->owner->timersq, &timer->link);
         }
 
     xnlock_put_irqrestore(&nklock, s);
@@ -277,7 +283,9 @@ int timer_settime (timer_t timerid,
   unlock_and_einval:
     xnlock_put_irqrestore(&nklock, s);
   einval:
-    thread_set_errno(EINVAL);
+    err = EINVAL;
+  error:
+    thread_set_errno(err);
     return -1;
 }
 
@@ -348,13 +356,11 @@ void pse51_timer_init_thread(pthread_t new_thread)
 void pse51_timer_cleanup_thread(pthread_t zombie)
 {
     xnholder_t *holder;
-    while ((holder = getheadq(&zombie->timersq)) != NULL)
+    while ((holder = getq(&zombie->timersq)) != NULL)
         {
-        timer_t tm = link2tm(holder) - timer_pool;
-#ifdef CONFIG_XENO_OPT_DEBUG
-        xnprintf("Posix timer %d not destroyed, destroying now.\n", tm);
-#endif /* CONFIG_XENO_OPT_DEBUG */
-        timer_delete(tm);
+        struct pse51_timer *timer = link2tm(holder);
+	xntimer_stop(&timer->timerbase);
+        timer->owner = NULL;
         }
 }
 

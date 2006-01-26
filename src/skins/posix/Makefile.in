@@ -66,8 +66,9 @@ am_libpthread_rt_la_OBJECTS = libpthread_rt_la-init.lo \
 	libpthread_rt_la-thread.lo libpthread_rt_la-timer.lo \
 	libpthread_rt_la-semaphore.lo libpthread_rt_la-clock.lo \
 	libpthread_rt_la-cond.lo libpthread_rt_la-mq.lo \
-	libpthread_rt_la-mutex.lo libpthread_rt_la-interrupt.lo \
-	libpthread_rt_la-rtdm.lo libpthread_rt_la-wrappers.lo
+	libpthread_rt_la-mutex.lo libpthread_rt_la-shm.lo \
+	libpthread_rt_la-interrupt.lo libpthread_rt_la-rtdm.lo \
+	libpthread_rt_la-wrappers.lo
 libpthread_rt_la_OBJECTS = $(am_libpthread_rt_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/src/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
@@ -246,6 +247,7 @@ libpthread_rt_la_SOURCES = \
 	cond.c \
 	mq.c \
 	mutex.c \
+	shm.c \
 	interrupt.c \
 	rtdm.c \
 	wrappers.c
@@ -253,7 +255,8 @@ libpthread_rt_la_SOURCES = \
 include_HEADERS = \
 	mqueue.h \
 	pthread.h \
-	semaphore.h
+	semaphore.h \
+	unistd.h
 
 libpthread_rt_la_CPPFLAGS = @XENO_USER_CFLAGS@ -I$(srcdir)/..
 EXTRA_DIST = posix.wrappers
@@ -334,6 +337,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-mutex.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-rtdm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-semaphore.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-shm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-thread.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-timer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-wrappers.Plo@am__quote@
@@ -414,6 +418,13 @@ libpthread_rt_la-mutex.lo: mutex.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mutex.c' object='libpthread_rt_la-mutex.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpthread_rt_la-mutex.lo `test -f 'mutex.c' || echo '$(srcdir)/'`mutex.c
+
+libpthread_rt_la-shm.lo: shm.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpthread_rt_la-shm.lo -MD -MP -MF "$(DEPDIR)/libpthread_rt_la-shm.Tpo" -c -o libpthread_rt_la-shm.lo `test -f 'shm.c' || echo '$(srcdir)/'`shm.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpthread_rt_la-shm.Tpo" "$(DEPDIR)/libpthread_rt_la-shm.Plo"; else rm -f "$(DEPDIR)/libpthread_rt_la-shm.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='shm.c' object='libpthread_rt_la-shm.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpthread_rt_la-shm.lo `test -f 'shm.c' || echo '$(srcdir)/'`shm.c
 
 libpthread_rt_la-interrupt.lo: interrupt.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpthread_rt_la-interrupt.lo -MD -MP -MF "$(DEPDIR)/libpthread_rt_la-interrupt.Tpo" -c -o libpthread_rt_la-interrupt.lo `test -f 'interrupt.c' || echo '$(srcdir)/'`interrupt.c; \
