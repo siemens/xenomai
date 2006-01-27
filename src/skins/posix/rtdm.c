@@ -41,13 +41,17 @@ static inline int set_errno(int ret)
 
 int __wrap_open(const char *path, int oflag, ...)
 {
-    int ret;
+    int ret, oldtype;
 
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
     ret = XENOMAI_SKINCALL2(__rtdm_muxid,
                             __rtdm_open,
                             path,
                             oflag);
+
+    pthread_setcanceltype(oldtype, NULL);
+
     if (ret >= 0)
         ret += __rtdm_fd_start;
     else if (ret == -ENODEV || ret == -ENOSYS) {
@@ -107,11 +111,19 @@ int __wrap_close(int fd)
     extern int __shm_close(int fd);
     int ret;
 
-    if (fd >= __rtdm_fd_start)
-        return set_errno(XENOMAI_SKINCALL1(__rtdm_muxid,
-                                           __rtdm_close,
-                                           fd - __rtdm_fd_start));
-    else
+    if (fd >= __rtdm_fd_start) {
+        int oldtype;
+
+        pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+        ret = set_errno(XENOMAI_SKINCALL1(__rtdm_muxid,
+                                          __rtdm_close,
+                                          fd - __rtdm_fd_start));
+
+        pthread_setcanceltype(oldtype, NULL);
+
+        return ret;
+    } else
         ret = __shm_close(fd);
 
     if (ret == -1 && errno == EBADF)
@@ -144,52 +156,84 @@ int __wrap_ioctl(int fd, unsigned long int request, ...)
 
 ssize_t __wrap_read(int fd, void *buf, size_t nbyte)
 {
-    if (fd >= __rtdm_fd_start)
-        return set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
-                                           __rtdm_read,
-                                           fd - __rtdm_fd_start,
-                                           buf,
-                                           nbyte));
-    else
+    if (fd >= __rtdm_fd_start) {
+        int ret, oldtype;
+
+        pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+        ret = set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
+                                          __rtdm_read,
+                                          fd - __rtdm_fd_start,
+                                          buf,
+                                          nbyte));
+
+        pthread_setcanceltype(oldtype, NULL);
+
+        return ret;
+    } else
         return __real_read(fd, buf, nbyte);
 }
 
 
 ssize_t __wrap_write(int fd, const void *buf, size_t nbyte)
 {
-    if (fd >= __rtdm_fd_start)
-        return set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
-                                           __rtdm_write,
-                                           fd - __rtdm_fd_start,
-                                           buf,
-                                           nbyte));
-    else
+    if (fd >= __rtdm_fd_start) {
+        int ret, oldtype;
+
+        pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+        ret = set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
+                                          __rtdm_write,
+                                          fd - __rtdm_fd_start,
+                                          buf,
+                                          nbyte));
+
+        pthread_setcanceltype(oldtype, NULL);
+
+        return ret;
+    } else
         return __real_write(fd, buf, nbyte);
 }
 
 
 ssize_t __wrap_recvmsg(int fd, struct msghdr *msg, int flags)
 {
-    if (fd >= __rtdm_fd_start)
-        return set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
-                                           __rtdm_recvmsg,
-                                           fd - __rtdm_fd_start,
-                                           msg,
-                                           flags));
-    else
+    if (fd >= __rtdm_fd_start) {
+        int ret, oldtype;
+
+        pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+        ret = set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
+                                          __rtdm_recvmsg,
+                                          fd - __rtdm_fd_start,
+                                          msg,
+                                          flags));
+
+        pthread_setcanceltype(oldtype, NULL);
+
+        return ret;
+    } else
         return __real_recvmsg(fd, msg, flags);
 }
 
 
 ssize_t __wrap_sendmsg(int fd, const struct msghdr *msg, int flags)
 {
-    if (fd >= __rtdm_fd_start)
-        return set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
-                                           __rtdm_sendmsg,
-                                           fd - __rtdm_fd_start,
-                                           msg,
-                                           flags));
-    else
+    if (fd >= __rtdm_fd_start) {
+        int ret, oldtype;
+
+        pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+        ret = set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
+                                          __rtdm_sendmsg,
+                                          fd - __rtdm_fd_start,
+                                          msg,
+                                          flags));
+
+        pthread_setcanceltype(oldtype, NULL);
+
+        return ret;
+    } else
         return __real_sendmsg(fd, msg, flags);
 }
 
@@ -201,13 +245,17 @@ ssize_t __wrap_recvfrom(int fd, void *buf, size_t len, int flags,
         struct iovec    iov = {buf, len};
         struct msghdr   msg =
             {from, (from != NULL) ? *fromlen : 0, &iov, 1, NULL, 0};
-        int             ret;
+        int             ret, oldtype;
+
+        pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
         ret = XENOMAI_SKINCALL3(__rtdm_muxid,
                                 __rtdm_recvmsg,
                                 fd - __rtdm_fd_start,
                                 &msg,
                                 flags);
+
+        pthread_setcanceltype(oldtype, NULL);
 
         if (ret < 0) {
             errno = -ret;
@@ -227,12 +275,19 @@ ssize_t __wrap_sendto(int fd, const void *buf, size_t len, int flags,
         struct iovec    iov = {(void *)buf, len};
         struct msghdr   msg =
             {(struct sockaddr *)to, tolen, &iov, 1, NULL, 0};
+        int             ret, oldtype;
 
-        return set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
+        pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+        ret = set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
                                            __rtdm_sendmsg,
                                            fd - __rtdm_fd_start,
                                            &msg,
                                            flags));
+
+        pthread_setcanceltype(oldtype, NULL);
+
+        return ret;
     } else
         return __real_sendto(fd, buf, len, flags, to, tolen);
 }
@@ -243,12 +298,19 @@ ssize_t __wrap_recv(int fd, void *buf, size_t len, int flags)
     if (fd >= __rtdm_fd_start) {
         struct iovec    iov = {buf, len};
         struct msghdr   msg = {NULL, 0, &iov, 1, NULL, 0};
+        int             ret, oldtype;
 
-        return set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
-                                           __rtdm_recvmsg,
-                                           fd - __rtdm_fd_start,
-                                           &msg,
-                                           flags));
+        pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+        ret = set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
+                                          __rtdm_recvmsg,
+                                          fd - __rtdm_fd_start,
+                                          &msg,
+                                          flags));
+
+        pthread_setcanceltype(oldtype, NULL);
+    
+        return ret;
     } else
         return __real_recv(fd, buf, len, flags);
 }
@@ -259,12 +321,19 @@ ssize_t __wrap_send(int fd, const void *buf, size_t len, int flags)
     if (fd >= __rtdm_fd_start) {
         struct iovec    iov = {(void *)buf, len};
         struct msghdr   msg = {NULL, 0, &iov, 1, NULL, 0};
+        int             ret, oldtype;
 
-        return set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
-                                           __rtdm_sendmsg,
-                                           fd - __rtdm_fd_start,
-                                           &msg,
-                                           flags));
+        pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+        ret = set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
+                                          __rtdm_sendmsg,
+                                          fd - __rtdm_fd_start,
+                                          &msg,
+                                          flags));
+
+        pthread_setcanceltype(oldtype, NULL);
+
+        return ret;
     } else
         return __real_send(fd, buf, len, flags);
 }
@@ -323,12 +392,19 @@ int __wrap_connect(int fd, const struct sockaddr *serv_addr,
 {
     if (fd >= __rtdm_fd_start) {
         struct _rtdm_setsockaddr_args args = {serv_addr, addrlen};
+        int                           ret, oldtype;
 
-        return set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
-                                           __rtdm_ioctl,
-                                           fd - __rtdm_fd_start,
-                                           _RTIOC_CONNECT,
-                                           &args));
+        pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+        ret = set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
+                                          __rtdm_ioctl,
+                                          fd - __rtdm_fd_start,
+                                          _RTIOC_CONNECT,
+                                          &args));
+
+        pthread_setcanceltype(oldtype, NULL);
+
+        return ret;
     } else
         return __real_connect(fd, serv_addr, addrlen);
 }
@@ -351,12 +427,17 @@ int __wrap_accept(int fd, struct sockaddr *addr, socklen_t *addrlen)
 {
     if (fd >= __rtdm_fd_start) {
         struct _rtdm_getsockaddr_args args = {addr, addrlen};
+        int                           oldtype;
+
+        pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
         fd = XENOMAI_SKINCALL3(__rtdm_muxid,
                                __rtdm_ioctl,
                                fd - __rtdm_fd_start,
                                _RTIOC_ACCEPT,
                                &args);
+
+        pthread_setcanceltype(oldtype, NULL);
 
         if (fd >= 0)
             fd += __rtdm_fd_start;
