@@ -170,7 +170,7 @@ int pse51_mutex_timedlock_break (pthread_mutex_t *mutex, xnticks_t abs_to)
 
 		    if (xnthread_test_flags(&cur->threadbase, XNRMID))
                         {
-                        err = EIDRM;
+                        err = EINVAL;
                         break;
                         }
                     }
@@ -236,7 +236,7 @@ int pthread_mutex_lock (pthread_mutex_t *mutex)
 
     do {
         err = pse51_mutex_timedlock_break(mutex, XN_INFINITE);
-    } while(err == EINTR || err == EIDRM);
+    } while(err == EINTR);
 
     return err;
 }
@@ -248,7 +248,7 @@ int pthread_mutex_timedlock (pthread_mutex_t *mutex, const struct timespec *to)
 
     do {
         err = pse51_mutex_timedlock_break(mutex, ts2ticks_ceil(to)+1);
-    } while(err == EINTR || err == EIDRM);
+    } while(err == EINTR);
 
     return err;
 }

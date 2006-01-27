@@ -19,8 +19,8 @@
 #include <errno.h>
 #include <unistd.h>             /* ftruncate, close. */
 #include <fcntl.h>              /* open */
-#include <sys/mman.h>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <xenomai/posix/syscall.h>
 
 extern int __pse51_muxid;
@@ -77,7 +77,7 @@ int __wrap_ftruncate(int fildes, off_t length)
 	return 0;
 
     if (err == EBADF)
-        return ftruncate(fildes, length);
+        return __real_ftruncate(fildes, length);
     
     errno = err;
     return -1;
@@ -114,7 +114,7 @@ void *__wrap_mmap(void *addr,
     if (err)
         goto error;
 
-    err = ioctl(fildes, 0, map.ioctl_cookie);
+    err = __real_ioctl(fildes, 0, map.ioctl_cookie);
 
     if (err)
         goto err_mmap_epilogue;

@@ -219,12 +219,17 @@ int __real_shutdown(int fd, int how)
 }
 
 /* shm */
+int __real_ftruncate(int fildes, off_t length)
+{
+    return ftruncate(fildes, length);
+}
+
 void *__real_mmap(void *addr, 
-		size_t len, 
-		int prot, 
-		int flags, 
-		int fd, 
-		off_t off)
+                  size_t len, 
+                  int prot, 
+                  int flags, 
+                  int fd, 
+                  off_t off)
 {
     return mmap(addr, len, prot, flags, fd, off);
 }
