@@ -328,18 +328,21 @@ static int pse51_mq_timedsend_inner(mqd_t fd,
         pthread_t cur;
         
         if ((rc = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC)))
-            break;
+            return rc;
 
         if ((rc = pse51_mq_trysend(desc, buffer, len, prio)) != EAGAIN)
-            break;
+            return rc;
 
         if ((pse51_desc_getflags(desc) & O_NONBLOCK))
-            break;
+            return rc;
 
         if ((rc = clock_adjust_timeout(&to, CLOCK_REALTIME)))
-            break;
+            return rc;
 
         mq = node2mq(pse51_desc_node(desc));
+
+        if (xnpod_unblockable_p())
+            return EPERM;
 
         xnsynch_sleep_on(&mq->synchbase, to);
 
@@ -356,8 +359,6 @@ static int pse51_mq_timedsend_inner(mqd_t fd,
         if (xnthread_test_flags(&cur->threadbase, XNRMID))
             return EBADF;
         }
-
-    return rc;
 }
 
 static int pse51_mq_timedrcv_inner(mqd_t fd,
@@ -378,17 +379,17 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
         int direct = 0;
         
         if ((rc = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC)))
-            break;
+            return rc;
 
         if ((rc = pse51_mq_tryrcv(desc, buffer, lenp, priop)) != EAGAIN)
-            break;
+            return rc;
 
         if ((pse51_desc_getflags(desc) & O_NONBLOCK))
-            break;
+            return rc;
 
         mq = node2mq(pse51_desc_node(desc));
 
-        if(testbits(pse51_desc_getflags(desc), O_DIRECT))
+        if(testbits(pse51_desc_getflags(desc), O_DIRECT) && cur)
             {
             msg.buf = buffer;
             msg.lenp = lenp;
@@ -400,8 +401,11 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
         else
             cur->arg = NULL;
 
-        if((rc = clock_adjust_timeout(&to, CLOCK_REALTIME)))
-            break;
+        if ((rc = clock_adjust_timeout(&to, CLOCK_REALTIME)))
+            return rc;
+
+        if (xnpod_unblockable_p())
+            return EPERM;
 
         xnsynch_sleep_on(&mq->synchbase, to);
 
@@ -419,8 +423,6 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
         if (xnthread_test_flags(&cur->threadbase, XNBREAK))
             return EINTR;
         }
-
-    return rc;
 }
 
 int mq_timedsend(mqd_t fd,
@@ -584,7 +586,7 @@ mqd_t mq_open(const char *name, int oflags, ...)
     mode_t mode;
     va_list ap;
     int err;
-
+    
     xnlock_get_irqsave(&nklock, s);
 
     err = pse51_node_get(&node, name, PSE51_MQ_MAGIC, oflags);

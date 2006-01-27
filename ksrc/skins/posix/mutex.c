@@ -69,8 +69,6 @@ int pthread_mutex_init (pthread_mutex_t *mutex, const pthread_mutexattr_t *attr)
     xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP;
     spl_t s;
     
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-
     if (!attr)
         attr = &default_attr;
 
@@ -104,8 +102,6 @@ int pthread_mutex_destroy (pthread_mutex_t *mutex)
 {
     spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(mutex, PSE51_MUTEX_MAGIC, pthread_mutex_t))
@@ -133,8 +129,9 @@ int pse51_mutex_timedlock_break (pthread_mutex_t *mutex, xnticks_t abs_to)
     pthread_t cur = pse51_current_thread();
     int err;
     spl_t s;
-    
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+
+    if (xnpod_unblockable_p() || !cur)
+        return EPERM;
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -202,13 +199,14 @@ int pse51_mutex_timedlock_break (pthread_mutex_t *mutex, xnticks_t abs_to)
 int pthread_mutex_trylock (pthread_mutex_t *mutex)
 
 {
-    pthread_t cur;
+    pthread_t cur = pse51_current_thread();
     int err;
     spl_t s;
     
-    xnlock_get_irqsave(&nklock, s);
+    if (xnpod_unblockable_p() || !cur)
+        return EPERM;
 
-    cur = pse51_current_thread();
+    xnlock_get_irqsave(&nklock, s);
 
     err = mutex_trylock_internal(mutex, cur);
     

@@ -115,6 +115,19 @@ int pse51_cond_timedwait_internal(pthread_cond_t *cond,
         goto unlock_and_return;
 	}
 
+    cur = pse51_current_thread();
+
+    if (xnpod_unblockable_p() || !cur)
+        {
+        err = EPERM;
+        goto unlock_and_return;
+        }
+
+    err = clock_adjust_timeout(&to, cond->attr.clock);
+
+    if(err)
+        goto unlock_and_return;
+    
     /* Unlock mutex, with its previous recursive lock count stored
        in "count". */
     if(mutex_save_count(mutex, &count))
@@ -123,8 +136,6 @@ int pse51_cond_timedwait_internal(pthread_cond_t *cond,
         goto unlock_and_return;
         }
 
-    cur = pse51_current_thread();
-
     /* Bind mutex to cond. */
     if (cond->mutex == NULL)
         {
@@ -132,11 +143,6 @@ int pse51_cond_timedwait_internal(pthread_cond_t *cond,
         ++mutex->condvars;
         }
 
-    err = clock_adjust_timeout(&to, cond->attr.clock);
-
-    if(err)
-        goto unlock_and_return;
-    
     /* Wait for another thread to signal the condition. */
     xnsynch_sleep_on(&cond->synchbase, to);
 
@@ -163,16 +169,16 @@ int pse51_cond_timedwait_internal(pthread_cond_t *cond,
     else if (xnthread_test_flags(&cur->threadbase, XNTIMEO))
         err = ETIMEDOUT;
 
-    /* relock mutex */
-    mutex_restore_count(mutex, count);
-
-    /* Unbind mutex and cond, if no other thread is waiting is the job was not
+    /* Unbind mutex and cond, if no other thread is waiting, if the job was not
        already done. */
     if (!xnsynch_nsleepers(&cond->synchbase) && cond->mutex != NULL)
 	{
         --mutex->condvars;
         cond->mutex = NULL;
 	}
+
+    /* relock mutex */
+    mutex_restore_count(mutex, count);
 
     thread_cancellation_point(cur);
 

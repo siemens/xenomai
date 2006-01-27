@@ -111,6 +111,9 @@ static inline int sem_timedwait_internal (sem_t *sem, xnticks_t to)
 
     if ((err = sem_trywait_internal(sem)) == EAGAIN)
         {
+        if (xnpod_unblockable_p())
+            return EPERM;
+
         if((err = clock_adjust_timeout(&to, CLOCK_REALTIME)))
             return err;
 
@@ -138,8 +141,6 @@ int sem_wait (sem_t *sem)
     spl_t s;
     int err;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-
     xnlock_get_irqsave(&nklock, s);
     err = sem_timedwait_internal(sem, XN_INFINITE);
     xnlock_put_irqrestore(&nklock, s);
@@ -158,8 +159,6 @@ int sem_timedwait (sem_t *sem, const struct timespec *abs_timeout)
 {
     spl_t s;
     int err;
-
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
 
     xnlock_get_irqsave(&nklock, s);
     err = sem_timedwait_internal(sem, ts2ticks_ceil(abs_timeout)+1);
@@ -235,8 +234,6 @@ int pse51_sem_init (sem_t *sem, int pshared, unsigned int value)
 {
     spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-
     xnlock_get_irqsave(&nklock, s);
 
     if (pshared)
@@ -272,8 +269,6 @@ int sem_destroy (sem_t *sem)
 
 {
     spl_t s;
-
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
 
     xnlock_get_irqsave(&nklock, s);
 

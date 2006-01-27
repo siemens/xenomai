@@ -396,6 +396,24 @@ int pse51_desc_get(pse51_desc_t **descp, int fd, unsigned magic)
     if (desc->node->magic != magic)
         return EBADF;
 
+    while (desc->node->flags & PSE51_NODE_PARTIAL_INIT)
+        {
+        pthread_t cur;
+
+        if (xnpod_unblockable_p())
+            return EPERM;
+
+        xnsynch_sleep_on(desc->node->completion_synch, XN_INFINITE);
+
+        cur = pse51_current_thread();
+
+        if (xnthread_test_flags(&cur->threadbase, XNRMID))
+            return EBADF;
+
+        if (xnthread_test_flags(&cur->threadbase, XNBREAK))
+            return EINTR;
+        }
+
     *descp = desc;
     return 0;
 }

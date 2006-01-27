@@ -97,8 +97,6 @@ int pthread_create (pthread_t *tid,
     int prio;
     spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-
     if (!tid)
         return EINVAL;
 
@@ -233,11 +231,16 @@ int pthread_equal (pthread_t t1, pthread_t t2)
 void pthread_exit (void *value_ptr)
 
 {
+    pthread_t cur;
     spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+    cur = pse51_current_thread();
+
+    if (!cur)
+        return;
+
     xnlock_get_irqsave(&nklock, s);
-    pse51_thread_abort(pse51_current_thread(), value_ptr);
+    pse51_thread_abort(cur, value_ptr);
 }
 
 int pthread_join (pthread_t thread, void **value_ptr)
@@ -247,8 +250,6 @@ int pthread_join (pthread_t thread, void **value_ptr)
     pthread_t cur;
     spl_t s;
     
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-
     cur = pse51_current_thread();
 
     xnlock_get_irqsave(&nklock, s);
@@ -275,8 +276,7 @@ int pthread_join (pthread_t thread, void **value_ptr)
     is_last_joiner = 1;
     while (pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
 	{
-        /* we can not suspend the root thread, return EPERM. */
-        if (!cur)
+        if (xnpod_unblockable_p())
             {
             xnlock_put_irqrestore(&nklock, s);
             return EPERM;
@@ -316,14 +316,12 @@ int pthread_join (pthread_t thread, void **value_ptr)
 pthread_t pthread_self (void)
 
 {
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
     return pse51_current_thread();
 }
 
 int sched_yield (void)
 
 {
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
     xnpod_yield();
     return 0;
 }
@@ -337,8 +335,6 @@ int pthread_make_periodic_np (pthread_t thread,
     xnticks_t start, period;
     int err;
     spl_t s;
-
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
 
     if (!periodtp || !starttp)
         return EINVAL;
@@ -364,7 +360,9 @@ int pthread_make_periodic_np (pthread_t thread,
 
 int pthread_wait_np(void)
 {
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+    if (xnpod_unblockable_p())
+        return EPERM;
+
     return -xnpod_wait_thread_period();
 }
 
