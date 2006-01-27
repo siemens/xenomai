@@ -65,7 +65,7 @@ static inline int mutex_timedlock_internal(pthread_mutex_t *mutex,
                 return EINTR;
 
             if (xnthread_test_flags(&cur->threadbase, XNRMID))
-                return EIDRM;
+                return EINVAL;
 
             if (xnthread_test_flags(&cur->threadbase, XNTIMEO))
                 return ETIMEDOUT;
