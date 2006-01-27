@@ -563,7 +563,7 @@ int __sem_destroy (struct task_struct *curr, struct pt_regs *regs)
 
 int __sem_open (struct task_struct *curr, struct pt_regs *regs)
 {
-    unsigned long handle, pid, uaddr;
+    unsigned long handle, uaddr;
     char name[PSE51_MAXNAME];
     sem_t *sem, *usem;
     int oflags;
@@ -580,8 +580,6 @@ int __sem_open (struct task_struct *curr, struct pt_regs *regs)
     
     if (!__xn_access_ok(curr,VERIFY_WRITE,(void __user *)usem,sizeof(handle)))
         return -EFAULT;
-
-    __xn_copy_from_user(curr, &pid, (void __user *)usem, sizeof(pid));
 
     len = __xn_strncpy_from_user(curr,
                                  name,
@@ -612,7 +610,7 @@ int __sem_open (struct task_struct *curr, struct pt_regs *regs)
         return -thread_get_errno();
         }
 
-    uaddr = pse51_usem_open(sem, (pid_t)pid, (unsigned long)usem);
+    uaddr = pse51_usem_open(sem, curr->mm, (unsigned long)usem);
 
     xnlock_put_irqrestore(&nklock, s);
 
@@ -652,7 +650,7 @@ int __sem_close (struct task_struct *curr, struct pt_regs *regs)
 
     xnlock_get_irqsave(&nklock, s);
 
-    closed = pse51_usem_close(sem, curr->tgid);
+    closed = pse51_usem_close(sem, curr->mm);
 
     if (closed < 0)
         {
@@ -1610,14 +1608,13 @@ int __timer_getoverrun (struct task_struct *curr, struct pt_regs *regs)
     return rc >= 0 ? rc : -thread_get_errno();
 }
 
-/* shm_open(name, oflag, mode, pid, ufd) */
+/* shm_open(name, oflag, mode, ufd) */
 int __shm_open (struct task_struct *curr, struct pt_regs *regs)
 {
     int ufd, kfd, oflag, err;
     char name[PSE51_MAXNAME];
     unsigned len;
     mode_t mode;
-    pid_t pid;
 
     len = __xn_strncpy_from_user(curr,
                                  name,
@@ -1637,11 +1634,10 @@ int __shm_open (struct task_struct *curr, struct pt_regs *regs)
     if (kfd == -1)
         return -thread_get_errno();
 
-    pid = (pid_t) __xn_reg_arg4(regs);
-    ufd = (int) __xn_reg_arg5(regs);
+    ufd = (int) __xn_reg_arg4(regs);
 
-    err = pse51_assoc_create(&pse51_ufds, (u_long) kfd, pid, (u_long) ufd);
-    /* pse51_assoc_create returning an error means that the same pid and user
+    err = pse51_assoc_create(&pse51_ufds, (u_long) kfd, curr->mm, (u_long) ufd);
+    /* pse51_assoc_create returning an error means that the same mm and user
        file descriptor are already registered. That is impossible. */
     BUG_ON(err);
     return 0;
@@ -1669,17 +1665,15 @@ int __shm_unlink (struct task_struct *curr, struct pt_regs *regs)
     return !err ? 0 : -thread_get_errno();
 }
 
-/* shm_close(pid, ufd) */
+/* shm_close(ufd) */
 int __shm_close (struct task_struct *curr, struct pt_regs *regs)
 {
     unsigned long kfd;
     int ufd, err;
-    pid_t pid;
 
-    pid = (pid_t) __xn_reg_arg1(regs);
-    ufd = (int) __xn_reg_arg2(regs);
+    ufd = (int) __xn_reg_arg1(regs);
 
-    err = pse51_assoc_lookup(&pse51_ufds, &kfd, pid, (u_long) ufd, 1);
+    err = pse51_assoc_lookup(&pse51_ufds, &kfd, curr->mm, (u_long) ufd, 1);
 
     if (err)
         return err;
@@ -1689,19 +1683,17 @@ int __shm_close (struct task_struct *curr, struct pt_regs *regs)
     return !err ? 0 : -thread_get_errno();
 }
 
-/* ftruncate(pid, ufd, len) */
+/* ftruncate(ufd, len) */
 int __ftruncate (struct task_struct *curr, struct pt_regs *regs)
 {
     unsigned long kfd;
     int ufd, err;
-    pid_t pid;
     off_t len;
 
-    pid = (pid_t) __xn_reg_arg1(regs);
-    ufd = (int) __xn_reg_arg2(regs);
-    len = (off_t) __xn_reg_arg3(regs);
+    ufd = (int) __xn_reg_arg1(regs);
+    len = (off_t) __xn_reg_arg2(regs);
 
-    err = pse51_assoc_lookup(&pse51_ufds, &kfd, pid, (u_long) ufd, 0);
+    err = pse51_assoc_lookup(&pse51_ufds, &kfd, curr->mm, (u_long) ufd, 0);
 
     if (err)
         return err;
@@ -1719,25 +1711,23 @@ typedef struct {
     unsigned long offset;
 } pse51_umap_t;
 
-/* mmap_prologue(len, pid, ufd, off, pse51_umap_t *umap) */
+/* mmap_prologue(len, ufd, off, pse51_umap_t *umap) */
 int __mmap_prologue (struct task_struct *curr, struct pt_regs *regs)
 {
     unsigned long kfd;
     pse51_umap_t umap;
     int ufd, err;
     size_t len;
-    pid_t pid;
     off_t off;
 
     len = (size_t) __xn_reg_arg1(regs);
-    pid = (pid_t) __xn_reg_arg2(regs);
-    ufd = (int) __xn_reg_arg3(regs);
-    off = (off_t) __xn_reg_arg4(regs);
+    ufd = (int) __xn_reg_arg2(regs);
+    off = (off_t) __xn_reg_arg3(regs);
 
-    if(!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg5(regs),sizeof(umap)))
+    if(!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg4(regs),sizeof(umap)))
         return -EFAULT;    
 
-    err = pse51_assoc_lookup(&pse51_ufds, &kfd, pid, (u_long) ufd, 0);
+    err = pse51_assoc_lookup(&pse51_ufds, &kfd, curr->mm, (u_long) ufd, 0);
 
     if (err)
         return err;
@@ -1760,30 +1750,28 @@ int __mmap_prologue (struct task_struct *curr, struct pt_regs *regs)
     umap.offset = xnheap_shared_offset(umap.ioctl_cookie, umap.kaddr);
 
     __xn_copy_to_user(curr,
-                      (void __user *)__xn_reg_arg5(regs),
+                      (void __user *)__xn_reg_arg4(regs),
                       &umap,
                       sizeof(umap));
 
     return 0;
 }
 
-/* mmap_epilogue(pid, uaddr, u_long *ioctl_cookie) */
+/* mmap_epilogue(uaddr, pse51_umap_t *umap) */
 int __mmap_epilogue (struct task_struct *curr, struct pt_regs *regs)
 {
     pse51_umap_t umap;
     void *uaddr;
-    pid_t pid;
     int err;
 
-    pid = (pid_t) __xn_reg_arg1(regs);
-    uaddr = (void *) __xn_reg_arg2(regs);
+    uaddr = (void *) __xn_reg_arg1(regs);
  
-    if(!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg3(regs),sizeof(umap)))
+    if(!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg2(regs),sizeof(umap)))
         return -EFAULT;
 
     __xn_copy_from_user(curr,
                         &umap,
-                        (void __user *)__xn_reg_arg3(regs),
+                        (void __user *)__xn_reg_arg2(regs),
                         sizeof(umap));
 
     if (uaddr == MAP_FAILED)
@@ -1794,13 +1782,13 @@ int __mmap_epilogue (struct task_struct *curr, struct pt_regs *regs)
     
     err = pse51_assoc_create(&pse51_umaps,
                              (u_long) umap.kaddr,
-                             pid,
+                             curr->mm,
                              (u_long) uaddr);
     BUG_ON(err);
     return 0;
 }
 
-/* munmap_prologue(pid, uaddr, len, &unmap) */
+/* munmap_prologue(uaddr, len, &unmap) */
 int __munmap_prologue (struct task_struct *curr, struct pt_regs *regs)
 {
     struct {
@@ -1811,16 +1799,14 @@ int __munmap_prologue (struct task_struct *curr, struct pt_regs *regs)
     xnheap_t *heap;
     void *kaddr;
     size_t len;
-    pid_t pid;
     int err;
 
-    pid = (pid_t) __xn_reg_arg1(regs);
-    uaddr = (unsigned long) __xn_reg_arg2(regs);
-    len = (size_t) __xn_reg_arg3(regs);
-    if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg4(regs),sizeof(uunmap)))
+    uaddr = (unsigned long) __xn_reg_arg1(regs);
+    len = (size_t) __xn_reg_arg2(regs);
+    if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg3(regs),sizeof(uunmap)))
         return -EFAULT;
 
-    err = pse51_assoc_lookup(&pse51_umaps, (u_long *) &kaddr, pid, uaddr, 0);
+    err = pse51_assoc_lookup(&pse51_umaps, (u_long *)&kaddr, curr->mm, uaddr, 0);
 
     if (err)
         return err;
@@ -1833,27 +1819,25 @@ int __munmap_prologue (struct task_struct *curr, struct pt_regs *regs)
     uunmap.mapsize = xnheap_size(heap);
     uunmap.offset = xnheap_shared_offset(heap, kaddr);
     __xn_copy_to_user(curr,
-                      (void __user *)__xn_reg_arg4(regs),
+                      (void __user *)__xn_reg_arg3(regs),
                       &uunmap,
                       sizeof(uunmap));
 
     return 0;
 }
 
-/* munmap_epilogue(pid, uaddr, len) */
+/* munmap_epilogue(uaddr, len) */
 int __munmap_epilogue (struct task_struct *curr, struct pt_regs *regs)
 {
     unsigned long uaddr;
     void *kaddr;
     size_t len;
-    pid_t pid;
     int err;
 
-    pid = (pid_t) __xn_reg_arg1(regs);
-    uaddr = (unsigned long) __xn_reg_arg2(regs);
-    len = (size_t) __xn_reg_arg3(regs);
+    uaddr = (unsigned long) __xn_reg_arg1(regs);
+    len = (size_t) __xn_reg_arg2(regs);
 
-    err = pse51_assoc_lookup(&pse51_umaps, (u_long *) &kaddr, pid, uaddr, 1);
+    err = pse51_assoc_lookup(&pse51_umaps, (u_long *)&kaddr, curr->mm, uaddr, 1);
 
     if (err)
         return err;

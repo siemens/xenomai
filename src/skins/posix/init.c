@@ -27,7 +27,6 @@
 #include <xenomai/posix/syscall.h>
 #include <xenomai/rtdm/syscall.h>
 
-unsigned long __pse51_mainpid;          /* main thread pid. */
 int __pse51_muxid = -1;
 int __rtdm_muxid  = -1;
 int __rtdm_fd_start = INT_MAX;
@@ -37,8 +36,6 @@ static __attribute__((constructor)) void __init_posix_interface(void)
 {
     xnfeatinfo_t finfo;
     int muxid;
-
-    __pse51_mainpid = (unsigned long) getpid();
 
     muxid = XENOMAI_SYSBIND(PSE51_SKIN_MAGIC,
 			    XENOMAI_FEAT_DEP,

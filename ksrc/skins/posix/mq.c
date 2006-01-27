@@ -202,7 +202,11 @@ int mq_setattr(mqd_t fd,
 
     mq = node2mq(pse51_desc_node(desc));
     if(oattr)
+        {
+        *oattr = mq->attr;
         oattr->mq_flags = pse51_desc_getflags(desc);
+        oattr->mq_curmsgs = countpq(&mq->queued);
+        }
     flags = (pse51_desc_getflags(desc) & PSE51_PERMS_MASK)
         | (attr->mq_flags & ~PSE51_PERMS_MASK);
     pse51_desc_setflags(desc, flags);

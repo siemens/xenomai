@@ -221,6 +221,9 @@ void pse51_sigqueue_inner (pthread_t thread, pse51_siginfo_t *si)
     unsigned prio;
     int signum;
 
+    if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC,struct pse51_thread))
+        return;
+
     signum = si->info.si_signo;
     /* Since signals below SIGRTMIN are not real-time, they should be treated
        after real-time signals, hence their priority. */
@@ -351,7 +354,7 @@ int sigqueue (pthread_t thread, int sig, union sigval value)
     pse51_siginfo_t *si = NULL; /* Avoid spurious warning. */
     spl_t s;
 
-    if ((unsigned) (sig - 1) > SIGRTMAX - 1)
+    if ((unsigned) sig > SIGRTMAX)
         return EINVAL;
 
     if (sig)
@@ -383,7 +386,7 @@ int pthread_kill (pthread_t thread, int sig)
     pse51_siginfo_t *si = NULL;
     spl_t s;
 
-    if ((unsigned) (sig - 1) > SIGRTMAX - 1)
+    if ((unsigned) sig > SIGRTMAX)
         return EINVAL;
 
     if (sig)
