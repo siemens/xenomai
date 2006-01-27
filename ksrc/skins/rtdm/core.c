@@ -116,13 +116,13 @@ static int create_instance(struct rtdm_device *device,
     spl_t                   s;
 
 
+    *context_ptr = NULL;
+
     xnlock_get_irqsave(&rt_fildes_lock, s);
 
     *fildes_ptr = fildes = free_fildes;
-    if (!fildes) {
+    if (unlikely(!fildes)) {
         xnlock_put_irqrestore(&rt_fildes_lock, s);
-
-        *context_ptr = NULL;
         return -ENFILE;
     }
     free_fildes = fildes->next;
@@ -134,15 +134,13 @@ static int create_instance(struct rtdm_device *device,
     if (context) {
         xnlock_get_irqsave(&rt_dev_lock, s);
 
-        if (context->device) {
+        if (unlikely(context->device)) {
             xnlock_put_irqrestore(&rt_dev_lock, s);
             return -EBUSY;
         }
         context->device = device;
 
         xnlock_put_irqrestore(&rt_dev_lock, s);
-
-        *context_ptr = context;
     } else {
         if (nrt_mem)
             context = kmalloc(sizeof(struct rtdm_dev_context) +
@@ -150,12 +148,13 @@ static int create_instance(struct rtdm_device *device,
         else
             context = xnmalloc(sizeof(struct rtdm_dev_context) +
                                device->context_size);
-        *context_ptr = context;
-        if (!context)
+        if (unlikely(!context))
             return -ENOMEM;
 
         context->device = device;
     }
+
+    *context_ptr = context;
 
     context->fd  = get_fd(fildes);
     context->ops = &device->ops;
