@@ -38,7 +38,7 @@ typedef struct pse51_named_sem {
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 typedef struct pse51_uptr {
-    pid_t pid;
+    struct mm_struct *mm;
     unsigned refcnt;
     unsigned long uaddr;
 
@@ -442,7 +442,9 @@ int sem_unlink(const char *name)
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 /* Must be called nklock locked, irq off. */
-unsigned long pse51_usem_open(sem_t *sem, pid_t pid, unsigned long uaddr)
+unsigned long pse51_usem_open(sem_t *sem,
+                              struct mm_struct *mm,
+                              unsigned long uaddr)
 {
     nsem_t *nsem = sem2named_sem(sem);
     xnholder_t *holder;
@@ -457,7 +459,7 @@ unsigned long pse51_usem_open(sem_t *sem, pid_t pid, unsigned long uaddr)
         {
         pse51_uptr_t *uptr = link2uptr(holder);
 
-        if (uptr->pid == pid)
+        if (uptr->mm == mm)
             {
             ++uptr->refcnt;
             return uptr->uaddr;
@@ -465,7 +467,7 @@ unsigned long pse51_usem_open(sem_t *sem, pid_t pid, unsigned long uaddr)
         }
 
     uptr = (pse51_uptr_t *) xnmalloc(sizeof(*uptr));
-    uptr->pid = pid;
+    uptr->mm = mm;
     uptr->uaddr = uaddr;
     uptr->refcnt = 1;
     inith(&uptr->link);
@@ -474,7 +476,7 @@ unsigned long pse51_usem_open(sem_t *sem, pid_t pid, unsigned long uaddr)
 }
 
 /* Must be called nklock locked, irq off. */
-int pse51_usem_close(sem_t *sem, pid_t pid)
+int pse51_usem_close(sem_t *sem, struct mm_struct *mm)
 {
     nsem_t *nsem = sem2named_sem(sem);
     pse51_uptr_t *uptr = NULL;
@@ -489,7 +491,7 @@ int pse51_usem_close(sem_t *sem, pid_t pid)
         {
         uptr = link2uptr(holder);
 
-        if (uptr->pid == pid)
+        if (uptr->mm == mm)
             {
             if (--uptr->refcnt)
                 return 0;
@@ -516,8 +518,8 @@ void pse51_usems_cleanup(sem_t *sem)
         pse51_uptr_t *uptr = link2uptr(holder);
 
 #ifdef CONFIG_XENO_OPT_DEBUG
-        xnprintf("POSIX semaphore \"%s\" binding for user process %d"
-                 " discarded.\n", nsem->nodebase.name, uptr->pid);
+        xnprintf("POSIX semaphore \"%s\" binding for user process"
+                 " discarded.\n", nsem->nodebase.name);
 #endif /* CONFIG_XENO_OPT_DEBUG */
 
         removeq(&nsem->userq, &uptr->link);

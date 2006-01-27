@@ -562,7 +562,7 @@ int munmap(void *addr, size_t len)
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 typedef struct {
     unsigned long uobj;
-    pid_t pid;
+    struct mm_struct *mm;
     unsigned long kobj;
 
     xnholder_t link;
@@ -592,7 +592,7 @@ int pse51_xnheap_get(xnheap_t **pheap, void *addr)
 
 static int pse51_assoc_lookup_inner(pse51_assocq_t *q,
                                     pse51_assoc_t **passoc,
-                                    int pid,
+                                    struct mm_struct *mm,
                                     u_long uobj)
 {
     pse51_assoc_t *assoc;
@@ -611,9 +611,9 @@ static int pse51_assoc_lookup_inner(pse51_assocq_t *q,
             holder = nextq(q, holder);
             }
         while (holder && (assoc->uobj < uobj ||
-                          (assoc->uobj == uobj && assoc->pid < pid)));
+                          (assoc->uobj == uobj && assoc->mm < mm)));
 
-        if (assoc->pid == pid && assoc->uobj == uobj)
+        if (assoc->mm == mm && assoc->uobj == uobj)
             {
             /* found */
             *passoc = assoc;
@@ -628,21 +628,24 @@ static int pse51_assoc_lookup_inner(pse51_assocq_t *q,
     return 0;
 }
 
-int pse51_assoc_create(pse51_assocq_t *q, u_long kobj, int pid, u_long uobj)
+int pse51_assoc_create(pse51_assocq_t *q,
+                       u_long kobj,
+                       struct mm_struct *mm,
+                       u_long uobj)
 {
     pse51_assoc_t *assoc, *next;
     spl_t s;
 
     xnlock_get_irqsave(&pse51_assoc_lock, s);
 
-    if (pse51_assoc_lookup_inner(q, &next, pid, uobj))
+    if (pse51_assoc_lookup_inner(q, &next, mm, uobj))
         {
         xnlock_put_irqrestore(&pse51_assoc_lock, s);
         return -EBUSY;
         }
 
     assoc = (pse51_assoc_t *) xnmalloc(sizeof(*assoc));
-    assoc->pid = pid;
+    assoc->mm = mm;
     assoc->uobj = uobj;
     assoc->kobj = kobj;
     inith(&assoc->link);
@@ -658,7 +661,7 @@ int pse51_assoc_create(pse51_assocq_t *q, u_long kobj, int pid, u_long uobj)
 
 int pse51_assoc_lookup(pse51_assocq_t *q,
                        u_long *kobj,
-                       int pid,
+                       struct mm_struct *mm,
                        u_long uobj,
                        int destroy)
 {
@@ -667,7 +670,7 @@ int pse51_assoc_lookup(pse51_assocq_t *q,
 
     xnlock_get_irqsave(&pse51_assoc_lock, s);
 
-    if (!pse51_assoc_lookup_inner(q, &assoc, pid, uobj))
+    if (!pse51_assoc_lookup_inner(q, &assoc, mm, uobj))
         {
         xnlock_put_irqrestore(&pse51_assoc_lock, s);
         return -EBADF;

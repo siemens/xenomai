@@ -25,7 +25,6 @@
 #include <posix/semaphore.h>
 
 extern int __pse51_muxid;
-extern unsigned long __pse51_mainpid;
 
 int __wrap_sem_init (sem_t *sem,
 		     int pshared,
@@ -178,8 +177,6 @@ sem_t *__wrap_sem_open (const char *name, int oflags, ...)
         err = ENOSPC;
         goto error;
         }
-
-    rsem->handle = __pse51_mainpid;
 
     err = -XENOMAI_SKINCALL5(__pse51_muxid,
                              __pse51_sem_open,

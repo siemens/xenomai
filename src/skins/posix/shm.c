@@ -24,7 +24,6 @@
 #include <xenomai/posix/syscall.h>
 
 extern int __pse51_muxid;
-extern unsigned long __pse51_mainpid;
 
 int __wrap_shm_open(const char *name, int oflag, mode_t mode)
 {
@@ -35,12 +34,11 @@ int __wrap_shm_open(const char *name, int oflag, mode_t mode)
     if (fd == -1)
         return -1;
 
-    err = -XENOMAI_SKINCALL5(__pse51_muxid,
+    err = -XENOMAI_SKINCALL4(__pse51_muxid,
                              __pse51_shm_open,
                              name,
                              oflag,
                              mode,
-                             __pse51_mainpid,
                              fd);
     if (!err)
 	return fd;
@@ -68,9 +66,8 @@ int __wrap_ftruncate(int fildes, off_t length)
 {
     int err;
 
-    err = -XENOMAI_SKINCALL3(__pse51_muxid,
+    err = -XENOMAI_SKINCALL2(__pse51_muxid,
                              __pse51_ftruncate,
-                             __pse51_mainpid,
                              fildes,
                              length);
     if (!err)
@@ -100,10 +97,9 @@ void *__wrap_mmap(void *addr,
     void *uaddr;
     int err;
 
-    err = -XENOMAI_SKINCALL5(__pse51_muxid,
+    err = -XENOMAI_SKINCALL4(__pse51_muxid,
                              __pse51_mmap_prologue,
                              len,
-                             __pse51_mainpid,
                              fildes,
                              off,
                              &map);
@@ -124,9 +120,8 @@ void *__wrap_mmap(void *addr,
     if (uaddr == MAP_FAILED)
         {
 err_mmap_epilogue:
-        XENOMAI_SKINCALL3(__pse51_muxid,
+        XENOMAI_SKINCALL2(__pse51_muxid,
                           __pse51_mmap_epilogue,
-                          __pse51_mainpid,
                           MAP_FAILED,
                           &map);
         return MAP_FAILED;
@@ -136,9 +131,8 @@ err_mmap_epilogue:
     mprotect(uaddr, map.offset, PROT_NONE);
 
     uaddr = (char *) uaddr + map.offset;
-    err = -XENOMAI_SKINCALL3(__pse51_muxid,
+    err = -XENOMAI_SKINCALL2(__pse51_muxid,
                              __pse51_mmap_epilogue,
-                             __pse51_mainpid,
                              (unsigned long) uaddr,
                              &map);
 
@@ -154,9 +148,8 @@ int __shm_close(int fd)
 {
     int err;
 
-    err = XENOMAI_SKINCALL2(__pse51_muxid,
+    err = XENOMAI_SKINCALL1(__pse51_muxid,
                             __pse51_shm_close,
-                            __pse51_mainpid,
                             fd);
 
     if (!err)
@@ -174,9 +167,8 @@ int __wrap_munmap(void *addr, size_t len)
     } map;
     int err;
 
-    err = -XENOMAI_SKINCALL4(__pse51_muxid,
+    err = -XENOMAI_SKINCALL3(__pse51_muxid,
                              __pse51_munmap_prologue,
-                             __pse51_mainpid,
                              addr,
                              len,
                              &map);
@@ -187,9 +179,8 @@ int __wrap_munmap(void *addr, size_t len)
     if (__real_munmap((char *) addr - map.offset, map.mapsize))
         return -1;
 
-    err = -XENOMAI_SKINCALL3(__pse51_muxid,
+    err = -XENOMAI_SKINCALL2(__pse51_muxid,
                              __pse51_munmap_epilogue,
-                             __pse51_mainpid,
                              addr,
                              len);
 
