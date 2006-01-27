@@ -74,8 +74,6 @@ int pthread_getschedparam (pthread_t tid, int *pol, struct sched_param *par)
 {
     spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(tid, PSE51_THREAD_MAGIC, struct pse51_thread))

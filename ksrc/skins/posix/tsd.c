@@ -106,9 +106,11 @@ int pthread_key_create (pthread_key_t *key, pse51_key_destructor_t destructor)
 int pthread_setspecific (pthread_key_t key, const void *value)
 
 {
+    pthread_t cur = pse51_current_thread();
     spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+    if (!cur)
+        return EPERM;
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -120,7 +122,7 @@ int pthread_setspecific (pthread_key_t key, const void *value)
 
     xnlock_put_irqrestore(&nklock, s);
 
-    thread_settsd(pse51_current_thread(), key->key, value);
+    thread_settsd(cur, key->key, value);
     
     return 0;
 }
@@ -128,10 +130,12 @@ int pthread_setspecific (pthread_key_t key, const void *value)
 void *pthread_getspecific (pthread_key_t key)
 
 {
+    pthread_t cur = pse51_current_thread();
     const void *value;
     spl_t s;
     
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+    if (!cur)
+        return NULL;
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -143,7 +147,7 @@ void *pthread_getspecific (pthread_key_t key)
 
     xnlock_put_irqrestore(&nklock, s);
     
-    value = thread_gettsd(pse51_current_thread(), key->key);
+    value = thread_gettsd(cur, key->key);
     
     return (void *)value;
 }
@@ -152,8 +156,6 @@ int pthread_key_delete (pthread_key_t key)
 
 {
     spl_t s;
-
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
 
     xnlock_get_irqsave(&nklock, s);
 

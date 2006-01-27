@@ -140,7 +140,7 @@ void pse51_thread_abort(pthread_t thread, void *status);
 
 static inline void thread_cancellation_point (pthread_t thread)
 {
-    if( (thread)->cancel_request
+    if( thread && thread->cancel_request
         && thread_getcancelstate(thread) == PTHREAD_CANCEL_ENABLE )
         pse51_thread_abort(thread, PTHREAD_CANCELED);
 }

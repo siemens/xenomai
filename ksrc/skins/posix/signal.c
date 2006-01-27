@@ -315,8 +315,6 @@ int sigaction (int sig, const struct sigaction *action, struct sigaction *old)
 {
     spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-
     if ((unsigned) (sig - 1) > SIGRTMAX - 1)
         {
         thread_set_errno(EINVAL);
@@ -417,15 +415,17 @@ int sigpending (sigset_t *user_set)
 
 {
     pse51_sigset_t *set = user2pse51_sigset(user_set);
+    pthread_t cur = pse51_current_thread();
     spl_t s;
-    
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
 
+    if (!cur)
+        return -1;              /* Can not set errno. */
+    
     /* Lock nklock, in order to prevent pthread_kill from modifying
      * blocked_received while we are reading */
     xnlock_get_irqsave(&nklock, s);  
 
-    *set = pse51_current_thread()->blocked_received.mask;
+    *set = cur->blocked_received.mask;
 
     xnlock_put_irqrestore(&nklock, s);
 
@@ -437,17 +437,16 @@ int pthread_sigmask (int how, const sigset_t *user_set, sigset_t *user_oset)
 {
     pse51_sigset_t *set = user2pse51_sigset(user_set);
     pse51_sigset_t *oset = user2pse51_sigset(user_oset);
+    pthread_t cur = pse51_current_thread();
     pse51_sigset_t unblocked;
-    pthread_t cur;
     spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+    if (!cur)
+        return EPERM;
 
     emptyset(&unblocked);
 
     xnlock_get_irqsave(&nklock, s);
-
-    cur = pse51_current_thread();
 
     if (oset)
         *oset = cur->sigmask;
@@ -530,10 +529,11 @@ static int pse51_sigtimedwait_inner (const sigset_t *user_set,
     int err = 0;
     spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-
     thread = pse51_current_thread();
 
+    if (!thread)
+        return EPERM;
+    
     /* All signals in "set" must be blocked in order for sigwait to
        work reliably. */
     nandset(&non_blocked, set, &thread->sigmask);
@@ -546,6 +546,12 @@ static int pse51_sigtimedwait_inner (const sigset_t *user_set,
     
     if (!received)
         {
+        if (xnpod_unblockable_p())
+            {
+            err = EPERM;
+            goto unlock_and_ret;
+            }
+
         err = clock_adjust_timeout(&to, CLOCK_MONOTONIC);
 
         if (err)

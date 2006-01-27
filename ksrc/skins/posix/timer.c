@@ -210,12 +210,12 @@ int timer_settime (timer_t timerid,
                    const struct itimerspec *__restrict__ value,
                    struct itimerspec *__restrict__ ovalue)
 {
-    pthread_t curr = pse51_current_thread();
+    pthread_t cur = pse51_current_thread();
     struct pse51_timer *timer;
     spl_t s;
     int err;
 
-    if (xnpod_asynch_p() || !curr)
+    if (!cur)
         {
         err = EPERM;
         goto error;
@@ -271,7 +271,7 @@ int timer_settime (timer_t timerid,
         xntimer_start(&timer->timerbase,
                       start,
                       ts2ticks_ceil(&value->it_interval));
-        timer->owner = curr;
+        timer->owner = cur;
         inith(&timer->link);
         appendq(&timer->owner->timersq, &timer->link);
         }

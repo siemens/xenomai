@@ -1,5 +1,8 @@
 2006-01-27  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
+	* ksrc/skins/posix: Remove xnpod_check_context() and fail with
+	EPERM where appropriate.
+
 	* src/skins/posix/rtdm.c: Handle cancellation requests for
 	user-space threads.
 

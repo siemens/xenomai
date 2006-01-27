@@ -36,8 +36,6 @@ int pthread_cancel (pthread_t thread)
     int cancel_enabled;
     spl_t s;
     
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
@@ -73,13 +71,15 @@ int pthread_cancel (pthread_t thread)
 void pthread_cleanup_push (cleanup_routine_t routine, void *arg)
 
 {
+    pthread_t cur = pse51_current_thread();
     cleanup_handler_t *handler;
     spl_t s;
     
     if (!routine)
         return;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+    if (!cur)
+        return;
 
     /* The allocation is inside the critical section in order to make the
        function async-signal safe, that is in order to avoid leaks if an
@@ -100,7 +100,7 @@ void pthread_cleanup_push (cleanup_routine_t routine, void *arg)
     handler->arg = arg;
     inith(&handler->link);
 
-    prependq(thread_cleanups(pse51_current_thread()), &handler->link);
+    prependq(thread_cleanups(cur), &handler->link);
 
     xnlock_put_irqrestore(&nklock, s);
 }
@@ -108,15 +108,17 @@ void pthread_cleanup_push (cleanup_routine_t routine, void *arg)
 void pthread_cleanup_pop (int execute)
 
 {
+    pthread_t cur = pse51_current_thread();
     cleanup_handler_t *handler;
     xnholder_t *holder;
     spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+    if (!cur)
+        return;
 
     xnlock_get_irqsave(&nklock, s);
 
-    holder = getq(thread_cleanups(pse51_current_thread()));
+    holder = getq(thread_cleanups(cur));
 
     if (!holder)
 	{
@@ -141,9 +143,7 @@ int pthread_setcanceltype (int type, int *oldtype_ptr)
     pthread_t cur;
     int oldtype;
     spl_t s;
-    
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-    
+
     switch (type)
 	{
 	default:
@@ -157,7 +157,10 @@ int pthread_setcanceltype (int type, int *oldtype_ptr)
 	}
 
     cur = pse51_current_thread();
-    
+
+    if (!cur)
+        return EPERM;
+
     xnlock_get_irqsave(&nklock, s);
 
     oldtype = thread_getcanceltype(cur);
@@ -183,8 +186,6 @@ int pthread_setcancelstate (int state, int *oldstate_ptr)
     int oldstate;
     spl_t s;
     
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-    
     switch (state)
 	{
 	default:
@@ -198,6 +199,9 @@ int pthread_setcancelstate (int state, int *oldstate_ptr)
 	}
 
     cur = pse51_current_thread();
+
+    if (!cur)
+        return EPERM;
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -221,7 +225,6 @@ void pthread_testcancel (void)
 {
     spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
     xnlock_get_irqsave(&nklock, s);
     thread_cancellation_point(pse51_current_thread());
     xnlock_put_irqrestore(&nklock, s);
