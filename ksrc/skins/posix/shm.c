@@ -191,13 +191,13 @@ int shm_open(const char *name, int oflags, mode_t mode)
 
     err = pse51_desc_create(&desc, &shm->nodebase);
     if (err)
-        goto err_put_shm;
+        goto err_shm_put;
 
     pse51_desc_setflags(desc, oflags & PSE51_PERMS_MASK);
     xnlock_put_irqrestore(&nklock, s);
     return pse51_desc_fd(desc);
 
-  err_put_shm:
+  err_shm_put:
     pse51_shm_put(shm, 1);
 
   error:
@@ -310,10 +310,10 @@ int ftruncate(int fd, off_t len)
     if (down_interruptible(&shm->maplock))
         {
         err = EINTR;
-        goto error;
+        goto err_shm_put;
         }
 
-    /* Allocate one page more for alignement (the address returned by mmap
+    /* Allocate one page more for alignment (the address returned by mmap
        is aligned). */
     len += PAGE_SIZE + xnheap_overhead(len, PAGE_SIZE);
     len = PAGE_ALIGN(len);
@@ -342,6 +342,7 @@ int ftruncate(int fd, off_t len)
 
     up(&shm->maplock);
 
+  err_shm_put:
     pse51_shm_put(shm, 1);
 
     if (!err)
@@ -522,7 +523,7 @@ int munmap(void *addr, size_t len)
     if (down_interruptible(&shm->maplock))
         {
         err = EINTR;
-        goto error;
+        goto err_shm_put;
         }
 
     for (holder = getheadq(&shm->mappings);
@@ -551,6 +552,7 @@ int munmap(void *addr, size_t len)
 
   err_up:
     up (&shm->maplock);
+  err_shm_put:
     pse51_shm_put(shm, 1);
   error:
     thread_set_errno(err);
