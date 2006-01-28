@@ -42,12 +42,13 @@ tcancel_DEPENDENCIES=../libposix_s.a libtests.a
 tsignal_DEPENDENCIES=../libposix_s.a libtests.a
 ttsd_DEPENDENCIES=../libposix_s.a libtests.a
 tclock_DEPENDENCIES=../libposix_s.a libtests.a
-tmq_DEPENDENCIES=../libposix_s.a libtests.a
 ttimers_DEPENDENCIES=../libposix_s.a libtests.a
+tmq_DEPENDENCIES=../libposix_s.a libtests.a
 
 check_LIBRARIES=libtests.a
 
-libtests_a_SOURCES = xntest.c xntest.h posix_test.c posix_test.h
+libtests_a_SOURCES = xntest.c
+libtests_a_DEPENDENCIES = xntest.h posix_test.h
 tthread_SOURCES = tthread.c
 tsem_SOURCES = tsem.c
 tmutex_SOURCES = tmutex.c

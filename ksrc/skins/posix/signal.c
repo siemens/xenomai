@@ -419,8 +419,11 @@ int sigpending (sigset_t *user_set)
     spl_t s;
 
     if (!cur)
-        return -1;              /* Can not set errno. */
-    
+        {
+        thread_set_errno(EPERM);
+        return -1;
+        }
+
     /* Lock nklock, in order to prevent pthread_kill from modifying
      * blocked_received while we are reading */
     xnlock_get_irqsave(&nklock, s);  
@@ -564,7 +567,7 @@ static int pse51_sigtimedwait_inner (const sigset_t *user_set,
         
         xnpod_suspend_thread(&thread->threadbase, XNDELAY, to, NULL);
 
-        thread_cancellation_point(thread);
+        thread_cancellation_point(&thread->threadbase);
 
         if (xnthread_test_flags(&thread->threadbase, XNBREAK))
             {

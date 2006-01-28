@@ -77,7 +77,7 @@ int clock_nanosleep (clockid_t clock_id,
 		     struct timespec *rmtp)
 {
     xnticks_t start, timeout;
-    pthread_t cur;
+    xnthread_t *cur;
     spl_t s;
     int err = 0;
 
@@ -87,7 +87,10 @@ int clock_nanosleep (clockid_t clock_id,
     if ((unsigned) rqtp->tv_nsec > ONE_BILLION)
         return EINVAL;
 
-    cur = pse51_current_thread();
+    if (xnpod_unblockable_p())
+        return EPERM;
+
+    cur = xnpod_current_thread();
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -114,11 +117,11 @@ int clock_nanosleep (clockid_t clock_id,
 	    break;
 	}
 
-    xnpod_suspend_thread(&cur->threadbase, XNDELAY, timeout+1, NULL);
+    xnpod_suspend_thread(cur, XNDELAY, timeout+1, NULL);
 
     thread_cancellation_point(cur);
         
-    if (xnthread_test_flags(&cur->threadbase, XNBREAK))
+    if (xnthread_test_flags(cur, XNBREAK))
 	{
         xnlock_put_irqrestore(&nklock, s);
 

@@ -23,7 +23,7 @@
 #include <posix/thread.h>
 
 /* must be called with nklock locked, interrupts off. */
-static inline int mutex_trylock_internal(pthread_mutex_t *mutex, pthread_t cur)
+static inline int mutex_trylock_internal(pthread_mutex_t *mutex, xnthread_t *cur)
 
 {
     if (!pse51_obj_active(mutex, PSE51_MUTEX_MAGIC, pthread_mutex_t))
@@ -32,8 +32,7 @@ static inline int mutex_trylock_internal(pthread_mutex_t *mutex, pthread_t cur)
     if (mutex->count)
         return EBUSY;
 
-    xnsynch_set_owner(&mutex->synchbase, &cur->threadbase);
-    mutex->owner = cur;
+    xnsynch_set_owner(&mutex->synchbase, cur);
     mutex->count = 1;
     return 0;
 }
@@ -44,12 +43,12 @@ static inline int mutex_timedlock_internal(pthread_mutex_t *mutex,
                                            xnticks_t abs_to)
 
 {
-    pthread_t cur = pse51_current_thread();
+    xnthread_t *cur = xnpod_current_thread();
     int err;
 
     err = mutex_trylock_internal(mutex, cur);
 
-    if (mutex->owner != cur)
+    if (xnsynch_owner(&mutex->synchbase) != cur)
         while (err == EBUSY)
             {
             xnticks_t to = abs_to;
@@ -61,13 +60,13 @@ static inline int mutex_timedlock_internal(pthread_mutex_t *mutex,
 
             xnsynch_sleep_on(&mutex->synchbase, to);
 
-            if (xnthread_test_flags(&cur->threadbase, XNBREAK))
+            if (xnthread_test_flags(cur, XNBREAK))
                 return EINTR;
 
-            if (xnthread_test_flags(&cur->threadbase, XNRMID))
+            if (xnthread_test_flags(cur, XNRMID))
                 return EINVAL;
 
-            if (xnthread_test_flags(&cur->threadbase, XNTIMEO))
+            if (xnthread_test_flags(cur, XNTIMEO))
                 return ETIMEDOUT;
 
             err = mutex_trylock_internal(mutex, cur);
@@ -84,15 +83,13 @@ static inline int mutex_unlock_internal(pthread_mutex_t *mutex)
     if (!pse51_obj_active(mutex, PSE51_MUTEX_MAGIC, pthread_mutex_t))
         return EINVAL;
     
-    if (mutex->owner != pse51_current_thread() || mutex->count != 1)
+    if (xnsynch_owner(&mutex->synchbase) != xnpod_current_thread()
+        || mutex->count != 1)
         return EPERM;
     
-    mutex->owner = NULL;
     mutex->count = 0;
     if (xnsynch_wakeup_one_sleeper(&mutex->synchbase))
         xnpod_schedule();
-    else
-        xnsynch_set_owner(&mutex->synchbase, NULL);
 
     return 0;
 }

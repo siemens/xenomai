@@ -82,7 +82,6 @@ int pthread_mutex_init (pthread_mutex_t *mutex, const pthread_mutexattr_t *attr)
 
     mutex->magic = PSE51_MUTEX_MAGIC;
     mutex->attr = *attr;
-    mutex->owner = NULL;
     inith(&mutex->link);
 
     if (attr->protocol == PTHREAD_PRIO_INHERIT)
@@ -126,11 +125,11 @@ int pthread_mutex_destroy (pthread_mutex_t *mutex)
 int pse51_mutex_timedlock_break (pthread_mutex_t *mutex, xnticks_t abs_to)
 
 {
-    pthread_t cur = pse51_current_thread();
+    xnthread_t *cur = xnpod_current_thread();
     int err;
     spl_t s;
 
-    if (xnpod_unblockable_p() || !cur)
+    if (xnpod_unblockable_p())
         return EPERM;
 
     xnlock_get_irqsave(&nklock, s);
@@ -153,19 +152,19 @@ int pse51_mutex_timedlock_break (pthread_mutex_t *mutex, xnticks_t abs_to)
                     
 		    xnsynch_sleep_on(&mutex->synchbase, to);
 
-		    if (xnthread_test_flags(&cur->threadbase, XNBREAK))
+		    if (xnthread_test_flags(cur, XNBREAK))
                         {
                         err = EINTR;
                         break;
                         }
 
-		    if (xnthread_test_flags(&cur->threadbase, XNTIMEO))
+		    if (xnthread_test_flags(cur, XNTIMEO))
                         {
                         err = ETIMEDOUT;
                         break;
                         }
 
-		    if (xnthread_test_flags(&cur->threadbase, XNRMID))
+		    if (xnthread_test_flags(cur, XNRMID))
                         {
                         err = EINVAL;
                         break;
@@ -199,7 +198,7 @@ int pse51_mutex_timedlock_break (pthread_mutex_t *mutex, xnticks_t abs_to)
 int pthread_mutex_trylock (pthread_mutex_t *mutex)
 
 {
-    pthread_t cur = pse51_current_thread();
+    xnthread_t *cur = xnpod_current_thread();
     int err;
     spl_t s;
     
@@ -211,7 +210,7 @@ int pthread_mutex_trylock (pthread_mutex_t *mutex)
     err = mutex_trylock_internal(mutex, cur);
     
     if (err == EBUSY && mutex->attr.type == PTHREAD_MUTEX_RECURSIVE
-        && mutex->owner == cur)
+        && xnsynch_owner(&mutex->synchbase) == cur)
         {
             if (mutex->count == UINT_MAX)
                 err = EAGAIN;
@@ -263,7 +262,8 @@ int pthread_mutex_unlock (pthread_mutex_t *mutex)
 
     if (err == EPERM && mutex->attr.type == PTHREAD_MUTEX_RECURSIVE)
 	{
-        if (mutex->owner == pse51_current_thread() && mutex->count)
+        if (xnsynch_owner(&mutex->synchbase) == xnpod_current_thread()
+            && mutex->count)
 	    {
             --mutex->count;
             err = 0;

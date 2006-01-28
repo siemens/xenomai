@@ -169,7 +169,7 @@ int pthread_setcanceltype (int type, int *oldtype_ptr)
 
     if (type == PTHREAD_CANCEL_ASYNCHRONOUS
 	&& thread_getcancelstate(cur) == PTHREAD_CANCEL_ENABLE)
-        thread_cancellation_point(cur);
+        thread_cancellation_point(&cur->threadbase);
 
     if (oldtype_ptr)
         *oldtype_ptr=oldtype;
@@ -210,7 +210,7 @@ int pthread_setcancelstate (int state, int *oldstate_ptr)
 
     if (state == PTHREAD_CANCEL_ENABLE
 	&& thread_getcanceltype(cur) == PTHREAD_CANCEL_ASYNCHRONOUS)
-        thread_cancellation_point(cur);
+        thread_cancellation_point(&cur->threadbase);
     
     if (oldstate_ptr)
         *oldstate_ptr=oldstate;
@@ -226,7 +226,7 @@ void pthread_testcancel (void)
     spl_t s;
 
     xnlock_get_irqsave(&nklock, s);
-    thread_cancellation_point(pse51_current_thread());
+    thread_cancellation_point(xnpod_current_thread());
     xnlock_put_irqrestore(&nklock, s);
 }
 

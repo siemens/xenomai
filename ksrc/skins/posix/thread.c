@@ -247,24 +247,24 @@ int pthread_join (pthread_t thread, void **value_ptr)
 
 {
     int is_last_joiner;
-    pthread_t cur;
+    xnthread_t *cur;
     spl_t s;
     
-    cur = pse51_current_thread();
+    cur = xnpod_current_thread();
 
     xnlock_get_irqsave(&nklock, s);
-
-    if (thread == cur)
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EDEADLK;
-	}
 
     if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)
 	&& !pse51_obj_deleted(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
 	{
         xnlock_put_irqrestore(&nklock, s);
         return ESRCH;
+	}
+
+    if (&thread->threadbase == cur)
+	{
+        xnlock_put_irqrestore(&nklock, s);
+        return EDEADLK;
 	}
 
     if (thread_getdetachstate(thread) != PTHREAD_CREATE_JOINABLE)
@@ -289,7 +289,7 @@ int pthread_join (pthread_t thread, void **value_ptr)
         thread_cancellation_point(cur);
         
         /* In case another thread called pthread_detach. */
-        if (xnthread_test_flags(&cur->threadbase, PSE51_JOINED_DETACHED))
+        if (xnthread_test_flags(cur, PSE51_JOINED_DETACHED))
 	    {
             xnlock_put_irqrestore(&nklock, s);
             return EINVAL;
@@ -425,19 +425,18 @@ extern int __pse51_errptd;
 int *pse51_errno_location (void)
 
 {
-#if !defined(__KERNEL__) || !defined(CONFIG_XENO_OPT_PERVASIVE)
-    static int fallback_errno;
-#endif /* ! __KERNEL__ || !CONFIG_XENO_OPT_PERVASIVE */
     pthread_t thread = pse51_current_thread();
+    static int fallback_errno;
 
     if (thread)
 	return &thread->err;
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    return (int *)&pse51_errno_ptd(current);
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-    return &fallback_errno;
+    if (xnpod_userspace_p())
+        return (int *)&pse51_errno_ptd(current);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+    return &fallback_errno;
 }
 
 EXPORT_SYMBOL(pthread_create);

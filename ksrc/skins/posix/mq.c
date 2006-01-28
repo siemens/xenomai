@@ -325,7 +325,7 @@ static int pse51_mq_timedsend_inner(mqd_t fd,
         xnticks_t to = abs_to;
         pse51_desc_t *desc;
         pse51_mq_t *mq;
-        pthread_t cur;
+        xnthread_t *cur;
         
         if ((rc = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC)))
             return rc;
@@ -346,17 +346,17 @@ static int pse51_mq_timedsend_inner(mqd_t fd,
 
         xnsynch_sleep_on(&mq->synchbase, to);
 
-        cur = pse51_current_thread();
+        cur = xnpod_current_thread();
 
         thread_cancellation_point(cur);
 
-        if (xnthread_test_flags(&cur->threadbase, XNBREAK))
+        if (xnthread_test_flags(cur, XNBREAK))
             return EINTR;
 
-        if (xnthread_test_flags(&cur->threadbase, XNTIMEO))
+        if (xnthread_test_flags(cur, XNTIMEO))
             return ETIMEDOUT;
 
-        if (xnthread_test_flags(&cur->threadbase, XNRMID))
+        if (xnthread_test_flags(cur, XNRMID))
             return EBADF;
         }
 }
@@ -367,7 +367,7 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
                                    unsigned *__restrict__ priop,
                                    xnticks_t abs_to)
 {
-    pthread_t cur = pse51_current_thread();
+    xnthread_t *cur = xnpod_current_thread();
     int rc;
 
     for (;;)
@@ -375,6 +375,7 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
         pse51_direct_msg_t msg;
         xnticks_t to = abs_to;
         pse51_desc_t *desc;
+        pthread_t thread;
         pse51_mq_t *mq;
         int direct = 0;
         
@@ -389,17 +390,19 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
 
         mq = node2mq(pse51_desc_node(desc));
 
-        if(testbits(pse51_desc_getflags(desc), O_DIRECT) && cur)
+        thread = thread2pthread(cur);
+        
+        if(testbits(pse51_desc_getflags(desc), O_DIRECT) && thread)
             {
             msg.buf = buffer;
             msg.lenp = lenp;
             msg.priop = priop;
             msg.used = 0;
-            cur->arg = &msg;
+            thread->arg = &msg;
             direct = 1;
             }
         else
-            cur->arg = NULL;
+            thread->arg = NULL;
 
         if ((rc = clock_adjust_timeout(&to, CLOCK_REALTIME)))
             return rc;
@@ -414,13 +417,13 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
         if (direct & msg.used)
             return 0;
             
-        if (xnthread_test_flags(&cur->threadbase, XNRMID))
+        if (xnthread_test_flags(cur, XNRMID))
             return EBADF;
 
-        if (xnthread_test_flags(&cur->threadbase, XNTIMEO))
+        if (xnthread_test_flags(cur, XNTIMEO))
             return ETIMEDOUT;
 
-        if (xnthread_test_flags(&cur->threadbase, XNBREAK))
+        if (xnthread_test_flags(cur, XNBREAK))
             return EINTR;
         }
 }
@@ -476,6 +479,7 @@ int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
 
 int mq_notify(mqd_t fd, const struct sigevent *evp)
 {
+    pthread_t thread = pse51_current_thread();
     pse51_desc_t *desc;
     pse51_mq_t *mq;
     int err;
@@ -489,6 +493,12 @@ int mq_notify(mqd_t fd, const struct sigevent *evp)
         goto error;
         }
 
+    if (xnpod_asynch_p() || !thread)
+        {
+        err = EPERM;
+        goto error;
+        }
+
     xnlock_get_irqsave(&nklock, s);
 
     err = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
@@ -498,7 +508,7 @@ int mq_notify(mqd_t fd, const struct sigevent *evp)
 
     mq = node2mq(pse51_desc_node(desc));
 
-    if (mq->target && mq->target != pse51_current_thread())
+    if (mq->target && mq->target != thread)
         {
         err = EBUSY;
         goto unlock_and_error;
@@ -509,7 +519,7 @@ int mq_notify(mqd_t fd, const struct sigevent *evp)
         mq->target = NULL;
     else
         {
-        mq->target = pse51_current_thread();
+        mq->target = thread;
         mq->si.info.si_signo = evp->sigev_signo;
         mq->si.info.si_code = SI_MESGQ;
         mq->si.info.si_value = evp->sigev_value;
