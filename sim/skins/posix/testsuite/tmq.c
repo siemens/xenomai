@@ -18,8 +18,9 @@
 
 #include <posix_test.h>
 
+static pthread_t root_thread_tcb;
 struct mq_attr attr;
-mqd_t qd;
+mqd_t qd, qdr, qdw;
 pthread_t tid_writer, tid_reader;
 
 static const char *tunes[] = {
@@ -69,12 +70,7 @@ void *writer(void *cookie)
     unsigned i;
     mqd_t qdf;
 
-    qdf = mq_open("mq-test", O_RDONLY);
-
-    TEST_ASSERT(qdf != (mqd_t) -1);
-
-    TEST_ASSERT(-1 == mq_send(qdf, tunes[0], strlen(tunes[0])+1, 0) && errno == EPERM);
-    TEST_ASSERT(0 == mq_close(qdf));
+    TEST_ASSERT(-1 == mq_send(qdr, tunes[0], strlen(tunes[0])+1, 0) && errno == EPERM);
 
     for(i = 0; i < sizeof(tunes)/sizeof(char *); i++)
         TEST_ASSERT_OK(mq_send(qd, tunes[i], strlen(tunes[i])+1, i));
@@ -119,17 +115,10 @@ void *reader(void *cookie)
     struct sched_param par;
     struct mq_attr attr;
     unsigned i, prev;
-    mqd_t qdf;
     char buffer [42];
     ssize_t len;
 
-    qdf = mq_open("mq-test", O_WRONLY);
-
-    TEST_ASSERT(qdf != (mqd_t) -1);
-
-    TEST_ASSERT(-1 == mq_receive(qdf, buffer, sizeof(buffer), 0) && errno == EPERM);
-    TEST_ASSERT(0 == mq_close(qdf));
-
+    TEST_ASSERT(-1 == mq_receive(qdw, buffer, sizeof(buffer), 0) && errno == EPERM);
     prev = sizeof(tunes)/sizeof(char *);
 
     do {
@@ -169,7 +158,6 @@ void *reader(void *cookie)
     par.sched_priority = sched_get_priority_max(SCHED_FIFO);
     pthread_setschedparam(tid_writer, SCHED_FIFO, &par); /* no switch here */
 
-
     prev = sizeof(tunes)/sizeof(char *);
 
     /* We should receive twice the highest priority message. */
@@ -194,24 +182,7 @@ void *reader(void *cookie)
 
 void *root_thread(void *cookie)
 {
-    struct mq_attr attr, gattr;
     pthread_attr_t tattr;
-
-    TEST_START(0);
-
-    TEST_ASSERT((mqd_t) -1 == mq_open("mq-test", O_RDWR) && errno == ENOENT);
-
-    TEST_ASSERT(-1 == mq_unlink("mq-test") && errno == ENOENT);
-
-    attr.mq_maxmsg = 16;
-    attr.mq_msgsize = 42;
-
-    TEST_ASSERT((mqd_t) -1 != (qd = mq_open("mq-test", O_RDWR | O_CREAT, 0, &attr)));
-
-    TEST_ASSERT(mq_getattr(qd, &gattr) == 0 &&
-                gattr.mq_msgsize == attr.mq_msgsize &&
-                gattr.mq_maxmsg == attr.mq_maxmsg &&
-                gattr.mq_curmsgs == 0);
 
     pthread_attr_init(&tattr);
     pthread_attr_setname_np(&tattr, "writer");
@@ -223,11 +194,60 @@ void *root_thread(void *cookie)
 
     pthread_join(tid_writer, NULL);
     
+    return NULL;
+}
+
+int __xeno_user_init (void)
+{
+    struct mq_attr qattr, gattr;
+    pthread_attr_t tattr;
+    int rc;
+    
+    TEST_START(0);
+
+    TEST_ASSERT((mqd_t) -1 == mq_open("/mq-test", O_RDWR) && errno == ENOENT);
+
+    TEST_ASSERT(-1 == mq_unlink("/mq-test") && errno == ENOENT);
+
+    qattr.mq_maxmsg = 16;
+    qattr.mq_msgsize = 42;
+
+    TEST_ASSERT((mqd_t) -1 != (qd = mq_open("/mq-test", O_RDWR | O_CREAT, 0, &qattr)));
+
+    TEST_ASSERT(mq_getattr(qd, &gattr) == 0 &&
+                gattr.mq_msgsize == qattr.mq_msgsize &&
+                gattr.mq_maxmsg == qattr.mq_maxmsg &&
+                gattr.mq_curmsgs == 0);
+
+    qdr = mq_open("/mq-test", O_RDONLY);
+
+    TEST_ASSERT(qdr != (mqd_t) -1);
+
+    qdw = mq_open("/mq-test", O_WRONLY);
+
+    TEST_ASSERT(qdw != (mqd_t) -1);
+
+    pthread_attr_init(&tattr);
+    pthread_attr_setname_np(&tattr, "root");
+    
+    rc=pthread_create(&root_thread_tcb, &tattr, root_thread, NULL);
+
+    pthread_attr_destroy(&tattr);
+
+    return rc;
+}
+
+void __xeno_user_exit (void)
+{
     TEST_ASSERT_OK(mq_close(qd));
 
-    TEST_ASSERT_OK(mq_unlink("mq-test"));
+    TEST_ASSERT(0 == mq_close(qdr));
 
-    TEST_ASSERT((mqd_t) -1 == mq_open("mq-test", O_RDWR) && errno == ENOENT);
+    TEST_ASSERT(0 == mq_close(qdw));
+
+    TEST_ASSERT_OK(mq_unlink("/mq-test"));
+
+    TEST_ASSERT((mqd_t) -1 == mq_open("/mq-test", O_RDWR) && errno == ENOENT);
 
     TEST_CHECK_SEQUENCE(SEQ("writer", 1),
                         SEQ("reader", 1),
@@ -237,6 +257,4 @@ void *root_thread(void *cookie)
                         SEQ("reader", 1),
                         END_SEQ);
     TEST_FINISH();
-
-    return NULL;
 }

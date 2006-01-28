@@ -97,14 +97,17 @@ int pse51_cond_timedwait_internal(pthread_cond_t *cond,
                                   pthread_mutex_t *mutex,
                                   xnticks_t to)
 {
+    xnthread_t *cur;
     unsigned count;
-    pthread_t cur;
     spl_t s;
     int err;
 
     if (!cond || !mutex)
         return EINVAL;
     
+    if (xnpod_unblockable_p())
+        return EPERM;
+
     xnlock_get_irqsave(&nklock, s);
 
     /* If another thread waiting for cond does not use the same mutex */
@@ -115,13 +118,7 @@ int pse51_cond_timedwait_internal(pthread_cond_t *cond,
         goto unlock_and_return;
 	}
 
-    cur = pse51_current_thread();
-
-    if (xnpod_unblockable_p() || !cur)
-        {
-        err = EPERM;
-        goto unlock_and_return;
-        }
+    cur = xnpod_current_thread();
 
     err = clock_adjust_timeout(&to, cond->attr.clock);
 
@@ -164,9 +161,9 @@ int pse51_cond_timedwait_internal(pthread_cond_t *cond,
 
     err = 0;
     
-    if (xnthread_test_flags(&cur->threadbase, XNBREAK))
+    if (xnthread_test_flags(cur, XNBREAK))
         err = EINTR;
-    else if (xnthread_test_flags(&cur->threadbase, XNTIMEO))
+    else if (xnthread_test_flags(cur, XNTIMEO))
         err = ETIMEDOUT;
 
     /* Unbind mutex and cond, if no other thread is waiting, if the job was not

@@ -1439,8 +1439,8 @@ int __intr_wait (struct task_struct *curr, struct pt_regs *regs)
 {
     struct pse51_interrupt *intr = (struct pse51_interrupt *)__xn_reg_arg1(regs);
     struct timespec ts;
+    xnthread_t *thread;
     xnticks_t timeout;
-    pthread_t thread;
     int err = 0;
     spl_t s;
 
@@ -1472,19 +1472,19 @@ int __intr_wait (struct task_struct *curr, struct pt_regs *regs)
 
     if (!intr->pending)
         {
-        thread = pse51_current_thread();
+        thread = xnpod_current_thread();
 
-        if (xnthread_base_priority(&thread->threadbase) != XNCORE_IRQ_PRIO)
+        if (xnthread_base_priority(thread) != XNCORE_IRQ_PRIO)
             /* Renice the waiter above all regular threads if needed. */
-            xnpod_renice_thread(&thread->threadbase,XNCORE_IRQ_PRIO);
+            xnpod_renice_thread(thread,XNCORE_IRQ_PRIO);
 
         xnsynch_sleep_on(&intr->synch_base,timeout);
         
-        if (xnthread_test_flags(&thread->threadbase,XNRMID))
+        if (xnthread_test_flags(thread,XNRMID))
             err = -EIDRM; /* Interrupt object deleted while pending. */
-        else if (xnthread_test_flags(&thread->threadbase,XNTIMEO))
+        else if (xnthread_test_flags(thread,XNTIMEO))
             err = -ETIMEDOUT; /* Timeout.*/
-        else if (xnthread_test_flags(&thread->threadbase,XNBREAK))
+        else if (xnthread_test_flags(thread,XNBREAK))
             err = -EINTR; /* Unblocked.*/
         else
             err = intr->pending;

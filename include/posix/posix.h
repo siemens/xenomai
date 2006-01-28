@@ -278,7 +278,6 @@ typedef struct pse51_mutex {
     xnsynch_t synchbase;
     xnholder_t link;            /* Link in pse51_mutexq */
     pthread_mutexattr_t attr;
-    pthread_t owner;
     unsigned count;             /* lock count. */
     unsigned condvars;          /* count of condition variables using this
 				   mutex. */

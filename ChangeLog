@@ -1,3 +1,10 @@
+2006-01-28  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix: Threads from other skins are allowed to use
+	posix skin synchronization objects (pthread_mutex_t, mqd_t,
+	pthread_cond_t and sem_t) and clock services (clock_nanosleep,
+	nanosleep).
+
 2006-01-27  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix: Remove xnpod_check_context() and fail with

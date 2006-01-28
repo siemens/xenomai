@@ -104,10 +104,10 @@ int sem_trywait (sem_t *sem)
 static inline int sem_timedwait_internal (sem_t *sem, xnticks_t to)
 
 {
-    pthread_t cur;
+    xnthread_t *cur;
     int err;
 
-    cur = pse51_current_thread();
+    cur = xnpod_current_thread();
 
     if ((err = sem_trywait_internal(sem)) == EAGAIN)
         {
@@ -122,13 +122,13 @@ static inline int sem_timedwait_internal (sem_t *sem, xnticks_t to)
         /* Handle cancellation requests. */
         thread_cancellation_point(cur);
 
-        if (xnthread_test_flags(&cur->threadbase, XNRMID))
+        if (xnthread_test_flags(cur, XNRMID))
             return EINVAL;
 
-        if (xnthread_test_flags(&cur->threadbase, XNBREAK))
+        if (xnthread_test_flags(cur, XNBREAK))
             return EINTR;
         
-        if (xnthread_test_flags(&cur->threadbase, XNTIMEO))
+        if (xnthread_test_flags(cur, XNTIMEO))
             return ETIMEDOUT;
         }
 

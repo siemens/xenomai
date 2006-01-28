@@ -79,7 +79,6 @@ void *producer (void *cookie)
     sigset_t blocked;
     unsigned pos;
     int next_msg;
-    int f;
 
     /* Copy the strings to shared memory. */
     pos = 0;
@@ -312,7 +311,7 @@ int __xeno_user_init (void)
     evt.sigev_value.sival_ptr = &producer_tm;
     if (timer_create(CLOCK_REALTIME, &evt, &producer_tm))
         {
-        xnprintf("timer_create(producer_tm): %s\n", errno);
+        xnprintf("timer_create(producer_tm): %d\n", errno);
         goto out;
         }
 

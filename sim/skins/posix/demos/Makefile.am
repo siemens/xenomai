@@ -9,7 +9,7 @@ endif
 AM_CFLAGS=-Wall -g -Werror-implicit-function-declaration
 
 INCLUDES = \
-	-D__IN_XENO__ -DPRODUCER \
+	-D__IN_XENO__ -DPRODUCER -DCONSUMER \
 	--gcic-backend=$(prefix)/libexec/gcic \
 	-I$(srcdir)/.. \
 	-I$(top_srcdir)/include \

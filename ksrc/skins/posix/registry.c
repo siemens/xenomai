@@ -251,25 +251,30 @@ int pse51_node_get(pse51_node_t **nodep,
     
         while (node->flags & PSE51_NODE_PARTIAL_INIT)
             {
-            pthread_t cur;
-        
+            xnthread_t *cur;
+
+            if (xnpod_unblockable_p())
+                {
+                pse51_node_put(node);
+                return EPERM;
+                }
+
             xnsynch_sleep_on(node->completion_synch, XN_INFINITE);
-            
-            cur = pse51_current_thread();
-        
-            if (xnthread_test_flags(&cur->threadbase, XNRMID))
+
+            cur = xnpod_current_thread();
+
+            if (xnthread_test_flags(cur, XNRMID))
                 {
                 err = EAGAIN;
                 break;
                 }
 
-            if (xnthread_test_flags(&cur->threadbase, XNBREAK))
+            if (xnthread_test_flags(cur, XNBREAK))
                 {
                 pse51_node_put(node);
                 return EINTR;
                 }
             }
-
         } while(err == EAGAIN);
 
     return err;
@@ -398,19 +403,19 @@ int pse51_desc_get(pse51_desc_t **descp, int fd, unsigned magic)
 
     while (desc->node->flags & PSE51_NODE_PARTIAL_INIT)
         {
-        pthread_t cur;
+        xnthread_t *cur;
 
         if (xnpod_unblockable_p())
             return EPERM;
 
         xnsynch_sleep_on(desc->node->completion_synch, XN_INFINITE);
 
-        cur = pse51_current_thread();
+        cur = xnpod_current_thread();
 
-        if (xnthread_test_flags(&cur->threadbase, XNRMID))
+        if (xnthread_test_flags(cur, XNRMID))
             return EBADF;
 
-        if (xnthread_test_flags(&cur->threadbase, XNBREAK))
+        if (xnthread_test_flags(cur, XNBREAK))
             return EINTR;
         }
 

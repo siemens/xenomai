@@ -138,11 +138,13 @@ static inline int thread_get_errno (void)
 
 void pse51_thread_abort(pthread_t thread, void *status);
 
-static inline void thread_cancellation_point (pthread_t thread)
+static inline void thread_cancellation_point (xnthread_t *thread)
 {
-    if( thread && thread->cancel_request
-        && thread_getcancelstate(thread) == PTHREAD_CANCEL_ENABLE )
-        pse51_thread_abort(thread, PTHREAD_CANCELED);
+    pthread_t cur = thread2pthread(thread);
+    
+    if(cur && cur->cancel_request
+        && thread_getcancelstate(cur) == PTHREAD_CANCEL_ENABLE )
+        pse51_thread_abort(cur, PTHREAD_CANCELED);
 }
 
 void pse51_thread_pkg_init(u_long rrperiod);
