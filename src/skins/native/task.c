@@ -59,6 +59,9 @@ static void *rt_task_trampoline (void *cookie)
     param.sched_priority = sched_get_priority_max(SCHED_FIFO);
     pthread_setschedparam(pthread_self(),SCHED_FIFO,&param);
 
+    /* rt_task_delete requires asynchronous cancellation */
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
     signal(SIGCHLD,&rt_task_sigharden);
 
     bulk.a1 = (u_long)iargs->task;
@@ -159,6 +162,9 @@ int rt_task_shadow (RT_TASK *task,
 		    int mode)
 {
     struct rt_arg_bulk bulk;
+
+    /* rt_task_delete requires asynchronous cancellation */
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
     signal(SIGCHLD,&rt_task_sigharden);
 
