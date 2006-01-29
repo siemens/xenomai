@@ -115,7 +115,8 @@ void *__wrap_mmap(void *addr,
     if (err)
         goto err_mmap_epilogue;
 
-    uaddr = __real_mmap(NULL, map.mapsize, prot, flags, fildes, off);
+    /* map the whole heap. */
+    uaddr = __real_mmap(NULL, map.mapsize, prot, flags, fildes, 0);
 
     if (uaddr == MAP_FAILED)
         {
@@ -131,6 +132,11 @@ err_mmap_epilogue:
     mprotect(uaddr, map.offset, PROT_NONE);
 
     uaddr = (char *) uaddr + map.offset;
+
+    /* Forbid access to the last mapsize - offset - len bytes. */
+    if (len < map.mapsize - map.offset)
+        mprotect((char *)uaddr+len, map.mapsize-map.offset-len, PROT_NONE);
+
     err = -XENOMAI_SKINCALL2(__pse51_muxid,
                              __pse51_mmap_epilogue,
                              (unsigned long) uaddr,
