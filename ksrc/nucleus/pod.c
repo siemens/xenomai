@@ -704,7 +704,9 @@ int xnpod_init_thread (xnthread_t *thread,
     if (stacksize == 0)
         stacksize = XNARCH_THREAD_STACKSZ;
 
-    err = xnthread_init(thread,name,prio,flags,stacksize);
+    /* Exclude XNSUSP, so that xnpod_suspend_thread() will put the thread in the
+       suspendq. */
+    err = xnthread_init(thread,name,prio,flags & ~XNSUSP,stacksize);
 
     if (err)
         return err;
@@ -714,7 +716,7 @@ int xnpod_init_thread (xnthread_t *thread,
     xnlock_get_irqsave(&nklock,s);
     thread->sched = xnpod_current_sched();
     appendq(&nkpod->threadq,&thread->glink);
-    xnpod_suspend_thread(thread,XNDORMANT,XN_INFINITE,NULL);
+    xnpod_suspend_thread(thread,XNDORMANT | (flags & XNSUSP),XN_INFINITE,NULL);
     xnlock_put_irqrestore(&nklock,s);
 
     return 0;
