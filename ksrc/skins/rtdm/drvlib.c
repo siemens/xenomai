@@ -47,6 +47,8 @@
  *
  * @return The system time in nanoseconds is returned
  *
+ * @note The nucleus timer has to be started to obtain valid results.
+ *
  * Environments:
  *
  * This service can be called from:
