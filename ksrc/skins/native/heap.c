@@ -61,7 +61,8 @@ static int __heap_read_proc (char *page,
     spl_t s;
 
     p += sprintf(p,"type=%s:size=%lu:used=%lu\n",
-		 heap->mode & H_SHARED ? "shared" : "local",
+		 (heap->mode & H_SHARED) == H_SHARED ? "shared" :
+		 (heap->mode & H_MAPPABLE) ? "mappable" : "kernel",
 		 xnheap_size(&heap->heap_base),
 		 xnheap_used_mem(&heap->heap_base));
 
@@ -128,20 +129,30 @@ static void __heap_flush_private (xnheap_t *heap,
  *
  * Initializes a memory heap suitable for time-bounded allocation
  * requests of dynamic memory. Memory heaps can be local to the kernel
- * space, or shared between kernel and user-space.
+ * address space, or mapped to user-space.
  *
  * In their simplest form, heaps are only accessible from kernel
  * space, and are merely usable as regular memory allocators.
  *
- * In the shared case, heaps are used as shared memory segments. All
+ * Heaps existing in kernel space can be mapped by user-space
+ * processes to their own address space provided H_MAPPABLE has been
+ * passed into the @a mode parameter.
+ *
+ * By default, heaps support allocation of multiple blocks of memory
+ * in an arbitrary order. However, it is possible to ask for
+ * single-block management by passing the H_SINGLE flag into the @a
+ * mode parameter, in which case the entire memory space managed by
+ * the heap is made available as a unique block.  In this mode, all
  * allocation requests made through rt_heap_alloc() will then return
- * the same memory block, which will point at the beginning of the
- * heap memory, and cover the entire heap space. This operating mode
- * is specified by passing the H_SHARED flag into the @a mode
- * parameter. By the proper use of a common @a name, all tasks can
- * bind themselves to the same heap and thus share the same memory
- * space, which start address should be subsequently retrieved by a
- * call to rt_heap_alloc().
+ * the same block address, pointing at the beginning of the heap
+ * memory.
+ *
+ * H_SHARED is a shorthand for creating shared memory segments
+ * transparently accessible from kernel and user-space contexts, which
+ * are basically single-block, mappable heaps. By proper use of a
+ * common @a name, all tasks can bind themselves to the same heap and
+ * thus share the same memory space, which start address should be
+ * subsequently retrieved by a call to rt_heap_alloc().
  *
  * @param heap The address of a heap descriptor Xenomai will use to store
  * the heap-related data.  This descriptor must always be valid while
@@ -151,8 +162,8 @@ static void __heap_flush_private (xnheap_t *heap,
  * @param name An ASCII string standing for the symbolic name of the
  * heap. When non-NULL and non-empty, this string is copied to a safe
  * place into the descriptor, and passed to the registry package if
- * enabled for indexing the created heap. Shared heaps must be given a
- * valid name.
+ * enabled for indexing the created heap. Mappable heaps must be given
+ * a valid name.
  *
  * @param heapsize The size (in bytes) of the block pool which is
  * going to be pre-allocated to the heap. Memory blocks will be
@@ -169,12 +180,18 @@ static void __heap_flush_private (xnheap_t *heap,
  * - H_PRIO makes tasks pend in priority order on the heap when
  * waiting for available blocks.
  *
- * - H_SHARED causes the heap to be sharable between kernel and
- * user-space tasks, and make it usable as a shared memory
- * segment. Otherwise, the new heap is only available for kernel-based
- * usage. This flag is implicitely set when the caller is running in
- * user-space. This feature requires the real-time support in
- * user-space to be configured in (CONFIG_XENO_OPT_PERVASIVE).
+ * - H_MAPPABLE causes the heap to be sharable between kernel and
+ * user-space contexts. Otherwise, the new heap is only available for
+ * kernel-based usage. This flag is implicitely set when the caller is
+ * running in user-space. This feature requires the real-time support
+ * in user-space to be configured in (CONFIG_XENO_OPT_PERVASIVE).
+ *
+ * - H_SINGLE causes the entire heap space to be managed as a single
+ * memory block.
+ *
+ * - H_SHARED is a shorthand for H_MAPPABLE|H_SINGLE, creating a
+ * global shared memory segment accessible from both the kernel and
+ * user-space contexts.
  *
  * - H_DMA causes the block pool associated to the heap to be
  * allocated in physically contiguous memory, suitable for DMA
@@ -187,17 +204,17 @@ static void __heap_flush_private (xnheap_t *heap,
  * registered object.
  *
  * - -EINVAL is returned if @a heapsize is null, greater than the
- * system limit, or @a name is null or empty for a shared heap.
+ * system limit, or @a name is null or empty for a mappable heap.
  *
  * - -ENOMEM is returned if not enough system memory is available to
- * create or register the heap. Additionally, and if H_SHARED has been
- * passed in @a mode, errors while mapping the block pool in the
+ * create or register the heap. Additionally, and if H_MAPPABLE has
+ * been passed in @a mode, errors while mapping the block pool in the
  * caller's address space might beget this return code too.
  *
  * - -EPERM is returned if this service was called from an invalid
  * context.
  *
- * - -ENOSYS is returned if @a mode specifies H_SHARED, but the
+ * - -ENOSYS is returned if @a mode specifies H_MAPPABLE, but the
  * real-time support in user-space is unavailable.
  *
  * Environments:
@@ -229,9 +246,11 @@ int rt_heap_create (RT_HEAP *heap,
     if (heapsize < 2 * PAGE_SIZE)
 	heapsize = 2 * PAGE_SIZE;
 
+    heap->csize = heapsize;	/* Record this for SBA management and inquiry. */
+
     /* Account for the overhead so that the actual free space is large
        enough to match the requested size. Using PAGE_SIZE for large
-       shared heaps might reserve way too much useless page map
+       single-block heaps might reserve way too much useless page map
        memory, but this should never get pathological anyway, since we
        are only consuming 1 byte per page. */
 
@@ -239,13 +258,13 @@ int rt_heap_create (RT_HEAP *heap,
     heapsize = PAGE_ALIGN(heapsize);
 
 #ifdef __KERNEL__
-    if (mode & H_SHARED)
+    if (mode & H_MAPPABLE)
 	{
 	if (!name || !*name)
 	    return -EINVAL;
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	err = xnheap_init_shared(&heap->heap_base,
+	err = xnheap_init_mapped(&heap->heap_base,
 				 heapsize,
 				 (mode & H_DMA) ? GFP_DMA : 0);
 	if (err)
@@ -279,7 +298,7 @@ int rt_heap_create (RT_HEAP *heap,
     heap->handle = 0;  /* i.e. (still) unregistered heap. */
     heap->magic = XENO_HEAP_MAGIC;
     heap->mode = mode;
-    heap->shm_block = NULL;
+    heap->sba = NULL;
     xnobject_copy_name(heap->name,name);
 
 #ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
@@ -382,8 +401,8 @@ int rt_heap_delete (RT_HEAP *heap)
        it safely. */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    if (heap->mode & H_SHARED)
-	err = xnheap_destroy_shared(&heap->heap_base);
+    if (heap->mode & H_MAPPABLE)
+	err = xnheap_destroy_mapped(&heap->heap_base);
     else
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 	err = xnheap_destroy(&heap->heap_base,&__heap_flush_private,NULL);
@@ -399,21 +418,21 @@ int rt_heap_delete (RT_HEAP *heap)
 /**
  * @fn int rt_heap_alloc(RT_HEAP *heap,size_t size,RTIME timeout,void **blockp)
  *
- * @brief Allocate a block or return the shared memory base.
+ * @brief Allocate a block or return the single segment base.
  *
  * This service allocates a block from the heap's internal pool, or
- * return the address of the shared memory segment in the caller's
- * address space if the heap is shared. Tasks may wait for some
- * requested amount of memory to become available from local heaps.
+ * returns the address of the single memory segment in the caller's
+ * address space. Tasks may wait for some requested amount of memory
+ * to become available from local heaps.
  *
  * @param heap The descriptor address of the heap to allocate a block
  * from.
  *
  * @param size The requested size in bytes of the block. If the heap
- * is shared, this value can be either zero, or the same value given
- * to rt_heap_create(). In any case, the same block covering the
- * entire heap space will always be returned to all callers of this
- * service.
+ * is managed as a single-block area (H_SINGLE), this value can be
+ * either zero, or the same value given to rt_heap_create(). In that
+ * case, the same block covering the entire heap space will always be
+ * returned to all callers of this service.
  *
  * @param timeout The number of clock ticks to wait for a block of
  * sufficient size to be available from a local heap (see
@@ -421,19 +440,20 @@ int rt_heap_delete (RT_HEAP *heap)
  * until some block is eventually available. Passing TM_NONBLOCK
  * causes the service to return immediately without waiting if no
  * block is available on entry. This parameter has no influence if the
- * heap is shared since the entire shared memory space is always
- * available.
+ * heap is managed as a single-block area since the entire heap space
+ * is always available.
  *
  * @param blockp A pointer to a memory location which will be written
  * upon success with the address of the allocated block, or the start
- * address of the shared memory segment. In the former case, the block
+ * address of the single memory segment. In the former case, the block
  * should be freed using rt_heap_free().
  *
  * @return 0 is returned upon success. Otherwise:
  *
  * - -EINVAL is returned if @a heap is not a heap descriptor, or @a
- * heap is shared (i.e. H_SHARED mode) and @a size is non-zero but
- * does not match the actual heap size passed to rt_heap_create().
+ * heap is managed as a single-block area (i.e. H_SINGLE mode) and @a
+ * size is non-zero but does not match the original heap size passed
+ * to rt_heap_create().
  *
  * - -EIDRM is returned if @a heap is a deleted heap descriptor.
  *
@@ -441,8 +461,8 @@ int rt_heap_delete (RT_HEAP *heap)
  * TM_NONBLOCK and no block is available within the specified amount
  * of time.
  *
- * - -EWOULDBLOCK is returned if @a timeout is equal to
- * TM_NONBLOCK and no block is immediately available on entry.
+ * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
+ * and no block is immediately available on entry.
  *
  * - -EINTR is returned if rt_task_unblock() has been called for the
  * waiting task before any block was available.
@@ -458,14 +478,14 @@ int rt_heap_delete (RT_HEAP *heap)
  * - Kernel module initialization/cleanup code
  * - Interrupt service routine
  *   only if @a timeout is equal to TM_NONBLOCK, or the heap is
- *   shared.
+ *   managed as a single-block area.
  *
  * - Kernel-based task
  * - User-space task (switches to primary mode)
  *
  * Rescheduling: always unless the request is immediately satisfied or
- * @a timeout specifies a non-blocking operation. Operations on shared
- * heaps never start the rescheduling procedure.
+ * @a timeout specifies a non-blocking operation. Operations on
+ * single-block heaps never start the rescheduling procedure.
  *
  * @note This service is sensitive to the current operation mode of
  * the system timer, as defined by the rt_timer_start() service. In
@@ -493,29 +513,30 @@ int rt_heap_alloc (RT_HEAP *heap,
 	goto unlock_and_exit;
 	}
 
-    /* In shared mode, there is only a single allocation returning the
-       whole addressable heap space to the user. All users referring
-       to this heap are then returned the same block. */
+    /* In single-block mode, there is only a single allocation
+       returning the whole addressable heap space to the user. All
+       users referring to this heap are then returned the same
+       block. */
 
-    if (heap->mode & H_SHARED)
+    if (heap->mode & H_SINGLE)
 	{
-	block = heap->shm_block;
+	block = heap->sba;
 
 	if (!block)
 	    {
 	    /* It's ok to pass zero for size here, since the requested
 	       size is implicitely the whole heap space; but if
-	       non-zero is given, it must match the actual heap
+	       non-zero is given, it must match the original heap
 	       size. */
 
-	    if (size > 0 && size != xnheap_size(&heap->heap_base))
+	    if (size > 0 && size != heap->csize)
 		{
 		err = -EINVAL;
 		goto unlock_and_exit;
 		}
 
-	    block = heap->shm_block = xnheap_alloc(&heap->heap_base,
-						   xnheap_max_contiguous(&heap->heap_base));
+	    block = heap->sba = xnheap_alloc(&heap->heap_base,
+					     xnheap_max_contiguous(&heap->heap_base));
 	    }
 
 	if (block)
@@ -575,8 +596,9 @@ int rt_heap_alloc (RT_HEAP *heap,
  * could be satisfied as a result of the release, it is immediately
  * resumed.
  *
- * If the heap is shared (i.e. H_SHARED mode), this service leads to a
- * null-effect and always returns successfully.
+ * If the heap is defined as a single-block area (i.e. H_SINGLE mode),
+ * this service leads to a null-effect and always returns
+ * successfully.
  *
  * @param heap The address of the heap descriptor to which the block
  * @a block belong.
@@ -617,7 +639,7 @@ int rt_heap_free (RT_HEAP *heap,
         goto unlock_and_exit;
         }
     
-    if (heap->mode & H_SHARED)	/* No-op if shared. */
+    if (heap->mode & H_SINGLE)	/* No-op in single-block mode. */
 	{
 	err = 0;
 	goto unlock_and_exit;
@@ -709,7 +731,7 @@ int rt_heap_inquire (RT_HEAP *heap,
     
     strcpy(info->name,heap->name);
     info->nwaiters = xnsynch_nsleepers(&heap->synch_base);
-    info->heapsize = xnheap_size(&heap->heap_base);
+    info->heapsize = heap->csize;
     info->mode = heap->mode;
 
  unlock_and_exit:
@@ -722,12 +744,12 @@ int rt_heap_inquire (RT_HEAP *heap,
 /**
  * @fn int rt_heap_bind(RT_HEAP *heap,const char *name,RTIME timeout)
  *
- * @brief Bind to a shared heap.
+ * @brief Bind to a mappable heap.
  *
  * This user-space only service retrieves the uniform descriptor of a
- * given shared Xenomai heap identified by its symbolic name. If the heap
- * does not exist on entry, this service blocks the caller until a
- * heap of the given name is created.
+ * given mappable Xenomai heap identified by its symbolic name. If the
+ * heap does not exist on entry, this service blocks the caller until
+ * a heap of the given name is created.
  *
  * @param name A valid NULL-terminated name which identifies the
  * heap to bind to.
@@ -778,14 +800,14 @@ int rt_heap_inquire (RT_HEAP *heap,
 /**
  * @fn int rt_heap_unbind(RT_HEAP *heap)
  *
- * @brief Unbind from a shared heap.
+ * @brief Unbind from a mappable heap.
  *
  * This user-space only service unbinds the calling task from the heap
  * object previously retrieved by a call to rt_heap_bind().
  *
  * Unbinding from a heap when it is no more needed is especially
  * important in order to properly release the mapping resources used
- * to attach the shared heap memory to the caller's address space.
+ * to attach the heap memory to the caller's address space.
  *
  * @param heap The address of a heap descriptor to unbind from.
  *

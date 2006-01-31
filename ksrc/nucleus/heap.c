@@ -1105,7 +1105,7 @@ static inline void __unreserve_and_free_heap (void *ptr, size_t size, int kmflag
 	}
 }
 
-int xnheap_init_shared (xnheap_t *heap,
+int xnheap_init_mapped (xnheap_t *heap,
 			u_long heapsize,
 			int memflags)
 {
@@ -1140,7 +1140,7 @@ int xnheap_init_shared (xnheap_t *heap,
     return 0;
 }
 
-int xnheap_destroy_shared (xnheap_t *heap)
+int xnheap_destroy_mapped (xnheap_t *heap)
 
 {
     spl_t s;
@@ -1164,12 +1164,12 @@ int xnheap_destroy_shared (xnheap_t *heap)
     return 0;
 }
 
-EXPORT_SYMBOL(xnheap_init_shared);
-EXPORT_SYMBOL(xnheap_destroy_shared);
+EXPORT_SYMBOL(xnheap_init_mapped);
+EXPORT_SYMBOL(xnheap_destroy_mapped);
 
 #elif defined(__XENO_SIM__)
 
-int xnheap_init_shared (xnheap_t *heap,
+int xnheap_init_mapped (xnheap_t *heap,
 			u_long heapsize,
 			int memflags)
 {
@@ -1191,7 +1191,7 @@ static void free_extent(xnheap_t *heap, void *extent, u_long size, void *cookie)
     xnarch_sysfree(extent, size);
 }
 
-int xnheap_destroy_shared(xnheap_t *heap)
+int xnheap_destroy_mapped(xnheap_t *heap)
 {
     xnheap_destroy(heap, free_extent, NULL);
 }

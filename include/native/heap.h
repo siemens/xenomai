@@ -27,10 +27,12 @@
 #include <xenomai/native/types.h>
 
 /* Creation flags. */
-#define H_PRIO   XNSYNCH_PRIO	/* Pend by task priority order. */
-#define H_FIFO   XNSYNCH_FIFO	/* Pend by FIFO order. */
-#define H_DMA    0x100		/* Use memory suitable for DMA. */
-#define H_SHARED 0x200		/* Use mappable shared memory. */
+#define H_PRIO     XNSYNCH_PRIO	/* Pend by task priority order. */
+#define H_FIFO     XNSYNCH_FIFO	/* Pend by FIFO order. */
+#define H_DMA      0x100	/* Use memory suitable for DMA. */
+#define H_MAPPABLE 0x200	/* Memory is mappable to user-space. */
+#define H_SINGLE   0x400	/* Manage as single-block area. */
+#define H_SHARED   (H_MAPPABLE|H_SINGLE) /* I.e. shared memory segment. */
 
 typedef struct rt_heap_info {
 
@@ -70,7 +72,9 @@ typedef struct rt_heap {
 
     int mode;		/* !< Creation mode. */
 
-    void *shm_block;	/* !< Single shared block (H_SHARED only) */
+    size_t csize;	/* !< Original size at creation. */
+
+    void *sba;		/* !< Single block ara (H_SINGLE only) */
 
     rt_handle_t handle;	/* !< Handle in registry -- zero if unregistered. */
 

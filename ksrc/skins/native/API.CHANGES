@@ -95,3 +95,9 @@ ___________________________________________________________________
 	bits are not auto-cleared upon receipt anymore. An explicit
 	call to rt_event_clear() is therefore needed to zero the
 	received bits into the event group.
+
+	o rt_heap_create() called from user-space with a null "mode"
+	argument now creates a regular mappable heap supporting
+	multiple blocks of memory, instead of a shared memory segment
+	managed as a single-block area. Passing H_SHARED is equivalent
+	to the former behaviour.
