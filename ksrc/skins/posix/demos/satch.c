@@ -1,4 +1,5 @@
-#if !defined(__KERNEL__) && !defined(__XENO_SIM__)
+#ifndef __XENO_SIM__
+#ifndef __KERNEL__
 #include <stdio.h>
 #define xnprintf printf
 #endif
@@ -9,6 +10,9 @@
 #include <sys/mman.h>
 #include <pthread.h>
 #include <mqueue.h>
+#else /* __XENO_SIM */
+#include <posix/posix.h>
+#endif /* __XENO_SIM */
 
 #define CONSUMER_TASK_PRI    1
 #define CONSUMER_STACK_SIZE  8192
