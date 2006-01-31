@@ -1,5 +1,8 @@
 2006-01-31  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/*/patches: Upgrade all Adeos patches to get the atomic
+	scheduling feature.
+
 	* ksrc/skins/native/event.c (rt_event_wait): Do not auto-clear the
 	satisfied event bits; rely on explicit call to rt_event_clear() to
 	do so.
