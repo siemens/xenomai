@@ -1,3 +1,9 @@
+2006-01-31  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/event.c (rt_event_wait): Do not auto-clear the
+	satisfied event bits; rely on explicit call to rt_event_clear() to
+	do so.
+
 2006-01-31  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* include/asm-*/hal.h: Factor arithmetic support routines.

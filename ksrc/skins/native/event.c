@@ -374,6 +374,10 @@ int rt_event_signal (RT_EVENT *event,
 
  * If the specified set of bits is not set, the calling task is
  * blocked. The task is not resumed until the request is fulfilled.
+ * The event bits are NOT cleared from the event group when a request
+ * is satisfied; rt_event_wait() will return immediately with success
+ * for the same event mask until rt_event_clear() is called to clear
+ * those bits.
  *
  * @param event The descriptor address of the affected event group.
  *
@@ -469,7 +473,6 @@ int rt_event_wait (RT_EVENT *event,
     if (timeout == TM_NONBLOCK)
         {
         unsigned long bits = (event->value & mask);
-        event->value &= ~mask;
         *mask_r = bits;
 
         if (mode & EV_ANY)
@@ -487,7 +490,6 @@ int rt_event_wait (RT_EVENT *event,
         (!(mode & EV_ANY) && ((mask & event->value) == mask)))
         {
         *mask_r = (event->value & mask);
-        event->value &= ~mask;
         goto unlock_and_exit;
         }
 
