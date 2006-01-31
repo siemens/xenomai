@@ -446,14 +446,22 @@ int xnshadow_harden (void)
        the Xenomai domain. This will cause the shadow thread to resume
        using the register state of the current Linux task. For this to
        happen, we set up the migration data, prepare to suspend the
-       current task then wake up the gatekeeper which will perform the
-       actual transition. */
+       current task, wake up the gatekeeper which will perform the
+       actual transition, then schedule out. Most of this sequence
+       must be atomic, and we get this guarantee by disabling
+       preemption and using the TASK_ATOMICSWITCH cumulative state
+       provided by Adeos to Linux tasks. We keep a paranoid approach,
+       testing for the current domain, for the case where the atomic
+       scheduling feature is not available from an oldish Adeos
+       support. */
 
     gk->thread = thread;
     preempt_disable();
     set_current_state(TASK_INTERRUPTIBLE|TASK_ATOMICSWITCH);
     wake_up_interruptible_sync(&gk->waitq);
-    schedule();
+
+    if (rthal_current_domain == rthal_root_domain) {
+    	schedule();
 
     /* Rare case: we might have been awaken by a signal before the
        gatekeeper sent us to primary mode. Since TASK_UNINTERRUPTIBLE
@@ -461,15 +469,16 @@ int xnshadow_harden (void)
        uniniterruptible tasks, we just notice the issue and gracefully
        fail; the caller will have to process this signal anyway. */
 
-    if (rthal_current_domain == rthal_root_domain) {
+	if (rthal_current_domain == rthal_root_domain) {
 #ifdef CONFIG_XENO_OPT_DEBUG
-    	if (!signal_pending(this_task) ||
-	    this_task->state != TASK_RUNNING)
-	    xnpod_fatal("xnshadow_harden() failed for thread %s[%d]",
+    		if (!signal_pending(this_task) ||
+		    this_task->state != TASK_RUNNING)
+		    xnpod_fatal("xnshadow_harden() failed for thread %s[%d]",
 			thread->name,
-			xnthread_user_pid(thread));
+				xnthread_user_pid(thread));
 #endif /* CONFIG_XENO_OPT_DEBUG */
-	return -ERESTARTSYS;
+		return -ERESTARTSYS;
+	}
     }
 
     /* "current" is now running into the Xenomai domain. */
