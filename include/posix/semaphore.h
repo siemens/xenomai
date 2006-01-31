@@ -19,6 +19,64 @@
 #ifndef _XENO_POSIX_SEMAPHORE_H
 #define _XENO_POSIX_SEMAPHORE_H
 
+#if defined(__KERNEL__) || defined(__XENO_SIM__)
+
+#ifdef __KERNEL__
+#include <linux/kernel.h>
+#include <linux/fcntl.h>
+#endif /* __KERNEL__ */
+
+#ifdef __XENO_SIM__
+#include <posix_overrides.h>
+#endif /* __XENO_SIM__ */
+
+#define SEM_VALUE_MAX (INT_MAX)
+#define SEM_FAILED    NULL
+
+typedef struct pse51_sem {
+    unsigned magic;
+    xnholder_t link;            /* Link in pse51_semq */
+    xnsynch_t synchbase;
+    int value;
+} sem_t;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#undef sem_init
+#define sem_init(s,p,v) pse51_sem_init((s),(p),(v))
+
+int pse51_sem_init(sem_t *sem,
+                   int pshared,
+                   unsigned int value);
+
+int sem_destroy(sem_t *sem);
+
+int sem_post(sem_t *sem);
+
+int sem_trywait(sem_t *sem);
+
+int sem_wait(sem_t *sem);
+
+int sem_timedwait(sem_t *sem,
+		  const struct timespec *abs_timeout);
+
+int sem_getvalue(sem_t *sem,
+		 int *value);
+
+sem_t *sem_open(const char *name, int oflag, ...);
+
+int sem_close(sem_t *sem);
+
+int sem_unlink(const char *name);
+
+#ifdef __cplusplus
+}
+#endif
+
+#else /* !(__KERNEL__ || __XENO_SIM__) */
+
 #include <fcntl.h>              /* For sem_open flags. */
 #include_next <semaphore.h>
 
@@ -50,5 +108,7 @@ int __real_sem_unlink(const char *name);
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* !(__KERNEL__ || __XENO_SIM__) */
 
 #endif /* _XENO_POSIX_SEMAPHORE_H */

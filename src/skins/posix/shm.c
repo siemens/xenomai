@@ -29,7 +29,7 @@ int __wrap_shm_open(const char *name, int oflag, mode_t mode)
 {
     int err, fd;
 
-    fd = open("/dev/rtheap", oflag, mode);
+    fd = __real_open("/dev/rtheap", oflag, mode);
 
     if (fd == -1)
         return -1;

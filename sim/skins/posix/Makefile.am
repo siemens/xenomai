@@ -16,7 +16,8 @@ AM_CPPFLAGS = \
 	--skin-code \
 	$(atomic_core) \
 	-I$(top_srcdir)/../ksrc/skins \
-	-I$(srcdir)/../include
+	-I$(top_srcdir)/../include \
+	-I$(srcdir)/..
 
 lib_LIBRARIES = libposix_s.a
 

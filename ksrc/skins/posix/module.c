@@ -24,7 +24,7 @@
 #include <posix/cond.h>
 #include <posix/mutex.h>
 #include <posix/sem.h>
-#include <posix/signal.h>
+#include <posix/sig.h>
 #include <posix/thread.h>
 #include <posix/tsd.h>
 #include <posix/mq.h>

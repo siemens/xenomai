@@ -1,7 +1,6 @@
 #ifndef MMAN_H
 #define MMAN_H
 
-#include <asm/mman.h>           /* PROT_* bits. */
 #include <xenomai/nucleus/queue.h>
 
 struct mm_struct;

@@ -19,9 +19,9 @@
 
 #include <posix/thread.h>
 #include <posix/cancel.h>
-#include <posix/signal.h>
 #include <posix/timer.h>
 #include <posix/tsd.h>
+#include <posix/sig.h>
 
 xnticks_t pse51_time_slice;
 

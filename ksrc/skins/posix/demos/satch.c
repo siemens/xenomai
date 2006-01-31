@@ -1,16 +1,14 @@
-#include <posix/posix.h>
 #if !defined(__KERNEL__) && !defined(__XENO_SIM__)
 #include <stdio.h>
-#include <string.h>
-#include <errno.h>
-
-#include <sys/mman.h>           /* For mlock. */
-#include <unistd.h>
-#include <pthread.h>
-#include <mqueue.h>
-
 #define xnprintf printf
 #endif
+
+#include <errno.h>
+#include <unistd.h>
+#include <signal.h>
+#include <sys/mman.h>
+#include <pthread.h>
+#include <mqueue.h>
 
 #define CONSUMER_TASK_PRI    1
 #define CONSUMER_STACK_SIZE  8192

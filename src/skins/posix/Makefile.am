@@ -18,13 +18,7 @@ libpthread_rt_la_SOURCES = \
 	rtdm.c \
 	wrappers.c
 
-include_HEADERS = \
-	mqueue.h \
-	pthread.h \
-	semaphore.h \
-	unistd.h
-
-libpthread_rt_la_CPPFLAGS = @XENO_USER_CFLAGS@ -I$(srcdir)/..
+libpthread_rt_la_CPPFLAGS = @XENO_USER_CFLAGS@ -I$(top_srcdir)/include/posix
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(libdir)
@@ -34,5 +28,3 @@ uninstall-local:
 	$(RM) $(DESTDIR)$(libdir)/posix.wrappers
 
 EXTRA_DIST = posix.wrappers
-
-SUBDIRS=sys

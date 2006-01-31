@@ -19,7 +19,7 @@
 #ifndef _POSIX_TIMER_H
 #define _POSIX_TIMER_H
 
-#include <posix/signal.h>        /* For struct itimerspec. */
+#include <posix/sig.h>        /* For struct itimerspec. */
 
 void pse51_timer_notified(pse51_siginfo_t *si);
 
