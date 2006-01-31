@@ -5,9 +5,19 @@
 
 #ifdef __KERNEL__
 #include <linux/signal.h>
+
+/* These are not defined in kernel-space headers. */
+#define sa_sigaction sa_handler
+typedef void (*sighandler_t) (int sig);
+typedef unsigned long sig_atomic_t;
+#define DELAYTIMER_MAX UINT_MAX
+
 #endif /* !__KERNEL__ */
 
-#if 1
+#ifdef __XENO_SIM__
+#include <posix_overrides.h>
+#endif /* __XENO_SIM__ */
+
 #undef sigemptyset
 #undef sigfillset
 #undef sigaddset
@@ -17,19 +27,6 @@
 #undef sigqueue
 #undef SIGRTMIN
 #undef SIGRTMAX
-#endif
-
-#ifdef __XENO_SIM__
-#include <posix_overrides.h>
-#endif /* __XENO_SIM__ */
-
-#ifdef __KERNEL__
-/* These are not defined in kernel-space headers. */
-#define sa_sigaction sa_handler
-typedef void (*sighandler_t) (int sig);
-typedef unsigned long sig_atomic_t;
-#define DELAYTIMER_MAX UINT_MAX
-#endif /* ! __KERNEL__ */
 
 #define sigaction(sig, action, old) pse51_sigaction(sig, action, old)
 #define sigemptyset pse51_sigemptyset
