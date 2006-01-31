@@ -469,7 +469,6 @@ int rt_event_wait (RT_EVENT *event,
     if (timeout == TM_NONBLOCK)
         {
         unsigned long bits = (event->value & mask);
-        event->value &= ~mask;
         *mask_r = bits;
 
         if (mode & EV_ANY)
@@ -487,7 +486,6 @@ int rt_event_wait (RT_EVENT *event,
         (!(mode & EV_ANY) && ((mask & event->value) == mask)))
         {
         *mask_r = (event->value & mask);
-        event->value &= ~mask;
         goto unlock_and_exit;
         }
 
