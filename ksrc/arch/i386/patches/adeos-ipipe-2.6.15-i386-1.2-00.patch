@@ -880,7 +880,7 @@
  
  #else
 --- 2.6.15/include/linux/sched.h	2006-01-03 04:21:10.000000000 +0100
-+++ 2.6.15-ipipe/include/linux/sched.h	2006-01-07 15:18:31.000000000 +0100
++++ 2.6.15-ipipe/include/linux/sched.h	2006-01-30 15:14:43.000000000 +0100
 @@ -4,6 +4,7 @@
  #include <asm/param.h>	/* for HZ */
  
@@ -889,7 +889,19 @@
  #include <linux/capability.h>
  #include <linux/threads.h>
  #include <linux/kernel.h>
-@@ -857,6 +858,9 @@ struct task_struct {
+@@ -127,6 +128,11 @@ extern unsigned long nr_iowait(void);
+ #define EXIT_DEAD		32
+ /* in tsk->state again */
+ #define TASK_NONINTERACTIVE	64
++#ifdef CONFIG_IPIPE
++#define TASK_ATOMICSWITCH	512
++#else  /* !CONFIG_IPIPE */
++#define TASK_ATOMICSWITCH	0
++#endif /* CONFIG_IPIPE */
+ 
+ #define __set_task_state(tsk, state_value)		\
+ 	do { (tsk)->state = (state_value); } while (0)
+@@ -857,6 +863,9 @@ struct task_struct {
  	int cpuset_mems_generation;
  #endif
  	atomic_t fs_excl;	/* holding fs exclusive resources */
@@ -977,7 +989,7 @@
  fork_out:
  	if (retval)
 --- 2.6.15/kernel/ipipe/Kconfig	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.15-ipipe/kernel/ipipe/Kconfig	2005-12-30 16:26:19.000000000 +0100
++++ 2.6.15-ipipe/kernel/ipipe/Kconfig	2006-01-09 03:41:09.000000000 +0100
 @@ -0,0 +1,15 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
@@ -994,44 +1006,6 @@
 +	  Activate this option if you want runtime statistics to be collected
 +	  while the I-pipe is operating. This option adds a small overhead, but
 +	  is useful to detect unexpected latency spots.
---- 2.6.15/kernel/ipipe/Kconfig.trace	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.15-ipipe/kernel/ipipe/Kconfig.trace	2006-01-06 08:47:31.000000000 +0100
-@@ -0,0 +1,35 @@
-+config IPIPE
-+	bool "Interrupt pipeline"
-+	default y
-+	---help---
-+	  Activate this option if you want the interrupt pipeline to be
-+	  compiled in.
-+
-+config IPIPE_STATS
-+	bool "Collect statistics"
-+	depends on IPIPE
-+	default n
-+	---help---
-+	  Activate this option if you want runtime statistics to be collected
-+	  while the I-pipe is operating. This option adds a small overhead, but
-+	  is useful to detect unexpected latency spots.
-+
-+config IPIPE_TRACE
-+ 	bool "Latency Tracing"
-+	depends on IPIPE && PROC_FS
-+	default n
-+	---help---
-+	  Activate this option if you want to use per-function tracing of
-+	  the kernel. The tracer will collect data via instrumentation
-+	  features like the one below or with the help of explicite calls
-+	  of ipipe_trace_xxx(). See include/linux/ipipe_trace.h for the
-+	  in-kernel tracing API. The collected data and runtime control
-+	  is available via /proc/ipipe/trace/*.
-+
-+config IPIPE_TRACE_IRQSOFF
-+	bool "Trace IRQs-off times"
-+	depends on IPIPE_TRACE
-+	default y
-+	---help---
-+	  Activate this option if I-pipe shall trace the longest path
-+	  with hard-IRQs switched off.
 --- 2.6.15/kernel/ipipe/Makefile	1970-01-01 01:00:00.000000000 +0100
 +++ 2.6.15-ipipe/kernel/ipipe/Makefile	2005-12-29 14:04:04.000000000 +0100
 @@ -0,0 +1,3 @@
@@ -2399,8 +2373,8 @@
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
 --- 2.6.15/kernel/sched.c	2006-01-03 04:21:10.000000000 +0100
-+++ 2.6.15-ipipe/kernel/sched.c	2006-01-07 15:18:31.000000000 +0100
-@@ -2952,6 +2952,11 @@ asmlinkage void __sched schedule(void)
++++ 2.6.15-ipipe/kernel/sched.c	2006-01-30 15:15:27.000000000 +0100
+@@ -2952,13 +2952,18 @@ asmlinkage void __sched schedule(void)
  	unsigned long run_time;
  	int cpu, idx, new_prio;
  
@@ -2412,10 +2386,25 @@
  	/*
  	 * Test if we are atomic.  Since do_exit() needs to call into
  	 * schedule() atomically, we ignore that path for now.
-@@ -2969,6 +2974,12 @@ asmlinkage void __sched schedule(void)
+ 	 * Otherwise, whine if we are scheduling when we should not be.
+ 	 */
+ 	if (likely(!current->exit_state)) {
+-		if (unlikely(in_atomic())) {
++		if (unlikely(!(current->state & TASK_ATOMICSWITCH) && in_atomic())) {
+ 			printk(KERN_ERR "scheduling while atomic: "
+ 				"%s/0x%08x/%d\n",
+ 				current->comm, preempt_count(), current->pid);
+@@ -2967,8 +2972,19 @@ asmlinkage void __sched schedule(void)
+ 	}
+ 	profile_hit(SCHED_PROFILING, __builtin_return_address(0));
  
++	if (unlikely(current->state & TASK_ATOMICSWITCH)) {
++		current->state &= ~TASK_ATOMICSWITCH;
++		goto preemption_off;
++	}
  need_resched:
  	preempt_disable();
++preemption_off:
 +#ifdef CONFIG_IPIPE
 +	if (unlikely(ipipe_current_domain != ipipe_root_domain)) {
 +		preempt_enable();
@@ -2425,7 +2414,7 @@
  	prev = current;
  	release_kernel_lock(prev);
  need_resched_nonpreemptible:
-@@ -3107,6 +3118,8 @@ switch_tasks:
+@@ -3107,6 +3123,8 @@ switch_tasks:
  		prepare_task_switch(rq, next);
  		prev = context_switch(rq, prev, next);
  		barrier();
@@ -2434,7 +2423,7 @@
  		/*
  		 * this_rq must be evaluated again because prev may have moved
  		 * CPUs since it called schedule(), thus the 'rq' on its stack
-@@ -3139,6 +3152,11 @@ asmlinkage void __sched preempt_schedule
+@@ -3139,6 +3157,11 @@ asmlinkage void __sched preempt_schedule
  	struct task_struct *task = current;
  	int saved_lock_depth;
  #endif
@@ -2446,7 +2435,7 @@
  	/*
  	 * If there is a non-zero preempt_count or interrupts are disabled,
  	 * we do not want to preempt the current task.  Just return..
-@@ -3768,6 +3786,7 @@ recheck:
+@@ -3768,6 +3791,7 @@ recheck:
  		deactivate_task(p, rq);
  	oldprio = p->prio;
  	__setscheduler(p, policy, param->sched_priority);
@@ -2454,7 +2443,7 @@
  	if (array) {
  		__activate_task(p, rq);
  		/*
-@@ -5745,3 +5764,53 @@ void set_curr_task(int cpu, task_t *p)
+@@ -5745,3 +5769,53 @@ void set_curr_task(int cpu, task_t *p)
  }
  
  #endif
@@ -5251,7 +5240,7 @@
  #define shutdown_level_ioapic	mask_IO_APIC_irq
  #define enable_level_ioapic	unmask_IO_APIC_irq
 --- 2.6.15/include/asm-i386/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.15-ipipe/include/asm-i386/ipipe.h	2006-01-06 08:55:54.000000000 +0100
++++ 2.6.15-ipipe/include/asm-i386/ipipe.h	2006-01-30 23:42:26.000000000 +0100
 @@ -0,0 +1,211 @@
 +/*   -*- linux-c -*-
 + *   include/asm-i386/ipipe.h
@@ -5284,10 +5273,10 @@
 +#include <linux/threads.h>
 +#include <irq_vectors.h>
 +
-+#define IPIPE_ARCH_STRING	"1.1-03"
++#define IPIPE_ARCH_STRING	"1.2-00"
 +#define IPIPE_MAJOR_NUMBER	1
-+#define IPIPE_MINOR_NUMBER	1
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_MINOR_NUMBER	2
++#define IPIPE_PATCH_NUMBER	0
 +
 +#ifdef CONFIG_X86_LOCAL_APIC
 +/* We want to cover the whole IRQ space when the APIC is enabled. */
