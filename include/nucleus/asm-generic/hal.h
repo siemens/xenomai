@@ -418,6 +418,15 @@ extern void rthal_domain_entry(int iflag);
 
 #endif /* !CONFIG_IPIPE */
 
+#ifndef TASK_ATOMICSWITCH
+/* Only recent I-pipe versions and no oldgen releases have this. */
+#define TASK_ATOMICSWITCH  0
+#ifdef CONFIG_PREEMPT
+#warning "Adeos: atomic task switch support is missing; upgrading"
+#warning "       to a recent I-pipe version is highly recommended."
+#endif /* CONFIG_PREEMPT */
+#endif /* !TASK_ATOMICSWITCH */
+
 #define rthal_spin_lock_irq(lock) \
 do {  \
     rthal_local_irq_disable(); \
