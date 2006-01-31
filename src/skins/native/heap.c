@@ -79,7 +79,7 @@ int rt_heap_create (RT_HEAP *heap,
 			    &ph,
 			    name,
 			    heapsize,
-			    mode|H_SHARED);
+			    mode|H_MAPPABLE);
     if (err)
 	return err;
 

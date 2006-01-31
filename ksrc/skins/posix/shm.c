@@ -86,7 +86,7 @@ static void pse51_shm_destroy(pse51_shm_t *shm, int force)
     if (shm->addr)
         {
         xnheap_free(&shm->heapbase, shm->addr);
-	xnheap_destroy_shared(&shm->heapbase);
+	xnheap_destroy_mapped(&shm->heapbase);
 	shm->addr = NULL;
         }
 
@@ -323,11 +323,11 @@ int ftruncate(int fd, off_t len)
         if (shm->addr)
             {
             xnheap_free(&shm->heapbase, shm->addr);
-            xnheap_destroy_shared(&shm->heapbase);
+            xnheap_destroy_mapped(&shm->heapbase);
             shm->addr = NULL;
             }
 
-        err = xnheap_init_shared(&shm->heapbase, len, 0);
+        err = xnheap_init_mapped(&shm->heapbase, len, 0);
 
         if (!err)
             {

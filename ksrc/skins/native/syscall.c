@@ -2118,7 +2118,7 @@ static int __rt_queue_alloc (struct task_struct *curr, struct pt_regs *regs)
        into the caller's address space. */
 
     if (buf)
-	buf = ph.mapbase + xnheap_shared_offset(&q->bufpool,buf);
+	buf = ph.mapbase + xnheap_mapped_offset(&q->bufpool,buf);
     else
 	err = -ENOMEM;
 
@@ -2167,7 +2167,7 @@ static int __rt_queue_free (struct task_struct *curr, struct pt_regs *regs)
 
     if (buf)
 	{
-	buf = xnheap_shared_address(&q->bufpool,(caddr_t)buf - ph.mapbase);
+	buf = xnheap_mapped_address(&q->bufpool,(caddr_t)buf - ph.mapbase);
 	err = rt_queue_free(q,buf);
 	}
     else
@@ -2226,7 +2226,7 @@ static int __rt_queue_send (struct task_struct *curr, struct pt_regs *regs)
 
     if (buf)
 	{
-	buf = xnheap_shared_address(&q->bufpool,(caddr_t)buf - ph.mapbase);
+	buf = xnheap_mapped_address(&q->bufpool,(caddr_t)buf - ph.mapbase);
 	err = rt_queue_send(q,buf,size,mode);
 	}
     else
@@ -2287,7 +2287,7 @@ static int __rt_queue_recv (struct task_struct *curr, struct pt_regs *regs)
 	{
 	/* Convert the kernel-based address of buf to the equivalent area
 	   into the caller's address space. */
-	buf = ph.mapbase + xnheap_shared_offset(&q->bufpool,buf);
+	buf = ph.mapbase + xnheap_mapped_offset(&q->bufpool,buf);
 	__xn_copy_to_user(curr,(void __user *)__xn_reg_arg2(regs),&buf,sizeof(buf));
 	}
 
@@ -2537,7 +2537,7 @@ static int __rt_heap_alloc (struct task_struct *curr, struct pt_regs *regs)
        into the caller's address space. */
 
     if (!err)
-	buf = ph.mapbase + xnheap_shared_offset(&heap->heap_base,buf);
+	buf = ph.mapbase + xnheap_mapped_offset(&heap->heap_base,buf);
 
  unlock_and_exit:
 
@@ -2584,7 +2584,7 @@ static int __rt_heap_free (struct task_struct *curr, struct pt_regs *regs)
 
     if (buf)
 	{
-	buf = xnheap_shared_address(&heap->heap_base,(caddr_t)buf - ph.mapbase);
+	buf = xnheap_mapped_address(&heap->heap_base,(caddr_t)buf - ph.mapbase);
 	err = rt_heap_free(heap,buf);
 	}
     else

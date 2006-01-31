@@ -1,5 +1,9 @@
 2006-01-31  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/native/heap.c, src/skins/native/heap.c: Decouple the
+	"mappable" and "single-block" properties of heaps, so that
+	multi-block heaps can be operated from user-space.
+ 
 	* ksrc/arch/*/patches: Upgrade all Adeos patches to get the atomic
 	scheduling feature.
 
@@ -37,7 +41,7 @@
 
 2006-01-26  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
-	* ksrc/nucleus/heap.c (xnheap_init_shared, xnheap_destroy_shared):
+	* ksrc/nucleus/heap.c (xnheap_init_mapped, xnheap_destroy_mapped):
 	Implementation for simulator. 
 
 	* ksrc/skins/posix/timer.c (timer_settime): Set owner in
@@ -3871,7 +3875,7 @@
 	should not switch to primary.
 
 	* skins/native/queue.c (rt_queue_create): Return -ENOMEM upon error
-	return from xnheap_init_shared().
+	return from xnheap_init_mapped().
 
 	* skins/native/lib/queue.c (rt_queue_create): Make sure we don't
 	leave a dandling queue in kernel space if the mapping fails.
