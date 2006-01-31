@@ -60,6 +60,10 @@
 /* Sched */
 #define MAX_RT_PRIO 100
 #define task_cpu(p) ((p)->processor)
+#ifndef CONFIG_PREEMPT
+#define preempt_disable()  do { } while(0)
+#define preempt_enable()   do { } while(0)
+#endif /* CONFIG_PREEMPT */
 
 /* Signals */
 #define wrap_sighand_lock(p)     ((p)->sigmask_lock)

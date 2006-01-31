@@ -216,6 +216,15 @@ static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
 #define IPIPE_EVENT_SELF  0
 #endif /* !IPIPE_EVENT_SELF */
 
+#ifndef TASK_ATOMICSWITCH
+/* Early I-pipe versions don't have this either. */
+#define TASK_ATOMICSWITCH  0
+#ifdef CONFIG_PREEMPT
+#warning "Adeos: atomic task switch support is missing; upgrading"
+#warning "       to a recent I-pipe version is highly recommended."
+#endif /* CONFIG_PREEMPT */
+#endif /* !TASK_ATOMICSWITCH */
+
 #define rthal_catch_taskexit(hdlr)	\
     ipipe_catch_event(ipipe_root_domain,IPIPE_EVENT_EXIT,hdlr)
 #define rthal_catch_sigwake(hdlr)	\
