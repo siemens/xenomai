@@ -546,7 +546,6 @@ AC_CONFIG_FILES([ \
 	src/skins/Makefile \
        	src/skins/uvm/Makefile \
        	src/skins/posix/Makefile \
-       	src/skins/posix/sys/Makefile \
        	src/skins/native/Makefile \
        	src/skins/psos+/Makefile \
        	src/skins/uitron/Makefile \
@@ -570,6 +569,7 @@ AC_CONFIG_FILES([ \
        	include/native/Makefile \
        	include/nucleus/Makefile \
        	include/posix/Makefile \
+       	include/posix/sys/Makefile \
        	include/psos+/Makefile \
        	include/rtai/Makefile \
        	include/rtdm/Makefile \

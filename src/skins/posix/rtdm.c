@@ -19,11 +19,12 @@
 
 #include <errno.h>
 #include <stdarg.h>
-#include <sys/select.h>
 #include <pthread.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/socket.h>
 #include <xenomai/rtdm/rtdm.h>
 #include <xenomai/rtdm/syscall.h>
-#include <xenomai/posix/syscall.h>
 
 extern int __rtdm_muxid;
 extern int __rtdm_fd_start;

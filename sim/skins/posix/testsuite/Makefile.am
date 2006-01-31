@@ -8,7 +8,8 @@ INCLUDES = \
 	-I$(srcdir)/.. \
 	-I@XENO_INSTALLDIR@/source/include \
 	-I@XENO_INSTALLDIR@/source/skins \
-	-I$(top_srcdir)/include
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/../include
 
 LDFLAGS = \
 	-u __xeno_user_init \

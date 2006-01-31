@@ -21,7 +21,7 @@
 #endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE*/
 #include <asm/xenomai/system.h> /* For xnlock. */
 #include <posix/timer.h>        /* For pse51_timer_notified. */
-#include <posix/signal.h>
+#include <posix/sig.h>
 
 static void pse51_default_handler (int sig);
 
@@ -30,6 +30,7 @@ typedef void siginfo_handler_t(int, siginfo_t *, void *);
 #define user2pse51_sigset(set) ((pse51_sigset_t *)(set))
 #define PSE51_SIGQUEUE_MAX 64
 
+#define SIGRTMAX 64
 static struct sigaction actions[SIGRTMAX];
 static pse51_siginfo_t pse51_infos_pool[PSE51_SIGQUEUE_MAX];
 #ifdef CONFIG_SMP

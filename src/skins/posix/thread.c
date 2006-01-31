@@ -16,11 +16,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#include <stddef.h>
 #include <errno.h>
 #include <signal.h>
 #include <xenomai/posix/syscall.h>
-#include "posix/pthread.h"
-#include "posix/semaphore.h"
+#include <pthread.h>
+#include <semaphore.h>
 
 extern int __pse51_muxid;
 

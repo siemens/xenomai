@@ -20,8 +20,8 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <xenomai/posix/syscall.h>
-#include <posix/pthread.h>
-#include <posix/mqueue.h>
+#include <pthread.h>
+#include <mqueue.h>
 
 
 extern int __pse51_muxid;

@@ -23,7 +23,7 @@
 #include <posix/registry.h>
 #include <posix/internal.h>     /* Magics, time conversion */
 #include <posix/thread.h>       /* errno. */
-#include <posix/signal.h>       /* pse51_siginfo_t. */
+#include <posix/sig.h>          /* pse51_siginfo_t. */
 
 /* Temporary definitions. */
 struct pse51_mq {

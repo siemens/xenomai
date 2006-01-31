@@ -1,20 +1,55 @@
 #ifndef PSE51_OVERRIDE_LIBC_DEFINES_H
 #define PSE51_OVERRIDE_LIBC_DEFINES_H
 
+#include <errno.h>
+#include <pthread.h>
+#include <signal.h>
+#include <time.h>
+#include <limits.h>
+#include <fcntl.h>
+
+#undef pthread_cleanup_push
+#undef pthread_cleanup_pop
+#undef PTHREAD_STACK_MIN
+#undef PTHREAD_DESTRUCTOR_ITERATIONS
+#undef PTHREAD_KEYS_MAX
+#undef PTHREAD_CREATE_JOINABLE
+#undef PTHREAD_CREATE_DETACHED
+#undef PTHREAD_INHERIT_SCHED
+#undef PTHREAD_EXPLICIT_SCHED
+#undef PTHREAD_SCOPE_SYSTEM
+#undef PTHREAD_SCOPE_PROCESS
+#undef PTHREAD_CANCEL_ENABLE
+#undef PTHREAD_CANCEL_DISABLE
+#undef PTHREAD_CANCEL_DEFERRED
+#undef PTHREAD_CANCEL_ASYNCHRONOUS
+#undef PTHREAD_CANCELED
+#undef PTHREAD_ONCE_INIT
+#undef SCHED_FIFO
+#undef SCHED_RR
+#undef SCHED_OTHER
 #undef errno
-struct sched_param {
-    int sched_priority;
-};
+#undef sigemptyset
+#undef sigfillset
+#undef sigaddset
+#undef sigdelset
+#undef sigismember
+#undef sigaction
+#undef sigqueue
+#undef SIGRTMIN
+#undef SIGRTMAX
+#undef TIMER_ABSTIME
+#undef errno
+
 #define pthread_attr_t pse51_attr_t
 #define pthread_t pse51_thread_t
 #define pthread_mutexattr_t pse51_mutexattr_t
 #define pthread_mutex_t pse51_mutex_t
-#define clockid_t pse51_clockid_t
 #define pthread_condattr_t pse51_condattr_t
 #define pthread_cond_t pse51_cond_t
-
 #define pthread_key_t pse51_key_t
 #define pthread_once_t pse51_once_t
+#define mqd_t pse51_mqd_t
 
 #define pthread_attr_init pse51_threadattr_init
 #define pthread_attr_destroy pse51_threadattr_destroy
@@ -36,6 +71,7 @@ struct sched_param {
 #define pthread_attr_setname_np pse51_threadattr_setname_np
 #define pthread_attr_getfp_np pse51_threadattr_getfp_np
 #define pthread_attr_setfp_np pse51_threadattr_setfp_np
+#define pthread_create pse51_thread_create
 #define pthread_detach pse51_thread_detach
 #define pthread_equal pse51_thread_equal
 #define pthread_exit pse51_thread_exit
@@ -64,7 +100,8 @@ struct sched_param {
 #define pthread_cond_init pse51_cond_init
 #define pthread_cond_destroy pse51_cond_destroy
 #define pthread_cond_wait pse51_cond_wait
-#define signal pse51_signal
+#define pthread_cond_signal pse51_cond_signal
+#define pthread_cond_timedwait pse51_cond_timedwait
 #define pthread_cond_broadcast pse51_cond_broadcast
 #define sem_destroy pse51_sem_destroy
 #define sem_post pse51_sem_post
@@ -82,13 +119,17 @@ struct sched_param {
 #define pthread_testcancel pse51_testcancel
 #define pthread_kill pse51_kill
 #define pthread_sigmask pse51_thread_sigmask
+#define signal pse51_signal
 #define sigpending pse51_sigpending
 #define sigwait pse51_sigwait
 #define sigtimedwait pse51_sigtimedwait
 #define sigwaitinfo pse51_sigwaitinfo
+#define sigqueue pse51_sigqueue
+#define pthread_key_create pse51_key_create
 #define pthread_key_delete pse51_key_delete
 #define pthread_getspecific pse51_getspecific
 #define pthread_setspecific pse51_setspecific
+#define pthread_once pse51_once
 #define clock_getres pse51_clock_getres
 #define clock_gettime pse51_clock_gettime
 #define clock_settime pse51_clock_settime

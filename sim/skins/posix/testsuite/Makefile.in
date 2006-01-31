@@ -270,7 +270,8 @@ INCLUDES = \
 	-I$(srcdir)/.. \
 	-I@XENO_INSTALLDIR@/source/include \
 	-I@XENO_INSTALLDIR@/source/skins \
-	-I$(top_srcdir)/include
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/../include
 
 tthread_DEPENDENCIES = ../libposix_s.a libtests.a
 tsem_DEPENDENCIES = ../libposix_s.a libtests.a

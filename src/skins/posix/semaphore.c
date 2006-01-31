@@ -20,9 +20,9 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <fcntl.h>              /* For O_CREAT. */
-#include <pthread.h>
+#include <pthread.h>            /* For pthread_setcanceltype. */
 #include <xenomai/posix/syscall.h>
-#include <posix/semaphore.h>
+#include <semaphore.h>
 
 extern int __pse51_muxid;
 

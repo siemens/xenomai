@@ -17,8 +17,8 @@
  */
 
 
-#ifndef _POSIX_SIGNAL_H
-#define _POSIX_SIGNAL_H
+#ifndef _POSIX_SIG_H
+#define _POSIX_SIG_H
 
 #include <posix/thread.h>
 
@@ -46,4 +46,4 @@ void pse51_signal_pkg_init(void);
 
 void pse51_signal_pkg_cleanup(void);
 
-#endif /* !_POSIX_SIGNAL_H */
+#endif /* !_POSIX_SIG_H */
