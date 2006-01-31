@@ -19,8 +19,23 @@
 
 #include <linux/config.h> 
 #include <asm/processor.h>
-#include <asm/cputable.h>
 #include <asm/ppc_asm.h>
+
+#ifdef CONFIG_PPC601_SYNC_FIX
+#define SYNC				\
+BEGIN_FTR_SECTION			\
+	sync;				\
+	isync;				\
+END_FTR_SECTION_IFSET(CPU_FTR_601)
+#else /* !CONFIG_PPC601_SYNC_FIX */
+#define	SYNC
+#endif /* CONFIG_PPC601_SYNC_FIX */
+
+#if defined(CONFIG_PPC64) || defined(CONFIG_PPC64BRIDGE)
+#define MTMSRD(r)	.long	(0x7c000164 + ((r) << 21))	/* mtmsrd */
+#else
+#define MTMSRD(r)	mtmsr	r
+#endif /* CONFIG_PPC64 || CONFIG_PPC64BRIDGE */
 
 #define RTHAL_FPSAVE(n, base)	stfd n,8*(n)(base)
 #define RTHAL_FPSAVE2(n, base)	RTHAL_FPSAVE(n, base); RTHAL_FPSAVE(n+1, base)
