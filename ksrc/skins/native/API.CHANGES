@@ -77,3 +77,21 @@ ___________________________________________________________________
 
         o the timer rt_timer_info structure has a "tsc" member, whose value is
          synchronized with the value of the date member.
+___________________________________________________________________
+
+2.0 -> 2.1-rc1
+
+	o Added a parameter to rt_pipe_create(), specifying the size
+	of a local memory pool to associate to the message
+	pipe. Passing zero is equivalent to the former
+	syntax. Additionally, rt_pipe_alloc() and rt_pipe_free() now
+	need to be passed the address of the message pipe descriptor
+	of reference.
+___________________________________________________________________
+
+2.1-rc2 -> 2.1-rc3
+
+	o rt_event_wait() has been fixed so that the satisfied event
+	bits are not auto-cleared upon receipt anymore. An explicit
+	call to rt_event_clear() is therefore needed to zero the
+	received bits into the event group.
