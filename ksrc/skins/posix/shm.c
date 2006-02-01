@@ -451,7 +451,7 @@ void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 static pse51_shm_t *pse51_shm_lookup(void *addr)
 {
     xnholder_t *holder;
-    pse51_shm_t *shm;
+    pse51_shm_t *shm = NULL;
     off_t off;
     spl_t s;
 
@@ -483,7 +483,7 @@ static pse51_shm_t *pse51_shm_lookup(void *addr)
 
 int munmap(void *addr, size_t len)
 {
-    pse51_shm_map_t *mapping;
+    pse51_shm_map_t *mapping = NULL;
     xnholder_t *holder;
     pse51_shm_t *shm;
     int err;
