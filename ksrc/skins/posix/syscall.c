@@ -562,8 +562,8 @@ int __sem_destroy (struct task_struct *curr, struct pt_regs *regs)
 int __sem_open (struct task_struct *curr, struct pt_regs *regs)
 {
     union __xeno_sem *sm, *usm;
-    unsigned long handle, uaddr;
     char name[PSE51_MAXNAME];
+    unsigned long uaddr;
     int oflags;
     long len;
     spl_t s;
