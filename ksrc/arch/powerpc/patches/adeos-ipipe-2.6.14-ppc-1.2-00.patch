@@ -4165,7 +4165,7 @@
  #define mask_irq(irq) ({if (irq_desc[irq].handler && irq_desc[irq].handler->disable) irq_desc[irq].handler->disable(irq);})
 --- 2.6.14/include/asm-ppc/ipipe.h	1970-01-01 01:00:00.000000000 +0100
 +++ 2.6.14-ipipe/include/asm-ppc/ipipe.h	2006-01-07 09:48:14.000000000 +0100
-@@ -0,0 +1,178 @@
+@@ -0,1 +1,179 @@
 +/* -*- linux-c -*-
 + * include/asm-ppc/ipipe.h
 + *
@@ -4201,10 +4201,10 @@
 +#include <linux/cpumask.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.1-02"
++#define IPIPE_ARCH_STRING	"1.2-00"
 +#define IPIPE_MAJOR_NUMBER	1
-+#define IPIPE_MINOR_NUMBER	1
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_MINOR_NUMBER	2
++#define IPIPE_PATCH_NUMBER	0
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
