@@ -1,5 +1,5 @@
 /*
- * Written by Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>.
+ * Copyright (C) 2003 Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -27,6 +27,7 @@
 
 #include <posix/errno.h>
 #include <posix/pthread.h>
+#include <posix/sched.h>
 #include <posix/signal.h>
 #include <posix/semaphore.h>
 #include <posix/mqueue.h>
@@ -41,6 +42,7 @@
 
 #include <errno.h>
 #include <pthread.h>
+#include <sched.h>
 #include <signal.h>
 #include <semaphore.h>
 #include <mqueue.h>

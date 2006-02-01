@@ -20,27 +20,37 @@
 #include <posix/mutex.h>
 #include <posix/cond.h>
 
-#define link2cond(laddr) \
-    ((pthread_cond_t *)(((char *)laddr) - offsetof(pthread_cond_t, link)))
+typedef struct pse51_cond {
+    xnsynch_t synchbase;
+    xnholder_t link;            /* Link in pse51_condq */
+
+#define link2cond(laddr)                                                \
+    ((pse51_cond_t *)(((char *)laddr) - offsetof(pse51_cond_t, link)))
+
+    pthread_condattr_t attr;
+    struct __shadow_mutex *mutex;
+} pse51_cond_t;
 
 static pthread_condattr_t default_cond_attr;
 
 static xnqueue_t pse51_condq;
 
-static void cond_destroy_internal (pthread_cond_t *cond)
+static void cond_destroy_internal (pse51_cond_t *cond)
 
 {
     removeq(&pse51_condq, &cond->link);
-    pse51_mark_deleted(cond);
     /* synchbase wait queue may not be empty only when this function is called
        from pse51_cond_obj_cleanup, hence the absence of xnpod_schedule(). */
     xnsynch_destroy(&cond->synchbase);
+    xnfree(cond);
 }
 
-int pthread_cond_init (pthread_cond_t *cond, const pthread_condattr_t *attr)
+int pthread_cond_init (pthread_cond_t *cnd, const pthread_condattr_t *attr)
 
 {
+    struct __shadow_cond *shadow = &((union __xeno_cond *) cnd)->shadow_cond;
     xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP;
+    pse51_cond_t *cond;
     spl_t s;
 
     if (!attr)
@@ -54,7 +64,29 @@ int pthread_cond_init (pthread_cond_t *cond, const pthread_condattr_t *attr)
         return EINVAL;
 	}
 
-    cond->magic = PSE51_COND_MAGIC;
+    if (shadow->magic == PSE51_COND_MAGIC)
+        {
+        xnholder_t *holder;
+        for(holder = getheadq(&pse51_condq); holder;
+            holder = nextq(&pse51_condq, holder))
+            if (holder == &shadow->cond->link)
+                {
+                /* mutex is already in the queue. */
+                xnlock_put_irqrestore(&nklock, s);
+                return EBUSY;
+                }
+        }
+
+    cond = (pse51_cond_t *) xnmalloc(sizeof(*cond));
+    if (!cond)
+        {
+        xnlock_put_irqrestore(&nklock, s);
+        return ENOMEM;
+        }
+
+    shadow->magic = PSE51_COND_MAGIC;
+    shadow->cond = cond;
+
     xnsynch_init(&cond->synchbase, synch_flags);
     inith(&cond->link);
     cond->attr = *attr;
@@ -67,18 +99,22 @@ int pthread_cond_init (pthread_cond_t *cond, const pthread_condattr_t *attr)
     return 0;    
 }
 
-int pthread_cond_destroy (pthread_cond_t *cond)
+int pthread_cond_destroy (pthread_cond_t *cnd)
 
 {
+    struct __shadow_cond *shadow = &((union __xeno_cond *) cnd)->shadow_cond;
+    pse51_cond_t *cond;
     spl_t s;
 
     xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(cond, PSE51_COND_MAGIC, pthread_cond_t))
+    if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond))
 	{
         xnlock_put_irqrestore(&nklock, s);
         return EINVAL;
 	}
+
+    cond = shadow->cond;
 
     if (xnsynch_nsleepers(&cond->synchbase))
 	{
@@ -87,31 +123,35 @@ int pthread_cond_destroy (pthread_cond_t *cond)
 	}
 
     cond_destroy_internal(cond);
+    pse51_mark_deleted(shadow);
     
     xnlock_put_irqrestore(&nklock, s);
 
     return 0;
 }
 
-int pse51_cond_timedwait_internal(pthread_cond_t *cond,
-                                  pthread_mutex_t *mutex,
+int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
+                                  struct __shadow_mutex *mutex,
                                   xnticks_t to)
 {
+    pse51_cond_t *cond;
     xnthread_t *cur;
     unsigned count;
     spl_t s;
     int err;
 
-    if (!cond || !mutex)
+    if (!shadow || !mutex)
         return EINVAL;
-    
+
     if (xnpod_unblockable_p())
         return EPERM;
 
     xnlock_get_irqsave(&nklock, s);
 
+    cond = shadow->cond;
+
     /* If another thread waiting for cond does not use the same mutex */
-    if (!pse51_obj_active(cond, PSE51_COND_MAGIC, pthread_cond_t)
+    if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond)
        || (cond->mutex && cond->mutex != mutex))
 	{
         err = EINVAL;
@@ -137,7 +177,7 @@ int pse51_cond_timedwait_internal(pthread_cond_t *cond,
     if (cond->mutex == NULL)
         {
         cond->mutex = mutex;
-        ++mutex->condvars;
+        ++mutex->mutex->condvars;
         }
 
     /* Wait for another thread to signal the condition. */
@@ -170,7 +210,7 @@ int pse51_cond_timedwait_internal(pthread_cond_t *cond,
        already done. */
     if (!xnsynch_nsleepers(&cond->synchbase) && cond->mutex != NULL)
 	{
-        --mutex->condvars;
+        --mutex->mutex->condvars;
         cond->mutex = NULL;
 	}
 
@@ -185,19 +225,25 @@ int pse51_cond_timedwait_internal(pthread_cond_t *cond,
     return err;
 }
 
-int pthread_cond_wait (pthread_cond_t *cond, pthread_mutex_t *mutex)
+int pthread_cond_wait (pthread_cond_t *cnd, pthread_mutex_t *mx)
 
 {
-    int err = pse51_cond_timedwait_internal(cond, mutex, XN_INFINITE);
+    struct __shadow_mutex *mutex = &((union __xeno_mutex *) mx)->shadow_mutex;
+    struct __shadow_cond *cond = &((union __xeno_cond *) cnd)->shadow_cond;
+    int err;
+
+    err = pse51_cond_timedwait_internal(cond, mutex, XN_INFINITE);
 
     return err == EINTR ? 0 : err;
 }
 
-int pthread_cond_timedwait (pthread_cond_t *cond,
-			    pthread_mutex_t *mutex,
+int pthread_cond_timedwait (pthread_cond_t *cnd,
+			    pthread_mutex_t *mx,
 			    const struct timespec *abstime)
 
 {
+    struct __shadow_mutex *mutex = &((union __xeno_mutex *) mx)->shadow_mutex;
+    struct __shadow_cond *cond = &((union __xeno_cond *) cnd)->shadow_cond;
     int err;
 
     err = pse51_cond_timedwait_internal(cond, mutex, ts2ticks_ceil(abstime)+1);
@@ -205,19 +251,22 @@ int pthread_cond_timedwait (pthread_cond_t *cond,
     return err == EINTR ? 0 : err;
 }
 
-int pthread_cond_signal (pthread_cond_t *cond)
+int pthread_cond_signal (pthread_cond_t *cnd)
 
 {
+    struct __shadow_cond *shadow = &((union __xeno_cond *) cnd)->shadow_cond;
+    pse51_cond_t *cond;
     spl_t s;
-
 
     xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(cond, PSE51_COND_MAGIC, pthread_cond_t))
+    if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond))
 	{
         xnlock_put_irqrestore(&nklock, s);
         return EINVAL;
 	}
+
+    cond = shadow->cond;
 
     if(xnsynch_wakeup_one_sleeper(&cond->synchbase) != NULL)
         xnpod_schedule();
@@ -227,18 +276,22 @@ int pthread_cond_signal (pthread_cond_t *cond)
     return 0;
 }
 
-int pthread_cond_broadcast (pthread_cond_t *cond)
+int pthread_cond_broadcast (pthread_cond_t *cnd)
 
 {
+    struct __shadow_cond *shadow = &((union __xeno_cond *) cnd)->shadow_cond;
+    pse51_cond_t *cond;
     spl_t s;
 
     xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(cond, PSE51_COND_MAGIC, pthread_cond_t))
+    if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond))
 	{
         xnlock_put_irqrestore(&nklock, s);
         return EINVAL;
 	}
+
+    cond = shadow->cond;
 
     if(xnsynch_flush(&cond->synchbase, 0) == XNSYNCH_RESCHED)
         xnpod_schedule();

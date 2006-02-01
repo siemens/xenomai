@@ -33,10 +33,7 @@ int __wrap_pthread_mutex_init (pthread_mutex_t *mutex,
 
     err = -XENOMAI_SKINCALL1(__pse51_muxid,
 			     __pse51_mutex_init,
-			     &_mutex->shadow_mutex.handle);
-    if (!err)
-	_mutex->shadow_mutex.magic = SHADOW_MUTEX_MAGIC;
-
+			     &_mutex->shadow_mutex);
     return err;
 }
 
@@ -45,12 +42,9 @@ int __wrap_pthread_mutex_destroy (pthread_mutex_t *mutex)
 {
     union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 
-    if (_mutex->shadow_mutex.magic != SHADOW_MUTEX_MAGIC)
-	return EINVAL;
-
     return -XENOMAI_SKINCALL1(__pse51_muxid,
 			      __pse51_mutex_destroy,
-			      _mutex->shadow_mutex.handle);
+			      &_mutex->shadow_mutex);
 }
 
 int __wrap_pthread_mutex_lock (pthread_mutex_t *mutex)
@@ -60,12 +54,9 @@ int __wrap_pthread_mutex_lock (pthread_mutex_t *mutex)
     int err;
 
     do {
-        if (_mutex->shadow_mutex.magic != SHADOW_MUTEX_MAGIC)
-            return EINVAL;
-
         err = XENOMAI_SKINCALL1(__pse51_muxid,
                                 __pse51_mutex_lock,
-                                _mutex->shadow_mutex.handle);
+                                &_mutex->shadow_mutex);
     } while (err == -EINTR);
 
     return -err;
@@ -78,12 +69,9 @@ int __wrap_pthread_mutex_timedlock (pthread_mutex_t *mutex,
     int err;
 
     do {
-        if (_mutex->shadow_mutex.magic != SHADOW_MUTEX_MAGIC)
-            return EINVAL;
-
         err = XENOMAI_SKINCALL2(__pse51_muxid,
                                 __pse51_mutex_timedlock,
-                                _mutex->shadow_mutex.handle,
+                                &_mutex->shadow_mutex,
                                 to);
     } while (err == -EINTR);
 
@@ -95,12 +83,9 @@ int __wrap_pthread_mutex_trylock (pthread_mutex_t *mutex)
 {
     union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 
-    if (_mutex->shadow_mutex.magic != SHADOW_MUTEX_MAGIC)
-	return EINVAL;
-
     return -XENOMAI_SKINCALL1(__pse51_muxid,
                               __pse51_mutex_trylock,
-                              _mutex->shadow_mutex.handle);
+                              &_mutex->shadow_mutex);
 }
 
 int __wrap_pthread_mutex_unlock (pthread_mutex_t *mutex)
@@ -108,10 +93,7 @@ int __wrap_pthread_mutex_unlock (pthread_mutex_t *mutex)
 {
     union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 
-    if (_mutex->shadow_mutex.magic != SHADOW_MUTEX_MAGIC)
-	return EINVAL;
-
     return -XENOMAI_SKINCALL1(__pse51_muxid,
 			      __pse51_mutex_unlock,
-			      _mutex->shadow_mutex.handle);
+			      &_mutex->shadow_mutex);
 }

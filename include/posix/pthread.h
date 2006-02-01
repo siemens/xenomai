@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2005 Philippe Gerum <rpm@xenomai.org>.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of the
+ * License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
-
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #ifndef _XENO_POSIX_PTHREAD_H
@@ -25,16 +25,12 @@
 
 #ifdef __KERNEL__
 #include <linux/types.h>
-#include <linux/sched.h>
+#include <sched.h>
 #endif /* __KERNEL__ */
 
 #ifdef __XENO_SIM__
 #include <posix_overrides.h>
-#define SCHED_FIFO  1
-#define SCHED_RR    2
 #endif /* __XENO_SIM__ */
-
-#define SCHED_OTHER 0
 
 #define PTHREAD_CREATE_JOINABLE 0
 #define PTHREAD_CREATE_DETACHED 1
@@ -97,28 +93,10 @@ typedef struct pse51_mutexattr {
     int protocol;
 } pthread_mutexattr_t;
 
-typedef struct pse51_mutex {
-    unsigned magic;
-    xnsynch_t synchbase;
-    xnholder_t link;            /* Link in pse51_mutexq */
-    pthread_mutexattr_t attr;
-    unsigned count;             /* lock count. */
-    unsigned condvars;          /* count of condition variables using this
-				   mutex. */
-} pthread_mutex_t;
-
 typedef struct pse51_condattr {
     unsigned magic;
     clockid_t clock;
 } pthread_condattr_t;
-
-typedef struct pse51_cond {
-    unsigned magic;
-    xnsynch_t synchbase;
-    xnholder_t link;            /* Link in pse51_condq */
-    pthread_condattr_t attr;
-    struct pse51_mutex *mutex;
-} pthread_cond_t;
 
 struct pse51_key;
 typedef struct pse51_key *pthread_key_t;
@@ -127,6 +105,76 @@ typedef struct pse51_once {
     unsigned magic;
     int routine_called;
 } pthread_once_t;
+
+#ifdef __KERNEL__
+/* The following definitions are copied from linuxthread pthreadtypes.h. */
+struct _pthread_fastlock
+{
+  long int __status;
+  int __spinlock;
+};
+
+typedef struct
+{
+  struct _pthread_fastlock __c_lock;
+  long __c_waiting;
+  char __padding[48 - sizeof (struct _pthread_fastlock)
+		 - sizeof (long) - sizeof (long long)];
+  long long __align;
+} pthread_cond_t;
+
+typedef struct
+{
+  int __m_reserved;
+  int __m_count;
+  long __m_owner;
+  int __m_kind;
+  struct _pthread_fastlock __m_lock;
+} pthread_mutex_t;
+#endif /* __KERNEL__ */
+
+#else /* !(__KERNEL__ || __XENO_SIM__) */
+
+#include <sched.h>
+#include_next <pthread.h>
+
+struct timespec;
+
+typedef unsigned long pthread_intr_t;
+
+#define PTHREAD_SHIELD  XNSHIELD
+#define PTHREAD_WARNSW  XNTRAPSW
+#define PTHREAD_PRIMARY XNTHREAD_SPARE1
+
+#define PTHREAD_IAUTOENA    XN_ISR_ENABLE
+#define PTHREAD_IPROPAGATE  XN_ISR_CHAINED
+
+#define PTHREAD_IENABLE     0
+#define PTHREAD_IDISABLE    1
+
+#endif /* !(__KERNEL__ || __XENO_SIM__) */
+
+struct pse51_mutex;
+
+union __xeno_mutex {
+    pthread_mutex_t native_mutex;
+    struct __shadow_mutex {
+	unsigned magic;
+	struct pse51_mutex *mutex;
+    } shadow_mutex;
+};
+
+struct pse51_cond;
+
+union __xeno_cond {
+    pthread_cond_t native_cond;
+    struct __shadow_cond {
+	unsigned magic;
+	struct pse51_cond *cond;
+    } shadow_cond;
+};
+
+#if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #ifdef __cplusplus
 extern "C" {
@@ -212,14 +260,6 @@ int pthread_join(pthread_t thread,
 		 void **value_ptr);
 
 pthread_t pthread_self(void);
-
-int sched_yield(void);
-
-int sched_get_priority_min(int policy);
-
-int sched_get_priority_max(int policy);
-
-int sched_rr_get_interval(int pid, struct timespec *interval);
 
 int pthread_getschedparam(pthread_t tid,
 			  int *pol,
@@ -325,40 +365,6 @@ int pthread_wait_np(void);
 
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
-#include_next <pthread.h>
-
-union __xeno_mutex {
-    pthread_mutex_t native_mutex;
-    struct __shadow_mutex {
-#define SHADOW_MUTEX_MAGIC 0x0d140518
-	unsigned magic;
-	unsigned long handle;
-    } shadow_mutex;
-};
-
-union __xeno_cond {
-    pthread_cond_t native_cond;
-    struct __shadow_cond {
-#define SHADOW_COND_MAGIC 0x030f0e04
-	unsigned magic;
-	unsigned long handle;
-    } shadow_cond;
-};
-
-struct timespec;
-
-typedef unsigned long pthread_intr_t;
-
-#define PTHREAD_SHIELD  XNSHIELD
-#define PTHREAD_WARNSW  XNTRAPSW
-#define PTHREAD_PRIMARY XNTHREAD_SPARE1
-
-#define PTHREAD_IAUTOENA    XN_ISR_ENABLE
-#define PTHREAD_IPROPAGATE  XN_ISR_CHAINED
-
-#define PTHREAD_IENABLE     0
-#define PTHREAD_IDISABLE    1
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -396,8 +402,6 @@ int __real_pthread_detach(pthread_t thread);
 int __real_pthread_setschedparam(pthread_t thread,
 				 int policy,
 				 const struct sched_param *param);
-int __real_sched_yield(void);
-
 int __real_pthread_yield(void);
 
 int __real_pthread_mutex_init(pthread_mutex_t *mutex,

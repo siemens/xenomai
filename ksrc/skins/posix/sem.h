@@ -22,19 +22,13 @@
 #include <posix/thread.h>       /* For pse51_current_thread and
                                    pse51_thread_t definition. */
 
-#define link2sem(laddr) \
-((sem_t *)(((char *)laddr) - (int)(&((sem_t *)0)->link)))
-
-#define synch2sem(saddr) \
-((sem_t *)(((char *)saddr) - (int)(&((sem_t *)0)->synchbase)))
-
 /* Must be called nklock locked, irq off. */
-unsigned long pse51_usem_open(sem_t *sem,
+unsigned long pse51_usem_open(struct __shadow_sem *sem,
                               struct mm_struct *mm,
                               unsigned long uaddr);
 
 /* Must be called nklock locked, irq off. */
-int pse51_usem_close(sem_t *sem, struct mm_struct *mm);
+int pse51_usem_close(struct __shadow_sem *sem, struct mm_struct *mm);
 
 void pse51_sem_pkg_init(void);
 

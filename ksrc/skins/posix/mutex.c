@@ -18,22 +18,18 @@
 
 #include <posix/mutex.h>
 
-#define link2mutex(laddr) \
-    ((pthread_mutex_t *)(((char *)laddr) - offsetof(pthread_mutex_t, link)))
-
-
 static pthread_mutexattr_t default_attr;
 
 static xnqueue_t pse51_mutexq;
 
-static void pse51_mutex_destroy_internal (pthread_mutex_t *mutex)
+static void pse51_mutex_destroy_internal (pse51_mutex_t *mutex)
 
 {
     removeq(&pse51_mutexq, &mutex->link);
-    pse51_mark_deleted(mutex);
     /* synchbase wait queue may not be empty only when this function is called
        from pse51_mutex_obj_cleanup, hence the absence of xnpod_schedule(). */
     xnsynch_destroy(&mutex->synchbase);
+    xnfree(mutex);
 }
 
 void pse51_mutex_pkg_init (void)
@@ -63,10 +59,11 @@ void pse51_mutex_pkg_cleanup (void)
     xnlock_put_irqrestore(&nklock, s);
 }
 
-int pthread_mutex_init (pthread_mutex_t *mutex, const pthread_mutexattr_t *attr)
-
+int pthread_mutex_init (pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 {
+    struct __shadow_mutex *shadow = &((union __xeno_mutex *) mx)->shadow_mutex;
     xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP;
+    pse51_mutex_t *mutex;
     spl_t s;
     
     if (!attr)
@@ -80,15 +77,37 @@ int pthread_mutex_init (pthread_mutex_t *mutex, const pthread_mutexattr_t *attr)
         return EINVAL;
 	}
 
-    mutex->magic = PSE51_MUTEX_MAGIC;
-    mutex->attr = *attr;
-    inith(&mutex->link);
+    if (shadow->magic == PSE51_MUTEX_MAGIC)
+        {
+        xnholder_t *holder;
+        for(holder = getheadq(&pse51_mutexq); holder;
+            holder = nextq(&pse51_mutexq, holder))
+            if (holder == &shadow->mutex->link)
+                {
+                /* mutex is already in the queue. */
+                xnlock_put_irqrestore(&nklock, s);
+                return EBUSY;
+                }
+        }
+
+    mutex = (pse51_mutex_t *) xnmalloc(sizeof(*mutex));
+    if (!mutex)
+        {
+        xnlock_put_irqrestore(&nklock, s);
+        return ENOMEM;
+        }
+
+    shadow->magic = PSE51_MUTEX_MAGIC;
+    shadow->mutex = mutex;
 
     if (attr->protocol == PTHREAD_PRIO_INHERIT)
         synch_flags |= XNSYNCH_PIP;
     
     xnsynch_init(&mutex->synchbase, synch_flags);
+    inith(&mutex->link);
+    mutex->attr = *attr;
     mutex->count = 0;
+
     appendq(&pse51_mutexq, &mutex->link);
 
     xnlock_put_irqrestore(&nklock, s);
@@ -96,18 +115,22 @@ int pthread_mutex_init (pthread_mutex_t *mutex, const pthread_mutexattr_t *attr)
     return 0;
 }
 
-int pthread_mutex_destroy (pthread_mutex_t *mutex)
+int pthread_mutex_destroy (pthread_mutex_t *mx)
 
 {
+    struct __shadow_mutex *shadow = &((union __xeno_mutex *) mx)->shadow_mutex;
+    pse51_mutex_t *mutex;
     spl_t s;
 
     xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(mutex, PSE51_MUTEX_MAGIC, pthread_mutex_t))
+    if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex))
 	{
         xnlock_put_irqrestore(&nklock, s);
         return EINVAL;
 	}
+
+    mutex = shadow->mutex;
 
     if (mutex->count || mutex->condvars)
 	{
@@ -115,6 +138,7 @@ int pthread_mutex_destroy (pthread_mutex_t *mutex)
         return EBUSY;
 	}
 
+    pse51_mark_deleted(shadow);
     pse51_mutex_destroy_internal(mutex);
     
     xnlock_put_irqrestore(&nklock, s);
@@ -122,10 +146,11 @@ int pthread_mutex_destroy (pthread_mutex_t *mutex)
     return 0;
 }
 
-int pse51_mutex_timedlock_break (pthread_mutex_t *mutex, xnticks_t abs_to)
+int pse51_mutex_timedlock_break (struct __shadow_mutex *shadow, xnticks_t abs_to)
 
 {
     xnthread_t *cur = xnpod_current_thread();
+    pse51_mutex_t *mutex;
     int err;
     spl_t s;
 
@@ -134,9 +159,12 @@ int pse51_mutex_timedlock_break (pthread_mutex_t *mutex, xnticks_t abs_to)
 
     xnlock_get_irqsave(&nklock, s);
 
-    err = mutex_timedlock_internal(mutex, abs_to);
+    err = mutex_timedlock_internal(shadow, abs_to);
 
     if (err == EBUSY)
+        {
+        mutex = shadow->mutex;
+
         switch (mutex->attr.type)
 	    {
 	    case PTHREAD_MUTEX_NORMAL:
@@ -189,15 +217,17 @@ int pse51_mutex_timedlock_break (pthread_mutex_t *mutex, xnticks_t abs_to)
             ++mutex->count;
             err = 0;
 	    }
+        }
 
     xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
 
-int pthread_mutex_trylock (pthread_mutex_t *mutex)
+int pthread_mutex_trylock (pthread_mutex_t *mx)
 
 {
+    struct __shadow_mutex *shadow = &((union __xeno_mutex *) mx)->shadow_mutex;
     xnthread_t *cur = xnpod_current_thread();
     int err;
     spl_t s;
@@ -207,11 +237,15 @@ int pthread_mutex_trylock (pthread_mutex_t *mutex)
 
     xnlock_get_irqsave(&nklock, s);
 
-    err = mutex_trylock_internal(mutex, cur);
-    
-    if (err == EBUSY && mutex->attr.type == PTHREAD_MUTEX_RECURSIVE
-        && xnsynch_owner(&mutex->synchbase) == cur)
+    err = mutex_trylock_internal(shadow, cur);
+
+    if (err == EBUSY)
         {
+        pse51_mutex_t *mutex = shadow->mutex;
+
+        if (mutex->attr.type == PTHREAD_MUTEX_RECURSIVE
+            && xnsynch_owner(&mutex->synchbase) == cur)
+            {
             if (mutex->count == UINT_MAX)
                 err = EAGAIN;
             else
@@ -219,6 +253,7 @@ int pthread_mutex_trylock (pthread_mutex_t *mutex)
                 ++mutex->count;
                 err = 0;
                 }
+            }
         }
 
     xnlock_put_irqrestore(&nklock, s);
@@ -226,49 +261,55 @@ int pthread_mutex_trylock (pthread_mutex_t *mutex)
     return err;
 }
 
-int pthread_mutex_lock (pthread_mutex_t *mutex)
+int pthread_mutex_lock (pthread_mutex_t *mx)
 
 {
+    struct __shadow_mutex *shadow = &((union __xeno_mutex *) mx)->shadow_mutex;
     int err;
 
     do {
-        err = pse51_mutex_timedlock_break(mutex, XN_INFINITE);
+        err = pse51_mutex_timedlock_break(shadow, XN_INFINITE);
     } while(err == EINTR);
 
     return err;
 }
 
-int pthread_mutex_timedlock (pthread_mutex_t *mutex, const struct timespec *to)
+int pthread_mutex_timedlock (pthread_mutex_t *mx, const struct timespec *to)
 
 {
+    struct __shadow_mutex *shadow = &((union __xeno_mutex *) mx)->shadow_mutex;
     int err;
 
     do {
-        err = pse51_mutex_timedlock_break(mutex, ts2ticks_ceil(to)+1);
+        err = pse51_mutex_timedlock_break(shadow, ts2ticks_ceil(to)+1);
     } while(err == EINTR);
 
     return err;
 }
 
-int pthread_mutex_unlock (pthread_mutex_t *mutex)
+int pthread_mutex_unlock (pthread_mutex_t *mx)
 
 {
+    struct __shadow_mutex *shadow = &((union __xeno_mutex *) mx)->shadow_mutex;
     int err;
     spl_t s;
     
     xnlock_get_irqsave(&nklock, s);
 
-    err = mutex_unlock_internal(mutex);
+    err = mutex_unlock_internal(shadow);
 
-    if (err == EPERM && mutex->attr.type == PTHREAD_MUTEX_RECURSIVE)
-	{
-        if (xnsynch_owner(&mutex->synchbase) == xnpod_current_thread()
-            && mutex->count)
-	    {
+    if (err == EPERM)
+        {
+        pse51_mutex_t *mutex = shadow->mutex;
+
+        if(mutex->attr.type == PTHREAD_MUTEX_RECURSIVE
+           && xnsynch_owner(&mutex->synchbase) == xnpod_current_thread()
+           && mutex->count)
+            {
             --mutex->count;
             err = 0;
-	    }
-	}
+            }
+        }
 
     xnlock_put_irqrestore(&nklock, s);
 
