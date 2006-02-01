@@ -63,7 +63,7 @@ static int __heap_read_proc (char *page,
     p += sprintf(p,"type=%s:size=%lu:used=%lu\n",
 		 (heap->mode & H_SHARED) == H_SHARED ? "shared" :
 		 (heap->mode & H_MAPPABLE) ? "mappable" : "kernel",
-		 heap->csize,
+		 (u_long) heap->csize,
 		 xnheap_used_mem(&heap->heap_base));
 
     xnlock_get_irqsave(&nklock,s);
