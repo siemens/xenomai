@@ -3,6 +3,8 @@
 
 #include <errno.h>
 #include <pthread.h>
+#include <sched.h>
+#include <semaphore.h>
 #include <signal.h>
 #include <time.h>
 #include <limits.h>
@@ -28,6 +30,8 @@
 #undef SCHED_FIFO
 #undef SCHED_RR
 #undef SCHED_OTHER
+#undef SEM_VALUE_MAX
+#undef SEM_FAILED
 #undef errno
 #undef sigemptyset
 #undef sigfillset
@@ -44,9 +48,7 @@
 #define pthread_attr_t pse51_attr_t
 #define pthread_t pse51_thread_t
 #define pthread_mutexattr_t pse51_mutexattr_t
-#define pthread_mutex_t pse51_mutex_t
 #define pthread_condattr_t pse51_condattr_t
-#define pthread_cond_t pse51_cond_t
 #define pthread_key_t pse51_key_t
 #define pthread_once_t pse51_once_t
 #define mqd_t pse51_mqd_t

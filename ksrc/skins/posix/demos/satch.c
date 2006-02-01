@@ -4,6 +4,7 @@
 #define xnprintf printf
 #endif
 
+#include <time.h>
 #include <errno.h>
 #include <unistd.h>
 #include <signal.h>

@@ -22,13 +22,28 @@
 #include <posix/internal.h>
 #include <posix/thread.h>
 
-/* must be called with nklock locked, interrupts off. */
-static inline int mutex_trylock_internal(pthread_mutex_t *mutex, xnthread_t *cur)
+typedef struct pse51_mutex {
+    xnsynch_t synchbase;
+    xnholder_t link;            /* Link in pse51_mutexq */
 
+#define link2mutex(laddr)                                               \
+    ((pse51_mutex_t *)(((char *)laddr) - offsetof(pse51_mutex_t, link)))
+
+    pthread_mutexattr_t attr;
+    unsigned count;             /* lock count. */
+    unsigned condvars;          /* count of condition variables using this
+				   mutex. */
+} pse51_mutex_t;
+
+/* must be called with nklock locked, interrupts off. */
+static inline int mutex_trylock_internal(struct __shadow_mutex *shadow,
+                                         xnthread_t *cur)
 {
-    if (!pse51_obj_active(mutex, PSE51_MUTEX_MAGIC, pthread_mutex_t))
+    pse51_mutex_t *mutex = shadow->mutex;
+
+    if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex))
         return EINVAL;
-    
+
     if (mutex->count)
         return EBUSY;
 
@@ -39,50 +54,60 @@ static inline int mutex_trylock_internal(pthread_mutex_t *mutex, xnthread_t *cur
 
 
 /* must be called with nklock locked, interrupts off. */
-static inline int mutex_timedlock_internal(pthread_mutex_t *mutex,
+static inline int mutex_timedlock_internal(struct __shadow_mutex *shadow,
                                            xnticks_t abs_to)
 
 {
     xnthread_t *cur = xnpod_current_thread();
     int err;
 
-    err = mutex_trylock_internal(mutex, cur);
+    err = mutex_trylock_internal(shadow, cur);
 
-    if (xnsynch_owner(&mutex->synchbase) != cur)
-        while (err == EBUSY)
-            {
-            xnticks_t to = abs_to;
+    if (err == EBUSY)
+        {
+        pse51_mutex_t *mutex = shadow->mutex;
 
-            err = clock_adjust_timeout(&to, CLOCK_REALTIME);
-
-            if (err)
-                return err;
-
-            xnsynch_sleep_on(&mutex->synchbase, to);
-
-            if (xnthread_test_flags(cur, XNBREAK))
-                return EINTR;
-
-            if (xnthread_test_flags(cur, XNRMID))
-                return EINVAL;
-
-            if (xnthread_test_flags(cur, XNTIMEO))
-                return ETIMEDOUT;
-
-            err = mutex_trylock_internal(mutex, cur);
-            }
+        if (xnsynch_owner(&mutex->synchbase) != cur)
+            do
+                {
+                xnticks_t to = abs_to;
+                
+                err = clock_adjust_timeout(&to, CLOCK_REALTIME);
+                
+                if (err)
+                    return err;
+                
+                xnsynch_sleep_on(&mutex->synchbase, to);
+                
+                if (xnthread_test_flags(cur, XNBREAK))
+                    return EINTR;
+                
+                if (xnthread_test_flags(cur, XNRMID))
+                    return EINVAL;
+                
+                if (xnthread_test_flags(cur, XNTIMEO))
+                    return ETIMEDOUT;
+                
+                err = mutex_trylock_internal(shadow, cur);
+                }
+            while (err == EBUSY);
+        }
 
     return err;
 }
 
 
 /* must be called with nklock locked, interrupts off. */
-static inline int mutex_unlock_internal(pthread_mutex_t *mutex)
+static inline int mutex_unlock_internal(struct __shadow_mutex *shadow)
 
 {
-    if (!pse51_obj_active(mutex, PSE51_MUTEX_MAGIC, pthread_mutex_t))
+    pse51_mutex_t *mutex;
+
+    if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex))
         return EINVAL;
-    
+
+    mutex = shadow->mutex;
+ 
     if (xnsynch_owner(&mutex->synchbase) != xnpod_current_thread()
         || mutex->count != 1)
         return EPERM;
@@ -96,9 +121,11 @@ static inline int mutex_unlock_internal(pthread_mutex_t *mutex)
 
 
 /* must be called with nklock locked, interrupts off. */
-static inline int mutex_save_count(pthread_mutex_t *mutex, unsigned *count_ptr)
-
+static inline int mutex_save_count(struct __shadow_mutex *shadow,
+                                   unsigned *count_ptr)
 {
+    pse51_mutex_t *mutex = shadow->mutex;
+
     if (mutex->count == 0)       /* Mutex is not locked. */
         return EINVAL;
 
@@ -107,16 +134,18 @@ static inline int mutex_save_count(pthread_mutex_t *mutex, unsigned *count_ptr)
     *count_ptr = mutex->count;
     mutex->count = 1;
 
-    return mutex_unlock_internal(mutex);
+    return mutex_unlock_internal(shadow);
 }
 
 
 /* must be called with nklock locked, interrupts off. */
-static inline void mutex_restore_count(pthread_mutex_t *mutex, unsigned count)
-
+static inline void mutex_restore_count(struct __shadow_mutex *shadow,
+                                       unsigned count)
 {
+    pse51_mutex_t *mutex = shadow->mutex;
+
     /* Relock the mutex */
-    mutex_timedlock_internal(mutex, XN_INFINITE);
+    mutex_timedlock_internal(shadow, XN_INFINITE);
 
     /* Restore the mutex lock count. */
     mutex->count = count;
@@ -127,6 +156,6 @@ void pse51_mutex_pkg_init(void);
 void pse51_mutex_pkg_cleanup(void);
 
 /* Interruptible versions of pthread_mutex_*. Exposed for use by syscall.c. */
-int pse51_mutex_timedlock_break (pthread_mutex_t *mutex, xnticks_t to);
+int pse51_mutex_timedlock_break (struct __shadow_mutex *shadow, xnticks_t to);
 
 #endif /* !_POSIX_MUTEX_H */

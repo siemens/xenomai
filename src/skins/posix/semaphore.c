@@ -30,12 +30,12 @@ int __wrap_sem_init (sem_t *sem,
 		     int pshared,
 		     unsigned value)
 {
-    union __xeno_semaphore *_sem = (union __xeno_semaphore *)sem;
+    union __xeno_sem *_sem = (union __xeno_sem *)sem;
     int err;
 
     err = -XENOMAI_SKINCALL3(__pse51_muxid,
 			     __pse51_sem_init,
-			     &_sem->handle,
+			     &_sem->shadow_sem,
 			     pshared,
 			     value);
     if (!err)
@@ -49,11 +49,12 @@ int __wrap_sem_init (sem_t *sem,
 int __wrap_sem_destroy (sem_t *sem)
 
 {
+    union __xeno_sem *_sem = (union __xeno_sem *)sem;
     int err;
 
     err = -XENOMAI_SKINCALL1(__pse51_muxid,
 			     __pse51_sem_destroy,
-			     sem);
+			     &_sem->shadow_sem);
     if (!err)
 	return 0;
 
@@ -65,11 +66,12 @@ int __wrap_sem_destroy (sem_t *sem)
 int __wrap_sem_post (sem_t *sem)
 
 {
+    union __xeno_sem *_sem = (union __xeno_sem *)sem;
     int err;
 
     err = -XENOMAI_SKINCALL1(__pse51_muxid,
 			     __pse51_sem_post,
-			     sem);
+			     &_sem->shadow_sem);
     if (!err)
 	return 0;
 
@@ -81,13 +83,14 @@ int __wrap_sem_post (sem_t *sem)
 int __wrap_sem_wait (sem_t *sem)
 
 {
+    union __xeno_sem *_sem = (union __xeno_sem *)sem;
     int err, oldtype;
 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
     err = -XENOMAI_SKINCALL1(__pse51_muxid,
 			     __pse51_sem_wait,
-			     sem);
+			     &_sem->shadow_sem);
 
     pthread_setcanceltype(oldtype, NULL);
 
@@ -102,13 +105,14 @@ int __wrap_sem_wait (sem_t *sem)
 int __wrap_sem_timedwait (sem_t *sem, const struct timespec *ts)
 
 {
+    union __xeno_sem *_sem = (union __xeno_sem *)sem;
     int err, oldtype;
 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
     err = -XENOMAI_SKINCALL2(__pse51_muxid,
 			     __pse51_sem_timedwait,
-			     sem,
+			     &_sem->shadow_sem,
                              ts);
 
     pthread_setcanceltype(oldtype, NULL);
@@ -124,11 +128,12 @@ int __wrap_sem_timedwait (sem_t *sem, const struct timespec *ts)
 int __wrap_sem_trywait (sem_t *sem)
 
 {
+    union __xeno_sem *_sem = (union __xeno_sem *)sem;
     int err;
 
     err = -XENOMAI_SKINCALL1(__pse51_muxid,
 			     __pse51_sem_trywait,
-			     sem);
+			     &_sem->shadow_sem);
     if (!err)
 	return 0;
 
@@ -140,11 +145,12 @@ int __wrap_sem_trywait (sem_t *sem)
 int __wrap_sem_getvalue (sem_t *sem, int *sval)
 
 {
+    union __xeno_sem *_sem = (union __xeno_sem *)sem;
     int err;
 
     err = -XENOMAI_SKINCALL2(__pse51_muxid,
 			     __pse51_sem_getvalue,
-			     sem,
+			     &_sem->shadow_sem,
 			     sval);
     if (!err)
 	return 0;
@@ -156,7 +162,7 @@ int __wrap_sem_getvalue (sem_t *sem, int *sval)
 
 sem_t *__wrap_sem_open (const char *name, int oflags, ...)
 {
-    union __xeno_semaphore *sem, *rsem;
+    union __xeno_sem *sem, *rsem;
     unsigned value = 0;
     mode_t mode = 0;
     va_list ap;
@@ -170,7 +176,7 @@ sem_t *__wrap_sem_open (const char *name, int oflags, ...)
         va_end(ap);
         }
 
-    rsem = sem = (union __xeno_semaphore *) malloc(sizeof(*sem));
+    rsem = sem = (union __xeno_sem *) malloc(sizeof(*sem));
 
     if (!rsem)
         {
@@ -201,11 +207,12 @@ sem_t *__wrap_sem_open (const char *name, int oflags, ...)
 
 int __wrap_sem_close (sem_t *sem)
 {
+    union __xeno_sem *_sem = (union __xeno_sem *)sem;
     int err, closed;
 
     err = -XENOMAI_SKINCALL2(__pse51_muxid,
                              __pse51_sem_close,
-                             sem,
+                             &_sem->shadow_sem,
 			     &closed);
 
     if (!err)

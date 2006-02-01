@@ -20,8 +20,10 @@
 #ifndef _POSIX_COND_H
 #define _POSIX_COND_H
 
-int pse51_cond_timedwait_internal(pthread_cond_t *cond,
-                                  pthread_mutex_t *mutex,
+#include <xenomai/posix/posix.h>
+
+int pse51_cond_timedwait_internal(struct __shadow_cond *cond,
+                                  struct __shadow_mutex *mutex,
                                   xnticks_t to);
 
 void pse51_cond_pkg_init(void);

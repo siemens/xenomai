@@ -96,8 +96,6 @@ void *root_thread(void *cookie)
 
     TEST_ASSERT(sem_wait(&sem) == -1 && errno == EINVAL);
 
-    TEST_ASSERT(sem_init(&sem, 1, 0) == -1 && errno == ENOSYS);
-
     TEST_ASSERT(sem_init(&sem, 0, -1) == -1 && errno == EINVAL);
 
     TEST_ASSERT_OK(sem_init(&sem, 0, 0));

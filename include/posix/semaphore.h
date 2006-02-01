@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2005 Philippe Gerum <rpm@xenomai.org>.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of the
+ * License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
-
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #ifndef _XENO_POSIX_SEMAPHORE_H
@@ -33,12 +33,40 @@
 #define SEM_VALUE_MAX (INT_MAX)
 #define SEM_FAILED    NULL
 
-typedef struct pse51_sem {
-    unsigned magic;
-    xnholder_t link;            /* Link in pse51_semq */
-    xnsynch_t synchbase;
-    int value;
+#ifdef __KERNEL__
+/* Copied from Linuxthreads semaphore.h. */
+struct _sem_fastlock
+{
+  long int __status;
+  int __spinlock;
+};
+
+typedef struct
+{
+  struct _sem_fastlock __sem_lock;
+  int __sem_value;
+  long __sem_waiting;
 } sem_t;
+#endif /* __KERNEL__ */
+
+#else /* !(__KERNEL__ || __XENO_SIM__) */
+
+#include <fcntl.h>              /* For sem_open flags. */
+#include_next <semaphore.h>
+
+#endif /* !(__KERNEL__ || __XENO_SIM__) */
+
+struct pse51_sem;
+
+union __xeno_sem {
+    sem_t native_sem;
+    struct __shadow_sem {
+        unsigned magic;
+        struct pse51_sem *sem;
+    } shadow_sem;
+};
+
+#if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #ifdef __cplusplus
 extern "C" {
@@ -76,14 +104,6 @@ int sem_unlink(const char *name);
 #endif
 
 #else /* !(__KERNEL__ || __XENO_SIM__) */
-
-#include <fcntl.h>              /* For sem_open flags. */
-#include_next <semaphore.h>
-
-union __xeno_semaphore {
-    sem_t native_sem;
-    unsigned long handle;
-};
 
 #ifdef __cplusplus
 extern "C" {
