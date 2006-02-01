@@ -290,9 +290,9 @@ do {  \
 #define rthal_printk	printk
 
 #ifdef __BIG_ENDIAN
-#define endianstruct struct { u_long _h; u_long _l; } _s
+#define endianstruct struct { unsigned _h; unsigned _l; } _s
 #else /* __LITTLE_ENDIAN */
-#define endianstruct struct { u_long _l; u_long _h; } _s
+#define endianstruct struct { unsigned _l; unsigned _h; } _s
 #endif
 
 #ifndef __rthal_u64tou32
@@ -331,7 +331,7 @@ static inline unsigned long long __rthal_generic_ulldiv (unsigned long long ull,
                                                          const unsigned uld,
                                                          unsigned long *const rp)
 {
-    const unsigned long r = do_div(ull, uld);
+    const unsigned r = do_div(ull, uld);
 
     if (rp)
         *rp = r;
