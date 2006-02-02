@@ -1,3 +1,8 @@
+2006-02-02  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/powerpc/system.h: Use private ts.fpr area as FPU backup
+	storage for kernel threads; discard redundant tcb::fpuenv.
+
 2006-02-01  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix: Use the same layout for pthread_mutex_t,
