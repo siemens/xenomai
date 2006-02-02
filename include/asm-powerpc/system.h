@@ -57,7 +57,6 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 #ifdef CONFIG_XENO_HW_FPU
     /* We only care for basic FPU handling in kernel-space; Altivec
        and SPE are not available to kernel-based nucleus threads. */
-    rthal_fpenv_t fpuenv  __attribute__ ((aligned (16)));
     rthal_fpenv_t *fpup;	/* Pointer to the FPU backup area */
     struct task_struct *user_fpu_owner;
     unsigned long user_fpu_owner_prev_msr;
@@ -340,8 +339,8 @@ static inline void xnarch_init_fpu (xnarchtcb_t *tcb)
 #ifdef CONFIG_XENO_HW_FPU
     /* Initialize the FPU for an emerging kernel-based RT thread. This
        must be run on behalf of the emerging thread. */
-    memset(&tcb->fpuenv,0,sizeof(tcb->fpuenv));
-    rthal_init_fpu(&tcb->fpuenv);
+    memset(&tcb->ts.fpr[0],0,sizeof(rthal_fpenv_t));
+    rthal_init_fpu((rthal_fpenv_t *)&tcb->ts.fpr[0]);
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
@@ -418,7 +417,7 @@ static inline void xnarch_init_tcb (xnarchtcb_t *tcb)
     memset(&tcb->ts,0,sizeof(tcb->ts));
 #ifdef CONFIG_XENO_HW_FPU
     tcb->user_fpu_owner = NULL;
-    tcb->fpup = &tcb->fpuenv;
+    tcb->fpup = (rthal_fpenv_t *)&tcb->ts.fpr[0];
 #endif /* CONFIG_XENO_HW_FPU */
     /* Must be followed by xnarch_init_thread(). */
 }
