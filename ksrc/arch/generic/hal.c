@@ -1156,6 +1156,7 @@ EXPORT_SYMBOL(rthal_irq_request);
 EXPORT_SYMBOL(rthal_irq_release);
 EXPORT_SYMBOL(rthal_irq_enable);
 EXPORT_SYMBOL(rthal_irq_disable);
+EXPORT_SYMBOL(rthal_irq_end);
 EXPORT_SYMBOL(rthal_irq_host_request);
 EXPORT_SYMBOL(rthal_irq_host_release);
 EXPORT_SYMBOL(rthal_irq_host_pend);

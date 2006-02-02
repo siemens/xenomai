@@ -296,6 +296,13 @@ static inline int xnarch_disable_irq (unsigned irq)
     return -ENOSYS;
 }
 
+static inline int xnarch_end_irq (unsigned irq)
+
+{
+    return -ENOSYS;
+}
+                                                                                
+
 static inline void xnarch_chain_irq (unsigned irq)
 
 { /* Nop */ }

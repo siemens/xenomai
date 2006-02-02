@@ -496,6 +496,12 @@ static inline int xnarch_disable_irq (unsigned irq)
     return rthal_irq_disable(irq);
 }
 
+static inline int xnarch_end_irq (unsigned irq)
+
+{
+     return rthal_irq_end(irq);
+}
+                                                                                
 static inline void xnarch_chain_irq (unsigned irq)
 
 {

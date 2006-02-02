@@ -188,6 +188,20 @@ int rthal_irq_disable (unsigned irq)
     return 0;
 }
 
+int rthal_irq_end (unsigned irq)
+
+{
+    if (irq >= IPIPE_NR_XIRQS)
+	return -EINVAL;
+
+    if (rthal_irq_descp(irq)->chip->unmask == NULL)
+	return -ENODEV;
+
+    rthal_irq_descp(irq)->chip->unmask(irq);
+
+    return 0;
+}
+
 int rthal_irq_host_request (unsigned irq,
 			    irqreturn_t (*handler)(int irq,
 						   void *dev_id,

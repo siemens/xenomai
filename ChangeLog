@@ -1,3 +1,9 @@
+2006-02-02  Wolfgang Grandegger  <wolfgang.grandegger@bluewin.ch>
+
+	* include/asm-generic/hal.h, include/asm-generic/system.h
+	(rthal_irq_end, xnarch_end_irq): Add specific support for
+	re-enabling an IRQ source upon interrupt.
+	
 2006-02-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/powerpc/system.h: Use private ts.fpr area as FPU backup
