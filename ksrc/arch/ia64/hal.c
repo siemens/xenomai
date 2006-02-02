@@ -223,6 +223,21 @@ int rthal_irq_disable (unsigned irq)
     return 0;
 }
 
+int rthal_irq_end (unsigned irq)
+
+{
+    if (irq >= IPIPE_NR_XIRQS)
+	return -EINVAL;
+
+    if (rthal_irq_descp(irq)->handler == NULL ||
+	rthal_irq_descp(irq)->handler->enable == NULL)
+	return -ENODEV;
+
+    rthal_irq_descp(irq)->handler->enable(irq);
+
+    return 0;
+}
+
 static inline int do_exception_event (unsigned event, unsigned domid, void *data)
 
 {

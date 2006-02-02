@@ -493,6 +493,8 @@ int rthal_irq_enable(unsigned irq);
 
 int rthal_irq_disable(unsigned irq);
 
+int rthal_irq_end(unsigned irq);
+
 int rthal_irq_host_request(unsigned irq,
 			   irqreturn_t (*handler)(int irq,
 						  void *dev_id,

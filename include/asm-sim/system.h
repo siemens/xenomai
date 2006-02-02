@@ -373,21 +373,26 @@ static inline int xnarch_hook_irq (unsigned irq,
     return mvm_hook_irq(irq,handler,cookie);
 }
 
-static inline int xnarch_release_irq (unsigned irq) {
-
+static inline int xnarch_release_irq (unsigned irq)
+{
     return mvm_release_irq(irq);
 }
 
-static inline int xnarch_enable_irq (unsigned irq) {
-
+static inline int xnarch_enable_irq (unsigned irq)
+{
     return mvm_enable_irq(irq);
 }
 
-static inline int xnarch_disable_irq (unsigned irq) {
-
+static inline int xnarch_disable_irq (unsigned irq)
+{
     return mvm_disable_irq(irq);
 }
 
+static inline int xnarch_end_irq (unsigned irq)
+{
+    return mvm_enable_irq(irq);
+}
+                                                                                
 static inline void xnarch_chain_irq (unsigned irq)
 
 { /* Nop */ }

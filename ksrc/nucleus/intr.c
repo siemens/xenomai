@@ -363,7 +363,7 @@ static void xnintr_irq_handler (unsigned irq, void *cookie)
     ++intr->hits;
 
     if (s & XN_ISR_ENABLE)
-	xnarch_enable_irq(irq);
+	xnarch_end_irq(irq);
 
     if (s & XN_ISR_CHAINED)
 	xnarch_chain_irq(irq);
