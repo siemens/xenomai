@@ -29,7 +29,7 @@ int SKIN_INIT(uvm)
 {
     int err;
 
-    nktickdef = XN_APERIODIC_TICK;	/* Defaults to aperiodic. */
+    nktickdef = XN_APERIODIC_TICK;	/* Force aperiodic. */
 
     err = xncore_attach();
 
