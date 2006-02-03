@@ -497,17 +497,9 @@ static inline int xnarch_start_timer (unsigned long nstick,
     pthread_t thid;
     int err;
 
-    if (nstick == 0) /* UVM does not provide oneshot timing. */
+    if (nstick == 0)
+	/* UVM cannot provide oneshot timing to apps. */
         return -ENODEV;
-
-    /* However, if we use the oneshot timing which is always available
-       at kernel level so that we can provide a better resolution for
-       virtual machine. */
-
-    err = uvm_timer_start(0);
-
-    if (err)
-	return err;
 
     parms.nstick = nstick;
     parms.tickhandler = tickhandler;

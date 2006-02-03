@@ -10,9 +10,6 @@ if [ "$CONFIG_XENOMAI" = "y" -a "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	mainmenu_option next_comment
 	comment 'Machine'
 	bool 'Enable FPU support' CONFIG_XENO_HW_FPU
-	bool 'Enable periodic timer support' CONFIG_XENO_HW_PERIODIC_TIMER
-	int 'Timer tuning latency (ns)' CONFIG_XENO_HW_TIMER_LATENCY 0
-	int 'Scheduling latency (ns)' CONFIG_XENO_HW_SCHED_LATENCY 0
 
 	mainmenu_option next_comment
 	comment 'NMI watchdog'

@@ -24,16 +24,13 @@ extern int __native_muxid;
 int rt_timer_start (RTIME tickval)
 
 {
-    return XENOMAI_SKINCALL1(__native_muxid,
-			     __native_timer_start,
-			     &tickval);
+    return 0;	/* DEPRECATED */
 }
 
 void rt_timer_stop (void)
 
 {
-    XENOMAI_SKINCALL0(__native_muxid,
-		      __native_timer_stop);
+    /* DEPRECATED */
 }
 
 RTIME rt_timer_read (void)

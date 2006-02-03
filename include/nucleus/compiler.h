@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2005 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2006 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -17,32 +17,27 @@
  * 02111-1307, USA.
  */
 
-#ifndef _XENO_ASM_UVM_SYSCALL_H
-#define _XENO_ASM_UVM_SYSCALL_H
-
-#include <asm/xenomai/syscall.h>
-
-#define UVM_SKIN_MAGIC    0x53554d53
-
-#define __uvm_thread_shadow       0
-#define __uvm_thread_create       1
-#define __uvm_thread_start        2
-#define __uvm_thread_set_periodic 3
-#define __uvm_thread_wait_period  4
-#define __uvm_thread_idle         5
-#define __uvm_thread_cancel       6
-#define __uvm_thread_activate     7
-#define __uvm_thread_hold         8
-#define __uvm_thread_release      9
-#define __uvm_timer_read          10
-#define __uvm_timer_tsc           11
+#ifndef _XENO_NUCLEUS_COMPILER_H
+#define _XENO_NUCLEUS_COMPILER_H
 
 #ifdef __KERNEL__
-
-int __uvm_syscall_init(void);
-
-void __uvm_syscall_cleanup(void);
-
+#include <linux/compiler.h>
+#define __deprecated__ __deprecated
+#define __deprecated_in_userspace__
+#define __deprecated_in_kernel__  __deprecated__
+#else /* !__KERNEL__ */
+#if __GNUC__ >= 3 && __GNUC_MINOR__ > 0
+#define __deprecated__	__attribute__((deprecated))
+#else
+#define __deprecated__	/* Unimplemented */
+#endif
+#ifndef __XENO_SIM__
+#define __deprecated_in_userspace__ __deprecated__
+#define __deprecated_in_kernel__
+#else /* __XENO_SIM__ */
+#define __deprecated_in_userspace__
+#define __deprecated_in_kernel__    __deprecated__
+#endif /* !__XENO_SIM__ */
 #endif /* __KERNEL__ */
 
-#endif /* !_XENO_ASM_UVM_SYSCALL_H */
+#endif /* !_XENO_NUCLEUS_COMPILER_H */

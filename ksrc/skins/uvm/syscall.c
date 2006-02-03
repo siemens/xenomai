@@ -177,32 +177,6 @@ static int __vm_timer_tsc (struct task_struct *curr, struct pt_regs *regs)
     return 0;
 }
 
-static int __vm_timer_start (struct task_struct *curr, struct pt_regs *regs)
-
-{
-    nanotime_t nstick;
-
-    __xn_copy_from_user(curr,&nstick,(void __user *)__xn_reg_arg1(regs),sizeof(nstick));
-
-    if (testbits(nkpod->status,XNTIMED))
-	{
-	if ((nstick == 0 && xnpod_get_tickval() == 1) ||
-	    (nstick != 0 && xnpod_get_tickval() == nstick))
-	    return 0;
-
-	xnpod_stop_timer();
-	}
-
-    return xnpod_start_timer(nstick,XNPOD_DEFAULT_TICKHANDLER);
-}
-
-static int __vm_timer_stop (struct task_struct *curr, struct pt_regs *regs)
-
-{
-    xnpod_stop_timer();
-    return 0;
-}
-
 static int __vm_thread_set_periodic (struct task_struct *curr, struct pt_regs *regs)
 
 {
@@ -396,8 +370,6 @@ static xnsysent_t __systab[] = {
     [__uvm_thread_release] = { &__vm_thread_release, __xn_exec_any },
     [__uvm_timer_read] = { &__vm_timer_read, __xn_exec_any  },
     [__uvm_timer_tsc] = { &__vm_timer_tsc, __xn_exec_any  },
-    [__uvm_timer_start] = { &__vm_timer_start, __xn_exec_lostage  },
-    [__uvm_timer_stop] = { &__vm_timer_stop, __xn_exec_lostage  },
 };
 
 int __uvm_syscall_init (void)

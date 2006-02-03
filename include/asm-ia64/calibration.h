@@ -26,15 +26,15 @@
 static inline unsigned long xnarch_get_sched_latency (void)
 
 {
-#if CONFIG_XENO_HW_SCHED_LATENCY != 0
-#define __sched_latency CONFIG_XENO_HW_SCHED_LATENCY
-#else /* CONFIG_XENO_HW_SCHED_LATENCY unspecified */
+#if CONFIG_XENO_OPT_TIMING_SCHEDLAT != 0
+#define __sched_latency CONFIG_XENO_OPT_TIMING_SCHEDLAT
+#else /* CONFIG_XENO_OPT_TIMING_SCHEDLAT unspecified */
 #ifdef CONFIG_IA64_HP_SIM
 #define __sched_latency 1281000
 #else /* !CONFIG_IA64_HP_SIM */
 #define __sched_latency 6000
 #endif /* CONFIG_IA64_HP_SIM */
-#endif /* CONFIG_XENO_HW_SCHED_LATENCY */
+#endif /* CONFIG_XENO_OPT_TIMING_SCHEDLAT */
 
     return __sched_latency;
 }

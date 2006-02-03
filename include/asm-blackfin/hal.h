@@ -70,11 +70,11 @@ static inline void rthal_timer_program_shot (unsigned long delay)
 
     /* Private interface -- Internal use only */
 
-#ifdef CONFIG_XENO_HW_PERIODIC_TIMER
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 extern int rthal_periodic_p;
-#else /* !CONFIG_XENO_HW_PERIODIC_TIMER */
+#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
 #define rthal_periodic_p  0
-#endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
 asmlinkage void rthal_thread_switch(struct thread_struct *prev,
 				    struct thread_struct *next);

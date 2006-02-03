@@ -359,7 +359,6 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
         return;
 
     finished = 1;
-    rt_timer_stop();
 
     if (test_mode == USER_TASK) {
         rt_sem_delete(&display_sem);
@@ -531,14 +530,6 @@ int main (int argc, char **argv)
            test_mode_names[test_mode]);
 
     mlockall(MCL_CURRENT|MCL_FUTURE);
-
-    err = rt_timer_start(TM_ONESHOT);
-
-    if (err)
-        {
-        fprintf(stderr,"latency: cannot start timer, code %d\n",err);
-        return 0;
-        }
 
     if ((test_mode != USER_TASK) || freeze_max)
         {

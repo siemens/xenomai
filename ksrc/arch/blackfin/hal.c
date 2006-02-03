@@ -44,7 +44,7 @@
 #include <asm/unistd.h>
 #include <asm/xenomai/hal.h>
 
-#ifdef CONFIG_XENO_HW_PERIODIC_TIMER
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 
 #define PERIODIC_TIME_SCALE 1
 #define CLOCKS_PER_TICK(hz) (get_cclk() / (hz) / PERIODIC_TIME_SCALE)
@@ -55,9 +55,9 @@ static inline void rthal_set_aperiodic(void)
 {
     rthal_periodic_p = 0;
 }
-#else /* !CONFIG_XENO_HW_PERIODIC_TIMER */
+#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
 #define rthal_set_aperiodic() do { } while(0)
-#endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
 static struct {
 
@@ -98,7 +98,7 @@ int rthal_timer_request (void (*handler)(void),
     flags = rthal_critical_enter(NULL);
 
     if (nstick > 0) {
-#ifdef CONFIG_XENO_HW_PERIODIC_TIMER
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 	/* Periodic setup. */
 	*pTCNTL = 1;
 	__builtin_bfin_csync();
@@ -107,9 +107,9 @@ int rthal_timer_request (void (*handler)(void),
 	__builtin_bfin_csync();
 	*pTCNTL = 7;		/* Auto-reload on. */
 	rthal_periodic_p = 1;
-#else /* !CONFIG_XENO_HW_PERIODIC_TIMER */
+#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
         return -ENOSYS;
-#endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
     }
     else {
 	/* Oneshot setup. We still use the core timer, but without

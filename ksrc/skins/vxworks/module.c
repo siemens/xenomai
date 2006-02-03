@@ -24,11 +24,6 @@ MODULE_DESCRIPTION("VxWorks(R) virtual machine");
 MODULE_AUTHOR("gilles.chanteperdrix@laposte.net");
 MODULE_LICENSE("GPL");
 
-/* Default tick period */
-static u_long tick_hz_arg = 1000000000 / XNPOD_DEFAULT_TICK;
-module_param_named(tick_hz,tick_hz_arg,ulong,0444);
-MODULE_PARM_DESC(tick_hz,"Clock tick frequency (Hz)");
-
 static xnpod_t pod;
 
 
@@ -54,12 +49,19 @@ int SKIN_INIT(vxworks)
 {
     int err;
 
+#if CONFIG_XENO_OPT_TIMING_PERIOD == 0
+    nktickdef = 10000000;	/* Defaults to 10ms. */
+#endif
+
     err = xnpod_init(&pod,255,0,0);
 
     if (err != 0)
         return err;
 
-    err = wind_sysclk_init(module_param_value(tick_hz_arg));
+    if (!testbits(nkpod->status,XNTMPER))
+	err = -EINVAL;	/* Cannot work in aperiodic timing mode. */
+    else
+	err = wind_sysclk_init(1000000000 / xnpod_get_tickval());
 
     if (err != 0)
         {

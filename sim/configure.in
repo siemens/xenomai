@@ -375,7 +375,9 @@ typedef u_quad_t u_gnuquad_t;
 
 AH_BOTTOM([#endif /* !_XENO_SIM_CONFIG_H */])
 
-dnl Nucleus limits -- set reasonable values.
+dnl Nucleus setup -- set reasonable values.
+AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_TIMING_PERIODIC,1,[config])
+AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_TIMING_PERIOD,0,[config])
 AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_SYS_HEAPSZ,128,[config])
 AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_SCALABLE_PRIOS,256,[config])
 

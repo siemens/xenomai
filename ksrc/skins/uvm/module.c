@@ -27,7 +27,11 @@ MODULE_LICENSE("GPL");
 
 int SKIN_INIT(uvm)
 {
-    int err = xncore_attach();
+    int err;
+
+    nktickdef = XN_APERIODIC_TICK;	/* Defaults to aperiodic. */
+
+    err = xncore_attach();
 
     if (err)
 	return err;

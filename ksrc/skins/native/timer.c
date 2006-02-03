@@ -208,11 +208,11 @@ int rt_timer_inquire (RT_TIMER_INFO *info)
     info->period = period;
     info->tsc = tsc;
 
-#ifdef CONFIG_XENO_HW_PERIODIC_TIMER
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
     if (period != TM_ONESHOT && period != TM_UNSET)
         info->date = nkpod->jiffies + nkpod->wallclock_offset;
     else
-#endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
         /* In aperiodic mode, our idea of time is the same as the
            CPU's, and a tick equals a nanosecond. */
         info->date = xnarch_tsc_to_ns(tsc) + nkpod->wallclock_offset;
@@ -315,95 +315,29 @@ void rt_timer_spin (RTIME ns)
 
 /**
  * @fn int rt_timer_start(RTIME nstick)
- * @brief Start the system timer.
+ * @brief DEPRECATED.
  *
- * The real-time kernel needs a time source to provide the
- * time-related services to the Xenomai tasks. rt_timer_start() sets the
- * current operation mode of the system timer. On architectures that
- * provide a oneshot-programmable time source, the system timer can
- * operate either in oneshot or periodic mode. In oneshot mode, the
- * underlying hardware will be reprogrammed after each clock tick so
- * that the next one occurs after a (possibly non-constant) specified
- * interval, at the expense of a larger overhead due to hardware
- * programming duties. Periodic mode provides timing services at a
- * lower programming cost when the underlying hardware is a true PIT
- * (and not a simple decrementer), but at the expense of a lower
- * precision since all delays are rounded up to the constant interval
- * value used to program the timer.
- *
- * This service defines the time unit which will be relevant when
- * specifying time intervals to the services taking timeout or delays
- * as input parameters. In periodic mode, clock ticks will represent
- * periodic jiffies. In oneshot mode, clock ticks will represent
- * nanoseconds.
- *
- * @param nstick The timer period in nanoseconds. If this parameter is
- * equal to TM_ONESHOT, the underlying hardware timer is set to
- * operate in oneshot-programmable mode. In this mode, timing accuracy
- * is higher - since it is not rounded to a constant time slice - at
- * the expense of a lesser efficicency when many timers are
- * simultaneously active. The oneshot mode gives better results in
- * configuration involving a few tasks requesting timing services over
- * different time scales that cannot be easily expressed as multiples
- * of a single base tick, or would lead to a waste of high frequency
- * periodical ticks.
- *
- * @return 0 is returned on success. Otherwise:
- *
- * - -EBUSY is returned if the timer has already been set.
- * rt_timer_stop() must be issued before rt_timer_start() is called
- * again.
- *
- * - -ENODEV is returned if the underlying architecture does not
- * support the requested periodic timing.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - User-space task
- *
- * Rescheduling: never.
+ * This service has been deprecated in favour of a build time
+ * configuration of the system timer. Please check the
+ * CONFIG_XENO_OPT_TIMING_PERIODIC and CONFIG_XENO_OPT_TIMING_PERIOD
+ * configuration switches.
  */
 
 int rt_timer_start (RTIME nstick)
 
 {
-    if (testbits(nkpod->status,XNTIMED))
-	{
-	if ((nstick == TM_ONESHOT && xnpod_get_tickval() == 1) ||
-	    (nstick != TM_ONESHOT && xnpod_get_tickval() == nstick))
-	    return 0;
-
-	xnpod_stop_timer();
-	}
-
-    return xnpod_start_timer(nstick,XNPOD_DEFAULT_TICKHANDLER);
+    return 0;
 }
 
 /**
  * @fn void rt_timer_stop(void)
- * @brief Stop the system timer.
+ * @brief DEPRECATED.
  *
- * This service stops the system timer previously started by a call to
- * rt_timer_start(). Calling rt_timer_stop() whilst the system timer
- * has not been started leads to a null-effect.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - User-space task
- *
- * Rescheduling: never.
  */
 
 void rt_timer_stop (void)
 
 {
-    xnpod_stop_timer();
 }
 
 /*@}*/
@@ -416,5 +350,3 @@ EXPORT_SYMBOL(rt_timer_inquire);
 EXPORT_SYMBOL(rt_timer_read);
 EXPORT_SYMBOL(rt_timer_tsc);
 EXPORT_SYMBOL(rt_timer_spin);
-EXPORT_SYMBOL(rt_timer_start);
-EXPORT_SYMBOL(rt_timer_stop);
