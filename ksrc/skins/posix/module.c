@@ -74,8 +74,6 @@ int SKIN_INIT(posix)
 
     xnprintf("starting POSIX services.\n");
 
-    nktickdef = XN_APERIODIC_TICK;	/* Defaults to aperiodic. */
-
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     /* The POSIX skin is stacked over the shared Xenomai pod. */
     err = xncore_attach();
