@@ -137,6 +137,10 @@ config XENO_OPT_TIMING_PERIOD
 	used to program the underlying timer hardware for periodic
 	timing.
 
+	Zero means to use the default skin setting. This value can be
+	overriden at runtime using the "tick_arg" module parameter
+	when loading the nucleus.
+
 if XENO_OPT_TIMING_PERIODIC != y
 
 config XENO_OPT_TIMING_PERIOD
