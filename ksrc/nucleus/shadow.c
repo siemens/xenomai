@@ -1543,14 +1543,25 @@ static inline void do_schedule_event (struct task_struct *next)
 
 #ifdef CONFIG_XENO_OPT_DEBUG
 	{
-	xnflags_t status = threadin->status & ~XNRELAX;
+	xnflags_t status = threadin->status;
 	int sigpending = signal_pending(next);
 
-        if (!(next->ptrace & PT_PTRACED) &&
+        if (!testbits(status, XNRELAX))
+            {
+            show_stack(xnthread_user_task(threadin),NULL);
+            xnpod_fatal("Hardened thread %s[%d] running in Linux domain?! (status=0x%lx, sig=%d, prev=%s[%d])",
+			threadin->name,
+			next->pid,
+			status,
+			sigpending,
+			prev->comm,
+			prev->pid);
+	    }
+        else if (!(next->ptrace & PT_PTRACED) &&
 	    /* Allow ptraced threads to run shortly in order to
 	       properly recover from a stopped state. */
 	    testbits(status,XNSTARTED) &&
-	    testbits(status,XNTHREAD_BLOCK_BITS))
+	    testbits(status,XNPEND))
 	    {
 	    show_stack(xnthread_user_task(threadin),NULL);
             xnpod_fatal("blocked thread %s[%d] rescheduled?! (status=0x%lx, sig=%d, prev=%s[%d])",
