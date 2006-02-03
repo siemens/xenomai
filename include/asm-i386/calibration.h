@@ -28,8 +28,8 @@
 static inline unsigned long xnarch_get_sched_latency (void)
 
 {
-#if CONFIG_XENO_HW_SCHED_LATENCY != 0
-#define __sched_latency CONFIG_XENO_HW_SCHED_LATENCY
+#if CONFIG_XENO_OPT_TIMING_SCHEDLAT != 0
+#define __sched_latency CONFIG_XENO_OPT_TIMING_SCHEDLAT
 #else
 
 #ifdef CONFIG_X86_LOCAL_APIC
@@ -45,7 +45,7 @@ static inline unsigned long xnarch_get_sched_latency (void)
 			 6700)
 
 #endif /* CONFIG_X86_LOCAL_APIC */
-#endif /* CONFIG_XENO_HW_SCHED_LATENCY */
+#endif /* CONFIG_XENO_OPT_TIMING_SCHEDLAT */
 
     return __sched_latency;
 }

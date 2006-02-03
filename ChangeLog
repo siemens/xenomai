@@ -1,3 +1,17 @@
+2006-02-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/compiler.h: Provide for compiler-dependent
+	settings.
+
+	* ksrc/nucleus/pod.c (xnpod_init), ksrc/skins/*/module.c:
+	Move system timer setup to pod initialization.
+
+	* ksrc/nucleus/Kconfig: Move configuration parameters related to
+	the timing support to the generic section.
+
+	* ksrc/skins/uvm/syscall.c, include/asm-uvm/system.h: Remove
+	uvm_timer_start and uvm_timer_stop services.
+	
 2006-02-02  Wolfgang Grandegger  <wolfgang.grandegger@bluewin.ch>
 
 	* include/asm-generic/hal.h, include/asm-generic/system.h

@@ -25,10 +25,6 @@ MODULE_DESCRIPTION("uITRON interface");
 MODULE_AUTHOR("rpm@xenomai.org");
 MODULE_LICENSE("GPL");
 
-static u_long tick_hz_arg = 1000000000 / XNPOD_DEFAULT_TICK; /* Default tick period */
-module_param_named(tick_hz,tick_hz_arg,ulong,0444);
-MODULE_PARM_DESC(tick_hz,"Clock tick frequency (Hz)");
-
 static xnpod_t pod;
 
 static void uitron_shutdown (int xtype)
@@ -47,24 +43,16 @@ static void uitron_shutdown (int xtype)
 int SKIN_INIT(uitron)
 
 {
-    u_long nstick = XNPOD_DEFAULT_TICK;
     int err;
+
+#if CONFIG_XENO_OPT_TIMING_PERIOD == 0
+    nktickdef = 10000000;	/* Defaults to 10ms. */
+#endif
 
     err = xnpod_init(&pod,uITRON_MIN_PRI,uITRON_MAX_PRI,0);
 
     if (err != 0)
-	return err;
-
-    if (module_param_value(tick_hz_arg) > 0)
-	nstick = 1000000000 / module_param_value(tick_hz_arg);
-
-    err = xnpod_start_timer(nstick,XNPOD_DEFAULT_TICKHANDLER);
-
-    if(err != 0)
-        {
-        xnpod_shutdown(err);
         return err;
-        }
 
     uitask_init();
     uisem_init();

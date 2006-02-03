@@ -57,12 +57,6 @@ void event(void *cookie)
 {
        int err;
 
-       err = rt_timer_start(TM_ONESHOT);
-       if (err) {
-               fprintf(stderr,"switch: cannot start timer, code %d\n", err);
-               return;
-       }
-
        err = rt_task_set_periodic(NULL,
                                   TM_NOW,
                                   rt_timer_ns2ticks(sampling_period));
@@ -131,7 +125,6 @@ void worker(void *cookie)
                        add_histogram(dt);
        }
 
-       rt_timer_stop();
        rt_sem_delete(&switch_sem);
 
        minjitter = minj;

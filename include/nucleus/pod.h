@@ -69,7 +69,6 @@
 #define XNPOD_NORMAL_EXIT  0x0
 #define XNPOD_FATAL_EXIT   0x1
 
-#define XNPOD_DEFAULT_TICK         XNARCH_DEFAULT_TICK
 #define XNPOD_DEFAULT_TICKHANDLER  (&xnpod_announce_tick)
 
 #define XNPOD_ALL_CPUS  XNARCH_CPU_MASK_ALL
@@ -243,6 +242,8 @@ extern u_long nkschedlat;
 
 extern u_long nktimerlat;
 
+extern u_long nktickdef;
+
 extern char *nkmsgbuf;
 
 #define xnprintf(fmt,args...)  xnarch_printf(fmt , ##args)
@@ -381,19 +382,19 @@ static inline u_long xnpod_get_tickval (void) {
 
 static inline xntime_t xnpod_ticks2ns (xnticks_t ticks) {
     /* Convert a count of ticks in nanoseconds */
-#ifdef CONFIG_XENO_HW_PERIODIC_TIMER
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
     return ticks * xnpod_get_tickval();
-#else /* !CONFIG_XENO_HW_PERIODIC_TIMER */
+#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
     return ticks;
-#endif /* !CONFIG_XENO_HW_PERIODIC_TIMER */
+#endif /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
 }
 
 static inline xnticks_t xnpod_ns2ticks (xntime_t t) {
-#ifdef CONFIG_XENO_HW_PERIODIC_TIMER
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
     return xnarch_ulldiv(t,xnpod_get_tickval(),NULL);
-#else /* !CONFIG_XENO_HW_PERIODIC_TIMER */
+#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
     return t;
-#endif /* !CONFIG_XENO_HW_PERIODIC_TIMER */
+#endif /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
 }
 
 int xnpod_init(xnpod_t *pod,

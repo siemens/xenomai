@@ -24,13 +24,13 @@
 
 #if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)
 
-#ifdef CONFIG_XENO_HW_PERIODIC_TIMER
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 /* Number of outstanding timers (hint only) -- must be ^2 */
 #define XNTIMER_WHEELSIZE 64
 #define XNTIMER_WHEELMASK (XNTIMER_WHEELSIZE - 1)
-#else /* !CONFIG_XENO_HW_PERIODIC_TIMER */
+#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
 #define XNTIMER_WHEELSIZE 1
-#endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
 #define XNTIMER_ENABLED   0x00000001
 #define XNTIMER_DEQUEUED  0x00000002

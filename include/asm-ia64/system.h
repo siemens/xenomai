@@ -570,13 +570,13 @@ static int xnarch_trap_fault (unsigned event, unsigned domid, void *data)
 unsigned long xnarch_calibrate_timer (void)
 
 {
-#if CONFIG_XENO_HW_TIMER_LATENCY != 0
-    return xnarch_ns_to_tsc(CONFIG_XENO_HW_TIMER_LATENCY);
-#else /* CONFIG_XENO_HW_TIMER_LATENCY unspecified. */
+#if CONFIG_XENO_OPT_TIMING_TIMERLAT != 0
+    return xnarch_ns_to_tsc(CONFIG_XENO_OPT_TIMING_TIMERLAT);
+#else /* CONFIG_XENO_OPT_TIMING_TIMERLAT unspecified. */
     /* Compute the time needed to program the ITM in aperiodic
        mode. The return value is expressed in CPU ticks. */
     return xnarch_ns_to_tsc(rthal_timer_calibrate()) ?: 1;
-#endif /* CONFIG_XENO_HW_TIMER_LATENCY != 0 */
+#endif /* CONFIG_XENO_OPT_TIMING_TIMERLAT != 0 */
 }
 
 int xnarch_calibrate_sched (void)

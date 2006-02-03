@@ -35,10 +35,6 @@ static u_long workspace_size_arg = 32 * 1024; /* Default size of VRTX workspace 
 module_param_named(workspace_size,workspace_size_arg,ulong,0444);
 MODULE_PARM_DESC(workspace_size,"Size of VRTX workspace (in bytes)");
 
-static u_long tick_hz_arg = 1000000000 / XNPOD_DEFAULT_TICK; /* Default tick period */
-module_param_named(tick_hz,tick_hz_arg,ulong,0444);
-MODULE_PARM_DESC(tick_hz,"Clock tick frequency (Hz)");
-
 static u_long task_stacksize_arg = 4096; /* Default size of VRTX tasks */
 module_param_named(task_stacksize,task_stacksize_arg,ulong,0444);
 MODULE_PARM_DESC(task_stacksize,"Default size of VRTX task stack (in bytes)");
@@ -117,24 +113,16 @@ static void vrtx_shutdown (int xtype)
 int SKIN_INIT(vrtx)
 
 {
-    u_long nstick = XNPOD_DEFAULT_TICK;
     int err, n;
+
+#if CONFIG_XENO_OPT_TIMING_PERIOD == 0
+    nktickdef = 10000000;	/* Defaults to 10ms. */
+#endif
 
     err = xnpod_init(&pod,255,0,XNDREORD);
 
     if (err != 0)
 	return err;
-
-    if (module_param_value(tick_hz_arg) > 0)
-	nstick = 1000000000 / module_param_value(tick_hz_arg);
-
-    err = xnpod_start_timer(nstick,XNPOD_DEFAULT_TICKHANDLER);
-
-    if (err != 0)
-        {
-        xnpod_shutdown(err);    
-	return err;
-        }
 
     for (n = 0; n < VRTX_MAX_CB - 1; n++)
 	vrtxidgen[n] = n + 1;

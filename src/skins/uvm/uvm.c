@@ -191,21 +191,6 @@ int uvm_thread_set_periodic (nanotime_t idate,
 			     &period);
 }
 
-int uvm_timer_start (nanotime_t nstick)
-
-{
-    return XENOMAI_SKINCALL1(__uvm_muxid,
-			     __uvm_timer_start,
-			     &nstick);
-}
-
-int uvm_timer_stop (void)
-{
-
-    return XENOMAI_SKINCALL0(__uvm_muxid,
-			     __uvm_timer_stop);
-}
-
 int uvm_timer_read (nanotime_t *tp)
 
 {

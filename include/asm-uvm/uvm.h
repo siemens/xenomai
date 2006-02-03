@@ -64,10 +64,6 @@ int uvm_thread_set_periodic(nanotime_t idate,
 
 int uvm_thread_wait_period(void);
 
-int uvm_timer_start(nanotime_t nstick);
-
-int uvm_timer_stop(void);
-
 int uvm_timer_read(nanotime_t *tp);
 
 int uvm_timer_tsc(nanotime_t *tp);

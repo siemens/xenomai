@@ -34,10 +34,6 @@ static u_long rn0_size_arg = 32 * 1024; /* Default size of region #0 */
 module_param_named(rn0_size,rn0_size_arg,ulong,0444);
 MODULE_PARM_DESC(rn0_size,"Size of pSOS+ region #0 (in bytes)");
 
-static u_long tick_hz_arg = 1000000000 / XNPOD_DEFAULT_TICK; /* Default tick period */
-module_param_named(tick_hz,tick_hz_arg,ulong,0444);
-MODULE_PARM_DESC(tick_hz,"Clock tick frequency (Hz)");
-
 static u_long time_slice_arg = 10; /* Default (round-robin) time slice */
 module_param_named(time_slice,time_slice_arg,ulong,0444);
 MODULE_PARM_DESC(time_slice,"Default time slice (in ticks)");
@@ -70,21 +66,18 @@ void k_fatal (u_long err_code, u_long flags)
 int SKIN_INIT(psos)
 
 {
-    u_long nstick = XNPOD_DEFAULT_TICK;
     int err;
+
+#if CONFIG_XENO_OPT_TIMING_PERIOD == 0
+    nktickdef = 10000000;	/* Defaults to 10ms. */
+#endif
 
     err = xnpod_init(&pod,1,255,0);
 
     if (err != 0)
 	return err;
 
-    if (module_param_value(tick_hz_arg) > 0)
-	nstick = 1000000000 / module_param_value(tick_hz_arg);
-
-    err = xnpod_start_timer(nstick,XNPOD_DEFAULT_TICKHANDLER);
-
-    if (err == 0)
-	err = psosrn_init(module_param_value(rn0_size_arg));
+    err = psosrn_init(module_param_value(rn0_size_arg));
 
     if (err != 0)
         {

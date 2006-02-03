@@ -280,7 +280,7 @@ static void xntimer_set_remote_aperiodic (xntimer_t *timer)
 	xntimer_next_remote_shot(timer->sched);
 }
 
-#ifdef CONFIG_XENO_HW_PERIODIC_TIMER
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 
 static inline void xntimer_enqueue_periodic (xntimer_t *timer)
 
@@ -448,7 +448,7 @@ void xntimer_set_periodic_mode (void)
     nktimer = &timer_ops_periodic;
 }
 
-#endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
 /*! 
  * \fn void xntimer_init(xntimer_t *timer,void (*handler)(void *cookie),void *cookie)

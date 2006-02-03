@@ -20,6 +20,15 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	bool 'Debug support' CONFIG_XENO_OPT_DEBUG
 	bool 'Watchdog support' CONFIG_XENO_OPT_WATCHDOG
 
+	bool 'Enable periodic timer support' CONFIG_XENO_OPT_TIMING_PERIODIC
+	if [ "$CONFIG_XENO_OPT_TIMING_PERIODIC" == "y" ]; then
+	   int 'Timer period (ns)' CONFIG_XENO_OPT_TIMING_PERIOD 0
+	else
+	   define_int CONFIG_XENO_OPT_TIMING_PERIOD 0
+	fi
+	int 'Timer tuning latency (ns)' CONFIG_XENO_OPT_TIMING_TIMERLAT 0
+	int 'Scheduling latency (ns)' CONFIG_XENO_OPT_TIMING_SCHEDLAT 0
+
 	mainmenu_option next_comment
 	comment 'Scalability options'
 		bool 'O(1) scheduler' CONFIG_XENO_OPT_SCALABLE_SCHED

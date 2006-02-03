@@ -37,11 +37,6 @@ MODULE_DESCRIPTION("POSIX/PSE51 interface");
 MODULE_AUTHOR("gilles.chanteperdrix@laposte.net");
 MODULE_LICENSE("GPL");
 
-static u_long tick_hz_arg = 0;	/* Oneshot as default. */
-
-module_param_named(tick_hz,tick_hz_arg,ulong,0444);
-MODULE_PARM_DESC(tick_hz,"Clock tick frequency (Hz), 0 for aperiodic mode");
-
 static u_long time_slice_arg = 1; /* Default (round-robin) time slice */
 module_param_named(time_slice,time_slice_arg,ulong,0444);
 MODULE_PARM_DESC(time_slice,"Default time slice (in ticks)");
@@ -75,10 +70,11 @@ static void pse51_shutdown(int xtype)
 
 int SKIN_INIT(posix)
 {
-    u_long nstick;
     int err;
 
     xnprintf("starting POSIX services.\n");
+
+    nktickdef = XN_APERIODIC_TICK;	/* Defaults to aperiodic. */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     /* The POSIX skin is stacked over the shared Xenomai pod. */
@@ -91,28 +87,8 @@ int SKIN_INIT(posix)
     if (err != 0)
 	return err;
 
-    if (module_param_value(tick_hz_arg) > 0)
-	nstick = 1000000000 / module_param_value(tick_hz_arg);
-    else
-        nstick = XN_APERIODIC_TICK;
-
-    err = xnpod_start_timer(nstick,XNPOD_DEFAULT_TICKHANDLER);
-    
-    if(err == -EBUSY)
-        {
-        err = 0;
-        if (testbits(nkpod->status, XNTIMED))
-            xnprintf("POSIX: Warning: aperiodic timer was already "
-                     "running.\n");
-        else
-            xnprintf("POSIX: Warning: periodic timer was already running "
-                     "(period %lu us).\n",
-                     xnpod_get_tickval() / 1000);
-        }
-
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    if (!err)
-	err = pse51_syscall_init();
+    err = pse51_syscall_init();
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
     
     if (err != 0)

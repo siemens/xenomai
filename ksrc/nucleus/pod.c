@@ -56,6 +56,13 @@ u_long nkschedlat = 0;
 
 u_long nktimerlat = 0;
 
+u_long nktickdef = CONFIG_XENO_OPT_TIMING_PERIOD;
+
+int tick_arg = -1;
+
+module_param_named(tick_arg,tick_arg,int,0444);
+MODULE_PARM_DESC(tick_arg,"Fixed clock tick value (ns), 0 for aperiodic mode");
+
 char *nkmsgbuf = NULL;
 
 const char *xnpod_fatal_helper (const char *format, ...)
@@ -289,7 +296,8 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
     char root_name[16];
     xnsched_t *sched;
     void *heapaddr;
-    int rc, n;
+    u_long nstick;
+    int err, n;
     spl_t s;
 
     xnlock_get_irqsave(&nklock,s);
@@ -376,7 +384,7 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
     if (!heapaddr ||
 	xnheap_init(&kheap,heapaddr,xnmod_sysheap_size,XNPOD_PAGESIZE) != 0)
         {
-        rc = -ENOMEM;
+        err = -ENOMEM;
         goto fail;
         }
 
@@ -396,10 +404,10 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
            layer. If the root thread needs to allocate stack memory, it
            must not rely on the validity of "nkpod" when doing so. */
 
-        rc = xnthread_init(&sched->rootcb,
-                           root_name,
-                           XNPOD_ROOT_PRIO_BASE,
-                           XNROOT|XNSTARTED
+        err = xnthread_init(&sched->rootcb,
+			    root_name,
+			    XNPOD_ROOT_PRIO_BASE,
+			    XNROOT|XNSTARTED
 #ifdef CONFIG_XENO_HW_FPU
                            /* If the host environment has a FPU, the root
                               thread must care for the FPU context. */
@@ -408,11 +416,11 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
                            ,
                            XNARCH_ROOT_STACKSZ);
 
-        if (rc)
+        if (err)
             {
 fail:
             nkpod = NULL;
-            return rc;
+            return err;
             }
 
         appendq(&pod->threadq,&sched->rootcb.glink);
@@ -439,6 +447,20 @@ fail:
     xnarch_memory_barrier();
 
     xnarch_notify_ready();
+
+    if (module_param_value(tick_arg) >= 0)
+	/* User passed tick_arg=<count-of-ns> */
+	nstick = module_param_value(tick_arg);
+    else
+        nstick = nktickdef;
+
+    err = xnpod_start_timer(nstick,XNPOD_DEFAULT_TICKHANDLER);
+    
+    if (err)
+	{
+	xnpod_shutdown(XNPOD_FATAL_EXIT);
+	return err;
+	}
 
     return 0;
 }
@@ -2932,12 +2954,11 @@ int xnpod_trap_fault (void *fltinfo)
  * settings. If this parameter is equal to XN_APERIODIC_TICK, the
  * underlying hardware timer is set to operate in oneshot-programming
  * mode. In this mode, timing accuracy is higher - since it is not
- * rounded to a constant time slice - at the expense of a lesser
- * efficicency when many timers are simultaneously active. The
- * aperiodic mode gives better results in configuration involving a
- * few threads requesting timing services over different time scales
- * that cannot be easily expressed as multiples of a single base tick,
- * or would lead to a waste of high frequency periodical ticks.
+ * rounded to a constant time slice. The aperiodic mode gives better
+ * results in configuration involving threads requesting timing
+ * services over different time scales that cannot be easily expressed
+ * as multiples of a single base tick, or would lead to a waste of
+ * high frequency periodical ticks.
  *
  * @param tickhandler The address of the tick handler which will process
  * each incoming tick. XNPOD_DEFAULT_TICKHANDLER can be passed to use
@@ -2986,10 +3007,10 @@ int xnpod_start_timer (u_long nstick, xnisr_t tickhandler)
     if (tickhandler == NULL)
         return -EINVAL;
 
-#ifndef CONFIG_XENO_HW_PERIODIC_TIMER
+#ifndef CONFIG_XENO_OPT_TIMING_PERIODIC
     if (nstick != XN_APERIODIC_TICK)
         return -ENODEV; /* No periodic support */
-#endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
         
     xnlock_get_irqsave(&nklock,s);
 
@@ -3001,11 +3022,18 @@ int xnpod_start_timer (u_long nstick, xnisr_t tickhandler)
 
     if (testbits(nkpod->status,XNTIMED))
         {
-        err = -EBUSY;
+	/* Timer is already running. */
+	if ((nstick == XN_APERIODIC_TICK && !testbits(nkpod->status,XNTMPER)) ||
+	    (nstick != XN_APERIODIC_TICK && xnpod_get_tickval() == nstick))
+	    err = 0;		/* Success. */
+	else
+	    /* Timing mode is incompatible: bail out. */
+	    err = -EBUSY;
+
         goto unlock_and_exit;
         }
 
-#ifdef CONFIG_XENO_HW_PERIODIC_TIMER
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
     if (nstick != XN_APERIODIC_TICK) /* Periodic mode. */
         {
         __setbits(nkpod->status,XNTMPER);
@@ -3015,7 +3043,7 @@ int xnpod_start_timer (u_long nstick, xnisr_t tickhandler)
 	xntimer_set_periodic_mode();
         }
     else /* Periodic setup. */
-#endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
         {
         __clrbits(nkpod->status,XNTMPER);
         nkpod->tickvalue = 1; /* Virtually the highest precision: 1ns */
@@ -3196,7 +3224,7 @@ int xnpod_announce_tick (xnintr_t *intr)
 
     /* Do the round-robin processing. */
 
-#ifdef CONFIG_XENO_HW_PERIODIC_TIMER
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
     {
     xnthread_t *runthread;
 
@@ -3233,7 +3261,7 @@ int xnpod_announce_tick (xnintr_t *intr)
 
  unlock_and_exit:
 
-#endif /* CONFIG_XENO_HW_PERIODIC_TIMER */
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
     xnlock_put_irqrestore(&nklock,s);
 

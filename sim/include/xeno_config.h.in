@@ -55,6 +55,12 @@
 #undef CONFIG_XENO_OPT_SYS_HEAPSZ
 
 /* config */
+#undef CONFIG_XENO_OPT_TIMING_PERIOD
+
+/* config */
+#undef CONFIG_XENO_OPT_TIMING_PERIODIC
+
+/* config */
 #undef CONFIG_XENO_OPT_WATCHDOG
 
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
