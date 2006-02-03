@@ -75,7 +75,8 @@ The following parameters can be passed at startup to the pSOS+
 API emulation module:
 
 - "rn0_size_arg", size of region #0 (in bytes). Defaults to 32k.
-- "tick_hz_arg", clock tick period. Defaults to 100 Hz.
+- "tick_arg", clock tick period (in nanoseconds). Defaults to 1000000
+(1ms).
 - "time_slice_arg", time slice period. Defaults to 10 clock ticks.
 
 Limitations

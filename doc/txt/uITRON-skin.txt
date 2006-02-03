@@ -88,4 +88,5 @@ Module parameters
 The following parameters can be passed at startup to the uITRON
 API module:
 
-- "tick_hz_arg", clock tick period. Defaults to 100 Hz.
+- "tick_arg", clock tick period (in nanoseconds). Defaults to 1000000
+(1ms).

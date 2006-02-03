@@ -75,5 +75,5 @@ API emulation module:
 
 - "workspace_size_arg", size of VRTX workspace (in bytes).
   Defaults to 32k.
-- "tick_hz_arg", clock tick period. Defaults to 100 Hz.
+- "tick_arg", clock tick period (in nanoseconds). Defaults to 1000000 (1ms).
 - "task_stacksize_arg", size of each VRTX task stack. Defaults to 4k.
