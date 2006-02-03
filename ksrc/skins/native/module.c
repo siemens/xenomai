@@ -112,8 +112,6 @@ int SKIN_INIT(native)
 {
     int err;
 
-    nktickdef = XN_APERIODIC_TICK;	/* Defaults to aperiodic. */
-
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     /* The native skin is stacked over the shared Xenomai pod. */
     err = xncore_attach();
