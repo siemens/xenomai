@@ -45,8 +45,6 @@ int main (int argc, char **argv)
 
     signal(SIGXCPU, warn_upon_switch);
 
-    rt_timer_start(TM_ONESHOT);
-
     err = rt_task_create(&task,"mytask",0,1,T_FPU);
 
     if (err)

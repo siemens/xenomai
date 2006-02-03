@@ -33,8 +33,6 @@ int main (int argc, char *argv[])
 
     mlockall(MCL_CURRENT|MCL_FUTURE);
 
-    err = rt_timer_start(TM_ONESHOT);
-
     /* ... */
 
     err = rt_alarm_create(&alarm_desc,"MyAlarm");
