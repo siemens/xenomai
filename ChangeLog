@@ -1,3 +1,7 @@
+2006-02-04  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386: Fix NMI support over 2.4.
+
 2006-02-04  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus/shadow.c, include/nucleus/types.h: Dump I-pipe
