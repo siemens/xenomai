@@ -1,5 +1,8 @@
 2006-02-04  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/i386/patches, ksrc/arch/powerpc/patches: Upgrade 2.4
+	patches.
+
 	* ksrc/arch/i386: Fix NMI support over 2.4.
 
 2006-02-04  Jan Kiszka  <jan.kiszka@web.de>
