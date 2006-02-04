@@ -37,6 +37,8 @@
 #ifndef _XENO_ASM_I386_HAL_H
 #define _XENO_ASM_I386_HAL_H
 
+#include <asm/xenomai/wrappers.h>
+
 #define __rthal_u64tou32(ull, h, l) ({          \
     unsigned long long _ull = (ull);            \
     (l) = _ull & 0xffffffff;                    \
