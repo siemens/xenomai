@@ -20,7 +20,7 @@
 #ifndef _XENO_NUCLEUS_COMPILER_H
 #define _XENO_NUCLEUS_COMPILER_H
 
-#if __GNUC__ >= 3 && __GNUC_MINOR__ > 0
+#if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ > 0)
 #define __deprecated_call__		__attribute__((deprecated))
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 #define __deprecated_call_in_user__
@@ -29,10 +29,10 @@
 #define __deprecated_call_in_user__	__deprecated_call__
 #define __deprecated_call_in_kernel__
 #endif /* __KERNEL__ || __XENO_SIM__ */
-#else /* !(__GNUC__ >= 3 && __GNUC_MINOR__ > 0) */
+#else /* !(__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ > 0)) */
 #define __deprecated_call__
 #define __deprecated_call_in_user__
 #define __deprecated_call_in_kernel__
-#endif /* __GNUC__ >= 3 && __GNUC_MINOR__ > 0 */
+#endif /* __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ > 0) */
 
 #endif /* !_XENO_NUCLEUS_COMPILER_H */
