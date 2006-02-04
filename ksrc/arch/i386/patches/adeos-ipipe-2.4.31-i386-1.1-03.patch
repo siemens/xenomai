@@ -1078,7 +1078,7 @@ diff -uNrp 2.4.31/arch/i386/kernel/ipipe-core.c 2.4.31-i386-ipipe/arch/i386/kern
 +EXPORT_SYMBOL(ipipe_tune_timer);
 diff -uNrp 2.4.31/arch/i386/kernel/ipipe-root.c 2.4.31-i386-ipipe/arch/i386/kernel/ipipe-root.c
 --- 2.4.31/arch/i386/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.4.31-i386-ipipe/arch/i386/kernel/ipipe-root.c	2006-01-07 09:32:32.000000000 +0100
++++ 2.4.31-i386-ipipe/arch/i386/kernel/ipipe-root.c	2006-02-04 18:22:06.000000000 +0100
 @@ -0,0 +1,578 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/i386/kernel/ipipe-root.c
@@ -1644,6 +1644,8 @@ diff -uNrp 2.4.31/arch/i386/kernel/ipipe-root.c 2.4.31-i386-ipipe/arch/i386/kern
 +#ifdef CONFIG_SMP
 +extern struct tlb_state cpu_tlbstate[];
 +EXPORT_SYMBOL_NOVERS(cpu_tlbstate);
++extern spinlock_t nmi_print_lock;
++EXPORT_SYMBOL(nmi_print_lock);
 +#endif /* CONFIG_SMP */
 +extern irq_desc_t irq_desc[];
 +EXPORT_SYMBOL_NOVERS(irq_desc);
@@ -1656,8 +1658,6 @@ diff -uNrp 2.4.31/arch/i386/kernel/ipipe-root.c 2.4.31-i386-ipipe/arch/i386/kern
 +EXPORT_SYMBOL(do_exit);
 +void (*nmi_watchdog_tick) (struct pt_regs * regs);
 +EXPORT_SYMBOL(nmi_watchdog_tick);
-+extern spinlock_t nmi_print_lock;
-+EXPORT_SYMBOL(nmi_print_lock);
 diff -uNrp 2.4.31/arch/i386/kernel/irq.c 2.4.31-i386-ipipe/arch/i386/kernel/irq.c
 --- 2.4.31/arch/i386/kernel/irq.c	2003-11-28 19:26:19.000000000 +0100
 +++ 2.4.31-i386-ipipe/arch/i386/kernel/irq.c	2005-11-25 15:56:39.000000000 +0100
@@ -2152,7 +2152,7 @@ diff -uNrp 2.4.31/include/asm-i386/hw_irq.h 2.4.31-i386-ipipe/include/asm-i386/h
   * system calls and interrupted 'random user-space'. Thus we have
 diff -uNrp 2.4.31/include/asm-i386/ipipe.h 2.4.31-i386-ipipe/include/asm-i386/ipipe.h
 --- 2.4.31/include/asm-i386/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.4.31-i386-ipipe/include/asm-i386/ipipe.h	2006-01-07 09:45:12.000000000 +0100
++++ 2.4.31-i386-ipipe/include/asm-i386/ipipe.h	2006-02-04 18:07:39.000000000 +0100
 @@ -0,0 +1,199 @@
 +/*   -*- linux-c -*-
 + *   include/asm-i386/ipipe.h
@@ -2186,10 +2186,10 @@ diff -uNrp 2.4.31/include/asm-i386/ipipe.h 2.4.31-i386-ipipe/include/asm-i386/ip
 +#include <asm/irq.h>
 +#endif /* __ASSEMBLY__ */
 +
-+#define IPIPE_ARCH_STRING	"1.1-02"
++#define IPIPE_ARCH_STRING	"1.1-03"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	1
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#define __clear_bit(nr,addr) clear_bit(nr,addr)
 +#define __test_bit(nr,addr)  test_bit(nr,addr)
