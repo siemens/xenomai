@@ -1,3 +1,8 @@
+2006-02-04  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/shadow.c, include/nucleus/types.h: Dump I-pipe
+	traces if available upon panic.
+	
 2006-02-04  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/timer.c (rt_timer_set_mode): Add service to
