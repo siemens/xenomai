@@ -27,8 +27,11 @@
 
 #ifdef __XENO_SIM__
 #include <posix_overrides.h>
-#define TIMER_ABSTIME 1
 #endif /* __XENO_SIM__ */
+
+#ifndef TIMER_ABSTIME
+#define TIMER_ABSTIME 1
+#endif
 
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
