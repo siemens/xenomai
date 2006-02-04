@@ -21,7 +21,7 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	bool 'Watchdog support' CONFIG_XENO_OPT_WATCHDOG
 
 	bool 'Enable periodic timer support' CONFIG_XENO_OPT_TIMING_PERIODIC
-	if [ "$CONFIG_XENO_OPT_TIMING_PERIODIC" == "y" ]; then
+	if [ "$CONFIG_XENO_OPT_TIMING_PERIODIC" = "y" ]; then
 	   int 'Timer period (ns)' CONFIG_XENO_OPT_TIMING_PERIOD 0
 	else
 	   define_int CONFIG_XENO_OPT_TIMING_PERIOD 0
