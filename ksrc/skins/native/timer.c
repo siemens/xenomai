@@ -369,33 +369,6 @@ int rt_timer_set_mode (RTIME nstick)
     return xnpod_start_timer(nstick,XNPOD_DEFAULT_TICKHANDLER);
 }
 
-/**
- * @fn int rt_timer_start(RTIME nstick)
- * @brief DEPRECATED.
- *
- * This service has been deprecated in favour of a build time
- * configuration of the system timer. Please check the
- * CONFIG_XENO_OPT_TIMING_PERIODIC and CONFIG_XENO_OPT_TIMING_PERIOD
- * configuration switches.
- */
-
-int rt_timer_start (RTIME nstick)
-
-{
-    return 0;
-}
-
-/**
- * @fn void rt_timer_stop(void)
- * @brief DEPRECATED.
- *
- */
-
-void rt_timer_stop (void)
-
-{
-}
-
 /*@}*/
 
 EXPORT_SYMBOL(rt_timer_ns2ticks);
