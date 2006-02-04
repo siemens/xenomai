@@ -20,8 +20,8 @@
 #ifndef _psos_asr_h
 #define _psos_asr_h
 
-#include "xenomai/psos+/defs.h"
-#include "xenomai/psos+/psos.h"
+#include "psos+/defs.h"
+#include "psos+/psos.h"
 
 #ifdef __cplusplus
 extern "C" {

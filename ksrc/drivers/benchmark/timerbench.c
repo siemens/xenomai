@@ -22,8 +22,8 @@
 #include <linux/ipipe_trace.h>
 #endif /* CONFIG_IPIPE_TRACE */
 
-#include <xenomai/rtdm/rtbenchmark.h>
-#include <xenomai/rtdm/rtdm_driver.h>
+#include <rtdm/rtbenchmark.h>
+#include <rtdm/rtdm_driver.h>
 
 struct rt_tmbench_context {
     int                         mode;

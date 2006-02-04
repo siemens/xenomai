@@ -32,7 +32,7 @@
 
 #include <linux/delay.h>
 
-#include <xenomai/rtdm/rtdm_driver.h>
+#include <rtdm/rtdm_driver.h>
 
 
 /*!

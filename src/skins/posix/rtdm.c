@@ -23,8 +23,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/socket.h>
-#include <xenomai/rtdm/rtdm.h>
-#include <xenomai/rtdm/syscall.h>
+#include <rtdm/rtdm.h>
+#include <rtdm/syscall.h>
 
 extern int __rtdm_muxid;
 extern int __rtdm_fd_start;

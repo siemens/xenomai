@@ -18,14 +18,14 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "xenomai/vrtx/event.h"
-#include "xenomai/vrtx/task.h"
-#include "xenomai/vrtx/sem.h"
-#include "xenomai/vrtx/mb.h"
-#include "xenomai/vrtx/mx.h"
-#include "xenomai/vrtx/queue.h"
-#include "xenomai/vrtx/pt.h"
-#include "xenomai/vrtx/heap.h"
+#include "vrtx/event.h"
+#include "vrtx/task.h"
+#include "vrtx/sem.h"
+#include "vrtx/mb.h"
+#include "vrtx/mx.h"
+#include "vrtx/queue.h"
+#include "vrtx/pt.h"
+#include "vrtx/heap.h"
 
 MODULE_DESCRIPTION("VRTX(R) virtual machine");
 MODULE_AUTHOR("jpinon@idealx.com");

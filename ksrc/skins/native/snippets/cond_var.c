@@ -1,5 +1,5 @@
-#include <xenomai/native/mutex.h>
-#include <xenomai/native/cond.h>
+#include <native/mutex.h>
+#include <native/cond.h>
 
 RT_COND cond_desc;
 

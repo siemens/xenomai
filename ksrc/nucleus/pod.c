@@ -35,13 +35,13 @@
 #define XENO_POD_MODULE 1
 
 #include <stdarg.h>
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/timer.h>
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/nucleus/intr.h>
-#include <xenomai/nucleus/module.h>
-#include <xenomai/nucleus/ltt.h>
+#include <nucleus/pod.h>
+#include <nucleus/timer.h>
+#include <nucleus/synch.h>
+#include <nucleus/heap.h>
+#include <nucleus/intr.h>
+#include <nucleus/module.h>
+#include <nucleus/ltt.h>
 
 /* NOTE: We need to initialize the globals: remember that this code
    also runs over user-space VMs... */

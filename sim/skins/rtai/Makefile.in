@@ -231,7 +231,8 @@ AM_CPPFLAGS = \
 	--gcic-backend=$(prefix)/libexec/gcic \
 	--skin-code \
 	$(atomic_core) \
-	-I$(srcdir)/../include
+	-I$(srcdir)/../include \
+	-I$(top_srcdir)/../include
 
 lib_LIBRARIES = librtai_s.a
 nodist_librtai_s_a_SOURCES = \

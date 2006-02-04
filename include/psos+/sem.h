@@ -20,8 +20,8 @@
 #ifndef _psos_sem_h
 #define _psos_sem_h
 
-#include "xenomai/psos+/defs.h"
-#include "xenomai/psos+/psos.h"
+#include "psos+/defs.h"
+#include "psos+/psos.h"
 
 #define PSOS_SEM_MAGIC 0x81810202
 

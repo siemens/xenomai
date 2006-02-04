@@ -28,10 +28,10 @@
 
 #include <linux/module.h>
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/rtdm/syscall.h>
-#include <xenomai/rtdm/rtdm_driver.h>
+#include <nucleus/pod.h>
+#include <nucleus/heap.h>
+#include <rtdm/syscall.h>
+#include <rtdm/rtdm_driver.h>
 
 #include "rtdm/core.h"
 #include "rtdm/device.h"

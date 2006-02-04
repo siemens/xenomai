@@ -10,7 +10,7 @@ xeno_posix-y := sched.o thread_attr.o thread.o mutex_attr.o mutex.o \
 
 xeno_posix-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o intr.o
 
-EXTRA_CFLAGS += -I$(srctree)/include/xenomai/posix -I$(src)/..
+EXTRA_CFLAGS += -I$(srctree)/include/xenomai/posix -I$(src)/.. -Iinclude/xenomai
 
 else
 
@@ -33,7 +33,7 @@ xeno_posix-objs += $(opt_objs-y)
 
 export-objs := $(xeno_posix-objs)
 
-EXTRA_CFLAGS += -I.. -I$(TOPDIR)/include/xenomai/compat -I$(TOPDIR)/include/xenomai/posix
+EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat -I.. -I$(TOPDIR)/include/xenomai/posix
 
 include $(TOPDIR)/Rules.make
 

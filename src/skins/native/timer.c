@@ -16,15 +16,15 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#include <xenomai/native/syscall.h>
-#include <xenomai/native/task.h>
+#include <native/syscall.h>
+#include <native/task.h>
 
 extern int __native_muxid;
 
 int rt_timer_start (RTIME tickval)
 
 {
-    return 0;	/* DEPRECATED */
+    return -ENOSYS;	/* DEPRECATED */
 }
 
 void rt_timer_stop (void)

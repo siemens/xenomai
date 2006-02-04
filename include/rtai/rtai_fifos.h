@@ -21,6 +21,6 @@
 #ifndef _RTAI_XENO_FIFOS_H
 #define _RTAI_XENO_FIFOS_H
 
-#include <xenomai/rtai/fifo.h>
+#include <rtai/fifo.h>
 
 #endif /* !_RTAI_XENO_FIFOS_H */

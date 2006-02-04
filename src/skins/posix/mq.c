@@ -19,7 +19,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <fcntl.h>
-#include <xenomai/posix/syscall.h>
+#include <posix/syscall.h>
 #include <pthread.h>
 #include <mqueue.h>
 

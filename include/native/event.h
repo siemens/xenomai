@@ -22,8 +22,8 @@
 #ifndef _XENO_EVENT_H
 #define _XENO_EVENT_H
 
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/native/types.h>
+#include <nucleus/synch.h>
+#include <native/types.h>
 
 /* Creation flags. */
 #define EV_PRIO  XNSYNCH_PRIO	/* Pend by task priority order. */

@@ -22,8 +22,8 @@
 #ifndef _XENO_MUTEX_H
 #define _XENO_MUTEX_H
 
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/native/types.h>
+#include <nucleus/synch.h>
+#include <native/types.h>
 
 struct rt_task;
 

@@ -25,7 +25,7 @@
 #ifndef _XENO_SKIN_PSOS_H
 #define _XENO_SKIN_PSOS_H
 
-#include <xenomai/nucleus/xenomai.h>
+#include <nucleus/xenomai.h>
 
 #define PSOS_SKIN_VERSION_CODE    0x00000004
 #define PSOS_SKIN_MAGIC           0x50534F53

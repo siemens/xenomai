@@ -21,7 +21,7 @@
 #ifndef _vrtx_mx_h
 #define _vrtx_mx_h
 
-#include "xenomai/vrtx/defs.h"
+#include "vrtx/defs.h"
 
 #define VRTXMX_FREE      0
 #define VRTXMX_LOCKED    1

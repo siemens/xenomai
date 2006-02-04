@@ -6,4 +6,6 @@ librtdm_la_SOURCES = \
 	core.c \
 	init.c
 
-librtdm_la_CPPFLAGS = @XENO_USER_CFLAGS@
+librtdm_la_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/include

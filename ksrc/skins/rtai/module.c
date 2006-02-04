@@ -18,14 +18,14 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <xenomai/nucleus/pod.h>
+#include <nucleus/pod.h>
 #ifdef __KERNEL__
-#include <xenomai/rtai/syscall.h>
-#include <xenomai/rtai/fifo.h>
+#include <rtai/syscall.h>
+#include <rtai/fifo.h>
 #endif /* __KERNEL__ */
-#include <xenomai/rtai/task.h>
-#include <xenomai/rtai/sem.h>
-#include <xenomai/rtai/shm.h>
+#include <rtai/task.h>
+#include <rtai/sem.h>
+#include <rtai/shm.h>
 
 MODULE_DESCRIPTION("RTAI API emulator");
 MODULE_AUTHOR("rpm@xenomai.org");

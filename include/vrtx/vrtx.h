@@ -21,7 +21,7 @@
 #ifndef _XENO_SKIN_VRTX_H
 #define _XENO_SKIN_VRTX_H
 
-#include <xenomai/nucleus/xenomai.h>
+#include <nucleus/xenomai.h>
 
 #define VRTX_SKIN_VERSION_CODE    0x00000002
 #define VRTX_SKIN_MAGIC           0x56525458

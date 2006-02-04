@@ -21,8 +21,8 @@
 #ifndef _RTAI_FIFO_H
 #define _RTAI_FIFO_H
 
-#include <xenomai/nucleus/pipe.h>
-#include <xenomai/rtai/types.h>
+#include <nucleus/pipe.h>
+#include <rtai/types.h>
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 

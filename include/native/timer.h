@@ -22,8 +22,8 @@
 #ifndef _XENO_TIMER_H
 #define _XENO_TIMER_H
 
-#include <xenomai/nucleus/timer.h>
-#include <xenomai/native/types.h>
+#include <nucleus/timer.h>
+#include <native/types.h>
 
 #define TM_UNSET   XN_NO_TICK
 #define TM_ONESHOT XN_APERIODIC_TICK
@@ -56,9 +56,9 @@ RTIME rt_timer_tsc(void);
 
 void rt_timer_spin(RTIME ns);
 
-int __deprecated__ rt_timer_start(RTIME nstick);
+int __deprecated_call__ rt_timer_start(RTIME nstick);
 
-void __deprecated__ rt_timer_stop(void);
+void __deprecated_call__ rt_timer_stop(void);
 
 #ifdef __cplusplus
 }

@@ -30,8 +30,8 @@
  *
  *@{*/
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/native/timer.h>
+#include <nucleus/pod.h>
+#include <native/timer.h>
 
 /**
  * @fn SRTIME rt_timer_ns2ticks(SRTIME ns)

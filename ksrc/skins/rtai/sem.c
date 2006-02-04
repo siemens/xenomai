@@ -18,10 +18,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/rtai/sem.h>
-#include <xenomai/rtai/task.h>
+#include <nucleus/pod.h>
+#include <nucleus/synch.h>
+#include <rtai/sem.h>
+#include <rtai/task.h>
 
 void rt_typed_sem_init (SEM *sem, int value, int type)
 

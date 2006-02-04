@@ -21,7 +21,7 @@
 #include <errno.h>
 #include <fcntl.h>              /* For O_CREAT. */
 #include <pthread.h>            /* For pthread_setcanceltype. */
-#include <xenomai/posix/syscall.h>
+#include <posix/syscall.h>
 #include <semaphore.h>
 
 extern int __pse51_muxid;

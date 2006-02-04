@@ -17,9 +17,9 @@
  */
 
 #ifdef __KERNEL__
-#include <xenomai/posix/syscall.h>
+#include <posix/syscall.h>
 #endif /* __KERNEL__ */
-#include <xenomai/posix/posix.h>
+#include <posix/posix.h>
 #include <posix/internal.h>
 #include <posix/cond.h>
 #include <posix/mutex.h>

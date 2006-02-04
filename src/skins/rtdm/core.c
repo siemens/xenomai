@@ -20,8 +20,8 @@
 #include <stddef.h>
 #include <errno.h>
 
-#include <xenomai/rtdm/rtdm.h>
-#include <xenomai/rtdm/syscall.h>
+#include <rtdm/rtdm.h>
+#include <rtdm/syscall.h>
 
 
 extern int __rtdm_muxid;

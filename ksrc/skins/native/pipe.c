@@ -45,10 +45,10 @@
  *
  *@{*/
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/native/registry.h>
-#include <xenomai/native/pipe.h>
+#include <nucleus/pod.h>
+#include <nucleus/heap.h>
+#include <native/registry.h>
+#include <native/pipe.h>
 
 static int __pipe_flush_apc;
 

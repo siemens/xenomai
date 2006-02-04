@@ -19,7 +19,7 @@
 #ifndef _uITRON_mbx_h
 #define _uITRON_mbx_h
 
-#include "xenomai/uitron/defs.h"
+#include "uitron/defs.h"
 
 #define uITRON_MBX_MAGIC 0x85850404
 

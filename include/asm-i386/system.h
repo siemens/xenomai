@@ -769,7 +769,7 @@ static inline void xnarch_exit (void)
 
 #else /* !__KERNEL__ */
 
-#include <xenomai/nucleus/system.h>
+#include <nucleus/system.h>
 #include <bits/local_lim.h>
 
 #endif /* __KERNEL__ */

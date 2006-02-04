@@ -17,7 +17,7 @@
  */
 
 
-#include <xenomai/nucleus/timer.h>
+#include <nucleus/timer.h>
 #include <posix/thread.h>
 #include <posix/timer.h>
 

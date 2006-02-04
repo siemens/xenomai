@@ -18,7 +18,7 @@
 
 #include <stdarg.h>
 
-#include <xenomai/nucleus/queue.h>
+#include <nucleus/queue.h>
 
 #include <posix/registry.h>
 #include <posix/internal.h>     /* Magics, time conversion */

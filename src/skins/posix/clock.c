@@ -18,7 +18,7 @@
 
 #include <errno.h>
 #include <pthread.h>            /* For pthread_setcanceltype. */
-#include <xenomai/posix/syscall.h>
+#include <posix/syscall.h>
 #include <time.h>
 
 extern int __pse51_muxid;

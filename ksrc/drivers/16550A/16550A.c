@@ -20,8 +20,8 @@
 #include <linux/ioport.h>
 #include <asm/io.h>
 
-#include <xenomai/rtdm/rtserial.h>
-#include <xenomai/rtdm/rtdm_driver.h>
+#include <rtdm/rtserial.h>
+#include <rtdm/rtdm_driver.h>
 
 
 #define MAX_DEVICES         8

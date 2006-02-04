@@ -6,6 +6,8 @@ obj-$(CONFIG_XENO_SKIN_UVM) += xeno_uvm.o
 
 xeno_uvm-y := module.o syscall.o
 
+EXTRA_CFLAGS += -Iinclude/xenomai
+
 else
 
 # Makefile frag for Linux v2.4
@@ -20,7 +22,7 @@ xeno_uvm-objs := module.o syscall.o
 
 export-objs := $(xeno_uvm-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
 

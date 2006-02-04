@@ -21,7 +21,7 @@
 #ifndef _vrtx_mb_h
 #define _vrtx_mb_h
 
-#include "xenomai/vrtx/defs.h"
+#include "vrtx/defs.h"
 
 typedef struct vrtxmsg {
     /* BEWARE, code assumes link is the first element */

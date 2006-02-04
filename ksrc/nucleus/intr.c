@@ -32,9 +32,9 @@
 
 #define XENO_INTR_MODULE 1
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/intr.h>
-#include <xenomai/nucleus/ltt.h>
+#include <nucleus/pod.h>
+#include <nucleus/intr.h>
+#include <nucleus/ltt.h>
 
 xnintr_t nkclock;
 

@@ -21,9 +21,9 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <xenomai/native/syscall.h>
-#include <xenomai/native/task.h>
-#include <xenomai/native/queue.h>
+#include <native/syscall.h>
+#include <native/task.h>
+#include <native/queue.h>
 
 extern int __native_muxid;
 

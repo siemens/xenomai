@@ -19,7 +19,7 @@
 #ifndef _uITRON_flag_h
 #define _uITRON_flag_h
 
-#include "xenomai/uitron/defs.h"
+#include "uitron/defs.h"
 
 #define uITRON_FLAG_MAGIC 0x85850303
 

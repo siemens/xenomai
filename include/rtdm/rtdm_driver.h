@@ -33,12 +33,12 @@
 #include <asm/atomic.h>
 #include <linux/list.h>
 
-#include <xenomai/nucleus/xenomai.h>
-#include <xenomai/nucleus/core.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/rtdm/rtdm.h>
+#include <nucleus/xenomai.h>
+#include <nucleus/core.h>
+#include <nucleus/heap.h>
+#include <nucleus/pod.h>
+#include <nucleus/synch.h>
+#include <rtdm/rtdm.h>
 
 
 struct rtdm_dev_context;

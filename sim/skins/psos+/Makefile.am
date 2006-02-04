@@ -13,7 +13,8 @@ AM_CPPFLAGS = \
 	--gcic-backend=$(prefix)/libexec/gcic \
 	--skin-code \
 	$(atomic_core) \
-	-I$(srcdir)/../include
+	-I$(srcdir)/../include \
+	-I$(top_srcdir)/../include
 
 lib_LIBRARIES = libpsos_s.a
 

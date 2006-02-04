@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include <xenomai/native/task.h>
-#include <xenomai/native/queue.h>
+#include <native/task.h>
+#include <native/queue.h>
 
 #define TASK_PRIO  99 /* Highest RT priority */
 #define TASK_MODE  0  /* No flags */

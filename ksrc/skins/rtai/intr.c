@@ -18,7 +18,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <xenomai/rtai/intr.h>
+#include <rtai/intr.h>
 
 int rt_request_irq (unsigned irq,
 		    void (*handler)(unsigned irq, void *cookie),

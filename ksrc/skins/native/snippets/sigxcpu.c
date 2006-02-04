@@ -5,7 +5,7 @@
 #include <signal.h>
 #include <getopt.h>
 #include <execinfo.h>
-#include <xenomai/native/task.h>
+#include <native/task.h>
 
 RT_TASK task;
 

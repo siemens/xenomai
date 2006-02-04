@@ -21,7 +21,7 @@
 #ifndef _vrtx_pt_h
 #define _vrtx_pt_h
 
-#include "xenomai/vrtx/defs.h"
+#include "vrtx/defs.h"
 
 #define VRTX_PT_MAGIC 0x82820404
 

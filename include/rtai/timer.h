@@ -21,7 +21,7 @@
 #ifndef _RTAI_TIMER_H
 #define _RTAI_TIMER_H
 
-#include <xenomai/rtai/types.h>
+#include <rtai/types.h>
 
 #ifdef __cplusplus
 extern "C" {

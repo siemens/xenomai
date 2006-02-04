@@ -26,7 +26,7 @@
 #ifndef _XENO_SKIN_VXWORKS_H
 #define _XENO_SKIN_VXWORKS_H
 
-#include <xenomai/nucleus/xenomai.h>
+#include <nucleus/xenomai.h>
 
 #define VXWORKS_SKIN_VERSION_STRING  "3"
 #define VXWORKS_SKIN_VERSION_CODE    0x00000003

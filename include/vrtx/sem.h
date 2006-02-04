@@ -21,7 +21,7 @@
 #ifndef _vrtx_sem_h
 #define _vrtx_sem_h
 
-#include "xenomai/vrtx/defs.h"
+#include "vrtx/defs.h"
 
 #define VRTX_SEM_MAGIC 0x82820202
 #define MAX_SEM_VALUE  65535

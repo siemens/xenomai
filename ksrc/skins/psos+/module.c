@@ -17,14 +17,14 @@
  * 02111-1307, USA.
  */
 
-#include "xenomai/psos+/event.h"
-#include "xenomai/psos+/task.h"
-#include "xenomai/psos+/sem.h"
-#include "xenomai/psos+/asr.h"
-#include "xenomai/psos+/queue.h"
-#include "xenomai/psos+/pt.h"
-#include "xenomai/psos+/rn.h"
-#include "xenomai/psos+/tm.h"
+#include "psos+/event.h"
+#include "psos+/task.h"
+#include "psos+/sem.h"
+#include "psos+/asr.h"
+#include "psos+/queue.h"
+#include "psos+/pt.h"
+#include "psos+/rn.h"
+#include "psos+/tm.h"
 
 MODULE_DESCRIPTION("pSOS+(R) virtual machine");
 MODULE_AUTHOR("rpm@xenomai.org");

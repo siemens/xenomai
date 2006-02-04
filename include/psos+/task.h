@@ -20,7 +20,7 @@
 #ifndef _psos_task_h
 #define _psos_task_h
 
-#include "xenomai/psos+/event.h"
+#include "psos+/event.h"
 
 #define PSOSTASK_NOTEPAD_REGS 16
 

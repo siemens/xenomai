@@ -21,7 +21,7 @@
 #include <fcntl.h>              /* open */
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <xenomai/posix/syscall.h>
+#include <posix/syscall.h>
 
 extern int __pse51_muxid;
 

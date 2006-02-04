@@ -19,11 +19,11 @@
 
 #define XENO_THREAD_MODULE 1
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/nucleus/thread.h>
-#include <xenomai/nucleus/module.h>
+#include <nucleus/pod.h>
+#include <nucleus/synch.h>
+#include <nucleus/heap.h>
+#include <nucleus/thread.h>
+#include <nucleus/module.h>
 
 static void xnthread_timeout_handler (void *cookie)
 

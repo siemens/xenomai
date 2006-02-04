@@ -20,11 +20,11 @@
 #ifndef _XENO_NUCLEUS_XENOMAI_H
 #define _XENO_NUCLEUS_XENOMAI_H
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/nucleus/intr.h>
-#include <xenomai/nucleus/module.h>
-#include <xenomai/nucleus/version.h>
+#include <nucleus/pod.h>
+#include <nucleus/synch.h>
+#include <nucleus/heap.h>
+#include <nucleus/intr.h>
+#include <nucleus/module.h>
+#include <nucleus/version.h>
 
 #endif /* !_XENO_NUCLEUS_XENOMAI_H */

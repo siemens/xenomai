@@ -21,6 +21,6 @@
 #ifndef _RTAI_XENO_TYPES_H
 #define _RTAI_XENO_TYPES_H
 
-#include <xenomai/rtai/types.h>
+#include <rtai/types.h>
 
 #endif /* !_RTAI_XENO_TYPES_H */

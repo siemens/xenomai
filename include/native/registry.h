@@ -22,7 +22,7 @@
 #ifndef _XENO_REGISTRY_H
 #define _XENO_REGISTRY_H
 
-#include <xenomai/native/types.h>
+#include <native/types.h>
 
 #define RT_REGISTRY_SELF  RT_HANDLE_INVALID
 
@@ -32,8 +32,8 @@
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/nucleus/thread.h>
+#include <nucleus/synch.h>
+#include <nucleus/thread.h>
 
 struct rt_object_procnode;
 

@@ -54,9 +54,9 @@
 
 #define XENO_TIMER_MODULE 1
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/thread.h>
-#include <xenomai/nucleus/timer.h>
+#include <nucleus/pod.h>
+#include <nucleus/thread.h>
+#include <nucleus/timer.h>
 
 static inline void xntimer_enqueue_aperiodic (xntimer_t *timer)
 

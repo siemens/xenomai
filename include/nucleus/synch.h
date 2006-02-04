@@ -20,7 +20,7 @@
 #ifndef _XENO_NUCLEUS_SYNCH_H
 #define _XENO_NUCLEUS_SYNCH_H
 
-#include <xenomai/nucleus/queue.h>
+#include <nucleus/queue.h>
 
 /* Creation flags */
 #define XNSYNCH_FIFO    0x0

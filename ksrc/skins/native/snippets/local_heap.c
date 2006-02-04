@@ -1,4 +1,4 @@
-#include <xenomai/native/heap.h>
+#include <native/heap.h>
 
 #define HEAP_SIZE (256*1024)
 #define HEAP_MODE 0		/* Local heap. */

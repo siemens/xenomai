@@ -17,8 +17,8 @@
  */
 
 #include <stdio.h>
-#include <xenomai/native/syscall.h>
-#include <xenomai/native/intr.h>
+#include <native/syscall.h>
+#include <native/intr.h>
 
 extern int __native_muxid;
 

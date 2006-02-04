@@ -20,7 +20,7 @@
 #ifndef _XENO_NUCLEUS_QUEUE_H
 #define _XENO_NUCLEUS_QUEUE_H
 
-#include <xenomai/nucleus/types.h>
+#include <nucleus/types.h>
 
 /* Basic element holder */
 

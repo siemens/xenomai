@@ -20,7 +20,7 @@
 #ifndef _XENO_NUCLEUS_THREAD_H
 #define _XENO_NUCLEUS_THREAD_H
 
-#include <xenomai/nucleus/timer.h>
+#include <nucleus/timer.h>
 
 /* Status flags */
 #define XNSUSP    0x00000001	/* Suspended */

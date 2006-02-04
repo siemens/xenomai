@@ -7,7 +7,7 @@ obj-$(CONFIG_XENO_SKIN_VXWORKS) += xeno_vxworks.o
 xeno_vxworks-y := errnoLib.o intLib.o kernelLib.o module.o msgQLib.o semLib.o \
 		sysLib.o taskHookLib.o taskInfo.o taskLib.o tickLib.o wdLib.o
 
-EXTRA_CFLAGS += -I$(src)/..
+EXTRA_CFLAGS += -Iinclude/xenomai -I$(src)/..
 
 else
 
@@ -24,7 +24,7 @@ xeno_vxworks-objs := errnoLib.o intLib.o kernelLib.o module.o msgQLib.o semLib.o
 
 export-objs := $(xeno_vxworks-objs)
 
-EXTRA_CFLAGS += -I.. -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat -I..
 
 include $(TOPDIR)/Rules.make
 

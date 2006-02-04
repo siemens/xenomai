@@ -19,7 +19,7 @@
 #include <stddef.h>
 #include <errno.h>
 #include <signal.h>
-#include <xenomai/posix/syscall.h>
+#include <posix/syscall.h>
 #include <pthread.h>
 #include <semaphore.h>
 

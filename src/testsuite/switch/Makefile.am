@@ -4,7 +4,9 @@ test_PROGRAMS = switch
 
 switch_SOURCES = switch.c
 
-switch_CPPFLAGS = @XENO_USER_CFLAGS@
+switch_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/include
 
 switch_LDFLAGS = @XENO_USER_LDFLAGS@
 

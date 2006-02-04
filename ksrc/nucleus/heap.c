@@ -65,9 +65,9 @@ HEAP {
 
 #define XENO_HEAP_MODULE 1
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/thread.h>
-#include <xenomai/nucleus/heap.h>
+#include <nucleus/pod.h>
+#include <nucleus/thread.h>
+#include <nucleus/heap.h>
 
 xnheap_t kheap;	/* System heap */
 

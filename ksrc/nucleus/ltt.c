@@ -23,7 +23,7 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <stdarg.h>
-#include <xenomai/nucleus/ltt.h>
+#include <nucleus/ltt.h>
 
 void xnltt_log_mark (const char *fmt, ...)
 

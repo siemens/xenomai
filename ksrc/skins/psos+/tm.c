@@ -17,8 +17,8 @@
  * 02111-1307, USA.
  */
 
-#include "xenomai/psos+/task.h"
-#include "xenomai/psos+/tm.h"
+#include "psos+/task.h"
+#include "psos+/tm.h"
 
 static xnqueue_t psostimerq;
 

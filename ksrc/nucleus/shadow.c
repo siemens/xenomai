@@ -41,13 +41,13 @@
 #include <linux/init.h>
 #include <linux/kthread.h>
 #include <asm/signal.h>
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/nucleus/module.h>
-#include <xenomai/nucleus/shadow.h>
-#include <xenomai/nucleus/core.h>
-#include <xenomai/nucleus/ltt.h>
+#include <nucleus/pod.h>
+#include <nucleus/heap.h>
+#include <nucleus/synch.h>
+#include <nucleus/module.h>
+#include <nucleus/shadow.h>
+#include <nucleus/core.h>
+#include <nucleus/ltt.h>
 #include <asm/xenomai/features.h>
 
 int nkgkptd;

@@ -21,7 +21,7 @@
 #ifndef _vrtx_task_h
 #define _vrtx_task_h
 
-#include "xenomai/vrtx/defs.h"
+#include "vrtx/defs.h"
 
 #define VRTX_TASK_MAGIC 0x82820101
 

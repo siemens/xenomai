@@ -16,9 +16,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#include <xenomai/native/syscall.h>
-#include <xenomai/native/mutex.h>
-#include <xenomai/native/cond.h>
+#include <native/syscall.h>
+#include <native/mutex.h>
+#include <native/cond.h>
 
 extern int __native_muxid;
 

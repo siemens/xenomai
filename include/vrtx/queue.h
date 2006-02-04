@@ -21,7 +21,7 @@
 #ifndef _vrtx_queue_h
 #define _vrtx_queue_h
 
-#include "xenomai/vrtx/defs.h"
+#include "vrtx/defs.h"
 
 #define VRTX_QUEUE_MAGIC 0x82820303
 

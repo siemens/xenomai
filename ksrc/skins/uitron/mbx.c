@@ -16,8 +16,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "xenomai/uitron/task.h"
-#include "xenomai/uitron/mbx.h"
+#include "uitron/task.h"
+#include "uitron/mbx.h"
 
 static xnqueue_t uimbxq;
 

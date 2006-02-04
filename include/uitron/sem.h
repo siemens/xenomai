@@ -19,7 +19,7 @@
 #ifndef _uITRON_sem_h
 #define _uITRON_sem_h
 
-#include "xenomai/uitron/defs.h"
+#include "uitron/defs.h"
 
 #define uITRON_SEM_MAGIC 0x85850202
 

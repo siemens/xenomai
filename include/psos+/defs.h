@@ -20,7 +20,7 @@
 #ifndef _psos_defs_h
 #define _psos_defs_h
 
-#include "xenomai/nucleus/xenomai.h"
+#include "nucleus/xenomai.h"
 
 #define psos_h2obj_active(h,m,t) \
 ((h) && ((t *)(h))->magic == (m) ? ((t *)(h)) : NULL)

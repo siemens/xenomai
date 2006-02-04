@@ -20,8 +20,8 @@
 #ifndef _RTDM_DEVICE_H
 #define _RTDM_DEVICE_H
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/rtdm/rtdm_driver.h>
+#include <nucleus/pod.h>
+#include <rtdm/rtdm_driver.h>
 #include <linux/sem.h>
 
 

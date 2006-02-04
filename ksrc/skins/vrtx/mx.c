@@ -18,8 +18,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "xenomai/vrtx/task.h"
-#include "xenomai/vrtx/mx.h"
+#include "vrtx/task.h"
+#include "vrtx/mx.h"
 
 static vrtxmx_t vrtxmxmap[VRTX_MAX_MXID];
 static int mx_destroy_internal (int indx);

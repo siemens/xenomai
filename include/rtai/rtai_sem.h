@@ -21,6 +21,6 @@
 #ifndef _RTAI_XENO_SEM_H
 #define _RTAI_XENO_SEM_H
 
-#include <xenomai/rtai/sem.h>
+#include <rtai/sem.h>
 
 #endif /* !_RTAI_XENO_SEM_H */

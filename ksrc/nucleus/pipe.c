@@ -32,9 +32,9 @@
 #include <asm/io.h>
 #include <asm/uaccess.h>
 #include <asm/system.h>
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/nucleus/pipe.h>
+#include <nucleus/pod.h>
+#include <nucleus/heap.h>
+#include <nucleus/pipe.h>
 
 static int xnpipe_asyncsig = SIGIO;
 

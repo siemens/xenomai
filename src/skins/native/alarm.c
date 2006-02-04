@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#include <xenomai/native/syscall.h>
-#include <xenomai/native/alarm.h>
+#include <native/syscall.h>
+#include <native/alarm.h>
 
 extern int __native_muxid;
 

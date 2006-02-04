@@ -1,4 +1,4 @@
-#include <xenomai/native/sem.h>
+#include <native/sem.h>
 
 #define SEM_INIT 1	 /* Initial semaphore count */
 #define SEM_MODE S_FIFO	 /* Wait by FIFO order */

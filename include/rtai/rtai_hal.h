@@ -21,6 +21,6 @@
 #ifndef _RTAI_XENO_HAL_H
 #define _RTAI_XENO_HAL_H
 
-#include <xenomai/rtai/intr.h>
+#include <rtai/intr.h>
 
 #endif /* !_RTAI_XENO_HAL_H */

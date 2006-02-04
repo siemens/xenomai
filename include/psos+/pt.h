@@ -20,8 +20,8 @@
 #ifndef _psos_pt_h
 #define _psos_pt_h
 
-#include "xenomai/psos+/defs.h"
-#include "xenomai/psos+/psos.h"
+#include "psos+/defs.h"
+#include "psos+/psos.h"
 
 #define PSOS_PT_MAGIC 0x81810404
 

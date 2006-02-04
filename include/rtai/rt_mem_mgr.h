@@ -20,7 +20,7 @@
 #ifndef _RTAI_XENO_MEM_MGR_H
 #define _RTAI_XENO_MEM_MGR_H
 
-#include <xenomai/nucleus/heap.h>
+#include <nucleus/heap.h>
 
 
 #define rt_alloc(size)	xnheap_alloc(&kheap,size)

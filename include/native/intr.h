@@ -22,9 +22,9 @@
 #ifndef _XENO_INTR_H
 #define _XENO_INTR_H
 
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/nucleus/intr.h>
-#include <xenomai/native/types.h>
+#include <nucleus/synch.h>
+#include <nucleus/intr.h>
+#include <native/types.h>
 
 /* Creation flag. */
 #define I_AUTOENA    XN_ISR_ENABLE /* Auto-enable interrupt channel

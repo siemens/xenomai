@@ -20,7 +20,7 @@
 #ifndef _XENO_NUCLEUS_HEAP_H
 #define _XENO_NUCLEUS_HEAP_H
 
-#include <xenomai/nucleus/queue.h>
+#include <nucleus/queue.h>
 
 /*
  * CONSTRAINTS:

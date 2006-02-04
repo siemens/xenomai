@@ -1,4 +1,4 @@
-#include <xenomai/native/event.h>
+#include <native/event.h>
 
 #define EVENT_INIT        0x0           /* No flags present at init */
 #define EVENT_MODE        EV_PRIO       /* Tasks will wait by priority order */

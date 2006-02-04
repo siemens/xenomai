@@ -18,8 +18,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "xenomai/vrtx/task.h"
-#include "xenomai/vrtx/heap.h"
+#include "vrtx/task.h"
+#include "vrtx/heap.h"
 
 static xnqueue_t vrtxheapq;
 
