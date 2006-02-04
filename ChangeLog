@@ -1,3 +1,13 @@
+2006-02-04  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/timer.c (rt_timer_set_mode): Add service to
+	change the timing mode dynamically.
+
+	* include/posix/time.h: Define TIMER_ABSTIME if missing for both
+	kernel and simulation builds.
+
+	* ksrc/skins/rtdm/core.c (create_instance): Fix warning in unlikely().
+
 2006-02-03  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/compiler.h: Provide for compiler-dependent

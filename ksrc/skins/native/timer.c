@@ -314,6 +314,62 @@ void rt_timer_spin (RTIME ns)
 }
 
 /**
+ * @fn int rt_timer_set_mode(RTIME nstick)
+ * @brief Set the system clock rate.
+ *
+ * This routine switches to periodic timing mode and sets the clock
+ * tick rate, or resets the current timing mode to aperiodic/oneshot
+ * mode depending on the value of the @a nstick parameter. Since the
+ * Xenomai nucleus automatically starts the system timer according to
+ * the configured policy and period when a real-time skin is loaded
+ * (see CONFIG_XENO_OPT_TIMING_PERIOD), calling rt_timer_set_mode() is
+ * not required from applications unless the pre-defined mode and
+ * period need to be changed dynamically.
+ *
+ * This service also sets the time unit which will be relevant when
+ * specifying time intervals to the services taking timeout or delays
+ * as input parameters. In periodic mode, clock ticks will represent
+ * periodic jiffies. In oneshot mode, clock ticks will represent
+ * nanoseconds.
+ *
+ * @param nstick The timer period in nanoseconds. If this parameter is
+ * equal to the special TM_ONESHOT value, the timer is set to operate
+ * in oneshot-programmable mode. Other values are interpreted as the
+ * time between two consecutive clock ticks in periodic timing mode
+ * (i.e. clock HZ = 1e9 / nstick).
+ *
+ * @return 0 is returned on success. Otherwise:
+ *
+ * - -ENODEV is returned if the underlying architecture does not
+ * support the requested periodic timing. Aperiodic/oneshot timing is
+ * always supported.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - User-space task
+ *
+ * Rescheduling: never.
+ */
+
+int rt_timer_set_mode (RTIME nstick)
+
+{
+    if (testbits(nkpod->status,XNTIMED))
+	{
+	if ((nstick == TM_ONESHOT && xnpod_get_tickval() == 1) ||
+	    (nstick != TM_ONESHOT && xnpod_get_tickval() == nstick))
+	    return 0;
+
+	xnpod_stop_timer();
+	}
+
+    return xnpod_start_timer(nstick,XNPOD_DEFAULT_TICKHANDLER);
+}
+
+/**
  * @fn int rt_timer_start(RTIME nstick)
  * @brief DEPRECATED.
  *
@@ -350,3 +406,4 @@ EXPORT_SYMBOL(rt_timer_inquire);
 EXPORT_SYMBOL(rt_timer_read);
 EXPORT_SYMBOL(rt_timer_tsc);
 EXPORT_SYMBOL(rt_timer_spin);
+EXPORT_SYMBOL(rt_timer_set_mode);

@@ -33,6 +33,14 @@ void rt_timer_stop (void)
     /* DEPRECATED */
 }
 
+int rt_timer_set_mode (RTIME tickval)
+
+{
+    return XENOMAI_SKINCALL1(__native_muxid,
+			     __native_timer_set_mode,
+			     &tickval);
+}
+
 RTIME rt_timer_read (void)
 
 {

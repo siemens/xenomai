@@ -101,3 +101,10 @@ ___________________________________________________________________
 	multiple blocks of memory, instead of a shared memory segment
 	managed as a single-block area. Passing H_SHARED is equivalent
 	to the former behaviour.
+
+	o rt_timer_start() and rt_timer_stop() have been deprecated.
+	The Xenomai nucleus now automatically starts the system timer
+	according to the configured policy and period when a real-time
+	skin is loaded (see CONFIG_XENO_OPT_TIMING_PERIOD). The new
+	rt_timer_set_mode() service can be used to change the current
+	timing mode and clock tick rate dynamically.
