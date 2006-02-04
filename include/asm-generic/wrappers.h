@@ -31,6 +31,8 @@
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
 
 #include <linux/wrapper.h>
+#include <linux/wait.h>
+#include <linux/sched.h>
 #include <linux/moduleparam.h>	/* Use the backport. */
 
 /* Compiler */
