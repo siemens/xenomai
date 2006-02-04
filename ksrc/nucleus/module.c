@@ -25,18 +25,18 @@
 
 #define XENO_MAIN_MODULE 1
 
-#include <xenomai/nucleus/module.h>
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/timer.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/nucleus/version.h>
+#include <nucleus/module.h>
+#include <nucleus/pod.h>
+#include <nucleus/timer.h>
+#include <nucleus/heap.h>
+#include <nucleus/version.h>
 #ifdef CONFIG_XENO_OPT_PIPE
-#include <xenomai/nucleus/pipe.h>
+#include <nucleus/pipe.h>
 #endif /* CONFIG_XENO_OPT_PIPE */
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-#include <xenomai/nucleus/core.h>
+#include <nucleus/core.h>
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
-#include <xenomai/nucleus/ltt.h>
+#include <nucleus/ltt.h>
 
 MODULE_DESCRIPTION("Xenomai nucleus");
 MODULE_AUTHOR("rpm@xenomai.org");

@@ -1,4 +1,4 @@
-#include <xenomai/native/task.h>
+#include <native/task.h>
 
 #define TASK_PRIO  99              /* Highest RT priority */
 #define TASK_MODE  T_FPU|T_CPU(0)  /* Uses FPU, bound to CPU #0 */

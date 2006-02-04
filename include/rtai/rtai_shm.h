@@ -21,6 +21,6 @@
 #ifndef _RTAI_XENO_SHM_H
 #define _RTAI_XENO_SHM_H
 
-#include <xenomai/rtai/shm.h>
+#include <rtai/shm.h>
 
 #endif /* _RTAI_XENO_SHM_H */

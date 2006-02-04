@@ -4,7 +4,9 @@ test_PROGRAMS = latency
 
 latency_SOURCES = latency.c
 
-latency_CPPFLAGS = @XENO_USER_CFLAGS@
+latency_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/include
 
 latency_LDFLAGS = @XENO_USER_LDFLAGS@
 

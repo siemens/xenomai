@@ -17,7 +17,7 @@
  */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-#include <xenomai/nucleus/shadow.h>
+#include <nucleus/shadow.h>
 #endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE*/
 #include <asm/xenomai/system.h> /* For xnlock. */
 #include <posix/timer.h>        /* For pse51_timer_notified. */

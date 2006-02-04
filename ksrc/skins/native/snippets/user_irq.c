@@ -1,5 +1,5 @@
-#include <xenomai/native/task.h>
-#include <xenomai/native/intr.h>
+#include <native/task.h>
+#include <native/intr.h>
 
 #define IRQ_NUMBER 7  /* Intercept interrupt #7 */
 #define TASK_PRIO  99 /* Highest RT priority */

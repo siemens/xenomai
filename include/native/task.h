@@ -22,10 +22,10 @@
 #ifndef _XENO_TASK_H
 #define _XENO_TASK_H
 
-#include <xenomai/nucleus/core.h>
-#include <xenomai/nucleus/thread.h>
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/native/timer.h>
+#include <nucleus/core.h>
+#include <nucleus/thread.h>
+#include <nucleus/synch.h>
+#include <native/timer.h>
 
 /* Creation flags. */
 #define T_FPU     XNFPU

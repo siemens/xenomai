@@ -20,8 +20,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <xenomai/posix/syscall.h>
-#include <xenomai/posix/posix.h>
+#include <posix/syscall.h>
+#include <posix/posix.h>
 #include <posix/thread.h>
 #include <posix/mutex.h>
 #include <posix/cond.h>

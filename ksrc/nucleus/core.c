@@ -17,8 +17,8 @@
  * 02111-1307, USA.
  */
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/core.h>
+#include <nucleus/pod.h>
+#include <nucleus/core.h>
 
 static xnpod_t __xeno_pod;
 

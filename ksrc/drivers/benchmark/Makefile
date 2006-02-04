@@ -8,6 +8,8 @@ obj-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += xeno_timerbench.o
 
 xeno_timerbench-y := timerbench.o
 
+EXTRA_CFLAGS += -Iinclude/xenomai
+
 else
 
 # Makefile frag for Linux v2.4
@@ -22,7 +24,7 @@ xeno_timerbench-objs := timerbench.o
 
 export-objs := $(xeno_timerbench-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat -I$(TOPDIR)/include/xenomai
+EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
 

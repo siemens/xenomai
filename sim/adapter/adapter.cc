@@ -20,8 +20,8 @@
 
 #include <xeno_config.h>
 #include <stdio.h>
-#include "xenomai/nucleus/pod.h"
-#include "xenomai/nucleus/synch.h"
+#include "nucleus/pod.h"
+#include "nucleus/synch.h"
 #include "vm/manager.h"
 #include "vm/interrupt.h"
 #include "vm/display.h"

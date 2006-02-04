@@ -38,7 +38,7 @@
 #endif /* __KERNEL__ */
 
 #include <asm/xenomai/system.h>
-#include <xenomai/nucleus/compiler.h>
+#include <nucleus/compiler.h>
 
 typedef unsigned long xnsigmask_t;
 

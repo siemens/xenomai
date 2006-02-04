@@ -6,6 +6,8 @@ obj-$(CONFIG_XENO_SKIN_VRTX) += xeno_vrtx.o
 
 xeno_vrtx-y := event.o heap.o mb.o module.o mx.o pt.o queue.o sem.o task.o time.o
 
+EXTRA_CFLAGS += -Iinclude/xenomai
+
 else
 
 # Makefile frag for Linux v2.4
@@ -20,7 +22,7 @@ xeno_vrtx-objs := event.o heap.o mb.o module.o mx.o pt.o queue.o sem.o task.o ti
 
 export-objs := $(xeno_vrtx-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
 

@@ -49,10 +49,10 @@
  *
  *@{*/
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/native/registry.h>
-#include <xenomai/native/task.h>
+#include <nucleus/pod.h>
+#include <nucleus/heap.h>
+#include <native/registry.h>
+#include <native/task.h>
 
 static RT_OBJECT __xeno_obj_slots[CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS];
 

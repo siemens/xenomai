@@ -40,10 +40,10 @@
  *
  *@{*/
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/native/task.h>
-#include <xenomai/native/sem.h>
-#include <xenomai/native/registry.h>
+#include <nucleus/pod.h>
+#include <native/task.h>
+#include <native/sem.h>
+#include <native/registry.h>
 
 #ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
 

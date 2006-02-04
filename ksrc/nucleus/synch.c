@@ -31,11 +31,11 @@
  *@{*/
 
 #include <stdarg.h>
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/nucleus/thread.h>
-#include <xenomai/nucleus/module.h>
-#include <xenomai/nucleus/ltt.h>
+#include <nucleus/pod.h>
+#include <nucleus/synch.h>
+#include <nucleus/thread.h>
+#include <nucleus/module.h>
+#include <nucleus/ltt.h>
 
 /*! 
  * \fn void xnsynch_init(xnsynch_t *synch, xnflags_t flags);

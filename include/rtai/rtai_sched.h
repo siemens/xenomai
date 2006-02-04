@@ -21,8 +21,8 @@
 #ifndef _RTAI_XENO_SCHED_H
 #define _RTAI_XENO_SCHED_H
 
-#include <xenomai/rtai/rtai_hal.h>
-#include <xenomai/rtai/task.h>
-#include <xenomai/rtai/timer.h>
+#include <rtai/rtai_hal.h>
+#include <rtai/task.h>
+#include <rtai/timer.h>
 
 #endif /* !_RTAI_XENO_SCHED_H */

@@ -1,7 +1,7 @@
 #ifndef MMAN_H
 #define MMAN_H
 
-#include <xenomai/nucleus/queue.h>
+#include <nucleus/queue.h>
 
 struct mm_struct;
 

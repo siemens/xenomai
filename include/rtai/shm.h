@@ -21,10 +21,10 @@
 #ifndef _RTAI_SHM_H
 #define _RTAI_SHM_H
 
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/rtai/types.h>
-#include <xenomai/rtai/shm.h>
-#include <xenomai/rtai/rtai_nam2num.h>
+#include <nucleus/heap.h>
+#include <rtai/types.h>
+#include <rtai/shm.h>
+#include <rtai/rtai_nam2num.h>
 
 #define USE_VMALLOC     0
 #define USE_GFP_KERNEL  1

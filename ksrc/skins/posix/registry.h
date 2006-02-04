@@ -2,8 +2,8 @@
 #define PSE51_REGISTRY_H
 
 #include <stdarg.h>
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/posix/posix.h>
+#include <nucleus/synch.h>
+#include <posix/posix.h>
 
 #define PSE51_MAXNAME 64
 

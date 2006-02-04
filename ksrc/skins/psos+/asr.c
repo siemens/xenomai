@@ -17,8 +17,8 @@
  * 02111-1307, USA.
  */
 
-#include "xenomai/psos+/task.h"
-#include "xenomai/psos+/asr.h"
+#include "psos+/task.h"
+#include "psos+/asr.h"
 
 void psosasr_init (void) {
 }

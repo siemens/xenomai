@@ -8,9 +8,9 @@
 #include <signal.h>
 #include <getopt.h>
 #include <time.h>
-#include <xenomai/native/task.h>
-#include <xenomai/native/timer.h>
-#include <xenomai/native/sem.h>
+#include <native/task.h>
+#include <native/timer.h>
+#include <native/sem.h>
 #include <rtdm/rtbenchmark.h>
 
 RT_TASK latency_task, display_task;

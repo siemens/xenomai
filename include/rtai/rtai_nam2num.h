@@ -19,7 +19,7 @@
 #ifndef _RTAI_XENO_NAM2NUM_H
 #define _RTAI_XENO_NAM2NUM_H
 
-#include <xenomai/rtai/rtai_types.h>
+#include <rtai/rtai_types.h>
 
 static inline unsigned long nam2num (const char *name)
 {

@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include <xenomai/native/task.h>
-#include <xenomai/native/queue.h>
+#include <native/task.h>
+#include <native/queue.h>
 
 #define CONSUMER_TASK_PRI    1
 #define CONSUMER_STACK_SIZE  8192

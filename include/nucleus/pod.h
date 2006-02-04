@@ -31,8 +31,8 @@
 /*! \addtogroup pod
  *@{*/
 
-#include <xenomai/nucleus/thread.h>
-#include <xenomai/nucleus/intr.h>
+#include <nucleus/thread.h>
+#include <nucleus/intr.h>
 
 /* Creation flags */
 #define XNDREORD 0x00000001     /* Don't reorder pend queues upon prio change */

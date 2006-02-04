@@ -22,9 +22,9 @@
 #ifndef _XENO_QUEUE_H
 #define _XENO_QUEUE_H
 
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/native/types.h>
+#include <nucleus/synch.h>
+#include <nucleus/heap.h>
+#include <native/types.h>
 
 /* Creation flags. */
 #define Q_PRIO   XNSYNCH_PRIO	/* Pend by task priority order. */

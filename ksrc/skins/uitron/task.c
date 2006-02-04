@@ -16,7 +16,7 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "xenomai/uitron/task.h"
+#include "uitron/task.h"
 
 static xnqueue_t uitaskq;
 

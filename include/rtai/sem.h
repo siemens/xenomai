@@ -21,7 +21,7 @@
 #ifndef _RTAI_SEM_H
 #define _RTAI_SEM_H
 
-#include <xenomai/rtai/types.h>
+#include <rtai/types.h>
 
 typedef struct rt_sem_placeholder {
     rt_handle_t opaque;

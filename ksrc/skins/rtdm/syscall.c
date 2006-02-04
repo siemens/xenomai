@@ -17,9 +17,9 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <xenomai/nucleus/shadow.h>
-#include <xenomai/rtdm/rtdm_driver.h>
-#include <xenomai/rtdm/syscall.h>
+#include <nucleus/shadow.h>
+#include <rtdm/rtdm_driver.h>
+#include <rtdm/syscall.h>
 
 #include "rtdm/core.h"
 

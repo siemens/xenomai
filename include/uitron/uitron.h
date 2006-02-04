@@ -19,7 +19,7 @@
 #ifndef _XENO_SKIN_UITRON_H
 #define _XENO_SKIN_UITRON_H
 
-#include <xenomai/nucleus/xenomai.h>
+#include <nucleus/xenomai.h>
 
 #define uITRON_SKIN_VERSION_CODE     0x00000002
 #define uITRON_SKIN_MAGIC            0x54524F4E

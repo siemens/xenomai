@@ -20,22 +20,22 @@
  */
 
 #include <linux/ioport.h>
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/nucleus/shadow.h>
-#include <xenomai/native/syscall.h>
-#include <xenomai/native/registry.h>
-#include <xenomai/native/task.h>
-#include <xenomai/native/timer.h>
-#include <xenomai/native/sem.h>
-#include <xenomai/native/event.h>
-#include <xenomai/native/mutex.h>
-#include <xenomai/native/cond.h>
-#include <xenomai/native/queue.h>
-#include <xenomai/native/heap.h>
-#include <xenomai/native/alarm.h>
-#include <xenomai/native/intr.h>
-#include <xenomai/native/pipe.h>
+#include <nucleus/pod.h>
+#include <nucleus/heap.h>
+#include <nucleus/shadow.h>
+#include <native/syscall.h>
+#include <native/registry.h>
+#include <native/task.h>
+#include <native/timer.h>
+#include <native/sem.h>
+#include <native/event.h>
+#include <native/mutex.h>
+#include <native/cond.h>
+#include <native/queue.h>
+#include <native/heap.h>
+#include <native/alarm.h>
+#include <native/intr.h>
+#include <native/pipe.h>
 
 /* This file implements the Xenomai syscall wrappers;
  *
@@ -859,40 +859,6 @@ static int __rt_task_reply (struct task_struct *curr, struct pt_regs *regs)
 #define __rt_task_reply    __rt_call_not_available
 
 #endif /* CONFIG_XENO_OPT_NATIVE_MPS */
-
-/*
- * int __rt_timer_start(RTIME *tickvalp)
- */
-
-static int __rt_timer_start (struct task_struct *curr, struct pt_regs *regs)
-
-{
-    RTIME tickval;
-
-    __xn_copy_from_user(curr,&tickval,(void __user *)__xn_reg_arg1(regs),sizeof(tickval));
-
-    if (testbits(nkpod->status,XNTIMED))
-	{
-	if ((tickval == XN_APERIODIC_TICK && xnpod_get_tickval() == 1) ||
-	    (tickval != XN_APERIODIC_TICK && xnpod_get_tickval() == tickval))
-	    return 0;
-
-	xnpod_stop_timer();
-	}
-
-    return xnpod_start_timer(tickval,XNPOD_DEFAULT_TICKHANDLER);
-}
-
-/*
- * int __rt_timer_stop(void)
- */
-
-static int __rt_timer_stop (struct task_struct *curr, struct pt_regs *regs)
-
-{
-    rt_timer_stop();
-    return 0;
-}
 
 /*
  * int __rt_timer_read(RTIME *timep)
@@ -3504,7 +3470,8 @@ static int __rt_misc_put_io_region (struct task_struct *curr, struct pt_regs *re
 }
 
 static  __attribute__((unused))
-int __rt_call_not_available (struct task_struct *curr, struct pt_regs *regs) {
+int __rt_call_not_available (struct task_struct *curr, struct pt_regs *regs)
+{
     return -ENOSYS;
 }
 
@@ -3530,8 +3497,8 @@ static xnsysent_t __systab[] = {
     [__native_task_send ] = { &__rt_task_send, __xn_exec_primary },
     [__native_task_receive ] = { &__rt_task_receive, __xn_exec_primary },
     [__native_task_reply ] = { &__rt_task_reply, __xn_exec_primary },
-    [__native_timer_start ] = { &__rt_timer_start, __xn_exec_lostage|__xn_exec_switchback },
-    [__native_timer_stop ] = { &__rt_timer_stop, __xn_exec_lostage|__xn_exec_switchback },
+    [__native_timer_start ] = { &__rt_call_not_available, __xn_exec_any },
+    [__native_timer_stop ] = { &__rt_call_not_available, __xn_exec_any },
     [__native_timer_read ] = { &__rt_timer_read, __xn_exec_any },
     [__native_timer_tsc ] = { &__rt_timer_tsc, __xn_exec_any },
     [__native_timer_ns2ticks ] = { &__rt_timer_ns2ticks, __xn_exec_any },

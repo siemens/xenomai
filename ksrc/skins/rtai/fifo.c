@@ -18,9 +18,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/rtai/fifo.h>
+#include <nucleus/pod.h>
+#include <nucleus/heap.h>
+#include <rtai/fifo.h>
 
 static RT_FIFO __fifo_table[CONFIG_XENO_OPT_PIPE_NRDEV];
 

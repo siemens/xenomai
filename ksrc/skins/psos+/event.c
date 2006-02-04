@@ -17,7 +17,7 @@
  * 02111-1307, USA.
  */
 
-#include "xenomai/psos+/task.h"
+#include "psos+/task.h"
 
 void ev_init (psosevent_t *evgroup)
 

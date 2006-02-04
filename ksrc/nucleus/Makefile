@@ -12,6 +12,8 @@ xeno_nucleus-$(CONFIG_XENO_OPT_PIPE) += pipe.o
 
 xeno_nucleus-$(CONFIG_LTT) += ltt.o
 
+EXTRA_CFLAGS += -Iinclude/xenomai
+
 else
 
 # Makefile frag for Linux v2.4
@@ -33,7 +35,7 @@ xeno_nucleus-objs += $(opt_objs-y)
 
 export-objs := $(xeno_nucleus-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
 

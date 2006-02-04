@@ -18,7 +18,10 @@ libpthread_rt_la_SOURCES = \
 	rtdm.c \
 	wrappers.c
 
-libpthread_rt_la_CPPFLAGS = @XENO_USER_CFLAGS@ -I$(top_srcdir)/include/posix
+libpthread_rt_la_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/include/posix
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(libdir)

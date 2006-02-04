@@ -18,7 +18,7 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "xenomai/vrtx/task.h"
+#include "vrtx/task.h"
 
 #define TEN_POW_9 1000000000ULL
 

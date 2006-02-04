@@ -19,9 +19,9 @@
 #ifndef _POSIX_INTERNAL_H
 #define _POSIX_INTERNAL_H
 
-#include <xenomai/nucleus/xenomai.h>
-#include <xenomai/nucleus/core.h>
-#include <xenomai/posix/posix.h>
+#include <nucleus/xenomai.h>
+#include <nucleus/core.h>
+#include <posix/posix.h>
 
 #define PSE51_MAGIC(n) (0x8686##n##n)
 #define PSE51_ANY_MAGIC         PSE51_MAGIC(00)

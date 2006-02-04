@@ -23,9 +23,9 @@
 #include <limits.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <xenomai/posix/posix.h>
-#include <xenomai/posix/syscall.h>
-#include <xenomai/rtdm/syscall.h>
+#include <posix/posix.h>
+#include <posix/syscall.h>
+#include <rtdm/syscall.h>
 
 int __pse51_muxid = -1;
 int __rtdm_muxid  = -1;

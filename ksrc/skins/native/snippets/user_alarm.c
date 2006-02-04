@@ -1,5 +1,5 @@
-#include <xenomai/native/task.h>
-#include <xenomai/native/alarm.h>
+#include <native/task.h>
+#include <native/alarm.h>
 
 #define TASK_PRIO  99 /* Highest RT priority */
 #define TASK_MODE  0  /* No flags */

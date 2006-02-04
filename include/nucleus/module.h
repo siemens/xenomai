@@ -20,7 +20,7 @@
 #ifndef _XENO_NUCLEUS_MODULE_H
 #define _XENO_NUCLEUS_MODULE_H
 
-#include <xenomai/nucleus/queue.h>
+#include <nucleus/queue.h>
 
 #define XNMOD_GHOLDER_REALLOC   128 /* Realloc count */
 #define XNMOD_GHOLDER_THRESHOLD 64  /* Safety threshold */

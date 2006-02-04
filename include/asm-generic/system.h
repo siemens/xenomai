@@ -37,7 +37,7 @@
 #include <linux/config.h>
 #include <asm/xenomai/hal.h>
 #include <asm/xenomai/atomic.h>
-#include <xenomai/nucleus/shadow.h>
+#include <nucleus/shadow.h>
 
 #define module_param_value(parm) (parm)
 

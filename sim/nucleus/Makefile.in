@@ -246,7 +246,8 @@ AM_CPPFLAGS = \
 	--gcic-backend=$(prefix)/libexec/gcic \
 	--kernel-code \
 	$(atomic_core) \
-	-I$(srcdir)/../include
+	-I$(srcdir)/../include \
+	-I$(top_srcdir)/../include
 
 libnucleus_s_a_LIBADD = ../adapter/adapter.o
 all: all-am

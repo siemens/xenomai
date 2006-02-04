@@ -21607,12 +21607,6 @@ XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
 
 
 
-base=include
-          ac_config_links="$ac_config_links src/include/xenomai:$base"
-
-base=rtdm
-          ac_config_links="$ac_config_links src/include/$base:include/$base"
-
 base=asm-$XENO_TARGET_ARCH
           ac_config_links="$ac_config_links src/include/asm/xenomai:include/$base"
 
@@ -22294,8 +22288,6 @@ do
   "doc/docbook/custom-stylesheets/xsl/html/Makefile" ) CONFIG_FILES="$CONFIG_FILES doc/docbook/custom-stylesheets/xsl/html/Makefile" ;;
   "doc/docbook/custom-stylesheets/xsl/html/chunk.xsl" ) CONFIG_FILES="$CONFIG_FILES doc/docbook/custom-stylesheets/xsl/html/chunk.xsl" ;;
   "doc/docbook/xenomai/Makefile" ) CONFIG_FILES="$CONFIG_FILES doc/docbook/xenomai/Makefile" ;;
-  "src/include/xenomai" ) CONFIG_LINKS="$CONFIG_LINKS src/include/xenomai:$base" ;;
-  "src/include/$base" ) CONFIG_LINKS="$CONFIG_LINKS src/include/$base:include/$base" ;;
   "src/include/asm/xenomai" ) CONFIG_LINKS="$CONFIG_LINKS src/include/asm/xenomai:include/$base" ;;
   "src/include/$base/xenomai" ) CONFIG_LINKS="$CONFIG_LINKS src/include/$base/xenomai:include/$base" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;

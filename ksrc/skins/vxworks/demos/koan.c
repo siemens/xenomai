@@ -19,8 +19,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <xenomai/vxworks/vxworks.h>
-#include <xenomai/native/timer.h>
+#include <vxworks/vxworks.h>
+#include <native/timer.h>
 
 #define CLK_RATE 50
 

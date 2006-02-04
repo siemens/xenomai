@@ -24,7 +24,7 @@
 
 #define XENO_SKIN_MAGIC  0x52544149
 
-#include <xenomai/nucleus/types.h>
+#include <nucleus/types.h>
 
 #define TM_INFINITE XN_INFINITE
 #define TM_NONBLOCK XN_NONBLOCK

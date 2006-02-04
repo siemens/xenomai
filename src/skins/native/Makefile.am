@@ -17,4 +17,6 @@ libnative_la_SOURCES = \
 	task.c \
 	timer.c
 
-libnative_la_CPPFLAGS = @XENO_USER_CFLAGS@
+libnative_la_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/include

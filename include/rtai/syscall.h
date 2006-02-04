@@ -20,7 +20,7 @@
 #ifndef _RTAI_SYSCALL_H
 #define _RTAI_SYSCALL_H
 
-#include <xenomai/rtai/types.h>
+#include <rtai/types.h>
 #include <asm/xenomai/syscall.h>
 
 #define __rtai_nop         0

@@ -20,7 +20,7 @@
 #ifndef _POSIX_COND_H
 #define _POSIX_COND_H
 
-#include <xenomai/posix/posix.h>
+#include <posix/posix.h>
 
 int pse51_cond_timedwait_internal(struct __shadow_cond *cond,
                                   struct __shadow_mutex *mutex,

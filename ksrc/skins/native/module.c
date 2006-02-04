@@ -28,23 +28,23 @@
  *
  */
 
-#include <xenomai/nucleus/pod.h>
+#include <nucleus/pod.h>
 #ifdef __KERNEL__
 #include <linux/init.h>
-#include <xenomai/native/syscall.h>
+#include <native/syscall.h>
 #endif /* __KERNEL__ */
-#include <xenomai/native/task.h>
-#include <xenomai/native/timer.h>
-#include <xenomai/native/registry.h>
-#include <xenomai/native/sem.h>
-#include <xenomai/native/event.h>
-#include <xenomai/native/mutex.h>
-#include <xenomai/native/cond.h>
-#include <xenomai/native/pipe.h>
-#include <xenomai/native/queue.h>
-#include <xenomai/native/heap.h>
-#include <xenomai/native/alarm.h>
-#include <xenomai/native/intr.h>
+#include <native/task.h>
+#include <native/timer.h>
+#include <native/registry.h>
+#include <native/sem.h>
+#include <native/event.h>
+#include <native/mutex.h>
+#include <native/cond.h>
+#include <native/pipe.h>
+#include <native/queue.h>
+#include <native/heap.h>
+#include <native/alarm.h>
+#include <native/intr.h>
 
 MODULE_DESCRIPTION("Native skin");
 MODULE_AUTHOR("rpm@xenomai.org");

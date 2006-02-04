@@ -18,8 +18,8 @@
 #ifndef _POSIX_INTR_H
 #define _POSIX_INTR_H
 
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/nucleus/intr.h>
+#include <nucleus/synch.h>
+#include <nucleus/intr.h>
 
 #define PTHREAD_IAUTOENA    XN_ISR_ENABLE
 #define PTHREAD_IPROPAGATE  XN_ISR_CHAINED

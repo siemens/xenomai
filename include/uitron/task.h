@@ -19,7 +19,7 @@
 #ifndef _uITRON_task_h
 #define _uITRON_task_h
 
-#include "xenomai/uitron/defs.h"
+#include "uitron/defs.h"
 
 #define uITRON_TASK_MAGIC 0x85850101
 

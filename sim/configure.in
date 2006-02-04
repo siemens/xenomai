@@ -414,8 +414,6 @@ dnl
 dnl Build the Makefiles
 dnl
 
-base=include
-AC_CONFIG_LINKS([include/xenomai:../$base])
 base=asm-sim
 AC_CONFIG_LINKS([include/asm/xenomai:../include/$base])
 

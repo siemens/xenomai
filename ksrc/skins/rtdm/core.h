@@ -20,8 +20,8 @@
 #ifndef _RTDM_CORE_H
 #define _RTDM_CORE_H
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/rtdm/rtdm_driver.h>
+#include <nucleus/pod.h>
+#include <rtdm/rtdm_driver.h>
 
 
 #define DEF_FILDES_COUNT    64  /* default number of file descriptors */

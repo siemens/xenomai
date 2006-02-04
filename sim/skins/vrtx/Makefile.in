@@ -232,7 +232,8 @@ AM_CPPFLAGS = \
 	--gcic-backend=$(prefix)/libexec/gcic \
 	--skin-code \
 	$(atomic_core) \
-	-I$(srcdir)/../include
+	-I$(srcdir)/../include \
+	-I$(top_srcdir)/../include
 
 lib_LIBRARIES = libvrtx_s.a
 nodist_libvrtx_s_a_SOURCES = \

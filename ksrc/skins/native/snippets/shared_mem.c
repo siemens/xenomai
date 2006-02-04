@@ -1,4 +1,4 @@
-#include <xenomai/native/heap.h>
+#include <native/heap.h>
 
 RT_HEAP heap_desc;
 

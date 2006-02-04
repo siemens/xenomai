@@ -6,4 +6,6 @@ libuvm_la_SOURCES = \
 	init.c \
 	uvm.c
 
-libuvm_la_CPPFLAGS = @XENO_USER_CFLAGS@
+libuvm_la_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/include

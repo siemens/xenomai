@@ -23,7 +23,7 @@
 
 #define RTAI_SKIN_MAGIC  0x56544442
 
-#include <xenomai/nucleus/types.h>
+#include <nucleus/types.h>
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 

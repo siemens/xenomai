@@ -21,7 +21,7 @@
 #ifndef _vrtx_heap_h
 #define _vrtx_heap_h
 
-#include "xenomai/vrtx/defs.h"
+#include "vrtx/defs.h"
 
 #define VRTX_HEAP_MAGIC 0x82820505
 

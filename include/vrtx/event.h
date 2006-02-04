@@ -21,7 +21,7 @@
 #ifndef _vrtx_event_h
 #define _vrtx_event_h
 
-#include "xenomai/vrtx/defs.h"
+#include "vrtx/defs.h"
 
 #define VRTX_EVENT_MAGIC 0x82820606
 

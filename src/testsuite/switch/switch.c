@@ -12,9 +12,9 @@
 #include <string.h>
 #include <signal.h>
 #include <getopt.h>
-#include <xenomai/native/task.h>
-#include <xenomai/native/timer.h>
-#include <xenomai/native/sem.h>
+#include <native/task.h>
+#include <native/timer.h>
+#include <native/sem.h>
 
 RT_TASK event_task, worker_task;
 

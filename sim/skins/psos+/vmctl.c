@@ -17,8 +17,8 @@
  */
 
 #include "xeno_config.h"
-#include "xenomai/psos+/task.h"
-#include "xenomai/psos+/queue.h"
+#include "psos+/task.h"
+#include "psos+/queue.h"
 
 MVM_DECL_DISPLAY_CONTROL(psostask,
 			 mvm_psostask_objctl,

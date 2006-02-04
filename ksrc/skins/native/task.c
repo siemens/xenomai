@@ -38,10 +38,10 @@
  *
  *@{*/
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/native/task.h>
-#include <xenomai/native/registry.h>
+#include <nucleus/pod.h>
+#include <nucleus/heap.h>
+#include <native/task.h>
+#include <native/registry.h>
 
 static DECLARE_XNQUEUE(__xeno_task_q);
 

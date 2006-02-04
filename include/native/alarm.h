@@ -22,9 +22,9 @@
 #ifndef _XENO_ALARM_H
 #define _XENO_ALARM_H
 
-#include <xenomai/nucleus/timer.h>
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/native/types.h>
+#include <nucleus/timer.h>
+#include <nucleus/synch.h>
+#include <native/types.h>
 
 typedef struct rt_alarm_info {
 

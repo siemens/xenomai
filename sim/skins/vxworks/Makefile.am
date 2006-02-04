@@ -13,8 +13,9 @@ AM_CPPFLAGS = \
 	--gcic-backend=$(prefix)/libexec/gcic \
 	--skin-code \
 	$(atomic_core) \
+	-I$(srcdir)/../include \
 	-I$(top_srcdir)/../ksrc/skins \
-	-I$(srcdir)/../include
+	-I$(top_srcdir)/../include
 
 lib_LIBRARIES = libvxworks_s.a
 

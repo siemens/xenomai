@@ -13,6 +13,8 @@ else
 xeno_hal-$(CONFIG_PPC) += switch.o
 endif
 
+EXTRA_CFLAGS += -Iinclude/xenomai
+
 else
 
 # Makefile frag for Linux v2.4
@@ -32,7 +34,7 @@ endif
 
 export-objs := hal.o
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
 
 EXTRA_AFLAGS += -I$(TOPDIR)/arch/ppc/kernel
 

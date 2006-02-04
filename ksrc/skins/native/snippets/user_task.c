@@ -1,4 +1,4 @@
-#include <xenomai/native/task.h>
+#include <native/task.h>
 
 #define TASK_PRIO  99 /* Highest RT priority */
 #define TASK_MODE  0  /* No flags */

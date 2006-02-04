@@ -20,7 +20,7 @@
 #ifndef _XENO_NUCLEUS_INTR_H
 #define _XENO_NUCLEUS_INTR_H
 
-#include <xenomai/nucleus/types.h>
+#include <nucleus/types.h>
 
 #define XN_ISR_HANDLED   0x0
 #define XN_ISR_CHAINED   0x1

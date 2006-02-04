@@ -27079,9 +27079,6 @@ fi
 
 
 
-base=include
-          ac_config_links="$ac_config_links include/xenomai:../$base"
-
 base=asm-sim
           ac_config_links="$ac_config_links include/asm/xenomai:../include/$base"
 
@@ -27692,7 +27689,6 @@ do
   "skins/rtai/Makefile" ) CONFIG_FILES="$CONFIG_FILES skins/rtai/Makefile" ;;
   "gcic/Makefile" ) CONFIG_FILES="$CONFIG_FILES gcic/Makefile" ;;
   "scope/Makefile" ) CONFIG_FILES="$CONFIG_FILES scope/Makefile" ;;
-  "include/xenomai" ) CONFIG_LINKS="$CONFIG_LINKS include/xenomai:../$base" ;;
   "include/asm/xenomai" ) CONFIG_LINKS="$CONFIG_LINKS include/asm/xenomai:../include/$base" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   "include/xeno_config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS include/xeno_config.h" ;;

@@ -18,10 +18,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/nucleus/queue.h>
-#include <xenomai/rtai/shm.h>
+#include <nucleus/pod.h>
+#include <nucleus/heap.h>
+#include <nucleus/queue.h>
+#include <rtai/shm.h>
 
 
 typedef struct xnshm_a {

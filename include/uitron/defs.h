@@ -19,8 +19,8 @@
 #ifndef _uITRON_defs_h
 #define _uITRON_defs_h
 
-#include "xenomai/nucleus/xenomai.h"
-#include "xenomai/uitron/uitron.h"
+#include "nucleus/xenomai.h"
+#include "uitron/uitron.h"
 
 #define ui_h2obj(h,m,t) \
 ((h) && ((t *)(h))->magic == (m) ? ((t *)(h)) : NULL)

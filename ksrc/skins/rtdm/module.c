@@ -40,10 +40,10 @@
  * to extend a device profile with more hardware-specific functions.
  */
 
-#include <xenomai/nucleus/pod.h>
+#include <nucleus/pod.h>
 #ifdef __KERNEL__
-#include <xenomai/nucleus/core.h>
-#include <xenomai/rtdm/syscall.h>
+#include <nucleus/core.h>
+#include <rtdm/syscall.h>
 #endif /* __KERNEL__ */
 
 #include "rtdm/core.h"

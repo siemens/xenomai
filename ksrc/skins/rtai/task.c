@@ -18,9 +18,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/rtai/task.h>
+#include <nucleus/pod.h>
+#include <nucleus/heap.h>
+#include <rtai/task.h>
 
 static DECLARE_XNQUEUE(__rtai_task_q);
 

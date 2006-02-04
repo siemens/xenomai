@@ -22,9 +22,9 @@
 #ifndef _XENO_PIPE_H
 #define _XENO_PIPE_H
 
-#include <xenomai/nucleus/pipe.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/native/types.h>
+#include <nucleus/pipe.h>
+#include <nucleus/heap.h>
+#include <native/types.h>
 
 /* Operation flags. */
 #define P_NORMAL  XNPIPE_NORMAL

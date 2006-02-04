@@ -22,7 +22,7 @@
 #ifndef _XENO_MISC_H
 #define _XENO_MISC_H
 
-#include <xenomai/native/types.h>
+#include <native/types.h>
 
 #if !defined(__KERNEL__) && !defined(__XENO_SIM__)
 

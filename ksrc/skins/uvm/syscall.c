@@ -17,12 +17,12 @@
  * 02111-1307, USA.
  */
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/nucleus/shadow.h>
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/asm-uvm/syscall.h>
-#include <xenomai/asm-uvm/uvm.h>
+#include <nucleus/pod.h>
+#include <nucleus/heap.h>
+#include <nucleus/shadow.h>
+#include <nucleus/synch.h>
+#include <asm-uvm/syscall.h>
+#include <asm-uvm/uvm.h>
 
 static int __vm_muxid;
 

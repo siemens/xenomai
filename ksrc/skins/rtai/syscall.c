@@ -17,10 +17,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/nucleus/heap.h>
-#include <xenomai/nucleus/shadow.h>
-#include <xenomai/rtai/syscall.h>
+#include <nucleus/pod.h>
+#include <nucleus/heap.h>
+#include <nucleus/shadow.h>
+#include <rtai/syscall.h>
 
 static int __rtai_muxid;
 

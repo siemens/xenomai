@@ -22,8 +22,8 @@
 #ifndef _XENO_COND_H
 #define _XENO_COND_H
 
-#include <xenomai/nucleus/synch.h>
-#include <xenomai/native/mutex.h>
+#include <nucleus/synch.h>
+#include <native/mutex.h>
 
 typedef struct rt_cond_info {
 

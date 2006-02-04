@@ -28,6 +28,8 @@ xeno_native-$(CONFIG_XENO_OPT_NATIVE_ALARM) += alarm.o
 
 xeno_native-$(CONFIG_XENO_OPT_NATIVE_INTR) += intr.o
 
+EXTRA_CFLAGS += -Iinclude/xenomai
+
 else
 
 # Makefile frag for Linux v2.4
@@ -55,7 +57,7 @@ xeno_native-objs += $(opt_objs-y)
 
 export-objs := $(xeno_native-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
 

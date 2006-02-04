@@ -1,4 +1,4 @@
-#include <xenomai/native/mutex.h>
+#include <native/mutex.h>
 
 RT_MUTEX mutex_desc;
 

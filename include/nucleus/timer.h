@@ -20,7 +20,7 @@
 #ifndef _XENO_NUCLEUS_TIMER_H
 #define _XENO_NUCLEUS_TIMER_H
 
-#include <xenomai/nucleus/queue.h>
+#include <nucleus/queue.h>
 
 #if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)
 

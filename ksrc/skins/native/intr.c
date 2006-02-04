@@ -27,10 +27,10 @@
  *
  *@{*/
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/native/task.h>
-#include <xenomai/native/registry.h>
-#include <xenomai/native/intr.h>
+#include <nucleus/pod.h>
+#include <native/task.h>
+#include <native/registry.h>
+#include <native/intr.h>
 
 static DECLARE_XNQUEUE(__xeno_intr_q);
 

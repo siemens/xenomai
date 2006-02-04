@@ -34,14 +34,14 @@
  *
  *@{*/
 
-#include <xenomai/nucleus/pod.h>
-#include <xenomai/native/task.h>
-#include <xenomai/native/alarm.h>
-#include <xenomai/native/registry.h>
+#include <nucleus/pod.h>
+#include <native/task.h>
+#include <native/alarm.h>
+#include <native/registry.h>
 
 #ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
 
-#include <xenomai/native/timer.h>
+#include <native/timer.h>
 
 static int __alarm_read_proc (char *page,
 			      char **start,

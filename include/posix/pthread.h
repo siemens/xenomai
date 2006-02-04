@@ -21,7 +21,7 @@
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
-#include <xenomai/nucleus/xenomai.h>
+#include <nucleus/xenomai.h>
 
 #ifdef __KERNEL__
 #include <linux/types.h>

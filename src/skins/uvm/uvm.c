@@ -24,8 +24,8 @@
 #include <unistd.h>
 #include <limits.h>
 #include <pthread.h>
-#include <xenomai/asm-uvm/syscall.h>
-#include <xenomai/asm-uvm/uvm.h>
+#include <asm-uvm/syscall.h>
+#include <asm-uvm/uvm.h>
 
 extern int __uvm_muxid;
 

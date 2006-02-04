@@ -21,8 +21,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <xenomai/native/syscall.h>
-#include <xenomai/native/task.h>
+#include <native/syscall.h>
+#include <native/task.h>
 
 pthread_key_t __native_tskey;
 

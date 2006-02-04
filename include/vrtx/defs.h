@@ -21,8 +21,8 @@
 #ifndef _vrtx_defs_h
 #define _vrtx_defs_h
 
-#include "xenomai/nucleus/xenomai.h"
-#include "xenomai/vrtx/vrtx.h"
+#include "nucleus/xenomai.h"
+#include "vrtx/vrtx.h"
 
 #define VRTX_MAX_TID 512	/* i.e. 1 - 511 */
 #define VRTX_MAX_PID 32  	/* i.e. 0 - 31 */

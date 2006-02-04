@@ -21,7 +21,7 @@
 #ifndef _XENO_NUCLEUS_LTT_H
 #define _XENO_NUCLEUS_LTT_H
 
-#include <xenomai/nucleus/types.h>
+#include <nucleus/types.h>
 
 #ifdef CONFIG_LTT
 

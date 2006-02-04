@@ -24,8 +24,8 @@
 #include <pthread.h>
 #include <signal.h>
 #include <limits.h>
-#include <xenomai/native/syscall.h>
-#include <xenomai/native/task.h>
+#include <native/syscall.h>
+#include <native/task.h>
 
 extern pthread_key_t __native_tskey;
 
