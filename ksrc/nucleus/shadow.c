@@ -1563,6 +1563,7 @@ static inline void do_schedule_event (struct task_struct *next)
 	    testbits(status,XNSTARTED) &&
 	    testbits(status,XNPEND))
 	    {
+	    ipipe_trace_panic_freeze();
 	    show_stack(xnthread_user_task(threadin),NULL);
             xnpod_fatal("blocked thread %s[%d] rescheduled?! (status=0x%lx, sig=%d, prev=%s[%d])",
 			threadin->name,

@@ -107,8 +107,10 @@ void __xeno_user_exit(void);
 
 #define xnpod_fatal(format,args...) \
 do { \
-   const char *panic = xnpod_fatal_helper(format,##args); \
-   xnarch_halt(panic); \
+    const char *panic; \
+    ipipe_trace_panic_freeze(); \
+    panic = xnpod_fatal_helper(format,##args); \
+    xnarch_halt(panic); \
 } while (0)
 
 #if defined(__XENO_SIM__) || defined(__XENO_UVM__)

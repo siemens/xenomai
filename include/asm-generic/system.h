@@ -39,6 +39,13 @@
 #include <asm/xenomai/atomic.h>
 #include <nucleus/shadow.h>
 
+#ifdef CONFIG_IPIPE_TRACE
+#include <linux/ipipe_trace.h>
+#else /* !CONFIG_IPIPE_TRACE */
+#define ipipe_trace_panic_freeze()
+#define ipipe_trace_panic_dump()
+#endif /* CONFIG_IPIPE_TRACE */
+
 #define module_param_value(parm) (parm)
 
 typedef unsigned long spl_t;
@@ -185,6 +192,7 @@ do { \
     rthal_emergency_console(); \
     xnarch_logerr("fatal: %s\n",emsg); \
     show_stack(NULL,NULL);			\
+    ipipe_trace_panic_dump();			\
     for (;;) cpu_relax();			\
 } while(0)
 

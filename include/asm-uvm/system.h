@@ -767,4 +767,7 @@ static inline void xnarch_sysfree (void *chunk, u_long bytes) {
 #define xnarch_post_graph(obj,state)
 #define xnarch_post_graph_if(obj,state,cond)
 
+/* Ipipe-tracer */
+#define ipipe_trace_panic_freeze()
+
 #endif /* !_XENO_ASM_UVM_SYSTEM_H */
