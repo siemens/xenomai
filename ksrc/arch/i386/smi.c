@@ -209,8 +209,9 @@ void rthal_smi_init(void)
 
 #else /* ! CONFIG_XENO_HW_SMI_WORKAROUND */
 
-    printk("Xenomai: Intel chipset found and SMI workaround not enabled,\n"
-           "       you may encounter high interrupt latencies.\n");
+   printk("Xenomai: Intel chipset found but SMI workaround not enabled (check\n"
+          "         CONFIG_XENO_HW_SMI_WORKAROUND). You may encounter high\n"
+          "         interrupt latencies!\n");
     pci_dev_put(dev);
 
 #endif /* ! CONFIG_XENO_HW_SMI_WORKAROUND */
