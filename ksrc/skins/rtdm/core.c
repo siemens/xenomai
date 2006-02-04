@@ -134,7 +134,7 @@ static int create_instance(struct rtdm_device *device,
     if (context) {
         xnlock_get_irqsave(&rt_dev_lock, s);
 
-        if (unlikely(context->device)) {
+        if (unlikely(context->device != NULL)) {
             xnlock_put_irqrestore(&rt_dev_lock, s);
             return -EBUSY;
         }
