@@ -63,7 +63,7 @@ static inline int __deprecated_call__ rt_timer_start(RTIME nstick)
     return 0;
 }
 
-void __deprecated_call__ rt_timer_stop(void)
+static inline void __deprecated_call__ rt_timer_stop(void)
 {
 }
 
