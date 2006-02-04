@@ -20,24 +20,19 @@
 #ifndef _XENO_NUCLEUS_COMPILER_H
 #define _XENO_NUCLEUS_COMPILER_H
 
-#ifdef __KERNEL__
-#include <linux/compiler.h>
-#define __deprecated__ __deprecated
-#define __deprecated_in_userspace__
-#define __deprecated_in_kernel__  __deprecated__
-#else /* !__KERNEL__ */
 #if __GNUC__ >= 3 && __GNUC_MINOR__ > 0
-#define __deprecated__	__attribute__((deprecated))
-#else
-#define __deprecated__	/* Unimplemented */
-#endif
-#ifndef __XENO_SIM__
-#define __deprecated_in_userspace__ __deprecated__
-#define __deprecated_in_kernel__
-#else /* __XENO_SIM__ */
-#define __deprecated_in_userspace__
-#define __deprecated_in_kernel__    __deprecated__
-#endif /* !__XENO_SIM__ */
-#endif /* __KERNEL__ */
+#define __deprecated_call__		__attribute__((deprecated))
+#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#define __deprecated_call_in_user__
+#define __deprecated_call_in_kernel__	__deprecated_call__
+#else /* !(__KERNEL__ || __XENO_SIM__) */
+#define __deprecated_call_in_user__	__deprecated_call__
+#define __deprecated_call_in_kernel__
+#endif /* __KERNEL__ || __XENO_SIM__ */
+#else /* !(__GNUC__ >= 3 && __GNUC_MINOR__ > 0) */
+#define __deprecated_call__
+#define __deprecated_call_in_user__
+#define __deprecated_call_in_kernel__
+#endif /* __GNUC__ >= 3 && __GNUC_MINOR__ > 0 */
 
 #endif /* !_XENO_NUCLEUS_COMPILER_H */
