@@ -11,13 +11,15 @@ if [ "$CONFIG_XENOMAI" = "y" -a "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	comment 'Machine'
 	bool 'Enable FPU support' CONFIG_XENO_HW_FPU
 
-	mainmenu_option next_comment
-	comment 'NMI watchdog'
-	bool 'Enable NMI watchdog' CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-	if [ "$CONFIG_XENO_HW_NMI_DEBUG_LATENCY" != "n" ]; then
-	    int 'NMI watchdog latency threshold (us)' CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX 0
+	if [ "$CONFIG_X86_LOCAL_APIC" = "y" ]; then
+	   mainmenu_option next_comment
+	   comment 'NMI watchdog'
+	   bool 'Enable NMI watchdog' CONFIG_XENO_HW_NMI_DEBUG_LATENCY
+	   if [ "$CONFIG_XENO_HW_NMI_DEBUG_LATENCY" != "n" ]; then
+	       int 'NMI watchdog latency threshold (us)' CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX 0
+	   fi
+	   endmenu
 	fi
-	endmenu
 	mainmenu_option next_comment
 	comment 'SMI workaround'
 	bool 'Disable SMI detection' CONFIG_XENO_HW_SMI_DETECT_DISABLE
