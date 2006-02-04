@@ -861,6 +861,18 @@ static int __rt_task_reply (struct task_struct *curr, struct pt_regs *regs)
 #endif /* CONFIG_XENO_OPT_NATIVE_MPS */
 
 /*
+ * int __rt_timer_set_mode(RTIME *tickvalp)
+ */
+
+static int __rt_timer_set_mode (struct task_struct *curr, struct pt_regs *regs)
+
+{
+    RTIME tickval;
+    __xn_copy_from_user(curr,&tickval,(void __user *)__xn_reg_arg1(regs),sizeof(tickval));
+    return rt_timer_set_mode(tickval);
+}
+
+/*
  * int __rt_timer_read(RTIME *timep)
  */
 
@@ -3497,8 +3509,8 @@ static xnsysent_t __systab[] = {
     [__native_task_send ] = { &__rt_task_send, __xn_exec_primary },
     [__native_task_receive ] = { &__rt_task_receive, __xn_exec_primary },
     [__native_task_reply ] = { &__rt_task_reply, __xn_exec_primary },
-    [__native_timer_start ] = { &__rt_call_not_available, __xn_exec_any },
-    [__native_timer_stop ] = { &__rt_call_not_available, __xn_exec_any },
+    [__native_timer_set_mode ] = { &__rt_timer_set_mode, __xn_exec_lostage|__xn_exec_switchback },
+    [__native_unimp_22 ] = { &__rt_call_not_available, __xn_exec_any },
     [__native_timer_read ] = { &__rt_timer_read, __xn_exec_any },
     [__native_timer_tsc ] = { &__rt_timer_tsc, __xn_exec_any },
     [__native_timer_ns2ticks ] = { &__rt_timer_ns2ticks, __xn_exec_any },
