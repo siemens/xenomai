@@ -21,18 +21,6 @@
 
 extern int __native_muxid;
 
-int rt_timer_start (RTIME tickval)
-
-{
-    return -ENOSYS;	/* DEPRECATED */
-}
-
-void rt_timer_stop (void)
-
-{
-    /* DEPRECATED */
-}
-
 int rt_timer_set_mode (RTIME tickval)
 
 {
