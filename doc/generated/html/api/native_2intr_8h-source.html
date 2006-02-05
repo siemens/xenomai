@@ -12,9 +12,9 @@
 00022 <span class="preprocessor">#ifndef _XENO_INTR_H</span>
 00023 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_INTR_H</span>
 00024 <span class="preprocessor"></span>
-00025 <span class="preprocessor">#include &lt;xenomai/nucleus/synch.h&gt;</span>
-00026 <span class="preprocessor">#include &lt;xenomai/nucleus/intr.h&gt;</span>
-00027 <span class="preprocessor">#include &lt;xenomai/native/types.h&gt;</span>
+00025 <span class="preprocessor">#include &lt;nucleus/synch.h&gt;</span>
+00026 <span class="preprocessor">#include &lt;nucleus/intr.h&gt;</span>
+00027 <span class="preprocessor">#include &lt;<a class="code" href="native_2types_8h.html">native/types.h</a>&gt;</span>
 00028 
 00029 <span class="comment">/* Creation flag. */</span>
 00030 <span class="preprocessor">#define I_AUTOENA    XN_ISR_ENABLE </span><span class="comment">/* Auto-enable interrupt channel</span>
@@ -111,11 +111,11 @@
 00121 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
 00122 <span class="preprocessor">#endif</span>
 00123 <span class="preprocessor"></span>
-00124 <span class="keywordtype">int</span> <a class="code" href="group__interrupt.html#ga14">rt_intr_bind</a>(RT_INTR *intr,
+00124 <span class="keywordtype">int</span> <a class="code" href="group__interrupt.html#ga10">rt_intr_bind</a>(RT_INTR *intr,
 00125                  <span class="keywordtype">unsigned</span> irq,
 00126                  RTIME timeout);
 00127 
-<a name="l00128"></a><a class="code" href="group__interrupt.html#ga15">00128</a> <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__interrupt.html#ga15">rt_intr_unbind</a> (RT_INTR *intr)
+<a name="l00128"></a><a class="code" href="group__interrupt.html#ga11">00128</a> <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__interrupt.html#ga11">rt_intr_unbind</a> (RT_INTR *intr)
 00129 
 00130 {
 00131     intr-&gt;opaque = RT_HANDLE_INVALID;
@@ -126,7 +126,7 @@
 00136                    <span class="keywordtype">unsigned</span> irq,
 00137                    <span class="keywordtype">int</span> mode);
 00138 
-00139 <span class="keywordtype">int</span> <a class="code" href="group__interrupt.html#ga13">rt_intr_wait</a>(RT_INTR *intr,
+00139 <span class="keywordtype">int</span> <a class="code" href="group__interrupt.html#ga9">rt_intr_wait</a>(RT_INTR *intr,
 00140                  RTIME timeout);
 00141 
 00142 <span class="preprocessor">#ifdef __cplusplus</span>
@@ -141,13 +141,13 @@
 00151 <span class="preprocessor"></span>
 00152 <span class="comment">/* Public interface. */</span>
 00153 
-00154 <span class="keywordtype">int</span> <a class="code" href="group__interrupt.html#ga9">rt_intr_delete</a>(RT_INTR *intr);
+00154 <span class="keywordtype">int</span> <a class="code" href="group__interrupt.html#ga4">rt_intr_delete</a>(RT_INTR *intr);
 00155 
-00156 <span class="keywordtype">int</span> <a class="code" href="group__interrupt.html#ga10">rt_intr_enable</a>(RT_INTR *intr);
+00156 <span class="keywordtype">int</span> <a class="code" href="group__interrupt.html#ga5">rt_intr_enable</a>(RT_INTR *intr);
 00157 
-00158 <span class="keywordtype">int</span> <a class="code" href="group__interrupt.html#ga11">rt_intr_disable</a>(RT_INTR *intr);
+00158 <span class="keywordtype">int</span> <a class="code" href="group__interrupt.html#ga6">rt_intr_disable</a>(RT_INTR *intr);
 00159 
-00160 <span class="keywordtype">int</span> <a class="code" href="group__interrupt.html#ga12">rt_intr_inquire</a>(RT_INTR *intr,
+00160 <span class="keywordtype">int</span> <a class="code" href="group__interrupt.html#ga7">rt_intr_inquire</a>(RT_INTR *intr,
 00161                     RT_INTR_INFO *info);
 00162 
 00163 <span class="preprocessor">#ifdef __cplusplus</span>
@@ -155,7 +155,7 @@
 00165 <span class="preprocessor">#endif</span>
 00166 <span class="preprocessor"></span>
 00167 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_INTR_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:39 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:20 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

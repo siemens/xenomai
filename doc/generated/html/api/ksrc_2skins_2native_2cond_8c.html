@@ -19,29 +19,45 @@ You should have received a copy of the GNU General Public License along with thi
 
 <p>
 Include dependency graph for cond.c:<p><center><img src="ksrc_2skins_2native_2cond_8c__incl.png" border="0" usemap="#ksrc/skins/native/cond.c_map" alt=""></center>
+<map name="ksrc/skins/native/cond.c_map">
+<area href="pod_8h.html" shape="rect" coords="227,58,331,82" alt="">
+<area href="task_8h.html" shape="rect" coords="231,154,327,178" alt="">
+<area href="mutex_8h.html" shape="rect" coords="393,304,502,328" alt="">
+<area href="cond_8h.html" shape="rect" coords="229,254,330,278" alt="">
+<area href="registry_8h.html" shape="rect" coords="222,353,337,377" alt="">
+<area href="thread_8h-source.html" shape="rect" coords="387,58,507,82" alt="">
+<area href="nucleus_2intr_8h-source.html" shape="rect" coords="731,70,833,94" alt="">
+<area href="nucleus_2timer_8h-source.html" shape="rect" coords="559,154,671,178" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="722,180,842,204" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="890,180,1005,204" alt="">
+<area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="393,106,502,130" alt="">
+<area href="synch_8h-source.html" shape="rect" coords="557,229,674,253" alt="">
+<area href="native_2timer_8h.html" shape="rect" coords="397,154,498,178" alt="">
+<area href="native_2types_8h.html" shape="rect" coords="563,290,667,314" alt="">
+</map>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
-<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cond.html#ga8">rt_cond_create</a></td></tr>
+<tr><td colspan="2"><br><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cond.html#ga0">rt_cond_create</a> (RT_COND *cond, const char *name)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a condition variable.  <a href="group__cond.html#ga8"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cond.html#ga9">rt_cond_delete</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a condition variable.  <a href="group__cond.html#ga0"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cond.html#ga1">rt_cond_delete</a> (RT_COND *cond)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a condition variable.  <a href="group__cond.html#ga9"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cond.html#ga10">rt_cond_signal</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a condition variable.  <a href="group__cond.html#ga1"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cond.html#ga2">rt_cond_signal</a> (RT_COND *cond)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Signal a condition variable.  <a href="group__cond.html#ga10"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cond.html#ga11">rt_cond_broadcast</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Signal a condition variable.  <a href="group__cond.html#ga2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cond.html#ga3">rt_cond_broadcast</a> (RT_COND *cond)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Broadcast a condition variable.  <a href="group__cond.html#ga11"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cond.html#ga12">rt_cond_wait</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Broadcast a condition variable.  <a href="group__cond.html#ga3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cond.html#ga4">rt_cond_wait</a> (RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on a condition.  <a href="group__cond.html#ga12"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cond.html#ga13">rt_cond_inquire</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on a condition.  <a href="group__cond.html#ga4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cond.html#ga5">rt_cond_inquire</a> (RT_COND *cond, RT_COND_INFO *info)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about a condition variable.  <a href="group__cond.html#ga13"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about a condition variable.  <a href="group__cond.html#ga5"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:40 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:21 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

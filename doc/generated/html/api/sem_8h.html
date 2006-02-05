@@ -19,19 +19,52 @@ You should have received a copy of the GNU General Public License along with thi
 
 <p>
 Include dependency graph for sem.h:<p><center><img src="sem_8h__incl.png" border="0" usemap="#include/native/sem.h_map" alt=""></center>
+<map name="include/native/sem.h_map">
+<area href="synch_8h-source.html" shape="rect" coords="200,78,317,102" alt="">
+<area href="native_2types_8h.html" shape="rect" coords="373,128,477,152" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="365,80,485,104" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="533,104,648,128" alt="">
+<area href="compiler_8h-source.html" shape="rect" coords="709,200,842,224" alt="">
+</map>
+
+<p>
+This graph shows which files directly or indirectly include this file:<p><center><img src="sem_8h__dep__incl.png" border="0" usemap="#include/native/sem.hdep_map" alt=""></center>
+<map name="include/native/sem.hdep_map">
+<area href="skins_2native_2module_8c.html" shape="rect" coords="200,8,378,32" alt="">
+<area href="ksrc_2skins_2native_2sem_8c.html" shape="rect" coords="209,56,369,80" alt="">
+<area href="native_2syscall_8c.html" shape="rect" coords="202,104,376,128" alt="">
+</map>
 
 <p>
 <a href="sem_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__semaphore.html#ga14">rt_sem_bind</a> (RT_SEM *sem, const char *name, RTIME timeout)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__semaphore.html#ga8">rt_sem_bind</a> (RT_SEM *sem, const char *name, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a semaphore.  <a href="group__semaphore.html#ga14"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__semaphore.html#ga15">rt_sem_unbind</a> (RT_SEM *sem)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a semaphore.  <a href="group__semaphore.html#ga8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__semaphore.html#ga9">rt_sem_unbind</a> (RT_SEM *sem)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unbind from a semaphore.  <a href="group__semaphore.html#ga15"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unbind from a semaphore.  <a href="group__semaphore.html#ga9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__semaphore.html#ga0">rt_sem_create</a> (RT_SEM *sem, const char *name, unsigned long icount, int mode)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a counting semaphore.  <a href="group__semaphore.html#ga0"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__semaphore.html#ga1">rt_sem_delete</a> (RT_SEM *sem)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a semaphore.  <a href="group__semaphore.html#ga1"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__semaphore.html#ga2">rt_sem_p</a> (RT_SEM *sem, RTIME timeout)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Pend on a semaphore.  <a href="group__semaphore.html#ga2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__semaphore.html#ga3">rt_sem_v</a> (RT_SEM *sem)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Signal a semaphore.  <a href="group__semaphore.html#ga3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__semaphore.html#ga4">rt_sem_broadcast</a> (RT_SEM *sem)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Broadcast a semaphore.  <a href="group__semaphore.html#ga4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__semaphore.html#ga5">rt_sem_inquire</a> (RT_SEM *sem, RT_SEM_INFO *info)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about a semaphore.  <a href="group__semaphore.html#ga5"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:39 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:20 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

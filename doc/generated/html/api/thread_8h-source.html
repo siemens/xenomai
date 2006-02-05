@@ -30,7 +30,7 @@
 00020 <span class="preprocessor">#ifndef _XENO_NUCLEUS_THREAD_H</span>
 00021 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_NUCLEUS_THREAD_H</span>
 00022 <span class="preprocessor"></span>
-00023 <span class="preprocessor">#include &lt;xenomai/nucleus/timer.h&gt;</span>
+00023 <span class="preprocessor">#include &lt;nucleus/timer.h&gt;</span>
 00024 
 00025 <span class="comment">/* Status flags */</span>
 00026 <span class="preprocessor">#define XNSUSP    0x00000001    </span><span class="comment">/* Suspended */</span>
@@ -268,7 +268,7 @@
 00258     <span class="keywordflow">if</span> (!testbits(thread-&gt;status,XNDELAY))
 00259         <span class="keywordflow">return</span> 0LL;
 00260 
-00261     timeout = (<a class="code" href="group__timer.html#ga26">xntimer_get_date</a>(&amp;thread-&gt;rtimer) ? : <a class="code" href="group__timer.html#ga26">xntimer_get_date</a>(&amp;thread-&gt;ptimer));
+00261     timeout = (<a class="code" href="group__timer.html#ga18">xntimer_get_date</a>(&amp;thread-&gt;rtimer) ? : <a class="code" href="group__timer.html#ga18">xntimer_get_date</a>(&amp;thread-&gt;ptimer));
 00262 
 00263     <span class="keywordflow">if</span> (timeout &lt;= now)
 00264         <span class="keywordflow">return</span> 1;
@@ -283,7 +283,7 @@
 00273 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
 00274 
 00275 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_THREAD_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:39 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:20 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

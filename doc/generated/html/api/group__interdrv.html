@@ -345,7 +345,7 @@ Increment context reference counter.
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>context</em>&nbsp;</td><td>Device context</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Note:</b></dt><dd>rtdm_context_get() automatically increments the lock counter. You only need to call this function in special scenrios.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd><a class="el" href="group__interdrv.html#ga7">rtdm_context_get()</a> automatically increments the lock counter. You only need to call this function in special scenrios.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -386,7 +386,7 @@ Decrement context reference counter.
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>context</em>&nbsp;</td><td>Device context</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Note:</b></dt><dd>Every successful call to rtdm_context_get() must be matched by a rtdm_context_unlock() invocation.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>Every successful call to <a class="el" href="group__interdrv.html#ga7">rtdm_context_get()</a> must be matched by a rtdm_context_unlock() invocation.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -1271,7 +1271,7 @@ Depends on driver implementation, see <a class="el" href="group__profiles.html">
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:46 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:26 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

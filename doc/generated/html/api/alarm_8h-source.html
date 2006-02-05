@@ -12,9 +12,9 @@
 00022 <span class="preprocessor">#ifndef _XENO_ALARM_H</span>
 00023 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_ALARM_H</span>
 00024 <span class="preprocessor"></span>
-00025 <span class="preprocessor">#include &lt;xenomai/nucleus/timer.h&gt;</span>
-00026 <span class="preprocessor">#include &lt;xenomai/nucleus/synch.h&gt;</span>
-00027 <span class="preprocessor">#include &lt;xenomai/native/types.h&gt;</span>
+00025 <span class="preprocessor">#include &lt;nucleus/timer.h&gt;</span>
+00026 <span class="preprocessor">#include &lt;nucleus/synch.h&gt;</span>
+00027 <span class="preprocessor">#include &lt;<a class="code" href="native_2types_8h.html">native/types.h</a>&gt;</span>
 00028 
 00029 <span class="keyword">typedef</span> <span class="keyword">struct </span>rt_alarm_info {
 00030 
@@ -95,7 +95,7 @@
 00105 <span class="keywordtype">int</span> <a class="code" href="group__alarm.html#ga8">rt_alarm_create</a>(RT_ALARM *alarm,
 00106                     <span class="keyword">const</span> <span class="keywordtype">char</span> *name);
 00107 
-00108 <span class="keywordtype">int</span> <a class="code" href="group__alarm.html#ga13">rt_alarm_wait</a>(RT_ALARM *alarm);
+00108 <span class="keywordtype">int</span> <a class="code" href="group__alarm.html#ga9">rt_alarm_wait</a>(RT_ALARM *alarm);
 00109 
 00110 <span class="preprocessor">#ifdef __cplusplus</span>
 00111 <span class="preprocessor"></span>}
@@ -111,15 +111,15 @@
 00121 <span class="preprocessor"></span>
 00122 <span class="comment">/* Public interface. */</span>
 00123 
-00124 <span class="keywordtype">int</span> <a class="code" href="group__alarm.html#ga9">rt_alarm_delete</a>(RT_ALARM *alarm);
+00124 <span class="keywordtype">int</span> <a class="code" href="group__alarm.html#ga4">rt_alarm_delete</a>(RT_ALARM *alarm);
 00125 
-00126 <span class="keywordtype">int</span> <a class="code" href="group__alarm.html#ga10">rt_alarm_start</a>(RT_ALARM *alarm,
+00126 <span class="keywordtype">int</span> <a class="code" href="group__alarm.html#ga5">rt_alarm_start</a>(RT_ALARM *alarm,
 00127                    RTIME value,
 00128                    RTIME interval);
 00129 
-00130 <span class="keywordtype">int</span> <a class="code" href="group__alarm.html#ga11">rt_alarm_stop</a>(RT_ALARM *alarm);
+00130 <span class="keywordtype">int</span> <a class="code" href="group__alarm.html#ga6">rt_alarm_stop</a>(RT_ALARM *alarm);
 00131 
-00132 <span class="keywordtype">int</span> <a class="code" href="group__alarm.html#ga12">rt_alarm_inquire</a>(RT_ALARM *alarm,
+00132 <span class="keywordtype">int</span> <a class="code" href="group__alarm.html#ga7">rt_alarm_inquire</a>(RT_ALARM *alarm,
 00133                      RT_ALARM_INFO *info);
 00134 
 00135 <span class="preprocessor">#ifdef __cplusplus</span>
@@ -127,7 +127,7 @@
 00137 <span class="preprocessor">#endif</span>
 00138 <span class="preprocessor"></span>
 00139 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_ALARM_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:39 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:20 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -12,7 +12,7 @@
 00022 <span class="preprocessor">#ifndef _XENO_REGISTRY_H</span>
 00023 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_REGISTRY_H</span>
 00024 <span class="preprocessor"></span>
-00025 <span class="preprocessor">#include &lt;xenomai/native/types.h&gt;</span>
+00025 <span class="preprocessor">#include &lt;<a class="code" href="native_2types_8h.html">native/types.h</a>&gt;</span>
 00026 
 00027 <span class="preprocessor">#define RT_REGISTRY_SELF  RT_HANDLE_INVALID</span>
 00028 <span class="preprocessor"></span>
@@ -22,8 +22,8 @@
 00032 
 00033 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_SIM__)</span>
 00034 <span class="preprocessor"></span>
-00035 <span class="preprocessor">#include &lt;xenomai/nucleus/synch.h&gt;</span>
-00036 <span class="preprocessor">#include &lt;xenomai/nucleus/thread.h&gt;</span>
+00035 <span class="preprocessor">#include &lt;nucleus/synch.h&gt;</span>
+00036 <span class="preprocessor">#include &lt;nucleus/thread.h&gt;</span>
 00037 
 00038 <span class="keyword">struct </span>rt_object_procnode;
 00039 
@@ -103,25 +103,25 @@
 00113 
 00114 <span class="comment">/* Public interface. */</span>
 00115 
-00116 <span class="keywordtype">int</span> <a class="code" href="group__registry.html#ga22">rt_registry_enter</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *key,
+00116 <span class="keywordtype">int</span> <a class="code" href="group__registry.html#ga15">rt_registry_enter</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *key,
 00117                       <span class="keywordtype">void</span> *objaddr,
 00118                       rt_handle_t *phandle,
 00119                       RT_OBJECT_PROCNODE *pnode);
 00120 
-00121 <span class="keywordtype">int</span> <a class="code" href="group__registry.html#ga23">rt_registry_bind</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *key,
+00121 <span class="keywordtype">int</span> <a class="code" href="group__registry.html#ga16">rt_registry_bind</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *key,
 00122                      RTIME timeout,
 00123                      rt_handle_t *phandle);
 00124 
-00125 <span class="keywordtype">int</span> <a class="code" href="group__registry.html#ga24">rt_registry_remove</a>(rt_handle_t handle);
+00125 <span class="keywordtype">int</span> <a class="code" href="group__registry.html#ga17">rt_registry_remove</a>(rt_handle_t handle);
 00126 
-00127 <span class="keywordtype">int</span> <a class="code" href="group__registry.html#ga25">rt_registry_remove_safe</a>(rt_handle_t handle,
+00127 <span class="keywordtype">int</span> <a class="code" href="group__registry.html#ga18">rt_registry_remove_safe</a>(rt_handle_t handle,
 00128                             RTIME timeout);
 00129 
-00130 <span class="keywordtype">void</span> *<a class="code" href="group__registry.html#ga26">rt_registry_get</a>(rt_handle_t handle);
+00130 <span class="keywordtype">void</span> *<a class="code" href="group__registry.html#ga19">rt_registry_get</a>(rt_handle_t handle);
 00131 
-00132 <span class="keywordtype">void</span> *<a class="code" href="group__registry.html#ga28">rt_registry_fetch</a>(rt_handle_t handle);
+00132 <span class="keywordtype">void</span> *<a class="code" href="group__registry.html#ga21">rt_registry_fetch</a>(rt_handle_t handle);
 00133 
-00134 u_long <a class="code" href="group__registry.html#ga27">rt_registry_put</a>(rt_handle_t handle);
+00134 u_long <a class="code" href="group__registry.html#ga20">rt_registry_put</a>(rt_handle_t handle);
 00135 
 00136 <span class="preprocessor">#ifdef __cplusplus</span>
 00137 <span class="preprocessor"></span>}
@@ -130,7 +130,7 @@
 00140 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
 00141 
 00142 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_REGISTRY_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:39 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:20 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

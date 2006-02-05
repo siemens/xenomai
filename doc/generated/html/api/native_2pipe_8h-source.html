@@ -12,9 +12,9 @@
 00022 <span class="preprocessor">#ifndef _XENO_PIPE_H</span>
 00023 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_PIPE_H</span>
 00024 <span class="preprocessor"></span>
-00025 <span class="preprocessor">#include &lt;xenomai/nucleus/pipe.h&gt;</span>
-00026 <span class="preprocessor">#include &lt;xenomai/nucleus/heap.h&gt;</span>
-00027 <span class="preprocessor">#include &lt;xenomai/native/types.h&gt;</span>
+00025 <span class="preprocessor">#include &lt;nucleus/pipe.h&gt;</span>
+00026 <span class="preprocessor">#include &lt;nucleus/heap.h&gt;</span>
+00027 <span class="preprocessor">#include &lt;<a class="code" href="native_2types_8h.html">native/types.h</a>&gt;</span>
 00028 
 00029 <span class="comment">/* Operation flags. */</span>
 00030 <span class="preprocessor">#define P_NORMAL  XNPIPE_NORMAL</span>
@@ -78,44 +78,44 @@
 00088 <span class="preprocessor"></span>
 00089 <span class="comment">/* Public interface. */</span>
 00090 
-00091 <span class="keywordtype">int</span> <a class="code" href="group__pipe.html#ga19">rt_pipe_create</a>(RT_PIPE *pipe,
+00091 <span class="keywordtype">int</span> <a class="code" href="group__pipe.html#ga9">rt_pipe_create</a>(RT_PIPE *pipe,
 00092                    <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
 00093                    <span class="keywordtype">int</span> minor,
 00094                    size_t poolsize);
 00095 
-00096 <span class="keywordtype">int</span> <a class="code" href="group__pipe.html#ga20">rt_pipe_delete</a>(RT_PIPE *pipe);
+00096 <span class="keywordtype">int</span> <a class="code" href="group__pipe.html#ga10">rt_pipe_delete</a>(RT_PIPE *pipe);
 00097 
-00098 ssize_t <a class="code" href="group__pipe.html#ga22">rt_pipe_read</a>(RT_PIPE *pipe,
+00098 ssize_t <a class="code" href="group__pipe.html#ga12">rt_pipe_read</a>(RT_PIPE *pipe,
 00099                      <span class="keywordtype">void</span> *buf,
 00100                      size_t size,
 00101                      RTIME timeout);
 00102 
-00103 ssize_t <a class="code" href="group__pipe.html#ga24">rt_pipe_write</a>(RT_PIPE *pipe,
+00103 ssize_t <a class="code" href="group__pipe.html#ga14">rt_pipe_write</a>(RT_PIPE *pipe,
 00104                       <span class="keyword">const</span> <span class="keywordtype">void</span> *buf,
 00105                       size_t size,
 00106                       <span class="keywordtype">int</span> mode);
 00107 
-00108 ssize_t <a class="code" href="group__pipe.html#ga25">rt_pipe_stream</a>(RT_PIPE *pipe,
+00108 ssize_t <a class="code" href="group__pipe.html#ga15">rt_pipe_stream</a>(RT_PIPE *pipe,
 00109                        <span class="keyword">const</span> <span class="keywordtype">void</span> *buf,
 00110                        size_t size);
 00111 
-00112 ssize_t <a class="code" href="group__pipe.html#ga26">rt_pipe_flush</a>(RT_PIPE *pipe);
+00112 ssize_t <a class="code" href="group__pipe.html#ga16">rt_pipe_flush</a>(RT_PIPE *pipe);
 00113 
 00114 <span class="preprocessor">#ifdef __KERNEL__</span>
 00115 <span class="preprocessor"></span>
-00116 ssize_t <a class="code" href="group__pipe.html#ga21">rt_pipe_receive</a>(RT_PIPE *pipe,
+00116 ssize_t <a class="code" href="group__pipe.html#ga11">rt_pipe_receive</a>(RT_PIPE *pipe,
 00117                         RT_PIPE_MSG **msg,
 00118                         RTIME timeout);
 00119 
-00120 ssize_t <a class="code" href="group__pipe.html#ga23">rt_pipe_send</a>(RT_PIPE *pipe,
+00120 ssize_t <a class="code" href="group__pipe.html#ga13">rt_pipe_send</a>(RT_PIPE *pipe,
 00121                      RT_PIPE_MSG *msg,
 00122                      size_t size,
 00123                      <span class="keywordtype">int</span> mode);
 00124 
-00125 RT_PIPE_MSG *<a class="code" href="group__pipe.html#ga27">rt_pipe_alloc</a>(RT_PIPE *pipe,
+00125 RT_PIPE_MSG *<a class="code" href="group__pipe.html#ga17">rt_pipe_alloc</a>(RT_PIPE *pipe,
 00126                            size_t size);
 00127 
-00128 <span class="keywordtype">int</span> <a class="code" href="group__pipe.html#ga28">rt_pipe_free</a>(RT_PIPE *pipe,
+00128 <span class="keywordtype">int</span> <a class="code" href="group__pipe.html#ga18">rt_pipe_free</a>(RT_PIPE *pipe,
 00129                  RT_PIPE_MSG *msg);
 00130 
 00131 <span class="keywordtype">int</span> __native_pipe_pkg_init(<span class="keywordtype">void</span>);
@@ -142,7 +142,7 @@
 00152 <span class="preprocessor">#endif</span>
 00153 <span class="preprocessor"></span>
 00154 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_PIPE_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:39 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:20 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

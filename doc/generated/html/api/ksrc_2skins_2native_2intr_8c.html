@@ -19,26 +19,41 @@ You should have received a copy of the GNU General Public License along with thi
 
 <p>
 Include dependency graph for intr.c:<p><center><img src="ksrc_2skins_2native_2intr_8c__incl.png" border="0" usemap="#ksrc/skins/native/intr.c_map" alt=""></center>
+<map name="ksrc/skins/native/intr.c_map">
+<area href="pod_8h.html" shape="rect" coords="217,57,321,81" alt="">
+<area href="task_8h.html" shape="rect" coords="221,153,317,177" alt="">
+<area href="registry_8h.html" shape="rect" coords="212,250,326,274" alt="">
+<area href="native_2intr_8h.html" shape="rect" coords="224,105,314,129" alt="">
+<area href="thread_8h-source.html" shape="rect" coords="377,57,497,81" alt="">
+<area href="nucleus_2intr_8h-source.html" shape="rect" coords="386,9,488,33" alt="">
+<area href="nucleus_2timer_8h-source.html" shape="rect" coords="548,58,660,82" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="709,84,829,108" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="877,84,992,108" alt="">
+<area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="382,252,492,276" alt="">
+<area href="synch_8h-source.html" shape="rect" coords="378,105,496,129" alt="">
+<area href="native_2timer_8h.html" shape="rect" coords="386,204,488,228" alt="">
+<area href="native_2types_8h.html" shape="rect" coords="552,186,656,210" alt="">
+</map>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
-<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga8">rt_intr_create</a></td></tr>
+<tr><td colspan="2"><br><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga3">rt_intr_create</a> (RT_INTR *intr, unsigned irq, rt_isr_t isr, rt_iack_t iack)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create an interrupt object from kernel space.  <a href="group__interrupt.html#ga8"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga9">rt_intr_delete</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create an interrupt object from kernel space.  <a href="group__interrupt.html#ga3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga4">rt_intr_delete</a> (RT_INTR *intr)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete an interrupt object.  <a href="group__interrupt.html#ga9"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga10">rt_intr_enable</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete an interrupt object.  <a href="group__interrupt.html#ga4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga5">rt_intr_enable</a> (RT_INTR *intr)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Enable an interrupt object.  <a href="group__interrupt.html#ga10"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga11">rt_intr_disable</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Enable an interrupt object.  <a href="group__interrupt.html#ga5"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga6">rt_intr_disable</a> (RT_INTR *intr)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disable an interrupt object.  <a href="group__interrupt.html#ga11"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga12">rt_intr_inquire</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disable an interrupt object.  <a href="group__interrupt.html#ga6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga7">rt_intr_inquire</a> (RT_INTR *intr, RT_INTR_INFO *info)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about an interrupt object.  <a href="group__interrupt.html#ga12"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about an interrupt object.  <a href="group__interrupt.html#ga7"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:40 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:21 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

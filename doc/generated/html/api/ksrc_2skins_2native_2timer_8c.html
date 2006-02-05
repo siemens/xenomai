@@ -19,41 +19,48 @@ You should have received a copy of the GNU General Public License along with thi
 
 <p>
 Include dependency graph for timer.c:<p><center><img src="ksrc_2skins_2native_2timer_8c__incl.png" border="0" usemap="#ksrc/skins/native/timer.c_map" alt=""></center>
+<map name="ksrc/skins/native/timer.c_map">
+<area href="pod_8h.html" shape="rect" coords="222,57,326,81" alt="">
+<area href="native_2timer_8h.html" shape="rect" coords="386,106,488,130" alt="">
+<area href="thread_8h-source.html" shape="rect" coords="377,58,497,82" alt="">
+<area href="nucleus_2intr_8h-source.html" shape="rect" coords="718,9,820,33" alt="">
+<area href="nucleus_2timer_8h-source.html" shape="rect" coords="548,58,660,82" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="709,57,829,81" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="877,57,992,81" alt="">
+<area href="native_2types_8h.html" shape="rect" coords="552,106,656,130" alt="">
+</map>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
-<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga10">rt_timer_ns2ticks</a></td></tr>
+<tr><td colspan="2"><br><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">SRTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga0">rt_timer_ns2ticks</a> (SRTIME ns)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert nanoseconds to internal clock ticks.  <a href="group__native__timer.html#ga10"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga12">rt_timer_ticks2ns</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert nanoseconds to internal clock ticks.  <a href="group__native__timer.html#ga0"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">SRTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga1">rt_timer_ns2tsc</a> (SRTIME ns)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert internal clock ticks to nanoseconds.  <a href="group__native__timer.html#ga12"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga11">rt_timer_ns2tsc</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert nanoseconds to local CPU clock ticks.  <a href="group__native__timer.html#ga1"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">SRTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga2">rt_timer_ticks2ns</a> (SRTIME ticks)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert nanoseconds to local CPU clock ticks.  <a href="group__native__timer.html#ga11"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga13">rt_timer_tsc2ns</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert internal clock ticks to nanoseconds.  <a href="group__native__timer.html#ga2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">SRTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga3">rt_timer_tsc2ns</a> (SRTIME ticks)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert local CPU clock ticks to nanoseconds.  <a href="group__native__timer.html#ga13"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga14">rt_timer_inquire</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert local CPU clock ticks to nanoseconds.  <a href="group__native__timer.html#ga3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga4">rt_timer_inquire</a> (RT_TIMER_INFO *info)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about the timer.  <a href="group__native__timer.html#ga14"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga15">rt_timer_read</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about the timer.  <a href="group__native__timer.html#ga4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">RTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga5">rt_timer_read</a> (void)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the current system time.  <a href="group__native__timer.html#ga15"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga16">rt_timer_tsc</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the current system time.  <a href="group__native__timer.html#ga5"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">RTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga6">rt_timer_tsc</a> (void)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the current TSC value.  <a href="group__native__timer.html#ga16"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga17">rt_timer_spin</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the current TSC value.  <a href="group__native__timer.html#ga6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga7">rt_timer_spin</a> (RTIME ns)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Busy wait burning CPU cycles.  <a href="group__native__timer.html#ga17"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga18">rt_timer_start</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Busy wait burning CPU cycles.  <a href="group__native__timer.html#ga7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga8">rt_timer_set_mode</a> (RTIME nstick)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start the system timer.  <a href="group__native__timer.html#ga18"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga19">rt_timer_stop</a></td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stop the system timer.  <a href="group__native__timer.html#ga19"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the system clock rate.  <a href="group__native__timer.html#ga8"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:40 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:21 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

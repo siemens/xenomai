@@ -19,32 +19,47 @@ You should have received a copy of the GNU General Public License along with thi
 
 <p>
 Include dependency graph for registry.c:<p><center><img src="registry_8c__incl.png" border="0" usemap="#ksrc/skins/native/registry.c_map" alt=""></center>
+<map name="ksrc/skins/native/registry.c_map">
+<area href="pod_8h.html" shape="rect" coords="241,58,345,82" alt="">
+<area href="nucleus_2heap_8h-source.html" shape="rect" coords="405,253,517,277" alt="">
+<area href="registry_8h.html" shape="rect" coords="236,290,350,314" alt="">
+<area href="task_8h.html" shape="rect" coords="245,157,341,181" alt="">
+<area href="thread_8h-source.html" shape="rect" coords="401,58,521,82" alt="">
+<area href="nucleus_2intr_8h-source.html" shape="rect" coords="745,34,846,58" alt="">
+<area href="nucleus_2timer_8h-source.html" shape="rect" coords="573,60,685,84" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="736,108,856,132" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="904,108,1018,132" alt="">
+<area href="native_2types_8h.html" shape="rect" coords="577,206,681,230" alt="">
+<area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="406,157,516,181" alt="">
+<area href="synch_8h-source.html" shape="rect" coords="570,108,688,132" alt="">
+<area href="native_2timer_8h.html" shape="rect" coords="410,205,512,229" alt="">
+</map>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
-<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#ga22">rt_registry_enter</a></td></tr>
+<tr><td colspan="2"><br><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#ga15">rt_registry_enter</a> (const char *key, void *objaddr, rt_handle_t *phandle, RT_OBJECT_PROCNODE *pnode)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Register a real-time object.  <a href="group__registry.html#ga22"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#ga23">rt_registry_bind</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Register a real-time object.  <a href="group__registry.html#ga15"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#ga16">rt_registry_bind</a> (const char *key, RTIME timeout, rt_handle_t *phandle)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a real-time object.  <a href="group__registry.html#ga23"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#ga24">rt_registry_remove</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a real-time object.  <a href="group__registry.html#ga16"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#ga17">rt_registry_remove</a> (rt_handle_t handle)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Forcibly unregister a real-time object.  <a href="group__registry.html#ga24"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#ga25">rt_registry_remove_safe</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Forcibly unregister a real-time object.  <a href="group__registry.html#ga17"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#ga18">rt_registry_remove_safe</a> (rt_handle_t handle, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unregister an idle real-time object.  <a href="group__registry.html#ga25"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#ga26">rt_registry_get</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unregister an idle real-time object.  <a href="group__registry.html#ga18"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#ga19">rt_registry_get</a> (rt_handle_t handle)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Find and lock a real-time object into the registry.  <a href="group__registry.html#ga26"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#ga28">rt_registry_fetch</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Find and lock a real-time object into the registry.  <a href="group__registry.html#ga19"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">u_long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#ga20">rt_registry_put</a> (rt_handle_t handle)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Find a real-time object into the registry.  <a href="group__registry.html#ga28"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#ga27">rt_registry_put</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unlock a real-time object from the registry.  <a href="group__registry.html#ga20"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#ga21">rt_registry_fetch</a> (rt_handle_t handle)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unlock a real-time object from the registry.  <a href="group__registry.html#ga27"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Find a real-time object into the registry.  <a href="group__registry.html#ga21"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:40 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:21 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

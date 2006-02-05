@@ -19,29 +19,44 @@ You should have received a copy of the GNU General Public License along with thi
 
 <p>
 Include dependency graph for event.c:<p><center><img src="ksrc_2skins_2native_2event_8c__incl.png" border="0" usemap="#ksrc/skins/native/event.c_map" alt=""></center>
+<map name="ksrc/skins/native/event.c_map">
+<area href="pod_8h.html" shape="rect" coords="230,58,334,82" alt="">
+<area href="task_8h.html" shape="rect" coords="234,154,330,178" alt="">
+<area href="event_8h.html" shape="rect" coords="230,202,334,226" alt="">
+<area href="registry_8h.html" shape="rect" coords="225,276,339,300" alt="">
+<area href="thread_8h-source.html" shape="rect" coords="390,58,510,82" alt="">
+<area href="nucleus_2intr_8h-source.html" shape="rect" coords="731,46,833,70" alt="">
+<area href="nucleus_2timer_8h-source.html" shape="rect" coords="561,153,673,177" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="722,166,842,190" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="890,166,1005,190" alt="">
+<area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="395,106,505,130" alt="">
+<area href="synch_8h-source.html" shape="rect" coords="391,202,509,226" alt="">
+<area href="native_2timer_8h.html" shape="rect" coords="399,154,501,178" alt="">
+<area href="native_2types_8h.html" shape="rect" coords="565,252,669,276" alt="">
+</map>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
-<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__event.html#ga8">rt_event_create</a></td></tr>
+<tr><td colspan="2"><br><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__event.html#ga0">rt_event_create</a> (RT_EVENT *event, const char *name, unsigned long ivalue, int mode)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create an event group.  <a href="group__event.html#ga8"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__event.html#ga9">rt_event_delete</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create an event group.  <a href="group__event.html#ga0"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__event.html#ga1">rt_event_delete</a> (RT_EVENT *event)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete an event group.  <a href="group__event.html#ga9"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__event.html#ga10">rt_event_signal</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete an event group.  <a href="group__event.html#ga1"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__event.html#ga2">rt_event_signal</a> (RT_EVENT *event, unsigned long mask)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Post an event group.  <a href="group__event.html#ga10"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__event.html#ga11">rt_event_wait</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Post an event group.  <a href="group__event.html#ga2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__event.html#ga3">rt_event_wait</a> (RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Pend on an event group.  <a href="group__event.html#ga11"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__event.html#ga12">rt_event_clear</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Pend on an event group.  <a href="group__event.html#ga3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__event.html#ga4">rt_event_clear</a> (RT_EVENT *event, unsigned long mask, unsigned long *mask_r)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Clear an event group.  <a href="group__event.html#ga12"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__event.html#ga13">rt_event_inquire</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Clear an event group.  <a href="group__event.html#ga4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__event.html#ga5">rt_event_inquire</a> (RT_EVENT *event, RT_EVENT_INFO *info)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about an event group.  <a href="group__event.html#ga13"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about an event group.  <a href="group__event.html#ga5"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:40 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:21 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

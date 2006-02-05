@@ -30,7 +30,7 @@
 00020 <span class="preprocessor">#ifndef _XENO_NUCLEUS_INTR_H</span>
 00021 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_NUCLEUS_INTR_H</span>
 00022 <span class="preprocessor"></span>
-00023 <span class="preprocessor">#include &lt;xenomai/nucleus/types.h&gt;</span>
+00023 <span class="preprocessor">#include &lt;nucleus/types.h&gt;</span>
 00024 
 00025 <span class="preprocessor">#define XN_ISR_HANDLED   0x0</span>
 00026 <span class="preprocessor"></span><span class="preprocessor">#define XN_ISR_CHAINED   0x1</span>
@@ -64,24 +64,24 @@
 00054 
 00055     <span class="comment">/* Public interface. */</span>
 00056 
-00057 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga11">xnintr_init</a>(xnintr_t *intr,
+00057 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga2">xnintr_init</a>(xnintr_t *intr,
 00058                 <span class="keywordtype">unsigned</span> irq,
 00059                 xnisr_t isr,
 00060                 xniack_t iack,
 00061                 xnflags_t flags);
 00062 
-00063 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga12">xnintr_destroy</a>(xnintr_t *intr);
+00063 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga3">xnintr_destroy</a>(xnintr_t *intr);
 00064 
-00065 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga13">xnintr_attach</a>(xnintr_t *intr,
+00065 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga4">xnintr_attach</a>(xnintr_t *intr,
 00066                   <span class="keywordtype">void</span> *cookie);
 00067 
-00068 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga14">xnintr_detach</a>(xnintr_t *intr);
+00068 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga5">xnintr_detach</a>(xnintr_t *intr);
 00069 
-00070 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga15">xnintr_enable</a>(xnintr_t *intr);
+00070 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga6">xnintr_enable</a>(xnintr_t *intr);
 00071 
-00072 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga16">xnintr_disable</a>(xnintr_t *intr);
+00072 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga7">xnintr_disable</a>(xnintr_t *intr);
 00073     
-00074 xnarch_cpumask_t <a class="code" href="group__intr.html#ga17">xnintr_affinity</a>(xnintr_t *intr,
+00074 xnarch_cpumask_t <a class="code" href="group__intr.html#ga8">xnintr_affinity</a>(xnintr_t *intr,
 00075                                  xnarch_cpumask_t cpumask);
 00076 
 00077 <span class="preprocessor">#ifdef __cplusplus</span>
@@ -91,7 +91,7 @@
 00081 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
 00082 
 00083 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_INTR_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:39 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:20 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

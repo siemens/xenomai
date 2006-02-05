@@ -19,19 +19,56 @@ You should have received a copy of the GNU General Public License along with thi
 
 <p>
 Include dependency graph for queue.h:<p><center><img src="native_2queue_8h__incl.png" border="0" usemap="#include/native/queue.h_map" alt=""></center>
+<map name="include/native/queue.h_map">
+<area href="synch_8h-source.html" shape="rect" coords="210,30,328,54" alt="">
+<area href="nucleus_2heap_8h-source.html" shape="rect" coords="213,78,325,102" alt="">
+<area href="native_2types_8h.html" shape="rect" coords="384,128,488,152" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="376,78,496,102" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="544,104,658,128" alt="">
+<area href="compiler_8h-source.html" shape="rect" coords="720,200,853,224" alt="">
+</map>
+
+<p>
+This graph shows which files directly or indirectly include this file:<p><center><img src="native_2queue_8h__dep__incl.png" border="0" usemap="#include/native/queue.hdep_map" alt=""></center>
+<map name="include/native/queue.hdep_map">
+<area href="skins_2native_2module_8c.html" shape="rect" coords="210,8,389,32" alt="">
+<area href="ksrc_2skins_2native_2queue_8c.html" shape="rect" coords="214,56,385,80" alt="">
+<area href="native_2syscall_8c.html" shape="rect" coords="213,104,386,128" alt="">
+</map>
 
 <p>
 <a href="native_2queue_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga18">rt_queue_bind</a> (RT_QUEUE *q, const char *name, RTIME timeout)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga11">rt_queue_bind</a> (RT_QUEUE *q, const char *name, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a shared message queue.  <a href="group__native__queue.html#ga18"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga19">rt_queue_unbind</a> (RT_QUEUE *q)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a shared message queue.  <a href="group__native__queue.html#ga11"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga12">rt_queue_unbind</a> (RT_QUEUE *q)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unbind from a shared message queue.  <a href="group__native__queue.html#ga19"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unbind from a shared message queue.  <a href="group__native__queue.html#ga12"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga1">rt_queue_create</a> (RT_QUEUE *q, const char *name, size_t poolsize, size_t qlimit, int mode)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a message queue.  <a href="group__native__queue.html#ga1"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga2">rt_queue_delete</a> (RT_QUEUE *q)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a message queue.  <a href="group__native__queue.html#ga2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga3">rt_queue_alloc</a> (RT_QUEUE *q, size_t size)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a message queue buffer.  <a href="group__native__queue.html#ga3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga5">rt_queue_free</a> (RT_QUEUE *q, void *buf)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free a message queue buffer.  <a href="group__native__queue.html#ga5"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga6">rt_queue_send</a> (RT_QUEUE *q, void *buf, size_t size, int mode)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Send a message to a queue.  <a href="group__native__queue.html#ga6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga7">rt_queue_recv</a> (RT_QUEUE *q, void **bufp, RTIME timeout)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive a message from a queue.  <a href="group__native__queue.html#ga7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga8">rt_queue_inquire</a> (RT_QUEUE *q, RT_QUEUE_INFO *info)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about a message queue.  <a href="group__native__queue.html#ga8"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:39 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:21 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

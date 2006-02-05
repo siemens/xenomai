@@ -27,34 +27,33 @@ Thread synchronization services.
 
 <p>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga0">xnsynch_init</a> (xnsynch_t *synch, xnflags_t flags)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a synchronization object.  <a href="#ga0"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga2">xnsynch_sleep_on</a> (xnsynch_t *synch, xnticks_t timeout)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sleep on a synchronization object.  <a href="#ga2"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga3">xnsynch_clear_boost</a> (xnsynch_t *synch, xnthread_t *lastowner)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Clear the priority boost.  <a href="#ga3"></a><br></td></tr>
-<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga10">xnsynch_init</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga4">xnsynch_renice_sleeper</a> (xnthread_t *thread)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a synchronization object.  <a href="#ga10"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga11">xnsynch_sleep_on</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change a sleeper's priority.  <a href="#ga4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">xnthread_t *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga5">xnsynch_wakeup_one_sleeper</a> (xnsynch_t *synch)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sleep on a synchronization object.  <a href="#ga11"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga12">xnsynch_renice_sleeper</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Give the resource ownership to the next waiting thread.  <a href="#ga5"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">xnpholder_t *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga6">xnsynch_wakeup_this_sleeper</a> (xnsynch_t *synch, xnpholder_t *holder)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change a sleeper's priority.  <a href="#ga12"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga13">xnsynch_wakeup_one_sleeper</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Give the resource ownership to a given waiting thread.  <a href="#ga6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga7">xnsynch_flush</a> (xnsynch_t *synch, xnflags_t reason)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Give the resource ownership to the next waiting thread.  <a href="#ga13"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga14">xnsynch_wakeup_this_sleeper</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unblock all waiters pending on a resource.  <a href="#ga7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga8">xnsynch_forget_sleeper</a> (xnthread_t *thread)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Give the resource ownership to a given waiting thread.  <a href="#ga14"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga15">xnsynch_flush</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Abort a wait for a resource.  <a href="#ga8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga9">xnsynch_release_all_ownerships</a> (xnthread_t *thread)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unblock all waiters pending on a resource.  <a href="#ga15"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga16">xnsynch_forget_sleeper</a></td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Abort a wait for a resource.  <a href="#ga16"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#ga17">xnsynch_release_all_ownerships</a></td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release all ownerships.  <a href="#ga17"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release all ownerships.  <a href="#ga9"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
 <a class="anchor" name="ga3" doxytag="synch.c::xnsynch_clear_boost"></a><p>
@@ -107,14 +106,27 @@ This service is called internally whenever a synchronization object is not claim
     </td>
   </tr>
 </table>
-<hr><h2>Variable Documentation</h2>
-<a class="anchor" name="ga15" doxytag="synch.c::xnsynch_flush"></a><p>
+<a class="anchor" name="ga7" doxytag="synch.c::xnsynch_flush"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void xnsynch_flush          </td>
+          <td class="md" nowrap valign="top">void xnsynch_flush           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">xnsynch_t *&nbsp;</td>
+          <td class="mdname" nowrap> <em>synch</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>xnflags_t&nbsp;</td>
+          <td class="mdname" nowrap> <em>reason</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
         </tr>
       </table>
     </td>
@@ -139,12 +151,12 @@ This service should be called by upper interfaces under circumstances requiring 
   </table>
 </dl>
 <ul>
-<li>XNRMID should be set to indicate that the synchronization object is about to be destroyed (see <a class="el" href="group__pod.html#ga150">xnpod_resume_thread()</a>).</li></ul>
+<li>XNRMID should be set to indicate that the synchronization object is about to be destroyed (see <a class="el" href="group__pod.html#ga36">xnpod_resume_thread()</a>).</li></ul>
 <p>
 <ul>
-<li>XNBREAK should be set to indicate that the wait has been forcibly interrupted (see <a class="el" href="group__pod.html#ga151">xnpod_unblock_thread()</a>).</li></ul>
+<li>XNBREAK should be set to indicate that the wait has been forcibly interrupted (see <a class="el" href="group__pod.html#ga37">xnpod_unblock_thread()</a>).</li></ul>
 <p>
-<dl compact><dt><b>Returns:</b></dt><dd>XNSYNCH_RESCHED is returned if at least one thread is unblocked, which means the caller should invoke <a class="el" href="group__pod.html#ga158">xnpod_schedule()</a> for applying the new scheduling state. Otherwise, XNSYNCH_DONE is returned.</dd></dl>
+<dl compact><dt><b>Returns:</b></dt><dd>XNSYNCH_RESCHED is returned if at least one thread is unblocked, which means the caller should invoke <a class="el" href="group__pod.html#ga41">xnpod_schedule()</a> for applying the new scheduling state. Otherwise, XNSYNCH_DONE is returned.</dd></dl>
 Side-effects:<p>
 <ul>
 <li>The effective priority of the previous resource owner might be lowered to its base priority value as a consequence of the priority inheritance boost being cleared.</li></ul>
@@ -160,13 +172,18 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga16" doxytag="synch.c::xnsynch_forget_sleeper"></a><p>
+<a class="anchor" name="ga8" doxytag="synch.c::xnsynch_forget_sleeper"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void xnsynch_forget_sleeper          </td>
+          <td class="md" nowrap valign="top">void xnsynch_forget_sleeper           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">xnthread_t *&nbsp;</td>
+          <td class="mdname1" valign="top" nowrap> <em>thread</em>          </td>
+          <td class="md" valign="top">&nbsp;)&nbsp;</td>
+          <td class="md" nowrap></td>
         </tr>
       </table>
     </td>
@@ -196,13 +213,27 @@ When the trace support is enabled (i.e. MVM), the idle state is posted to the sy
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga10" doxytag="synch.c::xnsynch_init"></a><p>
+<a class="anchor" name="ga0" doxytag="synch.c::xnsynch_init"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void xnsynch_init          </td>
+          <td class="md" nowrap valign="top">void xnsynch_init           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">xnsynch_t *&nbsp;</td>
+          <td class="mdname" nowrap> <em>synch</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>xnflags_t&nbsp;</td>
+          <td class="mdname" nowrap> <em>flags</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
         </tr>
       </table>
     </td>
@@ -240,13 +271,18 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga17" doxytag="synch.c::xnsynch_release_all_ownerships"></a><p>
+<a class="anchor" name="ga9" doxytag="synch.c::xnsynch_release_all_ownerships"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void xnsynch_release_all_ownerships          </td>
+          <td class="md" nowrap valign="top">void xnsynch_release_all_ownerships           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">xnthread_t *&nbsp;</td>
+          <td class="mdname1" valign="top" nowrap> <em>thread</em>          </td>
+          <td class="md" valign="top">&nbsp;)&nbsp;</td>
+          <td class="md" nowrap></td>
         </tr>
       </table>
     </td>
@@ -274,13 +310,18 @@ This call is used internally to release all the ownerships obtained by a thread 
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga12" doxytag="synch.c::xnsynch_renice_sleeper"></a><p>
+<a class="anchor" name="ga4" doxytag="synch.c::xnsynch_renice_sleeper"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void xnsynch_renice_sleeper          </td>
+          <td class="md" nowrap valign="top">void xnsynch_renice_sleeper           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">xnthread_t *&nbsp;</td>
+          <td class="mdname1" valign="top" nowrap> <em>thread</em>          </td>
+          <td class="md" valign="top">&nbsp;)&nbsp;</td>
+          <td class="md" nowrap></td>
         </tr>
       </table>
     </td>
@@ -308,13 +349,27 @@ This service is used by the PIP code to update the pending priority of a sleepin
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga11" doxytag="synch.c::xnsynch_sleep_on"></a><p>
+<a class="anchor" name="ga2" doxytag="synch.c::xnsynch_sleep_on"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void xnsynch_sleep_on          </td>
+          <td class="md" nowrap valign="top">void xnsynch_sleep_on           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">xnsynch_t *&nbsp;</td>
+          <td class="mdname" nowrap> <em>synch</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>xnticks_t&nbsp;</td>
+          <td class="mdname" nowrap> <em>timeout</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
         </tr>
       </table>
     </td>
@@ -344,17 +399,22 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: always.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__pod.html#ga166">xnpod_start_timer()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__pod.html#ga27">xnpod_start_timer()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga13" doxytag="synch.c::xnsynch_wakeup_one_sleeper"></a><p>
+<a class="anchor" name="ga5" doxytag="synch.c::xnsynch_wakeup_one_sleeper"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">xnthread_t * xnsynch_wakeup_one_sleeper          </td>
+          <td class="md" nowrap valign="top">xnthread_t * xnsynch_wakeup_one_sleeper           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">xnsynch_t *&nbsp;</td>
+          <td class="mdname1" valign="top" nowrap> <em>synch</em>          </td>
+          <td class="md" valign="top">&nbsp;)&nbsp;</td>
+          <td class="md" nowrap></td>
         </tr>
       </table>
     </td>
@@ -393,13 +453,27 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga14" doxytag="synch.c::xnsynch_wakeup_this_sleeper"></a><p>
+<a class="anchor" name="ga6" doxytag="synch.c::xnsynch_wakeup_this_sleeper"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void xnsynch_wakeup_this_sleeper          </td>
+          <td class="md" nowrap valign="top">void xnsynch_wakeup_this_sleeper           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">xnsynch_t *&nbsp;</td>
+          <td class="mdname" nowrap> <em>synch</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>xnpholder_t *&nbsp;</td>
+          <td class="mdname" nowrap> <em>holder</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
         </tr>
       </table>
     </td>
@@ -439,7 +513,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:42 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:22 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

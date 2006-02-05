@@ -12,8 +12,8 @@
 00022 <span class="preprocessor">#ifndef _XENO_COND_H</span>
 00023 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_COND_H</span>
 00024 <span class="preprocessor"></span>
-00025 <span class="preprocessor">#include &lt;xenomai/nucleus/synch.h&gt;</span>
-00026 <span class="preprocessor">#include &lt;xenomai/native/mutex.h&gt;</span>
+00025 <span class="preprocessor">#include &lt;nucleus/synch.h&gt;</span>
+00026 <span class="preprocessor">#include &lt;<a class="code" href="mutex_8h.html">native/mutex.h</a>&gt;</span>
 00027 
 00028 <span class="keyword">typedef</span> <span class="keyword">struct </span>rt_cond_info {
 00029 
@@ -67,11 +67,11 @@
 00077 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
 00078 <span class="preprocessor">#endif</span>
 00079 <span class="preprocessor"></span>
-00080 <span class="keywordtype">int</span> <a class="code" href="group__cond.html#ga14">rt_cond_bind</a>(RT_COND *cond,
+00080 <span class="keywordtype">int</span> <a class="code" href="group__cond.html#ga8">rt_cond_bind</a>(RT_COND *cond,
 00081                  <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
 00082                  RTIME timeout);
 00083 
-<a name="l00084"></a><a class="code" href="group__cond.html#ga15">00084</a> <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__cond.html#ga15">rt_cond_unbind</a> (RT_COND *cond)
+<a name="l00084"></a><a class="code" href="group__cond.html#ga9">00084</a> <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__cond.html#ga9">rt_cond_unbind</a> (RT_COND *cond)
 00085 
 00086 {
 00087     cond-&gt;opaque = RT_HANDLE_INVALID;
@@ -90,20 +90,20 @@
 00100 <span class="preprocessor"></span>
 00101 <span class="comment">/* Public interface. */</span>
 00102 
-00103 <span class="keywordtype">int</span> <a class="code" href="group__cond.html#ga8">rt_cond_create</a>(RT_COND *cond,
+00103 <span class="keywordtype">int</span> <a class="code" href="group__cond.html#ga0">rt_cond_create</a>(RT_COND *cond,
 00104                    <span class="keyword">const</span> <span class="keywordtype">char</span> *name);
 00105 
-00106 <span class="keywordtype">int</span> <a class="code" href="group__cond.html#ga9">rt_cond_delete</a>(RT_COND *cond);
+00106 <span class="keywordtype">int</span> <a class="code" href="group__cond.html#ga1">rt_cond_delete</a>(RT_COND *cond);
 00107 
-00108 <span class="keywordtype">int</span> <a class="code" href="group__cond.html#ga10">rt_cond_signal</a>(RT_COND *cond);
+00108 <span class="keywordtype">int</span> <a class="code" href="group__cond.html#ga2">rt_cond_signal</a>(RT_COND *cond);
 00109 
-00110 <span class="keywordtype">int</span> <a class="code" href="group__cond.html#ga11">rt_cond_broadcast</a>(RT_COND *cond);
+00110 <span class="keywordtype">int</span> <a class="code" href="group__cond.html#ga3">rt_cond_broadcast</a>(RT_COND *cond);
 00111 
-00112 <span class="keywordtype">int</span> <a class="code" href="group__cond.html#ga12">rt_cond_wait</a>(RT_COND *cond,
+00112 <span class="keywordtype">int</span> <a class="code" href="group__cond.html#ga4">rt_cond_wait</a>(RT_COND *cond,
 00113                  RT_MUTEX *mutex,
 00114                  RTIME timeout);
 00115 
-00116 <span class="keywordtype">int</span> <a class="code" href="group__cond.html#ga13">rt_cond_inquire</a>(RT_COND *cond,
+00116 <span class="keywordtype">int</span> <a class="code" href="group__cond.html#ga5">rt_cond_inquire</a>(RT_COND *cond,
 00117                     RT_COND_INFO *info);
 00118 
 00119 <span class="preprocessor">#ifdef __cplusplus</span>
@@ -111,7 +111,7 @@
 00121 <span class="preprocessor">#endif</span>
 00122 <span class="preprocessor"></span>
 00123 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_COND_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:39 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:20 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

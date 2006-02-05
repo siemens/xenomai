@@ -19,26 +19,41 @@ You should have received a copy of the GNU General Public License along with thi
 
 <p>
 Include dependency graph for alarm.c:<p><center><img src="ksrc_2skins_2native_2alarm_8c__incl.png" border="0" usemap="#ksrc/skins/native/alarm.c_map" alt=""></center>
+<map name="ksrc/skins/native/alarm.c_map">
+<area href="pod_8h.html" shape="rect" coords="230,58,334,82" alt="">
+<area href="task_8h.html" shape="rect" coords="234,156,330,180" alt="">
+<area href="alarm_8h.html" shape="rect" coords="397,205,504,229" alt="">
+<area href="registry_8h.html" shape="rect" coords="225,278,340,302" alt="">
+<area href="thread_8h-source.html" shape="rect" coords="390,58,510,82" alt="">
+<area href="nucleus_2intr_8h-source.html" shape="rect" coords="734,65,836,89" alt="">
+<area href="nucleus_2timer_8h-source.html" shape="rect" coords="562,205,674,229" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="725,169,845,193" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="893,169,1008,193" alt="">
+<area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="396,157,505,181" alt="">
+<area href="synch_8h-source.html" shape="rect" coords="560,157,677,181" alt="">
+<area href="native_2timer_8h.html" shape="rect" coords="400,253,501,277" alt="">
+<area href="native_2types_8h.html" shape="rect" coords="566,253,670,277" alt="">
+</map>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
-<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga8">rt_alarm_create</a></td></tr>
+<tr><td colspan="2"><br><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga3">rt_alarm_create</a> (RT_ALARM *alarm, const char *name, rt_alarm_t handler, void *cookie)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create an alarm object from kernel space.  <a href="group__alarm.html#ga8"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga9">rt_alarm_delete</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create an alarm object from kernel space.  <a href="group__alarm.html#ga3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga4">rt_alarm_delete</a> (RT_ALARM *alarm)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete an alarm.  <a href="group__alarm.html#ga9"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga10">rt_alarm_start</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete an alarm.  <a href="group__alarm.html#ga4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga5">rt_alarm_start</a> (RT_ALARM *alarm, RTIME value, RTIME interval)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start an alarm.  <a href="group__alarm.html#ga10"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga11">rt_alarm_stop</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start an alarm.  <a href="group__alarm.html#ga5"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga6">rt_alarm_stop</a> (RT_ALARM *alarm)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stop an alarm.  <a href="group__alarm.html#ga11"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga12">rt_alarm_inquire</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stop an alarm.  <a href="group__alarm.html#ga6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga7">rt_alarm_inquire</a> (RT_ALARM *alarm, RT_ALARM_INFO *info)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about an alarm.  <a href="group__alarm.html#ga12"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about an alarm.  <a href="group__alarm.html#ga7"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:40 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:21 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
