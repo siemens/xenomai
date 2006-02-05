@@ -30,31 +30,30 @@ Xenomai mutex services enforce a priority inheritance protocol in order to solve
 
 <p>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#ga12">rt_mutex_bind</a> (RT_MUTEX *mutex, const char *name, RTIME timeout)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#ga0">rt_mutex_create</a> (RT_MUTEX *mutex, const char *name)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a mutex.  <a href="#ga12"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#ga13">rt_mutex_unbind</a> (RT_MUTEX *mutex)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a mutex.  <a href="#ga0"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#ga1">rt_mutex_delete</a> (RT_MUTEX *mutex)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unbind from a mutex.  <a href="#ga13"></a><br></td></tr>
-<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#ga7">rt_mutex_create</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a mutex.  <a href="#ga1"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#ga2">rt_mutex_lock</a> (RT_MUTEX *mutex, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a mutex.  <a href="#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#ga8">rt_mutex_delete</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Acquire a mutex.  <a href="#ga2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#ga3">rt_mutex_unlock</a> (RT_MUTEX *mutex)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a mutex.  <a href="#ga8"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#ga9">rt_mutex_lock</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unlock mutex.  <a href="#ga3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#ga4">rt_mutex_inquire</a> (RT_MUTEX *mutex, RT_MUTEX_INFO *info)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Acquire a mutex.  <a href="#ga9"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#ga10">rt_mutex_unlock</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about a mutex.  <a href="#ga4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#ga7">rt_mutex_bind</a> (RT_MUTEX *mutex, const char *name, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unlock mutex.  <a href="#ga10"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#ga11">rt_mutex_inquire</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a mutex.  <a href="#ga7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#ga8">rt_mutex_unbind</a> (RT_MUTEX *mutex)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about a mutex.  <a href="#ga11"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unbind from a mutex.  <a href="#ga8"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="ga12" doxytag="mutex.h::rt_mutex_bind"></a><p>
+<a class="anchor" name="ga7" doxytag="mutex.h::rt_mutex_bind"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -109,7 +108,7 @@ This user-space only service retrieves the uniform descriptor of a given Xenomai
 <li>-EFAULT is returned if <em>mutex</em> or <em>name</em> is referencing invalid memory.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been called for the waiting task before the retrieval has completed.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga19">rt_task_unblock()</a> has been called for the waiting task before the retrieval has completed.</li></ul>
 <p>
 <ul>
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and the searched object is not registered on entry.</li></ul>
@@ -126,59 +125,31 @@ This service can be called from:<p>
 <li>User-space task (switches to primary mode)</li></ul>
 <p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__native__timer.html#ga18">rt_timer_start()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the rt_timer_start() service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga13" doxytag="mutex.h::rt_mutex_unbind"></a><p>
+<a class="anchor" name="ga0" doxytag="mutex.c::rt_mutex_create"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int rt_mutex_unbind           </td>
+          <td class="md" nowrap valign="top">int rt_mutex_create           </td>
           <td class="md" valign="top">(&nbsp;</td>
           <td class="md" nowrap valign="top">RT_MUTEX *&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap> <em>mutex</em>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap><code> [inline, static]</code></td>
+          <td class="mdname" nowrap> <em>mutex</em>, </td>
         </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table cellspacing="5" cellpadding="0" border="0">
-  <tr>
-    <td>
-      &nbsp;
-    </td>
-    <td>
-
-<p>
-Unbind from a mutex. 
-<p>
-This user-space only service unbinds the calling task from the mutex object previously retrieved by a call to <a class="el" href="group__mutex.html#ga12">rt_mutex_bind()</a>.<p>
-<dl compact><dt><b>Parameters:</b></dt><dd>
-  <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>mutex</em>&nbsp;</td><td>The address of a mutex descriptor to unbind from.</td></tr>
-  </table>
-</dl>
-<dl compact><dt><b>Returns:</b></dt><dd>0 is always returned.</dd></dl>
-This service can be called from:<p>
-<ul>
-<li>User-space task.</li></ul>
-<p>
-Rescheduling: never.     </td>
-  </tr>
-</table>
-<hr><h2>Variable Documentation</h2>
-<a class="anchor" name="ga7" doxytag="mutex.c::rt_mutex_create"></a><p>
-<table class="mdTable" cellpadding="2" cellspacing="0">
-  <tr>
-    <td class="mdRow">
-      <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int rt_mutex_create          </td>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>const char *&nbsp;</td>
+          <td class="mdname" nowrap> <em>name</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
         </tr>
       </table>
     </td>
@@ -219,13 +190,18 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga8" doxytag="mutex.c::rt_mutex_delete"></a><p>
+<a class="anchor" name="ga1" doxytag="mutex.c::rt_mutex_delete"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int rt_mutex_delete          </td>
+          <td class="md" nowrap valign="top">int rt_mutex_delete           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_MUTEX *&nbsp;</td>
+          <td class="mdname1" valign="top" nowrap> <em>mutex</em>          </td>
+          <td class="md" valign="top">&nbsp;)&nbsp;</td>
+          <td class="md" nowrap></td>
         </tr>
       </table>
     </td>
@@ -241,7 +217,7 @@ Rescheduling: possible.     </td>
 <p>
 Delete a mutex. 
 <p>
-Destroy a mutex and release all the tasks currently pending on it. A mutex exists in the system since <a class="el" href="group__mutex.html#ga7">rt_mutex_create()</a> has been called to create it, so this service must be called in order to destroy it afterwards.<p>
+Destroy a mutex and release all the tasks currently pending on it. A mutex exists in the system since <a class="el" href="group__mutex.html#ga0">rt_mutex_create()</a> has been called to create it, so this service must be called in order to destroy it afterwards.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>mutex</em>&nbsp;</td><td>The descriptor address of the affected mutex.</td></tr>
@@ -265,13 +241,27 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga11" doxytag="mutex.c::rt_mutex_inquire"></a><p>
+<a class="anchor" name="ga4" doxytag="mutex.c::rt_mutex_inquire"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int rt_mutex_inquire          </td>
+          <td class="md" nowrap valign="top">int rt_mutex_inquire           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_MUTEX *&nbsp;</td>
+          <td class="mdname" nowrap> <em>mutex</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>RT_MUTEX_INFO *&nbsp;</td>
+          <td class="mdname" nowrap> <em>info</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
         </tr>
       </table>
     </td>
@@ -309,13 +299,27 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga9" doxytag="mutex.c::rt_mutex_lock"></a><p>
+<a class="anchor" name="ga2" doxytag="mutex.c::rt_mutex_lock"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int rt_mutex_lock          </td>
+          <td class="md" nowrap valign="top">int rt_mutex_lock           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_MUTEX *&nbsp;</td>
+          <td class="mdname" nowrap> <em>mutex</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>RTIME&nbsp;</td>
+          <td class="mdname" nowrap> <em>timeout</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
         </tr>
       </table>
     </td>
@@ -332,7 +336,7 @@ Rescheduling: never.     </td>
 Acquire a mutex. 
 <p>
 Attempt to lock a mutex. The calling task is blocked until the mutex is available, in which case it is locked again before this service returns. Mutexes have an ownership property, which means that their current owner is tracked. Xenomai mutexes are implicitely recursive and implement the priority inheritance protocol.<p>
-Since a nested locking count is maintained for the current owner, <a class="el" href="group__mutex.html#ga9">rt_mutex_lock()</a> and <a class="el" href="group__mutex.html#ga10">rt_mutex_unlock()</a> must be used in pairs.<p>
+Since a nested locking count is maintained for the current owner, <a class="el" href="group__mutex.html#ga2">rt_mutex_lock()</a> and <a class="el" href="group__mutex.html#ga3">rt_mutex_unlock()</a> must be used in pairs.<p>
 Tasks pend on mutexes by priority order.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -351,7 +355,7 @@ Tasks pend on mutexes by priority order.<p>
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and the mutex is not immediately available.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been called for the waiting task before the mutex has become available.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga19">rt_task_unblock()</a> has been called for the waiting task before the mutex has become available.</li></ul>
 <p>
 <ul>
 <li>-ETIMEDOUT is returned if the mutex cannot be made available to the calling task within the specified amount of time.</li></ul>
@@ -365,17 +369,63 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task (switches to primary mode)</li></ul>
 <p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation. If the caller is blocked, the current owner's priority might be temporarily raised as a consequence of the priority inheritance protocol.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__native__timer.html#ga18">rt_timer_start()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the rt_timer_start() service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga10" doxytag="mutex.c::rt_mutex_unlock"></a><p>
+<a class="anchor" name="ga8" doxytag="mutex.h::rt_mutex_unbind"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int rt_mutex_unlock          </td>
+          <td class="md" nowrap valign="top">int rt_mutex_unbind           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_MUTEX *&nbsp;</td>
+          <td class="mdname1" valign="top" nowrap> <em>mutex</em>          </td>
+          <td class="md" valign="top">&nbsp;)&nbsp;</td>
+          <td class="md" nowrap><code> [inline, static]</code></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Unbind from a mutex. 
+<p>
+This user-space only service unbinds the calling task from the mutex object previously retrieved by a call to <a class="el" href="group__mutex.html#ga7">rt_mutex_bind()</a>.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>mutex</em>&nbsp;</td><td>The address of a mutex descriptor to unbind from.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 is always returned.</dd></dl>
+This service can be called from:<p>
+<ul>
+<li>User-space task.</li></ul>
+<p>
+Rescheduling: never.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga3" doxytag="mutex.c::rt_mutex_unlock"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">int rt_mutex_unlock           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_MUTEX *&nbsp;</td>
+          <td class="mdname1" valign="top" nowrap> <em>mutex</em>          </td>
+          <td class="md" valign="top">&nbsp;)&nbsp;</td>
+          <td class="md" nowrap></td>
         </tr>
       </table>
     </td>
@@ -415,7 +465,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:44 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:24 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

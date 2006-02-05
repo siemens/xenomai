@@ -350,7 +350,7 @@ main();
 
 
 ?>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:52 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:32 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

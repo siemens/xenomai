@@ -30,17 +30,17 @@
 00020 <span class="preprocessor">#ifndef _XENO_NUCLEUS_TIMER_H</span>
 00021 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_NUCLEUS_TIMER_H</span>
 00022 <span class="preprocessor"></span>
-00023 <span class="preprocessor">#include &lt;xenomai/nucleus/queue.h&gt;</span>
+00023 <span class="preprocessor">#include &lt;nucleus/queue.h&gt;</span>
 00024 
 00025 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)</span>
 00026 <span class="preprocessor"></span>
-00027 <span class="preprocessor">#ifdef CONFIG_XENO_HW_PERIODIC_TIMER</span>
+00027 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC</span>
 00028 <span class="preprocessor"></span><span class="comment">/* Number of outstanding timers (hint only) -- must be ^2 */</span>
 00029 <span class="preprocessor">#define XNTIMER_WHEELSIZE 64</span>
 00030 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_WHEELMASK (XNTIMER_WHEELSIZE - 1)</span>
-00031 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_HW_PERIODIC_TIMER */</span>
+00031 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
 00032 <span class="preprocessor">#define XNTIMER_WHEELSIZE 1</span>
-00033 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_HW_PERIODIC_TIMER */</span>
+00033 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
 00034 
 00035 <span class="preprocessor">#define XNTIMER_ENABLED   0x00000001</span>
 00036 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_DEQUEUED  0x00000002</span>
@@ -129,13 +129,13 @@
 00119 <span class="preprocessor"></span>
 00120 <span class="keyword">extern</span> xntmops_t *nktimer;
 00121 
-00122 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga23">xntimer_init</a>(xntimer_t *timer,
+00122 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga15">xntimer_init</a>(xntimer_t *timer,
 00123                   <span class="keywordtype">void</span> (*handler)(<span class="keywordtype">void</span> *cookie),
 00124                   <span class="keywordtype">void</span> *cookie);
 00125 
-00126 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga24">xntimer_destroy</a>(xntimer_t *timer);
+00126 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga16">xntimer_destroy</a>(xntimer_t *timer);
 00127 
-00128 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga25">xntimer_start</a>(xntimer_t *timer,
+00128 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga17">xntimer_start</a>(xntimer_t *timer,
 00129                    xnticks_t value,
 00130                    xnticks_t interval);
 00131 
@@ -145,11 +145,11 @@
 00158         nktimer-&gt;do_timer_stop(timer);
 00159 }
 00160 
-00161 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga28">xntimer_freeze</a>(<span class="keywordtype">void</span>);
+00161 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga20">xntimer_freeze</a>(<span class="keywordtype">void</span>);
 00162 
-00163 xnticks_t <a class="code" href="group__timer.html#ga26">xntimer_get_date</a>(xntimer_t *timer);
+00163 xnticks_t <a class="code" href="group__timer.html#ga18">xntimer_get_date</a>(xntimer_t *timer);
 00164 
-00165 xnticks_t <a class="code" href="group__timer.html#ga27">xntimer_get_timeout</a>(xntimer_t *timer);
+00165 xnticks_t <a class="code" href="group__timer.html#ga19">xntimer_get_timeout</a>(xntimer_t *timer);
 00166 
 00167 <span class="keywordtype">void</span> xntimer_set_periodic_mode(<span class="keywordtype">void</span>);
 00168 
@@ -168,7 +168,7 @@
 00181 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
 00182 
 00183 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_TIMER_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:39 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:20 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

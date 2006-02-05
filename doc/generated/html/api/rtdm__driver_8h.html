@@ -20,6 +20,30 @@ You should have received a copy of the GNU General Public License along with Xen
 
 <p>
 Include dependency graph for rtdm_driver.h:<p><center><img src="rtdm__driver_8h__incl.png" border="0" usemap="#include/rtdm/rtdm_driver.h_map" alt=""></center>
+<map name="include/rtdm/rtdm_driver.h_map">
+<area href="xenomai_8h-source.html" shape="rect" coords="234,154,368,178" alt="">
+<area href="pod_8h.html" shape="rect" coords="428,12,532,36" alt="">
+<area href="synch_8h-source.html" shape="rect" coords="421,206,538,230" alt="">
+<area href="nucleus_2heap_8h-source.html" shape="rect" coords="424,254,536,278" alt="">
+<area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="246,304,356,328" alt="">
+<area href="rtdm_8h.html" shape="rect" coords="256,352,346,376" alt="">
+<area href="nucleus_2intr_8h-source.html" shape="rect" coords="602,61,704,85" alt="">
+<area href="module_8h-source.html" shape="rect" coords="417,110,542,134" alt="">
+<area href="version_8h-source.html" shape="rect" coords="417,158,542,182" alt="">
+<area href="thread_8h-source.html" shape="rect" coords="593,12,713,36" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="593,206,713,230" alt="">
+</map>
+
+<p>
+This graph shows which files directly or indirectly include this file:<p><center><img src="rtdm__driver_8h__dep__incl.png" border="0" usemap="#include/rtdm/rtdm_driver.hdep_map" alt=""></center>
+<map name="include/rtdm/rtdm_driver.hdep_map">
+<area href="ksrc_2skins_2rtdm_2core_8c.html" shape="rect" coords="457,34,609,58" alt="">
+<area href="ksrc_2skins_2rtdm_2core_8h-source.html" shape="rect" coords="241,58,393,82" alt="">
+<area href="device_8h-source.html" shape="rect" coords="234,106,400,130" alt="">
+<area href="drvlib_8c.html" shape="rect" coords="238,154,396,178" alt="">
+<area href="skins_2rtdm_2module_8c.html" shape="rect" coords="449,82,617,106" alt="">
+<area href="device_8c.html" shape="rect" coords="452,130,614,154" alt="">
+</map>
 
 <p>
 <a href="rtdm__driver_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
@@ -33,11 +57,11 @@ Include dependency graph for rtdm_driver.h:<p><center><img src="rtdm__driver_8h_
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a1" doxytag="rtdm_driver.h::RTDM_NAMED_DEVICE"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a1">RTDM_NAMED_DEVICE</a>&nbsp;&nbsp;&nbsp;0x0010</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">If set, the device is addresses via a clear-text name. <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">If set, the device is addressed via a clear-text name. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a2" doxytag="rtdm_driver.h::RTDM_PROTOCOL_DEVICE"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a2">RTDM_PROTOCOL_DEVICE</a>&nbsp;&nbsp;&nbsp;0x0020</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">If set, the device is addresses via a combination of protocol ID and socket type. <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">If set, the device is addressed via a combination of protocol ID and socket type. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a3" doxytag="rtdm_driver.h::RTDM_DEVICE_TYPE_MASK"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm__driver_8h.html#a3">RTDM_DEVICE_TYPE_MASK</a>&nbsp;&nbsp;&nbsp;0x00F0</td></tr>
 
@@ -99,35 +123,35 @@ Include dependency graph for rtdm_driver.h:<p><center><img src="rtdm__driver_8h_
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get patch version number from driver revision code. <br></td></tr>
 <tr><td colspan="2"><br><h2>Global Lock across Scheduler Invocation</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga29">RTDM_EXECUTE_ATOMICALLY</a>(code_block)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga20">RTDM_EXECUTE_ATOMICALLY</a>(code_block)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Execute code block atomically.  <a href="group__rtdmsync.html#ga29"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Execute code block atomically.  <a href="group__rtdmsync.html#ga20"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>Spinlock with Preemption Deactivation</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga30" doxytag="rtdm_driver.h::RTDM_LOCK_UNLOCKED"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga30">RTDM_LOCK_UNLOCKED</a>&nbsp;&nbsp;&nbsp;SPIN_LOCK_UNLOCKED</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga21" doxytag="rtdm_driver.h::RTDM_LOCK_UNLOCKED"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga21">RTDM_LOCK_UNLOCKED</a>&nbsp;&nbsp;&nbsp;SPIN_LOCK_UNLOCKED</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Static lock initialisation. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga31">rtdm_lock_init</a>(lock)&nbsp;&nbsp;&nbsp;spin_lock_init(lock)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga22">rtdm_lock_init</a>(lock)&nbsp;&nbsp;&nbsp;spin_lock_init(lock)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Dynamic lock initialisation.  <a href="group__rtdmsync.html#ga31"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga32">rtdm_lock_get</a>(lock)&nbsp;&nbsp;&nbsp;rthal_spin_lock(lock)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Dynamic lock initialisation.  <a href="group__rtdmsync.html#ga22"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga23">rtdm_lock_get</a>(lock)&nbsp;&nbsp;&nbsp;rthal_spin_lock(lock)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Acquire lock from non-preemptible contexts.  <a href="group__rtdmsync.html#ga32"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga33">rtdm_lock_put</a>(lock)&nbsp;&nbsp;&nbsp;rthal_spin_unlock(lock)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Acquire lock from non-preemptible contexts.  <a href="group__rtdmsync.html#ga23"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga24">rtdm_lock_put</a>(lock)&nbsp;&nbsp;&nbsp;rthal_spin_unlock(lock)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release lock without preemption restoration.  <a href="group__rtdmsync.html#ga33"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga34">rtdm_lock_get_irqsave</a>(lock, context)&nbsp;&nbsp;&nbsp;rthal_spin_lock_irqsave(lock, context)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release lock without preemption restoration.  <a href="group__rtdmsync.html#ga24"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga25">rtdm_lock_get_irqsave</a>(lock, context)&nbsp;&nbsp;&nbsp;rthal_spin_lock_irqsave(lock, context)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Acquire lock and disable preemption.  <a href="group__rtdmsync.html#ga34"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga35">rtdm_lock_put_irqrestore</a>(lock, context)&nbsp;&nbsp;&nbsp;rthal_spin_unlock_irqrestore(lock, context)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Acquire lock and disable preemption.  <a href="group__rtdmsync.html#ga25"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga26">rtdm_lock_put_irqrestore</a>(lock, context)&nbsp;&nbsp;&nbsp;rthal_spin_unlock_irqrestore(lock, context)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release lock and restore preemption state.  <a href="group__rtdmsync.html#ga35"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga36">rtdm_lock_irqsave</a>(context)&nbsp;&nbsp;&nbsp;rthal_local_irq_save(context)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release lock and restore preemption state.  <a href="group__rtdmsync.html#ga26"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga27">rtdm_lock_irqsave</a>(context)&nbsp;&nbsp;&nbsp;rthal_local_irq_save(context)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disable preemption locally.  <a href="group__rtdmsync.html#ga36"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga37">rtdm_lock_irqrestore</a>(context)&nbsp;&nbsp;&nbsp;rthal_local_irq_restore(context)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disable preemption locally.  <a href="group__rtdmsync.html#ga27"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga28">rtdm_lock_irqrestore</a>(context)&nbsp;&nbsp;&nbsp;rthal_local_irq_restore(context)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Restore preemption state.  <a href="group__rtdmsync.html#ga37"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Restore preemption state.  <a href="group__rtdmsync.html#ga28"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga0" doxytag="rtdm_driver.h::rtdm_lock_t"></a>
 typedef spinlock_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga0">rtdm_lock_t</a></td></tr>
 
@@ -148,18 +172,18 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Re-enable interrupt line on return. <br></td></tr>
 <tr><td colspan="2"><br><h2>Task Priority Range</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="taskprio"></a> Maximum and minimum task priorities <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga18" doxytag="rtdm_driver.h::RTDM_TASK_LOWEST_PRIORITY"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga13" doxytag="rtdm_driver.h::RTDM_TASK_LOWEST_PRIORITY"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_TASK_LOWEST_PRIORITY</b>&nbsp;&nbsp;&nbsp;XNCORE_LOW_PRIO</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga19" doxytag="rtdm_driver.h::RTDM_TASK_HIGHEST_PRIORITY"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga14" doxytag="rtdm_driver.h::RTDM_TASK_HIGHEST_PRIORITY"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_TASK_HIGHEST_PRIORITY</b>&nbsp;&nbsp;&nbsp;XNCORE_HIGH_PRIO</td></tr>
 
 <tr><td colspan="2"><br><h2>Task Priority Modification</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="changetaskprio"></a> Raise or lower task priorities by one level <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga20" doxytag="rtdm_driver.h::RTDM_TASK_RAISE_PRIORITY"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga15" doxytag="rtdm_driver.h::RTDM_TASK_RAISE_PRIORITY"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_TASK_RAISE_PRIORITY</b>&nbsp;&nbsp;&nbsp;(+1)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga21" doxytag="rtdm_driver.h::RTDM_TASK_LOWER_PRIORITY"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga16" doxytag="rtdm_driver.h::RTDM_TASK_LOWER_PRIORITY"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_TASK_LOWER_PRIORITY</b>&nbsp;&nbsp;&nbsp;(-1)</td></tr>
 
 <tr><td colspan="2"><br><h2>Operation Handler Prototypes</h2></td></tr>
@@ -211,48 +235,48 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga7">rtdm_context_get</a> (int fd)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Resolve file descriptor to device context.  <a href="group__interdrv.html#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga7">rtdm_task_init</a> (rtdm_task_t *task, const char *name, <a class="el" href="group__rtdmtask.html#ga1">rtdm_task_proc_t</a> task_proc, void *arg, int priority, uint64_t period)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga2">rtdm_task_init</a> (rtdm_task_t *task, const char *name, <a class="el" href="group__rtdmtask.html#ga1">rtdm_task_proc_t</a> task_proc, void *arg, int priority, uint64_t period)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Intialise and start a real-time task.  <a href="group__rtdmtask.html#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga14">rtdm_task_join_nrt</a> (rtdm_task_t *task, unsigned int poll_delay)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Intialise and start a real-time task.  <a href="group__rtdmtask.html#ga2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga9">rtdm_task_join_nrt</a> (rtdm_task_t *task, unsigned int poll_delay)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on a real-time task to terminate.  <a href="group__rtdmtask.html#ga14"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga15">rtdm_task_sleep</a> (uint64_t delay)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on a real-time task to terminate.  <a href="group__rtdmtask.html#ga9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga10">rtdm_task_sleep</a> (uint64_t delay)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sleep a specified amount of time.  <a href="group__rtdmtask.html#ga15"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga16">rtdm_task_sleep_until</a> (uint64_t wakeup_time)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sleep a specified amount of time.  <a href="group__rtdmtask.html#ga10"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga11">rtdm_task_sleep_until</a> (uint64_t wakeup_time)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sleep until a specified absolute time.  <a href="group__rtdmtask.html#ga16"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga17">rtdm_task_busy_sleep</a> (uint64_t delay)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sleep until a specified absolute time.  <a href="group__rtdmtask.html#ga11"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga12">rtdm_task_busy_sleep</a> (uint64_t delay)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Busy-wait a specified amount of time.  <a href="group__rtdmtask.html#ga17"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga17">rtdm_event_wait</a> (rtdm_event_t *event)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Busy-wait a specified amount of time.  <a href="group__rtdmtask.html#ga12"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga8">rtdm_event_wait</a> (rtdm_event_t *event)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on event occurrence.  <a href="group__rtdmsync.html#ga17"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga18">rtdm_event_timedwait</a> (rtdm_event_t *event, int64_t timeout, rtdm_toseq_t *timeout_seq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on event occurrence.  <a href="group__rtdmsync.html#ga8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga9">rtdm_event_timedwait</a> (rtdm_event_t *event, int64_t timeout, rtdm_toseq_t *timeout_seq)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on event occurrence with timeout.  <a href="group__rtdmsync.html#ga18"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga16">rtdm_event_signal</a> (rtdm_event_t *event)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on event occurrence with timeout.  <a href="group__rtdmsync.html#ga9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga7">rtdm_event_signal</a> (rtdm_event_t *event)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Signal an event occurrence.  <a href="group__rtdmsync.html#ga16"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga21">rtdm_sem_down</a> (rtdm_sem_t *sem)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Signal an event occurrence.  <a href="group__rtdmsync.html#ga7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga12">rtdm_sem_down</a> (rtdm_sem_t *sem)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement a semaphore.  <a href="group__rtdmsync.html#ga21"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga22">rtdm_sem_timeddown</a> (rtdm_sem_t *sem, int64_t timeout, rtdm_toseq_t *timeout_seq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement a semaphore.  <a href="group__rtdmsync.html#ga12"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga13">rtdm_sem_timeddown</a> (rtdm_sem_t *sem, int64_t timeout, rtdm_toseq_t *timeout_seq)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement a semaphore with timeout.  <a href="group__rtdmsync.html#ga22"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga23">rtdm_sem_up</a> (rtdm_sem_t *sem)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement a semaphore with timeout.  <a href="group__rtdmsync.html#ga13"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga14">rtdm_sem_up</a> (rtdm_sem_t *sem)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Increment a semaphore.  <a href="group__rtdmsync.html#ga23"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga26">rtdm_mutex_lock</a> (rtdm_mutex_t *mutex)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Increment a semaphore.  <a href="group__rtdmsync.html#ga14"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga17">rtdm_mutex_lock</a> (rtdm_mutex_t *mutex)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex.  <a href="group__rtdmsync.html#ga26"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga27">rtdm_mutex_timedlock</a> (rtdm_mutex_t *mutex, int64_t timeout, rtdm_toseq_t *timeout_seq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex.  <a href="group__rtdmsync.html#ga17"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga18">rtdm_mutex_timedlock</a> (rtdm_mutex_t *mutex, int64_t timeout, rtdm_toseq_t *timeout_seq)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex with timeout.  <a href="group__rtdmsync.html#ga27"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga28">rtdm_mutex_unlock</a> (rtdm_mutex_t *mutex)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex with timeout.  <a href="group__rtdmsync.html#ga18"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga19">rtdm_mutex_unlock</a> (rtdm_mutex_t *mutex)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release a mutex.  <a href="group__rtdmsync.html#ga28"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release a mutex.  <a href="group__rtdmsync.html#ga19"></a><br></td></tr>
 </table>
 <hr><h2>Typedef Documentation</h2>
 <a class="anchor" name="a56" doxytag="rtdm_driver.h::rtdm_close_handler_t"></a><p>
@@ -531,7 +555,7 @@ Write handler.
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:40 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:21 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

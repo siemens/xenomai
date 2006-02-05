@@ -108,7 +108,7 @@ void rthal_critical_exit (unsigned long flags)
 }
 
 /**
- * @fn int rthal_irq_request(unsigned irq, void (*handler)(unsigned irq, void *cookie), int (*ackfn)(unsigned irq), void *cookie)
+ * @fn int rthal_irq_request(unsigned irq, rthal_irq_handler_t handler, rthal_irq_ackfn_t ackfn, void *cookie)
  *
  * @brief Install a real-time interrupt handler.
  *

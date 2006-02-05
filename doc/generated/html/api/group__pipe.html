@@ -18,7 +18,7 @@ Collaboration diagram for Message pipe services.:<center><table><tr><td><img src
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Message pipe services.<p>
 Message pipes are an improved replacement for the legacy RT-FIFOS. A message pipe is a two-way communication channel between Xenomai tasks and standard Linux processes using regular file I/O operations on a pseudo-device. Pipes can be operated in a message-oriented fashion so that message boundaries are preserved, and also in byte streaming mode from real-time to standard Linux processes for optimal throughput.<p>
-Xenomai tasks open their side of the pipe using the <a class="el" href="group__pipe.html#ga19">rt_pipe_create()</a> service; standard Linux processes do the same by opening one of the /dev/rtpN special devices, where N is the minor number agreed upon between both ends of each pipe. Additionally, named pipes are available through the registry support, which automatically creates a symbolic link from entries under /proc/xenomai/registry/pipes/ to the appropriate special device file. 
+Xenomai tasks open their side of the pipe using the <a class="el" href="group__pipe.html#ga9">rt_pipe_create()</a> service; standard Linux processes do the same by opening one of the /dev/rtpN special devices, where N is the minor number agreed upon between both ends of each pipe. Additionally, named pipes are available through the registry support, which automatically creates a symbolic link from entries under /proc/xenomai/registry/pipes/ to the appropriate special device file. 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
@@ -28,46 +28,60 @@ Xenomai tasks open their side of the pipe using the <a class="el" href="group__p
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">This file is part of the Xenomai project. <br></td></tr>
 
 <p>
-<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga19">rt_pipe_create</a></td></tr>
+<tr><td colspan="2"><br><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga9">rt_pipe_create</a> (RT_PIPE *pipe, const char *name, int minor, size_t poolsize)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a message pipe.  <a href="#ga19"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga20">rt_pipe_delete</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a message pipe.  <a href="#ga9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga10">rt_pipe_delete</a> (RT_PIPE *pipe)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a message pipe.  <a href="#ga20"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga21">rt_pipe_receive</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a message pipe.  <a href="#ga10"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga11">rt_pipe_receive</a> (RT_PIPE *pipe, RT_PIPE_MSG **msgp, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive a message from a pipe.  <a href="#ga21"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga22">rt_pipe_read</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive a message from a pipe.  <a href="#ga11"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga12">rt_pipe_read</a> (RT_PIPE *pipe, void *buf, size_t size, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read a message from a pipe.  <a href="#ga22"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga23">rt_pipe_send</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read a message from a pipe.  <a href="#ga12"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga13">rt_pipe_send</a> (RT_PIPE *pipe, RT_PIPE_MSG *msg, size_t size, int mode)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Send a message through a pipe.  <a href="#ga23"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga24">rt_pipe_write</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Send a message through a pipe.  <a href="#ga13"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga14">rt_pipe_write</a> (RT_PIPE *pipe, const void *buf, size_t size, int mode)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Write a message to a pipe.  <a href="#ga24"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga25">rt_pipe_stream</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Write a message to a pipe.  <a href="#ga14"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga15">rt_pipe_stream</a> (RT_PIPE *pipe, const void *buf, size_t size)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stream bytes to a pipe.  <a href="#ga25"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga26">rt_pipe_flush</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stream bytes to a pipe.  <a href="#ga15"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga16">rt_pipe_flush</a> (RT_PIPE *pipe)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Flush the pipe.  <a href="#ga26"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga27">rt_pipe_alloc</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Flush the pipe.  <a href="#ga16"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">RT_PIPE_MSG *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga17">rt_pipe_alloc</a> (RT_PIPE *pipe, size_t size)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a message pipe buffer.  <a href="#ga27"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga28">rt_pipe_free</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a message pipe buffer.  <a href="#ga17"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#ga18">rt_pipe_free</a> (RT_PIPE *pipe, RT_PIPE_MSG *msg)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free a message pipe buffer.  <a href="#ga28"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free a message pipe buffer.  <a href="#ga18"></a><br></td></tr>
 </table>
-<hr><h2>Variable Documentation</h2>
-<a class="anchor" name="ga27" doxytag="pipe.c::rt_pipe_alloc"></a><p>
+<hr><h2>Function Documentation</h2>
+<a class="anchor" name="ga17" doxytag="pipe.c::rt_pipe_alloc"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">RT_PIPE_MSG * rt_pipe_alloc          </td>
+          <td class="md" nowrap valign="top">RT_PIPE_MSG * rt_pipe_alloc           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_PIPE *&nbsp;</td>
+          <td class="mdname" nowrap> <em>pipe</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>size_t&nbsp;</td>
+          <td class="mdname" nowrap> <em>size</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
         </tr>
       </table>
     </td>
@@ -83,7 +97,7 @@ Xenomai tasks open their side of the pipe using the <a class="el" href="group__p
 <p>
 Allocate a message pipe buffer. 
 <p>
-This service allocates a message buffer from the pipe's heap which can be subsequently filled by the caller then passed to <a class="el" href="group__pipe.html#ga23">rt_pipe_send()</a> for sending. The beginning of the available data area of <em>size</em> contiguous bytes is accessible from P_MSGPTR(msg).<p>
+This service allocates a message buffer from the pipe's heap which can be subsequently filled by the caller then passed to <a class="el" href="group__pipe.html#ga13">rt_pipe_send()</a> for sending. The beginning of the available data area of <em>size</em> contiguous bytes is accessible from P_MSGPTR(msg).<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>pipe</em>&nbsp;</td><td>The descriptor address of the affected pipe.</td></tr>
@@ -99,13 +113,39 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga19" doxytag="pipe.c::rt_pipe_create"></a><p>
+<a class="anchor" name="ga9" doxytag="pipe.c::rt_pipe_create"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int rt_pipe_create          </td>
+          <td class="md" nowrap valign="top">int rt_pipe_create           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_PIPE *&nbsp;</td>
+          <td class="mdname" nowrap> <em>pipe</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>const char *&nbsp;</td>
+          <td class="mdname" nowrap> <em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>int&nbsp;</td>
+          <td class="mdname" nowrap> <em>minor</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>size_t&nbsp;</td>
+          <td class="mdname" nowrap> <em>poolsize</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
         </tr>
       </table>
     </td>
@@ -122,7 +162,7 @@ Rescheduling: never.     </td>
 Create a message pipe. 
 <p>
 This service opens a bi-directional communication channel allowing data exchange between Xenomai tasks and standard Linux processes. Pipes natively preserve message boundaries, but can also be used in byte stream mode from Xenomai tasks to standard Linux processes.<p>
-<a class="el" href="group__pipe.html#ga19">rt_pipe_create()</a> always returns immediately, even if no Linux process has opened the associated special device file yet. On the contrary, the non real-time side could block upon attempt to open the special device file until <a class="el" href="group__pipe.html#ga19">rt_pipe_create()</a> is issued on the same pipe from a Xenomai task, unless O_NONBLOCK has been specified to the open(2) system call.<p>
+<a class="el" href="group__pipe.html#ga9">rt_pipe_create()</a> always returns immediately, even if no Linux process has opened the associated special device file yet. On the contrary, the non real-time side could block upon attempt to open the special device file until <a class="el" href="group__pipe.html#ga9">rt_pipe_create()</a> is issued on the same pipe from a Xenomai task, unless O_NONBLOCK has been specified to the open(2) system call.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>pipe</em>&nbsp;</td><td>The address of a pipe descriptor Xenomai will use to store the pipe-related data. This descriptor must always be valid while the pipe is active therefore it must be allocated in permanent memory.</td></tr>
@@ -160,13 +200,18 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga20" doxytag="pipe.c::rt_pipe_delete"></a><p>
+<a class="anchor" name="ga10" doxytag="pipe.c::rt_pipe_delete"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int rt_pipe_delete          </td>
+          <td class="md" nowrap valign="top">int rt_pipe_delete           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_PIPE *&nbsp;</td>
+          <td class="mdname1" valign="top" nowrap> <em>pipe</em>          </td>
+          <td class="md" valign="top">&nbsp;)&nbsp;</td>
+          <td class="md" nowrap></td>
         </tr>
       </table>
     </td>
@@ -182,7 +227,7 @@ Rescheduling: possible.     </td>
 <p>
 Delete a message pipe. 
 <p>
-This service deletes a pipe previously created by <a class="el" href="group__pipe.html#ga19">rt_pipe_create()</a>. Data pending for transmission to non real-time processes are lost.<p>
+This service deletes a pipe previously created by <a class="el" href="group__pipe.html#ga9">rt_pipe_create()</a>. Data pending for transmission to non real-time processes are lost.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>pipe</em>&nbsp;</td><td>The descriptor address of the affected pipe.</td></tr>
@@ -209,13 +254,18 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga26" doxytag="pipe.c::rt_pipe_flush"></a><p>
+<a class="anchor" name="ga16" doxytag="pipe.c::rt_pipe_flush"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">ssize_t rt_pipe_flush          </td>
+          <td class="md" nowrap valign="top">ssize_t rt_pipe_flush           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_PIPE *&nbsp;</td>
+          <td class="mdname1" valign="top" nowrap> <em>pipe</em>          </td>
+          <td class="md" valign="top">&nbsp;)&nbsp;</td>
+          <td class="md" nowrap></td>
         </tr>
       </table>
     </td>
@@ -231,7 +281,7 @@ Rescheduling: possible.     </td>
 <p>
 Flush the pipe. 
 <p>
-This service flushes any pending data buffered by <a class="el" href="group__pipe.html#ga25">rt_pipe_stream()</a>. This operation makes the data available for reading from the associated special device.<p>
+This service flushes any pending data buffered by <a class="el" href="group__pipe.html#ga15">rt_pipe_stream()</a>. This operation makes the data available for reading from the associated special device.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>pipe</em>&nbsp;</td><td>The descriptor address of the pipe to flush.</td></tr>
@@ -258,13 +308,27 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga28" doxytag="pipe.c::rt_pipe_free"></a><p>
+<a class="anchor" name="ga18" doxytag="pipe.c::rt_pipe_free"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int rt_pipe_free          </td>
+          <td class="md" nowrap valign="top">int rt_pipe_free           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_PIPE *&nbsp;</td>
+          <td class="mdname" nowrap> <em>pipe</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>RT_PIPE_MSG *&nbsp;</td>
+          <td class="mdname" nowrap> <em>msg</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
         </tr>
       </table>
     </td>
@@ -280,14 +344,14 @@ Rescheduling: possible.     </td>
 <p>
 Free a message pipe buffer. 
 <p>
-This service releases a message buffer returned by <a class="el" href="group__pipe.html#ga21">rt_pipe_receive()</a> to the pipe's heap.<p>
+This service releases a message buffer returned by <a class="el" href="group__pipe.html#ga11">rt_pipe_receive()</a> to the pipe's heap.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>pipe</em>&nbsp;</td><td>The descriptor address of the affected pipe.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>msg</em>&nbsp;</td><td>The address of the message buffer to free.</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success, or -EINVAL if <em>msg</em> is not a valid message buffer previously allocated by the <a class="el" href="group__pipe.html#ga27">rt_pipe_alloc()</a> service.</dd></dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success, or -EINVAL if <em>msg</em> is not a valid message buffer previously allocated by the <a class="el" href="group__pipe.html#ga17">rt_pipe_alloc()</a> service.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -296,13 +360,39 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga22" doxytag="pipe.c::rt_pipe_read"></a><p>
+<a class="anchor" name="ga12" doxytag="pipe.c::rt_pipe_read"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">ssize_t rt_pipe_read          </td>
+          <td class="md" nowrap valign="top">ssize_t rt_pipe_read           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_PIPE *&nbsp;</td>
+          <td class="mdname" nowrap> <em>pipe</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>void *&nbsp;</td>
+          <td class="mdname" nowrap> <em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>size_t&nbsp;</td>
+          <td class="mdname" nowrap> <em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>RTIME&nbsp;</td>
+          <td class="mdname" nowrap> <em>timeout</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
         </tr>
       </table>
     </td>
@@ -318,7 +408,7 @@ Rescheduling: never.     </td>
 <p>
 Read a message from a pipe. 
 <p>
-This service retrieves the next message written to the associated special device in user-space. <a class="el" href="group__pipe.html#ga22">rt_pipe_read()</a> always preserves message boundaries, which means that all data sent through the same write(2) operation to the special device will be gathered in a single message by this service. This services differs from <a class="el" href="group__pipe.html#ga21">rt_pipe_receive()</a> in that it copies back the payload data to a user-defined memory area, instead of returning a pointer to the internal message buffer holding such data.<p>
+This service retrieves the next message written to the associated special device in user-space. <a class="el" href="group__pipe.html#ga12">rt_pipe_read()</a> always preserves message boundaries, which means that all data sent through the same write(2) operation to the special device will be gathered in a single message by this service. This services differs from <a class="el" href="group__pipe.html#ga11">rt_pipe_receive()</a> in that it copies back the payload data to a user-defined memory area, instead of returning a pointer to the internal message buffer holding such data.<p>
 Unless otherwise specified, the caller is blocked for a given amount of time if no data is immediately available on entry.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -345,7 +435,7 @@ Unless otherwise specified, the caller is blocked for a given amount of time if 
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and no data is immediately available on entry.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been called for the waiting task before any data was available.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga19">rt_task_unblock()</a> has been called for the waiting task before any data was available.</li></ul>
 <p>
 <ul>
 <li>-EPERM is returned if this service should block, but was called from a context which cannot sleep (e.g. interrupt, non-realtime or scheduler locked).</li></ul>
@@ -362,17 +452,37 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task (switches to primary mode)</li></ul>
 <p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__native__timer.html#ga18">rt_timer_start()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the rt_timer_start() service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga21" doxytag="pipe.c::rt_pipe_receive"></a><p>
+<a class="anchor" name="ga11" doxytag="pipe.c::rt_pipe_receive"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">ssize_t rt_pipe_receive          </td>
+          <td class="md" nowrap valign="top">ssize_t rt_pipe_receive           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_PIPE *&nbsp;</td>
+          <td class="mdname" nowrap> <em>pipe</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>RT_PIPE_MSG **&nbsp;</td>
+          <td class="mdname" nowrap> <em>msgp</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>RTIME&nbsp;</td>
+          <td class="mdname" nowrap> <em>timeout</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
         </tr>
       </table>
     </td>
@@ -388,12 +498,12 @@ Rescheduling: always unless the request is immediately satisfied or <em>timeout<
 <p>
 Receive a message from a pipe. 
 <p>
-This service retrieves the next message written to the associated special device in user-space. <a class="el" href="group__pipe.html#ga21">rt_pipe_receive()</a> always preserves message boundaries, which means that all data sent through the same write(2) operation to the special device will be gathered in a single message by this service. This service differs from <a class="el" href="group__pipe.html#ga22">rt_pipe_read()</a> in that it returns a pointer to the internal buffer holding the message, which improves performances by saving a data copy to a user-provided buffer, especially when large messages are involved.<p>
+This service retrieves the next message written to the associated special device in user-space. <a class="el" href="group__pipe.html#ga11">rt_pipe_receive()</a> always preserves message boundaries, which means that all data sent through the same write(2) operation to the special device will be gathered in a single message by this service. This service differs from <a class="el" href="group__pipe.html#ga12">rt_pipe_read()</a> in that it returns a pointer to the internal buffer holding the message, which improves performances by saving a data copy to a user-provided buffer, especially when large messages are involved.<p>
 Unless otherwise specified, the caller is blocked for a given amount of time if no data is immediately available on entry.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>pipe</em>&nbsp;</td><td>The descriptor address of the pipe to receive from.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>msgp</em>&nbsp;</td><td>A pointer to a memory location which will be written upon success with the address of the received message. Once consumed, the message space should be freed using <a class="el" href="group__pipe.html#ga28">rt_pipe_free()</a>. The application code can retrieve the actual data and size carried by the message by respectively using the P_MSGPTR() and P_MSGSIZE() macros.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>msgp</em>&nbsp;</td><td>A pointer to a memory location which will be written upon success with the address of the received message. Once consumed, the message space should be freed using <a class="el" href="group__pipe.html#ga18">rt_pipe_free()</a>. The application code can retrieve the actual data and size carried by the message by respectively using the P_MSGPTR() and P_MSGSIZE() macros.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>The number of clock ticks to wait for some message to arrive (see note). Passing TM_INFINITE causes the caller to block indefinitely until some data is eventually available. Passing TM_NONBLOCK causes the service to return immediately without waiting if no data is available on entry.</td></tr>
   </table>
 </dl>
@@ -414,7 +524,7 @@ Unless otherwise specified, the caller is blocked for a given amount of time if 
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and no data is immediately available on entry.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga39">rt_task_unblock()</a> has been called for the waiting task before any data was available.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga19">rt_task_unblock()</a> has been called for the waiting task before any data was available.</li></ul>
 <p>
 <ul>
 <li>-EPERM is returned if this service should block, but was called from a context which cannot sleep (e.g. interrupt, non-realtime or scheduler locked).</li></ul>
@@ -428,17 +538,43 @@ This service can be called from:<p>
 <li>Kernel-based task</li></ul>
 <p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__native__timer.html#ga18">rt_timer_start()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the rt_timer_start() service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga23" doxytag="pipe.c::rt_pipe_send"></a><p>
+<a class="anchor" name="ga13" doxytag="pipe.c::rt_pipe_send"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">ssize_t rt_pipe_send          </td>
+          <td class="md" nowrap valign="top">ssize_t rt_pipe_send           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_PIPE *&nbsp;</td>
+          <td class="mdname" nowrap> <em>pipe</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>RT_PIPE_MSG *&nbsp;</td>
+          <td class="mdname" nowrap> <em>msg</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>size_t&nbsp;</td>
+          <td class="mdname" nowrap> <em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>int&nbsp;</td>
+          <td class="mdname" nowrap> <em>mode</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
         </tr>
       </table>
     </td>
@@ -454,15 +590,15 @@ Rescheduling: always unless the request is immediately satisfied or <em>timeout<
 <p>
 Send a message through a pipe. 
 <p>
-This service writes a complete message to be received from the associated special device. <a class="el" href="group__pipe.html#ga23">rt_pipe_send()</a> always preserves message boundaries, which means that all data sent through a single call of this service will be gathered in a single read(2) operation from the special device. This service differs from <a class="el" href="group__pipe.html#ga24">rt_pipe_write()</a> in that it accepts a canned message buffer, instead of a pointer to the raw data to be sent. This call is useful whenever the caller wants to prepare the message contents separately from its sending, which does not require to have all the data to be sent available at once but allows for incremental updates of the message, and also saves a message copy, since <a class="el" href="group__pipe.html#ga23">rt_pipe_send()</a> deals internally with message buffers.<p>
+This service writes a complete message to be received from the associated special device. <a class="el" href="group__pipe.html#ga13">rt_pipe_send()</a> always preserves message boundaries, which means that all data sent through a single call of this service will be gathered in a single read(2) operation from the special device. This service differs from <a class="el" href="group__pipe.html#ga14">rt_pipe_write()</a> in that it accepts a canned message buffer, instead of a pointer to the raw data to be sent. This call is useful whenever the caller wants to prepare the message contents separately from its sending, which does not require to have all the data to be sent available at once but allows for incremental updates of the message, and also saves a message copy, since <a class="el" href="group__pipe.html#ga13">rt_pipe_send()</a> deals internally with message buffers.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>pipe</em>&nbsp;</td><td>The descriptor address of the pipe to send to.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>msg</em>&nbsp;</td><td>The address of the message to be sent. The message space must have been allocated using the <a class="el" href="group__pipe.html#ga27">rt_pipe_alloc()</a> service. Once passed to <a class="el" href="group__pipe.html#ga23">rt_pipe_send()</a>, the memory pointed to by <em>msg</em> is no more under the control of the application code and thus should not be referenced by it anymore; deallocation of this memory will be automatically handled as needed. As a special exception, <em>msg</em> can be NULL and will not be dereferenced if <em>size</em> is zero.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>size</em>&nbsp;</td><td>The size in bytes of the message (payload data only). Zero is a valid value, in which case the service returns immediately without sending any message. This parameter allows you to actually send less data than you reserved using the <a class="el" href="group__pipe.html#ga27">rt_pipe_alloc()</a> service, which may be the case if you did not know how much space you needed at the time of allocation. In all other cases it may be more convenient to just pass P_MSGSIZE(msg).</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>msg</em>&nbsp;</td><td>The address of the message to be sent. The message space must have been allocated using the <a class="el" href="group__pipe.html#ga17">rt_pipe_alloc()</a> service. Once passed to <a class="el" href="group__pipe.html#ga13">rt_pipe_send()</a>, the memory pointed to by <em>msg</em> is no more under the control of the application code and thus should not be referenced by it anymore; deallocation of this memory will be automatically handled as needed. As a special exception, <em>msg</em> can be NULL and will not be dereferenced if <em>size</em> is zero.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>size</em>&nbsp;</td><td>The size in bytes of the message (payload data only). Zero is a valid value, in which case the service returns immediately without sending any message. This parameter allows you to actually send less data than you reserved using the <a class="el" href="group__pipe.html#ga17">rt_pipe_alloc()</a> service, which may be the case if you did not know how much space you needed at the time of allocation. In all other cases it may be more convenient to just pass P_MSGSIZE(msg).</td></tr>
   </table>
 </dl>
-Additionally, <a class="el" href="group__pipe.html#ga23">rt_pipe_send()</a> causes any data buffered by <a class="el" href="group__pipe.html#ga25">rt_pipe_stream()</a> to be flushed prior to sending the message. For this reason, <a class="el" href="group__pipe.html#ga23">rt_pipe_send()</a> can return a non-zero byte count to the caller if some pending data has been flushed, even if <em>size</em> was zero on entry.<p>
+Additionally, <a class="el" href="group__pipe.html#ga13">rt_pipe_send()</a> causes any data buffered by <a class="el" href="group__pipe.html#ga15">rt_pipe_stream()</a> to be flushed prior to sending the message. For this reason, <a class="el" href="group__pipe.html#ga13">rt_pipe_send()</a> can return a non-zero byte count to the caller if some pending data has been flushed, even if <em>size</em> was zero on entry.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>A set of flags affecting the operation:</td></tr>
@@ -495,13 +631,33 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga25" doxytag="pipe.c::rt_pipe_stream"></a><p>
+<a class="anchor" name="ga15" doxytag="pipe.c::rt_pipe_stream"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">ssize_t rt_pipe_stream          </td>
+          <td class="md" nowrap valign="top">ssize_t rt_pipe_stream           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_PIPE *&nbsp;</td>
+          <td class="mdname" nowrap> <em>pipe</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>const void *&nbsp;</td>
+          <td class="mdname" nowrap> <em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>size_t&nbsp;</td>
+          <td class="mdname" nowrap> <em>size</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
         </tr>
       </table>
     </td>
@@ -517,8 +673,8 @@ Rescheduling: possible.     </td>
 <p>
 Stream bytes to a pipe. 
 <p>
-This service writes a sequence of bytes to be received from the associated special device. Unlike <a class="el" href="group__pipe.html#ga23">rt_pipe_send()</a>, this service does not preserve message boundaries. Instead, an internal buffer is filled on the fly with the data. The actual sending may be delayed until the internal buffer is full, or the Linux kernel is re-entered after the real-time system enters a quiescent state.<p>
-Data buffers sent by the <a class="el" href="group__pipe.html#ga25">rt_pipe_stream()</a> service are always transmitted in FIFO order (i.e. P_NORMAL mode).<p>
+This service writes a sequence of bytes to be received from the associated special device. Unlike <a class="el" href="group__pipe.html#ga13">rt_pipe_send()</a>, this service does not preserve message boundaries. Instead, an internal buffer is filled on the fly with the data. The actual sending may be delayed until the internal buffer is full, or the Linux kernel is re-entered after the real-time system enters a quiescent state.<p>
+Data buffers sent by the <a class="el" href="group__pipe.html#ga15">rt_pipe_stream()</a> service are always transmitted in FIFO order (i.e. P_NORMAL mode).<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>pipe</em>&nbsp;</td><td>The descriptor address of the pipe to write to.</td></tr>
@@ -553,13 +709,39 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga24" doxytag="pipe.c::rt_pipe_write"></a><p>
+<a class="anchor" name="ga14" doxytag="pipe.c::rt_pipe_write"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">ssize_t rt_pipe_write          </td>
+          <td class="md" nowrap valign="top">ssize_t rt_pipe_write           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_PIPE *&nbsp;</td>
+          <td class="mdname" nowrap> <em>pipe</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>const void *&nbsp;</td>
+          <td class="mdname" nowrap> <em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>size_t&nbsp;</td>
+          <td class="mdname" nowrap> <em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>int&nbsp;</td>
+          <td class="mdname" nowrap> <em>mode</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
         </tr>
       </table>
     </td>
@@ -575,7 +757,7 @@ Rescheduling: possible.     </td>
 <p>
 Write a message to a pipe. 
 <p>
-This service writes a complete message to be received from the associated special device. <a class="el" href="group__pipe.html#ga24">rt_pipe_write()</a> always preserves message boundaries, which means that all data sent through a single call of this service will be gathered in a single read(2) operation from the special device. This service differs from <a class="el" href="group__pipe.html#ga23">rt_pipe_send()</a> in that it accepts a pointer to the raw data to be sent, instead of a canned message buffer. This call is useful whenever the caller does not need to prepare the message contents separately from its sending.<p>
+This service writes a complete message to be received from the associated special device. <a class="el" href="group__pipe.html#ga14">rt_pipe_write()</a> always preserves message boundaries, which means that all data sent through a single call of this service will be gathered in a single read(2) operation from the special device. This service differs from <a class="el" href="group__pipe.html#ga13">rt_pipe_send()</a> in that it accepts a pointer to the raw data to be sent, instead of a canned message buffer. This call is useful whenever the caller does not need to prepare the message contents separately from its sending.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>pipe</em>&nbsp;</td><td>The descriptor address of the pipe to write to.</td></tr>
@@ -583,7 +765,7 @@ This service writes a complete message to be received from the associated specia
     <tr><td valign="top"></td><td valign="top"><em>size</em>&nbsp;</td><td>The size in bytes of the message (payload data only). Zero is a valid value, in which case the service returns immediately without sending any message.</td></tr>
   </table>
 </dl>
-Additionally, <a class="el" href="group__pipe.html#ga24">rt_pipe_write()</a> causes any data buffered by <a class="el" href="group__pipe.html#ga25">rt_pipe_stream()</a> to be flushed prior to sending the message. For this reason, <a class="el" href="group__pipe.html#ga24">rt_pipe_write()</a> can return a non-zero byte count to the caller if some pending data has been flushed, even if <em>size</em> was zero on entry.<p>
+Additionally, <a class="el" href="group__pipe.html#ga14">rt_pipe_write()</a> causes any data buffered by <a class="el" href="group__pipe.html#ga15">rt_pipe_stream()</a> to be flushed prior to sending the message. For this reason, <a class="el" href="group__pipe.html#ga14">rt_pipe_write()</a> can return a non-zero byte count to the caller if some pending data has been flushed, even if <em>size</em> was zero on entry.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>A set of flags affecting the operation:</td></tr>
@@ -619,7 +801,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:44 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:24 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

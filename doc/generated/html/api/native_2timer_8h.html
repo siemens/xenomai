@@ -19,12 +19,66 @@ You should have received a copy of the GNU General Public License along with thi
 
 <p>
 Include dependency graph for timer.h:<p><center><img src="native_2timer_8h__incl.png" border="0" usemap="#include/native/timer.h_map" alt=""></center>
+<map name="include/native/timer.h_map">
+<area href="nucleus_2timer_8h-source.html" shape="rect" coords="206,78,318,102" alt="">
+<area href="native_2types_8h.html" shape="rect" coords="376,128,480,152" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="368,80,488,104" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="536,104,650,128" alt="">
+<area href="compiler_8h-source.html" shape="rect" coords="712,200,845,224" alt="">
+</map>
+
+<p>
+This graph shows which files directly or indirectly include this file:<p><center><img src="native_2timer_8h__dep__incl.png" border="0" usemap="#include/native/timer.hdep_map" alt=""></center>
+<map name="include/native/timer.hdep_map">
+<area href="task_8h.html" shape="rect" coords="217,272,358,296" alt="">
+<area href="skins_2native_2module_8c.html" shape="rect" coords="418,8,597,32" alt="">
+<area href="native_2syscall_8c.html" shape="rect" coords="421,536,594,560" alt="">
+<area href="ksrc_2skins_2native_2timer_8c.html" shape="rect" coords="206,370,369,394" alt="">
+<area href="ksrc_2skins_2native_2alarm_8c.html" shape="rect" coords="423,56,591,80" alt="">
+<area href="ksrc_2skins_2native_2cond_8c.html" shape="rect" coords="426,104,589,128" alt="">
+<area href="ksrc_2skins_2native_2event_8c.html" shape="rect" coords="423,152,591,176" alt="">
+<area href="ksrc_2skins_2native_2heap_8c.html" shape="rect" coords="426,200,589,224" alt="">
+<area href="ksrc_2skins_2native_2intr_8c.html" shape="rect" coords="431,248,583,272" alt="">
+<area href="ksrc_2skins_2native_2mutex_8c.html" shape="rect" coords="422,296,593,320" alt="">
+<area href="ksrc_2skins_2native_2queue_8c.html" shape="rect" coords="422,344,593,368" alt="">
+<area href="registry_8c.html" shape="rect" coords="418,392,597,416" alt="">
+<area href="ksrc_2skins_2native_2sem_8c.html" shape="rect" coords="427,440,587,464" alt="">
+<area href="ksrc_2skins_2native_2task_8c.html" shape="rect" coords="427,488,587,512" alt="">
+</map>
 
 <p>
 <a href="native_2timer_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
+<tr><td colspan="2"><br><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">SRTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga0">rt_timer_ns2ticks</a> (SRTIME ns)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert nanoseconds to internal clock ticks.  <a href="group__native__timer.html#ga0"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">SRTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga2">rt_timer_ticks2ns</a> (SRTIME ticks)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert internal clock ticks to nanoseconds.  <a href="group__native__timer.html#ga2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">SRTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga1">rt_timer_ns2tsc</a> (SRTIME ns)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert nanoseconds to local CPU clock ticks.  <a href="group__native__timer.html#ga1"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">SRTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga3">rt_timer_tsc2ns</a> (SRTIME ticks)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert local CPU clock ticks to nanoseconds.  <a href="group__native__timer.html#ga3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga4">rt_timer_inquire</a> (RT_TIMER_INFO *info)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about the timer.  <a href="group__native__timer.html#ga4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">RTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga5">rt_timer_read</a> (void)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the current system time.  <a href="group__native__timer.html#ga5"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">RTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga6">rt_timer_tsc</a> (void)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the current TSC value.  <a href="group__native__timer.html#ga6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga7">rt_timer_spin</a> (RTIME ns)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Busy wait burning CPU cycles.  <a href="group__native__timer.html#ga7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga8">rt_timer_set_mode</a> (RTIME nstick)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the system clock rate.  <a href="group__native__timer.html#ga8"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:39 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:21 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

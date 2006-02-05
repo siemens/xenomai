@@ -12,8 +12,8 @@
 00022 <span class="preprocessor">#ifndef _XENO_EVENT_H</span>
 00023 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_EVENT_H</span>
 00024 <span class="preprocessor"></span>
-00025 <span class="preprocessor">#include &lt;xenomai/nucleus/synch.h&gt;</span>
-00026 <span class="preprocessor">#include &lt;xenomai/native/types.h&gt;</span>
+00025 <span class="preprocessor">#include &lt;nucleus/synch.h&gt;</span>
+00026 <span class="preprocessor">#include &lt;<a class="code" href="native_2types_8h.html">native/types.h</a>&gt;</span>
 00027 
 00028 <span class="comment">/* Creation flags. */</span>
 00029 <span class="preprocessor">#define EV_PRIO  XNSYNCH_PRIO   </span><span class="comment">/* Pend by task priority order. */</span>
@@ -79,11 +79,11 @@
 00089 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
 00090 <span class="preprocessor">#endif</span>
 00091 <span class="preprocessor"></span>
-00092 <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga14">rt_event_bind</a>(RT_EVENT *event,
+00092 <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga8">rt_event_bind</a>(RT_EVENT *event,
 00093                   <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
 00094                   RTIME timeout);
 00095 
-<a name="l00096"></a><a class="code" href="group__event.html#ga15">00096</a> <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga15">rt_event_unbind</a> (RT_EVENT *event)
+<a name="l00096"></a><a class="code" href="group__event.html#ga9">00096</a> <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga9">rt_event_unbind</a> (RT_EVENT *event)
 00097 
 00098 {
 00099     event-&gt;opaque = RT_HANDLE_INVALID;
@@ -102,27 +102,27 @@
 00112 <span class="preprocessor"></span>
 00113 <span class="comment">/* Public interface. */</span>
 00114 
-00115 <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga8">rt_event_create</a>(RT_EVENT *event,
+00115 <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga0">rt_event_create</a>(RT_EVENT *event,
 00116                     <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
 00117                     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ivalue,
 00118                     <span class="keywordtype">int</span> mode);
 00119 
-00120 <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga9">rt_event_delete</a>(RT_EVENT *event);
+00120 <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga1">rt_event_delete</a>(RT_EVENT *event);
 00121 
-00122 <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga10">rt_event_signal</a>(RT_EVENT *event,
+00122 <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga2">rt_event_signal</a>(RT_EVENT *event,
 00123                     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> mask);
 00124 
-00125 <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga11">rt_event_wait</a>(RT_EVENT *event,
+00125 <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga3">rt_event_wait</a>(RT_EVENT *event,
 00126                   <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> mask,
 00127                   <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *mask_r,
 00128                   <span class="keywordtype">int</span> mode,
 00129                   RTIME timeout);
 00130 
-00131 <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga12">rt_event_clear</a>(RT_EVENT *event,
+00131 <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga4">rt_event_clear</a>(RT_EVENT *event,
 00132                    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> mask,
 00133                    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *mask_r);
 00134 
-00135 <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga13">rt_event_inquire</a>(RT_EVENT *event,
+00135 <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga5">rt_event_inquire</a>(RT_EVENT *event,
 00136                      RT_EVENT_INFO *info);
 00137 
 00138 <span class="preprocessor">#ifdef __cplusplus</span>
@@ -130,7 +130,7 @@
 00140 <span class="preprocessor">#endif</span>
 00141 <span class="preprocessor"></span>
 00142 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_EVENT_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 16 16:05:39 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:14:20 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
