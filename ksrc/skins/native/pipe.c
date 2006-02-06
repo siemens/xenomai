@@ -27,9 +27,8 @@
  *
  * Message pipe services.
  *
- * Message pipes are an improved replacement for the legacy
- * RT-FIFOS. A message pipe is a two-way communication channel between
- * Xenomai tasks and standard Linux processes using regular file I/O
+ * A message pipe is a two-way communication channel between Xenomai
+ * tasks and standard Linux processes using regular file I/O
  * operations on a pseudo-device. Pipes can be operated in a
  * message-oriented fashion so that message boundaries are preserved,
  * and also in byte streaming mode from real-time to standard Linux
@@ -41,7 +40,7 @@
  * between both ends of each pipe. Additionally, named pipes are
  * available through the registry support, which automatically creates
  * a symbolic link from entries under /proc/xenomai/registry/pipes/ to
- * the appropriate special device file.
+ * the corresponding special device file.
  *
  *@{*/
 
@@ -195,14 +194,14 @@ void __native_pipe_pkg_cleanup (void)
  * registry support is enabled, passing a valid @a name parameter when
  * creating a message pipe subsequently allows standard Linux
  * processes to follow a symbolic link from
- * /proc/xenomai/registry/pipes/@a name in order to reach the associated
- * special device (i.e. /dev/rtp*), so that the specific @a minor
- * information does not need to be known from those processes for
- * opening the proper device file. In such a case, both sides of the
- * pipe only need to agree upon a symbolic name to refer to the same
- * data path, which is especially useful whenever the @a minor number
- * is picked up dynamically using an adaptive algorithm, depending on
- * the current system configuration.
+ * /proc/xenomai/registry/pipes/@a name in order to reach the
+ * associated special device (i.e. /dev/rtp*), so that the specific @a
+ * minor information does not need to be known from those processes
+ * for opening the proper device file. In such a case, both sides of
+ * the pipe only need to agree upon a symbolic name to refer to the
+ * same data path, which is especially useful whenever the @a minor
+ * number is picked up dynamically using an adaptive algorithm, such
+ * as passing P_MINOR_AUTO as @a minor value.
  *
  * @param minor The minor number of the device associated with the
  * pipe.  Passing P_MINOR_AUTO causes the minor number to be
