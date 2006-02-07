@@ -1,3 +1,10 @@
+2006-02-07  Anders Blomdell <anders.blomdell@control.lth.se>
+
+	* ksrc/nucleus/intr.c (xnintr_irq_handler): Decrement the
+	interrupt nesting count only after all external callbacks have
+	been invoked, so that no context switch could occur before the
+	current IRQ has been unmasked/propagated down the pipeline.
+
 2006-02-04  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches, ksrc/arch/powerpc/patches: Upgrade 2.4
