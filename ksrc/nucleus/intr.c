@@ -359,7 +359,6 @@ static void xnintr_irq_handler (unsigned irq, void *cookie)
 
     ++sched->inesting;
     s = intr->isr(intr);
-    --sched->inesting;
     ++intr->hits;
 
     if (s & XN_ISR_ENABLE)
@@ -368,7 +367,7 @@ static void xnintr_irq_handler (unsigned irq, void *cookie)
     if (s & XN_ISR_CHAINED)
 	xnarch_chain_irq(irq);
 
-    if (sched->inesting == 0 && xnsched_resched_p())
+    if (--sched->inesting == 0 && xnsched_resched_p())
 	xnpod_schedule();
 
     /* Since the host tick is low priority, we can wait for returning
