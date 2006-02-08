@@ -68,6 +68,8 @@ typedef struct rt_heap {
 
     xnheap_t heap_base;	/* !< Internal heap object. */
 
+    size_t csize;	/* !< Original heap size. */
+
     int mode;		/* !< Creation mode. */
 
     void *shm_block;	/* !< Single shared block (H_SHARED only) */

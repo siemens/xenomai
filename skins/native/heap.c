@@ -62,7 +62,7 @@ static int __heap_read_proc (char *page,
 
     p += sprintf(p,"type=%s:size=%lu:used=%lu\n",
 		 heap->mode & H_SHARED ? "shared" : "local",
-		 xnheap_size(&heap->heap_base),
+		 heap->csize,
 		 xnheap_used_mem(&heap->heap_base));
 
     xnlock_get_irqsave(&nklock,s);
@@ -228,6 +228,8 @@ int rt_heap_create (RT_HEAP *heap,
 
     if (heapsize < 2 * PAGE_SIZE)
 	heapsize = 2 * PAGE_SIZE;
+
+    heap->csize = heapsize;
 
     /* Account for the overhead so that the actual free space is large
        enough to match the requested size. Using PAGE_SIZE for large
@@ -503,7 +505,7 @@ int rt_heap_alloc (RT_HEAP *heap,
 	       non-zero is given, it must match the actual heap
 	       size. */
 
-	    if (size > 0 && size != xnheap_size(&heap->heap_base))
+	    if (size > 0 && size != heap->csize)
 		{
 		err = -EINVAL;
 		goto unlock_and_exit;
@@ -704,7 +706,7 @@ int rt_heap_inquire (RT_HEAP *heap,
     
     strcpy(info->name,heap->name);
     info->nwaiters = xnsynch_nsleepers(&heap->synch_base);
-    info->heapsize = xnheap_size(&heap->heap_base);
+    info->heapsize = heap->csize;
     info->mode = heap->mode;
 
  unlock_and_exit:
