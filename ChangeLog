@@ -1,3 +1,8 @@
+2006-02-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/task.c (rt_task_self): Return NULL if
+	!xnpod_primary_p().
+
 2006-02-07  Anders Blomdell <anders.blomdell@control.lth.se>
 
 	* ksrc/nucleus/intr.c (xnintr_irq_handler): Decrement the
