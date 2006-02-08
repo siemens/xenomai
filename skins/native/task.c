@@ -1452,7 +1452,7 @@ int rt_task_set_mode (int clrmask,
 RT_TASK *rt_task_self (void)
 
 {
-    return xnpod_asynch_p() ? NULL : xeno_current_task();
+    return !xnpod_primary_p() ? NULL : xeno_current_task();
 }
 
 /**
