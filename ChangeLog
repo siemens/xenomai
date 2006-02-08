@@ -1,4 +1,13 @@
+2006-02-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* skins/native/task.c (rt_task_self): Return NULL if
+	!xnpod_primary_p().
+
 2006-01-31  Philippe Gerum  <rpm@xenomai.org>
+
+	* skins/native/heap.c (rt_heap_create): Record and use original
+	heap size when needed, not the actual size including the
+	bookkeeping area.
 
 	* skins/native/event.c (rt_event_wait): Do not auto-clear the
 	satisfied event bits; rely on explicit call to rt_event_clear() to
