@@ -129,5 +129,7 @@ void rthal_nmi_proc_unregister(void)
 
 #endif /* CONFIG_PROC_FS */
 
+/*@}*/
+
 EXPORT_SYMBOL(rthal_maxlat_tsc);
 EXPORT_SYMBOL(rthal_maxlat_us);
