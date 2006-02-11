@@ -33,7 +33,7 @@
  * 
  * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next)
  */
-ENTRY(rthal_thread_switch)
+ENTRY(_rthal_thread_switch)
 
 	[--sp] = rets;
 	[--sp] = fp;
@@ -64,7 +64,7 @@ switch_point:
 	rets = [sp++];
 	rts;
 
-ENTRY(rthal_thread_trampoline)
+ENTRY(_rthal_thread_trampoline)
 	r0 = [sp++]; 
 	jump switch_point
 	
@@ -76,7 +76,7 @@ ENTRY(rthal_thread_trampoline)
  * int rthal_defer_switch_p(void)
  */
 
-ENTRY(rthal_defer_switch_p)
+ENTRY(_rthal_defer_switch_p)
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	p2.l = lo(ILAT);
@@ -99,11 +99,11 @@ ENTRY(rthal_defer_switch_p)
 
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
 
-ENTRY(rthal_nmi_handler)
+ENTRY(_rthal_nmi_handler)
 	SAVE_ALL_SYS
 	r0 = sp;
 	SP += -12;	
-	call rthal_nmi_tick
+	call _rthal_nmi_tick
 	SP += 12;	
 	RESTORE_ALL_SYS
 	rtn; 
