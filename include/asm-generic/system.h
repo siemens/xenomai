@@ -31,6 +31,7 @@
 #include <linux/slab.h>
 #include <linux/errno.h>
 #include <linux/vmalloc.h>
+#include <linux/mm.h>
 #include <asm/uaccess.h>
 #include <asm/param.h>
 #include <asm/mmu_context.h>
@@ -343,6 +344,15 @@ static inline void xnlock_put_irqrestore (xnlock_t *lock, spl_t flags)
 
 #endif /* CONFIG_SMP */
 
+static inline int xnarch_remap_page_range(struct vm_area_struct *vma,
+					  unsigned long uvaddr,
+					  unsigned long paddr,
+					  unsigned long size,
+					  pgprot_t prot)
+{
+    return wrap_remap_page_range(vma,uvaddr,paddr,size,prot);
+}
+
 #ifdef XENO_POD_MODULE
 
 #ifdef CONFIG_SMP
@@ -526,23 +536,12 @@ static inline xnarch_cpumask_t xnarch_set_irq_affinity (unsigned irq,
 
 #ifdef XENO_HEAP_MODULE
 
-#include <linux/mm.h>
-
 static inline void xnarch_init_heapcb (xnarch_heapcb_t *hcb)
 
 {
     atomic_set(&hcb->numaps,0);
     hcb->kmflags = 0;
     hcb->heapbase = NULL;
-}
-
-static inline int xnarch_remap_page_range(struct vm_area_struct *vma,
-					  unsigned long uvaddr,
-					  unsigned long paddr,
-					  unsigned long size,
-					  pgprot_t prot)
-{
-    return wrap_remap_page_range(vma,uvaddr,paddr,size,prot);
 }
 
 #endif /* XENO_HEAP_MODULE */
