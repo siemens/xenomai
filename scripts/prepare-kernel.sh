@@ -74,13 +74,14 @@ while test x$linux_tree = x; do
 done
 
 linux_tree=`cd $linux_tree && pwd`
+linux_out=$linux_tree
 
 if test \! -r $linux_tree/Makefile; then
    echo "$me: $linux_tree is not a valid Linux kernel tree"
    exit 2
 fi
 
-# Infere the default architecture if unspecified.
+# Infer the default architecture if unspecified.
 
 if test x$linux_arch = x; then
    build_arch=`$xenomai_root/config/config.guess`
@@ -143,6 +144,12 @@ fi
 if test "$xenomai_arch" = blackfin -a -d $linux_tree/arch/blackfin; then
    linux_arch=blackfin
 fi
+
+foo=`grep '^KERNELSRC    := ' $linux_tree/Makefile | cut -d= -f2`
+if [ ! -z $foo ] ; then
+    linux_tree=$foo
+fi
+unset foo
 
 eval linux_`grep '^EXTRAVERSION =' $linux_tree/Makefile | sed -e 's, ,,g'`
 eval linux_`grep '^PATCHLEVEL =' $linux_tree/Makefile | sed -e 's, ,,g'`
