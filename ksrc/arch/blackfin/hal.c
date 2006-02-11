@@ -80,9 +80,18 @@ asmlinkage void irq_panic(int reason, struct pt_regs *regs);
 
 static void rthal_latency_above_max(struct pt_regs *regs)
 {
+    unsigned long ilat, ipend, imask, sic_imask;
+
+    ilat = *pILAT;
+    ipend = *pIPEND;
+    imask = *pIMASK;
+    sic_imask = *pSIC_IMASK;
+
     rthal_emergency_console();
     printk("NMI watchdog detected timer latency above %u us\n",
 	   rthal_maxlat_us);
+    printk("[ILAT=0x%lx, IPEND=0x%lx, IMASK=0x%lx, SIC_IMASK=0x%lx]\n",
+	   ilat, ipend, imask, sic_imask);
     dump_stack();
     irq_panic(IRQ_NMI,regs);
 }
