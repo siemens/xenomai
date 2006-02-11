@@ -1,3 +1,15 @@
+2006-02-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-generic/system.h (xnarch_remap_page_range): Move to
+	the global section.
+
+	* arch/powerpc/fpu.S: Include missing <asm/cputable.h> for fixups.
+
+2006-02-11  Jim Cromie <jim.cromie@gmail.com>
+
+	* scripts/prepare-kernel.sh: Handle configuration over a kernel
+	output tree.
+
 2006-02-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/task.c (rt_task_self): Return NULL if
