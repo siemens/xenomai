@@ -739,6 +739,9 @@ if (cond) \
 __mvm_breakable(mvm_post_graph)(&(obj)->__mvm_display_context,state); \
 while(0)
 
+/* Ipipe-tracer */
+#define ipipe_trace_panic_freeze()
+
 #ifndef PAGE_SIZE
 #define PAGE_SIZE sysconf(_SC_PAGESIZE)
 #endif /* !PAGE_SIZE */
