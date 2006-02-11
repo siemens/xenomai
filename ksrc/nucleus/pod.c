@@ -3479,6 +3479,7 @@ EXPORT_SYMBOL(xnpod_welcome_thread);
 
 EXPORT_SYMBOL(nkclock);
 EXPORT_SYMBOL(nkpod);
+EXPORT_SYMBOL(nktickdef);
 
 #ifdef CONFIG_SMP
 EXPORT_SYMBOL(nklock);
