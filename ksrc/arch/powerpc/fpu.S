@@ -19,6 +19,7 @@
 
 #include <linux/config.h> 
 #include <asm/processor.h>
+#include <asm/cputable.h>
 #include <asm/ppc_asm.h>
 
 #ifdef CONFIG_PPC601_SYNC_FIX
