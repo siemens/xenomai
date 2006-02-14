@@ -1178,6 +1178,10 @@ int xnheap_init_mapped (xnheap_t *heap,
 
     heapsize = PAGE_ALIGN(heapsize);
     heapbase = xnarch_sysalloc(heapsize);
+
+    if (!heapbase)
+        return -ENOMEM;
+
     err = xnheap_init(heap, heapbase, heapsize, PAGE_SIZE);
 
     if (err)

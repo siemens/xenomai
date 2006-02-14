@@ -73,6 +73,16 @@ static void pse51_shm_init(pse51_shm_t *shm)
     appendq(&pse51_shmq, &shm->link);
 }
 
+#ifndef CONFIG_XENO_OPT_PERVASIVE
+static void pse51_free_heap_extent(xnheap_t *heap,
+                                   void *extent,
+                                   u_long size,
+                                   void *cookie)
+{
+    xnarch_sysfree(extent, size);
+}
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+
 /* Must be called nklock locked, irq off. */
 static void pse51_shm_destroy(pse51_shm_t *shm, int force)
 {
@@ -86,7 +96,13 @@ static void pse51_shm_destroy(pse51_shm_t *shm, int force)
     if (shm->addr)
         {
         xnheap_free(&shm->heapbase, shm->addr);
+        
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	xnheap_destroy_mapped(&shm->heapbase);
+#else /* !CONFIG_XENO_OPT_PERVASIVE. */
+        xnheap_destroy(&shm->heapbase, &pse51_free_heap_extent, NULL);
+#endif /* !CONFIG_XENO_OPT_PERVASIVE. */
+
 	shm->addr = NULL;
         }
 
@@ -323,16 +339,33 @@ int ftruncate(int fd, off_t len)
         if (shm->addr)
             {
             xnheap_free(&shm->heapbase, shm->addr);
+#ifdef CONFIG_XENO_OPT_PERVASIVE
             xnheap_destroy_mapped(&shm->heapbase);
+#else /* !CONFIG_XENO_OPT_PERVASIVE. */
+            xnheap_destroy(&shm->heapbase, &pse51_free_heap_extent, NULL);
+#endif /* !CONFIG_XENO_OPT_PERVASIVE. */
+
             shm->addr = NULL;
             }
 
+#ifdef CONFIG_XENO_OPT_PERVASIVE
         err = xnheap_init_mapped(&shm->heapbase, len, 0);
+#else /* !CONFIG_XENO_OPT_PERVASIVE. */
+        {
+        void *heapaddr = xnarch_sysalloc(len);
+
+        if (heapaddr)
+            err = xnheap_init(&shm->heapbase, heapaddr, len, PAGE_SIZE);
+        else
+            err = -ENOMEM;
+        }
+#endif /* !CONFIG_XENO_OPT_PERVASIVE. */
 
         if (!err)
             {
-            shm->size = xnheap_max_contiguous(&shm->heapbase) - PAGE_SIZE;
+            shm->size = xnheap_max_contiguous(&shm->heapbase);
             shm->addr = xnheap_alloc(&shm->heapbase, shm->size);
+            shm->size -= PAGE_SIZE;
             }
         }
     else if (len != xnheap_size(&shm->heapbase))
