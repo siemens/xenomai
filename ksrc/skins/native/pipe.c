@@ -71,7 +71,7 @@ static RT_OBJECT_PROCNODE __pipe_pnode = {
     .link_proc = &__pipe_link_proc,
 };
 
-#elif CONFIG_XENO_OPT_NATIVE_REGISTRY
+#elif defined(CONFIG_XENO_OPT_NATIVE_REGISTRY)
 
 static RT_OBJECT_PROCNODE __pipe_pnode = {
 

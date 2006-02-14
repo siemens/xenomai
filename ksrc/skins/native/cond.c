@@ -97,7 +97,7 @@ static RT_OBJECT_PROCNODE __cond_pnode = {
     .write_proc = NULL
 };
 
-#elif CONFIG_XENO_OPT_NATIVE_REGISTRY
+#elif defined(CONFIG_XENO_OPT_NATIVE_REGISTRY)
 
 static RT_OBJECT_PROCNODE __cond_pnode = {
 

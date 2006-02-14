@@ -18,6 +18,9 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	bool 'Interrupt shield support' CONFIG_XENO_OPT_ISHIELD
 	bool 'Statistics collection' CONFIG_XENO_OPT_STATS
 	bool 'Debug support' CONFIG_XENO_OPT_DEBUG
+	if [ "$CONFIG_XENO_OPT_DEBUG" = "y" ]; then
+		bool 'Queue Debugging support' CONFIG_XENO_OPT_DEBUG_QUEUES
+	fi
 	bool 'Watchdog support' CONFIG_XENO_OPT_WATCHDOG
 
 	bool 'Enable periodic timer support' CONFIG_XENO_OPT_TIMING_PERIODIC

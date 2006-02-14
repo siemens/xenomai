@@ -9,7 +9,8 @@ config XENO_SKIN_NATIVE
 if XENO_SKIN_NATIVE != n
 
 config XENO_OPT_NATIVE_REGISTRY
-	bool "Registry support"
+	bool
+	prompt "Registry support" if !XENO_OPT_PERVASIVE
 	default y
 	help
 	
