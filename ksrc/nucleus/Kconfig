@@ -87,6 +87,15 @@ config XENO_OPT_DEBUG
 	Do not switch this option on unless you really know what you
 	are doing.
 
+config XENO_OPT_DEBUG_QUEUES
+	bool "Queue Debugging support"
+	depends on XENO_OPT_DEBUG
+	help
+	
+	This option activates debugging checks for all queueing
+	operations of the Xenomai core. It adds even more runtime
+	overhead then CONFIG_XENO_OPT_DEBUG, use with care.
+
 config XENO_OPT_WATCHDOG
 	bool "Watchdog support"
 	default n

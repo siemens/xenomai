@@ -7,8 +7,14 @@ dep_tristate 'Native skin' CONFIG_XENO_SKIN_NATIVE $CONFIG_XENO_OPT_NUCLEUS
 if [ "$CONFIG_XENO_SKIN_NATIVE" != "n" ]; then
 	mainmenu_option next_comment
 	comment 'Native interface options'
-	bool 'Registry support' CONFIG_XENO_OPT_NATIVE_REGISTRY
-	int 'Number of registry slots' CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS 512
+	if [ "$CONFIG_XENO_OPT_PERVASIVE" != "n" ]; then
+		define_bool CONFIG_XENO_OPT_NATIVE_REGISTRY y
+	else
+		bool 'Registry support' CONFIG_XENO_OPT_NATIVE_REGISTRY
+	fi
+	if [ "$CONFIG_XENO_OPT_NATIVE_REGISTRY" != "n" ]; then
+		int 'Number of registry slots' CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS 512
+	fi
 	dep_bool 'Message pipes' CONFIG_XENO_OPT_NATIVE_PIPE $CONFIG_XENO_OPT_PIPE
 	if [ "$CONFIG_XENO_OPT_NATIVE_PIPE" != "n" ]; then
 		int 'Bytes in buffer space' CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ 4096
