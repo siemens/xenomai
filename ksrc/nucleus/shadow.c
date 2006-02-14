@@ -1174,13 +1174,13 @@ static inline int do_hisyscall_event (unsigned event, unsigned domid, void *data
 	    else
 		__xn_error_return(regs,-EINVAL);
 
-	    return RTHAL_EVENT_STOP;
+            goto nucleus_syscall_done;
 
 	case __xn_sys_arch:
 
 	    /* We don't want to switch mode here. */
 	    __xn_status_return(regs,xnarch_local_syscall(regs));
-	    return RTHAL_EVENT_STOP;
+            goto nucleus_syscall_done;
 
 	case __xn_sys_bind:
 	case __xn_sys_info:
@@ -1206,6 +1206,11 @@ static inline int do_hisyscall_event (unsigned event, unsigned domid, void *data
 	        {
 		xnshadow_relax(1);
 		exec_nucleus_syscall(muxop,regs);
+
+ nucleus_syscall_done:
+                if (xnpod_shadow_p() && signal_pending(p))
+                    request_syscall_restart(thread,regs);
+
 		return RTHAL_EVENT_STOP;
 		}
 
@@ -1412,6 +1417,10 @@ static inline int do_losyscall_event (unsigned event, unsigned domid, void *data
 	   behalf of the Linux domain (over which we are currently
 	   running). */
 	exec_nucleus_syscall(muxop,regs);
+
+        if (xnpod_shadow_p() && signal_pending(current))
+            request_syscall_restart(thread,regs);
+
 	return RTHAL_EVENT_STOP;
 	}
 
