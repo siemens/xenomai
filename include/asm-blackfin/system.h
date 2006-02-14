@@ -249,7 +249,7 @@ static inline int xnarch_escalate (void)
      * interrupt stack frame over the incoming thread through RTI. In
      * the latter case, the preempted kernel code will be diverted
      * shortly before resumption in order to run the rescheduling
-     * procedure (see __ipipe_irq_tail trampoline).
+     * procedure (see __ipipe_irq_tail_hook).
      */
 
     if (rthal_defer_switch_p()) {
@@ -513,7 +513,7 @@ static inline int xnarch_init (void)
 {
     int err;
 
-    __ipipe_irq_tail = (unsigned long)&xnpod_schedule_deferred;
+    __ipipe_irq_tail_hook = (unsigned long)&xnpod_schedule_deferred;
 
     err = rthal_init();
 
@@ -561,7 +561,7 @@ static inline int xnarch_init (void)
 static inline void xnarch_exit (void)
 
 {
-    __ipipe_irq_tail = 0;
+    __ipipe_irq_tail_hook = 0;
 #ifdef CONFIG_XENO_OPT_PERVASIVE
     xnshadow_cleanup();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
