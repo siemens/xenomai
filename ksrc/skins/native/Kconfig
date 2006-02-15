@@ -128,11 +128,11 @@ config XENO_OPT_NATIVE_MPS
 
 config XENO_OPT_NATIVE_INTR
 	bool "Interrupts"
-	default y
 	help
 	
 	This option provides a simple API to deal with interrupts,
-	both in kernel and user-space contexts. Registry support is
-	required.
+	both in kernel and user-space contexts. Note that the preferred
+	way of implementing generic drivers usable across all Xenomai
+	interfaces is defined by the Real-Time Driver Model (RTDM).
 
 endif
