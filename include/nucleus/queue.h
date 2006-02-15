@@ -57,27 +57,27 @@ typedef struct xnqueue {
 
     xnholder_t head;
     int elems;
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_DEBUG) && defined(CONFIG_SMP)
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_DEBUG_QUEUES) && defined(CONFIG_SMP)
     xnlock_t lock;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_DEBUG && CONFIG_SMP */
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_DEBUG_QUEUES && CONFIG_SMP */
 
 } xnqueue_t;
 
-#if defined(CONFIG_XENO_OPT_DEBUG) && defined(CONFIG_SMP)
+#if defined(CONFIG_XENO_OPT_DEBUG_QUEUES) && defined(CONFIG_SMP)
 #define DECLARE_XNQUEUE(q) xnqueue_t q = { { &(q).head, &(q).head }, 0, XNARCH_LOCK_UNLOCKED }
-#else /* !(CONFIG_XENO_OPT_DEBUG && CONFIG_SMP) */
+#else /* !(CONFIG_XENO_OPT_DEBUG_QUEUES && CONFIG_SMP) */
 #define DECLARE_XNQUEUE(q) xnqueue_t q = { { &(q).head, &(q).head }, 0 }
-#endif /* CONFIG_XENO_OPT_DEBUG && CONFIG_SMP */
+#endif /* CONFIG_XENO_OPT_DEBUG_QUEUES && CONFIG_SMP */
 
 static inline void initq (xnqueue_t *qslot) {
     inith(&qslot->head);
     qslot->elems = 0;
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_DEBUG) && defined(CONFIG_SMP)
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_DEBUG_QUEUES) && defined(CONFIG_SMP)
     xnlock_init(&qslot->lock);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_DEBUG && CONFIG_SMP */
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_DEBUG_QUEUES && CONFIG_SMP */
 }
 
-#ifdef CONFIG_XENO_OPT_DEBUG
+#ifdef CONFIG_XENO_OPT_DEBUG_QUEUES
 
 #if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)
 
@@ -172,7 +172,7 @@ do { \
    dth(__holder);				\
    --(__qslot)->elems; })
 
-#else /* !CONFIG_XENO_OPT_DEBUG */
+#else /* !CONFIG_XENO_OPT_DEBUG_QUEUES */
 
 static inline int insertq (xnqueue_t *qslot,
                            xnholder_t *head,
@@ -206,7 +206,7 @@ static inline int removeq (xnqueue_t *qslot,
     return --qslot->elems;
 }
 
-#endif /* CONFIG_XENO_OPT_DEBUG */
+#endif /* CONFIG_XENO_OPT_DEBUG_QUEUES */
 
 static inline xnholder_t *getheadq (xnqueue_t *qslot)
 {
