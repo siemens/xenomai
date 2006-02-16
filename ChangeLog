@@ -1,9 +1,15 @@
+2006-02-16  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/blackfin: Upgrade to 2005R4-RC2.
+
 2006-02-14  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/nucleus/shadow.c (do_hisyscall_event, do_losyscall_event):
 	Relax thread upon interruption of a nucleus syscall by a signal.
 
 2006-02-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/blackfin: Upgrade to uClinux 2005R4-RC2.
 
 	* include/asm-generic/system.h (xnarch_remap_page_range): Move to
 	the global section.
