@@ -31,6 +31,7 @@
 
 
 #include <linux/delay.h>
+#include <linux/mman.h>
 
 #include <rtdm/rtdm_driver.h>
 
@@ -1286,7 +1287,7 @@ int rtdm_irq_enable(rtdm_irq_t *irq_handle);
  * Rescheduling: never.
  */
 int rtdm_irq_disable(rtdm_irq_t *irq_handle);
-/** @} */
+/** @} Interrupt Management Services */
 
 
 /*!
@@ -1358,7 +1359,9 @@ void rtdm_nrtsig_destroy(rtdm_nrtsig_t *nrt_sig);
  * environments.
  */
 void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig);
-/** @} */
+/** @} Non-Real-Time Signalling Services */
+
+#endif /* DOXYGEN_CPP */
 
 
 /*!
@@ -1366,6 +1369,153 @@ void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig);
  * @defgroup util Utility Services
  * @{
  */
+
+struct rtdm_mmap_data {
+    void *src_addr;
+    struct vm_operations_struct *vm_ops;
+    void *vm_private_data;
+};
+
+static int rtdm_mmap_buffer(struct file *filp, struct vm_area_struct *vma)
+{
+    struct rtdm_mmap_data *mmap_data = filp->private_data;
+
+    vma->vm_ops = mmap_data->vm_ops;
+    vma->vm_private_data = mmap_data->vm_private_data;
+
+    return xnarch_remap_page_range(vma, vma->vm_start,
+                                   virt_to_phys(mmap_data->src_addr),
+                                   vma->vm_end - vma->vm_start, PAGE_SHARED);
+}
+
+static struct file_operations rtdm_mmap_fops = {
+    .mmap = rtdm_mmap_buffer,
+};
+
+/**
+ * Map a kernel memory range into the address space of the user.
+ *
+ * @param[in] user_info User information pointer as passed to the invoked
+ * device operation handler
+ * @param[in] src_addr Kernel address to be mapped
+ * @param[in] len Length of the memory range
+ * @param[in] prot Protection flags for the user's memory range, typically
+ * either PROT_READ or PROT_READ|PROT_WRITE
+ * @param[in,out] pptr Address of a pointer containing the desired user
+ * address or NULL on entry and the finally assigned address on return
+ * @param[in] vm_ops vm_operations to be executed on the vma_area of the
+ * user memory range or NULL
+ * @param[in] vm_private_data Private data to be stored in the vma_area,
+ * primarily useful for vm_operation handlers
+ *
+ * @return 0 on success, otherwise (most common values):
+ *
+ * - -EINVAL is returned if an invalid start address, size, or destination
+ * address was passed.
+ *
+ * - -ENOMEM is returned if there is insufficient free memory or the limit of
+ * memory mapping for the user process was reached.
+ *
+ * - -EAGAIN is returned if too much memory has been already locked by the
+ * user process.
+ *
+ * @note RTDM supports two models for unmapping the user memory range again.
+ * One is explicite unmapping via rtdm_munmap(), either performed when the
+ * user requests it via an IOCTL etc. or when the related device is closed.
+ * The other is automatic unmapping, triggered by the user invoking standard
+ * munmap() or by the termination of the related process. To track release of
+ * the mapping and therefore relinquishment of the referenced physical memory,
+ * the caller of rtdm_mmap_to_user() can pass a vm_operations_struct on
+ * invocation, defining a close handler for the vm_area. See Linux
+ * documentaion (e.g. Linux Device Drivers book) on virtual memory management
+ * for details.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - User-space task (non-RT)
+ *
+ * Rescheduling: possible.
+ */
+int rtdm_mmap_to_user(rtdm_user_info_t *user_info, void *src_addr, size_t len,
+                      int prot, void **pptr,
+                      struct vm_operations_struct *vm_ops,
+                      void *vm_private_data)
+{
+    struct rtdm_mmap_data   mmap_data = {src_addr, vm_ops, vm_private_data};
+    struct file             *filp;
+    struct file_operations  *old_fops;
+    void                    *old_priv_data;
+    void                    *user_ptr;
+
+    filp = filp_open("/dev/zero", O_RDWR, 0);
+    if (IS_ERR(filp))
+        return PTR_ERR(filp);
+
+    old_fops = filp->f_op;
+    filp->f_op = &rtdm_mmap_fops;
+
+    old_priv_data = filp->private_data;
+    filp->private_data = &mmap_data;
+
+    down_write(&user_info->mm->mmap_sem);
+    user_ptr = (void *)do_mmap(filp, (unsigned long)*pptr, len, prot,
+                               MAP_SHARED, 0);
+    up_write(&user_info->mm->mmap_sem);
+
+    filp->f_op = old_fops;
+    filp->private_data = old_priv_data;
+
+    filp_close(filp, user_info->files);
+
+    if (IS_ERR(user_ptr))
+        return PTR_ERR(user_ptr);
+
+    *pptr = user_ptr;
+    return 0;
+}
+
+EXPORT_SYMBOL(rtdm_mmap_to_user);
+
+
+/**
+ * Unmap a user memory range.
+ *
+ * @param[in] user_info User information pointer as passed to
+ * rtdm_mmap_to_user() when requesting to map the memory range
+ * @param[in] ptr User address or the memory range
+ * @param[in] len Length of the memory range
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EINVAL is returned if an invalid address or size was passed.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - User-space task (non-RT)
+ *
+ * Rescheduling: possible.
+ */
+int rtdm_munmap(rtdm_user_info_t *user_info, void *ptr, size_t len)
+{
+    int err;
+
+    down_write(&user_info->mm->mmap_sem);
+    err = do_munmap(user_info->mm, (unsigned long)ptr, len);
+    up_write(&user_info->mm->mmap_sem);
+
+    return err;
+}
+
+EXPORT_SYMBOL(rtdm_munmap);
+
+
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 
 /**
  * Real-time safe message printing on kernel console
@@ -1583,6 +1733,6 @@ int rtdm_strncpy_from_user(rtdm_user_info_t *user_info, char *dst,
  */
 int rtdm_in_rt_context(void);
 
-/** @} */
-
 #endif /* DOXYGEN_CPP */
+
+/** @} Utility Services */
