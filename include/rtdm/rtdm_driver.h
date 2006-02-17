@@ -995,6 +995,12 @@ static inline void rtdm_free(void *ptr)
     xnfree(ptr);
 }
 
+int rtdm_mmap_to_user(rtdm_user_info_t *user_info, void *src_addr, size_t len,
+                      int prot, void **pptr,
+                      struct vm_operations_struct *vm_ops,
+                      void *vm_private_data);
+int rtdm_munmap(rtdm_user_info_t *user_info, void *ptr, size_t len);
+
 static inline int rtdm_read_user_ok(rtdm_user_info_t *user_info,
                                     const void __user *ptr, size_t size)
 {

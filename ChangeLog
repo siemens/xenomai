@@ -1,3 +1,9 @@
+2006-02-17  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skin/rtdm/drvlib.c, include/rtdm/rtdm_driver.h: Add mmap
+	und munmap helper functions which do not depend on user-provided
+	standard Linux file descriptors.
+
 2006-02-16  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/blackfin: Upgrade to 2005R4-RC2.
