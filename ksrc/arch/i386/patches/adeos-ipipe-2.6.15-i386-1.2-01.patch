@@ -1,3 +1,54 @@
+--- 2.6.15/drivers/pci/msi.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/drivers/pci/msi.c	2006-02-16 18:05:04.000000000 +0100
+@@ -149,6 +149,21 @@ static void unmask_MSI_irq(unsigned int 
+ 	msi_set_mask_bit(vector, 0);
+ }
+ 
++#ifdef CONFIG_IPIPE
++static void ack_MSI_irq_w_maskbit(unsigned int vector)
++{
++    mask_MSI_irq(vector);
++    __ack_APIC_irq();
++}
++static void ack_MSI_irq_wo_maskbit(unsigned int vector)
++{
++    __ack_APIC_irq();
++}
++#else /* !CONFIG_IPIPE */
++#define ack_MSI_irq_wo_maskbit  do_nothing
++#define ack_MSI_irq_w_maskbit   mask_MSI_irq
++#endif /* CONFIG_IPIPE */
++
+ static unsigned int startup_msi_irq_wo_maskbit(unsigned int vector)
+ {
+ 	struct msi_desc *entry;
+@@ -212,7 +227,7 @@ static struct hw_interrupt_type msix_irq
+ 	.shutdown	= shutdown_msi_irq,
+ 	.enable		= unmask_MSI_irq,
+ 	.disable	= mask_MSI_irq,
+-	.ack		= mask_MSI_irq,
++	.ack		= ack_MSI_irq_w_maskbit,
+ 	.end		= end_msi_irq_w_maskbit,
+ 	.set_affinity	= set_msi_irq_affinity
+ };
+@@ -228,7 +243,7 @@ static struct hw_interrupt_type msi_irq_
+ 	.shutdown	= shutdown_msi_irq,
+ 	.enable		= unmask_MSI_irq,
+ 	.disable	= mask_MSI_irq,
+-	.ack		= mask_MSI_irq,
++	.ack		= ack_MSI_irq_w_maskbit,
+ 	.end		= end_msi_irq_w_maskbit,
+ 	.set_affinity	= set_msi_irq_affinity
+ };
+@@ -244,7 +259,7 @@ static struct hw_interrupt_type msi_irq_
+ 	.shutdown	= shutdown_msi_irq,
+ 	.enable		= do_nothing,
+ 	.disable	= do_nothing,
+-	.ack		= do_nothing,
++	.ack		= ack_MSI_irq_wo_maskbit,
+ 	.end		= end_msi_irq_wo_maskbit,
+ 	.set_affinity	= set_msi_irq_affinity
+ };
 --- 2.6.15/include/linux/hardirq.h	2006-01-03 04:21:10.000000000 +0100
 +++ 2.6.15-ipipe/include/linux/hardirq.h	2006-01-07 15:18:31.000000000 +0100
 @@ -87,8 +87,21 @@ extern void synchronize_irq(unsigned int
@@ -23,8 +74,8 @@
  struct task_struct;
  
 --- 2.6.15/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.15-ipipe/include/linux/ipipe.h	2006-01-06 12:43:53.000000000 +0100
-@@ -0,0 +1,792 @@
++++ 2.6.15-ipipe/include/linux/ipipe.h	2006-02-11 18:27:51.000000000 +0100
+@@ -0,0 +1,796 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -786,6 +837,8 @@
 +		__ipipe_unlock_irq(ipipe_percpu_domain[cpuid], irq);	\
 +	} while(0)
 +
++#define ipipe_root_domain_p			(ipipe_current_domain == ipipe_root_domain)
++
 +#else	/* !CONFIG_IPIPE */
 +
 +#define ipipe_init()				do { } while(0)
@@ -813,6 +866,8 @@
 +
 +#define ipipe_irq_lock(irq)			do { } while(0)
 +#define ipipe_irq_unlock(irq)			do { } while(0)
++
++#define ipipe_root_domain_p			1
 +
 +#endif	/* CONFIG_IPIPE */
 +
@@ -3095,8 +3150,20 @@
  
  #include "syscall_table.S"
 --- 2.6.15/arch/i386/kernel/i8259.c	2006-01-03 04:21:10.000000000 +0100
-+++ 2.6.15-ipipe/arch/i386/kernel/i8259.c	2006-01-07 15:31:56.000000000 +0100
-@@ -89,13 +89,14 @@ void disable_8259A_irq(unsigned int irq)
++++ 2.6.15-ipipe/arch/i386/kernel/i8259.c	2006-02-11 18:30:00.000000000 +0100
+@@ -39,8 +39,9 @@ DEFINE_SPINLOCK(i8259A_lock);
+ 
+ static void end_8259A_irq (unsigned int irq)
+ {
+-	if (!(irq_desc[irq].status & (IRQ_DISABLED|IRQ_INPROGRESS)) &&
+-							irq_desc[irq].action)
++	if (!ipipe_root_domain_p ||
++	    (!(irq_desc[irq].status & (IRQ_DISABLED|IRQ_INPROGRESS)) &&
++	     irq_desc[irq].action))
+ 		enable_8259A_irq(irq);
+ }
+ 
+@@ -89,13 +90,14 @@ void disable_8259A_irq(unsigned int irq)
  	unsigned int mask = 1 << irq;
  	unsigned long flags;
  
@@ -3113,7 +3180,7 @@
  }
  
  void enable_8259A_irq(unsigned int irq)
-@@ -103,13 +104,14 @@ void enable_8259A_irq(unsigned int irq)
+@@ -103,13 +105,14 @@ void enable_8259A_irq(unsigned int irq)
  	unsigned int mask = ~(1 << irq);
  	unsigned long flags;
  
@@ -3130,7 +3197,7 @@
  }
  
  int i8259A_irq_pending(unsigned int irq)
-@@ -118,12 +120,12 @@ int i8259A_irq_pending(unsigned int irq)
+@@ -118,12 +121,12 @@ int i8259A_irq_pending(unsigned int irq)
  	unsigned long flags;
  	int ret;
  
@@ -3145,7 +3212,7 @@
  
  	return ret;
  }
-@@ -170,7 +172,7 @@ static void mask_and_ack_8259A(unsigned 
+@@ -170,7 +173,7 @@ static void mask_and_ack_8259A(unsigned 
  	unsigned int irqmask = 1 << irq;
  	unsigned long flags;
  
@@ -3154,7 +3221,7 @@
  	/*
  	 * Lightweight spurious IRQ detection. We do not want
  	 * to overdo spurious IRQ handling - it's usually a sign
-@@ -188,6 +190,15 @@ static void mask_and_ack_8259A(unsigned 
+@@ -188,6 +191,15 @@ static void mask_and_ack_8259A(unsigned 
  	 */
  	if (cached_irq_mask & irqmask)
  		goto spurious_8259A_irq;
@@ -3170,7 +3237,7 @@
  	cached_irq_mask |= irqmask;
  
  handle_real_irq:
-@@ -201,7 +212,7 @@ handle_real_irq:
+@@ -201,7 +213,7 @@ handle_real_irq:
  		outb(cached_master_mask, PIC_MASTER_IMR);
  		outb(0x60+irq,PIC_MASTER_CMD);	/* 'Specific EOI to master */
  	}
@@ -3179,7 +3246,7 @@
  	return;
  
  spurious_8259A_irq:
-@@ -302,7 +313,7 @@ void init_8259A(int auto_eoi)
+@@ -302,7 +314,7 @@ void init_8259A(int auto_eoi)
  {
  	unsigned long flags;
  
@@ -3188,7 +3255,7 @@
  
  	outb(0xff, PIC_MASTER_IMR);	/* mask all of 8259A-1 */
  	outb(0xff, PIC_SLAVE_IMR);	/* mask all of 8259A-2 */
-@@ -336,7 +347,7 @@ void init_8259A(int auto_eoi)
+@@ -336,7 +348,7 @@ void init_8259A(int auto_eoi)
  	outb(cached_master_mask, PIC_MASTER_IMR); /* restore master IRQ mask */
  	outb(cached_slave_mask, PIC_SLAVE_IMR);	  /* restore slave IRQ mask */
  
@@ -3197,7 +3264,7 @@
  }
  
  /*
-@@ -410,7 +421,7 @@ void __init init_IRQ(void)
+@@ -410,7 +422,7 @@ void __init init_IRQ(void)
  	 */
  	for (i = 0; i < (NR_VECTORS - FIRST_EXTERNAL_VECTOR); i++) {
  		int vector = FIRST_EXTERNAL_VECTOR + i;
@@ -3207,7 +3274,7 @@
  		if (vector != SYSCALL_VECTOR) 
  			set_intr_gate(vector, interrupt[i]);
 --- 2.6.15/arch/i386/kernel/io_apic.c	2006-01-03 04:21:10.000000000 +0100
-+++ 2.6.15-ipipe/arch/i386/kernel/io_apic.c	2006-01-07 15:34:59.000000000 +0100
++++ 2.6.15-ipipe/arch/i386/kernel/io_apic.c	2006-02-15 20:53:40.000000000 +0100
 @@ -180,18 +180,20 @@ static void mask_IO_APIC_irq (unsigned i
  {
  	unsigned long flags;
@@ -5208,7 +5275,7 @@
  extern void disable_APIC_timer(void);
  extern void enable_APIC_timer(void);
 --- 2.6.15/include/asm-i386/io_apic.h	2006-01-03 04:21:10.000000000 +0100
-+++ 2.6.15-ipipe/include/asm-i386/io_apic.h	2006-01-07 15:31:56.000000000 +0100
++++ 2.6.15-ipipe/include/asm-i386/io_apic.h	2006-02-15 20:53:29.000000000 +0100
 @@ -16,8 +16,14 @@
  #ifdef CONFIG_PCI_MSI
  static inline int use_pci_vector(void)	{return 1;}
@@ -5240,7 +5307,7 @@
  #define shutdown_level_ioapic	mask_IO_APIC_irq
  #define enable_level_ioapic	unmask_IO_APIC_irq
 --- 2.6.15/include/asm-i386/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.15-ipipe/include/asm-i386/ipipe.h	2006-01-30 23:42:26.000000000 +0100
++++ 2.6.15-ipipe/include/asm-i386/ipipe.h	2006-02-15 21:28:59.000000000 +0100
 @@ -0,0 +1,211 @@
 +/*   -*- linux-c -*-
 + *   include/asm-i386/ipipe.h
@@ -5273,10 +5340,10 @@
 +#include <linux/threads.h>
 +#include <irq_vectors.h>
 +
-+#define IPIPE_ARCH_STRING	"1.2-00"
++#define IPIPE_ARCH_STRING	"1.2-01"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	2
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifdef CONFIG_X86_LOCAL_APIC
 +/* We want to cover the whole IRQ space when the APIC is enabled. */
