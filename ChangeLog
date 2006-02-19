@@ -1,3 +1,13 @@
+2006-02-19  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.1{45}-1.2-01.
+
+2006-02-18  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/syscall.c: Make rt_task_set_periodic a
+	conforming call.
+	(__rt_event_wait): Check for output parameter address.
+
 2006-02-17  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skin/rtdm/drvlib.c, include/rtdm/rtdm_driver.h: Add mmap
