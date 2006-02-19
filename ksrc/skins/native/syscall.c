@@ -1351,7 +1351,8 @@ static int __rt_event_wait (struct task_struct *curr, struct pt_regs *regs)
     RTIME timeout;
     int mode, err;
 
-    if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg1(regs),sizeof(ph)))
+    if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg1(regs),sizeof(ph)) ||
+	!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg3(regs),sizeof(mask_r)))
 	return -EFAULT;
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
@@ -3495,7 +3496,7 @@ static xnsysent_t __systab[] = {
     [__native_task_resume ] = { &__rt_task_resume, __xn_exec_any },
     [__native_task_delete ] = { &__rt_task_delete, __xn_exec_conforming },
     [__native_task_yield ] = { &__rt_task_yield, __xn_exec_primary },
-    [__native_task_set_periodic ] = { &__rt_task_set_periodic, __xn_exec_primary },
+    [__native_task_set_periodic ] = { &__rt_task_set_periodic, __xn_exec_conforming },
     [__native_task_wait_period ] = { &__rt_task_wait_period, __xn_exec_primary },
     [__native_task_set_priority ] = { &__rt_task_set_priority, __xn_exec_any },
     [__native_task_sleep ] = { &__rt_task_sleep, __xn_exec_primary },
