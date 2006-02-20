@@ -28,4 +28,4 @@ AM_LDFLAGS = \
 
 check_PROGRAMS=satch_s
 
-satch_s_SOURCES=satch.c
+nodist_satch_s_SOURCES=satch.c
