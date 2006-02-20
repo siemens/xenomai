@@ -1,3 +1,7 @@
+2006-02-20  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/arm/patches: Upgrade to 2.6.15-1.2-00.
+
 2006-02-19  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.1{45}-1.2-01.
@@ -165,7 +169,7 @@
 
 	* Makefile.am: Re-run prepare-kernel only when maintainer mode is
 	enabled, rename install-nodev install-user and do not install
-	kernel when make instal-user is used.
+	kernel when make install-user is used.
 
 2006-01-18  Jan Kiszka  <jan.kiszka@web.de>
 
