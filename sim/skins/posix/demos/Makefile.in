@@ -13,7 +13,7 @@
 # PARTICULAR PURPOSE.
 
 @SET_MAKE@
-SOURCES = $(satch_s_SOURCES)
+SOURCES = $(nodist_satch_s_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -48,8 +48,8 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/include/xeno_config.h
 CONFIG_CLEAN_FILES =
-am_satch_s_OBJECTS = satch.$(OBJEXT)
-satch_s_OBJECTS = $(am_satch_s_OBJECTS)
+nodist_satch_s_OBJECTS = satch.$(OBJEXT)
+satch_s_OBJECTS = $(nodist_satch_s_OBJECTS)
 satch_s_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
@@ -62,8 +62,8 @@ LTCOMPILE = $(LIBTOOL) --mode=compile --tag=CC $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link --tag=CC $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(satch_s_SOURCES)
-DIST_SOURCES = $(satch_s_SOURCES)
+SOURCES = $(nodist_satch_s_SOURCES)
+DIST_SOURCES =
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -233,7 +233,7 @@ AM_LDFLAGS = \
 	../../../vm/libmvm.la \
 	../../../vmutils/libmvmutils.la
 
-satch_s_SOURCES = satch.c
+nodist_satch_s_SOURCES = satch.c
 all: all-am
 
 .SUFFIXES:
