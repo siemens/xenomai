@@ -1,5 +1,9 @@
 2006-02-20  Philippe Gerum  <rpm@xenomai.org>
 
+ 	* RELEASE: Xenomai 2.1-rc3
+
+2006-02-20  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/arch/arm/patches: Upgrade to 2.6.15-1.2-00.
 
 2006-02-19  Philippe Gerum  <rpm@xenomai.org>
