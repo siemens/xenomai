@@ -258,7 +258,7 @@ error:
     return 0;
 }
 
-int close(int fd)
+int pse51_shm_close(int fd)
 {
     pse51_desc_t *desc;
     pse51_shm_t *shm;
@@ -777,7 +777,7 @@ void pse51_shm_pkg_cleanup(void)
 
 EXPORT_SYMBOL(shm_open);
 EXPORT_SYMBOL(shm_unlink);
-EXPORT_SYMBOL(close);
+EXPORT_SYMBOL(pse51_shm_close);
 EXPORT_SYMBOL(ftruncate);
 EXPORT_SYMBOL(mmap);
 EXPORT_SYMBOL(munmap);

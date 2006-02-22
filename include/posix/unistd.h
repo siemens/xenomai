@@ -33,9 +33,12 @@
 extern "C" {
 #endif
 
-int ftruncate(int fildes, off_t length);
+#undef close
+#define close(fd) pse51_shm_close(fd)
 
-int close(int fildes);
+int pse51_shm_close(int fildes);
+
+int ftruncate(int fildes, off_t length);
 
 #ifdef __cplusplus
 }

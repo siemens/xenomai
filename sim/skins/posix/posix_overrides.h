@@ -154,7 +154,6 @@
 #define mq_notify pse51_mq_notify
 #define shm_open pse51_shm_open
 #define shm_unlink pse51_shm_unlink
-#define close pse51_close
 #define mmap pse51_mmap
 #define munmap pse51_munmap
 #define ftruncate pse51_ftruncate
