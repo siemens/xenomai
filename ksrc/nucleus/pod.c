@@ -233,6 +233,14 @@ void xnpod_schedule_deferred (void)
 
 #endif /* __KERNEL__ */
 
+static void xnpod_flush_heap (xnheap_t *heap,
+                              void *extaddr,
+                              u_long extsize,
+                              void *cookie)
+{
+    xnarch_sysfree(extaddr,extsize);
+}
+
 /*! 
  * \fn int xnpod_init(xnpod_t *pod,int minpri,int maxpri,xnflags_t flags)
  * \brief Initialize a new pod.
@@ -330,10 +338,6 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
     initq(&pod->tswitchq);
     initq(&pod->tdeleteq);
 
-    for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++)
-        for (n = 0; n < XNTIMER_WHEELSIZE; n++)
-            initq(&pod->sched[cpu].timerwheel[n]);
-
     pod->schedlck = 0;
     pod->minpri = minpri;
     pod->maxpri = maxpri;
@@ -388,6 +392,30 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
         goto fail;
         }
 
+    for (cpu = 0; cpu < nr_cpus; cpu++)
+        {
+        err = -xntimerq_init(&pod->sched[cpu].timerqueue);
+    
+        if (err)
+            {
+            xnheap_destroy(&kheap,&xnpod_flush_heap,NULL);
+            goto fail;
+            }
+
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
+        for (n = 0; n < XNTIMER_WHEELSIZE; n++)
+            {
+            err = -xntlist_init(&pod->sched[cpu].timerwheel[n]);
+
+            if (err)
+                {
+                xnheap_destroy(&kheap,&xnpod_flush_heap,NULL);
+                goto fail;
+                }
+            }
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
+        }
+    
     for (cpu = 0; cpu < nr_cpus; ++cpu)
         {
         sched = xnpod_sched_slot(cpu);
@@ -447,7 +475,7 @@ fail:
     xnarch_memory_barrier();
 
     xnarch_notify_ready();
-
+    
     if (module_param_value(tick_arg) >= 0)
 	/* User passed tick_arg=<count-of-ns> */
 	nstick = module_param_value(tick_arg);
@@ -462,15 +490,8 @@ fail:
 	return err;
 	}
 
+    
     return 0;
-}
-
-static void xnpod_flush_heap (xnheap_t *heap,
-                              void *extaddr,
-                              u_long extsize,
-                              void *cookie)
-{
-    xnarch_sysfree(extaddr,extsize);
 }
 
 /*! 
@@ -502,6 +523,7 @@ void xnpod_shutdown (int xtype)
 {
     xnholder_t *holder, *nholder;
     xnthread_t *thread;
+    unsigned n, cpu;
     spl_t s;
 
     xnlock_get_irqsave(&nklock,s);
@@ -539,6 +561,15 @@ void xnpod_shutdown (int xtype)
     xnpod_schedule();
 
     __setbits(nkpod->status,XNPIDLE);
+
+    for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++)
+        {
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
+        for (n = 0; n < XNTIMER_WHEELSIZE; n++)
+            xntlist_destroy(&nkpod->sched[cpu].timerwheel[n]);
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
+        xntimerq_destroy(&nkpod->sched[cpu].timerqueue);
+        }
 
     xnlock_put_irqrestore(&nklock,s);
 

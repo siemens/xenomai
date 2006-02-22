@@ -788,5 +788,7 @@ static inline long IS_ERR(const void *ptr)
 /* Pre-set config switches. */
 
 #define CONFIG_XENO_OPT_TIMING_PERIODIC 1
+#define CONFIG_XENO_OPT_TIMER_HEAP 1
+#define CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY 256
 
 #endif /* !_XENO_ASM_SIM_SYSTEM_H */

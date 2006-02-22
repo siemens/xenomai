@@ -1,5 +1,8 @@
 2006-02-22  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
+	* include/nucleus/timer.h: Use binary heaps for the aperiodic
+	timers list implementation.
+
 	* include/posix/unistd.h (pse51_shm_close): Avoid clash between
 	POSIX skin function "close" and Linux 2.4 ppc symbol.
 
