@@ -219,6 +219,32 @@ config XENO_OPT_SCALABLE_PRIOS
 	application. For instance, the native skin needs a
 	hundred priority levels.
 
+choice
+        prompt "Nucleus timers list data structure"
+        default XENO_OPT_TIMER_LIST
+
+config XENO_OPT_TIMER_LIST
+        bool "linked list"
+        help
+        Use a linked list for the implementation of the nucleus timers list when
+        in aperiodic mode.
+
+config XENO_OPT_TIMER_HEAP
+        bool "binary heap"
+        help
+        Use a binary heap for the implementation of the nucleus timers list when
+        in aperiodic mode.
+
+endchoice
+
+config XENO_OPT_TIMER_HEAP_CAPACITY
+	int "Binary heap capacity"
+	depends on XENO_OPT_TIMER_HEAP
+	default 256
+        help 
+
+        Set the maximum number of timers in the nucleus timers list.
+
 endmenu
 
 menu "LTT tracepoints filtering"

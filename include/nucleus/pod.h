@@ -127,7 +127,10 @@ typedef struct xnsched {
 
     xnsched_queue_t readyq;     /*!< Ready-to-run threads (prioritized). */
 
-    xnqueue_t timerwheel[XNTIMER_WHEELSIZE]; /*!< BSDish timer wheel. */
+    xntimerq_t timerqueue;
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
+    xnqueue_t timerwheel [XNTIMER_WHEELSIZE]; /*!< BSDish timer wheel. */
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
     volatile unsigned inesting; /*!< Interrupt nesting level. */
 
