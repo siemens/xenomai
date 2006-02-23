@@ -56,7 +56,7 @@ testPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(test_PROGRAMS)
 am_switch_OBJECTS = switch-switch.$(OBJEXT)
 switch_OBJECTS = $(am_switch_OBJECTS)
-switch_DEPENDENCIES = ../../skins/native/libnative.la
+switch_DEPENDENCIES = ../../skins/native/.libs/libnative.a
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/src/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -229,7 +229,7 @@ switch_CPPFLAGS = \
 
 switch_LDFLAGS = @XENO_USER_LDFLAGS@
 switch_LDADD = \
-	../../skins/native/libnative.la \
+	../../skins/native/.libs/libnative.a \
 	-lpthread
 
 EXTRA_DIST = runinfo
