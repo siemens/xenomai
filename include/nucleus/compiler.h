@@ -35,4 +35,13 @@
 #define __deprecated_call_in_kernel__
 #endif /* __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ > 0) */
 
+#ifndef likely
+#if !defined(__GNUC__) || __GNUC__ == 2 && __GNUC_MINOR__ < 96
+#define __builtin_expect(x, v)         (x)
+#endif /* !gcc or gcc version < 2.96 */
+
+#define likely(x)   __builtin_expect((x) != 0, 1)
+#define unlikely(x) __builtin_expect((x) != 0, 0)
+#endif /* !defined(likely) */
+
 #endif /* !_XENO_NUCLEUS_COMPILER_H */
