@@ -1,3 +1,9 @@
+2006-02-24  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pod.c: Make sure that
+	!CONFIG_XENO_OPT_TIMING_PERIODIC implies nktickdef ==
+	XN_APERIODIC_TICK;
+
 2006-02-22  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* include/nucleus/timer.h: Use binary heaps for the aperiodic
