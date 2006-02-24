@@ -1,11 +1,12 @@
-prefix := $(shell xeno-config --prefix)
+XENO_CONFIG := xeno-config
+prefix := $(shell $(XENO_CONFIG) --prefix)
 
 ifeq ($(prefix),)
 $(error Please add <xenomai-install-path>/bin to your PATH variable)
 endif
 
-UVM_CFLAGS  := $(shell xeno-config --uvm-cflags)
-UVM_LDFLAGS := $(shell xeno-config --uvm-ldflags) -lvxworks
+UVM_CFLAGS  := $(shell $(XENO_CONFIG) --uvm-cflags)
+UVM_LDFLAGS := $(shell $(XENO_CONFIG) --uvm-ldflags) -lvxworks
 UVM_TARGETS := satch koan
 
 GCIC := $(prefix)/bin/gcic
