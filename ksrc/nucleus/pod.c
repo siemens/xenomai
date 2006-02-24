@@ -56,7 +56,11 @@ u_long nkschedlat = 0;
 
 u_long nktimerlat = 0;
 
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 u_long nktickdef = CONFIG_XENO_OPT_TIMING_PERIOD;
+#else
+u_long nktickdef = XN_APERIODIC_TICK;	/* Force aperiodic mode. */
+#endif
 
 int tick_arg = -1;
 
@@ -489,7 +493,6 @@ fail:
 	xnpod_shutdown(XNPOD_FATAL_EXIT);
 	return err;
 	}
-
     
     return 0;
 }
