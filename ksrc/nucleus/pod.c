@@ -309,7 +309,7 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
     xnsched_t *sched;
     void *heapaddr;
     u_long nstick;
-    int err, n;
+    int err;
     spl_t s;
 
     xnlock_get_irqsave(&nklock,s);
@@ -398,15 +398,9 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
 
     for (cpu = 0; cpu < nr_cpus; cpu++)
         {
-        err = -xntimerq_init(&pod->sched[cpu].timerqueue);
-    
-        if (err)
-            {
-            xnheap_destroy(&kheap,&xnpod_flush_heap,NULL);
-            goto fail;
-            }
-
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
+        unsigned n;
+
         for (n = 0; n < XNTIMER_WHEELSIZE; n++)
             {
             err = -xntlist_init(&pod->sched[cpu].timerwheel[n]);
@@ -418,6 +412,14 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
                 }
             }
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
+
+        err = -xntimerq_init(&pod->sched[cpu].timerqueue);
+    
+        if (err)
+            {
+            xnheap_destroy(&kheap,&xnpod_flush_heap,NULL);
+            goto fail;
+            }
         }
     
     for (cpu = 0; cpu < nr_cpus; ++cpu)
@@ -526,7 +528,7 @@ void xnpod_shutdown (int xtype)
 {
     xnholder_t *holder, *nholder;
     xnthread_t *thread;
-    unsigned n, cpu;
+    unsigned cpu;
     spl_t s;
 
     xnlock_get_irqsave(&nklock,s);
@@ -568,6 +570,8 @@ void xnpod_shutdown (int xtype)
     for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++)
         {
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
+        unsigned n;
+
         for (n = 0; n < XNTIMER_WHEELSIZE; n++)
             xntlist_destroy(&nkpod->sched[cpu].timerwheel[n]);
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
