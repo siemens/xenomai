@@ -395,7 +395,7 @@ static int gatekeeper_thread (void *data)
 	       change the CPU of the underlying Xenomai shadow too. We
 	       do not migrate the thread timers here, it would not
 	       work. For a "full" migration comprising timers, using
-	       xnpod_thread_migrate is required. */
+	       xnpod_migrate_thread is required. */
 	    thread->sched = xnpod_sched_slot(cpu);
 #endif /* CONFIG_SMP */
 	    xnpod_resume_thread(thread,XNRELAX);
@@ -755,7 +755,7 @@ int xnshadow_map (xnthread_t *thread,
 	CAP_TO_MASK(CAP_SYS_NICE);
 
     xnarch_init_shadow_tcb(xnthread_archtcb(thread),thread,xnthread_name(thread));
-    set_linux_task_priority(current,xnthread_base_priority(thread));
+    set_linux_task_priority(current,prio);
     xnshadow_ptd(current) = thread;
     xnpod_suspend_thread(thread,XNRELAX,XN_INFINITE,NULL);
 
