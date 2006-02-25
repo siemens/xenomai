@@ -42,7 +42,10 @@ int SKIN_INIT(uvm)
         err = __uvm_syscall_init();
 
     if (err)
-        xnpod_shutdown(err);    
+        {
+        xncore_detach();
+        xnpod_shutdown(err);
+        }
     else
 	xnprintf("starting UVM services.\n");
 
@@ -54,6 +57,7 @@ void SKIN_EXIT(uvm)
     xnprintf("stopping UVM services.\n");
     __uvm_syscall_cleanup();
     xncore_detach();
+    xnpod_shutdown(XNPOD_NORMAL_EXIT);
 }
 
 module_init(__uvm_skin_init);
