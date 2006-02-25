@@ -35,6 +35,13 @@ typedef struct pse51_mutex {
 				   mutex. */
 } pse51_mutex_t;
 
+void pse51_mutex_pkg_init(void);
+
+void pse51_mutex_pkg_cleanup(void);
+
+/* Interruptible versions of pthread_mutex_*. Exposed for use by syscall.c. */
+int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow, xnticks_t to);
+
 /* must be called with nklock locked, interrupts off. */
 static inline int mutex_trylock_internal(struct __shadow_mutex *shadow,
                                          xnthread_t *cur)
@@ -51,7 +58,6 @@ static inline int mutex_trylock_internal(struct __shadow_mutex *shadow,
     mutex->count = 1;
     return 0;
 }
-
 
 /* must be called with nklock locked, interrupts off. */
 static inline int mutex_timedlock_internal(struct __shadow_mutex *shadow,
@@ -95,67 +101,5 @@ static inline int mutex_timedlock_internal(struct __shadow_mutex *shadow,
 
     return err;
 }
-
-
-/* must be called with nklock locked, interrupts off. */
-static inline int mutex_unlock_internal(struct __shadow_mutex *shadow)
-
-{
-    pse51_mutex_t *mutex;
-
-    if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex))
-        return EINVAL;
-
-    mutex = shadow->mutex;
- 
-    if (xnsynch_owner(&mutex->synchbase) != xnpod_current_thread()
-        || mutex->count != 1)
-        return EPERM;
-    
-    mutex->count = 0;
-    if (xnsynch_wakeup_one_sleeper(&mutex->synchbase))
-        xnpod_schedule();
-
-    return 0;
-}
-
-
-/* must be called with nklock locked, interrupts off. */
-static inline int mutex_save_count(struct __shadow_mutex *shadow,
-                                   unsigned *count_ptr)
-{
-    pse51_mutex_t *mutex = shadow->mutex;
-
-    if (mutex->count == 0)       /* Mutex is not locked. */
-        return EINVAL;
-
-    /* Save the count and force it to 1, so that mutex_unlock_internal can
-       do its job. */
-    *count_ptr = mutex->count;
-    mutex->count = 1;
-
-    return mutex_unlock_internal(shadow);
-}
-
-
-/* must be called with nklock locked, interrupts off. */
-static inline void mutex_restore_count(struct __shadow_mutex *shadow,
-                                       unsigned count)
-{
-    pse51_mutex_t *mutex = shadow->mutex;
-
-    /* Relock the mutex */
-    mutex_timedlock_internal(shadow, XN_INFINITE);
-
-    /* Restore the mutex lock count. */
-    mutex->count = count;
-}
-
-void pse51_mutex_pkg_init(void);
-
-void pse51_mutex_pkg_cleanup(void);
-
-/* Interruptible versions of pthread_mutex_*. Exposed for use by syscall.c. */
-int pse51_mutex_timedlock_break (struct __shadow_mutex *shadow, xnticks_t to);
 
 #endif /* !_POSIX_MUTEX_H */
