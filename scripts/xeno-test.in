@@ -3,7 +3,7 @@
 myusage() {
     cat >&1 <<EOF
 xeno-test [options]
-  runs latency and klatency tests
+  runs latency test in all 3 test-modes
   -w <number>	spawn N workloads (dd if=/dev/zero of=/dev/null) default=1
   -d <device>	used as alternate src in workload (dd if=$device ..)
 		The device must be mounted, and (unfortunately) cannot
@@ -79,6 +79,8 @@ boxinfo() {
     # static info, show once
     loudly cat /proc/cpuinfo | egrep -v 'bug|wp'
     loudly cat /proc/meminfo
+    [ -f /proc/config.gz ] && loudly zgrep XENO /proc/config.gz
+
     [ -d /proc/adeos ] && for f in /proc/adeos/*; do loudly cat $f; done
     [ -d /proc/ipipe ] && for f in /proc/ipipe/*; do loudly cat $f; done
 }
@@ -101,14 +103,11 @@ run_w_load() {
     boxstatus
     (
 	cd ../testsuite/latency
-	#loudly ./run -- -T 10 -s -l 5
-	loudly ./run -- -h $opts
 
-	[ -n "$prepost" ] && loudly $prepost
-	
-	cd ../klatency
-	#loudly ./run -- -T 10 -s -l 5
-	loudly ./run -- -h $opts;
+	loudly ./run --  $opts -t0
+	loudly ./run --  $opts -t1
+	loudly ./run --  $opts -t2
+
     )
     boxstatus
 }
@@ -129,7 +128,7 @@ fi
 workload=1	# default = 1 job
 
 # *pass get all legit options, except -N, -L
-pass=		# pass thru to latency, klatency
+pass=		# pass thru to latency
 loadpass=	# pass thru to subshell, not to actual tests
 
 # if both empty means no logging
@@ -209,7 +208,7 @@ Also, if it spawns subtasks, it should end them all when it gets SIGTERM.
    previous results.
 
 3. added -p 'command', which runs command before, between, and after
-   the latency and klatency tests.
+   the latency tests.
 
 
 TODO:
