@@ -481,7 +481,7 @@ fail:
     xnarch_memory_barrier();
 
     xnarch_notify_ready();
-    
+
     if (module_param_value(tick_arg) >= 0)
 	/* User passed tick_arg=<count-of-ns> */
 	nstick = module_param_value(tick_arg);
