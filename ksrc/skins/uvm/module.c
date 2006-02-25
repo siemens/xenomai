@@ -36,7 +36,10 @@ int SKIN_INIT(uvm)
     if (err)
 	return err;
 
-    err = __uvm_syscall_init();
+    err = xnpod_start_timer(XN_APERIODIC_TICK, XNPOD_DEFAULT_TICKHANDLER);
+
+    if (!err)
+        err = __uvm_syscall_init();
 
     if (err)
         xnpod_shutdown(err);    
