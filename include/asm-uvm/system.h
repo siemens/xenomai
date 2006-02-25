@@ -116,8 +116,8 @@ static inline int xnarch_imuldiv(int i, int mult, int div)
 
 static inline unsigned long long __xnarch_ullimd(unsigned long long ull,
                                                  u_long m,
-                                                 u_long d) {
-
+                                                 u_long d)
+{
     unsigned long long mh, ml;
     u_long h, l, mlh, mll, qh, r, ql;
 
@@ -134,14 +134,16 @@ static inline unsigned long long __xnarch_ullimd(unsigned long long ull,
     return (((unsigned long long) qh) << 32) + ql;
 }
 
-static inline long long xnarch_llimd(long long ll, u_long m, u_long d) {
+static inline long long xnarch_llimd(long long ll, u_long m, u_long d)
+{
     if(ll < 0)
         return -__xnarch_ullimd(-ll, m, d);
     return __xnarch_ullimd(ll, m, d);
 }
 
 static inline unsigned long long xnarch_ullmul(unsigned long m1,
-                                               unsigned long m2) {
+                                               unsigned long m2)
+{
     return (unsigned long long) m1 * m2;
 }
 
@@ -195,7 +197,8 @@ typedef struct xnarch_heapcb {
 
 } xnarch_heapcb_t;
 
-static inline void xnarch_init_heapcb (xnarch_heapcb_t *cb) {
+static inline void xnarch_init_heapcb (xnarch_heapcb_t *cb)
+{
 }
 
 static inline int __attribute__ ((unused))
@@ -339,15 +342,17 @@ int __xeno_user_init(void);
 
 void __xeno_user_exit(void);
 
-static inline int xnarch_init (void) {
+static inline int xnarch_init (void)
+{
     return 0;
 }
 
-static inline void xnarch_exit (void) {
+static inline void xnarch_exit (void)
+{
 }
 
-static void xnarch_restart_handler (int sig) {
-
+static void xnarch_restart_handler (int sig)
+{
     longjmp(uvm_current->rstenv,1);
 }
 
@@ -410,16 +415,21 @@ int main (int argc, char *argv[])
 
 void *uvm_timer_handle;
 
-static inline void xnarch_program_timer_shot (unsigned long delay) {
+pthread_t uvm_timer_thid;
+
+static inline void xnarch_program_timer_shot (unsigned long delay)
+{
     /* Empty -- not available */
 }
 
-static inline void xnarch_stop_timer (void) {
+static inline void xnarch_stop_timer (void)
+{
+    pthread_cancel(uvm_timer_thid);
     uvm_thread_cancel(uvm_timer_handle,NULL);
 }
 
-static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask) {
-
+static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask)
+{
     return 0;
 }
 
@@ -428,6 +438,8 @@ static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask) {
 #ifdef XENO_POD_MODULE
 
 extern void *uvm_timer_handle;
+
+extern pthread_t uvm_timer_thid;
 
 xnsysinfo_t uvm_info;
 
@@ -459,6 +471,7 @@ static void *xnarch_timer_thread (void *cookie)
     unsigned long nstick;
     long err;
 
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
     param.sched_priority = sched_get_priority_min(SCHED_FIFO) + 2;
     sched_setscheduler(0,SCHED_FIFO,&param);
 
@@ -494,7 +507,6 @@ static inline int xnarch_start_timer (unsigned long nstick,
 {
     struct xnarch_tick_parms parms;
     pthread_attr_t thattr;
-    pthread_t thid;
     int err;
 
     if (nstick == 0)
@@ -509,7 +521,7 @@ static inline int xnarch_start_timer (unsigned long nstick,
     pthread_attr_init(&thattr);
     pthread_attr_setdetachstate(&thattr,PTHREAD_CREATE_DETACHED);
 
-    err = pthread_create(&thid,&thattr,&xnarch_timer_thread,&parms);
+    err = pthread_create(&uvm_timer_thid,&thattr,&xnarch_timer_thread,&parms);
 
     if (err)
 	return -err;
@@ -522,10 +534,12 @@ static inline int xnarch_start_timer (unsigned long nstick,
     return err;
 }
 
-static inline void xnarch_leave_root(xnarchtcb_t *rootcb) {
+static inline void xnarch_leave_root(xnarchtcb_t *rootcb)
+{
 }
 
-static inline void xnarch_enter_root(xnarchtcb_t *rootcb) {
+static inline void xnarch_enter_root(xnarchtcb_t *rootcb)
+{
 }
 
 static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
@@ -540,11 +554,12 @@ static inline void xnarch_finalize_and_switch (xnarchtcb_t *dead_tcb,
 {
     uvm_current = next_tcb;
     uvm_thread_cancel(dead_tcb->khandle,next_tcb->khandle);
+    pthread_exit(NULL); /* Should not be reached. */
 }
 
 static inline void xnarch_finalize_no_switch (xnarchtcb_t *dead_tcb)
-
 {
+    pthread_cancel(dead_tcb->thid);
     uvm_thread_cancel(dead_tcb->khandle,NULL);
 }
 
@@ -579,6 +594,7 @@ static void *xnarch_thread_trampoline (void *cookie)
 
     if (!setjmp(tcb->rstenv))
 	{
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	param.sched_priority = sched_get_priority_min(SCHED_FIFO) + 1;
 	sched_setscheduler(0,SCHED_FIFO,&param);
 	uvm_thread_create(tcb->name,tcb,&tcb->completion,&tcb->khandle);
@@ -631,19 +647,23 @@ static inline void xnarch_init_thread (xnarchtcb_t *tcb,
 	xnarch_logerr("pthread_create() failed for thread %s (err %d)\n",name,err);
 }
 
-static inline void xnarch_enable_fpu(xnarchtcb_t *current_tcb) {
+static inline void xnarch_enable_fpu(xnarchtcb_t *current_tcb)
+{
     /* Handled by the in-kernel nucleus */
 }
 
-static inline void xnarch_init_fpu(xnarchtcb_t *tcb) {
+static inline void xnarch_init_fpu(xnarchtcb_t *tcb)
+{
     /* Handled by the in-kernel nucleus */
 }
 
-static inline void xnarch_save_fpu(xnarchtcb_t *tcb) {
+static inline void xnarch_save_fpu(xnarchtcb_t *tcb)
+{
     /* Handled by the in-kernel nucleus */
 }
 
-static inline void xnarch_restore_fpu(xnarchtcb_t *tcb) {
+static inline void xnarch_restore_fpu(xnarchtcb_t *tcb)
+{
     /* Handled by the in-kernel nucleus */
 }
 
@@ -656,18 +676,18 @@ int xnarch_setimask (int imask)
     return !!s;
 }
 
-static inline int xnarch_send_ipi (cpumask_t cpumask) {
-
+static inline int xnarch_send_ipi (cpumask_t cpumask)
+{
     return 0;
 }
 
-static inline int xnarch_hook_ipi (void (*handler)(void)) {
-
+static inline int xnarch_hook_ipi (void (*handler)(void))
+{
     return 0;
 }
 
-static inline int xnarch_release_ipi (void) {
-
+static inline int xnarch_release_ipi (void)
+{
     return 0;
 }
 
@@ -692,8 +712,8 @@ static inline unsigned long long xnarch_get_sys_time(void)
 
 #ifdef XENO_THREAD_MODULE
 
-static inline void xnarch_init_tcb (xnarchtcb_t *tcb) {
-
+static inline void xnarch_init_tcb (xnarchtcb_t *tcb)
+{
     tcb->khandle = NULL;
 }
 
@@ -704,14 +724,14 @@ static inline void xnarch_init_tcb (xnarchtcb_t *tcb) {
 
 extern xnsysinfo_t uvm_info;
 
-static inline unsigned long long xnarch_tsc_to_ns (unsigned long long tsc) {
-
+static inline unsigned long long xnarch_tsc_to_ns (unsigned long long tsc)
+{
     nanostime_t ns;
     return uvm_timer_tsc2ns(tsc,&ns) ? 0 : ns;
 }
 
-static inline unsigned long long xnarch_ns_to_tsc (unsigned long long ns) {
-
+static inline unsigned long long xnarch_ns_to_tsc (unsigned long long ns)
+{
     nanostime_t tsc;
     return uvm_timer_ns2tsc(ns,&tsc) ? 0 : tsc;
 }
@@ -732,21 +752,25 @@ static inline unsigned long long xnarch_get_cpu_tsc (void)
     return t;
 }
 
-static inline unsigned long long xnarch_get_cpu_freq (void) {
+static inline unsigned long long xnarch_get_cpu_freq (void)
+{
     return uvm_info.cpufreq;
 }
 
-static inline void xnarch_halt (const char *emsg) {
+static inline void xnarch_halt (const char *emsg)
+{
     fprintf(stderr,"UVM fatal: %s\n",emsg);
     fflush(stderr);
     exit(99);
 }
 
-static inline void *xnarch_sysalloc (u_long bytes) {
+static inline void *xnarch_sysalloc (u_long bytes)
+{
     return malloc(bytes);
 }
 
-static inline void xnarch_sysfree (void *chunk, u_long bytes) {
+static inline void xnarch_sysfree (void *chunk, u_long bytes)
+{
     free(chunk);
 }
 
