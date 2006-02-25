@@ -287,6 +287,28 @@ int pthread_mutex_timedlock (pthread_mutex_t *mx, const struct timespec *to)
     return err;
 }
 
+/* must be called with nklock locked, interrupts off. */
+static inline int mutex_unlock_internal(struct __shadow_mutex *shadow)
+
+{
+    pse51_mutex_t *mutex;
+
+    if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex))
+        return EINVAL;
+
+    mutex = shadow->mutex;
+ 
+    if (xnsynch_owner(&mutex->synchbase) != xnpod_current_thread()
+        || mutex->count != 1)
+        return EPERM;
+    
+    mutex->count = 0;
+    if (xnsynch_wakeup_one_sleeper(&mutex->synchbase))
+        xnpod_schedule();
+
+    return 0;
+}
+
 int pthread_mutex_unlock (pthread_mutex_t *mx)
 
 {

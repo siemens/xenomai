@@ -130,6 +130,44 @@ int pthread_cond_destroy (pthread_cond_t *cnd)
     return 0;
 }
 
+/* must be called with nklock locked, interrupts off. */
+static inline int mutex_save_count(struct __shadow_mutex *shadow,
+                                   unsigned *count_ptr)
+{
+    pse51_mutex_t *mutex;
+
+    if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex))
+        return EINVAL;
+
+    mutex = shadow->mutex;
+
+    if (xnsynch_owner(&mutex->synchbase) != xnpod_current_thread()
+        || mutex->count == 0)
+        return EPERM;
+
+    *count_ptr = mutex->count;
+    mutex->count = 0;
+
+    xnsynch_wakeup_one_sleeper(&mutex->synchbase);
+    /* Do not reschedule here, releasing the mutex and suspension must be done
+       atomically in pthread_cond_*wait. */
+    
+    return 0;
+}
+
+/* must be called with nklock locked, interrupts off. */
+static inline void mutex_restore_count(struct __shadow_mutex *shadow,
+                                       unsigned count)
+{
+    pse51_mutex_t *mutex = shadow->mutex;
+
+    /* Relock the mutex */
+    mutex_timedlock_internal(shadow, XN_INFINITE);
+
+    /* Restore the mutex lock count. */
+    mutex->count = count;
+}
+
 int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
                                   struct __shadow_mutex *mutex,
                                   xnticks_t to)
@@ -167,11 +205,10 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
     
     /* Unlock mutex, with its previous recursive lock count stored
        in "count". */
-    if(mutex_save_count(mutex, &count))
-        {
-        err = EINVAL;
+    err = mutex_save_count(mutex, &count);
+
+    if(err)
         goto unlock_and_return;
-        }
 
     /* Bind mutex to cond. */
     if (cond->mutex == NULL)
