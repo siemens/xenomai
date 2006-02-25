@@ -1,3 +1,8 @@
+2006-02-25  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/cond.c (mutex_save_count): Do not reschedule,
+	it could break pthread_cond_wait.
+
 2006-02-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/uvm/syscall.c: Make __uvm_thread_cancel a conforming
