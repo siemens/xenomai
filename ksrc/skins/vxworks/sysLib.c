@@ -44,7 +44,6 @@ static int __tickAnnounce(xnintr_t *intr)
 
 int wind_sysclk_init(u_long init_rate)
 {
-    sysClkConnect(NULL, 0);
     return sysClkRateSet(init_rate);
 }
 
