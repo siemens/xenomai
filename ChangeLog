@@ -1,3 +1,11 @@
+2006-02-25  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/uvm/syscall.c: Make __uvm_thread_cancel a conforming
+	call.
+
+	* include/asm-uvm/system.h (xnarch_finalize_no_switch,
+	xnarch_stop_timer): Send cancellation signal to the target thread.
+
 2006-02-24  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pod.c: Make sure that
