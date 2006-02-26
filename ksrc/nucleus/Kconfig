@@ -220,20 +220,31 @@ config XENO_OPT_SCALABLE_PRIOS
 	hundred priority levels.
 
 choice
-        prompt "Nucleus timers list data structure"
+        prompt "Timer indexing method"
         default XENO_OPT_TIMER_LIST
+        help
+
+	This option allows to select the underlying data structure
+	which is going to be used for ordering the outstanding
+	software timers managed by the nucleus when operating in
+	aperiodic timing mode. In periodic mode, a fast timer wheel
+	data structure is always used, regardless of this option.
 
 config XENO_OPT_TIMER_LIST
-        bool "linked list"
+        bool "Linear"
         help
-        Use a linked list for the implementation of the nucleus timers list when
-        in aperiodic mode.
+
+        Use a linked list. Albeit O(N), this simple data structure is
+        particularly efficient when only a few timers (< 10) may be
+        concurrently outstanding at any point in time.
 
 config XENO_OPT_TIMER_HEAP
-        bool "binary heap"
+        bool "Tree"
         help
-        Use a binary heap for the implementation of the nucleus timers list when
-        in aperiodic mode.
+
+        Use a binary heap. This data structure is efficient when a
+        high number of software timers may be concurrently
+        outstanding at any point in time.
 
 endchoice
 
