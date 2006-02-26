@@ -41,11 +41,11 @@
  *@{*/
 
 #include <nucleus/pod.h>
+#include <nucleus/registry.h>
 #include <native/task.h>
 #include <native/sem.h>
-#include <native/registry.h>
 
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 static int __sem_read_proc (char *page,
 			    char **start,
@@ -91,23 +91,24 @@ static int __sem_read_proc (char *page,
     return len;
 }
 
-static RT_OBJECT_PROCNODE __sem_pnode = {
+static xnpnode_t __sem_pnode = {
 
     .dir = NULL,
+    .root = "native",
     .type = "semaphores",
     .entries = 0,
     .read_proc = &__sem_read_proc,
     .write_proc = NULL
 };
 
-#elif defined(CONFIG_XENO_OPT_NATIVE_REGISTRY)
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
 
-static RT_OBJECT_PROCNODE __sem_pnode = {
+static xnpnode_t __sem_pnode = {
 
     .type = "semaphores"
 };
 
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 /**
  * @fn int rt_sem_create(RT_SEM *sem,const char *name,unsigned long icount,int mode)
@@ -188,14 +189,14 @@ int rt_sem_create (RT_SEM *sem,
     sem->cpid = 0;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
-    /* <!> Since rt_register_enter() may reschedule, only register
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    /* <!> Since xnregister_enter() may reschedule, only register
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
     if (name)
         {
-	RT_OBJECT_PROCNODE *pnode = &__sem_pnode;
+	xnpnode_t *pnode = &__sem_pnode;
 	
 	if (!*name)
 	    {
@@ -206,12 +207,12 @@ int rt_sem_create (RT_SEM *sem,
 	    pnode = NULL;
 	    }
 	    
-        err = rt_registry_enter(sem->name,sem,&sem->handle,pnode);
+        err = xnregistry_enter(sem->name,sem,&sem->handle,pnode);
 
         if (err)
             rt_sem_delete(sem);
         }
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     return err;
 }
@@ -268,10 +269,10 @@ int rt_sem_delete (RT_SEM *sem)
     
     rc = xnsynch_destroy(&sem->synch_base);
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
+#ifdef CONFIG_XENO_OPT_REGISTRY
     if (sem->handle)
-        rt_registry_remove(sem->handle);
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+        xnregistry_remove(sem->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     xeno_mark_deleted(sem);
 

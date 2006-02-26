@@ -43,11 +43,11 @@
  *@{*/
 
 #include <nucleus/pod.h>
+#include <nucleus/registry.h>
 #include <native/task.h>
 #include <native/mutex.h>
-#include <native/registry.h>
 
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 static int __mutex_read_proc (char *page,
 			      char **start,
@@ -97,23 +97,24 @@ static int __mutex_read_proc (char *page,
     return len;
 }
 
-static RT_OBJECT_PROCNODE __mutex_pnode = {
+static xnpnode_t __mutex_pnode = {
 
     .dir = NULL,
+    .root = "native",
     .type = "mutexes",
     .entries = 0,
     .read_proc = &__mutex_read_proc,
     .write_proc = NULL
 };
 
-#elif defined(CONFIG_XENO_OPT_NATIVE_REGISTRY)
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
 
-static RT_OBJECT_PROCNODE __mutex_pnode = {
+static xnpnode_t __mutex_pnode = {
 
     .type = "mutexes"
 };
 
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 /**
  * @fn int rt_mutex_create(RT_MUTEX *mutex,const char *name)
@@ -176,14 +177,14 @@ int rt_mutex_create (RT_MUTEX *mutex,
     mutex->cpid = 0;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
-    /* <!> Since rt_register_enter() may reschedule, only register
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    /* <!> Since xnregister_enter() may reschedule, only register
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
     if (name)
         {
-	RT_OBJECT_PROCNODE *pnode = &__mutex_pnode;
+	xnpnode_t *pnode = &__mutex_pnode;
 	
 	if (!*name)
 	    {
@@ -194,12 +195,12 @@ int rt_mutex_create (RT_MUTEX *mutex,
 	    pnode = NULL;
 	    }
 	    
-        err = rt_registry_enter(mutex->name,mutex,&mutex->handle,pnode);
+        err = xnregistry_enter(mutex->name,mutex,&mutex->handle,pnode);
 
         if (err)
             rt_mutex_delete(mutex);
         }
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     return err;
 }
@@ -257,10 +258,10 @@ int rt_mutex_delete (RT_MUTEX *mutex)
     
     rc = xnsynch_destroy(&mutex->synch_base);
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
+#ifdef CONFIG_XENO_OPT_REGISTRY
     if (mutex->handle)
-        rt_registry_remove(mutex->handle);
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+        xnregistry_remove(mutex->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     xeno_mark_deleted(mutex);
 

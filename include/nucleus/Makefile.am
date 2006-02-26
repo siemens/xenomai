@@ -10,6 +10,7 @@ include_HEADERS = \
 	pipe.h \
 	pod.h \
 	queue.h \
+	registry.h \
 	shadow.h \
 	synch.h \
 	system.h \

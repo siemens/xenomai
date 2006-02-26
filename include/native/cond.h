@@ -34,7 +34,7 @@ typedef struct rt_cond_info {
 } RT_COND_INFO;
 
 typedef struct rt_cond_placeholder {
-    rt_handle_t opaque;
+    xnhandle_t opaque;
 } RT_COND_PLACEHOLDER;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
@@ -47,7 +47,7 @@ typedef struct rt_cond {
 
     xnsynch_t synch_base; /* !< Base synchronization object. */
 
-    rt_handle_t handle;	/* !< Handle in registry -- zero if unregistered. */
+    xnhandle_t handle;	/* !< Handle in registry -- zero if unregistered. */
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 
@@ -84,7 +84,7 @@ int rt_cond_bind(RT_COND *cond,
 static inline int rt_cond_unbind (RT_COND *cond)
 
 {
-    cond->opaque = RT_HANDLE_INVALID;
+    cond->opaque = XN_NO_HANDLE;
     return 0;
 }
 

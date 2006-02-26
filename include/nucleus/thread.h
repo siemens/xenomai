@@ -167,6 +167,13 @@ typedef struct xnthread {
 
     int iprio;			/* Initial priority */
 
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    struct {
+	xnhandle_t handle;	/* Handle in registry */
+	const char *waitkey;	/* Pended key */
+    } registry;
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
     unsigned magic;		/* Skin magic. */
 
     char name[XNOBJECT_NAME_LEN]; /* Symbolic name of thread */
@@ -217,6 +224,7 @@ typedef struct xnhook {
 #define xnthread_timeout(thread)           xntimer_get_timeout(&(thread)->rtimer)
 #define xnthread_stack_size(thread)        xnarch_stack_size(xnthread_archtcb(thread))
 #define xnthread_extended_info(thread)     ((thread)->extinfo)
+#define xnthread_handle(thread)            ((thread)->registry.handle)
 #define xnthread_set_magic(thread,m)       do { (thread)->magic = (m); } while(0)
 #define xnthread_get_magic(thread)         ((thread)->magic)
 #define xnthread_signaled_p(thread)        ((thread)->signals != 0)

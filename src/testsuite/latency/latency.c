@@ -546,6 +546,8 @@ int main (int argc, char **argv)
             }
         }
 
+    rt_timer_set_mode(TM_ONESHOT); /* Force aperiodic timing. */
+
     err = rt_task_create(&display_task,"display",0,98,0);
 
     if (err)

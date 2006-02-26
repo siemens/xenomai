@@ -476,6 +476,10 @@ fail:
 
     xnarch_hook_ipi(&xnpod_schedule_handler);
 
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    xnregistry_init();
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
     __clrbits(pod->status,XNPIDLE);
 
     xnarch_memory_barrier();
@@ -579,6 +583,10 @@ void xnpod_shutdown (int xtype)
         }
 
     xnlock_put_irqrestore(&nklock,s);
+
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    xnregistry_cleanup();
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     xnarch_notify_halt();
 

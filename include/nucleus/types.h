@@ -50,6 +50,10 @@ typedef unsigned long long xntime_t; /* ns */
 
 typedef long long xnstime_t;
 
+typedef unsigned long xnhandle_t;
+
+#define XN_NO_HANDLE ((xnhandle_t)0)
+
 struct xnintr;
 
 typedef int (*xnisr_t)(struct xnintr *intr);

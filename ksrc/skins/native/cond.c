@@ -40,12 +40,12 @@
  *@{*/
 
 #include <nucleus/pod.h>
+#include <nucleus/registry.h>
 #include <native/task.h>
 #include <native/mutex.h>
 #include <native/cond.h>
-#include <native/registry.h>
 
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 static int __cond_read_proc (char *page,
 			     char **start,
@@ -88,23 +88,24 @@ static int __cond_read_proc (char *page,
     return len;
 }
 
-static RT_OBJECT_PROCNODE __cond_pnode = {
+static xnpnode_t __cond_pnode = {
 
     .dir = NULL,
+    .root = "native",
     .type = "condvars",
     .entries = 0,
     .read_proc = &__cond_read_proc,
     .write_proc = NULL
 };
 
-#elif defined(CONFIG_XENO_OPT_NATIVE_REGISTRY)
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
 
-static RT_OBJECT_PROCNODE __cond_pnode = {
+static xnpnode_t __cond_pnode = {
 
     .type = "condvars"
 };
 
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 /**
  * @fn int rt_cond_create(RT_COND *cond, const char *name)
@@ -163,14 +164,14 @@ int rt_cond_create (RT_COND *cond,
     cond->cpid = 0;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
-    /* <!> Since rt_register_enter() may reschedule, only register
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    /* <!> Since xnregister_enter() may reschedule, only register
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
     if (name)
         {
-	RT_OBJECT_PROCNODE *pnode = &__cond_pnode;
+	xnpnode_t *pnode = &__cond_pnode;
 	
 	if (!*name)
 	    {
@@ -181,12 +182,12 @@ int rt_cond_create (RT_COND *cond,
 	    pnode = NULL;
 	    }
 	    
-        err = rt_registry_enter(cond->name,cond,&cond->handle,pnode);
+        err = xnregistry_enter(cond->name,cond,&cond->handle,pnode);
 
         if (err)
             rt_cond_delete(cond);
         }
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     return err;
 }
@@ -246,10 +247,10 @@ int rt_cond_delete (RT_COND *cond)
     
     rc = xnsynch_destroy(&cond->synch_base);
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
+#ifdef CONFIG_XENO_OPT_REGISTRY
     if (cond->handle)
-        rt_registry_remove(cond->handle);
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+        xnregistry_remove(cond->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     xeno_mark_deleted(cond);
 

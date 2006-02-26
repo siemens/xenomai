@@ -38,6 +38,28 @@ config XENO_OPT_PIPE_NRDEV
 	in the system. Pipe devices are named /dev/rtpN where N is a
 	device minor number ranging from 0 to XENO_OPT_PIPE_NRDEV - 1.
 
+config XENO_OPT_REGISTRY
+	bool
+	prompt "Registry support" if !XENO_OPT_PERVASIVE
+	default y
+	help
+	
+	The registry is used by Xenomai skins to bind real-time
+	objects they create to symbolic names, so that these objects
+	can be further retrieved and shared by real-time applications
+	regardless of their runtime space (i.e. kernel or user). Each
+	named object occupies a registry slot.
+
+config XENO_OPT_REGISTRY_NRSLOTS
+	int "Number of registry slots"
+	depends on XENO_OPT_REGISTRY
+	default 512
+	help
+	
+	This option sets the maximum number of real-time objects the
+	registry can handle. All skins using the registry share this
+	storage.
+
 config XENO_OPT_SYS_HEAPSZ
 	int "Size of the system heap (Kb)"
 	default 128

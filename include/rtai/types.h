@@ -46,8 +46,4 @@ typedef long long RTIME;
 
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
-typedef unsigned long rt_handle_t;
-
-#define RT_HANDLE_INVALID ((rt_handle_t)0)
-
 #endif /* !_RTAI_TYPES_H */

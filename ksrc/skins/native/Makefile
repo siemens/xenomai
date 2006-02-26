@@ -8,8 +8,6 @@ xeno_native-y := module.o task.o timer.o
 
 xeno_native-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
 
-xeno_native-$(CONFIG_XENO_OPT_NATIVE_REGISTRY) += registry.o
-
 xeno_native-$(CONFIG_XENO_OPT_NATIVE_PIPE) += pipe.o
 
 xeno_native-$(CONFIG_XENO_OPT_NATIVE_SEM) += sem.o
@@ -42,7 +40,6 @@ xeno_native-objs := module.o task.o timer.o
 
 opt_objs-y :=
 opt_objs-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
-opt_objs-$(CONFIG_XENO_OPT_NATIVE_REGISTRY) += registry.o
 opt_objs-$(CONFIG_XENO_OPT_NATIVE_PIPE) += pipe.o
 opt_objs-$(CONFIG_XENO_OPT_NATIVE_SEM) += sem.o
 opt_objs-$(CONFIG_XENO_OPT_NATIVE_EVENT) += event.o

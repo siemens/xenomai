@@ -33,7 +33,7 @@
 #define P_MINOR_AUTO	XNPIPE_MINOR_AUTO
 
 typedef struct rt_pipe_placeholder {
-    rt_handle_t opaque;
+    xnhandle_t opaque;
 } RT_PIPE_PLACEHOLDER;
 
 #ifdef __KERNEL__
@@ -66,7 +66,7 @@ typedef struct rt_pipe {
 
     u_long flushable;		/* !< Flush request flag. */
 
-    rt_handle_t handle;		/* !< Handle in registry -- zero if unregistered. */
+    xnhandle_t handle;		/* !< Handle in registry -- zero if unregistered. */
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 
@@ -141,7 +141,7 @@ int rt_pipe_bind(RT_PIPE *pipe,
 static inline int rt_pipe_unbind (RT_PIPE *pipe)
 
 {
-    pipe->opaque = RT_HANDLE_INVALID;
+    pipe->opaque = XN_NO_HANDLE;
     return 0;
 }
 

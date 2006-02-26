@@ -58,10 +58,6 @@ typedef long long SRTIME;
 
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
-typedef unsigned long rt_handle_t;
-
-#define RT_HANDLE_INVALID ((rt_handle_t)0)
-
 typedef xnsigmask_t rt_sigset_t;
 
 #define RT_HANDLER_NONE XNTHREAD_INVALID_ASR

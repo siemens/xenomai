@@ -19,6 +19,7 @@ nodist_libnucleus_s_a_SOURCES = \
 			intr.c \
 			module.c \
 			pod.c \
+			registry.c \
 			synch.c \
 			thread.c \
 			timer.c

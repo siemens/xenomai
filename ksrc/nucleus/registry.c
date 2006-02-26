@@ -22,11 +22,11 @@
  */
 
 /*!
- * \ingroup native
+ * \ingroup nucleus
  * \defgroup registry Registry services.
  *
  * The registry provides a mean to index real-time object descriptors
- * created by the Xenomai skin on unique alphanumeric keys. When labeled
+ * created by Xenomai skins on unique alphanumeric keys. When labeled
  * this way, a real-time object is globally exported; it can be
  * searched for, and its descriptor returned to the caller for further
  * use; the latter operation is called a "binding". When no object has
@@ -34,65 +34,52 @@
  * to set up a rendez-vous, blocking the caller until the object is
  * eventually registered.
  *
- * The registry is a simple yet powerful mechanism for sharing
- * real-time objects between kernel-based and user-space tasks, or
- * between tasks belonging to different user-space processes. Once the
- * binding has been done, an exported object can be controlled through
- * the regular API using the uniform descriptor returned by the
- * registry.
- *
- * All high-level real-time objects created by the Xenomai skin can be
- * registered. The name parameter passed to the various object
- * creation routines is used to have the new object indexed by the
- * Xenomai registry. Such registration is always optional though, and can
- * be avoided by passing a null or empty name string.
- *
  *@{*/
 
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
-#include <native/registry.h>
-#include <native/task.h>
+#include <nucleus/registry.h>
+#include <nucleus/thread.h>
 
-static RT_OBJECT __xeno_obj_slots[CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS];
+static xnobject_t registry_obj_slots[CONFIG_XENO_OPT_REGISTRY_NRSLOTS];
 
-static DECLARE_XNQUEUE(__xeno_obj_freeq); /* Free objects. */
+static DECLARE_XNQUEUE(registry_obj_freeq); /* Free objects. */
 
-static DECLARE_XNQUEUE(__xeno_obj_busyq); /* Active and exported objects. */
+static DECLARE_XNQUEUE(registry_obj_busyq); /* Active and exported objects. */
 
-static u_long __xeno_obj_stamp;
+static u_long registry_obj_stamp;
 
-static RT_HASH **__xeno_hash_table;
+static xnobjhash_t **registry_hash_table;
 
-static int __xeno_hash_entries;
+static int registry_hash_entries;
 
-static xnsynch_t __xeno_hash_synch;
+static xnsynch_t registry_hash_synch;
 
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 #include <linux/workqueue.h>
 
 extern struct proc_dir_entry *rthal_proc_root;
 
-static void __registry_proc_callback(void *cookie);
+static void registry_proc_callback(void *cookie);
 
-static void __registry_proc_schedule(void *cookie);
+static void registry_proc_schedule(void *cookie);
 
-static DECLARE_XNQUEUE(__xeno_obj_exportq); /* Objects waiting for /proc export. */
+static DECLARE_XNQUEUE(registry_obj_exportq); /* Objects waiting for /proc export. */
 
-static DECLARE_XNQUEUE(__xeno_obj_unexportq); /* Objects waiting for /proc unexport. */
+static DECLARE_XNQUEUE(registry_obj_unexportq); /* Objects waiting for /proc unexport. */
 
 #ifndef CONFIG_PREEMPT_RT
-static DECLARE_WORK(__registry_proc_work,&__registry_proc_callback,NULL);
+static DECLARE_WORK(registry_proc_work,&registry_proc_callback,NULL);
 #endif /* !CONFIG_PREEMPT_RT */
 
 static struct proc_dir_entry *registry_proc_root;
 
 static int registry_proc_apc;
 
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
-int __native_registry_pkg_init (void)
+int xnregistry_init (void)
 
 {
     static const u_short primes[] = {
@@ -106,9 +93,9 @@ int __native_registry_pkg_init (void)
 
     int n;
 
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 
-    registry_proc_apc = rthal_apc_alloc("registry_export",&__registry_proc_schedule,NULL);
+    registry_proc_apc = rthal_apc_alloc("registry_export",&registry_proc_schedule,NULL);
 
     if (registry_proc_apc < 0)
 	return registry_proc_apc;
@@ -122,50 +109,50 @@ int __native_registry_pkg_init (void)
 	return -ENOMEM;
 	}
 
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
-    for (n = 0; n < CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS; n++)
+    for (n = 0; n < CONFIG_XENO_OPT_REGISTRY_NRSLOTS; n++)
 	{
-	inith(&__xeno_obj_slots[n].link);
-	__xeno_obj_slots[n].objaddr = NULL;
-	appendq(&__xeno_obj_freeq,&__xeno_obj_slots[n].link);
+	inith(&registry_obj_slots[n].link);
+	registry_obj_slots[n].objaddr = NULL;
+	appendq(&registry_obj_freeq,&registry_obj_slots[n].link);
 	}
 
-    getq(&__xeno_obj_freeq); /* Slot #0 is reserved/invalid. */
+    getq(&registry_obj_freeq); /* Slot #0 is reserved/invalid. */
     
-    __xeno_hash_entries = primes[obj_hash_max(CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS / 100)];
-    __xeno_hash_table = (RT_HASH **)xnarch_sysalloc(sizeof(RT_HASH *) * __xeno_hash_entries);
+    registry_hash_entries = primes[obj_hash_max(CONFIG_XENO_OPT_REGISTRY_NRSLOTS / 100)];
+    registry_hash_table = (xnobjhash_t **)xnarch_sysalloc(sizeof(xnobjhash_t *) * registry_hash_entries);
 
-    if (!__xeno_hash_table)
+    if (!registry_hash_table)
 	{
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 	rthal_apc_free(registry_proc_apc);
 	remove_proc_entry("registry",rthal_proc_root);
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 	return -ENOMEM;
 	}
 
-    for (n = 0; n < __xeno_hash_entries; n++)
-	__xeno_hash_table[n] = NULL;
+    for (n = 0; n < registry_hash_entries; n++)
+	registry_hash_table[n] = NULL;
 
-    xnsynch_init(&__xeno_hash_synch,XNSYNCH_FIFO);
+    xnsynch_init(&registry_hash_synch,XNSYNCH_FIFO);
 
     return 0;
 }
 
-void __native_registry_pkg_cleanup (void)
+void xnregistry_cleanup (void)
 
 {
-    RT_HASH *ecurr, *enext;
+    xnobjhash_t *ecurr, *enext;
     int n;
 
-    for (n = 0 ; n < __xeno_hash_entries; n++)
+    for (n = 0 ; n < registry_hash_entries; n++)
 	{
-	for (ecurr = __xeno_hash_table[n]; ecurr; ecurr = enext)
+	for (ecurr = registry_hash_table[n]; ecurr; ecurr = enext)
 	    {
 	    enext = ecurr->next;
 
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 	    if (ecurr->object && ecurr->object->pnode)
 		{
@@ -177,45 +164,45 @@ void __native_registry_pkg_cleanup (void)
 				      registry_proc_root);
 		}
 
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 	    xnfree(ecurr);
 	    }
 	}
 
-    xnarch_sysfree(__xeno_hash_table,sizeof(RT_HASH *) * __xeno_hash_entries);
+    xnarch_sysfree(registry_hash_table,sizeof(xnobjhash_t *) * registry_hash_entries);
 
-    xnsynch_destroy(&__xeno_hash_synch);
+    xnsynch_destroy(&registry_hash_synch);
 
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
     rthal_apc_free(registry_proc_apc);
     flush_scheduled_work();
     remove_proc_entry("registry",rthal_proc_root);
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 }
 
-static inline RT_OBJECT *__registry_validate (rt_handle_t handle)
+static inline xnobject_t *registry_validate (xnhandle_t handle)
 
 {
-    if (handle > 0 && handle < CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS)
+    if (handle > 0 && handle < CONFIG_XENO_OPT_REGISTRY_NRSLOTS)
 	{
-        RT_OBJECT *object = &__xeno_obj_slots[handle];
+        xnobject_t *object = &registry_obj_slots[handle];
 	return object->objaddr ? object : NULL;
 	}
 
     return NULL;
 }
 
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 /* The following stuff implements the mechanism for delegating
-   export/unexport requests to/from the /proc interface from the Xenomai
-   domain to the Linux kernel (i.e. the "lower stage"). This ends up
-   being a bit complex due to the fact that such requests might lag
-   enough before being processed by the Linux kernel so that
+   export/unexport requests to/from the /proc interface from the
+   Xenomai domain to the Linux kernel (i.e. the "lower stage"). This
+   ends up being a bit complex due to the fact that such requests
+   might lag enough before being processed by the Linux kernel so that
    subsequent requests might just contradict former ones before they
    even had a chance to be applied (e.g. export -> unexport in the
-   Xenomai domain for a short-lived RT object). This situation and the
+   Xenomai domain for short-lived objects). This situation and the
    like are hopefully properly handled due to a careful
    synchronization of operations across domains. */
 
@@ -263,27 +250,27 @@ static struct proc_dir_entry *add_proc_link (const char *name,
     return entry;
 }
 
-static void __registry_proc_callback (void *cookie)
+static void registry_proc_callback (void *cookie)
 
 {
     struct proc_dir_entry *dir, *entry;
-    RT_OBJECT_PROCNODE *pnode;
     xnholder_t *holder;
-    RT_OBJECT *object;
+    xnobject_t *object;
+    xnpnode_t *pnode;
     const char *type;
     int entries;
     spl_t s;
 
     xnlock_get_irqsave(&nklock,s);
 
-    while ((holder = getq(&__xeno_obj_exportq)) != NULL)
+    while ((holder = getq(&registry_obj_exportq)) != NULL)
 	{
-	object = link2rtobj(holder);
+	object = link2xnobj(holder);
 	pnode = object->pnode;
 	type = pnode->type;
 	++pnode->entries;
-	object->proc = RT_OBJECT_PROC_RESERVED2;
-	appendq(&__xeno_obj_busyq,holder);
+	object->proc = XNOBJECT_PROC_RESERVED2;
+	appendq(&registry_obj_busyq,holder);
 	dir = pnode->dir;
 
 	xnlock_put_irqrestore(&nklock,s);
@@ -327,9 +314,9 @@ static void __registry_proc_callback (void *cookie)
 	    }
 	}
 
-    while ((holder = getq(&__xeno_obj_unexportq)) != NULL)
+    while ((holder = getq(&registry_obj_unexportq)) != NULL)
 	{
-	object = link2rtobj(holder);
+	object = link2xnobj(holder);
 	pnode = object->pnode;
 	object->pnode = NULL;
 	entry = object->proc;
@@ -342,11 +329,11 @@ static void __registry_proc_callback (void *cookie)
 	    pnode->dir = NULL;
 
 	if (object->objaddr)
-	    appendq(&__xeno_obj_busyq,holder);
+	    appendq(&registry_obj_busyq,holder);
 	else
 	    /* Trap the case where we are unexporting an already
 	       unregistered object. */
-	    appendq(&__xeno_obj_freeq,holder);
+	    appendq(&registry_obj_freeq,holder);
 
 	xnlock_put_irqrestore(&nklock,s);
 
@@ -361,38 +348,38 @@ static void __registry_proc_callback (void *cookie)
     xnlock_put_irqrestore(&nklock,s);
 }
 
-static void __registry_proc_schedule (void *cookie)
+static void registry_proc_schedule (void *cookie)
 
 {
 #ifdef CONFIG_PREEMPT_RT
     /* On PREEMPT_RT, we are already running over a thread context, so
        we don't need the workqueue indirection: let's invoke the
        export handler directly. */
-    __registry_proc_callback(cookie);
+    registry_proc_callback(cookie);
 #else /* CONFIG_PREEMPT_RT */
     /* schedule_work() will check for us if the work has already been
        scheduled, so just be lazy and submit blindly. */
-    schedule_work(&__registry_proc_work);
+    schedule_work(&registry_proc_work);
 #endif /* CONFIG_PREEMPT_RT */
 }
 
-static inline void __registry_proc_export (RT_OBJECT *object,
-					   RT_OBJECT_PROCNODE *pnode)
+static inline void registry_proc_export (xnobject_t *object,
+					 xnpnode_t *pnode)
 {
-    object->proc = RT_OBJECT_PROC_RESERVED1;
+    object->proc = XNOBJECT_PROC_RESERVED1;
     object->pnode = pnode;
-    removeq(&__xeno_obj_busyq,&object->link);
-    appendq(&__xeno_obj_exportq,&object->link);
+    removeq(&registry_obj_busyq,&object->link);
+    appendq(&registry_obj_exportq,&object->link);
     rthal_apc_schedule(registry_proc_apc);
 }
 
-static inline void __registry_proc_unexport (RT_OBJECT *object)
+static inline void registry_proc_unexport (xnobject_t *object)
 
 {
-    if (object->proc != RT_OBJECT_PROC_RESERVED1)
+    if (object->proc != XNOBJECT_PROC_RESERVED1)
 	{
-	removeq(&__xeno_obj_busyq,&object->link);
-	appendq(&__xeno_obj_unexportq,&object->link);
+	removeq(&registry_obj_busyq,&object->link);
+	appendq(&registry_obj_unexportq,&object->link);
 	rthal_apc_schedule(registry_proc_apc);
 	}
     else
@@ -400,16 +387,16 @@ static inline void __registry_proc_unexport (RT_OBJECT *object)
 	/* Unexporting before the lower stage has had a chance to
 	   export. Move back the object to the busyq just like if no
 	   export had been requested. */
-	removeq(&__xeno_obj_exportq,&object->link);
-	appendq(&__xeno_obj_busyq,&object->link);
+	removeq(&registry_obj_exportq,&object->link);
+	appendq(&registry_obj_busyq,&object->link);
 	object->pnode = NULL;
 	object->proc = NULL;
 	}
 }
 
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
-static unsigned __registry_hash_crunch (const char *key)
+static unsigned registry_hash_crunch (const char *key)
 
 {
     unsigned h = 0, g;
@@ -424,43 +411,43 @@ static unsigned __registry_hash_crunch (const char *key)
 	    h = (h ^ (g >> HQON)) ^ g;
 	}
 
-    return h % __xeno_hash_entries;
+    return h % registry_hash_entries;
 }
 
-static inline int __registry_hash_enter (const char *key,
-					 RT_OBJECT *object)
+static inline int registry_hash_enter (const char *key,
+				       xnobject_t *object)
 {
-    RT_HASH *enew, *ecurr;
+    xnobjhash_t *enew, *ecurr;
     unsigned s;
 
     object->key = key;
-    s = __registry_hash_crunch(key);
+    s = registry_hash_crunch(key);
 
-    for (ecurr = __xeno_hash_table[s]; ecurr != NULL; ecurr = ecurr->next)
+    for (ecurr = registry_hash_table[s]; ecurr != NULL; ecurr = ecurr->next)
 	{
 	if (ecurr->object == object || !strcmp(key,ecurr->object->key))
 	    return -EEXIST;
 	}
 
-    enew = (RT_HASH *)xnmalloc(sizeof(*enew));
+    enew = (xnobjhash_t *)xnmalloc(sizeof(*enew));
 
     if (!enew)
 	return -ENOMEM;
 
     enew->object = object;
-    enew->next = __xeno_hash_table[s];
-    __xeno_hash_table[s] = enew;
+    enew->next = registry_hash_table[s];
+    registry_hash_table[s] = enew;
     
     return 0;
 }
 
-static inline int __registry_hash_remove (RT_OBJECT *object)
+static inline int registry_hash_remove (xnobject_t *object)
 
 {
-    unsigned s = __registry_hash_crunch(object->key);
-    RT_HASH *ecurr, *eprev;
+    unsigned s = registry_hash_crunch(object->key);
+    xnobjhash_t *ecurr, *eprev;
 
-    for (ecurr = __xeno_hash_table[s], eprev = NULL;
+    for (ecurr = registry_hash_table[s], eprev = NULL;
 	 ecurr != NULL; eprev = ecurr, ecurr = ecurr->next)
 	{
 	if (ecurr->object == object)
@@ -468,7 +455,7 @@ static inline int __registry_hash_remove (RT_OBJECT *object)
 	    if (eprev)
 		eprev->next = ecurr->next;
 	    else
-		__xeno_hash_table[s] = ecurr->next;
+		registry_hash_table[s] = ecurr->next;
 
 	    xnfree(ecurr);
 
@@ -479,12 +466,12 @@ static inline int __registry_hash_remove (RT_OBJECT *object)
     return -ESRCH;
 }
 
-static RT_OBJECT *__registry_hash_find (const char *key)
+static xnobject_t *registry_hash_find (const char *key)
 
 {
-    RT_HASH *ecurr;
+    xnobjhash_t *ecurr;
 
-    for (ecurr = __xeno_hash_table[__registry_hash_crunch(key)];
+    for (ecurr = registry_hash_table[registry_hash_crunch(key)];
 	 ecurr != NULL; ecurr = ecurr->next)
 	{
 	if (!strcmp(key,ecurr->object->key))
@@ -494,33 +481,33 @@ static RT_OBJECT *__registry_hash_find (const char *key)
     return NULL;
 }
 
-static inline unsigned __registry_wakeup_sleepers(const char *key)
+static inline unsigned registry_wakeup_sleepers(const char *key)
 {
     xnpholder_t *holder, *nholder;
     unsigned cnt = 0;
 
-    nholder = getheadpq(xnsynch_wait_queue(&__xeno_hash_synch));
+    nholder = getheadpq(xnsynch_wait_queue(&registry_hash_synch));
 					
     while ((holder = nholder) != NULL)
 	{
-	RT_TASK *sleeper = thread2rtask(link2thread(holder,plink));
+	xnthread_t *sleeper = link2thread(holder,plink);
 
-	if (*key == *sleeper->wait_args.registry.key &&
-	    !strcmp(key, sleeper->wait_args.registry.key))
+	if (*key == *sleeper->registry.waitkey &&
+	    !strcmp(key, sleeper->registry.waitkey))
 	    {
-	    sleeper->wait_args.registry.key = NULL;
-	    nholder = xnsynch_wakeup_this_sleeper(&__xeno_hash_synch,holder);
+	    sleeper->registry.waitkey = NULL;
+	    nholder = xnsynch_wakeup_this_sleeper(&registry_hash_synch,holder);
 	    ++cnt;
 	    }
 	else
-	    nholder = nextpq(xnsynch_wait_queue(&__xeno_hash_synch),holder);
+	    nholder = nextpq(xnsynch_wait_queue(&registry_hash_synch),holder);
         }
 													    
     return cnt;
 }
 
 /**
- * @fn int rt_registry_enter(const char *key,void *objaddr,rt_handle_t *phandle,RT_OBJECT_PROCNODE *pnode)
+ * @fn int xnregistry_enter(const char *key,void *objaddr,xnhandle_t *phandle,xnpnode_t *pnode)
  * @brief Register a real-time object.
  *
  * This service allocates a new registry slot for an associated
@@ -536,7 +523,7 @@ static inline unsigned __registry_wakeup_sleepers(const char *key)
  *
  * @param phandle A pointer to a generic handle defined by the
  * registry which will uniquely identify the indexed object, until the
- * latter is unregistered using the rt_registry_remove() service.
+ * latter is unregistered using the xnregistry_remove() service.
  *
  * @param pnode A pointer to an optional /proc node class
  * descriptor. This structure provides the information needed to
@@ -561,18 +548,18 @@ static inline unsigned __registry_wakeup_sleepers(const char *key)
  * This service can be called from:
  *
  * - Kernel module initialization/cleanup code
- * - Kernel-based task
+ * - Kernel-based thread
  *
  * Rescheduling: possible.
  */
 
-int rt_registry_enter (const char *key,
-		       void *objaddr,
-		       rt_handle_t *phandle,
-		       RT_OBJECT_PROCNODE *pnode)
+int xnregistry_enter (const char *key,
+		      void *objaddr,
+		      xnhandle_t *phandle,
+		      xnpnode_t *pnode)
 {
     xnholder_t *holder;
-    RT_OBJECT *object;
+    xnobject_t *object;
     spl_t s;
     int err;
 
@@ -581,7 +568,7 @@ int rt_registry_enter (const char *key,
 
     xnlock_get_irqsave(&nklock,s);
 
-    holder = getq(&__xeno_obj_freeq);
+    holder = getq(&registry_obj_freeq);
 
     if (!holder)
 	{
@@ -589,37 +576,37 @@ int rt_registry_enter (const char *key,
 	goto unlock_and_exit;
 	}
 
-    object = link2rtobj(holder);
+    object = link2xnobj(holder);
 
-    err = __registry_hash_enter(key,object);
+    err = registry_hash_enter(key,object);
 
     if (err)
 	{
-	appendq(&__xeno_obj_freeq,holder);
+	appendq(&registry_obj_freeq,holder);
 	goto unlock_and_exit;
 	}
 
     xnsynch_init(&object->safesynch,XNSYNCH_FIFO);
     object->objaddr = objaddr;
-    object->cstamp = ++__xeno_obj_stamp;
+    object->cstamp = ++registry_obj_stamp;
     object->safelock = 0;
-    appendq(&__xeno_obj_busyq,holder);
+    appendq(&registry_obj_busyq,holder);
 
     /* <!> Make sure the handle is written back before the
        rescheduling takes place. */
-    *phandle = object - __xeno_obj_slots;
+    *phandle = object - registry_obj_slots;
 
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
     if (pnode)
-	__registry_proc_export(object,pnode);
+	registry_proc_export(object,pnode);
     else
 	{
 	object->proc = NULL;
 	object->pnode = NULL;
 	}
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
-    if (__registry_wakeup_sleepers(key))
+    if (registry_wakeup_sleepers(key))
 	xnpod_schedule();
 
  unlock_and_exit:
@@ -630,7 +617,7 @@ int rt_registry_enter (const char *key,
 }
 
 /**
- * @fn int rt_registry_bind(const char *key,RTIME timeout,rt_handle_t *phandle)
+ * @fn int xnregistry_bind(const char *key,xnticks_t timeout,xnhandle_t *phandle)
  * @brief Bind to a real-time object.
  *
  * This service retrieves the registry handle of a given object
@@ -642,9 +629,9 @@ int rt_registry_enter (const char *key,
  * object to bind to.
  *
  * @param timeout The number of clock ticks to wait for the
- * registration to occur (see note). Passing TM_INFINITE causes the
+ * registration to occur (see note). Passing XN_INFINITE causes the
  * caller to block indefinitely until the object is
- * registered. Passing TM_NONBLOCK causes the service to return
+ * registered. Passing XN_NONBLOCK causes the service to return
  * immediately without waiting if the object is not registered on
  * entry.
  *
@@ -657,10 +644,10 @@ int rt_registry_enter (const char *key,
  *
  * - -EINVAL is returned if @a key is NULL.
  *
- * - -EINTR is returned if rt_task_unblock() has been called for the
- * waiting task before the retrieval has completed.
+ * - -EINTR is returned if xnpod_unblock_thread() has been called for
+ * the waiting thread before the retrieval has completed.
  *
- * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
+ * - -EWOULDBLOCK is returned if @a timeout is equal to XN_NONBLOCK
  * and the searched object is not registered on entry. As a special
  * exception, this error is also returned if this service should
  * block, but was called from a context which cannot sleep
@@ -675,26 +662,26 @@ int rt_registry_enter (const char *key,
  *
  * - Kernel module initialization/cleanup code
  * - Interrupt service routine
- *   only if @a timeout is equal to TM_NONBLOCK.
+ *   only if @a timeout is equal to XN_NONBLOCK.
  *
- * - Kernel-based task
+ * - Kernel-based thread.
  *
  * Rescheduling: always unless the request is immediately satisfied or
  * @a timeout specifies a non-blocking operation.
  *
  * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the rt_timer_start() service. In
+ * the system timer, as defined by the xnpod_start_timer() service. In
  * periodic mode, clock ticks are interpreted as periodic jiffies. In
  * oneshot mode, clock ticks are interpreted as nanoseconds.
  */
 
-int rt_registry_bind (const char *key,
-		      RTIME timeout,
-		      rt_handle_t *phandle)
+int xnregistry_bind (const char *key,
+		     xnticks_t timeout,
+		     xnhandle_t *phandle)
 {
-    RT_OBJECT *object;
+    xnobject_t *object;
+    xnthread_t *thread;
     xnticks_t stime;
-    RT_TASK *task;
     int err = 0;
     spl_t s;
 
@@ -707,21 +694,21 @@ int rt_registry_bind (const char *key,
 
     for (;;)
 	{
-	object = __registry_hash_find(key);
+	object = registry_hash_find(key);
 
 	if (object)
 	    {
-	    *phandle = object - __xeno_obj_slots;
+	    *phandle = object - registry_obj_slots;
 	    goto unlock_and_exit;
 	    }
 
-	if (timeout == TM_NONBLOCK || xnpod_unblockable_p())
+	if (timeout == XN_NONBLOCK || xnpod_unblockable_p())
 	    {
 	    err = -EWOULDBLOCK;
 	    goto unlock_and_exit;
 	    }
 
-	if (timeout != TM_INFINITE)
+	if (timeout != XN_INFINITE)
 	    {
 	    xnticks_t now = xnpod_get_time();
 
@@ -732,17 +719,17 @@ int rt_registry_bind (const char *key,
 	    stime = now;
 	    }
 
-	task = xeno_current_task();
-	task->wait_args.registry.key = key;
-	xnsynch_sleep_on(&__xeno_hash_synch,timeout);
+	thread = xnpod_current_thread();
+	thread->registry.waitkey = key;
+	xnsynch_sleep_on(&registry_hash_synch,timeout);
 
-	if (xnthread_test_flags(&task->thread_base,XNTIMEO))
+	if (xnthread_test_flags(thread,XNTIMEO))
 	    {
 	    err = -ETIMEDOUT;
 	    goto unlock_and_exit;
 	    }
 
-	if (xnthread_test_flags(&task->thread_base,XNBREAK))
+	if (xnthread_test_flags(thread,XNBREAK))
 	    {
 	    err = -EINTR;
 	    goto unlock_and_exit;
@@ -757,7 +744,7 @@ int rt_registry_bind (const char *key,
 }
 
 /**
- * @fn int rt_registry_remove(rt_handle_t handle)
+ * @fn int xnregistry_remove(xnhandle_t handle)
  * @brief Forcibly unregister a real-time object.
  *
  * This service forcibly removes an object from the registry. The
@@ -776,21 +763,21 @@ int rt_registry_bind (const char *key,
  * This service can be called from:
  *
  * - Kernel module initialization/cleanup code
- * - Kernel-based task
+ * - Kernel-based thread
  *
  * Rescheduling: never.
  */
 
-int rt_registry_remove (rt_handle_t handle)
+int xnregistry_remove (xnhandle_t handle)
 
 {
-    RT_OBJECT *object;
+    xnobject_t *object;
     int err = 0;
     spl_t s;
 
     xnlock_get_irqsave(&nklock,s);
 
-    object = __registry_validate(handle);
+    object = registry_validate(handle);
 
     if (!object)
 	{
@@ -798,15 +785,15 @@ int rt_registry_remove (rt_handle_t handle)
 	goto unlock_and_exit;
 	}
 
-    __registry_hash_remove(object);
+    registry_hash_remove(object);
     object->objaddr = NULL;
     object->cstamp = 0;
 
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 
     if (object->pnode)
 	{
-	__registry_proc_unexport(object);
+	registry_proc_unexport(object);
 
 	/* Leave the update of the object queues to the work callback
 	   if it has been kicked. */
@@ -815,10 +802,10 @@ int rt_registry_remove (rt_handle_t handle)
 	    goto unlock_and_exit;
 	}
 
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
-    removeq(&__xeno_obj_busyq,&object->link);
-    appendq(&__xeno_obj_freeq,&object->link);
+    removeq(&registry_obj_busyq,&object->link);
+    appendq(&registry_obj_freeq,&object->link);
 
  unlock_and_exit:
 
@@ -828,19 +815,19 @@ int rt_registry_remove (rt_handle_t handle)
 }
 
 /**
- * @fn int rt_registry_remove_safe(rt_handle_t handle,RTIME timeout)
+ * @fn int xnregistry_remove_safe(xnhandle_t handle,xnticks_t timeout)
  * @brief Unregister an idle real-time object.
  *
  * This service removes an object from the registry. The caller might
  * sleep as a result of waiting for the target object to be unlocked
- * prior to the removal (see rt_registry_put()).
+ * prior to the removal (see xnregistry_put()).
  *
  * @param handle The generic handle of the object to remove.
  *
  * @param timeout If the object is locked on entry, @a param gives the
  * number of clock ticks to wait for the unlocking to occur (see
- * note). Passing TM_INFINITE causes the caller to block
- * indefinitely until the object is unlocked. Passing TM_NONBLOCK
+ * note). Passing XN_INFINITE causes the caller to block
+ * indefinitely until the object is unlocked. Passing XN_NONBLOCK
  * causes the service to return immediately without waiting if the
  * object is locked on entry.
  *
@@ -850,7 +837,7 @@ int rt_registry_remove (rt_handle_t handle)
  * object.
  *
  * - -EWOULDBLOCK is returned if @a timeout is equal to
- * TM_NONBLOCK and the object is locked on entry.
+ * XN_NONBLOCK and the object is locked on entry.
  *
  * - -EBUSY is returned if @a handle refers to a locked object and the
  * caller could not sleep until it is unlocked.
@@ -858,8 +845,8 @@ int rt_registry_remove (rt_handle_t handle)
  * - -ETIMEDOUT is returned if the object cannot be removed within the
  * specified amount of time.
  *
- * - -EINTR is returned if rt_task_unblock() has been called for the
- * calling task waiting for the object to be unlocked.
+ * - -EINTR is returned if xnpod_unblock_thread() has been called for
+ * the calling thread waiting for the object to be unlocked.
  *
  * Environments:
  *
@@ -867,30 +854,30 @@ int rt_registry_remove (rt_handle_t handle)
  *
  * - Kernel module initialization/cleanup code
  * - Interrupt service routine
- *   only if @a timeout is equal to TM_NONBLOCK.
+ *   only if @a timeout is equal to XN_NONBLOCK.
  *
- * - Kernel-based task
+ * - Kernel-based thread.
  *
  * Rescheduling: possible if the object to remove is currently locked
  * and the calling context can sleep.
  *
  * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the rt_timer_start() service. In
+ * the system timer, as defined by the xnpod_start_timer() service. In
  * periodic mode, clock ticks are interpreted as periodic jiffies. In
  * oneshot mode, clock ticks are interpreted as nanoseconds.
  */
 
-int rt_registry_remove_safe (rt_handle_t handle, RTIME timeout)
+int xnregistry_remove_safe (xnhandle_t handle, xnticks_t timeout)
 
 {
-    RT_OBJECT *object;
+    xnobject_t *object;
     u_long cstamp;
     int err = 0;
     spl_t s;
 
     xnlock_get_irqsave(&nklock,s);
 
-    object = __registry_validate(handle);
+    object = registry_validate(handle);
 
     if (!object)
 	{
@@ -901,7 +888,7 @@ int rt_registry_remove_safe (rt_handle_t handle, RTIME timeout)
     if (object->safelock == 0)
 	goto remove;
 
-    if (timeout == TM_NONBLOCK)
+    if (timeout == XN_NONBLOCK)
 	{
 	err = -EWOULDBLOCK;
 	goto unlock_and_exit;
@@ -917,15 +904,15 @@ int rt_registry_remove_safe (rt_handle_t handle, RTIME timeout)
      * The object creation stamp is here to deal with situations like this
      * one:
      *
-     * Thread(A) locks Object(T) using rt_registry_get()
-     * Thread(B) attempts to delete Object(T) using __registry_delete()
-     * Thread(C) attempts the same deletion, waiting like Thread(B) for
+     * Thread(A) locks Object(T) using xnregistry_get()
+     * Thread(B) attempts to remove Object(T) using xnregistry_remove()
+     * Thread(C) attempts the same removal, waiting like Thread(B) for
      * the object's safe count to fall down to zero.
      * Thread(A) unlocks Object(T), unblocking Thread(B) and (C).
-     * Thread(B) wakes up and successfully deletes Object(T)
+     * Thread(B) wakes up and successfully removes Object(T)
      * Thread(D) preempts Thread(C) and recycles Object(T) for another object
-     * Thread(C) wakes up and attempts to finalize the deletion of the
-     * _former_ Object(T), which leads to the spurious deletion of the
+     * Thread(C) wakes up and attempts to finalize the removal of the
+     * _former_ Object(T), which leads to the spurious removal of the
      * _new_ Object(T).
      */
 
@@ -935,13 +922,13 @@ int rt_registry_remove_safe (rt_handle_t handle, RTIME timeout)
 	{
 	xnsynch_sleep_on(&object->safesynch,timeout);
 
-	if (xnthread_test_flags(&xeno_current_task()->thread_base,XNBREAK))
+	if (xnthread_test_flags(xnpod_current_thread(),XNBREAK))
 	    {
 	    err = -EINTR;
 	    goto unlock_and_exit;
 	    }
 
-	if (xnthread_test_flags(&xeno_current_task()->thread_base,XNTIMEO))
+	if (xnthread_test_flags(xnpod_current_thread(),XNTIMEO))
 	    {
 	    err = -ETIMEDOUT;
 	    goto unlock_and_exit;
@@ -951,14 +938,14 @@ int rt_registry_remove_safe (rt_handle_t handle, RTIME timeout)
 
     if (object->cstamp != cstamp)
 	{
-	/* The caller should silently abort the deletion process. */
+	/* The caller should silently abort the removal process. */
 	err = -ESRCH;
 	goto unlock_and_exit;
 	}
 
  remove:
 
-    err = rt_registry_remove(handle);
+    err = xnregistry_remove(handle);
 
  unlock_and_exit:
 
@@ -968,20 +955,21 @@ int rt_registry_remove_safe (rt_handle_t handle, RTIME timeout)
 }
 
 /**
- * @fn void *rt_registry_get(rt_handle_t handle)
+ * @fn void *xnregistry_get(xnhandle_t handle)
  * @brief Find and lock a real-time object into the registry.
  *
  * This service retrieves an object from its handle into the registry
- * and prevents it deletion atomically. A locking count is tracked, so
- * that rt_registry_get() and rt_registry_put() must be used in pair.
+ * and prevents it removal atomically. A locking count is tracked, so
+ * that xnregistry_get() and xnregistry_put() must be used in pair.
  *
  * @param handle The generic handle of the object to find and lock. If
- * RT_REGISTRY_SELF is passed, the object is the calling Xenomai task.
+ * XNOBJECT_SELF is passed, the object is the calling Xenomai
+ * thread.
  *
  * @return The memory address of the object's descriptor is returned
  * on success. Otherwise, NULL is returned if @a handle does not
  * reference a registered object, or if @a handle is equal to
- * RT_REGISTRY_SELF but the current context is not a real-time task.
+ * XNOBJECT_SELF but the current context is not a real-time thread.
  *
  * Environments:
  *
@@ -989,38 +977,29 @@ int rt_registry_remove_safe (rt_handle_t handle, RTIME timeout)
  *
  * - Kernel module initialization/cleanup code
  * - Interrupt service routine
- * only if @a handle is different from RT_REGISTRY_SELF.
+ * only if @a handle is different from XNOBJECT_SELF.
  *
- * - Kernel-based task
+ * - Kernel-based thread.
  *
  * Rescheduling: never.
  */
 
-void *rt_registry_get (rt_handle_t handle)
+void *xnregistry_get (xnhandle_t handle)
 
 {
-    RT_OBJECT *object;
+    xnobject_t *object;
     void *objaddr;
     spl_t s;
 
     xnlock_get_irqsave(&nklock,s);
 
-    if (handle == RT_REGISTRY_SELF)
+    if (handle == XNOBJECT_SELF)
 	{
-	if (!xnpod_primary_p())
-	    {
-	    objaddr = NULL;
-	    goto unlock_and_exit;
-	    }
-
-	if (xnpod_current_thread()->magic == XENO_SKIN_MAGIC)
-	    {
-	    objaddr = xeno_current_task();
-	    goto unlock_and_exit;
-	    }
+	objaddr = xnpod_primary_p() ? xnpod_current_thread() : NULL;
+	goto unlock_and_exit;
 	}
 
-    object = __registry_validate(handle);
+    object = registry_validate(handle);
 
     if (object)
 	{
@@ -1038,22 +1017,22 @@ void *rt_registry_get (rt_handle_t handle)
 }
 
 /**
- * @fn u_long rt_registry_put(rt_handle_t handle)
+ * @fn u_long xnregistry_put(xnhandle_t handle)
  * @brief Unlock a real-time object from the registry.
  *
  * This service decrements the lock count of a registered object
- * previously locked by a call to rt_registry_get(). The object is
+ * previously locked by a call to xnregistry_get(). The object is
  * actually unlocked from the registry when the locking count falls
- * down to zero, thus waking up any task currently waiting inside
- * rt_registry_remove() for unregistering it.
+ * down to zero, thus waking up any thread currently blocked on
+ * xnregistry_remove() for unregistering it.
  *
  * @param handle The generic handle of the object to unlock. If
- * RT_REGISTRY_SELF is passed, the object is the calling Xenomai task.
+ * XNOBJECT_SELF is passed, the object is the calling Xenomai thread.
  *
  * @return The decremented lock count is returned upon success. Zero
  * is also returned if @a handle does not reference a registered
- * object, or if @a handle is equal to RT_REGISTRY_SELF but the current
- * context is not a real-time task.
+ * object, or if @a handle is equal to XNOBJECT_SELF but the current
+ * context is not a real-time thread.
  *
  * Environments:
  *
@@ -1061,24 +1040,24 @@ void *rt_registry_get (rt_handle_t handle)
  *
  * - Kernel module initialization/cleanup code
  * - Interrupt service routine
- * only if @a handle is different from RT_REGISTRY_SELF.
+ * only if @a handle is different from XNOBJECT_SELF.
  *
- * - Kernel-based task
+ * - Kernel-based thread
  *
  * Rescheduling: possible if the lock count falls down to zero and
- * some task is currently waiting for the object to be unlocked.
+ * some thread is currently waiting for the object to be unlocked.
  */
 
-u_long rt_registry_put (rt_handle_t handle)
+u_long xnregistry_put (xnhandle_t handle)
 
 {
-    RT_OBJECT *object;
+    xnobject_t *object;
     u_long newlock;
     spl_t s;
 
     xnlock_get_irqsave(&nklock,s);
 
-    if (handle == RT_REGISTRY_SELF)
+    if (handle == XNOBJECT_SELF)
 	{
 	if (!xnpod_primary_p())
 	    {
@@ -1086,11 +1065,10 @@ u_long rt_registry_put (rt_handle_t handle)
 	    goto unlock_and_exit;
 	    }
 
-	if (xnpod_current_thread()->magic == XENO_SKIN_MAGIC)
-	    handle = xeno_current_task()->handle;
+	handle = xnpod_current_thread()->registry.handle;
 	}
 
-    object = __registry_validate(handle);
+    object = registry_validate(handle);
 
     if (!object)
 	{
@@ -1114,19 +1092,19 @@ u_long rt_registry_put (rt_handle_t handle)
 }
 
 /**
- * @fn u_long rt_registry_fetch(rt_handle_t handle)
+ * @fn u_long xnregistry_fetch(xnhandle_t handle)
  * @brief Find a real-time object into the registry.
  *
  * This service retrieves an object from its handle into the registry
  * and returns the memory address of its descriptor.
  *
  * @param handle The generic handle of the object to fetch. If
- * RT_REGISTRY_SELF is passed, the object is the calling Xenomai task.
+ * XNOBJECT_SELF is passed, the object is the calling Xenomai thread.
  *
  * @return The memory address of the object's descriptor is returned
  * on success. Otherwise, NULL is returned if @a handle does not
  * reference a registered object, or if @a handle is equal to
- * RT_REGISTRY_SELF but the current context is not a real-time task.
+ * XNOBJECT_SELF but the current context is not a real-time thread.
  *
  * Environments:
  *
@@ -1134,38 +1112,29 @@ u_long rt_registry_put (rt_handle_t handle)
  *
  * - Kernel module initialization/cleanup code
  * - Interrupt service routine
- * only if @a handle is different from RT_REGISTRY_SELF.
+ * only if @a handle is different from XNOBJECT_SELF.
  *
- * - Kernel-based task
+ * - Kernel-based thread
  *
  * Rescheduling: never.
  */
 
-void *rt_registry_fetch (rt_handle_t handle)
+void *xnregistry_fetch (xnhandle_t handle)
 
 {
-    RT_OBJECT *object;
+    xnobject_t *object;
     void *objaddr;
     spl_t s;
 
     xnlock_get_irqsave(&nklock,s);
 
-    if (handle == RT_REGISTRY_SELF)
+    if (handle == XNOBJECT_SELF)
 	{
-	if (!xnpod_primary_p())
-	    {
-	    objaddr = NULL;
-	    goto unlock_and_exit;
-	    }
-
-	if (xnpod_current_thread()->magic == XENO_SKIN_MAGIC)
-	    {
-	    objaddr = xeno_current_task();
-	    goto unlock_and_exit;
-	    }
+	objaddr = xnpod_primary_p() ? xnpod_current_thread() : NULL;
+	goto unlock_and_exit;
 	}
 
-    object = __registry_validate(handle);
+    object = registry_validate(handle);
 
     if (object)
 	objaddr = object->objaddr;
@@ -1181,10 +1150,10 @@ void *rt_registry_fetch (rt_handle_t handle)
 
 /*@}*/
 
-EXPORT_SYMBOL(rt_registry_enter);
-EXPORT_SYMBOL(rt_registry_bind);
-EXPORT_SYMBOL(rt_registry_remove);
-EXPORT_SYMBOL(rt_registry_remove_safe);
-EXPORT_SYMBOL(rt_registry_get);
-EXPORT_SYMBOL(rt_registry_fetch);
-EXPORT_SYMBOL(rt_registry_put);
+EXPORT_SYMBOL(xnregistry_enter);
+EXPORT_SYMBOL(xnregistry_bind);
+EXPORT_SYMBOL(xnregistry_remove);
+EXPORT_SYMBOL(xnregistry_remove_safe);
+EXPORT_SYMBOL(xnregistry_get);
+EXPORT_SYMBOL(xnregistry_fetch);
+EXPORT_SYMBOL(xnregistry_put);

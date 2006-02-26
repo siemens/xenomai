@@ -60,7 +60,7 @@
 #define T_HIPRIO  XNCORE_HIGH_PRIO
 
 typedef struct rt_task_placeholder {
-    rt_handle_t opaque;
+    xnhandle_t opaque;
     unsigned long opaque2;
 } RT_TASK_PLACEHOLDER;
 
@@ -112,11 +112,8 @@ typedef struct rt_task {
 
     xnthread_t thread_base;
 
-    rt_handle_t handle;	/* !< Handle in registry -- zero if unregistered. */
-
     char rname[XNOBJECT_NAME_LEN]; /* !< Name in registry. Not the same as
                                       thread name for anonymous threads. */
-    
     int suspend_depth;
 
     int overrun;
@@ -143,10 +140,6 @@ typedef struct rt_task {
 	    void *block;
 	} heap;
 	
-	struct {
-	    const char *key;
-	} registry;
-
 #ifdef CONFIG_XENO_OPT_NATIVE_MPS
 	struct {
 	    RT_TASK_MCB mcb_s; /* Send area. */
@@ -218,7 +211,7 @@ int rt_task_bind(RT_TASK *task,
 static inline int rt_task_unbind (RT_TASK *task)
 
 {
-    task->opaque = RT_HANDLE_INVALID;
+    task->opaque = XN_NO_HANDLE;
     return 0;
 }
 

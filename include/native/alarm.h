@@ -37,7 +37,7 @@ typedef struct rt_alarm_info {
 } RT_ALARM_INFO;
 
 typedef struct rt_alarm_placeholder {
-    rt_handle_t opaque;
+    xnhandle_t opaque;
 } RT_ALARM_PLACEHOLDER;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
@@ -50,7 +50,7 @@ typedef struct rt_alarm {
 
     xntimer_t timer_base; /* !< Base timer object. */
 
-    rt_handle_t handle;	/* !< Handle in registry -- zero if unregistered. */
+    xnhandle_t handle;	/* !< Handle in registry -- zero if unregistered. */
 
     rt_alarm_t handler;		/* !< Alarm handler. */
     

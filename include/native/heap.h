@@ -48,7 +48,7 @@ typedef struct rt_heap_info {
 
 typedef struct rt_heap_placeholder {
 
-    rt_handle_t opaque;
+    xnhandle_t opaque;
 
     void *opaque2;
 
@@ -76,7 +76,7 @@ typedef struct rt_heap {
 
     void *sba;		/* !< Single block ara (H_SINGLE only) */
 
-    rt_handle_t handle;	/* !< Handle in registry -- zero if unregistered. */
+    xnhandle_t handle;	/* !< Handle in registry -- zero if unregistered. */
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 

@@ -57,7 +57,7 @@ typedef struct rt_queue_info {
 
 typedef struct rt_queue_placeholder {
 
-    rt_handle_t opaque;
+    xnhandle_t opaque;
 
     void *opaque2;
 
@@ -83,7 +83,7 @@ typedef struct rt_queue {
 
     int mode;		/* !< Creation mode. */
 
-    rt_handle_t handle;	/* !< Handle in registry -- zero if unregistered. */
+    xnhandle_t handle;	/* !< Handle in registry -- zero if unregistered. */
 
     int qlimit;		/* !< Maximum queued elements. */
 

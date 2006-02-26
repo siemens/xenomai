@@ -44,7 +44,7 @@ typedef struct rt_event_info {
 } RT_EVENT_INFO;
 
 typedef struct rt_event_placeholder {
-    rt_handle_t opaque;
+    xnhandle_t opaque;
 } RT_EVENT_PLACEHOLDER;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
@@ -59,7 +59,7 @@ typedef struct rt_event {
 
     unsigned long value; /* !< Event group value. */
 
-    rt_handle_t handle;	/* !< Handle in registry -- zero if unregistered. */
+    xnhandle_t handle;	/* !< Handle in registry -- zero if unregistered. */
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 
@@ -96,7 +96,7 @@ int rt_event_bind(RT_EVENT *event,
 static inline int rt_event_unbind (RT_EVENT *event)
 
 {
-    event->opaque = RT_HANDLE_INVALID;
+    event->opaque = XN_NO_HANDLE;
     return 0;
 }
 

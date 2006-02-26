@@ -191,6 +191,8 @@ int main(int argc, char **argv)
        printf("== Sampling period: %llu us\n", sampling_period / 1000);
        printf("== Do not interrupt this program\n");
 
+       rt_timer_set_mode(TM_ONESHOT); /* Force aperiodic timing. */
+
        err = rt_task_create(&worker_task, "worker", 0, 98, T_FPU);
        if (err) {
                fprintf(stderr,"switch: failed to create worker task, code %d\n", err);

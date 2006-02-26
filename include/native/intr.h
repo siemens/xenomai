@@ -43,7 +43,7 @@ typedef struct rt_intr_info {
 } RT_INTR_INFO;
 
 typedef struct rt_intr_placeholder {
-    rt_handle_t opaque;
+    xnhandle_t opaque;
 } RT_INTR_PLACEHOLDER;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
@@ -69,7 +69,7 @@ typedef struct rt_intr {
 
     void *private_data;	/* !< Private user-defined data. */
 
-    rt_handle_t handle;	/* !< Handle in registry -- zero if unregistered. */
+    xnhandle_t handle;	/* !< Handle in registry -- zero if unregistered. */
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 
@@ -128,7 +128,7 @@ int rt_intr_bind(RT_INTR *intr,
 static inline int rt_intr_unbind (RT_INTR *intr)
 
 {
-    intr->opaque = RT_HANDLE_INVALID;
+    intr->opaque = XN_NO_HANDLE;
     return 0;
 }
 

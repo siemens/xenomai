@@ -46,14 +46,14 @@
 
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
-#include <native/registry.h>
+#include <nucleus/registry.h>
 #include <native/pipe.h>
 
 static int __pipe_flush_apc;
 
 static DECLARE_XNQUEUE(__pipe_flush_q);
 
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 static ssize_t __pipe_link_proc (char *buf,
 				 int count,
@@ -63,22 +63,23 @@ static ssize_t __pipe_link_proc (char *buf,
     return snprintf(buf,count,"/dev/rtp%d",pipe->minor);
 }
 
-static RT_OBJECT_PROCNODE __pipe_pnode = {
+static xnpnode_t __pipe_pnode = {
 
     .dir = NULL,
+    .root = "native",
     .type = "pipes",
     .entries = 0,
     .link_proc = &__pipe_link_proc,
 };
 
-#elif defined(CONFIG_XENO_OPT_NATIVE_REGISTRY)
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
 
-static RT_OBJECT_PROCNODE __pipe_pnode = {
+static xnpnode_t __pipe_pnode = {
 
     .type = "pipes"
 };
 
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 static void __pipe_flush_pool (xnheap_t *heap,
                                void *poolmem,
@@ -315,14 +316,14 @@ int rt_pipe_create (RT_PIPE *pipe,
     pipe->cpid = 0;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
-    /* <!> Since rt_register_enter() may reschedule, only register
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    /* <!> Since xnregister_enter() may reschedule, only register
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
     if (name)
         {
-	RT_OBJECT_PROCNODE *pnode = &__pipe_pnode;
+	xnpnode_t *pnode = &__pipe_pnode;
 	
 	if (!*name)
 	    {
@@ -333,12 +334,12 @@ int rt_pipe_create (RT_PIPE *pipe,
 	    pnode = NULL;
 	    }
 	    
-        err = rt_registry_enter(pipe->name,pipe,&pipe->handle,pnode);
+        err = xnregistry_enter(pipe->name,pipe,&pipe->handle,pnode);
 
         if (err)
             rt_pipe_delete(pipe);
         }
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     return err;
 }
@@ -404,10 +405,10 @@ int rt_pipe_delete (RT_PIPE *pipe)
 
     err = xnpipe_disconnect(pipe->minor);
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
+#ifdef CONFIG_XENO_OPT_REGISTRY
     if (pipe->handle)
-        rt_registry_remove(pipe->handle);
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+        xnregistry_remove(pipe->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     xeno_mark_deleted(pipe);
 

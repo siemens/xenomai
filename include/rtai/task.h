@@ -27,7 +27,7 @@
 #include <rtai/types.h>
 
 typedef struct rt_task_placeholder {
-    rt_handle_t opaque;
+    xnhandle_t opaque;
     unsigned long opaque2;
 } RT_TASK_PLACEHOLDER;
 

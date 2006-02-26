@@ -35,11 +35,11 @@
  *@{*/
 
 #include <nucleus/pod.h>
+#include <nucleus/registry.h>
 #include <native/task.h>
 #include <native/alarm.h>
-#include <native/registry.h>
 
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 #include <native/timer.h>
 
@@ -85,23 +85,24 @@ static int __alarm_read_proc (char *page,
     return len;
 }
 
-static RT_OBJECT_PROCNODE __alarm_pnode = {
+static xnpnode_t __alarm_pnode = {
 
     .dir = NULL,
+    .root = "native",
     .type = "alarms",
     .entries = 0,
     .read_proc = &__alarm_read_proc,
     .write_proc = NULL
 };
 
-#elif defined(CONFIG_XENO_OPT_NATIVE_REGISTRY)
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
 
-static RT_OBJECT_PROCNODE __alarm_pnode = {
+static xnpnode_t __alarm_pnode = {
 
     .type = "alarms"
 };
 
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 
 int __native_alarm_pkg_init (void)
@@ -203,14 +204,14 @@ int rt_alarm_create (RT_ALARM *alarm,
     alarm->cpid = 0;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
-    /* <!> Since rt_register_enter() may reschedule, only register
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    /* <!> Since xnregister_enter() may reschedule, only register
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
     if (name)
         {
-	RT_OBJECT_PROCNODE *pnode = &__alarm_pnode;
+	xnpnode_t *pnode = &__alarm_pnode;
 	
 	if (!*name)
 	    {
@@ -221,12 +222,12 @@ int rt_alarm_create (RT_ALARM *alarm,
 	    pnode = NULL;
 	    }
 	    
-        err = rt_registry_enter(alarm->name,alarm,&alarm->handle,pnode);
+        err = xnregistry_enter(alarm->name,alarm,&alarm->handle,pnode);
 
         if (err)
             rt_alarm_delete(alarm);
         }
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     return err;
 }
@@ -286,10 +287,10 @@ int rt_alarm_delete (RT_ALARM *alarm)
     xnsynch_destroy(&alarm->synch_base);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
+#ifdef CONFIG_XENO_OPT_REGISTRY
     if (alarm->handle)
-        rt_registry_remove(alarm->handle);
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+        xnregistry_remove(alarm->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     xeno_mark_deleted(alarm);
 
