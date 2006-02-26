@@ -117,7 +117,7 @@ int rt_queue_unbind (RT_QUEUE *q)
 {
     int err = munmap(q->mapbase,q->mapsize);
 
-    q->opaque = RT_HANDLE_INVALID;
+    q->opaque = XN_NO_HANDLE;
     q->mapbase = NULL;
     q->mapsize = 0;
 
@@ -140,7 +140,7 @@ int rt_queue_delete (RT_QUEUE *q)
        this queue descriptor, so we'd better clean it up anyway so
        that it could not be further used. */
 
-    q->opaque = RT_HANDLE_INVALID;
+    q->opaque = XN_NO_HANDLE;
     q->mapbase = NULL;
     q->mapsize = 0;
 

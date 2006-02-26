@@ -87,6 +87,10 @@ int xnthread_init (xnthread_t *thread,
     thread->rrcredit = XN_INFINITE;
     thread->wchan = NULL;
     thread->magic = 0;
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    thread->registry.handle = XN_NO_HANDLE;
+    thread->registry.waitkey = NULL;
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 #ifdef CONFIG_XENO_OPT_STATS
     thread->stat.psw = 0;
@@ -126,6 +130,9 @@ void xnthread_cleanup_tcb (xnthread_t *thread)
 
     xnarch_free_stack(xnthread_archtcb(thread));
 
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    thread->registry.handle = XN_NO_HANDLE;
+#endif /* CONFIG_XENO_OPT_REGISTRY */
     thread->magic = 0;
 }
 

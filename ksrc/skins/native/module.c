@@ -29,13 +29,13 @@
  */
 
 #include <nucleus/pod.h>
+#include <nucleus/registry.h>
 #ifdef __KERNEL__
 #include <linux/init.h>
 #include <native/syscall.h>
 #endif /* __KERNEL__ */
 #include <native/task.h>
 #include <native/timer.h>
-#include <native/registry.h>
 #include <native/sem.h>
 #include <native/event.h>
 #include <native/mutex.h>
@@ -51,10 +51,10 @@ MODULE_AUTHOR("rpm@xenomai.org");
 MODULE_LICENSE("GPL");
 
 #if !defined(__KERNEL__) || !defined(CONFIG_XENO_OPT_PERVASIVE)
-static xnpod_t __xeno_pod;
+static xnpod_t __native_pod;
 #endif /* !__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
 
-static void xeno_shutdown (int xtype)
+static void native_shutdown (int xtype)
 
 {
 #ifdef CONFIG_XENO_OPT_NATIVE_INTR
@@ -100,10 +100,6 @@ static void xeno_shutdown (int xtype)
     xncore_detach();
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
-    __native_registry_pkg_cleanup();
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
-
     xnpod_shutdown(xtype);
 }
 
@@ -119,23 +115,16 @@ int SKIN_INIT(native)
     /* The native skin is standalone, there is no priority level to
        reserve for interrupt servers in user-space, since there is no
        user-space support in the first place. */
-    err = xnpod_init(&__xeno_pod,T_LOPRIO,T_HIPRIO,0);
+    err = xnpod_init(&__native_pod,T_LOPRIO,T_HIPRIO,0);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
     if (err)
 	goto fail;
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
-    err = __native_registry_pkg_init();
-
-    if (err)
-	goto fail;
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
-
     err = __native_task_pkg_init();
 
     if (err)
-	goto cleanup_registry;
+	goto fail;
 
 #ifdef CONFIG_XENO_OPT_NATIVE_SEM
     err = __native_sem_pkg_init();
@@ -271,12 +260,6 @@ int SKIN_INIT(native)
 
     __native_task_pkg_cleanup();
 
- cleanup_registry:
-
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
-    __native_registry_pkg_cleanup();
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
-
  fail:
 
     return err;
@@ -286,7 +269,7 @@ void SKIN_EXIT(native)
 
 {
     xnprintf("stopping native API services.\n");
-    xeno_shutdown(XNPOD_NORMAL_EXIT);
+    native_shutdown(XNPOD_NORMAL_EXIT);
 }
 
 module_init(__native_skin_init);

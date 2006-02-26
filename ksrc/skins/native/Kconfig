@@ -8,27 +8,6 @@ config XENO_SKIN_NATIVE
 
 if XENO_SKIN_NATIVE != n
 
-config XENO_OPT_NATIVE_REGISTRY
-	bool
-	prompt "Registry support" if !XENO_OPT_PERVASIVE
-	default y
-	help
-	
-	The registry is used to bind real-time objects created by the
-	native skin to a symbolic name, so that they can be further
-	retrieved and shared by real-time applications regardless of
-	their runtime space (i.e. kernel or user). Each named object
-	occupies a registry slot.
-
-config XENO_OPT_NATIVE_REGISTRY_NRSLOTS
-	int "Number of registry slots"
-	depends on XENO_OPT_NATIVE_REGISTRY
-	default 512
-	help
-	
-	This option sets the maximum number of real-time objects the
-	registry can handle.
-
 config XENO_OPT_NATIVE_PIPE
 	bool "Message pipes"
 	depends on XENO_OPT_PIPE

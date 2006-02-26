@@ -41,7 +41,7 @@ typedef struct rt_sem_info {
 } RT_SEM_INFO;
 
 typedef struct rt_sem_placeholder {
-    rt_handle_t opaque;
+    xnhandle_t opaque;
 } RT_SEM_PLACEHOLDER;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
@@ -58,7 +58,7 @@ typedef struct rt_sem {
 
     int mode;		/* !< Creation mode. */
 
-    rt_handle_t handle;	/* !< Handle in registry -- zero if unregistered. */
+    xnhandle_t handle;	/* !< Handle in registry -- zero if unregistered. */
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 
@@ -95,7 +95,7 @@ int rt_sem_bind(RT_SEM *sem,
 static inline int rt_sem_unbind (RT_SEM *sem)
 
 {
-    sem->opaque = RT_HANDLE_INVALID;
+    sem->opaque = XN_NO_HANDLE;
     return 0;
 }
 

@@ -10,6 +10,8 @@ xeno_nucleus-$(CONFIG_XENO_OPT_PERVASIVE) += shadow.o core.o
 
 xeno_nucleus-$(CONFIG_XENO_OPT_PIPE) += pipe.o
 
+xeno_nucleus-$(CONFIG_XENO_OPT_REGISTRY) += registry.o
+
 xeno_nucleus-$(CONFIG_LTT) += ltt.o
 
 EXTRA_CFLAGS += -Iinclude/xenomai
@@ -29,6 +31,7 @@ xeno_nucleus-objs := heap.o intr.o module.o pod.o synch.o thread.o timer.o
 opt_objs-y :=
 opt_objs-$(CONFIG_XENO_OPT_PERVASIVE) += shadow.o core.o
 opt_objs-$(CONFIG_XENO_OPT_PIPE) += pipe.o
+opt_objs-$(CONFIG_XENO_OPT_REGISTRY) += registry.o
 opt_objs-$(CONFIG_LTT) += ltt.o
 
 xeno_nucleus-objs += $(opt_objs-y)

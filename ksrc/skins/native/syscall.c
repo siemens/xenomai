@@ -23,8 +23,8 @@
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
 #include <nucleus/shadow.h>
+#include <nucleus/registry.h>
 #include <native/syscall.h>
-#include <native/registry.h>
 #include <native/task.h>
 #include <native/timer.h>
 #include <native/sem.h>
@@ -44,7 +44,7 @@
  * committed.
  *
  * o All skin services (re-)check the object descriptor they are
- * passed; so there is no race between a call to rt_registry_fetch()
+ * passed; so there is no race between a call to xnregistry_fetch()
  * where the user-space handle is converted to a descriptor pointer,
  * and the use of it in the actual syscall.
  */
@@ -53,7 +53,7 @@ static int __muxid;
 
 static int __rt_bind_helper (struct task_struct *curr,
 			     struct pt_regs *regs,
-			     rt_handle_t *handlep,
+			     xnhandle_t *handlep,
 			     unsigned magic,
 			     void **objaddrp)
 {
@@ -70,13 +70,13 @@ static int __rt_bind_helper (struct task_struct *curr,
     name[sizeof(name) - 1] = '\0';
     __xn_copy_from_user(curr,&timeout,(void __user *)__xn_reg_arg3(regs),sizeof(timeout));
 
-    err = rt_registry_bind(name,timeout,handlep);
+    err = xnregistry_bind(name,timeout,handlep);
 
     if (!err)
 	{
 	xnlock_get_irqsave(&nklock,s);
 
-	objaddr = rt_registry_fetch(*handlep);
+	objaddr = xnregistry_fetch(*handlep);
 	
 	/* Also validate the type of the bound object. */
 
@@ -170,7 +170,7 @@ static int __rt_task_create (struct task_struct *curr, struct pt_regs *regs)
     if (err == 0)
 	{
 	/* Copy back the registry handle to the ph struct. */
-	ph.opaque = task->handle;
+	ph.opaque = xnthread_handle(&task->thread_base);
 	ph.opaque2 = bulk.a5;	/* hidden pthread_t identifier. */
 	__xn_copy_to_user(curr,(void __user *)bulk.a1,&ph,sizeof(ph));
 	err = xnshadow_map(&task->thread_base,u_completion);
@@ -227,7 +227,7 @@ static int __rt_task_start (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    task = (RT_TASK *)rt_registry_fetch(ph.opaque);
+    task = (RT_TASK *)xnregistry_fetch(ph.opaque);
 
     if (!task)
 	return -ESRCH;
@@ -254,7 +254,7 @@ static int __rt_task_suspend (struct task_struct *curr, struct pt_regs *regs)
 
 	__xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-	task = (RT_TASK *)rt_registry_fetch(ph.opaque);
+	task = (RT_TASK *)xnregistry_fetch(ph.opaque);
 	}
     else
 	task = __rt_task_current(curr);
@@ -280,7 +280,7 @@ static int __rt_task_resume (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    task = (RT_TASK *)rt_registry_fetch(ph.opaque);
+    task = (RT_TASK *)xnregistry_fetch(ph.opaque);
 
     if (!task)
 	return -ESRCH;
@@ -305,7 +305,7 @@ static int __rt_task_delete (struct task_struct *curr, struct pt_regs *regs)
 
 	__xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-	task = (RT_TASK *)rt_registry_fetch(ph.opaque);
+	task = (RT_TASK *)xnregistry_fetch(ph.opaque);
 	}
     else
 	task = __rt_task_current(curr);
@@ -345,7 +345,7 @@ static int __rt_task_set_periodic (struct task_struct *curr, struct pt_regs *reg
 
 	__xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-	task = (RT_TASK *)rt_registry_fetch(ph.opaque);
+	task = (RT_TASK *)xnregistry_fetch(ph.opaque);
 	}
     else
 	task = __rt_task_current(curr);
@@ -387,7 +387,7 @@ static int __rt_task_set_priority (struct task_struct *curr, struct pt_regs *reg
 
 	__xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-	task = (RT_TASK *)rt_registry_fetch(ph.opaque);
+	task = (RT_TASK *)xnregistry_fetch(ph.opaque);
 	}
     else
 	task = __rt_task_current(curr);
@@ -443,7 +443,7 @@ static int __rt_task_unblock (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    task = (RT_TASK *)rt_registry_fetch(ph.opaque);
+    task = (RT_TASK *)xnregistry_fetch(ph.opaque);
 
     if (!task)
 	return -ESRCH;
@@ -474,7 +474,7 @@ static int __rt_task_inquire (struct task_struct *curr, struct pt_regs *regs)
 
 	__xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-	task = (RT_TASK *)rt_registry_fetch(ph.opaque);
+	task = (RT_TASK *)xnregistry_fetch(ph.opaque);
 	}
     else
 	task = __rt_task_current(curr);
@@ -509,7 +509,7 @@ static int __rt_task_notify (struct task_struct *curr, struct pt_regs *regs)
 
 	__xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-	task = (RT_TASK *)rt_registry_fetch(ph.opaque);
+	task = (RT_TASK *)xnregistry_fetch(ph.opaque);
 	}
     else
 	task = __rt_task_current(curr);
@@ -574,7 +574,7 @@ static int __rt_task_self (struct task_struct *curr, struct pt_regs *regs)
 	   the user-space interface. */
 	return -ESRCH;
 
-    ph.opaque = task->handle;	/* Copy back the task handle. */
+    ph.opaque = xnthread_handle(&task->thread_base); /* Copy back the task handle. */
 
     __xn_copy_to_user(curr,(void __user *)__xn_reg_arg1(regs),&ph,sizeof(ph));
 
@@ -600,7 +600,7 @@ static int __rt_task_slice (struct task_struct *curr, struct pt_regs *regs)
 
 	__xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-	task = (RT_TASK *)rt_registry_fetch(ph.opaque);
+	task = (RT_TASK *)xnregistry_fetch(ph.opaque);
 	}
     else
 	task = __rt_task_current(curr);
@@ -641,7 +641,7 @@ static int __rt_task_send (struct task_struct *curr, struct pt_regs *regs)
 
 	__xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-	task = (RT_TASK *)rt_registry_fetch(ph.opaque);
+	task = (RT_TASK *)xnregistry_fetch(ph.opaque);
 	}
     else
 	task = __rt_task_current(curr);
@@ -1093,7 +1093,7 @@ static int __rt_sem_delete (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    sem = (RT_SEM *)rt_registry_fetch(ph.opaque);
+    sem = (RT_SEM *)xnregistry_fetch(ph.opaque);
 
     if (!sem)
 	return -ESRCH;
@@ -1123,7 +1123,7 @@ static int __rt_sem_p (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    sem = (RT_SEM *)rt_registry_fetch(ph.opaque);
+    sem = (RT_SEM *)xnregistry_fetch(ph.opaque);
 
     if (!sem)
 	return -ESRCH;
@@ -1148,7 +1148,7 @@ static int __rt_sem_v (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    sem = (RT_SEM *)rt_registry_fetch(ph.opaque);
+    sem = (RT_SEM *)xnregistry_fetch(ph.opaque);
 
     if (!sem)
 	return -ESRCH;
@@ -1171,7 +1171,7 @@ static int __rt_sem_broadcast (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    sem = (RT_SEM *)rt_registry_fetch(ph.opaque);
+    sem = (RT_SEM *)xnregistry_fetch(ph.opaque);
 
     if (!sem)
 	return -ESRCH;
@@ -1200,7 +1200,7 @@ static int __rt_sem_inquire (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    sem = (RT_SEM *)rt_registry_fetch(ph.opaque);
+    sem = (RT_SEM *)xnregistry_fetch(ph.opaque);
 
     if (!sem)
 	return -ESRCH;
@@ -1321,7 +1321,7 @@ static int __rt_event_delete (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    event = (RT_EVENT *)rt_registry_fetch(ph.opaque);
+    event = (RT_EVENT *)xnregistry_fetch(ph.opaque);
 
     if (!event)
 	return -ESRCH;
@@ -1357,7 +1357,7 @@ static int __rt_event_wait (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    event = (RT_EVENT *)rt_registry_fetch(ph.opaque);
+    event = (RT_EVENT *)xnregistry_fetch(ph.opaque);
 
     if (!event)
 	return -ESRCH;
@@ -1390,7 +1390,7 @@ static int __rt_event_signal (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    event = (RT_EVENT *)rt_registry_fetch(ph.opaque);
+    event = (RT_EVENT *)xnregistry_fetch(ph.opaque);
 
     if (!event)
 	return -ESRCH;
@@ -1423,7 +1423,7 @@ static int __rt_event_clear (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    event = (RT_EVENT *)rt_registry_fetch(ph.opaque);
+    event = (RT_EVENT *)xnregistry_fetch(ph.opaque);
 
     if (!event)
 	return -ESRCH;
@@ -1459,7 +1459,7 @@ static int __rt_event_inquire (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    event = (RT_EVENT *)rt_registry_fetch(ph.opaque);
+    event = (RT_EVENT *)xnregistry_fetch(ph.opaque);
 
     if (!event)
 	return -ESRCH;
@@ -1572,7 +1572,7 @@ static int __rt_mutex_delete (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    mutex = (RT_MUTEX *)rt_registry_fetch(ph.opaque);
+    mutex = (RT_MUTEX *)xnregistry_fetch(ph.opaque);
 
     if (!mutex)
 	return -ESRCH;
@@ -1604,7 +1604,7 @@ static int __rt_mutex_lock (struct task_struct *curr, struct pt_regs *regs)
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
     __xn_copy_from_user(curr,&timeout,(void __user *)__xn_reg_arg2(regs),sizeof(timeout));
 
-    mutex = (RT_MUTEX *)rt_registry_fetch(ph.opaque);
+    mutex = (RT_MUTEX *)xnregistry_fetch(ph.opaque);
 
     if (!mutex)
 	return -ESRCH;
@@ -1627,7 +1627,7 @@ static int __rt_mutex_unlock (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    mutex = (RT_MUTEX *)rt_registry_fetch(ph.opaque);
+    mutex = (RT_MUTEX *)xnregistry_fetch(ph.opaque);
 
     if (!mutex)
 	return -ESRCH;
@@ -1656,7 +1656,7 @@ static int __rt_mutex_inquire (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    mutex = (RT_MUTEX *)rt_registry_fetch(ph.opaque);
+    mutex = (RT_MUTEX *)xnregistry_fetch(ph.opaque);
 
     if (!mutex)
 	return -ESRCH;
@@ -1768,7 +1768,7 @@ static int __rt_cond_delete (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    cond = (RT_COND *)rt_registry_fetch(ph.opaque);
+    cond = (RT_COND *)xnregistry_fetch(ph.opaque);
 
     if (!cond)
 	return -ESRCH;
@@ -1802,12 +1802,12 @@ static int __rt_cond_wait (struct task_struct *curr, struct pt_regs *regs)
     __xn_copy_from_user(curr,&cph,(void __user *)__xn_reg_arg1(regs),sizeof(cph));
     __xn_copy_from_user(curr,&mph,(void __user *)__xn_reg_arg2(regs),sizeof(mph));
 
-    cond = (RT_COND *)rt_registry_fetch(cph.opaque);
+    cond = (RT_COND *)xnregistry_fetch(cph.opaque);
 
     if (!cond)
 	return -ESRCH;
 
-    mutex = (RT_MUTEX *)rt_registry_fetch(mph.opaque);
+    mutex = (RT_MUTEX *)xnregistry_fetch(mph.opaque);
 
     if (!mutex)
 	return -ESRCH;
@@ -1832,7 +1832,7 @@ static int __rt_cond_signal (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    cond = (RT_COND *)rt_registry_fetch(ph.opaque);
+    cond = (RT_COND *)xnregistry_fetch(ph.opaque);
 
     if (!cond)
 	return -ESRCH;
@@ -1855,7 +1855,7 @@ static int __rt_cond_broadcast (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    cond = (RT_COND *)rt_registry_fetch(ph.opaque);
+    cond = (RT_COND *)xnregistry_fetch(ph.opaque);
 
     if (!cond)
 	return -ESRCH;
@@ -1884,7 +1884,7 @@ static int __rt_cond_inquire (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    cond = (RT_COND *)rt_registry_fetch(ph.opaque);
+    cond = (RT_COND *)xnregistry_fetch(ph.opaque);
 
     if (!cond)
 	return -ESRCH;
@@ -2040,7 +2040,7 @@ static int __rt_queue_delete (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    q = (RT_QUEUE *)rt_registry_fetch(ph.opaque);
+    q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
 
     if (!q)
 	err = -ESRCH;
@@ -2081,7 +2081,7 @@ static int __rt_queue_alloc (struct task_struct *curr, struct pt_regs *regs)
 
     xnlock_get_irqsave(&nklock,s);
 
-    q = (RT_QUEUE *)rt_registry_fetch(ph.opaque);
+    q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
 
     if (!q)
 	{
@@ -2133,7 +2133,7 @@ static int __rt_queue_free (struct task_struct *curr, struct pt_regs *regs)
 
     xnlock_get_irqsave(&nklock,s);
 
-    q = (RT_QUEUE *)rt_registry_fetch(ph.opaque);
+    q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
 
     if (!q)
 	{
@@ -2192,7 +2192,7 @@ static int __rt_queue_send (struct task_struct *curr, struct pt_regs *regs)
 
     xnlock_get_irqsave(&nklock,s);
 
-    q = (RT_QUEUE *)rt_registry_fetch(ph.opaque);
+    q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
 
     if (!q)
 	{
@@ -2249,7 +2249,7 @@ static int __rt_queue_recv (struct task_struct *curr, struct pt_regs *regs)
 
     xnlock_get_irqsave(&nklock,s);
 
-    q = (RT_QUEUE *)rt_registry_fetch(ph.opaque);
+    q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
 
     if (!q)
 	{
@@ -2298,7 +2298,7 @@ static int __rt_queue_inquire (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    q = (RT_QUEUE *)rt_registry_fetch(ph.opaque);
+    q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
 
     if (!q)
 	return -ESRCH;
@@ -2452,7 +2452,7 @@ static int __rt_heap_delete (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    heap = (RT_HEAP *)rt_registry_fetch(ph.opaque);
+    heap = (RT_HEAP *)xnregistry_fetch(ph.opaque);
 
     if (!heap)
 	err = -ESRCH;
@@ -2500,7 +2500,7 @@ static int __rt_heap_alloc (struct task_struct *curr, struct pt_regs *regs)
 
     xnlock_get_irqsave(&nklock,s);
 
-    heap = (RT_HEAP *)rt_registry_fetch(ph.opaque);
+    heap = (RT_HEAP *)xnregistry_fetch(ph.opaque);
 
     if (!heap)
 	{
@@ -2550,7 +2550,7 @@ static int __rt_heap_free (struct task_struct *curr, struct pt_regs *regs)
 
     xnlock_get_irqsave(&nklock,s);
 
-    heap = (RT_HEAP *)rt_registry_fetch(ph.opaque);
+    heap = (RT_HEAP *)xnregistry_fetch(ph.opaque);
 
     if (!heap)
 	{
@@ -2597,7 +2597,7 @@ static int __rt_heap_inquire (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    heap = (RT_HEAP *)rt_registry_fetch(ph.opaque);
+    heap = (RT_HEAP *)xnregistry_fetch(ph.opaque);
 
     if (!heap)
 	return -ESRCH;
@@ -2695,7 +2695,7 @@ static int __rt_alarm_delete (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    alarm = (RT_ALARM *)rt_registry_fetch(ph.opaque);
+    alarm = (RT_ALARM *)xnregistry_fetch(ph.opaque);
 
     if (!alarm)
 	return -ESRCH;
@@ -2726,7 +2726,7 @@ static int __rt_alarm_start (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    alarm = (RT_ALARM *)rt_registry_fetch(ph.opaque);
+    alarm = (RT_ALARM *)xnregistry_fetch(ph.opaque);
 
     if (!alarm)
 	return -ESRCH;
@@ -2752,7 +2752,7 @@ static int __rt_alarm_stop (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    alarm = (RT_ALARM *)rt_registry_fetch(ph.opaque);
+    alarm = (RT_ALARM *)xnregistry_fetch(ph.opaque);
 
     if (!alarm)
 	return -ESRCH;
@@ -2780,7 +2780,7 @@ static int __rt_alarm_wait (struct task_struct *curr, struct pt_regs *regs)
 
     xnlock_get_irqsave(&nklock,s);
 
-    alarm = xeno_h2obj_validate(rt_registry_fetch(ph.opaque),XENO_ALARM_MAGIC,RT_ALARM);
+    alarm = xeno_h2obj_validate(xnregistry_fetch(ph.opaque),XENO_ALARM_MAGIC,RT_ALARM);
 
     if (!alarm)
         {
@@ -2827,7 +2827,7 @@ static int __rt_alarm_inquire (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    alarm = (RT_ALARM *)rt_registry_fetch(ph.opaque);
+    alarm = (RT_ALARM *)xnregistry_fetch(ph.opaque);
 
     if (!alarm)
 	return -ESRCH;
@@ -2957,7 +2957,7 @@ static int __rt_intr_delete (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    intr = (RT_INTR *)rt_registry_fetch(ph.opaque);
+    intr = (RT_INTR *)xnregistry_fetch(ph.opaque);
 
     if (!intr)
 	return -ESRCH;
@@ -3000,7 +3000,7 @@ static int __rt_intr_wait (struct task_struct *curr, struct pt_regs *regs)
 
     xnlock_get_irqsave(&nklock,s);
 
-    intr = xeno_h2obj_validate(rt_registry_fetch(ph.opaque),XENO_INTR_MAGIC,RT_INTR);
+    intr = xeno_h2obj_validate(xnregistry_fetch(ph.opaque),XENO_INTR_MAGIC,RT_INTR);
 
     if (!intr)
         {
@@ -3054,7 +3054,7 @@ static int __rt_intr_enable (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    intr = (RT_INTR *)rt_registry_fetch(ph.opaque);
+    intr = (RT_INTR *)xnregistry_fetch(ph.opaque);
 
     if (!intr)
 	return -ESRCH;
@@ -3077,7 +3077,7 @@ static int __rt_intr_disable (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    intr = (RT_INTR *)rt_registry_fetch(ph.opaque);
+    intr = (RT_INTR *)xnregistry_fetch(ph.opaque);
 
     if (!intr)
 	return -ESRCH;
@@ -3106,7 +3106,7 @@ static int __rt_intr_inquire (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    intr = (RT_INTR *)rt_registry_fetch(ph.opaque);
+    intr = (RT_INTR *)xnregistry_fetch(ph.opaque);
 
     if (!intr)
 	return -ESRCH;
@@ -3227,7 +3227,7 @@ static int __rt_pipe_delete (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    pipe = (RT_PIPE *)rt_registry_fetch(ph.opaque);
+    pipe = (RT_PIPE *)xnregistry_fetch(ph.opaque);
 
     if (!pipe)
 	return -ESRCH;
@@ -3262,7 +3262,7 @@ static int __rt_pipe_read (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    pipe = (RT_PIPE *)rt_registry_fetch(ph.opaque);
+    pipe = (RT_PIPE *)xnregistry_fetch(ph.opaque);
 
     if (!pipe)
 	return -ESRCH;
@@ -3314,7 +3314,7 @@ static int __rt_pipe_write (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    pipe = (RT_PIPE *)rt_registry_fetch(ph.opaque);
+    pipe = (RT_PIPE *)xnregistry_fetch(ph.opaque);
 
     if (!pipe)
 	return -ESRCH;
@@ -3368,7 +3368,7 @@ static int __rt_pipe_stream (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    pipe = (RT_PIPE *)rt_registry_fetch(ph.opaque);
+    pipe = (RT_PIPE *)xnregistry_fetch(ph.opaque);
 
     if (!pipe)
 	return -ESRCH;
@@ -3424,7 +3424,7 @@ static int __rt_pipe_flush (struct task_struct *curr, struct pt_regs *regs)
 
     __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
 
-    pipe = (RT_PIPE *)rt_registry_fetch(ph.opaque);
+    pipe = (RT_PIPE *)xnregistry_fetch(ph.opaque);
 
     return pipe ? rt_pipe_flush(pipe) : -ESRCH;
 }

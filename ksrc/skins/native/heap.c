@@ -42,11 +42,11 @@
  *@{*/
 
 #include <nucleus/pod.h>
+#include <nucleus/registry.h>
 #include <native/task.h>
 #include <native/heap.h>
-#include <native/registry.h>
 
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 static int __heap_read_proc (char *page,
 			     char **start,
@@ -97,23 +97,24 @@ static int __heap_read_proc (char *page,
     return len;
 }
 
-static RT_OBJECT_PROCNODE __heap_pnode = {
+static xnpnode_t __heap_pnode = {
 
     .dir = NULL,
+    .root = "native",
     .type = "heaps",
     .entries = 0,
     .read_proc = &__heap_read_proc,
     .write_proc = NULL
 };
 
-#elif defined(CONFIG_XENO_OPT_NATIVE_REGISTRY)
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
 
-static RT_OBJECT_PROCNODE __heap_pnode = {
+static xnpnode_t __heap_pnode = {
 
     .type = "heaps"
 };
 
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 static void __heap_flush_private (xnheap_t *heap,
 				  void *heapmem,
@@ -301,14 +302,14 @@ int rt_heap_create (RT_HEAP *heap,
     heap->sba = NULL;
     xnobject_copy_name(heap->name,name);
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
-    /* <!> Since rt_register_enter() may reschedule, only register
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    /* <!> Since xnregister_enter() may reschedule, only register
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
     if (name)
         {
-	RT_OBJECT_PROCNODE *pnode = &__heap_pnode;
+	xnpnode_t *pnode = &__heap_pnode;
 	
 	if (!*name)
 	    {
@@ -319,12 +320,12 @@ int rt_heap_create (RT_HEAP *heap,
 	    pnode = NULL;
 	    }
 
-        err = rt_registry_enter(heap->name,heap,&heap->handle,pnode);
+        err = xnregistry_enter(heap->name,heap,&heap->handle,pnode);
 
         if (err)
             rt_heap_delete(heap);
         }
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     return err;
 }
@@ -382,10 +383,10 @@ int rt_heap_delete (RT_HEAP *heap)
 
     rc = xnsynch_destroy(&heap->synch_base);
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
+#ifdef CONFIG_XENO_OPT_REGISTRY
     if (heap->handle)
-        rt_registry_remove(heap->handle);
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+        xnregistry_remove(heap->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     xeno_mark_deleted(heap);
 

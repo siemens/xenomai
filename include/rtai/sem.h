@@ -24,7 +24,7 @@
 #include <rtai/types.h>
 
 typedef struct rt_sem_placeholder {
-    rt_handle_t opaque;
+    xnhandle_t opaque;
 } RT_SEM_PLACEHOLDER;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)

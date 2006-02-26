@@ -41,11 +41,11 @@
  *@{*/
 
 #include <nucleus/pod.h>
+#include <nucleus/registry.h>
 #include <native/task.h>
 #include <native/queue.h>
-#include <native/registry.h>
 
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 static int __queue_read_proc (char *page,
 			      char **start,
@@ -94,23 +94,24 @@ static int __queue_read_proc (char *page,
     return len;
 }
 
-static RT_OBJECT_PROCNODE __queue_pnode = {
+static xnpnode_t __queue_pnode = {
 
     .dir = NULL,
+    .root = "native",
     .type = "queues",
     .entries = 0,
     .read_proc = &__queue_read_proc,
     .write_proc = NULL
 };
 
-#elif defined(CONFIG_XENO_OPT_NATIVE_REGISTRY)
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
 
-static RT_OBJECT_PROCNODE __queue_pnode = {
+static xnpnode_t __queue_pnode = {
 
     .type = "queues"
 };
 
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 static void __queue_flush_private (xnheap_t *heap,
 				   void *poolmem,
@@ -276,14 +277,14 @@ int rt_queue_create (RT_QUEUE *q,
     q->mode = mode;
     xnobject_copy_name(q->name,name);
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
-    /* <!> Since rt_register_enter() may reschedule, only register
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    /* <!> Since xnregister_enter() may reschedule, only register
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
     if (name)
         {
-	RT_OBJECT_PROCNODE *pnode = &__queue_pnode;
+	xnpnode_t *pnode = &__queue_pnode;
 	
 	if (!*name)
 	    {
@@ -294,12 +295,12 @@ int rt_queue_create (RT_QUEUE *q,
 	    pnode = NULL;
 	    }
 	    
-        err = rt_registry_enter(q->name,q,&q->handle,pnode);
+        err = xnregistry_enter(q->name,q,&q->handle,pnode);
 
         if (err)
             rt_queue_delete(q);
         }
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     return err;
 }
@@ -357,10 +358,10 @@ int rt_queue_delete (RT_QUEUE *q)
 
     rc = xnsynch_destroy(&q->synch_base);
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
+#ifdef CONFIG_XENO_OPT_REGISTRY
     if (q->handle)
-        rt_registry_remove(q->handle);
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+        xnregistry_remove(q->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     xeno_mark_deleted(q);
 

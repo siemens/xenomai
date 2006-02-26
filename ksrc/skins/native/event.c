@@ -38,11 +38,11 @@
  *@{*/
 
 #include <nucleus/pod.h>
+#include <nucleus/registry.h>
 #include <native/task.h>
 #include <native/event.h>
-#include <native/registry.h>
 
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 static int __event_read_proc (char *page,
 			      char **start,
@@ -90,23 +90,24 @@ static int __event_read_proc (char *page,
     return len;
 }
 
-static RT_OBJECT_PROCNODE __event_pnode = {
+static xnpnode_t __event_pnode = {
 
     .dir = NULL,
+    .root = "native",
     .type = "events",
     .entries = 0,
     .read_proc = &__event_read_proc,
     .write_proc = NULL
 };
 
-#elif defined(CONFIG_XENO_OPT_NATIVE_REGISTRY)
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
 
-static RT_OBJECT_PROCNODE __event_pnode = {
+static xnpnode_t __event_pnode = {
 
     .type = "events"
 };
 
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 /**
  * @fn int rt_event_create(RT_EVENT *event,const char *name,unsigned long ivalue,int mode)
@@ -185,14 +186,14 @@ int rt_event_create (RT_EVENT *event,
     event->cpid = 0;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
-    /* <!> Since rt_register_enter() may reschedule, only register
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    /* <!> Since xnregister_enter() may reschedule, only register
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
     if (name)
         {
-	RT_OBJECT_PROCNODE *pnode = &__event_pnode;
+	xnpnode_t *pnode = &__event_pnode;
 	
 	if (!*name)
 	    {
@@ -203,12 +204,12 @@ int rt_event_create (RT_EVENT *event,
 	    pnode = NULL;
 	    }
 	    
-        err = rt_registry_enter(event->name,event,&event->handle,pnode);
+        err = xnregistry_enter(event->name,event,&event->handle,pnode);
 
         if (err)
             rt_event_delete(event);
         }
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     return err;
 }
@@ -265,10 +266,10 @@ int rt_event_delete (RT_EVENT *event)
     
     rc = xnsynch_destroy(&event->synch_base);
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
+#ifdef CONFIG_XENO_OPT_REGISTRY
     if (event->handle)
-        rt_registry_remove(event->handle);
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+        xnregistry_remove(event->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     xeno_mark_deleted(event);
 

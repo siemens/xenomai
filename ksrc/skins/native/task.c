@@ -40,8 +40,8 @@
 
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
+#include <nucleus/registry.h>
 #include <native/task.h>
-#include <native/registry.h>
 
 static DECLARE_XNQUEUE(__xeno_task_q);
 
@@ -65,10 +65,10 @@ static void __task_delete_hook (xnthread_t *thread)
     xnsynch_destroy(&task->msendq);
 #endif /* CONFIG_XENO_OPT_NATIVE_MPS */
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
-    if (task->handle)
-        rt_registry_remove(task->handle);
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    if (xnthread_handle(&task->thread_base) != XN_NO_HANDLE)
+        xnregistry_remove(xnthread_handle(&task->thread_base));
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     xnsynch_destroy(&task->safesynch);
 
@@ -271,7 +271,6 @@ int rt_task_create (RT_TASK *task,
     task->cstamp = ++__xeno_task_stamp;
     task->safelock = 0;
     xnsynch_init(&task->safesynch,XNSYNCH_FIFO);
-    task->handle = 0;	/* i.e. (still) unregistered task. */
 
     xnarch_cpus_clear(task->affinity);
 
@@ -292,17 +291,17 @@ int rt_task_create (RT_TASK *task,
     appendq(&__xeno_task_q,&task->link);
     xnlock_put_irqrestore(&nklock,s);
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
-    /* <!> Since rt_register_enter() may reschedule, only register
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    /* <!> Since xnregister_enter() may reschedule, only register
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
     if (name)
 	{
-	err = rt_registry_enter(task->rname,
-				task,
-				&task->handle,
-				NULL);
+	err = xnregistry_enter(task->rname,
+			       task,
+			       &xnthread_handle(&task->thread_base),
+			       NULL);
         if (err)
             rt_task_delete(task);
 	else if (!*name)
@@ -311,7 +310,7 @@ int rt_task_create (RT_TASK *task,
 	       into the TCB to set up a handle for the task. */
 	    xnthread_clear_name(&task->thread_base);
 	}
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     return err;
 }

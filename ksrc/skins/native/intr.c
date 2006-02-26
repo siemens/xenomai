@@ -28,8 +28,8 @@
  *@{*/
 
 #include <nucleus/pod.h>
+#include <nucleus/registry.h>
 #include <native/task.h>
-#include <native/registry.h>
 #include <native/intr.h>
 
 static DECLARE_XNQUEUE(__xeno_intr_q);
@@ -49,7 +49,7 @@ void __native_intr_pkg_cleanup (void)
 	rt_intr_delete(link2intr(holder));
 }
 
-#ifdef CONFIG_XENO_NATIVE_EXPORT_REGISTRY
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 static int __intr_read_proc (char *page,
 			     char **start,
@@ -100,23 +100,24 @@ static int __intr_read_proc (char *page,
     return len;
 }
 
-static RT_OBJECT_PROCNODE __intr_pnode = {
+static xnpnode_t __intr_pnode = {
 
     .dir = NULL,
+    .root = "native",
     .type = "interrupts",
     .entries = 0,
     .read_proc = &__intr_read_proc,
     .write_proc = NULL
 };
 
-#elif CONFIG_XENO_OPT_NATIVE_REGISTRY
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
 
-static RT_OBJECT_PROCNODE __intr_pnode = {
+static xnpnode_t __intr_pnode = {
 
     .type = "interrupts"
 };
 
-#endif /* CONFIG_XENO_NATIVE_EXPORT_REGISTRY */
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 /*! 
  * \fn int rt_intr_create (RT_INTR *intr,unsigned irq,rt_isr_t isr,rt_iack_t iack)
@@ -232,14 +233,14 @@ int rt_intr_create (RT_INTR *intr,
 
     err = xnintr_attach(&intr->intr_base,intr);
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
-    /* <!> Since rt_register_enter() may reschedule, only register
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    /* <!> Since xnregister_enter() may reschedule, only register
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
     if (!err)
-	err = rt_registry_enter(intr->name,intr,&intr->handle,&__intr_pnode);
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+	err = xnregistry_enter(intr->name,intr,&intr->handle,&__intr_pnode);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     if (err)
 	rt_intr_delete(intr);
@@ -308,10 +309,10 @@ int rt_intr_delete (RT_INTR *intr)
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
     xnintr_detach(&intr->intr_base);
 
-#ifdef CONFIG_XENO_OPT_NATIVE_REGISTRY
+#ifdef CONFIG_XENO_OPT_REGISTRY
     if (intr->handle)
-        rt_registry_remove(intr->handle);
-#endif /* CONFIG_XENO_OPT_NATIVE_REGISTRY */
+        xnregistry_remove(intr->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     xnintr_destroy(&intr->intr_base);
 

@@ -746,6 +746,9 @@ int __init __xeno_sys_init (void)
 #ifdef __KERNEL__
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
+
+    xncore_umount();
+
  cleanup_heap:
 
     xnheap_umount();

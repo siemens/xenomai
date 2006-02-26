@@ -19,29 +19,29 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_REGISTRY_H
-#define _XENO_REGISTRY_H
+#ifndef _XENO_NUCLEUS_REGISTRY_H
+#define _XENO_NUCLEUS_REGISTRY_H
 
-#include <native/types.h>
+#include <nucleus/types.h>
 
-#define RT_REGISTRY_SELF  RT_HANDLE_INVALID
+#define XNOBJECT_SELF  XN_NO_HANDLE
 
-#if defined(__KERNEL__) && defined(CONFIG_PROC_FS) && defined(CONFIG_XENO_OPT_NATIVE_REGISTRY)
-#define CONFIG_XENO_NATIVE_EXPORT_REGISTRY 1
-#endif /* __KERNEL__ && CONFIG_PROC_FS && CONFIG_XENO_OPT_NATIVE_REGISTRY */
+#if defined(__KERNEL__) && defined(CONFIG_PROC_FS) && defined(CONFIG_XENO_OPT_REGISTRY)
+#define CONFIG_XENO_EXPORT_REGISTRY 1
+#endif /* __KERNEL__ && CONFIG_PROC_FS && CONFIG_XENO_OPT_REGISTRY */
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #include <nucleus/synch.h>
 #include <nucleus/thread.h>
 
-struct rt_object_procnode;
+struct xnpnode;
 
-typedef struct rt_object {
+typedef struct xnobject {
 
     xnholder_t link;
-#define link2rtobj(laddr) \
-((RT_OBJECT *)(((char *)laddr) - (int)(&((RT_OBJECT *)0)->link)))
+#define link2xnobj(laddr) \
+((xnobject_t *)(((char *)laddr) - (int)(&((xnobject_t *)0)->link)))
 
     void *objaddr;
 
@@ -55,83 +55,84 @@ typedef struct rt_object {
 
 #if defined(CONFIG_PROC_FS) && defined(__KERNEL__)
 
-    struct rt_object_procnode *pnode; /* !< /proc information class. */
+    struct xnpnode *pnode; /* !< /proc information class. */
 
     struct proc_dir_entry *proc; /* !< /proc entry. */
 
 #endif /* CONFIG_PROC_FS && __KERNEL__ */
 
-} RT_OBJECT;
+} xnobject_t;
 
-typedef struct rt_hash {
+typedef struct xnobjhash {
 
-    RT_OBJECT *object;
+    xnobject_t *object;
 
-    struct rt_hash *next;	/* !< Next in h-table */
+    struct xnobjhash *next;	/* !< Next in h-table */
 
-} RT_HASH;
+} xnobjhash_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int __native_registry_pkg_init(void);
+int xnregistry_init(void);
 
-void __native_registry_pkg_cleanup(void);
+void xnregistry_cleanup(void);
 
 #if defined(CONFIG_PROC_FS) && defined(__KERNEL__)
 
 #include <linux/proc_fs.h>
 
-#define RT_OBJECT_PROC_RESERVED1 ((struct proc_dir_entry *)1)
-#define RT_OBJECT_PROC_RESERVED2 ((struct proc_dir_entry *)2)
+#define XNOBJECT_PROC_RESERVED1 ((struct proc_dir_entry *)1)
+#define XNOBJECT_PROC_RESERVED2 ((struct proc_dir_entry *)2)
 
 typedef ssize_t link_proc_t(char *buf,
 			    int count,
 			    void *data);
 
-typedef struct rt_object_procnode {
+typedef struct xnpnode {
 
     struct proc_dir_entry *dir;
+    const char *root;
     const char *type;
     int entries;
     read_proc_t *read_proc;
     write_proc_t *write_proc;
     link_proc_t *link_proc;
 
-} RT_OBJECT_PROCNODE;
+} xnpnode_t;
 
 #else /* !(CONFIG_PROC_FS && __KERNEL__) */
 
-typedef struct rt_object_procnode { /* Placeholder. */
+typedef struct xnpnode { /* Placeholder. */
 
     const char *type;
 
-} RT_OBJECT_PROCNODE;
+} xnpnode_t;
 
 #endif /* CONFIG_PROC_FS && __KERNEL__ */
 
 /* Public interface. */
 
-int rt_registry_enter(const char *key,
-		      void *objaddr,
-		      rt_handle_t *phandle,
-		      RT_OBJECT_PROCNODE *pnode);
+int xnregistry_enter(const char *key,
+		     void *objaddr,
+		     xnhandle_t *phandle,
+		     xnpnode_t *pnode);
 
-int rt_registry_bind(const char *key,
-		     RTIME timeout,
-		     rt_handle_t *phandle);
+int xnregistry_bind(const char *key,
+		    xnticks_t timeout,
+		    xnhandle_t *phandle);
 
-int rt_registry_remove(rt_handle_t handle);
+int xnregistry_remove(xnhandle_t handle);
 
-int rt_registry_remove_safe(rt_handle_t handle,
-			    RTIME timeout);
+int xnregistry_remove_safe(xnhandle_t handle,
+			   xnticks_t timeout);
 
-void *rt_registry_get(rt_handle_t handle);
+void *xnregistry_get(xnhandle_t handle);
 
-void *rt_registry_fetch(rt_handle_t handle);
+void *xnregistry_fetch(xnhandle_t handle);
 
-u_long rt_registry_put(rt_handle_t handle);
+u_long xnregistry_put(xnhandle_t handle);
 
 #ifdef __cplusplus
 }
@@ -139,4 +140,4 @@ u_long rt_registry_put(rt_handle_t handle);
 
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
-#endif /* !_XENO_REGISTRY_H */
+#endif /* !_XENO_NUCLEUS_REGISTRY_H */

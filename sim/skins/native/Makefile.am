@@ -20,7 +20,6 @@ lib_LIBRARIES = libnative_s.a
 
 nodist_libnative_s_a_SOURCES = \
 	module.c \
-	registry.c \
 	task.c \
 	timer.c \
 	sem.c \

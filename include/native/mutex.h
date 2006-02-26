@@ -38,7 +38,7 @@ typedef struct rt_mutex_info {
 } RT_MUTEX_INFO;
 
 typedef struct rt_mutex_placeholder {
-    rt_handle_t opaque;
+    xnhandle_t opaque;
 } RT_MUTEX_PLACEHOLDER;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
@@ -51,7 +51,7 @@ typedef struct __rt_mutex {
 
     xnsynch_t synch_base; /* !< Base synchronization object. */
 
-    rt_handle_t handle;	/* !< Handle in registry -- zero if unregistered. */
+    xnhandle_t handle;	/* !< Handle in registry -- zero if unregistered. */
 
     struct rt_task *owner;	/* !< Current mutex owner. */
 
@@ -92,7 +92,7 @@ int rt_mutex_bind(RT_MUTEX *mutex,
 static inline int rt_mutex_unbind (RT_MUTEX *mutex)
 
 {
-    mutex->opaque = RT_HANDLE_INVALID;
+    mutex->opaque = XN_NO_HANDLE;
     return 0;
 }
 

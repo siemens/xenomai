@@ -10,7 +10,6 @@ include_HEADERS = \
 	mutex.h \
 	pipe.h \
 	queue.h \
-	registry.h \
 	sem.h \
 	syscall.h \
 	task.h \

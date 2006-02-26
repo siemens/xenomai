@@ -115,7 +115,7 @@ int rt_heap_unbind (RT_HEAP *heap)
 {
     int err = munmap(heap->mapbase,heap->mapsize);
 
-    heap->opaque = RT_HANDLE_INVALID;
+    heap->opaque = XN_NO_HANDLE;
     heap->mapbase = NULL;
     heap->mapsize = 0;
 
@@ -138,7 +138,7 @@ int rt_heap_delete (RT_HEAP *heap)
        this heap descriptor, so we'd better clean it up anyway so
        that it could not be further used. */
 
-    heap->opaque = RT_HANDLE_INVALID;
+    heap->opaque = XN_NO_HANDLE;
     heap->mapbase = NULL;
     heap->mapsize = 0;
 
