@@ -40,6 +40,7 @@
 #include <nucleus/synch.h>
 #include <nucleus/heap.h>
 #include <nucleus/intr.h>
+#include <nucleus/registry.h>
 #include <nucleus/module.h>
 #include <nucleus/ltt.h>
 
@@ -317,7 +318,7 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
     if (nkpod != NULL)
         {
         /* Avoid trying to shutdown the pod when it is not valid. */
-        if (!testbits(pod->status, XNPIDLE) ||
+        if (!testbits(nkpod->status, XNPIDLE) ||
 
             /* In case a pod is already active, ask for removal via a call
                to the unload hook if any. Otherwise, the operation has
