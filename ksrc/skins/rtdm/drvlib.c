@@ -30,6 +30,7 @@
  */
 
 
+#include <asm/io.h>
 #include <linux/delay.h>
 #include <linux/mman.h>
 
