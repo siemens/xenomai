@@ -449,6 +449,7 @@ patch_link r m ksrc/drivers drivers/xenomai
 patch_link r n include/asm-$xenomai_arch include/asm-$linux_arch/xenomai
 patch_link r n include/asm-generic include/asm-generic/xenomai
 patch_link n n include include/xenomai
+patch_link n n include/asm-uvm include/xenomai/asm-uvm
 cd $xenomai_root
 for d in include/* ; do
     if test -d $d -a -z "`echo $d | grep '^include/asm-'`"; then
