@@ -87,7 +87,7 @@ int SKIN_INIT(rtdm)
     err = xncore_attach();
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
     /* The RTDM skin is standalone. */
-    err = xnpod_init(&__rtdm_pod, XNCORE_LOW_PRIO, XNCORE_HIGH_PRIO, 0);
+    err = xnpod_init(&__rtdm_pod, XNCORE_LOW_PRIO, XNCORE_HIGH_PRIO, XNREUSE);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
     if (err)
