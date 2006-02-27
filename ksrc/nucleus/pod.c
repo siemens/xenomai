@@ -317,9 +317,19 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
 
     if (nkpod != NULL)
         {
-        /* Avoid trying to shutdown the pod when it is not valid. */
-        if (!testbits(nkpod->status, XNPIDLE) ||
+	/* If requested, try to reuse the existing pod if it has the
+	   same properties. */
+        if (testbits(flags,XNREUSE) &&
+	    minpri == nkpod->minpri &&
+	    maxpri == nkpod->maxpri &&
+	    (flags & XNDREORD) == (nkpod->status & (XNDREORD|XNPIDLE)))
+	    {
+            xnlock_put_irqrestore(&nklock, s);
+	    return 0;
+	    }
 
+        /* Don't attempt to shutdown an already idle pod. */
+        if (!testbits(nkpod->status, XNPIDLE) ||
             /* In case a pod is already active, ask for removal via a call
                to the unload hook if any. Otherwise, the operation has
                failed. */

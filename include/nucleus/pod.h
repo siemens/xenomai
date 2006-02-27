@@ -36,15 +36,16 @@
 
 /* Creation flags */
 #define XNDREORD 0x00000001     /* Don't reorder pend queues upon prio change */
+#define XNREUSE  0x00000002     /* Reuse pod with identical properties */
 
 /* Pod status flags */
-#define XNRPRIO  0x00000002     /* Reverse priority scheme */
-#define XNTIMED  0x00000004     /* Timer started */
-#define XNTMSET  0x00000008     /* Pod time has been set */
-#define XNTMPER  0x00000010     /* Periodic timing */
-#define XNFATAL  0x00000020     /* Pod encountered a fatal error */
-#define XNPIDLE  0x00000040     /* Pod is unavailable (initializing/shutting down) */
-#define XNTLOCK  0x00000080	/* Timer lock pending */
+#define XNRPRIO  0x00000004     /* Reverse priority scheme */
+#define XNTIMED  0x00000008     /* Timer started */
+#define XNTMSET  0x00000010     /* Pod time has been set */
+#define XNTMPER  0x00000020     /* Periodic timing */
+#define XNFATAL  0x00000040     /* Pod encountered a fatal error */
+#define XNPIDLE  0x00000080     /* Pod is unavailable (initializing/shutting down) */
+#define XNTLOCK  0x00000100	/* Timer lock pending */
 
 /* Sched status flags */
 #define XNKCOUT  0x80000000	/* Sched callout context */
