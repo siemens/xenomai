@@ -65,6 +65,15 @@
  * threads using this object. Otherwise, no priority inheritance takes
  * place upon priority inversion (XNSYNCH_NOPIP).
  *
+ * - XNSYNCH_DREORD (Disable REORDering) tells the nucleus that the
+ * wait queue should not be reordered whenever the priority of a
+ * blocked thread it holds is changed. If this flag is not specified,
+ * changing the priority of a blocked thread using
+ * xnpod_renice_thread() will cause this object's wait queue to be
+ * reordered according to the new priority level, provided the
+ * synchronization object makes the waiters wait by priority order on
+ * the awaited resource (XNSYNCH_PRIO).
+ *
  * Environments:
  *
  * This service can be called from:
@@ -103,7 +112,7 @@ static inline void xnsynch_renice_thread (xnthread_t *thread, int prio)
     thread->cprio = prio;
 
     if (thread->wchan)
-	/* Ignoring the XNDREORD flag on purpose here. */
+	/* Ignoring the XNSYNCH_DREORD flag on purpose here. */
 	xnsynch_renice_sleeper(thread);
     else if (thread != xnpod_current_thread() &&
 	     testbits(thread->status,XNREADY))

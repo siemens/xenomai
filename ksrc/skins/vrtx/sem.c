@@ -91,7 +91,7 @@ int sc_screate (unsigned initval, int opt, int *perr)
     else
 	bflags = XNSYNCH_FIFO;
 
-    xnsynch_init(&sem->synchbase,bflags);
+    xnsynch_init(&sem->synchbase,bflags|XNSYNCH_DREORD);
     inith(&sem->link);
     sem->semid = semid;
     sem->magic = VRTX_SEM_MAGIC;

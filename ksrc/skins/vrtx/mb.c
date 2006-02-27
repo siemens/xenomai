@@ -93,7 +93,7 @@ xnsynch_t * mb_get_synch_internal(char **mboxp)
 
     inith(&msg_slot->link);
     msg_slot->mboxp = mboxp;
-    xnsynch_init(&msg_slot->synchbase ,XNSYNCH_PRIO);
+    xnsynch_init(&msg_slot->synchbase ,XNSYNCH_PRIO|XNSYNCH_DREORD);
 
     appendq(&vrtxmbq, &msg_slot->link);
 

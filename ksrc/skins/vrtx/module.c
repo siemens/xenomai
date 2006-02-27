@@ -119,7 +119,7 @@ int SKIN_INIT(vrtx)
     nktickdef = 10000000;	/* Defaults to 10ms. */
 #endif
 
-    err = xnpod_init(&pod,255,0,XNDREORD);
+    err = xnpod_init(&pod,255,0,0);
 
     if (err != 0)
 	return err;

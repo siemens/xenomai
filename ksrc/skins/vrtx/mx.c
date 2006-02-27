@@ -100,7 +100,7 @@ int sc_mcreate (unsigned int opt, int *errp)
     indx = vrtxmx2indx(link2vrtxmx(holder));
     vrtxmxmap[indx].state = VRTXMX_UNLOCKED;
 
-    xnsynch_init(&vrtxmxmap[indx].synchbase, flags);
+    xnsynch_init(&vrtxmxmap[indx].synchbase, flags|XNSYNCH_DREORD);
 
     xnlock_put_irqrestore(&nklock,s);
 

@@ -27,10 +27,11 @@
 #define XNSYNCH_PRIO    0x1
 #define XNSYNCH_NOPIP   0x0
 #define XNSYNCH_PIP     0x2
+#define XNSYNCH_DREORD  0x4
 
 #if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)
 
-#define XNSYNCH_CLAIMED 0x4	/* Claimed by other thread(s) w/ PIP */
+#define XNSYNCH_CLAIMED 0x8	/* Claimed by other thread(s) w/ PIP */
 
 /* Spare flags usable by upper interfaces */
 #define XNSYNCH_SPARE0  0x01000000
