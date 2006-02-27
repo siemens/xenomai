@@ -1,3 +1,9 @@
+2006-02-27  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pod.c (xnpod_renice_thread_inner, xnpod_init): Make
+	reordering-upon-renice a local property of the synchronization
+	object, instead of a global property of the pod.
+
 2006-02-27  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/asm-generic/wrappers.h: Set VM_RESERVED for the vma

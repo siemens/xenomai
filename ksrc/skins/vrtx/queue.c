@@ -128,7 +128,7 @@ int sc_qecreate (int qid, int qsize, int opt, int *errp)
 	bflags = XNSYNCH_PRIO;
 	}
 
-    xnsynch_init(&queue->synchbase, bflags);
+    xnsynch_init(&queue->synchbase, bflags|XNSYNCH_DREORD);
 
     queue->magic = VRTX_QUEUE_MAGIC;
     queue->maxnum = qsize;

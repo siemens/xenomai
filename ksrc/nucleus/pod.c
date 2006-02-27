@@ -268,14 +268,10 @@ static void xnpod_flush_heap (xnheap_t *heap,
  * valid for threads created on behalf of this pod.
  *
  * @param flags A set of creation flags affecting the operation.  The
- * only defined flag is XNDREORD (Disable REORDering), which tells the
- * nucleus that the (xnsynch_t) pend queue should not be reordered
- * whenever the priority of a blocked thread it holds is changed. If
- * this flag is not specified, changing the priority of a blocked
- * thread using xnpod_renice_thread() will cause the pended queue to
- * be reordered according to the new priority level, provided the
- * synchronization object makes the waiters wait by priority order on
- * the awaited resource (XNSYNCH_PRIO).
+ * only defined flag is XNREUSE, which tells the nucleus that a
+ * pre-existing pod exhibiting the same properties as the one which is
+ * being registered may be reused. In such a case, the call returns
+ * successfully, keeping the active pod unmodified.
  *
  * minpri might be numerically higher than maxpri if the upper
  * real-time interface exhibits a reverse priority scheme. For
@@ -320,9 +316,9 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
 	/* If requested, try to reuse the existing pod if it has the
 	   same properties. */
         if (testbits(flags,XNREUSE) &&
+	    !testbits(nkpod->status,XNPIDLE) &&
 	    minpri == nkpod->minpri &&
-	    maxpri == nkpod->maxpri &&
-	    (flags & XNDREORD) == (nkpod->status & (XNDREORD|XNPIDLE)))
+	    maxpri == nkpod->maxpri)
 	    {
             xnlock_put_irqrestore(&nklock, s);
 	    return 0;
@@ -345,7 +341,7 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
         flags |= XNRPRIO;
 
     /* Flags must be set before xnpod_get_qdir() is called */
-    pod->status = (flags & (XNRPRIO|XNDREORD))|XNPIDLE;
+    pod->status = (flags & XNRPRIO)|XNPIDLE;
 
     initq(&xnmod_glink_queue);
     initq(&pod->threadq);
@@ -1772,12 +1768,12 @@ int xnpod_unblock_thread (xnthread_t *thread)
  * \fn void xnpod_renice_thread(xnthread_t *thread,int prio)
  * \brief Change the base priority of a thread.
  *
- * Changes the base priority of a thread.  If the XNDREORD flag has
- * not been passed to xnpod_init() and the reniced thread is currently
- * blocked waiting in priority-pending mode (XNSYNCH_PRIO) for a
- * synchronization object to be signaled, the nucleus will attempt
- * to reorder the object's pend queue so that it reflects the new
- * sleeper's priority.
+ * Changes the base priority of a thread. If the reniced thread is
+ * currently blocked, waiting in priority-pending mode (XNSYNCH_PRIO)
+ * for a synchronization object to be signaled, the nucleus will
+ * attempt to reorder the object's wait queue so that it reflects the
+ * new sleeper's priority, unless the XNSYNCH_DREORD flag has been set
+ * for the pended object.
  *
  * @param thread The descriptor address of the affected thread.
  *
@@ -1846,12 +1842,12 @@ void xnpod_renice_thread_inner (xnthread_t *thread, int prio, int propagate)
 
         if (prio != oldprio &&
             thread->wchan != NULL &&
-            !testbits(nkpod->status,XNDREORD))
+            !testbits(thread->wchan->status,XNSYNCH_DREORD))
             /* Renice the pending order of the thread inside its wait
                queue, unless this behaviour has been explicitely
-               disabled at pod's level (XNDREORD), or the requested
-               priority has not changed, thus preventing spurious
-               round-robin effects. */
+               disabled for the pended synchronization object, or the
+               requested priority has not changed, thus preventing
+               spurious round-robin effects. */
             xnsynch_renice_sleeper(thread);
 
         if (!testbits(thread->status,XNTHREAD_BLOCK_BITS|XNLOCK))

@@ -77,7 +77,7 @@ int sc_fcreate (int *perr)
 	return 0;
 	}
 
-    xnsynch_init(&event->synchbase ,XNSYNCH_PRIO);
+    xnsynch_init(&event->synchbase ,XNSYNCH_PRIO|XNSYNCH_DREORD);
     inith(&event->link);
     event->eventid = eventid;
     event->magic = VRTX_EVENT_MAGIC;
