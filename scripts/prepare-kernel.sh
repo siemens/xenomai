@@ -42,7 +42,8 @@ patch_link() {
         recursive_opt=""
         directorytype_opt=""
         if test x$recursive = xr; then
-            directorytype_opt="( -type d -mindepth 1 ) -o"
+            recursive_opts="-mindepth 1"
+            directorytype_opt="-type d -o"
         else
             recursive_opt="-maxdepth 1"
         fi
@@ -448,6 +449,7 @@ patch_link r m ksrc/drivers drivers/xenomai
 patch_link r n include/asm-$xenomai_arch include/asm-$linux_arch/xenomai
 patch_link r n include/asm-generic include/asm-generic/xenomai
 patch_link n n include include/xenomai
+cd $xenomai_root
 for d in include/* ; do
     if test -d $d -a -z "`echo $d | grep '^include/asm-'`"; then
         destdir=`echo $d | sed -e 's,^\(include\)\(/.*\)$,\1/xenomai\2,'`
