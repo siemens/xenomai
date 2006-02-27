@@ -80,7 +80,7 @@ D: Context-switch time determination test.
 
 N: Romain Lenglet
 E: <rlenglet@users.forge.objectweb.org>
-D: Man pages.
+D: Man pages. Improvement of kernel preparation script.
 
 N: Heikki Lindholm
 E: holindho@cs.helsinki.fi

@@ -8,6 +8,15 @@
 	remap_pfn_range() will set VM_RESERVED which will prevent swap
 	out.
 
+2006-02-27  Romain Lenglet <rlenglet@users.forge.objectweb.org>
+ 
+ 	* scripts/prepare-kernel.sh: Added option to generate a diff file
+ 	instead of actually modifying the Linux source tree. Cleanup to not
+ 	link / copy files for other architectures than the built architecture,
+ 	and to not link / copy some files twice. Links to Xenomai files in the
+ 	Linux tree are no more created by default if they already exists.
+ 	Added --forcelink option to force the creation of links.
+ 
 2006-02-27  Philippe Gerum  <rpm@xenomai.org>
 	
 	* ksrc/nucleus/pod.c (xnpod_init): Allow for reusing a
