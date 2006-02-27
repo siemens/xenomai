@@ -57,7 +57,7 @@ patch_link() {
                 $link_makefiles_opt -name $config_file -o -name '*.[chS]' \) |
             while read f; do
                 if test ! -e $xenomai_root/$target_dir/$f; then rm -Rf $f; fi
-            done; else true; fi &&
+            done
         fi
 
         cd $xenomai_root/$target_dir &&
