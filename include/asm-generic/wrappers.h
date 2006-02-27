@@ -46,8 +46,10 @@
 #define module_param_named(name,var,type,mode)  module_param(var,type,mode)
 
 /* VM */
-#define wrap_remap_page_range(vma,from,to,size,prot) \
-    remap_page_range(from,to,size,prot)
+#define wrap_remap_page_range(vma,from,to,size,prot) do { \
+    vma->vm_flags |= VM_RESERVED; \
+    remap_page_range(from,to,size,prot); \
+} while (0)
 #define wrap_switch_mm(prev,next,task)	\
     switch_mm(prev,next,task,(task)->processor)
 #define wrap_enter_lazy_tlb(mm,task)	\
@@ -143,10 +145,13 @@ void show_stack(struct task_struct *task,
 /* VM */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,10)
 #define wrap_remap_page_range(vma,from,to,size,prot)  \
+    /* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */ \
     remap_pfn_range(vma,from,(to) >> PAGE_SHIFT,size,prot)
 #else /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10) */
-#define wrap_remap_page_range(vma,from,to,size,prot)  \
-    remap_page_range(vma,from,to,size,prot)
+#define wrap_remap_page_range(vma,from,to,size,prot) do { \
+    vma->vm_flags |= VM_RESERVED; \
+    remap_page_range(vma,from,to,size,prot); \
+} while (0)
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,10) */
 #define wrap_switch_mm(prev,next,task)	\
     switch_mm(prev,next,task)

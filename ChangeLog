@@ -1,4 +1,22 @@
+2006-02-27  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/asm-generic/wrappers.h: Set VM_RESERVED for the vma
+	before calling to deprecated remap_page_range().
+
+	* include/asm-generic/wrappers.h: Do not set VM_LOCKED for the
+	vma; either the wrappers to remap_page_range() or
+	remap_pfn_range() will set VM_RESERVED which will prevent swap
+	out.
+
+2006-02-27  Philippe Gerum  <rpm@xenomai.org>
+	
+	* ksrc/nucleus/pod.c (xnpod_init): Allow for reusing a
+	pre-existing pod with the same properties.
+
 2006-02-26  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pod.c (xnpod_init): Check the existing pod for idle
+	state, not the one undergoing registration.
 
 	* ksrc/nucleus, ksrc/skins/native: Make the registry support a
 	generic feature of the nucleus.
