@@ -948,7 +948,6 @@ static int xnheap_mmap (struct file *file,
 	return -ENXIO;	/* Doesn't match the heap size. */
         
     vma->vm_ops = &xnheap_vmops;
-    vma->vm_flags |= VM_LOCKED;	/* Don't swap this out. */
     vma->vm_private_data = file->private_data;
 
     vaddr = (unsigned long)heap->archdep.heapbase;
