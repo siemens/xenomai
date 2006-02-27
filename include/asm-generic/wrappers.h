@@ -46,10 +46,10 @@
 #define module_param_named(name,var,type,mode)  module_param(var,type,mode)
 
 /* VM */
-#define wrap_remap_page_range(vma,from,to,size,prot) do { \
+#define wrap_remap_page_range(vma,from,to,size,prot) ({ \
     vma->vm_flags |= VM_RESERVED; \
     remap_page_range(from,to,size,prot); \
-} while (0)
+})
 #define wrap_switch_mm(prev,next,task)	\
     switch_mm(prev,next,task,(task)->processor)
 #define wrap_enter_lazy_tlb(mm,task)	\
