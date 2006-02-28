@@ -1,3 +1,11 @@
+2006-02-28  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
+
+	* include/nucleus/intr.h, nucleus/intr.c: Add optional support
+	for shared interrupts (level- and edge-triggered), so that
+	multiple real-time interrupt handlers are allowed to control
+	dedicated hardware devices which are configured to share
+	the same interrupt channel.
+
 2006-02-28  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (do_losyscall_event): No pod might be
