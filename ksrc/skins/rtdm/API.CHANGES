@@ -1,0 +1,19 @@
+Scheduled modifications:
+ o Counting, thus nestable rtdm_irq_enable/disable. This will provide a clean
+   interface to leave the IRQ line disabled when returning from an ISR and
+   re-enable it later from task context.
+ o Timer API. This will allow to execute timed operations with lower jitter
+   inside the timer IRQ context.
+ o Packet pool management (generalised variant of RTnet's and RT-Firerwire's
+   buffer pools).
+
+Revision 4:
+ o Dropped RTDM_IRQ_PROPAGATE ISR return flag. Generic deterministic RTDM
+   drivers should not interact with standard Linux in this way.
+ o Merged RTDM_IRQ_ENABLE into RTDM_IRQ_HANDLED return code. An explicit
+   request to leave the IRQ line disabled upon return from ISR will be
+   provided in later versions via rtdm_irq_disable.
+ o Added RTDM_IRQTYPE_SHARED and RTDM_IRQTYPE_EDGE flags which indicate
+   specific handling sharable level- and edge-triggered IRQs
+ o Added rtdm_mmap_to_user and rtdm_munmap. Intended usage is the mapping of
+   driver memory like DMA buffers into the address range of a user task.

@@ -2,7 +2,7 @@
  * @file
  * Real-Time Driver Model for Xenomai, driver API header
  *
- * @note Copyright (C) 2005 Jan Kiszka <jan.kiszka@web.de>
+ * @note Copyright (C) 2005, 2006 Jan Kiszka <jan.kiszka@web.de>
  * @note Copyright (C) 2005 Joerg Langenberg <joerg.langenberg@gmx.net>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
@@ -101,10 +101,10 @@ struct rtdm_dev_context;
 #define RTDM_CONTEXT_STRUCT_VER     3
 
 /** Driver API version */
-#define RTDM_API_VER                3
+#define RTDM_API_VER                4
 
 /** Minimum API revision compatible with the current release */
-#define RTDM_API_MIN_COMPAT_VER     3
+#define RTDM_API_MIN_COMPAT_VER     4
 
 /** Flag indicating a secure variant of RTDM (not supported here) */
 #define RTDM_SECURE_DEVICE          0x80000000
@@ -120,7 +120,7 @@ struct rtdm_dev_context;
 #define RTDM_DRIVER_MINOR_VER(ver)  (((ver) >> 8) & 0xFF)
 
 /** Get patch version number from driver revision code */
-#define RTDM_DRIVER_PATCH_VER(ver) ((ver) & 0xFF)
+#define RTDM_DRIVER_PATCH_VER(ver)  ((ver) & 0xFF)
 /** @} */
 
 
@@ -700,8 +700,9 @@ typedef xnintr_t                    rtdm_irq_t;
  */
 /** Enable IRQ-sharing with other real-time drivers */
 #define RTDM_IRQTYPE_SHARED         XN_ISR_SHARED
-/** Additional flag to enable IRQ-sharing of edge-triggered interrupts */
-#define RTDM_IRQTYPE_EDGE	    XN_ISR_EDGE
+/** Mark IRQ as edge-triggered, relevant for correct handling of shared
+ *  edge-triggered IRQs */
+#define RTDM_IRQTYPE_EDGE           XN_ISR_EDGE
 /** @} */
 
 /**
@@ -718,14 +719,10 @@ typedef int (*rtdm_irq_handler_t)(rtdm_irq_t *irq_handle);
  * Return flags of interrupt handlers
  * @{
  */
-/** Denote handled interrupt */
-#define RTDM_IRQ_HANDLED	    XN_ISR_HANDLED
 /** Unhandled interrupt */
-#define RTDM_IRQ_NONE		    XN_ISR_NONE
-/** Propagate unhandled interrupt to possible other handlers */
-#define RTDM_IRQ_PROPAGATE          XN_ISR_PROPAGATE
-/** Interrupt line is not re-enabled on return */
-#define RTDM_IRQ_NOENABLE           XN_ISR_NOENABLE
+#define RTDM_IRQ_NONE               XN_ISR_NONE
+/** Denote handled interrupt */
+#define RTDM_IRQ_HANDLED            XN_ISR_HANDLED
 /** @} */
 
 /**
