@@ -1418,7 +1418,7 @@ static inline int do_losyscall_event (unsigned event, unsigned domid, void *data
 	   running). */
 	exec_nucleus_syscall(muxop,regs);
 
-        if (xnpod_shadow_p() && signal_pending(current))
+        if (nkpod && xnpod_shadow_p() && signal_pending(current))
             request_syscall_restart(thread,regs);
 
 	return RTHAL_EVENT_STOP;
