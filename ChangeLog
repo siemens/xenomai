@@ -1,3 +1,8 @@
+2066-02-08  Jan Kiszka  <jan.kiszka@web.de>
+
+	* src/testsuite/latency/latency.c: display all results in
+	microseconds, and state this clearly on start-up.
+
 2006-02-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pod.c (xnpod_renice_thread_inner, xnpod_init): Make
@@ -9,7 +14,7 @@
 	* include/asm-generic/wrappers.h: Set VM_RESERVED for the vma
 	before calling to deprecated remap_page_range().
 
-	* include/asm-generic/wrappers.h: Do not set VM_LOCKED for the
+	* ksrc/nucleus/heap.c: Do not set VM_LOCKED for the
 	vma; either the wrappers to remap_page_range() or
 	remap_pfn_range() will set VM_RESERVED which will prevent swap
 	out.
