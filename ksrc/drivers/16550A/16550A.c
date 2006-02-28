@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 Jan Kiszka <jan.kiszka@web.de>.
+ * Copyright (C) 2005, 2006 Jan Kiszka <jan.kiszka@web.de>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -238,7 +238,7 @@ static int rt_16550_interrupt(rtdm_irq_t *irq_context)
     int                     rbytes = 0;
     int                     events = 0;
     int                     modem;
-    int                     ret = RTDM_IRQ_PROPAGATE;
+    int                     ret = RTDM_IRQ_NONE;
 
 
     ctx = rtdm_irq_get_arg(irq_context, struct rt_16550_context);
@@ -266,7 +266,7 @@ static int rt_16550_interrupt(rtdm_irq_t *irq_context)
                 events |= RTSER_EVENT_MODEMLO;
         }
 
-        ret = RTDM_IRQ_ENABLE | RTDM_IRQ_HANDLED;
+        ret = RTDM_IRQ_HANDLED;
     }
 
     if (ctx->in_nwait > 0) {
@@ -351,7 +351,7 @@ static int rt_16550_set_config(struct rt_16550_context *ctx,
 
     if (testbits(config->config_mask, RTSER_SET_FIFO_DEPTH)) {
         ctx->config.fifo_depth = config->fifo_depth & FIFO_MASK;
-        outb(FCR_FIFO | FCR_RESET,                    FCR(dev_id));
+        outb(FCR_FIFO | FCR_RESET, FCR(dev_id));
         outb(FCR_FIFO | ctx->config.fifo_depth, FCR(dev_id));
     }
 
@@ -434,6 +434,15 @@ static int rt_16550_set_config(struct rt_16550_context *ctx,
 }
 
 
+void rt_16550_cleanup_ctx(struct rt_16550_context *ctx)
+{
+    rtdm_event_destroy(&ctx->in_event);
+    rtdm_event_destroy(&ctx->out_event);
+    rtdm_event_destroy(&ctx->ioc_event);
+    rtdm_mutex_destroy(&ctx->out_lock);
+}
+
+
 int rt_16550_open(struct rtdm_dev_context *context,
                   rtdm_user_info_t *user_info, int oflags)
 {
@@ -441,15 +450,10 @@ int rt_16550_open(struct rtdm_dev_context *context,
     int                     dev_id = context->device->device_id;
     int                     ret;
     uint64_t                *dummy;
+    rtdm_lockctx_t          lock_ctx;
 
 
     ctx = (struct rt_16550_context *)context->dev_private;
-
-    ret = rtdm_irq_request(&ctx->irq_handle, irq[dev_id], rt_16550_interrupt,
-			    RTDM_IRQTYPE_SHARED|RTDM_IRQTYPE_EDGE,
-			    context->device->proc_name, ctx);
-    if (ret < 0)
-        return ret;
 
     /* IPC initialisation - cannot fail with used parameters */
     rtdm_lock_init(&ctx->lock);
@@ -477,10 +481,26 @@ int rt_16550_open(struct rtdm_dev_context *context,
 
     rt_16550_set_config(ctx, &default_config, &dummy);
 
+    ret = rtdm_irq_request(&ctx->irq_handle, irq[dev_id], rt_16550_interrupt,
+                           RTDM_IRQTYPE_SHARED | RTDM_IRQTYPE_EDGE,
+                           context->device->proc_name, ctx);
+    if (ret < 0) {
+        /* reset DTR and RTS */
+        outb(0, MCR(dev_id));
+
+        rt_16550_cleanup_ctx(ctx);
+
+        return ret;
+    }
+    rtdm_irq_enable(&ctx->irq_handle);
+
+    rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
+
     /* enable IRQ interrupts */
     ctx->ier_status = IER_RX;
     outb(IER_RX, IER(dev_id));
-    rtdm_irq_enable(&ctx->irq_handle);
+
+    rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
 
     return 0;
 }
@@ -515,13 +535,14 @@ int rt_16550_close(struct rtdm_dev_context *context,
 
     rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
 
+    /* We should disable the line now, but this requires counting
+     * enable/disable, something not yet implemented by the core.
+     * At the moment this call could starve other users sharing the
+     * same line.
+    rtdm_irq_disable(&ctx->irq_handle); */
     rtdm_irq_free(&ctx->irq_handle);
 
-    rtdm_event_destroy(&ctx->in_event);
-    rtdm_event_destroy(&ctx->out_event);
-    rtdm_event_destroy(&ctx->ioc_event);
-
-    rtdm_mutex_destroy(&ctx->out_lock);
+    rt_16550_cleanup_ctx(ctx);
 
     if (in_history) {
         if (test_bit(RTDM_CREATED_IN_NRT, &context->context_flags))
