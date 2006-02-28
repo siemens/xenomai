@@ -40,29 +40,32 @@ static int xncore_unload_hook (void)
 int xncore_attach (void)
 
 {
+    /* We don't want to match any compatible pod, but exactely the
+       core one, so we emulate XNREUSE here. */
+
     if (nkpod)
 	{
 	if (nkpod != &__core_pod)
 	    return -ENOSYS;
+	}
+    else
+	{
+	if (xnpod_init(&__core_pod,XNCORE_MIN_PRIO,XNCORE_MAX_PRIO,0) != 0)
+	    return -ENOSYS;
 
-	++__core_pod.refcnt;
-
-	return 0;
+	__core_pod.svctable.unload = &xncore_unload_hook;
 	}
 
-    if (xnpod_init(&__core_pod,XNCORE_MIN_PRIO,XNCORE_MAX_PRIO,0) != 0)
-	return -ENOSYS;
-
-    __core_pod.svctable.unload = &xncore_unload_hook;
-    __core_pod.refcnt = 1;
+    ++__core_pod.refcnt;
 
     return 0;
 }
 
-int xncore_detach (void)
+void xncore_detach (int xtype)
 
 {
-    return --__core_pod.refcnt;
+    if (--__core_pod.refcnt == 1)
+	xnpod_shutdown(xtype);
 }
 
 int xncore_mount (void)
