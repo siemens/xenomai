@@ -22,6 +22,7 @@ E: dmitry.adamushko@gmail.com
 D: Various fixes in the nucleus and the native skin.
 D: Scalable scheduler implementation and other optimizations.
 D: Message pipes sanitization.
+D: Shared interrupt support.
 
 N: Edelhard Becker
 E: ebecker@software-manufaktur.de
