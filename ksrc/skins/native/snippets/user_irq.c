@@ -33,7 +33,7 @@ int main (int argc, char *argv[])
 
     /* ... */
 
-    err = rt_intr_create(&intr_desc,IRQ_NUMBER,I_AUTOENA);
+    err = rt_intr_create(&intr_desc,"MyIrq",IRQ_NUMBER,0);
 
     /* ... */
 

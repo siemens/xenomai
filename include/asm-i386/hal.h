@@ -141,6 +141,9 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul) {
 #define RTHAL_APIC_TIMER_VECTOR    RTHAL_SERVICE_VECTOR3
 #define RTHAL_APIC_TIMER_IPI       RTHAL_SERVICE_IPI3
 #define RTHAL_APIC_ICOUNT          ((RTHAL_TIMER_FREQ + HZ/2)/HZ)
+#define RTHAL_TIMER_IRQ 	   RTHAL_APIC_TIMER_IPI
+#else  /* !CONFIG_X86_LOCAL_APIC */
+#define RTHAL_TIMER_IRQ		   RTHAL_8254_IRQ
 #endif /* CONFIG_X86_LOCAL_APIC */
 
 #define RTHAL_NMICLK_FREQ	RTHAL_CPU_FREQ

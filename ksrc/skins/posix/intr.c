@@ -27,7 +27,7 @@ int pse51_intr_attach (struct pse51_interrupt *intr,
     int err;
     spl_t s;
 
-    xnintr_init(&intr->intr_base,irq,isr,iack,0);
+    xnintr_init(&intr->intr_base,NULL,irq,isr,iack,0);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     xnsynch_init(&intr->synch_base,XNSYNCH_PRIO);

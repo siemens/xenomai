@@ -280,6 +280,30 @@ config XENO_OPT_TIMER_HEAP_CAPACITY
 
 endmenu
 
+menu "Shared interrupts"
+
+config XENO_OPT_SHIRQ_LEVEL
+	bool "Level-triggered interrupts"
+	default n
+	help
+	
+	Enables support for shared level-triggered interrupts, so that
+	multiple real-time interrupt handlers are allowed to control
+	dedicated hardware devices which are configured to share
+	the same interrupt channel.
+
+config XENO_OPT_SHIRQ_EDGE
+	bool "Edge-triggered interrupts"
+	default n
+	help
+
+	Enables support for shared edge-triggered interrupts, so that
+	multiple real-time interrupt handlers are allowed to control
+	dedicated hardware devices which are configured to share
+	the same interrupt channel.
+
+endmenu
+
 menu "LTT tracepoints filtering"
 
 	depends on LTT

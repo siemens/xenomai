@@ -1487,10 +1487,10 @@ static int __pse51_intr_handler (xnintr_t *cookie)
     if (xnsynch_nsleepers(&intr->synch_base) > 0)
         xnsynch_flush(&intr->synch_base,0);
 
-    if (intr->mode & XN_ISR_CHAINED)
-        return XN_ISR_CHAINED|(intr->mode & XN_ISR_ENABLE);
+    if (intr->mode & XN_ISR_PROPAGATE)
+        return XN_ISR_PROPAGATE|(intr->mode & XN_ISR_NOENABLE);
 
-    return XN_ISR_HANDLED|(intr->mode & XN_ISR_ENABLE);
+    return XN_ISR_HANDLED|(intr->mode & XN_ISR_NOENABLE);
 }
 
 int __intr_attach (struct task_struct *curr, struct pt_regs *regs)
@@ -1509,7 +1509,7 @@ int __intr_attach (struct task_struct *curr, struct pt_regs *regs)
     /* Interrupt control mode. */
     mode = (int)__xn_reg_arg3(regs);
 
-    if (mode & ~(XN_ISR_ENABLE|XN_ISR_CHAINED))
+    if (mode & ~(XN_ISR_NOENABLE|XN_ISR_PROPAGATE))
         return -EINVAL;
 
     intr = (struct pse51_interrupt *)xnmalloc(sizeof(*intr));

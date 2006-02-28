@@ -2863,16 +2863,17 @@ int rt_intr_handler (xnintr_t *cookie)
     if (xnsynch_nsleepers(&intr->synch_base) > 0)
 	xnsynch_flush(&intr->synch_base,0);
 
-    if (intr->mode & XN_ISR_CHAINED)
-	return XN_ISR_CHAINED|(intr->mode & XN_ISR_ENABLE);
+    if (intr->mode & XN_ISR_PROPAGATE)
+	return XN_ISR_PROPAGATE|(intr->mode & XN_ISR_NOENABLE);
 
-    return XN_ISR_HANDLED|(intr->mode & XN_ISR_ENABLE);
+    return XN_ISR_HANDLED|(intr->mode & XN_ISR_NOENABLE);
 }
 
 EXPORT_SYMBOL(rt_intr_handler);
 
 /*
  * int __rt_intr_create(RT_INTR_PLACEHOLDER *ph,
+ *			const char *name,
  *                      unsigned irq,
  *                      int mode)
  */
@@ -2880,6 +2881,7 @@ EXPORT_SYMBOL(rt_intr_handler);
 static int __rt_intr_create (struct task_struct *curr, struct pt_regs *regs)
 
 {
+    char name[XNOBJECT_NAME_LEN];
     RT_INTR_PLACEHOLDER ph;
     int err, mode;
     RT_INTR *intr;
@@ -2888,13 +2890,24 @@ static int __rt_intr_create (struct task_struct *curr, struct pt_regs *regs)
     if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg1(regs),sizeof(ph)))
 	return -EFAULT;
 
+    if (__xn_reg_arg2(regs))
+	{
+	if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg2(regs),sizeof(name)))
+	    return -EFAULT;
+
+	__xn_strncpy_from_user(curr,name,(const char __user *)__xn_reg_arg2(regs),sizeof(name) - 1);
+	name[sizeof(name) - 1] = '\0';
+	}
+    else
+	*name = '\0';
+
     /* Interrupt line number. */
-    irq = (unsigned)__xn_reg_arg2(regs);
+    irq = (unsigned)__xn_reg_arg3(regs);
 
     /* Interrupt control mode. */
-    mode = (int)__xn_reg_arg3(regs);
+    mode = (int)__xn_reg_arg4(regs);
 
-    if (mode & ~(I_AUTOENA|I_PROPAGATE))
+    if (mode & ~(I_NOAUTOENA|I_PROPAGATE))
 	return -EINVAL;
 
     intr = (RT_INTR *)xnmalloc(sizeof(*intr));
@@ -2902,7 +2915,7 @@ static int __rt_intr_create (struct task_struct *curr, struct pt_regs *regs)
     if (!intr)
 	return -ENOMEM;
 
-    err = rt_intr_create(intr,irq,&rt_intr_handler,NULL);
+    err = rt_intr_create(intr,name,irq,&rt_intr_handler,NULL,0);
 
     if (err == 0)
 	{

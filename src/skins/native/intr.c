@@ -24,24 +24,22 @@
 extern int __native_muxid;
 
 int rt_intr_create (RT_INTR *intr,
+		    const char *name,
 		    unsigned irq,
 		    int mode)
 {
-    return XENOMAI_SKINCALL3(__native_muxid,
+    return XENOMAI_SKINCALL4(__native_muxid,
 			     __native_intr_create,
 			     intr,
+			     name,
 			     irq,
 			     mode);
 }
 
 int rt_intr_bind (RT_INTR *intr,
-		  unsigned irq,
+		  const char *name,
 		  RTIME timeout)
 {
-    char name[XNOBJECT_NAME_LEN];
-
-    snprintf(name,sizeof(name),"irq%u",irq);
-
     return XENOMAI_SKINCALL3(__native_muxid,
 			     __native_intr_bind,
 			     intr,

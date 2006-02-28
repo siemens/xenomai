@@ -109,6 +109,8 @@ typedef struct { volatile unsigned long lock; } xnlock_t;
 
 #define XNARCH_NR_CPUS               RTHAL_NR_CPUS
 
+#define XNARCH_TIMER_IRQ	     RTHAL_TIMER_IRQ
+
 #define XNARCH_ROOT_STACKSZ   0	/* Only a placeholder -- no stack */
 
 #define XNARCH_PROMPT "Xenomai: "

@@ -122,7 +122,7 @@ static xnpnode_t __intr_pnode = {
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 /*! 
- * \fn int rt_intr_create (RT_INTR *intr,unsigned irq,rt_isr_t isr,rt_iack_t iack)
+ * \fn int rt_intr_create (RT_INTR *intr,const char *name,unsigned irq,rt_isr_t isr,rt_iack_t iack,int mode)
  * \brief Create an interrupt object from kernel space.
  *
  * Initializes and associates an interrupt object with an IRQ line. In
@@ -137,16 +137,30 @@ static xnpnode_t __intr_pnode = {
  * the interrupted stack context, the rescheduling procedure is
  * locked, and the interrupt source is masked at hardware level. The
  * status value returned by the ISR is then checked for the following
- * bits:
+ * values:
  *
- * - RT_INTR_ENABLE asks Xenomai to re-enable the IRQ line upon return of
- * the interrupt service routine.
+ * - RT_INTR_HANDLED indicates that the interrupt request has been fulfilled
+ * by the ISR.
  *
- * - RT_INTR_CHAINED tells Xenomai to propagate the interrupt down the
- * Adeos interrupt pipeline to other Adeos domains, such as
- * Linux. This is the regular way to share interrupts between Xenomai and
- * the Linux kernel. At the opposite, RT_INTR_HANDLED can be used
- * instead to indicate that the interrupt request has been fulfilled.
+ * - RT_INTR_NONE indicates the opposite to RT_INTR_HANDLED. The ISR must always
+ * return this value when it determines that the interrupt request has not been
+ * issued by the dedicated hardware device.
+ *
+ * In addition, one of the following bits may be set by the ISR :
+ *
+ * NOTE: use these bits with care and only when you do understand their effect
+ * on the system.
+ * The ISR is not encouraged to use these bits in case it shares the IRQ line
+ * with other ISRs in the real-time domain.
+ *
+ * - RT_INTR_PROPAGATE tells Xenomai to require the real-time control
+ * layer to forward the IRQ. For instance, this would cause the Adeos
+ * control layer to propagate the interrupt down the interrupt
+ * pipeline to other Adeos domains, such as Linux. This is the regular
+ * way to share interrupts between Xenomai and the Linux kernel.
+ *
+ * - RT_INTR_NOENABLE asks Xenomai not to re-enable the IRQ line upon return
+ * of the interrupt service routine.
  *
  * A count of interrupt receipts is tracked into the interrupt
  * descriptor, and reset to zero each time the interrupt object is
@@ -157,6 +171,11 @@ static xnpnode_t __intr_pnode = {
  * use to store the object-specific data.  This descriptor must always
  * be valid while the object is active therefore it must be allocated
  * in permanent memory.
+ *
+ * @param name An ASCII string standing for the symbolic name of the
+ * interrupt object. When non-NULL and non-empty, this string is copied
+ * to a safe place into the descriptor, and passed to the registry package
+ * if enabled for indexing the created interrupt objects.
  *
  * @param irq The hardware interrupt channel associated with the
  * interrupt object. This value is architecture-dependent.
@@ -175,6 +194,14 @@ static xnpnode_t __intr_pnode = {
  * hardware. @a iack should return a non-zero value to indicate that
  * the interrupt has been properly acknowledged. If @a iack is NULL,
  * the default routine will be used instead.
+ *
+ * @param mode The interrupt object creation mode. The following flags can be
+ * OR'ed into this bitmask, each of them affecting the new interrupt object:
+ *
+ * - I_SHARED enables IRQ-sharing with other interrupt objects.
+ *
+ * - I_EDGE is an additional flag need to be set together with I_SHARED
+ * to enable IRQ-sharing of edge-triggered interrupts.
  *
  * @return 0 is returned upon success. Otherwise:
  *
@@ -208,9 +235,11 @@ static xnpnode_t __intr_pnode = {
  */
 
 int rt_intr_create (RT_INTR *intr,
+		    const char *name,
 		    unsigned irq,
 		    rt_isr_t isr,
-		    rt_iack_t iack)
+		    rt_iack_t iack,
+		    int mode)
 {
     int err;
     spl_t s;
@@ -218,7 +247,8 @@ int rt_intr_create (RT_INTR *intr,
     if (xnpod_asynch_p())
 	return -EPERM;
 
-    xnintr_init(&intr->intr_base,irq,isr,iack,0);
+    xnintr_init(&intr->intr_base,name,irq,isr,iack,mode);
+    xnobject_copy_name(intr->name,name);
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     xnsynch_init(&intr->synch_base,XNSYNCH_PRIO);
     intr->pending = 0;
@@ -231,7 +261,6 @@ int rt_intr_create (RT_INTR *intr,
     xnlock_get_irqsave(&nklock,s);
     appendq(&__xeno_intr_q,&intr->link);
     xnlock_put_irqrestore(&nklock,s);
-    snprintf(intr->name,sizeof(intr->name),"irq%u",irq);
 
     err = xnintr_attach(&intr->intr_base,intr);
 
@@ -507,7 +536,7 @@ int rt_intr_inquire (RT_INTR *intr,
 }
 
 /*! 
- * \fn int rt_intr_create (RT_INTR *intr,unsigned irq,int mode)
+ * \fn int rt_intr_create (RT_INTR *intr,const char *name,unsigned irq,int mode)
  * \brief Create an interrupt object from user-space.
  *
  * Initializes and associates an interrupt object with an IRQ line
@@ -525,21 +554,26 @@ int rt_intr_inquire (RT_INTR *intr,
  * be valid while the object is active therefore it must be allocated
  * in permanent memory.
  *
+ * @param name An ASCII string standing for the symbolic name of the
+ * interrupt object. When non-NULL and non-empty, this string is copied
+ * to a safe place into the descriptor, and passed to the registry package
+ * if enabled for indexing the created interrupt objects.
+ * 
  * @param irq The hardware interrupt channel associated with the
  * interrupt object. This value is architecture-dependent.
  *
  * @param mode The interrupt object creation mode. The following flags
  * can be OR'ed into this bitmask:
  *
- * - I_AUTOENA asks Xenomai to re-enable the IRQ line before awakening
+ * - I_NOAUTOENA asks Xenomai not to re-enable the IRQ line before awakening
  * the interrupt server task. This flag is functionally equivalent as
- * always returning RT_INTR_ENABLE from a kernel space interrupt
+ * always returning RT_INTR_NOENABLE from a kernel space interrupt
  * handler.
  *
  * - I_PROPAGATE asks Xenomai to propagate the IRQ down the pipeline; in
  * other words, the interrupt occurrence is chained to Linux after it
  * has been processed by the Xenomai task. This flag is functionally
- * equivalent as always returning RT_INTR_CHAINED from a kernel space
+ * equivalent as always returning RT_INTR_PROPAGATE from a kernel space
  * interrupt handler.
  *
  * @return 0 is returned upon success. Otherwise:
@@ -622,7 +656,7 @@ int rt_intr_inquire (RT_INTR *intr,
  */
 
 /**
- * @fn int rt_intr_bind(RT_INTR *intr,unsigned irq,RTIME timeout)
+ * @fn int rt_intr_bind(RT_INTR *intr,const char *name,RTIME timeout)
  * @brief Bind to an interrupt object.
  *
  * This user-space only service retrieves the uniform descriptor of a
@@ -632,13 +666,12 @@ int rt_intr_inquire (RT_INTR *intr,
  * interrupt is registered whenever a kernel-space task invokes the
  * rt_intr_create() service successfully for the given IRQ line.
  *
- * @param irq The hardware interrupt channel associated with the
- * interrupt object to search for. This value is
- * architecture-dependent.
- *
  * @param intr The address of an interrupt object descriptor retrieved
  * by the operation. Contents of this memory is undefined upon
  * failure.
+ *
+ * @param name An ASCII string standing for the symbolic name of the
+ * interrupt object to search for.
  *
  * @param timeout The number of clock ticks to wait for the
  * registration to occur (see note). Passing TM_INFINITE causes the

@@ -74,6 +74,8 @@ typedef unsigned long xnlock_t;
 
 #define XNARCH_NR_CPUS             1
 
+#define XNARCH_TIMER_IRQ	   0
+
 #define XNARCH_DEFAULT_TICK        1000000 /* ns, i.e. 1ms */
 #define XNARCH_SIG_RESTART         SIGUSR1
 #define XNARCH_HOST_TICK           0	/* No host ticking service */

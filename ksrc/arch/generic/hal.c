@@ -697,45 +697,6 @@ static int hal_read_proc (char *page,
     return len;
 }
 
-static int irq_read_proc (char *page,
-			  char **start,
-			  off_t off,
-			  int count,
-			  int *eof,
-			  void *data)
-{
-    int len = 0, cpu, irq;
-    char *p = page;
-
-    p += sprintf(p,"IRQ ");
-
-    for_each_online_cpu(cpu) {
-	p += sprintf(p,"        CPU%d",cpu);
-    }
-
-    for (irq = 0; irq < IPIPE_NR_IRQS; irq++) {
-
-	if (rthal_irq_handler(&rthal_domain, irq) == NULL)
-	    continue;
-
-	p += sprintf(p,"\n%3d:",irq);
-
-	for_each_online_cpu(cpu) {
-	    p += sprintf(p,"%12lu",rthal_cpudata_irq_hits(&rthal_domain,cpu,irq));
-	}
-    }
-
-    p += sprintf(p,"\n");
-
-    len = p - page - off;
-    if (len <= off + count) *eof = 1;
-    *start = page + off;
-    if (len > count) len = count;
-    if (len < 0) len = 0;
-
-    return len;
-}
-
 static int faults_read_proc (char *page,
 			     char **start,
 			     off_t off,
@@ -862,12 +823,6 @@ static int rthal_proc_register (void)
 		  NULL,
 		  rthal_proc_root);
 
-    __rthal_add_proc_leaf("irq",
-		  &irq_read_proc,
-		  NULL,
-		  NULL,
-		  rthal_proc_root);
-
     __rthal_add_proc_leaf("faults",
 		  &faults_read_proc,
 		  NULL,
@@ -890,7 +845,6 @@ static void rthal_proc_unregister (void)
 {
     rthal_nmi_proc_unregister();
     remove_proc_entry("hal",rthal_proc_root);
-    remove_proc_entry("irq",rthal_proc_root);
     remove_proc_entry("faults",rthal_proc_root);
     remove_proc_entry("apc",rthal_proc_root);
     remove_proc_entry("xenomai",NULL);
