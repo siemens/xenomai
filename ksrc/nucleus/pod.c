@@ -317,9 +317,11 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
 	   same properties. */
         if (testbits(flags,XNREUSE) &&
 	    !testbits(nkpod->status,XNPIDLE) &&
-	    minpri == nkpod->minpri &&
-	    maxpri == nkpod->maxpri)
+	    (nkpod == pod ||
+	     (minpri == nkpod->minpri &&
+	      maxpri == nkpod->maxpri)))
 	    {
+	    ++nkpod->refcnt;
             xnlock_put_irqrestore(&nklock, s);
 	    return 0;
 	    }
@@ -356,7 +358,7 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
     pod->wallclock_offset = 0;
     pod->tickvalue = XNARCH_DEFAULT_TICK;
     pod->ticks2sec = 1000000000/ XNARCH_DEFAULT_TICK;
-    pod->refcnt = 0;
+    pod->refcnt = 1;
 #ifdef __KERNEL__
     xnarch_atomic_set(&pod->timerlck,0);
 #endif /* __KERNEL__ */
@@ -544,7 +546,7 @@ void xnpod_shutdown (int xtype)
 
     xnlock_get_irqsave(&nklock,s);
 
-    if (!nkpod || testbits(nkpod->status,XNPIDLE) || nkpod->refcnt > 0)
+    if (!nkpod || testbits(nkpod->status,XNPIDLE) || --nkpod->refcnt != 0)
         goto unlock_and_exit; /* No-op */
 
     /* FIXME: We must release the lock before stopping the timer, so
