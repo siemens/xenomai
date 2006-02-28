@@ -22,25 +22,42 @@
 
 #include <nucleus/types.h>
 
-#define XN_ISR_HANDLED   0x0
-#define XN_ISR_CHAINED   0x1
-#define XN_ISR_ENABLE    0x2
+/* Possible return values of ISR. */
+#define XN_ISR_NONE   	 0x1
+#define XN_ISR_HANDLED	 0x2
+/* Additional bits. */
+#define XN_ISR_PROPAGATE 0x100
+#define XN_ISR_NOENABLE  0x200
+#define XN_ISR_BITMASK	 ~0xff
+
+/* Creation flags. */
+#define XN_ISR_SHARED	 0x1
+#define XN_ISR_EDGE	 0x2
+
+/* Operational flags. */
+#define XN_ISR_ATTACHED	 0x10000
 
 #if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)
 
-struct xnintr;
-
 typedef struct xnintr {
 
-    unsigned irq;	/* !< IRQ number. */
+#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
+    struct xnintr *next; /* !< Next object in the IRQ-sharing chain. */
+#endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */
 
     xnisr_t isr;	/* !< Interrupt service routine. */
 
-    xniack_t iack;	/* !< Interrupt acknowledge routine. */
+    void *cookie;	/* !< User-defined cookie value. */
 
     unsigned long hits;	/* !< Number of receipts (since attachment). */
 
-    void *cookie;	/* !< User-defined cookie value. */
+    xnflags_t flags; 	/* !< Creation flags. */
+
+    unsigned irq;	/* !< IRQ number. */
+
+    xniack_t iack;	/* !< Interrupt acknowledge routine. */
+
+    const char *name;	/* !< Symbolic name. */
 
 } xnintr_t;
 
@@ -50,11 +67,16 @@ extern xnintr_t nkclock;
 extern "C" {
 #endif
 
+int xnintr_mount(void);
+
 void xnintr_clock_handler(void);
+
+int xnintr_irq_proc(unsigned int irq, char *str);
 
     /* Public interface. */
 
 int xnintr_init(xnintr_t *intr,
+		const char *name,
 		unsigned irq,
 		xnisr_t isr,
 		xniack_t iack,

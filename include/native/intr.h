@@ -27,9 +27,9 @@
 #include <native/types.h>
 
 /* Creation flag. */
-#define I_AUTOENA    XN_ISR_ENABLE /* Auto-enable interrupt channel
-				      after each IRQ. */
-#define I_PROPAGATE  XN_ISR_CHAINED /* Propagate IRQs down the
+#define I_NOAUTOENA  XN_ISR_NOENABLE  /* Do not auto-enable interrupt channel
+				        after each IRQ. */
+#define I_PROPAGATE  XN_ISR_PROPAGATE /* Propagate IRQs down the
 				       pipeline after processing; IOW,
 				       pass them to Linux. */
 typedef struct rt_intr_info {
@@ -50,9 +50,14 @@ typedef struct rt_intr_placeholder {
 
 #define XENO_INTR_MAGIC 0x55550a0a
 
-#define RT_INTR_HANDLED XN_ISR_HANDLED
-#define RT_INTR_CHAINED XN_ISR_CHAINED
-#define RT_INTR_ENABLE  XN_ISR_ENABLE
+/* Creation flags. */
+#define I_SHARED	XN_ISR_SHARED
+#define I_EDGE		XN_ISR_EDGE
+
+#define RT_INTR_HANDLED		XN_ISR_HANDLED
+#define RT_INTR_NONE		XN_ISR_NONE
+#define RT_INTR_PROPAGATE	XN_ISR_PROPAGATE
+#define RT_INTR_NOENABLE	XN_ISR_NOENABLE
 
 #define I_DESC(xintr)  ((RT_INTR *)(xintr)->cookie)
 
@@ -81,7 +86,7 @@ typedef struct rt_intr {
 
     xnsynch_t synch_base; /* !< Base synchronization object. */
 
-    pid_t cpid;			/* !< Creator's pid. */
+    pid_t cpid;		/* !< Creator's pid. */
 
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
@@ -101,9 +106,11 @@ int __native_intr_pkg_init(void);
 void __native_intr_pkg_cleanup(void);
 
 int rt_intr_create(RT_INTR *intr,
+		   const char *name,
 		   unsigned irq,
 		   rt_isr_t isr,
-		   rt_iack_t iack);
+		   rt_iack_t iack,
+		   int mode);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 int rt_intr_handler(xnintr_t *cookie);
@@ -122,7 +129,7 @@ extern "C" {
 #endif
 
 int rt_intr_bind(RT_INTR *intr,
-		 unsigned irq,
+		 const char *name,
 		 RTIME timeout);
 
 static inline int rt_intr_unbind (RT_INTR *intr)
@@ -133,6 +140,7 @@ static inline int rt_intr_unbind (RT_INTR *intr)
 }
 
 int rt_intr_create(RT_INTR *intr,
+		   const char *name,
 		   unsigned irq,
 		   int mode);
 

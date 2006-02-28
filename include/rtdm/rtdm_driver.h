@@ -693,6 +693,17 @@ typedef unsigned long               rtdm_lockctx_t;
 
 typedef xnintr_t                    rtdm_irq_t;
 
+/*!
+ * @anchor RTDM_IRQTYPE_xxx   @name RTDM_IRQTYPE_xxx
+ * Interrupt registrations flags
+ * @{
+ */
+/** Enable IRQ-sharing with other real-time drivers */
+#define RTDM_IRQTYPE_SHARED         XN_ISR_SHARED
+/** Additional flag to enable IRQ-sharing of edge-triggered interrupts */
+#define RTDM_IRQTYPE_EDGE	    XN_ISR_EDGE
+/** @} */
+
 /**
  * Interrupt handler
  *
@@ -702,16 +713,19 @@ typedef xnintr_t                    rtdm_irq_t;
  */
 typedef int (*rtdm_irq_handler_t)(rtdm_irq_t *irq_handle);
 
-
 /*!
  * @anchor RTDM_IRQ_xxx   @name RTDM_IRQ_xxx
  * Return flags of interrupt handlers
  * @{
  */
+/** Denote handled interrupt */
+#define RTDM_IRQ_HANDLED	    XN_ISR_HANDLED
+/** Unhandled interrupt */
+#define RTDM_IRQ_NONE		    XN_ISR_NONE
 /** Propagate unhandled interrupt to possible other handlers */
-#define RTDM_IRQ_PROPAGATE          XN_ISR_CHAINED
-/** Re-enable interrupt line on return */
-#define RTDM_IRQ_ENABLE             XN_ISR_ENABLE
+#define RTDM_IRQ_PROPAGATE          XN_ISR_PROPAGATE
+/** Interrupt line is not re-enabled on return */
+#define RTDM_IRQ_NOENABLE           XN_ISR_NOENABLE
 /** @} */
 
 /**
@@ -741,7 +755,7 @@ static inline int rtdm_irq_request(rtdm_irq_t *irq_handle,
                                    const char *device_name,
                                    void *arg)
 {
-    xnintr_init(irq_handle, irq_no, handler, NULL, flags);
+    xnintr_init(irq_handle, device_name, irq_no, handler, NULL, flags);
     return xnintr_attach(irq_handle, arg);
 }
 

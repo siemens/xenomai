@@ -266,7 +266,7 @@ static int rt_16550_interrupt(rtdm_irq_t *irq_context)
                 events |= RTSER_EVENT_MODEMLO;
         }
 
-        ret = RTDM_IRQ_ENABLE;
+        ret = RTDM_IRQ_ENABLE | RTDM_IRQ_HANDLED;
     }
 
     if (ctx->in_nwait > 0) {
@@ -446,7 +446,8 @@ int rt_16550_open(struct rtdm_dev_context *context,
     ctx = (struct rt_16550_context *)context->dev_private;
 
     ret = rtdm_irq_request(&ctx->irq_handle, irq[dev_id], rt_16550_interrupt,
-                           0, context->device->proc_name, ctx);
+			    RTDM_IRQTYPE_SHARED|RTDM_IRQTYPE_EDGE,
+			    context->device->proc_name, ctx);
     if (ret < 0)
         return ret;
 

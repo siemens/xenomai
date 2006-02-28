@@ -47,6 +47,13 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 		int 'Number of priority levels' CONFIG_XENO_OPT_SCALABLE_PRIOS 256
 	fi
 	endmenu
+
+	mainmenu_option next_comment
+	comment 'Shared interrupts'
+		bool 'Level-triggered interrupts' CONFIG_XENO_OPT_SHIRQ_LEVEL
+		bool 'Edge-triggered interrupts' CONFIG_XENO_OPT_SHIRQ_EDGE
+	endmenu
+
 	if [ "$CONFIG_LTT" != "n" ]; then
 		mainmenu_option next_comment
 		comment 'LTT tracepoints filtering'

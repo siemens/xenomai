@@ -21,8 +21,8 @@
 #include <nucleus/synch.h>
 #include <nucleus/intr.h>
 
-#define PTHREAD_IAUTOENA    XN_ISR_ENABLE
-#define PTHREAD_IPROPAGATE  XN_ISR_CHAINED
+#define PTHREAD_INOAUTOENA  XN_ISR_NOENABLE
+#define PTHREAD_IPROPAGATE  XN_ISR_PROPAGATE
 
 #define PTHREAD_IENABLE     0
 #define PTHREAD_IDISABLE    1

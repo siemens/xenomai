@@ -75,6 +75,9 @@ typedef unsigned long xnlock_t;
 
 #define XNARCH_NR_CPUS              1
 
+/* Should be equal to the value used for creating the mvmtimer object (mvm_start_timer). */
+#define XNARCH_TIMER_IRQ	    1
+
 #define XNARCH_DEFAULT_TICK         10000000 /* ns, i.e. 10ms */
 #define XNARCH_HOST_TICK            0 /* No host ticking service. */
 

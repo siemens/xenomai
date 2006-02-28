@@ -3123,11 +3123,10 @@ unlock_and_exit:
 
     /* The clock interrupt does not need to be attached since the
        timer service will handle the arch-dependent setup. The IRQ
-       number (arg #2) is not used since the IRQ source will be
-       attached directly by the arch-dependent layer
+       source will be attached directly by the arch-dependent layer
        (xnarch_start_timer). */
 
-    xnintr_init(&nkclock,0,tickhandler,NULL,0);
+    xnintr_init(&nkclock,"[timer]",XNARCH_TIMER_IRQ,tickhandler,NULL,0);
 
     __setbits(nkpod->status,XNTIMED);
 

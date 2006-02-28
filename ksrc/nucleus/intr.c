@@ -41,8 +41,16 @@ xnintr_t nkclock;
 static void xnintr_irq_handler(unsigned irq,
 			       void *cookie);
 
+#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
+
+/* Helper functions. */
+static int xnintr_shirq_attach(xnintr_t *intr, void *cookie);
+static int xnintr_shirq_detach(xnintr_t *intr);
+
+#endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */
+
 /*! 
- * \fn int xnintr_init (xnintr_t *intr,unsigned irq,xnisr_t isr,xniack_t iack,xnflags_t flags)
+ * \fn int xnintr_init (xnintr_t *intr,const char *name,unsigned irq,xnisr_t isr,xniack_t iack,xnflags_t flags)
  * \brief Initialize an interrupt object.
  *
  * Associates an interrupt object with an IRQ line.
@@ -55,22 +63,36 @@ static void xnintr_irq_handler(unsigned irq,
  * the interrupted stack context, the rescheduling procedure is
  * locked, and the interrupt source is masked at hardware level. The
  * status value returned by the ISR is then checked for the following
- * bits:
+ * values:
  *
- * - XN_ISR_ENABLE asks the nucleus to re-enable the IRQ line. Over
- * some real-time control layers which mask and acknowledge IRQs, this
- * operation is necessary to revalidate the interrupt channel so that
- * more interrupts can be notified. The presence of such bit in the
- * ISR's return code causes the nucleus to ask the real-time control
- * layer to re-enable the interrupt.
+ * - XN_ISR_HANDLED indicates that the interrupt request has been fulfilled
+ * by the ISR.
  *
- * - XN_ISR_CHAINED tells the nucleus to require the real-time control
+ * - XN_ISR_NONE indicates the opposite to XN_ISR_HANDLED. The ISR must always
+ * return this value when it determines that the interrupt request has not been
+ * issued by the dedicated hardware device.
+ *
+ * In addition, one of the following bits may be set by the ISR :
+ *
+ * NOTE: use these bits with care and only when you do understand their effect
+ * on the system.
+ * The ISR is not encouraged to use these bits in case it shares the IRQ line
+ * with other ISRs in the real-time domain.
+ *
+ * - XN_ISR_PROPAGATE tells the nucleus to require the real-time control
  * layer to forward the IRQ. For instance, this would cause the Adeos
  * control layer to propagate the interrupt down the interrupt
  * pipeline to other Adeos domains, such as Linux. This is the regular
- * way to share interrupts between the nucleus and the host system. At
- * the opposite, RT_INTR_HANDLED can be used instead to indicate that
- * the interrupt request has been fulfilled.
+ * way to share interrupts between the nucleus and the host system.
+ *
+ * - XN_ISR_NOENABLE causes the nucleus to ask the real-time control
+ * layer _not_ to re-enable the IRQ line (read the following section).
+ * xnarch_end_irq() must be called to re-enable the IRQ line later.
+ *
+ * The nucleus re-enables the IRQ line by default. Over some real-time
+ * control layers which mask and acknowledge IRQs, this operation is
+ * necessary to revalidate the interrupt channel so that more interrupts
+ * can be notified.
  *
  * A count of interrupt receipts is tracked into the interrupt
  * descriptor, and reset to zero each time the interrupt object is
@@ -81,6 +103,9 @@ static void xnintr_irq_handler(unsigned irq,
  * nucleus will use to store the object-specific data.  This
  * descriptor must always be valid while the object is active
  * therefore it must be allocated in permanent memory.
+ *
+ * @param name An ASCII string standing for the symbolic name of the
+ * interrupt object.
  *
  * @param irq The hardware interrupt channel associated with the
  * interrupt object. This value is architecture-dependent. An
@@ -102,9 +127,13 @@ static void xnintr_irq_handler(unsigned irq,
  * the interrupt has been properly acknowledged. If @a iack is NULL,
  * the default routine will be used instead.
  *
- * @param flags A set of creation flags affecting the operation. Since
- * no flags are currently defined, zero should be passed for this
- * parameter.
+ * @param flags A set of creation flags affecting the operation. The
+ * valid flags are:
+ *
+ * - XN_ISR_SHARED enables IRQ-sharing with other interrupt objects.
+ *
+ * - XN_ISR_EDGE is an additional flag need to be set together with XN_ISR_SHARED
+ * to enable IRQ-sharing of edge-triggered interrupts.
  *
  * @return No error condition being defined, 0 is always returned.
  *
@@ -120,6 +149,7 @@ static void xnintr_irq_handler(unsigned irq,
  */
 
 int xnintr_init (xnintr_t *intr,
+		 const char *name,
 		 unsigned irq,
 		 xnisr_t isr,
 		 xniack_t iack,
@@ -130,6 +160,11 @@ int xnintr_init (xnintr_t *intr,
     intr->iack = iack;
     intr->cookie = NULL;
     intr->hits = 0;
+    intr->name = name;
+    intr->flags = flags;
+#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
+    intr->next = NULL;
+#endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */
 
     return 0;
 }
@@ -164,7 +199,8 @@ int xnintr_init (xnintr_t *intr,
 int xnintr_destroy (xnintr_t *intr)
 
 {
-    return xnintr_detach(intr);
+    xnintr_detach(intr);
+    return 0;
 }
 
 /*! 
@@ -206,7 +242,11 @@ int xnintr_attach (xnintr_t *intr,
 {
     intr->hits = 0;
     intr->cookie = cookie;
+#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
+    return xnintr_shirq_attach(intr,cookie);
+#else /* !CONFIG_XENO_OPT_SHIRQ_LEVEL && !CONFIG_XENO_OPT_SHIRQ_EDGE */
     return xnarch_hook_irq(intr->irq,&xnintr_irq_handler,intr->iack,intr);
+#endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */
 }
 
 /*! 
@@ -241,7 +281,11 @@ int xnintr_attach (xnintr_t *intr,
 int xnintr_detach (xnintr_t *intr)
 
 {
+#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
+    return xnintr_shirq_detach(intr);
+#else /* !CONFIG_XENO_OPT_SHIRQ_LEVEL && !CONFIG_XENO_OPT_SHIRQ_EDGE */
     return xnarch_release_irq(intr->irq);
+#endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */
 }
 
 /*! 
@@ -361,11 +405,10 @@ static void xnintr_irq_handler (unsigned irq, void *cookie)
     s = intr->isr(intr);
     ++intr->hits;
 
-    if (s & XN_ISR_ENABLE)
-	xnarch_end_irq(irq);
-
-    if (s & XN_ISR_CHAINED)
+    if (s & XN_ISR_PROPAGATE)
 	xnarch_chain_irq(irq);
+    else if (!(s & XN_ISR_NOENABLE))
+	xnarch_end_irq(irq);
 
     if (--sched->inesting == 0 && xnsched_resched_p())
 	xnpod_schedule();
@@ -384,6 +427,341 @@ static void xnintr_irq_handler (unsigned irq, void *cookie)
 }
 
 /*@}*/
+
+/* Optional support for shared interrupts. */
+
+#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
+
+typedef struct xnintr_shirq {
+
+    xnintr_t *handlers;
+#ifdef CONFIG_SMP
+    atomic_counter_t active;
+#endif /* CONFIG_SMP */
+
+} xnintr_shirq_t;
+
+static xnintr_shirq_t xnshirqs[RTHAL_NR_IRQS];
+
+#ifdef CONFIG_SMP
+static inline void xnintr_shirq_lock(xnintr_shirq_t *shirq) {
+    xnarch_atomic_inc(&shirq->active);
+}
+
+static inline void xnintr_shirq_unlock(xnintr_shirq_t *shirq) {
+    xnarch_atomic_dec(&shirq->active);
+}
+
+static inline void xnintr_shirq_spin(xnintr_shirq_t *shirq) {
+    while (xnarch_atomic_get(&shirq->active))
+	cpu_relax();
+}
+#else /* !CONFIG_SMP */
+static inline void xnintr_shirq_lock(xnintr_shirq_t *shirq) {}
+static inline void xnintr_shirq_unlock(xnintr_shirq_t *shirq) {}
+static inline void xnintr_shirq_spin(xnintr_shirq_t *shirq) {}
+#endif /* CONFIG_SMP */
+
+#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL)
+
+/*
+ * Low-level interrupt handler dispatching the user-defined ISRs for
+ * shared interrupts -- Called with interrupts off.
+ */
+
+static void xnintr_shirq_handler (unsigned irq, void *cookie)
+{
+    xnsched_t *sched = xnpod_current_sched();
+    xnintr_shirq_t *shirq = &xnshirqs[irq];
+    xnintr_t *intr;
+    int s = 0;
+
+    xnarch_memory_barrier();
+
+    xnltt_log_event(xeno_ev_ienter,irq);
+
+    ++sched->inesting;
+
+    xnintr_shirq_lock(shirq);
+    intr = shirq->handlers;
+
+    while (intr)
+        {
+	s |= intr->isr(intr) & XN_ISR_BITMASK;
+        ++intr->hits;
+        intr = intr->next;
+        }
+    xnintr_shirq_unlock(shirq);
+
+    --sched->inesting;
+
+    if (s & XN_ISR_PROPAGATE)
+	xnarch_chain_irq(irq);
+    else if (!(s & XN_ISR_NOENABLE))
+	xnarch_end_irq(irq);
+
+    if (sched->inesting == 0 && xnsched_resched_p())
+	xnpod_schedule();
+
+    xnltt_log_event(xeno_ev_iexit,irq);
+}
+
+#endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL */
+
+#if defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
+
+/*
+ * Low-level interrupt handler dispatching the user-defined ISRs for
+ * shared edge-triggered interrupts -- Called with interrupts off.
+ */
+
+static void xnintr_edge_shirq_handler (unsigned irq, void *cookie)
+{
+    const int MAX_EDGEIRQ_COUNTER = 128;
+
+    xnsched_t *sched = xnpod_current_sched();
+    xnintr_shirq_t *shirq = &xnshirqs[irq];
+    xnintr_t *intr, *end = NULL;
+    int s = 0, counter = 0;
+
+    xnarch_memory_barrier();
+
+    xnltt_log_event(xeno_ev_ienter,irq);
+
+    ++sched->inesting;
+
+    xnintr_shirq_lock(shirq);
+    intr = shirq->handlers;
+
+    while (intr != end)
+	{
+	int ret = intr->isr(intr),
+	    code = ret & ~XN_ISR_BITMASK,
+	    bits = ret & XN_ISR_BITMASK;
+
+	if (code == XN_ISR_HANDLED)
+	    {
+	    ++intr->hits;
+	    end = NULL;
+	    s |= bits;	    
+	    }
+	else if (code == XN_ISR_NONE && end == NULL)
+	    end = intr;
+
+	if (counter++ > MAX_EDGEIRQ_COUNTER)
+	    break;
+
+	if (!(intr = intr->next))
+	    intr = shirq->handlers;
+	}
+
+    xnintr_shirq_unlock(shirq);
+
+    --sched->inesting;
+
+    if (counter > MAX_EDGEIRQ_COUNTER)
+	xnlogerr("xnintr_edge_shirq_handler() : failed to get the IRQ%d line free.\n", irq);
+
+    if (s & XN_ISR_PROPAGATE)
+	xnarch_chain_irq(irq);
+    else if (!(s & XN_ISR_NOENABLE))
+	xnarch_end_irq(irq);
+
+    if (sched->inesting == 0 && xnsched_resched_p())
+	xnpod_schedule();
+
+    xnltt_log_event(xeno_ev_iexit,irq);
+}
+
+#endif /* CONFIG_XENO_OPT_SHIRQ_EDGE */
+
+static int xnintr_shirq_attach (xnintr_t *intr,
+			        void *cookie)
+{
+    xnintr_shirq_t *shirq = &xnshirqs[intr->irq];
+    xnintr_t *prev, **p = &shirq->handlers;
+    unsigned long flags;
+    int err = 0;
+
+    if (intr->irq >= RTHAL_NR_IRQS)
+	return -EINVAL;
+
+    flags = rthal_critical_enter(NULL);
+
+    if (__testbits(intr->flags,XN_ISR_ATTACHED))
+	{
+	err = -EPERM;
+	goto unlock_and_exit;
+	}
+
+    if ((prev = *p) != NULL)
+	{
+	/* Check on whether the shared mode is allowed. */
+	if (!(prev->flags & intr->flags & XN_ISR_SHARED) || (prev->iack != intr->iack)
+	    || ((prev->flags & XN_ISR_EDGE) != (intr->flags & XN_ISR_EDGE)))
+	    {
+	    err = -EBUSY;
+	    goto unlock_and_exit;
+	    }
+
+	/* Get a position at the end of the list to insert the new element. */
+	while (prev) 
+	    {
+	    p = &prev->next;
+	    prev = *p;
+	    }
+	}
+    else
+	{
+	/* Initialize the corresponding interrupt channel */
+	void (*handler)(unsigned, void *) = &xnintr_irq_handler;
+
+	if (intr->flags & XN_ISR_SHARED)
+	    {
+#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL)
+	    handler = &xnintr_shirq_handler;
+#endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL */
+
+#if defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
+	    if (intr->flags & XN_ISR_EDGE)
+		handler = &xnintr_edge_shirq_handler;
+#endif /* CONFIG_XENO_OPT_SHIRQ_EDGE */
+	    }
+
+	err = xnarch_hook_irq(intr->irq,handler,intr->iack,intr);
+	if (err)
+	    goto unlock_and_exit;
+	}
+
+    __setbits(intr->flags,XN_ISR_ATTACHED);
+
+    /* Add a given interrupt object. */
+    intr->next = NULL;
+    *p = intr;
+
+unlock_and_exit:
+
+    rthal_critical_exit(flags);
+    return err;
+}
+
+int xnintr_shirq_detach (xnintr_t *intr)
+{
+    xnintr_shirq_t *shirq = &xnshirqs[intr->irq];
+    xnintr_t *e, **p = &shirq->handlers;
+    unsigned long flags;
+    int err = 0;
+
+    if (intr->irq >= RTHAL_NR_IRQS)
+	return -EINVAL;
+
+    flags = rthal_critical_enter(NULL);
+
+    if (!__testbits(intr->flags,XN_ISR_ATTACHED))
+	{
+	rthal_critical_exit(flags);
+	return -EPERM;
+	}
+
+    __clrbits(intr->flags,XN_ISR_ATTACHED);
+
+    while ((e = *p) != NULL)
+	{
+	if (e == intr)
+	    {
+	    /* Remove a given interrupt object from the list. */
+	    *p = e->next;
+
+	    /* Release the IRQ line if this was the last user */
+	    if (shirq->handlers == NULL)
+		err = xnarch_release_irq(intr->irq);
+
+	    rthal_critical_exit(flags);
+
+	    /* The idea here is to keep a detached interrupt object valid as long
+	       as the corresponding irq handler is running. This is one of the requirements
+	       to iterate over the xnintr_shirq_t::handlers list in xnintr_irq_handler()
+	       in a lockless way. */
+
+	    xnintr_shirq_spin(shirq);
+	    return err;
+	    }
+	p = &e->next;
+	}
+
+    rthal_critical_exit(flags);
+
+    xnlogerr("Attempted to detach a non previously attached interrupt object");
+    return err;
+}
+
+int xnintr_mount(void)
+{
+    int i;
+    for (i = 0; i < RTHAL_NR_IRQS; ++i)
+	{
+	xnshirqs[i].handlers = NULL;
+#ifdef CONFIG_SMP
+	atomic_set(&xnshirqs[i].active,0);
+#endif /* CONFIG_SMP */
+	}
+    return 0;
+}
+
+int xnintr_irq_proc(unsigned int irq, char *str)
+{
+    xnintr_shirq_t *shirq;
+    xnintr_t *intr;
+    char *p = str;
+
+    if (rthal_virtual_irq_p(irq))
+	{
+	p += sprintf(p, "         [virtual]");
+	return p - str;
+	}
+    else if (irq == XNARCH_TIMER_IRQ)
+	{
+	p += sprintf(p, "         %s", nkclock.name);
+	return p - str;
+	}
+
+    shirq = &xnshirqs[irq];
+
+    xnintr_shirq_lock(shirq);
+    intr = shirq->handlers;
+
+    if (intr)
+	p += sprintf(p, "        ");
+
+    while (intr)
+	{
+	if (*(intr->name))
+	    p += sprintf(p, " %s,", intr->name);
+
+	intr = intr->next;
+	}
+
+    xnintr_shirq_unlock(shirq);
+
+    if (p != str)
+	--p;
+
+    return p - str;
+}
+
+#else /* !CONFIG_XENO_OPT_SHIRQ_LEVEL && !CONFIG_XENO_OPT_SHIRQ_EDGE */
+
+int xnintr_mount(void)
+{
+    return 0;
+}
+
+int xnintr_irq_proc(unsigned int irq, char *str)
+{
+    return 0;
+}
+
+#endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */
 
 EXPORT_SYMBOL(xnintr_attach);
 EXPORT_SYMBOL(xnintr_destroy);

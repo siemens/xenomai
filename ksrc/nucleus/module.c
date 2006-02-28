@@ -526,6 +526,48 @@ static int timer_read_proc (char *page,
     return len;
 }
 
+static int irq_read_proc (char *page,
+			  char **start,
+			  off_t off,
+			  int count,
+			  int *eof,
+			  void *data)
+{
+    int len = 0, cpu, irq;
+    char *p = page;
+
+    p += sprintf(p,"IRQ ");
+
+    for_each_online_cpu(cpu) {
+	p += sprintf(p,"        CPU%d",cpu);
+    }
+
+    for (irq = 0; irq < RTHAL_NR_IRQS; irq++) {
+
+	if (rthal_irq_handler(&rthal_domain, irq) == NULL)
+	    continue;
+
+	p += sprintf(p,"\n%3d:",irq);
+
+	for_each_online_cpu(cpu) {
+	    p += sprintf(p,"%12lu",rthal_cpudata_irq_hits(&rthal_domain,cpu,irq));
+	}
+
+	p += xnintr_irq_proc(irq, p); 
+    }
+
+    p += sprintf(p,"\n");
+
+    len = p - page - off;
+    if (len <= off + count) *eof = 1;
+    *start = page + off;
+    if (len > count) len = count;
+    if (len < 0) len = 0;
+
+    return len;
+}
+
+
 static struct proc_dir_entry *add_proc_leaf (const char *name,
 					     read_proc_t rdproc,
 					     write_proc_t wrproc,
@@ -614,6 +656,12 @@ void xnpod_init_proc (void)
 		  NULL,
 		  rthal_proc_root);
 
+    add_proc_leaf("irq",
+		  &irq_read_proc,
+		  NULL,
+		  NULL,
+		  rthal_proc_root);
+
 #ifdef CONFIG_XENO_OPT_PERVASIVE
     iface_proc_root = create_proc_entry("interfaces",
 					S_IFDIR,
@@ -633,6 +681,7 @@ void xnpod_delete_proc (void)
 
     remove_proc_entry("interfaces",rthal_proc_root);
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
+    remove_proc_entry("irq",rthal_proc_root);
     remove_proc_entry("timer",rthal_proc_root);
     remove_proc_entry("version",rthal_proc_root);
     remove_proc_entry("latency",rthal_proc_root);
@@ -712,6 +761,8 @@ int __init __xeno_sys_init (void)
 #ifdef CONFIG_PROC_FS
     xnpod_init_proc();
 #endif /* CONFIG_PROC_FS */
+
+    xnintr_mount();
 
 #ifdef CONFIG_LTT
     xnltt_mount();
