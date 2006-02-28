@@ -54,10 +54,10 @@ static void rtai_shutdown (int xtype)
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     __rtai_syscall_cleanup();
-    xncore_detach();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-
+    xncore_detach(xtype);
+#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
     xnpod_shutdown(xtype);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 }
 
 int SKIN_INIT(rtai)
@@ -141,10 +141,10 @@ int SKIN_INIT(rtai)
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     __rtai_syscall_cleanup();
-    xncore_detach();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-
+    xncore_detach(XNPOD_NORMAL_EXIT);
+#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
     xnpod_shutdown(XNPOD_NORMAL_EXIT);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
  fail:
 

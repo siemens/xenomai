@@ -43,7 +43,7 @@ int xncore_umount(void);
 
 int xncore_attach(void);
 
-int xncore_detach(void);
+void xncore_detach(int xtype);
 
 #ifdef __cplusplus
 };

@@ -89,16 +89,23 @@ void xnregistry_cleanup(void);
 typedef ssize_t link_proc_t(char *buf,
 			    int count,
 			    void *data);
+typedef struct xnptree {
+
+    struct proc_dir_entry *dir;
+    const char *name;
+    int entries;
+
+} xnptree_t;
 
 typedef struct xnpnode {
 
     struct proc_dir_entry *dir;
-    const char *root;
     const char *type;
     int entries;
     read_proc_t *read_proc;
     write_proc_t *write_proc;
     link_proc_t *link_proc;
+    xnptree_t *root;
 
 } xnpnode_t;
 

@@ -91,14 +91,16 @@ static int __sem_read_proc (char *page,
     return len;
 }
 
+extern xnptree_t __native_ptree;
+
 static xnpnode_t __sem_pnode = {
 
     .dir = NULL,
-    .root = "native",
     .type = "semaphores",
     .entries = 0,
     .read_proc = &__sem_read_proc,
-    .write_proc = NULL
+    .write_proc = NULL,
+    .root = &__native_ptree,
 };
 
 #elif defined(CONFIG_XENO_OPT_REGISTRY)

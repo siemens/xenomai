@@ -63,13 +63,15 @@ static ssize_t __pipe_link_proc (char *buf,
     return snprintf(buf,count,"/dev/rtp%d",pipe->minor);
 }
 
+extern xnptree_t __native_ptree;
+
 static xnpnode_t __pipe_pnode = {
 
     .dir = NULL,
-    .root = "native",
     .type = "pipes",
     .entries = 0,
     .link_proc = &__pipe_link_proc,
+    .root = &__native_ptree,
 };
 
 #elif defined(CONFIG_XENO_OPT_REGISTRY)

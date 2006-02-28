@@ -1,4 +1,11 @@
-2066-02-08  Jan Kiszka  <jan.kiszka@web.de>
+2006-02-28  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (do_losyscall_event): No pod might be
+	active as a result of a failed binding: make sure to check for
+	nkpod before processing pending signals upon return from
+	exec_nucleus_syscall.
+
+2006-02-28  Jan Kiszka  <jan.kiszka@web.de>
 
 	* src/testsuite/latency/latency.c: display all results in
 	microseconds, and state this clearly on start-up.
@@ -8,6 +15,11 @@
 	* ksrc/nucleus/pod.c (xnpod_renice_thread_inner, xnpod_init): Make
 	reordering-upon-renice a local property of the synchronization
 	object, instead of a global property of the pod.
+	(xnpod_init): Extend use of the reference counter for handling the
+	XNREUSE case. This is not perfect through, since we still don't
+	prevent the initial pod creator from vanishing due to a module
+	unloading, leaving nkpod set with a dandling pointer to its
+	descriptor.
 
 2006-02-27  Jan Kiszka  <jan.kiszka@web.de>
 
