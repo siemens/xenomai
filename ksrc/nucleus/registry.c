@@ -43,9 +43,9 @@
 
 static xnobject_t registry_obj_slots[CONFIG_XENO_OPT_REGISTRY_NRSLOTS];
 
-static DECLARE_XNQUEUE(registry_obj_freeq); /* Free objects. */
+static xnqueue_t registry_obj_freeq; /* Free objects. */
 
-static DECLARE_XNQUEUE(registry_obj_busyq); /* Active and exported objects. */
+static xnqueue_t registry_obj_busyq; /* Active and exported objects. */
 
 static u_long registry_obj_stamp;
 
@@ -65,9 +65,9 @@ static void registry_proc_callback(void *cookie);
 
 static void registry_proc_schedule(void *cookie);
 
-static DECLARE_XNQUEUE(registry_obj_exportq); /* Objects waiting for /proc export. */
+static xnqueue_t registry_obj_exportq; /* Objects waiting for /proc export. */
 
-static DECLARE_XNQUEUE(registry_obj_unexportq); /* Objects waiting for /proc unexport. */
+static xnqueue_t registry_obj_unexportq; /* Objects waiting for /proc unexport. */
 
 #ifndef CONFIG_PREEMPT_RT
 static DECLARE_WORK(registry_proc_work,&registry_proc_callback,NULL);
@@ -94,7 +94,6 @@ int xnregistry_init (void)
     int n;
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
-
     registry_proc_apc = rthal_apc_alloc("registry_export",&registry_proc_schedule,NULL);
 
     if (registry_proc_apc < 0)
@@ -109,7 +108,13 @@ int xnregistry_init (void)
 	return -ENOMEM;
 	}
 
+    initq(&registry_obj_exportq);
+    initq(&registry_obj_unexportq);
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
+
+    initq(&registry_obj_freeq);
+    initq(&registry_obj_busyq);
+    registry_obj_stamp = 0;
 
     for (n = 0; n < CONFIG_XENO_OPT_REGISTRY_NRSLOTS; n++)
 	{
@@ -153,17 +158,25 @@ void xnregistry_cleanup (void)
 	    enext = ecurr->next;
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
-
 	    if (ecurr->object && ecurr->object->pnode)
 		{
 		remove_proc_entry(ecurr->object->key,
 				  ecurr->object->pnode->dir);
 
 		if (--ecurr->object->pnode->entries <= 0)
+		    {
 		    remove_proc_entry(ecurr->object->pnode->type,
-				      registry_proc_root);
-		}
+				      ecurr->object->pnode->root->dir);
+		    ecurr->object->pnode->dir = NULL;
 
+		    if (--ecurr->object->pnode->root->entries <= 0)
+			{
+			remove_proc_entry(ecurr->object->pnode->root->name,
+					  registry_proc_root);
+			ecurr->object->pnode->root->dir = NULL;
+			}
+		    }
+		}
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 	    xnfree(ecurr);
@@ -253,11 +266,11 @@ static struct proc_dir_entry *add_proc_link (const char *name,
 static void registry_proc_callback (void *cookie)
 
 {
-    struct proc_dir_entry *dir, *entry;
+    struct proc_dir_entry *rdir, *dir, *entry;
+    const char *root, *type;
     xnholder_t *holder;
     xnobject_t *object;
     xnpnode_t *pnode;
-    const char *type;
     int entries;
     spl_t s;
 
@@ -268,17 +281,33 @@ static void registry_proc_callback (void *cookie)
 	object = link2xnobj(holder);
 	pnode = object->pnode;
 	type = pnode->type;
+	root = pnode->root->name;
 	++pnode->entries;
 	object->proc = XNOBJECT_PROC_RESERVED2;
 	appendq(&registry_obj_busyq,holder);
 	dir = pnode->dir;
+	rdir = pnode->root->dir;
 
 	xnlock_put_irqrestore(&nklock,s);
+
+	if (!rdir)
+	    {
+	    /* Create the root directory on the fly as needed. */
+	    rdir = create_proc_entry(root,S_IFDIR,registry_proc_root);
+
+	    if (!rdir)
+		{
+		object->proc = NULL;
+		goto fail;
+		}
+
+	    pnode->root->dir = rdir;
+	    }
 
 	if (!dir)
 	    {
 	    /* Create the class directory on the fly as needed. */
-	    dir = create_proc_entry(type,S_IFDIR,registry_proc_root);
+	    dir = create_proc_entry(type,S_IFDIR,rdir);
 
 	    if (!dir)
 		{
@@ -287,6 +316,7 @@ static void registry_proc_callback (void *cookie)
 		}
 
 	    pnode->dir = dir;
+	    ++pnode->root->entries;
 	    }
 
 	if (pnode->link_proc)
@@ -323,10 +353,17 @@ static void registry_proc_callback (void *cookie)
 	object->proc = NULL;
 	type = pnode->type;
 	dir = pnode->dir;
+	rdir = pnode->root->dir;
+	root = pnode->root->name;
 	entries = --pnode->entries;
 
 	if (entries <= 0)
+	    {
 	    pnode->dir = NULL;
+
+	    if (--pnode->root->entries <= 0)
+		pnode->root->dir = NULL;
+	    }
 
 	if (object->objaddr)
 	    appendq(&registry_obj_busyq,holder);
@@ -340,7 +377,12 @@ static void registry_proc_callback (void *cookie)
 	remove_proc_entry(entry->name,dir);
 
 	if (entries <= 0)
-	    remove_proc_entry(type,registry_proc_root);
+	    {
+	    remove_proc_entry(type,rdir);
+
+	    if (pnode->root->entries <= 0)
+		remove_proc_entry(root,registry_proc_root);
+	    }
 
 	xnlock_get_irqsave(&nklock,s);
 	}

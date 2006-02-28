@@ -71,10 +71,10 @@ static void rtdm_skin_shutdown(int xtype)
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     rtdm_syscall_cleanup();
-    xncore_detach();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-
+    xncore_detach(xtype);
+#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
     xnpod_shutdown(xtype);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 }
 
 
@@ -134,7 +134,9 @@ int SKIN_INIT(rtdm)
 
   cleanup_pod:
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    xncore_detach();
+    xncore_detach(err);
+#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+    xnpod_shutdown(err);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
   fail:

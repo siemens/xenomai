@@ -56,16 +56,16 @@ static void pse51_shutdown(int xtype)
     pse51_cond_pkg_cleanup();
     pse51_sem_pkg_cleanup();
     pse51_mutex_pkg_cleanup();
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    pse51_intr_pkg_cleanup();
-    pse51_syscall_cleanup();
-    xncore_detach();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
     pse51_reg_pkg_cleanup();
     pse51_mq_pkg_cleanup();
     pse51_signal_pkg_cleanup();
-
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    pse51_intr_pkg_cleanup();
+    pse51_syscall_cleanup();
+    xncore_detach(xtype);
+#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
     xnpod_shutdown(xtype);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 }
 
 int SKIN_INIT(posix)
@@ -79,7 +79,7 @@ int SKIN_INIT(posix)
     err = xncore_attach();
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
     /* The POSIX skin is standalone. */
-    err = xnpod_init(&pod,PSE51_MIN_PRIORITY,PSE51_MAX_PRIORITY,0);
+    err = xnpod_init(&pod,PSE51_MIN_PRIORITY,PSE51_MAX_PRIORITY,XNREUSE);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
     if (err != 0)
@@ -92,9 +92,10 @@ int SKIN_INIT(posix)
     if (err != 0)
         {
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	xncore_detach();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+	xncore_detach(err);
+#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
         xnpod_shutdown(err);    
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 	return err;
         }
 
