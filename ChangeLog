@@ -1,3 +1,12 @@
+2006-03-01  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/rtdm/rtdm_driver.h, ksrc/skins/rtdm/API.CHANGES: remove
+	IRQ propagation and deferred re-enabling from RTDM API, document
+	API changes.
+
+	* ksrc/drivers/16550A/16550A.c: update to latest RTDM API, re-order
+	device open to avoid shared-IRQ-related races.
+
 2006-02-28  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
 
 	* include/nucleus/intr.h, nucleus/intr.c: Add optional support
