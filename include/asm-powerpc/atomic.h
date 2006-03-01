@@ -142,12 +142,6 @@ static __inline__ unsigned long
 }
 #endif
 
-/*
- * This function doesn't exist, so you'll get a linker error
- * if something tries to do an invalid xchg().
- */
-extern void __xnarch_xchg_called_with_bad_pointer(void);
-
 static __inline__ unsigned long
     __xchg(volatile void *ptr, unsigned long x, unsigned int size)
 {
@@ -159,7 +153,6 @@ static __inline__ unsigned long
 	return __xchg_u64(ptr, x);
 #endif
     }
-    __xnarch_xchg_called_with_bad_pointer();
     return x;
 }
 
