@@ -1,3 +1,9 @@
+2006-03-01  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
+
+	* ksrc/arch/arm/hal.c (rthal_irq_enable, rthal_irq_disable,
+	rthal_irq_end): Bypass enable/disable_irq which are unsafe over
+	non-root domains when calling PIC handling routines.
+
 2006-03-01  Heikki Lindholm <holindho@cs.helsinki.fi>
 
 	* include/asm-powerpc/atomic.h: Remove LART on __xchg() support;
