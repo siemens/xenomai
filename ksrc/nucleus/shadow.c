@@ -813,24 +813,28 @@ void xnshadow_unmap (xnthread_t *thread)
 		    thread->name,
 		    p ? p->pid : -1);
     if (!p)
-	return;
+	goto renice_and_exit;
 
     xnshadow_ptd(p) = NULL;
 
     if (p->state != TASK_RUNNING)
+	{
 	/* If the shadow is being unmapped in primary mode or blocked
 	   in secondary mode, the associated Linux task should also
 	   die. In the former case, the zombie Linux side returning to
 	   user-space will be trapped and exited inside the pod's
 	   rescheduling routines. */
 	schedule_linux_call(LO_WAKEUP_REQ,p,0);
-    else
-	/* Otherwise, if the shadow is being unmapped in secondary
-	   mode and running, we only detach the shadow thread from its
-	   Linux mate, and renice the root thread appropriately. We do
-	   not reschedule since xnshadow_unmap() must be called from a
-	   thread deletion hook. */
-	xnpod_renice_root(XNPOD_ROOT_PRIO_BASE);
+	return;
+	}
+
+ renice_and_exit:
+    /* Otherwise, if the shadow is being unmapped in secondary mode
+       and running, we only detach the shadow thread from its Linux
+       mate, and renice the root thread appropriately. We do not
+       reschedule since xnshadow_unmap() must be called from a thread
+       deletion hook. */
+    xnpod_renice_root(XNPOD_ROOT_PRIO_BASE);
 }
 
 int xnshadow_wait_barrier (struct pt_regs *regs)
