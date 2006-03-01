@@ -1,3 +1,17 @@
+2006-03-01  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (xnshadow_unmap): Renice the root thread
+	when called from the task exit hook.
+
+	* include/asm-ia64/atomic.h (atomic_clear_mask): Fix badly broken
+	atomic clear/set mask routines.
+
+	* include/asm-ia64/syscall.h (__xn_interrupted_p): Test the proper
+	errno value.
+
+	* ksrc/nucleus/pod.c (xnpod_suspend_thread): Clear the wait
+	channel more carefully when dealing with XNKICKED.
+
 2006-03-01  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
 
 	* ksrc/arch/arm/hal.c (rthal_irq_enable, rthal_irq_disable,
