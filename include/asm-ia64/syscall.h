@@ -70,25 +70,29 @@ static inline long __xn_strncpy_from_user(struct task_struct *p,
 /* Purposedly used inlines and not macros for the following routines
    so that we don't risk spurious side-effects on the value arg. */
 
-static inline void __xn_success_return(struct pt_regs *regs, int v) {
+static inline void __xn_success_return(struct pt_regs *regs, int v)
+{
     __xn_reg_err(regs) = 0;
     __xn_reg_rval(regs) = v;
 }
 
-static inline void __xn_error_return(struct pt_regs *regs, int v) {
+static inline void __xn_error_return(struct pt_regs *regs, int v)
+{
     __xn_reg_err(regs) = -1;
     __xn_reg_rval(regs) = -v;
 }
 
-static inline void __xn_status_return(struct pt_regs *regs, int v) {
+static inline void __xn_status_return(struct pt_regs *regs, int v)
+{
     if(v < 0)
         __xn_error_return(regs, v);
     else
         __xn_success_return(regs, v);
 }
 
-static inline int __xn_interrupted_p(struct pt_regs *regs) {
-    return __xn_reg_err(regs) == -1 && __xn_reg_rval(regs) == -EINTR;
+static inline int __xn_interrupted_p(struct pt_regs *regs)
+{
+    return __xn_reg_err(regs) == -1 && __xn_reg_rval(regs) == EINTR;
 }
 
 #else /* !__KERNEL__ */
@@ -180,7 +184,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs) {
 #define CONFIG_XENO_HW_DIRECT_TSC 1
 
 static inline unsigned long long __xn_rdtsc (void)
-
 {
     unsigned long long t;
     __asm__ __volatile__("mov %0=ar.itc;;" : "=r"(t) :: "memory");
