@@ -48,7 +48,7 @@ static inline void atomic_set_mask(unsigned mask, unsigned long *addr)
     do {
         old = *m;
         new = old | mask;
-    } while (atomic_cmpxchg8_acq(m, new, old) != old);
+    } while (cmpxchg(m, old, new) != old);
 }
 
 #define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask,pflags)
@@ -62,7 +62,7 @@ static inline void atomic_clear_mask(unsigned mask, unsigned long *addr)
     do {
         old = *m;
         new = old & ~mask;
-    } while (atomic_cmpxchg8_acq(m, new, old) != old);
+    } while (cmpxchg(m, old, new) != old);
 }
 
 #define xnarch_atomic_clear_mask(pflags,mask)  atomic_clear_mask(mask,pflags)
