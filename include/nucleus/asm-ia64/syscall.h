@@ -166,7 +166,7 @@ static inline void __xn_status_return(struct pt_regs *regs, int v) {
 }
 
 static inline int __xn_interrupted_p(struct pt_regs *regs) {
-    return __xn_reg_err(regs) == -1 && __xn_reg_rval(regs) == -EINTR;
+    return __xn_reg_err(regs) == -1 && __xn_reg_rval(regs) == EINTR;
 }
 
 #else /* !__KERNEL__ */
