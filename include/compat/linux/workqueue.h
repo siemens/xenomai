@@ -26,6 +26,6 @@
 
 #define work_struct              tq_struct
 #define schedule_work(x)         schedule_task(x)
-#define flush_scheduled_work(x)  flush_scheduled_tasks(x)
+#define flush_scheduled_work()   flush_scheduled_tasks()
 
 #endif /* _XENO_COMPAT_LINUX_WORKQUEUE_H */
