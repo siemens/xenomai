@@ -85,8 +85,4 @@ therefore E_OACV is never returned.
 Module parameters
 =================
 
-The following parameters can be passed at startup to the uITRON
-API module:
-
-- "tick_arg", clock tick period (in nanoseconds). Defaults to 1000000
-(1ms).
+None.

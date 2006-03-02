@@ -157,8 +157,4 @@ added gradually :
 Module parameters
 =================
 
-The following parameters can be passed at startup to the PSE51
-API emulation module:
-
-- "tick_arg", clock tick period (in nanoseconds). Defaults to
-aperiodic mode (0).
+None.
