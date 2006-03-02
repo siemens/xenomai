@@ -65,21 +65,25 @@
 /* Purposedly used inlines and not macros for the following routines
    so that we don't risk spurious side-effects on the value arg. */
 
-static inline void __xn_success_return(struct pt_regs *regs, int v) {
+static inline void __xn_success_return(struct pt_regs *regs, int v)
+{
     __xn_reg_rval(regs) = v;
 }
 
-static inline void __xn_error_return(struct pt_regs *regs, int v) {
+static inline void __xn_error_return(struct pt_regs *regs, int v)
+{
     /* We currently never set the SO bit for marking errors, even if
      * we always test it upon syscall return. */
     __xn_reg_rval(regs) = v;
 }
 
-static inline void __xn_status_return(struct pt_regs *regs, int v) {
+static inline void __xn_status_return(struct pt_regs *regs, int v)
+{
     __xn_reg_rval(regs) = v;
 }
 
-static inline int __xn_interrupted_p(struct pt_regs *regs) {
+static inline int __xn_interrupted_p(struct pt_regs *regs)
+{
     return __xn_reg_rval(regs) == -EINTR;
 }
 
