@@ -327,7 +327,7 @@ int rt_task_make_periodic (RT_TASK *task,
 void rt_task_wait_period (void)
 
 {
-    xnpod_wait_thread_period();
+    xnpod_wait_thread_period(NULL);
 }
 
 EXPORT_SYMBOL(rt_task_init);

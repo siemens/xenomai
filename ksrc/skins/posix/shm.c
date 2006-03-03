@@ -112,6 +112,7 @@ static void pse51_shm_destroy(pse51_shm_t *shm, int force)
 #endif /* !CONFIG_XENO_OPT_PERVASIVE. */
 
 	shm->addr = NULL;
+        shm->size = 0;
         }
 
     if (force)
@@ -180,7 +181,7 @@ int shm_open(const char *name, int oflags, mode_t mode)
     pse51_node_t *node;
     pse51_desc_t *desc;
     pse51_shm_t *shm;
-    int err;
+    int err, fd;
     spl_t s;
 
     /* From root context only. */
@@ -224,8 +225,17 @@ int shm_open(const char *name, int oflags, mode_t mode)
         goto err_shm_put;
 
     pse51_desc_setflags(desc, oflags & PSE51_PERMS_MASK);
+
+    fd = pse51_desc_fd(desc);
     xnlock_put_irqrestore(&nklock, s);
-    return pse51_desc_fd(desc);
+
+    if ((oflags & O_TRUNC) && ftruncate(fd, 0))
+        {
+        close(fd);
+        return -1;
+        }
+    
+    return fd;
 
   err_shm_put:
     pse51_shm_put(shm, 1);
@@ -366,6 +376,7 @@ int ftruncate(int fd, off_t len)
     len += PAGE_SIZE + xnheap_overhead(len, PAGE_SIZE);
     len = PAGE_ALIGN(len);
 
+    err = 0;
     if (!countq(&shm->mappings))
         {
         if (shm->addr)
@@ -378,32 +389,36 @@ int ftruncate(int fd, off_t len)
 #endif /* !CONFIG_XENO_OPT_PERVASIVE. */
 
             shm->addr = NULL;
+            shm->size = 0;
             }
 
+        if (len)
+            {
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-        err = xnheap_init_mapped(&shm->heapbase, len, 0);
+            err = xnheap_init_mapped(&shm->heapbase, len, 0);
 #else /* !CONFIG_XENO_OPT_PERVASIVE. */
-        {
-        void *heapaddr = xnarch_sysalloc(len);
+            {
+            void *heapaddr = xnarch_sysalloc(len);
 
-        if (heapaddr)
-            err = xnheap_init(&shm->heapbase, heapaddr, len, PAGE_SIZE);
-        else
-            err = -ENOMEM;
-        }
+            if (heapaddr)
+                err = -xnheap_init(&shm->heapbase, heapaddr, len, PAGE_SIZE);
+            else
+                err = ENOMEM;
+            }
 #endif /* !CONFIG_XENO_OPT_PERVASIVE. */
 
-        if (!err)
-            {
-            shm->size = xnheap_max_contiguous(&shm->heapbase);
-            shm->addr = xnheap_alloc(&shm->heapbase, shm->size);
-            shm->size -= PAGE_SIZE;
+            if (!err)
+                {
+                shm->size = xnheap_max_contiguous(&shm->heapbase);
+                shm->addr = xnheap_alloc(&shm->heapbase, shm->size);
+                /* Required. */
+                memset(shm->addr, '\0', shm->size);
+                shm->size -= PAGE_SIZE;
+                }
             }
         }
     else if (len != xnheap_size(&shm->heapbase))
         err = EINVAL;
-    else
-        err = 0;
 
     up(&shm->maplock);
 

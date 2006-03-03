@@ -1,5 +1,16 @@
 2006-03-03  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
+	* ksrc/skins/posix/shm.c (ftruncate): Handle zero length.
+	(shm_open): Handle O_TRUNC open flag.
+	(ftruncate): Zero shared memory when creating it.
+
+	* ksrc/skins/posix/mq.c (pse51_mq_timedrcv_inner): Suppress
+	special handling of O_DIRECT flag. Use a separated wait queue for
+	blocked senders and receivers.
+
+	* ksrc/nucleus/heap.c: Remove implementation of xnheap_init_mapped
+	and xnheap_destroy_mapped for simulator, they were no longer used.
+
 	* ksrc/skins/posix: Initial POSIX skin documentation.
 
 2006-03-03  Philippe Gerum  <rpm@xenomai.org>
