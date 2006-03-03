@@ -29,7 +29,7 @@
 #if CONFIG_XENO_OPT_DEBUG_LEVEL > 0
 #define XENO_ASSERT(cond,action)  do { \
 if (unlikely((cond) != 0)) \
-    (action); \
+	do { action; } while(0); \
 } while(0)
 #else  /* CONFIG_XENO_OPT_DEBUG_LEVEL == 0 */
 #define XENO_ASSERT(cond,action,fmt,args...) do { } while(0)
