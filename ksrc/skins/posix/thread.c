@@ -358,12 +358,12 @@ int pthread_make_periodic_np (pthread_t thread,
     return err;
 }
 
-int pthread_wait_np(void)
+int pthread_wait_np(unsigned long *overruns_r)
 {
     if (xnpod_unblockable_p())
         return EPERM;
 
-    return -xnpod_wait_thread_period();
+    return -xnpod_wait_thread_period(overruns_r);
 }
 
 void pse51_thread_abort (pthread_t thread, void *status)

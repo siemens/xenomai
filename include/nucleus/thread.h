@@ -135,7 +135,7 @@ typedef struct xnthread {
 
     xntimer_t ptimer;		/* Periodic timer */
 
-    int poverrun;		/* Periodic timer overrun. */
+    xnticks_t pexpect;		/* Date of next periodic release point (raw ticks). */
 
     xnsigmask_t signals;	/* Pending signals */
 

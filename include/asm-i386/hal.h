@@ -54,20 +54,19 @@
 /* const helper for rthal_uldivrem, so that the compiler will eliminate
    multiple calls with same arguments, at no additionnal cost. */
 static inline __attribute_const__ unsigned long long
-__rthal_uldivrem(const unsigned long long ull, const unsigned long d) {
-
+__rthal_uldivrem(const unsigned long long ull, const unsigned long d)
+{
     unsigned long long ret;
     __asm__ ("divl %1" : "=A,A"(ret) : "r,?m"(d), "A,A"(ull));
     /* Exception if quotient does not fit on unsigned long. */
     return ret;
 }
 
-
 /* Fast long long division: when the quotient and remainder fit on 32 bits. */
 static inline unsigned long __rthal_i386_uldivrem(unsigned long long ull,
                                                   const unsigned d,
-                                                  unsigned long *const rp) {
-
+                                                  unsigned long *const rp)
+{
     unsigned long q, r;
     ull = __rthal_uldivrem(ull, d);
     __asm__ ( "": "=d"(r), "=a"(q) : "A"(ull));
@@ -82,8 +81,8 @@ static inline unsigned long __rthal_i386_uldivrem(unsigned long long ull,
 static inline unsigned long long __rthal_div96by32 (const unsigned long long h,
                                                     const unsigned long l,
                                                     const unsigned long d,
-                                                    unsigned long *const rp) {
-
+                                                    unsigned long *const rp)
+{
     u_long rh;
     const u_long qh = rthal_uldivrem(h, d, &rh);
     const unsigned long long t = __rthal_u64fromu32(rh, l);
@@ -97,8 +96,8 @@ static inline unsigned long long __rthal_div96by32 (const unsigned long long h,
 static inline unsigned long long
 __rthal_i386_ulldiv (const unsigned long long ull,
                      const unsigned d,
-                     unsigned long *const rp) {
-
+                     unsigned long *const rp)
+{
     unsigned long h, l;
     __rthal_u64tou32(ull, h, l);
     return __rthal_div96by32(h, l, d, rp);
@@ -113,7 +112,8 @@ __rthal_i386_ulldiv (const unsigned long long ull,
 
 typedef unsigned long long rthal_time_t;
 
-static inline __attribute_const__ unsigned long ffnz (unsigned long ul) {
+static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
+{
     /* Derived from bitops.h's ffs() */
     __asm__("bsfl %1, %0"
             : "=r,r" (ul)

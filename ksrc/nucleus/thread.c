@@ -38,8 +38,6 @@ static void xnthread_periodic_handler (void *cookie)
 {
     xnthread_t *thread = (xnthread_t *)cookie;
 
-    thread->poverrun++;
-
     if (xnthread_test_flags(thread,XNDELAY)) /* Prevent unwanted round-robin. */
 	xnpod_resume_thread(thread,XNDELAY);
 }
@@ -56,7 +54,6 @@ int xnthread_init (xnthread_t *thread,
     xntimer_set_priority(&thread->rtimer,XNTIMER_HIPRIO);
     xntimer_init(&thread->ptimer,&xnthread_periodic_handler,thread);
     xntimer_set_priority(&thread->ptimer,XNTIMER_HIPRIO);
-    thread->poverrun = -1;
 
     /* Setup the TCB. */
 

@@ -251,7 +251,7 @@ int rt_task_set_periodic(RT_TASK *task,
 			 RTIME idate,
 			 RTIME period);
 
-int rt_task_wait_period(void);
+int rt_task_wait_period(unsigned long *overruns_r);
 
 int rt_task_set_priority(RT_TASK *task,
 			 int prio);

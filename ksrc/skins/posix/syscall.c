@@ -326,7 +326,19 @@ int __pthread_make_periodic_np (struct task_struct *curr, struct pt_regs *regs)
 int __pthread_wait_np (struct task_struct *curr, struct pt_regs *regs)
 
 {
-    return -pthread_wait_np();
+    unsigned long overruns;
+    int err;
+
+    if (__xn_reg_arg1(regs) &&
+	!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg1(regs),sizeof(overruns)))
+	return -EFAULT;
+
+    err = -pthread_wait_np(&overruns);
+
+    if (__xn_reg_arg1(regs) && (err == 0 || err == -ETIMEDOUT))
+	__xn_copy_to_user(curr,(void __user *)__xn_reg_arg1(regs),&overruns,sizeof(overruns));
+
+    return err;
 }
 
 int __pthread_set_mode_np (struct task_struct *curr, struct pt_regs *regs)

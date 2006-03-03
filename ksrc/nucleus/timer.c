@@ -169,11 +169,22 @@ static xnticks_t xntimer_get_timeout_aperiodic (xntimer_t *timer)
     return xnarch_tsc_to_ns(xntimerh_date(&timer->aplink) - tsc);
 }
 
+static xnticks_t xntimer_get_raw_expiry_aperiodic (xntimer_t *timer)
+
+{
+    return xntimerh_date(&timer->aplink);
+}
+
 static xnticks_t xntimer_get_jiffies_aperiodic (void)
 {
     /* In aperiodic mode, our idea of time is the same as the CPU's,
        and a jiffy equals a nanosecond. */
     return xnpod_get_cpu_time();
+}
+
+static xnticks_t xntimer_get_raw_clock_aperiodic (void)
+{
+    return xnarch_get_cpu_tsc();
 }
 
 static const char *xntimer_get_type_aperiodic (void)
@@ -361,6 +372,12 @@ static xnticks_t xntimer_get_timeout_periodic (xntimer_t *timer)
     return xntlholder_date(&timer->plink) - nkpod->jiffies;
 }
 
+static xnticks_t xntimer_get_raw_expiry_periodic (xntimer_t *timer)
+
+{
+    return xntlholder_date(&timer->plink);
+}
+
 static xnticks_t xntimer_get_jiffies_periodic (void)
 {
     return nkpod->jiffies;
@@ -485,10 +502,12 @@ static xntmops_t timer_ops_periodic = {
 
     .do_tick = &xntimer_do_tick_periodic,
     .get_jiffies = &xntimer_get_jiffies_periodic,
+    .get_raw_clock = &xntimer_get_jiffies_periodic,
     .do_timer_start = &xntimer_do_start_periodic,
     .do_timer_stop = &xntimer_do_stop_periodic,
     .get_timer_date = &xntimer_get_date_periodic,
     .get_timer_timeout = &xntimer_get_timeout_periodic,
+    .get_timer_raw_expiry = &xntimer_get_raw_expiry_periodic,
     .set_timer_remote = &xntimer_set_remote_periodic,
     .get_type = &xntimer_get_type_periodic,
     .freeze = &xntimer_freeze_periodic,
@@ -806,10 +825,12 @@ static xntmops_t timer_ops_aperiodic = {
 
     .do_tick = &xntimer_do_tick_aperiodic,
     .get_jiffies = &xntimer_get_jiffies_aperiodic,
+    .get_raw_clock = &xntimer_get_raw_clock_aperiodic,
     .do_timer_start = &xntimer_do_start_aperiodic,
     .do_timer_stop = &xntimer_do_stop_aperiodic,
     .get_timer_date = &xntimer_get_date_aperiodic,
     .get_timer_timeout = &xntimer_get_timeout_aperiodic,
+    .get_timer_raw_expiry = &xntimer_get_raw_expiry_aperiodic,
     .set_timer_remote = &xntimer_set_remote_aperiodic,
     .get_type = &xntimer_get_type_aperiodic,
     .freeze = &xntimer_freeze_aperiodic,

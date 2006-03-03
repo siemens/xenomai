@@ -108,3 +108,15 @@ ___________________________________________________________________
 	skin is loaded (see CONFIG_XENO_OPT_TIMING_PERIOD). The new
 	rt_timer_set_mode() service can be used to change the current
 	timing mode and clock tick rate dynamically.
+___________________________________________________________________
+
+2.1-rc3 -> 2.1-rc4
+
+	o rt_task_wait_period() now takes a pointer-to-variable
+	parameter which is used to collect the number of pending
+	overruns. Passing NULL tells the API to discard this
+	count. Once collected or discarded, the count of past overruns
+	is cleared, and the timeline is resynchronized to the current
+	period. This update is basically a fix, which allows
+	applications to tell their overrun recovery procedure about
+	the exact number of pending overruns at once.

@@ -246,11 +246,12 @@ int rt_task_set_periodic (RT_TASK *task,
 			     &period);
 }
 
-int rt_task_wait_period (void)
+int rt_task_wait_period (unsigned long *overruns_r)
 
 {
-    return XENOMAI_SKINCALL0(__native_muxid,
-			     __native_task_wait_period);
+    return XENOMAI_SKINCALL1(__native_muxid,
+			     __native_task_wait_period,
+			     overruns_r);
 }
 
 int rt_task_set_priority (RT_TASK *task,

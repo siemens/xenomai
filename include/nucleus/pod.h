@@ -374,16 +374,19 @@ static inline void xnpod_renice_root (int prio)
 #define xnpod_timeset_p() \
     (!!testbits(nkpod->status,XNTMSET))
 
-static inline u_long xnpod_get_ticks2sec (void) {
+static inline u_long xnpod_get_ticks2sec (void)
+{
     return nkpod->ticks2sec;
 }
 
-static inline u_long xnpod_get_tickval (void) {
+static inline u_long xnpod_get_tickval (void)
+{
     /* Returns the duration of a tick in nanoseconds */
     return nkpod->tickvalue;
 }
 
-static inline xntime_t xnpod_ticks2ns (xnticks_t ticks) {
+static inline xntime_t xnpod_ticks2ns (xnticks_t ticks)
+{
     /* Convert a count of ticks in nanoseconds */
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
     return ticks * xnpod_get_tickval();
@@ -392,7 +395,8 @@ static inline xntime_t xnpod_ticks2ns (xnticks_t ticks) {
 #endif /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
 }
 
-static inline xnticks_t xnpod_ns2ticks (xntime_t t) {
+static inline xnticks_t xnpod_ns2ticks (xntime_t t)
+{
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
     return xnarch_ulldiv(t,xnpod_get_tickval(),NULL);
 #else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
@@ -493,7 +497,7 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
                               xnticks_t idate,
                               xnticks_t period);
 
-int xnpod_wait_thread_period(void);
+int xnpod_wait_thread_period(unsigned long *overruns_r);
 
 xnticks_t xnpod_get_time(void);
 
@@ -510,20 +514,24 @@ int xnpod_remove_hook(int type,
 
 void xnpod_check_context(int mask);
 
-static inline void xnpod_yield (void) {
+static inline void xnpod_yield (void)
+{
     xnpod_resume_thread(xnpod_current_thread(),0);
     xnpod_schedule();
 }
 
-static inline void xnpod_delay (xnticks_t timeout) {
+static inline void xnpod_delay (xnticks_t timeout)
+{
     xnpod_suspend_thread(xnpod_current_thread(),XNDELAY,timeout,NULL);
 }
 
-static inline void xnpod_suspend_self (void) {
+static inline void xnpod_suspend_self (void)
+{
     xnpod_suspend_thread(xnpod_current_thread(),XNSUSP,XN_INFINITE,NULL);
 }
 
-static inline void xnpod_delete_self (void) {
+static inline void xnpod_delete_self (void)
+{
     xnpod_delete_thread(xnpod_current_thread());
 }
 

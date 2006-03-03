@@ -182,11 +182,12 @@ int pthread_make_periodic_np (pthread_t thread,
 			      periodtp);
 }
 
-int pthread_wait_np (void)
+int pthread_wait_np (unsigned long *overruns_r)
 
 {
-    return -XENOMAI_SKINCALL0(__pse51_muxid,
-			      __pse51_thread_wait);
+    return -XENOMAI_SKINCALL1(__pse51_muxid,
+			      __pse51_thread_wait,
+			      overruns_r);
 }
 
 int pthread_set_mode_np (int clrmask,

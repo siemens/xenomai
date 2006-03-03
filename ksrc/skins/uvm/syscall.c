@@ -192,7 +192,7 @@ static int __vm_thread_set_periodic (struct task_struct *curr, struct pt_regs *r
 static int __vm_thread_wait_period (struct task_struct *curr, struct pt_regs *regs)
 
 {
-    return xnpod_wait_thread_period();
+    return xnpod_wait_thread_period(NULL);
 }
 
 static int __vm_thread_hold (struct task_struct *curr, struct pt_regs *regs)

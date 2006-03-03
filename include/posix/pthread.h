@@ -357,7 +357,7 @@ int pthread_make_periodic_np(pthread_t thread,
 			     struct timespec *starttp,
 			     struct timespec *periodtp);
 
-int pthread_wait_np(void);
+int pthread_wait_np(unsigned long *overruns_r);
 
 #ifdef __cplusplus
 }
@@ -372,7 +372,8 @@ extern "C" {
 int pthread_make_periodic_np(pthread_t thread,
 			     struct timespec *starttp,
 			     struct timespec *periodtp);
-int pthread_wait_np(void);
+
+int pthread_wait_np(unsigned long *overruns_r);
 
 int pthread_set_mode_np(int clrmask,
 			int setmask);

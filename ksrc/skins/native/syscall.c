@@ -360,12 +360,24 @@ static int __rt_task_set_periodic (struct task_struct *curr, struct pt_regs *reg
 }
 
 /*
- * int __rt_task_wait_period(void)
+ * int __rt_task_wait_period(unsigned long *overruns_r)
  */
 
 static int __rt_task_wait_period (struct task_struct *curr, struct pt_regs *regs)
 {
-    return rt_task_wait_period();
+    unsigned long overruns;
+    int err;
+
+    if (__xn_reg_arg1(regs) &&
+	!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg1(regs),sizeof(overruns)))
+	return -EFAULT;
+
+    err = rt_task_wait_period(&overruns);
+
+    if (__xn_reg_arg1(regs) && (err == 0 || err == -ETIMEDOUT))
+	__xn_copy_to_user(curr,(void __user *)__xn_reg_arg1(regs),&overruns,sizeof(overruns));
+
+    return err;
 }
 
 /*

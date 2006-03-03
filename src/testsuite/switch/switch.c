@@ -66,7 +66,7 @@ void event(void *cookie)
        }
 
        for (;;) {
-               err = rt_task_wait_period();
+               err = rt_task_wait_period(NULL);
                if (err) {
                        if (err != -ETIMEDOUT) {
                                /* Timer stopped. */
