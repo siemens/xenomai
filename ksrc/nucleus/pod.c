@@ -3508,16 +3508,19 @@ int xnpod_wait_thread_period (unsigned long *overruns_r)
     if (unlikely(now >= thread->pexpect + period))
 	{
 	missed = now - thread->pexpect;
-#if BITS_PER_LONG < 64
-	/* Slow (error) path, without resorting to 64bit divide.  We
-	   favour low overrun counts; getting high counts there
-	   already means that we have a big fishy issue to solve
-	   anyway. */
+#if BITS_PER_LONG < 64 && defined(__KERNEL__)
+	/* Slow (error) path, without resorting to 64 bit divide in
+	   kernel space unless the period fits in 32 bit. */
+	if (likely(period <= 0xffffffffLL))
+	    overruns = xnarch_uldiv(missed,period);
+	else
+	    {
 divide:
-	++overruns;
-	missed -= period;
-	if (missed >= period)
-	    goto divide;
+	    ++overruns;
+	    missed -= period;
+	    if (missed >= period)
+		goto divide;
+	    }
 #else /* BITS_PER_LONG >= 64 */
 	overruns = missed / period;
 #endif /* BITS_PER_LONG < 64 */
