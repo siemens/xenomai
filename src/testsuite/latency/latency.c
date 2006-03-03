@@ -105,8 +105,10 @@ void latency (void *cookie)
 
         for (count = sumj = 0; count < nsamples; count++)
             {
+	    unsigned long ov;
+
             expected_tsc += period_tsc;
-            err = rt_task_wait_period();
+            err = rt_task_wait_period(&ov);
 
             if (err)
                 {
@@ -116,7 +118,7 @@ void latency (void *cookie)
                     rt_task_delete(NULL); /* Timer stopped. */
 		    }
 
-                overrun++;
+                overrun += ov;
                 }
 
             dt = (long)(rt_timer_tsc() - expected_tsc);

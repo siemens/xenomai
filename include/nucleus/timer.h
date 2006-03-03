@@ -166,11 +166,13 @@ typedef struct xntimer {
 #define xntimer_set_priority(t,p) (xntimerh_prio(&(t)->aplink) = (p))
 #endif /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
 
-static inline int xntimer_active_p (xntimer_t *timer) {
+static inline int xntimer_active_p (xntimer_t *timer)
+{
     return timer->sched != NULL;
 }
 
-static inline int xntimer_running_p (xntimer_t *timer) {
+static inline int xntimer_running_p (xntimer_t *timer)
+{
     return !testbits(timer->status,XNTIMER_DEQUEUED);
 }
 
@@ -178,12 +180,14 @@ typedef struct xntmops {
 
     void (*do_tick)(void);
     xnticks_t (*get_jiffies)(void);
+    xnticks_t (*get_raw_clock)(void);
     void (*do_timer_start)(xntimer_t *timer,
 			   xnticks_t value,
 			   xnticks_t interval);
     void (*do_timer_stop)(xntimer_t *timer);
     xnticks_t (*get_timer_date)(xntimer_t *timer);
     xnticks_t (*get_timer_timeout)(xntimer_t *timer);
+    xnticks_t (*get_timer_raw_expiry)(xntimer_t *timer);
     void (*set_timer_remote)(xntimer_t *timer);
     const char *(*get_type)(void);
     void (*freeze)(void);

@@ -890,7 +890,7 @@ static inline rtdm_task_t *rtdm_task_current(void)
 
 static inline int rtdm_task_wait_period(void)
 {
-    return xnpod_wait_thread_period();
+    return xnpod_wait_thread_period(NULL);
 }
 
 int rtdm_task_sleep(uint64_t delay);

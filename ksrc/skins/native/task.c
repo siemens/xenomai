@@ -766,23 +766,33 @@ int rt_task_set_periodic (RT_TASK *task,
 }
 
 /**
- * @fn int rt_task_wait_period(void)
+ * @fn int rt_task_wait_period(unsigned long *overruns_r)
  * @brief Wait for the next periodic release point.
  *
  * Make the current task wait for the next periodic release point in
  * the processor time line.
  *
- * @return 0 is returned upon success. Otherwise:
+ * @param overruns_r If non-NULL, @a overruns_r must be a pointer to a
+ * memory location which will be written with the count of pending
+ * overruns. This value is copied only when rt_task_wait_period()
+ * returns -ETIMEDOUT or success; the memory location remains
+ * unmodified otherwise. If NULL, this count will never be copied
+ * back.
  *
- * - -EINVAL is returned if rt_task_set_periodic() has not previously
- * been called for the calling task.
+ * @return 0 is returned upon success; if @a overruns_r is valid, zero
+ * is copied to the pointed memory location. Otherwise:
+ *
+ * - -EWOULDBLOCK is returned if rt_task_set_periodic() has not
+ * previously been called for the calling task.
  *
  * - -EINTR is returned if rt_task_unblock() has been called for the
  * waiting task before the next periodic release point has been
  * reached. In this case, the overrun counter is reset too.
  *
- * - -ETIMEDOUT is returned if a timer overrun occurred, which indicates
- * that a previous release point has been missed by the calling task.
+ * - -ETIMEDOUT is returned if a timer overrun occurred, which
+ * indicates that a previous release point has been missed by the
+ * calling task. If @a overruns_r is valid, the count of pending
+ * overruns is copied to the pointed memory location.
  *
  * - -EPERM is returned if this service was called from a context
  * which cannot sleep (e.g. interrupt, non-realtime or scheduler
@@ -795,18 +805,18 @@ int rt_task_set_periodic (RT_TASK *task,
  * - Kernel-based task
  * - User-space task (switches to primary mode)
  *
- * Rescheduling: always unless an overrun has been detected.  In the
- * latter case, the current task immediately returns from this service
- * without being delayed.
+ * Rescheduling: always, unless the current release point has already
+ * been reached.  In the latter case, the current task immediately
+ * returns from this service without being delayed.
  */
 
-int rt_task_wait_period (void)
+int rt_task_wait_period (unsigned long *overruns_r)
 
 {
     if (xnpod_unblockable_p())
 	return -EPERM;
 
-    return xnpod_wait_thread_period();
+    return xnpod_wait_thread_period(overruns_r);
 }
 
 /**

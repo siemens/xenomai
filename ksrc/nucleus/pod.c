@@ -3398,23 +3398,27 @@ int xnpod_set_thread_periodic (xnthread_t *thread,
     xntimer_set_sched(&thread->ptimer, thread->sched);
 
     if (idate == XN_INFINITE)
+	{
         xntimer_start(&thread->ptimer,period,period);
+	thread->pexpect = nktimer->get_timer_raw_expiry(&thread->ptimer)
+	    + xntimer_interval(&thread->ptimer);
+	}
     else
-        {
-        now = xnpod_get_time();
+	{
+	now = xnpod_get_time();
 
-        if (idate > now)
+	if (idate > now)
 	    {
 	    xntimer_start(&thread->ptimer,idate - now,period);
+	    thread->pexpect = nktimer->get_timer_raw_expiry(&thread->ptimer)
+		+ xntimer_interval(&thread->ptimer);
             xnpod_suspend_thread(thread,XNDELAY,XN_INFINITE,NULL);
 	    }
         else
             err = -ETIMEDOUT;
-        }
+	}
 
  unlock_and_exit:
-
-    thread->poverrun = -1;
 
     xnlock_put_irqrestore(&nklock,s);
 
@@ -3422,13 +3426,21 @@ int xnpod_set_thread_periodic (xnthread_t *thread,
 }
 
 /**
- * @fn int xnpod_wait_thread_period(void)
+ * @fn int xnpod_wait_thread_period(unsigned long *overruns_r)
  * @brief Wait for the next periodic release point.
  *
  * Make the current thread wait for the next periodic release point in
  * the processor time line.
  *
- * @return 0 is returned upon success. Otherwise:
+ * @param overruns_r If non-NULL, @a overruns_r must be a pointer to a
+ * memory location which will be written with the count of pending
+ * overruns. This value is copied only when xnpod_wait_thread_period()
+ * returns -ETIMEDOUT or success; the memory location remains
+ * unmodified otherwise. If NULL, this count will never be copied
+ * back.
+ *
+ * @return 0 is returned upon success; if @a overruns_r is valid, zero
+ * is copied to the pointed memory location. Otherwise:
  *
  * - -EWOULDBLOCK is returned if xnpod_set_thread_periodic() has not
  * previously been called for the calling thread.
@@ -3437,9 +3449,10 @@ int xnpod_set_thread_periodic (xnthread_t *thread,
  * the waiting thread before the next periodic release point has been
  * reached. In this case, the overrun counter is reset too.
  *
- * - -ETIMEDOUT is returned if a timer overrun occurred, which
- * indicates that a previous release point has been missed by the
- * calling thread.
+ * - -ETIMEDOUT is returned if the timer has overrun, which indicates
+ * that one or more previous release points have been missed by the
+ * calling thread. If @a overruns_r is valid, the count of pending
+ * overruns is copied to the pointed memory location.
  *
  * Environments:
  *
@@ -3449,14 +3462,16 @@ int xnpod_set_thread_periodic (xnthread_t *thread,
  * - Kernel-based task
  * - User-space task
  *
- * Rescheduling: always, unless an overrun has been detected.  In the
- * latter case, the current thread immediately returns from this
- * service without being delayed.
+ * Rescheduling: always, unless the current release point has already
+ * been reached.  In the latter case, the current thread immediately
+ * returns from this service without being delayed.
  */
 
-int xnpod_wait_thread_period (void)
+int xnpod_wait_thread_period (unsigned long *overruns_r)
 
 {
+    xnticks_t now, missed, period;
+    unsigned long overruns = 0;
     xnthread_t *thread;
     int err = 0;
     spl_t s;
@@ -3465,7 +3480,7 @@ int xnpod_wait_thread_period (void)
 
     xnlock_get_irqsave(&nklock,s);
 
-    if (!xntimer_running_p(&thread->ptimer))
+    if (unlikely(!xntimer_running_p(&thread->ptimer)))
         {
         err = -EWOULDBLOCK;
         goto unlock_and_exit;
@@ -3473,24 +3488,47 @@ int xnpod_wait_thread_period (void)
 
     xnltt_log_event(xeno_ev_thrwait,thread->name);
 
-    if (thread->poverrun < 0)
-        {
-        xnpod_suspend_thread(thread,XNDELAY,XN_INFINITE,NULL);
+    now = nktimer->get_raw_clock(); /* Work with either TSC or periodic ticks. */
 
-        if (xnthread_test_flags(thread,XNBREAK))
-            {
-	    thread->poverrun = -1;
-            err = -EINTR;
-            goto unlock_and_exit;
-            }
+    if (likely(now < thread->pexpect))
+	{
+	xnpod_suspend_thread(thread,XNDELAY,XN_INFINITE,NULL);
 
-	if (thread->poverrun > 0)
-	    err = -ETIMEDOUT;
-        }
-    else
-        err = -ETIMEDOUT;
+	if (unlikely(xnthread_test_flags(thread,XNBREAK)))
+	    {
+	    err = -EINTR;
+	    goto unlock_and_exit;
+	    }
 
-    thread->poverrun--;
+	now = nktimer->get_raw_clock();
+	}
+
+    period = xntimer_interval(&thread->ptimer);
+
+    if (unlikely(now >= thread->pexpect + period))
+	{
+	missed = now - thread->pexpect;
+#if BITS_PER_LONG < 64
+	/* Slow (error) path, without resorting to 64bit divide.  We
+	   favour low overrun counts; getting high counts there
+	   already means that we have a big fishy issue to solve
+	   anyway. */
+divide:
+	++overruns;
+	missed -= period;
+	if (missed >= period)
+	    goto divide;
+#else /* BITS_PER_LONG >= 64 */
+	overruns = missed / period;
+#endif /* BITS_PER_LONG < 64 */
+	thread->pexpect += period * overruns;
+	err = -ETIMEDOUT;
+	}
+
+    thread->pexpect += period;
+
+    if (likely(overruns_r != NULL))
+	*overruns_r = overruns;
 
  unlock_and_exit:
 

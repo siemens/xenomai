@@ -1,3 +1,16 @@
+2006-03-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* scripts/xeno-load.in: Do not attempt to load Adeos as a module
+	since this is no more supported.
+	Properly unload the nucleus module after auto-load.
+
+	* include/asm-powerpc/system.h (xnarch_sysalloc): Remove 128Kb
+	limitation.
+
+2006-03-02  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-generic/hal.h: Remove unused rthal_u64div32c.
+
 2006-03-01  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (xnshadow_unmap): Renice the root thread

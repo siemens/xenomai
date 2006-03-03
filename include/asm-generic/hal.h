@@ -346,9 +346,6 @@ static inline unsigned long long __rthal_generic_ulldiv (unsigned long long ull,
 #define rthal_ulldiv(ull,uld,rp) __rthal_generic_ulldiv((ull),(uld),(rp))
 #endif /* !rthal_ulldiv */
 
-/* Another implementation of ulldiv, used to be defined on x86. */
-#define rthal_u64div32c(ull,uld,rp) rthal_ulldiv((ull),(uld),(rp))
-
 #ifndef rthal_uldivrem
 #define rthal_uldivrem(ull,ul,rp) ((unsigned) rthal_ulldiv((ull),(ul),(rp)))
 #endif /* !rthal_uldivrem */
