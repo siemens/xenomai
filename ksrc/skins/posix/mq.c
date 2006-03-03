@@ -47,13 +47,11 @@ struct pse51_mq {
     unsigned long flags;
 
     xnpqueue_t queued;
-    xnsynch_t synchbase;
+    xnsynch_t receivers;
+    xnsynch_t senders;
     size_t memsize;
     char *mem;
     xnqueue_t avail;
-
-#define synch2mq(saddr) \
-    ((pse51_mq_t *) (((char *)saddr) - offsetof(pse51_mq_t, synchbase)))
 
     /* mq_notify */
     pse51_siginfo_t si;
@@ -133,7 +131,8 @@ static int pse51_mq_init(pse51_mq_t *mq, const struct mq_attr *attr)
     mq->flags = 0;
     mq->memsize = memsize;
     initpq(&mq->queued, xnqueue_down, 0);
-    xnsynch_init(&mq->synchbase, XNSYNCH_PRIO | XNSYNCH_NOPIP);
+    xnsynch_init(&mq->receivers, XNSYNCH_PRIO | XNSYNCH_NOPIP);
+    xnsynch_init(&mq->senders, XNSYNCH_PRIO | XNSYNCH_NOPIP);
     mq->mem = mem;
 
     /* Fill the pool. */
@@ -155,7 +154,9 @@ static void pse51_mq_destroy(pse51_mq_t *mq)
     spl_t s;
 
     xnlock_get_irqsave(&nklock, s);
-    need_resched = (xnsynch_destroy(&mq->synchbase) == XNSYNCH_RESCHED);
+    need_resched = (xnsynch_destroy(&mq->receivers) == XNSYNCH_RESCHED);
+    need_resched =
+        (xnsynch_destroy(&mq->senders) == XNSYNCH_RESCHED) || need_resched;
     removeq(&pse51_mqq, &mq->link);
     xnlock_put_irqrestore(&nklock, s);
     xnarch_sysfree(mq->mem, mq->memsize);
@@ -244,7 +245,8 @@ static int pse51_mq_trysend(pse51_desc_t *desc,
                             size_t len,
                             unsigned prio)
 {
-    pthread_t reader;
+    xnthread_t *reader;
+    pthread_t thread;
     pse51_mq_t *mq;
     unsigned flags;
 
@@ -257,16 +259,12 @@ static int pse51_mq_trysend(pse51_desc_t *desc,
     if(len > mq->attr.mq_msgsize)
         return EMSGSIZE;
 
-    /* There may be a reader pending on the queue only if no message is already
-       queued. Otherwise, any pending thread is a writer. */
-    if(!countpq(&mq->queued))
-        reader = thread2pthread(xnsynch_wakeup_one_sleeper(&mq->synchbase));
-    else
-        reader = NULL;
+    reader = xnsynch_wakeup_one_sleeper(&mq->receivers);
+    thread = thread2pthread(reader);
 
-    if(reader && reader->arg)
+    if(thread)
         {
-        pse51_direct_msg_t *msg = (pse51_direct_msg_t *) reader->arg;
+        pse51_direct_msg_t *msg = (pse51_direct_msg_t *) thread->arg;
 
         memcpy(msg->buf, buffer, len);
         *(msg->lenp) = len;
@@ -287,7 +285,7 @@ static int pse51_mq_trysend(pse51_desc_t *desc,
 
         /* First message and no pending reader, attempt to send a signal if
            mq_notify was called. */
-        if (!countpq(&mq->queued) && mq->target)
+        if (!reader  && mq->target && countpq(&mq->queued) == 1)
             {
             pse51_sigqueue_inner(mq->target, &mq->si);
             mq->target = NULL;
@@ -330,7 +328,7 @@ static int pse51_mq_tryrcv(pse51_desc_t *desc,
 
     pse51_mq_msg_free(mq, msg);
 
-    if(xnsynch_wakeup_one_sleeper(&mq->synchbase))
+    if(xnsynch_wakeup_one_sleeper(&mq->senders))
         xnpod_schedule();
     
     return 0;
@@ -360,15 +358,15 @@ static int pse51_mq_timedsend_inner(mqd_t fd,
         if ((pse51_desc_getflags(desc) & O_NONBLOCK))
             return rc;
 
+        if (xnpod_unblockable_p())
+            return EPERM;
+
         if ((rc = clock_adjust_timeout(&to, CLOCK_REALTIME)))
             return rc;
 
         mq = node2mq(pse51_desc_node(desc));
 
-        if (xnpod_unblockable_p())
-            return EPERM;
-
-        xnsynch_sleep_on(&mq->synchbase, to);
+        xnsynch_sleep_on(&mq->senders, to);
 
         cur = xnpod_current_thread();
 
@@ -412,11 +410,17 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
         if ((pse51_desc_getflags(desc) & O_NONBLOCK))
             return rc;
 
+        if (xnpod_unblockable_p())
+            return EPERM;
+
+        if ((rc = clock_adjust_timeout(&to, CLOCK_REALTIME)))
+            return rc;
+
         mq = node2mq(pse51_desc_node(desc));
 
         thread = thread2pthread(cur);
         
-        if(testbits(pse51_desc_getflags(desc), O_DIRECT) && thread)
+        if(thread)
             {
             msg.buf = buffer;
             msg.lenp = lenp;
@@ -425,16 +429,8 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
             thread->arg = &msg;
             direct = 1;
             }
-        else
-            thread->arg = NULL;
 
-        if ((rc = clock_adjust_timeout(&to, CLOCK_REALTIME)))
-            return rc;
-
-        if (xnpod_unblockable_p())
-            return EPERM;
-
-        xnsynch_sleep_on(&mq->synchbase, to);
+        xnsynch_sleep_on(&mq->receivers, to);
 
         thread_cancellation_point(cur);
 

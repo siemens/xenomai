@@ -61,9 +61,6 @@ described in this specification. Here are the known ones :
   OS.
 
 - message queues:
-  . message queues support an "O_DIRECT" flag, which allows to copy messages
-  directly from sender to receiver when receiver was suspended before
-  sender; 
   . In kernel-space, mq_open may only be called with the O_CREAT flag from a
   module initialization context. mq_close and mq_unlink may only be called from
   a module initialization or cleanup context.

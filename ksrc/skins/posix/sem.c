@@ -149,27 +149,27 @@ static inline int sem_timedwait_internal (struct __shadow_sem *shadow,
 
     cur = xnpod_current_thread();
 
-    if ((err = sem_trywait_internal(shadow)) == EAGAIN)
-        {
-        if((err = clock_adjust_timeout(&to, CLOCK_REALTIME)))
-            return err;
+    if ((err = sem_trywait_internal(shadow)) != EAGAIN)
+        return err;
 
-        xnsynch_sleep_on(&sem->synchbase, to);
+    if((err = clock_adjust_timeout(&to, CLOCK_REALTIME)))
+        return err;
+
+    xnsynch_sleep_on(&sem->synchbase, to);
             
-        /* Handle cancellation requests. */
-        thread_cancellation_point(cur);
+    /* Handle cancellation requests. */
+    thread_cancellation_point(cur);
 
-        if (xnthread_test_flags(cur, XNRMID))
-            return EINVAL;
+    if (xnthread_test_flags(cur, XNRMID))
+        return EINVAL;
+    
+    if (xnthread_test_flags(cur, XNBREAK))
+        return EINTR;
+    
+    if (xnthread_test_flags(cur, XNTIMEO))
+        return ETIMEDOUT;
 
-        if (xnthread_test_flags(cur, XNBREAK))
-            return EINTR;
-        
-        if (xnthread_test_flags(cur, XNTIMEO))
-            return ETIMEDOUT;
-        }
-
-    return err;
+    return 0;
 }
 
 /**
