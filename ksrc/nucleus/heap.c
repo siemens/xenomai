@@ -1166,40 +1166,7 @@ int xnheap_destroy_mapped (xnheap_t *heap)
 EXPORT_SYMBOL(xnheap_init_mapped);
 EXPORT_SYMBOL(xnheap_destroy_mapped);
 
-#elif defined(__XENO_SIM__)
-
-int xnheap_init_mapped (xnheap_t *heap,
-			u_long heapsize,
-			int memflags)
-{
-    void *heapbase;
-    int err;
-
-    heapsize = PAGE_ALIGN(heapsize);
-    heapbase = xnarch_sysalloc(heapsize);
-
-    if (!heapbase)
-        return -ENOMEM;
-
-    err = xnheap_init(heap, heapbase, heapsize, PAGE_SIZE);
-
-    if (err)
-        xnarch_sysfree(heapbase, heapsize);
-
-    return err;
-}
-
-static void free_extent(xnheap_t *heap, void *extent, u_long size, void *cookie)
-{
-    xnarch_sysfree(extent, size);
-}
-
-int xnheap_destroy_mapped(xnheap_t *heap)
-{
-    xnheap_destroy(heap, free_extent, NULL);
-}
-
-#endif /* __XENO_SIM__ */
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 /*@}*/
 
