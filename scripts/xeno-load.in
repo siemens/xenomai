@@ -74,21 +74,16 @@ fi
 xeno_moddir=`grep "^[$spc]*xeno_moddir[$spc]*=" $run_info_file`
 user_moddir=`grep "^[$spc]*user_moddir[$spc]*=" $run_info_file`
 
-if test "x$xeno_moddir" = x; then
-  eval xeno_moddir='@XENO_MODULE_DIR@' #FIXME
-else
+if test \! "x$xeno_moddir" = x; then
   eval $xeno_moddir
 fi
 
 eval $user_moddir
 
-if `$sudo $modprobe -nq adeos >& /dev/null`; then
-   target_deps="adeos+"
+if `$sudo $modprobe -nq xeno_nucleus >& /dev/null`; then
+   target_deps="${target_deps}nucleus+"
 else
    target_deps=
-fi
-if `$sudo $modprobe -nq xeno_nucleus >& /dev/null`; then
-   target_deps="${target_deps}xeno_nucleus+"
 fi
 
 target_deps="${target_deps}`echo $stanza | cut -d: -f2`"
