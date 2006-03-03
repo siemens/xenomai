@@ -27,15 +27,15 @@
 #endif
 
 #if CONFIG_XENO_OPT_DEBUG_LEVEL > 0
-#define XENO_ASSERT(cond,action,fmt,args...)  do { \
+#define XENO_ASSERT(cond,action)  do { \
 if (unlikely((cond) != 0)) \
-    (action)(fmt , ##args); \
+    (action); \
 } while(0)
 #else  /* CONFIG_XENO_OPT_DEBUG_LEVEL == 0 */
 #define XENO_ASSERT(cond,action,fmt,args...) do { } while(0)
 #endif /* CONFIG_XENO_OPT_DEBUG_LEVEL > 0 */
 
 #define XENO_BUGON(cond)  \
-XENO_ASSERT(cond,xnpod_fatal,"assertion failed at %s:%d",__FILE__,__LINE__)
+    XENO_ASSERT(cond,xnpod_fatal("assertion failed at %s:%d",__FILE__,__LINE__))
 
 #endif /* !_XENO_NUCLEUS_ASSERT_H */
