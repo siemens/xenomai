@@ -410,8 +410,6 @@ int __real_pthread_mutex_init(pthread_mutex_t *mutex,
 
 int __real_pthread_mutex_destroy(pthread_mutex_t *mutex);
 
-int __real_pthread_mutex_destroy(pthread_mutex_t *mutex);
-
 int __real_pthread_mutex_lock(pthread_mutex_t *mutex);
 
 int __real_pthread_mutex_timedlock(pthread_mutex_t *mutex,

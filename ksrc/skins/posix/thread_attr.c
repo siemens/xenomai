@@ -16,6 +16,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * @ingroup posix_thread
+ * @defgroup posix_threadattr Thread creation attributes.
+ *
+ * Thread creation attributes.
+ *
+ *@{*/
 
 #include <posix/internal.h>
 
@@ -34,6 +41,12 @@ static const pthread_attr_t default_thread_attr = {
     affinity: XNPOD_ALL_CPUS,
 };
 
+/**
+ * Initialize a thread attributes object.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_init.html
+ * 
+ */
 int pthread_attr_init (pthread_attr_t *attr)
 
 {
@@ -45,6 +58,12 @@ int pthread_attr_init (pthread_attr_t *attr)
     return 0;
 }
 
+/**
+ * Destroy a thread attributes object.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_destroy.html
+ * 
+ */
 int pthread_attr_destroy (pthread_attr_t *attr)
 
 {
@@ -68,6 +87,12 @@ int pthread_attr_destroy (pthread_attr_t *attr)
     return 0;
 }
 
+/**
+ * Get detachstate attribute.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getdetachstate.html
+ * 
+ */
 int pthread_attr_getdetachstate (const pthread_attr_t *attr, int *detachstate)
 
 {
@@ -91,6 +116,12 @@ int pthread_attr_getdetachstate (const pthread_attr_t *attr, int *detachstate)
     return 0;
 }
 
+/**
+ * Set detachstate attribute.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/
+ * 
+ */
 int pthread_attr_setdetachstate (pthread_attr_t *attr, int detachstate)
 
 {
@@ -149,6 +180,12 @@ int pthread_attr_setstackaddr (pthread_attr_t *attr, void *stackaddr)
     return ENOSYS;
 }
 
+/**
+ * Get stacksize attribute.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getstacksize.html
+ *
+ */
 int pthread_attr_getstacksize (const pthread_attr_t *attr, size_t *stacksize)
 
 {
@@ -172,6 +209,12 @@ int pthread_attr_getstacksize (const pthread_attr_t *attr, size_t *stacksize)
     return 0;
 }
 
+/**
+ * Set stacksize attribute.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setstacksize.html
+ * 
+ */
 int pthread_attr_setstacksize (pthread_attr_t *attr, size_t stacksize)
 
 {
@@ -197,6 +240,12 @@ int pthread_attr_setstacksize (pthread_attr_t *attr, size_t stacksize)
     return 0;
 }
 
+/**
+ * Get inheritsched attribute.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getinheritsched.html
+ * 
+ */
 int pthread_attr_getinheritsched (const pthread_attr_t *attr,int *inheritsched)
 
 {
@@ -218,6 +267,12 @@ int pthread_attr_getinheritsched (const pthread_attr_t *attr,int *inheritsched)
     return 0;
 }
 
+/**
+ * Set inheritsched attribute.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setinheritsched.html
+ * 
+ */
 int pthread_attr_setinheritsched (pthread_attr_t *attr, int inheritsched)
 
 {
@@ -248,6 +303,12 @@ int pthread_attr_setinheritsched (pthread_attr_t *attr, int inheritsched)
     return 0;
 }
 
+/**
+ * Get schedpolicy attribute.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getschedpolicy.html
+ * 
+ */
 int pthread_attr_getschedpolicy (const pthread_attr_t *attr,int *policy)
 
 {
@@ -271,6 +332,12 @@ int pthread_attr_getschedpolicy (const pthread_attr_t *attr,int *policy)
     return 0;
 }
 
+/**
+ * Set schedpolicy attribute.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setschedpolicy.html
+ * 
+ */
 int pthread_attr_setschedpolicy (pthread_attr_t *attr, int policy)
 
 {
@@ -306,6 +373,12 @@ int pthread_attr_setschedpolicy (pthread_attr_t *attr, int policy)
     return 0;
 }
 
+/**
+ * Get schedparam attribute.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getschedparam.html
+ * 
+ */
 int pthread_attr_getschedparam (const pthread_attr_t *attr, struct sched_param *par)
 
 {
@@ -329,6 +402,12 @@ int pthread_attr_getschedparam (const pthread_attr_t *attr, struct sched_param *
     return 0;
 }
 
+/**
+ * Set schedparam attribute.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setschedparam.html
+ * 
+ */
 int pthread_attr_setschedparam (pthread_attr_t *attr, const struct sched_param *par)
 
 {
@@ -356,6 +435,12 @@ int pthread_attr_setschedparam (pthread_attr_t *attr, const struct sched_param *
     return 0;
 }
 
+/**
+ * Get contention scope attribute.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getscope.html
+ * 
+ */
 int pthread_attr_getscope (const pthread_attr_t *attr,int *scope)
 
 {
@@ -379,6 +464,12 @@ int pthread_attr_getscope (const pthread_attr_t *attr,int *scope)
     return 0;
 }
 
+/**
+ * Set contention scope attribute.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setscope.html
+ * 
+ */
 int pthread_attr_setscope (pthread_attr_t *attr,int scope)
 
 {
@@ -400,6 +491,9 @@ int pthread_attr_setscope (pthread_attr_t *attr,int scope)
     return 0;
 }
 
+/**
+ * Get name attribute.
+ */
 int pthread_attr_getname_np (const pthread_attr_t *attr, const char **name)
 
 {
@@ -423,6 +517,9 @@ int pthread_attr_getname_np (const pthread_attr_t *attr, const char **name)
     return 0;
 }
 
+/**
+ * Set name attribute.
+ */
 int pthread_attr_setname_np (pthread_attr_t *attr, const char *name)
 
 {
@@ -450,6 +547,9 @@ int pthread_attr_setname_np (pthread_attr_t *attr, const char *name)
     return 0;
 }
 
+/**
+ * Get the floating point attribute.
+ */
 int pthread_attr_getfp_np (const pthread_attr_t *attr, int *fp)
 
 {
@@ -473,6 +573,9 @@ int pthread_attr_getfp_np (const pthread_attr_t *attr, int *fp)
     return 0;
 }
 
+/**
+ * Set the floating point attribute.
+ */
 int pthread_attr_setfp_np (pthread_attr_t *attr, int fp)
 
 {
@@ -493,6 +596,9 @@ int pthread_attr_setfp_np (pthread_attr_t *attr, int fp)
     return 0;
 }
 
+/**
+ * Get the CPU affinity attribute.
+ */
 int
 pthread_attr_getaffinity_np (const pthread_attr_t *attr, xnarch_cpumask_t *mask)
 
@@ -517,6 +623,9 @@ pthread_attr_getaffinity_np (const pthread_attr_t *attr, xnarch_cpumask_t *mask)
     return 0;
 }
 
+/**
+ * Set the CPU affinity attribute.
+ */
 int pthread_attr_setaffinity_np (pthread_attr_t *attr, xnarch_cpumask_t mask)
 {
     spl_t s;
@@ -535,6 +644,8 @@ int pthread_attr_setaffinity_np (pthread_attr_t *attr, xnarch_cpumask_t mask)
 
     return 0;
 }
+
+/*@}*/
 
 EXPORT_SYMBOL(pthread_attr_init);
 EXPORT_SYMBOL(pthread_attr_destroy);

@@ -73,7 +73,7 @@ extern "C" {
 #endif
 
 #undef sem_init
-#define sem_init(s,p,v) pse51_sem_init((s),(p),(v))
+#define sem_init pse51_sem_init
 
 int pse51_sem_init(sem_t *sem,
                    int pshared,

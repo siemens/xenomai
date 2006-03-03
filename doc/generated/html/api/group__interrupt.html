@@ -26,7 +26,7 @@ Collaboration diagram for Interrupt management services.:<center><table><tr><td>
 
 <p>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga3">rt_intr_create</a> (RT_INTR *intr, unsigned irq, rt_isr_t isr, rt_iack_t iack)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga3">rt_intr_create</a> (RT_INTR *intr, const char *name, unsigned irq, rt_isr_t isr, rt_iack_t iack, int mode)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create an interrupt object from kernel space.  <a href="#ga3"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga4">rt_intr_delete</a> (RT_INTR *intr)</td></tr>
@@ -41,13 +41,13 @@ Collaboration diagram for Interrupt management services.:<center><table><tr><td>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga7">rt_intr_inquire</a> (RT_INTR *intr, RT_INTR_INFO *info)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about an interrupt object.  <a href="#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga8">rt_intr_create</a> (RT_INTR *intr, unsigned irq, int mode)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga8">rt_intr_create</a> (RT_INTR *intr, const char *name, unsigned irq, int mode)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create an interrupt object from user-space.  <a href="#ga8"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga9">rt_intr_wait</a> (RT_INTR *intr, RTIME timeout)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next interrupt.  <a href="#ga9"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga10">rt_intr_bind</a> (RT_INTR *intr, unsigned irq, RTIME timeout)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga10">rt_intr_bind</a> (RT_INTR *intr, const char *name, RTIME timeout)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to an interrupt object.  <a href="#ga10"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga11">rt_intr_unbind</a> (RT_INTR *intr)</td></tr>
@@ -69,8 +69,8 @@ Collaboration diagram for Interrupt management services.:<center><table><tr><td>
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
-          <td class="md" nowrap>unsigned&nbsp;</td>
-          <td class="mdname" nowrap> <em>irq</em>, </td>
+          <td class="md" nowrap>const char *&nbsp;</td>
+          <td class="mdname" nowrap> <em>name</em>, </td>
         </tr>
         <tr>
           <td class="md" nowrap align="right"></td>
@@ -100,8 +100,8 @@ Bind to an interrupt object.
 This user-space only service retrieves the uniform descriptor of a given Xenomai interrupt object identified by its IRQ number. If the object does not exist on entry, this service blocks the caller until an interrupt object of the given number is created. An interrupt is registered whenever a kernel-space task invokes the <a class="el" href="group__interrupt.html#ga8">rt_intr_create()</a> service successfully for the given IRQ line.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>irq</em>&nbsp;</td><td>The hardware interrupt channel associated with the interrupt object to search for. This value is architecture-dependent.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>intr</em>&nbsp;</td><td>The address of an interrupt object descriptor retrieved by the operation. Contents of this memory is undefined upon failure.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>An ASCII string standing for the symbolic name of the interrupt object to search for.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>The number of clock ticks to wait for the registration to occur (see note). Passing TM_INFINITE causes the caller to block indefinitely until the object is registered. Passing TM_NONBLOCK causes the service to return immediately without waiting if the object is not registered on entry.</td></tr>
   </table>
 </dl>
@@ -148,6 +148,12 @@ Rescheduling: always unless the request is immediately satisfied or <em>timeout<
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
+          <td class="md" nowrap>const char *&nbsp;</td>
+          <td class="mdname" nowrap> <em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
           <td class="md" nowrap>unsigned&nbsp;</td>
           <td class="mdname" nowrap> <em>irq</em>, </td>
         </tr>
@@ -181,15 +187,16 @@ When an interrupt occurs on the given <em>irq</em> line, any task pending on the
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>intr</em>&nbsp;</td><td>The address of a interrupt object descriptor Xenomai will use to store the object-specific data. This descriptor must always be valid while the object is active therefore it must be allocated in permanent memory.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>An ASCII string standing for the symbolic name of the interrupt object. When non-NULL and non-empty, this string is copied to a safe place into the descriptor, and passed to the registry package if enabled for indexing the created interrupt objects.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>irq</em>&nbsp;</td><td>The hardware interrupt channel associated with the interrupt object. This value is architecture-dependent.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>The interrupt object creation mode. The following flags can be OR'ed into this bitmask:</td></tr>
   </table>
 </dl>
 <ul>
-<li>I_AUTOENA asks Xenomai to re-enable the IRQ line before awakening the interrupt server task. This flag is functionally equivalent as always returning RT_INTR_ENABLE from a kernel space interrupt handler.</li></ul>
+<li>I_NOAUTOENA asks Xenomai not to re-enable the IRQ line before awakening the interrupt server task. This flag is functionally equivalent as always returning RT_INTR_NOENABLE from a kernel space interrupt handler.</li></ul>
 <p>
 <ul>
-<li>I_PROPAGATE asks Xenomai to propagate the IRQ down the pipeline; in other words, the interrupt occurrence is chained to Linux after it has been processed by the Xenomai task. This flag is functionally equivalent as always returning RT_INTR_CHAINED from a kernel space interrupt handler.</li></ul>
+<li>I_PROPAGATE asks Xenomai to propagate the IRQ down the pipeline; in other words, the interrupt occurrence is chained to Linux after it has been processed by the Xenomai task. This flag is functionally equivalent as always returning RT_INTR_PROPAGATE from a kernel space interrupt handler.</li></ul>
 <p>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
 <ul>
@@ -222,6 +229,12 @@ Rescheduling: possible.<p>
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
+          <td class="md" nowrap>const char *&nbsp;</td>
+          <td class="mdname" nowrap> <em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
           <td class="md" nowrap>unsigned&nbsp;</td>
           <td class="mdname" nowrap> <em>irq</em>, </td>
         </tr>
@@ -235,7 +248,13 @@ Rescheduling: possible.<p>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
           <td class="md" nowrap>rt_iack_t&nbsp;</td>
-          <td class="mdname" nowrap> <em>iack</em></td>
+          <td class="mdname" nowrap> <em>iack</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>int&nbsp;</td>
+          <td class="mdname" nowrap> <em>mode</em></td>
         </tr>
         <tr>
           <td class="md"></td>
@@ -258,22 +277,38 @@ Create an interrupt object from kernel space.
 <p>
 Initializes and associates an interrupt object with an IRQ line. In kernel space, interrupts are immediately notified to a user-defined handler or ISR (interrupt service routine).<p>
 When an interrupt occurs on the given <em>irq</em> line, the ISR is fired in order to deal with the hardware event. The interrupt service code may call any non-suspensive Xenomai service.<p>
-Upon receipt of an IRQ, the ISR is immediately called on behalf of the interrupted stack context, the rescheduling procedure is locked, and the interrupt source is masked at hardware level. The status value returned by the ISR is then checked for the following bits:<p>
+Upon receipt of an IRQ, the ISR is immediately called on behalf of the interrupted stack context, the rescheduling procedure is locked, and the interrupt source is masked at hardware level. The status value returned by the ISR is then checked for the following values:<p>
 <ul>
-<li>RT_INTR_ENABLE asks Xenomai to re-enable the IRQ line upon return of the interrupt service routine.</li></ul>
+<li>RT_INTR_HANDLED indicates that the interrupt request has been fulfilled by the ISR.</li></ul>
 <p>
 <ul>
-<li>RT_INTR_CHAINED tells Xenomai to propagate the interrupt down the Adeos interrupt pipeline to other Adeos domains, such as Linux. This is the regular way to share interrupts between Xenomai and the Linux kernel. At the opposite, RT_INTR_HANDLED can be used instead to indicate that the interrupt request has been fulfilled.</li></ul>
+<li>RT_INTR_NONE indicates the opposite to RT_INTR_HANDLED. The ISR must always return this value when it determines that the interrupt request has not been issued by the dedicated hardware device.</li></ul>
+<p>
+In addition, one of the following bits may be set by the ISR :<p>
+NOTE: use these bits with care and only when you do understand their effect on the system. The ISR is not encouraged to use these bits in case it shares the IRQ line with other ISRs in the real-time domain.<p>
+<ul>
+<li>RT_INTR_PROPAGATE tells Xenomai to require the real-time control layer to forward the IRQ. For instance, this would cause the Adeos control layer to propagate the interrupt down the interrupt pipeline to other Adeos domains, such as Linux. This is the regular way to share interrupts between Xenomai and the Linux kernel.</li></ul>
+<p>
+<ul>
+<li>RT_INTR_NOENABLE asks Xenomai not to re-enable the IRQ line upon return of the interrupt service routine.</li></ul>
 <p>
 A count of interrupt receipts is tracked into the interrupt descriptor, and reset to zero each time the interrupt object is attached. Since this count could wrap around, it should be used as an indication of interrupt activity only.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>intr</em>&nbsp;</td><td>The address of a interrupt object descriptor Xenomai will use to store the object-specific data. This descriptor must always be valid while the object is active therefore it must be allocated in permanent memory.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>An ASCII string standing for the symbolic name of the interrupt object. When non-NULL and non-empty, this string is copied to a safe place into the descriptor, and passed to the registry package if enabled for indexing the created interrupt objects.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>irq</em>&nbsp;</td><td>The hardware interrupt channel associated with the interrupt object. This value is architecture-dependent.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>isr</em>&nbsp;</td><td>The address of a valid interrupt service routine in kernel space. This handler will be called each time the corresponding IRQ is delivered on behalf of an interrupt context. A pointer to an internal information is passed to the routine which can use it to retrieve the descriptor address of the associated interrupt object through the I_DESC() macro.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>iack</em>&nbsp;</td><td>The address of an optional interrupt acknowledge routine, aimed at replacing the default one. Only very specific situations actually require to override the default setting for this parameter, like having to acknowledge non-standard PIC hardware. <em>iack</em> should return a non-zero value to indicate that the interrupt has been properly acknowledged. If <em>iack</em> is NULL, the default routine will be used instead.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>The interrupt object creation mode. The following flags can be OR'ed into this bitmask, each of them affecting the new interrupt object:</td></tr>
   </table>
 </dl>
+<ul>
+<li>I_SHARED enables IRQ-sharing with other interrupt objects.</li></ul>
+<p>
+<ul>
+<li>I_EDGE is an additional flag need to be set together with I_SHARED to enable IRQ-sharing of edge-triggered interrupts.</li></ul>
+<p>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
 <ul>
 <li>-ENOMEM is returned if the system fails to get enough dynamic memory from the global real-time heap in order to register the interrupt object.</li></ul>
@@ -611,7 +646,7 @@ Rescheduling: always, unless an interrupt is already pending on entry.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:20:05 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Fri Mar 3 17:22:32 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

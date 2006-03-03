@@ -21,10 +21,10 @@ You should have received a copy of the GNU General Public License along with thi
 Include dependency graph for task.h:<p><center><img src="task_8h__incl.png" border="0" usemap="#include/native/task.h_map" alt=""></center>
 <map name="include/native/task.h_map">
 <area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="206,7,316,31" alt="">
-<area href="thread_8h-source.html" shape="rect" coords="201,106,321,130" alt="">
+<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="201,106,321,130" alt="">
 <area href="synch_8h-source.html" shape="rect" coords="370,57,488,81" alt="">
-<area href="native_2timer_8h.html" shape="rect" coords="210,154,312,178" alt="">
-<area href="nucleus_2timer_8h-source.html" shape="rect" coords="373,105,485,129" alt="">
+<area href="include_2native_2timer_8h.html" shape="rect" coords="210,154,312,178" alt="">
+<area href="include_2nucleus_2timer_8h-source.html" shape="rect" coords="373,105,485,129" alt="">
 <area href="nucleus_2queue_8h-source.html" shape="rect" coords="536,105,656,129" alt="">
 <area href="nucleus_2types_8h-source.html" shape="rect" coords="704,129,818,153" alt="">
 <area href="compiler_8h-source.html" shape="rect" coords="880,225,1013,249" alt="">
@@ -42,10 +42,9 @@ This graph shows which files directly or indirectly include this file:<p><center
 <area href="skins_2native_2module_8c.html" shape="rect" coords="200,248,378,272" alt="">
 <area href="ksrc_2skins_2native_2mutex_8c.html" shape="rect" coords="204,296,374,320" alt="">
 <area href="ksrc_2skins_2native_2queue_8c.html" shape="rect" coords="204,344,374,368" alt="">
-<area href="registry_8c.html" shape="rect" coords="200,392,378,416" alt="">
-<area href="ksrc_2skins_2native_2sem_8c.html" shape="rect" coords="209,440,369,464" alt="">
-<area href="native_2syscall_8c.html" shape="rect" coords="202,488,376,512" alt="">
-<area href="ksrc_2skins_2native_2task_8c.html" shape="rect" coords="209,536,369,560" alt="">
+<area href="ksrc_2skins_2native_2sem_8c.html" shape="rect" coords="209,392,369,416" alt="">
+<area href="native_2syscall_8c.html" shape="rect" coords="202,440,376,464" alt="">
+<area href="ksrc_2skins_2native_2task_8c.html" shape="rect" coords="209,488,369,512" alt="">
 </map>
 
 <p>
@@ -85,7 +84,7 @@ This graph shows which files directly or indirectly include this file:<p><center
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga14">rt_task_set_periodic</a> (RT_TASK *task, RTIME idate, RTIME period)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Make a real-time task periodic.  <a href="group__task.html#ga14"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga15">rt_task_wait_period</a> (void)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga15">rt_task_wait_period</a> (unsigned long *overruns_r)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next periodic release point.  <a href="group__task.html#ga15"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga16">rt_task_set_priority</a> (RT_TASK *task, int prio)</td></tr>
@@ -122,7 +121,7 @@ This graph shows which files directly or indirectly include this file:<p><center
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Spawn a new real-time task.  <a href="group__task.html#ga28"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:19:22 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Fri Mar 3 17:21:47 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -16,6 +16,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+/**
+ * @ingroup posix
+ * @defgroup posix_shm Shared memory services.
+ *
+ * Shared memory services.
+ * 
+ *@{*/
+
 #include <nucleus/heap.h>
 #include <posix/registry.h>
 #include <posix/internal.h>
@@ -161,6 +169,12 @@ static void pse51_shm_put(pse51_shm_t *shm, unsigned dec)
     xnlock_put_irqrestore(&nklock, s);
 }
 
+/**
+ * Open a shared memory object.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/shm_open.html
+ * 
+ */
 int shm_open(const char *name, int oflags, mode_t mode)
 {
     pse51_node_t *node;
@@ -222,6 +236,12 @@ int shm_open(const char *name, int oflags, mode_t mode)
     return -1;
 }
 
+/**
+ * Unlink a shared memory object.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/shm_unlink.html
+ * 
+ */
 int shm_unlink(const char *name)
 {
     pse51_node_t *node;
@@ -258,7 +278,13 @@ error:
     return 0;
 }
 
-int pse51_shm_close(int fd)
+/**
+ * Close a file descriptor.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/close.html
+ * 
+ */
+int close(int fd)
 {
     pse51_desc_t *desc;
     pse51_shm_t *shm;
@@ -296,6 +322,12 @@ int pse51_shm_close(int fd)
     return -1;
 }
 
+/**
+ * Truncate a file or shared memory object to a specified length.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/ftruncate.html
+ * 
+ */
 int ftruncate(int fd, off_t len)
 {
     unsigned desc_flags;
@@ -386,6 +418,12 @@ int ftruncate(int fd, off_t len)
     return -1;
 }
 
+/**
+ * Map pages of memory.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/mmap.html
+ * 
+ */
 void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 {
     pse51_shm_map_t *map;
@@ -514,6 +552,12 @@ static pse51_shm_t *pse51_shm_lookup(void *addr)
     return shm;
 }
 
+/**
+ * Unmap pages of memory.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/munmap.html
+ * 
+ */
 int munmap(void *addr, size_t len)
 {
     pse51_shm_map_t *mapping = NULL;
@@ -774,6 +818,7 @@ void pse51_shm_pkg_cleanup(void)
         }
 }
 
+/*@}*/
 
 EXPORT_SYMBOL(shm_open);
 EXPORT_SYMBOL(shm_unlink);

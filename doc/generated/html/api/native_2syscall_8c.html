@@ -7,7 +7,7 @@
 <div class="qindex">  <form class="search" action="search.php" method="get">
 <a class="qindex" href="main.html">Main&nbsp;Page</a> | <a class="qindex" href="modules.html">Modules</a> | <a class="qindex" href="annotated.html">Data&nbsp;Structures</a> | <a class="qindex" href="dirs.html">Directories</a> | <a class="qindex" href="files.html">File&nbsp;List</a> | <a class="qindex" href="functions.html">Data&nbsp;Fields</a> | <a class="qindex" href="globals.html">Globals</a>  | <span class="search"><u>S</u>earch&nbsp;for&nbsp;<input class="search" type="text" name="query" value="" size="20" accesskey="s"/></span></form></div>
 <div class="nav">
-<a class="el" href="dir_000004.html">ksrc</a>&nbsp;/&nbsp;<a class="el" href="dir_000005.html">skins</a>&nbsp;/&nbsp;<a class="el" href="dir_000019.html">native</a></div>
+<a class="el" href="dir_000002.html">ksrc</a>&nbsp;/&nbsp;<a class="el" href="dir_000003.html">skins</a>&nbsp;/&nbsp;<a class="el" href="dir_000020.html">native</a></div>
 <h1>syscall.c File Reference</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 This file is part of the Xenomai project. 
 <p>
@@ -20,35 +20,27 @@ You should have received a copy of the GNU General Public License along with thi
 <p>
 Include dependency graph for syscall.c:<p><center><img src="native_2syscall_8c__incl.png" border="0" usemap="#ksrc/skins/native/syscall.c_map" alt=""></center>
 <map name="ksrc/skins/native/syscall.c_map">
-<area href="pod_8h.html" shape="rect" coords="245,243,349,267" alt="">
-<area href="nucleus_2heap_8h-source.html" shape="rect" coords="618,642,730,666" alt="">
-<area href="shadow_8h-source.html" shape="rect" coords="233,841,361,865" alt="">
-<area href="native_2syscall_8h-source.html" shape="rect" coords="241,889,353,913" alt="">
-<area href="registry_8h.html" shape="rect" coords="239,691,354,715" alt="">
-<area href="task_8h.html" shape="rect" coords="249,175,345,199" alt="">
-<area href="native_2timer_8h.html" shape="rect" coords="438,202,539,226" alt="">
-<area href="sem_8h.html" shape="rect" coords="439,498,538,522" alt="">
-<area href="event_8h.html" shape="rect" coords="437,546,541,570" alt="">
-<area href="mutex_8h.html" shape="rect" coords="434,450,543,474" alt="">
-<area href="cond_8h.html" shape="rect" coords="246,390,347,414" alt="">
-<area href="native_2queue_8h.html" shape="rect" coords="434,594,543,618" alt="">
-<area href="native_2heap_8h.html" shape="rect" coords="438,642,539,666" alt="">
-<area href="alarm_8h.html" shape="rect" coords="435,7,542,31" alt="">
-<area href="native_2intr_8h.html" shape="rect" coords="251,342,342,366" alt="">
-<area href="native_2pipe_8h.html" shape="rect" coords="441,741,537,765" alt="">
-<area href="thread_8h-source.html" shape="rect" coords="429,154,549,178" alt="">
-<area href="nucleus_2intr_8h-source.html" shape="rect" coords="438,250,539,274" alt="">
-<area href="nucleus_2timer_8h-source.html" shape="rect" coords="618,178,730,202" alt="">
-<area href="nucleus_2queue_8h-source.html" shape="rect" coords="781,450,901,474" alt="">
-<area href="native_2types_8h.html" shape="rect" coords="622,522,726,546" alt="">
-<area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="434,55,543,79" alt="">
-<area href="synch_8h-source.html" shape="rect" coords="615,450,733,474" alt="">
-<area href="nucleus_2pipe_8h-source.html" shape="rect" coords="621,741,727,765" alt="">
+<area href="pod_8h.html" shape="rect" coords="245,56,349,80" alt="">
+<area href="nucleus_2heap_8h-source.html" shape="rect" coords="410,514,522,538" alt="">
+<area href="shadow_8h-source.html" shape="rect" coords="233,154,361,178" alt="">
+<area href="include_2nucleus_2registry_8h.html" shape="rect" coords="234,202,360,226" alt="">
+<area href="native_2syscall_8h-source.html" shape="rect" coords="241,250,353,274" alt="">
+<area href="task_8h.html" shape="rect" coords="249,298,345,322" alt="">
+<area href="include_2native_2timer_8h.html" shape="rect" coords="416,202,517,226" alt="">
+<area href="include_2native_2sem_8h.html" shape="rect" coords="248,394,346,418" alt="">
+<area href="event_8h.html" shape="rect" coords="245,442,349,466" alt="">
+<area href="include_2native_2mutex_8h.html" shape="rect" coords="412,710,521,734" alt="">
+<area href="include_2native_2cond_8h.html" shape="rect" coords="246,784,348,808" alt="">
+<area href="native_2queue_8h.html" shape="rect" coords="242,538,352,562" alt="">
+<area href="native_2heap_8h.html" shape="rect" coords="246,346,348,370" alt="">
+<area href="alarm_8h.html" shape="rect" coords="244,688,350,712" alt="">
+<area href="include_2native_2intr_8h.html" shape="rect" coords="252,736,342,760" alt="">
+<area href="native_2pipe_8h.html" shape="rect" coords="249,490,345,514" alt="">
 </map>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:19:53 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Fri Mar 3 17:22:19 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

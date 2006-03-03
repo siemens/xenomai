@@ -16,6 +16,16 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * @ingroup posix_thread
+ * @defgroup posix_cancel Thread cancellation.
+ *
+ * Thread cancellation.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_09.html#tag_02_09_05
+ *
+ *@{*/
+
 #include <posix/thread.h>
 #include <posix/cancel.h>
 
@@ -30,6 +40,12 @@ typedef struct {
 ((cleanup_handler_t *)(((char *)laddr)-(int)(&((cleanup_handler_t *)0)->link)))
 } cleanup_handler_t;
 
+/**
+ * Cancel a thread.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cancel.html
+ * 
+ */
 int pthread_cancel (pthread_t thread)
 
 {
@@ -68,6 +84,12 @@ int pthread_cancel (pthread_t thread)
     return 0;
 }
 
+/**
+ * Register a cleanup handler to be executed at the time of cancellation.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_push.html
+ * 
+ */
 void pthread_cleanup_push (cleanup_routine_t routine, void *arg)
 
 {
@@ -105,6 +127,12 @@ void pthread_cleanup_push (cleanup_routine_t routine, void *arg)
     xnlock_put_irqrestore(&nklock, s);
 }
 
+/**
+ * Unregister the last registered cleanup handler.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_pop.html
+ * 
+ */
 void pthread_cleanup_pop (int execute)
 
 {
@@ -137,6 +165,12 @@ void pthread_cleanup_pop (int execute)
     xnlock_put_irqrestore(&nklock, s);
 }
 
+/**
+ * Set cancellation type of the current thread.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcanceltype.html
+ * 
+ */
 int pthread_setcanceltype (int type, int *oldtype_ptr)
 
 {
@@ -179,6 +213,12 @@ int pthread_setcanceltype (int type, int *oldtype_ptr)
     return 0;
 }
 
+/**
+ * Set cancellation state of the current thread.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcancelstate.html
+ * 
+ */
 int pthread_setcancelstate (int state, int *oldstate_ptr)
 
 {
@@ -220,6 +260,12 @@ int pthread_setcancelstate (int state, int *oldstate_ptr)
     return 0;
 }
 
+/**
+ * Test if a cancellation request is pending.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_testcancel.html
+ * 
+ */
 void pthread_testcancel (void)
 
 {
@@ -251,6 +297,8 @@ void pse51_cancel_cleanup_thread (pthread_t thread)
         xnfree(handler);
 	}
 }
+
+/*@}*/
 
 EXPORT_SYMBOL(pthread_cancel);
 EXPORT_SYMBOL(pthread_cleanup_push);

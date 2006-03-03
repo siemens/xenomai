@@ -7,7 +7,7 @@
 <div class="qindex">  <form class="search" action="search.php" method="get">
 <a class="qindex" href="main.html">Main&nbsp;Page</a> | <a class="qindex" href="modules.html">Modules</a> | <a class="qindex" href="annotated.html">Data&nbsp;Structures</a> | <a class="qindex" href="dirs.html">Directories</a> | <a class="qindex" href="files.html">File&nbsp;List</a> | <a class="qindex" href="functions.html">Data&nbsp;Fields</a> | <a class="qindex" href="globals.html">Globals</a>  | <span class="search"><u>S</u>earch&nbsp;for&nbsp;<input class="search" type="text" name="query" value="" size="20" accesskey="s"/></span></form></div>
 <div class="nav">
-<a class="el" href="dir_000000.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000003.html">nucleus</a></div>
+<a class="el" href="dir_000000.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000006.html">nucleus</a></div>
 <h1>types.h</h1><div class="fragment"><pre class="fragment">00001 <span class="comment">/*</span>
 00002 <span class="comment"> * Copyright (C) 2001,2002,2003 Philippe Gerum &lt;rpm@xenomai.org&gt;.</span>
 00003 <span class="comment"> *</span>
@@ -60,82 +60,86 @@
 00050 
 00051 <span class="keyword">typedef</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> xnstime_t;
 00052 
-00053 <span class="keyword">struct </span>xnintr;
+00053 <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> xnhandle_t;
 00054 
-00055 <span class="keyword">typedef</span> int (*xnisr_t)(<span class="keyword">struct </span>xnintr *intr);
-00056 
-00057 <span class="keyword">typedef</span> int (*xniack_t)(<span class="keywordtype">unsigned</span> irq);
+00055 <span class="preprocessor">#define XN_NO_HANDLE ((xnhandle_t)0)</span>
+00056 <span class="preprocessor"></span>
+00057 <span class="keyword">struct </span>xnintr;
 00058 
-00059 <span class="preprocessor">#define XN_INFINITE   (0)</span>
-00060 <span class="preprocessor"></span><span class="preprocessor">#define XN_NONBLOCK   ((xnticks_t)-1)</span>
-00061 <span class="preprocessor"></span>
-00062 <span class="preprocessor">#define XN_APERIODIC_TICK  0</span>
-00063 <span class="preprocessor"></span><span class="preprocessor">#define XN_NO_TICK         ((xnticks_t)-1)</span>
-00064 <span class="preprocessor"></span>
-00065 <span class="preprocessor">#define testbits(flags,mask) ((flags) &amp; (mask))</span>
-00066 <span class="preprocessor"></span><span class="preprocessor">#define setbits(flags,mask)  xnarch_atomic_set_mask(&amp;(flags),mask)</span>
-00067 <span class="preprocessor"></span><span class="preprocessor">#define clrbits(flags,mask)  xnarch_atomic_clear_mask(&amp;(flags),mask)</span>
-00068 <span class="preprocessor"></span><span class="preprocessor">#define __testbits(flags,mask) testbits(flags,mask)</span>
-00069 <span class="preprocessor"></span><span class="preprocessor">#define __setbits(flags,mask)  do { (flags) |= (mask); } while(0)</span>
-00070 <span class="preprocessor"></span><span class="preprocessor">#define __clrbits(flags,mask)  do { (flags) &amp;= ~(mask); } while(0)</span>
-00071 <span class="preprocessor"></span>
-00072 <span class="keyword">typedef</span> atomic_flags_t xnflags_t;
-00073 
-00074 <span class="preprocessor">#ifndef NULL</span>
-00075 <span class="preprocessor"></span><span class="preprocessor">#define NULL 0</span>
-00076 <span class="preprocessor"></span><span class="preprocessor">#endif</span>
-00077 <span class="preprocessor"></span>
-00078 <span class="preprocessor">#define XNOBJECT_NAME_LEN 32</span>
-00079 <span class="preprocessor"></span>
-00080 <span class="preprocessor">#define xnobject_copy_name(dst, src) \</span>
-00081 <span class="preprocessor">do { \</span>
-00082 <span class="preprocessor">    if (src) \</span>
-00083 <span class="preprocessor">        strncpy(dst, src, XNOBJECT_NAME_LEN); \</span>
-00084 <span class="preprocessor">    else \</span>
-00085 <span class="preprocessor">        *dst = '\0'; \</span>
-00086 <span class="preprocessor">} while (0)</span>
-00087 <span class="preprocessor"></span>
-00088 <span class="preprocessor">#define xnobject_create_name(dst, n, obj) \</span>
-00089 <span class="preprocessor">    snprintf(dst, n, "%p", obj)</span>
-00090 <span class="preprocessor"></span>
-00091 <span class="preprocessor">#define minval(a,b) ((a) &lt; (b) ? (a) : (b))</span>
-00092 <span class="preprocessor"></span><span class="preprocessor">#define maxval(a,b) ((a) &gt; (b) ? (a) : (b))</span>
-00093 <span class="preprocessor"></span>
-00094 <span class="preprocessor">#ifdef __cplusplus</span>
-00095 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-00096 <span class="preprocessor">#endif</span>
+00059 <span class="keyword">typedef</span> int (*xnisr_t)(<span class="keyword">struct </span>xnintr *intr);
+00060 
+00061 <span class="keyword">typedef</span> int (*xniack_t)(<span class="keywordtype">unsigned</span> irq);
+00062 
+00063 <span class="preprocessor">#define XN_INFINITE   (0)</span>
+00064 <span class="preprocessor"></span><span class="preprocessor">#define XN_NONBLOCK   ((xnticks_t)-1)</span>
+00065 <span class="preprocessor"></span>
+00066 <span class="preprocessor">#define XN_APERIODIC_TICK  0</span>
+00067 <span class="preprocessor"></span><span class="preprocessor">#define XN_NO_TICK         ((xnticks_t)-1)</span>
+00068 <span class="preprocessor"></span>
+00069 <span class="preprocessor">#define testbits(flags,mask) ((flags) &amp; (mask))</span>
+00070 <span class="preprocessor"></span><span class="preprocessor">#define setbits(flags,mask)  xnarch_atomic_set_mask(&amp;(flags),mask)</span>
+00071 <span class="preprocessor"></span><span class="preprocessor">#define clrbits(flags,mask)  xnarch_atomic_clear_mask(&amp;(flags),mask)</span>
+00072 <span class="preprocessor"></span><span class="preprocessor">#define __testbits(flags,mask) testbits(flags,mask)</span>
+00073 <span class="preprocessor"></span><span class="preprocessor">#define __setbits(flags,mask)  do { (flags) |= (mask); } while(0)</span>
+00074 <span class="preprocessor"></span><span class="preprocessor">#define __clrbits(flags,mask)  do { (flags) &amp;= ~(mask); } while(0)</span>
+00075 <span class="preprocessor"></span>
+00076 <span class="keyword">typedef</span> atomic_flags_t xnflags_t;
+00077 
+00078 <span class="preprocessor">#ifndef NULL</span>
+00079 <span class="preprocessor"></span><span class="preprocessor">#define NULL 0</span>
+00080 <span class="preprocessor"></span><span class="preprocessor">#endif</span>
+00081 <span class="preprocessor"></span>
+00082 <span class="preprocessor">#define XNOBJECT_NAME_LEN 32</span>
+00083 <span class="preprocessor"></span>
+00084 <span class="preprocessor">#define xnobject_copy_name(dst, src) \</span>
+00085 <span class="preprocessor">do { \</span>
+00086 <span class="preprocessor">    if (src) \</span>
+00087 <span class="preprocessor">        strncpy(dst, src, XNOBJECT_NAME_LEN); \</span>
+00088 <span class="preprocessor">    else \</span>
+00089 <span class="preprocessor">        *dst = '\0'; \</span>
+00090 <span class="preprocessor">} while (0)</span>
+00091 <span class="preprocessor"></span>
+00092 <span class="preprocessor">#define xnobject_create_name(dst, n, obj) \</span>
+00093 <span class="preprocessor">    snprintf(dst, n, "%p", obj)</span>
+00094 <span class="preprocessor"></span>
+00095 <span class="preprocessor">#define minval(a,b) ((a) &lt; (b) ? (a) : (b))</span>
+00096 <span class="preprocessor"></span><span class="preprocessor">#define maxval(a,b) ((a) &gt; (b) ? (a) : (b))</span>
 00097 <span class="preprocessor"></span>
-00098 <span class="keyword">const</span> <span class="keywordtype">char</span> *xnpod_fatal_helper(<span class="keyword">const</span> <span class="keywordtype">char</span> *format, ...);
-00099 
-00100 <span class="keywordtype">int</span> __xeno_user_init(<span class="keywordtype">void</span>);
-00101 
-00102 <span class="keywordtype">void</span> __xeno_user_exit(<span class="keywordtype">void</span>);
+00098 <span class="preprocessor">#ifdef __cplusplus</span>
+00099 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+00100 <span class="preprocessor">#endif</span>
+00101 <span class="preprocessor"></span>
+00102 <span class="keyword">const</span> <span class="keywordtype">char</span> *xnpod_fatal_helper(<span class="keyword">const</span> <span class="keywordtype">char</span> *format, ...);
 00103 
-00104 <span class="preprocessor">#ifdef __cplusplus</span>
-00105 <span class="preprocessor"></span>}
-00106 <span class="preprocessor">#endif</span>
-00107 <span class="preprocessor"></span>
-00108 <span class="preprocessor">#define xnpod_fatal(format,args...) \</span>
-00109 <span class="preprocessor">do { \</span>
-00110 <span class="preprocessor">    const char *panic; \</span>
-00111 <span class="preprocessor">    ipipe_trace_panic_freeze(); \</span>
-00112 <span class="preprocessor">    panic = xnpod_fatal_helper(format,##args); \</span>
-00113 <span class="preprocessor">    xnarch_halt(panic); \</span>
-00114 <span class="preprocessor">} while (0)</span>
-00115 <span class="preprocessor"></span>
-00116 <span class="preprocessor">#if defined(__XENO_SIM__) || defined(__XENO_UVM__)</span>
-00117 <span class="preprocessor"></span><span class="preprocessor">#define SKIN_INIT(name)  __xeno_skin_init(void)</span>
-00118 <span class="preprocessor"></span><span class="preprocessor">#define SKIN_EXIT(name)  __xeno_skin_exit(void)</span>
-00119 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !__XENO_SIM__ */</span>
-00120 <span class="preprocessor">#define SKIN_INIT(name)  __ ## name ## _skin_init(void)</span>
-00121 <span class="preprocessor"></span><span class="preprocessor">#define SKIN_EXIT(name)  __ ## name ## _skin_exit(void)</span>
-00122 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* __XENO_SIM__ */</span>
-00123 
-00124 <span class="preprocessor">#define root_thread_init __xeno_user_init</span>
-00125 <span class="preprocessor"></span><span class="preprocessor">#define root_thread_exit __xeno_user_exit</span>
-00126 <span class="preprocessor"></span>
-00127 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_TYPES_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:19:13 2006 for Xenomai API by&nbsp;
+00104 <span class="keywordtype">int</span> __xeno_user_init(<span class="keywordtype">void</span>);
+00105 
+00106 <span class="keywordtype">void</span> __xeno_user_exit(<span class="keywordtype">void</span>);
+00107 
+00108 <span class="preprocessor">#ifdef __cplusplus</span>
+00109 <span class="preprocessor"></span>}
+00110 <span class="preprocessor">#endif</span>
+00111 <span class="preprocessor"></span>
+00112 <span class="preprocessor">#define xnpod_fatal(format,args...) \</span>
+00113 <span class="preprocessor">do { \</span>
+00114 <span class="preprocessor">    const char *panic; \</span>
+00115 <span class="preprocessor">    ipipe_trace_panic_freeze(); \</span>
+00116 <span class="preprocessor">    panic = xnpod_fatal_helper(format,##args); \</span>
+00117 <span class="preprocessor">    xnarch_halt(panic); \</span>
+00118 <span class="preprocessor">} while (0)</span>
+00119 <span class="preprocessor"></span>
+00120 <span class="preprocessor">#if defined(__XENO_SIM__) || defined(__XENO_UVM__)</span>
+00121 <span class="preprocessor"></span><span class="preprocessor">#define SKIN_INIT(name)  __xeno_skin_init(void)</span>
+00122 <span class="preprocessor"></span><span class="preprocessor">#define SKIN_EXIT(name)  __xeno_skin_exit(void)</span>
+00123 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !__XENO_SIM__ */</span>
+00124 <span class="preprocessor">#define SKIN_INIT(name)  __ ## name ## _skin_init(void)</span>
+00125 <span class="preprocessor"></span><span class="preprocessor">#define SKIN_EXIT(name)  __ ## name ## _skin_exit(void)</span>
+00126 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* __XENO_SIM__ */</span>
+00127 
+00128 <span class="preprocessor">#define root_thread_init __xeno_user_init</span>
+00129 <span class="preprocessor"></span><span class="preprocessor">#define root_thread_exit __xeno_user_exit</span>
+00130 <span class="preprocessor"></span>
+00131 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_TYPES_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Fri Mar 3 17:21:39 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

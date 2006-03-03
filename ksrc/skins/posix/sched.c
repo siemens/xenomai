@@ -16,8 +16,22 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * @ingroup posix_thread
+ * @defgroup posix_sched Threads scheduling services.
+ *
+ * Thread scheduling services.
+ * 
+ *@{*/
+
 #include <posix/thread.h>
 
+/**
+ * Get minimum priority of the specified scheduling policy.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_min.html
+ * 
+ */
 int sched_get_priority_min (int policy)
 
 {
@@ -36,6 +50,12 @@ int sched_get_priority_min (int policy)
 	}
 }
 
+/**
+ * Get maximum priority of the specified scheduling policy.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_max.html
+ *
+ */
 int sched_get_priority_max (int policy)
 
 {
@@ -54,6 +74,12 @@ int sched_get_priority_max (int policy)
 	}
 }
 
+/**
+ * Get the round-robin scheduling time slice.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sched_rr_get_interval.html
+ * 
+ */
 int sched_rr_get_interval (int pid, struct timespec *interval)
 
 {
@@ -69,6 +95,12 @@ int sched_rr_get_interval (int pid, struct timespec *interval)
     return 0;
 }
 
+/**
+ * Get the scheduling policy and parameters of the specified thread.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html
+ * 
+ */
 int pthread_getschedparam (pthread_t tid, int *pol, struct sched_param *par)
 
 {
@@ -90,6 +122,12 @@ int pthread_getschedparam (pthread_t tid, int *pol, struct sched_param *par)
     return 0;
 }
 
+/**
+ * Set the scheduling policy and parameters of the specified thread.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setschedparam.html
+ * 
+ */
 int pthread_setschedparam (pthread_t tid, int pol, const struct sched_param *par)
 
 {
@@ -148,6 +186,20 @@ int pthread_setschedparam (pthread_t tid, int pol, const struct sched_param *par
     return 0;
 }
 
+/**
+ * Yield the processor.
+ * 
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sched_yield.html
+ *
+ */
+int sched_yield (void)
+
+{
+    xnpod_yield();
+    return 0;
+}
+
+/*@}*/
 
 EXPORT_SYMBOL(sched_get_priority_min);
 EXPORT_SYMBOL(sched_get_priority_max);

@@ -16,6 +16,21 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * @ingroup posix
+ * @defgroup posix_sem Semaphores services.
+ *
+ * Semaphores services.
+ *
+ * Semaphores are counters for resources shared between threads. The basic
+ * operations on semaphores are: increment the counter atomically, and wait
+ * until the counter is non-null and decrement it atomically.
+ *
+ * Semaphores have a maximum value past which they cannot be incremented.  The
+ * macro @a SEM_VALUE_MAX is defined to be this maximum value.
+ *
+ *@{*/
+
 #include <stddef.h>
 #include <stdarg.h>
 
@@ -94,6 +109,12 @@ static void sem_destroy_internal (pse51_sem_t *sem)
     xnfree(sem);
 }
 
+/**
+ * Lock a semaphore if it is available.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html
+ * 
+ */
 int sem_trywait (sem_t *sm)
 
 {
@@ -151,6 +172,12 @@ static inline int sem_timedwait_internal (struct __shadow_sem *shadow,
     return err;
 }
 
+/**
+ * Lock a semaphore.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_wait.html
+ * 
+ */
 int sem_wait (sem_t *sm)
 
 {
@@ -171,6 +198,12 @@ int sem_wait (sem_t *sm)
     return 0;
 }
 
+/**
+ * Try during a bounded time to lock a semaphore.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_timedwait.html
+ * 
+ */
 int sem_timedwait (sem_t *sm, const struct timespec *abs_timeout)
 
 {
@@ -191,6 +224,12 @@ int sem_timedwait (sem_t *sm, const struct timespec *abs_timeout)
     return 0;
 }
 
+/**
+ * Unlock a semaphore.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_post.html
+ * 
+ */
 int sem_post (sem_t *sm)
 
 {
@@ -231,6 +270,12 @@ int sem_post (sem_t *sm)
     return -1;
 }
 
+/**
+ * Get the value of a semaphore.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_getvalue.html
+ * 
+ */
 int sem_getvalue (sem_t *sm, int *value)
 
 {
@@ -273,7 +318,13 @@ static int pse51_sem_init_inner (pse51_sem_t *sem, int pshared, unsigned value)
 }
 
 
-int pse51_sem_init(sem_t *sm, int pshared, unsigned value)
+/**
+ * Initialize an unnamed semaphore.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_init.html
+ * 
+ */
+int sem_init (sem_t *sm, int pshared, unsigned value)
 {
     struct __shadow_sem *shadow = &((union __xeno_sem *) sm)->shadow_sem;
     pse51_sem_t *sem;
@@ -324,6 +375,12 @@ int pse51_sem_init(sem_t *sm, int pshared, unsigned value)
     return -1;
 }
 
+/**
+ * Destroy an unnamed semaphore.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_destroy.html
+ * 
+ */
 int sem_destroy (sem_t *sm)
 
 {
@@ -352,7 +409,13 @@ int sem_destroy (sem_t *sm)
     return -1;
 }
 
-sem_t *sem_open(const char *name, int oflags, ...)
+/**
+ * Open a named semaphore.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_open.html
+ * 
+ */
+sem_t *sem_open (const char *name, int oflags, ...)
 {
     nsem_t *named_sem;
     pse51_node_t *node;
@@ -427,7 +490,13 @@ sem_t *sem_open(const char *name, int oflags, ...)
     return SEM_FAILED;
 }
 
-int sem_close(sem_t *sm)
+/**
+ * Close a named semaphore.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_close.html
+ * 
+ */
+int sem_close (sem_t *sm)
 {
     struct __shadow_sem *shadow = &((union __xeno_sem *) sm)->shadow_sem;
     nsem_t *named_sem;
@@ -471,7 +540,13 @@ int sem_close(sem_t *sm)
     return -1;
 }
 
-int sem_unlink(const char *name)
+/**
+ * Unlink a named semaphore.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_unlink.html
+ * 
+ */
+int sem_unlink (const char *name)
 {
     pse51_node_t *node;
     nsem_t *named_sem;
@@ -505,9 +580,9 @@ int sem_unlink(const char *name)
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 /* Must be called nklock locked, irq off. */
-unsigned long pse51_usem_open(struct __shadow_sem *shadow,
-                              struct mm_struct *mm,
-                              unsigned long uaddr)
+unsigned long pse51_usem_open (struct __shadow_sem *shadow,
+                               struct mm_struct *mm,
+                               unsigned long uaddr)
 {
     xnholder_t *holder;
     pse51_uptr_t *uptr;
@@ -541,7 +616,7 @@ unsigned long pse51_usem_open(struct __shadow_sem *shadow,
 }
 
 /* Must be called nklock locked, irq off. */
-int pse51_usem_close(struct __shadow_sem *shadow, struct mm_struct *mm)
+int pse51_usem_close (struct __shadow_sem *shadow, struct mm_struct *mm)
 {
     nsem_t *nsem;
     pse51_uptr_t *uptr = NULL;
@@ -575,7 +650,7 @@ int pse51_usem_close(struct __shadow_sem *shadow, struct mm_struct *mm)
 }
 
 /* Must be called nklock locked, irq off. */
-void pse51_usems_cleanup(pse51_sem_t *sem)
+void pse51_usems_cleanup (pse51_sem_t *sem)
 {
     nsem_t *nsem = sem2named_sem(sem);
     xnholder_t *holder;
@@ -630,6 +705,8 @@ void pse51_sem_pkg_cleanup (void)
 
     xnlock_put_irqrestore(&nklock, s);
 }
+
+/*@}*/
 
 EXPORT_SYMBOL(pse51_sem_init);
 EXPORT_SYMBOL(sem_destroy);

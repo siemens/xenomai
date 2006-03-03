@@ -16,6 +16,11 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * @addtogroup posix_mutex
+ *
+ *@{*/
+
 #include <posix/internal.h>
 
 static const pthread_mutexattr_t default_mutex_attr = {
@@ -24,6 +29,12 @@ static const pthread_mutexattr_t default_mutex_attr = {
     protocol: PTHREAD_PRIO_NONE
 };
 
+/**
+ * Initialize a mutex attributes object.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_init.html
+ * 
+ */
 int pthread_mutexattr_init (pthread_mutexattr_t * attr)
 
 {
@@ -35,6 +46,12 @@ int pthread_mutexattr_init (pthread_mutexattr_t * attr)
     return 0;    
 }
 
+/**
+ * Destroy a mutex attributes object.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_destroy.html
+ * 
+ */
 int pthread_mutexattr_destroy (pthread_mutexattr_t *attr)
 
 {
@@ -54,6 +71,12 @@ int pthread_mutexattr_destroy (pthread_mutexattr_t *attr)
     return 0;
 }
 
+/**
+ * Get the mutex type attribute of a mutex attributes object.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_gettype.html
+ * 
+ */
 int pthread_mutexattr_gettype (const pthread_mutexattr_t *attr, int *type)
 
 {
@@ -77,6 +100,12 @@ int pthread_mutexattr_gettype (const pthread_mutexattr_t *attr, int *type)
     return 0;    
 }
 
+/**
+ * Set the mutex type attribute of a mutex attributes object.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_settype.html
+ * 
+ */
 int pthread_mutexattr_settype (pthread_mutexattr_t *attr, int type)
 
 {
@@ -113,6 +142,12 @@ int pthread_mutexattr_settype (pthread_mutexattr_t *attr, int type)
     return 0;
 }
 
+/**
+ * Get the protocol attribute of a mutex attributes object.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_getprotocol.html
+ * 
+ */
 int pthread_mutexattr_getprotocol (const pthread_mutexattr_t *attr, int *proto)
 
 {
@@ -136,7 +171,12 @@ int pthread_mutexattr_getprotocol (const pthread_mutexattr_t *attr, int *proto)
     return 0;
 }
 
-
+/**
+ * Set the protocol attribute of a mutex attributes object.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_setprotocol.html
+ * 
+ */
 int pthread_mutexattr_setprotocol (pthread_mutexattr_t *attr, int proto)
 
 {
@@ -173,6 +213,8 @@ int pthread_mutexattr_setprotocol (pthread_mutexattr_t *attr, int proto)
 
     return 0;
 }
+
+/*@}*/
 
 EXPORT_SYMBOL(pthread_mutexattr_init);
 EXPORT_SYMBOL(pthread_mutexattr_destroy);

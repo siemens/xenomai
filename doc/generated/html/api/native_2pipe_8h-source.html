@@ -23,7 +23,7 @@
 00033 <span class="preprocessor">#define P_MINOR_AUTO    XNPIPE_MINOR_AUTO</span>
 00034 <span class="preprocessor"></span>
 00035 <span class="keyword">typedef</span> <span class="keyword">struct </span>rt_pipe_placeholder {
-00036     rt_handle_t opaque;
+00036     xnhandle_t opaque;
 00037 } RT_PIPE_PLACEHOLDER;
 00038 
 00039 <span class="preprocessor">#ifdef __KERNEL__</span>
@@ -56,7 +56,7 @@
 00066 
 00067     u_long flushable;           <span class="comment">/* !&lt; Flush request flag. */</span>
 00068 
-00069     rt_handle_t handle;         <span class="comment">/* !&lt; Handle in registry -- zero if unregistered. */</span>
+00069     xnhandle_t handle;          <span class="comment">/* !&lt; Handle in registry -- zero if unregistered. */</span>
 00070 
 00071     <span class="keywordtype">char</span> name[XNOBJECT_NAME_LEN]; <span class="comment">/* !&lt; Symbolic name. */</span>
 00072 
@@ -131,7 +131,7 @@
 00141 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_pipe_unbind (RT_PIPE *pipe)
 00142 
 00143 {
-00144     pipe-&gt;opaque = RT_HANDLE_INVALID;
+00144     pipe-&gt;opaque = XN_NO_HANDLE;
 00145     <span class="keywordflow">return</span> 0;
 00146 }
 00147 
@@ -142,7 +142,7 @@
 00152 <span class="preprocessor">#endif</span>
 00153 <span class="preprocessor"></span>
 00154 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_PIPE_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:19:13 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Fri Mar 3 17:21:38 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -5,8 +5,8 @@ rect $synch_8h-source.html 421,206 538,230
 rect $nucleus_2heap_8h-source.html 424,254 536,278
 rect $include_2nucleus_2core_8h-source.html 246,304 356,328
 rect $rtdm_8h.html 256,352 346,376
-rect $nucleus_2intr_8h-source.html 602,61 704,85
+rect $include_2nucleus_2intr_8h-source.html 602,61 704,85
 rect $module_8h-source.html 417,110 542,134
 rect $version_8h-source.html 417,158 542,182
-rect $thread_8h-source.html 593,12 713,36
+rect $include_2nucleus_2thread_8h-source.html 593,12 713,36
 rect $nucleus_2queue_8h-source.html 593,206 713,230

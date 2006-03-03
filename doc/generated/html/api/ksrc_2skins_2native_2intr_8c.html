@@ -7,7 +7,7 @@
 <div class="qindex">  <form class="search" action="search.php" method="get">
 <a class="qindex" href="main.html">Main&nbsp;Page</a> | <a class="qindex" href="modules.html">Modules</a> | <a class="qindex" href="annotated.html">Data&nbsp;Structures</a> | <a class="qindex" href="dirs.html">Directories</a> | <a class="qindex" href="files.html">File&nbsp;List</a> | <a class="qindex" href="functions.html">Data&nbsp;Fields</a> | <a class="qindex" href="globals.html">Globals</a>  | <span class="search"><u>S</u>earch&nbsp;for&nbsp;<input class="search" type="text" name="query" value="" size="20" accesskey="s"/></span></form></div>
 <div class="nav">
-<a class="el" href="dir_000004.html">ksrc</a>&nbsp;/&nbsp;<a class="el" href="dir_000005.html">skins</a>&nbsp;/&nbsp;<a class="el" href="dir_000019.html">native</a></div>
+<a class="el" href="dir_000002.html">ksrc</a>&nbsp;/&nbsp;<a class="el" href="dir_000003.html">skins</a>&nbsp;/&nbsp;<a class="el" href="dir_000020.html">native</a></div>
 <h1>intr.c File Reference</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 This file is part of the Xenomai project. 
 <p>
@@ -20,24 +20,24 @@ You should have received a copy of the GNU General Public License along with thi
 <p>
 Include dependency graph for intr.c:<p><center><img src="ksrc_2skins_2native_2intr_8c__incl.png" border="0" usemap="#ksrc/skins/native/intr.c_map" alt=""></center>
 <map name="ksrc/skins/native/intr.c_map">
-<area href="pod_8h.html" shape="rect" coords="217,57,321,81" alt="">
-<area href="task_8h.html" shape="rect" coords="221,153,317,177" alt="">
-<area href="registry_8h.html" shape="rect" coords="212,250,326,274" alt="">
-<area href="native_2intr_8h.html" shape="rect" coords="224,105,314,129" alt="">
-<area href="thread_8h-source.html" shape="rect" coords="377,57,497,81" alt="">
-<area href="nucleus_2intr_8h-source.html" shape="rect" coords="386,9,488,33" alt="">
-<area href="nucleus_2timer_8h-source.html" shape="rect" coords="548,58,660,82" alt="">
-<area href="nucleus_2queue_8h-source.html" shape="rect" coords="709,84,829,108" alt="">
-<area href="nucleus_2types_8h-source.html" shape="rect" coords="877,84,992,108" alt="">
-<area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="382,252,492,276" alt="">
-<area href="synch_8h-source.html" shape="rect" coords="378,105,496,129" alt="">
-<area href="native_2timer_8h.html" shape="rect" coords="386,204,488,228" alt="">
-<area href="native_2types_8h.html" shape="rect" coords="552,186,656,210" alt="">
+<area href="pod_8h.html" shape="rect" coords="211,103,315,127" alt="">
+<area href="include_2nucleus_2registry_8h.html" shape="rect" coords="699,298,825,322" alt="">
+<area href="task_8h.html" shape="rect" coords="215,151,311,175" alt="">
+<area href="include_2native_2intr_8h.html" shape="rect" coords="218,199,309,223" alt="">
+<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="366,7,486,31" alt="">
+<area href="include_2nucleus_2intr_8h-source.html" shape="rect" coords="375,103,477,127" alt="">
+<area href="include_2nucleus_2timer_8h-source.html" shape="rect" coords="537,150,649,174" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="702,199,822,223" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="874,225,989,249" alt="">
+<area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="371,55,481,79" alt="">
+<area href="synch_8h-source.html" shape="rect" coords="367,199,485,223" alt="">
+<area href="include_2native_2timer_8h.html" shape="rect" coords="375,151,477,175" alt="">
+<area href="native_2types_8h.html" shape="rect" coords="541,249,645,273" alt="">
 </map>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga3">rt_intr_create</a> (RT_INTR *intr, unsigned irq, rt_isr_t isr, rt_iack_t iack)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga3">rt_intr_create</a> (RT_INTR *intr, const char *name, unsigned irq, rt_isr_t isr, rt_iack_t iack, int mode)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create an interrupt object from kernel space.  <a href="group__interrupt.html#ga3"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interrupt.html#ga4">rt_intr_delete</a> (RT_INTR *intr)</td></tr>
@@ -53,7 +53,7 @@ Include dependency graph for intr.c:<p><center><img src="ksrc_2skins_2native_2in
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about an interrupt object.  <a href="group__interrupt.html#ga7"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:19:44 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Fri Mar 3 17:22:10 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

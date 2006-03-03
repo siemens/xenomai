@@ -16,6 +16,22 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * @ingroup posix
+ * @defgroup posix_mutex Mutex services.
+ *
+ * Mutex services.
+ *
+ * A mutex is a MUTual EXclusion device, and is useful for protecting
+ * shared data structures from concurrent modifications, and implementing
+ * critical sections and monitors.
+ *
+ * Xenomai POSIX skin mutexes support priority inheritance (see
+ * pthread_mutexattr_setprotocol()), may be recursive (see
+ * pthread_mutexattr_settype()) and may be shared through shared memory.
+ *
+ *@{*/
+
 #include <posix/mutex.h>
 
 static pthread_mutexattr_t default_attr;
@@ -59,6 +75,12 @@ void pse51_mutex_pkg_cleanup (void)
     xnlock_put_irqrestore(&nklock, s);
 }
 
+/**
+ * Initialize a mutex.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_init.html
+ * 
+ */
 int pthread_mutex_init (pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 {
     struct __shadow_mutex *shadow = &((union __xeno_mutex *) mx)->shadow_mutex;
@@ -115,6 +137,12 @@ int pthread_mutex_init (pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
     return 0;
 }
 
+/**
+ * Destroy a mutex.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_destroy.html
+ * 
+ */
 int pthread_mutex_destroy (pthread_mutex_t *mx)
 
 {
@@ -224,6 +252,12 @@ int pse51_mutex_timedlock_break (struct __shadow_mutex *shadow, xnticks_t abs_to
     return err;
 }
 
+/**
+ * Lock a mutex if it is not already locked. 
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_trylock.html
+ * 
+ */
 int pthread_mutex_trylock (pthread_mutex_t *mx)
 
 {
@@ -261,6 +295,27 @@ int pthread_mutex_trylock (pthread_mutex_t *mx)
     return err;
 }
 
+/**
+ * Lock a mutex.
+ *
+ * @param mx the address of the mutex to be locked.
+ *
+ * @return 0 on success
+ * @return an error number if :
+ * - EINVAL, @a mx is invalid;
+ * - EAGAIN, @a mx is of PTHREAD_MUTEX_RECURSIVE type and the maximum number
+ *   of recursive locks has been exceeded;
+ * - EDEADLK, @a mx is of PTHREAD_MUTEX_ERRORCHECK type and the calling thread
+ *   already owns it;
+ * - EPERM, the caller context is invalid.
+ *
+ * @par valid contexts:
+ * - Xenomai kernel-space thread ;
+ * - Xenomai user-space thread (switches to primary mode).
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_lock.html
+ *
+ */
 int pthread_mutex_lock (pthread_mutex_t *mx)
 
 {
@@ -274,6 +329,12 @@ int pthread_mutex_lock (pthread_mutex_t *mx)
     return err;
 }
 
+/**
+ * Attempt, during a bounded time, to lock a mutex.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_timedlock.html
+ * 
+ */
 int pthread_mutex_timedlock (pthread_mutex_t *mx, const struct timespec *to)
 
 {
@@ -309,6 +370,12 @@ static inline int mutex_unlock_internal(struct __shadow_mutex *shadow)
     return 0;
 }
 
+/**
+ * Unlock a mutex.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_unlock.html
+ * 
+ */
 int pthread_mutex_unlock (pthread_mutex_t *mx)
 
 {
@@ -337,6 +404,8 @@ int pthread_mutex_unlock (pthread_mutex_t *mx)
 
     return err;
 }
+
+/*@}*/
 
 EXPORT_SYMBOL(pthread_mutex_init);
 EXPORT_SYMBOL(pthread_mutex_destroy);

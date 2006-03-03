@@ -17,8 +17,8 @@ Collaboration diagram for Message pipe services.:<center><table><tr><td><img src
 </map></td></tr></table></center>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Message pipe services.<p>
-Message pipes are an improved replacement for the legacy RT-FIFOS. A message pipe is a two-way communication channel between Xenomai tasks and standard Linux processes using regular file I/O operations on a pseudo-device. Pipes can be operated in a message-oriented fashion so that message boundaries are preserved, and also in byte streaming mode from real-time to standard Linux processes for optimal throughput.<p>
-Xenomai tasks open their side of the pipe using the <a class="el" href="group__pipe.html#ga9">rt_pipe_create()</a> service; standard Linux processes do the same by opening one of the /dev/rtpN special devices, where N is the minor number agreed upon between both ends of each pipe. Additionally, named pipes are available through the registry support, which automatically creates a symbolic link from entries under /proc/xenomai/registry/pipes/ to the appropriate special device file. 
+A message pipe is a two-way communication channel between Xenomai tasks and standard Linux processes using regular file I/O operations on a pseudo-device. Pipes can be operated in a message-oriented fashion so that message boundaries are preserved, and also in byte streaming mode from real-time to standard Linux processes for optimal throughput.<p>
+Xenomai tasks open their side of the pipe using the <a class="el" href="group__pipe.html#ga9">rt_pipe_create()</a> service; standard Linux processes do the same by opening one of the /dev/rtpN special devices, where N is the minor number agreed upon between both ends of each pipe. Additionally, named pipes are available through the registry support, which automatically creates a symbolic link from entries under /proc/xenomai/registry/pipes/ to the corresponding special device file. 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
@@ -169,7 +169,7 @@ This service opens a bi-directional communication channel allowing data exchange
     <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>An ASCII string standing for the symbolic name of the message pipe. When non-NULL and non-empty, this string is copied to a safe place into the descriptor, and passed to the registry package if enabled for indexing the created pipe.</td></tr>
   </table>
 </dl>
-Named pipes are supported through the use of the registry. When the registry support is enabled, passing a valid <em>name</em> parameter when creating a message pipe subsequently allows standard Linux processes to follow a symbolic link from /proc/xenomai/registry/pipes/<em>name</em> in order to reach the associated special device (i.e. /dev/rtp*), so that the specific <em>minor</em> information does not need to be known from those processes for opening the proper device file. In such a case, both sides of the pipe only need to agree upon a symbolic name to refer to the same data path, which is especially useful whenever the <em>minor</em> number is picked up dynamically using an adaptive algorithm, depending on the current system configuration.<p>
+Named pipes are supported through the use of the registry. When the registry support is enabled, passing a valid <em>name</em> parameter when creating a message pipe subsequently allows standard Linux processes to follow a symbolic link from /proc/xenomai/registry/pipes/<em>name</em> in order to reach the associated special device (i.e. /dev/rtp*), so that the specific <em>minor</em> information does not need to be known from those processes for opening the proper device file. In such a case, both sides of the pipe only need to agree upon a symbolic name to refer to the same data path, which is especially useful whenever the <em>minor</em> number is picked up dynamically using an adaptive algorithm, such as passing P_MINOR_AUTO as <em>minor</em> value.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>minor</em>&nbsp;</td><td>The minor number of the device associated with the pipe. Passing P_MINOR_AUTO causes the minor number to be auto-allocated. In such a case, the <em>name</em> parameter must be valid so that user-space processes may subsequently follow the symbolic link that will be automatically created from /proc/xenomai/registry/pipes/<em>name</em> to the allocated pipe device entry (i.e. /dev/rtp*).</td></tr>
@@ -801,7 +801,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:20:06 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Fri Mar 3 17:22:33 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

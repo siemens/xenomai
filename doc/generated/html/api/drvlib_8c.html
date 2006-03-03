@@ -7,7 +7,7 @@
 <div class="qindex">  <form class="search" action="search.php" method="get">
 <a class="qindex" href="main.html">Main&nbsp;Page</a> | <a class="qindex" href="modules.html">Modules</a> | <a class="qindex" href="annotated.html">Data&nbsp;Structures</a> | <a class="qindex" href="dirs.html">Directories</a> | <a class="qindex" href="files.html">File&nbsp;List</a> | <a class="qindex" href="functions.html">Data&nbsp;Fields</a> | <a class="qindex" href="globals.html">Globals</a>  | <span class="search"><u>S</u>earch&nbsp;for&nbsp;<input class="search" type="text" name="query" value="" size="20" accesskey="s"/></span></form></div>
 <div class="nav">
-<a class="el" href="dir_000004.html">ksrc</a>&nbsp;/&nbsp;<a class="el" href="dir_000005.html">skins</a>&nbsp;/&nbsp;<a class="el" href="dir_000006.html">rtdm</a></div>
+<a class="el" href="dir_000002.html">ksrc</a>&nbsp;/&nbsp;<a class="el" href="dir_000003.html">skins</a>&nbsp;/&nbsp;<a class="el" href="dir_000007.html">rtdm</a></div>
 <h1>drvlib.c File Reference</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 Real-Time Driver Model for Xenomai, driver library. 
 <p>
@@ -28,10 +28,10 @@ Include dependency graph for drvlib.c:<p><center><img src="drvlib_8c__incl.png" 
 <area href="nucleus_2heap_8h-source.html" shape="rect" coords="584,254,696,278" alt="">
 <area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="406,304,516,328" alt="">
 <area href="rtdm_8h.html" shape="rect" coords="416,352,506,376" alt="">
-<area href="nucleus_2intr_8h-source.html" shape="rect" coords="762,61,864,85" alt="">
+<area href="include_2nucleus_2intr_8h-source.html" shape="rect" coords="762,61,864,85" alt="">
 <area href="module_8h-source.html" shape="rect" coords="577,110,702,134" alt="">
 <area href="version_8h-source.html" shape="rect" coords="577,158,702,182" alt="">
-<area href="thread_8h-source.html" shape="rect" coords="753,12,873,36" alt="">
+<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="753,12,873,36" alt="">
 <area href="nucleus_2queue_8h-source.html" shape="rect" coords="753,206,873,230" alt="">
 </map>
 <table border="0" cellpadding="0" cellspacing="0">
@@ -152,35 +152,41 @@ Include dependency graph for drvlib.c:<p><center><img src="drvlib_8c__incl.png" 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nrtsignal.html#ga4">rtdm_nrtsig_pend</a> (rtdm_nrtsig_t *nrt_sig)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Trigger non-real-time signal.  <a href="group__nrtsignal.html#ga4"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga0">rtdm_printk</a> (const char *format,...)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga2">rtdm_mmap_to_user</a> (rtdm_user_info_t *user_info, void *src_addr, size_t len, int prot, void **pptr, struct vm_operations_struct *vm_ops, void *vm_private_data)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Real-time safe message printing on kernel console.  <a href="group__util.html#ga0"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga1">rtdm_malloc</a> (size_t size)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Map a kernel memory range into the address space of the user.  <a href="group__util.html#ga2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga3">rtdm_munmap</a> (rtdm_user_info_t *user_info, void *ptr, size_t len)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate memory block in real-time context.  <a href="group__util.html#ga1"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga2">rtdm_free</a> (void *ptr)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unmap a user memory range.  <a href="group__util.html#ga3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga4">rtdm_printk</a> (const char *format,...)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release real-time memory block.  <a href="group__util.html#ga2"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga3">rtdm_read_user_ok</a> (rtdm_user_info_t *user_info, const void __user *ptr, size_t size)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Real-time safe message printing on kernel console.  <a href="group__util.html#ga4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga5">rtdm_malloc</a> (size_t size)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Check if read access to user-space memory block is safe.  <a href="group__util.html#ga3"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga4">rtdm_rw_user_ok</a> (rtdm_user_info_t *user_info, const void __user *ptr, size_t size)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate memory block in real-time context.  <a href="group__util.html#ga5"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga6">rtdm_free</a> (void *ptr)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Check if read/write access to user-space memory block is safe.  <a href="group__util.html#ga4"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga5">rtdm_copy_from_user</a> (rtdm_user_info_t *user_info, void *dst, const void __user *src, size_t size)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release real-time memory block.  <a href="group__util.html#ga6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga7">rtdm_read_user_ok</a> (rtdm_user_info_t *user_info, const void __user *ptr, size_t size)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Copy user-space memory block to specified buffer.  <a href="group__util.html#ga5"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga6">rtdm_copy_to_user</a> (rtdm_user_info_t *user_info, void __user *dst, const void *src, size_t size)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Check if read access to user-space memory block is safe.  <a href="group__util.html#ga7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga8">rtdm_rw_user_ok</a> (rtdm_user_info_t *user_info, const void __user *ptr, size_t size)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Copy specified buffer to user-space memory block.  <a href="group__util.html#ga6"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga7">rtdm_strncpy_from_user</a> (rtdm_user_info_t *user_info, char *dst, const char __user *src, size_t count)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Check if read/write access to user-space memory block is safe.  <a href="group__util.html#ga8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga9">rtdm_copy_from_user</a> (rtdm_user_info_t *user_info, void *dst, const void __user *src, size_t size)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Copy user-space string to specified buffer.  <a href="group__util.html#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga8">rtdm_in_rt_context</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Copy user-space memory block to specified buffer.  <a href="group__util.html#ga9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga10">rtdm_copy_to_user</a> (rtdm_user_info_t *user_info, void __user *dst, const void *src, size_t size)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Test if running in a real-time task.  <a href="group__util.html#ga8"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Copy specified buffer to user-space memory block.  <a href="group__util.html#ga10"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga11">rtdm_strncpy_from_user</a> (rtdm_user_info_t *user_info, char *dst, const char __user *src, size_t count)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Copy user-space string to specified buffer.  <a href="group__util.html#ga11"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga12">rtdm_in_rt_context</a> (void)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Test if running in a real-time task.  <a href="group__util.html#ga12"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:19:55 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Fri Mar 3 17:22:22 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

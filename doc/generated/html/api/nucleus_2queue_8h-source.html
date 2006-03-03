@@ -7,7 +7,7 @@
 <div class="qindex">  <form class="search" action="search.php" method="get">
 <a class="qindex" href="main.html">Main&nbsp;Page</a> | <a class="qindex" href="modules.html">Modules</a> | <a class="qindex" href="annotated.html">Data&nbsp;Structures</a> | <a class="qindex" href="dirs.html">Directories</a> | <a class="qindex" href="files.html">File&nbsp;List</a> | <a class="qindex" href="functions.html">Data&nbsp;Fields</a> | <a class="qindex" href="globals.html">Globals</a>  | <span class="search"><u>S</u>earch&nbsp;for&nbsp;<input class="search" type="text" name="query" value="" size="20" accesskey="s"/></span></form></div>
 <div class="nav">
-<a class="el" href="dir_000000.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000003.html">nucleus</a></div>
+<a class="el" href="dir_000000.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000006.html">nucleus</a></div>
 <h1>queue.h</h1><div class="fragment"><pre class="fragment">00001 <span class="comment">/*</span>
 00002 <span class="comment"> * Copyright (C) 2001,2002,2003 Philippe Gerum &lt;rpm@xenomai.org&gt;.</span>
 00003 <span class="comment"> *</span>
@@ -67,27 +67,27 @@
 00057 
 00058     xnholder_t head;
 00059     <span class="keywordtype">int</span> elems;
-00060 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_DEBUG) &amp;&amp; defined(CONFIG_SMP)</span>
+00060 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_DEBUG_QUEUES) &amp;&amp; defined(CONFIG_SMP)</span>
 00061 <span class="preprocessor"></span>    xnlock_t lock;
-00062 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_DEBUG &amp;&amp; CONFIG_SMP */</span>
+00062 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_DEBUG_QUEUES &amp;&amp; CONFIG_SMP */</span>
 00063 
 00064 } xnqueue_t;
 00065 
-00066 <span class="preprocessor">#if defined(CONFIG_XENO_OPT_DEBUG) &amp;&amp; defined(CONFIG_SMP)</span>
+00066 <span class="preprocessor">#if defined(CONFIG_XENO_OPT_DEBUG_QUEUES) &amp;&amp; defined(CONFIG_SMP)</span>
 00067 <span class="preprocessor"></span><span class="preprocessor">#define DECLARE_XNQUEUE(q) xnqueue_t q = { { &amp;(q).head, &amp;(q).head }, 0, XNARCH_LOCK_UNLOCKED }</span>
-00068 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !(CONFIG_XENO_OPT_DEBUG &amp;&amp; CONFIG_SMP) */</span>
+00068 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !(CONFIG_XENO_OPT_DEBUG_QUEUES &amp;&amp; CONFIG_SMP) */</span>
 00069 <span class="preprocessor">#define DECLARE_XNQUEUE(q) xnqueue_t q = { { &amp;(q).head, &amp;(q).head }, 0 }</span>
-00070 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_DEBUG &amp;&amp; CONFIG_SMP */</span>
+00070 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_DEBUG_QUEUES &amp;&amp; CONFIG_SMP */</span>
 00071 
 00072 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> initq (xnqueue_t *qslot) {
 00073     inith(&amp;qslot-&gt;head);
 00074     qslot-&gt;elems = 0;
-00075 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_DEBUG) &amp;&amp; defined(CONFIG_SMP)</span>
+00075 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_DEBUG_QUEUES) &amp;&amp; defined(CONFIG_SMP)</span>
 00076 <span class="preprocessor"></span>    xnlock_init(&amp;qslot-&gt;lock);
-00077 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_DEBUG &amp;&amp; CONFIG_SMP */</span>
+00077 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_DEBUG_QUEUES &amp;&amp; CONFIG_SMP */</span>
 00078 }
 00079 
-00080 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_DEBUG</span>
+00080 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_DEBUG_QUEUES</span>
 00081 <span class="preprocessor"></span>
 00082 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)</span>
 00083 <span class="preprocessor"></span>
@@ -182,7 +182,7 @@
 00172 <span class="preprocessor">   dth(__holder);                               \</span>
 00173 <span class="preprocessor">   --(__qslot)-&gt;elems; })</span>
 00174 <span class="preprocessor"></span>
-00175 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_DEBUG */</span>
+00175 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_DEBUG_QUEUES */</span>
 00176 
 00177 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> insertq (xnqueue_t *qslot,
 00178                            xnholder_t *head,
@@ -216,7 +216,7 @@
 00206     <span class="keywordflow">return</span> --qslot-&gt;elems;
 00207 }
 00208 
-00209 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_DEBUG */</span>
+00209 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_DEBUG_QUEUES */</span>
 00210 
 00211 <span class="keyword">static</span> <span class="keyword">inline</span> xnholder_t *getheadq (xnqueue_t *qslot)
 00212 {
@@ -754,7 +754,7 @@
 00744 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_SCALABLE_SCHED */</span>
 00745 
 00746 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_QUEUE_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:19:13 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Fri Mar 3 17:21:38 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

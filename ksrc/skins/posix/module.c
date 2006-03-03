@@ -16,6 +16,14 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * @defgroup posix POSIX skin.
+ *
+ * Xenomai POSIX skin is an implementation of a small subset of the Single
+ * Unix specification over Xenomai generic RTOS core.
+ *
+ */
+
 #ifdef __KERNEL__
 #include <posix/syscall.h>
 #endif /* __KERNEL__ */

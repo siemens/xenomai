@@ -16,6 +16,18 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * @ingroup posix
+ * @defgroup posix_mq Message queues services.
+ *
+ * Message queues services.
+ *
+ * A message queue allow exchanging data between real-time threads. Maximum
+ * message length and maximum number of messages are fixed when the queue is
+ * created (see mq_open()).
+ *
+ *@{*/
+
 #include <stdarg.h>
 
 #include <nucleus/queue.h>
@@ -152,6 +164,12 @@ static void pse51_mq_destroy(pse51_mq_t *mq)
         xnpod_schedule();
 }
 
+/**
+ * Get a attribute object of a message queue.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_getattr.html
+ * 
+ */
 int mq_getattr(mqd_t fd, struct mq_attr *attr)
 {
     pse51_desc_t *desc;
@@ -179,6 +197,12 @@ int mq_getattr(mqd_t fd, struct mq_attr *attr)
     return 0;
 }
 
+/**
+ * Set flags of a message queue.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_setattr.html
+ * 
+ */
 int mq_setattr(mqd_t fd,
                const struct mq_attr *__restrict__ attr,
                struct mq_attr *__restrict__ oattr)
@@ -428,6 +452,12 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
         }
 }
 
+/**
+ * Try during a bounded time to send a message to a message queue.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedsend.html
+ * 
+ */
 int mq_timedsend(mqd_t fd,
                  const char * buffer,
                  size_t len,
@@ -459,6 +489,12 @@ int mq_timedsend(mqd_t fd,
     return 0;
 }
 
+/**
+ * Send a message to a message queue.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_send.html
+ * 
+ */
 int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
 {
     int err;
@@ -477,6 +513,13 @@ int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
     return 0;
 }
 
+/**
+ * Register the current thread to be notified of message arrival at an empty
+ * message queue.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_notify.html
+ * 
+ */
 int mq_notify(mqd_t fd, const struct sigevent *evp)
 {
     pthread_t thread = pse51_current_thread();
@@ -535,6 +578,12 @@ int mq_notify(mqd_t fd, const struct sigevent *evp)
     return -1;
 }
 
+/**
+ * Try during a bounded time to receive a message from a message queue.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedreceive.html
+ * 
+ */
 ssize_t mq_timedreceive(mqd_t fd,
                         char *__restrict__ buffer,
                         size_t len,
@@ -566,6 +615,12 @@ ssize_t mq_timedreceive(mqd_t fd,
     return len;    
 }
 
+/**
+ * Receive a message from a message queue.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_receive.html
+ * 
+ */
 ssize_t mq_receive(mqd_t fd, char *buffer, size_t len, unsigned *priop)
 {
     int err;
@@ -585,6 +640,12 @@ ssize_t mq_receive(mqd_t fd, char *buffer, size_t len, unsigned *priop)
 }
 
 
+/**
+ * Open a message queue.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_open.html
+ * 
+ */
 mqd_t mq_open(const char *name, int oflags, ...)
 {
     struct mq_attr *attr;
@@ -678,6 +739,12 @@ mqd_t mq_open(const char *name, int oflags, ...)
     return (mqd_t) -1;
 }
 
+/**
+ * Close a message queue.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_close.html
+ * 
+ */
 int mq_close(mqd_t fd)
 {
     pse51_desc_t *desc;
@@ -729,6 +796,12 @@ int mq_close(mqd_t fd)
     return -1;
 }
 
+/**
+ * Unlink a message queue.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_unlink.html
+ * 
+ */
 int mq_unlink(const char *name)
 {
     pse51_node_t *node;
@@ -790,6 +863,8 @@ void pse51_mq_pkg_cleanup(void)
         xnfree(mq);
         }
 }
+
+/*@}*/
 
 EXPORT_SYMBOL(mq_open);
 EXPORT_SYMBOL(mq_getattr);
