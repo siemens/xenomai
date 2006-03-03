@@ -16,6 +16,14 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * @ingroup posix
+ * @defgroup posix_signal Signals services.
+ *
+ * Signals management services.
+ * 
+ *@{*/
+
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 #include <nucleus/shadow.h>
 #endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE*/
@@ -150,6 +158,12 @@ static inline void nandset (pse51_sigset_t *set,
 }
 
 
+/**
+ * Initialize and empty a signal set.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigemptyset.html
+ * 
+ */
 int sigemptyset (sigset_t *user_set)
 
 {
@@ -160,6 +174,12 @@ int sigemptyset (sigset_t *user_set)
     return 0;
 }
 
+/**
+ * Initialize and fill a signal set.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigfillset.html
+ * 
+ */
 int sigfillset (sigset_t *user_set)
 
 {
@@ -170,6 +190,12 @@ int sigfillset (sigset_t *user_set)
     return 0;
 }
 
+/**
+ * Add a signal to a signal set.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigaddset.html
+ * 
+ */
 int sigaddset (sigset_t *user_set, int sig)
 
 {
@@ -186,6 +212,12 @@ int sigaddset (sigset_t *user_set, int sig)
     return 0;
 }
 
+/**
+ * Delete a signal from a signal set.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigdelset.html
+ * 
+ */
 int sigdelset (sigset_t *user_set, int sig)
 
 {
@@ -202,6 +234,12 @@ int sigdelset (sigset_t *user_set, int sig)
     return 0;
 }
 
+/**
+ * Test for a signal in a signal set.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigismember.html
+ * 
+ */
 int sigismember (const sigset_t *user_set, int sig)
 
 {
@@ -311,6 +349,12 @@ static pse51_siginfo_t *pse51_getsigq (pse51_sigqueue_t *queue,
     return si;
 }
 
+/**
+ * Examine and change a signal action.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigaction.html
+ * 
+ */
 int sigaction (int sig, const struct sigaction *action, struct sigaction *old)
 
 {
@@ -380,6 +424,12 @@ int sigqueue (pthread_t thread, int sig, union sigval value)
     return 0;
 }
 
+/**
+ * Send a signal to a thread.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_kill.html
+ * 
+ */
 int pthread_kill (pthread_t thread, int sig)
 {
     pse51_siginfo_t *si = NULL;
@@ -412,6 +462,12 @@ int pthread_kill (pthread_t thread, int sig)
     return 0;
 }
 
+/**
+ * Examine pending signals.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigpending.html
+ * 
+ */
 int sigpending (sigset_t *user_set)
 
 {
@@ -436,6 +492,12 @@ int sigpending (sigset_t *user_set)
     return 0;
 }
 
+/**
+ * Examine and change the set of signals blocked by a thread.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_sigmask.html
+ * 
+ */
 int pthread_sigmask (int how, const sigset_t *user_set, sigset_t *user_oset)
 
 {
@@ -597,6 +659,12 @@ static int pse51_sigtimedwait_inner (const sigset_t *user_set,
     return err;
 }
 
+/**
+ * Wait for signals.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigwait.html
+ * 
+ */
 int sigwait (const sigset_t *user_set, int *sig)
 {
     siginfo_t info;
@@ -614,6 +682,12 @@ int sigwait (const sigset_t *user_set, int *sig)
     return err;
 }
 
+/**
+ * Wait for signals.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigwaitinfo.html
+ * 
+ */
 int sigwaitinfo (const sigset_t *__restrict__ user_set,
                  siginfo_t *__restrict__ info)
 {
@@ -640,6 +714,12 @@ int sigwaitinfo (const sigset_t *__restrict__ user_set,
     return 0;
 }
 
+/**
+ * Wait during a bounded time for signals.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigtimedwait.html
+ * 
+ */
 int sigtimedwait (const sigset_t *__restrict__ user_set,
                   siginfo_t *__restrict__ info,
                   const struct timespec *__restrict__ timeout)
@@ -717,7 +797,8 @@ static void pse51_dispatch_signals (xnsigmask_t sigs)
             if (testbits(action->sa_flags, SA_ONESHOT))
                 action->sa_handler = SIG_DFL;
 
-            if (!testbits(action->sa_flags, SA_SIGINFO) || handler == SIG_DFL)
+            if (!testbits(action->sa_flags, SA_SIGINFO)
+                || handler == pse51_default_handler)
                 handler(info.si_signo);
             else
                 info_handler(info.si_signo, &info, NULL);
@@ -890,6 +971,8 @@ static void pse51_default_handler (int sig)
     xnpod_fatal("Thread %s received unhandled signal %d.\n",
                 thread_name(cur), sig);
 }
+
+/*@}*/
 
 EXPORT_SYMBOL(sigemptyset);
 EXPORT_SYMBOL(sigfillset);

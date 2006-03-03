@@ -16,6 +16,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * @ingroup posix
+ * @defgroup posix_thread Threads management services.
+ *
+ * Threads management services.
+ *
+ *@{*/
 
 #include <posix/thread.h>
 #include <posix/cancel.h>
@@ -34,7 +41,7 @@ static void thread_destroy (pthread_t thread)
 {
     removeq(&pse51_threadq, &thread->link);
     /* join_sync wait queue may not be empty only when this function is called
-       from pse51_cond_obj_cleanup, hence the absence of xnpod_schedule(). */
+       from pse51_thread_pkg_cleanup, hence the absence of xnpod_schedule(). */
     xnsynch_destroy(&thread->join_synch);
     xnfree(thread);
 }
@@ -85,6 +92,12 @@ static void thread_delete_hook (xnthread_t *xnthread)
     xnlock_put_irqrestore(&nklock, s);
 }
 
+/**
+ * Create a thread.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_create.html
+ * 
+ */
 int pthread_create (pthread_t *tid,
 		    const pthread_attr_t *attr,
 		    void *(*start) (void *),
@@ -193,6 +206,12 @@ int pthread_create (pthread_t *tid,
     return 0;
 }
 
+/**
+ * Detach a running thread.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_detach.html
+ * 
+ */
 int pthread_detach (pthread_t thread)
 
 {
@@ -223,11 +242,23 @@ int pthread_detach (pthread_t thread)
     return 0;
 }
 
+/**
+ * Compare thread descriptors.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_equal.html
+ * 
+ */
 int pthread_equal (pthread_t t1, pthread_t t2)
 {
     return t1 == t2;
 }
 
+/**
+ * Terminate the current thread.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_exit.html
+ * 
+ */
 void pthread_exit (void *value_ptr)
 
 {
@@ -243,6 +274,12 @@ void pthread_exit (void *value_ptr)
     pse51_thread_abort(cur, value_ptr);
 }
 
+/**
+ * Wait for termination of a specified thread.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_join.html
+ * 
+ */
 int pthread_join (pthread_t thread, void **value_ptr)
 
 {
@@ -313,19 +350,21 @@ int pthread_join (pthread_t thread, void **value_ptr)
     return 0;
 }
 
+/**
+ * Get descriptor of the calling thread.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_self.html
+ * 
+ */
 pthread_t pthread_self (void)
 
 {
     return pse51_current_thread();
 }
 
-int sched_yield (void)
-
-{
-    xnpod_yield();
-    return 0;
-}
-
+/**
+ * Make a thread periodic.
+ */
 int pthread_make_periodic_np (pthread_t thread,
                               struct timespec *starttp,
                               struct timespec *periodtp)
@@ -358,6 +397,9 @@ int pthread_make_periodic_np (pthread_t thread,
     return err;
 }
 
+/**
+ * Wait for current thread next period.
+ */
 int pthread_wait_np(unsigned long *overruns_r)
 {
     if (xnpod_unblockable_p())
@@ -438,6 +480,8 @@ int *pse51_errno_location (void)
 
     return &fallback_errno;
 }
+
+/*@}*/
 
 EXPORT_SYMBOL(pthread_create);
 EXPORT_SYMBOL(pthread_detach);

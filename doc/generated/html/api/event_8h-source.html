@@ -34,7 +34,7 @@
 00044 } RT_EVENT_INFO;
 00045 
 00046 <span class="keyword">typedef</span> <span class="keyword">struct </span>rt_event_placeholder {
-00047     rt_handle_t opaque;
+00047     xnhandle_t opaque;
 00048 } RT_EVENT_PLACEHOLDER;
 00049 
 00050 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_SIM__)</span>
@@ -49,7 +49,7 @@
 00059 
 00060     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> value; <span class="comment">/* !&lt; Event group value. */</span>
 00061 
-00062     rt_handle_t handle; <span class="comment">/* !&lt; Handle in registry -- zero if unregistered. */</span>
+00062     xnhandle_t handle;  <span class="comment">/* !&lt; Handle in registry -- zero if unregistered. */</span>
 00063 
 00064     <span class="keywordtype">char</span> name[XNOBJECT_NAME_LEN]; <span class="comment">/* !&lt; Symbolic name. */</span>
 00065 
@@ -86,7 +86,7 @@
 <a name="l00096"></a><a class="code" href="group__event.html#ga9">00096</a> <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__event.html#ga9">rt_event_unbind</a> (RT_EVENT *event)
 00097 
 00098 {
-00099     event-&gt;opaque = RT_HANDLE_INVALID;
+00099     event-&gt;opaque = XN_NO_HANDLE;
 00100     <span class="keywordflow">return</span> 0;
 00101 }
 00102 
@@ -130,7 +130,7 @@
 00140 <span class="preprocessor">#endif</span>
 00141 <span class="preprocessor"></span>
 00142 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_EVENT_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:19:13 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Fri Mar 3 17:21:38 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

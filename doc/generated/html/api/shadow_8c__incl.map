@@ -6,7 +6,7 @@ rect $module_8h-source.html 233,440 358,464
 rect $shadow_8h-source.html 232,488 360,512
 rect $include_2nucleus_2core_8h-source.html 241,536 350,560
 rect $ltt_8h-source.html 458,572 552,596
-rect $thread_8h-source.html 445,296 565,320
-rect $nucleus_2intr_8h-source.html 454,344 556,368
+rect $include_2nucleus_2thread_8h-source.html 445,296 565,320
+rect $include_2nucleus_2intr_8h-source.html 454,344 556,368
 rect $nucleus_2types_8h-source.html 632,392 746,416
 rect $nucleus_2queue_8h-source.html 445,392 565,416

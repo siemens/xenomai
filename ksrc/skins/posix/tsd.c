@@ -16,6 +16,27 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * @ingroup posix
+ * @defgroup posix_tsd Thread-specific data.
+ *
+ * Thread-specific data.
+ *
+ * Programs often need global or static variables that have different values in
+ * different threads. Since threads share one memory space, this cannot be
+ * achieved with regular variables. Thread-specific data is the POSIX threads
+ * answer to this need.
+ *
+ * Each thread possesses a private memory block, the thread-specific data area,
+ * or TSD area for short. This area is indexed by TSD keys. The TSD area
+ * associates values of type `void *' to TSD keys. TSD keys are common to all
+ * threads, but the value associated with a given TSD key can be different in
+ * each thread.
+ *
+ * When a thread is created, its TSD area initially associates @a NULL with all
+ * keys.
+ *
+ *@{*/
 
 #include <posix/thread.h>
 #include <posix/tsd.h>
@@ -45,6 +66,12 @@ static xnqueue_t free_keys,
 
 static unsigned allocated_keys;
 
+/**
+ * Create a thread-specific data key.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_key_create.html
+ * 
+ */
 int pthread_key_create (pthread_key_t *key, pse51_key_destructor_t destructor)
 
 {
@@ -103,6 +130,12 @@ int pthread_key_create (pthread_key_t *key, pse51_key_destructor_t destructor)
     return 0;
 }
 
+/**
+ * Associate a thread-specific value with the specified key.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setspecific.html
+ * 
+ */
 int pthread_setspecific (pthread_key_t key, const void *value)
 
 {
@@ -127,6 +160,12 @@ int pthread_setspecific (pthread_key_t key, const void *value)
     return 0;
 }
 
+/**
+ * Get the thread-specific value bound to the specified key.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getspecific.html
+ * 
+ */
 void *pthread_getspecific (pthread_key_t key)
 
 {
@@ -152,6 +191,12 @@ void *pthread_getspecific (pthread_key_t key)
     return (void *)value;
 }
 
+/**
+ * Delete a thread-specific data key.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_key_delete.html
+ * 
+ */
 int pthread_key_delete (pthread_key_t key)
 
 {
@@ -250,6 +295,8 @@ void pse51_tsd_pkg_cleanup (void)
     while ((key = link2key(getq(&free_keys))) != NULL)
         xnfree(key);
 }
+
+/*@}*/
 
 EXPORT_SYMBOL(pthread_key_create);
 EXPORT_SYMBOL(pthread_key_delete);

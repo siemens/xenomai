@@ -1,3 +1,7 @@
+2006-03-03  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix: Initial POSIX skin documentation.
+
 2006-03-03  Philippe Gerum  <rpm@xenomai.org>
 
 	* scripts/xeno-load.in: Do not attempt to load Adeos as a module

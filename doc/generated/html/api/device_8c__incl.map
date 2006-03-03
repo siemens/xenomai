@@ -3,8 +3,8 @@ rect $device_8h-source.html 225,208 326,232
 rect $proc_8h-source.html 230,256 321,280
 rect $pod_8h.html 747,73 851,97
 rect $rtdm__driver_8h.html 379,208 510,232
-rect $thread_8h-source.html 907,73 1027,97
-rect $nucleus_2intr_8h-source.html 917,182 1018,206
+rect $include_2nucleus_2thread_8h-source.html 907,73 1027,97
+rect $include_2nucleus_2intr_8h-source.html 917,182 1018,206
 rect $xenomai_8h-source.html 559,256 693,280
 rect $synch_8h-source.html 741,305 858,329
 rect $nucleus_2heap_8h-source.html 743,170 855,194

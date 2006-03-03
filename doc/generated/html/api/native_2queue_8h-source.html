@@ -47,7 +47,7 @@
 00057 
 00058 <span class="keyword">typedef</span> <span class="keyword">struct </span>rt_queue_placeholder {
 00059 
-00060     rt_handle_t opaque;
+00060     xnhandle_t opaque;
 00061 
 00062     <span class="keywordtype">void</span> *opaque2;
 00063 
@@ -73,7 +73,7 @@
 00083 
 00084     <span class="keywordtype">int</span> mode;           <span class="comment">/* !&lt; Creation mode. */</span>
 00085 
-00086     rt_handle_t handle; <span class="comment">/* !&lt; Handle in registry -- zero if unregistered. */</span>
+00086     xnhandle_t handle;  <span class="comment">/* !&lt; Handle in registry -- zero if unregistered. */</span>
 00087 
 00088     <span class="keywordtype">int</span> qlimit;         <span class="comment">/* !&lt; Maximum queued elements. */</span>
 00089 
@@ -167,7 +167,7 @@
 00177 <span class="preprocessor">#endif</span>
 00178 <span class="preprocessor"></span>
 00179 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_QUEUE_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:19:13 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Fri Mar 3 17:21:38 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -16,9 +16,23 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * @ingroup posix
+ * @defgroup posix_time Clocks and timers.
+ *
+ * Clocks and timers services.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05
+ *@{*/
 
 #include <posix/thread.h>
 
+/**
+ * Get resolution of the specified clock.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html
+ * 
+ */
 int clock_getres (clockid_t clock_id, struct timespec *res)
 
 {
@@ -34,6 +48,12 @@ int clock_getres (clockid_t clock_id, struct timespec *res)
     return 0;
 }
 
+/**
+ * Read the specified clock. 
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/clock_gettime.html
+ * 
+ */
 int clock_gettime (clockid_t clock_id, struct timespec *tp)
 
 {
@@ -58,6 +78,12 @@ int clock_gettime (clockid_t clock_id, struct timespec *tp)
     return 0;    
 }
 
+/**
+ * Set the specified clock.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/clock_settime.html
+ * 
+ */
 int clock_settime(clockid_t clock_id, const struct timespec *tp)
 
 {
@@ -71,6 +97,12 @@ int clock_settime(clockid_t clock_id, const struct timespec *tp)
     return -1;
 }
 
+/**
+ * Sleep some amount of time.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/clock_nanosleep.html
+ * 
+ */
 int clock_nanosleep (clockid_t clock_id,
 		     int flags,
 		     const struct timespec *rqtp,
@@ -141,6 +173,12 @@ int clock_nanosleep (clockid_t clock_id,
     return err;
 }
 
+/**
+ * Sleep some amount of time.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/nanosleep.html
+ * 
+ */
 int nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
 {
     int err = clock_nanosleep(CLOCK_REALTIME, 0, rqtp, rmtp);
@@ -151,6 +189,8 @@ int nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
     thread_set_errno(err);
     return -1;
 }
+
+/*@}*/
 
 EXPORT_SYMBOL(clock_getres);
 EXPORT_SYMBOL(clock_gettime);

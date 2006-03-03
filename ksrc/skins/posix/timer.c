@@ -16,6 +16,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * @addtogroup posix_time
+ * 
+ *@{*/
 
 #include <nucleus/timer.h>
 #include <posix/thread.h>
@@ -83,6 +87,12 @@ void pse51_timer_notified (pse51_siginfo_t *si)
     timer->last_overruns = timer->overruns;
 }
 
+/**
+ * Create a timer object.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/timer_create.html
+ *
+ */
 int timer_create (clockid_t clockid,
                   const struct sigevent *__restrict__ evp,
                   timer_t *__restrict__ timerid)
@@ -149,6 +159,12 @@ int timer_create (clockid_t clockid,
     return -1;
 }
 
+/**
+ * Delete a timer object.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/timer_delete.html
+ * 
+ */
 int timer_delete(timer_t timerid)
 {
     struct pse51_timer *timer;
@@ -205,6 +221,12 @@ static void pse51_timer_gettime_inner (struct pse51_timer *__restrict__ timer,
         }
 }
 
+/**
+ * Start or stop a timer.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/timer_settime.html
+ * 
+ */
 int timer_settime (timer_t timerid,
                    int flags,
                    const struct itimerspec *__restrict__ value,
@@ -289,6 +311,12 @@ int timer_settime (timer_t timerid,
     return -1;
 }
 
+/**
+ * Get timer next expiration date and reload value.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/timer_gettime.html
+ * 
+ */
 int timer_gettime(timer_t timerid, struct itimerspec *value)
 {
     struct pse51_timer *timer;
@@ -317,6 +345,13 @@ int timer_gettime(timer_t timerid, struct itimerspec *value)
     return -1;
 }
 
+/**
+ * Get the timer expiration overruns count since the most recent expiration
+ * signal delivery.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/timer_getoverrun.html
+ * 
+ */
 int timer_getoverrun(timer_t timerid)
 {
     struct pse51_timer *timer;
@@ -391,6 +426,8 @@ void pse51_timer_pkg_cleanup(void)
     /* Nothing to be done for deletion, since the pool is in static memory. */
 #endif /* CONFIG_XENO_OPT_DEBUG */
 }
+
+/*@}*/
 
 EXPORT_SYMBOL(timer_create);
 EXPORT_SYMBOL(timer_delete);

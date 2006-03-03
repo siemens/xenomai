@@ -34,7 +34,7 @@ extern "C" {
 #endif
 
 #undef close
-#define close(fd) pse51_shm_close(fd)
+#define close pse51_shm_close
 
 int pse51_shm_close(int fildes);
 

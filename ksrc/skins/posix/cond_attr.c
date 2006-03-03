@@ -16,6 +16,11 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * @addtogroup posix_cond
+ *
+ *@{*/
+
 #include <posix/internal.h>
 
 static pthread_condattr_t default_cond_attr = {
@@ -25,6 +30,12 @@ static pthread_condattr_t default_cond_attr = {
 };
 
 
+/**
+ * Initialize a condition variable attribute object.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_init.html
+ * 
+ */
 int pthread_condattr_init (pthread_condattr_t *attr)
 
 {
@@ -36,6 +47,12 @@ int pthread_condattr_init (pthread_condattr_t *attr)
     return 0;
 }
 
+/**
+ * Destroy a condition variable attribute object.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_destroy.html
+ * 
+ */
 int pthread_condattr_destroy (pthread_condattr_t *attr)
 
 {
@@ -55,6 +72,12 @@ int pthread_condattr_destroy (pthread_condattr_t *attr)
     return 0;
 }
 
+/**
+ * Get the clock selection condition variable attribute.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_getclock.html
+ * 
+ */
 int pthread_condattr_getclock (const pthread_condattr_t *attr, clockid_t *clk_id)
 
 {
@@ -74,6 +97,12 @@ int pthread_condattr_getclock (const pthread_condattr_t *attr, clockid_t *clk_id
     return 0;
 }
 
+/**
+ * Set the clock selection condition variable attribute.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_setclock.html
+ * 
+ */
 int pthread_condattr_setclock (pthread_condattr_t *attr, clockid_t clk_id)
 
 {
@@ -104,6 +133,8 @@ int pthread_condattr_setclock (pthread_condattr_t *attr, clockid_t clk_id)
 
     return 0;
 }
+
+/*@}*/
 
 EXPORT_SYMBOL(pthread_condattr_init);
 EXPORT_SYMBOL(pthread_condattr_destroy);

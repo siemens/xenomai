@@ -16,6 +16,24 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * @ingroup posix
+ * @defgroup posix_cond Condition variables services.
+ *
+ * Condition variables services.
+ *
+ * A condition variable is a synchronization object that allows threads to
+ * suspend execution until some predicate on shared data is satisfied. The basic
+ * operations on conditions are: signal the condition (when the predicate
+ * becomes true), and wait for the condition, suspending the thread execution
+ * until another thread signals the condition.
+ *
+ * A condition variable must always be associated with a mutex, to avoid the
+ * race condition where a thread prepares to wait on a condition variable and
+ * another thread signals the condition just before the first thread actually
+ * waits on it.
+ *
+ *@{*/
 
 #include <posix/mutex.h>
 #include <posix/cond.h>
@@ -45,6 +63,12 @@ static void cond_destroy_internal (pse51_cond_t *cond)
     xnfree(cond);
 }
 
+/**
+ * Initialize a condition variable.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_init.html
+ * 
+ */
 int pthread_cond_init (pthread_cond_t *cnd, const pthread_condattr_t *attr)
 
 {
@@ -71,7 +95,7 @@ int pthread_cond_init (pthread_cond_t *cnd, const pthread_condattr_t *attr)
             holder = nextq(&pse51_condq, holder))
             if (holder == &shadow->cond->link)
                 {
-                /* mutex is already in the queue. */
+                /* cond is already in the queue. */
                 xnlock_put_irqrestore(&nklock, s);
                 return EBUSY;
                 }
@@ -99,6 +123,12 @@ int pthread_cond_init (pthread_cond_t *cnd, const pthread_condattr_t *attr)
     return 0;    
 }
 
+/**
+ * Destroy a condition variable.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_destroy.html
+ * 
+ */
 int pthread_cond_destroy (pthread_cond_t *cnd)
 
 {
@@ -262,6 +292,12 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
     return err;
 }
 
+/**
+ * Wait for a condition variable to be signalled.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_wait.html
+ * 
+ */
 int pthread_cond_wait (pthread_cond_t *cnd, pthread_mutex_t *mx)
 
 {
@@ -274,6 +310,12 @@ int pthread_cond_wait (pthread_cond_t *cnd, pthread_mutex_t *mx)
     return err == EINTR ? 0 : err;
 }
 
+/**
+ * Wait a bounded time for a condition variable to be signalled.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_timedwait.html
+ * 
+ */
 int pthread_cond_timedwait (pthread_cond_t *cnd,
 			    pthread_mutex_t *mx,
 			    const struct timespec *abstime)
@@ -288,6 +330,12 @@ int pthread_cond_timedwait (pthread_cond_t *cnd,
     return err == EINTR ? 0 : err;
 }
 
+/**
+ * Signal a condition variable.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_signal.html.
+ * 
+ */
 int pthread_cond_signal (pthread_cond_t *cnd)
 
 {
@@ -313,6 +361,12 @@ int pthread_cond_signal (pthread_cond_t *cnd)
     return 0;
 }
 
+/**
+ * Broadcast a condition variable.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_broadcast.html
+ * 
+ */
 int pthread_cond_broadcast (pthread_cond_t *cnd)
 
 {
@@ -364,6 +418,8 @@ void pse51_cond_pkg_cleanup (void)
 
     xnlock_put_irqrestore(&nklock, s);
 }
+
+/*@}*/
 
 EXPORT_SYMBOL(pthread_cond_init);
 EXPORT_SYMBOL(pthread_cond_destroy);

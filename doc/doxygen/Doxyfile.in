@@ -371,6 +371,7 @@ INPUT                  = \
         @top_srcdir@/include/rtdm \
         @top_srcdir@/src/skins/rtdm \
         @top_srcdir@/ksrc/skins/rtdm \
+        @top_srcdir@/ksrc/skins/posix \
         @top_srcdir@/doc/doxygen
 
 # If the value of the INPUT tag contains directories, you can use the 
@@ -877,8 +878,10 @@ SEARCH_INCLUDES        = YES
 INCLUDE_PATH           = \
 @top_srcdir@/ksrc/skins/native \
 @top_srcdir@/ksrc/skins/rtdm \
+@top_srcdir@/ksrc/skins \
 @top_builddir@/include \
-@top_srcdir@/include
+@top_srcdir@/include \
+@top_srcdir@/include/posix \
 
 
 

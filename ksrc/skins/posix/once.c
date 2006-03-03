@@ -16,11 +16,23 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * @addtogroup posix_thread
+ *
+ *@{*/
+
 #include <posix/internal.h>
 
+/**
+ * Execute an initialization routine.
+ *
+ * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_once.html
+ * 
+ */
 int pthread_once (pthread_once_t *once, void (*init_routine)(void))
 
 {
+    unsigned routine_called;
     spl_t s;
 
     xnlock_get_irqsave(&nklock, s);
@@ -31,13 +43,18 @@ int pthread_once (pthread_once_t *once, void (*init_routine)(void))
         return EINVAL;
 	}
 
-    if (!once->routine_called)
-	{
-        init_routine();
+    routine_called = once->routine_called;
+    if (!routine_called)
         once->routine_called = 1;
-	}
 
     xnlock_put_irqrestore(&nklock, s);
+    
+    if (!routine_called)
+        init_routine();
 
     return 0;    
 }
+
+/*@}*/
+
+EXPORT_SYMBOL(pthread_once);

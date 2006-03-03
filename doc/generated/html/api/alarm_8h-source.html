@@ -27,7 +27,7 @@
 00037 } RT_ALARM_INFO;
 00038 
 00039 <span class="keyword">typedef</span> <span class="keyword">struct </span>rt_alarm_placeholder {
-00040     rt_handle_t opaque;
+00040     xnhandle_t opaque;
 00041 } RT_ALARM_PLACEHOLDER;
 00042 
 00043 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_SIM__)</span>
@@ -40,7 +40,7 @@
 00050 
 00051     xntimer_t timer_base; <span class="comment">/* !&lt; Base timer object. */</span>
 00052 
-00053     rt_handle_t handle; <span class="comment">/* !&lt; Handle in registry -- zero if unregistered. */</span>
+00053     xnhandle_t handle;  <span class="comment">/* !&lt; Handle in registry -- zero if unregistered. */</span>
 00054 
 00055     rt_alarm_t handler;         <span class="comment">/* !&lt; Alarm handler. */</span>
 00056     
@@ -127,7 +127,7 @@
 00137 <span class="preprocessor">#endif</span>
 00138 <span class="preprocessor"></span>
 00139 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_ALARM_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Feb 5 14:19:13 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Fri Mar 3 17:21:38 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
