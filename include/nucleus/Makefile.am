@@ -1,6 +1,7 @@
 includedir = $(prefix)/include/nucleus
 
 include_HEADERS = \
+	assert.h \
 	compiler.h \
 	core.h \
 	heap.h \
