@@ -119,10 +119,8 @@ extern "C" {
 static inline void *xnarch_sysalloc (u_long bytes)
 
 {
-#if 0	/* FIXME: likely on-demand mapping bug here */
     if (bytes >= 128*1024)
 	return vmalloc(bytes);
-#endif
 
     return kmalloc(bytes,GFP_KERNEL);
 }
@@ -130,11 +128,9 @@ static inline void *xnarch_sysalloc (u_long bytes)
 static inline void xnarch_sysfree (void *chunk, u_long bytes)
 
 {
-#if 0	/* FIXME: likely on-demand mapping bug here */
     if (bytes >= 128*1024)
 	vfree(chunk);
     else
-#endif
 	kfree(chunk);
 }
 
