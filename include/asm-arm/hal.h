@@ -35,7 +35,8 @@
 typedef unsigned long long rthal_time_t;
 
 #if __LINUX_ARM_ARCH__ < 5
-static inline __attribute_const__ unsigned long ffnz (unsigned long x) {
+static inline __attribute_const__ unsigned long ffnz (unsigned long x)
+{
 	int r = 0;
 
 	if (!x)
@@ -63,7 +64,8 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long x) {
 	return r;
 }
 #else
-static inline __attribute_const__ unsigned long ffnz (unsigned long ul) {
+static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
+{
 	int __r;
 	__asm__("clz\t%0, %1" : "=r" (__r) : "r"(ul & (-ul)) : "cc");
 	return 31 - __r;
@@ -87,17 +89,15 @@ extern spinlock_t irq_controller_lock;
 #define rthal_grab_control()     do { } while(0)
 #define rthal_release_control()  do { } while(0)
 
-static inline unsigned long long rthal_rdtsc (void) {
+static inline unsigned long long rthal_rdtsc (void)
+{
     unsigned long long t;
     rthal_read_tsc(t);
     return t;
 }
 
-static inline struct task_struct *rthal_root_host_task (int cpuid) {
-    return current;
-}
-
-static inline struct task_struct *rthal_current_host_task (int cpuid) {
+static inline struct task_struct *rthal_current_host_task (int cpuid)
+{
     return current;
 }
 
