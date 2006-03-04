@@ -352,6 +352,12 @@ int ftruncate(int fd, off_t len)
         goto error;
         }
 
+    if (len < 0)
+        {
+        err = EINVAL;
+        goto error;
+        }
+    
     xnlock_get_irqsave(&nklock, s);
     shm = pse51_shm_get(&desc, fd, 1);
 
@@ -373,8 +379,11 @@ int ftruncate(int fd, off_t len)
 
     /* Allocate one page more for alignment (the address returned by mmap
        is aligned). */
-    len += PAGE_SIZE + xnheap_overhead(len, PAGE_SIZE);
-    len = PAGE_ALIGN(len);
+    if (len)
+        {
+        len += PAGE_SIZE + xnheap_overhead(len, PAGE_SIZE);
+        len = PAGE_ALIGN(len);
+        }
 
     err = 0;
     if (!countq(&shm->mappings))
@@ -429,7 +438,7 @@ int ftruncate(int fd, off_t len)
         return 0;
 
   error:    
-    thread_set_errno(err);
+    thread_set_errno(err == ENOMEM ? EFBIG : err);
     return -1;
 }
 
