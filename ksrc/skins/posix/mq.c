@@ -286,7 +286,7 @@ static int pse51_mq_trysend(pse51_desc_t *desc,
 
         /* First message and no pending reader, attempt to send a signal if
            mq_notify was called. */
-        if (!reader  && mq->target && countpq(&mq->queued) == 1)
+        if (!reader && mq->target && countpq(&mq->queued) == 1)
             {
             pse51_sigqueue_inner(mq->target, &mq->si);
             mq->target = NULL;
