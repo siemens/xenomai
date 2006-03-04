@@ -161,11 +161,7 @@ int rthal_irq_enable (unsigned irq)
     if (irq >= IPIPE_NR_XIRQS)
         return -EINVAL;
 
-    if (rthal_irq_descp(irq)->handler == NULL ||
-	rthal_irq_descp(irq)->handler->enable == NULL)
-	return -ENODEV;
-
-    rthal_irq_descp(irq)->handler->enable(irq);
+    rthal_irq_descp(irq)->chip->unmask(irq);
 
     return 0;
 }
@@ -175,11 +171,7 @@ int rthal_irq_disable (unsigned irq)
     if (irq >= IPIPE_NR_XIRQS)
         return -EINVAL;
 
-    if (rthal_irq_descp(irq)->handler == NULL ||
-	rthal_irq_descp(irq)->handler->disable == NULL)
-	return -ENODEV;
-
-    rthal_irq_descp(irq)->handler->disable(irq);
+    rthal_irq_descp(irq)->chip->mask(irq);
 
     return 0;
 }
