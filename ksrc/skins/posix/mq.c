@@ -144,6 +144,7 @@ static int pse51_mq_init(pse51_mq_t *mq, const struct mq_attr *attr)
         }
 
     mq->attr = *attr;
+    mq->target = NULL;
 
     return 0;
 }
