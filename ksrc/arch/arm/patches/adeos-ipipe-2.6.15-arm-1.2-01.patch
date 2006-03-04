@@ -1006,22 +1006,6 @@
  
  	/* Networking initialization needs a process context */ 
  	sock_init();
---- 2.6.15/kernel/.tmp_exec_domain.ver	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.15-ipipe/kernel/.tmp_exec_domain.ver	2006-02-20 14:01:17.000000000 +0100
-@@ -0,0 +1,3 @@
-+__crc_register_exec_domain = 0x46e57b6a ;
-+__crc_unregister_exec_domain = 0x9cf4bf09 ;
-+__crc___set_personality = 0x6a47571d ;
---- 2.6.15/kernel/Makefile	2006-01-03 04:21:10.000000000 +0100
-+++ 2.6.15-ipipe/kernel/Makefile	2006-01-07 15:25:12.000000000 +0100
-@@ -32,6 +32,7 @@ obj-$(CONFIG_GENERIC_HARDIRQS) += irq/
- obj-$(CONFIG_CRASH_DUMP) += crash_dump.o
- obj-$(CONFIG_SECCOMP) += seccomp.o
- obj-$(CONFIG_RCU_TORTURE_TEST) += rcutorture.o
-+obj-$(CONFIG_IPIPE) += ipipe/
- 
- ifneq ($(CONFIG_SCHED_NO_NO_OMIT_FRAME_POINTER),y)
- # According to Alan Modra <alan@linuxcare.com.au>, the -fno-omit-frame-pointer is
 --- 2.6.15/kernel/exit.c	2006-01-03 04:21:10.000000000 +0100
 +++ 2.6.15-ipipe/kernel/exit.c	2006-01-07 15:18:31.000000000 +0100
 @@ -846,6 +846,7 @@ fastcall NORET_TYPE void do_exit(long co
@@ -4291,8 +4275,8 @@
  	return res & mask;
  }
 --- 2.6.15/include/asm-arm/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.15-ipipe/include/asm-arm/ipipe.h	2006-01-31 15:12:26.000000000 +0100
-@@ -0,0 +1,169 @@
++++ 2.6.15-ipipe/include/asm-arm/ipipe.h	2006-03-04 13:04:06.000000000 +0100
+@@ -0,0 +1,170 @@
 +/* -*- linux-c -*-
 + * include/asm-arm/ipipe.h
 + *
@@ -4322,17 +4306,18 @@
 +
 +#ifdef CONFIG_IPIPE
 +
-+#include <asm/ptrace.h>
-+#include <asm/irq.h>
-+#include <asm/bitops.h>
 +#include <linux/list.h>
 +#include <linux/cpumask.h>
 +#include <linux/threads.h>
++#include <asm/ptrace.h>
++#include <asm/irq.h>
++#include <asm/bitops.h>
++#include <asm/mach/irq.h>
 +
-+#define IPIPE_ARCH_STRING	"1.2-00"
++#define IPIPE_ARCH_STRING	"1.2-01"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	2
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
@@ -4421,9 +4406,9 @@
 +
 +#define __ipipe_check_platform()	do { } while(0)
 +
-+#define __ipipe_enable_irq(irq)		enable_irq(irq)
++#define __ipipe_enable_irq(irq)		irq_desc[irq].chip->unmask(irq)
 +
-+#define __ipipe_disable_irq(irq)	disable_irq(irq)
++#define __ipipe_disable_irq(irq)	irq_desc[irq].chip->mask(irq)
 +
 +void __ipipe_init_platform(void);
 +
