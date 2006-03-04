@@ -1,3 +1,11 @@
+2006-03-04  Philippe Gerum  <rpm@xenomai.org>
+
+ 	* RELEASE: Xenomai 2.1-rc4
+
+2006-03-04  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/arm/patches: Upgrade to 2.6.15-1.2-01.
+
 2006-03-03  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/shm.c (ftruncate): Handle zero length.
@@ -14,6 +22,8 @@
 	* ksrc/skins/posix: Initial POSIX skin documentation.
 
 2006-03-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/ia64/patches: Upgrade to 2.6.15-1.2-01.
 
 	* scripts/xeno-load.in: Do not attempt to load Adeos as a module
 	since this is no more supported.
