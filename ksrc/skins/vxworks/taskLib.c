@@ -390,7 +390,10 @@ STATUS taskPrioritySet (TASK_ID task_id, int prio)
     spl_t s;
 
     if ( prio<0 || prio>WIND_MAX_PRIORITIES )
+	{
         wind_errnoset(S_taskLib_ILLEGAL_PRIORITY);
+	return ERROR;
+	}
         
     xnlock_get_irqsave(&nklock, s);
 
