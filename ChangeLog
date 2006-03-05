@@ -1,5 +1,11 @@
 2006-03-05  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/vxworks/taskLib.c (taskPrioritySet): Return ERROR
+	upon invalid priority.
+
+	* ksrc/skins/native/syscall.c: Make rt_task_suspend a conforming
+	call.
+
 	* ksrc/nucleus/Config.in: Add missing choice for selecting the
 	timer indexing method over 2.4 kernels.
 
