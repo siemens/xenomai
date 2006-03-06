@@ -30,4 +30,10 @@ install-data-local:
 uninstall-local:
 	$(RM) $(DESTDIR)$(libdir)/posix.wrappers
 
+install-exec-hook:
+	for la in $(lib_LTLIBRARIES); do \
+	    sed -e 's/shouldnotlink=yes/shouldnotlink=no/' $(DESTDIR)$(libdir)/$$la > $(DESTDIR)$(libdir)/$$la.patched; \
+	    mv $(DESTDIR)$(libdir)/$$la.patched $(DESTDIR)$(libdir)/$$la; \
+	done
+
 EXTRA_DIST = posix.wrappers

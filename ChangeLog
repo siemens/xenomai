@@ -1,3 +1,8 @@
+2006-03-06  Jan Kiszka  <jan.kiszka@web.de>
+
+	* src/skins/{native,posix,rtdm}/Makefile.am: Suppress warnings
+	when linking against modules.
+
 2006-03-05  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/vxworks/taskLib.c (taskPrioritySet): Return ERROR
