@@ -1,6 +1,29 @@
 #! /bin/bash
 set -e
 
+# At all time, this variable must be set to either:
+# "y" if the changes to the Linux tree are specific to the kernel version;
+# "n" otherwise.
+patch_kernelversion_specific="n"
+
+# At all time, this variable must be set to either:
+# "y" if the changes to the Linux tree are specific to the architecture;
+# "n" otherwise.
+patch_architecture_specific="n"
+
+# At all time, this variable must be set to either:
+# "y": ignore kernel-version-specific changes;
+# "n": ignore non-kernel-version-specific changes;
+# "b": don't filter according to the kernel version.
+patch_kernelversion_filter="b"
+
+# At all time, this variable must be set to either:
+# "y": ignore architecture-specific changes;
+# "n": ignore non-architecture-specific changes;
+# "b": don't filter according to the architecture.
+patch_architecture_filter="b"
+
+
 patch_copytempfile() {
     file="$1"
     if ! test -f "$temp_tree/$file"; then
@@ -10,26 +33,40 @@ patch_copytempfile() {
     fi
 }
 
+check_filter() {
+    if test "$patch_kernelversion_specific" != "$patch_kernelversion_filter" \
+        -a "$patch_architecture_specific" != "$patch_architecture_filter"; then
+        echo ok
+    elif test -e "$temp_tree/$1"; then
+        echo "$me: inconsistent multiple changes to $1 in Linux kernel tree" >&2
+	echo error
+    else
+        echo ignore
+    fi
+}
+
 patch_append() {
     file="$1"
     if test "x$output_patch" = "x"; then
-        realfile="$linux_tree/$file"
+        cat >> "$linux_tree/$file"
     else
-        patch_copytempfile "$file"
-        realfile="$temp_tree/$file"
+        if test `check_filter $file` = "ok"; then
+            patch_copytempfile "$file"
+            cat >> "$temp_tree/$file"
+        fi
     fi
-    cat >> "$realfile"
 }
 
 patch_ed() {
     file="$1"
     if test "x$output_patch" = "x"; then
-        realfile="$linux_tree/$file"
+        ed -s "$linux_tree/$file" > /dev/null
     else
-        patch_copytempfile "$file"
-        realfile="$temp_tree/$file"
+        if test `check_filter $file` = "ok"; then
+            patch_copytempfile "$file"
+            ed -s "$temp_tree/$file" > /dev/null
+        fi
     fi
-    ed -s "$realfile" > /dev/null
 }
 
 patch_link() {
@@ -73,8 +110,10 @@ patch_link() {
                     ln -sf $xenomai_root/$target_dir/$f $linux_tree/$link_dir/$f
                 fi
             else
-                mkdir -p $temp_tree/$link_dir/$d
-                cp $xenomai_root/$target_dir/$f $temp_tree/$link_dir/$f
+                if test `check_filter $link_dir/$f` = "ok"; then
+                    mkdir -p $temp_tree/$link_dir/$d
+                    cp $xenomai_root/$target_dir/$f $temp_tree/$link_dir/$f
+                fi
             fi
         done
     )
@@ -94,7 +133,7 @@ generate_patch() {
 }
 
 
-usage='usage: prepare-kernel --linux=<linux-tree> --adeos=<adeos-patch> [--arch=<arch>] [--outpatch=<file> <tempdir>] [--forcelink]'
+usage='usage: prepare-kernel --linux=<linux-tree> --adeos=<adeos-patch> [--arch=<arch>] [--outpatch=<file> <tempdir> [--filterkvers=y|n] [--filterarch=y|n]] [--forcelink]'
 me=`basename $0`
 
 while test $# -gt 0; do
@@ -115,6 +154,12 @@ while test $# -gt 0; do
 	shift
 	temp_tree=`echo $1|sed -e 's,^--tempdir=\\(.*\\)$,\\1,g'`
 	;;
+    --filterkvers=*)
+        patch_kernelversion_filter=`echo $1|sed -e 's,^--filterkvers=\\(.*\\)$,\\1,g'`
+        ;;
+    --filterarch=*)
+        patch_architecture_filter=`echo $1|sed -e 's,^--filterarch=\\(.*\\)$,\\1,g'`
+        ;;
     --forcelink)
         forcelink=1
         ;;
@@ -163,13 +208,15 @@ linux_tree=`cd $linux_tree && pwd`
 linux_out=$linux_tree
 
 if test \! -r $linux_tree/Makefile; then
-   echo "$me: $linux_tree is not a valid Linux kernel tree"
+   echo "$me: $linux_tree is not a valid Linux kernel tree" >&2
    exit 2
 fi
 
 # Create an empty output patch file, and initialize the temporary tree.
 if test "x$output_patch" != "x"; then
 
+    # The directory must exist, but should be empty. To lower the risks of data
+    # loss, the script does not deletes files itself.
     if test ! -d $temp_tree; then
         echo "$me: $temp_tree (temporary tree) is not an existing directory" >&2
         exit 2
@@ -314,6 +361,8 @@ else
    exit 2
 fi
 
+patch_kernelversion_specific="y"
+
 case $linux_VERSION.$linux_PATCHLEVEL in
 
     #
@@ -324,6 +373,8 @@ case $linux_VERSION.$linux_PATCHLEVEL in
 
     config_file=Kconfig
 
+    patch_architecture_specific="y"
+
     if ! grep -q XENOMAI $linux_tree/init/Kconfig; then
 	sed -e "s,@LINUX_ARCH@,$linux_arch,g" $xenomai_root/scripts/Kconfig.frag |
             patch_append init/Kconfig
@@ -333,6 +384,8 @@ case $linux_VERSION.$linux_PATCHLEVEL in
 	p="drivers-\$(CONFIG_XENOMAI)		+= arch/$linux_arch/xenomai/"
 	( echo ; echo $p ) | patch_append arch/$linux_arch/Makefile
     fi
+
+    patch_architecture_specific="n"
 
     if ! grep -q CONFIG_XENOMAI $linux_tree/drivers/Makefile; then
 	p="obj-\$(CONFIG_XENOMAI)		+= xenomai/"
@@ -354,6 +407,7 @@ case $linux_VERSION.$linux_PATCHLEVEL in
     export linux_arch
     config_file=Config.in
 
+    patch_architecture_specific="n"
     if ! grep -q CONFIG_XENO $linux_tree/Makefile; then
 	patch_ed Makefile <<EOF
 /DRIVERS := \$(DRIVERS-y)
@@ -363,6 +417,7 @@ case $linux_VERSION.$linux_PATCHLEVEL in
 wq
 EOF
     fi
+    patch_architecture_specific="y"
     for defconfig_file in .config arch/$linux_arch/defconfig; do
        if test -w $linux_tree/$defconfig_file; then
           if ! grep -q CONFIG_XENO $linux_tree/$defconfig_file; then
@@ -388,6 +443,7 @@ endif
 wq
 EOF
     fi
+    patch_architecture_specific="n"
     if ! grep -q CONFIG_XENO $linux_tree/drivers/Makefile; then
 	patch_ed drivers/Makefile <<EOF
 /include \$(TOPDIR)\/Rules.make
@@ -411,6 +467,7 @@ obj-\$(CONFIG_XENOMAI) += xenomai/arch/generic/built-in.o
 wq
 EOF
     fi
+    patch_architecture_specific="y"
     if ! grep -iq xenomai $linux_tree/arch/$linux_arch/config.in; then
 	patch_ed arch/$linux_arch/config.in <<EOF
 $
@@ -439,14 +496,19 @@ esac
 # there, so that we don't pollute the Xenomai source tree with
 # compilation files.
 
+patch_kernelversion_specific="n"
+patch_architecture_specific="y"
 patch_link r m ksrc/arch/$xenomai_arch arch/$linux_arch/xenomai
+patch_architecture_specific="n"
 patch_link n m ksrc/ kernel/xenomai
 patch_link n m ksrc/arch kernel/xenomai/arch
 patch_link r m ksrc/arch/generic kernel/xenomai/arch/generic
-patch_link r m ksrc/nucleus kernel/xenomai/nucleus
+patch_link n m ksrc/nucleus kernel/xenomai/nucleus
 patch_link r m ksrc/skins kernel/xenomai/skins
 patch_link r m ksrc/drivers drivers/xenomai
+patch_architecture_specific="y"
 patch_link r n include/asm-$xenomai_arch include/asm-$linux_arch/xenomai
+patch_architecture_specific="n"
 patch_link r n include/asm-generic include/asm-generic/xenomai
 patch_link n n include include/xenomai
 patch_link n n include/asm-uvm include/xenomai/asm-uvm
