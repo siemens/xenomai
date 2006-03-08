@@ -43,10 +43,13 @@ void pse51_mutex_pkg_cleanup(void);
 int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow, xnticks_t to);
 
 /* must be called with nklock locked, interrupts off. */
-static inline int mutex_trylock_internal(struct __shadow_mutex *shadow,
-                                         xnthread_t *cur)
+static inline int mutex_trylock_internal(xnthread_t *cur,
+                                         struct __shadow_mutex *shadow)
 {
     pse51_mutex_t *mutex = shadow->mutex;
+
+    if (xnpod_unblockable_p())
+        return EPERM;
 
     if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex))
         return EINVAL;
@@ -60,14 +63,14 @@ static inline int mutex_trylock_internal(struct __shadow_mutex *shadow,
 }
 
 /* must be called with nklock locked, interrupts off. */
-static inline int mutex_timedlock_internal(struct __shadow_mutex *shadow,
+static inline int mutex_timedlock_internal(xnthread_t *cur,
+                                           struct __shadow_mutex *shadow,
                                            xnticks_t abs_to)
 
 {
-    xnthread_t *cur = xnpod_current_thread();
     int err;
 
-    err = mutex_trylock_internal(shadow, cur);
+    err = mutex_trylock_internal(cur, shadow);
 
     if (err == EBUSY)
         {
@@ -94,7 +97,7 @@ static inline int mutex_timedlock_internal(struct __shadow_mutex *shadow,
                 if (xnthread_test_flags(cur, XNTIMEO))
                     return ETIMEDOUT;
                 
-                err = mutex_trylock_internal(shadow, cur);
+                err = mutex_trylock_internal(cur, shadow);
                 }
             while (err == EBUSY);
         }

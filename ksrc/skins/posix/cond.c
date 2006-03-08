@@ -161,7 +161,8 @@ int pthread_cond_destroy (pthread_cond_t *cnd)
 }
 
 /* must be called with nklock locked, interrupts off. */
-static inline int mutex_save_count(struct __shadow_mutex *shadow,
+static inline int mutex_save_count(xnthread_t *cur,
+                                   struct __shadow_mutex *shadow,
                                    unsigned *count_ptr)
 {
     pse51_mutex_t *mutex;
@@ -171,8 +172,7 @@ static inline int mutex_save_count(struct __shadow_mutex *shadow,
 
     mutex = shadow->mutex;
 
-    if (xnsynch_owner(&mutex->synchbase) != xnpod_current_thread()
-        || mutex->count == 0)
+    if (xnsynch_owner(&mutex->synchbase) != cur || mutex->count == 0)
         return EPERM;
 
     *count_ptr = mutex->count;
@@ -186,13 +186,14 @@ static inline int mutex_save_count(struct __shadow_mutex *shadow,
 }
 
 /* must be called with nklock locked, interrupts off. */
-static inline void mutex_restore_count(struct __shadow_mutex *shadow,
+static inline void mutex_restore_count(xnthread_t *cur,
+                                       struct __shadow_mutex *shadow,
                                        unsigned count)
 {
     pse51_mutex_t *mutex = shadow->mutex;
 
     /* Relock the mutex */
-    mutex_timedlock_internal(shadow, XN_INFINITE);
+    mutex_timedlock_internal(cur, shadow, XN_INFINITE);
 
     /* Restore the mutex lock count. */
     mutex->count = count;
@@ -202,8 +203,8 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
                                   struct __shadow_mutex *mutex,
                                   xnticks_t to)
 {
+    xnthread_t *cur = xnpod_current_thread();
     pse51_cond_t *cond;
-    xnthread_t *cur;
     unsigned count;
     spl_t s;
     int err;
@@ -226,8 +227,6 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
         goto unlock_and_return;
 	}
 
-    cur = xnpod_current_thread();
-
     err = clock_adjust_timeout(&to, cond->attr.clock);
 
     if(err)
@@ -235,7 +234,7 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
     
     /* Unlock mutex, with its previous recursive lock count stored
        in "count". */
-    err = mutex_save_count(mutex, &count);
+    err = mutex_save_count(cur, mutex, &count);
 
     if(err)
         goto unlock_and_return;
@@ -282,7 +281,7 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
 	}
 
     /* relock mutex */
-    mutex_restore_count(mutex, count);
+    mutex_restore_count(cur, mutex, count);
 
     thread_cancellation_point(cur);
 
