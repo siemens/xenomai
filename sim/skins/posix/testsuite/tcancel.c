@@ -30,6 +30,11 @@ typedef struct cancel_mask {
 
 cancel_mask_t mask;
 
+void mutex_unlock(void *mutex)
+{
+    TEST_ASSERT_OK(pthread_mutex_unlock((pthread_mutex_t *) mutex));
+}
+
 void *cond_wait_thread(void *cookie)
 {
     pthread_setcanceltype(mask.type, &mask.type);
@@ -37,8 +42,8 @@ void *cond_wait_thread(void *cookie)
     
     TEST_MARK();
 
-    pthread_cleanup_push((void(*)(void *)) pthread_mutex_unlock,&mutex);
-
+    pthread_cleanup_push(mutex_unlock,&mutex);
+    
     TEST_ASSERT_OK(pthread_mutex_lock(&mutex));
 
     step = 1;
@@ -125,7 +130,7 @@ void launch_and_try_cancel(int type, int state)
     step=2;
     TEST_ASSERT_OK(pthread_cond_signal(&cond));
     TEST_ASSERT_OK(pthread_mutex_unlock(&mutex));
-    
+
     TEST_ASSERT(pthread_join(thread1, &status)==0 && status==PTHREAD_CANCELED);
 
     mask.type = type;
@@ -184,7 +189,7 @@ void *root_thread(void *cookie)
                         SEQ("joiner", 2),
                         /* DEFERRED, DISABLE */
                         SEQ("cond_wait", 3),
-                        SEQ("joiner", 3),                        
+                        SEQ("joiner", 3),
                         END_SEQ);
 
     TEST_FINISH();
