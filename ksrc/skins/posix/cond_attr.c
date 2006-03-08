@@ -31,7 +31,29 @@ static pthread_condattr_t default_cond_attr = {
 
 
 /**
- * Initialize a condition variable attribute object.
+ * Initialize a condition variable attributes object.
+ *
+ * This services initializes the condition variable attributes object @a attr
+ * with default values for all attributes. Default value for the @a clock
+ * attribute is @a CLOCK_REALTIME.
+ *
+ * Note that the @a pshared attribute is not supported: condition variables
+ * created by Xenomai POSIX skin may be shared by several processes through
+ * shared memory.
+ *
+ * If this service is called specifying a condition variable attributes object
+ * that was already initialized, the attributes object is reinitialized.
+ *
+ * @param attr the condition variable attributes object to be initialized.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ENOMEM, the condition variable attribute object pointer @a attr is @a
+ *   NULL.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - Xenomai kernel-space real-time thread.
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_init.html
  * 
@@ -48,7 +70,21 @@ int pthread_condattr_init (pthread_condattr_t *attr)
 }
 
 /**
- * Destroy a condition variable attribute object.
+ * Destroy a condition variable attributes object.
+ *
+ * This service destroys the condition variable attributes object @a attr. The
+ * object becomes invalid for all condition variable services (they all return
+ * EINVAL) except pthread_condattr_init().
+ *
+ * @param attr the initialized mutex attributes object to be destroyed.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, the mutex attributes object @a attr is invalid.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - Xenomai kernel-space real-time thread.
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_destroy.html
  * 
@@ -73,7 +109,28 @@ int pthread_condattr_destroy (pthread_condattr_t *attr)
 }
 
 /**
- * Get the clock selection condition variable attribute.
+ * Get the clock selection attribute from a condition variable attributes
+ * object.
+ *
+ * This service stores, at the address @a clk_id, the value of the @a clock
+ * attribute in the condition variable attributes object @a attr.
+ *
+ * See pthread_cond_timedwait() documentation for a description of the effect of
+ * this attribute on a condition variable. The clock ID returned is @a
+ * CLOCK_REALTIME or @a CLOCK_MONOTONIC.
+ *
+ * @param attr an initialized condition variable attributes object,
+ *
+ * @param clk_id address where the @a clock attribute value will be stored on
+ * success.
+ *
+ * @return 0 on success,
+ * @return an error number if:
+ * - EINVAL, the attribute object @a attr is invalid.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - Xenomai kernel-space real-time thread.
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_getclock.html
  * 
@@ -98,7 +155,27 @@ int pthread_condattr_getclock (const pthread_condattr_t *attr, clockid_t *clk_id
 }
 
 /**
- * Set the clock selection condition variable attribute.
+ * Set the clock selection attribute of a condition variable attributes object.
+ *
+ * This service set the @a clock attribute of the condition variable attributes
+ * object @a attr.
+ *
+ * See pthread_cond_timedwait() documentation for a description of the effect
+ * of this attribute on a condition variable.
+ *
+ * @param attr an initialized condition variable attributes object,
+ *
+ * @param clk_id value of the @a clock attribute, may be @a CLOCK_REALTIME or @a
+ * CLOCK_MONOTONIC.
+ *
+ * @return 0 on success,
+ * @return an error number if:
+ * - EINVAL, the condition variable attributes object @a attr is invalid;
+ * - EINVAL, the value of @a clk_id is invalid for the @a clock attribute.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - Xenomai kernel-space real-time thread.
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_setclock.html
  * 

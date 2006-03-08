@@ -32,17 +32,20 @@
  * locked by another thread is suspended until the owning thread unlocks the
  * mutex first.
  *
- * Before it can be used, a mutex has to be initialized by calling
- * pthread_mutex_init(). An attribute object, which reference may be passed
- * to this service, allow to select the features of the created mutex, namely
- * its @a type (see pthread_mutexattr_settype()) and the @a protocol it uses
- * (see pthread_mutexattr_setprotocol()).
+ * Before it can be used, a mutex has to be initialized with
+ * pthread_mutex_init(). An attribute object, which reference may be passed to
+ * this service, allows to select the features of the created mutex, namely its
+ * @a type (see pthread_mutexattr_settype()) and the priority @a protocol it
+ * uses (see pthread_mutexattr_setprotocol()).
  *
- * There is no support for the @a pshared attribute, all created mutex
- * may be shared by several processes through shared memory.
+ * There is no support for the @a pshared attribute; mutexes created by Xenomai
+ * POSIX skin may be shared by several processes through shared memory.
  *
  * By default, Xenomai POSIX skin mutexes are of the recursive type and use the
  * priority inheritance protocol.
+ *
+ * Note that only pthread_mutex_init() may be used to initialize a mutex, using
+ * the static initializer @a PTHREAD_MUTEX_INITIALIZER is not supported.
  *
  *@{*/
 
@@ -93,18 +96,19 @@ void pse51_mutex_pkg_cleanup (void)
  * Initialize a mutex.
  *
  * This services initializes the mutex @a mx, using the mutex attributes object
- * @a attr. If @a attr is @a NULL, default attributes are used (see
- * pthread_mutexattr_init()).
+ * @a attr. If @a attr is @a NULL or this service is used from user-space,
+ * default attributes are used (see pthread_mutexattr_init()).
  *
  * @param mx the mutex to be initialized;
  *
- * @param attr the mutex attributes.
+ * @param attr the mutex attributes object.
  *
- * @return 0 on success
+ * @return 0 on success,
  * @return an error number if:
  * - EINVAL, the mutex attributes object @a attr is invalid or uninitialized;
  * - EBUSY, the mutex @a mx was already initialized;
- * - ENOMEM, insufficient memory exists to initialize the mutex.
+ * - ENOMEM, insufficient memory exists in the system heap to initialize the
+ *   mutex, increase CONFIG_XENO_OPT_SYS_HEAPSZ.
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_init.html
  * 
@@ -169,12 +173,12 @@ int pthread_mutex_init (pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
  * Destroy a mutex.
  *
  * This service destroys the mutex @a mx, if it is unlocked and not referenced
- * by any condition variable. The mutex becomes invalid for all services (they
- * all return the EINVAL error) except pthread_mutex_init().
+ * by any condition variable. The mutex becomes invalid for all mutex services
+ * (they all return the EINVAL error) except pthread_mutex_init().
  *
  * @param mx the mutex to be destroyed.
  *
- * @return 0 on success
+ * @return 0 on success,
  * @return an error number if:
  * - EINVAL, the mutex @a mx is invalid;
  * - EBUSY, the mutex is locked, or used by a condition variable.
