@@ -26,9 +26,23 @@
  * shared data structures from concurrent modifications, and implementing
  * critical sections and monitors.
  *
- * Xenomai POSIX skin mutexes support priority inheritance (see
- * pthread_mutexattr_setprotocol()), may be recursive (see
- * pthread_mutexattr_settype()) and may be shared through shared memory.
+ * A mutex has two possible states: unlocked (not owned by any thread), and
+ * locked (owned by one thread). A mutex can never be owned by two different
+ * threads simultaneously. A thread attempting to lock a mutex that is already
+ * locked by another thread is suspended until the owning thread unlocks the
+ * mutex first.
+ *
+ * Before it can be used, a mutex has to be initialized by calling
+ * pthread_mutex_init(). An attribute object, which reference may be passed
+ * to this service, allow to select the features of the created mutex, namely
+ * its @a type (see pthread_mutexattr_settype()) and the @a protocol it uses
+ * (see pthread_mutexattr_setprotocol()).
+ *
+ * There is no support for the @a pshared attribute, all created mutex
+ * may be shared by several processes through shared memory.
+ *
+ * By default, Xenomai POSIX skin mutexes are of the recursive type and use the
+ * priority inheritance protocol.
  *
  *@{*/
 
@@ -43,7 +57,7 @@ static void pse51_mutex_destroy_internal (pse51_mutex_t *mutex)
 {
     removeq(&pse51_mutexq, &mutex->link);
     /* synchbase wait queue may not be empty only when this function is called
-       from pse51_mutex_obj_cleanup, hence the absence of xnpod_schedule(). */
+       from pse51_mutex_pkg_cleanup, hence the absence of xnpod_schedule(). */
     xnsynch_destroy(&mutex->synchbase);
     xnfree(mutex);
 }
@@ -77,6 +91,20 @@ void pse51_mutex_pkg_cleanup (void)
 
 /**
  * Initialize a mutex.
+ *
+ * This services initializes the mutex @a mx, using the mutex attributes object
+ * @a attr. If @a attr is @a NULL, default attributes are used (see
+ * pthread_mutexattr_init()).
+ *
+ * @param mx the mutex to be initialized;
+ *
+ * @param attr the mutex attributes.
+ *
+ * @return 0 on success
+ * @return an error number if:
+ * - EINVAL, the mutex attributes object @a attr is invalid or uninitialized;
+ * - EBUSY, the mutex @a mx was already initialized;
+ * - ENOMEM, insufficient memory exists to initialize the mutex.
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_init.html
  * 
@@ -140,6 +168,17 @@ int pthread_mutex_init (pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 /**
  * Destroy a mutex.
  *
+ * This service destroys the mutex @a mx, if it is unlocked and not referenced
+ * by any condition variable. The mutex becomes invalid for all services (they
+ * all return the EINVAL error) except pthread_mutex_init().
+ *
+ * @param mx the mutex to be destroyed.
+ *
+ * @return 0 on success
+ * @return an error number if:
+ * - EINVAL, the mutex @a mx is invalid;
+ * - EBUSY, the mutex is locked, or used by a condition variable.
+ *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_destroy.html
  * 
  */
@@ -182,12 +221,9 @@ int pse51_mutex_timedlock_break (struct __shadow_mutex *shadow, xnticks_t abs_to
     int err;
     spl_t s;
 
-    if (xnpod_unblockable_p())
-        return EPERM;
-
     xnlock_get_irqsave(&nklock, s);
 
-    err = mutex_timedlock_internal(shadow, abs_to);
+    err = mutex_timedlock_internal(cur, shadow, abs_to);
 
     if (err == EBUSY)
         {
@@ -253,7 +289,25 @@ int pse51_mutex_timedlock_break (struct __shadow_mutex *shadow, xnticks_t abs_to
 }
 
 /**
- * Lock a mutex if it is not already locked. 
+ * Attempt to lock a mutex.
+ *
+ * This service is equivalent to pthread_mutex_lock(), except that if the mutex
+ * @a mx is locked by another thread than the current one, this service returns
+ * immediately.
+ *
+ * @param mx the mutex to be locked.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EPERM, the service is called from an invalid context;
+ * - EINVAL, the mutex is invalid;
+ * - EBUSY, the mutex was locked by another thread than the current one;
+ * - EAGAIN, the mutex is recursive, and the maximum number of recursive locks
+ *   has been exceeded.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space thread,
+ * - Xenomai user-space thread (switches to primary mode).
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_trylock.html
  * 
@@ -266,12 +320,9 @@ int pthread_mutex_trylock (pthread_mutex_t *mx)
     int err;
     spl_t s;
     
-    if (xnpod_unblockable_p() || !cur)
-        return EPERM;
-
     xnlock_get_irqsave(&nklock, s);
 
-    err = mutex_trylock_internal(shadow, cur);
+    err = mutex_trylock_internal(cur, shadow);
 
     if (err == EBUSY)
         {
@@ -298,19 +349,30 @@ int pthread_mutex_trylock (pthread_mutex_t *mx)
 /**
  * Lock a mutex.
  *
- * @param mx the address of the mutex to be locked.
+ * This service attempts to lock the mutex @a mx. If the mutex is free, it
+ * becomes locked. If it was locked by another thread than the current one, the
+ * current thread is suspended until the mutex is unlocked. If it was already
+ * locked by the current mutex, the behaviour of this service depends on the
+ * mutex type :
+ * - for mutexes of the @a PTHREAD_MUTEX_NORMAL type, this service deadlocks;
+ * - for mutexes of the @a PTHREAD_MUTEX_ERRORCHECK type, this service returns
+ *   the EDEADLK error number;
+ * - for mutexes of the @a PTHREAD_MUTEX_RECURSIVE type, this service increments
+ *   the lock recursion count and returns 0.
+ *
+ * @param mx the mutex to be locked.
  *
  * @return 0 on success
- * @return an error number if :
- * - EINVAL, @a mx is invalid;
- * - EAGAIN, @a mx is of PTHREAD_MUTEX_RECURSIVE type and the maximum number
- *   of recursive locks has been exceeded;
- * - EDEADLK, @a mx is of PTHREAD_MUTEX_ERRORCHECK type and the calling thread
- *   already owns it;
- * - EPERM, the caller context is invalid.
+ * @return an error number if:
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, the mutex @a mx is invalid;
+ * - EDEADLK, the mutex is of the @a PTHREAD_MUTEX_ERRORCHECK type and the mutex
+ *   was already locked by the current thread;
+ * - EAGAIN, the mutex is of the @a PTHREAD_MUTEX_RECURSIVE type and the maximum
+ *   number of recursive locks has been exceeded.
  *
- * @par valid contexts:
- * - Xenomai kernel-space thread ;
+ * @par Valid contexts:
+ * - Xenomai kernel-space thread;
  * - Xenomai user-space thread (switches to primary mode).
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_lock.html
@@ -332,6 +394,30 @@ int pthread_mutex_lock (pthread_mutex_t *mx)
 /**
  * Attempt, during a bounded time, to lock a mutex.
  *
+ * This service is equivalent to pthread_mutex_lock(), except that if the mutex
+ * @a mx is locked by another thread than the current one, this service only
+ * suspends the current thread until the timeout specified by @a to expires.
+ *
+ * @param mx the mutex to be locked;
+ *
+ * @param to the timeout, expressed as an absolute value of the CLOCK_REALTIME
+ * clock.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, the mutex @a mx is invalid;
+ * - ETIMEDOUT, the mutex could not be locked and the specified timeout
+ *   expired;
+ * - EDEADLK, the mutex is of the @a PTHREAD_MUTEX_ERRORCHECK type and the mutex
+ *   was already locked by the current thread;
+ * - EAGAIN, the mutex is of the @a PTHREAD_MUTEX_RECURSIVE type and the maximum
+ *   number of recursive locks has been exceeded.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space thread;
+ * - Xenomai user-space thread (switches to primary mode).
+ *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_timedlock.html
  * 
  */
@@ -349,7 +435,8 @@ int pthread_mutex_timedlock (pthread_mutex_t *mx, const struct timespec *to)
 }
 
 /* must be called with nklock locked, interrupts off. */
-static inline int mutex_unlock_internal(struct __shadow_mutex *shadow)
+static inline int mutex_unlock_internal(xnthread_t *cur,
+                                        struct __shadow_mutex *shadow)
 
 {
     pse51_mutex_t *mutex;
@@ -359,8 +446,7 @@ static inline int mutex_unlock_internal(struct __shadow_mutex *shadow)
 
     mutex = shadow->mutex;
  
-    if (xnsynch_owner(&mutex->synchbase) != xnpod_current_thread()
-        || mutex->count != 1)
+    if (xnsynch_owner(&mutex->synchbase) != cur || mutex->count != 1)
         return EPERM;
     
     mutex->count = 0;
@@ -373,6 +459,29 @@ static inline int mutex_unlock_internal(struct __shadow_mutex *shadow)
 /**
  * Unlock a mutex.
  *
+ * This service unlocks the mutex @a mx. If the mutex is of the @a
+ * PTHREAD_MUTEX_RECURSIVE @a type and the locking recursion count is greater
+ * than one, the lock recursion count is decremented and the mutex remains
+ * locked.
+ *
+ * Attempting to unlock a mutex which is not locked or which is locked by anther
+ * thread than the current one yields the EPERM error, whatever the mutex @a
+ * type attribute.
+ *
+ * @param mx the mutex to be released.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, the mutex @a mx is invalid;
+ * - EPERM, the mutex was not locked by the current thread.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space thread,
+ * - kernel-space cancellation cleanup routine,
+ * - Xenomai user-space thread (switches to primary mode),
+ * - user-space cancellation cleanup routine.
+ *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_unlock.html
  * 
  */
@@ -380,19 +489,23 @@ int pthread_mutex_unlock (pthread_mutex_t *mx)
 
 {
     struct __shadow_mutex *shadow = &((union __xeno_mutex *) mx)->shadow_mutex;
+    xnthread_t *cur = xnpod_current_thread();
     int err;
     spl_t s;
-    
+
+    if (xnpod_root_p() || xnpod_interrupt_p())
+        return EPERM;
+
     xnlock_get_irqsave(&nklock, s);
 
-    err = mutex_unlock_internal(shadow);
+    err = mutex_unlock_internal(cur, shadow);
 
     if (err == EPERM)
         {
         pse51_mutex_t *mutex = shadow->mutex;
 
         if(mutex->attr.type == PTHREAD_MUTEX_RECURSIVE
-           && xnsynch_owner(&mutex->synchbase) == xnpod_current_thread()
+           && xnsynch_owner(&mutex->synchbase) == cur
            && mutex->count)
             {
             --mutex->count;
