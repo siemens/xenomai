@@ -33,6 +33,20 @@
  * another thread signals the condition just before the first thread actually
  * waits on it.
  *
+ * Before it can be used, a condition variable has to be initialized with
+ * pthread_cond_init(). An attribute object, which reference may be passed to
+ * this service, allows to select the features of the created condition
+ * variable, namely the @a clock used by the pthread_cond_timedwait() service
+ * (@a CLOCK_REALTIME is used by default).
+ *
+ * There is no support for the @a pshared attribute; condition variables created
+ * by Xenomai POSIX skin may be shared by several processes through shared
+ * memory.
+ *
+ * Note that only pthread_cond_init() may be used to initialize a condition
+ * variable, using the static initializer @a PTHREAD_COND_INITIALIZER is
+ * not supported.
+ *
  *@{*/
 
 #include <posix/mutex.h>
@@ -58,13 +72,30 @@ static void cond_destroy_internal (pse51_cond_t *cond)
 {
     removeq(&pse51_condq, &cond->link);
     /* synchbase wait queue may not be empty only when this function is called
-       from pse51_cond_obj_cleanup, hence the absence of xnpod_schedule(). */
+       from pse51_cond_pkg_cleanup, hence the absence of xnpod_schedule(). */
     xnsynch_destroy(&cond->synchbase);
     xnfree(cond);
 }
 
 /**
  * Initialize a condition variable.
+ *
+ * This service initializes the condition variable @a cnd, using the condition
+ * variable attributes object @a attr. If @a attr is @a NULL or this service is
+ * called from user-space, default attributes are used (see
+ * pthread_condattr_init()).
+ *
+ * @param cnd the condition variable to be initialized;
+ *
+ * @param attr the condition variable attributes object.
+ *
+ * @return 0 on succes,
+ * @return an error number if:
+ * - EINVAL, the condition variable attributes object @a attr is invalid or
+ *   uninitialized;
+ * - EBUSY, the condition variable @a cnd was already initialized;
+ * - ENOMEM, insufficient memory exists in the system heap to initialize the
+ *   condition variable, increase CONFIG_XENO_OPT_SYS_HEAPSZ.
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_init.html
  * 
@@ -125,6 +156,18 @@ int pthread_cond_init (pthread_cond_t *cnd, const pthread_condattr_t *attr)
 
 /**
  * Destroy a condition variable.
+ *
+ * This service destroys the condition variable @a cnd, if no thread is
+ * currently blocked on it. The condition variable becomes invalid for all
+ * condition variable services (they all return the EINVAL error) except
+ * pthread_cond_init().
+ *
+ * @param cnd the condition variable to be destroyed.
+ *
+ * @return 0 on succes,
+ * @return an error number if:
+ * - EINVAL, the condition variable @a cnd is invalid;
+ * - EBUSY, some thread is currently blocked on the condition variable.
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_destroy.html
  * 
@@ -274,7 +317,7 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
 
     /* Unbind mutex and cond, if no other thread is waiting, if the job was not
        already done. */
-    if (!xnsynch_nsleepers(&cond->synchbase) && cond->mutex != NULL)
+    if (!xnsynch_nsleepers(&cond->synchbase) && cond->mutex == mutex)
 	{
         --mutex->mutex->condvars;
         cond->mutex = NULL;
@@ -292,7 +335,47 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
 }
 
 /**
- * Wait for a condition variable to be signalled.
+ * Wait on a condition variable.
+ *
+ * This service atomically unlocks the mutex @a mx, and block the calling thread
+ * until the condition variable @a cnd is signalled using pthread_cond_signal()
+ * or pthread_cond_broadcast(). When the condition is signaled, this service
+ * re-acquire the mutex before returning.
+ *
+ * Spurious wakeups occur if a signal is delivered to the blocked thread, so, an
+ * application should not assume that the condition changed upon successful
+ * return from this service.
+ *
+ * Even if the mutex @a mx is recursive and its recursion count is greater than
+ * one on entry, it is unlocked before blocking the caller, and the recursion
+ * count is restored once the mutex is re-acquired by this service before
+ * returning.
+ *
+ * Once a thread is blocked on a condition variable, a dynamic binding is formed
+ * between the condition vairable @a cnd and the mutex @a mx; if another thread
+ * calls this service specifying @a cnd as a condition variable but another
+ * mutex than @a mx, this service returns immediately with the EINVAL status.
+ *
+ * This service is a cancellation point for Xenomai POSIX skins threads
+ * (created with the pthread_create() service). When such a thread is cancelled
+ * while blocked in a call to this service, the mutex @a mx is re-acquired
+ * before calling the cancellation cleanup handlers.
+ *
+ * @param cnd the condition variable to wait for;
+ *
+ * @param mx the mutex associated with @a cnd.
+ *
+ * @return 0 on success,
+ * @return an error number if:
+ * - EINVAL, the specified condition variable or mutex is invalid;
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, another thread is currently blocked on @a cnd using another mutex
+ *   than @a mx;
+ * - EPERM, the specified mutex is not owned by the caller.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space thread;
+ * - Xenomai user-space thread (switches to primary mode).
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_wait.html
  * 
@@ -310,7 +393,35 @@ int pthread_cond_wait (pthread_cond_t *cnd, pthread_mutex_t *mx)
 }
 
 /**
- * Wait a bounded time for a condition variable to be signalled.
+ * Wait a bounded time on a condition variable.
+ *
+ * This service is equivalent to pthread_cond_wait(), except that the calling
+ * thread remains blocked on the condition variable @a cnd only until the
+ * timeout specified by @a abstime expires.
+ *
+ * The timeout @a abstime is expressed as an absolute value of the @a clock
+ * attribute passed to pthread_cond_init(). By default, @a CLOCK_REALTIME is
+ * used.
+ *
+ * @param cnd the condition variable to wait for;
+ *
+ * @param mx the mutex associated with @a cnd;
+ *
+ * @param abstime the timeout, expressed as an absolute value of the clock
+ * attribute passed to pthread_cond_init().
+ *
+ * @return 0 on success,
+ * @return an error number if:
+ * - EINVAL, the specified condition variable, mutex or timeout is invalid;
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, another thread is currently blocked on @a cnd using another mutex
+ *   than @a mx;
+ * - EPERM, the specified mutex is not owned by the caller;
+ * - ETIMEDOUT, the specified timeout expired.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space thread;
+ * - Xenomai user-space thread (switches to primary mode).
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_timedwait.html
  * 
@@ -332,6 +443,17 @@ int pthread_cond_timedwait (pthread_cond_t *cnd,
 /**
  * Signal a condition variable.
  *
+ * This service unblocks one thread blocked on the condition variable @a cnd.
+ *
+ * If more than one thread is blocked on the specified condition variable, the
+ * highest priority thread is unblocked.
+ *
+ * @param cnd the condition variable to be signalled.
+ *
+ * @return 0 on succes,
+ * @return an error number if:
+ * - EINVAL, the condition variable is invalid.
+ *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_signal.html.
  * 
  */
@@ -352,7 +474,10 @@ int pthread_cond_signal (pthread_cond_t *cnd)
 
     cond = shadow->cond;
 
-    if(xnsynch_wakeup_one_sleeper(&cond->synchbase) != NULL)
+    /* FIXME: If the mutex associated with cnd is owned by the current thread,
+       we could postpone rescheduling until pthread_mutex_unlock is called, this
+       would save two useless context switches. */
+    if (xnsynch_wakeup_one_sleeper(&cond->synchbase) != NULL)
         xnpod_schedule();
 
     xnlock_put_irqrestore(&nklock, s);
@@ -362,6 +487,14 @@ int pthread_cond_signal (pthread_cond_t *cnd)
 
 /**
  * Broadcast a condition variable.
+ *
+ * This service unblocks all threads blocked on the condition variable @a cnd.
+ *
+ * @param cnd the condition variable to be signalled.
+ *
+ * @return 0 on succes,
+ * @return an error number if:
+ * - EINVAL, the condition variable is invalid.
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_broadcast.html
  * 

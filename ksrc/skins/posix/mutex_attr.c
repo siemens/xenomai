@@ -37,18 +37,21 @@ static const pthread_mutexattr_t default_mutex_attr = {
  * - for the @a type attribute, @a PTHREAD_MUTEX_RECURSIVE;
  * - for the @a protocol attribute, @a PTHREAD_PRIO_INHERIT.
  *
- * Note that the @a pshared attribute is unsupported: all mutex created
- * by Xenomai POSIX skin may be shared by several processes through shared
- * memory.
+ * Note that the @a pshared attribute is not supported: mutexes created by
+ * Xenomai POSIX skin may be shared by several processes through shared memory.
  *
  * If this service is called specifying a mutex attributes object that was
- * already initialized, the attributes object is initialized anew.
+ * already initialized, the attributes object is reinitialized.
  *
  * @param attr the mutex attributes object to be initialized.
  *
  * @return 0 on success;
  * @return an error number if:
- * - ENOMEM, the mutex attribute object pointer @a attr is @a NULL.
+ * - ENOMEM, the mutex attributes object pointer @a attr is @a NULL.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - Xenomai kernel-space real-time thread.
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_init.html
  * 
@@ -68,14 +71,18 @@ int pthread_mutexattr_init (pthread_mutexattr_t *attr)
  * Destroy a mutex attributes object.
  *
  * This service destroys the mutex attributes object @a attr. The object becomes
- * invalid for all services (they all return EINVAL) except
+ * invalid for all mutex services (they all return EINVAL) except
  * pthread_mutexattr_init().
  *
- * @param attr the mutex attributes object to be destroyed.
+ * @param attr the initialized mutex attributes object to be destroyed.
  *
  * @return 0 on success;
  * @return an error number if:
  * - EINVAL, the mutex attributes object @a attr is invalid.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - Xenomai kernel-space real-time thread.
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_destroy.html
  * 
@@ -102,8 +109,8 @@ int pthread_mutexattr_destroy (pthread_mutexattr_t *attr)
 /**
  * Get the mutex type attribute from a mutex attributes object.
  *
- * This service stores at the address @a type the value of the @a type attribute
- * in the mutex attributes object @a attr.
+ * This service stores, at the address @a type, the value of the @a type
+ * attribute in the mutex attributes object @a attr.
  *
  * See pthread_mutex_lock() and pthread_mutex_unlock() documentations for a
  * description of the values of the @a type attribute and their effect on a
@@ -118,6 +125,10 @@ int pthread_mutexattr_destroy (pthread_mutexattr_t *attr)
  * @return an error number if:
  * - EINVAL, the @a type address is invalid;
  * - EINVAL, the mutex attributes object @a attr is invalid.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - Xenomai kernel-space real-time thread.
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_gettype.html
  * 
@@ -148,7 +159,7 @@ int pthread_mutexattr_gettype (const pthread_mutexattr_t *attr, int *type)
 /**
  * Set the mutex type attribute of a mutex attributes object.
  *
- * This service set the @a type attribute of the mutex attribute object
+ * This service set the @a type attribute of the mutex attributes object
  * @a attr.
  *
  * See pthread_mutex_lock() and pthread_mutex_unlock() documentations for a
@@ -162,12 +173,16 @@ int pthread_mutexattr_gettype (const pthread_mutexattr_t *attr, int *type)
  *
  * @param attr an initialized mutex attributes object,
  *
- * @param type value of the @a type attribute.
+ * @param type value of the @a type attribute. 
  *
  * @return 0 on success,
  * @return an error number if:
- * - EINVAL, the attribute object @a attr is invalid;
+ * - EINVAL, the mutex attributes object @a attr is invalid;
  * - EINVAL, the value of @a type is invalid for the @a type attribute.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - Xenomai kernel-space real-time thread.
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_settype.html
  * 
@@ -230,6 +245,10 @@ int pthread_mutexattr_settype (pthread_mutexattr_t *attr, int type)
  * - EINVAL, the @a proto address is invalid;
  * - EINVAL, the mutex attributes object @a attr is invalid.
  *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - Xenomai kernel-space real-time thread.
+ *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_getprotocol.html
  * 
  */
@@ -277,6 +296,10 @@ int pthread_mutexattr_getprotocol (const pthread_mutexattr_t *attr, int *proto)
  * - EINVAL, the mutex attributes object @a attr is invalid;
  * - ENOTSUP, the value of @a proto is unsupported;
  * - EINVAL, the value of @a proto is invalid.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - Xenomai kernel-space real-time thread.
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_setprotocol.html
  * 
