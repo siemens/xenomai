@@ -446,7 +446,7 @@ int rtdm_dev_unregister(struct rtdm_device* device, unsigned int poll_delay);
 #define rtdm_ioctl                  rt_dev_ioctl
 #define rtdm_read                   rt_dev_read
 #define rtdm_write                  rt_dev_write
-#define rtdm_rescmsg                rt_dev_recvmsg
+#define rtdm_recvmsg                rt_dev_recvmsg
 #define rtdm_recv                   rt_dev_recv
 #define rtdm_recvfrom               rt_dev_recvfrom
 #define rtdm_sendmsg                rt_dev_sendmsg
