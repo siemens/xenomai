@@ -491,7 +491,8 @@ static inline int sem_trywait_internal (struct __shadow_sem *shadow)
  * Attempt to lock a semaphore.
  *
  * This service is equivalent to sem_wait(), except that it returns immediately
- * if the semaphore @a sm is currently locked.
+ * if the semaphore @a sm is currently locked, and that it is not a cancellation
+ * point.
  *
  * @param sm the semaphore to be locked.
  *
@@ -543,6 +544,8 @@ static inline int sem_timedwait_internal (struct __shadow_sem *shadow,
     if((err = clock_adjust_timeout(&to, CLOCK_REALTIME)))
         return err;
 
+    thread_cancellation_point(cur);
+
     xnsynch_sleep_on(&sem->synchbase, to);
             
     /* Handle cancellation requests. */
@@ -567,6 +570,11 @@ static inline int sem_timedwait_internal (struct __shadow_sem *shadow,
  * its value is greater than 0). If the semaphore is currently locked, the
  * calling thread is suspended until the semaphore is unlocked, or a signal is
  * delivered to the calling thread.
+ *
+ * This service is a cancellation point for Xenomai POSIX skin threads (created
+ * with the pthread_create() service). When such a thread is cancelled while
+ * blocked in a call to this service, the semaphore state is left unchanged
+ * before the cancellation cleanup handlers are called.
  *
  * @param sm the semaphore to be locked.
  *

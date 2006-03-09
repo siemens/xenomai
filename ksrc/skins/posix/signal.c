@@ -628,6 +628,8 @@ static int pse51_sigtimedwait_inner (const sigset_t *user_set,
             goto unlock_and_ret;
             }
         
+        thread_cancellation_point(&thread->threadbase);
+
         xnpod_suspend_thread(&thread->threadbase, XNDELAY, to, NULL);
 
         thread_cancellation_point(&thread->threadbase);

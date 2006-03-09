@@ -1,5 +1,11 @@
 2006-03-09  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
+	* ksrc/skins/posix/cancel.c (pthread_cleanup_pop): Execute the
+	cleanup routine with nklock unlocked.
+
+	* ksrc/skins/posix/*.c: Test cancellation bits before suspending
+	threads.
+
 	* ksrc/skins/posix/registry.c (pse51_node_lookup): Use different
 	namespaces for different objects types.
 
