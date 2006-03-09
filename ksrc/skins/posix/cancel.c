@@ -22,6 +22,28 @@
  *
  * Thread cancellation.
  *
+ * Cancellation is the mechanism by which a thread can terminate the execution
+ * of a Xenomai POSIX skin thread (created with pthread_create()). More
+ * precisely, a thread can send a cancellation request to a Xenomai POSIX skin
+ * thread and depending on its cancelability type (see pthread_setcanceltype())
+ * and state (see pthread_setcancelstate()), the target thread can then either
+ * ignore the request, honor it immediately, or defer it till it reaches a
+ * cancellation point. When threads are first created by pthread_create(), they
+ * always defer cancellation requests.
+ *
+ * When a thread eventually honors a cancellation request, it behaves as if
+ * @a pthread_exit(PTHREAD_CANCELED) was called.  All cleanup handlers are
+ * executed in reverse order, finalization functions for thread-specific data
+ * are called, and finally the thread stops executing. If the canceled thread
+ * was joinable, the return value PTHREAD_CANCELED is provided to whichever
+ * thread calls pthread_join() on it. See pthread_exit() for more information.
+ *
+ * Cancellation points are the points where the thread checks for pending
+ * cancellation requests and performs them.  The POSIX threads functions
+ * pthread_join(), pthread_cond_wait(), pthread_cond_timedwait(),
+ * pthread_testcancel(), sem_wait(), sem_timedwait(), sigwait() and 
+ * sigwaitinfo() are cancellation points.
+
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_09.html#tag_02_09_05
  *
  *@{*/
@@ -29,10 +51,10 @@
 #include <posix/thread.h>
 #include <posix/cancel.h>
 
-typedef void (*cleanup_routine_t) (void *);
+typedef void cleanup_routine_t(void *);
 
 typedef struct {
-    cleanup_routine_t routine;
+    cleanup_routine_t *routine;
     void *arg;
     xnholder_t link;
 
@@ -43,8 +65,22 @@ typedef struct {
 /**
  * Cancel a thread.
  *
+ * This service sends a cancellation request to the thread @a thread and returns
+ * immediately. Depending on the target thread cancelability state (see
+ * pthread_setcancelstate()) and type (see pthread_setcanceltype()), its
+ * termination is either immediate, deferred or ignored.
+ *
+ * When the cancellation request is handled and before the thread is terminated,
+ * the cancellation cleanup handlers (registered with the pthread_cleanup_push()
+ * service) are called, then the thread-specific data destructor functions
+ * (registered with pthread_key_create()).
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, the thread @a thread was not found.
+ *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cancel.html
- * 
+ *
  */
 int pthread_cancel (pthread_t thread)
 
@@ -87,20 +123,38 @@ int pthread_cancel (pthread_t thread)
 /**
  * Register a cleanup handler to be executed at the time of cancellation.
  *
+ * This service registers the given @a routine to be executed a the time of
+ * cancellation of the calling thread, if this thread is a Xenomai POSIX skin
+ * thread (i.e. created with the pthread_create() service). If the caller
+ * context is invalid (not a Xenomai POSIX skin thread), this service has no
+ * effect.
+ *
+ * If allocation from the system heap fails (because the system heap size is to
+ * small), this service fails silently.
+ *
+ * The routines registered with this service get called in LIFO order when the
+ * calling thread calls pthread_exit() or is canceled, or when it calls the
+ * pthread_cleanup_pop() service with a non null argument.
+ *
+ * @param routine the cleanup routine to be registered;
+ *
+ * @param arg the argument associated with this routine.
+ *
+ * @par Valid contexts:
+ * - Xenomai POSIX skin kernel-space thread,
+ * - Xenomai POSIX skin user-space thread (switches to primary mode).
+ *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_push.html
  * 
  */
-void pthread_cleanup_push (cleanup_routine_t routine, void *arg)
+void pthread_cleanup_push (cleanup_routine_t *routine, void *arg)
 
 {
     pthread_t cur = pse51_current_thread();
     cleanup_handler_t *handler;
     spl_t s;
     
-    if (!routine)
-        return;
-
-    if (!cur)
+    if (!routine || !cur || xnpod_interrupt_p() || xnpod_callout_p())
         return;
 
     /* The allocation is inside the critical section in order to make the
@@ -130,6 +184,24 @@ void pthread_cleanup_push (cleanup_routine_t routine, void *arg)
 /**
  * Unregister the last registered cleanup handler.
  *
+ * If the calling thread is a Xenomai POSIX skin thread (i.e. created with
+ * pthread_create()), this service unregisters the last routine which was
+ * registered with pthread_cleanup_push() and call it if @a execute is not null.
+ *
+ * If the caller context is invalid (not a Xenomai POSIX skin thread), this
+ * service has no effect.
+ *
+ * This service may be called at any place, but for maximal portability, should
+ * only called in the same lexical scope as the matching call to
+ * pthread_cleanup_push().
+ *
+ * @param execute if non zero, the last registered cleanup handler should be
+ * executed before it is unregistered.
+ *
+ * @par Valid contexts:
+ * - Xenomai POSIX skin kernel-space thread,
+ * - Xenomai POSIX skin user-space thread (switches to primary mode).
+ *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_pop.html
  * 
  */
@@ -138,10 +210,12 @@ void pthread_cleanup_pop (int execute)
 {
     pthread_t cur = pse51_current_thread();
     cleanup_handler_t *handler;
+    cleanup_routine_t *routine;
     xnholder_t *holder;
+    void *arg;
     spl_t s;
 
-    if (!cur)
+    if (!cur || xnpod_interrupt_p() || xnpod_callout_p())
         return;
 
     xnlock_get_irqsave(&nklock, s);
@@ -156,17 +230,45 @@ void pthread_cleanup_pop (int execute)
 
     handler = link2cleanup_handler(holder);
 
-    if (execute)
-        handler->routine(handler->arg);
+    routine = handler->routine;
+    arg = handler->arg;
 
     /* Same remark as xnmalloc in pthread_cleanup_push */
     xnfree(handler);
 
     xnlock_put_irqrestore(&nklock, s);
+
+    if (execute)
+        routine(arg);
 }
 
 /**
- * Set cancellation type of the current thread.
+ * Set cancelability type of the current thread.
+ *
+ * This service atomically sets the cancelability type of the calling thread,
+ * and return its previous value at the address @a oldtype_ptr, if this thread
+ * is a Xenomai POSIX skin thread (i.e. was created with the pthread_create()
+ * service).
+ *
+ * The cancelability type of a POSIX thread may be:
+ * - PTHREAD_CANCEL_DEFERRED, meaning that cancellation requests are only
+ *   handled in services which are cancellation points;
+ * - PTHREAD_CANCEL_ASYNCHRONOUS, meaning that cancellation requests are handled
+ *   as soon as they are sent.
+ *
+ * @param type new cancelability type of the calling thread;
+ *
+ * @param oldtype_ptr address where the old cancelability type will be stored on
+ * success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a type is not a valid cancelability type;
+ * - EPERM, the caller context is invalid.
+ *
+ * @par Valid contexts:
+ * - Xenomai POSIX skin kernel-space thread,
+ * - Xenomai POSIX skin user-space thread (switches to primary mode).
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcanceltype.html
  * 
@@ -192,7 +294,7 @@ int pthread_setcanceltype (int type, int *oldtype_ptr)
 
     cur = pse51_current_thread();
 
-    if (!cur)
+    if (!cur  || xnpod_interrupt_p())
         return EPERM;
 
     xnlock_get_irqsave(&nklock, s);
@@ -214,7 +316,32 @@ int pthread_setcanceltype (int type, int *oldtype_ptr)
 }
 
 /**
- * Set cancellation state of the current thread.
+ * Set cancelability state of the current thread.
+ *
+ * This service atomically set the cancelability state of the calling thread and
+ * returns its previous value at the address @a oldstate_ptr, if the calling
+ * thread is a Xenomai POSIX skin thread (i.e. created with the pthread_create
+ * service).
+ *
+ * The cancelability state of a POSIX thread may be:
+ * - PTHREAD_CANCEL_ENABLE, meaning that cancellation requests will be handled
+ *   if received;
+ * - PTHREAD_CANCEL_DISABLE, meaning that cancellation requests will not be
+ *   handled if received.
+ *
+ * @param type new cancelability state of the calling thread;
+ *
+ * @param oldtype_ptr address where the old cancelability state will be stored
+ * on success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a state is not a valid cancelability state;
+ * - EPERM, the caller context is invalid.
+ *
+ * @par Valid contexts:
+ * - Xenomai POSIX skin kernel-space thread,
+ * - Xenomai POSIX skin user-space thread (switches to primary mode).
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcancelstate.html
  * 
@@ -240,7 +367,7 @@ int pthread_setcancelstate (int state, int *oldstate_ptr)
 
     cur = pse51_current_thread();
 
-    if (!cur)
+    if (!cur  || xnpod_interrupt_p())
         return EPERM;
 
     xnlock_get_irqsave(&nklock, s);
@@ -262,6 +389,16 @@ int pthread_setcancelstate (int state, int *oldstate_ptr)
 
 /**
  * Test if a cancellation request is pending.
+ *
+ * This function creates a cancellation point if the calling thread is a Xenomai
+ * POSIX skin thread (i.e. created with the pthread_create() service).
+ *
+ * This function is a cancellation point. It has no effect if cancellation is
+ * disabled.
+ *
+ * @par Valid contexts:
+ * - Xenomai POSIX skin kernel-space thread,
+ * - Xenomai POSIX skin user-space thread (switches to primary mode).
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_testcancel.html
  * 

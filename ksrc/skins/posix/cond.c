@@ -260,6 +260,8 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
 
     xnlock_get_irqsave(&nklock, s);
 
+    thread_cancellation_point(cur);
+
     cond = shadow->cond;
 
     /* If another thread waiting for cond does not use the same mutex */
@@ -356,10 +358,10 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
  * calls this service specifying @a cnd as a condition variable but another
  * mutex than @a mx, this service returns immediately with the EINVAL status.
  *
- * This service is a cancellation point for Xenomai POSIX skins threads
+ * This service is a cancellation point for Xenomai POSIX skin threads
  * (created with the pthread_create() service). When such a thread is cancelled
  * while blocked in a call to this service, the mutex @a mx is re-acquired
- * before calling the cancellation cleanup handlers.
+ * before the cancellation cleanup handlers are called.
  *
  * @param cnd the condition variable to wait for;
  *

@@ -319,12 +319,14 @@ int pthread_join (pthread_t thread, void **value_ptr)
             return EPERM;
             }
 
+        thread_cancellation_point(cur);
+
         xnsynch_sleep_on(&thread->join_synch, XN_INFINITE);
 
         is_last_joiner = xnsynch_wakeup_one_sleeper(&thread->join_synch) == NULL;
 
         thread_cancellation_point(cur);
-        
+
         /* In case another thread called pthread_detach. */
         if (xnthread_test_flags(cur, PSE51_JOINED_DETACHED))
 	    {

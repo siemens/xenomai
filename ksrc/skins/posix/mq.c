@@ -367,9 +367,11 @@ static int pse51_mq_timedsend_inner(mqd_t fd,
 
         mq = node2mq(pse51_desc_node(desc));
 
-        xnsynch_sleep_on(&mq->senders, to);
-
         cur = xnpod_current_thread();
+
+        thread_cancellation_point(cur);
+
+        xnsynch_sleep_on(&mq->senders, to);
 
         thread_cancellation_point(cur);
 
@@ -430,6 +432,8 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
             thread->arg = &msg;
             direct = 1;
             }
+
+        thread_cancellation_point(cur);
 
         xnsynch_sleep_on(&mq->receivers, to);
 

@@ -149,10 +149,12 @@ int clock_nanosleep (clockid_t clock_id,
 	    break;
 	}
 
+    thread_cancellation_point(cur);
+
     xnpod_suspend_thread(cur, XNDELAY, timeout+1, NULL);
 
     thread_cancellation_point(cur);
-        
+
     if (xnthread_test_flags(cur, XNBREAK))
 	{
         xnlock_put_irqrestore(&nklock, s);
