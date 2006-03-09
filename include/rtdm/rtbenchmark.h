@@ -111,7 +111,6 @@ typedef struct rtbnch_trace_special {
  * @anchor IOCTLs @name IOCTLs
  * Benchmark device IOCTLs
  * @{ */
-
 #define RTBNCH_RTIOC_INTERM_RESULT      \
     _IOWR(RTIOC_TYPE_BENCHMARK, 0x00, struct rtbnch_interm_result)
 
@@ -138,6 +137,7 @@ typedef struct rtbnch_trace_special {
 
 #define RTBNCH_RTIOC_SPECIAL_TRACE_EX   \
     _IOW(RTIOC_TYPE_BENCHMARK, 0x25, struct rtbnch_trace_special)
+/** @} */
 
 /** @} */
 
