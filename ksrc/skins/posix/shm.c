@@ -269,9 +269,6 @@ int shm_unlink(const char *name)
 
     err = pse51_node_remove(&node, name, PSE51_SHM_MAGIC);
 
-    if (err == EINVAL)
-        err = ENOENT;
-
     if (err)
         {
         xnlock_put_irqrestore(&nklock, s);
