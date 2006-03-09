@@ -40,8 +40,8 @@
  * (@a CLOCK_REALTIME is used by default).
  *
  * There is no support for the @a pshared attribute; condition variables created
- * by Xenomai POSIX skin may be shared by several processes through shared
- * memory.
+ * by Xenomai POSIX skin may be shared by kernel-space modules and user-space
+ * processes through shared memory.
  *
  * Note that only pthread_cond_init() may be used to initialize a condition
  * variable, using the static initializer @a PTHREAD_COND_INITIALIZER is

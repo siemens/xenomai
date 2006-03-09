@@ -131,12 +131,8 @@ static int pse51_node_lookup (pse51_node_t ***node_linkp,
         {
         pse51_node_t *node = *node_link;
 
-        if(!strncmp(node->name, name, PSE51_MAXNAME))
-            {
-            if (node->magic != magic)
-                return EINVAL;
+        if(!strncmp(node->name, name, PSE51_MAXNAME) && node->magic == magic)
             break;
-            }
 
         node_link = &node->next;
         }

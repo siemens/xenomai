@@ -39,7 +39,8 @@
  * uses (see pthread_mutexattr_setprotocol()).
  *
  * There is no support for the @a pshared attribute; mutexes created by Xenomai
- * POSIX skin may be shared by several processes through shared memory.
+ * POSIX skin may be shared by kernel-space modules and user-space processes
+ * through shared memory.
  *
  * By default, Xenomai POSIX skin mutexes are of the recursive type and use the
  * priority inheritance protocol.
@@ -303,7 +304,7 @@ int pse51_mutex_timedlock_break (struct __shadow_mutex *shadow, xnticks_t abs_to
  *
  * @return 0 on success;
  * @return an error number if:
- * - EPERM, the service is called from an invalid context;
+ * - EPERM, the caller context is invalid;
  * - EINVAL, the mutex is invalid;
  * - EBUSY, the mutex was locked by another thread than the current one;
  * - EAGAIN, the mutex is recursive, and the maximum number of recursive locks
@@ -423,7 +424,7 @@ int pthread_mutex_lock (pthread_mutex_t *mx)
  * - Xenomai user-space thread (switches to primary mode).
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_timedlock.html
- * 
+ *
  */
 int pthread_mutex_timedlock (pthread_mutex_t *mx, const struct timespec *to)
 
