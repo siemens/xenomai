@@ -329,9 +329,9 @@ int pthread_setcanceltype (int type, int *oldtype_ptr)
  * - PTHREAD_CANCEL_DISABLE, meaning that cancellation requests will not be
  *   handled if received.
  *
- * @param type new cancelability state of the calling thread;
+ * @param state new cancelability state of the calling thread;
  *
- * @param oldtype_ptr address where the old cancelability state will be stored
+ * @param oldstate_ptr address where the old cancelability state will be stored
  * on success.
  *
  * @return 0 on success;

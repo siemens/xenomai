@@ -246,8 +246,8 @@ int timer_settime (timer_t timerid,
     if ((unsigned) timerid >= PSE51_TIMER_MAX)
         goto einval;
 
-    if ((unsigned) value->it_value.tv_nsec >= ONE_BILLION ||
-        ((unsigned) value->it_interval.tv_nsec >= ONE_BILLION &&
+    if ((unsigned long) value->it_value.tv_nsec >= ONE_BILLION ||
+        ((unsigned long) value->it_interval.tv_nsec >= ONE_BILLION &&
          (value->it_value.tv_sec != 0 || value->it_value.tv_nsec != 0)))
         goto einval;
 

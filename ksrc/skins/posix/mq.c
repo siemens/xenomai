@@ -469,7 +469,7 @@ int mq_timedsend(mqd_t fd,
     int err;
     spl_t s;
 
-    if((unsigned) abs_timeout->tv_nsec > ONE_BILLION)
+    if((unsigned long) abs_timeout->tv_nsec >= ONE_BILLION)
         {
         thread_set_errno(EINVAL);
         return -1;
@@ -595,7 +595,7 @@ ssize_t mq_timedreceive(mqd_t fd,
     int err;
     spl_t s;
 
-    if((unsigned) abs_timeout->tv_nsec > ONE_BILLION)
+    if((unsigned long) abs_timeout->tv_nsec >= ONE_BILLION)
         {
         thread_set_errno(EINVAL);
         return -1;
