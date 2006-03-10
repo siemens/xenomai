@@ -145,8 +145,7 @@ STATUS wdCancel ( WDOG_ID handle )
     
     xnlock_get_irqsave(&nklock, s);
     check_OBJ_ID_ERROR(handle, wind_wd_t, wd, WIND_WD_MAGIC, goto error);
-    if(xntimer_running_p(&wd->timerbase))
-        xntimer_stop(&wd->timerbase);
+    xntimer_stop(&wd->timerbase);
     xnlock_put_irqrestore(&nklock, s);
 
     return OK;
@@ -164,8 +163,7 @@ static void wd_destroy_internal (wind_wd_t * handle)
     spl_t s;
 
     xnlock_get_irqsave(&nklock, s);
-    if(testbits(handle->timerbase.status, XNTIMER_ENABLED))
-        xntimer_destroy(&handle->timerbase);
+    xntimer_destroy(&handle->timerbase);
     removeq(&wind_wd_q,&handle->link);
     wind_mark_deleted(handle);
     xnlock_put_irqrestore(&nklock, s);
