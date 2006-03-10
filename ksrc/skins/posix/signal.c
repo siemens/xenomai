@@ -731,7 +731,7 @@ int sigtimedwait (const sigset_t *__restrict__ user_set,
 
     if (timeout)
         {
-        if ((unsigned) timeout->tv_nsec > ONE_BILLION)
+        if ((unsigned long) timeout->tv_nsec >= ONE_BILLION)
             {
             err = EINVAL;
             goto out;

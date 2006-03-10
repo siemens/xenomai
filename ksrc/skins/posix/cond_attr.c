@@ -38,8 +38,8 @@ static pthread_condattr_t default_cond_attr = {
  * attribute is @a CLOCK_REALTIME.
  *
  * Note that the @a pshared attribute is not supported: condition variables
- * created by Xenomai POSIX skin may be shared by several processes through
- * shared memory.
+ * created by Xenomai POSIX skin may be shared by kernel-space modules and
+ * user-space processes through shared memory.
  *
  * If this service is called specifying a condition variable attributes object
  * that was already initialized, the attributes object is reinitialized.

@@ -38,7 +38,8 @@ static const pthread_mutexattr_t default_mutex_attr = {
  * - for the @a protocol attribute, @a PTHREAD_PRIO_INHERIT.
  *
  * Note that the @a pshared attribute is not supported: mutexes created by
- * Xenomai POSIX skin may be shared by several processes through shared memory.
+ * Xenomai POSIX skin may be shared by kernel-space modules and user-space
+ * processes through shared memory.
  *
  * If this service is called specifying a mutex attributes object that was
  * already initialized, the attributes object is reinitialized.

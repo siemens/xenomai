@@ -22,13 +22,49 @@
  *
  * Clocks and timers services.
  *
+ * Xenomai POSIX skin supports two clocks.
+ *
+ * CLOCK_REALTIME maps to the nucleus system clock, keeping time as the amount
+ * of time since the Epoch, with a resolution of one system clock tick. The
+ * duration of the system clock tick depends on the settings of the nucleus
+ * (configurable at compile-time with @a CONFIG_XENO_OPT_TIMING_PERIOD, and at
+ * run-time with the module parameter @a tick_arg). When the system timer is set
+ * to aperiodic mode, the default, the system clock tick is one nanosecond.
+ *
+ * CLOCK_MONOTONIC maps to an architecture-dependent high resolution counter, so
+ * is suitable for measuring short time intervals. However, when used for
+ * sleeping (with clock_nanosleep()), the CLOCK_MONOTONIC clock has a resolution
+ * of one system clock tick, like the CLOCK_REALTIME clock.
+ *
+ * Setting any of the two clocks with clock_settime() is currently not
+ * supported.
+ *
+ * Timer objects may be created with the timer_create() service using either of
+ * the two clocks, but the resolution of these timers is one system clock tick,
+ * as is the case for clock_nanosleep().
+ *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05
  *@{*/
 
 #include <posix/thread.h>
 
 /**
- * Get resolution of the specified clock.
+ * Get the resolution of the specified clock.
+ *
+ * This service returns, at the address @a res, if it is not @a NULL, the
+ * resolution of the clock @a clock_id.
+ *
+ * For both CLOCK_REALTIME and CLOCK_MONOTONIC, this resolution is the duration
+ * of one system clock tick. No other clock is supported.
+ *
+ * @param clock_id clock identifier, either CLOCK_REALTIME or CLOCK_MONOTONIC;
+ *
+ * @param res the address where the resolution of the specified clock will be
+ * stored on success.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a clock_id is invalid;
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html
  * 
@@ -51,6 +87,22 @@ int clock_getres (clockid_t clock_id, struct timespec *res)
 /**
  * Read the specified clock. 
  *
+ * This service returns, at the address @a tp the current value of the clock @a
+ * clock_id. If @a clock_id is:
+ * - CLOCK_REALTIME, the clock value represents the amount of time since the
+ *   Epoch, with a precision of one system clock tick;
+ * - CLOCK_MONOTONIC, the clock value is given by an architecture-dependent high
+ *   resolution counter, with a precision independent from the system clock tick
+ *   duration.
+ *
+ * @param clock_id clock identifier, either CLOCK_REALTIME or CLOCK_MONOTONIC;
+ *
+ * @param tp the address where the value of the specified clock will be stored.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a clock_id is invalid.
+ * 
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/clock_gettime.html
  * 
  */
@@ -81,13 +133,15 @@ int clock_gettime (clockid_t clock_id, struct timespec *tp)
 /**
  * Set the specified clock.
  *
+ * This service is not supported.
+ *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/clock_settime.html
  * 
  */
 int clock_settime(clockid_t clock_id, const struct timespec *tp)
 
 {
-    if (clock_id != CLOCK_REALTIME || tp->tv_nsec > ONE_BILLION)
+    if (clock_id != CLOCK_REALTIME || (unsigned long) tp->tv_nsec >= ONE_BILLION)
         {
         thread_set_errno(EINVAL);
         return -1;
@@ -99,6 +153,41 @@ int clock_settime(clockid_t clock_id, const struct timespec *tp)
 
 /**
  * Sleep some amount of time.
+ *
+ * This service suspends the calling thread until the wakeup time specified by
+ * @a rqtp, or a signal is delivered to the caller. If the flag TIMER_ABSTIME is
+ * set in the @a flags argument, the wakeup time is specified as an absolute
+ * value of the clock @a clock_id. If the flag TIMER_ABSTIME is not set, the
+ * wakeup time is specified as a time interval.
+ *
+ * If this service is interrupted by a signal, the flag TIMER_ABSTIME is not
+ * set, and @a rmtp is not @a NULL, the time remaining until the specified
+ * wakeup time is returned at the address @a rmtp.
+ *
+ * The resolution of this service is one system clock tick.
+ *
+ * @param clock_id clock identifier, either CLOCK_REALTIME or CLOCK_MONOTONIC.
+ *
+ * @param flags one of:
+ * - 0 meaning that the wakeup time @a rqtp is a time interval;
+ * - TIMER_ABSTIME, meaning that the wakeup time is an absolute value of the
+ *   clock @a clock_id.
+ *
+ * @param rqtp address of the wakeup time.
+ *
+ * @param rmtp address where the remaining time before wakeup will be stored if
+ * the service is interrupted by a signal.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EPERM, the caller context is invalid;
+ * - ENOTSUP, the specified clock is unsupported;
+ * - EINVAL, the specified wakeup time is invalid;
+ * - EINTR, this service was interrupted by a signal.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space thread,
+ * - Xenomai user-space thread (switches to primary mode).
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/clock_nanosleep.html
  * 
@@ -113,14 +202,14 @@ int clock_nanosleep (clockid_t clock_id,
     spl_t s;
     int err = 0;
 
+    if (xnpod_unblockable_p())
+        return EPERM;
+
     if (clock_id != CLOCK_MONOTONIC && clock_id != CLOCK_REALTIME)
         return ENOTSUP;
     
-    if ((unsigned) rqtp->tv_nsec > ONE_BILLION)
+    if ((unsigned long) rqtp->tv_nsec >= ONE_BILLION)
         return EINVAL;
-
-    if (xnpod_unblockable_p())
-        return EPERM;
 
     cur = xnpod_current_thread();
 
@@ -161,7 +250,7 @@ int clock_nanosleep (clockid_t clock_id,
 
         if (flags == 0 && rmtp)
             {
-            xnsticks_t rem  = timeout - clock_get_ticks(clock_id);
+            xnsticks_t rem  = timeout - (clock_get_ticks(clock_id) - start);
 
             ticks2ts(rmtp, rem > 0 ? rem : 0);
             }
@@ -177,6 +266,32 @@ int clock_nanosleep (clockid_t clock_id,
 
 /**
  * Sleep some amount of time.
+ *
+ * This service suspends the calling thread until the wakeup time specified by
+ * @a rqtp, or a signal is delivered. The wakeup time is specified as a time
+ * interval.
+ *
+ * If this service is interrupted by a signal and @a rmtp is not @a NULL, the
+ * time remaining until the specified wakeup time is returned at the address @a
+ * rmtp.
+ *
+ * The resolution of this service is one system clock tick.
+ *
+ * @param rqtp address of the wakeup time.
+ *
+ * @param rmtp address where the remaining time before wakeup will be stored if
+ * the service is interrupted by a signal.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EPERM, the caller context is invalid;
+ * - ENOTSUP, the specified clock is unsupported;
+ * - EINVAL, the specified wakeup time is invalid;
+ * - EINTR, this service was interrupted by a signal.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space thread,
+ * - Xenomai user-space thread (switches to primary mode).
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/nanosleep.html
  * 
