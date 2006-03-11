@@ -493,14 +493,12 @@ static void xnintr_shirq_handler (unsigned irq, void *cookie)
         }
     xnintr_shirq_unlock(shirq);
 
-    --sched->inesting;
-
     if (s & XN_ISR_PROPAGATE)
 	xnarch_chain_irq(irq);
     else if (!(s & XN_ISR_NOENABLE))
 	xnarch_end_irq(irq);
 
-    if (sched->inesting == 0 && xnsched_resched_p())
+    if (--sched->inesting == 0 && xnsched_resched_p())
 	xnpod_schedule();
 
     xnltt_log_event(xeno_ev_iexit,irq);
@@ -557,8 +555,6 @@ static void xnintr_edge_shirq_handler (unsigned irq, void *cookie)
 
     xnintr_shirq_unlock(shirq);
 
-    --sched->inesting;
-
     if (counter > MAX_EDGEIRQ_COUNTER)
 	xnlogerr("xnintr_edge_shirq_handler() : failed to get the IRQ%d line free.\n", irq);
 
@@ -567,7 +563,7 @@ static void xnintr_edge_shirq_handler (unsigned irq, void *cookie)
     else if (!(s & XN_ISR_NOENABLE))
 	xnarch_end_irq(irq);
 
-    if (sched->inesting == 0 && xnsched_resched_p())
+    if (--sched->inesting == 0 && xnsched_resched_p())
 	xnpod_schedule();
 
     xnltt_log_event(xeno_ev_iexit,irq);
