@@ -285,7 +285,6 @@ int clock_nanosleep (clockid_t clock_id,
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
  * - EPERM, the caller context is invalid;
- * - ENOTSUP, the specified clock is unsupported;
  * - EINVAL, the specified wakeup time is invalid;
  * - EINTR, this service was interrupted by a signal.
  *
