@@ -24,39 +24,39 @@ Semaphores have a maximum value past which they cannot be incremented. The macro
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga5">sem_trywait</a> (sem_t *sm)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga5">sem_init</a> (sem_t *sm, int pshared, unsigned value)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Lock a semaphore if it is available.  <a href="#ga5"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga7">sem_wait</a> (sem_t *sm)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize an unnamed semaphore.  <a href="#ga5"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga6">sem_destroy</a> (sem_t *sm)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Lock a semaphore.  <a href="#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga8">sem_timedwait</a> (sem_t *sm, const struct timespec *abs_timeout)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy an unnamed semaphore.  <a href="#ga6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">sem_t *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga7">sem_open</a> (const char *name, int oflags,...)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Try during a bounded time to lock a semaphore.  <a href="#ga8"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga9">sem_post</a> (sem_t *sm)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Open a named semaphore.  <a href="#ga7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga8">sem_close</a> (sem_t *sm)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unlock a semaphore.  <a href="#ga9"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga10">sem_getvalue</a> (sem_t *sm, int *value)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Close a named semaphore.  <a href="#ga8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga9">sem_unlink</a> (const char *name)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the value of a semaphore.  <a href="#ga10"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga12">sem_init</a> (sem_t *sm, int pshared, unsigned value)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unlink a named semaphore.  <a href="#ga9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga11">sem_trywait</a> (sem_t *sm)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize an unnamed semaphore.  <a href="#ga12"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga13">sem_destroy</a> (sem_t *sm)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Attempt to lock a semaphore.  <a href="#ga11"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga13">sem_wait</a> (sem_t *sm)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy an unnamed semaphore.  <a href="#ga13"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">sem_t *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga14">sem_open</a> (const char *name, int oflags,...)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Lock a semaphore.  <a href="#ga13"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga14">sem_timedwait</a> (sem_t *sm, const struct timespec *abs_timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Open a named semaphore.  <a href="#ga14"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga15">sem_close</a> (sem_t *sm)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Attempt, during a bounded time, to lock a semaphore.  <a href="#ga14"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga15">sem_post</a> (sem_t *sm)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Close a named semaphore.  <a href="#ga15"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga16">sem_unlink</a> (const char *name)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unlock a semaphore.  <a href="#ga15"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sem.html#ga16">sem_getvalue</a> (sem_t *sm, int *value)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unlink a named semaphore.  <a href="#ga16"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the value of a semaphore.  <a href="#ga16"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="ga15" doxytag="sem.c::sem_close"></a><p>
+<a class="anchor" name="ga8" doxytag="sem.c::sem_close"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -83,11 +83,27 @@ Semaphores have a maximum value past which they cannot be incremented. The macro
 <p>
 Close a named semaphore. 
 <p>
+This service closes the semaphore <em>sm</em>. The semaphore is destroyed only when unlinked with a call to the <a class="el" href="group__posix__sem.html#ga9">sem_unlink()</a> service and when each call to <a class="el" href="group__posix__sem.html#ga7">sem_open()</a> matches a call to this service.<p>
+When a semaphore is destroyed, the memory it used is returned to the system heap, so that further references to this semaphore are not guaranteed to fail, as is the case for unnamed semaphores.<p>
+This service fails if <em>sm</em> is an unnamed semaphore.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>sm</em>&nbsp;</td><td>the semaphore to be closed.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>and set <em>errno</em> if:<ul>
+<li>EINVAL, the semaphore <em>sm</em> is invalid or is an unnamed semaphore.</li></ul>
+</td></tr>
+  </table>
+</dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_close.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_close.html</a> </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga13" doxytag="sem.c::sem_destroy"></a><p>
+<a class="anchor" name="ga6" doxytag="sem.c::sem_destroy"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -114,11 +130,27 @@ Close a named semaphore.
 <p>
 Destroy an unnamed semaphore. 
 <p>
+This service destroys the semaphore <em>sm</em>. The semaphore becomes invalid for all semaphores services (they all return -1 with <em>errno</em> set to EINVAL) except <a class="el" href="group__posix__sem.html#ga5">sem_init()</a>.<p>
+Threads currently blocked on <em>sm</em> are unblocked and the service they used return -1 with <em>errno</em> set to EINVAL. The semaphore is then considered invalid by all semaphore services (they all fail with <em>errno</em> set to EINVAL) except <a class="el" href="group__posix__sem.html#ga5">sem_init()</a>.<p>
+This service fails if <em>sm</em> is a named semaphore.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>sm</em>&nbsp;</td><td>the semaphore to be destroyed.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success, </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>and set <em>errno</em> if:<ul>
+<li>EINVAL, the semaphore <em>sm</em> is invalid or a named semaphore.</li></ul>
+</td></tr>
+  </table>
+</dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_destroy.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_destroy.html</a> </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga10" doxytag="sem.c::sem_getvalue"></a><p>
+<a class="anchor" name="ga16" doxytag="sem.c::sem_getvalue"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -154,11 +186,27 @@ Destroy an unnamed semaphore.
 <p>
 Get the value of a semaphore. 
 <p>
+This service stores at the address <em>value</em>, the current count of the semaphore <em>sm</em>. The state of the semaphore is unchanged.<p>
+If the semaphore is currently locked, the value stored is zero.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>sm</em>&nbsp;</td><td>a semaphore;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>value</em>&nbsp;</td><td>address where the semaphore count will be stored on success.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
+<li>EINVAL, the semaphore is invalid or uninitialized.</li></ul>
+</td></tr>
+  </table>
+</dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_getvalue.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_getvalue.html</a> </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga12" doxytag="sem.c::sem_init"></a><p>
+<a class="anchor" name="ga5" doxytag="sem.c::sem_init"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -200,11 +248,29 @@ Get the value of a semaphore.
 <p>
 Initialize an unnamed semaphore. 
 <p>
+This service initializes the semaphore <em>sm</em>, with the value <em>value</em>.<p>
+The <em>pshared</em> argument is ignored by this implementation, semaphores created by this service may be shared by kernel-space modules and user-space processes through shared memory.<p>
+This service fails if <em>sm</em> is already initialized or is a named semaphore.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>sm</em>&nbsp;</td><td>the semaphore to be initialized;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>pshared</em>&nbsp;</td><td>ignored;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>value</em>&nbsp;</td><td>the semaphore initial value.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success, </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>and set <em>errno</em> if:<ul>
+<li>EBUSY, the semaphore <em>sm</em> was already initialized;</li><li>ENOSPC, insufficient memory exists in the system heap to initialize the semaphore, increase CONFIG_XENO_OPT_SYS_HEAPSZ;</li><li>EINVAL, the <em>value</em> argument exceeds <em>SEM_VALUE_MAX</em>.</li></ul>
+</td></tr>
+  </table>
+</dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_init.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_init.html</a> </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga14" doxytag="sem.c::sem_open"></a><p>
+<a class="anchor" name="ga7" doxytag="sem.c::sem_open"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -246,11 +312,28 @@ Initialize an unnamed semaphore.
 <p>
 Open a named semaphore. 
 <p>
+This service establishes a binding between the semaphore named <em>name</em> and the calling context.<p>
+If no semaphore named <em>name</em> exists and <em>oflags</em> has the <em>O_CREAT</em> bit set, the semaphore is created by this function, using two more arguments:<ul>
+<li>a <em>mode</em> argument, of type <b>mode_t</b>, currently ignored;</li><li>a <em>value</em> argument, of type <b>unsigned</b>, specifying the initial value of the created semaphore.</li></ul>
+<p>
+If <em>oflags</em> has the two bits <em>O_CREAT</em> and <em>O_EXCL</em> set and the semaphore already exists, this service fails.<p>
+<em>name</em> may be any arbitrary string, and slashes have no particular meaning. However, for portability, using a name which starts with a slash and contains no other slash is recommended.<p>
+If <a class="el" href="group__posix__sem.html#ga7">sem_open()</a> is called from the same context (kernel-space as a whole, or user-space process) several times with the same value of <em>name</em>, the same address is returned.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>the name of the semaphore to be created;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>oflags</em>&nbsp;</td><td>creation flags.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>the address of the named semaphore on success; <p>
+SEM_FAILED and set <em>errno</em> if:<ul>
+<li>ENAMETOOLONG, the length of the <em>name</em> argument exceeds 64 characters;</li><li>EEXIST, the bits <em>O_CREAT</em> and <em>O_EXCL</em> were set in <em>oflags</em> and the named semaphore already exists;</li><li>ENOENT, the bit <em>O_CREAT</em> is not set in <em>oflags</em> and the named semaphore does not exist;</li><li>ENOSPC, insufficient memory exists in the system heap to create the semaphore, increase CONFIG_XENO_OPT_SYS_HEAPSZ;</li><li>EINVAL, the <em>value</em> argument exceeds <em>SEM_VALUE_MAX</em>.</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_open.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_open.html</a> </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga9" doxytag="sem.c::sem_post"></a><p>
+<a class="anchor" name="ga15" doxytag="sem.c::sem_post"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -277,11 +360,26 @@ Open a named semaphore.
 <p>
 Unlock a semaphore. 
 <p>
+This service unlocks the semaphore <em>sm</em>.<p>
+If no thread is currently blocked on this semaphore, its count is incremented, otherwise the highest priority thread is unblocked.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>sm</em>&nbsp;</td><td>the semaphore to be unlocked.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with errno set if:<ul>
+<li>EINVAL, the specified semaphore is invalid or uninitialized;</li><li>EAGAIN, the semaphore count is <em>SEM_VALUE_MAX</em>.</li></ul>
+</td></tr>
+  </table>
+</dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_post.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_post.html</a> </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga8" doxytag="sem.c::sem_timedwait"></a><p>
+<a class="anchor" name="ga14" doxytag="sem.c::sem_timedwait"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -315,13 +413,31 @@ Unlock a semaphore.
     <td>
 
 <p>
-Try during a bounded time to lock a semaphore. 
+Attempt, during a bounded time, to lock a semaphore. 
 <p>
+This serivce is equivalent to <a class="el" href="group__posix__sem.html#ga13">sem_wait()</a>, except that the caller is only blocked until the timeout <em>abs_timeout</em> expires.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>sm</em>&nbsp;</td><td>the semaphore to be locked;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>abs_timeout</em>&nbsp;</td><td>the timeout, expressed as an absolute value of the CLOCK_REALTIME clock.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
+<li>EPERM, the caller context is invalid;</li><li>EINVAL, the semaphore is invalid or uninitialized;</li><li>EINVAL, the specified timeout is invalid;</li><li>EINTR, the caller was interrupted by a signal while blocked in this service;</li><li>ETIMEDOUT, the semaphore could not be locked and the specified timeout expired.</li></ul>
+</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>Xenomai kernel-space thread,</li><li>Xenomai user-space thread (switches to primary mode).</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_timedwait.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_timedwait.html</a> </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga5" doxytag="sem.c::sem_trywait"></a><p>
+<a class="anchor" name="ga11" doxytag="sem.c::sem_trywait"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -346,13 +462,26 @@ Try during a bounded time to lock a semaphore.
     <td>
 
 <p>
-Lock a semaphore if it is available. 
+Attempt to lock a semaphore. 
 <p>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html</a> </dd></dl>
-    </td>
+This service is equivalent to <a class="el" href="group__posix__sem.html#ga13">sem_wait()</a>, except that it returns immediately if the semaphore <em>sm</em> is currently locked, and that it is not a cancellation point.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>sm</em>&nbsp;</td><td>the semaphore to be locked.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
+<li>EINVAL, the specified semaphore is invalid or uninitialized;</li><li>EAGAIN, the specified semaphore is currently locked.</li></ul>
+</td></tr>
+  </table>
+</dl>
+<a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html</a>     </td>
   </tr>
 </table>
-<a class="anchor" name="ga16" doxytag="sem.c::sem_unlink"></a><p>
+<a class="anchor" name="ga9" doxytag="sem.c::sem_unlink"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -379,11 +508,26 @@ Lock a semaphore if it is available.
 <p>
 Unlink a named semaphore. 
 <p>
+This service unlinks the semaphore named <em>name</em>. This semaphore is not destroyed until all references obtained with <a class="el" href="group__posix__sem.html#ga7">sem_open()</a> are closed by calling <a class="el" href="group__posix__sem.html#ga8">sem_close()</a>. However, the unlinked semaphore may no longer be reached with the <a class="el" href="group__posix__sem.html#ga7">sem_open()</a> service.<p>
+When a semaphore is destroyed, the memory it used is returned to the system heap, so that further references to this semaphore are not guaranteed to fail, as is the case for unnamed semaphores.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>the name of the semaphore to be unlinked.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
+<li>ENAMETOOLONG, the length of the <em>name</em> argument exceeds 64 characters;</li><li>ENOENT, the named semaphore does not exist.</li></ul>
+</td></tr>
+  </table>
+</dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_unlink.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_unlink.html</a> </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga7" doxytag="sem.c::sem_wait"></a><p>
+<a class="anchor" name="ga13" doxytag="sem.c::sem_wait"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -410,11 +554,29 @@ Unlink a named semaphore.
 <p>
 Lock a semaphore. 
 <p>
+This service locks the semaphore <em>sm</em> if it is currently unlocked (i.e. if its value is greater than 0). If the semaphore is currently locked, the calling thread is suspended until the semaphore is unlocked, or a signal is delivered to the calling thread.<p>
+This service is a cancellation point for Xenomai POSIX skin threads (created with the <a class="el" href="group__posix__thread.html#ga8">pthread_create()</a> service). When such a thread is cancelled while blocked in a call to this service, the semaphore state is left unchanged before the cancellation cleanup handlers are called.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>sm</em>&nbsp;</td><td>the semaphore to be locked.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
+<li>EPERM, the caller context is invalid;</li><li>EINVAL, the semaphore is invalid or uninitialized;</li><li>EINTR, the caller was interrupted by a signal while blocked in this service.</li></ul>
+</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>Xenomai kernel-space thread,</li><li>Xenomai user-space thread (switches to primary mode).</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_wait.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_wait.html</a> </dd></dl>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Fri Mar 3 17:32:05 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Mar 11 15:12:00 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

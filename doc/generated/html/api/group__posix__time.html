@@ -18,6 +18,11 @@ Collaboration diagram for Clocks and timers.:<center><table><tr><td><img src="gr
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Clocks and timers services. 
 <p>
+Xenomai POSIX skin supports two clocks.<p>
+CLOCK_REALTIME maps to the nucleus system clock, keeping time as the amount of time since the Epoch, with a resolution of one system clock tick. The duration of the system clock tick depends on the settings of the nucleus (configurable at compile-time with <em>CONFIG_XENO_OPT_TIMING_PERIOD</em>, and at run-time with the module parameter <em>tick_arg</em>). When the system timer is set to aperiodic mode, the default, the system clock tick is one nanosecond.<p>
+CLOCK_MONOTONIC maps to an architecture-dependent high resolution counter, so is suitable for measuring short time intervals. However, when used for sleeping (with <a class="el" href="group__posix__time.html#ga5">clock_nanosleep()</a>), the CLOCK_MONOTONIC clock has a resolution of one system clock tick, like the CLOCK_REALTIME clock.<p>
+Setting any of the two clocks with <a class="el" href="group__posix__time.html#ga4">clock_settime()</a> is currently not supported.<p>
+Timer objects may be created with the <a class="el" href="group__posix__time.html#ga9">timer_create()</a> service using either of the two clocks, but the resolution of these timers is one system clock tick, as is the case for <a class="el" href="group__posix__time.html#ga5">clock_nanosleep()</a>.<p>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05">http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05</a> </dd></dl>
 
 <p>
@@ -26,7 +31,7 @@ Clocks and timers services.
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__time.html#ga2">clock_getres</a> (clockid_t clock_id, struct timespec *res)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get resolution of the specified clock.  <a href="#ga2"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the resolution of the specified clock.  <a href="#ga2"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__time.html#ga3">clock_gettime</a> (clockid_t clock_id, struct timespec *tp)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read the specified clock.  <a href="#ga3"></a><br></td></tr>
@@ -90,8 +95,24 @@ Clocks and timers services.
     <td>
 
 <p>
-Get resolution of the specified clock. 
+Get the resolution of the specified clock. 
 <p>
+This service returns, at the address <em>res</em>, if it is not <em>NULL</em>, the resolution of the clock <em>clock_id</em>.<p>
+For both CLOCK_REALTIME and CLOCK_MONOTONIC, this resolution is the duration of one system clock tick. No other clock is supported.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>clock_id</em>&nbsp;</td><td>clock identifier, either CLOCK_REALTIME or CLOCK_MONOTONIC;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>res</em>&nbsp;</td><td>the address where the resolution of the specified clock will be stored on success.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
+<li>EINVAL, <em>clock_id</em> is invalid;</li></ul>
+</td></tr>
+  </table>
+</dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html">http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html</a> </dd></dl>
     </td>
   </tr>
@@ -132,6 +153,23 @@ Get resolution of the specified clock.
 <p>
 Read the specified clock. 
 <p>
+This service returns, at the address <em>tp</em> the current value of the clock <em>clock_id</em>. If <em>clock_id</em> is:<ul>
+<li>CLOCK_REALTIME, the clock value represents the amount of time since the Epoch, with a precision of one system clock tick;</li><li>CLOCK_MONOTONIC, the clock value is given by an architecture-dependent high resolution counter, with a precision independent from the system clock tick duration.</li></ul>
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>clock_id</em>&nbsp;</td><td>clock identifier, either CLOCK_REALTIME or CLOCK_MONOTONIC;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>tp</em>&nbsp;</td><td>the address where the value of the specified clock will be stored.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
+<li>EINVAL, <em>clock_id</em> is invalid.</li></ul>
+</td></tr>
+  </table>
+</dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_gettime.html">http://www.opengroup.org/onlinepubs/000095399/functions/clock_gettime.html</a> </dd></dl>
     </td>
   </tr>
@@ -184,6 +222,26 @@ Read the specified clock.
 <p>
 Sleep some amount of time. 
 <p>
+This service suspends the calling thread until the wakeup time specified by <em>rqtp</em>, or a signal is delivered to the caller. If the flag TIMER_ABSTIME is set in the <em>flags</em> argument, the wakeup time is specified as an absolute value of the clock <em>clock_id</em>. If the flag TIMER_ABSTIME is not set, the wakeup time is specified as a time interval.<p>
+If this service is interrupted by a signal, the flag TIMER_ABSTIME is not set, and <em>rmtp</em> is not <em>NULL</em>, the time remaining until the specified wakeup time is returned at the address <em>rmtp</em>.<p>
+The resolution of this service is one system clock tick.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>clock_id</em>&nbsp;</td><td>clock identifier, either CLOCK_REALTIME or CLOCK_MONOTONIC.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>flags</em>&nbsp;</td><td>one of:<ul>
+<li>0 meaning that the wakeup time <em>rqtp</em> is a time interval;</li><li>TIMER_ABSTIME, meaning that the wakeup time is an absolute value of the clock <em>clock_id</em>.</li></ul>
+</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>rqtp</em>&nbsp;</td><td>address of the wakeup time.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>rmtp</em>&nbsp;</td><td>address where the remaining time before wakeup will be stored if the service is interrupted by a signal.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
+an error number if:<ul>
+<li>EPERM, the caller context is invalid;</li><li>ENOTSUP, the specified clock is unsupported;</li><li>EINVAL, the specified wakeup time is invalid;</li><li>EINTR, this service was interrupted by a signal.</li></ul>
+</dd></dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>Xenomai kernel-space thread,</li><li>Xenomai user-space thread (switches to primary mode).</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_nanosleep.html">http://www.opengroup.org/onlinepubs/000095399/functions/clock_nanosleep.html</a> </dd></dl>
     </td>
   </tr>
@@ -224,6 +282,7 @@ Sleep some amount of time.
 <p>
 Set the specified clock. 
 <p>
+This service is not supported.<p>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_settime.html">http://www.opengroup.org/onlinepubs/000095399/functions/clock_settime.html</a> </dd></dl>
     </td>
   </tr>
@@ -264,6 +323,26 @@ Set the specified clock.
 <p>
 Sleep some amount of time. 
 <p>
+This service suspends the calling thread until the wakeup time specified by <em>rqtp</em>, or a signal is delivered. The wakeup time is specified as a time interval.<p>
+If this service is interrupted by a signal and <em>rmtp</em> is not <em>NULL</em>, the time remaining until the specified wakeup time is returned at the address <em>rmtp</em>.<p>
+The resolution of this service is one system clock tick.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>rqtp</em>&nbsp;</td><td>address of the wakeup time.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>rmtp</em>&nbsp;</td><td>address where the remaining time before wakeup will be stored if the service is interrupted by a signal.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
+<li>EPERM, the caller context is invalid;</li><li>EINVAL, the specified wakeup time is invalid;</li><li>EINTR, this service was interrupted by a signal.</li></ul>
+</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>Xenomai kernel-space thread,</li><li>Xenomai user-space thread (switches to primary mode).</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/nanosleep.html">http://www.opengroup.org/onlinepubs/000095399/functions/nanosleep.html</a> </dd></dl>
     </td>
   </tr>
@@ -468,7 +547,7 @@ Start or stop a timer.
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Fri Mar 3 17:32:04 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Mar 11 15:11:59 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

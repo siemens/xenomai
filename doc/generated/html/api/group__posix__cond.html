@@ -19,7 +19,10 @@ Collaboration diagram for Condition variables services.:<center><table><tr><td><
 Condition variables services. 
 <p>
 A condition variable is a synchronization object that allows threads to suspend execution until some predicate on shared data is satisfied. The basic operations on conditions are: signal the condition (when the predicate becomes true), and wait for the condition, suspending the thread execution until another thread signals the condition.<p>
-A condition variable must always be associated with a mutex, to avoid the race condition where a thread prepares to wait on a condition variable and another thread signals the condition just before the first thread actually waits on it. 
+A condition variable must always be associated with a mutex, to avoid the race condition where a thread prepares to wait on a condition variable and another thread signals the condition just before the first thread actually waits on it.<p>
+Before it can be used, a condition variable has to be initialized with <a class="el" href="group__posix__cond.html#ga5">pthread_cond_init()</a>. An attribute object, which reference may be passed to this service, allows to select the features of the created condition variable, namely the <em>clock</em> used by the <a class="el" href="group__posix__cond.html#ga11">pthread_cond_timedwait()</a> service (<em>CLOCK_REALTIME</em> is used by default).<p>
+There is no support for the <em>pshared</em> attribute; condition variables created by Xenomai POSIX skin may be shared by kernel-space modules and user-space processes through shared memory.<p>
+Note that only <a class="el" href="group__posix__cond.html#ga5">pthread_cond_init()</a> may be used to initialize a condition variable, using the static initializer <em>PTHREAD_COND_INITIALIZER</em> is not supported. 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
@@ -32,10 +35,10 @@ A condition variable must always be associated with a mutex, to avoid the race c
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy a condition variable.  <a href="#ga6"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__cond.html#ga10">pthread_cond_wait</a> (pthread_cond_t *cnd, pthread_mutex_t *mx)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for a condition variable to be signalled.  <a href="#ga10"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on a condition variable.  <a href="#ga10"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__cond.html#ga11">pthread_cond_timedwait</a> (pthread_cond_t *cnd, pthread_mutex_t *mx, const struct timespec *abstime)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait a bounded time for a condition variable to be signalled.  <a href="#ga11"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait a bounded time on a condition variable.  <a href="#ga11"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__cond.html#ga12">pthread_cond_signal</a> (pthread_cond_t *cnd)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Signal a condition variable.  <a href="#ga12"></a><br></td></tr>
@@ -44,16 +47,16 @@ A condition variable must always be associated with a mutex, to avoid the race c
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Broadcast a condition variable.  <a href="#ga13"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__cond.html#ga16">pthread_condattr_init</a> (pthread_condattr_t *attr)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a condition variable attribute object.  <a href="#ga16"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a condition variable attributes object.  <a href="#ga16"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__cond.html#ga17">pthread_condattr_destroy</a> (pthread_condattr_t *attr)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy a condition variable attribute object.  <a href="#ga17"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy a condition variable attributes object.  <a href="#ga17"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__cond.html#ga18">pthread_condattr_getclock</a> (const pthread_condattr_t *attr, clockid_t *clk_id)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the clock selection condition variable attribute.  <a href="#ga18"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the clock selection attribute from a condition variable attributes object.  <a href="#ga18"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__cond.html#ga19">pthread_condattr_setclock</a> (pthread_condattr_t *attr, clockid_t clk_id)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the clock selection condition variable attribute.  <a href="#ga19"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the clock selection attribute of a condition variable attributes object.  <a href="#ga19"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
 <a class="anchor" name="ga13" doxytag="cond.c::pthread_cond_broadcast"></a><p>
@@ -83,6 +86,16 @@ A condition variable must always be associated with a mutex, to avoid the race c
 <p>
 Broadcast a condition variable. 
 <p>
+This service unblocks all threads blocked on the condition variable <em>cnd</em>.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>cnd</em>&nbsp;</td><td>the condition variable to be signalled.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on succes, <p>
+an error number if:<ul>
+<li>EINVAL, the condition variable is invalid.</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_broadcast.html">http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_broadcast.html</a> </dd></dl>
     </td>
   </tr>
@@ -114,6 +127,16 @@ Broadcast a condition variable.
 <p>
 Destroy a condition variable. 
 <p>
+This service destroys the condition variable <em>cnd</em>, if no thread is currently blocked on it. The condition variable becomes invalid for all condition variable services (they all return the EINVAL error) except <a class="el" href="group__posix__cond.html#ga5">pthread_cond_init()</a>.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>cnd</em>&nbsp;</td><td>the condition variable to be destroyed.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on succes, <p>
+an error number if:<ul>
+<li>EINVAL, the condition variable <em>cnd</em> is invalid;</li><li>EBUSY, some thread is currently blocked on the condition variable.</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_destroy.html">http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_destroy.html</a> </dd></dl>
     </td>
   </tr>
@@ -154,6 +177,17 @@ Destroy a condition variable.
 <p>
 Initialize a condition variable. 
 <p>
+This service initializes the condition variable <em>cnd</em>, using the condition variable attributes object <em>attr</em>. If <em>attr</em> is <em>NULL</em> or this service is called from user-space, default attributes are used (see <a class="el" href="group__posix__cond.html#ga16">pthread_condattr_init()</a>).<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>cnd</em>&nbsp;</td><td>the condition variable to be initialized;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>the condition variable attributes object.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on succes, <p>
+an error number if:<ul>
+<li>EINVAL, the condition variable attributes object <em>attr</em> is invalid or uninitialized;</li><li>EBUSY, the condition variable <em>cnd</em> was already initialized;</li><li>ENOMEM, insufficient memory exists in the system heap to initialize the condition variable, increase CONFIG_XENO_OPT_SYS_HEAPSZ.</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_init.html">http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_init.html</a> </dd></dl>
     </td>
   </tr>
@@ -185,6 +219,17 @@ Initialize a condition variable.
 <p>
 Signal a condition variable. 
 <p>
+This service unblocks one thread blocked on the condition variable <em>cnd</em>.<p>
+If more than one thread is blocked on the specified condition variable, the highest priority thread is unblocked.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>cnd</em>&nbsp;</td><td>the condition variable to be signalled.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on succes, <p>
+an error number if:<ul>
+<li>EINVAL, the condition variable is invalid.</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_signal.html.">http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_signal.html.</a> </dd></dl>
     </td>
   </tr>
@@ -229,8 +274,24 @@ Signal a condition variable.
     <td>
 
 <p>
-Wait a bounded time for a condition variable to be signalled. 
+Wait a bounded time on a condition variable. 
 <p>
+This service is equivalent to <a class="el" href="group__posix__cond.html#ga10">pthread_cond_wait()</a>, except that the calling thread remains blocked on the condition variable <em>cnd</em> only until the timeout specified by <em>abstime</em> expires.<p>
+The timeout <em>abstime</em> is expressed as an absolute value of the <em>clock</em> attribute passed to <a class="el" href="group__posix__cond.html#ga5">pthread_cond_init()</a>. By default, <em>CLOCK_REALTIME</em> is used.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>cnd</em>&nbsp;</td><td>the condition variable to wait for;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mx</em>&nbsp;</td><td>the mutex associated with <em>cnd</em>;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>abstime</em>&nbsp;</td><td>the timeout, expressed as an absolute value of the clock attribute passed to <a class="el" href="group__posix__cond.html#ga5">pthread_cond_init()</a>.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on success, <p>
+an error number if:<ul>
+<li>EINVAL, the specified condition variable, mutex or timeout is invalid;</li><li>EPERM, the caller context is invalid;</li><li>EINVAL, another thread is currently blocked on <em>cnd</em> using another mutex than <em>mx</em>;</li><li>EPERM, the specified mutex is not owned by the caller;</li><li>ETIMEDOUT, the specified timeout expired.</li></ul>
+</dd></dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>Xenomai kernel-space thread;</li><li>Xenomai user-space thread (switches to primary mode).</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_timedwait.html">http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_timedwait.html</a> </dd></dl>
     </td>
   </tr>
@@ -269,8 +330,26 @@ Wait a bounded time for a condition variable to be signalled.
     <td>
 
 <p>
-Wait for a condition variable to be signalled. 
+Wait on a condition variable. 
 <p>
+This service atomically unlocks the mutex <em>mx</em>, and block the calling thread until the condition variable <em>cnd</em> is signalled using <a class="el" href="group__posix__cond.html#ga12">pthread_cond_signal()</a> or <a class="el" href="group__posix__cond.html#ga13">pthread_cond_broadcast()</a>. When the condition is signaled, this service re-acquire the mutex before returning.<p>
+Spurious wakeups occur if a signal is delivered to the blocked thread, so, an application should not assume that the condition changed upon successful return from this service.<p>
+Even if the mutex <em>mx</em> is recursive and its recursion count is greater than one on entry, it is unlocked before blocking the caller, and the recursion count is restored once the mutex is re-acquired by this service before returning.<p>
+Once a thread is blocked on a condition variable, a dynamic binding is formed between the condition vairable <em>cnd</em> and the mutex <em>mx</em>; if another thread calls this service specifying <em>cnd</em> as a condition variable but another mutex than <em>mx</em>, this service returns immediately with the EINVAL status.<p>
+This service is a cancellation point for Xenomai POSIX skin threads (created with the <a class="el" href="group__posix__thread.html#ga8">pthread_create()</a> service). When such a thread is cancelled while blocked in a call to this service, the mutex <em>mx</em> is re-acquired before the cancellation cleanup handlers are called.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>cnd</em>&nbsp;</td><td>the condition variable to wait for;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mx</em>&nbsp;</td><td>the mutex associated with <em>cnd</em>.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on success, <p>
+an error number if:<ul>
+<li>EINVAL, the specified condition variable or mutex is invalid;</li><li>EPERM, the caller context is invalid;</li><li>EINVAL, another thread is currently blocked on <em>cnd</em> using another mutex than <em>mx</em>;</li><li>EPERM, the specified mutex is not owned by the caller.</li></ul>
+</dd></dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>Xenomai kernel-space thread;</li><li>Xenomai user-space thread (switches to primary mode).</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_wait.html">http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_wait.html</a> </dd></dl>
     </td>
   </tr>
@@ -300,8 +379,21 @@ Wait for a condition variable to be signalled.
     <td>
 
 <p>
-Destroy a condition variable attribute object. 
+Destroy a condition variable attributes object. 
 <p>
+This service destroys the condition variable attributes object <em>attr</em>. The object becomes invalid for all condition variable services (they all return EINVAL) except <a class="el" href="group__posix__cond.html#ga16">pthread_condattr_init()</a>.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>the initialized mutex attributes object to be destroyed.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
+an error number if:<ul>
+<li>EINVAL, the mutex attributes object <em>attr</em> is invalid.</li></ul>
+</dd></dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space real-time thread.</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_destroy.html">http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_destroy.html</a> </dd></dl>
     </td>
   </tr>
@@ -340,8 +432,23 @@ Destroy a condition variable attribute object.
     <td>
 
 <p>
-Get the clock selection condition variable attribute. 
+Get the clock selection attribute from a condition variable attributes object. 
 <p>
+This service stores, at the address <em>clk_id</em>, the value of the <em>clock</em> attribute in the condition variable attributes object <em>attr</em>.<p>
+See <a class="el" href="group__posix__cond.html#ga11">pthread_cond_timedwait()</a> documentation for a description of the effect of this attribute on a condition variable. The clock ID returned is <em>CLOCK_REALTIME</em> or <em>CLOCK_MONOTONIC</em>.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>an initialized condition variable attributes object,</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>clk_id</em>&nbsp;</td><td>address where the <em>clock</em> attribute value will be stored on success.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on success, <p>
+an error number if:<ul>
+<li>EINVAL, the attribute object <em>attr</em> is invalid.</li></ul>
+</dd></dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space real-time thread.</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_getclock.html">http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_getclock.html</a> </dd></dl>
     </td>
   </tr>
@@ -371,8 +478,23 @@ Get the clock selection condition variable attribute.
     <td>
 
 <p>
-Initialize a condition variable attribute object. 
+Initialize a condition variable attributes object. 
 <p>
+This services initializes the condition variable attributes object <em>attr</em> with default values for all attributes. Default value for the <em>clock</em> attribute is <em>CLOCK_REALTIME</em>.<p>
+Note that the <em>pshared</em> attribute is not supported: condition variables created by Xenomai POSIX skin may be shared by kernel-space modules and user-space processes through shared memory.<p>
+If this service is called specifying a condition variable attributes object that was already initialized, the attributes object is reinitialized.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>the condition variable attributes object to be initialized.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
+an error number if:<ul>
+<li>ENOMEM, the condition variable attribute object pointer <em>attr</em> is <em>NULL</em>.</li></ul>
+</dd></dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space real-time thread.</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_init.html">http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_init.html</a> </dd></dl>
     </td>
   </tr>
@@ -411,13 +533,28 @@ Initialize a condition variable attribute object.
     <td>
 
 <p>
-Set the clock selection condition variable attribute. 
+Set the clock selection attribute of a condition variable attributes object. 
 <p>
+This service set the <em>clock</em> attribute of the condition variable attributes object <em>attr</em>.<p>
+See <a class="el" href="group__posix__cond.html#ga11">pthread_cond_timedwait()</a> documentation for a description of the effect of this attribute on a condition variable.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>an initialized condition variable attributes object,</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>clk_id</em>&nbsp;</td><td>value of the <em>clock</em> attribute, may be <em>CLOCK_REALTIME</em> or <em>CLOCK_MONOTONIC</em>.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on success, <p>
+an error number if:<ul>
+<li>EINVAL, the condition variable attributes object <em>attr</em> is invalid;</li><li>EINVAL, the value of <em>clk_id</em> is invalid for the <em>clock</em> attribute.</li></ul>
+</dd></dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space real-time thread.</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_setclock.html">http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_setclock.html</a> </dd></dl>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Fri Mar 3 17:32:04 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Mar 11 15:11:59 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
