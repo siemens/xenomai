@@ -48,7 +48,7 @@ do {				  \
     (task)->flags &= ~PF_USEDFPU; \
 } while(0)
 
-/* Since the jon is done in the vanilla __switch_to() we call, the
+/* Since the job is done in the vanilla __switch_to() we call, the
    following routine is a nop on 2.4 kernels. */
 #define wrap_switch_iobitmap(p,cpu)   do { } while(0)
 
@@ -93,6 +93,7 @@ static inline void wrap_switch_iobitmap (struct task_struct *p, int cpu)
 	
 		tss->io_bitmap_max = thread->io_bitmap_max;
 		tss->io_bitmap_base = IO_BITMAP_OFFSET;
+		tss->io_bitmap_owner = thread;
 	}
     }
 }

@@ -1,3 +1,8 @@
+2006-03-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-i386/wrappers.h (wrap_switch_iobitmap): Set bitmap
+	new owner as required.
+
 2006-03-11  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pod.c (xnpod_init): Allow the system heap memory to
