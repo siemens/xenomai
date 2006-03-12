@@ -93,7 +93,9 @@ static inline void wrap_switch_iobitmap (struct task_struct *p, int cpu)
 	
 		tss->io_bitmap_max = thread->io_bitmap_max;
 		tss->io_bitmap_base = IO_BITMAP_OFFSET;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15)
 		tss->io_bitmap_owner = thread;
+#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15) */
 	}
     }
 }
