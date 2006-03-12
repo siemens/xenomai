@@ -49,7 +49,7 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
         choice 'Timer indexing method'			\
 	"Linear			CONFIG_XENO_OPT_TIMER_LIST	\
 	 Tree			CONFIG_XENO_OPT_TIMER_HEAP"	Linear
-	if [ "$CONFIG_XENO_OPT_TIMER_HEAP" != "n" ]; then
+	if [ "$CONFIG_XENO_OPT_TIMER_HEAP" = "y" ]; then
 		int 'Max. number of timers' CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY 256
 	fi
 	endmenu
