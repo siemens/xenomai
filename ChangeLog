@@ -1,3 +1,14 @@
+2006-03-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pod.c (xnpod_init): Allow the system heap memory to
+	be scattered over multiple extents, depending on the value of
+	XNARCH_SCATTER_HEAPSZ. This is a temporary work-around for dealing
+	with a current issue raised on the ppc32 architecture, making
+	kernel-based Xenomai threads fault when dereferencing portions of
+	vmalloc'ed memory. The downside of this hack is that the largest
+	block of contiguous memory which can be returned by the heap
+	manager on this architecture is 128Kb.
+
 2006-03-11  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
 
 	* ksrc/nucleus/intr.c: Fix bookkeeping of the interrupt nesting
