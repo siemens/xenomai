@@ -222,6 +222,8 @@ int SKIN_INIT(native)
 
  fail:
 
+    xnlogerr("native skin init failed, code %d.\n",err);
+
     return err;
 }
 

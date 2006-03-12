@@ -42,7 +42,11 @@ int SKIN_INIT(uvm)
         err = __uvm_syscall_init();
 
     if (err)
+	{
         xncore_detach(err);
+	xnlogerr("UVM skin init failed, code %d.\n",err);
+
+	}
     else
 	xnprintf("starting UVM services.\n");
 

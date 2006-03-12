@@ -91,7 +91,10 @@ int SKIN_INIT(posix)
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
     if (err != 0)
+	{
+	xnlogerr("POSIX skin init failed, code %d.\n",err);
 	return err;
+	}	
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     err = pse51_syscall_init();
@@ -104,6 +107,7 @@ int SKIN_INIT(posix)
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
         xnpod_shutdown(err);    
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+	xnlogerr("POSIX skin init failed, code %d.\n",err);
 	return err;
         }
 
