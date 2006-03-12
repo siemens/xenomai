@@ -825,7 +825,7 @@ int __init __xeno_sys_init (void)
 
  fail:
 
-    xnlogerr("System init failed, code %d.\n",err);
+    xnlogerr("system init failed, code %d.\n",err);
 
     return err;
 }
