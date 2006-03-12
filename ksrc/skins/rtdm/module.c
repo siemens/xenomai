@@ -140,6 +140,9 @@ int SKIN_INIT(rtdm)
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
   fail:
+
+    xnlogerr("RTDM skin init failed, code %d.\n",err);
+
     return err;
 }
 
