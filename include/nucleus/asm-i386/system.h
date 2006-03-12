@@ -305,6 +305,7 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
 
                 tss->io_bitmap_max = thread->io_bitmap_max;
                 tss->io_bitmap_base = IO_BITMAP_OFFSET;
+		tss->io_bitmap_owner = thread;
             }
         }
     }

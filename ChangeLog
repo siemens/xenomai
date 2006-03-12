@@ -1,3 +1,13 @@
+2006-03-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/asm-i386/system.h (xnarch_switch_to): Set bitmap
+	new owner as required.
+
+2006-03-02  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/asm-ia64/syscall.h (__xn_interrupted_p): Test
+	the proper errno value.
+
 2006-02-18  Philippe Gerum  <rpm@xenomai.org>
 
 	* skins/native/syscall.c: Make rt_task_set_periodic a conforming
