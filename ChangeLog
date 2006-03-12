@@ -1,5 +1,9 @@
 2006-03-12  Philippe Gerum  <rpm@xenomai.org>
 
+ 	* RELEASE: Xenomai 2.1 (Champagne)
+
+2006-03-12  Philippe Gerum  <rpm@xenomai.org>
+
 	* include/asm-i386/wrappers.h (wrap_switch_iobitmap): Set bitmap
 	new owner as required.
 
