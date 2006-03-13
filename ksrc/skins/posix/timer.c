@@ -90,6 +90,38 @@ void pse51_timer_notified (pse51_siginfo_t *si)
 /**
  * Create a timer object.
  *
+ * This service creates a time object using the clock @a clockid.
+ *
+ * If @a evp is not @a NULL, it describes the notification mechanism used on
+ * timer expiration. Only notification via signal delivery is supported (@a
+ * sigev_signo == @a SIGEV_SIGNAL).  The signal will be sent to the thread
+ * starting the timer with the timer_settime() service. If @a evp is @a NULL,
+ * the SIGALRM signal will be used.
+ *
+ * Note that signals sent to user-space threads will cause them to switch to
+ * secondary mode.
+ *
+ * If this service succeeds, an identifier for the created timer is returned at
+ * the address @a timerid. The timer is unarmed until started with the
+ * timer_settime() service.
+ *
+ * @param clockid clock used as a timing base;
+ *
+ * @param evp description of the asynchronous notification to occur when the
+ * timer expires;
+ *
+ * @param timerid address where the identifier of the created timer will be
+ * stored on success.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, the clock @a clockid is invalid, the member sigev_notify of the
+ *   @b sigevent structure at the address @a evp is not SIGEV_SIGNAL, or the
+ *   member sigev_signo of the @b sigevent structure is an invalid signal
+ *   number;
+ * - EAGAIN, the maximum number of timers was exceeded, recompile with a larger
+ *   value.
+ *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/timer_create.html
  *
  */
@@ -162,6 +194,14 @@ int timer_create (clockid_t clockid,
 /**
  * Delete a timer object.
  *
+ * This service deletes the timer @a timerid.
+ *
+ * @param timerid identifier of the timer to be removed;
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a timerid is invalid.
+ *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/timer_delete.html
  * 
  */
@@ -224,6 +264,47 @@ static void pse51_timer_gettime_inner (struct pse51_timer *__restrict__ timer,
 /**
  * Start or stop a timer.
  *
+ * This service sets a timer expiration date and reload value of the timer @a
+ * timerid. If @a ovalue is not @a NULL, the current expiration date and reload
+ * value are stored at the address @a ovalue as with timer_gettime().
+ *
+ * If the member @a it_value of the @b itimerspec structure is zero, the timer
+ * is stopped, otherwise the timer is started. If the member @a it_interval is
+ * not zero, the timer is periodic. The current thread must be a POSIX skin
+ * thread (created with pthread_create) and will be notified via signal of timer
+ * expirations. Note that these notification will cause user-space threads to
+ * switch to secondary mode.
+ *
+ * When starting the timer, if @a flags is TIMER_ABSTIME, the expiration value
+ * is interpreted as an absolute date of the clock passed to the timer_create()
+ * service. Otherwise, the expiration value is interpreted as a time interval.
+ *
+ * Expiration date and reload value are rounded to an integer count of system
+ * clock ticks (see paragraph @ref posix_time "Clocks and timers services" for
+ * the duration of the system tick).
+ *
+ * @param timerid identifier of the timer to be started or stopped;
+ *
+ * @param flags one of 0 or TIMER_ABSTIME;
+ *
+ * @param value address where the specified timer expiration date and reload
+ * value are read;
+ *
+ * @param ovalue address where the specified timer previous expiration date and
+ * reload value are stored if not @a NULL.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, the specified timer identifier, expiration date or reload value is
+ *   invalid.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space POSIX skin thread,
+ * - kernel-space thread cancellation cleanup routine,
+ * - Xenomai POSIX skin user-space thread (switches to primary mode),
+ * - user-space thread cancellation cleanup routine.
+ *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/timer_settime.html
  * 
  */
@@ -237,7 +318,7 @@ int timer_settime (timer_t timerid,
     spl_t s;
     int err;
 
-    if (!cur)
+    if (!cur || xnpod_interrupt_p())
         {
         err = EPERM;
         goto error;
@@ -314,6 +395,23 @@ int timer_settime (timer_t timerid,
 /**
  * Get timer next expiration date and reload value.
  *
+ * This service stores, at the address @a value, the expiration date (member @a
+ * it_value) and reload value (member @a it_interval) of the timer @a
+ * timerid. The values are returned as time intervals, and as multiples of the
+ * system clock tick duration (see paragraph @ref posix_time "Clocks and timers
+ * services" for details on the duration of the system clock tick). If the timer
+ * was not started, the returned members @a it_value and @a it_interval of @a
+ * value are zero.
+ *
+ * @param timerid timer identifier;
+ *
+ * @param value address where the timer expiration date and reload value are
+ * stored on success.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a timerid is invalid.
+ *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/timer_gettime.html
  * 
  */
@@ -346,8 +444,18 @@ int timer_gettime(timer_t timerid, struct itimerspec *value)
 }
 
 /**
- * Get the timer expiration overruns count since the most recent expiration
+ * Get expiration overruns count since the most recent timer expiration
  * signal delivery.
+ *
+ * This service returns @a timerid expiration overruns count since the most
+ * recent timer expiration signal delivery. If this count is more than @a
+ * DELAYTIMER_MAX expirations, @a DELAYTIMER_MAX is returned.
+ *
+ * @param timerid Timer identifier.
+ *
+ * @return the overruns count on success;
+ * @return -1 with @a errno set if:
+ * - EINVAL, @a timerid is invalid.
  *
  * @see http://www.opengroup.org/onlinepubs/000095399/functions/timer_getoverrun.html
  * 

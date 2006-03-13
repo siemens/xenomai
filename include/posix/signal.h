@@ -28,9 +28,7 @@
 #define sa_sigaction sa_handler
 typedef void (*sighandler_t) (int sig);
 typedef unsigned long sig_atomic_t;
-#define DELAYTIMER_MAX UINT_MAX
-
-#endif /* !__KERNEL__ */
+#endif /* __KERNEL__ */
 
 #ifdef __XENO_SIM__
 #include <posix_overrides.h>
@@ -107,10 +105,10 @@ int sigqueue (struct pse51_thread *thread, int sig, union sigval value);
 }
 #endif
 
-#else /* __KERNEL__ || __XENO_SIM__ */
+#else /* !(__KERNEL__ || __XENO_SIM__) */
 
 #include_next <signal.h>
 
-#endif /* __KERNEL__ || __XENO_SIM__ */
+#endif /* !(__KERNEL__ || __XENO_SIM__) */
 
 #endif /* _XENO_POSIX_SIGNAL_H */

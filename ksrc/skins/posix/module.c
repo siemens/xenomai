@@ -22,6 +22,28 @@
  * Xenomai POSIX skin is an implementation of a small subset of the Single
  * Unix specification over Xenomai generic RTOS core.
  *
+ * The following table gives equivalence between POSIX skin services and native
+ * skin services.
+ *
+ * <CENTER>
+ * <TABLE>
+ * <TR><TH>native skin services</TH><TH>POSIX skin services</TH></TR>
+ * <TR><TD>@ref alarm</TD>          <TD>@ref posix_time</TD></TR>
+ * <TR><TD>@ref cond</TD>           <TD>@ref posix_cond</TD></TR>
+ * <TR><TD>@ref event</TD>          <TD>no direct equivalence, <BR>
+ *                                      see @ref posix_cond</TD></TR>
+ * <TR><TD>@ref native_heap</TD>    <TD>@ref posix_shm</TD></TR>
+ * <TR><TD>@ref interrupt</TD>      <TD>not documented yet</TD></TR>
+ * <TR><TD>@ref mutex</TD>          <TD>@ref posix_mutex</TD></TR>
+ * <TR><TD>@ref pipe</TD>           <TD>no direct equivalence, <BR>
+ *                                      see @ref posix_mq</TD></TR>
+ * <TR><TD>@ref native_queue</TD>   <TD>@ref posix_mq</TD></TR>
+ * <TR><TD>@ref semaphore</TD>      <TD>@ref posix_sem</TD></TR>
+ * <TR><TD>@ref task</TD>           <TD>@ref posix_thread</TD></TR>
+ * <TR><TD>@ref native_timer</TD>   <TD>@ref posix_time</TD></TR>
+ * </TABLE>
+ * </CENTER>
+ *
  */
 
 #ifdef __KERNEL__
