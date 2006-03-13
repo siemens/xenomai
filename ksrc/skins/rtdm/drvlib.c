@@ -49,7 +49,9 @@
  *
  * @return The system time in nanoseconds is returned
  *
- * @note The nucleus timer has to be started to obtain valid results.
+ * @note The accuracy of the this service depends on the system timer.
+ * In particular, if the system timer is running in periodic mode, the return
+ * value will be multiples of the timer period.
  *
  * Environments:
  *
