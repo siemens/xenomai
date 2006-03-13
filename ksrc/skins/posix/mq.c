@@ -22,9 +22,9 @@
  *
  * Message queues services.
  *
- * A message queue allow exchanging data between real-time threads. Maximum
- * message length and maximum number of messages are fixed when the queue is
- * created (see mq_open()).
+ * A message queue allow exchanging data between real-time threads. For a POSIX
+ * message queue, maximum message length and maximum number of messages are
+ * fixed when it is created with mq_open().
  *
  *@{*/
 
@@ -166,77 +166,209 @@ static void pse51_mq_destroy(pse51_mq_t *mq)
         xnpod_schedule();
 }
 
+
 /**
- * Get a attribute object of a message queue.
+ * Open a message queue.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_getattr.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_open.html">
+ * Specification.</a>
  * 
  */
-int mq_getattr(mqd_t fd, struct mq_attr *attr)
+mqd_t mq_open(const char *name, int oflags, ...)
 {
+    struct mq_attr *attr;
+    xnsynch_t done_synch;
+    pse51_node_t *node;
     pse51_desc_t *desc;
+    spl_t s, ignored;
     pse51_mq_t *mq;
-    spl_t s;
+    mode_t mode;
+    va_list ap;
     int err;
-
+    
     xnlock_get_irqsave(&nklock, s);
 
-    err = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
+    err = pse51_node_get(&node, name, PSE51_MQ_MAGIC, oflags);
 
+    if(err)
+        goto error;
+
+    if(node)
+        {
+        mq = node2mq(node);
+        goto got_mq;
+        }
+
+    /* Here, we know that we must create a message queue. */
+    mq = (pse51_mq_t *) xnmalloc(sizeof(*mq));
+    
+    if(!mq)
+        {
+        err = ENOMEM;
+        goto error;
+        }
+
+    err = pse51_node_add_start(&mq->nodebase, name, PSE51_MQ_MAGIC, &done_synch);
+    if(err)
+        goto error;
+    xnlock_clear_irqon(&nklock);
+
+    /* Release the global lock while creating the message queue. */
+    va_start(ap, oflags);
+    mode = va_arg(ap, int); /* unused */
+    attr = va_arg(ap, struct mq_attr *);
+    va_end(ap);    
+
+    err = pse51_mq_init(mq, attr);
+
+    xnlock_get_irqsave(&nklock, ignored);
+    pse51_node_add_finished(&mq->nodebase, err);
     if(err)
         {
         xnlock_put_irqrestore(&nklock, s);
-        thread_set_errno(err);
-        return -1;
+        goto err_free_mq;
         }
-    
-    mq = node2mq(pse51_desc_node(desc));
-    *attr = mq->attr;
-    attr->mq_flags = pse51_desc_getflags(desc);
-    attr->mq_curmsgs = countpq(&mq->queued);
+
+    inith(&mq->link);
+    appendq(&pse51_mqq, &mq->link);
+
+    /* Whether found or created, here we have a valid message queue. */
+  got_mq:
+    err = pse51_desc_create(&desc, &mq->nodebase);
+
+    if(err)
+        goto err_put_mq;
+
+    pse51_desc_setflags(desc, oflags & (O_NONBLOCK | PSE51_PERMS_MASK));
+
     xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+    return (mqd_t) pse51_desc_fd(desc);
+
+
+  err_put_mq:
+    pse51_node_put(&mq->nodebase);
+
+    if(pse51_node_removed_p(&mq->nodebase))
+        {
+        /* mq is no longer referenced, we may destroy it. */
+        xnlock_put_irqrestore(&nklock, s);
+
+        pse51_mq_destroy(mq);
+  err_free_mq:
+        xnfree(mq);
+        }
+    else
+  error:
+        xnlock_put_irqrestore(&nklock, s);
+
+    thread_set_errno(err);
+
+    return (mqd_t) -1;
 }
 
 /**
- * Set flags of a message queue.
+ * Close a message queue.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_setattr.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_close.html">
+ * Specification.</a>
  * 
  */
-int mq_setattr(mqd_t fd,
-               const struct mq_attr *__restrict__ attr,
-               struct mq_attr *__restrict__ oattr)
+int mq_close(mqd_t fd)
 {
     pse51_desc_t *desc;
     pse51_mq_t *mq;
-    long flags;
     spl_t s;
     int err;
+
+    if (xnpod_asynch_p() || !xnpod_root_p())
+        {
+        err = EPERM;
+        goto error;
+        }
 
     xnlock_get_irqsave(&nklock, s);
 
     err = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
 
     if(err)
+        goto err_unlock;
+
+    mq = node2mq(pse51_desc_node(desc));
+    
+    err = pse51_desc_destroy(desc);
+
+    if(err)
+        goto err_unlock;
+
+    err = pse51_node_put(&mq->nodebase);
+
+    if(err)
+        goto err_unlock;
+    
+    if(pse51_node_removed_p(&mq->nodebase))
         {
         xnlock_put_irqrestore(&nklock, s);
+
+        pse51_mq_destroy(mq);
+        xnfree(mq);
+        }
+    else
+        xnlock_put_irqrestore(&nklock, s);
+
+    return 0;
+
+  err_unlock:
+    xnlock_put_irqrestore(&nklock, s);
+  error:
+    thread_set_errno(err);
+    return -1;
+}
+
+/**
+ * Unlink a message queue.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_unlink.html">
+ * Specification.</a>
+ * 
+ */
+int mq_unlink(const char *name)
+{
+    pse51_node_t *node;
+    pse51_mq_t *mq;
+    spl_t s;
+    int err;
+
+    if (xnpod_asynch_p() || !xnpod_root_p())
+        {
+        err = EPERM;
+        goto error;
+        }
+
+    xnlock_get_irqsave(&nklock, s);
+
+    err = pse51_node_remove(&node, name, PSE51_MQ_MAGIC);
+
+    if(!err && pse51_node_removed_p(node))
+        {
+        xnlock_put_irqrestore(&nklock, s);
+
+        mq = node2mq(node);
+        pse51_mq_destroy(mq);
+        xnfree(mq);
+        }
+    else
+        xnlock_put_irqrestore(&nklock, s);
+
+    if(err)
+        {
+error:
         thread_set_errno(err);
         return -1;
         }
-
-    mq = node2mq(pse51_desc_node(desc));
-    if(oattr)
-        {
-        *oattr = mq->attr;
-        oattr->mq_flags = pse51_desc_getflags(desc);
-        oattr->mq_curmsgs = countpq(&mq->queued);
-        }
-    flags = (pse51_desc_getflags(desc) & PSE51_PERMS_MASK)
-        | (attr->mq_flags & ~PSE51_PERMS_MASK);
-    pse51_desc_setflags(desc, flags);
-    xnlock_put_irqrestore(&nklock, s);
 
     return 0;
 }
@@ -456,7 +588,9 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
 /**
  * Try during a bounded time to send a message to a message queue.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedsend.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedsend.html">
+ * Specification.</a>
  * 
  */
 int mq_timedsend(mqd_t fd,
@@ -493,7 +627,9 @@ int mq_timedsend(mqd_t fd,
 /**
  * Send a message to a message queue.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_send.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_send.html">
+ * Specification.</a>
  * 
  */
 int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
@@ -515,10 +651,156 @@ int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
 }
 
 /**
+ * Try during a bounded time to receive a message from a message queue.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedreceive.html">
+ * Specification.</a>
+ * 
+ */
+ssize_t mq_timedreceive(mqd_t fd,
+                        char *__restrict__ buffer,
+                        size_t len,
+                        unsigned *__restrict__ priop,
+                        const struct timespec *__restrict__ abs_timeout)
+{
+    xnticks_t timeout;
+    int err;
+    spl_t s;
+
+    if((unsigned long) abs_timeout->tv_nsec >= ONE_BILLION)
+        {
+        thread_set_errno(EINVAL);
+        return -1;
+        }
+
+    timeout = ts2ticks_ceil(abs_timeout) + 1;
+
+    xnlock_get_irqsave(&nklock, s);
+    err = pse51_mq_timedrcv_inner(fd, buffer, &len, priop, timeout);
+    xnlock_put_irqrestore(&nklock, s);
+
+    if(err)
+        {
+        thread_set_errno(err);
+        return -1;
+        }
+
+    return len;    
+}
+
+/**
+ * Receive a message from a message queue.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_receive.html">
+ * Specification.</a>
+ * 
+ */
+ssize_t mq_receive(mqd_t fd, char *buffer, size_t len, unsigned *priop)
+{
+    int err;
+    spl_t s;
+
+    xnlock_get_irqsave(&nklock, s);
+    err = pse51_mq_timedrcv_inner(fd, buffer, &len, priop, XN_INFINITE);
+    xnlock_put_irqrestore(&nklock, s);
+
+    if(err)
+        {
+        thread_set_errno(err);
+        return -1;
+        }
+
+    return len;    
+}
+
+/**
+ * Get the attribute object of a message queue.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_getattr.html">
+ * Specification.</a>
+ * 
+ */
+int mq_getattr(mqd_t fd, struct mq_attr *attr)
+{
+    pse51_desc_t *desc;
+    pse51_mq_t *mq;
+    spl_t s;
+    int err;
+
+    xnlock_get_irqsave(&nklock, s);
+
+    err = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
+
+    if(err)
+        {
+        xnlock_put_irqrestore(&nklock, s);
+        thread_set_errno(err);
+        return -1;
+        }
+    
+    mq = node2mq(pse51_desc_node(desc));
+    *attr = mq->attr;
+    attr->mq_flags = pse51_desc_getflags(desc);
+    attr->mq_curmsgs = countpq(&mq->queued);
+    xnlock_put_irqrestore(&nklock, s);
+
+    return 0;
+}
+
+/**
+ * Set flags of a message queue.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_setattr.html">
+ * Specification.</a>
+ * 
+ */
+int mq_setattr(mqd_t fd,
+               const struct mq_attr *__restrict__ attr,
+               struct mq_attr *__restrict__ oattr)
+{
+    pse51_desc_t *desc;
+    pse51_mq_t *mq;
+    long flags;
+    spl_t s;
+    int err;
+
+    xnlock_get_irqsave(&nklock, s);
+
+    err = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
+
+    if(err)
+        {
+        xnlock_put_irqrestore(&nklock, s);
+        thread_set_errno(err);
+        return -1;
+        }
+
+    mq = node2mq(pse51_desc_node(desc));
+    if(oattr)
+        {
+        *oattr = mq->attr;
+        oattr->mq_flags = pse51_desc_getflags(desc);
+        oattr->mq_curmsgs = countpq(&mq->queued);
+        }
+    flags = (pse51_desc_getflags(desc) & PSE51_PERMS_MASK)
+        | (attr->mq_flags & ~PSE51_PERMS_MASK);
+    pse51_desc_setflags(desc, flags);
+    xnlock_put_irqrestore(&nklock, s);
+
+    return 0;
+}
+
+/**
  * Register the current thread to be notified of message arrival at an empty
  * message queue.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_notify.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_notify.html">
+ * Specification.</a>
  * 
  */
 int mq_notify(mqd_t fd, const struct sigevent *evp)
@@ -577,268 +859,6 @@ int mq_notify(mqd_t fd, const struct sigevent *evp)
   error:
     thread_set_errno(err);
     return -1;
-}
-
-/**
- * Try during a bounded time to receive a message from a message queue.
- *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedreceive.html
- * 
- */
-ssize_t mq_timedreceive(mqd_t fd,
-                        char *__restrict__ buffer,
-                        size_t len,
-                        unsigned *__restrict__ priop,
-                        const struct timespec *__restrict__ abs_timeout)
-{
-    xnticks_t timeout;
-    int err;
-    spl_t s;
-
-    if((unsigned long) abs_timeout->tv_nsec >= ONE_BILLION)
-        {
-        thread_set_errno(EINVAL);
-        return -1;
-        }
-
-    timeout = ts2ticks_ceil(abs_timeout) + 1;
-
-    xnlock_get_irqsave(&nklock, s);
-    err = pse51_mq_timedrcv_inner(fd, buffer, &len, priop, timeout);
-    xnlock_put_irqrestore(&nklock, s);
-
-    if(err)
-        {
-        thread_set_errno(err);
-        return -1;
-        }
-
-    return len;    
-}
-
-/**
- * Receive a message from a message queue.
- *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_receive.html
- * 
- */
-ssize_t mq_receive(mqd_t fd, char *buffer, size_t len, unsigned *priop)
-{
-    int err;
-    spl_t s;
-
-    xnlock_get_irqsave(&nklock, s);
-    err = pse51_mq_timedrcv_inner(fd, buffer, &len, priop, XN_INFINITE);
-    xnlock_put_irqrestore(&nklock, s);
-
-    if(err)
-        {
-        thread_set_errno(err);
-        return -1;
-        }
-
-    return len;    
-}
-
-
-/**
- * Open a message queue.
- *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_open.html
- * 
- */
-mqd_t mq_open(const char *name, int oflags, ...)
-{
-    struct mq_attr *attr;
-    xnsynch_t done_synch;
-    pse51_node_t *node;
-    pse51_desc_t *desc;
-    spl_t s, ignored;
-    pse51_mq_t *mq;
-    mode_t mode;
-    va_list ap;
-    int err;
-    
-    xnlock_get_irqsave(&nklock, s);
-
-    err = pse51_node_get(&node, name, PSE51_MQ_MAGIC, oflags);
-
-    if(err)
-        goto error;
-
-    if(node)
-        {
-        mq = node2mq(node);
-        goto got_mq;
-        }
-
-    /* Here, we know that we must create a message queue. */
-    mq = (pse51_mq_t *) xnmalloc(sizeof(*mq));
-    
-    if(!mq)
-        {
-        err = ENOMEM;
-        goto error;
-        }
-
-    err = pse51_node_add_start(&mq->nodebase, name, PSE51_MQ_MAGIC, &done_synch);
-    if(err)
-        goto error;
-    xnlock_clear_irqon(&nklock);
-
-    /* Release the global lock while creating the message queue. */
-    va_start(ap, oflags);
-    mode = va_arg(ap, int); /* unused */
-    attr = va_arg(ap, struct mq_attr *);
-    va_end(ap);    
-
-    err = pse51_mq_init(mq, attr);
-
-    xnlock_get_irqsave(&nklock, ignored);
-    pse51_node_add_finished(&mq->nodebase, err);
-    if(err)
-        {
-        xnlock_put_irqrestore(&nklock, s);
-        goto err_free_mq;
-        }
-
-    inith(&mq->link);
-    appendq(&pse51_mqq, &mq->link);
-
-    /* Whether found or created, here we have a valid message queue. */
-  got_mq:
-    err = pse51_desc_create(&desc, &mq->nodebase);
-
-    if(err)
-        goto err_put_mq;
-
-    pse51_desc_setflags(desc, oflags & (O_NONBLOCK | PSE51_PERMS_MASK));
-
-    xnlock_put_irqrestore(&nklock, s);
-
-    return (mqd_t) pse51_desc_fd(desc);
-
-
-  err_put_mq:
-    pse51_node_put(&mq->nodebase);
-
-    if(pse51_node_removed_p(&mq->nodebase))
-        {
-        /* mq is no longer referenced, we may destroy it. */
-        xnlock_put_irqrestore(&nklock, s);
-
-        pse51_mq_destroy(mq);
-  err_free_mq:
-        xnfree(mq);
-        }
-    else
-  error:
-        xnlock_put_irqrestore(&nklock, s);
-
-    thread_set_errno(err);
-
-    return (mqd_t) -1;
-}
-
-/**
- * Close a message queue.
- *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_close.html
- * 
- */
-int mq_close(mqd_t fd)
-{
-    pse51_desc_t *desc;
-    pse51_mq_t *mq;
-    spl_t s;
-    int err;
-
-    if (xnpod_asynch_p() || !xnpod_root_p())
-        {
-        err = EPERM;
-        goto error;
-        }
-
-    xnlock_get_irqsave(&nklock, s);
-
-    err = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
-
-    if(err)
-        goto err_unlock;
-
-    mq = node2mq(pse51_desc_node(desc));
-    
-    err = pse51_desc_destroy(desc);
-
-    if(err)
-        goto err_unlock;
-
-    err = pse51_node_put(&mq->nodebase);
-
-    if(err)
-        goto err_unlock;
-    
-    if(pse51_node_removed_p(&mq->nodebase))
-        {
-        xnlock_put_irqrestore(&nklock, s);
-
-        pse51_mq_destroy(mq);
-        xnfree(mq);
-        }
-    else
-        xnlock_put_irqrestore(&nklock, s);
-
-    return 0;
-
-  err_unlock:
-    xnlock_put_irqrestore(&nklock, s);
-  error:
-    thread_set_errno(err);
-    return -1;
-}
-
-/**
- * Unlink a message queue.
- *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/mq_unlink.html
- * 
- */
-int mq_unlink(const char *name)
-{
-    pse51_node_t *node;
-    pse51_mq_t *mq;
-    spl_t s;
-    int err;
-
-    if (xnpod_asynch_p() || !xnpod_root_p())
-        {
-        err = EPERM;
-        goto error;
-        }
-
-    xnlock_get_irqsave(&nklock, s);
-
-    err = pse51_node_remove(&node, name, PSE51_MQ_MAGIC);
-
-    if(!err && pse51_node_removed_p(node))
-        {
-        xnlock_put_irqrestore(&nklock, s);
-
-        mq = node2mq(node);
-        pse51_mq_destroy(mq);
-        xnfree(mq);
-        }
-    else
-        xnlock_put_irqrestore(&nklock, s);
-
-    if(err)
-        {
-error:
-        thread_set_errno(err);
-        return -1;
-        }
-
-    return 0;
 }
 
 int pse51_mq_pkg_init(void)

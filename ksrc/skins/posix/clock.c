@@ -43,7 +43,9 @@
  * the two clocks, but the resolution of these timers is one system clock tick,
  * as is the case for clock_nanosleep().
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05">
+ * Specification.</a>
  *@{*/
 
 #include <posix/thread.h>
@@ -66,7 +68,9 @@
  * @retval -1 with @a errno set if:
  * - EINVAL, @a clock_id is invalid;
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html">
+ * Specification.</a>
  * 
  */
 int clock_getres (clockid_t clock_id, struct timespec *res)
@@ -103,7 +107,9 @@ int clock_getres (clockid_t clock_id, struct timespec *res)
  * @retval -1 with @a errno set if:
  * - EINVAL, @a clock_id is invalid.
  * 
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/clock_gettime.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_gettime.html">
+ * Specification.</a>
  * 
  */
 int clock_gettime (clockid_t clock_id, struct timespec *tp)
@@ -135,7 +141,9 @@ int clock_gettime (clockid_t clock_id, struct timespec *tp)
  *
  * This service is not supported.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/clock_settime.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_settime.html">
+ * Specification.</a>
  * 
  */
 int clock_settime(clockid_t clock_id, const struct timespec *tp)
@@ -189,7 +197,9 @@ int clock_settime(clockid_t clock_id, const struct timespec *tp)
  * - Xenomai kernel-space thread,
  * - Xenomai user-space thread (switches to primary mode).
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/clock_nanosleep.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_nanosleep.html">
+ * Specification.</a>
  * 
  */
 int clock_nanosleep (clockid_t clock_id,
@@ -292,7 +302,9 @@ int clock_nanosleep (clockid_t clock_id,
  * - Xenomai kernel-space thread,
  * - Xenomai user-space thread (switches to primary mode).
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/nanosleep.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/nanosleep.html">
+ * Specification.</a>
  * 
  */
 int nanosleep(const struct timespec *rqtp, struct timespec *rmtp)

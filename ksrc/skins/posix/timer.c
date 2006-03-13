@@ -122,7 +122,9 @@ void pse51_timer_notified (pse51_siginfo_t *si)
  * - EAGAIN, the maximum number of timers was exceeded, recompile with a larger
  *   value.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/timer_create.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_create.html">
+ * Specification.</a>
  *
  */
 int timer_create (clockid_t clockid,
@@ -202,7 +204,9 @@ int timer_create (clockid_t clockid,
  * @retval -1 with @a errno set if:
  * - EINVAL, @a timerid is invalid.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/timer_delete.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_delete.html">
+ * Specification.</a>
  * 
  */
 int timer_delete(timer_t timerid)
@@ -305,7 +309,9 @@ static void pse51_timer_gettime_inner (struct pse51_timer *__restrict__ timer,
  * - Xenomai POSIX skin user-space thread (switches to primary mode),
  * - user-space thread cancellation cleanup routine.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/timer_settime.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_settime.html">
+ * Specification.</a>
  * 
  */
 int timer_settime (timer_t timerid,
@@ -412,7 +418,9 @@ int timer_settime (timer_t timerid,
  * @retval -1 with @a errno set if:
  * - EINVAL, @a timerid is invalid.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/timer_gettime.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_gettime.html">
+ * Specification.</a>
  * 
  */
 int timer_gettime(timer_t timerid, struct itimerspec *value)
@@ -457,7 +465,9 @@ int timer_gettime(timer_t timerid, struct itimerspec *value)
  * @return -1 with @a errno set if:
  * - EINVAL, @a timerid is invalid.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/timer_getoverrun.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_getoverrun.html">
+ * Specification.</a>
  * 
  */
 int timer_getoverrun(timer_t timerid)

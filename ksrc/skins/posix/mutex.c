@@ -111,7 +111,9 @@ void pse51_mutex_pkg_cleanup (void)
  * - ENOMEM, insufficient memory exists in the system heap to initialize the
  *   mutex, increase CONFIG_XENO_OPT_SYS_HEAPSZ.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_init.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_init.html">
+ * Specification.</a>
  * 
  */
 int pthread_mutex_init (pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
@@ -184,7 +186,9 @@ int pthread_mutex_init (pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
  * - EINVAL, the mutex @a mx is invalid;
  * - EBUSY, the mutex is locked, or used by a condition variable.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_destroy.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_destroy.html">
+ * Specification.</a>
  * 
  */
 int pthread_mutex_destroy (pthread_mutex_t *mx)
@@ -314,7 +318,9 @@ int pse51_mutex_timedlock_break (struct __shadow_mutex *shadow, xnticks_t abs_to
  * - Xenomai kernel-space thread,
  * - Xenomai user-space thread (switches to primary mode).
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_trylock.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_trylock.html">
+ * Specification.</a>
  * 
  */
 int pthread_mutex_trylock (pthread_mutex_t *mx)
@@ -380,7 +386,9 @@ int pthread_mutex_trylock (pthread_mutex_t *mx)
  * - Xenomai kernel-space thread;
  * - Xenomai user-space thread (switches to primary mode).
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_lock.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_lock.html">
+ * Specification.</a>
  *
  */
 int pthread_mutex_lock (pthread_mutex_t *mx)
@@ -423,7 +431,9 @@ int pthread_mutex_lock (pthread_mutex_t *mx)
  * - Xenomai kernel-space thread;
  * - Xenomai user-space thread (switches to primary mode).
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_timedlock.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_timedlock.html">
+ * Specification.</a>
  *
  */
 int pthread_mutex_timedlock (pthread_mutex_t *mx, const struct timespec *to)
@@ -487,7 +497,9 @@ static inline int mutex_unlock_internal(xnthread_t *cur,
  * - Xenomai user-space thread (switches to primary mode),
  * - user-space cancellation cleanup routine.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_unlock.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_unlock.html">
+ * Specification.</a>
  * 
  */
 int pthread_mutex_unlock (pthread_mutex_t *mx)

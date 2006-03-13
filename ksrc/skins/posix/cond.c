@@ -97,7 +97,9 @@ static void cond_destroy_internal (pse51_cond_t *cond)
  * - ENOMEM, insufficient memory exists in the system heap to initialize the
  *   condition variable, increase CONFIG_XENO_OPT_SYS_HEAPSZ.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_init.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_init.html">
+ * Specification.</a>
  * 
  */
 int pthread_cond_init (pthread_cond_t *cnd, const pthread_condattr_t *attr)
@@ -169,7 +171,9 @@ int pthread_cond_init (pthread_cond_t *cnd, const pthread_condattr_t *attr)
  * - EINVAL, the condition variable @a cnd is invalid;
  * - EBUSY, some thread is currently blocked on the condition variable.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_destroy.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_destroy.html">
+ * Specification.</a>
  * 
  */
 int pthread_cond_destroy (pthread_cond_t *cnd)
@@ -379,7 +383,9 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
  * - Xenomai kernel-space thread;
  * - Xenomai user-space thread (switches to primary mode).
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_wait.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_wait.html">
+ * Specification.</a>
  * 
  */
 int pthread_cond_wait (pthread_cond_t *cnd, pthread_mutex_t *mx)
@@ -425,7 +431,9 @@ int pthread_cond_wait (pthread_cond_t *cnd, pthread_mutex_t *mx)
  * - Xenomai kernel-space thread;
  * - Xenomai user-space thread (switches to primary mode).
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_timedwait.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_timedwait.html">
+ * Specification.</a>
  * 
  */
 int pthread_cond_timedwait (pthread_cond_t *cnd,
@@ -456,7 +464,9 @@ int pthread_cond_timedwait (pthread_cond_t *cnd,
  * @return an error number if:
  * - EINVAL, the condition variable is invalid.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_signal.html.
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_signal.html.">
+ * Specification.</a>
  * 
  */
 int pthread_cond_signal (pthread_cond_t *cnd)
@@ -498,7 +508,9 @@ int pthread_cond_signal (pthread_cond_t *cnd)
  * @return an error number if:
  * - EINVAL, the condition variable is invalid.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_broadcast.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_broadcast.html">
+ * Specification.</a>
  * 
  */
 int pthread_cond_broadcast (pthread_cond_t *cnd)

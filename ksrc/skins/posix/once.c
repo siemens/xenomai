@@ -26,7 +26,9 @@
 /**
  * Execute an initialization routine.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_once.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_once.html">
+ * Specification.</a>
  * 
  */
 int pthread_once (pthread_once_t *once, void (*init_routine)(void))

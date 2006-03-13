@@ -130,7 +130,9 @@ static int pse51_sem_init_inner (pse51_sem_t *sem, int pshared, unsigned value)
  *   semaphore, increase CONFIG_XENO_OPT_SYS_HEAPSZ;
  * - EINVAL, the @a value argument exceeds @a SEM_VALUE_MAX.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_init.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_init.html">
+ * Specification.</a>
  * 
  */
 int sem_init (sem_t *sm, int pshared, unsigned value)
@@ -204,7 +206,9 @@ int sem_init (sem_t *sm, int pshared, unsigned value)
  * @retval -1 and set @a errno if:
  * - EINVAL, the semaphore @a sm is invalid or a named semaphore.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_destroy.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_destroy.html">
+ * Specification.</a>
  * 
  */
 int sem_destroy (sem_t *sm)
@@ -273,7 +277,9 @@ int sem_destroy (sem_t *sm)
  *   semaphore, increase CONFIG_XENO_OPT_SYS_HEAPSZ;
  * - EINVAL, the @a value argument exceeds @a SEM_VALUE_MAX.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_open.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_open.html">
+ * Specification.</a>
  * 
  */
 sem_t *sem_open (const char *name, int oflags, ...)
@@ -370,7 +376,9 @@ sem_t *sem_open (const char *name, int oflags, ...)
  * @retval -1 and set @a errno if:
  * - EINVAL, the semaphore @a sm is invalid or is an unnamed semaphore.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_close.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_close.html">
+ * Specification.</a>
  * 
  */
 int sem_close (sem_t *sm)
@@ -436,7 +444,9 @@ int sem_close (sem_t *sm)
  * - ENAMETOOLONG, the length of the @a name argument exceeds 64 characters;
  * - ENOENT, the named semaphore does not exist.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_unlink.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_unlink.html">
+ * Specification.</a>
  * 
  */
 int sem_unlink (const char *name)
@@ -589,7 +599,9 @@ static inline int sem_timedwait_internal (struct __shadow_sem *shadow,
  * - Xenomai kernel-space thread,
  * - Xenomai user-space thread (switches to primary mode).
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_wait.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_wait.html">
+ * Specification.</a>
  * 
  */
 int sem_wait (sem_t *sm)
@@ -637,7 +649,9 @@ int sem_wait (sem_t *sm)
  * - Xenomai kernel-space thread,
  * - Xenomai user-space thread (switches to primary mode).
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_timedwait.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_timedwait.html">
+ * Specification.</a>
  * 
  */
 int sem_timedwait (sem_t *sm, const struct timespec *abs_timeout)
@@ -675,7 +689,9 @@ int sem_timedwait (sem_t *sm, const struct timespec *abs_timeout)
  * - EINVAL, the specified semaphore is invalid or uninitialized;
  * - EAGAIN, the semaphore count is @a SEM_VALUE_MAX.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_post.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_post.html">
+ * Specification.</a>
  * 
  */
 int sem_post (sem_t *sm)
@@ -734,7 +750,9 @@ int sem_post (sem_t *sm)
  * @retval -1 with @a errno set if:
  * - EINVAL, the semaphore is invalid or uninitialized.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sem_getvalue.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_getvalue.html">
+ * Specification.</a>
  * 
  */
 int sem_getvalue (sem_t *sm, int *value)

@@ -44,7 +44,9 @@
  * pthread_testcancel(), sem_wait(), sem_timedwait(), sigwait() and 
  * sigwaitinfo() are cancellation points.
 
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_09.html#tag_02_09_05
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_09.html#tag_02_09_05">
+ * Specification.</a>
  *
  *@{*/
 
@@ -79,7 +81,9 @@ typedef struct {
  * @return an error number if:
  * - ESRCH, the thread @a thread was not found.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cancel.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cancel.html">
+ * Specification.</a>
  *
  */
 int pthread_cancel (pthread_t thread)
@@ -144,7 +148,9 @@ int pthread_cancel (pthread_t thread)
  * - Xenomai POSIX skin kernel-space thread,
  * - Xenomai POSIX skin user-space thread (switches to primary mode).
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_push.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_push.html">
+ * Specification.</a>
  * 
  */
 void pthread_cleanup_push (cleanup_routine_t *routine, void *arg)
@@ -202,7 +208,9 @@ void pthread_cleanup_push (cleanup_routine_t *routine, void *arg)
  * - Xenomai POSIX skin kernel-space thread,
  * - Xenomai POSIX skin user-space thread (switches to primary mode).
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_pop.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_pop.html">
+ * Specification.</a>
  * 
  */
 void pthread_cleanup_pop (int execute)
@@ -270,7 +278,9 @@ void pthread_cleanup_pop (int execute)
  * - Xenomai POSIX skin kernel-space thread,
  * - Xenomai POSIX skin user-space thread (switches to primary mode).
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcanceltype.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcanceltype.html">
+ * Specification.</a>
  * 
  */
 int pthread_setcanceltype (int type, int *oldtype_ptr)
@@ -343,7 +353,9 @@ int pthread_setcanceltype (int type, int *oldtype_ptr)
  * - Xenomai POSIX skin kernel-space thread,
  * - Xenomai POSIX skin user-space thread (switches to primary mode).
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcancelstate.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcancelstate.html">
+ * Specification.</a>
  * 
  */
 int pthread_setcancelstate (int state, int *oldstate_ptr)
@@ -400,7 +412,9 @@ int pthread_setcancelstate (int state, int *oldstate_ptr)
  * - Xenomai POSIX skin kernel-space thread,
  * - Xenomai POSIX skin user-space thread (switches to primary mode).
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_testcancel.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_testcancel.html">
+ * Specification.</a>
  * 
  */
 void pthread_testcancel (void)
