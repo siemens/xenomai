@@ -49,9 +49,13 @@
  *
  * @return The system time in nanoseconds is returned
  *
- * @note The accuracy of the this service depends on the system timer.
- * In particular, if the system timer is running in periodic mode, the return
- * value will be multiples of the timer period.
+ * @note The resolution of this service depends on the system timer. In
+ * particular, if the system timer is running in periodic mode, the return
+ * value will be limited to multiples of the timer tick period.
+ *
+ * @note The system timer may have to be started to obtain valid results.
+ * Wether this happens automatically (as on Xenomai) or is controlled by the
+ * application depends on the RTDM host environment.
  *
  * Environments:
  *
