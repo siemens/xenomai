@@ -29,7 +29,9 @@
 /**
  * Get minimum priority of the specified scheduling policy.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_min.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_min.html">
+ * Specification.</a>
  * 
  */
 int sched_get_priority_min (int policy)
@@ -53,7 +55,9 @@ int sched_get_priority_min (int policy)
 /**
  * Get maximum priority of the specified scheduling policy.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_max.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_max.html">
+ * Specification.</a>
  *
  */
 int sched_get_priority_max (int policy)
@@ -77,7 +81,9 @@ int sched_get_priority_max (int policy)
 /**
  * Get the round-robin scheduling time slice.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sched_rr_get_interval.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_rr_get_interval.html">
+ * Specification.</a>
  * 
  */
 int sched_rr_get_interval (int pid, struct timespec *interval)
@@ -98,7 +104,9 @@ int sched_rr_get_interval (int pid, struct timespec *interval)
 /**
  * Get the scheduling policy and parameters of the specified thread.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">
+ * Specification.</a>
  * 
  */
 int pthread_getschedparam (pthread_t tid, int *pol, struct sched_param *par)
@@ -125,7 +133,9 @@ int pthread_getschedparam (pthread_t tid, int *pol, struct sched_param *par)
 /**
  * Set the scheduling policy and parameters of the specified thread.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setschedparam.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setschedparam.html">
+ * Specification.</a>
  * 
  */
 int pthread_setschedparam (pthread_t tid, int pol, const struct sched_param *par)
@@ -189,7 +199,9 @@ int pthread_setschedparam (pthread_t tid, int pol, const struct sched_param *par
 /**
  * Yield the processor.
  * 
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sched_yield.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_yield.html">
+ * Specification.</a>
  *
  */
 int sched_yield (void)

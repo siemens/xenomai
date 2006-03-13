@@ -161,7 +161,9 @@ static inline void nandset (pse51_sigset_t *set,
 /**
  * Initialize and empty a signal set.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigemptyset.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigemptyset.html">
+ * Specification.</a>
  * 
  */
 int sigemptyset (sigset_t *user_set)
@@ -177,7 +179,9 @@ int sigemptyset (sigset_t *user_set)
 /**
  * Initialize and fill a signal set.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigfillset.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigfillset.html">
+ * Specification.</a>
  * 
  */
 int sigfillset (sigset_t *user_set)
@@ -193,7 +197,9 @@ int sigfillset (sigset_t *user_set)
 /**
  * Add a signal to a signal set.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigaddset.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigaddset.html">
+ * Specification.</a>
  * 
  */
 int sigaddset (sigset_t *user_set, int sig)
@@ -215,7 +221,9 @@ int sigaddset (sigset_t *user_set, int sig)
 /**
  * Delete a signal from a signal set.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigdelset.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigdelset.html">
+ * Specification.</a>
  * 
  */
 int sigdelset (sigset_t *user_set, int sig)
@@ -237,7 +245,9 @@ int sigdelset (sigset_t *user_set, int sig)
 /**
  * Test for a signal in a signal set.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigismember.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigismember.html">
+ * Specification.</a>
  * 
  */
 int sigismember (const sigset_t *user_set, int sig)
@@ -352,7 +362,9 @@ static pse51_siginfo_t *pse51_getsigq (pse51_sigqueue_t *queue,
 /**
  * Examine and change a signal action.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigaction.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigaction.html">
+ * Specification.</a>
  * 
  */
 int sigaction (int sig, const struct sigaction *action, struct sigaction *old)
@@ -427,7 +439,9 @@ int sigqueue (pthread_t thread, int sig, union sigval value)
 /**
  * Send a signal to a thread.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_kill.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_kill.html">
+ * Specification.</a>
  * 
  */
 int pthread_kill (pthread_t thread, int sig)
@@ -465,7 +479,9 @@ int pthread_kill (pthread_t thread, int sig)
 /**
  * Examine pending signals.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigpending.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigpending.html">
+ * Specification.</a>
  * 
  */
 int sigpending (sigset_t *user_set)
@@ -495,7 +511,9 @@ int sigpending (sigset_t *user_set)
 /**
  * Examine and change the set of signals blocked by a thread.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_sigmask.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_sigmask.html">
+ * Specification.</a>
  * 
  */
 int pthread_sigmask (int how, const sigset_t *user_set, sigset_t *user_oset)
@@ -664,7 +682,9 @@ static int pse51_sigtimedwait_inner (const sigset_t *user_set,
 /**
  * Wait for signals.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigwait.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigwait.html">
+ * Specification.</a>
  * 
  */
 int sigwait (const sigset_t *user_set, int *sig)
@@ -687,7 +707,9 @@ int sigwait (const sigset_t *user_set, int *sig)
 /**
  * Wait for signals.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigwaitinfo.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigwaitinfo.html">
+ * Specification.</a>
  * 
  */
 int sigwaitinfo (const sigset_t *__restrict__ user_set,
@@ -719,7 +741,9 @@ int sigwaitinfo (const sigset_t *__restrict__ user_set,
 /**
  * Wait during a bounded time for signals.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/sigtimedwait.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigtimedwait.html">
+ * Specification.</a>
  * 
  */
 int sigtimedwait (const sigset_t *__restrict__ user_set,

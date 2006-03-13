@@ -54,7 +54,9 @@ static const pthread_mutexattr_t default_mutex_attr = {
  * - kernel module initialization or cleanup routine;
  * - Xenomai kernel-space real-time thread.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_init.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_init.html">
+ * Specification.</a>
  * 
  */
 int pthread_mutexattr_init (pthread_mutexattr_t *attr)
@@ -85,7 +87,9 @@ int pthread_mutexattr_init (pthread_mutexattr_t *attr)
  * - kernel module initialization or cleanup routine;
  * - Xenomai kernel-space real-time thread.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_destroy.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_destroy.html">
+ * Specification.</a>
  * 
  */
 int pthread_mutexattr_destroy (pthread_mutexattr_t *attr)
@@ -131,7 +135,9 @@ int pthread_mutexattr_destroy (pthread_mutexattr_t *attr)
  * - kernel module initialization or cleanup routine;
  * - Xenomai kernel-space real-time thread.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_gettype.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_gettype.html">
+ * Specification.</a>
  * 
  */
 int pthread_mutexattr_gettype (const pthread_mutexattr_t *attr, int *type)
@@ -185,7 +191,9 @@ int pthread_mutexattr_gettype (const pthread_mutexattr_t *attr, int *type)
  * - kernel module initialization or cleanup routine;
  * - Xenomai kernel-space real-time thread.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_settype.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_settype.html">
+ * Specification.</a>
  * 
  */
 int pthread_mutexattr_settype (pthread_mutexattr_t *attr, int type)
@@ -250,7 +258,9 @@ int pthread_mutexattr_settype (pthread_mutexattr_t *attr, int type)
  * - kernel module initialization or cleanup routine;
  * - Xenomai kernel-space real-time thread.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_getprotocol.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_getprotocol.html">
+ * Specification.</a>
  * 
  */
 int pthread_mutexattr_getprotocol (const pthread_mutexattr_t *attr, int *proto)
@@ -302,7 +312,9 @@ int pthread_mutexattr_getprotocol (const pthread_mutexattr_t *attr, int *proto)
  * - kernel module initialization or cleanup routine;
  * - Xenomai kernel-space real-time thread.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_setprotocol.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_setprotocol.html">
+ * Specification.</a>
  * 
  */
 int pthread_mutexattr_setprotocol (pthread_mutexattr_t *attr, int proto)

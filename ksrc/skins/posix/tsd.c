@@ -69,7 +69,9 @@ static unsigned allocated_keys;
 /**
  * Create a thread-specific data key.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_key_create.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_key_create.html">
+ * Specification.</a>
  * 
  */
 int pthread_key_create (pthread_key_t *key, pse51_key_destructor_t destructor)
@@ -133,7 +135,9 @@ int pthread_key_create (pthread_key_t *key, pse51_key_destructor_t destructor)
 /**
  * Associate a thread-specific value with the specified key.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setspecific.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setspecific.html">
+ * Specification.</a>
  * 
  */
 int pthread_setspecific (pthread_key_t key, const void *value)
@@ -163,7 +167,9 @@ int pthread_setspecific (pthread_key_t key, const void *value)
 /**
  * Get the thread-specific value bound to the specified key.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getspecific.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getspecific.html">
+ * Specification.</a>
  * 
  */
 void *pthread_getspecific (pthread_key_t key)
@@ -194,7 +200,9 @@ void *pthread_getspecific (pthread_key_t key)
 /**
  * Delete a thread-specific data key.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_key_delete.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_key_delete.html">
+ * Specification.</a>
  * 
  */
 int pthread_key_delete (pthread_key_t key)

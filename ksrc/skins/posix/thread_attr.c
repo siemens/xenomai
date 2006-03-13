@@ -44,7 +44,9 @@ static const pthread_attr_t default_thread_attr = {
 /**
  * Initialize a thread attributes object.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_init.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_init.html">
+ * Specification.</a>
  * 
  */
 int pthread_attr_init (pthread_attr_t *attr)
@@ -61,7 +63,9 @@ int pthread_attr_init (pthread_attr_t *attr)
 /**
  * Destroy a thread attributes object.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_destroy.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_destroy.html">
+ * Specification.</a>
  * 
  */
 int pthread_attr_destroy (pthread_attr_t *attr)
@@ -90,7 +94,9 @@ int pthread_attr_destroy (pthread_attr_t *attr)
 /**
  * Get detachstate attribute.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getdetachstate.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getdetachstate.html">
+ * Specification.</a>
  * 
  */
 int pthread_attr_getdetachstate (const pthread_attr_t *attr, int *detachstate)
@@ -119,7 +125,9 @@ int pthread_attr_getdetachstate (const pthread_attr_t *attr, int *detachstate)
 /**
  * Set detachstate attribute.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/">
+ * Specification.</a>
  * 
  */
 int pthread_attr_setdetachstate (pthread_attr_t *attr, int detachstate)
@@ -183,7 +191,9 @@ int pthread_attr_setstackaddr (pthread_attr_t *attr, void *stackaddr)
 /**
  * Get stacksize attribute.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getstacksize.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getstacksize.html">
+ * Specification.</a>
  *
  */
 int pthread_attr_getstacksize (const pthread_attr_t *attr, size_t *stacksize)
@@ -212,7 +222,9 @@ int pthread_attr_getstacksize (const pthread_attr_t *attr, size_t *stacksize)
 /**
  * Set stacksize attribute.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setstacksize.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setstacksize.html">
+ * Specification.</a>
  * 
  */
 int pthread_attr_setstacksize (pthread_attr_t *attr, size_t stacksize)
@@ -243,7 +255,9 @@ int pthread_attr_setstacksize (pthread_attr_t *attr, size_t stacksize)
 /**
  * Get inheritsched attribute.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getinheritsched.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getinheritsched.html">
+ * Specification.</a>
  * 
  */
 int pthread_attr_getinheritsched (const pthread_attr_t *attr,int *inheritsched)
@@ -270,7 +284,9 @@ int pthread_attr_getinheritsched (const pthread_attr_t *attr,int *inheritsched)
 /**
  * Set inheritsched attribute.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setinheritsched.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setinheritsched.html">
+ * Specification.</a>
  * 
  */
 int pthread_attr_setinheritsched (pthread_attr_t *attr, int inheritsched)
@@ -306,7 +322,9 @@ int pthread_attr_setinheritsched (pthread_attr_t *attr, int inheritsched)
 /**
  * Get schedpolicy attribute.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getschedpolicy.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getschedpolicy.html">
+ * Specification.</a>
  * 
  */
 int pthread_attr_getschedpolicy (const pthread_attr_t *attr,int *policy)
@@ -335,7 +353,9 @@ int pthread_attr_getschedpolicy (const pthread_attr_t *attr,int *policy)
 /**
  * Set schedpolicy attribute.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setschedpolicy.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setschedpolicy.html">
+ * Specification.</a>
  * 
  */
 int pthread_attr_setschedpolicy (pthread_attr_t *attr, int policy)
@@ -376,7 +396,9 @@ int pthread_attr_setschedpolicy (pthread_attr_t *attr, int policy)
 /**
  * Get schedparam attribute.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getschedparam.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getschedparam.html">
+ * Specification.</a>
  * 
  */
 int pthread_attr_getschedparam (const pthread_attr_t *attr, struct sched_param *par)
@@ -405,7 +427,9 @@ int pthread_attr_getschedparam (const pthread_attr_t *attr, struct sched_param *
 /**
  * Set schedparam attribute.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setschedparam.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setschedparam.html">
+ * Specification.</a>
  * 
  */
 int pthread_attr_setschedparam (pthread_attr_t *attr, const struct sched_param *par)
@@ -438,7 +462,9 @@ int pthread_attr_setschedparam (pthread_attr_t *attr, const struct sched_param *
 /**
  * Get contention scope attribute.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getscope.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getscope.html">
+ * Specification.</a>
  * 
  */
 int pthread_attr_getscope (const pthread_attr_t *attr,int *scope)
@@ -467,7 +493,9 @@ int pthread_attr_getscope (const pthread_attr_t *attr,int *scope)
 /**
  * Set contention scope attribute.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setscope.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setscope.html">
+ * Specification.</a>
  * 
  */
 int pthread_attr_setscope (pthread_attr_t *attr,int scope)

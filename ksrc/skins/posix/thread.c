@@ -95,7 +95,9 @@ static void thread_delete_hook (xnthread_t *xnthread)
 /**
  * Create a thread.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_create.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_create.html">
+ * Specification.</a>
  * 
  */
 int pthread_create (pthread_t *tid,
@@ -209,7 +211,9 @@ int pthread_create (pthread_t *tid,
 /**
  * Detach a running thread.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_detach.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_detach.html">
+ * Specification.</a>
  * 
  */
 int pthread_detach (pthread_t thread)
@@ -245,7 +249,9 @@ int pthread_detach (pthread_t thread)
 /**
  * Compare thread descriptors.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_equal.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_equal.html">
+ * Specification.</a>
  * 
  */
 int pthread_equal (pthread_t t1, pthread_t t2)
@@ -256,7 +262,9 @@ int pthread_equal (pthread_t t1, pthread_t t2)
 /**
  * Terminate the current thread.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_exit.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_exit.html">
+ * Specification.</a>
  * 
  */
 void pthread_exit (void *value_ptr)
@@ -277,7 +285,9 @@ void pthread_exit (void *value_ptr)
 /**
  * Wait for termination of a specified thread.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_join.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_join.html">
+ * Specification.</a>
  * 
  */
 int pthread_join (pthread_t thread, void **value_ptr)
@@ -355,7 +365,9 @@ int pthread_join (pthread_t thread, void **value_ptr)
 /**
  * Get descriptor of the calling thread.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/pthread_self.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_self.html">
+ * Specification.</a>
  * 
  */
 pthread_t pthread_self (void)

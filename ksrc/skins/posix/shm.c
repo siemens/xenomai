@@ -173,7 +173,9 @@ static void pse51_shm_put(pse51_shm_t *shm, unsigned dec)
 /**
  * Open a shared memory object.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/shm_open.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/shm_open.html">
+ * Specification.</a>
  * 
  */
 int shm_open(const char *name, int oflags, mode_t mode)
@@ -249,7 +251,9 @@ int shm_open(const char *name, int oflags, mode_t mode)
 /**
  * Unlink a shared memory object.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/shm_unlink.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/shm_unlink.html">
+ * Specification.</a>
  * 
  */
 int shm_unlink(const char *name)
@@ -288,7 +292,9 @@ error:
 /**
  * Close a file descriptor.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/close.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/close.html">
+ * Specification.</a>
  * 
  */
 int close(int fd)
@@ -332,7 +338,9 @@ int close(int fd)
 /**
  * Truncate a file or shared memory object to a specified length.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/ftruncate.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/ftruncate.html">
+ * Specification.</a>
  * 
  */
 int ftruncate(int fd, off_t len)
@@ -442,7 +450,9 @@ int ftruncate(int fd, off_t len)
 /**
  * Map pages of memory.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/mmap.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mmap.html">
+ * Specification.</a>
  * 
  */
 void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
@@ -576,7 +586,9 @@ static pse51_shm_t *pse51_shm_lookup(void *addr)
 /**
  * Unmap pages of memory.
  *
- * @see http://www.opengroup.org/onlinepubs/000095399/functions/munmap.html
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/munmap.html">
+ * Specification.</a>
  * 
  */
 int munmap(void *addr, size_t len)
