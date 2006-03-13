@@ -23,6 +23,7 @@
 
 #ifdef __KERNEL__
 #include <linux/time.h>
+#define DELAYTIMER_MAX UINT_MAX
 #endif /* __KERNEL__ */
 
 #ifdef __XENO_SIM__
