@@ -1064,17 +1064,20 @@ int mq_setattr(mqd_t fd,
  *
  * If @a evp is not @a NULL and is the address of a @b sigevent structure with
  * the @a sigev_notify member set to SIGEV_SIGNAL, the current thread will be
- * notified by a signal when a message is sent to message queue @a fd, and the
- * queue is empty. After the first notification, the thread is automatically
- * unregistered.
+ * notified by a signal when a message is sent to the message queue @a fd, the
+ * queue is empty, and no thread is blocked in call to mq_receive or
+ * mq_timedreceive. After the notification, the thread is unregistered.
  *
  * If @a evp is @a NULL or the @a sigev_notify member is SIGEV_NONE, the current
  * thread is unregistered.
  *
+ * Only one thread may be registered at a time.
+ *
  * If the current thread is not a Xenomai POSIX skin thread (created with
  * pthread_create()), this service fails.
  *
- * Only one thread may be registered at a time.
+ * Note that signals sent to user-space Xenomai POSIX skin threads will cause
+ * them to switch to secondary mode.
  *
  * @param fd messages queue descriptor;
  *
@@ -1086,6 +1089,10 @@ int mq_setattr(mqd_t fd,
  * - EPERM, the caller context is invalid;
  * - EBADF, @a fd is not a valid messages queue descriptor;
  * - EBUSY, another thread is already registered.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space POSIX skin thread,
+ * - Xenomai user-space POSIX skin thread (switches to primary mode).
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_notify.html">
