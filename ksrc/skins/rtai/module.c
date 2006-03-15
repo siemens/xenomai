@@ -70,7 +70,7 @@ int SKIN_INIT(rtai)
     err = xncore_attach();
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
     /* The RTAI emulator is standalone. */
-    err = xnpod_init(&__rtai_pod,XNCORE_MIN_PRIO,XNCORE_MAX_PRIO,0);
+    err = xnpod_init(&__rtai_pod,XNCORE_LOW_PRIO,XNCORE_HIGH_PRIO,0);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
     if (err)

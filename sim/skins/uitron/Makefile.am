@@ -16,9 +16,9 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../include \
 	-I$(top_srcdir)/../include
 
-lib_LIBRARIES = libuitron_s.a
+lib_LIBRARIES = libuitron_sim.a
 
-nodist_libuitron_s_a_SOURCES = \
+nodist_libuitron_sim_a_SOURCES = \
 	flag.c \
 	mbx.c \
 	module.c \

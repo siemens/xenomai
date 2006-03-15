@@ -475,26 +475,6 @@ void pse51_thread_pkg_cleanup (void)
     xnpod_remove_hook(XNHOOK_THREAD_DELETE,thread_delete_hook);
 }
 
-extern int __pse51_errptd;
-#define pse51_errno_ptd(t)  ((current)->ptd[__pse51_errptd])
-
-int *pse51_errno_location (void)
-
-{
-    pthread_t thread = pse51_current_thread();
-    static int fallback_errno;
-
-    if (thread)
-	return &thread->err;
-
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    if (xnpod_userspace_p())
-        return (int *)&pse51_errno_ptd(current);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-
-    return &fallback_errno;
-}
-
 /*@}*/
 
 EXPORT_SYMBOL(pthread_create);
@@ -506,4 +486,4 @@ EXPORT_SYMBOL(pthread_self);
 EXPORT_SYMBOL(sched_yield);
 EXPORT_SYMBOL(pthread_make_periodic_np);
 EXPORT_SYMBOL(pthread_wait_np);
-EXPORT_SYMBOL(pse51_errno_location);
+

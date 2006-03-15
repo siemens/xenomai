@@ -2567,7 +2567,7 @@ void xnpod_schedule (void)
            Mmmm... This must be the user-space mate of a deleted real-time
            shadow we've just rescheduled in the Linux domain to have it
            exit properly.  Reap it now. */
-        if (xnshadow_ptd(current) == NULL)
+        if (xnshadow_thrptd(current) == NULL)
             xnshadow_exit();
 
         /* We need to relock nklock here, since it is not locked and the caller

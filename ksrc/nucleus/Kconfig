@@ -241,19 +241,6 @@ config XENO_OPT_SCALABLE_SCHED
 	threads; otherwise, the default linear method usually performs
 	better with lower memory footprints.
 
-config XENO_OPT_SCALABLE_PRIOS
-	int "Number of priority levels"
-	depends on XENO_OPT_SCALABLE_SCHED
-	default 256
-	help
-
-	This option sets the maximum number of priority levels available
-	within the scalable scheduler's multi-level queue. This value
-	must be higher or equal than the maximum priority range which
-	could be required for running the real-time skin used by the
-	application. For instance, the native skin needs a
-	hundred priority levels.
-
 choice
         prompt "Timer indexing method"
         default XENO_OPT_TIMER_LIST

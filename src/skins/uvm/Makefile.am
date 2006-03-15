@@ -9,3 +9,5 @@ libuvm_la_SOURCES = \
 libuvm_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
+
+SUBDIRS = nucleus vxworks psos+ vrtx uitron

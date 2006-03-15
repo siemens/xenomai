@@ -2,7 +2,7 @@
  * \brief Real-time shadow services.
  * \author Philippe Gerum
  *
- * Copyright (C) 2001,2002,2003,2004,2005 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001,2002,2003,2004,2005,2006 Philippe Gerum <rpm@xenomai.org>.
  * Copyright (C) 2004 The RTAI project <http://www.rtai.org>
  * Copyright (C) 2004 The HYADES project <http://www.hyades-itea.org>
  * Copyright (C) 2005 The Xenomai project <http://www.Xenomai.org>
@@ -50,7 +50,9 @@
 #include <nucleus/ltt.h>
 #include <asm/xenomai/features.h>
 
-int nkgkptd;
+int nkthrptd;
+
+int nkerrptd;
 
 struct xnskentry muxtable[XENOMAI_MUX_NR];
 
@@ -570,7 +572,7 @@ void xnshadow_relax (int notify)
 		    xnthread_user_pid(thread));
 #endif /* CONFIG_XENO_OPT_DEBUG */
     cprio = thread->cprio < MAX_RT_PRIO ? thread->cprio : MAX_RT_PRIO-1;
-    rthal_reenter_root(get_switch_lock_owner(),SCHED_FIFO,cprio);
+    rthal_reenter_root(get_switch_lock_owner(),SCHED_FIFO,cprio ?: 1);
 
     xnthread_inc_ssw(thread);	/* Account for secondary mode switch. */
 
@@ -673,7 +675,12 @@ void xnshadow_exit (void)
  * @internal
  * \brief Create a shadow thread context.
  *
- * This call maps a nucleus thread to the "current" Linux task.
+ * This call maps a nucleus thread to the "current" Linux task.  The
+ * priority of the Linux task is set to the priority of the shadow
+ * thread bounded to the [1..MAX_RT_PRIO-1] range, and its scheduling
+ * policy is set to SCHED_FIFO. In other words, priority levels lower
+ * than 1 are mapped to 1, and levels higher than MAX_RT_PRIO-1 are
+ * mapped to the latter.
  *
  * @param thread The descriptor address of the new shadow thread to be
  * mapped to "current". This descriptor must have been previously
@@ -681,7 +688,7 @@ void xnshadow_exit (void)
  *
  * @warning The thread must have been set the same magic number
  * (i.e. xnthread_set_magic()) than the one used to register the skin
- * it belongs to. Failing to do so leads to unexpected results.
+ * it belongs to. Failing to do so might lead to unexpected results.
  *
  * @param u_completion is the address of an optional completion
  * descriptor aimed at synchronizing our parent thread with us. If
@@ -700,10 +707,6 @@ void xnshadow_exit (void)
  * signal, thus preventing the final migration to the Xenomai domain
  * (i.e. in order to process the signal in the Linux domain). This
  * error should not be considered as fatal.
- *
- * - -EINVAL is returned if the shadow thread has an invalid base
- * priority. Priority levels must be in the range [ 1..MAX_RT_PRIO-1 ]
- * inclusive.
  *
  * - -EPERM is returned if the shadow thread has been killed before
  * the current task had a chance to return to the caller. In such a
@@ -727,11 +730,6 @@ int xnshadow_map (xnthread_t *thread,
     unsigned muxid, magic;
     int mode, prio;
 
-    prio = xnthread_base_priority(thread);
-
-    if (prio < 1 || prio >= MAX_RT_PRIO)
-	return -EINVAL;
-
     /* Increment the interface reference count. */
     magic = xnthread_get_magic(thread);
 
@@ -747,7 +745,7 @@ int xnshadow_map (xnthread_t *thread,
     xnltt_log_event(xeno_ev_shadowmap,
 		    thread->name,
 		    current->pid,
-		    prio);
+		    xnthread_base_priority(thread));
 
     current->cap_effective |= 
 	CAP_TO_MASK(CAP_IPC_LOCK)|
@@ -755,8 +753,9 @@ int xnshadow_map (xnthread_t *thread,
 	CAP_TO_MASK(CAP_SYS_NICE);
 
     xnarch_init_shadow_tcb(xnthread_archtcb(thread),thread,xnthread_name(thread));
-    set_linux_task_priority(current,prio);
-    xnshadow_ptd(current) = thread;
+    prio = xnthread_base_priority(thread) < MAX_RT_PRIO ? xnthread_base_priority(thread) : MAX_RT_PRIO-1;
+    set_linux_task_priority(current,prio ?: 1);
+    xnshadow_thrptd(current) = thread;
     xnpod_suspend_thread(thread,XNRELAX,XN_INFINITE,NULL);
 
    if (u_completion)
@@ -815,7 +814,7 @@ void xnshadow_unmap (xnthread_t *thread)
     if (!p)
 	goto renice_and_exit;
 
-    xnshadow_ptd(p) = NULL;
+    xnshadow_thrptd(p) = NULL;
 
     if (p->state != TASK_RUNNING)
 	{
@@ -906,10 +905,13 @@ void xnshadow_start (xnthread_t *thread)
 void xnshadow_renice (xnthread_t *thread)
 
 {
-  /* Called with nklock locked, Xenomai interrupts off. */
+    /* Called with nklock locked, Xenomai interrupts off. */
     struct task_struct *p = xnthread_archtcb(thread)->user_task;
+    /* We need to bound the priority values in the [1..MAX_RT_PRIO-1]
+       range, since the core pod's priority scale is a superset of
+       Linux's priority scale. */
     int prio = thread->cprio < MAX_RT_PRIO ? thread->cprio : MAX_RT_PRIO-1;
-    schedule_linux_call(LO_RENICE_REQ,p,prio);
+    schedule_linux_call(LO_RENICE_REQ,p,prio ?: 1);
 }
 
 void xnshadow_suspend (xnthread_t *thread)
@@ -1494,7 +1496,7 @@ static inline void do_taskexit_event (struct task_struct *p)
     /* So that we won't attempt to further wakeup the exiting task in
        xnshadow_unmap(). */
 
-    xnshadow_ptd(p) = NULL;
+    xnshadow_thrptd(p) = NULL;
     xnthread_archtcb(thread)->user_task = NULL;
     xnpod_delete_thread(thread); /* Should indirectly call xnshadow_unmap(). */
 
@@ -1695,6 +1697,10 @@ static inline void do_setsched_event (struct task_struct *p, int priority)
     if (!thread)
 	return;
 
+    /* Linux's priority scale is a subset of the core pod's priority
+       scale, so there is no need to bound the priority values when
+       mapping them from Linux -> Xenomai. */
+
     if (thread->cprio != priority)
 	xnpod_renice_thread_inner(thread,priority,0);
 
@@ -1828,7 +1834,15 @@ int xnshadow_mount (void)
     unshielded_cpus = xnarch_cpu_online_map;
 #endif /* CONFIG_XENO_OPT_ISHIELD */
 
-    nkgkptd = rthal_alloc_ptdkey();
+    nkthrptd = rthal_alloc_ptdkey();
+    nkerrptd = rthal_alloc_ptdkey();
+
+    if (nkthrptd < 0 || nkerrptd < 0)
+	{
+	printk(KERN_WARNING "Xenomai: cannot allocate PTD slots\n");
+	return -ENOMEM;
+	}
+
     lostage_apc = rthal_apc_alloc("lostage_handler",&lostage_handler,NULL);
 
     for_each_online_cpu(cpu) {
@@ -1863,7 +1877,8 @@ void xnshadow_cleanup (void)
     }
 
     rthal_apc_free(lostage_apc);
-    rthal_free_ptdkey(nkgkptd);
+    rthal_free_ptdkey(nkerrptd);
+    rthal_free_ptdkey(nkthrptd);
 #ifdef CONFIG_XENO_OPT_ISHIELD
     rthal_unregister_domain(&irq_shield);
 #endif /* CONFIG_XENO_OPT_ISHIELD */
@@ -1881,4 +1896,5 @@ EXPORT_SYMBOL(xnshadow_unmap);
 EXPORT_SYMBOL(xnshadow_unregister_interface);
 EXPORT_SYMBOL(xnshadow_wait_barrier);
 EXPORT_SYMBOL(xnshadow_suspend);
-EXPORT_SYMBOL(nkgkptd);
+EXPORT_SYMBOL(nkthrptd);
+EXPORT_SYMBOL(nkerrptd);

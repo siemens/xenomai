@@ -106,7 +106,6 @@ static xnpnode_t __alarm_pnode = {
 
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
-
 int __native_alarm_pkg_init (void)
 
 {

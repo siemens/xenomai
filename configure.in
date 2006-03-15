@@ -539,17 +539,18 @@ AC_CONFIG_FILES([ \
 	scripts/xeno-load \
 	scripts/xeno-test \
 	src/Makefile \
-	src/nucleus/Makefile \
 	src/skins/Makefile \
-       	src/skins/uvm/Makefile \
        	src/skins/posix/Makefile \
        	src/skins/native/Makefile \
-       	src/skins/psos+/Makefile \
-       	src/skins/uitron/Makefile \
-       	src/skins/vrtx/Makefile \
        	src/skins/vxworks/Makefile \
        	src/skins/rtdm/Makefile \
        	src/skins/rtai/Makefile \
+       	src/skins/uvm/Makefile \
+       	src/skins/uvm/nucleus/Makefile \
+       	src/skins/uvm/vxworks/Makefile \
+       	src/skins/uvm/psos+/Makefile \
+       	src/skins/uvm/vrtx/Makefile \
+       	src/skins/uvm/uitron/Makefile \
 	src/include/Makefile \
        	src/testsuite/Makefile \
        	src/testsuite/latency/Makefile \

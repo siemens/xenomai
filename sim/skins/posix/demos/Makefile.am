@@ -20,12 +20,12 @@ AM_LDFLAGS = \
 	--gcic-backend=$(prefix)/libexec/gcic \
 	--cc=$(CXX) \
 	--no-mvm-libs \
-	../libposix_s.a \
-	../../../nucleus/libnucleus_s.a \
+	../libposix_sim.a \
+	../../../nucleus/libnucleus_sim.a \
 	../../../adapter/libadapter.a \
 	../../../vm/libmvm.la \
 	../../../vmutils/libmvmutils.la
 
-check_PROGRAMS=satch_s
+check_PROGRAMS=satch_sim
 
-nodist_satch_s_SOURCES=satch.c
+nodist_satch_sim_SOURCES=satch.c

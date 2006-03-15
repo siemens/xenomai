@@ -1,7 +1,7 @@
 
-lib_LIBRARIES = libpsos.a
+lib_LIBRARIES = libpsos_uvm.a
 
-nodist_libpsos_a_SOURCES = \
+nodist_libpsos_uvm_a_SOURCES = \
 	module.c \
 	asr.c \
 	event.c \
@@ -17,7 +17,7 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-D__XENO_UVM__
 
-CLEANFILES = $(nodist_libpsos_a_SOURCES)
+CLEANFILES = $(nodist_libpsos_uvm_a_SOURCES)
 
-$(nodist_libpsos_a_SOURCES): Makefile
+$(nodist_libpsos_uvm_a_SOURCES): Makefile
 	$(LN_S) -f $(top_srcdir)/ksrc/skins/psos+/$@

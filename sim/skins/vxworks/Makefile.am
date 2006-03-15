@@ -17,9 +17,9 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/../ksrc/skins \
 	-I$(top_srcdir)/../include
 
-lib_LIBRARIES = libvxworks_s.a
+lib_LIBRARIES = libvxworks_sim.a
 
-nodist_libvxworks_s_a_SOURCES = \
+nodist_libvxworks_sim_a_SOURCES = \
 	errnoLib.c \
 	intLib.c \
 	kernelLib.c \

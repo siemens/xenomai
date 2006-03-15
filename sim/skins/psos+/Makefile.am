@@ -16,9 +16,9 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../include \
 	-I$(top_srcdir)/../include
 
-lib_LIBRARIES = libpsos_s.a
+lib_LIBRARIES = libpsos_sim.a
 
-nodist_libpsos_s_a_SOURCES = \
+nodist_libpsos_sim_a_SOURCES = \
 	module.c \
 	asr.c \
 	event.c \

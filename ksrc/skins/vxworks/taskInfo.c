@@ -23,9 +23,9 @@
 
 
 
-/* TODO: check (in the doc or implementation) what should happen if task_id is
+/* FIXME: check (in the doc or implementation) what should happen if task_id is
    zero */
-char * taskName ( TASK_ID task_id )
+const char * taskName ( TASK_ID task_id )
 {
     wind_task_t * task;
     
@@ -36,14 +36,14 @@ char * taskName ( TASK_ID task_id )
     
     if(!task)
         return NULL;
-    else
-        return task->name;
+
+    return task->name;
 }
 
 
-int taskIdDefault ( TASK_ID task_id )
+TASK_ID taskIdDefault ( TASK_ID task_id )
 {
-    static int value = 0;
+    static TASK_ID value = 0;
 
     if(task_id)
         value = task_id;
@@ -58,10 +58,10 @@ BOOL taskIsReady ( TASK_ID task_id )
     
     check_OBJ_ID_ERROR(task_id,wind_task_t,task,WIND_TASK_MAGIC,return 0 );
 
+    if (&task->threadbase == xnpod_current_thread())
+	return 1;
+
     return testbits(xnthread_status_flags(&task->threadbase),XNREADY);
-    /* TODO: maybe we should check if task is the current task (it depends
-       whether taskIsReady(taskIdSelf()) should return true or false, which is
-       not documented) */
 }
 
 

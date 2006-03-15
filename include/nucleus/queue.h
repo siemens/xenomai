@@ -21,6 +21,7 @@
 #define _XENO_NUCLEUS_QUEUE_H
 
 #include <nucleus/types.h>
+#include <nucleus/core.h>
 
 /* Basic element holder */
 
@@ -579,7 +580,7 @@ static inline int countgq (xngqueue_t *gqslot)
 
 /* Multi-level priority queue */
 
-#define XNSPQUEUE_PRIOS      (CONFIG_XENO_OPT_SCALABLE_PRIOS + 1)
+#define XNSPQUEUE_PRIOS      (XNCORE_MAX_PRIO + 1)
 #define XNSPQUEUE_BITMAPSIZE ((XNSPQUEUE_PRIOS + BITS_PER_LONG - 1) / BITS_PER_LONG)
 
 typedef struct xnspqueue {

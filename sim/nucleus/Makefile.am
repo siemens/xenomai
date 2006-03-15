@@ -8,13 +8,13 @@ if CONFIG_XENO_MVM_ATOMIC_CORE
 atomic_core := --no-inst -O2
 endif
 
-lib_LIBRARIES = libnucleus_s.a
+lib_LIBRARIES = libnucleus_sim.a
 
 # Shadow, pipe and pervasive supports make no sense compiling in
 # native simulation mode. Therefore, their respective files are not
 # included here.
 
-nodist_libnucleus_s_a_SOURCES = \
+nodist_libnucleus_sim_a_SOURCES = \
 			heap.c \
 			intr.c \
 			module.c \
@@ -32,4 +32,4 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../include \
 	-I$(top_srcdir)/../include
 
-libnucleus_s_a_LIBADD = ../adapter/adapter.o
+libnucleus_sim_a_LIBADD = ../adapter/adapter.o

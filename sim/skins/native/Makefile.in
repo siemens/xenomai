@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-SOURCES = $(nodist_libnative_s_a_SOURCES)
+SOURCES = $(nodist_libnative_sim_a_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -58,12 +58,12 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 libLIBRARIES_INSTALL = $(INSTALL_DATA)
 LIBRARIES = $(lib_LIBRARIES)
 ARFLAGS = cru
-libnative_s_a_AR = $(AR) $(ARFLAGS)
-libnative_s_a_LIBADD =
-nodist_libnative_s_a_OBJECTS = module.$(OBJEXT) task.$(OBJEXT) \
+libnative_sim_a_AR = $(AR) $(ARFLAGS)
+libnative_sim_a_LIBADD =
+nodist_libnative_sim_a_OBJECTS = module.$(OBJEXT) task.$(OBJEXT) \
 	timer.$(OBJEXT) sem.$(OBJEXT) event.$(OBJEXT) mutex.$(OBJEXT) \
 	cond.$(OBJEXT) queue.$(OBJEXT) heap.$(OBJEXT) alarm.$(OBJEXT)
-libnative_s_a_OBJECTS = $(nodist_libnative_s_a_OBJECTS)
+libnative_sim_a_OBJECTS = $(nodist_libnative_sim_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
 am__depfiles_maybe = depfiles
@@ -75,7 +75,7 @@ LTCOMPILE = $(LIBTOOL) --mode=compile --tag=CC $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link --tag=CC $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(nodist_libnative_s_a_SOURCES)
+SOURCES = $(nodist_libnative_sim_a_SOURCES)
 DIST_SOURCES =
 ETAGS = etags
 CTAGS = ctags
@@ -235,8 +235,8 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../include \
 	-I$(top_srcdir)/../include
 
-lib_LIBRARIES = libnative_s.a
-nodist_libnative_s_a_SOURCES = \
+lib_LIBRARIES = libnative_sim.a
+nodist_libnative_sim_a_SOURCES = \
 	module.c \
 	task.c \
 	timer.c \
@@ -310,10 +310,10 @@ uninstall-libLIBRARIES:
 
 clean-libLIBRARIES:
 	-test -z "$(lib_LIBRARIES)" || rm -f $(lib_LIBRARIES)
-libnative_s.a: $(libnative_s_a_OBJECTS) $(libnative_s_a_DEPENDENCIES) 
-	-rm -f libnative_s.a
-	$(libnative_s_a_AR) libnative_s.a $(libnative_s_a_OBJECTS) $(libnative_s_a_LIBADD)
-	$(RANLIB) libnative_s.a
+libnative_sim.a: $(libnative_sim_a_OBJECTS) $(libnative_sim_a_DEPENDENCIES) 
+	-rm -f libnative_sim.a
+	$(libnative_sim_a_AR) libnative_sim.a $(libnative_sim_a_OBJECTS) $(libnative_sim_a_LIBADD)
+	$(RANLIB) libnative_sim.a
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

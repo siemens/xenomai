@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-SOURCES = $(nodist_libvrtx_s_a_SOURCES)
+SOURCES = $(nodist_libvrtx_sim_a_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -58,12 +58,12 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 libLIBRARIES_INSTALL = $(INSTALL_DATA)
 LIBRARIES = $(lib_LIBRARIES)
 ARFLAGS = cru
-libvrtx_s_a_AR = $(AR) $(ARFLAGS)
-libvrtx_s_a_LIBADD =
-nodist_libvrtx_s_a_OBJECTS = event.$(OBJEXT) heap.$(OBJEXT) \
+libvrtx_sim_a_AR = $(AR) $(ARFLAGS)
+libvrtx_sim_a_LIBADD =
+nodist_libvrtx_sim_a_OBJECTS = event.$(OBJEXT) heap.$(OBJEXT) \
 	mb.$(OBJEXT) module.$(OBJEXT) mx.$(OBJEXT) pt.$(OBJEXT) \
 	queue.$(OBJEXT) sem.$(OBJEXT) task.$(OBJEXT) time.$(OBJEXT)
-libvrtx_s_a_OBJECTS = $(nodist_libvrtx_s_a_OBJECTS)
+libvrtx_sim_a_OBJECTS = $(nodist_libvrtx_sim_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
 am__depfiles_maybe = depfiles
@@ -75,7 +75,7 @@ LTCOMPILE = $(LIBTOOL) --mode=compile --tag=CC $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link --tag=CC $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(nodist_libvrtx_s_a_SOURCES)
+SOURCES = $(nodist_libvrtx_sim_a_SOURCES)
 DIST_SOURCES =
 ETAGS = etags
 CTAGS = ctags
@@ -235,8 +235,8 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../include \
 	-I$(top_srcdir)/../include
 
-lib_LIBRARIES = libvrtx_s.a
-nodist_libvrtx_s_a_SOURCES = \
+lib_LIBRARIES = libvrtx_sim.a
+nodist_libvrtx_sim_a_SOURCES = \
 	event.c \
 	heap.c \
 	mb.c \
@@ -310,10 +310,10 @@ uninstall-libLIBRARIES:
 
 clean-libLIBRARIES:
 	-test -z "$(lib_LIBRARIES)" || rm -f $(lib_LIBRARIES)
-libvrtx_s.a: $(libvrtx_s_a_OBJECTS) $(libvrtx_s_a_DEPENDENCIES) 
-	-rm -f libvrtx_s.a
-	$(libvrtx_s_a_AR) libvrtx_s.a $(libvrtx_s_a_OBJECTS) $(libvrtx_s_a_LIBADD)
-	$(RANLIB) libvrtx_s.a
+libvrtx_sim.a: $(libvrtx_sim_a_OBJECTS) $(libvrtx_sim_a_DEPENDENCIES) 
+	-rm -f libvrtx_sim.a
+	$(libvrtx_sim_a_AR) libvrtx_sim.a $(libvrtx_sim_a_OBJECTS) $(libvrtx_sim_a_LIBADD)
+	$(RANLIB) libvrtx_sim.a
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

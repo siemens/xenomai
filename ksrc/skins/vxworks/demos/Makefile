@@ -6,13 +6,13 @@ $(error Please add <xenomai-install-path>/bin to your PATH variable)
 endif
 
 UVM_CFLAGS  := $(shell $(XENO_CONFIG) --uvm-cflags)
-UVM_LDFLAGS := $(shell $(XENO_CONFIG) --uvm-ldflags) -lvxworks
-UVM_TARGETS := satch koan
+UVM_LDFLAGS := $(shell $(XENO_CONFIG) --uvm-ldflags) -lvxworks_uvm
+UVM_TARGETS := satch_uvm koan_uvm
 
 GCIC := $(prefix)/bin/gcic
 SIM_CFLAGS  := -g
-SIM_LDFLAGS := -lvxworks_s
-SIM_TARGETS := satch_s koan_s
+SIM_LDFLAGS := -lvxworks_sim
+SIM_TARGETS := satch_sim koan_sim
 
 # "uvm" makes all demos running over the UVM.
 # "sim" makes all demos running over the RTOS simulator.
@@ -24,20 +24,20 @@ sim: $(SIM_TARGETS)
 
 all: uvm sim
 
-satch: satch.c
+satch_uvm: satch.c
 	$(CC) -o $@ $< $(UVM_CFLAGS) $(UVM_LDFLAGS)
 
-satch_s: satch_s.o
+satch_sim: satch_sim.o
 	$(GCIC) -o $@ $< $(SIM_LDFLAGS)
 
-koan: koan.c
-	$(CC) -o $@ $< $(UVM_CFLAGS) $(UVM_LDFLAGS) -lnative
+koan_uvm: koan.c
+	$(CC) -o $@ $< $(UVM_CFLAGS) $(UVM_LDFLAGS)
 
-koan_s: koan_s.o
-	$(GCIC) -o $@ $< $(SIM_LDFLAGS) -lnative_s
+koan_sim: koan_sim.o
+	$(GCIC) -o $@ $< $(SIM_LDFLAGS) -lnative_sim
 
-%_s.o: %.c
+%_sim.o: %.c
 	$(GCIC) -o $@ -c $< $(SIM_CFLAGS)
 
 clean:
-	$(RM) -f *.o *_s.o $(UVM_TARGETS) $(SIM_TARGETS)
+	$(RM) -f *.o *_sim.o $(UVM_TARGETS) $(SIM_TARGETS)

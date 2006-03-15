@@ -84,6 +84,7 @@ int xnthread_init (xnthread_t *thread,
     thread->rrcredit = XN_INFINITE;
     thread->wchan = NULL;
     thread->magic = 0;
+    thread->errcode = 0;
 #ifdef CONFIG_XENO_OPT_REGISTRY
     thread->registry.handle = XN_NO_HANDLE;
     thread->registry.waitkey = NULL;
@@ -200,3 +201,26 @@ char *xnthread_symbolic_status (xnflags_t status, char *buf, int size)
 
     return buf;
 }
+
+int *xnthread_get_errno_location (void)
+
+{
+    static int fallback_errno;
+
+    if (unlikely(!nkpod))
+	goto fallback;
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    if (likely(xnpod_userspace_p()))
+        return &xnshadow_errno(current);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+    if (likely(xnpod_primary_p()))
+	return &xnpod_current_thread()->errcode;
+
+ fallback:
+
+    return &fallback_errno;
+}
+
+EXPORT_SYMBOL(xnthread_get_errno_location);

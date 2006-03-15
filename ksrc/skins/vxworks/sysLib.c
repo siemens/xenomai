@@ -23,7 +23,7 @@
 #define ONE_BILLION 1000000000
 
 static wind_tick_handler_t tick_handler;
-static int tick_handler_arg;
+static long tick_handler_arg;
 
 
 void tickAnnounce(void)
@@ -54,7 +54,7 @@ void wind_sysclk_cleanup(void)
 }
 
 
-STATUS sysClkConnect (wind_tick_handler_t func, int arg)
+STATUS sysClkConnect (wind_tick_handler_t func, long arg)
 {
     if(func == NULL)
         return ERROR;
@@ -91,7 +91,9 @@ STATUS sysClkRateSet (int new_rate)
     int err;
     
     if(new_rate <= 0)
+	{
         return ERROR;
+	}
 
     if (testbits(nkpod->status,XNTIMED))
         xnpod_stop_timer();

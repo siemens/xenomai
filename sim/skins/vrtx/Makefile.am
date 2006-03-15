@@ -16,9 +16,9 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../include \
 	-I$(top_srcdir)/../include
 
-lib_LIBRARIES = libvrtx_s.a
+lib_LIBRARIES = libvrtx_sim.a
 
-nodist_libvrtx_s_a_SOURCES = \
+nodist_libvrtx_sim_a_SOURCES = \
 	event.c \
 	heap.c \
 	mb.c \

@@ -1,27 +1,24 @@
+lib_LTLIBRARIES = libvxworks.la
 
-lib_LIBRARIES = libvxworks.a
+libvxworks_la_LDFLAGS = -module -version-info 0:0:0 -lpthread
 
-nodist_libvxworks_a_SOURCES = \
-	errnoLib.c \
+libvxworks_la_SOURCES = \
 	intLib.c \
-	kernelLib.c \
-	module.c \
 	msgQLib.c \
+	kernelLib.c \
 	semLib.c \
-	sysLib.c \
-	taskHookLib.c \
 	taskInfo.c \
 	taskLib.c \
 	tickLib.c \
-	wdLib.c
+	sysLib.c \
+	init.c
 
-AM_CPPFLAGS = \
+libvxworks_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
-	-I$(top_srcdir)/ksrc/skins \
-	-I$(top_srcdir)/include \
-	-D__XENO_UVM__
+	-I$(top_srcdir)/include
 
-CLEANFILES = $(nodist_libvxworks_a_SOURCES)
-
-$(nodist_libvxworks_a_SOURCES) defs.h: Makefile
-	$(LN_S) -f $(top_srcdir)/ksrc/skins/vxworks/$@
+install-exec-hook:
+	for la in $(lib_LTLIBRARIES); do \
+	    sed -e 's/shouldnotlink=yes/shouldnotlink=no/' $(DESTDIR)$(libdir)/$$la > $(DESTDIR)$(libdir)/$$la.patched; \
+	    mv $(DESTDIR)$(libdir)/$$la.patched $(DESTDIR)$(libdir)/$$la; \
+	done

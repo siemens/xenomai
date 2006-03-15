@@ -22,6 +22,7 @@
 #define _vxworks_defs_h
 
 #include <nucleus/xenomai.h>
+#include <nucleus/registry.h>
 #include <vxworks/vxworks.h>
 
 #define WIND_MAGIC(n) (0x8383##n##n)
@@ -43,25 +44,155 @@
 
 #define wind_mark_deleted(t) ((t)->magic = 0)
 
-typedef struct wind_task wind_task_t;
+struct wind_sem;
 
-#define IS_WIND_TASK XNTHREAD_SPARE0
+typedef struct wind_sem wind_sem_t;
 
+typedef struct sem_vtbl {
+
+    STATUS (*take) (wind_sem_t *, xnticks_t);
+    STATUS (*give) (wind_sem_t *);
+    STATUS (*flush) (wind_sem_t *);
+    const char *type;
+
+} sem_vtbl_t;
+
+struct wind_sem {
+
+    unsigned int magic;
+
+    xnholder_t link;
+
+#define link2wind_sem(laddr) \
+((wind_sem_t *)(((char *)laddr) - (int)(&((wind_sem_t *)0)->link)))
+
+    xnsynch_t synchbase;
+
+#define synch2wind_sem(saddr) \
+((wind_sem_t *)(((char *)saddr) - (int)(&((wind_sem_t *)0)->synchbase)))
+
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    xnhandle_t handle;
+    char name[XNOBJECT_NAME_LEN];
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
+    /*
+     * count has a different meaning for the different kinds of
+     * semaphores : binary semaphore : binary state of the semaphore,
+     * counting semaphore: the semaphore count, mutex: the recursion
+     * count.
+     */
+    unsigned count;
+    
+    xnthread_t *owner;
+
+    const sem_vtbl_t * vtbl;
+};
+
+typedef struct wind_msg {
+
+    xnholder_t link;
+
+#define link2wind_msg(laddr) \
+((wind_msg_t *)(((char *)laddr) - (int)(&((wind_msg_t *)0)->link)))
+
+    unsigned int length;
+    
+    char buffer[0];
+
+} wind_msg_t;
+
+typedef struct wind_msgq {
+
+    unsigned int magic;
+    
+    UINT msg_length;
+
+    xnholder_t * free_list;     /* simply linked list of free messages */
+
+    xnqueue_t msgq;             /* queue of messages available for reading */
+
+    xnholder_t link;            /* link in wind_msgq_t */
+
+#define link2wind_msgq(laddr) \
+((wind_msgq_t *)(((char *)laddr) - (int)(&((wind_msgq_t *)0)->link)))
+
+    xnsynch_t synchbase;        /* pended readers or writers */
+
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    xnhandle_t handle;
+    char name[XNOBJECT_NAME_LEN];
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
+} wind_msgq_t;
+
+typedef struct wind_tcb wind_task_t;
+
+typedef struct wind_wd_utarget {
+
+    wind_timer_t handler;
+    long arg;
+
+} wind_wd_utarget_t;
+
+typedef struct wind_wd {
+
+    unsigned magic;   /* Magic code - must be first */
+
+    xnholder_t link;
+
+#define link2wind_wd(laddr) \
+((wind_wd_t *)(((char *)laddr) - (int)(&((wind_wd_t *)0)->link)))
+
+    xntimer_t timerbase;
+
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    xnhandle_t handle;
+    char name[XNOBJECT_NAME_LEN];
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    xnsynch_t synchbase;
+    wind_wd_utarget_t wdt;
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+} wind_wd_t;
+
+/* Internal flag marking a user-space task. */
+#define VX_SHADOW (0x8000)
+
+#define WIND_TASK_OPTIONS_MASK \
+(VX_FP_TASK|VX_PRIVATE_ENV|VX_NO_STACK_FILL|VX_UNBREAKABLE|VX_SHADOW) 
 
 #define wind_current_task() (thread2wind_task(xnpod_current_thread()))
 
+/* The following macros return normalized or native priority values
+   for the underlying pod. The core pod providing user-space support
+   uses an ascending [0-256] priority scale (include/nucleus/core.h),
+   whilst the VxWorks personality exhibits a decreasing scale
+   [255-0]. Normalization is not needed when the underlying pod
+   supporting the VxWorks skin is standalone, i.e. pure kernel, UVM or
+   simulation modes. */
 
-#define wind_errnoset(value) do                                         \
-{                                                                       \
-    if(!xnpod_asynch_p() &&                                             \
-       xnthread_test_flags(xnpod_current_thread(), IS_WIND_TASK))       \
-        {                                                               \
-        wind_task_t *_cur = wind_current_task();                        \
-        if (_cur)                                                       \
-            _cur->errorStatus = value;                                  \
-        }                                                               \
-} while(0)
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#define wind_normalized_prio(prio)	(XNCORE_MAX_PRIO - (prio) - 1)
+#define wind_denormalized_prio(prio)	(255 - (prio))
+#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+#define wind_normalized_prio(prio)	prio
+#define wind_denormalized_prio(prio)	prio
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
+int *wind_errno_location(void);
+
+static inline void wind_errnoset (int err)
+{
+    *xnthread_get_errno_location() = err;
+}
+
+static inline int wind_errnoget (void)
+{
+    return *xnthread_get_errno_location();
+}
 
 #define error_check(cond, status, action) do    \
 {                                               \
@@ -113,13 +244,13 @@ static inline void taskSafeInner (wind_task_t *cur)
 
 /* Must be called with nklock locked, interrupts off.
    Returns :
-   - ERROR if the safe count is null
+   - ERROR if the safe count is null or the current context is invalid
    - OK if the safe count was decremented but no rescheduling is needed.
    - 1 if the safe count was decremented and rescheduling is needed.
 */
 static inline int taskUnsafeInner (wind_task_t *cur)
 {
-    if(cur->safecnt == 0)
+    if(!xnpod_primary_p() || cur->safecnt == 0)
         return ERROR;
     
     if(--cur->safecnt == 0)

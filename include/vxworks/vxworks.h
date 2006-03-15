@@ -26,10 +26,10 @@
 #ifndef _XENO_SKIN_VXWORKS_H
 #define _XENO_SKIN_VXWORKS_H
 
-#include <nucleus/xenomai.h>
+#include <nucleus/types.h>
 
-#define VXWORKS_SKIN_VERSION_STRING  "3"
-#define VXWORKS_SKIN_VERSION_CODE    0x00000003
+#define VXWORKS_SKIN_VERSION_STRING  "4"
+#define VXWORKS_SKIN_VERSION_CODE    0x00000004
 #define VXWORKS_SKIN_MAGIC           0x57494E44
 
 #undef STATUS
@@ -71,92 +71,18 @@ typedef int BOOL;
 
 #define S_memLib_NOT_ENOUGH_MEMORY              (WIND_MEM_ERR_BASE + 0x0001)
 
-
 /* defines for basic tasks handling */
 
 /* Task Options: */
-/* execute with floating-point coprocessor support. */
-#define VX_FP_TASK (0x0008)
-
-/* include private environment support (see envLib). */
-#define VX_PRIVATE_ENV (0x0080)
-
-/* do not fill the stack for use by checkStack(). */
-#define VX_NO_STACK_FILL (0x0100)
 
 /* do not allow breakpoint debugging. */
-#define VX_UNBREAKABLE (0x0002)
-
-#define WIND_TASK_OPTIONS_MASK                                  \
-(VX_FP_TASK|VX_PRIVATE_ENV|VX_NO_STACK_FILL|VX_UNBREAKABLE) 
-
-
-typedef void (*FUNCPTR) (int, int, int, int, int, int, int, int, int, int);
-
-
-
-typedef struct wind_task
-{
-    unsigned int magic;                  /* Magic code - must be first */
-
-
-    /* The WIND task internal control block (which tends to be
-       rather public in pre-6.0 versions of the VxWorks kernel). */
-
-    char *name;
-    int flags;
-    int status;
-    int prio;
-    FUNCPTR entry;
-    int errorStatus;
-
-    /* Wind4Xeno specific: used by taskLib */
-    int auto_delete;
-
-    unsigned long int flow_id;
-
-    int safecnt;
-    xnsynch_t safesync;
-
-    xnthread_t threadbase;
-
-#define thread2wind_task(taddr)                                                 \
-( (taddr)                                                                       \
-  ? ((wind_task_t *)(((char *)taddr) - (int)(&((wind_task_t *)0)->threadbase))) \
-  : NULL )
-
-    xnholder_t link;        /* Link in wind_taskq */
-
-#define link2wind_task(laddr)                                           \
-((wind_task_t *)(((char *)laddr) - (int)(&((wind_task_t *)0)->link)))
-
-    int arg0;
-    int arg1;
-    int arg2;
-    int arg3;
-    int arg4;
-    int arg5;
-    int arg6;
-    int arg7;
-    int arg8;
-    int arg9;
-
-    /* Wind4Xeno specific: used by message queues */
-    char * rcv_buf;             /* A place to save the receive buffer when this
-                                   task is pending on a msgQReceive */
-    unsigned int rcv_bytes;     /* this is the size passed to msgQReceive */
-    
-
-}  WIND_TCB;
-
-
-
-#ifdef errno
-#undef errno
-#endif
-
-#define errno (*wind_current_context_errno())
-
+#define VX_UNBREAKABLE   0x0002
+/* execute with floating-point coprocessor support. */
+#define VX_FP_TASK       0x0008
+/* include private environment support (see envLib). */
+#define VX_PRIVATE_ENV   0x0080
+/* do not fill the stack for use by checkStack(). */
+#define VX_NO_STACK_FILL 0x0100
 
 /* defines for all kinds of semaphores */
 #define SEM_Q_FIFO           0x0
@@ -172,7 +98,7 @@ typedef struct wind_task
 
 #if BITS_PER_LONG == 32
 #define __natural_word_type int
-#else  /* defaults to long othewise */
+#else  /* defaults to long otherwise */
 #define __natural_word_type long
 #endif
 
@@ -192,249 +118,290 @@ typedef __natural_word_type TASK_ID;
 
 #undef __natural_word_type
 
-#define MSG_PRI_NORMAL (0)
-#define MSG_PRI_URGENT (1)
+#define MSG_PRI_NORMAL   0
+#define MSG_PRI_URGENT   1
 
-#define MSG_Q_FIFO (0x00)
-#define MSG_Q_PRIORITY (0x01)
+#define MSG_Q_FIFO       0x0
+#define MSG_Q_PRIORITY   0x1
 #define WIND_MSG_Q_OPTION_MASK (MSG_Q_FIFO|MSG_Q_PRIORITY)
 
 typedef unsigned int UINT;
 
-typedef unsigned long long int ULONG;
+typedef unsigned long ULONG;
 
+typedef void (*FUNCPTR)(long, long, long, long, long, long, long, long, long, long);
 
+typedef struct WIND_TCB_PLACEHOLDER {
+    TASK_ID handle;
+} WIND_TCB_PLACEHOLDER;
+
+typedef void (*wind_timer_t)(long);
+    
+#if defined(__KERNEL__) || defined(__XENO_SIM__)  || defined(__XENO_UVM__)
+
+#include <nucleus/pod.h>
+#include <nucleus/synch.h>
+
+typedef struct wind_tcb {
+
+    unsigned int magic;                  /* Magic code - must be first */
+
+    /* The WIND task internal control block (which tends to be rather
+       public in pre-6.0 versions of the VxWorks kernel). errorStatus
+       is missing since we must handle the error code at nucleus
+       level; applications should use errnoOfTaskGet/Set to access
+       this field. */
+
+    char name[XNOBJECT_NAME_LEN];
+    int flags;
+    int status;
+    int prio;
+    FUNCPTR entry;
+
+    /* Xenomai specific: used by taskLib */
+
+    int auto_delete;
+
+    unsigned long int flow_id;
+
+    int safecnt;
+    xnsynch_t safesync;
+
+    xnthread_t threadbase;
+
+    xnholder_t link;        /* Link in wind_taskq */
+
+#define link2wind_task(laddr)                                           \
+((wind_task_t *)(((char *)laddr) - (int)(&((wind_task_t *)0)->link)))
+
+    long arg0;
+    long arg1;
+    long arg2;
+    long arg3;
+    long arg4;
+    long arg5;
+    long arg6;
+    long arg7;
+    long arg8;
+    long arg9;
+
+    /* Xenomai specific: used by message queues */
+    char * rcv_buf;             /* A place to save the receive buffer when this
+                                   task is pending on a msgQReceive */
+    unsigned int rcv_bytes;     /* this is the size passed to msgQReceive */
+    
+}  WIND_TCB;
+
+static inline WIND_TCB *thread2wind_task(xnthread_t *t)
+{
+    return t ? ((WIND_TCB *)(((char *)t) - (int)(&((WIND_TCB *)0)->threadbase))) : NULL;
+}
+
+typedef void (*wind_create_hook)(WIND_TCB *);
+
+typedef void (*wind_switch_hook)(WIND_TCB *, WIND_TCB *);
+
+typedef void (*wind_delete_hook)(WIND_TCB *);
+
+typedef void (*wind_tick_handler_t)(long);
+    
+#ifdef errno
+#undef errno
+#endif
+#define errno (*wind_current_context_errno())
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-    int * wind_current_context_errno (void);
+WIND_TCB *taskTcb(TASK_ID task_id);
 
-    /* functions handling errno: */
-    void printErrno(int status);
+STATUS taskRestart(TASK_ID task_id);
+
+static inline void taskHookInit(void)
+{
+}
     
-    STATUS errnoSet(int status);
+STATUS taskCreateHookAdd(wind_create_hook hook);
 
-    int errnoGet (void);
+STATUS taskCreateHookDelete(wind_create_hook hook);
 
-    int errnoOfTaskGet(TASK_ID task_id);
+STATUS taskSwitchHookAdd(wind_switch_hook hook);
 
-    STATUS errnoOfTaskSet(TASK_ID task_id, int status);
+STATUS taskSwitchHookDelete(wind_switch_hook hook);
 
+STATUS taskDeleteHookAdd(wind_delete_hook hook);
 
+STATUS taskDeleteHookDelete(wind_delete_hook hook);
 
-
-    /* functions for tasks handling */
-    int taskSpawn ( char * name,
-                    int prio,
-                    int flags,
-                    int stacksize,
-                    FUNCPTR entry,
-                    int arg0, int arg1, int arg2, int arg3, int arg4,
-                    int arg5, int arg6, int arg7, int arg8, int arg9 );
-
-    STATUS taskInit ( WIND_TCB * handle,
-                      char * name,
-                      int prio,
-                      int flags,
-                      char * stack __attribute__ ((unused)),
-                      int stacksize,
-                      FUNCPTR entry,
-                      int arg0, int arg1, int arg2, int arg3, int arg4,
-                      int arg5, int arg6, int arg7, int arg8, int arg9 );
-
-    STATUS taskActivate(TASK_ID task_id);
-
-    void taskExit(int code);
+int intCount(void);
     
-    STATUS taskDelete(TASK_ID task_id);
+int intLevelSet(int level);
 
-    STATUS taskDeleteForce(TASK_ID task_id);
+int intLock(void);
 
-    STATUS taskSuspend(TASK_ID task_id);
+void intUnlock(int flags);
 
-    STATUS taskResume(TASK_ID task_id);
+STATUS sysClkConnect(wind_tick_handler_t routine,
+		     long arg);
 
-    STATUS taskRestart(TASK_ID task_id);
+void tickAnnounce(void);
 
-    STATUS taskPrioritySet(TASK_ID task_id, int prio);
+int *wind_current_context_errno(void);
 
-    STATUS taskPriorityGet(TASK_ID task_id, int * pprio);
-
-    STATUS taskLock(void);
-
-    STATUS taskUnlock(void);
-
-    int taskIdSelf(void);
-    
-    STATUS taskSafe(void);
-
-    STATUS taskUnsafe(void);
-    
-    STATUS taskDelay(int ticks);
-
-    STATUS taskIdVerify(TASK_ID task_id);
-
-    WIND_TCB *taskTcb(TASK_ID task_id);
-
-
-
-
-    /* functions for task hooks */
-    static inline void taskHookInit(void)
-    {
-    }
-    
-    typedef void (*wind_create_hook) (WIND_TCB *);
-
-    STATUS taskCreateHookAdd(wind_create_hook hook);
-
-    STATUS taskCreateHookDelete(wind_create_hook hook);
-
-
-    typedef void (*wind_switch_hook) (WIND_TCB *, WIND_TCB *);
-
-    STATUS taskSwitchHookAdd(wind_switch_hook hook);
-
-    STATUS taskSwitchHookDelete(wind_switch_hook hook);
-
-
-    typedef void (*wind_delete_hook) (WIND_TCB *);
-
-    STATUS taskDeleteHookAdd(wind_delete_hook hook);
-
-    STATUS taskDeleteHookDelete(wind_delete_hook hook);
-
-
-
-
-    /* functions for tasks information */
-    char *taskName ( TASK_ID task_id );
-
-    int taskNameToId ( char * name );
-
-    int taskIdDefault ( TASK_ID task_id );
-    
-    BOOL taskIsReady ( TASK_ID task_id );
-
-    BOOL taskIsSuspended ( TASK_ID task_id );
-         
-    /*Missing:
-      taskIdListGet()
-      taskOptionsGet()
-      taskOptionsSet()
-      taskRegsGet()
-      taskRegsSet()
-    */
-
-
-
-
-    /* functions dealing with all kinds of semaphores */
-    STATUS semGive(SEM_ID sem_id);
-
-    STATUS semTake(SEM_ID sem_id, int timeout);
-
-    STATUS semFlush(SEM_ID sem_id);
-
-    STATUS semDelete(SEM_ID sem_id);
-
-    
-
-
-    /* functions for binary semaphores */
-    SEM_ID semBCreate(int flags, SEM_B_STATE state);
-
-
-
-
-    /* functions for mutual-exclusion semaphores */
-    SEM_ID semMCreate(int flags);
-
-    /* Missing:
-    STATUS semMGiveForce(SEM_ID sem_id);
-    */
-
-
-
-    /* functions for counting semaphores */
-    SEM_ID semCCreate(int flags, int count);
-
-
-
-    /* functions for watchdogs */
-    typedef void (*wind_timer_t) (int);
-    
-    WDOG_ID wdCreate (void);
-
-    STATUS wdDelete (WDOG_ID handle);
-
-    STATUS wdStart (WDOG_ID handle, int timeout, wind_timer_t handler, int arg);
-
-    STATUS wdCancel (WDOG_ID handle);
-
-
-
-    /* Messages queues */
-    MSG_Q_ID msgQCreate( int nb_msgs, int length, int flags );
-
-    STATUS msgQDelete( MSG_Q_ID msg );
-
-    int msgQNumMsgs( MSG_Q_ID msg );
-
-    int msgQReceive( MSG_Q_ID msg,char *buf,UINT bytes,int to );
-
-    STATUS msgQSend( MSG_Q_ID msg,char *buf,UINT bytes,int to,int prio );
-
-
-
-    /* functions related to interrupts */
-    BOOL intContext (void);
-    
-    int intCount (void);
-    
-    int intLevelSet ( int level );
-
-    int intLock(void);
-
-    void intUnlock( int flags );
-
-
-
-
-    /* system timer */
-    typedef void (*wind_tick_handler_t) (int);
-    
-    STATUS sysClkConnect(wind_tick_handler_t routine, int arg );
-
-    void sysClkDisable(void);
-
-    void sysClkEnable(void);
-
-    int sysClkRateGet(void);
-    
-    STATUS sysClkRateSet(int ticksPerSecond);
-
-
-
-    /* system clock */
-    void tickAnnounce(void);
-    
-    ULONG tickGet (void);
-
-    void tickSet (ULONG ticks );
-
-
-
-    STATUS kernelTimeSlice ( int ticks );
-      
-    const char *kernelVersion (void);
-    
-    
 #ifdef __cplusplus
 }
 #endif
 
+#else /* !(__KERNEL__ || __XENO_SIM__) */
+
+#include <vxworks/syscall.h>
+
+typedef WIND_TCB_PLACEHOLDER WIND_TCB;
+
+#endif /* __KERNEL__ || __XENO_SIM__ */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void printErrno(int status);
+    
+STATUS errnoSet(int status);
+
+int errnoGet(void);
+
+int errnoOfTaskGet(TASK_ID task_id);
+
+STATUS errnoOfTaskSet(TASK_ID task_id, int status);
+
+TASK_ID taskSpawn(const char *name,
+		  int prio,
+		  int flags,
+		  int stacksize,
+		  FUNCPTR entry,
+		  long arg0, long arg1, long arg2, long arg3, long arg4,
+		  long arg5, long arg6, long arg7, long arg8, long arg9);
+
+STATUS taskInit(WIND_TCB *pTcb,
+		const char *name,
+		int prio,
+		int flags,
+		char * stack __attribute__ ((unused)),
+		int stacksize,
+		FUNCPTR entry,
+		long arg0, long arg1, long arg2, long arg3, long arg4,
+		long arg5, long arg6, long arg7, long arg8, long arg9);
+
+STATUS taskActivate(TASK_ID task_id);
+
+STATUS taskDelete(TASK_ID task_id);
+
+STATUS taskDeleteForce(TASK_ID task_id);
+
+STATUS taskSuspend(TASK_ID task_id);
+
+STATUS taskResume(TASK_ID task_id);
+
+STATUS taskPrioritySet(TASK_ID task_id,
+		       int prio);
+
+STATUS taskPriorityGet(TASK_ID task_id,
+		       int *pprio);
+
+void taskExit(int code); /* User-space may directly use exit(3). */
+    
+STATUS taskLock(void);
+
+STATUS taskUnlock(void);
+
+TASK_ID taskIdSelf(void);
+    
+STATUS taskSafe(void);
+
+STATUS taskUnsafe(void);
+    
+STATUS taskDelay(int ticks);
+
+STATUS taskIdVerify(TASK_ID task_id);
+
+const char *taskName(TASK_ID task_id);
+
+TASK_ID taskNameToId(const char *name);
+
+TASK_ID taskIdDefault(TASK_ID task_id);
+    
+BOOL taskIsReady(TASK_ID task_id);
+
+BOOL taskIsSuspended (TASK_ID task_id);
+         
+STATUS semGive(SEM_ID sem_id);
+
+STATUS semTake(SEM_ID sem_id,
+	       int timeout);
+
+STATUS semFlush(SEM_ID sem_id);
+
+STATUS semDelete(SEM_ID sem_id);
+
+SEM_ID semBCreate(int flags,
+		  SEM_B_STATE state);
+
+SEM_ID semMCreate(int flags);
+
+SEM_ID semCCreate(int flags,
+		  int count);
+
+WDOG_ID wdCreate(void);
+
+STATUS wdDelete(WDOG_ID wdog_id);
+
+STATUS wdStart(WDOG_ID wdog_id,
+	       int timeout,
+	       wind_timer_t handler,
+	       long arg);
+
+STATUS wdCancel(WDOG_ID wdog_id);
+
+MSG_Q_ID msgQCreate(int nb_msgs,
+		    int length,
+		    int flags);
+
+STATUS msgQDelete(MSG_Q_ID msg);
+
+int msgQNumMsgs(MSG_Q_ID msg);
+
+int msgQReceive(MSG_Q_ID msg,
+		char *buf,
+		UINT bytes,
+		int timeout);
+
+STATUS msgQSend(MSG_Q_ID msg,
+		const char *buf,
+		UINT bytes,
+		int timeout,
+		int prio);
+
+BOOL intContext(void);
+    
+void sysClkDisable(void);
+
+void sysClkEnable(void);
+
+int sysClkRateGet(void);
+    
+STATUS sysClkRateSet(int ticksPerSecond);
+    
+ULONG tickGet(void);
+
+void tickSet(ULONG ticks);
+
+STATUS kernelTimeSlice(int ticks);
+      
+const char *kernelVersion(void);
+    
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !_XENO_SKIN_VXWORKS_H */

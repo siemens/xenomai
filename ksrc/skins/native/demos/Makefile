@@ -12,8 +12,8 @@ STD_TARGETS := satch latency
 
 GCIC := $(prefix)/bin/gcic
 SIM_CFLAGS  := -g
-SIM_LDFLAGS := -lnative_s
-SIM_TARGETS := satch_s latency_s
+SIM_LDFLAGS := -lnative_sim
+SIM_TARGETS := satch_sim latency_sim
 
 # "std" makes all demos running natively in user-space.
 # "sim" makes all demos running over the RTOS simulator.
@@ -28,11 +28,11 @@ all: std sim
 $(STD_TARGETS): $(STD_TARGETS:%=%.c)
 	$(CC) -o $@ $< $(STD_CFLAGS) $(STD_LDFLAGS)
 
-$(SIM_TARGETS): $(SIM_TARGETS:%_s=%_s.o)
+$(SIM_TARGETS): $(SIM_TARGETS:%_sim=%_sim.o)
 	$(GCIC) -o $@ $^ $(SIM_LDFLAGS)
 
-%_s.o: %.c
+%_sim.o: %.c
 	$(GCIC) -o $@ -c $< $(SIM_CFLAGS)
 
 clean:
-	$(RM) -f *.o *_s.o $(STD_TARGETS) $(SIM_TARGETS)
+	$(RM) -f *.o *_sim.o $(STD_TARGETS) $(SIM_TARGETS)

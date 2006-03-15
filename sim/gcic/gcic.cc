@@ -934,7 +934,7 @@ int main (int argc, char **argv)
 	    {
 	    CCCmdString += " -lmvm";
 	    CCCmdString += " -lmvmutils";
-	    CCCmdString += " -lnucleus_s";
+	    CCCmdString += " -lnucleus_sim";
 	    }
 
 	CCCmdString += " -lm";
