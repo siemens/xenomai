@@ -19,9 +19,9 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/../include \
 	-I$(srcdir)/..
 
-lib_LIBRARIES = libposix_s.a
+lib_LIBRARIES = libposix_sim.a
 
-nodist_libposix_s_a_SOURCES = \
+nodist_libposix_sim_a_SOURCES = \
 	sched.c \
 	thread_attr.c \
 	thread.c \

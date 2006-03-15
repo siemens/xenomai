@@ -116,6 +116,8 @@ static RT_TASK *__rt_task_current (struct task_struct *curr)
  * a1: RT_TASK_PLACEHOLDER *task;
  * a2: const char *name;
  * a3: int prio;
+ * a4: int mode;
+ * a5: pthread_t opaque;
  * }
  */
 
@@ -320,8 +322,8 @@ static int __rt_task_delete (struct task_struct *curr, struct pt_regs *regs)
  * int __rt_task_yield(void)
  */
 
-static int __rt_task_yield (struct task_struct *curr, struct pt_regs *regs) {
-
+static int __rt_task_yield (struct task_struct *curr, struct pt_regs *regs)
+{
     return rt_task_yield();
 }
 

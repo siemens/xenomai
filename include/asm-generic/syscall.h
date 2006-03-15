@@ -98,10 +98,14 @@ typedef struct _xnsysent {
 
 } xnsysent_t;
 
-extern int nkgkptd;
+extern int nkthrptd;
 
-#define xnshadow_ptd(t)    ((t)->ptd[nkgkptd])
-#define xnshadow_thread(t) ((xnthread_t *)xnshadow_ptd(t))
+extern int nkerrptd;
+
+#define xnshadow_thrptd(t) ((t)->ptd[nkthrptd])
+#define xnshadow_thread(t) ((xnthread_t *)xnshadow_thrptd(t))
+/* The errno field must be addressable for plain Linux tasks too. */
+#define xnshadow_errno(t)  (*(int *)&((t)->ptd[nkerrptd]))
 
 #else /* !__KERNEL__ */
 

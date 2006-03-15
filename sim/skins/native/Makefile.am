@@ -16,9 +16,9 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../include \
 	-I$(top_srcdir)/../include
 
-lib_LIBRARIES = libnative_s.a
+lib_LIBRARIES = libnative_sim.a
 
-nodist_libnative_s_a_SOURCES = \
+nodist_libnative_sim_a_SOURCES = \
 	module.c \
 	task.c \
 	timer.c \

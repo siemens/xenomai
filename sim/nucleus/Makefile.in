@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-SOURCES = $(nodist_libnucleus_s_a_SOURCES)
+SOURCES = $(nodist_libnucleus_sim_a_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -58,12 +58,12 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 libLIBRARIES_INSTALL = $(INSTALL_DATA)
 LIBRARIES = $(lib_LIBRARIES)
 ARFLAGS = cru
-libnucleus_s_a_AR = $(AR) $(ARFLAGS)
-libnucleus_s_a_DEPENDENCIES = ../adapter/adapter.o
-nodist_libnucleus_s_a_OBJECTS = heap.$(OBJEXT) intr.$(OBJEXT) \
+libnucleus_sim_a_AR = $(AR) $(ARFLAGS)
+libnucleus_sim_a_DEPENDENCIES = ../adapter/adapter.o
+nodist_libnucleus_sim_a_OBJECTS = heap.$(OBJEXT) intr.$(OBJEXT) \
 	module.$(OBJEXT) pod.$(OBJEXT) registry.$(OBJEXT) \
 	synch.$(OBJEXT) thread.$(OBJEXT) timer.$(OBJEXT)
-libnucleus_s_a_OBJECTS = $(nodist_libnucleus_s_a_OBJECTS)
+libnucleus_sim_a_OBJECTS = $(nodist_libnucleus_sim_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
 am__depfiles_maybe = depfiles
@@ -75,7 +75,7 @@ LTCOMPILE = $(LIBTOOL) --mode=compile --tag=CC $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link --tag=CC $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(nodist_libnucleus_s_a_SOURCES)
+SOURCES = $(nodist_libnucleus_sim_a_SOURCES)
 DIST_SOURCES =
 ETAGS = etags
 CTAGS = ctags
@@ -227,12 +227,12 @@ subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 @CONFIG_XENO_MVM_ATOMIC_CORE_TRUE@atomic_core := --no-inst -O2
-lib_LIBRARIES = libnucleus_s.a
+lib_LIBRARIES = libnucleus_sim.a
 
 # Shadow, pipe and pervasive supports make no sense compiling in
 # native simulation mode. Therefore, their respective files are not
 # included here.
-nodist_libnucleus_s_a_SOURCES = \
+nodist_libnucleus_sim_a_SOURCES = \
 			heap.c \
 			intr.c \
 			module.c \
@@ -250,7 +250,7 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../include \
 	-I$(top_srcdir)/../include
 
-libnucleus_s_a_LIBADD = ../adapter/adapter.o
+libnucleus_sim_a_LIBADD = ../adapter/adapter.o
 all: all-am
 
 .SUFFIXES:
@@ -313,10 +313,10 @@ uninstall-libLIBRARIES:
 
 clean-libLIBRARIES:
 	-test -z "$(lib_LIBRARIES)" || rm -f $(lib_LIBRARIES)
-libnucleus_s.a: $(libnucleus_s_a_OBJECTS) $(libnucleus_s_a_DEPENDENCIES) 
-	-rm -f libnucleus_s.a
-	$(libnucleus_s_a_AR) libnucleus_s.a $(libnucleus_s_a_OBJECTS) $(libnucleus_s_a_LIBADD)
-	$(RANLIB) libnucleus_s.a
+libnucleus_sim.a: $(libnucleus_sim_a_OBJECTS) $(libnucleus_sim_a_DEPENDENCIES) 
+	-rm -f libnucleus_sim.a
+	$(libnucleus_sim_a_AR) libnucleus_sim.a $(libnucleus_sim_a_OBJECTS) $(libnucleus_sim_a_LIBADD)
+	$(RANLIB) libnucleus_sim.a
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

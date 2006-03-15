@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-SOURCES = $(nodist_libpsos_s_a_SOURCES)
+SOURCES = $(nodist_libpsos_sim_a_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -58,12 +58,12 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 libLIBRARIES_INSTALL = $(INSTALL_DATA)
 LIBRARIES = $(lib_LIBRARIES)
 ARFLAGS = cru
-libpsos_s_a_AR = $(AR) $(ARFLAGS)
-libpsos_s_a_LIBADD =
-nodist_libpsos_s_a_OBJECTS = module.$(OBJEXT) asr.$(OBJEXT) \
+libpsos_sim_a_AR = $(AR) $(ARFLAGS)
+libpsos_sim_a_LIBADD =
+nodist_libpsos_sim_a_OBJECTS = module.$(OBJEXT) asr.$(OBJEXT) \
 	event.$(OBJEXT) pt.$(OBJEXT) queue.$(OBJEXT) rn.$(OBJEXT) \
 	task.$(OBJEXT) tm.$(OBJEXT) sem.$(OBJEXT) vmctl.$(OBJEXT)
-libpsos_s_a_OBJECTS = $(nodist_libpsos_s_a_OBJECTS)
+libpsos_sim_a_OBJECTS = $(nodist_libpsos_sim_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
 am__depfiles_maybe = depfiles
@@ -75,7 +75,7 @@ LTCOMPILE = $(LIBTOOL) --mode=compile --tag=CC $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link --tag=CC $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(nodist_libpsos_s_a_SOURCES)
+SOURCES = $(nodist_libpsos_sim_a_SOURCES)
 DIST_SOURCES =
 ETAGS = etags
 CTAGS = ctags
@@ -235,8 +235,8 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../include \
 	-I$(top_srcdir)/../include
 
-lib_LIBRARIES = libpsos_s.a
-nodist_libpsos_s_a_SOURCES = \
+lib_LIBRARIES = libpsos_sim.a
+nodist_libpsos_sim_a_SOURCES = \
 	module.c \
 	asr.c \
 	event.c \
@@ -311,10 +311,10 @@ uninstall-libLIBRARIES:
 
 clean-libLIBRARIES:
 	-test -z "$(lib_LIBRARIES)" || rm -f $(lib_LIBRARIES)
-libpsos_s.a: $(libpsos_s_a_OBJECTS) $(libpsos_s_a_DEPENDENCIES) 
-	-rm -f libpsos_s.a
-	$(libpsos_s_a_AR) libpsos_s.a $(libpsos_s_a_OBJECTS) $(libpsos_s_a_LIBADD)
-	$(RANLIB) libpsos_s.a
+libpsos_sim.a: $(libpsos_sim_a_OBJECTS) $(libpsos_sim_a_DEPENDENCIES) 
+	-rm -f libpsos_sim.a
+	$(libpsos_sim_a_AR) libpsos_sim.a $(libpsos_sim_a_OBJECTS) $(libpsos_sim_a_LIBADD)
+	$(RANLIB) libpsos_sim.a
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

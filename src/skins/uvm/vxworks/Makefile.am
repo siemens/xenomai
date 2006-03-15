@@ -1,0 +1,27 @@
+
+lib_LIBRARIES = libvxworks_uvm.a
+
+nodist_libvxworks_uvm_a_SOURCES = \
+	errnoLib.c \
+	intLib.c \
+	kernelLib.c \
+	module.c \
+	msgQLib.c \
+	semLib.c \
+	sysLib.c \
+	taskHookLib.c \
+	taskInfo.c \
+	taskLib.c \
+	tickLib.c \
+	wdLib.c
+
+AM_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/ksrc/skins \
+	-I$(top_srcdir)/include \
+	-D__XENO_UVM__
+
+CLEANFILES = $(nodist_libvxworks_uvm_a_SOURCES)
+
+$(nodist_libvxworks_uvm_a_SOURCES) defs.h: Makefile
+	$(LN_S) -f $(top_srcdir)/ksrc/skins/vxworks/$@

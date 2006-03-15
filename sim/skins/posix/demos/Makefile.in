@@ -13,7 +13,7 @@
 # PARTICULAR PURPOSE.
 
 @SET_MAKE@
-SOURCES = $(nodist_satch_s_SOURCES)
+SOURCES = $(nodist_satch_sim_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -37,7 +37,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = satch_s$(EXEEXT)
+check_PROGRAMS = satch_sim$(EXEEXT)
 subdir = skins/posix/demos
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -48,9 +48,9 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/include/xeno_config.h
 CONFIG_CLEAN_FILES =
-nodist_satch_s_OBJECTS = satch.$(OBJEXT)
-satch_s_OBJECTS = $(nodist_satch_s_OBJECTS)
-satch_s_LDADD = $(LDADD)
+nodist_satch_sim_OBJECTS = satch.$(OBJEXT)
+satch_sim_OBJECTS = $(nodist_satch_sim_OBJECTS)
+satch_sim_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
 am__depfiles_maybe = depfiles
@@ -62,7 +62,7 @@ LTCOMPILE = $(LIBTOOL) --mode=compile --tag=CC $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link --tag=CC $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(nodist_satch_s_SOURCES)
+SOURCES = $(nodist_satch_sim_SOURCES)
 DIST_SOURCES =
 ETAGS = etags
 CTAGS = ctags
@@ -227,13 +227,13 @@ AM_LDFLAGS = \
 	--gcic-backend=$(prefix)/libexec/gcic \
 	--cc=$(CXX) \
 	--no-mvm-libs \
-	../libposix_s.a \
-	../../../nucleus/libnucleus_s.a \
+	../libposix_sim.a \
+	../../../nucleus/libnucleus_sim.a \
 	../../../adapter/libadapter.a \
 	../../../vm/libmvm.la \
 	../../../vmutils/libmvmutils.la
 
-nodist_satch_s_SOURCES = satch.c
+nodist_satch_sim_SOURCES = satch.c
 all: all-am
 
 .SUFFIXES:
@@ -274,9 +274,9 @@ clean-checkPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
-satch_s$(EXEEXT): $(satch_s_OBJECTS) $(satch_s_DEPENDENCIES) 
-	@rm -f satch_s$(EXEEXT)
-	$(LINK) $(satch_s_LDFLAGS) $(satch_s_OBJECTS) $(satch_s_LDADD) $(LIBS)
+satch_sim$(EXEEXT): $(satch_sim_OBJECTS) $(satch_sim_DEPENDENCIES) 
+	@rm -f satch_sim$(EXEEXT)
+	$(LINK) $(satch_sim_LDFLAGS) $(satch_sim_OBJECTS) $(satch_sim_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

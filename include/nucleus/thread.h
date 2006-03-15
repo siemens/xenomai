@@ -153,6 +153,8 @@ typedef struct xnthread {
     } stat;
 #endif /* CONFIG_XENO_OPT_STATS */
 
+    int errcode;		/* Local errno */
+
     xnasr_t asr;		/* Asynchronous service routine */
 
     xnflags_t asrmode;		/* Thread's mode for ASR */
@@ -258,6 +260,8 @@ int xnthread_init(xnthread_t *thread,
 void xnthread_cleanup_tcb(xnthread_t *thread);
 
 char *xnthread_symbolic_status(xnflags_t status, char *buf, int size);
+
+int *xnthread_get_errno_location(void);
 
 static inline xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t now)
 {

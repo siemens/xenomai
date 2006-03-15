@@ -1,3 +1,9 @@
+2006-03-15  Philippe Gerum  <rpm@xenomai.org>
+
+	* src/skins/uvm: Move all UVM-based builds to the UVM support
+	directory, only leaving skins with native call interfaces directly
+	under src/skins. Rename produced libs to be suffixed with _uvm.
+
 2006-03-15  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/registry.c (pse51_desc_create): Return EMFILE
@@ -8,6 +14,18 @@
 
 	* ksrc/skins/rtdm/drvlib.c (rtdm_clock_read): Update and clarify
 	documentation.
+
+2006-03-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vxworks, src/skins/vxworks: Add native call interface.
+
+	* include/nucleus/timer.h (XNTIMER_KILLED): Discard as unused.
+
+	* include/nucleus/thread.h: Add errno field to the base TCB.
+
+	* ksrc/nucleus/shadow.c, ksrc/nucleus/thread.c
+	(xnthread_get_errno_location): Provide per-thread errno location,
+	handling the asynchronous and user-space cases.
 
 2006-03-12  Philippe Gerum  <rpm@xenomai.org>
 

@@ -7,6 +7,8 @@ obj-$(CONFIG_XENO_SKIN_VXWORKS) += xeno_vxworks.o
 xeno_vxworks-y := errnoLib.o intLib.o kernelLib.o module.o msgQLib.o semLib.o \
 		sysLib.o taskHookLib.o taskInfo.o taskLib.o tickLib.o wdLib.o
 
+xeno_vxworks-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
+
 EXTRA_CFLAGS += -Iinclude/xenomai -I$(src)/..
 
 else
@@ -19,8 +21,11 @@ obj-$(CONFIG_XENO_SKIN_VXWORKS) := xeno_vxworks.o
 
 list-multi := xeno_vxworks.o
 
+opt_objs-y :=
+opt_objs-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
+
 xeno_vxworks-objs := errnoLib.o intLib.o kernelLib.o module.o msgQLib.o semLib.o \
-		sysLib.o taskHookLib.o taskInfo.o taskLib.o tickLib.o wdLib.o
+		sysLib.o taskHookLib.o taskInfo.o taskLib.o tickLib.o wdLib.o $(opt_objs-y)
 
 export-objs := $(xeno_vxworks-objs)
 

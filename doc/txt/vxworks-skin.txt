@@ -58,17 +58,18 @@ list. Here are the known variations:
 - Some tasks management functions which accept 0 as argument in the genuine OS
   may not accept it in the emulator.
 
-- The function taskIsReady may not have the correct behavior when the current
-  task is passed as argument.
-
-- the error S_taskLib_TASK_HOOK_TABLE_FULL has not the same value as in the
+- The error S_taskLib_TASK_HOOK_TABLE_FULL has not the same value as in the
   genuine OS.
 
-- the function 'exit' of VxWorks is now named 'taskExit' (exit was causing too
+- The function 'exit' of VxWorks is now named 'taskExit' (exit was causing too
   many compilation warnings).
 
-- functions taking function pointers as arguments do not use FUNCPTR, which mean
+- Functions taking function pointers as arguments do not use FUNCPTR, which mean
   that the function pointer types are verified at compile time.
+
+- msgQSend() might return S_memLib_NOT_ENOUGH_MEMORY in case of
+dynamic memory shortage when called from user-space, for messages
+longer than 128 bytes.
 
 Module parameters
 =================

@@ -20,12 +20,12 @@
 
 #include <vxworks/defs.h>
 
-xnticks_t tickGet(void)
+ULONG tickGet(void)
 {
-    return xnpod_get_time();
+    return (ULONG)xnpod_get_time();
 }
 
-void tickSet(xnticks_t newtime)
+void tickSet(ULONG newtime)
 {
     xnpod_set_time(newtime);
 }

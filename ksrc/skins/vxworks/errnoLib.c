@@ -20,14 +20,9 @@
 
 #include <vxworks/defs.h>
 
-/* FIXME: handle all cases here */
 int * wind_current_context_errno(void)
 {
-    if(!xnpod_asynch_p())
-        if(xnthread_test_flags(xnpod_current_thread(), IS_WIND_TASK))
-            return &wind_current_task()->errorStatus;
-
-    return NULL;
+    return xnthread_get_errno_location();
 }
 
 
@@ -129,7 +124,7 @@ int errnoOfTaskGet(TASK_ID task_id)
 
     check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC, goto error);
 
-    result = task->errorStatus;
+    result = wind_errnoget();
 
     xnlock_put_irqrestore(&nklock, s);
     return result;
@@ -149,7 +144,7 @@ STATUS errnoOfTaskSet(TASK_ID task_id, int status )
 
     check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC, goto error);
 
-    task->errorStatus = status;
+    wind_errnoset(status);
 
     xnlock_put_irqrestore(&nklock, s);
     return OK;

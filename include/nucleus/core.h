@@ -15,19 +15,31 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
+ *
+ * Core pod definitions. The core pod supports all APIs providing a
+ * system call interface to user-space applications. Core APIs, namely
+ * POSIX, native, RTDM and UVM, only use a sub-range of the available
+ * priority levels of the core pod, in order to have them exhibit a
+ * 1:1 mapping with Linux's SCHED_FIFO ascending priority
+ * scale. Non-core APIs may also rely on the core pod, provided they
+ * normalize the priority levels of their threads when calling the
+ * nucleus, in order to match the priority scale enforced by the
+ * former.
  */
 
 #ifndef _XENO_NUCLEUS_CORE_H
 #define _XENO_NUCLEUS_CORE_H
 
-/* Thread priority levels. */
+/* Global priority range supported by the core pod. */
+#define XNCORE_MIN_PRIO     0
+#define XNCORE_MAX_PRIO     256
+
+/* Priority sub-range used by core APIs. */
 #define XNCORE_LOW_PRIO     1
 #define XNCORE_HIGH_PRIO    99
-/* Extra level for IRQ servers in user-space. */
-#define XNCORE_IRQ_PRIO     (XNCORE_HIGH_PRIO + 1)
 
-#define XNCORE_MIN_PRIO     XNCORE_LOW_PRIO
-#define XNCORE_MAX_PRIO     XNCORE_IRQ_PRIO
+/* Priority of IRQ servers in user-space. */
+#define XNCORE_IRQ_PRIO     XNCORE_MAX_PRIO
 
 #ifdef __KERNEL__
 

@@ -105,7 +105,7 @@ int SKIN_INIT(posix)
     xnprintf("starting POSIX services.\n");
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    /* The POSIX skin is stacked over the shared Xenomai pod. */
+    /* The POSIX skin is stacked over the core pod. */
     err = xncore_attach();
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
     /* The POSIX skin is standalone. */

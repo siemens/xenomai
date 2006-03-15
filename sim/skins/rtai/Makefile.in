@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-SOURCES = $(nodist_librtai_s_a_SOURCES)
+SOURCES = $(nodist_librtai_sim_a_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -58,11 +58,11 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 libLIBRARIES_INSTALL = $(INSTALL_DATA)
 LIBRARIES = $(lib_LIBRARIES)
 ARFLAGS = cru
-librtai_s_a_AR = $(AR) $(ARFLAGS)
-librtai_s_a_LIBADD =
-nodist_librtai_s_a_OBJECTS = intr.$(OBJEXT) module.$(OBJEXT) \
+librtai_sim_a_AR = $(AR) $(ARFLAGS)
+librtai_sim_a_LIBADD =
+nodist_librtai_sim_a_OBJECTS = intr.$(OBJEXT) module.$(OBJEXT) \
 	sem.$(OBJEXT) task.$(OBJEXT) timer.$(OBJEXT)
-librtai_s_a_OBJECTS = $(nodist_librtai_s_a_OBJECTS)
+librtai_sim_a_OBJECTS = $(nodist_librtai_sim_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
 am__depfiles_maybe = depfiles
@@ -74,7 +74,7 @@ LTCOMPILE = $(LIBTOOL) --mode=compile --tag=CC $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link --tag=CC $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(nodist_librtai_s_a_SOURCES)
+SOURCES = $(nodist_librtai_sim_a_SOURCES)
 DIST_SOURCES =
 ETAGS = etags
 CTAGS = ctags
@@ -234,8 +234,8 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../include \
 	-I$(top_srcdir)/../include
 
-lib_LIBRARIES = librtai_s.a
-nodist_librtai_s_a_SOURCES = \
+lib_LIBRARIES = librtai_sim.a
+nodist_librtai_sim_a_SOURCES = \
 	intr.c \
 	module.c \
 	sem.c \
@@ -304,10 +304,10 @@ uninstall-libLIBRARIES:
 
 clean-libLIBRARIES:
 	-test -z "$(lib_LIBRARIES)" || rm -f $(lib_LIBRARIES)
-librtai_s.a: $(librtai_s_a_OBJECTS) $(librtai_s_a_DEPENDENCIES) 
-	-rm -f librtai_s.a
-	$(librtai_s_a_AR) librtai_s.a $(librtai_s_a_OBJECTS) $(librtai_s_a_LIBADD)
-	$(RANLIB) librtai_s.a
+librtai_sim.a: $(librtai_sim_a_OBJECTS) $(librtai_sim_a_DEPENDENCIES) 
+	-rm -f librtai_sim.a
+	$(librtai_sim_a_AR) librtai_sim.a $(librtai_sim_a_OBJECTS) $(librtai_sim_a_LIBADD)
+	$(RANLIB) librtai_sim.a
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

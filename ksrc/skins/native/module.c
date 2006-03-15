@@ -69,7 +69,7 @@ int SKIN_INIT(native)
     int err;
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    /* The native skin is stacked over the shared Xenomai pod. */
+    /* The native skin is stacked over the core pod. */
     err = xncore_attach();
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
     /* The native skin is standalone, there is no priority level to
@@ -84,7 +84,7 @@ int SKIN_INIT(native)
     err = __native_task_pkg_init();
 
     if (err)
-	goto fail;
+	goto cleanup_pod;
 
 #ifdef CONFIG_XENO_OPT_NATIVE_SEM
     err = __native_sem_pkg_init();
@@ -219,6 +219,14 @@ int SKIN_INIT(native)
 #endif /* CONFIG_XENO_OPT_NATIVE_SEM */
 
     __native_task_pkg_cleanup();
+
+ cleanup_pod:
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    xncore_detach(err);
+#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+    xnpod_shutdown(err);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
  fail:
 

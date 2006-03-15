@@ -20,55 +20,85 @@
 
 #include <vxworks/defs.h>
 
-
-
-
-typedef struct wind_msg
-{
-    xnholder_t link;
-
-#define link2wind_msg(laddr) \
-((wind_msg_t *)(((char *)laddr) - (int)(&((wind_msg_t *)0)->link)))
-
-    unsigned int length;
-    
-    char buffer[0];
-
-} wind_msg_t;
-
-
-typedef struct wind_msgq
-{
-    unsigned int magic;
-    
-    UINT msg_length;
-
-    xnholder_t * free_list;     /* simply linked list of free messages */
-
-    xnqueue_t msgq;             /* queue of messages available for reading */
-
-    xnholder_t link;            /* link in wind_msgq_t */
-
-#define link2wind_msgq(laddr) \
-((wind_msgq_t *)(((char *)laddr) - (int)(&((wind_msgq_t *)0)->link)))
-
-    xnsynch_t synchbase;        /* pended readers or writers */
-
-} wind_msgq_t;
-
-
 static xnqueue_t wind_msgq_q;
+
+static unsigned long msgq_ids;
 
 static	int msgq_destroy_internal(wind_msgq_t * queue);
 
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 
+static int msgq_read_proc (char *page,
+			   char **start,
+			   off_t off,
+			   int count,
+			   int *eof,
+			   void *data)
+{
+    wind_msgq_t *queue = (wind_msgq_t *)data;
+    char *p = page;
+    int len;
+    spl_t s;
 
+    p += sprintf(p,"porder=%s:mlength=%u:mcount=%d\n",
+		 xnsynch_test_flags(&queue->synchbase,XNSYNCH_PRIO) ? "prio" : "fifo",
+		 queue->msg_length,
+		 countq(&queue->msgq));
+
+    xnlock_get_irqsave(&nklock,s);
+
+    if (xnsynch_nsleepers(&queue->synchbase) > 0)
+	{
+	xnpholder_t *holder;
+	
+	/* Pended queue -- dump waiters. */
+
+	holder = getheadpq(xnsynch_wait_queue(&queue->synchbase));
+
+	while (holder)
+	    {
+	    xnthread_t *sleeper = link2thread(holder,plink);
+	    p += sprintf(p,"+%s\n",xnthread_name(sleeper));
+	    holder = nextpq(xnsynch_wait_queue(&queue->synchbase),holder);
+	    }
+	}
+
+    xnlock_put_irqrestore(&nklock,s);
+
+    len = (p - page) - off;
+    if (len <= off + count) *eof = 1;
+    *start = page + off;
+    if(len > count) len = count;
+    if(len < 0) len = 0;
+
+    return len;
+}
+
+extern xnptree_t __vxworks_ptree;
+
+static xnpnode_t msgq_pnode = {
+
+    .dir = NULL,
+    .type = "msgq",
+    .entries = 0,
+    .read_proc = &msgq_read_proc,
+    .write_proc = NULL,
+    .root = &__vxworks_ptree,
+};
+
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
+
+static xnpnode_t msgq_pnode = {
+
+    .type = "msgq"
+};
+
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 void wind_msgq_init (void)
 {
     initq(&wind_msgq_q);
 }
-
 
 void wind_msgq_cleanup (void)
 {
@@ -77,9 +107,6 @@ void wind_msgq_cleanup (void)
     while((holder = getheadq(&wind_msgq_q)) != NULL)
         msgq_destroy_internal(link2wind_msgq(holder));
 }
-
-
-
 
 /* free_msg: return a message to the free list */
 static inline void free_msg(wind_msgq_t * queue, wind_msg_t * msg)
@@ -128,8 +155,8 @@ MSG_Q_ID msgQCreate ( int nb_msgs, int length, int flags )
 {
     wind_msgq_t *queue;
     xnflags_t bflags = 0;
-    char *msgs_mem;
     int i, msg_size;
+    char *msgs_mem;
     spl_t s;
     
     check_NOT_ISR_CALLABLE(return 0);
@@ -161,7 +188,6 @@ MSG_Q_ID msgQCreate ( int nb_msgs, int length, int flags )
 
     xnsynch_init(&queue->synchbase, bflags);
 
-    
     msg_size = sizeof(wind_msg_t)+length;
 
     for( i=0 ; i<nb_msgs; ++i, msgs_mem += msg_size )
@@ -173,6 +199,17 @@ MSG_Q_ID msgQCreate ( int nb_msgs, int length, int flags )
     appendq(&wind_msgq_q, &queue->link);
     xnlock_put_irqrestore(&nklock, s);
     
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    sprintf(queue->name,"mq%lu",msgq_ids++);
+
+    if (xnregistry_enter(queue->name,queue,&queue->handle,&msgq_pnode))
+	{
+	wind_errnoset(S_objLib_OBJ_ID_ERROR);
+	msgQDelete((MSG_Q_ID)queue);
+	return 0;
+	}
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
     return (MSG_Q_ID) queue;
 }
 
@@ -286,7 +323,7 @@ int msgQReceive ( MSG_Q_ID qid, char *buf,UINT bytes,int to )
 }
 
 
-STATUS msgQSend (MSG_Q_ID qid ,char * buf, UINT bytes,int to, int prio)
+STATUS msgQSend (MSG_Q_ID qid ,const char * buf, UINT bytes,int to, int prio)
 {
     wind_msgq_t * queue;
     xnticks_t timeout;
@@ -376,6 +413,9 @@ STATUS msgQSend (MSG_Q_ID qid ,char * buf, UINT bytes,int to, int prio)
 static int msgq_destroy_internal(wind_msgq_t * queue)
 {
     int s = xnsynch_destroy(&queue->synchbase);
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    xnregistry_remove(queue->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
     wind_mark_deleted(queue);
     removeq(&wind_msgq_q, &queue->link);
     xnfree(queue);

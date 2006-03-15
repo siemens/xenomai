@@ -16,9 +16,9 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../include \
 	-I$(top_srcdir)/../include
 
-lib_LIBRARIES = librtai_s.a
+lib_LIBRARIES = librtai_sim.a
 
-nodist_librtai_s_a_SOURCES = \
+nodist_librtai_sim_a_SOURCES = \
 	intr.c \
 	module.c \
 	sem.c \

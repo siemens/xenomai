@@ -19,31 +19,26 @@
  */
 
 #include <vxworks/defs.h>
+#ifdef __KERNEL__
+#include <vxworks/syscall.h>
+#endif /* __KERNEL__ */
 
 MODULE_DESCRIPTION("VxWorks(R) virtual machine");
 MODULE_AUTHOR("gilles.chanteperdrix@laposte.net");
 MODULE_LICENSE("GPL");
 
-static xnpod_t pod;
+#if !defined(__KERNEL__) || !defined(CONFIG_XENO_OPT_PERVASIVE)
+static xnpod_t __vxworks_pod;
+#endif /* !__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
 
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
+xnptree_t __vxworks_ptree = {
 
-
-static void wind_shutdown (int xtype)
-{
-    xnpod_lock_sched();
-
-    wind_sysclk_cleanup();
-    wind_msgq_cleanup();
-    wind_sem_cleanup();
-    wind_wd_cleanup();
-    wind_task_hooks_cleanup();
-    wind_task_cleanup();
-
-    xnpod_shutdown(xtype);
-}
-
-
-
+    .dir = NULL,
+    .name = "vxworks",
+    .entries = 0,
+};
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 int SKIN_INIT(vxworks)
 {
@@ -53,7 +48,15 @@ int SKIN_INIT(vxworks)
     nktickdef = 10000000;	/* Defaults to 10ms. */
 #endif
 
-    err = xnpod_init(&pod,255,0,0);
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    /* The VxWorks skin is stacked over the core pod. */
+    err = xncore_attach();
+#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+    /* The native skin is standalone, there is no priority level to
+       reserve for interrupt servers in user-space, since there is no
+       user-space support in the first place. */
+    err = xnpod_init(&__vxworks_pod,255,0,0);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
     if (err != 0)
         return err;
@@ -65,7 +68,11 @@ int SKIN_INIT(vxworks)
 
     if (err != 0)
         {
-        xnpod_shutdown(err);    
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+	xncore_detach(err);
+#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+	xnpod_shutdown(err);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
         return err;
         }
 
@@ -74,6 +81,9 @@ int SKIN_INIT(vxworks)
     wind_sem_init();
     wind_msgq_init();
     wind_task_init();
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    wind_syscall_init();
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
     
     xnprintf("starting VxWorks services.\n");
 
@@ -83,7 +93,18 @@ int SKIN_INIT(vxworks)
 void SKIN_EXIT(vxworks)
 {
     xnprintf("stopping VxWorks services.\n");
-    wind_shutdown(XNPOD_NORMAL_EXIT);
+    wind_task_cleanup();
+    wind_sysclk_cleanup();
+    wind_msgq_cleanup();
+    wind_sem_cleanup();
+    wind_wd_cleanup();
+    wind_task_hooks_cleanup();
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    wind_syscall_cleanup();
+    xncore_detach(XNPOD_NORMAL_EXIT);
+#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+    xnpod_shutdown(XNPOD_NORMAL_EXIT);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 }
 
 module_init(__vxworks_skin_init);

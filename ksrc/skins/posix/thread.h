@@ -97,17 +97,14 @@ struct pse51_thread {
 
 #define pse51_current_thread() thread2pthread(xnpod_current_thread())
 
-int *pse51_errno_location(void);
-
 static inline void thread_set_errno (int err)
 {
-    if(!xnpod_interrupt_p())
-        *pse51_errno_location() = err;
+    *xnthread_get_errno_location() = err;
 }
 
 static inline int thread_get_errno (void)
 {
-    return !xnpod_interrupt_p() ? *pse51_errno_location() : 0;
+    return *xnthread_get_errno_location();
 }
 
 #define thread_name(thread) ((thread)->attr.name)

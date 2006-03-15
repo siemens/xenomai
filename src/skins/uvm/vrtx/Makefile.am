@@ -1,7 +1,7 @@
 
-lib_LIBRARIES = libvrtx.a
+lib_LIBRARIES = libvrtx_uvm.a
 
-nodist_libvrtx_a_SOURCES = \
+nodist_libvrtx_uvm_a_SOURCES = \
 	event.c \
 	heap.c \
 	mb.c \
@@ -18,7 +18,7 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-D__XENO_UVM__
 
-CLEANFILES = $(nodist_libvrtx_a_SOURCES)
+CLEANFILES = $(nodist_libvrtx_uvm_a_SOURCES)
 
-$(nodist_libvrtx_a_SOURCES): Makefile
+$(nodist_libvrtx_uvm_a_SOURCES): Makefile
 	$(LN_S) -f $(top_srcdir)/ksrc/skins/vrtx/$@
