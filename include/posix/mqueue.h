@@ -40,6 +40,10 @@
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__) || !HAVE_MQUEUE
 
+#ifndef MQ_PRIO_MAX
+#define MQ_PRIO_MAX 32768
+#endif
+
 #ifndef __KERNEL__
 typedef unsigned long mqd_t;
 #endif /* !__KERNEL__ */
