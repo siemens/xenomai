@@ -21,7 +21,7 @@ Thread cancellation.
 Cancellation is the mechanism by which a thread can terminate the execution of a Xenomai POSIX skin thread (created with <a class="el" href="group__posix__thread.html#ga8">pthread_create()</a>). More precisely, a thread can send a cancellation request to a Xenomai POSIX skin thread and depending on its cancelability type (see <a class="el" href="group__posix__cancel.html#ga4">pthread_setcanceltype()</a>) and state (see <a class="el" href="group__posix__cancel.html#ga5">pthread_setcancelstate()</a>), the target thread can then either ignore the request, honor it immediately, or defer it till it reaches a cancellation point. When threads are first created by <a class="el" href="group__posix__thread.html#ga8">pthread_create()</a>, they always defer cancellation requests.<p>
 When a thread eventually honors a cancellation request, it behaves as if <em>pthread_exit(PTHREAD_CANCELED)</em> was called. All cleanup handlers are executed in reverse order, finalization functions for thread-specific data are called, and finally the thread stops executing. If the canceled thread was joinable, the return value PTHREAD_CANCELED is provided to whichever thread calls <a class="el" href="group__posix__thread.html#ga12">pthread_join()</a> on it. See <a class="el" href="group__posix__thread.html#ga11">pthread_exit()</a> for more information.<p>
 Cancellation points are the points where the thread checks for pending cancellation requests and performs them. The POSIX threads functions <a class="el" href="group__posix__thread.html#ga12">pthread_join()</a>, <a class="el" href="group__posix__cond.html#ga10">pthread_cond_wait()</a>, <a class="el" href="group__posix__cond.html#ga11">pthread_cond_timedwait()</a>, <a class="el" href="group__posix__cancel.html#ga6">pthread_testcancel()</a>, <a class="el" href="group__posix__sem.html#ga13">sem_wait()</a>, <a class="el" href="group__posix__sem.html#ga14">sem_timedwait()</a>, <a class="el" href="group__posix__signal.html#ga30">sigwait()</a> and <a class="el" href="group__posix__signal.html#ga31">sigwaitinfo()</a> are cancellation points.<p>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_09.html#tag_02_09_05">http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_09.html#tag_02_09_05</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_09.html#tag_02_09_05">Specification.</a> </dd></dl>
 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
@@ -80,7 +80,7 @@ When the cancellation request is handled and before the thread is terminated, th
 an error number if:<ul>
 <li>ESRCH, the thread <em>thread</em> was not found.</li></ul>
 </dd></dl>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cancel.html">http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cancel.html</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cancel.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
@@ -122,7 +122,7 @@ This service may be called at any place, but for maximal portability, should onl
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
 <li>Xenomai POSIX skin kernel-space thread,</li><li>Xenomai POSIX skin user-space thread (switches to primary mode).</li></ul>
 </dd></dl>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_pop.html">http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_pop.html</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_pop.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
@@ -174,7 +174,7 @@ The routines registered with this service get called in LIFO order when the call
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
 <li>Xenomai POSIX skin kernel-space thread,</li><li>Xenomai POSIX skin user-space thread (switches to primary mode).</li></ul>
 </dd></dl>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_push.html">http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_push.html</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_push.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
@@ -231,7 +231,7 @@ an error number if:<ul>
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
 <li>Xenomai POSIX skin kernel-space thread,</li><li>Xenomai POSIX skin user-space thread (switches to primary mode).</li></ul>
 </dd></dl>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcancelstate.html">http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcancelstate.html</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcancelstate.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
@@ -288,7 +288,7 @@ an error number if:<ul>
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
 <li>Xenomai POSIX skin kernel-space thread,</li><li>Xenomai POSIX skin user-space thread (switches to primary mode).</li></ul>
 </dd></dl>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcanceltype.html">http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcanceltype.html</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcanceltype.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
@@ -324,11 +324,11 @@ This function is a cancellation point. It has no effect if cancellation is disab
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
 <li>Xenomai POSIX skin kernel-space thread,</li><li>Xenomai POSIX skin user-space thread (switches to primary mode).</li></ul>
 </dd></dl>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_testcancel.html">http://www.opengroup.org/onlinepubs/000095399/functions/pthread_testcancel.html</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_testcancel.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Mar 11 15:11:59 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Wed Mar 15 15:48:44 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

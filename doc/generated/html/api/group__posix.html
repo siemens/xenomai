@@ -15,7 +15,7 @@ Collaboration diagram for POSIX skin.:<center><table><tr><td><img src="group__po
 <area href="group__posix__mutex.html" shape="rect" coords="200,104,314,128" alt="">
 <area href="group__posix__mq.html" shape="rect" coords="168,152,346,176" alt="">
 <area href="group__posix__tsd.html" shape="rect" coords="184,200,330,224" alt="">
-<area href="group__posix__time.html" shape="rect" coords="192,248,322,272" alt="">
+<area href="group__posix__time.html" shape="rect" coords="165,248,349,272" alt="">
 <area href="group__posix__shm.html" shape="rect" coords="170,296,344,320" alt="">
 <area href="group__posix__sem.html" shape="rect" coords="180,344,334,368" alt="">
 <area href="group__posix__signal.html" shape="rect" coords="196,392,318,416" alt="">
@@ -23,12 +23,41 @@ Collaboration diagram for POSIX skin.:<center><table><tr><td><img src="group__po
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Xenomai POSIX skin is an implementation of a small subset of the Single Unix specification over Xenomai generic RTOS core. 
 <p>
-
+The following table gives equivalence between POSIX skin services and native skin services.<p>
+<center> <table border="1" cellspacing="3" cellpadding="3">
+<tr>
+<th>native skin services</th><th>POSIX skin services </th></tr>
+<tr>
+<td><a class="el" href="group__alarm.html">Alarm services.</a> </td><td><a class="el" href="group__posix__time.html">Clocks and timers services.</a> </td></tr>
+<tr>
+<td><a class="el" href="group__cond.html">Condition variable services.</a> </td><td><a class="el" href="group__posix__cond.html">Condition variables services.</a> </td></tr>
+<tr>
+<td><a class="el" href="group__event.html">Event flag group services.</a> </td><td>no direct equivalence, <br>
+ see <a class="el" href="group__posix__cond.html">Condition variables services.</a> </td></tr>
+<tr>
+<td><a class="el" href="group__native__heap.html">Memory heap services.</a> </td><td><a class="el" href="group__posix__shm.html">Shared memory services.</a> </td></tr>
+<tr>
+<td><a class="el" href="group__interrupt.html">Interrupt management services.</a> </td><td>not documented yet </td></tr>
+<tr>
+<td><a class="el" href="group__mutex.html">Mutex services.</a> </td><td><a class="el" href="group__posix__mutex.html">Mutex services.</a> </td></tr>
+<tr>
+<td><a class="el" href="group__pipe.html">Message pipe services.</a> </td><td>no direct equivalence, <br>
+ see <a class="el" href="group__posix__mq.html">Message queues services.</a> </td></tr>
+<tr>
+<td><a class="el" href="group__native__queue.html">Message queue services.</a> </td><td><a class="el" href="group__posix__mq.html">Message queues services.</a> </td></tr>
+<tr>
+<td><a class="el" href="group__semaphore.html">Counting semaphore services.</a> </td><td><a class="el" href="group__posix__sem.html">Semaphores services.</a> </td></tr>
+<tr>
+<td><a class="el" href="group__task.html">Task management services.</a> </td><td><a class="el" href="group__posix__thread.html">Threads management services.</a> </td></tr>
+<tr>
+<td><a class="el" href="group__native__timer.html">Timer management services.</a> </td><td><a class="el" href="group__posix__time.html">Clocks and timers services.</a> </td></tr>
+</table>
+</center> 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Modules</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__time.html">Clocks and timers.</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__time.html">Clocks and timers services.</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Clocks and timers services. <br></td></tr>
 
@@ -74,7 +103,7 @@ Xenomai POSIX skin is an implementation of a small subset of the Single Unix spe
 
 <p>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Mar 11 15:12:00 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Wed Mar 15 15:48:45 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
