@@ -53,7 +53,8 @@ Collaboration diagram for Clock Services:<center><table><tr><td><img src="group_
 Get system time. 
 <p>
 <dl compact><dt><b>Returns:</b></dt><dd>The system time in nanoseconds is returned</dd></dl>
-<dl compact><dt><b>Note:</b></dt><dd>The nucleus timer has to be started to obtain valid results.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>The resolution of this service depends on the system timer. In particular, if the system timer is running in periodic mode, the return value will be limited to multiples of the timer tick period.<p>
+The system timer may have to be started to obtain valid results. Wether this happens automatically (as on Xenomai) or is controlled by the application depends on the RTDM host environment.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -62,7 +63,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Mar 11 15:11:57 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Wed Mar 15 15:48:43 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

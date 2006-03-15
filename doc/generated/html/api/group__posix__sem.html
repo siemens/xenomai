@@ -94,12 +94,12 @@ This service fails if <em>sm</em> is an unnamed semaphore.<p>
 <dl compact><dt><b>Return values:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>and set <em>errno</em> if:<ul>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
 <li>EINVAL, the semaphore <em>sm</em> is invalid or is an unnamed semaphore.</li></ul>
 </td></tr>
   </table>
 </dl>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_close.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_close.html</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_close.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
@@ -141,12 +141,12 @@ This service fails if <em>sm</em> is a named semaphore.<p>
 <dl compact><dt><b>Return values:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success, </td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>and set <em>errno</em> if:<ul>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
 <li>EINVAL, the semaphore <em>sm</em> is invalid or a named semaphore.</li></ul>
 </td></tr>
   </table>
 </dl>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_destroy.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_destroy.html</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_destroy.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
@@ -202,7 +202,7 @@ If the semaphore is currently locked, the value stored is zero.<p>
 </td></tr>
   </table>
 </dl>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_getvalue.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_getvalue.html</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_getvalue.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
@@ -261,12 +261,12 @@ This service fails if <em>sm</em> is already initialized or is a named semaphore
 <dl compact><dt><b>Return values:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success, </td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>and set <em>errno</em> if:<ul>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
 <li>EBUSY, the semaphore <em>sm</em> was already initialized;</li><li>ENOSPC, insufficient memory exists in the system heap to initialize the semaphore, increase CONFIG_XENO_OPT_SYS_HEAPSZ;</li><li>EINVAL, the <em>value</em> argument exceeds <em>SEM_VALUE_MAX</em>.</li></ul>
 </td></tr>
   </table>
 </dl>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_init.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_init.html</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_init.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
@@ -322,14 +322,14 @@ If <a class="el" href="group__posix__sem.html#ga7">sem_open()</a> is called from
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>the name of the semaphore to be created;</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>oflags</em>&nbsp;</td><td>creation flags.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>oflags</em>&nbsp;</td><td>flags.</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>the address of the named semaphore on success; <p>
-SEM_FAILED and set <em>errno</em> if:<ul>
+SEM_FAILED with <em>errno</em> set if:<ul>
 <li>ENAMETOOLONG, the length of the <em>name</em> argument exceeds 64 characters;</li><li>EEXIST, the bits <em>O_CREAT</em> and <em>O_EXCL</em> were set in <em>oflags</em> and the named semaphore already exists;</li><li>ENOENT, the bit <em>O_CREAT</em> is not set in <em>oflags</em> and the named semaphore does not exist;</li><li>ENOSPC, insufficient memory exists in the system heap to create the semaphore, increase CONFIG_XENO_OPT_SYS_HEAPSZ;</li><li>EINVAL, the <em>value</em> argument exceeds <em>SEM_VALUE_MAX</em>.</li></ul>
 </dd></dl>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_open.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_open.html</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_open.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
@@ -375,7 +375,7 @@ If no thread is currently blocked on this semaphore, its count is incremented, o
 </td></tr>
   </table>
 </dl>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_post.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_post.html</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_post.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
@@ -433,7 +433,7 @@ This serivce is equivalent to <a class="el" href="group__posix__sem.html#ga13">s
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
 <li>Xenomai kernel-space thread,</li><li>Xenomai user-space thread (switches to primary mode).</li></ul>
 </dd></dl>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_timedwait.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_timedwait.html</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_timedwait.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
@@ -523,7 +523,7 @@ When a semaphore is destroyed, the memory it used is returned to the system heap
 </td></tr>
   </table>
 </dl>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_unlink.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_unlink.html</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_unlink.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
@@ -572,11 +572,11 @@ This service is a cancellation point for Xenomai POSIX skin threads (created wit
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
 <li>Xenomai kernel-space thread,</li><li>Xenomai user-space thread (switches to primary mode).</li></ul>
 </dd></dl>
-<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_wait.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_wait.html</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_wait.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Mar 11 15:12:00 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Wed Mar 15 15:48:46 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
