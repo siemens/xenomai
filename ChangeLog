@@ -1,3 +1,9 @@
+2006-03-15  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/registry.c (pse51_desc_create): Return EMFILE
+	or ENOSPC instead of ENFILE or ENOMEM when failing to create a
+	descriptor.
+
 2006-03-13  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/rtdm/drvlib.c (rtdm_clock_read): Update and clarify

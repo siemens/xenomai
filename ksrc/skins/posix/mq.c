@@ -44,8 +44,6 @@ struct pse51_mq {
 #define node2mq(naddr) \
     ((pse51_mq_t *) (((char *)naddr) - offsetof(pse51_mq_t, nodebase)))
 
-    unsigned long flags;
-
     xnpqueue_t queued;
     xnsynch_t receivers;
     xnsynch_t senders;
@@ -85,6 +83,11 @@ typedef struct pse51_direct_msg {
 
 static xnqueue_t pse51_mqq;
 
+static struct mq_attr default_attr = {
+    mq_maxmsg: 128,
+    mq_msgsize: 128,
+};
+
 static pse51_msg_t *pse51_mq_msg_alloc(pse51_mq_t *mq)
 {
     xnpholder_t *holder = (xnpholder_t *) getq(&mq->avail);
@@ -111,7 +114,9 @@ static int pse51_mq_init(pse51_mq_t *mq, const struct mq_attr *attr)
     if (xnpod_asynch_p() || !xnpod_root_p())
         return EPERM;
 
-    if(!attr->mq_maxmsg)
+    if (!attr)
+        attr = &default_attr;
+    else if (attr->mq_maxmsg <= 0 || attr->mq_msgsize <= 0)
         return EINVAL;
 
     msgsize = attr->mq_msgsize + sizeof(pse51_msg_t);
@@ -128,9 +133,8 @@ static int pse51_mq_init(pse51_mq_t *mq, const struct mq_attr *attr)
     if (!mem)
         return ENOSPC;
 
-    mq->flags = 0;
     mq->memsize = memsize;
-    initpq(&mq->queued, xnqueue_down, 0);
+    initpq(&mq->queued, xnqueue_down, MQ_PRIO_MAX);
     xnsynch_init(&mq->receivers, XNSYNCH_PRIO | XNSYNCH_NOPIP);
     xnsynch_init(&mq->senders, XNSYNCH_PRIO | XNSYNCH_NOPIP);
     mq->mem = mem;
@@ -170,6 +174,64 @@ static void pse51_mq_destroy(pse51_mq_t *mq)
 /**
  * Open a message queue.
  *
+ * This service establishes a binding between the message queue named @a name
+ * and the calling context.
+ *
+ * One of the following values should be set in @a oflags:
+ * - O_RDONLY, meaning that the returned queue descriptor may only be used for
+ *   receiving messages;
+ * - O_WRONLY, meaning that the returned queue descriptor may only be used for
+ *   sending messages;
+ * - O_RDWR, meaning that the returned queue descriptor may be used for both
+ *   sending and receiving messages.
+ *
+ * If no message queue named @a name exists, and @a oflags has the @a O_CREAT
+ * bit set, the message queue is created by this function, using two more
+ * arguments:
+ * - a @a mode argument, of type @b mode_t, currently ignored;
+ * - a @a attr argument, pointer to an @b mq_attr structure, specifying the
+ *   attributes of the new messages queue.
+ *
+ * If @a oflags has the two bits @a O_CREAT and @a O_EXCL set and the messages
+ * queue alread exists, this service fails.
+ *
+ * If the O_NONBLOCK bit is set in @a oflags, the mq_send(), mq_receive(),
+ * mq_timedsend() and mq_timedreceive() services return @a -1 with @a errno set
+ * to EAGAIN instead of blocking their caller.
+ *
+ * The following arguments of the @b mq_attr structure are used when creating a
+ * messages queue:
+ * - @a mq_maxmsg is the maximum number of messages in the queue (128 by
+ *   default);
+ * - @a mq_msgsize is the maximum size of each message (128 by default).
+ *
+ * @a name may be any arbitrary string, in which slashes have no particular
+ * meaning. However, for portability, using a name which starts with a slash and
+ * contains no other slash is recommended.
+ *
+ * @param name name of the message queue to open;
+ *
+ * @param oflags flags.
+ *
+ * @return a message queue descriptor on success;
+ * @return -1 with @a errno set if:
+ * - ENAMETOOLONG, the length of the @a name argument exceeds 64 characters;
+ * - EEXIST, the bits @a O_CREAT and @a O_EXCL were set in @a oflags and the
+ *   messages queue already exists;
+ * - ENOENT, the bit @a O_CREAT is not set in @a oflags and the messages queue
+ *   does not exist;
+ * - ENOSPC, allocation of system memory failed, or insufficient memory exists
+ *   in the system heap to create the queue, try increasing
+ *   CONFIG_XENO_OPT_SYS_HEAPSZ;
+ * - EPERM, attempting to create a message queue from an invalid context;
+ * - EINVAL, the @a attr argument is invalid;
+ * - EMFILE, too many descriptors are currently open.
+ *
+ * @par Valid contexts.
+ * When creating a message queue, only the following contexts are valid:
+ * - kernel module initialization or cleanup routine;
+ * - user-space thread (Xenomai threads switch to secondary mode).
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_open.html">
  * Specification.</a>
@@ -205,7 +267,7 @@ mqd_t mq_open(const char *name, int oflags, ...)
     
     if(!mq)
         {
-        err = ENOMEM;
+        err = ENOSPC;
         goto error;
         }
 
@@ -271,6 +333,21 @@ mqd_t mq_open(const char *name, int oflags, ...)
 /**
  * Close a message queue.
  *
+ * This service closes the message queue descriptor @a fd. The message queue is
+ * destroyed only when all open descriptors are closed, and when unlinked with a
+ * call to the mq_unlink() service.
+ *
+ * @param fd message queue descriptor.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EBADF, @a fd is an invalid message queue descriptor;
+ * - EPERM, the caller context is invalid.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - user-space thread (Xenomai threads switch to secondary mode).
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_close.html">
  * Specification.</a>
@@ -330,6 +407,23 @@ int mq_close(mqd_t fd)
 /**
  * Unlink a message queue.
  *
+ * This service unlinks the message queue named @a name. The message queue is
+ * not destroyed until all queue descriptors obtained with the mq_open() service
+ * are closed with the mq_close() service. However, the unlinked queue may no
+ * longer be reached with the mq_open() service.
+ *
+ * @param name the name of the message queue to be unlinked.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - ENAMETOOLONG, the length of the @a name argument exceeds 64 characters;
+ * - ENOENT, the messages queue does not exist;
+ * - EPERM, the caller context is invalid.
+ * 
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - user-space thread (Xenomai threads switch to secondary mode).
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_unlink.html">
  * Specification.</a>
@@ -387,7 +481,7 @@ static int pse51_mq_trysend(pse51_desc_t *desc,
     flags = pse51_desc_getflags(desc) & PSE51_PERMS_MASK;
 
     if(flags != O_WRONLY && flags != O_RDWR)
-        return EPERM;
+        return EBADF;
 
     if(len > mq->attr.mq_msgsize)
         return EMSGSIZE;
@@ -445,7 +539,7 @@ static int pse51_mq_tryrcv(pse51_desc_t *desc,
     flags = pse51_desc_getflags(desc) & PSE51_PERMS_MASK;
 
     if(flags != O_RDONLY && flags != O_RDWR)
-        return EPERM;
+        return EBADF;
 
     if(*lenp < mq->attr.mq_msgsize)
         return EMSGSIZE;
@@ -476,7 +570,8 @@ static int pse51_mq_timedsend_inner(mqd_t fd,
 {
     int rc;
 
-    for (;;) {
+    for (;;)
+        {
         xnticks_t to = abs_to;
         pse51_desc_t *desc;
         pse51_mq_t *mq;
@@ -586,7 +681,96 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
 }
 
 /**
- * Try during a bounded time to send a message to a message queue.
+ * Send a message to a messages queue.
+ *
+ * If the message queue @a fd is not full, this service sends the message of
+ * length @a len pointed to by the argument @a buffer, with priority @a prio. A
+ * message with greater priority is inserted in the queue before a message with
+ * lower priority.
+ *
+ * If the message queue is full and the flag @a O_NONBLOCK is not set, the
+ * calling thread is suspended until the queue is not full. If the message queue
+ * is not full and the flag @a O_NONBLOCK is set, the message is not sent and
+ * the service returns immediately -1 with @a errno set to EAGAIN.
+ *
+ * @param fd messages queue descriptor;
+ *
+ * @param buffer pointer to the message to be sent;
+ *
+ * @param len length of the message;
+ *
+ * @param prio priority of the message.
+ *
+ * @return 0 and send a message on success;
+ * @return -1 with no message sent and @a errno set if:
+ * - EBADF, @a fd is not a valid messages queue descriptor open for writing;
+ * - EMSGSIZE, the message length exceeds the @a mq_msgsize attribute of the
+ *   messages queue;
+ * - EAGAIN, the flag O_NONBLOCK is set for the descriptor @a fd and the message
+ *   queue is full;
+ * - EPERM, the caller context is invalid;
+ * - EINTR, the service was interrupted by a signal.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space thread,
+ * - Xenomai user-space thread (switches to primary mode).
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_send.html">
+ * Specification.</a>
+ * 
+ */
+int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
+{
+    int err;
+    spl_t s;
+
+    xnlock_get_irqsave(&nklock, s);
+    err = pse51_mq_timedsend_inner(fd, buffer, len, prio, XN_INFINITE);
+    xnlock_put_irqrestore(&nklock, s);
+
+    if(err)
+        {
+        thread_set_errno(err);
+        return -1;
+        }
+
+    return 0;
+}
+
+/**
+ * Attempt, during a bounded time, to send a message to a messages queue.
+ *
+ * This service is equivalent to mq_send(), except that if the message queue is
+ * full and the flag @a O_NONBLOCK is not set for the descriptor @a fd, the
+ * calling thread is only suspended until the timeout specified by @a
+ * abs_timeout expires.
+ *
+ * @param fd messages queue descriptor;
+ *
+ * @param buffer pointer to the message to be sent;
+ *
+ * @param len length of the message;
+ *
+ * @param prio priority of the message;
+ *
+ * @param abs_timeout the timeout, expressed as an absolute value of the
+ * CLOCK_REALTIME clock.
+ *
+ * @return 0 and send a message on success;
+ * @return -1 with no message sent and @a errno set if:
+ * - EBADF, @a fd is not a valid messages queue descriptor open for writing;
+ * - EMSGSIZE, the message length exceeds the @a mq_msgsize attribute of the
+ *   messages queue;
+ * - EAGAIN, the flag O_NONBLOCK is set for the descriptor @a fd and the message
+ *   queue is full;
+ * - EPERM, the caller context is invalid;
+ * - ETIMEDOUT, the specified timeout expired;
+ * - EINTR, the service was interrupted by a signal.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space thread,
+ * - Xenomai user-space thread (switches to primary mode).
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedsend.html">
@@ -625,20 +809,55 @@ int mq_timedsend(mqd_t fd,
 }
 
 /**
- * Send a message to a message queue.
+ * Receive a message from a messages queue.
+ *
+ * If the message queue @a fd is not empty and if @a len is greater than the @a
+ * mq_msgsize of the message queue, this service copies, at the address
+ * @a buffer, the queued message with the highest priority.
+ *
+ * If the queue is empty and the flag @a O_NONBLOCK is not set for the
+ * descriptor @a fd, the calling thread is suspended until some message is sent
+ * to the queue. If the queue is empty and the flag @a O_NONBLOCK is set for the
+ * descriptor @a fd, this service returns immediately -1 with @a errno set to
+ * EAGAIN.
+ *
+ * @param fd the queue descriptor;
+ *
+ * @param buffer the address where the received message will be stored on
+ * success;
+ *
+ * @param len @a buffer length;
+ *
+ * @param priop address where the priority of the received message will be
+ * stored on success.
+ *
+ * @return the message length, and copy a message at the address @a buffer on
+ * success;
+ * @return -1 with no message unqueued and @a errno set if:
+ * - EBADF, @a fd is not a valid descriptor open for reading;
+ * - EMSGSIZE, the length @a len is lesser than the message queue @a mq_msgsize
+ *   attribute;
+ * - EAGAIN, the queue is empty, and the flag @a O_NONBLOCK is set for the
+ *   descriptor @a fd;
+ * - EPERM, the caller context is invalid;
+ * - EINTR, the service was interrupted by a signal.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space thread,
+ * - Xenomai user-space thread (switches to primary mode).
  *
  * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_send.html">
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_receive.html">
  * Specification.</a>
  * 
  */
-int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
+ssize_t mq_receive(mqd_t fd, char *buffer, size_t len, unsigned *priop)
 {
     int err;
     spl_t s;
 
     xnlock_get_irqsave(&nklock, s);
-    err = pse51_mq_timedsend_inner(fd, buffer, len, prio, XN_INFINITE);
+    err = pse51_mq_timedrcv_inner(fd, buffer, &len, priop, XN_INFINITE);
     xnlock_put_irqrestore(&nklock, s);
 
     if(err)
@@ -647,11 +866,45 @@ int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
         return -1;
         }
 
-    return 0;
+    return len;    
 }
 
 /**
- * Try during a bounded time to receive a message from a message queue.
+ * Attempt, during a bounded time, to receive a message from a messages queue.
+ *
+ * This service is equivalent to mq_receive(), except that if the flag @a
+ * O_NONBLOCK is not set for the descriptor @a fd and the message queue is
+ * empty, the calling thread is only suspended until the timeout @a abs_timeout
+ * expires.
+ *
+ * @param fd the queue descriptor;
+ *
+ * @param buffer the address where the received message will be stored on
+ * success;
+ *
+ * @param len @a buffer length;
+ *
+ * @param priop address where the priority of the received message will be
+ * stored on success.
+ *
+ * @param abs_timeout the timeout, expressed as an absolute value of the
+ * CLOCK_REALTIME clock.
+ *
+ * @return the message length, and copy a message at the address @a buffer on
+ * success;
+ * @return -1 with no message unqueued and @a errno set if:
+ * - EBADF, @a fd is not a valid descriptor open for reading;
+ * - EMSGSIZE, the length @a len is lesser than the message queue @a mq_msgsize
+ *   attribute;
+ * - EAGAIN, the queue is empty, and the flag @a O_NONBLOCK is set for the
+ *   descriptor @a fd;
+ * - EPERM, the caller context is invalid;
+ * - EINTR, the service was interrupted by a signal;
+ * - ETIMEDOUT, the specified timeout expired.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space thread,
+ * - Xenomai user-space thread (switches to primary mode).
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedreceive.html">
@@ -690,33 +943,25 @@ ssize_t mq_timedreceive(mqd_t fd,
 }
 
 /**
- * Receive a message from a message queue.
+ * Get the attributes object of a messages queue.
  *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_receive.html">
- * Specification.</a>
- * 
- */
-ssize_t mq_receive(mqd_t fd, char *buffer, size_t len, unsigned *priop)
-{
-    int err;
-    spl_t s;
-
-    xnlock_get_irqsave(&nklock, s);
-    err = pse51_mq_timedrcv_inner(fd, buffer, &len, priop, XN_INFINITE);
-    xnlock_put_irqrestore(&nklock, s);
-
-    if(err)
-        {
-        thread_set_errno(err);
-        return -1;
-        }
-
-    return len;    
-}
-
-/**
- * Get the attribute object of a message queue.
+ * This service stores, at the address @a attr, the attributes of the messages
+ * queue descriptor @a fd.
+ *
+ * The following attributes are set:
+ * - @a mq_flags, flags of the message queue descriptor @a fd;
+ * - @a mq_maxmsg, maximum number of messages in the messages queue;
+ * - @a mq_msgsize, maximum message size;
+ * - @a mq_curmsgs, number of messages currently in the queue.
+ *
+ * @param fd messages queue descriptor;
+ *
+ * @param attr address where the messages queue attributes will be stored on
+ * success.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EBADF, @a fd is not a valid descriptor.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_getattr.html">
@@ -752,6 +997,25 @@ int mq_getattr(mqd_t fd, struct mq_attr *attr)
 
 /**
  * Set flags of a message queue.
+ *
+ * This service sets the flags of the @a fd descriptor to the value of the
+ * member @a mq_flags of the @b mq_attr structure pointed to by @a attr.
+ *
+ * The previous value of the messages queue attribute are stored at the address
+ * @a oattr if it is not @a NULL.
+ *
+ * Only setting or clearing the O_NONBLOCK flag has an effect.
+ *
+ * @param fd messages queue descriptor;
+ *
+ * @param attr pointer to new attributes (only @a mq_flags is used);
+ *
+ * @param oattr if not @a NULL, address where previous messages queue attributes
+ * will be stored on success.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EBADF, @a fd is not a valid messages queue descriptor.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_setattr.html">
@@ -797,6 +1061,31 @@ int mq_setattr(mqd_t fd,
 /**
  * Register the current thread to be notified of message arrival at an empty
  * message queue.
+ *
+ * If @a evp is not @a NULL and is the address of a @b sigevent structure with
+ * the @a sigev_notify member set to SIGEV_SIGNAL, the current thread will be
+ * notified by a signal when a message is sent to message queue @a fd, and the
+ * queue is empty. After the first notification, the thread is automatically
+ * unregistered.
+ *
+ * If @a evp is @a NULL or the @a sigev_notify member is SIGEV_NONE, the current
+ * thread is unregistered.
+ *
+ * If the current thread is not a Xenomai POSIX skin thread (created with
+ * pthread_create()), this service fails.
+ *
+ * Only one thread may be registered at a time.
+ *
+ * @param fd messages queue descriptor;
+ *
+ * @param evp pointer to an event notification structure.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a evp is invalid;
+ * - EPERM, the caller context is invalid;
+ * - EBADF, @a fd is not a valid messages queue descriptor;
+ * - EBUSY, another thread is already registered.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_notify.html">

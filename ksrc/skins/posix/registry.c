@@ -361,12 +361,12 @@ int pse51_desc_create(pse51_desc_t **descp, pse51_node_t *node)
     pse51_desc_t *desc;
 
     if (fd == -1)
-        return ENFILE;
+        return EMFILE;
 
     desc = (pse51_desc_t *) xnmalloc(sizeof(*desc));
 
     if (!desc)
-        return ENOMEM;
+        return ENOSPC;
 
     pse51_reg.descs[fd] = desc;
     desc->node = node;

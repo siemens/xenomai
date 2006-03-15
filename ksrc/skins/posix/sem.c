@@ -124,7 +124,7 @@ static int pse51_sem_init_inner (pse51_sem_t *sem, int pshared, unsigned value)
  * @param value the semaphore initial value.
  *
  * @retval 0 on success,
- * @retval -1 and set @a errno if:
+ * @retval -1 with @a errno set if:
  * - EBUSY, the semaphore @a sm was already initialized;
  * - ENOSPC, insufficient memory exists in the system heap to initialize the
  *   semaphore, increase CONFIG_XENO_OPT_SYS_HEAPSZ;
@@ -203,7 +203,7 @@ int sem_init (sem_t *sm, int pshared, unsigned value)
  * @param sm the semaphore to be destroyed.
  *
  * @retval 0 on success,
- * @retval -1 and set @a errno if:
+ * @retval -1 with @a errno set if:
  * - EINVAL, the semaphore @a sm is invalid or a named semaphore.
  *
  * @see
@@ -264,10 +264,10 @@ int sem_destroy (sem_t *sm)
  *
  * @param name the name of the semaphore to be created;
  *
- * @param oflags creation flags.
+ * @param oflags flags.
  *
  * @return the address of the named semaphore on success;
- * @return SEM_FAILED and set @a errno if:
+ * @return SEM_FAILED with @a errno set if:
  * - ENAMETOOLONG, the length of the @a name argument exceeds 64 characters;
  * - EEXIST, the bits @a O_CREAT and @a O_EXCL were set in @a oflags and the
  *   named semaphore already exists;
@@ -373,7 +373,7 @@ sem_t *sem_open (const char *name, int oflags, ...)
  * @param sm the semaphore to be closed.
  *
  * @retval 0 on success;
- * @retval -1 and set @a errno if:
+ * @retval -1 with @a errno set if:
  * - EINVAL, the semaphore @a sm is invalid or is an unnamed semaphore.
  *
  * @see
