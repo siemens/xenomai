@@ -25,6 +25,7 @@ extern int __vxworks_muxid;
 void printErrno (int status)
 {
     const char *msg;
+    char buf[64];
     
     switch(status)
     {
@@ -80,10 +81,13 @@ void printErrno (int status)
         msg="S_memLib_NOT_ENOUGH_MEMORY";
         break;
     default:
-        msg="Unknown error";
+        if (strerror_r(status,buf,sizeof(buf)))
+	    msg = "Unknown error";
+	else
+	    msg = buf;
     }
 
-    fprintf(stderr,"Status: %s\n", msg);
+    fprintf(stderr,"Error code %d: %s\n", status, msg);
 }
 
 STATUS errnoOfTaskSet(TASK_ID task_id, int errcode)
