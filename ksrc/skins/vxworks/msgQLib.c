@@ -341,14 +341,12 @@ STATUS msgQSend (MSG_Q_ID qid ,const char * buf, UINT bytes,int to, int prio)
     error_check( prio != MSG_PRI_NORMAL && prio != MSG_PRI_URGENT,
                  0, return ERROR ); /* FIXME: find another status than 0 */
 
-    error_check( buf == NULL, 0, return ERROR );
-
+    error_check( buf == NULL || bytes <= 0 || bytes > queue->msg_length,
+                 S_msgQLib_INVALID_MSG_LENGTH, return ERROR);
+    
     xnlock_get_irqsave(&nklock, s);
 
     check_OBJ_ID_ERROR(qid,wind_msgq_t,queue,WIND_MSGQ_MAGIC,goto error);
-    
-    error_check( bytes <= 0 || bytes > queue->msg_length,
-                 S_msgQLib_INVALID_MSG_LENGTH, goto error);
     
     /* here, we are finished with error checking, the real work can begin */
     

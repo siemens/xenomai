@@ -498,8 +498,7 @@ STATUS taskUnsafe (void)
     switch(taskUnsafeInner(wind_current_task())) {
 
     case ERROR:
-	/* FIXME: which errno is applicable for unbalanced safe/unsafe calls? */
-	wind_errnoset(S_intLib_NOT_ISR_CALLABLE);
+	wind_errnoset(-EPERM);
 	xnlock_put_irqrestore(&nklock, s);
 	return ERROR;
 
@@ -520,11 +519,12 @@ STATUS taskDelay ( int ticks )
 {
     check_NOT_ISR_CALLABLE(return ERROR);
 
-    /* TODO: manage to detect that an interrupt occured and return EINTR
-       Postponed till implementation of signals */
-
     if (ticks > 0)
+	{
         xnpod_delay(ticks);
+        error_check(xnthread_test_flags(wind_current_task()->threadbase,XNBREAK), -EINTR,
+		    return ERROR);
+	}
     else
         xnpod_yield();
 
@@ -532,7 +532,6 @@ STATUS taskDelay ( int ticks )
 }
 
 
-/* TODO: check if TaskIdVerify or TaskTcb accept 0 as argument */
 STATUS taskIdVerify( TASK_ID task_id )
 {
     wind_task_t * task;
