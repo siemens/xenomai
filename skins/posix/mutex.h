@@ -91,8 +91,6 @@ static inline int mutex_unlock_internal(pthread_mutex_t *mutex)
     mutex->count = 0;
     if (xnsynch_wakeup_one_sleeper(&mutex->synchbase))
         xnpod_schedule();
-    else
-        xnsynch_set_owner(&mutex->synchbase, NULL);
 
     return 0;
 }
@@ -102,15 +100,21 @@ static inline int mutex_unlock_internal(pthread_mutex_t *mutex)
 static inline int mutex_save_count(pthread_mutex_t *mutex, unsigned *count_ptr)
 
 {
-    if (mutex->count == 0)       /* Mutex is not locked. */
+    if (!pse51_obj_active(mutex, PSE51_MUTEX_MAGIC, pthread_mutex_t))
         return EINVAL;
-
-    /* Save the count and force it to 1, so that mutex_unlock_internal can
-       do its job. */
+    
+    if (mutex->owner != pse51_current_thread() || !mutex->count)
+        return EPERM;
+    
+    mutex->owner = NULL;
     *count_ptr = mutex->count;
-    mutex->count = 1;
+    mutex->count = 0;
 
-    return mutex_unlock_internal(mutex);
+    xnsynch_wakeup_one_sleeper(&mutex->synchbase);
+    /* Do not reschedule here, releasing the mutex and suspension must be done
+       atomically in pthread_cond_*wait. */
+
+    return 0;
 }
 
 

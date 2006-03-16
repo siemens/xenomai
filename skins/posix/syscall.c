@@ -566,6 +566,9 @@ int __sem_open (struct task_struct *curr, struct pt_regs *regs)
                        (mode_t) __xn_reg_arg4(regs),
                        (unsigned) __xn_reg_arg5(regs));
 
+    if (sem == SEM_FAILED)
+        return -thread_get_errno();
+    
     handle = (unsigned long) sem;
 
     __xn_copy_to_user(curr,
