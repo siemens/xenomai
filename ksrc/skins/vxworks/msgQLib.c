@@ -338,9 +338,6 @@ STATUS msgQSend (MSG_Q_ID qid ,const char * buf, UINT bytes,int to, int prio)
         return ERROR;
     }
 
-    error_check( prio != MSG_PRI_NORMAL && prio != MSG_PRI_URGENT,
-                 0, return ERROR ); /* FIXME: find another status than 0 */
-
     xnlock_get_irqsave(&nklock, s);
 
     check_OBJ_ID_ERROR(qid,wind_msgq_t,queue,WIND_MSGQ_MAGIC,goto error);
@@ -392,10 +389,10 @@ STATUS msgQSend (MSG_Q_ID qid ,const char * buf, UINT bytes,int to, int prio)
         
         msg->length = bytes;
         memcpy(msg->buffer, buf, bytes);
-        if( prio == MSG_PRI_URGENT )
-            prependq(&queue->msgq, &msg->link);
-        else
+        if( prio == MSG_PRI_NORMAL )
             appendq(&queue->msgq, &msg->link);
+        else	/* Anything else will be interpreted as MSG_PRI_URGENT. */
+            prependq(&queue->msgq, &msg->link);
     }
 
     xnlock_put_irqrestore(&nklock, s);

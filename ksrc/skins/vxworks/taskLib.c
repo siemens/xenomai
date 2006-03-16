@@ -82,13 +82,8 @@ STATUS taskInit(WIND_TCB * pTcb,
         return ERROR;
         }
 
-    /* TODO: check what happens here in the real OS
-       if(flags & ~WIND_TASK_OPTIONS_MASK)
-       {
-       wind_task_errnoset();
-       return ERROR;
-       }
-    */
+    /* VxWorks does not check for invalid option flags, so we
+       neither. */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     if (flags & VX_SHADOW)
