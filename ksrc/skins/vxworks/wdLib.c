@@ -126,9 +126,7 @@ WDOG_ID wdCreate (void)
 #ifdef CONFIG_XENO_OPT_REGISTRY
     sprintf(wd->name,"wd%lu",wd_ids++);
 
-    err = xnregistry_enter(wd->name,wd,&wd->handle,&wd_pnode);
-
-    if (err)
+    if (xnregistry_enter(wd->name,wd,&wd->handle,&wd_pnode))
 	{
 	wind_errnoset(S_objLib_OBJ_ID_ERROR);
 	wdDelete((WDOG_ID)wd);
