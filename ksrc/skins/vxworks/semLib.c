@@ -482,9 +482,7 @@ static SEM_ID sem_create_internal(int flags, const sem_vtbl_t * vtbl, int count)
 #ifdef CONFIG_XENO_OPT_REGISTRY
     sprintf(sem->name,"sem%lu",sem_ids++);
 
-    err = xnregistry_enter(sem->name,sem,&sem->handle,&sem_pnode);
-
-    if (err)
+    if (xnregistry_enter(sem->name,sem,&sem->handle,&sem_pnode))
 	{
 	wind_errnoset(S_objLib_OBJ_ID_ERROR);
 	semDelete((SEM_ID)sem);

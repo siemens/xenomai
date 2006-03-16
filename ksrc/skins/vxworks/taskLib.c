@@ -159,11 +159,10 @@ STATUS taskInit(WIND_TCB * pTcb,
     xnlock_put_irqrestore(&nklock, s);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
-    err = xnregistry_enter(pTcb->name,
-			   pTcb,
-			   &xnthread_handle(&pTcb->threadbase),
-			   NULL);
-    if (err)
+    if (xnregistry_enter(pTcb->name,
+			 pTcb,
+			 &xnthread_handle(&pTcb->threadbase),
+			 NULL))
 	{
 	wind_errnoset(S_objLib_OBJ_ID_ERROR);
 	taskDeleteForce((TASK_ID)pTcb);
@@ -522,7 +521,7 @@ STATUS taskDelay ( int ticks )
     if (ticks > 0)
 	{
         xnpod_delay(ticks);
-        error_check(xnthread_test_flags(wind_current_task()->threadbase,XNBREAK), -EINTR,
+        error_check(xnthread_test_flags(&wind_current_task()->threadbase,XNBREAK), -EINTR,
 		    return ERROR);
 	}
     else
