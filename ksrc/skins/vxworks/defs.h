@@ -244,15 +244,18 @@ static inline void taskSafeInner (wind_task_t *cur)
 
 /* Must be called with nklock locked, interrupts off.
    Returns :
-   - ERROR if the safe count is null or the current context is invalid
-   - OK if the safe count was decremented but no rescheduling is needed.
+   - ERROR if the current context is invalid
+   - OK if the safe count was zero or decremented but no rescheduling is needed.
    - 1 if the safe count was decremented and rescheduling is needed.
 */
 static inline int taskUnsafeInner (wind_task_t *cur)
 {
-    if(!xnpod_primary_p() || cur->safecnt == 0)
+    if(!xnpod_primary_p())
         return ERROR;
     
+    if (cur->safecnt == 0)
+	return OK;
+
     if(--cur->safecnt == 0)
         return xnsynch_flush(&cur->safesync,0) == XNSYNCH_RESCHED;
 
