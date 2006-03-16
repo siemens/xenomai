@@ -31,7 +31,7 @@ satch_sim: satch_sim.o
 	$(GCIC) -o $@ $< $(SIM_LDFLAGS)
 
 koan_uvm: koan.c
-	$(CC) -o $@ $< $(UVM_CFLAGS) $(UVM_LDFLAGS)
+	$(CC) -o $@ $< $(UVM_CFLAGS) $(UVM_LDFLAGS) -lnative
 
 koan_sim: koan_sim.o
 	$(GCIC) -o $@ $< $(SIM_LDFLAGS) -lnative_sim
