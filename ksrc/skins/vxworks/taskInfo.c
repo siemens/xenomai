@@ -20,15 +20,11 @@
 
 #include <vxworks/defs.h>
 
-
-
-
-/* FIXME: check (in the doc or implementation) what should happen if task_id is
-   zero */
 const char * taskName ( TASK_ID task_id )
 {
     wind_task_t * task;
-    
+
+    /* task_id == 0 is invalid. */
     task = wind_h2obj_active(task_id, WIND_TASK_MAGIC,wind_task_t);
 
     /* It is useless to lock the access to task here, because if the task
