@@ -130,7 +130,7 @@ static inline STATUS hook_del(xnqueue_t * queue, FUNCPTR wind_hook)
 
 STATUS taskCreateHookAdd (wind_create_hook hook)
 {
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+    error_check(xnpod_asynch_p(), -EPERM, return ERROR);
 
     return hook_add(&wind_create_hooks_q, appendq, (FUNCPTR) hook);
 }
@@ -138,7 +138,7 @@ STATUS taskCreateHookAdd (wind_create_hook hook)
 
 STATUS taskCreateHookDelete (wind_create_hook hook)
 {
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+    error_check(xnpod_asynch_p(), -EPERM, return ERROR);
 
     return hook_del(&wind_create_hooks_q, (FUNCPTR) hook);
 }
@@ -146,7 +146,7 @@ STATUS taskCreateHookDelete (wind_create_hook hook)
 
 STATUS taskSwitchHookAdd (wind_switch_hook hook)
 {
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+    error_check(xnpod_asynch_p(), -EPERM, return ERROR);
 
     return hook_add(&wind_switch_hooks_q, appendq, (FUNCPTR) hook);
 }
@@ -154,7 +154,7 @@ STATUS taskSwitchHookAdd (wind_switch_hook hook)
 
 STATUS taskSwitchHookDelete (wind_switch_hook hook)
 {
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+    error_check(xnpod_asynch_p(), -EPERM, return ERROR);
 
     return hook_del(&wind_switch_hooks_q, (FUNCPTR) hook);
 }
@@ -162,7 +162,7 @@ STATUS taskSwitchHookDelete (wind_switch_hook hook)
 
 STATUS taskDeleteHookAdd (wind_delete_hook hook)
 {
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+    error_check(xnpod_asynch_p(), -EPERM, return ERROR);
 
     return hook_add(&wind_delete_hooks_q, prependq, (FUNCPTR) hook);
 }
@@ -170,7 +170,7 @@ STATUS taskDeleteHookAdd (wind_delete_hook hook)
 
 STATUS taskDeleteHookDelete (wind_delete_hook hook)
 {
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+    error_check(xnpod_asynch_p(), -EPERM, return ERROR);
 
     return hook_del(&wind_delete_hooks_q, (FUNCPTR) hook);
 }

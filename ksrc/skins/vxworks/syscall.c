@@ -816,9 +816,6 @@ static int __wind_msgq_receive (struct task_struct *curr, struct pt_regs *regs)
     nbytes = __xn_reg_arg3(regs);
     timeout = __xn_reg_arg4(regs);
 
-    if (timeout != NO_WAIT && !xnpod_primary_p())
-	return -EPERM;
-
     if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg2(regs),nbytes))
 	return -EFAULT;
 
