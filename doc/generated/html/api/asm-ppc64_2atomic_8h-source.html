@@ -67,106 +67,81 @@
 00057 <span class="preprocessor">#include &lt;linux/bitops.h&gt;</span>
 00058 <span class="preprocessor">#include &lt;asm/system.h&gt;</span>
 00059 
-00060 <span class="preprocessor">#define atomic_xchg(ptr,v)       xchg(ptr,v)</span>
-00061 <span class="preprocessor"></span><span class="preprocessor">#define atomic_cmpxchg(ptr,o,n)  cmpxchg(ptr,o,n)</span>
-00062 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_memory_barrier()  smp_mb()</span>
-00063 <span class="preprocessor"></span>
-00064 <span class="keywordtype">void</span> atomic_set_mask(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> mask, <span class="comment">/* from arch/ppc/kernel/misc.S */</span>
-00065                      <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *ptr);
-00066 
-00067 <span class="preprocessor">#define xnarch_atomic_set(pcounter,i)          atomic_set(pcounter,i)</span>
-00068 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_get(pcounter)            atomic_read(pcounter)</span>
-00069 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_inc(pcounter)            atomic_inc(pcounter)</span>
-00070 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_dec(pcounter)            atomic_dec(pcounter)</span>
-00071 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_inc_and_test(pcounter)   atomic_inc_and_test(pcounter)</span>
-00072 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_dec_and_test(pcounter)   atomic_dec_and_test(pcounter)</span>
-00073 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask,pflags)</span>
-00074 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_clear_mask(pflags,mask)  atomic_clear_mask(mask,pflags)</span>
-00075 <span class="preprocessor"></span>
-00076 <span class="preprocessor">#else </span><span class="comment">/* !__KERNEL__ */</span>
-00077 
-00078 <span class="preprocessor">#include &lt;linux/config.h&gt;</span>
-00079 
-00080 <span class="comment">/* from asm-ppc64/memory.h */</span>
-00081 <span class="comment">/*</span>
-00082 <span class="comment"> * Arguably the bitops and *xchg operations don't imply any memory barrier</span>
-00083 <span class="comment"> * or SMP ordering, but in fact a lot of drivers expect them to imply</span>
-00084 <span class="comment"> * both, since they do on x86 cpus.</span>
-00085 <span class="comment"> */</span>
-00086 <span class="preprocessor">#ifdef CONFIG_SMP</span>
-00087 <span class="preprocessor"></span><span class="preprocessor">#define EIEIO_ON_SMP    "eieio\n"</span>
-00088 <span class="preprocessor"></span><span class="preprocessor">#define ISYNC_ON_SMP    "\n\tisync"</span>
-00089 <span class="preprocessor"></span><span class="preprocessor">#else</span>
-00090 <span class="preprocessor"></span><span class="preprocessor">#define EIEIO_ON_SMP</span>
-00091 <span class="preprocessor"></span><span class="preprocessor">#define ISYNC_ON_SMP</span>
-00092 <span class="preprocessor"></span><span class="preprocessor">#endif</span>
-00093 <span class="preprocessor"></span>
-00094 <span class="comment">/*</span>
-00095 <span class="comment"> * from &lt;linux/asm-ppc64/system.h&gt; and &lt;linux/asm-ppc64/atomic.h&gt;</span>
-00096 <span class="comment"> */</span>
-00097 
-00098 <span class="keyword">static</span> __inline__ <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>
-00099 atomic_cmpxchg(<span class="keyword">volatile</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *p, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> old, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keyword">new</span>)
-00100 {
-00101         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> prev;
-00102 
-00103         __asm__ __volatile__ (
-00104         EIEIO_ON_SMP
-00105 <span class="stringliteral">"1:     ldarx   %0,0,%2         # __cmpxchg_u64\n\</span>
-00106 <span class="stringliteral">        cmpd    0,%0,%3\n\</span>
-00107 <span class="stringliteral">        bne-    2f\n\</span>
-00108 <span class="stringliteral">        stdcx.  %4,0,%2\n\</span>
-00109 <span class="stringliteral">        bne-    1b"</span>
-00110         ISYNC_ON_SMP
-00111         <span class="stringliteral">"\n\</span>
-00112 <span class="stringliteral">2:"</span>
-00113         : <span class="stringliteral">"=&amp;r"</span> (prev), <span class="stringliteral">"=m"</span> (*p)
-00114         : <span class="stringliteral">"r"</span> (p), <span class="stringliteral">"r"</span> (old), <span class="stringliteral">"r"</span> (<span class="keyword">new</span>), <span class="stringliteral">"m"</span> (*p)
-00115         : <span class="stringliteral">"cc"</span>, <span class="stringliteral">"memory"</span>);
-00116 
-00117         <span class="keywordflow">return</span> prev;
-00118 }
-00119 
-00120 <span class="keyword">static</span> __inline__ <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>
-00121 atomic_xchg(<span class="keyword">volatile</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *m, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> val)
-00122 {
-00123         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> dummy;
-00124 
-00125         __asm__ __volatile__(
-00126         EIEIO_ON_SMP
-00127 <span class="stringliteral">"1:     ldarx %0,0,%3           # __xchg_u64\n\</span>
-00128 <span class="stringliteral">        stdcx. %2,0,%3\n\</span>
-00129 <span class="stringliteral">2:      bne- 1b"</span>
-00130         ISYNC_ON_SMP
-00131         : <span class="stringliteral">"=&amp;r"</span> (dummy), <span class="stringliteral">"=m"</span> (*m)
-00132         : <span class="stringliteral">"r"</span> (val), <span class="stringliteral">"r"</span> (m)
-00133         : <span class="stringliteral">"cc"</span>, <span class="stringliteral">"memory"</span>);
-00134 
-00135         <span class="keywordflow">return</span> (dummy);
-00136 }
-00137 
-00138 <span class="preprocessor">#define xnarch_memory_barrier() __asm__ __volatile__ ("sync" : : : "memory")</span>
-00139 <span class="preprocessor"></span>
-00140 <span class="preprocessor">#define xnarch_atomic_set(pcounter,i)          (((pcounter)-&gt;counter) = (i))</span>
-00141 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_get(pcounter)            ((pcounter)-&gt;counter)</span>
-00142 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_inc(pcounter)            atomic_inc(pcounter)</span>
-00143 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_dec(pcounter)            atomic_dec(pcounter)</span>
-00144 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_inc_and_test(pcounter)   (atomic_inc_return(pcounter) == 0)</span>
-00145 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_dec_and_test(pcounter)   (atomic_dec_return(pcounter) == 0)</span>
-00146 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask,pflags)</span>
-00147 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_clear_mask(pflags,mask)  atomic_clear_mask(mask,pflags)</span>
-00148 <span class="preprocessor"></span>
-00149 <span class="preprocessor">#define cpu_relax()  xnarch_memory_barrier()</span>
-00150 <span class="preprocessor"></span>
-00151 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
-00152 
-00153 <span class="keyword">typedef</span> atomic_t atomic_counter_t;
-00154 <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> atomic_flags_t;
-00155 
-00156 <span class="preprocessor">#define xnarch_atomic_xchg(ptr,x) atomic_xchg(ptr,x)</span>
-00157 <span class="preprocessor"></span>
-00158 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_ASM_PPC64_ATOMIC_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Fri Jan 13 21:37:27 2006 for Xenomai API by&nbsp;
+00060 <span class="preprocessor">#define xnarch_atomic_xchg(ptr,v)       xchg(ptr,v)</span>
+00061 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_memory_barrier()         smp_mb()</span>
+00062 <span class="preprocessor"></span>
+00063 <span class="keywordtype">void</span> atomic_set_mask(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> mask, <span class="comment">/* from arch/ppc/kernel/misc.S */</span>
+00064                      <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *ptr);
+00065 
+00066 <span class="preprocessor">#define xnarch_atomic_set(pcounter,i)          atomic_set(pcounter,i)</span>
+00067 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_get(pcounter)            atomic_read(pcounter)</span>
+00068 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_inc(pcounter)            atomic_inc(pcounter)</span>
+00069 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_dec(pcounter)            atomic_dec(pcounter)</span>
+00070 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_inc_and_test(pcounter)   atomic_inc_and_test(pcounter)</span>
+00071 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_dec_and_test(pcounter)   atomic_dec_and_test(pcounter)</span>
+00072 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask,pflags)</span>
+00073 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_clear_mask(pflags,mask)  atomic_clear_mask(mask,pflags)</span>
+00074 <span class="preprocessor"></span>
+00075 <span class="preprocessor">#else </span><span class="comment">/* !__KERNEL__ */</span>
+00076 
+00077 <span class="preprocessor">#include &lt;linux/config.h&gt;</span>
+00078 
+00079 <span class="comment">/* from asm-ppc64/memory.h */</span>
+00080 <span class="comment">/*</span>
+00081 <span class="comment"> * Arguably the bitops and *xchg operations don't imply any memory barrier</span>
+00082 <span class="comment"> * or SMP ordering, but in fact a lot of drivers expect them to imply</span>
+00083 <span class="comment"> * both, since they do on x86 cpus.</span>
+00084 <span class="comment"> */</span>
+00085 <span class="preprocessor">#ifdef CONFIG_SMP</span>
+00086 <span class="preprocessor"></span><span class="preprocessor">#define EIEIO_ON_SMP    "eieio\n"</span>
+00087 <span class="preprocessor"></span><span class="preprocessor">#define ISYNC_ON_SMP    "\n\tisync"</span>
+00088 <span class="preprocessor"></span><span class="preprocessor">#else</span>
+00089 <span class="preprocessor"></span><span class="preprocessor">#define EIEIO_ON_SMP</span>
+00090 <span class="preprocessor"></span><span class="preprocessor">#define ISYNC_ON_SMP</span>
+00091 <span class="preprocessor"></span><span class="preprocessor">#endif</span>
+00092 <span class="preprocessor"></span>
+00093 <span class="comment">/*</span>
+00094 <span class="comment"> * from &lt;linux/asm-ppc64/system.h&gt; and &lt;linux/asm-ppc64/atomic.h&gt;</span>
+00095 <span class="comment"> */</span>
+00096 
+00097 <span class="keyword">static</span> __inline__ <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>
+00098 xnarch_atomic_xchg(<span class="keyword">volatile</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *m, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> val)
+00099 {
+00100         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> dummy;
+00101 
+00102         __asm__ __volatile__(
+00103         EIEIO_ON_SMP
+00104 <span class="stringliteral">"1:     ldarx %0,0,%3           # __xchg_u64\n\</span>
+00105 <span class="stringliteral">        stdcx. %2,0,%3\n\</span>
+00106 <span class="stringliteral">2:      bne- 1b"</span>
+00107         ISYNC_ON_SMP
+00108         : <span class="stringliteral">"=&amp;r"</span> (dummy), <span class="stringliteral">"=m"</span> (*m)
+00109         : <span class="stringliteral">"r"</span> (val), <span class="stringliteral">"r"</span> (m)
+00110         : <span class="stringliteral">"cc"</span>, <span class="stringliteral">"memory"</span>);
+00111 
+00112         <span class="keywordflow">return</span> (dummy);
+00113 }
+00114 
+00115 <span class="preprocessor">#define xnarch_memory_barrier() __asm__ __volatile__ ("sync" : : : "memory")</span>
+00116 <span class="preprocessor"></span>
+00117 <span class="preprocessor">#define xnarch_atomic_set(pcounter,i)          (((pcounter)-&gt;counter) = (i))</span>
+00118 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_get(pcounter)            ((pcounter)-&gt;counter)</span>
+00119 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_inc(pcounter)            atomic_inc(pcounter)</span>
+00120 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_dec(pcounter)            atomic_dec(pcounter)</span>
+00121 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_inc_and_test(pcounter)   (atomic_inc_return(pcounter) == 0)</span>
+00122 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_dec_and_test(pcounter)   (atomic_dec_return(pcounter) == 0)</span>
+00123 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask,pflags)</span>
+00124 <span class="preprocessor"></span><span class="preprocessor">#define xnarch_atomic_clear_mask(pflags,mask)  atomic_clear_mask(mask,pflags)</span>
+00125 <span class="preprocessor"></span>
+00126 <span class="preprocessor">#define cpu_relax()  xnarch_memory_barrier()</span>
+00127 <span class="preprocessor"></span>
+00128 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
+00129 
+00130 <span class="keyword">typedef</span> atomic_t atomic_counter_t;
+00131 <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> atomic_flags_t;
+00132 
+00133 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_ASM_PPC64_ATOMIC_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Mar 16 19:28:30 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

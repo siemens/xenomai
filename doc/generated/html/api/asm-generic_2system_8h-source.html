@@ -491,31 +491,31 @@
 00481                                    <span class="keywordtype">int</span> (*ackfn)(<span class="keywordtype">unsigned</span> irq),
 00482                                    <span class="keywordtype">void</span> *cookie)
 00483 {
-00484     <span class="keywordflow">return</span> <a class="code" href="group__hal.html#ga75">rthal_irq_request</a>(irq,handler,ackfn,cookie);
+00484     <span class="keywordflow">return</span> <a class="code" href="group__hal.html#ga76">rthal_irq_request</a>(irq,handler,ackfn,cookie);
 00485 }
 00486 
 00487 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnarch_release_irq (<span class="keywordtype">unsigned</span> irq)
 00488 
 00489 {
-00490     <span class="keywordflow">return</span> <a class="code" href="group__hal.html#ga76">rthal_irq_release</a>(irq);
+00490     <span class="keywordflow">return</span> <a class="code" href="group__hal.html#ga77">rthal_irq_release</a>(irq);
 00491 }
 00492 
 00493 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnarch_enable_irq (<span class="keywordtype">unsigned</span> irq)
 00494 
 00495 {
-00496     <span class="keywordflow">return</span> <a class="code" href="group__hal.html#ga77">rthal_irq_enable</a>(irq);
+00496     <span class="keywordflow">return</span> <a class="code" href="group__hal.html#ga78">rthal_irq_enable</a>(irq);
 00497 }
 00498 
 00499 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnarch_disable_irq (<span class="keywordtype">unsigned</span> irq)
 00500 
 00501 {
-00502     <span class="keywordflow">return</span> <a class="code" href="group__hal.html#ga78">rthal_irq_disable</a>(irq);
+00502     <span class="keywordflow">return</span> <a class="code" href="group__hal.html#ga79">rthal_irq_disable</a>(irq);
 00503 }
 00504 
 00505 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnarch_chain_irq (<span class="keywordtype">unsigned</span> irq)
 00506 
 00507 {
-00508     <a class="code" href="group__hal.html#ga81">rthal_irq_host_pend</a>(irq);
+00508     <a class="code" href="group__hal.html#ga82">rthal_irq_host_pend</a>(irq);
 00509 }
 00510 
 00511 <span class="keyword">static</span> <span class="keyword">inline</span> xnarch_cpumask_t xnarch_set_irq_affinity (<span class="keywordtype">unsigned</span> irq,
@@ -572,7 +572,7 @@
 00562 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
 00563 
 00564 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_ASM_GENERIC_SYSTEM_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Fri Jan 13 21:37:27 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Mar 16 19:28:30 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

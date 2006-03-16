@@ -44,61 +44,61 @@
 00060 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_SERVICE_IPI3      IPIPE_SERVICE_IPI3</span>
 00061 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_SERVICE_VECTOR3   IPIPE_SERVICE_VECTOR3</span>
 00062 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_CRITICAL_IPI      IPIPE_CRITICAL_IPI</span>
-00063 <span class="preprocessor"></span>
-00064 <span class="keyword">typedef</span> <span class="keyword">struct </span>ipipe_domain rthal_pipeline_stage_t;
-00065 
-00066 <span class="preprocessor">#ifdef IPIPE_RW_LOCK_UNLOCKED</span>
-00067 <span class="preprocessor"></span><span class="keyword">typedef</span> ipipe_spinlock_t rthal_spinlock_t;
-00068 <span class="preprocessor">#define RTHAL_SPIN_LOCK_UNLOCKED IPIPE_SPIN_LOCK_UNLOCKED</span>
-00069 <span class="preprocessor"></span><span class="keyword">typedef</span> ipipe_rwlock_t rthal_rwlock_t;
-00070 <span class="preprocessor">#define RTHAL_RW_LOCK_UNLOCKED   IPIPE_RW_LOCK_UNLOCKED</span>
-00071 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !IPIPE_RW_LOCK_UNLOCKED */</span>
-00072 <span class="preprocessor">#ifdef RAW_RW_LOCK_UNLOCKED</span>
-00073 <span class="preprocessor"></span><span class="keyword">typedef</span> raw_spinlock_t rthal_spinlock_t;
-00074 <span class="preprocessor">#define RTHAL_SPIN_LOCK_UNLOCKED RAW_SPIN_LOCK_UNLOCKED</span>
-00075 <span class="preprocessor"></span><span class="keyword">typedef</span> raw_rwlock_t rthal_rwlock_t;
-00076 <span class="preprocessor">#define RTHAL_RW_LOCK_UNLOCKED RAW_RW_LOCK_UNLOCKED</span>
-00077 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !RAW_RW_LOCK_UNLOCKED */</span>
-00078 <span class="keyword">typedef</span> spinlock_t rthal_spinlock_t;
-00079 <span class="preprocessor">#define RTHAL_SPIN_LOCK_UNLOCKED SPIN_LOCK_UNLOCKED</span>
-00080 <span class="preprocessor"></span><span class="keyword">typedef</span> rwlock_t rthal_rwlock_t;
-00081 <span class="preprocessor">#define RTHAL_RW_LOCK_UNLOCKED RW_LOCK_UNLOCKED</span>
-00082 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* RAW_RW_LOCK_UNLOCKED */</span>
-00083 <span class="preprocessor">#endif </span><span class="comment">/* IPIPE_RW_LOCK_UNLOCKED */</span>
-00084 
-00085 <span class="preprocessor">#define rthal_local_irq_disable()       ipipe_stall_pipeline_from(&amp;rthal_domain)</span>
-00086 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_enable()        ipipe_unstall_pipeline_from(&amp;rthal_domain)</span>
-00087 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_save(x)         ((x) = !!ipipe_test_and_stall_pipeline_from(&amp;rthal_domain))</span>
-00088 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_restore(x)      ipipe_restore_pipeline_from(&amp;rthal_domain,(x))</span>
-00089 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_flags(x)        ((x) = !!ipipe_test_pipeline_from(&amp;rthal_domain))</span>
-00090 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_test()          (!!ipipe_test_pipeline_from(&amp;rthal_domain))</span>
-00091 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_sync(x)         ((x) = !!ipipe_test_and_unstall_pipeline_from(&amp;rthal_domain))</span>
-00092 <span class="preprocessor"></span><span class="preprocessor">#define rthal_stage_irq_enable(dom)     ipipe_unstall_pipeline_from(dom)</span>
-00093 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_save_hw(x)      local_irq_save_hw(x)</span>
-00094 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_restore_hw(x)   local_irq_restore_hw(x)</span>
-00095 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_enable_hw()     local_irq_enable_hw()</span>
-00096 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_disable_hw()    local_irq_disable_hw()</span>
-00097 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_flags_hw(x)     local_save_flags_hw(x)</span>
-00098 <span class="preprocessor"></span>
-00099 <span class="preprocessor">#define rthal_write_lock(lock)          write_lock_hw(lock)</span>
-00100 <span class="preprocessor"></span><span class="preprocessor">#define rthal_write_unlock(lock)        write_unlock_hw(lock)</span>
-00101 <span class="preprocessor"></span><span class="preprocessor">#define rthal_read_lock(lock)           read_lock_hw(lock)</span>
-00102 <span class="preprocessor"></span><span class="preprocessor">#define rthal_read_unlock(lock)         read_unlock_hw(lock)</span>
-00103 <span class="preprocessor"></span><span class="preprocessor">#define rthal_spin_lock(lock)           spin_lock_hw(lock)</span>
-00104 <span class="preprocessor"></span><span class="preprocessor">#define rthal_spin_unlock(lock)         spin_unlock_hw(lock)</span>
-00105 <span class="preprocessor"></span>
-00106 <span class="preprocessor">#define rthal_root_domain                       ipipe_root_domain</span>
-00107 <span class="preprocessor"></span><span class="preprocessor">#define rthal_current_domain                    ipipe_current_domain</span>
-00108 <span class="preprocessor"></span><span class="preprocessor">#define rthal_declare_cpuid                     ipipe_declare_cpuid</span>
-00109 <span class="preprocessor"></span>
-00110 <span class="preprocessor">#define rthal_load_cpuid()                      ipipe_load_cpuid()</span>
-00111 <span class="preprocessor"></span><span class="preprocessor">#define rthal_suspend_domain()                  ipipe_suspend_domain()</span>
-00112 <span class="preprocessor"></span><span class="preprocessor">#define rthal_grab_superlock(syncfn)            ipipe_critical_enter(syncfn)</span>
-00113 <span class="preprocessor"></span><span class="preprocessor">#define rthal_release_superlock(x)              ipipe_critical_exit(x)</span>
-00114 <span class="preprocessor"></span><span class="preprocessor">#define rthal_propagate_irq(irq)                ipipe_propagate_irq(irq)</span>
-00115 <span class="preprocessor"></span><span class="preprocessor">#define rthal_set_irq_affinity(irq,aff)         ipipe_set_irq_affinity(irq,aff)</span>
-00116 <span class="preprocessor"></span><span class="preprocessor">#define rthal_schedule_irq(irq)                 ipipe_schedule_irq(irq)</span>
-00117 <span class="preprocessor"></span><span class="preprocessor">#define rthal_virtualize_irq(dom,irq,isr,ackfn,mode) ipipe_virtualize_irq(dom,irq,isr,ackfn,mode)</span>
+00063 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_CRITICAL_VECTOR   IPIPE_CRITICAL_VECTOR</span>
+00064 <span class="preprocessor"></span>
+00065 <span class="keyword">typedef</span> <span class="keyword">struct </span>ipipe_domain rthal_pipeline_stage_t;
+00066 
+00067 <span class="preprocessor">#ifdef IPIPE_RW_LOCK_UNLOCKED</span>
+00068 <span class="preprocessor"></span><span class="keyword">typedef</span> ipipe_spinlock_t rthal_spinlock_t;
+00069 <span class="preprocessor">#define RTHAL_SPIN_LOCK_UNLOCKED IPIPE_SPIN_LOCK_UNLOCKED</span>
+00070 <span class="preprocessor"></span><span class="keyword">typedef</span> ipipe_rwlock_t rthal_rwlock_t;
+00071 <span class="preprocessor">#define RTHAL_RW_LOCK_UNLOCKED   IPIPE_RW_LOCK_UNLOCKED</span>
+00072 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !IPIPE_RW_LOCK_UNLOCKED */</span>
+00073 <span class="preprocessor">#ifdef RAW_RW_LOCK_UNLOCKED</span>
+00074 <span class="preprocessor"></span><span class="keyword">typedef</span> raw_spinlock_t rthal_spinlock_t;
+00075 <span class="preprocessor">#define RTHAL_SPIN_LOCK_UNLOCKED RAW_SPIN_LOCK_UNLOCKED</span>
+00076 <span class="preprocessor"></span><span class="keyword">typedef</span> raw_rwlock_t rthal_rwlock_t;
+00077 <span class="preprocessor">#define RTHAL_RW_LOCK_UNLOCKED RAW_RW_LOCK_UNLOCKED</span>
+00078 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !RAW_RW_LOCK_UNLOCKED */</span>
+00079 <span class="keyword">typedef</span> spinlock_t rthal_spinlock_t;
+00080 <span class="preprocessor">#define RTHAL_SPIN_LOCK_UNLOCKED SPIN_LOCK_UNLOCKED</span>
+00081 <span class="preprocessor"></span><span class="keyword">typedef</span> rwlock_t rthal_rwlock_t;
+00082 <span class="preprocessor">#define RTHAL_RW_LOCK_UNLOCKED RW_LOCK_UNLOCKED</span>
+00083 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* RAW_RW_LOCK_UNLOCKED */</span>
+00084 <span class="preprocessor">#endif </span><span class="comment">/* IPIPE_RW_LOCK_UNLOCKED */</span>
+00085 
+00086 <span class="preprocessor">#define rthal_local_irq_disable()       ipipe_stall_pipeline_from(&amp;rthal_domain)</span>
+00087 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_enable()        ipipe_unstall_pipeline_from(&amp;rthal_domain)</span>
+00088 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_save(x)         ((x) = !!ipipe_test_and_stall_pipeline_from(&amp;rthal_domain))</span>
+00089 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_restore(x)      ipipe_restore_pipeline_from(&amp;rthal_domain,(x))</span>
+00090 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_flags(x)        ((x) = !!ipipe_test_pipeline_from(&amp;rthal_domain))</span>
+00091 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_test()          (!!ipipe_test_pipeline_from(&amp;rthal_domain))</span>
+00092 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_sync(x)         ((x) = !!ipipe_test_and_unstall_pipeline_from(&amp;rthal_domain))</span>
+00093 <span class="preprocessor"></span><span class="preprocessor">#define rthal_stage_irq_enable(dom)     ipipe_unstall_pipeline_from(dom)</span>
+00094 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_save_hw(x)      local_irq_save_hw(x)</span>
+00095 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_restore_hw(x)   local_irq_restore_hw(x)</span>
+00096 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_enable_hw()     local_irq_enable_hw()</span>
+00097 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_disable_hw()    local_irq_disable_hw()</span>
+00098 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_flags_hw(x)     local_save_flags_hw(x)</span>
+00099 <span class="preprocessor"></span>
+00100 <span class="preprocessor">#define rthal_write_lock(lock)          write_lock_hw(lock)</span>
+00101 <span class="preprocessor"></span><span class="preprocessor">#define rthal_write_unlock(lock)        write_unlock_hw(lock)</span>
+00102 <span class="preprocessor"></span><span class="preprocessor">#define rthal_read_lock(lock)           read_lock_hw(lock)</span>
+00103 <span class="preprocessor"></span><span class="preprocessor">#define rthal_read_unlock(lock)         read_unlock_hw(lock)</span>
+00104 <span class="preprocessor"></span><span class="preprocessor">#define rthal_spin_lock(lock)           spin_lock_hw(lock)</span>
+00105 <span class="preprocessor"></span><span class="preprocessor">#define rthal_spin_unlock(lock)         spin_unlock_hw(lock)</span>
+00106 <span class="preprocessor"></span>
+00107 <span class="preprocessor">#define rthal_root_domain                       ipipe_root_domain</span>
+00108 <span class="preprocessor"></span><span class="preprocessor">#define rthal_current_domain                    ipipe_current_domain</span>
+00109 <span class="preprocessor"></span><span class="preprocessor">#define rthal_declare_cpuid                     ipipe_declare_cpuid</span>
+00110 <span class="preprocessor"></span>
+00111 <span class="preprocessor">#define rthal_load_cpuid()                      ipipe_load_cpuid()</span>
+00112 <span class="preprocessor"></span><span class="preprocessor">#define rthal_suspend_domain()                  ipipe_suspend_domain()</span>
+00113 <span class="preprocessor"></span><span class="preprocessor">#define rthal_grab_superlock(syncfn)            ipipe_critical_enter(syncfn)</span>
+00114 <span class="preprocessor"></span><span class="preprocessor">#define rthal_release_superlock(x)              ipipe_critical_exit(x)</span>
+00115 <span class="preprocessor"></span><span class="preprocessor">#define rthal_propagate_irq(irq)                ipipe_propagate_irq(irq)</span>
+00116 <span class="preprocessor"></span><span class="preprocessor">#define rthal_set_irq_affinity(irq,aff)         ipipe_set_irq_affinity(irq,aff)</span>
+00117 <span class="preprocessor"></span><span class="preprocessor">#define rthal_schedule_irq(irq)                 ipipe_schedule_irq(irq)</span>
 00118 <span class="preprocessor"></span><span class="preprocessor">#define rthal_alloc_virq()                      ipipe_alloc_virq()</span>
 00119 <span class="preprocessor"></span><span class="preprocessor">#define rthal_free_virq(irq)                    ipipe_free_virq(irq)</span>
 00120 <span class="preprocessor"></span><span class="preprocessor">#define rthal_trigger_irq(irq)                  ipipe_trigger_irq(irq)</span>
@@ -222,308 +222,309 @@
 00238 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_SERVICE_IPI3      ADEOS_SERVICE_IPI3</span>
 00239 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_SERVICE_VECTOR3   ADEOS_SERVICE_VECTOR3</span>
 00240 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_CRITICAL_IPI      ADEOS_CRITICAL_IPI</span>
-00241 <span class="preprocessor"></span>
-00242 <span class="keyword">typedef</span> adomain_t rthal_pipeline_stage_t;
-00243 
-00244 <span class="preprocessor">#ifdef RAW_RW_LOCK_UNLOCKED</span>
-00245 <span class="preprocessor"></span><span class="keyword">typedef</span> raw_spinlock_t rthal_spinlock_t;
-00246 <span class="preprocessor">#define RTHAL_SPIN_LOCK_UNLOCKED RAW_SPIN_LOCK_UNLOCKED</span>
-00247 <span class="preprocessor"></span><span class="keyword">typedef</span> raw_rwlock_t rthal_rwlock_t;
-00248 <span class="preprocessor">#define RTHAL_RW_LOCK_UNLOCKED RAW_RW_LOCK_UNLOCKED</span>
-00249 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !RAW_RW_LOCK_UNLOCKED */</span>
-00250 <span class="keyword">typedef</span> spinlock_t rthal_spinlock_t;
-00251 <span class="preprocessor">#define RTHAL_SPIN_LOCK_UNLOCKED SPIN_LOCK_UNLOCKED</span>
-00252 <span class="preprocessor"></span><span class="keyword">typedef</span> rwlock_t rthal_rwlock_t;
-00253 <span class="preprocessor">#define RTHAL_RW_LOCK_UNLOCKED RW_LOCK_UNLOCKED</span>
-00254 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* RAW_RW_LOCK_UNLOCKED */</span>
-00255 
-00256 <span class="preprocessor">#define rthal_local_irq_disable()       adeos_stall_pipeline_from(&amp;rthal_domain)</span>
-00257 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_enable()        adeos_unstall_pipeline_from(&amp;rthal_domain)</span>
-00258 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_save(x)         ((x) = !!adeos_test_and_stall_pipeline_from(&amp;rthal_domain))</span>
-00259 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_restore(x)      adeos_restore_pipeline_from(&amp;rthal_domain,(x))</span>
-00260 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_flags(x)        ((x) = !!adeos_test_pipeline_from(&amp;rthal_domain))</span>
-00261 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_test()          (!!adeos_test_pipeline_from(&amp;rthal_domain))</span>
-00262 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_sync(x)         ((x) = !!adeos_test_and_unstall_pipeline_from(&amp;rthal_domain))</span>
-00263 <span class="preprocessor"></span><span class="preprocessor">#define rthal_stage_irq_enable(dom)     adeos_unstall_pipeline_from(dom)</span>
-00264 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_save_hw(x)      adeos_hw_local_irq_save(x)</span>
-00265 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_restore_hw(x)   adeos_hw_local_irq_restore(x)</span>
-00266 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_enable_hw()     adeos_hw_sti()</span>
-00267 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_disable_hw()    adeos_hw_cli()</span>
-00268 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_flags_hw(x)     adeos_hw_local_irq_flags(x)</span>
-00269 <span class="preprocessor"></span>
-00270 <span class="preprocessor">#define rthal_write_lock(lock)          adeos_write_lock(lock)</span>
-00271 <span class="preprocessor"></span><span class="preprocessor">#define rthal_write_unlock(lock)        adeos_write_unlock(lock)</span>
-00272 <span class="preprocessor"></span><span class="preprocessor">#define rthal_read_lock(lock)           adeos_read_lock(lock)</span>
-00273 <span class="preprocessor"></span><span class="preprocessor">#define rthal_read_unlock(lock)         adeos_read_unlock(lock)</span>
-00274 <span class="preprocessor"></span><span class="preprocessor">#define rthal_spin_lock(lock)           adeos_spin_lock(lock)</span>
-00275 <span class="preprocessor"></span><span class="preprocessor">#define rthal_spin_unlock(lock)         adeos_spin_unlock(lock)</span>
-00276 <span class="preprocessor"></span>
-00277 <span class="preprocessor">#define rthal_root_domain                       adp_root</span>
-00278 <span class="preprocessor"></span><span class="preprocessor">#define rthal_current_domain                    adp_current</span>
-00279 <span class="preprocessor"></span><span class="preprocessor">#define rthal_declare_cpuid                     adeos_declare_cpuid</span>
-00280 <span class="preprocessor"></span>
-00281 <span class="preprocessor">#define rthal_load_cpuid()                      adeos_load_cpuid()</span>
-00282 <span class="preprocessor"></span><span class="preprocessor">#define rthal_suspend_domain()                  adeos_suspend_domain()</span>
-00283 <span class="preprocessor"></span><span class="preprocessor">#define rthal_grab_superlock(syncfn)            adeos_critical_enter(syncfn)</span>
-00284 <span class="preprocessor"></span><span class="preprocessor">#define rthal_release_superlock(x)              adeos_critical_exit(x)</span>
-00285 <span class="preprocessor"></span><span class="preprocessor">#define rthal_propagate_irq(irq)                adeos_propagate_irq(irq)</span>
-00286 <span class="preprocessor"></span><span class="preprocessor">#define rthal_set_irq_affinity(irq,aff)         adeos_set_irq_affinity(irq,aff)</span>
-00287 <span class="preprocessor"></span><span class="preprocessor">#define rthal_schedule_irq(irq)                 adeos_schedule_irq(irq)</span>
-00288 <span class="preprocessor"></span><span class="preprocessor">#define rthal_virtualize_irq(dom,irq,isr,ackfn,mode) adeos_virtualize_irq_from(dom,irq,isr,ackfn,mode)</span>
-00289 <span class="preprocessor"></span><span class="preprocessor">#define rthal_alloc_virq()                      adeos_alloc_irq()</span>
-00290 <span class="preprocessor"></span><span class="preprocessor">#define rthal_free_virq(irq)                    adeos_free_irq(irq)</span>
-00291 <span class="preprocessor"></span><span class="preprocessor">#define rthal_trigger_irq(irq)                  adeos_trigger_irq(irq)</span>
-00292 <span class="preprocessor"></span><span class="preprocessor">#define rthal_get_sysinfo(ibuf)                 adeos_get_sysinfo(ibuf)</span>
-00293 <span class="preprocessor"></span><span class="preprocessor">#define rthal_alloc_ptdkey()                    adeos_alloc_ptdkey()</span>
-00294 <span class="preprocessor"></span><span class="preprocessor">#define rthal_free_ptdkey(key)                  adeos_free_ptdkey(key)</span>
-00295 <span class="preprocessor"></span><span class="preprocessor">#define rthal_send_ipi(irq,cpus)                adeos_send_ipi(irq,cpus)</span>
-00296 <span class="preprocessor"></span><span class="preprocessor">#define rthal_lock_irq(dom,cpu,irq)             __adeos_lock_irq(dom,cpu,irq)</span>
-00297 <span class="preprocessor"></span><span class="preprocessor">#define rthal_unlock_irq(dom,irq)               __adeos_unlock_irq(dom,irq)</span>
-00298 <span class="preprocessor"></span><span class="preprocessor">#ifdef ADEOS_GRAB_TIMER</span>
-00299 <span class="preprocessor"></span><span class="preprocessor">#define rthal_set_timer(ns)                     adeos_tune_timer(ns,ns ? 0 : ADEOS_GRAB_TIMER)</span>
-00300 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !ADEOS_GRAB_TIMER */</span>
-00301 <span class="preprocessor">#define rthal_set_timer(ns)                     adeos_tune_timer(ns,0)</span>
-00302 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* ADEOS_GRAB_TIMER */</span>
-00303 <span class="preprocessor">#define rthal_reset_timer()                     adeos_tune_timer(0,ADEOS_RESET_TIMER)</span>
-00304 <span class="preprocessor"></span>
-00305 <span class="preprocessor">#define rthal_lock_cpu(x)                       adeos_lock_cpu(x)</span>
-00306 <span class="preprocessor"></span><span class="preprocessor">#define rthal_unlock_cpu(x)                     adeos_unlock_cpu(x)</span>
-00307 <span class="preprocessor"></span><span class="preprocessor">#define rthal_get_cpu(x)                        adeos_get_cpu(x)</span>
-00308 <span class="preprocessor"></span><span class="preprocessor">#define rthal_put_cpu(x)                        adeos_put_cpu(x)</span>
-00309 <span class="preprocessor"></span><span class="preprocessor">#define rthal_processor_id()                    adeos_processor_id()</span>
-00310 <span class="preprocessor"></span>
-00311 <span class="preprocessor">#define rthal_setsched_root(t,pol,prio)         __adeos_setscheduler_root(t,pol,prio)</span>
-00312 <span class="preprocessor"></span><span class="preprocessor">#define rthal_reenter_root(t,pol,prio)          __adeos_reenter_root(t,pol,prio)</span>
-00313 <span class="preprocessor"></span><span class="preprocessor">#define rthal_emergency_console()               adeos_set_printk_sync(adp_current)</span>
-00314 <span class="preprocessor"></span><span class="preprocessor">#define rthal_read_tsc(v)                       adeos_hw_tsc(v)</span>
-00315 <span class="preprocessor"></span>
-00316 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rthal_get_cpufreq(<span class="keywordtype">void</span>)
-00317 {
-00318     adsysinfo_t sysinfo;
-00319     rthal_get_sysinfo(&amp;sysinfo);
-00320     <span class="keywordflow">return</span> (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>)sysinfo.cpufreq;
-00321 }
-00322 
-00323 <span class="preprocessor">#define RTHAL_DECLARE_EVENT(hdlr) \</span>
-00324 <span class="preprocessor">static void hdlr (adevinfo_t *p) \</span>
-00325 <span class="preprocessor">{ \</span>
-00326 <span class="preprocessor">    if (do_##hdlr((p)-&gt;event,(p)-&gt;domid,(p)-&gt;evdata) == RTHAL_EVENT_PROPAGATE)  \</span>
-00327 <span class="preprocessor">        adeos_propagate_event(p); \</span>
-00328 <span class="preprocessor">}</span>
-00329 <span class="preprocessor"></span>
-00330 <span class="preprocessor">#define RTHAL_DECLARE_SCHEDULE_EVENT(hdlr) \</span>
-00331 <span class="preprocessor">static void hdlr (adevinfo_t *p) \</span>
-00332 <span class="preprocessor">{ \</span>
-00333 <span class="preprocessor">    struct { \</span>
-00334 <span class="preprocessor">        struct task_struct *prev; \</span>
-00335 <span class="preprocessor">        struct task_struct *next; \</span>
-00336 <span class="preprocessor">    } *ev = (__typeof(ev))(p)-&gt;evdata; \</span>
-00337 <span class="preprocessor">    do_##hdlr(ev-&gt;next);        \</span>
-00338 <span class="preprocessor">    adeos_propagate_event(p); \</span>
-00339 <span class="preprocessor">}</span>
-00340 <span class="preprocessor"></span>
-00341 <span class="preprocessor">#define RTHAL_DECLARE_SETSCHED_EVENT(hdlr) \</span>
-00342 <span class="preprocessor">static void hdlr (adevinfo_t *p) \</span>
-00343 <span class="preprocessor">{ \</span>
-00344 <span class="preprocessor">    struct { \</span>
-00345 <span class="preprocessor">        struct task_struct *task; \</span>
-00346 <span class="preprocessor">        int policy; \</span>
-00347 <span class="preprocessor">        struct sched_param *param; \</span>
-00348 <span class="preprocessor">    } *ev = (__typeof(ev))(p)-&gt;evdata; \</span>
-00349 <span class="preprocessor">    do_##hdlr(ev-&gt;task,ev-&gt;param-&gt;sched_priority);      \</span>
-00350 <span class="preprocessor">    adeos_propagate_event(p); \</span>
-00351 <span class="preprocessor">}</span>
-00352 <span class="preprocessor"></span>
-00353 <span class="preprocessor">#define RTHAL_DECLARE_SIGWAKE_EVENT(hdlr) \</span>
-00354 <span class="preprocessor">static void hdlr (adevinfo_t *p) \</span>
-00355 <span class="preprocessor">{ \</span>
-00356 <span class="preprocessor">    struct { \</span>
-00357 <span class="preprocessor">        struct task_struct *task; \</span>
-00358 <span class="preprocessor">    } *ev = (__typeof(ev))(p)-&gt;evdata; \</span>
-00359 <span class="preprocessor">    do_##hdlr(ev-&gt;task);        \</span>
-00360 <span class="preprocessor">    adeos_propagate_event(p); \</span>
-00361 <span class="preprocessor">}</span>
-00362 <span class="preprocessor"></span>
-00363 <span class="preprocessor">#define RTHAL_DECLARE_EXIT_EVENT(hdlr) \</span>
-00364 <span class="preprocessor">static void hdlr (adevinfo_t *p) \</span>
-00365 <span class="preprocessor">{ \</span>
-00366 <span class="preprocessor">    struct task_struct *task = (struct task_struct *)p-&gt;evdata; \</span>
-00367 <span class="preprocessor">    do_##hdlr(task);    \</span>
-00368 <span class="preprocessor">    adeos_propagate_event(p); \</span>
-00369 <span class="preprocessor">}</span>
-00370 <span class="preprocessor"></span>
-00371 <span class="preprocessor">#define rthal_catch_taskexit(hdlr)      \</span>
-00372 <span class="preprocessor">    adeos_catch_event_from(adp_root,ADEOS_EXIT_PROCESS,hdlr)</span>
-00373 <span class="preprocessor"></span><span class="preprocessor">#define rthal_catch_sigwake(hdlr)       \</span>
-00374 <span class="preprocessor">    adeos_catch_event_from(adp_root,ADEOS_KICK_PROCESS,hdlr)</span>
-00375 <span class="preprocessor"></span><span class="preprocessor">#define rthal_catch_schedule(hdlr)      \</span>
-00376 <span class="preprocessor">    adeos_catch_event_from(adp_root,ADEOS_SCHEDULE_HEAD,hdlr)</span>
-00377 <span class="preprocessor"></span><span class="preprocessor">#define rthal_catch_setsched(hdlr)      \</span>
-00378 <span class="preprocessor">    adeos_catch_event_from(&amp;rthal_domain,ADEOS_RENICE_PROCESS,hdlr)</span>
-00379 <span class="preprocessor"></span><span class="preprocessor">#define rthal_catch_losyscall(hdlr)     \</span>
-00380 <span class="preprocessor">    adeos_catch_event_from(adp_root,ADEOS_SYSCALL_PROLOGUE,hdlr)</span>
-00381 <span class="preprocessor"></span><span class="preprocessor">#define rthal_catch_hisyscall(hdlr)     \</span>
-00382 <span class="preprocessor">    adeos_catch_event_from(&amp;rthal_domain,ADEOS_SYSCALL_PROLOGUE,hdlr)</span>
-00383 <span class="preprocessor"></span><span class="preprocessor">#define rthal_catch_exception(ex,hdlr)  \</span>
-00384 <span class="preprocessor">    adeos_catch_event_from(&amp;rthal_domain,ex,hdlr)</span>
-00385 <span class="preprocessor"></span>
-00386 <span class="preprocessor">#define rthal_register_domain(_dom,_name,_id,_prio,_entry)      \</span>
-00387 <span class="preprocessor"> ({     \</span>
-00388 <span class="preprocessor">    adattr_t attr; \</span>
-00389 <span class="preprocessor">    adeos_init_attr(&amp;attr); \</span>
-00390 <span class="preprocessor">    attr.name = _name;     \</span>
-00391 <span class="preprocessor">    attr.entry = _entry;   \</span>
-00392 <span class="preprocessor">    attr.domid = _id;      \</span>
-00393 <span class="preprocessor">    attr.priority = _prio; \</span>
-00394 <span class="preprocessor">    adeos_register_domain(_dom,&amp;attr); \</span>
-00395 <span class="preprocessor"> })</span>
-00396 <span class="preprocessor"></span>
-00397 <span class="preprocessor">#define rthal_unregister_domain(dom)    adeos_unregister_domain(dom)</span>
-00398 <span class="preprocessor"></span>
-00399 <span class="preprocessor">#if !defined(CONFIG_ADEOS_NOTHREADS)</span>
-00400 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_DECLARE_DOMAIN(entry)     \</span>
-00401 <span class="preprocessor">void entry (int iflag)  \</span>
-00402 <span class="preprocessor">{                       \</span>
-00403 <span class="preprocessor">    if (iflag)          \</span>
-00404 <span class="preprocessor">        do_##entry();\</span>
-00405 <span class="preprocessor">    for (;;)            \</span>
-00406 <span class="preprocessor">        rthal_suspend_domain(); \</span>
-00407 <span class="preprocessor">}</span>
-00408 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* CONFIG_ADEOS_NOTHREADS */</span>
-00409 <span class="preprocessor">#define RTHAL_DECLARE_DOMAIN(entry)     \</span>
-00410 <span class="preprocessor">void entry (int iflag)  \</span>
-00411 <span class="preprocessor">{                       \</span>
-00412 <span class="preprocessor">    do_##entry();       \</span>
-00413 <span class="preprocessor">}</span>
-00414 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_ADEOS_NOTHREADS */</span>
-00415 
-00416 <span class="keyword">extern</span> <span class="keywordtype">void</span> rthal_domain_entry(<span class="keywordtype">int</span> iflag);
-00417 
-00418 <span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_IPIPE */</span>
-00419 
-00420 <span class="preprocessor">#define rthal_spin_lock_irq(lock) \</span>
-00421 <span class="preprocessor">do {  \</span>
-00422 <span class="preprocessor">    rthal_local_irq_disable(); \</span>
-00423 <span class="preprocessor">    rthal_spin_lock(lock); \</span>
-00424 <span class="preprocessor">} while(0)</span>
-00425 <span class="preprocessor"></span>
-00426 <span class="preprocessor">#define rthal_spin_unlock_irq(lock) \</span>
-00427 <span class="preprocessor">do {  \</span>
-00428 <span class="preprocessor">    rthal_spin_unlock(lock); \</span>
-00429 <span class="preprocessor">    rthal_local_irq_enable(); \</span>
-00430 <span class="preprocessor">} while(0)</span>
-00431 <span class="preprocessor"></span>
-00432 <span class="preprocessor">#define rthal_spin_lock_irqsave(lock,x) \</span>
-00433 <span class="preprocessor">do {  \</span>
-00434 <span class="preprocessor">    rthal_local_irq_save(x); \</span>
-00435 <span class="preprocessor">    rthal_spin_lock(lock); \</span>
-00436 <span class="preprocessor">} while(0)</span>
-00437 <span class="preprocessor"></span>
-00438 <span class="preprocessor">#define rthal_spin_unlock_irqrestore(lock,x) \</span>
-00439 <span class="preprocessor">do {  \</span>
-00440 <span class="preprocessor">    rthal_spin_unlock(lock); \</span>
-00441 <span class="preprocessor">    rthal_local_irq_restore(x); \</span>
-00442 <span class="preprocessor">} while(0)</span>
-00443 <span class="preprocessor"></span>
-00444 <span class="preprocessor">#define rthal_printk    printk</span>
-00445 <span class="preprocessor"></span>
-00446 <span class="keyword">typedef</span> void (*rthal_irq_handler_t)(<span class="keywordtype">unsigned</span> irq,
-00447                                     <span class="keywordtype">void</span> *cookie);
-00448 
-00449 <span class="keyword">struct </span>rthal_calibration_data {
-00450 
-00451     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> cpu_freq;
-00452     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> timer_freq;
-00453 };
-00454 
-00455 <span class="keyword">typedef</span> int (*rthal_trap_handler_t)(<span class="keywordtype">unsigned</span> trapno,
-00456                                     <span class="keywordtype">unsigned</span> domid,
-00457                                     <span class="keywordtype">void</span> *data);
-00458 
-00459 <span class="keyword">extern</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rthal_cpufreq_arg;
-00460 
-00461 <span class="keyword">extern</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rthal_timerfreq_arg;
-00462 
-00463 <span class="keyword">extern</span> rthal_pipeline_stage_t rthal_domain;
-00464 
-00465 <span class="keyword">extern</span> <span class="keyword">struct </span>rthal_calibration_data rthal_tunables;
-00466 
-00467 <span class="keyword">extern</span> <span class="keyword">volatile</span> <span class="keywordtype">int</span> rthal_sync_op;
-00468 
-00469 <span class="keyword">extern</span> <span class="keyword">volatile</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rthal_cpu_realtime;
-00470 
-00471 <span class="keyword">extern</span> rthal_trap_handler_t rthal_trap_handler;
-00472 
-00473 <span class="keyword">extern</span> <span class="keywordtype">int</span> rthal_realtime_faults[RTHAL_NR_CPUS][RTHAL_NR_FAULTS];
-00474 
-00475 <span class="keyword">extern</span> <span class="keywordtype">int</span> rthal_arch_init(<span class="keywordtype">void</span>);
-00476 
-00477 <span class="keyword">extern</span> <span class="keywordtype">void</span> rthal_arch_cleanup(<span class="keywordtype">void</span>);
-00478 
-00479     <span class="comment">/* Private interface -- Internal use only */</span>
-00480 
-00481 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rthal_critical_enter(<span class="keywordtype">void</span> (*synch)(<span class="keywordtype">void</span>));
-00482 
-00483 <span class="keywordtype">void</span> rthal_critical_exit(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> flags);
-00484 
-00485     <span class="comment">/* Public interface */</span>
-00486 
-00487 <span class="preprocessor">#ifdef __cplusplus</span>
-00488 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-00489 <span class="preprocessor">#endif </span><span class="comment">/* __cplusplus */</span>
-00490 
-00491 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga75">rthal_irq_request</a>(<span class="keywordtype">unsigned</span> irq,
-00492                       <span class="keywordtype">void</span> (*handler)(<span class="keywordtype">unsigned</span> irq, <span class="keywordtype">void</span> *cookie),
-00493                       <span class="keywordtype">int</span> (*ackfn)(<span class="keywordtype">unsigned</span> irq),
-00494                       <span class="keywordtype">void</span> *cookie);
-00495 
-00496 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga76">rthal_irq_release</a>(<span class="keywordtype">unsigned</span> irq);
-00497 
-00498 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga77">rthal_irq_enable</a>(<span class="keywordtype">unsigned</span> irq);
-00499 
-00500 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga78">rthal_irq_disable</a>(<span class="keywordtype">unsigned</span> irq);
-00501 
-00502 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga79">rthal_irq_host_request</a>(<span class="keywordtype">unsigned</span> irq,
-00503                            irqreturn_t (*handler)(<span class="keywordtype">int</span> irq,
-00504                                                   <span class="keywordtype">void</span> *dev_id,
-00505                                                   <span class="keyword">struct</span> pt_regs *regs), 
-00506                            <span class="keywordtype">char</span> *name,
-00507                            <span class="keywordtype">void</span> *dev_id);
-00508 
-00509 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga80">rthal_irq_host_release</a>(<span class="keywordtype">unsigned</span> irq,
-00510                            <span class="keywordtype">void</span> *dev_id);
-00511 
-00512 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga81">rthal_irq_host_pend</a>(<span class="keywordtype">unsigned</span> irq);
-00513 
-00514 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga84">rthal_apc_alloc</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name,
-00515                     <span class="keywordtype">void</span> (*handler)(<span class="keywordtype">void</span> *cookie),
-00516                     <span class="keywordtype">void</span> *cookie);
-00517 
-00518 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga85">rthal_apc_free</a>(<span class="keywordtype">int</span> apc);
-00519 
-00520 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga86">rthal_apc_schedule</a>(<span class="keywordtype">int</span> apc);
-00521 
-00522 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga82">rthal_irq_affinity</a>(<span class="keywordtype">unsigned</span> irq,
-00523                        cpumask_t cpumask,
-00524                        cpumask_t *oldmask);
-00525 
-00526 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga87">rthal_timer_request</a>(<span class="keywordtype">void</span> (*handler)(<span class="keywordtype">void</span>),
-00527                         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> nstick);
-00528 
-00529 <span class="keywordtype">void</span> <a class="code" href="group__hal.html#ga88">rthal_timer_release</a>(<span class="keywordtype">void</span>);
-00530 
-00531 rthal_trap_handler_t <a class="code" href="group__hal.html#ga83">rthal_trap_catch</a>(rthal_trap_handler_t handler);
-00532 
-00533 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rthal_timer_calibrate(<span class="keywordtype">void</span>);
-00534 
-00535 <span class="preprocessor">#ifdef __cplusplus</span>
-00536 <span class="preprocessor"></span>}
-00537 <span class="preprocessor">#endif </span><span class="comment">/* __cplusplus */</span>
-00538 
-00539 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
-00540 
-00543 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_ASM_GENERIC_HAL_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Fri Jan 13 21:37:27 2006 for Xenomai API by&nbsp;
+00241 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_CRITICAL_VECTOR   ADEOS_CRITICAL_VECTOR</span>
+00242 <span class="preprocessor"></span>
+00243 <span class="keyword">typedef</span> adomain_t rthal_pipeline_stage_t;
+00244 
+00245 <span class="preprocessor">#ifdef RAW_RW_LOCK_UNLOCKED</span>
+00246 <span class="preprocessor"></span><span class="keyword">typedef</span> raw_spinlock_t rthal_spinlock_t;
+00247 <span class="preprocessor">#define RTHAL_SPIN_LOCK_UNLOCKED RAW_SPIN_LOCK_UNLOCKED</span>
+00248 <span class="preprocessor"></span><span class="keyword">typedef</span> raw_rwlock_t rthal_rwlock_t;
+00249 <span class="preprocessor">#define RTHAL_RW_LOCK_UNLOCKED RAW_RW_LOCK_UNLOCKED</span>
+00250 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !RAW_RW_LOCK_UNLOCKED */</span>
+00251 <span class="keyword">typedef</span> spinlock_t rthal_spinlock_t;
+00252 <span class="preprocessor">#define RTHAL_SPIN_LOCK_UNLOCKED SPIN_LOCK_UNLOCKED</span>
+00253 <span class="preprocessor"></span><span class="keyword">typedef</span> rwlock_t rthal_rwlock_t;
+00254 <span class="preprocessor">#define RTHAL_RW_LOCK_UNLOCKED RW_LOCK_UNLOCKED</span>
+00255 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* RAW_RW_LOCK_UNLOCKED */</span>
+00256 
+00257 <span class="preprocessor">#define rthal_local_irq_disable()       adeos_stall_pipeline_from(&amp;rthal_domain)</span>
+00258 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_enable()        adeos_unstall_pipeline_from(&amp;rthal_domain)</span>
+00259 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_save(x)         ((x) = !!adeos_test_and_stall_pipeline_from(&amp;rthal_domain))</span>
+00260 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_restore(x)      adeos_restore_pipeline_from(&amp;rthal_domain,(x))</span>
+00261 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_flags(x)        ((x) = !!adeos_test_pipeline_from(&amp;rthal_domain))</span>
+00262 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_test()          (!!adeos_test_pipeline_from(&amp;rthal_domain))</span>
+00263 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_sync(x)         ((x) = !!adeos_test_and_unstall_pipeline_from(&amp;rthal_domain))</span>
+00264 <span class="preprocessor"></span><span class="preprocessor">#define rthal_stage_irq_enable(dom)     adeos_unstall_pipeline_from(dom)</span>
+00265 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_save_hw(x)      adeos_hw_local_irq_save(x)</span>
+00266 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_restore_hw(x)   adeos_hw_local_irq_restore(x)</span>
+00267 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_enable_hw()     adeos_hw_sti()</span>
+00268 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_disable_hw()    adeos_hw_cli()</span>
+00269 <span class="preprocessor"></span><span class="preprocessor">#define rthal_local_irq_flags_hw(x)     adeos_hw_local_irq_flags(x)</span>
+00270 <span class="preprocessor"></span>
+00271 <span class="preprocessor">#define rthal_write_lock(lock)          adeos_write_lock(lock)</span>
+00272 <span class="preprocessor"></span><span class="preprocessor">#define rthal_write_unlock(lock)        adeos_write_unlock(lock)</span>
+00273 <span class="preprocessor"></span><span class="preprocessor">#define rthal_read_lock(lock)           adeos_read_lock(lock)</span>
+00274 <span class="preprocessor"></span><span class="preprocessor">#define rthal_read_unlock(lock)         adeos_read_unlock(lock)</span>
+00275 <span class="preprocessor"></span><span class="preprocessor">#define rthal_spin_lock(lock)           adeos_spin_lock(lock)</span>
+00276 <span class="preprocessor"></span><span class="preprocessor">#define rthal_spin_unlock(lock)         adeos_spin_unlock(lock)</span>
+00277 <span class="preprocessor"></span>
+00278 <span class="preprocessor">#define rthal_root_domain                       adp_root</span>
+00279 <span class="preprocessor"></span><span class="preprocessor">#define rthal_current_domain                    adp_current</span>
+00280 <span class="preprocessor"></span><span class="preprocessor">#define rthal_declare_cpuid                     adeos_declare_cpuid</span>
+00281 <span class="preprocessor"></span>
+00282 <span class="preprocessor">#define rthal_load_cpuid()                      adeos_load_cpuid()</span>
+00283 <span class="preprocessor"></span><span class="preprocessor">#define rthal_suspend_domain()                  adeos_suspend_domain()</span>
+00284 <span class="preprocessor"></span><span class="preprocessor">#define rthal_grab_superlock(syncfn)            adeos_critical_enter(syncfn)</span>
+00285 <span class="preprocessor"></span><span class="preprocessor">#define rthal_release_superlock(x)              adeos_critical_exit(x)</span>
+00286 <span class="preprocessor"></span><span class="preprocessor">#define rthal_propagate_irq(irq)                adeos_propagate_irq(irq)</span>
+00287 <span class="preprocessor"></span><span class="preprocessor">#define rthal_set_irq_affinity(irq,aff)         adeos_set_irq_affinity(irq,aff)</span>
+00288 <span class="preprocessor"></span><span class="preprocessor">#define rthal_schedule_irq(irq)                 adeos_schedule_irq(irq)</span>
+00289 <span class="preprocessor"></span><span class="preprocessor">#define rthal_virtualize_irq(dom,irq,isr,ackfn,mode) adeos_virtualize_irq_from(dom,irq,isr,ackfn,mode)</span>
+00290 <span class="preprocessor"></span><span class="preprocessor">#define rthal_alloc_virq()                      adeos_alloc_irq()</span>
+00291 <span class="preprocessor"></span><span class="preprocessor">#define rthal_free_virq(irq)                    adeos_free_irq(irq)</span>
+00292 <span class="preprocessor"></span><span class="preprocessor">#define rthal_trigger_irq(irq)                  adeos_trigger_irq(irq)</span>
+00293 <span class="preprocessor"></span><span class="preprocessor">#define rthal_get_sysinfo(ibuf)                 adeos_get_sysinfo(ibuf)</span>
+00294 <span class="preprocessor"></span><span class="preprocessor">#define rthal_alloc_ptdkey()                    adeos_alloc_ptdkey()</span>
+00295 <span class="preprocessor"></span><span class="preprocessor">#define rthal_free_ptdkey(key)                  adeos_free_ptdkey(key)</span>
+00296 <span class="preprocessor"></span><span class="preprocessor">#define rthal_send_ipi(irq,cpus)                adeos_send_ipi(irq,cpus)</span>
+00297 <span class="preprocessor"></span><span class="preprocessor">#define rthal_lock_irq(dom,cpu,irq)             __adeos_lock_irq(dom,cpu,irq)</span>
+00298 <span class="preprocessor"></span><span class="preprocessor">#define rthal_unlock_irq(dom,irq)               __adeos_unlock_irq(dom,irq)</span>
+00299 <span class="preprocessor"></span><span class="preprocessor">#ifdef ADEOS_GRAB_TIMER</span>
+00300 <span class="preprocessor"></span><span class="preprocessor">#define rthal_set_timer(ns)                     adeos_tune_timer(ns,ns ? 0 : ADEOS_GRAB_TIMER)</span>
+00301 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !ADEOS_GRAB_TIMER */</span>
+00302 <span class="preprocessor">#define rthal_set_timer(ns)                     adeos_tune_timer(ns,0)</span>
+00303 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* ADEOS_GRAB_TIMER */</span>
+00304 <span class="preprocessor">#define rthal_reset_timer()                     adeos_tune_timer(0,ADEOS_RESET_TIMER)</span>
+00305 <span class="preprocessor"></span>
+00306 <span class="preprocessor">#define rthal_lock_cpu(x)                       adeos_lock_cpu(x)</span>
+00307 <span class="preprocessor"></span><span class="preprocessor">#define rthal_unlock_cpu(x)                     adeos_unlock_cpu(x)</span>
+00308 <span class="preprocessor"></span><span class="preprocessor">#define rthal_get_cpu(x)                        adeos_get_cpu(x)</span>
+00309 <span class="preprocessor"></span><span class="preprocessor">#define rthal_put_cpu(x)                        adeos_put_cpu(x)</span>
+00310 <span class="preprocessor"></span><span class="preprocessor">#define rthal_processor_id()                    adeos_processor_id()</span>
+00311 <span class="preprocessor"></span>
+00312 <span class="preprocessor">#define rthal_setsched_root(t,pol,prio)         __adeos_setscheduler_root(t,pol,prio)</span>
+00313 <span class="preprocessor"></span><span class="preprocessor">#define rthal_reenter_root(t,pol,prio)          __adeos_reenter_root(t,pol,prio)</span>
+00314 <span class="preprocessor"></span><span class="preprocessor">#define rthal_emergency_console()               adeos_set_printk_sync(adp_current)</span>
+00315 <span class="preprocessor"></span><span class="preprocessor">#define rthal_read_tsc(v)                       adeos_hw_tsc(v)</span>
+00316 <span class="preprocessor"></span>
+00317 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rthal_get_cpufreq(<span class="keywordtype">void</span>)
+00318 {
+00319     adsysinfo_t sysinfo;
+00320     rthal_get_sysinfo(&amp;sysinfo);
+00321     <span class="keywordflow">return</span> (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>)sysinfo.cpufreq;
+00322 }
+00323 
+00324 <span class="preprocessor">#define RTHAL_DECLARE_EVENT(hdlr) \</span>
+00325 <span class="preprocessor">static void hdlr (adevinfo_t *p) \</span>
+00326 <span class="preprocessor">{ \</span>
+00327 <span class="preprocessor">    if (do_##hdlr((p)-&gt;event,(p)-&gt;domid,(p)-&gt;evdata) == RTHAL_EVENT_PROPAGATE)  \</span>
+00328 <span class="preprocessor">        adeos_propagate_event(p); \</span>
+00329 <span class="preprocessor">}</span>
+00330 <span class="preprocessor"></span>
+00331 <span class="preprocessor">#define RTHAL_DECLARE_SCHEDULE_EVENT(hdlr) \</span>
+00332 <span class="preprocessor">static void hdlr (adevinfo_t *p) \</span>
+00333 <span class="preprocessor">{ \</span>
+00334 <span class="preprocessor">    struct { \</span>
+00335 <span class="preprocessor">        struct task_struct *prev; \</span>
+00336 <span class="preprocessor">        struct task_struct *next; \</span>
+00337 <span class="preprocessor">    } *ev = (__typeof(ev))(p)-&gt;evdata; \</span>
+00338 <span class="preprocessor">    do_##hdlr(ev-&gt;next);        \</span>
+00339 <span class="preprocessor">    adeos_propagate_event(p); \</span>
+00340 <span class="preprocessor">}</span>
+00341 <span class="preprocessor"></span>
+00342 <span class="preprocessor">#define RTHAL_DECLARE_SETSCHED_EVENT(hdlr) \</span>
+00343 <span class="preprocessor">static void hdlr (adevinfo_t *p) \</span>
+00344 <span class="preprocessor">{ \</span>
+00345 <span class="preprocessor">    struct { \</span>
+00346 <span class="preprocessor">        struct task_struct *task; \</span>
+00347 <span class="preprocessor">        int policy; \</span>
+00348 <span class="preprocessor">        struct sched_param *param; \</span>
+00349 <span class="preprocessor">    } *ev = (__typeof(ev))(p)-&gt;evdata; \</span>
+00350 <span class="preprocessor">    do_##hdlr(ev-&gt;task,ev-&gt;param-&gt;sched_priority);      \</span>
+00351 <span class="preprocessor">    adeos_propagate_event(p); \</span>
+00352 <span class="preprocessor">}</span>
+00353 <span class="preprocessor"></span>
+00354 <span class="preprocessor">#define RTHAL_DECLARE_SIGWAKE_EVENT(hdlr) \</span>
+00355 <span class="preprocessor">static void hdlr (adevinfo_t *p) \</span>
+00356 <span class="preprocessor">{ \</span>
+00357 <span class="preprocessor">    struct { \</span>
+00358 <span class="preprocessor">        struct task_struct *task; \</span>
+00359 <span class="preprocessor">    } *ev = (__typeof(ev))(p)-&gt;evdata; \</span>
+00360 <span class="preprocessor">    do_##hdlr(ev-&gt;task);        \</span>
+00361 <span class="preprocessor">    adeos_propagate_event(p); \</span>
+00362 <span class="preprocessor">}</span>
+00363 <span class="preprocessor"></span>
+00364 <span class="preprocessor">#define RTHAL_DECLARE_EXIT_EVENT(hdlr) \</span>
+00365 <span class="preprocessor">static void hdlr (adevinfo_t *p) \</span>
+00366 <span class="preprocessor">{ \</span>
+00367 <span class="preprocessor">    struct task_struct *task = (struct task_struct *)p-&gt;evdata; \</span>
+00368 <span class="preprocessor">    do_##hdlr(task);    \</span>
+00369 <span class="preprocessor">    adeos_propagate_event(p); \</span>
+00370 <span class="preprocessor">}</span>
+00371 <span class="preprocessor"></span>
+00372 <span class="preprocessor">#define rthal_catch_taskexit(hdlr)      \</span>
+00373 <span class="preprocessor">    adeos_catch_event_from(adp_root,ADEOS_EXIT_PROCESS,hdlr)</span>
+00374 <span class="preprocessor"></span><span class="preprocessor">#define rthal_catch_sigwake(hdlr)       \</span>
+00375 <span class="preprocessor">    adeos_catch_event_from(adp_root,ADEOS_KICK_PROCESS,hdlr)</span>
+00376 <span class="preprocessor"></span><span class="preprocessor">#define rthal_catch_schedule(hdlr)      \</span>
+00377 <span class="preprocessor">    adeos_catch_event_from(adp_root,ADEOS_SCHEDULE_HEAD,hdlr)</span>
+00378 <span class="preprocessor"></span><span class="preprocessor">#define rthal_catch_setsched(hdlr)      \</span>
+00379 <span class="preprocessor">    adeos_catch_event_from(&amp;rthal_domain,ADEOS_RENICE_PROCESS,hdlr)</span>
+00380 <span class="preprocessor"></span><span class="preprocessor">#define rthal_catch_losyscall(hdlr)     \</span>
+00381 <span class="preprocessor">    adeos_catch_event_from(adp_root,ADEOS_SYSCALL_PROLOGUE,hdlr)</span>
+00382 <span class="preprocessor"></span><span class="preprocessor">#define rthal_catch_hisyscall(hdlr)     \</span>
+00383 <span class="preprocessor">    adeos_catch_event_from(&amp;rthal_domain,ADEOS_SYSCALL_PROLOGUE,hdlr)</span>
+00384 <span class="preprocessor"></span><span class="preprocessor">#define rthal_catch_exception(ex,hdlr)  \</span>
+00385 <span class="preprocessor">    adeos_catch_event_from(&amp;rthal_domain,ex,hdlr)</span>
+00386 <span class="preprocessor"></span>
+00387 <span class="preprocessor">#define rthal_register_domain(_dom,_name,_id,_prio,_entry)      \</span>
+00388 <span class="preprocessor"> ({     \</span>
+00389 <span class="preprocessor">    adattr_t attr; \</span>
+00390 <span class="preprocessor">    adeos_init_attr(&amp;attr); \</span>
+00391 <span class="preprocessor">    attr.name = _name;     \</span>
+00392 <span class="preprocessor">    attr.entry = _entry;   \</span>
+00393 <span class="preprocessor">    attr.domid = _id;      \</span>
+00394 <span class="preprocessor">    attr.priority = _prio; \</span>
+00395 <span class="preprocessor">    adeos_register_domain(_dom,&amp;attr); \</span>
+00396 <span class="preprocessor"> })</span>
+00397 <span class="preprocessor"></span>
+00398 <span class="preprocessor">#define rthal_unregister_domain(dom)    adeos_unregister_domain(dom)</span>
+00399 <span class="preprocessor"></span>
+00400 <span class="preprocessor">#if !defined(CONFIG_ADEOS_NOTHREADS)</span>
+00401 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_DECLARE_DOMAIN(entry)     \</span>
+00402 <span class="preprocessor">void entry (int iflag)  \</span>
+00403 <span class="preprocessor">{                       \</span>
+00404 <span class="preprocessor">    if (iflag)          \</span>
+00405 <span class="preprocessor">        do_##entry();\</span>
+00406 <span class="preprocessor">    for (;;)            \</span>
+00407 <span class="preprocessor">        rthal_suspend_domain(); \</span>
+00408 <span class="preprocessor">}</span>
+00409 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* CONFIG_ADEOS_NOTHREADS */</span>
+00410 <span class="preprocessor">#define RTHAL_DECLARE_DOMAIN(entry)     \</span>
+00411 <span class="preprocessor">void entry (int iflag)  \</span>
+00412 <span class="preprocessor">{                       \</span>
+00413 <span class="preprocessor">    do_##entry();       \</span>
+00414 <span class="preprocessor">}</span>
+00415 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_ADEOS_NOTHREADS */</span>
+00416 
+00417 <span class="keyword">extern</span> <span class="keywordtype">void</span> rthal_domain_entry(<span class="keywordtype">int</span> iflag);
+00418 
+00419 <span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_IPIPE */</span>
+00420 
+00421 <span class="preprocessor">#define rthal_spin_lock_irq(lock) \</span>
+00422 <span class="preprocessor">do {  \</span>
+00423 <span class="preprocessor">    rthal_local_irq_disable(); \</span>
+00424 <span class="preprocessor">    rthal_spin_lock(lock); \</span>
+00425 <span class="preprocessor">} while(0)</span>
+00426 <span class="preprocessor"></span>
+00427 <span class="preprocessor">#define rthal_spin_unlock_irq(lock) \</span>
+00428 <span class="preprocessor">do {  \</span>
+00429 <span class="preprocessor">    rthal_spin_unlock(lock); \</span>
+00430 <span class="preprocessor">    rthal_local_irq_enable(); \</span>
+00431 <span class="preprocessor">} while(0)</span>
+00432 <span class="preprocessor"></span>
+00433 <span class="preprocessor">#define rthal_spin_lock_irqsave(lock,x) \</span>
+00434 <span class="preprocessor">do {  \</span>
+00435 <span class="preprocessor">    rthal_local_irq_save(x); \</span>
+00436 <span class="preprocessor">    rthal_spin_lock(lock); \</span>
+00437 <span class="preprocessor">} while(0)</span>
+00438 <span class="preprocessor"></span>
+00439 <span class="preprocessor">#define rthal_spin_unlock_irqrestore(lock,x) \</span>
+00440 <span class="preprocessor">do {  \</span>
+00441 <span class="preprocessor">    rthal_spin_unlock(lock); \</span>
+00442 <span class="preprocessor">    rthal_local_irq_restore(x); \</span>
+00443 <span class="preprocessor">} while(0)</span>
+00444 <span class="preprocessor"></span>
+00445 <span class="preprocessor">#define rthal_printk    printk</span>
+00446 <span class="preprocessor"></span>
+00447 <span class="keyword">typedef</span> void (*rthal_irq_handler_t)(<span class="keywordtype">unsigned</span> irq,
+00448                                     <span class="keywordtype">void</span> *cookie);
+00449 
+00450 <span class="keyword">struct </span>rthal_calibration_data {
+00451 
+00452     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> cpu_freq;
+00453     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> timer_freq;
+00454 };
+00455 
+00456 <span class="keyword">typedef</span> int (*rthal_trap_handler_t)(<span class="keywordtype">unsigned</span> trapno,
+00457                                     <span class="keywordtype">unsigned</span> domid,
+00458                                     <span class="keywordtype">void</span> *data);
+00459 
+00460 <span class="keyword">extern</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rthal_cpufreq_arg;
+00461 
+00462 <span class="keyword">extern</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rthal_timerfreq_arg;
+00463 
+00464 <span class="keyword">extern</span> rthal_pipeline_stage_t rthal_domain;
+00465 
+00466 <span class="keyword">extern</span> <span class="keyword">struct </span>rthal_calibration_data rthal_tunables;
+00467 
+00468 <span class="keyword">extern</span> <span class="keyword">volatile</span> <span class="keywordtype">int</span> rthal_sync_op;
+00469 
+00470 <span class="keyword">extern</span> <span class="keyword">volatile</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rthal_cpu_realtime;
+00471 
+00472 <span class="keyword">extern</span> rthal_trap_handler_t rthal_trap_handler;
+00473 
+00474 <span class="keyword">extern</span> <span class="keywordtype">int</span> rthal_realtime_faults[RTHAL_NR_CPUS][RTHAL_NR_FAULTS];
+00475 
+00476 <span class="keyword">extern</span> <span class="keywordtype">int</span> rthal_arch_init(<span class="keywordtype">void</span>);
+00477 
+00478 <span class="keyword">extern</span> <span class="keywordtype">void</span> rthal_arch_cleanup(<span class="keywordtype">void</span>);
+00479 
+00480     <span class="comment">/* Private interface -- Internal use only */</span>
+00481 
+00482 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rthal_critical_enter(<span class="keywordtype">void</span> (*synch)(<span class="keywordtype">void</span>));
+00483 
+00484 <span class="keywordtype">void</span> rthal_critical_exit(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> flags);
+00485 
+00486     <span class="comment">/* Public interface */</span>
+00487 
+00488 <span class="preprocessor">#ifdef __cplusplus</span>
+00489 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+00490 <span class="preprocessor">#endif </span><span class="comment">/* __cplusplus */</span>
+00491 
+00492 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga76">rthal_irq_request</a>(<span class="keywordtype">unsigned</span> irq,
+00493                       <span class="keywordtype">void</span> (*handler)(<span class="keywordtype">unsigned</span> irq, <span class="keywordtype">void</span> *cookie),
+00494                       <span class="keywordtype">int</span> (*ackfn)(<span class="keywordtype">unsigned</span> irq),
+00495                       <span class="keywordtype">void</span> *cookie);
+00496 
+00497 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga77">rthal_irq_release</a>(<span class="keywordtype">unsigned</span> irq);
+00498 
+00499 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga78">rthal_irq_enable</a>(<span class="keywordtype">unsigned</span> irq);
+00500 
+00501 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga79">rthal_irq_disable</a>(<span class="keywordtype">unsigned</span> irq);
+00502 
+00503 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga80">rthal_irq_host_request</a>(<span class="keywordtype">unsigned</span> irq,
+00504                            irqreturn_t (*handler)(<span class="keywordtype">int</span> irq,
+00505                                                   <span class="keywordtype">void</span> *dev_id,
+00506                                                   <span class="keyword">struct</span> pt_regs *regs), 
+00507                            <span class="keywordtype">char</span> *name,
+00508                            <span class="keywordtype">void</span> *dev_id);
+00509 
+00510 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga81">rthal_irq_host_release</a>(<span class="keywordtype">unsigned</span> irq,
+00511                            <span class="keywordtype">void</span> *dev_id);
+00512 
+00513 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga82">rthal_irq_host_pend</a>(<span class="keywordtype">unsigned</span> irq);
+00514 
+00515 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga85">rthal_apc_alloc</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name,
+00516                     <span class="keywordtype">void</span> (*handler)(<span class="keywordtype">void</span> *cookie),
+00517                     <span class="keywordtype">void</span> *cookie);
+00518 
+00519 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga86">rthal_apc_free</a>(<span class="keywordtype">int</span> apc);
+00520 
+00521 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga87">rthal_apc_schedule</a>(<span class="keywordtype">int</span> apc);
+00522 
+00523 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga83">rthal_irq_affinity</a>(<span class="keywordtype">unsigned</span> irq,
+00524                        cpumask_t cpumask,
+00525                        cpumask_t *oldmask);
+00526 
+00527 <span class="keywordtype">int</span> <a class="code" href="group__hal.html#ga88">rthal_timer_request</a>(<span class="keywordtype">void</span> (*handler)(<span class="keywordtype">void</span>),
+00528                         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> nstick);
+00529 
+00530 <span class="keywordtype">void</span> <a class="code" href="group__hal.html#ga89">rthal_timer_release</a>(<span class="keywordtype">void</span>);
+00531 
+00532 rthal_trap_handler_t <a class="code" href="group__hal.html#ga84">rthal_trap_catch</a>(rthal_trap_handler_t handler);
+00533 
+00534 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rthal_timer_calibrate(<span class="keywordtype">void</span>);
+00535 
+00536 <span class="preprocessor">#ifdef __cplusplus</span>
+00537 <span class="preprocessor"></span>}
+00538 <span class="preprocessor">#endif </span><span class="comment">/* __cplusplus */</span>
+00539 
+00540 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
+00541 
+00544 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_ASM_GENERIC_HAL_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Mar 16 19:28:30 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -15,200 +15,211 @@
 00037 <span class="preprocessor">#include &lt;<a class="code" href="asm-generic_2hal_8h.html">nucleus/asm-generic/hal.h</a>&gt;</span>    <span class="comment">/* Read the generic bits. */</span>
 00038 <span class="preprocessor">#include &lt;asm/div64.h&gt;</span>
 00039 
-00040 <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rthal_time_t;
-00041 
-00042 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_ullmul(<span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> m0, 
-00043                                               <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> m1)
-00044 {
-00045     <span class="keywordflow">return</span> (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>) m0 * m1;
-00046 }
-00047 
-00048 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_ulldiv (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> ull,
-00049                                                <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> uld,
-00050                                                <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *<span class="keyword">const</span> rp)
-00051 {
-00052     <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> r = ull % uld;
-00053     ull /= uld;
-00054 
-00055     <span class="keywordflow">if</span> (rp)
-00056         *rp = r;
+00040 <span class="preprocessor">#ifndef CONFIG_ADEOS_CORE</span>
+00041 <span class="preprocessor"></span><span class="preprocessor">#if IPIPE_RELEASE_NUMBER &lt; 0x010000</span>
+00042 <span class="preprocessor"></span><span class="preprocessor">#define rthal_virtualize_irq(dom,irq,isr,ackfn,mode) \</span>
+00043 <span class="preprocessor">    ipipe_virtualize_irq(dom,irq,isr,ackfn,mode)</span>
+00044 <span class="preprocessor"></span><span class="preprocessor">#else</span>
+00045 <span class="preprocessor"></span><span class="preprocessor">#define rthal_virtualize_irq(dom,irq,isr,ackfn,mode) \</span>
+00046 <span class="preprocessor">    ipipe_virtualize_irq(dom,irq,(ipipe_irq_handler_t)isr,NULL,(ipipe_irq_ackfn_t)ackfn,mode)</span>
+00047 <span class="preprocessor"></span><span class="preprocessor">#endif</span>
+00048 <span class="preprocessor"></span><span class="preprocessor">#endif</span>
+00049 <span class="preprocessor"></span>
+00050 <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rthal_time_t;
+00051 
+00052 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_ullmul(<span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> m0, 
+00053                                               <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> m1)
+00054 {
+00055     <span class="keywordflow">return</span> (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>) m0 * m1;
+00056 }
 00057 
-00058     <span class="keywordflow">return</span> ull;
-00059 }
-00060 
-00061 <span class="preprocessor">#define rthal_uldivrem(ull,ul,rp) ((u_long) rthal_ulldiv((ull),(ul),(rp)))</span>
-00062 <span class="preprocessor"></span>
-00063 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rthal_imuldiv (<span class="keywordtype">int</span> i, <span class="keywordtype">int</span> mult, <span class="keywordtype">int</span> div) {
+00058 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_ulldiv (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> ull,
+00059                                                <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> uld,
+00060                                                <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *<span class="keyword">const</span> rp)
+00061 {
+00062     <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> r = ull % uld;
+00063     ull /= uld;
 00064 
-00065     <span class="comment">/* Returns (int)i = (unsigned long long)i*(u_long)(mult)/(u_long)div. */</span>
-00066     <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> ull = rthal_ullmul(i, mult);
-00067     <span class="keywordflow">return</span> rthal_uldivrem(ull, div, NULL);
-00068 }
-00069 
-00070 <span class="keyword">static</span> <span class="keyword">inline</span> __attribute_const__
-00071 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> __rthal_ullimd (<span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> op,
-00072                                    <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> m,
-00073                                    <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> d)
-00074 {
-00075         <span class="keywordflow">return</span> (op*m)/d;
-00076 }
-00077 
-00078 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_llimd (<span class="keywordtype">long</span> <span class="keywordtype">long</span> op,
-00079                                      <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> m,
-00080                                      <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> d)
-00081 {
-00082 
-00083     <span class="keywordflow">if</span>(op &lt; 0LL)
-00084         <span class="keywordflow">return</span> -__rthal_ullimd(-op, m, d);
-00085     <span class="keywordflow">return</span> __rthal_ullimd(op, m, d);
+00065     <span class="keywordflow">if</span> (rp)
+00066         *rp = r;
+00067 
+00068     <span class="keywordflow">return</span> ull;
+00069 }
+00070 
+00071 <span class="preprocessor">#define rthal_uldivrem(ull,ul,rp) ((u_long) rthal_ulldiv((ull),(ul),(rp)))</span>
+00072 <span class="preprocessor"></span>
+00073 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rthal_imuldiv (<span class="keywordtype">int</span> i, <span class="keywordtype">int</span> mult, <span class="keywordtype">int</span> div) {
+00074 
+00075     <span class="comment">/* Returns (int)i = (unsigned long long)i*(u_long)(mult)/(u_long)div. */</span>
+00076     <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> ull = rthal_ullmul(i, mult);
+00077     <span class="keywordflow">return</span> rthal_uldivrem(ull, div, NULL);
+00078 }
+00079 
+00080 <span class="keyword">static</span> <span class="keyword">inline</span> __attribute_const__
+00081 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> __rthal_ullimd (<span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> op,
+00082                                    <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> m,
+00083                                    <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> d)
+00084 {
+00085         <span class="keywordflow">return</span> (op*m)/d;
 00086 }
 00087 
-00088 <span class="keyword">static</span> <span class="keyword">inline</span>  __attribute_const__ <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ffnz (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ul) {
-00089 
-00090     __asm__ (<span class="stringliteral">"cntlzd %0, %1"</span> : <span class="stringliteral">"=r"</span> (ul) : <span class="stringliteral">"r"</span> (ul &amp; (-ul)));
-00091     <span class="keywordflow">return</span> 63 - ul;
-00092 }
-00093 
-00094 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; !defined(__cplusplus)</span>
-00095 <span class="preprocessor"></span><span class="preprocessor">#include &lt;asm/system.h&gt;</span>
-00096 <span class="preprocessor">#include &lt;asm/time.h&gt;</span>
-00097 <span class="preprocessor">#include &lt;asm/timex.h&gt;</span>
-00098 <span class="preprocessor">#include &lt;nucleus/asm/atomic.h&gt;</span>
-00099 <span class="preprocessor">#include &lt;asm/processor.h&gt;</span>
-00100 
-00101 <span class="preprocessor">#ifdef CONFIG_ADEOS_CORE</span>
-00102 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_TIMER_IRQ   ADEOS_TIMER_VIRQ</span>
-00103 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !CONFIG_ADEOS_CORE */</span>
-00104 <span class="preprocessor">#define RTHAL_TIMER_IRQ   IPIPE_TIMER_VIRQ</span>
-00105 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_ADEOS_CORE */</span>
-00106 
-00107 <span class="preprocessor">#define rthal_irq_descp(irq)    (&amp;irq_desc[(irq)])</span>
-00108 <span class="preprocessor"></span>
-00109 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_rdtsc (<span class="keywordtype">void</span>) {
-00110     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> t;
-00111     rthal_read_tsc(t);
-00112     <span class="keywordflow">return</span> t;
-00113 }
-00114 
-00115 <span class="preprocessor">#if defined(CONFIG_ADEOS_CORE) &amp;&amp; !defined(CONFIG_ADEOS_NOTHREADS)</span>
-00116 <span class="preprocessor"></span>
-00117 <span class="comment">/* Since real-time interrupt handlers are called on behalf of the</span>
-00118 <span class="comment">   Xenomai domain stack, we cannot infere the "current" Linux task</span>
-00119 <span class="comment">   address using %esp. We must use the suspended Linux domain's stack</span>
-00120 <span class="comment">   pointer instead. */</span>
-00121 
-00122 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct </span>task_struct *rthal_root_host_task (<span class="keywordtype">int</span> cpuid) {
-00123     <span class="keywordflow">return</span> ((<span class="keyword">struct</span> thread_info *)(rthal_root_domain-&gt;esp[cpuid] &amp; (~(16384-1)UL)))-&gt;task;
-00124 }
-00125 
-00126 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct </span>task_struct *rthal_current_host_task (<span class="keywordtype">int</span> cpuid)
-00127 
-00128 {
-00129     <span class="keyword">register</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> esp <span class="keyword">asm</span> (<span class="stringliteral">"r1"</span>);
-00130     
-00131     <span class="keywordflow">if</span> (esp &gt;= rthal_domain.estackbase[cpuid] &amp;&amp; esp &lt; rthal_domain.estackbase[cpuid] + 16384)
-00132         <span class="keywordflow">return</span> rthal_root_host_task(cpuid);
-00133 
-00134     <span class="keywordflow">return</span> current;
-00135 }
-00136 
-00137 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_ADEOS_CORE || CONFIG_ADEOS_NOTHREADS */</span>
-00138 
-00139 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct </span>task_struct *rthal_root_host_task (<span class="keywordtype">int</span> cpuid) {
-00140     <span class="keywordflow">return</span> current;
-00141 }
-00142 
-00143 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct </span>task_struct *rthal_current_host_task (<span class="keywordtype">int</span> cpuid) {
+00088 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_llimd (<span class="keywordtype">long</span> <span class="keywordtype">long</span> op,
+00089                                      <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> m,
+00090                                      <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> d)
+00091 {
+00092 
+00093     <span class="keywordflow">if</span>(op &lt; 0LL)
+00094         <span class="keywordflow">return</span> -__rthal_ullimd(-op, m, d);
+00095     <span class="keywordflow">return</span> __rthal_ullimd(op, m, d);
+00096 }
+00097 
+00098 <span class="keyword">static</span> <span class="keyword">inline</span>  __attribute_const__ <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ffnz (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ul) {
+00099 
+00100     __asm__ (<span class="stringliteral">"cntlzd %0, %1"</span> : <span class="stringliteral">"=r"</span> (ul) : <span class="stringliteral">"r"</span> (ul &amp; (-ul)));
+00101     <span class="keywordflow">return</span> 63 - ul;
+00102 }
+00103 
+00104 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; !defined(__cplusplus)</span>
+00105 <span class="preprocessor"></span><span class="preprocessor">#include &lt;asm/system.h&gt;</span>
+00106 <span class="preprocessor">#include &lt;asm/time.h&gt;</span>
+00107 <span class="preprocessor">#include &lt;asm/timex.h&gt;</span>
+00108 <span class="preprocessor">#include &lt;nucleus/asm/atomic.h&gt;</span>
+00109 <span class="preprocessor">#include &lt;asm/processor.h&gt;</span>
+00110 
+00111 <span class="preprocessor">#ifdef CONFIG_ADEOS_CORE</span>
+00112 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_TIMER_IRQ   ADEOS_TIMER_VIRQ</span>
+00113 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !CONFIG_ADEOS_CORE */</span>
+00114 <span class="preprocessor">#define RTHAL_TIMER_IRQ   IPIPE_TIMER_VIRQ</span>
+00115 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_ADEOS_CORE */</span>
+00116 
+00117 <span class="preprocessor">#define rthal_irq_descp(irq)    (&amp;irq_desc[(irq)])</span>
+00118 <span class="preprocessor"></span>
+00119 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_rdtsc (<span class="keywordtype">void</span>) {
+00120     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> t;
+00121     rthal_read_tsc(t);
+00122     <span class="keywordflow">return</span> t;
+00123 }
+00124 
+00125 <span class="preprocessor">#if defined(CONFIG_ADEOS_CORE) &amp;&amp; !defined(CONFIG_ADEOS_NOTHREADS)</span>
+00126 <span class="preprocessor"></span>
+00127 <span class="comment">/* Since real-time interrupt handlers are called on behalf of the</span>
+00128 <span class="comment">   Xenomai domain stack, we cannot infere the "current" Linux task</span>
+00129 <span class="comment">   address using %esp. We must use the suspended Linux domain's stack</span>
+00130 <span class="comment">   pointer instead. */</span>
+00131 
+00132 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct </span>task_struct *rthal_root_host_task (<span class="keywordtype">int</span> cpuid) {
+00133     <span class="keywordflow">return</span> ((<span class="keyword">struct</span> thread_info *)(rthal_root_domain-&gt;esp[cpuid] &amp; (~(16384-1)UL)))-&gt;task;
+00134 }
+00135 
+00136 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct </span>task_struct *rthal_current_host_task (<span class="keywordtype">int</span> cpuid)
+00137 
+00138 {
+00139     <span class="keyword">register</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> esp <span class="keyword">asm</span> (<span class="stringliteral">"r1"</span>);
+00140     
+00141     <span class="keywordflow">if</span> (esp &gt;= rthal_domain.estackbase[cpuid] &amp;&amp; esp &lt; rthal_domain.estackbase[cpuid] + 16384)
+00142         <span class="keywordflow">return</span> rthal_root_host_task(cpuid);
+00143 
 00144     <span class="keywordflow">return</span> current;
 00145 }
 00146 
-00147 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_ADEOS_CORE &amp;&amp; !CONFIG_ADEOS_NOTHREADS */</span>
+00147 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_ADEOS_CORE || CONFIG_ADEOS_NOTHREADS */</span>
 00148 
-00149 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rthal_timer_program_shot (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> delay)
-00150 {
-00151     <span class="keywordflow">if</span>(!delay) delay = 1;
-00152     set_dec(delay);
-00153 }
-00154 
-00155     <span class="comment">/* Private interface -- Internal use only */</span>
+00149 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct </span>task_struct *rthal_root_host_task (<span class="keywordtype">int</span> cpuid) {
+00150     <span class="keywordflow">return</span> current;
+00151 }
+00152 
+00153 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct </span>task_struct *rthal_current_host_task (<span class="keywordtype">int</span> cpuid) {
+00154     <span class="keywordflow">return</span> current;
+00155 }
 00156 
-00157 <span class="comment">/* The following must be kept in sync w/ rthal_switch_context() in</span>
-00158 <span class="comment">   switch.S */</span>
-00159 <span class="preprocessor">#define RTHAL_SWITCH_FRAME_SIZE  224</span>
-00160 <span class="preprocessor"></span>
-00161 <span class="keywordtype">void</span> rthal_switch_context(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *out_kspp,
-00162                           <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *in_kspp);
-00163 
-00164 <span class="preprocessor">#ifdef CONFIG_XENO_HW_FPU</span>
-00165 <span class="preprocessor"></span>
-00166 <span class="keyword">typedef</span> <span class="keyword">struct </span>rthal_fpenv {
-00167     
-00168     <span class="comment">/* This layout must follow exactely the definition of the FPU</span>
-00169 <span class="comment">       backup area in a PPC thread struct available from</span>
-00170 <span class="comment">       &lt;asm-ppc/processor.h&gt;. Specifically, fpr[] an fpscr words must</span>
-00171 <span class="comment">       be contiguous in memory (see arch/ppc/hal/fpu.S). */</span>
+00157 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_ADEOS_CORE &amp;&amp; !CONFIG_ADEOS_NOTHREADS */</span>
+00158 
+00159 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rthal_timer_program_shot (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> delay)
+00160 {
+00161     <span class="keywordflow">if</span>(!delay) delay = 1;
+00162     set_dec(delay);
+00163 }
+00164 
+00165     <span class="comment">/* Private interface -- Internal use only */</span>
+00166 
+00167 <span class="preprocessor">#define RTHAL_SWITCH_FRAME_SIZE  (STACK_FRAME_OVERHEAD + sizeof(struct pt_regs))</span>
+00168 <span class="preprocessor"></span>
+00169 asmlinkage <span class="keywordtype">void</span> rthal_thread_switch(<span class="keyword">struct</span> thread_struct *prev,
+00170                                     <span class="keyword">struct</span> thread_struct *next,
+00171                                     <span class="keywordtype">int</span> kernel_thread);
 00172 
-00173     <span class="keywordtype">double</span> fpr[32];
-00174     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> fpscr;       <span class="comment">/* mffs uses 64-bit (pad in hi/fpscr in lo) */</span>
-00175 } rthal_fpenv_t;
-00176 
-00177 <span class="keywordtype">void</span> rthal_init_fpu(rthal_fpenv_t *fpuenv);
-00178 
-00179 <span class="keywordtype">void</span> rthal_save_fpu(rthal_fpenv_t *fpuenv);
-00180 
-00181 <span class="keywordtype">void</span> rthal_restore_fpu(rthal_fpenv_t *fpuenv);
-00182 
-00183 <span class="preprocessor">#ifndef CONFIG_SMP</span>
-00184 <span class="preprocessor"></span><span class="preprocessor">#define rthal_get_fpu_owner(cur) last_task_used_math</span>
-00185 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* CONFIG_SMP */</span>
-00186 <span class="preprocessor">#define rthal_get_fpu_owner(cur) ({                             \</span>
-00187 <span class="preprocessor">    struct task_struct * _cur = (cur);                          \</span>
-00188 <span class="preprocessor">    ((_cur-&gt;thread.regs &amp;&amp; (_cur-&gt;thread.regs-&gt;msr &amp; MSR_FP))   \</span>
-00189 <span class="preprocessor">     ? _cur : NULL);                                            \</span>
-00190 <span class="preprocessor">})</span>
-00191 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_SMP */</span>
-00192     
-00193 <span class="preprocessor">#define rthal_disable_fpu() ({                          \</span>
-00194 <span class="preprocessor">    register unsigned long _msr;                                 \</span>
-00195 <span class="preprocessor">    __asm__ __volatile__ ( "mfmsr %0" : "=r"(_msr) );   \</span>
-00196 <span class="preprocessor">    __asm__ __volatile__ ( "mtmsrd %0"                   \</span>
-00197 <span class="preprocessor">                           : </span><span class="comment">/* no output */</span>            \
-00198                            : "r"(_msr &amp; ~(MSR_FP))      \
-00199                            : "memory" );                \
-00200 })
-00201 
-00202 <span class="preprocessor">#define rthal_enable_fpu() ({                           \</span>
-00203 <span class="preprocessor">    register unsigned long _msr;                                 \</span>
-00204 <span class="preprocessor">    __asm__ __volatile__ ( "mfmsr %0" : "=r"(_msr) );   \</span>
-00205 <span class="preprocessor">    __asm__ __volatile__ ( "mtmsrd %0"                   \</span>
-00206 <span class="preprocessor">                           : </span><span class="comment">/* no output */</span>            \
-00207                            : "r"(_msr | MSR_FP)         \
-00208                            : "memory" );                \
-00209 })
-00210 
-00211 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_HW_FPU */</span>
+00173 asmlinkage <span class="keywordtype">void</span> rthal_thread_trampoline(<span class="keywordtype">void</span>);
+00174 
+00175 <span class="preprocessor">#ifdef CONFIG_XENO_HW_FPU</span>
+00176 <span class="preprocessor"></span>
+00177 <span class="keyword">typedef</span> <span class="keyword">struct </span>rthal_fpenv {
+00178     
+00179     <span class="comment">/* This layout must follow exactely the definition of the FPU</span>
+00180 <span class="comment">       backup area in a PPC thread struct available from</span>
+00181 <span class="comment">       &lt;asm-ppc/processor.h&gt;. Specifically, fpr[] an fpscr words must</span>
+00182 <span class="comment">       be contiguous in memory (see arch/ppc/hal/fpu.S). */</span>
+00183 
+00184     <span class="keywordtype">double</span> fpr[32];
+00185     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> fpscr;       <span class="comment">/* mffs uses 64-bit (pad in hi/fpscr in lo) */</span>
+00186 } rthal_fpenv_t;
+00187 
+00188 <span class="keywordtype">void</span> rthal_init_fpu(rthal_fpenv_t *fpuenv);
+00189 
+00190 <span class="keywordtype">void</span> rthal_save_fpu(rthal_fpenv_t *fpuenv);
+00191 
+00192 <span class="keywordtype">void</span> rthal_restore_fpu(rthal_fpenv_t *fpuenv);
+00193 
+00194 <span class="preprocessor">#ifndef CONFIG_SMP</span>
+00195 <span class="preprocessor"></span><span class="preprocessor">#define rthal_get_fpu_owner(cur) last_task_used_math</span>
+00196 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* CONFIG_SMP */</span>
+00197 <span class="preprocessor">#define rthal_get_fpu_owner(cur) ({                             \</span>
+00198 <span class="preprocessor">    struct task_struct * _cur = (cur);                          \</span>
+00199 <span class="preprocessor">    ((_cur-&gt;thread.regs &amp;&amp; (_cur-&gt;thread.regs-&gt;msr &amp; MSR_FP))   \</span>
+00200 <span class="preprocessor">     ? _cur : NULL);                                            \</span>
+00201 <span class="preprocessor">})</span>
+00202 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_SMP */</span>
+00203     
+00204 <span class="preprocessor">#define rthal_disable_fpu() ({                          \</span>
+00205 <span class="preprocessor">    register unsigned long _msr;                                 \</span>
+00206 <span class="preprocessor">    __asm__ __volatile__ ( "mfmsr %0" : "=r"(_msr) );   \</span>
+00207 <span class="preprocessor">    __asm__ __volatile__ ( "mtmsrd %0"                   \</span>
+00208 <span class="preprocessor">                           : </span><span class="comment">/* no output */</span>            \
+00209                            : "r"(_msr &amp; ~(MSR_FP))      \
+00210                            : "memory" );                \
+00211 })
 00212 
-00213 <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span> *<span class="keyword">const</span> rthal_fault_labels[] = {
-00214     [0] =  <span class="stringliteral">"Data or instruction access"</span>,
-00215     [1] =  <span class="stringliteral">"Alignment"</span>,
-00216     [2] =  <span class="stringliteral">"AltiVec unavailable"</span>,
-00217     [3] =  <span class="stringliteral">"Program check exception"</span>,
-00218     [4] =  <span class="stringliteral">"Machine check exception"</span>,
-00219     [5] =  <span class="stringliteral">"Unknown"</span>,
-00220     [6] =  <span class="stringliteral">"Instruction breakpoint"</span>,
-00221     [7] =  <span class="stringliteral">"Single-step exception"</span>,
-00222     [8] =  <span class="stringliteral">"Non-recoverable exception"</span>,
-00223     [9] =  <span class="stringliteral">"AltiVec assist"</span>,
-00224     [10] = <span class="stringliteral">"System reset exception"</span>,
-00225     [11] = <span class="stringliteral">"Kernel FP unavailable"</span>,
-00226     [12] = <span class="stringliteral">"Performance monitor"</span>,
-00227     [13] = NULL
-00228 };
-00229 
-00230 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; !__cplusplus */</span>
-00231 
-00234 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_ASM_PPC64_HAL_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Fri Jan 13 21:37:27 2006 for Xenomai API by&nbsp;
+00213 <span class="preprocessor">#define rthal_enable_fpu() ({                           \</span>
+00214 <span class="preprocessor">    register unsigned long _msr;                                 \</span>
+00215 <span class="preprocessor">    __asm__ __volatile__ ( "mfmsr %0" : "=r"(_msr) );   \</span>
+00216 <span class="preprocessor">    __asm__ __volatile__ ( "mtmsrd %0"                   \</span>
+00217 <span class="preprocessor">                           : </span><span class="comment">/* no output */</span>            \
+00218                            : "r"(_msr | MSR_FP)         \
+00219                            : "memory" );                \
+00220 })
+00221 
+00222 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_HW_FPU */</span>
+00223 
+00224 <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span> *<span class="keyword">const</span> rthal_fault_labels[] = {
+00225     [0] =  <span class="stringliteral">"Data or instruction access"</span>,
+00226     [1] =  <span class="stringliteral">"Alignment"</span>,
+00227     [2] =  <span class="stringliteral">"AltiVec unavailable"</span>,
+00228     [3] =  <span class="stringliteral">"Program check exception"</span>,
+00229     [4] =  <span class="stringliteral">"Machine check exception"</span>,
+00230     [5] =  <span class="stringliteral">"Unknown"</span>,
+00231     [6] =  <span class="stringliteral">"Instruction breakpoint"</span>,
+00232     [7] =  <span class="stringliteral">"Single-step exception"</span>,
+00233     [8] =  <span class="stringliteral">"Non-recoverable exception"</span>,
+00234     [9] =  <span class="stringliteral">"AltiVec assist"</span>,
+00235     [10] = <span class="stringliteral">"System reset exception"</span>,
+00236     [11] = <span class="stringliteral">"Kernel FP unavailable"</span>,
+00237     [12] = <span class="stringliteral">"Performance monitor"</span>,
+00238     [13] = NULL
+00239 };
+00240 
+00241 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; !__cplusplus */</span>
+00242 
+00245 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_ASM_PPC64_HAL_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Mar 16 19:28:30 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

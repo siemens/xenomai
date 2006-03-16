@@ -221,7 +221,7 @@ int rthal_irq_request (unsigned irq,
  * @brief Uninstall a real-time interrupt handler.
  *
  * Uninstalls an interrupt handler previously attached using the
- * rthal_request_irq() service.
+ * rthal_irq_request() service.
  *
  * @param irq The hardware interrupt channel to uninstall a handler
  * from.  This value is architecture-dependent.
@@ -467,7 +467,7 @@ int rthal_irq_host_release (unsigned irq, void *dev_id)
  * Causes the given IRQ to be propagated down to the Adeos pipeline to
  * the Linux kernel. This operation is typically used after the given
  * IRQ has been processed into the Xenomai domain by a real-time
- * interrupt handler (see rthal_request_irq()), in case such interrupt
+ * interrupt handler (see rthal_irq_request()), in case such interrupt
  * must also be handled by the Linux kernel.
  *
  * @param irq The interrupt source to detach the shared handler from.

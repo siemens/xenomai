@@ -14,127 +14,145 @@
 00029 <span class="preprocessor"></span>
 00030 <span class="preprocessor">#include &lt;<a class="code" href="asm-generic_2hal_8h.html">nucleus/asm-generic/hal.h</a>&gt;</span>    <span class="comment">/* Read the generic bits. */</span>
 00031 
-00032 <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_time_t;
-00033 
-00034 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_ullmul(<span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> m0, 
-00035                                               <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> m1)
-00036 {
-00037     <span class="keywordflow">return</span> (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>) m0 * m1;
-00038 }
-00039 
-00040 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_ulldiv (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> ull,
-00041                                                <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> uld,
-00042                                                <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *<span class="keyword">const</span> rp)
-00043 {
-00044     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> result = ull / uld;
-00045 
-00046     <span class="keywordflow">if</span> (rp)
-00047         *rp = ull % uld;
-00048 
-00049     <span class="keywordflow">return</span> result;
-00050 }
-00051 
-00052 <span class="preprocessor">#define rthal_uldivrem(ull,ul,rp) ((u_long) rthal_ulldiv((ull),(ul),(rp)))</span>
-00053 <span class="preprocessor"></span>
-00054 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rthal_imuldiv (<span class="keywordtype">int</span> i, <span class="keywordtype">int</span> mult, <span class="keywordtype">int</span> div)
-00055 {
-00056     <span class="keywordflow">return</span> ((<span class="keywordtype">long</span> <span class="keywordtype">long</span>)i * mult) / div;
-00057 }
+00032 <span class="preprocessor">#ifndef CONFIG_ADEOS_CORE</span>
+00033 <span class="preprocessor"></span><span class="preprocessor">#if IPIPE_RELEASE_NUMBER &lt; 0x010100</span>
+00034 <span class="preprocessor"></span><span class="preprocessor">#define rthal_virtualize_irq(dom,irq,isr,ackfn,mode) \</span>
+00035 <span class="preprocessor">    ipipe_virtualize_irq(dom,irq,isr,ackfn,mode)</span>
+00036 <span class="preprocessor"></span><span class="preprocessor">#else</span>
+00037 <span class="preprocessor"></span><span class="preprocessor">#define rthal_virtualize_irq(dom,irq,isr,ackfn,mode) \</span>
+00038 <span class="preprocessor">    ipipe_virtualize_irq(dom,irq,(ipipe_irq_handler_t)isr,NULL,(ipipe_irq_ackfn_t)ackfn,mode)</span>
+00039 <span class="preprocessor"></span><span class="preprocessor">#endif</span>
+00040 <span class="preprocessor"></span><span class="preprocessor">#endif</span>
+00041 <span class="preprocessor"></span>
+00042 <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_time_t;
+00043 
+00044 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_ullmul(<span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> m0, 
+00045                                               <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> m1)
+00046 {
+00047     <span class="keywordflow">return</span> (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>) m0 * m1;
+00048 }
+00049 
+00050 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_ulldiv (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> ull,
+00051                                                <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> uld,
+00052                                                <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *<span class="keyword">const</span> rp)
+00053 {
+00054     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> result = ull / uld;
+00055 
+00056     <span class="keywordflow">if</span> (rp)
+00057         *rp = ull % uld;
 00058 
-00059 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_llimd (<span class="keywordtype">long</span> <span class="keywordtype">long</span> op,
-00060                                      <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> m,
-00061                                      <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> d)
-00062 {
-00063     <span class="keywordtype">long</span> <span class="keywordtype">long</span> h, l, qh, ql, rh;
-00064 
-00065     <span class="comment">/* (ll * mult) may need 96 bits, so we split it into two parts. We use / and</span>
-00066 <span class="comment">       % on purpose, not shift operations, to handle correctly negative numbers.</span>
-00067 <span class="comment">    */</span>
-00068     h = (op / (1LL &lt;&lt; 32)) * m;
-00069     l = (op % (1LL &lt;&lt; 32)) * m;
-00070     h += l / (1LL &lt;&lt; 32);
-00071     l %= (1LL &lt;&lt; 32);
-00072 
-00073     rh = (h % d) * (1LL &lt;&lt; 32);
-00074     qh = (h / d) * (1LL &lt;&lt; 32);
-00075     ql = (rh + l) / d;
-00076 
-00077     <span class="keywordflow">return</span> qh + ql;
-00078 }
-00079 
-00080 <span class="keyword">static</span> <span class="keyword">inline</span> __attribute_const__ <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ffnz (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ul)
-00081 {
-00082     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> r;
-00083     <span class="keyword">asm</span> (<span class="stringliteral">"popcnt %0=%1"</span> : <span class="stringliteral">"=r"</span> (r) : <span class="stringliteral">"r"</span> ((ul-1) &amp; ~ul));
-00084     <span class="keywordflow">return</span> r;
-00085 }
+00059     <span class="keywordflow">return</span> result;
+00060 }
+00061 
+00062 <span class="preprocessor">#define rthal_uldivrem(ull,ul,rp) ((u_long) rthal_ulldiv((ull),(ul),(rp)))</span>
+00063 <span class="preprocessor"></span>
+00064 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rthal_imuldiv (<span class="keywordtype">int</span> i, <span class="keywordtype">int</span> mult, <span class="keywordtype">int</span> div)
+00065 {
+00066     <span class="keywordflow">return</span> ((<span class="keywordtype">long</span> <span class="keywordtype">long</span>)i * mult) / div;
+00067 }
+00068 
+00069 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_llimd (<span class="keywordtype">long</span> <span class="keywordtype">long</span> op,
+00070                                      <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> m,
+00071                                      <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> d)
+00072 {
+00073     <span class="keywordtype">long</span> <span class="keywordtype">long</span> h, l, qh, ql, rh;
+00074 
+00075     <span class="comment">/* (ll * mult) may need 96 bits, so we split it into two parts. We use / and</span>
+00076 <span class="comment">       % on purpose, not shift operations, to handle correctly negative numbers.</span>
+00077 <span class="comment">    */</span>
+00078     h = (op / (1LL &lt;&lt; 32)) * m;
+00079     l = (op % (1LL &lt;&lt; 32)) * m;
+00080     h += l / (1LL &lt;&lt; 32);
+00081     l %= (1LL &lt;&lt; 32);
+00082 
+00083     rh = (h % d) * (1LL &lt;&lt; 32);
+00084     qh = (h / d) * (1LL &lt;&lt; 32);
+00085     ql = (rh + l) / d;
 00086 
-00087 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; !defined(__cplusplus)</span>
-00088 <span class="preprocessor"></span><span class="preprocessor">#include &lt;asm/system.h&gt;</span>
-00089 <span class="preprocessor">#include &lt;nucleus/asm/atomic.h&gt;</span>
-00090 <span class="preprocessor">#include &lt;asm/processor.h&gt;</span>
-00091 <span class="preprocessor">#include &lt;asm/delay.h&gt;</span>          <span class="comment">/* For ia64_get_itc / ia64_set_itm */</span>
-00092 
-00093 <span class="preprocessor">#define RTHAL_TIMER_VECTOR      ADEOS_SERVICE_VECTOR3</span>
-00094 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_TIMER_IRQ         ADEOS_SERVICE_IPI3</span>
-00095 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_HOST_TIMER_VECTOR IA64_TIMER_VECTOR</span>
-00096 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_HOST_TIMER_IRQ    __ia64_local_vector_to_irq(IA64_TIMER_VECTOR)</span>
-00097 <span class="preprocessor"></span>
-00098 <span class="preprocessor">#define rthal_irq_descp(irq)  irq_descp(irq)</span>
-00099 <span class="preprocessor"></span><span class="preprocessor">#define rthal_itm_next        __adeos_itm_next</span>
-00100 <span class="preprocessor"></span><span class="preprocessor">#define rthal_tick_irq        __adeos_tick_irq</span>
-00101 <span class="preprocessor"></span>
-00102 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_rdtsc (<span class="keywordtype">void</span>)
-00103 {
-00104     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> t;
-00105     rthal_read_tsc(t);
-00106     <span class="keywordflow">return</span> t;
-00107 }
-00108 
-00109 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct </span>task_struct *rthal_root_host_task (<span class="keywordtype">int</span> cpuid)
-00110 {
-00111     <span class="keywordflow">return</span> current;
-00112 }
-00113 
-00114 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct </span>task_struct *rthal_current_host_task (<span class="keywordtype">int</span> cpuid)
-00115 {
-00116     <span class="keywordflow">return</span> current;
-00117 }
+00087     <span class="keywordflow">return</span> qh + ql;
+00088 }
+00089 
+00090 <span class="keyword">static</span> <span class="keyword">inline</span> __attribute_const__ <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ffnz (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ul)
+00091 {
+00092     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> r;
+00093     <span class="keyword">asm</span> (<span class="stringliteral">"popcnt %0=%1"</span> : <span class="stringliteral">"=r"</span> (r) : <span class="stringliteral">"r"</span> ((ul-1) &amp; ~ul));
+00094     <span class="keywordflow">return</span> r;
+00095 }
+00096 
+00097 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; !defined(__cplusplus)</span>
+00098 <span class="preprocessor"></span><span class="preprocessor">#include &lt;asm/system.h&gt;</span>
+00099 <span class="preprocessor">#include &lt;nucleus/asm/atomic.h&gt;</span>
+00100 <span class="preprocessor">#include &lt;asm/processor.h&gt;</span>
+00101 <span class="preprocessor">#include &lt;asm/delay.h&gt;</span>          <span class="comment">/* For ia64_get_itc / ia64_set_itm */</span>
+00102 
+00103 <span class="preprocessor">#define RTHAL_HOST_TIMER_VECTOR IA64_TIMER_VECTOR</span>
+00104 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_HOST_TIMER_IRQ    __ia64_local_vector_to_irq(IA64_TIMER_VECTOR)</span>
+00105 <span class="preprocessor"></span><span class="preprocessor">#define rthal_irq_descp(irq)  irq_descp(irq)</span>
+00106 <span class="preprocessor"></span>
+00107 <span class="preprocessor">#ifdef CONFIG_ADEOS_CORE</span>
+00108 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_TIMER_VECTOR      ADEOS_SERVICE_VECTOR3</span>
+00109 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_TIMER_IRQ         ADEOS_SERVICE_IPI3</span>
+00110 <span class="preprocessor"></span><span class="preprocessor">#define rthal_itm_next        __adeos_itm_next</span>
+00111 <span class="preprocessor"></span><span class="preprocessor">#define rthal_tick_irq        __adeos_tick_irq</span>
+00112 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !CONFIG_ADEOS_CORE */</span>
+00113 <span class="preprocessor">#define RTHAL_TIMER_VECTOR      IPIPE_SERVICE_VECTOR3</span>
+00114 <span class="preprocessor"></span><span class="preprocessor">#define RTHAL_TIMER_IRQ         IPIPE_SERVICE_IPI3</span>
+00115 <span class="preprocessor"></span><span class="preprocessor">#define rthal_itm_next        __ipipe_itm_next</span>
+00116 <span class="preprocessor"></span><span class="preprocessor">#define rthal_tick_irq        __ipipe_tick_irq</span>
+00117 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_ADEOS_CORE */</span>
 00118 
-00119 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rthal_timer_program_shot (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> delay)
+00119 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> rthal_rdtsc (<span class="keywordtype">void</span>)
 00120 {
-00121     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> flags;
-00122     <span class="keywordflow">if</span> (!delay) { delay = 10; }
-00123     rthal_local_irq_save_hw(flags);
-00124     ia64_set_itm(ia64_get_itc() + delay);
-00125     rthal_local_irq_restore_hw(flags);
-00126 }
-00127 
-00128     <span class="comment">/* Private interface -- Internal use only */</span>
-00129 
-00130 <span class="keywordtype">void</span> rthal_switch_context(<span class="keywordtype">void</span> *out_tcb,
-00131                           <span class="keywordtype">void</span> *in_tcb);
-00132 
-00133 <span class="keywordtype">void</span> rthal_prepare_stack(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> stackbase);
-00134 
-00135 <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span> *<span class="keyword">const</span> rthal_fault_labels[] = {
-00136     [0] = <span class="stringliteral">"General exception"</span>,
-00137     [1] = <span class="stringliteral">"FPU disabled"</span>,
-00138     [2] = <span class="stringliteral">"NaT consumption"</span>,
-00139     [3] = <span class="stringliteral">"Unsupported data reference"</span>,
-00140     [4] = <span class="stringliteral">"Debug"</span>,
-00141     [5] = <span class="stringliteral">"FPU fault"</span>,
-00142     [6] = <span class="stringliteral">"Unimplemented instruction address"</span>,
-00143     [7] = <span class="stringliteral">"ia32 exception"</span>,
-00144     [8] = <span class="stringliteral">"Generic fault"</span>,
-00145     [9] = <span class="stringliteral">"Page fault"</span>,
-00146     [10] = NULL
-00147 };
-00148 
-00149 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; !__cplusplus */</span>
+00121     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> t;
+00122     rthal_read_tsc(t);
+00123     <span class="keywordflow">return</span> t;
+00124 }
+00125 
+00126 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct </span>task_struct *rthal_root_host_task (<span class="keywordtype">int</span> cpuid)
+00127 {
+00128     <span class="keywordflow">return</span> current;
+00129 }
+00130 
+00131 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct </span>task_struct *rthal_current_host_task (<span class="keywordtype">int</span> cpuid)
+00132 {
+00133     <span class="keywordflow">return</span> current;
+00134 }
+00135 
+00136 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rthal_timer_program_shot (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> delay)
+00137 {
+00138     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> flags;
+00139     <span class="keywordflow">if</span> (!delay) { delay = 10; }
+00140     rthal_local_irq_save_hw(flags);
+00141     ia64_set_itm(ia64_get_itc() + delay);
+00142     rthal_local_irq_restore_hw(flags);
+00143 }
+00144 
+00145     <span class="comment">/* Private interface -- Internal use only */</span>
+00146 
+00147 <span class="keywordtype">void</span> rthal_thread_switch(__u64 *prev_ksp,
+00148                          __u64 *next_ksp,
+00149                          <span class="keywordtype">int</span> user_p);
 00150 
-00151 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_ASM_IA64_HAL_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Fri Jan 13 21:37:27 2006 for Xenomai API by&nbsp;
+00151 <span class="keywordtype">void</span> rthal_prepare_stack(__u64 stackbase);
+00152 
+00153 <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span> *<span class="keyword">const</span> rthal_fault_labels[] = {
+00154     [0] = <span class="stringliteral">"General exception"</span>,
+00155     [1] = <span class="stringliteral">"FPU disabled"</span>,
+00156     [2] = <span class="stringliteral">"NaT consumption"</span>,
+00157     [3] = <span class="stringliteral">"Unsupported data reference"</span>,
+00158     [4] = <span class="stringliteral">"Debug"</span>,
+00159     [5] = <span class="stringliteral">"FPU fault"</span>,
+00160     [6] = <span class="stringliteral">"Unimplemented instruction address"</span>,
+00161     [7] = <span class="stringliteral">"ia32 exception"</span>,
+00162     [8] = <span class="stringliteral">"Generic fault"</span>,
+00163     [9] = <span class="stringliteral">"Page fault"</span>,
+00164     [10] = NULL
+00165 };
+00166 
+00167 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; !__cplusplus */</span>
+00168 
+00169 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_ASM_IA64_HAL_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Mar 16 19:28:30 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
