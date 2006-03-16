@@ -24,11 +24,11 @@
 
 static xnqueue_t wind_wd_q;
 
-static unsigned long wd_ids;
-
 static void wd_destroy_internal(wind_wd_t *wd);
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
+
+static unsigned long wd_ids;
 
 static int wd_read_proc (char *page,
 			 char **start,
@@ -109,7 +109,6 @@ WDOG_ID wdCreate (void)
 {
     wind_wd_t *wd;
     spl_t s;
-    int err;
 
     check_alloc(wind_wd_t, wd, return 0);
 
@@ -145,8 +144,7 @@ STATUS wdDelete (WDOG_ID wdog_id)
     wind_wd_t *wd;
     spl_t s;
 
-    /*    xnpod_check_context(XNPOD_THREAD_CONTEXT); */
-
+    error_check(xnpod_asynch_p(), -EPERM, return ERROR);
     xnlock_get_irqsave(&nklock, s);
     check_OBJ_ID_ERROR(wdog_id, wind_wd_t, wd, WIND_WD_MAGIC, goto error);
     wd_destroy_internal(wd);

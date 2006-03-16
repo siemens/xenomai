@@ -87,7 +87,7 @@ void printErrno(int status)
         msg="Unknown error";
     }
 
-    xnarch_printf("Status: %s\n", msg);
+    xnarch_printf("Error code %d: %s\n", status, msg);
 }
 
 

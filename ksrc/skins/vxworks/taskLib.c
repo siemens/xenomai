@@ -26,7 +26,7 @@ static xnqueue_t wind_tasks_q;
 static unsigned long task_ids;
 static xnticks_t rrperiod;
 
-static void testSafe (wind_task_t *task);
+static int testSafe (wind_task_t *task);
 static void wind_task_delete_hook (xnthread_t *xnthread);
 static void wind_task_trampoline (void *cookie);
 
@@ -66,7 +66,6 @@ STATUS taskInit(WIND_TCB * pTcb,
 {
     xnflags_t bflags = 0;
     spl_t s;
-    int err;
 
     check_NOT_ISR_CALLABLE(return ERROR);
 
@@ -287,7 +286,9 @@ STATUS taskDelete(TASK_ID task_id)
 
     check_OBJ_ID_ERROR(task_id,wind_task_t,task,WIND_TASK_MAGIC,goto error );
     flow_id = task->flow_id;
-    testSafe(task);
+
+    if (testSafe(task) == ERROR)
+	goto error;
 
     /* we use flow_id here just in case task was destroyed and the block
        reused for another task by the allocator */
@@ -315,7 +316,6 @@ void taskExit(int code)
     wind_errnoset(code);
     xnpod_delete_self();
 }
-
 
 STATUS taskSuspend (TASK_ID task_id)
 {
@@ -588,10 +588,14 @@ TASK_ID taskNameToId ( const char * name )
 }
 
 /* nklock must be locked on entry, interrupts off */
-static void testSafe (wind_task_t *task)
+static int testSafe (wind_task_t *task)
 {
-    while (task->safecnt > 0)
+    while (task->safecnt > 0) {
         xnsynch_sleep_on(&task->safesync,XN_INFINITE);
+        error_check(xnthread_test_flags(&task->threadbase,XNBREAK), -EINTR,
+		    return ERROR);
+    }
+    return OK;
 }
 
 

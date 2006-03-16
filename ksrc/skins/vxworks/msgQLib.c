@@ -22,11 +22,11 @@
 
 static xnqueue_t wind_msgq_q;
 
-static unsigned long msgq_ids;
-
 static	int msgq_destroy_internal(wind_msgq_t * queue);
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
+
+static unsigned long msgq_ids;
 
 static int msgq_read_proc (char *page,
 			   char **start,
@@ -267,8 +267,6 @@ int msgQReceive ( MSG_Q_ID qid, char *buf,UINT bytes,int to )
     wind_task_t * task;
     spl_t s;
     
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-
     error_check( buf == NULL, 0, return ERROR );
 
     xnlock_get_irqsave(&nklock, s);
@@ -283,7 +281,7 @@ int msgQReceive ( MSG_Q_ID qid, char *buf,UINT bytes,int to )
     {
         /* message queue is empty */
         
-        error_check( to == NO_WAIT, S_objLib_OBJ_UNAVAILABLE, goto error);
+        error_check( to == NO_WAIT || xnpod_unblockable_p(), S_objLib_OBJ_UNAVAILABLE, goto error);
         
         if(to == WAIT_FOREVER)
             timeout = XN_INFINITE;
@@ -297,6 +295,8 @@ int msgQReceive ( MSG_Q_ID qid, char *buf,UINT bytes,int to )
         
         xnsynch_sleep_on(&queue->synchbase,timeout);
         
+        error_check(xnthread_test_flags(thread,XNBREAK),
+                    -EINTR, goto error);
         error_check(xnthread_test_flags(thread,XNRMID),
                     S_objLib_OBJ_DELETED, goto error);
         error_check(xnthread_test_flags(thread,XNTIMEO),
@@ -380,6 +380,8 @@ STATUS msgQSend (MSG_Q_ID qid ,const char * buf, UINT bytes,int to, int prio)
             
             xnsynch_sleep_on(&queue->synchbase,timeout);
             
+	    error_check(xnthread_test_flags(thread,XNBREAK),
+			-EINTR, goto error);
             error_check(xnthread_test_flags(thread,XNRMID),
                         S_objLib_OBJ_DELETED, goto error);
             error_check(xnthread_test_flags(thread,XNTIMEO),

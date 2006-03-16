@@ -1,3 +1,12 @@
+2006-03-16  Philippe Gerum  <rpm@xenomai.org>
+
+	* src/skins/vxworks/errnoLib.c (printErrno): Fall down to calling
+	strerror_r to decode POSIX errors.
+
+	* ksrc/skins/vxworks: Return -EPERM everytime a blocking call is
+	invoked on behalf on an invalid context, unless VxWorks already
+	handles the case. Remove xnpod_check_context() in most cases.
+
 2006-03-15  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/skins/uvm: Move all UVM-based builds to the UVM support

@@ -30,8 +30,6 @@
 
 static xnqueue_t wind_sem_q;
 
-static unsigned long sem_ids;
-
 static const sem_vtbl_t semb_vtbl;
 static const sem_vtbl_t semc_vtbl;
 static const sem_vtbl_t semm_vtbl;
@@ -40,6 +38,8 @@ static void sem_destroy_internal(wind_sem_t *sem);
 static SEM_ID sem_create_internal(int flags, const sem_vtbl_t * vtbl, int count);
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
+
+static unsigned long sem_ids;
 
 static int sem_read_proc (char *page,
 			  char **start,
@@ -295,6 +295,9 @@ static STATUS semb_take(wind_sem_t *sem, xnticks_t to)
         
 	xnsynch_sleep_on(&sem->synchbase, to);
 
+        error_check(xnthread_test_flags(thread,XNBREAK), -EINTR,
+		    return ERROR);
+
 	error_check(xnthread_test_flags(thread,XNRMID), S_objLib_OBJ_DELETED, 
                     return ERROR);
 
@@ -378,6 +381,9 @@ static STATUS semm_take(wind_sem_t *sem, xnticks_t to)
         
 	xnsynch_sleep_on(&sem->synchbase, to);
 
+        error_check(xnthread_test_flags(thread,XNBREAK), -EINTR,
+		    return ERROR);
+
 	error_check(xnthread_test_flags(thread,XNRMID), S_objLib_OBJ_DELETED, 
                     return ERROR);
 
@@ -458,10 +464,9 @@ static const sem_vtbl_t semm_vtbl = {
 static SEM_ID sem_create_internal(int flags, const sem_vtbl_t * vtbl, int count)
 {
     wind_sem_t *sem;
-    int err;
     spl_t s;
     
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+    error_check(xnpod_asynch_p(), -EPERM, return 0);
 
     check_alloc(wind_sem_t, sem, return 0);
 
