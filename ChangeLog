@@ -1,3 +1,11 @@
+2006-03-16  Philippe Gerum  <rpm@xenomai.org>
+
+ 	* RELEASE: Xenomai 2.0.4 (Slick)
+
+2006-03-16  Philippe Gerum  <rpm@xenomai.org>
+
+	* arch/*/patches: Upgrade all Adeos patches.
+
 2006-03-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/asm-i386/system.h (xnarch_switch_to): Set bitmap
