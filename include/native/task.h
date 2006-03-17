@@ -187,6 +187,8 @@ int rt_task_add_hook(int type,
 int rt_task_remove_hook(int type,
 			void (*routine)(void *cookie));
 
+int rt_task_catch(void (*handler)(rt_sigset_t));
+
 #ifdef __cplusplus
 }
 #endif
@@ -264,8 +266,6 @@ int rt_task_unblock(RT_TASK *task);
 
 int rt_task_inquire(RT_TASK *task,
 		     RT_TASK_INFO *info);
-
-int rt_task_catch(void (*handler)(rt_sigset_t));
 
 int rt_task_notify(RT_TASK *task,
 		   rt_sigset_t signals);
