@@ -35,7 +35,7 @@
    object of type 't' whose magic word should be 'm'. */
 
 #define wind_h2obj_active(h,m,t) \
-((h) && (h) != ERROR && ((t *)(h))->magic == (m) ? ((t *)(h)) : NULL)
+    ((h) && (((void *)h) != (void *)ERROR) && ((t *)(h))->magic == (m) ? ((t *)(h)) : NULL)
 
 /* Same as previously, but check for a deleted object, just returning
    a boolean value since the object would not be accessible if
