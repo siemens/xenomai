@@ -22,8 +22,10 @@
 
 #include <memory.h>
 #include <string.h>
+#include <asm/param.h>
 
-static inline unsigned long ffnz (unsigned long ul) {
+static inline unsigned long ffnz (unsigned long ul)
+{
     return ffs((int)ul) - 1;
 }
 
