@@ -1293,7 +1293,6 @@ int rt_task_remove_hook (int type, void (*routine)(void *cookie)) {
  * This service can be called from:
  *
  * - Kernel-based task
- * - User-space task
  *
  * Rescheduling: possible.
  */

@@ -116,7 +116,7 @@ int SKIN_INIT(vrtx)
     int err, n;
 
 #if CONFIG_XENO_OPT_TIMING_PERIOD == 0
-    nktickdef = 10000000;	/* Defaults to 10ms. */
+    nktickdef = 1000000;	/* Defaults to 1ms. */
 #endif
 
     err = xnpod_init(&pod,255,0,0);

@@ -69,7 +69,7 @@ int SKIN_INIT(psos)
     int err;
 
 #if CONFIG_XENO_OPT_TIMING_PERIOD == 0
-    nktickdef = 10000000;	/* Defaults to 10ms. */
+    nktickdef = 1000000;	/* Defaults to 1ms. */
 #endif
 
     err = xnpod_init(&pod,1,255,0);
