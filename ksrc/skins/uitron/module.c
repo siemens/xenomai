@@ -46,7 +46,7 @@ int SKIN_INIT(uitron)
     int err;
 
 #if CONFIG_XENO_OPT_TIMING_PERIOD == 0
-    nktickdef = 10000000;	/* Defaults to 10ms. */
+    nktickdef = 1000000;	/* Defaults to 1ms. */
 #endif
 
     err = xnpod_init(&pod,uITRON_MIN_PRI,uITRON_MAX_PRI,0);
