@@ -1139,6 +1139,14 @@ static inline int do_hisyscall_event (unsigned event, unsigned domid, void *data
     if (!__xn_reg_mux_p(regs))
 	goto linux_syscall;
 
+#ifdef CONFIG_XENO_OPT_SECURITY_ACCESS
+    if (unlikely(!cap_raised(p->cap_effective, CAP_SYS_NICE)))
+	{
+	__xn_error_return(regs,-EPERM);
+	return RTHAL_EVENT_STOP;
+	}
+#endif /* CONFIG_XENO_OPT_SECURITY_ACCESS */
+
     muxid = __xn_mux_id(regs);
     muxop = __xn_mux_op(regs);
 
