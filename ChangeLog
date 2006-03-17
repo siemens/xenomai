@@ -1,3 +1,22 @@
+2006-03-17  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/shadow.c (do_hisyscall_event): Require CAP_SYS_NICE
+	for running Xenomai syscalls.
+
+2006-03-17  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pod.c (xnpod_start_timer): Send a console warning
+	when the timer is started with a periodic tick > CONFIG_HZ.
+
+	* ksrc/skins/psos+/module.c (SKIN_INIT): 
+	* ksrc/skins/vrtx/module.c (SKIN_INIT): 
+	* ksrc/skins/vxworks/module.c (SKIN_INIT): 
+	* ksrc/skins/uitron/module.c (SKIN_INIT): Set default periodic
+	tick to 1ms.
+
+	* ksrc/nucleus/core.c (xncore_attach): Properly relay the exact
+	error code returned by xnpod_init().
+
 2006-03-16  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/skins/vxworks/errnoLib.c (printErrno): Fall down to calling
