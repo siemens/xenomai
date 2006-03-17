@@ -429,6 +429,7 @@ AC_CONFIG_FILES([ \
      include/Makefile \
      skins/psos+/Makefile \
      skins/vxworks/Makefile \
+     skins/vxworks/testsuite/Makefile \
      skins/vrtx/Makefile \
      skins/uitron/Makefile \
      skins/posix/Makefile \

@@ -13,7 +13,7 @@
 # PARTICULAR PURPOSE.
 
 @SET_MAKE@
-SOURCES = $(nodist_satch_sim_SOURCES)
+SOURCES = $(libtests_a_SOURCES) $(t010726_1_SOURCES) $(t010726_2_SOURCES) $(t010728_SOURCES) $(t010820_1_SOURCES) $(t010820_2_SOURCES) $(t010823_1_SOURCES) $(t010823_2_SOURCES) $(trestart_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -37,8 +37,10 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = satch_sim$(EXEEXT)
-subdir = skins/posix/demos
+check_PROGRAMS = trestart$(EXEEXT) t010726-1$(EXEEXT) \
+	t010726-2$(EXEEXT) t010728$(EXEEXT) t010820-1$(EXEEXT) \
+	t010820-2$(EXEEXT) t010823-1$(EXEEXT) t010823-2$(EXEEXT)
+subdir = skins/vxworks/testsuite
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
@@ -48,9 +50,35 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/include/xeno_config.h
 CONFIG_CLEAN_FILES =
-nodist_satch_sim_OBJECTS = satch.$(OBJEXT)
-satch_sim_OBJECTS = $(nodist_satch_sim_OBJECTS)
-satch_sim_LDADD = $(LDADD)
+ARFLAGS = cru
+libtests_a_AR = $(AR) $(ARFLAGS)
+libtests_a_LIBADD =
+am_libtests_a_OBJECTS = xntest.$(OBJEXT)
+libtests_a_OBJECTS = $(am_libtests_a_OBJECTS)
+am_t010726_1_OBJECTS = t010726-1.$(OBJEXT)
+t010726_1_OBJECTS = $(am_t010726_1_OBJECTS)
+t010726_1_LDADD = $(LDADD)
+am_t010726_2_OBJECTS = t010726-2.$(OBJEXT)
+t010726_2_OBJECTS = $(am_t010726_2_OBJECTS)
+t010726_2_LDADD = $(LDADD)
+am_t010728_OBJECTS = t010728.$(OBJEXT)
+t010728_OBJECTS = $(am_t010728_OBJECTS)
+t010728_LDADD = $(LDADD)
+am_t010820_1_OBJECTS = t010820-1.$(OBJEXT)
+t010820_1_OBJECTS = $(am_t010820_1_OBJECTS)
+t010820_1_LDADD = $(LDADD)
+am_t010820_2_OBJECTS = t010820-2.$(OBJEXT)
+t010820_2_OBJECTS = $(am_t010820_2_OBJECTS)
+t010820_2_LDADD = $(LDADD)
+am_t010823_1_OBJECTS = t010823-1.$(OBJEXT)
+t010823_1_OBJECTS = $(am_t010823_1_OBJECTS)
+t010823_1_LDADD = $(LDADD)
+am_t010823_2_OBJECTS = t010823-2.$(OBJEXT)
+t010823_2_OBJECTS = $(am_t010823_2_OBJECTS)
+t010823_2_LDADD = $(LDADD)
+am_trestart_OBJECTS = trestart.$(OBJEXT)
+trestart_OBJECTS = $(am_trestart_OBJECTS)
+trestart_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
 am__depfiles_maybe = depfiles
@@ -62,8 +90,14 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(nodist_satch_sim_SOURCES)
-DIST_SOURCES =
+SOURCES = $(libtests_a_SOURCES) $(t010726_1_SOURCES) \
+	$(t010726_2_SOURCES) $(t010728_SOURCES) $(t010820_1_SOURCES) \
+	$(t010820_2_SOURCES) $(t010823_1_SOURCES) $(t010823_2_SOURCES) \
+	$(trestart_SOURCES)
+DIST_SOURCES = $(libtests_a_SOURCES) $(t010726_1_SOURCES) \
+	$(t010726_2_SOURCES) $(t010728_SOURCES) $(t010820_1_SOURCES) \
+	$(t010820_2_SOURCES) $(t010823_1_SOURCES) $(t010823_2_SOURCES) \
+	$(trestart_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -77,7 +111,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
-CC = $(top_builddir)/gcic/gcic
+CC = ../../../gcic/gcic
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CONFIG_XENO_MVM_ATOMIC_CORE_FALSE = @CONFIG_XENO_MVM_ATOMIC_CORE_FALSE@
@@ -105,7 +139,18 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-LDFLAGS = @LDFLAGS@
+LDFLAGS = \
+	-u __xeno_user_init \
+	--gcic-backend=$(prefix)/libexec/gcic \
+	--cc=$(CXX) \
+	--no-mvm-libs \
+	libtests.a \
+	../libvxworks_sim.a \
+	../../../nucleus/libnucleus_sim.a \
+	../../../adapter/libadapter.a \
+	../../../vm/libmvm.la \
+	../../../vmutils/libmvmutils.la
+
 LEX = @LEX@
 LEXLIB = @LEXLIB@
 LEX_OUTPUT_ROOT = @LEX_OUTPUT_ROOT@
@@ -213,27 +258,32 @@ sharedstatedir = @sharedstatedir@
 subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-@CONFIG_XENO_MVM_ATOMIC_CORE_TRUE@atomic_core := --no-inst -O2
-AM_CFLAGS = -Wall -g -Werror-implicit-function-declaration
 INCLUDES = \
-	-D__IN_XENO__ -DPRODUCER -DCONSUMER \
+	-D__IN_XENO__ \
 	--gcic-backend=$(prefix)/libexec/gcic \
 	-I$(srcdir)/.. \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/../include
 
-AM_LDFLAGS = \
-	-u __xeno_user_init \
-	--gcic-backend=$(prefix)/libexec/gcic \
-	--cc=$(CXX) \
-	--no-mvm-libs \
-	../libposix_sim.a \
-	../../../nucleus/libnucleus_sim.a \
-	../../../adapter/libadapter.a \
-	../../../vm/libmvm.la \
-	../../../vmutils/libmvmutils.la
-
-nodist_satch_sim_SOURCES = satch.c
+trestart_DEPENDENCIES = ../libvxworks_sim.a libtests.a
+t010726_1_DEPENDENCIES = ../libvxworks_sim.a libtests.a
+t010726_2_DEPENDENCIES = ../libvxworks_sim.a libtests.a
+t010728_DEPENDENCIES = ../libvxworks_sim.a libtests.a
+t010820_1_DEPENDENCIES = ../libvxworks_sim.a libtests.a
+t010820_2_DEPENDENCIES = ../libvxworks_sim.a libtests.a
+t010823_1_DEPENDENCIES = ../libvxworks_sim.a libtests.a
+t010823_2_DEPENDENCIES = ../libvxworks_sim.a libtests.a
+check_LIBRARIES = libtests.a
+libtests_a_SOURCES = xntest.c
+libtests_a_DEPENDENCIES = xntest.h vxworks_test.h
+trestart_SOURCES = trestart.c
+t010726_1_SOURCES = t010726-1.c
+t010726_2_SOURCES = t010726-2.c
+t010728_SOURCES = t010728.c
+t010820_1_SOURCES = t010820-1.c
+t010820_2_SOURCES = t010820-2.c
+t010823_1_SOURCES = t010823-1.c
+t010823_2_SOURCES = t010823-2.c
 all: all-am
 
 .SUFFIXES:
@@ -247,9 +297,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  skins/posix/demos/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  skins/vxworks/testsuite/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  skins/posix/demos/Makefile
+	  $(AUTOMAKE) --foreign  skins/vxworks/testsuite/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -268,15 +318,43 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
+clean-checkLIBRARIES:
+	-test -z "$(check_LIBRARIES)" || rm -f $(check_LIBRARIES)
+libtests.a: $(libtests_a_OBJECTS) $(libtests_a_DEPENDENCIES) 
+	-rm -f libtests.a
+	$(libtests_a_AR) libtests.a $(libtests_a_OBJECTS) $(libtests_a_LIBADD)
+	$(RANLIB) libtests.a
+
 clean-checkPROGRAMS:
 	@list='$(check_PROGRAMS)'; for p in $$list; do \
 	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
-satch_sim$(EXEEXT): $(satch_sim_OBJECTS) $(satch_sim_DEPENDENCIES) 
-	@rm -f satch_sim$(EXEEXT)
-	$(LINK) $(satch_sim_LDFLAGS) $(satch_sim_OBJECTS) $(satch_sim_LDADD) $(LIBS)
+t010726-1$(EXEEXT): $(t010726_1_OBJECTS) $(t010726_1_DEPENDENCIES) 
+	@rm -f t010726-1$(EXEEXT)
+	$(LINK) $(t010726_1_LDFLAGS) $(t010726_1_OBJECTS) $(t010726_1_LDADD) $(LIBS)
+t010726-2$(EXEEXT): $(t010726_2_OBJECTS) $(t010726_2_DEPENDENCIES) 
+	@rm -f t010726-2$(EXEEXT)
+	$(LINK) $(t010726_2_LDFLAGS) $(t010726_2_OBJECTS) $(t010726_2_LDADD) $(LIBS)
+t010728$(EXEEXT): $(t010728_OBJECTS) $(t010728_DEPENDENCIES) 
+	@rm -f t010728$(EXEEXT)
+	$(LINK) $(t010728_LDFLAGS) $(t010728_OBJECTS) $(t010728_LDADD) $(LIBS)
+t010820-1$(EXEEXT): $(t010820_1_OBJECTS) $(t010820_1_DEPENDENCIES) 
+	@rm -f t010820-1$(EXEEXT)
+	$(LINK) $(t010820_1_LDFLAGS) $(t010820_1_OBJECTS) $(t010820_1_LDADD) $(LIBS)
+t010820-2$(EXEEXT): $(t010820_2_OBJECTS) $(t010820_2_DEPENDENCIES) 
+	@rm -f t010820-2$(EXEEXT)
+	$(LINK) $(t010820_2_LDFLAGS) $(t010820_2_OBJECTS) $(t010820_2_LDADD) $(LIBS)
+t010823-1$(EXEEXT): $(t010823_1_OBJECTS) $(t010823_1_DEPENDENCIES) 
+	@rm -f t010823-1$(EXEEXT)
+	$(LINK) $(t010823_1_LDFLAGS) $(t010823_1_OBJECTS) $(t010823_1_LDADD) $(LIBS)
+t010823-2$(EXEEXT): $(t010823_2_OBJECTS) $(t010823_2_DEPENDENCIES) 
+	@rm -f t010823-2$(EXEEXT)
+	$(LINK) $(t010823_2_LDFLAGS) $(t010823_2_OBJECTS) $(t010823_2_LDADD) $(LIBS)
+trestart$(EXEEXT): $(trestart_OBJECTS) $(trestart_DEPENDENCIES) 
+	@rm -f trestart$(EXEEXT)
+	$(LINK) $(trestart_LDFLAGS) $(trestart_OBJECTS) $(trestart_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -284,7 +362,15 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/satch.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t010726-1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t010726-2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t010728.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t010820-1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t010820-2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t010823-1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t010823-2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trestart.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xntest.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -393,7 +479,7 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
+	$(MAKE) $(AM_MAKEFLAGS) $(check_LIBRARIES) $(check_PROGRAMS)
 check: check-am
 all-am: Makefile
 installdirs:
@@ -423,8 +509,8 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-checkPROGRAMS clean-generic clean-libtool \
-	mostlyclean-am
+clean-am: clean-checkLIBRARIES clean-checkPROGRAMS clean-generic \
+	clean-libtool mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -473,18 +559,19 @@ ps-am:
 uninstall-am: uninstall-info-am
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean \
-	clean-checkPROGRAMS clean-generic clean-libtool ctags \
-	distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-man install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	clean-checkLIBRARIES clean-checkPROGRAMS clean-generic \
+	clean-libtool ctags distclean distclean-compile \
+	distclean-generic distclean-libtool distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-exec install-exec-am \
+	install-info install-info-am install-man install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-info-am
 
-vpath %.c $(top_srcdir)/../ksrc/skins/posix/demos
+
+override CFLAGS=-g
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
