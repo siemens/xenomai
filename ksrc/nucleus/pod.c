@@ -3154,6 +3154,8 @@ int xnpod_start_timer (u_long nstick, xnisr_t tickhandler)
         {
         /* Host tick needed but shorter than the timer precision;
            bad... */
+	xnlogerr("bad timer setup value (%lu Hz), must be >= CONFIG_HZ (%d).\n",
+		 1000000000U/nkpod->tickvalue,HZ);
         err = -EINVAL;
 
 unlock_and_exit:
