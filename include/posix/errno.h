@@ -30,18 +30,17 @@
 #include <posix_overrides.h>
 #endif /* __XENO_SIM__ */
 
-/* Error Codes (pse51_errno_location is implemented in sem.c). */
 /* errno values pasted from Linux asm/errno.h and bits/errno.h (ENOTSUP). */
 #define ENOTSUP         EOPNOTSUPP
 #define	ETIMEDOUT	110	/* Connection timed out */
 
-#define errno (*pse51_errno_location())
+#define errno (*xnthread_get_errno_location())
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int *pse51_errno_location(void);
+int *xnthread_get_errno_location(void);
 
 #ifdef __cplusplus
 }

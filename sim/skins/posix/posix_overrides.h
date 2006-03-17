@@ -43,7 +43,6 @@
 #undef SIGRTMIN
 #undef SIGRTMAX
 #undef TIMER_ABSTIME
-#undef errno
 
 #define pthread_attr_t pse51_attr_t
 #define pthread_t pse51_thread_t

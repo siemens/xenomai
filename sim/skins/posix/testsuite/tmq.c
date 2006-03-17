@@ -70,7 +70,7 @@ void *writer(void *cookie)
     unsigned i;
     mqd_t qdf;
 
-    TEST_ASSERT(-1 == mq_send(qdr, tunes[0], strlen(tunes[0])+1, 0) && errno == EPERM);
+    TEST_ASSERT(-1 == mq_send(qdr, tunes[0], strlen(tunes[0])+1, 0) && errno == EBADF);
 
     for(i = 0; i < sizeof(tunes)/sizeof(char *); i++)
         TEST_ASSERT_OK(mq_send(qd, tunes[i], strlen(tunes[i])+1, i));
@@ -118,7 +118,7 @@ void *reader(void *cookie)
     char buffer [42];
     ssize_t len;
 
-    TEST_ASSERT(-1 == mq_receive(qdw, buffer, sizeof(buffer), 0) && errno == EPERM);
+    TEST_ASSERT(-1 == mq_receive(qdw, buffer, sizeof(buffer), 0) && errno == EBADF);
     prev = sizeof(tunes)/sizeof(char *);
 
     do {
