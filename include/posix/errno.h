@@ -25,10 +25,9 @@
 #include <linux/errno.h>
 #include <linux/unistd.h>         /* conflicting declaration of errno. */
 #endif /* !__KERNEL__ */
-
-#ifdef __XENO_SIM__
+#else /* __XENO_SIM__ */
 #include <posix_overrides.h>
-#endif /* __XENO_SIM__ */
+#endif /* __KERNEL__ */
 
 /* errno values pasted from Linux asm/errno.h and bits/errno.h (ENOTSUP). */
 #define ENOTSUP         EOPNOTSUPP
