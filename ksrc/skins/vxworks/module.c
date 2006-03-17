@@ -45,7 +45,7 @@ int SKIN_INIT(vxworks)
     int err;
 
 #if CONFIG_XENO_OPT_TIMING_PERIOD == 0
-    nktickdef = 10000000;	/* Defaults to 10ms. */
+    nktickdef = 1000000;	/* Defaults to 1ms. */
 #endif
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
@@ -59,7 +59,7 @@ int SKIN_INIT(vxworks)
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
     if (err != 0)
-        return err;
+        goto fail;
 
     if (!testbits(nkpod->status,XNTMPER))
 	err = -EINVAL;	/* Cannot work in aperiodic timing mode. */
@@ -73,6 +73,8 @@ int SKIN_INIT(vxworks)
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
 	xnpod_shutdown(err);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+ fail:
+	xnlogerr("VxWorks skin init failed, code %d.\n",err);
         return err;
         }
 
