@@ -687,7 +687,7 @@ int xnintr_shirq_detach (xnintr_t *intr)
 
     rthal_critical_exit(flags);
 
-    xnlogerr("Attempted to detach a non previously attached interrupt object");
+    xnlogerr("attempted to detach a non previously attached interrupt object");
     return err;
 }
 
