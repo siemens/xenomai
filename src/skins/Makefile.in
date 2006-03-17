@@ -57,7 +57,7 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	uninstall-recursive
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = native posix rtdm rtai uvm
+DIST_SUBDIRS = native posix rtdm vxworks rtai uvm
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADEOS_PATCH = @ADEOS_PATCH@
@@ -208,7 +208,7 @@ target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
 @CONFIG_XENO_UVM_TRUE@OPTDIRS = uvm
-SUBDIRS = native posix rtdm rtai $(OPTDIRS)
+SUBDIRS = native posix rtdm vxworks rtai $(OPTDIRS)
 all: all-recursive
 
 .SUFFIXES:
