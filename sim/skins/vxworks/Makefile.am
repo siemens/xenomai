@@ -32,3 +32,5 @@ nodist_libvxworks_sim_a_SOURCES = \
 	taskLib.c \
 	tickLib.c \
 	wdLib.c
+
+SUBDIRS=testsuite

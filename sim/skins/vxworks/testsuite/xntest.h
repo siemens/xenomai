@@ -27,7 +27,7 @@
 
 #define TEST_ASSERT(assertion)                                          \
 do {                                                                    \
-    xnarch_printf(__FILE__ ":%d " #assertion "\n", __LINE__);          \
+    xnarch_printf(__FILE__ ":%d, " #assertion "\n", __LINE__);          \
     xntest_assert((assertion), #assertion, __FILE__, __LINE__ );        \
 } while (0)
 
@@ -39,7 +39,7 @@ do {                                                                    \
 
 #define SEQ(name, count) 1, name, count
 
-#define END_SEQ 0
+#define END_SEQ (0)
 
 #ifdef __cplusplus
 extern "C" {
