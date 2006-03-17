@@ -998,7 +998,7 @@ int xnpipe_mount (void)
     xnpipe_class = class_create(THIS_MODULE, "rtpipe");
     if(IS_ERR(xnpipe_class))
     {
-       xnlogerr("Error creating rtpipe class, err=%ld.\n",PTR_ERR(xnpipe_class));
+       xnlogerr("error creating rtpipe class, err=%ld.\n",PTR_ERR(xnpipe_class));
        return -EBUSY; 
     }
 
@@ -1010,7 +1010,7 @@ int xnpipe_mount (void)
 					NULL, "rtp%d", i);
        if(IS_ERR(cldev))
        {
-          xnlogerr("Can't add device class, major=%d, minor=%d, err=%ld\n", 
+          xnlogerr("can't add device class, major=%d, minor=%d, err=%ld\n", 
 		   XNPIPE_DEV_MAJOR, i, PTR_ERR(cldev));
           class_destroy(xnpipe_class);
           return -EBUSY;
@@ -1019,7 +1019,7 @@ int xnpipe_mount (void)
 
     if (register_chrdev(XNPIPE_DEV_MAJOR,"rtpipe",&xnpipe_fops))
 	{
-	xnlogerr("Unable to reserve major #%d for message pipe support.\n",
+	xnlogerr("unable to reserve major #%d for message pipe support.\n",
 		 XNPIPE_DEV_MAJOR);
 	return -EBUSY;
 	}

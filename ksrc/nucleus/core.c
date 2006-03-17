@@ -50,8 +50,10 @@ int xncore_attach (void)
 	}
     else
 	{
-	if (xnpod_init(&__core_pod,XNCORE_MIN_PRIO,XNCORE_MAX_PRIO,0) != 0)
-	    return -ENOSYS;
+	int err = xnpod_init(&__core_pod,XNCORE_MIN_PRIO,XNCORE_MAX_PRIO,0);
+
+	if (err)
+	    return err;
 
 	__core_pod.svctable.unload = &xncore_unload_hook;
 	}

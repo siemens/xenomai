@@ -1010,7 +1010,7 @@ int xnheap_mount (void)
 
     if(IS_ERR(xnheap_class))
     {
-       xnlogerr("Error creating rtheap class, err=%ld.\n",PTR_ERR(xnheap_class));
+       xnlogerr("error creating rtheap class, err=%ld.\n",PTR_ERR(xnheap_class));
        return -EBUSY; 
     }
 
@@ -1019,7 +1019,7 @@ int xnheap_mount (void)
 				     NULL, "rtheap");
     if(IS_ERR(cldev))
 	{
-	xnlogerr("Can't add device class, major=%d, minor=%d, err=%ld\n", 
+	xnlogerr("can't add device class, major=%d, minor=%d, err=%ld\n", 
 		 MISC_MAJOR, XNHEAP_DEV_MINOR, PTR_ERR(cldev));
 	class_destroy(xnheap_class);
 	return -EBUSY;
