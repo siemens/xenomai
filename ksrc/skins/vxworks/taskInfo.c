@@ -24,7 +24,9 @@ const char * taskName ( TASK_ID task_id )
 {
     wind_task_t * task;
 
-    /* task_id == 0 is invalid. */
+    if (task_id == 0)
+	task_id = taskIdSelf();
+
     task = wind_h2obj_active(task_id, WIND_TASK_MAGIC,wind_task_t);
 
     /* It is useless to lock the access to task here, because if the task
