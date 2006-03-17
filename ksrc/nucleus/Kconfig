@@ -17,6 +17,20 @@ config XENO_OPT_PERVASIVE
 	applications, which directly call the real-time APIs from
 	kernel modules.
 
+config XENO_OPT_SECURITY_ACCESS
+	bool "Enforce syscall access control"
+	depends on XENO_OPT_PERVASIVE
+	default y
+	help
+
+	When enabled, the nucleus requires applications running in
+	user-space to have the CAP_SYS_NICE capability turned on for
+	executing Xenomai syscalls, such as skin services.
+
+	Disabling this option means that *any* user from the system
+	could invoke Xenomai services without permission. Therefore,
+	think twice before switching this off.
+
 config XENO_OPT_PIPE
 	bool "Message pipes"
 	default y
@@ -137,6 +151,8 @@ config XENO_OPT_TIMING_PERIODIC
 	bool "Use periodic timer hardware"
 	default y
 	help
+	WARNING: This value must be <= CONFIG_HZ.
+
 	The nucleus can manage the timer hardware provided by the
 	underlying architecture either in aperiodic (one-shot) or
 	periodic timing modes. Aperiodic mode provides for
