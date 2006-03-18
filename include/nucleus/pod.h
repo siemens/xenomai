@@ -86,17 +86,17 @@
 #define XNPOD_ROOT_PRIO_BASE   ((nkpod)->root_prio_base)
 
 #ifdef CONFIG_XENO_OPT_SCALABLE_SCHED
-typedef xnspqueue_t xnsched_queue_t;
-#define sched_initpq    initspq
-#define sched_countpq   countspq
-#define sched_insertpql insertspql
-#define sched_insertpqf insertspqf
-#define sched_appendpq  appendspq
-#define sched_prependpq prependspq
-#define sched_removepq  removespq
-#define sched_getheadpq getheadspq
-#define sched_getpq     getspq
-#define sched_findpqh   findspqh
+typedef xnmlqueue_t xnsched_queue_t;
+#define sched_initpq    initmlq
+#define sched_countpq   countmlq
+#define sched_insertpql insertmlql
+#define sched_insertpqf insertmlqf
+#define sched_appendpq  appendmlq
+#define sched_prependpq prependmlq
+#define sched_removepq  removemlq
+#define sched_getheadpq getheadmlq
+#define sched_getpq     getmlq
+#define sched_findpqh   findmlqh
 #else /* ! CONFIG_XENO_OPT_SCALABLE_SCHED */
 typedef xnpqueue_t xnsched_queue_t;
 #define sched_initpq    initpq
