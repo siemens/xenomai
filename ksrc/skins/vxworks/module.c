@@ -62,7 +62,10 @@ int SKIN_INIT(vxworks)
         goto fail;
 
     if (!testbits(nkpod->status,XNTMPER))
-	err = -EINVAL;	/* Cannot work in aperiodic timing mode. */
+	{
+	xnlogerr("incompatible timer mode (aperiodic found, need periodic).\n");
+	err = -EBUSY;	/* Cannot work in aperiodic timing mode. */
+	}
     else
 	err = wind_sysclk_init(1000000000 / xnpod_get_tickval());
 
