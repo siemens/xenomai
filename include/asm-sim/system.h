@@ -22,6 +22,7 @@
 #ifndef _XENO_ASM_SIM_SYSTEM_H
 #define _XENO_ASM_SIM_SYSTEM_H
 
+#include <asm/param.h>
 #include <errno.h>
 #include <string.h>
 #include <malloc.h>
