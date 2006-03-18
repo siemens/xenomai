@@ -39,8 +39,6 @@ static SEM_ID sem_create_internal(int flags, const sem_vtbl_t * vtbl, int count)
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
-static unsigned long sem_ids;
-
 static int sem_read_proc (char *page,
 			  char **start,
 			  off_t off,
@@ -480,6 +478,9 @@ static SEM_ID sem_create_internal(int flags, const sem_vtbl_t * vtbl, int count)
     appendq(&wind_sem_q,&sem->link);
     xnlock_put_irqrestore(&nklock, s);
 #ifdef CONFIG_XENO_OPT_REGISTRY
+    {
+    static unsigned long sem_ids;
+
     sprintf(sem->name,"sem%lu",sem_ids++);
 
     if (xnregistry_enter(sem->name,sem,&sem->handle,&sem_pnode))
@@ -488,6 +489,7 @@ static SEM_ID sem_create_internal(int flags, const sem_vtbl_t * vtbl, int count)
 	semDelete((SEM_ID)sem);
 	return 0;
 	}
+    }
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
     return (SEM_ID) sem;

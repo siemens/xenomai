@@ -28,8 +28,6 @@ static void wd_destroy_internal(wind_wd_t *wd);
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
-static unsigned long wd_ids;
-
 static int wd_read_proc (char *page,
 			 char **start,
 			 off_t off,
@@ -124,6 +122,9 @@ WDOG_ID wdCreate (void)
     xnlock_put_irqrestore(&nklock, s);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
+    {
+    static unsigned long wd_ids;
+
     sprintf(wd->name,"wd%lu",wd_ids++);
 
     if (xnregistry_enter(wd->name,wd,&wd->handle,&wd_pnode))
@@ -132,6 +133,7 @@ WDOG_ID wdCreate (void)
 	wdDelete((WDOG_ID)wd);
 	return 0;
 	}
+    }
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
     return (WDOG_ID) wd;

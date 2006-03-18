@@ -26,8 +26,6 @@ static	int msgq_destroy_internal(wind_msgq_t * queue);
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
-static unsigned long msgq_ids;
-
 static int msgq_read_proc (char *page,
 			   char **start,
 			   off_t off,
@@ -200,6 +198,9 @@ MSG_Q_ID msgQCreate ( int nb_msgs, int length, int flags )
     xnlock_put_irqrestore(&nklock, s);
     
 #ifdef CONFIG_XENO_OPT_REGISTRY
+    {
+    static unsigned long msgq_ids;
+
     sprintf(queue->name,"mq%lu",msgq_ids++);
 
     if (xnregistry_enter(queue->name,queue,&queue->handle,&msgq_pnode))
@@ -208,6 +209,7 @@ MSG_Q_ID msgQCreate ( int nb_msgs, int length, int flags )
 	msgQDelete((MSG_Q_ID)queue);
 	return 0;
 	}
+    }
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
     return (MSG_Q_ID) queue;
