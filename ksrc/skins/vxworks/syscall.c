@@ -432,6 +432,7 @@ static int __wind_task_nametoid (struct task_struct *curr, struct pt_regs *regs)
 static int __wind_sem_bcreate (struct task_struct *curr, struct pt_regs *regs)
 {
     SEM_B_STATE state;
+    wind_sem_t *sem;
     SEM_ID sem_id;
     int flags;
 
@@ -440,12 +441,12 @@ static int __wind_sem_bcreate (struct task_struct *curr, struct pt_regs *regs)
 
     flags = __xn_reg_arg1(regs);
     state = __xn_reg_arg2(regs);
+    sem = (wind_sem_t *)semBCreate(flags,state);
 
-    sem_id = semBCreate(flags,state);
-
-    if (!sem_id)
+    if (!sem)
 	return wind_errnoget();
 
+    sem_id = sem->handle;
     __xn_copy_to_user(curr,(void __user *)__xn_reg_arg3(regs),&sem_id,sizeof(sem_id));
 
     return 0;
@@ -458,6 +459,7 @@ static int __wind_sem_bcreate (struct task_struct *curr, struct pt_regs *regs)
 static int __wind_sem_ccreate (struct task_struct *curr, struct pt_regs *regs)
 {
     int flags, count;
+    wind_sem_t *sem;
     SEM_ID sem_id;
 
     if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg3(regs),sizeof(sem_id)))
@@ -465,12 +467,12 @@ static int __wind_sem_ccreate (struct task_struct *curr, struct pt_regs *regs)
 
     flags = __xn_reg_arg1(regs);
     count = __xn_reg_arg2(regs);
+    sem = (wind_sem_t *)semCCreate(flags,count);
 
-    sem_id = semCCreate(flags,count);
-
-    if (!sem_id)
+    if (!sem)
 	return wind_errnoget();
 
+    sem_id = sem->handle;
     __xn_copy_to_user(curr,(void __user *)__xn_reg_arg3(regs),&sem_id,sizeof(sem_id));
 
     return 0;
@@ -482,6 +484,7 @@ static int __wind_sem_ccreate (struct task_struct *curr, struct pt_regs *regs)
 
 static int __wind_sem_mcreate (struct task_struct *curr, struct pt_regs *regs)
 {
+    wind_sem_t *sem;
     SEM_ID sem_id;
     int flags;
 
@@ -489,12 +492,12 @@ static int __wind_sem_mcreate (struct task_struct *curr, struct pt_regs *regs)
 	return -EFAULT;
 
     flags = __xn_reg_arg1(regs);
+    sem = (wind_sem_t *)semMCreate(flags);
 
-    sem_id = semMCreate(flags);
-
-    if (!sem_id)
+    if (!sem)
 	return wind_errnoget();
 
+    sem_id = sem->handle;
     __xn_copy_to_user(curr,(void __user *)__xn_reg_arg2(regs),&sem_id,sizeof(sem_id));
 
     return 0;
@@ -734,6 +737,7 @@ static int __wind_kernel_timeslice (struct task_struct *curr, struct pt_regs *re
 static int __wind_msgq_create (struct task_struct *curr, struct pt_regs *regs)
 {
     int nb_msgs, length, flags;
+    wind_msgq_t *msgq;
     MSG_Q_ID qid;
 
     if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg4(regs),sizeof(qid)))
@@ -742,12 +746,12 @@ static int __wind_msgq_create (struct task_struct *curr, struct pt_regs *regs)
     nb_msgs = __xn_reg_arg1(regs);
     length = __xn_reg_arg2(regs);
     flags = __xn_reg_arg3(regs);
+    msgq = (wind_msgq_t *)msgQCreate(nb_msgs,length,flags);
 
-    qid = msgQCreate(nb_msgs,length,flags);
-
-    if (!qid)
+    if (!msgq)
 	return wind_errnoget();
 
+    qid = msgq->handle;
     __xn_copy_to_user(curr,(void __user *)__xn_reg_arg4(regs),&qid,sizeof(qid));
 
     return 0;
@@ -990,15 +994,17 @@ static int __wind_wd_create (struct task_struct *curr, struct pt_regs *regs)
 
 {
     WDOG_ID wdog_id;
+    wind_wd_t *wd;
 
     if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg1(regs),sizeof(wdog_id)))
 	return -EFAULT;
 
-    wdog_id = wdCreate();
+    wd = (wind_wd_t *)wdCreate();
 
-    if (!wdog_id)
+    if (!wd)
 	return wind_errnoget();
 
+    wdog_id = wd->handle;
     __xn_copy_to_user(curr,(void __user *)__xn_reg_arg1(regs),&wdog_id,sizeof(wdog_id));
 
     return 0;
