@@ -26,8 +26,8 @@
 					    CONFIG_XENO_VERSION_MINOR, \
 					    CONFIG_XENO_REVISION_LEVEL)
 
-#define XENO_VERSION_NAME	"Champagne"
+#define XENO_VERSION_NAME	"Engines Of Creation"
 
-#define XENO_VERSION_STRING	"2.1"
+#define XENO_VERSION_STRING	"2.2-dev"
 
 #endif /* _XENO_NUCLEUS_VERSION_H */
