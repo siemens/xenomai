@@ -115,8 +115,6 @@ typedef struct xnthread {
 
     int cprio;			/* Current priority */
 
-    xnholder_t slink;		/* Thread holder in suspend queue */
-
     xnpholder_t rlink;		/* Thread holder in ready queue */
 
     xnpholder_t plink;		/* Thread holder in synchronization queue(s) */

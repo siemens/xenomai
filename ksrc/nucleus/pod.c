@@ -370,8 +370,6 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
     pod->schedhook = NULL;
 #endif /* __XENO_SIM__ */
 
-    initq(&pod->suspendq);
-
     for (cpu=0; cpu < nr_cpus; ++cpu)
         {
         sched = &pod->sched[cpu];
@@ -824,8 +822,8 @@ int xnpod_init_thread (xnthread_t *thread,
     if (stacksize == 0)
         stacksize = XNARCH_THREAD_STACKSZ;
 
-    /* Exclude XNSUSP, so that xnpod_suspend_thread() will put the thread in the
-       suspendq. */
+    /* Exclude XNSUSP, so that xnpod_suspend_thread() will actually do
+       the suspension work for the thread. */
     err = xnthread_init(thread,name,prio,flags & ~XNSUSP,stacksize);
 
     if (err)
@@ -1270,14 +1268,8 @@ void xnpod_delete_thread (xnthread_t *thread)
             __clrbits(thread->status,XNREADY);
             }
         }
-    else
-        {
-        if (testbits(thread->status,XNDELAY))
+    else if (testbits(thread->status,XNDELAY))
             xntimer_stop(&thread->rtimer);
-
-        if (testbits(thread->status,XNTHREAD_BLOCK_BITS & ~XNDELAY))
-            removeq(&nkpod->suspendq,&thread->slink);
-        }
 
     xntimer_stop(&thread->ptimer);
 
@@ -1468,18 +1460,8 @@ void xnpod_suspend_thread (xnthread_t *thread,
             __clrbits(thread->status,XNREADY);
             }
 
-        if ((mask & ~XNDELAY) != 0)
-            /* If the thread is forcibly suspended outside the simple
-               delay condition, link it to suspension queue. */
-            appendq(&nkpod->suspendq,&thread->slink);
-
         __clrbits(thread->status,XNRMID|XNTIMEO|XNBREAK);
         }
-    else if ((mask & ~XNDELAY) != 0 &&
-             !testbits(thread->status,XNTHREAD_BLOCK_BITS & ~XNDELAY))
-        /* If the thread is forcibly suspended while undergoing a
-           simple delay condition, link it to suspension queue too. */
-        appendq(&nkpod->suspendq,&thread->slink);
 
     __setbits(thread->status,mask);
 
@@ -1653,20 +1635,7 @@ void xnpod_resume_thread (xnthread_t *thread,
                     }
 
                 if (testbits(thread->status,XNTHREAD_BLOCK_BITS)) /* Still blocked? */
-                    {
-                    if (testbits(thread->status,XNDELAY))
-                        /* Funky corner case here: the suspensive
-                           condition we have just removed was not
-                           XNPEND, and we are still blocked on
-                           XNDELAY.  We thus need to remove the thread
-                           from the suspension queue to reflect the
-                           removal of the cleared condition, since
-                           threads on resource-free timed waits are
-                           not expected to be linked to this queue. */
-                        removeq(&nkpod->suspendq,&thread->slink);
-
                     goto unlock_and_exit;
-                    }
                 }
             else
                 {
@@ -1686,19 +1655,13 @@ void xnpod_resume_thread (xnthread_t *thread,
                timer is simply a no-op. */
             xntimer_stop(&thread->rtimer);
 
-        if ((mask & ~XNDELAY) != 0)
-            {
-            /* If the thread was actually suspended, remove it from
-               the suspension queue -- this allows requests like
-               xnpod_suspend_thread(...,thread,XNDELAY,0,...) not to
-               run the following code when the suspended thread is
-               woken up while undergoing an infinite delay. */
-
-            removeq(&nkpod->suspendq,&thread->slink);
-
-            if (thread->wchan)
-                xnsynch_forget_sleeper(thread);
-            }
+        if ((mask & ~XNDELAY) != 0 && thread->wchan != NULL)
+            /* If the thread was actually suspended, clear the wait
+               channel.  -- this allows requests like
+               xnpod_suspend_thread(thread,XNDELAY,...) not to run the
+               following code when the suspended thread is woken up
+               while undergoing a simple delay. */
+	    xnsynch_forget_sleeper(thread);
         }
     else if (testbits(thread->status,XNREADY))
         {

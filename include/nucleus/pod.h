@@ -189,8 +189,6 @@ struct xnpod {
 
     xnsched_t sched[XNARCH_NR_CPUS]; /*!< Per-cpu scheduler slots. */
 
-    xnqueue_t suspendq;         /*!< Suspended (blocked) threads. */
-
     xnqueue_t threadq;          /*!< All existing threads. */
 
     volatile u_long schedlck;	/*!< Scheduler lock count. */
