@@ -36,6 +36,7 @@ void root_thread_exit(void);
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #define MODULE_LICENSE(x)
 
@@ -43,8 +44,15 @@ void root_thread_exit(void);
 
 int main (int argc, char *argv[])
 {
+    int err;
+
     atexit(&root_thread_exit);
-    return root_thread_init();
+    err = root_thread_init();
+
+    if (!err)
+	pause();
+
+    return err;
 }
 
 #endif /* Native, user-space execution */
