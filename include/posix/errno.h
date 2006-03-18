@@ -24,7 +24,6 @@
 #ifdef __KERNEL__
 #include <linux/errno.h>
 #include <linux/unistd.h>         /* conflicting declaration of errno. */
-#endif /* !__KERNEL__ */
 #else /* __XENO_SIM__ */
 #include <posix_overrides.h>
 #endif /* __KERNEL__ */
