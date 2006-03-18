@@ -28,6 +28,8 @@
  * drivers. Specifically, it addresses the constraints of mixed
  * RT/non-RT systems like Xenomai. RTDM conforms to POSIX
  * semantics (IEEE Std 1003.1) where available and applicable.
+ *
+ * @b API @b Revision: 4
  */
 
 /*!
