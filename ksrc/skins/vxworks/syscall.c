@@ -1214,7 +1214,7 @@ int wind_syscall_init (void)
 {
     __muxid =
 	xnshadow_register_interface("vxworks",
-				    WIND_TASK_MAGIC,
+				    VXWORKS_SKIN_MAGIC,
 				    sizeof(__systab) / sizeof(__systab[0]),
 				    __systab,
 				    NULL);
