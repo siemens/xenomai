@@ -1,5 +1,8 @@
 2006-03-18  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/nucleus/queue.h: Use a two-level bitmap for the
+	multi-level priority queue.
+
 	* include/nucleus/pod.h, include/nucleus/thread.h,
 	ksrc/nucleus/pod.c: Get rid of the suspended thread queue.
 

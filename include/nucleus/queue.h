@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2005 Dmitry Adamushko <dmitry.adamushko@gmail.com>
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -138,7 +139,7 @@ do { \
 #else /* !(__KERNEL__ || __XENO_UVM__ || __XENO_SIM__) */
 
 /* Disable queue checks in user-space code which does not run as part
-   of any virtual machine, e.g. skin syslibs. */
+   of any virtual machine, e.g. skin call interface libs. */
 
 #define XENO_DEBUG_CHECK_QUEUE(__qslot)
 #define XENO_DEBUG_INSERT_QUEUE(__qslot,__holder)
@@ -579,166 +580,181 @@ static inline int countgq (xngqueue_t *gqslot)
 
 #ifdef CONFIG_XENO_OPT_SCALABLE_SCHED
 
-/* Multi-level priority queue */
+/* Multi-level priority queue, suitable for handling the runnable
+   thread queue. */
 
-#define XNSPQUEUE_PRIOS      (XNCORE_MAX_PRIO + 2)
-#define XNSPQUEUE_BITMAPSIZE ((XNSPQUEUE_PRIOS + BITS_PER_LONG - 1) / BITS_PER_LONG)
+#define __MLQ_LONGS ((XNCORE_NR_PRIO+BITS_PER_LONG-1)/BITS_PER_LONG)
 
-typedef struct xnspqueue {
+typedef struct xnmlqueue {
 
     int qdir, maxpri;
 
-    unsigned int elems;
+    unsigned elems;
 
-    u_long bitmap[XNSPQUEUE_BITMAPSIZE];
+    u_long himap,
+	   lomap[__MLQ_LONGS];
 
-    struct xnqueue queue[XNSPQUEUE_PRIOS];
+    struct xnqueue queue[XNCORE_NR_PRIO];
 
-} xnspqueue_t;
+} xnmlqueue_t;
 
-static inline unsigned int countspq(xnspqueue_t *spqslot)
+#undef __MLQ_LONGS
+
+static inline unsigned countmlq(xnmlqueue_t *mlqslot)
 {
-    return spqslot->elems;
+    return mlqslot->elems;
 }
 
-static inline unsigned int xnspqueue_prio2idx(xnspqueue_t *spqslot, int prio)
+static inline unsigned indexmlq(xnmlqueue_t *mlqslot, int prio)
 {
-    if (spqslot->qdir == xnqueue_up) /* minprio > maxprio */
-        return prio - spqslot->maxpri;
+    if (mlqslot->qdir == xnqueue_up) /* minprio > maxprio */
+        return prio - mlqslot->maxpri;
     else
-        return spqslot->maxpri - prio;
+        return mlqslot->maxpri - prio;
 }
 
-static inline unsigned int xnspqueue_find_firstbit(xnspqueue_t *spqslot)
+static inline unsigned ffsmlq(xnmlqueue_t *mlqslot)
+{
+    int hi = ffnz(mlqslot->himap);
+    int lo = ffnz(mlqslot->lomap[hi]);
+    return hi * BITS_PER_LONG + lo; /* Result is undefined if none set. */
+}
+
+static inline void initmlq(xnmlqueue_t *mlqslot, int qdir, int maxpri)
 {
     int i;
 
-/* simplest approach for now */
-    for (i = 0; i < XNSPQUEUE_BITMAPSIZE; i++)
-        {
-        if (spqslot->bitmap[i])
-            return ffnz(spqslot->bitmap[i]) + i*BITS_PER_LONG;
-        }
-
-    return 0; /* something already had gone wrong before this code was called */
+    mlqslot->elems = 0;
+    mlqslot->qdir  = qdir;
+    mlqslot->maxpri = maxpri;
+    mlqslot->himap = 0;
+    memset(&mlqslot->lomap,0,sizeof(mlqslot->lomap));
+    
+    for (i = 0; i < XNCORE_NR_PRIO; i++)
+        initq(&mlqslot->queue[i]);
 }
 
-static inline void initspq(xnspqueue_t *spqslot, int qdir, int maxpri)
+#define XNMLQUEUE_APPEND   0
+#define XNMLQUEUE_PREPEND  1
+
+static inline void addmlq(xnmlqueue_t *mlqslot,
+			  xnpholder_t  *holder,
+			  unsigned idx,
+			  int mode)
 {
-    int i;
+    xnqueue_t *queue = &mlqslot->queue[idx];
+    int hi = idx / BITS_PER_LONG;
+    int lo = idx % BITS_PER_LONG;
 
-    spqslot->elems = 0;
-    spqslot->qdir  = qdir;
-    spqslot->maxpri = maxpri;
-    
-    memset(&spqslot->bitmap, 0, XNSPQUEUE_BITMAPSIZE*sizeof(u_long));
-    
-    for (i = 0; i < XNSPQUEUE_PRIOS; i++)
-        initq(&spqslot->queue[i]);
-}
-
-#define XNSPQUEUE_APPEND        0
-#define XNSPQUEUE_PREPEND       1
-
-static inline void __xnspqueue_insert(xnspqueue_t *spqslot,
-                                      xnpholder_t  *holder,
-                                      unsigned int idx,
-                                      int mode)
-{
-    xnqueue_t *queue = &spqslot->queue[idx];
-
-    if (mode == XNSPQUEUE_PREPEND) /* Hopefully, this should be optimized away. */
+    if (mode == XNMLQUEUE_PREPEND) /* Hopefully, this should be optimized away. */
         prependq(queue, &holder->plink);
     else
         appendq(queue, &holder->plink);
 
-    spqslot->elems++;
-    __setbits(spqslot->bitmap[idx / BITS_PER_LONG],1 << (idx % BITS_PER_LONG));
+    mlqslot->elems++;
+    __setbits(mlqslot->himap,1 << hi);
+    __setbits(mlqslot->lomap[hi],1 << lo);
 }
 
-static inline void insertspql(xnspqueue_t *spqslot,
-                             xnpholder_t *holder,
-                             int prio)
+static inline void insertmlql(xnmlqueue_t *mlqslot,
+			      xnpholder_t *holder,
+			      int prio)
 {
-    __xnspqueue_insert(spqslot, holder, xnspqueue_prio2idx(spqslot,prio), XNSPQUEUE_PREPEND);
+    addmlq(mlqslot, holder, indexmlq(mlqslot,prio), XNMLQUEUE_PREPEND);
     holder->prio = prio;
 }
 
-static inline void insertspqf(xnspqueue_t *spqslot,
-                             xnpholder_t *holder,
-                             int prio)
+static inline void insertmlqf(xnmlqueue_t *mlqslot,
+			      xnpholder_t *holder,
+			      int prio)
 {
-    __xnspqueue_insert(spqslot, holder, xnspqueue_prio2idx(spqslot,prio), XNSPQUEUE_APPEND);
+    addmlq(mlqslot, holder, indexmlq(mlqslot,prio), XNMLQUEUE_APPEND);
     holder->prio = prio;
 }
 
-static inline void appendspq(xnspqueue_t *spqslot,
-                            xnpholder_t *holder)
+static inline void appendmlq(xnmlqueue_t *mlqslot,
+			     xnpholder_t *holder)
 {
-    __xnspqueue_insert(spqslot, holder, spqslot->maxpri, XNSPQUEUE_APPEND);
-    holder->prio = spqslot->maxpri;
+    addmlq(mlqslot, holder, mlqslot->maxpri, XNMLQUEUE_APPEND);
+    holder->prio = mlqslot->maxpri;
 }
 
-static inline void prependspq(xnspqueue_t *spqslot,
-                             xnpholder_t *holder)
+static inline void prependmlq(xnmlqueue_t *mlqslot,
+			      xnpholder_t *holder)
 {
-    __xnspqueue_insert(spqslot, holder, 0, XNSPQUEUE_PREPEND);
+    addmlq(mlqslot, holder, 0, XNMLQUEUE_PREPEND);
     holder->prio = 0;
 }
 
-static inline void removespq(xnspqueue_t *spqslot,
-                            xnpholder_t *holder)
+static inline void removemlq(xnmlqueue_t *mlqslot,
+			     xnpholder_t *holder)
 {
-    unsigned int idx = xnspqueue_prio2idx(spqslot,holder->prio);
-    xnqueue_t *queue = &spqslot->queue[idx];
+    unsigned idx = indexmlq(mlqslot,holder->prio);
+    xnqueue_t *queue = &mlqslot->queue[idx];
 
-    spqslot->elems--;
+    mlqslot->elems--;
     
     removeq(queue, &holder->plink);
     
-    if (!countq(queue))
-        __clrbits(spqslot->bitmap[idx / BITS_PER_LONG],1 << (idx % BITS_PER_LONG));
+    if (!countq(queue)) {
+        int hi = idx / BITS_PER_LONG;
+        int lo = idx % BITS_PER_LONG;
+        __clrbits(mlqslot->lomap[hi],1 << lo);
+	if (mlqslot->lomap[hi] == 0)
+	    __clrbits(mlqslot->himap,1 << hi);
+    }
 }
 
-static inline xnpholder_t* findspqh(xnspqueue_t *spqslot,
-                                   int prio)
+static inline xnpholder_t *findmlqh(xnmlqueue_t *mlqslot,
+				    int prio)
 {
-    xnqueue_t *queue = &spqslot->queue[xnspqueue_prio2idx(spqslot,prio)];
+    xnqueue_t *queue = &mlqslot->queue[indexmlq(mlqslot,prio)];
     return (xnpholder_t *)getheadq(queue);
 }
 
-static inline xnpholder_t* getheadspq(xnspqueue_t *spqslot)
+static inline xnpholder_t *getheadmlq(xnmlqueue_t *mlqslot)
 {
     xnqueue_t *queue;
 
-    if (!countspq(spqslot))
+    if (!countmlq(mlqslot))
         return NULL;
 
-    queue = &spqslot->queue[xnspqueue_find_firstbit(spqslot)];
+    queue = &mlqslot->queue[ffsmlq(mlqslot)];
     
     return (xnpholder_t *)getheadq(queue);
 }
 
-static inline xnpholder_t* getspq(xnspqueue_t *spqslot)
+static inline xnpholder_t *getmlq(xnmlqueue_t *mlqslot)
 {
-    unsigned int idx;
+    unsigned idx;
     xnholder_t *holder;
     xnqueue_t *queue;
+    int hi, lo;
 
-    if (!countspq(spqslot))
+    if (!countmlq(mlqslot))
         return NULL;
 
-    idx    = xnspqueue_find_firstbit(spqslot);
-    queue  = &spqslot->queue[idx];
+    idx = ffsmlq(mlqslot);
+    queue = &mlqslot->queue[idx];
     holder = getq(queue);
 
+#ifdef CONFIG_XENO_OPT_DEBUG_QUEUES
     if (!holder)
-        return NULL;
+        xnpod_fatal("corrupted multi-level queue, qslot=%p at %s:%d",
+                    mlqslot,
+		    __FILE__,__LINE__);
+#endif /* CONFIG_XENO_OPT_DEBUG_QUEUES */
         
-    spqslot->elems--;    
+    hi = idx / BITS_PER_LONG;
+    lo = idx % BITS_PER_LONG;
 
-    if (!countq(queue))
-        __clrbits(spqslot->bitmap[idx / BITS_PER_LONG],1 << (idx % BITS_PER_LONG));
+    mlqslot->elems--;    
+
+    if (!countq(queue)) {
+        __clrbits(mlqslot->lomap[hi],1 << lo);
+	if (mlqslot->lomap[hi] == 0)
+	    __clrbits(mlqslot->himap,1 << hi);
+    }
     
     return (xnpholder_t *)holder;
 }
