@@ -270,7 +270,8 @@ typedef struct xnpholder {
 
 } xnpholder_t;
 
-static inline void initph (xnpholder_t *holder) {
+static inline void initph (xnpholder_t *holder)
+{
     inith(&holder->plink);
     /* Priority is set upon queue insertion */
 }
@@ -580,7 +581,7 @@ static inline int countgq (xngqueue_t *gqslot)
 
 /* Multi-level priority queue */
 
-#define XNSPQUEUE_PRIOS      (XNCORE_MAX_PRIO + 1)
+#define XNSPQUEUE_PRIOS      (XNCORE_MAX_PRIO + 2)
 #define XNSPQUEUE_BITMAPSIZE ((XNSPQUEUE_PRIOS + BITS_PER_LONG - 1) / BITS_PER_LONG)
 
 typedef struct xnspqueue {
