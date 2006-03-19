@@ -1623,7 +1623,7 @@ static inline void do_schedule_event (struct task_struct *next)
         {
         xnpod_renice_root(newrprio);
 
-	if (xnpod_priocompare(newrprio,oldrprio) < 0)
+	if (xnpod_compare_prio(newrprio,oldrprio) < 0)
 	    /* Subtle: by downgrading the root thread priority, some
 	       higher priority thread might well become eligible for
 	       execution instead of us. Since xnpod_renice_root() does

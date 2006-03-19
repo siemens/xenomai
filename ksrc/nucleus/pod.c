@@ -94,12 +94,13 @@ const char *xnpod_fatal_helper (const char *format, ...)
     now = nktimer->get_jiffies();
 
     p += snprintf(p,XNPOD_FATAL_BUFSZ - (p - nkmsgbuf),
-	          "\n %-3s  %-6s %-4s %-8s %-8s  %s\n",
+	          "\n %-3s  %-6s %-8s %-8s %-8s  %s\n",
 		  "CPU","PID","PRI","TIMEOUT","STAT","NAME");
 
     for (cpu = 0; cpu < nr_cpus; ++cpu)
         {
         xnsched_t *sched = xnpod_sched_slot(cpu);
+	char pbuf[16];
 
         holder = getheadq(&nkpod->threadq);
 
@@ -111,12 +112,19 @@ const char *xnpod_fatal_helper (const char *format, ...)
             if (thread->sched != sched)
                 continue;
 
+	    if (thread->status & XNINVPS)
+		snprintf(pbuf,sizeof(pbuf),"%3d(%d)",
+			 thread->cprio,
+			 xnpod_rescale_prio(thread->cprio));
+	    else
+		snprintf(pbuf,sizeof(pbuf),"%3d",thread->cprio);
+
 	    p += snprintf(p,XNPOD_FATAL_BUFSZ - (p - nkmsgbuf),
-			  "%c%3u  %-6d %-4d %-8Lu %.8lx  %s\n",
+			  "%c%3u  %-6d %-8s %-8Lu %.8lx  %s\n",
 			  thread == sched->runthread ? '>' : ' ',
 			  cpu,
 			  xnthread_user_pid(thread),
-			  thread->cprio,
+			  pbuf,
 			  xnthread_get_timeout(thread, now),
 			  thread->status,
 			  thread->name);
@@ -686,7 +694,7 @@ static inline void xnpod_switch_zombie (xnthread_t *threadout,
     xnltt_log_event(xeno_ev_finalize,threadout->name,threadin->name);
 
     if (countq(&nkpod->tdeleteq) > 0 &&
-        !testbits(threadout->status,XNTHREAD_SYSTEM_BITS))
+        !testbits(threadout->status,XNROOT))
         {
         xnltt_log_event(xeno_ev_callout,"SELF-DELETE",threadout->name);
         xnpod_fire_callouts(&nkpod->tdeleteq,threadout);
@@ -771,6 +779,22 @@ static inline void xnpod_switch_zombie (xnthread_t *threadout,
  * real-time control layer since the FPU management is always active
  * if present.
  *
+ * - XNINVPS tells the nucleus that the new thread will use an
+ * inverted priority scale with respect to the one enforced by the
+ * current pod. This means that the calling skin will still have to
+ * normalize the priority levels passed to the nucleus routines so
+ * that they conform to the pod's priority scale, but the nucleus will
+ * automatically rescale those values when displaying the priority
+ * information (e.g. /proc/xenomai/sched output). This bit must not be
+ * confused with the XNRPRIO bit, which is internally set by the
+ * nucleus during pod initialization when the low priority level is
+ * found to be numerically higher than the high priority bound. Having
+ * the XNINVPS bit set for a thread running on a pod with XNRPRIO
+ * unset means that the skin emulates a decreasing priority scale
+ * using the pod's increasing priority scale. This is typically the
+ * case for skins running over the core pod (see
+ * include/nucleus/core.h).
+ *
  * @param stacksize The size of the stack (in bytes) for the new
  * thread. If zero is passed, the nucleus will use a reasonable
  * pre-defined size depending on the underlying real-time control
@@ -812,7 +836,7 @@ int xnpod_init_thread (xnthread_t *thread,
     spl_t s;
     int err;
 
-    if (flags & ~(XNFPU|XNSHADOW|XNSHIELD|XNSUSP))
+    if (flags & ~(XNFPU|XNSHADOW|XNSHIELD|XNSUSP|XNINVPS))
         return -EINVAL;
 
 #ifndef CONFIG_XENO_OPT_ISHIELD
@@ -991,7 +1015,7 @@ int xnpod_start_thread (xnthread_t *thread,
 #endif /* __XENO_SIM__ */
 
     if (countq(&nkpod->tstartq) > 0 &&
-        !testbits(thread->status,XNTHREAD_SYSTEM_BITS))
+        !testbits(thread->status,XNROOT))
         {
         xnltt_log_event(xeno_ev_callout,"START",thread->name);
         xnpod_fire_callouts(&nkpod->tstartq,thread);
@@ -1306,7 +1330,7 @@ void xnpod_delete_thread (xnthread_t *thread)
     else
         {
         if (countq(&nkpod->tdeleteq) > 0 &&
-            !testbits(thread->status,XNTHREAD_SYSTEM_BITS))
+            !testbits(thread->status,XNROOT))
             {
             xnltt_log_event(xeno_ev_callout,"DELETE",thread->name);
             xnpod_fire_callouts(&nkpod->tdeleteq,thread);
@@ -1401,8 +1425,8 @@ void xnpod_suspend_thread (xnthread_t *thread,
     spl_t s;
 
 #if defined(CONFIG_XENO_OPT_DEBUG) || defined(__XENO_SIM__)
-    if (testbits(thread->status,XNTHREAD_SYSTEM_BITS))
-        xnpod_fatal("attempt to suspend system thread %s",thread->name);
+    if (testbits(thread->status,XNROOT))
+        xnpod_fatal("attempt to suspend root thread %s",thread->name);
 
     if (thread->wchan && wchan)
         xnpod_fatal("thread %s attempts a conjunctive wait",thread->name);
@@ -1845,7 +1869,7 @@ void xnpod_renice_thread_inner (xnthread_t *thread, int prio, int propagate)
        priority level if it is undergoing a PIP boost. */
 
     if (!testbits(thread->status,XNBOOST) ||
-        xnpod_priocompare(prio,oldprio) > 0)
+        xnpod_compare_prio(prio,oldprio) > 0)
         {
         thread->cprio = prio;
 
@@ -2448,7 +2472,7 @@ void xnpod_schedule (void)
 
             if (head == runthread)
                 goto do_switch;
-            else if (xnpod_priocompare(head->cprio,runthread->cprio) > 0)
+            else if (xnpod_compare_prio(head->cprio,runthread->cprio) > 0)
                 {
                 if (!testbits(runthread->status,XNREADY))
                     /* Preempt the running thread */
@@ -2551,7 +2575,7 @@ void xnpod_schedule (void)
 #endif /* __XENO_SIM__ */
     
     if (countq(&nkpod->tswitchq) > 0 &&
-        !testbits(runthread->status,XNTHREAD_SYSTEM_BITS))
+        !testbits(runthread->status,XNROOT))
         {
         xnltt_log_event(xeno_ev_callout,"SWITCH",runthread->name);
         xnpod_fire_callouts(&nkpod->tswitchq,runthread);
