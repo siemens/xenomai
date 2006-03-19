@@ -86,6 +86,10 @@ STATUS taskInit(WIND_TCB * pTcb,
        neither. */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    /* VxWorks priority scale is inverted compared to the core
+       pod's we are going to use for hosting our threads. */
+    bflags |= XNINVPS;
+
     if (flags & VX_SHADOW)
         bflags |= XNSHADOW;
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */

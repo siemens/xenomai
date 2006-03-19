@@ -299,12 +299,19 @@ static inline int xnpod_get_maxprio (xnpod_t *pod, int incr)
         pod->maxpri + incr;
 }
 
-static inline int xnpod_priocompare (int inprio, int outprio)
+static inline int xnpod_compare_prio (int inprio, int outprio)
 {
     /* Returns a negative, null or positive value whether inprio is
        lower than, equal to or greater than outprio. */
     int delta = inprio - outprio;
     return testbits(nkpod->status,XNRPRIO) ? -delta : delta;
+}
+
+static inline int xnpod_rescale_prio (int prio)
+{
+    return xnpod_get_qdir(nkpod) == xnqueue_up ?
+        nkpod->minpri - prio :
+        nkpod->maxpri - prio - 1;
 }
 
 static inline void xnpod_renice_root (int prio)

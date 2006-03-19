@@ -138,20 +138,28 @@ static void sched_seq_stop(struct seq_file *seq, void *v)
 
 static int sched_seq_show(struct seq_file *seq, void *v)
 {
-    char buf[64];
+    char sbuf[64], pbuf[16];
 
     if (v == SEQ_START_TOKEN)
-	seq_printf(seq,"%-3s  %-6s %-4s %-8s %-10s %s\n",
+	seq_printf(seq,"%-3s  %-6s %-8s %-8s %-10s %s\n",
 		   "CPU","PID","PRI","TIMEOUT","STAT","NAME");
     else
 	{
 	struct sched_seq_info *p = (struct sched_seq_info *)v;
-	seq_printf(seq,"%3u  %-6d %-4d %-8Lu %-10s %s\n",
+
+	if (p->status & XNINVPS)
+	    snprintf(pbuf,sizeof(pbuf),"%3d(%d)",
+		     p->cprio,
+		     xnpod_rescale_prio(p->cprio));
+	else
+	    snprintf(pbuf,sizeof(pbuf),"%3d",p->cprio);
+
+	seq_printf(seq,"%3u  %-6d %-8s %-8Lu %-10s %s\n",
 		   p->cpu,
 		   p->pid,
-		   p->cprio,
+		   pbuf,
 		   p->timeout,
-		   xnthread_symbolic_status(p->status,buf,sizeof(buf)),
+		   xnthread_symbolic_status(p->status,sbuf,sizeof(sbuf)),
 		   p->name);
 	}
 
