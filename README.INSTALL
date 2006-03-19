@@ -16,7 +16,7 @@ built-in extension of the Linux kernel, and no more as a collection of
 separate out-of-tree modules. A direct benefit of such approach is the
 ability to build the Xenomai real-time subsystem statically into the
 target kernel, or as loadable modules as with earlier versions.
-Additionally, the usual Linux kernel configuration process will be
+therefore, the usual Linux kernel configuration process will be
 normally used to define the various settings for the Xenomai kernel
 components.
 
@@ -40,7 +40,7 @@ $ scripts/prepare-kernel.sh --linux=<linux-srctree>
 [--adeos=<adeos-patch>] [--arch=<target-arch>]
 
     --linux specifies the path of the target kernel source tree. Such
-    kernel tree being configured or not makes no different and is
+    kernel tree being configured or not makes no difference and is
     valid either way.
 
     --adeos specifies the path of the Adeos patch to apply against the
@@ -133,7 +133,7 @@ NAME                 DESCRIPTION                     [BINDING,]DEFAULT(*)
 
 --prefix             Installation directory          /usr/xenomai
 --enable-uvm         Build UVM support               enabled
---enable-uvm-heapsz  system heap size for UVMs       enabled
+--enable-uvm-heapsz  system heap size for UVMs       128 (kb)
 --enable-debug       Enable debug symbols (-g)       disabled
 --enable-smp         Enable SMP support              weak,disabled
 
@@ -172,7 +172,7 @@ compiler for the power PC architecture may be named
 powerpc-405-linux-gnu-gcc.
 
 The easiest way to build a GNU cross-compiler might involve using Dan
-Kegel crosstools found at http://kegel.com/crosstool.
+Kegel's crosstools found at http://kegel.com/crosstool.
 
 When passing the option --host=powerpc-405-linux-gnu to configure,
 configure will automatically use powerpc-405-linux-gnu- as a prefix to
@@ -242,7 +242,7 @@ A typical cross-compilation setup, in order to build Xenomai for an
 ia64 system:
 
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=powerpc \
-  --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-linux-2.6.11-ia64-rXcYY.patch \
+  --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-ipipe-2.6.15-ia64-X.Y-ZZ.patch \
   --linux=$linux_tree
 $ cd $linux_tree
 $ make ARCH=ia64 CROSS_COMPILE=ia64-linux- xconfig/gconfig/menuconfig # select the kernel and Xenomai options
