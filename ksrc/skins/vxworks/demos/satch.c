@@ -34,6 +34,7 @@ void root_thread_exit(void);
 
 #if !defined(__KERNEL__) && !defined(__XENO_UVM__) && !defined(__XENO_SIM__)
 
+#include <sys/mman.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -45,6 +46,8 @@ void root_thread_exit(void);
 int main (int argc, char *argv[])
 {
     int err;
+
+    mlockall(MCL_CURRENT|MCL_FUTURE);
 
     atexit(&root_thread_exit);
     err = root_thread_init();

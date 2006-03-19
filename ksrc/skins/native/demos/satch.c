@@ -1,3 +1,4 @@
+#include <sys/mman.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -120,6 +121,7 @@ void root_thread_exit (void)
 int main (int ac, char *av[])
 
 {
+    mlockall(MCL_CURRENT|MCL_FUTURE);
     root_thread_init();
     pause();
     root_thread_exit();
