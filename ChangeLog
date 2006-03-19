@@ -1,3 +1,9 @@
+2006-03-19  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/thread.h: Add XNINVPS bit.
+
+	* ksrc/nucleus: xnpod_priocompare() -> xnpod_compare_prio().
+
 2006-03-18  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/queue.h: Use a two-level bitmap for the
