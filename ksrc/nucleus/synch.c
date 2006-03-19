@@ -178,7 +178,7 @@ void xnsynch_sleep_on (xnsynch_t *synch,
 
 	if (testbits(synch->status,XNSYNCH_PIP) &&
 	    owner != NULL &&
-	    xnpod_priocompare(thread->cprio,owner->cprio) > 0)
+	    xnpod_compare_prio(thread->cprio,owner->cprio) > 0)
 	    {
 	    if (!testbits(owner->status,XNBOOST))
 		{
@@ -237,7 +237,7 @@ static void xnsynch_clear_boost (xnsynch_t *synch,
 	/* Find the highest priority needed to enforce the PIP. */
 	int rprio = getheadpq(&lastowner->claimq)->prio;
 
-	if (xnpod_priocompare(rprio,downprio) > 0)
+	if (xnpod_compare_prio(rprio,downprio) > 0)
 	    downprio = rprio;
 	}
 
@@ -269,7 +269,7 @@ void xnsynch_renice_sleeper (xnthread_t *thread)
 	insertpqf(&synch->pendq,&thread->plink,thread->cprio);
 
 	if (testbits(synch->status,XNSYNCH_CLAIMED) &&
-	    xnpod_priocompare(thread->cprio,owner->cprio) > 0)
+	    xnpod_compare_prio(thread->cprio,owner->cprio) > 0)
 	    {
 	    removepq(&owner->claimq,&synch->link);
 	    insertpqf(&owner->claimq,&synch->link,thread->cprio);
@@ -555,7 +555,7 @@ void xnsynch_forget_sleeper (xnthread_t *thread)
 
 		rprio = getheadpq(&owner->claimq)->prio;
 
-		if (xnpod_priocompare(rprio,owner->cprio) < 0)
+		if (xnpod_compare_prio(rprio,owner->cprio) < 0)
 		    xnsynch_renice_thread(owner,rprio);
 		}
 	}
