@@ -88,7 +88,7 @@ void producer (void *cookie)
 int root_thread_init (void)
 
 {
-    rt_timer_start(1000000);	/* 1ms periodic tick. */
+    rt_timer_set_mode(1000000);	/* Forc 1ms periodic tick. */
 
     rt_task_spawn(&consumer_task,
 		  "ConsumerTask",
