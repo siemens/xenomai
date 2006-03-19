@@ -50,6 +50,7 @@
 #define XNFPU     0x00100000	/* Thread uses FPU */
 #define XNSHADOW  0x00200000	/* Shadow thread */
 #define XNROOT    0x00400000	/* Root thread (i.e. Linux/IDLE) */
+#define XNINVPS   0x00800000	/* Using inverted priority scale */
 
 /*
   Must follow the declaration order of the above bits. Status symbols
@@ -73,12 +74,11 @@
   '.', '.', '.', 'X', '.', \
   '.', '.', '.', 'b', 'T', \
   'l', 'r', '.', 's', 't', \
-  'f', '.', '.' \
+  'f', '.', '.', '.'	   \
 }
 
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX)
 #define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNSHIELD|XNTRAPSW)
-#define XNTHREAD_SYSTEM_BITS  (XNROOT)
 
 /* These flags are available to the real-time interfaces */
 #define XNTHREAD_SPARE0  0x10000000
@@ -90,8 +90,9 @@
 #if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)
 
 #ifdef __XENO_SIM__
-#define XNRUNNING  XNTHREAD_SPARE0	/* Pseudo-status (must not conflict with system bits) */
-#define XNDELETED  XNTHREAD_SPARE1	/* idem. */
+/* Pseudo-status (must not conflict with other bits) */
+#define XNRUNNING  XNTHREAD_SPARE0
+#define XNDELETED  XNTHREAD_SPARE1
 #endif /* __XENO_SIM__ */
 
 #define XNTHREAD_INVALID_ASR  ((void (*)(xnsigmask_t))0)
