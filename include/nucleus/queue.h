@@ -583,6 +583,10 @@ static inline int countgq (xngqueue_t *gqslot)
 /* Multi-level priority queue, suitable for handling the runnable
    thread queue. */
 
+#if BITS_PER_LONG * BITS_PER_LONG < XNCORE_NR_PRIO
+#error "Internal bitmap cannot hold so many priority levels"
+#endif
+
 #define __MLQ_LONGS ((XNCORE_NR_PRIO+BITS_PER_LONG-1)/BITS_PER_LONG)
 
 typedef struct xnmlqueue {
