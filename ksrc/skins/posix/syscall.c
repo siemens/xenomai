@@ -150,7 +150,7 @@ static pthread_t __pthread_find (const struct pse51_hkey *hkey)
     return k_tid;
 }
 
-int __pthread_create (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_create (struct task_struct *curr, struct pt_regs *regs)
 
 {
     struct sched_param param;
@@ -198,7 +198,7 @@ int __pthread_create (struct task_struct *curr, struct pt_regs *regs)
     return err;
 }
 
-int __pthread_detach (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_detach (struct task_struct *curr, struct pt_regs *regs)
 
 { 
     struct pse51_hkey hkey;
@@ -243,7 +243,8 @@ static int __pthread_shadow (struct task_struct *curr,
     return err;
 }
 
-int __pthread_setschedparam (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_setschedparam (struct task_struct *curr,
+                                    struct pt_regs *regs)
 
 { 
     int policy, err, promoted = 0;
@@ -285,13 +286,14 @@ int __pthread_setschedparam (struct task_struct *curr, struct pt_regs *regs)
     return err;
 }
 
-int __sched_yield (struct task_struct *curr, struct pt_regs *regs)
+static int __sched_yield (struct task_struct *curr, struct pt_regs *regs)
 
 {
     return -sched_yield();
 }
 
-int __pthread_make_periodic_np (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_make_periodic_np (struct task_struct *curr,
+                                       struct pt_regs *regs)
 
 { 
     struct timespec startt, periodt;
@@ -321,7 +323,7 @@ int __pthread_make_periodic_np (struct task_struct *curr, struct pt_regs *regs)
     return -pthread_make_periodic_np(k_tid,&startt,&periodt);
 }
 
-int __pthread_wait_np (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_wait_np (struct task_struct *curr, struct pt_regs *regs)
 
 {
     unsigned long overruns;
@@ -339,7 +341,7 @@ int __pthread_wait_np (struct task_struct *curr, struct pt_regs *regs)
     return err;
 }
 
-int __pthread_set_mode_np (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_set_mode_np (struct task_struct *curr, struct pt_regs *regs)
 
 {
     xnflags_t clrmask, setmask;
@@ -369,7 +371,7 @@ int __pthread_set_mode_np (struct task_struct *curr, struct pt_regs *regs)
     return err;
 }
 
-int __pthread_set_name_np (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_set_name_np (struct task_struct *curr, struct pt_regs *regs)
 
 { 
     char name[XNOBJECT_NAME_LEN];
@@ -402,7 +404,7 @@ int __pthread_set_name_np (struct task_struct *curr, struct pt_regs *regs)
     return 0;
 }
 
-int __sem_init (struct task_struct *curr, struct pt_regs *regs)
+static int __sem_init (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_sem sm, *usm;
@@ -428,7 +430,7 @@ int __sem_init (struct task_struct *curr, struct pt_regs *regs)
     return 0;
 }
 
-int __sem_post (struct task_struct *curr, struct pt_regs *regs)
+static int __sem_post (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_sem sm, *usm;
@@ -446,7 +448,7 @@ int __sem_post (struct task_struct *curr, struct pt_regs *regs)
     return sem_post(&sm.native_sem) == 0 ? 0 : -thread_get_errno();
 }
 
-int __sem_wait (struct task_struct *curr, struct pt_regs *regs)
+static int __sem_wait (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_sem sm, *usm;
@@ -464,7 +466,7 @@ int __sem_wait (struct task_struct *curr, struct pt_regs *regs)
     return sem_wait(&sm.native_sem) == 0 ? 0 : -thread_get_errno();
 }
 
-int __sem_timedwait (struct task_struct *curr, struct pt_regs *regs)
+static int __sem_timedwait (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_sem sm, *usm;
@@ -491,7 +493,7 @@ int __sem_timedwait (struct task_struct *curr, struct pt_regs *regs)
     return sem_timedwait(&sm.native_sem, &ts) == 0 ? : -thread_get_errno();
 }
 
-int __sem_trywait (struct task_struct *curr, struct pt_regs *regs)
+static int __sem_trywait (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_sem sm, *usm;
@@ -509,7 +511,7 @@ int __sem_trywait (struct task_struct *curr, struct pt_regs *regs)
     return sem_trywait(&sm.native_sem) == 0 ? 0 : -thread_get_errno();
 }
 
-int __sem_getvalue (struct task_struct *curr, struct pt_regs *regs)
+static int __sem_getvalue (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_sem sm, *usm;
@@ -540,7 +542,7 @@ int __sem_getvalue (struct task_struct *curr, struct pt_regs *regs)
     return 0;
 }
 
-int __sem_destroy (struct task_struct *curr, struct pt_regs *regs)
+static int __sem_destroy (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_sem sm, *usm;
@@ -569,7 +571,7 @@ int __sem_destroy (struct task_struct *curr, struct pt_regs *regs)
     return 0;
 }
 
-int __sem_open (struct task_struct *curr, struct pt_regs *regs)
+static int __sem_open (struct task_struct *curr, struct pt_regs *regs)
 {
     union __xeno_sem *sm, *usm;
     char name[PSE51_MAXNAME];
@@ -638,7 +640,7 @@ int __sem_open (struct task_struct *curr, struct pt_regs *regs)
     return 0;
 }
 
-int __sem_close (struct task_struct *curr, struct pt_regs *regs)
+static int __sem_close (struct task_struct *curr, struct pt_regs *regs)
 {
     union __xeno_sem sm, *usm;
     int closed, err;
@@ -681,7 +683,7 @@ int __sem_close (struct task_struct *curr, struct pt_regs *regs)
     return -thread_get_errno();
 }
 
-int __sem_unlink (struct task_struct *curr, struct pt_regs *regs)
+static int __sem_unlink (struct task_struct *curr, struct pt_regs *regs)
 {
     char name[PSE51_MAXNAME];
     long len;
@@ -700,7 +702,7 @@ int __sem_unlink (struct task_struct *curr, struct pt_regs *regs)
     return sem_unlink(name) == 0 ? 0 : -thread_get_errno();
 }
 
-int __clock_getres (struct task_struct *curr, struct pt_regs *regs)
+static int __clock_getres (struct task_struct *curr, struct pt_regs *regs)
 
 {
     struct timespec ts;
@@ -722,7 +724,7 @@ int __clock_getres (struct task_struct *curr, struct pt_regs *regs)
     return err ? -thread_get_errno() : 0;
 }
 
-int __clock_gettime (struct task_struct *curr, struct pt_regs *regs)
+static int __clock_gettime (struct task_struct *curr, struct pt_regs *regs)
 
 {
     struct timespec ts;
@@ -744,7 +746,7 @@ int __clock_gettime (struct task_struct *curr, struct pt_regs *regs)
     return err ? -thread_get_errno() : 0;
 }
 
-int __clock_settime (struct task_struct *curr, struct pt_regs *regs)
+static int __clock_settime (struct task_struct *curr, struct pt_regs *regs)
 
 {
     struct timespec ts;
@@ -763,7 +765,7 @@ int __clock_settime (struct task_struct *curr, struct pt_regs *regs)
     return clock_settime(clock_id,&ts) ? -thread_get_errno() : 0;
 }
 
-int __clock_nanosleep (struct task_struct *curr, struct pt_regs *regs)
+static int __clock_nanosleep (struct task_struct *curr, struct pt_regs *regs)
 
 {
     struct timespec rqt, rmt, *rmtp = NULL;
@@ -803,7 +805,7 @@ int __clock_nanosleep (struct task_struct *curr, struct pt_regs *regs)
     return -EINTR;
 }
 
-int __mutex_init (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_mutex_init (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_mutex mx, *umx;
@@ -831,7 +833,8 @@ int __mutex_init (struct task_struct *curr, struct pt_regs *regs)
     return 0;
 }
 
-int __mutex_destroy (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_mutex_destroy (struct task_struct *curr,
+                                    struct pt_regs *regs)
 
 {
     union __xeno_mutex mx, *umx;
@@ -856,7 +859,7 @@ int __mutex_destroy (struct task_struct *curr, struct pt_regs *regs)
     return -err;
 }
 
-int __mutex_lock (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_mutex_lock (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_mutex mx, *umx;
@@ -874,7 +877,8 @@ int __mutex_lock (struct task_struct *curr, struct pt_regs *regs)
     return -pse51_mutex_timedlock_break(&mx.shadow_mutex, XN_INFINITE);
 }
 
-int __mutex_timedlock (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_mutex_timedlock (struct task_struct *curr,
+                                      struct pt_regs *regs)
 
 {
     union __xeno_mutex mx, *umx;
@@ -901,7 +905,8 @@ int __mutex_timedlock (struct task_struct *curr, struct pt_regs *regs)
     return -pse51_mutex_timedlock_break(&mx.shadow_mutex,ts2ticks_ceil(&ts)+1);
 }
 
-int __mutex_trylock (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_mutex_trylock (struct task_struct *curr,
+                                    struct pt_regs *regs)
 
 {
     union __xeno_mutex mx, *umx;
@@ -919,7 +924,8 @@ int __mutex_trylock (struct task_struct *curr, struct pt_regs *regs)
     return -pthread_mutex_trylock(&mx.native_mutex);
 }
 
-int __mutex_unlock (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_mutex_unlock (struct task_struct *curr,
+                                   struct pt_regs *regs)
 
 {
     union __xeno_mutex mx, *umx;
@@ -937,7 +943,7 @@ int __mutex_unlock (struct task_struct *curr, struct pt_regs *regs)
     return -pthread_mutex_unlock(&mx.native_mutex);
 }
 
-int __cond_init (struct task_struct *curr, struct pt_regs *regs)
+static int __cond_init (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_cond cnd, *ucnd;
@@ -961,7 +967,7 @@ int __cond_init (struct task_struct *curr, struct pt_regs *regs)
     return 0;
 }
 
-int __cond_destroy (struct task_struct *curr, struct pt_regs *regs)
+static int __cond_destroy (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_cond cnd, *ucnd;
@@ -989,7 +995,7 @@ int __cond_destroy (struct task_struct *curr, struct pt_regs *regs)
     return 0;
 }
 
-int __cond_wait (struct task_struct *curr, struct pt_regs *regs)
+static int __cond_wait (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_cond cnd, *ucnd;
@@ -1019,7 +1025,7 @@ int __cond_wait (struct task_struct *curr, struct pt_regs *regs)
                                           XN_INFINITE);
 }
 
-int __cond_timedwait (struct task_struct *curr, struct pt_regs *regs)
+static int __cond_timedwait (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_cond cnd, *ucnd;
@@ -1058,7 +1064,7 @@ int __cond_timedwait (struct task_struct *curr, struct pt_regs *regs)
                                           ts2ticks_ceil(&ts)+1);
 }
 
-int __cond_signal (struct task_struct *curr, struct pt_regs *regs)
+static int __cond_signal (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_cond cnd, *ucnd;
@@ -1076,7 +1082,7 @@ int __cond_signal (struct task_struct *curr, struct pt_regs *regs)
     return -pthread_cond_signal(&cnd.native_cond);
 }
 
-int __cond_broadcast (struct task_struct *curr, struct pt_regs *regs)
+static int __cond_broadcast (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_cond cnd, *ucnd;
@@ -1094,7 +1100,7 @@ int __cond_broadcast (struct task_struct *curr, struct pt_regs *regs)
     return -pthread_cond_broadcast(&cnd.native_cond);
 }
 
-int __mq_open (struct task_struct *curr, struct pt_regs *regs)
+static int __mq_open (struct task_struct *curr, struct pt_regs *regs)
 
 {
     char name[PSE51_MAXNAME];
@@ -1139,7 +1145,7 @@ int __mq_open (struct task_struct *curr, struct pt_regs *regs)
     return q == (mqd_t)-1 ? -thread_get_errno() : q;
 }
 
-int __mq_close (struct task_struct *curr, struct pt_regs *regs)
+static int __mq_close (struct task_struct *curr, struct pt_regs *regs)
 {
     mqd_t q;
     int err;
@@ -1150,7 +1156,7 @@ int __mq_close (struct task_struct *curr, struct pt_regs *regs)
     return err ? -thread_get_errno() : 0;
 }
 
-int __mq_unlink (struct task_struct *curr, struct pt_regs *regs)
+static int __mq_unlink (struct task_struct *curr, struct pt_regs *regs)
 {
     char name[PSE51_MAXNAME];
     unsigned len;
@@ -1171,7 +1177,7 @@ int __mq_unlink (struct task_struct *curr, struct pt_regs *regs)
     return err ? -thread_get_errno() : 0;
 }
 
-int __mq_getattr (struct task_struct *curr, struct pt_regs *regs)
+static int __mq_getattr (struct task_struct *curr, struct pt_regs *regs)
 {
     struct mq_attr attr;
     mqd_t q;
@@ -1194,7 +1200,7 @@ int __mq_getattr (struct task_struct *curr, struct pt_regs *regs)
     return 0;
 }
 
-int __mq_setattr (struct task_struct *curr, struct pt_regs *regs)
+static int __mq_setattr (struct task_struct *curr, struct pt_regs *regs)
 {
     struct mq_attr attr, oattr;
     mqd_t q;
@@ -1224,7 +1230,7 @@ int __mq_setattr (struct task_struct *curr, struct pt_regs *regs)
     return 0;
 }
 
-int __mq_send (struct task_struct *curr, struct pt_regs *regs)
+static int __mq_send (struct task_struct *curr, struct pt_regs *regs)
 {
     char tmp_buf[PSE51_MQ_FSTORE_LIMIT];
     caddr_t tmp_area;
@@ -1271,7 +1277,7 @@ int __mq_send (struct task_struct *curr, struct pt_regs *regs)
     return err ? -thread_get_errno() : 0;
 }
 
-int __mq_timedsend (struct task_struct *curr, struct pt_regs *regs)
+static int __mq_timedsend (struct task_struct *curr, struct pt_regs *regs)
 {
     struct timespec timeout, *timeoutp;
     char tmp_buf[PSE51_MQ_FSTORE_LIMIT];
@@ -1328,7 +1334,7 @@ int __mq_timedsend (struct task_struct *curr, struct pt_regs *regs)
     return err ? -thread_get_errno() : 0;
 }
 
-int __mq_receive (struct task_struct *curr, struct pt_regs *regs)
+static int __mq_receive (struct task_struct *curr, struct pt_regs *regs)
 {
     char tmp_buf[PSE51_MQ_FSTORE_LIMIT];
     caddr_t tmp_area;
@@ -1391,7 +1397,7 @@ int __mq_receive (struct task_struct *curr, struct pt_regs *regs)
     return 0;
 }
 
-int __mq_timedreceive (struct task_struct *curr, struct pt_regs *regs)
+static int __mq_timedreceive (struct task_struct *curr, struct pt_regs *regs)
 {
     struct timespec timeout, *timeoutp;
     char tmp_buf[PSE51_MQ_FSTORE_LIMIT];
@@ -1470,7 +1476,7 @@ int __mq_timedreceive (struct task_struct *curr, struct pt_regs *regs)
     return 0;
 }
 
-int __mq_notify (struct task_struct *curr, struct pt_regs *regs)
+static int __mq_notify (struct task_struct *curr, struct pt_regs *regs)
 {
     struct sigevent sev;
     mqd_t q;
@@ -1503,7 +1509,7 @@ static int __pse51_intr_handler (xnintr_t *cookie)
     return XN_ISR_HANDLED|(intr->mode & XN_ISR_NOENABLE);
 }
 
-int __intr_attach (struct task_struct *curr, struct pt_regs *regs)
+static int __intr_attach (struct task_struct *curr, struct pt_regs *regs)
 {
     struct pse51_interrupt *intr;
     unsigned long handle;
@@ -1544,7 +1550,7 @@ int __intr_attach (struct task_struct *curr, struct pt_regs *regs)
     return -err;
 }
 
-int __intr_detach (struct task_struct *curr, struct pt_regs *regs)
+static int __intr_detach (struct task_struct *curr, struct pt_regs *regs)
 {
     struct pse51_interrupt *intr = (struct pse51_interrupt *)__xn_reg_arg1(regs);
     int err = pse51_intr_detach(intr);
@@ -1555,7 +1561,7 @@ int __intr_detach (struct task_struct *curr, struct pt_regs *regs)
     return -err;
 }
 
-int __intr_wait (struct task_struct *curr, struct pt_regs *regs)
+static int __intr_wait (struct task_struct *curr, struct pt_regs *regs)
 {
     struct pse51_interrupt *intr = (struct pse51_interrupt *)__xn_reg_arg1(regs);
     struct timespec ts;
@@ -1619,7 +1625,7 @@ int __intr_wait (struct task_struct *curr, struct pt_regs *regs)
     return err;
 }
 
-int __intr_control (struct task_struct *curr, struct pt_regs *regs)
+static int __intr_control (struct task_struct *curr, struct pt_regs *regs)
 {
     struct pse51_interrupt *intr = (struct pse51_interrupt *)__xn_reg_arg1(regs);
     int cmd = (int)__xn_reg_arg2(regs);
@@ -1627,7 +1633,7 @@ int __intr_control (struct task_struct *curr, struct pt_regs *regs)
     return pse51_intr_control(intr,cmd);
 }
 
-int __timer_create (struct task_struct *curr, struct pt_regs *regs)
+static int __timer_create (struct task_struct *curr, struct pt_regs *regs)
 {
     struct sigevent sev;
     timer_t tm;
@@ -1654,7 +1660,7 @@ int __timer_create (struct task_struct *curr, struct pt_regs *regs)
     return rc == 0 ? 0 : -thread_get_errno();
 }
 
-int __timer_delete (struct task_struct *curr, struct pt_regs *regs)
+static int __timer_delete (struct task_struct *curr, struct pt_regs *regs)
 {
     int rc;
 
@@ -1663,7 +1669,7 @@ int __timer_delete (struct task_struct *curr, struct pt_regs *regs)
     return rc == 0 ? 0 : -thread_get_errno();
 }
 
-int __timer_settime (struct task_struct *curr, struct pt_regs *regs)
+static int __timer_settime (struct task_struct *curr, struct pt_regs *regs)
 {
     struct itimerspec newv, oldv, *oldvp;
     int rc;
@@ -1701,7 +1707,7 @@ int __timer_settime (struct task_struct *curr, struct pt_regs *regs)
     return rc == 0 ? 0 : -thread_get_errno();
 }
 
-int __timer_gettime (struct task_struct *curr, struct pt_regs *regs)
+static int __timer_gettime (struct task_struct *curr, struct pt_regs *regs)
 {
     struct itimerspec val;
     int rc;
@@ -1719,7 +1725,7 @@ int __timer_gettime (struct task_struct *curr, struct pt_regs *regs)
     return rc == 0 ? 0 : -thread_get_errno();
 }
 
-int __timer_getoverrun (struct task_struct *curr, struct pt_regs *regs)
+static int __timer_getoverrun (struct task_struct *curr, struct pt_regs *regs)
 {
     int rc;
 
@@ -1729,7 +1735,7 @@ int __timer_getoverrun (struct task_struct *curr, struct pt_regs *regs)
 }
 
 /* shm_open(name, oflag, mode, ufd) */
-int __shm_open (struct task_struct *curr, struct pt_regs *regs)
+static int __shm_open (struct task_struct *curr, struct pt_regs *regs)
 {
     int ufd, kfd, oflag, err;
     char name[PSE51_MAXNAME];
@@ -1764,7 +1770,7 @@ int __shm_open (struct task_struct *curr, struct pt_regs *regs)
 }
 
 /* shm_unlink(name) */
-int __shm_unlink (struct task_struct *curr, struct pt_regs *regs)
+static int __shm_unlink (struct task_struct *curr, struct pt_regs *regs)
 {
     char name[PSE51_MAXNAME];
     unsigned len;
@@ -1786,7 +1792,7 @@ int __shm_unlink (struct task_struct *curr, struct pt_regs *regs)
 }
 
 /* shm_close(ufd) */
-int __shm_close (struct task_struct *curr, struct pt_regs *regs)
+static int __shm_close (struct task_struct *curr, struct pt_regs *regs)
 {
     unsigned long kfd;
     int ufd, err;
@@ -1804,7 +1810,7 @@ int __shm_close (struct task_struct *curr, struct pt_regs *regs)
 }
 
 /* ftruncate(ufd, len) */
-int __ftruncate (struct task_struct *curr, struct pt_regs *regs)
+static int __ftruncate (struct task_struct *curr, struct pt_regs *regs)
 {
     unsigned long kfd;
     int ufd, err;
@@ -1832,7 +1838,7 @@ typedef struct {
 } pse51_umap_t;
 
 /* mmap_prologue(len, ufd, off, pse51_umap_t *umap) */
-int __mmap_prologue (struct task_struct *curr, struct pt_regs *regs)
+static int __mmap_prologue (struct task_struct *curr, struct pt_regs *regs)
 {
     unsigned long kfd;
     pse51_umap_t umap;
@@ -1878,7 +1884,7 @@ int __mmap_prologue (struct task_struct *curr, struct pt_regs *regs)
 }
 
 /* mmap_epilogue(uaddr, pse51_umap_t *umap) */
-int __mmap_epilogue (struct task_struct *curr, struct pt_regs *regs)
+static int __mmap_epilogue (struct task_struct *curr, struct pt_regs *regs)
 {
     pse51_umap_t umap;
     void *uaddr;
@@ -1909,7 +1915,7 @@ int __mmap_epilogue (struct task_struct *curr, struct pt_regs *regs)
 }
 
 /* munmap_prologue(uaddr, len, &unmap) */
-int __munmap_prologue (struct task_struct *curr, struct pt_regs *regs)
+static int __munmap_prologue (struct task_struct *curr, struct pt_regs *regs)
 {
     struct {
         unsigned long mapsize;
@@ -1947,7 +1953,7 @@ int __munmap_prologue (struct task_struct *curr, struct pt_regs *regs)
 }
 
 /* munmap_epilogue(uaddr, len) */
-int __munmap_epilogue (struct task_struct *curr, struct pt_regs *regs)
+static int __munmap_epilogue (struct task_struct *curr, struct pt_regs *regs)
 {
     unsigned long uaddr;
     void *kaddr;
@@ -2070,12 +2076,12 @@ static xnsysent_t __systab[] = {
     [__pse51_clock_gettime] = { &__clock_gettime, __xn_exec_any },
     [__pse51_clock_settime] = { &__clock_settime, __xn_exec_any },
     [__pse51_clock_nanosleep] = { &__clock_nanosleep, __xn_exec_primary },
-    [__pse51_mutex_init] = { &__mutex_init, __xn_exec_any },
-    [__pse51_mutex_destroy] = { &__mutex_destroy, __xn_exec_any },
-    [__pse51_mutex_lock] = { &__mutex_lock, __xn_exec_primary },
-    [__pse51_mutex_timedlock] = { &__mutex_timedlock, __xn_exec_primary },
-    [__pse51_mutex_trylock] = { &__mutex_trylock, __xn_exec_primary },
-    [__pse51_mutex_unlock] = { &__mutex_unlock, __xn_exec_primary },
+    [__pse51_mutex_init] = { &__pthread_mutex_init, __xn_exec_any },
+    [__pse51_mutex_destroy] = { &__pthread_mutex_destroy, __xn_exec_any },
+    [__pse51_mutex_lock] = { &__pthread_mutex_lock, __xn_exec_primary },
+    [__pse51_mutex_timedlock] = { &__pthread_mutex_timedlock, __xn_exec_primary },
+    [__pse51_mutex_trylock] = { &__pthread_mutex_trylock, __xn_exec_primary },
+    [__pse51_mutex_unlock] = { &__pthread_mutex_unlock, __xn_exec_primary },
     [__pse51_cond_init] = { &__cond_init, __xn_exec_any },
     [__pse51_cond_destroy] = { &__cond_destroy, __xn_exec_any },
     [__pse51_cond_wait] = { &__cond_wait, __xn_exec_primary },
