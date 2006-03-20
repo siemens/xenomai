@@ -21,7 +21,16 @@
  * @defgroup posix_shm Shared memory services.
  *
  * Shared memory services.
- * 
+ *
+ * Shared memory objects are memory regions that can be mapped into processes
+ * address space, allowing them to share these regions as well as to share them
+ * with kernel-space modules.
+ *
+ * Shared memory are also the only mean by which anonymous POSIX skin
+ * synchronization objects (mutexes, condition variables or semaphores) may be
+ * shared between kernel-space modules and user-space processes, or between
+ * several processes.
+ *
  *@{*/
 
 #include <nucleus/heap.h>
@@ -173,12 +182,59 @@ static void pse51_shm_put(pse51_shm_t *shm, unsigned dec)
 /**
  * Open a shared memory object.
  *
+ * This service establishes a connection between a shared memory object and a
+ * file descriptor. Further use of this descriptor will allow to dimension and
+ * map the shared memory into the calling context address space.
+ *
+ * One of the following access mode should be set in @a oflags:
+ * - O_RDONLY, meaning that the shared memory object may only be mapped with the
+ *   PROT_READ flag;
+ * - O_WRONLY, meaning that the shared memory object may only be mapped with the
+ *   PROT_WRITE flag;
+ * - O_RDWR, meaning that the shared memory object may be mapped with the
+ *   PROT_READ | PROT_WRITE flag.
+ *
+ * If no shared memory object  named @a name exists, and @a oflags has the @a
+ * O_CREAT bit set, the shared memory object is created by this function.
+ *
+ * If @a oflags has the two bits @a O_CREAT and @a O_EXCL set and the shared
+ * memory object alread exists, this service fails.
+ *
+ * If @a oflags has the bit @a O_TRUNC set, the shared memory exists and is not
+ * currently mapped, its size is truncated to 0.
+ *
+ * @a name may be any arbitrary string, in which slashes have no particular
+ * meaning. However, for portability, using a name which starts with a slash and
+ * contains no other slash is recommended.
+ *
+ * @param name name of the shared memory object to open;
+ *
+ * @param oflags flags.
+ *
+ * @return a file descriptor on success;
+ * @return -1 with @a errno set if:
+ * - ENAMETOOLONG, the length of the @a name argument exceeds 64 characters;
+ * - EEXIST, the bits @a O_CREAT and @a O_EXCL were set in @a oflags and the
+ *   shared memory object already exists;
+ * - ENOENT, the bit @a O_CREAT is not set in @a oflags and the shared memory
+ *   object does not exist;
+ * - ENOSPC, insufficient memory exists in the system heap to create the shared
+ *   memory object, increase CONFIG_XENO_OPT_SYS_HEAPSZ;
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, the O_TRUNC flag was specified and the shared memory object is
+ *   currently mapped;
+ * - EMFILE, too many descriptors are currently open.
+ *
+ * @par Valid contexts.
+ * - kernel module initialization or cleanup routine;
+ * - user-space thread (Xenomai threads switch to secondary mode).
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/shm_open.html">
  * Specification.</a>
  * 
  */
-int shm_open(const char *name, int oflags, mode_t mode)
+int shm_open (const char *name, int oflags, mode_t mode)
 {
     pse51_node_t *node;
     pse51_desc_t *desc;
@@ -206,7 +262,7 @@ int shm_open(const char *name, int oflags, mode_t mode)
         
         if (!shm)
             {
-            err = ENOMEM;
+            err = ENOSPC;
             goto error;
             }
 
@@ -249,21 +305,108 @@ int shm_open(const char *name, int oflags, mode_t mode)
 }
 
 /**
+ * Close a file descriptor.
+ *
+ * This service closes the file descriptor @a fd. In kernel-space, this service
+ * only works for file descriptors opened with shm_open(), i.e. shared memory
+ * objects. A shared memory object is only destroyed once all file descriptors
+ * are closed with this service, it is unlinked with the shm_unlink() service,
+ * and all mappings are unmapped with the munmap() service.
+ *
+ * @param fd file descriptor.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EBADF, @a fd is not a valid file descriptor (in kernel-space, it was not
+ *   obtained with shm_open());
+ * - EPERM, the caller context is invalid.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - kernel-space cancellation cleanup routine;
+ * - user-space thread (Xenomai threads switch to secondary mode);
+ * - user-space cancellation cleanup routine.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/close.html">
+ * Specification.</a>
+ * 
+ */
+int close (int fd)
+{
+    pse51_desc_t *desc;
+    pse51_shm_t *shm;
+    spl_t s;
+    int err;
+
+    xnlock_get_irqsave(&nklock, s);
+
+    shm = pse51_shm_get(&desc, fd, 0);
+
+    if(IS_ERR(shm))
+        {
+        err = -PTR_ERR(shm);
+        goto error;
+        }
+
+    if (xnpod_interrupt_p() || !xnpod_root_p())
+        {
+        err = EPERM;
+        goto error;
+        }    
+
+    err = pse51_desc_destroy(desc);
+
+    if(err)
+        goto error;
+
+    pse51_shm_put(shm, 1);
+    xnlock_put_irqrestore(&nklock, s);
+    return 0;
+
+  error:
+    xnlock_put_irqrestore(&nklock, s);
+    thread_set_errno(err);
+    return -1;
+}
+
+/**
  * Unlink a shared memory object.
+ *
+ * This service unlinks the shared memory object named @a name. The shared
+ * memory object is not destroyed until every file descriptor obtained with the
+ * shm_open() service is closed with the close() service and all mappings done
+ * with mmap() are unmapped with munmap(). However, after a call to this
+ * service, the unlinked shared memory object may no longer be reached 
+ * with the shm_open() service.
+ *
+ * @param name name of the shared memory obect to be unlinked.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EPERM, the caller context is invalid;
+ * - ENAMETOOLONG, the length of the @a name argument exceeds 64 characters;
+ * - ENOENT, the shared memory object does not exist.
+ * 
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - kernel-space cancellation cleanup routine;
+ * - user-space thread (Xenomai threads switch to secondary mode);
+ * - user-space cancellation cleanup routine.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/shm_unlink.html">
  * Specification.</a>
  * 
  */
-int shm_unlink(const char *name)
+int shm_unlink (const char *name)
 {
     pse51_node_t *node;
     pse51_shm_t *shm;
     int err;
     spl_t s;
 
-    if (xnpod_asynch_p() || !xnpod_root_p())
+    if (xnpod_interrupt_p() || !xnpod_root_p())
         {
         err = EPERM;
         goto error;
@@ -290,60 +433,40 @@ error:
 }
 
 /**
- * Close a file descriptor.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/close.html">
- * Specification.</a>
- * 
- */
-int close(int fd)
-{
-    pse51_desc_t *desc;
-    pse51_shm_t *shm;
-    spl_t s;
-    int err;
-
-    if (xnpod_asynch_p() || !xnpod_root_p())
-        {
-        thread_set_errno(EPERM);
-        return -1;
-        }    
-
-    xnlock_get_irqsave(&nklock, s);
-
-    shm = pse51_shm_get(&desc, fd, 0);
-
-    if(IS_ERR(shm))
-        {
-        err = -PTR_ERR(shm);
-        goto error;
-        }
-
-    err = pse51_desc_destroy(desc);
-
-    if(err)
-        goto error;
-
-    pse51_shm_put(shm, 1);
-    xnlock_put_irqrestore(&nklock, s);
-    return 0;
-
-  error:
-    xnlock_put_irqrestore(&nklock, s);
-    thread_set_errno(err);
-    return -1;
-}
-
-/**
  * Truncate a file or shared memory object to a specified length.
+ *
+ * When used in kernel-space, this service set to @a len the size of a shared
+ * memory object opened with the shm_open() service. In user-space this service
+ * set the size of any file. When this service is used to increase the size of a
+ * file or shared memory object, the added space is zero-filled.
+ *
+ * Xenomai POSIX skin shared memory objects may only be resized if they are not
+ * currently mapped.
+ *
+ * @param fd file descriptor;
+ *
+ * @param len new length of the underlying file or shared memory object.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EBADF, @a fd is not a valid file descriptor;
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, the specified length is invalid;
+ * - EINTR, this service was interrupted by a signal;
+ * - EBUSY, @a fd is a shared memory object descriptor and the underlying shared
+ *   memory is currently mapped;
+ * - EFBIG, allocation of system memory failed.
+ *
+ * @par Valid contexts.
+ * - kernel module initialization or cleanup routine;
+ * - user-space thread (Xenomai threads switch to secondary mode).
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/ftruncate.html">
  * Specification.</a>
  * 
  */
-int ftruncate(int fd, off_t len)
+int ftruncate (int fd, off_t len)
 {
     unsigned desc_flags;
     pse51_desc_t *desc;
@@ -351,28 +474,30 @@ int ftruncate(int fd, off_t len)
     int err;
     spl_t s;
     
-    if (xnpod_asynch_p() || !xnpod_root_p())
-        {
-        err = EPERM;
-        goto error;
-        }
-
-    if (len < 0)
-        {
-        err = EINVAL;
-        goto error;
-        }
-    
     xnlock_get_irqsave(&nklock, s);
     shm = pse51_shm_get(&desc, fd, 1);
 
     if(IS_ERR(shm))
         {
-        xnlock_put_irqrestore(&nklock, s);
         err = -PTR_ERR(shm);
+        xnlock_put_irqrestore(&nklock, s);
         goto error;
         }
 
+    if (xnpod_asynch_p() || !xnpod_root_p())
+        {
+        err = EPERM;
+        xnlock_put_irqrestore(&nklock, s);
+        goto err_shm_put;
+        }
+
+    if (len < 0)
+        {
+        err = EINVAL;
+        xnlock_put_irqrestore(&nklock, s);
+        goto err_shm_put;
+        }
+    
     desc_flags = pse51_desc_getflags(desc);
     xnlock_put_irqrestore(&nklock, s);
 
@@ -393,8 +518,23 @@ int ftruncate(int fd, off_t len)
     err = 0;
     if (!countq(&shm->mappings))
         {
+        /* Temporary storage, in order to preserve the memory contents upon
+           resizing, if possible. */
+        void *addr = NULL;
+        size_t size = 0;
+
         if (shm->addr)
             {
+            size = shm->size;
+            addr = xnarch_sysalloc(size);
+            if (!addr)
+                {
+                err = ENOMEM;
+                goto err_up;
+                }
+
+            memcpy(addr, shm->addr, size);
+                
             xnheap_free(&shm->heapbase, shm->addr);
 #ifdef CONFIG_XENO_OPT_PERVASIVE
             xnheap_destroy_mapped(&shm->heapbase);
@@ -418,22 +558,30 @@ int ftruncate(int fd, off_t len)
                 err = -xnheap_init(&shm->heapbase, heapaddr, len, PAGE_SIZE);
             else
                 err = ENOMEM;
+
+            if (err)
+                goto err_up;
             }
 #endif /* !CONFIG_XENO_OPT_PERVASIVE. */
 
-            if (!err)
-                {
-                shm->size = xnheap_max_contiguous(&shm->heapbase);
-                shm->addr = xnheap_alloc(&shm->heapbase, shm->size);
-                /* Required. */
-                memset(shm->addr, '\0', shm->size);
-                shm->size -= PAGE_SIZE;
-                }
+            shm->size = xnheap_max_contiguous(&shm->heapbase);
+            shm->addr = xnheap_alloc(&shm->heapbase, shm->size);
+            /* Required. */
+            memset(shm->addr, '\0', shm->size);
+            shm->size -= PAGE_SIZE;
+
+            /* Copy the previous contents. */
+            if (addr)
+                memcpy(shm->addr, addr, shm->size < size ? shm->size : size);
             }
+
+        if (addr)
+            xnarch_sysfree(addr, size);
         }
     else if (len != xnheap_size(&shm->heapbase))
-        err = EINVAL;
+        err = EBUSY;
 
+  err_up:
     up(&shm->maplock);
 
   err_shm_put:
@@ -450,12 +598,64 @@ int ftruncate(int fd, off_t len)
 /**
  * Map pages of memory.
  *
+ * This service allow shared memory regions to be accessed by the caller.
+ *
+ * When used in kernel-space, this service returns the address of the offset @a
+ * off of the shared memory object underlying @a fd. The protection flags @a
+ * prot, are only checked for consistency with @a fd open flags, but memory
+ * protection is unsupported. An existing shared memory region exists before it
+ * is mapped, this service only increments a reference counter.
+ *
+ * The only supported value for @a flags is @a MAP_SHARED.
+ *
+ * When used in user-space, this service maps the specified shared memory region
+ * into the caller address-space. If @a fd is not a shared memory object
+ * descriptor (i.e. not obtained with shm_open()), this service falls back to
+ * the regular Linux mmap service.
+ *
+ * @param addr ignored.
+ *
+ * @param len size of the shared memory region to be mapped.
+ *
+ * @param prot protection bits, checked in kernel-space, but only useful in
+ * user-space, are a bitwise or of the following values:
+ * - PROT_NONE, meaning that the mapped region can not be accessed;
+ * - PROT_READ, meaning that the mapped region can be read;
+ * - PROT_WRITE, meaning that the mapped region can be written;
+ * - PROT_EXEC, meaning that the mapped region can be executed.
+ *
+ * @param flags only MAP_SHARED is accepted, meaning that the mapped memory
+ * region is shared.
+ *
+ * @param fd file descriptor, obtained with shm_open().
+ *
+ * @param off offset in the shared memory region.
+ *
+ * @retval 0 on success;
+ * @retval MAP_FAILED with @a errno set if:
+ * - EINVAL, @a len is null or @a addr is not a multiple of @a PAGE_SIZE;
+ * - EBADF, @a fd is not a shared memory object descriptor (obtained with
+ *   shm_open());
+ * - EPERM, the caller context is invalid;
+ * - ENOTSUP, @a flags is not @a MAP_SHARED;
+ * - EACCES, @a fd is not opened for reading or is not opend for writing and
+ *   PROT_WRITE is set in @a prot;
+ * - EINTR, this service was interrupted by a signal;
+ * - ENXIO, the range [off;off+len) is invalid for the shared memory region
+ *   specified by @a fd;
+ * - EAGAIN, insufficient memory exists in the system heap to create the
+ *   mapping, increase CONFIG_XENO_OPT_SYS_HEAPSZ.
+ *
+ * @par Valid contexts.
+ * - kernel module initialization or cleanup routine;
+ * - user-space thread (Xenomai threads switch to secondary mode).
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mmap.html">
  * Specification.</a>
  * 
  */
-void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
+void *mmap (void *addr, size_t len, int prot, int flags, int fd, off_t off)
 {
     pse51_shm_map_t *map;
     unsigned desc_flags;
@@ -465,21 +665,9 @@ void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
     int err;
     spl_t s;
 
-    if (xnpod_asynch_p() || !xnpod_root_p())
-        {
-        err = EPERM;
-        goto error;
-        }    
-
     if (!len)
         {
         err = EINVAL;
-        goto error;
-        }
-
-    if (flags != MAP_SHARED)
-        {
-        err = ENOTSUP;
         goto error;
         }
 
@@ -498,6 +686,20 @@ void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
         xnlock_put_irqrestore(&nklock, s);
         err = -PTR_ERR(shm);
         goto error;
+        }
+
+    if (xnpod_asynch_p() || !xnpod_root_p())
+        {
+        err = EPERM;
+        xnlock_put_irqrestore(&nklock, s);
+        goto err_shm_put;
+        }    
+
+    if (flags != MAP_SHARED)
+        {
+        err = ENOTSUP;
+        xnlock_put_irqrestore(&nklock, s);
+        goto err_shm_put;
         }
 
     desc_flags = pse51_desc_getflags(desc);
@@ -586,24 +788,39 @@ static pse51_shm_t *pse51_shm_lookup(void *addr)
 /**
  * Unmap pages of memory.
  *
+ * This service unmaps the shared memory region [addr;addr+len) from the caller
+ * address-space.
+ *
+ * When called from kernel-space the memory region remain accessible as long as
+ * it exists, and this service only decrements a reference counter.
+ *
+ * When called from user-space, if the region is not a shared memory region,
+ * this service falls back to the regular Linux munmap() service.
+ *
+ * @param addr start address of shared memory area;
+ *
+ * @param len length of the shared memory area.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a len is null, @a addr is not a multiple of the page size or the
+ *   range [addr;addr+len) is not a mapped region;
+ * - ENXIO, @a addr is not the address of a shared memory area;
+ * - EPERM, the caller context is invalid;
+ * - EINTR, this service was interrupted by a signal.
+ * 
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/munmap.html">
  * Specification.</a>
  * 
  */
-int munmap(void *addr, size_t len)
+int munmap (void *addr, size_t len)
 {
     pse51_shm_map_t *mapping = NULL;
     xnholder_t *holder;
     pse51_shm_t *shm;
     int err;
     spl_t s;
-
-    if (xnpod_asynch_p() || !xnpod_root_p())
-        {
-        err = EPERM;
-        goto error;
-        }    
 
     if (!len)
         {
@@ -623,9 +840,16 @@ int munmap(void *addr, size_t len)
     if (!shm)
         {
         xnlock_put_irqrestore(&nklock, s);
-        err = EINVAL;
+        err = ENXIO;
         goto error;
         }
+
+    if (xnpod_asynch_p() || !xnpod_root_p())
+        {
+        xnlock_put_irqrestore(&nklock, s);
+        err = EPERM;
+        goto error;
+        }    
 
     ++shm->nodebase.refcount;
     xnlock_put_irqrestore(&nklock, s);

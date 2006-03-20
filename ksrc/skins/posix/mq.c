@@ -174,8 +174,8 @@ static void pse51_mq_destroy(pse51_mq_t *mq)
 /**
  * Open a message queue.
  *
- * This service establishes a binding between the message queue named @a name
- * and the calling context.
+ * This service establishes a connection between the message queue named @a name
+ * and the calling context (kernel-space as a whole, or user-space process).
  *
  * One of the following values should be set in @a oflags:
  * - O_RDONLY, meaning that the returned queue descriptor may only be used for
@@ -186,21 +186,21 @@ static void pse51_mq_destroy(pse51_mq_t *mq)
  *   sending and receiving messages.
  *
  * If no message queue named @a name exists, and @a oflags has the @a O_CREAT
- * bit set, the message queue is created by this function, using two more
+ * bit set, the message queue is created by this function, taking two more
  * arguments:
  * - a @a mode argument, of type @b mode_t, currently ignored;
  * - a @a attr argument, pointer to an @b mq_attr structure, specifying the
- *   attributes of the new messages queue.
+ *   attributes of the new message queue.
  *
- * If @a oflags has the two bits @a O_CREAT and @a O_EXCL set and the messages
+ * If @a oflags has the two bits @a O_CREAT and @a O_EXCL set and the message
  * queue alread exists, this service fails.
  *
  * If the O_NONBLOCK bit is set in @a oflags, the mq_send(), mq_receive(),
  * mq_timedsend() and mq_timedreceive() services return @a -1 with @a errno set
  * to EAGAIN instead of blocking their caller.
  *
- * The following arguments of the @b mq_attr structure are used when creating a
- * messages queue:
+ * The following arguments of the @b mq_attr structure at the address @a attr
+ * are used when creating a message queue:
  * - @a mq_maxmsg is the maximum number of messages in the queue (128 by
  *   default);
  * - @a mq_msgsize is the maximum size of each message (128 by default).
@@ -217,8 +217,8 @@ static void pse51_mq_destroy(pse51_mq_t *mq)
  * @return -1 with @a errno set if:
  * - ENAMETOOLONG, the length of the @a name argument exceeds 64 characters;
  * - EEXIST, the bits @a O_CREAT and @a O_EXCL were set in @a oflags and the
- *   messages queue already exists;
- * - ENOENT, the bit @a O_CREAT is not set in @a oflags and the messages queue
+ *   message queue already exists;
+ * - ENOENT, the bit @a O_CREAT is not set in @a oflags and the message queue
  *   does not exist;
  * - ENOSPC, allocation of system memory failed, or insufficient memory exists
  *   in the system heap to create the queue, try increasing
@@ -237,7 +237,7 @@ static void pse51_mq_destroy(pse51_mq_t *mq)
  * Specification.</a>
  * 
  */
-mqd_t mq_open(const char *name, int oflags, ...)
+mqd_t mq_open (const char *name, int oflags, ...)
 {
     struct mq_attr *attr;
     xnsynch_t done_synch;
@@ -346,21 +346,23 @@ mqd_t mq_open(const char *name, int oflags, ...)
  *
  * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
- * - user-space thread (Xenomai threads switch to secondary mode).
+ * - kernel-space cancellation cleanup routine;
+ * - user-space thread (Xenomai threads switch to secondary mode);
+ * - user-space cancellation cleanup routine.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_close.html">
  * Specification.</a>
  * 
  */
-int mq_close(mqd_t fd)
+int mq_close (mqd_t fd)
 {
     pse51_desc_t *desc;
     pse51_mq_t *mq;
     spl_t s;
     int err;
 
-    if (xnpod_asynch_p() || !xnpod_root_p())
+    if (xnpod_interrupt_p() || !xnpod_root_p())
         {
         err = EPERM;
         goto error;
@@ -409,34 +411,37 @@ int mq_close(mqd_t fd)
  *
  * This service unlinks the message queue named @a name. The message queue is
  * not destroyed until all queue descriptors obtained with the mq_open() service
- * are closed with the mq_close() service. However, the unlinked queue may no
- * longer be reached with the mq_open() service.
+ * are closed with the mq_close() service. However, after a call to this
+ * service, the unlinked queue may no longer be reached with the mq_open()
+ * service.
  *
- * @param name the name of the message queue to be unlinked.
+ * @param name name of the message queue to be unlinked.
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
+ * - EPERM, the caller context is invalid;
  * - ENAMETOOLONG, the length of the @a name argument exceeds 64 characters;
- * - ENOENT, the messages queue does not exist;
- * - EPERM, the caller context is invalid.
+ * - ENOENT, the message queue does not exist.
  * 
  * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
- * - user-space thread (Xenomai threads switch to secondary mode).
+ * - kernel-space cancellation cleanup routine;
+ * - user-space thread (Xenomai threads switch to secondary mode);
+ * - user-space cancellation cleanup routine.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_unlink.html">
  * Specification.</a>
  * 
  */
-int mq_unlink(const char *name)
+int mq_unlink (const char *name)
 {
     pse51_node_t *node;
     pse51_mq_t *mq;
     spl_t s;
     int err;
 
-    if (xnpod_asynch_p() || !xnpod_root_p())
+    if (xnpod_interrupt_p() || !xnpod_root_p())
         {
         err = EPERM;
         goto error;
@@ -681,7 +686,7 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
 }
 
 /**
- * Send a message to a messages queue.
+ * Send a message to a message queue.
  *
  * If the message queue @a fd is not full, this service sends the message of
  * length @a len pointed to by the argument @a buffer, with priority @a prio. A
@@ -693,7 +698,7 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
  * is not full and the flag @a O_NONBLOCK is set, the message is not sent and
  * the service returns immediately -1 with @a errno set to EAGAIN.
  *
- * @param fd messages queue descriptor;
+ * @param fd message queue descriptor;
  *
  * @param buffer pointer to the message to be sent;
  *
@@ -703,9 +708,9 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
  *
  * @return 0 and send a message on success;
  * @return -1 with no message sent and @a errno set if:
- * - EBADF, @a fd is not a valid messages queue descriptor open for writing;
+ * - EBADF, @a fd is not a valid message queue descriptor open for writing;
  * - EMSGSIZE, the message length exceeds the @a mq_msgsize attribute of the
- *   messages queue;
+ *   message queue;
  * - EAGAIN, the flag O_NONBLOCK is set for the descriptor @a fd and the message
  *   queue is full;
  * - EPERM, the caller context is invalid;
@@ -739,14 +744,14 @@ int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
 }
 
 /**
- * Attempt, during a bounded time, to send a message to a messages queue.
+ * Attempt, during a bounded time, to send a message to a message queue.
  *
  * This service is equivalent to mq_send(), except that if the message queue is
  * full and the flag @a O_NONBLOCK is not set for the descriptor @a fd, the
  * calling thread is only suspended until the timeout specified by @a
  * abs_timeout expires.
  *
- * @param fd messages queue descriptor;
+ * @param fd message queue descriptor;
  *
  * @param buffer pointer to the message to be sent;
  *
@@ -759,9 +764,9 @@ int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
  *
  * @return 0 and send a message on success;
  * @return -1 with no message sent and @a errno set if:
- * - EBADF, @a fd is not a valid messages queue descriptor open for writing;
+ * - EBADF, @a fd is not a valid message queue descriptor open for writing;
  * - EMSGSIZE, the message length exceeds the @a mq_msgsize attribute of the
- *   messages queue;
+ *   message queue;
  * - EAGAIN, the flag O_NONBLOCK is set for the descriptor @a fd and the message
  *   queue is full;
  * - EPERM, the caller context is invalid;
@@ -809,7 +814,7 @@ int mq_timedsend(mqd_t fd,
 }
 
 /**
- * Receive a message from a messages queue.
+ * Receive a message from a message queue.
  *
  * If the message queue @a fd is not empty and if @a len is greater than the @a
  * mq_msgsize of the message queue, this service copies, at the address
@@ -870,7 +875,7 @@ ssize_t mq_receive(mqd_t fd, char *buffer, size_t len, unsigned *priop)
 }
 
 /**
- * Attempt, during a bounded time, to receive a message from a messages queue.
+ * Attempt, during a bounded time, to receive a message from a message queue.
  *
  * This service is equivalent to mq_receive(), except that if the flag @a
  * O_NONBLOCK is not set for the descriptor @a fd and the message queue is
@@ -943,20 +948,20 @@ ssize_t mq_timedreceive(mqd_t fd,
 }
 
 /**
- * Get the attributes object of a messages queue.
+ * Get the attributes object of a message queue.
  *
  * This service stores, at the address @a attr, the attributes of the messages
  * queue descriptor @a fd.
  *
  * The following attributes are set:
  * - @a mq_flags, flags of the message queue descriptor @a fd;
- * - @a mq_maxmsg, maximum number of messages in the messages queue;
+ * - @a mq_maxmsg, maximum number of messages in the message queue;
  * - @a mq_msgsize, maximum message size;
  * - @a mq_curmsgs, number of messages currently in the queue.
  *
- * @param fd messages queue descriptor;
+ * @param fd message queue descriptor;
  *
- * @param attr address where the messages queue attributes will be stored on
+ * @param attr address where the message queue attributes will be stored on
  * success.
  *
  * @retval 0 on success;
@@ -1001,21 +1006,21 @@ int mq_getattr(mqd_t fd, struct mq_attr *attr)
  * This service sets the flags of the @a fd descriptor to the value of the
  * member @a mq_flags of the @b mq_attr structure pointed to by @a attr.
  *
- * The previous value of the messages queue attribute are stored at the address
+ * The previous value of the message queue attribute are stored at the address
  * @a oattr if it is not @a NULL.
  *
  * Only setting or clearing the O_NONBLOCK flag has an effect.
  *
- * @param fd messages queue descriptor;
+ * @param fd message queue descriptor;
  *
  * @param attr pointer to new attributes (only @a mq_flags is used);
  *
- * @param oattr if not @a NULL, address where previous messages queue attributes
+ * @param oattr if not @a NULL, address where previous message queue attributes
  * will be stored on success.
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
- * - EBADF, @a fd is not a valid messages queue descriptor.
+ * - EBADF, @a fd is not a valid message queue descriptor.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_setattr.html">
@@ -1079,7 +1084,7 @@ int mq_setattr(mqd_t fd,
  * Note that signals sent to user-space Xenomai POSIX skin threads will cause
  * them to switch to secondary mode.
  *
- * @param fd messages queue descriptor;
+ * @param fd message queue descriptor;
  *
  * @param evp pointer to an event notification structure.
  *
@@ -1087,7 +1092,7 @@ int mq_setattr(mqd_t fd,
  * @retval -1 with @a errno set if:
  * - EINVAL, @a evp is invalid;
  * - EPERM, the caller context is invalid;
- * - EBADF, @a fd is not a valid messages queue descriptor;
+ * - EBADF, @a fd is not a valid message queue descriptor;
  * - EBUSY, another thread is already registered.
  *
  * @par Valid contexts:
