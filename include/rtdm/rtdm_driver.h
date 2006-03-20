@@ -45,7 +45,11 @@ struct rtdm_dev_context;
 
 
 /*!
- * @ingroup devregister
+ * @addtogroup devregister
+ * @{
+ */
+
+/*!
  * @anchor dev_flags @name Device Flags
  * Static flags describing a RTDM device
  * @{
@@ -63,7 +67,7 @@ struct rtdm_dev_context;
 
 /** Mask selecting the device type. */
 #define RTDM_DEVICE_TYPE_MASK       0x00F0
-/** @} */
+/** @} Device Flags */
 
 
 /*!
@@ -84,11 +88,10 @@ struct rtdm_dev_context;
 
 /** Lowest bit number the driver developer can use freely */
 #define RTDM_USER_CONTEXT_FLAG      8   /* first user-definable flag */
-/** @} */
+/** @} Context Flags */
 
 
 /*!
- * @ingroup devregister
  * @anchor versioning @name Versioning
  * Current revisions of RTDM structures and interfaces, encoding of driver
  * versions.
@@ -121,11 +124,10 @@ struct rtdm_dev_context;
 
 /** Get patch version number from driver revision code */
 #define RTDM_DRIVER_PATCH_VER(ver)  ((ver) & 0xFF)
-/** @} */
+/** @} Versioning */
 
 
 /*!
- * @ingroup devregister
  * @name Operation Handler Prototypes
  * @{
  */
@@ -278,7 +280,7 @@ typedef
                                       rtdm_user_info_t          *user_info,
                                       const struct msghdr       *msg,
                                       int                       flags);
-/** @} */
+/** @} Operation Handler Prototypes */
 
 typedef
     int     (*rtdm_rt_handler_t)     (struct rtdm_dev_context   *context,
@@ -287,7 +289,6 @@ typedef
 
 
 /**
- * @ingroup devregister
  * Device operations
  */
 struct rtdm_operations {
@@ -301,7 +302,7 @@ struct rtdm_operations {
     rtdm_ioctl_handler_t            ioctl_rt;
     /** IOCTL from non-real-time context (optional) */
     rtdm_ioctl_handler_t            ioctl_nrt;
-    /** @} */
+    /** @} Common Operations */
 
     /*! @name Stream-Oriented Device Operations
      * @{ */
@@ -313,7 +314,7 @@ struct rtdm_operations {
     rtdm_write_handler_t            write_rt;
     /** Write handler for non-real-time context (optional) */
     rtdm_write_handler_t            write_nrt;
-    /** @} */
+    /** @} Stream-Oriented Device Operations */
 
     /*! @name Message-Oriented Device Operations
      * @{ */
@@ -325,7 +326,7 @@ struct rtdm_operations {
     rtdm_sendmsg_handler_t          sendmsg_rt;
     /** Transmit message handler for non-real-time context (optional) */
     rtdm_sendmsg_handler_t          sendmsg_nrt;
-    /** @} */
+    /** @} Message-Oriented Device Operations */
 };
 
 /**
@@ -362,7 +363,6 @@ struct rtdm_dev_reserved {
 };
 
 /**
- * @ingroup devregister
  * @brief RTDM device
  *
  * This structure specifies a RTDM device. As some fields, especially the
@@ -430,6 +430,7 @@ struct rtdm_device {
     /** Data stored by RTDM inside a registered device (internal use only) */
     struct rtdm_dev_reserved        reserved;
 };
+/** @} devregister */
 
 
 /* --- device registration --- */
@@ -532,7 +533,7 @@ static inline uint64_t rtdm_clock_read(void)
     code_block;                                                             \
     xnlock_put_irqrestore(&nklock, s);                                      \
 }
-/** @} */
+/** @} Global Lock across Scheduler Invocation */
 
 /*!
  * @name Spinlock with Preemption Deactivation
@@ -680,9 +681,9 @@ typedef unsigned long               rtdm_lockctx_t;
  */
 #define rtdm_lock_irqrestore(context)           \
     rthal_local_irq_restore(context)
-/** @} */
+/** @} Spinlock with Preemption Deactivation */
 
-/** @} */
+/** @} rtdmsync */
 
 
 /* --- Interrupt management services --- */
@@ -703,7 +704,7 @@ typedef xnintr_t                    rtdm_irq_t;
 /** Mark IRQ as edge-triggered, relevant for correct handling of shared
  *  edge-triggered IRQs */
 #define RTDM_IRQTYPE_EDGE           XN_ISR_EDGE
-/** @} */
+/** @} RTDM_IRQTYPE_xxx */
 
 /**
  * Interrupt handler
@@ -723,7 +724,7 @@ typedef int (*rtdm_irq_handler_t)(rtdm_irq_t *irq_handle);
 #define RTDM_IRQ_NONE               XN_ISR_NONE
 /** Denote handled interrupt */
 #define RTDM_IRQ_HANDLED            XN_ISR_HANDLED
-/** @} */
+/** @} RTDM_IRQ_xxx */
 
 /**
  * Retrieve IRQ handler argument
@@ -743,7 +744,7 @@ typedef int (*rtdm_irq_handler_t)(rtdm_irq_t *irq_handle);
  * Rescheduling: never.
  */
 #define rtdm_irq_get_arg(irq_handle, type)  ((type *)irq_handle->cookie)
-/** @} */
+/** @} rtdmirq */
 
 static inline int rtdm_irq_request(rtdm_irq_t *irq_handle,
                                    unsigned int irq_no,
@@ -791,7 +792,7 @@ typedef unsigned                    rtdm_nrtsig_t;
  * blocking operations.
  */
 typedef void (*rtdm_nrtsig_handler_t)(rtdm_nrtsig_t nrt_sig);
-/** @} */
+/** @} nrtsignal */
 
 
 static inline int rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig,
@@ -840,7 +841,7 @@ typedef void (*rtdm_task_proc_t)(void *arg);
  * @{ */
 #define RTDM_TASK_LOWEST_PRIORITY   XNCORE_LOW_PRIO
 #define RTDM_TASK_HIGHEST_PRIORITY  XNCORE_HIGH_PRIO
-/** @} */
+/** @} Task Priority Range */
 
 /*!
  * @anchor changetaskprio @name Task Priority Modification
@@ -848,9 +849,9 @@ typedef void (*rtdm_task_proc_t)(void *arg);
  * @{ */
 #define RTDM_TASK_RAISE_PRIORITY    (+1)
 #define RTDM_TASK_LOWER_PRIORITY    (-1)
-/** @} */
+/** @} Task Priority Modification */
 
-/** @} */
+/** @} rtdmtask */
 
 int rtdm_task_init(rtdm_task_t *task, const char *name,
                    rtdm_task_proc_t task_proc, void *arg,
