@@ -18,10 +18,10 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_SKIN_VRTX_H
-#define _XENO_SKIN_VRTX_H
+#ifndef _XENO_VRTX_VRTX_H
+#define _XENO_VRTX_VRTX_H
 
-#include <nucleus/xenomai.h>
+#include <nucleus/types.h>
 
 #define VRTX_SKIN_VERSION_CODE    0x00000002
 #define VRTX_SKIN_MAGIC           0x56525458
@@ -242,7 +242,9 @@ int sc_hcreate(char *heapaddr,
 	       unsigned log2psize,
 	       int *perr);
 
-void sc_hdelete(int hid, int opt, int *perr);
+void sc_hdelete(int hid,
+		int opt,
+		int *perr);
 
 char *sc_halloc(int hid,
 		unsigned long size,
@@ -252,7 +254,9 @@ void sc_hfree(int hid,
 	      char *block,
 	      int *perr);
 
-void sc_hinquiry(int info[3], int hid, int *errp);
+void sc_hinquiry(int info[3],
+		 int hid,
+		 int *errp);
 
 void ui_timer(void);
 
@@ -270,7 +274,8 @@ void sc_stime(long time);
 
 int sc_gversion(void);
 
-void sc_adelay (struct timespec time, int *errp);
+void sc_adelay (struct timespec time,
+		int *errp);
 
 #ifdef __cplusplus
 };
@@ -296,4 +301,4 @@ void sc_adelay (struct timespec time, int *errp);
 #define ER_DEL   0x33
 #define ER_OVF   0x34
 
-#endif /* !_XENO_SKIN_VRTX_H */
+#endif /* !_XENO_VRTX_VRTX_H */
