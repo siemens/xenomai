@@ -242,8 +242,8 @@ int sem_destroy (sem_t *sm)
 /**
  * Open a named semaphore.
  *
- * This service establishes a binding between the semaphore named @a name and
- * the calling context.
+ * This service establishes a connection between the semaphore named @a name and
+ * the calling context (kernel-space as a whole, or user-space process).
  *
  * If no semaphore named @a name exists and @a oflags has the @a O_CREAT bit
  * set, the semaphore is created by this function, using two more arguments:
