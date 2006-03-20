@@ -18,8 +18,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _vrtx_event_h
-#define _vrtx_event_h
+#ifndef _XENO_VRTX_EVENT_H
+#define _XENO_VRTX_EVENT_H
 
 #include "vrtx/defs.h"
 
@@ -54,4 +54,4 @@ void vrtxevent_cleanup(void);
 }
 #endif
 
-#endif /* !_vrtx_event_h */
+#endif /* !_XENO_VRTX_EVENT_H */

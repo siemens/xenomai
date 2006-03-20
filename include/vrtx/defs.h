@@ -18,11 +18,12 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _vrtx_defs_h
-#define _vrtx_defs_h
+#ifndef _XENO_VRTX_DEFS_H
+#define _XENO_VRTX_DEFS_H
 
-#include "nucleus/xenomai.h"
-#include "vrtx/vrtx.h"
+#include <nucleus/xenomai.h>
+#include <nucleus/registry.h>
+#include <vrtx/vrtx.h>
 
 #define VRTX_MAX_TID 512	/* i.e. 1 - 511 */
 #define VRTX_MAX_PID 32  	/* i.e. 0 - 31 */
@@ -49,4 +50,4 @@ void *vrtx_find_object_by_id(int id);
 }
 #endif
 
-#endif /* !_vrtx_defs_h */
+#endif /* !_XENO_VRTX_DEFS_H */
