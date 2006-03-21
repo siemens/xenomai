@@ -943,7 +943,7 @@ static int __pthread_mutex_unlock (struct task_struct *curr,
     return -pthread_mutex_unlock(&mx.native_mutex);
 }
 
-static int __cond_init (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_cond_init (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_cond cnd, *ucnd;
@@ -967,7 +967,7 @@ static int __cond_init (struct task_struct *curr, struct pt_regs *regs)
     return 0;
 }
 
-static int __cond_destroy (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_cond_destroy (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_cond cnd, *ucnd;
@@ -995,7 +995,7 @@ static int __cond_destroy (struct task_struct *curr, struct pt_regs *regs)
     return 0;
 }
 
-static int __cond_wait (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_cond_wait (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_cond cnd, *ucnd;
@@ -1025,7 +1025,7 @@ static int __cond_wait (struct task_struct *curr, struct pt_regs *regs)
                                           XN_INFINITE);
 }
 
-static int __cond_timedwait (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_cond_timedwait (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_cond cnd, *ucnd;
@@ -1064,7 +1064,7 @@ static int __cond_timedwait (struct task_struct *curr, struct pt_regs *regs)
                                           ts2ticks_ceil(&ts)+1);
 }
 
-static int __cond_signal (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_cond_signal (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_cond cnd, *ucnd;
@@ -1082,7 +1082,7 @@ static int __cond_signal (struct task_struct *curr, struct pt_regs *regs)
     return -pthread_cond_signal(&cnd.native_cond);
 }
 
-static int __cond_broadcast (struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_cond_broadcast (struct task_struct *curr, struct pt_regs *regs)
 
 {
     union __xeno_cond cnd, *ucnd;
@@ -2082,12 +2082,12 @@ static xnsysent_t __systab[] = {
     [__pse51_mutex_timedlock] = { &__pthread_mutex_timedlock, __xn_exec_primary },
     [__pse51_mutex_trylock] = { &__pthread_mutex_trylock, __xn_exec_primary },
     [__pse51_mutex_unlock] = { &__pthread_mutex_unlock, __xn_exec_primary },
-    [__pse51_cond_init] = { &__cond_init, __xn_exec_any },
-    [__pse51_cond_destroy] = { &__cond_destroy, __xn_exec_any },
-    [__pse51_cond_wait] = { &__cond_wait, __xn_exec_primary },
-    [__pse51_cond_timedwait] = { &__cond_timedwait, __xn_exec_primary },
-    [__pse51_cond_signal] = { &__cond_signal, __xn_exec_any },
-    [__pse51_cond_broadcast] = { &__cond_broadcast, __xn_exec_any },
+    [__pse51_cond_init] = { &__pthread_cond_init, __xn_exec_any },
+    [__pse51_cond_destroy] = { &__pthread_cond_destroy, __xn_exec_any },
+    [__pse51_cond_wait] = { &__pthread_cond_wait, __xn_exec_primary },
+    [__pse51_cond_timedwait] = { &__pthread_cond_timedwait, __xn_exec_primary },
+    [__pse51_cond_signal] = { &__pthread_cond_signal, __xn_exec_any },
+    [__pse51_cond_broadcast] = { &__pthread_cond_broadcast, __xn_exec_any },
     [__pse51_mq_open] = { &__mq_open, __xn_exec_lostage },
     [__pse51_mq_close] = { &__mq_close, __xn_exec_lostage },
     [__pse51_mq_unlink] = { &__mq_unlink, __xn_exec_lostage },
