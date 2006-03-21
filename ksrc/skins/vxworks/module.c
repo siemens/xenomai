@@ -52,10 +52,7 @@ int SKIN_INIT(vxworks)
     /* The VxWorks skin is stacked over the core pod. */
     err = xncore_attach();
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-    /* The native skin is standalone, there is no priority level to
-       reserve for interrupt servers in user-space, since there is no
-       user-space support in the first place. */
-    err = xnpod_init(&__vxworks_pod,255,0,0);
+    /* The VxWorks skin is standalone. */
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
     if (err != 0)
