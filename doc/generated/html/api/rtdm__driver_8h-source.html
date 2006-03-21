@@ -31,120 +31,120 @@
 00044 <span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>;
 00045 
 00046 
-<a name="l00055"></a><a class="code" href="rtdm__driver_8h.html#a0">00055</a> <span class="preprocessor">#define RTDM_EXCLUSIVE              0x0001</span>
-00056 <span class="preprocessor"></span>
-<a name="l00058"></a><a class="code" href="rtdm__driver_8h.html#a1">00058</a> <span class="preprocessor">#define RTDM_NAMED_DEVICE           0x0010</span>
-00059 <span class="preprocessor"></span>
-<a name="l00062"></a><a class="code" href="rtdm__driver_8h.html#a2">00062</a> <span class="preprocessor">#define RTDM_PROTOCOL_DEVICE        0x0020</span>
+<a name="l00059"></a><a class="code" href="group__devregister.html#ga11">00059</a> <span class="preprocessor">#define RTDM_EXCLUSIVE              0x0001</span>
+00060 <span class="preprocessor"></span>
+<a name="l00062"></a><a class="code" href="group__devregister.html#ga12">00062</a> <span class="preprocessor">#define RTDM_NAMED_DEVICE           0x0010</span>
 00063 <span class="preprocessor"></span>
-<a name="l00065"></a><a class="code" href="rtdm__driver_8h.html#a3">00065</a> <span class="preprocessor">#define RTDM_DEVICE_TYPE_MASK       0x00F0</span>
-00066 <span class="preprocessor"></span>
-<a name="l00076"></a><a class="code" href="rtdm__driver_8h.html#a4">00076</a> <span class="preprocessor">#define RTDM_CREATED_IN_NRT         0</span>
-00077 <span class="preprocessor"></span>
-<a name="l00079"></a><a class="code" href="rtdm__driver_8h.html#a5">00079</a> <span class="preprocessor">#define RTDM_CLOSING                1</span>
-00080 <span class="preprocessor"></span>
-<a name="l00083"></a><a class="code" href="rtdm__driver_8h.html#a6">00083</a> <span class="preprocessor">#define RTDM_FORCED_CLOSING         2</span>
+<a name="l00066"></a><a class="code" href="group__devregister.html#ga13">00066</a> <span class="preprocessor">#define RTDM_PROTOCOL_DEVICE        0x0020</span>
+00067 <span class="preprocessor"></span>
+<a name="l00069"></a><a class="code" href="group__devregister.html#ga14">00069</a> <span class="preprocessor">#define RTDM_DEVICE_TYPE_MASK       0x00F0</span>
+00070 <span class="preprocessor"></span>
+<a name="l00080"></a><a class="code" href="group__devregister.html#ga15">00080</a> <span class="preprocessor">#define RTDM_CREATED_IN_NRT         0</span>
+00081 <span class="preprocessor"></span>
+<a name="l00083"></a><a class="code" href="group__devregister.html#ga16">00083</a> <span class="preprocessor">#define RTDM_CLOSING                1</span>
 00084 <span class="preprocessor"></span>
-<a name="l00086"></a><a class="code" href="rtdm__driver_8h.html#a7">00086</a> <span class="preprocessor">#define RTDM_USER_CONTEXT_FLAG      8   </span><span class="comment">/* first user-definable flag */</span>
-00087 
-<a name="l00098"></a><a class="code" href="rtdm__driver_8h.html#a8">00098</a> <span class="preprocessor">#define RTDM_DEVICE_STRUCT_VER      3</span>
-00099 <span class="preprocessor"></span>
-<a name="l00101"></a><a class="code" href="rtdm__driver_8h.html#a9">00101</a> <span class="preprocessor">#define RTDM_CONTEXT_STRUCT_VER     3</span>
+<a name="l00087"></a><a class="code" href="group__devregister.html#ga17">00087</a> <span class="preprocessor">#define RTDM_FORCED_CLOSING         2</span>
+00088 <span class="preprocessor"></span>
+<a name="l00090"></a><a class="code" href="group__devregister.html#ga18">00090</a> <span class="preprocessor">#define RTDM_USER_CONTEXT_FLAG      8   </span><span class="comment">/* first user-definable flag */</span>
+00091 
+<a name="l00101"></a><a class="code" href="group__devregister.html#ga19">00101</a> <span class="preprocessor">#define RTDM_DEVICE_STRUCT_VER      3</span>
 00102 <span class="preprocessor"></span>
-<a name="l00104"></a><a class="code" href="rtdm__driver_8h.html#a10">00104</a> <span class="preprocessor">#define RTDM_API_VER                4</span>
+<a name="l00104"></a><a class="code" href="group__devregister.html#ga20">00104</a> <span class="preprocessor">#define RTDM_CONTEXT_STRUCT_VER     3</span>
 00105 <span class="preprocessor"></span>
-<a name="l00107"></a><a class="code" href="rtdm__driver_8h.html#a11">00107</a> <span class="preprocessor">#define RTDM_API_MIN_COMPAT_VER     4</span>
+<a name="l00107"></a><a class="code" href="group__devregister.html#ga21">00107</a> <span class="preprocessor">#define RTDM_API_VER                4</span>
 00108 <span class="preprocessor"></span>
-<a name="l00110"></a><a class="code" href="rtdm__driver_8h.html#a12">00110</a> <span class="preprocessor">#define RTDM_SECURE_DEVICE          0x80000000</span>
+<a name="l00110"></a><a class="code" href="group__devregister.html#ga22">00110</a> <span class="preprocessor">#define RTDM_API_MIN_COMPAT_VER     4</span>
 00111 <span class="preprocessor"></span>
-<a name="l00113"></a><a class="code" href="rtdm__driver_8h.html#a13">00113</a> <span class="preprocessor">#define RTDM_DRIVER_VER(major, minor, patch) \</span>
-00114 <span class="preprocessor">    (((major &amp; 0xFF) &lt;&lt; 16) | ((minor &amp; 0xFF) &lt;&lt; 8) | (patch &amp; 0xFF))</span>
-00115 <span class="preprocessor"></span>
-<a name="l00117"></a><a class="code" href="rtdm__driver_8h.html#a14">00117</a> <span class="preprocessor">#define RTDM_DRIVER_MAJOR_VER(ver)  (((ver) &gt;&gt; 16) &amp; 0xFF)</span>
+<a name="l00113"></a><a class="code" href="group__devregister.html#ga23">00113</a> <span class="preprocessor">#define RTDM_SECURE_DEVICE          0x80000000</span>
+00114 <span class="preprocessor"></span>
+<a name="l00116"></a><a class="code" href="group__devregister.html#ga24">00116</a> <span class="preprocessor">#define RTDM_DRIVER_VER(major, minor, patch) \</span>
+00117 <span class="preprocessor">    (((major &amp; 0xFF) &lt;&lt; 16) | ((minor &amp; 0xFF) &lt;&lt; 8) | (patch &amp; 0xFF))</span>
 00118 <span class="preprocessor"></span>
-<a name="l00120"></a><a class="code" href="rtdm__driver_8h.html#a15">00120</a> <span class="preprocessor">#define RTDM_DRIVER_MINOR_VER(ver)  (((ver) &gt;&gt; 8) &amp; 0xFF)</span>
+<a name="l00120"></a><a class="code" href="group__devregister.html#ga25">00120</a> <span class="preprocessor">#define RTDM_DRIVER_MAJOR_VER(ver)  (((ver) &gt;&gt; 16) &amp; 0xFF)</span>
 00121 <span class="preprocessor"></span>
-<a name="l00123"></a><a class="code" href="rtdm__driver_8h.html#a16">00123</a> <span class="preprocessor">#define RTDM_DRIVER_PATCH_VER(ver)  ((ver) &amp; 0xFF)</span>
+<a name="l00123"></a><a class="code" href="group__devregister.html#ga26">00123</a> <span class="preprocessor">#define RTDM_DRIVER_MINOR_VER(ver)  (((ver) &gt;&gt; 8) &amp; 0xFF)</span>
 00124 <span class="preprocessor"></span>
-00145 <span class="keyword">typedef</span>
-<a name="l00146"></a><a class="code" href="rtdm__driver_8h.html#a56">00146</a>     int     (*<a class="code" href="rtdm__driver_8h.html#a56">rtdm_open_handler_t</a>)   (<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
-00147                                       rtdm_user_info_t          *user_info,
-00148                                       <span class="keywordtype">int</span>                       oflag);
-00149 
-00162 <span class="keyword">typedef</span>
-<a name="l00163"></a><a class="code" href="rtdm__driver_8h.html#a57">00163</a>     int     (*<a class="code" href="rtdm__driver_8h.html#a57">rtdm_socket_handler_t</a>) (<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
-00164                                       rtdm_user_info_t          *user_info,
-00165                                       <span class="keywordtype">int</span>                       protocol);
-00166 
-00178 <span class="keyword">typedef</span>
-<a name="l00179"></a><a class="code" href="rtdm__driver_8h.html#a58">00179</a>     int     (*<a class="code" href="rtdm__driver_8h.html#a58">rtdm_close_handler_t</a>)  (<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
-00180                                       rtdm_user_info_t          *user_info);
-00181 
-00195 <span class="keyword">typedef</span>
-<a name="l00196"></a><a class="code" href="rtdm__driver_8h.html#a59">00196</a>     int     (*<a class="code" href="rtdm__driver_8h.html#a59">rtdm_ioctl_handler_t</a>)  (<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
-00197                                       rtdm_user_info_t          *user_info,
-00198                                       <span class="keywordtype">int</span>                       request,
-00199                                       <span class="keywordtype">void</span>                      *arg);
-00200 
-00214 <span class="keyword">typedef</span>
-<a name="l00215"></a><a class="code" href="rtdm__driver_8h.html#a60">00215</a>     ssize_t (*<a class="code" href="rtdm__driver_8h.html#a60">rtdm_read_handler_t</a>)   (<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
-00216                                       rtdm_user_info_t          *user_info,
-00217                                       <span class="keywordtype">void</span>                      *buf,
-00218                                       size_t                    nbyte);
-00219 
-00234 <span class="keyword">typedef</span>
-<a name="l00235"></a><a class="code" href="rtdm__driver_8h.html#a61">00235</a>     ssize_t (*<a class="code" href="rtdm__driver_8h.html#a61">rtdm_write_handler_t</a>)  (<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
-00236                                       rtdm_user_info_t          *user_info,
-00237                                       <span class="keyword">const</span> <span class="keywordtype">void</span>                *buf,
-00238                                       size_t                    nbyte);
-00239 
-00255 <span class="keyword">typedef</span>
-<a name="l00256"></a><a class="code" href="rtdm__driver_8h.html#a62">00256</a>     ssize_t (*<a class="code" href="rtdm__driver_8h.html#a62">rtdm_recvmsg_handler_t</a>)(<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
-00257                                       rtdm_user_info_t          *user_info,
-00258                                       <span class="keyword">struct </span>msghdr             *msg,
-00259                                       <span class="keywordtype">int</span>                       flags);
-00260 
-00276 <span class="keyword">typedef</span>
-<a name="l00277"></a><a class="code" href="rtdm__driver_8h.html#a63">00277</a>     ssize_t (*<a class="code" href="rtdm__driver_8h.html#a63">rtdm_sendmsg_handler_t</a>)(<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
-00278                                       rtdm_user_info_t          *user_info,
-00279                                       <span class="keyword">const</span> <span class="keyword">struct </span>msghdr       *msg,
-00280                                       <span class="keywordtype">int</span>                       flags);
-00283 <span class="keyword">typedef</span>
-00284     int     (*rtdm_rt_handler_t)     (<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
-00285                                       rtdm_user_info_t          *user_info,
-00286                                       <span class="keywordtype">void</span>                      *arg);
-00287 
-00288 
-<a name="l00293"></a><a class="code" href="structrtdm__operations.html">00293</a> <span class="keyword">struct </span><a class="code" href="structrtdm__operations.html">rtdm_operations</a> {
-<a name="l00297"></a><a class="code" href="structrtdm__operations.html#z34_0">00297</a>     <a class="code" href="rtdm__driver_8h.html#a58">rtdm_close_handler_t</a>            <a class="code" href="structrtdm__operations.html#z34_0">close_rt</a>;
-<a name="l00299"></a><a class="code" href="structrtdm__operations.html#z34_1">00299</a>     <a class="code" href="rtdm__driver_8h.html#a58">rtdm_close_handler_t</a>            <a class="code" href="structrtdm__operations.html#z34_1">close_nrt</a>;
-<a name="l00301"></a><a class="code" href="structrtdm__operations.html#z34_2">00301</a>     <a class="code" href="rtdm__driver_8h.html#a59">rtdm_ioctl_handler_t</a>            <a class="code" href="structrtdm__operations.html#z34_2">ioctl_rt</a>;
-<a name="l00303"></a><a class="code" href="structrtdm__operations.html#z34_3">00303</a>     <a class="code" href="rtdm__driver_8h.html#a59">rtdm_ioctl_handler_t</a>            <a class="code" href="structrtdm__operations.html#z34_3">ioctl_nrt</a>;
-<a name="l00309"></a><a class="code" href="structrtdm__operations.html#z35_0">00309</a>     <a class="code" href="rtdm__driver_8h.html#a60">rtdm_read_handler_t</a>             <a class="code" href="structrtdm__operations.html#z35_0">read_rt</a>;
-<a name="l00311"></a><a class="code" href="structrtdm__operations.html#z35_1">00311</a>     <a class="code" href="rtdm__driver_8h.html#a60">rtdm_read_handler_t</a>             <a class="code" href="structrtdm__operations.html#z35_1">read_nrt</a>;
-<a name="l00313"></a><a class="code" href="structrtdm__operations.html#z35_2">00313</a>     <a class="code" href="rtdm__driver_8h.html#a61">rtdm_write_handler_t</a>            <a class="code" href="structrtdm__operations.html#z35_2">write_rt</a>;
-<a name="l00315"></a><a class="code" href="structrtdm__operations.html#z35_3">00315</a>     <a class="code" href="rtdm__driver_8h.html#a61">rtdm_write_handler_t</a>            <a class="code" href="structrtdm__operations.html#z35_3">write_nrt</a>;
-<a name="l00321"></a><a class="code" href="structrtdm__operations.html#z36_0">00321</a>     <a class="code" href="rtdm__driver_8h.html#a62">rtdm_recvmsg_handler_t</a>          <a class="code" href="structrtdm__operations.html#z36_0">recvmsg_rt</a>;
-<a name="l00323"></a><a class="code" href="structrtdm__operations.html#z36_1">00323</a>     <a class="code" href="rtdm__driver_8h.html#a62">rtdm_recvmsg_handler_t</a>          <a class="code" href="structrtdm__operations.html#z36_1">recvmsg_nrt</a>;
-<a name="l00325"></a><a class="code" href="structrtdm__operations.html#z36_2">00325</a>     <a class="code" href="rtdm__driver_8h.html#a63">rtdm_sendmsg_handler_t</a>          <a class="code" href="structrtdm__operations.html#z36_2">sendmsg_rt</a>;
-<a name="l00327"></a><a class="code" href="structrtdm__operations.html#z36_3">00327</a>     <a class="code" href="rtdm__driver_8h.html#a63">rtdm_sendmsg_handler_t</a>          <a class="code" href="structrtdm__operations.html#z36_3">sendmsg_nrt</a>;
-00329 };
-00330 
-<a name="l00342"></a><a class="code" href="structrtdm__dev__context.html">00342</a> <span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> {
-<a name="l00344"></a><a class="code" href="structrtdm__dev__context.html#o0">00344</a>     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>                   <a class="code" href="structrtdm__dev__context.html#o0">context_flags</a>;
-<a name="l00346"></a><a class="code" href="structrtdm__dev__context.html#o1">00346</a>     <span class="keywordtype">int</span>                             <a class="code" href="structrtdm__dev__context.html#o1">fd</a>;
-<a name="l00349"></a><a class="code" href="structrtdm__dev__context.html#o2">00349</a>     atomic_t                        <a class="code" href="structrtdm__dev__context.html#o2">close_lock_count</a>;
-<a name="l00351"></a><a class="code" href="structrtdm__dev__context.html#o3">00351</a>     <span class="keyword">struct </span><a class="code" href="structrtdm__operations.html">rtdm_operations</a>          *<a class="code" href="structrtdm__dev__context.html#o3">ops</a>;
-<a name="l00353"></a><a class="code" href="structrtdm__dev__context.html#o4">00353</a>     <span class="keyword">volatile</span> <span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a>     *<a class="code" href="structrtdm__dev__context.html#o4">device</a>;
-<a name="l00355"></a><a class="code" href="structrtdm__dev__context.html#o5">00355</a>     <span class="keywordtype">char</span>                            <a class="code" href="structrtdm__dev__context.html#o5">dev_private</a>[0];
-00356 };
-00357 
-00358 <span class="keyword">struct </span>rtdm_dev_reserved {
-00359     <span class="keyword">struct </span>list_head                entry;
-00360     atomic_t                        refcount;
-00361     <span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>         *exclusive_context;
-00362 };
-00363 
+<a name="l00126"></a><a class="code" href="group__devregister.html#ga27">00126</a> <span class="preprocessor">#define RTDM_DRIVER_PATCH_VER(ver)  ((ver) &amp; 0xFF)</span>
+00127 <span class="preprocessor"></span>
+00147 <span class="keyword">typedef</span>
+<a name="l00148"></a><a class="code" href="group__devregister.html#ga0">00148</a>     int     (*<a class="code" href="group__devregister.html#ga0">rtdm_open_handler_t</a>)   (<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
+00149                                       rtdm_user_info_t          *user_info,
+00150                                       <span class="keywordtype">int</span>                       oflag);
+00151 
+00164 <span class="keyword">typedef</span>
+<a name="l00165"></a><a class="code" href="group__devregister.html#ga1">00165</a>     int     (*<a class="code" href="group__devregister.html#ga1">rtdm_socket_handler_t</a>) (<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
+00166                                       rtdm_user_info_t          *user_info,
+00167                                       <span class="keywordtype">int</span>                       protocol);
+00168 
+00180 <span class="keyword">typedef</span>
+<a name="l00181"></a><a class="code" href="group__devregister.html#ga2">00181</a>     int     (*<a class="code" href="group__devregister.html#ga2">rtdm_close_handler_t</a>)  (<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
+00182                                       rtdm_user_info_t          *user_info);
+00183 
+00197 <span class="keyword">typedef</span>
+<a name="l00198"></a><a class="code" href="group__devregister.html#ga3">00198</a>     int     (*<a class="code" href="group__devregister.html#ga3">rtdm_ioctl_handler_t</a>)  (<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
+00199                                       rtdm_user_info_t          *user_info,
+00200                                       <span class="keywordtype">int</span>                       request,
+00201                                       <span class="keywordtype">void</span>                      *arg);
+00202 
+00216 <span class="keyword">typedef</span>
+<a name="l00217"></a><a class="code" href="group__devregister.html#ga4">00217</a>     ssize_t (*<a class="code" href="group__devregister.html#ga4">rtdm_read_handler_t</a>)   (<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
+00218                                       rtdm_user_info_t          *user_info,
+00219                                       <span class="keywordtype">void</span>                      *buf,
+00220                                       size_t                    nbyte);
+00221 
+00236 <span class="keyword">typedef</span>
+<a name="l00237"></a><a class="code" href="group__devregister.html#ga5">00237</a>     ssize_t (*<a class="code" href="group__devregister.html#ga5">rtdm_write_handler_t</a>)  (<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
+00238                                       rtdm_user_info_t          *user_info,
+00239                                       <span class="keyword">const</span> <span class="keywordtype">void</span>                *buf,
+00240                                       size_t                    nbyte);
+00241 
+00257 <span class="keyword">typedef</span>
+<a name="l00258"></a><a class="code" href="group__devregister.html#ga6">00258</a>     ssize_t (*<a class="code" href="group__devregister.html#ga6">rtdm_recvmsg_handler_t</a>)(<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
+00259                                       rtdm_user_info_t          *user_info,
+00260                                       <span class="keyword">struct </span>msghdr             *msg,
+00261                                       <span class="keywordtype">int</span>                       flags);
+00262 
+00278 <span class="keyword">typedef</span>
+<a name="l00279"></a><a class="code" href="group__devregister.html#ga7">00279</a>     ssize_t (*<a class="code" href="group__devregister.html#ga7">rtdm_sendmsg_handler_t</a>)(<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
+00280                                       rtdm_user_info_t          *user_info,
+00281                                       <span class="keyword">const</span> <span class="keyword">struct </span>msghdr       *msg,
+00282                                       <span class="keywordtype">int</span>                       flags);
+00285 <span class="keyword">typedef</span>
+00286     int     (*rtdm_rt_handler_t)     (<span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>   *context,
+00287                                       rtdm_user_info_t          *user_info,
+00288                                       <span class="keywordtype">void</span>                      *arg);
+00289 
+00290 
+<a name="l00294"></a><a class="code" href="structrtdm__operations.html">00294</a> <span class="keyword">struct </span><a class="code" href="structrtdm__operations.html">rtdm_operations</a> {
+<a name="l00298"></a><a class="code" href="structrtdm__operations.html#z34_0">00298</a>     <a class="code" href="group__devregister.html#ga2">rtdm_close_handler_t</a>            <a class="code" href="structrtdm__operations.html#z34_0">close_rt</a>;
+<a name="l00300"></a><a class="code" href="structrtdm__operations.html#z34_1">00300</a>     <a class="code" href="group__devregister.html#ga2">rtdm_close_handler_t</a>            <a class="code" href="structrtdm__operations.html#z34_1">close_nrt</a>;
+<a name="l00302"></a><a class="code" href="structrtdm__operations.html#z34_2">00302</a>     <a class="code" href="group__devregister.html#ga3">rtdm_ioctl_handler_t</a>            <a class="code" href="structrtdm__operations.html#z34_2">ioctl_rt</a>;
+<a name="l00304"></a><a class="code" href="structrtdm__operations.html#z34_3">00304</a>     <a class="code" href="group__devregister.html#ga3">rtdm_ioctl_handler_t</a>            <a class="code" href="structrtdm__operations.html#z34_3">ioctl_nrt</a>;
+<a name="l00310"></a><a class="code" href="structrtdm__operations.html#z35_0">00310</a>     <a class="code" href="group__devregister.html#ga4">rtdm_read_handler_t</a>             <a class="code" href="structrtdm__operations.html#z35_0">read_rt</a>;
+<a name="l00312"></a><a class="code" href="structrtdm__operations.html#z35_1">00312</a>     <a class="code" href="group__devregister.html#ga4">rtdm_read_handler_t</a>             <a class="code" href="structrtdm__operations.html#z35_1">read_nrt</a>;
+<a name="l00314"></a><a class="code" href="structrtdm__operations.html#z35_2">00314</a>     <a class="code" href="group__devregister.html#ga5">rtdm_write_handler_t</a>            <a class="code" href="structrtdm__operations.html#z35_2">write_rt</a>;
+<a name="l00316"></a><a class="code" href="structrtdm__operations.html#z35_3">00316</a>     <a class="code" href="group__devregister.html#ga5">rtdm_write_handler_t</a>            <a class="code" href="structrtdm__operations.html#z35_3">write_nrt</a>;
+<a name="l00322"></a><a class="code" href="structrtdm__operations.html#z36_0">00322</a>     <a class="code" href="group__devregister.html#ga6">rtdm_recvmsg_handler_t</a>          <a class="code" href="structrtdm__operations.html#z36_0">recvmsg_rt</a>;
+<a name="l00324"></a><a class="code" href="structrtdm__operations.html#z36_1">00324</a>     <a class="code" href="group__devregister.html#ga6">rtdm_recvmsg_handler_t</a>          <a class="code" href="structrtdm__operations.html#z36_1">recvmsg_nrt</a>;
+<a name="l00326"></a><a class="code" href="structrtdm__operations.html#z36_2">00326</a>     <a class="code" href="group__devregister.html#ga7">rtdm_sendmsg_handler_t</a>          <a class="code" href="structrtdm__operations.html#z36_2">sendmsg_rt</a>;
+<a name="l00328"></a><a class="code" href="structrtdm__operations.html#z36_3">00328</a>     <a class="code" href="group__devregister.html#ga7">rtdm_sendmsg_handler_t</a>          <a class="code" href="structrtdm__operations.html#z36_3">sendmsg_nrt</a>;
+00330 };
+00331 
+<a name="l00343"></a><a class="code" href="structrtdm__dev__context.html">00343</a> <span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> {
+<a name="l00345"></a><a class="code" href="structrtdm__dev__context.html#o0">00345</a>     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>                   <a class="code" href="structrtdm__dev__context.html#o0">context_flags</a>;
+<a name="l00347"></a><a class="code" href="structrtdm__dev__context.html#o1">00347</a>     <span class="keywordtype">int</span>                             <a class="code" href="structrtdm__dev__context.html#o1">fd</a>;
+<a name="l00350"></a><a class="code" href="structrtdm__dev__context.html#o2">00350</a>     atomic_t                        <a class="code" href="structrtdm__dev__context.html#o2">close_lock_count</a>;
+<a name="l00352"></a><a class="code" href="structrtdm__dev__context.html#o3">00352</a>     <span class="keyword">struct </span><a class="code" href="structrtdm__operations.html">rtdm_operations</a>          *<a class="code" href="structrtdm__dev__context.html#o3">ops</a>;
+<a name="l00354"></a><a class="code" href="structrtdm__dev__context.html#o4">00354</a>     <span class="keyword">volatile</span> <span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a>     *<a class="code" href="structrtdm__dev__context.html#o4">device</a>;
+<a name="l00356"></a><a class="code" href="structrtdm__dev__context.html#o5">00356</a>     <span class="keywordtype">char</span>                            <a class="code" href="structrtdm__dev__context.html#o5">dev_private</a>[0];
+00357 };
+00358 
+00359 <span class="keyword">struct </span>rtdm_dev_reserved {
+00360     <span class="keyword">struct </span>list_head                entry;
+00361     atomic_t                        refcount;
+00362     <span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a>         *exclusive_context;
+00363 };
+00364 
 <a name="l00372"></a><a class="code" href="structrtdm__device.html">00372</a> <span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a> {
 <a name="l00375"></a><a class="code" href="structrtdm__device.html#o0">00375</a>     <span class="keywordtype">int</span>                             <a class="code" href="structrtdm__device.html#o0">struct_version</a>;
 00376 
@@ -156,11 +156,11 @@
 <a name="l00386"></a><a class="code" href="structrtdm__device.html#o4">00386</a>     <span class="keywordtype">int</span>                             <a class="code" href="structrtdm__device.html#o4">protocol_family</a>;
 <a name="l00388"></a><a class="code" href="structrtdm__device.html#o5">00388</a>     <span class="keywordtype">int</span>                             <a class="code" href="structrtdm__device.html#o5">socket_type</a>;
 00389 
-<a name="l00392"></a><a class="code" href="structrtdm__device.html#o6">00392</a>     <a class="code" href="rtdm__driver_8h.html#a56">rtdm_open_handler_t</a>             <a class="code" href="structrtdm__device.html#o6">open_rt</a>;
-<a name="l00395"></a><a class="code" href="structrtdm__device.html#o7">00395</a>     <a class="code" href="rtdm__driver_8h.html#a56">rtdm_open_handler_t</a>             <a class="code" href="structrtdm__device.html#o7">open_nrt</a>;
+<a name="l00392"></a><a class="code" href="structrtdm__device.html#o6">00392</a>     <a class="code" href="group__devregister.html#ga0">rtdm_open_handler_t</a>             <a class="code" href="structrtdm__device.html#o6">open_rt</a>;
+<a name="l00395"></a><a class="code" href="structrtdm__device.html#o7">00395</a>     <a class="code" href="group__devregister.html#ga0">rtdm_open_handler_t</a>             <a class="code" href="structrtdm__device.html#o7">open_nrt</a>;
 00396 
-<a name="l00399"></a><a class="code" href="structrtdm__device.html#o8">00399</a>     <a class="code" href="rtdm__driver_8h.html#a57">rtdm_socket_handler_t</a>           <a class="code" href="structrtdm__device.html#o8">socket_rt</a>;
-<a name="l00402"></a><a class="code" href="structrtdm__device.html#o9">00402</a>     <a class="code" href="rtdm__driver_8h.html#a57">rtdm_socket_handler_t</a>           <a class="code" href="structrtdm__device.html#o9">socket_nrt</a>;
+<a name="l00399"></a><a class="code" href="structrtdm__device.html#o8">00399</a>     <a class="code" href="group__devregister.html#ga1">rtdm_socket_handler_t</a>           <a class="code" href="structrtdm__device.html#o8">socket_rt</a>;
+<a name="l00402"></a><a class="code" href="structrtdm__device.html#o9">00402</a>     <a class="code" href="group__devregister.html#ga1">rtdm_socket_handler_t</a>           <a class="code" href="structrtdm__device.html#o9">socket_nrt</a>;
 00403 
 <a name="l00405"></a><a class="code" href="structrtdm__device.html#o10">00405</a>     <span class="keyword">struct </span><a class="code" href="structrtdm__operations.html">rtdm_operations</a>          ops;
 00406 
@@ -178,381 +178,379 @@
 00429 
 <a name="l00431"></a><a class="code" href="structrtdm__device.html#o20">00431</a>     <span class="keyword">struct </span>rtdm_dev_reserved        reserved;
 00432 };
-00433 
-00434 
-00435 <span class="comment">/* --- device registration --- */</span>
-00436 
-00437 <span class="keywordtype">int</span> <a class="code" href="group__devregister.html#ga0">rtdm_dev_register</a>(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a>* device);
-00438 <span class="keywordtype">int</span> <a class="code" href="group__devregister.html#ga1">rtdm_dev_unregister</a>(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a>* device, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> poll_delay);
-00439 
+00436 <span class="comment">/* --- device registration --- */</span>
+00437 
+00438 <span class="keywordtype">int</span> <a class="code" href="group__devregister.html#ga9">rtdm_dev_register</a>(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a>* device);
+00439 <span class="keywordtype">int</span> <a class="code" href="group__devregister.html#ga10">rtdm_dev_unregister</a>(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a>* device, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> poll_delay);
 00440 
-00441 <span class="comment">/* --- inter-driver API --- */</span>
-00442 
-00443 <span class="preprocessor">#define rtdm_open                   rt_dev_open</span>
-00444 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_socket                 rt_dev_socket</span>
-00445 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_close                  rt_dev_close</span>
-00446 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_ioctl                  rt_dev_ioctl</span>
-00447 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_read                   rt_dev_read</span>
-00448 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_write                  rt_dev_write</span>
-00449 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_recvmsg                rt_dev_recvmsg</span>
-00450 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_recv                   rt_dev_recv</span>
-00451 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_recvfrom               rt_dev_recvfrom</span>
-00452 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_sendmsg                rt_dev_sendmsg</span>
-00453 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_send                   rt_dev_send</span>
-00454 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_sendto                 rt_dev_sendto</span>
-00455 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_bind                   rt_dev_bind</span>
-00456 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_listen                 rt_dev_listen</span>
-00457 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_accept                 rt_dev_accept</span>
-00458 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_getsockopt             rt_dev_getsockopt</span>
-00459 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_setsockopt             rt_dev_setsockopt</span>
-00460 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_getsockname            rt_dev_getsockname</span>
-00461 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_getpeername            rt_dev_getpeername</span>
-00462 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_shutdown               rt_dev_shutdown</span>
-00463 <span class="preprocessor"></span>
-00464 <span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *<a class="code" href="group__interdrv.html#ga7">rtdm_context_get</a>(<span class="keywordtype">int</span> <a class="code" href="structrtdm__dev__context.html#o1">fd</a>);
-00465 
-00466 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_context_lock(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context)
-00467 {
-00468     atomic_inc(&amp;context-&gt;<a class="code" href="structrtdm__dev__context.html#o2">close_lock_count</a>);
-00469 }
-00470 
-00471 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_context_unlock(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context)
-00472 {
-00473     atomic_dec(&amp;context-&gt;<a class="code" href="structrtdm__dev__context.html#o2">close_lock_count</a>);
-00474 }
-00475 
+00441 
+00442 <span class="comment">/* --- inter-driver API --- */</span>
+00443 
+00444 <span class="preprocessor">#define rtdm_open                   rt_dev_open</span>
+00445 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_socket                 rt_dev_socket</span>
+00446 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_close                  rt_dev_close</span>
+00447 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_ioctl                  rt_dev_ioctl</span>
+00448 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_read                   rt_dev_read</span>
+00449 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_write                  rt_dev_write</span>
+00450 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_recvmsg                rt_dev_recvmsg</span>
+00451 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_recv                   rt_dev_recv</span>
+00452 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_recvfrom               rt_dev_recvfrom</span>
+00453 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_sendmsg                rt_dev_sendmsg</span>
+00454 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_send                   rt_dev_send</span>
+00455 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_sendto                 rt_dev_sendto</span>
+00456 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_bind                   rt_dev_bind</span>
+00457 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_listen                 rt_dev_listen</span>
+00458 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_accept                 rt_dev_accept</span>
+00459 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_getsockopt             rt_dev_getsockopt</span>
+00460 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_setsockopt             rt_dev_setsockopt</span>
+00461 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_getsockname            rt_dev_getsockname</span>
+00462 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_getpeername            rt_dev_getpeername</span>
+00463 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_shutdown               rt_dev_shutdown</span>
+00464 <span class="preprocessor"></span>
+00465 <span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *<a class="code" href="group__interdrv.html#ga7">rtdm_context_get</a>(<span class="keywordtype">int</span> <a class="code" href="structrtdm__dev__context.html#o1">fd</a>);
+00466 
+00467 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_context_lock(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context)
+00468 {
+00469     atomic_inc(&amp;context-&gt;<a class="code" href="structrtdm__dev__context.html#o2">close_lock_count</a>);
+00470 }
+00471 
+00472 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_context_unlock(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context)
+00473 {
+00474     atomic_dec(&amp;context-&gt;<a class="code" href="structrtdm__dev__context.html#o2">close_lock_count</a>);
+00475 }
 00476 
-00477 <span class="comment">/* --- clock services --- */</span>
-00478 <span class="keyword">static</span> <span class="keyword">inline</span> uint64_t rtdm_clock_read(<span class="keywordtype">void</span>)
-00479 {
-00480     <span class="keywordflow">return</span> xnpod_ticks2ns(<a class="code" href="group__pod.html#ga51">xnpod_get_time</a>());
-00481 }
-00482 
+00477 
+00478 <span class="comment">/* --- clock services --- */</span>
+00479 <span class="keyword">static</span> <span class="keyword">inline</span> uint64_t rtdm_clock_read(<span class="keywordtype">void</span>)
+00480 {
+00481     <span class="keywordflow">return</span> xnpod_ticks2ns(<a class="code" href="group__pod.html#ga52">xnpod_get_time</a>());
+00482 }
 00483 
-00484 <span class="comment">/* --- spin lock services --- */</span>
-<a name="l00527"></a><a class="code" href="group__rtdmsync.html#ga20">00527</a> <span class="preprocessor">#define RTDM_EXECUTE_ATOMICALLY(code_block)                                 \</span>
-00528 <span class="preprocessor">{                                                                           \</span>
-00529 <span class="preprocessor">    spl_t   s;                                                              \</span>
-00530 <span class="preprocessor">                                                                            \</span>
-00531 <span class="preprocessor">    xnlock_get_irqsave(&amp;nklock, s);                                         \</span>
-00532 <span class="preprocessor">    code_block;                                                             \</span>
-00533 <span class="preprocessor">    xnlock_put_irqrestore(&amp;nklock, s);                                      \</span>
-00534 <span class="preprocessor">}</span>
-00535 <span class="preprocessor"></span>
-<a name="l00545"></a><a class="code" href="group__rtdmsync.html#ga21">00545</a> <span class="preprocessor">#define RTDM_LOCK_UNLOCKED          SPIN_LOCK_UNLOCKED</span>
-00546 <span class="preprocessor"></span>
-<a name="l00548"></a><a class="code" href="group__rtdmsync.html#ga0">00548</a> <span class="keyword">typedef</span> spinlock_t                  <a class="code" href="group__rtdmsync.html#ga0">rtdm_lock_t</a>;
-00549 
-<a name="l00551"></a><a class="code" href="group__rtdmsync.html#ga1">00551</a> <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>               <a class="code" href="group__rtdmsync.html#ga1">rtdm_lockctx_t</a>;
-00552 
-<a name="l00568"></a><a class="code" href="group__rtdmsync.html#ga22">00568</a> <span class="preprocessor">#define rtdm_lock_init(lock)        spin_lock_init(lock)</span>
-00569 <span class="preprocessor"></span>
-<a name="l00586"></a><a class="code" href="group__rtdmsync.html#ga23">00586</a> <span class="preprocessor">#define rtdm_lock_get(lock)         rthal_spin_lock(lock)</span>
-00587 <span class="preprocessor"></span>
-<a name="l00604"></a><a class="code" href="group__rtdmsync.html#ga24">00604</a> <span class="preprocessor">#define rtdm_lock_put(lock)         rthal_spin_unlock(lock)</span>
-00605 <span class="preprocessor"></span>
-<a name="l00623"></a><a class="code" href="group__rtdmsync.html#ga25">00623</a> <span class="preprocessor">#define rtdm_lock_get_irqsave(lock, context)    \</span>
-00624 <span class="preprocessor">    rthal_spin_lock_irqsave(lock, context)</span>
-00625 <span class="preprocessor"></span>
-<a name="l00643"></a><a class="code" href="group__rtdmsync.html#ga26">00643</a> <span class="preprocessor">#define rtdm_lock_put_irqrestore(lock, context) \</span>
-00644 <span class="preprocessor">    rthal_spin_unlock_irqrestore(lock, context)</span>
-00645 <span class="preprocessor"></span>
-<a name="l00662"></a><a class="code" href="group__rtdmsync.html#ga27">00662</a> <span class="preprocessor">#define rtdm_lock_irqsave(context)              \</span>
-00663 <span class="preprocessor">    rthal_local_irq_save(context)</span>
-00664 <span class="preprocessor"></span>
-<a name="l00681"></a><a class="code" href="group__rtdmsync.html#ga28">00681</a> <span class="preprocessor">#define rtdm_lock_irqrestore(context)           \</span>
-00682 <span class="preprocessor">    rthal_local_irq_restore(context)</span>
-00683 <span class="preprocessor"></span>
-00688 <span class="comment">/* --- Interrupt management services --- */</span>
-00694 <span class="keyword">typedef</span> xnintr_t                    rtdm_irq_t;
-00695 
-<a name="l00702"></a><a class="code" href="group__rtdmirq.html#ga6">00702</a> <span class="preprocessor">#define RTDM_IRQTYPE_SHARED         XN_ISR_SHARED</span>
-00703 <span class="preprocessor"></span>
-<a name="l00705"></a><a class="code" href="group__rtdmirq.html#ga7">00705</a> <span class="preprocessor">#define RTDM_IRQTYPE_EDGE           XN_ISR_EDGE</span>
-00706 <span class="preprocessor"></span>
-<a name="l00715"></a><a class="code" href="group__rtdmirq.html#ga1">00715</a> <span class="keyword">typedef</span> int (*<a class="code" href="group__rtdmirq.html#ga1">rtdm_irq_handler_t</a>)(rtdm_irq_t *irq_handle);
-00716 
-<a name="l00723"></a><a class="code" href="group__rtdmirq.html#ga8">00723</a> <span class="preprocessor">#define RTDM_IRQ_NONE               XN_ISR_NONE</span>
-00724 <span class="preprocessor"></span>
-<a name="l00725"></a><a class="code" href="group__rtdmirq.html#ga9">00725</a> <span class="preprocessor">#define RTDM_IRQ_HANDLED            XN_ISR_HANDLED</span>
-00726 <span class="preprocessor"></span>
-<a name="l00745"></a><a class="code" href="group__rtdmirq.html#ga10">00745</a> <span class="preprocessor">#define rtdm_irq_get_arg(irq_handle, type)  ((type *)irq_handle-&gt;cookie)</span>
-00746 <span class="preprocessor"></span>
-00748 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_irq_request(rtdm_irq_t *irq_handle,
-00749                                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> irq_no,
-00750                                    <a class="code" href="group__rtdmirq.html#ga1">rtdm_irq_handler_t</a> handler,
-00751                                    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> flags,
-00752                                    <span class="keyword">const</span> <span class="keywordtype">char</span> *device_name,
-00753                                    <span class="keywordtype">void</span> *arg)
-00754 {
-00755     <a class="code" href="group__intr.html#ga2">xnintr_init</a>(irq_handle, device_name, irq_no, handler, NULL, flags);
-00756     <span class="keywordflow">return</span> <a class="code" href="group__intr.html#ga4">xnintr_attach</a>(irq_handle, arg);
-00757 }
-00758 
-00759 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_irq_free(rtdm_irq_t *irq_handle)
-00760 {
-00761     <span class="keywordflow">return</span> <a class="code" href="group__intr.html#ga5">xnintr_detach</a>(irq_handle);
-00762 }
-00763 
-00764 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_irq_enable(rtdm_irq_t *irq_handle)
-00765 {
-00766     <span class="keywordflow">return</span> <a class="code" href="group__intr.html#ga6">xnintr_enable</a>(irq_handle);
-00767 }
-00768 
-00769 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_irq_disable(rtdm_irq_t *irq_handle)
-00770 {
-00771     <span class="keywordflow">return</span> <a class="code" href="group__intr.html#ga7">xnintr_disable</a>(irq_handle);
-00772 }
-00773 
+00484 
+00485 <span class="comment">/* --- spin lock services --- */</span>
+<a name="l00528"></a><a class="code" href="group__rtdmsync.html#ga20">00528</a> <span class="preprocessor">#define RTDM_EXECUTE_ATOMICALLY(code_block)                                 \</span>
+00529 <span class="preprocessor">{                                                                           \</span>
+00530 <span class="preprocessor">    spl_t   s;                                                              \</span>
+00531 <span class="preprocessor">                                                                            \</span>
+00532 <span class="preprocessor">    xnlock_get_irqsave(&amp;nklock, s);                                         \</span>
+00533 <span class="preprocessor">    code_block;                                                             \</span>
+00534 <span class="preprocessor">    xnlock_put_irqrestore(&amp;nklock, s);                                      \</span>
+00535 <span class="preprocessor">}</span>
+00536 <span class="preprocessor"></span>
+<a name="l00546"></a><a class="code" href="group__rtdmsync.html#ga21">00546</a> <span class="preprocessor">#define RTDM_LOCK_UNLOCKED          SPIN_LOCK_UNLOCKED</span>
+00547 <span class="preprocessor"></span>
+<a name="l00549"></a><a class="code" href="group__rtdmsync.html#ga0">00549</a> <span class="keyword">typedef</span> spinlock_t                  <a class="code" href="group__rtdmsync.html#ga0">rtdm_lock_t</a>;
+00550 
+<a name="l00552"></a><a class="code" href="group__rtdmsync.html#ga1">00552</a> <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>               <a class="code" href="group__rtdmsync.html#ga1">rtdm_lockctx_t</a>;
+00553 
+<a name="l00569"></a><a class="code" href="group__rtdmsync.html#ga22">00569</a> <span class="preprocessor">#define rtdm_lock_init(lock)        spin_lock_init(lock)</span>
+00570 <span class="preprocessor"></span>
+<a name="l00587"></a><a class="code" href="group__rtdmsync.html#ga23">00587</a> <span class="preprocessor">#define rtdm_lock_get(lock)         rthal_spin_lock(lock)</span>
+00588 <span class="preprocessor"></span>
+<a name="l00605"></a><a class="code" href="group__rtdmsync.html#ga24">00605</a> <span class="preprocessor">#define rtdm_lock_put(lock)         rthal_spin_unlock(lock)</span>
+00606 <span class="preprocessor"></span>
+<a name="l00624"></a><a class="code" href="group__rtdmsync.html#ga25">00624</a> <span class="preprocessor">#define rtdm_lock_get_irqsave(lock, context)    \</span>
+00625 <span class="preprocessor">    rthal_spin_lock_irqsave(lock, context)</span>
+00626 <span class="preprocessor"></span>
+<a name="l00644"></a><a class="code" href="group__rtdmsync.html#ga26">00644</a> <span class="preprocessor">#define rtdm_lock_put_irqrestore(lock, context) \</span>
+00645 <span class="preprocessor">    rthal_spin_unlock_irqrestore(lock, context)</span>
+00646 <span class="preprocessor"></span>
+<a name="l00663"></a><a class="code" href="group__rtdmsync.html#ga27">00663</a> <span class="preprocessor">#define rtdm_lock_irqsave(context)              \</span>
+00664 <span class="preprocessor">    rthal_local_irq_save(context)</span>
+00665 <span class="preprocessor"></span>
+<a name="l00682"></a><a class="code" href="group__rtdmsync.html#ga28">00682</a> <span class="preprocessor">#define rtdm_lock_irqrestore(context)           \</span>
+00683 <span class="preprocessor">    rthal_local_irq_restore(context)</span>
+00684 <span class="preprocessor"></span>
+00689 <span class="comment">/* --- Interrupt management services --- */</span>
+00695 <span class="keyword">typedef</span> xnintr_t                    rtdm_irq_t;
+00696 
+<a name="l00703"></a><a class="code" href="group__rtdmirq.html#ga6">00703</a> <span class="preprocessor">#define RTDM_IRQTYPE_SHARED         XN_ISR_SHARED</span>
+00704 <span class="preprocessor"></span>
+<a name="l00706"></a><a class="code" href="group__rtdmirq.html#ga7">00706</a> <span class="preprocessor">#define RTDM_IRQTYPE_EDGE           XN_ISR_EDGE</span>
+00707 <span class="preprocessor"></span>
+<a name="l00716"></a><a class="code" href="group__rtdmirq.html#ga1">00716</a> <span class="keyword">typedef</span> int (*<a class="code" href="group__rtdmirq.html#ga1">rtdm_irq_handler_t</a>)(rtdm_irq_t *irq_handle);
+00717 
+<a name="l00724"></a><a class="code" href="group__rtdmirq.html#ga8">00724</a> <span class="preprocessor">#define RTDM_IRQ_NONE               XN_ISR_NONE</span>
+00725 <span class="preprocessor"></span>
+<a name="l00726"></a><a class="code" href="group__rtdmirq.html#ga9">00726</a> <span class="preprocessor">#define RTDM_IRQ_HANDLED            XN_ISR_HANDLED</span>
+00727 <span class="preprocessor"></span>
+<a name="l00746"></a><a class="code" href="group__rtdmirq.html#ga10">00746</a> <span class="preprocessor">#define rtdm_irq_get_arg(irq_handle, type)  ((type *)irq_handle-&gt;cookie)</span>
+00747 <span class="preprocessor"></span>
+00749 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_irq_request(rtdm_irq_t *irq_handle,
+00750                                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> irq_no,
+00751                                    <a class="code" href="group__rtdmirq.html#ga1">rtdm_irq_handler_t</a> handler,
+00752                                    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> flags,
+00753                                    <span class="keyword">const</span> <span class="keywordtype">char</span> *device_name,
+00754                                    <span class="keywordtype">void</span> *arg)
+00755 {
+00756     <a class="code" href="group__intr.html#ga2">xnintr_init</a>(irq_handle, device_name, irq_no, handler, NULL, flags);
+00757     <span class="keywordflow">return</span> <a class="code" href="group__intr.html#ga4">xnintr_attach</a>(irq_handle, arg);
+00758 }
+00759 
+00760 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_irq_free(rtdm_irq_t *irq_handle)
+00761 {
+00762     <span class="keywordflow">return</span> <a class="code" href="group__intr.html#ga5">xnintr_detach</a>(irq_handle);
+00763 }
+00764 
+00765 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_irq_enable(rtdm_irq_t *irq_handle)
+00766 {
+00767     <span class="keywordflow">return</span> <a class="code" href="group__intr.html#ga6">xnintr_enable</a>(irq_handle);
+00768 }
+00769 
+00770 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_irq_disable(rtdm_irq_t *irq_handle)
+00771 {
+00772     <span class="keywordflow">return</span> <a class="code" href="group__intr.html#ga7">xnintr_disable</a>(irq_handle);
+00773 }
 00774 
-00775 <span class="comment">/* --- non-real-time signalling services --- */</span>
-00776 
-00782 <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span>                    rtdm_nrtsig_t;
-00783 
-<a name="l00793"></a><a class="code" href="group__nrtsignal.html#ga1">00793</a> <span class="keyword">typedef</span> void (*<a class="code" href="group__nrtsignal.html#ga1">rtdm_nrtsig_handler_t</a>)(rtdm_nrtsig_t nrt_sig);
-00797 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig,
-00798                                    <a class="code" href="group__nrtsignal.html#ga1">rtdm_nrtsig_handler_t</a> handler)
-00799 {
-00800     *nrt_sig = rthal_alloc_virq();
-00801 
-00802     <span class="keywordflow">if</span> (*nrt_sig == 0)
-00803         <span class="keywordflow">return</span> -EAGAIN;
-00804 
-00805     rthal_virtualize_irq(rthal_root_domain, *nrt_sig, (rthal_irq_handler_t)handler, NULL, NULL,
-00806                          IPIPE_HANDLE_MASK);
-00807     <span class="keywordflow">return</span> 0;
-00808 }
-00809 
-00810 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_nrtsig_destroy(rtdm_nrtsig_t *nrt_sig)
-00811 {
-00812     rthal_free_virq(*nrt_sig);
-00813 }
-00814 
-00815 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig)
-00816 {
-00817     rthal_trigger_irq(*nrt_sig);
-00818 }
-00819 
+00775 
+00776 <span class="comment">/* --- non-real-time signalling services --- */</span>
+00777 
+00783 <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span>                    rtdm_nrtsig_t;
+00784 
+<a name="l00794"></a><a class="code" href="group__nrtsignal.html#ga1">00794</a> <span class="keyword">typedef</span> void (*<a class="code" href="group__nrtsignal.html#ga1">rtdm_nrtsig_handler_t</a>)(rtdm_nrtsig_t nrt_sig);
+00798 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig,
+00799                                    <a class="code" href="group__nrtsignal.html#ga1">rtdm_nrtsig_handler_t</a> handler)
+00800 {
+00801     *nrt_sig = rthal_alloc_virq();
+00802 
+00803     <span class="keywordflow">if</span> (*nrt_sig == 0)
+00804         <span class="keywordflow">return</span> -EAGAIN;
+00805 
+00806     rthal_virtualize_irq(rthal_root_domain, *nrt_sig, (rthal_irq_handler_t)handler, NULL, NULL,
+00807                          IPIPE_HANDLE_MASK);
+00808     <span class="keywordflow">return</span> 0;
+00809 }
+00810 
+00811 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_nrtsig_destroy(rtdm_nrtsig_t *nrt_sig)
+00812 {
+00813     rthal_free_virq(*nrt_sig);
+00814 }
+00815 
+00816 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig)
+00817 {
+00818     rthal_trigger_irq(*nrt_sig);
+00819 }
 00820 
-00821 <span class="comment">/* --- task and timing services --- */</span>
-00827 <span class="keyword">typedef</span> xnthread_t                  rtdm_task_t;
-00828 
-<a name="l00834"></a><a class="code" href="group__rtdmtask.html#ga1">00834</a> <span class="keyword">typedef</span> void (*<a class="code" href="group__rtdmtask.html#ga1">rtdm_task_proc_t</a>)(<span class="keywordtype">void</span> *arg);
-00835 
+00821 
+00822 <span class="comment">/* --- task and timing services --- */</span>
+00828 <span class="keyword">typedef</span> xnthread_t                  rtdm_task_t;
+00829 
+<a name="l00835"></a><a class="code" href="group__rtdmtask.html#ga1">00835</a> <span class="keyword">typedef</span> void (*<a class="code" href="group__rtdmtask.html#ga1">rtdm_task_proc_t</a>)(<span class="keywordtype">void</span> *arg);
 00836 
-00841 <span class="preprocessor">#define RTDM_TASK_LOWEST_PRIORITY   XNCORE_LOW_PRIO</span>
-00842 <span class="preprocessor"></span><span class="preprocessor">#define RTDM_TASK_HIGHEST_PRIORITY  XNCORE_HIGH_PRIO</span>
-00843 <span class="preprocessor"></span>
-00849 <span class="preprocessor">#define RTDM_TASK_RAISE_PRIORITY    (+1)</span>
-00850 <span class="preprocessor"></span><span class="preprocessor">#define RTDM_TASK_LOWER_PRIORITY    (-1)</span>
-00851 <span class="preprocessor"></span>
-00855 <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#ga2">rtdm_task_init</a>(rtdm_task_t *task, <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
-00856                    <a class="code" href="group__rtdmtask.html#ga1">rtdm_task_proc_t</a> task_proc, <span class="keywordtype">void</span> *arg,
-00857                    <span class="keywordtype">int</span> priority, uint64_t period);
-00858 
-00859 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_task_destroy(rtdm_task_t *task)
-00860 {
-00861     <a class="code" href="group__pod.html#ga33">xnpod_delete_thread</a>(task);
-00862 }
-00863 
-00864 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#ga9">rtdm_task_join_nrt</a>(rtdm_task_t *task, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> poll_delay);
-00865 
-00866 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_task_set_priority(rtdm_task_t *task, <span class="keywordtype">int</span> priority)
-00867 {
-00868     <a class="code" href="group__pod.html#ga38">xnpod_renice_thread</a>(task, priority);
-00869     <a class="code" href="group__pod.html#ga41">xnpod_schedule</a>();
-00870 }
-00871 
-00872 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_task_set_period(rtdm_task_t *task, uint64_t period)
-00873 {
-00874     <span class="keywordflow">return</span> <a class="code" href="group__pod.html#ga49">xnpod_set_thread_periodic</a>(task, XN_INFINITE,
-00875                                      xnpod_ns2ticks(period));
-00876 }
-00877 
-00878 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_task_unblock(rtdm_task_t *task)
-00879 {
-00880     <span class="keywordtype">int</span> res = <a class="code" href="group__pod.html#ga37">xnpod_unblock_thread</a>(task);
-00881 
-00882     <a class="code" href="group__pod.html#ga41">xnpod_schedule</a>();
-00883     <span class="keywordflow">return</span> res;
-00884 }
-00885 
-00886 <span class="keyword">static</span> <span class="keyword">inline</span> rtdm_task_t *rtdm_task_current(<span class="keywordtype">void</span>)
-00887 {
-00888     <span class="keywordflow">return</span> xnpod_current_thread();
-00889 }
-00890 
-00891 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_task_wait_period(<span class="keywordtype">void</span>)
-00892 {
-00893     <span class="keywordflow">return</span> <a class="code" href="group__pod.html#ga50">xnpod_wait_thread_period</a>(NULL);
-00894 }
-00895 
-00896 <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#ga10">rtdm_task_sleep</a>(uint64_t delay);
-00897 <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#ga11">rtdm_task_sleep_until</a>(uint64_t wakeup_time);
-00898 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#ga12">rtdm_task_busy_sleep</a>(uint64_t delay);
-00899 
+00837 
+00842 <span class="preprocessor">#define RTDM_TASK_LOWEST_PRIORITY   XNCORE_LOW_PRIO</span>
+00843 <span class="preprocessor"></span><span class="preprocessor">#define RTDM_TASK_HIGHEST_PRIORITY  XNCORE_HIGH_PRIO</span>
+00844 <span class="preprocessor"></span>
+00850 <span class="preprocessor">#define RTDM_TASK_RAISE_PRIORITY    (+1)</span>
+00851 <span class="preprocessor"></span><span class="preprocessor">#define RTDM_TASK_LOWER_PRIORITY    (-1)</span>
+00852 <span class="preprocessor"></span>
+00856 <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#ga2">rtdm_task_init</a>(rtdm_task_t *task, <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
+00857                    <a class="code" href="group__rtdmtask.html#ga1">rtdm_task_proc_t</a> task_proc, <span class="keywordtype">void</span> *arg,
+00858                    <span class="keywordtype">int</span> priority, uint64_t period);
+00859 
+00860 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_task_destroy(rtdm_task_t *task)
+00861 {
+00862     <a class="code" href="group__pod.html#ga34">xnpod_delete_thread</a>(task);
+00863 }
+00864 
+00865 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#ga9">rtdm_task_join_nrt</a>(rtdm_task_t *task, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> poll_delay);
+00866 
+00867 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_task_set_priority(rtdm_task_t *task, <span class="keywordtype">int</span> priority)
+00868 {
+00869     <a class="code" href="group__pod.html#ga39">xnpod_renice_thread</a>(task, priority);
+00870     <a class="code" href="group__pod.html#ga42">xnpod_schedule</a>();
+00871 }
+00872 
+00873 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_task_set_period(rtdm_task_t *task, uint64_t period)
+00874 {
+00875     <span class="keywordflow">return</span> <a class="code" href="group__pod.html#ga50">xnpod_set_thread_periodic</a>(task, XN_INFINITE,
+00876                                      xnpod_ns2ticks(period));
+00877 }
+00878 
+00879 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_task_unblock(rtdm_task_t *task)
+00880 {
+00881     <span class="keywordtype">int</span> res = <a class="code" href="group__pod.html#ga38">xnpod_unblock_thread</a>(task);
+00882 
+00883     <a class="code" href="group__pod.html#ga42">xnpod_schedule</a>();
+00884     <span class="keywordflow">return</span> res;
+00885 }
+00886 
+00887 <span class="keyword">static</span> <span class="keyword">inline</span> rtdm_task_t *rtdm_task_current(<span class="keywordtype">void</span>)
+00888 {
+00889     <span class="keywordflow">return</span> xnpod_current_thread();
+00890 }
+00891 
+00892 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_task_wait_period(<span class="keywordtype">void</span>)
+00893 {
+00894     <span class="keywordflow">return</span> <a class="code" href="group__pod.html#ga51">xnpod_wait_thread_period</a>(NULL);
+00895 }
+00896 
+00897 <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#ga10">rtdm_task_sleep</a>(uint64_t delay);
+00898 <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#ga11">rtdm_task_sleep_until</a>(uint64_t wakeup_time);
+00899 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#ga12">rtdm_task_busy_sleep</a>(uint64_t delay);
 00900 
-00901 <span class="comment">/* --- timeout sequences */</span>
-00902 
-00903 <span class="keyword">typedef</span> uint64_t                    rtdm_toseq_t;
-00904 
-00905 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_toseq_init(rtdm_toseq_t *timeout_seq, int64_t timeout)
-00906 {
-00907     *timeout_seq = <a class="code" href="group__pod.html#ga51">xnpod_get_time</a>() + xnpod_ns2ticks(timeout);
-00908 }
-00909 
+00901 
+00902 <span class="comment">/* --- timeout sequences */</span>
+00903 
+00904 <span class="keyword">typedef</span> uint64_t                    rtdm_toseq_t;
+00905 
+00906 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_toseq_init(rtdm_toseq_t *timeout_seq, int64_t timeout)
+00907 {
+00908     *timeout_seq = <a class="code" href="group__pod.html#ga52">xnpod_get_time</a>() + xnpod_ns2ticks(timeout);
+00909 }
 00910 
-00911 <span class="comment">/* --- event services --- */</span>
-00912 
-00913 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
-00914     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>                   pending;
-00915     xnsynch_t                       synch_base;
-00916 } rtdm_event_t;
-00917 
-00918 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_event_init(rtdm_event_t *event, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> pending)
-00919 {
-00920     event-&gt;pending = pending;
-00921     <a class="code" href="group__synch.html#ga0">xnsynch_init</a>(&amp;event-&gt;synch_base, XNSYNCH_PRIO);
-00922 }
-00923 
-00924 <span class="keywordtype">void</span> _rtdm_synch_flush(xnsynch_t *synch, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> reason);
-00925 
-00926 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_event_destroy(rtdm_event_t *event)
-00927 {
-00928     _rtdm_synch_flush(&amp;event-&gt;synch_base, XNRMID);
-00929 }
-00930 
-00931 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga8">rtdm_event_wait</a>(rtdm_event_t *event);
-00932 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga9">rtdm_event_timedwait</a>(rtdm_event_t *event, int64_t timeout,
-00933                          rtdm_toseq_t *timeout_seq);
-00934 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga7">rtdm_event_signal</a>(rtdm_event_t *event);
-00935 
-00936 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_event_pulse(rtdm_event_t *event)
-00937 {
-00938     _rtdm_synch_flush(&amp;event-&gt;synch_base, 0);
-00939 }
-00940 
-00941 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_event_clear(rtdm_event_t *event)
-00942 {
-00943     event-&gt;pending = 0;
-00944 }
-00945 
+00911 
+00912 <span class="comment">/* --- event services --- */</span>
+00913 
+00914 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
+00915     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>                   pending;
+00916     xnsynch_t                       synch_base;
+00917 } rtdm_event_t;
+00918 
+00919 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_event_init(rtdm_event_t *event, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> pending)
+00920 {
+00921     event-&gt;pending = pending;
+00922     <a class="code" href="group__synch.html#ga0">xnsynch_init</a>(&amp;event-&gt;synch_base, XNSYNCH_PRIO);
+00923 }
+00924 
+00925 <span class="keywordtype">void</span> _rtdm_synch_flush(xnsynch_t *synch, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> reason);
+00926 
+00927 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_event_destroy(rtdm_event_t *event)
+00928 {
+00929     _rtdm_synch_flush(&amp;event-&gt;synch_base, XNRMID);
+00930 }
+00931 
+00932 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga8">rtdm_event_wait</a>(rtdm_event_t *event);
+00933 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga9">rtdm_event_timedwait</a>(rtdm_event_t *event, int64_t timeout,
+00934                          rtdm_toseq_t *timeout_seq);
+00935 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga7">rtdm_event_signal</a>(rtdm_event_t *event);
+00936 
+00937 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_event_pulse(rtdm_event_t *event)
+00938 {
+00939     _rtdm_synch_flush(&amp;event-&gt;synch_base, 0);
+00940 }
+00941 
+00942 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_event_clear(rtdm_event_t *event)
+00943 {
+00944     event-&gt;pending = 0;
+00945 }
 00946 
-00947 <span class="comment">/* --- semaphore services --- */</span>
-00948 
-00949 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
-00950     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>                   value;
-00951     xnsynch_t                       synch_base;
-00952 } rtdm_sem_t;
-00953 
-00954 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_sem_init(rtdm_sem_t *sem, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> value)
-00955 {
-00956     sem-&gt;value = value;
-00957     <a class="code" href="group__synch.html#ga0">xnsynch_init</a>(&amp;sem-&gt;synch_base, XNSYNCH_PRIO);
-00958 }
-00959 
-00960 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_sem_destroy(rtdm_sem_t *sem)
-00961 {
-00962     _rtdm_synch_flush(&amp;sem-&gt;synch_base, XNRMID);
-00963 }
-00964 
-00965 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga12">rtdm_sem_down</a>(rtdm_sem_t *sem);
-00966 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga13">rtdm_sem_timeddown</a>(rtdm_sem_t *sem, int64_t timeout,
-00967                        rtdm_toseq_t *timeout_seq);
-00968 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga14">rtdm_sem_up</a>(rtdm_sem_t *sem);
-00969 
+00947 
+00948 <span class="comment">/* --- semaphore services --- */</span>
+00949 
+00950 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
+00951     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>                   value;
+00952     xnsynch_t                       synch_base;
+00953 } rtdm_sem_t;
+00954 
+00955 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_sem_init(rtdm_sem_t *sem, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> value)
+00956 {
+00957     sem-&gt;value = value;
+00958     <a class="code" href="group__synch.html#ga0">xnsynch_init</a>(&amp;sem-&gt;synch_base, XNSYNCH_PRIO);
+00959 }
+00960 
+00961 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_sem_destroy(rtdm_sem_t *sem)
+00962 {
+00963     _rtdm_synch_flush(&amp;sem-&gt;synch_base, XNRMID);
+00964 }
+00965 
+00966 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga12">rtdm_sem_down</a>(rtdm_sem_t *sem);
+00967 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga13">rtdm_sem_timeddown</a>(rtdm_sem_t *sem, int64_t timeout,
+00968                        rtdm_toseq_t *timeout_seq);
+00969 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga14">rtdm_sem_up</a>(rtdm_sem_t *sem);
 00970 
-00971 <span class="comment">/* --- mutex services --- */</span>
-00972 
-00973 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
-00974     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>                   locked;
-00975     xnsynch_t                       synch_base;
-00976 } rtdm_mutex_t;
-00977 
-00978 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_mutex_init(rtdm_mutex_t *mutex)
-00979 {
-00980     mutex-&gt;locked = 0;
-00981     <a class="code" href="group__synch.html#ga0">xnsynch_init</a>(&amp;mutex-&gt;synch_base, XNSYNCH_PRIO|XNSYNCH_PIP);
-00982 }
-00983 
-00984 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_mutex_destroy(rtdm_mutex_t *mutex)
-00985 {
-00986     _rtdm_synch_flush(&amp;mutex-&gt;synch_base, XNRMID);
-00987 }
-00988 
-00989 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga17">rtdm_mutex_lock</a>(rtdm_mutex_t *mutex);
-00990 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga18">rtdm_mutex_timedlock</a>(rtdm_mutex_t *mutex, int64_t timeout,
-00991                          rtdm_toseq_t *timeout_seq);
-00992 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga19">rtdm_mutex_unlock</a>(rtdm_mutex_t *mutex);
-00993 
+00971 
+00972 <span class="comment">/* --- mutex services --- */</span>
+00973 
+00974 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
+00975     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>                   locked;
+00976     xnsynch_t                       synch_base;
+00977 } rtdm_mutex_t;
+00978 
+00979 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_mutex_init(rtdm_mutex_t *mutex)
+00980 {
+00981     mutex-&gt;locked = 0;
+00982     <a class="code" href="group__synch.html#ga0">xnsynch_init</a>(&amp;mutex-&gt;synch_base, XNSYNCH_PRIO|XNSYNCH_PIP);
+00983 }
+00984 
+00985 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_mutex_destroy(rtdm_mutex_t *mutex)
+00986 {
+00987     _rtdm_synch_flush(&amp;mutex-&gt;synch_base, XNRMID);
+00988 }
+00989 
+00990 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga17">rtdm_mutex_lock</a>(rtdm_mutex_t *mutex);
+00991 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga18">rtdm_mutex_timedlock</a>(rtdm_mutex_t *mutex, int64_t timeout,
+00992                          rtdm_toseq_t *timeout_seq);
+00993 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga19">rtdm_mutex_unlock</a>(rtdm_mutex_t *mutex);
 00994 
-00995 <span class="comment">/* --- utility functions --- */</span>
-00996 
-00997 <span class="preprocessor">#define rtdm_printk(format, ...)    printk(format, ##__VA_ARGS__)</span>
-00998 <span class="preprocessor"></span>
-00999 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> *rtdm_malloc(size_t size)
-01000 {
-01001     <span class="keywordflow">return</span> xnmalloc(size);
-01002 }
-01003 
-01004 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_free(<span class="keywordtype">void</span> *ptr)
-01005 {
-01006     xnfree(ptr);
-01007 }
-01008 
-01009 <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga2">rtdm_mmap_to_user</a>(rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *src_addr, size_t len,
-01010                       <span class="keywordtype">int</span> prot, <span class="keywordtype">void</span> **pptr,
-01011                       <span class="keyword">struct</span> vm_operations_struct *vm_ops,
-01012                       <span class="keywordtype">void</span> *vm_private_data);
-01013 <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga3">rtdm_munmap</a>(rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *ptr, size_t len);
-01014 
-01015 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_read_user_ok(rtdm_user_info_t *user_info,
-01016                                     <span class="keyword">const</span> <span class="keywordtype">void</span> __user *ptr, size_t size)
-01017 {
-01018     <span class="keywordflow">return</span> __xn_access_ok(user_info, VERIFY_READ, ptr, size);
-01019 }
-01020 
-01021 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_rw_user_ok(rtdm_user_info_t *user_info,
-01022                                   <span class="keyword">const</span> <span class="keywordtype">void</span> __user *ptr, size_t size)
-01023 {
-01024     <span class="keywordflow">return</span> __xn_access_ok(user_info, VERIFY_WRITE, ptr, size);
-01025 }
-01026 
-01027 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_copy_from_user(rtdm_user_info_t *user_info,
-01028                                       <span class="keywordtype">void</span> *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> __user *src,
-01029                                       size_t size)
-01030 {
-01031     <span class="keywordflow">return</span> __xn_copy_from_user(user_info, dst, src, size);
-01032 }
-01033 
-01034 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_copy_to_user(rtdm_user_info_t *user_info,
-01035                                     <span class="keywordtype">void</span> __user *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> *src,
-01036                                     size_t size)
-01037 {
-01038     <span class="keywordflow">return</span> __xn_copy_to_user(user_info, dst, src, size);
-01039 }
-01040 
-01041 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_strncpy_from_user(rtdm_user_info_t *user_info,
-01042                                          <span class="keywordtype">char</span> *dst,
-01043                                          <span class="keyword">const</span> <span class="keywordtype">char</span> __user *src,
-01044                                          size_t count)
-01045 {
-01046     <span class="keywordflow">if</span> (unlikely(__xn_access_ok(user_info, VERIFY_READ, src, 1)))
-01047         <span class="keywordflow">return</span> -EFAULT;
-01048     <span class="keywordflow">return</span> __xn_strncpy_from_user(user_info, dst, src, count);
-01049 }
-01050 
-01051 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_in_rt_context(<span class="keywordtype">void</span>)
-01052 {
-01053     <span class="keywordflow">return</span> (rthal_current_domain != rthal_root_domain);
-01054 }
-01055 
-01056 <span class="keywordtype">int</span> rtdm_exec_in_rt(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context,
-01057                     rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *arg,
-01058                     rtdm_rt_handler_t handler);
-01059 
-01060 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DRIVER_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Wed Mar 15 15:47:44 2006 for Xenomai API by&nbsp;
+00995 
+00996 <span class="comment">/* --- utility functions --- */</span>
+00997 
+00998 <span class="preprocessor">#define rtdm_printk(format, ...)    printk(format, ##__VA_ARGS__)</span>
+00999 <span class="preprocessor"></span>
+01000 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> *rtdm_malloc(size_t size)
+01001 {
+01002     <span class="keywordflow">return</span> xnmalloc(size);
+01003 }
+01004 
+01005 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_free(<span class="keywordtype">void</span> *ptr)
+01006 {
+01007     xnfree(ptr);
+01008 }
+01009 
+01010 <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga2">rtdm_mmap_to_user</a>(rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *src_addr, size_t len,
+01011                       <span class="keywordtype">int</span> prot, <span class="keywordtype">void</span> **pptr,
+01012                       <span class="keyword">struct</span> vm_operations_struct *vm_ops,
+01013                       <span class="keywordtype">void</span> *vm_private_data);
+01014 <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga3">rtdm_munmap</a>(rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *ptr, size_t len);
+01015 
+01016 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_read_user_ok(rtdm_user_info_t *user_info,
+01017                                     <span class="keyword">const</span> <span class="keywordtype">void</span> __user *ptr, size_t size)
+01018 {
+01019     <span class="keywordflow">return</span> __xn_access_ok(user_info, VERIFY_READ, ptr, size);
+01020 }
+01021 
+01022 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_rw_user_ok(rtdm_user_info_t *user_info,
+01023                                   <span class="keyword">const</span> <span class="keywordtype">void</span> __user *ptr, size_t size)
+01024 {
+01025     <span class="keywordflow">return</span> __xn_access_ok(user_info, VERIFY_WRITE, ptr, size);
+01026 }
+01027 
+01028 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_copy_from_user(rtdm_user_info_t *user_info,
+01029                                       <span class="keywordtype">void</span> *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> __user *src,
+01030                                       size_t size)
+01031 {
+01032     <span class="keywordflow">return</span> __xn_copy_from_user(user_info, dst, src, size);
+01033 }
+01034 
+01035 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_copy_to_user(rtdm_user_info_t *user_info,
+01036                                     <span class="keywordtype">void</span> __user *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> *src,
+01037                                     size_t size)
+01038 {
+01039     <span class="keywordflow">return</span> __xn_copy_to_user(user_info, dst, src, size);
+01040 }
+01041 
+01042 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_strncpy_from_user(rtdm_user_info_t *user_info,
+01043                                          <span class="keywordtype">char</span> *dst,
+01044                                          <span class="keyword">const</span> <span class="keywordtype">char</span> __user *src,
+01045                                          size_t count)
+01046 {
+01047     <span class="keywordflow">if</span> (unlikely(__xn_access_ok(user_info, VERIFY_READ, src, 1)))
+01048         <span class="keywordflow">return</span> -EFAULT;
+01049     <span class="keywordflow">return</span> __xn_strncpy_from_user(user_info, dst, src, count);
+01050 }
+01051 
+01052 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_in_rt_context(<span class="keywordtype">void</span>)
+01053 {
+01054     <span class="keywordflow">return</span> (rthal_current_domain != rthal_root_domain);
+01055 }
+01056 
+01057 <span class="keywordtype">int</span> rtdm_exec_in_rt(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context,
+01058                     rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *arg,
+01059                     rtdm_rt_handler_t handler);
+01060 
+01061 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DRIVER_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:49 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

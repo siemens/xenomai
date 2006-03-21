@@ -336,7 +336,7 @@ This service atomically unlocks the mutex <em>mx</em>, and block the calling thr
 Spurious wakeups occur if a signal is delivered to the blocked thread, so, an application should not assume that the condition changed upon successful return from this service.<p>
 Even if the mutex <em>mx</em> is recursive and its recursion count is greater than one on entry, it is unlocked before blocking the caller, and the recursion count is restored once the mutex is re-acquired by this service before returning.<p>
 Once a thread is blocked on a condition variable, a dynamic binding is formed between the condition vairable <em>cnd</em> and the mutex <em>mx</em>; if another thread calls this service specifying <em>cnd</em> as a condition variable but another mutex than <em>mx</em>, this service returns immediately with the EINVAL status.<p>
-This service is a cancellation point for Xenomai POSIX skin threads (created with the <a class="el" href="group__posix__thread.html#ga8">pthread_create()</a> service). When such a thread is cancelled while blocked in a call to this service, the mutex <em>mx</em> is re-acquired before the cancellation cleanup handlers are called.<p>
+This service is a cancellation point for Xenomai POSIX skin threads (created with the <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a> service). When such a thread is cancelled while blocked in a call to this service, the mutex <em>mx</em> is re-acquired before the cancellation cleanup handlers are called.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>cnd</em>&nbsp;</td><td>the condition variable to wait for;</td></tr>
@@ -554,7 +554,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Wed Mar 15 15:48:45 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:58 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

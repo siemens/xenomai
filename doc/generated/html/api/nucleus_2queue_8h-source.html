@@ -10,751 +10,773 @@
 <a class="el" href="dir_000000.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000006.html">nucleus</a></div>
 <h1>queue.h</h1><div class="fragment"><pre class="fragment">00001 <span class="comment">/*</span>
 00002 <span class="comment"> * Copyright (C) 2001,2002,2003 Philippe Gerum &lt;rpm@xenomai.org&gt;.</span>
-00003 <span class="comment"> *</span>
-00004 <span class="comment"> * Xenomai is free software; you can redistribute it and/or modify</span>
-00005 <span class="comment"> * it under the terms of the GNU General Public License as published</span>
-00006 <span class="comment"> * by the Free Software Foundation; either version 2 of the License,</span>
-00007 <span class="comment"> * or (at your option) any later version.</span>
-00008 <span class="comment"> *</span>
-00009 <span class="comment"> * Xenomai is distributed in the hope that it will be useful, but</span>
-00010 <span class="comment"> * WITHOUT ANY WARRANTY; without even the implied warranty of</span>
-00011 <span class="comment"> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</span>
-00012 <span class="comment"> * General Public License for more details.</span>
-00013 <span class="comment"> *</span>
-00014 <span class="comment"> * You should have received a copy of the GNU General Public License</span>
-00015 <span class="comment"> * along with Xenomai; if not, write to the Free Software</span>
-00016 <span class="comment"> * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</span>
-00017 <span class="comment"> * 02111-1307, USA.</span>
-00018 <span class="comment"> */</span>
-00019 
-00020 <span class="preprocessor">#ifndef _XENO_NUCLEUS_QUEUE_H</span>
-00021 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_NUCLEUS_QUEUE_H</span>
-00022 <span class="preprocessor"></span>
-00023 <span class="preprocessor">#include &lt;nucleus/types.h&gt;</span>
-00024 
-00025 <span class="comment">/* Basic element holder */</span>
+00003 <span class="comment"> * Copyright (C) 2005 Dmitry Adamushko &lt;dmitry.adamushko@gmail.com&gt;</span>
+00004 <span class="comment"> *</span>
+00005 <span class="comment"> * Xenomai is free software; you can redistribute it and/or modify</span>
+00006 <span class="comment"> * it under the terms of the GNU General Public License as published</span>
+00007 <span class="comment"> * by the Free Software Foundation; either version 2 of the License,</span>
+00008 <span class="comment"> * or (at your option) any later version.</span>
+00009 <span class="comment"> *</span>
+00010 <span class="comment"> * Xenomai is distributed in the hope that it will be useful, but</span>
+00011 <span class="comment"> * WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+00012 <span class="comment"> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</span>
+00013 <span class="comment"> * General Public License for more details.</span>
+00014 <span class="comment"> *</span>
+00015 <span class="comment"> * You should have received a copy of the GNU General Public License</span>
+00016 <span class="comment"> * along with Xenomai; if not, write to the Free Software</span>
+00017 <span class="comment"> * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</span>
+00018 <span class="comment"> * 02111-1307, USA.</span>
+00019 <span class="comment"> */</span>
+00020 
+00021 <span class="preprocessor">#ifndef _XENO_NUCLEUS_QUEUE_H</span>
+00022 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_NUCLEUS_QUEUE_H</span>
+00023 <span class="preprocessor"></span>
+00024 <span class="preprocessor">#include &lt;nucleus/types.h&gt;</span>
+00025 <span class="preprocessor">#include &lt;nucleus/core.h&gt;</span>
 00026 
-00027 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnholder {
+00027 <span class="comment">/* Basic element holder */</span>
 00028 
-00029     <span class="keyword">struct </span>xnholder *next;
-00030     <span class="keyword">struct </span>xnholder *last;
-00031 
-00032 } xnholder_t;
+00029 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnholder {
+00030 
+00031     <span class="keyword">struct </span>xnholder *next;
+00032     <span class="keyword">struct </span>xnholder *last;
 00033 
-00034 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> inith (xnholder_t *holder) {
-00035     <span class="comment">/* Holding queues are doubly-linked and circular */</span>
-00036     holder-&gt;last = holder;
-00037     holder-&gt;next = holder;
-00038 }
-00039 
-00040 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> ath (xnholder_t *head,
-00041                         xnholder_t *holder) {
-00042     <span class="comment">/* Inserts the new element right after the heading one  */</span>
-00043     holder-&gt;last = head;
-00044     holder-&gt;next = head-&gt;next;
-00045     holder-&gt;next-&gt;last = holder;
-00046     head-&gt;next = holder;
-00047 }
-00048 
-00049 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> dth (xnholder_t *holder) {
-00050     holder-&gt;last-&gt;next = holder-&gt;next;
-00051     holder-&gt;next-&gt;last = holder-&gt;last;
-00052 }
-00053 
-00054 <span class="comment">/* Basic element queue */</span>
+00034 } xnholder_t;
+00035 
+00036 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> inith (xnholder_t *holder) {
+00037     <span class="comment">/* Holding queues are doubly-linked and circular */</span>
+00038     holder-&gt;last = holder;
+00039     holder-&gt;next = holder;
+00040 }
+00041 
+00042 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> ath (xnholder_t *head,
+00043                         xnholder_t *holder) {
+00044     <span class="comment">/* Inserts the new element right after the heading one  */</span>
+00045     holder-&gt;last = head;
+00046     holder-&gt;next = head-&gt;next;
+00047     holder-&gt;next-&gt;last = holder;
+00048     head-&gt;next = holder;
+00049 }
+00050 
+00051 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> dth (xnholder_t *holder) {
+00052     holder-&gt;last-&gt;next = holder-&gt;next;
+00053     holder-&gt;next-&gt;last = holder-&gt;last;
+00054 }
 00055 
-00056 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnqueue {
+00056 <span class="comment">/* Basic element queue */</span>
 00057 
-00058     xnholder_t head;
-00059     <span class="keywordtype">int</span> elems;
-00060 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_DEBUG_QUEUES) &amp;&amp; defined(CONFIG_SMP)</span>
-00061 <span class="preprocessor"></span>    xnlock_t lock;
-00062 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_DEBUG_QUEUES &amp;&amp; CONFIG_SMP */</span>
-00063 
-00064 } xnqueue_t;
+00058 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnqueue {
+00059 
+00060     xnholder_t head;
+00061     <span class="keywordtype">int</span> elems;
+00062 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_DEBUG_QUEUES) &amp;&amp; defined(CONFIG_SMP)</span>
+00063 <span class="preprocessor"></span>    xnlock_t lock;
+00064 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_DEBUG_QUEUES &amp;&amp; CONFIG_SMP */</span>
 00065 
-00066 <span class="preprocessor">#if defined(CONFIG_XENO_OPT_DEBUG_QUEUES) &amp;&amp; defined(CONFIG_SMP)</span>
-00067 <span class="preprocessor"></span><span class="preprocessor">#define DECLARE_XNQUEUE(q) xnqueue_t q = { { &amp;(q).head, &amp;(q).head }, 0, XNARCH_LOCK_UNLOCKED }</span>
-00068 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !(CONFIG_XENO_OPT_DEBUG_QUEUES &amp;&amp; CONFIG_SMP) */</span>
-00069 <span class="preprocessor">#define DECLARE_XNQUEUE(q) xnqueue_t q = { { &amp;(q).head, &amp;(q).head }, 0 }</span>
-00070 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_DEBUG_QUEUES &amp;&amp; CONFIG_SMP */</span>
-00071 
-00072 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> initq (xnqueue_t *qslot) {
-00073     inith(&amp;qslot-&gt;head);
-00074     qslot-&gt;elems = 0;
-00075 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_DEBUG_QUEUES) &amp;&amp; defined(CONFIG_SMP)</span>
-00076 <span class="preprocessor"></span>    xnlock_init(&amp;qslot-&gt;lock);
-00077 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_DEBUG_QUEUES &amp;&amp; CONFIG_SMP */</span>
-00078 }
-00079 
-00080 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_DEBUG_QUEUES</span>
-00081 <span class="preprocessor"></span>
-00082 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)</span>
+00066 } xnqueue_t;
+00067 
+00068 <span class="preprocessor">#if defined(CONFIG_XENO_OPT_DEBUG_QUEUES) &amp;&amp; defined(CONFIG_SMP)</span>
+00069 <span class="preprocessor"></span><span class="preprocessor">#define DECLARE_XNQUEUE(q) xnqueue_t q = { { &amp;(q).head, &amp;(q).head }, 0, XNARCH_LOCK_UNLOCKED }</span>
+00070 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !(CONFIG_XENO_OPT_DEBUG_QUEUES &amp;&amp; CONFIG_SMP) */</span>
+00071 <span class="preprocessor">#define DECLARE_XNQUEUE(q) xnqueue_t q = { { &amp;(q).head, &amp;(q).head }, 0 }</span>
+00072 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_DEBUG_QUEUES &amp;&amp; CONFIG_SMP */</span>
+00073 
+00074 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> initq (xnqueue_t *qslot) {
+00075     inith(&amp;qslot-&gt;head);
+00076     qslot-&gt;elems = 0;
+00077 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_DEBUG_QUEUES) &amp;&amp; defined(CONFIG_SMP)</span>
+00078 <span class="preprocessor"></span>    xnlock_init(&amp;qslot-&gt;lock);
+00079 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_DEBUG_QUEUES &amp;&amp; CONFIG_SMP */</span>
+00080 }
+00081 
+00082 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_DEBUG_QUEUES</span>
 00083 <span class="preprocessor"></span>
-00084 <span class="preprocessor">#define XENO_DEBUG_CHECK_QUEUE(__qslot)         \</span>
-00085 <span class="preprocessor">do { \</span>
-00086 <span class="preprocessor">    xnholder_t *curr; \</span>
-00087 <span class="preprocessor">    spl_t s; \</span>
-00088 <span class="preprocessor">    int nelems = 0; \</span>
-00089 <span class="preprocessor">    xnlock_get_irqsave(&amp;(__qslot)-&gt;lock,s);     \</span>
-00090 <span class="preprocessor">    curr = (__qslot)-&gt;head.last;                                  \</span>
-00091 <span class="preprocessor">    while (curr != &amp;(__qslot)-&gt;head &amp;&amp; nelems &lt; (__qslot)-&gt;elems)       \</span>
-00092 <span class="preprocessor">        curr = curr-&gt;last, nelems++; \</span>
-00093 <span class="preprocessor">    if (curr != &amp;(__qslot)-&gt;head || nelems != (__qslot)-&gt;elems)   \</span>
-00094 <span class="preprocessor">        xnpod_fatal("corrupted queue, qslot-&gt;elems=%d, qslot=%p at %s:%d", \</span>
-00095 <span class="preprocessor">                    (__qslot)-&gt;elems,                             \</span>
-00096 <span class="preprocessor">                    __qslot,                                      \</span>
-00097 <span class="preprocessor">                    __FILE__,__LINE__);                           \</span>
-00098 <span class="preprocessor">    xnlock_put_irqrestore(&amp;(__qslot)-&gt;lock,s);  \</span>
-00099 <span class="preprocessor">} while(0)</span>
-00100 <span class="preprocessor"></span>
-00101 <span class="preprocessor">#define XENO_DEBUG_INSERT_QUEUE(__qslot,__holder)               \</span>
-00102 <span class="preprocessor">do { \</span>
-00103 <span class="preprocessor">    xnholder_t *curr; \</span>
-00104 <span class="preprocessor">    spl_t s; \</span>
-00105 <span class="preprocessor">    xnlock_get_irqsave(&amp;(__qslot)-&gt;lock,s);     \</span>
-00106 <span class="preprocessor">    curr = (__qslot)-&gt;head.last;                           \</span>
-00107 <span class="preprocessor">    while (curr != &amp;(__qslot)-&gt;head &amp;&amp; (__holder) != curr)      \</span>
-00108 <span class="preprocessor">        curr = curr-&gt;last; \</span>
-00109 <span class="preprocessor">    if (curr == (__holder))                                         \</span>
-00110 <span class="preprocessor">        xnpod_fatal("inserting element twice, holder=%p, qslot=%p at %s:%d", \</span>
-00111 <span class="preprocessor">                    __holder, \</span>
-00112 <span class="preprocessor">                    __qslot, \</span>
-00113 <span class="preprocessor">                    __FILE__,__LINE__); \</span>
-00114 <span class="preprocessor">    if ((__holder)-&gt;last == NULL)                                  \</span>
-00115 <span class="preprocessor">        xnpod_fatal("holder=%p not initialized, qslot=%p", \</span>
-00116 <span class="preprocessor">                    __holder, \</span>
-00117 <span class="preprocessor">                    __qslot); \</span>
-00118 <span class="preprocessor">    xnlock_put_irqrestore(&amp;(__qslot)-&gt;lock,s);  \</span>
-00119 <span class="preprocessor">} while(0)</span>
-00120 <span class="preprocessor"></span>
-00121 <span class="preprocessor">#define XENO_DEBUG_REMOVE_QUEUE(__qslot,__holder)       \</span>
-00122 <span class="preprocessor">do { \</span>
-00123 <span class="preprocessor">    xnholder_t *curr; \</span>
-00124 <span class="preprocessor">    spl_t s; \</span>
-00125 <span class="preprocessor">    xnlock_get_irqsave(&amp;(__qslot)-&gt;lock,s);     \</span>
-00126 <span class="preprocessor">    curr = (__qslot)-&gt;head.last;                           \</span>
-00127 <span class="preprocessor">    while (curr != &amp;(__qslot)-&gt;head &amp;&amp; (__holder) != curr)      \</span>
-00128 <span class="preprocessor">        curr = curr-&gt;last; \</span>
-00129 <span class="preprocessor">    if (curr == &amp;(__qslot)-&gt;head)                                               \</span>
-00130 <span class="preprocessor">        xnpod_fatal("removing non-linked element, holder=%p, qslot=%p at %s:%d", \</span>
-00131 <span class="preprocessor">                    __holder, \</span>
-00132 <span class="preprocessor">                    __qslot,    \</span>
-00133 <span class="preprocessor">                    __FILE__,__LINE__); \</span>
-00134 <span class="preprocessor">    xnlock_put_irqrestore(&amp;(__qslot)-&gt;lock,s);  \</span>
-00135 <span class="preprocessor">} while(0)</span>
-00136 <span class="preprocessor"></span>
-00137 <span class="preprocessor">#else </span><span class="comment">/* !(__KERNEL__ || __XENO_UVM__ || __XENO_SIM__) */</span>
-00138 
-00139 <span class="comment">/* Disable queue checks in user-space code which does not run as part</span>
-00140 <span class="comment">   of any virtual machine, e.g. skin syslibs. */</span>
-00141 
-00142 <span class="preprocessor">#define XENO_DEBUG_CHECK_QUEUE(__qslot)</span>
-00143 <span class="preprocessor"></span><span class="preprocessor">#define XENO_DEBUG_INSERT_QUEUE(__qslot,__holder)</span>
-00144 <span class="preprocessor"></span><span class="preprocessor">#define XENO_DEBUG_REMOVE_QUEUE(__qslot,__holder)</span>
-00145 <span class="preprocessor"></span>
-00146 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
-00147 
-00148 <span class="comment">/* Write the following as macros so that line numbering information</span>
-00149 <span class="comment">   keeps pointing at the real caller in diagnosis messages. */</span>
-00150 
-00151 <span class="preprocessor">#define insertq(__qslot,__head,__holder)        \</span>
-00152 <span class="preprocessor">({ XENO_DEBUG_CHECK_QUEUE(__qslot);             \</span>
-00153 <span class="preprocessor">   XENO_DEBUG_INSERT_QUEUE(__qslot,__holder);   \</span>
-00154 <span class="preprocessor">   ath((__head)-&gt;last,__holder);                \</span>
-00155 <span class="preprocessor">   ++(__qslot)-&gt;elems; })</span>
-00156 <span class="preprocessor"></span>
-00157 <span class="preprocessor">#define prependq(__qslot,__holder)              \</span>
-00158 <span class="preprocessor">({ XENO_DEBUG_CHECK_QUEUE(__qslot);             \</span>
-00159 <span class="preprocessor">   XENO_DEBUG_INSERT_QUEUE(__qslot,__holder);   \</span>
-00160 <span class="preprocessor">   ath(&amp;(__qslot)-&gt;head,__holder);              \</span>
-00161 <span class="preprocessor">   ++(__qslot)-&gt;elems; })</span>
-00162 <span class="preprocessor"></span>
-00163 <span class="preprocessor">#define appendq(__qslot,__holder)               \</span>
-00164 <span class="preprocessor">({ XENO_DEBUG_CHECK_QUEUE(__qslot);             \</span>
-00165 <span class="preprocessor">   XENO_DEBUG_INSERT_QUEUE(__qslot,__holder);   \</span>
-00166 <span class="preprocessor">   ath((__qslot)-&gt;head.last,__holder);          \</span>
-00167 <span class="preprocessor">   ++(__qslot)-&gt;elems; })</span>
-00168 <span class="preprocessor"></span>
-00169 <span class="preprocessor">#define removeq(__qslot,__holder)               \</span>
-00170 <span class="preprocessor">({ XENO_DEBUG_CHECK_QUEUE(__qslot);             \</span>
-00171 <span class="preprocessor">   XENO_DEBUG_REMOVE_QUEUE(__qslot,__holder);   \</span>
-00172 <span class="preprocessor">   dth(__holder);                               \</span>
-00173 <span class="preprocessor">   --(__qslot)-&gt;elems; })</span>
-00174 <span class="preprocessor"></span>
-00175 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_DEBUG_QUEUES */</span>
-00176 
-00177 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> insertq (xnqueue_t *qslot,
-00178                            xnholder_t *head,
-00179                            xnholder_t *holder)
-00180 {
-00181     <span class="comment">/* Insert the &lt;holder&gt; element before &lt;head&gt; */</span>
-00182     ath(head-&gt;last,holder);
-00183     <span class="keywordflow">return</span> ++qslot-&gt;elems;
-00184 }
-00185 
-00186 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> prependq (xnqueue_t *qslot,
-00187                             xnholder_t *holder)
-00188 {
-00189     <span class="comment">/* Prepend the element to the queue */</span>
-00190     ath(&amp;qslot-&gt;head,holder);
-00191     <span class="keywordflow">return</span> ++qslot-&gt;elems;
-00192 }
-00193 
-00194 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> appendq (xnqueue_t *qslot,
-00195                            xnholder_t *holder)
-00196 {
-00197     <span class="comment">/* Append the element to the queue */</span>
-00198     ath(qslot-&gt;head.last,holder);
-00199     <span class="keywordflow">return</span> ++qslot-&gt;elems;
-00200 }
-00201 
-00202 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> removeq (xnqueue_t *qslot,
-00203                            xnholder_t *holder)
-00204 {
-00205     dth(holder);
-00206     <span class="keywordflow">return</span> --qslot-&gt;elems;
-00207 }
-00208 
-00209 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_DEBUG_QUEUES */</span>
+00084 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)</span>
+00085 <span class="preprocessor"></span>
+00086 <span class="preprocessor">#define XENO_DEBUG_CHECK_QUEUE(__qslot)         \</span>
+00087 <span class="preprocessor">do { \</span>
+00088 <span class="preprocessor">    xnholder_t *curr; \</span>
+00089 <span class="preprocessor">    spl_t s; \</span>
+00090 <span class="preprocessor">    int nelems = 0; \</span>
+00091 <span class="preprocessor">    xnlock_get_irqsave(&amp;(__qslot)-&gt;lock,s);     \</span>
+00092 <span class="preprocessor">    curr = (__qslot)-&gt;head.last;                                  \</span>
+00093 <span class="preprocessor">    while (curr != &amp;(__qslot)-&gt;head &amp;&amp; nelems &lt; (__qslot)-&gt;elems)       \</span>
+00094 <span class="preprocessor">        curr = curr-&gt;last, nelems++; \</span>
+00095 <span class="preprocessor">    if (curr != &amp;(__qslot)-&gt;head || nelems != (__qslot)-&gt;elems)   \</span>
+00096 <span class="preprocessor">        xnpod_fatal("corrupted queue, qslot-&gt;elems=%d, qslot=%p at %s:%d", \</span>
+00097 <span class="preprocessor">                    (__qslot)-&gt;elems,                             \</span>
+00098 <span class="preprocessor">                    __qslot,                                      \</span>
+00099 <span class="preprocessor">                    __FILE__,__LINE__);                           \</span>
+00100 <span class="preprocessor">    xnlock_put_irqrestore(&amp;(__qslot)-&gt;lock,s);  \</span>
+00101 <span class="preprocessor">} while(0)</span>
+00102 <span class="preprocessor"></span>
+00103 <span class="preprocessor">#define XENO_DEBUG_INSERT_QUEUE(__qslot,__holder)               \</span>
+00104 <span class="preprocessor">do { \</span>
+00105 <span class="preprocessor">    xnholder_t *curr; \</span>
+00106 <span class="preprocessor">    spl_t s; \</span>
+00107 <span class="preprocessor">    xnlock_get_irqsave(&amp;(__qslot)-&gt;lock,s);     \</span>
+00108 <span class="preprocessor">    curr = (__qslot)-&gt;head.last;                           \</span>
+00109 <span class="preprocessor">    while (curr != &amp;(__qslot)-&gt;head &amp;&amp; (__holder) != curr)      \</span>
+00110 <span class="preprocessor">        curr = curr-&gt;last; \</span>
+00111 <span class="preprocessor">    if (curr == (__holder))                                         \</span>
+00112 <span class="preprocessor">        xnpod_fatal("inserting element twice, holder=%p, qslot=%p at %s:%d", \</span>
+00113 <span class="preprocessor">                    __holder, \</span>
+00114 <span class="preprocessor">                    __qslot, \</span>
+00115 <span class="preprocessor">                    __FILE__,__LINE__); \</span>
+00116 <span class="preprocessor">    if ((__holder)-&gt;last == NULL)                                  \</span>
+00117 <span class="preprocessor">        xnpod_fatal("holder=%p not initialized, qslot=%p", \</span>
+00118 <span class="preprocessor">                    __holder, \</span>
+00119 <span class="preprocessor">                    __qslot); \</span>
+00120 <span class="preprocessor">    xnlock_put_irqrestore(&amp;(__qslot)-&gt;lock,s);  \</span>
+00121 <span class="preprocessor">} while(0)</span>
+00122 <span class="preprocessor"></span>
+00123 <span class="preprocessor">#define XENO_DEBUG_REMOVE_QUEUE(__qslot,__holder)       \</span>
+00124 <span class="preprocessor">do { \</span>
+00125 <span class="preprocessor">    xnholder_t *curr; \</span>
+00126 <span class="preprocessor">    spl_t s; \</span>
+00127 <span class="preprocessor">    xnlock_get_irqsave(&amp;(__qslot)-&gt;lock,s);     \</span>
+00128 <span class="preprocessor">    curr = (__qslot)-&gt;head.last;                           \</span>
+00129 <span class="preprocessor">    while (curr != &amp;(__qslot)-&gt;head &amp;&amp; (__holder) != curr)      \</span>
+00130 <span class="preprocessor">        curr = curr-&gt;last; \</span>
+00131 <span class="preprocessor">    if (curr == &amp;(__qslot)-&gt;head)                                               \</span>
+00132 <span class="preprocessor">        xnpod_fatal("removing non-linked element, holder=%p, qslot=%p at %s:%d", \</span>
+00133 <span class="preprocessor">                    __holder, \</span>
+00134 <span class="preprocessor">                    __qslot,    \</span>
+00135 <span class="preprocessor">                    __FILE__,__LINE__); \</span>
+00136 <span class="preprocessor">    xnlock_put_irqrestore(&amp;(__qslot)-&gt;lock,s);  \</span>
+00137 <span class="preprocessor">} while(0)</span>
+00138 <span class="preprocessor"></span>
+00139 <span class="preprocessor">#else </span><span class="comment">/* !(__KERNEL__ || __XENO_UVM__ || __XENO_SIM__) */</span>
+00140 
+00141 <span class="comment">/* Disable queue checks in user-space code which does not run as part</span>
+00142 <span class="comment">   of any virtual machine, e.g. skin call interface libs. */</span>
+00143 
+00144 <span class="preprocessor">#define XENO_DEBUG_CHECK_QUEUE(__qslot)</span>
+00145 <span class="preprocessor"></span><span class="preprocessor">#define XENO_DEBUG_INSERT_QUEUE(__qslot,__holder)</span>
+00146 <span class="preprocessor"></span><span class="preprocessor">#define XENO_DEBUG_REMOVE_QUEUE(__qslot,__holder)</span>
+00147 <span class="preprocessor"></span>
+00148 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
+00149 
+00150 <span class="comment">/* Write the following as macros so that line numbering information</span>
+00151 <span class="comment">   keeps pointing at the real caller in diagnosis messages. */</span>
+00152 
+00153 <span class="preprocessor">#define insertq(__qslot,__head,__holder)        \</span>
+00154 <span class="preprocessor">({ XENO_DEBUG_CHECK_QUEUE(__qslot);             \</span>
+00155 <span class="preprocessor">   XENO_DEBUG_INSERT_QUEUE(__qslot,__holder);   \</span>
+00156 <span class="preprocessor">   ath((__head)-&gt;last,__holder);                \</span>
+00157 <span class="preprocessor">   ++(__qslot)-&gt;elems; })</span>
+00158 <span class="preprocessor"></span>
+00159 <span class="preprocessor">#define prependq(__qslot,__holder)              \</span>
+00160 <span class="preprocessor">({ XENO_DEBUG_CHECK_QUEUE(__qslot);             \</span>
+00161 <span class="preprocessor">   XENO_DEBUG_INSERT_QUEUE(__qslot,__holder);   \</span>
+00162 <span class="preprocessor">   ath(&amp;(__qslot)-&gt;head,__holder);              \</span>
+00163 <span class="preprocessor">   ++(__qslot)-&gt;elems; })</span>
+00164 <span class="preprocessor"></span>
+00165 <span class="preprocessor">#define appendq(__qslot,__holder)               \</span>
+00166 <span class="preprocessor">({ XENO_DEBUG_CHECK_QUEUE(__qslot);             \</span>
+00167 <span class="preprocessor">   XENO_DEBUG_INSERT_QUEUE(__qslot,__holder);   \</span>
+00168 <span class="preprocessor">   ath((__qslot)-&gt;head.last,__holder);          \</span>
+00169 <span class="preprocessor">   ++(__qslot)-&gt;elems; })</span>
+00170 <span class="preprocessor"></span>
+00171 <span class="preprocessor">#define removeq(__qslot,__holder)               \</span>
+00172 <span class="preprocessor">({ XENO_DEBUG_CHECK_QUEUE(__qslot);             \</span>
+00173 <span class="preprocessor">   XENO_DEBUG_REMOVE_QUEUE(__qslot,__holder);   \</span>
+00174 <span class="preprocessor">   dth(__holder);                               \</span>
+00175 <span class="preprocessor">   --(__qslot)-&gt;elems; })</span>
+00176 <span class="preprocessor"></span>
+00177 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_DEBUG_QUEUES */</span>
+00178 
+00179 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> insertq (xnqueue_t *qslot,
+00180                            xnholder_t *head,
+00181                            xnholder_t *holder)
+00182 {
+00183     <span class="comment">/* Insert the &lt;holder&gt; element before &lt;head&gt; */</span>
+00184     ath(head-&gt;last,holder);
+00185     <span class="keywordflow">return</span> ++qslot-&gt;elems;
+00186 }
+00187 
+00188 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> prependq (xnqueue_t *qslot,
+00189                             xnholder_t *holder)
+00190 {
+00191     <span class="comment">/* Prepend the element to the queue */</span>
+00192     ath(&amp;qslot-&gt;head,holder);
+00193     <span class="keywordflow">return</span> ++qslot-&gt;elems;
+00194 }
+00195 
+00196 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> appendq (xnqueue_t *qslot,
+00197                            xnholder_t *holder)
+00198 {
+00199     <span class="comment">/* Append the element to the queue */</span>
+00200     ath(qslot-&gt;head.last,holder);
+00201     <span class="keywordflow">return</span> ++qslot-&gt;elems;
+00202 }
+00203 
+00204 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> removeq (xnqueue_t *qslot,
+00205                            xnholder_t *holder)
+00206 {
+00207     dth(holder);
+00208     <span class="keywordflow">return</span> --qslot-&gt;elems;
+00209 }
 00210 
-00211 <span class="keyword">static</span> <span class="keyword">inline</span> xnholder_t *getheadq (xnqueue_t *qslot)
-00212 {
-00213     xnholder_t *holder = qslot-&gt;head.next;
-00214     <span class="keywordflow">if</span> (holder == &amp;qslot-&gt;head) <span class="keywordflow">return</span> NULL;
-00215     <span class="keywordflow">return</span> holder;
-00216 }
-00217 
-00218 <span class="keyword">static</span> <span class="keyword">inline</span> xnholder_t *getq (xnqueue_t *qslot)
-00219 {
-00220     xnholder_t *holder = getheadq(qslot);
-00221     <span class="keywordflow">if</span> (holder) removeq(qslot,holder);
-00222     <span class="keywordflow">return</span> holder;
-00223 }
-00224 
-00225 <span class="keyword">static</span> <span class="keyword">inline</span> xnholder_t *nextq (xnqueue_t *qslot,
-00226                                  xnholder_t *holder)
-00227 {
-00228     xnholder_t *nextholder = holder-&gt;next;
-00229     <span class="keywordflow">return</span> nextholder == &amp;qslot-&gt;head ? NULL : nextholder;
-00230 }
-00231 
-00232 <span class="keyword">static</span> <span class="keyword">inline</span> xnholder_t *popq (xnqueue_t *qslot,
-00233                                 xnholder_t *holder)
-00234 {
-00235     xnholder_t *nextholder = nextq(qslot,holder);
-00236     removeq(qslot,holder);
-00237     <span class="keywordflow">return</span> nextholder;
-00238 }
-00239 
-00240 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> countq (xnqueue_t *qslot)
-00241 {
-00242     <span class="keywordflow">return</span> qslot-&gt;elems;
-00243 }
-00244 
-00245 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> moveq (xnqueue_t *dstq, xnqueue_t *srcq)
-00246 {
-00247     xnholder_t *headsrc = srcq-&gt;head.next;
-00248     xnholder_t *tailsrc = srcq-&gt;head.last-&gt;last;
-00249     xnholder_t *headdst = &amp;dstq-&gt;head;
-00250 
-00251     headsrc-&gt;last-&gt;next = tailsrc-&gt;next;
-00252     tailsrc-&gt;next-&gt;last = headsrc-&gt;last;
-00253     headsrc-&gt;last = headdst;
-00254     tailsrc-&gt;next = headdst-&gt;next;
-00255     headdst-&gt;next-&gt;last = tailsrc;
-00256     headdst-&gt;next = headsrc;
-00257     dstq-&gt;elems += srcq-&gt;elems;
-00258     srcq-&gt;elems = 0;
-00259 
-00260     <span class="keywordflow">return</span> dstq-&gt;elems;
-00261 }
-00262 
-00263 <span class="comment">/* Prioritized element holder */</span>
+00211 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_DEBUG_QUEUES */</span>
+00212 
+00213 <span class="keyword">static</span> <span class="keyword">inline</span> xnholder_t *getheadq (xnqueue_t *qslot)
+00214 {
+00215     xnholder_t *holder = qslot-&gt;head.next;
+00216     <span class="keywordflow">if</span> (holder == &amp;qslot-&gt;head) <span class="keywordflow">return</span> NULL;
+00217     <span class="keywordflow">return</span> holder;
+00218 }
+00219 
+00220 <span class="keyword">static</span> <span class="keyword">inline</span> xnholder_t *getq (xnqueue_t *qslot)
+00221 {
+00222     xnholder_t *holder = getheadq(qslot);
+00223     <span class="keywordflow">if</span> (holder) removeq(qslot,holder);
+00224     <span class="keywordflow">return</span> holder;
+00225 }
+00226 
+00227 <span class="keyword">static</span> <span class="keyword">inline</span> xnholder_t *nextq (xnqueue_t *qslot,
+00228                                  xnholder_t *holder)
+00229 {
+00230     xnholder_t *nextholder = holder-&gt;next;
+00231     <span class="keywordflow">return</span> nextholder == &amp;qslot-&gt;head ? NULL : nextholder;
+00232 }
+00233 
+00234 <span class="keyword">static</span> <span class="keyword">inline</span> xnholder_t *popq (xnqueue_t *qslot,
+00235                                 xnholder_t *holder)
+00236 {
+00237     xnholder_t *nextholder = nextq(qslot,holder);
+00238     removeq(qslot,holder);
+00239     <span class="keywordflow">return</span> nextholder;
+00240 }
+00241 
+00242 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> countq (xnqueue_t *qslot)
+00243 {
+00244     <span class="keywordflow">return</span> qslot-&gt;elems;
+00245 }
+00246 
+00247 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> moveq (xnqueue_t *dstq, xnqueue_t *srcq)
+00248 {
+00249     xnholder_t *headsrc = srcq-&gt;head.next;
+00250     xnholder_t *tailsrc = srcq-&gt;head.last-&gt;last;
+00251     xnholder_t *headdst = &amp;dstq-&gt;head;
+00252 
+00253     headsrc-&gt;last-&gt;next = tailsrc-&gt;next;
+00254     tailsrc-&gt;next-&gt;last = headsrc-&gt;last;
+00255     headsrc-&gt;last = headdst;
+00256     tailsrc-&gt;next = headdst-&gt;next;
+00257     headdst-&gt;next-&gt;last = tailsrc;
+00258     headdst-&gt;next = headsrc;
+00259     dstq-&gt;elems += srcq-&gt;elems;
+00260     srcq-&gt;elems = 0;
+00261 
+00262     <span class="keywordflow">return</span> dstq-&gt;elems;
+00263 }
 00264 
-00265 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnpholder {
+00265 <span class="comment">/* Prioritized element holder */</span>
 00266 
-00267     xnholder_t plink;
-00268     <span class="keywordtype">int</span> prio;
-00269 
-00270 } xnpholder_t;
+00267 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnpholder {
+00268 
+00269     xnholder_t plink;
+00270     <span class="keywordtype">int</span> prio;
 00271 
-00272 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> initph (xnpholder_t *holder) {
-00273     inith(&amp;holder-&gt;plink);
-00274     <span class="comment">/* Priority is set upon queue insertion */</span>
-00275 }
-00276 
-00277 <span class="comment">/* Prioritized element queue */</span>
-00278 
-00279 <span class="preprocessor">#define xnqueue_up   (-1)</span>
-00280 <span class="preprocessor"></span><span class="preprocessor">#define xnqueue_down   1</span>
-00281 <span class="preprocessor"></span>
-00282 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnpqueue {
-00283 
-00284     xnqueue_t pqueue;
-00285     <span class="keywordtype">int</span> qdir;
+00272 } xnpholder_t;
+00273 
+00274 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> initph (xnpholder_t *holder)
+00275 {
+00276     inith(&amp;holder-&gt;plink);
+00277     <span class="comment">/* Priority is set upon queue insertion */</span>
+00278 }
+00279 
+00280 <span class="comment">/* Prioritized element queue */</span>
+00281 
+00282 <span class="preprocessor">#define xnqueue_up   (-1)</span>
+00283 <span class="preprocessor"></span><span class="preprocessor">#define xnqueue_down   1</span>
+00284 <span class="preprocessor"></span>
+00285 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnpqueue {
 00286 
-00287 } xnpqueue_t;
-00288 
-00289 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> initpq (xnpqueue_t *pqslot,
-00290                            <span class="keywordtype">int</span> qdir,
-00291                            <span class="keywordtype">int</span> maxpri)
-00292 {
-00293     initq(&amp;pqslot-&gt;pqueue);
-00294     pqslot-&gt;qdir = qdir;
-00295 }
-00296 
-00297 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> insertpq (xnpqueue_t *pqslot,
-00298                             xnpholder_t *head,
-00299                             xnpholder_t *holder)
-00300 {
-00301     <span class="comment">/* Insert the &lt;holder&gt; element before &lt;head&gt; */</span>
-00302     <span class="keywordflow">return</span> insertq(&amp;pqslot-&gt;pqueue,&amp;head-&gt;plink,&amp;holder-&gt;plink);
-00303 }
-00304 
-00305 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> insertpqf (xnpqueue_t *pqslot,
-00306                              xnpholder_t *holder,
-00307                              <span class="keywordtype">int</span> prio)
-00308 {
-00309     <span class="comment">/* Insert the element at the end of its priority group (FIFO) */</span>
-00310 
-00311     xnholder_t *curr;
-00312 
-00313     <span class="keywordflow">if</span> (pqslot-&gt;qdir == xnqueue_down) {
-00314         <span class="keywordflow">for</span> (curr = pqslot-&gt;pqueue.head.last;
-00315              curr != &amp;pqslot-&gt;pqueue.head; curr = curr-&gt;last) {
-00316                 <span class="keywordflow">if</span> (prio &lt;= ((xnpholder_t *)curr)-&gt;prio)
-00317                     <span class="keywordflow">break</span>;
-00318         }
-00319     }
-00320     <span class="keywordflow">else</span> {
-00321         <span class="keywordflow">for</span> (curr = pqslot-&gt;pqueue.head.last;
-00322              curr != &amp;pqslot-&gt;pqueue.head; curr = curr-&gt;last) {
-00323                 <span class="keywordflow">if</span> (prio &gt;= ((xnpholder_t *)curr)-&gt;prio)
-00324                     <span class="keywordflow">break</span>;
-00325         }
-00326     }
-00327 
-00328     holder-&gt;prio = prio;
-00329 
-00330     <span class="keywordflow">return</span> insertq(&amp;pqslot-&gt;pqueue,curr-&gt;next,&amp;holder-&gt;plink);
-00331 }
+00287     xnqueue_t pqueue;
+00288     <span class="keywordtype">int</span> qdir;
+00289 
+00290 } xnpqueue_t;
+00291 
+00292 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> initpq (xnpqueue_t *pqslot,
+00293                            <span class="keywordtype">int</span> qdir,
+00294                            <span class="keywordtype">int</span> maxpri)
+00295 {
+00296     initq(&amp;pqslot-&gt;pqueue);
+00297     pqslot-&gt;qdir = qdir;
+00298 }
+00299 
+00300 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> insertpq (xnpqueue_t *pqslot,
+00301                             xnpholder_t *head,
+00302                             xnpholder_t *holder)
+00303 {
+00304     <span class="comment">/* Insert the &lt;holder&gt; element before &lt;head&gt; */</span>
+00305     <span class="keywordflow">return</span> insertq(&amp;pqslot-&gt;pqueue,&amp;head-&gt;plink,&amp;holder-&gt;plink);
+00306 }
+00307 
+00308 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> insertpqf (xnpqueue_t *pqslot,
+00309                              xnpholder_t *holder,
+00310                              <span class="keywordtype">int</span> prio)
+00311 {
+00312     <span class="comment">/* Insert the element at the end of its priority group (FIFO) */</span>
+00313 
+00314     xnholder_t *curr;
+00315 
+00316     <span class="keywordflow">if</span> (pqslot-&gt;qdir == xnqueue_down) {
+00317         <span class="keywordflow">for</span> (curr = pqslot-&gt;pqueue.head.last;
+00318              curr != &amp;pqslot-&gt;pqueue.head; curr = curr-&gt;last) {
+00319                 <span class="keywordflow">if</span> (prio &lt;= ((xnpholder_t *)curr)-&gt;prio)
+00320                     <span class="keywordflow">break</span>;
+00321         }
+00322     }
+00323     <span class="keywordflow">else</span> {
+00324         <span class="keywordflow">for</span> (curr = pqslot-&gt;pqueue.head.last;
+00325              curr != &amp;pqslot-&gt;pqueue.head; curr = curr-&gt;last) {
+00326                 <span class="keywordflow">if</span> (prio &gt;= ((xnpholder_t *)curr)-&gt;prio)
+00327                     <span class="keywordflow">break</span>;
+00328         }
+00329     }
+00330 
+00331     holder-&gt;prio = prio;
 00332 
-00333 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> insertpql (xnpqueue_t *pqslot,
-00334                              xnpholder_t *holder,
-00335                              <span class="keywordtype">int</span> prio)
-00336 {
-00337     <span class="comment">/* Insert the element at the front of its priority group (LIFO) */</span>
-00338 
-00339     xnholder_t *curr;
-00340 
-00341     <span class="keywordflow">if</span> (pqslot-&gt;qdir == xnqueue_down) {
-00342         <span class="keywordflow">for</span> (curr = pqslot-&gt;pqueue.head.next;
-00343              curr != &amp;pqslot-&gt;pqueue.head; curr = curr-&gt;next) {
-00344                 <span class="keywordflow">if</span> (prio &gt;= ((xnpholder_t *)curr)-&gt;prio)
-00345                     <span class="keywordflow">break</span>;
-00346         }
-00347     }
-00348     <span class="keywordflow">else</span> {
-00349         <span class="keywordflow">for</span> (curr = pqslot-&gt;pqueue.head.next;
-00350              curr != &amp;pqslot-&gt;pqueue.head; curr = curr-&gt;next) {
-00351                 <span class="keywordflow">if</span> (prio &lt;= ((xnpholder_t *)curr)-&gt;prio)
-00352                     <span class="keywordflow">break</span>;
-00353         }
-00354     }
-00355 
-00356     holder-&gt;prio = prio;
-00357 
-00358     <span class="keywordflow">return</span> insertq(&amp;pqslot-&gt;pqueue,curr,&amp;holder-&gt;plink);
-00359 }
+00333     <span class="keywordflow">return</span> insertq(&amp;pqslot-&gt;pqueue,curr-&gt;next,&amp;holder-&gt;plink);
+00334 }
+00335 
+00336 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> insertpql (xnpqueue_t *pqslot,
+00337                              xnpholder_t *holder,
+00338                              <span class="keywordtype">int</span> prio)
+00339 {
+00340     <span class="comment">/* Insert the element at the front of its priority group (LIFO) */</span>
+00341 
+00342     xnholder_t *curr;
+00343 
+00344     <span class="keywordflow">if</span> (pqslot-&gt;qdir == xnqueue_down) {
+00345         <span class="keywordflow">for</span> (curr = pqslot-&gt;pqueue.head.next;
+00346              curr != &amp;pqslot-&gt;pqueue.head; curr = curr-&gt;next) {
+00347                 <span class="keywordflow">if</span> (prio &gt;= ((xnpholder_t *)curr)-&gt;prio)
+00348                     <span class="keywordflow">break</span>;
+00349         }
+00350     }
+00351     <span class="keywordflow">else</span> {
+00352         <span class="keywordflow">for</span> (curr = pqslot-&gt;pqueue.head.next;
+00353              curr != &amp;pqslot-&gt;pqueue.head; curr = curr-&gt;next) {
+00354                 <span class="keywordflow">if</span> (prio &lt;= ((xnpholder_t *)curr)-&gt;prio)
+00355                     <span class="keywordflow">break</span>;
+00356         }
+00357     }
+00358 
+00359     holder-&gt;prio = prio;
 00360 
-00361 <span class="keyword">static</span> <span class="keyword">inline</span> xnpholder_t *findpqh (xnpqueue_t *pqslot,
-00362                                     <span class="keywordtype">int</span> prio)
-00363 {
-00364     <span class="comment">/* Find the element heading a given priority group */</span>
-00365 
-00366     xnholder_t *curr;
-00367 
-00368     <span class="keywordflow">if</span> (pqslot-&gt;qdir == xnqueue_down) {
-00369         <span class="keywordflow">for</span> (curr = pqslot-&gt;pqueue.head.next;
-00370              curr != &amp;pqslot-&gt;pqueue.head; curr = curr-&gt;next) {
-00371                 <span class="keywordflow">if</span> (prio &gt;= ((xnpholder_t *)curr)-&gt;prio)
-00372                     <span class="keywordflow">break</span>;
-00373         }
-00374     }
-00375     <span class="keywordflow">else</span> {
-00376         <span class="keywordflow">for</span> (curr = pqslot-&gt;pqueue.head.next;
-00377              curr != &amp;pqslot-&gt;pqueue.head; curr = curr-&gt;next) {
-00378                 <span class="keywordflow">if</span> (prio &lt;= ((xnpholder_t *)curr)-&gt;prio)
-00379                     <span class="keywordflow">break</span>;
-00380         }
-00381     }
-00382 
-00383     <span class="keywordflow">if</span> (curr &amp;&amp; ((xnpholder_t *)curr)-&gt;prio == prio)
-00384         <span class="keywordflow">return</span> (xnpholder_t *)curr;
+00361     <span class="keywordflow">return</span> insertq(&amp;pqslot-&gt;pqueue,curr,&amp;holder-&gt;plink);
+00362 }
+00363 
+00364 <span class="keyword">static</span> <span class="keyword">inline</span> xnpholder_t *findpqh (xnpqueue_t *pqslot,
+00365                                     <span class="keywordtype">int</span> prio)
+00366 {
+00367     <span class="comment">/* Find the element heading a given priority group */</span>
+00368 
+00369     xnholder_t *curr;
+00370 
+00371     <span class="keywordflow">if</span> (pqslot-&gt;qdir == xnqueue_down) {
+00372         <span class="keywordflow">for</span> (curr = pqslot-&gt;pqueue.head.next;
+00373              curr != &amp;pqslot-&gt;pqueue.head; curr = curr-&gt;next) {
+00374                 <span class="keywordflow">if</span> (prio &gt;= ((xnpholder_t *)curr)-&gt;prio)
+00375                     <span class="keywordflow">break</span>;
+00376         }
+00377     }
+00378     <span class="keywordflow">else</span> {
+00379         <span class="keywordflow">for</span> (curr = pqslot-&gt;pqueue.head.next;
+00380              curr != &amp;pqslot-&gt;pqueue.head; curr = curr-&gt;next) {
+00381                 <span class="keywordflow">if</span> (prio &lt;= ((xnpholder_t *)curr)-&gt;prio)
+00382                     <span class="keywordflow">break</span>;
+00383         }
+00384     }
 00385 
-00386     <span class="keywordflow">return</span> NULL;
-00387 }
+00386     <span class="keywordflow">if</span> (curr &amp;&amp; ((xnpholder_t *)curr)-&gt;prio == prio)
+00387         <span class="keywordflow">return</span> (xnpholder_t *)curr;
 00388 
-00389 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> appendpq (xnpqueue_t *pqslot,
-00390                             xnpholder_t *holder)
-00391 {
-00392     holder-&gt;prio = 0;
-00393     <span class="keywordflow">return</span> appendq(&amp;pqslot-&gt;pqueue,&amp;holder-&gt;plink);
-00394 }
-00395 
-00396 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> prependpq (xnpqueue_t *pqslot,
-00397                              xnpholder_t *holder)
-00398 {
-00399     holder-&gt;prio = 0;
-00400     <span class="keywordflow">return</span> prependq(&amp;pqslot-&gt;pqueue,&amp;holder-&gt;plink);
-00401 }
-00402 
-00403 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> removepq (xnpqueue_t *pqslot,
-00404                             xnpholder_t *holder)
-00405 {
-00406     <span class="keywordflow">return</span> removeq(&amp;pqslot-&gt;pqueue,&amp;holder-&gt;plink);
-00407 }
-00408 
-00409 <span class="keyword">static</span> <span class="keyword">inline</span> xnpholder_t *getheadpq (xnpqueue_t *pqslot)
-00410 {
-00411     <span class="keywordflow">return</span> (xnpholder_t *)getheadq(&amp;pqslot-&gt;pqueue);
-00412 }
-00413 
-00414 <span class="keyword">static</span> <span class="keyword">inline</span> xnpholder_t *nextpq (xnpqueue_t *pqslot,
-00415                                    xnpholder_t *holder)
-00416 {
-00417     <span class="keywordflow">return</span> (xnpholder_t *)nextq(&amp;pqslot-&gt;pqueue,&amp;holder-&gt;plink);
-00418 }
-00419 
-00420 <span class="keyword">static</span> <span class="keyword">inline</span> xnpholder_t *getpq (xnpqueue_t *pqslot)
-00421 {
-00422     <span class="keywordflow">return</span> (xnpholder_t *)getq(&amp;pqslot-&gt;pqueue);
-00423 }
-00424 
-00425 <span class="keyword">static</span> <span class="keyword">inline</span> xnpholder_t *poppq (xnpqueue_t *pqslot,
-00426                                   xnpholder_t *holder)
-00427 {
-00428     <span class="keywordflow">return</span> (xnpholder_t *)popq(&amp;pqslot-&gt;pqueue,&amp;holder-&gt;plink);
-00429 }
-00430 
-00431 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> countpq (xnpqueue_t *pqslot)
-00432 {
-00433     <span class="keywordflow">return</span> countq(&amp;pqslot-&gt;pqueue);
-00434 }
-00435 
-00436 <span class="comment">/* Generic prioritized element holder */</span>
-00437 
-00438 <span class="keyword">typedef</span> <span class="keyword">struct </span>xngholder {
-00439 
-00440     xnpholder_t glink;
-00441     <span class="keywordtype">void</span> *data;
+00389     <span class="keywordflow">return</span> NULL;
+00390 }
+00391 
+00392 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> appendpq (xnpqueue_t *pqslot,
+00393                             xnpholder_t *holder)
+00394 {
+00395     holder-&gt;prio = 0;
+00396     <span class="keywordflow">return</span> appendq(&amp;pqslot-&gt;pqueue,&amp;holder-&gt;plink);
+00397 }
+00398 
+00399 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> prependpq (xnpqueue_t *pqslot,
+00400                              xnpholder_t *holder)
+00401 {
+00402     holder-&gt;prio = 0;
+00403     <span class="keywordflow">return</span> prependq(&amp;pqslot-&gt;pqueue,&amp;holder-&gt;plink);
+00404 }
+00405 
+00406 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> removepq (xnpqueue_t *pqslot,
+00407                             xnpholder_t *holder)
+00408 {
+00409     <span class="keywordflow">return</span> removeq(&amp;pqslot-&gt;pqueue,&amp;holder-&gt;plink);
+00410 }
+00411 
+00412 <span class="keyword">static</span> <span class="keyword">inline</span> xnpholder_t *getheadpq (xnpqueue_t *pqslot)
+00413 {
+00414     <span class="keywordflow">return</span> (xnpholder_t *)getheadq(&amp;pqslot-&gt;pqueue);
+00415 }
+00416 
+00417 <span class="keyword">static</span> <span class="keyword">inline</span> xnpholder_t *nextpq (xnpqueue_t *pqslot,
+00418                                    xnpholder_t *holder)
+00419 {
+00420     <span class="keywordflow">return</span> (xnpholder_t *)nextq(&amp;pqslot-&gt;pqueue,&amp;holder-&gt;plink);
+00421 }
+00422 
+00423 <span class="keyword">static</span> <span class="keyword">inline</span> xnpholder_t *getpq (xnpqueue_t *pqslot)
+00424 {
+00425     <span class="keywordflow">return</span> (xnpholder_t *)getq(&amp;pqslot-&gt;pqueue);
+00426 }
+00427 
+00428 <span class="keyword">static</span> <span class="keyword">inline</span> xnpholder_t *poppq (xnpqueue_t *pqslot,
+00429                                   xnpholder_t *holder)
+00430 {
+00431     <span class="keywordflow">return</span> (xnpholder_t *)popq(&amp;pqslot-&gt;pqueue,&amp;holder-&gt;plink);
+00432 }
+00433 
+00434 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> countpq (xnpqueue_t *pqslot)
+00435 {
+00436     <span class="keywordflow">return</span> countq(&amp;pqslot-&gt;pqueue);
+00437 }
+00438 
+00439 <span class="comment">/* Generic prioritized element holder */</span>
+00440 
+00441 <span class="keyword">typedef</span> <span class="keyword">struct </span>xngholder {
 00442 
-00443 } xngholder_t;
-00444 
-00445 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> initgh (xngholder_t *holder, <span class="keywordtype">void</span> *data)
-00446 {
-00447     inith(&amp;holder-&gt;glink.plink);
-00448     holder-&gt;data = data;
-00449 }
-00450 
-00451 <span class="comment">/* Generic element queue */</span>
-00452 
-00453 <span class="keyword">typedef</span> <span class="keyword">struct </span>xngqueue {
-00454 
-00455     xnpqueue_t gqueue;
-00456     xnqueue_t *freehq;
-00457     void (*starvation)(xnqueue_t *);
-00458     <span class="keywordtype">int</span> threshold;
-00459 
-00460 } xngqueue_t;
-00461 
-00462 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> initgq (xngqueue_t *gqslot,
-00463                            xnqueue_t *freehq,
-00464                            <span class="keywordtype">void</span> (*starvation)(xnqueue_t *),
-00465                            <span class="keywordtype">int</span> threshold,
-00466                            <span class="keywordtype">int</span> qdir,
-00467                            <span class="keywordtype">int</span> maxpri)
-00468 {
-00469     initpq(&amp;gqslot-&gt;gqueue,qdir,maxpri);
-00470     gqslot-&gt;freehq = freehq;
-00471     gqslot-&gt;starvation = starvation;
-00472     gqslot-&gt;threshold = threshold;
-00473 }
-00474 
-00475 <span class="keyword">static</span> <span class="keyword">inline</span> xngholder_t *allocgh (xngqueue_t *gqslot)
-00476 {
-00477     <span class="keywordflow">if</span> (countq(gqslot-&gt;freehq) &lt; gqslot-&gt;threshold)
-00478         gqslot-&gt;starvation(gqslot-&gt;freehq);
-00479 
-00480     <span class="keywordflow">return</span> (xngholder_t *)getq(gqslot-&gt;freehq);
-00481 }
+00443     xnpholder_t glink;
+00444     <span class="keywordtype">void</span> *data;
+00445 
+00446 } xngholder_t;
+00447 
+00448 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> initgh (xngholder_t *holder, <span class="keywordtype">void</span> *data)
+00449 {
+00450     inith(&amp;holder-&gt;glink.plink);
+00451     holder-&gt;data = data;
+00452 }
+00453 
+00454 <span class="comment">/* Generic element queue */</span>
+00455 
+00456 <span class="keyword">typedef</span> <span class="keyword">struct </span>xngqueue {
+00457 
+00458     xnpqueue_t gqueue;
+00459     xnqueue_t *freehq;
+00460     void (*starvation)(xnqueue_t *);
+00461     <span class="keywordtype">int</span> threshold;
+00462 
+00463 } xngqueue_t;
+00464 
+00465 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> initgq (xngqueue_t *gqslot,
+00466                            xnqueue_t *freehq,
+00467                            <span class="keywordtype">void</span> (*starvation)(xnqueue_t *),
+00468                            <span class="keywordtype">int</span> threshold,
+00469                            <span class="keywordtype">int</span> qdir,
+00470                            <span class="keywordtype">int</span> maxpri)
+00471 {
+00472     initpq(&amp;gqslot-&gt;gqueue,qdir,maxpri);
+00473     gqslot-&gt;freehq = freehq;
+00474     gqslot-&gt;starvation = starvation;
+00475     gqslot-&gt;threshold = threshold;
+00476 }
+00477 
+00478 <span class="keyword">static</span> <span class="keyword">inline</span> xngholder_t *allocgh (xngqueue_t *gqslot)
+00479 {
+00480     <span class="keywordflow">if</span> (countq(gqslot-&gt;freehq) &lt; gqslot-&gt;threshold)
+00481         gqslot-&gt;starvation(gqslot-&gt;freehq);
 00482 
-00483 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> *removegh (xngqueue_t *gqslot,
-00484                               xngholder_t *holder)
-00485 {
-00486     removepq(&amp;gqslot-&gt;gqueue,&amp;holder-&gt;glink);
-00487     appendq(gqslot-&gt;freehq,&amp;holder-&gt;glink.plink);
-00488     <span class="keywordflow">return</span> holder-&gt;data;
-00489 }
-00490 
-00491 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> insertgqf (xngqueue_t *gqslot,
-00492                              <span class="keywordtype">void</span> *data,
-00493                              <span class="keywordtype">int</span> prio)
-00494 {
-00495     xngholder_t *holder = allocgh(gqslot);
-00496     holder-&gt;data = data;
-00497     <span class="keywordflow">return</span> insertpqf(&amp;gqslot-&gt;gqueue,&amp;holder-&gt;glink,prio);
-00498 }
-00499 
-00500 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> insertgql (xngqueue_t *gqslot,
-00501                              <span class="keywordtype">void</span> *data,
-00502                              <span class="keywordtype">int</span> prio)
-00503 {
-00504     xngholder_t *holder = allocgh(gqslot);
-00505     holder-&gt;data = data;
-00506     <span class="keywordflow">return</span> insertpql(&amp;gqslot-&gt;gqueue,&amp;holder-&gt;glink,prio);
-00507 }
-00508 
-00509 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> appendgq (xngqueue_t *gqslot,
-00510                             <span class="keywordtype">void</span> *data)
-00511 {
-00512     xngholder_t *holder = allocgh(gqslot);
-00513     holder-&gt;data = data;
-00514     <span class="keywordflow">return</span> appendpq(&amp;gqslot-&gt;gqueue,&amp;holder-&gt;glink);
-00515 }
-00516 
-00517 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> prependgq (xngqueue_t *gqslot,
-00518                              <span class="keywordtype">void</span> *data)
-00519 {
-00520     xngholder_t *holder = allocgh(gqslot);
-00521     holder-&gt;data = data;
-00522     <span class="keywordflow">return</span> prependpq(&amp;gqslot-&gt;gqueue,&amp;holder-&gt;glink);
-00523 }
-00524 
-00525 <span class="keyword">static</span> <span class="keyword">inline</span> xngholder_t *getheadgq (xngqueue_t *gqslot)
-00526 {
-00527     <span class="keywordflow">return</span> (xngholder_t *)getheadpq(&amp;gqslot-&gt;gqueue);
-00528 }
-00529 
-00530 <span class="keyword">static</span> <span class="keyword">inline</span> xngholder_t *nextgq (xngqueue_t *gqslot,
-00531                                    xngholder_t *holder)
-00532 {
-00533     <span class="keywordflow">return</span> (xngholder_t *)nextpq(&amp;gqslot-&gt;gqueue,&amp;holder-&gt;glink);
-00534 }
-00535 
-00536 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> *getgq (xngqueue_t *gqslot)
-00537 {
-00538     xngholder_t *holder = getheadgq(gqslot);
-00539     <span class="keywordflow">if</span> (!holder) <span class="keywordflow">return</span> NULL;
-00540     appendq(gqslot-&gt;freehq,&amp;getpq(&amp;gqslot-&gt;gqueue)-&gt;plink);
-00541     <span class="keywordflow">return</span> holder-&gt;data;
-00542 }
-00543 
-00544 <span class="keyword">static</span> <span class="keyword">inline</span> xngholder_t *popgq (xngqueue_t *gqslot,
-00545                                   xngholder_t *holder)
-00546 {
-00547     xngholder_t *nextholder = nextgq(gqslot,holder);
-00548     removegh(gqslot,holder);
-00549     <span class="keywordflow">return</span> nextholder;
-00550 }
-00551 
-00552 <span class="keyword">static</span> <span class="keyword">inline</span> xngholder_t *findgq (xngqueue_t *gqslot,
-00553                                    <span class="keywordtype">void</span> *data)
-00554 {
-00555     xnholder_t *holder;
-00556 
-00557     <span class="keywordflow">for</span> (holder = gqslot-&gt;gqueue.pqueue.head.next;
-00558          holder != &amp;gqslot-&gt;gqueue.pqueue.head; holder = holder-&gt;next) {
-00559          <span class="keywordflow">if</span> (((xngholder_t *)holder)-&gt;data == data)
-00560              <span class="keywordflow">return</span> (xngholder_t *)holder;
-00561         }
-00562 
-00563     <span class="keywordflow">return</span> NULL;
-00564 }
+00483     <span class="keywordflow">return</span> (xngholder_t *)getq(gqslot-&gt;freehq);
+00484 }
+00485 
+00486 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> *removegh (xngqueue_t *gqslot,
+00487                               xngholder_t *holder)
+00488 {
+00489     removepq(&amp;gqslot-&gt;gqueue,&amp;holder-&gt;glink);
+00490     appendq(gqslot-&gt;freehq,&amp;holder-&gt;glink.plink);
+00491     <span class="keywordflow">return</span> holder-&gt;data;
+00492 }
+00493 
+00494 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> insertgqf (xngqueue_t *gqslot,
+00495                              <span class="keywordtype">void</span> *data,
+00496                              <span class="keywordtype">int</span> prio)
+00497 {
+00498     xngholder_t *holder = allocgh(gqslot);
+00499     holder-&gt;data = data;
+00500     <span class="keywordflow">return</span> insertpqf(&amp;gqslot-&gt;gqueue,&amp;holder-&gt;glink,prio);
+00501 }
+00502 
+00503 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> insertgql (xngqueue_t *gqslot,
+00504                              <span class="keywordtype">void</span> *data,
+00505                              <span class="keywordtype">int</span> prio)
+00506 {
+00507     xngholder_t *holder = allocgh(gqslot);
+00508     holder-&gt;data = data;
+00509     <span class="keywordflow">return</span> insertpql(&amp;gqslot-&gt;gqueue,&amp;holder-&gt;glink,prio);
+00510 }
+00511 
+00512 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> appendgq (xngqueue_t *gqslot,
+00513                             <span class="keywordtype">void</span> *data)
+00514 {
+00515     xngholder_t *holder = allocgh(gqslot);
+00516     holder-&gt;data = data;
+00517     <span class="keywordflow">return</span> appendpq(&amp;gqslot-&gt;gqueue,&amp;holder-&gt;glink);
+00518 }
+00519 
+00520 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> prependgq (xngqueue_t *gqslot,
+00521                              <span class="keywordtype">void</span> *data)
+00522 {
+00523     xngholder_t *holder = allocgh(gqslot);
+00524     holder-&gt;data = data;
+00525     <span class="keywordflow">return</span> prependpq(&amp;gqslot-&gt;gqueue,&amp;holder-&gt;glink);
+00526 }
+00527 
+00528 <span class="keyword">static</span> <span class="keyword">inline</span> xngholder_t *getheadgq (xngqueue_t *gqslot)
+00529 {
+00530     <span class="keywordflow">return</span> (xngholder_t *)getheadpq(&amp;gqslot-&gt;gqueue);
+00531 }
+00532 
+00533 <span class="keyword">static</span> <span class="keyword">inline</span> xngholder_t *nextgq (xngqueue_t *gqslot,
+00534                                    xngholder_t *holder)
+00535 {
+00536     <span class="keywordflow">return</span> (xngholder_t *)nextpq(&amp;gqslot-&gt;gqueue,&amp;holder-&gt;glink);
+00537 }
+00538 
+00539 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> *getgq (xngqueue_t *gqslot)
+00540 {
+00541     xngholder_t *holder = getheadgq(gqslot);
+00542     <span class="keywordflow">if</span> (!holder) <span class="keywordflow">return</span> NULL;
+00543     appendq(gqslot-&gt;freehq,&amp;getpq(&amp;gqslot-&gt;gqueue)-&gt;plink);
+00544     <span class="keywordflow">return</span> holder-&gt;data;
+00545 }
+00546 
+00547 <span class="keyword">static</span> <span class="keyword">inline</span> xngholder_t *popgq (xngqueue_t *gqslot,
+00548                                   xngholder_t *holder)
+00549 {
+00550     xngholder_t *nextholder = nextgq(gqslot,holder);
+00551     removegh(gqslot,holder);
+00552     <span class="keywordflow">return</span> nextholder;
+00553 }
+00554 
+00555 <span class="keyword">static</span> <span class="keyword">inline</span> xngholder_t *findgq (xngqueue_t *gqslot,
+00556                                    <span class="keywordtype">void</span> *data)
+00557 {
+00558     xnholder_t *holder;
+00559 
+00560     <span class="keywordflow">for</span> (holder = gqslot-&gt;gqueue.pqueue.head.next;
+00561          holder != &amp;gqslot-&gt;gqueue.pqueue.head; holder = holder-&gt;next) {
+00562          <span class="keywordflow">if</span> (((xngholder_t *)holder)-&gt;data == data)
+00563              <span class="keywordflow">return</span> (xngholder_t *)holder;
+00564         }
 00565 
-00566 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> *removegq (xngqueue_t *gqslot,
-00567                               <span class="keywordtype">void</span> *data)
-00568 {
-00569     xngholder_t *holder = findgq(gqslot,data);
-00570     <span class="keywordflow">return</span> holder ? removegh(gqslot,holder) : NULL;
-00571 }
-00572 
-00573 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> countgq (xngqueue_t *gqslot)
-00574 {
-00575     <span class="keywordflow">return</span> countpq(&amp;gqslot-&gt;gqueue);
-00576 }
-00577 
-00578 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_SCALABLE_SCHED</span>
-00579 <span class="preprocessor"></span>
-00580 <span class="comment">/* Multi-level priority queue */</span>
-00581 
-00582 <span class="preprocessor">#define XNSPQUEUE_PRIOS      (CONFIG_XENO_OPT_SCALABLE_PRIOS + 1)</span>
-00583 <span class="preprocessor"></span><span class="preprocessor">#define XNSPQUEUE_BITMAPSIZE ((XNSPQUEUE_PRIOS + BITS_PER_LONG - 1) / BITS_PER_LONG)</span>
-00584 <span class="preprocessor"></span>
-00585 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnspqueue {
-00586 
-00587     <span class="keywordtype">int</span> qdir, maxpri;
-00588 
-00589     <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> elems;
-00590 
-00591     u_long bitmap[XNSPQUEUE_BITMAPSIZE];
-00592 
-00593     <span class="keyword">struct </span>xnqueue queue[XNSPQUEUE_PRIOS];
-00594 
-00595 } xnspqueue_t;
-00596 
-00597 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> countspq(xnspqueue_t *spqslot)
-00598 {
-00599     <span class="keywordflow">return</span> spqslot-&gt;elems;
-00600 }
-00601 
-00602 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> xnspqueue_prio2idx(xnspqueue_t *spqslot, <span class="keywordtype">int</span> prio)
-00603 {
-00604     <span class="keywordflow">if</span> (spqslot-&gt;qdir == xnqueue_up) <span class="comment">/* minprio &gt; maxprio */</span>
-00605         <span class="keywordflow">return</span> prio - spqslot-&gt;maxpri;
-00606     <span class="keywordflow">else</span>
-00607         <span class="keywordflow">return</span> spqslot-&gt;maxpri - prio;
-00608 }
-00609 
-00610 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> xnspqueue_find_firstbit(xnspqueue_t *spqslot)
-00611 {
-00612     <span class="keywordtype">int</span> i;
-00613 
-00614 <span class="comment">/* simplest approach for now */</span>
-00615     <span class="keywordflow">for</span> (i = 0; i &lt; XNSPQUEUE_BITMAPSIZE; i++)
-00616         {
-00617         <span class="keywordflow">if</span> (spqslot-&gt;bitmap[i])
-00618             <span class="keywordflow">return</span> ffnz(spqslot-&gt;bitmap[i]) + i*BITS_PER_LONG;
-00619         }
-00620 
-00621     <span class="keywordflow">return</span> 0; <span class="comment">/* something already had gone wrong before this code was called */</span>
-00622 }
-00623 
-00624 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> initspq(xnspqueue_t *spqslot, <span class="keywordtype">int</span> qdir, <span class="keywordtype">int</span> maxpri)
-00625 {
-00626     <span class="keywordtype">int</span> i;
-00627 
-00628     spqslot-&gt;elems = 0;
-00629     spqslot-&gt;qdir  = qdir;
-00630     spqslot-&gt;maxpri = maxpri;
-00631     
-00632     memset(&amp;spqslot-&gt;bitmap, 0, XNSPQUEUE_BITMAPSIZE*<span class="keyword">sizeof</span>(u_long));
-00633     
-00634     <span class="keywordflow">for</span> (i = 0; i &lt; XNSPQUEUE_PRIOS; i++)
-00635         initq(&amp;spqslot-&gt;queue[i]);
-00636 }
-00637 
-00638 <span class="preprocessor">#define XNSPQUEUE_APPEND        0</span>
-00639 <span class="preprocessor"></span><span class="preprocessor">#define XNSPQUEUE_PREPEND       1</span>
-00640 <span class="preprocessor"></span>
-00641 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __xnspqueue_insert(xnspqueue_t *spqslot,
-00642                                       xnpholder_t  *holder,
-00643                                       <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx,
-00644                                       <span class="keywordtype">int</span> mode)
-00645 {
-00646     xnqueue_t *queue = &amp;spqslot-&gt;queue[idx];
-00647 
-00648     <span class="keywordflow">if</span> (mode == XNSPQUEUE_PREPEND) <span class="comment">/* Hopefully, this should be optimized away. */</span>
-00649         prependq(queue, &amp;holder-&gt;plink);
-00650     <span class="keywordflow">else</span>
-00651         appendq(queue, &amp;holder-&gt;plink);
+00566     <span class="keywordflow">return</span> NULL;
+00567 }
+00568 
+00569 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> *removegq (xngqueue_t *gqslot,
+00570                               <span class="keywordtype">void</span> *data)
+00571 {
+00572     xngholder_t *holder = findgq(gqslot,data);
+00573     <span class="keywordflow">return</span> holder ? removegh(gqslot,holder) : NULL;
+00574 }
+00575 
+00576 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> countgq (xngqueue_t *gqslot)
+00577 {
+00578     <span class="keywordflow">return</span> countpq(&amp;gqslot-&gt;gqueue);
+00579 }
+00580 
+00581 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_SCALABLE_SCHED</span>
+00582 <span class="preprocessor"></span>
+00583 <span class="comment">/* Multi-level priority queue, suitable for handling the runnable</span>
+00584 <span class="comment">   thread queue. */</span>
+00585 
+00586 <span class="preprocessor">#if BITS_PER_LONG * BITS_PER_LONG &lt; XNCORE_NR_PRIO</span>
+00587 <span class="preprocessor"></span><span class="preprocessor">#error "Internal bitmap cannot hold so many priority levels"</span>
+00588 <span class="preprocessor"></span><span class="preprocessor">#endif</span>
+00589 <span class="preprocessor"></span>
+00590 <span class="preprocessor">#define __MLQ_LONGS ((XNCORE_NR_PRIO+BITS_PER_LONG-1)/BITS_PER_LONG)</span>
+00591 <span class="preprocessor"></span>
+00592 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnmlqueue {
+00593 
+00594     <span class="keywordtype">int</span> qdir, maxpri;
+00595 
+00596     <span class="keywordtype">unsigned</span> elems;
+00597 
+00598     u_long himap,
+00599            lomap[__MLQ_LONGS];
+00600 
+00601     <span class="keyword">struct </span>xnqueue queue[XNCORE_NR_PRIO];
+00602 
+00603 } xnmlqueue_t;
+00604 
+00605 <span class="preprocessor">#undef __MLQ_LONGS</span>
+00606 <span class="preprocessor"></span>
+00607 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> countmlq(xnmlqueue_t *mlqslot)
+00608 {
+00609     <span class="keywordflow">return</span> mlqslot-&gt;elems;
+00610 }
+00611 
+00612 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> indexmlq(xnmlqueue_t *mlqslot, <span class="keywordtype">int</span> prio)
+00613 {
+00614     <span class="keywordflow">if</span> (mlqslot-&gt;qdir == xnqueue_up) <span class="comment">/* minprio &gt; maxprio */</span>
+00615         <span class="keywordflow">return</span> prio - mlqslot-&gt;maxpri;
+00616     <span class="keywordflow">else</span>
+00617         <span class="keywordflow">return</span> mlqslot-&gt;maxpri - prio;
+00618 }
+00619 
+00620 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> ffsmlq(xnmlqueue_t *mlqslot)
+00621 {
+00622     <span class="keywordtype">int</span> hi = ffnz(mlqslot-&gt;himap);
+00623     <span class="keywordtype">int</span> lo = ffnz(mlqslot-&gt;lomap[hi]);
+00624     <span class="keywordflow">return</span> hi * BITS_PER_LONG + lo; <span class="comment">/* Result is undefined if none set. */</span>
+00625 }
+00626 
+00627 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> initmlq(xnmlqueue_t *mlqslot, <span class="keywordtype">int</span> qdir, <span class="keywordtype">int</span> maxpri)
+00628 {
+00629     <span class="keywordtype">int</span> i;
+00630 
+00631     mlqslot-&gt;elems = 0;
+00632     mlqslot-&gt;qdir  = qdir;
+00633     mlqslot-&gt;maxpri = maxpri;
+00634     mlqslot-&gt;himap = 0;
+00635     memset(&amp;mlqslot-&gt;lomap,0,<span class="keyword">sizeof</span>(mlqslot-&gt;lomap));
+00636     
+00637     <span class="keywordflow">for</span> (i = 0; i &lt; XNCORE_NR_PRIO; i++)
+00638         initq(&amp;mlqslot-&gt;queue[i]);
+00639 }
+00640 
+00641 <span class="preprocessor">#define XNMLQUEUE_APPEND   0</span>
+00642 <span class="preprocessor"></span><span class="preprocessor">#define XNMLQUEUE_PREPEND  1</span>
+00643 <span class="preprocessor"></span>
+00644 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> addmlq(xnmlqueue_t *mlqslot,
+00645                           xnpholder_t  *holder,
+00646                           <span class="keywordtype">unsigned</span> idx,
+00647                           <span class="keywordtype">int</span> mode)
+00648 {
+00649     xnqueue_t *queue = &amp;mlqslot-&gt;queue[idx];
+00650     <span class="keywordtype">int</span> hi = idx / BITS_PER_LONG;
+00651     <span class="keywordtype">int</span> lo = idx % BITS_PER_LONG;
 00652 
-00653     spqslot-&gt;elems++;
-00654     __setbits(spqslot-&gt;bitmap[idx / BITS_PER_LONG],1 &lt;&lt; (idx % BITS_PER_LONG));
-00655 }
-00656 
-00657 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> insertspql(xnspqueue_t *spqslot,
-00658                              xnpholder_t *holder,
-00659                              <span class="keywordtype">int</span> prio)
-00660 {
-00661     __xnspqueue_insert(spqslot, holder, xnspqueue_prio2idx(spqslot,prio), XNSPQUEUE_PREPEND);
-00662     holder-&gt;prio = prio;
-00663 }
-00664 
-00665 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> insertspqf(xnspqueue_t *spqslot,
-00666                              xnpholder_t *holder,
-00667                              <span class="keywordtype">int</span> prio)
-00668 {
-00669     __xnspqueue_insert(spqslot, holder, xnspqueue_prio2idx(spqslot,prio), XNSPQUEUE_APPEND);
-00670     holder-&gt;prio = prio;
-00671 }
-00672 
-00673 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> appendspq(xnspqueue_t *spqslot,
-00674                             xnpholder_t *holder)
-00675 {
-00676     __xnspqueue_insert(spqslot, holder, spqslot-&gt;maxpri, XNSPQUEUE_APPEND);
-00677     holder-&gt;prio = spqslot-&gt;maxpri;
-00678 }
-00679 
-00680 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> prependspq(xnspqueue_t *spqslot,
-00681                              xnpholder_t *holder)
-00682 {
-00683     __xnspqueue_insert(spqslot, holder, 0, XNSPQUEUE_PREPEND);
-00684     holder-&gt;prio = 0;
-00685 }
-00686 
-00687 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> removespq(xnspqueue_t *spqslot,
-00688                             xnpholder_t *holder)
-00689 {
-00690     <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx = xnspqueue_prio2idx(spqslot,holder-&gt;prio);
-00691     xnqueue_t *queue = &amp;spqslot-&gt;queue[idx];
+00653     <span class="keywordflow">if</span> (mode == XNMLQUEUE_PREPEND) <span class="comment">/* Hopefully, this should be optimized away. */</span>
+00654         prependq(queue, &amp;holder-&gt;plink);
+00655     <span class="keywordflow">else</span>
+00656         appendq(queue, &amp;holder-&gt;plink);
+00657 
+00658     mlqslot-&gt;elems++;
+00659     __setbits(mlqslot-&gt;himap,1 &lt;&lt; hi);
+00660     __setbits(mlqslot-&gt;lomap[hi],1 &lt;&lt; lo);
+00661 }
+00662 
+00663 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> insertmlql(xnmlqueue_t *mlqslot,
+00664                               xnpholder_t *holder,
+00665                               <span class="keywordtype">int</span> prio)
+00666 {
+00667     addmlq(mlqslot, holder, indexmlq(mlqslot,prio), XNMLQUEUE_PREPEND);
+00668     holder-&gt;prio = prio;
+00669 }
+00670 
+00671 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> insertmlqf(xnmlqueue_t *mlqslot,
+00672                               xnpholder_t *holder,
+00673                               <span class="keywordtype">int</span> prio)
+00674 {
+00675     addmlq(mlqslot, holder, indexmlq(mlqslot,prio), XNMLQUEUE_APPEND);
+00676     holder-&gt;prio = prio;
+00677 }
+00678 
+00679 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> appendmlq(xnmlqueue_t *mlqslot,
+00680                              xnpholder_t *holder)
+00681 {
+00682     addmlq(mlqslot, holder, mlqslot-&gt;maxpri, XNMLQUEUE_APPEND);
+00683     holder-&gt;prio = mlqslot-&gt;maxpri;
+00684 }
+00685 
+00686 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> prependmlq(xnmlqueue_t *mlqslot,
+00687                               xnpholder_t *holder)
+00688 {
+00689     addmlq(mlqslot, holder, 0, XNMLQUEUE_PREPEND);
+00690     holder-&gt;prio = 0;
+00691 }
 00692 
-00693     spqslot-&gt;elems--;
-00694     
-00695     removeq(queue, &amp;holder-&gt;plink);
-00696     
-00697     <span class="keywordflow">if</span> (!countq(queue))
-00698         __clrbits(spqslot-&gt;bitmap[idx / BITS_PER_LONG],1 &lt;&lt; (idx % BITS_PER_LONG));
-00699 }
-00700 
-00701 <span class="keyword">static</span> <span class="keyword">inline</span> xnpholder_t* findspqh(xnspqueue_t *spqslot,
-00702                                    <span class="keywordtype">int</span> prio)
-00703 {
-00704     xnqueue_t *queue = &amp;spqslot-&gt;queue[xnspqueue_prio2idx(spqslot,prio)];
-00705     <span class="keywordflow">return</span> (xnpholder_t *)getheadq(queue);
-00706 }
-00707 
-00708 <span class="keyword">static</span> <span class="keyword">inline</span> xnpholder_t* getheadspq(xnspqueue_t *spqslot)
-00709 {
-00710     xnqueue_t *queue;
+00693 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> removemlq(xnmlqueue_t *mlqslot,
+00694                              xnpholder_t *holder)
+00695 {
+00696     <span class="keywordtype">unsigned</span> idx = indexmlq(mlqslot,holder-&gt;prio);
+00697     xnqueue_t *queue = &amp;mlqslot-&gt;queue[idx];
+00698 
+00699     mlqslot-&gt;elems--;
+00700     
+00701     removeq(queue, &amp;holder-&gt;plink);
+00702     
+00703     <span class="keywordflow">if</span> (!countq(queue)) {
+00704         <span class="keywordtype">int</span> hi = idx / BITS_PER_LONG;
+00705         <span class="keywordtype">int</span> lo = idx % BITS_PER_LONG;
+00706         __clrbits(mlqslot-&gt;lomap[hi],1 &lt;&lt; lo);
+00707         <span class="keywordflow">if</span> (mlqslot-&gt;lomap[hi] == 0)
+00708             __clrbits(mlqslot-&gt;himap,1 &lt;&lt; hi);
+00709     }
+00710 }
 00711 
-00712     <span class="keywordflow">if</span> (!countspq(spqslot))
-00713         <span class="keywordflow">return</span> NULL;
-00714 
-00715     queue = &amp;spqslot-&gt;queue[xnspqueue_find_firstbit(spqslot)];
-00716     
-00717     <span class="keywordflow">return</span> (xnpholder_t *)getheadq(queue);
-00718 }
-00719 
-00720 <span class="keyword">static</span> <span class="keyword">inline</span> xnpholder_t* getspq(xnspqueue_t *spqslot)
-00721 {
-00722     <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx;
-00723     xnholder_t *holder;
-00724     xnqueue_t *queue;
+00712 <span class="keyword">static</span> <span class="keyword">inline</span> xnpholder_t *findmlqh(xnmlqueue_t *mlqslot,
+00713                                     <span class="keywordtype">int</span> prio)
+00714 {
+00715     xnqueue_t *queue = &amp;mlqslot-&gt;queue[indexmlq(mlqslot,prio)];
+00716     <span class="keywordflow">return</span> (xnpholder_t *)getheadq(queue);
+00717 }
+00718 
+00719 <span class="keyword">static</span> <span class="keyword">inline</span> xnpholder_t *getheadmlq(xnmlqueue_t *mlqslot)
+00720 {
+00721     xnqueue_t *queue;
+00722 
+00723     <span class="keywordflow">if</span> (!countmlq(mlqslot))
+00724         <span class="keywordflow">return</span> NULL;
 00725 
-00726     <span class="keywordflow">if</span> (!countspq(spqslot))
-00727         <span class="keywordflow">return</span> NULL;
-00728 
-00729     idx    = xnspqueue_find_firstbit(spqslot);
-00730     queue  = &amp;spqslot-&gt;queue[idx];
-00731     holder = getq(queue);
-00732 
-00733     <span class="keywordflow">if</span> (!holder)
-00734         <span class="keywordflow">return</span> NULL;
-00735         
-00736     spqslot-&gt;elems--;    
+00726     queue = &amp;mlqslot-&gt;queue[ffsmlq(mlqslot)];
+00727     
+00728     <span class="keywordflow">return</span> (xnpholder_t *)getheadq(queue);
+00729 }
+00730 
+00731 <span class="keyword">static</span> <span class="keyword">inline</span> xnpholder_t *getmlq(xnmlqueue_t *mlqslot)
+00732 {
+00733     <span class="keywordtype">unsigned</span> idx;
+00734     xnholder_t *holder;
+00735     xnqueue_t *queue;
+00736     <span class="keywordtype">int</span> hi, lo;
 00737 
-00738     <span class="keywordflow">if</span> (!countq(queue))
-00739         __clrbits(spqslot-&gt;bitmap[idx / BITS_PER_LONG],1 &lt;&lt; (idx % BITS_PER_LONG));
-00740     
-00741     <span class="keywordflow">return</span> (xnpholder_t *)holder;
-00742 }
-00743 
-00744 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_SCALABLE_SCHED */</span>
-00745 
-00746 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_QUEUE_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Wed Mar 15 15:47:44 2006 for Xenomai API by&nbsp;
+00738     <span class="keywordflow">if</span> (!countmlq(mlqslot))
+00739         <span class="keywordflow">return</span> NULL;
+00740 
+00741     idx = ffsmlq(mlqslot);
+00742     queue = &amp;mlqslot-&gt;queue[idx];
+00743     holder = getq(queue);
+00744 
+00745 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_DEBUG_QUEUES</span>
+00746 <span class="preprocessor"></span>    <span class="keywordflow">if</span> (!holder)
+00747         xnpod_fatal(<span class="stringliteral">"corrupted multi-level queue, qslot=%p at %s:%d"</span>,
+00748                     mlqslot,
+00749                     __FILE__,__LINE__);
+00750 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_DEBUG_QUEUES */</span>
+00751         
+00752     hi = idx / BITS_PER_LONG;
+00753     lo = idx % BITS_PER_LONG;
+00754 
+00755     mlqslot-&gt;elems--;    
+00756 
+00757     <span class="keywordflow">if</span> (!countq(queue)) {
+00758         __clrbits(mlqslot-&gt;lomap[hi],1 &lt;&lt; lo);
+00759         <span class="keywordflow">if</span> (mlqslot-&gt;lomap[hi] == 0)
+00760             __clrbits(mlqslot-&gt;himap,1 &lt;&lt; hi);
+00761     }
+00762     
+00763     <span class="keywordflow">return</span> (xnpholder_t *)holder;
+00764 }
+00765 
+00766 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_SCALABLE_SCHED */</span>
+00767 
+00768 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_QUEUE_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:49 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -107,68 +107,65 @@
 00097 <span class="preprocessor"></span>
 00098 <span class="preprocessor">#define pse51_current_thread() thread2pthread(xnpod_current_thread())</span>
 00099 <span class="preprocessor"></span>
-00100 <span class="keywordtype">int</span> *pse51_errno_location(<span class="keywordtype">void</span>);
-00101 
-00102 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> thread_set_errno (<span class="keywordtype">int</span> err)
-00103 {
-00104     <span class="keywordflow">if</span>(!xnpod_interrupt_p())
-00105         *pse51_errno_location() = err;
-00106 }
-00107 
-00108 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> thread_get_errno (<span class="keywordtype">void</span>)
-00109 {
-00110     <span class="keywordflow">return</span> !xnpod_interrupt_p() ? *pse51_errno_location() : 0;
-00111 }
-00112 
-00113 <span class="preprocessor">#define thread_name(thread) ((thread)-&gt;attr.name)</span>
-00114 <span class="preprocessor"></span>
-00115 <span class="preprocessor">#define thread_exit_status(thread) ((thread)-&gt;exit_status)</span>
-00116 <span class="preprocessor"></span>
-00117 <span class="preprocessor">#define thread_getdetachstate(thread) ((thread)-&gt;attr.detachstate)</span>
-00118 <span class="preprocessor"></span>
-00119 <span class="preprocessor">#define thread_setdetachstate(thread, state) ((thread)-&gt;attr.detachstate=state)</span>
-00120 <span class="preprocessor"></span>
-00121 <span class="preprocessor">#define thread_getcancelstate(thread) ((thread)-&gt;cancelstate)</span>
-00122 <span class="preprocessor"></span>
-00123 <span class="preprocessor">#define thread_setcancelstate(thread, state) ((thread)-&gt;cancelstate=state)</span>
-00124 <span class="preprocessor"></span>
-00125 <span class="preprocessor">#define thread_setcanceltype(thread, type) ((thread)-&gt;canceltype=type)</span>
-00126 <span class="preprocessor"></span>
-00127 <span class="preprocessor">#define thread_getcanceltype(thread) ((thread)-&gt;canceltype)</span>
-00128 <span class="preprocessor"></span>
-00129 <span class="preprocessor">#define thread_clrcancel(thread) ((thread)-&gt;cancel_request = 0)</span>
-00130 <span class="preprocessor"></span>
-00131 <span class="preprocessor">#define thread_setcancel(thread) ((thread)-&gt;cancel_request = 1)</span>
-00132 <span class="preprocessor"></span>
-00133 <span class="preprocessor">#define thread_cleanups(thread) (&amp;(thread)-&gt;cleanup_handlers_q)</span>
-00134 <span class="preprocessor"></span>
-00135 <span class="preprocessor">#define thread_gettsd(thread, key) ((thread)-&gt;tsd[key])</span>
-00136 <span class="preprocessor"></span>
-00137 <span class="preprocessor">#define thread_settsd(thread, key, value) ((thread)-&gt;tsd[key]=(value))</span>
-00138 <span class="preprocessor"></span>
-00139 <span class="keywordtype">void</span> pse51_thread_abort(pthread_t thread, <span class="keywordtype">void</span> *status);
-00140 
-00141 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> thread_cancellation_point (xnthread_t *thread)
-00142 {
-00143     pthread_t cur = thread2pthread(thread);
-00144     
-00145     <span class="keywordflow">if</span>(cur &amp;&amp; cur-&gt;cancel_request
-00146         &amp;&amp; thread_getcancelstate(cur) == PTHREAD_CANCEL_ENABLE )
-00147         pse51_thread_abort(cur, PTHREAD_CANCELED);
-00148 }
-00149 
-00150 <span class="keywordtype">void</span> pse51_thread_pkg_init(u_long rrperiod);
-00151 
-00152 <span class="keywordtype">void</span> pse51_thread_pkg_cleanup(<span class="keywordtype">void</span>);
+00100 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> thread_set_errno (<span class="keywordtype">int</span> err)
+00101 {
+00102     *xnthread_get_errno_location() = err;
+00103 }
+00104 
+00105 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> thread_get_errno (<span class="keywordtype">void</span>)
+00106 {
+00107     <span class="keywordflow">return</span> *xnthread_get_errno_location();
+00108 }
+00109 
+00110 <span class="preprocessor">#define thread_name(thread) ((thread)-&gt;attr.name)</span>
+00111 <span class="preprocessor"></span>
+00112 <span class="preprocessor">#define thread_exit_status(thread) ((thread)-&gt;exit_status)</span>
+00113 <span class="preprocessor"></span>
+00114 <span class="preprocessor">#define thread_getdetachstate(thread) ((thread)-&gt;attr.detachstate)</span>
+00115 <span class="preprocessor"></span>
+00116 <span class="preprocessor">#define thread_setdetachstate(thread, state) ((thread)-&gt;attr.detachstate=state)</span>
+00117 <span class="preprocessor"></span>
+00118 <span class="preprocessor">#define thread_getcancelstate(thread) ((thread)-&gt;cancelstate)</span>
+00119 <span class="preprocessor"></span>
+00120 <span class="preprocessor">#define thread_setcancelstate(thread, state) ((thread)-&gt;cancelstate=state)</span>
+00121 <span class="preprocessor"></span>
+00122 <span class="preprocessor">#define thread_setcanceltype(thread, type) ((thread)-&gt;canceltype=type)</span>
+00123 <span class="preprocessor"></span>
+00124 <span class="preprocessor">#define thread_getcanceltype(thread) ((thread)-&gt;canceltype)</span>
+00125 <span class="preprocessor"></span>
+00126 <span class="preprocessor">#define thread_clrcancel(thread) ((thread)-&gt;cancel_request = 0)</span>
+00127 <span class="preprocessor"></span>
+00128 <span class="preprocessor">#define thread_setcancel(thread) ((thread)-&gt;cancel_request = 1)</span>
+00129 <span class="preprocessor"></span>
+00130 <span class="preprocessor">#define thread_cleanups(thread) (&amp;(thread)-&gt;cleanup_handlers_q)</span>
+00131 <span class="preprocessor"></span>
+00132 <span class="preprocessor">#define thread_gettsd(thread, key) ((thread)-&gt;tsd[key])</span>
+00133 <span class="preprocessor"></span>
+00134 <span class="preprocessor">#define thread_settsd(thread, key, value) ((thread)-&gt;tsd[key]=(value))</span>
+00135 <span class="preprocessor"></span>
+00136 <span class="keywordtype">void</span> pse51_thread_abort(pthread_t thread, <span class="keywordtype">void</span> *status);
+00137 
+00138 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> thread_cancellation_point (xnthread_t *thread)
+00139 {
+00140     pthread_t cur = thread2pthread(thread);
+00141     
+00142     <span class="keywordflow">if</span>(cur &amp;&amp; cur-&gt;cancel_request
+00143         &amp;&amp; thread_getcancelstate(cur) == PTHREAD_CANCEL_ENABLE )
+00144         pse51_thread_abort(cur, PTHREAD_CANCELED);
+00145 }
+00146 
+00147 <span class="keywordtype">void</span> pse51_thread_pkg_init(u_long rrperiod);
+00148 
+00149 <span class="keywordtype">void</span> pse51_thread_pkg_cleanup(<span class="keywordtype">void</span>);
+00150 
+00151 <span class="comment">/* round-robin period. */</span>
+00152 <span class="keyword">extern</span> xnticks_t pse51_time_slice;
 00153 
-00154 <span class="comment">/* round-robin period. */</span>
-00155 <span class="keyword">extern</span> xnticks_t pse51_time_slice;
+00154 <span class="comment">/* threads list */</span>
+00155 <span class="keyword">extern</span> xnqueue_t pse51_threadq;
 00156 
-00157 <span class="comment">/* threads list */</span>
-00158 <span class="keyword">extern</span> xnqueue_t pse51_threadq;
-00159 
-00160 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_THREAD_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Wed Mar 15 15:47:44 2006 for Xenomai API by&nbsp;
+00157 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_THREAD_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:49 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

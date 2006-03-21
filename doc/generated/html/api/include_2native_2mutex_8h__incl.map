@@ -1,6 +1,7 @@
 base referer
-rect $synch_8h-source.html 210,78 328,102
-rect $native_2types_8h.html 384,128 488,152
-rect $nucleus_2queue_8h-source.html 376,80 496,104
+rect $synch_8h-source.html 210,54 328,78
+rect $native_2types_8h.html 384,104 488,128
+rect $nucleus_2queue_8h-source.html 376,56 496,80
 rect $nucleus_2types_8h-source.html 544,104 658,128
+rect $include_2nucleus_2core_8h-source.html 546,56 656,80
 rect $compiler_8h-source.html 720,200 853,224
