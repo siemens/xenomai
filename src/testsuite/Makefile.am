@@ -1,1 +1,1 @@
-SUBDIRS = latency switch
+SUBDIRS = latency switch cyclic
