@@ -179,8 +179,11 @@ int __wrap_munmap(void *addr, size_t len)
                              len,
                              &map);
 
-    if (err == EBADF)
+    if (err == ENXIO)
         return __real_munmap(addr, len);
+
+    if (err)
+        goto error;
 
     if (__real_munmap((char *) addr - map.offset, map.mapsize))
         return -1;
@@ -193,6 +196,7 @@ int __wrap_munmap(void *addr, size_t len)
     if (!err)
 	return 0;
 
+  error:
     errno = err;
     return -1;
 }

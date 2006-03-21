@@ -100,7 +100,7 @@ while test $# -gt 0; do
 	    fi
 	    wrappers=`cat $XENO_POSIX_WRAPPERS | \
 	    while read symbol; do \
-                echo -n "-Wl,--wrap -Wl,$symbol " ; \
+                echo -n "-Wl,--wrap,$symbol " ; \
 	     done`
             echo "$wrappers $XENO_POSIX_LDFLAGS"
             ;;

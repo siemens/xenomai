@@ -507,6 +507,9 @@ XENO_USER_APP_CFLAGS=$XENO_USER_CFLAGS
 XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__IN_XENO__ -Wstrict-prototypes"
 XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
 
+XENO_POSIX_WRAPPERS=`while read symbol; do echo -n "-Wl,--wrap,$symbol "; done \
+        < $srcdir/src/skins/posix/posix.wrappers`
+
 dnl
 dnl Build the Makefiles
 dnl
@@ -525,6 +528,9 @@ AC_SUBST(XENO_USER_CFLAGS)
 AC_SUBST(XENO_USER_LDFLAGS)
 AC_SUBST(XENO_USER_APP_CFLAGS)
 AC_SUBST(XENO_USER_APP_LDFLAGS)
+AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
+        ['$(top_srcdir)/src/skins/posix/posix.wrappers'])
+AC_SUBST(XENO_POSIX_WRAPPERS)
 
 base=asm-$XENO_TARGET_ARCH
 AC_CONFIG_LINKS([src/include/asm/xenomai:include/$base])
@@ -555,6 +561,7 @@ AC_CONFIG_FILES([ \
        	src/testsuite/Makefile \
        	src/testsuite/latency/Makefile \
        	src/testsuite/switch/Makefile \
+       	src/testsuite/cyclic/Makefile \
        	include/Makefile \
        	include/asm-generic/Makefile \
        	include/asm-blackfin/Makefile \
