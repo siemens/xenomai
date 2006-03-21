@@ -211,6 +211,8 @@ static void pse51_shm_put(pse51_shm_t *shm, unsigned dec)
  *
  * @param oflags flags.
  *
+ * @param mode ignored.
+ *
  * @return a file descriptor on success;
  * @return -1 with @a errno set if:
  * - ENAMETOOLONG, the length of the @a name argument exceeds 64 characters;

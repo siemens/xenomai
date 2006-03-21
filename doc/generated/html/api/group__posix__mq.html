@@ -34,19 +34,19 @@ A message queue allow exchanging data between real-time threads. For a POSIX mes
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unlink a message queue.  <a href="#ga11"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mq.html#ga16">mq_send</a> (mqd_t fd, const char *buffer, size_t len, unsigned prio)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Send a message to a messages queue.  <a href="#ga16"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Send a message to a message queue.  <a href="#ga16"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mq.html#ga17">mq_timedsend</a> (mqd_t fd, const char *buffer, size_t len, unsigned prio, const struct timespec *abs_timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Attempt, during a bounded time, to send a message to a messages queue.  <a href="#ga17"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Attempt, during a bounded time, to send a message to a message queue.  <a href="#ga17"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mq.html#ga18">mq_receive</a> (mqd_t fd, char *buffer, size_t len, unsigned *priop)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive a message from a messages queue.  <a href="#ga18"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive a message from a message queue.  <a href="#ga18"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mq.html#ga19">mq_timedreceive</a> (mqd_t fd, char *__restrict__ buffer, size_t len, unsigned *__restrict__ priop, const struct timespec *__restrict__ abs_timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Attempt, during a bounded time, to receive a message from a messages queue.  <a href="#ga19"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Attempt, during a bounded time, to receive a message from a message queue.  <a href="#ga19"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mq.html#ga20">mq_getattr</a> (mqd_t fd, struct mq_attr *attr)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the attributes object of a messages queue.  <a href="#ga20"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the attributes object of a message queue.  <a href="#ga20"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mq.html#ga21">mq_setattr</a> (mqd_t fd, const struct mq_attr *__restrict__ attr, struct mq_attr *__restrict__ oattr)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set flags of a message queue.  <a href="#ga21"></a><br></td></tr>
@@ -97,7 +97,7 @@ This service closes the message queue descriptor <em>fd</em>. The message queue 
   </table>
 </dl>
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
-<li>kernel module initialization or cleanup routine;</li><li>user-space thread (Xenomai threads switch to secondary mode).</li></ul>
+<li>kernel module initialization or cleanup routine;</li><li>kernel-space cancellation cleanup routine;</li><li>user-space thread (Xenomai threads switch to secondary mode);</li><li>user-space cancellation cleanup routine.</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_close.html">Specification.</a> </dd></dl>
     </td>
@@ -137,16 +137,16 @@ This service closes the message queue descriptor <em>fd</em>. The message queue 
     <td>
 
 <p>
-Get the attributes object of a messages queue. 
+Get the attributes object of a message queue. 
 <p>
 This service stores, at the address <em>attr</em>, the attributes of the messages queue descriptor <em>fd</em>.<p>
 The following attributes are set:<ul>
-<li><em>mq_flags</em>, flags of the message queue descriptor <em>fd</em>;</li><li><em>mq_maxmsg</em>, maximum number of messages in the messages queue;</li><li><em>mq_msgsize</em>, maximum message size;</li><li><em>mq_curmsgs</em>, number of messages currently in the queue.</li></ul>
+<li><em>mq_flags</em>, flags of the message queue descriptor <em>fd</em>;</li><li><em>mq_maxmsg</em>, maximum number of messages in the message queue;</li><li><em>mq_msgsize</em>, maximum message size;</li><li><em>mq_curmsgs</em>, number of messages currently in the queue.</li></ul>
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>fd</em>&nbsp;</td><td>messages queue descriptor;</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>address where the messages queue attributes will be stored on success.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>fd</em>&nbsp;</td><td>message queue descriptor;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>address where the message queue attributes will be stored on success.</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Return values:</b></dt><dd>
@@ -197,13 +197,14 @@ The following attributes are set:<ul>
 <p>
 Register the current thread to be notified of message arrival at an empty message queue. 
 <p>
-If <em>evp</em> is not <em>NULL</em> and is the address of a <b>sigevent</b> structure with the <em>sigev_notify</em> member set to SIGEV_SIGNAL, the current thread will be notified by a signal when a message is sent to message queue <em>fd</em>, and the queue is empty. After the first notification, the thread is automatically unregistered.<p>
+If <em>evp</em> is not <em>NULL</em> and is the address of a <b>sigevent</b> structure with the <em>sigev_notify</em> member set to SIGEV_SIGNAL, the current thread will be notified by a signal when a message is sent to the message queue <em>fd</em>, the queue is empty, and no thread is blocked in call to mq_receive or mq_timedreceive. After the notification, the thread is unregistered.<p>
 If <em>evp</em> is <em>NULL</em> or the <em>sigev_notify</em> member is SIGEV_NONE, the current thread is unregistered.<p>
-If the current thread is not a Xenomai POSIX skin thread (created with <a class="el" href="group__posix__thread.html#ga8">pthread_create()</a>), this service fails.<p>
 Only one thread may be registered at a time.<p>
+If the current thread is not a Xenomai POSIX skin thread (created with <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a>), this service fails.<p>
+Note that signals sent to user-space Xenomai POSIX skin threads will cause them to switch to secondary mode.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>fd</em>&nbsp;</td><td>messages queue descriptor;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>fd</em>&nbsp;</td><td>message queue descriptor;</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>evp</em>&nbsp;</td><td>pointer to an event notification structure.</td></tr>
   </table>
 </dl>
@@ -211,10 +212,13 @@ Only one thread may be registered at a time.<p>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
-<li>EINVAL, <em>evp</em> is invalid;</li><li>EPERM, the caller context is invalid;</li><li>EBADF, <em>fd</em> is not a valid messages queue descriptor;</li><li>EBUSY, another thread is already registered.</li></ul>
+<li>EINVAL, <em>evp</em> is invalid;</li><li>EPERM, the caller context is invalid;</li><li>EBADF, <em>fd</em> is not a valid message queue descriptor;</li><li>EBUSY, another thread is already registered.</li></ul>
 </td></tr>
   </table>
 </dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>Xenomai kernel-space POSIX skin thread,</li><li>Xenomai user-space POSIX skin thread (switches to primary mode).</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_notify.html">Specification.</a> </dd></dl>
     </td>
   </tr>
@@ -261,16 +265,16 @@ Only one thread may be registered at a time.<p>
 <p>
 Open a message queue. 
 <p>
-This service establishes a binding between the message queue named <em>name</em> and the calling context.<p>
+This service establishes a connection between the message queue named <em>name</em> and the calling context (kernel-space as a whole, or user-space process).<p>
 One of the following values should be set in <em>oflags:</em> <ul>
 <li>O_RDONLY, meaning that the returned queue descriptor may only be used for receiving messages;</li><li>O_WRONLY, meaning that the returned queue descriptor may only be used for sending messages;</li><li>O_RDWR, meaning that the returned queue descriptor may be used for both sending and receiving messages.</li></ul>
 <p>
-If no message queue named <em>name</em> exists, and <em>oflags</em> has the <em>O_CREAT</em> bit set, the message queue is created by this function, using two more arguments:<ul>
-<li>a <em>mode</em> argument, of type <b>mode_t</b>, currently ignored;</li><li>a <em>attr</em> argument, pointer to an <b>mq_attr</b> structure, specifying the attributes of the new messages queue.</li></ul>
+If no message queue named <em>name</em> exists, and <em>oflags</em> has the <em>O_CREAT</em> bit set, the message queue is created by this function, taking two more arguments:<ul>
+<li>a <em>mode</em> argument, of type <b>mode_t</b>, currently ignored;</li><li>a <em>attr</em> argument, pointer to an <b>mq_attr</b> structure, specifying the attributes of the new message queue.</li></ul>
 <p>
-If <em>oflags</em> has the two bits <em>O_CREAT</em> and <em>O_EXCL</em> set and the messages queue alread exists, this service fails.<p>
+If <em>oflags</em> has the two bits <em>O_CREAT</em> and <em>O_EXCL</em> set and the message queue alread exists, this service fails.<p>
 If the O_NONBLOCK bit is set in <em>oflags</em>, the <a class="el" href="group__posix__mq.html#ga16">mq_send()</a>, <a class="el" href="group__posix__mq.html#ga18">mq_receive()</a>, <a class="el" href="group__posix__mq.html#ga17">mq_timedsend()</a> and <a class="el" href="group__posix__mq.html#ga19">mq_timedreceive()</a> services return <em>-1</em> with <em>errno</em> set to EAGAIN instead of blocking their caller.<p>
-The following arguments of the <b>mq_attr</b> structure are used when creating a messages queue:<ul>
+The following arguments of the <b>mq_attr</b> structure at the address <em>attr</em> are used when creating a message queue:<ul>
 <li><em>mq_maxmsg</em> is the maximum number of messages in the queue (128 by default);</li><li><em>mq_msgsize</em> is the maximum size of each message (128 by default).</li></ul>
 <p>
 <em>name</em> may be any arbitrary string, in which slashes have no particular meaning. However, for portability, using a name which starts with a slash and contains no other slash is recommended.<p>
@@ -282,7 +286,7 @@ The following arguments of the <b>mq_attr</b> structure are used when creating a
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>a message queue descriptor on success; <p>
 -1 with <em>errno</em> set if:<ul>
-<li>ENAMETOOLONG, the length of the <em>name</em> argument exceeds 64 characters;</li><li>EEXIST, the bits <em>O_CREAT</em> and <em>O_EXCL</em> were set in <em>oflags</em> and the messages queue already exists;</li><li>ENOENT, the bit <em>O_CREAT</em> is not set in <em>oflags</em> and the messages queue does not exist;</li><li>ENOSPC, allocation of system memory failed, or insufficient memory exists in the system heap to create the queue, try increasing CONFIG_XENO_OPT_SYS_HEAPSZ;</li><li>EPERM, attempting to create a message queue from an invalid context;</li><li>EINVAL, the <em>attr</em> argument is invalid;</li><li>EMFILE, too many descriptors are currently open.</li></ul>
+<li>ENAMETOOLONG, the length of the <em>name</em> argument exceeds 64 characters;</li><li>EEXIST, the bits <em>O_CREAT</em> and <em>O_EXCL</em> were set in <em>oflags</em> and the message queue already exists;</li><li>ENOENT, the bit <em>O_CREAT</em> is not set in <em>oflags</em> and the message queue does not exist;</li><li>ENOSPC, allocation of system memory failed, or insufficient memory exists in the system heap to create the queue, try increasing CONFIG_XENO_OPT_SYS_HEAPSZ;</li><li>EPERM, attempting to create a message queue from an invalid context;</li><li>EINVAL, the <em>attr</em> argument is invalid;</li><li>EMFILE, too many descriptors are currently open.</li></ul>
 </dd></dl>
 <dl compact><dt><b>Valid contexts.</b></dt><dd>When creating a message queue, only the following contexts are valid:<ul>
 <li>kernel module initialization or cleanup routine;</li><li>user-space thread (Xenomai threads switch to secondary mode).</li></ul>
@@ -337,7 +341,7 @@ The following arguments of the <b>mq_attr</b> structure are used when creating a
     <td>
 
 <p>
-Receive a message from a messages queue. 
+Receive a message from a message queue. 
 <p>
 If the message queue <em>fd</em> is not empty and if <em>len</em> is greater than the <em>mq_msgsize</em> of the message queue, this service copies, at the address <em>buffer</em>, the queued message with the highest priority.<p>
 If the queue is empty and the flag <em>O_NONBLOCK</em> is not set for the descriptor <em>fd</em>, the calling thread is suspended until some message is sent to the queue. If the queue is empty and the flag <em>O_NONBLOCK</em> is set for the descriptor <em>fd</em>, this service returns immediately -1 with <em>errno</em> set to EAGAIN.<p>
@@ -406,13 +410,13 @@ If the queue is empty and the flag <em>O_NONBLOCK</em> is not set for the descri
     <td>
 
 <p>
-Send a message to a messages queue. 
+Send a message to a message queue. 
 <p>
 If the message queue <em>fd</em> is not full, this service sends the message of length <em>len</em> pointed to by the argument <em>buffer</em>, with priority <em>prio</em>. A message with greater priority is inserted in the queue before a message with lower priority.<p>
 If the message queue is full and the flag <em>O_NONBLOCK</em> is not set, the calling thread is suspended until the queue is not full. If the message queue is not full and the flag <em>O_NONBLOCK</em> is set, the message is not sent and the service returns immediately -1 with <em>errno</em> set to EAGAIN.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>fd</em>&nbsp;</td><td>messages queue descriptor;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>fd</em>&nbsp;</td><td>message queue descriptor;</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>buffer</em>&nbsp;</td><td>pointer to the message to be sent;</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>len</em>&nbsp;</td><td>length of the message;</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>prio</em>&nbsp;</td><td>priority of the message.</td></tr>
@@ -420,7 +424,7 @@ If the message queue is full and the flag <em>O_NONBLOCK</em> is not set, the ca
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 and send a message on success; <p>
 -1 with no message sent and <em>errno</em> set if:<ul>
-<li>EBADF, <em>fd</em> is not a valid messages queue descriptor open for writing;</li><li>EMSGSIZE, the message length exceeds the <em>mq_msgsize</em> attribute of the messages queue;</li><li>EAGAIN, the flag O_NONBLOCK is set for the descriptor <em>fd</em> and the message queue is full;</li><li>EPERM, the caller context is invalid;</li><li>EINTR, the service was interrupted by a signal.</li></ul>
+<li>EBADF, <em>fd</em> is not a valid message queue descriptor open for writing;</li><li>EMSGSIZE, the message length exceeds the <em>mq_msgsize</em> attribute of the message queue;</li><li>EAGAIN, the flag O_NONBLOCK is set for the descriptor <em>fd</em> and the message queue is full;</li><li>EPERM, the caller context is invalid;</li><li>EINTR, the service was interrupted by a signal.</li></ul>
 </dd></dl>
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
 <li>Xenomai kernel-space thread,</li><li>Xenomai user-space thread (switches to primary mode).</li></ul>
@@ -472,20 +476,20 @@ If the message queue is full and the flag <em>O_NONBLOCK</em> is not set, the ca
 Set flags of a message queue. 
 <p>
 This service sets the flags of the <em>fd</em> descriptor to the value of the member <em>mq_flags</em> of the <b>mq_attr</b> structure pointed to by <em>attr</em>.<p>
-The previous value of the messages queue attribute are stored at the address <em>oattr</em> if it is not <em>NULL</em>.<p>
+The previous value of the message queue attribute are stored at the address <em>oattr</em> if it is not <em>NULL</em>.<p>
 Only setting or clearing the O_NONBLOCK flag has an effect.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>fd</em>&nbsp;</td><td>messages queue descriptor;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>fd</em>&nbsp;</td><td>message queue descriptor;</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>pointer to new attributes (only <em>mq_flags</em> is used);</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>oattr</em>&nbsp;</td><td>if not <em>NULL</em>, address where previous messages queue attributes will be stored on success.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>oattr</em>&nbsp;</td><td>if not <em>NULL</em>, address where previous message queue attributes will be stored on success.</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Return values:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
-<li>EBADF, <em>fd</em> is not a valid messages queue descriptor.</li></ul>
+<li>EBADF, <em>fd</em> is not a valid message queue descriptor.</li></ul>
 </td></tr>
   </table>
 </dl>
@@ -545,7 +549,7 @@ Only setting or clearing the O_NONBLOCK flag has an effect.<p>
     <td>
 
 <p>
-Attempt, during a bounded time, to receive a message from a messages queue. 
+Attempt, during a bounded time, to receive a message from a message queue. 
 <p>
 This service is equivalent to <a class="el" href="group__posix__mq.html#ga18">mq_receive()</a>, except that if the flag <em>O_NONBLOCK</em> is not set for the descriptor <em>fd</em> and the message queue is empty, the calling thread is only suspended until the timeout <em>abs_timeout</em> expires.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
@@ -620,12 +624,12 @@ This service is equivalent to <a class="el" href="group__posix__mq.html#ga18">mq
     <td>
 
 <p>
-Attempt, during a bounded time, to send a message to a messages queue. 
+Attempt, during a bounded time, to send a message to a message queue. 
 <p>
 This service is equivalent to <a class="el" href="group__posix__mq.html#ga16">mq_send()</a>, except that if the message queue is full and the flag <em>O_NONBLOCK</em> is not set for the descriptor <em>fd</em>, the calling thread is only suspended until the timeout specified by <em>abs_timeout</em> expires.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>fd</em>&nbsp;</td><td>messages queue descriptor;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>fd</em>&nbsp;</td><td>message queue descriptor;</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>buffer</em>&nbsp;</td><td>pointer to the message to be sent;</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>len</em>&nbsp;</td><td>length of the message;</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>prio</em>&nbsp;</td><td>priority of the message;</td></tr>
@@ -634,7 +638,7 @@ This service is equivalent to <a class="el" href="group__posix__mq.html#ga16">mq
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 and send a message on success; <p>
 -1 with no message sent and <em>errno</em> set if:<ul>
-<li>EBADF, <em>fd</em> is not a valid messages queue descriptor open for writing;</li><li>EMSGSIZE, the message length exceeds the <em>mq_msgsize</em> attribute of the messages queue;</li><li>EAGAIN, the flag O_NONBLOCK is set for the descriptor <em>fd</em> and the message queue is full;</li><li>EPERM, the caller context is invalid;</li><li>ETIMEDOUT, the specified timeout expired;</li><li>EINTR, the service was interrupted by a signal.</li></ul>
+<li>EBADF, <em>fd</em> is not a valid message queue descriptor open for writing;</li><li>EMSGSIZE, the message length exceeds the <em>mq_msgsize</em> attribute of the message queue;</li><li>EAGAIN, the flag O_NONBLOCK is set for the descriptor <em>fd</em> and the message queue is full;</li><li>EPERM, the caller context is invalid;</li><li>ETIMEDOUT, the specified timeout expired;</li><li>EINTR, the service was interrupted by a signal.</li></ul>
 </dd></dl>
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
 <li>Xenomai kernel-space thread,</li><li>Xenomai user-space thread (switches to primary mode).</li></ul>
@@ -670,28 +674,28 @@ This service is equivalent to <a class="el" href="group__posix__mq.html#ga16">mq
 <p>
 Unlink a message queue. 
 <p>
-This service unlinks the message queue named <em>name</em>. The message queue is not destroyed until all queue descriptors obtained with the <a class="el" href="group__posix__mq.html#ga9">mq_open()</a> service are closed with the <a class="el" href="group__posix__mq.html#ga10">mq_close()</a> service. However, the unlinked queue may no longer be reached with the <a class="el" href="group__posix__mq.html#ga9">mq_open()</a> service.<p>
+This service unlinks the message queue named <em>name</em>. The message queue is not destroyed until all queue descriptors obtained with the <a class="el" href="group__posix__mq.html#ga9">mq_open()</a> service are closed with the <a class="el" href="group__posix__mq.html#ga10">mq_close()</a> service. However, after a call to this service, the unlinked queue may no longer be reached with the <a class="el" href="group__posix__mq.html#ga9">mq_open()</a> service.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>the name of the message queue to be unlinked.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>name of the message queue to be unlinked.</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Return values:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
-<li>ENAMETOOLONG, the length of the <em>name</em> argument exceeds 64 characters;</li><li>ENOENT, the messages queue does not exist;</li><li>EPERM, the caller context is invalid.</li></ul>
+<li>EPERM, the caller context is invalid;</li><li>ENAMETOOLONG, the length of the <em>name</em> argument exceeds 64 characters;</li><li>ENOENT, the message queue does not exist.</li></ul>
 </td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
-<li>kernel module initialization or cleanup routine;</li><li>user-space thread (Xenomai threads switch to secondary mode).</li></ul>
+<li>kernel module initialization or cleanup routine;</li><li>kernel-space cancellation cleanup routine;</li><li>user-space thread (Xenomai threads switch to secondary mode);</li><li>user-space cancellation cleanup routine.</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_unlink.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Wed Mar 15 15:48:45 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:58 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -23,19 +23,398 @@ Collaboration diagram for Device Registration Services:<center><table><tr><td><i
 <tr><td class="memItemLeft" nowrap align="right" valign="top">struct &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__operations.html">rtdm_operations</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Device operations.  <a href="structrtdm__operations.html#_details">More...</a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">struct &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Device context.  <a href="structrtdm__dev__context.html#_details">More...</a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">struct &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html">rtdm_device</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">RTDM device.  <a href="structrtdm__device.html#_details">More...</a><br></td></tr>
+<tr><td colspan="2"><br><h2>Device Flags</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="dev_flags"></a> Static flags describing a RTDM device <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga11" doxytag="devregister::RTDM_EXCLUSIVE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga11">RTDM_EXCLUSIVE</a>&nbsp;&nbsp;&nbsp;0x0001</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">If set, only a single instance of the device can be requested by an application. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga12" doxytag="devregister::RTDM_NAMED_DEVICE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga12">RTDM_NAMED_DEVICE</a>&nbsp;&nbsp;&nbsp;0x0010</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">If set, the device is addressed via a clear-text name. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga13" doxytag="devregister::RTDM_PROTOCOL_DEVICE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga13">RTDM_PROTOCOL_DEVICE</a>&nbsp;&nbsp;&nbsp;0x0020</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">If set, the device is addressed via a combination of protocol ID and socket type. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga14" doxytag="devregister::RTDM_DEVICE_TYPE_MASK"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga14">RTDM_DEVICE_TYPE_MASK</a>&nbsp;&nbsp;&nbsp;0x00F0</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Mask selecting the device type. <br></td></tr>
+<tr><td colspan="2"><br><h2>Context Flags</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="ctx_flags"></a> Dynamic flags describing the state of an open RTDM device (bit numbers) <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga15" doxytag="devregister::RTDM_CREATED_IN_NRT"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga15">RTDM_CREATED_IN_NRT</a>&nbsp;&nbsp;&nbsp;0</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set by RTDM if the device instance was created in non-real-time context. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga16" doxytag="devregister::RTDM_CLOSING"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga16">RTDM_CLOSING</a>&nbsp;&nbsp;&nbsp;1</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set by RTDM when the device is being closed. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga17" doxytag="devregister::RTDM_FORCED_CLOSING"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga17">RTDM_FORCED_CLOSING</a>&nbsp;&nbsp;&nbsp;2</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set by RTDM if the device has to be closed regardless of possible pending locks held by other users. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga18" doxytag="devregister::RTDM_USER_CONTEXT_FLAG"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga18">RTDM_USER_CONTEXT_FLAG</a>&nbsp;&nbsp;&nbsp;8</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Lowest bit number the driver developer can use freely. <br></td></tr>
+<tr><td colspan="2"><br><h2>Versioning</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="versioning"></a> Current revisions of RTDM structures and interfaces, encoding of driver versions. <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga19" doxytag="devregister::RTDM_DEVICE_STRUCT_VER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga19">RTDM_DEVICE_STRUCT_VER</a>&nbsp;&nbsp;&nbsp;3</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Version of struct <a class="el" href="structrtdm__device.html">rtdm_device</a>. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga20" doxytag="devregister::RTDM_CONTEXT_STRUCT_VER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga20">RTDM_CONTEXT_STRUCT_VER</a>&nbsp;&nbsp;&nbsp;3</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Version of struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a>. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga21" doxytag="devregister::RTDM_API_VER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga21">RTDM_API_VER</a>&nbsp;&nbsp;&nbsp;4</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Driver API version. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga22" doxytag="devregister::RTDM_API_MIN_COMPAT_VER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga22">RTDM_API_MIN_COMPAT_VER</a>&nbsp;&nbsp;&nbsp;4</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Minimum API revision compatible with the current release. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga23" doxytag="devregister::RTDM_SECURE_DEVICE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga23">RTDM_SECURE_DEVICE</a>&nbsp;&nbsp;&nbsp;0x80000000</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Flag indicating a secure variant of RTDM (not supported here). <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga24" doxytag="devregister::RTDM_DRIVER_VER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga24">RTDM_DRIVER_VER</a>(major, minor, patch)&nbsp;&nbsp;&nbsp;(((major &amp; 0xFF) &lt;&lt; 16) | ((minor &amp; 0xFF) &lt;&lt; 8) | (patch &amp; 0xFF))</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Version code constructor for driver revisions. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga25" doxytag="devregister::RTDM_DRIVER_MAJOR_VER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga25">RTDM_DRIVER_MAJOR_VER</a>(ver)&nbsp;&nbsp;&nbsp;(((ver) &gt;&gt; 16) &amp; 0xFF)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get major version number from driver revision code. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga26" doxytag="devregister::RTDM_DRIVER_MINOR_VER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga26">RTDM_DRIVER_MINOR_VER</a>(ver)&nbsp;&nbsp;&nbsp;(((ver) &gt;&gt; 8) &amp; 0xFF)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get minor version number from driver revision code. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga27" doxytag="devregister::RTDM_DRIVER_PATCH_VER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga27">RTDM_DRIVER_PATCH_VER</a>(ver)&nbsp;&nbsp;&nbsp;((ver) &amp; 0xFF)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get patch version number from driver revision code. <br></td></tr>
+<tr><td colspan="2"><br><h2>Operation Handler Prototypes</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga0">rtdm_open_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int oflag)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Named device open handler.  <a href="#ga0"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga1">rtdm_socket_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int protocol)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Socket creation handler for protocol devices.  <a href="#ga1"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga2">rtdm_close_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Close handler.  <a href="#ga2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga3">rtdm_ioctl_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int request, void *arg)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">IOCTL handler.  <a href="#ga3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef ssize_t(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga4">rtdm_read_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, void *buf, size_t nbyte)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read handler.  <a href="#ga4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef ssize_t(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga5">rtdm_write_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, const void *buf, size_t nbyte)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Write handler.  <a href="#ga5"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef ssize_t(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga6">rtdm_recvmsg_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, struct msghdr *msg, int flags)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive message handler.  <a href="#ga6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef ssize_t(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga7">rtdm_sendmsg_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, const struct msghdr *msg, int flags)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Transmit message handler.  <a href="#ga7"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga0">rtdm_dev_register</a> (struct <a class="el" href="structrtdm__device.html">rtdm_device</a> *device)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga9">rtdm_dev_register</a> (struct <a class="el" href="structrtdm__device.html">rtdm_device</a> *device)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Register a RTDM device.  <a href="#ga0"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga1">rtdm_dev_unregister</a> (struct <a class="el" href="structrtdm__device.html">rtdm_device</a> *device, unsigned int poll_delay)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Register a RTDM device.  <a href="#ga9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga10">rtdm_dev_unregister</a> (struct <a class="el" href="structrtdm__device.html">rtdm_device</a> *device, unsigned int poll_delay)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unregisters a RTDM device.  <a href="#ga1"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unregisters a RTDM device.  <a href="#ga10"></a><br></td></tr>
+</table>
+<hr><h2>Typedef Documentation</h2>
+<a class="anchor" name="ga2" doxytag="rtdm_driver.h::rtdm_close_handler_t"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">typedef int(* <a class="el" href="group__devregister.html#ga2">rtdm_close_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info)          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Close handler. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>context</em>&nbsp;</td><td>Context structure associated with opened device instance </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>user_info</em>&nbsp;</td><td>Opaque pointer to information about user mode caller, NULL if kernel mode call</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise negative error code</dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><code><a class="el" href="group__posix__shm.html#ga9">close()</a></code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+    </td>
+  </tr>
+</table>
+<a class="anchor" name="ga3" doxytag="rtdm_driver.h::rtdm_ioctl_handler_t"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">typedef int(* <a class="el" href="group__devregister.html#ga3">rtdm_ioctl_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int request, void *arg)          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+IOCTL handler. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>context</em>&nbsp;</td><td>Context structure associated with opened device instance </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>user_info</em>&nbsp;</td><td>Opaque pointer to information about user mode caller, NULL if kernel mode call </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>request</em>&nbsp;</td><td>Request number as passed by the user </td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>arg</em>&nbsp;</td><td>Request argument as passed by the user</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>Positiv value on success, otherwise negative error code</dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><code>ioctl()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+    </td>
+  </tr>
+</table>
+<a class="anchor" name="ga0" doxytag="rtdm_driver.h::rtdm_open_handler_t"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">typedef int(* <a class="el" href="group__devregister.html#ga0">rtdm_open_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int oflag)          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Named device open handler. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>context</em>&nbsp;</td><td>Context structure associated with opened device instance </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>user_info</em>&nbsp;</td><td>Opaque pointer to information about user mode caller, NULL if kernel mode call </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>oflag</em>&nbsp;</td><td>Open flags as passed by the user</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise negative error code</dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><code>open()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+    </td>
+  </tr>
+</table>
+<a class="anchor" name="ga4" doxytag="rtdm_driver.h::rtdm_read_handler_t"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">typedef ssize_t(* <a class="el" href="group__devregister.html#ga4">rtdm_read_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, void *buf, size_t nbyte)          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Read handler. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>context</em>&nbsp;</td><td>Context structure associated with opened device instance </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>user_info</em>&nbsp;</td><td>Opaque pointer to information about user mode caller, NULL if kernel mode call </td></tr>
+    <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>buf</em>&nbsp;</td><td>Input buffer as passed by the user </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>nbyte</em>&nbsp;</td><td>Number of bytes the user requests to read</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>On success, the number of bytes read, otherwise negative error code</dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><code>read()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+    </td>
+  </tr>
+</table>
+<a class="anchor" name="ga6" doxytag="rtdm_driver.h::rtdm_recvmsg_handler_t"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">typedef ssize_t(* <a class="el" href="group__devregister.html#ga6">rtdm_recvmsg_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, struct msghdr *msg, int flags)          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Receive message handler. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>context</em>&nbsp;</td><td>Context structure associated with opened device instance </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>user_info</em>&nbsp;</td><td>Opaque pointer to information about user mode caller, NULL if kernel mode call </td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>msg</em>&nbsp;</td><td>Message descriptor as passed by the user, automatically mirrored to safe kernel memory in case of user mode call </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>flags</em>&nbsp;</td><td>Message flags as passed by the user</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>On success, the number of bytes received, otherwise negative error code</dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><code>recvmsg()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+    </td>
+  </tr>
+</table>
+<a class="anchor" name="ga7" doxytag="rtdm_driver.h::rtdm_sendmsg_handler_t"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">typedef ssize_t(* <a class="el" href="group__devregister.html#ga7">rtdm_sendmsg_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, const struct msghdr *msg, int flags)          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Transmit message handler. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>context</em>&nbsp;</td><td>Context structure associated with opened device instance </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>user_info</em>&nbsp;</td><td>Opaque pointer to information about user mode caller, NULL if kernel mode call </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>msg</em>&nbsp;</td><td>Message descriptor as passed by the user, automatically mirrored to safe kernel memory in case of user mode call </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>flags</em>&nbsp;</td><td>Message flags as passed by the user</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>On success, the number of bytes transmitted, otherwise negative error code</dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><code>sendmsg()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+    </td>
+  </tr>
+</table>
+<a class="anchor" name="ga1" doxytag="rtdm_driver.h::rtdm_socket_handler_t"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">typedef int(* <a class="el" href="group__devregister.html#ga1">rtdm_socket_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int protocol)          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Socket creation handler for protocol devices. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>context</em>&nbsp;</td><td>Context structure associated with opened device instance </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>user_info</em>&nbsp;</td><td>Opaque pointer to information about user mode caller, NULL if kernel mode call </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>protocol</em>&nbsp;</td><td>Protocol number as passed by the user</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise negative error code</dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><code>socket()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+    </td>
+  </tr>
+</table>
+<a class="anchor" name="ga5" doxytag="rtdm_driver.h::rtdm_write_handler_t"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">typedef ssize_t(* <a class="el" href="group__devregister.html#ga5">rtdm_write_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, const void *buf, size_t nbyte)          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Write handler. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>context</em>&nbsp;</td><td>Context structure associated with opened device instance </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>user_info</em>&nbsp;</td><td>Opaque pointer to information about user mode caller, NULL if kernel mode call </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>buf</em>&nbsp;</td><td>Output buffer as passed by the user </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>nbyte</em>&nbsp;</td><td>Number of bytes the user requests to write</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>On success, the number of bytes written, otherwise negative error code</dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><code>write()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+    </td>
+  </tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="ga0" doxytag="device.c::rtdm_dev_register"></a><p>
+<a class="anchor" name="ga9" doxytag="device.c::rtdm_dev_register"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -88,7 +467,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga1" doxytag="device.c::rtdm_dev_unregister"></a><p>
+<a class="anchor" name="ga10" doxytag="device.c::rtdm_dev_unregister"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -145,7 +524,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Wed Mar 15 15:48:42 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:55 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

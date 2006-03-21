@@ -93,7 +93,7 @@
 00083 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t clock_get_ticks(clockid_t clock_id)
 00084 {
 00085     <span class="keywordflow">if</span>(clock_id == CLOCK_REALTIME)
-00086         <span class="keywordflow">return</span> <a class="code" href="group__pod.html#ga51">xnpod_get_time</a>();
+00086         <span class="keywordflow">return</span> <a class="code" href="group__pod.html#ga52">xnpod_get_time</a>();
 00087     <span class="keywordflow">else</span>
 00088         <span class="keywordflow">return</span> xnpod_ns2ticks(xnpod_get_cpu_time());
 00089 }
@@ -115,7 +115,7 @@
 00105 }
 00106 
 00107 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_INTERNAL_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Wed Mar 15 15:47:44 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:49 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

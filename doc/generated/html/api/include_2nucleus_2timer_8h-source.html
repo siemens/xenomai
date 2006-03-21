@@ -40,216 +40,215 @@
 00030 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_WHEELMASK (XNTIMER_WHEELSIZE - 1)</span>
 00031 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
 00032 
-00033 <span class="preprocessor">#define XNTIMER_ENABLED   0x00000001</span>
-00034 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_DEQUEUED  0x00000002</span>
-00035 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_KILLED    0x00000004</span>
-00036 <span class="preprocessor"></span>
-00037 <span class="comment">/* These flags are available to the real-time interfaces */</span>
-00038 <span class="preprocessor">#define XNTIMER_SPARE0  0x01000000</span>
-00039 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_SPARE1  0x02000000</span>
-00040 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_SPARE2  0x04000000</span>
-00041 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_SPARE3  0x08000000</span>
-00042 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_SPARE4  0x10000000</span>
-00043 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_SPARE5  0x20000000</span>
-00044 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_SPARE6  0x40000000</span>
-00045 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_SPARE7  0x80000000</span>
-00046 <span class="preprocessor"></span>
-00047 <span class="preprocessor">#define XNTIMER_LOPRIO  (-999999999)</span>
-00048 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_STDPRIO 0</span>
-00049 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_HIPRIO  999999999</span>
-00050 <span class="preprocessor"></span>
-00051 <span class="preprocessor">#define XNTIMER_KEEPER_ID 0</span>
-00052 <span class="preprocessor"></span>
-00053 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
-00054     xnholder_t link;
-00055     xnticks_t key;
-00056     <span class="keywordtype">int</span> prio;
-00057 
-00058 <span class="preprocessor">#define link2tlholder(laddr) \</span>
-00059 <span class="preprocessor">    ((xntlholder_t *)(((char *)laddr) - offsetof(xntlholder_t, link)))</span>
-00060 <span class="preprocessor"></span>
-00061 } xntlholder_t;
-00062 <span class="preprocessor">#define xntlholder_date(h)       ((h)-&gt;key)</span>
-00063 <span class="preprocessor"></span><span class="preprocessor">#define xntlholder_prio(h)       ((h)-&gt;prio)</span>
-00064 <span class="preprocessor"></span><span class="preprocessor">#define xntlholder_init(h)       inith(&amp;(h)-&gt;link)</span>
-00065 <span class="preprocessor"></span><span class="preprocessor">#define xntlist_init(q)       (initq(q),0)</span>
-00066 <span class="preprocessor"></span><span class="preprocessor">#define xntlist_destroy(q)    do { } while (0)</span>
-00067 <span class="preprocessor"></span><span class="preprocessor">#define xntlist_head(q)                         \</span>
-00068 <span class="preprocessor">    ({ xnholder_t *_h = getheadq(q);            \</span>
-00069 <span class="preprocessor">        !_h ? NULL : link2tlholder(_h);         \</span>
-00070 <span class="preprocessor">    })</span>
-00071 <span class="preprocessor"></span>
-00072 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xntlist_insert(xnqueue_t *q, xntlholder_t *holder)
-00073 {
-00074     xnholder_t *p;
-00075     
-00076     <span class="comment">/* Insert the new timer at the proper place in the single</span>
-00077 <span class="comment">       queue managed when running in aperiodic mode. O(N) here,</span>
-00078 <span class="comment">       but users of the aperiodic mode need to pay a price for</span>
-00079 <span class="comment">       the increased flexibility... */</span>
-00080 
-00081     <span class="keywordflow">for</span> (p = q-&gt;head.last; p != &amp;q-&gt;head; p = p-&gt;last)
-00082         <span class="keywordflow">if</span> (holder-&gt;key &gt; link2tlholder(p)-&gt;key ||
-00083             (holder-&gt;key == link2tlholder(p)-&gt;key &amp;&amp;
-00084              holder-&gt;prio &lt;= link2tlholder(p)-&gt;prio))
-00085             <span class="keywordflow">break</span>;
-00086         
-00087     insertq(q,p-&gt;next,&amp;holder-&gt;link);
-00088 }
-00089 
-00090 <span class="preprocessor">#define xntlist_remove(q, h)  removeq((q),&amp;(h)-&gt;link)</span>
-00091 <span class="preprocessor"></span>
-00092 <span class="preprocessor">#if defined(CONFIG_XENO_OPT_TIMER_HEAP)</span>
-00093 <span class="preprocessor"></span><span class="preprocessor">#include &lt;nucleus/bheap.h&gt;</span>
-00094 <span class="keyword">typedef</span> bheaph_t xntimerh_t;
-00095 <span class="preprocessor">#define xntimerh_date(h)       bheaph_key(h)</span>
-00096 <span class="preprocessor"></span><span class="preprocessor">#define xntimerh_prio(h)       bheaph_prio(h)</span>
-00097 <span class="preprocessor"></span><span class="preprocessor">#define xntimerh_init(h)       bheaph_init(h)</span>
-00098 <span class="preprocessor"></span><span class="keyword">typedef</span> bheap_t xntimerq_t;
-00099 <span class="preprocessor">#define xntimerq_init(q)       bheap_init((q), CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY)</span>
-00100 <span class="preprocessor"></span><span class="preprocessor">#define xntimerq_destroy(q)    bheap_destroy(q)</span>
-00101 <span class="preprocessor"></span><span class="preprocessor">#define xntimerq_head(q)       bheap_gethead(q)</span>
-00102 <span class="preprocessor"></span><span class="preprocessor">#define xntimerq_insert(q, h)  bheap_insert((q),(h))</span>
-00103 <span class="preprocessor"></span><span class="preprocessor">#define xntimerq_remove(q, h)  bheap_delete((q),(h))</span>
-00104 <span class="preprocessor"></span>
-00105 <span class="preprocessor">#else </span><span class="comment">/* CONFIG_XENO_OPT_TIMER_LIST */</span>
-00106 <span class="keyword">typedef</span> xntlholder_t xntimerh_t;
-00107 <span class="preprocessor">#define xntimerh_date(h)       xntlholder_date(h)</span>
-00108 <span class="preprocessor"></span><span class="preprocessor">#define xntimerh_prio(h)       xntlholder_prio(h)</span>
-00109 <span class="preprocessor"></span><span class="preprocessor">#define xntimerh_init(h)       xntlholder_init(h)</span>
-00110 <span class="preprocessor"></span><span class="keyword">typedef</span> xnqueue_t xntimerq_t;
-00111 <span class="preprocessor">#define xntimerq_init(q)       xntlist_init(q)</span>
-00112 <span class="preprocessor"></span><span class="preprocessor">#define xntimerq_destroy(q)    xntlist_destroy(q)</span>
-00113 <span class="preprocessor"></span><span class="preprocessor">#define xntimerq_head(q)       xntlist_head(q)</span>
-00114 <span class="preprocessor"></span><span class="preprocessor">#define xntimerq_insert(q,h)   xntlist_insert((q),(h))</span>
-00115 <span class="preprocessor"></span><span class="preprocessor">#define xntimerq_remove(q, h)  xntlist_remove((q),(h))</span>
-00116 <span class="preprocessor"></span>
-00117 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_TIMER_LIST */</span>
-00118 
-00119 <span class="keyword">struct </span><a class="code" href="structxnsched.html">xnsched</a>;
-00120 
-00121 <span class="keyword">typedef</span> <span class="keyword">struct </span>xntimer {
-00122 
-00123     xntimerh_t aplink;          <span class="comment">/* Link in aperiodic timers list. */</span>
-00124 
-00125 <span class="preprocessor">#define aplink2timer(laddr) \</span>
-00126 <span class="preprocessor">    ((xntimer_t *)(((char *)(laddr)) - (int)(&amp;((xntimer_t *)0)-&gt;aplink)))</span>
-00127 <span class="preprocessor"></span>
-00128 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC</span>
-00129 <span class="preprocessor"></span>    xntlholder_t plink;         <span class="comment">/* Link in periodic timers wheel. */</span>
-00130 
-00131 <span class="preprocessor">#define plink2timer(laddr) \</span>
-00132 <span class="preprocessor">    ((xntimer_t *)(((char *)(laddr)) - (int)(&amp;((xntimer_t *)0)-&gt;plink)))</span>
-00133 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
-00134 
-00135     xnflags_t status;           <span class="comment">/* !&lt; Timer status. */</span>
-00136 
-00137     xnticks_t interval;         <span class="comment">/* !&lt; Periodic interval (in ticks, 0 == one shot). */</span>
-00138 
-00139     <span class="keyword">struct </span><a class="code" href="structxnsched.html">xnsched</a> *sched;      <span class="comment">/* !&lt; Sched structure to which the timer is</span>
-00140 <span class="comment">                                   attached. */</span>
-00141 
-00142     void (*handler)(<span class="keywordtype">void</span> *cookie); <span class="comment">/* !&lt; Timeout handler. */</span>
-00143 
-00144     <span class="keywordtype">void</span> *cookie;       <span class="comment">/* !&lt; Cookie to pass to the timeout handler. */</span>
-00145 
-00146     XNARCH_DECL_DISPLAY_CONTEXT();
-00147 
-00148 } xntimer_t;
-00149 
-00150 <span class="preprocessor">#if defined(CONFIG_SMP)</span>
-00151 <span class="preprocessor"></span><span class="preprocessor">#define xntimer_sched(t)          ((t)-&gt;sched)</span>
-00152 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !CONFIG_SMP */</span>
-00153 <span class="preprocessor">#define xntimer_sched(t)          xnpod_current_sched()</span>
-00154 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_SMP */</span>
-00155 <span class="preprocessor">#define xntimer_interval(t)       ((t)-&gt;interval)</span>
-00156 <span class="preprocessor"></span><span class="preprocessor">#define xntimer_set_cookie(t,c)   ((t)-&gt;cookie = (c))</span>
-00157 <span class="preprocessor"></span>
-00158 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC</span>
-00159 <span class="preprocessor"></span><span class="preprocessor">#define xntimer_set_priority(t,p) ({                    \</span>
-00160 <span class="preprocessor">            xntimer_t *_t = (t);                        \</span>
-00161 <span class="preprocessor">            unsigned prio = (p);                        \</span>
-00162 <span class="preprocessor">            xntimerh_prio(&amp;(_t)-&gt;aplink) = prio;        \</span>
-00163 <span class="preprocessor">            xntlholder_prio(&amp;(_t)-&gt;plink) = prio;       \</span>
-00164 <span class="preprocessor">        })</span>
-00165 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
-00166 <span class="preprocessor">#define xntimer_set_priority(t,p) (xntimerh_prio(&amp;(t)-&gt;aplink) = (p))</span>
-00167 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
-00168 
-00169 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xntimer_active_p (xntimer_t *timer)
-00170 {
-00171     <span class="keywordflow">return</span> timer-&gt;sched != NULL;
-00172 }
-00173 
-00174 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xntimer_running_p (xntimer_t *timer)
-00175 {
-00176     <span class="keywordflow">return</span> !testbits(timer-&gt;status,XNTIMER_DEQUEUED);
-00177 }
-00178 
-00179 <span class="keyword">typedef</span> <span class="keyword">struct </span>xntmops {
-00180 
-00181     void (*do_tick)(void);
-00182     xnticks_t (*get_jiffies)(void);
-00183     xnticks_t (*get_raw_clock)(void);
-00184     void (*do_timer_start)(xntimer_t *timer,
-00185                            xnticks_t value,
-00186                            xnticks_t interval);
-00187     void (*do_timer_stop)(xntimer_t *timer);
-00188     xnticks_t (*get_timer_date)(xntimer_t *timer);
-00189     xnticks_t (*get_timer_timeout)(xntimer_t *timer);
-00190     xnticks_t (*get_timer_raw_expiry)(xntimer_t *timer);
-00191     void (*set_timer_remote)(xntimer_t *timer);
-00192     <span class="keyword">const</span> <span class="keywordtype">char</span> *(*get_type)(void);
-00193     void (*freeze)(void);
-00194 
-00195 } xntmops_t;
-00196 
-00197 <span class="preprocessor">#ifdef __cplusplus</span>
-00198 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-00199 <span class="preprocessor">#endif</span>
-00200 <span class="preprocessor"></span>
-00201 <span class="keyword">extern</span> xntmops_t *nktimer;
-00202 
-00203 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga18">xntimer_init</a>(xntimer_t *timer,
-00204                   <span class="keywordtype">void</span> (*handler)(<span class="keywordtype">void</span> *cookie),
-00205                   <span class="keywordtype">void</span> *cookie);
-00206 
-00207 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga19">xntimer_destroy</a>(xntimer_t *timer);
-00208 
-00209 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga20">xntimer_start</a>(xntimer_t *timer,
-00210                    xnticks_t value,
-00211                    xnticks_t interval);
-00212 
-00236 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xntimer_stop(xntimer_t *timer)
-00237 {
-00238     <span class="keywordflow">if</span> (!testbits(timer-&gt;status,XNTIMER_DEQUEUED))
-00239         nktimer-&gt;do_timer_stop(timer);
-00240 }
-00241 
-00242 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga23">xntimer_freeze</a>(<span class="keywordtype">void</span>);
-00243 
-00244 xnticks_t <a class="code" href="group__timer.html#ga21">xntimer_get_date</a>(xntimer_t *timer);
-00245 
-00246 xnticks_t <a class="code" href="group__timer.html#ga22">xntimer_get_timeout</a>(xntimer_t *timer);
-00247 
-00248 <span class="keywordtype">void</span> xntimer_set_periodic_mode(<span class="keywordtype">void</span>);
-00249 
-00250 <span class="keywordtype">void</span> xntimer_set_aperiodic_mode(<span class="keywordtype">void</span>);
-00251 
-00252 <span class="preprocessor">#if defined(CONFIG_SMP)</span>
-00253 <span class="preprocessor"></span><span class="keywordtype">int</span> xntimer_set_sched(xntimer_t *timer, <span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched);
-00254 <span class="preprocessor">#else </span><span class="comment">/* ! CONFIG_SMP */</span>
-00255 <span class="preprocessor">#define xntimer_set_sched(timer,sched)</span>
-00256 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_SMP */</span>
-00257 
-00258 <span class="preprocessor">#ifdef __cplusplus</span>
-00259 <span class="preprocessor"></span>}
-00260 <span class="preprocessor">#endif</span>
-00261 <span class="preprocessor"></span>
-00262 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
-00263 
-00264 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_TIMER_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Wed Mar 15 15:47:44 2006 for Xenomai API by&nbsp;
+00033 <span class="preprocessor">#define XNTIMER_DEQUEUED  0x00000001</span>
+00034 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_KILLED    0x00000002</span>
+00035 <span class="preprocessor"></span>
+00036 <span class="comment">/* These flags are available to the real-time interfaces */</span>
+00037 <span class="preprocessor">#define XNTIMER_SPARE0  0x01000000</span>
+00038 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_SPARE1  0x02000000</span>
+00039 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_SPARE2  0x04000000</span>
+00040 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_SPARE3  0x08000000</span>
+00041 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_SPARE4  0x10000000</span>
+00042 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_SPARE5  0x20000000</span>
+00043 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_SPARE6  0x40000000</span>
+00044 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_SPARE7  0x80000000</span>
+00045 <span class="preprocessor"></span>
+00046 <span class="preprocessor">#define XNTIMER_LOPRIO  (-999999999)</span>
+00047 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_STDPRIO 0</span>
+00048 <span class="preprocessor"></span><span class="preprocessor">#define XNTIMER_HIPRIO  999999999</span>
+00049 <span class="preprocessor"></span>
+00050 <span class="preprocessor">#define XNTIMER_KEEPER_ID 0</span>
+00051 <span class="preprocessor"></span>
+00052 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
+00053     xnholder_t link;
+00054     xnticks_t key;
+00055     <span class="keywordtype">int</span> prio;
+00056 
+00057 <span class="preprocessor">#define link2tlholder(laddr) \</span>
+00058 <span class="preprocessor">    ((xntlholder_t *)(((char *)laddr) - offsetof(xntlholder_t, link)))</span>
+00059 <span class="preprocessor"></span>
+00060 } xntlholder_t;
+00061 <span class="preprocessor">#define xntlholder_date(h)       ((h)-&gt;key)</span>
+00062 <span class="preprocessor"></span><span class="preprocessor">#define xntlholder_prio(h)       ((h)-&gt;prio)</span>
+00063 <span class="preprocessor"></span><span class="preprocessor">#define xntlholder_init(h)       inith(&amp;(h)-&gt;link)</span>
+00064 <span class="preprocessor"></span><span class="preprocessor">#define xntlist_init(q)       (initq(q),0)</span>
+00065 <span class="preprocessor"></span><span class="preprocessor">#define xntlist_destroy(q)    do { } while (0)</span>
+00066 <span class="preprocessor"></span><span class="preprocessor">#define xntlist_head(q)                         \</span>
+00067 <span class="preprocessor">    ({ xnholder_t *_h = getheadq(q);            \</span>
+00068 <span class="preprocessor">        !_h ? NULL : link2tlholder(_h);         \</span>
+00069 <span class="preprocessor">    })</span>
+00070 <span class="preprocessor"></span>
+00071 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xntlist_insert(xnqueue_t *q, xntlholder_t *holder)
+00072 {
+00073     xnholder_t *p;
+00074     
+00075     <span class="comment">/* Insert the new timer at the proper place in the single</span>
+00076 <span class="comment">       queue managed when running in aperiodic mode. O(N) here,</span>
+00077 <span class="comment">       but users of the aperiodic mode need to pay a price for</span>
+00078 <span class="comment">       the increased flexibility... */</span>
+00079 
+00080     <span class="keywordflow">for</span> (p = q-&gt;head.last; p != &amp;q-&gt;head; p = p-&gt;last)
+00081         <span class="keywordflow">if</span> (holder-&gt;key &gt; link2tlholder(p)-&gt;key ||
+00082             (holder-&gt;key == link2tlholder(p)-&gt;key &amp;&amp;
+00083              holder-&gt;prio &lt;= link2tlholder(p)-&gt;prio))
+00084             <span class="keywordflow">break</span>;
+00085         
+00086     insertq(q,p-&gt;next,&amp;holder-&gt;link);
+00087 }
+00088 
+00089 <span class="preprocessor">#define xntlist_remove(q, h)  removeq((q),&amp;(h)-&gt;link)</span>
+00090 <span class="preprocessor"></span>
+00091 <span class="preprocessor">#if defined(CONFIG_XENO_OPT_TIMER_HEAP)</span>
+00092 <span class="preprocessor"></span><span class="preprocessor">#include &lt;nucleus/bheap.h&gt;</span>
+00093 <span class="keyword">typedef</span> bheaph_t xntimerh_t;
+00094 <span class="preprocessor">#define xntimerh_date(h)       bheaph_key(h)</span>
+00095 <span class="preprocessor"></span><span class="preprocessor">#define xntimerh_prio(h)       bheaph_prio(h)</span>
+00096 <span class="preprocessor"></span><span class="preprocessor">#define xntimerh_init(h)       bheaph_init(h)</span>
+00097 <span class="preprocessor"></span><span class="keyword">typedef</span> bheap_t xntimerq_t;
+00098 <span class="preprocessor">#define xntimerq_init(q)       bheap_init((q), CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY)</span>
+00099 <span class="preprocessor"></span><span class="preprocessor">#define xntimerq_destroy(q)    bheap_destroy(q)</span>
+00100 <span class="preprocessor"></span><span class="preprocessor">#define xntimerq_head(q)       bheap_gethead(q)</span>
+00101 <span class="preprocessor"></span><span class="preprocessor">#define xntimerq_insert(q, h)  bheap_insert((q),(h))</span>
+00102 <span class="preprocessor"></span><span class="preprocessor">#define xntimerq_remove(q, h)  bheap_delete((q),(h))</span>
+00103 <span class="preprocessor"></span>
+00104 <span class="preprocessor">#else </span><span class="comment">/* CONFIG_XENO_OPT_TIMER_LIST */</span>
+00105 <span class="keyword">typedef</span> xntlholder_t xntimerh_t;
+00106 <span class="preprocessor">#define xntimerh_date(h)       xntlholder_date(h)</span>
+00107 <span class="preprocessor"></span><span class="preprocessor">#define xntimerh_prio(h)       xntlholder_prio(h)</span>
+00108 <span class="preprocessor"></span><span class="preprocessor">#define xntimerh_init(h)       xntlholder_init(h)</span>
+00109 <span class="preprocessor"></span><span class="keyword">typedef</span> xnqueue_t xntimerq_t;
+00110 <span class="preprocessor">#define xntimerq_init(q)       xntlist_init(q)</span>
+00111 <span class="preprocessor"></span><span class="preprocessor">#define xntimerq_destroy(q)    xntlist_destroy(q)</span>
+00112 <span class="preprocessor"></span><span class="preprocessor">#define xntimerq_head(q)       xntlist_head(q)</span>
+00113 <span class="preprocessor"></span><span class="preprocessor">#define xntimerq_insert(q,h)   xntlist_insert((q),(h))</span>
+00114 <span class="preprocessor"></span><span class="preprocessor">#define xntimerq_remove(q, h)  xntlist_remove((q),(h))</span>
+00115 <span class="preprocessor"></span>
+00116 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_TIMER_LIST */</span>
+00117 
+00118 <span class="keyword">struct </span><a class="code" href="structxnsched.html">xnsched</a>;
+00119 
+00120 <span class="keyword">typedef</span> <span class="keyword">struct </span>xntimer {
+00121 
+00122     xntimerh_t aplink;          <span class="comment">/* Link in aperiodic timers list. */</span>
+00123 
+00124 <span class="preprocessor">#define aplink2timer(laddr) \</span>
+00125 <span class="preprocessor">    ((xntimer_t *)(((char *)(laddr)) - (int)(&amp;((xntimer_t *)0)-&gt;aplink)))</span>
+00126 <span class="preprocessor"></span>
+00127 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC</span>
+00128 <span class="preprocessor"></span>    xntlholder_t plink;         <span class="comment">/* Link in periodic timers wheel. */</span>
+00129 
+00130 <span class="preprocessor">#define plink2timer(laddr) \</span>
+00131 <span class="preprocessor">    ((xntimer_t *)(((char *)(laddr)) - (int)(&amp;((xntimer_t *)0)-&gt;plink)))</span>
+00132 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
+00133 
+00134     xnflags_t status;           <span class="comment">/* !&lt; Timer status. */</span>
+00135 
+00136     xnticks_t interval;         <span class="comment">/* !&lt; Periodic interval (in ticks, 0 == one shot). */</span>
+00137 
+00138     <span class="keyword">struct </span><a class="code" href="structxnsched.html">xnsched</a> *sched;      <span class="comment">/* !&lt; Sched structure to which the timer is</span>
+00139 <span class="comment">                                   attached. */</span>
+00140 
+00141     void (*handler)(<span class="keywordtype">void</span> *cookie); <span class="comment">/* !&lt; Timeout handler. */</span>
+00142 
+00143     <span class="keywordtype">void</span> *cookie;       <span class="comment">/* !&lt; Cookie to pass to the timeout handler. */</span>
+00144 
+00145     XNARCH_DECL_DISPLAY_CONTEXT();
+00146 
+00147 } xntimer_t;
+00148 
+00149 <span class="preprocessor">#if defined(CONFIG_SMP)</span>
+00150 <span class="preprocessor"></span><span class="preprocessor">#define xntimer_sched(t)          ((t)-&gt;sched)</span>
+00151 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !CONFIG_SMP */</span>
+00152 <span class="preprocessor">#define xntimer_sched(t)          xnpod_current_sched()</span>
+00153 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_SMP */</span>
+00154 <span class="preprocessor">#define xntimer_interval(t)       ((t)-&gt;interval)</span>
+00155 <span class="preprocessor"></span><span class="preprocessor">#define xntimer_set_cookie(t,c)   ((t)-&gt;cookie = (c))</span>
+00156 <span class="preprocessor"></span>
+00157 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC</span>
+00158 <span class="preprocessor"></span><span class="preprocessor">#define xntimer_set_priority(t,p) ({                    \</span>
+00159 <span class="preprocessor">            xntimer_t *_t = (t);                        \</span>
+00160 <span class="preprocessor">            unsigned prio = (p);                        \</span>
+00161 <span class="preprocessor">            xntimerh_prio(&amp;(_t)-&gt;aplink) = prio;        \</span>
+00162 <span class="preprocessor">            xntlholder_prio(&amp;(_t)-&gt;plink) = prio;       \</span>
+00163 <span class="preprocessor">        })</span>
+00164 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
+00165 <span class="preprocessor">#define xntimer_set_priority(t,p) (xntimerh_prio(&amp;(t)-&gt;aplink) = (p))</span>
+00166 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
+00167 
+00168 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xntimer_active_p (xntimer_t *timer)
+00169 {
+00170     <span class="keywordflow">return</span> timer-&gt;sched != NULL;
+00171 }
+00172 
+00173 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xntimer_running_p (xntimer_t *timer)
+00174 {
+00175     <span class="keywordflow">return</span> !testbits(timer-&gt;status,XNTIMER_DEQUEUED);
+00176 }
+00177 
+00178 <span class="keyword">typedef</span> <span class="keyword">struct </span>xntmops {
+00179 
+00180     void (*do_tick)(void);
+00181     xnticks_t (*get_jiffies)(void);
+00182     xnticks_t (*get_raw_clock)(void);
+00183     void (*do_timer_start)(xntimer_t *timer,
+00184                            xnticks_t value,
+00185                            xnticks_t interval);
+00186     void (*do_timer_stop)(xntimer_t *timer);
+00187     xnticks_t (*get_timer_date)(xntimer_t *timer);
+00188     xnticks_t (*get_timer_timeout)(xntimer_t *timer);
+00189     xnticks_t (*get_timer_raw_expiry)(xntimer_t *timer);
+00190     void (*set_timer_remote)(xntimer_t *timer);
+00191     <span class="keyword">const</span> <span class="keywordtype">char</span> *(*get_type)(void);
+00192     void (*freeze)(void);
+00193 
+00194 } xntmops_t;
+00195 
+00196 <span class="preprocessor">#ifdef __cplusplus</span>
+00197 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+00198 <span class="preprocessor">#endif</span>
+00199 <span class="preprocessor"></span>
+00200 <span class="keyword">extern</span> xntmops_t *nktimer;
+00201 
+00202 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga18">xntimer_init</a>(xntimer_t *timer,
+00203                   <span class="keywordtype">void</span> (*handler)(<span class="keywordtype">void</span> *cookie),
+00204                   <span class="keywordtype">void</span> *cookie);
+00205 
+00206 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga19">xntimer_destroy</a>(xntimer_t *timer);
+00207 
+00208 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga20">xntimer_start</a>(xntimer_t *timer,
+00209                    xnticks_t value,
+00210                    xnticks_t interval);
+00211 
+00235 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xntimer_stop(xntimer_t *timer)
+00236 {
+00237     <span class="keywordflow">if</span> (!testbits(timer-&gt;status,XNTIMER_DEQUEUED))
+00238         nktimer-&gt;do_timer_stop(timer);
+00239 }
+00240 
+00241 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga23">xntimer_freeze</a>(<span class="keywordtype">void</span>);
+00242 
+00243 xnticks_t <a class="code" href="group__timer.html#ga21">xntimer_get_date</a>(xntimer_t *timer);
+00244 
+00245 xnticks_t <a class="code" href="group__timer.html#ga22">xntimer_get_timeout</a>(xntimer_t *timer);
+00246 
+00247 <span class="keywordtype">void</span> xntimer_set_periodic_mode(<span class="keywordtype">void</span>);
+00248 
+00249 <span class="keywordtype">void</span> xntimer_set_aperiodic_mode(<span class="keywordtype">void</span>);
+00250 
+00251 <span class="preprocessor">#if defined(CONFIG_SMP)</span>
+00252 <span class="preprocessor"></span><span class="keywordtype">int</span> xntimer_set_sched(xntimer_t *timer, <span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched);
+00253 <span class="preprocessor">#else </span><span class="comment">/* ! CONFIG_SMP */</span>
+00254 <span class="preprocessor">#define xntimer_set_sched(timer,sched)</span>
+00255 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_SMP */</span>
+00256 
+00257 <span class="preprocessor">#ifdef __cplusplus</span>
+00258 <span class="preprocessor"></span>}
+00259 <span class="preprocessor">#endif</span>
+00260 <span class="preprocessor"></span>
+00261 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
+00262 
+00263 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_TIMER_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:49 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

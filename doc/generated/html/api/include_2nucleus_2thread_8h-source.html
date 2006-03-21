@@ -60,35 +60,35 @@
 00050 <span class="preprocessor">#define XNFPU     0x00100000    </span><span class="comment">/* Thread uses FPU */</span>
 00051 <span class="preprocessor">#define XNSHADOW  0x00200000    </span><span class="comment">/* Shadow thread */</span>
 00052 <span class="preprocessor">#define XNROOT    0x00400000    </span><span class="comment">/* Root thread (i.e. Linux/IDLE) */</span>
-00053 
-00054 <span class="comment">/*</span>
-00055 <span class="comment">  Must follow the declaration order of the above bits. Status symbols</span>
-00056 <span class="comment">  are defined as follows:</span>
-00057 <span class="comment">  'S' -&gt; Forcibly suspended.</span>
-00058 <span class="comment">  'w'/'W' -&gt; Waiting for a resource, with or without timeout.</span>
-00059 <span class="comment">  'D' -&gt; Delayed (without any other wait condition).</span>
-00060 <span class="comment">  'R' -&gt; Runnable.</span>
-00061 <span class="comment">  'U' -&gt; Unstarted or dormant.</span>
-00062 <span class="comment">  'X' -&gt; Relaxed shadow.</span>
-00063 <span class="comment">  'b' -&gt; Priority boost undergoing.</span>
-00064 <span class="comment">  'T' -&gt; Ptraced and stopped.</span>
-00065 <span class="comment">  'l' -&gt; Locks scheduler.</span>
-00066 <span class="comment">  'r' -&gt; Undergoes round-robin .</span>
-00067 <span class="comment">  's' -&gt; Interrupt shield enabled.</span>
-00068 <span class="comment">  't' -&gt; Mode switches trapped.</span>
-00069 <span class="comment">  'f' -&gt; FPU enabled (for kernel threads).</span>
-00070 <span class="comment">*/</span>
-00071 <span class="preprocessor">#define XNTHREAD_SLABEL_INIT { \</span>
-00072 <span class="preprocessor">  'S', 'W', 'D', 'R', 'U', \</span>
-00073 <span class="preprocessor">  '.', '.', '.', 'X', '.', \</span>
-00074 <span class="preprocessor">  '.', '.', '.', 'b', 'T', \</span>
-00075 <span class="preprocessor">  'l', 'r', '.', 's', 't', \</span>
-00076 <span class="preprocessor">  'f', '.', '.' \</span>
-00077 <span class="preprocessor">}</span>
-00078 <span class="preprocessor"></span>
-00079 <span class="preprocessor">#define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX)</span>
-00080 <span class="preprocessor"></span><span class="preprocessor">#define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNSHIELD|XNTRAPSW)</span>
-00081 <span class="preprocessor"></span><span class="preprocessor">#define XNTHREAD_SYSTEM_BITS  (XNROOT)</span>
+00053 <span class="preprocessor">#define XNINVPS   0x00800000    </span><span class="comment">/* Using inverted priority scale */</span>
+00054 
+00055 <span class="comment">/*</span>
+00056 <span class="comment">  Must follow the declaration order of the above bits. Status symbols</span>
+00057 <span class="comment">  are defined as follows:</span>
+00058 <span class="comment">  'S' -&gt; Forcibly suspended.</span>
+00059 <span class="comment">  'w'/'W' -&gt; Waiting for a resource, with or without timeout.</span>
+00060 <span class="comment">  'D' -&gt; Delayed (without any other wait condition).</span>
+00061 <span class="comment">  'R' -&gt; Runnable.</span>
+00062 <span class="comment">  'U' -&gt; Unstarted or dormant.</span>
+00063 <span class="comment">  'X' -&gt; Relaxed shadow.</span>
+00064 <span class="comment">  'b' -&gt; Priority boost undergoing.</span>
+00065 <span class="comment">  'T' -&gt; Ptraced and stopped.</span>
+00066 <span class="comment">  'l' -&gt; Locks scheduler.</span>
+00067 <span class="comment">  'r' -&gt; Undergoes round-robin .</span>
+00068 <span class="comment">  's' -&gt; Interrupt shield enabled.</span>
+00069 <span class="comment">  't' -&gt; Mode switches trapped.</span>
+00070 <span class="comment">  'f' -&gt; FPU enabled (for kernel threads).</span>
+00071 <span class="comment">*/</span>
+00072 <span class="preprocessor">#define XNTHREAD_SLABEL_INIT { \</span>
+00073 <span class="preprocessor">  'S', 'W', 'D', 'R', 'U', \</span>
+00074 <span class="preprocessor">  '.', '.', '.', 'X', '.', \</span>
+00075 <span class="preprocessor">  '.', '.', '.', 'b', 'T', \</span>
+00076 <span class="preprocessor">  'l', 'r', '.', 's', 't', \</span>
+00077 <span class="preprocessor">  'f', '.', '.', '.'       \</span>
+00078 <span class="preprocessor">}</span>
+00079 <span class="preprocessor"></span>
+00080 <span class="preprocessor">#define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX)</span>
+00081 <span class="preprocessor"></span><span class="preprocessor">#define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNSHIELD|XNTRAPSW)</span>
 00082 <span class="preprocessor"></span>
 00083 <span class="comment">/* These flags are available to the real-time interfaces */</span>
 00084 <span class="preprocessor">#define XNTHREAD_SPARE0  0x10000000</span>
@@ -100,198 +100,201 @@
 00090 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)</span>
 00091 <span class="preprocessor"></span>
 00092 <span class="preprocessor">#ifdef __XENO_SIM__</span>
-00093 <span class="preprocessor"></span><span class="preprocessor">#define XNRUNNING  XNTHREAD_SPARE0      </span><span class="comment">/* Pseudo-status (must not conflict with system bits) */</span>
-00094 <span class="preprocessor">#define XNDELETED  XNTHREAD_SPARE1      </span><span class="comment">/* idem. */</span>
-00095 <span class="preprocessor">#endif </span><span class="comment">/* __XENO_SIM__ */</span>
-00096 
-00097 <span class="preprocessor">#define XNTHREAD_INVALID_ASR  ((void (*)(xnsigmask_t))0)</span>
-00098 <span class="preprocessor"></span>
-00099 <span class="keyword">struct </span><a class="code" href="structxnsched.html">xnsched</a>;
-00100 <span class="keyword">struct </span>xnsynch;
-00101 
-00102 <span class="keyword">typedef</span> void (*xnasr_t)(xnsigmask_t sigs);
-00103 
-00104 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnthread {
-00105 
-00106     xnarchtcb_t tcb;            <span class="comment">/* Architecture-dependent block -- Must be first */</span>
-00107 
-00108     xnflags_t status;           <span class="comment">/* Thread status flags */</span>
-00109 
-00110     <span class="keyword">struct </span><a class="code" href="structxnsched.html">xnsched</a> *sched;      <span class="comment">/* Thread scheduler */</span>
-00111 
-00112     xnarch_cpumask_t affinity;  <span class="comment">/* Processor affinity. */</span>
-00113 
-00114     <span class="keywordtype">int</span> bprio;                  <span class="comment">/* Base priority (before PIP boost) */</span>
-00115 
-00116     <span class="keywordtype">int</span> cprio;                  <span class="comment">/* Current priority */</span>
-00117 
-00118     xnholder_t slink;           <span class="comment">/* Thread holder in suspend queue */</span>
-00119 
-00120     xnpholder_t rlink;          <span class="comment">/* Thread holder in ready queue */</span>
-00121 
-00122     xnpholder_t plink;          <span class="comment">/* Thread holder in synchronization queue(s) */</span>
-00123 
-00124     xnholder_t glink;           <span class="comment">/* Thread holder in global queue */</span>
-00125 
-00126 <span class="comment">/* We don't want side-effects on laddr here! */</span>
-00127 <span class="preprocessor">#define link2thread(laddr,link) \</span>
-00128 <span class="preprocessor">((xnthread_t *)(((char *)laddr) - (int)(&amp;((xnthread_t *)0)-&gt;link)))</span>
-00129 <span class="preprocessor"></span>
-00130     xnpqueue_t claimq;          <span class="comment">/* Owned resources claimed by others (PIP) */</span>
-00131 
-00132     <span class="keyword">struct </span>xnsynch *wchan;      <span class="comment">/* Resource the thread pends on */</span>
-00133 
-00134     xntimer_t rtimer;           <span class="comment">/* Resource timer */</span>
-00135 
-00136     xntimer_t ptimer;           <span class="comment">/* Periodic timer */</span>
-00137 
-00138     xnticks_t pexpect;          <span class="comment">/* Date of next periodic release point (raw ticks). */</span>
-00139 
-00140     xnsigmask_t signals;        <span class="comment">/* Pending signals */</span>
-00141 
-00142     xnticks_t rrperiod;         <span class="comment">/* Allotted round-robin period (ticks) */</span>
-00143 
-00144     xnticks_t rrcredit;         <span class="comment">/* Remaining round-robin time credit (ticks) */</span>
-00145 
-00146 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_STATS</span>
-00147 <span class="preprocessor"></span>    <span class="keyword">struct </span>{
-00148         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> psw;      <span class="comment">/* Primary mode switch count */</span>
-00149         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ssw;      <span class="comment">/* Secondary mode switch count */</span>
-00150         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> csw;      <span class="comment">/* Context switches (includes</span>
-00151 <span class="comment">                                   secondary -&gt; primary switches) */</span>
-00152         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> pf;       <span class="comment">/* Number of page faults */</span>
-00153     } stat;
-00154 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_STATS */</span>
-00155 
-00156     xnasr_t asr;                <span class="comment">/* Asynchronous service routine */</span>
-00157 
-00158     xnflags_t asrmode;          <span class="comment">/* Thread's mode for ASR */</span>
-00159 
-00160     <span class="keywordtype">int</span> asrimask;               <span class="comment">/* Thread's interrupt mask for ASR */</span>
-00161 
-00162     <span class="keywordtype">unsigned</span> asrlevel;          <span class="comment">/* ASR execution level (ASRs are reentrant) */</span>
-00163 
-00164     <span class="keywordtype">int</span> imask;                  <span class="comment">/* Initial interrupt mask */</span>
-00165 
-00166     <span class="keywordtype">int</span> imode;                  <span class="comment">/* Initial mode */</span>
-00167 
-00168     <span class="keywordtype">int</span> iprio;                  <span class="comment">/* Initial priority */</span>
-00169 
-00170 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_REGISTRY</span>
-00171 <span class="preprocessor"></span>    <span class="keyword">struct </span>{
-00172         xnhandle_t handle;      <span class="comment">/* Handle in registry */</span>
-00173         <span class="keyword">const</span> <span class="keywordtype">char</span> *waitkey;    <span class="comment">/* Pended key */</span>
-00174     } registry;
-00175 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_REGISTRY */</span>
-00176 
-00177     <span class="keywordtype">unsigned</span> magic;             <span class="comment">/* Skin magic. */</span>
-00178 
-00179     <span class="keywordtype">char</span> name[XNOBJECT_NAME_LEN]; <span class="comment">/* Symbolic name of thread */</span>
-00180 
-00181     xnticks_t stime;            <span class="comment">/* Start time */</span>
-00182 
-00183     void (*entry)(<span class="keywordtype">void</span> *cookie); <span class="comment">/* Thread entry routine */</span>
-00184 
-00185     <span class="keywordtype">void</span> *cookie;               <span class="comment">/* Cookie to pass to the entry routine */</span>
-00186 
-00187     <span class="keywordtype">void</span> *extinfo;              <span class="comment">/* Extended information -- user-defined */</span>
-00188 
-00189     XNARCH_DECL_DISPLAY_CONTEXT();
-00190 
-00191 } xnthread_t;
-00192 
-00193 <span class="preprocessor">#define XNHOOK_THREAD_START  1</span>
-00194 <span class="preprocessor"></span><span class="preprocessor">#define XNHOOK_THREAD_SWITCH 2</span>
-00195 <span class="preprocessor"></span><span class="preprocessor">#define XNHOOK_THREAD_DELETE 3</span>
-00196 <span class="preprocessor"></span>
-00197 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnhook {
-00198 
-00199     xnholder_t link;
-00200 
-00201 <span class="preprocessor">#define link2hook(laddr) \</span>
-00202 <span class="preprocessor">((xnhook_t *)(((char *)laddr) - (int)(&amp;((xnhook_t *)0)-&gt;link)))</span>
-00203 <span class="preprocessor"></span>
-00204     void (*routine)(xnthread_t *thread);
-00205 
-00206 } xnhook_t;
-00207 
-00208 <span class="preprocessor">#define xnthread_name(thread)              ((thread)-&gt;name)</span>
-00209 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_clear_name(thread)        do { *(thread)-&gt;name = 0; } while(0)</span>
-00210 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_sched(thread)             ((thread)-&gt;sched)</span>
-00211 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_start_time(thread)        ((thread)-&gt;stime)</span>
-00212 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_status_flags(thread)      ((thread)-&gt;status)</span>
-00213 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_test_flags(thread,flags)  testbits((thread)-&gt;status,flags)</span>
-00214 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_set_flags(thread,flags)   __setbits((thread)-&gt;status,flags)</span>
-00215 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_clear_flags(thread,flags) __clrbits((thread)-&gt;status,flags)</span>
-00216 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_initial_priority(thread)  ((thread)-&gt;iprio)</span>
-00217 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_base_priority(thread)     ((thread)-&gt;bprio)</span>
-00218 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_current_priority(thread)  ((thread)-&gt;cprio)</span>
-00219 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_time_slice(thread)        ((thread)-&gt;rrperiod)</span>
-00220 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_time_credit(thread)       ((thread)-&gt;rrcredit)</span>
-00221 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_archtcb(thread)           (&amp;((thread)-&gt;tcb))</span>
-00222 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_asr_level(thread)         ((thread)-&gt;asrlevel)</span>
-00223 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_pending_signals(thread)   ((thread)-&gt;signals)</span>
-00224 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_timeout(thread)           xntimer_get_timeout(&amp;(thread)-&gt;rtimer)</span>
-00225 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_stack_size(thread)        xnarch_stack_size(xnthread_archtcb(thread))</span>
-00226 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_extended_info(thread)     ((thread)-&gt;extinfo)</span>
-00227 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_handle(thread)            ((thread)-&gt;registry.handle)</span>
-00228 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_set_magic(thread,m)       do { (thread)-&gt;magic = (m); } while(0)</span>
-00229 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_get_magic(thread)         ((thread)-&gt;magic)</span>
-00230 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_signaled_p(thread)        ((thread)-&gt;signals != 0)</span>
-00231 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_user_task(thread)         xnarch_user_task(xnthread_archtcb(thread))</span>
-00232 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_user_pid(thread) \</span>
-00233 <span class="preprocessor">    (testbits((thread)-&gt;status,XNROOT) || !xnthread_user_task(thread) ? \</span>
-00234 <span class="preprocessor">    0 : xnarch_user_pid(xnthread_archtcb(thread)))</span>
-00235 <span class="preprocessor"></span>
-00236 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_STATS</span>
-00237 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_inc_psw(thread)     ++(thread)-&gt;stat.psw</span>
-00238 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_inc_ssw(thread)     ++(thread)-&gt;stat.ssw</span>
-00239 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_inc_csw(thread)     ++(thread)-&gt;stat.csw</span>
-00240 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_inc_pf(thread)      ++(thread)-&gt;stat.pf</span>
-00241 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* CONFIG_XENO_OPT_STATS */</span>
-00242 <span class="preprocessor">#define xnthread_inc_psw(thread)     do { } while(0)</span>
-00243 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_inc_ssw(thread)     do { } while(0)</span>
-00244 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_inc_csw(thread)     do { } while(0)</span>
-00245 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_inc_pf(thread)      do { } while(0)</span>
-00246 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_STATS */</span>
-00247 
-00248 <span class="preprocessor">#ifdef __cplusplus</span>
-00249 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-00250 <span class="preprocessor">#endif</span>
-00251 <span class="preprocessor"></span>
-00252 <span class="keywordtype">int</span> xnthread_init(xnthread_t *thread,
-00253                   <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
-00254                   <span class="keywordtype">int</span> prio,
-00255                   xnflags_t flags,
-00256                   <span class="keywordtype">unsigned</span> stacksize);
-00257 
-00258 <span class="keywordtype">void</span> xnthread_cleanup_tcb(xnthread_t *thread);
-00259 
-00260 <span class="keywordtype">char</span> *xnthread_symbolic_status(xnflags_t status, <span class="keywordtype">char</span> *buf, <span class="keywordtype">int</span> size);
-00261 
-00262 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t now)
-00263 {
-00264     xnticks_t timeout;
-00265 
-00266     <span class="keywordflow">if</span> (!testbits(thread-&gt;status,XNDELAY))
-00267         <span class="keywordflow">return</span> 0LL;
+00093 <span class="preprocessor"></span><span class="comment">/* Pseudo-status (must not conflict with other bits) */</span>
+00094 <span class="preprocessor">#define XNRUNNING  XNTHREAD_SPARE0</span>
+00095 <span class="preprocessor"></span><span class="preprocessor">#define XNDELETED  XNTHREAD_SPARE1</span>
+00096 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* __XENO_SIM__ */</span>
+00097 
+00098 <span class="preprocessor">#define XNTHREAD_INVALID_ASR  ((void (*)(xnsigmask_t))0)</span>
+00099 <span class="preprocessor"></span>
+00100 <span class="keyword">struct </span><a class="code" href="structxnsched.html">xnsched</a>;
+00101 <span class="keyword">struct </span>xnsynch;
+00102 
+00103 <span class="keyword">typedef</span> void (*xnasr_t)(xnsigmask_t sigs);
+00104 
+00105 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnthread {
+00106 
+00107     xnarchtcb_t tcb;            <span class="comment">/* Architecture-dependent block -- Must be first */</span>
+00108 
+00109     xnflags_t status;           <span class="comment">/* Thread status flags */</span>
+00110 
+00111     <span class="keyword">struct </span><a class="code" href="structxnsched.html">xnsched</a> *sched;      <span class="comment">/* Thread scheduler */</span>
+00112 
+00113     xnarch_cpumask_t affinity;  <span class="comment">/* Processor affinity. */</span>
+00114 
+00115     <span class="keywordtype">int</span> bprio;                  <span class="comment">/* Base priority (before PIP boost) */</span>
+00116 
+00117     <span class="keywordtype">int</span> cprio;                  <span class="comment">/* Current priority */</span>
+00118 
+00119     xnpholder_t rlink;          <span class="comment">/* Thread holder in ready queue */</span>
+00120 
+00121     xnpholder_t plink;          <span class="comment">/* Thread holder in synchronization queue(s) */</span>
+00122 
+00123     xnholder_t glink;           <span class="comment">/* Thread holder in global queue */</span>
+00124 
+00125 <span class="comment">/* We don't want side-effects on laddr here! */</span>
+00126 <span class="preprocessor">#define link2thread(laddr,link) \</span>
+00127 <span class="preprocessor">((xnthread_t *)(((char *)laddr) - (int)(&amp;((xnthread_t *)0)-&gt;link)))</span>
+00128 <span class="preprocessor"></span>
+00129     xnpqueue_t claimq;          <span class="comment">/* Owned resources claimed by others (PIP) */</span>
+00130 
+00131     <span class="keyword">struct </span>xnsynch *wchan;      <span class="comment">/* Resource the thread pends on */</span>
+00132 
+00133     xntimer_t rtimer;           <span class="comment">/* Resource timer */</span>
+00134 
+00135     xntimer_t ptimer;           <span class="comment">/* Periodic timer */</span>
+00136 
+00137     xnticks_t pexpect;          <span class="comment">/* Date of next periodic release point (raw ticks). */</span>
+00138 
+00139     xnsigmask_t signals;        <span class="comment">/* Pending signals */</span>
+00140 
+00141     xnticks_t rrperiod;         <span class="comment">/* Allotted round-robin period (ticks) */</span>
+00142 
+00143     xnticks_t rrcredit;         <span class="comment">/* Remaining round-robin time credit (ticks) */</span>
+00144 
+00145 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_STATS</span>
+00146 <span class="preprocessor"></span>    <span class="keyword">struct </span>{
+00147         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> psw;      <span class="comment">/* Primary mode switch count */</span>
+00148         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ssw;      <span class="comment">/* Secondary mode switch count */</span>
+00149         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> csw;      <span class="comment">/* Context switches (includes</span>
+00150 <span class="comment">                                   secondary -&gt; primary switches) */</span>
+00151         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> pf;       <span class="comment">/* Number of page faults */</span>
+00152     } stat;
+00153 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_STATS */</span>
+00154 
+00155     <span class="keywordtype">int</span> errcode;                <span class="comment">/* Local errno */</span>
+00156 
+00157     xnasr_t asr;                <span class="comment">/* Asynchronous service routine */</span>
+00158 
+00159     xnflags_t asrmode;          <span class="comment">/* Thread's mode for ASR */</span>
+00160 
+00161     <span class="keywordtype">int</span> asrimask;               <span class="comment">/* Thread's interrupt mask for ASR */</span>
+00162 
+00163     <span class="keywordtype">unsigned</span> asrlevel;          <span class="comment">/* ASR execution level (ASRs are reentrant) */</span>
+00164 
+00165     <span class="keywordtype">int</span> imask;                  <span class="comment">/* Initial interrupt mask */</span>
+00166 
+00167     <span class="keywordtype">int</span> imode;                  <span class="comment">/* Initial mode */</span>
+00168 
+00169     <span class="keywordtype">int</span> iprio;                  <span class="comment">/* Initial priority */</span>
+00170 
+00171 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_REGISTRY</span>
+00172 <span class="preprocessor"></span>    <span class="keyword">struct </span>{
+00173         xnhandle_t handle;      <span class="comment">/* Handle in registry */</span>
+00174         <span class="keyword">const</span> <span class="keywordtype">char</span> *waitkey;    <span class="comment">/* Pended key */</span>
+00175     } registry;
+00176 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_REGISTRY */</span>
+00177 
+00178     <span class="keywordtype">unsigned</span> magic;             <span class="comment">/* Skin magic. */</span>
+00179 
+00180     <span class="keywordtype">char</span> name[XNOBJECT_NAME_LEN]; <span class="comment">/* Symbolic name of thread */</span>
+00181 
+00182     xnticks_t stime;            <span class="comment">/* Start time */</span>
+00183 
+00184     void (*entry)(<span class="keywordtype">void</span> *cookie); <span class="comment">/* Thread entry routine */</span>
+00185 
+00186     <span class="keywordtype">void</span> *cookie;               <span class="comment">/* Cookie to pass to the entry routine */</span>
+00187 
+00188     <span class="keywordtype">void</span> *extinfo;              <span class="comment">/* Extended information -- user-defined */</span>
+00189 
+00190     XNARCH_DECL_DISPLAY_CONTEXT();
+00191 
+00192 } xnthread_t;
+00193 
+00194 <span class="preprocessor">#define XNHOOK_THREAD_START  1</span>
+00195 <span class="preprocessor"></span><span class="preprocessor">#define XNHOOK_THREAD_SWITCH 2</span>
+00196 <span class="preprocessor"></span><span class="preprocessor">#define XNHOOK_THREAD_DELETE 3</span>
+00197 <span class="preprocessor"></span>
+00198 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnhook {
+00199 
+00200     xnholder_t link;
+00201 
+00202 <span class="preprocessor">#define link2hook(laddr) \</span>
+00203 <span class="preprocessor">((xnhook_t *)(((char *)laddr) - (int)(&amp;((xnhook_t *)0)-&gt;link)))</span>
+00204 <span class="preprocessor"></span>
+00205     void (*routine)(xnthread_t *thread);
+00206 
+00207 } xnhook_t;
+00208 
+00209 <span class="preprocessor">#define xnthread_name(thread)              ((thread)-&gt;name)</span>
+00210 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_clear_name(thread)        do { *(thread)-&gt;name = 0; } while(0)</span>
+00211 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_sched(thread)             ((thread)-&gt;sched)</span>
+00212 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_start_time(thread)        ((thread)-&gt;stime)</span>
+00213 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_status_flags(thread)      ((thread)-&gt;status)</span>
+00214 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_test_flags(thread,flags)  testbits((thread)-&gt;status,flags)</span>
+00215 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_set_flags(thread,flags)   __setbits((thread)-&gt;status,flags)</span>
+00216 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_clear_flags(thread,flags) __clrbits((thread)-&gt;status,flags)</span>
+00217 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_initial_priority(thread)  ((thread)-&gt;iprio)</span>
+00218 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_base_priority(thread)     ((thread)-&gt;bprio)</span>
+00219 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_current_priority(thread)  ((thread)-&gt;cprio)</span>
+00220 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_time_slice(thread)        ((thread)-&gt;rrperiod)</span>
+00221 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_time_credit(thread)       ((thread)-&gt;rrcredit)</span>
+00222 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_archtcb(thread)           (&amp;((thread)-&gt;tcb))</span>
+00223 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_asr_level(thread)         ((thread)-&gt;asrlevel)</span>
+00224 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_pending_signals(thread)   ((thread)-&gt;signals)</span>
+00225 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_timeout(thread)           xntimer_get_timeout(&amp;(thread)-&gt;rtimer)</span>
+00226 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_stack_size(thread)        xnarch_stack_size(xnthread_archtcb(thread))</span>
+00227 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_extended_info(thread)     ((thread)-&gt;extinfo)</span>
+00228 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_handle(thread)            ((thread)-&gt;registry.handle)</span>
+00229 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_set_magic(thread,m)       do { (thread)-&gt;magic = (m); } while(0)</span>
+00230 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_get_magic(thread)         ((thread)-&gt;magic)</span>
+00231 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_signaled_p(thread)        ((thread)-&gt;signals != 0)</span>
+00232 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_user_task(thread)         xnarch_user_task(xnthread_archtcb(thread))</span>
+00233 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_user_pid(thread) \</span>
+00234 <span class="preprocessor">    (testbits((thread)-&gt;status,XNROOT) || !xnthread_user_task(thread) ? \</span>
+00235 <span class="preprocessor">    0 : xnarch_user_pid(xnthread_archtcb(thread)))</span>
+00236 <span class="preprocessor"></span>
+00237 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_STATS</span>
+00238 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_inc_psw(thread)     ++(thread)-&gt;stat.psw</span>
+00239 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_inc_ssw(thread)     ++(thread)-&gt;stat.ssw</span>
+00240 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_inc_csw(thread)     ++(thread)-&gt;stat.csw</span>
+00241 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_inc_pf(thread)      ++(thread)-&gt;stat.pf</span>
+00242 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* CONFIG_XENO_OPT_STATS */</span>
+00243 <span class="preprocessor">#define xnthread_inc_psw(thread)     do { } while(0)</span>
+00244 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_inc_ssw(thread)     do { } while(0)</span>
+00245 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_inc_csw(thread)     do { } while(0)</span>
+00246 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_inc_pf(thread)      do { } while(0)</span>
+00247 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_STATS */</span>
+00248 
+00249 <span class="preprocessor">#ifdef __cplusplus</span>
+00250 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+00251 <span class="preprocessor">#endif</span>
+00252 <span class="preprocessor"></span>
+00253 <span class="keywordtype">int</span> xnthread_init(xnthread_t *thread,
+00254                   <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
+00255                   <span class="keywordtype">int</span> prio,
+00256                   xnflags_t flags,
+00257                   <span class="keywordtype">unsigned</span> stacksize);
+00258 
+00259 <span class="keywordtype">void</span> xnthread_cleanup_tcb(xnthread_t *thread);
+00260 
+00261 <span class="keywordtype">char</span> *xnthread_symbolic_status(xnflags_t status, <span class="keywordtype">char</span> *buf, <span class="keywordtype">int</span> size);
+00262 
+00263 <span class="keywordtype">int</span> *xnthread_get_errno_location(<span class="keywordtype">void</span>);
+00264 
+00265 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t now)
+00266 {
+00267     xnticks_t timeout;
 00268 
-00269     timeout = (<a class="code" href="group__timer.html#ga21">xntimer_get_date</a>(&amp;thread-&gt;rtimer) ? : <a class="code" href="group__timer.html#ga21">xntimer_get_date</a>(&amp;thread-&gt;ptimer));
-00270 
-00271     <span class="keywordflow">if</span> (timeout &lt;= now)
-00272         <span class="keywordflow">return</span> 1;
+00269     <span class="keywordflow">if</span> (!testbits(thread-&gt;status,XNDELAY))
+00270         <span class="keywordflow">return</span> 0LL;
+00271 
+00272     timeout = (<a class="code" href="group__timer.html#ga21">xntimer_get_date</a>(&amp;thread-&gt;rtimer) ? : <a class="code" href="group__timer.html#ga21">xntimer_get_date</a>(&amp;thread-&gt;ptimer));
 00273 
-00274     <span class="keywordflow">return</span> timeout - now;
-00275 }
+00274     <span class="keywordflow">if</span> (timeout &lt;= now)
+00275         <span class="keywordflow">return</span> 1;
 00276 
-00277 <span class="preprocessor">#ifdef __cplusplus</span>
-00278 <span class="preprocessor"></span>}
-00279 <span class="preprocessor">#endif</span>
-00280 <span class="preprocessor"></span>
-00281 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
-00282 
-00283 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_THREAD_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Wed Mar 15 15:47:44 2006 for Xenomai API by&nbsp;
+00277     <span class="keywordflow">return</span> timeout - now;
+00278 }
+00279 
+00280 <span class="preprocessor">#ifdef __cplusplus</span>
+00281 <span class="preprocessor"></span>}
+00282 <span class="preprocessor">#endif</span>
+00283 <span class="preprocessor"></span>
+00284 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
+00285 
+00286 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_THREAD_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:49 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

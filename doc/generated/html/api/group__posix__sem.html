@@ -312,7 +312,7 @@ This service fails if <em>sm</em> is already initialized or is a named semaphore
 <p>
 Open a named semaphore. 
 <p>
-This service establishes a binding between the semaphore named <em>name</em> and the calling context.<p>
+This service establishes a connection between the semaphore named <em>name</em> and the calling context (kernel-space as a whole, or user-space process).<p>
 If no semaphore named <em>name</em> exists and <em>oflags</em> has the <em>O_CREAT</em> bit set, the semaphore is created by this function, using two more arguments:<ul>
 <li>a <em>mode</em> argument, of type <b>mode_t</b>, currently ignored;</li><li>a <em>value</em> argument, of type <b>unsigned</b>, specifying the initial value of the created semaphore.</li></ul>
 <p>
@@ -555,7 +555,7 @@ When a semaphore is destroyed, the memory it used is returned to the system heap
 Lock a semaphore. 
 <p>
 This service locks the semaphore <em>sm</em> if it is currently unlocked (i.e. if its value is greater than 0). If the semaphore is currently locked, the calling thread is suspended until the semaphore is unlocked, or a signal is delivered to the calling thread.<p>
-This service is a cancellation point for Xenomai POSIX skin threads (created with the <a class="el" href="group__posix__thread.html#ga8">pthread_create()</a> service). When such a thread is cancelled while blocked in a call to this service, the semaphore state is left unchanged before the cancellation cleanup handlers are called.<p>
+This service is a cancellation point for Xenomai POSIX skin threads (created with the <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a> service). When such a thread is cancelled while blocked in a call to this service, the semaphore state is left unchanged before the cancellation cleanup handlers are called.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>sm</em>&nbsp;</td><td>the semaphore to be locked.</td></tr>
@@ -576,7 +576,7 @@ This service is a cancellation point for Xenomai POSIX skin threads (created wit
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Wed Mar 15 15:48:46 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:59 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

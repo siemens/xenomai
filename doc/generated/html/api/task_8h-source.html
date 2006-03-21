@@ -177,85 +177,85 @@
 00187 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga22">rt_task_remove_hook</a>(<span class="keywordtype">int</span> type,
 00188                         <span class="keywordtype">void</span> (*routine)(<span class="keywordtype">void</span> *cookie));
 00189 
-00190 <span class="preprocessor">#ifdef __cplusplus</span>
-00191 <span class="preprocessor"></span>}
-00192 <span class="preprocessor">#endif</span>
-00193 <span class="preprocessor"></span>
-00194 <span class="preprocessor">#else </span><span class="comment">/* !(__KERNEL__ || __XENO_SIM__) */</span>
-00195 
-00196 <span class="keyword">typedef</span> RT_TASK_PLACEHOLDER RT_TASK;
+00190 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga23">rt_task_catch</a>(<span class="keywordtype">void</span> (*handler)(rt_sigset_t));
+00191 
+00192 <span class="preprocessor">#ifdef __cplusplus</span>
+00193 <span class="preprocessor"></span>}
+00194 <span class="preprocessor">#endif</span>
+00195 <span class="preprocessor"></span>
+00196 <span class="preprocessor">#else </span><span class="comment">/* !(__KERNEL__ || __XENO_SIM__) */</span>
 00197 
-00198 <span class="preprocessor">#ifdef __cplusplus</span>
-00199 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-00200 <span class="preprocessor">#endif</span>
-00201 <span class="preprocessor"></span>
-00202 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga29">rt_task_shadow</a>(RT_TASK *task,
-00203                    <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
-00204                    <span class="keywordtype">int</span> prio,
-00205                    <span class="keywordtype">int</span> mode);
-00206 
-00207 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga30">rt_task_bind</a>(RT_TASK *task,
-00208                  <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
-00209                  RTIME timeout);
-00210 
-<a name="l00211"></a><a class="code" href="group__task.html#ga31">00211</a> <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga31">rt_task_unbind</a> (RT_TASK *task)
+00198 <span class="keyword">typedef</span> RT_TASK_PLACEHOLDER RT_TASK;
+00199 
+00200 <span class="preprocessor">#ifdef __cplusplus</span>
+00201 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+00202 <span class="preprocessor">#endif</span>
+00203 <span class="preprocessor"></span>
+00204 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga29">rt_task_shadow</a>(RT_TASK *task,
+00205                    <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
+00206                    <span class="keywordtype">int</span> prio,
+00207                    <span class="keywordtype">int</span> mode);
+00208 
+00209 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga30">rt_task_bind</a>(RT_TASK *task,
+00210                  <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
+00211                  RTIME timeout);
 00212 
-00213 {
-00214     task-&gt;opaque = XN_NO_HANDLE;
-00215     <span class="keywordflow">return</span> 0;
-00216 }
-00217 
-00218 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga32">rt_task_join</a>(RT_TASK *task);
+<a name="l00213"></a><a class="code" href="group__task.html#ga31">00213</a> <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga31">rt_task_unbind</a> (RT_TASK *task)
+00214 
+00215 {
+00216     task-&gt;opaque = XN_NO_HANDLE;
+00217     <span class="keywordflow">return</span> 0;
+00218 }
 00219 
-00220 <span class="preprocessor">#ifdef __cplusplus</span>
-00221 <span class="preprocessor"></span>}
-00222 <span class="preprocessor">#endif</span>
-00223 <span class="preprocessor"></span>
-00224 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
-00225 
-00226 <span class="preprocessor">#ifdef __cplusplus</span>
-00227 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-00228 <span class="preprocessor">#endif</span>
-00229 <span class="preprocessor"></span>
-00230 <span class="comment">/* Public interface */</span>
-00231 
-00232 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga8">rt_task_create</a>(RT_TASK *task,
-00233                    <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
-00234                    <span class="keywordtype">int</span> stksize,
-00235                    <span class="keywordtype">int</span> prio,
-00236                    <span class="keywordtype">int</span> mode);
-00237 
-00238 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga9">rt_task_start</a>(RT_TASK *task,
-00239                   <span class="keywordtype">void</span> (*fun)(<span class="keywordtype">void</span> *cookie),
-00240                   <span class="keywordtype">void</span> *cookie);
-00241 
-00242 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga10">rt_task_suspend</a>(RT_TASK *task);
+00220 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga32">rt_task_join</a>(RT_TASK *task);
+00221 
+00222 <span class="preprocessor">#ifdef __cplusplus</span>
+00223 <span class="preprocessor"></span>}
+00224 <span class="preprocessor">#endif</span>
+00225 <span class="preprocessor"></span>
+00226 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
+00227 
+00228 <span class="preprocessor">#ifdef __cplusplus</span>
+00229 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+00230 <span class="preprocessor">#endif</span>
+00231 <span class="preprocessor"></span>
+00232 <span class="comment">/* Public interface */</span>
+00233 
+00234 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga8">rt_task_create</a>(RT_TASK *task,
+00235                    <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
+00236                    <span class="keywordtype">int</span> stksize,
+00237                    <span class="keywordtype">int</span> prio,
+00238                    <span class="keywordtype">int</span> mode);
+00239 
+00240 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga9">rt_task_start</a>(RT_TASK *task,
+00241                   <span class="keywordtype">void</span> (*fun)(<span class="keywordtype">void</span> *cookie),
+00242                   <span class="keywordtype">void</span> *cookie);
 00243 
-00244 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga11">rt_task_resume</a>(RT_TASK *task);
+00244 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga10">rt_task_suspend</a>(RT_TASK *task);
 00245 
-00246 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga12">rt_task_delete</a>(RT_TASK *task);
+00246 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga11">rt_task_resume</a>(RT_TASK *task);
 00247 
-00248 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga13">rt_task_yield</a>(<span class="keywordtype">void</span>);
+00248 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga12">rt_task_delete</a>(RT_TASK *task);
 00249 
-00250 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga14">rt_task_set_periodic</a>(RT_TASK *task,
-00251                          RTIME idate,
-00252                          RTIME period);
-00253 
-00254 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga15">rt_task_wait_period</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *overruns_r);
+00250 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga13">rt_task_yield</a>(<span class="keywordtype">void</span>);
+00251 
+00252 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga14">rt_task_set_periodic</a>(RT_TASK *task,
+00253                          RTIME idate,
+00254                          RTIME period);
 00255 
-00256 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga16">rt_task_set_priority</a>(RT_TASK *task,
-00257                          <span class="keywordtype">int</span> prio);
-00258 
-00259 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga17">rt_task_sleep</a>(RTIME delay);
+00256 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga15">rt_task_wait_period</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *overruns_r);
+00257 
+00258 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga16">rt_task_set_priority</a>(RT_TASK *task,
+00259                          <span class="keywordtype">int</span> prio);
 00260 
-00261 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga18">rt_task_sleep_until</a>(RTIME date);
+00261 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga17">rt_task_sleep</a>(RTIME delay);
 00262 
-00263 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga19">rt_task_unblock</a>(RT_TASK *task);
+00263 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga18">rt_task_sleep_until</a>(RTIME date);
 00264 
-00265 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga20">rt_task_inquire</a>(RT_TASK *task,
-00266                      RT_TASK_INFO *info);
-00267 
-00268 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga23">rt_task_catch</a>(<span class="keywordtype">void</span> (*handler)(rt_sigset_t));
+00265 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga19">rt_task_unblock</a>(RT_TASK *task);
+00266 
+00267 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga20">rt_task_inquire</a>(RT_TASK *task,
+00268                      RT_TASK_INFO *info);
 00269 
 00270 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga24">rt_task_notify</a>(RT_TASK *task,
 00271                    rt_sigset_t signals);
@@ -301,7 +301,7 @@
 00311 <span class="preprocessor">#endif</span>
 00312 <span class="preprocessor"></span>
 00313 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_TASK_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Wed Mar 15 15:47:44 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:49 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
