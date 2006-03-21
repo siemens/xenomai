@@ -19,9 +19,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <linux/ioport.h>
 #include <nucleus/pod.h>
-#include <nucleus/heap.h>
 #include <nucleus/shadow.h>
 #include <vxworks/defs.h>
 #include <vxworks/syscall.h>
@@ -50,7 +48,7 @@ static WIND_TCB *__wind_task_current (struct task_struct *curr)
 {
     xnthread_t *thread = xnshadow_thread(curr);
 
-    if (!thread || xnthread_get_magic(thread) != WIND_TASK_MAGIC)
+    if (!thread || xnthread_get_magic(thread) != VXWORKS_SKIN_MAGIC)
 	return NULL;
 
     return thread2wind_task(thread); /* Convert TCB pointers. */
@@ -593,6 +591,9 @@ static int __wind_taskinfo_name (struct task_struct *curr, struct pt_regs *regs)
     xnhandle_t handle = __xn_reg_arg1(regs);
     const char *name;
     WIND_TCB *pTcb;
+
+    if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg2(regs),XNOBJECT_NAME_LEN))
+	return -EFAULT;
 
     pTcb = (WIND_TCB *)xnregistry_fetch(handle);
 
