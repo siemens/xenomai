@@ -50,7 +50,6 @@ int wind_sysclk_init(u_long init_rate)
 
 void wind_sysclk_cleanup(void)
 {
-    xnpod_stop_timer();
 }
 
 
