@@ -30,8 +30,6 @@ static xnpod_t pod;
 static void uitron_shutdown (int xtype)
 
 {
-    xnpod_stop_timer();
-
     uimbx_cleanup();
     uiflag_cleanup();
     uisem_cleanup();

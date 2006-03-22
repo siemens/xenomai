@@ -189,14 +189,10 @@ int sem_init (sem_t *sm, int pshared, unsigned value)
 /**
  * Destroy an unnamed semaphore.
  *
- * This service destroys the semaphore @a sm. The semaphore becomes invalid for
- * all semaphores services (they all return -1 with @a errno set to EINVAL)
- * except sem_init().
- *
- * Threads currently blocked on @a sm are unblocked and the service they used
- * return -1 with @a errno set to EINVAL. The semaphore is then considered
- * invalid by all semaphore services (they all fail with @a errno set to EINVAL)
- * except sem_init().
+ * This service destroys the semaphore @a sm. Threads currently blocked on @a sm
+ * are unblocked and the service they called return -1 with @a errno set to
+ * EINVAL. The semaphore is then considered invalid by all semaphore services
+ * (they all fail with @a errno set to EINVAL) except sem_init().
  *
  * This service fails if @a sm is a named semaphore.
  *
@@ -511,7 +507,9 @@ static inline int sem_trywait_internal (struct __shadow_sem *shadow)
  * - EINVAL, the specified semaphore is invalid or uninitialized;
  * - EAGAIN, the specified semaphore is currently locked.
  *
- * http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html
+ * * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html">
+ * Specification.</a>
  * 
  */
 int sem_trywait (sem_t *sm)

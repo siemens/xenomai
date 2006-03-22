@@ -44,7 +44,6 @@ static void psos_shutdown (int xtype)
 
 {
     xnpod_lock_sched();
-    xnpod_stop_timer();
 
     psostask_cleanup();
     psostm_cleanup();

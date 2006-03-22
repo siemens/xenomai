@@ -77,8 +77,6 @@ static xnpod_t pod;
 
 static void pse51_shutdown(int xtype)
 {
-    xnpod_stop_timer();
-
     pse51_thread_pkg_cleanup();
     pse51_shm_pkg_cleanup();
     pse51_timer_pkg_cleanup();

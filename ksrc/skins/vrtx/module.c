@@ -96,7 +96,6 @@ static void vrtx_shutdown (int xtype)
 
 {
     xnpod_lock_sched();
-    xnpod_stop_timer();
 
     vrtxtask_cleanup();
     vrtxpt_cleanup();
