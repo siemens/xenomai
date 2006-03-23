@@ -1,7 +1,5 @@
 /*
- * Copyright (C) 2001,2002 IDEALX (http://www.idealx.com/).
- * Written by Julien Pinon <jpinon@idealx.com>.
- * Copyright (C) 2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2006 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -18,44 +16,39 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_VRTX_QUEUE_H
-#define _XENO_VRTX_QUEUE_H
+#ifndef _XENO_VRTX_SYSCALL_H
+#define _XENO_VRTX_SYSCALL_H
 
-#include "vrtx/defs.h"
+#ifndef __XENO_SIM__
+#include <asm/xenomai/syscall.h>
+#endif /* __XENO_SIM__ */
 
-#define VRTX_QUEUE_MAGIC 0x82820303
+#define __vrtx_tecreate    0
+#define __vrtx_tdelete     1
 
-typedef struct vrtxqmsg {
-    xnholder_t link;
+struct vrtx_arg_bulk {
 
-#define link2vrtxmsg(laddr) \
-((vrtxqmsg_t *)(((char *)laddr) - (int)(&((vrtxqmsg_t *)0)->link)))
+    u_long a1;
+    u_long a2;
+    u_long a3;
+    u_long a4;
+    u_long a5;
+};
 
-    char *message;
-} vrtxqmsg_t;
-
-typedef struct vrtxqueue {
-
-    unsigned magic;   /* Magic code - must be first */
-
-    xnsynch_t synchbase;
-
-    xnqueue_t messageq;
-    
-    int maxnum;
-
-} vrtxqueue_t;
+#ifdef __KERNEL__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void vrtxqueue_init(void);
+int vrtxsys_init(void);
 
-void vrtxqueue_cleanup(void);
+void vrtxsys_cleanup(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* !_XENO_VRTX_QUEUE_H */
+#endif /* __KERNEL__ */
+
+#endif /* _XENO_VRTX_SYSCALL_H */

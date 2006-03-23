@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2001,2002 IDEALX (http://www.idealx.com/).
  * Written by Julien Pinon <jpinon@idealx.com>.
- * Copyright (C) 2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2003,2006 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -18,36 +18,36 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "vrtx/pt.h"
+#include <vrtx/pt.h>
 
-static xnqueue_t vrtxptq;
+static vrtxidmap_t *vrtx_pt_idmap;
 
-static vrtxpt_t *vrtxptmap[VRTX_MAX_PID];
-
-static void vrtxpt_delete_internal(vrtxpt_t *pt);
-
-void vrtxpt_init (void) {
-    initq(&vrtxptq);
-}
-
-void vrtxpt_cleanup (void) {
-
-    xnholder_t *holder;
-
-    while ((holder = getheadq(&vrtxptq)) != NULL)
-	vrtxpt_delete_internal(link2vrtxpt(holder));
-}
+static xnqueue_t vrtx_pt_q;
 
 static void vrtxpt_delete_internal (vrtxpt_t *pt)
 
 {
-    spl_t s;
-
-    xnlock_get_irqsave(&nklock,s);
-    removeq(&vrtxptq,&pt->link);
-    vrtxptmap[pt->pid] = NULL;
+    removeq(&vrtx_pt_q,&pt->link);
+    vrtx_put_id(vrtx_pt_idmap,pt->pid);
     vrtx_mark_deleted(pt);
-    xnlock_put_irqrestore(&nklock,s);
+}
+
+int vrtxpt_init (void)
+{
+    initq(&vrtx_pt_q);
+    vrtx_pt_idmap = vrtx_alloc_idmap(VRTX_MAX_PTS,1);
+    return vrtx_pt_idmap ? 0 : -ENOMEM;
+}
+
+void vrtxpt_cleanup (void)
+{
+
+    xnholder_t *holder;
+
+    while ((holder = getheadq(&vrtx_pt_q)) != NULL)
+	vrtxpt_delete_internal(link2vrtxpt(holder));
+
+    vrtx_free_idmap(vrtx_pt_idmap);
 }
 
 static int vrtxpt_add_extent (vrtxpt_t *pt,
@@ -57,8 +57,8 @@ static int vrtxpt_add_extent (vrtxpt_t *pt,
     u_long bitmapsize;
     vrtxptext_t *ptext;
     char *mp;
-    long n;
     spl_t s;
+    long n;
 
     if (extsize <= pt->bsize + sizeof(vrtxptext_t))
 	return ER_IIP;
@@ -107,49 +107,18 @@ int sc_pcreate (int pid,
 		char *paddr,
 		long psize,
 		long bsize,
-		int *perr)
+		int *errp)
 {
     vrtxpt_t *pt;
     spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-
-    if (pid < -1 || pid >= VRTX_MAX_PID ||
+    if (pid < -1 ||
 	bsize <= ptext_align_mask ||
 	psize < bsize + sizeof(vrtxpt_t) + sizeof(vrtxptext_t))
 	{
-	*perr = ER_IIP;
+	*errp = ER_IIP;
 	return -1;
 	}
-
-    xnlock_get_irqsave(&nklock,s);
-
-    if (pid < 0)
-	{
-	for (pid = 0; pid < VRTX_MAX_PID; pid++)
-	    {
-	    if (vrtxptmap[pid] == NULL)
-		break;
-	    }
-
-	if (pid >= VRTX_MAX_PID)
-	    {
-	    xnlock_put_irqrestore(&nklock,s);
-	    *perr = ER_PID;
-	    return -1;
-	    }
-	}
-    else if (pid >= 0 && vrtxptmap[pid] != NULL)
-	{
-	xnlock_put_irqrestore(&nklock,s);
-	*perr = ER_PID;
-	return -1;
-	}
-
-    /* Reserve slot while preemption is disabled */
-    vrtxptmap[pid] = (vrtxpt_t *)1;
-
-    xnlock_put_irqrestore(&nklock,s);
 
     pt = (vrtxpt_t *)paddr;
     inith(&pt->link);
@@ -158,90 +127,81 @@ int sc_pcreate (int pid,
     pt->ublks = 0;
     pt->pid = pid;
 
-    *perr = vrtxpt_add_extent(pt,
-			      (char *)pt + sizeof(*pt),
-			      psize - sizeof(*pt));
-    if (*perr != RET_OK)
+    *errp = vrtxpt_add_extent(pt,(char *)pt + sizeof(*pt),psize - sizeof(*pt));
+
+    if (*errp != RET_OK)
+	return -1;
+    
+    pid = vrtx_get_id(vrtx_pt_idmap,pid,pt);
+
+    if (pid < 0)
 	{
-	vrtxptmap[pid] = NULL;
+	*errp = ER_PID;
 	return -1;
 	}
-    
+
+    pt->pid = pid;
     pt->magic = VRTX_PT_MAGIC;
+
     xnlock_get_irqsave(&nklock,s);
-    vrtxptmap[pid] = pt;
-    appendq(&vrtxptq,&pt->link);
+    appendq(&vrtx_pt_q,&pt->link);
     xnlock_put_irqrestore(&nklock,s);
 
     return pid;
 }
 
-void sc_pdelete (int pid, int opt, int *perr)
+void sc_pdelete (int pid, int opt, int *errp)
 
 {
     vrtxpt_t *pt;
     spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-
-    if (pid < 0 || pid >= VRTX_MAX_PID)
+    if (opt & ~1)
 	{
-	*perr = ER_PID;
-	return;
-	}
-
-    if ((opt & ~1) != 0)
-	{
-	*perr = ER_IIP;
+	*errp = ER_IIP;
 	return;
 	}
 
     xnlock_get_irqsave(&nklock,s);
 
-    pt = vrtxptmap[pid];
+    pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap,pid);
 
     if (pt == NULL)
 	{
-	xnlock_put_irqrestore(&nklock,s);
-	*perr = ER_PID;
-	return;
+	*errp = ER_PID;
+	goto unlock_and_exit;
 	}
 
     vrtxpt_delete_internal(pt);
 
-    *perr = RET_OK;
+    *errp = RET_OK;
+
+ unlock_and_exit:
     
     xnlock_put_irqrestore(&nklock,s);
 }
 
-char *sc_gblock (int pid, int *perr)
+char *sc_gblock (int pid, int *errp)
 
 {
     vrtxptext_t *ptext;
     xnholder_t *holder;
+    void *buf = NULL;
     u_long numblk;
     vrtxpt_t *pt;
-    void *buf;
     spl_t s;
-
-    if (pid < 0 || pid >= VRTX_MAX_PID)
-	{
-	*perr = ER_PID;
-	return NULL;
-	}
 
     xnlock_get_irqsave(&nklock,s);
 
-    pt = vrtxptmap[pid];
+    pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap,pid);
 
     if (pt == NULL)
 	{
-	xnlock_put_irqrestore(&nklock,s);
-	*perr = ER_PID;
-	return NULL;
+	*errp = ER_PID;
+	goto unlock_and_exit;
 	}
 
-    for (holder = getheadq(&pt->extq), buf = NULL;
+    for (holder = getheadq(&pt->extq);
 	holder; holder = nextq(&pt->extq,holder))
 	{
 	ptext = link2vrtxptext(holder);
@@ -259,12 +219,14 @@ char *sc_gblock (int pid, int *perr)
 
     xnlock_put_irqrestore(&nklock,s);
 
-    *perr = (buf == NULL ? ER_MEM : RET_OK);
+    *errp = (buf == NULL ? ER_MEM : RET_OK);
+
+ unlock_and_exit:
 
     return (char *)buf;
 }
 
-void sc_rblock (int pid, char *buf, int *perr)
+void sc_rblock (int pid, char *buf, int *errp)
 
 {
     vrtxptext_t *ptext;
@@ -273,21 +235,14 @@ void sc_rblock (int pid, char *buf, int *perr)
     vrtxpt_t *pt;
     spl_t s;
 
-    if (pid < 0 || pid >= VRTX_MAX_PID)
-	{
-	*perr = ER_PID;
-	return;
-	}
-
     xnlock_get_irqsave(&nklock,s);
 
-    pt = vrtxptmap[pid];
+    pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap,pid);
 
     if (pt == NULL)
 	{
-	xnlock_put_irqrestore(&nklock,s);
-	*perr = ER_PID;
-	return;
+	*errp = ER_PID;
+	goto unlock_and_exit;
 	}
 
     /* For each extent linked to the partition's queue */
@@ -308,11 +263,10 @@ void sc_rblock (int pid, char *buf, int *perr)
 
 	    numblk = (buf - ptext->data) / pt->bsize;
 
-	    /* Check using the bitmap if the block
-	       was previously allocated. Remember that
-	       gblock()/rblock() ops are valid on behalf of
-	       ISRs, so we need to protect ourselves using a hard
-	       critical section.*/
+	    /* Check using the bitmap if the block was previously
+	       allocated. Remember that gblock()/rblock() ops are
+	       valid on behalf of ISRs, so we need to protect
+	       ourselves using a hard critical section.*/
 
 	    if (ptext_bitmap_tstbit(ptext,numblk))
 		{
@@ -322,48 +276,41 @@ void sc_rblock (int pid, char *buf, int *perr)
 		ptext->freelist = buf;
 		pt->ublks--;
 		pt->fblks++;
-		xnlock_put_irqrestore(&nklock,s);
-		*perr = RET_OK;
-		return;
+		*errp = RET_OK;
+		goto unlock_and_exit;
 		}
 	    }
 	}
 
-nmb:
+ nmb:
+    *errp = ER_NMB;
+
+ unlock_and_exit:
 
     xnlock_put_irqrestore(&nklock,s);
-
-    *perr = ER_NMB;
 }
 
 void sc_pextend (int pid,
 		 char *extaddr,
 		 long extsize,
-		 int *perr)
+		 int *errp)
 {
     vrtxpt_t *pt;
     spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-
-    if (pid < 0 || pid >= VRTX_MAX_PID)
-	{
-	*perr = ER_PID;
-	return;
-	}
-
     xnlock_get_irqsave(&nklock,s);
 
-    pt = vrtxptmap[pid];
+    pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap,pid);
 
     if (pt == NULL)
 	{
-	xnlock_put_irqrestore(&nklock,s);
-	*perr = ER_PID;
-	return;
+	*errp = ER_PID;
+	goto unlock_and_exit;
 	}
 
-    *perr = vrtxpt_add_extent(pt,extaddr,extsize);
+    *errp = vrtxpt_add_extent(pt,extaddr,extsize);
+
+ unlock_and_exit:
 
     xnlock_put_irqrestore(&nklock,s);
 }
@@ -374,34 +321,27 @@ void sc_pinquiry (unsigned long info[3], int pid, int *errp)
     vrtxpt_t *pt;
     spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-
-    if (pid < 0 || pid >= VRTX_MAX_PID)
-	{
-	*errp = ER_PID;
-	return;
-	}
-
     xnlock_get_irqsave(&nklock,s);
 
-    pt = vrtxptmap[pid];
+    pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap,pid);
 
     if (pt == NULL)
 	{
-	xnlock_put_irqrestore(&nklock,s);
 	*errp = ER_PID;
-	return;
+	goto unlock_and_exit;
 	}
 
     info[0] = pt->ublks;
     info[1] = pt->fblks;
     info[2] = pt->bsize;
 
-    xnlock_put_irqrestore(&nklock,s);
-
     *errp = RET_OK;
 
+ unlock_and_exit:
+
+    xnlock_put_irqrestore(&nklock,s);
 }
+
 /*
  * IMPLEMENTATION NOTES:
  *

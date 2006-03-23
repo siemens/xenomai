@@ -18,56 +18,36 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_VRTX_HEAP_H
-#define _XENO_VRTX_HEAP_H
+#ifndef _XENO_VRTX_MX_H
+#define _XENO_VRTX_MX_H
 
-#include "vrtx/defs.h"
+#include <vrtx/defs.h>
 
-#define VRTX_HEAP_MAGIC 0x82820505
+typedef struct vrtxmx {
 
-typedef struct vrtxuslt { /* Region unit slot */
+    xnholder_t link;
 
-    unsigned prev : 15;
-    unsigned next : 15;
-    unsigned busy : 1;
-    unsigned heading : 1;
-    unsigned units;
+#define link2vrtxmx(laddr) \
+((vrtxmx_t *)(((char *)laddr) - (int)(&((vrtxmx_t *)0)->link)))
 
-} vrtxuslt_t;
+    int mid;
 
-#define heap_align_mask   (sizeof(vrtxuslt_t)-1)
-
-typedef struct vrtxheap {
-
-    unsigned magic;   /* Magic code - must be first */
-
-    xnholder_t link;  /* Link in vrtxheapq */
-
-#define link2vrtxheap(laddr) \
-((vrtxheap_t *)(((char *)laddr) - (int)(&((vrtxheap_t *)0)->link)))
+    xnthread_t *owner;
 
     xnsynch_t synchbase;
 
-    u_long log2psize;	/* Aligned allocation unit size */
-
-    u_long allocated;	/* count of allocated blocks */
-
-    u_long released;	/* count of allocated then released blocks */
-
-    xnheap_t sysheap;	/* memory heap */
-
-} vrtxheap_t;
+} vrtxmx_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int vrtxheap_init(u_long heap0size);
+int vrtxmx_init(void);
 
-void vrtxheap_cleanup(void);
+void vrtxmx_cleanup(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* !_XENO_VRTX_HEAP_H */
+#endif /* !_XENO_VRTX_MX_H */

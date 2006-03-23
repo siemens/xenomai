@@ -18,29 +18,48 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_VRTX_MB_H
-#define _XENO_VRTX_MB_H
+#ifndef _XENO_VRTX_QUEUE_H
+#define _XENO_VRTX_QUEUE_H
 
-#include "vrtx/defs.h"
+#include <vrtx/defs.h>
 
-typedef struct vrtxmsg {
-    /* BEWARE, code assumes link is the first element */
+#define VRTX_QUEUE_MAGIC 0x82820303
+
+typedef struct vrtxqueue {
+
+    unsigned magic;   /* Magic code - must be first */
+
     xnholder_t link;
 
-    xnsynch_t  synchbase;
-    char **mboxp;
-} vrtxmsg_t;
+#define link2vrtxqueue(laddr) \
+((vrtxqueue_t *)(((char *)laddr) - (int)(&((vrtxqueue_t *)0)->link)))
+
+    int qid;
+
+    xnsynch_t synchbase;
+
+    char **messages;
+    
+    int rdptr;
+
+    int wrptr;
+
+    int qused;
+
+    int qsize;	/* Does not account for the jamming slot. */
+
+} vrtxqueue_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void vrtxmb_init(void);
+int vrtxqueue_init(void);
 
-void vrtxmb_cleanup(void);
+void vrtxqueue_cleanup(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* !_XENO_VRTX_MB_H */
+#endif /* !_XENO_VRTX_QUEUE_H */

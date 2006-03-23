@@ -23,8 +23,8 @@
  * VxWorks is a registered trademark of Wind River Systems, Inc.
  */
 
-#ifndef _XENO_SKIN_VXWORKS_H
-#define _XENO_SKIN_VXWORKS_H
+#ifndef _XENO_VXWORKS_VXWORKS_H
+#define _XENO_VXWORKS_VXWORKS_H
 
 #include <nucleus/types.h>
 
@@ -253,13 +253,13 @@ int *wind_current_context_errno(void);
 }
 #endif
 
-#else /* !(__KERNEL__ || __XENO_SIM__) */
+#else /* !(__KERNEL__ || __XENO_SIM__ || __XENO_UVM__) */
 
 #include <vxworks/syscall.h>
 
 typedef WIND_TCB_PLACEHOLDER WIND_TCB;
 
-#endif /* __KERNEL__ || __XENO_SIM__ */
+#endif /* __KERNEL__ || __XENO_SIM__ || __XENO_UVM__ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -404,4 +404,4 @@ const char *kernelVersion(void);
 }
 #endif
 
-#endif /* !_XENO_SKIN_VXWORKS_H */
+#endif /* !_XENO_VXWORKS_VXWORKS_H */

@@ -6,7 +6,9 @@ obj-$(CONFIG_XENO_SKIN_VRTX) += xeno_vrtx.o
 
 xeno_vrtx-y := event.o heap.o mb.o module.o mx.o pt.o queue.o sem.o task.o time.o
 
-EXTRA_CFLAGS += -Iinclude/xenomai
+xeno_vrtx-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
+
+EXTRA_CFLAGS += -I$(src)/.. -Iinclude/xenomai
 
 else
 
@@ -18,11 +20,14 @@ obj-$(CONFIG_XENO_SKIN_VRTX) := xeno_vrtx.o
 
 list-multi := xeno_vrtx.o
 
-xeno_vrtx-objs := event.o heap.o mb.o module.o mx.o pt.o queue.o sem.o task.o time.o
+opt_objs-y :=
+opt_objs-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
+
+xeno_vrtx-objs := event.o heap.o mb.o module.o mx.o pt.o queue.o sem.o task.o time.o $(opt_objs-y)
 
 export-objs := $(xeno_vrtx-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat -I..
 
 include $(TOPDIR)/Rules.make
 
