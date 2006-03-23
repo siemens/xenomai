@@ -20,12 +20,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <nucleus/jhash.h>
 #include <posix/syscall.h>
 #include <posix/posix.h>
 #include <posix/thread.h>
 #include <posix/mutex.h>
 #include <posix/cond.h>
-#include <posix/jhash.h>
 #include <posix/mq.h>
 #include <posix/intr.h>
 #include <posix/registry.h>     /* For PSE51_MAXNAME. */
