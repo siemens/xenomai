@@ -21,16 +21,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <vxworks/vxworks.h>
+#include <vrtx/vrtx.h>
 
-pthread_key_t __vxworks_tskey;
+pthread_key_t __vrtx_tskey;
 
-int __vxworks_muxid = -1;
+int __vrtx_muxid = -1;
 
 static void __flush_tsd (void *tsd)
 
 {
-    /* Free the task descriptor allocated by taskIdSelf(). */
+    /* Free the TCB allocated by sc_tinquiry(). */
     free(tsd);
 }
 
@@ -40,7 +40,7 @@ static __attribute__((constructor)) void __init_xeno_interface(void)
     xnfeatinfo_t finfo;
     int muxid;
 
-    muxid = XENOMAI_SYSBIND(VXWORKS_SKIN_MAGIC,
+    muxid = XENOMAI_SYSBIND(VRTX_SKIN_MAGIC,
 			    XENOMAI_FEAT_DEP,
 			    XENOMAI_ABI_REV,
 			    &finfo);
@@ -63,8 +63,8 @@ static __attribute__((constructor)) void __init_xeno_interface(void)
 	case -ENOSYS:
 	case -ESRCH:
 
-	    fprintf(stderr,"Xenomai: VxWorks skin or CONFIG_XENO_OPT_PERVASIVE disabled.\n");
-	    fprintf(stderr,"(modprobe xeno_vxworks?)\n");
+	    fprintf(stderr,"Xenomai: VRTX skin or CONFIG_XENO_OPT_PERVASIVE disabled.\n");
+	    fprintf(stderr,"(modprobe xeno_vrtx?)\n");
 	    exit(1);
 
 	default:
@@ -77,13 +77,13 @@ static __attribute__((constructor)) void __init_xeno_interface(void)
 
 	    /* Allocate a TSD key for indexing self task pointers. */
 
-	    if (pthread_key_create(&__vxworks_tskey,&__flush_tsd) != 0)
+	    if (pthread_key_create(&__vrtx_tskey,&__flush_tsd) != 0)
 		{
 		fprintf(stderr,"Xenomai: failed to allocate new TSD key?!\n");
 		exit(1);
 		}
 
-	    __vxworks_muxid = muxid;
+	    __vrtx_muxid = muxid;
 	    break;
 	}
 }

@@ -18,42 +18,58 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_VRTX_SEM_H
-#define _XENO_VRTX_SEM_H
+#ifndef _XENO_VRTX_HEAP_H
+#define _XENO_VRTX_HEAP_H
 
 #include "vrtx/defs.h"
 
-#define VRTX_SEM_MAGIC 0x82820202
-#define MAX_SEM_VALUE  65535
+#define VRTX_HEAP_MAGIC 0x82820505
 
+typedef struct vrtxuslt { /* Region unit slot */
 
-typedef struct vrtxsem {
+    unsigned prev : 15;
+    unsigned next : 15;
+    unsigned busy : 1;
+    unsigned heading : 1;
+    unsigned units;
+
+} vrtxuslt_t;
+
+#define heap_align_mask   (sizeof(vrtxuslt_t)-1)
+
+typedef struct vrtxheap {
 
     unsigned magic;   /* Magic code - must be first */
 
-    xnholder_t link;  /* Link in vrtxsemq */
+    xnholder_t link;  /* Link in vrtxheapq */
 
-#define link2vrtxsem(laddr) \
-((vrtxsem_t *)(((char *)laddr) - (int)(&((vrtxsem_t *)0)->link)))
+#define link2vrtxheap(laddr) \
+((vrtxheap_t *)(((char *)laddr) - (int)(&((vrtxheap_t *)0)->link)))
 
-    int semid;		/* VRTX identifier */
+    int hid;		/* VRTX identifier */
 
     xnsynch_t synchbase;
 
-    u_long count;   /* Available resource count */
+    u_long log2psize;	/* Aligned allocation unit size */
 
-} vrtxsem_t;
+    u_long allocated;	/* count of allocated blocks */
+
+    u_long released;	/* count of allocated then released blocks */
+
+    xnheap_t sysheap;	/* memory heap */
+
+} vrtxheap_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void vrtxsem_init(void);
+int vrtxheap_init(u_long heap0size);
 
-void vrtxsem_cleanup(void);
+void vrtxheap_cleanup(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* !_XENO_VRTX_SEM_H */
+#endif /* !_XENO_VRTX_HEAP_H */

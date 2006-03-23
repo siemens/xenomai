@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2001,2002 IDEALX (http://www.idealx.com/).
  * Written by Julien Pinon <jpinon@idealx.com>.
- * Copyright (C) 2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2003,2006 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -21,18 +21,30 @@
 #include "vrtx/task.h"
 #include "vrtx/heap.h"
 
-static xnqueue_t vrtxheapq;
+static vrtxidmap_t *vrtx_heap_idmap;
 
-static void heap_destroy_internal(vrtxheap_t *heap);
+static xnqueue_t vrtx_heap_q;
+
+static void heap_destroy_internal (vrtxheap_t *heap)
+
+{
+    spl_t s;
+
+    xnlock_get_irqsave(&nklock,s);
+    removeq(&vrtx_heap_q,&heap->link);
+    vrtx_put_id(vrtx_heap_idmap,heap->hid);
+    vrtx_mark_deleted(heap);
+    xnlock_put_irqrestore(&nklock,s);
+    xnheap_destroy(&heap->sysheap,NULL,NULL);
+}
 
 int vrtxheap_init (u_long heap0size)
 
 {
     char *heap0addr;
-    int err;
-    int heapid;
+    int err, hid;
 
-    initq(&vrtxheapq);
+    initq(&vrtx_heap_q);
 
     if (heap0size < 2048)
 	heap0size = 2048;
@@ -42,19 +54,24 @@ int vrtxheap_init (u_long heap0size)
     if (!heap0addr)
 	return -ENOMEM;
 
-    heapid = sc_hcreate(heap0addr, heap0size, 7, &err);
-    if ( err != RET_OK )
+    hid = sc_hcreate(heap0addr, heap0size, 7, &err);	/* Must be #0 */
+
+    if (err)
 	{
-	if ( err == ER_IIP)
-	    {
+	if (err == ER_IIP)
 	    return -EINVAL;
-	    }
 	else
-	    {
 	    return -ENOMEM;
-	    }
 	}
   
+    vrtx_heap_idmap = vrtx_alloc_idmap(VRTX_MAX_HEAPS,0);
+
+    if (!vrtx_heap_idmap)
+	{
+	sc_hdelete(hid,1,&err);
+	return -ENOMEM;
+	}
+
     return 0;
 }
 
@@ -63,74 +80,50 @@ void vrtxheap_cleanup (void)
 {
     xnholder_t *holder;
 
-    while ((holder = getheadq(&vrtxheapq)) != NULL)
+    while ((holder = getheadq(&vrtx_heap_q)) != NULL)
 	heap_destroy_internal(link2vrtxheap(holder));
+
+    vrtx_free_idmap(vrtx_heap_idmap);
 }
-
-static void heap_destroy_internal (vrtxheap_t *heap)
-
-{
-    spl_t s;
-
-    xnlock_get_irqsave(&nklock,s);
-    removeq(&vrtxheapq,&heap->link);
-    vrtx_mark_deleted(heap);
-    xnlock_put_irqrestore(&nklock,s);
-    xnheap_destroy(&heap->sysheap,NULL,NULL);
-}
-
 
 int sc_hcreate(char *heapaddr,
 	       u_long heapsize,
 	       unsigned log2psize,
-	       int *perr)
+	       int *errp)
 {
-    u_long pagesize;
     vrtxheap_t *heap;
+    u_long pagesize;
+    int err, hid;
     spl_t s;
-
-    int err;
-    int heapid;
-
-
-    *perr = RET_OK;
 
     /* checks will be done in xnheap_init */
 
     if (log2psize == 0)
-	{
 	pagesize = 512; /* VRTXsa system call reference */
-	}
     else
-	{
 	pagesize = 1 << log2psize;
-	}
-
 
     heap = (vrtxheap_t *)xnmalloc(sizeof(*heap));
 
     if (!heap)
 	{
-	*perr = ER_NOCB;
+	*errp = ER_NOCB;
 	return 0;
 	}
 
     err = xnheap_init(&heap->sysheap, heapaddr, heapsize, pagesize);
-    if (err != 0)
+
+    if (err)
 	{
-	    if (err == -EINVAL)
-	        {
-		*perr = ER_IIP;
-		}
-	    else
-	        {
-		*perr = ER_NOCB;
-		}
-	    xnfree(heap);
+	if (err == -EINVAL)
+	    *errp = ER_IIP;
+	else
+	    *errp = ER_NOCB;
 
-	    return 0;
+	xnfree(heap);
+
+	return 0;
 	}
-
 
     heap->magic = VRTX_HEAP_MAGIC;
     inith(&heap->link);
@@ -138,12 +131,25 @@ int sc_hcreate(char *heapaddr,
     heap->allocated = 0;
     heap->released = 0;
 
+    hid = vrtx_get_id(vrtx_heap_idmap,-1,heap);
+
+    if (hid < 0)
+	{
+	xnheap_destroy(&heap->sysheap,NULL,NULL);
+	xnfree(heap);
+	*errp = ER_NOCB;
+	return 0;
+	}
+
+    heap->hid = hid;
+
     xnlock_get_irqsave(&nklock,s);
-    heapid = vrtx_alloc_id(heap);
-    appendq(&vrtxheapq, &heap->link);
+    appendq(&vrtx_heap_q, &heap->link);
     xnlock_put_irqrestore(&nklock,s);
 
-    return heapid;
+    *errp = RET_OK;
+
+    return hid;
 }
 
 void sc_hdelete (int hid, int opt, int *errp)
@@ -153,27 +159,27 @@ void sc_hdelete (int hid, int opt, int *errp)
 
     xnlock_get_irqsave(&nklock,s);
 
-    heap = (vrtxheap_t *)vrtx_find_object_by_id(hid);
+    heap = (vrtxheap_t *)vrtx_get_object(vrtx_heap_idmap,hid);
     
     if (opt == 0)
-	{ /* delete heap only if no blocks are allocated */
+	{ /* Delete heap only if no blocks are allocated */
 	if (heap->sysheap.ubytes > 0)
 	    {
-	    xnlock_put_irqrestore(&nklock,s);
 	    *errp = ER_PND;
-	    return;
+	    goto unlock_and_exit;
 	    }
 	}
     else if (opt != 1)
 	{
-	xnlock_put_irqrestore(&nklock,s);
 	*errp = ER_IIP;
-	return;
+	goto unlock_and_exit;
 	}
 
     *errp = RET_OK;
 
     heap_destroy_internal(heap);
+
+ unlock_and_exit:
 
     xnlock_put_irqrestore(&nklock,s);
 }
@@ -186,24 +192,26 @@ char *sc_halloc(int hid, unsigned long bsize, int *errp)
 
     xnlock_get_irqsave(&nklock,s);
 
-    heap = (vrtxheap_t *)vrtx_find_object_by_id(hid);
+    heap = (vrtxheap_t *)vrtx_get_object(vrtx_heap_idmap,hid);
+
     if (heap == NULL)
 	{
-	xnlock_put_irqrestore(&nklock,s);
+	blockp = NULL;
 	*errp = ER_ID;
-	return NULL;
+	goto unlock_and_exit;
 	}
 
     blockp = xnheap_alloc(&heap->sysheap,bsize);
+
     if (blockp == NULL)
-	{
 	*errp = ER_MEM;
-	}
     else
 	{
 	*errp = RET_OK;
+	heap->allocated++;
 	}
-    heap->allocated++;
+
+ unlock_and_exit:
 
     xnlock_put_irqrestore(&nklock,s);
 
@@ -217,25 +225,25 @@ void sc_hfree(int hid, char *blockp, int *errp)
 
     xnlock_get_irqsave(&nklock,s);
 
-    heap = (vrtxheap_t *)vrtx_find_object_by_id(hid);
+    heap = (vrtxheap_t *)vrtx_get_object(vrtx_heap_idmap,hid);
 
     if (heap == NULL)
 	{
-	xnlock_put_irqrestore(&nklock,s);
 	*errp = ER_ID;
-	return;
+	goto unlock_and_exit;
 	}
 
-    if (0 != xnheap_free(&heap->sysheap, blockp))
+    if (xnheap_free(&heap->sysheap, blockp) != 0)
 	{
-	xnlock_put_irqrestore(&nklock,s);
 	*errp = ER_NMB;
-	return;
+	goto unlock_and_exit;
 	}
 
     *errp = RET_OK;
     heap->allocated--;
     heap->released++;
+
+ unlock_and_exit:
 
     xnlock_put_irqrestore(&nklock,s);
 }
@@ -247,23 +255,21 @@ void sc_hinquiry (int info[3], int hid, int *errp)
 
     xnlock_get_irqsave(&nklock,s);
 
-    heap = (vrtxheap_t *)vrtx_find_object_by_id(hid);
+    heap = (vrtxheap_t *)vrtx_get_object(vrtx_heap_idmap,hid);
+
     if (heap == NULL)
 	{
-	xnlock_put_irqrestore(&nklock,s);
 	*errp = ER_ID;
-	return;
+	goto unlock_and_exit;
 	}
-    else
-	{
-	*errp = RET_OK;
-	}
+
+    *errp = RET_OK;
 
     info[0] = heap->allocated;
-
     info[1] = heap->released;
-
     info[2] = heap->log2psize;
+
+ unlock_and_exit:
 
     xnlock_put_irqrestore(&nklock,s);
 }

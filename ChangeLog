@@ -1,3 +1,12 @@
+2006-03-23  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/jhash.h: Moved from ksrc/skins/posix for a
+	broader usage.
+
+2006-03-21  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/posix/syscall.c: __cond_* -> __pthread_cond_*.
+
 2006-03-22  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/*/module.c (SKIN_EXIT): Do not call

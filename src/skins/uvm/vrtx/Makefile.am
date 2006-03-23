@@ -15,6 +15,7 @@ nodist_libvrtx_uvm_a_SOURCES = \
 
 AM_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/ksrc/skins \
 	-I$(top_srcdir)/include \
 	-D__XENO_UVM__
 

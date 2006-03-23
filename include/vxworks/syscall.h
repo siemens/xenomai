@@ -16,8 +16,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _vxworks_syscall_h
-#define _vxworks_syscall_h
+#ifndef _XENO_VXWORKS_SYSCALL_H
+#define _XENO_VXWORKS_SYSCALL_H
 
 #ifndef __XENO_SIM__
 #include <asm/xenomai/syscall.h>
@@ -93,4 +93,4 @@ void wind_syscall_cleanup(void);
 
 #endif /* __KERNEL__ */
 
-#endif /* _vxworks_syscall_h */
+#endif /* _XENO_VXWORKS_SYSCALL_H */

@@ -18,36 +18,36 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_VRTX_DEFS_H
-#define _XENO_VRTX_DEFS_H
+#ifndef _XENO_VRTX_MB_H
+#define _XENO_VRTX_MB_H
 
-#include <nucleus/xenomai.h>
-#include <nucleus/registry.h>
-#include <vrtx/vrtx.h>
+#include <vrtx/defs.h>
 
-#define VRTX_MAX_TID 512	/* i.e. 1 - 511 */
-#define VRTX_MAX_PID 32  	/* i.e. 0 - 31 */
-#define VRTX_MAX_QID 256  	/* i.e. 0 - 255 */
-#define VRTX_MAX_MXID 256  	/* i.e. 0 - 255 */
-#define VRTX_MAX_CB  256 	/* i.e. 0 - 255 */
+typedef struct vrtxmb {
 
-#define vrtx_h2obj_active(h,m,t) \
-((h) && ((t *)(h))->magic == (m) ? ((t *)(h)) : NULL)
+    xnholder_t link;
 
-#define vrtx_mark_deleted(t) ((t)->magic = ~(t)->magic)
+#define link2vrtxmb(laddr) \
+((vrtxmb_t *)(((char *)laddr) - (int)(&((vrtxmb_t *)0)->link)))
+
+    xnsynch_t  synchbase;
+
+    char **mboxp;
+
+    struct vrtxmb *hnext;
+
+} vrtxmb_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int vrtx_alloc_id(void *refobject);
+void vrtxmb_init(void);
 
-void vrtx_release_id(int id);
-
-void *vrtx_find_object_by_id(int id);
+void vrtxmb_cleanup(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* !_XENO_VRTX_DEFS_H */
+#endif /* !_XENO_VRTX_MB_H */

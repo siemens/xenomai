@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2001,2002 IDEALX (http://www.idealx.com/).
  * Written by Julien Pinon <jpinon@idealx.com>.
- * Copyright (C) 2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2003,2006 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -18,26 +18,93 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "vrtx/task.h"
-#include "vrtx/mb.h"
+#include <nucleus/jhash.h>
+#include <vrtx/task.h>
+#include <vrtx/mb.h>
 
-static xnqueue_t vrtxmbq;
+static xnqueue_t vrtx_mbox_q;
+
+#define MB_HASHBITS 8
+
+static vrtxmb_t *jhash_buckets[1<<MB_HASHBITS]; /* Guaranteed zero */
+
+static void mb_hash (char **hkey, vrtxmb_t *mb)
+{
+    vrtxmb_t **bucketp;
+    uint32_t hash;
+    spl_t s;
+
+    hash = jhash2((uint32_t *)&hkey,sizeof(hkey)/sizeof(uint32_t),0);
+    bucketp = &jhash_buckets[hash&((1<<MB_HASHBITS)-1)];
+
+    xnlock_get_irqsave(&nklock,s);
+    mb->hnext = *bucketp;
+    *bucketp = mb;
+    xnlock_put_irqrestore(&nklock,s);
+}
+
+static void mb_unhash (char **hkey)
+{
+    vrtxmb_t **tail, *mb;
+    uint32_t hash;
+    spl_t s;
+
+    hash = jhash2((uint32_t *)&hkey,sizeof(hkey)/sizeof(uint32_t),0);
+    tail = &jhash_buckets[hash&((1<<MB_HASHBITS)-1)];
+
+    xnlock_get_irqsave(&nklock,s);
+
+    mb = *tail;
+
+    while (mb != NULL && mb->mboxp != hkey)
+        {
+        tail = &mb->hnext;
+        mb = *tail;
+        }
+
+    if (mb)
+        *tail = mb->hnext;
+
+    xnlock_put_irqrestore(&nklock,s);
+}
+
+static vrtxmb_t *mb_find (char **hkey)
+
+{
+    uint32_t hash;
+    vrtxmb_t *mb;
+    spl_t s;
+
+    hash = jhash2((uint32_t *)&hkey,sizeof(hkey)/sizeof(uint32_t),0);
+
+    xnlock_get_irqsave(&nklock,s);
+
+    mb = jhash_buckets[hash&((1<<MB_HASHBITS)-1)];
+
+    while (mb != NULL && mb->mboxp != hkey)
+        mb = mb->hnext;
+
+    xnlock_put_irqrestore(&nklock,s);
+
+    return mb;
+}
 
 void vrtxmb_init (void)
 {
-    initq(&vrtxmbq);
+    initq(&vrtx_mbox_q);
 }
 
 void vrtxmb_cleanup (void)
 {
-    vrtxmsg_t *msg_slot;
     xnholder_t *holder;
+    vrtxmb_t *mb;
 
-    while ((holder = getq(&vrtxmbq)) != NULL)
+    while ((holder = getq(&vrtx_mbox_q)) != NULL)
 	{
-	msg_slot = (vrtxmsg_t *)holder;
-	xnsynch_destroy(&msg_slot->synchbase);
-	xnfree(msg_slot);
+	mb = link2vrtxmb(holder);
+	xnsynch_destroy(&mb->synchbase);
+	mb_unhash(mb->mboxp);
+	xnfree(mb);
 	}
 }
 
@@ -50,13 +117,11 @@ char *sc_accept (char **mboxp, int *errp)
 
     msg = *mboxp;
 
-    if (msg == 0)
-	{
+    if (msg == NULL)
 	*errp = ER_NMP;
-	}
     else
 	{
-	*mboxp = 0;
+	*mboxp = NULL;
 	*errp = RET_OK;
 	}
 
@@ -65,81 +130,97 @@ char *sc_accept (char **mboxp, int *errp)
     return msg;
 }
 
-/**
-  Manages a hash of xnsynch_t objects, indexed by mailboxes addresses.
-  Given a mailbox, returns its synch.
-  If the synch is not found, creates one,
-*/
-xnsynch_t * mb_get_synch_internal(char **mboxp)
+/*
+ * Manages a hash of xnsynch_t objects, indexed by mailboxes
+ * addresses.  Given a mailbox, returns its synch.  If the synch is
+ * not found, creates one. Must be called interrupts off, nklock
+ * locked.
+ */
+
+xnsynch_t *mb_map(char **mboxp)
 {
-    xnholder_t *holder;
-    vrtxmsg_t *msg_slot;
-    spl_t s;
+    vrtxmb_t *mb = mb_find(mboxp);
 
-    xnlock_get_irqsave(&nklock,s);
+    if (mb)
+	return &mb->synchbase;
 
-    for (holder = getheadq(&vrtxmbq);
-	 holder != NULL; holder = nextq(&vrtxmbq, holder))
-	{
-	if ( ((vrtxmsg_t *)holder)->mboxp == mboxp)
-	    {
-	    xnlock_put_irqrestore(&nklock,s);
-	    return &((vrtxmsg_t *)holder)->synchbase;
-	    }
-	}
+    /* New mailbox, create a new slot for it. */
 
-    /* not found */
-    msg_slot = (vrtxmsg_t *)xnmalloc(sizeof(*msg_slot));
+    mb = (vrtxmb_t *)xnmalloc(sizeof(*mb));
 
-    inith(&msg_slot->link);
-    msg_slot->mboxp = mboxp;
-    xnsynch_init(&msg_slot->synchbase ,XNSYNCH_PRIO|XNSYNCH_DREORD);
+    if (!mb)
+	return NULL;
 
-    appendq(&vrtxmbq, &msg_slot->link);
+    inith(&mb->link);
+    mb->mboxp = mboxp;
+    mb->hnext = NULL;
+    xnsynch_init(&mb->synchbase ,XNSYNCH_PRIO|XNSYNCH_DREORD);
+    appendq(&vrtx_mbox_q, &mb->link);
+    mb_hash(mboxp,mb);
 
-    xnlock_put_irqrestore(&nklock,s);
-
-    return &msg_slot->synchbase;
+    return &mb->synchbase;
 }
 
 char *sc_pend (char **mboxp, long timeout, int *errp)
 {
-    char *msg;
     xnsynch_t *synchbase;
     vrtxtask_t *task;
+    char *msg;
     spl_t s;
 
     xnlock_get_irqsave(&nklock,s);
 
     msg = *mboxp;
 
-    if (msg == 0)
+    if (msg != NULL)
 	{
-	synchbase = mb_get_synch_internal(mboxp);
-	
-	task = vrtx_current_task();
-	task->vrtxtcb.TCBSTAT = TBSMBOX;
-	if (timeout)
-	    task->vrtxtcb.TCBSTAT |= TBSDELAY;
-
-	xnsynch_sleep_on(synchbase,timeout);
-
-	if (xnthread_test_flags(&task->threadbase,XNTIMEO))
-	    {
-	    xnlock_put_irqrestore(&nklock,s);
-	    *errp = ER_TMO;
-	    return NULL; /* Timeout.*/
-	    }
-	msg = vrtx_current_task()->waitargs.qmsg;
-	}
-    else
-	{
-	*mboxp = 0;
+	*mboxp = NULL;	/* Consume the message and exit. */
+	goto done;
 	}
 
-    xnlock_put_irqrestore(&nklock,s);
+    if (xnpod_unblockable_p())
+	{
+	*errp = -EPERM;
+	goto unlock_and_exit;
+	}
+
+    synchbase = mb_map(mboxp);
+
+    if (!synchbase)
+	{
+	*errp = ER_NOCB;
+	goto unlock_and_exit;
+	}
+
+    task = vrtx_current_task();
+    task->vrtxtcb.TCBSTAT = TBSMBOX;
+
+    if (timeout)
+	task->vrtxtcb.TCBSTAT |= TBSDELAY;
+
+    xnsynch_sleep_on(synchbase,timeout);
+
+    if (xnthread_test_flags(&task->threadbase,XNBREAK))
+	{
+	*errp = -EINTR;
+	goto unlock_and_exit;
+	}
+    
+    if (xnthread_test_flags(&task->threadbase,XNTIMEO))
+	{
+	*errp = ER_TMO;
+	goto unlock_and_exit;
+	}
+
+    msg = task->waitargs.msg;
+
+ done:
 
     *errp = RET_OK;
+
+ unlock_and_exit:
+
+    xnlock_put_irqrestore(&nklock,s);
 
     return msg;
 }
@@ -150,34 +231,42 @@ void sc_post (char **mboxp, char *msg, int *errp)
     xnthread_t *waiter;
     spl_t s;
 
-    if (msg == 0)
+    if (msg == NULL)
 	{
 	*errp = ER_ZMW;
 	return;
 	}
 
-    if (*mboxp != 0)
+    xnlock_get_irqsave(&nklock,s);
+
+    if (*mboxp != NULL)
 	{
 	*errp = ER_MIU;
-	return;
+	goto unlock_and_exit;
 	}
 
     *errp = RET_OK;
 
-    xnlock_get_irqsave(&nklock,s);
+    synchbase = mb_map(mboxp);
 
-    synchbase = mb_get_synch_internal(mboxp);
+    if (!synchbase)
+	{
+	*errp = ER_NOCB;
+	goto unlock_and_exit;
+	}
 
     /* xnsynch_wakeup_one_sleeper() readies the thread */
     waiter = xnsynch_wakeup_one_sleeper(synchbase);
     
     if (waiter)
 	{
-	thread2vrtxtask(waiter)->waitargs.qmsg = msg;
+	thread2vrtxtask(waiter)->waitargs.msg = msg;
 	xnpod_schedule();
 	}
     else
 	*mboxp = msg;
+
+ unlock_and_exit:
 
     xnlock_put_irqrestore(&nklock,s);
 }

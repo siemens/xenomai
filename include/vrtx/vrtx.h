@@ -23,21 +23,8 @@
 
 #include <nucleus/types.h>
 
-#define VRTX_SKIN_VERSION_CODE    0x00000002
-#define VRTX_SKIN_MAGIC           0x56525458
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-typedef struct _TCB {
-
-    int TCBSTAT;
-
-} TCB;
-
-#define seconds 	tv_sec
-#define nanoseconds	tv_nsec
+#define VRTX_SKIN_MAGIC    0x56525458
+#define VRTX_SKIN_VERSION  6
 
 #define TBSSUSP   0x0001
 #define TBSMBOX   0x0002
@@ -50,7 +37,56 @@ typedef struct _TCB {
 #define TBSMUTEX  0x0800
 #define TBSADELAY 0x8000
 
-#define VRTX_VERSION 0x00000005
+#define RET_OK   0x00
+#define ER_TID   0x01
+#define ER_TCB   0x02
+#define ER_MEM   0x03
+#define ER_NMB   0x04
+#define ER_MIU   0x05
+#define ER_ZMW   0x06
+#define ER_BUF   0x07
+#define ER_TMO   0x0A
+#define ER_NMP   0x0B
+#define ER_QID   0x0C
+#define ER_QFL   0x0D
+#define ER_PID   0x0E
+#define ER_IIP   0x12
+#define ER_NOCB  0x30
+#define ER_ID    0x31
+#define ER_PND   0x32
+#define ER_DEL   0x33
+#define ER_OVF   0x34
+
+#define seconds      tv_sec
+#define nanoseconds  tv_nsec
+
+typedef struct _TCB {
+
+    int TCBSTAT;
+
+} TCB;
+
+#if defined(__KERNEL__) || defined(__XENO_SIM__)  || defined(__XENO_UVM__)
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+void ui_timer(void);
+
+#ifdef __cplusplus
+};
+#endif /* __cplusplus */
+
+#else /* !(__KERNEL__ || __XENO_SIM__ || __XENO_UVM__) */
+
+#include <vrtx/syscall.h>
+
+#endif /* __KERNEL__ || __XENO_SIM__ || __XENO_UVM__ */
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 void sc_putc(int c);
 
@@ -258,8 +294,6 @@ void sc_hinquiry(int info[3],
 		 int hid,
 		 int *errp);
 
-void ui_timer(void);
-
 void sc_gclock(struct timespec *timep,
 		unsigned long *nsp,
 		int *errp);
@@ -280,25 +314,5 @@ void sc_adelay (struct timespec time,
 #ifdef __cplusplus
 };
 #endif /* __cplusplus */
-
-#define RET_OK   0x00
-#define ER_TID   0x01
-#define ER_TCB   0x02
-#define ER_MEM   0x03
-#define ER_NMB   0x04
-#define ER_MIU   0x05
-#define ER_ZMW   0x06
-#define ER_BUF   0x07
-#define ER_TMO   0x0A
-#define ER_NMP   0x0B
-#define ER_QID   0x0C
-#define ER_QFL   0x0D
-#define ER_PID   0x0E
-#define ER_IIP   0x12
-#define ER_NOCB  0x30
-#define ER_ID    0x31
-#define ER_PND   0x32
-#define ER_DEL   0x33
-#define ER_OVF   0x34
 
 #endif /* !_XENO_VRTX_VRTX_H */

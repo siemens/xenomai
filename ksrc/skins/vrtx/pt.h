@@ -77,6 +77,7 @@ typedef struct vrtxpt {
     u_long bsize;	/* (Aligned) Block size */
 
     u_long ublks;	/* Overall number of used blocks */
+
     u_long fblks;	/* Overall number of free blocks */
 
 } vrtxpt_t;
@@ -85,7 +86,7 @@ typedef struct vrtxpt {
 extern "C" {
 #endif
 
-void vrtxpt_init(void);
+int vrtxpt_init(void);
 
 void vrtxpt_cleanup(void);
 

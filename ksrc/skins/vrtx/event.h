@@ -18,69 +18,40 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_VRTX_TASK_H
-#define _XENO_VRTX_TASK_H
+#ifndef _XENO_VRTX_EVENT_H
+#define _XENO_VRTX_EVENT_H
 
 #include "vrtx/defs.h"
 
-#define VRTX_TASK_MAGIC 0x82820101
+#define VRTX_EVENT_MAGIC 0x82820606
 
-typedef struct vrtxtask {
+typedef struct vrtxevent {
 
     unsigned magic;   /* Magic code - must be first */
 
-    xnholder_t link;	/* Link in vrtxtaskq */
+    xnholder_t link;
 
-#define link2vrtxtask(laddr) \
-((vrtxtask_t *)(((char *)laddr) - (int)(&((vrtxtask_t *)0)->link)))
+#define link2vrtxevent(laddr) \
+((vrtxevent_t *)(((char *)laddr) - (int)(&((vrtxevent_t *)0)->link)))
 
-    xnthread_t threadbase;
+    int evid;		/* VRTX identifier */
 
-#define thread2vrtxtask(taddr) \
-((taddr) ? ((vrtxtask_t *)(((char *)taddr) - (int)(&((vrtxtask_t *)0)->threadbase))) : NULL)
+    xnsynch_t synchbase;
 
-    int tid;
+    int events;   /* Event flags */
 
-    void (*entry)(void *cookie);
-
-    char *param;
-
-    u_long paramsz;
-
-    TCB vrtxtcb; /* Fake VRTX task control block for sc_tinquiry() */
-
-    union { /* Saved args for current synch. wait operation */
-
-	struct {
-	    int opt;
-	    int mask;
-	} evgroup;
-
-	char *qmsg;
-
-	struct {
-	    u_long size;
-	    void *chunk;
-	} heap;
-
-    } waitargs;
-
-} vrtxtask_t;
-
-#define vrtx_current_task() thread2vrtxtask(xnpod_current_thread())
+} vrtxevent_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void vrtxtask_init(u_long stacksize);
+int vrtxevent_init(void);
 
-void vrtxtask_cleanup(void);
-
-void vrtxtask_delete_internal(vrtxtask_t *task);
+void vrtxevent_cleanup(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* !_XENO_VRTX_TASK_H */
+#endif /* !_XENO_VRTX_EVENT_H */

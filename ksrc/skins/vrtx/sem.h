@@ -18,40 +18,41 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_VRTX_EVENT_H
-#define _XENO_VRTX_EVENT_H
+#ifndef _XENO_VRTX_SEM_H
+#define _XENO_VRTX_SEM_H
 
 #include "vrtx/defs.h"
 
-#define VRTX_EVENT_MAGIC 0x82820606
+#define VRTX_SEM_MAGIC 0x82820202
+#define MAX_SEM_VALUE  65535
 
-typedef struct vrtxevent {
+typedef struct vrtxsem {
 
     unsigned magic;   /* Magic code - must be first */
 
     xnholder_t link;  /* Link in vrtxsemq */
 
-#define link2vrtxevent(laddr) \
-((vrtxevent_t *)(((char *)laddr) - (int)(&((vrtxevent_t *)0)->link)))
+#define link2vrtxsem(laddr) \
+((vrtxsem_t *)(((char *)laddr) - (int)(&((vrtxsem_t *)0)->link)))
 
-    int eventid;		/* VRTX identifier */
+    int semid;		/* VRTX identifier */
 
     xnsynch_t synchbase;
 
-    unsigned long events;   /* Event flags */
+    u_long count;   /* Available resource count */
 
-} vrtxevent_t;
+} vrtxsem_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void vrtxevent_init(void);
+int vrtxsem_init(void);
 
-void vrtxevent_cleanup(void);
+void vrtxsem_cleanup(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* !_XENO_VRTX_EVENT_H */
+#endif /* !_XENO_VRTX_SEM_H */
