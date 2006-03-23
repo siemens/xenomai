@@ -19,7 +19,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <nucleus/pod.h>
 #include <nucleus/shadow.h>
 #include <vxworks/defs.h>
 #include <vxworks/syscall.h>
@@ -57,7 +56,7 @@ static WIND_TCB *__wind_task_current (struct task_struct *curr)
 /*
  * int __wind_task_init(struct wind_arg_bulk *bulk,
  *                      WIND_TCB_PLACEHOLDER *ph,
- *                      xncompletion_t __user *u_completion)
+ *                      xncompletion_t *completion)
  * bulk = {
  * a1: const char *name;
  * a2: int prio;
@@ -75,10 +74,13 @@ static int __wind_task_init (struct task_struct *curr, struct pt_regs *regs)
     WIND_TCB_PLACEHOLDER ph;
     WIND_TCB *task;
 
-    __xn_copy_from_user(curr,&bulk,(void __user *)__xn_reg_arg1(regs),sizeof(bulk));
+    if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg1(regs),sizeof(bulk)))
+	return -EFAULT;
 
     if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg2(regs),sizeof(ph)))
 	return -EFAULT;
+
+    __xn_copy_from_user(curr,&bulk,(void __user *)__xn_reg_arg1(regs),sizeof(bulk));
 
     if (bulk.a1)
 	{
@@ -97,7 +99,7 @@ static int __wind_task_init (struct task_struct *curr, struct pt_regs *regs)
     prio = bulk.a2;
     /* Task flags. */
     flags = bulk.a3|VX_SHADOW;
-    /* Completion descriptor our parent thread is pending on -- may be NULL. */
+    /* Completion descriptor our parent thread is pending on. */
     u_completion = (xncompletion_t __user *)__xn_reg_arg3(regs);
 
     task = (WIND_TCB *)xnmalloc(sizeof(*task));
@@ -123,7 +125,6 @@ static int __wind_task_init (struct task_struct *curr, struct pt_regs *regs)
 	}
     else
 	{
-	xnfree(task);
 	/* Unblock and pass back error code. */
 
 	err = wind_errnoget();
@@ -131,6 +132,9 @@ static int __wind_task_init (struct task_struct *curr, struct pt_regs *regs)
 	if (u_completion)
 	    xnshadow_signal_completion(u_completion,err);
 	}
+
+    if (err)
+	xnfree(task);
 
     return err;
 }
