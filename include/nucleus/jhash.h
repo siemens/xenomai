@@ -1,7 +1,6 @@
 /*
  * Jenkins hash support, lifted from the Linux kernel from
- * linux/include/linux/jhash.h.  We use it to index Xenomai shadow
- * TCBs on pthread descriptor addresses.
+ * linux/include/linux/jhash.h.
  *
  * Original credits:
  *
@@ -22,8 +21,10 @@
  * any bugs present are surely my fault.  -DaveM
  */
 
-#ifndef _XENO_POSIX_JHASH_H
-#define _XENO_POSIX_JHASH_H
+#ifndef _XENO_NUCLEUS_JHASH_H
+#define _XENO_NUCLEUS_JHASH_H
+
+#include <nucleus/types.h>
 
 /* NOTE: Arguments are modified. */
 #define __jhash_mix(a, b, c) \
@@ -45,9 +46,9 @@
 /* A special optimized version that handles 1 or more of u32s.
  * The length parameter here is the number of u32s in the key.
  */
-static inline u32 jhash2(const u32 *k, u32 length, u32 initval)
+static inline uint32_t jhash2(const uint32_t *k, uint32_t length, uint32_t initval)
 {
-	u32 a, b, c, len;
+	uint32_t a, b, c, len;
 
 	a = b = JHASH_GOLDEN_RATIO;
 	c = initval;
@@ -73,4 +74,4 @@ static inline u32 jhash2(const u32 *k, u32 length, u32 initval)
 	return c;
 }
 
-#endif /* _XENO_POSIX_JHASH_H */
+#endif /* _XENO_NUCLEUS_JHASH_H */
