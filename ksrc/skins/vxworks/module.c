@@ -53,6 +53,7 @@ int SKIN_INIT(vxworks)
     err = xncore_attach();
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
     /* The VxWorks skin is standalone. */
+    err = xnpod_init(&__vxworks_pod,255,0,XNREUSE);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
     if (err != 0)
