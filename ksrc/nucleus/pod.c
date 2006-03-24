@@ -309,6 +309,8 @@ static void xnpod_flush_heap (xnheap_t *heap,
 int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
 
 {
+    extern int xeno_nucleus_status;
+
     unsigned cpu, nr_cpus = xnarch_num_online_cpus();
     char root_name[16];
     xnsched_t *sched;
@@ -317,6 +319,10 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
     int err;
     spl_t s;
 
+    if (xeno_nucleus_status < 0)
+        /* xeno_nucleus module failed to load properly, bail out. */
+        return xeno_nucleus_status;
+    
     xnlock_get_irqsave(&nklock,s);
 
     if (nkpod != NULL)
