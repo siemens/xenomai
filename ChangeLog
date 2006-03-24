@@ -1,3 +1,8 @@
+2006-03-24  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/nucleus/pod.c (xnpod_init): Return immediately with an
+	error if the xeno_nucleus module failed to load properly.
+
 2006-03-23  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/jhash.h: Moved from ksrc/skins/posix for a

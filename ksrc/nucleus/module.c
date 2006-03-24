@@ -50,6 +50,8 @@ xnqueue_t xnmod_glink_queue;
 
 u_long xnmod_sysheap_size;
 
+int xeno_nucleus_status = -EINVAL;
+
 void xnmod_alloc_glinks (xnqueue_t *freehq)
 
 {
@@ -800,6 +802,8 @@ int __init __xeno_sys_init (void)
 	      XENO_VERSION_STRING,
 	      XENO_VERSION_NAME);
 
+    xeno_nucleus_status = 0;
+
     return 0;
 
 #ifdef __KERNEL__
@@ -834,6 +838,8 @@ int __init __xeno_sys_init (void)
  fail:
 
     xnlogerr("system init failed, code %d.\n",err);
+
+    xeno_nucleus_status = err;
 
     return err;
 }
