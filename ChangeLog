@@ -1,3 +1,9 @@
+2006-03-24  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/module.c (SKIN_EXIT): Do not call
+	xnpod_stop_timer, let xnpod_shutdown do it when removing the
+	last reference to a pod.
+
 2006-03-17  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus/shadow.c (do_hisyscall_event): Require CAP_SYS_NICE
