@@ -61,6 +61,7 @@
  * - -EINTR (interrupted explicitly or by signal)
  * - -EAGAIN (no data available in non-blocking mode)
  * - -EBADF (device has been closed while reading)
+ * - -EIO (hardware error or broken bit stream)
  * .
  * @n
  * @b Write @n
