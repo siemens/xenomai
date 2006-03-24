@@ -1,5 +1,8 @@
 2006-03-24  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
+	* ksrc/nucleus/pod.c (xnpod_init): Return immediately with an
+	error if the xeno_nucleus module failed to load properly.
+
 	* ksrc/skins/posix/module.c (SKIN_EXIT): Do not call
 	xnpod_stop_timer, let xnpod_shutdown do it when removing the
 	last reference to a pod.
