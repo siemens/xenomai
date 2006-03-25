@@ -34,8 +34,7 @@
 
   <!-- Footer customization -->
   <xsl:template name="user.footer.content">
-    <hr/><p class="copyright">&#x00A9; 2004 RTAI Project</p>
-	<p class="copyright">&#x00A9; 2005 Xenomai Project</p>
+    <hr/><p class="copyright">&#x00A9; 2005 Xenomai Project</p>
 
     <a href="http://validator.w3.org/check/referer" 
       title="Markup validation for this page">
