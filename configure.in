@@ -604,6 +604,7 @@ if test \! x$XENO_MAYBE_DOCDIR = x; then
 	doc/docbook/custom-stylesheets/xsl/fo/Makefile \
 	doc/docbook/custom-stylesheets/xsl/html/Makefile \
 	doc/docbook/custom-stylesheets/xsl/html/chunk.xsl \
+	doc/docbook/custom-stylesheets/xsl/html/onechunk.xsl \
 	doc/docbook/xenomai/Makefile \
       ])
 fi
