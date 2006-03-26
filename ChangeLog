@@ -1,3 +1,12 @@
+2006-03-26  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.16-1.2-01.
+
+2006-03-21  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/posix/syscall.c: __cond_* -> __pthread_cond_*,
+	__mutex_* -> __pthread_mutex_*.
+
 2006-03-24  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/nucleus/pod.c (xnpod_init): Return immediately with an
