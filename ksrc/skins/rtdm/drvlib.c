@@ -279,6 +279,8 @@ void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay)
     spl_t s;
 
 
+    XENO_ASSERT(RTDM, xnpod_root_p(), return;);
+
     xnlock_get_irqsave(&nklock, s);
 
     while (!xnthread_test_flags(task, XNZOMBIE)) {
@@ -305,6 +307,9 @@ EXPORT_SYMBOL(rtdm_task_join_nrt);
  * - -EINTR is returned if calling task has been unblock by a signal or
  * explicitely via rtdm_task_unblock().
  *
+ * - -EPERM @e may be returned if an illegal invocation environment is
+ * detected.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -318,6 +323,8 @@ int rtdm_task_sleep(uint64_t delay)
 {
     xnthread_t  *thread = xnpod_current_thread();
 
+
+    XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
 
     xnpod_suspend_thread(thread, XNDELAY, xnpod_ns2ticks(delay), NULL);
 
@@ -337,6 +344,9 @@ EXPORT_SYMBOL(rtdm_task_sleep);
  * - -EINTR is returned if calling task has been unblock by a signal or
  * explicitely via rtdm_task_unblock().
  *
+ * - -EPERM @e may be returned if an illegal invocation environment is
+ * detected.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -353,6 +363,8 @@ int rtdm_task_sleep_until(uint64_t wakeup_time)
     spl_t       s;
     int         err = 0;
 
+
+    XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -626,6 +638,9 @@ EXPORT_SYMBOL(rtdm_event_signal);
  *
  * - -EIDRM is returned if @a event has been destroyed.
  *
+ * - -EPERM @e may be returned if an illegal invocation environment is
+ * detected.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -640,6 +655,8 @@ int rtdm_event_wait(rtdm_event_t *event)
     spl_t   s;
     int     err = 0;
 
+
+    XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -689,6 +706,9 @@ EXPORT_SYMBOL(rtdm_event_wait);
  *
  * - -EIDRM is returned if @a event has been destroyed.
  *
+ * - -EPERM @e may be returned if an illegal invocation environment is
+ * detected.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -705,6 +725,8 @@ int rtdm_event_timedwait(rtdm_event_t *event, int64_t timeout,
     spl_t       s;
     int         err = 0;
 
+
+    XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -810,6 +832,9 @@ void rtdm_sem_destroy(rtdm_sem_t *sem);
  *
  * - -EIDRM is returned if @a sem has been destroyed.
  *
+ * - -EPERM @e may be returned if an illegal invocation environment is
+ * detected.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -824,6 +849,8 @@ int rtdm_sem_down(rtdm_sem_t *sem)
     spl_t   s;
     int     err = 0;
 
+
+    XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -878,6 +905,9 @@ EXPORT_SYMBOL(rtdm_sem_down);
  *
  * - -EIDRM is returned if @a sem has been destroyed.
  *
+ * - -EPERM @e may be returned if an illegal invocation environment is
+ * detected.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -894,6 +924,8 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, int64_t timeout,
     spl_t       s;
     int         err = 0;
 
+
+    XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -1035,6 +1067,9 @@ void rtdm_mutex_destroy(rtdm_mutex_t *mutex);
  *
  * - -EIDRM is returned if @a mutex has been destroyed.
  *
+ * - -EPERM @e may be returned if an illegal invocation environment is
+ * detected.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -1049,6 +1084,8 @@ int rtdm_mutex_lock(rtdm_mutex_t *mutex)
     spl_t   s;
     int     err = 0;
 
+
+    XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -1097,6 +1134,9 @@ EXPORT_SYMBOL(rtdm_mutex_lock);
  *
  * - -EIDRM is returned if @a mutex has been destroyed.
  *
+ * - -EPERM @e may be returned if an illegal invocation environment is
+ * detected.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -1113,6 +1153,8 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, int64_t timeout,
     spl_t       s;
     int         err = 0;
 
+
+    XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -1178,6 +1220,8 @@ void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
 {
     spl_t s;
 
+
+    XENO_ASSERT(RTDM, !xnpod_asynch_p(), return;);
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -1426,6 +1470,9 @@ static struct file_operations rtdm_mmap_fops = {
  * - -EAGAIN is returned if too much memory has been already locked by the
  * user process.
  *
+ * - -EPERM @e may be returned if an illegal invocation environment is
+ * detected.
+ *
  * @note RTDM supports two models for unmapping the user memory range again.
  * One is explicite unmapping via rtdm_munmap(), either performed when the
  * user requests it via an IOCTL etc. or when the related device is closed.
@@ -1456,6 +1503,9 @@ int rtdm_mmap_to_user(rtdm_user_info_t *user_info, void *src_addr, size_t len,
     struct file_operations  *old_fops;
     void                    *old_priv_data;
     void                    *user_ptr;
+
+
+    XENO_ASSERT(RTDM, xnpod_root_p(), return -EPERM;);
 
     filp = filp_open("/dev/zero", O_RDWR, 0);
     if (IS_ERR(filp))
@@ -1499,6 +1549,9 @@ EXPORT_SYMBOL(rtdm_mmap_to_user);
  *
  * - -EINVAL is returned if an invalid address or size was passed.
  *
+ * - -EPERM @e may be returned if an illegal invocation environment is
+ * detected.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -1511,6 +1564,9 @@ EXPORT_SYMBOL(rtdm_mmap_to_user);
 int rtdm_munmap(rtdm_user_info_t *user_info, void *ptr, size_t len)
 {
     int err;
+
+
+    XENO_ASSERT(RTDM, xnpod_root_p(), return -EPERM;);
 
     down_write(&user_info->mm->mmap_sem);
     err = do_munmap(user_info->mm, (unsigned long)ptr, len);
