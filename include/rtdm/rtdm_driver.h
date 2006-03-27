@@ -40,6 +40,13 @@
 #include <nucleus/synch.h>
 #include <rtdm/rtdm.h>
 
+/* debug support */
+#include <nucleus/assert.h>
+
+#ifndef CONFIG_XENO_OPT_DEBUG_RTDM
+#define CONFIG_XENO_OPT_DEBUG_RTDM  0
+#endif
+
 
 struct rtdm_dev_context;
 
@@ -891,6 +898,7 @@ static inline rtdm_task_t *rtdm_task_current(void)
 
 static inline int rtdm_task_wait_period(void)
 {
+    XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
     return xnpod_wait_thread_period(NULL);
 }
 
