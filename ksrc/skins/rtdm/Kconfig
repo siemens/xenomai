@@ -7,3 +7,12 @@ config XENO_SKIN_RTDM
 	This API skin allows to write real-time drivers against a common
 	light weight interface in kernel mode, but use them across all other
 	skins in both kernel and user mode.
+
+config XENO_OPT_DEBUG_RTDM
+    bool "RTDM Debugging support"
+    depends on XENO_OPT_DEBUG && XENO_SKIN_RTDM
+    help
+
+    This option activates debugging checks for the RTDM subsystem.
+    It is a recommended option for analysing potential issues in RTDM
+    drivers. A minor runtime overhead is added.
