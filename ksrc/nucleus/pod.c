@@ -2284,7 +2284,9 @@ static inline void __xnpod_switch_fpu (xnsched_t *sched)
 
             xnarch_restore_fpu(xnthread_archtcb(runthread));
             }
-
+        else
+            xnarch_enable_fpu(xnthread_archtcb(runthread));
+     
         sched->fpuholder = runthread;
         }
     else
