@@ -3,6 +3,16 @@
 	* doc/man/xeno-config.man.in: Updated to match the latest revision of
 	the xeno-config script.
 
+2006-03-26  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/include/nucleus/assert.h: XENO_ASSERT with built-in
+	activation at compile time.
+
+	* ksrc/skins/rtdm/Kconfig, ksrc/skins/rtdm/Config.in,
+	ksrc/skins/rtdm/drvlib.c, include/rtdm/rtdm_driver.h: Use
+	XENO_ASSERT to check for correct RTDM driver API invocation
+	contexts.
+
 2006-03-26  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.16-1.2-01.
