@@ -7,6 +7,7 @@ include_HEADERS = \
 	core.h \
 	heap.h \
 	intr.h \
+	jhash.h \
 	ltt.h \
 	module.h \
 	pipe.h \

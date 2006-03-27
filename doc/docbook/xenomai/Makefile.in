@@ -252,7 +252,7 @@ GEN_DOC_DIST_ROOT = $(doc_top_distdir)/doc/generated
 EXTRA_DIST = xenomai.xml
 DBX_HTML_DOCS = xenomai
 DBX_HTML_CSS = xenomai.css
-DBX_HTML_STYLESHEET = ../custom-stylesheets/xsl/html/chunk.xsl
+DBX_HTML_STYLESHEET = ../custom-stylesheets/xsl/html/onechunk.xsl
 DBX_PDF_DOCS = xenomai.pdf
 DBX_FO_STYLESHEET = ../custom-stylesheets/xsl/fo/docbook.xsl
 all: all-am
