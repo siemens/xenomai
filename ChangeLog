@@ -1,4 +1,11 @@
-2006-03-26  Philippe Gerum  <rpm@xenomai.org>
+2006-03-25  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/heap.c (xnheap_mmap): Don't raise VM_IO for VMAs
+	which do not potentially map I/O memory. This solves GDB access
+	error on mmapped heaps, caused by the ptrace() restriction on
+	exporting I/O memory mappings.
+
+2006-03-23  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.16-1.2-01.
 
