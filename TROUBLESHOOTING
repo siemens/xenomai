@@ -56,11 +56,12 @@ ______________________________________________________________________
 Q: Any Xenomai syscall invoked by my user-space application fails with
 error code -38 (-ENOSYS).
 
-A1: Did you load the required modules?
-e.g. xeno_nucleus.ko + xeno_native.ko? Normally, you
-should be using a run script (see xeno-load) that does this for you;
-but if you don't, make sure to load this modules by hand before
-launching your application.
+A1: In case you did not build the Xenomai sub-system statically into
+your kernel, did you load the required modules?  e.g. xeno_nucleus.ko
++ xeno_native.ko? Normally, you should be using a run script (see
+xeno-load) that does this for you; but if you don't, make sure to load
+this modules by hand before launching your application.
+
 A2: If those modules are loaded but the error persists, check that
 your Xenomai configuration enables the pervasive real-time support in
 user-space, in the top-level "Nucleus" menu.
@@ -86,26 +87,6 @@ reserved by the POSIX library.  A work-around consists of setting a
 lower user-limit for initial stack allocation, like calling "ulimit -s
 <initial-size-in-kbytes>" in your parent shell before running your
 application (defaults to 8192).
-
-______________________________________________________________________
-
-Q: When running a real-time application with LTT support enabled, I
-get a slew of scary messages like this one:
-"TraceDaemon: WARNING!!!!
- TraceDaemon: INCOMPLETE EVENT BUFFER LOST (buffer size: ..."
-Sometimes, my real-time application even seems to go out of the
-window, what's this?!
-
-A: It's likely that your application was running, thus indirectly
-producing trace events, when LTT's trace daemon finished and closed
-its internal trace buffers (e.g. the tracing duration you passed to
-the "tracedaemon" command has elapsed, causing the daemon to
-exit). Since this particular operation is not synchronized with
-Xenomai's activity, some real-time task has probably referred to stale
-memory.
-
-The cure is to upgrade your combo Adeos+LTT patch since this bug has
-now been fixed.
 
 ======================================================================
 
@@ -230,4 +211,5 @@ A: Xenomai sends this message if the kernel configuration Xenomai was
 ======================================================================
 ======================================================================
 
-Last Updated: Tue Mar 29 12:03:42 CEST 2005
+Last Updated: Mon Mar 27 09:14:35 CEST 2006
+
