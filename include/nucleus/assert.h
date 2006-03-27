@@ -22,20 +22,12 @@
 
 #include <nucleus/compiler.h>
 
-#ifndef CONFIG_XENO_OPT_DEBUG_LEVEL
-#define CONFIG_XENO_OPT_DEBUG_LEVEL  0
-#endif
-
-#if CONFIG_XENO_OPT_DEBUG_LEVEL > 0
-#define XENO_ASSERT(cond,action)  do { \
-if (unlikely((cond) != 0)) \
+#define XENO_ASSERT(subsystem,cond,action)  do { \
+if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem > 0 && !(cond))) \
 	do { action; } while(0); \
 } while(0)
-#else  /* CONFIG_XENO_OPT_DEBUG_LEVEL == 0 */
-#define XENO_ASSERT(cond,action) do { } while(0)
-#endif /* CONFIG_XENO_OPT_DEBUG_LEVEL > 0 */
 
-#define XENO_BUGON(cond)  \
-    XENO_ASSERT(cond,xnpod_fatal("assertion failed at %s:%d",__FILE__,__LINE__))
+#define XENO_BUGON(subsystem,cond)  \
+    XENO_ASSERT(subsystem,cond,xnpod_fatal("assertion failed at %s:%d",__FILE__,__LINE__))
 
 #endif /* !_XENO_NUCLEUS_ASSERT_H */
