@@ -422,8 +422,19 @@ static inline void xnarch_enable_fpu(xnarchtcb_t *tcb)
 {
     struct task_struct *task = tcb->user_task;
 
-    if (task && !wrap_test_fpu_used(task))
-        return;
+    if (task)
+        {
+        if (!xnarch_fpu_init_p(task))
+            return;
+
+        /* If "task" switched while in Linux domain, its FPU context may have
+           been overriden, restore it. */
+        if (!wrap_test_fpu_used(task))
+            {
+            xnarch_restore_fpu(tcb);
+            return;
+            }
+        }
 
     clts();
 

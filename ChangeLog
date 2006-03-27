@@ -1,5 +1,9 @@
 2006-03-27  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
+	* include/asm-i386/system.h (xnarch_enable_fpu): Restore FPU
+	context when a task switched its FPU context while crossing the
+	Linux domain.
+
 	* ksrc/skins/rtai/Config.in, ksrc/skins/rtai/Kconfig: Make
 	the RTAI skin unavailable if the native skin is built into the
 	kernel.
