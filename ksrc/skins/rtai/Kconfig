@@ -1,5 +1,5 @@
 config XENO_SKIN_RTAI
-	depends on XENO_OPT_NUCLEUS
+	depends on XENO_OPT_NUCLEUS && !XENO_SKIN_NATIVE
 	tristate "RTAI emulator"
 	default n
 	help
@@ -32,3 +32,6 @@ config XENO_OPT_RTAI_SHM
 	help
 	
 	SHM are Shared Memory objects across RTAI tasks.
+
+comment "RTAI emulator unavailable, disable native API or build it as module"
+        depends on XENO_SKIN_NATIVE = y
