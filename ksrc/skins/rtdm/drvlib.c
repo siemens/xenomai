@@ -1390,9 +1390,9 @@ static int rtdm_mmap_buffer(struct file *filp, struct vm_area_struct *vma)
     vma->vm_ops = mmap_data->vm_ops;
     vma->vm_private_data = mmap_data->vm_private_data;
 
-    return xnarch_remap_page_range(vma, vma->vm_start,
-                                   virt_to_phys(mmap_data->src_addr),
-                                   vma->vm_end - vma->vm_start, PAGE_SHARED);
+    return xnarch_remap_io_page_range(vma, vma->vm_start,
+				      virt_to_phys(mmap_data->src_addr),
+				      vma->vm_end - vma->vm_start, PAGE_SHARED);
 }
 
 static struct file_operations rtdm_mmap_fops = {
