@@ -346,13 +346,20 @@ static inline void xnlock_put_irqrestore (xnlock_t *lock, spl_t flags)
 
 #endif /* CONFIG_SMP */
 
-static inline int xnarch_remap_page_range(struct vm_area_struct *vma,
-					  unsigned long uvaddr,
-					  unsigned long paddr,
-					  unsigned long size,
-					  pgprot_t prot)
+static inline int xnarch_remap_vm_page(struct vm_area_struct *vma,
+				       unsigned long from,
+				       unsigned long to)
 {
-    return wrap_remap_page_range(vma,uvaddr,paddr,size,prot);
+    return wrap_remap_vm_page(vma,from,to);
+}
+
+static inline int xnarch_remap_io_page_range(struct vm_area_struct *vma,
+					     unsigned long from,
+					     unsigned long to,
+					     unsigned long size,
+					     pgprot_t prot)
+{
+    return wrap_remap_io_page_range(vma,from,to,size,prot);
 }
 
 #ifdef XENO_POD_MODULE
