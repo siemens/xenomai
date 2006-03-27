@@ -11,7 +11,7 @@
   <xsl:param name="shade.verbatim" select="1" />
   <xsl:param name="use.id.as.filename" select="1" />
   <xsl:param name="root.filename" select="''" />
-  <xsl:param name="generate.toc" select="'article toc,table sect1 toc'" />
+  <xsl:param name="generate.toc" select="'article toc,table'" />
   <xsl:param name="generate.section.toc.level" select="2" />
 
   <!-- Which element should include a TOC ? -->
