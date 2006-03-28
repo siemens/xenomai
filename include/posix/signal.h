@@ -50,7 +50,6 @@ typedef unsigned long sig_atomic_t;
 #define sigaddset pse51_sigaddset
 #define sigdelset pse51_sigdelset
 #define sigismember pse51_sigismember
-#define sigqueue pse51_sigqueue
 
 #define SIGRTMIN 33
 #define SIGRTMAX 64
@@ -98,8 +97,7 @@ int sigtimedwait(const sigset_t *__restrict__ user_set,
                  siginfo_t *__restrict__ info,
                  const struct timespec *__restrict__ timeout);
 
-/* Depart from POSIX here, we use a thread id instead of a process id. */
-int sigqueue (struct pse51_thread *thread, int sig, union sigval value);
+int pthread_sigqueue_np (struct pse51_thread *thread, int sig, union sigval value);
 
 #ifdef __cplusplus
 }

@@ -52,7 +52,7 @@ static const pthread_mutexattr_t default_mutex_attr = {
  *
  * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
- * - Xenomai kernel-space real-time thread.
+ * - Xenomai kernel-space thread.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_init.html">
@@ -85,7 +85,7 @@ int pthread_mutexattr_init (pthread_mutexattr_t *attr)
  *
  * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
- * - Xenomai kernel-space real-time thread.
+ * - Xenomai kernel-space thread.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_destroy.html">
@@ -133,7 +133,7 @@ int pthread_mutexattr_destroy (pthread_mutexattr_t *attr)
  *
  * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
- * - Xenomai kernel-space real-time thread.
+ * - Xenomai kernel-space thread.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_gettype.html">
@@ -189,7 +189,7 @@ int pthread_mutexattr_gettype (const pthread_mutexattr_t *attr, int *type)
  *
  * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
- * - Xenomai kernel-space real-time thread.
+ * - Xenomai kernel-space thread.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_settype.html">
@@ -256,7 +256,7 @@ int pthread_mutexattr_settype (pthread_mutexattr_t *attr, int type)
  *
  * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
- * - Xenomai kernel-space real-time thread.
+ * - Xenomai kernel-space thread.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_getprotocol.html">
@@ -310,7 +310,7 @@ int pthread_mutexattr_getprotocol (const pthread_mutexattr_t *attr, int *proto)
  *
  * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
- * - Xenomai kernel-space real-time thread.
+ * - Xenomai kernel-space thread.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_setprotocol.html">

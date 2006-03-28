@@ -41,9 +41,9 @@
  * Cancellation points are the points where the thread checks for pending
  * cancellation requests and performs them.  The POSIX threads functions
  * pthread_join(), pthread_cond_wait(), pthread_cond_timedwait(),
- * pthread_testcancel(), sem_wait(), sem_timedwait(), sigwait() and 
- * sigwaitinfo() are cancellation points.
-
+ * pthread_testcancel(), sem_wait(), sem_timedwait(), sigwait(), sigwaitinfo()
+ * and sigtimedwait() are cancellation points.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_09.html#tag_02_09_05">
  * Specification.</a>

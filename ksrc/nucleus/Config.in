@@ -43,9 +43,6 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	mainmenu_option next_comment
 	comment 'Scalability options'
 		bool 'O(1) scheduler' CONFIG_XENO_OPT_SCALABLE_SCHED
-	if [ "$CONFIG_XENO_OPT_SCALABLE_SCHED" != "n" ]; then
-		int 'Number of priority levels' CONFIG_XENO_OPT_SCALABLE_PRIOS 256
-	fi
         choice 'Timer indexing method'			\
 	"Linear			CONFIG_XENO_OPT_TIMER_LIST	\
 	 Tree			CONFIG_XENO_OPT_TIMER_HEAP"	Linear

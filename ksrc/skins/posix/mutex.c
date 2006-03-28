@@ -479,9 +479,9 @@ static inline int mutex_unlock_internal(xnthread_t *cur,
  * than one, the lock recursion count is decremented and the mutex remains
  * locked.
  *
- * Attempting to unlock a mutex which is not locked or which is locked by anther
- * thread than the current one yields the EPERM error, whatever the mutex @a
- * type attribute.
+ * Attempting to unlock a mutex which is not locked or which is locked by
+ * another thread than the current one yields the EPERM error, whatever the
+ * mutex @a type attribute.
  *
  * @param mx the mutex to be released.
  *

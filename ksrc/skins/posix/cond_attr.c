@@ -53,7 +53,7 @@ static pthread_condattr_t default_cond_attr = {
  *
  * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
- * - Xenomai kernel-space real-time thread.
+ * - Xenomai kernel-space thread.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_init.html">
@@ -86,7 +86,7 @@ int pthread_condattr_init (pthread_condattr_t *attr)
  *
  * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
- * - Xenomai kernel-space real-time thread.
+ * - Xenomai kernel-space thread.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_destroy.html">
@@ -134,7 +134,7 @@ int pthread_condattr_destroy (pthread_condattr_t *attr)
  *
  * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
- * - Xenomai kernel-space real-time thread.
+ * - Xenomai kernel-space thread.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_getclock.html">
@@ -181,7 +181,7 @@ int pthread_condattr_getclock (const pthread_condattr_t *attr, clockid_t *clk_id
  *
  * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
- * - Xenomai kernel-space real-time thread.
+ * - Xenomai kernel-space thread.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_setclock.html">

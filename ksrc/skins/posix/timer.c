@@ -93,10 +93,10 @@ void pse51_timer_notified (pse51_siginfo_t *si)
  * This service creates a time object using the clock @a clockid.
  *
  * If @a evp is not @a NULL, it describes the notification mechanism used on
- * timer expiration. Only notification via signal delivery is supported (@a
- * sigev_signo == @a SIGEV_SIGNAL).  The signal will be sent to the thread
- * starting the timer with the timer_settime() service. If @a evp is @a NULL,
- * the SIGALRM signal will be used.
+ * timer expiration. Only notification via signal delivery is supported (member
+ * @a sigev_notify of @a evp set to @a SIGEV_SIGNAL).  The signal will be sent to
+ * the thread starting the timer with the timer_settime() service. If @a evp is
+ * @a NULL, the SIGALRM signal will be used.
  *
  * Note that signals sent to user-space threads will cause them to switch to
  * secondary mode.
@@ -115,10 +115,11 @@ void pse51_timer_notified (pse51_siginfo_t *si)
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
- * - EINVAL, the clock @a clockid is invalid, the member sigev_notify of the
- *   @b sigevent structure at the address @a evp is not SIGEV_SIGNAL, or the
- *   member sigev_signo of the @b sigevent structure is an invalid signal
- *   number;
+ * - EINVAL, the clock @a clockid is invalid;
+ * - EINVAL, the member @a sigev_notify of the @b sigevent structure at the
+ *   address @a evp is not SIGEV_SIGNAL;
+ * - EINVAL, the  member @a sigev_signo of the @b sigevent structure is an
+ *   invalid signal number;
  * - EAGAIN, the maximum number of timers was exceeded, recompile with a larger
  *   value.
  *
@@ -272,20 +273,20 @@ static void pse51_timer_gettime_inner (struct pse51_timer *__restrict__ timer,
  * timerid. If @a ovalue is not @a NULL, the current expiration date and reload
  * value are stored at the address @a ovalue as with timer_gettime().
  *
- * If the member @a it_value of the @b itimerspec structure is zero, the timer
- * is stopped, otherwise the timer is started. If the member @a it_interval is
- * not zero, the timer is periodic. The current thread must be a POSIX skin
- * thread (created with pthread_create) and will be notified via signal of timer
- * expirations. Note that these notification will cause user-space threads to
- * switch to secondary mode.
+ * If the member @a it_value of the @b itimerspec structure at @a value is zero,
+ * the timer is stopped, otherwise the timer is started. If the member @a
+ * it_interval is not zero, the timer is periodic. The current thread must be a
+ * POSIX skin thread (created with pthread_create()) and will be notified via
+ * signal of timer expirations. Note that these notifications will cause
+ * user-space threads to switch to secondary mode.
  *
  * When starting the timer, if @a flags is TIMER_ABSTIME, the expiration value
  * is interpreted as an absolute date of the clock passed to the timer_create()
  * service. Otherwise, the expiration value is interpreted as a time interval.
  *
  * Expiration date and reload value are rounded to an integer count of system
- * clock ticks (see paragraph @ref posix_time "Clocks and timers services" for
- * the duration of the system tick).
+ * clock ticks (see note in section @ref posix_time "Clocks and timers services"
+ * for details on the duration of the system tick).
  *
  * @param timerid identifier of the timer to be started or stopped;
  *
@@ -404,10 +405,10 @@ int timer_settime (timer_t timerid,
  * This service stores, at the address @a value, the expiration date (member @a
  * it_value) and reload value (member @a it_interval) of the timer @a
  * timerid. The values are returned as time intervals, and as multiples of the
- * system clock tick duration (see paragraph @ref posix_time "Clocks and timers
- * services" for details on the duration of the system clock tick). If the timer
- * was not started, the returned members @a it_value and @a it_interval of @a
- * value are zero.
+ * system clock tick duration (see note in section
+ * @ref posix_time "Clocks and timers services" for details on the
+ * duration of the system clock tick). If the timer was not started, the
+ * returned members @a it_value and @a it_interval of @a value are zero.
  *
  * @param timerid timer identifier;
  *

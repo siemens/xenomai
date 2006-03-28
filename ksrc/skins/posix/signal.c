@@ -21,6 +21,28 @@
  * @defgroup posix_signal Signals services.
  *
  * Signals management services.
+ *
+ * Signals are asynchronous notifications delivered to a process or thread. Such
+ * notifications occur as the result of an exceptional event or at the request
+ * of another process.
+ *
+ * The services documented here are reserved to Xenomai kernel-space threads,
+ * user-space threads switch to secondary mode when handling signals, and use
+ * Linux regular signals services.
+ *
+ * Xenomai POSIX skin signals are implemented as real-time signals, meaning
+ * that they are queued when posted several times to a thread before the
+ * first notification is handled, and that each signal carry additional data in
+ * a @b siginfo_t object. In order to ensure consistence with user-space
+ * signals, valid signals number range from 1 to SIGRTMAX, signals from SIGRTMIN
+ * to SIGRTMAX being higher priority than signals from 1 to SIGRTMIN-1. As a
+ * special case, signal 0 may be used with services pthread_kill() and
+ * pthread_sigqueue_np() to check if a thread exists, but entails no other
+ * action.
+ *
+ * The action to be taken upon reception of a signal depends on the thread
+ * signal mask, (see pthread_sigmask()), and on the settings described by a
+ * @b sigaction structure (see sigaction()).
  * 
  *@{*/
 
@@ -150,7 +172,7 @@ static inline void orset (pse51_sigset_t *set,
     *set = (*left) | (*right);
 }
 
-static inline void nandset (pse51_sigset_t *set,
+static inline void andnotset (pse51_sigset_t *set,
                             const pse51_sigset_t *left,
                             const pse51_sigset_t *right)
 {
@@ -161,17 +183,23 @@ static inline void nandset (pse51_sigset_t *set,
 /**
  * Initialize and empty a signal set.
  *
+ * This service initializes ane empties the signal set pointed to by @a set.
+ *
+ * @param set address of a the signal set to be initialized.
+ *
+ * @retval 0
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigemptyset.html">
  * Specification.</a>
  * 
  */
-int sigemptyset (sigset_t *user_set)
+int sigemptyset (sigset_t *set)
 
 {
-    pse51_sigset_t *set = user2pse51_sigset(user_set);
+    pse51_sigset_t *pse51_set = user2pse51_sigset(set);
     
-    emptyset(set);
+    emptyset(pse51_set);
 
     return 0;
 }
@@ -179,17 +207,23 @@ int sigemptyset (sigset_t *user_set)
 /**
  * Initialize and fill a signal set.
  *
+ * This service initializes ane fills the signal set pointed to by @a set.
+ *
+ * @param set address of a the signal set to be filled.
+ *
+ * @retval 0
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigfillset.html">
  * Specification.</a>
  * 
  */
-int sigfillset (sigset_t *user_set)
+int sigfillset (sigset_t *set)
 
 {
-    pse51_sigset_t *set = user2pse51_sigset(user_set);
+    pse51_sigset_t *pse51_set = user2pse51_sigset(set);
     
-    fillset(set);
+    fillset(pse51_set);
 
     return 0;
 }
@@ -197,15 +231,26 @@ int sigfillset (sigset_t *user_set)
 /**
  * Add a signal to a signal set.
  *
+ * This service adds the signal number @a sig to the signal set pointed to by @a
+ * set.
+ *
+ * @param set address of a signal set;
+ *
+ * @param sig signal to be added to @a set.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a sig is not a valid signal number.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigaddset.html">
  * Specification.</a>
  * 
  */
-int sigaddset (sigset_t *user_set, int sig)
+int sigaddset (sigset_t *set, int sig)
 
 {
-    pse51_sigset_t *set = user2pse51_sigset(user_set);
+    pse51_sigset_t *pse51_set = user2pse51_sigset(set);
     
     if ((unsigned ) (sig - 1) > SIGRTMAX - 1)
         {
@@ -213,7 +258,7 @@ int sigaddset (sigset_t *user_set, int sig)
         return -1;
         }
 
-    addset(set, sig);
+    addset(pse51_set, sig);
 
     return 0;
 }
@@ -221,15 +266,26 @@ int sigaddset (sigset_t *user_set, int sig)
 /**
  * Delete a signal from a signal set.
  *
+ * This service remove the signal number @a sig from the signal set pointed to
+ * by @a set.
+ *
+ * @param set address of a signal set;
+ *
+ * @param sig signal to be removed from @a set.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a sig is not a valid signal number.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigdelset.html">
  * Specification.</a>
  * 
  */
-int sigdelset (sigset_t *user_set, int sig)
+int sigdelset (sigset_t *set, int sig)
 
 {
-    pse51_sigset_t *set = user2pse51_sigset(user_set);
+    pse51_sigset_t *pse51_set = user2pse51_sigset(set);
     
     if ((unsigned ) (sig - 1) > SIGRTMAX - 1)
         {
@@ -237,7 +293,7 @@ int sigdelset (sigset_t *user_set, int sig)
         return -1;
         }
 
-    delset(set, sig);
+    delset(pse51_set, sig);
 
     return 0;
 }
@@ -245,15 +301,26 @@ int sigdelset (sigset_t *user_set, int sig)
 /**
  * Test for a signal in a signal set.
  *
+ * This service tests whether the signal number @a sig is member of the signal
+ * set pointed to by @a set.
+ *
+ * @param set address of a signal set;
+ *
+ * @param sig tested signal number.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a sig is not a valid signal number.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigismember.html">
  * Specification.</a>
  * 
  */
-int sigismember (const sigset_t *user_set, int sig)
+int sigismember (const sigset_t *set, int sig)
 
 {
-    pse51_sigset_t *set=user2pse51_sigset(user_set);
+    pse51_sigset_t *pse51_set=user2pse51_sigset(set);
 
     if ((unsigned ) (sig - 1) > SIGRTMAX - 1)
         {
@@ -261,7 +328,7 @@ int sigismember (const sigset_t *user_set, int sig)
         return -1;
         }
 
-    return ismember(set,sig);
+    return ismember(pse51_set,sig);
 }
 
 /* Must be called with nklock lock, irqs off, may reschedule. */
@@ -293,7 +360,8 @@ void pse51_sigqueue_inner (pthread_t thread, pse51_siginfo_t *si)
         }
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    pse51_signal_schedule_request(thread);
+    if (testbits(thread->threadbase.status, XNSHADOW))
+        pse51_signal_schedule_request(thread);
 #endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE*/
 
     if (thread == pse51_current_thread()
@@ -362,12 +430,73 @@ static pse51_siginfo_t *pse51_getsigq (pse51_sigqueue_t *queue,
 /**
  * Examine and change a signal action.
  *
+ * The @b sigaction structure descibes the actions to be taken upon signal
+ * delivery. A @b sigaction structure is associated with every signal, for the
+ * kernel-space as a whole.
+ *
+ * If @a oact is not @a NULL, this service returns at the address @a oact, the
+ * current value of the @b sigaction structure associated with the signal @a
+ * sig.
+ *
+ * If @a act is not @a NULL, this service set to the value pointed to by @a act,
+ * the @b sigaction structure associated with the signal @a sig.
+ *
+ * The structure @b sigaction has the following members:
+ * - @a sa_flags, is a bitwise OR of the flags;
+ *   - SA_RESETHAND, meaning that the signal handler will be reset to SIG_GFL
+ *     and SA_SIGINFO cleared upon reception of a signal,
+ *   - SA_NODEFER, meaning that the signal handler will be called with the
+ *     signal @a sig not masked when handling the signal @a sig,
+ *   - SA_SIGINFO, meaning that the member @a sa_sigaction of the @b sigaction
+ *     structure will be used as a signal handler instead of @a sa_handler
+ * - @a sa_mask, of type @b sigset_t, is the value to which the thread signals
+ *   mask will be set during execution of the signal handler (@a sig is
+ *   automatically added to this set if SA_NODEFER is not set in @a sa_flags);
+ * - @a sa_handler, of type <b>void (*)(int)</b> is the signal handler which
+ *   will be called upon signal delivery if SA_SIGINFO is not set in @a
+ *   sa_flags, or one of SIG_IGN or SIG_DFL, meaning that the signal will be
+ *   respectively ignored or handled with the default handler;
+ * - @a sa_sigaction, of type <b>void (*)(int, siginfo_t *, void *)</b> is the
+ *   signal handler which will be called upon signal delivery if SA_SIGINFO is
+ *   set in @a sa_flags.
+ *
+ * When using @a sa_handler as a signal handler, it is passed the number of the
+ * received signal, when using @a sa_sigaction, two additional arguments are
+ * passed:
+ * - a pointer to a @b siginfo_t object, containing additional information about
+ *   the received signal;
+ * - a void pointer, always null in this implementation.
+ *
+ * The following members of the @b siginfo_t structure are filled by this
+ * implementation:
+ * - @a si_signo, the signal number;
+ * - @a si_code, the provenance of the signal, one of:
+ *     - SI_QUEUE, the signal was queued with pthread_sigqueue_np(),
+ *     - SI_USER, the signal was queued with pthread_kill(),
+ *     - SI_TIMER, the signal was queued by a timer (see timer_settime()),
+ *     - SI_MESQ, the signal was queued by a message queue (see mq_notify());
+ * - @a si_value, an additional datum, of type @b union @b sigval.
+ *
+ * @param sig a signal number;
+ *
+ * @param act if not null, description of the action to be taken upon
+ * notification of the signal @a sig;
+ *
+ * @param oact if not null, address where the previous description of the signal
+ * action is stored on success.
+ *
+ * @retval 0 on sucess;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a sig is an invalid signal number;
+ * - ENOTSUP, the @a sa_flags member of @a act contains other flags than
+ *   SA_RESETHAND, SA_NODEFER and SA_SIGINFO;
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigaction.html">
  * Specification.</a>
  * 
  */
-int sigaction (int sig, const struct sigaction *action, struct sigaction *old)
+int sigaction (int sig, const struct sigaction *act, struct sigaction *oact)
 
 {
     spl_t s;
@@ -378,7 +507,7 @@ int sigaction (int sig, const struct sigaction *action, struct sigaction *old)
         return -1;
         }
 
-    if (action && testbits(action->sa_flags, ~SIGACTION_FLAGS))
+    if (act && testbits(act->sa_flags, ~SIGACTION_FLAGS))
         {
         thread_set_errno(ENOTSUP);
         return -1;
@@ -386,50 +515,18 @@ int sigaction (int sig, const struct sigaction *action, struct sigaction *old)
 
     xnlock_get_irqsave(&nklock, s);
 
-    if (old)
-        *old = actions[sig - 1];
+    if (oact)
+        *oact = actions[sig - 1];
 
-    if (action)
+    if (act)
         {
-        struct sigaction *dest_action = &actions[sig - 1];
+        struct sigaction *dest_act = &actions[sig - 1];
             
-        *dest_action = *action;
+        *dest_act = *act;
 
-        if (!(testbits(action->sa_flags, SA_NOMASK)))
-            addset(user2pse51_sigset(&dest_action->sa_mask), sig);
+        if (!(testbits(act->sa_flags, SA_NODEFER)))
+            addset(user2pse51_sigset(&dest_act->sa_mask), sig);
         }
-
-    xnlock_put_irqrestore(&nklock, s);
-
-    return 0;
-}
-
-int sigqueue (pthread_t thread, int sig, union sigval value)
-{
-    pse51_siginfo_t *si = NULL; /* Avoid spurious warning. */
-    spl_t s;
-
-    if ((unsigned) sig > SIGRTMAX)
-        return EINVAL;
-
-    if (sig)
-        {
-        si = pse51_new_siginfo(sig, SI_QUEUE, value);
-
-        if (!si)
-            return EAGAIN;
-        }
-
-    xnlock_get_irqsave(&nklock, s);    
-
-    if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC,struct pse51_thread))
-        {
-        xnlock_put_irqrestore(&nklock, s);
-        return ESRCH;
-        }
-
-    if (sig)
-        pse51_sigqueue_inner(thread, si);
 
     xnlock_put_irqrestore(&nklock, s);
 
@@ -438,6 +535,20 @@ int sigqueue (pthread_t thread, int sig, union sigval value)
 
 /**
  * Send a signal to a thread.
+ *
+ * This service send the signal @a sig to the Xenomai POSIX skin thread @a
+ * thread (created with pthread_create()). If @a sig is zero, this service check
+ * for existence of the thread @a thread, but no signal is sent.
+ *
+ * @param thread thread identifier;
+ *
+ * @param sig signal number.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a sig is an invalid signal number;
+ * - EAGAIN, the maximum number of pending signals has been exceeded;
+ * - ESRCH, @a thread is an invalid thread identifier.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_kill.html">
@@ -476,18 +587,92 @@ int pthread_kill (pthread_t thread, int sig)
     return 0;
 }
 
+
+/**
+ * Queue a signal to a thread.
+ *
+ * This service send the signal @a sig to the Xenomai POSIX skin thread @a
+ * thread (created with pthread_create()), with the value @a value. If @a sig is
+ * zero, this service check for existence of the thread @a thread, but no signal
+ * is sent.
+ *
+ * This service is equivalent to the POSIX service sigqueue(), except that the
+ * signal is directed to a thread instead of being directed to a process.
+ *
+ * @param thread thread identifier,
+ *
+ * @param sig signal number,
+ *
+ * @param value additional datum passed to @a thread with the signal @a sig.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a sig is an invalid signal number;
+ * - EAGAIN, the maximum number of pending signals has been exceeded;
+ * - ESRCH, @a thread is an invalid thread identifier.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigqueue.html">
+ * sigqueue() specification.</a>
+ * 
+ */
+int pthread_sigqueue_np (pthread_t thread, int sig, union sigval value)
+{
+    pse51_siginfo_t *si = NULL; /* Avoid spurious warning. */
+    spl_t s;
+
+    if ((unsigned) sig > SIGRTMAX)
+        return EINVAL;
+
+    if (sig)
+        {
+        si = pse51_new_siginfo(sig, SI_QUEUE, value);
+
+        if (!si)
+            return EAGAIN;
+        }
+
+    xnlock_get_irqsave(&nklock, s);    
+
+    if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC,struct pse51_thread))
+        {
+        xnlock_put_irqrestore(&nklock, s);
+        return ESRCH;
+        }
+
+    if (sig)
+        pse51_sigqueue_inner(thread, si);
+
+    xnlock_put_irqrestore(&nklock, s);
+
+    return 0;
+}
+
 /**
  * Examine pending signals.
+ *
+ * This service stores, at the address @a set, the set of signals that are
+ * currently blocked and have been received by the calling thread.
+ *
+ * @param set address where the set of blocked and received signals are stored
+ * on success.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EPERM, the calling context is invalid.
+ *
+ * @par Valid contexts:
+ * - Xenomai POSIX skin kernel-space thread.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigpending.html">
  * Specification.</a>
  * 
  */
-int sigpending (sigset_t *user_set)
+int sigpending (sigset_t *set)
 
 {
-    pse51_sigset_t *set = user2pse51_sigset(user_set);
+    pse51_sigset_t *pse51_set = user2pse51_sigset(set);
     pthread_t cur = pse51_current_thread();
     spl_t s;
 
@@ -501,7 +686,7 @@ int sigpending (sigset_t *user_set)
      * blocked_received while we are reading */
     xnlock_get_irqsave(&nklock, s);  
 
-    *set = cur->blocked_received.mask;
+    *pse51_set = cur->blocked_received.mask;
 
     xnlock_put_irqrestore(&nklock, s);
 
@@ -511,16 +696,49 @@ int sigpending (sigset_t *user_set)
 /**
  * Examine and change the set of signals blocked by a thread.
  *
+ * The signal mask of a thread is the set of signals that are blocked by this
+ * thread.
+ *
+ * If @a oset is not NULL, this service stores, at the address @a oset the
+ * current signal mask of the calling thread.
+ *
+ * If @a set is not NULL, this service sets the signal mask of the calling
+ * thread according to the value of @a how, as follow:
+ * - if @a how is SIG_BLOCK, the signals in @a set are added to the calling
+ *   thread signal mask;
+ * - if @a how is SIG_SETMASK, the calling thread signal mask is set to @a set;
+ * - if @a how is SIG_UNBLOCK, the signals in @a set are removed from the
+ *   calling thread signal mask.
+ *
+ * If some signals are unblocked by this service, they are handled before this
+ * service returns.
+ *
+ * @param how if @a set is not null, a value indicating how to interpret @a set;
+ *
+ * @param set if not null, a signal set that will be used to modify the calling
+ * thread signal mask;
+ *
+ * @param oset if not null, address where the previous value of the calling
+ * thread signal mask will be stored on success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EPERM, the calling context is invalid;
+ * - EINVAL, @a how is not SIG_BLOCK, SIG_UNBLOCK or SIG_SETMASK.
+ *
+ * @par Valid contexts:
+ * - Xenomai POSIX skin kernel-space thread.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_sigmask.html">
  * Specification.</a>
  * 
  */
-int pthread_sigmask (int how, const sigset_t *user_set, sigset_t *user_oset)
+int pthread_sigmask (int how, const sigset_t *set, sigset_t *oset)
 
 {
-    pse51_sigset_t *set = user2pse51_sigset(user_set);
-    pse51_sigset_t *oset = user2pse51_sigset(user_oset);
+    pse51_sigset_t *pse51_set = user2pse51_sigset(set);
+    pse51_sigset_t *pse51_oset = user2pse51_sigset(oset);
     pthread_t cur = pse51_current_thread();
     pse51_sigset_t unblocked;
     spl_t s;
@@ -532,10 +750,10 @@ int pthread_sigmask (int how, const sigset_t *user_set, sigset_t *user_oset)
 
     xnlock_get_irqsave(&nklock, s);
 
-    if (oset)
-        *oset = cur->sigmask;
+    if (pse51_oset)
+        *pse51_oset = cur->sigmask;
 
-    if (!set)
+    if (!pse51_set)
         goto unlock_and_exit;
 
     if (xnthread_signaled_p(&cur->threadbase))
@@ -548,20 +766,20 @@ int pthread_sigmask (int how, const sigset_t *user_set, sigset_t *user_oset)
 
         case SIG_BLOCK:
 
-            orset(&cur->sigmask, &cur->sigmask, set);
+            orset(&cur->sigmask, &cur->sigmask, pse51_set);
             break;
 
         case SIG_UNBLOCK:
             /* Mark as pending any signal which was received while
                blocked and is going to be unblocked. */
-            andset(&unblocked, set, &cur->blocked_received.mask);
-            nandset(&cur->sigmask, &cur->pending.mask, &unblocked);
+            andset(&unblocked, pse51_set, &cur->blocked_received.mask);
+            andnotset(&cur->sigmask, &cur->pending.mask, &unblocked);
             break;
 
         case SIG_SETMASK:
 
-            nandset(&unblocked, &cur->blocked_received.mask, set);
-            cur->sigmask = *set;
+            andnotset(&unblocked, &cur->blocked_received.mask, pse51_set);
+            cur->sigmask = *pse51_set;
             break;
 
         default:
@@ -603,11 +821,11 @@ int pthread_sigmask (int how, const sigset_t *user_set, sigset_t *user_oset)
     return 0;
 }
 
-static int pse51_sigtimedwait_inner (const sigset_t *user_set,
+static int pse51_sigtimedwait_inner (const sigset_t *set,
                                      siginfo_t *si,
                                      xnticks_t to)
 {
-    pse51_sigset_t non_blocked, *set = user2pse51_sigset(user_set);
+    pse51_sigset_t non_blocked, *pse51_set = user2pse51_sigset(set);
     pse51_siginfo_t *received;
     pthread_t thread;
     int err = 0;
@@ -615,27 +833,21 @@ static int pse51_sigtimedwait_inner (const sigset_t *user_set,
 
     thread = pse51_current_thread();
 
-    if (!thread)
+    if (!thread || xnpod_unblockable_p())
         return EPERM;
     
     /* All signals in "set" must be blocked in order for sigwait to
        work reliably. */
-    nandset(&non_blocked, set, &thread->sigmask);
+    andnotset(&non_blocked, pse51_set, &thread->sigmask);
     if (!isemptyset(&non_blocked))
         return EINVAL;
 
     xnlock_get_irqsave(&nklock, s);
 
-    received = pse51_getsigq(&thread->blocked_received, set, NULL);
+    received = pse51_getsigq(&thread->blocked_received, pse51_set, NULL);
     
     if (!received)
         {
-        if (xnpod_unblockable_p())
-            {
-            err = EPERM;
-            goto unlock_and_ret;
-            }
-
         err = clock_adjust_timeout(&to, CLOCK_MONOTONIC);
 
         if (err)
@@ -655,7 +867,7 @@ static int pse51_sigtimedwait_inner (const sigset_t *user_set,
         if (xnthread_test_flags(&thread->threadbase, XNBREAK))
             {
             if (!(received = pse51_getsigq(&thread->blocked_received,
-                                           set,
+                                           pse51_set,
                                            NULL)))
                 err = EINTR;
             }
@@ -682,19 +894,42 @@ static int pse51_sigtimedwait_inner (const sigset_t *user_set,
 /**
  * Wait for signals.
  *
+ * This service blocks a Xenomai kernel-space POSIX skin thread until a signal
+ * of the set @a set is received. If a signal in @a set is not currently blocked
+ * by the calling thread, this service returns immediately with an error. The
+ * signal received is stored at the address @a sig.
+ *
+ * If a signal of the set @a set was already pending, it is cleared and this
+ * service returns immediately.
+ *
+ * Signals are received in priority order, i.e. from SIGRTMIN to SIGRTMAX, then
+ * from 1 to SIGRTMIN-1.
+ *
+ * @param set set of signals to wait for;
+ *
+ * @param sig address where the received signal will be stored on success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, a signal in @a set is not currently blocked.
+ *
+ * @par Valid contexts:
+ * - Xenomai POSIX skin kernel-space thread.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigwait.html">
  * Specification.</a>
  * 
  */
-int sigwait (const sigset_t *user_set, int *sig)
+int sigwait (const sigset_t *set, int *sig)
 {
     siginfo_t info;
     int err;
 
     do
         {
-        err = pse51_sigtimedwait_inner(user_set, &info, XN_INFINITE);
+        err = pse51_sigtimedwait_inner(set, &info, XN_INFINITE);
         }
     while (err == EINTR);
 
@@ -707,12 +942,29 @@ int sigwait (const sigset_t *user_set, int *sig)
 /**
  * Wait for signals.
  *
- * @see
+ * This service is equivalent to the sigwait() service, except that it returns,
+ * at the address @a info, the @b siginfo_t object associated with the received
+ * signal instead of only returning the signal number.
+ *
+ * @param set set of signals to wait for;
+ *
+ * @param info address where the received @b siginfo_t object will be stored on
+ * success.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, a signal in @a set is not currently blocked.
+ *
+ * @par Valid contexts:
+ * - Xenomai POSIX skin kernel-space thread.
+ *
+* @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigwaitinfo.html">
  * Specification.</a>
  * 
  */
-int sigwaitinfo (const sigset_t *__restrict__ user_set,
+int sigwaitinfo (const sigset_t *__restrict__ set,
                  siginfo_t *__restrict__ info)
 {
     siginfo_t loc_info;
@@ -723,7 +975,7 @@ int sigwaitinfo (const sigset_t *__restrict__ user_set,
 
     do
         {
-        err = pse51_sigtimedwait_inner(user_set, info, XN_INFINITE);
+        err = pse51_sigtimedwait_inner(set, info, XN_INFINITE);
         }
     while (err == EINTR);
 
@@ -741,12 +993,33 @@ int sigwaitinfo (const sigset_t *__restrict__ user_set,
 /**
  * Wait during a bounded time for signals.
  *
+ * This service is equivalent to the sigwaitinfo() service, except that the
+ * calling thread is only blocked until the timeout specified by @a timeout
+ * expires.
+ *
+ * @param set set of signals to wait for;
+ *
+ * @param info address where the received @b siginfo_t object will be stored on
+ * success;
+ *
+ * @param timeout the timeout, expressed as a time interval.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, the specified timeout is invalid;
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, a signal in @a set is not currently blocked;
+ * - EAGAIN, no signal was received and the specified timeout expired.
+ *
+ * @par Valid contexts:
+ * - Xenomai POSIX skin kernel-space thread.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigtimedwait.html">
  * Specification.</a>
  * 
  */
-int sigtimedwait (const sigset_t *__restrict__ user_set,
+int sigtimedwait (const sigset_t *__restrict__ set,
                   siginfo_t *__restrict__ info,
                   const struct timespec *__restrict__ timeout)
 {
@@ -768,7 +1041,7 @@ int sigtimedwait (const sigset_t *__restrict__ user_set,
 
     do 
         {
-        err = pse51_sigtimedwait_inner(user_set, info, abs_timeout);
+        err = pse51_sigtimedwait_inner(set, info, abs_timeout);
         }
     while (err == EINTR);
 
@@ -811,6 +1084,7 @@ static void pse51_dispatch_signals (xnsigmask_t sigs)
 
         if (action->sa_handler != SIG_IGN)
             {
+            int use_info = testbits(action->sa_flags, SA_SIGINFO);
             siginfo_handler_t *info_handler =
                 (siginfo_handler_t *) action->sa_sigaction;
             sighandler_t handler = action->sa_handler;
@@ -820,11 +1094,13 @@ static void pse51_dispatch_signals (xnsigmask_t sigs)
 
             thread->sigmask = *user2pse51_sigset(&action->sa_mask);
 
-            if (testbits(action->sa_flags, SA_ONESHOT))
+            if (testbits(action->sa_flags, SA_RESETHAND))
+                {
+                action->sa_flags &= ~SA_SIGINFO;
                 action->sa_handler = SIG_DFL;
+                }
 
-            if (!testbits(action->sa_flags, SA_SIGINFO)
-                || handler == pse51_default_handler)
+            if (!use_info)
                 handler(info.si_signo);
             else
                 info_handler(info.si_signo, &info, NULL);
@@ -1007,8 +1283,8 @@ EXPORT_SYMBOL(sigdelset);
 EXPORT_SYMBOL(sigismember);
 EXPORT_SYMBOL(pthread_kill);
 EXPORT_SYMBOL(pthread_sigmask);
+EXPORT_SYMBOL(pthread_sigqueue_np);
 EXPORT_SYMBOL(pse51_sigaction);
-EXPORT_SYMBOL(pse51_sigqueue);
 
 EXPORT_SYMBOL(sigpending);
 EXPORT_SYMBOL(sigwait);

@@ -120,7 +120,7 @@ void test_sigwait(void)
     sched_yield();
     TEST_ASSERT_OK(pthread_attr_destroy(&tattr));
 
-    TEST_ASSERT_OK(sigqueue(thread, SIGRTMIN+1, (union sigval) 42));
+    TEST_ASSERT_OK(pthread_sigqueue_np(thread, SIGRTMIN+1, (union sigval) 42));
     TEST_ASSERT_OK(pthread_kill(thread, SIGRTMIN));
     TEST_ASSERT_OK(pthread_kill(thread, SIGRTMIN+2));
 

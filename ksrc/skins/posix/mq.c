@@ -88,7 +88,7 @@ static struct mq_attr default_attr = {
     mq_msgsize: 128,
 };
 
-static pse51_msg_t *pse51_mq_msg_alloc(pse51_mq_t *mq)
+static pse51_msg_t *pse51_mq_msg_alloc (pse51_mq_t *mq)
 {
     xnpholder_t *holder = (xnpholder_t *) getq(&mq->avail);
 
@@ -99,14 +99,14 @@ static pse51_msg_t *pse51_mq_msg_alloc(pse51_mq_t *mq)
     return link2msg(holder);
 }
 
-static void pse51_mq_msg_free(pse51_mq_t *mq, pse51_msg_t *msg)
+static void pse51_mq_msg_free (pse51_mq_t *mq, pse51_msg_t *msg)
 {
     xnholder_t *holder = (xnholder_t *) (&msg->link);
     inith(holder);
     prependq(&mq->avail, holder); /* For earliest re-use of the block. */
 }
 
-static int pse51_mq_init(pse51_mq_t *mq, const struct mq_attr *attr)
+static int pse51_mq_init (pse51_mq_t *mq, const struct mq_attr *attr)
 {
     unsigned i, msgsize, memsize;
     char *mem;
@@ -153,7 +153,7 @@ static int pse51_mq_init(pse51_mq_t *mq, const struct mq_attr *attr)
     return 0;
 }
 
-static void pse51_mq_destroy(pse51_mq_t *mq)
+static void pse51_mq_destroy (pse51_mq_t *mq)
 {
     int need_resched;
     spl_t s;
@@ -189,7 +189,7 @@ static void pse51_mq_destroy(pse51_mq_t *mq)
  * bit set, the message queue is created by this function, taking two more
  * arguments:
  * - a @a mode argument, of type @b mode_t, currently ignored;
- * - a @a attr argument, pointer to an @b mq_attr structure, specifying the
+ * - an @a attr argument, pointer to an @b mq_attr structure, specifying the
  *   attributes of the new message queue.
  *
  * If @a oflags has the two bits @a O_CREAT and @a O_EXCL set and the message
@@ -472,10 +472,10 @@ error:
     return 0;
 }
 
-static int pse51_mq_trysend(pse51_desc_t *desc,
-                            const char *buffer,
-                            size_t len,
-                            unsigned prio)
+static int pse51_mq_trysend (pse51_desc_t *desc,
+                             const char *buffer,
+                             size_t len,
+                             unsigned prio)
 {
     xnthread_t *reader;
     pthread_t thread;
@@ -530,10 +530,10 @@ static int pse51_mq_trysend(pse51_desc_t *desc,
     return 0;
 }
 
-static int pse51_mq_tryrcv(pse51_desc_t *desc,
-                           char *__restrict__ buffer,
-                           size_t *__restrict__ lenp,
-                           unsigned *__restrict__ priop)
+static int pse51_mq_tryrcv (pse51_desc_t *desc,
+                            char *__restrict__ buffer,
+                            size_t *__restrict__ lenp,
+                            unsigned *__restrict__ priop)
 {
     xnpholder_t *holder;
     pse51_msg_t *msg;
@@ -567,11 +567,11 @@ static int pse51_mq_tryrcv(pse51_desc_t *desc,
 }
 
 
-static int pse51_mq_timedsend_inner(mqd_t fd,
-                                    const char * buffer,
-                                    size_t len,
-                                    unsigned prio,
-                                    xnticks_t abs_to)
+static int pse51_mq_timedsend_inner (mqd_t fd,
+                                     const char * buffer,
+                                     size_t len,
+                                     unsigned prio,
+                                     xnticks_t abs_to)
 {
     int rc;
 
@@ -618,11 +618,11 @@ static int pse51_mq_timedsend_inner(mqd_t fd,
         }
 }
 
-static int pse51_mq_timedrcv_inner(mqd_t fd,
-                                   char *__restrict__ buffer,
-                                   size_t *__restrict__ lenp,
-                                   unsigned *__restrict__ priop,
-                                   xnticks_t abs_to)
+static int pse51_mq_timedrcv_inner (mqd_t fd,
+                                    char *__restrict__ buffer,
+                                    size_t *__restrict__ lenp,
+                                    unsigned *__restrict__ priop,
+                                    xnticks_t abs_to)
 {
     xnthread_t *cur = xnpod_current_thread();
     int rc;
@@ -695,8 +695,8 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
  *
  * If the message queue is full and the flag @a O_NONBLOCK is not set, the
  * calling thread is suspended until the queue is not full. If the message queue
- * is not full and the flag @a O_NONBLOCK is set, the message is not sent and
- * the service returns immediately -1 with @a errno set to EAGAIN.
+ * is full and the flag @a O_NONBLOCK is set, the message is not sent and the
+ * service returns immediately a value of -1 with @a errno set to EAGAIN.
  *
  * @param fd message queue descriptor;
  *
@@ -709,8 +709,8 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
  * @return 0 and send a message on success;
  * @return -1 with no message sent and @a errno set if:
  * - EBADF, @a fd is not a valid message queue descriptor open for writing;
- * - EMSGSIZE, the message length exceeds the @a mq_msgsize attribute of the
- *   message queue;
+ * - EMSGSIZE, the message length @a len exceeds the @a mq_msgsize attribute of
+ *   the message queue;
  * - EAGAIN, the flag O_NONBLOCK is set for the descriptor @a fd and the message
  *   queue is full;
  * - EPERM, the caller context is invalid;
@@ -725,7 +725,7 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
  * Specification.</a>
  * 
  */
-int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
+int mq_send (mqd_t fd, const char *buffer, size_t len, unsigned prio)
 {
     int err;
     spl_t s;
@@ -782,11 +782,11 @@ int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
  * Specification.</a>
  * 
  */
-int mq_timedsend(mqd_t fd,
-                 const char * buffer,
-                 size_t len,
-                 unsigned prio,
-                 const struct timespec *abs_timeout)
+int mq_timedsend (mqd_t fd,
+                  const char * buffer,
+                  size_t len,
+                  unsigned prio,
+                  const struct timespec *abs_timeout)
 {
     xnticks_t timeout;
     int err;
@@ -823,8 +823,8 @@ int mq_timedsend(mqd_t fd,
  * If the queue is empty and the flag @a O_NONBLOCK is not set for the
  * descriptor @a fd, the calling thread is suspended until some message is sent
  * to the queue. If the queue is empty and the flag @a O_NONBLOCK is set for the
- * descriptor @a fd, this service returns immediately -1 with @a errno set to
- * EAGAIN.
+ * descriptor @a fd, this service returns immediately a value of -1 with @a
+ * errno set to EAGAIN.
  *
  * @param fd the queue descriptor;
  *
@@ -856,7 +856,7 @@ int mq_timedsend(mqd_t fd,
  * Specification.</a>
  * 
  */
-ssize_t mq_receive(mqd_t fd, char *buffer, size_t len, unsigned *priop)
+ssize_t mq_receive (mqd_t fd, char *buffer, size_t len, unsigned *priop)
 {
     int err;
     spl_t s;
@@ -916,11 +916,11 @@ ssize_t mq_receive(mqd_t fd, char *buffer, size_t len, unsigned *priop)
  * Specification.</a>
  * 
  */
-ssize_t mq_timedreceive(mqd_t fd,
-                        char *__restrict__ buffer,
-                        size_t len,
-                        unsigned *__restrict__ priop,
-                        const struct timespec *__restrict__ abs_timeout)
+ssize_t mq_timedreceive (mqd_t fd,
+                         char *__restrict__ buffer,
+                         size_t len,
+                         unsigned *__restrict__ priop,
+                         const struct timespec *__restrict__ abs_timeout)
 {
     xnticks_t timeout;
     int err;
@@ -973,7 +973,7 @@ ssize_t mq_timedreceive(mqd_t fd,
  * Specification.</a>
  * 
  */
-int mq_getattr(mqd_t fd, struct mq_attr *attr)
+int mq_getattr (mqd_t fd, struct mq_attr *attr)
 {
     pse51_desc_t *desc;
     pse51_mq_t *mq;
@@ -1006,7 +1006,7 @@ int mq_getattr(mqd_t fd, struct mq_attr *attr)
  * This service sets the flags of the @a fd descriptor to the value of the
  * member @a mq_flags of the @b mq_attr structure pointed to by @a attr.
  *
- * The previous value of the message queue attribute are stored at the address
+ * The previous value of the message queue attributes are stored at the address
  * @a oattr if it is not @a NULL.
  *
  * Only setting or clearing the O_NONBLOCK flag has an effect.
@@ -1027,9 +1027,9 @@ int mq_getattr(mqd_t fd, struct mq_attr *attr)
  * Specification.</a>
  * 
  */
-int mq_setattr(mqd_t fd,
-               const struct mq_attr *__restrict__ attr,
-               struct mq_attr *__restrict__ oattr)
+int mq_setattr (mqd_t fd,
+                const struct mq_attr *__restrict__ attr,
+                struct mq_attr *__restrict__ oattr)
 {
     pse51_desc_t *desc;
     pse51_mq_t *mq;
@@ -1070,8 +1070,8 @@ int mq_setattr(mqd_t fd,
  * If @a evp is not @a NULL and is the address of a @b sigevent structure with
  * the @a sigev_notify member set to SIGEV_SIGNAL, the current thread will be
  * notified by a signal when a message is sent to the message queue @a fd, the
- * queue is empty, and no thread is blocked in call to mq_receive or
- * mq_timedreceive. After the notification, the thread is unregistered.
+ * queue is empty, and no thread is blocked in call to mq_receive() or
+ * mq_timedreceive(). After the notification, the thread is unregistered.
  *
  * If @a evp is @a NULL or the @a sigev_notify member is SIGEV_NONE, the current
  * thread is unregistered.
@@ -1104,7 +1104,7 @@ int mq_setattr(mqd_t fd,
  * Specification.</a>
  * 
  */
-int mq_notify(mqd_t fd, const struct sigevent *evp)
+int mq_notify (mqd_t fd, const struct sigevent *evp)
 {
     pthread_t thread = pse51_current_thread();
     pse51_desc_t *desc;
@@ -1162,13 +1162,13 @@ int mq_notify(mqd_t fd, const struct sigevent *evp)
     return -1;
 }
 
-int pse51_mq_pkg_init(void)
+int pse51_mq_pkg_init (void)
 {
     initq(&pse51_mqq);
     return 0;
 }
 
-void pse51_mq_pkg_cleanup(void)
+void pse51_mq_pkg_cleanup (void)
 {
     xnholder_t *holder;
 
