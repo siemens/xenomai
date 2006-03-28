@@ -109,7 +109,7 @@ void sc_tdelete(int tid,
 		int opt,
 		int *perr);
 
-TCB *sc_tinquiry(int *pinfo,
+TCB *sc_tinquiry(int pinfo[],
 		 int tid,
 		 int *perr);
 

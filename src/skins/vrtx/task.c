@@ -183,3 +183,63 @@ void sc_tdelete (int tid, int opt, int *errp)
 			      tid,
 			      opt);
 }
+
+void sc_tpriority (int tid, int prio, int *errp)
+{
+    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
+			      __vrtx_tpriority,
+			      tid,
+			      prio);
+}
+
+void sc_tresume (int tid, int opt, int *errp)
+{
+    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
+			      __vrtx_tresume,
+			      tid,
+			      opt);
+}
+
+void sc_tsuspend (int tid, int opt, int *errp)
+{
+    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
+			      __vrtx_tsuspend,
+			      tid,
+			      opt);
+}
+
+TCB *sc_tinquiry (int pinfo[], int tid, int *errp)
+{
+    TCB *tcb;
+
+    tcb = (TCB *)pthread_getspecific(__vrtx_tskey); /* Cannot fail. */
+
+    *errp = XENOMAI_SKINCALL3(__vrtx_muxid,
+			      __vrtx_tinquiry,
+			      pinfo,
+			      tcb,
+			      tid);
+    if (*errp)
+	return NULL;
+
+    return tcb;
+}
+
+void sc_tslice (unsigned short ticks)
+{
+    XENOMAI_SKINCALL1(__vrtx_muxid,
+		      __vrtx_tslice,
+		      ticks);
+}
+
+void sc_lock (void)
+{
+    XENOMAI_SKINCALL0(__vrtx_muxid,
+		      __vrtx_lock);
+}
+
+void sc_unlock (void)
+{
+    XENOMAI_SKINCALL0(__vrtx_muxid,
+		      __vrtx_unlock);
+}
