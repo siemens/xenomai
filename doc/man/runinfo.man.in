@@ -149,5 +149,7 @@ In this example, target \fBuserspace\fP is the default target, since it is the f
 .BR modprobe (8),
 .BR rmmod (8)
 .SH HISTORY
-2005-10-18 \- Written by Romain Lenglet <rlenglet@users.forge.objectweb.org>
+.TP
+2005-10-18
+Written by Romain Lenglet <rlenglet@users.forge.objectweb.org>
 

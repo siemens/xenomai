@@ -32,6 +32,7 @@ When \fBxeno-config\fP is executed without any options, the output is equivalent
 
 .\" ********************************************************************
 .SH OPTIONS
+.TP
 .B \-\-v, \-\-verbose
 Outputs all configuration information, in a human-readable format.
 .TP
