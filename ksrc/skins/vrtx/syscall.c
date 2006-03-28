@@ -129,9 +129,129 @@ static int __sc_tdelete (struct task_struct *curr, struct pt_regs *regs)
     return err;
 }
 
+/*
+ * int __sc_tpriority(int tid, int prio)
+ */
+
+static int __sc_tpriority (struct task_struct *curr, struct pt_regs *regs)
+
+{
+    int err, tid, prio;
+
+    tid = __xn_reg_arg1(regs);
+    prio = __xn_reg_arg2(regs);
+    sc_tpriority(tid,prio,&err);
+
+    return err;
+}
+
+/*
+ * int __sc_tresume(int tid, int opt)
+ */
+
+static int __sc_tresume (struct task_struct *curr, struct pt_regs *regs)
+
+{
+    int err, tid, opt;
+
+    tid = __xn_reg_arg1(regs);
+    opt = __xn_reg_arg2(regs);
+    sc_tpriority(tid,opt,&err);
+
+    return err;
+}
+
+/*
+ * int __sc_tsuspend(int tid, int opt)
+ */
+
+static int __sc_tsuspend (struct task_struct *curr, struct pt_regs *regs)
+
+{
+    int err, tid, opt;
+
+    tid = __xn_reg_arg1(regs);
+    opt = __xn_reg_arg2(regs);
+    sc_tsuspend(tid,opt,&err);
+
+    return err;
+}
+
+/*
+ * int __sc_tslice(unsigned short ticks)
+ */
+
+static int __sc_tslice (struct task_struct *curr, struct pt_regs *regs)
+
+{
+    unsigned short ticks;
+
+    ticks = (unsigned short)__xn_reg_arg1(regs);
+    sc_tslice(ticks);
+
+    return 0;
+}
+
+/*
+ * int __sc_tinquiry(int pinfo[], TCB *tcb, int tid)
+ */
+
+static int __sc_tinquiry (struct task_struct *curr, struct pt_regs *regs)
+
+{
+    int err, tid, pinfo[3];
+    TCB *tcb;
+
+    if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg1(regs),sizeof(pinfo)))
+	return -EFAULT;
+
+    if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg2(regs),sizeof(*tcb)))
+	return -EFAULT;
+
+    tid = __xn_reg_arg3(regs);
+    tcb = sc_tinquiry(pinfo,tid,&err);
+
+    if (!err)
+	{
+	__xn_copy_to_user(curr,(void __user *)__xn_reg_arg1(regs),pinfo,sizeof(pinfo));
+	__xn_copy_to_user(curr,(void __user *)__xn_reg_arg2(regs),tcb,sizeof(*tcb));
+	}
+
+    return err;
+}
+
+/*
+ * int __sc_lock(void)
+ */
+
+static int __sc_lock (struct task_struct *curr, struct pt_regs *regs)
+
+{
+    sc_lock();
+    return 0;
+}
+
+/*
+ * int __sc_unlock(void)
+ */
+
+static int __sc_unlock (struct task_struct *curr, struct pt_regs *regs)
+
+{
+    sc_unlock();
+    return 0;
+}
+
 static xnsysent_t __systab[] = {
     [__vrtx_tecreate ] = { &__sc_tecreate, __xn_exec_init },
     [__vrtx_tdelete ] = { &__sc_tdelete, __xn_exec_conforming },
+    [__vrtx_tpriority ] = { &__sc_tpriority, __xn_exec_primary },
+    [__vrtx_tresume ] = { &__sc_tresume, __xn_exec_primary },
+    [__vrtx_tsuspend ] = { &__sc_tsuspend, __xn_exec_primary },
+    [__vrtx_tslice ] = { &__sc_tslice, __xn_exec_any },
+    [__vrtx_tinquiry ] = { &__sc_tinquiry, __xn_exec_primary },
+    [__vrtx_lock ] = { &__sc_lock, __xn_exec_primary },
+    [__vrtx_unlock ] = { &__sc_unlock, __xn_exec_primary },
 };
 
 static void __shadow_delete_hook (xnthread_t *thread)

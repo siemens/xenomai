@@ -528,7 +528,7 @@ void sc_unlock (void)
     xnpod_unlock_sched();
 }
 
-TCB *sc_tinquiry (int *pinfo, int tid, int *errp)
+TCB *sc_tinquiry (int pinfo[], int tid, int *errp)
 
 {
     vrtxtask_t *task;
@@ -538,7 +538,19 @@ TCB *sc_tinquiry (int *pinfo, int tid, int *errp)
     xnlock_get_irqsave(&nklock,s);
 
     if (tid == 0)
+	{
+	if (xnpod_interrupt_p()) /* Called on behalf of an ISR */
+	    {
+	    pinfo[0] = 0;
+	    pinfo[1] = 256;
+	    pinfo[2] = xnpod_idle_p() ? TBSIDLE : 0;
+	    tcb = &vrtx_idle_tcb;
+	    tcb->TCBSTAT = pinfo[2];
+	    goto done;
+	    }
+
 	task = vrtx_current_task();
+	}
     else
 	{
 	task = (vrtxtask_t *)vrtx_get_object(vrtx_task_idmap,tid);
@@ -551,29 +563,20 @@ TCB *sc_tinquiry (int *pinfo, int tid, int *errp)
 	    }
 	}
 
-    if (xnpod_interrupt_p())	/* Called on behalf an ISR */
-	{
-	pinfo[0] = 0;
-	pinfo[1] = 256;
-	pinfo[2] = xnpod_idle_p() ? TBSIDLE : 0;
-	tcb = &vrtx_idle_tcb;
-	tcb->TCBSTAT = pinfo[2];
-	}
-    else
-	{
-	tcb = &task->vrtxtcb;
+    tcb = &task->vrtxtcb;
 
-	/* the vrtx specs says that TCB is only valid in a call to */
-	/* sc_tinquiry.                                            */
-	/* we can set TCBSTAT only before each suspending call     */
-	/* and correct it here if the task has been resumed        */
-	if (!(testbits(task->threadbase.status, XNTHREAD_BLOCK_BITS)))
-	    tcb->TCBSTAT = 0;
+    /* the VRTX specs says that TCB is only valid in a call to
+     * sc_tinquiry.  we can set TCBSTAT only before each suspending
+     * call and correct it here if the task has been resumed  */
 
-	pinfo[0] = task->tid;
-	pinfo[1] = vrtx_denormalized_prio(xnthread_base_priority(&task->threadbase));
-	pinfo[2] = tcb->TCBSTAT;
-	}
+    if (!(testbits(task->threadbase.status, XNTHREAD_BLOCK_BITS)))
+	tcb->TCBSTAT = 0;
+
+    pinfo[0] = task->tid;
+    pinfo[1] = vrtx_denormalized_prio(xnthread_base_priority(&task->threadbase));
+    pinfo[2] = tcb->TCBSTAT;
+
+ done:
 
     *errp = RET_OK;
 

@@ -25,14 +25,19 @@
 
 #define __vrtx_tecreate    0
 #define __vrtx_tdelete     1
+#define __vrtx_tpriority   2
+#define __vrtx_tresume     3
+#define __vrtx_tsuspend    4
+#define __vrtx_tslice      5
+#define __vrtx_tinquiry    6
+#define __vrtx_lock        7
+#define __vrtx_unlock      8
 
 struct vrtx_arg_bulk {
 
     u_long a1;
     u_long a2;
     u_long a3;
-    u_long a4;
-    u_long a5;
 };
 
 #ifdef __KERNEL__

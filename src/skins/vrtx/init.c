@@ -30,7 +30,7 @@ int __vrtx_muxid = -1;
 static void __flush_tsd (void *tsd)
 
 {
-    /* Free the TCB allocated by sc_tinquiry(). */
+    /* Free the TCB struct. */
     free(tsd);
 }
 
@@ -39,6 +39,7 @@ static __attribute__((constructor)) void __init_xeno_interface(void)
 {
     xnfeatinfo_t finfo;
     int muxid;
+    TCB *tcb;
 
     muxid = XENOMAI_SYSBIND(VRTX_SKIN_MAGIC,
 			    XENOMAI_FEAT_DEP,
@@ -83,6 +84,15 @@ static __attribute__((constructor)) void __init_xeno_interface(void)
 		exit(1);
 		}
 
+	    tcb = (TCB *)malloc(sizeof(*tcb));
+
+	    if (!tcb)
+		{
+		fprintf(stderr,"Xenomai: failed to allocate local TCB?!\n");
+		exit(1);
+		}
+
+	    pthread_setspecific(__vrtx_tskey,tcb);
 	    __vrtx_muxid = muxid;
 	    break;
 	}
