@@ -250,7 +250,7 @@ int sem_destroy (sem_t *sm)
  * If @a oflags has the two bits @a O_CREAT and @a O_EXCL set and the semaphore
  * already exists, this service fails.
  *
- * @a name may be any arbitrary string, and slashes have no particular
+ * @a name may be any arbitrary string, in which slashes have no particular
  * meaning. However, for portability, using a name which starts with a slash and
  * contains no other slash is recommended.
  *

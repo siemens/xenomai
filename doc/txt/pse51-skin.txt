@@ -145,7 +145,6 @@ TODO List
 The PSE51 skin is still a work in progress, it lacks some features which will be 
 added gradually :
 - spinlocks/rwlocks/barriers ;
-- add support for mq_notify, now that real-time signals are working ;
 - add support for real-time signals for user-space threads.
 - dimensioning constants are scattered all over the skin sources, they should be
   centralized, and made configurable through configure.
@@ -154,4 +153,8 @@ added gradually :
 Module parameters
 =================
 
-None.
+The following parameters can be passed at startup to the POSIX skin module:
+
+- "time_slice_arg", duration, as a count of system clock ticks, of the
+  round-robin time slice. Defaults to 1 tick. Only effective when system timer
+  is set to periodic mode.

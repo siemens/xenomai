@@ -811,6 +811,12 @@ static pse51_shm_t *pse51_shm_lookup(void *addr)
  * - EPERM, the caller context is invalid;
  * - EINTR, this service was interrupted by a signal.
  * 
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - kernel-space cancellation cleanup routine;
+ * - user-space thread (Xenomai threads switch to secondary mode);
+ * - user-space cancellation cleanup routine.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/munmap.html">
  * Specification.</a>
