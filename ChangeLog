@@ -1,3 +1,8 @@
+2006-03-28  Romain Lenglet <rlenglet@users.forge.objectweb.org>
+
+	* doc/man/*.man.in: Minor correction and changelogs cosmetic
+	changes.
+
 2006-03-27  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* include/asm-i386/system.h (xnarch_enable_fpu): Restore FPU

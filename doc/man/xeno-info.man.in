@@ -20,4 +20,6 @@ xeno-info \- Outputs information about the system
 It is useful to include the output of the \fBxeno-info\fP command in any bug report to the Xenomai project.
 
 .SH HISTORY
-2005-10-19 \- Written by Romain Lenglet <rlenglet@users.forge.objectweb.org>
+.TP
+2005-10-19
+Written by Romain Lenglet <rlenglet@users.forge.objectweb.org>

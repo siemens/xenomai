@@ -60,4 +60,6 @@ No \fB.runinfo\fP file was found in the specified \fIdirectory\fP (or in the cur
 .BR runinfo (5),
 .BR sudo (8)
 .SH HISTORY
-2005-10-18 \- Written by Romain Lenglet <rlenglet@users.forge.objectweb.org>
+.TP
+2005-10-18
+Written by Romain Lenglet <rlenglet@users.forge.objectweb.org>
