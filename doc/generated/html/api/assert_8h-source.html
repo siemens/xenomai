@@ -32,24 +32,16 @@
 00022 <span class="preprocessor"></span>
 00023 <span class="preprocessor">#include &lt;nucleus/compiler.h&gt;</span>
 00024 
-00025 <span class="preprocessor">#ifndef CONFIG_XENO_OPT_DEBUG_LEVEL</span>
-00026 <span class="preprocessor"></span><span class="preprocessor">#define CONFIG_XENO_OPT_DEBUG_LEVEL  0</span>
-00027 <span class="preprocessor"></span><span class="preprocessor">#endif</span>
-00028 <span class="preprocessor"></span>
-00029 <span class="preprocessor">#if CONFIG_XENO_OPT_DEBUG_LEVEL &gt; 0</span>
-00030 <span class="preprocessor"></span><span class="preprocessor">#define XENO_ASSERT(cond,action)  do { \</span>
-00031 <span class="preprocessor">if (unlikely((cond) != 0)) \</span>
-00032 <span class="preprocessor">        do { action; } while(0); \</span>
-00033 <span class="preprocessor">} while(0)</span>
-00034 <span class="preprocessor"></span><span class="preprocessor">#else  </span><span class="comment">/* CONFIG_XENO_OPT_DEBUG_LEVEL == 0 */</span>
-00035 <span class="preprocessor">#define XENO_ASSERT(cond,action) do { } while(0)</span>
-00036 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_DEBUG_LEVEL &gt; 0 */</span>
-00037 
-00038 <span class="preprocessor">#define XENO_BUGON(cond)  \</span>
-00039 <span class="preprocessor">    XENO_ASSERT(cond,xnpod_fatal("assertion failed at %s:%d",__FILE__,__LINE__))</span>
-00040 <span class="preprocessor"></span>
-00041 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_ASSERT_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:49 2006 for Xenomai API by&nbsp;
+00025 <span class="preprocessor">#define XENO_ASSERT(subsystem,cond,action)  do { \</span>
+00026 <span class="preprocessor">if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem &gt; 0 &amp;&amp; !(cond))) \</span>
+00027 <span class="preprocessor">        do { action; } while(0); \</span>
+00028 <span class="preprocessor">} while(0)</span>
+00029 <span class="preprocessor"></span>
+00030 <span class="preprocessor">#define XENO_BUGON(subsystem,cond)  \</span>
+00031 <span class="preprocessor">    XENO_ASSERT(subsystem,cond,xnpod_fatal("assertion failed at %s:%d",__FILE__,__LINE__))</span>
+00032 <span class="preprocessor"></span>
+00033 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_ASSERT_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Mar 28 17:21:29 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

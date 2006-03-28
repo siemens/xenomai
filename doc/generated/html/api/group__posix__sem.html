@@ -130,8 +130,7 @@ This service fails if <em>sm</em> is an unnamed semaphore.<p>
 <p>
 Destroy an unnamed semaphore. 
 <p>
-This service destroys the semaphore <em>sm</em>. The semaphore becomes invalid for all semaphores services (they all return -1 with <em>errno</em> set to EINVAL) except <a class="el" href="group__posix__sem.html#ga5">sem_init()</a>.<p>
-Threads currently blocked on <em>sm</em> are unblocked and the service they used return -1 with <em>errno</em> set to EINVAL. The semaphore is then considered invalid by all semaphore services (they all fail with <em>errno</em> set to EINVAL) except <a class="el" href="group__posix__sem.html#ga5">sem_init()</a>.<p>
+This service destroys the semaphore <em>sm</em>. Threads currently blocked on <em>sm</em> are unblocked and the service they called return -1 with <em>errno</em> set to EINVAL. The semaphore is then considered invalid by all semaphore services (they all fail with <em>errno</em> set to EINVAL) except <a class="el" href="group__posix__sem.html#ga5">sem_init()</a>.<p>
 This service fails if <em>sm</em> is a named semaphore.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -317,7 +316,7 @@ If no semaphore named <em>name</em> exists and <em>oflags</em> has the <em>O_CRE
 <li>a <em>mode</em> argument, of type <b>mode_t</b>, currently ignored;</li><li>a <em>value</em> argument, of type <b>unsigned</b>, specifying the initial value of the created semaphore.</li></ul>
 <p>
 If <em>oflags</em> has the two bits <em>O_CREAT</em> and <em>O_EXCL</em> set and the semaphore already exists, this service fails.<p>
-<em>name</em> may be any arbitrary string, and slashes have no particular meaning. However, for portability, using a name which starts with a slash and contains no other slash is recommended.<p>
+<em>name</em> may be any arbitrary string, in which slashes have no particular meaning. However, for portability, using a name which starts with a slash and contains no other slash is recommended.<p>
 If <a class="el" href="group__posix__sem.html#ga7">sem_open()</a> is called from the same context (kernel-space as a whole, or user-space process) several times with the same value of <em>name</em>, the same address is returned.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -478,7 +477,8 @@ This service is equivalent to <a class="el" href="group__posix__sem.html#ga13">s
 </td></tr>
   </table>
 </dl>
-<a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html">http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html</a>     </td>
+* <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html">Specification.</a> </dd></dl>
+    </td>
   </tr>
 </table>
 <a class="anchor" name="ga9" doxytag="sem.c::sem_unlink"></a><p>
@@ -576,7 +576,7 @@ This service is a cancellation point for Xenomai POSIX skin threads (created wit
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:59 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 28 17:21:42 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

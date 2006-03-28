@@ -727,6 +727,9 @@ This function waits or tests for the occurence of the given event, taking the pr
 <ul>
 <li>-EIDRM is returned if <em>event</em> has been destroyed.</li></ul>
 <p>
+<ul>
+<li>-EPERM <em>may</em> be returned if an illegal invocation environment is detected.</li></ul>
+<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -774,6 +777,9 @@ This is the light-weight version of <a class="el" href="group__rtdmsync.html#ga9
 <p>
 <ul>
 <li>-EIDRM is returned if <em>event</em> has been destroyed.</li></ul>
+<p>
+<ul>
+<li>-EPERM <em>may</em> be returned if an illegal invocation environment is detected.</li></ul>
 <p>
 Environments:<p>
 This service can be called from:<p>
@@ -901,6 +907,9 @@ This is the light-weight version of <a class="el" href="group__rtdmsync.html#ga1
 <ul>
 <li>-EIDRM is returned if <em>mutex</em> has been destroyed.</li></ul>
 <p>
+<ul>
+<li>-EPERM <em>may</em> be returned if an illegal invocation environment is detected.</li></ul>
+<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -971,6 +980,9 @@ This function tries to acquire the given mutex. If it is not available, the call
 <p>
 <ul>
 <li>-EIDRM is returned if <em>mutex</em> has been destroyed.</li></ul>
+<p>
+<ul>
+<li>-EPERM <em>may</em> be returned if an illegal invocation environment is detected.</li></ul>
 <p>
 Environments:<p>
 This service can be called from:<p>
@@ -1101,6 +1113,9 @@ This is the light-weight version of <a class="el" href="group__rtdmsync.html#ga1
 <ul>
 <li>-EIDRM is returned if <em>sem</em> has been destroyed.</li></ul>
 <p>
+<ul>
+<li>-EPERM <em>may</em> be returned if an illegal invocation environment is detected.</li></ul>
+<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -1222,6 +1237,9 @@ This function tries to decrement the given semphore's value if it is positive on
 <ul>
 <li>-EIDRM is returned if <em>sem</em> has been destroyed.</li></ul>
 <p>
+<ul>
+<li>-EPERM <em>may</em> be returned if an illegal invocation environment is detected.</li></ul>
+<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -1340,7 +1358,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:56 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 28 17:21:39 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

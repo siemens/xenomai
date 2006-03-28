@@ -197,7 +197,7 @@ The following attributes are set:<ul>
 <p>
 Register the current thread to be notified of message arrival at an empty message queue. 
 <p>
-If <em>evp</em> is not <em>NULL</em> and is the address of a <b>sigevent</b> structure with the <em>sigev_notify</em> member set to SIGEV_SIGNAL, the current thread will be notified by a signal when a message is sent to the message queue <em>fd</em>, the queue is empty, and no thread is blocked in call to mq_receive or mq_timedreceive. After the notification, the thread is unregistered.<p>
+If <em>evp</em> is not <em>NULL</em> and is the address of a <b>sigevent</b> structure with the <em>sigev_notify</em> member set to SIGEV_SIGNAL, the current thread will be notified by a signal when a message is sent to the message queue <em>fd</em>, the queue is empty, and no thread is blocked in call to <a class="el" href="group__posix__mq.html#ga18">mq_receive()</a> or <a class="el" href="group__posix__mq.html#ga19">mq_timedreceive()</a>. After the notification, the thread is unregistered.<p>
 If <em>evp</em> is <em>NULL</em> or the <em>sigev_notify</em> member is SIGEV_NONE, the current thread is unregistered.<p>
 Only one thread may be registered at a time.<p>
 If the current thread is not a Xenomai POSIX skin thread (created with <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a>), this service fails.<p>
@@ -270,7 +270,7 @@ One of the following values should be set in <em>oflags:</em> <ul>
 <li>O_RDONLY, meaning that the returned queue descriptor may only be used for receiving messages;</li><li>O_WRONLY, meaning that the returned queue descriptor may only be used for sending messages;</li><li>O_RDWR, meaning that the returned queue descriptor may be used for both sending and receiving messages.</li></ul>
 <p>
 If no message queue named <em>name</em> exists, and <em>oflags</em> has the <em>O_CREAT</em> bit set, the message queue is created by this function, taking two more arguments:<ul>
-<li>a <em>mode</em> argument, of type <b>mode_t</b>, currently ignored;</li><li>a <em>attr</em> argument, pointer to an <b>mq_attr</b> structure, specifying the attributes of the new message queue.</li></ul>
+<li>a <em>mode</em> argument, of type <b>mode_t</b>, currently ignored;</li><li>an <em>attr</em> argument, pointer to an <b>mq_attr</b> structure, specifying the attributes of the new message queue.</li></ul>
 <p>
 If <em>oflags</em> has the two bits <em>O_CREAT</em> and <em>O_EXCL</em> set and the message queue alread exists, this service fails.<p>
 If the O_NONBLOCK bit is set in <em>oflags</em>, the <a class="el" href="group__posix__mq.html#ga16">mq_send()</a>, <a class="el" href="group__posix__mq.html#ga18">mq_receive()</a>, <a class="el" href="group__posix__mq.html#ga17">mq_timedsend()</a> and <a class="el" href="group__posix__mq.html#ga19">mq_timedreceive()</a> services return <em>-1</em> with <em>errno</em> set to EAGAIN instead of blocking their caller.<p>
@@ -344,7 +344,7 @@ The following arguments of the <b>mq_attr</b> structure at the address <em>attr<
 Receive a message from a message queue. 
 <p>
 If the message queue <em>fd</em> is not empty and if <em>len</em> is greater than the <em>mq_msgsize</em> of the message queue, this service copies, at the address <em>buffer</em>, the queued message with the highest priority.<p>
-If the queue is empty and the flag <em>O_NONBLOCK</em> is not set for the descriptor <em>fd</em>, the calling thread is suspended until some message is sent to the queue. If the queue is empty and the flag <em>O_NONBLOCK</em> is set for the descriptor <em>fd</em>, this service returns immediately -1 with <em>errno</em> set to EAGAIN.<p>
+If the queue is empty and the flag <em>O_NONBLOCK</em> is not set for the descriptor <em>fd</em>, the calling thread is suspended until some message is sent to the queue. If the queue is empty and the flag <em>O_NONBLOCK</em> is set for the descriptor <em>fd</em>, this service returns immediately a value of -1 with <em>errno</em> set to EAGAIN.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>fd</em>&nbsp;</td><td>the queue descriptor;</td></tr>
@@ -413,7 +413,7 @@ If the queue is empty and the flag <em>O_NONBLOCK</em> is not set for the descri
 Send a message to a message queue. 
 <p>
 If the message queue <em>fd</em> is not full, this service sends the message of length <em>len</em> pointed to by the argument <em>buffer</em>, with priority <em>prio</em>. A message with greater priority is inserted in the queue before a message with lower priority.<p>
-If the message queue is full and the flag <em>O_NONBLOCK</em> is not set, the calling thread is suspended until the queue is not full. If the message queue is not full and the flag <em>O_NONBLOCK</em> is set, the message is not sent and the service returns immediately -1 with <em>errno</em> set to EAGAIN.<p>
+If the message queue is full and the flag <em>O_NONBLOCK</em> is not set, the calling thread is suspended until the queue is not full. If the message queue is full and the flag <em>O_NONBLOCK</em> is set, the message is not sent and the service returns immediately a value of -1 with <em>errno</em> set to EAGAIN.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>fd</em>&nbsp;</td><td>message queue descriptor;</td></tr>
@@ -424,7 +424,7 @@ If the message queue is full and the flag <em>O_NONBLOCK</em> is not set, the ca
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 and send a message on success; <p>
 -1 with no message sent and <em>errno</em> set if:<ul>
-<li>EBADF, <em>fd</em> is not a valid message queue descriptor open for writing;</li><li>EMSGSIZE, the message length exceeds the <em>mq_msgsize</em> attribute of the message queue;</li><li>EAGAIN, the flag O_NONBLOCK is set for the descriptor <em>fd</em> and the message queue is full;</li><li>EPERM, the caller context is invalid;</li><li>EINTR, the service was interrupted by a signal.</li></ul>
+<li>EBADF, <em>fd</em> is not a valid message queue descriptor open for writing;</li><li>EMSGSIZE, the message length <em>len</em> exceeds the <em>mq_msgsize</em> attribute of the message queue;</li><li>EAGAIN, the flag O_NONBLOCK is set for the descriptor <em>fd</em> and the message queue is full;</li><li>EPERM, the caller context is invalid;</li><li>EINTR, the service was interrupted by a signal.</li></ul>
 </dd></dl>
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
 <li>Xenomai kernel-space thread,</li><li>Xenomai user-space thread (switches to primary mode).</li></ul>
@@ -476,7 +476,7 @@ If the message queue is full and the flag <em>O_NONBLOCK</em> is not set, the ca
 Set flags of a message queue. 
 <p>
 This service sets the flags of the <em>fd</em> descriptor to the value of the member <em>mq_flags</em> of the <b>mq_attr</b> structure pointed to by <em>attr</em>.<p>
-The previous value of the message queue attribute are stored at the address <em>oattr</em> if it is not <em>NULL</em>.<p>
+The previous value of the message queue attributes are stored at the address <em>oattr</em> if it is not <em>NULL</em>.<p>
 Only setting or clearing the O_NONBLOCK flag has an effect.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -695,7 +695,7 @@ This service unlinks the message queue named <em>name</em>. The message queue is
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:58 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 28 17:21:42 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
