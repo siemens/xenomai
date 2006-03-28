@@ -41,7 +41,7 @@ This is a <b>preliminary</b> version of the common interface a RTDM-compliant se
  <b>Read</b> <br>
  Environments: RT (non-RT optional)<br>
  Specific return values:<ul>
-<li>-ETIMEDOUT</li><li>-EINTR (interrupted explicitly or by signal)</li><li>-EAGAIN (no data available in non-blocking mode)</li><li>-EBADF (device has been closed while reading)</li></ul>
+<li>-ETIMEDOUT</li><li>-EINTR (interrupted explicitly or by signal)</li><li>-EAGAIN (no data available in non-blocking mode)</li><li>-EBADF (device has been closed while reading)</li><li>-EIO (hardware error or broken bit stream)</li></ul>
 <br>
  <b>Write</b> <br>
  Environments: RT (non-RT optional)<br>
@@ -554,7 +554,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:55 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 28 17:21:38 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

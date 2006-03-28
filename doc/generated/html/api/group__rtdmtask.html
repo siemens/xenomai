@@ -488,6 +488,9 @@ Sleep a specified amount of time.
 <ul>
 <li>-EINTR is returned if calling task has been unblock by a signal or explicitely via rtdm_task_unblock().</li></ul>
 <p>
+<ul>
+<li>-EPERM <em>may</em> be returned if an illegal invocation environment is detected.</li></ul>
+<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -531,6 +534,9 @@ Sleep until a specified absolute time.
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
 <ul>
 <li>-EINTR is returned if calling task has been unblock by a signal or explicitely via rtdm_task_unblock().</li></ul>
+<p>
+<ul>
+<li>-EPERM <em>may</em> be returned if an illegal invocation environment is detected.</li></ul>
 <p>
 Environments:<p>
 This service can be called from:<p>
@@ -618,7 +624,7 @@ This service can be called from:<p>
 Rescheduling: always, unless a timer overrun occured.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:56 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 28 17:21:39 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

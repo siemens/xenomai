@@ -19,10 +19,11 @@ Collaboration diagram for Clocks and timers services.:<center><table><tr><td><im
 Clocks and timers services. 
 <p>
 Xenomai POSIX skin supports two clocks:<p>
-CLOCK_REALTIME maps to the nucleus system clock, keeping time as the amount of time since the Epoch, with a resolution of one system clock tick. The duration of the system clock tick depends on the settings of the nucleus (configurable at compile-time with <em>CONFIG_XENO_OPT_TIMING_PERIOD</em>, and at run-time with the module parameter <em>tick_arg</em>). When the system timer is set to aperiodic mode, the default, the system clock tick is one nanosecond.<p>
+CLOCK_REALTIME maps to the nucleus system clock, keeping time as the amount of time since the Epoch, with a resolution of one system clock tick.<p>
 CLOCK_MONOTONIC maps to an architecture-dependent high resolution counter, so is suitable for measuring short time intervals. However, when used for sleeping (with <a class="el" href="group__posix__time.html#ga5">clock_nanosleep()</a>), the CLOCK_MONOTONIC clock has a resolution of one system clock tick, like the CLOCK_REALTIME clock.<p>
 Setting any of the two clocks with <a class="el" href="group__posix__time.html#ga4">clock_settime()</a> is currently not supported.<p>
 Timer objects may be created with the <a class="el" href="group__posix__time.html#ga9">timer_create()</a> service using either of the two clocks, but the resolution of these timers is one system clock tick, as is the case for <a class="el" href="group__posix__time.html#ga5">clock_nanosleep()</a>.<p>
+<dl compact><dt><b>Note:</b></dt><dd>The duration of the system clock tick depends on the settings of the nucleus (configurable at compile-time with <em>CONFIG_XENO_OPT_TIMING_PERIOD</em>, and at run-time with the <em>xeno_nucleus</em> module parameter <em>tick_arg</em>). When the system timer is set to aperiodic mode, the default, the system clock tick is one nanosecond.</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05">Specification.</a> </dd></dl>
 
 <p>
@@ -390,7 +391,7 @@ The resolution of this service is one system clock tick.<p>
 Create a timer object. 
 <p>
 This service creates a time object using the clock <em>clockid</em>.<p>
-If <em>evp</em> is not <em>NULL</em>, it describes the notification mechanism used on timer expiration. Only notification via signal delivery is supported (<em>sigev_signo</em> == <em>SIGEV_SIGNAL</em>). The signal will be sent to the thread starting the timer with the <a class="el" href="group__posix__time.html#ga12">timer_settime()</a> service. If <em>evp</em> is <em>NULL</em>, the SIGALRM signal will be used.<p>
+If <em>evp</em> is not <em>NULL</em>, it describes the notification mechanism used on timer expiration. Only notification via signal delivery is supported (member <em>sigev_notify</em> of <em>evp</em> set to <em>SIGEV_SIGNAL</em>). The signal will be sent to the thread starting the timer with the <a class="el" href="group__posix__time.html#ga12">timer_settime()</a> service. If <em>evp</em> is <em>NULL</em>, the SIGALRM signal will be used.<p>
 Note that signals sent to user-space threads will cause them to switch to secondary mode.<p>
 If this service succeeds, an identifier for the created timer is returned at the address <em>timerid</em>. The timer is unarmed until started with the <a class="el" href="group__posix__time.html#ga12">timer_settime()</a> service.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
@@ -404,7 +405,7 @@ If this service succeeds, an identifier for the created timer is returned at the
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
-<li>EINVAL, the clock <em>clockid</em> is invalid, the member sigev_notify of the <b>sigevent</b> structure at the address <em>evp</em> is not SIGEV_SIGNAL, or the member sigev_signo of the <b>sigevent</b> structure is an invalid signal number;</li><li>EAGAIN, the maximum number of timers was exceeded, recompile with a larger value.</li></ul>
+<li>EINVAL, the clock <em>clockid</em> is invalid;</li><li>EINVAL, the member <em>sigev_notify</em> of the <b>sigevent</b> structure at the address <em>evp</em> is not SIGEV_SIGNAL;</li><li>EINVAL, the member <em>sigev_signo</em> of the <b>sigevent</b> structure is an invalid signal number;</li><li>EAGAIN, the maximum number of timers was exceeded, recompile with a larger value.</li></ul>
 </td></tr>
   </table>
 </dl>
@@ -534,7 +535,7 @@ This service returns <em>timerid</em> expiration overruns count since the most r
 <p>
 Get timer next expiration date and reload value. 
 <p>
-This service stores, at the address <em>value</em>, the expiration date (member <em>it_value</em>) and reload value (member <em>it_interval</em>) of the timer <em>timerid</em>. The values are returned as time intervals, and as multiples of the system clock tick duration (see paragraph <a class="el" href="group__posix__time.html">Clocks and timers</a> services" for details on the duration of the system clock tick). If the timer was not started, the returned members <em>it_value</em> and <em>it_interval</em> of <em>value</em> are zero.<p>
+This service stores, at the address <em>value</em>, the expiration date (member <em>it_value</em>) and reload value (member <em>it_interval</em>) of the timer <em>timerid</em>. The values are returned as time intervals, and as multiples of the system clock tick duration (see note in section <a class="el" href="group__posix__time.html">Clocks and timers services</a> for details on the duration of the system clock tick). If the timer was not started, the returned members <em>it_value</em> and <em>it_interval</em> of <em>value</em> are zero.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>timerid</em>&nbsp;</td><td>timer identifier;</td></tr>
@@ -602,9 +603,9 @@ This service stores, at the address <em>value</em>, the expiration date (member 
 Start or stop a timer. 
 <p>
 This service sets a timer expiration date and reload value of the timer <em>timerid</em>. If <em>ovalue</em> is not <em>NULL</em>, the current expiration date and reload value are stored at the address <em>ovalue</em> as with <a class="el" href="group__posix__time.html#ga13">timer_gettime()</a>.<p>
-If the member <em>it_value</em> of the <b>itimerspec</b> structure is zero, the timer is stopped, otherwise the timer is started. If the member <em>it_interval</em> is not zero, the timer is periodic. The current thread must be a POSIX skin thread (created with pthread_create) and will be notified via signal of timer expirations. Note that these notification will cause user-space threads to switch to secondary mode.<p>
+If the member <em>it_value</em> of the <b>itimerspec</b> structure at <em>value</em> is zero, the timer is stopped, otherwise the timer is started. If the member <em>it_interval</em> is not zero, the timer is periodic. The current thread must be a POSIX skin thread (created with <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a>) and will be notified via signal of timer expirations. Note that these notifications will cause user-space threads to switch to secondary mode.<p>
 When starting the timer, if <em>flags</em> is TIMER_ABSTIME, the expiration value is interpreted as an absolute date of the clock passed to the <a class="el" href="group__posix__time.html#ga9">timer_create()</a> service. Otherwise, the expiration value is interpreted as a time interval.<p>
-Expiration date and reload value are rounded to an integer count of system clock ticks (see paragraph <a class="el" href="group__posix__time.html">Clocks and timers services</a> for the duration of the system tick).<p>
+Expiration date and reload value are rounded to an integer count of system clock ticks (see note in section <a class="el" href="group__posix__time.html">Clocks and timers services</a> for details on the duration of the system tick).<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>timerid</em>&nbsp;</td><td>identifier of the timer to be started or stopped;</td></tr>
@@ -628,7 +629,7 @@ Expiration date and reload value are rounded to an integer count of system clock
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:57 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 28 17:21:41 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

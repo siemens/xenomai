@@ -330,7 +330,7 @@ an error number if:<ul>
 Unlock a mutex. 
 <p>
 This service unlocks the mutex <em>mx</em>. If the mutex is of the <em>PTHREAD_MUTEX_RECURSIVE</em> <em>type</em> and the locking recursion count is greater than one, the lock recursion count is decremented and the mutex remains locked.<p>
-Attempting to unlock a mutex which is not locked or which is locked by anther thread than the current one yields the EPERM error, whatever the mutex <em>type</em> attribute.<p>
+Attempting to unlock a mutex which is not locked or which is locked by another thread than the current one yields the EPERM error, whatever the mutex <em>type</em> attribute.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>mx</em>&nbsp;</td><td>the mutex to be released.</td></tr>
@@ -385,7 +385,7 @@ an error number if:<ul>
 <li>EINVAL, the mutex attributes object <em>attr</em> is invalid.</li></ul>
 </dd></dl>
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
-<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space real-time thread.</li></ul>
+<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread.</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_destroy.html">Specification.</a> </dd></dl>
     </td>
@@ -440,7 +440,7 @@ an error number if:<ul>
 <li>EINVAL, the <em>proto</em> address is invalid;</li><li>EINVAL, the mutex attributes object <em>attr</em> is invalid.</li></ul>
 </dd></dl>
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
-<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space real-time thread.</li></ul>
+<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread.</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_getprotocol.html">Specification.</a> </dd></dl>
     </td>
@@ -495,7 +495,7 @@ an error number if:<ul>
 <li>EINVAL, the <em>type</em> address is invalid;</li><li>EINVAL, the mutex attributes object <em>attr</em> is invalid.</li></ul>
 </dd></dl>
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
-<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space real-time thread.</li></ul>
+<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread.</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_gettype.html">Specification.</a> </dd></dl>
     </td>
@@ -543,7 +543,7 @@ an error number if:<ul>
 <li>ENOMEM, the mutex attributes object pointer <em>attr</em> is <em>NULL</em>.</li></ul>
 </dd></dl>
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
-<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space real-time thread.</li></ul>
+<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread.</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_init.html">Specification.</a> </dd></dl>
     </td>
@@ -600,7 +600,7 @@ an error status if:<ul>
 <li>EINVAL, the mutex attributes object <em>attr</em> is invalid;</li><li>ENOTSUP, the value of <em>proto</em> is unsupported;</li><li>EINVAL, the value of <em>proto</em> is invalid.</li></ul>
 </dd></dl>
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
-<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space real-time thread.</li></ul>
+<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread.</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_setprotocol.html">Specification.</a> </dd></dl>
     </td>
@@ -656,13 +656,13 @@ an error number if:<ul>
 <li>EINVAL, the mutex attributes object <em>attr</em> is invalid;</li><li>EINVAL, the value of <em>type</em> is invalid for the <em>type</em> attribute.</li></ul>
 </dd></dl>
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
-<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space real-time thread.</li></ul>
+<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread.</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_settype.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:58 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 28 17:21:42 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

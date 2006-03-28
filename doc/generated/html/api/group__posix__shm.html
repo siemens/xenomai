@@ -295,6 +295,9 @@ When called from user-space, if the region is not a shared memory region, this s
 </td></tr>
   </table>
 </dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>kernel module initialization or cleanup routine;</li><li>kernel-space cancellation cleanup routine;</li><li>user-space thread (Xenomai threads switch to secondary mode);</li><li>user-space cancellation cleanup routine.</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/munmap.html">Specification.</a> </dd></dl>
     </td>
   </tr>
@@ -415,7 +418,7 @@ This service unlinks the shared memory object named <em>name</em>. The shared me
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 21 18:16:59 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 28 17:21:42 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
