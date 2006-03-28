@@ -13,7 +13,7 @@
 # PARTICULAR PURPOSE.
 
 @SET_MAKE@
-SOURCES = $(nodist_satch_sim_SOURCES) $(nodist_simple_sim_SOURCES)
+SOURCES = $(nodist_satch_sim_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -37,7 +37,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = satch_sim$(EXEEXT) simple_sim$(EXEEXT)
+check_PROGRAMS = satch_sim$(EXEEXT)
 subdir = skins/posix/demos
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -51,9 +51,6 @@ CONFIG_CLEAN_FILES =
 nodist_satch_sim_OBJECTS = satch.$(OBJEXT)
 satch_sim_OBJECTS = $(nodist_satch_sim_OBJECTS)
 satch_sim_LDADD = $(LDADD)
-nodist_simple_sim_OBJECTS = simple.$(OBJEXT)
-simple_sim_OBJECTS = $(nodist_simple_sim_OBJECTS)
-simple_sim_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
 am__depfiles_maybe = depfiles
@@ -65,7 +62,7 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(nodist_satch_sim_SOURCES) $(nodist_simple_sim_SOURCES)
+SOURCES = $(nodist_satch_sim_SOURCES)
 DIST_SOURCES =
 ETAGS = etags
 CTAGS = ctags
@@ -237,7 +234,6 @@ AM_LDFLAGS = \
 	../../../vmutils/libmvmutils.la
 
 nodist_satch_sim_SOURCES = satch.c
-nodist_simple_sim_SOURCES = simple.c
 all: all-am
 
 .SUFFIXES:
@@ -281,9 +277,6 @@ clean-checkPROGRAMS:
 satch_sim$(EXEEXT): $(satch_sim_OBJECTS) $(satch_sim_DEPENDENCIES) 
 	@rm -f satch_sim$(EXEEXT)
 	$(LINK) $(satch_sim_LDFLAGS) $(satch_sim_OBJECTS) $(satch_sim_LDADD) $(LIBS)
-simple_sim$(EXEEXT): $(simple_sim_OBJECTS) $(simple_sim_DEPENDENCIES) 
-	@rm -f simple_sim$(EXEEXT)
-	$(LINK) $(simple_sim_LDFLAGS) $(simple_sim_OBJECTS) $(simple_sim_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -292,7 +285,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/satch.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/simple.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
