@@ -962,7 +962,7 @@ static int xnheap_mmap (struct file *file,
 
 	while (size > 0)
 	    {
-	    if (xnarch_remap_vm_page(vma,maddr,vaddr))
+            if (xnarch_remap_vm_page(vma,maddr,__va_to_kva(vaddr)))
 		return -EAGAIN;
 
 	    maddr += PAGE_SIZE;
