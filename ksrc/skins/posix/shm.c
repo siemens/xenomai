@@ -439,11 +439,14 @@ error:
  *
  * When used in kernel-space, this service set to @a len the size of a shared
  * memory object opened with the shm_open() service. In user-space this service
- * set the size of any file. When this service is used to increase the size of a
- * file or shared memory object, the added space is zero-filled.
+ * falls back to Linux regular ftruncate service for file descriptors not
+ * obtained with shm_open(). When this service is used to increase the size of a
+ * shared memory object, the added space is zero-filled.
  *
- * Xenomai POSIX skin shared memory objects may only be resized if they are not
- * currently mapped.
+ * Shared memory are suitable for direct memory access (allocated in physically
+ * contiguous memory) if their size is less than or equal to 128 K.
+ *
+ * Shared memory objects may only be resized if they are not currently mapped.
  *
  * @param fd file descriptor;
  *
@@ -550,8 +553,9 @@ int ftruncate (int fd, off_t len)
 
         if (len)
             {
+            int flags = len <= 128*1024 ? GFP_USER : 0;
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-            err = xnheap_init_mapped(&shm->heapbase, len, 0);
+            err = xnheap_init_mapped(&shm->heapbase, len, flags);
 #else /* !CONFIG_XENO_OPT_PERVASIVE. */
             {
             void *heapaddr = xnarch_sysalloc(len);

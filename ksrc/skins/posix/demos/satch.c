@@ -288,7 +288,10 @@ int __xeno_user_init (void)
     pthread_attr_setschedparam(&attr, &parm);
     rc = pthread_create(&consumer_task, &attr, &consumer, NULL);
     if (rc)
+        {
+        xnprintf("pthread_create(consumer_task): %d\n", rc);
         goto out;
+        }
 
 #endif /* CONSUMER */
 
@@ -324,7 +327,10 @@ int __xeno_user_init (void)
     rc = pthread_create(&producer_task, &attr, &producer, NULL);
 
     if (rc)
+        {
+        xnprintf("pthread_create(producer_task): %d\n", rc);
         goto out;
+        }
 #endif /* PRODUCER */
 
     if (close(fd))

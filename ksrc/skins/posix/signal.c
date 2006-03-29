@@ -173,8 +173,8 @@ static inline void orset (pse51_sigset_t *set,
 }
 
 static inline void andnotset (pse51_sigset_t *set,
-                            const pse51_sigset_t *left,
-                            const pse51_sigset_t *right)
+                              const pse51_sigset_t *left,
+                              const pse51_sigset_t *right)
 {
     *set = (*left) & ~(*right);
 }

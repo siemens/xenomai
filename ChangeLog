@@ -1,3 +1,8 @@
+2006-03-29  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/shm.c (ftruncate): Use kmalloc for shared
+	memory smaller than 128K.
+
 2006-03-28  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/signal.c (pthread_sigqueue_np): Rename
