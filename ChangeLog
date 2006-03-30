@@ -1,3 +1,9 @@
+2006-03-30  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-generic/wrappers.h, ksrc/nucleus/heap.c: Fix
+	regression introduced by commit #797 in wrap_remap_vm_page() for
+	kernel revisions < 2.6.15.
+
 2006-03-29  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/shm.c (ftruncate): Use kmalloc for shared
