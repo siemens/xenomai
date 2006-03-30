@@ -922,10 +922,6 @@ unsigned long __va_to_kva (unsigned long va)
 
 EXPORT_SYMBOL(__va_to_kva);
 
-#else /* !CONFIG_MMU */
-
-#define __va_to_kva(va) (va)
-
 #endif /* CONFIG_MMU */
 
 static int xnheap_mmap (struct file *file,

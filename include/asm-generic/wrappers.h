@@ -28,12 +28,6 @@
 #include <linux/config.h>
 #include <linux/version.h>
 
-#ifdef CONFIG_MMU
-unsigned long __va_to_kva(unsigned long va);
-#else /* !CONFIG_MMU */
-#define __va_to_kva(va) (va)
-#endif /* CONFIG_MMU */
-
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
 
 #include <linux/wrapper.h>
@@ -52,6 +46,10 @@ unsigned long __va_to_kva(unsigned long va);
 #define module_param_named(name,var,type,mode)  module_param(var,type,mode)
 
 /* VM */
+
+/* We don't support MMU-less architectures over 2.4 */
+unsigned long __va_to_kva(unsigned long va);
+
 #define wrap_remap_vm_page(vma,from,to) ({ \
     vma->vm_flags |= VM_RESERVED; \
     remap_page_range(from,virt_to_phys((void *)__va_to_kva(to)),PAGE_SIZE,PAGE_SHARED); \
@@ -153,6 +151,12 @@ void show_stack(struct task_struct *task,
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0) */
 
 /* VM */
+
+#ifdef CONFIG_MMU
+unsigned long __va_to_kva(unsigned long va);
+#else /* !CONFIG_MMU */
+#define __va_to_kva(va) (va)
+#endif /* CONFIG_MMU */
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15)
 #define wrap_remap_vm_page(vma,from,to) ({ \
