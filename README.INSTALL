@@ -269,3 +269,7 @@ $ make install
 
 CAUTION: note the --disabled-shared flag configuring out the shared
 library support, which is unavailable for this architecture.
+
+You may also want to have a look at this hands-on description about
+configuring and building a Xenomai system for the Blackfin
+architecture: http://docs.blackfin.uclinux.org/doku.php?id=adeos
