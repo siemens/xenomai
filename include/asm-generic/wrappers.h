@@ -28,6 +28,12 @@
 #include <linux/config.h>
 #include <linux/version.h>
 
+#ifdef CONFIG_MMU
+unsigned long __va_to_kva(unsigned long va);
+#else /* !CONFIG_MMU */
+#define __va_to_kva(va) (va)
+#endif /* CONFIG_MMU */
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
 
 #include <linux/wrapper.h>
@@ -48,7 +54,7 @@
 /* VM */
 #define wrap_remap_vm_page(vma,from,to) ({ \
     vma->vm_flags |= VM_RESERVED; \
-    remap_page_range(from,virt_to_phys((void *)to),PAGE_SIZE,PAGE_SHARED); \
+    remap_page_range(from,virt_to_phys((void *)__va_to_kva(to)),PAGE_SIZE,PAGE_SHARED); \
 })
 #define wrap_remap_io_page_range(vma,from,to,size,prot) ({ \
     vma->vm_flags |= VM_RESERVED; \
@@ -147,33 +153,37 @@ void show_stack(struct task_struct *task,
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0) */
 
 /* VM */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,10)
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15)
 #define wrap_remap_vm_page(vma,from,to) ({ \
     vma->vm_flags |= VM_RESERVED; \
-    vm_insert_page(vma,from,vmalloc_to_page((void *)to));	\
+    vm_insert_page(vma,from,vmalloc_to_page((void *)to)); \
 })
-#else /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,15) */
-/* Actually, this is a best-effort, and has the unwanted side-effet of
- * setting the VM_IO flag on the vma, which prevents GDB inspection of
- * the mmapped memory. Anyway, this legacy would only hit setups using
- * oldish 2.6 kernel revisions. */
+#define wrap_remap_io_page_range(vma,from,to,size,prot)  \
+    /* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */ \
+    remap_pfn_range(vma,from,(to) >> PAGE_SHIFT,size,prot)
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,10)
+/* Actually, this is a best-effort since we don't have
+ * vm_insert_page(), and has the unwanted side-effet of setting the
+ * VM_IO flag on the vma, which prevents GDB inspection of the mmapped
+ * memory. Anyway, this legacy would only hit setups using pre-2.6.11
+ * kernel revisions. */
 #define wrap_remap_vm_page(vma,from,to) \
-	remap_pfn_range(vma,from,(to) >> PAGE_SHIFT,PAGE_SHIFT,PAGE_SHARED)
-#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15) */
+    remap_pfn_range(vma,from,virt_to_phys((void *)__va_to_kva(to)) >> PAGE_SHIFT,PAGE_SHIFT,PAGE_SHARED)
 #define wrap_remap_io_page_range(vma,from,to,size,prot)  \
     /* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */ \
     remap_pfn_range(vma,from,(to) >> PAGE_SHIFT,size,prot)
 #else /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10) */
 #define wrap_remap_vm_page(vma,from,to) ({ \
     vma->vm_flags |= VM_RESERVED; \
-    remap_page_range(from,virt_to_phys((void *)to),PAGE_SIZE,PAGE_SHARED); \
+    remap_page_range(from,virt_to_phys((void *)__va_to_kva(to)),PAGE_SIZE,PAGE_SHARED); \
 })
 #define wrap_remap_io_page_range(vma,from,to,size,prot) do { \
     vma->vm_flags |= VM_RESERVED; \
     remap_page_range(vma,from,to,size,prot); \
 } while (0)
-#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,10) */
+#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15) */
+
 #define wrap_switch_mm(prev,next,task)	\
     switch_mm(prev,next,task)
 #define wrap_enter_lazy_tlb(mm,task)	\

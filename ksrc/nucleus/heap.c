@@ -886,7 +886,7 @@ static int xnheap_ioctl (struct inode *inode,
 
 #ifdef CONFIG_MMU
 
-static unsigned long __va_to_kva (unsigned long va)
+unsigned long __va_to_kva (unsigned long va)
 
 {
     pgd_t *pgd; pmd_t *pmd; pte_t *ptep, pte;
@@ -919,6 +919,8 @@ static unsigned long __va_to_kva (unsigned long va)
 
     return kva;
 }
+
+EXPORT_SYMBOL(__va_to_kva);
 
 #else /* !CONFIG_MMU */
 
@@ -970,12 +972,11 @@ static int xnheap_mmap (struct file *file,
 	    size -= PAGE_SIZE;
 	    }
 	}
-    else
-	if (xnarch_remap_io_page_range(vma,
-				       vma->vm_start,
-				       virt_to_phys((void *)vaddr),
-				       size,
-				       PAGE_SHARED))
+    else if (xnarch_remap_io_page_range(vma,
+					vma->vm_start,
+					virt_to_phys((void *)vaddr),
+					size,
+					PAGE_SHARED))
 	    return -EAGAIN;
 
     atomic_inc(&heap->archdep.numaps);
@@ -1004,7 +1005,7 @@ int xnheap_mount (void)
 
     if(IS_ERR(xnheap_class))
     {
-       xnlogerr("Error creating rtheap class, err=%ld.\n",PTR_ERR(xnheap_class));
+       xnlogerr("error creating rtheap class, err=%ld.\n",PTR_ERR(xnheap_class));
        return -EBUSY; 
     }
 
@@ -1013,7 +1014,7 @@ int xnheap_mount (void)
 				     NULL, "rtheap");
     if(IS_ERR(cldev))
 	{
-	xnlogerr("Can't add device class, major=%d, minor=%d, err=%ld\n", 
+	xnlogerr("can't add device class, major=%d, minor=%d, err=%ld\n", 
 		 MISC_MAJOR, XNHEAP_DEV_MINOR, PTR_ERR(cldev));
 	class_destroy(xnheap_class);
 	return -EBUSY;
@@ -1053,9 +1054,14 @@ static inline void *__alloc_and_reserve_heap (size_t size, int kmflags)
         for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
 	    SetPageReserved(virt_to_page(__va_to_kva(vaddr)));
 	}
-    else /* Otherwise, we have been asked for some vmalloc() space. */
+    else
 	{
-        ptr = kmalloc(size,kmflags);
+	/*
+	 * Otherwise, we have been asked for some kmalloc()
+	 * space. Assume that we can wait to get the required memory.
+	 */
+
+        ptr = kmalloc(size,kmflags|GFP_KERNEL);
 
 	if (!ptr)
 	    return NULL;
