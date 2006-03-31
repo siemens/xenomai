@@ -1,6 +1,40 @@
+diff -uNrp 2.4.25-ppc/Makefile 2.4.25-ppc-ipipe/Makefile
+--- 2.4.25-ppc/Makefile	2005-08-05 00:33:41.000000000 +0200
++++ 2.4.25-ppc-ipipe/Makefile	2006-03-31 17:16:39.000000000 +0200
+@@ -198,6 +198,18 @@ DRIVERS-$(CONFIG_HOTPLUG_PCI) += drivers
+ DRIVERS-$(CONFIG_ISDN_BOOL) += drivers/isdn/vmlinux-obj.o
+ DRIVERS-$(CONFIG_CRYPTO) += crypto/crypto.o
+ 
++DRIVERS-$(CONFIG_XENO_OPT_NUCLEUS) += kernel/xenomai/nucleus/xeno_nucleus.o
++DRIVERS-$(CONFIG_XENO_SKIN_NATIVE) += kernel/xenomai/skins/native/xeno_native.o
++DRIVERS-$(CONFIG_XENO_SKIN_POSIX) += kernel/xenomai/skins/posix/xeno_posix.o
++DRIVERS-$(CONFIG_XENO_SKIN_RTDM) += kernel/xenomai/skins/rtdm/xeno_rtdm.o
++DRIVERS-$(CONFIG_XENO_SKIN_UVM) += kernel/xenomai/skins/uvm/xeno_uvm.o
++DRIVERS-$(CONFIG_XENO_SKIN_PSOS) += kernel/xenomai/skins/psos+/xeno_psos.o
++DRIVERS-$(CONFIG_XENO_SKIN_VRTX) += kernel/xenomai/skins/vrtx/xeno_vrtx.o
++DRIVERS-$(CONFIG_XENO_SKIN_VXWORKS) += kernel/xenomai/skins/vxworks/xeno_vxworks.o
++DRIVERS-$(CONFIG_XENO_SKIN_UITRON) += kernel/xenomai/skins/uitron/xeno_uitron.o
++DRIVERS-$(CONFIG_XENO_SKIN_RTAI) += kernel/xenomai/skins/rtai/xeno_rtai.o
++DRIVERS-$(CONFIG_XENO_DRIVERS_16550A) += drivers/xenomai/16550A/xeno_16550A.o
++DRIVERS-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += drivers/xenomai/benchmark/xeno_timerbench.o
+ DRIVERS := $(DRIVERS-y)
+ 
+ 
+diff -uNrp 2.4.25-ppc/arch/ppc/Makefile 2.4.25-ppc-ipipe/arch/ppc/Makefile
+--- 2.4.25-ppc/arch/ppc/Makefile	2005-04-14 10:49:30.000000000 +0200
++++ 2.4.25-ppc-ipipe/arch/ppc/Makefile	2006-03-31 17:16:39.000000000 +0200
+@@ -127,3 +127,8 @@ archmrproper:
+ 
+ archdep: scripts/mkdep
+ 	$(MAKEBOOT) fastdep
++
++ifdef CONFIG_XENOMAI
++SUBDIRS += arch/ppc/xenomai
++DRIVERS += arch/ppc/xenomai/built-in.o
++endif
 diff -uNrp 2.4.25-ppc/arch/ppc/config.in 2.4.25-ppc-ipipe/arch/ppc/config.in
 --- 2.4.25-ppc/arch/ppc/config.in	2005-10-24 16:39:53.000000000 +0200
-+++ 2.4.25-ppc-ipipe/arch/ppc/config.in	2006-01-30 15:58:04.000000000 +0100
++++ 2.4.25-ppc-ipipe/arch/ppc/config.in	2006-03-31 17:19:31.000000000 +0200
 @@ -787,6 +787,12 @@ else
    fi
  fi
@@ -37,7 +71,7 @@ diff -uNrp 2.4.25-ppc/arch/ppc/kernel/Makefile 2.4.25-ppc-ipipe/arch/ppc/kernel/
  obj-$(CONFIG_KGDB)		+= gen550_kgdb.o gen550_dbg.o
 diff -uNrp 2.4.25-ppc/arch/ppc/kernel/entry.S 2.4.25-ppc-ipipe/arch/ppc/kernel/entry.S
 --- 2.4.25-ppc/arch/ppc/kernel/entry.S	2005-03-16 00:12:45.000000000 +0100
-+++ 2.4.25-ppc-ipipe/arch/ppc/kernel/entry.S	2005-11-17 14:42:10.000000000 +0100
++++ 2.4.25-ppc-ipipe/arch/ppc/kernel/entry.S	2006-03-31 22:24:56.000000000 +0200
 @@ -53,6 +53,21 @@ _GLOBAL(DoSyscall)
  	lis	r10,0x1000
  	andc	r11,r11,r10
@@ -55,7 +89,7 @@ diff -uNrp 2.4.25-ppc/arch/ppc/kernel/entry.S 2.4.25-ppc-ipipe/arch/ppc/kernel/e
 +	lwz	r8,GPR8(r1)
 +	lwz	r9,GPR9(r1)
 +	bgt	restore
-+	blt	ret_from_except_1
++	blt	ret_from_syscall_1
 +#endif /* CONFIG_IPIPE */
  #ifdef SHOW_SYSCALLS
  #ifdef SHOW_SYSCALLS_TASK
@@ -651,8 +685,8 @@ diff -uNrp 2.4.25-ppc/arch/ppc/kernel/ipipe-core.c 2.4.25-ppc-ipipe/arch/ppc/ker
 +EXPORT_SYMBOL(ipipe_tune_timer);
 diff -uNrp 2.4.25-ppc/arch/ppc/kernel/ipipe-root.c 2.4.25-ppc-ipipe/arch/ppc/kernel/ipipe-root.c
 --- 2.4.25-ppc/arch/ppc/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.4.25-ppc-ipipe/arch/ppc/kernel/ipipe-root.c	2006-02-04 20:09:01.000000000 +0100
-@@ -0,0 +1,480 @@
++++ 2.4.25-ppc-ipipe/arch/ppc/kernel/ipipe-root.c	2006-03-31 22:49:20.000000000 +0200
+@@ -0,0 +1,478 @@
 +/* -*- linux-c -*-
 + * linux/arch/ppc/kernel/ipipe-root.c
 + *
@@ -1059,9 +1093,7 @@ diff -uNrp 2.4.25-ppc/arch/ppc/kernel/ipipe-root.c 2.4.25-ppc-ipipe/arch/ppc/ker
 +	 * can occur while checking the identity of the current domain.
 +	 */
 +	ipipe_load_cpuid();
-+	return (ipipe_percpu_domain[cpuid] == ipipe_root_domain &&
-+		!test_bit(IPIPE_STALL_FLAG,
-+			  &ipipe_root_domain->cpudata[cpuid].status));
++	return ipipe_percpu_domain[cpuid] == ipipe_root_domain;
 +}
 +
 +asmlinkage void __ipipe_stall_root_raw(void)
@@ -1294,6 +1326,17 @@ diff -uNrp 2.4.25-ppc/arch/ppc/mm/fault.c 2.4.25-ppc-ipipe/arch/ppc/mm/fault.c
  #if defined(CONFIG_XMON) || defined(CONFIG_KGDB)
  	if (debugger_fault_handler && regs->trap == 0x300) {
  		debugger_fault_handler(regs);
+diff -uNrp 2.4.25-ppc/drivers/Makefile 2.4.25-ppc-ipipe/drivers/Makefile
+--- 2.4.25-ppc/drivers/Makefile	2005-08-05 00:33:41.000000000 +0200
++++ 2.4.25-ppc-ipipe/drivers/Makefile	2006-03-31 17:16:39.000000000 +0200
+@@ -50,4 +50,7 @@ subdir-$(CONFIG_ACPI_BOOT)	+= acpi
+ 
+ subdir-$(CONFIG_BLUEZ)		+= bluetooth
+ 
++mod-subdirs := xenomai
++subdir-$(CONFIG_XENOMAI) += xenomai
++
+ include $(TOPDIR)/Rules.make
 diff -uNrp 2.4.25-ppc/include/asm-ppc/hw_irq.h 2.4.25-ppc-ipipe/include/asm-ppc/hw_irq.h
 --- 2.4.25-ppc/include/asm-ppc/hw_irq.h	2003-10-30 01:34:05.000000000 +0100
 +++ 2.4.25-ppc-ipipe/include/asm-ppc/hw_irq.h	2006-01-30 16:06:18.000000000 +0100
@@ -1369,7 +1412,7 @@ diff -uNrp 2.4.25-ppc/include/asm-ppc/hw_irq.h 2.4.25-ppc-ipipe/include/asm-ppc/
  #define mask_irq(irq) ({if (irq_desc[irq].handler && irq_desc[irq].handler->disable) irq_desc[irq].handler->disable(irq);})
 diff -uNrp 2.4.25-ppc/include/asm-ppc/ipipe.h 2.4.25-ppc-ipipe/include/asm-ppc/ipipe.h
 --- 2.4.25-ppc/include/asm-ppc/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.4.25-ppc-ipipe/include/asm-ppc/ipipe.h	2006-02-04 20:17:33.000000000 +0100
++++ 2.4.25-ppc-ipipe/include/asm-ppc/ipipe.h	2006-03-31 22:45:19.000000000 +0200
 @@ -0,0 +1,180 @@
 +/* -*- linux-c -*-
 + * include/asm-ppc/ipipe.h
@@ -1404,10 +1447,10 @@ diff -uNrp 2.4.25-ppc/include/asm-ppc/ipipe.h 2.4.25-ppc-ipipe/include/asm-ppc/i
 +#include <asm/bitops.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.0-03"
++#define IPIPE_ARCH_STRING	"1.0-04"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	0
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_PATCH_NUMBER	4
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
@@ -2449,7 +2492,7 @@ diff -uNrp 2.4.25-ppc/init/main.c 2.4.25-ppc-ipipe/init/main.c
  	 * Ok, at this point all CPU's should be initialized, so
 diff -uNrp 2.4.25-ppc/kernel/Makefile 2.4.25-ppc-ipipe/kernel/Makefile
 --- 2.4.25-ppc/kernel/Makefile	2002-11-28 19:42:24.000000000 +0100
-+++ 2.4.25-ppc-ipipe/kernel/Makefile	2006-01-30 16:04:55.000000000 +0100
++++ 2.4.25-ppc-ipipe/kernel/Makefile	2006-03-31 17:19:25.000000000 +0200
 @@ -16,6 +16,7 @@ obj-y     = sched.o dma.o fork.o exec_do
  	    sysctl.o acct.o capability.o ptrace.o timer.o user.o \
  	    signal.o sys.o kmod.o context.o
