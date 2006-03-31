@@ -128,7 +128,6 @@ static const unsigned rthal_smi_masked_bits =
 
 static unsigned rthal_smi_saved_bits;
 static unsigned short rthal_smi_en_addr;
-static struct pci_dev *smi_dev;
 
 #define mask_bits(v, p) outl(inl(p)&~(v),(p))
 #define set_bits(v, p)  outl(inl(p)|(v), (p))
@@ -157,6 +156,9 @@ void rthal_smi_disable(void)
     rthal_smi_saved_bits = inl(rthal_smi_en_addr) & rthal_smi_masked_bits;
     mask_bits(rthal_smi_masked_bits, rthal_smi_en_addr);
 
+    if (inl(rthal_smi_en_addr) & rthal_smi_masked_bits)
+        printk("Xenomai: SMI workaround failed!\n");
+
     register_reboot_notifier(&rthal_smi_notifier);
 }
 
@@ -168,8 +170,6 @@ void rthal_smi_restore(void)
     set_bits(rthal_smi_saved_bits, rthal_smi_en_addr);
 
     unregister_reboot_notifier(&rthal_smi_notifier);
-
-    pci_dev_put(smi_dev);
 }
 
 static unsigned short __devinit get_smi_en_addr(struct pci_dev *dev)
@@ -202,19 +202,15 @@ void rthal_smi_init(void)
         }
 
 #ifdef CONFIG_XENO_HW_SMI_WORKAROUND
-
-    printk("Xenomai: SMI-enabled Intel chipset found, enabling SMI workaround.\n");
+    printk("Xenomai: SMI-enabled chipset found, enabling SMI workaround.\n");
     rthal_smi_en_addr = get_smi_en_addr(dev);
-    smi_dev = dev;
-
 #else /* ! CONFIG_XENO_HW_SMI_WORKAROUND */
-
-   printk("Xenomai: SMI-enabled Intel chipset found but SMI workaround not enabled (check\n"
-          "         CONFIG_XENO_HW_SMI_WORKAROUND). You may encounter high\n"
-          "         interrupt latencies!\n");
-    pci_dev_put(dev);
-
+    printk("Xenomai: SMI-enabled chipset found but SMI workaround not enabled (check\n"
+           "         CONFIG_XENO_HW_SMI_WORKAROUND). You may encounter high\n"
+           "         interrupt latencies!\n");
 #endif /* ! CONFIG_XENO_HW_SMI_WORKAROUND */
+
+   pci_dev_put(dev);
 }
 
 #ifdef CONFIG_XENO_HW_SMI_DETECT
