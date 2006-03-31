@@ -27,6 +27,7 @@
 
 #include <linux/config.h>
 #include <linux/version.h>
+#include <asm/io.h>
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
 
