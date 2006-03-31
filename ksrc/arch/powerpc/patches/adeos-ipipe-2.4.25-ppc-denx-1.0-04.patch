@@ -1,37 +1,3 @@
-diff -uNrp 2.4.25-ppc/Makefile 2.4.25-ppc-ipipe/Makefile
---- 2.4.25-ppc/Makefile	2005-08-05 00:33:41.000000000 +0200
-+++ 2.4.25-ppc-ipipe/Makefile	2006-03-31 17:16:39.000000000 +0200
-@@ -198,6 +198,18 @@ DRIVERS-$(CONFIG_HOTPLUG_PCI) += drivers
- DRIVERS-$(CONFIG_ISDN_BOOL) += drivers/isdn/vmlinux-obj.o
- DRIVERS-$(CONFIG_CRYPTO) += crypto/crypto.o
- 
-+DRIVERS-$(CONFIG_XENO_OPT_NUCLEUS) += kernel/xenomai/nucleus/xeno_nucleus.o
-+DRIVERS-$(CONFIG_XENO_SKIN_NATIVE) += kernel/xenomai/skins/native/xeno_native.o
-+DRIVERS-$(CONFIG_XENO_SKIN_POSIX) += kernel/xenomai/skins/posix/xeno_posix.o
-+DRIVERS-$(CONFIG_XENO_SKIN_RTDM) += kernel/xenomai/skins/rtdm/xeno_rtdm.o
-+DRIVERS-$(CONFIG_XENO_SKIN_UVM) += kernel/xenomai/skins/uvm/xeno_uvm.o
-+DRIVERS-$(CONFIG_XENO_SKIN_PSOS) += kernel/xenomai/skins/psos+/xeno_psos.o
-+DRIVERS-$(CONFIG_XENO_SKIN_VRTX) += kernel/xenomai/skins/vrtx/xeno_vrtx.o
-+DRIVERS-$(CONFIG_XENO_SKIN_VXWORKS) += kernel/xenomai/skins/vxworks/xeno_vxworks.o
-+DRIVERS-$(CONFIG_XENO_SKIN_UITRON) += kernel/xenomai/skins/uitron/xeno_uitron.o
-+DRIVERS-$(CONFIG_XENO_SKIN_RTAI) += kernel/xenomai/skins/rtai/xeno_rtai.o
-+DRIVERS-$(CONFIG_XENO_DRIVERS_16550A) += drivers/xenomai/16550A/xeno_16550A.o
-+DRIVERS-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += drivers/xenomai/benchmark/xeno_timerbench.o
- DRIVERS := $(DRIVERS-y)
- 
- 
-diff -uNrp 2.4.25-ppc/arch/ppc/Makefile 2.4.25-ppc-ipipe/arch/ppc/Makefile
---- 2.4.25-ppc/arch/ppc/Makefile	2005-04-14 10:49:30.000000000 +0200
-+++ 2.4.25-ppc-ipipe/arch/ppc/Makefile	2006-03-31 17:16:39.000000000 +0200
-@@ -127,3 +127,8 @@ archmrproper:
- 
- archdep: scripts/mkdep
- 	$(MAKEBOOT) fastdep
-+
-+ifdef CONFIG_XENOMAI
-+SUBDIRS += arch/ppc/xenomai
-+DRIVERS += arch/ppc/xenomai/built-in.o
-+endif
 diff -uNrp 2.4.25-ppc/arch/ppc/config.in 2.4.25-ppc-ipipe/arch/ppc/config.in
 --- 2.4.25-ppc/arch/ppc/config.in	2005-10-24 16:39:53.000000000 +0200
 +++ 2.4.25-ppc-ipipe/arch/ppc/config.in	2006-03-31 17:19:31.000000000 +0200
@@ -50,7 +16,7 @@ diff -uNrp 2.4.25-ppc/arch/ppc/config.in 2.4.25-ppc-ipipe/arch/ppc/config.in
  bool 'System V IPC' CONFIG_SYSVIPC
 diff -uNrp 2.4.25-ppc/arch/ppc/kernel/Makefile 2.4.25-ppc-ipipe/arch/ppc/kernel/Makefile
 --- 2.4.25-ppc/arch/ppc/kernel/Makefile	2005-10-15 19:14:59.000000000 +0200
-+++ 2.4.25-ppc-ipipe/arch/ppc/kernel/Makefile	2005-11-12 23:33:42.000000000 +0100
++++ 2.4.25-ppc-ipipe/arch/ppc/kernel/Makefile	2006-03-31 23:34:46.000000000 +0200
 @@ -46,7 +46,8 @@ export-objs			:= ppc_ksyms.o time.o ocp.
  					ppc4xx_dma.o ppc4xx_sgdma.o \
  					ppc4xx_stbdma.o ppc4xx_pm.o \
