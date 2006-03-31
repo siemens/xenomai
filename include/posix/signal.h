@@ -54,10 +54,6 @@ typedef unsigned long sig_atomic_t;
 #define SIGRTMIN 33
 #define SIGRTMAX 64
 
-#ifndef SIGEV_THREAD_ID
-#define SIGEV_THREAD_ID 4
-#endif /* !SIGEV_THREAD_ID */
-
 struct pse51_thread;
 
 #ifdef __cplusplus
