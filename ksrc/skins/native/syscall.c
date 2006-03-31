@@ -207,7 +207,12 @@ static int __rt_task_bind (struct task_struct *curr, struct pt_regs *regs)
     err = __rt_bind_helper(curr,regs,&ph.opaque,XENO_TASK_MAGIC,NULL);
 
     if (!err)
+	{
+	/* We just don't know the associated user-space pthread
+	   identifier -- clear it to prevent misuse. */
+	ph.opaque2 = 0;
 	__xn_copy_to_user(curr,(void __user *)__xn_reg_arg1(regs),&ph,sizeof(ph));
+	}
 
     return err;
 }

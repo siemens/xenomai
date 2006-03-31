@@ -1,3 +1,11 @@
+2006-03-31  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (lostage_handler): Always send SIGKILL to
+	the entire thread group.
+	(xnshadow_unmap): Send SIGKILL to the non-active task mapped to a
+	deleted shadow, instead of issuing a plain wakeup. We expect the
+	entire thread group to be killed in turn by such deletion.
+
 2006-03-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-generic/wrappers.h, ksrc/nucleus/heap.c: Fix

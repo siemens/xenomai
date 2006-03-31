@@ -212,7 +212,7 @@ int rt_task_delete (RT_TASK *task)
 {
     int err;
 
-    if (task) {
+    if (task && task->opaque2) {
 	err = pthread_cancel((pthread_t)task->opaque2);
 	if (err)
 	    return -err;
@@ -349,6 +349,9 @@ int rt_task_slice (RT_TASK *task,
 
 int rt_task_join (RT_TASK *task)
 {
+    if (!task->opaque2)
+	return -ESRCH;
+
     return -pthread_join((pthread_t)task->opaque2, NULL);
 }
 

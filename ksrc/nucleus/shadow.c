@@ -327,7 +327,14 @@ static void lostage_handler (void *cookie)
 
 	    case LO_SIGNAL_REQ:
 
-		send_sig(rq->req[reqnum].arg,p,1);
+		/* Special case: SIGKILL should always be sent to the
+		   entire thread group. */
+
+		if (rq->req[reqnum].arg == SIGKILL)
+		    kill_proc(p->pid,SIGKILL,1);
+		else
+		    send_sig(rq->req[reqnum].arg,p,1);
+
 		break;
 	    }
 	}
@@ -790,7 +797,7 @@ void xnshadow_unmap (xnthread_t *thread)
 	xnpod_fatal("xnshadow_unmap() called from invalid context");
 #endif /* CONFIG_XENO_OPT_DEBUG */
 
-    p = xnthread_archtcb(thread)->user_task;
+    p = xnthread_archtcb(thread)->user_task; /* May be != current */
 
     magic = xnthread_get_magic(thread);
 
@@ -819,11 +826,11 @@ void xnshadow_unmap (xnthread_t *thread)
     if (p->state != TASK_RUNNING)
 	{
 	/* If the shadow is being unmapped in primary mode or blocked
-	   in secondary mode, the associated Linux task should also
-	   die. In the former case, the zombie Linux side returning to
-	   user-space will be trapped and exited inside the pod's
-	   rescheduling routines. */
-	schedule_linux_call(LO_WAKEUP_REQ,p,0);
+	   in secondary mode, the entire thread group associated with
+	   the mapped task should also die. In the former case, the
+	   zombie Linux side returning to user-space will be trapped
+	   and exited inside the pod's rescheduling routines. */
+	schedule_linux_call(LO_SIGNAL_REQ,p,SIGKILL);
 	return;
 	}
 
