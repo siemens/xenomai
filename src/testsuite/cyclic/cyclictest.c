@@ -44,7 +44,9 @@ extern int clock_nanosleep (clockid_t __clock_id, int __flags,
 #define USEC_PER_SEC	1000000
 #define NSEC_PER_SEC	1000000000
 
+#ifdef __UNSUPPORTED
 #define MODE_CYCLIC		0
+#endif
 #define MODE_CLOCK_NANOSLEEP	1
 #define MODE_SYS_ITIMER		2
 #define MODE_SYS_NANOSLEEP	3
@@ -150,6 +152,7 @@ void *timerthread(void *param)
 	sigaddset(&sigset, par->signal);
 	sigprocmask(SIG_BLOCK, &sigset, NULL);
 	
+#ifdef __UNSUPPORTED
 	if (par->mode == MODE_CYCLIC) {
 		sigev.sigev_notify = SIGEV_THREAD_ID | SIGEV_SIGNAL;
 		sigev.sigev_signo = par->signal;
@@ -157,6 +160,7 @@ void *timerthread(void *param)
 		timer_create(par->clock, &sigev, &timer);
 		tspec.it_interval = interval;
 	}
+#endif
 
 	memset(&schedp, 0, sizeof(schedp));
 	schedp.sched_priority = par->prio;
@@ -175,6 +179,7 @@ void *timerthread(void *param)
 	next = now;
 	next.tv_sec++;
 	
+#ifdef __UNSUPPORTED
 	if (par->mode == MODE_CYCLIC) {
 		if (par->timermode == TIMER_ABSTIME)
 			tspec.it_value = next;
@@ -184,6 +189,7 @@ void *timerthread(void *param)
 		}
 		timer_settime(timer, par->timermode, &tspec, NULL);
 	}
+#endif
 	
 	if (par->mode == MODE_SYS_ITIMER) {
 		itimer.it_value.tv_sec = 1;
@@ -206,7 +212,9 @@ void *timerthread(void *param)
 
 		/* Wait for next period */
 		switch (par->mode) {
+#ifdef __UNSUPPORTED
 		case MODE_CYCLIC:
+#endif
 		case MODE_SYS_ITIMER:
 			if (sigwait(&sigset, &sigs) < 0)
 				goto out;
@@ -262,8 +270,10 @@ void *timerthread(void *param)
 	}
 
 out:		
+#ifdef __UNSUPPORTED
 	if (par->mode == MODE_CYCLIC)
 		timer_delete(timer);
+#endif
 
 	if (par->mode == MODE_SYS_ITIMER) {
 		itimer.it_value.tv_sec = 0;
