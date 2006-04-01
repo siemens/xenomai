@@ -22,6 +22,25 @@
  *
  * Thread creation attributes.
  *
+ * The services in this section allow to set the attributes of a
+ * @b pthread_attr_t structure, passed to the pthread_create() service in order
+ * to set the attributes of a created thread.
+ *
+ * A @b pthread_attr_t structure has to be initialized with pthread_attr_init()
+ * first. Attributes are then set to their default, in kernel-space:
+ * - @a detachstate to PTHREAD_CREATE_JOINABLE,
+ * - @a stacksize to PTHREAD_STACK_MIN,
+ * - @a inheritsched to PTHREAD_EXPLICIT_SCHED,
+ * - @a schedpolicy to SCHED_FIFO,
+ * - scheduling priority to the minimum,
+ * - floating-point hardware enabled (only available in kernel-space),
+ * - processor affinity set to all available processors (only available as a
+ *   thread attribute in kernel-space).
+ *
+ * In user-space, the defaults are those documented by the underlying threading
+ * library (LinuxThreads or NPTL), and only threads created with the SCHED_FIFO
+ * policy are Xenomai threads, i.e. permitted to run in primary mode.
+ * 
  *@{*/
 
 #include <posix/internal.h>
@@ -44,6 +63,17 @@ static const pthread_attr_t default_thread_attr = {
 /**
  * Initialize a thread attributes object.
  *
+ * This service initializes the thread creation attributes structure pointed to
+ * by @a attr. Attributes are set to their default values (see @ref
+ * posix_threadattr).
+ *
+ * If this service is called specifying a thread attributes object that was
+ * already initialized, the attributes object is reinitialized.
+ *
+ * @param attr address of the thread attributes object to initialize.
+ *
+ * @return 0.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_init.html">
  * Specification.</a>
@@ -52,9 +82,6 @@ static const pthread_attr_t default_thread_attr = {
 int pthread_attr_init (pthread_attr_t *attr)
 
 {
-    if (!attr)
-        return ENOMEM;
-
     *attr = default_thread_attr;
 
     return 0;
@@ -62,6 +89,10 @@ int pthread_attr_init (pthread_attr_t *attr)
 
 /**
  * Destroy a thread attributes object.
+ *
+ * This service invalidates the attribute object pointed to by @a attr. The
+ * object becomes invalid for all services (they all return EINVAL) except
+ * pthread_attr_init().
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_destroy.html">
@@ -94,6 +125,27 @@ int pthread_attr_destroy (pthread_attr_t *attr)
 /**
  * Get detachstate attribute.
  *
+ * This service returns, at the address @a detachstate, the value of the
+ * @a detachstate attribute in the thread attribute object @a attr.
+ *
+ * Valid values of this attribute are PTHREAD_CREATE_JOINABLE and
+ * PTHREAD_CREATE_DETACHED. A detached thread is a thread whose control block is
+ * automatically reclaimed by the system when it finishes execution. The
+ * control block of a joinable thread, on the other hand, is only reclaimed when
+ * joined with the service pthread_join().
+ *
+ * A thread that was created joinable may be detached after creation by using
+ * the pthread_detach() service.
+ *
+ * @param attr attribute object
+ *
+ * @param detachstate address where the value of the detachstate attribute will
+ * be stored on success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr is invalid;
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getdetachstate.html">
  * Specification.</a>
@@ -104,9 +156,6 @@ int pthread_attr_getdetachstate (const pthread_attr_t *attr, int *detachstate)
 {
     spl_t s;
 
-    if (!detachstate)
-        return EINVAL;
-        
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
@@ -125,8 +174,28 @@ int pthread_attr_getdetachstate (const pthread_attr_t *attr, int *detachstate)
 /**
  * Set detachstate attribute.
  *
+ * This service sets to @a detachstate the value of the @a detachstate attribute
+ * in the attribute object @a attr. 
+ *
+ * Valid values of this attribute are PTHREAD_CREATE_JOINABLE and
+ * PTHREAD_CREATE_DETACHED. A detached thread is a thread whose control block is
+ * automatically reclaimed by the system when it finishes execution. The
+ * control block of a joinable thread, on the other hand, is only reclaimed when
+ * joined with the service pthread_join().
+ *
+ * A thread that was created joinable may be detached after creation by using
+ * the pthread_detach() service.
+ *
+ * @param attr attribute object;
+ *
+ * @param detachstate value of the detachstate attribute.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, the attribute object @a attr is invalid
+ *
  * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/">
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setdetachstate.html">
  * Specification.</a>
  * 
  */
@@ -134,6 +203,10 @@ int pthread_attr_setdetachstate (pthread_attr_t *attr, int detachstate)
 
 {
     spl_t s;
+
+    if (detachstate != PTHREAD_CREATE_JOINABLE
+        && detachstate != PTHREAD_CREATE_DETACHED)
+        return EINVAL;
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -149,47 +222,23 @@ int pthread_attr_setdetachstate (pthread_attr_t *attr, int detachstate)
     return 0;
 }
 
-int pthread_attr_getstackaddr (const pthread_attr_t *attr, void **stackaddr)
-
-{
-    spl_t s;
-
-    if (!stackaddr)
-        return EINVAL;
-
-    xnlock_get_irqsave(&nklock, s);
-
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
-	}
-
-    xnlock_put_irqrestore(&nklock, s);
-
-    return ENOSYS;
-}
-
-int pthread_attr_setstackaddr (pthread_attr_t *attr, void *stackaddr)
-
-{
-    spl_t s;
-
-    xnlock_get_irqsave(&nklock, s);
-
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
-	}
-
-    xnlock_put_irqrestore(&nklock, s);
-
-    return ENOSYS;
-}
-
 /**
  * Get stacksize attribute.
+ *
+ * This service stores, at the address @a stacksize, the value of the @a
+ * stacksize attribute in the attribute object @a attr.
+ *
+ * The @a stacksize attribute is used as the stack size of the threads created
+ * using the attribute object @a attr.
+ *
+ * @param attr attribute object;
+ *
+ * @param stacksize address where the value of the @a stacksize attribute will
+ * be stored on success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr is invalid.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getstacksize.html">
@@ -200,9 +249,6 @@ int pthread_attr_getstacksize (const pthread_attr_t *attr, size_t *stacksize)
 
 {
     spl_t s;
-
-    if (!stacksize)
-        return EINVAL;
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -222,6 +268,22 @@ int pthread_attr_getstacksize (const pthread_attr_t *attr, size_t *stacksize)
 /**
  * Set stacksize attribute.
  *
+ * This service set to @a stacksize, the value of the @a stacksize attribute in
+ * the attribute object @a attr.
+ *
+ * The @a stacksize attribute is used as the stack size of the threads created
+ * using the attribute object @a attr.
+ *
+ * The minimum value for this attribute is PTHREAD_STACK_MIN.
+ *
+ * @param attr attribute object;
+ *
+ * @param stacksize value of the @a stacksize attribute.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr or @a stacksize is invalid.
+ * 
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setstacksize.html">
  * Specification.</a>
@@ -232,15 +294,12 @@ int pthread_attr_setstacksize (pthread_attr_t *attr, size_t stacksize)
 {
     spl_t s;
 
+    if (stacksize < PTHREAD_STACK_MIN)
+        return EINVAL;
+    
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
-	}
-
-    if (stacksize < PTHREAD_STACK_MIN)
 	{
         xnlock_put_irqrestore(&nklock, s);
         return EINVAL;
@@ -255,6 +314,25 @@ int pthread_attr_setstacksize (pthread_attr_t *attr, size_t stacksize)
 /**
  * Get inheritsched attribute.
  *
+ * This service returns at the address @a inheritsched the value of the @a
+ * inheritsched attribute in the attribute object @a attr.
+ *
+ * Threads created with this attribute set to PTHREAD_EXPLICIT_SCHED will use
+ * the same scheduling policy and priority as the thread calling
+ * pthread_create(). Threads created with this attribute set to
+ * PTHREAD_INHERIT_SCHED will use the value of the @a schedpolicy attribute as
+ * scheduling policy, and the value of the @a schedparam  attribute as scheduling
+ * priority.
+ *
+ * @param attr attribute object;
+ *
+ * @param inheritsched address where the value of the @a inheritsched attribute
+ * will be stored on success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr is invalid.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getinheritsched.html">
  * Specification.</a>
@@ -264,9 +342,6 @@ int pthread_attr_getinheritsched (const pthread_attr_t *attr,int *inheritsched)
 
 {
     spl_t s;
-
-    if (!inheritsched)
-        return EINVAL;
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -283,6 +358,25 @@ int pthread_attr_getinheritsched (const pthread_attr_t *attr,int *inheritsched)
 
 /**
  * Set inheritsched attribute.
+ *
+ * This service set to @a inheritsched the value of the @a inheritsched
+ * attribute in the attribute object @a attr.
+ *
+ * Threads created with this attribute set to PTHREAD_INHERIT_SCHED will use the
+ * same scheduling policy and priority as the thread calling
+ * pthread_create(). Threads created with this attribute set to
+ * PTHREAD_EXPLICIT_SCHED will use the value of the @a schedpolicy attribute as
+ * scheduling policy, and the value of the @a schedparam attribute as scheduling
+ * priority.
+ *
+ * @param attr attribute object;
+ *
+ * @param inheritsched value of the @a inheritsched attribute,
+ * PTHREAD_INHERIT_SCHED or PTHREAD_EXPLICIT_SCHED.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr or @a inheritsched is invalid.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setinheritsched.html">
@@ -322,6 +416,23 @@ int pthread_attr_setinheritsched (pthread_attr_t *attr, int inheritsched)
 /**
  * Get schedpolicy attribute.
  *
+ * This service stores, at the address @a policy, the value of the @a policy
+ * attribute in the attribute object @a attr.
+ *
+ * Threads created with the attribute object @a attr use the value of this
+ * attribute as scheduling policy if the @a inheritsched attribute is set to
+ * PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO or
+ * SCHED_RR, SCHED_OTHER is equivalent to SCHED_RR.
+ *
+ * @param attr attribute object;
+ *
+ * @param policy address where the value of the @a policy attribute in the
+ * attribute object @a attr will be stored on success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr is invalid.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getschedpolicy.html">
  * Specification.</a>
@@ -332,9 +443,6 @@ int pthread_attr_getschedpolicy (const pthread_attr_t *attr,int *policy)
 {
     spl_t s;
 
-    if (!policy)
-        return EINVAL;
-    
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
@@ -352,6 +460,22 @@ int pthread_attr_getschedpolicy (const pthread_attr_t *attr,int *policy)
 
 /**
  * Set schedpolicy attribute.
+ *
+ * This service set to @a policy the value of the @a policy attribute in the
+ * attribute object @a attr.
+ *
+ * Threads created with the attribute object @a attr use the value of this
+ * attribute as scheduling policy if the @a inheritsched attribute is set to
+ * PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO or
+ * SCHED_RR, SCHED_OTHER is equivalent to SCHED_RR.
+ *
+ * @param attr attribute object;
+ *
+ * @param policy value of the @a policy attribute.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr or @a policy is invalid.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setschedpolicy.html">
@@ -396,6 +520,23 @@ int pthread_attr_setschedpolicy (pthread_attr_t *attr, int policy)
 /**
  * Get schedparam attribute.
  *
+ * This service stores, at the address @a par, the value of the @a schedparam
+ * attribute in the attribute object @a attr.
+ *
+ * The only member of the @b sched_param structure used by this implementation
+ * is @a sched_priority. Threads created with @a attr will use the value of this
+ * attribute as a scheduling priority if the attribute @a inheritsched is set to
+ * PTHREAD_EXPLICIT_SCHED. Valid priorities range from 1 to 99.
+ *
+ * @param attr attribute object;
+ *
+ * @param par address where the value of the @a schedparam attribute will be
+ * stored on success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr is invalid.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getschedparam.html">
  * Specification.</a>
@@ -406,9 +547,6 @@ int pthread_attr_getschedparam (const pthread_attr_t *attr, struct sched_param *
 {
     spl_t s;
 
-    if (!par)
-        return EINVAL;
-    
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
@@ -427,6 +565,23 @@ int pthread_attr_getschedparam (const pthread_attr_t *attr, struct sched_param *
 /**
  * Set schedparam attribute.
  *
+ * This service set to @a par, the value of the @a schedparam attribute in the
+ * attribute object @a attr.
+ *
+ * The only member of the @b sched_param structure used by this implementation
+ * is @a sched_priority. Threads created with @a attr will use the value of this
+ * attribute as a scheduling priority if the attribute @a inheritsched is set to
+ * PTHREAD_EXPLICIT_SCHED. Valid priorities range from 1 to 99.
+ *
+ *
+ * @param attr attribute object;
+ *
+ * @param par value of the @a schedparam attribute.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr or @a par is invalid.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setschedparam.html">
  * Specification.</a>
@@ -436,9 +591,6 @@ int pthread_attr_setschedparam (pthread_attr_t *attr, const struct sched_param *
 
 {
     spl_t s;
-
-    if (!par)
-        return EINVAL;
 
     if (par->sched_priority < PSE51_MIN_PRIORITY
 	|| par->sched_priority > PSE51_MAX_PRIORITY )
@@ -462,19 +614,32 @@ int pthread_attr_setschedparam (pthread_attr_t *attr, const struct sched_param *
 /**
  * Get contention scope attribute.
  *
+ * This service stores, at the address @a scope, the value of the @a scope
+ * attribute in the attribute object @a attr.
+ *
+ * The @a scope attribute represents the scheduling contention scope of threads
+ * created with the attribute object @a attr. This implementation only supports
+ * the value PTHREAD_SCOPE_SYSTEM.
+ *
+ * @param attr attribute object;
+ *
+ * @param scope address where the value of the @a scope attribute will be stored
+ * on sucess.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr is invalid.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getscope.html">
  * Specification.</a>
  * 
  */
-int pthread_attr_getscope (const pthread_attr_t *attr,int *scope)
+int pthread_attr_getscope (const pthread_attr_t *attr, int *scope)
 
 {
     spl_t s;
 
-    if (!scope)
-        return EINVAL;
-    
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
@@ -493,12 +658,28 @@ int pthread_attr_getscope (const pthread_attr_t *attr,int *scope)
 /**
  * Set contention scope attribute.
  *
+ * This service set to @a scope the value of the @a scope attribute in the
+ * attribute object @a attr.
+ *
+ * The @a scope attribute represents the scheduling contention scope of threads
+ * created with the attribute object @a attr. This implementation only supports
+ * the value PTHREAD_SCOPE_SYSTEM.
+ *
+ * @param attr attribute object;
+ *
+ * @param scope value of the @a scope attribute.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ENOTSUP, @a scope is an unsupported value of the scope attribute.
+ * - EINVAL, @a attr is invalid.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setscope.html">
  * Specification.</a>
  * 
  */
-int pthread_attr_setscope (pthread_attr_t *attr,int scope)
+int pthread_attr_setscope (pthread_attr_t *attr, int scope)
 
 {
     spl_t s;
@@ -521,15 +702,35 @@ int pthread_attr_setscope (pthread_attr_t *attr,int scope)
 
 /**
  * Get name attribute.
+ *
+ * This service stores, at the address @a name, the value of the @a name
+ * attribute in the attribute object @a attr.
+ *
+ * The @a name attribute is the name under which a thread created with the
+ * attribute object @a attr will appear under /proc/xenomai/sched. 
+ *
+ * The name returned by this function is only valid until the name is changed
+ * with pthread_attr_setname_np() or the @a attr object is destroyed with
+ * pthread_attr_destroy().
+ *
+ * If @a name is @a NULL, a unique default name will be used.
+ *
+ * The @a name attribute is not portable.
+ *
+ * @param attr attribute object;
+ *
+ * @param name address where the value of the @a name attribute will be stored
+ * on success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr is invalid.
  */
 int pthread_attr_getname_np (const pthread_attr_t *attr, const char **name)
 
 {
     spl_t s;
 
-    if (!name)
-        return EINVAL;
-    
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
@@ -547,15 +748,31 @@ int pthread_attr_getname_np (const pthread_attr_t *attr, const char **name)
 
 /**
  * Set name attribute.
+ *
+ * This service set to @a name, the value of the @a name attribute in the
+ * attribute object @a attr.
+ *
+ * The @a name attribute is the name under which a thread created with the
+ * attribute object @a attr will appear under /proc/xenomai/sched.
+ *
+ * If @a name is @a NULL, a unique default name will be used.
+ *
+ * The @a name attribute is not portable.
+ *
+ * @param attr attribute object;
+ *
+ * @param name value of the @a name attribute.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr is invalid.
  */
 int pthread_attr_setname_np (pthread_attr_t *attr, const char *name)
 
 {
+    int err = 0;
     spl_t s;
 
-    if (!name)
-        return EINVAL;
-    
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
@@ -567,25 +784,48 @@ int pthread_attr_setname_np (pthread_attr_t *attr, const char *name)
     if (attr->name)
         xnfree(attr->name);
 
-    if ((attr->name = xnmalloc(strlen(name)+1)))
-        strcpy(attr->name, name);
-    
+    if (name)
+        {
+        attr->name = xnmalloc(strlen(name)+1);
+
+        if (attr->name)
+            strcpy(attr->name, name);
+        else
+            err = ENOMEM;
+        }
+    else
+        attr->name = NULL;
+        
     xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+    return err;
 }
 
 /**
  * Get the floating point attribute.
+ *
+ * This service returns, at the address @a fp, the value of the @a fp attribute
+ * in the attribute object @a attr.
+ *
+ * The @a fp attribute is a boolean attribute indicating whether a thread
+ * created with the attribute @a attr may use floating-point hardware.
+ *
+ * The @a fp attribute is not portable.
+ *
+ * @param attr attribute object;
+ *
+ * @param fp address where the value of the @a fp attribute will be stored on
+ * success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr is invalid.
  */
 int pthread_attr_getfp_np (const pthread_attr_t *attr, int *fp)
 
 {
     spl_t s;
 
-    if (!fp)
-        return EINVAL;
-    
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
@@ -603,6 +843,22 @@ int pthread_attr_getfp_np (const pthread_attr_t *attr, int *fp)
 
 /**
  * Set the floating point attribute.
+ *
+ * This service set to @a fp, the value of the @a fp attribute in the attribute
+ * object @a attr.
+ *
+ * The @a fp attribute is a boolean attribute indicating whether a thread
+ * created with the attribute @a attr may use floating-point hardware.
+ *
+ * The @a fp attribute is not portable.
+ *
+ * @param attr attribute object;
+ *
+ * @param fp value of the @a fp attribute.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr is invalid.
  */
 int pthread_attr_setfp_np (pthread_attr_t *attr, int fp)
 
@@ -625,7 +881,25 @@ int pthread_attr_setfp_np (pthread_attr_t *attr, int fp)
 }
 
 /**
- * Get the CPU affinity attribute.
+ * Get the processor affinity attribute.
+ *
+ * This service stores, at the address @a mask, the value of the @a affinity
+ * attribute in the attribute object @a attr.
+ *
+ * The @a affinity attributes is a bitmask where bits set indicate processor
+ * where a thread created with the attribute @a attr may run. The least
+ * significant bit corresponds to the first logical processor.
+ *
+ * The @a affinity attribute is not portable.
+ *
+ * @param attr attribute object;
+ *
+ * @param mask address where the value of the @a affinity attribute will be
+ * stored on success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr is invalid.
  */
 int
 pthread_attr_getaffinity_np (const pthread_attr_t *attr, xnarch_cpumask_t *mask)
@@ -633,9 +907,6 @@ pthread_attr_getaffinity_np (const pthread_attr_t *attr, xnarch_cpumask_t *mask)
 {
     spl_t s;
 
-    if (!mask)
-        return EINVAL;
-    
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
@@ -652,7 +923,25 @@ pthread_attr_getaffinity_np (const pthread_attr_t *attr, xnarch_cpumask_t *mask)
 }
 
 /**
- * Set the CPU affinity attribute.
+ * Set the processor affinity attribute.
+ *
+ * This service sets to @a mask, the value of the @a affinity attribute in the
+ * attribute object @a attr.
+ *
+ * The @a affinity attributes is a bitmask where bits set indicate processor
+ * where a thread created with the attribute @a attr may run. The least
+ * significant bit corresponds to the first logical processor.
+ *
+ * The @a affinity attribute is not portable.
+ *
+ * @param attr attribute object;
+ *
+ * @param mask address where the value of the @a affinity attribute will be
+ * stored on success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr is invalid.
  */
 int pthread_attr_setaffinity_np (pthread_attr_t *attr, xnarch_cpumask_t mask)
 {
@@ -679,8 +968,6 @@ EXPORT_SYMBOL(pthread_attr_init);
 EXPORT_SYMBOL(pthread_attr_destroy);
 EXPORT_SYMBOL(pthread_attr_getdetachstate);
 EXPORT_SYMBOL(pthread_attr_setdetachstate);
-EXPORT_SYMBOL(pthread_attr_getstackaddr);
-EXPORT_SYMBOL(pthread_attr_setstackaddr);
 EXPORT_SYMBOL(pthread_attr_getstacksize);
 EXPORT_SYMBOL(pthread_attr_setstacksize);
 EXPORT_SYMBOL(pthread_attr_getinheritsched);

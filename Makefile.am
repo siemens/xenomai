@@ -54,7 +54,7 @@ install-user:
 
 if XENO_BUILD_LINUX
 if MAINTAINER_MODE
-linux/%: linux/.xenomai-prepared
+linux/%: linux/.xenomai-prepared FORCE
 	$(top_srcdir)/scripts/prepare-kernel.sh \
              --adeos="$(ADEOS_PATCH)" --linux=linux \
 	     --arch=$(XENO_LINUX_ARCH) && \
@@ -62,7 +62,7 @@ linux/%: linux/.xenomai-prepared
 	cd linux && $(MAKE) $* \
 		ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross
 else
-linux/%: linux/.xenomai-prepared
+linux/%: linux/.xenomai-prepared FORCE
 	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
 	cd linux && $(MAKE) $* \
 		ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross
@@ -70,6 +70,8 @@ endif
 
 linux/.xenomai-prepared: config.status
 	./config.status linux
+
+.PHONY: FORCE
 
 linux/install: linux/all
 	@targets=modules_install; \

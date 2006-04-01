@@ -21,13 +21,44 @@
  * @defgroup posix_sched Threads scheduling services.
  *
  * Thread scheduling services.
- * 
+ *
+ * Xenomai POSIX skin supports the two scheduling policies SCHED_FIFO and
+ * SCHED_RR. The SCHED_OTHER policy is the same as SCHED_RR. 
+ *
+ * The SCHED_RR policy is only effective if the system timer is started in
+ * periodic mode (i.e. if configured with the compilation constant @a
+ * CONFIG_XENO_OPT_TIMING_PERIOD or the @a xeno_nucleus module parameter @a
+ * tick_arg set to a non null value). The SCHED_RR round-robin time slice is
+ * configured with the @a xeno_posix module parameter @a time_slice, as a count
+ * of system timer clock ticks.
+ *
+ * The SCHED_SPORADIC policy is not supported.
+ *
+ * The scheduling policy and priority of a thread is set when creating a thread,
+ * by using thread creation attributes (see pthread_attr_setinheritsched(),
+ * pthread_attr_setschedpolicy() and pthread_attr_setschedparam()), or when the
+ * thread is already running by using the service pthread_setschedparam().
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_04">
+ * Specification.</a>
+ *
  *@{*/
 
 #include <posix/thread.h>
 
 /**
  * Get minimum priority of the specified scheduling policy.
+ *
+ * This service returns the minimum priority of the scheduling policy @a
+ * policy.
+ *
+ * @param policy scheduling policy, one of SCHED_FIFO, SCHED_RR, or
+ * SCHED_OTHER.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a policy is invalid.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_min.html">
@@ -55,6 +86,16 @@ int sched_get_priority_min (int policy)
 /**
  * Get maximum priority of the specified scheduling policy.
  *
+ * This service returns the maximum priority of the scheduling policy @a
+ * policy.
+ *
+ * @param policy scheduling policy, one of SCHED_FIFO, SCHED_RR, or
+ * SCHED_OTHER.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a policy is invalid.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_max.html">
  * Specification.</a>
@@ -81,6 +122,22 @@ int sched_get_priority_max (int policy)
 /**
  * Get the round-robin scheduling time slice.
  *
+ * This service returns the time quantum used by Xenomai POSIX skin SCHED_RR
+ * scheduling policy.
+ *
+ * In kernel-space, this service only works if pid is zero, in user-space,
+ * round-robin scheduling policy is not supported, and this service not
+ * implemented.
+ *
+ * @param pid must be zero;
+ *
+ * @param interval address where the round-robin scheduling time quantum will
+ * be returned on success.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - ESRCH, @a pid is invalid (not 0).
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_rr_get_interval.html">
  * Specification.</a>
@@ -103,6 +160,22 @@ int sched_rr_get_interval (int pid, struct timespec *interval)
 
 /**
  * Get the scheduling policy and parameters of the specified thread.
+ *
+ * This service returns, at the addresses @a pol and @a par, the current
+ * scheduling policy and scheduling parameters (i.e. priority) of the Xenomai
+ * POSIX skin thread @a tid.
+ *
+ * @param tid target thread;
+ *
+ * @param pol address where the scheduling policy of @a tid is stored on
+ * success;
+ *
+ * @param par address where the scheduling parameters of @a tid is stored on
+ * success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a tid is invalid.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">
@@ -132,6 +205,25 @@ int pthread_getschedparam (pthread_t tid, int *pol, struct sched_param *par)
 
 /**
  * Set the scheduling policy and parameters of the specified thread.
+ *
+ * This service set the scheduling policy of the Xenomai POSIX skin thread @a
+ * tid to the value @a  pol, and its scheduling parameters (i.e. its priority)
+ * to the value pointed to by @a par.
+ *
+ * When used in user-space, passing SCHED_FIFO as the @a pol argument, this
+ * service may be used to turn the regular thread @a tid into a Xenomai POSIX
+ * skin thread.
+ *
+ * @param tid target thread;
+ *
+ * @param pol scheduling policy, one of SCHED_FIFO, SCHED_RR or SCHED_OTHER;
+ *
+ * @param par scheduling parameters address.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a tid is invalid;
+ * - EINVAL, @a pol or @a par->sched_priority is invalid.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setschedparam.html">
@@ -198,7 +290,11 @@ int pthread_setschedparam (pthread_t tid, int pol, const struct sched_param *par
 
 /**
  * Yield the processor.
- * 
+ *
+ * This function move the current thread at the end of its priority group.
+ *
+ * @retval 0
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_yield.html">
  * Specification.</a>

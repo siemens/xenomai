@@ -40,14 +40,15 @@
  * as is the case for clock_nanosleep().
  *
  * @note The duration of the system clock tick depends on the settings of the
- * nucleus (configurable at compile-time with @a CONFIG_XENO_OPT_TIMING_PERIOD,
- * and at run-time with the @a xeno_nucleus module parameter @a tick_arg). When
- * the system timer is set to aperiodic mode, the default, the system clock tick
- * is one nanosecond.
+ * nucleus system timer (configurable at compile-time with the constant @a
+ * CONFIG_XENO_OPT_TIMING_PERIOD, and at run-time with the @a xeno_nucleus
+ * module parameter @a tick_arg). When the system timer is set to aperiodic
+ * mode, the default, the system clock tick is one nanosecond.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05">
  * Specification.</a>
+ *
  *@{*/
 
 #include <posix/thread.h>

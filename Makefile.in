@@ -693,20 +693,22 @@ install-exec-local: devices
 install-user:
 	$(MAKE) SUDO=false install
 
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@linux/%: linux/.xenomai-prepared
+@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@linux/%: linux/.xenomai-prepared FORCE
 @MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	$(top_srcdir)/scripts/prepare-kernel.sh \
 @MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@             --adeos="$(ADEOS_PATCH)" --linux=linux \
 @MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	     --arch=$(XENO_LINUX_ARCH) && \
 @MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
 @MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	cd linux && $(MAKE) $* \
 @MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@		ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross
-@MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@linux/%: linux/.xenomai-prepared
+@MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@linux/%: linux/.xenomai-prepared FORCE
 @MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
 @MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@	cd linux && $(MAKE) $* \
 @MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@		ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross
 
 @XENO_BUILD_LINUX_TRUE@linux/.xenomai-prepared: config.status
 @XENO_BUILD_LINUX_TRUE@	./config.status linux
+
+@XENO_BUILD_LINUX_TRUE@.PHONY: FORCE
 
 @XENO_BUILD_LINUX_TRUE@linux/install: linux/all
 @XENO_BUILD_LINUX_TRUE@	@targets=modules_install; \
