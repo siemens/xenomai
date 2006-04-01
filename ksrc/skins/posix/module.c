@@ -22,12 +22,12 @@
  * Xenomai POSIX skin is an implementation of a small subset of the Single
  * Unix specification over Xenomai generic RTOS core.
  *
- * The following table gives equivalence between POSIX skin services and native
- * skin services.
+ * The following table gives equivalence between native API services and POSIX
+ * services.
  *
  * <CENTER>
  * <TABLE>
- * <TR><TH>native skin services</TH><TH>POSIX skin services</TH></TR>
+ * <TR><TH>Native API services</TH> <TH>POSIX API services</TH></TR>
  * <TR><TD>@ref alarm</TD>          <TD>@ref posix_time</TD></TR>
  * <TR><TD>@ref cond</TD>           <TD>@ref posix_cond</TD></TR>
  * <TR><TD>@ref event</TD>          <TD>no direct equivalence, <BR>
