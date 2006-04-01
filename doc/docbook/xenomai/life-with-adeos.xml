@@ -6,7 +6,7 @@
 <article id="Life_With_Adeos">
   <articleinfo>
     <title>Life with Adeos</title>
-    <releaseinfo>Rev</releaseinfo>
+    <releaseinfo>Revision B</releaseinfo>
     <pubdate>10/09/2005</pubdate>
     <author>
       <firstname>Philippe</firstname>
@@ -15,6 +15,20 @@
     <copyright>
       <year>2005</year>
     </copyright>
+
+    <abstract>
+      <para>This article gives an overview of the Adeos technology and
+      what it provides to Xenomai. After an introduction addressing
+      the event pipeline, the implementation of interrupts dispatching
+      as well as the system event propagation, we will then study the
+      interactions between Xenomai and Adeos. The notions of primary
+      and secondary domains will be explained and we will also be
+      interested in studying how interrupts get propagated. We will
+      finally conclude on a few tips and tricks to disable/enable
+      interrupts sources and to share interrupts between domains.
+      </para>
+    </abstract>
+
     <legalnotice>
       <para>The legal notice comes here!</para>
     </legalnotice>
@@ -90,7 +104,27 @@
 	general view of some Adeos-based system, where multiple
 	domains are sharing events through the pipeline abstraction:</para>
 
-      <para>FIGURE HERE</para>
+      <mediaobject>
+	<imageobject role="html">
+	  <imagedata format="JPG"
+	             align="center"
+	             valign="middle"
+	             fileref="../pictures/life-with-adeos-img1.jpg"/>
+	</imageobject>
+	<textobject>
+	  <formalpara>
+	    <title>
+	      Event pipeline representation (2)
+	    </title>
+	    <para>Here I put a description !</para>
+	  </formalpara>
+	</textobject>
+	<caption>
+	  <para>
+	    Event pipeline representation
+	  </para>
+	</caption>
+      </mediaobject>
 
       <para>In the figure above, the position of the Linux kernel with
 	respect to the pipelining order might be anywhere; this said, the
@@ -102,7 +136,7 @@
 
     <!-- ===             Optimistic interrupt protection             === -->
 
-    <sect2 id="Optimistic_interrupt_protection" reflabel="optimistic
+    <sect2 id="Optimistic_interrupt_protection" xreflabel="optimistic
       interrupt protection">
       <title>Optimistic interrupt protection</title>
 
@@ -219,7 +253,7 @@
 
     <!-- ===      Xenomai's primary and secondary domain             === -->
 
-    <sect2 id="Xenomai's_primary_and_secondary_domain"
+    <sect2 id="Xenomai_primary_and_secondary_domain"
       xreflabel="primary and secondary domain">
       <title>Xenomai's primary and secondary domains</title>
 
@@ -344,10 +378,13 @@
       of priority:</para>
 
       <itemizedlist>
-	<listitem>Xenomai's primary domain, which is the home of the
-	  real-time nucleus;</listitem>
-	<listitem>The interrupt shield domain;</listitem>
-	<listitem>The Linux domain.</listitem>
+	<listitem>
+	  <para>Xenomai's primary domain, which is the home of the
+	  real-time nucleus;</para></listitem>
+	<listitem>
+	  <para>The interrupt shield domain;</para></listitem>
+	<listitem>
+	  <para>The Linux domain.</para></listitem>
       </itemizedlist>
 
     </sect2>
