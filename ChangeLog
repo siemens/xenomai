@@ -1,3 +1,8 @@
+2006-04-01  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/pod.h, include/nucleus/thread.h,
+	ksrc/nucleus/pod.c: Get rid of the suspended thread queue.
+
 2006-03-31  Philippe Gerum  <rpm@xenomai.org>
 
 	* arch/powerpc/patches: Upgrade to Adeos 2.4.25/1.0-04.

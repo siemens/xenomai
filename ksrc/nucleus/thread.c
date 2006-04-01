@@ -110,7 +110,6 @@ int xnthread_init (xnthread_t *thread,
 	snprintf(thread->name,sizeof(thread->name),"%p",thread);
 
     inith(&thread->glink);
-    inith(&thread->slink);
     initph(&thread->rlink);
     initph(&thread->plink);
     initpq(&thread->claimq,xnpod_get_qdir(nkpod),xnpod_get_maxprio(nkpod,0));
