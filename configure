@@ -20637,7 +20637,7 @@ echo "${ECHO_T}yes" >&6
   echo "$as_me:$LINENO: checking for Linux sources" >&5
 echo $ECHO_N "checking for Linux sources... $ECHO_C" >&6
   if test x"$XENO_LINUX_SRCDIR" = xy; then
-      candidates="linux* $srcdir/linux*"
+      candidates="linux-* $srcdir/linux-* $srcdir/linux linux"
       if test x"$cross_compiling" = xno; then
           candidates="$candidates /lib/modules/`uname -r`/source /usr/src/linux"
       fi
@@ -23267,8 +23267,9 @@ done
            echo "*** Warning: built version of linux and requested versions are "
            echo "*** different. If you want to build the requested version of "
            echo "*** linux, remove the file: linux/.xenomai-prepared."
+        else
+           touch linux/.xenomai-prepared
         fi
-        touch linux/.xenomai-prepared
      else
            set -e
            targetdir=$PWD/linux
