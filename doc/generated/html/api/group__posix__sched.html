@@ -18,6 +18,11 @@ Collaboration diagram for Threads scheduling services.:<center><table><tr><td><i
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Thread scheduling services. 
 <p>
+Xenomai POSIX skin supports the two scheduling policies SCHED_FIFO and SCHED_RR. The SCHED_OTHER policy is the same as SCHED_RR.<p>
+The SCHED_RR policy is only effective if the system timer is started in periodic mode (i.e. if configured with the compilation constant <em>CONFIG_XENO_OPT_TIMING_PERIOD</em> or the <em>xeno_nucleus</em> module parameter <em>tick_arg</em> set to a non null value). The SCHED_RR round-robin time slice is configured with the <em>xeno_posix</em> module parameter <em>time_slice</em>, as a count of system timer clock ticks.<p>
+The SCHED_SPORADIC policy is not supported.<p>
+The scheduling policy and priority of a thread is set when creating a thread, by using thread creation attributes (see <a class="el" href="group__posix__threadattr.html#ga8">pthread_attr_setinheritsched()</a>, <a class="el" href="group__posix__threadattr.html#ga10">pthread_attr_setschedpolicy()</a> and <a class="el" href="group__posix__threadattr.html#ga12">pthread_attr_setschedparam()</a>), or when the thread is already running by using the service <a class="el" href="group__posix__sched.html#ga4">pthread_setschedparam()</a>.<p>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_04">Specification.</a> </dd></dl>
 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
@@ -85,6 +90,18 @@ Thread scheduling services.
 <p>
 Get the scheduling policy and parameters of the specified thread. 
 <p>
+This service returns, at the addresses <em>pol</em> and <em>par</em>, the current scheduling policy and scheduling parameters (i.e. priority) of the Xenomai POSIX skin thread <em>tid</em>.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>tid</em>&nbsp;</td><td>target thread;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>pol</em>&nbsp;</td><td>address where the scheduling policy of <em>tid</em> is stored on success;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>par</em>&nbsp;</td><td>address where the scheduling parameters of <em>tid</em> is stored on success.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
+an error number if:<ul>
+<li>ESRCH, <em>tid</em> is invalid.</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">Specification.</a> </dd></dl>
     </td>
   </tr>
@@ -131,6 +148,19 @@ Get the scheduling policy and parameters of the specified thread.
 <p>
 Set the scheduling policy and parameters of the specified thread. 
 <p>
+This service set the scheduling policy of the Xenomai POSIX skin thread <em>tid</em> to the value <em>pol</em>, and its scheduling parameters (i.e. its priority) to the value pointed to by <em>par</em>.<p>
+When used in user-space, passing SCHED_FIFO as the <em>pol</em> argument, this service may be used to turn the regular thread <em>tid</em> into a Xenomai POSIX skin thread.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>tid</em>&nbsp;</td><td>target thread;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>pol</em>&nbsp;</td><td>scheduling policy, one of SCHED_FIFO, SCHED_RR or SCHED_OTHER;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>par</em>&nbsp;</td><td>scheduling parameters address.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
+an error number if:<ul>
+<li>ESRCH, <em>tid</em> is invalid;</li><li>EINVAL, <em>pol</em> or <em>par-&gt;sched_priority</em> is invalid.</li></ul>
+</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setschedparam.html">Specification.</a> </dd></dl>
     </td>
   </tr>
@@ -162,6 +192,20 @@ Set the scheduling policy and parameters of the specified thread.
 <p>
 Get maximum priority of the specified scheduling policy. 
 <p>
+This service returns the maximum priority of the scheduling policy <em>policy</em>.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>policy</em>&nbsp;</td><td>scheduling policy, one of SCHED_FIFO, SCHED_RR, or SCHED_OTHER.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
+<li>EINVAL, <em>policy</em> is invalid.</li></ul>
+</td></tr>
+  </table>
+</dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_max.html">Specification.</a> </dd></dl>
     </td>
   </tr>
@@ -193,6 +237,20 @@ Get maximum priority of the specified scheduling policy.
 <p>
 Get minimum priority of the specified scheduling policy. 
 <p>
+This service returns the minimum priority of the scheduling policy <em>policy</em>.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>policy</em>&nbsp;</td><td>scheduling policy, one of SCHED_FIFO, SCHED_RR, or SCHED_OTHER.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
+<li>EINVAL, <em>policy</em> is invalid.</li></ul>
+</td></tr>
+  </table>
+</dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_min.html">Specification.</a> </dd></dl>
     </td>
   </tr>
@@ -233,6 +291,22 @@ Get minimum priority of the specified scheduling policy.
 <p>
 Get the round-robin scheduling time slice. 
 <p>
+This service returns the time quantum used by Xenomai POSIX skin SCHED_RR scheduling policy.<p>
+In kernel-space, this service only works if pid is zero, in user-space, round-robin scheduling policy is not supported, and this service not implemented.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>pid</em>&nbsp;</td><td>must be zero;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>interval</em>&nbsp;</td><td>address where the round-robin scheduling time quantum will be returned on success.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
+<li>ESRCH, <em>pid</em> is invalid (not 0).</li></ul>
+</td></tr>
+  </table>
+</dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_rr_get_interval.html">Specification.</a> </dd></dl>
     </td>
   </tr>
@@ -264,11 +338,17 @@ Get the round-robin scheduling time slice.
 <p>
 Yield the processor. 
 <p>
+This function move the current thread at the end of its priority group.<p>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td></td></tr>
+  </table>
+</dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_yield.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 28 17:21:42 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Apr 1 18:45:31 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

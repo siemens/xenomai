@@ -128,8 +128,9 @@ This service closes the file descriptor <em>fd</em>. In kernel-space, this servi
 <p>
 Truncate a file or shared memory object to a specified length. 
 <p>
-When used in kernel-space, this service set to <em>len</em> the size of a shared memory object opened with the <a class="el" href="group__posix__shm.html#ga8">shm_open()</a> service. In user-space this service set the size of any file. When this service is used to increase the size of a file or shared memory object, the added space is zero-filled.<p>
-Xenomai POSIX skin shared memory objects may only be resized if they are not currently mapped.<p>
+When used in kernel-space, this service set to <em>len</em> the size of a shared memory object opened with the <a class="el" href="group__posix__shm.html#ga8">shm_open()</a> service. In user-space this service falls back to Linux regular ftruncate service for file descriptors not obtained with <a class="el" href="group__posix__shm.html#ga8">shm_open()</a>. When this service is used to increase the size of a shared memory object, the added space is zero-filled.<p>
+Shared memory are suitable for direct memory access (allocated in physically contiguous memory) if their size is less than or equal to 128 K.<p>
+Shared memory objects may only be resized if they are not currently mapped.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>fd</em>&nbsp;</td><td>file descriptor;</td></tr>
@@ -418,7 +419,7 @@ This service unlinks the shared memory object named <em>name</em>. The shared me
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Mar 28 17:21:42 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Apr 1 18:45:32 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
