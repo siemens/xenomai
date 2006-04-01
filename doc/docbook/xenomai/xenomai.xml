@@ -2,7 +2,7 @@
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN" 
           "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
 
-<article id="WhitePaper">
+<article id="White_Paper">
   <articleinfo>
     <title>Xenomai - Implementing a RTOS emulation framework
       on GNU/Linux</title>
@@ -12,7 +12,6 @@
       <firstname>Philippe</firstname>
       <surname>Gerum</surname>	
     </author>
-    <corpauthor>Company name</corpauthor>
     <copyright>
       <year>2004</year>
     </copyright>
@@ -48,8 +47,7 @@
     </abstract>
 
     <legalnotice>
-      <para>This is my legal notice that I put here... Be careful :
-      this notice is legal!</para>
+      <para>The legal notice comes here!</para>
     </legalnotice>
 
   </articleinfo>
