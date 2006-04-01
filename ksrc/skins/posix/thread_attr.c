@@ -22,12 +22,12 @@
  *
  * Thread creation attributes.
  *
- * The services in this section allow to set the attributes of a
- * @b pthread_attr_t structure, passed to the pthread_create() service in order
+ * The services described in this section allow to set the attributes of a
+ * @b pthread_attr_t object, passed to the pthread_create() service in order
  * to set the attributes of a created thread.
  *
- * A @b pthread_attr_t structure has to be initialized with pthread_attr_init()
- * first. Attributes are then set to their default, in kernel-space:
+ * A @b pthread_attr_t object has to be initialized with pthread_attr_init()
+ * first, which sets attributes to their default values, i.e. in kernel-space:
  * - @a detachstate to PTHREAD_CREATE_JOINABLE,
  * - @a stacksize to PTHREAD_STACK_MIN,
  * - @a inheritsched to PTHREAD_EXPLICIT_SCHED,

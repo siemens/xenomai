@@ -22,6 +22,10 @@
  *
  * Threads management services.
  *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_09.html#tag_02_09">
+ * Specification.</a>
+ * 
  *@{*/
 
 #include <posix/thread.h>
@@ -111,9 +115,6 @@ int pthread_create (pthread_t *tid,
     const char *name;
     int prio;
     spl_t s;
-
-    if (!tid)
-        return EINVAL;
 
     if (attr && attr->magic != PSE51_THREAD_ATTR_MAGIC)
         return EINVAL;
