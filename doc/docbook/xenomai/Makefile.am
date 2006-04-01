@@ -1,8 +1,8 @@
 include ../docbook.rules
 
-EXTRA_DIST=xenomai.xml
+EXTRA_DIST=xenomai.xml life-with-adeos.xml
 
-DBX_HTML_DOCS=xenomai
+DBX_HTML_DOCS=xenomai life-with-adeos
 DBX_HTML_CSS=xenomai.css
 DBX_HTML_STYLESHEET=../custom-stylesheets/xsl/html/onechunk.xsl
 
