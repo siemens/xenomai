@@ -3,7 +3,7 @@
           "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
 
 
-<article id="Life_With_Adeos">
+<article id="index">
   <articleinfo>
     <title>Life with Adeos</title>
     <releaseinfo>Revision B</releaseinfo>
@@ -109,7 +109,7 @@
 	  <imagedata format="JPG"
 	             align="center"
 	             valign="middle"
-	             fileref="../pictures/life-with-adeos-img1.jpg"/>
+	             fileref="life-with-adeos-img1.jpg"/>
 	</imageobject>
 	<caption>
 	  <para>
@@ -178,7 +178,7 @@
 	  <imagedata format="JPG"
 	             align="center"
 	             valign="middle"
-	             fileref="../pictures/life-with-adeos-img2.jpg"/>
+	             fileref="life-with-adeos-img2.jpg"/>
 	</imageobject>
 	<caption>
 	  <para>
@@ -248,7 +248,7 @@
 	<imagedata format="JPG"
 	  align="center"
 	  valign="middle"
-	  fileref="../pictures/life-with-adeos-img3.jpg"/>
+	  fileref="life-with-adeos-img3.jpg"/>
       </imageobject>
       <caption>
 	<para>
@@ -408,7 +408,7 @@
 	  <imagedata format="JPG"
 	    align="center"
 	    valign="middle"
-	    fileref="../pictures/life-with-adeos-img4.jpg"/>
+	    fileref="life-with-adeos-img4.jpg"/>
 	</imageobject>
 	<caption>
 	  <para>
