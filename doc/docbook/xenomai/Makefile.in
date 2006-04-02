@@ -238,7 +238,7 @@ DBX_XSLTPROC_FLAGS = --catalogs --xinclude $(DBX_MAYBE_NONET)
 # So as to have HTML documents browseable in the build directory, they make
 # reference to pictures and CSS in the sources directory. But when installing,
 # pictures and CSS are installed too, so the HTML documents have to be
-# transformed in order to make reference to the installed picutures and
+# transformed in order to make reference to the installed pictures and
 # CSS. This is what the variable DBX_HTML_TRANSFORM is used for.
 @DBX_DOC_TRUE@esc_html_srcroot = $(subst .,\.,$(html_srcroot))
 @DBX_DOC_TRUE@DBX_SGML_CATALOG_FILES = $(DBX_BUILD_ROOT)/catalog
@@ -249,8 +249,8 @@ PDF_DOCS = $(DBX_PDF_DOCS)
 docdir = $(datadir)/doc/$(PACKAGE)-$(VERSION)
 doc_top_distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)
 GEN_DOC_DIST_ROOT = $(doc_top_distdir)/doc/generated
-EXTRA_DIST = xenomai.xml
-DBX_HTML_DOCS = xenomai
+EXTRA_DIST = xenomai.xml life-with-adeos.xml
+DBX_HTML_DOCS = xenomai life-with-adeos
 DBX_HTML_CSS = xenomai.css
 DBX_HTML_STYLESHEET = ../custom-stylesheets/xsl/html/onechunk.xsl
 DBX_PDF_DOCS = xenomai.pdf
@@ -498,7 +498,8 @@ uninstall-am: uninstall-info-am uninstall-local
 @DBX_DOC_TRUE@dbx-pdf-local: $(DBX_PDF_DOCS)
 @DBX_DOC_TRUE@dbx-html-local: $(DBX_HTML_DOCS)
 
-@DBX_DOC_TRUE@all-local: dbx-xsl-local dbx-pdf-local dbx-html-local
+#all-local: dbx-xsl-local dbx-pdf-local dbx-html-local
+@DBX_DOC_TRUE@all-local: dbx-xsl-local dbx-html-local
 
 install-dbx-htmldocs: $(DBX_ALL_HTML:%=$(HTML_DOCSDIR)%)
 	docs="$^"; abs_builddir=$$PWD; \
