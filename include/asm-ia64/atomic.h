@@ -36,8 +36,6 @@ typedef atomic_t atomic_counter_t;
 #define xnarch_atomic_inc_and_test(pcounter)   atomic_inc_and_test(pcounter)
 #define xnarch_atomic_dec_and_test(pcounter)   atomic_dec_and_test(pcounter)
 #define xnarch_memory_barrier()                smp_mb()
-#define atomic_xchg(ptr,v)                     ia64_xchg8(ptr,v)
-#define atomic_cmpxchg8_acq(ptr,o,n)           cmpxchg_acq(ptr,o,n)
 
 static inline void atomic_set_mask(unsigned mask, unsigned long *addr)
 {
@@ -80,8 +78,8 @@ typedef struct { volatile int counter; } atomic_counter_t;
 #define atomic_inc(v)	        atomic_add(1, (v))
 #define atomic_dec_and_test(v)	(atomic_sub_return(1, (v)) == 0)
 
-static inline unsigned long atomic_xchg (volatile void *ptr,
-					 unsigned long x)
+static inline unsigned long xnarch_atomic_xchg (volatile void *ptr,
+						unsigned long x)
 {
 	uint64_t ia64_intri_res;						
 	asm __volatile ("xchg8 %0=[%1],%2" : "=r" (ia64_intri_res)	
@@ -89,16 +87,7 @@ static inline unsigned long atomic_xchg (volatile void *ptr,
 	return ia64_intri_res;
 }
 
-#define atomic_cmpxchg8_acq(ptr, new, old)						\
-({											\
-	uint64_t ia64_intri_res;							\
-	asm volatile ("mov ar.ccv=%0;;" :: "rO"((uint64_t)old));			\
-	asm volatile ("cmpxchg8.acq %0=[%1],%2,ar.ccv":					\
-			      "=r"(ia64_intri_res) : "r"(ptr), "r"(new) : "memory");	\
-	ia64_intri_res;									\
-})
-
-#define atomic_cmpxchg4_acq(ptr, new, old)						\
+#define do_cmpxchg4_acq(ptr, new, old)							\
 ({											\
 	uint64_t ia64_intri_res;							\
 	asm volatile ("mov ar.ccv=%0;;" :: "rO"((uint64_t)old));			\
@@ -114,7 +103,7 @@ static inline int atomic_add (int i, atomic_counter_t *v)
 	do {
 		old = atomic_read(v);
 		new = old + i;
-	} while (atomic_cmpxchg4_acq(v, new, old) != old);
+	} while (do_cmpxchg4_acq(v, new, old) != old);
 	return new;
 }
 
@@ -125,7 +114,7 @@ static inline int atomic_sub_return (int i, atomic_counter_t *v)
 	do {
 		old = atomic_read(v);
 		new = old - i;
-	} while (atomic_cmpxchg4_acq(v, new, old) != old);
+	} while (do_cmpxchg4_acq(v, new, old) != old);
 	return new;
 }
 
@@ -143,6 +132,5 @@ typedef unsigned long atomic_flags_t;
 #define xnarch_atomic_set(pcounter,i)          atomic_set(pcounter,i)
 #define xnarch_atomic_inc(pcounter)            atomic_inc(pcounter)
 #define xnarch_atomic_dec_and_test(pcounter)   atomic_dec_and_test(pcounter)
-#define xnarch_atomic_xchg(ptr,x)              atomic_xchg(ptr,x)
 
 #endif /* !_XENO_ASM_IA64_ATOMIC_H */
