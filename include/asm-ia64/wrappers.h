@@ -30,9 +30,13 @@
 
 #define wrap_access_ok(task,addr,size) __access_ok((addr),(size),(task)->addr_limit)
 
-#else /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)  */
+#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)  */
 
 #define wrap_access_ok(task,addr,size) __access_ok((addr),(size),(task)->thread_info->addr_limit)
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,16)
+#define task_pt_regs(t)  ia64_task_regs(t)
+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,16)  */
 
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
 
