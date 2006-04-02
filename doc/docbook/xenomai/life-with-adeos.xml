@@ -111,14 +111,6 @@
 	             valign="middle"
 	             fileref="../pictures/life-with-adeos-img1.jpg"/>
 	</imageobject>
-	<textobject>
-	  <formalpara>
-	    <title>
-	      Event pipeline representation (2)
-	    </title>
-	    <para>Here I put a description !</para>
-	  </formalpara>
-	</textobject>
 	<caption>
 	  <para>
 	    Event pipeline representation
@@ -181,7 +173,19 @@
       is achieved by a per-domain, per-CPU interrupt log, as
       illustrated below:</para>
 
-      <para>FIGURE HERE</para>
+      <mediaobject>
+	<imageobject role="html">
+	  <imagedata format="JPG"
+	             align="center"
+	             valign="middle"
+	             fileref="../pictures/life-with-adeos-img2.jpg"/>
+	</imageobject>
+	<caption>
+	  <para>
+	    The optimistic interrupt protection scheme
+	  </para>
+	</caption>
+      </mediaobject>
 
     </sect2>
 
@@ -239,7 +243,19 @@
     threads. The figure below illustrates the position of the Adeos
     layer in the Xenomai architecture:</para>
 
-    <para>FIGURE HERE</para>
+    <mediaobject>
+      <imageobject role="html">
+	<imagedata format="JPG"
+	  align="center"
+	  valign="middle"
+	  fileref="../pictures/life-with-adeos-img3.jpg"/>
+      </imageobject>
+      <caption>
+	<para>
+	  Position of Adeos in the Xenomai architecture
+	</para>
+      </caption>
+    </mediaobject>
 
     <para>You will notice that the Adeos interface is directly exposed
     to the Hardware Abstraction Layer which underlies the Xenomai
@@ -386,6 +402,21 @@
 	<listitem>
 	  <para>The Linux domain.</para></listitem>
       </itemizedlist>
+
+      <mediaobject>
+	<imageobject role="html">
+	  <imagedata format="JPG"
+	    align="center"
+	    valign="middle"
+	    fileref="../pictures/life-with-adeos-img4.jpg"/>
+	</imageobject>
+	<caption>
+	  <para>
+	    The three stages of the Adeos pipeline
+	  </para>
+	</caption>
+      </mediaobject>
+
 
     </sect2>
 
