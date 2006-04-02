@@ -27,7 +27,7 @@ endif
 # So as to have HTML documents browseable in the build directory, they make
 # reference to pictures and CSS in the sources directory. But when installing,
 # pictures and CSS are installed too, so the HTML documents have to be
-# transformed in order to make reference to the installed picutures and
+# transformed in order to make reference to the installed pictures and
 # CSS. This is what the variable DBX_HTML_TRANSFORM is used for.
 esc_html_srcroot=$(subst .,\.,$(html_srcroot))
 DBX_HTML_TRANSFORM=sed "s,\(src\|href\)=\"$(esc_html_srcroot),\1=\"..,g"
@@ -67,7 +67,7 @@ DBX_SGML_CATALOG_FILES=$(DBX_BUILD_ROOT)/catalog
 #     $DBX_SRC_ROOT/css.
 #
 # The pictures use by the HTML document have to be in the $DBX_SRC_ROOT/pictures
-%: %.xml %.xml.valid-stamp $(DBX_HTML_STYLESHEET)
+%: %.xml %.xml.valid-stamp $(DBX_HTML_STYLESHEET) FORCE
 	@echo Generating $@
 	$(mkinstalldirs) $@
 	deps="$^"; set dummy $$deps; src=$$2; stylesheet=$$4; \
@@ -76,8 +76,10 @@ DBX_SGML_CATALOG_FILES=$(DBX_BUILD_ROOT)/catalog
 	    --stringparam html.stylesheet $(html_srcroot)/css/$(DBX_HTML_CSS) \
 	    --stringparam navig.graphics.path $(html_srcroot)/pictures/ \
 	    --stringparam admon.graphics.path $(html_srcroot)/pictures/ \
+	    --stringparam img.src.path $(html_srcroot)/pictures/ \
 	    --stringparam base.dir $@/ $$stylesheet $$src
 
+.PHONY: FORCE
 
 #
 # PDF
@@ -85,7 +87,7 @@ DBX_SGML_CATALOG_FILES=$(DBX_BUILD_ROOT)/catalog
 # We use xsltproc with a docbook-xsl stylesheet to generate the output in the
 # .fo format, which is then converted to pdf by FOP.
 # 
-# DBX_HTML_STYLESHEET is the relative path to the docbook-xsl stylesheet. Thanks
+# DBX_FO_STYLESHEET is the relative path to the docbook-xsl stylesheet. Thanks
 #     to make's VPATH, it may be relative to the current build or sources
 #     directory.
 #
@@ -99,7 +101,8 @@ DBX_SGML_CATALOG_FILES=$(DBX_BUILD_ROOT)/catalog
 
 %.pdf: %.fo
 	@echo Generating $@...
-	$(DBX_FOP) -fo $< -pdf $@
+	abs_target=`pwd`/$@; abs_source=`pwd`/$<; cd $(DBX_SRC_ROOT)/pictures; \
+	$(DBX_FOP) -fo $$abs_source -pdf $$abs_target
 
 clean-dbx-local:
 	$(RM) -r $(DBX_HTML_DOCS) $(DBX_PDF_DOCS) *.fo *.xml.valid-stamp
