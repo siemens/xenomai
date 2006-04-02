@@ -23,7 +23,8 @@ echo 'Generating documentation in the build tree.'
 [ -d tmp-dist ] && rm -Rf tmp-dist
 make clean
 mkdir tmp-dist
-make doc_top_distdir=`pwd`/tmp-dist distdir=./tmp-dist distdir
+mkdir tmp-dist/doc
+make doc_top_distdir=`pwd`/tmp-dist distdir=./tmp-dist/doc distdir
 
 if ! [ -d tmp-dist/doc/generated ]; then 
     die Something went wrong when generating the documentation.
@@ -81,3 +82,5 @@ echo -n 'Adding new files...'
     svn add "${file[*]}"
 done
 echo `cat "$builddir/tmp-dist/added_files"` done.
+
+rm -Rf tmp-dist
