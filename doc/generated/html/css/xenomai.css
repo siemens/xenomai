@@ -160,6 +160,16 @@ div.note p {
         color: red;
 }
 
+div.caption { 
+        color: #8A56EF;
+        text-decoration: underline;
+}
+
+div.caption p { 
+        text-align: center;
+}
+
+
 div.legalnotice {
         background-color: #FFFFBB;
 }
