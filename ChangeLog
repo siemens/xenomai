@@ -1,4 +1,12 @@
+2006-04-02  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-{ia64,arm,i386}/system.h (xnarch_sysalloc,
+	xnarch_sysfree): Use kmalloc() for allocations <= 128k.
+
 2006-04-01  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pod.c (xnpod_start_timer): Statically check for the
+	host tick value as much as possible.
 
 	* include/nucleus/pod.h, include/nucleus/thread.h,
 	ksrc/nucleus/pod.c: Get rid of the suspended thread queue.
