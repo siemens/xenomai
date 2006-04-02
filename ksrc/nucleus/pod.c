@@ -3111,7 +3111,10 @@ int xnpod_start_timer (u_long nstick, xnisr_t tickhandler)
     if (!nkpod || testbits(nkpod->status,XNPIDLE))
         {
         err = -ENOSYS;
-        goto unlock_and_exit;
+
+unlock_and_exit:
+        xnlock_put_irqrestore(&nklock,s);
+        return err;
         }
 
     if (testbits(nkpod->status,XNTIMED))
@@ -3145,20 +3148,17 @@ int xnpod_start_timer (u_long nstick, xnisr_t tickhandler)
 	xntimer_set_aperiodic_mode();
         }
 
-    if (XNARCH_HOST_TICK > 0 && XNARCH_HOST_TICK < nkpod->tickvalue)
+#if XNARCH_HOST_TICK > 0
+    if (XNARCH_HOST_TICK < nkpod->tickvalue)
         {
         /* Host tick needed but shorter than the timer precision;
            bad... */
 	xnlogerr("bad timer setup value (%lu Hz), must be >= CONFIG_HZ (%d).\n",
 		 1000000000U/nkpod->tickvalue,HZ);
         err = -EINVAL;
-
-unlock_and_exit:
-
-        xnlock_put_irqrestore(&nklock,s);
-
-        return err;
+	goto unlock_and_exit;
         }
+#endif /* XNARCH_HOST_TICK > 0 */
 
     xnltt_log_event(xeno_ev_tmstart,nstick);
 
