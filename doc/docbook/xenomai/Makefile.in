@@ -253,7 +253,7 @@ EXTRA_DIST = xenomai.xml life-with-adeos.xml
 DBX_HTML_DOCS = xenomai life-with-adeos
 DBX_HTML_CSS = xenomai.css
 DBX_HTML_STYLESHEET = ../custom-stylesheets/xsl/html/onechunk.xsl
-DBX_PDF_DOCS = xenomai.pdf
+DBX_PDF_DOCS = xenomai.pdf life-with-adeos.pdf
 DBX_FO_STYLESHEET = ../custom-stylesheets/xsl/fo/docbook.xsl
 all: all-am
 
@@ -452,7 +452,7 @@ uninstall-am: uninstall-info-am uninstall-local
 #     $DBX_SRC_ROOT/css.
 #
 # The pictures use by the HTML document have to be in the $DBX_SRC_ROOT/pictures
-@DBX_DOC_TRUE@%: %.xml %.xml.valid-stamp $(DBX_HTML_STYLESHEET)
+@DBX_DOC_TRUE@%: %.xml %.xml.valid-stamp $(DBX_HTML_STYLESHEET) FORCE
 @DBX_DOC_TRUE@	@echo Generating $@
 @DBX_DOC_TRUE@	$(mkinstalldirs) $@
 @DBX_DOC_TRUE@	deps="$^"; set dummy $$deps; src=$$2; stylesheet=$$4; \
@@ -461,7 +461,10 @@ uninstall-am: uninstall-info-am uninstall-local
 @DBX_DOC_TRUE@	    --stringparam html.stylesheet $(html_srcroot)/css/$(DBX_HTML_CSS) \
 @DBX_DOC_TRUE@	    --stringparam navig.graphics.path $(html_srcroot)/pictures/ \
 @DBX_DOC_TRUE@	    --stringparam admon.graphics.path $(html_srcroot)/pictures/ \
+@DBX_DOC_TRUE@	    --stringparam img.src.path $(html_srcroot)/pictures/ \
 @DBX_DOC_TRUE@	    --stringparam base.dir $@/ $$stylesheet $$src
+
+@DBX_DOC_TRUE@.PHONY: FORCE
 
 #
 # PDF
@@ -469,7 +472,7 @@ uninstall-am: uninstall-info-am uninstall-local
 # We use xsltproc with a docbook-xsl stylesheet to generate the output in the
 # .fo format, which is then converted to pdf by FOP.
 # 
-# DBX_HTML_STYLESHEET is the relative path to the docbook-xsl stylesheet. Thanks
+# DBX_FO_STYLESHEET is the relative path to the docbook-xsl stylesheet. Thanks
 #     to make's VPATH, it may be relative to the current build or sources
 #     directory.
 #
@@ -483,7 +486,8 @@ uninstall-am: uninstall-info-am uninstall-local
 
 @DBX_DOC_TRUE@%.pdf: %.fo
 @DBX_DOC_TRUE@	@echo Generating $@...
-@DBX_DOC_TRUE@	$(DBX_FOP) -fo $< -pdf $@
+@DBX_DOC_TRUE@	abs_target=`pwd`/$@; abs_source=`pwd`/$<; cd $(DBX_SRC_ROOT)/pictures; \
+@DBX_DOC_TRUE@	$(DBX_FOP) -fo $$abs_source -pdf $$abs_target
 
 @DBX_DOC_TRUE@clean-dbx-local:
 @DBX_DOC_TRUE@	$(RM) -r $(DBX_HTML_DOCS) $(DBX_PDF_DOCS) *.fo *.xml.valid-stamp
