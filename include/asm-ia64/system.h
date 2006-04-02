@@ -98,7 +98,7 @@ extern "C" {
 static inline void *xnarch_sysalloc (u_long bytes)
 
 {
-    if (bytes >= 128*1024)
+    if (bytes > 128*1024)
         return vmalloc(bytes);
 
     return kmalloc(bytes,GFP_KERNEL);
@@ -107,7 +107,7 @@ static inline void *xnarch_sysalloc (u_long bytes)
 static inline void xnarch_sysfree (void *chunk, u_long bytes)
 
 {
-    if (bytes >= 128*1024)
+    if (bytes > 128*1024)
         vfree(chunk);
     else
         kfree(chunk);
@@ -183,7 +183,7 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
 	if (IA64_HAS_EXTRA_STATE(next))
 		ia64_load_extra(next);
 
-	ia64_psr(ia64_task_regs(next))->dfh = !ia64_is_local_fpu_owner(next);
+	ia64_psr(task_pt_regs(next))->dfh = !ia64_is_local_fpu_owner(next);
 
         rthal_thread_switch(out_tcb->kspp,in_tcb->kspp,1);
         }
@@ -238,7 +238,7 @@ static inline void xnarch_init_fpu (xnarchtcb_t *tcb)
         /* Real-time shadow FPU initialization: setting the mfh bit in saved
           registers, xnarch_save_fpu will finish the work. Since tcb is the tcb
           of a shadow, no need to check: task == fph2task(tcb->fpup). */
-        ia64_psr(ia64_task_regs(task))->mfh = 1;
+        ia64_psr(task_pt_regs(task))->mfh = 1;
 }
 
 static inline void xnarch_save_fpu (xnarchtcb_t *tcb)
@@ -251,7 +251,7 @@ static inline void xnarch_save_fpu (xnarchtcb_t *tcb)
         if(tcb->user_task && tcb->fpup)
             {
             struct task_struct *linux_fpu_owner = fph2task(tcb->fpup);
-            struct ia64_psr *psr = ia64_psr(ia64_task_regs(linux_fpu_owner));
+            struct ia64_psr *psr = ia64_psr(task_pt_regs(linux_fpu_owner));
 
             /* Keep the FPU save zone in sync with what Linux expects. */
             psr->mfh = 0;
