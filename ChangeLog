@@ -1,3 +1,9 @@
+2006-04-03  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/syscall.c (__*_init): Copy user-space contents
+	before calling kernel-space init in order to correctly detect
+	duplicate initializations.
+
 2066-04-03  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/rtdm/device.c, ksrc/skins/rtdm/proc.c: Remove unneeded
