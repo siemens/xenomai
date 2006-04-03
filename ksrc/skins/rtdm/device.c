@@ -369,19 +369,13 @@ int rtdm_dev_unregister(struct rtdm_device* device, unsigned int poll_delay)
         return -ENODEV;
 
     down(&nrt_dev_lock);
-
-#ifdef CONFIG_PROC_FS
-    remove_proc_entry("information", device->proc_entry);
-    remove_proc_entry(device->proc_name, rtdm_proc_root);
-#endif /* CONFIG_PROC_FS */
-
     xnlock_get_irqsave(&rt_dev_lock, s);
 
     while (atomic_read(&reg_dev->reserved.refcount) > 1) {
         xnlock_put_irqrestore(&rt_dev_lock, s);
+        up(&nrt_dev_lock);
 
         if (!poll_delay) {
-            up(&nrt_dev_lock);
             rtdm_dereference_device(reg_dev);
             return -EAGAIN;
         }
@@ -391,12 +385,19 @@ int rtdm_dev_unregister(struct rtdm_device* device, unsigned int poll_delay)
                       "release...\n", reg_dev->device_name);
         msleep(poll_delay);
 
+        down(&nrt_dev_lock);
         xnlock_get_irqsave(&rt_dev_lock, s);
     }
 
     list_del(&reg_dev->reserved.entry);
 
     xnlock_put_irqrestore(&rt_dev_lock, s);
+
+#ifdef CONFIG_PROC_FS
+    remove_proc_entry("information", device->proc_entry);
+    remove_proc_entry(device->proc_name, rtdm_proc_root);
+#endif /* CONFIG_PROC_FS */
+
     up(&nrt_dev_lock);
 
     if (reg_dev->reserved.exclusive_context)
