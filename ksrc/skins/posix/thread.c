@@ -543,6 +543,11 @@ int pthread_make_periodic_np (pthread_t thread,
  * - EWOULDBLOCK, the calling thread is not periodic;
  * - EINTR, this service was interrupted by a signal;
  * - ETIMEDOUT, at least one overrun occurred.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space thread;
+ * - Xenomai user-space thread (switches to primary mode).
+ *
  */
 int pthread_wait_np(unsigned long *overruns_r)
 {
