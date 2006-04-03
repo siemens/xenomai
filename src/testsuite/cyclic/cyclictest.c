@@ -13,7 +13,9 @@
 
 #define INGO_TRACE 0
 #define TGLX_TRACE 0
-#define ANY_TRACE (INGO_TRACE + TGLX_TRACE)
+#ifndef IPIPE_TRACE
+#define IPIPE_TRACE 0
+#endif
 
 #include <fcntl.h>
 #include <getopt.h>
@@ -32,6 +34,10 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/mman.h>
+
+#if IPIPE_TRACE
+#include <rtdm/rtbenchmark.h>
+#endif
 
 /* Ugly, but .... */
 #define gettid() syscall(__NR_gettid)
@@ -81,9 +87,10 @@ struct thread_stat {
 	pthread_t thread;
 	int threadstarted;
 	int tid;
+	int traced;
 };
 
-static int shutdown;
+static int test_shutdown;
 static int tracelimit = 100000;
 
 static inline void tsnorm(struct timespec *ts)
@@ -120,15 +127,23 @@ void *timerthread(void *param)
 {
 	struct thread_param *par = param;
 	struct sched_param schedp;
-	struct sigevent sigev;
 	sigset_t sigset;
-	timer_t timer;
 	struct timespec now, next, interval;
 	struct itimerval itimer;
-	struct itimerspec tspec;
 	struct thread_stat *stat = par->stats;
 	int policy = par->prio ? SCHED_FIFO : SCHED_OTHER;
-	int err, stopped = 0;
+	int err;
+#ifdef __UNSUPPORTED
+	struct sigevent sigev;
+	timer_t timer;
+	struct itimerspec tspec;
+#endif
+#if (INGO_TRACE + TGLX_TRACE)
+	int stopped = 0;
+#endif
+#if IPIPE_TRACE
+	int benchdev = open("rtbenchmark0", O_RDWR);
+#endif
 
 	interval.tv_sec = par->interval / USEC_PER_SEC;
 	interval.tv_nsec = (par->interval % USEC_PER_SEC) * 1000;
@@ -169,7 +184,7 @@ void *timerthread(void *param)
         if (err) {
             fprintf(stderr, "pthread_setschedparam: %s\n"
                     "(modprobe xeno_posix?)\n", strerror(err));
-            shutdown = 1;
+            test_shutdown = 1;
             return (void *) 1;
         }
 #endif
@@ -201,11 +216,11 @@ void *timerthread(void *param)
 
 	stat->threadstarted++;
 
-#if ANY_TRACE		
+#if (INGO_TRACE + TGLX_TRACE)
 	gettimeofday(0,(struct timezone *)1);
 #endif
 
-	while (!shutdown) {
+	while (!test_shutdown) {
 
 		long diff;
 		int sigs;
@@ -245,16 +260,21 @@ void *timerthread(void *param)
 		diff = calcdiff(now, next);
 		if (diff < stat->min)
 			stat->min = diff;
-		if (diff > stat->max)
+		if (diff > stat->max) {
 			stat->max = diff;
+#if IPIPE_TRACE
+			if (stat->traced)
+				ioctl(benchdev, RTBNCH_RTIOC_REFREEZE_TRACE, diff);
+#endif
+		}
 
+#if (INGO_TRACE + TGLX_TRACE)
 		if (!stopped && (diff > tracelimit)) {
 			stopped++;
-#if ANY_TRACE 
 			gettimeofday(0,0);
-			shutdown++;
-#endif			
+			test_shutdown++;
 		}
+#endif
 		stat->act = diff;
 		stat->cycles++;
 		
@@ -286,6 +306,10 @@ out:
 	/* switch to normal */
 	schedp.sched_priority = 0;
 	pthread_setschedparam(pthread_self(), SCHED_OTHER, &schedp);
+
+#if IPIPE_TRACE
+	close(benchdev);
+#endif
 
 	stat->threadstarted = -1;
 
@@ -389,7 +413,7 @@ static void process_options (int argc, char *argv[])
 
 static void sighand(int sig)
 {
-	shutdown = 1;
+	test_shutdown = 1;
 }
 
 static void print_stat(struct thread_param *par, int index, int verbose)
@@ -469,9 +493,10 @@ int main(int argc, char **argv)
 		pthread_attr_setstacksize(&thattr, 131072);
 		pthread_create(&stat[i].thread, &thattr, timerthread, &par[i]);
 		stat[i].threadstarted = 1;
+		stat[i].traced = (i == 0);
 	}
 	
-	while (!shutdown) {
+	while (!test_shutdown) {
 		char lavg[256];
 		int fd, len, allstopped = 0;
 
@@ -491,14 +516,14 @@ int main(int argc, char **argv)
 				allstopped++;
 		}
 		usleep(10000);
-		if (shutdown || allstopped == num_threads)
+		if (test_shutdown || allstopped == num_threads)
 			break;
 		if (!verbose)
 			printf("\033[%dA", num_threads + 2);
 	}
 	ret = 0;
  outall:
-	shutdown = 1;
+	test_shutdown = 1;
 	for (i = 0; i < num_threads; i++) {
 		if (stat[i].threadstarted > 0)
 			pthread_kill(stat[i].thread, SIGTERM);
