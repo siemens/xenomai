@@ -473,7 +473,7 @@
     <!-- ===                 Interrupt propagation                   === -->
 
     <sect2 id="Interrupt_propagatio">
-      <title>Interruptpropagation</title>
+      <title>Interrupt propagation</title>
 
       <para>Because it is ahead in the pipeline, the real-time nucleus
       which lives in the Xenomai domain is first notified of any
@@ -572,38 +572,37 @@
       sharing hardware interrupts between domains is as
       follows:</para>
  
-<programlisting>
-	void realtime_eth_handler (unsigned irq, void *cookie) 
-	{ 
-	/* 
-	This interrupt handler has been installed using 
-	rthal_irq_request(), so it will always be invoked on behalf of 
-	the Xenomai (primary) domain. 
-	*/ 
+      <programlisting>
+void realtime_eth_handler (unsigned irq, void *cookie) 
+{ 
+    /* 
+     * This interrupt handler has been installed using 
+     * rthal_irq_request(), so it will always be invoked on behalf of 
+     * the Xenomai (primary) domain. 
+     */ 
 
-	rthal_irq_disable(irq); 
-	/* The Xenomai domain won't receive this irq anymore */
+    rthal_irq_disable(irq); 
+    /* The Xenomai domain won't receive this irq anymore */
+    
+    rthal_irq_host_pend(irq); 
+    /* This irq has been marked as pending for Linux */ 
+}
 
-	rthal_irq_host_pend(irq); 
-	/* This irq has been marked as pending for Linux */ 
-	}
-   
-	void linux_eth_handler (int irq, void *dev_id, struct pt_regs *regs) 
-	{ 
-	/* 
-	This interrupt handler has been installed using 
-	rthal_irq_host_request(), so it will always be invoked on 
-	behalf of the Linux (secondary) domain, as a shared interrupt 
-	handler (Linux-wise). 
-	*/ 
-	rthal_irq_enable(irq); 
-
-	/* 
-	BUG: This won't work as expected: we are only unlocking the 
-	interrupt source for the Linux domain which is current here, 
-	not for the Xenomai domain! 
-	*/ 
-	}
+void linux_eth_handler (int irq, void *dev_id, struct pt_regs *regs) 
+{ 
+    /* 
+     * This interrupt handler has been installed using 
+     * rthal_irq_host_request(), so it will always be invoked on 
+     * behalf of the Linux (secondary) domain, as a shared interrupt 
+     * handler (Linux-wise). 
+     */ 
+    rthal_irq_enable(irq); 
+    
+    /* 
+     * BUG: This won't work as expected: we are only unlocking the 
+     * interrupt source for the Linux domain which is current here, 
+     * not for the Xenomai domain! 
+     */ 
       </programlisting>
 
       <para>In the non-working example above, since Xenomai always
@@ -666,17 +665,17 @@
       way, this time properly:</para>
 
       <programlisting>
-	void realtime_eth_handler (unsigned irq, void *cookie) 
-	{ 
-	rthal_irq_enable(irq); 
-	rthal_irq_host_pend(irq); 
-	/* This irq has been marked as pending for Linux */ 
-	}
- 
-	void linux_eth_handler (int irq, void *dev_id, struct pt_regs *regs) 
-	{ 
-	/* process the IRQ normally. */ 
-	} 
+void realtime_eth_handler (unsigned irq, void *cookie) 
+{ 
+    rthal_irq_enable(irq); 
+    rthal_irq_host_pend(irq); 
+    /* This irq has been marked as pending for Linux */ 
+}
+
+void linux_eth_handler (int irq, void *dev_id, struct pt_regs *regs) 
+{ 
+    /* process the IRQ normally. */ 
+} 
       </programlisting>
 
     </sect2>
