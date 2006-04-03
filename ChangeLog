@@ -9,6 +9,10 @@
 
 2066-04-03  Jan Kiszka  <jan.kiszka@web.de>
 
+	* src/testsuite/cyclic/cyclictest.c, src/testsuite/cyclic/Makefile.am:
+	Add ipipe-tracing support for highest prio thread, fixed some
+	warnings.
+
 	* ksrc/skins/rtdm/device.c, ksrc/skins/rtdm/proc.c: Remove unneeded
 	nrt-locks from proc functions, release nrt-lock in unregister loop for
 	busy devices.
