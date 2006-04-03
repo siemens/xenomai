@@ -502,8 +502,7 @@ uninstall-am: uninstall-info-am uninstall-local
 @DBX_DOC_TRUE@dbx-pdf-local: $(DBX_PDF_DOCS)
 @DBX_DOC_TRUE@dbx-html-local: $(DBX_HTML_DOCS)
 
-#all-local: dbx-xsl-local dbx-pdf-local dbx-html-local
-@DBX_DOC_TRUE@all-local: dbx-xsl-local dbx-html-local
+@DBX_DOC_TRUE@all-local: dbx-xsl-local dbx-pdf-local dbx-html-local
 
 install-dbx-htmldocs: $(DBX_ALL_HTML:%=$(HTML_DOCSDIR)%)
 	docs="$^"; abs_builddir=$$PWD; \

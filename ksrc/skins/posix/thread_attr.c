@@ -129,10 +129,10 @@ int pthread_attr_destroy (pthread_attr_t *attr)
  * @a detachstate attribute in the thread attribute object @a attr.
  *
  * Valid values of this attribute are PTHREAD_CREATE_JOINABLE and
- * PTHREAD_CREATE_DETACHED. A detached thread is a thread whose control block is
- * automatically reclaimed by the system when it finishes execution. The
- * control block of a joinable thread, on the other hand, is only reclaimed when
- * joined with the service pthread_join().
+ * PTHREAD_CREATE_DETACHED. A detached thread is a thread which control block is
+ * automatically reclaimed when it terminates. The control block of a joinable
+ * thread, on the other hand, is only reclaimed when joined with the service
+ * pthread_join().
  *
  * A thread that was created joinable may be detached after creation by using
  * the pthread_detach() service.
@@ -178,10 +178,10 @@ int pthread_attr_getdetachstate (const pthread_attr_t *attr, int *detachstate)
  * in the attribute object @a attr. 
  *
  * Valid values of this attribute are PTHREAD_CREATE_JOINABLE and
- * PTHREAD_CREATE_DETACHED. A detached thread is a thread whose control block is
- * automatically reclaimed by the system when it finishes execution. The
- * control block of a joinable thread, on the other hand, is only reclaimed when
- * joined with the service pthread_join().
+ * PTHREAD_CREATE_DETACHED. A detached thread is a thread which control block is
+ * automatically reclaimed when it terminates. The control block of a joinable
+ * thread, on the other hand, is only reclaimed when joined with the service
+ * pthread_join().
  *
  * A thread that was created joinable may be detached after creation by using
  * the pthread_detach() service.

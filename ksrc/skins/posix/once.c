@@ -26,6 +26,17 @@
 /**
  * Execute an initialization routine.
  *
+ * This service may be used by libraries which need an initialization function
+ * to be called only once.
+ *
+ * The function @a init_routine will only be called, with no argument, the first
+ * time this service is called specifying the address @a once.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, the object pointed to by @a once is invalid (it must have been
+ *   initialized with PTHREAD_ONCE_INIT).
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_once.html">
  * Specification.</a>
@@ -39,21 +50,22 @@ int pthread_once (pthread_once_t *once, void (*init_routine)(void))
 
     xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(once,PSE51_ONCE_MAGIC,pthread_once_t) || !init_routine)
+    if (!pse51_obj_active(once,PSE51_ONCE_MAGIC,pthread_once_t))
 	{
         xnlock_put_irqrestore(&nklock, s);
         return EINVAL;
 	}
 
-    routine_called = once->routine_called;
-    if (!routine_called)
+    if (!once->routine_called)
+        {
+        init_routine();
+        /* If the calling thread is canceled while executing init_routine,
+           routine_called will not be set to 1. */
         once->routine_called = 1;
+        } 
 
     xnlock_put_irqrestore(&nklock, s);
     
-    if (!routine_called)
-        init_routine();
-
     return 0;    
 }
 

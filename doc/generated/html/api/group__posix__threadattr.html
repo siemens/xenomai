@@ -210,7 +210,7 @@ an error number if:<ul>
 Get detachstate attribute. 
 <p>
 This service returns, at the address <em>detachstate</em>, the value of the <em>detachstate</em> attribute in the thread attribute object <em>attr</em>.<p>
-Valid values of this attribute are PTHREAD_CREATE_JOINABLE and PTHREAD_CREATE_DETACHED. A detached thread is a thread whose control block is automatically reclaimed by the system when it finishes execution. The control block of a joinable thread, on the other hand, is only reclaimed when joined with the service <a class="el" href="group__posix__thread.html#ga11">pthread_join()</a>.<p>
+Valid values of this attribute are PTHREAD_CREATE_JOINABLE and PTHREAD_CREATE_DETACHED. A detached thread is a thread which control block is automatically reclaimed when it terminates. The control block of a joinable thread, on the other hand, is only reclaimed when joined with the service <a class="el" href="group__posix__thread.html#ga11">pthread_join()</a>.<p>
 A thread that was created joinable may be detached after creation by using the <a class="el" href="group__posix__thread.html#ga8">pthread_detach()</a> service.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -720,7 +720,7 @@ an error number if:<ul>
 Set detachstate attribute. 
 <p>
 This service sets to <em>detachstate</em> the value of the <em>detachstate</em> attribute in the attribute object <em>attr</em>.<p>
-Valid values of this attribute are PTHREAD_CREATE_JOINABLE and PTHREAD_CREATE_DETACHED. A detached thread is a thread whose control block is automatically reclaimed by the system when it finishes execution. The control block of a joinable thread, on the other hand, is only reclaimed when joined with the service <a class="el" href="group__posix__thread.html#ga11">pthread_join()</a>.<p>
+Valid values of this attribute are PTHREAD_CREATE_JOINABLE and PTHREAD_CREATE_DETACHED. A detached thread is a thread which control block is automatically reclaimed when it terminates. The control block of a joinable thread, on the other hand, is only reclaimed when joined with the service <a class="el" href="group__posix__thread.html#ga11">pthread_join()</a>.<p>
 A thread that was created joinable may be detached after creation by using the <a class="el" href="group__posix__thread.html#ga8">pthread_detach()</a> service.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -1102,7 +1102,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Apr 1 18:45:32 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Apr 3 19:53:07 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
