@@ -99,6 +99,40 @@ static void thread_delete_hook (xnthread_t *xnthread)
 /**
  * Create a thread.
  *
+ * This service create a thread. The created thread may be used with all POSIX
+ * skin services.
+ *
+ * The new thread run the @a start routine, with the @a arg argument.
+ *
+ * The new thread signal mask is inherited from the current thread, if it was
+ * also created with pthread_create(), otherwise the new thread signal mask is
+ * empty.
+ *
+ * Other attributes of the new thread depend on the @a attr argument. If
+ * @a attr is null, default values for these attributes are used. See @ref
+ * posix_threadattr for a definition of thread creation attributes and their
+ * default values.
+ *
+ * Returning from the @a start routine has the same effect as calling
+ * pthread_exit() with the return value.
+ *
+ * @param tid address where the identifier of the new thread will be stored on
+ * success;
+ *
+ * @param attr thread attributes;
+ *
+ * @param start thread routine;
+ *
+ * @param arg thread routine argument.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr is invalid;
+ * - EAGAIN, insufficient memory exists in the system heap to create a new
+ *   thread, increase CONFIG_XENO_OPT_SYS_HEAPSZ;
+ * - EINVAL, thread attribute @a inheritsched is set to PTHREAD_INHERIT_SCHED
+ *   and the calling thread does not belong to the POSIX skin;
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_create.html">
  * Specification.</a>
@@ -212,6 +246,21 @@ int pthread_create (pthread_t *tid,
 /**
  * Detach a running thread.
  *
+ * This service detaches a joinable thread. A detached thread is a thread
+ * which control block is automatically reclaimed when it terminates. The
+ * control block of a joinable thread, on the other hand, is only reclaimed when
+ * joined with the service pthread_join().
+ *
+ * If some threads are currently blocked in the pthread_join() service with @a
+ * thread as a target, they are unblocked and pthread_join() returns EINVAL.
+ *
+ * @param thread target thread.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a thread is an invalid thread identifier;
+ * - EINVAL, @a thread is not joinable.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_detach.html">
  * Specification.</a>
@@ -248,7 +297,18 @@ int pthread_detach (pthread_t thread)
 }
 
 /**
- * Compare thread descriptors.
+ * Compare thread identifiers.
+ *
+ * This service compare the thread identifiers @a t1 and @a t2. No attempt is
+ * made to check the threads for existence. In order to check if a thread
+ * exists, the  pthread_kill() service should be used with the signal number 0.
+ *
+ * @param t1 thread identifier;
+ *
+ * @param t2 other thread identifier.
+ *
+ * @return a non zero value if the thread identifiers are equal;
+ * @return 0 otherwise. 
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_equal.html">
@@ -262,6 +322,16 @@ int pthread_equal (pthread_t t1, pthread_t t2)
 
 /**
  * Terminate the current thread.
+ *
+ * This service terminate the current thread with the return value @a
+ * value_ptr. If the current thread is joinable, the return value is returned to
+ * any thread joining the current thread with the pthread_join() service.
+ *
+ * When a thread terminates, cancellation cleanup handlers are executed in the
+ * reverse order that they were pushed. Then, thread-specific data destructors
+ * are executed.
+ *
+ * @param value_ptr thread return value.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_exit.html">
@@ -285,6 +355,34 @@ void pthread_exit (void *value_ptr)
 
 /**
  * Wait for termination of a specified thread.
+ *
+ * This service blocks the calling thread until the thread @a thread terminates
+ * or detaches. If @a thread terminates, its return value is stored at the
+ * address @a value_ptr. This service may also be used to get the return value
+ * of a thread that already terminated but was not joined.
+ *
+ * This service is a cancelation point for POSIX skin threads: if the calling
+ * thread is canceled while blocked in a call to this service, the cancelation
+ * request is honored and @a thread remains joinable.
+ *
+ * Multiple simultaneous calls to pthread_join() specifying the same target
+ * thread block all the callers until the target thread terminates.
+ *
+ * @param thread identifier of the thread to wait for;
+ *
+ * @param value_ptr address where the target thread return value will be stored
+ * on success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a thread is invalid;
+ * - EDEADLK, attempting to join the calling thread;
+ * - EINVAL, @a thread is detached;
+ * - EPERM, the caller context is invalid.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space thread;
+ * - Xenomai user-space thread (switches to primary mode).
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_join.html">
@@ -364,7 +462,12 @@ int pthread_join (pthread_t thread, void **value_ptr)
 }
 
 /**
- * Get descriptor of the calling thread.
+ * Get the identifier of the calling thread.
+ *
+ * This service returns the identifier of the calling thread.
+ *
+ * @return identifier of the calling thread;
+ * @return NULL if the calling thread is not a POSIX skin thread.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_self.html">
@@ -379,6 +482,20 @@ pthread_t pthread_self (void)
 
 /**
  * Make a thread periodic.
+ *
+ * This service make the POSIX skin thread @a thread periodic.
+ *
+ * @param thread thread identifier;
+ *
+ * @param starttp start time, expressed as an absolute value of the
+ * CLOCK_REALTIME clock;
+ *
+ * @param periodtp period, expressed as a time interval.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a thread is invalid;
+ * - ETIMEDOUT, the start time has already passed.
  */
 int pthread_make_periodic_np (pthread_t thread,
                               struct timespec *starttp,
@@ -389,9 +506,6 @@ int pthread_make_periodic_np (pthread_t thread,
     xnticks_t start, period;
     int err;
     spl_t s;
-
-    if (!periodtp || !starttp)
-        return EINVAL;
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -414,13 +528,36 @@ int pthread_make_periodic_np (pthread_t thread,
 
 /**
  * Wait for current thread next period.
+ *
+ * If it is periodic, this service blocks the calling thread until the next
+ * period elapses.
+ *
+ * This service is a cancelation point for POSIX skin threads.
+ *
+ * @param overruns_r address where the overruns count is returned in case of
+ * overrun.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EPERM, the calling context is invalid;
+ * - EWOULDBLOCK, the calling thread is not periodic;
+ * - EINTR, this service was interrupted by a signal;
+ * - ETIMEDOUT, at least one overrun occurred.
  */
 int pthread_wait_np(unsigned long *overruns_r)
 {
+    xnthread_t *cur;
+    int err;
+
     if (xnpod_unblockable_p())
         return EPERM;
 
-    return -xnpod_wait_thread_period(overruns_r);
+    cur = xnpod_current_thread();
+    thread_cancellation_point(cur);
+    err = -xnpod_wait_thread_period(overruns_r);
+    thread_cancellation_point(cur);
+
+    return err;
 }
 
 void pse51_thread_abort (pthread_t thread, void *status)

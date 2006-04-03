@@ -1,5 +1,8 @@
 2006-04-03  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
+	* ksrc/skins/posix/thread.c (pthread_wait_np): Make this service a
+	cancellation point.
+
 	* ksrc/skins/posix/syscall.c (__*_init): Copy user-space contents
 	before calling kernel-space init in order to correctly detect
 	duplicate initializations.
