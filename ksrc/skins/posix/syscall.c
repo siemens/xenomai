@@ -419,6 +419,11 @@ int __sem_init (struct task_struct *curr, struct pt_regs *regs)
     pshared = (int)__xn_reg_arg2(regs);
     value = (unsigned)__xn_reg_arg3(regs);
 
+    __xn_copy_from_user(curr,
+                        &sm.shadow_sem,
+                        (void __user*)&usm->shadow_sem,
+                        sizeof(sm.shadow_sem));
+
     if (sem_init(&sm.native_sem,pshared,value) == -1)
         return -thread_get_errno();
 
@@ -817,6 +822,11 @@ int __pthread_mutex_init (struct task_struct *curr, struct pt_regs *regs)
     if (!__xn_access_ok(curr,VERIFY_WRITE,(void __user *) umx,sizeof(*umx)))
         return -EFAULT;
 
+    __xn_copy_from_user(curr,
+                        &mx.shadow_mutex,
+                        (void __user *) &umx->shadow_mutex,
+                        sizeof(mx.shadow_mutex));
+
     /* Recursive + PIP forced. */
     pthread_mutexattr_init(&attr);
     pthread_mutexattr_settype(&attr,PTHREAD_MUTEX_RECURSIVE);
@@ -949,6 +959,11 @@ int __pthread_cond_init (struct task_struct *curr, struct pt_regs *regs)
     
     if (!__xn_access_ok(curr,VERIFY_WRITE,(void __user *) ucnd,sizeof(*ucnd)))
         return -EFAULT;
+
+    __xn_copy_from_user(curr,
+                        &cnd.shadow_cond,
+                        (void __user *) &ucnd->shadow_cond,
+                        sizeof(cnd.shadow_cond));
 
     /* Always use default attribute. */
     err = pthread_cond_init(&cnd.native_cond,NULL);

@@ -1,3 +1,9 @@
+2006-04-03  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/syscall.c (__*_init): Copy user-space contents
+	before calling kernel-space init in order to correctly detect
+	duplicate initializations.
+
 2006-04-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-{ia64,arm,i386}/system.h (xnarch_sysalloc,
