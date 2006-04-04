@@ -10,6 +10,9 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	mainmenu_option next_comment
 	comment 'Nucleus options'
 	bool 'Pervasive real-time support in user-space' CONFIG_XENO_OPT_PERVASIVE
+	if [ "$CONFIG_XENO_OPT_PERVASIVE" != "n" ]; then
+		bool 'Enforce syscall access control' CONFIG_XENO_OPT_SECURITY_ACCESS
+	fi
 	bool 'Message pipes' CONFIG_XENO_OPT_PIPE
 	if [ "$CONFIG_XENO_OPT_PIPE" != "n" ]; then
 		int 'Number of pipe devices' CONFIG_XENO_OPT_PIPE_NRDEV 32
