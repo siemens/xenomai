@@ -74,24 +74,24 @@ static void thread_delete_hook (xnthread_t *xnthread)
     pse51_timer_cleanup_thread(thread);
 
     switch (thread_getdetachstate(thread))
-	{
-	case PTHREAD_CREATE_DETACHED:
+        {
+        case PTHREAD_CREATE_DETACHED:
 
-	    thread_destroy(thread);
-	    break;
+            thread_destroy(thread);
+            break;
 
-	case PTHREAD_CREATE_JOINABLE:
+        case PTHREAD_CREATE_JOINABLE:
 
             xnsynch_wakeup_one_sleeper(&thread->join_synch);
             /* Do not call xnpod_schedule here, this thread will be dead soon,
                so that xnpod_schedule will be called anyway. The TCB will be
                freed by the last joiner. */
-	    break;
+            break;
 
-	default:
+        default:
 
-	    break;
-	}
+            break;
+        }
 
     xnlock_put_irqrestore(&nklock, s);
 }
@@ -139,9 +139,9 @@ static void thread_delete_hook (xnthread_t *xnthread)
  * 
  */
 int pthread_create (pthread_t *tid,
-		    const pthread_attr_t *attr,
-		    void *(*start) (void *),
-		    void *arg)
+                    const pthread_attr_t *attr,
+                    void *(*start) (void *),
+                    void *arg)
 {
     pthread_t thread, cur;
     xnflags_t flags = 0;
@@ -156,27 +156,27 @@ int pthread_create (pthread_t *tid,
     thread = (pthread_t)xnmalloc(sizeof(*thread));
 
     if (!thread)
-	return EAGAIN;
+        return EAGAIN;
 
     thread->attr = attr ? *attr : default_attr;
 
     cur = pse51_current_thread();
 
     if (thread->attr.inheritsched == PTHREAD_INHERIT_SCHED)
-	{
+        {
         /* cur may be NULL if pthread_create is not called by a pse51
            thread, in which case trying to inherit scheduling
            parameters is treated as an error. */
 
         if (!cur)
-	    {
+            {
             xnfree(thread);
             return EINVAL;
-	    }
+            }
 
         thread->attr.policy = cur->attr.policy;
         thread->attr.schedparam = cur->attr.schedparam;
-	}
+        }
 
     prio = thread->attr.schedparam.sched_priority;
     stacksize = thread->attr.stacksize;
@@ -186,17 +186,17 @@ int pthread_create (pthread_t *tid,
         flags |= XNFPU;
 
     if (!start)
-	flags |= XNSHADOW;	/* Note: no interrupt shield. */
+        flags |= XNSHADOW;      /* Note: no interrupt shield. */
     
     if (xnpod_init_thread(&thread->threadbase,
-			  name,
-			  prio,
-			  flags,
+                          name,
+                          prio,
+                          flags,
                           stacksize) != 0)
-	{
-	xnfree(thread);
-	return EAGAIN;
-	}
+        {
+        xnfree(thread);
+        return EAGAIN;
+        }
 
     xnthread_set_magic(&thread->threadbase,PSE51_SKIN_MAGIC);
     
@@ -215,10 +215,10 @@ int pthread_create (pthread_t *tid,
     pse51_timer_init_thread(thread);
     
     if (thread->attr.policy == SCHED_RR)
-	{
-	xnthread_time_slice(&thread->threadbase) = pse51_time_slice;
+        {
+        xnthread_time_slice(&thread->threadbase) = pse51_time_slice;
         flags = XNRRB;
-	}
+        }
     else
         flags = 0;
 
@@ -233,13 +233,13 @@ int pthread_create (pthread_t *tid,
     
     *tid = thread; /* Must be done before the thread is started. */
 
-    if (start)	/* Do not start shadow threads (i.e. start == NULL). */
-	xnpod_start_thread(&thread->threadbase,
-			   flags,
-			   0,
-			   thread->attr.affinity,
-			   thread_trampoline,
-			   thread);
+    if (start)  /* Do not start shadow threads (i.e. start == NULL). */
+        xnpod_start_thread(&thread->threadbase,
+                           flags,
+                           0,
+                           thread->attr.affinity,
+                           thread_trampoline,
+                           thread);
     return 0;
 }
 
@@ -274,22 +274,22 @@ int pthread_detach (pthread_t thread)
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
-	{
+        {
         xnlock_put_irqrestore(&nklock, s);
         return ESRCH;
-	}
+        }
 
     if (thread_getdetachstate(thread) != PTHREAD_CREATE_JOINABLE)
-	{
+        {
         xnlock_put_irqrestore(&nklock, s);
         return EINVAL;
-	}
+        }
 
     thread_setdetachstate(thread, PTHREAD_CREATE_DETACHED);
 
     if (xnsynch_flush(&thread->join_synch,
                       PSE51_JOINED_DETACHED) == XNSYNCH_RESCHED)
-	xnpod_schedule();
+        xnpod_schedule();
 
     xnlock_put_irqrestore(&nklock, s);
 
@@ -356,17 +356,23 @@ void pthread_exit (void *value_ptr)
 /**
  * Wait for termination of a specified thread.
  *
- * This service blocks the calling thread until the thread @a thread terminates
- * or detaches. If @a thread terminates, its return value is stored at the
- * address @a value_ptr. This service may also be used to get the return value
- * of a thread that already terminated but was not joined.
+ * If the thread @a thread is running and joinable, this service blocks the
+ * calling thread until the thread @a thread terminates or detaches. In this
+ * case, the calling context must be blockable, i.e. a Xenomai thread. When @a
+ * thread terminates, its return value is stored at the address @a
+ * value_ptr.
+ *
+ * If, on the other hand, the thread @a thread has already finished execution,
+ * its return value is stored at the address @a value_ptr and this service
+ * returns immediately. In this case, this service may be called from any
+ * context, and in particular from modules cleanup routines.
  *
  * This service is a cancelation point for POSIX skin threads: if the calling
  * thread is canceled while blocked in a call to this service, the cancelation
  * request is honored and @a thread remains joinable.
  *
- * Multiple simultaneous calls to pthread_join() specifying the same target
- * thread block all the callers until the target thread terminates.
+ * Multiple simultaneous calls to pthread_join() specifying the same running
+ * target thread block all the callers until the target thread terminates.
  *
  * @param thread identifier of the thread to wait for;
  *
@@ -380,7 +386,7 @@ void pthread_exit (void *value_ptr)
  * - EINVAL, @a thread is detached;
  * - EPERM, the caller context is invalid.
  *
- * @par Valid contexts:
+ * @par Valid contexts, if this service has to block its caller:
  * - Xenomai kernel-space thread;
  * - Xenomai user-space thread (switches to primary mode).
  *
@@ -401,27 +407,27 @@ int pthread_join (pthread_t thread, void **value_ptr)
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)
-	&& !pse51_obj_deleted(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
-	{
+        && !pse51_obj_deleted(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
+        {
         xnlock_put_irqrestore(&nklock, s);
         return ESRCH;
-	}
+        }
 
     if (&thread->threadbase == cur)
-	{
+        {
         xnlock_put_irqrestore(&nklock, s);
         return EDEADLK;
-	}
+        }
 
     if (thread_getdetachstate(thread) != PTHREAD_CREATE_JOINABLE)
-	{
+        {
         xnlock_put_irqrestore(&nklock, s);
         return EINVAL;
-	}
+        }
 
     is_last_joiner = 1;
     while (pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
-	{
+        {
         if (xnpod_unblockable_p())
             {
             xnlock_put_irqrestore(&nklock, s);
@@ -438,11 +444,11 @@ int pthread_join (pthread_t thread, void **value_ptr)
 
         /* In case another thread called pthread_detach. */
         if (xnthread_test_flags(cur, PSE51_JOINED_DETACHED))
-	    {
+            {
             xnlock_put_irqrestore(&nklock, s);
             return EINVAL;
-	    }
-	}
+            }
+        }
 
     /* If we reach this point, at least one joiner is going to succeed, we can
        mark the joined thread as detached. */
@@ -510,7 +516,7 @@ int pthread_make_periodic_np (pthread_t thread,
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
-	{
+        {
         err = ESRCH;
         goto unlock_and_exit;
         }
@@ -592,16 +598,16 @@ void pse51_thread_pkg_cleanup (void)
     xnlock_get_irqsave(&nklock, s);
 
     while ((holder = getheadq(&pse51_threadq)) != NULL)
-	{
+        {
         pthread_t thread = link2pthread(holder);
 
         if (pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
-	    {
+            {
             /* Remaining running thread. */
             thread_setdetachstate(thread, PTHREAD_CREATE_DETACHED);
             pse51_thread_abort(thread, NULL);
-	    }
-	else
+            }
+        else
             {
             /* Remaining TCB (joinable thread, which was never joined). */
 #ifdef CONFIG_XENO_OPT_DEBUG
@@ -611,7 +617,7 @@ void pse51_thread_pkg_cleanup (void)
 #endif /* CONFIG_XENO_OPT_DEBUG */
             thread_destroy(thread);
             }
-	}
+        }
 
     xnlock_put_irqrestore(&nklock, s);
 
