@@ -573,7 +573,9 @@ int rt_queue_free (RT_QUEUE *q,
  * message has been enqueued. Upon error, one of the following error
  * codes is returned:
  *
- * - -EINVAL is returned if @a q is not a message queue descriptor.
+ * - -EINVAL is returned if @a q is not a message queue descriptor, or
+ * @a buf is not a valid message buffer obtained from a previous call
+ * to rt_queue_alloc().
  *
  * - -EIDRM is returned if @a q is a deleted queue descriptor.
  *
@@ -623,9 +625,10 @@ int rt_queue_send (RT_QUEUE *q,
 
     msg = ((rt_queue_msg_t *)buf) - 1;
 
-    if (msg->refcount == 0)
+    if (xnheap_check_block(&q->bufpool,msg) || msg->refcount == 0)
 	{
-	/* Cheap test: the sender cannot own the message. Bail out. */
+	/* In case of invalid block or if the sender does not own the
+	   message, just bail out. */
 	err = -EINVAL;
 	goto unlock_and_exit;
 	}
