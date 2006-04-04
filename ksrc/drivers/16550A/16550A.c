@@ -41,7 +41,8 @@
 #define LCR_DLAB            0x80
 
 #define FCR_FIFO            0x01
-#define FCR_RESET           0x06
+#define FCR_RESET_RX        0x02
+#define FCR_RESET_TX        0x04
 
 #define IER_RX              0x01
 #define IER_TX              0x02
@@ -351,7 +352,7 @@ static int rt_16550_set_config(struct rt_16550_context *ctx,
 
     if (testbits(config->config_mask, RTSER_SET_FIFO_DEPTH)) {
         ctx->config.fifo_depth = config->fifo_depth & FIFO_MASK;
-        outb(FCR_FIFO | FCR_RESET, FCR(dev_id));
+        outb(FCR_FIFO | FCR_RESET_RX | FCR_RESET_TX, FCR(dev_id));
         outb(FCR_FIFO | ctx->config.fifo_depth, FCR(dev_id));
     }
 
@@ -717,7 +718,6 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
                                            ctx->config.event_timeout,
                                            &timeout_seq);
                 if (ret < 0) {
-                    clear_bit(0, &ctx->ioc_event_lock);
                     if (ret == -EIDRM)  /* device has been closed */
                         ret = -EBADF;
                     goto wait_unlock_out;
@@ -749,6 +749,33 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
           wait_unlock_out:
             /* release the simple event waiter lock */
             clear_bit(0, &ctx->ioc_event_lock);
+            break;
+        }
+
+        case RTIOC_PURGE: {
+            rtdm_lockctx_t  lock_ctx;
+            int             fcr = 0;
+
+            rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
+            if ((int)arg && RTDM_PURGE_RX_BUFFER) {
+                ctx->in_head   = 0;
+                ctx->in_tail   = 0;
+                ctx->in_npend  = 0;
+                ctx->status    = 0;
+                fcr |= FCR_FIFO | FCR_RESET_RX;
+                inb(RHR(dev_id));
+            }
+            if ((int)arg && RTDM_PURGE_TX_BUFFER) {
+                ctx->out_head  = 0;
+                ctx->out_tail  = 0;
+                ctx->out_npend = 0;
+                fcr |= FCR_FIFO | FCR_RESET_TX;
+            }
+            if (fcr) {
+                outb(fcr, FCR(dev_id));
+                outb(FCR_FIFO | ctx->config.fifo_depth, FCR(dev_id));
+            }
+            rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
             break;
         }
 
@@ -1057,7 +1084,7 @@ static const struct rtdm_device __initdata device_tmpl = {
     device_class:       RTDM_CLASS_SERIAL,
     device_sub_class:   RTDM_SUBCLASS_16550A,
     driver_name:        "xeno_16550A",
-    driver_version:     RTDM_DRIVER_VER(1, 2, 6),
+    driver_version:     RTDM_DRIVER_VER(1, 3, 0),
     peripheral_name:    "UART 16550A",
     provider_name:      "Jan Kiszka",
 };
