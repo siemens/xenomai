@@ -191,6 +191,9 @@ static inline void xnheap_finalize_free(xnheap_t *heap)
 	xnheap_finalize_free_inner(heap);
 }
 
+int xnheap_check_block(xnheap_t *heap,
+		       void *block);
+
 #ifdef __cplusplus
 }
 #endif

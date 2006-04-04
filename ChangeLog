@@ -1,3 +1,11 @@
+2006-04-04  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/queue.c (rt_queue_send): Check message buffer
+	address.
+
+	* ksrc/nucleus/heap.c (xnheap_check_block): Add routine to validate
+	an allocated memory block.
+
 2006-04-03  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/syscall.c (__*_init): Copy user-space contents
