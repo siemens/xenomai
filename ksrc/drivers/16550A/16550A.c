@@ -757,7 +757,7 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
             int             fcr = 0;
 
             rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
-            if ((int)arg && RTDM_PURGE_RX_BUFFER) {
+            if ((int)arg & RTDM_PURGE_RX_BUFFER) {
                 ctx->in_head   = 0;
                 ctx->in_tail   = 0;
                 ctx->in_npend  = 0;
@@ -765,7 +765,7 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
                 fcr |= FCR_FIFO | FCR_RESET_RX;
                 inb(RHR(dev_id));
             }
-            if ((int)arg && RTDM_PURGE_TX_BUFFER) {
+            if ((int)arg & RTDM_PURGE_TX_BUFFER) {
                 ctx->out_head  = 0;
                 ctx->out_tail  = 0;
                 ctx->out_npend = 0;
