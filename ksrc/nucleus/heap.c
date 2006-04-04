@@ -797,6 +797,48 @@ void xnheap_finalize_free_inner (xnheap_t *heap)
     xnlock_put_irqrestore(&heap->lock,s);
 }
 
+int xnheap_check_block (xnheap_t *heap, void *block)
+
+{
+    xnextent_t *extent = NULL;
+    u_long pagenum, boffset;
+    xnholder_t *holder;
+    int ptype, err = 0;
+    spl_t s;
+
+    xnlock_get_irqsave(&heap->lock,s);
+
+    /* Find the extent from which the checked block is
+       originating. */
+
+    for (holder = getheadq(&heap->extents);
+	 holder != NULL; holder = nextq(&heap->extents,holder))
+	{
+	extent = link2extent(holder);
+
+	if ((caddr_t)block >= extent->membase &&
+	    (caddr_t)block < extent->memlim)
+	    break;
+	}
+
+    if (!holder)
+	goto bad_block;
+
+    /* Compute the heading page number in the page map. */
+    pagenum = ((caddr_t)block - extent->membase) >> heap->pageshift;
+    boffset = ((caddr_t)block - (extent->membase + (pagenum << heap->pageshift)));
+    ptype = extent->pagemap[pagenum];
+
+    if (ptype == XNHEAP_PFREE || /* Unallocated page? */
+	ptype == XNHEAP_PCONT)  /* Not a range heading page? */
+bad_block:
+	err = -EINVAL;
+
+    xnlock_put_irqrestore(&heap->lock,s);
+
+    return err;
+}
+
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 
 #include <asm/io.h>
@@ -1167,5 +1209,6 @@ EXPORT_SYMBOL(xnheap_free);
 EXPORT_SYMBOL(xnheap_init);
 EXPORT_SYMBOL(xnheap_schedule_free);
 EXPORT_SYMBOL(xnheap_finalize_free_inner);
+EXPORT_SYMBOL(xnheap_check_block);
 
 EXPORT_SYMBOL(kheap);

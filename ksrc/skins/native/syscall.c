@@ -2161,7 +2161,8 @@ static int __rt_queue_free (struct task_struct *curr, struct pt_regs *regs)
 	}
 
     /* Convert the caller-based address of buf to the equivalent area
-       into the kernel address space. */
+       into the kernel address space. We don't know whether buf is
+       valid memory yet, do not dereference it. */
 
     if (buf)
 	{
@@ -2220,7 +2221,8 @@ static int __rt_queue_send (struct task_struct *curr, struct pt_regs *regs)
 	}
 
     /* Convert the caller-based address of buf to the equivalent area
-       into the kernel address space. */
+       into the kernel address space. We don't know whether buf is
+       valid memory yet, do not dereference it. */
 
     if (buf)
 	{
