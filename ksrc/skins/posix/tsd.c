@@ -36,20 +36,24 @@
  * When a thread is created, its TSD area initially associates @a NULL with all
  * keys.
  *
+ * The services documented here are valid in kernel-space context; when called
+ * in user-space, the underlying Linux threading library (LinuxThreads or NPTL)
+ * services are used.
+ *
  *@{*/
 
 #include <posix/thread.h>
 #include <posix/tsd.h>
 
-typedef void (*pse51_key_destructor_t)(void *);
+typedef void pse51_key_destructor_t(void *);
 
 struct pse51_key {
 
     unsigned magic;
     unsigned key;
-    pse51_key_destructor_t destructor;
+    pse51_key_destructor_t *destructor;
     xnholder_t link;            /* link in the list of free keys or
-                                   destructors. */
+                                   valid keys. */
 #define link2key(laddr) ({                                              \
         void *_laddr = laddr;                                           \
         (!_laddr                                                        \
@@ -69,12 +73,29 @@ static unsigned allocated_keys;
 /**
  * Create a thread-specific data key.
  *
+ * This service create a TSD key. The NULL value is associated for all threads
+ * with the new key and the new key is returned at the address @a key. If @a
+ * destructor is not null, it is executed when a thread is terminated as long as
+ * the datum associated with the key is not NULL, up to
+ * PTHREAD_DESTRUCTOR_ITERATIONS times.
+ *
+ * @param key address where the new key will be stored on success;
+ *
+ * @param destructor function to be invoked when a thread terminates and has a
+ * non NULL value associated with the new key.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EAGAIN, the total number of keys PTHREAD_KEYS_MAX TSD has been exceeded;
+ * - ENOMEM, insufficient memory exists in the system heap to create a new key,
+ *   increase CONFIG_XENO_OPT_SYS_HEAPSZ.
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_key_create.html">
  * Specification.</a>
  * 
  */
-int pthread_key_create (pthread_key_t *key, pse51_key_destructor_t destructor)
+int pthread_key_create (pthread_key_t *key, void (*destructor)(void *))
 
 {
     pthread_key_t result;
@@ -83,42 +104,36 @@ int pthread_key_create (pthread_key_t *key, pse51_key_destructor_t destructor)
 
     xnlock_get_irqsave(&nklock, s);
 
-    if (!key)
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
-	}
-
     if (allocated_keys == PTHREAD_KEYS_MAX)
-	{
-	result = link2key(getq(&free_keys));
+        {
+        result = link2key(getq(&free_keys));
 
         if (!result)
-	    {
+            {
             xnlock_put_irqrestore(&nklock, s);
             return EAGAIN;
-	    }
+            }
 
         /* We are reusing a deleted key, we hence need to make sure
            that the values previously associated with this key are
            NULL. */
 
         for (holder = getheadq(&pse51_threadq); holder;
-	     holder = nextq(&pse51_threadq, holder))
+             holder = nextq(&pse51_threadq, holder))
             thread_settsd(link2pthread(holder), result->key, NULL);
-	}
+        }
     else
-	{
-	result = xnmalloc(sizeof(*result));
+        {
+        result = xnmalloc(sizeof(*result));
 
         if (!result)
-	    {
+            {
             xnlock_put_irqrestore(&nklock, s);
             return ENOMEM;
-	    }
+            }
 
         result->key = allocated_keys++;
-	}
+        }
 
     result->magic = PSE51_KEY_MAGIC;
     result->destructor = destructor;
@@ -134,6 +149,21 @@ int pthread_key_create (pthread_key_t *key, pse51_key_destructor_t destructor)
 
 /**
  * Associate a thread-specific value with the specified key.
+ *
+ * This service associates, for the calling thread, the value @a value to the
+ * key @a key.
+ *
+ * @param key TSD key, obtained with pthread_key_create();
+ *
+ * @param value value.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, @a key is invalid.
+ * 
+ * @par Valid contexts:
+ * - Xenomai POSIX skin kernel-space thread.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setspecific.html">
@@ -152,10 +182,10 @@ int pthread_setspecific (pthread_key_t key, const void *value)
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(key, PSE51_KEY_MAGIC, struct pse51_key))
-	{
+        {
         xnlock_put_irqrestore(&nklock, s);
         return EINVAL;
-	}
+        }
 
     xnlock_put_irqrestore(&nklock, s);
 
@@ -166,6 +196,17 @@ int pthread_setspecific (pthread_key_t key, const void *value)
 
 /**
  * Get the thread-specific value bound to the specified key.
+ *
+ * This service returns the value associated, for the calling thread, with the
+ * key @a key.
+ *
+ * @param key TSD key, obtained with pthread_key_create().
+ *
+ * @return the value associated with @a key;
+ * @return NULL if the context is invalid.
+ *
+ * @par Valid contexts:
+ * - Xenomai POSIX skin kernel-space thread.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getspecific.html">
@@ -185,10 +226,10 @@ void *pthread_getspecific (pthread_key_t key)
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(key, PSE51_KEY_MAGIC, struct pse51_key))
-	{
+        {
         xnlock_put_irqrestore(&nklock, s);
         return NULL;
-	}
+        }
 
     xnlock_put_irqrestore(&nklock, s);
     
@@ -199,6 +240,17 @@ void *pthread_getspecific (pthread_key_t key)
 
 /**
  * Delete a thread-specific data key.
+ *
+ * This service deletes the TSD key @a key. Note that the key destructor
+ * function is not called, so, if any thread has a value associated with @a key
+ * that is a pointer to dynamically allocated memory, the application has to
+ * manage to free that memory by other means.
+ *
+ * @param key the TSD key to be destroyed.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a key is invalid.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_key_delete.html">
@@ -213,10 +265,10 @@ int pthread_key_delete (pthread_key_t key)
     xnlock_get_irqsave(&nklock, s);
 
     if (!pse51_obj_active(key, PSE51_KEY_MAGIC, struct pse51_key))
-	{
+        {
         xnlock_put_irqrestore(&nklock, s);
         return EINVAL;
-	}
+        }
 
     pse51_mark_deleted(key);
     removeq(&valid_keys, &key->link);
@@ -246,38 +298,40 @@ void pse51_tsd_cleanup_thread (pthread_t thread)
     xnlock_get_irqsave(&nklock, s);
 
     for (i = 0; again && i < PTHREAD_DESTRUCTOR_ITERATIONS; i++)
-	{
+        {
         xnholder_t *holder = getheadq(&valid_keys);
 
         again = 0;
 
         while(holder)
-	    {
+            {
             pthread_key_t key = link2key(holder);
             const void *value;
 
             if (!pse51_obj_active(key, PSE51_KEY_MAGIC, struct pse51_key))
-		{
-                /* A destructor deleted this key. */
+                {
+                /* A destructor destroyed this key. */
                 again = 1;
                 break;
-		}
+                }
 
             holder = nextq(&valid_keys, holder);
-	    value = thread_gettsd(thread, key->key);
+            value = thread_gettsd(thread, key->key);
 
             if (value)
-		{
-		thread_settsd(thread, key->key, NULL);
+                {
+                thread_settsd(thread, key->key, NULL);
 
-		if (key->destructor)
-		    {
-		    again = 1;
-		    key->destructor((void *) value);
-		    }
-		}
-	    }
-	}
+                if (key->destructor)
+                    {
+                    again = 1;
+                    xnlock_put_irqrestore(&nklock, s);
+                    key->destructor((void *) value);
+                    xnlock_get_irqsave(&nklock, s);
+                    }
+                }
+            }
+        }
 
     xnlock_put_irqrestore(&nklock, s);
 }
@@ -295,10 +349,10 @@ void pse51_tsd_pkg_cleanup (void)
     pthread_key_t key;
 
     while ((key = link2key(getq(&valid_keys))) != NULL)
-	{
+        {
         pse51_mark_deleted(key);
         xnfree(key);
-	}
+        }
 
     while ((key = link2key(getq(&free_keys))) != NULL)
         xnfree(key);
