@@ -1,3 +1,8 @@
+2006-04-05  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/drivers/16550A/16550A.c: Fix screwed IRQ source
+	detection which caused sporadic hard deadlocks.
+
 2006-04-05  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/timer.c (xntimer_freeze_*periodic): For the sake of
