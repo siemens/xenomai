@@ -415,19 +415,9 @@ int main (int argc, char *argv[])
 
 #ifdef XENO_TIMER_MODULE
 
-void *uvm_timer_handle;
-
-pthread_t uvm_timer_thid;
-
 static inline void xnarch_program_timer_shot (unsigned long delay)
 {
     /* Empty -- not available */
-}
-
-static inline void xnarch_stop_timer (void)
-{
-    pthread_cancel(uvm_timer_thid);
-    uvm_thread_cancel(uvm_timer_handle,NULL);
 }
 
 static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask)
@@ -439,9 +429,9 @@ static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask)
 
 #ifdef XENO_POD_MODULE
 
-extern void *uvm_timer_handle;
+static void *uvm_timer_handle;
 
-extern pthread_t uvm_timer_thid;
+static pthread_t uvm_timer_thid;
 
 xnsysinfo_t uvm_info;
 
@@ -534,6 +524,12 @@ static inline int xnarch_start_timer (unsigned long nstick,
 	uvm_thread_start(uvm_timer_handle);
 
     return err;
+}
+
+static inline void xnarch_stop_timer (void)
+{
+    pthread_cancel(uvm_timer_thid);
+    uvm_thread_cancel(uvm_timer_handle,NULL);
 }
 
 static inline void xnarch_leave_root(xnarchtcb_t *rootcb)
