@@ -1292,17 +1292,6 @@ diff -uNrp 2.4.25-ppc/arch/ppc/mm/fault.c 2.4.25-ppc-ipipe/arch/ppc/mm/fault.c
  #if defined(CONFIG_XMON) || defined(CONFIG_KGDB)
  	if (debugger_fault_handler && regs->trap == 0x300) {
  		debugger_fault_handler(regs);
-diff -uNrp 2.4.25-ppc/drivers/Makefile 2.4.25-ppc-ipipe/drivers/Makefile
---- 2.4.25-ppc/drivers/Makefile	2005-08-05 00:33:41.000000000 +0200
-+++ 2.4.25-ppc-ipipe/drivers/Makefile	2006-03-31 17:16:39.000000000 +0200
-@@ -50,4 +50,7 @@ subdir-$(CONFIG_ACPI_BOOT)	+= acpi
- 
- subdir-$(CONFIG_BLUEZ)		+= bluetooth
- 
-+mod-subdirs := xenomai
-+subdir-$(CONFIG_XENOMAI) += xenomai
-+
- include $(TOPDIR)/Rules.make
 diff -uNrp 2.4.25-ppc/include/asm-ppc/hw_irq.h 2.4.25-ppc-ipipe/include/asm-ppc/hw_irq.h
 --- 2.4.25-ppc/include/asm-ppc/hw_irq.h	2003-10-30 01:34:05.000000000 +0100
 +++ 2.4.25-ppc-ipipe/include/asm-ppc/hw_irq.h	2006-01-30 16:06:18.000000000 +0100
