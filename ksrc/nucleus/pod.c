@@ -3211,28 +3211,34 @@ void xnpod_stop_timer (void)
 {
     spl_t s;
 
-    xntimer_freeze();
+    xnltt_log_event(xeno_ev_tmstop);
 
     xnlock_get_irqsave(&nklock,s);
 
-    if (!nkpod || testbits(nkpod->status,XNPIDLE))
-        goto unlock_and_exit;
+    if (!nkpod ||
+	testbits(nkpod->status,XNPIDLE) ||
+	!testbits(nkpod->status,XNTIMED))
+	{
+	xnlock_put_irqrestore(&nklock,s);
+	return;
+	}
 
-    xnltt_log_event(xeno_ev_tmstop);
-
-    if (testbits(nkpod->status,XNTIMED))
-        {
-        __clrbits(nkpod->status,XNTIMED|XNTMPER);
-        /* NOTE: The nkclock interrupt object is not destroyed on
-           purpose since this would be redundant with
-           xnarch_stop_timer() called when freezing timers. In any
-           case, no resource is associated with this object. */
-	xntimer_set_aperiodic_mode();
-        }
-
- unlock_and_exit:
+    __clrbits(nkpod->status,XNTIMED|XNTMPER);
 
     xnlock_put_irqrestore(&nklock,s);
+
+    /* We must not hold the nklock while stopping the hardware
+       timer. This might have very undesirable side-effects on SMP
+       systems. */
+    xnarch_stop_timer();
+
+    xntimer_freeze();
+
+    /* NOTE: The nkclock interrupt object is not destroyed on purpose
+       since this would be redundant after xnarch_stop_timer() has
+       been called. In any case, no resource is associated with this
+       object. */
+    xntimer_set_aperiodic_mode();
 }
 
 /*! 

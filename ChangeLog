@@ -1,3 +1,13 @@
+2006-04-05  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/timer.c (xntimer_freeze_*periodic): For the sake of
+	consistency, move calls to xnarch_stop_timer() to
+	xnpod_stop_timer(), since we should enforce a symmetry with
+	xnpod_start_timer() [which calls xnarch_start_timer()].
+
+	* ksrc/nucleus/pod.c (xnpod_stop_timer): Make it robust when
+	called uselessly (i.e. inactive systimer).
+
 2006-04-04  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/queue.c (rt_queue_send): Check message buffer

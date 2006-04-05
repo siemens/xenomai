@@ -131,6 +131,11 @@ static inline int xnarch_start_timer (unsigned long ns,
     return rthal_timer_request(tickhandler,ns);
 }
 
+static inline void xnarch_stop_timer (void)
+{
+    rthal_timer_release();
+}
+
 static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
 {
     rthal_declare_cpuid;
@@ -492,10 +497,6 @@ static inline int xnarch_local_syscall (struct pt_regs *regs)
 
 static inline void xnarch_program_timer_shot (unsigned long delay) {
     rthal_timer_program_shot(rthal_imuldiv(delay,RTHAL_TIMER_FREQ,RTHAL_CPU_FREQ));
-}
-
-static inline void xnarch_stop_timer (void) {
-    rthal_timer_release();
 }
 
 static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask)

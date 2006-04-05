@@ -135,6 +135,11 @@ static inline int xnarch_start_timer (unsigned long ns,
     return delta < 0LL ? 0LL : xnarch_tsc_to_ns(delta);
 }
 
+static inline void xnarch_stop_timer (void)
+{
+    rthal_timer_release();
+}
+
 static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
 
 {
@@ -494,11 +499,6 @@ static inline int xnarch_local_syscall (struct pt_regs *regs)
 static inline void xnarch_program_timer_shot (unsigned long delay)
 {
     rthal_timer_program_shot(delay);
-}
-
-static inline void xnarch_stop_timer (void)
-{
-    rthal_timer_release();
 }
 
 static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask)
