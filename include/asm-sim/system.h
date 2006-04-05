@@ -427,10 +427,6 @@ static inline void xnarch_program_timer_shot (unsigned long delay) {
     mvm_program_timer(delay);
 }
 
-static inline void xnarch_stop_timer (void) {
-    mvm_stop_timer();
-}
-
 static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask) {
     return -1;
 }
@@ -512,6 +508,11 @@ int main (int argc, char *argv[])
 static inline int xnarch_start_timer (unsigned long nstick,
 				      void (*tickhandler)(void)) {
     return mvm_start_timer(nstick,tickhandler);
+}
+
+static inline void xnarch_stop_timer (void)
+{
+    mvm_stop_timer();
 }
 
 static inline void xnarch_leave_root(xnarchtcb_t *rootcb) {

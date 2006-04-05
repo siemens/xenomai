@@ -285,12 +285,7 @@ static void xntimer_freeze_aperiodic (void)
     int cpu;
     spl_t s;
 
-    xnarch_stop_timer();
-
     xnlock_get_irqsave(&nklock,s);
-
-    if (!nkpod || testbits(nkpod->status,XNPIDLE))
-        goto unlock_and_exit;
 
     nr_cpus = xnarch_num_online_cpus();
     for (cpu = 0; cpu < nr_cpus; cpu++)
@@ -304,8 +299,6 @@ static void xntimer_freeze_aperiodic (void)
             xntimerq_remove(timerq, holder);
             }
         }
-
- unlock_and_exit:
 
     xnlock_put_irqrestore(&nklock,s);
 }
@@ -472,12 +465,7 @@ static void xntimer_freeze_periodic (void)
     int n, cpu;
     spl_t s;
 
-    xnarch_stop_timer();
-
     xnlock_get_irqsave(&nklock,s);
-
-    if (!nkpod || testbits(nkpod->status,XNPIDLE))
-        goto unlock_and_exit;
 
     nr_cpus = xnarch_num_online_cpus();
     for (cpu = 0; cpu < nr_cpus; cpu++)
@@ -492,8 +480,6 @@ static void xntimer_freeze_periodic (void)
                 xntlist_remove(timerq, holder);
                 }
             }
-
- unlock_and_exit:
 
     xnlock_put_irqrestore(&nklock,s);
 }

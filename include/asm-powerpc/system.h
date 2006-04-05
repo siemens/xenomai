@@ -151,6 +151,11 @@ static inline int xnarch_start_timer (unsigned long ns,
     return rthal_timer_request(tickhandler,ns);
 }
 
+static inline void xnarch_stop_timer (void)
+{
+    rthal_timer_release();
+}
+
 static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
 
 {
@@ -558,10 +563,6 @@ static inline void xnarch_program_timer_shot (unsigned long delay) {
        timebase value is used to express CPU ticks on the PowerPC
        port, there is no need to rescale the delay value. */
     rthal_timer_program_shot(delay);
-}
-
-static inline void xnarch_stop_timer (void) {
-    rthal_timer_release();
 }
 
 static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask)

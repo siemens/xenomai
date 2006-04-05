@@ -127,6 +127,11 @@ static inline int xnarch_start_timer (unsigned long ns,
     return rthal_timer_request(tickhandler,ns);
 }
 
+static inline void xnarch_stop_timer (void)
+{
+    rthal_timer_release();
+}
+
 static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
 
 {
@@ -621,11 +626,6 @@ static inline void xnarch_program_timer_shot (unsigned long delay)
             rthal_nmi_arm(delay + rthal_maxlat_tsc);
     }
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
-}
-
-static inline void xnarch_stop_timer (void)
-{
-    rthal_timer_release();
 }
 
 static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask)
