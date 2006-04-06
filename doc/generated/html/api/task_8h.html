@@ -51,18 +51,18 @@ This graph shows which files directly or indirectly include this file:<p><center
 <a href="task_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga29">rt_task_shadow</a> (RT_TASK *task, const char *name, int prio, int mode)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga32">rt_task_shadow</a> (RT_TASK *task, const char *name, int prio, int mode)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Turns the current Linux task into a native Xenomai task.  <a href="group__task.html#ga29"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga30">rt_task_bind</a> (RT_TASK *task, const char *name, RTIME timeout)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Turns the current Linux task into a native Xenomai task.  <a href="group__task.html#ga32"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga33">rt_task_bind</a> (RT_TASK *task, const char *name, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a real-time task.  <a href="group__task.html#ga30"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga31">rt_task_unbind</a> (RT_TASK *task)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a real-time task.  <a href="group__task.html#ga33"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga34">rt_task_unbind</a> (RT_TASK *task)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unbind from a real-time task.  <a href="group__task.html#ga31"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga32">rt_task_join</a> (RT_TASK *task)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unbind from a real-time task.  <a href="group__task.html#ga34"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga35">rt_task_join</a> (RT_TASK *task)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on the termination of a real-time task.  <a href="group__task.html#ga32"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on the termination of a real-time task.  <a href="group__task.html#ga35"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga8">rt_task_create</a> (RT_TASK *task, const char *name, int stksize, int prio, int mode)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a new real-time task.  <a href="group__task.html#ga8"></a><br></td></tr>
@@ -114,11 +114,20 @@ This graph shows which files directly or indirectly include this file:<p><center
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga27">rt_task_slice</a> (RT_TASK *task, RTIME quantum)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set a task's round-robin quantum.  <a href="group__task.html#ga27"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga28">rt_task_spawn</a> (RT_TASK *task, const char *name, int stksize, int prio, int mode, void(*entry)(void *cookie), void *cookie)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga28">rt_task_send</a> (RT_TASK *task, RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Spawn a new real-time task.  <a href="group__task.html#ga28"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Send a message to a task.  <a href="group__task.html#ga28"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga29">rt_task_receive</a> (RT_TASK_MCB *mcb_r, RTIME timeout)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive a message from a task.  <a href="group__task.html#ga29"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga30">rt_task_reply</a> (int flowid, RT_TASK_MCB *mcb_s)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Reply to a task.  <a href="group__task.html#ga30"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga31">rt_task_spawn</a> (RT_TASK *task, const char *name, int stksize, int prio, int mode, void(*entry)(void *cookie), void *cookie)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Spawn a new real-time task.  <a href="group__task.html#ga31"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Apr 3 19:52:55 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 18:04:11 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

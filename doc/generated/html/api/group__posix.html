@@ -10,15 +10,16 @@
 <p>
 Collaboration diagram for POSIX skin.:<center><table><tr><td><img src="group__posix.png" border="0" alt="" usemap="#group____posix_map">
 <map name="group____posix_map">
-<area href="group__posix__thread.html" shape="rect" coords="153,8,361,32" alt="">
-<area href="group__posix__cond.html" shape="rect" coords="161,56,353,80" alt="">
-<area href="group__posix__mutex.html" shape="rect" coords="200,104,314,128" alt="">
-<area href="group__posix__mq.html" shape="rect" coords="168,152,346,176" alt="">
-<area href="group__posix__tsd.html" shape="rect" coords="184,200,330,224" alt="">
-<area href="group__posix__time.html" shape="rect" coords="165,248,349,272" alt="">
-<area href="group__posix__shm.html" shape="rect" coords="170,296,344,320" alt="">
-<area href="group__posix__sem.html" shape="rect" coords="180,344,334,368" alt="">
-<area href="group__posix__signal.html" shape="rect" coords="196,392,318,416" alt="">
+<area href="group__posix__thread.html" shape="rect" coords="165,8,373,32" alt="">
+<area href="group__posix__cond.html" shape="rect" coords="173,56,365,80" alt="">
+<area href="group__posix__mutex.html" shape="rect" coords="212,104,326,128" alt="">
+<area href="group__posix__mq.html" shape="rect" coords="180,152,358,176" alt="">
+<area href="group__posix__intr.html" shape="rect" coords="152,200,386,224" alt="">
+<area href="group__posix__tsd.html" shape="rect" coords="196,248,342,272" alt="">
+<area href="group__posix__time.html" shape="rect" coords="177,296,361,320" alt="">
+<area href="group__posix__shm.html" shape="rect" coords="182,344,356,368" alt="">
+<area href="group__posix__sem.html" shape="rect" coords="192,392,346,416" alt="">
+<area href="group__posix__signal.html" shape="rect" coords="208,440,330,464" alt="">
 </map></td></tr></table></center>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Xenomai POSIX skin is an implementation of a small subset of the Single Unix specification over Xenomai generic RTOS core. 
@@ -37,7 +38,7 @@ The following table gives equivalence between native API services and POSIX serv
 <tr>
 <td><a class="el" href="group__native__heap.html">Memory heap services.</a> </td><td><a class="el" href="group__posix__shm.html">Shared memory services.</a> </td></tr>
 <tr>
-<td><a class="el" href="group__interrupt.html">Interrupt management services.</a> </td><td>not documented yet </td></tr>
+<td><a class="el" href="group__interrupt.html">Interrupt management services.</a> </td><td><a class="el" href="group__posix__intr.html">Interruptions management services.</a> </td></tr>
 <tr>
 <td><a class="el" href="group__mutex.html">Mutex services.</a> </td><td><a class="el" href="group__posix__mutex.html">Mutex services.</a> </td></tr>
 <tr>
@@ -65,6 +66,11 @@ The following table gives equivalence between native API services and POSIX serv
 <tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__cond.html">Condition variables services.</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Condition variables services. <br></td></tr>
+
+<p>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__intr.html">Interruptions management services.</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Interruptions management services. <br></td></tr>
 
 <p>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mq.html">Message queues services.</a></td></tr>
@@ -103,7 +109,7 @@ The following table gives equivalence between native API services and POSIX serv
 
 <p>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Apr 3 19:53:05 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 18:04:22 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

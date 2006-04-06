@@ -491,6 +491,8 @@ pthread_t pthread_self (void)
  *
  * This service make the POSIX skin thread @a thread periodic.
  *
+ * This service is a non-portable extension of the POSIX interface.
+ *
  * @param thread thread identifier;
  *
  * @param starttp start time, expressed as an absolute value of the
@@ -540,6 +542,8 @@ int pthread_make_periodic_np (pthread_t thread,
  *
  * This service is a cancelation point for POSIX skin threads.
  *
+ * This service is a non-portable extension of the POSIX interface.
+ *
  * @param overruns_r address where the overruns count is returned in case of
  * overrun.
  *
@@ -569,6 +573,103 @@ int pthread_wait_np(unsigned long *overruns_r)
     thread_cancellation_point(cur);
 
     return err;
+}
+
+/**
+ * Set the mode of the current thread.
+ *
+ * This service sets the mode of the calling thread. @a clrmask and @a setmask
+ * are two bit masks which are respectively cleared and set in the calling
+ * thread status. They are a bitwise OR of the following values:
+ * - PTHREAD_LOCK_SCHED, when set, locks the scheduler, which prevents the
+ *   current thread from being switched out by the scheduler until the scheduler
+ *   is unlocked;
+ * - PTHREAD_SHIELD, when set, activates the interrupt shield, which improve the
+ *   execution determinism of the current thread by blocking Linux interrupts
+ *   when it runs in secondary mode;
+ * - PTHREAD_WARNSW, when set, cause the signal SIGXCPU to be sent to the
+ *   current thread, whenever it involontary switches to secondary mode;
+ * - PTHREAD_PRIMARY, cause the migration of the current thread to primary
+ *   mode.
+ *
+ * PTHREAD_LOCK_SCHED is valid for any Xenomai thread, the other bits are only
+ * valid for Xenomai user-space threads.
+ *
+ * This service is a non-portable extension of the POSIX interface.
+ *
+ * @param clrmask set of bits to be cleared;
+ *
+ * @param setmask set of bits to be set.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, some bit in @a clrmask or @a setmask is invalid.
+ * 
+ */
+int pthread_set_mode_np (int clrmask, int setmask)
+
+{
+    xnthread_t *cur = xnpod_current_thread();
+    xnflags_t valid_flags = XNLOCK;
+    int err;
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    if (testbits(cur->status, XNSHADOW))
+        valid_flags |= XNTHREAD_SPARE1|XNSHIELD|XNTRAPSW;
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+    /* XNTHREAD_SPARE1 is used for primary mode switch. */
+
+    if ((clrmask & ~valid_flags) != 0 || (setmask & ~valid_flags) != 0)
+        return EINVAL;
+
+    err = -xnpod_set_thread_mode(cur,
+                                 clrmask & ~XNTHREAD_SPARE1,
+                                 setmask & ~XNTHREAD_SPARE1);
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    if (testbits(cur->status, XNSHADOW) && (clrmask & XNTHREAD_SPARE1) != 0)
+        xnshadow_relax(0);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+    return err;
+}
+
+/**
+ * Set a thread name.
+ *
+ * This service set to @a name, the name of @a thread. This name is used for
+ * displaying information in /proc/xenomai/sched.
+ *
+ * This service is a non-portable extension of the POSIX interface.
+ *
+ * @param thread target thread;
+ *
+ * @param name name of the thread.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a thread is invalid.
+ * 
+ */
+int pthread_set_name_np (pthread_t thread,
+			 const char *name)
+{
+    spl_t s;
+
+    xnlock_get_irqsave(&nklock, s);
+
+    if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
+        {
+        xnlock_put_irqrestore(&nklock, s);
+        return ESRCH;
+        }
+
+    snprintf(xnthread_name(&thread->threadbase),XNOBJECT_NAME_LEN,"%s",name);
+
+    xnlock_put_irqrestore(&nklock, s);
+
+    return 0;
 }
 
 void pse51_thread_abort (pthread_t thread, void *status)

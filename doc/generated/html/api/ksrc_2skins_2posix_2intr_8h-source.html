@@ -31,64 +31,48 @@
 00021 <span class="preprocessor">#include &lt;nucleus/synch.h&gt;</span>
 00022 <span class="preprocessor">#include &lt;nucleus/intr.h&gt;</span>
 00023 
-00024 <span class="preprocessor">#define PTHREAD_INOAUTOENA  XN_ISR_NOENABLE</span>
-00025 <span class="preprocessor"></span><span class="preprocessor">#define PTHREAD_IPROPAGATE  XN_ISR_PROPAGATE</span>
-00026 <span class="preprocessor"></span>
-00027 <span class="preprocessor">#define PTHREAD_IENABLE     0</span>
-00028 <span class="preprocessor"></span><span class="preprocessor">#define PTHREAD_IDISABLE    1</span>
-00029 <span class="preprocessor"></span>
-00030 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_SIM__)</span>
-00031 <span class="preprocessor"></span>
-00032 <span class="preprocessor">#define PTHREAD_IDESC(xintr)  ((struct pse51_interrupt *)(xintr)-&gt;cookie)</span>
-00033 <span class="preprocessor"></span>
-00034 <span class="keyword">struct </span>pse51_interrupt {
+00024 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_SIM__)</span>
+00025 <span class="preprocessor"></span>
+00026 <span class="preprocessor">#define PTHREAD_IDESC(xintr)  ((struct pse51_interrupt *)(xintr)-&gt;cookie)</span>
+00027 <span class="preprocessor"></span>
+00028 <span class="keyword">struct </span>pse51_interrupt {
+00029 
+00030     <span class="keywordtype">unsigned</span> magic;   <span class="comment">/* !&lt; Magic code - must be first */</span>
+00031 
+00032     xnintr_t intr_base; <span class="comment">/* !&lt; Base interrupt object. */</span>
+00033 
+00034     xnholder_t link;    <span class="comment">/* !&lt; Link in pse51_intrq */</span>
 00035 
-00036     <span class="keywordtype">unsigned</span> magic;   <span class="comment">/* !&lt; Magic code - must be first */</span>
-00037 
-00038     xnintr_t intr_base; <span class="comment">/* !&lt; Base interrupt object. */</span>
-00039 
-00040     xnholder_t link;    <span class="comment">/* !&lt; Link in pse51_intrq */</span>
-00041 
-00042 <span class="preprocessor">#define link2intr(laddr) \</span>
-00043 <span class="preprocessor">((struct pse51_interrupt *)(((char *)laddr) - (int)(&amp;((struct pse51_interrupt *)0)-&gt;link)))</span>
-00044 <span class="preprocessor"></span>
-00045 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_PERVASIVE)</span>
-00046 <span class="preprocessor"></span>
-00047     <span class="keywordtype">int</span> mode;           <span class="comment">/* !&lt; Interrupt control mode. */</span>
-00048 
-00049     <span class="keywordtype">int</span> pending;        <span class="comment">/* !&lt; Pending hits to process. */</span>
-00050 
-00051     xnsynch_t synch_base; <span class="comment">/* !&lt; Base synchronization object. */</span>
-00052 
-00053 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_PERVASIVE */</span>
-00054 };
+00036 <span class="preprocessor">#define link2intr(laddr) \</span>
+00037 <span class="preprocessor">((struct pse51_interrupt *)(((char *)laddr) - (int)(&amp;((struct pse51_interrupt *)0)-&gt;link)))</span>
+00038 <span class="preprocessor"></span>
+00039 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_PERVASIVE)</span>
+00040 <span class="preprocessor"></span>
+00041     <span class="keywordtype">int</span> mode;           <span class="comment">/* !&lt; Interrupt control mode. */</span>
+00042 
+00043     <span class="keywordtype">int</span> pending;        <span class="comment">/* !&lt; Pending hits to process. */</span>
+00044 
+00045     xnsynch_t synch_base; <span class="comment">/* !&lt; Base synchronization object. */</span>
+00046 
+00047 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_PERVASIVE */</span>
+00048 };
+00049 
+00050 <span class="preprocessor">#ifdef __cplusplus</span>
+00051 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+00052 <span class="preprocessor">#endif</span>
+00053 <span class="preprocessor"></span>
+00054 <span class="keywordtype">void</span> pse51_intr_pkg_init(<span class="keywordtype">void</span>);
 00055 
-00056 <span class="preprocessor">#ifdef __cplusplus</span>
-00057 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-00058 <span class="preprocessor">#endif</span>
-00059 <span class="preprocessor"></span>
-00060 <span class="keywordtype">void</span> pse51_intr_pkg_init(<span class="keywordtype">void</span>);
-00061 
-00062 <span class="keywordtype">void</span> pse51_intr_pkg_cleanup(<span class="keywordtype">void</span>);
+00056 <span class="keywordtype">void</span> pse51_intr_pkg_cleanup(<span class="keywordtype">void</span>);
+00057 
+00058 <span class="preprocessor">#ifdef __cplusplus</span>
+00059 <span class="preprocessor"></span>}
+00060 <span class="preprocessor">#endif</span>
+00061 <span class="preprocessor"></span>
+00062 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
 00063 
-00064 <span class="keywordtype">int</span> pse51_intr_attach(<span class="keyword">struct</span> pse51_interrupt *intr,
-00065                       <span class="keywordtype">unsigned</span> irq,
-00066                       xnisr_t isr,
-00067                       xniack_t iack);
-00068 
-00069 <span class="keywordtype">int</span> pse51_intr_detach(<span class="keyword">struct</span> pse51_interrupt *intr);
-00070 
-00071 <span class="keywordtype">int</span> pse51_intr_control(<span class="keyword">struct</span> pse51_interrupt *intr,
-00072                        <span class="keywordtype">int</span> cmd);
-00073 
-00074 <span class="preprocessor">#ifdef __cplusplus</span>
-00075 <span class="preprocessor"></span>}
-00076 <span class="preprocessor">#endif</span>
-00077 <span class="preprocessor"></span>
-00078 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
-00079 
-00080 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_INTR_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Apr 3 19:52:55 2006 for Xenomai API by&nbsp;
+00064 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_INTR_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 18:04:11 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

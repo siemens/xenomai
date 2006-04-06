@@ -107,27 +107,30 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="group__semaphore.html#ga9">sem.h</a><li>rt_sem_v()
 : <a class="el" href="group__semaphore.html#ga3">sem.c</a>, <a class="el" href="group__semaphore.html#ga3">sem.h</a><li>rt_task_add_hook()
 : <a class="el" href="group__task.html#ga21">task.c</a><li>rt_task_bind()
-: <a class="el" href="group__task.html#ga30">task.h</a><li>rt_task_catch()
+: <a class="el" href="group__task.html#ga33">task.h</a><li>rt_task_catch()
 : <a class="el" href="group__task.html#ga23">task.c</a><li>rt_task_create()
 : <a class="el" href="group__task.html#ga8">task.c</a>, <a class="el" href="group__task.html#ga8">task.h</a><li>rt_task_delete()
 : <a class="el" href="group__task.html#ga12">task.c</a>, <a class="el" href="group__task.html#ga12">task.h</a><li>rt_task_inquire()
 : <a class="el" href="group__task.html#ga20">task.c</a>, <a class="el" href="group__task.html#ga20">task.h</a><li>rt_task_join()
-: <a class="el" href="group__task.html#ga32">task.h</a><li>rt_task_notify()
-: <a class="el" href="group__task.html#ga24">task.c</a>, <a class="el" href="group__task.html#ga24">task.h</a><li>rt_task_remove_hook()
-: <a class="el" href="group__task.html#ga22">task.c</a><li>rt_task_resume()
+: <a class="el" href="group__task.html#ga35">task.h</a><li>rt_task_notify()
+: <a class="el" href="group__task.html#ga24">task.c</a>, <a class="el" href="group__task.html#ga24">task.h</a><li>rt_task_receive()
+: <a class="el" href="group__task.html#ga29">task.c</a>, <a class="el" href="group__task.html#ga29">task.h</a><li>rt_task_remove_hook()
+: <a class="el" href="group__task.html#ga22">task.c</a><li>rt_task_reply()
+: <a class="el" href="group__task.html#ga30">task.c</a>, <a class="el" href="group__task.html#ga30">task.h</a><li>rt_task_resume()
 : <a class="el" href="group__task.html#ga11">task.c</a>, <a class="el" href="group__task.html#ga11">task.h</a><li>rt_task_self()
-: <a class="el" href="group__task.html#ga26">task.c</a>, <a class="el" href="group__task.html#ga26">task.h</a><li>rt_task_set_mode()
+: <a class="el" href="group__task.html#ga26">task.c</a>, <a class="el" href="group__task.html#ga26">task.h</a><li>rt_task_send()
+: <a class="el" href="group__task.html#ga28">task.c</a>, <a class="el" href="group__task.html#ga28">task.h</a><li>rt_task_set_mode()
 : <a class="el" href="group__task.html#ga25">task.c</a>, <a class="el" href="group__task.html#ga25">task.h</a><li>rt_task_set_periodic()
 : <a class="el" href="group__task.html#ga14">task.c</a>, <a class="el" href="group__task.html#ga14">task.h</a><li>rt_task_set_priority()
 : <a class="el" href="group__task.html#ga16">task.c</a>, <a class="el" href="group__task.html#ga16">task.h</a><li>rt_task_shadow()
-: <a class="el" href="group__task.html#ga29">task.h</a><li>rt_task_sleep()
+: <a class="el" href="group__task.html#ga32">task.h</a><li>rt_task_sleep()
 : <a class="el" href="group__task.html#ga17">task.c</a>, <a class="el" href="group__task.html#ga17">task.h</a><li>rt_task_sleep_until()
 : <a class="el" href="group__task.html#ga18">task.c</a>, <a class="el" href="group__task.html#ga18">task.h</a><li>rt_task_slice()
 : <a class="el" href="group__task.html#ga27">task.c</a>, <a class="el" href="group__task.html#ga27">task.h</a><li>rt_task_spawn()
-: <a class="el" href="group__task.html#ga28">task.h</a><li>rt_task_start()
+: <a class="el" href="group__task.html#ga31">task.h</a><li>rt_task_start()
 : <a class="el" href="group__task.html#ga9">task.c</a>, <a class="el" href="group__task.html#ga9">task.h</a><li>rt_task_suspend()
 : <a class="el" href="group__task.html#ga10">task.c</a>, <a class="el" href="group__task.html#ga10">task.h</a><li>rt_task_unbind()
-: <a class="el" href="group__task.html#ga31">task.h</a><li>rt_task_unblock()
+: <a class="el" href="group__task.html#ga34">task.h</a><li>rt_task_unblock()
 : <a class="el" href="group__task.html#ga19">task.c</a>, <a class="el" href="group__task.html#ga19">task.h</a><li>rt_task_wait_period()
 : <a class="el" href="group__task.html#ga15">task.c</a>, <a class="el" href="group__task.html#ga15">task.h</a><li>rt_task_yield()
 : <a class="el" href="group__task.html#ga13">task.c</a>, <a class="el" href="group__task.html#ga13">task.h</a><li>rt_timer_inquire()
@@ -284,7 +287,7 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="group__rtserial.html#ga74">rtserial.h</a><li>RTSER_RTIOC_WAIT_EVENT
 : <a class="el" href="group__rtserial.html#ga75">rtserial.h</a><li>rtser_status_t
 : <a class="el" href="group__rtserial.html#ga1">rtserial.h</a></ul>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Apr 3 19:53:12 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 18:04:28 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
