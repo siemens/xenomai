@@ -1,3 +1,9 @@
+2006-04-06  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/drivers/16550A/16550A.c: [Sync to driver version 1.3.1]
+	Fix screwed IRQ source detection which caused sporadic hard deadlocks,
+	add RTIOC_PURGE support, minor clean-up of RTSER_RTIOC_WAIT_EVENT.
+
 2006-04-05  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/timer.c (xntimer_freeze_*periodic): For the sake of
