@@ -553,8 +553,8 @@ int ftruncate (int fd, off_t len)
 
         if (len)
             {
-            int flags = len <= 128*1024 ? GFP_USER : 0;
 #ifdef CONFIG_XENO_OPT_PERVASIVE
+            int flags = len <= 128*1024 ? GFP_USER : 0;
             err = xnheap_init_mapped(&shm->heapbase, len, flags);
 #else /* !CONFIG_XENO_OPT_PERVASIVE. */
             {
