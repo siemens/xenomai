@@ -1,3 +1,8 @@
+2006-04-06  Rodrigo Rosenfeld Rosas <lbocseg@yahoo.com.br>
+
+	* ksrc/skins/native/snippets/sigxcpu.c (task_body): Fix parameters
+	to rt_task_set_mode().
+
 2006-04-06  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/drivers/16550A/16550A.c: [Sync to driver version 1.3.1]
