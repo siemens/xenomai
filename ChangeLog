@@ -1,5 +1,7 @@
 2006-04-06  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
+	* scripts/Kconfig.frag: select I-Pipe when Xenomai is enabled.
+
 	* ksrc/skins/posix/intr.c: Export kernel-space POSIX skin
 	interrupts management interface.
 

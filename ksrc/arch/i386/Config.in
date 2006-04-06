@@ -1,11 +1,14 @@
 mainmenu_option next_comment
 comment 'Real-time sub-system'
 
-bool 'Xenomai' CONFIG_XENOMAI
+if [ "$CONFIG_IPIPE" = "n" ]; then
+    comment "Xenomai depends on Adeos interrupt pipeline"
+else
+    bool 'Xenomai' CONFIG_XENOMAI
 
-source kernel/xenomai/Config.in
+    source kernel/xenomai/Config.in
 
-if [ "$CONFIG_XENOMAI" = "y" -a "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
+    if [ "$CONFIG_XENOMAI" = "y" -a "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 
 	mainmenu_option next_comment
 	comment 'Machine'
@@ -42,6 +45,7 @@ if [ "$CONFIG_XENOMAI" = "y" -a "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	fi
 	endmenu
 	endmenu
+    fi
 fi
 
 endmenu
