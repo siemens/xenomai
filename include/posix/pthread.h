@@ -140,19 +140,18 @@ typedef struct
 
 struct timespec;
 
-typedef unsigned long pthread_intr_t;
+#endif /* !(__KERNEL__ || __XENO_SIM__) */
 
-#define PTHREAD_SHIELD  XNSHIELD
-#define PTHREAD_WARNSW  XNTRAPSW
-#define PTHREAD_PRIMARY XNTHREAD_SPARE1
+#define PTHREAD_SHIELD     XNSHIELD
+#define PTHREAD_WARNSW     XNTRAPSW
+#define PTHREAD_LOCK_SCHED XNLOCK
+#define PTHREAD_PRIMARY    XNTHREAD_SPARE1
 
 #define PTHREAD_INOAUTOENA  XN_ISR_NOENABLE
 #define PTHREAD_IPROPAGATE  XN_ISR_PROPAGATE
 
 #define PTHREAD_IENABLE     0
 #define PTHREAD_IDISABLE    1
-
-#endif /* !(__KERNEL__ || __XENO_SIM__) */
 
 struct pse51_mutex;
 
@@ -173,6 +172,10 @@ union __xeno_cond {
 	struct pse51_cond *cond;
     } shadow_cond;
 };
+
+struct pse51_interrupt;
+
+typedef struct pse51_interrupt *pthread_intr_t;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
@@ -358,6 +361,22 @@ int pthread_make_periodic_np(pthread_t thread,
 			     struct timespec *periodtp);
 
 int pthread_wait_np(unsigned long *overruns_r);
+
+int pthread_set_mode_np(int clrmask,
+			int setmask);
+
+int pthread_set_name_np(pthread_t thread,
+			const char *name);
+
+int pthread_intr_attach_np(pthread_intr_t *intr,
+			   unsigned irq,
+			   xnisr_t isr,
+                           xniack_t iack);
+
+int pthread_intr_detach_np(pthread_intr_t intr);
+
+int pthread_intr_control_np(pthread_intr_t intr,
+			    int cmd);
 
 #ifdef __cplusplus
 }

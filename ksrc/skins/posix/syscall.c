@@ -345,30 +345,11 @@ static int __pthread_set_mode_np (struct task_struct *curr, struct pt_regs *regs
 
 {
     xnflags_t clrmask, setmask;
-    struct pse51_hkey hkey;
-    pthread_t k_tid;
-    int err;
 
-    hkey.u_tid = __xn_reg_arg1(regs); /* always pthread_self() */
-    hkey.mm = curr->mm;
-    k_tid = __pthread_find(&hkey);
-    clrmask = __xn_reg_arg2(regs);
-    setmask = __xn_reg_arg3(regs);
+    clrmask = __xn_reg_arg1(regs);
+    setmask = __xn_reg_arg2(regs);
 
-    /* XNTHREAD_SPARE1 is used for primary mode switch. */
-
-    if ((clrmask & ~(XNSHIELD|XNTRAPSW|XNTHREAD_SPARE1)) != 0 ||
-        (setmask & ~(XNSHIELD|XNTRAPSW|XNTHREAD_SPARE1)) != 0)
-        return -EINVAL;
-
-    err = xnpod_set_thread_mode(&k_tid->threadbase,
-                                clrmask & ~XNTHREAD_SPARE1,
-                                setmask & ~XNTHREAD_SPARE1);
-
-    if ((clrmask & XNTHREAD_SPARE1) != 0)
-        xnshadow_relax(0);
-
-    return err;
+    return -pthread_set_mode_np(clrmask, setmask);
 }
 
 static int __pthread_set_name_np (struct task_struct *curr, struct pt_regs *regs)
@@ -377,7 +358,6 @@ static int __pthread_set_name_np (struct task_struct *curr, struct pt_regs *regs
     char name[XNOBJECT_NAME_LEN];
     struct pse51_hkey hkey;
     pthread_t k_tid;
-    spl_t s;
 
     if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg2(regs),sizeof(name)))
         return -EFAULT;
@@ -389,19 +369,7 @@ static int __pthread_set_name_np (struct task_struct *curr, struct pt_regs *regs
     hkey.mm = curr->mm;
     k_tid = __pthread_find(&hkey);
 
-    xnlock_get_irqsave(&nklock, s);
-
-    if (!pse51_obj_active(k_tid, PSE51_THREAD_MAGIC, struct pse51_thread))
-        {
-        xnlock_put_irqrestore(&nklock, s);
-        return -ESRCH;
-        }
-
-    strcpy(xnthread_name(&k_tid->threadbase),name);
-
-    xnlock_put_irqrestore(&nklock, s);
-
-    return 0;
+    return -pthread_set_name_np(k_tid, name);
 }
 
 static int __sem_init (struct task_struct *curr, struct pt_regs *regs)
@@ -1511,7 +1479,7 @@ static int __mq_notify (struct task_struct *curr, struct pt_regs *regs)
 
 static int __pse51_intr_handler (xnintr_t *cookie)
 {
-    struct pse51_interrupt *intr = PTHREAD_IDESC(cookie);
+    pthread_intr_t intr = PTHREAD_IDESC(cookie);
 
     ++intr->pending;
 
@@ -1526,12 +1494,11 @@ static int __pse51_intr_handler (xnintr_t *cookie)
 
 static int __intr_attach (struct task_struct *curr, struct pt_regs *regs)
 {
-    struct pse51_interrupt *intr;
-    unsigned long handle;
+    pthread_intr_t intr;
     int err, mode;
     unsigned irq;
 
-    if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg1(regs),sizeof(handle)))
+    if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg1(regs),sizeof(intr)))
         return -EFAULT;
 
     /* Interrupt line number. */
@@ -1543,42 +1510,31 @@ static int __intr_attach (struct task_struct *curr, struct pt_regs *regs)
     if (mode & ~(XN_ISR_NOENABLE|XN_ISR_PROPAGATE))
         return -EINVAL;
 
-    intr = (struct pse51_interrupt *)xnmalloc(sizeof(*intr));
-
-    if (!intr)
-        return -ENOMEM;
-
-    err = pse51_intr_attach(intr,irq,&__pse51_intr_handler,NULL);
+    err = pthread_intr_attach_np(&intr,irq,&__pse51_intr_handler,NULL);
 
     if (err == 0)
         {
         intr->mode = mode;
-        handle = (unsigned long)intr;
         __xn_copy_to_user(curr,
                           (void __user *)__xn_reg_arg1(regs),
-                          &handle,
-                          sizeof(handle));
+                          &intr,
+                          sizeof(intr));
         }
-    else
-        xnfree(intr);
 
-    return -err;
+    return !err ? 0 : -thread_get_errno();
 }
 
 static int __intr_detach (struct task_struct *curr, struct pt_regs *regs)
 {
-    struct pse51_interrupt *intr = (struct pse51_interrupt *)__xn_reg_arg1(regs);
-    int err = pse51_intr_detach(intr);
+    pthread_intr_t intr = (struct pse51_interrupt *)__xn_reg_arg1(regs);
+    int err = pthread_intr_detach_np(intr);
 
-    if (!err)
-        xnfree(intr);
-
-    return -err;
+    return !err ? 0 : -thread_get_errno();
 }
 
 static int __intr_wait (struct task_struct *curr, struct pt_regs *regs)
 {
-    struct pse51_interrupt *intr = (struct pse51_interrupt *)__xn_reg_arg1(regs);
+    pthread_intr_t intr = (pthread_intr_t)__xn_reg_arg1(regs);
     struct timespec ts;
     xnthread_t *thread;
     xnticks_t timeout;
@@ -1628,13 +1584,17 @@ static int __intr_wait (struct task_struct *curr, struct pt_regs *regs)
         else if (xnthread_test_flags(thread,XNBREAK))
             err = -EINTR; /* Unblocked.*/
         else
+            {
             err = intr->pending;
+            intr->pending = 0;
+            }
         }
     else
+        {
         err = intr->pending;
+        intr->pending = 0;
+        }
 
-    intr->pending = 0;
-    
     xnlock_put_irqrestore(&nklock,s);
 
     return err;
@@ -1642,10 +1602,12 @@ static int __intr_wait (struct task_struct *curr, struct pt_regs *regs)
 
 static int __intr_control (struct task_struct *curr, struct pt_regs *regs)
 {
-    struct pse51_interrupt *intr = (struct pse51_interrupt *)__xn_reg_arg1(regs);
-    int cmd = (int)__xn_reg_arg2(regs);
+    pthread_intr_t intr = (pthread_intr_t)__xn_reg_arg1(regs);
+    int err, cmd = (int)__xn_reg_arg2(regs);
 
-    return pse51_intr_control(intr,cmd);
+    err = pthread_intr_control_np(intr,cmd);
+
+    return !err ? 0 : -thread_get_errno();
 }
 
 static int __timer_create (struct task_struct *curr, struct pt_regs *regs)

@@ -33,7 +33,7 @@
  * <TR><TD>@ref event</TD>          <TD>no direct equivalence, <BR>
  *                                      see @ref posix_cond</TD></TR>
  * <TR><TD>@ref native_heap</TD>    <TD>@ref posix_shm</TD></TR>
- * <TR><TD>@ref interrupt</TD>      <TD>not documented yet</TD></TR>
+ * <TR><TD>@ref interrupt</TD>      <TD>@ref posix_intr</TD></TR>
  * <TR><TD>@ref mutex</TD>          <TD>@ref posix_mutex</TD></TR>
  * <TR><TD>@ref pipe</TD>           <TD>no direct equivalence, <BR>
  *                                      see @ref posix_mq</TD></TR>

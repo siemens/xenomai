@@ -201,16 +201,19 @@
 00191         xnheap_finalize_free_inner(heap);
 00192 }
 00193 
-00194 <span class="preprocessor">#ifdef __cplusplus</span>
-00195 <span class="preprocessor"></span>}
-00196 <span class="preprocessor">#endif</span>
-00197 <span class="preprocessor"></span>
-00198 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
-00199 
-00200 <span class="preprocessor">#define XNHEAP_DEV_NAME  "/dev/rtheap"</span>
-00201 <span class="preprocessor"></span>
-00202 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_HEAP_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Apr 3 19:52:55 2006 for Xenomai API by&nbsp;
+00194 <span class="keywordtype">int</span> xnheap_check_block(xnheap_t *heap,
+00195                        <span class="keywordtype">void</span> *block);
+00196 
+00197 <span class="preprocessor">#ifdef __cplusplus</span>
+00198 <span class="preprocessor"></span>}
+00199 <span class="preprocessor">#endif</span>
+00200 <span class="preprocessor"></span>
+00201 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
+00202 
+00203 <span class="preprocessor">#define XNHEAP_DEV_NAME  "/dev/rtheap"</span>
+00204 <span class="preprocessor"></span>
+00205 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_HEAP_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 18:04:11 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

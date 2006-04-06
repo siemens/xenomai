@@ -185,9 +185,17 @@ int pthread_make_periodic_np (pthread_t thread,
 int pthread_wait_np (unsigned long *overruns_r)
 
 {
-    return -XENOMAI_SKINCALL1(__pse51_muxid,
-			      __pse51_thread_wait,
-			      overruns_r);
+    int err, oldtype;
+
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+    err = -XENOMAI_SKINCALL1(__pse51_muxid,
+                             __pse51_thread_wait,
+                             overruns_r);
+
+    pthread_setcanceltype(oldtype, NULL);
+
+    return err;
 }
 
 int pthread_set_mode_np (int clrmask,

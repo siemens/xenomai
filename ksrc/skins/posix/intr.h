@@ -21,12 +21,6 @@
 #include <nucleus/synch.h>
 #include <nucleus/intr.h>
 
-#define PTHREAD_INOAUTOENA  XN_ISR_NOENABLE
-#define PTHREAD_IPROPAGATE  XN_ISR_PROPAGATE
-
-#define PTHREAD_IENABLE     0
-#define PTHREAD_IDISABLE    1
-
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #define PTHREAD_IDESC(xintr)  ((struct pse51_interrupt *)(xintr)->cookie)
@@ -60,16 +54,6 @@ extern "C" {
 void pse51_intr_pkg_init(void);
 
 void pse51_intr_pkg_cleanup(void);
-
-int pse51_intr_attach(struct pse51_interrupt *intr,
-		      unsigned irq,
-		      xnisr_t isr,
-		      xniack_t iack);
-
-int pse51_intr_detach(struct pse51_interrupt *intr);
-
-int pse51_intr_control(struct pse51_interrupt *intr,
-		       int cmd);
 
 #ifdef __cplusplus
 }

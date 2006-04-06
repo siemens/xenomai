@@ -16,7 +16,7 @@
       interested in studying how interrupts get propagated. We will
       finally conclude on a few tips and tricks to disable/enable
       interrupts sources and to share interrupts between domains.
-      </p></div></div></div></div><div class="toc"><dl><dt><span class="sect1"><a href="#What_is_Adeos">1. What is Adeos</a></span></dt><dd><dl><dt><span class="sect2"><a href="#The_event_pipeline">1.1. The event pipeline</a></span></dt><dt><span class="sect2"><a href="#Optimistic_interrupt_protection">1.2. Optimistic interrupt protection</a></span></dt><dt><span class="sect2"><a href="#System-event_propagation">1.3. System-event propagation</a></span></dt></dl></dd><dt><span class="sect1"><a href="#What_does_Adeos_provide_to_Xenomai">2. What does Adeos provide to Xenomai?</a></span></dt><dd><dl><dt><span class="sect2"><a href="#Xenomai_primary_and_secondary_domain">2.1. Xenomai's primary and secondary domains</a></span></dt><dt><span class="sect2"><a href="#System_call_interception">2.2. System call interception</a></span></dt><dt><span class="sect2"><a href="#Interrupt_propagatio">2.3. Interruptpropagation</a></span></dt></dl></dd><dt><span class="sect1"><a href="#Tips_and_trick">3. Tips and tricks</a></span></dt><dd><dl><dt><span class="sect2"><a href="#Enabling_Disabling_interrupt_source">3.1. Enabling/Disabling interrupt sources</a></span></dt><dt><span class="sect2"><a href="#Sharing_interrupts_between_domain">3.2. Sharing interrupts between domains</a></span></dt><dt><span class="sect2"><a href="#Interrupt_sharing_and_latency">3.3. Interrupt sharing and latency</a></span></dt></dl></dd><dt><span class="sect1"><a href="#Conclusion">4. Conclusion</a></span></dt><dt><span class="sect1"><a href="#Useful_links">5. Useful links</a></span></dt></dl></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="What_is_Adeos"></a>1. What is Adeos</h2></div></div></div><p>Adeos is a resource virtualization layer available as a
+      </p></div></div></div></div><div class="toc"><dl><dt><span class="sect1"><a href="#What_is_Adeos">1. What is Adeos</a></span></dt><dd><dl><dt><span class="sect2"><a href="#The_event_pipeline">1.1. The event pipeline</a></span></dt><dt><span class="sect2"><a href="#Optimistic_interrupt_protection">1.2. Optimistic interrupt protection</a></span></dt><dt><span class="sect2"><a href="#System-event_propagation">1.3. System-event propagation</a></span></dt></dl></dd><dt><span class="sect1"><a href="#What_does_Adeos_provide_to_Xenomai">2. What does Adeos provide to Xenomai?</a></span></dt><dd><dl><dt><span class="sect2"><a href="#Xenomai_primary_and_secondary_domain">2.1. Xenomai's primary and secondary domains</a></span></dt><dt><span class="sect2"><a href="#System_call_interception">2.2. System call interception</a></span></dt><dt><span class="sect2"><a href="#Interrupt_propagatio">2.3. Interrupt propagation</a></span></dt></dl></dd><dt><span class="sect1"><a href="#Tips_and_trick">3. Tips and tricks</a></span></dt><dd><dl><dt><span class="sect2"><a href="#Enabling_Disabling_interrupt_source">3.1. Enabling/Disabling interrupt sources</a></span></dt><dt><span class="sect2"><a href="#Sharing_interrupts_between_domain">3.2. Sharing interrupts between domains</a></span></dt><dt><span class="sect2"><a href="#Interrupt_sharing_and_latency">3.3. Interrupt sharing and latency</a></span></dt></dl></dd><dt><span class="sect1"><a href="#Conclusion">4. Conclusion</a></span></dt><dt><span class="sect1"><a href="#Useful_links">5. Useful links</a></span></dt></dl></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="What_is_Adeos"></a>1. What is Adeos</h2></div></div></div><p>Adeos is a resource virtualization layer available as a
       Linux kernel patch, which general design has been proposed by
       <span class="emphasis"><em>Karim Yaghmour</em></span> in a technical paper, back in
       2001.</p><p>The current incarnation of this proposal makes it a simple, yet
@@ -271,7 +271,7 @@
       makes the former appear as a natural extension of the latter. As
       an illustration of this, Xenomai threads both support the full
       Linux signals semantics and ptracing feature, which in turn
-      enables the GDB support natively for them.</p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="Interrupt_propagatio"></a>2.3. Interruptpropagation</h3></div></div></div><p>Because it is ahead in the pipeline, the real-time nucleus
+      enables the GDB support natively for them.</p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="Interrupt_propagatio"></a>2.3. Interrupt propagation</h3></div></div></div><p>Because it is ahead in the pipeline, the real-time nucleus
       which lives in the Xenomai domain is first notified of any
       incoming interrupt of interest, processes it, then marks such
       interrupt to be passed down the pipeline, eventually to the
@@ -324,37 +324,36 @@
       interrupt channel.</p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="Sharing_interrupts_between_domain"></a>3.2. Sharing interrupts between domains</h3></div></div></div><p>A typical example of mis-using the Adeos pipeline when
       sharing hardware interrupts between domains is as
       follows:</p><pre class="programlisting">
-	void realtime_eth_handler (unsigned irq, void *cookie) 
-	{ 
-	/* 
-	This interrupt handler has been installed using 
-	rthal_irq_request(), so it will always be invoked on behalf of 
-	the Xenomai (primary) domain. 
-	*/ 
+void realtime_eth_handler (unsigned irq, void *cookie) 
+{ 
+    /* 
+     * This interrupt handler has been installed using 
+     * rthal_irq_request(), so it will always be invoked on behalf of 
+     * the Xenomai (primary) domain. 
+     */ 
 
-	rthal_irq_disable(irq); 
-	/* The Xenomai domain won't receive this irq anymore */
+    rthal_irq_disable(irq); 
+    /* The Xenomai domain won't receive this irq anymore */
+    
+    rthal_irq_host_pend(irq); 
+    /* This irq has been marked as pending for Linux */ 
+}
 
-	rthal_irq_host_pend(irq); 
-	/* This irq has been marked as pending for Linux */ 
-	}
-   
-	void linux_eth_handler (int irq, void *dev_id, struct pt_regs *regs) 
-	{ 
-	/* 
-	This interrupt handler has been installed using 
-	rthal_irq_host_request(), so it will always be invoked on 
-	behalf of the Linux (secondary) domain, as a shared interrupt 
-	handler (Linux-wise). 
-	*/ 
-	rthal_irq_enable(irq); 
-
-	/* 
-	BUG: This won't work as expected: we are only unlocking the 
-	interrupt source for the Linux domain which is current here, 
-	not for the Xenomai domain! 
-	*/ 
-	}
+void linux_eth_handler (int irq, void *dev_id, struct pt_regs *regs) 
+{ 
+    /* 
+     * This interrupt handler has been installed using 
+     * rthal_irq_host_request(), so it will always be invoked on 
+     * behalf of the Linux (secondary) domain, as a shared interrupt 
+     * handler (Linux-wise). 
+     */ 
+    rthal_irq_enable(irq); 
+    
+    /* 
+     * BUG: This won't work as expected: we are only unlocking the 
+     * interrupt source for the Linux domain which is current here, 
+     * not for the Xenomai domain! 
+     */ 
       </pre><p>In the non-working example above, since Xenomai always
       uses the explicit propagation mode for all interrupts it
       intercepts, the next ethernet interrupt will be marked as
@@ -395,17 +394,17 @@
       played immediately after the current handler invocation
       returns.</p><p>So, the solution is to re-write the previous example this
       way, this time properly:</p><pre class="programlisting">
-	void realtime_eth_handler (unsigned irq, void *cookie) 
-	{ 
-	rthal_irq_enable(irq); 
-	rthal_irq_host_pend(irq); 
-	/* This irq has been marked as pending for Linux */ 
-	}
- 
-	void linux_eth_handler (int irq, void *dev_id, struct pt_regs *regs) 
-	{ 
-	/* process the IRQ normally. */ 
-	} 
+void realtime_eth_handler (unsigned irq, void *cookie) 
+{ 
+    rthal_irq_enable(irq); 
+    rthal_irq_host_pend(irq); 
+    /* This irq has been marked as pending for Linux */ 
+}
+
+void linux_eth_handler (int irq, void *dev_id, struct pt_regs *regs) 
+{ 
+    /* process the IRQ normally. */ 
+} 
       </pre></div></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="Conclusion"></a>4. Conclusion</h2></div></div></div><p>Adeos is a rather simple piece of code, with very
     interesting properties when used properly. The backbone of the
     Adeos scheme is the event pipeline, and as such, it brings all the

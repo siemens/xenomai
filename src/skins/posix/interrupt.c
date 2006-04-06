@@ -60,12 +60,17 @@ int pthread_intr_detach_np (pthread_intr_t intr)
 int pthread_intr_wait_np (pthread_intr_t intr,
 			  const struct timespec *to)
 {
-    int err;
+    int err, oldtype;
+
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
     err = XENOMAI_SKINCALL2(__pse51_muxid,
 			    __pse51_intr_wait,
 			    intr,
 			    to);
+
+    pthread_setcanceltype(oldtype, NULL);
+
     if (err > 0)
 	return err;
 

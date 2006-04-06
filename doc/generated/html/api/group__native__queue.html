@@ -601,7 +601,7 @@ This service sends a complete message to a given queue.<p>
 <p>
 <dl compact><dt><b>Returns:</b></dt><dd>Upon success, this service returns the number of receivers which got awaken as a result of the operation. If zero is returned, no task was waiting on the receiving side of the queue, and the message has been enqueued. Upon error, one of the following error codes is returned:</dd></dl>
 <ul>
-<li>-EINVAL is returned if <em>q</em> is not a message queue descriptor.</li></ul>
+<li>-EINVAL is returned if <em>q</em> is not a message queue descriptor, or <em>buf</em> is not a valid message buffer obtained from a previous call to <a class="el" href="group__native__queue.html#ga3">rt_queue_alloc()</a>.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>q</em> is a deleted queue descriptor.</li></ul>
@@ -659,7 +659,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Apr 3 19:53:00 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 18:04:17 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
