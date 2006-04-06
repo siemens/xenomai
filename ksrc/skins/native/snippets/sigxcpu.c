@@ -13,7 +13,7 @@ void task_body (void *cookie)
 
 {
     /* Ask Xenomai to warn us upon switches to secondary mode. */
-    rt_task_set_mode(T_WARNSW,0,NULL);
+    rt_task_set_mode(0, T_WARNSW, NULL);
 
     /* A real-time task always starts in primary mode. */
 
