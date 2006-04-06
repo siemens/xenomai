@@ -31,49 +31,47 @@ The source of all Xenomai magic.
 
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structxnsched.html">xnsched_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o4">sched</a> [XNARCH_NR_CPUS]</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">xnqueue_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o5">suspendq</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">xnqueue_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o5">threadq</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">xnqueue_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o6">threadq</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">volatile u_long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o6">schedlck</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">volatile u_long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o7">schedlck</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">xnqueue_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o7">tstartq</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">xnqueue_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o8">tstartq</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">xnqueue_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o8">tswitchq</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">xnqueue_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o9">tswitchq</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">xnqueue_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o9">tdeleteq</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">xnqueue_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o10">tdeleteq</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o10">minpri</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o11">minpri</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o11">maxpri</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o12">maxpri</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o12">root_prio_base</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o13">root_prio_base</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">u_long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o13">tickvalue</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">u_long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o14">tickvalue</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">u_long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o14">ticks2sec</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">u_long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o15">ticks2sec</a></td></tr>
-
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o16">refcnt</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o15">refcnt</a></td></tr>
 
 <tr><td class="memItemLeft" nowrap>struct {</td></tr>
 
-<tr><td class="memItemLeft" nowrap>&nbsp;&nbsp;&nbsp;void(*&nbsp;&nbsp;&nbsp;<a class="el" href="structxnpod.html#o17">settime</a> )(xnticks_t newtime)</td></tr>
+<tr><td class="memItemLeft" nowrap>&nbsp;&nbsp;&nbsp;void(*&nbsp;&nbsp;&nbsp;<a class="el" href="structxnpod.html#o16">settime</a> )(xnticks_t newtime)</td></tr>
 
-<tr><td class="memItemLeft" nowrap>&nbsp;&nbsp;&nbsp;int(*&nbsp;&nbsp;&nbsp;<a class="el" href="structxnpod.html#o18">faulthandler</a> )(xnarch_fltinfo_t *fltinfo)</td></tr>
+<tr><td class="memItemLeft" nowrap>&nbsp;&nbsp;&nbsp;int(*&nbsp;&nbsp;&nbsp;<a class="el" href="structxnpod.html#o17">faulthandler</a> )(xnarch_fltinfo_t *fltinfo)</td></tr>
 
-<tr><td class="memItemLeft" nowrap>&nbsp;&nbsp;&nbsp;int(*&nbsp;&nbsp;&nbsp;<a class="el" href="structxnpod.html#o19">unload</a> )(void)</td></tr>
+<tr><td class="memItemLeft" nowrap>&nbsp;&nbsp;&nbsp;int(*&nbsp;&nbsp;&nbsp;<a class="el" href="structxnpod.html#o18">unload</a> )(void)</td></tr>
 
-<tr><td class="memItemLeft" nowrap valign="top">}&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o20">svctable</a></td></tr>
+<tr><td class="memItemLeft" nowrap valign="top">}&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#o19">svctable</a></td></tr>
 
 </table>
 <hr><h2>Field Documentation</h2>
-<a class="anchor" name="o18" doxytag="xnpod::faulthandler"></a><p>
+<a class="anchor" name="o17" doxytag="xnpod::faulthandler"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int(* <a class="el" href="structxnpod.html#o18">xnpod::faulthandler</a>)(xnarch_fltinfo_t *fltinfo)          </td>
+          <td class="md" nowrap valign="top">int(* <a class="el" href="structxnpod.html#o17">xnpod::faulthandler</a>)(xnarch_fltinfo_t *fltinfo)          </td>
         </tr>
       </table>
     </td>
@@ -136,13 +134,13 @@ Host timer.     </td>
 Periodic ticks elapsed since boot.     </td>
   </tr>
 </table>
-<a class="anchor" name="o12" doxytag="xnpod::maxpri"></a><p>
+<a class="anchor" name="o11" doxytag="xnpod::maxpri"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int <a class="el" href="structxnpod.html#o12">xnpod::maxpri</a>          </td>
+          <td class="md" nowrap valign="top">int <a class="el" href="structxnpod.html#o11">xnpod::maxpri</a>          </td>
         </tr>
       </table>
     </td>
@@ -159,13 +157,13 @@ Periodic ticks elapsed since boot.     </td>
 Minimum priority value. Maximum priority value.     </td>
   </tr>
 </table>
-<a class="anchor" name="o11" doxytag="xnpod::minpri"></a><p>
+<a class="anchor" name="o10" doxytag="xnpod::minpri"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int <a class="el" href="structxnpod.html#o11">xnpod::minpri</a>          </td>
+          <td class="md" nowrap valign="top">int <a class="el" href="structxnpod.html#o10">xnpod::minpri</a>          </td>
         </tr>
       </table>
     </td>
@@ -182,13 +180,13 @@ Minimum priority value. Maximum priority value.     </td>
 Minimum priority value.     </td>
   </tr>
 </table>
-<a class="anchor" name="o16" doxytag="xnpod::refcnt"></a><p>
+<a class="anchor" name="o15" doxytag="xnpod::refcnt"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int <a class="el" href="structxnpod.html#o16">xnpod::refcnt</a>          </td>
+          <td class="md" nowrap valign="top">int <a class="el" href="structxnpod.html#o15">xnpod::refcnt</a>          </td>
         </tr>
       </table>
     </td>
@@ -205,13 +203,13 @@ Minimum priority value.     </td>
 Reference count.     </td>
   </tr>
 </table>
-<a class="anchor" name="o13" doxytag="xnpod::root_prio_base"></a><p>
+<a class="anchor" name="o12" doxytag="xnpod::root_prio_base"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int <a class="el" href="structxnpod.html#o13">xnpod::root_prio_base</a>          </td>
+          <td class="md" nowrap valign="top">int <a class="el" href="structxnpod.html#o12">xnpod::root_prio_base</a>          </td>
         </tr>
       </table>
     </td>
@@ -251,13 +249,13 @@ Base priority of ROOT thread.     </td>
 Per-cpu scheduler slots.     </td>
   </tr>
 </table>
-<a class="anchor" name="o7" doxytag="xnpod::schedlck"></a><p>
+<a class="anchor" name="o6" doxytag="xnpod::schedlck"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">volatile u_long <a class="el" href="structxnpod.html#o7">xnpod::schedlck</a>          </td>
+          <td class="md" nowrap valign="top">volatile u_long <a class="el" href="structxnpod.html#o6">xnpod::schedlck</a>          </td>
         </tr>
       </table>
     </td>
@@ -274,13 +272,13 @@ Per-cpu scheduler slots.     </td>
 Scheduler lock count.     </td>
   </tr>
 </table>
-<a class="anchor" name="o17" doxytag="xnpod::settime"></a><p>
+<a class="anchor" name="o16" doxytag="xnpod::settime"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void(* <a class="el" href="structxnpod.html#o17">xnpod::settime</a>)(xnticks_t newtime)          </td>
+          <td class="md" nowrap valign="top">void(* <a class="el" href="structxnpod.html#o16">xnpod::settime</a>)(xnticks_t newtime)          </td>
         </tr>
       </table>
     </td>
@@ -320,36 +318,13 @@ Clock setting hook.     </td>
 Status bitmask.     </td>
   </tr>
 </table>
-<a class="anchor" name="o5" doxytag="xnpod::suspendq"></a><p>
+<a class="anchor" name="o19" doxytag="xnpod::svctable"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">xnqueue_t <a class="el" href="structxnpod.html#o5">xnpod::suspendq</a>          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table cellspacing="5" cellpadding="0" border="0">
-  <tr>
-    <td>
-      &nbsp;
-    </td>
-    <td>
-
-<p>
-Suspended (blocked) threads.     </td>
-  </tr>
-</table>
-<a class="anchor" name="o20" doxytag="xnpod::svctable"></a><p>
-<table class="mdTable" cellpadding="2" cellspacing="0">
-  <tr>
-    <td class="mdRow">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td class="md" nowrap valign="top">struct { ... }   <a class="el" href="structxnpod.html#o20">xnpod::svctable</a>          </td>
+          <td class="md" nowrap valign="top">struct { ... }   <a class="el" href="structxnpod.html#o19">xnpod::svctable</a>          </td>
         </tr>
       </table>
     </td>
@@ -366,13 +341,13 @@ Suspended (blocked) threads.     </td>
 Table of overridable service entry points.     </td>
   </tr>
 </table>
-<a class="anchor" name="o10" doxytag="xnpod::tdeleteq"></a><p>
+<a class="anchor" name="o9" doxytag="xnpod::tdeleteq"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">xnqueue_t <a class="el" href="structxnpod.html#o10">xnpod::tdeleteq</a>          </td>
+          <td class="md" nowrap valign="top">xnqueue_t <a class="el" href="structxnpod.html#o9">xnpod::tdeleteq</a>          </td>
         </tr>
       </table>
     </td>
@@ -389,13 +364,13 @@ Table of overridable service entry points.     </td>
 Thread start hook queue. Thread switch hook queue. Thread delete hook queue.     </td>
   </tr>
 </table>
-<a class="anchor" name="o6" doxytag="xnpod::threadq"></a><p>
+<a class="anchor" name="o5" doxytag="xnpod::threadq"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">xnqueue_t <a class="el" href="structxnpod.html#o6">xnpod::threadq</a>          </td>
+          <td class="md" nowrap valign="top">xnqueue_t <a class="el" href="structxnpod.html#o5">xnpod::threadq</a>          </td>
         </tr>
       </table>
     </td>
@@ -412,13 +387,13 @@ Thread start hook queue. Thread switch hook queue. Thread delete hook queue.    
 All existing threads.     </td>
   </tr>
 </table>
-<a class="anchor" name="o15" doxytag="xnpod::ticks2sec"></a><p>
+<a class="anchor" name="o14" doxytag="xnpod::ticks2sec"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">u_long <a class="el" href="structxnpod.html#o15">xnpod::ticks2sec</a>          </td>
+          <td class="md" nowrap valign="top">u_long <a class="el" href="structxnpod.html#o14">xnpod::ticks2sec</a>          </td>
         </tr>
       </table>
     </td>
@@ -435,13 +410,13 @@ All existing threads.     </td>
 Number of ticks per second (1e9 if aperiodic).     </td>
   </tr>
 </table>
-<a class="anchor" name="o14" doxytag="xnpod::tickvalue"></a><p>
+<a class="anchor" name="o13" doxytag="xnpod::tickvalue"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">u_long <a class="el" href="structxnpod.html#o14">xnpod::tickvalue</a>          </td>
+          <td class="md" nowrap valign="top">u_long <a class="el" href="structxnpod.html#o13">xnpod::tickvalue</a>          </td>
         </tr>
       </table>
     </td>
@@ -458,13 +433,13 @@ Number of ticks per second (1e9 if aperiodic).     </td>
 Tick duration (ns, 1 if aperiodic).     </td>
   </tr>
 </table>
-<a class="anchor" name="o8" doxytag="xnpod::tstartq"></a><p>
+<a class="anchor" name="o7" doxytag="xnpod::tstartq"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">xnqueue_t <a class="el" href="structxnpod.html#o8">xnpod::tstartq</a>          </td>
+          <td class="md" nowrap valign="top">xnqueue_t <a class="el" href="structxnpod.html#o7">xnpod::tstartq</a>          </td>
         </tr>
       </table>
     </td>
@@ -481,13 +456,13 @@ Tick duration (ns, 1 if aperiodic).     </td>
 Thread start hook queue.     </td>
   </tr>
 </table>
-<a class="anchor" name="o9" doxytag="xnpod::tswitchq"></a><p>
+<a class="anchor" name="o8" doxytag="xnpod::tswitchq"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">xnqueue_t <a class="el" href="structxnpod.html#o9">xnpod::tswitchq</a>          </td>
+          <td class="md" nowrap valign="top">xnqueue_t <a class="el" href="structxnpod.html#o8">xnpod::tswitchq</a>          </td>
         </tr>
       </table>
     </td>
@@ -504,13 +479,13 @@ Thread start hook queue.     </td>
 Thread start hook queue. Thread switch hook queue.     </td>
   </tr>
 </table>
-<a class="anchor" name="o19" doxytag="xnpod::unload"></a><p>
+<a class="anchor" name="o18" doxytag="xnpod::unload"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int(* <a class="el" href="structxnpod.html#o19">xnpod::unload</a>)(void)          </td>
+          <td class="md" nowrap valign="top">int(* <a class="el" href="structxnpod.html#o18">xnpod::unload</a>)(void)          </td>
         </tr>
       </table>
     </td>
@@ -552,7 +527,7 @@ Difference between wallclock time and epoch in ticks.     </td>
 </table>
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>include/nucleus/<a class="el" href="pod_8h-source.html">pod.h</a></ul>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Mar 11 15:11:51 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 14:44:19 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

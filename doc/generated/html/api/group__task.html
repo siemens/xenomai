@@ -88,21 +88,30 @@ The Xenomai scheduler ensures that concurrent tasks are run according to one of 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga27">rt_task_slice</a> (RT_TASK *task, RTIME quantum)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set a task's round-robin quantum.  <a href="#ga27"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga28">rt_task_spawn</a> (RT_TASK *task, const char *name, int stksize, int prio, int mode, void(*entry)(void *cookie), void *cookie)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga28">rt_task_send</a> (RT_TASK *task, RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Spawn a new real-time task.  <a href="#ga28"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga29">rt_task_shadow</a> (RT_TASK *task, const char *name, int prio, int mode)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Send a message to a task.  <a href="#ga28"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga29">rt_task_receive</a> (RT_TASK_MCB *mcb_r, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Turns the current Linux task into a native Xenomai task.  <a href="#ga29"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga30">rt_task_bind</a> (RT_TASK *task, const char *name, RTIME timeout)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive a message from a task.  <a href="#ga29"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga30">rt_task_reply</a> (int flowid, RT_TASK_MCB *mcb_s)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a real-time task.  <a href="#ga30"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga31">rt_task_unbind</a> (RT_TASK *task)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Reply to a task.  <a href="#ga30"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga31">rt_task_spawn</a> (RT_TASK *task, const char *name, int stksize, int prio, int mode, void(*entry)(void *cookie), void *cookie)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unbind from a real-time task.  <a href="#ga31"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga32">rt_task_join</a> (RT_TASK *task)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Spawn a new real-time task.  <a href="#ga31"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga32">rt_task_shadow</a> (RT_TASK *task, const char *name, int prio, int mode)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on the termination of a real-time task.  <a href="#ga32"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Turns the current Linux task into a native Xenomai task.  <a href="#ga32"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga33">rt_task_bind</a> (RT_TASK *task, const char *name, RTIME timeout)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a real-time task.  <a href="#ga33"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga34">rt_task_unbind</a> (RT_TASK *task)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unbind from a real-time task.  <a href="#ga34"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga35">rt_task_join</a> (RT_TASK *task)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on the termination of a real-time task.  <a href="#ga35"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
 <a class="anchor" name="ga21" doxytag="task.c::rt_task_add_hook"></a><p>
@@ -177,7 +186,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga30" doxytag="task.h::rt_task_bind"></a><p>
+<a class="anchor" name="ga33" doxytag="task.h::rt_task_bind"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -378,7 +387,7 @@ The task is left in an innocuous state until it is actually started by <a class=
 <li>T_CPU(cpuid) makes the new task affine to CPU # <b>cpuid</b>. CPU identifiers range from 0 to RTHAL_NR_CPUS - 1 (inclusive).</li></ul>
 <p>
 <ul>
-<li>T_JOINABLE (user-space only) allows another task to wait on the termination of the new task. This implies that <a class="el" href="group__task.html#ga32">rt_task_join()</a> is actually called for this task to clean up any user-space located resources after its termination.</li></ul>
+<li>T_JOINABLE (user-space only) allows another task to wait on the termination of the new task. This implies that <a class="el" href="group__task.html#ga35">rt_task_join()</a> is actually called for this task to clean up any user-space located resources after its termination.</li></ul>
 <p>
 Passing T_FPU|T_CPU(1) in the <em>mode</em> parameter thus creates a task with FPU support enabled and which will be affine to CPU #1.<p>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
@@ -525,7 +534,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga32" doxytag="task.h::rt_task_join"></a><p>
+<a class="anchor" name="ga35" doxytag="task.h::rt_task_join"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -639,6 +648,88 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
+<a class="anchor" name="ga29" doxytag="task.c::rt_task_receive"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">int rt_task_receive           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_TASK_MCB *&nbsp;</td>
+          <td class="mdname" nowrap> <em>mcb_r</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>RTIME&nbsp;</td>
+          <td class="mdname" nowrap> <em>timeout</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Receive a message from a task. 
+<p>
+This service is part of the synchronous message passing support available to Xenomai tasks. It allows the caller to receive a variable-sized message sent from another task using the <a class="el" href="group__task.html#ga28">rt_task_send()</a> service. The sending task is blocked until the caller invokes <a class="el" href="group__task.html#ga30">rt_task_reply()</a> to finish the transaction.<p>
+A basic message control block is used to store the location and size of the data area to receive from the sender, in addition to a user-defined operation code.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>mcb_r</em>&nbsp;</td><td>The address of a message control block referring to the receive message area. The fields from this control block should be set as follows:</td></tr>
+  </table>
+</dl>
+<ul>
+<li>mcb_r-&gt;data should contain the address of a buffer large enough to collect the data sent by the remote task;</li></ul>
+<p>
+<ul>
+<li>mcb_r-&gt;size should contain the size in bytes of the buffer space pointed at by mcb_r-&gt;data. If mcb_r-&gt;size is lower than the actual size of the received message, no data copy takes place and -ENOBUFS is returned to the caller. See note.</li></ul>
+<p>
+Upon return, mcb_r-&gt;opcode will contain the operation code sent from the remote task using <a class="el" href="group__task.html#ga28">rt_task_send()</a>.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>The number of clock ticks to wait for receiving a message (see note). Passing TM_INFINITE causes the caller to block indefinitely until a remote task eventually sends a message. Passing TM_NONBLOCK causes the service to return immediately without waiting if no remote task is currently waiting for sending a message.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>A strictly positive value is returned upon success, representing a flow identifier for the opening transaction; this token should be passed to <a class="el" href="group__task.html#ga30">rt_task_reply()</a>, in order to send back a reply to and unblock the remote task appropriately. Otherwise:</dd></dl>
+<ul>
+<li>-ENOBUFS is returned if <em>mcb_r</em> does not point at a message area large enough to collect the remote task's message.</li></ul>
+<p>
+<ul>
+<li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and no remote task is currently waiting for sending a message to the caller.</li></ul>
+<p>
+<ul>
+<li>-ETIMEDOUT is returned if no message was received within the <em>timeout</em>.</li></ul>
+<p>
+<ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga19">rt_task_unblock()</a> has been called for the caller before any message was available.</li></ul>
+<p>
+<ul>
+<li>-EPERM is returned if this service was called from a context which cannot sleep (e.g. interrupt, non-realtime or scheduler locked).</li></ul>
+<p>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel-based task</li><li>User-space task (switches to primary mode)</li></ul>
+<p>
+Rescheduling: Always.<p>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the rt_timer_start() service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds.<p>
+When called from a user-space task, this service may need to allocate some temporary buffer space from the system heap to hold the received data if the size of the latter exceeds a certain amount; the threshold before allocation is currently set to 64 bytes. </dd></dl>
+    </td>
+  </tr>
+</table>
 <a class="anchor" name="ga22" doxytag="task.c::rt_task_remove_hook"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
@@ -699,6 +790,76 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li></ul>
 <p>
 Rescheduling: never.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga30" doxytag="task.c::rt_task_reply"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">int rt_task_reply           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">int&nbsp;</td>
+          <td class="mdname" nowrap> <em>flowid</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>RT_TASK_MCB *&nbsp;</td>
+          <td class="mdname" nowrap> <em>mcb_s</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Reply to a task. 
+<p>
+This service is part of the synchronous message passing support available to Xenomai tasks. It allows the caller to send back a variable-sized message to the sender task, once the initial message from this task has been pulled using <a class="el" href="group__task.html#ga29">rt_task_receive()</a> and processed. As a consequence of this call, the remote task will be unblocked from the <a class="el" href="group__task.html#ga28">rt_task_send()</a> service.<p>
+A basic message control block is used to store the location and size of the data area to send back, in addition to a user-defined status code.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>flowid</em>&nbsp;</td><td>The flow identifier returned by a previous call to <a class="el" href="group__task.html#ga29">rt_task_receive()</a> which uniquely identifies the current transaction.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mcb_s</em>&nbsp;</td><td>The address of an optional message control block referring to the message to be sent back. If <em>mcb_s</em> is NULL, the sender will be unblocked without getting any reply data. When <em>mcb_s</em> is valid, the fields from this control block should be set as follows:</td></tr>
+  </table>
+</dl>
+<ul>
+<li>mcb_s-&gt;data should contain the address of the payload data to send to the remote task.</li></ul>
+<p>
+<ul>
+<li>mcb_s-&gt;size should contain the size in bytes of the payload data pointed at by mcb_s-&gt;data. 0 is a legitimate value, and indicates that no payload data will be transferred. In the latter case, mcb_s-&gt;data will be ignored. See note.</li></ul>
+<p>
+<ul>
+<li>mcb_s-&gt;opcode is an opaque status code carried during the message transfer the caller can fill with any appropriate value. It will be made available "as is" to the remote task into the status code field by the <a class="el" href="group__task.html#ga28">rt_task_send()</a> service. If <em>mcb_s</em> is NULL, 0 will be returned to the initial sender into the status code field.</li></ul>
+<p>
+<dl compact><dt><b>Returns:</b></dt><dd>O is returned upon success. Otherwise:</dd></dl>
+<ul>
+<li>-ENXIO is returned if <em>flowid</em> does not match the expected identifier returned from the latest call of the current task to <a class="el" href="group__task.html#ga29">rt_task_receive()</a>, or if the remote task stopped waiting for the reply in the meantime (e.g. the initial sender could have been deleted or forcibly unblocked).</li></ul>
+<p>
+<ul>
+<li>-EPERM is returned if this service was called from an invalid context (e.g. interrupt, or non-primary).</li></ul>
+<p>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel-based task</li><li>User-space task (switches to primary mode)</li></ul>
+<p>
+Rescheduling: Always.<p>
+<dl compact><dt><b>Note:</b></dt><dd>When called from a user-space task, this service may need to allocate some temporary buffer space from the system heap to hold the reply data if the size of the latter exceeds a certain amount; the threshold before allocation is currently set to 64 bytes. </dd></dl>
+    </td>
   </tr>
 </table>
 <a class="anchor" name="ga11" doxytag="task.c::rt_task_resume"></a><p>
@@ -788,6 +949,115 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga28" doxytag="task.c::rt_task_send"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">ssize_t rt_task_send           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_TASK *&nbsp;</td>
+          <td class="mdname" nowrap> <em>task</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>RT_TASK_MCB *&nbsp;</td>
+          <td class="mdname" nowrap> <em>mcb_s</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>RT_TASK_MCB *&nbsp;</td>
+          <td class="mdname" nowrap> <em>mcb_r</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>RTIME&nbsp;</td>
+          <td class="mdname" nowrap> <em>timeout</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Send a message to a task. 
+<p>
+This service is part of the synchronous message passing support available to Xenomai tasks. It allows the caller to send a variable-sized message to another task, waiting for the remote to receive the initial message by a call to <a class="el" href="group__task.html#ga29">rt_task_receive()</a>, then reply to it using <a class="el" href="group__task.html#ga30">rt_task_reply()</a>.<p>
+A basic message control block is used to store the location and size of the data area to send or retrieve upon reply, in addition to a user-defined operation code.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The descriptor address of the recipient task.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mcb_s</em>&nbsp;</td><td>The address of the message control block referring to the message to be sent. The fields from this control block should be set as follows:</td></tr>
+  </table>
+</dl>
+<ul>
+<li>mcb_s-&gt;data should contain the address of the payload data to send to the remote task.</li></ul>
+<p>
+<ul>
+<li>mcb_s-&gt;size should contain the size in bytes of the payload data pointed at by mcb_s-&gt;data. 0 is a legitimate value, and indicates that no payload data will be transferred. In the latter case, mcb_s-&gt;data will be ignored. See note.</li></ul>
+<p>
+<ul>
+<li>mcb_s-&gt;opcode is an opaque operation code carried during the message transfer the caller can fill with any appropriate value. It will be made available "as is" to the remote task into the operation code field by the <a class="el" href="group__task.html#ga29">rt_task_receive()</a> service.</li></ul>
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>mcb_r</em>&nbsp;</td><td>The address of an optional message control block referring to the reply message area. If <em>mcb_r</em> is NULL and a reply is sent back by the remote task, the reply message will be discarded, and -ENOBUFS will be returned to the caller. When <em>mcb_r</em> is valid, the fields from this control block should be set as follows:</td></tr>
+  </table>
+</dl>
+<ul>
+<li>mcb_r-&gt;data should contain the address of a buffer large enough to collect the reply data from the remote task.</li></ul>
+<p>
+<ul>
+<li>mcb_r-&gt;size should contain the size in bytes of the buffer space pointed at by mcb_r-&gt;data. If mcb_r-&gt;size is lower than the actual size of the reply message, no data copy takes place and -ENOBUFS is returned to the caller. See note.</li></ul>
+<p>
+Upon return, mcb_r-&gt;opcode will contain the status code sent back from the remote task using <a class="el" href="group__task.html#ga30">rt_task_reply()</a>, or 0 if unspecified.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>The number of clock ticks to wait for the remote task to reply to the initial message (see note). Passing TM_INFINITE causes the caller to block indefinitely until the remote task eventually replies. Passing TM_NONBLOCK causes the service to return immediately without waiting if the remote task is not waiting for messages (i.e. if <em>task</em> is not currently blocked on the <a class="el" href="group__task.html#ga29">rt_task_receive()</a> service).</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>A positive value is returned upon success, representing the length (in bytes) of the reply message returned by the remote task. 0 is a success status, meaning either that <em>mcb_r</em> was NULL on entry, or that no actual message was passed to the remote call to <a class="el" href="group__task.html#ga30">rt_task_reply()</a>. Otherwise:</dd></dl>
+<ul>
+<li>-ENOBUFS is returned if <em>mcb_r</em> does not point at a message area large enough to collect the remote task's reply. This includes the case where <em>mcb_r</em> is NULL on entry albeit the remote task attempts to send a reply message.</li></ul>
+<p>
+<ul>
+<li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and <em>task</em> is not currently blocked on the <a class="el" href="group__task.html#ga29">rt_task_receive()</a> service.</li></ul>
+<p>
+<ul>
+<li>-EIDRM is returned if <em>task</em> has been deleted while waiting for a reply.</li></ul>
+<p>
+<ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga19">rt_task_unblock()</a> has been called for the caller before any reply was available.</li></ul>
+<p>
+<ul>
+<li>-EPERM is returned if this service should block, but was called from a context which cannot sleep (e.g. interrupt, non-realtime or scheduler locked).</li></ul>
+<p>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel-based task</li><li>User-space task (switches to primary mode)</li></ul>
+<p>
+Rescheduling: Always.<p>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the rt_timer_start() service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds.<p>
+When called from a user-space task, this service may need to allocate some temporary buffer space from the system heap to hold both the sent and the reply data if this cumulated size exceeds a certain amount; the threshold before allocation is currently set to 64 bytes. </dd></dl>
+    </td>
   </tr>
 </table>
 <a class="anchor" name="ga25" doxytag="task.c::rt_task_set_mode"></a><p>
@@ -1029,7 +1299,7 @@ This service can be called from:<p>
 Rescheduling: possible if <em>task</em> is the current one.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga29" doxytag="task.h::rt_task_shadow"></a><p>
+<a class="anchor" name="ga32" doxytag="task.h::rt_task_shadow"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1294,7 +1564,7 @@ Rescheduling: never.<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga28" doxytag="task.h::rt_task_spawn"></a><p>
+<a class="anchor" name="ga31" doxytag="task.h::rt_task_spawn"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1531,7 +1801,7 @@ This service can be called from:<p>
 Rescheduling: always if <em>task</em> is NULL.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga31" doxytag="task.h::rt_task_unbind"></a><p>
+<a class="anchor" name="ga34" doxytag="task.h::rt_task_unbind"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1558,7 +1828,7 @@ Rescheduling: always if <em>task</em> is NULL.     </td>
 <p>
 Unbind from a real-time task. 
 <p>
-This user-space only service unbinds the calling task from the task object previously retrieved by a call to <a class="el" href="group__task.html#ga30">rt_task_bind()</a>.<p>
+This user-space only service unbinds the calling task from the task object previously retrieved by a call to <a class="el" href="group__task.html#ga33">rt_task_bind()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The address of a task descriptor to unbind from.</td></tr>
@@ -1714,7 +1984,7 @@ This service can be called from:<p>
 Rescheduling: always if a next equal-priority task is ready to run, otherwise, this service leads to a no-op.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Mar 11 15:11:56 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 14:44:24 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
