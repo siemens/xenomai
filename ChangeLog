@@ -1,3 +1,9 @@
+2006-04-07  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* include/nucleus/pod.h (xnpod_reset_watchdog): Move the watchdog
+	members from xnpod_t to xnsched_t, make the watchdog
+	cpu-specific.
+
 2006-04-06  Rodrigo Rosenfeld Rosas <lbocseg@yahoo.com.br>
 
 	* ksrc/skins/native/snippets/sigxcpu.c (task_body): Fix parameters

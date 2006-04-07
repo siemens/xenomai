@@ -138,6 +138,11 @@ typedef struct xnsched {
     xnthread_t *fpuholder;      /*!< Thread owning the current FPU context. */
 #endif /* CONFIG_XENO_HW_FPU */
 
+#ifdef CONFIG_XENO_OPT_WATCHDOG
+    xnticks_t watchdog_trigger; /* !< Watchdog trigger value. */
+    int watchdog_armed;         /* !< Watchdog state. */
+#endif /* CONFIG_XENO_OPT_WATCHDOG */
+
     xnthread_t rootcb;          /*!< Root thread control block. */
 
 } xnsched_t;
@@ -220,9 +225,7 @@ struct xnpod {
     } svctable;                 /*!< Table of overridable service entry points. */
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
-    xnticks_t watchdog_trigger; /* !< Watchdog trigger value. */
     xnticks_t watchdog_reload;  /* !< Watchdog reload value. */
-    int watchdog_armed;         /* !< Watchdog state. */
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
 
 #ifdef __XENO_SIM__
@@ -268,13 +271,13 @@ void xnpod_switch_fpu(xnsched_t *sched);
 #endif /* CONFIG_XENO_HW_FPU */
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
-static inline void xnpod_reset_watchdog (void)
+static inline void xnpod_reset_watchdog (xnsched_t *sched)
 {
-    nkpod->watchdog_trigger = xnarch_get_cpu_tsc() + nkpod->watchdog_reload;
-    nkpod->watchdog_armed = 0;
+    sched->watchdog_trigger = xnarch_get_cpu_tsc() + nkpod->watchdog_reload;
+    sched->watchdog_armed = 0;
 }
 #else /* !CONFIG_XENO_OPT_WATCHDOG */
-static inline void xnpod_reset_watchdog (void)
+static inline void xnpod_reset_watchdog (xnsched_t *sched)
 {
 }
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
