@@ -709,7 +709,7 @@ static inline void xnpod_switch_zombie (xnthread_t *threadout,
     sched->runthread = threadin;
 
     if (testbits(threadin->status,XNROOT)) {
-        xnpod_reset_watchdog();
+        xnpod_reset_watchdog(sched);
         xnfreesync();
         xnarch_enter_root(xnthread_archtcb(threadin));
     }
@@ -2534,7 +2534,7 @@ void xnpod_schedule (void)
     if (testbits(threadout->status,XNROOT))
         xnarch_leave_root(xnthread_archtcb(threadout));
     else if (testbits(threadin->status,XNROOT)) {
-        xnpod_reset_watchdog();
+        xnpod_reset_watchdog(sched);
         xnfreesync();
         xnarch_enter_root(xnthread_archtcb(threadin));
     }
@@ -2700,7 +2700,7 @@ maybe_switch:
     if (testbits(runthread->status,XNROOT))
         xnarch_leave_root(xnthread_archtcb(runthread));
     else if (testbits(threadin->status,XNROOT)) {
-        xnpod_reset_watchdog();
+        xnpod_reset_watchdog(sched);
         xnfreesync();
         xnarch_enter_root(xnthread_archtcb(threadin));
     }
@@ -3172,8 +3172,13 @@ unlock_and_exit:
     __setbits(nkpod->status,XNTIMED);
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
+    {
+    unsigned cpu;
+    
     nkpod->watchdog_reload = xnarch_ns_to_tsc(4000000000LL);
-    xnpod_reset_watchdog();
+    for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++)
+        xnpod_reset_watchdog(xnpod_sched_slot(cpu));
+    }
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
 
     xnlock_put_irqrestore(&nklock,s);
@@ -3298,27 +3303,27 @@ void xnpod_stop_timer (void)
 int xnpod_announce_tick (xnintr_t *intr)
 
 {
-    unsigned cpu;
+    xnsched_t *sched;
     spl_t s;
 
-    cpu = xnarch_current_cpu();
+    sched = xnpod_current_sched();
 
     xnlock_get_irqsave(&nklock,s);
 
     xnltt_log_event(xeno_ev_tmtick,xnpod_current_thread()->name);
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
-    if (xnarch_get_cpu_tsc() >= nkpod->watchdog_trigger) {
-        if (!xnpod_root_p() && nkpod->watchdog_armed) {
+    if (xnarch_get_cpu_tsc() >= sched->watchdog_trigger) {
+        if (!xnpod_root_p() && sched->watchdog_armed) {
             xnltt_log_event(xeno_ev_watchdog,xnpod_current_thread()->name);
             xnprintf("watchdog triggered -- suspending runaway thread '%s'\n",
                      xnpod_current_thread()->name);
             xnpod_suspend_thread(xnpod_current_thread(),XNSUSP,XN_INFINITE,NULL);
         } else {
-            xnpod_reset_watchdog();
+            xnpod_reset_watchdog(sched);
         }
     }
-    nkpod->watchdog_armed = !xnpod_root_p();
+    sched->watchdog_armed = !xnpod_root_p();
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
 
     nktimer->do_tick(); /* Fire the timeouts, if any. */
@@ -3333,7 +3338,7 @@ int xnpod_announce_tick (xnintr_t *intr)
     if (!testbits(nkpod->status,XNTMPER))
         goto unlock_and_exit;
 
-    runthread = xnpod_sched_slot(cpu)->runthread;
+    runthread = sched->runthread;
 
     if (testbits(runthread->status,XNRRB) &&
         runthread->rrcredit != XN_INFINITE &&
