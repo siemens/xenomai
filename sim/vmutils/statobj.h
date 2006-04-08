@@ -55,6 +55,9 @@ class MvmHistogram;
 class MvmFilter;
 class MvmScaler;
 class MvmTimeGraph;
+class MvmHistogramExportMsg;
+class MvmTimeGraphExportMsg;
+class MvmStateDiagramExportMsg;
 
 extern double variance(double,
 		       double,
