@@ -191,7 +191,7 @@ static int CommonMatchPS(handle, format, widthPtr, heightPtr)
 		(!memcmp(buf, "oundingBox:", 11)) &&
 		(ImgRead(handle, (char *) buf, 40) == 40))) {
 	    int w, h, zoomx, zoomy;
-	    char *p = buf;
+	    char *p = (char *)buf;
 	    buf[41] = 0;
 	    w = - (int) strtoul(p, &p, 0);
 	    h = - (int) strtoul(p, &p, 0);
@@ -286,9 +286,9 @@ CommonReadPS(interp, handle, format, imageHandle,
     }
     sprintf(zoom, "-r%dx%d", zoomx, zoomy);
 
-    len = ImgRead(handle, buffer, 1024);
+    len = ImgRead(handle, (char *)buffer, 1024);
     buffer[1024] = 0;
-    p = strstr(buffer,"%%BoundingBox:");
+    p = strstr((char *)buffer,"%%BoundingBox:");
     fileHeight = height + srcY;
     if (p) {
 	/* postscript */
@@ -331,7 +331,7 @@ CommonReadPS(interp, handle, format, imageHandle,
 
     while (len > 0) {
 	Tcl_Write(chan, (char *) buffer, 1024);
-	len = ImgRead(handle, buffer, 1024);
+	len = ImgRead(handle, (char *)buffer, 1024);
     }
     Tcl_Write(chan,"\nquit\n", 6);
     Tcl_Flush(chan);
