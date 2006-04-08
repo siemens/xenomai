@@ -190,7 +190,7 @@ ImgGetByteArrayFromObj(objPtr, lengthPtr)
 	if (lengthPtr != NULL) {
 	    *lengthPtr = baPtr->used;
 	}
-	return (unsigned char *) baPtr->bytes;
+	return (char *) baPtr->bytes;
     } else {
 	char *string =  (char *) objPtr;
 	if (lengthPtr != NULL) {

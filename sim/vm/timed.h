@@ -167,6 +167,8 @@ public:
 
     MvmScheduler();
 
+    virtual ~MvmScheduler() {}
+
     MvmTimed *exchange();
 
     void insert(MvmTimed *object);
@@ -206,6 +208,8 @@ public:
 
     MvmSchedSlave(MvmScheduler *master =0,
 		  MvmTimed *manager =0);
+
+    virtual ~MvmSchedSlave() {}
 
     void setMaster(MvmScheduler *s) {
 	master = s;
