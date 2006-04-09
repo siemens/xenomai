@@ -1,3 +1,8 @@
+2006-04-09  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.15-1.2-02 and
+	2.6.16-1.2-02.
+
 2006-04-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* sim: Fix issues with GCC 4.x.
