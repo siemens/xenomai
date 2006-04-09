@@ -181,14 +181,40 @@ int rt_queue_send (RT_QUEUE *q,
 			     mode);
 }
 
-ssize_t rt_queue_recv (RT_QUEUE *q,
-		       void **bufp,
-		       RTIME timeout)
+int rt_queue_write (RT_QUEUE *q,
+		    const void *buf,
+		    size_t size,
+		    int mode)
+{
+    return XENOMAI_SKINCALL4(__native_muxid,
+			     __native_queue_write,
+			     q,
+			     buf,
+			     size,
+			     mode);
+}
+
+ssize_t rt_queue_receive (RT_QUEUE *q,
+			  void **bufp,
+			  RTIME timeout)
 {
     return XENOMAI_SKINCALL3(__native_muxid,
-			     __native_queue_recv,
+			     __native_queue_receive,
 			     q,
 			     bufp,
+			     &timeout);
+}
+
+ssize_t rt_queue_read (RT_QUEUE *q,
+		       void *buf,
+		       size_t size,
+		       RTIME timeout)
+{
+    return XENOMAI_SKINCALL4(__native_muxid,
+			     __native_queue_read,
+			     q,
+			     buf,
+			     size,
 			     &timeout);
 }
 

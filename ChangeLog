@@ -5,6 +5,14 @@
 
 2006-04-09  Philippe Gerum  <rpm@xenomai.org>
 
+	* skins/native/queue.c: Add rt_queue_read/write() calls providing
+	integrated i/o operations for faster execution from user-space
+	for short/simple messages.
+
+	* skins/native/queue.c: Deprecate rt_queue_recv() in favour of
+	rt_queue_receive() for consistency purpose with the rest of the
+	interface.
+	
 	* ksrc/arch/i386/patches: Upgrade to 2.6.15-1.2-02 and
 	2.6.16-1.2-02.
 
