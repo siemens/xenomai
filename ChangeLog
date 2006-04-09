@@ -3,6 +3,8 @@
 	* ksrc/skins/rtdm/core.c: catch IRQ lock leaks in driver handlers
 	via XENO_ASSERT.
 
+	* include/nucleus/assert.h: improve XENO_ASSERT verbosity.
+
 2006-04-09  Philippe Gerum  <rpm@xenomai.org>
 
 	* skins/native/queue.c: Add rt_queue_read/write() calls providing
