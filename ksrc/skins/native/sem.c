@@ -344,9 +344,10 @@ int rt_sem_delete (RT_SEM *sem)
  * @a timeout specifies a non-blocking operation.
  *
  * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the rt_timer_start() service. In
- * periodic mode, clock ticks are interpreted as periodic jiffies. In
- * oneshot mode, clock ticks are interpreted as nanoseconds.
+ * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
+ * parameter. In periodic mode, clock ticks are interpreted as
+ * periodic jiffies. In oneshot mode, clock ticks are interpreted as
+ * nanoseconds.
  */
 
 int rt_sem_p (RT_SEM *sem,
@@ -623,9 +624,10 @@ int rt_sem_inquire (RT_SEM *sem,
  * @a timeout specifies a non-blocking operation.
  *
  * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the rt_timer_start() service. In
- * periodic mode, clock ticks are interpreted as periodic jiffies. In
- * oneshot mode, clock ticks are interpreted as nanoseconds.
+ * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
+ * parameter. In periodic mode, clock ticks are interpreted as
+ * periodic jiffies. In oneshot mode, clock ticks are interpreted as
+ * nanoseconds.
  */
 
 /**

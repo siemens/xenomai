@@ -54,9 +54,6 @@
  * - User-space task
  *
  * Rescheduling: never.
- *
- * @note The system timer need to have been started with
- * rt_timer_start() for this service to work properly.
  */
 
 SRTIME rt_timer_ns2ticks (SRTIME ns)
@@ -115,9 +112,6 @@ SRTIME rt_timer_ns2tsc (SRTIME ns)
  * - User-space task
  *
  * Rescheduling: never.
- *
- * @note The system timer need to have been started with
- * rt_timer_start() for this service to work properly.
  */
 
 SRTIME rt_timer_ticks2ns (SRTIME ticks)
@@ -170,7 +164,7 @@ SRTIME rt_timer_tsc2ns (SRTIME ticks)
  * date. The period can have the following values:
  *
  * - TM_UNSET is a special value indicating that the system timer is
- * inactive. A call to rt_timer_start() activates it.
+ * inactive. A call to rt_timer_set_mode() re-activates it.
  *
  * - TM_ONESHOT is a special value indicating that the timer has been
  * set up in oneshot mode.
@@ -240,9 +234,10 @@ int rt_timer_inquire (RT_TIMER_INFO *info)
  * Rescheduling: never.
  *
  * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the rt_timer_start() service. In
- * periodic mode, clock ticks are expressed as periodic jiffies. In
- * oneshot mode, clock ticks are expressed as nanoseconds.
+ * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
+ * parameter. In periodic mode, clock ticks are interpreted as
+ * periodic jiffies. In oneshot mode, clock ticks are interpreted as
+ * nanoseconds.
  */
 
 RTIME rt_timer_read (void)
