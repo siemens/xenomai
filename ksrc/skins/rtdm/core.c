@@ -223,6 +223,8 @@ int _rtdm_open(rtdm_user_info_t *user_info, const char *path, int oflag)
         ret = device->open_rt(context, user_info, oflag);
     }
 
+    XENO_ASSERT(RTDM, !rthal_local_irq_test(), rthal_local_irq_enable(););
+
     if (unlikely(ret < 0))
         goto cleanup_out;
 
@@ -267,6 +269,8 @@ int _rtdm_socket(rtdm_user_info_t *user_info, int protocol_family,
         context->context_flags = 0;
         ret = device->socket_rt(context, user_info, protocol);
     }
+
+    XENO_ASSERT(RTDM, !rthal_local_irq_test(), rthal_local_irq_enable(););
 
     if (unlikely(ret < 0))
         goto cleanup_out;
@@ -333,6 +337,8 @@ int _rtdm_close(rtdm_user_info_t *user_info, int fd, int forced)
     } else
         ret = context->ops->close_nrt(context, user_info);
 
+    XENO_ASSERT(RTDM, !rthal_local_irq_test(), rthal_local_irq_enable(););
+
     if (unlikely(ret < 0))
         goto unlock_out;
 
@@ -377,6 +383,8 @@ int _rtdm_close(rtdm_user_info_t *user_info, int fd, int forced)
         ret = ops->operation##_rt(context, user_info, args);                \
     else                                                                    \
         ret = ops->operation##_nrt(context, user_info, args);               \
+                                                                            \
+    XENO_ASSERT(RTDM, !rthal_local_irq_test(), rthal_local_irq_enable(););  \
                                                                             \
     rtdm_context_unlock(context);                                           \
                                                                             \
