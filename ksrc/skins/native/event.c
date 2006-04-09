@@ -442,9 +442,10 @@ int rt_event_signal (RT_EVENT *event,
  * @a timeout specifies a non-blocking operation.
  *
  * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the rt_timer_start() service. In
- * periodic mode, clock ticks are interpreted as periodic jiffies. In
- * oneshot mode, clock ticks are interpreted as nanoseconds.
+ * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
+ * parameter. In periodic mode, clock ticks are interpreted as
+ * periodic jiffies. In oneshot mode, clock ticks are interpreted as
+ * nanoseconds.
  */
 
 int rt_event_wait (RT_EVENT *event,
@@ -697,9 +698,10 @@ int rt_event_inquire (RT_EVENT *event,
  * @a timeout specifies a non-blocking operation.
  *
  * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the rt_timer_start() service. In
- * periodic mode, clock ticks are interpreted as periodic jiffies. In
- * oneshot mode, clock ticks are interpreted as nanoseconds.
+ * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
+ * parameter. In periodic mode, clock ticks are interpreted as
+ * periodic jiffies. In oneshot mode, clock ticks are interpreted as
+ * nanoseconds.
  */
 
 /**

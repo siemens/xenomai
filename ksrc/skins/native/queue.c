@@ -734,9 +734,10 @@ int rt_queue_send (RT_QUEUE *q,
  * @a timeout specifies a non-blocking operation.
  *
  * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the rt_timer_start() service. In
- * periodic mode, clock ticks are interpreted as periodic jiffies. In
- * oneshot mode, clock ticks are interpreted as nanoseconds.
+ * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
+ * parameter. In periodic mode, clock ticks are interpreted as
+ * periodic jiffies. In oneshot mode, clock ticks are interpreted as
+ * nanoseconds.
  */
 
 ssize_t rt_queue_recv (RT_QUEUE *q,
@@ -922,9 +923,10 @@ int rt_queue_inquire (RT_QUEUE *q,
  * @a timeout specifies a non-blocking operation.
  *
  * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the rt_timer_start() service. In
- * periodic mode, clock ticks are interpreted as periodic jiffies. In
- * oneshot mode, clock ticks are interpreted as nanoseconds.
+ * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
+ * parameter. In periodic mode, clock ticks are interpreted as
+ * periodic jiffies. In oneshot mode, clock ticks are interpreted as
+ * nanoseconds.
  */
 
 /**
