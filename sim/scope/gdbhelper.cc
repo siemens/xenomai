@@ -423,6 +423,8 @@ static int splitInput (Tcl_Interp *tclInterp,
     
     char *ibuf = gdb_ibuf.gets(), *estart = gdb_ibuf.gets();
 
+    Tcl_ResetResult(tclInterp);
+
     for (;;)
 	{
 	if (*ibuf == '\0' || *ibuf == '\n')
@@ -504,7 +506,7 @@ static int splitInput (Tcl_Interp *tclInterp,
 		// the contents of the log did not match anything known to
 		// the caller. We cannot return -1, which value is reserved
 		// to indicate that the connection with GDB has been lost.
-		
+
 		Tcl_AppendElement(tclInterp,CString(rc2 ? rc2 : nre).gets());
 		Tcl_AppendElement(tclInterp,matched);
 		Tcl_AppendElement(tclInterp,Tcl_DStringValue(&gdb_ilog));
