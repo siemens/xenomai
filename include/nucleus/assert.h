@@ -23,11 +23,17 @@
 #include <nucleus/compiler.h>
 
 #define XENO_ASSERT(subsystem,cond,action)  do { \
-if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem > 0 && !(cond))) \
-	do { action; } while(0); \
+    if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem > 0 && !(cond))) { \
+        ipipe_trace_panic_freeze(); \
+        xnlogerr("assertion failed at %s:%d (%s)\n", __FILE__, __LINE__, (#cond)); \
+        ipipe_trace_panic_dump(); \
+        action; \
+    } \
 } while(0)
 
-#define XENO_BUGON(subsystem,cond)  \
-    XENO_ASSERT(subsystem,cond,xnpod_fatal("assertion failed at %s:%d",__FILE__,__LINE__))
+#define XENO_BUGON(subsystem,cond)  do { \
+    if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem > 0 && !(cond))) \
+        xnpod_fatal("assertion failed at %s:%d (%s)", __FILE__, __LINE__, (#cond)); \
+} while(0)
 
 #endif /* !_XENO_NUCLEUS_ASSERT_H */
