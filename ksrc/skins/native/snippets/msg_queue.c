@@ -33,7 +33,7 @@ void consumer (void *cookie)
        until the queue is eventually removed from the system by a call
        to rt_queue_delete(). */
 
-    while ((len = rt_queue_recv(&q_desc,&msg,TM_INFINITE)) > 0)
+    while ((len = rt_queue_receive(&q_desc,&msg,TM_INFINITE)) > 0)
 	{
 	printf("received message> len=%d bytes, ptr=%p, s=%s\n",
 	       len,msg,(const char *)msg);

@@ -85,7 +85,7 @@
 #define __native_queue_alloc        59
 #define __native_queue_free         60
 #define __native_queue_send         61
-#define __native_queue_recv         62
+#define __native_queue_receive      62
 #define __native_queue_inquire      63
 #define __native_heap_create        64
 #define __native_heap_bind          65
@@ -117,6 +117,8 @@
 #define __native_misc_put_io_region 91
 #define __native_timer_ns2tsc       92
 #define __native_timer_tsc2ns       93
+#define __native_queue_write        94
+#define __native_queue_read         95
 
 struct rt_arg_bulk {
 

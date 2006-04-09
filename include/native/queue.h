@@ -165,8 +165,25 @@ int rt_queue_send(RT_QUEUE *q,
 		  size_t size,
 		  int mode);
 
-ssize_t rt_queue_recv(RT_QUEUE *q,
-		      void **bufp,
+int rt_queue_write(RT_QUEUE *q,
+		   const void *buf,
+		   size_t size,
+		   int mode);
+
+ssize_t rt_queue_receive(RT_QUEUE *q,
+			 void **bufp,
+			 RTIME timeout);
+
+static inline ssize_t __deprecated_call__ rt_queue_recv(RT_QUEUE *q,
+							void **bufp,
+							RTIME timeout)
+{
+    return rt_queue_receive(q,bufp,timeout);
+}
+
+ssize_t rt_queue_read(RT_QUEUE *q,
+		      void *bufp,
+		      size_t size,
 		      RTIME timeout);
 
 int rt_queue_inquire(RT_QUEUE *q,

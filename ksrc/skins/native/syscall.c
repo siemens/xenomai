@@ -2240,12 +2240,59 @@ static int __rt_queue_send (struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
- * int __rt_queue_recv(RT_QUEUE_PLACEHOLDER *ph,
- *                     void **bufp,
- *                     RTIME *timeoutp)
+ * int __rt_queue_write(RT_QUEUE_PLACEHOLDER *ph,
+ *                      const void *buf,
+ *                      size_t size,
+ *                      int mode)
  */
 
-static int __rt_queue_recv (struct task_struct *curr, struct pt_regs *regs)
+static int __rt_queue_write (struct task_struct *curr, struct pt_regs *regs)
+
+{
+    RT_QUEUE_PLACEHOLDER ph;
+    void __user *buf, *mbuf;
+    RT_QUEUE *q;
+    size_t size;
+    int mode;
+
+    if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg1(regs),sizeof(ph)))
+	return -EFAULT;
+
+    __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
+
+    q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
+
+    /* Buffer to write to the queue. */
+    buf = (void __user *)__xn_reg_arg2(regs);
+
+    /* Payload size. */
+    size = (size_t)__xn_reg_arg3(regs);
+
+    /* Sending mode. */
+    mode = (int)__xn_reg_arg4(regs);
+
+    if (!__xn_access_ok(curr,VERIFY_READ,buf,size))
+	return -EFAULT;
+
+    mbuf = rt_queue_alloc(q,size);
+
+    if (!mbuf)
+	return -ENOMEM;
+
+    if (size > 0)
+	/* Slurp the message directly into the conveying buffer. */
+	__xn_copy_from_user(curr,mbuf,buf,size);
+
+    return rt_queue_send(q,mbuf,size,mode);
+}
+
+/*
+ * int __rt_queue_receive(RT_QUEUE_PLACEHOLDER *ph,
+ *                        void **bufp,
+ *                        RTIME *timeoutp)
+ */
+
+static int __rt_queue_receive (struct task_struct *curr, struct pt_regs *regs)
 
 {
     RT_QUEUE_PLACEHOLDER ph;
@@ -2278,7 +2325,7 @@ static int __rt_queue_recv (struct task_struct *curr, struct pt_regs *regs)
 	goto unlock_and_exit;
 	}
 
-    err = (int)rt_queue_recv(q,&buf,timeout);
+    err = (int)rt_queue_receive(q,&buf,timeout);
 
     /* Convert the caller-based address of buf to the equivalent area
        into the kernel address space. */
@@ -2296,6 +2343,59 @@ static int __rt_queue_recv (struct task_struct *curr, struct pt_regs *regs)
     xnlock_put_irqrestore(&nklock,s);
 
     return err;
+}
+
+/*
+ * int __rt_queue_read(RT_QUEUE_PLACEHOLDER *ph,
+ *                     void *buf,
+ *                     size_t size,
+ *                     RTIME *timeoutp)
+ */
+
+static int __rt_queue_read (struct task_struct *curr, struct pt_regs *regs)
+
+{
+    RT_QUEUE_PLACEHOLDER ph;
+    void __user *buf, *mbuf;
+    ssize_t rsize;
+    RTIME timeout;
+    RT_QUEUE *q;
+    size_t size;
+
+    if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg1(regs),sizeof(ph)))
+	return -EFAULT;
+
+    __xn_copy_from_user(curr,&ph,(void __user *)__xn_reg_arg1(regs),sizeof(ph));
+
+    q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
+
+    /* Address of message space to write to. */
+    buf = (void __user *)__xn_reg_arg2(regs);
+
+    /* Size of message space. */
+    size = (size_t)__xn_reg_arg3(regs);
+
+    if (!__xn_access_ok(curr,VERIFY_WRITE,buf,size))
+	return -EFAULT;
+
+    if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg4(regs),sizeof(timeout)))
+	return -EFAULT;
+
+    __xn_copy_from_user(curr,&timeout,(void __user *)__xn_reg_arg3(regs),sizeof(timeout));
+
+    rsize = rt_queue_receive(q,&mbuf,timeout);
+
+    if (rsize >= 0)
+	{
+	size = size < rsize ? size : rsize;
+
+	if (size > 0)
+	    __xn_copy_to_user(curr,buf,mbuf,size);
+	}
+
+    rt_queue_free(q,mbuf);
+
+    return (int)rsize;
 }
 
 /*
@@ -2340,8 +2440,10 @@ static int __rt_queue_inquire (struct task_struct *curr, struct pt_regs *regs)
 #define __rt_queue_alloc     __rt_call_not_available
 #define __rt_queue_free      __rt_call_not_available
 #define __rt_queue_send      __rt_call_not_available
-#define __rt_queue_recv      __rt_call_not_available
+#define __rt_queue_receive   __rt_call_not_available
 #define __rt_queue_inquire   __rt_call_not_available
+#define __rt_queue_read      __rt_call_not_available
+#define __rt_queue_write     __rt_call_not_available
 
 #endif /* CONFIG_XENO_OPT_NATIVE_QUEUE */
 
@@ -3585,7 +3687,9 @@ static xnsysent_t __systab[] = {
     [__native_queue_alloc ] = { &__rt_queue_alloc, __xn_exec_any },
     [__native_queue_free ] = { &__rt_queue_free, __xn_exec_any },
     [__native_queue_send ] = { &__rt_queue_send, __xn_exec_any },
-    [__native_queue_recv ] = { &__rt_queue_recv, __xn_exec_primary },
+    [__native_queue_write ] = { &__rt_queue_write, __xn_exec_any },
+    [__native_queue_receive ] = { &__rt_queue_receive, __xn_exec_primary },
+    [__native_queue_read ] = { &__rt_queue_read, __xn_exec_primary },
     [__native_queue_inquire ] = { &__rt_queue_inquire, __xn_exec_any },
     [__native_heap_create ] = { &__rt_heap_create, __xn_exec_lostage },
     [__native_heap_bind ] = { &__rt_heap_bind, __xn_exec_conforming },
