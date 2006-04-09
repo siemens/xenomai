@@ -706,8 +706,7 @@ int rt_task_yield (void)
  * - -ETIMEDOUT is returned if @a idate is different from TM_INFINITE
  * and represents a date in the past.
  *
- * - -EWOULDBLOCK is returned if the system timer has not been started
- * using rt_timer_start().
+ * - -EWOULDBLOCK is returned if the system timer is not active.
  *
  * - -EPERM is returned if @a task is NULL but not called from a task
  * context.
@@ -726,9 +725,10 @@ int rt_task_yield (void)
  * @a idate has not elapsed yet.
  *
  * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the rt_timer_start() service. In
- * periodic mode, clock ticks are interpreted as periodic jiffies. In
- * oneshot mode, clock ticks are interpreted as nanoseconds.
+ * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
+ * parameter. In periodic mode, clock ticks are interpreted as
+ * periodic jiffies. In oneshot mode, clock ticks are interpreted as
+ * nanoseconds.
  */
 
 int rt_task_set_periodic (RT_TASK *task,
@@ -936,9 +936,10 @@ int rt_task_set_priority (RT_TASK *task,
  * Rescheduling: always unless a null delay is given.
  *
  * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the rt_timer_start() service. In
- * periodic mode, clock ticks are interpreted as periodic jiffies. In
- * oneshot mode, clock ticks are interpreted as nanoseconds.
+ * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
+ * parameter. In periodic mode, clock ticks are interpreted as
+ * periodic jiffies. In oneshot mode, clock ticks are interpreted as
+ * nanoseconds.
  */
 
 int rt_task_sleep (RTIME delay)
@@ -998,9 +999,10 @@ int rt_task_sleep (RTIME delay)
  * Rescheduling: always unless a date in the past is given.
  *
  * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the rt_timer_start() service. In
- * periodic mode, clock ticks are interpreted as periodic jiffies. In
- * oneshot mode, clock ticks are interpreted as nanoseconds.
+ * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
+ * parameter. In periodic mode, clock ticks are interpreted as
+ * periodic jiffies. In oneshot mode, clock ticks are interpreted as
+ * nanoseconds.
  */
 
 int rt_task_sleep_until (RTIME date)
@@ -1592,9 +1594,10 @@ RT_TASK *rt_task_self (void)
  * Rescheduling: never.
  *
  * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the rt_timer_start() service. In
- * periodic mode, clock ticks are interpreted as periodic jiffies. In
- * oneshot mode, clock ticks are interpreted as nanoseconds.
+ * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
+ * parameter. In periodic mode, clock ticks are interpreted as
+ * periodic jiffies. In oneshot mode, clock ticks are interpreted as
+ * nanoseconds.
  */
 
 int rt_task_slice (RT_TASK *task, RTIME quantum)
@@ -1731,9 +1734,10 @@ int rt_task_slice (RT_TASK *task, RTIME quantum)
  * Rescheduling: Always.
  *
  * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the rt_timer_start() service. In
- * periodic mode, clock ticks are interpreted as periodic jiffies. In
- * oneshot mode, clock ticks are interpreted as nanoseconds.
+ * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
+ * parameter. In periodic mode, clock ticks are interpreted as
+ * periodic jiffies. In oneshot mode, clock ticks are interpreted as
+ * nanoseconds.
  *
  * @note When called from a user-space task, this service may need to
  * allocate some temporary buffer space from the system heap to hold
@@ -1923,9 +1927,10 @@ ssize_t rt_task_send (RT_TASK *task,
  * Rescheduling: Always.
  *
  * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the rt_timer_start() service. In
- * periodic mode, clock ticks are interpreted as periodic jiffies. In
- * oneshot mode, clock ticks are interpreted as nanoseconds.
+ * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
+ * parameter. In periodic mode, clock ticks are interpreted as
+ * periodic jiffies. In oneshot mode, clock ticks are interpreted as
+ * nanoseconds.
  *
  * @note When called from a user-space task, this service may need to
  * allocate some temporary buffer space from the system heap to hold
@@ -2358,9 +2363,10 @@ int rt_task_reply (int flowid, RT_TASK_MCB *mcb_s)
  * @a timeout specifies a non-blocking operation.
  *
  * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the rt_timer_start() service. In
- * periodic mode, clock ticks are interpreted as periodic jiffies. In
- * oneshot mode, clock ticks are interpreted as nanoseconds.
+ * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
+ * parameter. In periodic mode, clock ticks are interpreted as
+ * periodic jiffies. In oneshot mode, clock ticks are interpreted as
+ * nanoseconds.
  */
 
 /**
