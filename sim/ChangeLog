@@ -1,3 +1,13 @@
+2006-04-09  Philippe Gerum  <rpm@xenomai.org>
+
+	* sim/scope/gdbhelper.cc (splitInput): Re-init the result buffer
+	so that large GDB output involving multiple read loops don't
+	recycle old contents spuriously.
+
+	* sim/scope/tcl/gdb.tcl (gdb:seek): Auto-limit the backtrace dump
+	to the inner last 32 frames in order to work-around issues GDB 6.x
+	has with ucontext(2) driven co-routines.
+
 2006-01-04  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* configure.in: Add nucleus scalable scheduler and watchdog
