@@ -1,3 +1,8 @@
+2006-04-10  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/drivers/16550A/16550A.c: Fix leaking lock in
+	rt_16550_read().
+
 2006-04-09  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/rtdm/core.c: catch IRQ lock leaks in driver handlers
