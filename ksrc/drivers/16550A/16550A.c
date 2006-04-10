@@ -836,6 +836,8 @@ ssize_t rt_16550_read(struct rtdm_dev_context *context,
             else
                 ret = -EIO;
             ctx->status = 0;
+
+            rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
             break;
         }
 
@@ -1083,7 +1085,7 @@ static const struct rtdm_device __initdata device_tmpl = {
     device_class:       RTDM_CLASS_SERIAL,
     device_sub_class:   RTDM_SUBCLASS_16550A,
     driver_name:        "xeno_16550A",
-    driver_version:     RTDM_DRIVER_VER(1, 3, 1),
+    driver_version:     RTDM_DRIVER_VER(1, 3, 2),
     peripheral_name:    "UART 16550A",
     provider_name:      "Jan Kiszka",
 };

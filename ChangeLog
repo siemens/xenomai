@@ -1,3 +1,8 @@
+2006-04-10  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/drivers/16550A/16550A.c: Fix leaking lock in
+	rt_16550_read().
+
 2006-04-09  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.15-1.2-02 and
