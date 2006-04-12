@@ -40,6 +40,10 @@ int open(const char *path, int oflag, ...);
 #include <time.h>
 #include_next <fcntl.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int __real_open(const char *path, int oflag, ...);
 
 #ifdef __cplusplus
