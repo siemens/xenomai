@@ -1,3 +1,12 @@
+2006-04-13  Philippe Gerum  <rpm@xenomai.org>
+
+	* scripts/prepare-kernel.sh, scripts/xeno-load.in,
+	scripts/xeno-info.in: Fix obsolete syntax.
+
+2006-02-11  Jim Cromie <jim.cromie@gmail.com>
+
+	* scripts/xeno-test.in: Fix obsolete syntax.
+
 2006-04-10  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/drivers/16550A/16550A.c: Fix leaking lock in
