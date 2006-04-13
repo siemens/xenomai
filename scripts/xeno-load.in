@@ -56,7 +56,7 @@ if test \! -r $run_info_file; then
 fi
 
 if test $target_name = default; then
-  target_name=`cut -s -d: -f1 $run_info_file | head -1`
+  target_name=`cut -s -d: -f1 $run_info_file | head -n1`
   if test "x$target_name" = x; then
      echo "xeno-load: no target defined in $run_info_file"
      exit 2

@@ -90,7 +90,7 @@ boxstatus() {
     loudly cat /proc/interrupts
     loudly cat /proc/loadavg
     [ -n "$prepost" ] && loudly $prepost
-    loudly top -bn1c | head -$(( 12 + $workload ))
+    loudly top -bn1c | head -n $(( 12 + $workload ))
 }
 
 
