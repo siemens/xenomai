@@ -48,7 +48,6 @@
 #include <rtdm/syscall.h>
 #endif /* __KERNEL__ */
 
-#include "rtdm/core.h"
 #include "rtdm/device.h"
 #include "rtdm/proc.h"
 
@@ -64,7 +63,6 @@ static xnpod_t __rtdm_pod;
 
 static void rtdm_skin_shutdown(int xtype)
 {
-    rtdm_core_cleanup();
     rtdm_dev_cleanup();
 
 #ifdef CONFIG_PROC_FS
@@ -99,14 +97,10 @@ int SKIN_INIT(rtdm)
     if (err)
         goto cleanup_pod;
 
-    err = rtdm_core_init();
-    if (err)
-        goto cleanup_dev;
-
 #ifdef CONFIG_PROC_FS
     err = rtdm_proc_init();
     if (err)
-        goto cleanup_core;
+        goto cleanup_dev;
 #endif /* CONFIG_PROC_FS */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
@@ -126,12 +120,9 @@ int SKIN_INIT(rtdm)
 #ifdef CONFIG_PROC_FS
     rtdm_proc_cleanup();
 
-  cleanup_core:
+  cleanup_dev:
 #endif /* CONFIG_PROC_FS */
 
-    rtdm_core_cleanup();
-
-  cleanup_dev:
     rtdm_dev_cleanup();
 
   cleanup_pod:

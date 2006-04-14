@@ -37,23 +37,16 @@
 #include "rtdm/device.h"
 
 
-unsigned int                fd_count = DEF_FILDES_COUNT;
-module_param(fd_count, uint, 0400);
-MODULE_PARM_DESC(fd_count, "Maximum number of file descriptors");
+#define FD_BITMAP_SIZE  ((RTDM_FD_MAX + BITS_PER_LONG-1) / BITS_PER_LONG)
 
-struct rtdm_fildes          *fildes_table;  /* allocated on init */
-static struct rtdm_fildes   *free_fildes;   /* chain of free descriptors */
-int                         open_fildes;    /* number of used descriptors */
+struct rtdm_fildes      fildes_table[RTDM_FD_MAX] =
+                            { [0 ... RTDM_FD_MAX-1] = { NULL } };
+static unsigned long    used_fildes[FD_BITMAP_SIZE];
+int                     open_fildes;    /* amount of used descriptors */
 
 #ifdef CONFIG_SMP
-xnlock_t                    rt_fildes_lock = XNARCH_LOCK_UNLOCKED;
+xnlock_t                rt_fildes_lock = XNARCH_LOCK_UNLOCKED;
 #endif /* !CONFIG_SMP */
-
-
-static inline int get_fd(struct rtdm_fildes *fildes)
-{
-    return (fildes - fildes_table);
-}
 
 
 /**
@@ -79,19 +72,16 @@ static inline int get_fd(struct rtdm_fildes *fildes)
  */
 struct rtdm_dev_context *rtdm_context_get(int fd)
 {
-    struct rtdm_fildes      *fildes;
     struct rtdm_dev_context *context;
     spl_t                   s;
 
 
-    if ((unsigned int)fd >= fd_count)
+    if ((unsigned int)fd >= RTDM_FD_MAX)
         return NULL;
-
-    fildes = &fildes_table[fd];
 
     xnlock_get_irqsave(&rt_fildes_lock, s);
 
-    context = (struct rtdm_dev_context *)fildes->context;
+    context = fildes_table[fd].context;
     if (unlikely(!context ||
                  test_bit(RTDM_CLOSING, &context->context_flags))) {
         xnlock_put_irqrestore(&rt_fildes_lock, s);
@@ -111,24 +101,31 @@ static int create_instance(struct rtdm_device *device,
                            struct rtdm_fildes **fildes_ptr,
                            int nrt_mem)
 {
-    struct rtdm_fildes      *fildes;
     struct rtdm_dev_context *context;
+    int                     fd;
     spl_t                   s;
 
 
+    /* Reset to NULL so that we can always use cleanup_instance to revert
+       also partially successful allocations */
     *context_ptr = NULL;
+    *fildes_ptr  = NULL;
 
+    /* Reserve a file descriptor */
     xnlock_get_irqsave(&rt_fildes_lock, s);
 
-    *fildes_ptr = fildes = free_fildes;
-    if (unlikely(!fildes)) {
+    if (unlikely(open_fildes >= RTDM_FD_MAX)) {
         xnlock_put_irqrestore(&rt_fildes_lock, s);
         return -ENFILE;
     }
-    free_fildes = fildes->next;
+
+    fd = find_first_zero_bit(used_fildes, RTDM_FD_MAX);
+    set_bit(fd, used_fildes);
     open_fildes++;
 
     xnlock_put_irqrestore(&rt_fildes_lock, s);
+
+    *fildes_ptr = &fildes_table[fd];
 
     context = device->reserved.exclusive_context;
     if (context) {
@@ -156,7 +153,7 @@ static int create_instance(struct rtdm_device *device,
 
     *context_ptr = context;
 
-    context->fd  = get_fd(fildes);
+    context->fd  = fd;
     context->ops = &device->ops;
     atomic_set(&context->close_lock_count, 0);
 
@@ -172,19 +169,17 @@ static void cleanup_instance(struct rtdm_device *device,
                              spl_t *s)
 {
     if (fildes) {
-        fildes->next = free_fildes;
-        free_fildes = fildes;
-        open_fildes--;
-
+        clear_bit((fildes - fildes_table), used_fildes);
         fildes->context = NULL;
+        open_fildes--;
     }
 
     xnlock_put_irqrestore(&rt_fildes_lock, *s);
 
     if (context) {
-        if (device->reserved.exclusive_context)
+        if (device->reserved.exclusive_context) {
             context->device = NULL;
-        else {
+        } else {
             if (nrt_mem)
                 kfree(context);
             else
@@ -291,21 +286,18 @@ int _rtdm_socket(rtdm_user_info_t *user_info, int protocol_family,
 
 int _rtdm_close(rtdm_user_info_t *user_info, int fd, int forced)
 {
-    struct rtdm_fildes      *fildes;
     struct rtdm_dev_context *context;
     spl_t                   s;
     int                     ret;
 
 
     ret = -EBADF;
-    if (unlikely((unsigned int)fd >= fd_count))
+    if (unlikely((unsigned int)fd >= RTDM_FD_MAX))
         goto err_out;
-
-    fildes = &fildes_table[fd];
 
     xnlock_get_irqsave(&rt_fildes_lock, s);
 
-    context = (struct rtdm_dev_context *)fildes->context;
+    context = fildes_table[fd].context;
 
     if (unlikely(!context)) {
         xnlock_put_irqrestore(&rt_fildes_lock, s);
@@ -349,10 +341,10 @@ int _rtdm_close(rtdm_user_info_t *user_info, int fd, int forced)
         ret = -EAGAIN;
         goto unlock_out;
     }
-    fildes->context = NULL;
 
-    cleanup_instance((struct rtdm_device *)context->device, context,
-        fildes, test_bit(RTDM_CREATED_IN_NRT, &context->context_flags), &s);
+    cleanup_instance((struct rtdm_device *)context->device,
+        context, &fildes_table[fd],
+        test_bit(RTDM_CREATED_IN_NRT, &context->context_flags), &s);
 
     return ret;
 
@@ -431,25 +423,6 @@ ssize_t _rtdm_sendmsg(rtdm_user_info_t *user_info, int fd,
                   const struct msghdr *msg, int flags)
 {
     MAJOR_FUNCTION_WRAPPER(sendmsg, msg, flags);
-}
-
-
-int __init rtdm_core_init(void)
-{
-    int i;
-
-
-    fildes_table = (struct rtdm_fildes *)
-        kmalloc(fd_count * sizeof(struct rtdm_fildes), GFP_KERNEL);
-    if (!fildes_table)
-        return -ENOMEM;
-
-    memset(fildes_table, 0, fd_count * sizeof(struct rtdm_fildes));
-    for (i = 0; i < fd_count-1; i++)
-        fildes_table[i].next = &fildes_table[i+1];
-    free_fildes = &fildes_table[0];
-
-    return 0;
 }
 
 
