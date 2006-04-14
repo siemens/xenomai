@@ -24,29 +24,17 @@
 #include <rtdm/rtdm_driver.h>
 
 
-#define DEF_FILDES_COUNT    64  /* default number of file descriptors */
-
-
-struct rtdm_fildes {
-    struct rtdm_fildes                  *next;
-    volatile struct rtdm_dev_context    *context;
-};
-
-
 #ifdef CONFIG_SMP
 extern xnlock_t             rt_fildes_lock;
 #endif /* CONFIG_SMP */
 
-extern unsigned int         fd_count;
-extern struct rtdm_fildes   *fildes_table;
+#define RTDM_FD_MAX         CONFIG_XENO_OPT_RTDM_FILDES
+
+struct rtdm_fildes {
+    struct rtdm_dev_context *context;
+};
+
+extern struct rtdm_fildes   fildes_table[];
 extern int                  open_fildes;
-
-
-int __init rtdm_core_init(void);
-
-static inline void rtdm_core_cleanup(void)
-{
-    kfree(fildes_table);
-}
 
 #endif /* _RTDM_CORE_H */

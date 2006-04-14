@@ -130,7 +130,7 @@ static int proc_read_open_fildes(char* buf, char** start, off_t offset,
     if (!RTDM_PROC_PRINT("Index\tLocked\tDevice\n"))
         goto done;
 
-    for (i = 0; i < fd_count; i++) {
+    for (i = 0; i < RTDM_FD_MAX; i++) {
         xnlock_get_irqsave(&rt_fildes_lock, s);
 
         if (!fildes_table[i].context) {
@@ -190,8 +190,8 @@ static int proc_read_fildes(char* buf, char** start, off_t offset,
     RTDM_PROC_PRINT_VARS(80);
 
 
-    RTDM_PROC_PRINT("total:\t%d\nopen:\t%d\nfree:\t%d\n", fd_count,
-                    open_fildes, fd_count - open_fildes);
+    RTDM_PROC_PRINT("total:\t%d\nopen:\t%d\nfree:\t%d\n", RTDM_FD_MAX,
+                    open_fildes, RTDM_FD_MAX - open_fildes);
 
     RTDM_PROC_PRINT_DONE;
 }

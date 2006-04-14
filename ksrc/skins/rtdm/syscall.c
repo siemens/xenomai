@@ -29,7 +29,7 @@ int __rtdm_muxid;
 
 static int sys_rtdm_fdcount(struct task_struct *curr, struct pt_regs *regs)
 {
-    return fd_count;
+    return RTDM_FD_MAX;
 }
 
 
