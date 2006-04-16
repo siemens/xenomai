@@ -10,7 +10,7 @@ if XENO_SKIN_NATIVE != n
 
 config XENO_OPT_NATIVE_PIPE
 	bool "Message pipes"
-	depends on XENO_OPT_PIPE
+	select XENO_OPT_PIPE
 	default y
 	help
 	
@@ -32,6 +32,18 @@ config XENO_OPT_NATIVE_PIPE_BUFSZ
 	
 	This option sets the memory size available for per-pipe
 	buffering when message pipes are used in byte stream mode.
+
+config XENO_OPT_NATIVE_REGISTRY
+	bool
+	prompt "Registry support" if !XENO_OPT_PERVASIVE
+	select XENO_OPT_REGISTRY
+	default y
+	help
+	
+	The registry is used to bind real-time objects to symbolic names,
+	so that these objects can be further retrieved and shared by
+	real-time applications regardless of their runtime space (i.e.
+	kernel or user). Each named object occupies a registry slot.
 
 config XENO_OPT_NATIVE_SEM
 	bool "Counting semaphores"

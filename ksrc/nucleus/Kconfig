@@ -32,15 +32,7 @@ config XENO_OPT_SECURITY_ACCESS
 	think twice before switching this off.
 
 config XENO_OPT_PIPE
-	bool "Message pipes"
-	default y
-	help
-
-	Message pipes are bi-directional FIFO communication
-	channels allowing data exchange between real-time kernel
-	threads and regular user-space processes. Pipes natively
-	preserve message boundaries, but can also be used in byte
-	streaming mode from kernel to user-space.
+	bool
 
 config XENO_OPT_PIPE_NRDEV
 	int "Number of pipe devices"
@@ -48,14 +40,23 @@ config XENO_OPT_PIPE_NRDEV
 	default 32
 	help
 	
+	Message pipes are bi-directional FIFO communication
+	channels allowing data exchange between real-time kernel
+	threads and regular user-space processes. Pipes natively
+	preserve message boundaries, but can also be used in byte
+	streaming mode from kernel to user-space.
+	
 	This option sets the maximum number of pipe devices supported
 	in the system. Pipe devices are named /dev/rtpN where N is a
 	device minor number ranging from 0 to XENO_OPT_PIPE_NRDEV - 1.
 
 config XENO_OPT_REGISTRY
 	bool
-	prompt "Registry support" if !XENO_OPT_PERVASIVE
-	default y
+
+config XENO_OPT_REGISTRY_NRSLOTS
+	int "Number of registry slots"
+	depends on XENO_OPT_REGISTRY
+	default 512
 	help
 	
 	The registry is used by Xenomai skins to bind real-time
@@ -63,12 +64,6 @@ config XENO_OPT_REGISTRY
 	can be further retrieved and shared by real-time applications
 	regardless of their runtime space (i.e. kernel or user). Each
 	named object occupies a registry slot.
-
-config XENO_OPT_REGISTRY_NRSLOTS
-	int "Number of registry slots"
-	depends on XENO_OPT_REGISTRY
-	default 512
-	help
 	
 	This option sets the maximum number of real-time objects the
 	registry can handle. All skins using the registry share this
