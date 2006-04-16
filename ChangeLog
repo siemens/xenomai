@@ -1,3 +1,12 @@
+2006-04-15  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.14-1.2-02.
+
+2006-04-15  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/Kconfig, ksrc/skins/*/Kconfig: Optimize feature
+	selection for pipes and registry support.
+
 2006-04-14  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skin/rtdm/*: Rewrite of the file descriptor management.
