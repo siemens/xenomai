@@ -1,3 +1,7 @@
+2006-04-16  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.16-1.2-03.
+
 2006-04-15  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.14-1.2-02.
