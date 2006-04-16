@@ -4265,8 +4265,8 @@ Binary files 2.6.16/arch/ia64/hp/sim/boot/bootloader and 2.6.16-ipipe/arch/ia64/
 +EXPORT_SYMBOL(ipipe_get_sysinfo);
 +EXPORT_SYMBOL(ipipe_tune_timer);
 --- 2.6.16/arch/i386/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.16-ipipe/arch/i386/kernel/ipipe-root.c	2006-03-28 15:30:10.000000000 +0200
-@@ -0,0 +1,583 @@
++++ 2.6.16-ipipe/arch/i386/kernel/ipipe-root.c	2006-04-16 15:36:06.000000000 +0200
+@@ -0,0 +1,596 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/i386/kernel/ipipe-root.c
 + *
@@ -4354,13 +4354,14 @@ Binary files 2.6.16/arch/ia64/hp/sim/boot/bootloader and 2.6.16-ipipe/arch/ia64/
 +
 +#ifdef CONFIG_SMP
 +
-+static int __ipipe_boot_cpuid(void)
++static __attribute__((no_instrument_function)) int __ipipe_boot_cpuid(void)
 +{
 +	return 0;
 +}
 +
 +u8 __ipipe_apicid_2_cpu[IPIPE_NR_CPUS];
 +
++#ifndef CONFIG_IPIPE_TRACE
 +static int __ipipe_hard_cpuid(void)
 +{
 +	unsigned long flags;
@@ -4371,6 +4372,18 @@ Binary files 2.6.16/arch/ia64/hp/sim/boot/bootloader and 2.6.16-ipipe/arch/ia64/
 +	local_irq_restore_hw(flags);
 +	return cpu;
 +}
++#else /* CONFIG_IPIPE_TRACE */
++static notrace int __ipipe_hard_cpuid(void)
++{
++	unsigned long flags;
++	int cpu;
++
++	local_irq_save_hw_notrace(flags);
++	cpu = __ipipe_apicid_2_cpu[GET_APIC_ID(apic_read(APIC_ID))];
++	local_irq_restore_hw_notrace(flags);
++	return cpu;
++}
++#endif /* CONFIG_IPIPE_TRACE */
 +
 +int (*__ipipe_logical_cpuid)(void) = &__ipipe_boot_cpuid;
 +
@@ -5252,7 +5265,7 @@ Binary files 2.6.16/arch/ia64/hp/sim/boot/bootloader and 2.6.16-ipipe/arch/ia64/
  #define shutdown_level_ioapic	mask_IO_APIC_irq
  #define enable_level_ioapic	unmask_IO_APIC_irq
 --- 2.6.16/include/asm-i386/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.16-ipipe/include/asm-i386/ipipe.h	2006-03-27 16:14:50.000000000 +0200
++++ 2.6.16-ipipe/include/asm-i386/ipipe.h	2006-04-16 15:36:06.000000000 +0200
 @@ -0,0 +1,211 @@
 +/*   -*- linux-c -*-
 + *   include/asm-i386/ipipe.h
@@ -5285,10 +5298,10 @@ Binary files 2.6.16/arch/ia64/hp/sim/boot/bootloader and 2.6.16-ipipe/arch/ia64/
 +#include <linux/threads.h>
 +#include <irq_vectors.h>
 +
-+#define IPIPE_ARCH_STRING	"1.2-02"
++#define IPIPE_ARCH_STRING	"1.2-03"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	2
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#ifdef CONFIG_X86_LOCAL_APIC
 +/* We want to cover the whole IRQ space when the APIC is enabled. */
@@ -5353,7 +5366,7 @@ Binary files 2.6.16/arch/ia64/hp/sim/boot/bootloader and 2.6.16-ipipe/arch/ia64/
 +#define IPIPE_CRITICAL_VECTOR  0xf9	/* Used by ipipe_critical_enter/exit() */
 +#define IPIPE_CRITICAL_IPI     (IPIPE_CRITICAL_VECTOR - FIRST_EXTERNAL_VECTOR)
 +
-+static inline int ipipe_processor_id(void)
++static inline __attribute__((no_instrument_function)) int ipipe_processor_id(void)
 +{
 +	extern int (*__ipipe_logical_cpuid)(void);
 +	return __ipipe_logical_cpuid();
