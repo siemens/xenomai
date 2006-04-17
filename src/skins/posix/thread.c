@@ -22,6 +22,7 @@
 #include <posix/syscall.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <nucleus/thread.h>
 
 extern int __pse51_muxid;
 
@@ -201,9 +202,8 @@ int pthread_wait_np (unsigned long *overruns_r)
 int pthread_set_mode_np (int clrmask,
 			 int setmask)
 {
+    extern int __pse51_sigxcpu_no_mlock;
     pthread_t tid = pthread_self();
-    void __handle_lock_alert(int);
-    struct sigaction sa;
     int err;
 
     err = -XENOMAI_SKINCALL3(__pse51_muxid,
@@ -212,18 +212,13 @@ int pthread_set_mode_np (int clrmask,
 			     clrmask,
 			     setmask);
 
-    /* Silently uninstall our internal handler for SIGXCPU. At that
+    /* Silently deactivate our internal handler for SIGXCPU. At that
        point, we know that the process memory has been properly
        locked, otherwise we would have caught the latter signal upon
        thread creation. */
 
-    if (!err &&
-	!sigaction(SIGXCPU,NULL,&sa) &&
-	sa.sa_handler == &__handle_lock_alert)
-	{
-	sa.sa_handler = SIG_DFL;
-	sigaction(SIGXCPU,&sa,NULL);
-	}
+    if (!err && __pse51_sigxcpu_no_mlock)
+	__pse51_sigxcpu_no_mlock = !(setmask & PTHREAD_WARNSW);
 
     return err;
 }
