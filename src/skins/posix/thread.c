@@ -202,11 +202,30 @@ int pthread_set_mode_np (int clrmask,
 			 int setmask)
 {
     pthread_t tid = pthread_self();
-    return -XENOMAI_SKINCALL3(__pse51_muxid,
-			      __pse51_thread_set_mode,
-			      tid, /* Do not inline. */
-			      clrmask,
-			      setmask);
+    void __handle_lock_alert(int);
+    struct sigaction sa;
+    int err;
+
+    err = -XENOMAI_SKINCALL3(__pse51_muxid,
+			     __pse51_thread_set_mode,
+			     tid, /* Do not inline. */
+			     clrmask,
+			     setmask);
+
+    /* Silently uninstall our internal handler for SIGXCPU. At that
+       point, we know that the process memory has been properly
+       locked, otherwise we would have caught the latter signal upon
+       thread creation. */
+
+    if (!err &&
+	!sigaction(SIGXCPU,NULL,&sa) &&
+	sa.sa_handler == &__handle_lock_alert)
+	{
+	sa.sa_handler = SIG_DFL;
+	sigaction(SIGXCPU,&sa,NULL);
+	}
+
+    return err;
 }
 
 int pthread_set_name_np (pthread_t thread,

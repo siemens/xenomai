@@ -31,9 +31,18 @@ int __pse51_muxid = -1;
 int __rtdm_muxid  = -1;
 int __rtdm_fd_start = INT_MAX;
 
+void __handle_lock_alert (int sig)
+
+{
+    fprintf(stderr,"Xenomai: process memory not locked (missing mlockall?)\n");
+    fflush(stderr);
+    exit(4);
+}
+
 static __attribute__((constructor)) void __init_posix_interface(void)
 
 {
+    struct sigaction sa;
     xnfeatinfo_t finfo;
     int muxid;
 
@@ -86,4 +95,12 @@ static __attribute__((constructor)) void __init_posix_interface(void)
         __rtdm_fd_start = FD_SETSIZE - XENOMAI_SKINCALL0(__rtdm_muxid,
                                                          __rtdm_fdcount);
         }
+
+    /* Install a SIGXCPU handler to intercept alerts about unlocked
+       process memory. */
+
+    sa.sa_handler = &__handle_lock_alert;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGXCPU,&sa,NULL);
 }

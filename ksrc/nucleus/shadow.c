@@ -754,6 +754,9 @@ int xnshadow_map (xnthread_t *thread,
 		    current->pid,
 		    xnthread_base_priority(thread));
 
+    if (!(current->mm->def_flags & VM_LOCKED))
+	send_sig(SIGXCPU,current,1);
+
     current->cap_effective |= 
 	CAP_TO_MASK(CAP_IPC_LOCK)|
 	CAP_TO_MASK(CAP_SYS_RAWIO)|
