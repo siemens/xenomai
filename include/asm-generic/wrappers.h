@@ -197,7 +197,11 @@ unsigned long __va_to_kva(unsigned long va);
 /* Device registration */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,13)
 #define DECLARE_DEVCLASS(clname) struct class *clname
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15) || defined(gfp_zone)
+/* Testing that gfp_zone() exists as a macro is a gross hack used to
+   discover DENX-originated 2.6.14 kernels, for which the prototype of
+   class_device_create() already conforms to the one found in 2.6.15
+   mainline. */
 #define wrap_class_device_create class_device_create
 #else /* < 2.6.15 */
 #define wrap_class_device_create(c,p,dt,dv,fmt,args...) class_device_create(c,dt,dv,fmt , ##args)
