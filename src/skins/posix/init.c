@@ -28,15 +28,32 @@
 #include <rtdm/syscall.h>
 
 int __pse51_muxid = -1;
+int __pse51_sigxcpu_no_mlock = 1;
 int __rtdm_muxid  = -1;
 int __rtdm_fd_start = INT_MAX;
 
 void __handle_lock_alert (int sig)
 
 {
-    fprintf(stderr,"Xenomai: process memory not locked (missing mlockall?)\n");
-    fflush(stderr);
-    exit(4);
+    struct sigaction sa;
+
+    if (__pse51_sigxcpu_no_mlock)
+	{
+	fprintf(stderr,"Xenomai: process memory not locked (missing mlockall?)\n");
+	fflush(stderr);
+	exit(4);
+	}
+    else
+	{
+	/* PTHREAD_WARNSW was set for the thread but no user-defined
+	   handler has been set to override our internal handler, so
+	   let's invoke the default signal action. */
+	sa.sa_handler = SIG_DFL;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sigaction(SIGXCPU,&sa,NULL);
+	pthread_kill(pthread_self(),SIGXCPU);
+	}
 }
 
 static __attribute__((constructor)) void __init_posix_interface(void)

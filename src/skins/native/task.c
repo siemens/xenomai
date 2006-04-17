@@ -311,8 +311,7 @@ int rt_task_set_mode (int clrmask,
 		      int setmask,
 		      int *oldmode)
 {
-    void __handle_lock_alert(int);
-    struct sigaction sa;
+    extern int __native_sigxcpu_no_mlock;
     int err;
 
     err = XENOMAI_SKINCALL3(__native_muxid,
@@ -321,18 +320,13 @@ int rt_task_set_mode (int clrmask,
 			    setmask,
 			    oldmode);
 
-    /* Silently uninstall our internal handler for SIGXCPU. At that
+    /* Silently deactivate our internal handler for SIGXCPU. At that
        point, we know that the process memory has been properly
        locked, otherwise we would have caught the latter signal upon
        thread creation. */
 
-    if (!err &&
-	!sigaction(SIGXCPU,NULL,&sa) &&
-	sa.sa_handler == &__handle_lock_alert)
-	{
-	sa.sa_handler = SIG_DFL;
-	sigaction(SIGXCPU,&sa,NULL);
-	}
+    if (!err && __native_sigxcpu_no_mlock)
+	__native_sigxcpu_no_mlock = !(setmask & T_WARNSW);
 
     return err;
 }

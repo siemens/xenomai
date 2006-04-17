@@ -29,12 +29,30 @@ pthread_key_t __native_tskey;
 
 int __native_muxid = -1;
 
+int __native_sigxcpu_no_mlock = 1;
+
 void __handle_lock_alert (int sig)
 
 {
-    fprintf(stderr,"Xenomai: process memory not locked (missing mlockall?)\n");
-    fflush(stderr);
-    exit(4);
+    struct sigaction sa;
+
+    if (__native_sigxcpu_no_mlock)
+	{
+	fprintf(stderr,"Xenomai: process memory not locked (missing mlockall?)\n");
+	fflush(stderr);
+	exit(4);
+	}
+    else
+	{
+	/* T_WARNSW was set for the task but no user-defined handler
+	   has been set to override our internal handler, so let's
+	   invoke the default signal action. */
+	sa.sa_handler = SIG_DFL;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sigaction(SIGXCPU,&sa,NULL);
+	pthread_kill(pthread_self(),SIGXCPU);
+	}
 }
 
 static void __flush_tsd (void *tsd)
