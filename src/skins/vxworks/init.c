@@ -18,6 +18,7 @@
 
 #include <malloc.h>
 #include <stdio.h>
+#include <signal.h>
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -26,6 +27,14 @@
 pthread_key_t __vxworks_tskey;
 
 int __vxworks_muxid = -1;
+
+void __handle_lock_alert (int sig)
+
+{
+    fprintf(stderr,"Xenomai: process memory not locked (missing mlockall?)\n");
+    fflush(stderr);
+    exit(4);
+}
 
 static void __flush_tsd (void *tsd)
 
@@ -37,6 +46,7 @@ static void __flush_tsd (void *tsd)
 static __attribute__((constructor)) void __init_xeno_interface(void)
 
 {
+    struct sigaction sa;
     xnfeatinfo_t finfo;
     int muxid;
 
@@ -86,4 +96,12 @@ static __attribute__((constructor)) void __init_xeno_interface(void)
 	    __vxworks_muxid = muxid;
 	    break;
 	}
+
+    /* Install a SIGXCPU handler to intercept alerts about unlocked
+       process memory. */
+
+    sa.sa_handler = &__handle_lock_alert;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGXCPU,&sa,NULL);
 }

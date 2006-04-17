@@ -1,5 +1,11 @@
 2006-04-17  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/shadow.c (xnshadow_map): Send SIGXCPU to emerging
+	shadow threads which did not lock their process memory.
+
+	* src/skins (library constructor): Install internal SIGXCPU
+	handler for receiving unlocked memory alerts.
+	
 	* include/asm-generic/wrappers.h: Detect Denx-originated 2.6.14
 	kernels when needed.
 
