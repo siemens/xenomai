@@ -875,6 +875,17 @@ Binary files 2.6.16/arch/ia64/hp/sim/boot/bootloader and 2.6.16-ipipe/arch/ia64/
 +#endif	/* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_H */
+--- 2.6.16/include/linux/linkage.h	2006-03-20 06:53:29.000000000 +0100
++++ 2.6.16-ipipe/include/linux/linkage.h	2006-03-21 14:53:07.000000000 +0100
+@@ -51,4 +51,8 @@
+ #define fastcall
+ #endif
+ 
++#ifndef notrace
++#define notrace		__attribute__((no_instrument_function))
++#endif
++
+ #endif
 --- 2.6.16/include/linux/preempt.h	2006-03-20 06:53:29.000000000 +0100
 +++ 2.6.16-ipipe/include/linux/preempt.h	2006-03-21 14:34:51.000000000 +0100
 @@ -27,29 +27,43 @@
