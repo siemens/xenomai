@@ -1,3 +1,7 @@
+2006-04-18  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.1{5,6}-1.2-04.
+
 2006-04-17  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (xnshadow_map): Send SIGXCPU to emerging
