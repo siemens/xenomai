@@ -17,6 +17,8 @@ xeno-test [options]
   -L	     	writes to logfile (default "test-`uname -r`") (via script)
   -N <name>	same as -L, but prepend "$name-" (without -L, logname="$name-")
 		prepending allows you to give a full path.
+  -m		sends output file to xeno-test@xenomai.org
+  -M <email>	sends output file to given addy
 
   # following options are passed thru to latency, klatency
   -s	print statistics of sampled data (default on)
@@ -136,7 +138,10 @@ logfile=	#
 logprefix=
 prepost=	# command to run pre, and post test (ex ntpq -p)
 
-while getopts 'd:shqT:l:H:B:uLN:w:W:p:' FOO ; do
+email='xeno-test@xenomai.org'
+sendit=
+
+while getopts 'd:shqT:l:H:B:uLN:w:W:p:mM:' FOO ; do
 
     case $FOO in
 	s|h|q)
@@ -166,6 +171,11 @@ while getopts 'd:shqT:l:H:B:uLN:w:W:p:' FOO ; do
 	p)
 	    prepost=$OPTARG 
 	    loadpass="$loadpass -p '$OPTARG'"  ;;
+	M)
+	    email=$OPTARG 
+	    sendit=1 ;;
+	m)
+	    sendit=1 ;;
 	?)
 	    myusage ;;
     esac
@@ -179,6 +189,10 @@ if [ "$logprefix$logfile" != "" ]; then
     # restart inside a script invocation, passing all
     date=`date +%y%m%d.%H%M%S`
     script -c "./xeno-test $loadpass $pass $*" "$logprefix$logfile-$date"
+    if [ $sendit == 1 ]; then
+	echo "mailing $logprefix$logfile-$date to $email"
+	mail -s 'xeno-test results' $email < "$logprefix$logfile-$date"
+    fi
 else
     if [ "$altwork" != "" ]; then
 	mkload() { exec $altwork; }
