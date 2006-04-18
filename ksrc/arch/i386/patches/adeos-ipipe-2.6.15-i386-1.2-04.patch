@@ -874,6 +874,17 @@
 +#endif	/* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_H */
+--- 2.6.15/include/linux/linkage.h	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/include/linux/linkage.h	2006-01-07 15:45:45.000000000 +0100
+@@ -51,4 +51,8 @@
+ #define fastcall
+ #endif
+ 
++#ifndef notrace
++#define notrace		__attribute__((no_instrument_function))
++#endif
++
+ #endif
 --- 2.6.15/include/linux/preempt.h	2006-01-03 04:21:10.000000000 +0100
 +++ 2.6.15-ipipe/include/linux/preempt.h	2006-01-07 15:24:17.000000000 +0100
 @@ -27,29 +27,43 @@
