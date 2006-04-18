@@ -1,4 +1,12 @@
+2006-04-18  Jim Cromie <jim.cromie@gmail.com>
+
+	* scripts/xeno-test.in: Add -[Mm] options for automated
+	transmission of test results by mail.
+
 2006-04-18  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/thread.h: Remove useless tracking of secondary
+	to primary mode switches.
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.1{5,6}-1.2-04.
 
