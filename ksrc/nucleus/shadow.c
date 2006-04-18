@@ -497,8 +497,6 @@ int xnshadow_harden (void)
     xnpod_switch_fpu(xnpod_current_sched());
 #endif /* CONFIG_XENO_HW_FPU */
 
-    xnthread_inc_psw(thread);	/* Account for primary mode switch. */
-
     if (xnthread_signaled_p(thread))
         xnpod_dispatch_signals();
 

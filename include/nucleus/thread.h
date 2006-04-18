@@ -144,8 +144,7 @@ typedef struct xnthread {
 
 #ifdef CONFIG_XENO_OPT_STATS
     struct {
-	unsigned long psw;	/* Primary mode switch count */
-	unsigned long ssw;	/* Secondary mode switch count */
+	unsigned long ssw;	/* Primary -> secondary mode switch count */
 	unsigned long csw;	/* Context switches (includes
 				   secondary -> primary switches) */
 	unsigned long pf;	/* Number of page faults */
@@ -235,12 +234,10 @@ typedef struct xnhook {
     0 : xnarch_user_pid(xnthread_archtcb(thread)))
 
 #ifdef CONFIG_XENO_OPT_STATS
-#define xnthread_inc_psw(thread)     ++(thread)->stat.psw
 #define xnthread_inc_ssw(thread)     ++(thread)->stat.ssw
 #define xnthread_inc_csw(thread)     ++(thread)->stat.csw
 #define xnthread_inc_pf(thread)      ++(thread)->stat.pf
 #else /* CONFIG_XENO_OPT_STATS */
-#define xnthread_inc_psw(thread)     do { } while(0)
 #define xnthread_inc_ssw(thread)     do { } while(0)
 #define xnthread_inc_csw(thread)     do { } while(0)
 #define xnthread_inc_pf(thread)      do { } while(0)

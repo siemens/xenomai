@@ -252,7 +252,6 @@ struct stat_seq_iterator {
 	pid_t pid;
 	xnflags_t status;
 	const char *name;
-	unsigned long psw;
 	unsigned long ssw;
 	unsigned long csw;
 	unsigned long pf;
@@ -293,18 +292,15 @@ static void stat_seq_stop(struct seq_file *seq, void *v)
 
 static int stat_seq_show(struct seq_file *seq, void *v)
 {
-    char msw[64];
-
     if (v == SEQ_START_TOKEN)
 	seq_printf(seq,"%-3s  %-6s %-10s %-10s %-4s  %-8s  %s\n",
 		   "CPU","PID","MSW","CSW","PF","STAT","NAME");
     else
 	{
 	struct stat_seq_info *p = (struct stat_seq_info *)v;
-	snprintf(msw,sizeof(msw),"%lu/%lu",p->psw, p->ssw);
-	seq_printf(seq,"%3u  %-6d %-10s %-10lu %-4lu  %.8lx  %s\n",
+	seq_printf(seq,"%3u  %-6d %-10lu %-10lu %-4lu  %.8lx  %s\n",
 		   p->cpu, p->pid,
-		   msw, p->csw, p->pf,
+		   p->ssw, p->csw, p->pf,
 		   p->status, p->name);
 	}
 
@@ -363,7 +359,6 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 	iter->stat_info[n].pid = xnthread_user_pid(thread);
 	iter->stat_info[n].name = thread->name;
 	iter->stat_info[n].status = thread->status;
-	iter->stat_info[n].psw = thread->stat.psw;
 	iter->stat_info[n].ssw = thread->stat.ssw;
 	iter->stat_info[n].csw = thread->stat.csw;
 	iter->stat_info[n].pf = thread->stat.pf;

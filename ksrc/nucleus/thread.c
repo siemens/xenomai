@@ -91,7 +91,6 @@ int xnthread_init (xnthread_t *thread,
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
 #ifdef CONFIG_XENO_OPT_STATS
-    thread->stat.psw = 0;
     thread->stat.ssw = 0;
     thread->stat.csw = 0;
     thread->stat.pf = 0;
