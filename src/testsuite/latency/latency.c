@@ -23,8 +23,8 @@ RT_SEM display_sem;
 long minjitter, maxjitter, avgjitter;
 long gminjitter = TEN_MILLION,
     gmaxjitter = -TEN_MILLION,
-    gavgjitter = 0,
     goverrun = 0;
+long long gavgjitter = 0;
 
 long long period_ns = 0;
 int test_duration = 0;  /* sec of testing, via -T <sec>, 0 is inf */
@@ -99,8 +99,9 @@ void latency (void *cookie)
 
     for (;;)
         {
-        long minj = TEN_MILLION, maxj = -TEN_MILLION, dt, sumj;
+        long minj = TEN_MILLION, maxj = -TEN_MILLION, dt;
         long overrun = 0;
+        long long sumj;
         test_loops++;
 
         for (count = sumj = 0; count < nsamples; count++)

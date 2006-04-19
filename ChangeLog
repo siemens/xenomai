@@ -1,3 +1,8 @@
+2006-04-19  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* include/rtdm/rtbenchmark.h: Use long long for sum computations
+	in order to avoid intermediate value overflow.
+
 2006-04-19  Jan Kiszka  <jan.kiszka@web.de>
 
 	* src/testsuite/cyclic/cyclictest.c: Synchronise threads on startup
