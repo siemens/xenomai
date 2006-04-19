@@ -22,7 +22,6 @@
 #include <posix/syscall.h>
 #include <pthread.h>
 #include <semaphore.h>
-#include <nucleus/thread.h>
 
 extern int __pse51_muxid;
 
