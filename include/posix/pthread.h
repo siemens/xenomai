@@ -137,7 +137,7 @@ typedef struct
 
 #include <sched.h>
 #include_next <pthread.h>
-#include_next <nucleus/thread.h>
+#include <nucleus/thread.h>
 
 struct timespec;
 
