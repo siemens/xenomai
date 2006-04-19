@@ -498,7 +498,7 @@ int main(int argc, char **argv)
 		pthread_attr_setstacksize(&thattr, 131072);
 		pthread_create(&stat[i].thread, &thattr, timerthread, &par[i]);
 		stat[i].threadstarted = 1;
-		stat[i].traced = (i == 0);
+		stat[i].traced = (i == 0 && benchdev >= 0);
 	}
 	
 	while (!test_shutdown) {

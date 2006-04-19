@@ -1,7 +1,8 @@
 2006-04-19  Jan Kiszka  <jan.kiszka@web.de>
 
 	* src/testsuite/cyclic/cyclictest.c: Synchronise threads on startup
-	so that timer storms are avoided. Reorder tracing code.
+	so that timer storms are avoided. Reorder tracing code. Fix mode
+	switch in highest prio thread when not using the tracer.
 
 2006-04-19  Romain Lenglet <rlenglet@users.forge.objectweb.org>
 
