@@ -63,7 +63,7 @@
 #define RTBNCH_TIMER_HANDLER    1
 
 typedef struct rtbnch_result {
-    long                    avg;
+    long long               avg;
     long                    min;
     long                    max;
     long                    overruns;

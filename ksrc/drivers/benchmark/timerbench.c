@@ -68,6 +68,10 @@ static inline void add_histogram(struct rt_tmbench_context *ctx,
     histogram[inabs < ctx->histogram_size ? inabs : ctx->histogram_size-1]++;
 }
 
+static inline long long slldiv(long long s, unsigned d)
+{
+    return s >= 0 ? xnarch_ulldiv(s,d,NULL) : -xnarch_ulldiv(-s,d,NULL);
+}
 
 void eval_inner_loop(struct rt_tmbench_context *ctx, long dt)
 {
@@ -111,7 +115,7 @@ void eval_outer_loop(struct rt_tmbench_context *ctx)
         if (ctx->curr.max > ctx->result.overall.max)
             ctx->result.overall.max = ctx->curr.max;
 
-        ctx->result.last.avg = ctx->curr.avg / ctx->samples_per_sec;
+        ctx->result.last.avg = slldiv(ctx->curr.avg, ctx->samples_per_sec);
         ctx->result.overall.avg      += ctx->result.last.avg;
         ctx->result.overall.overruns += ctx->curr.overruns;
         rtdm_event_pulse(&ctx->result_event);
@@ -404,9 +408,10 @@ int rt_tmbench_ioctl_nrt(struct rtdm_dev_context *context,
 
             ctx->mode = -1;
 
-            ctx->result.overall.avg /=
-                    ((ctx->result.overall.test_loops) > 1 ?
-                     ctx->result.overall.test_loops : 2) - 1;
+            ctx->result.overall.avg =
+                slldiv(ctx->result.overall.avg,
+                       ((ctx->result.overall.test_loops) > 1 ?
+                       ctx->result.overall.test_loops : 2) - 1);
 
             if (user_info) {
                 if (!rtdm_rw_user_ok(user_info, usr_res,
