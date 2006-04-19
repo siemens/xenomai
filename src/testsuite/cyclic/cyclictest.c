@@ -95,6 +95,8 @@ static int tracelimit = 100000;
 static struct timespec start;
 #if IPIPE_TRACE
 static int benchdev = -1;
+#else
+#define benchdev -1
 #endif
 
 static inline void tsnorm(struct timespec *ts)
