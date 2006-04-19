@@ -92,6 +92,10 @@ struct thread_stat {
 
 static int test_shutdown;
 static int tracelimit = 100000;
+static struct timespec start;
+#if IPIPE_TRACE
+static int benchdev = -1;
+#endif
 
 static inline void tsnorm(struct timespec *ts)
 {
@@ -141,9 +145,6 @@ void *timerthread(void *param)
 #if (INGO_TRACE + TGLX_TRACE)
 	int stopped = 0;
 #endif
-#if IPIPE_TRACE
-	int benchdev = open("rtbenchmark0", O_RDWR);
-#endif
 
 	interval.tv_sec = par->interval / USEC_PER_SEC;
 	interval.tv_nsec = (par->interval % USEC_PER_SEC) * 1000;
@@ -190,8 +191,7 @@ void *timerthread(void *param)
 #endif
 
 	/* Get current time */
-	clock_gettime(par->clock, &now);
-	next = now;
+	next = start;
 	next.tv_sec++;
 	
 #ifdef __UNSUPPORTED
@@ -307,10 +307,6 @@ out:
 	schedp.sched_priority = 0;
 	pthread_setschedparam(pthread_self(), SCHED_OTHER, &schedp);
 
-#if IPIPE_TRACE
-	close(benchdev);
-#endif
-
 	stat->threadstarted = -1;
 
 	return NULL;
@@ -413,6 +409,9 @@ static void process_options (int argc, char *argv[])
 
 static void sighand(int sig)
 {
+#if IPIPE_TRACE
+	close(benchdev);
+#endif
 	test_shutdown = 1;
 }
 
@@ -467,7 +466,13 @@ int main(int argc, char **argv)
 	stat = calloc(num_threads, sizeof(struct thread_stat));
 	if (!stat)
 		goto outpar;
-	
+
+#if IPIPE_TRACE
+	benchdev = open("rtbenchmark0", O_RDWR);
+#endif
+
+	clock_gettime(clocksources[clocksel], &start);
+
 	for (i = 0; i < num_threads; i++) {
 		if (verbose) {
 			stat[i].values = calloc(VALBUF_SIZE, sizeof(long));
