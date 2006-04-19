@@ -1,3 +1,8 @@
+2006-04-19  Romain Lenglet <rlenglet@users.forge.objectweb.org>
+
+	* doc/man/xeno-test.man.in: Add documentation for the new -m and -M
+	options added to the xeno-test script.
+
 2006-04-18  Jim Cromie <jim.cromie@gmail.com>
 
 	* scripts/xeno-test.in: Add -[Mm] options for automated
