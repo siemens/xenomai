@@ -9,11 +9,11 @@
 .\" Xenomai distribution.
 .\"
 .pc
-.TH XENO-TEST 1 "2005-10-19" "@PACKAGE_VERSION@" "Xenomai"
+.TH XENO-TEST 1 "2006-04-19" "@PACKAGE_VERSION@" "Xenomai"
 .SH NAME
-xeno\-test \- Tests and mesures the performance of a Xenomai installation
+xeno\-test \- Tests and measures the performance of a Xenomai installation
 .SH SYNOPSIS
-\fBxeno\-test\fP [\fB\-w\fP \fIworkloads\fP] [\fB\-d\fP \fIdevice\fP] [\fB\-W\fP \fIcommand\fP] [\fB\-p\fP \fIcommand\fP] [\fB\-L\fP [\fB\-N\fP \fIprefix\fP]] [\fB\-s\fP] [\fB\-l\fP \fIsamples\fP] [\fB\-h\fP [\fB\-H\fP \fIcategories\fP] [\fB\-B\fP \fIgranularity\fP]] [\fB\-T\fP \fIseconds\fP [\fB\-q\fP]] [\fB\-\-\fP] [\fIargs\fP] ...
+\fBxeno\-test\fP [\fB\-w\fP \fIworkloads\fP] [\fB\-d\fP \fIdevice\fP] [\fB\-W\fP \fIcommand\fP] [\fB\-p\fP \fIcommand\fP] [\fB\-L\fP [\fB\-N\fP \fIprefix\fP]] [\fB\-m\fP | \fB\-M\fP \fIemail\fP] [\fB\-s\fP] [\fB\-l\fP \fIsamples\fP] [\fB\-h\fP [\fB\-H\fP \fIcategories\fP] [\fB\-B\fP \fIgranularity\fP]] [\fB\-T\fP \fIseconds\fP [\fB\-q\fP]] [\fB\-\-\fP] [\fIargs\fP] ...
 .SH DESCRIPTION
 \fBxeno\-test\fP measures the performance of Xenomai, by executing Xenomai's \fBlatency\fP and \fBklatency\fP tests while generating a high workload on the system.
 The default command that is executed to simulate workload (if no alternate command is specified with a \fB-W\fP \fIcommand\fP option) is:
@@ -28,6 +28,8 @@ If the \fB\-q\fP option is not specified, samples are printed in groups separate
 In addition, \fBlatency\fP and \fBklatency\fP print statistics for all samples before terminating, and can also optionally print statistics for every group of samples (see the \fB\-s\fP option), and distribution histograms (see the \fB\-h\fP option).
 
 If an invalid option is specified, \fBxeno\-test\fP prints out an usage help message and exits.
+
+You are strongly encouraged to use the \fB\-m\fP option, to anonymously help the Xenomai team collecting statistics about Xenomai's performance on the widest range of systems.
 
 .SH OPTIONS
 These following options are specific to \fBxeno\-test\fP:
@@ -55,6 +57,12 @@ Activates logging. The log file is created in the current directory, and is name
 \fB\-N\fP \fIprefix\fP
 Prepends \fIprefix\fP\fB\-\fP to the log file name, hence if the \fB\-L\fP option is also specified the log file name is \fIprefix\fP\fB\-test\-\fP\fIkernel_release\fP.
 This option is useful to create the log file in a different directory, by specifying a \fIprefix\fP that starts with the relative path to that directory.
+.TP
+\fB\-m\fP
+Sends the results of the tests to the Xenomai team's email address, to help collecting statistics about Xenomai's performance. The email is sent using the system's mail(1) command.
+.TP
+\fB\-M\fP \fIemail\fP
+Sends the results of the tests to the specified email address. The email is sent using the system's mail(1) command.
 .PP
 The following options are directly passed to the \fBlatency\fP and \fBklatency\fP test commands executed by \fBxeno\-test\fP.
 If no such options are specified, the \fB\-s \-T 10 \-q\fP options are passed by default by \fBxeno\-test\fP.
@@ -110,6 +118,9 @@ It is not possible to specify the period between samples (default is \fB1 second
 .BR xeno\-load (1),
 .BR uname (1)
 .SH HISTORY
+.TP
+2006-04-19
+Updated to document the new -m and -M options.
 .TP
 2005-10-19
 Written by Romain Lenglet <rlenglet@users.forge.objectweb.org>
