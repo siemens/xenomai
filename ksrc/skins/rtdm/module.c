@@ -109,6 +109,10 @@ int SKIN_INIT(rtdm)
         goto cleanup_proc;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
+#ifndef MODULE
+    rtdm_initialised = 1;
+#endif /* !MODULE */
+
     xnprintf("starting RTDM services.\n");
 
     return 0;

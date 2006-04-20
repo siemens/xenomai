@@ -1,3 +1,8 @@
+2006-04-20  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/rtdm/device.[ch], ksrc/skins/rtdm/module.c: Catch
+	unsuccessful skin initialisation for the built-in case.
+
 2006-04-20  Jim Cromie <jim.cromie@gmail.com>
 
 	* TROUBLESHOOTING: Add clarification regarding dangerous kernel
