@@ -6,6 +6,57 @@ arch-specific or generic.
                            GENERIC
 ===================================================================
 
+Q: Which CONFIG_* items are latency killers, and should be avoided ?
+
+A: Heres an enumeration.  Several of these are discussed in greater
+detail in following sections.
+
+CONFIG_CPU_FREQ: This allows the CPU frequency to be modulated with
+workload, but many CPUs change the TSC counting frequency also, which
+makes it useless for accurate timing when the CPU clock can change.
+Also some CPUs can take several milliseconds to ramp up to full speed.
+
+APM: The APM model assigns power management control to the BIOS, and
+BIOS code is never written with RT-latency in mind.  If configured,
+APM routines are invoked with SMI priority, which breaks the rule that
+adeos-ipipe must be in charge of such things.  DISABLE_SMI doesnt help
+here (more later).
+
+ACPI_PROCESSOR: For systems with ACPI support in the BIOS, this ACPI
+sub-option installs an 'idle' handler that uses ACPI C2 and C3
+processor states to save power.  The CPU must 'warm-up' from these
+sleep states, increasing latency in ways dependent upon both the
+BIOS's ACPI tables and code.  You may be able to suppress the sleeping
+with 'idle=poll' boot-arg, test to find out
+
+Summarizing, the latencies incurred here are dependent upon CPU, BIOS,
+and motherboard; ie they're hard to predict, so we are conservative.
+Feel free to test on your platform, (xeno-test runs testsuite/latency
+in 3 modes), but keep in mind that before you rely on the numbers, you
+must test with workloads that will exercise all the hardware used for
+your RT application.
+
+______________________________________________________________________
+
+Q: How do I adequately stress-test ?
+
+A: xeno-test has a very basic workload generator, whose main virtue is
+that its nearly universally available.
+
+    dd if=/dev/zero of=/dev/null
+
+You can change the input device (-d /dev/hda1) to get real device
+activity and interrupts, and/or -w 4 to run more workload tasks.  For
+more thorough testing, use -W <your-script>.
+
+If you are looking for real heavy loads, cache benchmarks tend to
+stress your system the most, http://www.cwi.nl/~manegold/Calibrator
+for example. Combine them with heavy i/o load (flood ping etc.) to
+generate device interrupts.  Also consider benchmarking software, such
+as bonnie++, cpuburn, lmbench.
+
+______________________________________________________________________
+
 Q: My user-space application has unexpected latencies which seem to
 appear when transitioning from primary (Xenomai) to secondary (native
 Linux) real-time modes. Why?

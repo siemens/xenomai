@@ -74,12 +74,14 @@ be bound to the target kernel.
 Once the target kernel has been prepared, all Xenomai configuration
 options are available from the "Real-time subsystem" toplevel menu.
 
-Once configured, the kernel should be built as usual.
+There are several configure options that cause large latencies; they
+should be avoided.  The TROUBLESHOOTING file identifies them and
+explains the issues with their use.  Once configured, the kernel
+should be built as usual.
 
-It might be a good idea to put all the output into a different build
-directory as to build from from linux source several targets. For each
-target add O=../build-<target> to each make invocation. See section 2.2 
-for an example.
+If you want several different configs/builds at hand, you can reuse
+the same source by adding O=../build-<target> to each make
+invocation. See section 2.2 for an example.
 
 In order to cross-compile the Linux kernel, pass an ARCH and
 CROSS_COMPILE variable on make command line. See sections 2.2, 2.3 and
@@ -105,7 +107,9 @@ kernel. For instance, enabling TSC support in user-space for x86
 albeit the kernel has been compiled with CONFIG_X86_TSC disabled would
 certainly lead to runtime problems if uncaught, since Xenomai and the
 application would not agree on the high precision clock to use for
-their timings.
+their timings.  Furthermore, most of these issues cannot be probed for
+during compilation, because the target generally has different
+features than the host, even when theyre the same arch (ex 386 vs 686)
 
 In order to solve those potential issues, each Xenomai architecture
 port defines a set of critical features which is tested for
@@ -126,8 +130,8 @@ which have been compiled with the x86-tsc option on, must run on a
 kernel built with CONFIG_X86_TSC set, since the x86-tsc option's
 binding is strong.
 
-1.3.2 Generic options
----------------------
+1.3.2 Generic configure options
+-------------------------------
 
 NAME                 DESCRIPTION                     [BINDING,]DEFAULT(*)
 
@@ -137,15 +141,17 @@ NAME                 DESCRIPTION                     [BINDING,]DEFAULT(*)
 --enable-debug       Enable debug symbols (-g)       disabled
 --enable-smp         Enable SMP support              weak,disabled
 
-1.3.3 Arch-specific options
----------------------------
+1.3.3 Arch-specific configure options
+-------------------------------------
 
 NAME                DESCRIPTION                      [BINDING,]DEFAULT(*)
 
 --enable-x86-sep    Enable x86 SEP instructions      strong,disabled
-                    for issuing syscalls
+                    for issuing syscalls.
+		    You will also need NPTL
 
 --enable-x86-tsc    Enable x86 TSC for timings       strong,enabled
+		    You must have TSC for this.
 
 --enable-arm-arch   Define version of the target     strong,"4"
                     ARM core architecture
@@ -254,7 +260,7 @@ $ make install
 2.4 Building for the Blackfin
 -----------------------------
 
-The Blackfin is a MMU-less, DSP-type architecture running
+The Blackfin is an MMU-less, DSP-type architecture running
 uClinux.
 
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=blackfin \
