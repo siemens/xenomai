@@ -228,8 +228,8 @@ cyclictest_SOURCES = cyclictest.c
 cyclictest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -DIPIPE_TRACE=1 -I$(top_srcdir)/include
 cyclictest_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 cyclictest_LDADD = \
-	../../skins/posix/.libs/libpthread_rt.a \
-	-lpthread -lrt
+	-lpthread -lrt \
+	../../skins/posix/.libs/libpthread_rt.a
 
 EXTRA_DIST = runinfo
 all: all-am
