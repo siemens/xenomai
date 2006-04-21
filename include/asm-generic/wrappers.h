@@ -159,7 +159,7 @@ unsigned long __va_to_kva(unsigned long va);
 #define __va_to_kva(va) (va)
 #endif /* CONFIG_MMU */
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15) && defined(CONFIG_MMU)
 #define wrap_remap_vm_page(vma,from,to) ({ \
     vma->vm_flags |= VM_RESERVED; \
     vm_insert_page(vma,from,vmalloc_to_page((void *)to)); \
