@@ -236,6 +236,7 @@ include_HEADERS = \
 	version.h \
 	xenomai.h
 
+EXTRA_DIST = bind.h
 all: all-am
 
 .SUFFIXES:

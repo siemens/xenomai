@@ -76,4 +76,33 @@ static inline const char *get_feature_label (unsigned feature)
     }
 }
 
+#ifndef __KERNEL__
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+static inline void xeno_x86_features_check(void)
+{
+#ifdef CONFIG_XENO_X86_SEP
+  size_t n = confstr(_CS_GNU_LIBPTHREAD_VERSION, NULL, 0);
+  if (n > 0)
+      {
+      char buf[n];
+      
+      confstr (_CS_GNU_LIBPTHREAD_VERSION, buf, n);
+
+      if (strstr (buf, "NPTL"))
+          return;
+      }
+
+  fprintf(stderr, "Xenomai: SEP instruction needs NPTL and NPTL was not detected"
+          "\nplease install NPTL or rebuild the user-space support passing "
+          "--disable-x86-sep.\n"); 
+  exit(1);
+#endif /* CONFIG_XENO_X86_SEP */
+}
+#define xeno_arch_features_check() xeno_x86_features_check()
+#endif /* __KERNEL__ */
+
 #endif /* !_XENO_ASM_I386_FEATURES_H */

@@ -28,14 +28,6 @@ pthread_key_t __vrtx_tskey;
 
 int __vrtx_muxid = -1;
 
-void __handle_lock_alert (int sig)
-
-{
-    fprintf(stderr,"Xenomai: process memory not locked (missing mlockall?)\n");
-    fflush(stderr);
-    exit(4);
-}
-
 static void __flush_tsd (void *tsd)
 
 {
@@ -46,69 +38,25 @@ static void __flush_tsd (void *tsd)
 static __attribute__((constructor)) void __init_xeno_interface(void)
 
 {
-    struct sigaction sa;
-    xnfeatinfo_t finfo;
-    int muxid;
     TCB *tcb;
 
-    muxid = XENOMAI_SYSBIND(VRTX_SKIN_MAGIC,
-			    XENOMAI_FEAT_DEP,
-			    XENOMAI_ABI_REV,
-			    &finfo);
-    switch (muxid)
-	{
-	case -EINVAL:
+    __vrtx_muxid = xeno_user_skin_init(VRTX_SKIN_MAGIC, "VRTX", "xeno_vrtx");
+    
+    /* Allocate a TSD key for indexing self task pointers. */
 
-	    fprintf(stderr,"Xenomai: incompatible feature set\n");
-	    fprintf(stderr,"(required=\"%s\", present=\"%s\", missing=\"%s\").\n",
-		    finfo.feat_man_s,finfo.feat_all_s,finfo.feat_mis_s);
-	    exit(1);
+    if (pthread_key_create(&__vrtx_tskey,&__flush_tsd) != 0)
+        {
+        fprintf(stderr,"Xenomai: failed to allocate new TSD key?!\n");
+        exit(1);
+        }
 
-	case -ENOEXEC:
-
-	    fprintf(stderr,"Xenomai: incompatible ABI revision level\n");
-	    fprintf(stderr,"(needed=%lu, current=%lu).\n",
-		    XENOMAI_ABI_REV,finfo.abirev);
-	    exit(1);
-
-	case -ENOSYS:
-	case -ESRCH:
-
-	    fprintf(stderr,"Xenomai: VRTX skin or CONFIG_XENO_OPT_PERVASIVE disabled.\n");
-	    fprintf(stderr,"(modprobe xeno_vrtx?)\n");
-	    exit(1);
-
-	default:
-
-	    if (muxid < 0)
-		{
-		fprintf(stderr,"Xenomai: binding failed: %s.\n",strerror(-muxid));
-		exit(1);
-		}
-
-	    /* Allocate a TSD key for indexing self task pointers. */
-
-	    if (pthread_key_create(&__vrtx_tskey,&__flush_tsd) != 0)
-		{
-		fprintf(stderr,"Xenomai: failed to allocate new TSD key?!\n");
-		exit(1);
-		}
-
-	    tcb = (TCB *)malloc(sizeof(*tcb));
-
-	    if (!tcb)
-		{
-		fprintf(stderr,"Xenomai: failed to allocate local TCB?!\n");
-		exit(1);
-		}
-
-	    pthread_setspecific(__vrtx_tskey,tcb);
-	    __vrtx_muxid = muxid;
-	    break;
-	}
-
-    sa.sa_handler = &__handle_lock_alert;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    sigaction(SIGXCPU,&sa,NULL);
+    tcb = (TCB *)malloc(sizeof(*tcb));
+    
+    if (!tcb)
+        {
+        fprintf(stderr,"Xenomai: failed to allocate local TCB?!\n");
+        exit(1);
+        }
+    
+    pthread_setspecific(__vrtx_tskey,tcb);
 }
