@@ -21,7 +21,6 @@
 #define _XENO_ASM_UVM_SYSCALL_H
 
 #include <asm/xenomai/syscall.h>
-#include <nucleus/bind.h>
 
 #define UVM_SKIN_MAGIC    0x53554d53
 
@@ -43,6 +42,10 @@
 int __uvm_syscall_init(void);
 
 void __uvm_syscall_cleanup(void);
+
+#else /* !__KERNEL__ */
+
+#include <nucleus/bind.h>
 
 #endif /* __KERNEL__ */
 

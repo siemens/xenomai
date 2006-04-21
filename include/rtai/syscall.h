@@ -22,7 +22,6 @@
 
 #include <rtai/types.h>
 #include <asm/xenomai/syscall.h>
-#include <nucleus/bind.h>
 
 #define __rtai_nop         0
 
@@ -31,6 +30,10 @@
 int __rtai_syscall_init(void);
 
 void __rtai_syscall_cleanup(void);
+
+#else /* !__KERNEL__ */
+
+#include <nucleus/bind.h>
 
 #endif /* __KERNEL__ */
 

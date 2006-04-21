@@ -21,7 +21,6 @@
 
 #ifndef __XENO_SIM__
 #include <asm/xenomai/syscall.h>
-#include <nucleus/bind.h>
 #endif /* __XENO_SIM__ */
 
 #define __native_task_create        0
@@ -143,6 +142,10 @@ void __native_syscall_cleanup(void);
 #ifdef __cplusplus
 }
 #endif
+
+#else /* !__KERNEL__ */
+
+#include <nucleus/bind.h>
 
 #endif /* __KERNEL__ */
 
