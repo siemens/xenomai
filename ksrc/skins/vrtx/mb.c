@@ -50,20 +50,21 @@ static void mb_hash (char **pkey, vrtxmb_t *mb)
     xnlock_put_irqrestore(&nklock,s);
 }
 
-static void mb_unhash (char **hkey)
+static void mb_unhash (char **pkey)
 {
+    union jhash_union hkey = { .key = pkey };
     vrtxmb_t **tail, *mb;
     uint32_t hash;
     spl_t s;
 
-    hash = jhash2((uint32_t *)&hkey,sizeof(hkey)/sizeof(uint32_t),0);
+    hash = jhash2(&hkey.val,sizeof(pkey)/sizeof(uint32_t),0);
     tail = &jhash_buckets[hash&((1<<MB_HASHBITS)-1)];
 
     xnlock_get_irqsave(&nklock,s);
 
     mb = *tail;
 
-    while (mb != NULL && mb->mboxp != hkey)
+    while (mb != NULL && mb->mboxp != pkey)
         {
         tail = &mb->hnext;
         mb = *tail;
@@ -75,20 +76,21 @@ static void mb_unhash (char **hkey)
     xnlock_put_irqrestore(&nklock,s);
 }
 
-static vrtxmb_t *mb_find (char **hkey)
+static vrtxmb_t *mb_find (char **pkey)
 
 {
+    union jhash_union hkey = { .key = pkey };
     uint32_t hash;
     vrtxmb_t *mb;
     spl_t s;
 
-    hash = jhash2((uint32_t *)&hkey,sizeof(hkey)/sizeof(uint32_t),0);
+    hash = jhash2(&hkey.val,sizeof(pkey)/sizeof(uint32_t),0);
 
     xnlock_get_irqsave(&nklock,s);
 
     mb = jhash_buckets[hash&((1<<MB_HASHBITS)-1)];
 
-    while (mb != NULL && mb->mboxp != hkey)
+    while (mb != NULL && mb->mboxp != pkey)
         mb = mb->hnext;
 
     xnlock_put_irqrestore(&nklock,s);
