@@ -21,6 +21,7 @@
 
 #ifndef __XENO_SIM__
 #include <asm/xenomai/syscall.h>
+#include <nucleus/bind.h>
 #endif /* __XENO_SIM__ */
 
 #define __pse51_thread_create         0

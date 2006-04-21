@@ -30,6 +30,10 @@ static __attribute__((constructor)) void __init_rtdm_interface(void)
     xnfeatinfo_t finfo;
     int muxid;
 
+#ifdef xeno_arch_features_check
+    xeno_arch_features_check();
+#endif /* xeno_arch_features_check */
+
     muxid = XENOMAI_SYSBIND(RTDM_SKIN_MAGIC,
 			    XENOMAI_FEAT_DEP,
 			    XENOMAI_ABI_REV,

@@ -29,46 +29,7 @@ xnsysinfo_t __uvm_info;
 static __attribute__((constructor)) void __init_uvm_interface(void)
 
 {
-    xnfeatinfo_t finfo;
-    int muxid;
+    __uvm_muxid = xeno_user_skin_init(UVM_SKIN_MAGIC, "UVM", "xeno_uvm");
 
-    muxid = XENOMAI_SYSBIND(UVM_SKIN_MAGIC,
-			    XENOMAI_FEAT_DEP,
-			    XENOMAI_ABI_REV,
-			    &finfo);
-    switch (muxid)
-	{
-	case -EINVAL:
-
-	    fprintf(stderr,"Xenomai: incompatible feature set\n");
-	    fprintf(stderr,"(required=\"%s\", present=\"%s\", missing=\"%s\").\n",
-		    finfo.feat_man_s,finfo.feat_all_s,finfo.feat_mis_s);
-	    exit(1);
-
-	case -ENOEXEC:
-
-	    fprintf(stderr,"Xenomai: incompatible ABI revision level\n");
-	    fprintf(stderr,"(needed=%lu, current=%lu).\n",
-		    XENOMAI_ABI_REV,finfo.abirev);
-	    exit(1);
-
-	case -ENOSYS:
-	case -ESRCH:
-
-	    fprintf(stderr,"Xenomai: UVM skin or CONFIG_XENO_OPT_PERVASIVE disabled.\n");
-	    fprintf(stderr,"(modprobe xeno_uvm?)\n");
-	    exit(1);
-
-	default:
-
-	    if (muxid < 0)
-		{
-		fprintf(stderr,"Xenomai: binding failed: %s.\n",strerror(-muxid));
-		exit(1);
-		}
-
-	    XENOMAI_SYSCALL2(__xn_sys_info,muxid,&__uvm_info);
-	    __uvm_muxid = muxid;
-	    break;
-	}
+    XENOMAI_SYSCALL2(__xn_sys_info,__uvm_muxid,&__uvm_info);
 }

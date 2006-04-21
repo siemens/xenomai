@@ -19,9 +19,9 @@
 #include <stddef.h>
 #include <errno.h>
 #include <signal.h>
-#include <posix/syscall.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <posix/syscall.h>
 
 extern int __pse51_muxid;
 
@@ -201,7 +201,7 @@ int pthread_wait_np (unsigned long *overruns_r)
 int pthread_set_mode_np (int clrmask,
 			 int setmask)
 {
-    extern int __pse51_sigxcpu_no_mlock;
+    extern int xeno_sigxcpu_no_mlock;
     pthread_t tid = pthread_self();
     int err;
 
@@ -216,8 +216,8 @@ int pthread_set_mode_np (int clrmask,
        locked, otherwise we would have caught the latter signal upon
        thread creation. */
 
-    if (!err && __pse51_sigxcpu_no_mlock)
-	__pse51_sigxcpu_no_mlock = !(setmask & PTHREAD_WARNSW);
+    if (!err && xeno_sigxcpu_no_mlock)
+	xeno_sigxcpu_no_mlock = !(setmask & PTHREAD_WARNSW);
 
     return err;
 }

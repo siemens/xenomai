@@ -22,3 +22,5 @@ include_HEADERS = \
 	types.h \
 	version.h \
 	xenomai.h
+
+EXTRA_DIST = bind.h

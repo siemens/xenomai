@@ -22,6 +22,7 @@
 
 #include <rtai/types.h>
 #include <asm/xenomai/syscall.h>
+#include <nucleus/bind.h>
 
 #define __rtai_nop         0
 

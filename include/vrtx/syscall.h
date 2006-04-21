@@ -20,6 +20,7 @@
 #define _XENO_VRTX_SYSCALL_H
 
 #ifndef __XENO_SIM__
+#include <nucleus/bind.h>
 #include <asm/xenomai/syscall.h>
 #endif /* __XENO_SIM__ */
 

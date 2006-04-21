@@ -311,7 +311,7 @@ int rt_task_set_mode (int clrmask,
 		      int setmask,
 		      int *oldmode)
 {
-    extern int __native_sigxcpu_no_mlock;
+    extern int xeno_sigxcpu_no_mlock;
     int err;
 
     err = XENOMAI_SKINCALL3(__native_muxid,
@@ -325,8 +325,8 @@ int rt_task_set_mode (int clrmask,
        locked, otherwise we would have caught the latter signal upon
        thread creation. */
 
-    if (!err && __native_sigxcpu_no_mlock)
-	__native_sigxcpu_no_mlock = !(setmask & T_WARNSW);
+    if (!err && xeno_sigxcpu_no_mlock)
+	xeno_sigxcpu_no_mlock = !(setmask & T_WARNSW);
 
     return err;
 }
