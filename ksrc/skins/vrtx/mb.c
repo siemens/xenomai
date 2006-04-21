@@ -28,13 +28,20 @@ static xnqueue_t vrtx_mbox_q;
 
 static vrtxmb_t *jhash_buckets[1<<MB_HASHBITS]; /* Guaranteed zero */
 
-static void mb_hash (char **hkey, vrtxmb_t *mb)
+union jhash_union {
+
+    char **key;
+    uint32_t val; 
+};
+
+static void mb_hash (char **pkey, vrtxmb_t *mb)
 {
+    union jhash_union hkey = { .key = pkey };
     vrtxmb_t **bucketp;
     uint32_t hash;
     spl_t s;
 
-    hash = jhash2((uint32_t *)&hkey,sizeof(hkey)/sizeof(uint32_t),0);
+    hash = jhash2(&hkey.val,sizeof(pkey)/sizeof(uint32_t),0);
     bucketp = &jhash_buckets[hash&((1<<MB_HASHBITS)-1)];
 
     xnlock_get_irqsave(&nklock,s);
