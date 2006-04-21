@@ -256,8 +256,12 @@ static inline unsigned long long __xn_rdtsc (void)
 }
 
 /* uClibc does not provide any dummy mlockall() call for this arch;
-   nullify it here. */
-#define mlockall(flags)  ({ (void)(flags); 0; })
+   provide it here. Note: let the compiler decides whether it wants to
+   actually inline this routine, i.e. do not force always_inline. */
+inline __attribute__((weak)) int mlockall (int flags)
+{
+    return 0;
+}
 
 #endif /* __KERNEL__ */
 
