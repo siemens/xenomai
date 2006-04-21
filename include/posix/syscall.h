@@ -21,7 +21,6 @@
 
 #ifndef __XENO_SIM__
 #include <asm/xenomai/syscall.h>
-#include <nucleus/bind.h>
 #endif /* __XENO_SIM__ */
 
 #define __pse51_thread_create         0
@@ -99,6 +98,10 @@ void pse51_syscall_cleanup(void);
 #ifdef __cplusplus
 }
 #endif
+
+#else /* !__KERNEL__ */
+
+#include <nucleus/bind.h>
 
 #endif /* __KERNEL__ */
 
