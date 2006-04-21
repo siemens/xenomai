@@ -1,3 +1,8 @@
+2006-04-21  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-blackfin/calibration.h (xnarch_get_sched_latency):
+	Add calibration value for the BF537.
+
 2006-04-21  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* src/skins, include/nucleus/bind.h: Factor common library
