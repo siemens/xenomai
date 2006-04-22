@@ -658,7 +658,7 @@ void xntimer_start (xntimer_t *timer,
  * @retval 0 otherwise.
  *
  */
-int xntimer_set_sched(xntimer_t *timer, xnsched_t *sched)
+int xntimer_set_sched (xntimer_t *timer, xnsched_t *sched)
 {
     int err = 0;
     int queued;

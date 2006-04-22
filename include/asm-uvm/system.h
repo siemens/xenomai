@@ -465,7 +465,7 @@ static void *xnarch_timer_thread (void *cookie)
 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
     param.sched_priority = sched_get_priority_min(SCHED_FIFO) + 2;
-    sched_setscheduler(0,SCHED_FIFO,&param);
+    pthread_setschedparam(pthread_self(),SCHED_FIFO,&param);
 
     /* Copy the following values laid into our parent's stack before
        it is unblocked from the completion by uvm_thread_create(). */
@@ -569,7 +569,7 @@ static inline void xnarch_init_root_tcb (xnarchtcb_t *tcb,
     int err;
 
     param.sched_priority = sched_get_priority_min(SCHED_FIFO);
-    sched_setscheduler(0,SCHED_FIFO,&param);
+    pthread_setschedparam(pthread_self(),SCHED_FIFO,&param);
     err = uvm_system_info(&uvm_info);
 
     if (err)
@@ -594,7 +594,7 @@ static void *xnarch_thread_trampoline (void *cookie)
 	{
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	param.sched_priority = sched_get_priority_min(SCHED_FIFO) + 1;
-	sched_setscheduler(0,SCHED_FIFO,&param);
+        pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 	uvm_thread_create(tcb->name,tcb,&tcb->completion,&tcb->khandle);
 	err = uvm_thread_barrier();	/* Wait for start. */
 	if (err)
