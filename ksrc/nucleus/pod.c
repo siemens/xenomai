@@ -185,15 +185,12 @@ static int xnpod_fault_handler (xnarch_fltinfo_t *fltinfo)
 
     if (!xnpod_userspace_p())
         {
-#ifdef __KERNEL__
-        xnprintf("suspending kernel thread %p ('%s')", thread, thread->name);
-        print_symbol(" at %s", xnarch_fault_pc(fltinfo));
-        xnprintf(" after exception #%u\n", xnarch_fault_trap(fltinfo));
-        show_stack(NULL, NULL);
-#else
-        xnprintf("suspending kernel thread %p ('%s') at %p after exception #%u\n"
-                 , thread, thread->name, xnarch_fault_pc(fltinfo), xnarch_fault_trap(fltinfo));
-#endif
+        xnprintf("suspending kernel thread %p ('%s') at 0x%lx after exception #%u\n",
+                 thread,
+                 thread->name,
+                 xnarch_fault_pc(fltinfo),
+                 xnarch_fault_trap(fltinfo));
+
         xnpod_suspend_thread(thread,XNSUSP,XN_INFINITE,NULL);
 
         return 1;
