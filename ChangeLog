@@ -1,3 +1,25 @@
+2006-04-22  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/task.c (rt_task_delete): Send SIGKILL to the
+	non-current Linux task associated with the deleted shadow.
+
+	* ksrc/nucleus/shadow.c (xnshadow_unmap): Revert to v2.1
+	behaviour, only waking up the unmapped task. The decision to send
+	an appropriate Linux signal or not is left to the skins.
+
+2006-04-21  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-blackfin/calibration.h (xnarch_get_sched_latency):
+	Add calibration value for the BF537.
+
+	* include/asm-blackfin/syscall.h: Fix the mlockall() placeholder.
+
+	* include/asm-generic/wrappers.h: Do not use vm_insert_page() with
+	!CONFIG_MMU.
+
+	* include/asm-blackfin/atomic.h (xnarch_atomic_xchg): Fix conflict
+	with atomic_xchg() over 2.6.16.
+
 2006-04-18  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.1{5,6}-1.2-04.

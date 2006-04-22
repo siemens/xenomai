@@ -73,7 +73,8 @@ static struct __lostagerq {
 #define LO_START_REQ  0
 #define LO_WAKEUP_REQ 1
 #define LO_RENICE_REQ 2
-#define LO_SIGNAL_REQ 3
+#define LO_SIGGRP_REQ 3
+#define LO_SIGTHR_REQ 4
 	int type;
 	struct task_struct *task;
 	int arg;
@@ -260,7 +261,7 @@ void xnshadow_reset_shield (void)
 static void lostage_handler (void *cookie)
 
 {
-    int cpuid = smp_processor_id(), reqnum;
+    int cpuid = smp_processor_id(), reqnum, sig;
     struct __lostagerq *rq = &lostagerq[cpuid];
 
     while ((reqnum = rq->out) != rq->in)
@@ -323,16 +324,16 @@ static void lostage_handler (void *cookie)
 		set_linux_task_priority(p,rq->req[reqnum].arg);
 		break;
 
-	    case LO_SIGNAL_REQ:
+	    case LO_SIGTHR_REQ:
 
-		/* Special case: SIGKILL should always be sent to the
-		   entire thread group. */
+		sig = rq->req[reqnum].arg;
+		send_sig(sig,p,1);
+		break;
 
-		if (rq->req[reqnum].arg == SIGKILL)
-		    kill_proc(p->pid,SIGKILL,1);
-		else
-		    send_sig(rq->req[reqnum].arg,p,1);
+	    case LO_SIGGRP_REQ:
 
+		sig = rq->req[reqnum].arg;
+		kill_proc(p->pid,sig,1);
 		break;
 	    }
 	}
@@ -827,11 +828,11 @@ void xnshadow_unmap (xnthread_t *thread)
     if (p->state != TASK_RUNNING)
 	{
 	/* If the shadow is being unmapped in primary mode or blocked
-	   in secondary mode, the entire thread group associated with
-	   the mapped task should also die. In the former case, the
-	   zombie Linux side returning to user-space will be trapped
-	   and exited inside the pod's rescheduling routines. */
-	schedule_linux_call(LO_SIGNAL_REQ,p,SIGKILL);
+	   in secondary mode, the associated Linux task should also
+	   die. In the former case, the zombie Linux side returning to
+	   user-space will be trapped and exited inside the pod's
+	   rescheduling routines. */
+	schedule_linux_call(LO_WAKEUP_REQ,p,0);
 	return;
 	}
 
@@ -924,7 +925,7 @@ void xnshadow_suspend (xnthread_t *thread)
 {
   /* Called with nklock locked, Xenomai interrupts off. */
     struct task_struct *p = xnthread_archtcb(thread)->user_task;
-    schedule_linux_call(LO_SIGNAL_REQ,p,SIGCHLD);
+    schedule_linux_call(LO_SIGTHR_REQ,p,SIGCHLD);
 }
 
 static void stringify_feature_set (u_long fset, char *buf, int size)
@@ -1119,10 +1120,11 @@ static void exec_nucleus_syscall (int muxop, struct pt_regs *regs)
 	}
 }
 
-void xnshadow_send_sig (xnthread_t *thread, int sig)
+void xnshadow_send_sig (xnthread_t *thread, int sig, int specific)
 
 {
-    schedule_linux_call(LO_SIGNAL_REQ,xnthread_user_task(thread),sig);
+    schedule_linux_call(specific ? LO_SIGTHR_REQ : LO_SIGGRP_REQ,
+			xnthread_user_task(thread),sig);
 }
 
 static inline int do_hisyscall_event (unsigned event, unsigned domid, void *data)
