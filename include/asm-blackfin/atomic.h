@@ -26,8 +26,8 @@
 #include <asm/atomic.h>
 #include <asm/system.h>
 
-#define atomic_xchg(ptr,v)       xchg(ptr,v)
-#define xnarch_memory_barrier()  smp_mb()
+#define xnarch_atomic_xchg(ptr,v)    xchg(ptr,v)
+#define xnarch_memory_barrier()      smp_mb()
 
 #define xnarch_atomic_set(pcounter,i)          atomic_set(pcounter,i)
 #define xnarch_atomic_get(pcounter)            atomic_read(pcounter)
@@ -44,14 +44,13 @@ typedef atomic_t atomic_counter_t;
 
 #include <asm/xenomai/syscall.h>
 
-static __inline__ unsigned long atomic_xchg(unsigned long *ptr, unsigned long x)
+static __inline__ unsigned long xnarch_atomic_xchg(unsigned long *ptr, unsigned long x)
 {
 	unsigned long oldval;
 	XENOMAI_SYSCALL4(__xn_sys_arch,__xn_lsys_xchg,ptr,x,&oldval);
 	return oldval;
 }
 
-#define xnarch_atomic_xchg(ptr,v)   atomic_xchg(ptr,v)
 #define xnarch_memory_barrier()     __asm__ __volatile__("": : :"memory")
 
 #define cpu_relax()  xnarch_memory_barrier()
