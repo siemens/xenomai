@@ -227,7 +227,7 @@ static void pse51_mq_destroy (pse51_mq_t *mq)
  * - EINVAL, the @a attr argument is invalid;
  * - EMFILE, too many descriptors are currently open.
  *
- * @par Valid contexts.
+ * @par Valid contexts:
  * When creating a message queue, only the following contexts are valid:
  * - kernel module initialization or cleanup routine;
  * - user-space thread (Xenomai threads switch to secondary mode).

@@ -227,7 +227,7 @@ static void pse51_shm_put(pse51_shm_t *shm, unsigned dec)
  *   currently mapped;
  * - EMFILE, too many descriptors are currently open.
  *
- * @par Valid contexts.
+ * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
  * - user-space thread (Xenomai threads switch to secondary mode).
  *
@@ -462,7 +462,7 @@ error:
  *   memory is currently mapped;
  * - EFBIG, allocation of system memory failed.
  *
- * @par Valid contexts.
+ * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
  * - user-space thread (Xenomai threads switch to secondary mode).
  *
@@ -478,7 +478,7 @@ int ftruncate (int fd, off_t len)
     pse51_shm_t *shm;
     int err;
     spl_t s;
-    
+
     xnlock_get_irqsave(&nklock, s);
     shm = pse51_shm_get(&desc, fd, 1);
 
@@ -518,6 +518,8 @@ int ftruncate (int fd, off_t len)
         {
         len += PAGE_SIZE + xnheap_overhead(len, PAGE_SIZE);
         len = PAGE_ALIGN(len);
+        if (len == 2 * PAGE_SIZE)
+            len = 3 * PAGE_SIZE;
         }
 
     err = 0;
@@ -555,7 +557,7 @@ int ftruncate (int fd, off_t len)
             {
 #ifdef CONFIG_XENO_OPT_PERVASIVE
             int flags = len <= 128*1024 ? GFP_USER : 0;
-            err = xnheap_init_mapped(&shm->heapbase, len, flags);
+            err = -xnheap_init_mapped(&shm->heapbase, len, flags);
 #else /* !CONFIG_XENO_OPT_PERVASIVE. */
             {
             void *heapaddr = xnarch_sysalloc(len);
@@ -652,7 +654,7 @@ int ftruncate (int fd, off_t len)
  * - EAGAIN, insufficient memory exists in the system heap to create the
  *   mapping, increase CONFIG_XENO_OPT_SYS_HEAPSZ.
  *
- * @par Valid contexts.
+ * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
  * - user-space thread (Xenomai threads switch to secondary mode).
  *

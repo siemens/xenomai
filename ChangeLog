@@ -1,3 +1,12 @@
+2006-04-22  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/shm.c (ftruncate): Round small shared memory to
+	3 pages, as required by xnheap_init.
+
+	* include/asm-uvm/system.h (xnarch_thread_trampoline): Set
+	scheduling parameters of each thread with pthread_setschedparam()
+	instead of setting the whole process ones with sched_setscheduler().
+
 2006-04-21  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-blackfin/calibration.h (xnarch_get_sched_latency):
