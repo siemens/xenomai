@@ -370,6 +370,8 @@ int main (int argc, char *argv[])
 	exit(1);
 	}
 
+    mlockall(MCL_CURRENT|MCL_FUTURE);
+
     err = __xeno_sys_init();
 
     if (err)
@@ -393,8 +395,6 @@ int main (int argc, char *argv[])
         fprintf(stderr,"user_init() failed: %s\n",strerror(-err));
         exit(4);
 	}
-
-    mlockall(MCL_CURRENT|MCL_FUTURE);
 
     sa.sa_handler = &xnarch_restart_handler;
     sigemptyset(&sa.sa_mask);
