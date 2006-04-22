@@ -1,3 +1,12 @@
+2006-04-22  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/task.c (rt_task_delete): Send SIGKILL to the
+	non-current Linux task associated with the deleted shadow.
+
+	* ksrc/nucleus/shadow.c (xnshadow_unmap): Revert to v2.1
+	behaviour, only waking up the unmapped task. The decision to send
+	an appropriate Linux signal or not is left to the skins.
+
 2006-04-22  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/shm.c (ftruncate): Round small shared memory to
