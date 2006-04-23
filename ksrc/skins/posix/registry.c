@@ -394,7 +394,9 @@ int pse51_desc_get(pse51_desc_t **descp, int fd, unsigned magic)
     if (err)
         return err;
 
-    if (desc->node->magic != magic)
+    if (desc->node->magic != magic
+        /* In case the object has been unlinked. */
+        && desc->node->magic != ~magic)
         return EBADF;
 
     *descp = desc;
