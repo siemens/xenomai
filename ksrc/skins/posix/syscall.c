@@ -221,6 +221,7 @@ static int __pthread_shadow (struct task_struct *curr,
 
     pthread_attr_init(&attr);
     attr.policy = SCHED_FIFO;
+    attr.detachstate = PTHREAD_CREATE_DETACHED;
     attr.schedparam = *param;
     attr.fp = 1;
     attr.name = curr->comm;
