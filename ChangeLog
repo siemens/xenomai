@@ -1,3 +1,16 @@
+2006-04-24  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
+
+	* ksrc/arch/generic/hal.c (rthal_irq_request): Do not grab the
+	critical lock uselessly.
+
+	* ksrc/nucleus/intr.c (xnintr_shirq_attach, xnintr_shirq_detach):
+	Grab the nucleus lock instead of the HAL's critical lock.
+
+2006-04-23  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-generic/wrappers.h (SCHED_NORMAL): Add for 2.4
+	kernels.
+
 2006-04-23  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/registry.c (pse51_desc_get): Allow descriptors

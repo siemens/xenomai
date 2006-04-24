@@ -576,13 +576,13 @@ static int xnintr_shirq_attach (xnintr_t *intr,
 {
     xnintr_shirq_t *shirq = &xnshirqs[intr->irq];
     xnintr_t *prev, **p = &shirq->handlers;
-    unsigned long flags;
     int err = 0;
+    spl_t s;
 
     if (intr->irq >= RTHAL_NR_IRQS)
 	return -EINVAL;
 
-    flags = rthal_critical_enter(NULL);
+    xnlock_get_irqsave(&nklock,s);
 
     if (__testbits(intr->flags,XN_ISR_ATTACHED))
 	{
@@ -637,7 +637,7 @@ static int xnintr_shirq_attach (xnintr_t *intr,
 
 unlock_and_exit:
 
-    rthal_critical_exit(flags);
+    xnlock_put_irqrestore(&nklock,s);
     return err;
 }
 
@@ -645,17 +645,17 @@ int xnintr_shirq_detach (xnintr_t *intr)
 {
     xnintr_shirq_t *shirq = &xnshirqs[intr->irq];
     xnintr_t *e, **p = &shirq->handlers;
-    unsigned long flags;
     int err = 0;
+    spl_t s;
 
     if (intr->irq >= RTHAL_NR_IRQS)
 	return -EINVAL;
 
-    flags = rthal_critical_enter(NULL);
+    xnlock_get_irqsave(&nklock,s);
 
     if (!__testbits(intr->flags,XN_ISR_ATTACHED))
 	{
-	rthal_critical_exit(flags);
+	xnlock_put_irqrestore(&nklock,s);
 	return -EPERM;
 	}
 
@@ -672,7 +672,7 @@ int xnintr_shirq_detach (xnintr_t *intr)
 	    if (shirq->handlers == NULL)
 		err = xnarch_release_irq(intr->irq);
 
-	    rthal_critical_exit(flags);
+	    xnlock_put_irqrestore(&nklock,s);
 
 	    /* The idea here is to keep a detached interrupt object valid as long
 	       as the corresponding irq handler is running. This is one of the requirements
@@ -685,7 +685,7 @@ int xnintr_shirq_detach (xnintr_t *intr)
 	p = &e->next;
 	}
 
-    rthal_critical_exit(flags);
+    xnlock_put_irqrestore(&nklock,s);
 
     xnlogerr("attempted to detach a non previously attached interrupt object.\n");
     return err;
