@@ -48,6 +48,7 @@ check_filter() {
 patch_append() {
     file="$1"
     if test "x$output_patch" = "x"; then
+	chmod +w "$linux_tree/$file"
         cat >> "$linux_tree/$file"
     else
         if test `check_filter $file` = "ok"; then
