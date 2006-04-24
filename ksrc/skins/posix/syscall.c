@@ -1741,10 +1741,26 @@ static int __shm_open (struct task_struct *curr, struct pt_regs *regs)
     ufd = (int) __xn_reg_arg4(regs);
 
     err = pse51_assoc_create(&pse51_ufds, (u_long) kfd, curr->mm, (u_long) ufd);
-    /* pse51_assoc_create returning an error means that the same mm and user
-       file descriptor are already registered. That is impossible. */
-    BUG_ON(err);
-    return 0;
+    /* pse51_assoc_create returning -EBUSY means that the same mm and user
+       file descriptor are already registered. This happens if an mm_struct got
+       recycled and the application did not close properly the shared memory
+       descriptors. */
+    if (err == -EBUSY) {
+        unsigned long old_kfd;
+#ifdef CONFIG_XENO_OPT_DEBUG
+        xnprintf("POSIX user-space file descriptor %d not closed,"
+                 " closing now.\n", ufd);
+#endif /* CONFIG_XENO_OPT_DEBUG. */
+        pse51_assoc_lookup(&pse51_ufds, &old_kfd, curr->mm, (u_long) ufd, 1);
+        close(old_kfd);
+
+        err = pse51_assoc_create(&pse51_ufds,(u_long)kfd,curr->mm,(u_long)ufd);
+    }
+
+    if (err)
+        close(kfd);
+    
+    return err;
 }
 
 /* shm_unlink(name) */
@@ -1888,8 +1904,28 @@ static int __mmap_epilogue (struct task_struct *curr, struct pt_regs *regs)
                              (u_long) umap.kaddr,
                              curr->mm,
                              (u_long) uaddr);
-    BUG_ON(err);
-    return 0;
+    /* pse51_assoc_create returning -EBUSY means that the same mm and user
+       space mapping are already registered. This happens if an mm_struct got
+       recycled and the application did not unmap properly a shared memory
+       area. */
+    if (err == -EBUSY) {
+        unsigned long old_kaddr;
+#ifdef CONFIG_XENO_OPT_DEBUG
+        xnprintf("POSIX user-space mapping 0x%08lx not unmapped,"
+                 " leaking until posix skin is shut down.\n", (u_long) uaddr);
+#endif /* CONFIG_XENO_OPT_DEBUG. */
+        pse51_assoc_lookup(&pse51_umaps,&old_kaddr,curr->mm,(u_long)uaddr,1);
+
+        err = pse51_assoc_create(&pse51_umaps,
+                                 (u_long) umap.kaddr,
+                                 curr->mm,
+                                 (u_long) uaddr);
+    }
+
+    if (err)
+        munmap(umap.kaddr, umap.len);        
+    
+    return err;
 }
 
 /* munmap_prologue(uaddr, len, &unmap) */
