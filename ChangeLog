@@ -1,3 +1,8 @@
+2006-04-24  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pod.c (xnpod_announce_tick): Do _not_ ask for
+	re-enabling the timer interrupt line upon return.
+
 2006-04-24  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
 
 	* ksrc/arch/generic/hal.c (rthal_irq_request): Do not grab the
