@@ -76,7 +76,10 @@ unsigned long __va_to_kva(unsigned long va);
 #ifndef CONFIG_PREEMPT
 #define preempt_disable()  do { } while(0)
 #define preempt_enable()   do { } while(0)
-#endif /* CONFIG_PREEMPT */
+#endif /* !CONFIG_PREEMPT */
+#ifndef SCHED_NORMAL
+#define SCHED_NORMAL SCHED_OTHER
+#endif /* !SCHED_NORMAL */
 
 /* Signals */
 #define wrap_sighand_lock(p)     ((p)->sigmask_lock)
