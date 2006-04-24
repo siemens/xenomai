@@ -1925,7 +1925,7 @@ static int __mmap_epilogue (struct task_struct *curr, struct pt_regs *regs)
     if (err)
         munmap(umap.kaddr, umap.len);        
     
-    return err;
+    return err == -ENOSPC ? -EAGAIN : err;
 }
 
 /* munmap_prologue(uaddr, len, &unmap) */
