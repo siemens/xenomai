@@ -3289,7 +3289,7 @@ void xnpod_stop_timer (void)
  * exhausted. The nucleus always calls the rescheduling procedure
  * after the outer interrupt has been processed.
  *
- * @return XN_ISR_HANDLED is always returned.
+ * @return XN_ISR_HANDLED|XN_ISR_NOENABLE is always returned.
  *
  * Environments:
  *
@@ -3371,7 +3371,7 @@ int xnpod_announce_tick (xnintr_t *intr)
 
     xnlock_put_irqrestore(&nklock,s);
 
-    return XN_ISR_HANDLED;
+    return XN_ISR_HANDLED|XN_ISR_NOENABLE;
 }
 
 /*! 
