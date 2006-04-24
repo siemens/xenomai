@@ -9,11 +9,11 @@
 .\" Xenomai distribution.
 .\"
 .pc
-.TH XENO-TEST 1 "2006-04-19" "@PACKAGE_VERSION@" "Xenomai"
+.TH XENO-TEST 1 "2006-04-21" "@PACKAGE_VERSION@" "Xenomai"
 .SH NAME
 xeno\-test \- Tests and measures the performance of a Xenomai installation
 .SH SYNOPSIS
-\fBxeno\-test\fP [\fB\-w\fP \fIworkloads\fP] [\fB\-d\fP \fIdevice\fP] [\fB\-W\fP \fIcommand\fP] [\fB\-p\fP \fIcommand\fP] [\fB\-L\fP [\fB\-N\fP \fIprefix\fP]] [\fB\-m\fP | \fB\-M\fP \fIemail\fP] [\fB\-s\fP] [\fB\-l\fP \fIsamples\fP] [\fB\-h\fP [\fB\-H\fP \fIcategories\fP] [\fB\-B\fP \fIgranularity\fP]] [\fB\-T\fP \fIseconds\fP [\fB\-q\fP]] [\fB\-\-\fP] [\fIargs\fP] ...
+\fBxeno\-test\fP [\fB\-v\fP] [\fB\-w\fP \fIworkloads\fP] [\fB\-d\fP \fIdevice\fP] [\fB\-W\fP \fIcommand\fP] [\fB\-p\fP \fIcommand\fP] [\fB\-L\fP [\fB\-N\fP \fIprefix\fP]] [\fB\-m\fP | \fB\-M\fP \fIemail\fP] [\fB\-s\fP] [\fB\-l\fP \fIsamples\fP] [\fB\-h\fP [\fB\-H\fP \fIcategories\fP] [\fB\-B\fP \fIgranularity\fP]] [\fB\-T\fP \fIseconds\fP [\fB\-q\fP]] [\fB\-\-\fP] [\fIargs\fP] ...
 .SH DESCRIPTION
 \fBxeno\-test\fP measures the performance of Xenomai, by executing Xenomai's \fBlatency\fP and \fBklatency\fP tests while generating a high workload on the system.
 The default command that is executed to simulate workload (if no alternate command is specified with a \fB-W\fP \fIcommand\fP option) is:
@@ -33,6 +33,9 @@ You are strongly encouraged to use the \fB\-m\fP option, to anonymously help the
 
 .SH OPTIONS
 These following options are specific to \fBxeno\-test\fP:
+.TP
+\fB\-v\fP
+Produces more verbose tests results.
 .TP
 \fB\-w\fP \fIworkloads\fP
 The number of workload commands to execute simultaneously. By default, this number is \fB1\fP.
@@ -118,6 +121,9 @@ It is not possible to specify the period between samples (default is \fB1 second
 .BR xeno\-load (1),
 .BR uname (1)
 .SH HISTORY
+.TP
+2006-04-21
+Updated to document the new -v option.
 .TP
 2006-04-19
 Updated to document the new -m and -M options.
