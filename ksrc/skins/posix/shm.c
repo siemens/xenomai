@@ -1003,6 +1003,12 @@ int pse51_assoc_create(pse51_assocq_t *q,
         }
 
     assoc = (pse51_assoc_t *) xnmalloc(sizeof(*assoc));
+    if (!assoc)
+        {
+        xnlock_put_irqrestore(&pse51_assoc_lock, s);
+        return -ENOSPC;
+        }
+        
     assoc->mm = mm;
     assoc->uobj = uobj;
     assoc->kobj = kobj;

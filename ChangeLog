@@ -1,3 +1,9 @@
+2006-04-24  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/syscall.c (__shm_open, __mmap_epilogue): Handle
+	correctly error cases where Linux recycles an mm_struct, or when
+	the system heap is exhausted.
+
 2006-04-24  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pod.c (xnpod_announce_tick): Do _not_ ask for
