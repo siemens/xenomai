@@ -160,32 +160,15 @@ int rthal_irq_request (unsigned irq,
 		       rthal_irq_ackfn_t ackfn,
 		       void *cookie)
 {
-    unsigned long flags;
-    int err = 0;
-
     if (handler == NULL || irq >= IPIPE_NR_IRQS)
 	return -EINVAL;
 
-    flags = rthal_critical_enter(NULL);
-
-    if (rthal_irq_handler(&rthal_domain, irq) != NULL)
-	{
-	err = -EBUSY;
-	goto unlock_and_exit;
-	}
-
-    err = rthal_virtualize_irq(&rthal_domain,
-			       irq,
-			       handler,
-			       cookie,
-			       ackfn,
-			       IPIPE_DYNAMIC_MASK);
-
- unlock_and_exit:
-
-    rthal_critical_exit(flags);
-
-    return err;
+    return rthal_virtualize_irq(&rthal_domain,
+				irq,
+				handler,
+				cookie,
+				ackfn,
+				IPIPE_DYNAMIC_MASK | IPIPE_EXCLUSIVE_MASK);
 }
 
 /**
