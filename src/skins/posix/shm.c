@@ -145,6 +145,8 @@ err_mmap_epilogue:
     if (!err)
 	return uaddr;
 
+    __real_munmap(uaddr, map.mapsize);
+
   error:
     errno = err;
     return MAP_FAILED;

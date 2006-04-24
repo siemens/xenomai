@@ -1,3 +1,22 @@
+2006-04-24  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/syscall.c (__shm_open, __mmap_epilogue): Handle
+	correctly error cases where Linux recycles an mm_struct, or when
+	the system heap is exhausted.
+
+	* ksrc/skins/posix/registry.c (pse51_desc_get): Allow descriptors
+	to point to unlinked object.
+
+	* ksrc/skins/posix/shm.c (pse51_assoc_lookup_inner): Handle
+	correctly an insertion before the last element.
+
+	* ksrc/skins/posix/shm.c (ftruncate): Round small shared memory to
+	3 pages, as required by xnheap_init.
+
+	* include/asm-uvm/system.h (xnarch_thread_trampoline): Set
+	scheduling parameters of each thread with pthread_setschedparam()
+	instead of setting the whole process ones with sched_setscheduler().
+
 2006-04-24  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pod.c (xnpod_announce_tick): Do _not_ ask for

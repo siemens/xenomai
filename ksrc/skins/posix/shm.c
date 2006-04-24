@@ -342,7 +342,7 @@ int ftruncate(int fd, off_t len)
     pse51_shm_t *shm;
     int err;
     spl_t s;
-    
+
     if (xnpod_asynch_p() || !xnpod_root_p())
         {
         err = EPERM;
@@ -380,6 +380,8 @@ int ftruncate(int fd, off_t len)
         {
         len += PAGE_SIZE + xnheap_overhead(len, PAGE_SIZE);
         len = PAGE_ALIGN(len);
+        if (len == 2 * PAGE_SIZE)
+            len = 3 * PAGE_SIZE;
         }
 
     err = 0;
@@ -401,7 +403,8 @@ int ftruncate(int fd, off_t len)
         if (len)
             {
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-            err = xnheap_init_mapped(&shm->heapbase, len, 0);
+            int flags = len <= 128*1024 ? GFP_USER : 0;
+            err = -xnheap_init_mapped(&shm->heapbase, len, flags);
 #else /* !CONFIG_XENO_OPT_PERVASIVE. */
             {
             void *heapaddr = xnarch_sysalloc(len);
@@ -743,6 +746,12 @@ int pse51_assoc_create(pse51_assocq_t *q,
         }
 
     assoc = (pse51_assoc_t *) xnmalloc(sizeof(*assoc));
+    if (!assoc)
+        {
+        xnlock_put_irqrestore(&pse51_assoc_lock, s);
+        return -ENOSPC;
+        }
+        
     assoc->mm = mm;
     assoc->uobj = uobj;
     assoc->kobj = kobj;
