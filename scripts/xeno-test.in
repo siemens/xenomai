@@ -12,15 +12,18 @@ xeno-test [options]
   -W <script>   script is an alternate workload.  If you need to pass args
 		to your program, use quotes.  The program must clean
 		up its children when it gets a SIGTERM
-  -p <cmd>	cmd is run before, between and after latency, klatency tests
+  -p <cmd>	cmd is run before and after rt-tests
 		(forex: 'ntpdate -b <host>' or 'ntpq -p')
-  -L	     	writes to logfile (default "test-`uname -r`") (via script)
-  -N <name>	same as -L, but prepend "$name-" (without -L, logname="$name-")
-		prepending allows you to give a full path.
-  -m		sends output file to xeno-test@xenomai.org
-  -M <email>	sends output file to given addy
-
-  # following options are passed thru to latency, klatency
+  -L	     	writes logs to /tmp/test-`uname -r`-<timestamp>
+  -N <name>	like -L, but writes to name-<timestamp> (in PWD)
+		name can be full or relative pathname
+  -v		verbose
+  -M <email>	sends output to given addr
+  -m		sends output to xenotest.output@gmail.com
+  -U <url>	uploads output to given UEL
+  -u		uploads output to (TBD)
+	
+  # following options are passed thru to latency
   -s	print statistics of sampled data (default on)
   -h	print histogram of sampled data (default on)
   -q	quiet, dont print 1 sec sampled data (default on, off if !-T)
@@ -29,7 +32,7 @@ xeno-test [options]
   -H <bucketcount>
   -B <bucketsize ns>
 EOF
-    # NB: many defaults are coded in latency, klatency
+    # NB: many defaults are coded in latency
     exit 1
 }
 
@@ -43,7 +46,7 @@ loudly() {
     # run task after announcing it
     echo;  date;
     echo running: $*
-    $* &
+    eval $* &		# eval helps w complex cmds, like zegrep -E
     wait $!
 }
 
@@ -77,20 +80,40 @@ cleanup_load() {
     unset dd_jobs;
 }
 
-boxinfo() {
-    # static info, show once
-    loudly cat /proc/cpuinfo | egrep -v 'bug|wp'
-    loudly cat /proc/meminfo
-    [ -f /proc/config.gz ] && loudly zgrep XENO /proc/config.gz
+whatconf="XENO|IPIPE|PREEMPT|CONFIG_ACPI|CONFIG_PM|CPU_FREQ|CONFIG_DEBUG_SPINLOCK|CONFIG_FRAME_POINTER"
+
+
+boxinfo() { # static info, show once
+
+    loudly ./xeno-config --verbose
+    loudly ./xeno-info
+
+    loudly cat /proc/cpuinfo	# bogomips changes under CPU_FREQ
+
+    # how much of the config do we want ?
+    local cmd="zgrep -E '$whatconf'"
+    [ "$verbose" = 1 ] && cmd=cat
+
+    if [ -f /proc/config.gz ]; then	# get the config
+	loudly $cmd /proc/config.gz
+    elif [ -f /lib/modules/`uname -r`/build/.config ]; then
+	loudly $cmd /lib/modules/`uname -r`/build/.config
+    fi
 
     [ -d /proc/adeos ] && for f in /proc/adeos/*; do loudly cat $f; done
     [ -d /proc/ipipe ] && for f in /proc/ipipe/*; do loudly cat $f; done
 }
 
-boxstatus() {
-    # get dynamic status (bogomips, cpuMhz change with CPU_FREQ)
+boxstatus() {     # get dynamic status
+
     loudly cat /proc/interrupts
     loudly cat /proc/loadavg
+    loudly cat /proc/meminfo
+
+    if [ -d /proc/xenomai ]; then
+	for f in /proc/xenomai/*;   do [ -f $f ] && loudly cat $f; done
+	for f in /proc/xenomai/*/*; do [ -f $f ] && loudly cat $f; done
+    fi
     [ -n "$prepost" ] && loudly $prepost
     loudly top -bn1c | head -n $(( 12 + $workload ))
 }
@@ -105,16 +128,23 @@ run_w_load() {
     boxstatus
     (
 	cd ../testsuite/latency
-
 	loudly ./run --  $opts -t0
 	loudly ./run --  $opts -t1
 	loudly ./run --  $opts -t2
-
     )
+    (	cd ../testsuite/switch 
+	loudly ./run --  '# switch'
+    )
+    (	cd ../testsuite/cyclic
+	loudly ./run -- -p 10 -n -l 1000 '# cyclictest'
+    )
+
     boxstatus
 }
 
 
+#####################
+# MAIN
 
 if [ -f /proc/config.gz ] ; then
 
@@ -133,15 +163,36 @@ workload=1	# default = 1 job
 pass=		# pass thru to latency
 loadpass=	# pass thru to subshell, not to actual tests
 
-# if both empty means no logging
-logfile=	#
-logprefix=
+logging=	# no logging by default
+logfile=	# defaults to test-`uname -r`-<datestampe>
+logprefix=/tmp/	# someplace usually there
 prepost=	# command to run pre, and post test (ex ntpq -p)
 
-email='xeno-test@xenomai.org'
-sendit=
+email='xenotest.output@gmail.com'	# until formalized
+sentby='xenotest.sender@xenomai.org'
+url=
+sendit=		# send it by m-mail, u-url
+verbose=
 
-while getopts 'd:shqT:l:H:B:uLN:w:W:p:mM:' FOO ; do
+sendit() {
+    local file=$1
+    
+    if [ "$sendit" == 'm' ]; then
+	echo "mailing $file to $email"
+	if [ "$file" != '' ]; then
+	    mail -s 'xeno-test results' $email -- -F $sentby < $file
+	else
+	    cat - | mail -s 'xeno-test results' $email -- -F $sentby
+	fi
+    elif [ "$sendit" == 'u' ]; then
+	which curl && curl -T $file $url
+	# -x $proxy >/tmp/.submit_result
+	# which wget && curl -T $file $url \
+    fi
+}
+
+
+while getopts 'd:shqT:l:H:B:uLN:w:W:p:mM:U:' FOO ; do
 
     case $FOO in
 	s|h|q)
@@ -159,8 +210,10 @@ while getopts 'd:shqT:l:H:B:uLN:w:W:p:mM:' FOO ; do
 	    loadpass="$loadpass -d $device"
 	    ;;
 	L)
+	    logging=1
 	    logfile=test-`uname -r`  ;;
 	N)
+	    logging=1
 	    logprefix=$OPTARG ;;
 	w)
 	    workload=$OPTARG
@@ -173,9 +226,19 @@ while getopts 'd:shqT:l:H:B:uLN:w:W:p:mM:' FOO ; do
 	    loadpass="$loadpass -p '$OPTARG'"  ;;
 	M)
 	    email=$OPTARG 
-	    sendit=1 ;;
+	    sendit='m' ;;
 	m)
-	    sendit=1 ;;
+	    sendit='m' ;;
+	U)
+	    url=$OPTARG 
+	    sendit='u' ;;
+	v)
+	    verbose=1 ;;
+	n)
+	    # accept note (from the outer process)
+	    notes=$OPTARG ;;
+
+
 	?)
 	    myusage ;;
     esac
@@ -185,23 +248,24 @@ done
 shift $(($OPTIND - 1));
 
 
-if [ "$logprefix$logfile" != "" ]; then
-    # restart inside a script invocation, passing all
-    date=`date +%y%m%d.%H%M%S`
-    script -c "./xeno-test $loadpass $pass $*" "$logprefix$logfile-$date"
-    if [ $sendit == 1 ]; then
-	echo "mailing $logprefix$logfile-$date to $email"
-	mail -s 'xeno-test results' $email < "$logprefix$logfile-$date"
-    fi
+if [ "$logging" != "" ]; then
+    # restart inside a script invocation, passing appropriate args
+    wfile=$logprefix$logfile-`date +%y%m%d.%H%M%S`
+    script -c "./xeno-test $loadpass $pass $*" $wfile && sendit $wfile
 else
     if [ "$altwork" != "" ]; then
 	mkload() { exec $altwork; }
     fi
-    echo running $0 $pass $*
-    run_w_load $pass $*
+    echo starting $0 $pass $loadpass $*
+    if [ "$sendit" != '' ]; then
+	run_w_load $pass $* | sendit
+    else
+	run_w_load $pass $*
+    fi
 fi
 
 exit;
+
 
 #################################################
 
