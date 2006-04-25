@@ -20,8 +20,7 @@ xeno-test [options]
   -v		verbose
   -M <email>	sends output to given addr
   -m		sends output to xenotest.output@gmail.com
-  -U <url>	uploads output to given UEL
-  -u		uploads output to (TBD)
+  -U <url>	uploads output to given URL
 	
   # following options are passed thru to latency
   -s	print statistics of sampled data (default on)
