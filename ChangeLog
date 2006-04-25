@@ -1,3 +1,21 @@
+2006-04-25  Romain Lenglet <rlenglet@users.forge.objectweb.org>
+ 
+ 	* doc/man/xeno-test.man.in: Add documentation for the new -U option.
+ 	Correct the synopsis to reflect the depencency between -m, -M, -U and
+ 	-L. Remove references to long removed klatency test command.
+ 
+ 	* scripts/xeno-test.in: Typo: "UEL"->"URL". Remove documentation for
+ 	-u from printed usage until it is actually implemented.
+ 
+2006-04-21  Romain Lenglet <rlenglet@users.forge.objectweb.org>
+ 
+ 	* doc/man/xeno-test.man.in: Add documentation for the new -v option
+ 	added to the xeno-test script.
+ 
+2006-04-21  Jim Cromie <jim.cromie@gmail.com>
+
+	* scripts/xeno-test.in: Fix use of cyclictest; add -U option.
+	
 2006-04-24  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/syscall.c (__shm_open, __mmap_epilogue): Handle
