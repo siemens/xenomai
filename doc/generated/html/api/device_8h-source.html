@@ -48,27 +48,33 @@
 00038 <span class="keyword">extern</span> <span class="keyword">struct </span>list_head *rtdm_named_devices;
 00039 <span class="keyword">extern</span> <span class="keyword">struct </span>list_head *rtdm_protocol_devices;
 00040 
-00041 
-00042 <span class="keywordtype">int</span> rtdm_no_support(<span class="keywordtype">void</span>);
-00043 
-00044 <span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a> *get_named_device(<span class="keyword">const</span> <span class="keywordtype">char</span> *name);
-00045 <span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a> *get_protocol_device(<span class="keywordtype">int</span> <a class="code" href="structrtdm__device.html#o4">protocol_family</a>, <span class="keywordtype">int</span> <a class="code" href="structrtdm__device.html#o5">socket_type</a>);
+00041 <span class="preprocessor">#ifdef MODULE</span>
+00042 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_initialised 1</span>
+00043 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !MODULE */</span>
+00044 <span class="keyword">extern</span> <span class="keywordtype">int</span>              rtdm_initialised;
+00045 <span class="preprocessor">#endif </span><span class="comment">/* MODULE */</span>
 00046 
-00047 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_dereference_device(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device)
-00048 {
-00049     atomic_dec(&amp;device-&gt;<a class="code" href="structrtdm__device.html#o20">reserved</a>.refcount);
-00050 }
-00051 
-00052 <span class="keywordtype">int</span> __init rtdm_dev_init(<span class="keywordtype">void</span>);
-00053 
-00054 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_dev_cleanup(<span class="keywordtype">void</span>)
-00055 {
-00056     kfree(rtdm_named_devices);
-00057     kfree(rtdm_protocol_devices);
-00058 }
+00047 
+00048 <span class="keywordtype">int</span> rtdm_no_support(<span class="keywordtype">void</span>);
+00049 
+00050 <span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a> *get_named_device(<span class="keyword">const</span> <span class="keywordtype">char</span> *name);
+00051 <span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a> *get_protocol_device(<span class="keywordtype">int</span> <a class="code" href="structrtdm__device.html#o4">protocol_family</a>, <span class="keywordtype">int</span> <a class="code" href="structrtdm__device.html#o5">socket_type</a>);
+00052 
+00053 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_dereference_device(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device)
+00054 {
+00055     atomic_dec(&amp;device-&gt;<a class="code" href="structrtdm__device.html#o20">reserved</a>.refcount);
+00056 }
+00057 
+00058 <span class="keywordtype">int</span> __init rtdm_dev_init(<span class="keywordtype">void</span>);
 00059 
-00060 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DEVICE_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 19:54:01 2006 for Xenomai API by&nbsp;
+00060 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_dev_cleanup(<span class="keywordtype">void</span>)
+00061 {
+00062     kfree(rtdm_named_devices);
+00063     kfree(rtdm_protocol_devices);
+00064 }
+00065 
+00066 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DEVICE_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:01 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

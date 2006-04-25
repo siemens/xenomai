@@ -149,7 +149,7 @@ an error number if:<ul>
 Set the scheduling policy and parameters of the specified thread. 
 <p>
 This service set the scheduling policy of the Xenomai POSIX skin thread <em>tid</em> to the value <em>pol</em>, and its scheduling parameters (i.e. its priority) to the value pointed to by <em>par</em>.<p>
-When used in user-space, passing SCHED_FIFO as the <em>pol</em> argument, this service may be used to turn the regular thread <em>tid</em> into a Xenomai POSIX skin thread.<p>
+When used in user-space, passing the current thread ID as <em>tid</em> argument, and SCHED_FIFO as <em>pol</em> argument, this service turns the current thread into a Xenomai POSIX skin thread. If <em>tid</em> is neither the identifier of the current thread nor the identifier of a Xenomai POSIX skin thread, this service falls back to the regular <a class="el" href="group__posix__sched.html#ga4">pthread_setschedparam()</a> service.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>tid</em>&nbsp;</td><td>target thread;</td></tr>
@@ -159,7 +159,7 @@ When used in user-space, passing SCHED_FIFO as the <em>pol</em> argument, this s
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
 an error number if:<ul>
-<li>ESRCH, <em>tid</em> is invalid;</li><li>EINVAL, <em>pol</em> or <em>par-&gt;sched_priority</em> is invalid.</li></ul>
+<li>ESRCH, <em>tid</em> is invalid;</li><li>EINVAL, <em>pol</em> or <em>par-&gt;sched_priority</em> is invalid;</li><li>EFAULT, in user-space, <em>par</em> is an invalid address;</li><li>EPERM, in user-space, the calling process does not have superuser permissions.</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setschedparam.html">Specification.</a> </dd></dl>
     </td>
@@ -348,7 +348,7 @@ This function move the current thread at the end of its priority group.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 19:54:11 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:12 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

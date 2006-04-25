@@ -288,7 +288,7 @@ The following arguments of the <b>mq_attr</b> structure at the address <em>attr<
 -1 with <em>errno</em> set if:<ul>
 <li>ENAMETOOLONG, the length of the <em>name</em> argument exceeds 64 characters;</li><li>EEXIST, the bits <em>O_CREAT</em> and <em>O_EXCL</em> were set in <em>oflags</em> and the message queue already exists;</li><li>ENOENT, the bit <em>O_CREAT</em> is not set in <em>oflags</em> and the message queue does not exist;</li><li>ENOSPC, allocation of system memory failed, or insufficient memory exists in the system heap to create the queue, try increasing CONFIG_XENO_OPT_SYS_HEAPSZ;</li><li>EPERM, attempting to create a message queue from an invalid context;</li><li>EINVAL, the <em>attr</em> argument is invalid;</li><li>EMFILE, too many descriptors are currently open.</li></ul>
 </dd></dl>
-<dl compact><dt><b>Valid contexts.</b></dt><dd>When creating a message queue, only the following contexts are valid:<ul>
+<dl compact><dt><b>Valid contexts:</b></dt><dd>When creating a message queue, only the following contexts are valid:<ul>
 <li>kernel module initialization or cleanup routine;</li><li>user-space thread (Xenomai threads switch to secondary mode).</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_open.html">Specification.</a> </dd></dl>
@@ -695,7 +695,7 @@ This service unlinks the message queue named <em>name</em>. The message queue is
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 19:54:11 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:11 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
