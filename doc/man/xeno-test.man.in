@@ -9,23 +9,23 @@
 .\" Xenomai distribution.
 .\"
 .pc
-.TH XENO-TEST 1 "2006-04-21" "@PACKAGE_VERSION@" "Xenomai"
+.TH XENO-TEST 1 "2006-04-25" "@PACKAGE_VERSION@" "Xenomai"
 .SH NAME
 xeno\-test \- Tests and measures the performance of a Xenomai installation
 .SH SYNOPSIS
-\fBxeno\-test\fP [\fB\-v\fP] [\fB\-w\fP \fIworkloads\fP] [\fB\-d\fP \fIdevice\fP] [\fB\-W\fP \fIcommand\fP] [\fB\-p\fP \fIcommand\fP] [\fB\-L\fP [\fB\-N\fP \fIprefix\fP]] [\fB\-m\fP | \fB\-M\fP \fIemail\fP] [\fB\-s\fP] [\fB\-l\fP \fIsamples\fP] [\fB\-h\fP [\fB\-H\fP \fIcategories\fP] [\fB\-B\fP \fIgranularity\fP]] [\fB\-T\fP \fIseconds\fP [\fB\-q\fP]] [\fB\-\-\fP] [\fIargs\fP] ...
+\fBxeno\-test\fP [\fB\-v\fP] [\fB\-w\fP \fIworkloads\fP] [\fB\-d\fP \fIdevice\fP] [\fB\-W\fP \fIcommand\fP] [\fB\-p\fP \fIcommand\fP] [\fB\-L\fP [\fB\-N\fP \fIprefix\fP] [\fB\-m\fP | \fB\-M\fP \fIemail\fP | \fB\-U\fP \fIurl\fP]] [\fB\-s\fP] [\fB\-l\fP \fIsamples\fP] [\fB\-h\fP [\fB\-H\fP \fIcategories\fP] [\fB\-B\fP \fIgranularity\fP]] [\fB\-T\fP \fIseconds\fP [\fB\-q\fP]] [\fB\-\-\fP] [\fIargs\fP] ...
 .SH DESCRIPTION
-\fBxeno\-test\fP measures the performance of Xenomai, by executing Xenomai's \fBlatency\fP and \fBklatency\fP tests while generating a high workload on the system.
+\fBxeno\-test\fP measures the performance of Xenomai, by executing Xenomai's \fBlatency\fP tests while generating a high workload on the system.
 The default command that is executed to simulate workload (if no alternate command is specified with a \fB-W\fP \fIcommand\fP option) is:
 .RS
 .sp
 .B dd if=/dev/zero of=/dev/null
 .sp
 .RE
-The executed \fBlatency\fP and \fBklatency\fP tests periodically (every second) sample and print out the minimum, average, and maximum latency.
+The executed \fBlatency\fP tests periodically (every second) sample and print out the minimum, average, and maximum latency.
 However, by default, if no option is specified to \fBxeno\-test\fP, those tests are executed with the \fB\-q\fP option (see below), which disables the printing of samples.
 If the \fB\-q\fP option is not specified, samples are printed in groups separated by headers.
-In addition, \fBlatency\fP and \fBklatency\fP print statistics for all samples before terminating, and can also optionally print statistics for every group of samples (see the \fB\-s\fP option), and distribution histograms (see the \fB\-h\fP option).
+In addition, \fBlatency\fP print statistics for all samples before terminating, and can also optionally print statistics for every group of samples (see the \fB\-s\fP option), and distribution histograms (see the \fB\-h\fP option).
 
 If an invalid option is specified, \fBxeno\-test\fP prints out an usage help message and exits.
 
@@ -52,22 +52,28 @@ If the command requires arguments, the command and its arguments must be quoted 
 In addition to such static arguments, the \fIargs\fP optional arguments passed to \fBxeno\-test\fP are appended to \fIcommand\fP to execute it. 
 .TP
 \fB\-p\fP \fIcommand\fP
-Makes \fBxeno\-test\fP execute the specified \fIcommand\fP before, between and after the \fBlatency\fP and \fBklatency\fP tests.
+Makes \fBxeno\-test\fP execute the specified \fIcommand\fP before, between and after the \fBlatency\fP executions. 
 .TP
 \fB\-L\fP
-Activates logging. The log file is created in the current directory, and is named \fBtest\-\fP\fIkernel_release\fP, where \fIkernel_release\fP is the release number of the running Linux kernel (as determined by executing \fBuname \-r\fP).
+Activates logging of the tests results. The log file is created in the \fB/tmp/\fP directory, and is named \fBtest\-\fP\fIkernel_release\fP, where \fIkernel_release\fP is the release number of the running Linux kernel (as determined by executing \fBuname \-r\fP).
 .TP
 \fB\-N\fP \fIprefix\fP
 Prepends \fIprefix\fP\fB\-\fP to the log file name, hence if the \fB\-L\fP option is also specified the log file name is \fIprefix\fP\fB\-test\-\fP\fIkernel_release\fP.
-This option is useful to create the log file in a different directory, by specifying a \fIprefix\fP that starts with the relative path to that directory.
+This option is useful to create the log file in a different directory than \fB/tmp/\fP, by specifying a \fIprefix\fP that starts with the relative path to that directory.
 .TP
 \fB\-m\fP
-Sends the results of the tests to the Xenomai team's email address, to help collecting statistics about Xenomai's performance. The email is sent using the system's mail(1) command.
+Sends the tests results log file to the Xenomai team's email address (\fBxenotest.output@gmail.com\fP), to help collecting statistics about Xenomai's performance. The email is sent using the system's mail(1) command. The email's sender address is \fBxenotest.sender@xenomai.org\fP, and the email's subject is \fB"xeno-test results"\fP.
 .TP
 \fB\-M\fP \fIemail\fP
-Sends the results of the tests to the specified email address. The email is sent using the system's mail(1) command.
+Similar to the \fB\-m\fP option, but sends the tests results log file to the specified email address instead of the default one.
+.TP
+\fB\-U\fP \fIurl\fP
+Uploads the tests results log file to the specified URL.
+If there is no file part in the specified \fIurl\fP, the log file name is appended to it to form the URL used for upload.
+The file is transmitted as an attachment, with the log file name as a filename, in an HTTP POST request of MIME type multi-part/form-data (like with a HTML-form-based file uploads).
+The upload is performed using the curl(1) command.
 .PP
-The following options are directly passed to the \fBlatency\fP and \fBklatency\fP test commands executed by \fBxeno\-test\fP.
+The following options are directly passed to the \fBlatency\fP test command executed by \fBxeno\-test\fP.
 If no such options are specified, the \fB\-s \-T 10 \-q\fP options are passed by default by \fBxeno\-test\fP.
 .TP
 \fB\-s\fP
@@ -93,7 +99,7 @@ The granularity - or bucket size -, in nanoseconds, used to discriminate between
 By default, this number is \fB1000\fP ns.
 .TP
 \fB\-T\fP \fIseconds\fP
-The period, in seconds, during which \fBlatency\fP and \fBklatency\fP tests are respectively executed.
+The period, in seconds, during which \fBlatency\fP tests are executed.
 If that option is not specified, the tests execute infinitely until the user types \fBCONTROL-C\fP (i.e. sends a SIGINT signal to them).
 .TP
 \fB\-q\fP
@@ -114,13 +120,16 @@ An invalid option was specified.
 .SH KNOWN BUGS
 \fBxeno\-test\fP allows to specify the \fB\-N\fP \fIlogprefix\fP option without the \fB\-L\fP option, in which case the log file name is: \fIlogprefix\fP\fB\-\fP.
 
-\fBlatency\fP and \fBklatency\fP allow to specify the \fB\-H\fP \fIcategories\fP and \fB\-B\fP \fIgranularity\fP options without the \fB\-h\fP option, in which case they have no effect.
+\fBlatency\fP allows to specify the \fB\-H\fP \fIcategories\fP and \fB\-B\fP \fIgranularity\fP options without the \fB\-h\fP option, in which case they have no effect.
 
-It is not possible to specify the period between samples (default is \fB1 second\fP) since this is not configurable for \fBklatency\fP, although this may be configured for \fBlatency\fP through this command's \fB\-p\fP option.
+It is possible to specify the period between samples (default is \fB1 second\fP) using the \fBlatency\fP command's \fB\-p\fP option, but this option cannot be passed through \fBxeno-test\fP.
 .SH "SEE ALSO"
 .BR xeno\-load (1),
 .BR uname (1)
 .SH HISTORY
+.TP
+2006-04-25
+Updated to document the new -U option. Removed references to the klatency command. Modified the synopsis to reflect the dependency of -m, -M and -U options on the -L option.
 .TP
 2006-04-21
 Updated to document the new -v option.
