@@ -1,3 +1,9 @@
+2006-04-25  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/hal.c: Always check that the irq is the range
+	[0..NR_IRQS-1] before referring to irq_desc. On x86, NR_IRQS may
+	be lesser than IPIPE_NR_XIRQS.
+
 2006-04-24  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/syscall.c (__shm_open, __mmap_epilogue): Handle

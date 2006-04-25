@@ -477,7 +477,7 @@ int rthal_irq_host_request (unsigned irq,
 {
     unsigned long flags;
 
-    if (irq >= IPIPE_NR_XIRQS || !handler)
+    if (irq >= NR_IRQS || !handler)
 	return -EINVAL;
 
     spin_lock_irqsave(&rthal_irq_descp(irq)->lock,flags);
@@ -498,7 +498,7 @@ int rthal_irq_host_release (unsigned irq, void *dev_id)
 {
     unsigned long flags;
 
-    if (irq >= IPIPE_NR_XIRQS || rthal_linux_irq[irq].count == 0)
+    if (irq >= NR_IRQS || rthal_linux_irq[irq].count == 0)
 	return -EINVAL;
 
     free_irq(irq,dev_id);
@@ -516,7 +516,7 @@ int rthal_irq_host_release (unsigned irq, void *dev_id)
 int rthal_irq_enable (unsigned irq)
 
 {
-    if (irq >= IPIPE_NR_XIRQS)
+    if (irq >= NR_IRQS)
 	return -EINVAL;
 
     if (rthal_irq_descp(irq)->handler == NULL ||
@@ -531,7 +531,7 @@ int rthal_irq_enable (unsigned irq)
 int rthal_irq_disable (unsigned irq)
 {
 
-    if (irq >= IPIPE_NR_XIRQS)
+    if (irq >= NR_IRQS)
 	return -EINVAL;
 
     if (rthal_irq_descp(irq)->handler == NULL ||
@@ -546,7 +546,7 @@ int rthal_irq_disable (unsigned irq)
 int rthal_irq_end (unsigned irq)
 
 {
-    if (irq >= IPIPE_NR_XIRQS)
+    if (irq >= NR_IRQS)
 	return -EINVAL;
 
     if (rthal_irq_descp(irq)->handler == NULL ||
