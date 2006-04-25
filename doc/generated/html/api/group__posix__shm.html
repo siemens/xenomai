@@ -145,7 +145,7 @@ Shared memory objects may only be resized if they are not currently mapped.<p>
 </td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Valid contexts.</b></dt><dd><ul>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
 <li>kernel module initialization or cleanup routine;</li><li>user-space thread (Xenomai threads switch to secondary mode).</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/ftruncate.html">Specification.</a> </dd></dl>
@@ -236,7 +236,7 @@ When used in user-space, this service maps the specified shared memory region in
 </td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Valid contexts.</b></dt><dd><ul>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
 <li>kernel module initialization or cleanup routine;</li><li>user-space thread (Xenomai threads switch to secondary mode).</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mmap.html">Specification.</a> </dd></dl>
@@ -364,7 +364,7 @@ If <em>oflags</em> has the bit <em>O_TRUNC</em> set, the shared memory exists an
 -1 with <em>errno</em> set if:<ul>
 <li>ENAMETOOLONG, the length of the <em>name</em> argument exceeds 64 characters;</li><li>EEXIST, the bits <em>O_CREAT</em> and <em>O_EXCL</em> were set in <em>oflags</em> and the shared memory object already exists;</li><li>ENOENT, the bit <em>O_CREAT</em> is not set in <em>oflags</em> and the shared memory object does not exist;</li><li>ENOSPC, insufficient memory exists in the system heap to create the shared memory object, increase CONFIG_XENO_OPT_SYS_HEAPSZ;</li><li>EPERM, the caller context is invalid;</li><li>EINVAL, the O_TRUNC flag was specified and the shared memory object is currently mapped;</li><li>EMFILE, too many descriptors are currently open.</li></ul>
 </dd></dl>
-<dl compact><dt><b>Valid contexts.</b></dt><dd><ul>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
 <li>kernel module initialization or cleanup routine;</li><li>user-space thread (Xenomai threads switch to secondary mode).</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/shm_open.html">Specification.</a> </dd></dl>
@@ -419,7 +419,7 @@ This service unlinks the shared memory object named <em>name</em>. The shared me
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 19:54:12 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:12 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

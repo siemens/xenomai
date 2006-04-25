@@ -31,78 +31,78 @@ Include dependency graph for core.c:<p><center><img src="ksrc_2skins_2rtdm_2core
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga7">rtdm_context_get</a> (int fd)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga3">rtdm_context_get</a> (int fd)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Resolve file descriptor to device context.  <a href="group__interdrv.html#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga19">rtdm_context_lock</a> (struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Resolve file descriptor to device context.  <a href="group__interdrv.html#ga3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga14">rtdm_context_lock</a> (struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Increment context reference counter.  <a href="group__interdrv.html#ga19"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga20">rtdm_context_unlock</a> (struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Increment context reference counter.  <a href="group__interdrv.html#ga14"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga15">rtdm_context_unlock</a> (struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement context reference counter.  <a href="group__interdrv.html#ga20"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga21">rtdm_open</a> (const char *path, int oflag,...)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement context reference counter.  <a href="group__interdrv.html#ga15"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga16">rtdm_open</a> (const char *path, int oflag,...)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Open a device.  <a href="group__interdrv.html#ga21"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga22">rtdm_socket</a> (int protocol_family, int socket_type, int protocol)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Open a device.  <a href="group__interdrv.html#ga16"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga17">rtdm_socket</a> (int protocol_family, int socket_type, int protocol)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a socket.  <a href="group__interdrv.html#ga22"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga23">rtdm_close</a> (int fd)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a socket.  <a href="group__interdrv.html#ga17"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga18">rtdm_close</a> (int fd)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Close a device or socket.  <a href="group__interdrv.html#ga23"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga24">rtdm_ioctl</a> (int fd, int request,...)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Close a device or socket.  <a href="group__interdrv.html#ga18"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga19">rtdm_ioctl</a> (int fd, int request,...)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Issue an IOCTL.  <a href="group__interdrv.html#ga24"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga25">rtdm_read</a> (int fd, void *buf, size_t nbyte)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Issue an IOCTL.  <a href="group__interdrv.html#ga19"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga20">rtdm_read</a> (int fd, void *buf, size_t nbyte)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read from device.  <a href="group__interdrv.html#ga25"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga26">rtdm_write</a> (int fd, const void *buf, size_t nbyte)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read from device.  <a href="group__interdrv.html#ga20"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga21">rtdm_write</a> (int fd, const void *buf, size_t nbyte)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Write to device.  <a href="group__interdrv.html#ga26"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga27">rtdm_recvmsg</a> (int fd, struct msghdr *msg, int flags)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Write to device.  <a href="group__interdrv.html#ga21"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga22">rtdm_recvmsg</a> (int fd, struct msghdr *msg, int flags)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive message from socket.  <a href="group__interdrv.html#ga27"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga28">rtdm_recvfrom</a> (int fd, void *buf, size_t len, int flags, struct sockaddr *from, socklen_t *fromlen)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive message from socket.  <a href="group__interdrv.html#ga22"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga23">rtdm_recvfrom</a> (int fd, void *buf, size_t len, int flags, struct sockaddr *from, socklen_t *fromlen)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive message from socket.  <a href="group__interdrv.html#ga28"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga29">rtdm_recv</a> (int fd, void *buf, size_t len, int flags)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive message from socket.  <a href="group__interdrv.html#ga23"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga24">rtdm_recv</a> (int fd, void *buf, size_t len, int flags)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive message from socket.  <a href="group__interdrv.html#ga29"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga30">rtdm_sendmsg</a> (int fd, const struct msghdr *msg, int flags)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive message from socket.  <a href="group__interdrv.html#ga24"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga25">rtdm_sendmsg</a> (int fd, const struct msghdr *msg, int flags)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Transmit message to socket.  <a href="group__interdrv.html#ga30"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga31">rtdm_sendto</a> (int fd, const void *buf, size_t len, int flags, const struct sockaddr *to, socklen_t tolen)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Transmit message to socket.  <a href="group__interdrv.html#ga25"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga26">rtdm_sendto</a> (int fd, const void *buf, size_t len, int flags, const struct sockaddr *to, socklen_t tolen)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Transmit message to socket.  <a href="group__interdrv.html#ga31"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga32">rtdm_send</a> (int fd, const void *buf, size_t len, int flags)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Transmit message to socket.  <a href="group__interdrv.html#ga26"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga27">rtdm_send</a> (int fd, const void *buf, size_t len, int flags)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Transmit message to socket.  <a href="group__interdrv.html#ga32"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga33">rtdm_bind</a> (int fd, const struct sockaddr *my_addr, socklen_t addrlen)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Transmit message to socket.  <a href="group__interdrv.html#ga27"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga28">rtdm_bind</a> (int fd, const struct sockaddr *my_addr, socklen_t addrlen)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to local address.  <a href="group__interdrv.html#ga33"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga34">rtdm_connect</a> (int fd, const struct sockaddr *serv_addr, socklen_t addrlen)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to local address.  <a href="group__interdrv.html#ga28"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga29">rtdm_connect</a> (int fd, const struct sockaddr *serv_addr, socklen_t addrlen)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Connect to remote address.  <a href="group__interdrv.html#ga34"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga35">rtdm_listen</a> (int fd, int backlog)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Connect to remote address.  <a href="group__interdrv.html#ga29"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga30">rtdm_listen</a> (int fd, int backlog)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Listen for incomming connection requests.  <a href="group__interdrv.html#ga35"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga36">rtdm_accept</a> (int fd, struct sockaddr *addr, socklen_t *addrlen)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Listen for incomming connection requests.  <a href="group__interdrv.html#ga30"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga31">rtdm_accept</a> (int fd, struct sockaddr *addr, socklen_t *addrlen)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Accept a connection requests.  <a href="group__interdrv.html#ga36"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga37">rtdm_shutdown</a> (int fd, int how)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Accept a connection requests.  <a href="group__interdrv.html#ga31"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga32">rtdm_shutdown</a> (int fd, int how)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Shut down parts of a connection.  <a href="group__interdrv.html#ga37"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga38">rtdm_getsockopt</a> (int fd, int level, int optname, void *optval, socklen_t *optlen)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Shut down parts of a connection.  <a href="group__interdrv.html#ga32"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga33">rtdm_getsockopt</a> (int fd, int level, int optname, void *optval, socklen_t *optlen)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get socket option.  <a href="group__interdrv.html#ga38"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga39">rtdm_setsockopt</a> (int fd, int level, int optname, const void *optval, socklen_t optlen)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get socket option.  <a href="group__interdrv.html#ga33"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga34">rtdm_setsockopt</a> (int fd, int level, int optname, const void *optval, socklen_t optlen)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set socket option.  <a href="group__interdrv.html#ga39"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga40">rtdm_getsockname</a> (int fd, struct sockaddr *name, socklen_t *namelen)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set socket option.  <a href="group__interdrv.html#ga34"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga35">rtdm_getsockname</a> (int fd, struct sockaddr *name, socklen_t *namelen)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get local socket address.  <a href="group__interdrv.html#ga40"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga41">rtdm_getpeername</a> (int fd, struct sockaddr *name, socklen_t *namelen)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get local socket address.  <a href="group__interdrv.html#ga35"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga36">rtdm_getpeername</a> (int fd, struct sockaddr *name, socklen_t *namelen)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get socket destination address.  <a href="group__interdrv.html#ga41"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get socket destination address.  <a href="group__interdrv.html#ga36"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__userapi.html#ga0">rt_dev_open</a> (const char *path, int oflag,...)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Open a device.  <a href="group__userapi.html#ga0"></a><br></td></tr>
@@ -167,7 +167,7 @@ Include dependency graph for core.c:<p><center><img src="ksrc_2skins_2rtdm_2core
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get socket destination address.  <a href="group__userapi.html#ga20"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 19:54:02 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:01 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

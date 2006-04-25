@@ -95,7 +95,7 @@
 00085 <span class="preprocessor"></span><span class="preprocessor">#define __native_queue_alloc        59</span>
 00086 <span class="preprocessor"></span><span class="preprocessor">#define __native_queue_free         60</span>
 00087 <span class="preprocessor"></span><span class="preprocessor">#define __native_queue_send         61</span>
-00088 <span class="preprocessor"></span><span class="preprocessor">#define __native_queue_recv         62</span>
+00088 <span class="preprocessor"></span><span class="preprocessor">#define __native_queue_receive      62</span>
 00089 <span class="preprocessor"></span><span class="preprocessor">#define __native_queue_inquire      63</span>
 00090 <span class="preprocessor"></span><span class="preprocessor">#define __native_heap_create        64</span>
 00091 <span class="preprocessor"></span><span class="preprocessor">#define __native_heap_bind          65</span>
@@ -127,34 +127,40 @@
 00117 <span class="preprocessor"></span><span class="preprocessor">#define __native_misc_put_io_region 91</span>
 00118 <span class="preprocessor"></span><span class="preprocessor">#define __native_timer_ns2tsc       92</span>
 00119 <span class="preprocessor"></span><span class="preprocessor">#define __native_timer_tsc2ns       93</span>
-00120 <span class="preprocessor"></span>
-00121 <span class="keyword">struct </span>rt_arg_bulk {
-00122 
-00123     u_long a1;
-00124     u_long a2;
-00125     u_long a3;
-00126     u_long a4;
-00127     u_long a5;
-00128 };
-00129 
-00130 <span class="preprocessor">#ifdef __KERNEL__</span>
-00131 <span class="preprocessor"></span>
-00132 <span class="preprocessor">#ifdef __cplusplus</span>
-00133 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-00134 <span class="preprocessor">#endif</span>
-00135 <span class="preprocessor"></span>
-00136 <span class="keywordtype">int</span> __native_syscall_init(<span class="keywordtype">void</span>);
-00137 
-00138 <span class="keywordtype">void</span> __native_syscall_cleanup(<span class="keywordtype">void</span>);
+00120 <span class="preprocessor"></span><span class="preprocessor">#define __native_queue_write        94</span>
+00121 <span class="preprocessor"></span><span class="preprocessor">#define __native_queue_read         95</span>
+00122 <span class="preprocessor"></span>
+00123 <span class="keyword">struct </span>rt_arg_bulk {
+00124 
+00125     u_long a1;
+00126     u_long a2;
+00127     u_long a3;
+00128     u_long a4;
+00129     u_long a5;
+00130 };
+00131 
+00132 <span class="preprocessor">#ifdef __KERNEL__</span>
+00133 <span class="preprocessor"></span>
+00134 <span class="preprocessor">#ifdef __cplusplus</span>
+00135 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+00136 <span class="preprocessor">#endif</span>
+00137 <span class="preprocessor"></span>
+00138 <span class="keywordtype">int</span> __native_syscall_init(<span class="keywordtype">void</span>);
 00139 
-00140 <span class="preprocessor">#ifdef __cplusplus</span>
-00141 <span class="preprocessor"></span>}
-00142 <span class="preprocessor">#endif</span>
-00143 <span class="preprocessor"></span>
-00144 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
-00145 
-00146 <span class="preprocessor">#endif </span><span class="comment">/* _NATIVE_SYSCALL_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 19:54:01 2006 for Xenomai API by&nbsp;
+00140 <span class="keywordtype">void</span> __native_syscall_cleanup(<span class="keywordtype">void</span>);
+00141 
+00142 <span class="preprocessor">#ifdef __cplusplus</span>
+00143 <span class="preprocessor"></span>}
+00144 <span class="preprocessor">#endif</span>
+00145 <span class="preprocessor"></span>
+00146 <span class="preprocessor">#else </span><span class="comment">/* !__KERNEL__ */</span>
+00147 
+00148 <span class="preprocessor">#include &lt;nucleus/bind.h&gt;</span>
+00149 
+00150 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
+00151 
+00152 <span class="preprocessor">#endif </span><span class="comment">/* _NATIVE_SYSCALL_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:01 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

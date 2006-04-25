@@ -41,21 +41,27 @@ This implementation is based on a zero-copy scheme for message buffers. Message 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga5">rt_queue_free</a> (RT_QUEUE *q, void *buf)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free a message queue buffer.  <a href="#ga5"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga6">rt_queue_send</a> (RT_QUEUE *q, void *buf, size_t size, int mode)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga6">rt_queue_send</a> (RT_QUEUE *q, void *mbuf, size_t size, int mode)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Send a message to a queue.  <a href="#ga6"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga7">rt_queue_recv</a> (RT_QUEUE *q, void **bufp, RTIME timeout)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga7">rt_queue_write</a> (RT_QUEUE *q, const void *buf, size_t size, int mode)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive a message from a queue.  <a href="#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga8">rt_queue_inquire</a> (RT_QUEUE *q, RT_QUEUE_INFO *info)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Write a message to a queue.  <a href="#ga7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga8">rt_queue_receive</a> (RT_QUEUE *q, void **bufp, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about a message queue.  <a href="#ga8"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga11">rt_queue_bind</a> (RT_QUEUE *q, const char *name, RTIME timeout)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive a message from a queue.  <a href="#ga8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga9">rt_queue_read</a> (RT_QUEUE *q, void *buf, size_t size, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a shared message queue.  <a href="#ga11"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga12">rt_queue_unbind</a> (RT_QUEUE *q)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read a message from a queue.  <a href="#ga9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga10">rt_queue_inquire</a> (RT_QUEUE *q, RT_QUEUE_INFO *info)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unbind from a shared message queue.  <a href="#ga12"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about a message queue.  <a href="#ga10"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga13">rt_queue_bind</a> (RT_QUEUE *q, const char *name, RTIME timeout)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a shared message queue.  <a href="#ga13"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__queue.html#ga14">rt_queue_unbind</a> (RT_QUEUE *q)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unbind from a shared message queue.  <a href="#ga14"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
 <a class="anchor" name="ga3" doxytag="queue.c::rt_queue_alloc"></a><p>
@@ -110,7 +116,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga11" doxytag="queue.h::rt_queue_bind"></a><p>
+<a class="anchor" name="ga13" doxytag="queue.h::rt_queue_bind"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -182,7 +188,7 @@ This service can be called from:<p>
 <li>User-space task (switches to primary mode)</li></ul>
 <p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the rt_timer_start() service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD parameter. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
     </td>
   </tr>
 </table>
@@ -377,14 +383,14 @@ Rescheduling: possible.     </td>
 <p>
 Free a message queue buffer. 
 <p>
-This service releases a message buffer returned by <a class="el" href="group__native__queue.html#ga7">rt_queue_recv()</a> to the queue's internal pool.<p>
+This service releases a message buffer returned by <a class="el" href="group__native__queue.html#ga8">rt_queue_receive()</a> to the queue's internal pool.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>q</em>&nbsp;</td><td>The descriptor address of the affected queue.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>buf</em>&nbsp;</td><td>The address of the message buffer to free. Even zero-sized messages carrying no payload data must be freed, since they are assigned a valid memory space to store internal information.</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success, or -EINVAL if <em>buf</em> is not a valid message buffer previously allocated by the <a class="el" href="group__native__queue.html#ga3">rt_queue_alloc()</a> service, or the caller did not get ownership of the message through a successful return from <a class="el" href="group__native__queue.html#ga7">rt_queue_recv()</a>.</dd></dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success, or -EINVAL if <em>buf</em> is not a valid message buffer previously allocated by the <a class="el" href="group__native__queue.html#ga3">rt_queue_alloc()</a> service, or the caller did not get ownership of the message through a successful return from <a class="el" href="group__native__queue.html#ga8">rt_queue_receive()</a>.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -393,7 +399,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga8" doxytag="queue.c::rt_queue_inquire"></a><p>
+<a class="anchor" name="ga10" doxytag="queue.c::rt_queue_inquire"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -451,13 +457,102 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga7" doxytag="queue.c::rt_queue_recv"></a><p>
+<a class="anchor" name="ga9" doxytag="queue.c::rt_queue_read"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">ssize_t rt_queue_recv           </td>
+          <td class="md" nowrap valign="top">ssize_t rt_queue_read           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_QUEUE *&nbsp;</td>
+          <td class="mdname" nowrap> <em>q</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>void *&nbsp;</td>
+          <td class="mdname" nowrap> <em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>size_t&nbsp;</td>
+          <td class="mdname" nowrap> <em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>RTIME&nbsp;</td>
+          <td class="mdname" nowrap> <em>timeout</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Read a message from a queue. 
+<p>
+This service retrieves the next message available from the given queue. Unless otherwise specified, the caller is blocked for a given amount of time if no message is immediately available on entry. This services differs from <a class="el" href="group__native__queue.html#ga8">rt_queue_receive()</a> in that it copies back the payload data to a user-defined memory area, instead of returning a pointer to the message buffer holding such data.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>q</em>&nbsp;</td><td>The descriptor address of the message queue to read from.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>buf</em>&nbsp;</td><td>A pointer to a memory area which will be written upon success with the message contents. The internal message buffer conveying the data is automatically freed by this call.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>size</em>&nbsp;</td><td>The length in bytes of the memory area pointed to by <em>buf</em>. Messages larger than <em>size</em> are truncated appropriately.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>The number of clock ticks to wait for some message to arrive (see note). Passing TM_INFINITE causes the caller to block indefinitely until some message is eventually available. Passing TM_NONBLOCK causes the service to return immediately without waiting if no message is available on entry.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>The number of bytes available from the received message is returned upon success, which might be greater than the actual number of bytes copied to the destination buffer if the message has been truncated. Zero is a possible value corresponding to a zero-sized message passed to <a class="el" href="group__native__queue.html#ga6">rt_queue_send()</a> or <a class="el" href="group__native__queue.html#ga7">rt_queue_write()</a>. Otherwise:</dd></dl>
+<ul>
+<li>-EINVAL is returned if <em>q</em> is not a message queue descriptor.</li></ul>
+<p>
+<ul>
+<li>-EIDRM is returned if <em>q</em> is a deleted queue descriptor.</li></ul>
+<p>
+<ul>
+<li>-ETIMEDOUT is returned if <em>timeout</em> is different from TM_NONBLOCK and no message is available within the specified amount of time.</li></ul>
+<p>
+<ul>
+<li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to TM_NONBLOCK and no message is immediately available on entry.</li></ul>
+<p>
+<ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga19">rt_task_unblock()</a> has been called for the waiting task before any data was available.</li></ul>
+<p>
+<ul>
+<li>-EPERM is returned if this service should block, but was called from a context which cannot sleep (e.g. interrupt, non-realtime or scheduler locked).</li></ul>
+<p>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Interrupt service routine only if <em>timeout</em> is equal to TM_NONBLOCK.</li></ul>
+<p>
+<ul>
+<li>Kernel-based task</li><li>User-space task (switches to primary mode)</li></ul>
+<p>
+Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD parameter. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+    </td>
+  </tr>
+</table>
+<a class="anchor" name="ga8" doxytag="queue.c::rt_queue_receive"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">ssize_t rt_queue_receive           </td>
           <td class="md" valign="top">(&nbsp;</td>
           <td class="md" nowrap valign="top">RT_QUEUE *&nbsp;</td>
           <td class="mdname" nowrap> <em>q</em>, </td>
@@ -529,7 +624,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task (switches to primary mode)</li></ul>
 <p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the rt_timer_start() service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD parameter. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
     </td>
   </tr>
 </table>
@@ -548,7 +643,7 @@ Rescheduling: always unless the request is immediately satisfied or <em>timeout<
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
           <td class="md" nowrap>void *&nbsp;</td>
-          <td class="mdname" nowrap> <em>buf</em>, </td>
+          <td class="mdname" nowrap> <em>mbuf</em>, </td>
         </tr>
         <tr>
           <td class="md" nowrap align="right"></td>
@@ -581,11 +676,11 @@ Rescheduling: always unless the request is immediately satisfied or <em>timeout<
 <p>
 Send a message to a queue. 
 <p>
-This service sends a complete message to a given queue.<p>
+This service sends a complete message to a given queue. The message must have been allocated by a previous call to <a class="el" href="group__native__queue.html#ga3">rt_queue_alloc()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>q</em>&nbsp;</td><td>The descriptor address of the message queue to send to.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>buf</em>&nbsp;</td><td>The address of the message to be sent. The message space must have been allocated using the <a class="el" href="group__native__queue.html#ga3">rt_queue_alloc()</a> service. Once passed to <a class="el" href="group__native__queue.html#ga6">rt_queue_send()</a>, the memory pointed to by <em>buf</em> is no more under the control of the sender and thus should not be referenced by it anymore; deallocation of this memory must be handled on the receiving side.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mbuf</em>&nbsp;</td><td>The address of the message buffer to be sent. The message buffer must have been allocated using the <a class="el" href="group__native__queue.html#ga3">rt_queue_alloc()</a> service. Once passed to <a class="el" href="group__native__queue.html#ga6">rt_queue_send()</a>, the memory pointed to by <em>mbuf</em> is no more under the control of the sender and thus should not be referenced by it anymore; deallocation of this memory must be handled on the receiving side.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>size</em>&nbsp;</td><td>The size in bytes of the message. Zero is a valid value, in which case an empty message will be sent.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>A set of flags affecting the operation:</td></tr>
   </table>
@@ -601,7 +696,7 @@ This service sends a complete message to a given queue.<p>
 <p>
 <dl compact><dt><b>Returns:</b></dt><dd>Upon success, this service returns the number of receivers which got awaken as a result of the operation. If zero is returned, no task was waiting on the receiving side of the queue, and the message has been enqueued. Upon error, one of the following error codes is returned:</dd></dl>
 <ul>
-<li>-EINVAL is returned if <em>q</em> is not a message queue descriptor, or <em>buf</em> is not a valid message buffer obtained from a previous call to <a class="el" href="group__native__queue.html#ga3">rt_queue_alloc()</a>.</li></ul>
+<li>-EINVAL is returned if <em>q</em> is not a message queue descriptor, or <em>mbuf</em> is not a valid message buffer obtained from a previous call to <a class="el" href="group__native__queue.html#ga3">rt_queue_alloc()</a>.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>q</em> is a deleted queue descriptor.</li></ul>
@@ -617,7 +712,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga12" doxytag="queue.h::rt_queue_unbind"></a><p>
+<a class="anchor" name="ga14" doxytag="queue.h::rt_queue_unbind"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -644,7 +739,7 @@ Rescheduling: possible.     </td>
 <p>
 Unbind from a shared message queue. 
 <p>
-This user-space only service unbinds the calling task from the message queue object previously retrieved by a call to <a class="el" href="group__native__queue.html#ga11">rt_queue_bind()</a>.<p>
+This user-space only service unbinds the calling task from the message queue object previously retrieved by a call to <a class="el" href="group__native__queue.html#ga13">rt_queue_bind()</a>.<p>
 Unbinding from a message queue when it is no more needed is especially important in order to properly release the mapping resources used to attach the shared queue memory to the caller's address space.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -659,7 +754,91 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 19:54:06 2006 for Xenomai API by&nbsp;
+<a class="anchor" name="ga7" doxytag="queue.c::rt_queue_write"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">int rt_queue_write           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_QUEUE *&nbsp;</td>
+          <td class="mdname" nowrap> <em>q</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>const void *&nbsp;</td>
+          <td class="mdname" nowrap> <em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>size_t&nbsp;</td>
+          <td class="mdname" nowrap> <em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>int&nbsp;</td>
+          <td class="mdname" nowrap> <em>mode</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Write a message to a queue. 
+<p>
+This service writes a complete message to a given queue. This service differs from <a class="el" href="group__native__queue.html#ga6">rt_queue_send()</a> in that it accepts a pointer to the raw data to be sent, instead of a canned message buffer.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>q</em>&nbsp;</td><td>The descriptor address of the message queue to write to.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>buf</em>&nbsp;</td><td>The address of the message data to be written to the queue. A message buffer will be allocated internally to convey the data.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>size</em>&nbsp;</td><td>The size in bytes of the message data. Zero is a valid value, in which case an empty message will be sent.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>A set of flags affecting the operation:</td></tr>
+  </table>
+</dl>
+<ul>
+<li>Q_URGENT causes the message to be prepended to the message queue, ensuring a LIFO ordering.</li></ul>
+<p>
+<ul>
+<li>Q_NORMAL causes the message to be appended to the message queue, ensuring a FIFO ordering.</li></ul>
+<p>
+<ul>
+<li>Q_BROADCAST causes the message to be sent to all tasks currently waiting for messages. The message is not copied; a reference count is maintained instead so that the message will remain valid until all receivers get a copy of the message, after which the message space will be returned to the queue's internal pool.</li></ul>
+<p>
+<dl compact><dt><b>Returns:</b></dt><dd>Upon success, this service returns the number of receivers which got awaken as a result of the operation. If zero is returned, no task was waiting on the receiving side of the queue, and the message has been enqueued. Upon error, one of the following error codes is returned:</dd></dl>
+<ul>
+<li>-EINVAL is returned if <em>q</em> is not a message queue descriptor.</li></ul>
+<p>
+<ul>
+<li>-EIDRM is returned if <em>q</em> is a deleted queue descriptor.</li></ul>
+<p>
+<ul>
+<li>-ENOMEM is returned if queuing the message would exceed the limit defined for the queue at creation, or if no memory can be obtained to convey the message data internally.</li></ul>
+<p>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
+<p>
+Rescheduling: possible.     </td>
+  </tr>
+</table>
+<hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:06 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

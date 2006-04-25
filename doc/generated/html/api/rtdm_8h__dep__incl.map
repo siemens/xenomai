@@ -2,9 +2,9 @@ base referer
 rect $rtbenchmark_8h.html 194,34 378,58
 rect $rtdm__driver_8h.html 198,82 374,106
 rect $rtserial_8h.html 212,130 361,154
-rect $ksrc_2skins_2rtdm_2core_8c.html 649,34 801,58
+rect $ksrc_2skins_2rtdm_2core_8c.html 649,58 801,82
 rect $ksrc_2skins_2rtdm_2core_8h-source.html 433,58 585,82
 rect $device_8h-source.html 426,106 592,130
 rect $drvlib_8c.html 430,154 588,178
-rect $skins_2rtdm_2module_8c.html 641,82 809,106
-rect $device_8c.html 644,130 806,154
+rect $device_8c.html 644,106 806,130
+rect $skins_2rtdm_2module_8c.html 641,154 809,178

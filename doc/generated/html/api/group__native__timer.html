@@ -92,7 +92,7 @@ Return various information about the status of the system timer.<p>
 <dl compact><dt><b>Returns:</b></dt><dd>This service always returns 0.</dd></dl>
 The information block returns the period and the current system date. The period can have the following values:<p>
 <ul>
-<li>TM_UNSET is a special value indicating that the system timer is inactive. A call to rt_timer_start() activates it.</li></ul>
+<li>TM_UNSET is a special value indicating that the system timer is inactive. A call to <a class="el" href="group__native__timer.html#ga8">rt_timer_set_mode()</a> re-activates it.</li></ul>
 <p>
 <ul>
 <li>TM_ONESHOT is a special value indicating that the timer has been set up in oneshot mode.</li></ul>
@@ -147,9 +147,7 @@ This service can be called from:<p>
 <ul>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
-Rescheduling: never.<p>
-<dl compact><dt><b>Note:</b></dt><dd>The system timer need to have been started with rt_timer_start() for this service to work properly. </dd></dl>
-    </td>
+Rescheduling: never.     </td>
   </tr>
 </table>
 <a class="anchor" name="ga1" doxytag="timer.c::rt_timer_ns2tsc"></a><p>
@@ -229,7 +227,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the rt_timer_start() service. In periodic mode, clock ticks are expressed as periodic jiffies. In oneshot mode, clock ticks are expressed as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD parameter. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
     </td>
   </tr>
 </table>
@@ -360,9 +358,7 @@ This service can be called from:<p>
 <ul>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
-Rescheduling: never.<p>
-<dl compact><dt><b>Note:</b></dt><dd>The system timer need to have been started with rt_timer_start() for this service to work properly. </dd></dl>
-    </td>
+Rescheduling: never.     </td>
   </tr>
 </table>
 <a class="anchor" name="ga6" doxytag="timer.c::rt_timer_tsc"></a><p>
@@ -444,7 +440,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 19:54:06 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:06 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

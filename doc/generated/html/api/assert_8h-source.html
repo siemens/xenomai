@@ -33,15 +33,21 @@
 00023 <span class="preprocessor">#include &lt;nucleus/compiler.h&gt;</span>
 00024 
 00025 <span class="preprocessor">#define XENO_ASSERT(subsystem,cond,action)  do { \</span>
-00026 <span class="preprocessor">if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem &gt; 0 &amp;&amp; !(cond))) \</span>
-00027 <span class="preprocessor">        do { action; } while(0); \</span>
-00028 <span class="preprocessor">} while(0)</span>
-00029 <span class="preprocessor"></span>
-00030 <span class="preprocessor">#define XENO_BUGON(subsystem,cond)  \</span>
-00031 <span class="preprocessor">    XENO_ASSERT(subsystem,cond,xnpod_fatal("assertion failed at %s:%d",__FILE__,__LINE__))</span>
-00032 <span class="preprocessor"></span>
-00033 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_ASSERT_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Apr 6 19:54:01 2006 for Xenomai API by&nbsp;
+00026 <span class="preprocessor">    if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem &gt; 0 &amp;&amp; !(cond))) { \</span>
+00027 <span class="preprocessor">        ipipe_trace_panic_freeze(); \</span>
+00028 <span class="preprocessor">        xnlogerr("assertion failed at %s:%d (%s)\n", __FILE__, __LINE__, (#cond)); \</span>
+00029 <span class="preprocessor">        ipipe_trace_panic_dump(); \</span>
+00030 <span class="preprocessor">        action; \</span>
+00031 <span class="preprocessor">    } \</span>
+00032 <span class="preprocessor">} while(0)</span>
+00033 <span class="preprocessor"></span>
+00034 <span class="preprocessor">#define XENO_BUGON(subsystem,cond)  do { \</span>
+00035 <span class="preprocessor">    if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem &gt; 0 &amp;&amp; !(cond))) \</span>
+00036 <span class="preprocessor">        xnpod_fatal("assertion failed at %s:%d (%s)", __FILE__, __LINE__, (#cond)); \</span>
+00037 <span class="preprocessor">} while(0)</span>
+00038 <span class="preprocessor"></span>
+00039 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_ASSERT_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:01 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
