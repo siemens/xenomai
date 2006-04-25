@@ -141,6 +141,11 @@ int __wrap_pthread_setschedparam (pthread_t thread,
     pthread_t myself = pthread_self();
     int err, promoted;
 
+    err = __real_pthread_setschedparam(thread, policy, param);
+
+    if (err)
+        return err;
+
     err = -XENOMAI_SKINCALL5(__pse51_muxid,
 			     __pse51_thread_setschedparam,
 			     thread,
@@ -148,6 +153,7 @@ int __wrap_pthread_setschedparam (pthread_t thread,
 			     param,
 			     myself,
 			     &promoted);
+
     if (!err && promoted)
 	{
 	signal(SIGCHLD,&__pthread_sigharden_handler);
