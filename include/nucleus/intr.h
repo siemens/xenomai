@@ -28,7 +28,7 @@
 /* Additional bits. */
 #define XN_ISR_PROPAGATE 0x100
 #define XN_ISR_NOENABLE  0x200
-#define XN_ISR_BITMASK	 ~0xff
+#define XN_ISR_BITMASK	 (~0xff)
 
 /* Creation flags. */
 #define XN_ISR_SHARED	 0x1
