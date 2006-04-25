@@ -210,9 +210,11 @@ int pthread_getschedparam (pthread_t tid, int *pol, struct sched_param *par)
  * tid to the value @a  pol, and its scheduling parameters (i.e. its priority)
  * to the value pointed to by @a par.
  *
- * When used in user-space, passing SCHED_FIFO as the @a pol argument, this
- * service may be used to turn the regular thread @a tid into a Xenomai POSIX
- * skin thread.
+ * When used in user-space, passing the current thread ID as @a tid argument,
+ * and SCHED_FIFO as @a pol argument, this service turns the current thread into
+ * a Xenomai POSIX skin thread. If @a tid is neither the identifier of the
+ * current thread nor the identifier of a Xenomai POSIX skin thread, this
+ * service falls back to the regular pthread_setschedparam() service.
  *
  * @param tid target thread;
  *
@@ -223,7 +225,10 @@ int pthread_getschedparam (pthread_t tid, int *pol, struct sched_param *par)
  * @return 0 on success;
  * @return an error number if:
  * - ESRCH, @a tid is invalid;
- * - EINVAL, @a pol or @a par->sched_priority is invalid.
+ * - EINVAL, @a pol or @a par->sched_priority is invalid;
+ * - EFAULT, in user-space, @a par is an invalid address;
+ * - EPERM, in user-space, the calling process does not have superuser
+ *   permissions.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setschedparam.html">
