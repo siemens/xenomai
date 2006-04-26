@@ -1,3 +1,9 @@
+2006-04-26  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.1{5,6}-1.2-05.
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.14-1.2-03.
+
 2006-04-25  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* src/skins/posix/thread.c (__wrap_pthread_setschedparam): Call
