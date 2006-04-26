@@ -74,7 +74,7 @@
  #ifndef CONFIG_VIRT_CPU_ACCOUNTING
  static inline void account_user_vtime(struct task_struct *tsk)
 --- 2.6.14/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/include/linux/ipipe.h	2006-03-27 16:11:53.000000000 +0200
++++ 2.6.14-ipipe/include/linux/ipipe.h	2006-04-21 17:54:28.000000000 +0200
 @@ -0,0 +1,798 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
@@ -203,9 +203,13 @@
 +typedef void (*ipipe_irq_handler_t)(unsigned irq,
 +				    void *cookie);
 +
++#define IPIPE_SAME_HANDLER	((ipipe_irq_handler_t)(-1))
++
 +typedef int (*ipipe_irq_ackfn_t)(unsigned irq);
 +
-+#define IPIPE_SAME_HANDLER	((ipipe_irq_handler_t)(-1))
++typedef int (*ipipe_event_handler_t)(unsigned event,
++				     struct ipipe_domain *from,
++				     void *data);
 +
 +struct ipipe_domain {
 +
@@ -228,9 +232,7 @@
 +		void *cookie;
 +	} ____cacheline_aligned irqs[IPIPE_NR_IRQS];
 +
-+	int (*evhand[IPIPE_NR_EVENTS])(unsigned event,
-+				       struct ipipe_domain *from,
-+				       void *data); /* Event handlers. */
++	ipipe_event_handler_t evhand[IPIPE_NR_EVENTS]; /* Event handlers. */
 +	unsigned long long evself;	/* Self-monitored event bits. */
 +
 +#ifdef CONFIG_IPIPE_STATS
@@ -789,11 +791,9 @@
 +	clear_bit(IPIPE_SPRINTK_FLAG, &ipd->flags);
 +}
 +
-+int ipipe_catch_event(struct ipipe_domain *ipd,
-+		      unsigned event,
-+		      int (*handler)(unsigned event,
-+				     struct ipipe_domain *ipd,
-+				     void *data));
++ipipe_event_handler_t ipipe_catch_event(struct ipipe_domain *ipd,
++					unsigned event,
++					ipipe_event_handler_t handler);
 +
 +cpumask_t ipipe_set_irq_affinity(unsigned irq,
 +				 cpumask_t cpumask);
@@ -874,6 +874,17 @@
 +#endif	/* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_H */
+--- 2.6.14/include/linux/linkage.h	2005-10-28 02:02:08.000000000 +0200
++++ 2.6.14-ipipe/include/linux/linkage.h	2005-12-29 14:04:04.000000000 +0100
+@@ -51,4 +51,8 @@
+ #define fastcall
+ #endif
+ 
++#ifndef notrace
++#define notrace		__attribute__((no_instrument_function))
++#endif
++
+ #endif
 --- 2.6.14/include/linux/preempt.h	2005-10-28 02:02:08.000000000 +0200
 +++ 2.6.14-ipipe/include/linux/preempt.h	2005-10-31 10:15:18.000000000 +0100
 @@ -13,41 +13,58 @@
@@ -1066,7 +1077,7 @@
  fork_out:
  	if (retval)
 --- 2.6.14/kernel/ipipe/Kconfig	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/kernel/ipipe/Kconfig	2006-04-01 18:49:41.000000000 +0200
++++ 2.6.14-ipipe/kernel/ipipe/Kconfig	2006-04-26 19:32:34.000000000 +0200
 @@ -0,0 +1,15 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
@@ -1084,8 +1095,23 @@
 +	  while the I-pipe is operating. This option adds a small overhead, but
 +	  is useful to detect unexpected latency spots.
 --- 2.6.14/kernel/ipipe/Kconfig.trace	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/kernel/ipipe/Kconfig.trace	2006-03-27 18:56:22.000000000 +0200
-@@ -0,0 +1,21 @@
++++ 2.6.14-ipipe/kernel/ipipe/Kconfig.trace	2006-04-26 19:46:30.000000000 +0200
+@@ -0,0 +1,45 @@
++config IPIPE
++	bool "Interrupt pipeline"
++	default y
++	---help---
++	  Activate this option if you want the interrupt pipeline to be
++	  compiled in.
++
++config IPIPE_STATS
++	bool "Collect statistics"
++	depends on IPIPE
++	default n
++	---help---
++	  Activate this option if you want runtime statistics to be collected
++	  while the I-pipe is operating. This option adds a small overhead, but
++	  is useful to detect unexpected latency spots.
 +
 +config IPIPE_TRACE
 + 	bool "Latency Tracing"
@@ -1107,6 +1133,15 @@
 +	---help---
 +	  Activate this option if I-pipe shall trace the longest path
 +	  with hard-IRQs switched off.
++
++config IPIPE_TRACE_SHIFT
++	int "Depth of trace log (14 => 16Kpoints, 17 => 32Kpoints)"
++	range 10 18
++	default 14
++	depends on IPIPE_TRACE
++	---help---
++	  The number of trace points to hold tracing data for each
++	  trace path, as a power of 2.
 --- 2.6.14/kernel/ipipe/Makefile	1970-01-01 01:00:00.000000000 +0100
 +++ 2.6.14-ipipe/kernel/ipipe/Makefile	2005-12-29 14:04:04.000000000 +0100
 @@ -0,0 +1,3 @@
@@ -1114,7 +1149,7 @@
 +obj-$(CONFIG_IPIPE)	+= core.o generic.o
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 --- 2.6.14/kernel/ipipe/core.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/kernel/ipipe/core.c	2006-04-09 14:44:55.000000000 +0200
++++ 2.6.14-ipipe/kernel/ipipe/core.c	2006-04-24 09:54:17.000000000 +0200
 @@ -0,0 +1,828 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
@@ -1531,7 +1566,7 @@
 +	} else
 +		modemask &=
 +		    ~(IPIPE_HANDLE_MASK | IPIPE_STICKY_MASK |
-+		      IPIPE_SHARED_MASK);
++		      IPIPE_SHARED_MASK | IPIPE_EXCLUSIVE_MASK);
 +
 +	if (acknowledge == NULL) {
 +		if ((modemask & IPIPE_SHARED_MASK) == 0)
@@ -1945,8 +1980,8 @@
 +EXPORT_SYMBOL(__ipipe_pipelock);
 +EXPORT_SYMBOL(__ipipe_virtual_irq_map);
 --- 2.6.14/kernel/ipipe/generic.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/kernel/ipipe/generic.c	2006-01-06 09:27:24.000000000 +0100
-@@ -0,0 +1,397 @@
++++ 2.6.14-ipipe/kernel/ipipe/generic.c	2006-04-21 18:09:27.000000000 +0200
+@@ -0,0 +1,398 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/generic.c
 + *
@@ -2215,10 +2250,11 @@
 + * ipipe_catch_event() -- Interpose or remove an event handler for a
 + * given domain.
 + */
-+int ipipe_catch_event(struct ipipe_domain *ipd,
-+		      unsigned event,
-+		      int (*handler)(unsigned event, struct ipipe_domain *ipd, void *data))
++ipipe_event_handler_t ipipe_catch_event(struct ipipe_domain *ipd,
++					unsigned event,
++					ipipe_event_handler_t handler)
 +{
++	ipipe_event_handler_t old_handler;
 +	int self = 0;
 +
 +	if (event & IPIPE_EVENT_SELF) {
@@ -2227,9 +2263,9 @@
 +	}
 +
 +	if (event >= IPIPE_NR_EVENTS)
-+		return -EINVAL;
++		return NULL;
 +
-+	if (!xchg(&ipd->evhand[event],handler))	{
++	if (!(old_handler = xchg(&ipd->evhand[event],handler)))	{
 +		if (handler) {
 +			if (self)
 +				ipd->evself |= (1LL << event);
@@ -2250,7 +2286,7 @@
 +			ipd->evself |= (1LL << event);
 +	}
 +
-+	return 0;
++	return old_handler;
 +}
 +
 +cpumask_t ipipe_set_irq_affinity (unsigned irq, cpumask_t cpumask)
@@ -2473,7 +2509,7 @@
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
 --- 2.6.14/kernel/sched.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/kernel/sched.c	2006-01-30 12:41:46.000000000 +0100
++++ 2.6.14-ipipe/kernel/sched.c	2006-04-23 08:55:02.000000000 +0200
 @@ -2855,13 +2855,18 @@ asmlinkage void __sched schedule(void)
  	unsigned long run_time;
  	int cpu, idx, new_prio;
@@ -2543,7 +2579,7 @@
  	if (array) {
  		__activate_task(p, rq);
  		/*
-@@ -5647,3 +5671,53 @@ void set_curr_task(int cpu, task_t *p)
+@@ -5647,3 +5671,50 @@ void set_curr_task(int cpu, task_t *p)
  }
  
  #endif
@@ -2556,9 +2592,6 @@
 +	unsigned long flags;
 +	runqueue_t *rq;
 +	int oldprio;
-+
-+	if (prio < 1 || prio > MAX_RT_PRIO-1)
-+		return -EINVAL;
 +
 +	rq = task_rq_lock(p, &flags);
 +	array = p->array;
@@ -2753,13 +2786,17 @@
  
  ifndef CONFIG_MATH_EMULATION
 --- 2.6.14/arch/ppc/kernel/entry.S	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/arch/ppc/kernel/entry.S	2005-10-31 10:15:17.000000000 +0100
-@@ -44,6 +44,14 @@
++++ 2.6.14-ipipe/arch/ppc/kernel/entry.S	2006-04-26 17:00:33.000000000 +0200
+@@ -44,6 +44,18 @@
  #define LOAD_MSR_KERNEL(r, x)	li r,(x)
  #endif
  
 +#ifdef CONFIG_IPIPE
-+#define STALL_ROOT_COND		bl	__ipipe_stall_root_raw
++#define STALL_ROOT_COND		stwu	r1,-4(r1) ;		\
++				stw	r3,0(r1) ;		\
++				bl	__ipipe_stall_root_raw ;\
++				lwz	r3,0(r1) ;		\
++				addi	r1,r1,4	;
 +#define UNSTALL_ROOT_COND	bl	__ipipe_unstall_root_raw
 +#else /* !CONFIG_IPIPE */
 +#define STALL_ROOT_COND
@@ -2769,7 +2806,7 @@
  #ifdef CONFIG_BOOKE
  #include "head_booke.h"
  #define TRANSFER_TO_HANDLER_EXC_LEVEL(exc_level)	\
-@@ -144,8 +152,23 @@ END_FTR_SECTION_IFSET(CPU_FTR_CAN_NAP)
+@@ -144,8 +156,23 @@ END_FTR_SECTION_IFSET(CPU_FTR_CAN_NAP)
  	.globl transfer_to_handler_cont
  transfer_to_handler_cont:
  	lwz	r11,THREAD_INFO-THREAD(r12)
@@ -2793,7 +2830,7 @@
  3:
  	mflr	r9
  	lwz	r11,0(r9)		/* virtual address of handler */
-@@ -196,6 +219,21 @@ _GLOBAL(DoSyscall)
+@@ -196,6 +223,21 @@ _GLOBAL(DoSyscall)
  	lwz	r11,_CCR(r1)	/* Clear SO bit in CR */
  	rlwinm	r11,r11,0,4,2
  	stw	r11,_CCR(r1)
@@ -2815,7 +2852,7 @@
  #ifdef SHOW_SYSCALLS
  	bl	do_show_syscall
  #endif /* SHOW_SYSCALLS */
-@@ -265,13 +303,23 @@ syscall_exit_cont:
+@@ -265,13 +307,23 @@ syscall_exit_cont:
  	SYNC
  	RFI
  
@@ -2839,7 +2876,7 @@
  	li	r3,0
  	b	ret_from_syscall
  
-@@ -650,6 +698,12 @@ ret_from_except:
+@@ -650,6 +702,12 @@ ret_from_except:
  	SYNC			/* Some chip revs have problems here... */
  	MTMSRD(r10)		/* disable interrupts */
  
@@ -2852,7 +2889,7 @@
  	lwz	r3,_MSR(r1)	/* Returning to user mode? */
  	andi.	r0,r3,MSR_PR
  	beq	resume_kernel
-@@ -685,11 +739,13 @@ resume_kernel:
+@@ -685,11 +743,13 @@ resume_kernel:
  	beq+	restore
  	andi.	r0,r3,MSR_EE	/* interrupts off? */
  	beq	restore		/* don't schedule if so */
@@ -2866,7 +2903,7 @@
  #else
  resume_kernel:
  #endif /* CONFIG_PREEMPT */
-@@ -1000,3 +1056,10 @@ machine_check_in_rtas:
+@@ -1000,3 +1060,10 @@ machine_check_in_rtas:
  	/* XXX load up BATs and panic */
  
  #endif /* CONFIG_PPC_OF */
@@ -3481,106 +3518,9 @@
 +EXPORT_SYMBOL(ipipe_trigger_irq);
 +EXPORT_SYMBOL(ipipe_get_sysinfo);
 +EXPORT_SYMBOL(ipipe_tune_timer);
---- 2.6.14/arch/ppc/kernel/ipipe-mcount.S	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/arch/ppc/kernel/ipipe-mcount.S	2006-03-28 07:41:37.000000000 +0200
-@@ -0,0 +1,94 @@
-+/*
-+ *  linux/arch/ppc/kernel/ipipe-mcount.S
-+ *
-+ *  Shamelessly lifted from CONFIG_MCOUNT support.
-+ */
-+
-+#include <linux/config.h>
-+#include <asm/ppc_asm.h>
-+
-+/*
-+ * mcount() is not the same as _mcount().  The callers of mcount() have a
-+ * normal context.  The callers of _mcount() do not have a stack frame and
-+ * have not saved the "caller saves" registers.
-+ */
-+.globl	mcount
-+mcount:		
-+	stwu	r1,-16(r1)
-+	mflr	r4
-+	lis	r6,ipipe_trace_enable@ha
-+	lwz	r6,ipipe_trace_enable@l(r6)
-+	stw	r4,20(r1)
-+	cmpwi	r6,0
-+	beq	1f
-+	/* r4 contains lr (eip), put parent lr (parent_eip) in r5 */
-+	lwz	r5,16(r1)
-+	lwz	r5,4(r5)
-+	/* r3=IPIPE_TRACE_FN, r6=no additional value */
-+	li      r3,0
-+	li      r6,0
-+	bl	__ipipe_trace
-+1:
-+	lwz	r0,20(r1)
-+	mtlr	r0
-+	addi	r1,r1,16
-+	blr
-+
-+/*
-+ * The -pg flag, which is specified in the case of CONFIG_IPIPE_TRACE, causes the
-+ * C compiler to add a call to _mcount() at the start of each function preamble,
-+ * before the stack frame is created.  An example of this preamble code is:
-+ *
-+ * 	mflr    r0
-+ * 	lis     r12,-16354
-+ * 	stw     r0,4(r1)
-+ * 	addi    r0,r12,-19652
-+ * 	bl      0xc00034c8 <_mcount>
-+ * 	mflr    r0
-+ * 	stwu    r1,-16(r1)
-+ */
-+.globl	_mcount
-+_mcount:		
-+#define M_STK_SIZE 48
-+	/* Would not expect to need to save cr, but glibc version of */
-+	/* _mcount() does, so cautiously saving it here too.         */
-+	stwu	r1,-M_STK_SIZE(r1)
-+	stw	r3, 12(r1)
-+	stw	r4, 16(r1)
-+	stw	r5, 20(r1)
-+	stw	r6, 24(r1)
-+	mflr	r4		/* will use as second arg to __ipipe_trace() */
-+	mfcr	r5
-+	lis	r6,ipipe_trace_enable@ha
-+	lwz	r6,ipipe_trace_enable@l(r6)
-+	cmpwi	r6,0
-+	stw	r4, 44(r1)	/* lr */
-+	stw	r5,  8(r1)	/* cr */
-+	stw	r7, 28(r1)
-+	stw	r8, 32(r1)
-+	stw	r9, 36(r1)
-+	stw	r10,40(r1)
-+	beq	1f
-+	/* r4 contains lr (eip), put parent lr (parent_eip) in r5 */
-+	lwz	r5,M_STK_SIZE+4(r1)
-+	/* r3=IPIPE_TRACE_FN, r6=no additional value */
-+	li      r3,0
-+	li      r6,0
-+	bl	__ipipe_trace
-+1:
-+	lwz	r8,  8(r1)	/* cr */
-+	lwz	r9, 44(r1)	/* lr */
-+	lwz	r3, 12(r1)
-+	lwz	r4, 16(r1)
-+	lwz	r5, 20(r1)
-+	mtcrf	0xff,r8
-+	mtctr	r9
-+	lwz	r0, 52(r1)
-+	lwz	r6, 24(r1)
-+	lwz	r7, 28(r1)
-+	lwz	r8, 32(r1)
-+	lwz	r9, 36(r1)
-+	lwz	r10,40(r1)
-+	addi	r1,r1,M_STK_SIZE
-+	mtlr	r0
-+	bctr
 --- 2.6.14/arch/ppc/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/arch/ppc/kernel/ipipe-root.c	2006-03-31 22:26:13.000000000 +0200
-@@ -0,0 +1,472 @@
++++ 2.6.14-ipipe/arch/ppc/kernel/ipipe-root.c	2006-04-26 17:19:36.000000000 +0200
+@@ -0,0 +1,488 @@
 +/* -*- linux-c -*-
 + * linux/arch/ppc/kernel/ipipe-root.c
 + *
@@ -3885,10 +3825,18 @@
 +	ipipe_declare_cpuid;
 +	int irq;
 +
++#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
++	ipipe_trace_begin(regs->nip);
++#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
++
 +	if ((irq = ppc_md.get_irq(regs)) >= 0)
 +		__ipipe_handle_irq(irq, regs);
 +	else if (irq != -2)
 +		ppc_spurious_interrupts++;
++
++#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
++	ipipe_trace_end(regs->nip);
++#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
 +
 +	ipipe_load_cpuid();
 +
@@ -3907,6 +3855,10 @@
 +asmlinkage int __ipipe_grab_timer(struct pt_regs *regs)
 +{
 +	ipipe_declare_cpuid;
++
++#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
++	ipipe_trace_begin(regs->nip);
++#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
 +
 +#ifdef CONFIG_POWER4
 +	/* On 970 CPUs DEC cannot be disabled, and without setting DEC
@@ -3935,6 +3887,10 @@
 +
 +	__ipipe_handle_irq(IPIPE_TIMER_VIRQ, regs);
 +
++#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
++	ipipe_trace_end(regs->nip);
++#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
++
 +	ipipe_load_cpuid();
 +
 +	return (ipipe_percpu_domain[cpuid] == ipipe_root_domain &&
@@ -3958,7 +3914,7 @@
 +	return ipipe_percpu_domain[cpuid] == ipipe_root_domain;
 +}
 +
-+asmlinkage void __ipipe_stall_root_raw(void)
++void __ipipe_stall_root_raw(void)
 +{
 +	ipipe_declare_cpuid;
 +
@@ -3972,7 +3928,7 @@
 +	local_irq_enable_hw();
 +}
 +
-+asmlinkage void __ipipe_unstall_root_raw(void)
++void __ipipe_unstall_root_raw(void)
 +{
 +	ipipe_declare_cpuid;
 +
@@ -4491,7 +4447,7 @@
  
  #define mask_irq(irq) ({if (irq_desc[irq].handler && irq_desc[irq].handler->disable) irq_desc[irq].handler->disable(irq);})
 --- 2.6.14/include/asm-ppc/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/include/asm-ppc/ipipe.h	2006-03-28 07:14:41.000000000 +0200
++++ 2.6.14-ipipe/include/asm-ppc/ipipe.h	2006-04-26 15:56:49.000000000 +0200
 @@ -0,0 +1,185 @@
 +/* -*- linux-c -*-
 + * include/asm-ppc/ipipe.h
@@ -4529,10 +4485,10 @@
 +#include <linux/cpumask.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.2-02"
++#define IPIPE_ARCH_STRING	"1.2-03"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	2
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
