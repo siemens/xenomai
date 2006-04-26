@@ -279,8 +279,11 @@ int __pthread_setschedparam (struct task_struct *curr, struct pt_regs *regs)
         err = __pthread_shadow(curr,&hkey,&param);
         promoted = 1;
         }
-    else
+    else if (k_tid)
         err = -pthread_setschedparam(k_tid,policy,&param);
+    else
+        /* noop. */
+        err = 0;
 
     if (!err)
         __xn_put_user(curr,promoted,(int __user *)__xn_reg_arg5(regs));

@@ -141,6 +141,16 @@ int __wrap_pthread_setschedparam (pthread_t thread,
     pthread_t myself = pthread_self();
     int err, promoted;
 
+    /* The NPTL version of pthread_getschedparam does not issue a syscall to
+       know the scheduling policy and parameters of the target thread, instead,
+       the values passed to the last call to pthread_setschedparam are used. We
+       hence call __real_pthread_setschedparam so that the NPTL is informed of
+       the current setting. */
+    err = __real_pthread_setschedparam(thread, policy, param);
+
+    if (err)
+        return err;
+
     err = -XENOMAI_SKINCALL5(__pse51_muxid,
 			     __pse51_thread_setschedparam,
 			     thread,
@@ -148,6 +158,7 @@ int __wrap_pthread_setschedparam (pthread_t thread,
 			     param,
 			     myself,
 			     &promoted);
+
     if (!err && promoted)
 	{
 	signal(SIGCHLD,&__pthread_sigharden_handler);

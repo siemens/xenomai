@@ -1,3 +1,9 @@
+2006-04-25  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* src/skins/posix/thread.c (__wrap_pthread_setschedparam): Call
+	__real_pthread_setschedparam in order to inform the libc of the
+	scheduling parameters change.
+
 2006-04-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/hal.c: Always check that the irq is the range
