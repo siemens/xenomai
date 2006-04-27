@@ -331,32 +331,31 @@ int rt_intr_delete (RT_INTR *intr)
     if (!intr)
         {
         err = xeno_handle_error(intr,XENO_INTR_MAGIC,RT_INTR);
-        goto unlock_and_exit;
+	xnlock_put_irqrestore(&nklock,s);
+	return err;
         }
     
     removeq(&__xeno_intr_q,&intr->link);
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     rc = xnsynch_destroy(&intr->synch_base);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-    xnintr_detach(&intr->intr_base);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
     if (intr->handle)
         xnregistry_remove(intr->handle);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-    xnintr_destroy(&intr->intr_base);
-
     xeno_mark_deleted(intr);
+
+    xnlock_put_irqrestore(&nklock,s);
+
+    err = xnintr_detach(&intr->intr_base);
+    xnintr_destroy(&intr->intr_base);
 
     if (rc == XNSYNCH_RESCHED)
         /* Some task has been woken up as a result of the deletion:
            reschedule now. */
         xnpod_schedule();
-
- unlock_and_exit:
-
-    xnlock_put_irqrestore(&nklock,s);
 
     return err;
 }
