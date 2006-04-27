@@ -24,12 +24,12 @@ xeno-test [options]
 	
   # following options are passed thru to latency
   -s	print statistics of sampled data (default on)
-  -h	print histogram of sampled data (default on)
+  -h	print histogram of sampled data (default on, implies -s)
   -q	quiet, dont print 1 sec sampled data (default on, off if !-T)
-  -T <sec test>	(default: 10 sec, for demo purposes)
-  -l <data/header lines>
-  -H <bucketcount>
-  -B <bucketsize ns>
+  -T <sec test>	(default: 120 sec)
+  -l <data/header lines> (default 21)
+  -H <bucketcount> (default 100)
+  -B <bucketsize ns> (default 1000)
 EOF
     # NB: many defaults are coded in latency
     exit 1
@@ -120,7 +120,7 @@ boxstatus() {     # get dynamic status
 
 run_w_load() {
     local opts="$*";
-    [ "$opts"  = '' ] && opts='-q -s -T 10'
+    [ "$opts"  = '' ] && opts='-q -s -T 120'
 
     boxinfo
     loudly generate_loads $workload
