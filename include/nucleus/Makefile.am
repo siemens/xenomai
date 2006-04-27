@@ -3,6 +3,7 @@ includedir = $(prefix)/include/nucleus
 include_HEADERS = \
 	assert.h \
 	bheap.h \
+	bind.h \
 	compiler.h \
 	core.h \
 	heap.h \
@@ -22,5 +23,3 @@ include_HEADERS = \
 	types.h \
 	version.h \
 	xenomai.h
-
-EXTRA_DIST = bind.h

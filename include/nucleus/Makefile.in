@@ -216,6 +216,7 @@ target_vendor = @target_vendor@
 include_HEADERS = \
 	assert.h \
 	bheap.h \
+	bind.h \
 	compiler.h \
 	core.h \
 	heap.h \
@@ -236,7 +237,6 @@ include_HEADERS = \
 	version.h \
 	xenomai.h
 
-EXTRA_DIST = bind.h
 all: all-am
 
 .SUFFIXES:
