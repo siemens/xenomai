@@ -3,7 +3,6 @@
 # Interrupt pipeline
 #
 CONFIG_IPIPE=y
-CONFIG_IPIPE_EXTENDED=y
 # CONFIG_IPIPE_STATS is not set
 
 #
