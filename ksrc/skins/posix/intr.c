@@ -174,18 +174,19 @@ int pthread_intr_detach_np (pthread_intr_t intr)
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     rc = xnsynch_destroy(&intr->synch_base);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-    xnintr_detach(&intr->intr_base);
-
-    xnintr_destroy(&intr->intr_base);
 
     pse51_mark_deleted(intr);
 
     removeq(&pse51_intrq, &intr->link);
 
+    xnlock_put_irqrestore(&nklock, s);
+
+    xnintr_detach(&intr->intr_base);
+    xnintr_destroy(&intr->intr_base);
+
     if (rc == XNSYNCH_RESCHED)
         xnpod_schedule();
 
-    xnlock_put_irqrestore(&nklock, s);
     xnfree(intr);
 
     return 0;
