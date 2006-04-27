@@ -1,3 +1,7 @@
+2006-04-27  Jim Cromie <jim.cromie@gmail.com>
+
+	* scripts/xeno-test.in: Fix default value for -T.
+
 2006-04-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.15-1.2-02.
