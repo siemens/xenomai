@@ -98,6 +98,19 @@ config XENO_OPT_ISHIELD
 	of Linux kernel activities is already prevented by design,
 	should leave this option disabled.
 
+config XENO_OPT_PIPELINE_HEAD
+	bool "Optimize as pipeline head"
+	default y
+	help
+	
+	This option causes Xenomai to declare itself as always leading
+	the interrupt pipeline, which in turn allows Adeos to optimize
+	for faster domain stall/unstall operations.
+
+	However, enabling this option prevents inserting Adeos domains
+	with higher priority than Xenomai in the pipeline, which
+	should be rarely needed though.
+
 config XENO_OPT_STATS
 	bool "Statistics collection"
 	default y
