@@ -199,7 +199,6 @@ do { \
 } while(0)
 
 static inline int xnarch_setimask (int imask)
-
 {
     spl_t s;
     splhigh(s);
@@ -218,8 +217,8 @@ static inline int xnarch_setimask (int imask)
 #define xnlock_clear_irqoff(lock)   xnlock_put_irqrestore(lock,1)
 #define xnlock_clear_irqon(lock)    xnlock_put_irqrestore(lock,0)
 
-static inline void xnlock_init (xnlock_t *lock) {
-
+static inline void xnlock_init (xnlock_t *lock)
+{
     *lock = XNARCH_LOCK_UNLOCKED;
 }
 
@@ -289,7 +288,6 @@ static inline spl_t __xnlock_get_irqsave (xnlock_t *lock)
 }
 
 static inline void xnlock_put_irqrestore (xnlock_t *lock, spl_t flags)
-
 {
     if (!(flags & 2))
         {

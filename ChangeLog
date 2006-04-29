@@ -1,5 +1,8 @@
 2006-04-29  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/asm-generic/hal.h: Use Adeos optimization as invariant
+	pipeline head.
+
 	* include/nucleus/queue.h, ksrc: Define and use a predicate for
 	testing queue emptiness.
 

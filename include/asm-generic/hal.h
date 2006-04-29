@@ -106,10 +106,20 @@ typedef rwlock_t rthal_rwlock_t;
 
 #define rthal_cpudata_irq_hits(ipd,cpu,irq)	__ipipe_cpudata_irq_hits(ipd,cpu,irq)
 
+/* Obsolete Adeos patches do not support the invariant pipeline head
+   optimization, so we check for the presence of __ipipe_pipeline_head
+   to detect it. */
+#if defined(CONFIG_XENO_OPT_PIPELINE_HEAD) && defined(__ipipe_pipeline_head)
+#define rthal_local_irq_disable()	ipipe_stall_pipeline_head()
+#define rthal_local_irq_enable()	ipipe_unstall_pipeline_head()
+#define rthal_local_irq_save(x)		((x) = !!ipipe_test_and_stall_pipeline_head())
+#define rthal_local_irq_restore(x)	ipipe_restore_pipeline_head(x)
+#else /* !(CONFIG_XENO_OPT_PIPELINE_HEAD && __ipipe_pipeline_head) */
 #define rthal_local_irq_disable()	ipipe_stall_pipeline_from(&rthal_domain)
 #define rthal_local_irq_enable()	ipipe_unstall_pipeline_from(&rthal_domain)
 #define rthal_local_irq_save(x)		((x) = !!ipipe_test_and_stall_pipeline_from(&rthal_domain))
 #define rthal_local_irq_restore(x)	ipipe_restore_pipeline_from(&rthal_domain,(x))
+#endif /* CONFIG_XENO_OPT_PIPELINE_HEAD && __ipipe_pipeline_head */
 #define rthal_local_irq_flags(x)	((x) = !!ipipe_test_pipeline_from(&rthal_domain))
 #define rthal_local_irq_test()		(!!ipipe_test_pipeline_from(&rthal_domain))
 #define rthal_stage_irq_enable(dom)	ipipe_unstall_pipeline_from(dom)

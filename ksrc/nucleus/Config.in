@@ -27,6 +27,7 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	fi
 	int 'Size of the system heap (Kb)' CONFIG_XENO_OPT_SYS_HEAPSZ 128
 	bool 'Interrupt shield support' CONFIG_XENO_OPT_ISHIELD
+	bool 'Optimize as pipeline head' CONFIG_XENO_OPT_PIPELINE_HEAD
 	bool 'Statistics collection' CONFIG_XENO_OPT_STATS
 	bool 'Debug support' CONFIG_XENO_OPT_DEBUG
 	if [ "$CONFIG_XENO_OPT_DEBUG" = "y" ]; then
