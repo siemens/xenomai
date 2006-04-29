@@ -27047,11 +27047,6 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-cat >>confdefs.h <<_ACEOF
-#define CONFIG_XENO_OPT_SCALABLE_PRIOS 256
-_ACEOF
-
-
 cat >>confdefs.h <<\_ACEOF
 #define CONFIG_XENO_OPT_REGISTRY 1
 _ACEOF

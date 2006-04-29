@@ -46,9 +46,6 @@
 #undef CONFIG_XENO_OPT_RTAI_SEM
 
 /* config */
-#undef CONFIG_XENO_OPT_SCALABLE_PRIOS
-
-/* config */
 #undef CONFIG_XENO_OPT_SCALABLE_SCHED
 
 /* config */
