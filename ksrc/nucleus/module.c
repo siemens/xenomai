@@ -67,7 +67,7 @@ void xnmod_alloc_glinks (xnqueue_t *freehq)
 	   allocating memory eventually. Otherwise, we have to raise a
 	   fatal error right now. */
 
-	if (countq(freehq) == 0)
+	if (emptyq_p(freehq))
 	    xnpod_fatal("cannot allocate generic holders");
 
 	return;

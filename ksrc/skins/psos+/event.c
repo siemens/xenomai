@@ -122,7 +122,7 @@ u_long ev_send (u_long tid,
     /* Only the task to which the event group pertains can
        pend on it. */
 
-    if (countpq(xnsynch_wait_queue(&evgroup->synchbase)) > 0)
+    if (!emptypq_p(xnsynch_wait_queue(&evgroup->synchbase)))
 	{
 	u_long flags = task->waitargs.evgroup.flags;
 	u_long bits = task->waitargs.evgroup.events;

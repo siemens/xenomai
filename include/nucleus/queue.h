@@ -33,14 +33,16 @@ typedef struct xnholder {
 
 } xnholder_t;
 
-static inline void inith (xnholder_t *holder) {
+static inline void inith (xnholder_t *holder)
+{
     /* Holding queues are doubly-linked and circular */
     holder->last = holder;
     holder->next = holder;
 }
 
 static inline void ath (xnholder_t *head,
-                        xnholder_t *holder) {
+                        xnholder_t *holder)
+{
     /* Inserts the new element right after the heading one  */
     holder->last = head;
     holder->next = head->next;
@@ -48,7 +50,8 @@ static inline void ath (xnholder_t *head,
     head->next = holder;
 }
 
-static inline void dth (xnholder_t *holder) {
+static inline void dth (xnholder_t *holder)
+{
     holder->last->next = holder->next;
     holder->next->last = holder->last;
 }
@@ -71,7 +74,8 @@ typedef struct xnqueue {
 #define DECLARE_XNQUEUE(q) xnqueue_t q = { { &(q).head, &(q).head }, 0 }
 #endif /* CONFIG_XENO_OPT_DEBUG_QUEUES && CONFIG_SMP */
 
-static inline void initq (xnqueue_t *qslot) {
+static inline void initq (xnqueue_t *qslot)
+{
     inith(&qslot->head);
     qslot->elems = 0;
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_DEBUG_QUEUES) && defined(CONFIG_SMP)
@@ -176,36 +180,36 @@ do { \
 
 #else /* !CONFIG_XENO_OPT_DEBUG_QUEUES */
 
-static inline int insertq (xnqueue_t *qslot,
-                           xnholder_t *head,
-                           xnholder_t *holder)
+static inline void insertq (xnqueue_t *qslot,
+			    xnholder_t *head,
+			    xnholder_t *holder)
 {
     /* Insert the <holder> element before <head> */
     ath(head->last,holder);
-    return ++qslot->elems;
+    ++qslot->elems;
 }
 
-static inline int prependq (xnqueue_t *qslot,
-                            xnholder_t *holder)
+static inline void prependq (xnqueue_t *qslot,
+			     xnholder_t *holder)
 {
     /* Prepend the element to the queue */
     ath(&qslot->head,holder);
-    return ++qslot->elems;
+    ++qslot->elems;
 }
 
-static inline int appendq (xnqueue_t *qslot,
+static inline void appendq (xnqueue_t *qslot,
                            xnholder_t *holder)
 {
     /* Append the element to the queue */
     ath(qslot->head.last,holder);
-    return ++qslot->elems;
+    ++qslot->elems;
 }
 
-static inline int removeq (xnqueue_t *qslot,
-                           xnholder_t *holder)
+static inline void removeq (xnqueue_t *qslot,
+			    xnholder_t *holder)
 {
     dth(holder);
-    return --qslot->elems;
+    --qslot->elems;
 }
 
 #endif /* CONFIG_XENO_OPT_DEBUG_QUEUES */
@@ -213,8 +217,7 @@ static inline int removeq (xnqueue_t *qslot,
 static inline xnholder_t *getheadq (xnqueue_t *qslot)
 {
     xnholder_t *holder = qslot->head.next;
-    if (holder == &qslot->head) return NULL;
-    return holder;
+    return holder == &qslot->head ? NULL : holder;
 }
 
 static inline xnholder_t *getq (xnqueue_t *qslot)
@@ -244,7 +247,12 @@ static inline int countq (xnqueue_t *qslot)
     return qslot->elems;
 }
 
-static inline int moveq (xnqueue_t *dstq, xnqueue_t *srcq)
+static inline int emptyq_p (xnqueue_t *qslot)
+{
+    return qslot->head.next == &qslot->head;
+}
+
+static inline void moveq (xnqueue_t *dstq, xnqueue_t *srcq)
 {
     xnholder_t *headsrc = srcq->head.next;
     xnholder_t *tailsrc = srcq->head.last->last;
@@ -258,8 +266,6 @@ static inline int moveq (xnqueue_t *dstq, xnqueue_t *srcq)
     headdst->next = headsrc;
     dstq->elems += srcq->elems;
     srcq->elems = 0;
-
-    return dstq->elems;
 }
 
 /* Prioritized element holder */
@@ -297,17 +303,17 @@ static inline void initpq (xnpqueue_t *pqslot,
     pqslot->qdir = qdir;
 }
 
-static inline int insertpq (xnpqueue_t *pqslot,
-                            xnpholder_t *head,
-                            xnpholder_t *holder)
+static inline void insertpq (xnpqueue_t *pqslot,
+			     xnpholder_t *head,
+			     xnpholder_t *holder)
 {
     /* Insert the <holder> element before <head> */
-    return insertq(&pqslot->pqueue,&head->plink,&holder->plink);
+    insertq(&pqslot->pqueue,&head->plink,&holder->plink);
 }
 
-static inline int insertpqf (xnpqueue_t *pqslot,
-                             xnpholder_t *holder,
-                             int prio)
+static inline void insertpqf (xnpqueue_t *pqslot,
+			      xnpholder_t *holder,
+			      int prio)
 {
     /* Insert the element at the end of its priority group (FIFO) */
 
@@ -330,12 +336,12 @@ static inline int insertpqf (xnpqueue_t *pqslot,
 
     holder->prio = prio;
 
-    return insertq(&pqslot->pqueue,curr->next,&holder->plink);
+    insertq(&pqslot->pqueue,curr->next,&holder->plink);
 }
 
-static inline int insertpql (xnpqueue_t *pqslot,
-                             xnpholder_t *holder,
-                             int prio)
+static inline void insertpql (xnpqueue_t *pqslot,
+			      xnpholder_t *holder,
+			      int prio)
 {
     /* Insert the element at the front of its priority group (LIFO) */
 
@@ -358,7 +364,7 @@ static inline int insertpql (xnpqueue_t *pqslot,
 
     holder->prio = prio;
 
-    return insertq(&pqslot->pqueue,curr,&holder->plink);
+    insertq(&pqslot->pqueue,curr,&holder->plink);
 }
 
 static inline xnpholder_t *findpqh (xnpqueue_t *pqslot,
@@ -389,24 +395,24 @@ static inline xnpholder_t *findpqh (xnpqueue_t *pqslot,
     return NULL;
 }
 
-static inline int appendpq (xnpqueue_t *pqslot,
-                            xnpholder_t *holder)
+static inline void appendpq (xnpqueue_t *pqslot,
+			     xnpholder_t *holder)
 {
     holder->prio = 0;
-    return appendq(&pqslot->pqueue,&holder->plink);
+    appendq(&pqslot->pqueue,&holder->plink);
 }
 
-static inline int prependpq (xnpqueue_t *pqslot,
-                             xnpholder_t *holder)
+static inline void prependpq (xnpqueue_t *pqslot,
+			      xnpholder_t *holder)
 {
     holder->prio = 0;
-    return prependq(&pqslot->pqueue,&holder->plink);
+    prependq(&pqslot->pqueue,&holder->plink);
 }
 
-static inline int removepq (xnpqueue_t *pqslot,
-                            xnpholder_t *holder)
+static inline void removepq (xnpqueue_t *pqslot,
+			     xnpholder_t *holder)
 {
-    return removeq(&pqslot->pqueue,&holder->plink);
+    removeq(&pqslot->pqueue,&holder->plink);
 }
 
 static inline xnpholder_t *getheadpq (xnpqueue_t *pqslot)
@@ -434,6 +440,11 @@ static inline xnpholder_t *poppq (xnpqueue_t *pqslot,
 static inline int countpq (xnpqueue_t *pqslot)
 {
     return countq(&pqslot->pqueue);
+}
+
+static inline int emptypq_p (xnpqueue_t *pqslot)
+{
+    return emptyq_p(&pqslot->pqueue);
 }
 
 /* Generic prioritized element holder */
@@ -491,7 +502,7 @@ static inline void *removegh (xngqueue_t *gqslot,
     return holder->data;
 }
 
-static inline int insertgqf (xngqueue_t *gqslot,
+static inline void insertgqf (xngqueue_t *gqslot,
                              void *data,
                              int prio)
 {
@@ -500,29 +511,29 @@ static inline int insertgqf (xngqueue_t *gqslot,
     return insertpqf(&gqslot->gqueue,&holder->glink,prio);
 }
 
-static inline int insertgql (xngqueue_t *gqslot,
-                             void *data,
-                             int prio)
+static inline void insertgql (xngqueue_t *gqslot,
+			      void *data,
+			      int prio)
 {
     xngholder_t *holder = allocgh(gqslot);
     holder->data = data;
-    return insertpql(&gqslot->gqueue,&holder->glink,prio);
+    insertpql(&gqslot->gqueue,&holder->glink,prio);
 }
 
-static inline int appendgq (xngqueue_t *gqslot,
-                            void *data)
+static inline void appendgq (xngqueue_t *gqslot,
+			     void *data)
 {
     xngholder_t *holder = allocgh(gqslot);
     holder->data = data;
-    return appendpq(&gqslot->gqueue,&holder->glink);
+    appendpq(&gqslot->gqueue,&holder->glink);
 }
 
-static inline int prependgq (xngqueue_t *gqslot,
-                             void *data)
+static inline void prependgq (xngqueue_t *gqslot,
+			      void *data)
 {
     xngholder_t *holder = allocgh(gqslot);
     holder->data = data;
-    return prependpq(&gqslot->gqueue,&holder->glink);
+    prependpq(&gqslot->gqueue,&holder->glink);
 }
 
 static inline xngholder_t *getheadgq (xngqueue_t *gqslot)
@@ -578,6 +589,11 @@ static inline int countgq (xngqueue_t *gqslot)
     return countpq(&gqslot->gqueue);
 }
 
+static inline int emptygq_p (xngqueue_t *gqslot)
+{
+    return emptypq_p(&gqslot->gqueue);
+}
+
 #ifdef CONFIG_XENO_OPT_SCALABLE_SCHED
 
 /* Multi-level priority queue, suitable for handling the runnable
@@ -593,7 +609,7 @@ typedef struct xnmlqueue {
 
     int qdir, maxpri;
 
-    unsigned elems;
+    int elems;
 
     u_long himap,
 	   lomap[__MLQ_LONGS];
@@ -604,12 +620,17 @@ typedef struct xnmlqueue {
 
 #undef __MLQ_LONGS
 
-static inline unsigned countmlq(xnmlqueue_t *mlqslot)
+static inline int countmlq(xnmlqueue_t *mlqslot)
 {
     return mlqslot->elems;
 }
 
-static inline unsigned indexmlq(xnmlqueue_t *mlqslot, int prio)
+static inline int emptymlq_p(xnmlqueue_t *mlqslot)
+{
+    return mlqslot->himap == 0;
+}
+
+static inline int indexmlq(xnmlqueue_t *mlqslot, int prio)
 {
     if (mlqslot->qdir == xnqueue_up) /* minprio > maxprio */
         return prio - mlqslot->maxpri;
@@ -617,7 +638,7 @@ static inline unsigned indexmlq(xnmlqueue_t *mlqslot, int prio)
         return mlqslot->maxpri - prio;
 }
 
-static inline unsigned ffsmlq(xnmlqueue_t *mlqslot)
+static inline int ffsmlq(xnmlqueue_t *mlqslot)
 {
     int hi = ffnz(mlqslot->himap);
     int lo = ffnz(mlqslot->lomap[hi]);
@@ -626,7 +647,7 @@ static inline unsigned ffsmlq(xnmlqueue_t *mlqslot)
 
 static inline void initmlq(xnmlqueue_t *mlqslot, int qdir, int maxpri)
 {
-    int i;
+    int prio;
 
     mlqslot->elems = 0;
     mlqslot->qdir  = qdir;
@@ -634,8 +655,8 @@ static inline void initmlq(xnmlqueue_t *mlqslot, int qdir, int maxpri)
     mlqslot->himap = 0;
     memset(&mlqslot->lomap,0,sizeof(mlqslot->lomap));
     
-    for (i = 0; i < XNCORE_NR_PRIO; i++)
-        initq(&mlqslot->queue[i]);
+    for (prio = 0; prio < XNCORE_NR_PRIO; prio++)
+        initq(&mlqslot->queue[prio]);
 }
 
 #define XNMLQUEUE_APPEND   0
@@ -643,7 +664,7 @@ static inline void initmlq(xnmlqueue_t *mlqslot, int qdir, int maxpri)
 
 static inline void addmlq(xnmlqueue_t *mlqslot,
 			  xnpholder_t  *holder,
-			  unsigned idx,
+			  int idx,
 			  int mode)
 {
     xnqueue_t *queue = &mlqslot->queue[idx];
@@ -693,14 +714,14 @@ static inline void prependmlq(xnmlqueue_t *mlqslot,
 static inline void removemlq(xnmlqueue_t *mlqslot,
 			     xnpholder_t *holder)
 {
-    unsigned idx = indexmlq(mlqslot,holder->prio);
+    int idx = indexmlq(mlqslot,holder->prio);
     xnqueue_t *queue = &mlqslot->queue[idx];
 
     mlqslot->elems--;
     
     removeq(queue, &holder->plink);
     
-    if (!countq(queue)) {
+    if (emptyq_p(queue)) {
         int hi = idx / BITS_PER_LONG;
         int lo = idx % BITS_PER_LONG;
         __clrbits(mlqslot->lomap[hi],1 << lo);
@@ -720,7 +741,7 @@ static inline xnpholder_t *getheadmlq(xnmlqueue_t *mlqslot)
 {
     xnqueue_t *queue;
 
-    if (!countmlq(mlqslot))
+    if (emptymlq_p(mlqslot))
         return NULL;
 
     queue = &mlqslot->queue[ffsmlq(mlqslot)];
@@ -730,12 +751,11 @@ static inline xnpholder_t *getheadmlq(xnmlqueue_t *mlqslot)
 
 static inline xnpholder_t *getmlq(xnmlqueue_t *mlqslot)
 {
-    unsigned idx;
     xnholder_t *holder;
     xnqueue_t *queue;
-    int hi, lo;
+    int idx, hi, lo;
 
-    if (!countmlq(mlqslot))
+    if (emptymlq_p(mlqslot))
         return NULL;
 
     idx = ffsmlq(mlqslot);
@@ -754,7 +774,7 @@ static inline xnpholder_t *getmlq(xnmlqueue_t *mlqslot)
 
     mlqslot->elems--;    
 
-    if (!countq(queue)) {
+    if (emptyq_p(queue)) {
         __clrbits(mlqslot->lomap[hi],1 << lo);
 	if (mlqslot->lomap[hi] == 0)
 	    __clrbits(mlqslot->himap,1 << hi);

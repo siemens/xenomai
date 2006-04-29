@@ -699,7 +699,7 @@ static inline void xnpod_switch_zombie (xnthread_t *threadout,
 
     xnltt_log_event(xeno_ev_finalize,threadout->name,threadin->name);
 
-    if (countq(&nkpod->tdeleteq) > 0 &&
+    if (!emptyq_p(&nkpod->tdeleteq) &&
         !testbits(threadout->status,XNROOT))
         {
         xnltt_log_event(xeno_ev_callout,"SELF-DELETE",threadout->name);
@@ -1020,7 +1020,7 @@ int xnpod_start_thread (xnthread_t *thread,
         nkpod->schedhook(thread,XNREADY);
 #endif /* __XENO_SIM__ */
 
-    if (countq(&nkpod->tstartq) > 0 &&
+    if (!emptyq_p(&nkpod->tstartq) &&
         !testbits(thread->status,XNROOT))
         {
         xnltt_log_event(xeno_ev_callout,"START",thread->name);
@@ -1335,7 +1335,7 @@ void xnpod_delete_thread (xnthread_t *thread)
         }
     else
         {
-        if (countq(&nkpod->tdeleteq) > 0 &&
+        if (!emptyq_p(&nkpod->tdeleteq) &&
             !testbits(thread->status,XNROOT))
             {
             xnltt_log_event(xeno_ev_callout,"DELETE",thread->name);
@@ -2030,7 +2030,7 @@ void xnpod_rotate_readyq (int prio)
 
     sched = xnpod_current_sched();
 
-    if (sched_countpq(&sched->readyq) == 0)
+    if (sched_emptypq_p(&sched->readyq))
         goto unlock_and_exit; /* Nobody is ready. */
 
     xnltt_log_event(xeno_ev_rdrotate,sched->runthread,prio);
@@ -2311,8 +2311,8 @@ void xnpod_switch_fpu (xnsched_t *sched)
  *
  * Preempts the running thread (because a higher priority thread has
  * just been readied).  The thread is re-inserted to the front of its
- * priority group in the ready thread queue. Must must be called
- * with nklock locked, interrupts off.
+ * priority group in the ready thread queue. Must be called with
+ * nklock locked, interrupts off.
  */
 
 static inline void xnpod_preempt_current_thread (xnsched_t *sched)
@@ -2324,14 +2324,16 @@ static inline void xnpod_preempt_current_thread (xnsched_t *sched)
     __setbits(thread->status,XNREADY);
 
 #ifdef __XENO_SIM__
-    if (sched_getheadpq(&sched->readyq) != &thread->rlink)
+    if (getheadpq(&sched->readyq) != &thread->rlink)
         nkpod->schedhook(thread,XNREADY);
-    else if (sched_countpq(&sched->readyq) > 1)
+    else if (nextpq(&sched->readyq,&thread->rlink) != NULL)
         {
         /* The running thread is still heading the ready queue and
            more than one thread is linked to this queue, so we may
            refer to the following element as a thread object
-           (obviously distinct from the running thread) safely. */
+           (obviously distinct from the running thread) safely. Note:
+           this works because the simulator never uses multi-level
+           queues for holding ready threads. --rpm */
         thread = link2thread(thread->rlink.plink.next,rlink);
         nkpod->schedhook(thread,XNREADY);
         }
@@ -2582,7 +2584,7 @@ void xnpod_schedule (void)
         nkpod->schedhook(runthread,XNRUNNING);
 #endif /* __XENO_SIM__ */
     
-    if (countq(&nkpod->tswitchq) > 0 &&
+    if (!emptyq_p(&nkpod->tswitchq) &&
         !testbits(runthread->status,XNROOT))
         {
         xnltt_log_event(xeno_ev_callout,"SWITCH",runthread->name);

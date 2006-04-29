@@ -28,7 +28,7 @@ static int xncore_unload_hook (void)
     /* If no thread is hosted by the Xenomai pod, unload it. We are
        called with interrupts off, nklock locked. */
 
-    if (nkpod == &__core_pod && countq(&nkpod->threadq) == 0)
+    if (nkpod == &__core_pod && emptyq_p(&nkpod->threadq))
 	{
 	xncore_umount();
 	return 1;

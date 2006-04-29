@@ -1,3 +1,8 @@
+2006-04-29  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/queue.h, ksrc: Define and use a predicate for
+	testing queue emptiness.
+
 2006-04-27  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
 
 	* ksrc/skins/native/intr.c (rt_intr_delete):
