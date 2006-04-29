@@ -944,7 +944,7 @@ static unsigned xnpipe_poll (struct file *file,
     if (testbits(state->status,XNPIPE_KERN_CONN))
 	w_mask |= (POLLOUT|POLLWRNORM);
 
-    if (countq(&state->outq) > 0)
+    if (!emptyq_p(&state->outq))
 	r_mask |= (POLLIN|POLLRDNORM);
 
     if (!r_mask)

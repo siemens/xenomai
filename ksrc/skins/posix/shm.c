@@ -523,7 +523,7 @@ int ftruncate (int fd, off_t len)
         }
 
     err = 0;
-    if (!countq(&shm->mappings))
+    if (emptyq_p(&shm->mappings))
         {
         /* Temporary storage, in order to preserve the memory contents upon
            resizing, if possible. */

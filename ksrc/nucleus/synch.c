@@ -230,7 +230,7 @@ static void xnsynch_clear_boost (xnsynch_t *synch,
     __clrbits(synch->status,XNSYNCH_CLAIMED);
     downprio = lastowner->bprio;
 
-    if (countpq(&lastowner->claimq) == 0)
+    if (emptypq_p(&lastowner->claimq))
 	__clrbits(lastowner->status,XNBOOST);
     else
 	{
@@ -343,7 +343,7 @@ xnthread_t *xnsynch_wakeup_one_sleeper (xnsynch_t *synch)
 
     xnlock_put_irqrestore(&nklock,s);
 
-    xnarch_post_graph_if(synch,0,countpq(&synch->pendq) == 0);
+    xnarch_post_graph_if(synch,0,emptypq_p(&synch->pendq));
 
     return thread;
 }
@@ -412,7 +412,7 @@ xnpholder_t *xnsynch_wakeup_this_sleeper (xnsynch_t *synch,
 
     xnlock_put_irqrestore(&nklock,s);
 
-    xnarch_post_graph_if(synch,0,countpq(&synch->pendq) == 0);
+    xnarch_post_graph_if(synch,0,emptypq_p(&synch->pendq));
 
     return nholder;
 }
@@ -477,7 +477,7 @@ int xnsynch_flush (xnsynch_t *synch, xnflags_t reason)
 
     xnltt_log_event(xeno_ev_syncflush,synch,reason);
 
-    status = countpq(&synch->pendq) > 0 ? XNSYNCH_RESCHED : XNSYNCH_DONE;
+    status = emptypq_p(&synch->pendq) ? XNSYNCH_DONE : XNSYNCH_RESCHED;
 
     while ((holder = getpq(&synch->pendq)) != NULL)
 	{
@@ -497,7 +497,7 @@ int xnsynch_flush (xnsynch_t *synch, xnflags_t reason)
 
     xnlock_put_irqrestore(&nklock,s);
 
-    xnarch_post_graph_if(synch,0,countpq(&synch->pendq) == 0);
+    xnarch_post_graph_if(synch,0,emptypq_p(&synch->pendq));
 
     return status;
 }
@@ -538,7 +538,7 @@ void xnsynch_forget_sleeper (xnthread_t *thread)
 	xnthread_t *owner = synch->owner;
 	int rprio;
 
-	if (countpq(&synch->pendq) == 0)
+	if (emptypq_p(&synch->pendq))
 	    /* No more sleepers: clear the boost. */
 	    xnsynch_clear_boost(synch,owner);
 	else if (getheadpq(&synch->pendq)->prio !=
@@ -560,7 +560,7 @@ void xnsynch_forget_sleeper (xnthread_t *thread)
 		}
 	}
 
-    xnarch_post_graph_if(synch,0,countpq(&synch->pendq) == 0);
+    xnarch_post_graph_if(synch,0,emptypq_p(&synch->pendq));
 }
 
 /*! 

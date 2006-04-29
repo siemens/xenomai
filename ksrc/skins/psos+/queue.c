@@ -243,9 +243,9 @@ static u_long q_destroy_internal (psosqueue_t *queue)
 
     removeq(&psosqueueq,&queue->link);
 
-    if (countpq(xnsynch_wait_queue(&queue->synchbase)) > 0)
+    if (!emptypq_p(xnsynch_wait_queue(&queue->synchbase)))
 	err = ERR_TATQDEL;
-    else if (countq(&queue->inq) > 0)
+    else if (!emptyq_p(&queue->inq))
 	err = ERR_MATQDEL;
     else
 	err = SUCCESS;
@@ -428,7 +428,7 @@ again:
 	mbuf = link2psosmbuf(holder);
 
 	xnarch_post_graph(&queue->synchbase,
-			  countq(&queue->inq) > 0 ? 2 : 0); /* POSTED or EMPTY */
+			  emptyq_p(&queue->inq) ? 0 : 2); /* EMPTY or POSTED */
 	}
 
     if (mbuf->len > buflen)

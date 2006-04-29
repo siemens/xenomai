@@ -88,7 +88,7 @@
 #ifdef CONFIG_XENO_OPT_SCALABLE_SCHED
 typedef xnmlqueue_t xnsched_queue_t;
 #define sched_initpq    initmlq
-#define sched_countpq   countmlq
+#define sched_emptypq_p emptymlq_p
 #define sched_insertpql insertmlql
 #define sched_insertpqf insertmlqf
 #define sched_appendpq  appendmlq
@@ -100,7 +100,7 @@ typedef xnmlqueue_t xnsched_queue_t;
 #else /* ! CONFIG_XENO_OPT_SCALABLE_SCHED */
 typedef xnpqueue_t xnsched_queue_t;
 #define sched_initpq    initpq
-#define sched_countpq   countpq
+#define sched_emptypq_p emptypq_p
 #define sched_insertpql insertpql
 #define sched_insertpqf insertpqf
 #define sched_appendpq  appendpq
