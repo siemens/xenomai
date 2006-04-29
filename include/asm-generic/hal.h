@@ -112,7 +112,6 @@ typedef rwlock_t rthal_rwlock_t;
 #define rthal_local_irq_restore(x)	ipipe_restore_pipeline_from(&rthal_domain,(x))
 #define rthal_local_irq_flags(x)	((x) = !!ipipe_test_pipeline_from(&rthal_domain))
 #define rthal_local_irq_test()		(!!ipipe_test_pipeline_from(&rthal_domain))
-#define rthal_local_irq_sync(x)		((x) = !!ipipe_test_and_unstall_pipeline_from(&rthal_domain))
 #define rthal_stage_irq_enable(dom)	ipipe_unstall_pipeline_from(dom)
 #define rthal_local_irq_save_hw(x)	local_irq_save_hw(x)
 #define rthal_local_irq_restore_hw(x)	local_irq_restore_hw(x)

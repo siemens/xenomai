@@ -60,7 +60,6 @@ typedef unsigned long spl_t;
 #define splnone()   rthal_local_irq_enable()
 #define spltest()   rthal_local_irq_test()
 #define splget(x)   rthal_local_irq_flags(x)
-#define splsync(x)  rthal_local_irq_sync(x)
 
 #if defined(CONFIG_SMP) && \
     (defined(CONFIG_XENO_OPT_STATS) || defined(CONFIG_XENO_OPT_DEBUG))
