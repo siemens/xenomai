@@ -27,14 +27,6 @@ int kthread_should_stop(void)
     return kthread_stop_info.p == current;
 }
 
-#if 0
-static struct task_struct *workqueue_daemon;
-
-static struct semaphore workqueue_req_pending;
-
-static DECLARE_MUTEX(workqueue_req_lock);
-#endif
-
 static void kthread_trampoline(void *data)
 {
     struct kthread_arg_block *bp = data;
@@ -111,58 +103,6 @@ int kthread_stop(struct task_struct *p)
     return ret;
 }
 
-#if 0
-/* workqueue_thread: The worker thread: waits for scheduled jobs and
-   run them. */
-
-static int workqueue_thread (void *arg)
-{
-    for (;;) {
-	down(&workqueue_req_pending);
-	down(&workqueue_req_lock);
-	up(&workqueue_req_lock);
-
-	if (kthread_should_stop())
-	    break;
-    }
-
-    return 0;
-}
-
-/* schedule_work() -- Push a new work request to be processed asap by
-   the worker thread. */
-
-int schedule_work(struct work_struct *work)
-{
-    return 0;
-}
-
-/* flush_scheduled_work() -- Flush pending jobs and wait until their
-   completion. We don't care for the livelock case: Xenomai won't
-   cause this. */
-
-void flush_scheduled_work(void)
-{
-}
-
-static int __init __xeno_compat_init(void)
-{
-    /* Create a worker thread for processing Xenomai workqueue
-       requests; we don't care for SMP scalability here, just have
-       one, it's enough regarding the way we use this support. */
-    sema_init(&workqueue_req_pending,0);
-    smp_wmb();
-    workqueue_daemon = kthread_create(&workqueue_thread,NULL,"workd");
-    return 0;
-}
-
-__initcall(__xeno_compat_init);
-#endif
-
 EXPORT_SYMBOL(kthread_create);
 EXPORT_SYMBOL(kthread_should_stop);
 EXPORT_SYMBOL(kthread_stop);
-#if 0
-EXPORT_SYMBOL(schedule_work);
-EXPORT_SYMBOL(flush_scheduled_work);
-#endif
