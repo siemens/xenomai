@@ -1,6 +1,57 @@
---- 2.6.14/include/linux/hardirq.h	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/include/linux/hardirq.h	2005-10-31 10:15:18.000000000 +0100
-@@ -87,8 +87,21 @@
+--- 2.6.15/drivers/pci/msi.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/drivers/pci/msi.c	2006-02-16 18:05:04.000000000 +0100
+@@ -149,6 +149,21 @@ static void unmask_MSI_irq(unsigned int 
+ 	msi_set_mask_bit(vector, 0);
+ }
+ 
++#ifdef CONFIG_IPIPE
++static void ack_MSI_irq_w_maskbit(unsigned int vector)
++{
++    mask_MSI_irq(vector);
++    __ack_APIC_irq();
++}
++static void ack_MSI_irq_wo_maskbit(unsigned int vector)
++{
++    __ack_APIC_irq();
++}
++#else /* !CONFIG_IPIPE */
++#define ack_MSI_irq_wo_maskbit  do_nothing
++#define ack_MSI_irq_w_maskbit   mask_MSI_irq
++#endif /* CONFIG_IPIPE */
++
+ static unsigned int startup_msi_irq_wo_maskbit(unsigned int vector)
+ {
+ 	struct msi_desc *entry;
+@@ -212,7 +227,7 @@ static struct hw_interrupt_type msix_irq
+ 	.shutdown	= shutdown_msi_irq,
+ 	.enable		= unmask_MSI_irq,
+ 	.disable	= mask_MSI_irq,
+-	.ack		= mask_MSI_irq,
++	.ack		= ack_MSI_irq_w_maskbit,
+ 	.end		= end_msi_irq_w_maskbit,
+ 	.set_affinity	= set_msi_irq_affinity
+ };
+@@ -228,7 +243,7 @@ static struct hw_interrupt_type msi_irq_
+ 	.shutdown	= shutdown_msi_irq,
+ 	.enable		= unmask_MSI_irq,
+ 	.disable	= mask_MSI_irq,
+-	.ack		= mask_MSI_irq,
++	.ack		= ack_MSI_irq_w_maskbit,
+ 	.end		= end_msi_irq_w_maskbit,
+ 	.set_affinity	= set_msi_irq_affinity
+ };
+@@ -244,7 +259,7 @@ static struct hw_interrupt_type msi_irq_
+ 	.shutdown	= shutdown_msi_irq,
+ 	.enable		= do_nothing,
+ 	.disable	= do_nothing,
+-	.ack		= do_nothing,
++	.ack		= ack_MSI_irq_wo_maskbit,
+ 	.end		= end_msi_irq_wo_maskbit,
+ 	.set_affinity	= set_msi_irq_affinity
+ };
+--- 2.6.15/include/linux/hardirq.h	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/include/linux/hardirq.h	2006-01-07 15:18:31.000000000 +0100
+@@ -87,8 +87,21 @@ extern void synchronize_irq(unsigned int
  # define synchronize_irq(irq)	barrier()
  #endif
  
@@ -20,11 +71,11 @@
  #define nmi_exit()		sub_preempt_count(HARDIRQ_OFFSET)
 +#endif /* CONFIG_IPIPE */
  
- #ifndef CONFIG_VIRT_CPU_ACCOUNTING
- static inline void account_user_vtime(struct task_struct *tsk)
---- 2.6.14/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/include/linux/ipipe.h	2006-01-06 12:43:53.000000000 +0100
-@@ -0,0 +1,792 @@
+ struct task_struct;
+ 
+--- 2.6.15/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.15-ipipe/include/linux/ipipe.h	2006-04-29 16:41:22.000000000 +0200
+@@ -0,0 +1,734 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -152,9 +203,13 @@
 +typedef void (*ipipe_irq_handler_t)(unsigned irq,
 +				    void *cookie);
 +
++#define IPIPE_SAME_HANDLER	((ipipe_irq_handler_t)(-1))
++
 +typedef int (*ipipe_irq_ackfn_t)(unsigned irq);
 +
-+#define IPIPE_SAME_HANDLER	((ipipe_irq_handler_t)(-1))
++typedef int (*ipipe_event_handler_t)(unsigned event,
++				     struct ipipe_domain *from,
++				     void *data);
 +
 +struct ipipe_domain {
 +
@@ -177,9 +232,7 @@
 +		void *cookie;
 +	} ____cacheline_aligned irqs[IPIPE_NR_IRQS];
 +
-+	int (*evhand[IPIPE_NR_EVENTS])(unsigned event,
-+				       struct ipipe_domain *from,
-+				       void *data); /* Event handlers. */
++	ipipe_event_handler_t evhand[IPIPE_NR_EVENTS]; /* Event handlers. */
 +	unsigned long long evself;	/* Self-monitored event bits. */
 +
 +#ifdef CONFIG_IPIPE_STATS
@@ -389,13 +442,21 @@
 +
 +unsigned long __ipipe_test_and_stall_root(void);
 +
-+void fastcall __ipipe_restore_root(unsigned long flags);
++void fastcall __ipipe_walk_pipeline(struct list_head *pos, int cpuid);
++
++void fastcall __ipipe_restore_root(unsigned long x);
 +
 +int fastcall __ipipe_schedule_irq(unsigned irq, struct list_head *head);
 +
 +int fastcall __ipipe_dispatch_event(unsigned event, void *data);
 +
 +#define __ipipe_pipeline_head_p(ipd) (&(ipd)->p_link == __ipipe_pipeline.next)
++
++/*
++ * Keep the following as a macro, so that client code could check for
++ * the support of the invariant pipeline head optimization.
++ */
++#define __ipipe_pipeline_head() list_entry(__ipipe_pipeline.next,struct ipipe_domain,p_link)
 +
 +#define __ipipe_event_pipelined_p(ev) \
 +	(__ipipe_event_monitors[ev] > 0 || (ipipe_current_domain->evself & (1LL << ev)))
@@ -570,7 +631,6 @@
 +
 +static inline int ipipe_propagate_irq(unsigned irq)
 +{
-+
 +	return __ipipe_schedule_irq(irq, ipipe_current_domain->p_link.next);
 +}
 +
@@ -580,132 +640,45 @@
 +	return __ipipe_schedule_irq(irq, &ipipe_current_domain->p_link);
 +}
 +
-+static inline void ipipe_stall_pipeline_from(struct ipipe_domain *ipd)
-+{
-+	ipipe_declare_cpuid;
-+#ifdef CONFIG_SMP
-+	unsigned long flags;
++void fastcall ipipe_stall_pipeline_from(struct ipipe_domain *ipd);
 +
-+	ipipe_lock_cpu(flags); /* Care for migration. */
-+
-+	__set_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
-+	ipipe_mark_domain_stall(ipd, cpuid);
-+
-+	if (!__ipipe_pipeline_head_p(ipd))
-+		ipipe_unlock_cpu(flags);
-+#else	/* CONFIG_SMP */
-+	set_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
-+	ipipe_mark_domain_stall(ipd, cpuid);
-+
-+	if (__ipipe_pipeline_head_p(ipd))
-+		local_irq_disable_hw();
-+#endif	/* CONFIG_SMP */
-+}
-+
-+static inline unsigned long ipipe_test_pipeline_from(struct ipipe_domain *ipd)
-+{
-+	unsigned long flags, s;
-+	ipipe_declare_cpuid;
-+
-+	ipipe_get_cpu(flags);
-+	s = test_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
-+	ipipe_put_cpu(flags);
-+
-+	return s;
-+}
-+
-+static inline unsigned long ipipe_test_and_stall_pipeline_from(struct
-+							       ipipe_domain
-+							       *ipd)
-+{
-+	ipipe_declare_cpuid;
-+	unsigned long s;
-+#ifdef CONFIG_SMP
-+	unsigned long flags;
-+
-+	ipipe_lock_cpu(flags); /* Care for migration. */
-+
-+	s = __test_and_set_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
-+	ipipe_mark_domain_stall(ipd, cpuid);
-+
-+	if (!__ipipe_pipeline_head_p(ipd))
-+		ipipe_unlock_cpu(flags);
-+#else	/* CONFIG_SMP */
-+	s = test_and_set_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
-+	ipipe_mark_domain_stall(ipd, cpuid);
-+
-+	if (__ipipe_pipeline_head_p(ipd))
-+		local_irq_disable_hw();
-+#endif	/* CONFIG_SMP */
-+
-+	return s;
-+}
++unsigned long fastcall ipipe_test_and_stall_pipeline_from(struct ipipe_domain *ipd);
 +
 +void fastcall ipipe_unstall_pipeline_from(struct ipipe_domain *ipd);
 +
-+static inline unsigned long ipipe_test_and_unstall_pipeline_from(struct
-+								 ipipe_domain
-+								 *ipd)
++unsigned long fastcall ipipe_test_and_unstall_pipeline_from(struct ipipe_domain *ipd);
++
++void fastcall ipipe_restore_pipeline_from(struct ipipe_domain *ipd,
++					  unsigned long x);
++void ipipe_stall_pipeline_head(void);
++
++unsigned long ipipe_test_and_stall_pipeline_head(void);
++
++void ipipe_unstall_pipeline_head(void);
++
++void fastcall ipipe_restore_pipeline_head(unsigned long x);
++
++static inline unsigned long ipipe_test_pipeline_from(struct ipipe_domain *ipd)
 +{
-+	unsigned long flags, s;
++	unsigned long flags, x;
 +	ipipe_declare_cpuid;
 +
 +	ipipe_get_cpu(flags);
-+	s = test_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
-+	ipipe_unstall_pipeline_from(ipd);
++	x = test_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
 +	ipipe_put_cpu(flags);
 +
-+	return s;
-+}
-+
-+static inline void ipipe_unstall_pipeline(void)
-+{
-+	ipipe_unstall_pipeline_from(ipipe_current_domain);
-+}
-+
-+static inline unsigned long ipipe_test_and_unstall_pipeline(void)
-+{
-+	return ipipe_test_and_unstall_pipeline_from(ipipe_current_domain);
-+}
-+
-+static inline unsigned long ipipe_test_pipeline(void)
-+{
-+	return ipipe_test_pipeline_from(ipipe_current_domain);
-+}
-+
-+static inline unsigned long ipipe_test_and_stall_pipeline(void)
-+{
-+	return ipipe_test_and_stall_pipeline_from(ipipe_current_domain);
-+}
-+
-+static inline void ipipe_restore_pipeline_from(struct ipipe_domain *ipd,
-+					       unsigned long flags)
-+{
-+	if (flags)
-+		ipipe_stall_pipeline_from(ipd);
-+	else
-+		ipipe_unstall_pipeline_from(ipd);
-+}
-+
-+static inline void ipipe_stall_pipeline(void)
-+{
-+	ipipe_stall_pipeline_from(ipipe_current_domain);
-+}
-+
-+static inline void ipipe_restore_pipeline(unsigned long flags)
-+{
-+	ipipe_restore_pipeline_from(ipipe_current_domain, flags);
++	return x;
 +}
 +
 +static inline void ipipe_restore_pipeline_nosync(struct ipipe_domain *ipd,
-+						 unsigned long flags, int cpuid)
++						 unsigned long x, int cpuid)
 +{
 +	/*
 +	 * If cpuid is current, then it must be held on entry
 +	 * (ipipe_get_cpu/local_irq_save_hw/local_irq_disable_hw).
 +	 */
 +
-+	if (flags) {
++	if (x) {
 +		__set_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
 +		ipipe_mark_domain_stall(ipd,cpuid);
 +	}
@@ -714,6 +687,24 @@
 +		ipipe_mark_domain_unstall(ipd,cpuid);
 +	}
 +}
++
++#define ipipe_unstall_pipeline() \
++	ipipe_unstall_pipeline_from(ipipe_current_domain)
++
++#define ipipe_test_and_unstall_pipeline() \
++	ipipe_test_and_unstall_pipeline_from(ipipe_current_domain)
++
++#define ipipe_test_pipeline() \
++	ipipe_test_pipeline_from(ipipe_current_domain)
++
++#define ipipe_test_and_stall_pipeline() \
++	ipipe_test_and_stall_pipeline_from(ipipe_current_domain)
++
++#define ipipe_stall_pipeline() \
++	ipipe_stall_pipeline_from(ipipe_current_domain)
++
++#define ipipe_restore_pipeline(x) \
++	ipipe_restore_pipeline_from(ipipe_current_domain, (x))
 +
 +void ipipe_init_attr(struct ipipe_domain_attr *attr);
 +
@@ -736,11 +727,9 @@
 +	clear_bit(IPIPE_SPRINTK_FLAG, &ipd->flags);
 +}
 +
-+int ipipe_catch_event(struct ipipe_domain *ipd,
-+		      unsigned event,
-+		      int (*handler)(unsigned event,
-+				     struct ipipe_domain *ipd,
-+				     void *data));
++ipipe_event_handler_t ipipe_catch_event(struct ipipe_domain *ipd,
++					unsigned event,
++					ipipe_event_handler_t handler);
 +
 +cpumask_t ipipe_set_irq_affinity(unsigned irq,
 +				 cpumask_t cpumask);
@@ -786,6 +775,8 @@
 +		__ipipe_unlock_irq(ipipe_percpu_domain[cpuid], irq);	\
 +	} while(0)
 +
++#define ipipe_root_domain_p			(ipipe_current_domain == ipipe_root_domain)
++
 +#else	/* !CONFIG_IPIPE */
 +
 +#define ipipe_init()				do { } while(0)
@@ -814,30 +805,25 @@
 +#define ipipe_irq_lock(irq)			do { } while(0)
 +#define ipipe_irq_unlock(irq)			do { } while(0)
 +
++#define ipipe_root_domain_p			1
++
 +#endif	/* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_H */
---- 2.6.14/include/linux/preempt.h	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/include/linux/preempt.h	2005-10-31 10:15:18.000000000 +0100
-@@ -13,41 +13,58 @@
-   extern void fastcall add_preempt_count(int val);
-   extern void fastcall sub_preempt_count(int val);
- #else
--# define add_preempt_count(val)	do { preempt_count() += (val); } while (0)
--# define sub_preempt_count(val)	do { preempt_count() -= (val); } while (0)
-+#define add_preempt_count(val)	do { preempt_count() += (val); } while (0)
-+#define sub_preempt_count(val)	do { preempt_count() -= (val); } while (0)
+--- 2.6.15/include/linux/linkage.h	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/include/linux/linkage.h	2006-01-07 15:45:45.000000000 +0100
+@@ -51,4 +51,8 @@
+ #define fastcall
  #endif
  
--#define inc_preempt_count() add_preempt_count(1)
--#define dec_preempt_count() sub_preempt_count(1)
-+#define inc_preempt_count()	add_preempt_count(1)
-+#define dec_preempt_count()	sub_preempt_count(1)
- 
--#define preempt_count()	(current_thread_info()->preempt_count)
-+#define preempt_count()		(current_thread_info()->preempt_count)
- 
- #ifdef CONFIG_PREEMPT
++#ifndef notrace
++#define notrace		__attribute__((no_instrument_function))
++#endif
++
+ #endif
+--- 2.6.15/include/linux/preempt.h	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/include/linux/preempt.h	2006-01-07 15:24:17.000000000 +0100
+@@ -27,29 +27,43 @@
  
  asmlinkage void preempt_schedule(void);
  
@@ -846,15 +832,12 @@
 -	inc_preempt_count(); \
 -	barrier(); \
 +#ifdef CONFIG_IPIPE
-+
 +#include <asm/ipipe.h>
-+
 +extern struct ipipe_domain *ipipe_percpu_domain[], *ipipe_root_domain;
-+
 +#define ipipe_preempt_guard()	(ipipe_percpu_domain[ipipe_processor_id()] == ipipe_root_domain)
-+#else
++#else /* !CONFIG_IPIPE */
 +#define ipipe_preempt_guard()	1
-+#endif
++#endif /* CONFIG_IPIPE */
 +
 +#define preempt_disable()						\
 +do {									\
@@ -891,16 +874,17 @@
 -#define preempt_enable() \
 -do { \
 -	preempt_enable_no_resched(); \
--	preempt_check_resched(); \
 +#define preempt_enable()						\
 +do {									\
 +	preempt_enable_no_resched();					\
+ 	barrier(); \
+-	preempt_check_resched(); \
 +	preempt_check_resched();					\
  } while (0)
  
  #else
---- 2.6.14/include/linux/sched.h	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/include/linux/sched.h	2006-01-30 12:42:22.000000000 +0100
+--- 2.6.15/include/linux/sched.h	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/include/linux/sched.h	2006-01-30 15:14:43.000000000 +0100
 @@ -4,6 +4,7 @@
  #include <asm/param.h>	/* for HZ */
  
@@ -909,7 +893,7 @@
  #include <linux/capability.h>
  #include <linux/threads.h>
  #include <linux/kernel.h>
-@@ -127,6 +128,11 @@
+@@ -127,6 +128,11 @@ extern unsigned long nr_iowait(void);
  #define EXIT_DEAD		32
  /* in tsk->state again */
  #define TASK_NONINTERACTIVE	64
@@ -921,7 +905,7 @@
  
  #define __set_task_state(tsk, state_value)		\
  	do { (tsk)->state = (state_value); } while (0)
-@@ -813,6 +819,9 @@
+@@ -857,6 +863,9 @@ struct task_struct {
  	int cpuset_mems_generation;
  #endif
  	atomic_t fs_excl;	/* holding fs exclusive resources */
@@ -931,9 +915,9 @@
  };
  
  static inline pid_t process_group(struct task_struct *tsk)
---- 2.6.14/init/Kconfig	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/init/Kconfig	2006-01-12 23:46:00.000000000 +0100
-@@ -69,6 +69,7 @@
+--- 2.6.15/init/Kconfig	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/init/Kconfig	2006-01-07 15:18:31.000000000 +0100
+@@ -69,6 +69,7 @@ menu "General setup"
  
  config LOCALVERSION
  	string "Local version - append to kernel release"
@@ -941,17 +925,17 @@
  	help
  	  Append an extra string to the end of your kernel version.
  	  This will show up when you type uname, for example.
---- 2.6.14/init/main.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/init/main.c	2005-12-29 15:25:54.000000000 +0100
-@@ -402,6 +402,7 @@
- 	 */
+--- 2.6.15/init/main.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/init/main.c	2006-01-07 15:24:56.000000000 +0100
+@@ -403,6 +403,7 @@ static void noinline rest_init(void)
  	schedule();
+ 	preempt_disable();
  
-+ 	ipipe_reset_stats();
++  	ipipe_reset_stats();
+ 	/* Call into cpu_idle with preempt disabled */
  	cpu_idle();
  } 
- 
-@@ -487,6 +488,11 @@
+@@ -489,6 +490,11 @@ asmlinkage void __init start_kernel(void
  	init_timers();
  	softirq_init();
  	time_init();
@@ -963,7 +947,7 @@
  
  	/*
  	 * HACK ALERT! This is early. We're enabling the console before
-@@ -611,6 +617,7 @@
+@@ -613,6 +619,7 @@ static void __init do_basic_setup(void)
  #ifdef CONFIG_SYSCTL
  	sysctl_init();
  #endif
@@ -971,19 +955,19 @@
  
  	/* Networking initialization needs a process context */ 
  	sock_init();
---- 2.6.14/kernel/Makefile	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/kernel/Makefile	2006-01-30 12:46:21.000000000 +0100
-@@ -32,6 +32,7 @@
- obj-$(CONFIG_GENERIC_HARDIRQS) += irq/
+--- 2.6.15/kernel/Makefile	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/kernel/Makefile	2006-01-07 15:25:12.000000000 +0100
+@@ -32,6 +32,7 @@ obj-$(CONFIG_GENERIC_HARDIRQS) += irq/
  obj-$(CONFIG_CRASH_DUMP) += crash_dump.o
  obj-$(CONFIG_SECCOMP) += seccomp.o
+ obj-$(CONFIG_RCU_TORTURE_TEST) += rcutorture.o
 +obj-$(CONFIG_IPIPE) += ipipe/
  
  ifneq ($(CONFIG_SCHED_NO_NO_OMIT_FRAME_POINTER),y)
  # According to Alan Modra <alan@linuxcare.com.au>, the -fno-omit-frame-pointer is
---- 2.6.14/kernel/exit.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/kernel/exit.c	2005-10-31 10:15:18.000000000 +0100
-@@ -846,6 +846,7 @@
+--- 2.6.15/kernel/exit.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/kernel/exit.c	2006-01-07 15:18:31.000000000 +0100
+@@ -846,6 +846,7 @@ fastcall NORET_TYPE void do_exit(long co
  		exit_itimers(tsk->signal);
  		acct_process(code);
  	}
@@ -991,11 +975,11 @@
  	exit_mm(tsk);
  
  	exit_sem(tsk);
---- 2.6.14/kernel/fork.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/kernel/fork.c	2005-10-31 10:15:18.000000000 +0100
-@@ -1153,6 +1153,14 @@
- 	total_forks++;
- 	write_unlock_irq(&tasklist_lock);
+--- 2.6.15/kernel/fork.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/kernel/fork.c	2006-01-07 15:18:31.000000000 +0100
+@@ -1142,6 +1142,14 @@ static task_t *copy_process(unsigned lon
+ 	proc_fork_connector(p);
+ 	cpuset_fork(p);
  	retval = 0;
 +#ifdef CONFIG_IPIPE
 +	{
@@ -1008,8 +992,8 @@
  
  fork_out:
  	if (retval)
---- 2.6.14/kernel/ipipe/Kconfig	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/kernel/ipipe/Kconfig	2006-01-09 03:41:09.000000000 +0100
+--- 2.6.15/kernel/ipipe/Kconfig	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.15-ipipe/kernel/ipipe/Kconfig	2006-04-26 19:32:34.000000000 +0200
 @@ -0,0 +1,15 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
@@ -1026,15 +1010,15 @@
 +	  Activate this option if you want runtime statistics to be collected
 +	  while the I-pipe is operating. This option adds a small overhead, but
 +	  is useful to detect unexpected latency spots.
---- 2.6.14/kernel/ipipe/Makefile	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/kernel/ipipe/Makefile	2005-12-29 14:04:04.000000000 +0100
+--- 2.6.15/kernel/ipipe/Makefile	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.15-ipipe/kernel/ipipe/Makefile	2005-12-29 14:04:04.000000000 +0100
 @@ -0,0 +1,3 @@
 +
 +obj-$(CONFIG_IPIPE)	+= core.o generic.o
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
---- 2.6.14/kernel/ipipe/core.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/kernel/ipipe/core.c	2006-01-06 09:28:39.000000000 +0100
-@@ -0,0 +1,827 @@
+--- 2.6.15/kernel/ipipe/core.c	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.15-ipipe/kernel/ipipe/core.c	2006-04-30 18:32:46.000000000 +0200
+@@ -0,0 +1,983 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -1077,7 +1061,7 @@
 +
 +ipipe_spinlock_t __ipipe_pipelock = IPIPE_SPIN_LOCK_UNLOCKED;
 +
-+struct list_head __ipipe_pipeline;
++LIST_HEAD(__ipipe_pipeline);
 +
 +unsigned long __ipipe_virtual_irq_map = 0;
 +
@@ -1102,8 +1086,6 @@
 +	 * running on the boot CPU, hw interrupts are off, and
 +	 * secondary CPUs are still lost in space.
 +	 */
-+
-+	INIT_LIST_HEAD(&__ipipe_pipeline);
 +
 +	ipd->name = "Linux";
 +	ipd->domid = IPIPE_ROOT_ID;
@@ -1222,36 +1204,83 @@
 +
 +unsigned long __ipipe_test_root(void)
 +{
-+	unsigned long flags, s;
++	unsigned long flags, x;
 +	ipipe_declare_cpuid;
 +
 +	ipipe_get_cpu(flags); /* Care for migration. */
-+	s = test_bit(IPIPE_STALL_FLAG, &ipipe_root_domain->cpudata[cpuid].status);
++	x = test_bit(IPIPE_STALL_FLAG, &ipipe_root_domain->cpudata[cpuid].status);
 +	ipipe_put_cpu(flags);
 +
-+	return s;
++	return x;
 +}
 +
 +unsigned long __ipipe_test_and_stall_root(void)
 +{
-+	unsigned long flags, s;
++	unsigned long flags, x;
 +	ipipe_declare_cpuid;
 +
 +	ipipe_get_cpu(flags); /* Care for migration. */
-+	s = test_and_set_bit(IPIPE_STALL_FLAG,
++	x = test_and_set_bit(IPIPE_STALL_FLAG,
 +			     &ipipe_root_domain->cpudata[cpuid].status);
 +	ipipe_mark_domain_stall(ipipe_root_domain,cpuid);
 +	ipipe_put_cpu(flags);
 +
-+	return s;
++	return x;
 +}
 +
-+void fastcall __ipipe_restore_root(unsigned long flags)
++void fastcall __ipipe_restore_root(unsigned long x)
 +{
-+	if (flags)
++	if (x)
 +		__ipipe_stall_root();
 +	else
 +		__ipipe_unstall_root();
++}
++
++void fastcall ipipe_stall_pipeline_from(struct ipipe_domain *ipd)
++{
++	ipipe_declare_cpuid;
++#ifdef CONFIG_SMP
++	unsigned long flags;
++
++	ipipe_lock_cpu(flags); /* Care for migration. */
++
++	__set_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++	ipipe_mark_domain_stall(ipd, cpuid);
++
++	if (!__ipipe_pipeline_head_p(ipd))
++		ipipe_unlock_cpu(flags);
++#else	/* CONFIG_SMP */
++	set_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++	ipipe_mark_domain_stall(ipd, cpuid);
++
++	if (__ipipe_pipeline_head_p(ipd))
++		local_irq_disable_hw();
++#endif	/* CONFIG_SMP */
++}
++
++unsigned long fastcall ipipe_test_and_stall_pipeline_from(struct ipipe_domain *ipd)
++{
++	ipipe_declare_cpuid;
++	unsigned long s;
++#ifdef CONFIG_SMP
++	unsigned long flags;
++
++	ipipe_lock_cpu(flags); /* Care for migration. */
++
++	s = __test_and_set_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++	ipipe_mark_domain_stall(ipd, cpuid);
++
++	if (!__ipipe_pipeline_head_p(ipd))
++		ipipe_unlock_cpu(flags);
++#else	/* CONFIG_SMP */
++	s = test_and_set_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++	ipipe_mark_domain_stall(ipd, cpuid);
++
++	if (__ipipe_pipeline_head_p(ipd))
++		local_irq_disable_hw();
++#endif	/* CONFIG_SMP */
++
++	return s;
 +}
 +
 +/*
@@ -1261,7 +1290,6 @@
 + */
 +void fastcall ipipe_unstall_pipeline_from(struct ipipe_domain *ipd)
 +{
-+	struct ipipe_domain *this_domain;
 +	struct list_head *pos;
 +	unsigned long flags;
 +	ipipe_declare_cpuid;
@@ -1272,22 +1300,130 @@
 +
 +	ipipe_mark_domain_unstall(ipd, cpuid);
 +
-+	this_domain = ipipe_percpu_domain[cpuid];
++	if (ipd == ipipe_percpu_domain[cpuid])
++		pos = &ipd->p_link;
++	else
++		pos = __ipipe_pipeline.next;
 +
-+	if (ipd == this_domain) {
-+		if (ipd->cpudata[cpuid].irq_pending_hi != 0)
-+			__ipipe_sync_stage(IPIPE_IRQMASK_ANY);
++	__ipipe_walk_pipeline(pos, cpuid);
 +
-+		goto release_cpu_and_exit;
++	if (__ipipe_pipeline_head_p(ipd))
++		local_irq_enable_hw();
++	else
++		ipipe_unlock_cpu(flags);
++}
++
++unsigned long fastcall ipipe_test_and_unstall_pipeline_from(struct ipipe_domain *ipd)
++{
++	unsigned long flags, x;
++	ipipe_declare_cpuid;
++
++	ipipe_get_cpu(flags);
++	x = test_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++	ipipe_unstall_pipeline_from(ipd);
++	ipipe_put_cpu(flags);
++
++	return x;
++}
++
++void fastcall ipipe_restore_pipeline_from(struct ipipe_domain *ipd,
++					  unsigned long x)
++{
++	if (x)
++		ipipe_stall_pipeline_from(ipd);
++	else
++		ipipe_unstall_pipeline_from(ipd);
++}
++
++void ipipe_stall_pipeline_head(void)
++{
++	struct ipipe_domain *ipd;
++	ipipe_declare_cpuid;
++	unsigned long flags;
++
++	ipipe_lock_cpu(flags); /* Care for migration and leave locked. */
++	ipd = __ipipe_pipeline_head();
++	__set_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++	ipipe_mark_domain_stall(ipd, cpuid);
++}
++
++unsigned long ipipe_test_and_stall_pipeline_head(void)
++{
++	struct ipipe_domain *ipd;
++	unsigned long s, flags;
++	ipipe_declare_cpuid;
++
++	ipipe_lock_cpu(flags); /* Care for migration and leave locked. */
++	ipd = __ipipe_pipeline_head();
++	s = __test_and_set_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++	ipipe_mark_domain_stall(ipd, cpuid);
++
++	return s;
++}
++
++void ipipe_unstall_pipeline_head(void)
++{
++	struct ipipe_domain *ipd;
++	unsigned long flags;
++	ipipe_declare_cpuid;
++
++	ipipe_lock_cpu(flags);
++	ipd = __ipipe_pipeline_head();
++	__clear_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++	ipipe_mark_domain_unstall(ipd, cpuid);
++
++	/* Since ipd is the pipeline head, only hw masking could have
++	   previously been in effect, therefore no external interrupt
++	   could have piled up in our log, but, virtual interrupts
++	   might have, so we try to sync those if needed. */
++
++	if (unlikely((ipd->cpudata[cpuid].irq_pending_hi & IPIPE_IRQMASK_VIRT) != 0)) {
++		if (likely(ipd == ipipe_percpu_domain[cpuid]))
++			__ipipe_sync_stage(IPIPE_IRQMASK_VIRT);
++		else
++			__ipipe_walk_pipeline(&ipd->p_link, cpuid);
++        }
++
++	local_irq_enable_hw();
++}
++
++void fastcall ipipe_restore_pipeline_head(unsigned long x)
++{
++	struct ipipe_domain *ipd;
++	ipipe_declare_cpuid;
++	unsigned long flags;
++
++	ipipe_lock_cpu(flags);
++	ipd = __ipipe_pipeline_head();
++	if (x) {
++		__set_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++		ipipe_mark_domain_stall(ipd, cpuid);
++	} else {
++		__clear_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++		ipipe_mark_domain_unstall(ipd, cpuid);
++		if (unlikely((ipd->cpudata[cpuid].irq_pending_hi & IPIPE_IRQMASK_VIRT) != 0)) {
++			if (likely(ipd == ipipe_percpu_domain[cpuid]))
++				__ipipe_sync_stage(IPIPE_IRQMASK_VIRT);
++			else
++				__ipipe_walk_pipeline(&ipd->p_link, cpuid);
++		}
++		local_irq_enable_hw();
 +	}
++}
 +
-+	list_for_each(pos, &__ipipe_pipeline) {
++/* __ipipe_walk_pipeline(): Plays interrupts pending in the log. Must
++   be called with local hw interrupts disabled. */
 +
++void fastcall __ipipe_walk_pipeline(struct list_head *pos, int cpuid)
++{
++	struct ipipe_domain *this_domain = ipipe_percpu_domain[cpuid];
++
++	while (pos != &__ipipe_pipeline) {
 +		struct ipipe_domain *next_domain =
-+			list_entry(pos, struct ipipe_domain, p_link);
++		    list_entry(pos, struct ipipe_domain, p_link);
 +
-+		if (test_bit(IPIPE_STALL_FLAG,
-+			     &next_domain->cpudata[cpuid].status))
++		if (test_bit
++		    (IPIPE_STALL_FLAG, &next_domain->cpudata[cpuid].status))
 +			break;	/* Stalled stage -- do not go further. */
 +
 +		if (next_domain->cpudata[cpuid].irq_pending_hi != 0) {
@@ -1303,22 +1439,16 @@
 +				if (this_domain->cpudata[cpuid].
 +				    irq_pending_hi != 0
 +				    && !test_bit(IPIPE_STALL_FLAG,
-+						 &this_domain->cpudata[cpuid].
-+						 status))
++						 &this_domain->cpudata[cpuid].status))
 +					__ipipe_sync_stage(IPIPE_IRQMASK_ANY);
 +			}
 +
 +			break;
 +		} else if (next_domain == this_domain)
 +			break;
++
++		pos = next_domain->p_link.next;
 +	}
-+
-+release_cpu_and_exit:
-+
-+	if (__ipipe_pipeline_head_p(ipd))
-+		local_irq_enable_hw();
-+	else
-+		ipipe_unlock_cpu(flags);
 +}
 +
 +/*
@@ -1449,7 +1579,7 @@
 +	} else
 +		modemask &=
 +		    ~(IPIPE_HANDLE_MASK | IPIPE_STICKY_MASK |
-+		      IPIPE_SHARED_MASK);
++		      IPIPE_SHARED_MASK | IPIPE_EXCLUSIVE_MASK);
 +
 +	if (acknowledge == NULL) {
 +		if ((modemask & IPIPE_SHARED_MASK) == 0)
@@ -1566,9 +1696,11 @@
 +		 */
 +		if (next_domain->evhand[event] != NULL)	{
 +			ipipe_percpu_domain[cpuid] = next_domain;
-+			ipipe_unlock_cpu(flags);
++			if (next_domain == ipipe_root_domain)
++				ipipe_unlock_cpu(flags);
 +			propagate = !next_domain->evhand[event](event,start_domain,data);
-+			ipipe_lock_cpu(flags);
++			if (next_domain == ipipe_root_domain)
++				ipipe_lock_cpu(flags);
 +			if (ipipe_percpu_domain[cpuid] != next_domain)
 +				this_domain = ipipe_percpu_domain[cpuid];
 +		}
@@ -1850,9 +1982,17 @@
 +EXPORT_SYMBOL(ipipe_control_irq);
 +EXPORT_SYMBOL(ipipe_suspend_domain);
 +EXPORT_SYMBOL(ipipe_alloc_virq);
-+EXPORT_SYMBOL(ipipe_unstall_pipeline_from);
 +EXPORT_SYMBOL(ipipe_percpu_domain);
 +EXPORT_SYMBOL(ipipe_root_domain);
++EXPORT_SYMBOL(ipipe_stall_pipeline_from);
++EXPORT_SYMBOL(ipipe_test_and_stall_pipeline_from);
++EXPORT_SYMBOL(ipipe_unstall_pipeline_from);
++EXPORT_SYMBOL(ipipe_restore_pipeline_from);
++EXPORT_SYMBOL(ipipe_test_and_unstall_pipeline_from);
++EXPORT_SYMBOL(ipipe_stall_pipeline_head);
++EXPORT_SYMBOL(ipipe_test_and_stall_pipeline_head);
++EXPORT_SYMBOL(ipipe_unstall_pipeline_head);
++EXPORT_SYMBOL(ipipe_restore_pipeline_head);
 +EXPORT_SYMBOL(__ipipe_unstall_root);
 +EXPORT_SYMBOL(__ipipe_stall_root);
 +EXPORT_SYMBOL(__ipipe_restore_root);
@@ -1862,9 +2002,9 @@
 +EXPORT_SYMBOL(__ipipe_pipeline);
 +EXPORT_SYMBOL(__ipipe_pipelock);
 +EXPORT_SYMBOL(__ipipe_virtual_irq_map);
---- 2.6.14/kernel/ipipe/generic.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/kernel/ipipe/generic.c	2006-01-06 09:27:24.000000000 +0100
-@@ -0,0 +1,397 @@
+--- 2.6.15/kernel/ipipe/generic.c	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.15-ipipe/kernel/ipipe/generic.c	2006-04-21 18:09:27.000000000 +0200
+@@ -0,0 +1,398 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/generic.c
 + *
@@ -2133,10 +2273,11 @@
 + * ipipe_catch_event() -- Interpose or remove an event handler for a
 + * given domain.
 + */
-+int ipipe_catch_event(struct ipipe_domain *ipd,
-+		      unsigned event,
-+		      int (*handler)(unsigned event, struct ipipe_domain *ipd, void *data))
++ipipe_event_handler_t ipipe_catch_event(struct ipipe_domain *ipd,
++					unsigned event,
++					ipipe_event_handler_t handler)
 +{
++	ipipe_event_handler_t old_handler;
 +	int self = 0;
 +
 +	if (event & IPIPE_EVENT_SELF) {
@@ -2145,9 +2286,9 @@
 +	}
 +
 +	if (event >= IPIPE_NR_EVENTS)
-+		return -EINVAL;
++		return NULL;
 +
-+	if (!xchg(&ipd->evhand[event],handler))	{
++	if (!(old_handler = xchg(&ipd->evhand[event],handler)))	{
 +		if (handler) {
 +			if (self)
 +				ipd->evself |= (1LL << event);
@@ -2168,7 +2309,7 @@
 +			ipd->evself |= (1LL << event);
 +	}
 +
-+	return 0;
++	return old_handler;
 +}
 +
 +cpumask_t ipipe_set_irq_affinity (unsigned irq, cpumask_t cpumask)
@@ -2262,9 +2403,9 @@
 +EXPORT_SYMBOL(ipipe_set_irq_affinity);
 +EXPORT_SYMBOL(ipipe_send_ipi);
 +EXPORT_SYMBOL(__ipipe_schedule_irq);
---- 2.6.14/kernel/irq/handle.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/kernel/irq/handle.c	2005-10-31 10:15:18.000000000 +0100
-@@ -81,6 +81,17 @@
+--- 2.6.15/kernel/irq/handle.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/kernel/irq/handle.c	2006-01-07 15:27:15.000000000 +0100
+@@ -81,6 +81,17 @@ fastcall int handle_IRQ_event(unsigned i
  {
  	int ret, retval = 0, status = 0;
  
@@ -2282,13 +2423,14 @@
  	if (!(action->flags & SA_INTERRUPT))
  		local_irq_enable();
  
-@@ -117,14 +128,18 @@
+@@ -117,16 +128,20 @@ fastcall unsigned int __do_IRQ(unsigned 
  		/*
  		 * No locking required for CPU-local interrupts:
  		 */
 +#ifndef CONFIG_IPIPE
- 		desc->handler->ack(irq);
-+#endif /* CONFIG_IPIPE */
+ 		if (desc->handler->ack)
+ 			desc->handler->ack(irq);
++#endif /* !CONFIG_IPIPE */
  		action_ret = handle_IRQ_event(irq, regs, desc->action);
  		desc->handler->end(irq);
  		return 1;
@@ -2296,15 +2438,16 @@
  
  	spin_lock(&desc->lock);
 +#ifndef CONFIG_IPIPE
- 	desc->handler->ack(irq);
-+#endif /* CONFIG_IPIPE */
+ 	if (desc->handler->ack)
+ 		desc->handler->ack(irq);
++#endif /* !CONFIG_IPIPE */
  	/*
  	 * REPLAY is when Linux resends an IRQ that was dropped earlier
  	 * WAITING is used by probe to mark irqs that are being tested
---- 2.6.14/kernel/printk.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/kernel/printk.c	2006-01-03 11:45:23.000000000 +0100
-@@ -507,6 +507,78 @@
-  * is inspected when the actual printing occurs.
+--- 2.6.15/kernel/printk.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/kernel/printk.c	2006-01-07 15:18:31.000000000 +0100
+@@ -511,6 +511,78 @@ __attribute__((weak)) unsigned long long
+  * printf(3)
   */
  
 +#ifdef CONFIG_IPIPE
@@ -2382,7 +2525,7 @@
  asmlinkage int printk(const char *fmt, ...)
  {
  	va_list args;
-@@ -518,6 +590,7 @@
+@@ -522,6 +594,7 @@ asmlinkage int printk(const char *fmt, .
  
  	return r;
  }
@@ -2390,9 +2533,9 @@
  
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
---- 2.6.14/kernel/sched.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/kernel/sched.c	2006-01-30 12:41:46.000000000 +0100
-@@ -2855,13 +2855,18 @@
+--- 2.6.15/kernel/sched.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/kernel/sched.c	2006-04-23 08:53:30.000000000 +0200
+@@ -2952,13 +2952,18 @@ asmlinkage void __sched schedule(void)
  	unsigned long run_time;
  	int cpu, idx, new_prio;
  
@@ -2412,7 +2555,7 @@
  			printk(KERN_ERR "scheduling while atomic: "
  				"%s/0x%08x/%d\n",
  				current->comm, preempt_count(), current->pid);
-@@ -2870,8 +2875,19 @@
+@@ -2967,8 +2972,19 @@ asmlinkage void __sched schedule(void)
  	}
  	profile_hit(SCHED_PROFILING, __builtin_return_address(0));
  
@@ -2432,7 +2575,7 @@
  	prev = current;
  	release_kernel_lock(prev);
  need_resched_nonpreemptible:
-@@ -3010,6 +3026,8 @@
+@@ -3107,6 +3123,8 @@ switch_tasks:
  		prepare_task_switch(rq, next);
  		prev = context_switch(rq, prev, next);
  		barrier();
@@ -2441,7 +2584,7 @@
  		/*
  		 * this_rq must be evaluated again because prev may have moved
  		 * CPUs since it called schedule(), thus the 'rq' on its stack
-@@ -3042,6 +3060,11 @@
+@@ -3139,6 +3157,11 @@ asmlinkage void __sched preempt_schedule
  	struct task_struct *task = current;
  	int saved_lock_depth;
  #endif
@@ -2453,7 +2596,7 @@
  	/*
  	 * If there is a non-zero preempt_count or interrupts are disabled,
  	 * we do not want to preempt the current task.  Just return..
-@@ -3670,6 +3693,7 @@
+@@ -3768,6 +3791,7 @@ recheck:
  		deactivate_task(p, rq);
  	oldprio = p->prio;
  	__setscheduler(p, policy, param->sched_priority);
@@ -2461,7 +2604,7 @@
  	if (array) {
  		__activate_task(p, rq);
  		/*
-@@ -5647,3 +5671,53 @@
+@@ -5745,3 +5769,50 @@ void set_curr_task(int cpu, task_t *p)
  }
  
  #endif
@@ -2474,9 +2617,6 @@
 +	unsigned long flags;
 +	runqueue_t *rq;
 +	int oldprio;
-+
-+	if (prio < 1 || prio > MAX_RT_PRIO-1)
-+		return -EINVAL;
 +
 +	rq = task_rq_lock(p, &flags);
 +	array = p->array;
@@ -2515,9 +2655,9 @@
 +EXPORT_SYMBOL(ipipe_reenter_root);
 +
 +#endif /* CONFIG_IPIPE */
---- 2.6.14/kernel/signal.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/kernel/signal.c	2005-10-31 10:15:18.000000000 +0100
-@@ -601,6 +601,7 @@
+--- 2.6.15/kernel/signal.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/kernel/signal.c	2006-01-07 15:18:31.000000000 +0100
+@@ -593,6 +593,7 @@ void signal_wake_up(struct task_struct *
  	unsigned int mask;
  
  	set_tsk_thread_flag(t, TIF_SIGPENDING);
@@ -2525,9 +2665,9 @@
  
  	/*
  	 * For SIGKILL, we want to wake it up in the stopped/traced case.
---- 2.6.14/lib/smp_processor_id.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/lib/smp_processor_id.c	2005-10-31 10:15:18.000000000 +0100
-@@ -12,6 +12,11 @@
+--- 2.6.15/lib/smp_processor_id.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/lib/smp_processor_id.c	2006-01-07 15:18:32.000000000 +0100
+@@ -13,6 +13,11 @@ unsigned int debug_smp_processor_id(void
  	int this_cpu = raw_smp_processor_id();
  	cpumask_t this_mask;
  
@@ -2539,8 +2679,8 @@
  	if (likely(preempt_count))
  		goto out;
  
---- 2.6.14/lib/spinlock_debug.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/lib/spinlock_debug.c	2005-11-02 19:21:20.000000000 +0100
+--- 2.6.15/lib/spinlock_debug.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/lib/spinlock_debug.c	2006-01-07 15:18:32.000000000 +0100
 @@ -10,6 +10,7 @@
  #include <linux/spinlock.h>
  #include <linux/interrupt.h>
@@ -2549,7 +2689,7 @@
  
  static void spin_bug(spinlock_t *lock, const char *msg)
  {
-@@ -93,6 +94,8 @@
+@@ -94,6 +95,8 @@ void _raw_spin_lock(spinlock_t *lock)
  	debug_spin_lock_after(lock);
  }
  
@@ -2558,7 +2698,7 @@
  int _raw_spin_trylock(spinlock_t *lock)
  {
  	int ret = __raw_spin_trylock(&lock->raw_lock);
-@@ -108,12 +111,16 @@
+@@ -109,12 +112,16 @@ int _raw_spin_trylock(spinlock_t *lock)
  	return ret;
  }
  
@@ -2575,7 +2715,7 @@
  static void rwlock_bug(rwlock_t *lock, const char *msg)
  {
  	static long print_once = 1;
-@@ -162,6 +169,8 @@
+@@ -164,6 +171,8 @@ void _raw_read_lock(rwlock_t *lock)
  		__read_lock_debug(lock);
  }
  
@@ -2584,7 +2724,7 @@
  int _raw_read_trylock(rwlock_t *lock)
  {
  	int ret = __raw_read_trylock(&lock->raw_lock);
-@@ -175,12 +184,16 @@
+@@ -177,12 +186,16 @@ int _raw_read_trylock(rwlock_t *lock)
  	return ret;
  }
  
@@ -2601,7 +2741,7 @@
  static inline void debug_write_lock_before(rwlock_t *lock)
  {
  	RWLOCK_BUG_ON(lock->magic != RWLOCK_MAGIC, lock, "bad magic");
-@@ -235,6 +248,8 @@
+@@ -237,6 +250,8 @@ void _raw_write_lock(rwlock_t *lock)
  	debug_write_lock_after(lock);
  }
  
@@ -2610,7 +2750,7 @@
  int _raw_write_trylock(rwlock_t *lock)
  {
  	int ret = __raw_write_trylock(&lock->raw_lock);
-@@ -250,8 +265,12 @@
+@@ -252,8 +267,12 @@ int _raw_write_trylock(rwlock_t *lock)
  	return ret;
  }
  
@@ -2623,9 +2763,9 @@
  }
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
---- 2.6.14/mm/vmalloc.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/mm/vmalloc.c	2005-10-31 10:15:18.000000000 +0100
-@@ -18,6 +18,7 @@
+--- 2.6.15/mm/vmalloc.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/mm/vmalloc.c	2006-01-07 15:18:32.000000000 +0100
+@@ -19,6 +19,7 @@
  
  #include <asm/uaccess.h>
  #include <asm/tlbflush.h>
@@ -2633,9 +2773,9 @@
  
  
  DEFINE_RWLOCK(vmlist_lock);
-@@ -148,10 +149,14 @@
+@@ -148,10 +149,14 @@ int map_vm_area(struct vm_struct *area, 
+ 	BUG_ON(addr >= end);
  	pgd = pgd_offset_k(addr);
- 	spin_lock(&init_mm.page_table_lock);
  	do {
 +		pgd_t oldpgd;
 +		memcpy(&oldpgd,pgd,sizeof(pgd_t));
@@ -2646,22 +2786,22 @@
 +		if (pgd_val(oldpgd) != pgd_val(*pgd))
 +			set_pgdir(addr, *pgd);
  	} while (pgd++, addr = next, addr != end);
- 	spin_unlock(&init_mm.page_table_lock);
  	flush_cache_vmap((unsigned long) area->addr, end);
---- 2.6.14/arch/arm/Kconfig	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/arch/arm/Kconfig	2006-01-03 17:29:41.000000000 +0100
-@@ -339,6 +339,8 @@
- 	depends on SMP
- 	default "4"
+ 	return err;
+--- 2.6.15/arch/arm/Kconfig	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/arch/arm/Kconfig	2006-02-20 14:46:32.000000000 +0100
+@@ -368,6 +368,8 @@ config LOCAL_TIMERS
+ 	  accounting to be spread across the timer interval, preventing a
+ 	  "thundering herd" at every timer tick.
  
 +source "kernel/ipipe/Kconfig"
 +
  config PREEMPT
  	bool "Preemptible Kernel (EXPERIMENTAL)"
  	depends on EXPERIMENTAL
---- 2.6.14/arch/arm/kernel/Makefile	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/arch/arm/kernel/Makefile	2006-01-03 17:29:41.000000000 +0100
-@@ -19,6 +19,7 @@
+--- 2.6.15/arch/arm/kernel/Makefile	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/arch/arm/kernel/Makefile	2006-02-20 14:47:06.000000000 +0100
+@@ -19,6 +19,7 @@ obj-$(CONFIG_ARTHUR)		+= arthur.o
  obj-$(CONFIG_ISA_DMA)		+= dma-isa.o
  obj-$(CONFIG_PCI)		+= bios32.o
  obj-$(CONFIG_SMP)		+= smp.o
@@ -2669,8 +2809,8 @@
  
  obj-$(CONFIG_IWMMXT)		+= iwmmxt.o
  AFLAGS_iwmmxt.o			:= -Wa,-mcpu=iwmmxt
---- 2.6.14/arch/arm/kernel/entry-armv.S	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/arch/arm/kernel/entry-armv.S	2006-01-03 17:29:41.000000000 +0100
+--- 2.6.15/arch/arm/kernel/entry-armv.S	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/arch/arm/kernel/entry-armv.S	2006-02-20 14:47:21.000000000 +0100
 @@ -3,6 +3,7 @@
   *
   *  Copyright (C) 1996,1997,1998 Russell King.
@@ -2679,7 +2819,7 @@
   *
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of the GNU General Public License version 2 as
-@@ -33,7 +34,11 @@
+@@ -34,7 +35,11 @@
  	@ routine called with r0 = irq number, r1 = struct pt_regs *
  	@
  	adrne	lr, 1b
@@ -2691,7 +2831,7 @@
  
  #ifdef CONFIG_SMP
  	/*
-@@ -182,6 +187,11 @@
+@@ -190,6 +195,11 @@ __irq_svc:
  #endif
  
  	irq_handler
@@ -2703,7 +2843,7 @@
  #ifdef CONFIG_PREEMPT
  	ldr	r0, [tsk, #TI_FLAGS]		@ get flags
  	tst	r0, #_TIF_NEED_RESCHED
-@@ -192,6 +202,9 @@
+@@ -200,6 +210,9 @@ preempt_return:
  	teq	r0, r7
  	strne	r0, [r0, -r0]			@ bug()
  #endif
@@ -2713,7 +2853,7 @@
  	ldr	r0, [sp, #S_PSR]		@ irqs are already disabled
  	msr	spsr_cxsf, r0
  	ldmia	sp, {r0 - pc}^			@ load r0 - pc, cpsr
-@@ -220,6 +233,12 @@
+@@ -228,6 +241,12 @@ svc_preempt:
  __und_svc:
  	svc_entry
  
@@ -2726,7 +2866,7 @@
  	@
  	@ call emulation code, which returns using r9 if it has emulated
  	@ the instruction, or the more conventional lr if we are to treat
-@@ -378,6 +397,12 @@
+@@ -386,6 +405,12 @@ __irq_usr:
  #endif
  
  	irq_handler
@@ -2739,7 +2879,7 @@
  #ifdef CONFIG_PREEMPT
  	ldr	r0, [tsk, #TI_PREEMPT]
  	str	r8, [tsk, #TI_PREEMPT]
-@@ -471,8 +496,8 @@
+@@ -479,8 +504,8 @@ call_fpe:
  	mov	pc, lr				@ CP#8
  	mov	pc, lr				@ CP#9
  #ifdef CONFIG_VFP
@@ -2750,7 +2890,7 @@
  #else
  	mov	pc, lr				@ CP#10 (VFP)
  	mov	pc, lr				@ CP#11 (VFP)
-@@ -483,10 +508,34 @@
+@@ -491,10 +516,34 @@ call_fpe:
  	mov	pc, lr				@ CP#15 (Control)
  
  do_fpe:
@@ -2785,8 +2925,8 @@
  /*
   * The FP module is called with these registers set:
   *  r0  = instruction
---- 2.6.14/arch/arm/kernel/entry-common.S	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/arch/arm/kernel/entry-common.S	2006-01-03 17:29:41.000000000 +0100
+--- 2.6.15/arch/arm/kernel/entry-common.S	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/arch/arm/kernel/entry-common.S	2006-02-20 14:47:34.000000000 +0100
 @@ -2,6 +2,7 @@
   *  linux/arch/arm/kernel/entry-common.S
   *
@@ -2815,7 +2955,7 @@
  	ldr	r1, [sp, #S_OFF + S_PSR]	@ get calling cpsr
  	ldr	lr, [sp, #S_OFF + S_PC]!	@ get pc
  	msr	spsr_cxsf, r1			@ save in spsr_svc
-@@ -35,6 +41,13 @@
+@@ -35,6 +41,13 @@ ret_fast_syscall:
  	add	sp, sp, #S_FRAME_SIZE - S_PC
  	movs	pc, lr				@ return & move spsr_svc into cpsr
  
@@ -2829,7 +2969,7 @@
  /*
   * Ok, we need to do extra processing, enter the slow path.
   */
-@@ -63,14 +76,7 @@
+@@ -62,14 +75,7 @@ ret_slow_syscall:
  	tst	r1, #_TIF_WORK_MASK
  	bne	work_pending
  no_work_pending:
@@ -2845,7 +2985,7 @@
  
  /*
   * This is how we return from a fork.
-@@ -152,6 +158,17 @@
+@@ -151,6 +157,17 @@ ENTRY(vector_swi)
  	ldr	ip, [tsk, #TI_FLAGS]		@ check for syscall tracing
  	bic	scno, scno, #0xff000000		@ mask off SWI op-code
  	eor	scno, scno, #__NR_SYSCALL_BASE	@ check OS number
@@ -2863,7 +3003,7 @@
  	adr	tbl, sys_call_table		@ load syscall table pointer
  	tst	ip, #_TIF_SYSCALL_TRACE		@ are we tracing syscalls?
  	bne	__sys_trace
-@@ -196,6 +213,9 @@
+@@ -195,6 +212,9 @@ __sys_trace_return:
  __cr_alignment:
  	.word	cr_alignment
  #endif
@@ -2873,8 +3013,8 @@
  
  	.type	sys_call_table, #object
  ENTRY(sys_call_table)
---- 2.6.14/arch/arm/kernel/entry-header.S	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/arch/arm/kernel/entry-header.S	2006-01-03 17:29:41.000000000 +0100
+--- 2.6.15/arch/arm/kernel/entry-header.S	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/arch/arm/kernel/entry-header.S	2006-02-20 14:47:43.000000000 +0100
 @@ -67,6 +67,15 @@
  #endif
  	.endm
@@ -2891,8 +3031,8 @@
  
  /*
   * These are the registers used in the syscall handler, and allow us to
---- 2.6.14/arch/arm/kernel/ipipe-core.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/arch/arm/kernel/ipipe-core.c	2006-01-04 17:38:52.000000000 +0100
+--- 2.6.15/arch/arm/kernel/ipipe-core.c	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.15-ipipe/arch/arm/kernel/ipipe-core.c	2006-04-21 17:01:06.000000000 +0200
 @@ -0,0 +1,348 @@
 +/* -*- linux-c -*-
 + * linux/arch/arm/kernel/ipipe-core.c
@@ -3220,7 +3360,7 @@
 +	if (flags & IPIPE_RESET_TIMER)
 +		ticks = __ipipe_mach_ticks_per_jiffy;
 +	else {
-+		ticks = ns * __ipipe_mach_ticks_per_jiffy / (1000000000 / HZ);
++		ticks = ns / (TICKS_PER_uSEC * 1000);
 +
 +		if (ticks > __ipipe_mach_ticks_per_jiffy)
 +			return -EINVAL;
@@ -3242,9 +3382,9 @@
 +EXPORT_SYMBOL(ipipe_trigger_irq);
 +EXPORT_SYMBOL(ipipe_get_sysinfo);
 +EXPORT_SYMBOL(ipipe_tune_timer);
---- 2.6.14/arch/arm/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/arch/arm/kernel/ipipe-root.c	2006-01-06 12:40:42.000000000 +0100
-@@ -0,0 +1,438 @@
+--- 2.6.15/arch/arm/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.15-ipipe/arch/arm/kernel/ipipe-root.c	2006-03-28 07:04:48.000000000 +0200
+@@ -0,0 +1,394 @@
 +/* -*- linux-c -*-
 + * linux/arch/arm/kernel/ipipe-root.c
 + *
@@ -3426,45 +3566,6 @@
 +}
 +
 +/*
-+ * __ipipe_walk_pipeline(): Plays interrupts pending in the log. Must
-+ * be called with local hw interrupts disabled.
-+ */
-+static inline void __ipipe_walk_pipeline(struct list_head *pos, int cpuid)
-+{
-+	struct ipipe_domain *this_domain = ipipe_percpu_domain[cpuid];
-+
-+	while (pos != &__ipipe_pipeline) {
-+		struct ipipe_domain *next_domain =
-+			list_entry(pos, struct ipipe_domain, p_link);
-+
-+		if (test_bit(IPIPE_STALL_FLAG,
-+			     &next_domain->cpudata[cpuid].status))
-+			break;	/* Stalled stage -- do not go further. */
-+
-+		if (next_domain->cpudata[cpuid].irq_pending_hi != 0) {
-+
-+			if (next_domain == this_domain)
-+				__ipipe_sync_stage(IPIPE_IRQMASK_ANY);
-+			else {
-+				__ipipe_switch_to(this_domain, next_domain, cpuid);
-+
-+				ipipe_load_cpuid();	/* Processor might have changed. */
-+
-+				if (this_domain->cpudata[cpuid].irq_pending_hi != 0
-+				    && !test_bit(IPIPE_STALL_FLAG,
-+						 &this_domain->cpudata[cpuid].status))
-+					__ipipe_sync_stage(IPIPE_IRQMASK_ANY);
-+			}
-+
-+			break;
-+		} else if (next_domain == this_domain)
-+			break;
-+
-+		pos = next_domain->p_link.next;
-+	}
-+}
-+
-+/*
 + * __ipipe_handle_irq() -- IPIPE's generic IRQ handler. An optimistic
 + * interrupt protection log is maintained here for each domain. Hw
 + * interrupts are off on entry.
@@ -3566,10 +3667,6 @@
 +		__ipipe_tick_regs[cpuid].ARM_cpsr = regs->ARM_cpsr;
 +		__ipipe_tick_regs[cpuid].ARM_pc = regs->ARM_pc;
 +
-+		__ipipe_handle_irq(irq, regs);
-+
-+		ipipe_load_cpuid();
-+
 +		if (__ipipe_decr_ticks != __ipipe_mach_ticks_per_jiffy) {
 +			unsigned long long next_date, now;
 +
@@ -3583,11 +3680,10 @@
 +			__ipipe_decr_next[cpuid] = next_date;
 +		}
 +	}
-+	else {
-+		__ipipe_handle_irq(irq, regs);
 +
-+		ipipe_load_cpuid();
-+	}
++	__ipipe_handle_irq(irq, regs);
++
++	ipipe_load_cpuid();
 +
 +	return (ipipe_percpu_domain[cpuid] == ipipe_root_domain &&
 +		!test_bit(IPIPE_STALL_FLAG,
@@ -3683,8 +3779,8 @@
 +	regs->ARM_r7 = origr7;
 +	return 0;
 +}
---- 2.6.14/arch/arm/kernel/irq.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/arch/arm/kernel/irq.c	2006-01-03 17:29:41.000000000 +0100
+--- 2.6.15/arch/arm/kernel/irq.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/arch/arm/kernel/irq.c	2006-02-20 14:48:37.000000000 +0100
 @@ -54,10 +54,11 @@
  
  static int noirqdebug;
@@ -3698,34 +3794,34 @@
  void (*init_arch_irq)(void) __initdata = NULL;
  
  /*
---- 2.6.14/arch/arm/kernel/process.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/arch/arm/kernel/process.c	2006-01-03 17:29:41.000000000 +0100
-@@ -85,12 +85,12 @@
-  */
- void default_idle(void)
- {
--	local_irq_disable();
-+	local_irq_disable_hw_cond();
- 	if (!need_resched() && !hlt_counter) {
- 		timer_dyn_reprogram();
- 		arch_idle();
+--- 2.6.15/arch/arm/kernel/process.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/arch/arm/kernel/process.c	2006-02-20 14:48:55.000000000 +0100
+@@ -89,12 +89,12 @@ void default_idle(void)
+ 	if (hlt_counter)
+ 		cpu_relax();
+ 	else {
+-		local_irq_disable();
++		local_irq_disable_hw();
+ 		if (!need_resched()) {
+ 			timer_dyn_reprogram();
+ 			arch_idle();
+ 		}
+-		local_irq_enable();
++		local_irq_enable_hw();
  	}
--	local_irq_enable();
-+	local_irq_enable_hw_cond();
  }
  
- /*
-@@ -107,6 +107,7 @@
- 		void (*idle)(void) = pm_idle;
+@@ -120,6 +120,7 @@ void cpu_idle(void)
+ 
  		if (!idle)
  			idle = default_idle;
-+		ipipe_suspend_domain();
- 		preempt_disable();
++ 		ipipe_suspend_domain();
  		leds_event(led_idle_start);
  		while (!need_resched())
---- 2.6.14/arch/arm/kernel/ptrace.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/arch/arm/kernel/ptrace.c	2006-01-03 17:29:41.000000000 +0100
-@@ -494,6 +494,10 @@
+ 			idle();
+--- 2.6.15/arch/arm/kernel/ptrace.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/arch/arm/kernel/ptrace.c	2006-02-20 14:49:03.000000000 +0100
+@@ -503,6 +503,10 @@ void ptrace_break(struct task_struct *ts
  
  static int break_trap(struct pt_regs *regs, unsigned int instr)
  {
@@ -3736,9 +3832,9 @@
  	ptrace_break(current, regs);
  	return 0;
  }
---- 2.6.14/arch/arm/kernel/traps.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/arch/arm/kernel/traps.c	2006-01-03 17:29:41.000000000 +0100
-@@ -298,6 +298,9 @@
+--- 2.6.15/arch/arm/kernel/traps.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/arch/arm/kernel/traps.c	2006-02-20 14:49:14.000000000 +0100
+@@ -303,6 +303,9 @@ asmlinkage void do_undefinstr(struct pt_
  	}
  	spin_unlock_irq(&undef_lock);
  
@@ -3748,8 +3844,8 @@
  #ifdef CONFIG_DEBUG_USER
  	if (user_debug & UDBG_UNDEFINED) {
  		printk(KERN_INFO "%s (%d): undefined instruction: pc=%p\n",
---- 2.6.14/arch/arm/mach-integrator/core.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/arch/arm/mach-integrator/core.c	2006-01-03 17:29:41.000000000 +0100
+--- 2.6.15/arch/arm/mach-integrator/core.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/arch/arm/mach-integrator/core.c	2006-02-20 14:49:50.000000000 +0100
 @@ -2,6 +2,7 @@
   *  linux/arch/arm/mach-integrator/core.c
   *
@@ -3758,7 +3854,7 @@
   *
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of the GNU General Public License version 2, as
-@@ -148,53 +149,57 @@
+@@ -148,53 +149,57 @@ EXPORT_SYMBOL(cm_control);
  /*
   * How long is the timer interval?
   */
@@ -3849,7 +3945,7 @@
  }
  
  /*
-@@ -205,10 +210,22 @@
+@@ -205,10 +210,22 @@ integrator_timer_interrupt(int irq, void
  {
  	write_seqlock(&xtime_lock);
  
@@ -3874,7 +3970,7 @@
  
  	/*
  	 * the clock tick routines are only processed on the
-@@ -239,24 +256,30 @@
+@@ -239,24 +256,30 @@ static struct irqaction integrator_timer
  	.handler	= integrator_timer_interrupt,
  };
  
@@ -3915,7 +4011,7 @@
  	/*
  	 * Initialise to a known state (all timers off)
  	 */
-@@ -264,12 +287,51 @@
+@@ -264,12 +287,51 @@ void __init integrator_time_init(unsigne
  	writel(0, TIMER1_VA_BASE + TIMER_CTRL);
  	writel(0, TIMER2_VA_BASE + TIMER_CTRL);
  
@@ -3970,8 +4066,8 @@
 +	return readl(TIMER1_VA_BASE + TIMER_VALUE);
  }
 +#endif /* CONFIG_IPIPE */
---- 2.6.14/arch/arm/mach-integrator/integrator_cp.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/arch/arm/mach-integrator/integrator_cp.c	2006-01-03 17:29:41.000000000 +0100
+--- 2.6.15/arch/arm/mach-integrator/integrator_cp.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/arch/arm/mach-integrator/integrator_cp.c	2006-02-20 14:50:07.000000000 +0100
 @@ -2,6 +2,7 @@
   *  linux/arch/arm/mach-integrator/integrator_cp.c
   *
@@ -3980,7 +4076,7 @@
   *
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of the GNU General Public License as published by
-@@ -521,9 +522,14 @@
+@@ -566,9 +567,14 @@ static void __init intcp_init(void)
  
  #define TIMER_CTRL_IE	(1 << 5)			/* Interrupt Enable */
  
@@ -3996,9 +4092,9 @@
  }
  
  static struct sys_timer cp_timer = {
---- 2.6.14/arch/arm/mm/fault.c	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/arch/arm/mm/fault.c	2006-01-03 17:29:41.000000000 +0100
-@@ -223,6 +223,9 @@
+--- 2.6.15/arch/arm/mm/fault.c	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/arch/arm/mm/fault.c	2006-02-20 14:50:31.000000000 +0100
+@@ -223,6 +223,9 @@ do_page_fault(unsigned long addr, unsign
  	struct mm_struct *mm;
  	int fault, sig, code;
  
@@ -4008,7 +4104,7 @@
  	tsk = current;
  	mm  = tsk->mm;
  
-@@ -354,6 +357,9 @@
+@@ -354,6 +357,9 @@ do_translation_fault(unsigned long addr,
  bad_area:
  	tsk = current;
  
@@ -4018,7 +4114,7 @@
  	do_bad_area(tsk, tsk->active_mm, addr, fsr, regs);
  	return 0;
  }
-@@ -366,6 +372,10 @@
+@@ -366,6 +372,10 @@ static int
  do_sect_fault(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
  {
  	struct task_struct *tsk = current;
@@ -4029,7 +4125,7 @@
  	do_bad_area(tsk, tsk->active_mm, addr, fsr, regs);
  	return 0;
  }
-@@ -376,6 +386,9 @@
+@@ -376,6 +386,9 @@ do_sect_fault(unsigned long addr, unsign
  static int
  do_bad(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
  {
@@ -4039,7 +4135,7 @@
  	return 1;
  }
  
-@@ -451,6 +464,9 @@
+@@ -451,6 +464,9 @@ do_DataAbort(unsigned long addr, unsigne
  	if (!inf->fn(addr, fsr, regs))
  		return;
  
@@ -4049,8 +4145,8 @@
  	printk(KERN_ALERT "Unhandled fault: %s (0x%03x) at 0x%08lx\n",
  		inf->name, fsr, addr);
  
---- 2.6.14/include/asm-arm/arch-integrator/entry-macro.S	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/include/asm-arm/arch-integrator/entry-macro.S	2006-01-03 17:29:41.000000000 +0100
+--- 2.6.15/include/asm-arm/arch-integrator/entry-macro.S	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/include/asm-arm/arch-integrator/entry-macro.S	2006-02-20 14:51:16.000000000 +0100
 @@ -20,7 +20,11 @@
  		teq	\irqstat, #0
  		ldreq	\irqstat, [\base, #(INTEGRATOR_HDR_IC_OFFSET+IRQ_STATUS)]
@@ -4064,14 +4160,14 @@
  1001:		tst	\irqstat, #15
  		bne	1002f
  		add	\irqnr, \irqnr, #4
---- 2.6.14/include/asm-arm/arch-integrator/platform.h	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/include/asm-arm/arch-integrator/platform.h	2006-01-03 18:02:33.000000000 +0100
+--- 2.6.15/include/asm-arm/arch-integrator/platform.h	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/include/asm-arm/arch-integrator/platform.h	2006-02-20 14:54:22.000000000 +0100
 @@ -26,13 +26,15 @@
   * 	NOTE: This is a multi-hosted header file for use with uHAL and
   * 	      supported debuggers.
   *
 - * 	$Id: platform.s,v 1.32 2000/02/18 10:51:39 asims Exp $
-+ * 	$Id: platform.h,v 1.2 2006/01/03 17:02:33 rpm Exp $
++ * 	$Id: platform.h,v 1.2 2006/02/20 13:54:22 rpm Exp $
   *
   * ***********************************************************************/
  
@@ -4105,8 +4201,8 @@
  
  /*
   *  These are useconds NOT ticks.
---- 2.6.14/include/asm-arm/arch-integrator/timex.h	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/include/asm-arm/arch-integrator/timex.h	2006-01-03 17:29:41.000000000 +0100
+--- 2.6.15/include/asm-arm/arch-integrator/timex.h	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/include/asm-arm/arch-integrator/timex.h	2006-02-20 14:51:46.000000000 +0100
 @@ -21,6 +21,6 @@
   */
  
@@ -4116,9 +4212,9 @@
   */
 -#define CLOCK_TICK_RATE		(50000000 / 16)
 +#define CLOCK_TICK_RATE		(1000000)
---- 2.6.14/include/asm-arm/atomic.h	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/include/asm-arm/atomic.h	2006-01-03 17:29:41.000000000 +0100
-@@ -110,10 +110,10 @@
+--- 2.6.15/include/asm-arm/atomic.h	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/include/asm-arm/atomic.h	2006-02-20 14:52:05.000000000 +0100
+@@ -129,10 +129,10 @@ static inline int atomic_add_return(int 
  	unsigned long flags;
  	int val;
  
@@ -4131,7 +4227,7 @@
  
  	return val;
  }
-@@ -123,10 +123,10 @@
+@@ -142,10 +142,10 @@ static inline int atomic_sub_return(int 
  	unsigned long flags;
  	int val;
  
@@ -4144,7 +4240,21 @@
  
  	return val;
  }
-@@ -135,9 +135,9 @@
+@@ -155,11 +155,11 @@ static inline int atomic_cmpxchg(atomic_
+ 	int ret;
+ 	unsigned long flags;
+ 
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 	ret = v->counter;
+ 	if (likely(ret == old))
+ 		v->counter = new;
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ 
+ 	return ret;
+ }
+@@ -168,9 +168,9 @@ static inline void atomic_clear_mask(uns
  {
  	unsigned long flags;
  
@@ -4156,9 +4266,9 @@
  }
  
  #endif /* __LINUX_ARM_ARCH__ */
---- 2.6.14/include/asm-arm/bitops.h	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/include/asm-arm/bitops.h	2006-01-03 17:29:41.000000000 +0100
-@@ -36,9 +36,9 @@
+--- 2.6.15/include/asm-arm/bitops.h	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/include/asm-arm/bitops.h	2006-02-20 14:52:19.000000000 +0100
+@@ -37,9 +37,9 @@ static inline void ____atomic_set_bit(un
  
  	p += bit >> 5;
  
@@ -4170,7 +4280,7 @@
  }
  
  static inline void ____atomic_clear_bit(unsigned int bit, volatile unsigned long *p)
-@@ -48,9 +48,9 @@
+@@ -49,9 +49,9 @@ static inline void ____atomic_clear_bit(
  
  	p += bit >> 5;
  
@@ -4182,7 +4292,7 @@
  }
  
  static inline void ____atomic_change_bit(unsigned int bit, volatile unsigned long *p)
-@@ -60,9 +60,9 @@
+@@ -61,9 +61,9 @@ static inline void ____atomic_change_bit
  
  	p += bit >> 5;
  
@@ -4194,7 +4304,7 @@
  }
  
  static inline int
-@@ -74,10 +74,10 @@
+@@ -75,10 +75,10 @@ ____atomic_test_and_set_bit(unsigned int
  
  	p += bit >> 5;
  
@@ -4207,7 +4317,7 @@
  
  	return res & mask;
  }
-@@ -91,10 +91,10 @@
+@@ -92,10 +92,10 @@ ____atomic_test_and_clear_bit(unsigned i
  
  	p += bit >> 5;
  
@@ -4220,7 +4330,7 @@
  
  	return res & mask;
  }
-@@ -108,10 +108,10 @@
+@@ -109,10 +109,10 @@ ____atomic_test_and_change_bit(unsigned 
  
  	p += bit >> 5;
  
@@ -4233,9 +4343,9 @@
  
  	return res & mask;
  }
---- 2.6.14/include/asm-arm/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/include/asm-arm/ipipe.h	2006-01-31 15:12:26.000000000 +0100
-@@ -0,0 +1,169 @@
+--- 2.6.15/include/asm-arm/ipipe.h	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.15-ipipe/include/asm-arm/ipipe.h	2006-04-29 17:02:20.000000000 +0200
+@@ -0,0 +1,170 @@
 +/* -*- linux-c -*-
 + * include/asm-arm/ipipe.h
 + *
@@ -4265,16 +4375,17 @@
 +
 +#ifdef CONFIG_IPIPE
 +
-+#include <asm/ptrace.h>
-+#include <asm/irq.h>
-+#include <asm/bitops.h>
 +#include <linux/list.h>
 +#include <linux/cpumask.h>
 +#include <linux/threads.h>
++#include <asm/ptrace.h>
++#include <asm/irq.h>
++#include <asm/bitops.h>
++#include <asm/mach/irq.h>
 +
-+#define IPIPE_ARCH_STRING	"1.2-00"
++#define IPIPE_ARCH_STRING	"1.3-00"
 +#define IPIPE_MAJOR_NUMBER	1
-+#define IPIPE_MINOR_NUMBER	2
++#define IPIPE_MINOR_NUMBER	3
 +#define IPIPE_PATCH_NUMBER	0
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
@@ -4364,9 +4475,9 @@
 +
 +#define __ipipe_check_platform()	do { } while(0)
 +
-+#define __ipipe_enable_irq(irq)		enable_irq(irq)
++#define __ipipe_enable_irq(irq)		irq_desc[irq].chip->unmask(irq)
 +
-+#define __ipipe_disable_irq(irq)	disable_irq(irq)
++#define __ipipe_disable_irq(irq)	irq_desc[irq].chip->mask(irq)
 +
 +void __ipipe_init_platform(void);
 +
@@ -4405,28 +4516,26 @@
 +#endif /* CONFIG_IPIPE */
 +
 +#endif	/* !__ARM_IPIPE_H */
---- 2.6.14/include/asm-arm/mmu_context.h	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/include/asm-arm/mmu_context.h	2006-01-03 17:29:41.000000000 +0100
-@@ -91,6 +91,16 @@
+--- 2.6.15/include/asm-arm/mmu_context.h	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/include/asm-arm/mmu_context.h	2006-02-20 14:52:31.000000000 +0100
+@@ -85,11 +85,14 @@ switch_mm(struct mm_struct *prev, struct
+ 	unsigned int cpu = smp_processor_id();
+ 
+ 	if (prev != next) {
++		unsigned long flags;
++		local_irq_save_hw_cond(flags);
+ 		cpu_set(cpu, next->cpu_vm_mask);
+ 		check_context(next);
+ 		cpu_switch_mm(next->pgd, next);
+ 		if (cache_is_vivt())
+ 			cpu_clear(cpu, prev->cpu_vm_mask);
++		local_irq_restore_hw_cond(flags);
+ 	}
  }
  
- #define deactivate_mm(tsk,mm)	do { } while (0)
-+#ifdef CONFIG_IPIPE
-+#define activate_mm(active_mm, mm)		\
-+do {						\
-+	unsigned long flags;			\
-+	local_irq_save_hw_cond(flags);		\
-+	switch_mm(active_mm, mm, current);	\
-+	local_irq_restore_hw_cond(flags);	\
-+} while(0)
-+#else
- #define activate_mm(prev,next)	switch_mm(prev, next, NULL)
-+#endif
- 
- #endif
---- 2.6.14/include/asm-arm/pgalloc.h	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/include/asm-arm/pgalloc.h	2006-01-03 17:29:41.000000000 +0100
-@@ -29,6 +29,11 @@
+--- 2.6.15/include/asm-arm/pgalloc.h	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/include/asm-arm/pgalloc.h	2006-02-20 14:52:43.000000000 +0100
+@@ -29,6 +29,11 @@ extern void free_pgd_slow(pgd_t *pgd);
  
  #define check_pgt_cache()		do { } while (0)
  
@@ -4438,9 +4547,9 @@
  /*
   * Allocate one PTE table.
   *
---- 2.6.14/include/asm-arm/system.h	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-ipipe/include/asm-arm/system.h	2006-01-03 17:29:41.000000000 +0100
-@@ -176,30 +176,30 @@
+--- 2.6.15/include/asm-arm/system.h	2006-01-03 04:21:10.000000000 +0100
++++ 2.6.15-ipipe/include/asm-arm/system.h	2006-02-20 14:52:57.000000000 +0100
+@@ -176,30 +176,30 @@ do {									\
   */
  #if __LINUX_ARM_ARCH__ >= 6
  
@@ -4479,7 +4588,7 @@
  "	orr	%1, %0, #128\n"					\
  "	msr	cpsr_c, %1"					\
  	: "=r" (x), "=r" (temp)					\
-@@ -210,11 +210,11 @@
+@@ -210,11 +210,11 @@ do {									\
  /*
   * Enable IRQs
   */
@@ -4493,7 +4602,7 @@
  "	bic	%0, %0, #128\n"					\
  "	msr	cpsr_c, %0"					\
  	: "=r" (temp)						\
-@@ -225,11 +225,11 @@
+@@ -225,11 +225,11 @@ do {									\
  /*
   * Disable IRQs
   */
@@ -4507,7 +4616,7 @@
  "	orr	%0, %0, #128\n"					\
  "	msr	cpsr_c, %0"					\
  	: "=r" (temp)						\
-@@ -240,7 +240,7 @@
+@@ -240,7 +240,7 @@ do {									\
  /*
   * Enable FIQs
   */
@@ -4516,7 +4625,7 @@
  	({							\
  		unsigned long temp;				\
  	__asm__ __volatile__(					\
-@@ -255,7 +255,7 @@
+@@ -255,7 +255,7 @@ do {									\
  /*
   * Disable FIQs
   */
@@ -4525,7 +4634,7 @@
  	({							\
  		unsigned long temp;				\
  	__asm__ __volatile__(					\
-@@ -272,29 +272,63 @@
+@@ -272,29 +272,63 @@ do {									\
  /*
   * Save the current interrupt enable state.
   */
