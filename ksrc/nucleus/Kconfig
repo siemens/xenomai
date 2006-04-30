@@ -157,7 +157,7 @@ menu "Timing"
 
 config XENO_OPT_TIMING_PERIODIC
 	bool "Use periodic timer hardware"
-	default y
+	default n
 	help
 	WARNING: This value must be <= CONFIG_HZ.
 
@@ -175,8 +175,8 @@ config XENO_OPT_TIMING_PERIODIC
 	tick, or would lead to a waste of high frequency periodic ticks.
 
 	Enabling this option allows the nucleus to use the timer
-	hardware as a pure Programmable Interval Timer. You can
-	disable this option in order to save a few hundreds bytes if
+	hardware as a pure Programmable Interval Timer. You can leave
+	this option disabled in order to save a few hundreds bytes if
 	you plan to use the system timer in aperiodic mode only.
 
 	This option must not be confused with the ability to run

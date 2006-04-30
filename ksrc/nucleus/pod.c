@@ -91,7 +91,7 @@ const char *xnpod_fatal_helper (const char *format, ...)
         goto out;
 
     __setbits(nkpod->status,XNFATAL);
-    now = nktimer->get_jiffies();
+    now = xntimer_get_jiffies();
 
     p += snprintf(p,XNPOD_FATAL_BUFSZ - (p - nkmsgbuf),
 	          "\n %-3s  %-6s %-8s %-8s %-8s  %s\n",
@@ -136,7 +136,7 @@ const char *xnpod_fatal_helper (const char *format, ...)
 		      "Timer: %s [tickval=%lu ns, elapsed=%Lu]\n",
 		      nktimer->get_type(),
 		      xnpod_get_tickval(),
-		      nktimer->get_jiffies());
+		      xntimer_get_jiffies());
     else
         p += snprintf(p,XNPOD_FATAL_BUFSZ - (p - nkmsgbuf),
 		      "Timer: none\n");
@@ -2794,7 +2794,7 @@ xnticks_t xnpod_get_time (void)
 {
     /* Return an adjusted value of the monotonic time with the
        wallclock offset as defined in xnpod_set_time(). */
-    return nktimer->get_jiffies() + nkpod->wallclock_offset;
+    return xntimer_get_jiffies() + nkpod->wallclock_offset;
 }
 
 /*! 
@@ -3453,7 +3453,7 @@ int xnpod_set_thread_periodic (xnthread_t *thread,
     if (idate == XN_INFINITE)
 	{
         xntimer_start(&thread->ptimer,period,period);
-	thread->pexpect = nktimer->get_timer_raw_expiry(&thread->ptimer)
+	thread->pexpect = xntimer_get_raw_expiry(&thread->ptimer)
 	    + xntimer_interval(&thread->ptimer);
 	}
     else
@@ -3463,7 +3463,7 @@ int xnpod_set_thread_periodic (xnthread_t *thread,
 	if (idate > now)
 	    {
 	    xntimer_start(&thread->ptimer,idate - now,period);
-	    thread->pexpect = nktimer->get_timer_raw_expiry(&thread->ptimer)
+	    thread->pexpect = xntimer_get_raw_expiry(&thread->ptimer)
 		+ xntimer_interval(&thread->ptimer);
             xnpod_suspend_thread(thread,XNDELAY,XN_INFINITE,NULL);
 	    }
@@ -3541,7 +3541,7 @@ int xnpod_wait_thread_period (unsigned long *overruns_r)
 
     xnltt_log_event(xeno_ev_thrwait,thread->name);
 
-    now = nktimer->get_raw_clock(); /* Work with either TSC or periodic ticks. */
+    now = xntimer_get_rawclock(); /* Work with either TSC or periodic ticks. */
 
     if (likely(now < thread->pexpect))
 	{
@@ -3553,7 +3553,7 @@ int xnpod_wait_thread_period (unsigned long *overruns_r)
 	    goto unlock_and_exit;
 	    }
 
-	now = nktimer->get_raw_clock();
+	now = xntimer_get_rawclock();
 	}
 
     period = xntimer_interval(&thread->ptimer);
