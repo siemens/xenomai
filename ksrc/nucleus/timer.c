@@ -179,7 +179,7 @@ static xnticks_t xntimer_get_jiffies_aperiodic (void)
 {
     /* In aperiodic mode, our idea of time is the same as the CPU's,
        and a jiffy equals a nanosecond. */
-    return xnpod_get_cpu_time();
+    return xnarch_get_cpu_time();
 }
 
 static xnticks_t xntimer_get_raw_clock_aperiodic (void)

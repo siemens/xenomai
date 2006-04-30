@@ -1,3 +1,13 @@
+2006-04-30  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/timer.h: Keep inlining calls with
+	!CONFIG_XENO_OPT_TIMING_PERIODIC.
+
+	* ksrc/nucleus/Kconfig: Default to !CONFIG_XENO_OPT_TIMING_PERIODIC.
+
+	* ksrc/arch/generic/hal.c (rthal_init): Add LART for misconfigured
+	invariant pipeline head.
+
 2006-04-29  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-generic/hal.h: Use Adeos optimization as invariant
@@ -5,6 +15,19 @@
 
 	* include/nucleus/queue.h, ksrc: Define and use a predicate for
 	testing queue emptiness.
+
+2006-04-29  Romain Lenglet <rlenglet@users.forge.objectweb.org>
+
+	* doc/man/xeno-test.man.in: Corrections about options: -d, -L, -N, -p.
+	Removed documented dependency between -m and -M, and -L or -N.
+	Removed History section: redundant with Xenomai's ChangeLog.
+	Modified documented set of default options passed to latency, to
+	reflect new value passed in -T option.
+	Other cleanups.
+
+	* doc/man/{runinfo.man.in,xeno-config.man.in,xeno-info.man.in,
+	xeno-load.man.in}: Removed History sections: redundant with Xenomai's
+	ChangeLog.
 
 2006-04-27  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
 

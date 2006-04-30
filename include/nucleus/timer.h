@@ -238,6 +238,33 @@ static inline void xntimer_stop(xntimer_t *timer)
 	nktimer->do_timer_stop(timer);
 }
 
+static inline xnticks_t xntimer_get_jiffies(void)
+{
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
+    return nktimer->get_jiffies();
+#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
+    return xnarch_get_cpu_time();
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
+}
+
+static inline xnticks_t xntimer_get_rawclock(void)
+{
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
+    return nktimer->get_raw_clock();
+#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
+    return xnarch_get_cpu_tsc();
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
+}
+
+static inline xnticks_t xntimer_get_raw_expiry (xntimer_t *timer)
+{
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
+    return nktimer->get_timer_raw_expiry(timer);
+#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
+    return xntimerh_date(&timer->aplink);
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
+}
+
 void xntimer_freeze(void);
 
 xnticks_t xntimer_get_date(xntimer_t *timer);

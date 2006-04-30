@@ -386,8 +386,8 @@ void xnintr_clock_handler (void)
 }
 
 /*
- * Low-level interrupt handler dispatching the user-defined ISR for
- * interrupts other than the clock IRQ -- Called with interrupts off.
+ * Low-level interrupt handler dispatching the ISRs -- Called with
+ * interrupts off.
  */
 
 static void xnintr_irq_handler (unsigned irq, void *cookie)

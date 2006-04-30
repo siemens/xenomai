@@ -210,7 +210,7 @@ static int sched_seq_open(struct inode *inode, struct file *file)
 
     xnlock_get_irqsave(&nklock,s);
 
-    iter->start_time = nktimer->get_jiffies();
+    iter->start_time = xntimer_get_jiffies();
 
     for (holder = getheadq(&nkpod->threadq);
 	 holder && count > 0;
@@ -512,7 +512,7 @@ static int timer_read_proc (char *page,
 	{
 	status = nktimer->get_type();
 	tickval = xnpod_get_tickval();
-	jiffies = nktimer->get_jiffies();
+	jiffies = xntimer_get_jiffies();
 	}
 
     len = sprintf(page,
