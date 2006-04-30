@@ -2567,8 +2567,8 @@ void xnpod_schedule (void)
         if (xnshadow_thrptd(current) == NULL)
             xnshadow_exit();
 
-        /* We need to relock nklock here, since it is not locked and the caller
-           may expect it to be locked. */
+        /* We need to relock nklock here, since it is not locked and
+           the caller may expect it to be locked. */
         xnlock_get_irqsave(&nklock, ignored);
         xnlock_put_irqrestore(&nklock, s);
         return;
@@ -2974,32 +2974,23 @@ int xnpod_remove_hook (int type, void (*routine)(xnthread_t *))
 void xnpod_check_context (int mask)
 
 {
-    xnsched_t *sched;
-    spl_t s;
-
-    xnlock_get_irqsave(&nklock,s);
-
-    sched = xnpod_current_sched();
+    xnsched_t *sched = xnpod_current_sched();
 
     if ((mask & XNPOD_ROOT_CONTEXT) && xnpod_root_p())
-        goto unlock_and_exit;
+        return;
 
     if ((mask & XNPOD_THREAD_CONTEXT) && !xnpod_asynch_p())
-        goto unlock_and_exit;
+        return;
 
     if ((mask & XNPOD_INTERRUPT_CONTEXT) && sched->inesting > 0)
-        goto unlock_and_exit;
+        return;
 
     if ((mask & XNPOD_HOOK_CONTEXT) && xnpod_callout_p())
-        goto unlock_and_exit;
+        return;
 
     xnpod_fatal("illegal context for call: current=%s, mask=0x%x",
                 xnpod_asynch_p() ? "ISR/callout" : xnpod_current_thread()->name,
                 mask);
-
- unlock_and_exit:
-
-    xnlock_put_irqrestore(&nklock,s);
 }
 
 /*! 
@@ -3297,20 +3288,20 @@ void xnpod_stop_timer (void)
  *
  * This service can be called from:
  *
- * - Interrupt service routine
+ * - Interrupt service routine, must be called with interrupts off.
  *
  * Rescheduling: possible.
+ *
  */
 
 int xnpod_announce_tick (xnintr_t *intr)
 
 {
     xnsched_t *sched;
-    spl_t s;
 
     sched = xnpod_current_sched();
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get(&nklock);
 
     xnltt_log_event(xeno_ev_tmtick,xnpod_current_thread()->name);
 
@@ -3371,7 +3362,7 @@ int xnpod_announce_tick (xnintr_t *intr)
 
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put(&nklock);
 
     return XN_ISR_HANDLED|XN_ISR_NOENABLE;
 }

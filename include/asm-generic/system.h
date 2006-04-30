@@ -209,9 +209,12 @@ static inline int xnarch_setimask (int imask)
 #ifdef CONFIG_SMP
 
 #ifdef CONFIG_XENO_SPINLOCK_DEBUG
+#define xnlock_get(lock) \
+    __xnlock_get(lock, __FILE__, __LINE__,__FUNCTION__)
 #define xnlock_get_irqsave(lock,x) \
     ((x) = __xnlock_get_irqsave(lock, __FILE__, __LINE__,__FUNCTION__))
 #else /* !CONFIG_XENO_SPINLOCK_DEBUG */
+#define xnlock_get(lock)            __xnlock_get(lock)
 #define xnlock_get_irqsave(lock,x)  ((x) = __xnlock_get_irqsave(lock))
 #endif /* CONFIG_XENO_SPINLOCK_DEBUG */
 #define xnlock_clear_irqoff(lock)   xnlock_put_irqrestore(lock,1)
@@ -225,6 +228,101 @@ static inline void xnlock_init (xnlock_t *lock)
 #ifdef CONFIG_XENO_SPINLOCK_DEBUG
 
 #define XNARCH_DEBUG_SPIN_LIMIT 3000000
+
+static inline void __xnlock_get (xnlock_t *lock,
+				 const char *file,
+				 unsigned line,
+				 const char *function)
+{
+    unsigned spin_count = 0;
+#else /* !CONFIG_XENO_SPINLOCK_DEBUG */
+static inline void __xnlock_get (xnlock_t *lock)
+{
+#endif /* CONFIG_XENO_SPINLOCK_DEBUG */
+    rthal_declare_cpuid;
+
+    rthal_load_cpuid();
+
+    if (!test_and_set_bit(cpuid,&lock->lock))
+        {
+#ifdef CONFIG_XENO_SPINLOCK_DEBUG
+        unsigned long long lock_date = rthal_rdtsc();
+#endif /* CONFIG_XENO_SPINLOCK_DEBUG */
+        while (test_and_set_bit(BITS_PER_LONG - 1,&lock->lock))
+            /* Use an non-locking test in the inner loop, as Linux'es
+               bit_spin_lock. */
+            while (test_bit(BITS_PER_LONG - 1,&lock->lock))
+                {
+                cpu_relax();
+
+#ifdef CONFIG_XENO_SPINLOCK_DEBUG
+                if (++spin_count == XNARCH_DEBUG_SPIN_LIMIT)
+                    {
+                    rthal_emergency_console();
+                    printk(KERN_ERR
+                           "Xenomai: stuck on nucleus lock %p\n"
+                           "       waiter = %s:%u (%s(), CPU #%d)\n"
+                           "       owner  = %s:%u (%s(), CPU #%d)\n",
+                           lock,file,line,function,cpuid,
+                           lock->file,lock->line,lock->function,lock->cpu);
+                    show_stack(NULL,NULL);
+                    for (;;)
+                        cpu_relax();
+                    }
+#endif /* CONFIG_XENO_SPINLOCK_DEBUG */
+                }
+
+#ifdef CONFIG_XENO_SPINLOCK_DEBUG
+        lock->spin_time = rthal_rdtsc() - lock_date;
+        lock->lock_date = lock_date;
+        lock->file = file;
+        lock->function = function;
+        lock->line = line;
+        lock->cpu = cpuid;
+#endif /* CONFIG_XENO_SPINLOCK_DEBUG */
+        }
+}
+
+static inline void xnlock_put (xnlock_t *lock)
+{
+    rthal_declare_cpuid;
+
+    rthal_load_cpuid();
+    if (test_and_clear_bit(cpuid,&lock->lock))
+	{
+#ifdef CONFIG_XENO_OPT_STATS
+	extern xnlockinfo_t xnlock_stats[];
+
+	unsigned long long lock_time = rthal_rdtsc() - lock->lock_date;
+
+	if (lock_time > xnlock_stats[cpuid].lock_time)
+	    {
+	    xnlock_stats[cpuid].lock_time = lock_time;
+	    xnlock_stats[cpuid].spin_time = lock->spin_time;
+	    xnlock_stats[cpuid].file = lock->file;
+	    xnlock_stats[cpuid].function = lock->function;
+	    xnlock_stats[cpuid].line = lock->line;
+	    }
+#endif /* CONFIG_XENO_OPT_STATS */
+
+	clear_bit(BITS_PER_LONG - 1,&lock->lock);
+	}
+#ifdef CONFIG_XENO_SPINLOCK_DEBUG
+    else
+	{
+	rthal_emergency_console();
+	printk(KERN_ERR
+	       "Xenomai: unlocking unlocked nucleus lock %p\n"
+	       "       owner  = %s:%u (%s(), CPU #%d)\n",
+	       lock,lock->file,lock->line,lock->function,lock->cpu);
+	show_stack(NULL,NULL);
+	for (;;)
+	    cpu_relax();
+	}
+#endif
+}
+
+#ifdef CONFIG_XENO_SPINLOCK_DEBUG
 
 static inline spl_t __xnlock_get_irqsave (xnlock_t *lock,
                                           const char *file,
@@ -336,6 +434,8 @@ static inline void xnlock_put_irqrestore (xnlock_t *lock, spl_t flags)
 #else /* !CONFIG_SMP */
 
 #define xnlock_init(lock)              do { } while(0)
+#define xnlock_get(lock)               do { } while(0)
+#define xnlock_put(lock)               do { } while(0)
 #define xnlock_get_irqsave(lock,x)     rthal_local_irq_save(x)
 #define xnlock_put_irqrestore(lock,x)  rthal_local_irq_restore(x)
 #define xnlock_clear_irqoff(lock)      rthal_local_irq_disable()
