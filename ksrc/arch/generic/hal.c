@@ -903,12 +903,24 @@ int rthal_init (void)
 				RTHAL_ROOT_PRIO + 100,
 				&rthal_domain_entry);
     if (!err)
+	{
+#if defined(CONFIG_XENO_OPT_PIPELINE_HEAD) && defined(__ipipe_pipeline_head)
+	if (__ipipe_pipeline_head() != &rthal_domain)
+	    {
+	    rthal_unregister_domain(&rthal_domain);
+	    printk(KERN_ERR "Xenomai: the real-time domain is not heading the pipeline,\n");
+	    printk(KERN_ERR "         either unload domain %s or disable CONFIG_XENO_OPT_PIPELINE_HEAD.\n",
+		   __ipipe_pipeline_head()->name);
+	    goto out_proc_unregister;
+	    }
+#endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
     	rthal_init_done = 1;
+	}
     else 
-    {
+	{
         printk(KERN_ERR "Xenomai: Domain registration failed.\n");
         goto out_proc_unregister;
-    }
+	}
 
     return 0;
 
