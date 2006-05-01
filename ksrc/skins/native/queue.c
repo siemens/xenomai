@@ -885,7 +885,7 @@ ssize_t rt_queue_receive (RT_QUEUE *q,
 }
 
 /**
- * @fn ssize_t rt_queue_read(RT_QUEUE *q,void *buf,RTIME timeout)
+ * @fn ssize_t rt_queue_read(RT_QUEUE *q,void *buf,size_t size,RTIME timeout)
  *
  * @brief Read a message from a queue.
  *
