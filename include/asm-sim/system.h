@@ -69,6 +69,8 @@ typedef unsigned long xnlock_t;
 #define XNARCH_LOCK_UNLOCKED 0
 
 #define xnlock_init(lock)              do { } while(0)
+#define xnlock_get(lock)               do { } while(0)
+#define xnlock_put(lock)               do { } while(0)
 #define xnlock_get_irqsave(lock,x)     ((x) = mvm_set_irqmask(-1))
 #define xnlock_put_irqrestore(lock,x)  mvm_set_irqmask(x)
 #define xnlock_clear_irqoff(lock)      mvm_set_irqmask(-1)
