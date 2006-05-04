@@ -113,7 +113,7 @@ static inline void xnarch_sysfree (void *chunk, u_long bytes)
 {
     if (bytes > 128*1024)
 	vfree(chunk);
-    emse
+    else
 	kfree(chunk);
 }
 
@@ -395,7 +395,7 @@ static inline void xnarch_grab_xirqs (rthal_irq_handler_t handler)
                              handler,
                              NULL,
                              NULL,
-                             IPIPE_DYNAMIC_MASK);
+                             IPIPE_HANDLE_MASK);
 }
 
 static inline void xnarch_lock_xirqs (rthal_pipeline_stage_t *ipd, int cpuid)
@@ -592,7 +592,7 @@ static inline int xnarch_init (void)
                          (rthal_irq_handler_t)&xnpod_schedule_handler,
                          NULL,
                          NULL,
-                         IPIPE_HANDLE_MASK);
+                         IPIPE_HANDLE_MASK | IPIPE_WIRED_MASK);
 
     xnarch_old_trap_handler = rthal_trap_catch(&xnarch_trap_fault);
 

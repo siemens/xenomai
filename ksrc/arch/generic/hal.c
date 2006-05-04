@@ -168,7 +168,7 @@ int rthal_irq_request (unsigned irq,
 				handler,
 				cookie,
 				ackfn,
-				IPIPE_DYNAMIC_MASK | IPIPE_EXCLUSIVE_MASK);
+				IPIPE_HANDLE_MASK | IPIPE_WIRED_MASK | IPIPE_EXCLUSIVE_MASK);
 }
 
 /**
@@ -200,19 +200,15 @@ int rthal_irq_request (unsigned irq,
 int rthal_irq_release (unsigned irq)
 
 {
-    int err = 0;
-	
     if (irq >= IPIPE_NR_IRQS)
 	return -EINVAL;
 
-    err = rthal_virtualize_irq(&rthal_domain,
-			       irq,
-			       NULL,
-			       NULL,
-			       NULL,
-			       IPIPE_PASS_MASK);
-
-    return err;
+    return rthal_virtualize_irq(&rthal_domain,
+				irq,
+				NULL,
+				NULL,
+				NULL,
+				IPIPE_PASS_MASK);
 }
 
 /**
@@ -873,7 +869,6 @@ int rthal_init (void)
 			       NULL,
 			       NULL,
 			       IPIPE_HANDLE_MASK);
-
     if (err)
     {
         printk(KERN_ERR "Xenomai: Failed to virtualize IRQ.\n");
@@ -900,25 +895,21 @@ int rthal_init (void)
     err = rthal_register_domain(&rthal_domain,
 				"Xenomai",
 				RTHAL_DOMAIN_ID,
-				RTHAL_ROOT_PRIO + 100,
+				RTHAL_XENO_PRIO,
 				&rthal_domain_entry);
     if (!err)
-	{
-#if defined(CONFIG_XENO_OPT_PIPELINE_HEAD) && defined(__ipipe_pipeline_head)
-	if (__ipipe_pipeline_head() != &rthal_domain)
-	    {
-	    rthal_unregister_domain(&rthal_domain);
-	    printk(KERN_ERR "Xenomai: the real-time domain is not heading the pipeline,\n");
-	    printk(KERN_ERR "         either unload domain %s or disable CONFIG_XENO_OPT_PIPELINE_HEAD.\n",
-		   __ipipe_pipeline_head()->name);
-	    goto out_proc_unregister;
-	    }
-#endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
     	rthal_init_done = 1;
-	}
     else 
 	{
-        printk(KERN_ERR "Xenomai: Domain registration failed.\n");
+	if (err == -EAGAIN)
+	    {
+	    printk(KERN_ERR "Xenomai: the real-time domain cannot head the pipeline,\n");
+	    printk(KERN_ERR "         either unload domain %s or disable CONFIG_XENO_OPT_PIPELINE_HEAD.\n",
+		   __ipipe_pipeline_head()->name);
+	    }
+	else
+	    printk(KERN_ERR "Xenomai: Domain registration failed (%d).\n",err);
+
         goto out_proc_unregister;
 	}
 
