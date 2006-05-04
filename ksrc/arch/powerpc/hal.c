@@ -427,7 +427,7 @@ int rthal_arch_init (void)
 	return -ENODEV;
     }
 #endif /* CONFIG_ALTIVEC */
-
+    printk("TIMER IRQ is %d\n",RTHAL_TIMER_IRQ);
     if (rthal_cpufreq_arg == 0)
 	/* The CPU frequency is expressed as the timebase frequency
 	   for this port. */

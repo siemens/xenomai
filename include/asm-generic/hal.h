@@ -62,10 +62,19 @@
 #endif /* !CONFIG_IPIPE */
 
 #define RTHAL_NR_CPUS		IPIPE_NR_CPUS
-#define RTHAL_ROOT_PRIO		IPIPE_ROOT_PRIO
 #define RTHAL_NR_FAULTS		IPIPE_NR_FAULTS
 #define RTHAL_NR_IRQS		IPIPE_NR_IRQS
 #define RTHAL_VIRQ_BASE		IPIPE_VIRQ_BASE
+
+/* I-pipe domain priorities. If the invariant pipeline head feature is
+   available from the I-pipe support and enabled for Xenomai, use
+   it. */
+#define RTHAL_ROOT_PRIO		IPIPE_ROOT_PRIO
+#if defined(CONFIG_XENO_OPT_PIPELINE_HEAD) && defined(IPIPE_HEAD_PRIORITY)
+#define RTHAL_XENO_PRIO		IPIPE_HEAD_PRIORITY
+#else /* !(CONFIG_XENO_OPT_PIPELINE_HEAD && IPIPE_HEAD_PRIORITY) */
+#define RTHAL_XENO_PRIO		(RTHAL_ROOT_PRIO + 100)
+#endif /* CONFIG_XENO_OPT_PIPELINE_HEAD && IPIPE_HEAD_PRIORITY */
 
 #define rthal_virtual_irq_p(irq)	((irq) >= RTHAL_VIRQ_BASE && \
 					(irq) < RTHAL_NR_IRQS)
@@ -240,6 +249,11 @@ static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
 #warning "       to a recent I-pipe version is highly recommended."
 #endif /* CONFIG_PREEMPT */
 #endif /* !TASK_ATOMICSWITCH */
+
+#ifndef IPIPE_WIRED_MASK
+/* In case wired interrupt support is not available. */
+#define IPIPE_WIRED_MASK  0
+#endif /* !IPIPE_WIRED_MASK */
 
 #define rthal_catch_taskexit(hdlr)	\
     ipipe_catch_event(ipipe_root_domain,IPIPE_EVENT_EXIT,hdlr)

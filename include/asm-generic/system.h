@@ -476,7 +476,7 @@ static inline int xnarch_hook_ipi (void (*handler)(void))
 				(rthal_irq_handler_t) handler,
 				NULL,
 				NULL,
-				IPIPE_HANDLE_MASK);
+				IPIPE_HANDLE_MASK | IPIPE_WIRED_MASK);
 }
 
 static inline int xnarch_release_ipi (void)
