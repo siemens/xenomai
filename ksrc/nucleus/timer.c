@@ -107,8 +107,8 @@ static inline void xntimer_next_remote_shot (xnsched_t *sched)
 }
 
 static void xntimer_do_start_aperiodic (xntimer_t *timer,
-				 xnticks_t value,
-				 xnticks_t interval)
+					xnticks_t value,
+					xnticks_t interval)
 {
     if (!testbits(timer->status,XNTIMER_DEQUEUED))
 	xntimer_dequeue_aperiodic(timer);
