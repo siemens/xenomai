@@ -901,6 +901,7 @@ int rthal_init (void)
     	rthal_init_done = 1;
     else 
 	{
+#ifdef __ipipe_pipeline_head
 	if (err == -EAGAIN)
 	    {
 	    printk(KERN_ERR "Xenomai: the real-time domain cannot head the pipeline,\n");
@@ -908,6 +909,7 @@ int rthal_init (void)
 		   __ipipe_pipeline_head()->name);
 	    }
 	else
+#endif
 	    printk(KERN_ERR "Xenomai: Domain registration failed (%d).\n",err);
 
         goto out_proc_unregister;
