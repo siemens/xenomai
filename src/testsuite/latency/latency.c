@@ -111,21 +111,22 @@ void latency (void *cookie)
             expected_tsc += period_tsc;
             err = rt_task_wait_period(&ov);
 
-            if (err)
-                {
-                if (err != -ETIMEDOUT)
-		    {
-		    fprintf(stderr,"latency: wait period failed, code %d\n",err);
-                    rt_task_delete(NULL); /* Timer stopped. */
-		    }
-
-                overrun += ov;
-                }
-
             dt = (long)(rt_timer_tsc() - expected_tsc);
             if (dt > maxj) maxj = dt;
             if (dt < minj) minj = dt;
             sumj += dt;
+
+            if (err)
+                {
+                if (err != -ETIMEDOUT)
+                    {
+                    fprintf(stderr,"latency: wait period failed, code %d\n",err);
+                    rt_task_delete(NULL); /* Timer stopped. */
+                    }
+
+                overrun += ov;
+                expected_tsc += period_tsc * ov;
+                }
 
             if (freeze_max && (dt > gmaxjitter) && !(finished || warmup))
                 {
