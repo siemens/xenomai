@@ -181,8 +181,9 @@ config XENO_OPT_TIMING_PERIODIC
 
 	Enabling this option allows the nucleus to use the timer
 	hardware as a pure Programmable Interval Timer. You can leave
-	this option disabled in order to save a few hundreds bytes if
-	you plan to use the system timer in aperiodic mode only.
+	this option disabled in order to save a few hundreds bytes and
+	some cycles on the fast path if you plan to use the system
+	timer in aperiodic mode only.
 
 	This option must not be confused with the ability to run
 	periodic threads, which is possible is both timing
