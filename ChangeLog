@@ -1,3 +1,9 @@
+2006-05-05  Jim Cromie <jim.cromie@gmail.com>
+
+	* scripts/prepare-kernel.sh (patch_append): Do not alter link
+	targets when the patched kernel is in fact a shadow tree from an
+	actual source tree made using lndir.
+	
 2006-05-07  Jan Kiszka  <jan.kiszka@web.de>
 
 	* src/testsuite/latency/latency.c: forward expected tick dates
