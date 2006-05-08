@@ -48,6 +48,10 @@ check_filter() {
 patch_append() {
     file="$1"
     if test "x$output_patch" = "x"; then
+	if test -L "$linux_tree/$file" ; then
+	    mv "$linux_tree/$file" "$linux_tree/$file.orig"
+	    cp "$linux_tree/$file.orig" "$linux_tree/$file"
+	fi
 	chmod +w "$linux_tree/$file"
         cat >> "$linux_tree/$file"
     else
