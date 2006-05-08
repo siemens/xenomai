@@ -127,3 +127,7 @@ ___________________________________________________________________
 	o rt_queue_recv() has been renamed rt_queue_receive() with no
 	other change for consistency purpose with the rest of the
 	interface.
+
+	o New services rt_queue_read() and rt_queue_write() have been
+	provided, accepting user-defined buffers instead of blocks
+	from the internal buffer pool.
