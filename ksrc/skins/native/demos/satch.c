@@ -1,3 +1,4 @@
+#include <sys/mman.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -88,7 +89,7 @@ void producer (void *cookie)
 int root_thread_init (void)
 
 {
-    rt_timer_start(1000000);	/* 1ms periodic tick. */
+    rt_timer_set_mode(1000000);	/* Forc 1ms periodic tick. */
 
     rt_task_spawn(&consumer_task,
 		  "ConsumerTask",
@@ -120,6 +121,7 @@ void root_thread_exit (void)
 int main (int ac, char *av[])
 
 {
+    mlockall(MCL_CURRENT|MCL_FUTURE);
     root_thread_init();
     pause();
     root_thread_exit();
