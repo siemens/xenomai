@@ -1,3 +1,8 @@
+2006-05-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/demos/satch.c: Fix deprecated call to
+	rt_timer_start.
+
 2006-04-27  Jim Cromie <jim.cromie@gmail.com>
 
 	* scripts/xeno-test.in: Fix default value for -T.
