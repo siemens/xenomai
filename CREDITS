@@ -45,7 +45,7 @@ D: the map.
 N: Jim Cromie
 E: jcromie@divsol.com
 D: Comprehensive statistics collection for the testsuite.
-Validation test script.
+D: Validation test script. Various script fixes and sanitization.
 
 N: Pierre Ficheux
 E: contact@ficheux.com
