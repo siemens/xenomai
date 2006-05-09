@@ -20,103 +20,98 @@
 
 #include <vxworks/defs.h>
 
-int * wind_current_context_errno(void)
+int *wind_current_context_errno(void)
 {
     return xnthread_get_errno_location();
 }
 
-
 void printErrno(int status)
 {
-    const char * msg;
-    
-    switch(status)
-    {
-    case S_objLib_OBJ_ID_ERROR:
-        msg="S_objLib_OBJ_ID_ERROR";
-        break;
-    case S_objLib_OBJ_UNAVAILABLE:
-        msg="S_objLib_OBJ_UNAVAILABLE";
-        break;
-    case S_objLib_OBJ_DELETED:
-        msg="S_objLib_OBJ_DELETED";
-        break;
-    case S_objLib_OBJ_TIMEOUT:
-        msg="S_objLib_OBJ_TIMEOUT";
-        break;
-    case S_taskLib_NAME_NOT_FOUND:
-        msg="S_taskLib_NAME_NOT_FOUND";
-        break;
-    case S_taskLib_TASK_HOOK_NOT_FOUND:
-        msg="S_taskLib_TASK_HOOK_NOT_FOUND";
-        break;
-    case S_taskLib_ILLEGAL_PRIORITY:
-        msg="S_taskLib_ILLEGAL_PRIORITY";
-        break;
-    case S_taskLib_TASK_HOOK_TABLE_FULL:
-        msg="S_taskLib_TASK_HOOK_TABLE_FULL";
-        break;
-    case S_semLib_INVALID_STATE:
-        msg="S_semLib_INVALID_STATE";
-        break;
-    case S_semLib_INVALID_OPTION:
-        msg="S_semLib_INVALID_OPTION";
-        break;
-    case S_semLib_INVALID_QUEUE_TYPE:
-        msg="S_semLib_INVALID_QUEUE_TYPE";
-        break;
-    case S_semLib_INVALID_OPERATION:
-        msg="S_semLib_INVALID_OPERATION";
-        break;
-    case S_msgQLib_INVALID_MSG_LENGTH:
-        msg="S_msgQLib_INVALID_MSG_LENGTH";
-        break;
-    case S_msgQLib_NON_ZERO_TIMEOUT_AT_INT_LEVEL:
-        msg="S_msgQLib_NON_ZERO_TIMEOUT_AT_INT_LEVEL";
-        break;
-    case S_msgQLib_INVALID_QUEUE_TYPE:
-        msg="S_msgQLib_INVALID_QUEUE_TYPE";
-        break;
-    case S_intLib_NOT_ISR_CALLABLE:
-        msg="S_intLib_NOT_ISR_CALLABLE";
-        break;
-    case S_memLib_NOT_ENOUGH_MEMORY:
-        msg="S_memLib_NOT_ENOUGH_MEMORY";
-        break;
-    default:
-        msg="Unknown error";
+    const char *msg;
+
+    switch (status) {
+        case S_objLib_OBJ_ID_ERROR:
+            msg = "S_objLib_OBJ_ID_ERROR";
+            break;
+        case S_objLib_OBJ_UNAVAILABLE:
+            msg = "S_objLib_OBJ_UNAVAILABLE";
+            break;
+        case S_objLib_OBJ_DELETED:
+            msg = "S_objLib_OBJ_DELETED";
+            break;
+        case S_objLib_OBJ_TIMEOUT:
+            msg = "S_objLib_OBJ_TIMEOUT";
+            break;
+        case S_taskLib_NAME_NOT_FOUND:
+            msg = "S_taskLib_NAME_NOT_FOUND";
+            break;
+        case S_taskLib_TASK_HOOK_NOT_FOUND:
+            msg = "S_taskLib_TASK_HOOK_NOT_FOUND";
+            break;
+        case S_taskLib_ILLEGAL_PRIORITY:
+            msg = "S_taskLib_ILLEGAL_PRIORITY";
+            break;
+        case S_taskLib_TASK_HOOK_TABLE_FULL:
+            msg = "S_taskLib_TASK_HOOK_TABLE_FULL";
+            break;
+        case S_semLib_INVALID_STATE:
+            msg = "S_semLib_INVALID_STATE";
+            break;
+        case S_semLib_INVALID_OPTION:
+            msg = "S_semLib_INVALID_OPTION";
+            break;
+        case S_semLib_INVALID_QUEUE_TYPE:
+            msg = "S_semLib_INVALID_QUEUE_TYPE";
+            break;
+        case S_semLib_INVALID_OPERATION:
+            msg = "S_semLib_INVALID_OPERATION";
+            break;
+        case S_msgQLib_INVALID_MSG_LENGTH:
+            msg = "S_msgQLib_INVALID_MSG_LENGTH";
+            break;
+        case S_msgQLib_NON_ZERO_TIMEOUT_AT_INT_LEVEL:
+            msg = "S_msgQLib_NON_ZERO_TIMEOUT_AT_INT_LEVEL";
+            break;
+        case S_msgQLib_INVALID_QUEUE_TYPE:
+            msg = "S_msgQLib_INVALID_QUEUE_TYPE";
+            break;
+        case S_intLib_NOT_ISR_CALLABLE:
+            msg = "S_intLib_NOT_ISR_CALLABLE";
+            break;
+        case S_memLib_NOT_ENOUGH_MEMORY:
+            msg = "S_memLib_NOT_ENOUGH_MEMORY";
+            break;
+        default:
+            msg = "Unknown error";
     }
 
     xnarch_printf("Error code %d: %s\n", status, msg);
 }
 
-
 STATUS errnoSet(int status)
 {
-    int * errno_ptr = wind_current_context_errno();
+    int *errno_ptr = wind_current_context_errno();
 
-    if(!errno_ptr)
+    if (!errno_ptr)
         return ERROR;
 
-    *errno_ptr=status;
+    *errno_ptr = status;
     return OK;
 }
 
-
 int errnoGet(void)
 {
-    int * errno_ptr = wind_current_context_errno();
+    int *errno_ptr = wind_current_context_errno();
 
-    if(!errno_ptr)
+    if (!errno_ptr)
         return 0;
-    
+
     return (*errno_ptr);
 }
 
-
 int errnoOfTaskGet(TASK_ID task_id)
 {
-    wind_task_t * task;
+    wind_task_t *task;
     int result;
     spl_t s;
 
@@ -129,15 +124,14 @@ int errnoOfTaskGet(TASK_ID task_id)
     xnlock_put_irqrestore(&nklock, s);
     return result;
 
- error:
+  error:
     xnlock_put_irqrestore(&nklock, s);
     return ERROR;
 }
 
-
-STATUS errnoOfTaskSet(TASK_ID task_id, int status )
+STATUS errnoOfTaskSet(TASK_ID task_id, int status)
 {
-    wind_task_t * task;
+    wind_task_t *task;
     spl_t s;
 
     xnlock_get_irqsave(&nklock, s);
@@ -149,7 +143,7 @@ STATUS errnoOfTaskSet(TASK_ID task_id, int status )
     xnlock_put_irqrestore(&nklock, s);
     return OK;
 
- error:
+  error:
     xnlock_put_irqrestore(&nklock, s);
     return ERROR;
 }

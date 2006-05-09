@@ -20,54 +20,51 @@
 
 #include <vxworks/defs.h>
 
-const char * taskName ( TASK_ID task_id )
+const char *taskName(TASK_ID task_id)
 {
-    wind_task_t * task;
+    wind_task_t *task;
 
     if (task_id == 0)
-	task_id = taskIdSelf();
+        task_id = taskIdSelf();
 
-    task = wind_h2obj_active(task_id, WIND_TASK_MAGIC,wind_task_t);
+    task = wind_h2obj_active(task_id, WIND_TASK_MAGIC, wind_task_t);
 
     /* It is useless to lock the access to task here, because if the task
        is deleted, the returned pointer will be invalid anyway. */
-    
-    if(!task)
+
+    if (!task)
         return NULL;
 
     return task->name;
 }
 
-
-TASK_ID taskIdDefault ( TASK_ID task_id )
+TASK_ID taskIdDefault(TASK_ID task_id)
 {
     static TASK_ID value = 0;
 
-    if(task_id)
+    if (task_id)
         value = task_id;
 
     return value;
 }
-    
 
-BOOL taskIsReady ( TASK_ID task_id )
+BOOL taskIsReady(TASK_ID task_id)
 {
-    wind_task_t * task;
-    
-    check_OBJ_ID_ERROR(task_id,wind_task_t,task,WIND_TASK_MAGIC,return 0 );
+    wind_task_t *task;
+
+    check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC, return 0);
 
     if (&task->threadbase == xnpod_current_thread())
-	return 1;
+        return 1;
 
-    return testbits(xnthread_status_flags(&task->threadbase),XNREADY);
+    return testbits(xnthread_status_flags(&task->threadbase), XNREADY);
 }
 
-
-BOOL taskIsSuspended ( TASK_ID task_id )
+BOOL taskIsSuspended(TASK_ID task_id)
 {
-    wind_task_t * task;
+    wind_task_t *task;
 
-    check_OBJ_ID_ERROR(task_id,wind_task_t,task,WIND_TASK_MAGIC,return 0 );
+    check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC, return 0);
 
-    return testbits(xnthread_status_flags(&task->threadbase),XNSUSP);
+    return testbits(xnthread_status_flags(&task->threadbase), XNSUSP);
 }

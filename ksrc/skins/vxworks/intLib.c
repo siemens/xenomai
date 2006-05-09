@@ -20,29 +20,23 @@
 
 #include <vxworks/defs.h>
 
-
-
-
-BOOL intContext (void)
+BOOL intContext(void)
 {
-    return (BOOL) xnpod_interrupt_p();
+    return (BOOL)xnpod_interrupt_p();
 }
 
-
-int intCount (void)
+int intCount(void)
 {
     return xnpod_current_sched()->inesting;
 }
 
-
-int intLevelSet (int mask)
+int intLevelSet(int mask)
 {
     return xnarch_setimask(mask);
-    
+
 }
 
-
-int intLock (void)
+int intLock(void)
 {
     spl_t s;
 
@@ -51,8 +45,7 @@ int intLock (void)
     return (int)s;
 }
 
-
-void intUnlock (int flags)
+void intUnlock(int flags)
 {
     spl_t s = (spl_t)flags;
     splexit(s);

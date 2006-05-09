@@ -45,7 +45,7 @@ int SKIN_INIT(vxworks)
     int err;
 
 #if CONFIG_XENO_OPT_TIMING_PERIOD == 0
-    nktickdef = 1000000;	/* Defaults to 1ms. */
+    nktickdef = 1000000;        /* Defaults to 1ms. */
 #endif
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
@@ -53,31 +53,28 @@ int SKIN_INIT(vxworks)
     err = xncore_attach();
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
     /* The VxWorks skin is standalone. */
-    err = xnpod_init(&__vxworks_pod,255,0,XNREUSE);
+    err = xnpod_init(&__vxworks_pod, 255, 0, XNREUSE);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
     if (err != 0)
         goto fail;
 
-    if (!testbits(nkpod->status,XNTMPER))
-	{
-	xnlogerr("incompatible timer mode (aperiodic found, need periodic).\n");
-	err = -EBUSY;	/* Cannot work in aperiodic timing mode. */
-	}
-    else
-	err = wind_sysclk_init(1000000000 / xnpod_get_tickval());
+    if (!testbits(nkpod->status, XNTMPER)) {
+        xnlogerr("incompatible timer mode (aperiodic found, need periodic).\n");
+        err = -EBUSY;           /* Cannot work in aperiodic timing mode. */
+    } else
+        err = wind_sysclk_init(1000000000 / xnpod_get_tickval());
 
-    if (err != 0)
-        {
+    if (err != 0) {
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	xncore_detach(err);
+        xncore_detach(err);
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-	xnpod_shutdown(err);
+        xnpod_shutdown(err);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
- fail:
-	xnlogerr("VxWorks skin init failed, code %d.\n",err);
+      fail:
+        xnlogerr("VxWorks skin init failed, code %d.\n", err);
         return err;
-        }
+    }
 
     wind_wd_init();
     wind_task_hooks_init();
@@ -87,7 +84,7 @@ int SKIN_INIT(vxworks)
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     wind_syscall_init();
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-    
+
     xnprintf("starting VxWorks services.\n");
 
     return 0;
