@@ -20,15 +20,15 @@
 
 #include <vxworks/defs.h>
 
-STATUS kernelTimeSlice (int ticks)
+STATUS kernelTimeSlice(int ticks)
 {
     spl_t s;
 
     xnlock_get_irqsave(&nklock, s);
 
-    wind_set_rrperiod((xnticks_t) ticks);
-    
-    if(ticks != 0)
+    wind_set_rrperiod((xnticks_t)ticks);
+
+    if (ticks != 0)
         xnpod_activate_rr(ticks);
     else
         xnpod_deactivate_rr();
@@ -38,8 +38,7 @@ STATUS kernelTimeSlice (int ticks)
     return OK;
 }
 
-
-const char *kernelVersion (void)
+const char *kernelVersion(void)
 {
     return "VxWorks/VM version " VXWORKS_SKIN_VERSION_STRING;
 }

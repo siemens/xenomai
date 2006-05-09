@@ -25,15 +25,13 @@
 static wind_tick_handler_t tick_handler;
 static long tick_handler_arg;
 
-
 void tickAnnounce(void)
 {
-    if(tick_handler != NULL)
+    if (tick_handler != NULL)
         tick_handler(tick_handler_arg);
 
     xnpod_announce_tick(&nkclock);
 }
-
 
 static int __tickAnnounce(xnintr_t *intr)
 {
@@ -41,21 +39,18 @@ static int __tickAnnounce(xnintr_t *intr)
     return XN_ISR_HANDLED;
 }
 
-
 int wind_sysclk_init(u_long init_rate)
 {
     return sysClkRateSet(init_rate);
 }
 
-
 void wind_sysclk_cleanup(void)
 {
 }
 
-
-STATUS sysClkConnect (wind_tick_handler_t func, long arg)
+STATUS sysClkConnect(wind_tick_handler_t func, long arg)
 {
-    if(func == NULL)
+    if (func == NULL)
         return ERROR;
 
     tick_handler_arg = arg;
@@ -64,40 +59,35 @@ STATUS sysClkConnect (wind_tick_handler_t func, long arg)
     return OK;
 }
 
-
-void sysClkDisable (void)
+void sysClkDisable(void)
 {
     xnpod_stop_timer();
 }
 
-
-void sysClkEnable (void)
+void sysClkEnable(void)
 {
     /* Rely on the fact that even if sysClkDisable was called, the value of
        nkpod->tickvalue did not change. */
     xnpod_start_timer(xnpod_get_tickval(), &__tickAnnounce);
 }
 
-
-int sysClkRateGet (void)
+int sysClkRateGet(void)
 {
     return xnpod_get_ticks2sec();
 }
 
-
-STATUS sysClkRateSet (int new_rate)
+STATUS sysClkRateSet(int new_rate)
 {
     int err;
-    
-    if(new_rate <= 0)
-	{
-        return ERROR;
-	}
 
-    if (testbits(nkpod->status,XNTIMED))
+    if (new_rate <= 0) {
+        return ERROR;
+    }
+
+    if (testbits(nkpod->status, XNTIMED))
         xnpod_stop_timer();
 
-    err = xnpod_start_timer(ONE_BILLION / new_rate , &__tickAnnounce);
+    err = xnpod_start_timer(ONE_BILLION / new_rate, &__tickAnnounce);
 
     return err == 0 ? OK : ERROR;
 }
