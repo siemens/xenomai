@@ -47,46 +47,44 @@
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
-static int __sem_read_proc (char *page,
-			    char **start,
-			    off_t off,
-			    int count,
-			    int *eof,
-			    void *data)
+static int __sem_read_proc(char *page,
+                           char **start,
+                           off_t off, int count, int *eof, void *data)
 {
     RT_SEM *sem = (RT_SEM *)data;
     char *p = page;
     int len;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
     if (xnsynch_nsleepers(&sem->synch_base) == 0)
-	/* Idle/posted semaphore -- dump count. */
-	p += sprintf(p,"=%lu\n",sem->count);
-    else
-	{
-	xnpholder_t *holder;
-	
-	/* Pended semaphore -- dump waiters. */
+        /* Idle/posted semaphore -- dump count. */
+        p += sprintf(p, "=%lu\n", sem->count);
+    else {
+        xnpholder_t *holder;
 
-	holder = getheadpq(xnsynch_wait_queue(&sem->synch_base));
+        /* Pended semaphore -- dump waiters. */
 
-	while (holder)
-	    {
-	    xnthread_t *sleeper = link2thread(holder,plink);
-	    p += sprintf(p,"+%s\n",xnthread_name(sleeper));
-	    holder = nextpq(xnsynch_wait_queue(&sem->synch_base),holder);
-	    }
-	}
+        holder = getheadpq(xnsynch_wait_queue(&sem->synch_base));
 
-    xnlock_put_irqrestore(&nklock,s);
+        while (holder) {
+            xnthread_t *sleeper = link2thread(holder, plink);
+            p += sprintf(p, "+%s\n", xnthread_name(sleeper));
+            holder = nextpq(xnsynch_wait_queue(&sem->synch_base), holder);
+        }
+    }
+
+    xnlock_put_irqrestore(&nklock, s);
 
     len = (p - page) - off;
-    if (len <= off + count) *eof = 1;
+    if (len <= off + count)
+        *eof = 1;
     *start = page + off;
-    if(len > count) len = count;
-    if(len < 0) len = 0;
+    if (len > count)
+        len = count;
+    if (len < 0)
+        len = 0;
 
     return len;
 }
@@ -167,25 +165,22 @@ static xnpnode_t __sem_pnode = {
  * Rescheduling: possible.
  */
 
-int rt_sem_create (RT_SEM *sem,
-                   const char *name,
-                   unsigned long icount,
-                   int mode)
+int rt_sem_create(RT_SEM *sem, const char *name, unsigned long icount, int mode)
 {
     int err = 0;
 
     if (xnpod_asynch_p())
-	return -EPERM;
+        return -EPERM;
 
     if ((mode & S_PULSE) && icount > 0)
-	return -EINVAL;
+        return -EINVAL;
 
-    xnsynch_init(&sem->synch_base,mode & S_PRIO);
+    xnsynch_init(&sem->synch_base, mode & S_PRIO);
     sem->count = icount;
     sem->mode = mode;
-    sem->handle = 0;    /* i.e. (still) unregistered semaphore. */
+    sem->handle = 0;            /* i.e. (still) unregistered semaphore. */
     sem->magic = XENO_SEM_MAGIC;
-    xnobject_copy_name(sem->name,name);
+    xnobject_copy_name(sem->name, name);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     sem->cpid = 0;
@@ -196,24 +191,22 @@ int rt_sem_create (RT_SEM *sem,
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
-    if (name)
-        {
-	xnpnode_t *pnode = &__sem_pnode;
-	
-	if (!*name)
-	    {
-	    /* Since this is an anonymous object (empty name on entry)
-	       from user-space, it gets registered under an unique
-	       internal name but is not exported through /proc. */
-	    xnobject_create_name(sem->name,sizeof(sem->name),(void*)sem);
-	    pnode = NULL;
-	    }
-	    
-        err = xnregistry_enter(sem->name,sem,&sem->handle,pnode);
+    if (name) {
+        xnpnode_t *pnode = &__sem_pnode;
+
+        if (!*name) {
+            /* Since this is an anonymous object (empty name on entry)
+               from user-space, it gets registered under an unique
+               internal name but is not exported through /proc. */
+            xnobject_create_name(sem->name, sizeof(sem->name), (void *)sem);
+            pnode = NULL;
+        }
+
+        err = xnregistry_enter(sem->name, sem, &sem->handle, pnode);
 
         if (err)
             rt_sem_delete(sem);
-        }
+    }
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
     return err;
@@ -250,25 +243,23 @@ int rt_sem_create (RT_SEM *sem,
  * Rescheduling: possible.
  */
 
-int rt_sem_delete (RT_SEM *sem)
-
+int rt_sem_delete(RT_SEM *sem)
 {
     int err = 0, rc;
     spl_t s;
 
     if (xnpod_asynch_p())
-	return -EPERM;
+        return -EPERM;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    sem = xeno_h2obj_validate(sem,XENO_SEM_MAGIC,RT_SEM);
+    sem = xeno_h2obj_validate(sem, XENO_SEM_MAGIC, RT_SEM);
 
-    if (!sem)
-        {
-        err = xeno_handle_error(sem,XENO_SEM_MAGIC,RT_SEM);
+    if (!sem) {
+        err = xeno_handle_error(sem, XENO_SEM_MAGIC, RT_SEM);
         goto unlock_and_exit;
-        }
-    
+    }
+
     rc = xnsynch_destroy(&sem->synch_base);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
@@ -283,9 +274,9 @@ int rt_sem_delete (RT_SEM *sem)
            reschedule now. */
         xnpod_schedule();
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -350,57 +341,52 @@ int rt_sem_delete (RT_SEM *sem)
  * nanoseconds.
  */
 
-int rt_sem_p (RT_SEM *sem,
-              RTIME timeout)
+int rt_sem_p(RT_SEM *sem, RTIME timeout)
 {
     int err = 0;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    sem = xeno_h2obj_validate(sem,XENO_SEM_MAGIC,RT_SEM);
+    sem = xeno_h2obj_validate(sem, XENO_SEM_MAGIC, RT_SEM);
 
-    if (!sem)
-        {
-        err = xeno_handle_error(sem,XENO_SEM_MAGIC,RT_SEM);
+    if (!sem) {
+        err = xeno_handle_error(sem, XENO_SEM_MAGIC, RT_SEM);
         goto unlock_and_exit;
-        }
-    
-    if (timeout == TM_NONBLOCK)
-        {
+    }
+
+    if (timeout == TM_NONBLOCK) {
         if (sem->count > 0)
             sem->count--;
         else
             err = -EWOULDBLOCK;
 
         goto unlock_and_exit;
-        }
+    }
 
-    if (xnpod_unblockable_p())
-	{
-	err = -EPERM;
-	goto unlock_and_exit;
-	}
+    if (xnpod_unblockable_p()) {
+        err = -EPERM;
+        goto unlock_and_exit;
+    }
 
     if (sem->count > 0)
         --sem->count;
-    else
-        {
+    else {
         RT_TASK *task = xeno_current_task();
 
-        xnsynch_sleep_on(&sem->synch_base,timeout);
-        
-        if (xnthread_test_flags(&task->thread_base,XNRMID))
-            err = -EIDRM; /* Semaphore deleted while pending. */
-        else if (xnthread_test_flags(&task->thread_base,XNTIMEO))
-            err = -ETIMEDOUT; /* Timeout.*/
-        else if (xnthread_test_flags(&task->thread_base,XNBREAK))
-            err = -EINTR; /* Unblocked.*/
-        }
+        xnsynch_sleep_on(&sem->synch_base, timeout);
 
- unlock_and_exit:
+        if (xnthread_test_flags(&task->thread_base, XNRMID))
+            err = -EIDRM;       /* Semaphore deleted while pending. */
+        else if (xnthread_test_flags(&task->thread_base, XNTIMEO))
+            err = -ETIMEDOUT;   /* Timeout. */
+        else if (xnthread_test_flags(&task->thread_base, XNBREAK))
+            err = -EINTR;       /* Unblocked. */
+    }
 
-    xnlock_put_irqrestore(&nklock,s);
+  unlock_and_exit:
+
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -433,30 +419,28 @@ int rt_sem_p (RT_SEM *sem,
  * Rescheduling: possible.
  */
 
-int rt_sem_v (RT_SEM *sem)
-
+int rt_sem_v(RT_SEM *sem)
 {
     int err = 0;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    sem = xeno_h2obj_validate(sem,XENO_SEM_MAGIC,RT_SEM);
+    sem = xeno_h2obj_validate(sem, XENO_SEM_MAGIC, RT_SEM);
 
-    if (!sem)
-        {
-        err = xeno_handle_error(sem,XENO_SEM_MAGIC,RT_SEM);
+    if (!sem) {
+        err = xeno_handle_error(sem, XENO_SEM_MAGIC, RT_SEM);
         goto unlock_and_exit;
-        }
-    
+    }
+
     if (xnsynch_wakeup_one_sleeper(&sem->synch_base) != NULL)
         xnpod_schedule();
     else if (!(sem->mode & S_PULSE))
         sem->count++;
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -489,30 +473,28 @@ int rt_sem_v (RT_SEM *sem)
  * Rescheduling: possible.
  */
 
-int rt_sem_broadcast (RT_SEM *sem)
-
+int rt_sem_broadcast(RT_SEM *sem)
 {
     int err = 0;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    sem = xeno_h2obj_validate(sem,XENO_SEM_MAGIC,RT_SEM);
+    sem = xeno_h2obj_validate(sem, XENO_SEM_MAGIC, RT_SEM);
 
-    if (!sem)
-        {
-        err = xeno_handle_error(sem,XENO_SEM_MAGIC,RT_SEM);
+    if (!sem) {
+        err = xeno_handle_error(sem, XENO_SEM_MAGIC, RT_SEM);
         goto unlock_and_exit;
-        }
+    }
 
-    if (xnsynch_flush(&sem->synch_base,0) == XNSYNCH_RESCHED)
-	xnpod_schedule();
+    if (xnsynch_flush(&sem->synch_base, 0) == XNSYNCH_RESCHED)
+        xnpod_schedule();
 
     sem->count = 0;
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -547,29 +529,27 @@ int rt_sem_broadcast (RT_SEM *sem)
  * Rescheduling: never.
  */
 
-int rt_sem_inquire (RT_SEM *sem,
-                    RT_SEM_INFO *info)
+int rt_sem_inquire(RT_SEM *sem, RT_SEM_INFO *info)
 {
     int err = 0;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    sem = xeno_h2obj_validate(sem,XENO_SEM_MAGIC,RT_SEM);
+    sem = xeno_h2obj_validate(sem, XENO_SEM_MAGIC, RT_SEM);
 
-    if (!sem)
-        {
-        err = xeno_handle_error(sem,XENO_SEM_MAGIC,RT_SEM);
+    if (!sem) {
+        err = xeno_handle_error(sem, XENO_SEM_MAGIC, RT_SEM);
         goto unlock_and_exit;
-        }
-    
-    strcpy(info->name,sem->name);
+    }
+
+    strcpy(info->name, sem->name);
     info->count = sem->count;
     info->nwaiters = xnsynch_nsleepers(&sem->synch_base);
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -649,14 +629,12 @@ int rt_sem_inquire (RT_SEM *sem,
  * Rescheduling: never.
  */
 
-int __native_sem_pkg_init (void)
-
+int __native_sem_pkg_init(void)
 {
     return 0;
 }
 
-void __native_sem_pkg_cleanup (void)
-
+void __native_sem_pkg_cleanup(void)
 {
 }
 

@@ -56,8 +56,7 @@
  * Rescheduling: never.
  */
 
-SRTIME rt_timer_ns2ticks (SRTIME ns)
-
+SRTIME rt_timer_ns2ticks(SRTIME ns)
 {
     return xnpod_ns2ticks(ns);
 }
@@ -85,8 +84,7 @@ SRTIME rt_timer_ns2ticks (SRTIME ns)
  * Rescheduling: never.
  */
 
-SRTIME rt_timer_ns2tsc (SRTIME ns)
-
+SRTIME rt_timer_ns2tsc(SRTIME ns)
 {
     return xnarch_ns_to_tsc(ns);
 }
@@ -114,8 +112,7 @@ SRTIME rt_timer_ns2tsc (SRTIME ns)
  * Rescheduling: never.
  */
 
-SRTIME rt_timer_ticks2ns (SRTIME ticks)
-
+SRTIME rt_timer_ticks2ns(SRTIME ticks)
 {
     return xnpod_ticks2ns(ticks);
 }
@@ -143,8 +140,7 @@ SRTIME rt_timer_ticks2ns (SRTIME ticks)
  * Rescheduling: never.
  */
 
-SRTIME rt_timer_tsc2ns (SRTIME ticks)
-
+SRTIME rt_timer_tsc2ns(SRTIME ticks)
 {
     return xnarch_tsc_to_ns(ticks);
 }
@@ -186,17 +182,16 @@ SRTIME rt_timer_tsc2ns (SRTIME ticks)
  * Rescheduling: never.
  */
 
-int rt_timer_inquire (RT_TIMER_INFO *info)
-
+int rt_timer_inquire(RT_TIMER_INFO *info)
 {
     RTIME period, tsc;
 
-    if (!testbits(nkpod->status,XNTIMED))
-	period = TM_UNSET;
-    else if (!testbits(nkpod->status,XNTMPER))
-	period = TM_ONESHOT;
+    if (!testbits(nkpod->status, XNTIMED))
+        period = TM_UNSET;
+    else if (!testbits(nkpod->status, XNTMPER))
+        period = TM_ONESHOT;
     else
-	period = xnpod_get_tickval();
+        period = xnpod_get_tickval();
 
     tsc = xnarch_get_cpu_tsc();
     info->period = period;
@@ -210,7 +205,7 @@ int rt_timer_inquire (RT_TIMER_INFO *info)
         /* In aperiodic mode, our idea of time is the same as the
            CPU's, and a tick equals a nanosecond. */
         info->date = xnarch_tsc_to_ns(tsc) + nkpod->wallclock_offset;
-    
+
     return 0;
 }
 
@@ -240,8 +235,7 @@ int rt_timer_inquire (RT_TIMER_INFO *info)
  * nanoseconds.
  */
 
-RTIME rt_timer_read (void)
-
+RTIME rt_timer_read(void)
 {
     return xnpod_get_time();
 }
@@ -267,8 +261,7 @@ RTIME rt_timer_read (void)
  * Rescheduling: never.
  */
 
-RTIME rt_timer_tsc (void)
-
+RTIME rt_timer_tsc(void)
 {
     return xnarch_get_cpu_tsc();
 }
@@ -299,13 +292,12 @@ RTIME rt_timer_tsc (void)
  * Rescheduling: never.
  */
 
-void rt_timer_spin (RTIME ns)
-
+void rt_timer_spin(RTIME ns)
 {
     RTIME etime = xnarch_get_cpu_tsc() + xnarch_ns_to_tsc(ns);
 
     while (xnarch_get_cpu_tsc() < etime)
-	cpu_relax();
+        cpu_relax();
 }
 
 /**
@@ -349,19 +341,17 @@ void rt_timer_spin (RTIME ns)
  * Rescheduling: never.
  */
 
-int rt_timer_set_mode (RTIME nstick)
-
+int rt_timer_set_mode(RTIME nstick)
 {
-    if (testbits(nkpod->status,XNTIMED))
-	{
-	if ((nstick == TM_ONESHOT && xnpod_get_tickval() == 1) ||
-	    (nstick != TM_ONESHOT && xnpod_get_tickval() == nstick))
-	    return 0;
+    if (testbits(nkpod->status, XNTIMED)) {
+        if ((nstick == TM_ONESHOT && xnpod_get_tickval() == 1) ||
+            (nstick != TM_ONESHOT && xnpod_get_tickval() == nstick))
+            return 0;
 
-	xnpod_stop_timer();
-	}
+        xnpod_stop_timer();
+    }
 
-    return xnpod_start_timer(nstick,XNPOD_DEFAULT_TICKHANDLER);
+    return xnpod_start_timer(nstick, XNPOD_DEFAULT_TICKHANDLER);
 }
 
 /*@}*/

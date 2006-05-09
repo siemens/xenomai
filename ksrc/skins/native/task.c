@@ -47,14 +47,13 @@ static DECLARE_XNQUEUE(__xeno_task_q);
 
 static u_long __xeno_task_stamp;
 
-static void __task_delete_hook (xnthread_t *thread)
-
+static void __task_delete_hook(xnthread_t *thread)
 {
     /* The scheduler is locked while hooks are running. */
     RT_TASK *task;
 
     if (xnthread_get_magic(thread) != XENO_SKIN_MAGIC)
-	return;
+        return;
 
     task = thread2rtask(thread);
 
@@ -72,87 +71,79 @@ static void __task_delete_hook (xnthread_t *thread)
 
     xnsynch_destroy(&task->safesynch);
 
-    removeq(&__xeno_task_q,&task->link);
+    removeq(&__xeno_task_q, &task->link);
 
     xeno_mark_deleted(task);
 
-    if (xnthread_test_flags(&task->thread_base,XNSHADOW))
-	xnfreesafe(&task->thread_base,task,&task->link);
+    if (xnthread_test_flags(&task->thread_base, XNSHADOW))
+        xnfreesafe(&task->thread_base, task, &task->link);
 }
 
-u_long __native_task_safe (void)
-
+u_long __native_task_safe(void)
 {
     RT_TASK *task = xeno_current_task();
     return ++task->safelock;
 }
 
-u_long __native_task_unsafe (void)
-
+u_long __native_task_unsafe(void)
 {
     /* Must be called nklock locked, interrupts off. */
     RT_TASK *task = xeno_current_task();
     u_long safelock;
 
     if (task->safelock > 0 &&
-	--task->safelock == 0 &&
-	xnsynch_nsleepers(&task->safesynch) > 0)
-	{
-	xnsynch_flush(&task->safesynch,0);
-	xnpod_schedule();
-	}
+        --task->safelock == 0 && xnsynch_nsleepers(&task->safesynch) > 0) {
+        xnsynch_flush(&task->safesynch, 0);
+        xnpod_schedule();
+    }
 
     safelock = task->safelock;
 
     return safelock;
 }
 
-int __native_task_safewait (RT_TASK *task)
-
+int __native_task_safewait(RT_TASK *task)
 {
     /* Must be called nklock locked, interrupts off. */
     u_long cstamp;
 
     if (task->safelock == 0)
-	return 0;
+        return 0;
 
     if (task == xeno_current_task())
-	return -EDEADLK;
-    
+        return -EDEADLK;
+
     cstamp = task->cstamp;
 
-    do
-	{
-	xnsynch_sleep_on(&task->safesynch,TM_INFINITE);
+    do {
+        xnsynch_sleep_on(&task->safesynch, TM_INFINITE);
 
-	if (xnthread_test_flags(&xeno_current_task()->thread_base,XNBREAK))
-	    return -EINTR;
-	}
+        if (xnthread_test_flags(&xeno_current_task()->thread_base, XNBREAK))
+            return -EINTR;
+    }
     while (task->safelock > 0);
 
     if (task->cstamp != cstamp)
-	return -EIDRM;
+        return -EIDRM;
 
     return 0;
 }
 
-int __native_task_pkg_init (void)
-
+int __native_task_pkg_init(void)
 {
-    xnpod_add_hook(XNHOOK_THREAD_DELETE,&__task_delete_hook);
+    xnpod_add_hook(XNHOOK_THREAD_DELETE, &__task_delete_hook);
 
     return 0;
 }
 
-void __native_task_pkg_cleanup (void)
-
+void __native_task_pkg_cleanup(void)
 {
     xnholder_t *holder;
 
     while ((holder = getheadq(&__xeno_task_q)) != NULL)
-	rt_task_delete(link2rtask(holder));
+        rt_task_delete(link2rtask(holder));
 
-    xnpod_remove_hook(XNHOOK_THREAD_DELETE,&__task_delete_hook);
+    xnpod_remove_hook(XNHOOK_THREAD_DELETE, &__task_delete_hook);
 }
 
 /**
@@ -227,89 +218,79 @@ void __native_task_pkg_cleanup (void)
  * Rescheduling: possible.
  */
 
-int rt_task_create (RT_TASK *task,
-		    const char *name,
-		    int stksize,
-		    int prio,
-		    int mode)
+int rt_task_create(RT_TASK *task,
+                   const char *name, int stksize, int prio, int mode)
 {
     int err = 0, cpumask, cpu;
     xnflags_t bflags;
     spl_t s;
 
     if (prio < T_LOPRIO || prio > T_HIPRIO)
-	return -EINVAL;
+        return -EINVAL;
 
     if (xnpod_asynch_p())
-	return -EPERM;
+        return -EPERM;
 
-    bflags = mode & (XNFPU|XNSHADOW|XNSHIELD|XNSUSP);
+    bflags = mode & (XNFPU | XNSHADOW | XNSHIELD | XNSUSP);
 
-    if (name)
-        {
+    if (name) {
         if (!*name)
-	/* i.e. Anonymous object which must be accessible from
-	   user-space. */
-            xnobject_create_name(task->rname,sizeof(task->rname),task);
+            /* i.e. Anonymous object which must be accessible from
+               user-space. */
+            xnobject_create_name(task->rname, sizeof(task->rname), task);
         else
             xnobject_copy_name(task->rname, name);
-        }
+    }
 
-    if (xnpod_init_thread(&task->thread_base,
-			  name,
-			  prio,
-			  bflags,
-			  stksize) != 0)
-	/* Assume this is the only possible failure. */
-	return -ENOMEM;
+    if (xnpod_init_thread(&task->thread_base, name, prio, bflags, stksize) != 0)
+        /* Assume this is the only possible failure. */
+        return -ENOMEM;
 
-    xnthread_set_magic(&task->thread_base,XENO_SKIN_MAGIC);
+    xnthread_set_magic(&task->thread_base, XENO_SKIN_MAGIC);
 
     inith(&task->link);
     task->suspend_depth = (bflags & XNSUSP) ? 1 : 0;
     task->overrun = -1;
     task->cstamp = ++__xeno_task_stamp;
     task->safelock = 0;
-    xnsynch_init(&task->safesynch,XNSYNCH_FIFO);
+    xnsynch_init(&task->safesynch, XNSYNCH_FIFO);
 
     xnarch_cpus_clear(task->affinity);
 
     for (cpu = 0, cpumask = (mode >> 24) & 0xff;
-	 cpumask != 0 && cpu < 8; cpu++, cpumask >>= 1)
-	if (cpumask & 1)
-	    xnarch_cpu_set(cpu,task->affinity);
+         cpumask != 0 && cpu < 8; cpu++, cpumask >>= 1)
+        if (cpumask & 1)
+            xnarch_cpu_set(cpu, task->affinity);
 
 #ifdef CONFIG_XENO_OPT_NATIVE_MPS
-    xnsynch_init(&task->mrecv,XNSYNCH_FIFO);
-    xnsynch_init(&task->msendq,XNSYNCH_PRIO|XNSYNCH_PIP);
-    xnsynch_set_owner(&task->msendq,&task->thread_base);
+    xnsynch_init(&task->mrecv, XNSYNCH_FIFO);
+    xnsynch_init(&task->msendq, XNSYNCH_PRIO | XNSYNCH_PIP);
+    xnsynch_set_owner(&task->msendq, &task->thread_base);
     task->flowgen = 0;
 #endif /* CONFIG_XENO_OPT_NATIVE_MPS */
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
     task->magic = XENO_TASK_MAGIC;
-    appendq(&__xeno_task_q,&task->link);
-    xnlock_put_irqrestore(&nklock,s);
+    appendq(&__xeno_task_q, &task->link);
+    xnlock_put_irqrestore(&nklock, s);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
     /* <!> Since xnregister_enter() may reschedule, only register
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
-    if (name)
-	{
-	err = xnregistry_enter(task->rname,
-			       task,
-			       &xnthread_handle(&task->thread_base),
-			       NULL);
+    if (name) {
+        err = xnregistry_enter(task->rname,
+                               task,
+                               &xnthread_handle(&task->thread_base), NULL);
         if (err)
             rt_task_delete(task);
-	else if (!*name)
-	    /* /proc/xenomai/sched will dump no name for the anonymous
-	       task, but the registry still has a stable reference
-	       into the TCB to set up a handle for the task. */
-	    xnthread_clear_name(&task->thread_base);
-	}
+        else if (!*name)
+            /* /proc/xenomai/sched will dump no name for the anonymous
+               task, but the registry still has a stable reference
+               into the TCB to set up a handle for the task. */
+            xnthread_clear_name(&task->thread_base);
+    }
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
     return err;
@@ -357,41 +338,32 @@ int rt_task_create (RT_TASK *task,
  * Rescheduling: possible.
  */
 
-int rt_task_start (RT_TASK *task,
-		   void (*entry)(void *cookie),
-		   void *cookie)
+int rt_task_start(RT_TASK *task, void (*entry) (void *cookie), void *cookie)
 {
     int err = 0;
     spl_t s;
 
     if (xnpod_asynch_p())
-	return -EPERM;
+        return -EPERM;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    task = xeno_h2obj_validate(task,XENO_TASK_MAGIC,RT_TASK);
+    task = xeno_h2obj_validate(task, XENO_TASK_MAGIC, RT_TASK);
 
-    if (!task)
-	{
-	err = xeno_handle_error(task,XENO_TASK_MAGIC,RT_TASK);
-	goto unlock_and_exit;
-	}
+    if (!task) {
+        err = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
+        goto unlock_and_exit;
+    }
 
-    if (!xnthread_test_flags(&task->thread_base,XNDORMANT))
-	{
-	err = -EBUSY; /* Task already started. */
-	goto unlock_and_exit;
-	}
+    if (!xnthread_test_flags(&task->thread_base, XNDORMANT)) {
+        err = -EBUSY;           /* Task already started. */
+        goto unlock_and_exit;
+    }
 
-    xnpod_start_thread(&task->thread_base,
-		       0,
-		       0,
-		       task->affinity,
-		       entry,
-		       cookie);
- unlock_and_exit:
+    xnpod_start_thread(&task->thread_base, 0, 0, task->affinity, entry, cookie);
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -437,44 +409,37 @@ int rt_task_start (RT_TASK *task,
  * Rescheduling: always if @a task is NULL.
  */
 
-int rt_task_suspend (RT_TASK *task)
-
+int rt_task_suspend(RT_TASK *task)
 {
     int err = 0;
     spl_t s;
 
-    if (!task)
-	{
-	if (!xnpod_primary_p())
-	    return -EPERM;
+    if (!task) {
+        if (!xnpod_primary_p())
+            return -EPERM;
 
-	task = xeno_current_task();
-	}
+        task = xeno_current_task();
+    }
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    task = xeno_h2obj_validate(task,XENO_TASK_MAGIC,RT_TASK);
+    task = xeno_h2obj_validate(task, XENO_TASK_MAGIC, RT_TASK);
 
-    if (!task)
-	{
-	err = xeno_handle_error(task,XENO_TASK_MAGIC,RT_TASK);
-	goto unlock_and_exit;
-	}
+    if (!task) {
+        err = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
+        goto unlock_and_exit;
+    }
 
-    if (xnpod_unblockable_p())
-	{
-	err = -EPERM;
-	goto unlock_and_exit;
-	}
+    if (xnpod_unblockable_p()) {
+        err = -EPERM;
+        goto unlock_and_exit;
+    }
 
     if (task->suspend_depth++ == 0)
-	xnpod_suspend_thread(&task->thread_base,
-			     XNSUSP,
-			     XN_INFINITE,
-			     NULL);
- unlock_and_exit:
+        xnpod_suspend_thread(&task->thread_base, XNSUSP, XN_INFINITE, NULL);
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -511,31 +476,28 @@ int rt_task_suspend (RT_TASK *task)
  * to zero as a result of the current invocation.
  */
 
-int rt_task_resume (RT_TASK *task)
-
+int rt_task_resume(RT_TASK *task)
 {
     int err = 0;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    task = xeno_h2obj_validate(task,XENO_TASK_MAGIC,RT_TASK);
+    task = xeno_h2obj_validate(task, XENO_TASK_MAGIC, RT_TASK);
 
-    if (!task)
-	{
-	err = xeno_handle_error(task,XENO_TASK_MAGIC,RT_TASK);
-	goto unlock_and_exit;
-	}
+    if (!task) {
+        err = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
+        goto unlock_and_exit;
+    }
 
-    if (task->suspend_depth > 0 && --task->suspend_depth == 0)
-	{
-	xnpod_resume_thread(&task->thread_base,XNSUSP);
-	xnpod_schedule();
-	}
+    if (task->suspend_depth > 0 && --task->suspend_depth == 0) {
+        xnpod_resume_thread(&task->thread_base, XNSUSP);
+        xnpod_schedule();
+    }
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -596,49 +558,45 @@ int rt_task_resume (RT_TASK *task)
  * deleted task is currently running into a safe section.
  */
 
-int rt_task_delete (RT_TASK *task)
-
+int rt_task_delete(RT_TASK *task)
 {
     int err = 0;
     spl_t s;
 
-    if (!task)
-	{
-	if (!xnpod_primary_p())
-	    return -EPERM;
+    if (!task) {
+        if (!xnpod_primary_p())
+            return -EPERM;
 
-	task = xeno_current_task();
-	}
-    else if (xnpod_asynch_p())
-	    return -EPERM;
+        task = xeno_current_task();
+    } else if (xnpod_asynch_p())
+        return -EPERM;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    task = xeno_h2obj_validate(task,XENO_TASK_MAGIC,RT_TASK);
+    task = xeno_h2obj_validate(task, XENO_TASK_MAGIC, RT_TASK);
 
-    if (!task)
-	{
-	err = xeno_handle_error(task,XENO_TASK_MAGIC,RT_TASK);
-	goto unlock_and_exit;
-	}
+    if (!task) {
+        err = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
+        goto unlock_and_exit;
+    }
 
     /* Make sure the target task is out of any safe section. */
     err = __native_task_safewait(task);
 
     if (err)
-	goto unlock_and_exit;
+        goto unlock_and_exit;
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     if (task != xeno_current_task())
-	xnshadow_send_sig(&task->thread_base,SIGKILL,1);
+        xnshadow_send_sig(&task->thread_base, SIGKILL, 1);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
     /* Does not return if task is current. */
     xnpod_delete_thread(&task->thread_base);
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -667,11 +625,10 @@ int rt_task_delete (RT_TASK *task)
  * otherwise, this service leads to a no-op.
  */
 
-int rt_task_yield (void)
-
+int rt_task_yield(void)
 {
     if (xnpod_unblockable_p())
-	return -EPERM;
+        return -EPERM;
 
     xnpod_yield();
 
@@ -736,36 +693,32 @@ int rt_task_yield (void)
  * nanoseconds.
  */
 
-int rt_task_set_periodic (RT_TASK *task,
-			  RTIME idate,
-			  RTIME period)
+int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
 {
     int err;
     spl_t s;
 
-    if (!task)
-	{
-	if (!xnpod_primary_p())
-	    return -EPERM;
+    if (!task) {
+        if (!xnpod_primary_p())
+            return -EPERM;
 
-	task = xeno_current_task();
-	}
+        task = xeno_current_task();
+    }
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    task = xeno_h2obj_validate(task,XENO_TASK_MAGIC,RT_TASK);
+    task = xeno_h2obj_validate(task, XENO_TASK_MAGIC, RT_TASK);
 
-    if (!task)
-	{
-	err = xeno_handle_error(task,XENO_TASK_MAGIC,RT_TASK);
-	goto unlock_and_exit;
-	}
+    if (!task) {
+        err = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
+        goto unlock_and_exit;
+    }
 
-    err = xnpod_set_thread_periodic(&task->thread_base,idate,period);
+    err = xnpod_set_thread_periodic(&task->thread_base, idate, period);
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -815,11 +768,10 @@ int rt_task_set_periodic (RT_TASK *task,
  * returns from this service without being delayed.
  */
 
-int rt_task_wait_period (unsigned long *overruns_r)
-
+int rt_task_wait_period(unsigned long *overruns_r)
 {
     if (xnpod_unblockable_p())
-	return -EPERM;
+        return -EPERM;
 
     return xnpod_wait_thread_period(overruns_r);
 }
@@ -869,42 +821,39 @@ int rt_task_wait_period (unsigned long *overruns_r)
  * Rescheduling: possible if @a task is the current one.
  */
 
-int rt_task_set_priority (RT_TASK *task,
-			  int prio)
+int rt_task_set_priority(RT_TASK *task, int prio)
 {
     int oldprio;
     spl_t s;
 
     if (prio < T_LOPRIO || prio > T_HIPRIO)
-	return -EINVAL;
+        return -EINVAL;
 
-    if (!task)
-	{
-	if (!xnpod_primary_p())
-	    return -EPERM;
+    if (!task) {
+        if (!xnpod_primary_p())
+            return -EPERM;
 
-	task = xeno_current_task();
-	}
+        task = xeno_current_task();
+    }
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    task = xeno_h2obj_validate(task,XENO_TASK_MAGIC,RT_TASK);
+    task = xeno_h2obj_validate(task, XENO_TASK_MAGIC, RT_TASK);
 
-    if (!task)
-	{
-	oldprio = xeno_handle_error(task,XENO_TASK_MAGIC,RT_TASK);
-	goto unlock_and_exit;
-	}
-    
+    if (!task) {
+        oldprio = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
+        goto unlock_and_exit;
+    }
+
     oldprio = xnthread_base_priority(&task->thread_base);
 
-    xnpod_renice_thread(&task->thread_base,prio);
+    xnpod_renice_thread(&task->thread_base, prio);
 
     xnpod_schedule();
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return oldprio;
 }
@@ -947,27 +896,25 @@ int rt_task_set_priority (RT_TASK *task,
  * nanoseconds.
  */
 
-int rt_task_sleep (RTIME delay)
-
+int rt_task_sleep(RTIME delay)
 {
     if (xnpod_unblockable_p())
-	return -EPERM;
+        return -EPERM;
 
     if (delay == 0)
-	return 0;
+        return 0;
 
-    if (!testbits(nkpod->status,XNTIMED))
-	return -EWOULDBLOCK;
+    if (!testbits(nkpod->status, XNTIMED))
+        return -EWOULDBLOCK;
 
     /* Calling the suspension service on behalf of the current task
        implicitely calls the rescheduling procedure. */
 
     xnpod_suspend_thread(&xeno_current_task()->thread_base,
-			 XNDELAY,
-			 delay,
-			 NULL);
+                         XNDELAY, delay, NULL);
 
-    return xnthread_test_flags(&xeno_current_task()->thread_base,XNBREAK) ? -EINTR : 0;
+    return xnthread_test_flags(&xeno_current_task()->thread_base,
+                               XNBREAK) ? -EINTR : 0;
 }
 
 /**
@@ -1010,40 +957,35 @@ int rt_task_sleep (RTIME delay)
  * nanoseconds.
  */
 
-int rt_task_sleep_until (RTIME date)
-
+int rt_task_sleep_until(RTIME date)
 {
     int err = 0;
     SRTIME delay;
     spl_t s;
 
     if (xnpod_unblockable_p())
-	return -EPERM;
+        return -EPERM;
 
-    if (!testbits(nkpod->status,XNTIMED))
-	return -EWOULDBLOCK;
+    if (!testbits(nkpod->status, XNTIMED))
+        return -EWOULDBLOCK;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
     /* Calling the suspension service on behalf of the current task
        implicitely calls the rescheduling procedure. */
 
     delay = date - xnpod_get_time();
 
-    if (delay > 0)
-	{
-	xnpod_suspend_thread(&xeno_current_task()->thread_base,
-			     XNDELAY,
-			     delay,
-			     NULL);
+    if (delay > 0) {
+        xnpod_suspend_thread(&xeno_current_task()->thread_base,
+                             XNDELAY, delay, NULL);
 
-	if (xnthread_test_flags(&xeno_current_task()->thread_base,XNBREAK))
-	    err = -EINTR;
-	}
-    else
-	err = -ETIMEDOUT;
+        if (xnthread_test_flags(&xeno_current_task()->thread_base, XNBREAK))
+            err = -EINTR;
+    } else
+        err = -ETIMEDOUT;
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -1079,29 +1021,27 @@ int rt_task_sleep_until (RTIME date)
  * Rescheduling: possible.
  */
 
-int rt_task_unblock (RT_TASK *task)
-
+int rt_task_unblock(RT_TASK *task)
 {
     int err = 0;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    task = xeno_h2obj_validate(task,XENO_TASK_MAGIC,RT_TASK);
+    task = xeno_h2obj_validate(task, XENO_TASK_MAGIC, RT_TASK);
 
-    if (!task)
-	{
-	err = xeno_handle_error(task,XENO_TASK_MAGIC,RT_TASK);
-	goto unlock_and_exit;
-	}
-    
+    if (!task) {
+        err = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
+        goto unlock_and_exit;
+    }
+
     xnpod_unblock_thread(&task->thread_base);
 
     xnpod_schedule();
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -1142,39 +1082,36 @@ int rt_task_unblock (RT_TASK *task)
  * Rescheduling: never.
  */
 
-int rt_task_inquire (RT_TASK *task, RT_TASK_INFO *info)
-
+int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 {
     int err = 0;
     spl_t s;
 
-    if (!task)
-	{
-	if (!xnpod_primary_p())
-	    return -EPERM;
+    if (!task) {
+        if (!xnpod_primary_p())
+            return -EPERM;
 
-	task = xeno_current_task();
-	}
+        task = xeno_current_task();
+    }
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    task = xeno_h2obj_validate(task,XENO_TASK_MAGIC,RT_TASK);
+    task = xeno_h2obj_validate(task, XENO_TASK_MAGIC, RT_TASK);
 
-    if (!task)
-	{
-	err = xeno_handle_error(task,XENO_TASK_MAGIC,RT_TASK);
-	goto unlock_and_exit;
-	}
-    
-    strcpy(info->name,xnthread_name(&task->thread_base));
+    if (!task) {
+        err = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
+        goto unlock_and_exit;
+    }
+
+    strcpy(info->name, xnthread_name(&task->thread_base));
     info->bprio = xnthread_base_priority(&task->thread_base);
     info->cprio = xnthread_current_priority(&task->thread_base);
     info->status = xnthread_status_flags(&task->thread_base);
     info->relpoint = xntimer_get_date(&task->timer);
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -1229,9 +1166,10 @@ int rt_task_inquire (RT_TASK *task, RT_TASK_INFO *info)
  * Rescheduling: never.
  */
 
-int rt_task_add_hook (int type, void (*routine)(void *cookie)) {
+int rt_task_add_hook(int type, void (*routine) (void *cookie))
+{
 
-    return xnpod_add_hook(type,(void (*)(xnthread_t *))routine);
+    return xnpod_add_hook(type, (void (*)(xnthread_t *))routine);
 }
 
 /**
@@ -1267,9 +1205,10 @@ int rt_task_add_hook (int type, void (*routine)(void *cookie)) {
  * Rescheduling: never.
  */
 
-int rt_task_remove_hook (int type, void (*routine)(void *cookie)) {
+int rt_task_remove_hook(int type, void (*routine) (void *cookie))
+{
 
-    return xnpod_remove_hook(type,(void (*)(xnthread_t *))routine);
+    return xnpod_remove_hook(type, (void (*)(xnthread_t *))routine);
 }
 
 /**
@@ -1304,19 +1243,18 @@ int rt_task_remove_hook (int type, void (*routine)(void *cookie)) {
  * Rescheduling: possible.
  */
 
-int rt_task_catch (void (*handler)(rt_sigset_t))
-
+int rt_task_catch(void (*handler) (rt_sigset_t))
 {
     spl_t s;
 
     if (!xnpod_primary_p())
-	return -EPERM;
+        return -EPERM;
 
-    xnlock_get_irqsave(&nklock,s);
-    xeno_current_task()->thread_base.asr = (xnasr_t)handler;
+    xnlock_get_irqsave(&nklock, s);
+    xeno_current_task()->thread_base.asr = (xnasr_t) handler;
     xeno_current_task()->thread_base.asrmode &= ~XNASDI;
     xeno_current_task()->thread_base.asrimask = 0;
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     /* The rescheduling procedure checks for pending signals. */
     xnpod_schedule();
@@ -1365,47 +1303,42 @@ int rt_task_catch (void (*handler)(rt_sigset_t))
  * Rescheduling: possible.
  */
 
-int rt_task_notify (RT_TASK *task,
-		    rt_sigset_t signals)
+int rt_task_notify(RT_TASK *task, rt_sigset_t signals)
 {
     int err = 0;
     spl_t s;
 
-    if (!task)
-	{
-	if (!xnpod_primary_p())
-	    return -EPERM;
+    if (!task) {
+        if (!xnpod_primary_p())
+            return -EPERM;
 
-	task = xeno_current_task();
-	}
+        task = xeno_current_task();
+    }
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    task = xeno_h2obj_validate(task,XENO_TASK_MAGIC,RT_TASK);
+    task = xeno_h2obj_validate(task, XENO_TASK_MAGIC, RT_TASK);
 
-    if (!task)
-	{
-	err = xeno_handle_error(task,XENO_TASK_MAGIC,RT_TASK);
-	goto unlock_and_exit;
-	}
-    
-    if (task->thread_base.asr == RT_HANDLER_NONE)
-	{
-	err = -ESRCH;
-	goto unlock_and_exit;
-	}
+    if (!task) {
+        err = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
+        goto unlock_and_exit;
+    }
 
-    if (signals > 0)
-	{
-	task->thread_base.signals |= signals;
+    if (task->thread_base.asr == RT_HANDLER_NONE) {
+        err = -ESRCH;
+        goto unlock_and_exit;
+    }
 
-	if (xnpod_current_thread() == &task->thread_base)
-	    xnpod_schedule();
-	}
+    if (signals > 0) {
+        task->thread_base.signals |= signals;
 
- unlock_and_exit:
+        if (xnpod_current_thread() == &task->thread_base)
+            xnpod_schedule();
+    }
 
-    xnlock_put_irqrestore(&nklock,s);
+  unlock_and_exit:
+
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -1499,36 +1432,33 @@ int rt_task_notify (RT_TASK *task,
  * and the calling context is a task.
  */
 
-int rt_task_set_mode (int clrmask,
-		      int setmask,
-		      int *mode_r)
+int rt_task_set_mode(int clrmask, int setmask, int *mode_r)
 {
     int mode;
 
-    if (xnpod_asynch_p())
-	{
-	clrmask &= ~T_LOCK;
-	setmask &= ~T_LOCK;
+    if (xnpod_asynch_p()) {
+        clrmask &= ~T_LOCK;
+        setmask &= ~T_LOCK;
 
-	if (!clrmask && !setmask)
-	    return 0;
-	}
+        if (!clrmask && !setmask)
+            return 0;
+    }
 
-    if (((clrmask|setmask) & ~(T_LOCK|T_RRB|T_NOSIG|T_SHIELD|T_WARNSW)) != 0)
-	return -EINVAL;
+    if (((clrmask | setmask) &
+         ~(T_LOCK | T_RRB | T_NOSIG | T_SHIELD | T_WARNSW)) != 0)
+        return -EINVAL;
 
     if (!xnpod_primary_p())
-	return -EPERM;
+        return -EPERM;
 
     mode = xnpod_set_thread_mode(&xeno_current_task()->thread_base,
-				 clrmask,
-				 setmask);
+                                 clrmask, setmask);
     if (mode_r)
-	*mode_r = mode;
+        *mode_r = mode;
 
     if ((clrmask & ~setmask) & T_LOCK)
-	/* Reschedule if the scheduler has been unlocked. */
-	xnpod_schedule();
+        /* Reschedule if the scheduler has been unlocked. */
+        xnpod_schedule();
 
     return 0;
 }
@@ -1557,10 +1487,9 @@ int rt_task_set_mode (int clrmask,
  * Rescheduling: never.
  */
 
-RT_TASK *rt_task_self (void)
-
+RT_TASK *rt_task_self(void)
 {
-    return !xnpod_primary_p() ? NULL : xeno_current_task();
+    return !xnpod_primary_p()? NULL : xeno_current_task();
 }
 
 /**
@@ -1605,39 +1534,36 @@ RT_TASK *rt_task_self (void)
  * nanoseconds.
  */
 
-int rt_task_slice (RT_TASK *task, RTIME quantum)
-
+int rt_task_slice(RT_TASK *task, RTIME quantum)
 {
     int err = 0;
     spl_t s;
 
     if (!quantum)
-	return -EINVAL;
+        return -EINVAL;
 
-    if (!task)
-	{
-	if (!xnpod_primary_p())
-	    return -EPERM;
+    if (!task) {
+        if (!xnpod_primary_p())
+            return -EPERM;
 
-	task = xeno_current_task();
-	}
+        task = xeno_current_task();
+    }
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    task = xeno_h2obj_validate(task,XENO_TASK_MAGIC,RT_TASK);
+    task = xeno_h2obj_validate(task, XENO_TASK_MAGIC, RT_TASK);
 
-    if (!task)
-	{
-	err = xeno_handle_error(task,XENO_TASK_MAGIC,RT_TASK);
-	goto unlock_and_exit;
-	}
-    
+    if (!task) {
+        err = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
+        goto unlock_and_exit;
+    }
+
     xnthread_time_slice(&task->thread_base) = quantum;
     xnthread_time_credit(&task->thread_base) = quantum;
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -1751,38 +1677,33 @@ int rt_task_slice (RT_TASK *task, RTIME quantum)
  * 64 bytes.
  */
 
-ssize_t rt_task_send (RT_TASK *task,
-		      RT_TASK_MCB *mcb_s,
-		      RT_TASK_MCB *mcb_r,
-		      RTIME timeout)
+ssize_t rt_task_send(RT_TASK *task,
+                     RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME timeout)
 {
     RT_TASK *sender;
     size_t rsize;
     ssize_t err;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    task = xeno_h2obj_validate(task,XENO_TASK_MAGIC,RT_TASK);
+    task = xeno_h2obj_validate(task, XENO_TASK_MAGIC, RT_TASK);
 
-    if (!task)
-	{
-	err = xeno_handle_error(task,XENO_TASK_MAGIC,RT_TASK);
-	goto unlock_and_exit;
-	}
+    if (!task) {
+        err = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
+        goto unlock_and_exit;
+    }
 
-    if (timeout == TM_NONBLOCK && xnsynch_nsleepers(&task->mrecv) == 0)
-	{
-	/* Can't block and no receiver pending; just bail out. */
-	err = -EWOULDBLOCK;
-	goto unlock_and_exit;
-	}
+    if (timeout == TM_NONBLOCK && xnsynch_nsleepers(&task->mrecv) == 0) {
+        /* Can't block and no receiver pending; just bail out. */
+        err = -EWOULDBLOCK;
+        goto unlock_and_exit;
+    }
 
-    if (xnpod_unblockable_p())
-	{
-	err = -EPERM;
-	goto unlock_and_exit;
-	}
+    if (xnpod_unblockable_p()) {
+        err = -EPERM;
+        goto unlock_and_exit;
+    }
 
     sender = xeno_current_task();
 
@@ -1791,7 +1712,7 @@ ssize_t rt_task_send (RT_TASK *task,
        value. */
 
     if (++task->flowgen < 0)
-	task->flowgen = 1;
+        task->flowgen = 1;
 
     mcb_s->flowid = task->flowgen;
 
@@ -1800,15 +1721,15 @@ ssize_t rt_task_send (RT_TASK *task,
     /* Then, setup the reply control block. */
 
     if (mcb_r)
-	sender->wait_args.mps.mcb_r = *mcb_r;
+        sender->wait_args.mps.mcb_r = *mcb_r;
     else
-	sender->wait_args.mps.mcb_r.size = 0;
+        sender->wait_args.mps.mcb_r.size = 0;
 
     /* Wake up the receiver if it is currently waiting for a message,
        then sleep on the send queue, waiting for the remote
        reply. xnsynch_sleep_on() will reschedule as needed. */
 
-    xnsynch_flush(&task->mrecv,0);
+    xnsynch_flush(&task->mrecv, 0);
 
     /* Since the receiver is perpetually marked as the current owner
        of its own send queue which has been declared as a PIP-enabled
@@ -1816,50 +1737,44 @@ ssize_t rt_task_send (RT_TASK *task,
        required by the priority inheritance protocol
        (i.e. prio(sender) > prio(receiver)). */
 
-    xnsynch_sleep_on(&task->msendq,timeout);
+    xnsynch_sleep_on(&task->msendq, timeout);
 
-    if (xnthread_test_flags(&sender->thread_base,XNRMID))
-	err = -EIDRM; /* Receiver deleted while pending. */
-    else if (xnthread_test_flags(&sender->thread_base,XNTIMEO))
-	err = -ETIMEDOUT; /* Timeout.*/
-    else if (xnthread_test_flags(&sender->thread_base,XNBREAK))
-	err = -EINTR; /* Unblocked.*/
-    else
-	{
-	rsize = sender->wait_args.mps.mcb_r.size;
+    if (xnthread_test_flags(&sender->thread_base, XNRMID))
+        err = -EIDRM;           /* Receiver deleted while pending. */
+    else if (xnthread_test_flags(&sender->thread_base, XNTIMEO))
+        err = -ETIMEDOUT;       /* Timeout. */
+    else if (xnthread_test_flags(&sender->thread_base, XNBREAK))
+        err = -EINTR;           /* Unblocked. */
+    else {
+        rsize = sender->wait_args.mps.mcb_r.size;
 
-	if (rsize > 0)
-	    {
-	    /* Ok, the message has been processed and answered by the
-	       remote, and a memory address is available to pass the
-	       reply back to our caller: let's do it. Make sure we
-	       have enough buffer space to perform the entire copy. */
+        if (rsize > 0) {
+            /* Ok, the message has been processed and answered by the
+               remote, and a memory address is available to pass the
+               reply back to our caller: let's do it. Make sure we
+               have enough buffer space to perform the entire copy. */
 
-	    if (mcb_r != NULL && rsize <= mcb_r->size)
-		{
-		memcpy(mcb_r->data,sender->wait_args.mps.mcb_r.data,rsize);
-		err = (ssize_t)rsize;
-		}
-	    else
-		err = -ENOBUFS;
-	    }
-	else
-	    err = 0; /* i.e. message processed, no reply expected or sent. */
+            if (mcb_r != NULL && rsize <= mcb_r->size) {
+                memcpy(mcb_r->data, sender->wait_args.mps.mcb_r.data, rsize);
+                err = (ssize_t) rsize;
+            } else
+                err = -ENOBUFS;
+        } else
+            err = 0;            /* i.e. message processed, no reply expected or sent. */
 
-	/* The status code is considered meaningful whether there is
-	   some actual reply data or not; recycle the opcode field to
-	   return it. */
+        /* The status code is considered meaningful whether there is
+           some actual reply data or not; recycle the opcode field to
+           return it. */
 
-	if (mcb_r)
-	    {
-	    mcb_r->opcode = sender->wait_args.mps.mcb_r.opcode;
-	    mcb_r->size = rsize;
-	    }
-	}
+        if (mcb_r) {
+            mcb_r->opcode = sender->wait_args.mps.mcb_r.opcode;
+            mcb_r->size = rsize;
+        }
+    }
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -1944,8 +1859,7 @@ ssize_t rt_task_send (RT_TASK *task,
  * bytes.
  */
 
-int rt_task_receive (RT_TASK_MCB *mcb_r,
-		     RTIME timeout)
+int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
 {
     RT_TASK *receiver, *sender;
     xnpholder_t *holder;
@@ -1954,11 +1868,11 @@ int rt_task_receive (RT_TASK_MCB *mcb_r,
     spl_t s;
 
     if (!xnpod_primary_p())
-	return -EPERM;
+        return -EPERM;
 
     receiver = xeno_current_task();
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
     /* Fetch the first available message, but don't wake up the sender
        until our caller invokes rt_task_reply(). IOW,
@@ -1967,65 +1881,58 @@ int rt_task_receive (RT_TASK_MCB *mcb_r,
     holder = getheadpq(xnsynch_wait_queue(&receiver->msendq));
 
     if (holder)
-	goto pull_message;
+        goto pull_message;
 
-    if (timeout == TM_NONBLOCK)
-	{
-	err = -EWOULDBLOCK;
-	goto unlock_and_exit;
-	}
+    if (timeout == TM_NONBLOCK) {
+        err = -EWOULDBLOCK;
+        goto unlock_and_exit;
+    }
 
-    if (xnpod_unblockable_p())
-	{
-	err = -EPERM;
-	goto unlock_and_exit;
-	}
+    if (xnpod_unblockable_p()) {
+        err = -EPERM;
+        goto unlock_and_exit;
+    }
 
     /* Wait on our receive slot for some sender to enqueue itself in
        our send queue. */
 
-    xnsynch_sleep_on(&receiver->mrecv,timeout);
+    xnsynch_sleep_on(&receiver->mrecv, timeout);
 
     /* XNRMID cannot happen, since well, the current task would be the
        deleted object, so... */
 
-    if (xnthread_test_flags(&receiver->thread_base,XNTIMEO))
-	{
-	err = -ETIMEDOUT; /* Timeout.*/
-	goto unlock_and_exit;
-	}
-    else if (xnthread_test_flags(&receiver->thread_base,XNBREAK))
-	{
-	err = -EINTR; /* Unblocked.*/
-	goto unlock_and_exit;
-	}
+    if (xnthread_test_flags(&receiver->thread_base, XNTIMEO)) {
+        err = -ETIMEDOUT;       /* Timeout. */
+        goto unlock_and_exit;
+    } else if (xnthread_test_flags(&receiver->thread_base, XNBREAK)) {
+        err = -EINTR;           /* Unblocked. */
+        goto unlock_and_exit;
+    }
 
     holder = getheadpq(xnsynch_wait_queue(&receiver->msendq));
     /* There must be a valid holder since we waited for it. */
 
- pull_message:
+  pull_message:
 
-    sender = thread2rtask(link2thread(holder,plink));
+    sender = thread2rtask(link2thread(holder, plink));
 
     rsize = sender->wait_args.mps.mcb_s.size;
 
-    if (rsize <= mcb_r->size)
-	{
-	if (rsize > 0)
-	    memcpy(mcb_r->data,sender->wait_args.mps.mcb_s.data,rsize);
+    if (rsize <= mcb_r->size) {
+        if (rsize > 0)
+            memcpy(mcb_r->data, sender->wait_args.mps.mcb_s.data, rsize);
 
-	/* The flow identifier can't be either null or negative. */
-	err = sender->wait_args.mps.mcb_s.flowid;
-	}
-    else
-	err = -ENOBUFS;
+        /* The flow identifier can't be either null or negative. */
+        err = sender->wait_args.mps.mcb_s.flowid;
+    } else
+        err = -ENOBUFS;
 
     mcb_r->opcode = sender->wait_args.mps.mcb_s.opcode;
     mcb_r->size = rsize;
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -2095,8 +2002,7 @@ int rt_task_receive (RT_TASK_MCB *mcb_r,
  * the threshold before allocation is currently set to 64 bytes.
  */
 
-int rt_task_reply (int flowid, RT_TASK_MCB *mcb_s)
-
+int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 {
     RT_TASK *sender, *receiver;
     xnpholder_t *holder;
@@ -2105,38 +2011,35 @@ int rt_task_reply (int flowid, RT_TASK_MCB *mcb_s)
     spl_t s;
 
     if (!xnpod_primary_p())
-	return -EPERM;
+        return -EPERM;
 
     sender = xeno_current_task();
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    for (holder = getheadpq(xnsynch_wait_queue(&sender->msendq)), receiver = NULL;
-	 holder != NULL;
-	 holder = nextpq(xnsynch_wait_queue(&sender->msendq),holder))
-	{
-	receiver = thread2rtask(link2thread(holder,plink));
+    for (holder = getheadpq(xnsynch_wait_queue(&sender->msendq)), receiver =
+         NULL; holder != NULL;
+         holder = nextpq(xnsynch_wait_queue(&sender->msendq), holder)) {
+        receiver = thread2rtask(link2thread(holder, plink));
 
-	/* Check the flow identifier, just in case the sender has
-	   vanished away while we were processing its last
-	   message. Each sent message carries a distinct flow
-	   identifier from other senders wrt to a given receiver. */
+        /* Check the flow identifier, just in case the sender has
+           vanished away while we were processing its last
+           message. Each sent message carries a distinct flow
+           identifier from other senders wrt to a given receiver. */
 
-	if (receiver->wait_args.mps.mcb_s.flowid == flowid)
-	    {
-	    /* Note that the following will cause the receiver to be
-	       unblocked without transferring the ownership of the
-	       msendq object, since we want the sender to keep it. */
-	    xnpod_resume_thread(&receiver->thread_base,XNPEND);
-	    break;
-	    }
-	}
+        if (receiver->wait_args.mps.mcb_s.flowid == flowid) {
+            /* Note that the following will cause the receiver to be
+               unblocked without transferring the ownership of the
+               msendq object, since we want the sender to keep it. */
+            xnpod_resume_thread(&receiver->thread_base, XNPEND);
+            break;
+        }
+    }
 
-    if (!receiver)
-	{
-	err = -ENXIO;
-	goto unlock_and_exit;
-	}
+    if (!receiver) {
+        err = -ENXIO;
+        goto unlock_and_exit;
+    }
 
     /* Copy the reply data to a location where the receiver can find
        it. */
@@ -2144,19 +2047,17 @@ int rt_task_reply (int flowid, RT_TASK_MCB *mcb_s)
     rsize = mcb_s ? mcb_s->size : 0;
     err = 0;
 
-    if (receiver->wait_args.mps.mcb_r.size >= rsize)
-	{
-	/* Sending back a NULL or zero-length reply is perfectly
-	   valid; it just means to unblock the initial sender without
-	   passing it back any reply data. */
+    if (receiver->wait_args.mps.mcb_r.size >= rsize) {
+        /* Sending back a NULL or zero-length reply is perfectly
+           valid; it just means to unblock the initial sender without
+           passing it back any reply data. */
 
-	if (rsize > 0)
-	    memcpy(receiver->wait_args.mps.mcb_r.data,mcb_s->data,rsize);
-	}
-    else
-	/* The receiver will get the same error code. Falldown
-	   through the rescheduling is wanted. */
-	err = -ENOBUFS;
+        if (rsize > 0)
+            memcpy(receiver->wait_args.mps.mcb_r.data, mcb_s->data, rsize);
+    } else
+        /* The receiver will get the same error code. Falldown
+           through the rescheduling is wanted. */
+        err = -ENOBUFS;
 
     /* Copy back the actual size of the reply data, */
     receiver->wait_args.mps.mcb_r.size = rsize;
@@ -2168,9 +2069,9 @@ int rt_task_reply (int flowid, RT_TASK_MCB *mcb_s)
 
     xnpod_schedule();
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
