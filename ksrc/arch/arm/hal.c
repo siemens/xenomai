@@ -56,8 +56,7 @@ static struct {
 
 static int rthal_periodic_p;
 
-int rthal_timer_request (void (*handler)(void),
-                         unsigned long nstick)
+int rthal_timer_request(void (*handler) (void), unsigned long nstick)
 {
     unsigned long flags;
     int err;
@@ -71,8 +70,7 @@ int rthal_timer_request (void (*handler)(void),
            Use the built-in Adeos service directly. */
         err = rthal_set_timer(nstick);
         rthal_periodic_p = 1;
-    }
-    else {
+    } else {
         /* Oneshot setup. */
         rthal_periodic_p = 0;
         rthal_timer_program_shot(__ipipe_mach_ticks_per_jiffy);
@@ -81,16 +79,14 @@ int rthal_timer_request (void (*handler)(void),
     rthal_irq_release(RTHAL_TIMER_IRQ);
 
     err = rthal_irq_request(RTHAL_TIMER_IRQ,
-                            (rthal_irq_handler_t)handler,
-                            NULL,
-                            NULL);
+                            (rthal_irq_handler_t) handler, NULL, NULL);
 
     rthal_critical_exit(flags);
 
     return err;
 }
 
-void rthal_timer_release (void)
+void rthal_timer_release(void)
 {
     unsigned long flags;
 
@@ -108,55 +104,54 @@ void rthal_timer_release (void)
     rthal_critical_exit(flags);
 }
 
-unsigned long rthal_timer_calibrate (void)
+unsigned long rthal_timer_calibrate(void)
 {
     return 1000000000 / RTHAL_CPU_FREQ;
 }
 
-int rthal_irq_host_request (unsigned irq,
-                            irqreturn_t (*handler)(int irq,
-                                                   void *dev_id,
-                                                   struct pt_regs *regs),
-                            char *name,
-                            void *dev_id)
+int rthal_irq_host_request(unsigned irq,
+                           irqreturn_t(*handler) (int irq,
+                                                  void *dev_id,
+                                                  struct pt_regs *regs),
+                           char *name, void *dev_id)
 {
     unsigned long flags;
 
     if (irq >= IPIPE_NR_XIRQS || !handler)
         return -EINVAL;
 
-    spin_lock_irqsave(&irq_controller_lock,flags);
+    spin_lock_irqsave(&irq_controller_lock, flags);
 
     if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action) {
         rthal_linux_irq[irq].flags = rthal_irq_descp(irq)->action->flags;
         rthal_irq_descp(irq)->action->flags |= SA_SHIRQ;
     }
 
-    spin_unlock_irqrestore(&irq_controller_lock,flags);
+    spin_unlock_irqrestore(&irq_controller_lock, flags);
 
-    return request_irq(irq,handler,SA_SHIRQ,name,dev_id);
+    return request_irq(irq, handler, SA_SHIRQ, name, dev_id);
 }
 
-int rthal_irq_host_release (unsigned irq, void *dev_id)
+int rthal_irq_host_release(unsigned irq, void *dev_id)
 {
     unsigned long flags;
 
     if (irq >= IPIPE_NR_XIRQS || rthal_linux_irq[irq].count == 0)
         return -EINVAL;
 
-    free_irq(irq,dev_id);
+    free_irq(irq, dev_id);
 
-    spin_lock_irqsave(&irq_controller_lock,flags);
+    spin_lock_irqsave(&irq_controller_lock, flags);
 
     if (--rthal_linux_irq[irq].count == 0 && rthal_irq_descp(irq)->action)
         rthal_irq_descp(irq)->action->flags = rthal_linux_irq[irq].flags;
 
-    spin_unlock_irqrestore(&irq_controller_lock,flags);
+    spin_unlock_irqrestore(&irq_controller_lock, flags);
 
     return 0;
 }
 
-int rthal_irq_enable (unsigned irq)
+int rthal_irq_enable(unsigned irq)
 {
     if (irq >= IPIPE_NR_XIRQS)
         return -EINVAL;
@@ -166,7 +161,7 @@ int rthal_irq_enable (unsigned irq)
     return 0;
 }
 
-int rthal_irq_disable (unsigned irq)
+int rthal_irq_disable(unsigned irq)
 {
     if (irq >= IPIPE_NR_XIRQS)
         return -EINVAL;
@@ -176,12 +171,12 @@ int rthal_irq_disable (unsigned irq)
     return 0;
 }
 
-int rthal_irq_end (unsigned irq)
+int rthal_irq_end(unsigned irq)
 {
     return rthal_irq_enable(irq);
 }
 
-static inline int do_exception_event (unsigned event, unsigned domid, void *data)
+static inline int do_exception_event(unsigned event, unsigned domid, void *data)
 {
     rthal_declare_cpuid;
 
@@ -191,8 +186,8 @@ static inline int do_exception_event (unsigned event, unsigned domid, void *data
         rthal_realtime_faults[cpuid][event]++;
 
         if (rthal_trap_handler != NULL &&
-            test_bit(cpuid,&rthal_cpu_realtime) &&
-            rthal_trap_handler(event,domid,data) != 0)
+            test_bit(cpuid, &rthal_cpu_realtime) &&
+            rthal_trap_handler(event, domid, data) != 0)
             return RTHAL_EVENT_STOP;
     }
 
@@ -201,20 +196,20 @@ static inline int do_exception_event (unsigned event, unsigned domid, void *data
 
 RTHAL_DECLARE_EVENT(exception_event);
 
-static inline void do_rthal_domain_entry (void)
+static inline void do_rthal_domain_entry(void)
 {
     unsigned trapnr;
 
     /* Trap all faults. */
     for (trapnr = 0; trapnr < RTHAL_NR_FAULTS; trapnr++)
-        rthal_catch_exception(trapnr,&exception_event);
+        rthal_catch_exception(trapnr, &exception_event);
 
     printk(KERN_INFO "Xenomai: hal/arm started.\n");
 }
 
 RTHAL_DECLARE_DOMAIN(rthal_domain_entry);
 
-int rthal_arch_init (void)
+int rthal_arch_init(void)
 {
     if (rthal_cpufreq_arg == 0)
         /* The CPU frequency is expressed as the timebase frequency
@@ -227,7 +222,7 @@ int rthal_arch_init (void)
     return 0;
 }
 
-void rthal_arch_cleanup (void)
+void rthal_arch_cleanup(void)
 {
     /* Nothing to cleanup so far. */
     printk(KERN_INFO "Xenomai: hal/arm stopped.\n");

@@ -88,33 +88,29 @@ struct rthal_apic_data {
 
 static struct rthal_apic_data rthal_timer_mode[RTHAL_NR_CPUS];
 
-static inline void rthal_setup_periodic_apic (unsigned count,
-                                              unsigned vector)
+static inline void rthal_setup_periodic_apic(unsigned count, unsigned vector)
 {
     apic_read(APIC_LVTT);
-    apic_write_around(APIC_LVTT,APIC_LVT_TIMER_PERIODIC|vector);
+    apic_write_around(APIC_LVTT, APIC_LVT_TIMER_PERIODIC | vector);
     apic_read(APIC_TMICT);
-    apic_write_around(APIC_TMICT,count);
+    apic_write_around(APIC_TMICT, count);
 }
 
-static inline void rthal_setup_oneshot_apic (unsigned count,
-                                             unsigned vector)
+static inline void rthal_setup_oneshot_apic(unsigned count, unsigned vector)
 {
     apic_read(APIC_LVTT);
-    apic_write_around(APIC_LVTT,vector);
+    apic_write_around(APIC_LVTT, vector);
     apic_read(APIC_TMICT);
-    apic_write_around(APIC_TMICT,count);
+    apic_write_around(APIC_TMICT, count);
 }
 
-static void rthal_critical_sync (void)
-
+static void rthal_critical_sync(void)
 {
     struct rthal_apic_data *p;
     long long sync_time;
     rthal_declare_cpuid;
 
-    switch (rthal_sync_op)
-        {
+    switch (rthal_sync_op) {
         case 1:
             rthal_load_cpuid();
 
@@ -125,42 +121,40 @@ static void rthal_critical_sync (void)
             /* Stagger local timers on SMP systems, to prevent the
                tick handler from stupidly spinning while running on
                other CPU. */
-            if(p->mode)
+            if (p->mode)
                 sync_time += rthal_imuldiv(p->count, cpuid, num_online_cpus());
 
-            while (rthal_rdtsc() < sync_time)
-                ;
-            
+            while (rthal_rdtsc() < sync_time) ;
+
             if (p->mode)
-                rthal_setup_periodic_apic(p->count,RTHAL_APIC_TIMER_VECTOR);
+                rthal_setup_periodic_apic(p->count, RTHAL_APIC_TIMER_VECTOR);
             else
-                rthal_setup_oneshot_apic(p->count,RTHAL_APIC_TIMER_VECTOR);
+                rthal_setup_oneshot_apic(p->count, RTHAL_APIC_TIMER_VECTOR);
 
             break;
 
         case 2:
 
-            rthal_setup_periodic_apic(RTHAL_APIC_ICOUNT,LOCAL_TIMER_VECTOR);
+            rthal_setup_periodic_apic(RTHAL_APIC_ICOUNT, LOCAL_TIMER_VECTOR);
             break;
-        }
+    }
 }
 
-irqreturn_t rthal_broadcast_to_local_timers (int irq,
-                                             void *dev_id,
-                                             struct pt_regs *regs)
+irqreturn_t rthal_broadcast_to_local_timers(int irq,
+                                            void *dev_id, struct pt_regs *regs)
 {
     unsigned long flags;
 
     rthal_local_irq_save_hw(flags);
     apic_wait_icr_idle();
-    apic_write_around(APIC_ICR,APIC_DM_FIXED|APIC_DEST_ALLINC|LOCAL_TIMER_VECTOR);
+    apic_write_around(APIC_ICR,
+                      APIC_DM_FIXED | APIC_DEST_ALLINC | LOCAL_TIMER_VECTOR);
     rthal_local_irq_restore_hw(flags);
 
     return IRQ_HANDLED;
 }
 
-unsigned long rthal_timer_calibrate (void)
-
+unsigned long rthal_timer_calibrate(void)
 {
     unsigned long flags;
     rthal_time_t t, dt;
@@ -170,13 +164,13 @@ unsigned long rthal_timer_calibrate (void)
 
     t = rthal_rdtsc();
 
-    for (i = 0; i < 10000; i++)
-        { 
+    for (i = 0; i < 10000; i++) {
         apic_read(APIC_LVTT);
-        apic_write_around(APIC_LVTT,APIC_LVT_TIMER_PERIODIC|LOCAL_TIMER_VECTOR);
+        apic_write_around(APIC_LVTT,
+                          APIC_LVT_TIMER_PERIODIC | LOCAL_TIMER_VECTOR);
         apic_read(APIC_TMICT);
-        apic_write_around(APIC_TMICT,RTHAL_APIC_ICOUNT);
-        }
+        apic_write_around(APIC_TMICT, RTHAL_APIC_ICOUNT);
+    }
 
     dt = rthal_rdtsc() - t;
 
@@ -187,7 +181,7 @@ unsigned long rthal_timer_calibrate (void)
     ipipe_trace_max_reset();
 #endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
 
-    return rthal_imuldiv(dt,100000,RTHAL_CPU_FREQ);
+    return rthal_imuldiv(dt, 100000, RTHAL_CPU_FREQ);
 }
 
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
@@ -197,7 +191,7 @@ extern void show_registers(struct pt_regs *regs);
 
 extern spinlock_t nmi_print_lock;
 
-void die_nmi (struct pt_regs *regs, const char *msg)
+void die_nmi(struct pt_regs *regs, const char *msg)
 {
     spin_lock(&nmi_print_lock);
     /*
@@ -233,8 +227,7 @@ static void rthal_latency_above_max(struct pt_regs *regs)
 
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 
-int rthal_timer_request (void (*handler)(void),
-                         unsigned long nstick)
+int rthal_timer_request(void (*handler) (void), unsigned long nstick)
 {
     struct rthal_apic_data *p;
     long long sync_time;
@@ -262,14 +255,14 @@ int rthal_timer_request (void (*handler)(void),
     /* We keep the setup data array just to be able to expose it to
        the visible interface if it happens to be really needed at some
        point in time. */
-    
+
     for_each_online_cpu(cpu) {
         p = &rthal_timer_mode[cpu];
         p->mode = !!nstick;     /* 0=oneshot, 1=periodic */
         p->count = nstick;
 
         if (p->mode)
-            p->count = rthal_imuldiv(p->count,RTHAL_TIMER_FREQ,1000000000);
+            p->count = rthal_imuldiv(p->count, RTHAL_TIMER_FREQ, 1000000000);
         else
             p->count = RTHAL_APIC_ICOUNT;
     }
@@ -280,21 +273,18 @@ int rthal_timer_request (void (*handler)(void),
 
     sync_time = rthal_timers_sync_time;
 
-    if(p->mode)
+    if (p->mode)
         sync_time += rthal_imuldiv(p->count, cpuid, num_online_cpus());
-    
-    while (rthal_rdtsc() < sync_time)
-        ;
+
+    while (rthal_rdtsc() < sync_time) ;
 
     if (p->mode)
-        rthal_setup_periodic_apic(p->count,RTHAL_APIC_TIMER_VECTOR);
+        rthal_setup_periodic_apic(p->count, RTHAL_APIC_TIMER_VECTOR);
     else
-        rthal_setup_oneshot_apic(p->count,RTHAL_APIC_TIMER_VECTOR);
+        rthal_setup_oneshot_apic(p->count, RTHAL_APIC_TIMER_VECTOR);
 
     rthal_irq_request(RTHAL_APIC_TIMER_IPI,
-                      (rthal_irq_handler_t)handler,
-                      NULL,
-                      NULL);
+                      (rthal_irq_handler_t) handler, NULL, NULL);
 
     rthal_critical_exit(flags);
 
@@ -303,14 +293,13 @@ int rthal_timer_request (void (*handler)(void),
                            "rthal_broadcast_timer",
                            &rthal_broadcast_to_local_timers);
 
-    if (!p->mode)	/* This only works in aperiodic mode. */
-	rthal_nmi_init(&rthal_latency_above_max);
+    if (!p->mode)               /* This only works in aperiodic mode. */
+        rthal_nmi_init(&rthal_latency_above_max);
 
     return 0;
 }
 
-void rthal_timer_release (void)
-
+void rthal_timer_release(void)
 {
     unsigned long flags;
 
@@ -318,13 +307,12 @@ void rthal_timer_release (void)
     rthal_nmi_release();
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 
-    rthal_irq_host_release(RTHAL_8254_IRQ,
-                            &rthal_broadcast_to_local_timers);
+    rthal_irq_host_release(RTHAL_8254_IRQ, &rthal_broadcast_to_local_timers);
 
     flags = rthal_critical_enter(&rthal_critical_sync);
 
     rthal_sync_op = 2;
-    rthal_setup_periodic_apic(RTHAL_APIC_ICOUNT,LOCAL_TIMER_VECTOR);
+    rthal_setup_periodic_apic(RTHAL_APIC_ICOUNT, LOCAL_TIMER_VECTOR);
     rthal_irq_release(RTHAL_APIC_TIMER_IPI);
 
     rthal_critical_exit(flags);
@@ -332,8 +320,7 @@ void rthal_timer_release (void)
 
 #else /* !CONFIG_X86_LOCAL_APIC */
 
-unsigned long rthal_timer_calibrate (void)
-
+unsigned long rthal_timer_calibrate(void)
 {
     unsigned long flags;
     rthal_time_t t, dt;
@@ -341,15 +328,14 @@ unsigned long rthal_timer_calibrate (void)
 
     flags = rthal_critical_enter(NULL);
 
-    outb(0x34,PIT_MODE);
+    outb(0x34, PIT_MODE);
 
     t = rthal_rdtsc();
 
-    for (i = 0; i < 10000; i++)
-        { 
-        outb(LATCH & 0xff,PIT_CH0);
-        outb(LATCH >> 8,PIT_CH0);
-        }
+    for (i = 0; i < 10000; i++) {
+        outb(LATCH & 0xff, PIT_CH0);
+        outb(LATCH >> 8, PIT_CH0);
+    }
 
     dt = rthal_rdtsc() - t;
 
@@ -360,56 +346,50 @@ unsigned long rthal_timer_calibrate (void)
     ipipe_trace_max_reset();
 #endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
 
-    return rthal_imuldiv(dt,100000,RTHAL_CPU_FREQ);
+    return rthal_imuldiv(dt, 100000, RTHAL_CPU_FREQ);
 }
 
-int rthal_timer_request (void (*handler)(void),
-                         unsigned long nstick)
+int rthal_timer_request(void (*handler) (void), unsigned long nstick)
 {
     unsigned long flags;
     int err;
 
     flags = rthal_critical_enter(NULL);
 
-    if (nstick > 0)
-        {
+    if (nstick > 0) {
         /* Periodic setup for 8254 channel #0. */
         unsigned period;
-        period = (unsigned)rthal_llimd(nstick,RTHAL_TIMER_FREQ,1000000000);
-        if (period > LATCH) period = LATCH;
-        outb(0x34,PIT_MODE);
-        outb(period & 0xff,PIT_CH0);
-        outb(period >> 8,PIT_CH0);
-        }
-    else
-        {
+        period = (unsigned)rthal_llimd(nstick, RTHAL_TIMER_FREQ, 1000000000);
+        if (period > LATCH)
+            period = LATCH;
+        outb(0x34, PIT_MODE);
+        outb(period & 0xff, PIT_CH0);
+        outb(period >> 8, PIT_CH0);
+    } else {
         /* Oneshot setup for 8254 channel #0. */
-        outb(0x30,PIT_MODE);
-        outb(LATCH & 0xff,PIT_CH0);
-        outb(LATCH >> 8,PIT_CH0);
-        }
+        outb(0x30, PIT_MODE);
+        outb(LATCH & 0xff, PIT_CH0);
+        outb(LATCH >> 8, PIT_CH0);
+    }
 
     rthal_irq_release(RTHAL_8254_IRQ);
 
     err = rthal_irq_request(RTHAL_8254_IRQ,
-                            (rthal_irq_handler_t)handler,
-                            NULL,
-                            NULL);
+                            (rthal_irq_handler_t) handler, NULL, NULL);
 
     rthal_critical_exit(flags);
 
     return err;
 }
 
-void rthal_timer_release (void)
-
+void rthal_timer_release(void)
 {
     unsigned long flags;
 
     flags = rthal_critical_enter(NULL);
-    outb(0x34,PIT_MODE);
-    outb(LATCH & 0xff,PIT_CH0);
-    outb(LATCH >> 8,PIT_CH0);
+    outb(0x34, PIT_MODE);
+    outb(LATCH & 0xff, PIT_CH0);
+    outb(LATCH >> 8, PIT_CH0);
     rthal_irq_release(RTHAL_8254_IRQ);
 
     rthal_critical_exit(flags);
@@ -425,30 +405,28 @@ static int rthal_last_8254_counter2;
 
 /* TSC emulation using PIT channel #2. */
 
-void rthal_setup_8254_tsc (void)
-
+void rthal_setup_8254_tsc(void)
 {
     unsigned long flags;
     int count;
 
     rthal_local_irq_save_hw(flags);
 
-    outb_p(0x0,PIT_MODE);
+    outb_p(0x0, PIT_MODE);
     count = inb_p(PIT_CH0);
     count |= inb_p(PIT_CH0) << 8;
-    outb_p(0xb4,PIT_MODE);
-    outb_p(RTHAL_8254_COUNT2LATCH & 0xff,PIT_CH2);
-    outb_p(RTHAL_8254_COUNT2LATCH >> 8,PIT_CH2);
+    outb_p(0xb4, PIT_MODE);
+    outb_p(RTHAL_8254_COUNT2LATCH & 0xff, PIT_CH2);
+    outb_p(RTHAL_8254_COUNT2LATCH >> 8, PIT_CH2);
     rthal_tsc_8254 = count + LATCH * jiffies;
-    rthal_last_8254_counter2 = 0; 
+    rthal_last_8254_counter2 = 0;
     /* Gate high, disable speaker */
-    outb_p((inb_p(0x61)&~0x2)|1,0x61);
+    outb_p((inb_p(0x61) & ~0x2) | 1, 0x61);
 
     rthal_local_irq_restore_hw(flags);
 }
 
-rthal_time_t rthal_get_8254_tsc (void)
-
+rthal_time_t rthal_get_8254_tsc(void)
 {
     unsigned long flags;
     int delta, count;
@@ -456,7 +434,7 @@ rthal_time_t rthal_get_8254_tsc (void)
 
     rthal_local_irq_save_hw(flags);
 
-    outb(0xd8,PIT_MODE);
+    outb(0xd8, PIT_MODE);
     count = inb(PIT_CH2);
     delta = rthal_last_8254_counter2 - (count |= (inb(PIT_CH2) << 8));
     rthal_last_8254_counter2 = count;
@@ -470,160 +448,150 @@ rthal_time_t rthal_get_8254_tsc (void)
 
 #endif /* !CONFIG_X86_TSC */
 
-int rthal_irq_host_request (unsigned irq,
-			    irqreturn_t (*handler)(int irq,
-						   void *dev_id,
-						   struct pt_regs *regs), 
-			    char *name,
-			    void *dev_id)
+int rthal_irq_host_request(unsigned irq,
+                           irqreturn_t(*handler) (int irq,
+                                                  void *dev_id,
+                                                  struct pt_regs *regs),
+                           char *name, void *dev_id)
 {
     unsigned long flags;
 
     if (irq >= IPIPE_NR_XIRQS || !handler)
-	return -EINVAL;
+        return -EINVAL;
 
-    spin_lock_irqsave(&rthal_irq_descp(irq)->lock,flags);
+    spin_lock_irqsave(&rthal_irq_descp(irq)->lock, flags);
 
-    if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action)
-	{
-	rthal_linux_irq[irq].flags = rthal_irq_descp(irq)->action->flags;
-	rthal_irq_descp(irq)->action->flags |= SA_SHIRQ;
-	}
+    if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action) {
+        rthal_linux_irq[irq].flags = rthal_irq_descp(irq)->action->flags;
+        rthal_irq_descp(irq)->action->flags |= SA_SHIRQ;
+    }
 
-    spin_unlock_irqrestore(&rthal_irq_descp(irq)->lock,flags);
+    spin_unlock_irqrestore(&rthal_irq_descp(irq)->lock, flags);
 
-    return request_irq(irq,handler,SA_SHIRQ,name,dev_id);
+    return request_irq(irq, handler, SA_SHIRQ, name, dev_id);
 }
 
-int rthal_irq_host_release (unsigned irq, void *dev_id)
-
+int rthal_irq_host_release(unsigned irq, void *dev_id)
 {
     unsigned long flags;
 
     if (irq >= NR_IRQS || rthal_linux_irq[irq].count == 0)
-	return -EINVAL;
+        return -EINVAL;
 
-    free_irq(irq,dev_id);
+    free_irq(irq, dev_id);
 
-    spin_lock_irqsave(&rthal_irq_descp(irq)->lock,flags);
+    spin_lock_irqsave(&rthal_irq_descp(irq)->lock, flags);
 
     if (--rthal_linux_irq[irq].count == 0 && rthal_irq_descp(irq)->action)
-	rthal_irq_descp(irq)->action->flags = rthal_linux_irq[irq].flags;
+        rthal_irq_descp(irq)->action->flags = rthal_linux_irq[irq].flags;
 
-    spin_unlock_irqrestore(&rthal_irq_descp(irq)->lock,flags);
+    spin_unlock_irqrestore(&rthal_irq_descp(irq)->lock, flags);
 
     return 0;
 }
 
-int rthal_irq_enable (unsigned irq)
-
+int rthal_irq_enable(unsigned irq)
 {
     if (irq >= NR_IRQS)
-	return -EINVAL;
+        return -EINVAL;
 
     if (rthal_irq_descp(irq)->handler == NULL ||
-	rthal_irq_descp(irq)->handler->enable == NULL)
-	return -ENODEV;
+        rthal_irq_descp(irq)->handler->enable == NULL)
+        return -ENODEV;
 
     rthal_irq_descp(irq)->handler->enable(irq);
 
     return 0;
 }
 
-int rthal_irq_disable (unsigned irq)
+int rthal_irq_disable(unsigned irq)
 {
 
     if (irq >= NR_IRQS)
-	return -EINVAL;
+        return -EINVAL;
 
     if (rthal_irq_descp(irq)->handler == NULL ||
-	rthal_irq_descp(irq)->handler->disable == NULL)
-	return -ENODEV;
+        rthal_irq_descp(irq)->handler->disable == NULL)
+        return -ENODEV;
 
     rthal_irq_descp(irq)->handler->disable(irq);
 
     return 0;
 }
 
-int rthal_irq_end (unsigned irq)
-
+int rthal_irq_end(unsigned irq)
 {
     if (irq >= NR_IRQS)
-	return -EINVAL;
+        return -EINVAL;
 
     if (rthal_irq_descp(irq)->handler == NULL ||
-	rthal_irq_descp(irq)->handler->enable == NULL)
-	return -ENODEV;
+        rthal_irq_descp(irq)->handler->enable == NULL)
+        return -ENODEV;
 
     rthal_irq_descp(irq)->handler->enable(irq);
 
     return 0;
 }
 
-static inline int do_exception_event (unsigned event, unsigned domid, void *data)
-
+static inline int do_exception_event(unsigned event, unsigned domid, void *data)
 {
     rthal_declare_cpuid;
 
     /* Notes:
 
-    1) GPF needs to be propagated downstream whichever domain caused
-    it. This is required so that we don't spuriously raise a fatal
-    error when some fixup code is available to solve the error
-    condition. For instance, Linux always attempts to reload the %gs
-    segment register when switching a process in (__switch_to()),
-    regardless of its value. It is then up to Linux's GPF handling
-    code to search for a possible fixup whenever some exception
-    occurs. In the particular case of the %gs register, such an
-    exception could be raised for an exiting process if a preemption
-    occurs inside a short time window, after the process's LDT has
-    been dropped, but before the kernel lock is taken.  The same goes
-    for Xenomai switching back a Linux thread in non-RT mode which
-    happens to have been preempted inside do_exit() after the MM
-    context has been dropped (thus the LDT too). In such a case, %gs
-    could be reloaded with what used to be the TLS descriptor of the
-    exiting thread, but unfortunately after the LDT itself has been
-    dropped. Since the default LDT is only 5 entries long, any attempt
-    to refer to an LDT-indexed descriptor above this value would cause
-    a GPF.  2) NMI is not pipelined. */
+       1) GPF needs to be propagated downstream whichever domain caused
+       it. This is required so that we don't spuriously raise a fatal
+       error when some fixup code is available to solve the error
+       condition. For instance, Linux always attempts to reload the %gs
+       segment register when switching a process in (__switch_to()),
+       regardless of its value. It is then up to Linux's GPF handling
+       code to search for a possible fixup whenever some exception
+       occurs. In the particular case of the %gs register, such an
+       exception could be raised for an exiting process if a preemption
+       occurs inside a short time window, after the process's LDT has
+       been dropped, but before the kernel lock is taken.  The same goes
+       for Xenomai switching back a Linux thread in non-RT mode which
+       happens to have been preempted inside do_exit() after the MM
+       context has been dropped (thus the LDT too). In such a case, %gs
+       could be reloaded with what used to be the TLS descriptor of the
+       exiting thread, but unfortunately after the LDT itself has been
+       dropped. Since the default LDT is only 5 entries long, any attempt
+       to refer to an LDT-indexed descriptor above this value would cause
+       a GPF.  2) NMI is not pipelined. */
 
     rthal_load_cpuid();
 
-    if (domid == RTHAL_DOMAIN_ID)
-        {
+    if (domid == RTHAL_DOMAIN_ID) {
         rthal_realtime_faults[cpuid][event]++;
 
         if (rthal_trap_handler != NULL &&
-            test_bit(cpuid,&rthal_cpu_realtime) &&
-            rthal_trap_handler(event,domid,data) != 0)
+            test_bit(cpuid, &rthal_cpu_realtime) &&
+            rthal_trap_handler(event, domid, data) != 0)
             return RTHAL_EVENT_STOP;
-        }
+    }
 
     return RTHAL_EVENT_PROPAGATE;
 }
 
 RTHAL_DECLARE_EVENT(exception_event);
 
-static inline void do_rthal_domain_entry (void)
-
+static inline void do_rthal_domain_entry(void)
 {
     unsigned trapnr;
 
     /* Trap all faults. */
     for (trapnr = 0; trapnr < RTHAL_NR_FAULTS; trapnr++)
-        rthal_catch_exception(trapnr,&exception_event);
+        rthal_catch_exception(trapnr, &exception_event);
 
     printk(KERN_INFO "Xenomai: hal/x86 started.\n");
 }
 
 RTHAL_DECLARE_DOMAIN(rthal_domain_entry);
 
-int rthal_arch_init (void)
-
+int rthal_arch_init(void)
 {
 #ifdef CONFIG_X86_LOCAL_APIC
-    if (!test_bit(X86_FEATURE_APIC,boot_cpu_data.x86_capability))
-    {
+    if (!test_bit(X86_FEATURE_APIC, boot_cpu_data.x86_capability)) {
         printk("Xenomai: Local APIC absent or disabled!\n"
                "         Disable APIC support or pass \"lapic=1\" as bootparam.\n");
         rthal_smi_restore();
@@ -651,8 +619,7 @@ int rthal_arch_init (void)
     return 0;
 }
 
-void rthal_arch_cleanup (void)
-
+void rthal_arch_cleanup(void)
 {
     printk(KERN_INFO "Xenomai: hal/x86 stopped.\n");
 }

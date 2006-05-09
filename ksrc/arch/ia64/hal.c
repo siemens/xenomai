@@ -54,7 +54,7 @@ static struct {
 
 } rthal_linux_irq[IPIPE_NR_XIRQS];
 
-static void rthal_adjust_before_relay (unsigned irq, void *cookie)
+static void rthal_adjust_before_relay(unsigned irq, void *cookie)
 {
     rthal_itm_next[rthal_processor_id()] = ia64_get_itc();
     rthal_propagate_irq(irq);
@@ -66,7 +66,7 @@ static void rthal_set_itv(void)
     ia64_set_itv(irq_to_vector(rthal_tick_irq));
 }
 
-static void rthal_timer_set_irq (unsigned tick_irq)
+static void rthal_timer_set_irq(unsigned tick_irq)
 {
     unsigned long flags;
 
@@ -76,34 +76,27 @@ static void rthal_timer_set_irq (unsigned tick_irq)
     rthal_critical_exit(flags);
 }
 
-int rthal_timer_request (void (*handler)(void),
-			 unsigned long nstick)
+int rthal_timer_request(void (*handler) (void), unsigned long nstick)
 {
     unsigned long flags;
 
     flags = rthal_critical_enter(NULL);
 
     rthal_irq_release(RTHAL_TIMER_IRQ);
-    
+
     rthal_set_timer(nstick);
 
     if (rthal_irq_request(RTHAL_TIMER_IRQ,
-                          (rthal_irq_handler_t) handler,
-			  NULL,
-                          NULL) < 0)
-        {
+                          (rthal_irq_handler_t) handler, NULL, NULL) < 0) {
         rthal_critical_exit(flags);
         return -EINVAL;
-        }
+    }
 
     if (rthal_irq_request(RTHAL_HOST_TIMER_IRQ,
-                          &rthal_adjust_before_relay,
-			  NULL,
-                          NULL) < 0)
-        {
+                          &rthal_adjust_before_relay, NULL, NULL) < 0) {
         rthal_critical_exit(flags);
         return -EINVAL;
-        }
+    }
 
     rthal_critical_exit(flags);
 
@@ -112,28 +105,26 @@ int rthal_timer_request (void (*handler)(void),
     return 0;
 }
 
-void rthal_timer_release (void)
-
+void rthal_timer_release(void)
 {
     unsigned long flags;
 
     rthal_timer_set_irq(RTHAL_HOST_TIMER_IRQ);
     rthal_reset_timer();
-    flags = rthal_critical_enter(NULL);        
+    flags = rthal_critical_enter(NULL);
     rthal_irq_release(RTHAL_TIMER_IRQ);
     rthal_irq_release(RTHAL_HOST_TIMER_IRQ);
     rthal_critical_exit(flags);
 }
 
-unsigned long rthal_timer_calibrate (void)
-
+unsigned long rthal_timer_calibrate(void)
 {
     unsigned long flags, delay;
     rthal_time_t t, dt;
     int i;
 
-    delay = RTHAL_CPU_FREQ; /* 1s */
-    
+    delay = RTHAL_CPU_FREQ;     /* 1s */
+
     flags = rthal_critical_enter(NULL);
 
     t = rthal_rdtsc();
@@ -145,149 +136,139 @@ unsigned long rthal_timer_calibrate (void)
 
     rthal_critical_exit(flags);
 
-    return rthal_imuldiv(dt,100000,RTHAL_CPU_FREQ);
+    return rthal_imuldiv(dt, 100000, RTHAL_CPU_FREQ);
 }
 
-int rthal_irq_host_request (unsigned irq,
-			    irqreturn_t (*handler)(int irq,
-						   void *dev_id,
-						   struct pt_regs *regs), 
-			    char *name,
-			    void *dev_id)
+int rthal_irq_host_request(unsigned irq,
+                           irqreturn_t(*handler) (int irq,
+                                                  void *dev_id,
+                                                  struct pt_regs *regs),
+                           char *name, void *dev_id)
 {
     unsigned long flags;
 
     if (irq >= IPIPE_NR_XIRQS || !handler)
-	return -EINVAL;
+        return -EINVAL;
 
-    spin_lock_irqsave(&rthal_irq_descp(irq)->lock,flags);
+    spin_lock_irqsave(&rthal_irq_descp(irq)->lock, flags);
 
-    if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action)
-	{
-	rthal_linux_irq[irq].flags = rthal_irq_descp(irq)->action->flags;
-	rthal_irq_descp(irq)->action->flags |= SA_SHIRQ;
-	}
+    if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action) {
+        rthal_linux_irq[irq].flags = rthal_irq_descp(irq)->action->flags;
+        rthal_irq_descp(irq)->action->flags |= SA_SHIRQ;
+    }
 
-    spin_unlock_irqrestore(&rthal_irq_descp(irq)->lock,flags);
+    spin_unlock_irqrestore(&rthal_irq_descp(irq)->lock, flags);
 
-    return request_irq(irq,handler,SA_SHIRQ,name,dev_id);
+    return request_irq(irq, handler, SA_SHIRQ, name, dev_id);
 }
 
-int rthal_irq_host_release (unsigned irq, void *dev_id)
-
+int rthal_irq_host_release(unsigned irq, void *dev_id)
 {
     unsigned long flags;
 
     if (irq >= IPIPE_NR_XIRQS || rthal_linux_irq[irq].count == 0)
-	return -EINVAL;
+        return -EINVAL;
 
-    free_irq(irq,dev_id);
+    free_irq(irq, dev_id);
 
-    spin_lock_irqsave(&rthal_irq_descp(irq)->lock,flags);
+    spin_lock_irqsave(&rthal_irq_descp(irq)->lock, flags);
 
     if (--rthal_linux_irq[irq].count == 0 && rthal_irq_descp(irq)->action)
-	rthal_irq_descp(irq)->action->flags = rthal_linux_irq[irq].flags;
+        rthal_irq_descp(irq)->action->flags = rthal_linux_irq[irq].flags;
 
-    spin_unlock_irqrestore(&rthal_irq_descp(irq)->lock,flags);
+    spin_unlock_irqrestore(&rthal_irq_descp(irq)->lock, flags);
 
     return 0;
 }
 
-int rthal_irq_enable (unsigned irq)
-
+int rthal_irq_enable(unsigned irq)
 {
     if (irq >= IPIPE_NR_XIRQS)
-	return -EINVAL;
+        return -EINVAL;
 
     if (rthal_irq_descp(irq)->handler == NULL ||
-	rthal_irq_descp(irq)->handler->enable == NULL)
-	return -ENODEV;
+        rthal_irq_descp(irq)->handler->enable == NULL)
+        return -ENODEV;
 
     rthal_irq_descp(irq)->handler->enable(irq);
 
     return 0;
 }
 
-int rthal_irq_disable (unsigned irq)
+int rthal_irq_disable(unsigned irq)
 {
 
     if (irq >= IPIPE_NR_XIRQS)
-	return -EINVAL;
+        return -EINVAL;
 
     if (rthal_irq_descp(irq)->handler == NULL ||
-	rthal_irq_descp(irq)->handler->disable == NULL)
-	return -ENODEV;
+        rthal_irq_descp(irq)->handler->disable == NULL)
+        return -ENODEV;
 
     rthal_irq_descp(irq)->handler->disable(irq);
 
     return 0;
 }
 
-int rthal_irq_end (unsigned irq)
-
+int rthal_irq_end(unsigned irq)
 {
     if (irq >= IPIPE_NR_XIRQS)
-	return -EINVAL;
+        return -EINVAL;
 
     if (rthal_irq_descp(irq)->handler == NULL ||
-	rthal_irq_descp(irq)->handler->enable == NULL)
-	return -ENODEV;
+        rthal_irq_descp(irq)->handler->enable == NULL)
+        return -ENODEV;
 
     rthal_irq_descp(irq)->handler->enable(irq);
 
     return 0;
 }
 
-static inline int do_exception_event (unsigned event, unsigned domid, void *data)
-
+static inline int do_exception_event(unsigned event, unsigned domid, void *data)
 {
     rthal_declare_cpuid;
 
     rthal_load_cpuid();
 
-    if (domid == RTHAL_DOMAIN_ID)
-	{
-	rthal_realtime_faults[cpuid][event]++;
+    if (domid == RTHAL_DOMAIN_ID) {
+        rthal_realtime_faults[cpuid][event]++;
 
-	if (rthal_trap_handler != NULL &&
-	    test_bit(cpuid,&rthal_cpu_realtime) &&
-	    rthal_trap_handler(event,domid,data) != 0)
-	    return RTHAL_EVENT_STOP;
-	}
+        if (rthal_trap_handler != NULL &&
+            test_bit(cpuid, &rthal_cpu_realtime) &&
+            rthal_trap_handler(event, domid, data) != 0)
+            return RTHAL_EVENT_STOP;
+    }
 
     return RTHAL_EVENT_PROPAGATE;
 }
 
 RTHAL_DECLARE_EVENT(exception_event);
 
-static inline void do_rthal_domain_entry (void)
-
+static inline void do_rthal_domain_entry(void)
 {
     unsigned trapnr;
 
     /* Trap all faults. */
     for (trapnr = 0; trapnr < RTHAL_NR_FAULTS; trapnr++)
-	rthal_catch_exception(trapnr,&exception_event);
+        rthal_catch_exception(trapnr, &exception_event);
 
     printk(KERN_INFO "Xenomai: hal/ia64 started.\n");
 }
 
 RTHAL_DECLARE_DOMAIN(rthal_domain_entry);
 
-int rthal_arch_init (void)
-
+int rthal_arch_init(void)
 {
     if (rthal_cpufreq_arg == 0)
-	rthal_cpufreq_arg = (unsigned long)rthal_get_cpufreq();
+        rthal_cpufreq_arg = (unsigned long)rthal_get_cpufreq();
 
     if (rthal_timerfreq_arg == 0)
-	rthal_timerfreq_arg = rthal_cpufreq_arg;
+        rthal_timerfreq_arg = rthal_cpufreq_arg;
 
     return 0;
 }
 
-void rthal_arch_cleanup (void)
-
+void rthal_arch_cleanup(void)
 {
     /* Nothing to cleanup so far. */
     printk(KERN_INFO "Xenomai: hal/ia64 stopped.\n");
