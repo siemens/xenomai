@@ -36,18 +36,18 @@
 #include <asm/unistd.h>
 #include <asm/xenomai/hal.h>
 
-static void (*rthal_nmi_emergency)(struct pt_regs *);
+static void (*rthal_nmi_emergency) (struct pt_regs *);
 
 static volatile void *rthal_old_nmi_handler;
 
 asmlinkage void rthal_nmi_handler(struct pt_regs *regs);
 
-asmlinkage void rthal_nmi_tick (struct pt_regs *regs)
+asmlinkage void rthal_nmi_tick(struct pt_regs *regs)
 {
     rthal_nmi_emergency(regs);
 }
 
-int rthal_nmi_request (void (*emergency)(struct pt_regs *))
+int rthal_nmi_request(void (*emergency) (struct pt_regs *))
 {
     if (rthal_nmi_emergency)
         return -EBUSY;
@@ -62,10 +62,10 @@ int rthal_nmi_request (void (*emergency)(struct pt_regs *))
     return 0;
 }
 
-void rthal_nmi_release (void)
+void rthal_nmi_release(void)
 {
     if (rthal_nmi_emergency == NULL)
-	return;
+        return;
 
     rthal_nmi_disarm();
     __builtin_bfin_csync();
@@ -74,18 +74,18 @@ void rthal_nmi_release (void)
     rthal_nmi_emergency = NULL;
 }
 
-void rthal_nmi_arm (unsigned long delay)
+void rthal_nmi_arm(unsigned long delay)
 {
-    *pWDOG_CTL = 0xad0;		/* Disable */
+    *pWDOG_CTL = 0xad0;         /* Disable */
     __builtin_bfin_csync();
     *pWDOG_CNT = delay;
-    *pWDOG_CTL = 0x2;		/* Enable, generate NMIs */
+    *pWDOG_CTL = 0x2;           /* Enable, generate NMIs */
     __builtin_bfin_csync();
 }
 
-void rthal_nmi_disarm (void)
+void rthal_nmi_disarm(void)
 {
-    *pWDOG_CTL = 0xad0;		/* Disable */
+    *pWDOG_CTL = 0xad0;         /* Disable */
     __builtin_bfin_csync();
 }
 

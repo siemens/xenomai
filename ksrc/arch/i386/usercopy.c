@@ -45,11 +45,11 @@ do {									   \
 		: "memory");						   \
 } while (0)
 
-long rthal_strncpy_from_user(char *dst, const char __user *src, long count)
+long rthal_strncpy_from_user(char *dst, const char __user * src, long count)
 {
-	long res;
-	__do_strncpy_from_user(dst, src, count, res);
-	return res;
+    long res;
+    __do_strncpy_from_user(dst, src, count, res);
+    return res;
 }
 
 EXPORT_SYMBOL(rthal_strncpy_from_user);

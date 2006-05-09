@@ -49,14 +49,14 @@
 MODULE_LICENSE("GPL");
 
 unsigned long rthal_cpufreq_arg;
-module_param_named(cpufreq,rthal_cpufreq_arg,ulong,0444);
+module_param_named(cpufreq, rthal_cpufreq_arg, ulong, 0444);
 
 unsigned long rthal_timerfreq_arg;
-module_param_named(timerfreq,rthal_timerfreq_arg,ulong,0444);
+module_param_named(timerfreq, rthal_timerfreq_arg, ulong, 0444);
 
 static struct {
 
-    void (*handler)(void *cookie);
+    void (*handler) (void *cookie);
     void *cookie;
     const char *name;
     unsigned long hits[RTHAL_NR_CPUS];
@@ -87,21 +87,19 @@ volatile int rthal_sync_op;
 
 volatile unsigned long rthal_cpu_realtime;
 
-unsigned long rthal_critical_enter (void (*synch)(void))
-
+unsigned long rthal_critical_enter(void (*synch) (void))
 {
     unsigned long flags = rthal_grab_superlock(synch);
 
     if (atomic_dec_and_test(&rthal_sync_count))
-	rthal_sync_op = 0;
+        rthal_sync_op = 0;
     else if (synch != NULL)
-	printk(KERN_WARNING "Xenomai: Nested critical sync will fail.\n");
+        printk(KERN_WARNING "Xenomai: Nested critical sync will fail.\n");
 
     return flags;
 }
 
-void rthal_critical_exit (unsigned long flags)
-
+void rthal_critical_exit(unsigned long flags)
 {
     atomic_inc(&rthal_sync_count);
     rthal_release_superlock(flags);
@@ -155,20 +153,20 @@ void rthal_critical_exit (unsigned long flags)
  * - Any domain context.
  */
 
-int rthal_irq_request (unsigned irq,
-		       rthal_irq_handler_t handler,
-		       rthal_irq_ackfn_t ackfn,
-		       void *cookie)
+int rthal_irq_request(unsigned irq,
+                      rthal_irq_handler_t handler,
+                      rthal_irq_ackfn_t ackfn, void *cookie)
 {
     if (handler == NULL || irq >= IPIPE_NR_IRQS)
-	return -EINVAL;
+        return -EINVAL;
 
     return rthal_virtualize_irq(&rthal_domain,
-				irq,
-				handler,
-				cookie,
-				ackfn,
-				IPIPE_HANDLE_MASK | IPIPE_WIRED_MASK | IPIPE_EXCLUSIVE_MASK);
+                                irq,
+                                handler,
+                                cookie,
+                                ackfn,
+                                IPIPE_HANDLE_MASK | IPIPE_WIRED_MASK |
+                                IPIPE_EXCLUSIVE_MASK);
 }
 
 /**
@@ -197,18 +195,13 @@ int rthal_irq_request (unsigned irq,
  * - Any domain context.
  */
 
-int rthal_irq_release (unsigned irq)
-
+int rthal_irq_release(unsigned irq)
 {
     if (irq >= IPIPE_NR_IRQS)
-	return -EINVAL;
+        return -EINVAL;
 
     return rthal_virtualize_irq(&rthal_domain,
-				irq,
-				NULL,
-				NULL,
-				NULL,
-				IPIPE_PASS_MASK);
+                                irq, NULL, NULL, NULL, IPIPE_PASS_MASK);
 }
 
 /**
@@ -302,8 +295,7 @@ int rthal_irq_release (unsigned irq)
  * - Xenomai domain context.
  */
 
-int rthal_irq_host_pend (unsigned irq)
-
+int rthal_irq_host_pend(unsigned irq)
 {
     return rthal_propagate_irq(irq);
 }
@@ -345,25 +337,24 @@ int rthal_irq_host_pend (unsigned irq)
 
 #ifdef CONFIG_SMP
 
-int rthal_irq_affinity (unsigned irq, cpumask_t cpumask, cpumask_t *oldmask)
-
+int rthal_irq_affinity(unsigned irq, cpumask_t cpumask, cpumask_t *oldmask)
 {
     cpumask_t _oldmask;
 
     if (irq >= IPIPE_NR_XIRQS)
-	return -EINVAL;
+        return -EINVAL;
 
-    _oldmask = rthal_set_irq_affinity(irq,cpumask);
+    _oldmask = rthal_set_irq_affinity(irq, cpumask);
 
     if (oldmask)
-	*oldmask = _oldmask;
+        *oldmask = _oldmask;
 
     return cpus_empty(_oldmask) ? -EINVAL : 0;
 }
 
 #else /* !CONFIG_SMP */
 
-int rthal_irq_affinity (unsigned irq, cpumask_t cpumask, cpumask_t *oldmask)
+int rthal_irq_affinity(unsigned irq, cpumask_t cpumask, cpumask_t *oldmask)
 {
     return 0;
 }
@@ -393,14 +384,14 @@ int rthal_irq_affinity (unsigned irq, cpumask_t cpumask, cpumask_t *oldmask)
  * - Any domain context.
  */
 
-rthal_trap_handler_t rthal_trap_catch (rthal_trap_handler_t handler)
+rthal_trap_handler_t rthal_trap_catch(rthal_trap_handler_t handler)
 {
-    return (rthal_trap_handler_t)xchg(&rthal_trap_handler,handler);
+    return (rthal_trap_handler_t) xchg(&rthal_trap_handler, handler);
 }
 
-static void rthal_apc_handler (unsigned virq, void *arg)
+static void rthal_apc_handler(unsigned virq, void *arg)
 {
-    void (*handler)(void *), *cookie;
+    void (*handler) (void *), *cookie;
     rthal_declare_cpuid;
 
     rthal_load_cpuid();
@@ -415,17 +406,16 @@ static void rthal_apc_handler (unsigned virq, void *arg)
        invoked on the same CPU than the code which called
        rthal_apc_schedule(). */
 
-    while (rthal_apc_pending[cpuid] != 0)
-	{
-	int apc = ffnz(rthal_apc_pending[cpuid]);
-	clear_bit(apc,&rthal_apc_pending[cpuid]);
-	handler = rthal_apc_table[apc].handler;
-	cookie = rthal_apc_table[apc].cookie;
-	rthal_apc_table[apc].hits[cpuid]++;
-	rthal_spin_unlock(&rthal_apc_lock);
-	handler(cookie);
-	rthal_spin_lock(&rthal_apc_lock);
-	}
+    while (rthal_apc_pending[cpuid] != 0) {
+        int apc = ffnz(rthal_apc_pending[cpuid]);
+        clear_bit(apc, &rthal_apc_pending[cpuid]);
+        handler = rthal_apc_table[apc].handler;
+        cookie = rthal_apc_table[apc].cookie;
+        rthal_apc_table[apc].hits[cpuid]++;
+        rthal_spin_unlock(&rthal_apc_lock);
+        handler(cookie);
+        rthal_spin_lock(&rthal_apc_lock);
+    }
 
     rthal_spin_unlock(&rthal_apc_lock);
 }
@@ -443,8 +433,7 @@ static void rthal_apc_handler (unsigned virq, void *arg)
 
 static struct task_struct *rthal_apc_servers[RTHAL_NR_CPUS];
 
-static int rthal_apc_thread (void *data)
-
+static int rthal_apc_thread(void *data)
 {
     unsigned cpu = (unsigned)(unsigned long)data;
 
@@ -454,12 +443,12 @@ static int rthal_apc_thread (void *data)
     /* Use highest priority here, since some apc handlers might
        require to run as soon as possible after the request has been
        pended. */
-    rthal_setsched_root(current,SCHED_FIFO,MAX_RT_PRIO-1);
+    rthal_setsched_root(current, SCHED_FIFO, MAX_RT_PRIO - 1);
 
     while (!kthread_should_stop()) {
-	set_current_state(TASK_INTERRUPTIBLE);
-	schedule();
-	rthal_apc_handler(0);
+        set_current_state(TASK_INTERRUPTIBLE);
+        schedule();
+        rthal_apc_handler(0);
     }
 
     __set_current_state(TASK_RUNNING);
@@ -467,8 +456,7 @@ static int rthal_apc_thread (void *data)
     return 0;
 }
 
-void rthal_apc_kicker (unsigned virq, void *cookie)
-
+void rthal_apc_kicker(unsigned virq, void *cookie)
 {
     wake_up_process(rthal_apc_servers[smp_processor_id()]);
 }
@@ -522,30 +510,27 @@ void rthal_apc_kicker (unsigned virq, void *cookie)
  * - Linux domain context.
  */
 
-int rthal_apc_alloc (const char *name,
-		     void (*handler)(void *cookie),
-		     void *cookie)
+int rthal_apc_alloc(const char *name,
+                    void (*handler) (void *cookie), void *cookie)
 {
     unsigned long flags;
     int apc;
 
     if (handler == NULL)
-	return -EINVAL;
+        return -EINVAL;
 
-    rthal_spin_lock_irqsave(&rthal_apc_lock,flags);
+    rthal_spin_lock_irqsave(&rthal_apc_lock, flags);
 
-    if (rthal_apc_map != ~0)
-	{
-	apc = ffz(rthal_apc_map);
-	set_bit(apc,&rthal_apc_map);
-	rthal_apc_table[apc].handler = handler;
-	rthal_apc_table[apc].cookie = cookie;
-	rthal_apc_table[apc].name = name;
-	}
-    else
-	apc = -EBUSY;
+    if (rthal_apc_map != ~0) {
+        apc = ffz(rthal_apc_map);
+        set_bit(apc, &rthal_apc_map);
+        rthal_apc_table[apc].handler = handler;
+        rthal_apc_table[apc].cookie = cookie;
+        rthal_apc_table[apc].name = name;
+    } else
+        apc = -EBUSY;
 
-    rthal_spin_unlock_irqrestore(&rthal_apc_lock,flags);
+    rthal_spin_unlock_irqrestore(&rthal_apc_lock, flags);
 
     return apc;
 }
@@ -571,12 +556,11 @@ int rthal_apc_alloc (const char *name,
  * - Any domain context.
  */
 
-int rthal_apc_free (int apc)
-
+int rthal_apc_free(int apc)
 {
     if (apc < 0 || apc >= RTHAL_NR_APCS ||
-	!test_and_clear_bit(apc,&rthal_apc_map))
-	return -EINVAL;
+        !test_and_clear_bit(apc, &rthal_apc_map))
+        return -EINVAL;
 
     return 0;
 }
@@ -611,35 +595,30 @@ int rthal_apc_free (int apc)
  * Xenomai domain.
  */
 
-int rthal_apc_schedule (int apc)
-
+int rthal_apc_schedule(int apc)
 {
     rthal_declare_cpuid;
 
     if (apc < 0 || apc >= RTHAL_NR_APCS)
-	return -EINVAL;
+        return -EINVAL;
 
-    rthal_load_cpuid();	/* Migration would be harmless here. */
+    rthal_load_cpuid();         /* Migration would be harmless here. */
 
-    if (!test_and_set_bit(apc,&rthal_apc_pending[cpuid]))
-	{
-	rthal_schedule_irq(rthal_apc_virq);
-	return 1;
-	}
+    if (!test_and_set_bit(apc, &rthal_apc_pending[cpuid])) {
+        rthal_schedule_irq(rthal_apc_virq);
+        return 1;
+    }
 
-    return 0;	/* Already pending. */
+    return 0;                   /* Already pending. */
 }
 
 #ifdef CONFIG_PROC_FS
 
 struct proc_dir_entry *rthal_proc_root;
 
-static int hal_read_proc (char *page,
-			  char **start,
-			  off_t off,
-			  int count,
-			  int *eof,
-			  void *data)
+static int hal_read_proc(char *page,
+                         char **start,
+                         off_t off, int count, int *eof, void *data)
 {
     int len, major, minor, patchlevel;
 
@@ -653,199 +632,180 @@ static int hal_read_proc (char *page,
 
     major = ADEOS_MAJOR_NUMBER;
 
-    if (ADEOS_MINOR_NUMBER < 255)
-	{
-	--major;
-	minor = 99;
-	patchlevel = ADEOS_MINOR_NUMBER;
-	}
-    else
-	{
-	minor = 0;
-	patchlevel = 0;
-	}
+    if (ADEOS_MINOR_NUMBER < 255) {
+        --major;
+        minor = 99;
+        patchlevel = ADEOS_MINOR_NUMBER;
+    } else {
+        minor = 0;
+        patchlevel = 0;
+    }
 #endif /* CONFIG_IPIPE */
 
-    len = sprintf(page,"%d.%d-%.2d\n",major,minor,patchlevel);
+    len = sprintf(page, "%d.%d-%.2d\n", major, minor, patchlevel);
     len -= off;
-    if (len <= off + count) *eof = 1;
+    if (len <= off + count)
+        *eof = 1;
     *start = page + off;
-    if(len > count) len = count;
-    if(len < 0) len = 0;
+    if (len > count)
+        len = count;
+    if (len < 0)
+        len = 0;
 
     return len;
 }
 
-static int faults_read_proc (char *page,
-			     char **start,
-			     off_t off,
-			     int count,
-			     int *eof,
-			     void *data)
+static int faults_read_proc(char *page,
+                            char **start,
+                            off_t off, int count, int *eof, void *data)
 {
     int len = 0, cpu, trap;
     char *p = page;
 
-    p += sprintf(p,"TRAP ");
+    p += sprintf(p, "TRAP ");
 
     for_each_online_cpu(cpu) {
-	p += sprintf(p,"        CPU%d",cpu);
+        p += sprintf(p, "        CPU%d", cpu);
     }
 
     for (trap = 0; rthal_fault_labels[trap] != NULL; trap++) {
 
-	if (!*rthal_fault_labels[trap])
-	    continue;
+        if (!*rthal_fault_labels[trap])
+            continue;
 
-	p += sprintf(p,"\n%3d: ",trap);
+        p += sprintf(p, "\n%3d: ", trap);
 
-	for_each_online_cpu(cpu) {
-	    p += sprintf(p,"%12d",
-			 rthal_realtime_faults[cpu][trap]);
-	}
+        for_each_online_cpu(cpu) {
+            p += sprintf(p, "%12d", rthal_realtime_faults[cpu][trap]);
+        }
 
-	p += sprintf(p,"    (%s)",rthal_fault_labels[trap]);
+        p += sprintf(p, "    (%s)", rthal_fault_labels[trap]);
     }
 
-    p += sprintf(p,"\n");
+    p += sprintf(p, "\n");
 
     len = p - page - off;
-    if (len <= off + count) *eof = 1;
+    if (len <= off + count)
+        *eof = 1;
     *start = page + off;
-    if (len > count) len = count;
-    if (len < 0) len = 0;
+    if (len > count)
+        len = count;
+    if (len < 0)
+        len = 0;
 
     return len;
 }
 
-static int apc_read_proc (char *page,
-			     char **start,
-			     off_t off,
-			     int count,
-			     int *eof,
-			     void *data)
+static int apc_read_proc(char *page,
+                         char **start,
+                         off_t off, int count, int *eof, void *data)
 {
     int len = 0, cpu, apc;
     char *p = page;
 
-    p += sprintf(p,"APC ");
+    p += sprintf(p, "APC ");
 
     for_each_online_cpu(cpu) {
-	p += sprintf(p,"         CPU%d",cpu);
+        p += sprintf(p, "         CPU%d", cpu);
     }
 
-    for (apc = 0; apc < BITS_PER_LONG; apc++)
-	{
-	if (!test_bit(apc,&rthal_apc_map))
-	    continue;	/* Not hooked. */
+    for (apc = 0; apc < BITS_PER_LONG; apc++) {
+        if (!test_bit(apc, &rthal_apc_map))
+            continue;           /* Not hooked. */
 
-	p += sprintf(p,"\n%3d: ",apc);
+        p += sprintf(p, "\n%3d: ", apc);
 
-	for_each_online_cpu(cpu) {
-	    p += sprintf(p,"%12lu",
-			 rthal_apc_table[apc].hits[cpu]);
-	}
+        for_each_online_cpu(cpu) {
+            p += sprintf(p, "%12lu", rthal_apc_table[apc].hits[cpu]);
+        }
 
-	p += sprintf(p,"    (%s)",rthal_apc_table[apc].name);
-	}
+        p += sprintf(p, "    (%s)", rthal_apc_table[apc].name);
+    }
 
-    p += sprintf(p,"\n");
+    p += sprintf(p, "\n");
 
     len = p - page - off;
-    if (len <= off + count) *eof = 1;
+    if (len <= off + count)
+        *eof = 1;
     *start = page + off;
-    if (len > count) len = count;
-    if (len < 0) len = 0;
+    if (len > count)
+        len = count;
+    if (len < 0)
+        len = 0;
 
     return len;
 }
 
-struct proc_dir_entry *__rthal_add_proc_leaf (const char *name,
-					      read_proc_t rdproc,
-					      write_proc_t wrproc,
-					      void *data,
-					      struct proc_dir_entry *parent)
+struct proc_dir_entry *__rthal_add_proc_leaf(const char *name,
+                                             read_proc_t rdproc,
+                                             write_proc_t wrproc,
+                                             void *data,
+                                             struct proc_dir_entry *parent)
 {
     int mode = wrproc ? 0644 : 0444;
     struct proc_dir_entry *entry;
 
-    entry = create_proc_entry(name,mode,parent);
+    entry = create_proc_entry(name, mode, parent);
 
-    if (entry)
-	{
-	entry->nlink = 1;
-	entry->data = data;
-	entry->read_proc = rdproc;
-	entry->write_proc = wrproc;
-	entry->owner = THIS_MODULE;
-	}
+    if (entry) {
+        entry->nlink = 1;
+        entry->data = data;
+        entry->read_proc = rdproc;
+        entry->write_proc = wrproc;
+        entry->owner = THIS_MODULE;
+    }
 
     return entry;
 }
 
-static int rthal_proc_register (void)
-
+static int rthal_proc_register(void)
 {
-    rthal_proc_root = create_proc_entry("xenomai",S_IFDIR, 0);
+    rthal_proc_root = create_proc_entry("xenomai", S_IFDIR, 0);
 
-    if (!rthal_proc_root)
-	{
-	printk(KERN_ERR "Xenomai: Unable to initialize /proc/xenomai.\n");
-	return -1;
-        }
+    if (!rthal_proc_root) {
+        printk(KERN_ERR "Xenomai: Unable to initialize /proc/xenomai.\n");
+        return -1;
+    }
 
     rthal_proc_root->owner = THIS_MODULE;
 
-    __rthal_add_proc_leaf("hal",
-		  &hal_read_proc,
-		  NULL,
-		  NULL,
-		  rthal_proc_root);
+    __rthal_add_proc_leaf("hal", &hal_read_proc, NULL, NULL, rthal_proc_root);
 
     __rthal_add_proc_leaf("faults",
-		  &faults_read_proc,
-		  NULL,
-		  NULL,
-		  rthal_proc_root);
+                          &faults_read_proc, NULL, NULL, rthal_proc_root);
 
-    __rthal_add_proc_leaf("apc",
-		  &apc_read_proc,
-		  NULL,
-		  NULL,
-		  rthal_proc_root);
+    __rthal_add_proc_leaf("apc", &apc_read_proc, NULL, NULL, rthal_proc_root);
 
     rthal_nmi_proc_register();
 
     return 0;
 }
 
-static void rthal_proc_unregister (void)
-
+static void rthal_proc_unregister(void)
 {
     rthal_nmi_proc_unregister();
-    remove_proc_entry("hal",rthal_proc_root);
-    remove_proc_entry("faults",rthal_proc_root);
-    remove_proc_entry("apc",rthal_proc_root);
-    remove_proc_entry("xenomai",NULL);
+    remove_proc_entry("hal", rthal_proc_root);
+    remove_proc_entry("faults", rthal_proc_root);
+    remove_proc_entry("apc", rthal_proc_root);
+    remove_proc_entry("xenomai", NULL);
 }
 
 #endif /* CONFIG_PROC_FS */
 
-int rthal_init (void)
-
+int rthal_init(void)
 {
     int err;
 
 #ifdef CONFIG_SMP
     /* The nucleus also sets the same CPU affinity so that both
        modules keep their execution sequence on SMP boxen. */
-    set_cpus_allowed(current,cpumask_of_cpu(0));
+    set_cpus_allowed(current, cpumask_of_cpu(0));
 #endif /* CONFIG_SMP */
 
     err = rthal_arch_init();
 
     if (err)
-	goto out;
+        goto out;
 
     /* The arch-dependent support must have updated the frequency args
        as required. */
@@ -856,35 +816,31 @@ int rthal_init (void)
        domain. */
     rthal_apc_virq = rthal_alloc_virq();
 
-    if (!rthal_apc_virq)
-    {
+    if (!rthal_apc_virq) {
         printk(KERN_ERR "Xenomai: No virtual interrupt available.\n");
-	    err = -EBUSY;
+        err = -EBUSY;
         goto out_arch_cleanup;
     }
 
     err = rthal_virtualize_irq(rthal_current_domain,
-			       rthal_apc_virq,
-			       &rthal_apc_trampoline,
-			       NULL,
-			       NULL,
-			       IPIPE_HANDLE_MASK);
-    if (err)
-    {
+                               rthal_apc_virq,
+                               &rthal_apc_trampoline,
+                               NULL, NULL, IPIPE_HANDLE_MASK);
+    if (err) {
         printk(KERN_ERR "Xenomai: Failed to virtualize IRQ.\n");
         goto out_free_irq;
     }
-
 #ifdef CONFIG_PREEMPT_RT
     {
-    int cpu;
-    for_each_online_cpu(cpu) {
-       rthal_apc_servers[cpu] =
-	   kthread_create(&rthal_apc_thread,(void *)(unsigned long)cpu,"apc/%d",cpu);
-       if (!rthal_apc_servers[cpu])
-	   goto out_kthread_stop;
-       wake_up_process(rthal_apc_servers[cpu]);
-      }
+        int cpu;
+        for_each_online_cpu(cpu) {
+            rthal_apc_servers[cpu] =
+                kthread_create(&rthal_apc_thread, (void *)(unsigned long)cpu,
+                               "apc/%d", cpu);
+            if (!rthal_apc_servers[cpu])
+                goto out_kthread_stop;
+            wake_up_process(rthal_apc_servers[cpu]);
+        }
     }
 #endif /* CONFIG_PREEMPT_RT */
 
@@ -893,85 +849,83 @@ int rthal_init (void)
 #endif /* CONFIG_PROC_FS */
 
     err = rthal_register_domain(&rthal_domain,
-				"Xenomai",
-				RTHAL_DOMAIN_ID,
-				RTHAL_XENO_PRIO,
-				&rthal_domain_entry);
+                                "Xenomai",
+                                RTHAL_DOMAIN_ID,
+                                RTHAL_XENO_PRIO, &rthal_domain_entry);
     if (!err)
-    	rthal_init_done = 1;
-    else 
-	{
+        rthal_init_done = 1;
+    else {
 #ifdef __ipipe_pipeline_head
-	if (err == -EAGAIN)
-	    {
-	    printk(KERN_ERR "Xenomai: the real-time domain cannot head the pipeline,\n");
-	    printk(KERN_ERR "         either unload domain %s or disable CONFIG_XENO_OPT_PIPELINE_HEAD.\n",
-		   __ipipe_pipeline_head()->name);
-	    }
-	else
+        if (err == -EAGAIN) {
+            printk(KERN_ERR
+                   "Xenomai: the real-time domain cannot head the pipeline,\n");
+            printk(KERN_ERR
+                   "         either unload domain %s or disable CONFIG_XENO_OPT_PIPELINE_HEAD.\n",
+                   __ipipe_pipeline_head()->name);
+        } else
 #endif
-	    printk(KERN_ERR "Xenomai: Domain registration failed (%d).\n",err);
+            printk(KERN_ERR "Xenomai: Domain registration failed (%d).\n", err);
 
         goto out_proc_unregister;
-	}
+    }
 
     return 0;
 
-out_proc_unregister:
+  out_proc_unregister:
 #ifdef CONFIG_PROC_FS
     rthal_proc_unregister();
 #endif
 #ifdef CONFIG_PREEMPT_RT
-out_kthread_stop:
+  out_kthread_stop:
     {
-    int cpu;
-    for_each_online_cpu(cpu) {
-        if (rthal_apc_servers[cpu])
-            kthread_stop(rthal_apc_servers[cpu]);
-      }
+        int cpu;
+        for_each_online_cpu(cpu) {
+            if (rthal_apc_servers[cpu])
+                kthread_stop(rthal_apc_servers[cpu]);
+        }
     }
 #endif /* CONFIG_PREEMPT_RT */
-    rthal_virtualize_irq(rthal_current_domain,rthal_apc_virq,NULL,NULL,NULL,0);
-   
-out_free_irq:
+    rthal_virtualize_irq(rthal_current_domain, rthal_apc_virq, NULL, NULL, NULL,
+                         0);
+
+  out_free_irq:
     rthal_free_virq(rthal_apc_virq);
 
- out_arch_cleanup:
+  out_arch_cleanup:
     rthal_arch_cleanup();
 
- out:
+  out:
     return err;
 }
 
-void rthal_exit (void)
-
+void rthal_exit(void)
 {
 #ifdef CONFIG_SMP
     /* The nucleus also sets the same CPU affinity so that both
        modules keep their execution sequence on SMP boxen. */
-    set_cpus_allowed(current,cpumask_of_cpu(0));
+    set_cpus_allowed(current, cpumask_of_cpu(0));
 #endif /* CONFIG_SMP */
 
 #ifdef CONFIG_PROC_FS
     rthal_proc_unregister();
 #endif /* CONFIG_PROC_FS */
 
-    if (rthal_apc_virq)
-	{
-	rthal_virtualize_irq(rthal_current_domain,rthal_apc_virq,NULL,NULL,NULL,0);
-	rthal_free_virq(rthal_apc_virq);
+    if (rthal_apc_virq) {
+        rthal_virtualize_irq(rthal_current_domain, rthal_apc_virq, NULL, NULL,
+                             NULL, 0);
+        rthal_free_virq(rthal_apc_virq);
 #ifdef CONFIG_PREEMPT_RT
-	{
-	int cpu;
-	for_each_online_cpu(cpu) {
-            kthread_stop(rthal_apc_servers[cpu]);
-	  }
-	}
+        {
+            int cpu;
+            for_each_online_cpu(cpu) {
+                kthread_stop(rthal_apc_servers[cpu]);
+            }
+        }
 #endif /* CONFIG_PREEMPT_RT */
-	}
+    }
 
     if (rthal_init_done)
-	rthal_unregister_domain(&rthal_domain);
+        rthal_unregister_domain(&rthal_domain);
 
     rthal_arch_cleanup();
 }

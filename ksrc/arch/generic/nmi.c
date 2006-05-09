@@ -44,51 +44,45 @@ unsigned long rthal_maxlat_tsc;
 
 unsigned rthal_maxlat_us = CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX;
 
-void rthal_nmi_init (void (*emergency)(struct pt_regs *))
-
+void rthal_nmi_init(void (*emergency) (struct pt_regs *))
 {
     rthal_maxlat_tsc = rthal_llimd(rthal_maxlat_us * 1000ULL,
-				   RTHAL_NMICLK_FREQ,
-				   1000000000);
+                                   RTHAL_NMICLK_FREQ, 1000000000);
     rthal_nmi_release();
-    
+
     if (rthal_nmi_request(emergency))
-	printk("Xenomai: NMI watchdog not available.\n");
+        printk("Xenomai: NMI watchdog not available.\n");
     else
-	printk("Xenomai: NMI watchdog started (threshold=%u us).\n",
-	       rthal_maxlat_us);
+        printk("Xenomai: NMI watchdog started (threshold=%u us).\n",
+               rthal_maxlat_us);
 }
 
 #ifdef CONFIG_PROC_FS
 
 #include <linux/ctype.h>
 
-static int maxlat_read_proc (char *page,
-                             char **start,
-                             off_t off,
-                             int count,
-                             int *eof,
-                             void *data)
+static int maxlat_read_proc(char *page,
+                            char **start,
+                            off_t off, int count, int *eof, void *data)
 {
     int len;
 
     len = sprintf(page, "%u\n", rthal_maxlat_us);
     len -= off;
     if (len <= off + count)
-	*eof = 1;
+        *eof = 1;
     *start = page + off;
     if (len > count)
-	len = count;
+        len = count;
     if (len < 0)
-	len = 0;
+        len = 0;
 
     return len;
 }
 
-static int maxlat_write_proc (struct file *file,
-                              const char __user *buffer,
-                              unsigned long count,
-                              void *data)
+static int maxlat_write_proc(struct file *file,
+                             const char __user * buffer,
+                             unsigned long count, void *data)
 {
     char *end, buf[16];
     int val;
@@ -97,18 +91,17 @@ static int maxlat_write_proc (struct file *file,
     n = (count > sizeof(buf) - 1) ? sizeof(buf) - 1 : count;
 
     if (copy_from_user(buf, buffer, n))
-	return -EFAULT;
+        return -EFAULT;
 
     buf[n] = '\0';
     val = simple_strtol(buf, &end, 0);
 
     if (((*end != '\0') && !isspace(*end)) || (val < 0))
-	return -EINVAL;
+        return -EINVAL;
 
     rthal_maxlat_us = val;
     rthal_maxlat_tsc = rthal_llimd(rthal_maxlat_us * 1000ULL,
-                                   RTHAL_NMICLK_FREQ,
-                                   1000000000);
+                                   RTHAL_NMICLK_FREQ, 1000000000);
 
     return count;
 }
@@ -116,10 +109,8 @@ static int maxlat_write_proc (struct file *file,
 void rthal_nmi_proc_register(void)
 {
     __rthal_add_proc_leaf("nmi_maxlat",
-		  &maxlat_read_proc,
-		  &maxlat_write_proc,
-		  NULL,
-		  rthal_proc_root);
+                          &maxlat_read_proc,
+                          &maxlat_write_proc, NULL, rthal_proc_root);
 }
 
 void rthal_nmi_proc_unregister(void)
