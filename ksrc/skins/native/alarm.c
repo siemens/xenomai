@@ -43,44 +43,43 @@
 
 #include <native/timer.h>
 
-static int __alarm_read_proc (char *page,
-			      char **start,
-			      off_t off,
-			      int count,
-			      int *eof,
-			      void *data)
+static int __alarm_read_proc(char *page,
+                             char **start,
+                             off_t off, int count, int *eof, void *data)
 {
     RT_ALARM *alarm = (RT_ALARM *)data;
     char *p = page;
     int len;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    p += sprintf(p,"interval=%Lu:expiries=%lu\n",
-	rt_timer_tsc2ns(xntimer_interval(&alarm->timer_base)),
-	alarm->expiries);
+    p += sprintf(p, "interval=%Lu:expiries=%lu\n",
+                 rt_timer_tsc2ns(xntimer_interval(&alarm->timer_base)),
+                 alarm->expiries);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     {
-    xnpholder_t *holder = getheadpq(xnsynch_wait_queue(&alarm->synch_base));
-    
-    while (holder)
-        {
-        xnthread_t *sleeper = link2thread(holder,plink);
-        p += sprintf(p,"+%s\n",xnthread_name(sleeper));
-        holder = nextpq(xnsynch_wait_queue(&alarm->synch_base),holder);
+        xnpholder_t *holder = getheadpq(xnsynch_wait_queue(&alarm->synch_base));
+
+        while (holder) {
+            xnthread_t *sleeper = link2thread(holder, plink);
+            p += sprintf(p, "+%s\n", xnthread_name(sleeper));
+            holder = nextpq(xnsynch_wait_queue(&alarm->synch_base), holder);
         }
     }
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     len = (p - page) - off;
-    if (len <= off + count) *eof = 1;
+    if (len <= off + count)
+        *eof = 1;
     *start = page + off;
-    if(len > count) len = count;
-    if(len < 0) len = 0;
+    if (len > count)
+        len = count;
+    if (len < 0)
+        len = 0;
 
     return len;
 }
@@ -106,23 +105,20 @@ static xnpnode_t __alarm_pnode = {
 
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
-int __native_alarm_pkg_init (void)
-
+int __native_alarm_pkg_init(void)
 {
     return 0;
 }
 
-void __native_alarm_pkg_cleanup (void)
-
+void __native_alarm_pkg_cleanup(void)
 {
 }
 
-static void __alarm_trampoline (void *cookie)
-
+static void __alarm_trampoline(void *cookie)
 {
     RT_ALARM *alarm = (RT_ALARM *)cookie;
     ++alarm->expiries;
-    alarm->handler(alarm,alarm->cookie);
+    alarm->handler(alarm, alarm->cookie);
 }
 
 /**
@@ -182,26 +178,24 @@ static void __alarm_trampoline (void *cookie)
  * to unblock any thread sleeping on the rt_alarm_wait() service.
  */
 
-int rt_alarm_create (RT_ALARM *alarm,
-		     const char *name,
-		     rt_alarm_t handler,
-		     void *cookie)
+int rt_alarm_create(RT_ALARM *alarm,
+                    const char *name, rt_alarm_t handler, void *cookie)
 {
     int err = 0;
 
     if (xnpod_asynch_p())
-	return -EPERM;
+        return -EPERM;
 
-    xntimer_init(&alarm->timer_base,&__alarm_trampoline,alarm);
-    alarm->handle = 0;  /* i.e. (still) unregistered alarm. */
+    xntimer_init(&alarm->timer_base, &__alarm_trampoline, alarm);
+    alarm->handle = 0;          /* i.e. (still) unregistered alarm. */
     alarm->magic = XENO_ALARM_MAGIC;
     alarm->expiries = 0;
     alarm->handler = handler;
     alarm->cookie = cookie;
-    xnobject_copy_name(alarm->name,name);
+    xnobject_copy_name(alarm->name, name);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    xnsynch_init(&alarm->synch_base,XNSYNCH_PRIO);
+    xnsynch_init(&alarm->synch_base, XNSYNCH_PRIO);
     alarm->cpid = 0;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
@@ -210,24 +204,23 @@ int rt_alarm_create (RT_ALARM *alarm,
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
-    if (name)
-        {
-	xnpnode_t *pnode = &__alarm_pnode;
-	
-	if (!*name)
-	    {
-	    /* Since this is an anonymous object (empty name on entry)
-	       from user-space, it gets registered under an unique
-	       internal name but is not exported through /proc. */
-	    xnobject_create_name(alarm->name,sizeof(alarm->name),(void*)alarm);
-	    pnode = NULL;
-	    }
-	    
-        err = xnregistry_enter(alarm->name,alarm,&alarm->handle,pnode);
+    if (name) {
+        xnpnode_t *pnode = &__alarm_pnode;
+
+        if (!*name) {
+            /* Since this is an anonymous object (empty name on entry)
+               from user-space, it gets registered under an unique
+               internal name but is not exported through /proc. */
+            xnobject_create_name(alarm->name, sizeof(alarm->name),
+                                 (void *)alarm);
+            pnode = NULL;
+        }
+
+        err = xnregistry_enter(alarm->name, alarm, &alarm->handle, pnode);
 
         if (err)
             rt_alarm_delete(alarm);
-        }
+    }
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
     return err;
@@ -263,25 +256,23 @@ int rt_alarm_create (RT_ALARM *alarm,
  * Rescheduling: never.
  */
 
-int rt_alarm_delete (RT_ALARM *alarm)
-
+int rt_alarm_delete(RT_ALARM *alarm)
 {
     int err = 0;
     spl_t s;
 
     if (xnpod_asynch_p())
-	return -EPERM;
+        return -EPERM;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    alarm = xeno_h2obj_validate(alarm,XENO_ALARM_MAGIC,RT_ALARM);
+    alarm = xeno_h2obj_validate(alarm, XENO_ALARM_MAGIC, RT_ALARM);
 
-    if (!alarm)
-        {
-        err = xeno_handle_error(alarm,XENO_ALARM_MAGIC,RT_ALARM);
+    if (!alarm) {
+        err = xeno_handle_error(alarm, XENO_ALARM_MAGIC, RT_ALARM);
         goto unlock_and_exit;
-        }
-    
+    }
+
     xntimer_destroy(&alarm->timer_base);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
@@ -295,9 +286,9 @@ int rt_alarm_delete (RT_ALARM *alarm)
 
     xeno_mark_deleted(alarm);
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -351,28 +342,25 @@ int rt_alarm_delete (RT_ALARM *alarm)
  * nanoseconds.
  */
 
-int rt_alarm_start (RT_ALARM *alarm,
-		    RTIME value,
-		    RTIME interval)
+int rt_alarm_start(RT_ALARM *alarm, RTIME value, RTIME interval)
 {
     int err = 0;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    alarm = xeno_h2obj_validate(alarm,XENO_ALARM_MAGIC,RT_ALARM);
+    alarm = xeno_h2obj_validate(alarm, XENO_ALARM_MAGIC, RT_ALARM);
 
-    if (!alarm)
-        {
-        err = xeno_handle_error(alarm,XENO_ALARM_MAGIC,RT_ALARM);
+    if (!alarm) {
+        err = xeno_handle_error(alarm, XENO_ALARM_MAGIC, RT_ALARM);
         goto unlock_and_exit;
-        }
+    }
 
-    xntimer_start(&alarm->timer_base,value,interval);
+    xntimer_start(&alarm->timer_base, value, interval);
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -404,27 +392,25 @@ int rt_alarm_start (RT_ALARM *alarm,
  * Rescheduling: never.
  */
 
-int rt_alarm_stop (RT_ALARM *alarm)
-
+int rt_alarm_stop(RT_ALARM *alarm)
 {
     int err = 0;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    alarm = xeno_h2obj_validate(alarm,XENO_ALARM_MAGIC,RT_ALARM);
+    alarm = xeno_h2obj_validate(alarm, XENO_ALARM_MAGIC, RT_ALARM);
 
-    if (!alarm)
-        {
-        err = xeno_handle_error(alarm,XENO_ALARM_MAGIC,RT_ALARM);
+    if (!alarm) {
+        err = xeno_handle_error(alarm, XENO_ALARM_MAGIC, RT_ALARM);
         goto unlock_and_exit;
-        }
+    }
 
     xntimer_stop(&alarm->timer_base);
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -466,29 +452,27 @@ int rt_alarm_stop (RT_ALARM *alarm)
  * Rescheduling: never.
  */
 
-int rt_alarm_inquire (RT_ALARM *alarm,
-                      RT_ALARM_INFO *info)
+int rt_alarm_inquire(RT_ALARM *alarm, RT_ALARM_INFO *info)
 {
     int err = 0;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    alarm = xeno_h2obj_validate(alarm,XENO_ALARM_MAGIC,RT_ALARM);
+    alarm = xeno_h2obj_validate(alarm, XENO_ALARM_MAGIC, RT_ALARM);
 
-    if (!alarm)
-        {
-        err = xeno_handle_error(alarm,XENO_ALARM_MAGIC,RT_ALARM);
+    if (!alarm) {
+        err = xeno_handle_error(alarm, XENO_ALARM_MAGIC, RT_ALARM);
         goto unlock_and_exit;
-        }
-    
-    strcpy(info->name,alarm->name);
+    }
+
+    strcpy(info->name, alarm->name);
     info->expiration = xntimer_get_timeout(&alarm->timer_base);
     info->expiries = alarm->expiries;
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }

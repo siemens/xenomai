@@ -47,43 +47,41 @@
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
-static int __cond_read_proc (char *page,
-			     char **start,
-			     off_t off,
-			     int count,
-			     int *eof,
-			     void *data)
+static int __cond_read_proc(char *page,
+                            char **start,
+                            off_t off, int count, int *eof, void *data)
 {
     RT_COND *cond = (RT_COND *)data;
     char *p = page;
     int len;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    if (xnsynch_nsleepers(&cond->synch_base) > 0)
-	{
-	xnpholder_t *holder;
-	
-	/* Pended condvar -- dump waiters. */
+    if (xnsynch_nsleepers(&cond->synch_base) > 0) {
+        xnpholder_t *holder;
 
-	holder = getheadpq(xnsynch_wait_queue(&cond->synch_base));
+        /* Pended condvar -- dump waiters. */
 
-	while (holder)
-	    {
-	    xnthread_t *sleeper = link2thread(holder,plink);
-	    p += sprintf(p,"+%s\n",xnthread_name(sleeper));
-	    holder = nextpq(xnsynch_wait_queue(&cond->synch_base),holder);
-	    }
-	}
+        holder = getheadpq(xnsynch_wait_queue(&cond->synch_base));
 
-    xnlock_put_irqrestore(&nklock,s);
+        while (holder) {
+            xnthread_t *sleeper = link2thread(holder, plink);
+            p += sprintf(p, "+%s\n", xnthread_name(sleeper));
+            holder = nextpq(xnsynch_wait_queue(&cond->synch_base), holder);
+        }
+    }
+
+    xnlock_put_irqrestore(&nklock, s);
 
     len = (p - page) - off;
-    if (len <= off + count) *eof = 1;
+    if (len <= off + count)
+        *eof = 1;
     *start = page + off;
-    if(len > count) len = count;
-    if(len < 0) len = 0;
+    if (len > count)
+        len = count;
+    if (len < 0)
+        len = 0;
 
     return len;
 }
@@ -149,18 +147,17 @@ static xnpnode_t __cond_pnode = {
  * Rescheduling: possible.
  */
 
-int rt_cond_create (RT_COND *cond,
-		    const char *name)
+int rt_cond_create(RT_COND *cond, const char *name)
 {
     int err = 0;
 
     if (xnpod_asynch_p())
-	return -EPERM;
+        return -EPERM;
 
-    xnsynch_init(&cond->synch_base,XNSYNCH_PRIO);
-    cond->handle = 0;  /* i.e. (still) unregistered cond. */
+    xnsynch_init(&cond->synch_base, XNSYNCH_PRIO);
+    cond->handle = 0;           /* i.e. (still) unregistered cond. */
     cond->magic = XENO_COND_MAGIC;
-    xnobject_copy_name(cond->name,name);
+    xnobject_copy_name(cond->name, name);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     cond->cpid = 0;
@@ -171,24 +168,22 @@ int rt_cond_create (RT_COND *cond,
        complete objects, so that the registry cannot return handles to
        half-baked objects... */
 
-    if (name)
-        {
-	xnpnode_t *pnode = &__cond_pnode;
-	
-	if (!*name)
-	    {
-	    /* Since this is an anonymous object (empty name on entry)
-	       from user-space, it gets registered under an unique
-	       internal name but is not exported through /proc. */
-	    xnobject_create_name(cond->name,sizeof(cond->name),(void*)cond);
-	    pnode = NULL;
-	    }
-	    
-        err = xnregistry_enter(cond->name,cond,&cond->handle,pnode);
+    if (name) {
+        xnpnode_t *pnode = &__cond_pnode;
+
+        if (!*name) {
+            /* Since this is an anonymous object (empty name on entry)
+               from user-space, it gets registered under an unique
+               internal name but is not exported through /proc. */
+            xnobject_create_name(cond->name, sizeof(cond->name), (void *)cond);
+            pnode = NULL;
+        }
+
+        err = xnregistry_enter(cond->name, cond, &cond->handle, pnode);
 
         if (err)
             rt_cond_delete(cond);
-        }
+    }
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
     return err;
@@ -228,25 +223,23 @@ int rt_cond_create (RT_COND *cond,
  * Rescheduling: possible.
  */
 
-int rt_cond_delete (RT_COND *cond)
-
+int rt_cond_delete(RT_COND *cond)
 {
     int err = 0, rc;
     spl_t s;
 
     if (xnpod_asynch_p())
-	return -EPERM;
+        return -EPERM;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    cond = xeno_h2obj_validate(cond,XENO_COND_MAGIC,RT_COND);
+    cond = xeno_h2obj_validate(cond, XENO_COND_MAGIC, RT_COND);
 
-    if (!cond)
-        {
-        err = xeno_handle_error(cond,XENO_COND_MAGIC,RT_COND);
+    if (!cond) {
+        err = xeno_handle_error(cond, XENO_COND_MAGIC, RT_COND);
         goto unlock_and_exit;
-        }
-    
+    }
+
     rc = xnsynch_destroy(&cond->synch_base);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
@@ -261,9 +254,9 @@ int rt_cond_delete (RT_COND *cond)
            reschedule now. */
         xnpod_schedule();
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -298,31 +291,28 @@ int rt_cond_delete (RT_COND *cond)
  * Rescheduling: possible.
  */
 
-int rt_cond_signal (RT_COND *cond)
-
+int rt_cond_signal(RT_COND *cond)
 {
     int err = 0;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    cond = xeno_h2obj_validate(cond,XENO_COND_MAGIC,RT_COND);
+    cond = xeno_h2obj_validate(cond, XENO_COND_MAGIC, RT_COND);
 
-    if (!cond)
-        {
-        err = xeno_handle_error(cond,XENO_COND_MAGIC,RT_COND);
+    if (!cond) {
+        err = xeno_handle_error(cond, XENO_COND_MAGIC, RT_COND);
         goto unlock_and_exit;
-        }
+    }
 
-    if (thread2rtask(xnsynch_wakeup_one_sleeper(&cond->synch_base)) != NULL)
-	{
-	xnsynch_set_owner(&cond->synch_base,NULL); /* No ownership to track. */
-	xnpod_schedule();
-	}
+    if (thread2rtask(xnsynch_wakeup_one_sleeper(&cond->synch_base)) != NULL) {
+        xnsynch_set_owner(&cond->synch_base, NULL); /* No ownership to track. */
+        xnpod_schedule();
+    }
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -357,28 +347,26 @@ int rt_cond_signal (RT_COND *cond)
  * Rescheduling: possible.
  */
 
-int rt_cond_broadcast (RT_COND *cond)
-
+int rt_cond_broadcast(RT_COND *cond)
 {
     int err = 0;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    cond = xeno_h2obj_validate(cond,XENO_COND_MAGIC,RT_COND);
+    cond = xeno_h2obj_validate(cond, XENO_COND_MAGIC, RT_COND);
 
-    if (!cond)
-        {
-        err = xeno_handle_error(cond,XENO_COND_MAGIC,RT_COND);
+    if (!cond) {
+        err = xeno_handle_error(cond, XENO_COND_MAGIC, RT_COND);
         goto unlock_and_exit;
-        }
+    }
 
-    if (xnsynch_flush(&cond->synch_base,0) == XNSYNCH_RESCHED)
-	xnpod_schedule();
+    if (xnsynch_flush(&cond->synch_base, 0) == XNSYNCH_RESCHED)
+        xnpod_schedule();
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -436,48 +424,45 @@ int rt_cond_broadcast (RT_COND *cond)
  * nanoseconds.
  */
 
-int rt_cond_wait (RT_COND *cond,
-		  RT_MUTEX *mutex,
-		  RTIME timeout)
+int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 {
     RT_TASK *task;
     int err;
     spl_t s;
 
     if (timeout == TM_NONBLOCK)
-	return -EWOULDBLOCK;
-    
-    xnlock_get_irqsave(&nklock,s);
+        return -EWOULDBLOCK;
 
-    cond = xeno_h2obj_validate(cond,XENO_COND_MAGIC,RT_COND);
+    xnlock_get_irqsave(&nklock, s);
 
-    if (!cond)
-        {
-        err = xeno_handle_error(cond,XENO_COND_MAGIC,RT_COND);
+    cond = xeno_h2obj_validate(cond, XENO_COND_MAGIC, RT_COND);
+
+    if (!cond) {
+        err = xeno_handle_error(cond, XENO_COND_MAGIC, RT_COND);
         goto unlock_and_exit;
-        }
+    }
 
     err = rt_mutex_unlock(mutex);
 
     if (err)
-	goto unlock_and_exit;
+        goto unlock_and_exit;
 
     task = xeno_current_task();
 
-    xnsynch_sleep_on(&cond->synch_base,timeout);
-        
-    if (xnthread_test_flags(&task->thread_base,XNRMID))
-	err = -EIDRM; /* Condvar deleted while pending. */
-    else if (xnthread_test_flags(&task->thread_base,XNTIMEO))
-	err = -ETIMEDOUT; /* Timeout.*/
-    else if (xnthread_test_flags(&task->thread_base,XNBREAK))
-	err = -EINTR; /* Unblocked.*/
+    xnsynch_sleep_on(&cond->synch_base, timeout);
 
-    rt_mutex_lock(mutex,TM_INFINITE);
+    if (xnthread_test_flags(&task->thread_base, XNRMID))
+        err = -EIDRM;           /* Condvar deleted while pending. */
+    else if (xnthread_test_flags(&task->thread_base, XNTIMEO))
+        err = -ETIMEDOUT;       /* Timeout. */
+    else if (xnthread_test_flags(&task->thread_base, XNBREAK))
+        err = -EINTR;           /* Unblocked. */
 
- unlock_and_exit:
+    rt_mutex_lock(mutex, TM_INFINITE);
 
-    xnlock_put_irqrestore(&nklock,s);
+  unlock_and_exit:
+
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -516,28 +501,26 @@ int rt_cond_wait (RT_COND *cond,
  * Rescheduling: never.
  */
 
-int rt_cond_inquire (RT_COND *cond,
-		     RT_COND_INFO *info)
+int rt_cond_inquire(RT_COND *cond, RT_COND_INFO *info)
 {
     int err = 0;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    cond = xeno_h2obj_validate(cond,XENO_COND_MAGIC,RT_COND);
+    cond = xeno_h2obj_validate(cond, XENO_COND_MAGIC, RT_COND);
 
-    if (!cond)
-        {
-        err = xeno_handle_error(cond,XENO_COND_MAGIC,RT_COND);
+    if (!cond) {
+        err = xeno_handle_error(cond, XENO_COND_MAGIC, RT_COND);
         goto unlock_and_exit;
-        }
-    
-    strcpy(info->name,cond->name);
+    }
+
+    strcpy(info->name, cond->name);
     info->nwaiters = xnsynch_nsleepers(&cond->synch_base);
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -620,14 +603,12 @@ int rt_cond_inquire (RT_COND *cond,
  * Rescheduling: never.
  */
 
-int __native_cond_pkg_init (void)
-
+int __native_cond_pkg_init(void)
 {
     return 0;
 }
 
-void __native_cond_pkg_cleanup (void)
-
+void __native_cond_pkg_cleanup(void)
 {
 }
 
