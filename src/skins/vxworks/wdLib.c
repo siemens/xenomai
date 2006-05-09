@@ -21,9 +21,9 @@
 
 extern int __vxworks_muxid;
 
-static inline int __wdWait(WDOG_ID wdog_id, struct wind_wd_utarget_t *wdt)
+static inline int __wdWait(WDOG_ID wdog_id, wind_wd_utarget_t *wdt)
 {
-    return XENOMAI_SKINCALL1(__vxworks_muxid,
+    return XENOMAI_SKINCALL2(__vxworks_muxid,
 			     __vxworks_wd_wait,
 			     wdog_id,
 			     wdt);
@@ -31,7 +31,7 @@ static inline int __wdWait(WDOG_ID wdog_id, struct wind_wd_utarget_t *wdt)
 
 static void wdServer (WDOG_ID wdog_id)
 {
-    struct wind_wd_utarget_t wdt;
+    wind_wd_utarget_t wdt;
 
     for (;;)
 	{

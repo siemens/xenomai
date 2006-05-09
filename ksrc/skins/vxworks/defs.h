@@ -128,13 +128,6 @@ typedef struct wind_msgq {
 
 typedef struct wind_tcb wind_task_t;
 
-typedef struct wind_wd_utarget {
-
-    wind_timer_t handler;
-    long arg;
-
-} wind_wd_utarget_t;
-
 typedef struct wind_wd {
 
     unsigned magic;   /* Magic code - must be first */
