@@ -137,6 +137,13 @@ typedef struct WIND_TCB_PLACEHOLDER {
 
 typedef void (*wind_timer_t)(long);
     
+typedef struct wind_wd_utarget {
+
+    wind_timer_t handler;
+    long arg;
+
+} wind_wd_utarget_t;
+
 #if defined(__KERNEL__) || defined(__XENO_SIM__)  || defined(__XENO_UVM__)
 
 #include <nucleus/pod.h>
