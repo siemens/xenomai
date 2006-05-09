@@ -1,3 +1,7 @@
+2006-05-09  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/blackfin/patches: Upgrade to 2.6.16-1.4-01.
+
 2006-05-09  Romain Lenglet  <rlenglet@users.forge.objectweb.org>
 
 	* ksrc/nucleus/udev/rtpipe.rules, ksrc/nucleus/udev/rtheap.rules:
