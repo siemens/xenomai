@@ -29,15 +29,11 @@ SEM_ID semBCreate(int flags, SEM_B_STATE state)
     int err;
 
     err = XENOMAI_SKINCALL3(__vxworks_muxid,
-			    __vxworks_sem_bcreate,
-			    flags,
-			    state,
-			    &sem_id);
-    if (err)
-	{
-	errno = abs(err);
-	return 0;
-	}
+                            __vxworks_sem_bcreate, flags, state, &sem_id);
+    if (err) {
+        errno = abs(err);
+        return 0;
+    }
 
     return sem_id;
 }
@@ -48,15 +44,11 @@ SEM_ID semCCreate(int flags, int count)
     int err;
 
     err = XENOMAI_SKINCALL3(__vxworks_muxid,
-			    __vxworks_sem_ccreate,
-			    flags,
-			    count,
-			    &sem_id);
-    if (err)
-	{
-	errno = abs(err);
-	return 0;
-	}
+                            __vxworks_sem_ccreate, flags, count, &sem_id);
+    if (err) {
+        errno = abs(err);
+        return 0;
+    }
 
     return sem_id;
 }
@@ -67,14 +59,11 @@ SEM_ID semMCreate(int flags)
     int err;
 
     err = XENOMAI_SKINCALL2(__vxworks_muxid,
-			    __vxworks_sem_mcreate,
-			    flags,
-			    &sem_id);
-    if (err)
-	{
-	errno = abs(err);
-	return 0;
-	}
+                            __vxworks_sem_mcreate, flags, &sem_id);
+    if (err) {
+        errno = abs(err);
+        return 0;
+    }
 
     return sem_id;
 }
@@ -83,14 +72,11 @@ STATUS semDelete(SEM_ID sem_id)
 {
     int err;
 
-    err = XENOMAI_SKINCALL1(__vxworks_muxid,
-			    __vxworks_sem_delete,
-			    sem_id);
-    if (err)
-	{
-	errno = abs(err);
-	return ERROR;
-	}
+    err = XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_sem_delete, sem_id);
+    if (err) {
+        errno = abs(err);
+        return ERROR;
+    }
 
     return OK;
 }
@@ -100,14 +86,11 @@ STATUS semTake(SEM_ID sem_id, int timeout)
     int err;
 
     err = XENOMAI_SKINCALL2(__vxworks_muxid,
-			    __vxworks_sem_take,
-			    sem_id,
-			    timeout);
-    if (err)
-	{
-	errno = abs(err);
-	return ERROR;
-	}
+                            __vxworks_sem_take, sem_id, timeout);
+    if (err) {
+        errno = abs(err);
+        return ERROR;
+    }
 
     return OK;
 }
@@ -116,14 +99,11 @@ STATUS semGive(SEM_ID sem_id)
 {
     int err;
 
-    err = XENOMAI_SKINCALL1(__vxworks_muxid,
-			    __vxworks_sem_give,
-			    sem_id);
-    if (err)
-	{
-	errno = abs(err);
-	return ERROR;
-	}
+    err = XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_sem_give, sem_id);
+    if (err) {
+        errno = abs(err);
+        return ERROR;
+    }
 
     return OK;
 }
@@ -132,14 +112,11 @@ STATUS semFlush(SEM_ID sem_id)
 {
     int err;
 
-    err = XENOMAI_SKINCALL1(__vxworks_muxid,
-			    __vxworks_sem_flush,
-			    sem_id);
-    if (err)
-	{
-	errno = abs(err);
-	return ERROR;
-	}
+    err = XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_sem_flush, sem_id);
+    if (err) {
+        errno = abs(err);
+        return ERROR;
+    }
 
     return OK;
 }

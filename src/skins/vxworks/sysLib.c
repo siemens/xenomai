@@ -22,32 +22,26 @@ extern int __vxworks_muxid;
 
 void sysClkDisable(void)
 {
-    XENOMAI_SKINCALL0(__vxworks_muxid,
-		      __vxworks_sys_clkdisable);
+    XENOMAI_SKINCALL0(__vxworks_muxid, __vxworks_sys_clkdisable);
 }
 
 void sysClkEnable(void)
 {
-    XENOMAI_SKINCALL0(__vxworks_muxid,
-		      __vxworks_sys_clkenable);
+    XENOMAI_SKINCALL0(__vxworks_muxid, __vxworks_sys_clkenable);
 }
 
 int sysClkRateGet(void)
 {
     int hz;
 
-    XENOMAI_SKINCALL1(__vxworks_muxid,
-		      __vxworks_sys_clkrateget,
-		      &hz);
+    XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_sys_clkrateget, &hz);
     return hz;
 }
-    
+
 STATUS sysClkRateSet(int hz)
 {
     int err;
 
-    err = XENOMAI_SKINCALL1(__vxworks_muxid,
-			    __vxworks_sys_clkrateset,
-			    hz);
+    err = XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_sys_clkrateset, hz);
     return err ? ERROR : OK;
 }

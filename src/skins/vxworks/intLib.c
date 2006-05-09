@@ -22,6 +22,5 @@ extern int __vxworks_muxid;
 
 BOOL intContext(void)
 {
-    return XENOMAI_SKINCALL0(__vxworks_muxid,
-			     __vxworks_int_context);
+    return XENOMAI_SKINCALL0(__vxworks_muxid, __vxworks_int_context);
 }
