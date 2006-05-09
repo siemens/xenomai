@@ -99,7 +99,7 @@ void pse51_syscall_cleanup(void);
 }
 #endif
 
-#else /* !__KERNEL__ */
+#elif !defined(__XENO_SIM__)
 
 #include <nucleus/bind.h>
 
