@@ -1,5 +1,9 @@
 2006-05-09  Philippe Gerum  <rpm@xenomai.org>
 
+ 	* RELEASE: Xenomai 2.1.1 (Trundrumbalind)
+
+2006-05-09  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/arch/blackfin/patches: Upgrade to 2.6.16-1.4-01.
 
 2006-05-09  Romain Lenglet  <rlenglet@users.forge.objectweb.org>
@@ -246,7 +250,7 @@
 
 2006-03-12  Philippe Gerum  <rpm@xenomai.org>
 
- 	* RELEASE: Xenomai 2.1 (Champagne)
+ 	* RELEASE: Xenomai 2.1.0 (Champagne)
 
 2006-03-12  Philippe Gerum  <rpm@xenomai.org>
 
