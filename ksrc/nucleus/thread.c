@@ -25,50 +25,46 @@
 #include <nucleus/thread.h>
 #include <nucleus/module.h>
 
-static void xnthread_timeout_handler (void *cookie)
-
+static void xnthread_timeout_handler(void *cookie)
 {
     xnthread_t *thread = (xnthread_t *)cookie;
-    __setbits(thread->status,XNTIMEO); /* Interrupts are off. */
-    xnpod_resume_thread(thread,XNDELAY);
+    __setbits(thread->status, XNTIMEO); /* Interrupts are off. */
+    xnpod_resume_thread(thread, XNDELAY);
 }
 
-static void xnthread_periodic_handler (void *cookie)
-
+static void xnthread_periodic_handler(void *cookie)
 {
     xnthread_t *thread = (xnthread_t *)cookie;
 
-    if (xnthread_test_flags(thread,XNDELAY)) /* Prevent unwanted round-robin. */
-	xnpod_resume_thread(thread,XNDELAY);
+    if (xnthread_test_flags(thread, XNDELAY))   /* Prevent unwanted round-robin. */
+        xnpod_resume_thread(thread, XNDELAY);
 }
 
-int xnthread_init (xnthread_t *thread,
-		   const char *name,
-		   int prio,
-		   xnflags_t flags,
-		   unsigned stacksize)
+int xnthread_init(xnthread_t *thread,
+                  const char *name,
+                  int prio, xnflags_t flags, unsigned stacksize)
 {
     int err;
 
-    xntimer_init(&thread->rtimer,&xnthread_timeout_handler,thread);
-    xntimer_set_priority(&thread->rtimer,XNTIMER_HIPRIO);
-    xntimer_init(&thread->ptimer,&xnthread_periodic_handler,thread);
-    xntimer_set_priority(&thread->ptimer,XNTIMER_HIPRIO);
+    xntimer_init(&thread->rtimer, &xnthread_timeout_handler, thread);
+    xntimer_set_priority(&thread->rtimer, XNTIMER_HIPRIO);
+    xntimer_init(&thread->ptimer, &xnthread_periodic_handler, thread);
+    xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
 
     /* Setup the TCB. */
 
     xnarch_init_tcb(xnthread_archtcb(thread));
 
     if (flags & XNSHADOW)
-	stacksize = 0;
+        stacksize = 0;
     else
-	/* Align stack size on a natural word boundary */
-	stacksize &= ~(sizeof(long) - 1);
+        /* Align stack size on a natural word boundary */
+        stacksize &= ~(sizeof(long) - 1);
 
-    err = xnarch_alloc_stack(xnthread_archtcb(thread),stacksize);
+    err = xnarch_alloc_stack(xnthread_archtcb(thread), stacksize);
 
     if (err)
-	return err;
+        return err;
 
     thread->status = flags;
     thread->signals = 0;
@@ -105,22 +101,21 @@ int xnthread_init (xnthread_t *thread,
     thread->extinfo = NULL;
 
     if (name)
-	xnobject_copy_name(thread->name,name);
+        xnobject_copy_name(thread->name, name);
     else
-	snprintf(thread->name,sizeof(thread->name),"%p",thread);
+        snprintf(thread->name, sizeof(thread->name), "%p", thread);
 
     inith(&thread->glink);
     initph(&thread->rlink);
     initph(&thread->plink);
-    initpq(&thread->claimq,xnpod_get_qdir(nkpod),xnpod_get_maxprio(nkpod,0));
+    initpq(&thread->claimq, xnpod_get_qdir(nkpod), xnpod_get_maxprio(nkpod, 0));
 
     xnarch_init_display_context(thread);
 
     return 0;
 }
 
-void xnthread_cleanup_tcb (xnthread_t *thread)
-
+void xnthread_cleanup_tcb(xnthread_t *thread)
 {
     /* Does not wreck the TCB, only releases the held resources. */
 
@@ -132,81 +127,76 @@ void xnthread_cleanup_tcb (xnthread_t *thread)
     thread->magic = 0;
 }
 
-char *xnthread_symbolic_status (xnflags_t status, char *buf, int size)
+char *xnthread_symbolic_status(xnflags_t status, char *buf, int size)
 {
     static const char labels[] = XNTHREAD_SLABEL_INIT;
     xnflags_t mask;
     int pos, c;
     char *wp;
 
-    for (mask = status & ~XNTHREAD_SPARES, pos = 0, wp = buf;
-	 mask != 0 && wp - buf < size - 2; /* 1-letter label + \0 */
-	 mask >>= 1, pos++)
-	{
-	c = labels[pos];
+    for (mask = status & ~XNTHREAD_SPARES, pos = 0, wp = buf; mask != 0 && wp - buf < size - 2; /* 1-letter label + \0 */
+         mask >>= 1, pos++) {
+        c = labels[pos];
 
-	if (mask & 1)
-	    {
-	    switch (1 << pos)
-		{
-		case XNFPU:
-		
-		    /* Only output the FPU flag for kernel-based
-		       threads; Others get the same level of fp
-		       support than any user-space tasks on the
-		       current platform. */
+        if (mask & 1) {
+            switch (1 << pos) {
+                case XNFPU:
 
-		    if (status & (XNSHADOW|XNROOT))
-			continue;
+                    /* Only output the FPU flag for kernel-based
+                       threads; Others get the same level of fp
+                       support than any user-space tasks on the
+                       current platform. */
 
-		    break;
+                    if (status & (XNSHADOW | XNROOT))
+                        continue;
 
-		case XNROOT:
+                    break;
 
-		    c = 'R';	/* Always mark root as runnable. */
-		    break;
+                case XNROOT:
 
-		case XNDELAY:
+                    c = 'R';    /* Always mark root as runnable. */
+                    break;
 
-		    /* Only report genuine delays here, not timed
-		       waits for resources. */
+                case XNDELAY:
 
-		    if (status & XNPEND)
-			continue;
+                    /* Only report genuine delays here, not timed
+                       waits for resources. */
 
-		    break;
+                    if (status & XNPEND)
+                        continue;
 
-		case XNPEND:
+                    break;
 
-		    /* Report timed waits with lowercase symbol. */
+                case XNPEND:
 
-		    if (status & XNDELAY)
-			c |= 0x20;
+                    /* Report timed waits with lowercase symbol. */
 
-		    break;
+                    if (status & XNDELAY)
+                        c |= 0x20;
 
-		default:
+                    break;
 
-		    if (c == '.')
-			continue;
-		}
+                default:
 
-	    *wp++ = c;
-	    }
-	}
+                    if (c == '.')
+                        continue;
+            }
+
+            *wp++ = c;
+        }
+    }
 
     *wp = '\0';
 
     return buf;
 }
 
-int *xnthread_get_errno_location (void)
-
+int *xnthread_get_errno_location(void)
 {
     static int fallback_errno;
 
     if (unlikely(!nkpod))
-	goto fallback;
+        goto fallback;
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     if (likely(xnpod_userspace_p()))
@@ -214,9 +204,9 @@ int *xnthread_get_errno_location (void)
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
     if (likely(xnpod_primary_p()))
-	return &xnpod_current_thread()->errcode;
+        return &xnpod_current_thread()->errcode;
 
- fallback:
+  fallback:
 
     return &fallback_errno;
 }

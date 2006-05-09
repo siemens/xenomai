@@ -43,9 +43,9 @@
 
 static xnobject_t registry_obj_slots[CONFIG_XENO_OPT_REGISTRY_NRSLOTS];
 
-static xnqueue_t registry_obj_freeq; /* Free objects. */
+static xnqueue_t registry_obj_freeq;    /* Free objects. */
 
-static xnqueue_t registry_obj_busyq; /* Active and exported objects. */
+static xnqueue_t registry_obj_busyq;    /* Active and exported objects. */
 
 static u_long registry_obj_stamp;
 
@@ -65,12 +65,12 @@ static void registry_proc_callback(void *cookie);
 
 static void registry_proc_schedule(void *cookie);
 
-static xnqueue_t registry_obj_exportq; /* Objects waiting for /proc export. */
+static xnqueue_t registry_obj_exportq;  /* Objects waiting for /proc export. */
 
-static xnqueue_t registry_obj_unexportq; /* Objects waiting for /proc unexport. */
+static xnqueue_t registry_obj_unexportq;    /* Objects waiting for /proc unexport. */
 
 #ifndef CONFIG_PREEMPT_RT
-static DECLARE_WORK(registry_proc_work,&registry_proc_callback,NULL);
+static DECLARE_WORK(registry_proc_work, &registry_proc_callback, NULL);
 #endif /* !CONFIG_PREEMPT_RT */
 
 static struct proc_dir_entry *registry_proc_root;
@@ -79,12 +79,11 @@ static int registry_proc_apc;
 
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
-int xnregistry_init (void)
-
+int xnregistry_init(void)
 {
     static const u_short primes[] = {
-	101,  211,  307,  401,  503,  601,
-	701,  809,  907,  1009, 1103
+        101, 211, 307, 401, 503, 601,
+        701, 809, 907, 1009, 1103
     };
 
 #define obj_hash_max(n)			 \
@@ -94,19 +93,18 @@ int xnregistry_init (void)
     int n;
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
-    registry_proc_apc = rthal_apc_alloc("registry_export",&registry_proc_schedule,NULL);
+    registry_proc_apc =
+        rthal_apc_alloc("registry_export", &registry_proc_schedule, NULL);
 
     if (registry_proc_apc < 0)
-	return registry_proc_apc;
+        return registry_proc_apc;
 
     registry_proc_root = create_proc_entry("registry",
-					   S_IFDIR,
-					   rthal_proc_root);
-    if (!registry_proc_root)
-	{
-	rthal_apc_free(registry_proc_apc);
-	return -ENOMEM;
-	}
+                                           S_IFDIR, rthal_proc_root);
+    if (!registry_proc_root) {
+        rthal_apc_free(registry_proc_apc);
+        return -ENOMEM;
+    }
 
     initq(&registry_obj_exportq);
     initq(&registry_obj_unexportq);
@@ -116,92 +114,86 @@ int xnregistry_init (void)
     initq(&registry_obj_busyq);
     registry_obj_stamp = 0;
 
-    for (n = 0; n < CONFIG_XENO_OPT_REGISTRY_NRSLOTS; n++)
-	{
-	inith(&registry_obj_slots[n].link);
-	registry_obj_slots[n].objaddr = NULL;
-	appendq(&registry_obj_freeq,&registry_obj_slots[n].link);
-	}
+    for (n = 0; n < CONFIG_XENO_OPT_REGISTRY_NRSLOTS; n++) {
+        inith(&registry_obj_slots[n].link);
+        registry_obj_slots[n].objaddr = NULL;
+        appendq(&registry_obj_freeq, &registry_obj_slots[n].link);
+    }
 
-    getq(&registry_obj_freeq); /* Slot #0 is reserved/invalid. */
-    
-    registry_hash_entries = primes[obj_hash_max(CONFIG_XENO_OPT_REGISTRY_NRSLOTS / 100)];
-    registry_hash_table = (xnobjhash_t **)xnarch_sysalloc(sizeof(xnobjhash_t *) * registry_hash_entries);
+    getq(&registry_obj_freeq);  /* Slot #0 is reserved/invalid. */
 
-    if (!registry_hash_table)
-	{
+    registry_hash_entries =
+        primes[obj_hash_max(CONFIG_XENO_OPT_REGISTRY_NRSLOTS / 100)];
+    registry_hash_table =
+        (xnobjhash_t **) xnarch_sysalloc(sizeof(xnobjhash_t *) *
+                                         registry_hash_entries);
+
+    if (!registry_hash_table) {
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
-	rthal_apc_free(registry_proc_apc);
-	remove_proc_entry("registry",rthal_proc_root);
+        rthal_apc_free(registry_proc_apc);
+        remove_proc_entry("registry", rthal_proc_root);
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
-	return -ENOMEM;
-	}
+        return -ENOMEM;
+    }
 
     for (n = 0; n < registry_hash_entries; n++)
-	registry_hash_table[n] = NULL;
+        registry_hash_table[n] = NULL;
 
-    xnsynch_init(&registry_hash_synch,XNSYNCH_FIFO);
+    xnsynch_init(&registry_hash_synch, XNSYNCH_FIFO);
 
     return 0;
 }
 
-void xnregistry_cleanup (void)
-
+void xnregistry_cleanup(void)
 {
     xnobjhash_t *ecurr, *enext;
     int n;
 
-    for (n = 0 ; n < registry_hash_entries; n++)
-	{
-	for (ecurr = registry_hash_table[n]; ecurr; ecurr = enext)
-	    {
-	    enext = ecurr->next;
+    for (n = 0; n < registry_hash_entries; n++) {
+        for (ecurr = registry_hash_table[n]; ecurr; ecurr = enext) {
+            enext = ecurr->next;
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
-	    if (ecurr->object && ecurr->object->pnode)
-		{
-		remove_proc_entry(ecurr->object->key,
-				  ecurr->object->pnode->dir);
+            if (ecurr->object && ecurr->object->pnode) {
+                remove_proc_entry(ecurr->object->key,
+                                  ecurr->object->pnode->dir);
 
-		if (--ecurr->object->pnode->entries <= 0)
-		    {
-		    remove_proc_entry(ecurr->object->pnode->type,
-				      ecurr->object->pnode->root->dir);
-		    ecurr->object->pnode->dir = NULL;
+                if (--ecurr->object->pnode->entries <= 0) {
+                    remove_proc_entry(ecurr->object->pnode->type,
+                                      ecurr->object->pnode->root->dir);
+                    ecurr->object->pnode->dir = NULL;
 
-		    if (--ecurr->object->pnode->root->entries <= 0)
-			{
-			remove_proc_entry(ecurr->object->pnode->root->name,
-					  registry_proc_root);
-			ecurr->object->pnode->root->dir = NULL;
-			}
-		    }
-		}
+                    if (--ecurr->object->pnode->root->entries <= 0) {
+                        remove_proc_entry(ecurr->object->pnode->root->name,
+                                          registry_proc_root);
+                        ecurr->object->pnode->root->dir = NULL;
+                    }
+                }
+            }
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
-	    xnfree(ecurr);
-	    }
-	}
+            xnfree(ecurr);
+        }
+    }
 
-    xnarch_sysfree(registry_hash_table,sizeof(xnobjhash_t *) * registry_hash_entries);
+    xnarch_sysfree(registry_hash_table,
+                   sizeof(xnobjhash_t *) * registry_hash_entries);
 
     xnsynch_destroy(&registry_hash_synch);
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
     rthal_apc_free(registry_proc_apc);
     flush_scheduled_work();
-    remove_proc_entry("registry",rthal_proc_root);
+    remove_proc_entry("registry", rthal_proc_root);
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 }
 
-static inline xnobject_t *registry_validate (xnhandle_t handle)
-
+static inline xnobject_t *registry_validate(xnhandle_t handle)
 {
-    if (handle > 0 && handle < CONFIG_XENO_OPT_REGISTRY_NRSLOTS)
-	{
+    if (handle > 0 && handle < CONFIG_XENO_OPT_REGISTRY_NRSLOTS) {
         xnobject_t *object = &registry_obj_slots[handle];
-	return object->objaddr ? object : NULL;
-	}
+        return object->objaddr ? object : NULL;
+    }
 
     return NULL;
 }
@@ -219,19 +211,19 @@ static inline xnobject_t *registry_validate (xnhandle_t handle)
    like are hopefully properly handled due to a careful
    synchronization of operations across domains. */
 
-static struct proc_dir_entry *add_proc_leaf (const char *name,
-					     read_proc_t rdproc,
-					     write_proc_t wrproc,
-					     void *data,
-					     struct proc_dir_entry *parent)
+static struct proc_dir_entry *add_proc_leaf(const char *name,
+                                            read_proc_t rdproc,
+                                            write_proc_t wrproc,
+                                            void *data,
+                                            struct proc_dir_entry *parent)
 {
     int mode = wrproc ? 0644 : 0444;
     struct proc_dir_entry *entry;
 
-    entry = create_proc_entry(name,mode,parent);
+    entry = create_proc_entry(name, mode, parent);
 
     if (!entry)
-	return NULL;
+        return NULL;
 
     entry->nlink = 1;
     entry->data = data;
@@ -242,29 +234,28 @@ static struct proc_dir_entry *add_proc_leaf (const char *name,
     return entry;
 }
 
-static struct proc_dir_entry *add_proc_link (const char *name,
-					     link_proc_t *link_proc,
-					     void *data,
-					     struct proc_dir_entry *parent)
+static struct proc_dir_entry *add_proc_link(const char *name,
+                                            link_proc_t *link_proc,
+                                            void *data,
+                                            struct proc_dir_entry *parent)
 {
     struct proc_dir_entry *entry;
     char target[128];
 
-    if (link_proc(target,sizeof(target),data) <= 0)
-	return NULL;
+    if (link_proc(target, sizeof(target), data) <= 0)
+        return NULL;
 
-    entry = proc_symlink(name,parent,target);
+    entry = proc_symlink(name, parent, target);
 
     if (!entry)
-	return NULL;
+        return NULL;
 
     entry->owner = THIS_MODULE;
 
     return entry;
 }
 
-static void registry_proc_callback (void *cookie)
-
+static void registry_proc_callback(void *cookie)
 {
     struct proc_dir_entry *rdir, *dir, *entry;
     const char *root, *type;
@@ -274,124 +265,112 @@ static void registry_proc_callback (void *cookie)
     int entries;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    while ((holder = getq(&registry_obj_exportq)) != NULL)
-	{
-	object = link2xnobj(holder);
-	pnode = object->pnode;
-	type = pnode->type;
-	root = pnode->root->name;
-	++pnode->entries;
-	object->proc = XNOBJECT_PROC_RESERVED2;
-	appendq(&registry_obj_busyq,holder);
-	dir = pnode->dir;
-	rdir = pnode->root->dir;
+    while ((holder = getq(&registry_obj_exportq)) != NULL) {
+        object = link2xnobj(holder);
+        pnode = object->pnode;
+        type = pnode->type;
+        root = pnode->root->name;
+        ++pnode->entries;
+        object->proc = XNOBJECT_PROC_RESERVED2;
+        appendq(&registry_obj_busyq, holder);
+        dir = pnode->dir;
+        rdir = pnode->root->dir;
 
-	xnlock_put_irqrestore(&nklock,s);
+        xnlock_put_irqrestore(&nklock, s);
 
-	if (!rdir)
-	    {
-	    /* Create the root directory on the fly as needed. */
-	    rdir = create_proc_entry(root,S_IFDIR,registry_proc_root);
+        if (!rdir) {
+            /* Create the root directory on the fly as needed. */
+            rdir = create_proc_entry(root, S_IFDIR, registry_proc_root);
 
-	    if (!rdir)
-		{
-		object->proc = NULL;
-		goto fail;
-		}
+            if (!rdir) {
+                object->proc = NULL;
+                goto fail;
+            }
 
-	    pnode->root->dir = rdir;
-	    }
+            pnode->root->dir = rdir;
+        }
 
-	if (!dir)
-	    {
-	    /* Create the class directory on the fly as needed. */
-	    dir = create_proc_entry(type,S_IFDIR,rdir);
+        if (!dir) {
+            /* Create the class directory on the fly as needed. */
+            dir = create_proc_entry(type, S_IFDIR, rdir);
 
-	    if (!dir)
-		{
-		object->proc = NULL;
-		goto fail;
-		}
+            if (!dir) {
+                object->proc = NULL;
+                goto fail;
+            }
 
-	    pnode->dir = dir;
-	    ++pnode->root->entries;
-	    }
+            pnode->dir = dir;
+            ++pnode->root->entries;
+        }
 
-	if (pnode->link_proc)
-	    /* Entry is a symlink to somewhere else. */
-	    object->proc = add_proc_link(object->key,
-					 pnode->link_proc,
-					 object->objaddr,
-					 dir);
-	else
-	    /* Entry allows to get/set object properties. */
-	    object->proc = add_proc_leaf(object->key,
-					 pnode->read_proc,
-					 pnode->write_proc,
-					 object->objaddr,
-					 dir);
- fail:
-	xnlock_get_irqsave(&nklock,s);
+        if (pnode->link_proc)
+            /* Entry is a symlink to somewhere else. */
+            object->proc = add_proc_link(object->key,
+                                         pnode->link_proc,
+                                         object->objaddr, dir);
+        else
+            /* Entry allows to get/set object properties. */
+            object->proc = add_proc_leaf(object->key,
+                                         pnode->read_proc,
+                                         pnode->write_proc,
+                                         object->objaddr, dir);
+      fail:
+        xnlock_get_irqsave(&nklock, s);
 
-	if (!object->proc)
-	    {
-	    /* On error, pretend that the object has never been
-	       exported. */
-	    object->pnode = NULL;
-	    --pnode->entries;
-	    }
-	}
+        if (!object->proc) {
+            /* On error, pretend that the object has never been
+               exported. */
+            object->pnode = NULL;
+            --pnode->entries;
+        }
+    }
 
-    while ((holder = getq(&registry_obj_unexportq)) != NULL)
-	{
-	object = link2xnobj(holder);
-	pnode = object->pnode;
-	object->pnode = NULL;
-	entry = object->proc;
-	object->proc = NULL;
-	type = pnode->type;
-	dir = pnode->dir;
-	rdir = pnode->root->dir;
-	root = pnode->root->name;
-	entries = --pnode->entries;
+    while ((holder = getq(&registry_obj_unexportq)) != NULL) {
+        object = link2xnobj(holder);
+        pnode = object->pnode;
+        object->pnode = NULL;
+        entry = object->proc;
+        object->proc = NULL;
+        type = pnode->type;
+        dir = pnode->dir;
+        rdir = pnode->root->dir;
+        root = pnode->root->name;
+        entries = --pnode->entries;
 
-	if (entries <= 0)
-	    {
-	    pnode->dir = NULL;
+        if (entries <= 0) {
+            pnode->dir = NULL;
 
-	    if (--pnode->root->entries <= 0)
-		pnode->root->dir = NULL;
-	    }
+            if (--pnode->root->entries <= 0)
+                pnode->root->dir = NULL;
+        }
 
-	if (object->objaddr)
-	    appendq(&registry_obj_busyq,holder);
-	else
-	    /* Trap the case where we are unexporting an already
-	       unregistered object. */
-	    appendq(&registry_obj_freeq,holder);
+        if (object->objaddr)
+            appendq(&registry_obj_busyq, holder);
+        else
+            /* Trap the case where we are unexporting an already
+               unregistered object. */
+            appendq(&registry_obj_freeq, holder);
 
-	xnlock_put_irqrestore(&nklock,s);
+        xnlock_put_irqrestore(&nklock, s);
 
-	remove_proc_entry(entry->name,dir);
+        remove_proc_entry(entry->name, dir);
 
-	if (entries <= 0)
-	    {
-	    remove_proc_entry(type,rdir);
+        if (entries <= 0) {
+            remove_proc_entry(type, rdir);
 
-	    if (pnode->root->entries <= 0)
-		remove_proc_entry(root,registry_proc_root);
-	    }
+            if (pnode->root->entries <= 0)
+                remove_proc_entry(root, registry_proc_root);
+        }
 
-	xnlock_get_irqsave(&nklock,s);
-	}
+        xnlock_get_irqsave(&nklock, s);
+    }
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 }
 
-static void registry_proc_schedule (void *cookie)
-
+static void registry_proc_schedule(void *cookie)
 {
 #ifdef CONFIG_PREEMPT_RT
     /* On PREEMPT_RT, we are already running over a thread context, so
@@ -405,59 +384,51 @@ static void registry_proc_schedule (void *cookie)
 #endif /* CONFIG_PREEMPT_RT */
 }
 
-static inline void registry_proc_export (xnobject_t *object,
-					 xnpnode_t *pnode)
+static inline void registry_proc_export(xnobject_t *object, xnpnode_t *pnode)
 {
     object->proc = XNOBJECT_PROC_RESERVED1;
     object->pnode = pnode;
-    removeq(&registry_obj_busyq,&object->link);
-    appendq(&registry_obj_exportq,&object->link);
+    removeq(&registry_obj_busyq, &object->link);
+    appendq(&registry_obj_exportq, &object->link);
     rthal_apc_schedule(registry_proc_apc);
 }
 
-static inline void registry_proc_unexport (xnobject_t *object)
-
+static inline void registry_proc_unexport(xnobject_t *object)
 {
-    if (object->proc != XNOBJECT_PROC_RESERVED1)
-	{
-	removeq(&registry_obj_busyq,&object->link);
-	appendq(&registry_obj_unexportq,&object->link);
-	rthal_apc_schedule(registry_proc_apc);
-	}
-    else
-	{
-	/* Unexporting before the lower stage has had a chance to
-	   export. Move back the object to the busyq just like if no
-	   export had been requested. */
-	removeq(&registry_obj_exportq,&object->link);
-	appendq(&registry_obj_busyq,&object->link);
-	object->pnode = NULL;
-	object->proc = NULL;
-	}
+    if (object->proc != XNOBJECT_PROC_RESERVED1) {
+        removeq(&registry_obj_busyq, &object->link);
+        appendq(&registry_obj_unexportq, &object->link);
+        rthal_apc_schedule(registry_proc_apc);
+    } else {
+        /* Unexporting before the lower stage has had a chance to
+           export. Move back the object to the busyq just like if no
+           export had been requested. */
+        removeq(&registry_obj_exportq, &object->link);
+        appendq(&registry_obj_busyq, &object->link);
+        object->pnode = NULL;
+        object->proc = NULL;
+    }
 }
 
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
-static unsigned registry_hash_crunch (const char *key)
-
+static unsigned registry_hash_crunch(const char *key)
 {
     unsigned h = 0, g;
 
-#define HQON    24		/* Higher byte position */
-#define HBYTE   0xf0000000	/* Higher nibble on */
+#define HQON    24              /* Higher byte position */
+#define HBYTE   0xf0000000      /* Higher nibble on */
 
-    while (*key)
-	{
-	h = (h << 4) + *key++;
-	if ((g = (h & HBYTE)) != 0)
-	    h = (h ^ (g >> HQON)) ^ g;
-	}
+    while (*key) {
+        h = (h << 4) + *key++;
+        if ((g = (h & HBYTE)) != 0)
+            h = (h ^ (g >> HQON)) ^ g;
+    }
 
     return h % registry_hash_entries;
 }
 
-static inline int registry_hash_enter (const char *key,
-				       xnobject_t *object)
+static inline int registry_hash_enter(const char *key, xnobject_t *object)
 {
     xnobjhash_t *enew, *ecurr;
     unsigned s;
@@ -465,60 +436,54 @@ static inline int registry_hash_enter (const char *key,
     object->key = key;
     s = registry_hash_crunch(key);
 
-    for (ecurr = registry_hash_table[s]; ecurr != NULL; ecurr = ecurr->next)
-	{
-	if (ecurr->object == object || !strcmp(key,ecurr->object->key))
-	    return -EEXIST;
-	}
+    for (ecurr = registry_hash_table[s]; ecurr != NULL; ecurr = ecurr->next) {
+        if (ecurr->object == object || !strcmp(key, ecurr->object->key))
+            return -EEXIST;
+    }
 
-    enew = (xnobjhash_t *)xnmalloc(sizeof(*enew));
+    enew = (xnobjhash_t *) xnmalloc(sizeof(*enew));
 
     if (!enew)
-	return -ENOMEM;
+        return -ENOMEM;
 
     enew->object = object;
     enew->next = registry_hash_table[s];
     registry_hash_table[s] = enew;
-    
+
     return 0;
 }
 
-static inline int registry_hash_remove (xnobject_t *object)
-
+static inline int registry_hash_remove(xnobject_t *object)
 {
     unsigned s = registry_hash_crunch(object->key);
     xnobjhash_t *ecurr, *eprev;
 
     for (ecurr = registry_hash_table[s], eprev = NULL;
-	 ecurr != NULL; eprev = ecurr, ecurr = ecurr->next)
-	{
-	if (ecurr->object == object)
-	    {
-	    if (eprev)
-		eprev->next = ecurr->next;
-	    else
-		registry_hash_table[s] = ecurr->next;
+         ecurr != NULL; eprev = ecurr, ecurr = ecurr->next) {
+        if (ecurr->object == object) {
+            if (eprev)
+                eprev->next = ecurr->next;
+            else
+                registry_hash_table[s] = ecurr->next;
 
-	    xnfree(ecurr);
+            xnfree(ecurr);
 
-	    return 0;
-	    }
-	}
+            return 0;
+        }
+    }
 
     return -ESRCH;
 }
 
-static xnobject_t *registry_hash_find (const char *key)
-
+static xnobject_t *registry_hash_find(const char *key)
 {
     xnobjhash_t *ecurr;
 
     for (ecurr = registry_hash_table[registry_hash_crunch(key)];
-	 ecurr != NULL; ecurr = ecurr->next)
-	{
-	if (!strcmp(key,ecurr->object->key))
-	    return ecurr->object;
-	}
+         ecurr != NULL; ecurr = ecurr->next) {
+        if (!strcmp(key, ecurr->object->key))
+            return ecurr->object;
+    }
 
     return NULL;
 }
@@ -529,22 +494,19 @@ static inline unsigned registry_wakeup_sleepers(const char *key)
     unsigned cnt = 0;
 
     nholder = getheadpq(xnsynch_wait_queue(&registry_hash_synch));
-					
-    while ((holder = nholder) != NULL)
-	{
-	xnthread_t *sleeper = link2thread(holder,plink);
 
-	if (*key == *sleeper->registry.waitkey &&
-	    !strcmp(key, sleeper->registry.waitkey))
-	    {
-	    sleeper->registry.waitkey = NULL;
-	    nholder = xnsynch_wakeup_this_sleeper(&registry_hash_synch,holder);
-	    ++cnt;
-	    }
-	else
-	    nholder = nextpq(xnsynch_wait_queue(&registry_hash_synch),holder);
-        }
-													    
+    while ((holder = nholder) != NULL) {
+        xnthread_t *sleeper = link2thread(holder, plink);
+
+        if (*key == *sleeper->registry.waitkey &&
+            !strcmp(key, sleeper->registry.waitkey)) {
+            sleeper->registry.waitkey = NULL;
+            nholder = xnsynch_wakeup_this_sleeper(&registry_hash_synch, holder);
+            ++cnt;
+        } else
+            nholder = nextpq(xnsynch_wait_queue(&registry_hash_synch), holder);
+    }
+
     return cnt;
 }
 
@@ -595,44 +557,40 @@ static inline unsigned registry_wakeup_sleepers(const char *key)
  * Rescheduling: possible.
  */
 
-int xnregistry_enter (const char *key,
-		      void *objaddr,
-		      xnhandle_t *phandle,
-		      xnpnode_t *pnode)
+int xnregistry_enter(const char *key,
+                     void *objaddr, xnhandle_t *phandle, xnpnode_t *pnode)
 {
     xnholder_t *holder;
     xnobject_t *object;
     spl_t s;
     int err;
 
-    if (!key || !objaddr || strchr(key,'/'))
-	return -EINVAL;
+    if (!key || !objaddr || strchr(key, '/'))
+        return -EINVAL;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
     holder = getq(&registry_obj_freeq);
 
-    if (!holder)
-	{
-	err = -ENOMEM;
-	goto unlock_and_exit;
-	}
+    if (!holder) {
+        err = -ENOMEM;
+        goto unlock_and_exit;
+    }
 
     object = link2xnobj(holder);
 
-    err = registry_hash_enter(key,object);
+    err = registry_hash_enter(key, object);
 
-    if (err)
-	{
-	appendq(&registry_obj_freeq,holder);
-	goto unlock_and_exit;
-	}
+    if (err) {
+        appendq(&registry_obj_freeq, holder);
+        goto unlock_and_exit;
+    }
 
-    xnsynch_init(&object->safesynch,XNSYNCH_FIFO);
+    xnsynch_init(&object->safesynch, XNSYNCH_FIFO);
     object->objaddr = objaddr;
     object->cstamp = ++registry_obj_stamp;
     object->safelock = 0;
-    appendq(&registry_obj_busyq,holder);
+    appendq(&registry_obj_busyq, holder);
 
     /* <!> Make sure the handle is written back before the
        rescheduling takes place. */
@@ -640,20 +598,19 @@ int xnregistry_enter (const char *key,
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
     if (pnode)
-	registry_proc_export(object,pnode);
-    else
-	{
-	object->proc = NULL;
-	object->pnode = NULL;
-	}
+        registry_proc_export(object, pnode);
+    else {
+        object->proc = NULL;
+        object->pnode = NULL;
+    }
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
     if (registry_wakeup_sleepers(key))
-	xnpod_schedule();
+        xnpod_schedule();
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -717,9 +674,7 @@ int xnregistry_enter (const char *key,
  * oneshot mode, clock ticks are interpreted as nanoseconds.
  */
 
-int xnregistry_bind (const char *key,
-		     xnticks_t timeout,
-		     xnhandle_t *phandle)
+int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 {
     xnobject_t *object;
     xnthread_t *thread;
@@ -728,59 +683,53 @@ int xnregistry_bind (const char *key,
     spl_t s;
 
     if (!key)
-	return -EINVAL;
+        return -EINVAL;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
     stime = xnpod_get_time();
 
-    for (;;)
-	{
-	object = registry_hash_find(key);
+    for (;;) {
+        object = registry_hash_find(key);
 
-	if (object)
-	    {
-	    *phandle = object - registry_obj_slots;
-	    goto unlock_and_exit;
-	    }
+        if (object) {
+            *phandle = object - registry_obj_slots;
+            goto unlock_and_exit;
+        }
 
-	if (timeout == XN_NONBLOCK || xnpod_unblockable_p())
-	    {
-	    err = -EWOULDBLOCK;
-	    goto unlock_and_exit;
-	    }
+        if (timeout == XN_NONBLOCK || xnpod_unblockable_p()) {
+            err = -EWOULDBLOCK;
+            goto unlock_and_exit;
+        }
 
-	if (timeout != XN_INFINITE)
-	    {
-	    xnticks_t now = xnpod_get_time();
+        if (timeout != XN_INFINITE) {
+            xnticks_t now = xnpod_get_time();
 
-	    if (stime + timeout >= now)
-		break;
+            if (stime + timeout >= now)
+                break;
 
-	    timeout -= (now - stime);
-	    stime = now;
-	    }
+            timeout -= (now - stime);
+            stime = now;
+        }
 
-	thread = xnpod_current_thread();
-	thread->registry.waitkey = key;
-	xnsynch_sleep_on(&registry_hash_synch,timeout);
+        thread = xnpod_current_thread();
+        thread->registry.waitkey = key;
+        xnsynch_sleep_on(&registry_hash_synch, timeout);
 
-	if (xnthread_test_flags(thread,XNTIMEO))
-	    {
-	    err = -ETIMEDOUT;
-	    goto unlock_and_exit;
-	    }
+        if (xnthread_test_flags(thread, XNTIMEO)) {
+            err = -ETIMEDOUT;
+            goto unlock_and_exit;
+        }
 
-	if (xnthread_test_flags(thread,XNBREAK))
-	    {
-	    err = -EINTR;
-	    goto unlock_and_exit;
-	    }
-	}
+        if (xnthread_test_flags(thread, XNBREAK)) {
+            err = -EINTR;
+            goto unlock_and_exit;
+        }
+    }
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -810,22 +759,20 @@ int xnregistry_bind (const char *key,
  * Rescheduling: never.
  */
 
-int xnregistry_remove (xnhandle_t handle)
-
+int xnregistry_remove(xnhandle_t handle)
 {
     xnobject_t *object;
     int err = 0;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
     object = registry_validate(handle);
 
-    if (!object)
-	{
-	err = -ESRCH;
-	goto unlock_and_exit;
-	}
+    if (!object) {
+        err = -ESRCH;
+        goto unlock_and_exit;
+    }
 
     registry_hash_remove(object);
     object->objaddr = NULL;
@@ -833,25 +780,23 @@ int xnregistry_remove (xnhandle_t handle)
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
-    if (object->pnode)
-	{
-	registry_proc_unexport(object);
+    if (object->pnode) {
+        registry_proc_unexport(object);
 
-	/* Leave the update of the object queues to the work callback
-	   if it has been kicked. */
+        /* Leave the update of the object queues to the work callback
+           if it has been kicked. */
 
-	if (object->pnode)
-	    goto unlock_and_exit;
-	}
-
+        if (object->pnode)
+            goto unlock_and_exit;
+    }
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
-    removeq(&registry_obj_busyq,&object->link);
-    appendq(&registry_obj_freeq,&object->link);
+    removeq(&registry_obj_busyq, &object->link);
+    appendq(&registry_obj_freeq, &object->link);
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -909,38 +854,34 @@ int xnregistry_remove (xnhandle_t handle)
  * oneshot mode, clock ticks are interpreted as nanoseconds.
  */
 
-int xnregistry_remove_safe (xnhandle_t handle, xnticks_t timeout)
-
+int xnregistry_remove_safe(xnhandle_t handle, xnticks_t timeout)
 {
     xnobject_t *object;
     u_long cstamp;
     int err = 0;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
     object = registry_validate(handle);
 
-    if (!object)
-	{
-	err = -ESRCH;
-	goto unlock_and_exit;
-	}
+    if (!object) {
+        err = -ESRCH;
+        goto unlock_and_exit;
+    }
 
     if (object->safelock == 0)
-	goto remove;
+        goto remove;
 
-    if (timeout == XN_NONBLOCK)
-	{
-	err = -EWOULDBLOCK;
-	goto unlock_and_exit;
-	}
-	
-    if (xnpod_unblockable_p())
-	{
-	err = -EBUSY;
-	goto unlock_and_exit;
-	}
+    if (timeout == XN_NONBLOCK) {
+        err = -EWOULDBLOCK;
+        goto unlock_and_exit;
+    }
+
+    if (xnpod_unblockable_p()) {
+        err = -EBUSY;
+        goto unlock_and_exit;
+    }
 
     /*
      * The object creation stamp is here to deal with situations like this
@@ -960,38 +901,34 @@ int xnregistry_remove_safe (xnhandle_t handle, xnticks_t timeout)
 
     cstamp = object->cstamp;
 
-    do
-	{
-	xnsynch_sleep_on(&object->safesynch,timeout);
+    do {
+        xnsynch_sleep_on(&object->safesynch, timeout);
 
-	if (xnthread_test_flags(xnpod_current_thread(),XNBREAK))
-	    {
-	    err = -EINTR;
-	    goto unlock_and_exit;
-	    }
+        if (xnthread_test_flags(xnpod_current_thread(), XNBREAK)) {
+            err = -EINTR;
+            goto unlock_and_exit;
+        }
 
-	if (xnthread_test_flags(xnpod_current_thread(),XNTIMEO))
-	    {
-	    err = -ETIMEDOUT;
-	    goto unlock_and_exit;
-	    }
-	}
+        if (xnthread_test_flags(xnpod_current_thread(), XNTIMEO)) {
+            err = -ETIMEDOUT;
+            goto unlock_and_exit;
+        }
+    }
     while (object->safelock > 0);
 
-    if (object->cstamp != cstamp)
-	{
-	/* The caller should silently abort the removal process. */
-	err = -ESRCH;
-	goto unlock_and_exit;
-	}
+    if (object->cstamp != cstamp) {
+        /* The caller should silently abort the removal process. */
+        err = -ESRCH;
+        goto unlock_and_exit;
+    }
 
- remove:
+  remove:
 
     err = xnregistry_remove(handle);
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -1026,34 +963,30 @@ int xnregistry_remove_safe (xnhandle_t handle, xnticks_t timeout)
  * Rescheduling: never.
  */
 
-void *xnregistry_get (xnhandle_t handle)
-
+void *xnregistry_get(xnhandle_t handle)
 {
     xnobject_t *object;
     void *objaddr;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    if (handle == XNOBJECT_SELF)
-	{
-	objaddr = xnpod_primary_p() ? xnpod_current_thread() : NULL;
-	goto unlock_and_exit;
-	}
+    if (handle == XNOBJECT_SELF) {
+        objaddr = xnpod_primary_p()? xnpod_current_thread() : NULL;
+        goto unlock_and_exit;
+    }
 
     object = registry_validate(handle);
 
-    if (object)
-	{
-	++object->safelock;
-	objaddr = object->objaddr;
-	}
-    else
-	objaddr = NULL;
+    if (object) {
+        ++object->safelock;
+        objaddr = object->objaddr;
+    } else
+        objaddr = NULL;
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return objaddr;
 }
@@ -1090,45 +1023,40 @@ void *xnregistry_get (xnhandle_t handle)
  * some thread is currently waiting for the object to be unlocked.
  */
 
-u_long xnregistry_put (xnhandle_t handle)
-
+u_long xnregistry_put(xnhandle_t handle)
 {
     xnobject_t *object;
     u_long newlock;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    if (handle == XNOBJECT_SELF)
-	{
-	if (!xnpod_primary_p())
-	    {
-	    newlock = 0;
-	    goto unlock_and_exit;
-	    }
+    if (handle == XNOBJECT_SELF) {
+        if (!xnpod_primary_p()) {
+            newlock = 0;
+            goto unlock_and_exit;
+        }
 
-	handle = xnpod_current_thread()->registry.handle;
-	}
+        handle = xnpod_current_thread()->registry.handle;
+    }
 
     object = registry_validate(handle);
 
-    if (!object)
-	{
-	newlock = 0;
-	goto unlock_and_exit;
-	}
+    if (!object) {
+        newlock = 0;
+        goto unlock_and_exit;
+    }
 
     if ((newlock = object->safelock) > 0 &&
-	(newlock = --object->safelock) == 0 &&
-	xnsynch_nsleepers(&object->safesynch) > 0)
-	{
-	xnsynch_flush(&object->safesynch,0);
-	xnpod_schedule();
-	}
+        (newlock = --object->safelock) == 0 &&
+        xnsynch_nsleepers(&object->safesynch) > 0) {
+        xnsynch_flush(&object->safesynch, 0);
+        xnpod_schedule();
+    }
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return newlock;
 }
@@ -1161,31 +1089,29 @@ u_long xnregistry_put (xnhandle_t handle)
  * Rescheduling: never.
  */
 
-void *xnregistry_fetch (xnhandle_t handle)
-
+void *xnregistry_fetch(xnhandle_t handle)
 {
     xnobject_t *object;
     void *objaddr;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    if (handle == XNOBJECT_SELF)
-	{
-	objaddr = xnpod_primary_p() ? xnpod_current_thread() : NULL;
-	goto unlock_and_exit;
-	}
+    if (handle == XNOBJECT_SELF) {
+        objaddr = xnpod_primary_p()? xnpod_current_thread() : NULL;
+        goto unlock_and_exit;
+    }
 
     object = registry_validate(handle);
 
     if (object)
-	objaddr = object->objaddr;
+        objaddr = object->objaddr;
     else
-	objaddr = NULL;
+        objaddr = NULL;
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return objaddr;
 }
