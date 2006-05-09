@@ -29,23 +29,22 @@ pthread_key_t __native_tskey;
 
 int __native_muxid = -1;
 
-static void __flush_tsd (void *tsd)
-
+static void __flush_tsd(void *tsd)
 {
     /* Free the task descriptor allocated by rt_task_self(). */
     free(tsd);
 }
 
-static __attribute__((constructor)) void __init_xeno_interface(void)
-
+static __attribute__ ((constructor))
+void __init_xeno_interface(void)
 {
-    __native_muxid = xeno_user_skin_init(XENO_SKIN_MAGIC,"native","xeno_native");
-    
+    __native_muxid =
+        xeno_user_skin_init(XENO_SKIN_MAGIC, "native", "xeno_native");
+
     /* Allocate a TSD key for indexing self task pointers. */
 
-    if (pthread_key_create(&__native_tskey,&__flush_tsd) != 0)
-        {
-        fprintf(stderr,"Xenomai: failed to allocate new TSD key?!\n");
+    if (pthread_key_create(&__native_tskey, &__flush_tsd) != 0) {
+        fprintf(stderr, "Xenomai: failed to allocate new TSD key?!\n");
         exit(1);
-        }    
+    }
 }

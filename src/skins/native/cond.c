@@ -22,66 +22,39 @@
 
 extern int __native_muxid;
 
-int rt_cond_create (RT_COND *cond,
-		    const char *name)
+int rt_cond_create(RT_COND *cond, const char *name)
 {
-    return XENOMAI_SKINCALL2(__native_muxid,
-			     __native_cond_create,
-			     cond,
-			     name);
+    return XENOMAI_SKINCALL2(__native_muxid, __native_cond_create, cond, name);
 }
 
-int rt_cond_bind (RT_COND *cond,
-		  const char *name,
-		  RTIME timeout)
+int rt_cond_bind(RT_COND *cond, const char *name, RTIME timeout)
 {
     return XENOMAI_SKINCALL3(__native_muxid,
-			     __native_cond_bind,
-			     cond,
-			     name,
-			     &timeout);
+                             __native_cond_bind, cond, name, &timeout);
 }
 
-int rt_cond_delete (RT_COND *cond)
-
+int rt_cond_delete(RT_COND *cond)
 {
-    return XENOMAI_SKINCALL1(__native_muxid,
-			     __native_cond_delete,
-			     cond);
+    return XENOMAI_SKINCALL1(__native_muxid, __native_cond_delete, cond);
 }
 
-int rt_cond_wait (RT_COND *cond,
-		  RT_MUTEX *mutex,
-		  RTIME timeout)
+int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 {
     return XENOMAI_SKINCALL3(__native_muxid,
-			     __native_cond_wait,
-			     cond,
-			     mutex,
-			     &timeout);
+                             __native_cond_wait, cond, mutex, &timeout);
 }
 
-int rt_cond_signal (RT_COND *cond)
-
+int rt_cond_signal(RT_COND *cond)
 {
-    return XENOMAI_SKINCALL1(__native_muxid,
-			     __native_cond_signal,
-			     cond);
+    return XENOMAI_SKINCALL1(__native_muxid, __native_cond_signal, cond);
 }
 
-int rt_cond_broadcast (RT_COND *cond)
-
+int rt_cond_broadcast(RT_COND *cond)
 {
-    return XENOMAI_SKINCALL1(__native_muxid,
-			     __native_cond_broadcast,
-			     cond);
+    return XENOMAI_SKINCALL1(__native_muxid, __native_cond_broadcast, cond);
 }
 
-int rt_cond_inquire (RT_COND *cond,
-		     RT_COND_INFO *info)
+int rt_cond_inquire(RT_COND *cond, RT_COND_INFO *info)
 {
-    return XENOMAI_SKINCALL2(__native_muxid,
-			     __native_cond_inquire,
-			     cond,
-			     info);
+    return XENOMAI_SKINCALL2(__native_muxid, __native_cond_inquire, cond, info);
 }

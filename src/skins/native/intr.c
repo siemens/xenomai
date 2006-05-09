@@ -23,68 +23,40 @@
 
 extern int __native_muxid;
 
-int rt_intr_create (RT_INTR *intr,
-		    const char *name,
-		    unsigned irq,
-		    int mode)
+int rt_intr_create(RT_INTR *intr, const char *name, unsigned irq, int mode)
 {
     return XENOMAI_SKINCALL4(__native_muxid,
-			     __native_intr_create,
-			     intr,
-			     name,
-			     irq,
-			     mode);
+                             __native_intr_create, intr, name, irq, mode);
 }
 
-int rt_intr_bind (RT_INTR *intr,
-		  const char *name,
-		  RTIME timeout)
+int rt_intr_bind(RT_INTR *intr, const char *name, RTIME timeout)
 {
     return XENOMAI_SKINCALL3(__native_muxid,
-			     __native_intr_bind,
-			     intr,
-			     name,
-			     &timeout);
+                             __native_intr_bind, intr, name, &timeout);
 }
 
-int rt_intr_delete (RT_INTR *intr)
-
+int rt_intr_delete(RT_INTR *intr)
 {
-    return XENOMAI_SKINCALL1(__native_muxid,
-			     __native_intr_delete,
-			     intr);
+    return XENOMAI_SKINCALL1(__native_muxid, __native_intr_delete, intr);
 }
 
-int rt_intr_wait (RT_INTR *intr,
-		  RTIME timeout)
+int rt_intr_wait(RT_INTR *intr, RTIME timeout)
 {
     return XENOMAI_SKINCALL2(__native_muxid,
-			     __native_intr_wait,
-			     intr,
-			     &timeout);
+                             __native_intr_wait, intr, &timeout);
 }
 
-int rt_intr_enable (RT_INTR *intr)
-
+int rt_intr_enable(RT_INTR *intr)
 {
-    return XENOMAI_SKINCALL1(__native_muxid,
-			     __native_intr_enable,
-			     intr);
+    return XENOMAI_SKINCALL1(__native_muxid, __native_intr_enable, intr);
 }
 
-int rt_intr_disable (RT_INTR *intr)
-
+int rt_intr_disable(RT_INTR *intr)
 {
-    return XENOMAI_SKINCALL1(__native_muxid,
-			     __native_intr_disable,
-			     intr);
+    return XENOMAI_SKINCALL1(__native_muxid, __native_intr_disable, intr);
 }
 
-int rt_intr_inquire (RT_INTR *intr,
-		     RT_INTR_INFO *info)
+int rt_intr_inquire(RT_INTR *intr, RT_INTR_INFO *info)
 {
-    return XENOMAI_SKINCALL2(__native_muxid,
-			     __native_intr_inquire,
-			     intr,
-			     info);
+    return XENOMAI_SKINCALL2(__native_muxid, __native_intr_inquire, intr, info);
 }
