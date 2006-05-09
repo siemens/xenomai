@@ -1,3 +1,10 @@
+2006-05-09  Romain Lenglet  <rlenglet@users.forge.objectweb.org>
+
+	* ksrc/nucleus/udev/rtpipe.rules, ksrc/nucleus/udev/rtheap.rules:
+	Modified key match KERNEL= into KERNEL==, to avoid errors with
+	recent versions of Udev which are stricter about the rules syntax.
+	Removed unuseful NAME= key assignments.
+
 2006-05-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/demos/satch.c: Fix deprecated call to
