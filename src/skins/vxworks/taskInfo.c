@@ -18,66 +18,57 @@
 
 #include <stdlib.h>
 #include <errno.h>
-#include <nucleus/thread.h>	/* For status bits. */
+#include <nucleus/thread.h>     /* For status bits. */
 #include <vxworks/vxworks.h>
 
 extern int __vxworks_muxid;
 
-const char *taskName (TASK_ID task_id)
+const char *taskName(TASK_ID task_id)
 {
     static char namebuf[XNOBJECT_NAME_LEN];
     int err;
 
     err = XENOMAI_SKINCALL2(__vxworks_muxid,
-			    __vxworks_taskinfo_name,
-			    task_id,
-			    namebuf);
-    if (err)
-	{
-	errno = abs(err);
-	return NULL;
-	}
+                            __vxworks_taskinfo_name, task_id, namebuf);
+    if (err) {
+        errno = abs(err);
+        return NULL;
+    }
 
     return namebuf;
 }
 
-TASK_ID taskIdDefault (TASK_ID task_id)
+TASK_ID taskIdDefault(TASK_ID task_id)
 {
     TASK_ID ret_id;
 
     XENOMAI_SKINCALL2(__vxworks_muxid,
-		      __vxworks_taskinfo_iddfl,
-		      task_id,
-		      &ret_id);
+                      __vxworks_taskinfo_iddfl, task_id, &ret_id);
     return ret_id;
 }
 
-BOOL taskIsReady (TASK_ID task_id)
+BOOL taskIsReady(TASK_ID task_id)
 {
     unsigned long status;
     int err;
 
     err = XENOMAI_SKINCALL2(__vxworks_muxid,
-			    __vxworks_taskinfo_status,
-			    task_id,
-			    &status);
+                            __vxworks_taskinfo_status, task_id, &status);
     if (err)
-	return 0;
+        return 0;
 
     return !!(status & XNREADY);
 }
 
-BOOL taskIsSuspended (TASK_ID task_id)
+BOOL taskIsSuspended(TASK_ID task_id)
 {
     unsigned long status;
     int err;
 
     err = XENOMAI_SKINCALL2(__vxworks_muxid,
-			    __vxworks_taskinfo_status,
-			    task_id,
-			    &status);
+                            __vxworks_taskinfo_status, task_id, &status);
     if (err)
-	return 0;
+        return 0;
 
     return !!(status & XNSUSP);
 }

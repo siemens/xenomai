@@ -24,15 +24,11 @@ ULONG tickGet(void)
 {
     ULONG ticks;
 
-    XENOMAI_SKINCALL1(__vxworks_muxid,
-		      __vxworks_tick_get,
-		      &ticks);
+    XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_tick_get, &ticks);
     return ticks;
 }
 
 void tickSet(ULONG ticks)
 {
-    XENOMAI_SKINCALL1(__vxworks_muxid,
-		      __vxworks_tick_set,
-		      ticks);
+    XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_tick_set, ticks);
 }
