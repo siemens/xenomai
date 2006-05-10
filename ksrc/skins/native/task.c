@@ -360,7 +360,8 @@ int rt_task_start(RT_TASK *task, void (*entry) (void *cookie), void *cookie)
         goto unlock_and_exit;
     }
 
-    xnpod_start_thread(&task->thread_base, 0, 0, task->affinity, entry, cookie);
+    err = xnpod_start_thread(&task->thread_base, 0, 0, task->affinity, entry, cookie);
+
   unlock_and_exit:
 
     xnlock_put_irqrestore(&nklock, s);
