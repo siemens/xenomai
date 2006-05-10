@@ -94,6 +94,7 @@ void xnsynch_init(xnsynch_t *synch, xnflags_t flags)
 
     synch->status = flags & ~(XNSYNCH_CLAIMED | XNSYNCH_PENDING);
     synch->owner = NULL;
+    synch->cleanup = NULL;	/* Only works for PIP-enabled objects. */
     initpq(&synch->pendq, xnpod_get_qdir(nkpod), xnpod_get_maxprio(nkpod, 0));
     xnarch_init_display_context(synch);
 }
@@ -592,8 +593,11 @@ void xnsynch_release_all_ownerships(xnthread_t *thread)
     for (holder = getheadpq(&thread->claimq); holder != NULL; holder = nholder) {
         /* Since xnsynch_wakeup_one_sleeper() alters the claim queue,
            we need to be conservative while scanning it. */
+        xnsynch_t *synch = link2synch(holder);
         nholder = nextpq(&thread->claimq, holder);
-        xnsynch_wakeup_one_sleeper(link2synch(holder));
+        xnsynch_wakeup_one_sleeper(synch);
+	if (synch->cleanup)
+             synch->cleanup(synch);
     }
 }
 
