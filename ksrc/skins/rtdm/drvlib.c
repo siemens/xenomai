@@ -1081,29 +1081,7 @@ void rtdm_mutex_destroy(rtdm_mutex_t *mutex);
  */
 int rtdm_mutex_lock(rtdm_mutex_t *mutex)
 {
-    spl_t   s;
-    int     err = 0;
-
-
-    XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
-
-    xnlock_get_irqsave(&nklock, s);
-
-    if (testbits(mutex->synch_base.status, SYNCH_DELETED))
-        err = -EIDRM;
-    else
-        while (__test_and_set_bit(0, &mutex->locked)) {
-            xnsynch_sleep_on(&mutex->synch_base, XN_INFINITE);
-
-            if (xnthread_test_flags(xnpod_current_thread(), XNRMID)) {
-                err = -EIDRM;
-                break;
-            }
-        }
-
-    xnlock_put_irqrestore(&nklock, s);
-
-    return err;
+    return rtdm_mutex_timedlock(mutex, 0, NULL);
 }
 
 EXPORT_SYMBOL(rtdm_mutex_lock);
@@ -1129,9 +1107,6 @@ EXPORT_SYMBOL(rtdm_mutex_lock);
  * - -EWOULDBLOCK is returned if @a timeout is negative and the semaphore
  * value is currently not positive.
  *
- * - -EINTR is returned if calling task has been unblock by a signal or
- * explicitely via rtdm_task_unblock().
- *
  * - -EIDRM is returned if @a mutex has been destroyed.
  *
  * - -EPERM @e may be returned if an illegal invocation environment is
@@ -1149,7 +1124,7 @@ EXPORT_SYMBOL(rtdm_mutex_lock);
 int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, int64_t timeout,
                          rtdm_toseq_t *timeout_seq)
 {
-    xnthread_t  *thread;
+    xnthread_t  *thread = xnpod_current_thread();
     spl_t       s;
     int         err = 0;
 
@@ -1158,39 +1133,42 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, int64_t timeout,
 
     xnlock_get_irqsave(&nklock, s);
 
-    if (testbits(mutex->synch_base.status, SYNCH_DELETED))
+    if (unlikely(testbits(mutex->status, SYNCH_DELETED)))
         err = -EIDRM;
-    else
-        while (__test_and_set_bit(0, &mutex->locked)) {
-            /* non-blocking mode */
-            if (timeout < 0) {
-                err = -EWOULDBLOCK;
-                break;
-            }
-            /* timeout sequence */
-            if (timeout_seq && (timeout > 0)) {
-                timeout = *timeout_seq - xnpod_get_time();
-                if (unlikely(timeout <= 0)) {
-                    err = -ETIMEDOUT;
-                    break;
-                }
-                xnsynch_sleep_on(&mutex->synch_base, timeout);
-            }
-            /* infinite or relative timeout */
-            else
-                xnsynch_sleep_on(&mutex->synch_base, xnpod_ns2ticks(timeout));
-
-            thread = xnpod_current_thread();
-
-            if (xnthread_test_flags(thread, XNTIMEO|XNRMID)) {
-                if (xnthread_test_flags(thread, XNTIMEO))
-                    err = -ETIMEDOUT;
-                else /*  XNRMID */
-                    err = -EIDRM;
-                break;
-            }
+    else if (likely(xnsynch_owner(mutex) == NULL))
+        xnsynch_set_owner(mutex, thread);
+    else {
+        /* non-blocking mode */
+        if (timeout < 0) {
+            err = -EWOULDBLOCK;
+            goto unlock_out;
         }
 
+      restart:
+        if (timeout_seq && (timeout > 0)) {
+            /* timeout sequence */
+            timeout = *timeout_seq - xnpod_get_time();
+            if (unlikely(timeout <= 0)) {
+                err = -ETIMEDOUT;
+                goto unlock_out;
+            }
+            xnsynch_sleep_on(mutex, timeout);
+        } else {
+            /* infinite or relative timeout */
+            xnsynch_sleep_on(mutex, xnpod_ns2ticks(timeout));
+        }
+
+        if (unlikely(xnthread_test_flags(thread, XNTIMEO|XNRMID|XNBREAK))) {
+            if (xnthread_test_flags(thread, XNTIMEO))
+                err = -ETIMEDOUT;
+            else if (xnthread_test_flags(thread, XNRMID))
+                err = -EIDRM;
+            else /*  XNBREAK */
+                goto restart;
+        }
+    }
+
+  unlock_out:
     xnlock_put_irqrestore(&nklock, s);
 
     return err;
@@ -1225,8 +1203,7 @@ void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
 
     xnlock_get_irqsave(&nklock, s);
 
-    __clear_bit(0, &mutex->locked);
-    if (likely(xnsynch_wakeup_one_sleeper(&mutex->synch_base) != NULL))
+    if (unlikely(xnsynch_wakeup_one_sleeper(mutex) != NULL))
         xnpod_schedule();
 
     xnlock_put_irqrestore(&nklock, s);
