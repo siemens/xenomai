@@ -1,3 +1,7 @@
+2006-05-10  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c: Export xnshadow_send_sig().
+
 2006-05-09  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.1.1 (Trundrumbalind)

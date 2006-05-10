@@ -1898,4 +1898,5 @@ EXPORT_SYMBOL(xnshadow_unmap);
 EXPORT_SYMBOL(xnshadow_unregister_interface);
 EXPORT_SYMBOL(xnshadow_wait_barrier);
 EXPORT_SYMBOL(xnshadow_suspend);
+EXPORT_SYMBOL(xnshadow_send_sig);
 EXPORT_SYMBOL(nkgkptd);
