@@ -46,8 +46,8 @@
 #define T_NOSIG    XNASDI
 #define T_SHIELD   XNSHIELD
 #define T_WARNSW   XNTRAPSW
-#define T_PRIMARY  XNTHREAD_SPARE0
-#define T_JOINABLE XNTHREAD_SPARE1
+#define T_PRIMARY  0x00000200	/* Recycle internal bits status which */
+#define T_JOINABLE 0x00000400	/* won't be passed to the nucleus.  */
 
 /* Task hook types. */
 #define T_HOOK_START  XNHOOK_THREAD_START
