@@ -234,6 +234,10 @@ void xntimer_start(xntimer_t *timer,
 
 static inline void xntimer_stop(xntimer_t *timer)
 {
+    /* Careful: the do_timer_stop() helper is expected to preserve the
+       date field of the stopped timer, so that subsequent calls to
+       xntimer_get_timeout() would still work on such timer as
+       expected. */
     if (!testbits(timer->status,XNTIMER_DEQUEUED))
 	nktimer->do_timer_stop(timer);
 }

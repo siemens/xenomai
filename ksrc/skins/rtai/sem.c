@@ -172,6 +172,12 @@ int rt_sem_wait (SEM *sem)
 	err = SEM_ERR; /* Semaphore deleted while pending. */
     else if (xnthread_test_flags(&task->thread_base,XNBREAK))
 	err = -EINTR; /* Unblocked.*/
+    else if (sem->type == RES_SEM)
+	{
+ grab_resource:
+	sem->owner = task;
+	err = sem->count = 1; /* Initial lock. */
+	}
 
  unlock_and_exit:
 

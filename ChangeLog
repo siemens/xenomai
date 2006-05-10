@@ -1,5 +1,32 @@
 2006-05-10  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/rtai/sem.c (rt_sem_wait): Update the owner field and
+	the resource count upon return from xnsynch_sleep_on() -- this is
+	needed now that resources may be stolen away from threads while
+	the ownership is still pending.
+
+	* ksrc/skins/vrtx/mx.c (sc_mpend): Update the owner field upon
+	return from xnsynch_sleep_on() -- this is needed now that
+	resources may be stolen away from threads while the ownership is
+	still pending.
+
+	* ksrc/skins/posix/mutex.c (pse51_mutex_timedlock_break): Clear
+	the lock count upon return from xnsynch_sleep_on() -- this is
+	needed now that resources may be stolen away from threads while
+	the ownership is still pending.
+
+	* ksrc/skins/native/mutex.c (rt_mutex_lock): Make sure to put the
+	internal mutex data in sync upon return from xnsynch_sleep_on(),
+	in order to properly deal with resource stealing.
+
+	* ksrc/nucleus/synch.c (xnsynch_sleep_on): Implement resource
+	stealing against lower priority threads that have been already
+	transferred the resource ownership, but are still waiting for the
+	CPU in a ready state.
+
+	* ksrc/nucleus/pod.c (xnpod_unblock_thread): Do not raise the
+	XNBREAK condition for already awaken threads.
+
 	* include/native/task.h (T_JOINABLE): Solve conflict with CPU
 	affinity bits.
 

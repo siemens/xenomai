@@ -358,9 +358,7 @@ int rt_mutex_lock(RT_MUTEX *mutex, RTIME timeout)
 
     if (mutex->owner == NULL) {
         xnsynch_set_owner(&mutex->synch_base, &task->thread_base);
-        mutex->owner = task;
-        mutex->lockcnt = 1;
-        goto unlock_and_exit;
+        goto grab_mutex;
     }
 
     if (mutex->owner == task) {
@@ -381,6 +379,13 @@ int rt_mutex_lock(RT_MUTEX *mutex, RTIME timeout)
         err = -ETIMEDOUT;       /* Timeout. */
     else if (xnthread_test_flags(&task->thread_base, XNBREAK))
         err = -EINTR;           /* Unblocked. */
+    else {
+ grab_mutex:
+         /* xnsynch_sleep_on() might have stolen the resource, so we
+	    need to put our internal data in sync. */
+         mutex->owner = task;
+	 mutex->lockcnt = 1;
+    }
 
   unlock_and_exit:
 
