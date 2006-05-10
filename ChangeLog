@@ -1,5 +1,11 @@
 2006-05-10  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/synch.c (xnsynch_release_all_ownerships): Fire
+	cleanup handler for released objects.
+
+	* ksrc/nucleus/pod.c (xnpod_unblock_thread): Do not raise the
+	XNBREAK condition for already awaken threads.
+
 	* include/native/task.h (T_JOINABLE): Solve conflict with CPU
 	affinity bits.
 

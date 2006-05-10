@@ -65,6 +65,8 @@ typedef struct xnsynch {
 
     struct xnthread *owner; /* Thread which owns the resource */
 
+    void (*cleanup)(struct xnsynch *synch); /* Cleanup handler */
+
     XNARCH_DECL_DISPLAY_CONTEXT();
 
 } xnsynch_t;
@@ -88,6 +90,11 @@ xnsynch_flush(synch,XNRMID)
 
 static inline void xnsynch_set_owner (xnsynch_t *synch, struct xnthread *thread) {
     synch->owner = thread;
+}
+
+static inline void xnsynch_register_cleanup (xnsynch_t *synch, void (*handler)(xnsynch_t *))
+{
+    synch->cleanup = handler;
 }
 
 void xnsynch_sleep_on(xnsynch_t *synch,

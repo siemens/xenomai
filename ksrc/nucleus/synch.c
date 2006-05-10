@@ -585,8 +585,11 @@ void xnsynch_release_all_ownerships (xnthread_t *thread)
 	{
 	/* Since xnsynch_wakeup_one_sleeper() alters the claim queue,
 	   we need to be conservative while scanning it. */
+	xnsynch_t *synch = link2synch(holder);
 	nholder = nextpq(&thread->claimq,holder);
-	xnsynch_wakeup_one_sleeper(link2synch(holder));
+	xnsynch_wakeup_one_sleeper(synch);
+	if (synch->cleanup)
+             synch->cleanup(synch);
 	}
 }
 
