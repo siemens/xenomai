@@ -1,3 +1,8 @@
+2006-05-10  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/task.c (rt_task_start): Propagate error code
+	from xnpod_start_thread().
+
 2006-05-09  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.2-rc1
