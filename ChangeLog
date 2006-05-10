@@ -1,3 +1,9 @@
+2006-05-11  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/rtdm/drvlib.c, include/rtdm/rtdm_driver.h: Fixed
+	ownership management in mutex code (PI was broken) and
+	refactored the implementation.
+
 2006-05-10  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/synch.c (xnsynch_release_all_ownerships): Fire
