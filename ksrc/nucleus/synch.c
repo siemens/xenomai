@@ -207,6 +207,7 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout)
                 timeout = xnthread_timeout(thread);
                 if (timeout > 1) /* Otherwise, it's too late, time elapsed. */
                     goto redo;
+		__setbits(thread->status, XNTIMEO);
             }
         }
         else {
