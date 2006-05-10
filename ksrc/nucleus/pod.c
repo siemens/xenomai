@@ -1770,9 +1770,16 @@ int xnpod_unblock_thread (xnthread_t *thread)
 
     /* We should not clear a previous break state if this service is
        called more than once before the target thread actually
-       resumes, so we only set the bit here and never clear it. */
+       resumes, so we only set the bit here and never clear
+       it. However, we must not raise the XNBREAK bit if the target
+       thread was already awake at the time of this call, so that
+       downstream code does not get confused by some "successful but
+       interrupted syscall" condition. IOW, a break state raised here
+       must always trigger an error code downstream, and an already
+       successful syscall cannot be marked as interrupted. */
 
-    __setbits(thread->status,XNBREAK);
+    if (ret)
+	    __setbits(thread->status, XNBREAK);
 
     xnlock_put_irqrestore(&nklock,s);
 
