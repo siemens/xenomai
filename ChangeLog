@@ -1,5 +1,8 @@
 2006-05-10  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/synch.c (xnsynch_release_all_ownerships): Fire
+	cleanup handler for released objects.
+
 	* ksrc/skins/rtai/sem.c (rt_sem_wait): Update the owner field and
 	the resource count upon return from xnsynch_sleep_on() -- this is
 	needed now that resources may be stolen away from threads while
