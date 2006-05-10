@@ -193,9 +193,7 @@ void sc_mpend (int mid, unsigned long timeout, int *errp)
 
     *errp = RET_OK;
 
-    if (mx->owner == NULL)
-	mx->owner = xnpod_current_thread();
-    else
+    if (mx->owner != NULL)
 	{
 	task = vrtx_current_task();
 	task->vrtxtcb.TCBSTAT = TBSMUTEX;
@@ -211,7 +209,15 @@ void sc_mpend (int mid, unsigned long timeout, int *errp)
 	    *errp = ER_DEL; /* Mutex deleted while pending. */
 	else if (xnthread_test_flags(&task->threadbase, XNTIMEO))
 	    *errp = ER_TMO; /* Timeout.*/
+	else
+	    goto grab_mutex;
+
+	goto unlock_and_exit;
 	}
+
+ grab_mutex:
+
+    mx->owner = xnpod_current_thread();
 
  unlock_and_exit:
 

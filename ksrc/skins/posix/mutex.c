@@ -270,6 +270,8 @@ int pse51_mutex_timedlock_break (struct __shadow_mutex *shadow, xnticks_t abs_to
                         err = EINVAL;
                         break;
                         }
+
+		    mutex->count = 0;
                     }
 
             break;
