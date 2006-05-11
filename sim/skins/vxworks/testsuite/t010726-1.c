@@ -95,11 +95,11 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
 
     TEST_MARK();
 
-    TEST_CHECK_SEQUENCE(SEQ("Slicer1",40),
-                        SEQ("Slicer2",41),
-                        SEQ("Slicer3",41),
+    TEST_CHECK_SEQUENCE(SEQ("Slicer1",4),
+                        SEQ("Slicer2",4),
+                        SEQ("Slicer3",4),
                         SEQ("root",2),
-                        SEQ("Slicer1",121),
+                        SEQ("Slicer1",12),
                         SEQ("root",1),
                         END_SEQ);
 
