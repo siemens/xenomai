@@ -2,7 +2,7 @@
 
 	* ksrc/skins/rtdm/drvlib.c, include/rtdm/rtdm_driver.h: Fixed
 	ownership management in mutex code (PI was broken) and
-	refactored the implementation.
+	refactored the mutex, semaphore, and event implementation.
 
 2006-05-10  Philippe Gerum  <rpm@xenomai.org>
 
