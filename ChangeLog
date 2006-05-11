@@ -1,3 +1,8 @@
+2006-05-11  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/nucleus/shadow.c (xnshadow_ppd_get): Add support for
+	per-process data.
+
 2006-05-11  Niklaus Giger <niklaus.giger@member.fsf.org>
 
 	* ksrc/skins/vxworks/demos/satch.c: Raise task stack size to 24Kb.
