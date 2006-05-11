@@ -271,7 +271,7 @@ int pse51_mutex_timedlock_break (struct __shadow_mutex *shadow, xnticks_t abs_to
                         break;
                         }
 
-		    mutex->count = 0;
+		    mutex->count = 1;
                     }
 
             break;
