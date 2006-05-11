@@ -38,7 +38,7 @@ void tickAnnounce(void)
 static int __tickAnnounce(xnintr_t *intr)
 {
     tickAnnounce();
-    return XN_ISR_HANDLED;
+    return XN_ISR_HANDLED | XN_ISR_NOENABLE;
 }
 
 
@@ -50,7 +50,7 @@ int wind_sysclk_init(u_long init_rate)
 
 void wind_sysclk_cleanup(void)
 {
-    xnpod_stop_timer();
+    xnpod_reset_timer();	/* Back to the default timer setup. */
 }
 
 

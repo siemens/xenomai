@@ -1,3 +1,20 @@
+2006-05-11  Niklaus Giger <niklaus.giger@member.fsf.org>
+
+	* ksrc/skins/vxworks/demos/satch.c: Raise task stack size to 24Kb.
+
+2006-05-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vxworks/sysLib.c (wind_sysclk_cleanup): Reset the
+	timer instead of shutting it off.
+	
+	* ksrc/nucleus/pod.c (xnpod_start_timer): Also check the tick
+	handler address when trying to recycle the current timing setup.
+	(xnpod_reset_timer): Add reset service requesting the default
+	timing setup.
+
+	* ksrc/skins/vxworks/sysLib.c (__tickAnnounce): Add missing
+	NO_ENABLE bit to the return value.
+
 2006-05-11  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/rtdm/drvlib.c, include/rtdm/rtdm_driver.h: Fixed
