@@ -21,10 +21,10 @@
 #include <vxworks/vxworks.h>
 
 #define CONSUMER_TASK_PRI    115
-#define CONSUMER_STACK_SIZE  8192
+#define CONSUMER_STACK_SIZE  24*1024
 
 #define PRODUCER_TASK_PRI    110
-#define PRODUCER_STACK_SIZE  8192
+#define PRODUCER_STACK_SIZE  24*1024
 
 #define CONSUMER_WAIT 150
 #define PRODUCER_TRIG 40
