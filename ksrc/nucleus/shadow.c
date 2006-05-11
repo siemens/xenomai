@@ -48,6 +48,8 @@
 #include <nucleus/shadow.h>
 #include <nucleus/core.h>
 #include <nucleus/ltt.h>
+#include <nucleus/jhash.h>
+#include <nucleus/ppd.h>
 #include <asm/xenomai/features.h>
 
 int nkthrptd;
@@ -95,9 +97,146 @@ do { \
 
 static struct task_struct *switch_lock_owner[XNARCH_NR_CPUS];
 
+static xnqueue_t *xnshadow_ppd_hash;
+#define XNSHADOW_PPD_HASH_SIZE 13
+
 void xnpod_declare_iface_proc(struct xnskentry *iface);
 
 void xnpod_discard_iface_proc(struct xnskentry *iface);
+
+union xnshadow_ppd_hkey {
+    struct mm_struct *mm;
+    uint32_t val;
+};
+
+/* ppd holder with the same mm collide and are stored contiguously in the same
+   bucket, so that they can all be destroyed with only one hash lookup by
+   xnshadow_ppd_remove_mm. */
+static unsigned
+xnshadow_ppd_lookup_inner(xnqueue_t **pq,
+                          xnshadow_ppd_t **pholder,
+                          xnshadow_ppd_key_t *pkey)
+{
+    union xnshadow_ppd_hkey key = { .mm = pkey->mm };
+    unsigned bucket = jhash2(&key.val, sizeof(key)/sizeof(uint32_t), 0);
+    xnshadow_ppd_t *ppd;
+    xnholder_t *holder;
+
+    *pq = &xnshadow_ppd_hash[bucket % XNSHADOW_PPD_HASH_SIZE];
+    holder = getheadq(*pq);
+
+    if (!holder)
+        {
+        *pholder = NULL;
+        return 0;
+        }
+    
+    do 
+        {
+        ppd = link2ppd(holder);
+        holder = nextq(*pq, holder);
+        }
+    while (holder &&
+           (ppd->key.mm < pkey->mm ||
+            (ppd->key.mm == pkey->mm && ppd->key.muxid < pkey->muxid)));
+
+    if (ppd->key.mm == pkey->mm && ppd->key.muxid == pkey->muxid)
+        {
+        /* found it, return it. */
+        *pholder = ppd;
+        return 1;
+        }
+
+    /* not found, return successor for insertion. */
+    if (ppd->key.mm < pkey->mm ||
+        (ppd->key.mm == pkey->mm && ppd->key.muxid < pkey->muxid))
+        *pholder = holder ? link2ppd(holder) : NULL;
+    else
+        *pholder = ppd;
+
+    return 0;
+}
+
+static void xnshadow_ppd_insert(xnshadow_ppd_t *holder)
+{
+    xnshadow_ppd_t *next;
+    xnqueue_t *q;
+    unsigned found;
+    spl_t s;
+
+    xnlock_get_irqsave(&nklock, s);
+    found = xnshadow_ppd_lookup_inner(&q, &next, &holder->key);
+    BUG_ON(found);
+    inith(&holder->link);
+    if (next)
+        insertq(q, &next->link, &holder->link);
+    else
+        appendq(q, &holder->link);
+    xnlock_put_irqrestore(&nklock, s);
+}
+
+/* will be called by skin code, nklock locked irqs off. */
+static xnshadow_ppd_t *xnshadow_ppd_lookup(unsigned muxid, struct mm_struct *mm)
+{
+    xnshadow_ppd_t *holder;
+    xnshadow_ppd_key_t key;
+    unsigned found;
+    xnqueue_t *q;
+
+    key.muxid = muxid;
+    key.mm = mm;
+    found = xnshadow_ppd_lookup_inner(&q, &holder, &key);
+
+    if (!found)
+        return NULL;
+
+    return holder;
+}
+
+static void xnshadow_ppd_remove(xnshadow_ppd_t *holder)
+{
+    unsigned found;
+    xnqueue_t *q;
+    spl_t s;
+
+    xnlock_get_irqsave(&nklock, s);
+    found = xnshadow_ppd_lookup_inner(&q, &holder, &holder->key);
+
+    if (found)
+        removeq(q, &holder->link);
+
+    xnlock_put_irqrestore(&nklock, s);
+}
+
+static inline void xnshadow_ppd_remove_mm(struct mm_struct *mm,
+                                          void (*destructor)(xnshadow_ppd_t *))
+{
+    xnshadow_ppd_key_t key;
+    xnshadow_ppd_t *ppd;
+    xnholder_t *holder;
+    xnqueue_t *q;
+    spl_t s;
+
+    key.muxid = 0;
+    key.mm = mm;
+    xnlock_get_irqsave(&nklock, s);
+    xnshadow_ppd_lookup_inner(&q, &ppd, &key);
+
+    while (ppd && ppd->key.mm == mm)
+        {
+        holder = nextq(q, &ppd->link);
+        removeq(q, &ppd->link);
+        xnlock_put_irqrestore(&nklock, s);
+        /* releasing nklock is safe here, if we assume that no insertion for the
+           same mm will take place while we are running xnpod_remove_mm. */
+        destructor(ppd);
+
+        ppd = holder ? link2ppd(holder) : NULL;
+        xnlock_get_irqsave(&nklock, s);
+        }
+
+    xnlock_put_irqrestore(&nklock, s);
+}
 
 static inline void request_syscall_restart(xnthread_t *thread,
                                            struct pt_regs *regs)
@@ -916,6 +1055,7 @@ static int bind_to_interface(struct task_struct *curr,
                              unsigned magic,
                              u_long featdep, u_long abirev, u_long infarg)
 {
+    xnshadow_ppd_t *ppd = NULL;
     xnfeatinfo_t finfo;
     u_long featmis;
     int muxid;
@@ -981,18 +1121,42 @@ static int bind_to_interface(struct task_struct *curr,
        chance to call xnpod_init(). */
 
     if (muxtable[muxid].eventcb) {
-        int err = muxtable[muxid].eventcb(XNSHADOW_CLIENT_ATTACH);
+        xnlock_get_irqsave(&nklock, s);
 
-        if (err) {
-            xnarch_atomic_dec(&muxtable[muxid].refcnt);
-            return err;
+        ppd = xnshadow_ppd_lookup(muxid, curr->mm);
+
+        /* protect from the same process binding several time. */
+        if (!ppd) {
+            ppd = (xnshadow_ppd_t *)
+                muxtable[muxid].eventcb(XNSHADOW_CLIENT_ATTACH, curr);
+
+            if (IS_ERR(ppd)) {
+                xnarch_atomic_dec(&muxtable[muxid].refcnt);
+                xnlock_put_irqrestore(&nklock, s);
+                return PTR_ERR(ppd);
+            }
+
+            if (ppd) {
+                ppd->key.muxid = muxid;
+                ppd->key.mm = curr->mm;
+                xnshadow_ppd_insert(ppd);
+            }
         }
+
+        xnlock_put_irqrestore(&nklock, s);
     }
 
-    if (!nkpod || testbits(nkpod->status, XNPIDLE))
+    if (!nkpod || testbits(nkpod->status, XNPIDLE)) {
         /* Ok mate, but you really ought to create some pod in a way
            or another if you want me to be of some help here... */
+        if (muxtable[muxid].eventcb && ppd) {
+            xnshadow_ppd_remove(ppd);
+            muxtable[muxid].eventcb(XNSHADOW_CLIENT_DETACH, ppd);
+        }
+
+        xnarch_atomic_dec(&muxtable[muxid].refcnt);
         return -ENOSYS;
+    }
 
     return ++muxid;
 }
@@ -1640,18 +1804,45 @@ static inline void do_setsched_event(struct task_struct *p, int priority)
 
 RTHAL_DECLARE_SETSCHED_EVENT(setsched_event);
 
+static void detach_ppd(xnshadow_ppd_t *ppd)
+{
+    muxtable[xnshadow_ppd_muxid(ppd)].eventcb(XNSHADOW_CLIENT_DETACH, ppd);
+}
+
+static inline void do_cleanup_event (struct mm_struct *mm)
+{
+    xnshadow_ppd_remove_mm(mm, &detach_ppd);
+}
+
+RTHAL_DECLARE_CLEANUP_EVENT(cleanup_event);
+
 /*
  * xnshadow_register_interface() -- Register a new skin/interface.
  * NOTE: an interface can be registered without its pod being
  * necessarily active. In such a case, a lazy initialization scheme
  * can be implemented through the event callback fired upon the first
  * client binding.
+ *
+ * The event callback will be called with its first argument set to:
+ * - XNSHADOW_CLIENT_ATTACH, when a user-space process binds the interface, the
+ *   second argument being the task_struct pointer of the calling thread, the
+ *   callback may then return:
+ *   . a pointer to an xnshadow_ppd_t structure, meaning that this structure
+ *   will be attached to the calling process for this interface;
+ *   . a NULL pointer, meaning that no per-process structure should be attached
+ *   to this process for this interface;
+ *   . ERR_PTR(negative value) indicating an error, the binding process will
+ *   then abort;
+ * - XNSHADOW_DETACH, when a user-space process terminates, if a non-NULL
+ *   per-process structure is attached to the dying process, the second argument
+ *   being the pointer to the per-process data attached to the dying process.
  */
 
 int xnshadow_register_interface(const char *name,
                                 unsigned magic,
                                 int nrcalls,
-                                xnsysent_t *systab, int (*eventcb) (int))
+                                xnsysent_t *systab,
+                                void *(*eventcb)(int, void *))
 {
     int muxid;
     spl_t s;
@@ -1720,12 +1911,37 @@ int xnshadow_unregister_interface(int muxid)
     return err;
 }
 
+/**
+ * Return the per-process data attached to the calling process.
+ *
+ * This service returns the per-process data attached to the calling process for
+ * the skin whose muxid is @a muxid. It must be called with nklock locked, irqs
+ * off.
+ *
+ * See xnshadow_register_interface() documentation for information on the way to
+ * attach a per-process data to a process.
+ *
+ * @param muxid the skin muxid.
+ *
+ * @return the per-process data if the current context is a user-space process;
+ * @return NULL otherwise.
+ * 
+ */
+xnshadow_ppd_t *xnshadow_ppd_get(unsigned muxid)
+{
+    if (xnpod_userspace_p())
+        return xnshadow_ppd_lookup(muxid - 1, current->mm);
+
+    return NULL;
+}
+
 void xnshadow_grab_events(void)
 {
     rthal_catch_taskexit(&taskexit_event);
     rthal_catch_sigwake(&sigwake_event);
     rthal_catch_schedule(&schedule_event);
     rthal_catch_setsched(&setsched_event);
+    rthal_catch_cleanup(&cleanup_event);
 }
 
 void xnshadow_release_events(void)
@@ -1734,10 +1950,12 @@ void xnshadow_release_events(void)
     rthal_catch_sigwake(NULL);
     rthal_catch_schedule(NULL);
     rthal_catch_setsched(NULL);
+    rthal_catch_cleanup(NULL);
 }
 
 int xnshadow_mount(void)
 {
+    unsigned i, size;
     int cpu;
 
 #ifdef CONFIG_XENO_OPT_ISHIELD
@@ -1775,12 +1993,27 @@ int xnshadow_mount(void)
     rthal_catch_losyscall(&losyscall_event);
     rthal_catch_hisyscall(&hisyscall_event);
 
+    size = sizeof(xnqueue_t) * XNSHADOW_PPD_HASH_SIZE;
+    xnshadow_ppd_hash = (xnqueue_t *) xnarch_sysalloc(size);
+    if (!xnshadow_ppd_hash)
+        {
+        xnshadow_cleanup();
+        printk(KERN_WARNING "Xenomai: cannot allocate PPD hash table.\n");
+        return -ENOMEM;
+        }
+
+    for (i = 0; i < XNSHADOW_PPD_HASH_SIZE; i++)
+        initq(&xnshadow_ppd_hash[i]);
     return 0;
 }
 
 void xnshadow_cleanup(void)
 {
     int cpu;
+
+    if (xnshadow_ppd_hash)
+        xnarch_sysfree(xnshadow_ppd_hash,
+                       sizeof(xnqueue_t) * XNSHADOW_PPD_HASH_SIZE);
 
     rthal_catch_losyscall(NULL);
     rthal_catch_hisyscall(NULL);
@@ -1813,5 +2046,6 @@ EXPORT_SYMBOL(xnshadow_send_sig);
 EXPORT_SYMBOL(xnshadow_unregister_interface);
 EXPORT_SYMBOL(xnshadow_wait_barrier);
 EXPORT_SYMBOL(xnshadow_suspend);
+EXPORT_SYMBOL(xnshadow_ppd_get);
 EXPORT_SYMBOL(nkthrptd);
 EXPORT_SYMBOL(nkerrptd);
