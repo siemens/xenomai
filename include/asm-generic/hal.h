@@ -236,6 +236,14 @@ static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
     return RTHAL_EVENT_PROPAGATE; \
 }
 
+#define RTHAL_DECLARE_CLEANUP_EVENT(hdlr) \
+static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
+{ \
+    struct mm_struct *mm = (struct mm_struct *)data; \
+    do_##hdlr(mm);                                   \
+    return RTHAL_EVENT_PROPAGATE; \
+}
+
 #ifndef IPIPE_EVENT_SELF
 /* Some early I-pipe versions don't have this. */
 #define IPIPE_EVENT_SELF  0
@@ -255,6 +263,8 @@ static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
 #define IPIPE_WIRED_MASK  0
 #endif /* !IPIPE_WIRED_MASK */
 
+#define rthal_catch_cleanup(hdlr)         \
+    ipipe_catch_event(ipipe_root_domain,IPIPE_EVENT_CLEANUP,hdlr)
 #define rthal_catch_taskexit(hdlr)	\
     ipipe_catch_event(ipipe_root_domain,IPIPE_EVENT_EXIT,hdlr)
 #define rthal_catch_sigwake(hdlr)	\
