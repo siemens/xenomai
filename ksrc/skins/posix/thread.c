@@ -526,7 +526,7 @@ int pthread_make_periodic_np (pthread_t thread,
     start = ts2ticks_ceil(starttp);
     period = ts2ticks_ceil(periodtp);
     err = -xnpod_set_thread_periodic(&thread->threadbase, start, period);
-    
+
  unlock_and_exit:
 
     xnlock_put_irqrestore(&nklock, s);
