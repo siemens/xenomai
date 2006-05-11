@@ -422,6 +422,8 @@ int xnpod_start_timer(u_long nstick,
 
 void xnpod_stop_timer(void);
 
+int xnpod_reset_timer(void);
+
 void xnpod_shutdown(int xtype);
 
 int xnpod_init_thread(xnthread_t *thread,
