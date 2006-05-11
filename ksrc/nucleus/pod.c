@@ -307,7 +307,6 @@ int xnpod_init (xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
     char root_name[16];
     xnsched_t *sched;
     void *heapaddr;
-    u_long nstick;
     int err;
     spl_t s;
 
@@ -542,13 +541,7 @@ fail:
 
     xnarch_notify_ready();
 
-    if (module_param_value(tick_arg) >= 0)
-	/* User passed tick_arg=<count-of-ns> */
-	nstick = module_param_value(tick_arg);
-    else
-        nstick = nktickdef;
-
-    err = xnpod_start_timer(nstick,XNPOD_DEFAULT_TICKHANDLER);
+    err = xnpod_reset_timer();
     
     if (err)
 	{
@@ -3103,11 +3096,12 @@ unlock_and_exit:
     if (testbits(nkpod->status,XNTIMED))
         {
 	/* Timer is already running. */
-	if ((nstick == XN_APERIODIC_TICK && !testbits(nkpod->status,XNTMPER)) ||
-	    (nstick != XN_APERIODIC_TICK && xnpod_get_tickval() == nstick))
+	if (((nstick == XN_APERIODIC_TICK && !testbits(nkpod->status,XNTMPER)) ||
+	     (nstick != XN_APERIODIC_TICK && xnpod_get_tickval() == nstick)) &&
+	    tickhandler == nkclock.isr)
 	    err = 0;		/* Success. */
 	else
-	    /* Timing mode is incompatible: bail out. */
+	    /* Timing setup is incompatible: bail out. */
 	    err = -EBUSY;
 
         goto unlock_and_exit;
@@ -3246,6 +3240,63 @@ void xnpod_stop_timer (void)
        been called. In any case, no resource is associated with this
        object. */
     xntimer_set_aperiodic_mode();
+}
+
+/*! 
+ * \fn int xnpod_reset_timer(void)
+ * \brief Reset the system timer.
+ *
+ * Reset the system timer to its default setup. The default setup data
+ * are obtained, by order of priority, from:
+ *
+ * - the "tick_arg" module parameter when passed to the nucleus. Zero
+ * means aperiodic timing, any other value is used as the constant
+ * period to use for undergoing the periodic timing mode.
+ *
+ * - or, the value of the CONFIG_XENO_OPT_TIMING_PERIOD configuration
+ * parameter if CONFIG_XENO_OPT_TIMING_PERIODIC is also set. If the
+ * latter is unset, the aperiodic mode will be used.
+ *
+ * @return 0 is returned on success. Otherwise:
+ *
+ * - -EBUSY is returned if the timer has already been set with
+ * incompatible requirements (different mode, different period if
+ * periodic, or non-default tick handler).  xnpod_stop_timer() must be
+ * issued before xnpod_reset_timer() is called again.
+ *
+ * - -ENODEV is returned if the underlying architecture does not
+ * support the requested periodic timing.
+ *
+ * - -ENOSYS is returned if no active pod exists.
+ *
+ * Side-effect: A host timing service is started in order to relay the
+ * canonical periodical tick to the underlying architecture,
+ * regardless of the frequency used for Xenomai's system
+ * tick. This routine does not call the rescheduling procedure.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - User-space task in secondary mode
+ *
+ * Rescheduling: never.
+ */
+
+int xnpod_reset_timer(void)
+{
+    u_long nstick;
+
+    xnpod_stop_timer();
+
+    if (module_param_value(tick_arg) >= 0)
+        /* User passed tick_arg=<count-of-ns> */
+        nstick = module_param_value(tick_arg);
+    else
+        nstick = nktickdef;
+
+    return xnpod_start_timer(nstick, XNPOD_DEFAULT_TICKHANDLER);
 }
 
 /*! 
@@ -3596,6 +3647,7 @@ EXPORT_SYMBOL(xnpod_shutdown);
 EXPORT_SYMBOL(xnpod_start_thread);
 EXPORT_SYMBOL(xnpod_start_timer);
 EXPORT_SYMBOL(xnpod_stop_timer);
+EXPORT_SYMBOL(xnpod_reset_timer);
 EXPORT_SYMBOL(xnpod_suspend_thread);
 EXPORT_SYMBOL(xnpod_trap_fault);
 EXPORT_SYMBOL(xnpod_unblock_thread);
