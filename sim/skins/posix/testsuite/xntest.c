@@ -134,9 +134,9 @@ void xntest_check_seq(int next, ...)
 {
     xntest_mark_t *mark;
     xnholder_t *holder;
+    char *file, *name;
+    int line, count;
     va_list args;
-    char *name;
-    int count;
     spl_t s;
 
     va_start(args, next);
@@ -145,23 +145,32 @@ void xntest_check_seq(int next, ...)
     holder = getheadq(&marks_q);
 
     while(next) {
+        file = va_arg(args,char *);
+        line = va_arg(args,int);
         name = va_arg(args,char *);
         count = va_arg(args,int);
         ++tests;
         if(holder == NULL) {
-            xnarch_printf("Expected sequence: SEQ(\"%s\",%d); "
-                          "reached end of recorded sequence.\n", name, count);
+            xnarch_printf("%s:%d: Expected sequence: SEQ(\"%s\",%d); "
+                          "reached end of recorded sequence.\n",
+                          file, line, name, count);
             ++test_failures;
         } else {
             mark = link2mark(holder);
 
             if(strings_differ(mark->threadname, name) || mark->count != count ) {
-                xnarch_printf("Expected sequence: SEQ(\"%s\",%d); "
+                xnarch_printf("%s:%d: Expected sequence: SEQ(\"%s\",%d); "
                               "got SEQ(\"%s\",%d)\n",
-                              name, count, mark->threadname, mark->count);
+                              file,
+                              line,
+                              name,
+                              count,
+                              mark->threadname,
+                              mark->count);
                 ++test_failures;
             } else
-                xnarch_printf("Correct sequence: SEQ(\"%s\",%d)\n", name, count);
+                xnarch_printf("%s:%d Correct sequence: SEQ(\"%s\",%d)\n",
+                              file, line, name, count);
 
             holder = nextq(&marks_q, holder);
         }

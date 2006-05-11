@@ -37,7 +37,7 @@ do {                                                                    \
 
 #define TEST_CHECK_SEQUENCE xntest_check_seq
 
-#define SEQ(name, count) 1, name, count
+#define SEQ(name, count) 1, __FILE__, __LINE__, name, count
 
 #define END_SEQ (0)
 
