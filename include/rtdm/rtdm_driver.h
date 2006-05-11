@@ -920,14 +920,16 @@ static inline void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, int64_t timeout)
 /* --- event services --- */
 
 typedef struct {
-    unsigned long                   pending;
     xnsynch_t                       synch_base;
 } rtdm_event_t;
 
+#define RTDM_EVENT_PENDING          XNSYNCH_SPARE1
+
 static inline void rtdm_event_init(rtdm_event_t *event, unsigned long pending)
 {
-    event->pending = pending;
     xnsynch_init(&event->synch_base, XNSYNCH_PRIO);
+    if (pending)
+        xnsynch_set_flags(&event->synch_base, RTDM_EVENT_PENDING);
 }
 
 void _rtdm_synch_flush(xnsynch_t *synch, unsigned long reason);
@@ -947,10 +949,7 @@ static inline void rtdm_event_pulse(rtdm_event_t *event)
     _rtdm_synch_flush(&event->synch_base, 0);
 }
 
-static inline void rtdm_event_clear(rtdm_event_t *event)
-{
-    event->pending = 0;
-}
+void rtdm_event_clear(rtdm_event_t *event);
 
 
 /* --- semaphore services --- */
@@ -979,22 +978,31 @@ void rtdm_sem_up(rtdm_sem_t *sem);
 
 /* --- mutex services --- */
 
-typedef xnsynch_t                   rtdm_mutex_t;
+typedef struct {
+    xnsynch_t                       synch_base;
+} rtdm_mutex_t;
 
 static inline void rtdm_mutex_init(rtdm_mutex_t *mutex)
 {
-    xnsynch_init(mutex, XNSYNCH_PRIO|XNSYNCH_PIP);
+    xnsynch_init(&mutex->synch_base, XNSYNCH_PRIO|XNSYNCH_PIP);
 }
 
 static inline void rtdm_mutex_destroy(rtdm_mutex_t *mutex)
 {
-    _rtdm_synch_flush(mutex, XNRMID);
+    _rtdm_synch_flush(&mutex->synch_base, XNRMID);
 }
 
 int rtdm_mutex_lock(rtdm_mutex_t *mutex);
 int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, int64_t timeout,
                          rtdm_toseq_t *timeout_seq);
-void rtdm_mutex_unlock(rtdm_mutex_t *mutex);
+
+static inline void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
+{
+    XENO_ASSERT(RTDM, !xnpod_asynch_p(), return;);
+
+    if (unlikely(xnsynch_wakeup_one_sleeper(&mutex->synch_base)))
+        xnpod_schedule();
+}
 
 
 /* --- utility functions --- */
