@@ -157,7 +157,7 @@ xnshadow_ppd_lookup_inner(xnqueue_t **pq,
     return 0;
 }
 
-static void xnshadow_ppd_insert(xnshadow_ppd_t *holder)
+static int xnshadow_ppd_insert(xnshadow_ppd_t *holder)
 {
     xnshadow_ppd_t *next;
     xnqueue_t *q;
@@ -166,13 +166,20 @@ static void xnshadow_ppd_insert(xnshadow_ppd_t *holder)
 
     xnlock_get_irqsave(&nklock, s);
     found = xnshadow_ppd_lookup_inner(&q, &next, &holder->key);
-    BUG_ON(found);
+    if (found)
+        {
+        xnlock_put_irqrestore(&nklock, s);
+        return -EBUSY;
+        }
+
     inith(&holder->link);
     if (next)
         insertq(q, &next->link, &holder->link);
     else
         appendq(q, &holder->link);
     xnlock_put_irqrestore(&nklock, s);
+
+    return 0;
 }
 
 /* will be called by skin code, nklock locked irqs off. */
@@ -1127,29 +1134,31 @@ static int bind_to_interface(struct task_struct *curr,
        chance to call xnpod_init(). */
 
     if (muxtable[muxid].eventcb) {
+
         xnlock_get_irqsave(&nklock, s);
-
         ppd = xnshadow_ppd_lookup(muxid, curr->mm);
+        xnlock_put_irqrestore(&nklock, s);
 
-        /* protect from the same process binding several time. */
+        /* protect from the same process binding several times. */
         if (!ppd) {
             ppd = (xnshadow_ppd_t *)
                 muxtable[muxid].eventcb(XNSHADOW_CLIENT_ATTACH, curr);
 
             if (IS_ERR(ppd)) {
                 xnarch_atomic_dec(&muxtable[muxid].refcnt);
-                xnlock_put_irqrestore(&nklock, s);
                 return PTR_ERR(ppd);
             }
 
             if (ppd) {
                 ppd->key.muxid = muxid;
                 ppd->key.mm = curr->mm;
-                xnshadow_ppd_insert(ppd);
+                
+                if (xnshadow_ppd_insert(ppd) == -EBUSY)
+                    /* In case of concurrent binding (which can not happen with
+                       Xenomai libraries), detach right away the second ppd. */
+                    muxtable[muxid].eventcb(XNSHADOW_CLIENT_DETACH, ppd);
             }
         }
-
-        xnlock_put_irqrestore(&nklock, s);
     }
 
     if (!nkpod || testbits(nkpod->status, XNPIDLE)) {
