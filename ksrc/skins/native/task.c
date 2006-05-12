@@ -588,7 +588,13 @@ int rt_task_delete(RT_TASK *task)
         goto unlock_and_exit;
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    if (task != xeno_current_task())
+    /* rt_task_delete() might be called for cleaning up a just created
+       shadow task which has not been successfully mapped, so make
+       sure we have an associated Linux mate before trying to send it
+       a signal. This will also prevent any action on kernel-based
+       Xenomai threads for which the user TCB extension is always
+       NULL. */
+    if (xnthread_user_task(&task->thread_base) && task != xeno_current_task())
         xnshadow_send_sig(&task->thread_base, SIGKILL, 1);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
