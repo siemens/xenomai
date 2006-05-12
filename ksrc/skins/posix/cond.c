@@ -207,7 +207,10 @@ int pthread_cond_destroy (pthread_cond_t *cnd)
     return 0;
 }
 
-/* must be called with nklock locked, interrupts off. */
+/* must be called with nklock locked, interrupts off.
+
+   Note: this function is very similar to mutex_unlock_internal() in mutex.h.
+*/
 static inline int mutex_save_count(xnthread_t *cur,
                                    struct __shadow_mutex *shadow,
                                    unsigned *count_ptr)
@@ -223,9 +226,11 @@ static inline int mutex_save_count(xnthread_t *cur,
         return EPERM;
 
     *count_ptr = mutex->count;
-    mutex->count = 0;
 
-    xnsynch_wakeup_one_sleeper(&mutex->synchbase);
+    if (xnsynch_wakeup_one_sleeper(&mutex->synchbase))
+        mutex->count = 1;
+    else
+        mutex->count = 0;
     /* Do not reschedule here, releasing the mutex and suspension must be done
        atomically in pthread_cond_*wait. */
     

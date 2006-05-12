@@ -42,8 +42,8 @@
  * POSIX skin may be shared by kernel-space modules and user-space processes
  * through shared memory.
  *
- * By default, Xenomai POSIX skin mutexes are of the recursive type and use the
- * priority inheritance protocol.
+ * By default, Xenomai POSIX skin mutexes are of the recursive type and use no
+ * priority protocol.
  *
  * Note that only pthread_mutex_init() may be used to initialize a mutex, using
  * the static initializer @a PTHREAD_MUTEX_INITIALIZER is not supported.
@@ -241,7 +241,7 @@ int pse51_mutex_timedlock_break (struct __shadow_mutex *shadow, xnticks_t abs_to
         switch (mutex->attr.type)
 	    {
 	    case PTHREAD_MUTEX_NORMAL:
-		/* Deadlock. */
+		/* Attempting to relock a normal mutex, deadlock. */
 		for (;;)
                     {
                     xnticks_t to = abs_to;
@@ -270,8 +270,6 @@ int pse51_mutex_timedlock_break (struct __shadow_mutex *shadow, xnticks_t abs_to
                         err = EINVAL;
                         break;
                         }
-
-		    mutex->count = 1;
                     }
 
             break;
@@ -451,7 +449,11 @@ int pthread_mutex_timedlock (pthread_mutex_t *mx, const struct timespec *to)
     return err;
 }
 
-/* must be called with nklock locked, interrupts off. */
+/* must be called with nklock locked, interrupts off.
+
+   Note: the function mutex_save_count() in cond.c is very similar to this
+   function.
+*/
 static inline int mutex_unlock_internal(xnthread_t *cur,
                                         struct __shadow_mutex *shadow)
 
@@ -466,9 +468,10 @@ static inline int mutex_unlock_internal(xnthread_t *cur,
     if (xnsynch_owner(&mutex->synchbase) != cur || mutex->count != 1)
         return EPERM;
     
-    mutex->count = 0;
     if (xnsynch_wakeup_one_sleeper(&mutex->synchbase))
         xnpod_schedule();
+    else
+        mutex->count = 0;
 
     return 0;
 }
