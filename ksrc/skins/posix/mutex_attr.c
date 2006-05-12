@@ -26,7 +26,7 @@
 static const pthread_mutexattr_t default_mutex_attr = {
     magic: PSE51_MUTEX_ATTR_MAGIC,
     type: PTHREAD_MUTEX_RECURSIVE,
-    protocol: PTHREAD_PRIO_INHERIT
+    protocol: PTHREAD_PRIO_NONE
 };
 
 /**
@@ -35,7 +35,7 @@ static const pthread_mutexattr_t default_mutex_attr = {
  * This services initializes the mutex attributes object @a attr with default
  * values for all attributes. Default value are :
  * - for the @a type attribute, @a PTHREAD_MUTEX_RECURSIVE;
- * - for the @a protocol attribute, @a PTHREAD_PRIO_INHERIT.
+ * - for the @a protocol attribute, @a PTHREAD_PRIO_NONE.
  *
  * Note that the @a pshared attribute is not supported: mutexes created by
  * Xenomai POSIX skin may be shared by kernel-space modules and user-space

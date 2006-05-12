@@ -1,3 +1,11 @@
+2006-05-12  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/mutex_attr.c: set default mutex priority
+	protocol to PTHREAD_PRIO_NONE.
+
+	* ksrc/skins/posix/mutex.h (mutex_timedlock_internal): Use
+	xnsynch_sleep_on built-in ability to steal ressources.
+
 2006-05-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/task.c (rt_task_delete): Do not attempt to
