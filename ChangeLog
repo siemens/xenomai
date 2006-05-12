@@ -1,3 +1,11 @@
+2006-05-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/task.c (rt_task_delete): Do not attempt to
+	send a Linux signal to an unknown Linux mate.
+
+	* ksrc/nucleus/shadow.c (schedule_linux_call): Add LART to capture
+	invocations with NULL task pointer.
+
 2006-05-11  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/nucleus/shadow.c (xnshadow_ppd_get): Add support for

@@ -121,7 +121,11 @@ typedef rwlock_t rthal_rwlock_t;
 #if defined(CONFIG_XENO_OPT_PIPELINE_HEAD) && defined(__ipipe_pipeline_head)
 #define rthal_local_irq_disable()	ipipe_stall_pipeline_head()
 #define rthal_local_irq_enable()	ipipe_unstall_pipeline_head()
+#if 0
 #define rthal_local_irq_save(x)		((x) = !!ipipe_test_and_stall_pipeline_head())
+#else
+#define rthal_local_irq_save(x)		((x) = !!ipipe_test_and_stall_pipeline_from(&rthal_domain))
+#endif
 #define rthal_local_irq_restore(x)	ipipe_restore_pipeline_head(x)
 #else /* !(CONFIG_XENO_OPT_PIPELINE_HEAD && __ipipe_pipeline_head) */
 #define rthal_local_irq_disable()	ipipe_stall_pipeline_from(&rthal_domain)
