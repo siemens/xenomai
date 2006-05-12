@@ -900,7 +900,7 @@ XenoThread::XenoThread (void *_tcbarg,
 			void *_faddr,
 			int _pflags,
 			const char *_name) :
-    MvmThread(_name,_pflags|MVM_THREAD_CLIENT,16384)
+    MvmThread(_name,_pflags|MVM_THREAD_CLIENT,32768)
 {
     tcbarg = _tcbarg;
     faddr = _faddr;
@@ -915,7 +915,7 @@ XenoThread::XenoThread (void *_tcbarg,
 }
 
 XenoThread::XenoThread (const char *_name) :
-    MvmThread(_name,MVM_IFACE_HIDDEN,16384)
+    MvmThread(_name,MVM_IFACE_HIDDEN,32768)
 {
     tcbarg = NULL;
     faddr = NULL;
