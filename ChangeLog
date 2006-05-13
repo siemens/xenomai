@@ -1,3 +1,8 @@
+2006-05-13  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/thread.h (XNHELD): Add "held" blocking bit which
+	should be useful for implementing temporal partitioning.
+
 2006-05-12  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/nucleus/shadow.c (bind_to_interface): Avoid holding the
