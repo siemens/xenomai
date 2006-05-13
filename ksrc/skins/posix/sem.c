@@ -469,6 +469,8 @@ int sem_unlink (const char *name)
     return 0;
 
   error:
+    xnlock_put_irqrestore(&nklock, s);
+
     thread_set_errno(err);
 
     return -1;
