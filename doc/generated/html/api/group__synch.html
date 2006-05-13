@@ -151,12 +151,12 @@ This service should be called by upper interfaces under circumstances requiring 
   </table>
 </dl>
 <ul>
-<li>XNRMID should be set to indicate that the synchronization object is about to be destroyed (see <a class="el" href="group__pod.html#ga37">xnpod_resume_thread()</a>).</li></ul>
+<li>XNRMID should be set to indicate that the synchronization object is about to be destroyed (see <a class="el" href="group__pod.html#ga38">xnpod_resume_thread()</a>).</li></ul>
 <p>
 <ul>
-<li>XNBREAK should be set to indicate that the wait has been forcibly interrupted (see <a class="el" href="group__pod.html#ga38">xnpod_unblock_thread()</a>).</li></ul>
+<li>XNBREAK should be set to indicate that the wait has been forcibly interrupted (see <a class="el" href="group__pod.html#ga39">xnpod_unblock_thread()</a>).</li></ul>
 <p>
-<dl compact><dt><b>Returns:</b></dt><dd>XNSYNCH_RESCHED is returned if at least one thread is unblocked, which means the caller should invoke <a class="el" href="group__pod.html#ga42">xnpod_schedule()</a> for applying the new scheduling state. Otherwise, XNSYNCH_DONE is returned.</dd></dl>
+<dl compact><dt><b>Returns:</b></dt><dd>XNSYNCH_RESCHED is returned if at least one thread is unblocked, which means the caller should invoke <a class="el" href="group__pod.html#ga43">xnpod_schedule()</a> for applying the new scheduling state. Otherwise, XNSYNCH_DONE is returned.</dd></dl>
 Side-effects:<p>
 <ul>
 <li>The effective priority of the previous resource owner might be lowered to its base priority value as a consequence of the priority inheritance boost being cleared.</li></ul>
@@ -264,7 +264,7 @@ This object has built-in support for priority inheritance.<p>
 <li>XNSYNCH_PIP causes the priority inheritance mechanism to be automatically activated when a priority inversion is detected among threads using this object. Otherwise, no priority inheritance takes place upon priority inversion (XNSYNCH_NOPIP).</li></ul>
 <p>
 <ul>
-<li>XNSYNCH_DREORD (Disable REORDering) tells the nucleus that the wait queue should not be reordered whenever the priority of a blocked thread it holds is changed. If this flag is not specified, changing the priority of a blocked thread using <a class="el" href="group__pod.html#ga39">xnpod_renice_thread()</a> will cause this object's wait queue to be reordered according to the new priority level, provided the synchronization object makes the waiters wait by priority order on the awaited resource (XNSYNCH_PRIO).</li></ul>
+<li>XNSYNCH_DREORD (Disable REORDering) tells the nucleus that the wait queue should not be reordered whenever the priority of a blocked thread it holds is changed. If this flag is not specified, changing the priority of a blocked thread using <a class="el" href="group__pod.html#ga40">xnpod_renice_thread()</a> will cause this object's wait queue to be reordered according to the new priority level, provided the synchronization object makes the waiters wait by priority order on the awaited resource (XNSYNCH_PRIO).</li></ul>
 <p>
 Environments:<p>
 This service can be called from:<p>
@@ -516,7 +516,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:03 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:05:28 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -42,91 +42,101 @@
 00032 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)</span>
 00033 <span class="preprocessor"></span>
 00034 <span class="preprocessor">#define XNSYNCH_CLAIMED 0x8     </span><span class="comment">/* Claimed by other thread(s) w/ PIP */</span>
-00035 
-00036 <span class="comment">/* Spare flags usable by upper interfaces */</span>
-00037 <span class="preprocessor">#define XNSYNCH_SPARE0  0x01000000</span>
-00038 <span class="preprocessor"></span><span class="preprocessor">#define XNSYNCH_SPARE1  0x02000000</span>
-00039 <span class="preprocessor"></span><span class="preprocessor">#define XNSYNCH_SPARE2  0x04000000</span>
-00040 <span class="preprocessor"></span><span class="preprocessor">#define XNSYNCH_SPARE3  0x08000000</span>
-00041 <span class="preprocessor"></span><span class="preprocessor">#define XNSYNCH_SPARE4  0x10000000</span>
-00042 <span class="preprocessor"></span><span class="preprocessor">#define XNSYNCH_SPARE5  0x20000000</span>
-00043 <span class="preprocessor"></span><span class="preprocessor">#define XNSYNCH_SPARE6  0x40000000</span>
-00044 <span class="preprocessor"></span><span class="preprocessor">#define XNSYNCH_SPARE7  0x80000000</span>
-00045 <span class="preprocessor"></span>
-00046 <span class="comment">/* Statuses */</span>
-00047 <span class="preprocessor">#define XNSYNCH_DONE    0       </span><span class="comment">/* Resource available / operation complete */</span>
-00048 <span class="preprocessor">#define XNSYNCH_WAIT    1       </span><span class="comment">/* Calling thread blocked -- start rescheduling */</span>
-00049 <span class="preprocessor">#define XNSYNCH_RESCHED 2       </span><span class="comment">/* Force rescheduling */</span>
-00050 
-00051 <span class="keyword">struct </span>xnthread;
-00052 <span class="keyword">struct </span>xnsynch;
-00053 <span class="keyword">struct </span>xnmutex;
-00054 
-00055 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnsynch {
-00056 
-00057     xnpholder_t link;   <span class="comment">/* Link in claim queues */</span>
-00058 
-00059 <span class="preprocessor">#define link2synch(laddr) \</span>
-00060 <span class="preprocessor">((xnsynch_t *)(((char *)laddr) - (int)(&amp;((xnsynch_t *)0)-&gt;link)))</span>
-00061 <span class="preprocessor"></span>
-00062     xnflags_t status;   <span class="comment">/* Status word */</span>
-00063 
-00064     xnpqueue_t pendq;   <span class="comment">/* Pending threads */</span>
-00065 
-00066     <span class="keyword">struct </span>xnthread *owner; <span class="comment">/* Thread which owns the resource */</span>
-00067 
-00068     XNARCH_DECL_DISPLAY_CONTEXT();
-00069 
-00070 } xnsynch_t;
-00071 
-00072 <span class="preprocessor">#define xnsynch_test_flags(synch,flags)  testbits((synch)-&gt;status,flags)</span>
-00073 <span class="preprocessor"></span><span class="preprocessor">#define xnsynch_set_flags(synch,flags)   setbits((synch)-&gt;status,flags)</span>
-00074 <span class="preprocessor"></span><span class="preprocessor">#define xnsynch_clear_flags(synch,flags) clrbits((synch)-&gt;status,flags)</span>
-00075 <span class="preprocessor"></span><span class="preprocessor">#define xnsynch_wait_queue(synch)        (&amp;((synch)-&gt;pendq))</span>
-00076 <span class="preprocessor"></span><span class="preprocessor">#define xnsynch_nsleepers(synch)         countpq(&amp;((synch)-&gt;pendq))</span>
-00077 <span class="preprocessor"></span><span class="preprocessor">#define xnsynch_owner(synch)             ((synch)-&gt;owner)</span>
-00078 <span class="preprocessor"></span>
-00079 <span class="preprocessor">#ifdef __cplusplus</span>
-00080 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-00081 <span class="preprocessor">#endif</span>
-00082 <span class="preprocessor"></span>
-00083 <span class="keywordtype">void</span> <a class="code" href="group__synch.html#ga0">xnsynch_init</a>(xnsynch_t *synch,
-00084                   xnflags_t flags);
-00085 
-00086 <span class="preprocessor">#define xnsynch_destroy(synch) \</span>
-00087 <span class="preprocessor">xnsynch_flush(synch,XNRMID)</span>
-00088 <span class="preprocessor"></span>
-00089 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnsynch_set_owner (xnsynch_t *synch, <span class="keyword">struct</span> xnthread *thread) {
-00090     synch-&gt;owner = thread;
-00091 }
-00092 
-00093 <span class="keywordtype">void</span> <a class="code" href="group__synch.html#ga2">xnsynch_sleep_on</a>(xnsynch_t *synch,
-00094                       xnticks_t timeout);
-00095 
-00096 <span class="keyword">struct </span>xnthread *<a class="code" href="group__synch.html#ga5">xnsynch_wakeup_one_sleeper</a>(xnsynch_t *synch);
+00035 <span class="preprocessor">#define XNSYNCH_PENDING 0x10    </span><span class="comment">/* Pending ownership -- may be stolen  */</span>
+00036 
+00037 <span class="comment">/* Spare flags usable by upper interfaces */</span>
+00038 <span class="preprocessor">#define XNSYNCH_SPARE0  0x01000000</span>
+00039 <span class="preprocessor"></span><span class="preprocessor">#define XNSYNCH_SPARE1  0x02000000</span>
+00040 <span class="preprocessor"></span><span class="preprocessor">#define XNSYNCH_SPARE2  0x04000000</span>
+00041 <span class="preprocessor"></span><span class="preprocessor">#define XNSYNCH_SPARE3  0x08000000</span>
+00042 <span class="preprocessor"></span><span class="preprocessor">#define XNSYNCH_SPARE4  0x10000000</span>
+00043 <span class="preprocessor"></span><span class="preprocessor">#define XNSYNCH_SPARE5  0x20000000</span>
+00044 <span class="preprocessor"></span><span class="preprocessor">#define XNSYNCH_SPARE6  0x40000000</span>
+00045 <span class="preprocessor"></span><span class="preprocessor">#define XNSYNCH_SPARE7  0x80000000</span>
+00046 <span class="preprocessor"></span>
+00047 <span class="comment">/* Statuses */</span>
+00048 <span class="preprocessor">#define XNSYNCH_DONE    0       </span><span class="comment">/* Resource available / operation complete */</span>
+00049 <span class="preprocessor">#define XNSYNCH_WAIT    1       </span><span class="comment">/* Calling thread blocked -- start rescheduling */</span>
+00050 <span class="preprocessor">#define XNSYNCH_RESCHED 2       </span><span class="comment">/* Force rescheduling */</span>
+00051 
+00052 <span class="keyword">struct </span>xnthread;
+00053 <span class="keyword">struct </span>xnsynch;
+00054 <span class="keyword">struct </span>xnmutex;
+00055 
+00056 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnsynch {
+00057 
+00058     xnpholder_t link;   <span class="comment">/* Link in claim queues */</span>
+00059 
+00060 <span class="preprocessor">#define link2synch(laddr) \</span>
+00061 <span class="preprocessor">((xnsynch_t *)(((char *)laddr) - (int)(&amp;((xnsynch_t *)0)-&gt;link)))</span>
+00062 <span class="preprocessor"></span>
+00063     xnflags_t status;   <span class="comment">/* Status word */</span>
+00064 
+00065     xnpqueue_t pendq;   <span class="comment">/* Pending threads */</span>
+00066 
+00067     <span class="keyword">struct </span>xnthread *owner; <span class="comment">/* Thread which owns the resource */</span>
+00068 
+00069     void (*cleanup)(<span class="keyword">struct </span>xnsynch *synch); <span class="comment">/* Cleanup handler */</span>
+00070 
+00071     XNARCH_DECL_DISPLAY_CONTEXT();
+00072 
+00073 } xnsynch_t;
+00074 
+00075 <span class="preprocessor">#define xnsynch_test_flags(synch,flags)  testbits((synch)-&gt;status,flags)</span>
+00076 <span class="preprocessor"></span><span class="preprocessor">#define xnsynch_set_flags(synch,flags)   setbits((synch)-&gt;status,flags)</span>
+00077 <span class="preprocessor"></span><span class="preprocessor">#define xnsynch_clear_flags(synch,flags) clrbits((synch)-&gt;status,flags)</span>
+00078 <span class="preprocessor"></span><span class="preprocessor">#define xnsynch_wait_queue(synch)        (&amp;((synch)-&gt;pendq))</span>
+00079 <span class="preprocessor"></span><span class="preprocessor">#define xnsynch_nsleepers(synch)         countpq(&amp;((synch)-&gt;pendq))</span>
+00080 <span class="preprocessor"></span><span class="preprocessor">#define xnsynch_owner(synch)             ((synch)-&gt;owner)</span>
+00081 <span class="preprocessor"></span>
+00082 <span class="preprocessor">#ifdef __cplusplus</span>
+00083 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+00084 <span class="preprocessor">#endif</span>
+00085 <span class="preprocessor"></span>
+00086 <span class="keywordtype">void</span> <a class="code" href="group__synch.html#ga0">xnsynch_init</a>(xnsynch_t *synch,
+00087                   xnflags_t flags);
+00088 
+00089 <span class="preprocessor">#define xnsynch_destroy(synch) \</span>
+00090 <span class="preprocessor">xnsynch_flush(synch,XNRMID)</span>
+00091 <span class="preprocessor"></span>
+00092 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnsynch_set_owner (xnsynch_t *synch, <span class="keyword">struct</span> xnthread *thread)
+00093 {
+00094     synch-&gt;owner = thread;
+00095     __clrbits(synch-&gt;status, XNSYNCH_PENDING);
+00096 }
 00097 
-00098 xnpholder_t *<a class="code" href="group__synch.html#ga6">xnsynch_wakeup_this_sleeper</a>(xnsynch_t *synch,
-00099                                          xnpholder_t *holder);
-00100 
-00101 <span class="keywordtype">int</span> <a class="code" href="group__synch.html#ga7">xnsynch_flush</a>(xnsynch_t *synch,
-00102                   xnflags_t reason);
-00103 
-00104 <span class="keywordtype">void</span> <a class="code" href="group__synch.html#ga9">xnsynch_release_all_ownerships</a>(<span class="keyword">struct</span> xnthread *thread);
+00098 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnsynch_register_cleanup (xnsynch_t *synch, <span class="keywordtype">void</span> (*handler)(xnsynch_t *))
+00099 {
+00100     synch-&gt;cleanup = handler;
+00101 }
+00102 
+00103 <span class="keywordtype">void</span> <a class="code" href="group__synch.html#ga2">xnsynch_sleep_on</a>(xnsynch_t *synch,
+00104                       xnticks_t timeout);
 00105 
-00106 <span class="keywordtype">void</span> <a class="code" href="group__synch.html#ga4">xnsynch_renice_sleeper</a>(<span class="keyword">struct</span> xnthread *thread);
+00106 <span class="keyword">struct </span>xnthread *<a class="code" href="group__synch.html#ga5">xnsynch_wakeup_one_sleeper</a>(xnsynch_t *synch);
 00107 
-00108 <span class="keywordtype">void</span> <a class="code" href="group__synch.html#ga8">xnsynch_forget_sleeper</a>(<span class="keyword">struct</span> xnthread *thread);
-00109 
-00110 <span class="keyword">struct </span>xnthread *xnsynch_forget_one_sleeper(xnsynch_t *synch);
-00111 
-00112 <span class="preprocessor">#ifdef __cplusplus</span>
-00113 <span class="preprocessor"></span>}
-00114 <span class="preprocessor">#endif</span>
-00115 <span class="preprocessor"></span>
-00116 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
+00108 xnpholder_t *<a class="code" href="group__synch.html#ga6">xnsynch_wakeup_this_sleeper</a>(xnsynch_t *synch,
+00109                                          xnpholder_t *holder);
+00110 
+00111 <span class="keywordtype">int</span> <a class="code" href="group__synch.html#ga7">xnsynch_flush</a>(xnsynch_t *synch,
+00112                   xnflags_t reason);
+00113 
+00114 <span class="keywordtype">void</span> <a class="code" href="group__synch.html#ga9">xnsynch_release_all_ownerships</a>(<span class="keyword">struct</span> xnthread *thread);
+00115 
+00116 <span class="keywordtype">void</span> <a class="code" href="group__synch.html#ga4">xnsynch_renice_sleeper</a>(<span class="keyword">struct</span> xnthread *thread);
 00117 
-00118 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SYNCH_H_ */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:01 2006 for Xenomai API by&nbsp;
+00118 <span class="keywordtype">void</span> <a class="code" href="group__synch.html#ga8">xnsynch_forget_sleeper</a>(<span class="keyword">struct</span> xnthread *thread);
+00119 
+00120 <span class="keyword">struct </span>xnthread *xnsynch_forget_one_sleeper(xnsynch_t *synch);
+00121 
+00122 <span class="preprocessor">#ifdef __cplusplus</span>
+00123 <span class="preprocessor"></span>}
+00124 <span class="preprocessor">#endif</span>
+00125 <span class="preprocessor"></span>
+00126 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
+00127 
+00128 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SYNCH_H_ */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:04:28 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -169,13 +169,13 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="group__devregister.html#ga26">rtdm_driver.h</a><li>RTDM_DRIVER_PATCH_VER
 : <a class="el" href="group__devregister.html#ga27">rtdm_driver.h</a><li>RTDM_DRIVER_VER
 : <a class="el" href="group__devregister.html#ga24">rtdm_driver.h</a><li>rtdm_event_clear()
-: <a class="el" href="group__rtdmsync.html#ga6">drvlib.c</a><li>rtdm_event_destroy()
+: <a class="el" href="group__rtdmsync.html#ga9">drvlib.c</a>, <a class="el" href="group__rtdmsync.html#ga9">rtdm_driver.h</a><li>rtdm_event_destroy()
 : <a class="el" href="group__rtdmsync.html#ga4">drvlib.c</a><li>rtdm_event_init()
 : <a class="el" href="group__rtdmsync.html#ga3">drvlib.c</a><li>rtdm_event_pulse()
 : <a class="el" href="group__rtdmsync.html#ga5">drvlib.c</a><li>rtdm_event_signal()
-: <a class="el" href="group__rtdmsync.html#ga7">drvlib.c</a>, <a class="el" href="group__rtdmsync.html#ga7">rtdm_driver.h</a><li>rtdm_event_timedwait()
-: <a class="el" href="group__rtdmsync.html#ga9">drvlib.c</a>, <a class="el" href="group__rtdmsync.html#ga9">rtdm_driver.h</a><li>rtdm_event_wait()
-: <a class="el" href="group__rtdmsync.html#ga8">drvlib.c</a>, <a class="el" href="group__rtdmsync.html#ga8">rtdm_driver.h</a><li>RTDM_EXCLUSIVE
+: <a class="el" href="group__rtdmsync.html#ga6">drvlib.c</a>, <a class="el" href="group__rtdmsync.html#ga6">rtdm_driver.h</a><li>rtdm_event_timedwait()
+: <a class="el" href="group__rtdmsync.html#ga8">drvlib.c</a>, <a class="el" href="group__rtdmsync.html#ga8">rtdm_driver.h</a><li>rtdm_event_wait()
+: <a class="el" href="group__rtdmsync.html#ga7">drvlib.c</a>, <a class="el" href="group__rtdmsync.html#ga7">rtdm_driver.h</a><li>RTDM_EXCLUSIVE
 : <a class="el" href="group__devregister.html#ga11">rtdm_driver.h</a><li>RTDM_EXECUTE_ATOMICALLY
 : <a class="el" href="group__rtdmsync.html#ga20">rtdm_driver.h</a><li>RTDM_FORCED_CLOSING
 : <a class="el" href="group__devregister.html#ga17">rtdm_driver.h</a><li>rtdm_free()
@@ -213,9 +213,9 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="group__util.html#ga3">drvlib.c</a>, <a class="el" href="group__util.html#ga3">rtdm_driver.h</a><li>rtdm_mutex_destroy()
 : <a class="el" href="group__rtdmsync.html#ga16">drvlib.c</a><li>rtdm_mutex_init()
 : <a class="el" href="group__rtdmsync.html#ga15">drvlib.c</a><li>rtdm_mutex_lock()
-: <a class="el" href="group__rtdmsync.html#ga17">drvlib.c</a>, <a class="el" href="group__rtdmsync.html#ga17">rtdm_driver.h</a><li>rtdm_mutex_timedlock()
-: <a class="el" href="group__rtdmsync.html#ga18">drvlib.c</a>, <a class="el" href="group__rtdmsync.html#ga18">rtdm_driver.h</a><li>rtdm_mutex_unlock()
-: <a class="el" href="group__rtdmsync.html#ga19">drvlib.c</a>, <a class="el" href="group__rtdmsync.html#ga19">rtdm_driver.h</a><li>RTDM_NAMED_DEVICE
+: <a class="el" href="group__rtdmsync.html#ga18">drvlib.c</a>, <a class="el" href="group__rtdmsync.html#ga18">rtdm_driver.h</a><li>rtdm_mutex_timedlock()
+: <a class="el" href="group__rtdmsync.html#ga19">drvlib.c</a>, <a class="el" href="group__rtdmsync.html#ga19">rtdm_driver.h</a><li>rtdm_mutex_unlock()
+: <a class="el" href="group__rtdmsync.html#ga17">drvlib.c</a><li>RTDM_NAMED_DEVICE
 : <a class="el" href="group__devregister.html#ga12">rtdm_driver.h</a><li>rtdm_nrtsig_destroy()
 : <a class="el" href="group__nrtsignal.html#ga3">drvlib.c</a><li>rtdm_nrtsig_handler_t
 : <a class="el" href="group__nrtsignal.html#ga1">rtdm_driver.h</a><li>rtdm_nrtsig_init()
@@ -264,20 +264,20 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="group__devregister.html#ga18">rtdm_driver.h</a><li>rtdm_write()
 : <a class="el" href="group__interdrv.html#ga21">core.c</a><li>rtdm_write_handler_t
 : <a class="el" href="group__devregister.html#ga5">rtdm_driver.h</a><li>rthal_apc_alloc()
-: <a class="el" href="group__hal.html#ga67">hal.c</a><li>rthal_apc_free()
-: <a class="el" href="group__hal.html#ga68">hal.c</a><li>rthal_apc_schedule()
-: <a class="el" href="group__hal.html#ga69">hal.c</a><li>rthal_irq_affinity()
-: <a class="el" href="group__hal.html#ga64">hal.c</a><li>rthal_irq_disable()
-: <a class="el" href="group__hal.html#ga47">hal.c</a><li>rthal_irq_enable()
-: <a class="el" href="group__hal.html#ga46">hal.c</a><li>rthal_irq_host_pend()
-: <a class="el" href="group__hal.html#ga63">hal.c</a><li>rthal_irq_host_release()
-: <a class="el" href="group__hal.html#ga45">hal.c</a><li>rthal_irq_host_request()
-: <a class="el" href="group__hal.html#ga44">hal.c</a><li>rthal_irq_release()
-: <a class="el" href="group__hal.html#ga62">hal.c</a><li>rthal_irq_request()
-: <a class="el" href="group__hal.html#ga61">hal.c</a><li>rthal_timer_release()
-: <a class="el" href="group__hal.html#ga42">hal.c</a><li>rthal_timer_request()
-: <a class="el" href="group__hal.html#ga41">hal.c</a><li>rthal_trap_catch()
-: <a class="el" href="group__hal.html#ga65">hal.c</a><li>RTIOC_PURGE
+: <a class="el" href="group__hal.html#ga68">hal.c</a><li>rthal_apc_free()
+: <a class="el" href="group__hal.html#ga69">hal.c</a><li>rthal_apc_schedule()
+: <a class="el" href="group__hal.html#ga70">hal.c</a><li>rthal_irq_affinity()
+: <a class="el" href="group__hal.html#ga65">hal.c</a><li>rthal_irq_disable()
+: <a class="el" href="group__hal.html#ga48">hal.c</a><li>rthal_irq_enable()
+: <a class="el" href="group__hal.html#ga47">hal.c</a><li>rthal_irq_host_pend()
+: <a class="el" href="group__hal.html#ga64">hal.c</a><li>rthal_irq_host_release()
+: <a class="el" href="group__hal.html#ga46">hal.c</a><li>rthal_irq_host_request()
+: <a class="el" href="group__hal.html#ga45">hal.c</a><li>rthal_irq_release()
+: <a class="el" href="group__hal.html#ga63">hal.c</a><li>rthal_irq_request()
+: <a class="el" href="group__hal.html#ga62">hal.c</a><li>rthal_timer_release()
+: <a class="el" href="group__hal.html#ga43">hal.c</a><li>rthal_timer_request()
+: <a class="el" href="group__hal.html#ga42">hal.c</a><li>rthal_trap_catch()
+: <a class="el" href="group__hal.html#ga66">hal.c</a><li>RTIOC_PURGE
 : <a class="el" href="rtdm_8h.html#a10">rtdm.h</a><li>RTSER_1_5_STOPB
 : <a class="el" href="group__rtserial.html#ga14">rtserial.h</a><li>rtser_config_t
 : <a class="el" href="group__rtserial.html#ga0">rtserial.h</a><li>rtser_event_t
@@ -289,7 +289,7 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="group__rtserial.html#ga74">rtserial.h</a><li>RTSER_RTIOC_WAIT_EVENT
 : <a class="el" href="group__rtserial.html#ga75">rtserial.h</a><li>rtser_status_t
 : <a class="el" href="group__rtserial.html#ga1">rtserial.h</a></ul>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:18 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:05:43 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
