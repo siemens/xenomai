@@ -32,25 +32,26 @@
 #define XNRESTART 0x00000040	/* Restarting thread */
 #define XNSTARTED 0x00000080	/* Could be restarted */
 #define XNRELAX   0x00000100	/* Relaxed shadow thread (blocking bit) */
+#define XNHELD    0x00000200	/* Held thread from suspended partition */
 
-#define XNTIMEO   0x00000200	/* Woken up due to a timeout condition */
-#define XNRMID    0x00000400	/* Pending on a removed resource */
-#define XNBREAK   0x00000800	/* Forcibly awaken from a wait state */
-#define XNKICKED  0x00001000	/* Kicked upon signal (shadow only) */
-#define XNBOOST   0x00002000	/* Undergoes regular PIP boost */
-#define XNDEBUG   0x00004000	/* Hit debugger breakpoint (shadow only) */
+#define XNTIMEO   0x00000400	/* Woken up due to a timeout condition */
+#define XNRMID    0x00000800	/* Pending on a removed resource */
+#define XNBREAK   0x00001000	/* Forcibly awaken from a wait state */
+#define XNKICKED  0x00002000	/* Kicked upon signal (shadow only) */
+#define XNBOOST   0x00004000	/* Undergoes regular PIP boost */
+#define XNDEBUG   0x00008000	/* Hit debugger breakpoint (shadow only) */
 
 /* Mode flags. */
-#define XNLOCK    0x00008000	/* Not preemptible */
-#define XNRRB     0x00010000	/* Undergoes a round-robin scheduling */
-#define XNASDI    0x00020000	/* ASR are disabled */
-#define XNSHIELD  0x00040000	/* IRQ shield is enabled (shadow only) */
-#define XNTRAPSW  0x00080000	/* Trap execution mode switches */
+#define XNLOCK    0x00010000	/* Not preemptible */
+#define XNRRB     0x00020000	/* Undergoes a round-robin scheduling */
+#define XNASDI    0x00040000	/* ASR are disabled */
+#define XNSHIELD  0x00080000	/* IRQ shield is enabled (shadow only) */
+#define XNTRAPSW  0x00100000	/* Trap execution mode switches */
 
-#define XNFPU     0x00100000	/* Thread uses FPU */
-#define XNSHADOW  0x00200000	/* Shadow thread */
-#define XNROOT    0x00400000	/* Root thread (i.e. Linux/IDLE) */
-#define XNINVPS   0x00800000	/* Using inverted priority scale */
+#define XNFPU     0x00200000	/* Thread uses FPU */
+#define XNSHADOW  0x00400000	/* Shadow thread */
+#define XNROOT    0x00800000	/* Root thread (i.e. Linux/IDLE) */
+#define XNINVPS   0x01000000	/* Using inverted priority scale */
 
 /*
   Must follow the declaration order of the above bits. Status symbols
@@ -61,6 +62,7 @@
   'R' -> Runnable.
   'U' -> Unstarted or dormant.
   'X' -> Relaxed shadow.
+  'H' -> Held thread.
   'b' -> Priority boost undergoing.
   'T' -> Ptraced and stopped.
   'l' -> Locks scheduler.
@@ -71,13 +73,13 @@
 */
 #define XNTHREAD_SLABEL_INIT { \
   'S', 'W', 'D', 'R', 'U', \
-  '.', '.', '.', 'X', '.', \
-  '.', '.', '.', 'b', 'T', \
-  'l', 'r', '.', 's', 't', \
-  'f', '.', '.', '.'	   \
+  '.', '.', '.', 'X', 'H', \
+  '.', '.', '.', '.', 'b', 'T', \
+  'l', 'r', '.', 's', 't', 'f', \
+  '.', '.', '.'  \
 }
 
-#define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX)
+#define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNHELD)
 #define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNSHIELD|XNTRAPSW)
 
 /* These flags are available to the real-time interfaces */
