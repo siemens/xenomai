@@ -22,7 +22,7 @@ A mutex is a MUTual EXclusion device, and is useful for protecting shared data s
 A mutex has two possible states: unlocked (not owned by any thread), and locked (owned by one thread). A mutex can never be owned by two different threads simultaneously. A thread attempting to lock a mutex that is already locked by another thread is suspended until the owning thread unlocks the mutex first.<p>
 Before it can be used, a mutex has to be initialized with <a class="el" href="group__posix__mutex.html#ga6">pthread_mutex_init()</a>. An attribute object, which reference may be passed to this service, allows to select the features of the created mutex, namely its <em>type</em> (see <a class="el" href="group__posix__mutex.html#ga17">pthread_mutexattr_settype()</a>) and the priority <em>protocol</em> it uses (see <a class="el" href="group__posix__mutex.html#ga19">pthread_mutexattr_setprotocol()</a>).<p>
 There is no support for the <em>pshared</em> attribute; mutexes created by Xenomai POSIX skin may be shared by kernel-space modules and user-space processes through shared memory.<p>
-By default, Xenomai POSIX skin mutexes are of the recursive type and use the priority inheritance protocol.<p>
+By default, Xenomai POSIX skin mutexes are of the recursive type and use no priority protocol.<p>
 Note that only <a class="el" href="group__posix__mutex.html#ga6">pthread_mutex_init()</a> may be used to initialize a mutex, using the static initializer <em>PTHREAD_MUTEX_INITIALIZER</em> is not supported. 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
@@ -529,7 +529,7 @@ an error number if:<ul>
 Initialize a mutex attributes object. 
 <p>
 This services initializes the mutex attributes object <em>attr</em> with default values for all attributes. Default value are :<ul>
-<li>for the <em>type</em> attribute, <em>PTHREAD_MUTEX_RECURSIVE</em>;</li><li>for the <em>protocol</em> attribute, <em>PTHREAD_PRIO_INHERIT</em>.</li></ul>
+<li>for the <em>type</em> attribute, <em>PTHREAD_MUTEX_RECURSIVE</em>;</li><li>for the <em>protocol</em> attribute, <em>PTHREAD_PRIO_NONE</em>.</li></ul>
 <p>
 Note that the <em>pshared</em> attribute is not supported: mutexes created by Xenomai POSIX skin may be shared by kernel-space modules and user-space processes through shared memory.<p>
 If this service is called specifying a mutex attributes object that was already initialized, the attributes object is reinitialized.<p>
@@ -662,7 +662,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:11 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:05:36 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

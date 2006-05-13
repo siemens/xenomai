@@ -87,36 +87,34 @@
 00077         pse51_mutex_t *mutex = shadow-&gt;mutex;
 00078 
 00079         <span class="keywordflow">if</span> (xnsynch_owner(&amp;mutex-&gt;synchbase) != cur)
-00080             <span class="keywordflow">do</span>
-00081                 {
-00082                 xnticks_t to = abs_to;
-00083                 
-00084                 err = clock_adjust_timeout(&amp;to, CLOCK_REALTIME);
-00085                 
-00086                 <span class="keywordflow">if</span> (err)
-00087                     <span class="keywordflow">return</span> err;
-00088                 
-00089                 <a class="code" href="group__synch.html#ga2">xnsynch_sleep_on</a>(&amp;mutex-&gt;synchbase, to);
-00090                 
-00091                 <span class="keywordflow">if</span> (xnthread_test_flags(cur, XNBREAK))
-00092                     <span class="keywordflow">return</span> EINTR;
-00093                 
-00094                 <span class="keywordflow">if</span> (xnthread_test_flags(cur, XNRMID))
-00095                     <span class="keywordflow">return</span> EINVAL;
-00096                 
-00097                 <span class="keywordflow">if</span> (xnthread_test_flags(cur, XNTIMEO))
-00098                     <span class="keywordflow">return</span> ETIMEDOUT;
-00099                 
-00100                 err = mutex_trylock_internal(cur, shadow);
-00101                 }
-00102             <span class="keywordflow">while</span> (err == EBUSY);
-00103         }
-00104 
-00105     <span class="keywordflow">return</span> err;
-00106 }
-00107 
-00108 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_MUTEX_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:01 2006 for Xenomai API by&nbsp;
+00080             {
+00081             xnticks_t to = abs_to;
+00082                 
+00083             err = clock_adjust_timeout(&amp;to, CLOCK_REALTIME);
+00084                 
+00085             <span class="keywordflow">if</span> (err)
+00086                 <span class="keywordflow">return</span> err;
+00087             
+00088             <a class="code" href="group__synch.html#ga2">xnsynch_sleep_on</a>(&amp;mutex-&gt;synchbase, to);
+00089             
+00090             <span class="keywordflow">if</span> (xnthread_test_flags(cur, XNBREAK))
+00091                 <span class="keywordflow">return</span> EINTR;
+00092             
+00093             <span class="keywordflow">if</span> (xnthread_test_flags(cur, XNRMID))
+00094                 <span class="keywordflow">return</span> EINVAL;
+00095             
+00096             <span class="keywordflow">if</span> (xnthread_test_flags(cur, XNTIMEO))
+00097                 <span class="keywordflow">return</span> ETIMEDOUT;
+00098 
+00099             mutex-&gt;count = 1;
+00100             }
+00101         }
+00102 
+00103     <span class="keywordflow">return</span> err;
+00104 }
+00105 
+00106 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_MUTEX_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:04:28 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

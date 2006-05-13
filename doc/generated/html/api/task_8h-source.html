@@ -36,9 +36,9 @@
 00046 <span class="preprocessor"></span><span class="preprocessor">#define T_NOSIG    XNASDI</span>
 00047 <span class="preprocessor"></span><span class="preprocessor">#define T_SHIELD   XNSHIELD</span>
 00048 <span class="preprocessor"></span><span class="preprocessor">#define T_WARNSW   XNTRAPSW</span>
-00049 <span class="preprocessor"></span><span class="preprocessor">#define T_PRIMARY  XNTHREAD_SPARE0</span>
-00050 <span class="preprocessor"></span><span class="preprocessor">#define T_JOINABLE XNTHREAD_SPARE1</span>
-00051 <span class="preprocessor"></span>
+00049 <span class="preprocessor"></span><span class="preprocessor">#define T_PRIMARY  0x00000200   </span><span class="comment">/* Recycle internal bits status which */</span>
+00050 <span class="preprocessor">#define T_JOINABLE 0x00000400   </span><span class="comment">/* won't be passed to the nucleus.  */</span>
+00051 
 00052 <span class="comment">/* Task hook types. */</span>
 00053 <span class="preprocessor">#define T_HOOK_START  XNHOOK_THREAD_START</span>
 00054 <span class="preprocessor"></span><span class="preprocessor">#define T_HOOK_SWITCH XNHOOK_THREAD_SWITCH</span>
@@ -301,7 +301,7 @@
 00311 <span class="preprocessor">#endif</span>
 00312 <span class="preprocessor"></span>
 00313 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_TASK_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:01 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:04:28 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

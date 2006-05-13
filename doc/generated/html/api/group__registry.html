@@ -105,7 +105,7 @@ This service retrieves the registry handle of a given object identified by its k
 <li>-EINVAL is returned if <em>key</em> is NULL.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__pod.html#ga38">xnpod_unblock_thread()</a> has been called for the waiting thread before the retrieval has completed.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__pod.html#ga39">xnpod_unblock_thread()</a> has been called for the waiting thread before the retrieval has completed.</li></ul>
 <p>
 <ul>
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is equal to XN_NONBLOCK and the searched object is not registered on entry. As a special exception, this error is also returned if this service should block, but was called from a context which cannot sleep (e.g. interrupt, non-realtime or scheduler locked).</li></ul>
@@ -438,7 +438,7 @@ This service removes an object from the registry. The caller might sleep as a re
 <li>-ETIMEDOUT is returned if the object cannot be removed within the specified amount of time.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__pod.html#ga38">xnpod_unblock_thread()</a> has been called for the calling thread waiting for the object to be unlocked.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__pod.html#ga39">xnpod_unblock_thread()</a> has been called for the calling thread waiting for the object to be unlocked.</li></ul>
 <p>
 Environments:<p>
 This service can be called from:<p>
@@ -453,7 +453,7 @@ Rescheduling: possible if the object to remove is currently locked and the calli
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:02 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:05:28 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

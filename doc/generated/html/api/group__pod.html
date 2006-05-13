@@ -56,87 +56,90 @@ typedef <a class="el" href="structxnsched.html">xnsched</a>&nbsp;</td><td class=
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga29">xnpod_stop_timer</a> (void)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stop the system timer.  <a href="#ga29"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga30">xnpod_shutdown</a> (int xtype)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga30">xnpod_reset_timer</a> (void)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Shutdown the current pod.  <a href="#ga30"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga31">xnpod_init_thread</a> (xnthread_t *thread, const char *name, int prio, xnflags_t flags, unsigned stacksize)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Reset the system timer.  <a href="#ga30"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga31">xnpod_shutdown</a> (int xtype)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a new thread.  <a href="#ga31"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga32">xnpod_start_thread</a> (xnthread_t *thread, xnflags_t mode, int imask, xnarch_cpumask_t affinity, void(*entry)(void *cookie), void *cookie)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Shutdown the current pod.  <a href="#ga31"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga32">xnpod_init_thread</a> (xnthread_t *thread, const char *name, int prio, xnflags_t flags, unsigned stacksize)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initial start of a newly created thread.  <a href="#ga32"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga33">xnpod_restart_thread</a> (xnthread_t *thread)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a new thread.  <a href="#ga32"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga33">xnpod_start_thread</a> (xnthread_t *thread, xnflags_t mode, int imask, xnarch_cpumask_t affinity, void(*entry)(void *cookie), void *cookie)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Restart a thread.  <a href="#ga33"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga34">xnpod_delete_thread</a> (xnthread_t *thread)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initial start of a newly created thread.  <a href="#ga33"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga34">xnpod_restart_thread</a> (xnthread_t *thread)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a thread.  <a href="#ga34"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">xnflags_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga35">xnpod_set_thread_mode</a> (xnthread_t *thread, xnflags_t clrmask, xnflags_t setmask)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Restart a thread.  <a href="#ga34"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga35">xnpod_delete_thread</a> (xnthread_t *thread)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change a thread's control mode.  <a href="#ga35"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga37">xnpod_resume_thread</a> (xnthread_t *thread, xnflags_t mask)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a thread.  <a href="#ga35"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">xnflags_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga36">xnpod_set_thread_mode</a> (xnthread_t *thread, xnflags_t clrmask, xnflags_t setmask)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Resume a thread.  <a href="#ga37"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga38">xnpod_unblock_thread</a> (xnthread_t *thread)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change a thread's control mode.  <a href="#ga36"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga38">xnpod_resume_thread</a> (xnthread_t *thread, xnflags_t mask)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unblock a thread.  <a href="#ga38"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga39">xnpod_renice_thread</a> (xnthread_t *thread, int prio)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Resume a thread.  <a href="#ga38"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga39">xnpod_unblock_thread</a> (xnthread_t *thread)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change the base priority of a thread.  <a href="#ga39"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga40">xnpod_migrate_thread</a> (int cpu)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unblock a thread.  <a href="#ga39"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga40">xnpod_renice_thread</a> (xnthread_t *thread, int prio)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Migrate the current thread.  <a href="#ga40"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga41">xnpod_rotate_readyq</a> (int prio)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change the base priority of a thread.  <a href="#ga40"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga41">xnpod_migrate_thread</a> (int cpu)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Rotate a priority level in the ready queue.  <a href="#ga41"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga42">xnpod_schedule</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Migrate the current thread.  <a href="#ga41"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga42">xnpod_rotate_readyq</a> (int prio)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Rescheduling procedure entry point.  <a href="#ga42"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga43">xnpod_dispatch_signals</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Rotate a priority level in the ready queue.  <a href="#ga42"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga43">xnpod_schedule</a> (void)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Deliver pending asynchronous signals to the running thread.  <a href="#ga43"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga47">xnpod_activate_rr</a> (xnticks_t quantum)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Rescheduling procedure entry point.  <a href="#ga43"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga44">xnpod_dispatch_signals</a> (void)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Globally activate the round-robin scheduling.  <a href="#ga47"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga48">xnpod_deactivate_rr</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Deliver pending asynchronous signals to the running thread.  <a href="#ga44"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga48">xnpod_activate_rr</a> (xnticks_t quantum)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Globally deactivate the round-robin scheduling.  <a href="#ga48"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga49">xnpod_set_time</a> (xnticks_t newtime)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Globally activate the round-robin scheduling.  <a href="#ga48"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga49">xnpod_deactivate_rr</a> (void)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the nucleus idea of time.  <a href="#ga49"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga50">xnpod_set_thread_periodic</a> (xnthread_t *thread, xnticks_t idate, xnticks_t period)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Globally deactivate the round-robin scheduling.  <a href="#ga49"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga50">xnpod_set_time</a> (xnticks_t newtime)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Make a thread periodic.  <a href="#ga50"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga51">xnpod_wait_thread_period</a> (unsigned long *overruns_r)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the nucleus idea of time.  <a href="#ga50"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga51">xnpod_set_thread_periodic</a> (xnthread_t *thread, xnticks_t idate, xnticks_t period)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next periodic release point.  <a href="#ga51"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">xnticks_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga52">xnpod_get_time</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Make a thread periodic.  <a href="#ga51"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga52">xnpod_wait_thread_period</a> (unsigned long *overruns_r)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the nucleus idea of time.  <a href="#ga52"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga54">xnpod_add_hook</a> (int type, void(*routine)(xnthread_t *))</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next periodic release point.  <a href="#ga52"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">xnticks_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga53">xnpod_get_time</a> (void)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a nucleus hook.  <a href="#ga54"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga55">xnpod_remove_hook</a> (int type, void(*routine)(xnthread_t *))</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the nucleus idea of time.  <a href="#ga53"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga55">xnpod_add_hook</a> (int type, void(*routine)(xnthread_t *))</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Remove a nucleus hook.  <a href="#ga55"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga69">xnpod_suspend_thread</a> (xnthread_t *thread, xnflags_t mask, xnticks_t timeout, xnsynch_t *wchan)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a nucleus hook.  <a href="#ga55"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga56">xnpod_remove_hook</a> (int type, void(*routine)(xnthread_t *))</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Suspend a thread.  <a href="#ga69"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga70">xnpod_welcome_thread</a> (xnthread_t *thread)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Remove a nucleus hook.  <a href="#ga56"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga70">xnpod_suspend_thread</a> (xnthread_t *thread, xnflags_t mask, xnticks_t timeout, xnsynch_t *wchan)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Thread prologue.  <a href="#ga70"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga71">xnpod_preempt_current_thread</a> (<a class="el" href="structxnsched.html">xnsched_t</a> *sched)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Suspend a thread.  <a href="#ga70"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga71">xnpod_welcome_thread</a> (xnthread_t *thread)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Preempts the current thread.  <a href="#ga71"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga72">xnpod_trap_fault</a> (void *fltinfo)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Thread prologue.  <a href="#ga71"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga72">xnpod_preempt_current_thread</a> (<a class="el" href="structxnsched.html">xnsched_t</a> *sched)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Default fault handler.  <a href="#ga72"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga73">xnpod_announce_tick</a> (xnintr_t *intr)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Preempts the current thread.  <a href="#ga72"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga73">xnpod_trap_fault</a> (void *fltinfo)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Announce a new clock tick.  <a href="#ga73"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Default fault handler.  <a href="#ga73"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga74">xnpod_announce_tick</a> (xnintr_t *intr)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Announce a new clock tick.  <a href="#ga74"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="ga47" doxytag="pod.h::xnpod_activate_rr"></a><p>
+<a class="anchor" name="ga48" doxytag="pod.h::xnpod_activate_rr"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -163,7 +166,7 @@ typedef <a class="el" href="structxnsched.html">xnsched</a>&nbsp;</td><td class=
 <p>
 Globally activate the round-robin scheduling. 
 <p>
-This service activates the round-robin scheduling for all threads which have the XNRRB flag set in their status mask (see <a class="el" href="group__pod.html#ga35">xnpod_set_thread_mode()</a>). Each of them will run for the given time quantum, then preempted and moved to the end of its priority group in the ready queue. This process is repeated until the round-robin scheduling is disabled for those threads.<p>
+This service activates the round-robin scheduling for all threads which have the XNRRB flag set in their status mask (see <a class="el" href="group__pod.html#ga36">xnpod_set_thread_mode()</a>). Each of them will run for the given time quantum, then preempted and moved to the end of its priority group in the ready queue. This process is repeated until the round-robin scheduling is disabled for those threads.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>quantum</em>&nbsp;</td><td>The time credit which will be given to each rr-enabled thread (in ticks).</td></tr>
@@ -177,7 +180,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga54" doxytag="pod.h::xnpod_add_hook"></a><p>
+<a class="anchor" name="ga55" doxytag="pod.h::xnpod_add_hook"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -249,7 +252,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga73" doxytag="pod.c::xnpod_announce_tick"></a><p>
+<a class="anchor" name="ga74" doxytag="pod.c::xnpod_announce_tick"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -287,12 +290,12 @@ Side-effect: Since this routine manages the round-robin scheduling, the running 
 Environments:<p>
 This service can be called from:<p>
 <ul>
-<li>Interrupt service routine</li></ul>
+<li>Interrupt service routine, must be called with interrupts off.</li></ul>
 <p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga48" doxytag="pod.h::xnpod_deactivate_rr"></a><p>
+<a class="anchor" name="ga49" doxytag="pod.h::xnpod_deactivate_rr"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -319,7 +322,7 @@ Rescheduling: possible.     </td>
 <p>
 Globally deactivate the round-robin scheduling. 
 <p>
-This service deactivates the round-robin scheduling for all threads which have the XNRRB flag set in their status mask (see <a class="el" href="group__pod.html#ga35">xnpod_set_thread_mode()</a>).<p>
+This service deactivates the round-robin scheduling for all threads which have the XNRRB flag set in their status mask (see <a class="el" href="group__pod.html#ga36">xnpod_set_thread_mode()</a>).<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -328,7 +331,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga34" doxytag="pod.h::xnpod_delete_thread"></a><p>
+<a class="anchor" name="ga35" doxytag="pod.h::xnpod_delete_thread"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -355,7 +358,7 @@ Rescheduling: never.     </td>
 <p>
 Delete a thread. 
 <p>
-Terminates a thread and releases all the nucleus resources it currently holds. A thread exists in the system since <a class="el" href="group__pod.html#ga31">xnpod_init_thread()</a> has been called to create it, so this service must be called in order to destroy it afterwards.<p>
+Terminates a thread and releases all the nucleus resources it currently holds. A thread exists in the system since <a class="el" href="group__pod.html#ga32">xnpod_init_thread()</a> has been called to create it, so this service must be called in order to destroy it afterwards.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the terminated thread.</td></tr>
@@ -371,7 +374,7 @@ This service can be called from:<p>
 Rescheduling: possible if the current thread self-deletes.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga43" doxytag="pod.h::xnpod_dispatch_signals"></a><p>
+<a class="anchor" name="ga44" doxytag="pod.h::xnpod_dispatch_signals"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -404,7 +407,7 @@ This internal routine checks for the presence of asynchronous signals directed t
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga52" doxytag="pod.h::xnpod_get_time"></a><p>
+<a class="anchor" name="ga53" doxytag="pod.h::xnpod_get_time"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -515,7 +518,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga31" doxytag="pod.h::xnpod_init_thread"></a><p>
+<a class="anchor" name="ga32" doxytag="pod.h::xnpod_init_thread"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -569,7 +572,7 @@ This service can be called from:<p>
 <p>
 Initialize a new thread. 
 <p>
-Initializes a new thread attached to the active pod. The thread is left in an innocuous state until it is actually started by <a class="el" href="group__pod.html#ga32">xnpod_start_thread()</a>.<p>
+Initializes a new thread attached to the active pod. The thread is left in an innocuous state until it is actually started by <a class="el" href="group__pod.html#ga33">xnpod_start_thread()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The address of a thread descriptor the nucleus will use to store the thread-specific data. This descriptor must always be valid while the thread is active therefore it must be allocated in permanent memory. </td></tr>
@@ -584,7 +587,7 @@ Initializes a new thread attached to the active pod. The thread is left in an in
   </table>
 </dl>
 <ul>
-<li>XNSUSP creates the thread in a suspended state. In such a case, the thread will have to be explicitely resumed using the <a class="el" href="group__pod.html#ga37">xnpod_resume_thread()</a> service for its execution to actually begin, additionally to issuing <a class="el" href="group__pod.html#ga32">xnpod_start_thread()</a> for it. This flag can also be specified when invoking <a class="el" href="group__pod.html#ga32">xnpod_start_thread()</a> as a starting mode.</li></ul>
+<li>XNSUSP creates the thread in a suspended state. In such a case, the thread will have to be explicitely resumed using the <a class="el" href="group__pod.html#ga38">xnpod_resume_thread()</a> service for its execution to actually begin, additionally to issuing <a class="el" href="group__pod.html#ga33">xnpod_start_thread()</a> for it. This flag can also be specified when invoking <a class="el" href="group__pod.html#ga33">xnpod_start_thread()</a> as a starting mode.</li></ul>
 <p>
 <ul>
 <li>XNFPU (enable FPU) tells the nucleus that the new thread will use the floating-point unit. In such a case, the nucleus will handle the FPU context save/restore ops upon thread switches at the expense of a few additional cycles per context switch. By default, a thread is not expected to use the FPU. This flag is simply ignored when the nucleus runs on behalf of a userspace-based real-time control layer since the FPU management is always active if present.</li></ul>
@@ -614,7 +617,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga40" doxytag="pod.h::xnpod_migrate_thread"></a><p>
+<a class="anchor" name="ga41" doxytag="pod.h::xnpod_migrate_thread"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -657,7 +660,7 @@ This call makes the current thread migrate to another CPU if its affinity allows
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga71" doxytag="pod.c::xnpod_preempt_current_thread"></a><p>
+<a class="anchor" name="ga72" doxytag="pod.c::xnpod_preempt_current_thread"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -686,11 +689,11 @@ Preempts the current thread.
 <p>
 <p><b>For internal use only.</b></p>
 <p>
-Preempts the running thread (because a higher priority thread has just been readied). The thread is re-inserted to the front of its priority group in the ready thread queue. Must must be called with nklock locked, interrupts off. </p>
+Preempts the running thread (because a higher priority thread has just been readied). The thread is re-inserted to the front of its priority group in the ready thread queue. Must be called with nklock locked, interrupts off. </p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga55" doxytag="pod.h::xnpod_remove_hook"></a><p>
+<a class="anchor" name="ga56" doxytag="pod.h::xnpod_remove_hook"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -726,7 +729,7 @@ Preempts the running thread (because a higher priority thread has just been read
 <p>
 Remove a nucleus hook. 
 <p>
-This service removes a nucleus hook previously registered using <a class="el" href="group__pod.html#ga54">xnpod_add_hook()</a>.<p>
+This service removes a nucleus hook previously registered using <a class="el" href="group__pod.html#ga55">xnpod_add_hook()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>type</em>&nbsp;</td><td>Defines the kind of hook to remove among XNHOOK_THREAD_START, XNHOOK_THREAD_DELETE and XNHOOK_THREAD_SWITCH.</td></tr>
@@ -742,7 +745,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga39" doxytag="pod.h::xnpod_renice_thread"></a><p>
+<a class="anchor" name="ga40" doxytag="pod.h::xnpod_renice_thread"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -804,7 +807,60 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga33" doxytag="pod.h::xnpod_restart_thread"></a><p>
+<a class="anchor" name="ga30" doxytag="pod.h::xnpod_reset_timer"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">int xnpod_reset_timer           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">void&nbsp;</td>
+          <td class="mdname1" valign="top" nowrap>          </td>
+          <td class="md" valign="top">&nbsp;)&nbsp;</td>
+          <td class="md" nowrap></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Reset the system timer. 
+<p>
+Reset the system timer to its default setup. The default setup data are obtained, by order of priority, from:<p>
+<ul>
+<li>the "tick_arg" module parameter when passed to the nucleus. Zero means aperiodic timing, any other value is used as the constant period to use for undergoing the periodic timing mode.</li></ul>
+<p>
+<ul>
+<li>or, the value of the CONFIG_XENO_OPT_TIMING_PERIOD configuration parameter if CONFIG_XENO_OPT_TIMING_PERIODIC is also set. If the latter is unset, the aperiodic mode will be used.</li></ul>
+<p>
+<dl compact><dt><b>Returns:</b></dt><dd>0 is returned on success. Otherwise:</dd></dl>
+<ul>
+<li>-EBUSY is returned if the timer has already been set with incompatible requirements (different mode, different period if periodic, or non-default tick handler). <a class="el" href="group__pod.html#ga29">xnpod_stop_timer()</a> must be issued before <a class="el" href="group__pod.html#ga30">xnpod_reset_timer()</a> is called again.</li></ul>
+<p>
+<ul>
+<li>-ENODEV is returned if the underlying architecture does not support the requested periodic timing.</li></ul>
+<p>
+<ul>
+<li>-ENOSYS is returned if no active pod exists.</li></ul>
+<p>
+Side-effect: A host timing service is started in order to relay the canonical periodical tick to the underlying architecture, regardless of the frequency used for Xenomai's system tick. This routine does not call the rescheduling procedure.<p>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>User-space task in secondary mode</li></ul>
+<p>
+Rescheduling: never.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga34" doxytag="pod.h::xnpod_restart_thread"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -831,10 +887,10 @@ Rescheduling: never.     </td>
 <p>
 Restart a thread. 
 <p>
-Restarts a previously started thread. The thread is first terminated then respawned using the same information that prevailed when it was first started, including the mode bits and interrupt mask initially passed to the <a class="el" href="group__pod.html#ga32">xnpod_start_thread()</a> service. As a consequence of this call, the thread entry point is rerun.<p>
+Restarts a previously started thread. The thread is first terminated then respawned using the same information that prevailed when it was first started, including the mode bits and interrupt mask initially passed to the <a class="el" href="group__pod.html#ga33">xnpod_start_thread()</a> service. As a consequence of this call, the thread entry point is rerun.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread which must have been previously started by the <a class="el" href="group__pod.html#ga32">xnpod_start_thread()</a> service.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread which must have been previously started by the <a class="el" href="group__pod.html#ga33">xnpod_start_thread()</a> service.</td></tr>
   </table>
 </dl>
 Self-restarting a thread is allowed. However, restarting the root thread is not.<p>
@@ -846,7 +902,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga37" doxytag="pod.h::xnpod_resume_thread"></a><p>
+<a class="anchor" name="ga38" doxytag="pod.h::xnpod_resume_thread"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -898,7 +954,7 @@ Resumes the execution of a thread previously suspended by one or more calls to x
 <ul>
 <li>XNPEND. This flag removes the resource wait condition. If a watchdog is armed, it is automatically disarmed by this call. Unlike the two previous conditions, only the current thread can set this condition for itself, i.e. no thread can force another one to pend on a resource.</li></ul>
 <p>
-When the thread is eventually resumed by one or more calls to <a class="el" href="group__pod.html#ga37">xnpod_resume_thread()</a>, the caller of xnpod_suspend_thread() in the awakened thread that suspended itself should check for the following bits in its own status mask to determine what caused its wake up:<p>
+When the thread is eventually resumed by one or more calls to <a class="el" href="group__pod.html#ga38">xnpod_resume_thread()</a>, the caller of xnpod_suspend_thread() in the awakened thread that suspended itself should check for the following bits in its own status mask to determine what caused its wake up:<p>
 <ul>
 <li>XNRMID means that the caller must assume that the pended synchronization object has been destroyed (see <a class="el" href="group__synch.html#ga7">xnsynch_flush()</a>).</li></ul>
 <p>
@@ -906,7 +962,7 @@ When the thread is eventually resumed by one or more calls to <a class="el" href
 <li>XNTIMEO means that the delay elapsed, or the watchdog went off before the corresponding synchronization object was signaled.</li></ul>
 <p>
 <ul>
-<li>XNBREAK means that the wait has been forcibly broken by a call to <a class="el" href="group__pod.html#ga38">xnpod_unblock_thread()</a>.</li></ul>
+<li>XNBREAK means that the wait has been forcibly broken by a call to <a class="el" href="group__pod.html#ga39">xnpod_unblock_thread()</a>.</li></ul>
 <p>
 Environments:<p>
 This service can be called from:<p>
@@ -916,7 +972,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga41" doxytag="pod.h::xnpod_rotate_readyq"></a><p>
+<a class="anchor" name="ga42" doxytag="pod.h::xnpod_rotate_readyq"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -943,7 +999,7 @@ Rescheduling: never.     </td>
 <p>
 Rotate a priority level in the ready queue. 
 <p>
-The thread at the head of the ready queue of the given priority level is moved to the end of this queue. Therefore, the execution of threads having the same priority is switched. Round-robin scheduling policies may be implemented by periodically issuing this call in a given period of time. It should be noted that the nucleus already provides a built-in round-robin mode though (see <a class="el" href="group__pod.html#ga47">xnpod_activate_rr()</a>).<p>
+The thread at the head of the ready queue of the given priority level is moved to the end of this queue. Therefore, the execution of threads having the same priority is switched. Round-robin scheduling policies may be implemented by periodically issuing this call in a given period of time. It should be noted that the nucleus already provides a built-in round-robin mode though (see <a class="el" href="group__pod.html#ga48">xnpod_activate_rr()</a>).<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>prio</em>&nbsp;</td><td>The priority level to rotate. if XNPOD_RUNPRIO is given, the running thread priority is used to rotate the queue.</td></tr>
@@ -958,7 +1014,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga42" doxytag="pod.h::xnpod_schedule"></a><p>
+<a class="anchor" name="ga43" doxytag="pod.h::xnpod_schedule"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -985,17 +1041,17 @@ Rescheduling: never.     </td>
 <p>
 Rescheduling procedure entry point. 
 <p>
-This is the central rescheduling routine which should be called to validate and apply changes which have previously been made to the nucleus scheduling state, such as suspending, resuming or changing the priority of threads. This call first determines if a thread switch should take place, and performs it as needed. <a class="el" href="group__pod.html#ga42">xnpod_schedule()</a> actually switches threads if:<p>
+This is the central rescheduling routine which should be called to validate and apply changes which have previously been made to the nucleus scheduling state, such as suspending, resuming or changing the priority of threads. This call first determines if a thread switch should take place, and performs it as needed. <a class="el" href="group__pod.html#ga43">xnpod_schedule()</a> actually switches threads if:<p>
 <ul>
 <li>the running thread has been blocked or deleted.</li><li>or, the running thread has a lower priority than the first ready to run thread.</li><li>or, the running thread does not lead no more the ready threads (round-robin).</li></ul>
 <p>
 The nucleus implements a lazy rescheduling scheme so that most of the services affecting the threads state MUST be followed by a call to the rescheduling procedure for the new scheduling state to be applied. In other words, multiple changes on the scheduler state can be done in a row, waking threads up, blocking others, without being immediately translated into the corresponding context switches, like it would be necessary would it appear that a higher priority thread than the current one became runnable for instance. When all changes have been applied, the rescheduling procedure is then called to consider those changes, and possibly replace the current thread by another one.<p>
-As a notable exception to the previous principle however, every action which ends up suspending or deleting the current thread begets an immediate call to the rescheduling procedure on behalf of the service causing the state transition. For instance, self-suspension, self-destruction, or sleeping on a synchronization object automatically leads to a call to the rescheduling procedure, therefore the caller does not need to explicitely issue <a class="el" href="group__pod.html#ga42">xnpod_schedule()</a> after such operations.<p>
+As a notable exception to the previous principle however, every action which ends up suspending or deleting the current thread begets an immediate call to the rescheduling procedure on behalf of the service causing the state transition. For instance, self-suspension, self-destruction, or sleeping on a synchronization object automatically leads to a call to the rescheduling procedure, therefore the caller does not need to explicitely issue <a class="el" href="group__pod.html#ga43">xnpod_schedule()</a> after such operations.<p>
 The rescheduling procedure always leads to a null-effect if the scheduler is locked (XNLOCK bit set in the status mask of the running thread), or if it is called on behalf of an ISR or callout.<p>
 Calling this procedure with no applicable context switch pending is harmless and simply leads to a null-effect.<p>
 Side-effects:<p>
 <ul>
-<li>If an asynchronous service routine exists, the pending asynchronous signals are delivered to a resuming thread or on behalf of the caller before it returns from the procedure if no context switch has taken place. This behaviour can be disabled by setting the XNASDI flag in the thread's status mask by calling <a class="el" href="group__pod.html#ga35">xnpod_set_thread_mode()</a>.</li></ul>
+<li>If an asynchronous service routine exists, the pending asynchronous signals are delivered to a resuming thread or on behalf of the caller before it returns from the procedure if no context switch has taken place. This behaviour can be disabled by setting the XNASDI flag in the thread's status mask by calling <a class="el" href="group__pod.html#ga36">xnpod_set_thread_mode()</a>.</li></ul>
 <p>
 Environments:<p>
 This service can be called from:<p>
@@ -1060,7 +1116,7 @@ This internal routine should NEVER be used directly by the upper interfaces. It 
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga35" doxytag="pod.h::xnpod_set_thread_mode"></a><p>
+<a class="anchor" name="ga36" doxytag="pod.h::xnpod_set_thread_mode"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1117,7 +1173,7 @@ Change the control mode of a given thread. The control mode affects the behaviou
 <li>XNRRB causes the thread to be marked as undergoing the round-robin scheduling policy. The contents of the thread.rrperiod field determines the time quantum (in ticks) allowed for its next slice. If the thread is already undergoing the round-robin scheduling policy at the time this service is called, the time quantum remains unchanged.</li></ul>
 <p>
 <ul>
-<li>XNASDI disables the asynchronous signal handling for this thread. See <a class="el" href="group__pod.html#ga42">xnpod_schedule()</a> for more on this.</li></ul>
+<li>XNASDI disables the asynchronous signal handling for this thread. See <a class="el" href="group__pod.html#ga43">xnpod_schedule()</a> for more on this.</li></ul>
 <p>
 <ul>
 <li>XNSHIELD enables the interrupt shield for the current user-space task. When engaged, the interrupt shield protects the shadow task running in secondary mode from any preemption by the regular Linux interrupt handlers, without delaying in any way Xenomai's interrupt handling. The shield is operated on a per-task basis at each context switch, depending on the setting of this flag. This feature is only available if the CONFIG_XENO_OPT_ISHIELD option has been enabled at configuration time; otherwise, this flag is simply ignored.</li></ul>
@@ -1130,7 +1186,7 @@ This service can be called from:<p>
 Rescheduling: never, therefore, the caller should reschedule if XNLOCK has been passed into <em>clrmask</em>.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga50" doxytag="pod.h::xnpod_set_thread_periodic"></a><p>
+<a class="anchor" name="ga51" doxytag="pod.h::xnpod_set_thread_periodic"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1172,7 +1228,7 @@ Rescheduling: never, therefore, the caller should reschedule if XNLOCK has been 
 <p>
 Make a thread periodic. 
 <p>
-Make a thread periodic by programming its first release point and its period in the processor time line. Subsequent calls to <a class="el" href="group__pod.html#ga51">xnpod_wait_thread_period()</a> will delay the thread until the next periodic release point in the processor timeline is reached.<p>
+Make a thread periodic by programming its first release point and its period in the processor time line. Subsequent calls to <a class="el" href="group__pod.html#ga52">xnpod_wait_thread_period()</a> will delay the thread until the next periodic release point in the processor timeline is reached.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread. This thread is immediately delayed until the first periodic release point is reached.</td></tr>
@@ -1197,7 +1253,7 @@ Rescheduling: possible if the operation affects the current thread and <em>idate
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga49" doxytag="pod.h::xnpod_set_time"></a><p>
+<a class="anchor" name="ga50" doxytag="pod.h::xnpod_set_time"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1233,7 +1289,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga30" doxytag="pod.h::xnpod_shutdown"></a><p>
+<a class="anchor" name="ga31" doxytag="pod.h::xnpod_shutdown"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1266,7 +1322,7 @@ Forcibly shutdowns the active pod. All existing nucleus threads (but the root on
     <tr><td valign="top"></td><td valign="top"><em>xtype</em>&nbsp;</td><td>An exit code passed to the host environment who started the nucleus. Zero is always interpreted as a successful return.</td></tr>
   </table>
 </dl>
-The nucleus never calls this routine directly. Skins should provide their own shutdown handlers which end up calling <a class="el" href="group__pod.html#ga30">xnpod_shutdown()</a> after their own housekeeping chores have been carried out.<p>
+The nucleus never calls this routine directly. Skins should provide their own shutdown handlers which end up calling <a class="el" href="group__pod.html#ga31">xnpod_shutdown()</a> after their own housekeeping chores have been carried out.<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -1275,7 +1331,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga32" doxytag="pod.h::xnpod_start_thread"></a><p>
+<a class="anchor" name="ga33" doxytag="pod.h::xnpod_start_thread"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1338,7 +1394,7 @@ Initial start of a newly created thread.
 Starts a (newly) created thread, scheduling it for the first time. This call releases the target thread from the XNDORMANT state. This service also sets the initial mode and interrupt mask for the new thread.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread which must have been previously initialized by the <a class="el" href="group__pod.html#ga31">xnpod_init_thread()</a> service.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread which must have been previously initialized by the <a class="el" href="group__pod.html#ga32">xnpod_init_thread()</a> service.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>The initial thread mode. The following flags can be part of this bitmask, each of them affecting the nucleus behaviour regarding the started thread:</td></tr>
   </table>
 </dl>
@@ -1349,10 +1405,10 @@ Starts a (newly) created thread, scheduling it for the first time. This call rel
 <li>XNRRB causes the thread to be marked as undergoing the round-robin scheduling policy at startup. The contents of the thread.rrperiod field determines the time quantum (in ticks) allowed for its next slice.</li></ul>
 <p>
 <ul>
-<li>XNASDI disables the asynchronous signal handling for this thread. See <a class="el" href="group__pod.html#ga42">xnpod_schedule()</a> for more on this.</li></ul>
+<li>XNASDI disables the asynchronous signal handling for this thread. See <a class="el" href="group__pod.html#ga43">xnpod_schedule()</a> for more on this.</li></ul>
 <p>
 <ul>
-<li>XNSUSP makes the thread start in a suspended state. In such a case, the thread will have to be explicitely resumed using the <a class="el" href="group__pod.html#ga37">xnpod_resume_thread()</a> service for its execution to actually begin.</li></ul>
+<li>XNSUSP makes the thread start in a suspended state. In such a case, the thread will have to be explicitely resumed using the <a class="el" href="group__pod.html#ga38">xnpod_resume_thread()</a> service for its execution to actually begin.</li></ul>
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -1424,7 +1480,7 @@ The time interval that elapses between two consecutive invocations of the handle
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned on success. Otherwise:</dd></dl>
 <ul>
-<li>-EBUSY is returned if the timer has already been set. <a class="el" href="group__pod.html#ga29">xnpod_stop_timer()</a> must be issued before <a class="el" href="group__pod.html#ga28">xnpod_start_timer()</a> is called again.</li></ul>
+<li>-EBUSY is returned if the timer has already been set with incompatible requirements (different mode, different period if periodic, or different handler). <a class="el" href="group__pod.html#ga29">xnpod_stop_timer()</a> must be issued before <a class="el" href="group__pod.html#ga28">xnpod_start_timer()</a> is called again.</li></ul>
 <p>
 <ul>
 <li>-EINVAL is returned if an invalid null tick handler has been passed, or if the timer precision cannot represent the duration of a single host tick.</li></ul>
@@ -1480,7 +1536,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga69" doxytag="pod.c::xnpod_suspend_thread"></a><p>
+<a class="anchor" name="ga70" doxytag="pod.c::xnpod_suspend_thread"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1528,7 +1584,7 @@ Rescheduling: never.     </td>
 <p>
 Suspend a thread. 
 <p>
-Suspends the execution of a thread according to a given suspensive condition. This thread will not be eligible for scheduling until it all the pending suspensive conditions set by this service are removed by one or more calls to <a class="el" href="group__pod.html#ga37">xnpod_resume_thread()</a>.<p>
+Suspends the execution of a thread according to a given suspensive condition. This thread will not be eligible for scheduling until it all the pending suspensive conditions set by this service are removed by one or more calls to <a class="el" href="group__pod.html#ga38">xnpod_resume_thread()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the suspended thread.</td></tr>
@@ -1536,7 +1592,7 @@ Suspends the execution of a thread according to a given suspensive condition. Th
   </table>
 </dl>
 <ul>
-<li>XNSUSP. This flag forcibly suspends a thread, regardless of any resource to wait for. A reverse call to <a class="el" href="group__pod.html#ga37">xnpod_resume_thread()</a> specifying the XNSUSP bit must be issued to remove this condition, which is cumulative with other suspension bits.<em>wchan</em> should be NULL when using this suspending mode.</li></ul>
+<li>XNSUSP. This flag forcibly suspends a thread, regardless of any resource to wait for. A reverse call to <a class="el" href="group__pod.html#ga38">xnpod_resume_thread()</a> specifying the XNSUSP bit must be issued to remove this condition, which is cumulative with other suspension bits.<em>wchan</em> should be NULL when using this suspending mode.</li></ul>
 <p>
 <ul>
 <li>XNDELAY. This flags denotes a counted delay wait (in ticks) which duration is defined by the value of the timeout parameter.</li></ul>
@@ -1561,7 +1617,7 @@ Rescheduling: possible if the current thread suspends itself.<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga72" doxytag="pod.c::xnpod_trap_fault"></a><p>
+<a class="anchor" name="ga73" doxytag="pod.c::xnpod_trap_fault"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1597,7 +1653,7 @@ This is the default handler which is called whenever an uncontrolled exception o
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga38" doxytag="pod.h::xnpod_unblock_thread"></a><p>
+<a class="anchor" name="ga39" doxytag="pod.h::xnpod_unblock_thread"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1641,7 +1697,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga51" doxytag="pod.h::xnpod_wait_thread_period"></a><p>
+<a class="anchor" name="ga52" doxytag="pod.h::xnpod_wait_thread_period"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1671,15 +1727,15 @@ Wait for the next periodic release point.
 Make the current thread wait for the next periodic release point in the processor time line.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>overruns_r</em>&nbsp;</td><td>If non-NULL, <em>overruns_r</em> must be a pointer to a memory location which will be written with the count of pending overruns. This value is copied only when <a class="el" href="group__pod.html#ga51">xnpod_wait_thread_period()</a> returns -ETIMEDOUT or success; the memory location remains unmodified otherwise. If NULL, this count will never be copied back.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>overruns_r</em>&nbsp;</td><td>If non-NULL, <em>overruns_r</em> must be a pointer to a memory location which will be written with the count of pending overruns. This value is copied only when <a class="el" href="group__pod.html#ga52">xnpod_wait_thread_period()</a> returns -ETIMEDOUT or success; the memory location remains unmodified otherwise. If NULL, this count will never be copied back.</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success; if <em>overruns_r</em> is valid, zero is copied to the pointed memory location. Otherwise:</dd></dl>
 <ul>
-<li>-EWOULDBLOCK is returned if <a class="el" href="group__pod.html#ga50">xnpod_set_thread_periodic()</a> has not previously been called for the calling thread.</li></ul>
+<li>-EWOULDBLOCK is returned if <a class="el" href="group__pod.html#ga51">xnpod_set_thread_periodic()</a> has not previously been called for the calling thread.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__pod.html#ga38">xnpod_unblock_thread()</a> has been called for the waiting thread before the next periodic release point has been reached. In this case, the overrun counter is reset too.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__pod.html#ga39">xnpod_unblock_thread()</a> has been called for the waiting thread before the next periodic release point has been reached. In this case, the overrun counter is reset too.</li></ul>
 <p>
 <ul>
 <li>-ETIMEDOUT is returned if the timer has overrun, which indicates that one or more previous release points have been missed by the calling thread. If <em>overruns_r</em> is valid, the count of pending overruns is copied to the pointed memory location.</li></ul>
@@ -1692,7 +1748,7 @@ This service can be called from:<p>
 Rescheduling: always, unless the current release point has already been reached. In the latter case, the current thread immediately returns from this service without being delayed.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga70" doxytag="pod.c::xnpod_welcome_thread"></a><p>
+<a class="anchor" name="ga71" doxytag="pod.c::xnpod_welcome_thread"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -1725,7 +1781,7 @@ This internal routine is called on behalf of a (re)starting thread's prologue be
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:02 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:05:27 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

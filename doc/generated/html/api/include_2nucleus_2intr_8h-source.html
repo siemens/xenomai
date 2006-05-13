@@ -38,7 +38,7 @@
 00028 <span class="preprocessor"></span><span class="comment">/* Additional bits. */</span>
 00029 <span class="preprocessor">#define XN_ISR_PROPAGATE 0x100</span>
 00030 <span class="preprocessor"></span><span class="preprocessor">#define XN_ISR_NOENABLE  0x200</span>
-00031 <span class="preprocessor"></span><span class="preprocessor">#define XN_ISR_BITMASK   ~0xff</span>
+00031 <span class="preprocessor"></span><span class="preprocessor">#define XN_ISR_BITMASK   (~0xff)</span>
 00032 <span class="preprocessor"></span>
 00033 <span class="comment">/* Creation flags. */</span>
 00034 <span class="preprocessor">#define XN_ISR_SHARED    0x1</span>
@@ -113,7 +113,7 @@
 00103 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
 00104 
 00105 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_INTR_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:01 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:04:28 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

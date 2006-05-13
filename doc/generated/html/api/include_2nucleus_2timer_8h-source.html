@@ -221,34 +221,65 @@
 00211 
 00235 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xntimer_stop(xntimer_t *timer)
 00236 {
-00237     <span class="keywordflow">if</span> (!testbits(timer-&gt;status,XNTIMER_DEQUEUED))
-00238         nktimer-&gt;do_timer_stop(timer);
-00239 }
-00240 
-00241 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga23">xntimer_freeze</a>(<span class="keywordtype">void</span>);
-00242 
-00243 xnticks_t <a class="code" href="group__timer.html#ga21">xntimer_get_date</a>(xntimer_t *timer);
+00237     <span class="comment">/* Careful: the do_timer_stop() helper is expected to preserve the</span>
+00238 <span class="comment">       date field of the stopped timer, so that subsequent calls to</span>
+00239 <span class="comment">       xntimer_get_timeout() would still work on such timer as</span>
+00240 <span class="comment">       expected. */</span>
+00241     <span class="keywordflow">if</span> (!testbits(timer-&gt;status,XNTIMER_DEQUEUED))
+00242         nktimer-&gt;do_timer_stop(timer);
+00243 }
 00244 
-00245 xnticks_t <a class="code" href="group__timer.html#ga22">xntimer_get_timeout</a>(xntimer_t *timer);
-00246 
-00247 <span class="keywordtype">void</span> xntimer_set_periodic_mode(<span class="keywordtype">void</span>);
-00248 
-00249 <span class="keywordtype">void</span> xntimer_set_aperiodic_mode(<span class="keywordtype">void</span>);
-00250 
-00251 <span class="preprocessor">#if defined(CONFIG_SMP)</span>
-00252 <span class="preprocessor"></span><span class="keywordtype">int</span> xntimer_set_sched(xntimer_t *timer, <span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched);
-00253 <span class="preprocessor">#else </span><span class="comment">/* ! CONFIG_SMP */</span>
-00254 <span class="preprocessor">#define xntimer_set_sched(timer,sched)</span>
-00255 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_SMP */</span>
-00256 
-00257 <span class="preprocessor">#ifdef __cplusplus</span>
-00258 <span class="preprocessor"></span>}
-00259 <span class="preprocessor">#endif</span>
-00260 <span class="preprocessor"></span>
-00261 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
+00245 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t xntimer_get_jiffies(<span class="keywordtype">void</span>)
+00246 {
+00247 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC</span>
+00248 <span class="preprocessor"></span>    <span class="keywordflow">return</span> nktimer-&gt;get_jiffies();
+00249 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
+00250     <span class="keywordflow">return</span> xnarch_get_cpu_time();
+00251 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
+00252 }
+00253 
+00254 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t xntimer_get_rawclock(<span class="keywordtype">void</span>)
+00255 {
+00256 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC</span>
+00257 <span class="preprocessor"></span>    <span class="keywordflow">return</span> nktimer-&gt;get_raw_clock();
+00258 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
+00259     <span class="keywordflow">return</span> xnarch_get_cpu_tsc();
+00260 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
+00261 }
 00262 
-00263 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_TIMER_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Apr 25 19:45:01 2006 for Xenomai API by&nbsp;
+00263 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t xntimer_get_raw_expiry (xntimer_t *timer)
+00264 {
+00265 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC</span>
+00266 <span class="preprocessor"></span>    <span class="keywordflow">return</span> nktimer-&gt;get_timer_raw_expiry(timer);
+00267 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
+00268     <span class="keywordflow">return</span> xntimerh_date(&amp;timer-&gt;aplink);
+00269 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
+00270 }
+00271 
+00272 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#ga23">xntimer_freeze</a>(<span class="keywordtype">void</span>);
+00273 
+00274 xnticks_t <a class="code" href="group__timer.html#ga21">xntimer_get_date</a>(xntimer_t *timer);
+00275 
+00276 xnticks_t <a class="code" href="group__timer.html#ga22">xntimer_get_timeout</a>(xntimer_t *timer);
+00277 
+00278 <span class="keywordtype">void</span> xntimer_set_periodic_mode(<span class="keywordtype">void</span>);
+00279 
+00280 <span class="keywordtype">void</span> xntimer_set_aperiodic_mode(<span class="keywordtype">void</span>);
+00281 
+00282 <span class="preprocessor">#if defined(CONFIG_SMP)</span>
+00283 <span class="preprocessor"></span><span class="keywordtype">int</span> xntimer_set_sched(xntimer_t *timer, <span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched);
+00284 <span class="preprocessor">#else </span><span class="comment">/* ! CONFIG_SMP */</span>
+00285 <span class="preprocessor">#define xntimer_set_sched(timer,sched)</span>
+00286 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_SMP */</span>
+00287 
+00288 <span class="preprocessor">#ifdef __cplusplus</span>
+00289 <span class="preprocessor"></span>}
+00290 <span class="preprocessor">#endif</span>
+00291 <span class="preprocessor"></span>
+00292 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
+00293 
+00294 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_TIMER_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:04:28 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
