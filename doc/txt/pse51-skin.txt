@@ -1,10 +1,19 @@
 Overview
 ========
 
-The POSIX emulation module on top of Xenomai aims at providing an
-(almost) PSE51 compatible API. In order to help porting applications
-from other PSE51 compatible APIS (like RTLinux) it will contain some
-non portable extensions to the POSIX specification.
+The POSIX module on top of Xenomai is currently available to
+kernel-based applications, and to user-space applications through a
+direct call interface to the module. The POSIX module can also be used
+over the event-driven simulation engine.
+
+ xeno_posix.ko: POSIX module in kernel space.
+libpthread_rt.so: Direct call interface.
+libposix_sim.a: POSIX module over the event-driven simulator.
+
+The POSIX module on top of Xenomai aims at providing an (almost) PSE51
+compatible API. In order to help porting applications from other PSE51
+compatible APIs (like RTLinux) it will contain some non portable
+extensions to the POSIX specification.
 
 This skin already contains most basic features :
 - threads,
