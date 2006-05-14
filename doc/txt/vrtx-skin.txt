@@ -2,8 +2,17 @@
 Overview
 ========
 
-The VRTX (R) emulation module on top of Xenomai currently mimicks
-the following services:
+The VRTX (R) emulation module on top of Xenomai is currently available
+to kernel-based applications, and user-space applications over the
+UVM.  A direct call interface which allows user-space applications to
+use the services of the in-kernel emulator without the UVM, is under
+development in this tree. The VRTX module can also be used over the
+event-driven simulation engine.
+
+ xeno_vrtx.ko: VRTX emulator in kernel space.
+libvrtx_uvm.a: VRTX emulation in user-space over the UVM.
+libvrtx.so: Direct call interface.
+libvrtx_sim.a: VRTX emulation over the event-driven simulator.
 
 Known variations from VRTX
 ==========================

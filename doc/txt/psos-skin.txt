@@ -1,8 +1,16 @@
 Overview
 ========
 
-The pSOS+ emulation module on top of Xenomai currently mimicks the
-following services:
+The pSOS+ (R) emulation module on top of Xenomai is currently
+available to kernel-based applications, and to user-space applications
+over the UVM. The pSOS+ module can also be used over the event-driven
+simulation engine.
+
+ xeno_psos.ko: pSOS+ emulator in kernel space.
+libpsos_uvm.a: pSOS+ emulation in user-space over the UVM.
+libpsos_sim.a: pSOS+ emulation over the event-driven simulator.
+
+The pSOS+ emulation module currently mimicks the following services:
 
 as_catch, as_send, as_return
 

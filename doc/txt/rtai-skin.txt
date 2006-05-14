@@ -1,8 +1,15 @@
 Overview
 ========
 
+The RTAI emulation module on top of Xenomai is currently available to
+kernel-based applications, and can be used over the event-driven
+simulation engine.
+
+ xeno_rtai.ko: RTAI emulator in kernel space.
+librtai_sim.a: RTAI emulation over the event-driven simulator.
+
 The RTAI emulation module on top of Xenomai currently mimicks the
-following services for kernel space applications:
+following services:
 
 rt_request_irq
 rt_release_irq
