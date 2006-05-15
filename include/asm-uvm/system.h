@@ -207,7 +207,6 @@ static inline void xnarch_init_heapcb (xnarch_heapcb_t *cb)
 
 static inline int __attribute__ ((unused))
 xnarch_read_environ (const char *name, const char **ptype, void *pvar)
-
 {
     char *value;
 
@@ -286,25 +285,21 @@ static inline int xnarch_hook_irq (unsigned irq,
 }
 
 static inline int xnarch_release_irq (unsigned irq)
-
 {
     return -ENOSYS;
 }
 
 static inline int xnarch_enable_irq (unsigned irq)
-
 {
     return -ENOSYS;
 }
 
 static inline int xnarch_disable_irq (unsigned irq)
-
 {
     return -ENOSYS;
 }
 
 static inline int xnarch_end_irq (unsigned irq)
-
 {
     return -ENOSYS;
 }
@@ -312,7 +307,9 @@ static inline int xnarch_end_irq (unsigned irq)
 
 static inline void xnarch_chain_irq (unsigned irq)
 
-{ /* Nop */ }
+{
+    /* empty */
+}
 
 static inline unsigned long xnarch_set_irq_affinity (unsigned irq,
 						     unsigned long affinity)
@@ -361,7 +358,6 @@ static void xnarch_restart_handler (int sig)
 }
 
 int main (int argc, char *argv[])
-
 {
     struct sigaction sa;
     int err;
@@ -457,7 +453,6 @@ struct xnarch_tick_parms {
  */
 
 static void *xnarch_timer_thread (void *cookie)
-
 {
     struct xnarch_tick_parms *p = (struct xnarch_tick_parms *)cookie;
     void (*tickhandler)(void);
@@ -668,7 +663,6 @@ static inline void xnarch_restore_fpu(xnarchtcb_t *tcb)
 }
 
 int xnarch_setimask (int imask)
-
 {
     spl_t s;
     splhigh(s);
@@ -737,7 +731,6 @@ static inline unsigned long long xnarch_ns_to_tsc (unsigned long long ns)
 }
 
 static inline unsigned long long xnarch_get_cpu_time (void)
-
 {
     nanotime_t t;
     uvm_timer_read(&t);
