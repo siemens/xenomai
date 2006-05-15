@@ -1,3 +1,7 @@
+2006-05-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* sim/vm/thread.cc (XenoThread): Raise stack size to 32k.
+
 2006-04-09  Philippe Gerum  <rpm@xenomai.org>
 
 	* sim/scope/gdbhelper.cc (splitInput): Re-init the result buffer
