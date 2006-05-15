@@ -1000,7 +1000,7 @@ static inline void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
 {
     XENO_ASSERT(RTDM, !xnpod_asynch_p(), return;);
 
-    if (unlikely(xnsynch_wakeup_one_sleeper(&mutex->synch_base)))
+    if (unlikely(xnsynch_wakeup_one_sleeper(&mutex->synch_base) != NULL))
         xnpod_schedule();
 }
 
