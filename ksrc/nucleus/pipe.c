@@ -87,21 +87,6 @@ static inline void xnpipe_minor_free(int minor)
               1 << (minor % BITS_PER_LONG));
 }
 
-/* Get nklock locked before using this macro */
-
-#define xnpipe_read_wait(state,flags)						\
-    ({										\
-    int __sigpending;								\
-    DEFINE_WAIT(__wait);							\
-    xnpipe_enqueue_read(state);							\
-    xnlock_put_irqrestore(&nklock,flags);					\
-    prepare_to_wait_exclusive(&(state)->readq, &__wait, TASK_INTERRUPTIBLE);	\
-    schedule();									\
-    finish_wait(&(state)->readq, &__wait);					\
-    __sigpending = signal_pending(current);					\
-    xnlock_get_irqsave(&nklock,flags);						\
-    __sigpending; })
-
 static inline void xnpipe_enqueue_read(xnpipe_state_t *state)
 {
     spl_t s;
@@ -116,6 +101,28 @@ static inline void xnpipe_enqueue_read(xnpipe_state_t *state)
     (state->readw)++;
 
     xnlock_put_irqrestore(&nklock, s);
+}
+
+/* Must be entered with nklock held. */
+
+static inline int xnpipe_read_wait(xnpipe_state_t *state, spl_t s)
+{
+    DEFINE_WAIT(wait);
+    int sigpending;
+
+    xnpipe_enqueue_read(state);
+    xnlock_put_irqrestore(&nklock, s);
+
+    prepare_to_wait_exclusive(&(state)->readq, &wait, TASK_INTERRUPTIBLE);
+    schedule();
+    finish_wait(&(state)->readq, &wait);
+    sigpending = signal_pending(current);
+
+    /* We do not pass "s" back to the caller, we just restore the
+       entry state here. */
+    xnlock_get_irqsave(&nklock, s);
+
+    return sigpending;
 }
 
 static inline void xnpipe_dequeue_read(xnpipe_state_t *state)

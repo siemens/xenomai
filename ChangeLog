@@ -1,3 +1,9 @@
+2006-05-15  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/pipe.c (xnpipe_read_wait): Change the former macro
+	to an inline routine in order to work around an optimization bug
+	from the SuSE-originated GCC 4.x.
+
 2006-05-13  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/thread.h (XNHELD): Add "held" blocking bit which
