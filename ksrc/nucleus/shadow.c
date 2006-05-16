@@ -114,38 +114,34 @@ union xnshadow_ppd_hkey {
    xnshadow_ppd_remove_mm. */
 static unsigned
 xnshadow_ppd_lookup_inner(xnqueue_t **pq,
-                          xnshadow_ppd_t **pholder,
-                          xnshadow_ppd_key_t *pkey)
+                          xnshadow_ppd_t ** pholder, xnshadow_ppd_key_t * pkey)
 {
-    union xnshadow_ppd_hkey key = { .mm = pkey->mm };
-    unsigned bucket = jhash2(&key.val, sizeof(key)/sizeof(uint32_t), 0);
+    union xnshadow_ppd_hkey key = {.mm = pkey->mm };
+    unsigned bucket = jhash2(&key.val, sizeof(key) / sizeof(uint32_t), 0);
     xnshadow_ppd_t *ppd;
     xnholder_t *holder;
 
     *pq = &xnshadow_ppd_hash[bucket % XNSHADOW_PPD_HASH_SIZE];
     holder = getheadq(*pq);
 
-    if (!holder)
-        {
+    if (!holder) {
         *pholder = NULL;
         return 0;
-        }
-    
-    do 
-        {
+    }
+
+    do {
         ppd = link2ppd(holder);
         holder = nextq(*pq, holder);
-        }
+    }
     while (holder &&
            (ppd->key.mm < pkey->mm ||
             (ppd->key.mm == pkey->mm && ppd->key.muxid < pkey->muxid)));
 
-    if (ppd->key.mm == pkey->mm && ppd->key.muxid == pkey->muxid)
-        {
+    if (ppd->key.mm == pkey->mm && ppd->key.muxid == pkey->muxid) {
         /* found it, return it. */
         *pholder = ppd;
         return 1;
-        }
+    }
 
     /* not found, return successor for insertion. */
     if (ppd->key.mm < pkey->mm ||
@@ -157,7 +153,7 @@ xnshadow_ppd_lookup_inner(xnqueue_t **pq,
     return 0;
 }
 
-static int xnshadow_ppd_insert(xnshadow_ppd_t *holder)
+static int xnshadow_ppd_insert(xnshadow_ppd_t * holder)
 {
     xnshadow_ppd_t *next;
     xnqueue_t *q;
@@ -166,11 +162,10 @@ static int xnshadow_ppd_insert(xnshadow_ppd_t *holder)
 
     xnlock_get_irqsave(&nklock, s);
     found = xnshadow_ppd_lookup_inner(&q, &next, &holder->key);
-    if (found)
-        {
+    if (found) {
         xnlock_put_irqrestore(&nklock, s);
         return -EBUSY;
-        }
+    }
 
     inith(&holder->link);
     if (next)
@@ -200,7 +195,7 @@ static xnshadow_ppd_t *xnshadow_ppd_lookup(unsigned muxid, struct mm_struct *mm)
     return holder;
 }
 
-static void xnshadow_ppd_remove(xnshadow_ppd_t *holder)
+static void xnshadow_ppd_remove(xnshadow_ppd_t * holder)
 {
     unsigned found;
     xnqueue_t *q;
@@ -216,7 +211,7 @@ static void xnshadow_ppd_remove(xnshadow_ppd_t *holder)
 }
 
 static inline void xnshadow_ppd_remove_mm(struct mm_struct *mm,
-                                          void (*destructor)(xnshadow_ppd_t *))
+                                          void (*destructor) (xnshadow_ppd_t *))
 {
     xnshadow_ppd_key_t key;
     xnshadow_ppd_t *ppd;
@@ -229,8 +224,7 @@ static inline void xnshadow_ppd_remove_mm(struct mm_struct *mm,
     xnlock_get_irqsave(&nklock, s);
     xnshadow_ppd_lookup_inner(&q, &ppd, &key);
 
-    while (ppd && ppd->key.mm == mm)
-        {
+    while (ppd && ppd->key.mm == mm) {
         holder = nextq(q, &ppd->link);
         removeq(q, &ppd->link);
         xnlock_put_irqrestore(&nklock, s);
@@ -240,7 +234,7 @@ static inline void xnshadow_ppd_remove_mm(struct mm_struct *mm,
 
         ppd = holder ? link2ppd(holder) : NULL;
         xnlock_get_irqsave(&nklock, s);
-        }
+    }
 
     xnlock_put_irqrestore(&nklock, s);
 }
@@ -487,7 +481,7 @@ static void schedule_linux_call(int type, struct task_struct *p, int arg)
 #ifdef CONFIG_XENO_OPT_DEBUG
     if (!p)
         xnpod_fatal("schedule_linux_call() invoked "
-		    "with NULL task pointer (req=%d, arg=%d)?!",type,arg);
+                    "with NULL task pointer (req=%d, arg=%d)?!", type, arg);
 #endif /* CONFIG_XENO_OPT_DEBUG */
 
     splhigh(s);
@@ -1152,7 +1146,7 @@ static int bind_to_interface(struct task_struct *curr,
             if (ppd) {
                 ppd->key.muxid = muxid;
                 ppd->key.mm = curr->mm;
-                
+
                 if (xnshadow_ppd_insert(ppd) == -EBUSY)
                     /* In case of concurrent binding (which can not happen with
                        Xenomai libraries), detach right away the second ppd. */
@@ -1819,12 +1813,12 @@ static inline void do_setsched_event(struct task_struct *p, int priority)
 
 RTHAL_DECLARE_SETSCHED_EVENT(setsched_event);
 
-static void detach_ppd(xnshadow_ppd_t *ppd)
+static void detach_ppd(xnshadow_ppd_t * ppd)
 {
     muxtable[xnshadow_ppd_muxid(ppd)].eventcb(XNSHADOW_CLIENT_DETACH, ppd);
 }
 
-static inline void do_cleanup_event (struct mm_struct *mm)
+static inline void do_cleanup_event(struct mm_struct *mm)
 {
     xnshadow_ppd_remove_mm(mm, &detach_ppd);
 }
@@ -1857,7 +1851,7 @@ int xnshadow_register_interface(const char *name,
                                 unsigned magic,
                                 int nrcalls,
                                 xnsysent_t *systab,
-                                void *(*eventcb)(int, void *))
+                                void *(*eventcb) (int, void *))
 {
     int muxid;
     spl_t s;
@@ -2009,16 +2003,16 @@ int xnshadow_mount(void)
     rthal_catch_hisyscall(&hisyscall_event);
 
     size = sizeof(xnqueue_t) * XNSHADOW_PPD_HASH_SIZE;
-    xnshadow_ppd_hash = (xnqueue_t *) xnarch_sysalloc(size);
-    if (!xnshadow_ppd_hash)
-        {
+    xnshadow_ppd_hash = (xnqueue_t *)xnarch_sysalloc(size);
+    if (!xnshadow_ppd_hash) {
         xnshadow_cleanup();
         printk(KERN_WARNING "Xenomai: cannot allocate PPD hash table.\n");
         return -ENOMEM;
-        }
+    }
 
     for (i = 0; i < XNSHADOW_PPD_HASH_SIZE; i++)
         initq(&xnshadow_ppd_hash[i]);
+
     return 0;
 }
 
