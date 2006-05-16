@@ -91,7 +91,7 @@ int xntest_assert(int status, char *assertion, char *file, int line)
     ++tests;
     if(!status) {
         ++test_failures;
-        xnarch_printf("%s:%d: TEST %s failed.\n", file, line, assertion);
+        xnarch_printf("%s:%d: TEST failed: %s\n", file, line, assertion);
     } else
         xnarch_printf("%s:%d TEST passed.\n", file, line);
     xnlock_put_irqrestore(&test_lock, s);
