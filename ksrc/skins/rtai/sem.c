@@ -150,9 +150,7 @@ int rt_sem_wait (SEM *sem)
 	if (sem->owner == NULL)
 	    {
 	    xnsynch_set_owner(&sem->synch_base,&task->thread_base);
-	    sem->owner = task;
-	    err = sem->count = 1; /* Initial lock. */
-	    goto unlock_and_exit;
+            goto grab_resource;
 	    }
 	else if (sem->owner == task) /* Recursive lock. */
 	    {
