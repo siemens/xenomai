@@ -527,8 +527,11 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
     intr = shirq->handlers;
 
     while (intr != end) {
-        int ret = intr->isr(intr),
-            code = ret & ~XN_ISR_BITMASK, bits = ret & XN_ISR_BITMASK;
+        int ret, code, bits;
+
+        ret = intr->isr(intr);
+	code = ret & ~XN_ISR_BITMASK;
+	bits = ret & XN_ISR_BITMASK;
 
         if (code == XN_ISR_HANDLED) {
             ++intr->hits;
