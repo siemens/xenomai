@@ -13,6 +13,7 @@ include_HEADERS = \
 	module.h \
 	pipe.h \
 	pod.h \
+	ppd.h \
 	queue.h \
 	registry.h \
 	shadow.h \
