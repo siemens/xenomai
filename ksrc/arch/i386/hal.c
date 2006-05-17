@@ -74,8 +74,6 @@ static struct {
 
 } rthal_linux_irq[IPIPE_NR_XIRQS];
 
-unsigned long rthal_tsc2ns_scale;
-
 #ifdef CONFIG_X86_LOCAL_APIC
 
 static long long rthal_timers_sync_time;
