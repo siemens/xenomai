@@ -79,27 +79,22 @@ static void __task_delete_hook(xnthread_t *thread)
         xnfreesafe(&task->thread_base, task, &task->link);
 }
 
-u_long __native_task_safe(void)
+void __native_task_safe(void)
 {
     RT_TASK *task = xeno_current_task();
-    return ++task->safelock;
+    ++task->safelock;
 }
 
-u_long __native_task_unsafe(void)
+void __native_task_unsafe(void)
 {
     /* Must be called nklock locked, interrupts off. */
     RT_TASK *task = xeno_current_task();
-    u_long safelock;
 
     if (task->safelock > 0 &&
         --task->safelock == 0 && xnsynch_nsleepers(&task->safesynch) > 0) {
         xnsynch_flush(&task->safesynch, 0);
         xnpod_schedule();
     }
-
-    safelock = task->safelock;
-
-    return safelock;
 }
 
 int __native_task_safewait(RT_TASK *task)
