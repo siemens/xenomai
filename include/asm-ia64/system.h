@@ -145,11 +145,7 @@ static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
 {
     struct task_struct *fpu_owner
         = (struct task_struct *)ia64_get_kr(IA64_KR_FPU_OWNER);
-    rthal_declare_cpuid;
 
-    rthal_load_cpuid();
-
-    __set_bit(cpuid,&rthal_cpu_realtime);
     /* Remember the preempted Linux task pointer. */
     rootcb->user_task = rootcb->active_task = current;
     /* So that xnarch_save_fpu() will operate on the right FPU area. */
@@ -159,7 +155,6 @@ static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
 
 static inline void xnarch_enter_root (xnarchtcb_t *rootcb)
 {
-    __clear_bit(xnarch_current_cpu(),&rthal_cpu_realtime);
 }
 
 static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,

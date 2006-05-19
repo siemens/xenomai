@@ -122,13 +122,6 @@ static inline void xnarch_stop_timer (void)
 static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
 
 {
-    rthal_declare_cpuid;
-
-    rthal_load_cpuid();
-
-    /* rthal_cpu_realtime is only tested for the current processor,
-       and always inside a critical section. */
-    __set_bit(cpuid,&rthal_cpu_realtime);
     /* Remember the preempted Linux task pointer. */
     rootcb->user_task = current;
     rootcb->tsp = &current->thread;
@@ -137,7 +130,6 @@ static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
 static inline void xnarch_enter_root (xnarchtcb_t *rootcb)
 
 {
-    __clear_bit(xnarch_current_cpu(),&rthal_cpu_realtime);
 }
 
 static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
