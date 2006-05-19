@@ -169,9 +169,9 @@ static inline RT_TASK *thread2rtask (xnthread_t *t)
 extern "C" {
 #endif
 
-u_long __native_task_safe(void);
+void __native_task_safe(void);
 
-u_long __native_task_unsafe(void);
+void __native_task_unsafe(void);
 
 int __native_task_safewait(RT_TASK *task);
 
