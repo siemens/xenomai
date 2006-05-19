@@ -1,6 +1,11 @@
+2006-05-19  Jan Kiszka  <jan.kiszka@web.d>
+
+	* src/testsuite/latency/latency.c: Add pid to registered names
+	allowing multiple instances of latency to run.
+
 2006-05-19  Wolfgang Grandegger  <wg@grandegger.com>
 
-	* include/rtdm/rtdm_driver.h (rtdm_strncpy_from_user): fixed
+	* include/rtdm/rtdm_driver.h (rtdm_strncpy_from_user): Fixed
 	range check.
 
 2006-05-17  Philippe Gerum  <rpm@xenomai.org>

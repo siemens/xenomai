@@ -173,9 +173,11 @@ void display (void *cookie)
 {
     int err, n = 0;
     time_t start;
+    char sem_name[16];
 
     if (test_mode == USER_TASK) {
-        err = rt_sem_create(&display_sem,"dispsem",0,S_FIFO);
+        snprintf(sem_name, sizeof(sem_name), "dispsem-%d", getpid());
+        err = rt_sem_create(&display_sem,sem_name,0,S_FIFO);
 
         if (err)
             {
@@ -420,6 +422,7 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
 int main (int argc, char **argv)
 {
     int c, err;
+    char task_name[16];
 
     while ((c = getopt(argc,argv,"hp:l:T:qH:B:sD:t:f")) != EOF)
         switch (c)
@@ -553,7 +556,8 @@ int main (int argc, char **argv)
 
     rt_timer_set_mode(TM_ONESHOT); /* Force aperiodic timing. */
 
-    err = rt_task_create(&display_task,"display",0,98,T_FPU);
+    snprintf(task_name, sizeof(task_name), "display-%d", getpid());
+    err = rt_task_create(&display_task,task_name,0,98,T_FPU);
 
     if (err)
         {
@@ -570,7 +574,8 @@ int main (int argc, char **argv)
         }
 
     if (test_mode == USER_TASK) {
-        err = rt_task_create(&latency_task,"sampling",0,99,T_FPU);
+        snprintf(task_name, sizeof(task_name), "sampling-%d", getpid());
+        err = rt_task_create(&latency_task,task_name,0,99,T_FPU);
 
         if (err)
             {
