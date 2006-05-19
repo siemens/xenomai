@@ -85,8 +85,6 @@ int rthal_realtime_faults[RTHAL_NR_CPUS][RTHAL_NR_FAULTS];
 
 volatile int rthal_sync_op;
 
-volatile unsigned long rthal_cpu_realtime;
-
 unsigned long rthal_critical_enter(void (*synch) (void))
 {
     unsigned long flags = rthal_grab_superlock(synch);
@@ -1070,7 +1068,6 @@ EXPORT_SYMBOL(rthal_critical_exit);
 
 EXPORT_SYMBOL(rthal_domain);
 EXPORT_SYMBOL(rthal_tunables);
-EXPORT_SYMBOL(rthal_cpu_realtime);
 #ifdef CONFIG_PROC_FS
 EXPORT_SYMBOL(rthal_proc_root);
 #endif /* CONFIG_PROC_FS */

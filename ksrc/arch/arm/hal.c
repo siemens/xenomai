@@ -186,7 +186,6 @@ static inline int do_exception_event(unsigned event, unsigned domid, void *data)
         rthal_realtime_faults[cpuid][event]++;
 
         if (rthal_trap_handler != NULL &&
-            test_bit(cpuid, &rthal_cpu_realtime) &&
             rthal_trap_handler(event, domid, data) != 0)
             return RTHAL_EVENT_STOP;
     }

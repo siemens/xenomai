@@ -465,8 +465,6 @@ extern struct rthal_calibration_data rthal_tunables;
 
 extern volatile int rthal_sync_op;
 
-extern volatile unsigned long rthal_cpu_realtime;
-
 extern rthal_trap_handler_t rthal_trap_handler;
 
 extern int rthal_realtime_faults[RTHAL_NR_CPUS][RTHAL_NR_FAULTS];

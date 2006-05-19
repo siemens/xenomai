@@ -1,3 +1,7 @@
+2006-05-19  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.1{5,6}-1.3-04.
+
 2006-05-19  Jan Kiszka  <jan.kiszka@web.d>
 
 	* src/testsuite/latency/latency.c: Add pid to registered names
@@ -9,6 +13,9 @@
 	range check.
 
 2006-05-17  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-*/system.h (xnarch_enter_root, xnarch_leave_root):
+	* ksrc/arch/*/hal.c: Get rid of rthal_cpu_realtime.
 
 	* include/asm-generic/hal.h (rthal_local_irq_save,
 	rthal_local_irq_flags): Canonicalize the return value so that only
