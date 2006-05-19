@@ -1039,7 +1039,7 @@ static inline int rtdm_strncpy_from_user(rtdm_user_info_t *user_info,
                                          const char __user *src,
                                          size_t count)
 {
-    if (unlikely(__xn_access_ok(user_info, VERIFY_READ, src, 1)))
+    if (unlikely(!__xn_access_ok(user_info, VERIFY_READ, src, 1)))
         return -EFAULT;
     return __xn_strncpy_from_user(user_info, dst, src, count);
 }
