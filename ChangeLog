@@ -5,7 +5,8 @@
 2006-05-19  Jan Kiszka  <jan.kiszka@web.d>
 
 	* src/testsuite/latency/latency.c: Add pid to registered names
-	allowing multiple instances of latency to run.
+	allowing multiple instances of latency to run. Add -c switch to
+	pin down measuring task to a specified CPU.
 
 2006-05-19  Wolfgang Grandegger  <wg@grandegger.com>
 
