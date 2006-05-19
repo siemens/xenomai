@@ -423,8 +423,9 @@ int main (int argc, char **argv)
 {
     int c, err;
     char task_name[16];
+    int cpu = 0;
 
-    while ((c = getopt(argc,argv,"hp:l:T:qH:B:sD:t:f")) != EOF)
+    while ((c = getopt(argc,argv,"hp:l:T:qH:B:sD:t:fc:")) != EOF)
         switch (c)
             {
             case 'h':
@@ -483,6 +484,10 @@ int main (int argc, char **argv)
                 freeze_max = 1;
                 break;
 
+            case 'c':
+                cpu = T_CPU(atoi(optarg));
+                break;
+
             default:
 
                 fprintf(stderr, "usage: latency [options]\n"
@@ -496,7 +501,8 @@ int main (int argc, char **argv)
                         "  [-q]                         # supresses RTD, RTH lines if -T is used\n"
                         "  [-D <benchmark_device_no>]   # number of benchmark device, default=0\n"
                         "  [-t <test_mode>]             # 0=user task (default), 1=kernel task, 2=timer IRQ\n"
-                        "  [-f]                         # freeze trace for each new max latency\n");
+                        "  [-f]                         # freeze trace for each new max latency\n"
+                        "  [-c <cpu>]                   # pin measuring task down to given CPU\n");
                 exit(2);
             }
 
@@ -575,7 +581,7 @@ int main (int argc, char **argv)
 
     if (test_mode == USER_TASK) {
         snprintf(task_name, sizeof(task_name), "sampling-%d", getpid());
-        err = rt_task_create(&latency_task,task_name,0,99,T_FPU);
+        err = rt_task_create(&latency_task,task_name,0,99,T_FPU|cpu);
 
         if (err)
             {
