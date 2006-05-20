@@ -74,8 +74,8 @@
  struct task_struct;
  
 --- 2.6.15/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.15-ipipe/include/linux/ipipe.h	2006-05-15 13:28:27.000000000 +0200
-@@ -0,0 +1,697 @@
++++ 2.6.15-ipipe/include/linux/ipipe.h	2006-05-19 16:35:06.000000000 +0200
+@@ -0,0 +1,699 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -128,7 +128,7 @@
 +#define IPIPE_SPRINTK_FLAG	0	/* Synchronous printk() allowed */
 +#define IPIPE_AHEAD_FLAG	1	/* Domain always heads the pipeline */
 +
-+#define IPIPE_STALL_FLAG	0	/* Stalls a pipeline stage */
++#define IPIPE_STALL_FLAG	0	/* Stalls a pipeline stage -- guaranteed at bit #0 */
 +#define IPIPE_SYNC_FLAG		1	/* The interrupt syncer is running for the domain */
 +
 +#define IPIPE_SYNC_MASK		(1 << IPIPE_SYNC_FLAG)
@@ -202,18 +202,18 @@
 +#endif /* CONFIG_SMP */
 +
 +#define ipipe_virtual_irq_p(irq)	((irq) >= IPIPE_VIRQ_BASE && \
-+					 (irq) < IPIPE_NR_IRQS)
++									 (irq) < IPIPE_NR_IRQS)
 +
 +typedef void (*ipipe_irq_handler_t)(unsigned irq,
-+				    void *cookie);
++									void *cookie);
 +
 +#define IPIPE_SAME_HANDLER	((ipipe_irq_handler_t)(-1))
 +
 +typedef int (*ipipe_irq_ackfn_t)(unsigned irq);
 +
 +typedef int (*ipipe_event_handler_t)(unsigned event,
-+				     struct ipipe_domain *from,
-+				     void *data);
++									 struct ipipe_domain *from,
++									 void *data);
 +struct ipipe_domain {
 +
 +	struct list_head p_link;	/* Link in pipeline */
@@ -550,12 +550,12 @@
 +								  ipipe_irq_ackfn_t acknowledge)
 +{
 +	return ipipe_virtualize_irq(ipipe_current_domain,
-+				    irq,
-+				    IPIPE_SAME_HANDLER,
-+				    NULL,
-+				    acknowledge,
-+				    IPIPE_SHARED_MASK | IPIPE_HANDLE_MASK |
-+				    IPIPE_PASS_MASK);
++								irq,
++								IPIPE_SAME_HANDLER,
++								NULL,
++								acknowledge,
++								IPIPE_SHARED_MASK | IPIPE_HANDLE_MASK |
++								IPIPE_PASS_MASK);
 +}
 +
 +int ipipe_control_irq(unsigned irq,
@@ -723,6 +723,7 @@
 +#define local_irq_restore_hw_cond(flags)	local_irq_restore_hw(flags)
 +#define spin_lock_irqsave_hw_cond(lock,flags)	spin_lock_irqsave_hw(lock,flags)
 +#define spin_unlock_irqrestore_hw_cond(lock,flags) spin_unlock_irqrestore_hw(lock,flags)
++#define smp_processor_id_hw()			ipipe_processor_id()
 +
 +#define ipipe_irq_lock(irq)						\
 +	do {								\
@@ -764,6 +765,7 @@
 +#define local_irq_restore_hw_cond(flags)	do { } while(0)
 +#define spin_lock_irqsave_hw_cond(lock,flags)	do { (void)(flags); spin_lock(lock); } while(0)
 +#define spin_unlock_irqrestore_hw_cond(lock,flags)	spin_unlock(lock)
++#define smp_processor_id_hw()			smp_processor_id()
 +
 +#define ipipe_irq_lock(irq)			do { } while(0)
 +#define ipipe_irq_unlock(irq)		do { } while(0)
@@ -971,7 +973,7 @@
 +obj-$(CONFIG_IPIPE)	+= core.o generic.o
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 --- 2.6.15/kernel/ipipe/core.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.15-ipipe/kernel/ipipe/core.c	2006-05-15 13:39:11.000000000 +0200
++++ 2.6.15-ipipe/kernel/ipipe/core.c	2006-05-15 17:27:29.000000000 +0200
 @@ -0,0 +1,1044 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
@@ -1309,7 +1311,7 @@
 +	if (x) {
 +#ifdef CONFIG_DEBUG_KERNEL
 +		static int warned;
-+		if (test_and_set_bit(IPIPE_STALL_FLAG, &head->cpudata[cpuid].status)) {
++		if (!warned && test_and_set_bit(IPIPE_STALL_FLAG, &head->cpudata[cpuid].status)) {
 +			/*
 +			 * Already stalled albeit ipipe_restore_pipeline_head()
 +			 * should have detected it? Send a warning once.\n");
@@ -4305,10 +4307,10 @@
 +#include <asm/bitops.h>
 +#include <asm/mach/irq.h>
 +
-+#define IPIPE_ARCH_STRING	"1.3-03"
++#define IPIPE_ARCH_STRING	"1.3-04"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	3
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_PATCH_NUMBER	4
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
@@ -4462,9 +4464,13 @@
 +
 +#endif	/* !__ARM_IPIPE_H */
 --- 2.6.15/include/asm-arm/mmu_context.h	2006-01-03 04:21:10.000000000 +0100
-+++ 2.6.15-ipipe/include/asm-arm/mmu_context.h	2006-02-20 14:52:31.000000000 +0100
-@@ -85,11 +85,14 @@ switch_mm(struct mm_struct *prev, struct
- 	unsigned int cpu = smp_processor_id();
++++ 2.6.15-ipipe/include/asm-arm/mmu_context.h	2006-05-20 17:12:07.000000000 +0200
+@@ -82,14 +82,17 @@ static inline void
+ switch_mm(struct mm_struct *prev, struct mm_struct *next,
+ 	  struct task_struct *tsk)
+ {
+-	unsigned int cpu = smp_processor_id();
++	unsigned int cpu = smp_processor_id_hw();
  
  	if (prev != next) {
 +		unsigned long flags;
