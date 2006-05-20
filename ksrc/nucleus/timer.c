@@ -27,28 +27,18 @@
  *
  * The Xenomai timer facility behaves slightly differently
  * depending on the underlying system timer mode, i.e. periodic or
- * aperiodic. In periodic mode, the hardware timer ticks periodically
- * without any external programming (aside of the initial one which
- * sets its period). In such a case, a BSD timer wheel (see
- * "Redesigning the BSD Callout and Timer Facilities" by Adam
- * M. Costello and George Varghese) is used to its full addressing
- * capabilities.
+ * aperiodic.
+ *
+ * In periodic mode, the hardware timer ticks periodically without any
+ * external programming (aside of the initial one which sets its
+ * period).
  * 
  * If the underlying timer source is aperiodic, we need to reprogram
  * the next shot after each tick at hardware level, and we do not need
- * any periodic source. In such a case, the timer manager only uses a
- * single slot (#0) from the wheel as a plain linked list, which is
- * ordered by increasing timeout values of the running timers.
+ * any periodic source.
  *
  * Depending on the above mode, the timer object stores time values
  * either as count of periodic ticks, or as count of CPU ticks.
- *
- * The current implementation assumes that the maximum number of
- * outstanding timers in aperiodic mode is low (< 16?). Would this
- * assumption prove false, we would need to go for an AVL of some
- * sort, likely a RB tree. The periodic mode is already based on a
- * timer wheel, so there should not be any problem here, unless your
- * application is some ugly monster from the dark ages...
  *
  *@{*/
 
