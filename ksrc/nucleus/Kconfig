@@ -144,7 +144,7 @@ menu "Timing"
 
 config XENO_OPT_TIMING_PERIODIC
 	bool "Use periodic timer hardware"
-	default y
+	default n
 	help
 	The nucleus can manage the timer hardware provided by the
 	underlying architecture either in aperiodic (one-shot) or
@@ -203,7 +203,6 @@ config XENO_OPT_TIMING_PERIOD
 endif
 
 config XENO_OPT_TIMING_PERIOD
-
 
 config XENO_OPT_TIMING_TIMERLAT
 	int "Timer tuning latency (ns)"
