@@ -54,12 +54,15 @@
     (P4_CCCR_OVF_PMI0|P4_CCCR_THRESHOLD(15)|P4_CCCR_COMPLEMENT|         \
      P4_CCCR_COMPARE|P4_CCCR_REQUIRED|P4_CCCR_ESCR_SELECT(4)|P4_CCCR_ENABLE)
 
-typedef struct {
-    /* Xenomai watchdog data. */
-    unsigned armed;
-    unsigned long perfctr_msr;
-    unsigned long long next_linux_check;
-    unsigned int p4_cccr_val;
+typedef union {
+    struct {
+        /* Xenomai watchdog data. */
+        unsigned armed;
+        unsigned long perfctr_msr;
+        unsigned long long next_linux_check;
+        unsigned int p4_cccr_val;
+    };
+    char __pad[SMP_CACHE_BYTES];
 } rthal_nmi_wd_t ____cacheline_aligned;
 
 static rthal_nmi_wd_t rthal_nmi_wds[NR_CPUS];
@@ -81,6 +84,9 @@ static inline void wrmsrl(unsigned long msr, unsigned long long val)
 #else /* Linux >= 2.6 */
 extern int nmi_active;
 #endif /* Linux >= 2.6 */
+
+int crash = 0;
+EXPORT_SYMBOL(crash);
 
 static void rthal_touch_nmi_watchdog(void)
 {
@@ -105,7 +111,7 @@ static void rthal_nmi_watchdog_tick(struct pt_regs *regs)
     rthal_nmi_wd_t *wd = &rthal_nmi_wds[cpu];
     unsigned long long now;
 
-    if (wd->armed)
+    if (wd->armed || crash)
         rthal_nmi_emergency(regs);
 
     now = rthal_rdtsc();
@@ -200,7 +206,7 @@ void rthal_nmi_arm(unsigned long delay)
         return;
 
     /* If linux watchdog could tick now, make it tick now. */
-    if ((long long)(rthal_rdtsc() - wd->next_linux_check) >= 0) {
+    if (crash || (long long) (rthal_rdtsc() - wd->next_linux_check) >= 0) {
         unsigned long flags;
 
         /* Protect from an interrupt handler calling rthal_nmi_arm. */
