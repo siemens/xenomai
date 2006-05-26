@@ -1425,7 +1425,7 @@ int rtdm_mmap_to_user(rtdm_user_info_t *user_info, void *src_addr, size_t len,
 {
     struct rtdm_mmap_data   mmap_data = {src_addr, vm_ops, vm_private_data};
     struct file             *filp;
-    struct file_operations  *old_fops;
+    const struct file_operations    *old_fops;
     void                    *old_priv_data;
     void                    *user_ptr;
 
@@ -1447,7 +1447,7 @@ int rtdm_mmap_to_user(rtdm_user_info_t *user_info, void *src_addr, size_t len,
                                MAP_SHARED, 0);
     up_write(&user_info->mm->mmap_sem);
 
-    filp->f_op = old_fops;
+    filp->f_op = (typeof(filp->f_op))old_fops;
     filp->private_data = old_priv_data;
 
     filp_close(filp, user_info->files);
