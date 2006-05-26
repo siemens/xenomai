@@ -213,12 +213,10 @@ int pthread_set_mode_np (int clrmask,
 			 int setmask)
 {
     extern int xeno_sigxcpu_no_mlock;
-    pthread_t tid = pthread_self();
     int err;
 
-    err = -XENOMAI_SKINCALL3(__pse51_muxid,
+    err = -XENOMAI_SKINCALL2(__pse51_muxid,
 			     __pse51_thread_set_mode,
-			     tid, /* Do not inline. */
 			     clrmask,
 			     setmask);
 
