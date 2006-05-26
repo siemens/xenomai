@@ -54,6 +54,7 @@ void *root_thread(void *cookie)
     pthread_t child1, child2;
     pthread_attr_t attr;
     struct sched_param p;
+    struct timespec ts;
     size_t s;
     int i;
     void *tmp;
@@ -111,44 +112,54 @@ void *root_thread(void *cookie)
 
     TEST_MARK();                /* 7 */
 
-#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
-    /* Check round-robin scheduling. Only works with period of 10 ms. */
-    TEST_ASSERT_OK(pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED));
-    TEST_ASSERT_OK(pthread_getschedparam(pthread_self(), &i, &p));
-    TEST_ASSERT_OK(pthread_attr_setschedparam(&attr, &p));
-    TEST_ASSERT_OK(pthread_attr_setschedpolicy(&attr, SCHED_RR));
-    TEST_ASSERT_OK(pthread_attr_setname_np(&attr, "slicer1"));
-    TEST_ASSERT_OK(pthread_create(&child1, &attr, slicer, &child1));
+    TEST_ASSERT_OK(clock_getres(CLOCK_REALTIME, &ts));
 
-    TEST_ASSERT_OK(pthread_attr_setname_np(&attr, "slicer2"));
-    TEST_ASSERT_OK(pthread_create(&child2, &attr, slicer, &child2));
+    /* Check if running over aperiodic timer by reading the clock resolution. */
+    if (!ts.tv_sec && ts.tv_nsec == 1)
+        TEST_CHECK_SEQUENCE(SEQ("root", 2),
+                            SEQ("detached", 1),
+                            SEQ("joinable", 1),
+                            SEQ("detached", 1),
+                            SEQ("joinable", 1),
+                            END_SEQ);
+    else {
+        /* Check round-robin scheduling. Only works over periodic timer, with
+         * period of 10 ms. */
+        TEST_ASSERT_OK(pthread_attr_setinheritsched(&attr,
+                                                    PTHREAD_EXPLICIT_SCHED));
+        TEST_ASSERT_OK(pthread_getschedparam(pthread_self(), &i, &p));
+        TEST_ASSERT_OK(pthread_attr_setschedparam(&attr, &p));
+        TEST_ASSERT_OK(pthread_attr_setschedpolicy(&attr, SCHED_RR));
+        TEST_ASSERT_OK(pthread_attr_setname_np(&attr, "slicer1"));
+        TEST_ASSERT_OK(pthread_create(&child1, &attr, slicer, &child1));
+        
+        TEST_ASSERT_OK(pthread_attr_setname_np(&attr, "slicer2"));
+        TEST_ASSERT_OK(pthread_create(&child2, &attr, slicer, &child2));
+        
+        TEST_MARK();
 
-    TEST_MARK();
-
-    TEST_ASSERT(pthread_join(child1, &tmp) == 0 && tmp == &child1);
-    TEST_ASSERT(pthread_join(child2, &tmp) == 0 && tmp == &child2);
-
-    TEST_MARK();
-#endif
+        TEST_ASSERT(pthread_join(child1, &tmp) == 0 && tmp == &child1);
+        TEST_ASSERT(pthread_join(child2, &tmp) == 0 && tmp == &child2);
+        
+        TEST_MARK();
     
-    TEST_CHECK_SEQUENCE(SEQ("root", 2),
-                        SEQ("detached", 1),
-                        SEQ("joinable", 1),
-                        SEQ("detached", 1),
-                        SEQ("joinable", 1),
-#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
-                        SEQ("root", 2),
-                        SEQ("slicer1", 1),
-                        SEQ("slicer2", 1),
-                        SEQ("slicer1", 1),
-                        SEQ("slicer2", 1),
-                        SEQ("slicer1", 1),
-                        SEQ("slicer2", 1),
-                        SEQ("slicer1", 1),
-                        SEQ("slicer2", 1),
-                        SEQ("root", 1),
-#endif
-                        END_SEQ);
+        TEST_CHECK_SEQUENCE(SEQ("root", 2),
+                            SEQ("detached", 1),
+                            SEQ("joinable", 1),
+                            SEQ("detached", 1),
+                            SEQ("joinable", 1),
+                            SEQ("root", 2),
+                            SEQ("slicer1", 1),
+                            SEQ("slicer2", 1),
+                            SEQ("slicer1", 1),
+                            SEQ("slicer2", 1),
+                            SEQ("slicer1", 1),
+                            SEQ("slicer2", 1),
+                            SEQ("slicer1", 1),
+                            SEQ("slicer2", 1),
+                            SEQ("root", 1),
+                            END_SEQ);
+    }
 
     TEST_FINISH();
 
