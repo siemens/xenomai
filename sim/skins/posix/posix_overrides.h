@@ -72,6 +72,8 @@
 #define pthread_attr_setname_np pse51_threadattr_setname_np
 #define pthread_attr_getfp_np pse51_threadattr_getfp_np
 #define pthread_attr_setfp_np pse51_threadattr_setfp_np
+#define pthread_attr_setaffinity_np pse51_threadattr_setaffinity_np
+#define pthread_attr_getaffinity_np pse51_threadattr_getaffinity_np
 #define pthread_create pse51_thread_create
 #define pthread_detach pse51_thread_detach
 #define pthread_equal pse51_thread_equal

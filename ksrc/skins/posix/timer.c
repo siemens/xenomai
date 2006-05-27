@@ -183,7 +183,7 @@ int timer_create (clockid_t clockid,
     timer->clockid = clockid;
     xnlock_put_irqrestore(&nklock, s);
 
-    *timerid = timer - timer_pool;
+    *timerid = (timer_t) (timer - timer_pool);
 
     return 0;
 
@@ -220,7 +220,7 @@ int timer_delete(timer_t timerid)
 
     xnlock_get_irqsave(&nklock, s);
 
-    timer = &timer_pool[timerid];
+    timer = &timer_pool[(unsigned long) timerid];
 
     if (!xntimer_active_p(&timer->timerbase))
         goto unlock_and_einval;
@@ -341,7 +341,7 @@ int timer_settime (timer_t timerid,
 
     xnlock_get_irqsave(&nklock, s);
 
-    timer = &timer_pool[timerid];
+    timer = &timer_pool[(unsigned long) timerid];
 
     if (!xntimer_active_p(&timer->timerbase))
         goto unlock_and_einval;
@@ -434,7 +434,7 @@ int timer_gettime(timer_t timerid, struct itimerspec *value)
 
     xnlock_get_irqsave(&nklock, s);
 
-    timer = &timer_pool[timerid];
+    timer = &timer_pool[(unsigned long) timerid];
 
     if (!xntimer_active_p(&timer->timerbase))
         goto unlock_and_einval;
@@ -482,7 +482,7 @@ int timer_getoverrun(timer_t timerid)
 
     xnlock_get_irqsave(&nklock, s);
 
-    timer = &timer_pool[timerid];
+    timer = &timer_pool[(unsigned long) timerid];
 
     if (!xntimer_active_p(&timer->timerbase))
         goto unlock_and_einval;
