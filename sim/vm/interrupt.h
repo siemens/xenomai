@@ -145,7 +145,7 @@ public:
 	return currentIrq;
     }
 
-    int MvmIrqManager::onHandlerP () {
+    int onHandlerP () {
 	return !!getCurrentIrq();
     }
 
