@@ -88,8 +88,6 @@ void *root_thread(void *cookie)
     TEST_ASSERT(pthread_attr_getinheritsched(&attr, &i) == 0 &&
                 i == PTHREAD_INHERIT_SCHED);
     
-    TEST_ASSERT(pthread_join(child1, &tmp) == ESRCH);
-
     /* Check elementary scheduling determinism. */
     TEST_MARK();                /* 1 */
     
