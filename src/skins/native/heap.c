@@ -98,6 +98,9 @@ int rt_heap_unbind(RT_HEAP *heap)
 {
     int err = munmap(heap->mapbase, heap->mapsize);
 
+    if (err == -1)
+        err = -errno;
+
     heap->opaque = XN_NO_HANDLE;
     heap->mapbase = NULL;
     heap->mapsize = 0;
@@ -110,6 +113,9 @@ int rt_heap_delete(RT_HEAP *heap)
     int err;
 
     err = munmap(heap->mapbase, heap->mapsize);
+
+    if (err == -1)
+        err = -errno;
 
     if (!err)
         err = XENOMAI_SKINCALL1(__native_muxid, __native_heap_delete, heap);

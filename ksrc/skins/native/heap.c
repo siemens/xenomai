@@ -334,7 +334,7 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
  * - -EIDRM is returned if @a heap is a deleted heap descriptor.
  *
  * - -EPERM is returned if this service was called from an
- * asynchronous context.
+ * invalid context.
  *
  * Environments:
  *
@@ -351,7 +351,7 @@ int rt_heap_delete(RT_HEAP *heap)
     int err = 0, rc;
     spl_t s;
 
-    if (xnpod_asynch_p())
+    if (!xnpod_root_p())
         return -EPERM;
 
     xnlock_get_irqsave(&nklock, s);
