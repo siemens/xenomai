@@ -87,8 +87,8 @@ static void pse51_shutdown(int xtype)
     pse51_mutex_pkg_cleanup();
     pse51_signal_pkg_cleanup();
     pse51_reg_pkg_cleanup();
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     pse51_intr_pkg_cleanup();
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     pse51_syscall_cleanup();
     xncore_detach(xtype);
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
@@ -138,9 +138,7 @@ int SKIN_INIT(posix)
     pse51_tsd_pkg_init();
     pse51_cond_pkg_init();
     pse51_mq_pkg_init();
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     pse51_intr_pkg_init();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
     pse51_timer_pkg_init();
     pse51_shm_pkg_init();
 
