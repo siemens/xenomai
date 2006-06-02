@@ -516,10 +516,8 @@ int ftruncate (int fd, off_t len)
        is aligned). */
     if (len)
         {
-        len += PAGE_SIZE + xnheap_overhead(len, PAGE_SIZE);
+        len += PAGE_SIZE + PAGE_ALIGN(xnheap_overhead(len, PAGE_SIZE));
         len = PAGE_ALIGN(len);
-        if (len == 2 * PAGE_SIZE)
-            len = 3 * PAGE_SIZE;
         }
 
     err = 0;
