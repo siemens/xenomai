@@ -32,8 +32,8 @@
 } while(0)
 
 #define XENO_BUGON(subsystem,cond)  do { \
-    if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem > 0 && !(cond))) \
-        xnpod_fatal("assertion failed at %s:%d (%s)", __FILE__, __LINE__, (#cond)); \
+    if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem > 0 && (cond))) \
+        xnpod_fatal("bug at %s:%d (%s)", __FILE__, __LINE__, (#cond)); \
 } while(0)
 
 #endif /* !_XENO_NUCLEUS_ASSERT_H */
