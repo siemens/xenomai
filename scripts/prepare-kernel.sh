@@ -1,6 +1,8 @@
 #! /bin/bash
 set -e
 
+unset CDPATH
+
 # At all time, this variable must be set to either:
 # "y" if the changes to the Linux tree are specific to the kernel version;
 # "n" otherwise.
