@@ -1,3 +1,10 @@
+2006-06-02  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/nucleus/{bheap.h,timer.h}, ksrc/nucleus/pod.c:
+	Combine bheap head with element buffer, fix consistency checks
+	and additionally make use of XENO_BUGON. Simplify pod init and
+	cleanup of timer structures.
+
 2006-05-23  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/arch/i386/nmi.c: Fix alignement for gcc-4.1.
@@ -14,7 +21,7 @@
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.1{4,5}-1.3-04.
 
-2006-05-19  Jan Kiszka  <jan.kiszka@web.d>
+2006-05-19  Jan Kiszka  <jan.kiszka@web.de>
 
 	* src/testsuite/latency/latency.c: Add pid to registered names
 	allowing multiple instances of latency to run. Add -c switch to

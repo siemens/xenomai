@@ -32,6 +32,7 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	bool 'Debug support' CONFIG_XENO_OPT_DEBUG
 	if [ "$CONFIG_XENO_OPT_DEBUG" = "y" ]; then
 		bool 'Queue Debugging support' CONFIG_XENO_OPT_DEBUG_QUEUES
+		define_bool CONFIG_XENO_OPT_DEBUG_BHEAP y
 	fi
 	bool 'Watchdog support' CONFIG_XENO_OPT_WATCHDOG
 

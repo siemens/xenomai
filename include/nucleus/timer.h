@@ -58,11 +58,10 @@ typedef struct {
     ((xntlholder_t *)(((char *)laddr) - offsetof(xntlholder_t, link)))
 
 } xntlholder_t;
-#define xntlholder_date(h)       ((h)->key)
-#define xntlholder_prio(h)       ((h)->prio)
-#define xntlholder_init(h)       inith(&(h)->link)
-#define xntlist_init(q)       (initq(q),0)
-#define xntlist_destroy(q)    do { } while (0)
+#define xntlholder_date(h)      ((h)->key)
+#define xntlholder_prio(h)      ((h)->prio)
+#define xntlholder_init(h)      inith(&(h)->link)
+#define xntlist_init(q)         initq(q)
 #define xntlist_head(q)                         \
     ({ xnholder_t *_h = getheadq(q);            \
         !_h ? NULL : link2tlholder(_h);         \
@@ -71,7 +70,7 @@ typedef struct {
 static inline void xntlist_insert(xnqueue_t *q, xntlholder_t *holder)
 {
     xnholder_t *p;
-    
+
     /* Insert the new timer at the proper place in the single
        queue managed when running in aperiodic mode. O(N) here,
        but users of the aperiodic mode need to pay a price for
@@ -82,7 +81,7 @@ static inline void xntlist_insert(xnqueue_t *q, xntlholder_t *holder)
             (holder->key == link2tlholder(p)->key &&
              holder->prio <= link2tlholder(p)->prio))
             break;
-        
+
     insertq(q,p->next,&holder->link);
 }
 
@@ -94,7 +93,7 @@ typedef bheaph_t xntimerh_t;
 #define xntimerh_date(h)       bheaph_key(h)
 #define xntimerh_prio(h)       bheaph_prio(h)
 #define xntimerh_init(h)       bheaph_init(h)
-typedef bheap_t xntimerq_t;
+typedef DECLARE_BHEAP_CONTAINER(xntimerq_t, CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY);
 #define xntimerq_init(q)       bheap_init((q), CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY)
 #define xntimerq_destroy(q)    bheap_destroy(q)
 #define xntimerq_head(q)       bheap_gethead(q)
@@ -108,7 +107,7 @@ typedef xntlholder_t xntimerh_t;
 #define xntimerh_init(h)       xntlholder_init(h)
 typedef xnqueue_t xntimerq_t;
 #define xntimerq_init(q)       xntlist_init(q)
-#define xntimerq_destroy(q)    xntlist_destroy(q)
+#define xntimerq_destroy(q)    do { } while (0)
 #define xntimerq_head(q)       xntlist_head(q)
 #define xntimerq_insert(q,h)   xntlist_insert((q),(h))
 #define xntimerq_remove(q, h)  xntlist_remove((q),(h))

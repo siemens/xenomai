@@ -145,6 +145,10 @@ config XENO_OPT_DEBUG_QUEUES
 	operations of the Xenomai core. It adds even more runtime
 	overhead then CONFIG_XENO_OPT_DEBUG, use with care.
 
+config XENO_OPT_DEBUG_BHEAP
+	bool
+	default y if XENO_OPT_DEBUG
+
 config XENO_OPT_WATCHDOG
 	bool "Watchdog support"
 	default n
