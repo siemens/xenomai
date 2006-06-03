@@ -21,6 +21,7 @@
 #define _XENO_NUCLEUS_BHEAP_H
 
 #include <nucleus/compiler.h>
+#include <nucleus/assert.h>
 
 /* Priority queue implementation, using a binary heap. */
 
@@ -43,10 +44,29 @@ typedef struct bheaph {
 typedef struct bheap {
     unsigned sz;
     unsigned last;
-    bheaph_t **elems;
+    bheaph_t *elems[1]; /* only padding, indexing starts at 1 */
 } bheap_t;
 
-static inline bheaph_t *bheap_gethead(bheap_t *heap)
+#define DECLARE_BHEAP_CONTAINER(name, sz)       \
+    struct {                                    \
+        bheap_t bheap;                          \
+        bheaph_t *elems[sz];                    \
+    } name
+
+#ifdef CONFIG_XENO_OPT_DEBUG_BHEAP
+#define BHEAP_CHECK(heap)   XENO_BUGON(BHEAP, ((heap)->sz == 0))
+#else /* !CONFIG_XENO_OPT_DEBUG_BHEAP */
+#define BHEAP_CHECK(heap)   do { } while (0)
+#endif /* CONFIG_XENO_OPT_DEBUG_BHEAP */
+
+#define bheap_gethead(heap)                     \
+({                                              \
+    bheap_t *_bheap = &(heap)->bheap;           \
+    BHEAP_CHECK(_bheap);                        \
+    __internal_bheap_gethead(_bheap);           \
+})
+
+static inline bheaph_t *__internal_bheap_gethead(bheap_t *heap)
 {
     if (heap->last == 1)
         return NULL;
@@ -68,26 +88,20 @@ static inline bheaph_t *bheaph_child(bheap_t *heap, bheaph_t *holder, int side)
     return likely(pos < heap->last) ? heap->elems[pos] : NULL;
 }
 
-static inline int bheap_init(bheap_t *heap, unsigned sz)
+#define bheap_init(heap, sz) __internal_bheap_init(&(heap)->bheap, sz)
+
+static inline void __internal_bheap_init(bheap_t *heap, unsigned sz)
 {
     heap->sz = sz;
     heap->last = 1;
-    heap->elems = (bheaph_t **) xnarch_sysalloc(sz * sizeof(void *));
-
-    if (!heap->elems)
-        return ENOMEM;
-
-    /* start indexing at 1. */
-    heap->elems -= 1;
-
-    return 0;
 }
 
-static inline void bheap_destroy(bheap_t *heap)
-{    
-    xnarch_sysfree(heap->elems + 1, heap->sz * sizeof(void *));
-    heap->last = 0;
+#define bheap_destroy(heap) __internal_bheap_destroy(&(heap)->bheap)
+
+static inline void __internal_bheap_destroy(bheap_t *heap)
+{
     heap->sz = 0;
+    heap->last = 1;
 }
 
 static inline void bheap_swap(bheap_t *heap, bheaph_t *h1, bheaph_t *h2)
@@ -115,7 +129,7 @@ static inline void bheap_down(bheap_t *heap, bheaph_t *holder)
     for (;;) {
         left = bheaph_child(heap, holder, 0);
         right = bheaph_child(heap, holder, 1);
-        
+
         if (left && right)
             minchild = bheaph_lt(left, right) ? left : right;
         else
@@ -128,7 +142,14 @@ static inline void bheap_down(bheap_t *heap, bheaph_t *holder)
     }
 }
 
-static inline int bheap_insert(bheap_t *heap, bheaph_t *holder)
+#define bheap_insert(heap, holder)              \
+({                                              \
+    bheap_t *_bheap = &(heap)->bheap;           \
+    BHEAP_CHECK(_bheap);                        \
+    __internal_bheap_insert(_bheap, holder);    \
+})
+
+static inline int __internal_bheap_insert(bheap_t *heap, bheaph_t *holder)
 {
     if (heap->last == heap->sz + 1)
         return EBUSY;
@@ -140,32 +161,46 @@ static inline int bheap_insert(bheap_t *heap, bheaph_t *holder)
     return 0;
 }
 
-static inline int bheap_delete(bheap_t *heap, bheaph_t *holder)
+#define bheap_delete(heap, holder)              \
+({                                              \
+    bheap_t *_bheap = &(heap)->bheap;           \
+    BHEAP_CHECK(_bheap);                        \
+    __internal_bheap_delete(_bheap, holder);    \
+})
+
+static inline int __internal_bheap_delete(bheap_t *heap, bheaph_t *holder)
 {
     bheaph_t *lasth;
-    
-    if (heap->last == 1)
+
+    if (bheaph_pos(holder) >= heap->last)
         return EINVAL;
-    
+
     --heap->last;
-    if (heap->last > 1) {
+    if (heap->last != bheaph_pos(holder)) {
         lasth = heap->elems[heap->last];
         heap->elems[bheaph_pos(holder)] = lasth;
         bheaph_pos(lasth) = bheaph_pos(holder);
         bheap_down(heap, lasth);
     }
-   
+
     return 0;
 }
 
-static inline bheaph_t *bheap_get(bheap_t *heap)
+#define bheap_get(heap)                         \
+({                                              \
+    bheap_t *_bheap = &(heap)->bheap;           \
+    BHEAP_CHECK(_bheap);                        \
+    __internal_bheap_get(_bheap, holder);       \
+})
+
+static inline bheaph_t *__internal_bheap_get(bheap_t *heap)
 {
-    bheaph_t *holder = bheap_gethead(heap);
+    bheaph_t *holder = __internal_bheap_gethead(heap);
 
     if (!holder)
         return NULL;
 
-    bheap_delete(heap, holder);
+    __internal_bheap_delete(heap, holder);
 
     return holder;
 }
