@@ -19,7 +19,7 @@ xeno-test [options]
 		name can be full or relative pathname
   -v		verbose
   -M <email>	sends output to given addr
-  -m		sends output to xenotest.output@gmail.com
+  -m		sends output to xenomai-data@gna.org
   -U <url>	uploads output to given URL
 	
   # following options are passed thru to latency
@@ -167,7 +167,7 @@ logfile=	# defaults to test-`uname -r`-<datestampe>
 logprefix=/tmp/	# someplace usually there
 prepost=	# command to run pre, and post test (ex ntpq -p)
 
-email='xenotest.output@gmail.com'	# until formalized
+email='xenomai-data@gna.org'
 sentby='xenotest.sender@xenomai.org'
 url=
 sendit=		# send it by m-mail, u-url
