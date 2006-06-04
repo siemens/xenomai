@@ -1,6 +1,9 @@
 2006-06-02  Jim Cromie <jim.cromie@gmail.com>
 
-	* scripts/xeno-test.in: Fix a few default values.
+	* scripts/xeno-test.in: Rename -p option to -P, reusing -p for
+	passing the equivalent option to the latency test. Add -D to
+	change the timestamp format. Various cleanups. Fix a few default
+	values.
 	
 2006-06-02  Jan Kiszka  <jan.kiszka@web.de>
 	
