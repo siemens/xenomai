@@ -54,9 +54,11 @@ static void *rt_task_trampoline(void *cookie)
     struct rt_arg_bulk bulk;
     long err;
 
-    /* Ok, this looks like weird, but we need this. */
-    param.sched_priority = sched_get_priority_max(SCHED_FIFO);
-    pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+    if (iargs->prio > 0) {
+		/* Ok, this looks like weird, but we need this. */
+		param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+		pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+    }
 
     /* rt_task_delete requires asynchronous cancellation */
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -126,8 +128,10 @@ int rt_task_create(RT_TASK *task,
     pthread_attr_setstacksize(&thattr, stksize);
     if (!(mode & T_JOINABLE))
         pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
-    pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
-    param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+    if (prio > 0) {
+		pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
+		param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+	}
     pthread_attr_setschedparam(&thattr, &param);
 
     err = pthread_create(&thid, &thattr, &rt_task_trampoline, &iargs);

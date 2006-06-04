@@ -259,7 +259,7 @@ static inline void request_syscall_restart(xnthread_t *thread,
 
 static inline void set_linux_task_priority(struct task_struct *p, int prio)
 {
-    if (rthal_setsched_root(p, SCHED_FIFO, prio) < 0)
+    if (rthal_setsched_root(p, prio ? SCHED_FIFO : SCHED_NORMAL, prio) < 0)
         printk(KERN_WARNING
                "Xenomai: invalid Linux priority level: %d, task=%s\n", prio,
                p->comm);
@@ -705,7 +705,7 @@ void xnshadow_relax(int notify)
                     thread->name, xnthread_user_pid(thread));
 #endif /* CONFIG_XENO_OPT_DEBUG */
     cprio = thread->cprio < MAX_RT_PRIO ? thread->cprio : MAX_RT_PRIO - 1;
-    rthal_reenter_root(get_switch_lock_owner(), SCHED_FIFO, cprio ? : 1);
+    rthal_reenter_root(get_switch_lock_owner(), cprio ? SCHED_FIFO : SCHED_NORMAL, cprio);
 
     xnthread_inc_ssw(thread);   /* Account for secondary mode switch. */
 
@@ -794,22 +794,22 @@ static int xnshadow_wait_completion(xncompletion_t __user * u_completion)
 
 void xnshadow_exit(void)
 {
-    rthal_reenter_root(get_switch_lock_owner(), SCHED_FIFO,
+    rthal_reenter_root(get_switch_lock_owner(),
+		       current->rt_priority ? SCHED_FIFO : SCHED_NORMAL,
                        current->rt_priority);
     do_exit(0);
 }
 
-/*! 
+/*!
  * \fn int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion)
  * @internal
  * \brief Create a shadow thread context.
  *
  * This call maps a nucleus thread to the "current" Linux task.  The
  * priority of the Linux task is set to the priority of the shadow
- * thread bounded to the [1..MAX_RT_PRIO-1] range, and its scheduling
- * policy is set to SCHED_FIFO. In other words, priority levels lower
- * than 1 are mapped to 1, and levels higher than MAX_RT_PRIO-1 are
- * mapped to the latter.
+ * thread bounded to the [0..MAX_RT_PRIO-1] range, and its scheduling
+ * policy is set to either SCHED_FIFO for non-zero priority levels, or
+ * SCHED_NORMAL otherwise.
  *
  * @param thread The descriptor address of the new shadow thread to be
  * mapped to "current". This descriptor must have been previously
@@ -885,7 +885,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
     prio =
         xnthread_base_priority(thread) <
         MAX_RT_PRIO ? xnthread_base_priority(thread) : MAX_RT_PRIO - 1;
-    set_linux_task_priority(current, prio ? : 1);
+    set_linux_task_priority(current, prio);
     xnshadow_thrptd(current) = thread;
     xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, NULL);
 
@@ -1029,7 +1029,7 @@ void xnshadow_renice(xnthread_t *thread)
        range, since the core pod's priority scale is a superset of
        Linux's priority scale. */
     int prio = thread->cprio < MAX_RT_PRIO ? thread->cprio : MAX_RT_PRIO - 1;
-    schedule_linux_call(LO_RENICE_REQ, p, prio ? : 1);
+    schedule_linux_call(LO_RENICE_REQ, p, prio);
 }
 
 void xnshadow_suspend(xnthread_t *thread)
