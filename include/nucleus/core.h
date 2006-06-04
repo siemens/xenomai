@@ -38,7 +38,7 @@
 #define XNCORE_NR_PRIO      (XNCORE_MAX_PRIO - XNCORE_MIN_PRIO + 2)
 
 /* Priority sub-range used by core APIs. */
-#define XNCORE_LOW_PRIO     1
+#define XNCORE_LOW_PRIO     0
 #define XNCORE_HIGH_PRIO    99
 
 /* Priority of IRQ servers in user-space. */
