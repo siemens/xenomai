@@ -1,3 +1,16 @@
+2006-06-02  Jim Cromie <jim.cromie@gmail.com>
+
+	* scripts/xeno-test.in: Fix a few default values.
+	
+2006-06-02  Jan Kiszka  <jan.kiszka@web.de>
+	
+	* ksrc/nucleus/shadow.c, include/nucleus/core.h: Allow creation of
+	non real-time but still Xenomai-enabled threads, undergoing a
+	SCHED_NORMAL policy, at priority level #0.
+
+	* src/skins/native/task.c: Allow creating non real-time Xenomai
+	threads.
+
 2006-06-02  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/nucleus/{bheap.h,timer.h}, ksrc/nucleus/pod.c:
