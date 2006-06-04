@@ -12,7 +12,7 @@ xeno-test [options]
   -W <script>   script is an alternate workload.  If you need to pass args
 		to your program, use quotes.  The program must clean
 		up its children when it gets a SIGTERM
-  -p <cmd>	cmd is run before and after rt-tests
+  -P <cmd>	cmd is run before and after rt-tests
 		(forex: 'ntpdate -b <host>' or 'ntpq -p')
   -L	     	writes logs to /tmp/test-`uname -r`-<timestamp>
   -N <name>	like -L, but writes to name-<timestamp> (in PWD)
@@ -21,15 +21,17 @@ xeno-test [options]
   -M <email>	sends output to given addr
   -m		sends output to xenomai-data@gna.org
   -U <url>	uploads output to given URL
-	
+  -D <datefmt>	alternate options to date, for timestamp (dflt: 
+
   # following options are passed thru to latency
   -s	print statistics of sampled data (default on)
   -h	print histogram of sampled data (default on, implies -s)
   -q	quiet, dont print 1 sec sampled data (default on, off if !-T)
-  -T <sec test>	(default: 120 sec)
+  -T <sec test>		 (default: 120 sec)
   -l <data/header lines> (default 21)
-  -H <bucketcount> (default 100)
-  -B <bucketsize ns> (default 1000)
+  -H <bucketcount>	 (default 100)
+  -B <bucketsize ns>	 (default 1000 ns)
+  -p <sample_period_us>	 (default 100 us)
 EOF
     # NB: many defaults are coded in latency
     exit 1
@@ -43,9 +45,9 @@ set -o notify	# see dd's finish immediately.(or not!)
 loudly() {
     [ "$1" = "" ] && return
     # run task after announcing it
-    echo;  date;
+    echo; date;
     echo running: $*
-    eval $* &		# eval helps w complex cmds, like zegrep -E
+    eval $* &			# eval helps w complex cmds, like zegrep -E
     wait $!
 }
 
@@ -88,6 +90,7 @@ boxinfo() { # static info, show once
     loudly ./xeno-info
 
     loudly cat /proc/cpuinfo	# bogomips changes under CPU_FREQ
+    loudly cksum /proc/cpuinfo	'# cpuinfo fingerprint'
 
     # how much of the config do we want ?
     local cmd="zgrep -E '$whatconf'"
@@ -120,7 +123,7 @@ boxstatus() {     # get dynamic status
 
 run_w_load() {
     local opts="$*";
-    [ "$opts"  = '' ] && opts='-q -s -T 120'
+    [ "$opts"  = '' ] && opts='-sh -T 120'
 
     boxinfo
     loudly generate_loads $workload
@@ -145,17 +148,6 @@ run_w_load() {
 #####################
 # MAIN
 
-if [ -f /proc/config.gz ] ; then
-
-    # check/warn on problem configs
-    
-    eval `zgrep CONFIG_CPU_FREQ /proc/config.gz`;
-    if [ ! -z "$CONFIG_CPU_FREQ" ] ; then
-	echo "warning: CONFIG_CPU_FREQ=$CONFIG_CPU_FREQ may be problematic"
-    fi
-
-fi
-
 workload=1	# default = 1 job
 
 # *pass get all legit options, except -N, -L
@@ -167,11 +159,12 @@ logfile=	# defaults to test-`uname -r`-<datestampe>
 logprefix=/tmp/	# someplace usually there
 prepost=	# command to run pre, and post test (ex ntpq -p)
 
-email='xenomai-data@gna.org'
-sentby='xenotest.sender@xenomai.org'
+email='xenomai-data@gna.org'		# may reject til you subscribe
+sentby='xenotest.sender@xenomai.org'	# tbd
 url=
 sendit=		# send it by m-mail, u-url
 verbose=
+dateargs='+%y%m%d.%H%M%S'
 
 sendit() {
     local file=$1
@@ -190,14 +183,16 @@ sendit() {
     fi
 }
 
-
-while getopts 'd:shqT:l:H:B:uLN:w:W:p:mM:U:' FOO ; do
-
+handle_options() {	# called for XENOTEST_OPTS, ARGV
     case $FOO in
+
+	# latency passthrus
 	s|h|q)
 	    pass="$pass -$FOO" ;;
-	T|l|H|B)
+	T|l|H|B|p)
 	    pass="$pass -$FOO $OPTARG" ;;
+
+	# workload related
 	d) 
 	    device=$OPTARG    
 	    echo creating workload using dd if=$device
@@ -208,21 +203,23 @@ while getopts 'd:shqT:l:H:B:uLN:w:W:p:mM:U:' FOO ; do
 	    fi
 	    loadpass="$loadpass -d $device"
 	    ;;
-	L)
-	    logging=1
-	    logfile=test-`uname -r`  ;;
-	N)
-	    logging=1
-	    logprefix=$OPTARG ;;
 	w)
 	    workload=$OPTARG
 	    loadpass="$loadpass -w $OPTARG"  ;;
 	W)
 	    altwork=$OPTARG
 	    loadpass="$loadpass -W '$OPTARG'"  ;;
-	p)
+	P)
 	    prepost=$OPTARG 
-	    loadpass="$loadpass -p '$OPTARG'"  ;;
+	    loadpass="$loadpass -P '$OPTARG'"  ;;
+
+	# output disposition
+	L)
+	    logging=1
+	    logfile=test-`uname -r`  ;;
+	N)
+	    logging=1
+	    logprefix=$OPTARG ;;
 	M)
 	    email=$OPTARG 
 	    sendit='m' ;;
@@ -233,14 +230,19 @@ while getopts 'd:shqT:l:H:B:uLN:w:W:p:mM:U:' FOO ; do
 	    sendit='u' ;;
 	v)
 	    verbose=1 ;;
-	n)
-	    # accept note (from the outer process)
-	    notes=$OPTARG ;;
-
-
+	D)
+	    dateargs=$OPTARG ;;
 	?)
 	    myusage ;;
     esac
+}
+
+# process options from envar, then from cmd-line
+while getopts 'd:shqT:l:H:B:uLN:w:W:p:mM:U:P:D:' FOO $XENOTEST_OPTS ; do
+    handle_options;
+done
+while getopts 'd:shqT:l:H:B:uLN:w:W:p:mM:U:P:D:' FOO ; do
+    handle_options;
 done
 
 # all args have been handled, and split into 2 passthrus
@@ -249,7 +251,7 @@ shift $(($OPTIND - 1));
 
 if [ "$logging" != "" ]; then
     # restart inside a script invocation, passing appropriate args
-    wfile=$logprefix$logfile-`date +%y%m%d.%H%M%S`
+    wfile=$logprefix$logfile-`date $dateargs`
     script -c "./xeno-test $loadpass $pass $*" $wfile && sendit $wfile
 else
     if [ "$altwork" != "" ]; then
@@ -257,7 +259,7 @@ else
     fi
     echo starting $0 $pass $loadpass $*
     if [ "$sendit" != '' ]; then
-	run_w_load $pass $* | sendit
+	run_w_load $pass $* 2>&1 | sendit
     else
 	run_w_load $pass $*
     fi
