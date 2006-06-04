@@ -374,9 +374,6 @@ static inline int do_exception_event(unsigned event, unsigned domid, void *data)
         rthal_realtime_faults[cpuid][event]++;
 
         if (rthal_trap_handler != NULL &&
-#if 0
-            test_bit(cpuid, &rthal_cpu_realtime) &&
-#endif
             rthal_trap_handler(event, domid, data) != 0)
             return RTHAL_EVENT_STOP;
     }
@@ -413,7 +410,7 @@ int rthal_arch_init(void)
         return -ENODEV;
     }
 #endif /* CONFIG_ALTIVEC */
-    printk("TIMER IRQ is %d\n", RTHAL_TIMER_IRQ);
+
     if (rthal_cpufreq_arg == 0)
         /* The CPU frequency is expressed as the timebase frequency
            for this port. */
