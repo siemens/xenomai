@@ -1,3 +1,8 @@
+2006-06-05  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/blackfin/patches: Upgrade to R06R1RC2-bf53x-1.4-03 and
+	cvs-20060604-bf53x-1.4-03.
+
 2006-05-19  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.1.2 (Seven String)
