@@ -135,6 +135,11 @@ static inline void xnarch_enter_root (xnarchtcb_t *rootcb)
 static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
 				     xnarchtcb_t *in_tcb)
 {
+    if (in_tcb->user_task)
+	rthal_clear_foreign_stack(&rthal_domain);
+    else
+	rthal_set_foreign_stack(&rthal_domain);
+
     rthal_thread_switch(out_tcb->tsp, in_tcb->tsp);
 }
 

@@ -176,52 +176,52 @@ static inline void xnarch_enter_root (xnarchtcb_t *rootcb)
 }
 
 static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
-				     xnarchtcb_t *in_tcb)
+									 xnarchtcb_t *in_tcb)
 {
     struct task_struct *prev = out_tcb->active_task;
     struct task_struct *next = in_tcb->user_task;
 
-    in_tcb->active_task = next ?: prev;
+    if (likely(next != NULL)) {
+		in_tcb->active_task = next;
+		rthal_clear_foreign_stack(&rthal_domain);
+	} else {
+		in_tcb->active_task = prev;
+		rthal_set_foreign_stack(&rthal_domain);
+	}
 
-    if (next && next != prev) /* Switch to new user-space thread? */
-	{
-	struct mm_struct *mm = next->active_mm;
-
-	/* Switch the mm context.*/
-
+    if (next && next != prev) { /* Switch to new user-space thread? */
+		struct mm_struct *mm = next->active_mm;
+		/* Switch the mm context.*/
 #ifdef CONFIG_ALTIVEC
-	asm volatile (
-		      "dssall;\n"
+		asm volatile (
+			"dssall;\n"
 #if !defined(CONFIG_POWER4) && !defined(CONFIG_PPC64)
-		      "sync;\n"
+			"sync;\n"
 #endif
-		      : : );
+			: : );
 #endif /* CONFIG_ALTIVEC */
 	
 #ifdef CONFIG_PPC64
-	if (!cpu_isset(smp_processor_id(), mm->cpu_vm_mask)) {
-	    cpu_set(smp_processor_id(), mm->cpu_vm_mask);
-	}
+		if (!cpu_isset(smp_processor_id(), mm->cpu_vm_mask))
+			cpu_set(smp_processor_id(), mm->cpu_vm_mask);
 	
-	if (cur_cpu_spec->cpu_features & CPU_FTR_SLB) {
-	    switch_slb(next, mm);
-	}
-	else {
-	    switch_stab(next, mm);
-	}
+		if (cur_cpu_spec->cpu_features & CPU_FTR_SLB)
+			switch_slb(next, mm);
+		else
+			switch_stab(next, mm);
 	
-	flush_tlb_pending();
+		flush_tlb_pending();
 #else /* !CONFIG_PPC64 */
-	next->thread.pgdir = mm->pgd;
-	get_mmu_context(mm);
-	set_context(mm->context,mm->pgd);
-	current = prev;		/* Make sure r2 is valid. */
+		next->thread.pgdir = mm->pgd;
+		get_mmu_context(mm);
+		set_context(mm->context,mm->pgd);
+		current = prev;		/* Make sure r2 is valid. */
 #endif /* CONFIG_PPC64 */
 	}
 
 #ifdef CONFIG_PPC64
     rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, 
-		    in_tcb->user_task == NULL ? 1 : 0);
+						in_tcb->user_task == NULL ? 1 : 0);
 #else /* !CONFIG_PPC64 */
     rthal_thread_switch(out_tcb->tsp, in_tcb->tsp);
 #endif /* CONFIG_PPC64 */

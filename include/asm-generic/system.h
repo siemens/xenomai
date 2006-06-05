@@ -468,13 +468,12 @@ static inline int xnarch_remap_io_page_range(struct vm_area_struct *vma,
 
 #ifdef CONFIG_SMP
 
-static inline int xnarch_send_ipi (xnarch_cpumask_t cpumask) {
-
+static inline int xnarch_send_ipi (xnarch_cpumask_t cpumask)
+{
     return rthal_send_ipi(RTHAL_SERVICE_IPI0, cpumask);
 }
 
 static inline int xnarch_hook_ipi (void (*handler)(void))
-
 {
     return rthal_virtualize_irq(&rthal_domain,
 				RTHAL_SERVICE_IPI0,
@@ -485,7 +484,6 @@ static inline int xnarch_hook_ipi (void (*handler)(void))
 }
 
 static inline int xnarch_release_ipi (void)
-
 {
     return rthal_virtualize_irq(&rthal_domain,
 				RTHAL_SERVICE_IPI0,
@@ -503,7 +501,6 @@ static void xnarch_finalize_cpu(unsigned irq)
 }
 
 static inline void xnarch_notify_halt(void)
-    
 {
     xnarch_cpumask_t other_cpus = cpu_online_map;
     unsigned cpu, nr_cpus = num_online_cpus();
@@ -543,18 +540,18 @@ static inline void xnarch_notify_halt(void)
 
 #else /* !CONFIG_SMP */
 
-static inline int xnarch_send_ipi (xnarch_cpumask_t cpumask) {
-
+static inline int xnarch_send_ipi (xnarch_cpumask_t cpumask)
+{
     return 0;
 }
 
-static inline int xnarch_hook_ipi (void (*handler)(void)) {
-
+static inline int xnarch_hook_ipi (void (*handler)(void))
+{
     return 0;
 }
 
-static inline int xnarch_release_ipi (void) {
-
+static inline int xnarch_release_ipi (void)
+{
     return 0;
 }
 
@@ -563,7 +560,6 @@ static inline int xnarch_release_ipi (void) {
 #endif /* CONFIG_SMP */
 
 static inline void xnarch_notify_shutdown(void)
-
 {
 #ifdef CONFIG_SMP
     /* The HAL layer also sets the same CPU affinity so that both
@@ -580,7 +576,6 @@ static inline void xnarch_notify_shutdown(void)
 }
 
 static void xnarch_notify_ready (void)
-
 {
     rthal_grab_control();
 #ifdef CONFIG_XENO_OPT_PERVASIVE    
@@ -608,31 +603,26 @@ static inline int xnarch_hook_irq (unsigned irq,
 }
 
 static inline int xnarch_release_irq (unsigned irq)
-
 {
     return rthal_irq_release(irq);
 }
 
 static inline int xnarch_enable_irq (unsigned irq)
-
 {
     return rthal_irq_enable(irq);
 }
 
 static inline int xnarch_disable_irq (unsigned irq)
-
 {
     return rthal_irq_disable(irq);
 }
 
 static inline int xnarch_end_irq (unsigned irq)
-
 {
      return rthal_irq_end(irq);
 }
                                                                                 
 static inline void xnarch_chain_irq (unsigned irq)
-
 {
     rthal_irq_host_pend(irq);
 }

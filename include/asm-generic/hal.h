@@ -263,6 +263,22 @@ static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
 #define IPIPE_WIRED_MASK  0
 #endif /* !IPIPE_WIRED_MASK */
 
+#ifndef IPIPE_NOSTACK_FLAG
+/* In case the foreign stack marker is absent. */
+#define IPIPE_NOSTACK_FLAG 2
+#define ipipe_set_foreign_stack(ipd)	do { } while(0)
+#define ipipe_clear_foreign_stack(ipd)	do { } while(0)
+#endif /* !IPIPE_NOSTACK_FLAG */
+
+#ifdef CONFIG_KGDB
+#define rthal_set_foreign_stack(ipd)	ipipe_set_foreign_stack(ipd)
+#define rthal_clear_foreign_stack(ipd)	ipipe_clear_foreign_stack(ipd)
+#else /* !CONFIG_KGDB */
+/* No need to track foreign stacks unless KGDB is active. */
+#define rthal_set_foreign_stack(ipd)	do { } while(0)
+#define rthal_clear_foreign_stack(ipd)	do { } while(0)
+#endif /* CONFIG_KGDB */
+
 #define rthal_catch_cleanup(hdlr)         \
     ipipe_catch_event(ipipe_root_domain,IPIPE_EVENT_CLEANUP,hdlr)
 #define rthal_catch_taskexit(hdlr)	\

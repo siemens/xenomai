@@ -139,7 +139,7 @@ static inline void xnarch_stop_timer (void)
 static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
 {
     /* Remember the preempted Linux task pointer. */
-    rootcb->user_task = rootcb->active_task = rthal_current_host_task(cpuid);
+    rootcb->user_task = rootcb->active_task = current;
     rootcb->tip = current->thread_info;
 #ifdef CONFIG_XENO_HW_FPU
     rootcb->user_fpu_owner = rthal_get_fpu_owner(rootcb->user_task);
@@ -160,16 +160,21 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
     struct task_struct *prev = out_tcb->active_task;
     struct task_struct *next = in_tcb->user_task;
 
-    in_tcb->active_task = next ?: prev;
+    if (likely(next != NULL)) {
+		in_tcb->active_task = next;
+		rthal_clear_foreign_stack(&rthal_domain);
+	} else {
+		in_tcb->active_task = prev;
+		rthal_set_foreign_stack(&rthal_domain);
+	}
 
     if (next && next != prev) {
-        /* Switch to new user-space thread? */
-        struct mm_struct *oldmm = prev->active_mm;
-
-        if (next->active_mm)
-            switch_mm(oldmm, next->active_mm, next);
-        if (!next->mm)
-            enter_lazy_tlb(oldmm, next);
+		/* Switch to new user-space thread? */
+		struct mm_struct *oldmm = prev->active_mm;
+	    if (next->active_mm)
+		switch_mm(oldmm, next->active_mm, next);
+	    if (!next->mm)
+		enter_lazy_tlb(oldmm, next);
     }
 
     /* Kernel-to-kernel context switch. */
@@ -488,7 +493,8 @@ static inline int xnarch_local_syscall (struct pt_regs *regs)
 
 #ifdef XENO_TIMER_MODULE
 
-static inline void xnarch_program_timer_shot (unsigned long delay) {
+static inline void xnarch_program_timer_shot (unsigned long delay)
+{
     rthal_timer_program_shot(rthal_imuldiv(delay,RTHAL_TIMER_FREQ,RTHAL_CPU_FREQ));
 }
 
