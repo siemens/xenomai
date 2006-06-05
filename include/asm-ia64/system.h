@@ -163,10 +163,15 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
     struct task_struct *prev = out_tcb->active_task;
     struct task_struct *next = in_tcb->user_task;
 
-    in_tcb->active_task = next ?: prev;
+	if (likely(next != NULL)) {
+		in_tcb->active_task = next;
+		rthal_clear_foreign_stack(&rthal_domain);
+	} else {
+		in_tcb->active_task = prev;
+		rthal_set_foreign_stack(&rthal_domain);
+	}
 
-    if (next && next != prev)
-        {
+    if (next && next != prev) {
         /* We are switching to a user task different from the last
            preempted or running user task, so that we can use the
            Linux context switch routine. */
@@ -177,18 +182,17 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
         if (!next->mm)
             enter_lazy_tlb(oldmm,next);
 
-	if (IA64_HAS_EXTRA_STATE(prev))
-		ia64_save_extra(prev);
+		if (IA64_HAS_EXTRA_STATE(prev))
+			ia64_save_extra(prev);
 
-	if (IA64_HAS_EXTRA_STATE(next))
-		ia64_load_extra(next);
+		if (IA64_HAS_EXTRA_STATE(next))
+			ia64_load_extra(next);
 
-	ia64_psr(task_pt_regs(next))->dfh = !ia64_is_local_fpu_owner(next);
+		ia64_psr(task_pt_regs(next))->dfh = !ia64_is_local_fpu_owner(next);
 
         rthal_thread_switch(out_tcb->kspp,in_tcb->kspp,1);
-        }
-    else
-        {
+	}
+    else {
         unsigned long gp;
 
         ia64_stop();
@@ -202,7 +206,7 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
         /* fph will be enabled by xnarch_restore_fpu if needed, and
            returns the root thread in its usual mode. */
         ia64_fph_disable();
-        }
+	}
 }
 
 static inline void xnarch_finalize_and_switch (xnarchtcb_t *dead_tcb,
