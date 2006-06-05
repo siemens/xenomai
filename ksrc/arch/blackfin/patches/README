@@ -10,8 +10,8 @@ tree, before you attempt to compile the Xenomai codebase against the
 latter kernel.
 
 On the Blackfin architecture, Xenomai is supported on the uClinux
-kernel series for the BF533 and BF537 boards. The current support is
-based on the uClinux releases published by the Blackfin project [2].
+kernel series for the BF533 and BF537 boards, based on the uClinux
+releases published by the Blackfin project [2].
 
 Just apply the provided patch against the corresponding kernel
 release. You may want to have a look at the README.*INSTALL guides at
