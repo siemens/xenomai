@@ -1097,11 +1097,15 @@ void pse51_shm_pkg_cleanup(void)
         {
         pse51_shm_t *shm = link2shm(holder);
         pse51_node_t *node;
+        spl_t s;
+
 #ifdef CONFIG_XENO_OPT_DEBUG
         xnprintf("POSIX shared memory \"%s\" discarded.\n", shm->nodebase.name);
 #endif /* CONFIG_XENO_OPT_DEBUG */
+        xnlock_get_irqsave(&nklock, s);
         pse51_node_remove(&node, shm->nodebase.name, PSE51_SHM_MAGIC);
         pse51_shm_destroy(shm, 1);
+        xnlock_put_irqrestore(&nklock, s);
         }
 }
 
