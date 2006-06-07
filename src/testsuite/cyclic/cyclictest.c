@@ -36,7 +36,7 @@
 #include <sys/mman.h>
 
 #if IPIPE_TRACE
-#include <rtdm/rtbenchmark.h>
+#include <rtdm/rttesting.h>
 #endif
 
 /* Ugly, but .... */

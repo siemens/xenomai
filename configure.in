@@ -562,8 +562,9 @@ AC_CONFIG_FILES([ \
 	src/include/Makefile \
        	src/testsuite/Makefile \
        	src/testsuite/latency/Makefile \
-       	src/testsuite/switch/Makefile \
+       	src/testsuite/switchbench/Makefile \
        	src/testsuite/cyclic/Makefile \
+       	src/testsuite/switchtest/Makefile \
        	include/Makefile \
        	include/asm-generic/Makefile \
        	include/asm-blackfin/Makefile \

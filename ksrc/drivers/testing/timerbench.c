@@ -22,7 +22,7 @@
 #include <linux/ipipe_trace.h>
 #endif /* CONFIG_IPIPE_TRACE */
 
-#include <rtdm/rtbenchmark.h>
+#include <rtdm/rttesting.h>
 #include <rtdm/rtdm_driver.h>
 
 struct rt_tmbench_context {
@@ -547,7 +547,7 @@ static struct rtdm_device device = {
         sendmsg_nrt:    NULL,
     },
 
-    device_class:       RTDM_CLASS_BENCHMARK,
+    device_class:       RTDM_CLASS_TESTING,
     device_sub_class:   RTDM_SUBCLASS_TIMER,
     driver_name:        "xeno_timerbench",
     driver_version:     RTDM_DRIVER_VER(0, 1, 0),

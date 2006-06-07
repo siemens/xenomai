@@ -11,7 +11,7 @@
 #include <native/task.h>
 #include <native/timer.h>
 #include <native/sem.h>
-#include <rtdm/rtbenchmark.h>
+#include <rtdm/rttesting.h>
 
 RT_TASK latency_task, display_task;
 

@@ -1,0 +1,1 @@
+switch:posix+rtdm+switchtest:!./switch;popall:control_c
