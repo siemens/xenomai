@@ -1,18 +1,16 @@
-testdir = $(prefix)/testsuite/switch
+testdir = $(prefix)/testsuite/switchtest
 
 test_PROGRAMS = switch
 
 switch_SOURCES = switch.c
 
-switch_CPPFLAGS = \
-	@XENO_USER_CFLAGS@ \
-	-I$(top_srcdir)/include
+switch_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -g -I$(top_srcdir)/include
 
-switch_LDFLAGS = @XENO_USER_LDFLAGS@
+switch_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 
 switch_LDADD = \
-	../../skins/native/.libs/libnative.a \
-	-lpthread
+	-lpthread -lrt \
+	../../skins/posix/.libs/libpthread_rt.a
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(testdir)

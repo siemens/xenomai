@@ -1,1 +1,1 @@
-SUBDIRS = latency switch cyclic
+SUBDIRS = latency switchbench cyclic switchtest

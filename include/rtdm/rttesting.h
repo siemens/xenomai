@@ -23,7 +23,7 @@
 
 /*!
  * @ingroup profiles
- * @defgroup rtbenchmark Benchmark Devices
+ * @defgroup rtbenchmark Timer benchmark Device
  *
  * This group of devices is intended to provide in-kernel benchmark results.
  * Feel free to comment on this profile via the Xenomai mailing list
@@ -35,7 +35,7 @@
  * @n
  * @ref rtdm_device.device_name "Device Name": @c "rtbenchmark<N>", N >= 0 @n
  * @n
- * @ref rtdm_device.device_class "Device Class": @c RTDM_CLASS_BENCHMARK @n
+ * @ref rtdm_device.device_class "Device Class": @c RTDM_CLASS_TESTING @n
  * @n
  *
  * @par Supported Operations
@@ -48,14 +48,14 @@
  * Specific return values: none @n
  * @n
  * @b IOCTL @n
- * Mandatory Environments: see @ref IOCTLs "below" @n
- * Specific return values: see @ref IOCTLs "below" @n
+ * Mandatory Environments: see @ref TIMER_IOCTLs "below" @n
+ * Specific return values: see @ref TIMER_IOCTLs "below" @n
  *
  * @{
  */
 
-#ifndef _RTBENCHMARK_H
-#define _RTBENCHMARK_H
+#ifndef _RTTESTING_H
+#define _RTTESTING_H
 
 #include <rtdm/rtdm.h>
 
@@ -97,19 +97,20 @@ typedef struct rtbnch_trace_special {
 } rtbnch_trace_special_t;
 
 
-#define RTIOC_TYPE_BENCHMARK        RTDM_CLASS_BENCHMARK
-
+#define RTIOC_TYPE_BENCHMARK        RTDM_CLASS_TESTING
 
 /*!
- * @name Sub-Classes of RTDM_CLASS_BENCHMARK
+ * @name Sub-Classes of RTDM_CLASS_TESTING
  * @{ */
 #define RTDM_SUBCLASS_TIMER         0
+
+#define RTDM_SUBCLASS_SWITCH        1
 /** @} */
 
 
 /*!
- * @anchor IOCTLs @name IOCTLs
- * Benchmark device IOCTLs
+ * @anchor TIMER_IOCTLs @name TIMER_IOCTLs
+ * Timer benchmark device IOCTLs
  * @{ */
 #define RTBNCH_RTIOC_INTERM_RESULT      \
     _IOWR(RTIOC_TYPE_BENCHMARK, 0x00, struct rtbnch_interm_result)
@@ -139,6 +140,49 @@ typedef struct rtbnch_trace_special {
     _IOW(RTIOC_TYPE_BENCHMARK, 0x25, struct rtbnch_trace_special)
 /** @} */
 
+
+#define RTIOC_TYPE_SWITCH           RTDM_CLASS_TESTING
+
+#define RTSWITCH_FPU     0x1
+#define RTSWITCH_USE_FPU 0x2 /* Only for kernel-space tasks. */
+
+
+struct rtswitch_task {
+    unsigned index;
+    unsigned flags;
+};
+
+struct rtswitch {
+    unsigned from;
+    unsigned to;
+};
+
+/**
+ * @anchor SWITCH_IOCTLs @name @SWITCH_IOCTLs
+ * Context-switch testing device IOCTLs
+ * @{ */
+#define RTSWITCH_RTIOC_TASKS_COUNT                   \
+    _IOW(RTIOC_TYPE_SWITCH, 0x30, unsigned long)
+
+#define RTSWITCH_RTIOC_SET_CPU \
+    _IOW(RTIOC_TYPE_SWITCH, 0x31, unsigned long)
+
+#define RTSWITCH_RTIOC_REGISTER_UTASK \
+    _IOW(RTIOC_TYPE_SWITCH, 0x32, struct rtswitch_task)
+
+#define RTSWITCH_RTIOC_CREATE_KTASK \
+    _IOWR(RTIOC_TYPE_SWITCH, 0x33, struct rtswitch_task)
+
+#define RTSWITCH_RTIOC_PEND \
+    _IOR(RTIOC_TYPE_SWITCH, 0x34, struct rtswitch_task)
+
+#define RTSWITCH_RTIOC_SWITCH_TO \
+    _IOR(RTIOC_TYPE_SWITCH, 0x35, struct rtswitch)
+
+#define RTSWITCH_RTIOC_GET_SWITCHES_COUNT \
+    _IOR(RTIOC_TYPE_SWITCH, 0x36, unsigned long)
 /** @} */
 
-#endif /* _RTBENCHMARK_H */
+/** @} */
+
+#endif /* _RTTESTING_H */

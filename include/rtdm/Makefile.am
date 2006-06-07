@@ -7,4 +7,4 @@ include_HEADERS = \
 	rtdm.h \
 	rtdm_driver.h \
 	rtserial.h \
-	rtbenchmark.h
+	rttesting.h

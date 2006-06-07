@@ -2,7 +2,7 @@ ifeq ($(PATCHLEVEL),6)
 
 # Makefile frag for Linux v2.6
 
-obj-$(CONFIG_XENOMAI) += 16550A/ benchmark/
+obj-$(CONFIG_XENOMAI) += 16550A/ testing/
 
 else
 
@@ -10,7 +10,9 @@ else
 
 subdir-$(CONFIG_XENO_DRIVERS_16550A) += 16550A
 
-subdir-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += benchmark
+subdir-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += testing
+
+subdir-$(CONFIG_XENO_DRIVERS_SWITCHTEST) += testing
 
 include $(TOPDIR)/Rules.make
 

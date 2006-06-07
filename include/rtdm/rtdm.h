@@ -68,7 +68,7 @@ typedef struct task_struct          rtdm_user_info_t;
 #define RTDM_CLASS_CAN              3
 #define RTDM_CLASS_NETWORK          4
 #define RTDM_CLASS_RTMAC            5
-#define RTDM_CLASS_BENCHMARK        6
+#define RTDM_CLASS_TESTING          6
 /*
 #define RTDM_CLASS_USB              ?
 #define RTDM_CLASS_FIREWIRE         ?
