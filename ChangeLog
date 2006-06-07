@@ -1,5 +1,7 @@
 2006-06-07  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
+	* src/testsuite/switchtest: Add context switch unit test.
+
 	* ksrc/skins/posix/shm.c (ftruncate): Rework allocation of shared
 	memory with the size that is not a multiple of the page size.
 	(pse51_shm_pkg_cleanup): Hold the nklock while calling

@@ -34,7 +34,7 @@ struct cpu_tasks {
 
 /* Thread type. */
 typedef enum {
-    IDLE = 0,
+    SLEEPER = 0,
     RTK  = 1,        /* kernel-space thread. */
     RTUP = 2,        /* user-space real-time thread in primary mode. */
     RTUS = 3,        /* user-space real-time thread in secondary mode. */
@@ -43,12 +43,12 @@ typedef enum {
 } threadtype;
 
 typedef enum {
-    FP   = 1,        /* arm the FPU task bit (only make sense for RTK) */
+    AFP  = 1,        /* arm the FPU task bit (only make sense for RTK) */
     UFPP = 2,        /* use the FPU while in primary mode. */
     UFPS = 4         /* use the FPU while in secondary mode. */
 } fpflags;
 
-sem_t idle_start, terminate;
+sem_t sleeper_start, terminate;
 
 void timespec_substract(struct timespec *result,
                         const struct timespec *lhs,
@@ -63,7 +63,7 @@ void timespec_substract(struct timespec *result,
     }
 }
 
-static void *idle(void *cookie)
+static void *sleeper(void *cookie)
 {
     struct task_params *param = (struct task_params *) cookie;
     unsigned tasks_count = param->cpu->tasks_count;
@@ -75,7 +75,7 @@ static void *idle(void *cookie)
     CPU_ZERO(&cpu_set);
     CPU_SET(param->cpu->index, &cpu_set);
     if (sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
-        perror("idle: sched_setaffinity");
+        perror("sleeper: sched_setaffinity");
         exit(EXIT_FAILURE);
     }
 
@@ -85,7 +85,7 @@ static void *idle(void *cookie)
     ts.tv_sec = 0;
     ts.tv_nsec = 1000000;
 
-    __real_sem_wait(&idle_start);
+    __real_sem_wait(&sleeper_start);
 
     clock_gettime(CLOCK_REALTIME, &last);
 
@@ -106,7 +106,7 @@ static void *idle(void *cookie)
             last = now;
 
             if (ioctl(fd, RTSWITCH_RTIOC_GET_SWITCHES_COUNT, &switches_count)) {
-                perror("idle: ioctl(RTSWITCH_RTIOC_GET_SWITCHES_COUNT)");
+                perror("sleeper: ioctl(RTSWITCH_RTIOC_GET_SWITCHES_COUNT)");
                 exit(EXIT_FAILURE);
             }
             
@@ -124,7 +124,7 @@ static void *idle(void *cookie)
             ++rtsw.to;
         
         if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw)) {
-            perror("idle: ioctl(RTSWITCH_RTIOC_SWITCH_TO)");
+            perror("sleeper: ioctl(RTSWITCH_RTIOC_SWITCH_TO)");
             exit(EXIT_FAILURE);
         }
     }
@@ -310,7 +310,7 @@ static int parse_arg(struct task_params *param,
     };
 
     static struct t2f fp2flags [] = {
-        { "_fp",   FP   },
+        { "_fp",   AFP   },
         { "_ufpp", UFPP },
         { "_ufps", UFPS }
     };
@@ -370,7 +370,7 @@ static int check_arg(const struct task_params *param, struct cpu_tasks *end_cpu)
         return -1;
 
     switch (param->type) {
-    case IDLE:
+    case SLEEPER:
         if (param->fp)
             return -1;
         break;
@@ -486,11 +486,11 @@ int main(int argc, const char *argv[])
     const char **all, *progname = argv[0];
     unsigned i, j, count, nr_cpus;
     struct cpu_tasks *cpus;
-    pthread_attr_t rt_attr, idle_attr;
+    pthread_attr_t rt_attr, sleeper_attr;
     struct sched_param sp;
 
     /* Initializations. */
-    if (__real_sem_init(&idle_start, 0, 0)) {
+    if (__real_sem_init(&sleeper_start, 0, 0)) {
         perror("sem_init");
         exit(EXIT_FAILURE);
     }
@@ -523,7 +523,7 @@ int main(int argc, const char *argv[])
         size = cpus[i].capacity * sizeof(struct task_params);
         cpus[i].tasks_count = 1;
         cpus[i].tasks = (struct task_params *) malloc(size);
-        cpus[i].tasks[0].type = IDLE;
+        cpus[i].tasks[0].type = SLEEPER;
         cpus[i].tasks[0].fp = 0;
         cpus[i].tasks[0].cpu = &cpus[i];        
     }
@@ -616,8 +616,8 @@ int main(int argc, const char *argv[])
     pthread_attr_setschedparam(&rt_attr, &sp);
     pthread_attr_setstacksize(&rt_attr, 20 * 1024);
 
-    /* Prepare attribute for idle tasks. */
-    pthread_attr_init(&idle_attr);
+    /* Prepare attribute for sleeper tasks. */
+    pthread_attr_init(&sleeper_attr);
     pthread_attr_setstacksize(&rt_attr, 20 * 1024);
 
     /* Create and register all tasks. */
@@ -650,7 +650,7 @@ int main(int argc, const char *argv[])
 
             switch(param->type) {
             case RTK:
-                param->swt.flags = (param->fp & FP ? RTSWITCH_FPU : 0)
+                param->swt.flags = (param->fp & AFP ? RTSWITCH_FPU : 0)
                     | (param->fp & UFPP ? RTSWITCH_USE_FPU : 0);
 
                 if (ioctl(cpu->fd, RTSWITCH_RTIOC_CREATE_KTASK, &param->swt)) {
@@ -659,9 +659,9 @@ int main(int argc, const char *argv[])
                 }
                 break;
 
-            case IDLE:
-                task_routine = idle;
-                attr = &idle_attr;
+            case SLEEPER:
+                task_routine = sleeper;
+                attr = &sleeper_attr;
                 goto do_register;
                 
             case RTUP:
@@ -699,7 +699,7 @@ int main(int argc, const char *argv[])
                     exit(EXIT_FAILURE);
                 }
 
-                if (param->type != IDLE) {
+                if (param->type != SLEEPER) {
                     char name [64];
 
                     snprintf(name, sizeof(name), "%s%u/%u",
@@ -717,9 +717,9 @@ int main(int argc, const char *argv[])
         }
     }
 
-    /* Start the idle tasks. */
+    /* Start the sleeper tasks. */
     for (i = 0; i < nr_cpus; i ++)
-        __real_sem_post(&idle_start);
+        __real_sem_post(&sleeper_start);
 
     /* Wait for interruption. */
     __real_sem_wait(&terminate);
@@ -745,7 +745,7 @@ int main(int argc, const char *argv[])
         free(cpu->tasks);
     }
     free(cpus);
-    __real_sem_destroy(&idle_start);
+    __real_sem_destroy(&sleeper_start);
     __real_sem_destroy(&terminate);
 
     return 0;
