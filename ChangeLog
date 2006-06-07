@@ -1,3 +1,10 @@
+2006-06-07  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/shm.c (ftruncate): Rework allocation of shared
+	memory with the size that is not a multiple of the page size.
+	(pse51_shm_pkg_cleanup): Hold the nklock while calling
+	pse51_shm_destroy to avoid a panic when compiled in debug mode.
+
 2006-06-05  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/blackfin/patches: Upgrade to R06R1RC2-bf53x-1.4-03 and
