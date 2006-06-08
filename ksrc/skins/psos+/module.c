@@ -31,17 +31,16 @@ MODULE_AUTHOR("rpm@xenomai.org");
 MODULE_LICENSE("GPL");
 
 static u_long rn0_size_arg = 32 * 1024; /* Default size of region #0 */
-module_param_named(rn0_size,rn0_size_arg,ulong,0444);
-MODULE_PARM_DESC(rn0_size,"Size of pSOS+ region #0 (in bytes)");
+module_param_named(rn0_size, rn0_size_arg, ulong, 0444);
+MODULE_PARM_DESC(rn0_size, "Size of pSOS+ region #0 (in bytes)");
 
-static u_long time_slice_arg = 10; /* Default (round-robin) time slice */
-module_param_named(time_slice,time_slice_arg,ulong,0444);
-MODULE_PARM_DESC(time_slice,"Default time slice (in ticks)");
+static u_long time_slice_arg = 10;  /* Default (round-robin) time slice */
+module_param_named(time_slice, time_slice_arg, ulong, 0444);
+MODULE_PARM_DESC(time_slice, "Default time slice (in ticks)");
 
 static xnpod_t pod;
 
-static void psos_shutdown (int xtype)
-
+static void psos_shutdown(int xtype)
 {
     xnpod_lock_sched();
 
@@ -56,33 +55,30 @@ static void psos_shutdown (int xtype)
     xnpod_shutdown(xtype);
 }
 
-void k_fatal (u_long err_code, u_long flags)
-
+void k_fatal(u_long err_code, u_long flags)
 {
-    xnpod_fatal("pSOS/vm: fatal error, code 0x%x",err_code);
+    xnpod_fatal("pSOS/vm: fatal error, code 0x%x", err_code);
 }
 
 int SKIN_INIT(psos)
-
 {
     int err;
 
 #if CONFIG_XENO_OPT_TIMING_PERIOD == 0
-    nktickdef = 1000000;	/* Defaults to 1ms. */
+    nktickdef = 1000000;        /* Defaults to 1ms. */
 #endif
 
-    err = xnpod_init(&pod,1,255,0);
+    err = xnpod_init(&pod, 1, 255, 0);
 
     if (err != 0)
-	return err;
+        return err;
 
     err = psosrn_init(module_param_value(rn0_size_arg));
 
-    if (err != 0)
-        {
+    if (err != 0) {
         xnpod_shutdown(XNPOD_FATAL_EXIT);
         return err;
-        }
+    }
 
     psossem_init();
     psosqueue_init();
@@ -97,7 +93,6 @@ int SKIN_INIT(psos)
 }
 
 void SKIN_EXIT(psos)
-
 {
     xnprintf("stopping pSOS+ services.\n");
     psos_shutdown(XNPOD_NORMAL_EXIT);

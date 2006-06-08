@@ -20,24 +20,25 @@
 #include "psos+/task.h"
 #include "psos+/asr.h"
 
-void psosasr_init (void) {
+void psosasr_init(void)
+{
 }
 
-void psosasr_cleanup (void) {
+void psosasr_cleanup(void)
+{
 }
 
-u_long as_catch (void (*routine)(void),
-		 u_long mode)
+u_long as_catch(void (*routine) (void), u_long mode)
 {
     spl_t s;
 
     xnpod_check_context(XNPOD_THREAD_CONTEXT);
 
-    xnlock_get_irqsave(&nklock,s);
-    psos_current_task()->threadbase.asr = (xnasr_t)routine;
+    xnlock_get_irqsave(&nklock, s);
+    psos_current_task()->threadbase.asr = (xnasr_t) routine;
     psos_current_task()->threadbase.asrmode = psos_mode_to_xeno(mode);
     psos_current_task()->threadbase.asrimask = ((mode >> 8) & 0x7);
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     /* The rescheduling procedure checks for pending signals. */
     xnpod_schedule();
@@ -45,40 +46,36 @@ u_long as_catch (void (*routine)(void),
     return SUCCESS;
 }
 
-u_long as_send (u_long tid,
-		u_long signals)
+u_long as_send(u_long tid, u_long signals)
 {
     u_long err = SUCCESS;
     psostask_t *task;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    task = psos_h2obj_active(tid,PSOS_TASK_MAGIC,psostask_t);
+    task = psos_h2obj_active(tid, PSOS_TASK_MAGIC, psostask_t);
 
-    if (!task)
-	{
-	err = psos_handle_error(tid,PSOS_TASK_MAGIC,psostask_t);
-	goto unlock_and_exit;
-	}
+    if (!task) {
+        err = psos_handle_error(tid, PSOS_TASK_MAGIC, psostask_t);
+        goto unlock_and_exit;
+    }
 
-    if (task->threadbase.asr == XNTHREAD_INVALID_ASR)
-	{
-	err = ERR_NOASR;
-	goto unlock_and_exit;
-	}
+    if (task->threadbase.asr == XNTHREAD_INVALID_ASR) {
+        err = ERR_NOASR;
+        goto unlock_and_exit;
+    }
 
-    if (signals > 0)
-	{
-	task->threadbase.signals |= signals;
+    if (signals > 0) {
+        task->threadbase.signals |= signals;
 
-	if (xnpod_current_thread() == &task->threadbase)
-	    xnpod_schedule();
-	}
+        if (xnpod_current_thread() == &task->threadbase)
+            xnpod_schedule();
+    }
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
