@@ -35,13 +35,12 @@
 static int __muxid;
 
 #if 0
-static vrtxtask_t *__vrtx_task_current (struct task_struct *curr)
-
+static vrtxtask_t *__vrtx_task_current(struct task_struct *curr)
 {
     xnthread_t *thread = xnshadow_thread(curr);
 
     if (!thread || xnthread_get_magic(thread) != VRTX_SKIN_MAGIC)
-	return NULL;
+        return NULL;
 
     return thread2vrtxtask(thread); /* Convert TCB pointers. */
 }
@@ -58,57 +57,54 @@ static vrtxtask_t *__vrtx_task_current (struct task_struct *curr)
  * }
  */
 
-static int __sc_tecreate (struct task_struct *curr, struct pt_regs *regs)
-
+static int __sc_tecreate(struct task_struct *curr, struct pt_regs *regs)
 {
     xncompletion_t __user *u_completion;
     struct vrtx_arg_bulk bulk;
     int prio, mode, tid, err;
     vrtxtask_t *task;
 
-    if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg1(regs),sizeof(bulk)))
-	return -EFAULT;
+    if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(bulk)))
+        return -EFAULT;
 
-    if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg2(regs),sizeof(tid)))
-	return -EFAULT;
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(tid)))
+        return -EFAULT;
 
-    __xn_copy_from_user(curr,&bulk,(void __user *)__xn_reg_arg1(regs),sizeof(bulk));
+    __xn_copy_from_user(curr, &bulk, (void __user *)__xn_reg_arg1(regs),
+                        sizeof(bulk));
 
     /* Suggested task id. */
     tid = bulk.a1;
     /* Task priority. */
     prio = bulk.a2;
     /* Task mode. */
-    mode = bulk.a3|0x100;
+    mode = bulk.a3 | 0x100;
 
     /* Completion descriptor our parent thread is pending on. */
     u_completion = (xncompletion_t __user *)__xn_reg_arg3(regs);
 
     task = xnmalloc(sizeof(*task));
-    
-    if (!task)
-	{
-	err = ER_TCB;
-	goto done;
-	}
-	
-    tid = sc_tecreate_inner(task,NULL,tid,prio,mode,0,0,NULL,0,&err);
 
-    if (tid < 0)
-	{
-	if (u_completion)
-	    xnshadow_signal_completion(u_completion,err);
-	}
-    else
-	{
-	__xn_copy_to_user(curr,(void __user *)__xn_reg_arg2(regs),&tid,sizeof(tid));
-	err = xnshadow_map(&task->threadbase,u_completion);
-	}
+    if (!task) {
+        err = ER_TCB;
+        goto done;
+    }
+
+    tid = sc_tecreate_inner(task, NULL, tid, prio, mode, 0, 0, NULL, 0, &err);
+
+    if (tid < 0) {
+        if (u_completion)
+            xnshadow_signal_completion(u_completion, err);
+    } else {
+        __xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &tid,
+                          sizeof(tid));
+        err = xnshadow_map(&task->threadbase, u_completion);
+    }
 
     if (err)
-	xnfree(task);
+        xnfree(task);
 
- done:
+  done:
 
     return err;
 }
@@ -117,14 +113,13 @@ static int __sc_tecreate (struct task_struct *curr, struct pt_regs *regs)
  * int __sc_tdelete(int tid, int opt)
  */
 
-static int __sc_tdelete (struct task_struct *curr, struct pt_regs *regs)
-
+static int __sc_tdelete(struct task_struct *curr, struct pt_regs *regs)
 {
     int err, tid, opt;
 
     tid = __xn_reg_arg1(regs);
     opt = __xn_reg_arg2(regs);
-    sc_tdelete(tid,opt,&err);
+    sc_tdelete(tid, opt, &err);
 
     return err;
 }
@@ -133,14 +128,13 @@ static int __sc_tdelete (struct task_struct *curr, struct pt_regs *regs)
  * int __sc_tpriority(int tid, int prio)
  */
 
-static int __sc_tpriority (struct task_struct *curr, struct pt_regs *regs)
-
+static int __sc_tpriority(struct task_struct *curr, struct pt_regs *regs)
 {
     int err, tid, prio;
 
     tid = __xn_reg_arg1(regs);
     prio = __xn_reg_arg2(regs);
-    sc_tpriority(tid,prio,&err);
+    sc_tpriority(tid, prio, &err);
 
     return err;
 }
@@ -149,14 +143,13 @@ static int __sc_tpriority (struct task_struct *curr, struct pt_regs *regs)
  * int __sc_tresume(int tid, int opt)
  */
 
-static int __sc_tresume (struct task_struct *curr, struct pt_regs *regs)
-
+static int __sc_tresume(struct task_struct *curr, struct pt_regs *regs)
 {
     int err, tid, opt;
 
     tid = __xn_reg_arg1(regs);
     opt = __xn_reg_arg2(regs);
-    sc_tpriority(tid,opt,&err);
+    sc_tpriority(tid, opt, &err);
 
     return err;
 }
@@ -165,14 +158,13 @@ static int __sc_tresume (struct task_struct *curr, struct pt_regs *regs)
  * int __sc_tsuspend(int tid, int opt)
  */
 
-static int __sc_tsuspend (struct task_struct *curr, struct pt_regs *regs)
-
+static int __sc_tsuspend(struct task_struct *curr, struct pt_regs *regs)
 {
     int err, tid, opt;
 
     tid = __xn_reg_arg1(regs);
     opt = __xn_reg_arg2(regs);
-    sc_tsuspend(tid,opt,&err);
+    sc_tsuspend(tid, opt, &err);
 
     return err;
 }
@@ -181,8 +173,7 @@ static int __sc_tsuspend (struct task_struct *curr, struct pt_regs *regs)
  * int __sc_tslice(unsigned short ticks)
  */
 
-static int __sc_tslice (struct task_struct *curr, struct pt_regs *regs)
-
+static int __sc_tslice(struct task_struct *curr, struct pt_regs *regs)
 {
     unsigned short ticks;
 
@@ -196,26 +187,26 @@ static int __sc_tslice (struct task_struct *curr, struct pt_regs *regs)
  * int __sc_tinquiry(int pinfo[], TCB *tcb, int tid)
  */
 
-static int __sc_tinquiry (struct task_struct *curr, struct pt_regs *regs)
-
+static int __sc_tinquiry(struct task_struct *curr, struct pt_regs *regs)
 {
     int err, tid, pinfo[3];
     TCB *tcb;
 
-    if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg1(regs),sizeof(pinfo)))
-	return -EFAULT;
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pinfo)))
+        return -EFAULT;
 
-    if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg2(regs),sizeof(*tcb)))
-	return -EFAULT;
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(*tcb)))
+        return -EFAULT;
 
     tid = __xn_reg_arg3(regs);
-    tcb = sc_tinquiry(pinfo,tid,&err);
+    tcb = sc_tinquiry(pinfo, tid, &err);
 
-    if (!err)
-	{
-	__xn_copy_to_user(curr,(void __user *)__xn_reg_arg1(regs),pinfo,sizeof(pinfo));
-	__xn_copy_to_user(curr,(void __user *)__xn_reg_arg2(regs),tcb,sizeof(*tcb));
-	}
+    if (!err) {
+        __xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), pinfo,
+                          sizeof(pinfo));
+        __xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), tcb,
+                          sizeof(*tcb));
+    }
 
     return err;
 }
@@ -224,8 +215,7 @@ static int __sc_tinquiry (struct task_struct *curr, struct pt_regs *regs)
  * int __sc_lock(void)
  */
 
-static int __sc_lock (struct task_struct *curr, struct pt_regs *regs)
-
+static int __sc_lock(struct task_struct *curr, struct pt_regs *regs)
 {
     sc_lock();
     return 0;
@@ -235,53 +225,48 @@ static int __sc_lock (struct task_struct *curr, struct pt_regs *regs)
  * int __sc_unlock(void)
  */
 
-static int __sc_unlock (struct task_struct *curr, struct pt_regs *regs)
-
+static int __sc_unlock(struct task_struct *curr, struct pt_regs *regs)
 {
     sc_unlock();
     return 0;
 }
 
 static xnsysent_t __systab[] = {
-    [__vrtx_tecreate ] = { &__sc_tecreate, __xn_exec_init },
-    [__vrtx_tdelete ] = { &__sc_tdelete, __xn_exec_conforming },
-    [__vrtx_tpriority ] = { &__sc_tpriority, __xn_exec_primary },
-    [__vrtx_tresume ] = { &__sc_tresume, __xn_exec_primary },
-    [__vrtx_tsuspend ] = { &__sc_tsuspend, __xn_exec_primary },
-    [__vrtx_tslice ] = { &__sc_tslice, __xn_exec_any },
-    [__vrtx_tinquiry ] = { &__sc_tinquiry, __xn_exec_primary },
-    [__vrtx_lock ] = { &__sc_lock, __xn_exec_primary },
-    [__vrtx_unlock ] = { &__sc_unlock, __xn_exec_primary },
+    [__vrtx_tecreate] = {&__sc_tecreate, __xn_exec_init},
+    [__vrtx_tdelete] = {&__sc_tdelete, __xn_exec_conforming},
+    [__vrtx_tpriority] = {&__sc_tpriority, __xn_exec_primary},
+    [__vrtx_tresume] = {&__sc_tresume, __xn_exec_primary},
+    [__vrtx_tsuspend] = {&__sc_tsuspend, __xn_exec_primary},
+    [__vrtx_tslice] = {&__sc_tslice, __xn_exec_any},
+    [__vrtx_tinquiry] = {&__sc_tinquiry, __xn_exec_primary},
+    [__vrtx_lock] = {&__sc_lock, __xn_exec_primary},
+    [__vrtx_unlock] = {&__sc_unlock, __xn_exec_primary},
 };
 
-static void __shadow_delete_hook (xnthread_t *thread)
-
+static void __shadow_delete_hook(xnthread_t *thread)
 {
     if (xnthread_get_magic(thread) == VRTX_SKIN_MAGIC &&
-	testbits(thread->status,XNSHADOW))
-	xnshadow_unmap(thread);
+        testbits(thread->status, XNSHADOW))
+        xnshadow_unmap(thread);
 }
 
-int vrtxsys_init (void)
-
+int vrtxsys_init(void)
 {
     __muxid =
-	xnshadow_register_interface("vrtx",
-				    VRTX_SKIN_MAGIC,
-				    sizeof(__systab) / sizeof(__systab[0]),
-				    __systab,
-				    NULL);
+        xnshadow_register_interface("vrtx",
+                                    VRTX_SKIN_MAGIC,
+                                    sizeof(__systab) / sizeof(__systab[0]),
+                                    __systab, NULL);
     if (__muxid < 0)
-	return -ENOSYS;
+        return -ENOSYS;
 
-    xnpod_add_hook(XNHOOK_THREAD_DELETE,&__shadow_delete_hook);
-    
+    xnpod_add_hook(XNHOOK_THREAD_DELETE, &__shadow_delete_hook);
+
     return 0;
 }
 
-void vrtxsys_cleanup (void)
-
+void vrtxsys_cleanup(void)
 {
-    xnpod_remove_hook(XNHOOK_THREAD_DELETE,&__shadow_delete_hook);
+    xnpod_remove_hook(XNHOOK_THREAD_DELETE, &__shadow_delete_hook);
     xnshadow_unregister_interface(__muxid);
 }

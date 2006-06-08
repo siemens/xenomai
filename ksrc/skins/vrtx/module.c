@@ -32,13 +32,13 @@ MODULE_DESCRIPTION("VRTX(R) virtual machine");
 MODULE_AUTHOR("jpinon@idealx.com, rpm@xenomai.org");
 MODULE_LICENSE("GPL");
 
-static u_long workspace_size_arg = 32 * 1024; /* Default size of VRTX workspace */
-module_param_named(workspace_size,workspace_size_arg,ulong,0444);
-MODULE_PARM_DESC(workspace_size,"Size of VRTX workspace (in bytes)");
+static u_long workspace_size_arg = 32 * 1024;   /* Default size of VRTX workspace */
+module_param_named(workspace_size, workspace_size_arg, ulong, 0444);
+MODULE_PARM_DESC(workspace_size, "Size of VRTX workspace (in bytes)");
 
-static u_long task_stacksize_arg = 4096; /* Default size of VRTX tasks */
-module_param_named(task_stacksize,task_stacksize_arg,ulong,0444);
-MODULE_PARM_DESC(task_stacksize,"Default size of VRTX task stack (in bytes)");
+static u_long task_stacksize_arg = 4096;    /* Default size of VRTX tasks */
+module_param_named(task_stacksize, task_stacksize_arg, ulong, 0444);
+MODULE_PARM_DESC(task_stacksize, "Default size of VRTX task stack (in bytes)");
 
 #if !defined(__KERNEL__) || !defined(CONFIG_XENO_OPT_PERVASIVE)
 static xnpod_t __vrtx_pod;
@@ -53,107 +53,102 @@ xnptree_t __vrtx_ptree = {
 };
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
-vrtxidmap_t *vrtx_alloc_idmap (int maxids, int reserve)
+vrtxidmap_t *vrtx_alloc_idmap(int maxids, int reserve)
 {
     vrtxidmap_t *map;
     int mapsize;
 
     if (maxids > VRTX_MAX_IDS)
-	return NULL;
+        return NULL;
 
     mapsize = sizeof(*map) + (maxids - 1) * sizeof(map->objarray[0]);
-    map = (vrtxidmap_t *)xnmalloc(mapsize);
+    map = (vrtxidmap_t *) xnmalloc(mapsize);
 
     if (!map)
-	return NULL;
+        return NULL;
 
     map->usedids = 0;
     map->maxids = maxids;
-    map->himask = reserve ? (((maxids/BITS_PER_LONG)/2)<<1)-1 : 0;
+    map->himask = reserve ? (((maxids / BITS_PER_LONG) / 2) << 1) - 1 : 0;
     map->himap = ~0;
-    memset(map->lomap,~0,sizeof(map->lomap));
-    memset(map->objarray,0,sizeof(map->objarray[0]) * maxids);
+    memset(map->lomap, ~0, sizeof(map->lomap));
+    memset(map->objarray, 0, sizeof(map->objarray[0]) * maxids);
 
     return map;
 }
 
-void vrtx_free_idmap (vrtxidmap_t *map)
+void vrtx_free_idmap(vrtxidmap_t * map)
 {
     xnfree(map);
 }
 
-int vrtx_get_id (vrtxidmap_t *map, int id, void *objaddr)
+int vrtx_get_id(vrtxidmap_t * map, int id, void *objaddr)
 {
     int hi, lo;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    if (id >= 0)
-	{
-	if (map->objarray[id] != NULL)
-	    {
-	    id = -1;
-	    goto unlock_and_exit;
-	    }
-	}
-    else if (map->usedids >= map->maxids)
-	goto unlock_and_exit;
-    else
-	{
-	/* The himask implements a namespace reservation of half of
-	   the bitmap space which cannot be used to draw ids. */
+    if (id >= 0) {
+        if (map->objarray[id] != NULL) {
+            id = -1;
+            goto unlock_and_exit;
+        }
+    } else if (map->usedids >= map->maxids)
+        goto unlock_and_exit;
+    else {
+        /* The himask implements a namespace reservation of half of
+           the bitmap space which cannot be used to draw ids. */
 
-	hi = ffnz(map->himap & ~map->himask);
+        hi = ffnz(map->himap & ~map->himask);
 
-	if (!hi)
-	    goto unlock_and_exit;
+        if (!hi)
+            goto unlock_and_exit;
 
-	lo = ffnz(map->lomap[hi]);
-	id = hi * BITS_PER_LONG + lo;
-	++map->usedids;
+        lo = ffnz(map->lomap[hi]);
+        id = hi * BITS_PER_LONG + lo;
+        ++map->usedids;
 
-        __clrbits(map->lomap[hi],1 << lo);
+        __clrbits(map->lomap[hi], 1 << lo);
 
-	if (map->lomap[hi] == 0)
-	    __clrbits(map->himap,1 << hi);
-	}
+        if (map->lomap[hi] == 0)
+            __clrbits(map->himap, 1 << hi);
+    }
 
     map->objarray[id] = objaddr;
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return id;
 }
 
-void vrtx_put_id (vrtxidmap_t *map, int id)
+void vrtx_put_id(vrtxidmap_t * map, int id)
 {
     int hi = id / BITS_PER_LONG;
     int lo = id % BITS_PER_LONG;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
     map->objarray[id] = NULL;
-    __setbits(map->himap,1 << hi);
-    __setbits(map->lomap[hi],1 << lo);
+    __setbits(map->himap, 1 << hi);
+    __setbits(map->lomap[hi], 1 << lo);
     --map->usedids;
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 }
 
-int sc_gversion (void)
+int sc_gversion(void)
 {
     return VRTX_SKIN_VERSION;
 }
 
 int SKIN_INIT(vrtx)
-
 {
     int err;
 
 #if CONFIG_XENO_OPT_TIMING_PERIOD == 0
-    nktickdef = 1000000;	/* Defaults to 1ms. */
+    nktickdef = 1000000;        /* Defaults to 1ms. */
 #endif
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
@@ -161,29 +156,27 @@ int SKIN_INIT(vrtx)
     err = xncore_attach();
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
     /* The VRTX skin is standalone. */
-    err = xnpod_init(&__vrtx_pod,255,0,XNREUSE);
+    err = xnpod_init(&__vrtx_pod, 255, 0, XNREUSE);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
     if (err != 0)
-	goto fail;
+        goto fail;
 
-    if (!testbits(nkpod->status,XNTMPER))
-	{
-	xnlogerr("incompatible timer mode (aperiodic found, need periodic).\n");
-	err = -EBUSY;	/* Cannot work in aperiodic timing mode. */
-	}
+    if (!testbits(nkpod->status, XNTMPER)) {
+        xnlogerr("incompatible timer mode (aperiodic found, need periodic).\n");
+        err = -EBUSY;           /* Cannot work in aperiodic timing mode. */
+    }
 
-    if (err != 0)
-        {
+    if (err != 0) {
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	xncore_detach(err);
+        xncore_detach(err);
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-	xnpod_shutdown(err);
+        xnpod_shutdown(err);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
- fail:
-	xnlogerr("VRTX skin init failed, code %d.\n",err);
+      fail:
+        xnlogerr("VRTX skin init failed, code %d.\n", err);
         return err;
-        }
+    }
 
     /* the VRTX workspace, or sysheap, is accessed (sc_halloc) with
      * hid #0.  We must ensure it is the first heap created, so
@@ -192,7 +185,7 @@ int SKIN_INIT(vrtx)
     err = vrtxheap_init(module_param_value(workspace_size_arg));
 
     if (err != 0)
-	goto fail;
+        goto fail;
 
     vrtxevent_init();
     vrtxsem_init();
@@ -211,7 +204,6 @@ int SKIN_INIT(vrtx)
 }
 
 void SKIN_EXIT(vrtx)
-
 {
     xnprintf("stopping VRTX services.\n");
 
