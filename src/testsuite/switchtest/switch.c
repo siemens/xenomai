@@ -71,6 +71,7 @@ static void *sleeper(void *cookie)
     int fd = param->cpu->fd;
     struct rtswitch rtsw;
     cpu_set_t cpu_set;
+    unsigned i = 0;
 
     CPU_ZERO(&cpu_set);
     CPU_SET(param->cpu->index, &cpu_set);
@@ -122,11 +123,17 @@ static void *sleeper(void *cookie)
             rtsw.to = 0;
         if (rtsw.to == rtsw.from)
             ++rtsw.to;
-        
+
+        fp_regs_set(rtsw.from + i * 1000);
         if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw)) {
             perror("sleeper: ioctl(RTSWITCH_RTIOC_SWITCH_TO)");
             exit(EXIT_FAILURE);
         }
+        if (fp_regs_check(rtsw.from + i * 1000))
+            pthread_kill(pthread_self(), SIGSTOP);
+
+        if(++i == 4000000)
+            i = 0;
     }
 }
 
@@ -137,6 +144,7 @@ static void *rtup(void *cookie)
     int err, fd = param->cpu->fd;
     struct rtswitch rtsw;
     cpu_set_t cpu_set;
+    unsigned i = 0;
 
     CPU_ZERO(&cpu_set);
     CPU_SET(param->cpu->index, &cpu_set);
@@ -171,14 +179,17 @@ static void *rtup(void *cookie)
             ++rtsw.to;
 
         if (param->fp & UFPP)
-            fp_regs_set(rtsw.from);
+            fp_regs_set(rtsw.from + i * 1000);
         if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw)) {
             perror("ioctl(RTSWITCH_RTIOC_SWITCH_TO)");
             exit(EXIT_FAILURE);
         }
         if (param->fp & UFPP)
-            if (fp_regs_check(rtsw.from))
+            if (fp_regs_check(rtsw.from + i * 1000))
                 pthread_kill(pthread_self(), SIGSTOP);
+
+        if(++i == 4000000)
+            i = 0;
     }
 }
 
@@ -189,6 +200,7 @@ static void *rtus(void *cookie)
     int err, fd = param->cpu->fd;
     struct rtswitch rtsw;
     cpu_set_t cpu_set;
+    unsigned i = 0;
 
     CPU_ZERO(&cpu_set);
     CPU_SET(param->cpu->index, &cpu_set);
@@ -223,14 +235,17 @@ static void *rtus(void *cookie)
             ++rtsw.to;
 
         if (param->fp & UFPS)
-            fp_regs_set(rtsw.from);
+            fp_regs_set(rtsw.from + i * 1000);
         if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw)) {
             perror("ioctl(RTSWITCH_RTIOC_SWITCH_TO)");
             exit(EXIT_FAILURE);
         }
         if (param->fp & UFPS)
-            if (fp_regs_check(rtsw.from))
+            if (fp_regs_check(rtsw.from + i * 1000))
                 pthread_kill(pthread_self(), SIGSTOP);
+
+        if(++i == 4000000)
+            i = 0;
     }
 }
 
@@ -241,6 +256,7 @@ static void *rtuo(void *cookie)
     int err, fd = param->cpu->fd;
     struct rtswitch rtsw;
     cpu_set_t cpu_set;
+    unsigned i = 0;
 
     CPU_ZERO(&cpu_set);
     CPU_SET(param->cpu->index, &cpu_set);
@@ -275,13 +291,13 @@ static void *rtuo(void *cookie)
             ++rtsw.to;
 
         if ((mode && param->fp & UFPP) || (!mode && param->fp & UFPS))
-            fp_regs_set(rtsw.from);
+            fp_regs_set(rtsw.from + i * 1000);
         if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw)) {
             perror("rtuo: ioctl(RTSWITCH_RTIOC_SWITCH_TO)");
             exit(EXIT_FAILURE);
         }
         if ((mode && param->fp & UFPP) || (!mode && param->fp & UFPS))
-            if (fp_regs_check(rtsw.from))
+            if (fp_regs_check(rtsw.from + i * 1000))
                 pthread_kill(pthread_self(), SIGSTOP);
 
         /* Switch mode. */
@@ -290,6 +306,9 @@ static void *rtuo(void *cookie)
             fprintf(stderr, "rtuo: pthread_set_mode_np: %s\n", strerror(err));
             exit(EXIT_FAILURE);
         }
+
+        if(++i == 4000000)
+            i = 0;
     }
 }
 
@@ -401,7 +420,7 @@ static int check_arg(const struct task_params *param, struct cpu_tasks *end_cpu)
 
 static void post_sem_on_sig(int sig)
 {
-    __real_sem_post(&terminate);
+    sem_post(&terminate);
     signal(sig, SIG_DFL);
 }
 
@@ -495,7 +514,7 @@ int main(int argc, const char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    if (__real_sem_init(&terminate, 0, 0)) {
+    if (sem_init(&terminate, 0, 0)) {
         perror("sem_init");
         exit(EXIT_FAILURE);
     }
@@ -692,15 +711,15 @@ int main(int argc, const char *argv[])
             }
 
             if (param->type != RTK) {
-                err = pthread_create(&param->thread, attr, task_routine, param);
-
-                if (err) {
-                    fprintf(stderr, "pthread_create: %s\n", strerror(err));
-                    exit(EXIT_FAILURE);
-                }
-
                 if (param->type != SLEEPER) {
                     char name [64];
+
+                    err = pthread_create(&param->thread,attr,task_routine,param);
+                    
+                    if (err) {
+                        fprintf(stderr, "pthread_create: %s\n", strerror(err));
+                        exit(EXIT_FAILURE);
+                    }
 
                     snprintf(name, sizeof(name), "%s%u/%u",
                              basename, param->swt.index, i);
@@ -710,6 +729,16 @@ int main(int argc, const char *argv[])
                     if (err) {
                         fprintf(stderr, "pthread_set_name_np: %s\n",
                                 strerror(err));
+                        exit(EXIT_FAILURE);
+                    }
+                } else {
+                    err = __real_pthread_create(&param->thread,
+                                                attr,
+                                                task_routine,
+                                                param);
+
+                    if (err) {
+                        fprintf(stderr, "pthread_create: %s\n", strerror(err));
                         exit(EXIT_FAILURE);
                     }
                 }
@@ -722,7 +751,7 @@ int main(int argc, const char *argv[])
         __real_sem_post(&sleeper_start);
 
     /* Wait for interruption. */
-    __real_sem_wait(&terminate);
+    sem_wait(&terminate);
 
     /* Cleanup. */
     for (i = 0; i < nr_cpus; i ++) {
@@ -746,7 +775,7 @@ int main(int argc, const char *argv[])
     }
     free(cpus);
     __real_sem_destroy(&sleeper_start);
-    __real_sem_destroy(&terminate);
+    sem_destroy(&terminate);
 
     return 0;
 }
