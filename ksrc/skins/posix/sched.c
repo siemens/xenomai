@@ -22,8 +22,11 @@
  *
  * Thread scheduling services.
  *
- * Xenomai POSIX skin supports the two scheduling policies SCHED_FIFO and
- * SCHED_RR. The SCHED_OTHER policy is the same as SCHED_RR. 
+ * Xenomai POSIX skin supports the scheduling policies SCHED_FIFO, SCHED_RR and
+ * SCHED_OTHER.
+ *
+ * The SCHED_OTHER policy is mainly useful for user-space non-realtime
+ * activities that need to synchronize with real-time activities.
  *
  * The SCHED_RR policy is only effective if the system timer is started in
  * periodic mode (i.e. if configured with the compilation constant @a
@@ -72,12 +75,12 @@ int sched_get_priority_min (int policy)
 	{
 	case SCHED_FIFO:
 	case SCHED_RR:
-	case SCHED_OTHER:
-
 	    return PSE51_MIN_PRIORITY;
 
-	default:
+	case SCHED_OTHER:
+            return 0;
 
+	default:
 	    thread_set_errno(EINVAL);
 	    return -1;
 	}
@@ -108,12 +111,12 @@ int sched_get_priority_max (int policy)
 	{
 	case SCHED_FIFO:
 	case SCHED_RR:
-	case SCHED_OTHER:
-
 	    return PSE51_MAX_PRIORITY;
 
-	default:
+	case SCHED_OTHER:
+            return 0;
 
+	default:
 	    thread_set_errno(EINVAL);
 	    return -1;
 	}
@@ -273,8 +276,9 @@ int pthread_setschedparam (pthread_t tid, int pol, const struct sched_param *par
 	    clrmask = 0;
 	}
 
-    if (par->sched_priority < PSE51_MIN_PRIORITY
-	|| par->sched_priority > PSE51_MAX_PRIORITY )
+    if ((pol != SCHED_OTHER && (par->sched_priority < PSE51_MIN_PRIORITY
+                                 || par->sched_priority > PSE51_MAX_PRIORITY))
+        || (pol == SCHED_OTHER && par->sched_priority != 0))
 	{
         xnlock_put_irqrestore(&nklock, s);
         return EINVAL;

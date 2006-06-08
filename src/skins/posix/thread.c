@@ -28,6 +28,7 @@ extern int __pse51_muxid;
 struct pthread_iargs {
     void *(*start)(void *);
     void *arg;
+    int policy;
     int prio;
     sem_t sync;
     int ret;
@@ -54,7 +55,7 @@ static void *__pthread_trampoline (void *arg)
        passed to pthread_create(3), so we force the scheduling policy
        once again here. */
     param.sched_priority = iargs->prio;
-    __real_pthread_setschedparam(tid,SCHED_FIFO,&param);
+    __real_pthread_setschedparam(tid,iargs->policy,&param);
 
     /* Do _not_ inline the call to pthread_self() in the syscall
        macro: this trashes the syscall regs on some archs. */
@@ -74,10 +75,13 @@ static void *__pthread_trampoline (void *arg)
     __real_sem_post(&iargs->sync);
 
     if (!err)
-	{
-	XENOMAI_SYSCALL1(__xn_sys_migrate,XENOMAI_XENO_DOMAIN);
-	status = start(cookie);
-	}
+        {
+        if (iargs->policy != SCHED_OTHER)
+            {
+            XENOMAI_SYSCALL1(__xn_sys_migrate,XENOMAI_XENO_DOMAIN);
+            status = start(cookie);
+            }
+        }
     else
 	status = (void *)-err;
 
@@ -93,26 +97,25 @@ int __wrap_pthread_create (pthread_t *tid,
     int inherit, policy, err;
     struct sched_param param;
 
-    /* Run the vanilla pthread_create(3) service whenever SCHED_FIFO
-       is not the new thread's policy. */
+    if (!attr) {
+        policy = SCHED_OTHER;
+        param.sched_priority = 0;
+    } else {
+        pthread_attr_getinheritsched(attr,&inherit);
+        if (inherit == PTHREAD_EXPLICIT_SCHED) {
+            pthread_attr_getschedpolicy(attr,&policy);
+            pthread_attr_getschedparam(attr,&param);
+        } else
+            /* inherit == PTHREAD_INHERIT_SCHED */
+            pthread_getschedparam(pthread_self(),&policy,&param);
+    }
 
-    if (!attr ||
-	(!pthread_attr_getinheritsched(attr,&inherit) &&
-	 ((inherit == PTHREAD_EXPLICIT_SCHED &&
-	   !pthread_attr_getschedpolicy(attr,&policy) &&
-	   !pthread_attr_getschedparam(attr,&param) &&
-	   policy != SCHED_FIFO) ||
-	  (inherit == PTHREAD_INHERIT_SCHED &&
-	   !pthread_getschedparam(pthread_self(),&policy,&param) &&
-	   policy != SCHED_FIFO))))
-	return __real_pthread_create(tid,attr,start,arg);
-
-    /* Ok, we are about to create a new real-time thread. First start
-       a native POSIX thread, then associate a Xenomai shadow to
+    /* First start a native POSIX thread, then associate a Xenomai shadow to
        it. */
 
     iargs.start = start;
     iargs.arg = arg;
+    iargs.policy = policy;
     iargs.prio = param.sched_priority;
     iargs.ret = EAGAIN;
     __real_sem_init(&iargs.sync,0,0);
@@ -162,7 +165,8 @@ int __wrap_pthread_setschedparam (pthread_t thread,
     if (!err && promoted)
 	{
 	signal(SIGCHLD,&__pthread_sigharden_handler);
-	XENOMAI_SYSCALL1(__xn_sys_migrate,XENOMAI_XENO_DOMAIN);
+        if (policy != SCHED_OTHER)
+            XENOMAI_SYSCALL1(__xn_sys_migrate,XENOMAI_XENO_DOMAIN);
 	}
 
     return err;

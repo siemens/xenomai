@@ -402,4 +402,3 @@ int pse51_desc_get(pse51_desc_t **descp, int fd, unsigned magic)
     *descp = desc;
     return 0;
 }
-
