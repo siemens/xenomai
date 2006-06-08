@@ -40,7 +40,7 @@ static int rtswitch_pend_rt(rtswitch_context_t *ctx,
         return -EINVAL;
 
     task = &ctx->tasks[idx];
-    task->base.flags = (task->base.flags & ~RTSWITCH_RT) | RTSWITCH_RT;
+    task->base.flags |= RTSWITCH_RT;
 
     xnsynch_sleep_on(&task->rt_synch, XN_INFINITE);
 
@@ -66,7 +66,7 @@ static int rtswitch_to_rt(rtswitch_context_t *ctx,
     from = &ctx->tasks[from_idx];
     to = &ctx->tasks[to_idx];
 
-    from->base.flags = (from->base.flags & ~RTSWITCH_RT) | RTSWITCH_RT;
+    from->base.flags |= RTSWITCH_RT;
     ++ctx->switches_count;
 
     switch (to->base.flags & RTSWITCH_RT) {
@@ -109,7 +109,7 @@ static int rtswitch_pend_nrt(rtswitch_context_t *ctx,
 
     task = &ctx->tasks[idx];
 
-    task->base.flags = (task->base.flags & ~RTSWITCH_RT) | RTSWITCH_NRT;
+    task->base.flags &= ~RTSWITCH_RT;
 
     if (down_interruptible(&task->nrt_synch))
         return -EINTR;
@@ -129,7 +129,7 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
     from = &ctx->tasks[from_idx];
     to = &ctx->tasks[to_idx];
 
-    from->base.flags = (from->base.flags & ~RTSWITCH_RT) | RTSWITCH_NRT;
+    from->base.flags &= ~RTSWITCH_RT;
     ++ctx->switches_count;
 
     switch (to->base.flags & RTSWITCH_RT) {
@@ -212,7 +212,7 @@ static void rtswitch_ktask(void *cookie)
     struct taskarg *arg = (struct taskarg *) cookie;
     rtswitch_context_t *ctx = arg->ctx;
     rtswitch_task_t *task = arg->task;
-    unsigned to;
+    unsigned to, i = 0;
 
     to = task->base.index;
 
@@ -227,11 +227,14 @@ static void rtswitch_ktask(void *cookie)
             ++to;
 
         if (task->base.flags & RTSWITCH_USE_FPU)
-            fp_regs_set(task->base.index);
+            fp_regs_set(task->base.index + i * 1000);
         rtswitch_to_rt(ctx, task->base.index, to);
         if (task->base.flags & RTSWITCH_USE_FPU)
-            if (fp_regs_check(task->base.index))
+            if (fp_regs_check(task->base.index + i * 1000))
                 xnpod_suspend_self();
+
+        if (++i == 4000000)
+            i = 0;
     }
 }
 
