@@ -278,6 +278,8 @@ static void xnsynch_clear_boost(xnsynch_t *synch, xnthread_t *lastowner)
  * of a sleeping thread.
  *
  * @param thread The descriptor address of the affected thread.
+ *
+ * @note This routine must be entered nklock locked, interrupts off.
  */
 
 void xnsynch_renice_sleeper(xnthread_t *thread)
@@ -588,6 +590,8 @@ void xnsynch_forget_sleeper(xnthread_t *thread)
  * entered interrupts off.
  *
  * @param thread The descriptor address of the affected thread.
+ *
+ * @note This routine must be entered nklock locked, interrupts off.
  */
 
 void xnsynch_release_all_ownerships(xnthread_t *thread)
