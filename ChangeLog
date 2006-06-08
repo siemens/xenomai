@@ -1,3 +1,8 @@
+2006-06-08  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
+
+	* ksrc/nucleus/synch.c (xnsynch_sleep_on): Do not clear the
+	pending ownership under timeout condition.
+
 2006-06-07  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* src/testsuite/switchtest: Add context switch unit test.
