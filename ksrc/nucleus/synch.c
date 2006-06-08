@@ -180,7 +180,7 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout)
                 /* Ownership is still pending, steal the resource. */
                 synch->owner = thread;
                 __clrbits(thread->status, XNRMID | XNTIMEO | XNBREAK);
-                goto unlock_and_exit;
+                goto grab_ownership;
             }
 
             if (!testbits(owner->status, XNBOOST)) {
@@ -208,6 +208,7 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout)
                 if (timeout > 1) /* Otherwise, it's too late, time elapsed. */
                     goto redo;
 		__setbits(thread->status, XNTIMEO);
+		goto unlock_and_exit;
             }
         }
         else {
@@ -219,10 +220,12 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout)
         xnpod_suspend_thread(thread, XNPEND, timeout, synch);
     }
 
-unlock_and_exit:
+grab_ownership:
 
     /* Now the resource is truely owned by the caller. */
     __clrbits(synch->status, XNSYNCH_PENDING);
+
+unlock_and_exit:
 
     xnlock_put_irqrestore(&nklock, s);
 }
