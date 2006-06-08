@@ -31,15 +31,14 @@
  * - @a detachstate to PTHREAD_CREATE_JOINABLE,
  * - @a stacksize to PTHREAD_STACK_MIN,
  * - @a inheritsched to PTHREAD_EXPLICIT_SCHED,
- * - @a schedpolicy to SCHED_FIFO,
+ * - @a schedpolicy to SCHED_OTHER,
  * - scheduling priority to the minimum,
  * - floating-point hardware enabled (only available in kernel-space),
  * - processor affinity set to all available processors (only available as a
  *   thread attribute in kernel-space).
  *
  * In user-space, the defaults are those documented by the underlying threading
- * library (LinuxThreads or NPTL), and only threads created with the SCHED_FIFO
- * policy are Xenomai threads, i.e. permitted to run in primary mode.
+ * library (LinuxThreads or NPTL).
  * 
  *@{*/
 
@@ -50,9 +49,9 @@ static const pthread_attr_t default_thread_attr = {
     detachstate: PTHREAD_CREATE_JOINABLE,
     stacksize: PTHREAD_STACK_MIN,
     inheritsched: PTHREAD_EXPLICIT_SCHED,
-    policy: SCHED_FIFO,
+    policy: SCHED_OTHER,
     schedparam: {
-        sched_priority: PSE51_MIN_PRIORITY
+        sched_priority: 0
     },
 
     name: NULL,
@@ -421,8 +420,8 @@ int pthread_attr_setinheritsched (pthread_attr_t *attr, int inheritsched)
  *
  * Threads created with the attribute object @a attr use the value of this
  * attribute as scheduling policy if the @a inheritsched attribute is set to
- * PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO or
- * SCHED_RR, SCHED_OTHER is equivalent to SCHED_RR.
+ * PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO,
+ * SCHED_RR or SCHED_OTHER.
  *
  * @param attr attribute object;
  *
@@ -466,8 +465,8 @@ int pthread_attr_getschedpolicy (const pthread_attr_t *attr,int *policy)
  *
  * Threads created with the attribute object @a attr use the value of this
  * attribute as scheduling policy if the @a inheritsched attribute is set to
- * PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO or
- * SCHED_RR, SCHED_OTHER is equivalent to SCHED_RR.
+ * PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO,
+ * SCHED_RR or SCHED_OTHER.
  *
  * @param attr attribute object;
  *
@@ -494,8 +493,6 @@ int pthread_attr_setschedpolicy (pthread_attr_t *attr, int policy)
 	    return EINVAL;
 
 	case SCHED_OTHER:
-	    policy = SCHED_RR;
-
 	case SCHED_FIFO:
 	case SCHED_RR:
 
@@ -511,6 +508,12 @@ int pthread_attr_setschedpolicy (pthread_attr_t *attr, int policy)
 	}
 
     attr->policy = policy;
+    if (policy == SCHED_OTHER) {
+        if (attr->schedparam.sched_priority != 0)
+            attr->schedparam.sched_priority = 0;
+    } else
+        if (attr->schedparam.sched_priority == 0)
+            attr->schedparam.sched_priority = PSE51_MIN_PRIORITY;
 
     xnlock_put_irqrestore(&nklock, s);
 
@@ -587,14 +590,11 @@ int pthread_attr_getschedparam (const pthread_attr_t *attr, struct sched_param *
  * Specification.</a>
  * 
  */
-int pthread_attr_setschedparam (pthread_attr_t *attr, const struct sched_param *par)
+int pthread_attr_setschedparam (pthread_attr_t *attr,
+                                const struct sched_param *par)
 
 {
     spl_t s;
-
-    if (par->sched_priority < PSE51_MIN_PRIORITY
-	|| par->sched_priority > PSE51_MAX_PRIORITY )
-        return EINVAL;
 
     xnlock_get_irqsave(&nklock, s);
 
@@ -603,6 +603,15 @@ int pthread_attr_setschedparam (pthread_attr_t *attr, const struct sched_param *
         xnlock_put_irqrestore(&nklock, s);
         return EINVAL;
 	}
+
+    if ((attr->policy != SCHED_OTHER &&
+         (par->sched_priority < PSE51_MIN_PRIORITY
+          || par->sched_priority > PSE51_MAX_PRIORITY))
+        || (attr->policy == SCHED_OTHER && par->sched_priority != 0))
+        {
+        xnlock_put_irqrestore(&nklock, s);
+        return EINVAL;
+        }
 
     attr->schedparam = *par;
 

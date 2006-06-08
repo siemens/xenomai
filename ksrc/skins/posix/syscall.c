@@ -159,9 +159,6 @@ static int __pthread_create (struct task_struct *curr, struct pt_regs *regs)
     pthread_t k_tid;
     int err;
 
-    if (curr->policy != SCHED_FIFO) /* Only allow FIFO for now. */
-        return -EINVAL;
-
     /* We have been passed the pthread_t identifier the user-space
        POSIX library has assigned to our caller; we'll index our
        internal pthread_t descriptor in kernel space on it. */
@@ -254,10 +251,6 @@ static int __pthread_setschedparam (struct task_struct *curr,
     pthread_t k_tid;
 
     policy = __xn_reg_arg2(regs);
-
-    if (policy != SCHED_FIFO)
-        /* User-space POSIX shadows only support SCHED_FIFO for now. */
-        return -EINVAL;
 
     if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg3(regs),sizeof(param)))
         return -EFAULT;
