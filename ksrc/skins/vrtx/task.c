@@ -28,74 +28,68 @@ static u_long vrtx_default_stacksz;
 
 static TCB vrtx_idle_tcb;
 
-static void vrtxtask_delete_hook (xnthread_t *thread)
-
+static void vrtxtask_delete_hook(xnthread_t *thread)
 {
     vrtxtask_t *task;
 
     if (xnthread_get_magic(thread) != VRTX_SKIN_MAGIC)
-	return;
+        return;
 
     task = thread2vrtxtask(thread);
-    removeq(&vrtx_task_q,&task->link);
+    removeq(&vrtx_task_q, &task->link);
 
     if (task->param != NULL && task->paramsz > 0)
-	xnfree(task->param);
+        xnfree(task->param);
 
     if (task->tid)
-	vrtx_put_id(vrtx_task_idmap,task->tid);
+        vrtx_put_id(vrtx_task_idmap, task->tid);
 
     vrtx_mark_deleted(task);
     xnfree(task);
 }
 
-int vrtxtask_init (u_long stacksize)
-
+int vrtxtask_init(u_long stacksize)
 {
     initq(&vrtx_task_q);
     vrtx_default_stacksz = stacksize;
-    vrtx_task_idmap = vrtx_alloc_idmap(VRTX_MAX_NTASKS,1);
+    vrtx_task_idmap = vrtx_alloc_idmap(VRTX_MAX_NTASKS, 1);
 
     if (!vrtx_task_idmap)
-	return -ENOMEM;
+        return -ENOMEM;
 
-    vrtx_get_id(vrtx_task_idmap,0,NULL); /* Reserve slot #0 */
-    xnpod_add_hook(XNHOOK_THREAD_DELETE,vrtxtask_delete_hook);
+    vrtx_get_id(vrtx_task_idmap, 0, NULL);  /* Reserve slot #0 */
+    xnpod_add_hook(XNHOOK_THREAD_DELETE, vrtxtask_delete_hook);
 
     return 0;
 }
 
-void vrtxtask_cleanup (void)
-
+void vrtxtask_cleanup(void)
 {
     xnholder_t *holder;
 
     while ((holder = getheadq(&vrtx_task_q)) != NULL)
-	xnpod_delete_thread(&link2vrtxtask(holder)->threadbase);
+        xnpod_delete_thread(&link2vrtxtask(holder)->threadbase);
 
-    xnpod_remove_hook(XNHOOK_THREAD_DELETE,vrtxtask_delete_hook);
+    xnpod_remove_hook(XNHOOK_THREAD_DELETE, vrtxtask_delete_hook);
     vrtx_free_idmap(vrtx_task_idmap);
 }
 
-static void vrtxtask_trampoline (void *cookie)
+static void vrtxtask_trampoline(void *cookie)
 {
     vrtxtask_t *task = (vrtxtask_t *)cookie;
     int err;
 
     task->entry(task->param);
-    sc_tdelete(0,0,&err);
+    sc_tdelete(0, 0, &err);
 }
 
-int sc_tecreate_inner (vrtxtask_t *task,
-		       void (*entry)(void *),
-		       int tid,
-		       int prio,
-		       int mode,
-		       u_long user,
-		       u_long sys,
-		       char *paddr,
-		       u_long psize,
-		       int *errp)
+int sc_tecreate_inner(vrtxtask_t *task,
+                      void (*entry) (void *),
+                      int tid,
+                      int prio,
+                      int mode,
+                      u_long user,
+                      u_long sys, char *paddr, u_long psize, int *errp)
 {
     xnflags_t bmode = 0, bflags = 0;
     char *_paddr = NULL;
@@ -103,41 +97,35 @@ int sc_tecreate_inner (vrtxtask_t *task,
     spl_t s;
 
     if (user == 0)
-	user = vrtx_default_stacksz;
+        user = vrtx_default_stacksz;
 
-    if (prio < 0 || prio > 255 ||
-	tid < -1 || tid > 255 ||
-	(!(mode & 0x100) && user + sys < 1024))	/* Tiny kernel stack */
-	{
-	*errp = ER_IIP;
-	return -1;
-	}
+    if (prio < 0 || prio > 255 || tid < -1 || tid > 255 || (!(mode & 0x100) && user + sys < 1024)) {    /* Tiny kernel stack */
+        *errp = ER_IIP;
+        return -1;
+    }
 
     if (tid != 0)
-	tid = vrtx_get_id(vrtx_task_idmap,tid,task);
+        tid = vrtx_get_id(vrtx_task_idmap, tid, task);
 
-    if (tid < 0)
-	{
-	*errp = ER_TID;
-	return -1;
-	}
+    if (tid < 0) {
+        *errp = ER_TID;
+        return -1;
+    }
 
-    if (paddr != NULL && psize > 0)
-	{
-	_paddr = xnmalloc(psize);
+    if (paddr != NULL && psize > 0) {
+        _paddr = xnmalloc(psize);
 
-	if (!_paddr)
-	    {
-	    vrtx_put_id(vrtx_task_idmap,tid);
-	    *errp = ER_MEM;
-	    return -1;
-	    }
+        if (!_paddr) {
+            vrtx_put_id(vrtx_task_idmap, tid);
+            *errp = ER_MEM;
+            return -1;
+        }
 
-	memcpy(_paddr,paddr,psize);
-	paddr = _paddr;
-	}
+        memcpy(_paddr, paddr, psize);
+        paddr = _paddr;
+    }
 
-    sprintf(name,"t%.3d",tid);
+    sprintf(name, "t%.3d", tid);
 
     if (mode & 0x100)
         bflags |= XNSHADOW;
@@ -146,20 +134,18 @@ int sc_tecreate_inner (vrtxtask_t *task,
         bflags |= XNFPU;
 
     if (xnpod_init_thread(&task->threadbase,
-			  name,
-			  vrtx_normalized_prio(prio),
-			  bflags,
-			  user + sys) != 0)
-	{
-	if (_paddr)
-	    xnfree(_paddr);
+                          name,
+                          vrtx_normalized_prio(prio),
+                          bflags, user + sys) != 0) {
+        if (_paddr)
+            xnfree(_paddr);
 
-	vrtx_put_id(vrtx_task_idmap,tid);
-	*errp = ER_MEM;
-	return -1;
-	}
+        vrtx_put_id(vrtx_task_idmap, tid);
+        *errp = ER_MEM;
+        return -1;
+    }
 
-    xnthread_set_magic(&task->threadbase,VRTX_SKIN_MAGIC);
+    xnthread_set_magic(&task->threadbase, VRTX_SKIN_MAGIC);
 
     inith(&task->link);
     task->tid = tid;
@@ -170,71 +156,54 @@ int sc_tecreate_inner (vrtxtask_t *task,
     task->vrtxtcb.TCBSTAT = 0;
 
     if (mode & 0x2)
-	bmode |= XNSUSP;
+        bmode |= XNSUSP;
 
     if (mode & 0x4)
-	bmode |= XNLOCK;
+        bmode |= XNLOCK;
 
     if (mode & 0x10)
-	bmode |= XNRRB;
+        bmode |= XNRRB;
 
     *errp = RET_OK;
 
-    xnlock_get_irqsave(&nklock,s);
-    appendq(&vrtx_task_q,&task->link);
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
+    appendq(&vrtx_task_q, &task->link);
+    xnlock_put_irqrestore(&nklock, s);
 
     xnpod_start_thread(&task->threadbase,
-		       bmode,
-		       0,
-		       XNPOD_ALL_CPUS,
-		       &vrtxtask_trampoline,
-		       task);
+                       bmode, 0, XNPOD_ALL_CPUS, &vrtxtask_trampoline, task);
     return tid;
 }
 
-int sc_tecreate (void (*entry)(void *),
-		 int tid,
-		 int prio,
-		 int mode,
-		 u_long user,
-		 u_long sys,
-		 char *paddr,
-		 u_long psize,
-		 int *errp)
+int sc_tecreate(void (*entry) (void *),
+                int tid,
+                int prio,
+                int mode,
+                u_long user, u_long sys, char *paddr, u_long psize, int *errp)
 {
     vrtxtask_t *task;
 
     task = xnmalloc(sizeof(*task));
-    
-    if (!task)
-	{
-	*errp = ER_TCB;
-	return -1;
-	}
 
-    tid = sc_tecreate_inner(task,entry,tid,prio,mode,user,sys,paddr,psize,errp);
+    if (!task) {
+        *errp = ER_TCB;
+        return -1;
+    }
+
+    tid =
+        sc_tecreate_inner(task, entry, tid, prio, mode, user, sys, paddr, psize,
+                          errp);
 
     if (tid < 0)
-	xnfree(task);
+        xnfree(task);
 
     return tid;
 }
 
-int sc_tcreate (void (*entry)(void*),
-		int tid,
-		int prio,
-		int *errp)
+int sc_tcreate(void (*entry) (void *), int tid, int prio, int *errp)
 {
     return sc_tecreate(entry,
-		       tid,
-		       prio,
-		       0x0,
-		       vrtx_default_stacksz,
-		       0,
-		       NULL,
-		       0,
-		       errp);
+                       tid, prio, 0x0, vrtx_default_stacksz, 0, NULL, 0, errp);
 }
 
 /*
@@ -244,113 +213,103 @@ int sc_tcreate (void (*entry)(void*),
  * deletion loop and never resume.
  */
 
-void sc_tdelete (int tid, int opt, int *errp)
-
+void sc_tdelete(int tid, int opt, int *errp)
 {
     vrtxtask_t *task;
     spl_t s;
 
-    if (opt == 'A') /* Delete by priority (depleted form) */
-	{
-	xnholder_t *holder, *nextholder;
+    if (opt == 'A') {           /* Delete by priority (depleted form) */
+        xnholder_t *holder, *nextholder;
 
-	xnlock_get_irqsave(&nklock,s);
+        xnlock_get_irqsave(&nklock, s);
 
-	nextholder = getheadq(&vrtx_task_q);
+        nextholder = getheadq(&vrtx_task_q);
 
-	*errp = RET_OK;
+        *errp = RET_OK;
 
-	while ((holder = nextholder) != NULL)
-	    {
-	    nextholder = nextq(&vrtx_task_q,holder);
-	    task = link2vrtxtask(holder);
+        while ((holder = nextholder) != NULL) {
+            nextholder = nextq(&vrtx_task_q, holder);
+            task = link2vrtxtask(holder);
 
-	    /* The task base priority is tested here, this excludes
-	       temporarily raised priorities due to a PIP boost. */
+            /* The task base priority is tested here, this excludes
+               temporarily raised priorities due to a PIP boost. */
 
-	    if (vrtx_denormalized_prio(xnthread_base_priority(&task->threadbase)) == tid)
-		xnpod_delete_thread(&task->threadbase);
-	    }
+            if (vrtx_denormalized_prio
+                (xnthread_base_priority(&task->threadbase)) == tid)
+                xnpod_delete_thread(&task->threadbase);
+        }
 
-	xnlock_put_irqrestore(&nklock,s);
+        xnlock_put_irqrestore(&nklock, s);
 
-	return;
-	}
+        return;
+    }
 
-    if (opt != 0)
-	{
-	*errp = ER_IIP;
-	return;
-	}
+    if (opt != 0) {
+        *errp = ER_IIP;
+        return;
+    }
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
     if (tid == 0)
-	task = vrtx_current_task();
-    else
-	{
-	task = (vrtxtask_t *)vrtx_get_object(vrtx_task_idmap,tid);
+        task = vrtx_current_task();
+    else {
+        task = (vrtxtask_t *)vrtx_get_object(vrtx_task_idmap, tid);
 
-	if (!task)
-	    {
-	    *errp = ER_TID;
-	    goto unlock_and_exit;
-	    }
-	}
+        if (!task) {
+            *errp = ER_TID;
+            goto unlock_and_exit;
+        }
+    }
 
     *errp = RET_OK;
 
     xnpod_delete_thread(&task->threadbase);
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 }
 
-void sc_tpriority (int tid, int prio, int *errp)
-
+void sc_tpriority(int tid, int prio, int *errp)
 {
     vrtxtask_t *task;
     spl_t s;
 
-    if (prio < 0 || prio > 255)
-	{
-	*errp = ER_IIP;
-	return;
-	}
+    if (prio < 0 || prio > 255) {
+        *errp = ER_IIP;
+        return;
+    }
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
     if (tid == 0)
-	task = vrtx_current_task();
-    else
-	{
-	task = (vrtxtask_t *)vrtx_get_object(vrtx_task_idmap,tid);
+        task = vrtx_current_task();
+    else {
+        task = (vrtxtask_t *)vrtx_get_object(vrtx_task_idmap, tid);
 
-	if (!task)
-	    {
-	    *errp = ER_TID;
-	    goto unlock_and_exit;
-	    }
-	}
+        if (!task) {
+            *errp = ER_TID;
+            goto unlock_and_exit;
+        }
+    }
 
-    if (prio == vrtx_denormalized_prio(xnthread_base_priority(&task->threadbase)))
-	{
-	/* Allow a round-robin effect if newprio == oldprio... */
-	if (!xnthread_test_flags(&task->threadbase,XNBOOST))
-	    /* ...unless the thread is PIP-boosted. */
-	    xnpod_resume_thread(&task->threadbase,0);
-	}
-    else
-	xnpod_renice_thread(&task->threadbase,vrtx_normalized_prio(prio));
-    
+    if (prio ==
+        vrtx_denormalized_prio(xnthread_base_priority(&task->threadbase))) {
+        /* Allow a round-robin effect if newprio == oldprio... */
+        if (!xnthread_test_flags(&task->threadbase, XNBOOST))
+            /* ...unless the thread is PIP-boosted. */
+            xnpod_resume_thread(&task->threadbase, 0);
+    } else
+        xnpod_renice_thread(&task->threadbase, vrtx_normalized_prio(prio));
+
     *errp = RET_OK;
 
     xnpod_schedule();
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 }
 
 /*
@@ -360,71 +319,66 @@ void sc_tpriority (int tid, int prio, int *errp)
  * implicit round-robin effect or not. It currently does.
  */
 
-void sc_tresume (int tid, int opt, int *errp)
-
+void sc_tresume(int tid, int opt, int *errp)
 {
     vrtxtask_t *task;
     spl_t s;
 
-    if (opt == 'A') /* Resume by priority (depleted form) */
-	{
-	xnholder_t *holder, *nextholder;
+    if (opt == 'A') {           /* Resume by priority (depleted form) */
+        xnholder_t *holder, *nextholder;
 
-	xnlock_get_irqsave(&nklock,s);
+        xnlock_get_irqsave(&nklock, s);
 
-	nextholder = getheadq(&vrtx_task_q);
+        nextholder = getheadq(&vrtx_task_q);
 
-	while ((holder = nextholder) != NULL)
-	    {
-	    nextholder = nextq(&vrtx_task_q,holder);
-	    task = link2vrtxtask(holder);
+        while ((holder = nextholder) != NULL) {
+            nextholder = nextq(&vrtx_task_q, holder);
+            task = link2vrtxtask(holder);
 
-	    /* The task base priority is tested here, this excludes
-	       temporarily raised priorities due to a PIP boost. */
+            /* The task base priority is tested here, this excludes
+               temporarily raised priorities due to a PIP boost. */
 
-	    if (vrtx_denormalized_prio(xnthread_base_priority(&task->threadbase)) == tid)
-		xnpod_resume_thread(&task->threadbase,XNSUSP);
-	    }
+            if (vrtx_denormalized_prio
+                (xnthread_base_priority(&task->threadbase)) == tid)
+                xnpod_resume_thread(&task->threadbase, XNSUSP);
+        }
 
-	*errp = RET_OK;
+        *errp = RET_OK;
 
-	xnpod_schedule();
+        xnpod_schedule();
 
-	xnlock_put_irqrestore(&nklock,s);
+        xnlock_put_irqrestore(&nklock, s);
 
-	return;
-	}
+        return;
+    }
 
-    if (opt != 0)
-	{
-	*errp = ER_IIP;
-	return;
-	}
+    if (opt != 0) {
+        *errp = ER_IIP;
+        return;
+    }
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
     if (tid == 0)
-	task = vrtx_current_task();
-    else
-	{
-	task = (vrtxtask_t *)vrtx_get_object(vrtx_task_idmap,tid);
+        task = vrtx_current_task();
+    else {
+        task = (vrtxtask_t *)vrtx_get_object(vrtx_task_idmap, tid);
 
-	if (!task)
-	    {
-	    *errp = ER_TID;
-	    goto unlock_and_exit;
-	    }
-	}
+        if (!task) {
+            *errp = ER_TID;
+            goto unlock_and_exit;
+        }
+    }
 
-    xnpod_resume_thread(&task->threadbase,XNSUSP);
+    xnpod_resume_thread(&task->threadbase, XNSUSP);
 
     *errp = RET_OK;
 
     xnpod_schedule();
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 }
 
 /*
@@ -435,133 +389,115 @@ void sc_tresume (int tid, int opt, int *errp)
  * unblocked.
  */
 
-void sc_tsuspend (int tid, int opt, int *errp)
-
+void sc_tsuspend(int tid, int opt, int *errp)
 {
     vrtxtask_t *task;
     spl_t s;
 
-    if (opt == 'A') /* Resume by priority (depleted form) */
-	{
-	xnholder_t *holder, *nextholder;
+    if (opt == 'A') {           /* Resume by priority (depleted form) */
+        xnholder_t *holder, *nextholder;
 
-	xnlock_get_irqsave(&nklock,s);
+        xnlock_get_irqsave(&nklock, s);
 
-	nextholder = getheadq(&vrtx_task_q);
+        nextholder = getheadq(&vrtx_task_q);
 
-	*errp = RET_OK;
+        *errp = RET_OK;
 
-	while ((holder = nextholder) != NULL)
-	    {
-	    nextholder = nextq(&vrtx_task_q,holder);
-	    task = link2vrtxtask(holder);
+        while ((holder = nextholder) != NULL) {
+            nextholder = nextq(&vrtx_task_q, holder);
+            task = link2vrtxtask(holder);
 
-	    /* The task base priority is tested here, this excludes
-	       temporarily raised priorities due to a PIP boost. */
+            /* The task base priority is tested here, this excludes
+               temporarily raised priorities due to a PIP boost. */
 
-	    if (vrtx_denormalized_prio(xnthread_base_priority(&task->threadbase)) == tid)
-		{
-		task->vrtxtcb.TCBSTAT = TBSSUSP;
+            if (vrtx_denormalized_prio
+                (xnthread_base_priority(&task->threadbase)) == tid) {
+                task->vrtxtcb.TCBSTAT = TBSSUSP;
 
-		xnpod_suspend_thread(&task->threadbase,
-				     XNSUSP,
-				     XN_INFINITE,
-				     NULL);
-		}
-	    }
+                xnpod_suspend_thread(&task->threadbase,
+                                     XNSUSP, XN_INFINITE, NULL);
+            }
+        }
 
-	xnlock_put_irqrestore(&nklock,s);
+        xnlock_put_irqrestore(&nklock, s);
 
-	return;
-	}
+        return;
+    }
 
-    if (opt != 0)
-	{
-	*errp = ER_IIP;
-	return;
-	}
+    if (opt != 0) {
+        *errp = ER_IIP;
+        return;
+    }
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
     if (tid == 0)
-	task = vrtx_current_task();
-    else
-	{
-	task = (vrtxtask_t *)vrtx_get_object(vrtx_task_idmap,tid);
+        task = vrtx_current_task();
+    else {
+        task = (vrtxtask_t *)vrtx_get_object(vrtx_task_idmap, tid);
 
-	if (!task)
-	    {
-	    *errp = ER_TID;
-	    goto unlock_and_exit;
-	    }
-	}
+        if (!task) {
+            *errp = ER_TID;
+            goto unlock_and_exit;
+        }
+    }
 
     task->vrtxtcb.TCBSTAT = TBSSUSP;
 
     *errp = RET_OK;
 
-    xnpod_suspend_thread(&task->threadbase,
-			 XNSUSP,
-			 XN_INFINITE,
-			 NULL);
- unlock_and_exit:
+    xnpod_suspend_thread(&task->threadbase, XNSUSP, XN_INFINITE, NULL);
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 }
 
-void sc_tslice (u_short ticks)
-
+void sc_tslice(u_short ticks)
 {
     if (ticks == 0)
-	xnpod_deactivate_rr();
+        xnpod_deactivate_rr();
     else
-	xnpod_activate_rr(ticks);
+        xnpod_activate_rr(ticks);
 }
 
-void sc_lock (void)
+void sc_lock(void)
 {
     xnpod_lock_sched();
 }
 
-void sc_unlock (void)
+void sc_unlock(void)
 {
     xnpod_unlock_sched();
 }
 
-TCB *sc_tinquiry (int pinfo[], int tid, int *errp)
-
+TCB *sc_tinquiry(int pinfo[], int tid, int *errp)
 {
     vrtxtask_t *task;
     TCB *tcb;
     spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+    xnlock_get_irqsave(&nklock, s);
 
-    if (tid == 0)
-	{
-	if (xnpod_interrupt_p()) /* Called on behalf of an ISR */
-	    {
-	    pinfo[0] = 0;
-	    pinfo[1] = 256;
-	    pinfo[2] = xnpod_idle_p() ? TBSIDLE : 0;
-	    tcb = &vrtx_idle_tcb;
-	    tcb->TCBSTAT = pinfo[2];
-	    goto done;
-	    }
+    if (tid == 0) {
+        if (xnpod_interrupt_p()) {  /* Called on behalf of an ISR */
+            pinfo[0] = 0;
+            pinfo[1] = 256;
+            pinfo[2] = xnpod_idle_p()? TBSIDLE : 0;
+            tcb = &vrtx_idle_tcb;
+            tcb->TCBSTAT = pinfo[2];
+            goto done;
+        }
 
-	task = vrtx_current_task();
-	}
-    else
-	{
-	task = (vrtxtask_t *)vrtx_get_object(vrtx_task_idmap,tid);
+        task = vrtx_current_task();
+    } else {
+        task = (vrtxtask_t *)vrtx_get_object(vrtx_task_idmap, tid);
 
-	if (!task)
-	    {
-	    tcb = NULL;
-	    *errp = ER_TID;
-	    goto unlock_and_exit;
-	    }
-	}
+        if (!task) {
+            tcb = NULL;
+            *errp = ER_TID;
+            goto unlock_and_exit;
+        }
+    }
 
     tcb = &task->vrtxtcb;
 
@@ -570,19 +506,20 @@ TCB *sc_tinquiry (int pinfo[], int tid, int *errp)
      * call and correct it here if the task has been resumed  */
 
     if (!(testbits(task->threadbase.status, XNTHREAD_BLOCK_BITS)))
-	tcb->TCBSTAT = 0;
+        tcb->TCBSTAT = 0;
 
     pinfo[0] = task->tid;
-    pinfo[1] = vrtx_denormalized_prio(xnthread_base_priority(&task->threadbase));
+    pinfo[1] =
+        vrtx_denormalized_prio(xnthread_base_priority(&task->threadbase));
     pinfo[2] = tcb->TCBSTAT;
 
- done:
+  done:
 
     *errp = RET_OK;
 
- unlock_and_exit:
+  unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock,s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return tcb;
 }

@@ -22,12 +22,12 @@
 
 #define TEN_POW_9 1000000000ULL
 
-void ui_timer (void)
+void ui_timer(void)
 {
     xnpod_announce_tick(&nkclock);
 }
 
-void sc_gclock (struct timespec *timep, unsigned long *nsp, int *errp)
+void sc_gclock(struct timespec *timep, unsigned long *nsp, int *errp)
 {
     unsigned long remain;
     xnticks_t now;
@@ -39,22 +39,20 @@ void sc_gclock (struct timespec *timep, unsigned long *nsp, int *errp)
     *errp = RET_OK;
 }
 
-void sc_sclock (struct timespec time, unsigned long ns, int *errp)
+void sc_sclock(struct timespec time, unsigned long ns, int *errp)
 {
-    if ( (ns > 1000000000) ||
-	 ( (time.nanoseconds < 0) || (time.nanoseconds > 999999999) ) )
-	{
-	*errp = ER_IIP;
-	return;
-	}
+    if ((ns > 1000000000) ||
+        ((time.nanoseconds < 0) || (time.nanoseconds > 999999999))) {
+        *errp = ER_IIP;
+        return;
+    }
 
-    if ( (ns != xnpod_get_tickval()) )
-	{
-	xnpod_stop_timer();
+    if ((ns != xnpod_get_tickval())) {
+        xnpod_stop_timer();
 
-	if (ns != 0)
-	    xnpod_start_timer(ns, &xnpod_announce_tick);
-	}
+        if (ns != 0)
+            xnpod_start_timer(ns, &xnpod_announce_tick);
+    }
 
     xnpod_set_time(time.seconds * TEN_POW_9 + time.nanoseconds);
 
@@ -63,44 +61,39 @@ void sc_sclock (struct timespec time, unsigned long ns, int *errp)
 
 unsigned long sc_gtime(void)
 {
-    return (unsigned long)xnpod_get_time ();
+    return (unsigned long)xnpod_get_time();
 }
 
 void sc_stime(long time)
 {
-    xnpod_set_time (time);
+    xnpod_set_time(time);
 }
 
-void sc_delay (long ticks)
+void sc_delay(long ticks)
 {
-    if (ticks > 0)
-	{
-	vrtx_current_task()->vrtxtcb.TCBSTAT = TBSDELAY;	
-	xnpod_delay(ticks);
-	}
-    else
-	xnpod_yield(); /* Perform manual round-robin */
+    if (ticks > 0) {
+        vrtx_current_task()->vrtxtcb.TCBSTAT = TBSDELAY;
+        xnpod_delay(ticks);
+    } else
+        xnpod_yield();          /* Perform manual round-robin */
 }
 
-void sc_adelay (struct timespec time, int *errp)
+void sc_adelay(struct timespec time, int *errp)
 {
     xnticks_t now, etime;
 
-    if ( (time.nanoseconds < 0) || (time.nanoseconds > 999999999) )
-	{
-	*errp = ER_IIP;
-	return;
-	}
+    if ((time.nanoseconds < 0) || (time.nanoseconds > 999999999)) {
+        *errp = ER_IIP;
+        return;
+    }
 
     etime = time.seconds * TEN_POW_9 + time.nanoseconds;
     now = xnpod_get_time();
     *errp = RET_OK;
 
-    if (etime > now)
-	{
-	vrtx_current_task()->vrtxtcb.TCBSTAT = TBSADELAY;
-	xnpod_delay(etime - now);
-	}
-    else
-	xnpod_yield(); /* Perform manual round-robin */
+    if (etime > now) {
+        vrtx_current_task()->vrtxtcb.TCBSTAT = TBSADELAY;
+        xnpod_delay(etime - now);
+    } else
+        xnpod_yield();          /* Perform manual round-robin */
 }
