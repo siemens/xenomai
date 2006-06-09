@@ -820,6 +820,14 @@ static int xnpipe_ioctl(struct inode *inode,
 
             break;
 
+        case XNPIPEIOC_SETSIG:
+
+            if (arg < 1 || arg >= _NSIG)
+                return -EINVAL;
+
+	    xnpipe_asyncsig = arg;
+            break;
+
         case FIONREAD:
 
             xnlock_get_irqsave(&nklock, s);
