@@ -1,3 +1,16 @@
+2006-06-09  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* skins/vxworks/testsuite/xntest.c: Configurable verbosity.
+
+	* skins/vxworks/testsuite/*.c: Delete the created tasks before
+	test end.
+
+	* skins/vxworks/testsuite/*.c (rootTask): Replace
+	S_semlib_INVALID_OPTION with S_semlib_INVALID_QUEUE_TYPE.
+
+	* skins/vxworks/testsuite/t010823-1.c (rootTask): Pass a non NULL
+	stack pointer to taskInit when running this test under vxworks.
+
 2006-05-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* sim/vm/thread.cc (XenoThread): Raise stack size to 32k.

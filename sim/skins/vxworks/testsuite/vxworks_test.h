@@ -21,15 +21,16 @@
 #ifndef wxworks_test_h
 #define wxworks_test_h
 
-#include <vxworks/vxworks.h>
+#include <vxworks.h>
 #include <xntest.h>
 
-#define TEST_ASSERT_OK(expr)                                    \
-do {                                                            \
-    xnarch_printf(__FILE__ ":%d, " #expr " == OK\n", __LINE__); \
-    if(!xntest_assert(((expr)==OK), #expr "== OK" ,             \
-                      __FILE__, __LINE__ ))                     \
-        printErrno(errno);                                      \
+#define TEST_ASSERT_OK(expr)                                            \
+do {                                                                    \
+    if (xntest_verbose)                                                 \
+        xnarch_printf(__FILE__ ":%d, " #expr " == OK\n", __LINE__);     \
+    if(!xntest_assert(((expr)==OK), #expr "== OK" ,                     \
+                      __FILE__, __LINE__ ))                             \
+        printErrno(errno);                                              \
 } while (0)
 
 #endif /* !wxworks_test_h */

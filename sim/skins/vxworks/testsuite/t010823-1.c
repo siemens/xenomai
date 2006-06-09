@@ -59,6 +59,8 @@ void peerTask  (long a0, long a1, long a2, long a3, long a4,
 void rootTask (long a0, long a1, long a2, long a3, long a4,
 	       long a5, long a6, long a7, long a8, long a9)
 {
+    const size_t stackSize = 32768;
+    char *pstackBase = NULL;
     WIND_TCB *pTcb;
     int prio = 0;
 
@@ -67,12 +69,16 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
     pTcb = taskTcb(taskIdSelf());
     TEST_ASSERT(pTcb != NULL);
 
+#ifdef VXWORKS
+    pstackBase = (char *) malloc(stackSize) + stacksize;
+#endif
+  
     TEST_ASSERT(taskInit(&peerTcb,
 			 "peerTask",
 			 -1,
 			 0,
-			 NULL,
-			 32768,
+			 pstackBase,
+			 stackSize,
 			 peerTask,
 			 0,0,0,0,0,0,0,0,0,0) == ERROR &&
 		errno == S_taskLib_ILLEGAL_PRIORITY);
@@ -81,8 +87,8 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
 			    "peerTask",
 			    19,
 			    0,
-			    NULL,
-			    32768,
+                            pstackBase,
+			    stackSize,
 			    peerTask,
 			    0,0,0,0,0,0,0,0,0,0));
 
