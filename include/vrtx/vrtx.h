@@ -129,6 +129,9 @@ void sc_tsuspend(int tid,
 
 void sc_delay(long timeout);
 
+void sc_adelay (struct timespec time,
+		int *perr);
+
 void sc_lock(void);
 
 void sc_unlock(void);
@@ -307,9 +310,6 @@ unsigned long sc_gtime(void);
 void sc_stime(long time);
 
 int sc_gversion(void);
-
-void sc_adelay (struct timespec time,
-		int *errp);
 
 #ifdef __cplusplus
 };
