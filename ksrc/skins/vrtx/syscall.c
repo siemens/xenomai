@@ -231,6 +231,36 @@ static int __sc_unlock(struct task_struct *curr, struct pt_regs *regs)
     return 0;
 }
 
+/*
+ * int __sc_delay(long timeout)
+ */
+
+static int __sc_delay(struct task_struct *curr, struct pt_regs *regs)
+{
+    sc_delay(__xn_reg_arg1(regs));
+    return 0;
+}
+
+/*
+ * int __sc_adelay(struct timespec time)
+ */
+
+static int __sc_adelay(struct task_struct *curr, struct pt_regs *regs)
+{
+	struct timespec time;
+    int err;
+
+    if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(time)))
+        return -EFAULT;
+
+    __xn_copy_from_user(curr, &time, (void __user *)__xn_reg_arg1(regs),
+                        sizeof(time));
+
+    sc_adelay(time,&err);
+
+    return err;
+}
+
 static xnsysent_t __systab[] = {
     [__vrtx_tecreate] = {&__sc_tecreate, __xn_exec_init},
     [__vrtx_tdelete] = {&__sc_tdelete, __xn_exec_conforming},
@@ -241,6 +271,8 @@ static xnsysent_t __systab[] = {
     [__vrtx_tinquiry] = {&__sc_tinquiry, __xn_exec_primary},
     [__vrtx_lock] = {&__sc_lock, __xn_exec_primary},
     [__vrtx_unlock] = {&__sc_unlock, __xn_exec_primary},
+    [__vrtx_delay] = {&__sc_delay, __xn_exec_primary},
+    [__vrtx_adelay] = {&__sc_adelay, __xn_exec_primary},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)

@@ -32,6 +32,8 @@
 #define __vrtx_tinquiry    6
 #define __vrtx_lock        7
 #define __vrtx_unlock      8
+#define __vrtx_delay       9
+#define __vrtx_adelay      10
 
 struct vrtx_arg_bulk {
 
@@ -41,6 +43,8 @@ struct vrtx_arg_bulk {
 };
 
 #ifdef __KERNEL__
+
+#include <linux/time.h>
 
 #ifdef __cplusplus
 extern "C" {
