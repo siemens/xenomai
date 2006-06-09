@@ -243,3 +243,9 @@ void sc_unlock (void)
     XENOMAI_SKINCALL0(__vrtx_muxid,
 		      __vrtx_unlock);
 }
+
+void sc_delay (long timeout)
+{
+    XENOMAI_SKINCALL1(__vrtx_muxid,
+		      __vrtx_delay);
+}
