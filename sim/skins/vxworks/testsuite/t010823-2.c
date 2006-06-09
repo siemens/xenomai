@@ -98,13 +98,13 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
     TEST_ASSERT(pTcb != NULL);
 
     bsemid = semBCreate(0xffffffff,0);
-    TEST_ASSERT(bsemid == 0 && errno == S_semLib_INVALID_OPTION);
+    TEST_ASSERT(bsemid == 0 && errno == S_semLib_INVALID_QUEUE_TYPE);
 
     bsemid = semBCreate(SEM_Q_PRIORITY,0);
     TEST_ASSERT(bsemid != 0);
 
     mutexid = semMCreate(0xffffffff);
-    TEST_ASSERT(mutexid == 0 && errno == S_semLib_INVALID_OPTION);
+    TEST_ASSERT(mutexid == 0 && errno == S_semLib_INVALID_QUEUE_TYPE);
 
     mutexid = semMCreate(SEM_Q_PRIORITY|SEM_DELETE_SAFE|SEM_INVERSION_SAFE);
     TEST_ASSERT(mutexid != 0);
@@ -160,7 +160,7 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
 			SEQ("root",1),
 			SEQ("Test1",1),
 			SEQ("root",2),
-			SEQ("Test2",2011),
+			SEQ("Test2",2009),
 			SEQ("root",1),
 			END_SEQ);
     TEST_FINISH();

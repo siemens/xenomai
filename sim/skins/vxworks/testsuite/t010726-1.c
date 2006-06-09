@@ -27,6 +27,8 @@
 
 #include <vxworks_test.h>
 
+static TASK_ID tSlicer1, tSlicer2, tSlicer3;
+
 void sliceTask (long a0, long a1, long a2, long a3, long a4,
                 long a5, long a6, long a7, long a8, long a9)
 {
@@ -58,26 +60,26 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
 
     /* The root task starts with a priority of 0 */
 
-    TEST_ASSERT(taskSpawn("Slicer1",
-                          20,
-                          0,
-                          32768,
-                          sliceTask,
-                          0,0,0,0,0,0,0,0,0,0) != ERROR );
+    TEST_ASSERT((tSlicer1 = taskSpawn("Slicer1",
+                                      20,
+                                      0,
+                                      32768,
+                                      sliceTask,
+                                      0,0,0,0,0,0,0,0,0,0)) != ERROR);
     
-    TEST_ASSERT(taskSpawn("Slicer2",
-                          20,
-                          0,
-                          32768,
-                          sliceTask,
-                          1,0,0,0,0,0,0,0,0,0) != ERROR );
+    TEST_ASSERT((tSlicer2 = taskSpawn("Slicer2",
+                                      20,
+                                      0,
+                                      32768,
+                                      sliceTask,
+                                      1,0,0,0,0,0,0,0,0,0)) != ERROR);
 
-    TEST_ASSERT(taskSpawn("Slicer3",
-                          20,
-                          0,
-                          32768,
-                          sliceTask,
-                          2,0,0,0,0,0,0,0,0,0) != ERROR );
+    TEST_ASSERT((tSlicer3 = taskSpawn("Slicer3",
+                                      20,
+                                      0,
+                                      32768,
+                                      sliceTask,
+                                      2,0,0,0,0,0,0,0,0,0)) != ERROR);
 
     taskDelay(6);
 
@@ -102,6 +104,10 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
                         SEQ("Slicer1",12),
                         SEQ("root",1),
                         END_SEQ);
+
+    taskDelete(tSlicer1);
+    taskDelete(tSlicer2);
+    taskDelete(tSlicer3);    
 
     TEST_FINISH();
 }

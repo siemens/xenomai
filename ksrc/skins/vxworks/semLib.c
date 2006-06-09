@@ -117,7 +117,7 @@ SEM_ID semBCreate(int flags, SEM_B_STATE state)
 {
     int bflags = 0;
 
-    error_check(flags & ~WIND_SEMB_OPTION_MASK, S_semLib_INVALID_OPTION,
+    error_check(flags & ~WIND_SEMB_OPTION_MASK, S_semLib_INVALID_QUEUE_TYPE,
                 return 0);
 
     error_check(state != SEM_EMPTY && state != SEM_FULL, S_semLib_INVALID_STATE,
@@ -133,7 +133,7 @@ SEM_ID semCCreate(int flags, int count)
 {
     int bflags = 0;
 
-    error_check(flags & ~WIND_SEMC_OPTION_MASK, S_semLib_INVALID_OPTION,
+    error_check(flags & ~WIND_SEMC_OPTION_MASK, S_semLib_INVALID_QUEUE_TYPE,
                 return 0);
 
     if (flags & SEM_Q_PRIORITY)
@@ -146,15 +146,17 @@ SEM_ID semMCreate(int flags)
 {
     int bflags = 0;
 
-    if (flags & ~WIND_SEMM_OPTION_MASK)
-        goto invalid_op;
+    error_check(flags & ~WIND_SEMM_OPTION_MASK, S_semLib_INVALID_QUEUE_TYPE,
+                return 0);
 
     if (flags & SEM_Q_PRIORITY)
         bflags |= XNSYNCH_PRIO;
 
     if (flags & SEM_INVERSION_SAFE) {
-        if (!(flags & SEM_Q_PRIORITY))
-            goto invalid_op;
+        if (!(flags & SEM_Q_PRIORITY)) {
+            wind_errnoset(S_semLib_INVALID_OPTION);
+            return 0;
+        }
 
         bflags |= XNSYNCH_PIP;
     }
@@ -163,11 +165,6 @@ SEM_ID semMCreate(int flags)
         bflags |= WIND_SEM_DEL_SAFE;
 
     return sem_create_internal(bflags, &semm_vtbl, 0);
-
-  invalid_op:
-    wind_errnoset(S_semLib_INVALID_OPTION);
-    return 0;
-
 }
 
 STATUS semDelete(SEM_ID sem_id)

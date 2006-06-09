@@ -1,3 +1,9 @@
+2006-06-09  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/vxworks/semLib.c (sem*Create): Return 
+	S_semlib_INVALID_QUEUE_TYPE in case of invalid option, as does the
+	real vxworks.
+
 2006-06-08  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* src/testsuite/switchtest/switch.c,

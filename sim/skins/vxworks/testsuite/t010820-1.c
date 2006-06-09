@@ -38,6 +38,7 @@
 */
 
 static SEM_ID semid;
+static TASK_ID tTest2, tRoot;
 
 void sem1Task  (long a0, long a1, long a2, long a3, long a4,
 		long a5, long a6, long a7, long a8, long a9)
@@ -47,7 +48,7 @@ void sem1Task  (long a0, long a1, long a2, long a3, long a4,
     TEST_ASSERT(pTcb != NULL);
 
     semid = semCCreate(0xffffffff,0);
-    TEST_ASSERT(semid == 0 && errno == S_semLib_INVALID_OPTION);
+    TEST_ASSERT(semid == 0 && errno == S_semLib_INVALID_QUEUE_TYPE);
 
     semid = semCCreate(SEM_Q_FIFO,0);
     TEST_ASSERT(semid != 0);
@@ -85,7 +86,8 @@ void sem1Task  (long a0, long a1, long a2, long a3, long a4,
     
     TEST_ASSERT_OK(semDelete(semid));
 
-/*     TEST_ASSERT(!ckObjectExists(semid)); */
+    taskDelete(tTest2);
+    taskDelete(tRoot);
 
     TEST_FINISH();
 }
@@ -136,12 +138,12 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
 	      sem1Task,
 	      0,0,0,0,0,0,0,0,0,0);
 
-    taskSpawn("Test2",
-	      20,
-	      0,
-	      32768,
-	      sem2Task,
-	      0,0,0,0,0,0,0,0,0,0);
+    tTest2 = taskSpawn("Test2",
+                       20,
+                       0,
+                       32768,
+                       sem2Task,
+                       0,0,0,0,0,0,0,0,0,0);
 
     TEST_ASSERT_OK(taskSuspend(0));
 
@@ -150,12 +152,12 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
 
 int __xeno_user_init (void)
 {
-    return !taskSpawn("root",
-                      0,
-                      0,
-                      32768,
-                      rootTask,
-                      0,0,0,0,0,0,0,0,0,0);
+    return !(tRoot = taskSpawn("root",
+                               0,
+                               0,
+                               32768,
+                               rootTask,
+                               0,0,0,0,0,0,0,0,0,0));
 }
 
 void __xeno_user_exit (void)

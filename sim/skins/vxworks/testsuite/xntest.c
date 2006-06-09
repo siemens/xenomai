@@ -44,7 +44,10 @@ static xntimer_t watchdog;
 static int test_failures;
 static int tests;
 
+int xntest_verbose = 0;
 
+module_param_named(xntest_verbose, xntest_verbose, int, 0444);
+MODULE_PARM_DESC(xntest_verbose, "Set to 1 to make test verbose");
 
 static inline xnholder_t *gettailq (xnqueue_t *qslot) {
     xnholder_t *holder = qslot->head.last;
@@ -53,7 +56,7 @@ static inline xnholder_t *gettailq (xnqueue_t *qslot) {
 }
 
 /* 30 seconds */
-#define test_timeout 30000
+#define test_timeout 30
 
 static inline int strings_differ(const char *str1, const char *str2)
 {
@@ -62,7 +65,7 @@ static inline int strings_differ(const char *str1, const char *str2)
 
 static void interrupt_test (void *dummy)
 {
-   xnpod_fatal("test interrupted by watchdog.\n");
+   xnpod_fatal("\ntest interrupted by watchdog.\n");
 }
 
 
@@ -71,9 +74,12 @@ void xntest_start(void)
 {
     spl_t s;
 
+    if (module_param_value(xntest_verbose) >= 0)
+        xntest_verbose = module_param_value(xntest_verbose);
+
     xnlock_get_irqsave(&test_lock, s);
     xntimer_init(&watchdog, interrupt_test, 0);
-    xntimer_start(&watchdog, xnpod_ns2ticks(test_timeout * 1000000ULL), XN_INFINITE);
+    xntimer_start(&watchdog, xnpod_ns2ticks(test_timeout * 1000000000ULL), XN_INFINITE);
 
     initq(&marks_q);
     tests=0;
@@ -92,7 +98,7 @@ int xntest_assert(int status, char *assertion, char *file, int line)
     if(!status) {
         ++test_failures;
         xnarch_printf("%s:%d: TEST failed: %s\n", file, line, assertion);
-    } else
+    } else if (xntest_verbose)
         xnarch_printf("%s:%d TEST passed.\n", file, line);
     xnlock_put_irqrestore(&test_lock, s);
 
@@ -188,6 +194,8 @@ void xntest_finish(char *file, int line)
     xnholder_t *holder;
     spl_t s;
     
+    xntimer_destroy(&watchdog);
+
     xnlock_get_irqsave(&test_lock, s);
     for(holder = getheadq(&marks_q); holder ; holder=next_holder)
     {
