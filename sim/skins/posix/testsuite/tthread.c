@@ -126,8 +126,8 @@ void *root_thread(void *cookie)
         TEST_ASSERT_OK(pthread_attr_setinheritsched(&attr,
                                                     PTHREAD_EXPLICIT_SCHED));
         TEST_ASSERT_OK(pthread_getschedparam(pthread_self(), &i, &p));
-        TEST_ASSERT_OK(pthread_attr_setschedparam(&attr, &p));
         TEST_ASSERT_OK(pthread_attr_setschedpolicy(&attr, SCHED_RR));
+        TEST_ASSERT_OK(pthread_attr_setschedparam(&attr, &p));
         TEST_ASSERT_OK(pthread_attr_setname_np(&attr, "slicer1"));
         TEST_ASSERT_OK(pthread_create(&child1, &attr, slicer, &child1));
         
