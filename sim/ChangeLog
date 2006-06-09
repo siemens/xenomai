@@ -1,6 +1,8 @@
 2006-06-09  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
-	* skins/vxworks/testsuite/xntest.c: Configurable verbosity.
+	* skins/posix/testsuite/xntest.c: Make verbosity configurable.
+
+	* skins/vxworks/testsuite/xntest.c: Make verbosity configurable.
 
 	* skins/vxworks/testsuite/*.c: Delete the created tasks before
 	test end.
