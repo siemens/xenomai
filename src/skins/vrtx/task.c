@@ -247,5 +247,13 @@ void sc_unlock (void)
 void sc_delay (long timeout)
 {
     XENOMAI_SKINCALL1(__vrtx_muxid,
-		      __vrtx_delay);
+		      __vrtx_delay,
+		      timeout);
+}
+
+void sc_adelay (struct timespec time, int *errp)
+{
+    *errp = XENOMAI_SKINCALL1(__vrtx_muxid,
+			      __vrtx_adelay,
+			      &time);
 }
