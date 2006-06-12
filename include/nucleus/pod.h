@@ -318,7 +318,6 @@ static inline int xnpod_rescale_prio (int prio)
 }
 
 static inline void xnpod_renice_root (int prio)
-
 {
     xnthread_t *rootcb;
     spl_t s;

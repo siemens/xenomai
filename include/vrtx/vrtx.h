@@ -98,216 +98,212 @@ int sc_tecreate(void (*entry)(void *),
 		unsigned long sys,
 		char *paddr,
 		unsigned long psize,
-		int *perr);
+		int *errp);
 
 int sc_tcreate(void (*entry)(void*),
 	       int tid,
 	       int prio,
-	       int *perr);
+	       int *errp);
 
 void sc_tdelete(int tid,
 		int opt,
-		int *perr);
+		int *errp);
 
 TCB *sc_tinquiry(int pinfo[],
 		 int tid,
-		 int *perr);
+		 int *errp);
 
 void sc_tpriority(int tid,
 		  int prio,
-		  int *perr);
+		  int *errp);
 
 void sc_tresume(int tid,
 		int opt,
-		int *perr);
+		int *errp);
 
 void sc_tslice(unsigned short ticks);
 
 void sc_tsuspend(int tid,
 		 int opt,
-		 int *perr);
-
-void sc_delay(long timeout);
-
-void sc_adelay (struct timespec time,
-		int *perr);
+		 int *errp);
 
 void sc_lock(void);
 
 void sc_unlock(void);
 
+int sc_mcreate(unsigned int opt,
+	       int *errp);
+
+void sc_maccept(int mid,
+		int *errp);
+
+void sc_mdelete(int mid,
+		int opt, int *errp);
+
+int sc_minquiry(int mid,
+		int *errp);
+
+void sc_mpend(int mid,
+	      unsigned long timeout,
+	      int *errp);
+
+void sc_mpost(int mid,
+	      int *errp);
+
+int sc_qcreate(int qid,
+	       int qsize,
+	       int *errp);
+
+int sc_qecreate(int qid,
+		int qsize,
+		int opt,
+		int *errp);
+  
+void sc_qdelete(int qid,
+		int opt,
+		int *errp);
+  
+void sc_qjam(int qid,
+	     char *msg,
+	     int *errp);
+
+void sc_qpost(int qid,
+	      char *msg,
+	      int *errp);
+
+void sc_qbrdcst(int qid,
+	       char *msg,
+	       int *errp);
+
+char *sc_qaccept(int qid,
+		 int *errp);
+
+char *sc_qinquiry(int qid,
+		  int *countp,
+		  int *errp);
+
+char *sc_qpend(int qid,
+	       long timeout,
+	       int *errp);
+
+void sc_post(char **mboxp,
+	     char *msg,
+	     int *errp);
+
+char *sc_accept(char **mboxp,
+		int *errp);
+
+char *sc_pend(char **mboxp,
+	      long timeout,
+	      int *errp);
+
+int sc_fcreate(int *errp);
+
+void sc_fdelete(int fid,
+		int opt,
+		int *errp);
+
+void sc_fpost(int fid,
+	      int mask,
+	      int *errp);
+
+int sc_fclear(int fid,
+	      int mask,
+	      int *errp);
+
+int sc_finquiry(int fid,
+		int *errp);
+
+int sc_fpend(int fid,
+	     long timeout,
+	     int mask,
+	     int opt,
+	     int *errp);
+
+int sc_screate(unsigned initval,
+	       int opt,
+	       int *errp);
+
+void sc_sdelete(int semid,
+		int opt,
+		int *errp);
+
+void sc_spend(int semid,
+	      long timeout,
+	      int *errp);
+
+void sc_saccept(int semid,
+	      int *errp);
+
+void sc_spost(int semid,
+	      int *errp);
+
+int sc_sinquiry(int semid,
+		int *errp);
+
 int sc_pcreate(int pid,
 	       char *paddr,
 	       long psize,
 	       long bsize,
-	       int *perr);
+	       int *errp);
 
 void sc_pdelete(int tid,
 		int opt,
-		int *perr);
+		int *errp);
 
 void sc_pextend(int pid,
 		char *eaddr,
 		long esize,
-		int *perr);
+		int *errp);
 
 void sc_pinquiry(unsigned long info[3],
 		 int pid,
 		 int *errp);
 
 char *sc_gblock(int pid,
-		int *perr);
+		int *errp);
 
 void sc_rblock(int pid,
 	       char *blockp,
-	       int *perr);
-
-int sc_mcreate(unsigned int opt,
 	       int *errp);
-
-void sc_maccept (int mid,
-		 int *errp);
-
-void sc_mdelete (int mid,
-		 int opt, int *errp);
-
-int sc_minquiry (int mid,
-		 int *errp);
-
-void sc_mpend (int mid,
-	       unsigned long timeout,
-	       int *errp);
-
-void sc_mpost (int mid,
-	       int *errp);
-
-void sc_post(char **mboxp,
-	     char *msg,
-	     int *perr);
-
-char *sc_accept(char **mboxp,
-		int *perr);
-
-char *sc_pend(char **mboxp,
-	      long timeout,
-	      int *perr);
-
-int sc_qcreate(int qid,
-		int qsize,
-		int *perr);
-
-int sc_qecreate(int qid,
-		int qsize,
-		int opt,
-		int *perr);
-  
-void sc_qdelete(int qid,
-		int opt,
-		int *perr);
-  
-void sc_qjam(int qid,
-	     char *msg,
-	     int *perr);
-
-void sc_qpost(int qid,
-	      char *msg,
-	      int *perr);
-
-void sc_qbrdcst(int qid,
-	       char *msg,
-	       int *perr);
-
-char *sc_qaccept(int qid,
-		 int *perr);
-
-char *sc_qinquiry(int qid,
-		  int *countp,
-		  int *perr);
-
-char *sc_qpend(int qid,
-	       long timeout,
-	       int *perr);
-
-int sc_fcreate(int *perr);
-
-void sc_fdelete(int fid,
-		int opt,
-		int *perr);
-
-void sc_fpost(int fid,
-	      int mask,
-	      int *perr);
-
-int sc_fclear(int fid,
-	      int mask,
-	      int *perr);
-
-int sc_finquiry(int fid,
-		int *perr);
-
-int sc_fpend(int fid,
-	     long timeout,
-	     int mask,
-	     int opt,
-	     int *perr);
-
-int sc_screate(unsigned initval,
-	       int opt,
-	       int *perr);
-
-void sc_sdelete(int semid,
-		int opt,
-		int *perr);
-
-void sc_spend(int semid,
-	      long timeout,
-	      int *perr);
-
-void sc_saccept(int semid,
-	      int *perr);
-
-void sc_spost(int semid,
-	      int *perr);
-
-int sc_sinquiry(int semid,
-		int *perr);
-
-void sc_stime(long ticks);
-
-unsigned long sc_gtime(void);
 
 int sc_hcreate(char *heapaddr,
 	       unsigned long heapsize,
 	       unsigned log2psize,
-	       int *perr);
+	       int *errp);
 
 void sc_hdelete(int hid,
 		int opt,
-		int *perr);
+		int *errp);
 
 char *sc_halloc(int hid,
 		unsigned long size,
-		int *perr);
+		int *errp);
 
 void sc_hfree(int hid,
 	      char *block,
-	      int *perr);
+	      int *errp);
 
 void sc_hinquiry(int info[3],
 		 int hid,
 		 int *errp);
 
-void sc_gclock(struct timespec *timep,
-		unsigned long *nsp,
+void sc_delay(long timeout);
+
+void sc_adelay (struct timespec time,
 		int *errp);
+
+void sc_stime(unsigned long ticks);
+
+unsigned long sc_gtime(void);
+
+void sc_gclock(struct timespec *timep,
+	       unsigned long *nsp,
+	       int *errp);
 
 void sc_sclock(struct timespec time,
 	       unsigned long ns,
 	       int *errp);
-
-unsigned long sc_gtime(void);
-
-void sc_stime(long time);
 
 int sc_gversion(void);
 

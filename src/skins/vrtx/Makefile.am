@@ -4,7 +4,11 @@ libvrtx_la_LDFLAGS = -module -version-info 0:0:0 -lpthread
 
 libvrtx_la_SOURCES = \
 	init.c \
-	task.c
+	mb.c \
+	mx.c \
+	queue.c \
+	task.c \
+	time.c
 
 libvrtx_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \

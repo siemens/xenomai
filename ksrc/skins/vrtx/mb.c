@@ -24,6 +24,10 @@
 
 static xnqueue_t vrtx_mbox_q;
 
+/* Note: In the current implementation, mailbox addresses passed to
+ * the VRTX services are never dereferenced, but only used as hash
+ * keys. */
+
 #define MB_HASHBITS 8
 
 static vrtxmb_t *jhash_buckets[1 << MB_HASHBITS];   /* Guaranteed zero */
@@ -114,27 +118,6 @@ void vrtxmb_cleanup(void)
     }
 }
 
-char *sc_accept(char **mboxp, int *errp)
-{
-    char *msg;
-    spl_t s;
-
-    xnlock_get_irqsave(&nklock, s);
-
-    msg = *mboxp;
-
-    if (msg == NULL)
-        *errp = ER_NMP;
-    else {
-        *mboxp = NULL;
-        *errp = RET_OK;
-    }
-
-    xnlock_put_irqrestore(&nklock, s);
-
-    return msg;
-}
-
 /*
  * Manages a hash of xnsynch_t objects, indexed by mailboxes
  * addresses.  Given a mailbox, returns its synch.  If the synch is
@@ -142,12 +125,12 @@ char *sc_accept(char **mboxp, int *errp)
  * locked.
  */
 
-xnsynch_t *mb_map(char **mboxp)
+vrtxmb_t *mb_map(char **mboxp)
 {
     vrtxmb_t *mb = mb_find(mboxp);
 
     if (mb)
-        return &mb->synchbase;
+        return mb;
 
     /* New mailbox, create a new slot for it. */
 
@@ -158,39 +141,67 @@ xnsynch_t *mb_map(char **mboxp)
 
     inith(&mb->link);
     mb->mboxp = mboxp;
+    mb->msg = NULL;
     mb->hnext = NULL;
     xnsynch_init(&mb->synchbase, XNSYNCH_PRIO | XNSYNCH_DREORD);
     appendq(&vrtx_mbox_q, &mb->link);
     mb_hash(mboxp, mb);
 
-    return &mb->synchbase;
+    return mb;
 }
 
-char *sc_pend(char **mboxp, long timeout, int *errp)
+char *sc_accept(char **mboxp, int *errp)
 {
-    xnsynch_t *synchbase;
-    vrtxtask_t *task;
-    char *msg;
+    char *msg = NULL;
+    vrtxmb_t *mb;
     spl_t s;
 
     xnlock_get_irqsave(&nklock, s);
 
-    msg = *mboxp;
+    mb = mb_map(mboxp);
 
-    if (msg != NULL) {
-        *mboxp = NULL;          /* Consume the message and exit. */
-        goto done;
-    }
-
-    if (xnpod_unblockable_p()) {
-        *errp = -EPERM;
+    if (!mb) {
+        *errp = ER_NOCB;
         goto unlock_and_exit;
     }
 
-    synchbase = mb_map(mboxp);
+    msg = mb->msg;
 
-    if (!synchbase) {
+    if (msg == NULL)
+        *errp = ER_NMP;
+    else {
+		mb->msg = NULL;
+        *errp = RET_OK;
+    }
+
+ unlock_and_exit:
+
+    xnlock_put_irqrestore(&nklock, s);
+
+    return msg;
+}
+
+char *sc_pend(char **mboxp, long timeout, int *errp)
+{
+    char *msg = NULL;
+    vrtxtask_t *task;
+    vrtxmb_t *mb;
+    spl_t s;
+
+    xnlock_get_irqsave(&nklock, s);
+
+    mb = mb_map(mboxp);
+
+    if (!mb) {
         *errp = ER_NOCB;
+        goto unlock_and_exit;
+    }
+
+    if (mb->msg != NULL)
+        goto done;
+
+    if (xnpod_unblockable_p()) {
+        *errp = -EPERM;
         goto unlock_and_exit;
     }
 
@@ -200,7 +211,7 @@ char *sc_pend(char **mboxp, long timeout, int *errp)
     if (timeout)
         task->vrtxtcb.TCBSTAT |= TBSDELAY;
 
-    xnsynch_sleep_on(synchbase, timeout);
+    xnsynch_sleep_on(&mb->synchbase, timeout);
 
     if (xnthread_test_flags(&task->threadbase, XNBREAK)) {
         *errp = -EINTR;
@@ -212,10 +223,10 @@ char *sc_pend(char **mboxp, long timeout, int *errp)
         goto unlock_and_exit;
     }
 
-    msg = task->waitargs.msg;
-
   done:
 
+    msg = mb->msg;
+    mb->msg = NULL;
     *errp = RET_OK;
 
   unlock_and_exit:
@@ -227,8 +238,7 @@ char *sc_pend(char **mboxp, long timeout, int *errp)
 
 void sc_post(char **mboxp, char *msg, int *errp)
 {
-    xnsynch_t *synchbase;
-    xnthread_t *waiter;
+    vrtxmb_t *mb;
     spl_t s;
 
     if (msg == NULL) {
@@ -238,28 +248,24 @@ void sc_post(char **mboxp, char *msg, int *errp)
 
     xnlock_get_irqsave(&nklock, s);
 
-    if (*mboxp != NULL) {
-        *errp = ER_MIU;
-        goto unlock_and_exit;
-    }
+    mb = mb_map(mboxp);
 
-    *errp = RET_OK;
-
-    synchbase = mb_map(mboxp);
-
-    if (!synchbase) {
+    if (!mb) {
         *errp = ER_NOCB;
         goto unlock_and_exit;
     }
 
-    /* xnsynch_wakeup_one_sleeper() readies the thread */
-    waiter = xnsynch_wakeup_one_sleeper(synchbase);
+    if (mb->msg != NULL) {
+        *errp = ER_MIU;
+        goto unlock_and_exit;
+    }
 
-    if (waiter) {
-        thread2vrtxtask(waiter)->waitargs.msg = msg;
+	mb->msg = msg;
+    *errp = RET_OK;
+
+    /* xnsynch_wakeup_one_sleeper() readies the front thread */
+    if (xnsynch_wakeup_one_sleeper(&mb->synchbase))
         xnpod_schedule();
-    } else
-        *mboxp = msg;
 
   unlock_and_exit:
 

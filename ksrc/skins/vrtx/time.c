@@ -64,7 +64,7 @@ unsigned long sc_gtime(void)
     return (unsigned long)xnpod_get_time();
 }
 
-void sc_stime(long time)
+void sc_stime(unsigned long time)
 {
     xnpod_set_time(time);
 }
