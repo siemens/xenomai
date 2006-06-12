@@ -1024,8 +1024,7 @@ int pse51_assoc_create(pse51_assocq_t *q,
 int pse51_assoc_lookup(pse51_assocq_t *q,
                        u_long *kobj,
                        struct mm_struct *mm,
-                       u_long uobj,
-                       int destroy)
+                       u_long uobj)
 {
     pse51_assoc_t *assoc;
     spl_t s;
@@ -1040,11 +1039,31 @@ int pse51_assoc_lookup(pse51_assocq_t *q,
 
     *kobj = assoc->kobj;
 
-    if (destroy)
+    xnlock_put_irqrestore(&pse51_assoc_lock, s);
+
+    return 0;
+}
+
+int pse51_assoc_remove(pse51_assocq_t *q,
+                       u_long *kobj,
+                       struct mm_struct *mm,
+                       u_long uobj)
+{
+    pse51_assoc_t *assoc;
+    spl_t s;
+
+    xnlock_get_irqsave(&pse51_assoc_lock, s);
+
+    if (!pse51_assoc_lookup_inner(q, &assoc, mm, uobj))
         {
-        removeq(q, &assoc->link);
-        xnfree(assoc);
+        xnlock_put_irqrestore(&pse51_assoc_lock, s);
+        return -EBADF;
         }
+
+    *kobj = assoc->kobj;
+
+    removeq(q, &assoc->link);
+    xnfree(assoc);
 
     xnlock_put_irqrestore(&pse51_assoc_lock, s);
 
