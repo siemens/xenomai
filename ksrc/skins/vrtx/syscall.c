@@ -104,7 +104,7 @@ static int __sc_tecreate(struct task_struct *curr, struct pt_regs *regs)
     if (err)
         xnfree(task);
 
-  done:
+done:
 
     return err;
 }
@@ -242,12 +242,12 @@ static int __sc_delay(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
- * int __sc_adelay(struct timespec time)
+ * int __sc_adelay(struct timespec *time)
  */
 
 static int __sc_adelay(struct task_struct *curr, struct pt_regs *regs)
 {
-	struct timespec time;
+    struct timespec time;
     int err;
 
     if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(time)))
@@ -259,6 +259,415 @@ static int __sc_adelay(struct task_struct *curr, struct pt_regs *regs)
     sc_adelay(time,&err);
 
     return err;
+}
+
+/*
+ * int __sc_stime(unsigned long ticks)
+ */
+
+static int __sc_stime(struct task_struct *curr, struct pt_regs *regs)
+{
+    sc_stime(__xn_reg_arg1(regs));
+    return 0;
+}
+
+/*
+ * int __sc_gtime(unsigned long *ticks_p)
+ */
+
+static int __sc_gtime(struct task_struct *curr, struct pt_regs *regs)
+{
+	unsigned long ticks;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(ticks)))
+        return -EFAULT;
+
+    ticks = sc_gtime();
+
+	__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &ticks,
+					  sizeof(ticks));
+    return 0;
+}
+
+/*
+ * int __sc_sclock(struct timespec *time, unsigned long ns)
+ */
+
+static int __sc_sclock(struct task_struct *curr, struct pt_regs *regs)
+{
+    struct timespec time;
+	unsigned long ns;
+	int err;
+
+    if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(time)))
+        return -EFAULT;
+
+    __xn_copy_from_user(curr, &time, (void __user *)__xn_reg_arg1(regs),
+                        sizeof(time));
+
+	ns = __xn_reg_arg1(regs);
+
+	sc_sclock(time,ns,&err);
+
+    return err;
+}
+
+/*
+ * int __sc_gclock(struct timespec *time, unsigned long ns)
+ */
+
+static int __sc_gclock(struct task_struct *curr, struct pt_regs *regs)
+{
+    struct timespec time;
+	unsigned long ns;
+	int err;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(time)))
+        return -EFAULT;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(ns)))
+        return -EFAULT;
+
+	sc_gclock(&time,&ns,&err);
+
+	if (!err) {
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &time,
+						  sizeof(time));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &ns,
+						  sizeof(ns));
+	}
+
+    return err;
+}
+
+/*
+ * int __sc_mcreate(int opt, int *mid)
+ */
+
+static int __sc_mcreate(struct task_struct *curr, struct pt_regs *regs)
+{
+	int opt = __xn_reg_arg1(regs), mid, err;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(mid)))
+        return -EFAULT;
+
+	mid = sc_mcreate(opt,&err);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &mid,
+						  sizeof(mid));
+	return err;
+}
+
+/*
+ * int __sc_mdelete(int mid, int opt)
+ */
+
+static int __sc_mdelete(struct task_struct *curr, struct pt_regs *regs)
+{
+	int opt, mid, err;
+
+	mid = __xn_reg_arg1(regs);
+	opt = __xn_reg_arg2(regs);
+	sc_mdelete(mid,opt,&err);
+
+	return err;
+}
+
+/*
+ * int __sc_mpost(int mid)
+ */
+
+static int __sc_mpost(struct task_struct *curr, struct pt_regs *regs)
+{
+	int mid, err;
+
+	mid = __xn_reg_arg1(regs);
+	sc_mpost(mid,&err);
+
+	return err;
+}
+
+/*
+ * int __sc_maccept(int mid)
+ */
+
+static int __sc_maccept(struct task_struct *curr, struct pt_regs *regs)
+{
+	int mid, err;
+
+	mid = __xn_reg_arg1(regs);
+	sc_maccept(mid,&err);
+
+	return err;
+}
+
+/*
+ * int __sc_mpend(int mid, unsigned long timeout)
+ */
+
+static int __sc_mpend(struct task_struct *curr, struct pt_regs *regs)
+{
+	unsigned long timeout;
+	int mid, err;
+
+	mid = __xn_reg_arg1(regs);
+	timeout = __xn_reg_arg2(regs);
+	sc_mpend(mid,timeout,&err);
+
+	return err;
+}
+
+/*
+ * int __sc_minquiry(int mid, int *statusp)
+ */
+
+static int __sc_minquiry(struct task_struct *curr, struct pt_regs *regs)
+{
+	int mid, status, err;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(status)))
+        return -EFAULT;
+
+	mid = __xn_reg_arg1(regs);
+	status = sc_minquiry(mid,&err);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &status,
+						  sizeof(status));
+	return err;
+}
+
+/*
+ * int __sc_qecreate(int qid, int qsize, int opt, int *qidp)
+ */
+
+static int __sc_qecreate(struct task_struct *curr, struct pt_regs *regs)
+{
+    int qid, qsize, opt, err;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(qid)))
+        return -EFAULT;
+
+    qid = __xn_reg_arg1(regs);
+    qsize = __xn_reg_arg2(regs);
+    opt = __xn_reg_arg3(regs);
+    qid = sc_qecreate(qid,qsize,opt,&err);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg4(regs), &qid,
+						  sizeof(qid));
+	return err;
+}
+
+/*
+ * int __sc_qdelete(int qid, int opt)
+ */
+
+static int __sc_qdelete(struct task_struct *curr, struct pt_regs *regs)
+{
+    int qid, opt, err;
+
+    qid = __xn_reg_arg1(regs);
+    opt = __xn_reg_arg2(regs);
+    sc_qdelete(qid,opt,&err);
+
+	return err;
+}
+
+/*
+ * int __sc_qpost(int qid, char *msg)
+ */
+
+static int __sc_qpost(struct task_struct *curr, struct pt_regs *regs)
+{
+    int qid, err;
+	char *msg;
+
+    qid = __xn_reg_arg1(regs);
+    msg = (char *)__xn_reg_arg2(regs);
+    sc_qpost(qid,msg,&err);
+
+	return err;
+}
+
+/*
+ * int __sc_qbrdcst(int qid, char *msg)
+ */
+
+static int __sc_qbrdcst(struct task_struct *curr, struct pt_regs *regs)
+{
+    int qid, err;
+	char *msg;
+
+    qid = __xn_reg_arg1(regs);
+    msg = (char *)__xn_reg_arg2(regs);
+    sc_qbrdcst(qid,msg,&err);
+
+	return err;
+}
+
+/*
+ * int __sc_qjam(int qid, char *msg)
+ */
+
+static int __sc_qjam(struct task_struct *curr, struct pt_regs *regs)
+{
+    int qid, err;
+	char *msg;
+
+    qid = __xn_reg_arg1(regs);
+    msg = (char *)__xn_reg_arg2(regs);
+    sc_qjam(qid,msg,&err);
+
+	return err;
+}
+
+/*
+ * int __sc_qpend(int qid, unsigned long timeout, char **msgp)
+ */
+
+static int __sc_qpend(struct task_struct *curr, struct pt_regs *regs)
+{
+	long timeout;
+    int qid, err;
+	char *msg;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(msg)))
+        return -EFAULT;
+
+    qid = __xn_reg_arg1(regs);
+    timeout = __xn_reg_arg2(regs);
+    msg = sc_qpend(qid,timeout,&err);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &msg,
+						  sizeof(msg));
+	return err;
+}
+
+/*
+ * int __sc_qaccept(int qid, char **msgp)
+ */
+
+static int __sc_qaccept(struct task_struct *curr, struct pt_regs *regs)
+{
+    int qid, err;
+	char *msg;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(msg)))
+        return -EFAULT;
+
+    qid = __xn_reg_arg1(regs);
+    msg = sc_qaccept(qid,&err);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &msg,
+						  sizeof(msg));
+	return err;
+}
+
+/*
+ * int __sc_qinquiry(int qid, int *countp, char **msgp)
+ */
+
+static int __sc_qinquiry(struct task_struct *curr, struct pt_regs *regs)
+{
+    int qid, count, err;
+	char *msg;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(count)))
+        return -EFAULT;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(msg)))
+        return -EFAULT;
+
+    qid = __xn_reg_arg1(regs);
+    msg = sc_qinquiry(qid,&count,&err);
+
+	if (!err) {
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &count,
+						  sizeof(count));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &msg,
+						  sizeof(msg));
+	}
+
+	return err;
+}
+
+/*
+ * int __sc_post(char **mboxp, char *msg)
+ */
+
+static int __sc_post(struct task_struct *curr, struct pt_regs *regs)
+{
+	char **mboxp, *msg;
+	int err;
+
+	/* We should be able to write to a mailbox storage, even if we
+	 * actually don't. */
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(msg)))
+        return -EFAULT;
+
+    mboxp = (char **)__xn_reg_arg1(regs);
+    msg = (char *)__xn_reg_arg2(regs);
+	sc_post(mboxp,msg,&err);
+
+	return err;
+}
+
+/*
+ * int __sc_accept(char **mboxp, char **msgp)
+ */
+
+static int __sc_accept(struct task_struct *curr, struct pt_regs *regs)
+{
+	char **mboxp, *msg;
+	int err;
+
+	/* We should be able to write to a mailbox storage, even if we
+	 * actually don't. */
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(msg)))
+        return -EFAULT;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(msg)))
+        return -EFAULT;
+
+    mboxp = (char **)__xn_reg_arg1(regs);
+	msg = sc_accept(mboxp,&err);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &msg,
+						  sizeof(msg));
+	return err;
+}
+
+/*
+ * int __sc_pend(char **mboxp, long timeout, char **msgp)
+ */
+
+static int __sc_pend(struct task_struct *curr, struct pt_regs *regs)
+{
+	char **mboxp, *msg;
+	long timeout;
+	int err;
+
+	/* We should be able to write to a mailbox storage, even if we
+	 * actually don't. */
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(msg)))
+        return -EFAULT;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(msg)))
+        return -EFAULT;
+
+    mboxp = (char **)__xn_reg_arg1(regs);
+    timeout = __xn_reg_arg2(regs);
+	msg = sc_pend(mboxp,timeout,&err);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &msg,
+						  sizeof(msg));
+	return err;
 }
 
 static xnsysent_t __systab[] = {
@@ -273,6 +682,27 @@ static xnsysent_t __systab[] = {
     [__vrtx_unlock] = {&__sc_unlock, __xn_exec_primary},
     [__vrtx_delay] = {&__sc_delay, __xn_exec_primary},
     [__vrtx_adelay] = {&__sc_adelay, __xn_exec_primary},
+    [__vrtx_stime] = {&__sc_stime, __xn_exec_any},
+    [__vrtx_gtime] = {&__sc_gtime, __xn_exec_any},
+    [__vrtx_sclock] = {&__sc_sclock, __xn_exec_any},
+    [__vrtx_gclock] = {&__sc_gclock, __xn_exec_any},
+    [__vrtx_mcreate] = {&__sc_mcreate, __xn_exec_any},
+    [__vrtx_mdelete] = {&__sc_mdelete, __xn_exec_any},
+    [__vrtx_mpost] = {&__sc_mpost, __xn_exec_primary},
+    [__vrtx_maccept] = {&__sc_maccept, __xn_exec_primary},
+    [__vrtx_mpend] = {&__sc_mpend, __xn_exec_primary},
+    [__vrtx_minquiry] = {&__sc_minquiry, __xn_exec_any},
+    [__vrtx_qecreate] = {&__sc_qecreate, __xn_exec_any},
+    [__vrtx_qdelete] = {&__sc_qdelete, __xn_exec_any},
+    [__vrtx_qpost] = {&__sc_qpost, __xn_exec_any},
+    [__vrtx_qbrdcst] = {&__sc_qbrdcst, __xn_exec_any},
+    [__vrtx_qjam] = {&__sc_qjam, __xn_exec_any},
+    [__vrtx_qpend] = {&__sc_qpend, __xn_exec_primary},
+    [__vrtx_qaccept] = {&__sc_qaccept, __xn_exec_any},
+    [__vrtx_qinquiry] = {&__sc_qinquiry, __xn_exec_any},
+    [__vrtx_post] = {&__sc_post, __xn_exec_any},
+    [__vrtx_accept] = {&__sc_accept, __xn_exec_any},
+    [__vrtx_pend] = {&__sc_pend, __xn_exec_primary},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)

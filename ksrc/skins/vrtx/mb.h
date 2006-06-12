@@ -34,6 +34,19 @@ typedef struct vrtxmb {
 
     char **mboxp;
 
+    /* We don't store the pending message into *mboxp directly, but
+       rather into a separate field which is always accessible from
+       kernel space, so that posting a new value could be done for
+       user-space originated mailboxes too regardless of the current
+       context. This means that peeking at the mailbox value without
+       using the VRTX services won't work, but nothing says it should
+       anyway, except perhaps for post-mortem analysis. In the latter
+       case, the debugging code should fetch the last posted value
+       from ->msg instead of dereferencing the mailbox pointer
+       directly. */
+
+    char *msg;
+
     struct vrtxmb *hnext;
 
 } vrtxmb_t;

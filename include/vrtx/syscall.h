@@ -34,6 +34,27 @@
 #define __vrtx_unlock      8
 #define __vrtx_delay       9
 #define __vrtx_adelay      10
+#define __vrtx_stime       11
+#define __vrtx_gtime       12
+#define __vrtx_sclock      13
+#define __vrtx_gclock      14
+#define __vrtx_mcreate     15
+#define __vrtx_mdelete     16
+#define __vrtx_mpost       17
+#define __vrtx_maccept     18
+#define __vrtx_mpend       19
+#define __vrtx_minquiry    20
+#define __vrtx_qecreate    21
+#define __vrtx_qdelete     22
+#define __vrtx_qpost       23
+#define __vrtx_qbrdcst     24
+#define __vrtx_qjam        25
+#define __vrtx_qpend       26
+#define __vrtx_qaccept     27
+#define __vrtx_qinquiry    28
+#define __vrtx_post        29
+#define __vrtx_accept      30
+#define __vrtx_pend        31
 
 struct vrtx_arg_bulk {
 

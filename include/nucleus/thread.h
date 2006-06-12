@@ -37,7 +37,7 @@
 #define XNTIMEO   0x00000400	/* Woken up due to a timeout condition */
 #define XNRMID    0x00000800	/* Pending on a removed resource */
 #define XNBREAK   0x00001000	/* Forcibly awaken from a wait state */
-#define XNKICKED  0x00002000	/* Kicked upon signal (shadow only) */
+#define XNKICKED  0x00002000	/* Kicked upon Linux signal (shadow only) */
 #define XNBOOST   0x00004000	/* Undergoes regular PIP boost */
 #define XNDEBUG   0x00008000	/* Hit debugger breakpoint (shadow only) */
 
@@ -138,7 +138,7 @@ typedef struct xnthread {
 
     xnticks_t pexpect;		/* Date of next periodic release point (raw ticks). */
 
-    xnsigmask_t signals;	/* Pending signals */
+    xnsigmask_t signals;	/* Pending core signals */
 
     xnticks_t rrperiod;		/* Allotted round-robin period (ticks) */
 

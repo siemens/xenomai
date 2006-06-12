@@ -2023,8 +2023,9 @@ void xnpod_deactivate_rr(void)
  * \brief Deliver pending asynchronous signals to the running thread.
  *
  * This internal routine checks for the presence of asynchronous
- * signals directed to the running thread, and attempt to start the
- * asynchronous service routine (ASR) if any.
+ * signals directed to the running thread, and attempts to start the
+ * asynchronous service routine (ASR) if any. Called with nklock
+ * locked, interrupts off.
  */
 
 void xnpod_dispatch_signals(void)
@@ -3119,7 +3120,7 @@ int xnpod_reset_timer(void)
 {
     u_long nstick;
 
-	xnpod_stop_timer();
+    xnpod_stop_timer();
 
     if (module_param_value(tick_arg) >= 0)
         /* User passed tick_arg=<count-of-ns> */
