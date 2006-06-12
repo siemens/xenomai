@@ -992,21 +992,19 @@ int pse51_assoc_create(pse51_assocq_t *q,
     pse51_assoc_t *assoc, *next;
     spl_t s;
 
+    assoc = (pse51_assoc_t *) xnmalloc(sizeof(*assoc));
+    if (!assoc)
+        return -ENOSPC;
+
     xnlock_get_irqsave(&pse51_assoc_lock, s);
 
     if (pse51_assoc_lookup_inner(q, &next, mm, uobj))
         {
         xnlock_put_irqrestore(&pse51_assoc_lock, s);
+        xnfree(assoc);
         return -EBUSY;
         }
 
-    assoc = (pse51_assoc_t *) xnmalloc(sizeof(*assoc));
-    if (!assoc)
-        {
-        xnlock_put_irqrestore(&pse51_assoc_lock, s);
-        return -ENOSPC;
-        }
-        
     assoc->mm = mm;
     assoc->uobj = uobj;
     assoc->kobj = kobj;
@@ -1063,9 +1061,10 @@ int pse51_assoc_remove(pse51_assocq_t *q,
     *kobj = assoc->kobj;
 
     removeq(q, &assoc->link);
-    xnfree(assoc);
 
     xnlock_put_irqrestore(&pse51_assoc_lock, s);
+
+    xnfree(assoc);
 
     return 0;
 }
@@ -1080,10 +1079,14 @@ void pse51_assocq_destroy(pse51_assocq_t *q, void (*destroy)(u_long kobj))
 
     while ((holder = getq(q)))
         {
+        xnlock_put_irqrestore(&pse51_assoc_lock, s);
+
         assoc = link2assoc(holder);
         if (destroy)
             destroy(assoc->kobj);
         xnfree(assoc);
+
+        xnlock_get_irqsave(&pse51_assoc_lock, s);
         }
 
     xnlock_put_irqrestore(&pse51_assoc_lock, s);
