@@ -22,8 +22,12 @@ int pse51_assoc_create(pse51_assocq_t *q,
 int pse51_assoc_lookup(pse51_assocq_t *q,
                        u_long *kobj,
                        struct mm_struct *mm,
-                       u_long uobj,
-                       int destroy);
+                       u_long uobj);
+
+int pse51_assoc_remove(pse51_assocq_t *q,
+                       u_long *kobj,
+                       struct mm_struct *mm,
+                       u_long uobj);
 
 int pse51_xnheap_get(xnheap_t **pheap, void *addr);
 

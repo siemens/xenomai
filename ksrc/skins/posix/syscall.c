@@ -1747,7 +1747,7 @@ static int __shm_open (struct task_struct *curr, struct pt_regs *regs)
         xnprintf("POSIX user-space file descriptor %d not closed,"
                  " closing now.\n", ufd);
 #endif /* CONFIG_XENO_OPT_DEBUG. */
-        pse51_assoc_lookup(&pse51_ufds, &old_kfd, curr->mm, (u_long) ufd, 1);
+        pse51_assoc_remove(&pse51_ufds, &old_kfd, curr->mm, (u_long) ufd);
         close(old_kfd);
 
         err = pse51_assoc_create(&pse51_ufds,(u_long)kfd,curr->mm,(u_long)ufd);
@@ -1789,7 +1789,7 @@ static int __shm_close (struct task_struct *curr, struct pt_regs *regs)
 
     ufd = (int) __xn_reg_arg1(regs);
 
-    err = pse51_assoc_lookup(&pse51_ufds, &kfd, curr->mm, (u_long) ufd, 1);
+    err = pse51_assoc_remove(&pse51_ufds, &kfd, curr->mm, (u_long) ufd);
 
     if (err)
         return err;
@@ -1809,7 +1809,7 @@ static int __ftruncate (struct task_struct *curr, struct pt_regs *regs)
     ufd = (int) __xn_reg_arg1(regs);
     len = (off_t) __xn_reg_arg2(regs);
 
-    err = pse51_assoc_lookup(&pse51_ufds, &kfd, curr->mm, (u_long) ufd, 0);
+    err = pse51_assoc_lookup(&pse51_ufds, &kfd, curr->mm, (u_long) ufd);
 
     if (err)
         return err;
@@ -1843,7 +1843,7 @@ static int __mmap_prologue (struct task_struct *curr, struct pt_regs *regs)
     if(!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg4(regs),sizeof(umap)))
         return -EFAULT;    
 
-    err = pse51_assoc_lookup(&pse51_ufds, &kfd, curr->mm, (u_long) ufd, 0);
+    err = pse51_assoc_lookup(&pse51_ufds, &kfd, curr->mm, (u_long) ufd);
 
     if (err)
         return err;
@@ -1910,7 +1910,7 @@ static int __mmap_epilogue (struct task_struct *curr, struct pt_regs *regs)
         xnprintf("POSIX user-space mapping 0x%08lx not unmapped,"
                  " leaking until posix skin is shut down.\n", (u_long) uaddr);
 #endif /* CONFIG_XENO_OPT_DEBUG. */
-        pse51_assoc_lookup(&pse51_umaps,&old_kaddr,curr->mm,(u_long)uaddr,1);
+        pse51_assoc_remove(&pse51_umaps,&old_kaddr,curr->mm,(u_long)uaddr);
 
         err = pse51_assoc_create(&pse51_umaps,
                                  (u_long) umap.kaddr,
@@ -1942,7 +1942,7 @@ static int __munmap_prologue (struct task_struct *curr, struct pt_regs *regs)
     if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg3(regs),sizeof(uunmap)))
         return -EFAULT;
 
-    err = pse51_assoc_lookup(&pse51_umaps, (u_long *)&kaddr, curr->mm, uaddr, 0);
+    err = pse51_assoc_lookup(&pse51_umaps, (u_long *)&kaddr, curr->mm, uaddr);
 
     if (err)
         return err;
@@ -1973,7 +1973,7 @@ static int __munmap_epilogue (struct task_struct *curr, struct pt_regs *regs)
     uaddr = (unsigned long) __xn_reg_arg1(regs);
     len = (size_t) __xn_reg_arg2(regs);
 
-    err = pse51_assoc_lookup(&pse51_umaps, (u_long *)&kaddr, curr->mm, uaddr, 1);
+    err = pse51_assoc_remove(&pse51_umaps, (u_long *)&kaddr, curr->mm, uaddr);
 
     if (err)
         return err;
