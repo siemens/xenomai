@@ -462,8 +462,10 @@ const char *all_fp [] = {
 
 void usage(FILE *fd, const char *progname)
 {
-    unsigned i;
-    
+    unsigned i, j, nr_cpus;
+
+    nr_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+
     fprintf(fd,
             "Usage:\n"
             "%s threadspec threadspec...\n"
@@ -484,19 +486,20 @@ void usage(FILE *fd, const char *progname)
             "secondary mode\n     (invalid for rtk and rtup),\n\n"
             "[0-9]* specifies the ID of the CPU where the created thread will "
             "run, 0 if\n       unspecified.\n\n"
-            "Passing no argument is equivalent to running for each cpu:\n%s",
+            "Passing no argument is equivalent to running:\n%s",
             progname, progname, progname);
 
-    for (i = 0; i < sizeof(all_fp)/sizeof(char *); i++)
-        fprintf(fd, " %s", all_fp[i]);
+    for (i = 0; i < nr_cpus; i++)
+        for (j = 0; j < sizeof(all_fp)/sizeof(char *); j++)
+            fprintf(fd, " %s%d", all_fp[j], i);
 
     fprintf(fd,
-            "\n\nPassing only the -n argument is equivalent to running for each"
-            " cpu:\n%s",
+            "\n\nPassing only the -n argument is equivalent to running:\n%s",
             progname);
 
-    for (i = 0; i < sizeof(all_nofp)/sizeof(char *); i++)
-        fprintf(fd, " %s", all_fp[i]);
+    for (i = 0; i < nr_cpus; i++)
+        for (j = 0; j < sizeof(all_nofp)/sizeof(char *); j++)
+            fprintf(fd, " %s%d", all_nofp[j], i);
     fprintf(fd, "\n\n");
 }
 
