@@ -1,3 +1,10 @@
+2006-06-12  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/nucleus/shadow.c: Add a syscall table for nucleus syscalls,
+	and register it with xnshadow_register_interface. Remove treatment
+	of nucleus syscalls as exceptions in do_hisyscall_event and
+	do_losyscall_event.
+
 2006-06-09  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pipe.c (xnpipe_ioctl): Provide for
