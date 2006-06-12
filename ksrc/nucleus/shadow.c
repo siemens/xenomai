@@ -101,6 +101,8 @@ static struct task_struct *switch_lock_owner[XNARCH_NR_CPUS];
 static xnqueue_t *xnshadow_ppd_hash;
 #define XNSHADOW_PPD_HASH_SIZE 13
 
+static int xnshadow_nucleus_muxid = -1;
+
 void xnpod_declare_iface_proc(struct xnskentry *iface);
 
 void xnpod_discard_iface_proc(struct xnskentry *iface);
@@ -720,79 +722,6 @@ void xnshadow_relax(int notify)
     xnltt_log_event(xeno_ev_secondary, current->comm);
 }
 
-#define completion_value_ok ((1UL << (BITS_PER_LONG-1))-1)
-
-void xnshadow_signal_completion(xncompletion_t __user * u_completion, int err)
-{
-    struct task_struct *p;
-    pid_t pid;
-    spl_t s;
-
-    /* We should not be able to signal completion to any stale
-       waiter. */
-
-    xnlock_get_irqsave(&nklock, s);
-
-    __xn_get_user(current, pid, &u_completion->pid);
-    /* Poor man's semaphore V. */
-    __xn_put_user(current, err ? : completion_value_ok,
-                  &u_completion->syncflag);
-
-    if (pid == -1) {
-        /* The waiter did not enter xnshadow_wait_completion() yet:
-           just raise the flag and exit. */
-        xnlock_put_irqrestore(&nklock, s);
-        return;
-    }
-
-    xnlock_put_irqrestore(&nklock, s);
-
-    read_lock(&tasklist_lock);
-
-    p = find_task_by_pid(pid);
-
-    if (p)
-        wake_up_process(p);
-
-    read_unlock(&tasklist_lock);
-}
-
-static int xnshadow_wait_completion(xncompletion_t __user * u_completion)
-{
-    long syncflag;
-    spl_t s;
-
-    /* The completion block is always part of the waiter's address
-       space. */
-
-    for (;;) {                  /* Poor man's semaphore P. */
-        xnlock_get_irqsave(&nklock, s);
-
-        __xn_get_user(current, syncflag, &u_completion->syncflag);
-
-        if (syncflag)
-            break;
-
-        __xn_put_user(current, current->pid, &u_completion->pid);
-
-        set_current_state(TASK_INTERRUPTIBLE);
-
-        xnlock_put_irqrestore(&nklock, s);
-
-        schedule();
-
-        if (signal_pending(current)) {
-            __xn_put_user(current, -1, &u_completion->pid);
-            syncflag = -ERESTARTSYS;
-            break;
-        }
-    }
-
-    xnlock_put_irqrestore(&nklock, s);
-
-    return syncflag == completion_value_ok ? 0 : (int)syncflag;
-}
-
 void xnshadow_exit(void)
 {
     rthal_reenter_root(get_switch_lock_owner(),
@@ -1040,6 +969,29 @@ void xnshadow_suspend(xnthread_t *thread)
     schedule_linux_call(LO_SIGTHR_REQ, p, SIGCHLD);
 }
 
+static int xnshadow_sys_migrate(struct task_struct *curr, struct pt_regs *regs)
+{
+    if (rthal_current_domain == rthal_root_domain)
+        if (__xn_reg_arg1(regs) == XENOMAI_XENO_DOMAIN) {
+            if (!xnshadow_thread(curr))
+                return -EPERM;
+
+            return xnshadow_harden() ?: 1;
+        } else
+            return 0;
+    else /* rthal_current_domain != rthal_root_domain */
+        if (__xn_reg_arg1(regs) == XENOMAI_LINUX_DOMAIN) {
+            xnshadow_relax(0);
+            return 1;
+        } else
+            return 0;
+}
+
+static int xnshadow_sys_arch(struct task_struct *curr, struct pt_regs *regs)
+{
+    return xnarch_local_syscall(regs);
+}
+
 static void stringify_feature_set(u_long fset, char *buf, int size)
 {
     unsigned long feature;
@@ -1059,10 +1011,12 @@ static void stringify_feature_set(u_long fset, char *buf, int size)
     }
 }
 
-static int bind_to_interface(struct task_struct *curr,
-                             unsigned magic,
-                             u_long featdep, u_long abirev, u_long infarg)
+static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 {
+    unsigned magic = __xn_reg_arg1(regs);
+    u_long featdep = __xn_reg_arg2(regs);
+    u_long abirev = __xn_reg_arg3(regs);
+    u_long infarg = __xn_reg_arg4(regs);
     xnshadow_ppd_t *ppd = NULL;
     xnfeatinfo_t finfo;
     u_long featmis;
@@ -1168,14 +1122,15 @@ static int bind_to_interface(struct task_struct *curr,
         return -ENOSYS;
     }
 
-    return ++muxid;
+    return muxid;
 }
 
-static int get_system_info(struct task_struct *curr, int muxid, /* unused */
-                           u_long infarg)
+static int xnshadow_sys_info(struct task_struct *curr, struct pt_regs *regs)
 {
+    /* UNUSED int muxid = __xn_reg_arg1(regs); */
+    u_long infarg = __xn_reg_arg2(regs);
     xnsysinfo_t info;
-
+        
     if (!__xn_access_ok(curr, VERIFY_WRITE, infarg, sizeof(info)))
         return -EFAULT;
 
@@ -1186,74 +1141,101 @@ static int get_system_info(struct task_struct *curr, int muxid, /* unused */
     return 0;
 }
 
+#define completion_value_ok ((1UL << (BITS_PER_LONG-1))-1)
+
+void xnshadow_signal_completion(xncompletion_t __user * u_completion, int err)
+{
+    struct task_struct *p;
+    pid_t pid;
+    spl_t s;
+
+    /* We should not be able to signal completion to any stale
+       waiter. */
+
+    xnlock_get_irqsave(&nklock, s);
+
+    __xn_get_user(current, pid, &u_completion->pid);
+    /* Poor man's semaphore V. */
+    __xn_put_user(current, err ? : completion_value_ok,
+                  &u_completion->syncflag);
+
+    if (pid == -1) {
+        /* The waiter did not enter xnshadow_wait_completion() yet:
+           just raise the flag and exit. */
+        xnlock_put_irqrestore(&nklock, s);
+        return;
+    }
+
+    xnlock_put_irqrestore(&nklock, s);
+
+    read_lock(&tasklist_lock);
+
+    p = find_task_by_pid(pid);
+
+    if (p)
+        wake_up_process(p);
+
+    read_unlock(&tasklist_lock);
+}
+
+static int xnshadow_sys_completion(struct task_struct *curr,
+                                   struct pt_regs *regs)
+{
+    xncompletion_t __user * u_completion =
+        (xncompletion_t __user*) __xn_reg_arg1(regs);
+    long syncflag;
+    spl_t s;
+
+    /* The completion block is always part of the waiter's address
+       space. */
+
+    for (;;) {                  /* Poor man's semaphore P. */
+        xnlock_get_irqsave(&nklock, s);
+
+        __xn_get_user(current, syncflag, &u_completion->syncflag);
+
+        if (syncflag)
+            break;
+
+        __xn_put_user(current, current->pid, &u_completion->pid);
+
+        set_current_state(TASK_INTERRUPTIBLE);
+
+        xnlock_put_irqrestore(&nklock, s);
+
+        schedule();
+
+        if (signal_pending(current)) {
+            __xn_put_user(current, -1, &u_completion->pid);
+            syncflag = -ERESTARTSYS;
+            break;
+        }
+    }
+
+    xnlock_put_irqrestore(&nklock, s);
+
+    return syncflag == completion_value_ok ? 0 : (int)syncflag;
+}
+
+static int xnshadow_sys_barrier(struct task_struct *curr, struct pt_regs *regs)
+{
+    return xnshadow_wait_barrier(regs);
+}
+
+static xnsysent_t xnshadow_systab [] = {
+    [ __xn_sys_migrate ] = { &xnshadow_sys_migrate, __xn_exec_current },
+    [ __xn_sys_arch ] = { &xnshadow_sys_arch, __xn_exec_any },
+    [ __xn_sys_bind ] = { &xnshadow_sys_bind, __xn_exec_lostage },
+    [ __xn_sys_info ] = { &xnshadow_sys_info, __xn_exec_lostage },
+    [ __xn_sys_completion ] = { &xnshadow_sys_completion, __xn_exec_lostage },
+    [ __xn_sys_barrier ] = { &xnshadow_sys_barrier, __xn_exec_lostage },
+};
+
 static inline int substitute_linux_syscall(struct task_struct *curr,
                                            struct pt_regs *regs)
 {
     /* No real-time replacement for now -- let Linux handle this call. */
     return 0;
-}
-
-static void exec_nucleus_syscall(int muxop, struct pt_regs *regs)
-{
-    int err;
-
-    /* Called on behalf of the root thread. */
-
-    switch (muxop) {
-        case __xn_sys_completion:
-
-            __xn_status_return(regs,
-                               xnshadow_wait_completion((xncompletion_t __user
-                                                         *)
-                                                        __xn_reg_arg1(regs)));
-            break;
-
-        case __xn_sys_migrate:
-
-            if ((err = xnshadow_harden()) != 0)
-                __xn_error_return(regs, err);
-            else
-                __xn_success_return(regs, 1);
-
-            break;
-
-        case __xn_sys_barrier:
-
-            __xn_status_return(regs, xnshadow_wait_barrier(regs));
-            break;
-
-        case __xn_sys_bind:
-
-            __xn_status_return(regs,
-                               bind_to_interface(current,
-                                                 __xn_reg_arg1(regs),
-                                                 __xn_reg_arg2(regs),
-                                                 __xn_reg_arg3(regs),
-                                                 __xn_reg_arg4(regs)));
-            break;
-
-        case __xn_sys_info:
-
-            __xn_status_return(regs,
-                               get_system_info(current,
-                                               __xn_reg_arg1(regs),
-                                               __xn_reg_arg2(regs)));
-            break;
-
-        case __xn_sys_arch:
-
-            /* A special syscall channel, available for implementing
-               arch-dependent system calls (see asm-<arch>/system.h
-               for local implementations). */
-
-            __xn_status_return(regs, xnarch_local_syscall(regs));
-            break;
-
-        default:
-
-            printk(KERN_WARNING "Xenomai: Unknown nucleus syscall #%d\n",
-                   muxop);
-    }
 }
 
 void xnshadow_send_sig(xnthread_t *thread, int sig, int specific)
@@ -1294,90 +1276,13 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 
     xnltt_log_event(xeno_ev_syscall, thread->name, muxid, muxop);
 
-    if (muxid != 0)
-        goto skin_syscall;
-
-    /* Nucleus internal syscall. */
-
-    switch (muxop) {
-        case __xn_sys_migrate:
-
-            if (__xn_reg_arg1(regs) == XENOMAI_XENO_DOMAIN) {   /* Linux => Xenomai */
-                if (!thread)    /* Not a shadow -- cannot migrate to Xenomai. */
-                    __xn_error_return(regs, -EPERM);
-                else if (!xnthread_test_flags(thread, XNRELAX))
-                    __xn_success_return(regs, 0);
-                else
-                    /* Migration to Xenomai from the Linux domain
-                       must be done from the latter: propagate
-                       the request to the Linux-level handler. */
-                    return RTHAL_EVENT_PROPAGATE;
-            } else if (__xn_reg_arg1(regs) == XENOMAI_LINUX_DOMAIN) {   /* Xenomai => Linux */
-                if (!thread || xnthread_test_flags(thread, XNRELAX))
-                    __xn_success_return(regs, 0);
-                else {
-                    __xn_success_return(regs, 1);
-                    xnshadow_relax(0);  /* Don't notify upon explicit migration. */
-                }
-            } else
-                __xn_error_return(regs, -EINVAL);
-
-            goto nucleus_syscall_done;
-
-        case __xn_sys_arch:
-
-            /* We don't want to switch mode here. */
-            __xn_status_return(regs, xnarch_local_syscall(regs));
-            goto nucleus_syscall_done;
-
-        case __xn_sys_bind:
-        case __xn_sys_info:
-        case __xn_sys_completion:
-        case __xn_sys_barrier:
-
-            /* If called from Xenomai, switch to secondary mode then run
-             * the internal syscall afterwards. If called from Linux,
-             * propagate the event so that linux_sysentry() will catch
-             * it and run the syscall from there. We need to play this
-             * trick here and at a few other locations because Adeos
-             * will propagate events down the pipeline up to (and
-             * including) the calling domain itself, so if Xenomai is
-             * the original caller, there is no way Linux can receive
-             * the syscall from propagation because Adeos won't cross
-             * the boundary delimited by the calling Xenomai stage for
-             * this particular syscall instance. If the latter is
-             * still unclear in your mind, have a look at the
-             * ipipe/adeos_catch_event() documentation and get back to
-             * this later. */
-
-            if (domid == RTHAL_DOMAIN_ID) {
-                xnshadow_relax(1);
-                exec_nucleus_syscall(muxop, regs);
-
-              nucleus_syscall_done:
-                if (xnpod_shadow_p() && signal_pending(p))
-                    request_syscall_restart(thread, regs);
-
-                return RTHAL_EVENT_STOP;
-            }
-
-            /* Delegate the syscall handling to the Linux domain. */
-            return RTHAL_EVENT_PROPAGATE;
-
-        default:
-
-          bad_syscall:
-            __xn_error_return(regs, -ENOSYS);
-            return RTHAL_EVENT_STOP;
+    if (muxid < 0 || muxid > XENOMAI_MUX_NR ||
+        muxop < 0 || muxop >= muxtable[muxid].nrcalls) {
+        __xn_error_return(regs, -ENOSYS);
+        return RTHAL_EVENT_STOP;
     }
 
-  skin_syscall:
-
-    if (muxid < 0 || muxid > XENOMAI_MUX_NR ||
-        muxop < 0 || muxop >= muxtable[muxid - 1].nrcalls)
-        goto bad_syscall;
-
-    sysflags = muxtable[muxid - 1].systab[muxop].flags;
+    sysflags = muxtable[muxid].systab[muxop].flags;
 
     if ((sysflags & __xn_exec_shadow) != 0 && !thread) {
         __xn_error_return(regs, -EPERM);
@@ -1435,7 +1340,7 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
            immediately. */
     }
 
-    err = muxtable[muxid - 1].systab[muxop].svc(p, regs);
+    err = muxtable[muxid].systab[muxop].svc(p, regs);
 
     if (err == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
         if (switched) {
@@ -1547,21 +1452,9 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
                     nkpod ? xnpod_current_thread()->name : "<system>",
                     muxid, muxop);
 
-    if (muxid == 0) {
-        /* These are special built-in services which must run on
-           behalf of the Linux domain (over which we are currently
-           running). */
-        exec_nucleus_syscall(muxop, regs);
-
-        if (nkpod && xnpod_shadow_p() && signal_pending(current))
-            request_syscall_restart(thread, regs);
-
-        return RTHAL_EVENT_STOP;
-    }
-
     /* Processing a real-time skin syscall. */
 
-    sysflags = muxtable[muxid - 1].systab[muxop].flags;
+    sysflags = muxtable[muxid].systab[muxop].flags;
 
     if ((sysflags & __xn_exec_conforming) != 0)
         sysflags |= (thread ? __xn_exec_histage : __xn_exec_lostage);
@@ -1582,7 +1475,7 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
     } else                      /* We want to run the syscall in the Linux domain.  */
         switched = 0;
 
-    err = muxtable[muxid - 1].systab[muxop].svc(current, regs);
+    err = muxtable[muxid].systab[muxop].svc(current, regs);
 
     if (err == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
         if (switched) {
@@ -1880,7 +1773,7 @@ int xnshadow_register_interface(const char *name,
             xnpod_declare_iface_proc(muxtable + muxid);
 #endif /* CONFIG_PROC_FS */
 
-            return muxid + 1;
+            return muxid;
         }
     }
 
@@ -1900,7 +1793,7 @@ int xnshadow_unregister_interface(int muxid)
     int err = 0;
     spl_t s;
 
-    if (--muxid < 0 || muxid >= XENOMAI_MUX_NR)
+    if (muxid < 0 || muxid >= XENOMAI_MUX_NR)
         return -EINVAL;
 
     xnlock_get_irqsave(&nklock, s);
@@ -1940,7 +1833,7 @@ int xnshadow_unregister_interface(int muxid)
 xnshadow_ppd_t *xnshadow_ppd_get(unsigned muxid)
 {
     if (xnpod_userspace_p())
-        return xnshadow_ppd_lookup(muxid - 1, current->mm);
+        return xnshadow_ppd_lookup(muxid, current->mm);
 
     return NULL;
 }
@@ -1968,6 +1861,8 @@ int xnshadow_mount(void)
     unsigned i, size;
     int cpu;
 
+    xnshadow_nucleus_muxid = -1;
+    
 #ifdef CONFIG_XENO_OPT_ISHIELD
     if (rthal_register_domain(&irq_shield,
                               "IShield",
@@ -2014,6 +1909,24 @@ int xnshadow_mount(void)
     for (i = 0; i < XNSHADOW_PPD_HASH_SIZE; i++)
         initq(&xnshadow_ppd_hash[i]);
 
+    xnshadow_nucleus_muxid =
+        xnshadow_register_interface("xenomai",
+                                    0x58454E4F,
+                                    sizeof(xnshadow_systab)/sizeof(xnsysent_t),
+                                    xnshadow_systab,
+                                    NULL);
+
+    if (xnshadow_nucleus_muxid != 0) {
+        if (xnshadow_nucleus_muxid > 0) {
+            printk(KERN_WARNING "Xenomai: got non null id when registering "
+                   "nucleus syscalls table.\n");
+        } else
+            printk(KERN_WARNING "Xenomai: cannot register nucleus syscalls.\n");
+            
+        xnshadow_cleanup();
+        return -ENOMEM;
+    }
+
     return 0;
 }
 
@@ -2021,9 +1934,14 @@ void xnshadow_cleanup(void)
 {
     int cpu;
 
+    if (xnshadow_nucleus_muxid >= 0)
+        xnshadow_unregister_interface(xnshadow_nucleus_muxid);
+    xnshadow_nucleus_muxid = -1;
+
     if (xnshadow_ppd_hash)
         xnarch_sysfree(xnshadow_ppd_hash,
                        sizeof(xnqueue_t) * XNSHADOW_PPD_HASH_SIZE);
+    xnshadow_ppd_hash = NULL;
 
     rthal_catch_losyscall(NULL);
     rthal_catch_hisyscall(NULL);
