@@ -22,8 +22,8 @@ satch_rt.o: CPPFLAGS=-DCONSUMER
 
 # To use this makefile with xeno-config not located in PATH, type :
 # make XENO_CONFIG=/path/to/xeno-config
-XENO_CONFIG=xeno-config
-prefix := $(shell $(XENO_CONFIG) --prefix)
+XENO_CONFIG=$(DESTDIR)/usr/xenomai/bin/xeno-config
+prefix := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --prefix)
 
 ifeq ($(prefix),)
 $(error Please add <xenomai-install-path>/bin to your PATH variable or type: \
@@ -32,8 +32,8 @@ endif
 
 CC:= $(shell $(XENO_CONFIG) --cc)
 
-CFLAGS_RT:= $(shell $(XENO_CONFIG) --posix-cflags) -g
-LDFLAGS_RT:= $(shell $(XENO_CONFIG) --posix-ldflags)
+CFLAGS_RT:= $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --posix-cflags) -g
+LDFLAGS_RT:= $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --posix-ldflags)
 
 all: $(bin_PROGRAMS) $(lib_LIBRARIES)
 
