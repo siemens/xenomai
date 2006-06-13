@@ -1919,9 +1919,9 @@ int xnshadow_mount(void)
     if (xnshadow_nucleus_muxid != 0) {
         if (xnshadow_nucleus_muxid > 0) {
             printk(KERN_WARNING "Xenomai: got non null id when registering "
-                   "nucleus syscalls table.\n");
+                   "nucleus syscall table.\n");
         } else
-            printk(KERN_WARNING "Xenomai: cannot register nucleus syscalls.\n");
+            printk(KERN_WARNING "Xenomai: cannot register nucleus syscall table.\n");
             
         xnshadow_cleanup();
         return -ENOMEM;
@@ -1936,6 +1936,7 @@ void xnshadow_cleanup(void)
 
     if (xnshadow_nucleus_muxid >= 0)
         xnshadow_unregister_interface(xnshadow_nucleus_muxid);
+
     xnshadow_nucleus_muxid = -1;
 
     if (xnshadow_ppd_hash)
