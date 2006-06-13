@@ -55,6 +55,12 @@
 #define __vrtx_post        29
 #define __vrtx_accept      30
 #define __vrtx_pend        31
+#define __vrtx_fcreate     32
+#define __vrtx_fdelete     33
+#define __vrtx_fpost       34
+#define __vrtx_fpend       35
+#define __vrtx_fclear      36
+#define __vrtx_finquiry    37
 
 struct vrtx_arg_bulk {
 

@@ -207,18 +207,18 @@ void sc_fpost(int fid,
 	      int mask,
 	      int *errp);
 
+int sc_fpend(int fid,
+	     long timeout,
+	     int mask,
+	     int opt,
+	     int *errp);
+
 int sc_fclear(int fid,
 	      int mask,
 	      int *errp);
 
 int sc_finquiry(int fid,
 		int *errp);
-
-int sc_fpend(int fid,
-	     long timeout,
-	     int mask,
-	     int opt,
-	     int *errp);
 
 int sc_screate(unsigned initval,
 	       int opt,
