@@ -1162,15 +1162,27 @@ int mq_notify (mqd_t fd, const struct sigevent *evp)
     return -1;
 }
 
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+pse51_assocq_t pse51_uqds;
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
 int pse51_mq_pkg_init (void)
 {
     initq(&pse51_mqq);
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    pse51_assocq_init(&pse51_uqds);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
     return 0;
 }
 
 void pse51_mq_pkg_cleanup (void)
 {
     xnholder_t *holder;
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    pse51_assocq_destroy(&pse51_uqds, NULL);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
     while ((holder = getheadq(&pse51_mqq)))
         {

@@ -31,74 +31,6 @@ struct {
 
 #define PSE51_NODE_PARTIAL_INIT 1
 
-int pse51_reg_pkg_init (unsigned buckets_count, unsigned maxfds)
-{
-    size_t size, mapsize;
-    char *chunk;
-    unsigned i;
-
-    mapsize = maxfds / BITS_PER_LONG;
-    if(maxfds % BITS_PER_LONG) ++mapsize;
-
-    size = sizeof(pse51_node_t) * buckets_count +
-        sizeof(pse51_desc_t) * maxfds +
-        sizeof(long) * mapsize;
-
-    chunk = (char *) xnmalloc(size);
-    if(!chunk)
-        return ENOMEM;
-
-    pse51_reg.node_buckets = (pse51_node_t **) chunk;
-    pse51_reg.buckets_count = buckets_count;
-    for(i = 0; i < buckets_count; i++)
-        pse51_reg.node_buckets[i] = NULL;
-
-    chunk += sizeof(pse51_node_t) * buckets_count;
-    pse51_reg.descs = (pse51_desc_t **) chunk;
-    for(i = 0; i < maxfds; i++)
-        pse51_reg.descs[i] = NULL;
-
-    chunk += sizeof(pse51_desc_t) * maxfds;
-    pse51_reg.fdsmap = (unsigned long *) chunk;
-    pse51_reg.maxfds = maxfds;
-    pse51_reg.mapsz = mapsize;
-
-    /* Initialize fds map. Bit set means "descriptor free". */
-    for(i = 0; i < maxfds / BITS_PER_LONG; i++)
-        pse51_reg.fdsmap[i] = ~0;
-    if(maxfds % BITS_PER_LONG)
-        pse51_reg.fdsmap[mapsize-1] = (1 << (maxfds % BITS_PER_LONG)) - 1;
-
-    return 0;
-}
-
-void pse51_reg_pkg_cleanup (void)
-{
-    unsigned i;
-    for(i = 0; i < pse51_reg.maxfds; i++)
-        if(pse51_reg.descs[i])
-            {
-#ifdef CONFIG_XENO_OPT_DEBUG
-            xnprintf("Posix descriptor %d was not destroyed, destroying now.\n",
-                     i);
-#endif /* CONFIG_XENO_OPT_DEBUG */
-            pse51_desc_destroy(pse51_reg.descs[i]);
-            }
-
-#ifdef CONFIG_XENO_OPT_DEBUG
-    for (i = 0; i < pse51_reg.buckets_count; i++)
-        {
-        pse51_node_t *node;
-        for (node = pse51_reg.node_buckets[i]; node; node = node->next)
-            xnprintf("POSIX node \"%s\" left aside.\n",
-                     node->name);
-        }
-#endif /* CONFIG_XENO_OPT_DEBUG */
-
-    xnfree(pse51_reg.node_buckets);
-}
-
-
 static unsigned pse51_reg_crunch (const char *key)
 {
     unsigned h = 0, g;
@@ -401,4 +333,248 @@ int pse51_desc_get(pse51_desc_t **descp, int fd, unsigned magic)
 
     *descp = desc;
     return 0;
+}
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+typedef struct {
+    unsigned long uobj;
+    struct mm_struct *mm;
+    unsigned long kobj;
+
+    xnholder_t link;
+#define link2assoc(laddr) \
+    (pse51_assoc_t *) ((char *)(laddr) - offsetof(pse51_assoc_t, link))
+
+} pse51_assoc_t;
+
+#ifdef CONFIG_SMP
+static xnlock_t pse51_assoc_lock;
+#endif /* CONIG_SMP */
+
+static int pse51_assoc_lookup_inner(pse51_assocq_t *q,
+                                    pse51_assoc_t **passoc,
+                                    struct mm_struct *mm,
+                                    u_long uobj)
+{
+    pse51_assoc_t *assoc;
+    xnholder_t *holder;
+    spl_t s;
+
+    xnlock_get_irqsave(&pse51_assoc_lock, s);
+
+    holder = getheadq(q);
+
+    if (!holder)
+        {
+        /* empty list. */
+        xnlock_put_irqrestore(&pse51_assoc_lock, s);
+        *passoc = NULL;
+        return 0;
+        }
+
+    do 
+        {
+        assoc = link2assoc(holder);
+        holder = nextq(q, holder);
+        }
+    while (holder && (assoc->uobj < uobj ||
+                      (assoc->uobj == uobj && assoc->mm < mm)));
+
+    if (assoc->mm == mm && assoc->uobj == uobj)
+        {
+        /* found */
+        *passoc = assoc;
+        xnlock_put_irqrestore(&pse51_assoc_lock, s);
+        return 1;
+        }
+
+    /* not found. */
+    if (assoc->uobj < uobj || (assoc->uobj == uobj && assoc->mm < mm))
+        *passoc = holder ? link2assoc(holder) : NULL;
+    else
+        *passoc = assoc;
+
+    xnlock_put_irqrestore(&pse51_assoc_lock, s);
+
+    return 0;
+}
+
+int pse51_assoc_create(pse51_assocq_t *q,
+                       u_long kobj,
+                       struct mm_struct *mm,
+                       u_long uobj)
+{
+    pse51_assoc_t *assoc, *next;
+    spl_t s;
+
+    assoc = (pse51_assoc_t *) xnmalloc(sizeof(*assoc));
+    if (!assoc)
+        return -ENOSPC;
+
+    xnlock_get_irqsave(&pse51_assoc_lock, s);
+
+    if (pse51_assoc_lookup_inner(q, &next, mm, uobj))
+        {
+        xnlock_put_irqrestore(&pse51_assoc_lock, s);
+        xnfree(assoc);
+        return -EBUSY;
+        }
+
+    assoc->mm = mm;
+    assoc->uobj = uobj;
+    assoc->kobj = kobj;
+    inith(&assoc->link);
+    if (next)
+        insertq(q, &next->link, &assoc->link);
+    else
+        appendq(q, &assoc->link);
+
+    xnlock_put_irqrestore(&pse51_assoc_lock, s);
+
+    return 0;
+}
+
+int pse51_assoc_lookup(pse51_assocq_t *q,
+                       u_long *kobj,
+                       struct mm_struct *mm,
+                       u_long uobj)
+{
+    pse51_assoc_t *assoc;
+    spl_t s;
+
+    xnlock_get_irqsave(&pse51_assoc_lock, s);
+
+    if (!pse51_assoc_lookup_inner(q, &assoc, mm, uobj))
+        {
+        xnlock_put_irqrestore(&pse51_assoc_lock, s);
+        return -EBADF;
+        }
+
+    *kobj = assoc->kobj;
+
+    xnlock_put_irqrestore(&pse51_assoc_lock, s);
+
+    return 0;
+}
+
+int pse51_assoc_remove(pse51_assocq_t *q,
+                       u_long *kobj,
+                       struct mm_struct *mm,
+                       u_long uobj)
+{
+    pse51_assoc_t *assoc;
+    spl_t s;
+
+    xnlock_get_irqsave(&pse51_assoc_lock, s);
+
+    if (!pse51_assoc_lookup_inner(q, &assoc, mm, uobj))
+        {
+        xnlock_put_irqrestore(&pse51_assoc_lock, s);
+        return -EBADF;
+        }
+
+    *kobj = assoc->kobj;
+
+    removeq(q, &assoc->link);
+
+    xnlock_put_irqrestore(&pse51_assoc_lock, s);
+
+    xnfree(assoc);
+
+    return 0;
+}
+
+void pse51_assocq_destroy(pse51_assocq_t *q, void (*destroy)(u_long kobj))
+{
+    pse51_assoc_t *assoc;
+    xnholder_t *holder;
+    spl_t s;
+
+    xnlock_get_irqsave(&pse51_assoc_lock, s);
+
+    while ((holder = getq(q)))
+        {
+        xnlock_put_irqrestore(&pse51_assoc_lock, s);
+
+        assoc = link2assoc(holder);
+        if (destroy)
+            destroy(assoc->kobj);
+        xnfree(assoc);
+
+        xnlock_get_irqsave(&pse51_assoc_lock, s);
+        }
+
+    xnlock_put_irqrestore(&pse51_assoc_lock, s);
+}
+
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */    
+
+int pse51_reg_pkg_init (unsigned buckets_count, unsigned maxfds)
+{
+    size_t size, mapsize;
+    char *chunk;
+    unsigned i;
+
+    mapsize = maxfds / BITS_PER_LONG;
+    if(maxfds % BITS_PER_LONG) ++mapsize;
+
+    size = sizeof(pse51_node_t) * buckets_count +
+        sizeof(pse51_desc_t) * maxfds +
+        sizeof(long) * mapsize;
+
+    chunk = (char *) xnmalloc(size);
+    if(!chunk)
+        return ENOMEM;
+
+    pse51_reg.node_buckets = (pse51_node_t **) chunk;
+    pse51_reg.buckets_count = buckets_count;
+    for(i = 0; i < buckets_count; i++)
+        pse51_reg.node_buckets[i] = NULL;
+
+    chunk += sizeof(pse51_node_t) * buckets_count;
+    pse51_reg.descs = (pse51_desc_t **) chunk;
+    for(i = 0; i < maxfds; i++)
+        pse51_reg.descs[i] = NULL;
+
+    chunk += sizeof(pse51_desc_t) * maxfds;
+    pse51_reg.fdsmap = (unsigned long *) chunk;
+    pse51_reg.maxfds = maxfds;
+    pse51_reg.mapsz = mapsize;
+
+    /* Initialize fds map. Bit set means "descriptor free". */
+    for(i = 0; i < maxfds / BITS_PER_LONG; i++)
+        pse51_reg.fdsmap[i] = ~0;
+    if(maxfds % BITS_PER_LONG)
+        pse51_reg.fdsmap[mapsize-1] = (1 << (maxfds % BITS_PER_LONG)) - 1;
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    xnlock_init(&pse51_assoc_lock);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+    return 0;
+}
+
+void pse51_reg_pkg_cleanup (void)
+{
+    unsigned i;
+    for(i = 0; i < pse51_reg.maxfds; i++)
+        if(pse51_reg.descs[i])
+            {
+#ifdef CONFIG_XENO_OPT_DEBUG
+            xnprintf("Posix descriptor %d was not destroyed, destroying now.\n",
+                     i);
+#endif /* CONFIG_XENO_OPT_DEBUG */
+            pse51_desc_destroy(pse51_reg.descs[i]);
+            }
+
+#ifdef CONFIG_XENO_OPT_DEBUG
+    for (i = 0; i < pse51_reg.buckets_count; i++)
+        {
+        pse51_node_t *node;
+        for (node = pse51_reg.node_buckets[i]; node; node = node->next)
+            xnprintf("POSIX node \"%s\" left aside.\n",
+                     node->name);
+        }
+#endif /* CONFIG_XENO_OPT_DEBUG */
+
+    xnfree(pse51_reg.node_buckets);
 }
