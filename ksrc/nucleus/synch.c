@@ -169,33 +169,37 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout)
     xnltt_log_event(xeno_ev_sleepon, thread->name, synch);
 
     if (testbits(synch->status, XNSYNCH_PRIO)) {
- redo:
-        owner = synch->owner;
 
-        if (owner != NULL &&
-            testbits(synch->status, XNSYNCH_PIP) &&
-            xnpod_compare_prio(thread->cprio, owner->cprio) > 0) {
+        if (testbits(synch->status, XNSYNCH_PIP)) {
+  redo:
+	    owner = synch->owner;
+	    
+            if (owner && xnpod_compare_prio(thread->cprio, owner->cprio) > 0) {
 
-            if (testbits(synch->status, XNSYNCH_PENDING)) {
-                /* Ownership is still pending, steal the resource. */
-                synch->owner = thread;
-                __clrbits(thread->status, XNRMID | XNTIMEO | XNBREAK);
-                goto grab_ownership;
-            }
+        	if (testbits(synch->status, XNSYNCH_PENDING)) {
+            	    /* Ownership is still pending, steal the resource. */
+            	    synch->owner = thread;
+            	    __clrbits(thread->status, XNRMID | XNTIMEO | XNBREAK);
+            	    goto grab_ownership;
+        	}
 
-            if (!testbits(owner->status, XNBOOST)) {
-                owner->bprio = owner->cprio;
-                __setbits(owner->status, XNBOOST);
-            }
+        	if (!testbits(owner->status, XNBOOST)) {
+            	    owner->bprio = owner->cprio;
+            	    __setbits(owner->status, XNBOOST);
+        	}
 
-            if (testbits(synch->status, XNSYNCH_CLAIMED))
-                removepq(&owner->claimq, &synch->link);
-            else
-                __setbits(synch->status, XNSYNCH_CLAIMED);
+        	if (testbits(synch->status, XNSYNCH_CLAIMED))
+            	    removepq(&owner->claimq, &synch->link);
+        	else
+            	    __setbits(synch->status, XNSYNCH_CLAIMED);
 
-            insertpqf(&synch->pendq, &thread->plink, thread->cprio);
-            insertpqf(&owner->claimq, &synch->link, thread->cprio);
-            xnsynch_renice_thread(owner, thread->cprio);
+        	insertpqf(&synch->pendq, &thread->plink, thread->cprio);
+        	insertpqf(&owner->claimq, &synch->link, thread->cprio);
+        	xnsynch_renice_thread(owner, thread->cprio);
+	    }
+	    else
+        	insertpqf(&synch->pendq, &thread->plink, thread->cprio);
+
             xnpod_suspend_thread(thread, XNPEND, timeout, synch);
 
             if (unlikely(synch->owner != thread)) {
