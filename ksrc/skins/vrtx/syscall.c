@@ -784,6 +784,107 @@ static int __sc_finquiry(struct task_struct *curr, struct pt_regs *regs)
 	return err;
 }
 
+/*
+ * int __sc_screate(unsigned initval, int opt, int *semid)
+ */
+
+static int __sc_screate(struct task_struct *curr, struct pt_regs *regs)
+{
+    int semid, opt, err;
+	unsigned initval;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(semid)))
+        return -EFAULT;
+
+	initval = __xn_reg_arg1(regs);
+	opt = __xn_reg_arg2(regs);
+    semid = sc_screate(initval,opt,&err);
+
+    if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &semid,
+						  sizeof(semid));
+    return err;
+}
+
+/*
+ * int __sc_sdelete(int semid, int opt)
+ */
+
+static int __sc_sdelete(struct task_struct *curr, struct pt_regs *regs)
+{
+    int semid, opt, err;
+
+    semid = __xn_reg_arg1(regs);
+    opt = __xn_reg_arg2(regs);
+    sc_sdelete(semid,opt,&err);
+
+	return err;
+}
+
+/*
+ * int __sc_spost(int semid)
+ */
+
+static int __sc_spost(struct task_struct *curr, struct pt_regs *regs)
+{
+    int semid, err;
+
+    semid = __xn_reg_arg1(regs);
+    sc_spost(semid,&err);
+
+	return err;
+}
+
+/*
+ * int __sc_spend(int semid, long timeout)
+ */
+
+static int __sc_spend(struct task_struct *curr, struct pt_regs *regs)
+{
+    int semid, err;
+	long timeout;
+
+    semid = __xn_reg_arg1(regs);
+    timeout = __xn_reg_arg2(regs);
+    sc_spend(semid,timeout,&err);
+
+	return err;
+}
+
+/*
+ * int __sc_saccept(int semid)
+ */
+
+static int __sc_saccept(struct task_struct *curr, struct pt_regs *regs)
+{
+    int semid, err;
+
+    semid = __xn_reg_arg1(regs);
+    sc_saccept(semid,&err);
+
+	return err;
+}
+
+/*
+ * int __sc_sinquiry(int semid, int *count_r)
+ */
+
+static int __sc_sinquiry(struct task_struct *curr, struct pt_regs *regs)
+{
+    int semid, count_r, err;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(count_r)))
+        return -EFAULT;
+
+    semid = __xn_reg_arg1(regs);
+    count_r = sc_sinquiry(semid,&err);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &count_r,
+						  sizeof(count_r));
+	return err;
+}
+
 static xnsysent_t __systab[] = {
     [__vrtx_tecreate] = {&__sc_tecreate, __xn_exec_init},
     [__vrtx_tdelete] = {&__sc_tdelete, __xn_exec_conforming},
@@ -823,6 +924,12 @@ static xnsysent_t __systab[] = {
     [__vrtx_fpend] = {&__sc_fpend, __xn_exec_primary},
     [__vrtx_fclear] = {&__sc_fclear, __xn_exec_any},
     [__vrtx_finquiry] = {&__sc_finquiry, __xn_exec_any},
+    [__vrtx_screate] = {&__sc_screate, __xn_exec_any},
+    [__vrtx_sdelete] = {&__sc_sdelete, __xn_exec_any},
+    [__vrtx_spost] = {&__sc_spost, __xn_exec_any},
+    [__vrtx_spend] = {&__sc_spend, __xn_exec_primary},
+    [__vrtx_saccept] = {&__sc_saccept, __xn_exec_any},
+    [__vrtx_sinquiry] = {&__sc_sinquiry, __xn_exec_any},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)

@@ -8,6 +8,7 @@ libvrtx_la_SOURCES = \
 	mb.c \
 	mx.c \
 	queue.c \
+	sem.c \
 	task.c \
 	time.c
 
