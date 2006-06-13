@@ -670,6 +670,120 @@ static int __sc_pend(struct task_struct *curr, struct pt_regs *regs)
 	return err;
 }
 
+/*
+ * int __sc_fcreate(int *fidp)
+ */
+
+static int __sc_fcreate(struct task_struct *curr, struct pt_regs *regs)
+{
+    int fid, err;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(fid)))
+        return -EFAULT;
+
+    fid = sc_fcreate(&err);
+
+    if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &fid,
+						  sizeof(fid));
+    return err;
+}
+
+/*
+ * int __sc_fdelete(int fid, int opt)
+ */
+
+static int __sc_fdelete(struct task_struct *curr, struct pt_regs *regs)
+{
+    int fid, opt, err;
+
+    fid = __xn_reg_arg1(regs);
+    opt = __xn_reg_arg2(regs);
+    sc_fdelete(fid,opt,&err);
+
+	return err;
+}
+
+/*
+ * int __sc_fpost(int fid, int mask)
+ */
+
+static int __sc_fpost(struct task_struct *curr, struct pt_regs *regs)
+{
+    int fid, mask, err;
+
+    fid = __xn_reg_arg1(regs);
+    mask = __xn_reg_arg2(regs);
+    sc_fpost(fid,mask,&err);
+
+	return err;
+}
+
+/*
+ * int __sc_fpend(int fid, long timeout, int mask, int opt, int *mask_r)
+ */
+
+static int __sc_fpend(struct task_struct *curr, struct pt_regs *regs)
+{
+    int fid, mask, mask_r, opt, err;
+	long timeout;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg5(regs), sizeof(mask_r)))
+        return -EFAULT;
+
+    fid = __xn_reg_arg1(regs);
+    timeout = __xn_reg_arg2(regs);
+    mask = __xn_reg_arg3(regs);
+    opt = __xn_reg_arg4(regs);
+    mask_r = sc_fpend(fid,timeout,mask,opt,&err);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg5(regs), &mask_r,
+						  sizeof(mask_r));
+	return err;
+}
+
+/*
+ * int __sc_fclear(int fid, int mask, int *mask_r)
+ */
+
+static int __sc_fclear(struct task_struct *curr, struct pt_regs *regs)
+{
+    int fid, mask, mask_r, err;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(mask_r)))
+        return -EFAULT;
+
+    fid = __xn_reg_arg1(regs);
+    mask = __xn_reg_arg2(regs);
+    mask_r = sc_fclear(fid,mask,&err);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &mask_r,
+						  sizeof(mask_r));
+	return err;
+}
+
+/*
+ * int __sc_finquiry(int fid, int *mask_r)
+ */
+
+static int __sc_finquiry(struct task_struct *curr, struct pt_regs *regs)
+{
+    int fid, mask_r, err;
+
+    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(mask_r)))
+        return -EFAULT;
+
+    fid = __xn_reg_arg1(regs);
+    mask_r = sc_finquiry(fid,&err);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &mask_r,
+						  sizeof(mask_r));
+	return err;
+}
+
 static xnsysent_t __systab[] = {
     [__vrtx_tecreate] = {&__sc_tecreate, __xn_exec_init},
     [__vrtx_tdelete] = {&__sc_tdelete, __xn_exec_conforming},
@@ -703,6 +817,12 @@ static xnsysent_t __systab[] = {
     [__vrtx_post] = {&__sc_post, __xn_exec_any},
     [__vrtx_accept] = {&__sc_accept, __xn_exec_any},
     [__vrtx_pend] = {&__sc_pend, __xn_exec_primary},
+    [__vrtx_fcreate] = {&__sc_fcreate, __xn_exec_any},
+    [__vrtx_fdelete] = {&__sc_fdelete, __xn_exec_any},
+    [__vrtx_fpost] = {&__sc_fpost, __xn_exec_any},
+    [__vrtx_fpend] = {&__sc_fpend, __xn_exec_primary},
+    [__vrtx_fclear] = {&__sc_fclear, __xn_exec_any},
+    [__vrtx_finquiry] = {&__sc_finquiry, __xn_exec_any},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)
