@@ -61,6 +61,12 @@
 #define __vrtx_fpend       35
 #define __vrtx_fclear      36
 #define __vrtx_finquiry    37
+#define __vrtx_screate     38
+#define __vrtx_sdelete     39
+#define __vrtx_spost       40
+#define __vrtx_spend       41
+#define __vrtx_saccept     42
+#define __vrtx_sinquiry    43
 
 struct vrtx_arg_bulk {
 
