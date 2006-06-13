@@ -2,6 +2,7 @@
 #define PSE51_REGISTRY_H
 
 #include <stdarg.h>
+#include <nucleus/queue.h>
 #include <nucleus/synch.h>
 #include <posix/posix.h>
 
@@ -82,5 +83,30 @@ int pse51_desc_destroy(pse51_desc_t *desc);
 #define pse51_desc_fd(desc) ((desc)->fd)
 
 #define PSE51_PERMS_MASK  (O_RDONLY | O_WRONLY | O_RDWR)
+
+
+/* Associative lists. */
+struct mm_struct;
+
+typedef xnqueue_t pse51_assocq_t;
+
+#define pse51_assocq_init(q) (initq(q))
+
+void pse51_assocq_destroy(pse51_assocq_t *q, void (*destroy)(u_long kobj));
+
+int pse51_assoc_create(pse51_assocq_t *q,
+                       u_long kobj,
+                       struct mm_struct *mm,
+                       u_long uobj);
+
+int pse51_assoc_lookup(pse51_assocq_t *q,
+                       u_long *kobj,
+                       struct mm_struct *mm,
+                       u_long uobj);
+
+int pse51_assoc_remove(pse51_assocq_t *q,
+                       u_long *kobj,
+                       struct mm_struct *mm,
+                       u_long uobj);
 
 #endif /* PSE51_REGISTRY_H */
