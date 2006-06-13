@@ -33,7 +33,7 @@ mqd_t __wrap_mq_open (const char *name,
     struct mq_attr *attr = NULL;
     mode_t mode = 0;
     va_list ap;
-    int q;
+    int q, err;
 
     if ((oflags & O_CREAT) != 0)
 	{
@@ -42,19 +42,24 @@ mqd_t __wrap_mq_open (const char *name,
 	attr = va_arg(ap, struct mq_attr *);
 	va_end(ap);
         }
-    
-    q = XENOMAI_SKINCALL4(__pse51_muxid,
-                          __pse51_mq_open,
-                          name,
-                          oflags,
-                          mode,
-                          attr);
 
-    if (q >= 0)
-	return (mqd_t) q;
+    q = __real_open("/dev/null", oflags, 0);
 
-    errno = -q;
+    if (q == -1)
+        return (mqd_t) -1;
 
+    err = -XENOMAI_SKINCALL5(__pse51_muxid,
+                             __pse51_mq_open,
+                             name,
+                             oflags,
+                             mode,
+                             attr,
+                             q);
+
+    if (!err)
+        return (mqd_t) q;
+
+    errno = err;
     return (mqd_t) -1;
 }
 
@@ -66,10 +71,9 @@ int __wrap_mq_close (mqd_t q)
 			    __pse51_mq_close,
 			    q);
     if (!err)
-	return 0;
+	return __real_close(q);
 
     errno = -err;
-
     return -1;
 }
 
@@ -84,7 +88,6 @@ int __wrap_mq_unlink (const char *name)
 	return 0;
 
     errno = -err;
-
     return -1;
 }
 
@@ -101,7 +104,6 @@ int __wrap_mq_getattr (mqd_t q,
 	return 0;
 
     errno = -err;
-
     return -1;
 }
 
@@ -120,7 +122,6 @@ int __wrap_mq_setattr (mqd_t q,
 	return 0;
 
     errno = -err;
-
     return -1;
 }
 
@@ -146,7 +147,6 @@ int __wrap_mq_send (mqd_t q,
 	return 0;
 
     errno = -err;
-
     return -1;
 }
 
@@ -174,7 +174,6 @@ int __wrap_mq_timedsend (mqd_t q,
 	return 0;
 
     errno = -err;
-
     return -1;
 }
 
@@ -201,7 +200,6 @@ ssize_t __wrap_mq_receive (mqd_t q,
 	return rlen;
 
     errno = -err;
-
     return -1;
 }
 
@@ -230,7 +228,6 @@ ssize_t __wrap_mq_timedreceive (mqd_t q,
 	return rlen;
 
     errno = -err;
-
     return -1;
 }
 
