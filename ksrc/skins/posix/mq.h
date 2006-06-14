@@ -5,7 +5,11 @@
 
 #define PSE51_MQ_FSTORE_LIMIT 64
 
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+
 extern pse51_assocq_t pse51_uqds; /* List of user-space queues descriptors. */
+
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */    
 
 int pse51_mq_pkg_init(void);
 

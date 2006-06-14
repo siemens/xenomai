@@ -921,7 +921,7 @@ int pse51_xnheap_get(xnheap_t **pheap, void *addr)
     *pheap = &shm->heapbase;
     return 0;
 }
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */    
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 int pse51_shm_pkg_init(void)
 {

@@ -85,28 +85,45 @@ int pse51_desc_destroy(pse51_desc_t *desc);
 #define PSE51_PERMS_MASK  (O_RDONLY | O_WRONLY | O_RDWR)
 
 
-/* Associative lists. */
+/* Associative lists, used for association of user-space to kernel-space
+   objects. */
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 struct mm_struct;
+
+#ifdef CONFIG_SMP
+extern xnlock_t pse51_assoc_lock;
+#endif
 
 typedef xnqueue_t pse51_assocq_t;
 
+typedef struct {
+    struct mm_struct *mm;
+    u_long uobj;
+    xnholder_t link;
+
+#define link2assoc(laddr) \
+    ((pse51_assoc_t *)((unsigned long)(laddr) - offsetof(pse51_assoc_t, link)))
+
+} pse51_assoc_t;
+
 #define pse51_assocq_init(q) (initq(q))
 
-void pse51_assocq_destroy(pse51_assocq_t *q, void (*destroy)(u_long kobj));
+#define pse51_assoc_uobj(assoc) ((assoc)->uobj)
 
-int pse51_assoc_create(pse51_assocq_t *q,
-                       u_long kobj,
+void pse51_assocq_destroy(pse51_assocq_t *q, void (*destroy)(pse51_assoc_t *));
+
+int pse51_assoc_insert(pse51_assocq_t *q,
+                       pse51_assoc_t *assoc,
                        struct mm_struct *mm,
                        u_long uobj);
 
-int pse51_assoc_lookup(pse51_assocq_t *q,
-                       u_long *kobj,
-                       struct mm_struct *mm,
-                       u_long uobj);
+pse51_assoc_t *pse51_assoc_lookup(pse51_assocq_t *q,
+                                  struct mm_struct *mm,
+                                  u_long uobj);
 
-int pse51_assoc_remove(pse51_assocq_t *q,
-                       u_long *kobj,
-                       struct mm_struct *mm,
-                       u_long uobj);
+pse51_assoc_t *pse51_assoc_remove(pse51_assocq_t *q,
+                                  struct mm_struct *mm,
+                                  u_long uobj);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */    
 
 #endif /* PSE51_REGISTRY_H */
