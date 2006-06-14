@@ -85,9 +85,6 @@ static inline void wrmsrl(unsigned long msr, unsigned long long val)
 extern int nmi_active;
 #endif /* Linux >= 2.6 */
 
-int crash = 0;
-EXPORT_SYMBOL(crash);
-
 static void rthal_touch_nmi_watchdog(void)
 {
     unsigned long long next_linux_check;
@@ -111,7 +108,7 @@ static void rthal_nmi_watchdog_tick(struct pt_regs *regs)
     rthal_nmi_wd_t *wd = &rthal_nmi_wds[cpu];
     unsigned long long now;
 
-    if (wd->armed || crash)
+    if (wd->armed)
         rthal_nmi_emergency(regs);
 
     now = rthal_rdtsc();
@@ -206,7 +203,7 @@ void rthal_nmi_arm(unsigned long delay)
         return;
 
     /* If linux watchdog could tick now, make it tick now. */
-    if (crash || (long long) (rthal_rdtsc() - wd->next_linux_check) >= 0) {
+    if ((long long) (rthal_rdtsc() - wd->next_linux_check) >= 0) {
         unsigned long flags;
 
         /* Protect from an interrupt handler calling rthal_nmi_arm. */
