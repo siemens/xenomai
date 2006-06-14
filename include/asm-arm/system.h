@@ -595,23 +595,11 @@ static inline int xnarch_init (void)
 
     xnarch_old_trap_handler = rthal_trap_catch(&xnarch_trap_fault);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-    err = xnshadow_mount();
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-
-    if (err) {
-        rthal_trap_catch(xnarch_old_trap_handler);
-        rthal_free_virq(xnarch_escalation_virq);
-    }
-
-    return err;
+    return 0;
 }
 
 static inline void xnarch_exit (void)
 {
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-    xnshadow_cleanup();
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
     rthal_trap_catch(xnarch_old_trap_handler);
     rthal_free_virq(xnarch_escalation_virq);
     rthal_exit();
