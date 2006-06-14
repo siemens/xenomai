@@ -336,20 +336,10 @@ int pse51_desc_get(pse51_desc_t **descp, int fd, unsigned magic)
 }
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-typedef struct {
-    unsigned long uobj;
-    struct mm_struct *mm;
-    unsigned long kobj;
-
-    xnholder_t link;
-#define link2assoc(laddr) \
-    (pse51_assoc_t *) ((char *)(laddr) - offsetof(pse51_assoc_t, link))
-
-} pse51_assoc_t;
 
 #ifdef CONFIG_SMP
-static xnlock_t pse51_assoc_lock;
-#endif /* CONIG_SMP */
+xnlock_t pse51_assoc_lock;
+#endif
 
 static int pse51_assoc_lookup_inner(pse51_assocq_t *q,
                                     pse51_assoc_t **passoc,
@@ -358,16 +348,12 @@ static int pse51_assoc_lookup_inner(pse51_assocq_t *q,
 {
     pse51_assoc_t *assoc;
     xnholder_t *holder;
-    spl_t s;
-
-    xnlock_get_irqsave(&pse51_assoc_lock, s);
 
     holder = getheadq(q);
 
     if (!holder)
         {
         /* empty list. */
-        xnlock_put_irqrestore(&pse51_assoc_lock, s);
         *passoc = NULL;
         return 0;
         }
@@ -384,7 +370,6 @@ static int pse51_assoc_lookup_inner(pse51_assocq_t *q,
         {
         /* found */
         *passoc = assoc;
-        xnlock_put_irqrestore(&pse51_assoc_lock, s);
         return 1;
         }
 
@@ -394,35 +379,27 @@ static int pse51_assoc_lookup_inner(pse51_assocq_t *q,
     else
         *passoc = assoc;
 
-    xnlock_put_irqrestore(&pse51_assoc_lock, s);
-
     return 0;
 }
 
-int pse51_assoc_create(pse51_assocq_t *q,
-                       u_long kobj,
+int pse51_assoc_insert(pse51_assocq_t *q,
+                       pse51_assoc_t *assoc,
                        struct mm_struct *mm,
                        u_long uobj)
 {
-    pse51_assoc_t *assoc, *next;
+    pse51_assoc_t *next;
     spl_t s;
-
-    assoc = (pse51_assoc_t *) xnmalloc(sizeof(*assoc));
-    if (!assoc)
-        return -ENOSPC;
 
     xnlock_get_irqsave(&pse51_assoc_lock, s);
 
     if (pse51_assoc_lookup_inner(q, &next, mm, uobj))
         {
         xnlock_put_irqrestore(&pse51_assoc_lock, s);
-        xnfree(assoc);
         return -EBUSY;
         }
 
     assoc->mm = mm;
     assoc->uobj = uobj;
-    assoc->kobj = kobj;
     inith(&assoc->link);
     if (next)
         insertq(q, &next->link, &assoc->link);
@@ -434,76 +411,56 @@ int pse51_assoc_create(pse51_assocq_t *q,
     return 0;
 }
 
-int pse51_assoc_lookup(pse51_assocq_t *q,
-                       u_long *kobj,
-                       struct mm_struct *mm,
-                       u_long uobj)
+pse51_assoc_t *pse51_assoc_lookup(pse51_assocq_t *q,
+                                  struct mm_struct *mm,
+                                  u_long uobj)
 {
     pse51_assoc_t *assoc;
+    unsigned found;
     spl_t s;
 
     xnlock_get_irqsave(&pse51_assoc_lock, s);
-
-    if (!pse51_assoc_lookup_inner(q, &assoc, mm, uobj))
-        {
-        xnlock_put_irqrestore(&pse51_assoc_lock, s);
-        return -EBADF;
-        }
-
-    *kobj = assoc->kobj;
-
+    found = pse51_assoc_lookup_inner(q, &assoc, mm, uobj);
     xnlock_put_irqrestore(&pse51_assoc_lock, s);
 
-    return 0;
+    return found ? assoc : NULL;
 }
 
-int pse51_assoc_remove(pse51_assocq_t *q,
-                       u_long *kobj,
-                       struct mm_struct *mm,
-                       u_long uobj)
+pse51_assoc_t *pse51_assoc_remove(pse51_assocq_t *q,
+                                  struct mm_struct *mm,
+                                  u_long uobj)
 {
     pse51_assoc_t *assoc;
     spl_t s;
 
     xnlock_get_irqsave(&pse51_assoc_lock, s);
-
     if (!pse51_assoc_lookup_inner(q, &assoc, mm, uobj))
         {
         xnlock_put_irqrestore(&pse51_assoc_lock, s);
-        return -EBADF;
+        return NULL;
         }
-
-    *kobj = assoc->kobj;
 
     removeq(q, &assoc->link);
-
     xnlock_put_irqrestore(&pse51_assoc_lock, s);
 
-    xnfree(assoc);
-
-    return 0;
+    return assoc;
 }
 
-void pse51_assocq_destroy(pse51_assocq_t *q, void (*destroy)(u_long kobj))
+void pse51_assocq_destroy(pse51_assocq_t *q, void (*destroy)(pse51_assoc_t *))
 {
     pse51_assoc_t *assoc;
     xnholder_t *holder;
     spl_t s;
 
     xnlock_get_irqsave(&pse51_assoc_lock, s);
-
     while ((holder = getq(q)))
         {
-        xnlock_put_irqrestore(&pse51_assoc_lock, s);
-
         assoc = link2assoc(holder);
+        xnlock_put_irqrestore(&pse51_assoc_lock, s);
         if (destroy)
-            destroy(assoc->kobj);
-        xnfree(assoc);
-
+            destroy(assoc);
         xnlock_get_irqsave(&pse51_assoc_lock, s);
         }
-
     xnlock_put_irqrestore(&pse51_assoc_lock, s);
 }
 

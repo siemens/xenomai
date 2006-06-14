@@ -21,6 +21,7 @@
  */
 
 #include <nucleus/jhash.h>
+#include <nucleus/ppd.h>
 #include <posix/syscall.h>
 #include <posix/posix.h>
 #include <posix/thread.h>
@@ -543,22 +544,24 @@ static int __sem_destroy (struct task_struct *curr, struct pt_regs *regs)
 
 static int __sem_open (struct task_struct *curr, struct pt_regs *regs)
 {
-    union __xeno_sem *sm, *usm;
+    union __xeno_sem *sm;
     char name[PSE51_MAXNAME];
+    pse51_assoc_t *assoc;
     unsigned long uaddr;
+    pse51_usem_t *usm;
     int oflags;
     long len;
     spl_t s;
     
-    if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg1(regs),sizeof(usm)))
+    if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg1(regs),sizeof(uaddr)))
         return -EFAULT;
 
     __xn_copy_from_user(curr,
-                        &usm,
+                        &uaddr,
                         (void __user *)__xn_reg_arg1(regs),
-                        sizeof(usm));
+                        sizeof(uaddr));
     
-    if (!__xn_access_ok(curr,VERIFY_WRITE,(void __user *)usm,sizeof(*usm)))
+    if (!__xn_access_ok(curr,VERIFY_WRITE,(void __user *)uaddr,sizeof(sem_t)))
         return -EFAULT;
 
     len = __xn_strncpy_from_user(curr,
@@ -574,7 +577,7 @@ static int __sem_open (struct task_struct *curr, struct pt_regs *regs)
 
     oflags = __xn_reg_arg3(regs);
 
-    xnlock_get_irqsave(&nklock, s);
+    xnlock_get_irqsave(&pse51_assoc_lock, s);
 
     if (!(oflags & O_CREAT))
         sm = (union __xeno_sem *) sem_open(name, oflags);
@@ -586,25 +589,50 @@ static int __sem_open (struct task_struct *curr, struct pt_regs *regs)
 
     if (sm == SEM_FAILED)
         {
-        xnlock_put_irqrestore(&nklock, s);
+        xnlock_put_irqrestore(&pse51_assoc_lock, s);
         return -thread_get_errno();
         }
 
-    uaddr = pse51_usem_open(&sm->shadow_sem, curr->mm, (unsigned long)usm);
+    assoc = pse51_assoc_lookup(&pse51_usems,curr->mm,(u_long)sm->shadow_sem.sem);
 
-    xnlock_put_irqrestore(&nklock, s);
+    if (!assoc)
+        {
+        usm = (pse51_usem_t *) xnmalloc(sizeof(*usm));
 
-    if (uaddr == (unsigned long) usm)
+        if (!usm)
+            {
+            sem_close(&sm->native_sem);
+            xnlock_put_irqrestore(&pse51_assoc_lock, s);
+            return -ENOSPC;
+            }
+
+        usm->uaddr = uaddr;
+        usm->refcnt = 1;
+
+        pse51_assoc_insert(&pse51_usems,
+                           &usm->assoc,
+                           curr->mm,
+                           (u_long) sm->shadow_sem.sem);
+        }
+    else
+        {
+        usm = assoc2usem(assoc);
+        ++usm->refcnt;
+        }
+    
+    xnlock_put_irqrestore(&pse51_assoc_lock, s);
+
+    if (usm->uaddr == uaddr)
         /* First binding by this process. */
         __xn_copy_to_user(curr,
-                          (void __user *)&usm->shadow_sem,
+                          (void __user *)usm->uaddr,
                           &sm->shadow_sem,
-                          sizeof(usm->shadow_sem));
+                          sizeof(sm->shadow_sem));
     else
         /* Semaphore already bound by this process in user-space. */
         __xn_copy_to_user(curr,
                           (void __user *)__xn_reg_arg1(regs),
-                          &uaddr,
+                          &usm->uaddr,
                           sizeof(unsigned long));
 
     return 0;
@@ -612,33 +640,41 @@ static int __sem_open (struct task_struct *curr, struct pt_regs *regs)
 
 static int __sem_close (struct task_struct *curr, struct pt_regs *regs)
 {
-    union __xeno_sem sm, *usm;
+    pse51_assoc_t *assoc;
+    union __xeno_sem sm;
+    unsigned long uaddr;
+    pse51_usem_t *usm;
     int closed, err;
     spl_t s;
     
-    usm = (union __xeno_sem *) __xn_reg_arg1(regs);
+    uaddr = (unsigned long) __xn_reg_arg1(regs);
 
-    if (!__xn_access_ok(curr,VERIFY_READ,(void __user *) usm,sizeof(*usm)))
+    if (!__xn_access_ok(curr,VERIFY_READ,(void __user *)uaddr,sizeof(sem_t)))
         return -EFAULT;
 
     __xn_copy_from_user(curr,
                         &sm.shadow_sem,
-                        (void __user*)&usm->shadow_sem,
+                        (void __user*)uaddr,
                         sizeof(sm.shadow_sem));
 
-    xnlock_get_irqsave(&nklock, s);
+    xnlock_get_irqsave(&pse51_assoc_lock, s);
 
-    closed = pse51_usem_close(&usm->shadow_sem, curr->mm);
+    assoc = pse51_assoc_lookup(&pse51_usems,curr->mm,(u_long)sm.shadow_sem.sem);
 
-    if (closed < 0)
+    if (!assoc)
         {
         xnlock_put_irqrestore(&nklock, s);
-        return closed;
+        return -EINVAL;
         }
 
+    usm = assoc2usem(assoc);
+
+    if ((closed = (--usm->refcnt == 0)))
+        pse51_assoc_remove(&pse51_usems,curr->mm,(u_long)sm.shadow_sem.sem);
+    
     err = sem_close(&sm.native_sem);
 
-    xnlock_put_irqrestore(&nklock, s);
+    xnlock_put_irqrestore(&pse51_assoc_lock, s);
 
     if (!err)
         {
@@ -1080,15 +1116,18 @@ static int __pthread_cond_broadcast (struct task_struct *curr, struct pt_regs *r
     return -pthread_cond_broadcast(&cnd.native_cond);
 }
 
+/* mq_open(name, oflags, mode, attr, ufd) */
 static int __mq_open (struct task_struct *curr, struct pt_regs *regs)
 
 {
     char name[PSE51_MAXNAME];
     struct mq_attr attr;
+    pse51_ufd_t *assoc;
+    int err, oflags;
+    mqd_t kqd, uqd;
     unsigned len;
     mode_t mode;
-    int oflags;
-    mqd_t q;
+    spl_t s;
 
     len = __xn_strncpy_from_user(curr,
                                  name,
@@ -1120,20 +1159,67 @@ static int __mq_open (struct task_struct *curr, struct pt_regs *regs)
         attr.mq_curmsgs = 0;
         }
 
-    q = mq_open(name,oflags,mode,&attr);
+    kqd = mq_open(name,oflags,mode,&attr);
 
-    return q == (mqd_t)-1 ? -thread_get_errno() : q;
+    if (kqd == -1)
+        return -thread_get_errno();
+
+    uqd = __xn_reg_arg5(regs);
+
+    assoc = (pse51_ufd_t *) xnmalloc(sizeof(*assoc));
+
+    if (!assoc)
+        {
+        mq_close(kqd);
+        return -ENOSPC;
+        }
+
+    assoc->kfd = kqd;
+
+    xnlock_get_irqsave(&pse51_assoc_lock, s);
+    err = pse51_assoc_insert(&pse51_uqds, &assoc->assoc, curr->mm, (u_long) uqd);
+
+    if (err == -EBUSY) 
+        {
+        pse51_assoc_t *old_assoc;
+#ifdef CONFIG_XENO_OPT_DEBUG
+        xnprintf("POSIX user-space queue descriptor %d not closed,"
+                 " closing now.\n", uqd);
+#endif /* CONFIG_XENO_OPT_DEBUG. */
+        old_assoc = pse51_assoc_remove(&pse51_ufds, curr->mm, (u_long) uqd);
+        mq_close(assoc2ufd(old_assoc)->kfd);
+        xnfree(assoc2ufd(old_assoc));
+
+        err = pse51_assoc_insert(&pse51_uqds,&assoc->assoc,curr->mm,(u_long)uqd);
+    }
+    xnlock_put_irqrestore(&pse51_assoc_lock, s);
+
+    if (err)
+        {
+        xnfree(assoc);
+        mq_close(kqd);
+        }
+
+    return err;
 }
 
 static int __mq_close (struct task_struct *curr, struct pt_regs *regs)
 {
-    mqd_t q;
+    pse51_assoc_t *assoc;
+    mqd_t uqd;
     int err;
     
-    q = (mqd_t) __xn_reg_arg1(regs);
-    err = mq_close(q);
+    uqd = (mqd_t) __xn_reg_arg1(regs);
 
-    return err ? -thread_get_errno() : 0;
+    assoc = pse51_assoc_remove(&pse51_uqds, curr->mm, (u_long) uqd);
+
+    if (!assoc)
+        return -EBADF;
+
+    err = mq_close(assoc2ufd(assoc)->kfd);
+    xnfree(assoc2ufd(assoc));
+
+    return !err ? 0 : -thread_get_errno();
 }
 
 static int __mq_unlink (struct task_struct *curr, struct pt_regs *regs)
@@ -1159,16 +1245,22 @@ static int __mq_unlink (struct task_struct *curr, struct pt_regs *regs)
 
 static int __mq_getattr (struct task_struct *curr, struct pt_regs *regs)
 {
+    pse51_assoc_t *assoc;
     struct mq_attr attr;
-    mqd_t q;
+    pse51_ufd_t *ufd;
     int err;
 
+    assoc = pse51_assoc_lookup(&pse51_uqds,curr->mm,(u_long)__xn_reg_arg1(regs));
+
+    if (!assoc)
+        return -EBADF;
+
+    ufd = assoc2ufd(assoc);
+    
     if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg2(regs),sizeof(attr)))
         return -EFAULT;
 
-    q = (mqd_t) __xn_reg_arg1(regs);
-
-    err = mq_getattr(q,&attr);
+    err = mq_getattr(ufd->kfd,&attr);
 
     if (err)
         return -thread_get_errno();
@@ -1183,13 +1275,19 @@ static int __mq_getattr (struct task_struct *curr, struct pt_regs *regs)
 static int __mq_setattr (struct task_struct *curr, struct pt_regs *regs)
 {
     struct mq_attr attr, oattr;
-    mqd_t q;
+    pse51_assoc_t *assoc;
+    pse51_ufd_t *ufd;
     int err;
 
+    assoc = pse51_assoc_lookup(&pse51_uqds,curr->mm,(u_long)__xn_reg_arg1(regs));
+
+    if (!assoc)
+        return -EBADF;
+
+    ufd = assoc2ufd(assoc);
+    
     if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg2(regs),sizeof(attr)))
         return -EFAULT;
-
-    q = (mqd_t) __xn_reg_arg1(regs);
 
     __xn_copy_from_user(curr,&attr,(struct mq_attr *)__xn_reg_arg2(regs),sizeof(attr));
 
@@ -1197,7 +1295,7 @@ static int __mq_setattr (struct task_struct *curr, struct pt_regs *regs)
         !__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg3(regs),sizeof(oattr)))
         return -EFAULT;
 
-    err = mq_setattr(q,&attr,&oattr);
+    err = mq_setattr(ufd->kfd,&attr,&oattr);
 
     if (err)
         return -thread_get_errno();
@@ -1213,16 +1311,23 @@ static int __mq_setattr (struct task_struct *curr, struct pt_regs *regs)
 static int __mq_send (struct task_struct *curr, struct pt_regs *regs)
 {
     char tmp_buf[PSE51_MQ_FSTORE_LIMIT];
+    pse51_assoc_t *assoc;
+    pse51_ufd_t *ufd;
     caddr_t tmp_area;
     unsigned prio;
     size_t len;
     int err;
-    mqd_t q;
 
-    q = (mqd_t) __xn_reg_arg1(regs);
     len = (size_t) __xn_reg_arg3(regs);
     prio = __xn_reg_arg4(regs);
 
+    assoc = pse51_assoc_lookup(&pse51_uqds,curr->mm,(u_long)__xn_reg_arg1(regs));
+
+    if (!assoc)
+        return -EBADF;
+
+    ufd = assoc2ufd(assoc);
+    
     if (len > 0)
         {
         if (!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg2(regs),len))
@@ -1249,7 +1354,7 @@ static int __mq_send (struct task_struct *curr, struct pt_regs *regs)
     else
         tmp_area = NULL;
 
-    err = mq_send(q,tmp_area,len,prio);
+    err = mq_send(ufd->kfd,tmp_area,len,prio);
 
     if (tmp_area && tmp_area != tmp_buf)
         xnfree(tmp_area);
@@ -1261,19 +1366,26 @@ static int __mq_timedsend (struct task_struct *curr, struct pt_regs *regs)
 {
     struct timespec timeout, *timeoutp;
     char tmp_buf[PSE51_MQ_FSTORE_LIMIT];
+    pse51_assoc_t *assoc;
+    pse51_ufd_t *ufd;
     caddr_t tmp_area;
     unsigned prio;
     size_t len;
     int err;
-    mqd_t q;
 
+    len = (size_t)__xn_reg_arg3(regs);
+    prio = __xn_reg_arg4(regs);
+
+    assoc = pse51_assoc_lookup(&pse51_uqds,curr->mm,(u_long)__xn_reg_arg1(regs));
+
+    if (!assoc)
+        return -EBADF;
+
+    ufd = assoc2ufd(assoc);
+    
     if (__xn_reg_arg5(regs) &&
         !__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg5(regs),sizeof(timeout)))
         return -EFAULT;
-
-    q = (mqd_t) __xn_reg_arg1(regs);
-    len = (size_t)__xn_reg_arg3(regs);
-    prio = __xn_reg_arg4(regs);
 
     if (len > 0)
         {
@@ -1306,7 +1418,7 @@ static int __mq_timedsend (struct task_struct *curr, struct pt_regs *regs)
     else
         timeoutp = NULL;
 
-    err = mq_timedsend(q,tmp_area,len,prio,timeoutp);
+    err = mq_timedsend(ufd->kfd,tmp_area,len,prio,timeoutp);
 
     if (tmp_area && tmp_area != tmp_buf)
         xnfree(tmp_area);
@@ -1317,10 +1429,18 @@ static int __mq_timedsend (struct task_struct *curr, struct pt_regs *regs)
 static int __mq_receive (struct task_struct *curr, struct pt_regs *regs)
 {
     char tmp_buf[PSE51_MQ_FSTORE_LIMIT];
+    pse51_assoc_t *assoc;
+    pse51_ufd_t *ufd;
     caddr_t tmp_area;
     unsigned prio;
     ssize_t len;
-    mqd_t q;
+
+    assoc = pse51_assoc_lookup(&pse51_uqds,curr->mm,(u_long)__xn_reg_arg1(regs));
+
+    if (!assoc)
+        return -EBADF;
+
+    ufd = assoc2ufd(assoc);
 
     if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg3(regs),sizeof(len)))
         return -EFAULT;
@@ -1329,8 +1449,6 @@ static int __mq_receive (struct task_struct *curr, struct pt_regs *regs)
 
     if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg4(regs),sizeof(prio)))
         return -EFAULT;
-
-    q = (mqd_t) __xn_reg_arg1(regs);
 
     if (len > 0)
         {
@@ -1350,7 +1468,7 @@ static int __mq_receive (struct task_struct *curr, struct pt_regs *regs)
     else
         tmp_area = NULL;
 
-    len = mq_receive(q,tmp_area,len,&prio);
+    len = mq_receive(ufd->kfd,tmp_area,len,&prio);
 
     if (len == -1)
         {
@@ -1381,13 +1499,19 @@ static int __mq_timedreceive (struct task_struct *curr, struct pt_regs *regs)
 {
     struct timespec timeout, *timeoutp;
     char tmp_buf[PSE51_MQ_FSTORE_LIMIT];
+    pse51_assoc_t *assoc;
+    pse51_ufd_t *ufd;
     caddr_t tmp_area;
     unsigned prio;
     ssize_t len;
-    mqd_t q;
 
-    q = (mqd_t) __xn_reg_arg1(regs);
+    assoc = pse51_assoc_lookup(&pse51_uqds,curr->mm,(u_long)__xn_reg_arg1(regs));
 
+    if (!assoc)
+        return -EBADF;
+
+    ufd = assoc2ufd(assoc);
+    
     if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg3(regs),sizeof(len)))
         return -EFAULT;
 
@@ -1429,7 +1553,7 @@ static int __mq_timedreceive (struct task_struct *curr, struct pt_regs *regs)
     else
         timeoutp = NULL;
 
-    len = mq_timedreceive(q,tmp_area,len,&prio,timeoutp);
+    len = mq_timedreceive(ufd->kfd,tmp_area,len,&prio,timeoutp);
 
     if (len == -1)
         {
@@ -1458,17 +1582,23 @@ static int __mq_timedreceive (struct task_struct *curr, struct pt_regs *regs)
 
 static int __mq_notify (struct task_struct *curr, struct pt_regs *regs)
 {
+    pse51_assoc_t *assoc;
     struct sigevent sev;
-    mqd_t q;
+    pse51_ufd_t *ufd;
+
+    assoc = pse51_assoc_lookup(&pse51_uqds,curr->mm,(u_long)__xn_reg_arg1(regs));
+
+    if (!assoc)
+        return -EBADF;
+
+    ufd = assoc2ufd(assoc);
 
     if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(sev)))
         return -EFAULT;
 
-    q = (mqd_t) __xn_reg_arg1(regs);
-
     __xn_copy_from_user(curr, &sev, (char *) __xn_reg_arg2(regs), sizeof(sev));
 
-    if (mq_notify(q, &sev))
+    if (mq_notify(ufd->kfd, &sev))
         return -thread_get_errno();
 
     return 0;
@@ -1711,10 +1841,12 @@ static int __timer_getoverrun (struct task_struct *curr, struct pt_regs *regs)
 /* shm_open(name, oflag, mode, ufd) */
 static int __shm_open (struct task_struct *curr, struct pt_regs *regs)
 {
-    int ufd, kfd, oflag, err;
     char name[PSE51_MAXNAME];
+    int ufd, kfd, oflag, err;
+    pse51_ufd_t *assoc;
     unsigned len;
     mode_t mode;
+    spl_t s;
 
     len = __xn_strncpy_from_user(curr,
                                  name,
@@ -1734,27 +1866,44 @@ static int __shm_open (struct task_struct *curr, struct pt_regs *regs)
     if (kfd == -1)
         return -thread_get_errno();
 
+    assoc = (pse51_ufd_t *) xnmalloc(sizeof(*assoc));
+
+    if (!assoc)
+        {
+        pse51_shm_close(kfd);
+        return -ENOSPC;
+        }
+
+    assoc->kfd = kfd;
+
     ufd = (int) __xn_reg_arg4(regs);
 
-    err = pse51_assoc_create(&pse51_ufds, (u_long) kfd, curr->mm, (u_long) ufd);
+    xnlock_get_irqsave(&pse51_assoc_lock, s);
+    err = pse51_assoc_insert(&pse51_ufds,&assoc->assoc,curr->mm,(u_long)ufd);
     /* pse51_assoc_create returning -EBUSY means that the same mm and user
        file descriptor are already registered. This happens if an mm_struct got
        recycled and the application did not close properly the shared memory
        descriptors. */
-    if (err == -EBUSY) {
-        unsigned long old_kfd;
+    if (err == -EBUSY)
+        {
+        pse51_assoc_t *old_assoc;
 #ifdef CONFIG_XENO_OPT_DEBUG
         xnprintf("POSIX user-space file descriptor %d not closed,"
                  " closing now.\n", ufd);
 #endif /* CONFIG_XENO_OPT_DEBUG. */
-        pse51_assoc_remove(&pse51_ufds, &old_kfd, curr->mm, (u_long) ufd);
-        close(old_kfd);
+        old_assoc = pse51_assoc_remove(&pse51_ufds, curr->mm, (u_long) ufd);
+        pse51_shm_close(assoc2ufd(old_assoc)->kfd);
+        xnfree(assoc2ufd(old_assoc));
 
-        err = pse51_assoc_create(&pse51_ufds,(u_long)kfd,curr->mm,(u_long)ufd);
-    }
+        err = pse51_assoc_insert(&pse51_ufds,&assoc->assoc,curr->mm,(u_long)ufd);
+        }
+    xnlock_put_irqrestore(&pse51_assoc_lock, s);
 
     if (err)
+        {
+        xnfree(assoc);
         close(kfd);
+        }
     
     return err;
 }
@@ -1784,17 +1933,19 @@ static int __shm_unlink (struct task_struct *curr, struct pt_regs *regs)
 /* shm_close(ufd) */
 static int __shm_close (struct task_struct *curr, struct pt_regs *regs)
 {
-    unsigned long kfd;
-    int ufd, err;
+    pse51_assoc_t *assoc;
+    pse51_ufd_t *ufd;
+    int err;
 
-    ufd = (int) __xn_reg_arg1(regs);
+    assoc = pse51_assoc_remove(&pse51_ufds,curr->mm,(u_long)__xn_reg_arg1(regs));
 
-    err = pse51_assoc_remove(&pse51_ufds, &kfd, curr->mm, (u_long) ufd);
+    if (!assoc)
+        return -EBADF;
 
-    if (err)
-        return err;
-
-    err = close(kfd);
+    ufd = assoc2ufd(assoc);
+    
+    err = close(ufd->kfd);
+    xnfree(ufd);
 
     return !err ? 0 : -thread_get_errno();
 }
@@ -1802,19 +1953,21 @@ static int __shm_close (struct task_struct *curr, struct pt_regs *regs)
 /* ftruncate(ufd, len) */
 static int __ftruncate (struct task_struct *curr, struct pt_regs *regs)
 {
-    unsigned long kfd;
-    int ufd, err;
+    pse51_assoc_t *assoc;
+    pse51_ufd_t *ufd;
     off_t len;
+    int err;
 
-    ufd = (int) __xn_reg_arg1(regs);
     len = (off_t) __xn_reg_arg2(regs);
 
-    err = pse51_assoc_lookup(&pse51_ufds, &kfd, curr->mm, (u_long) ufd);
+    assoc = pse51_assoc_lookup(&pse51_ufds,curr->mm,(u_long)__xn_reg_arg1(regs));
 
-    if (err)
-        return err;
+    if (!assoc)
+        return -EBADF;
 
-    err = ftruncate(kfd, len);
+    ufd = assoc2ufd(assoc);
+    
+    err = ftruncate(ufd->kfd, len);
 
     return !err ? 0 : -thread_get_errno();
 }
@@ -1825,103 +1978,129 @@ typedef struct {
     xnheap_t *ioctl_cookie;
     unsigned long heapsize;
     unsigned long offset;
-} pse51_umap_t;
+} pse51_mmap_param_t;
 
-/* mmap_prologue(len, ufd, off, pse51_umap_t *umap) */
+/* mmap_prologue(len, ufd, off, pse51_mmap_param_t *mmap_param) */
 static int __mmap_prologue (struct task_struct *curr, struct pt_regs *regs)
 {
-    unsigned long kfd;
-    pse51_umap_t umap;
-    int ufd, err;
+    pse51_mmap_param_t mmap_param;
+    pse51_assoc_t *assoc;
+    pse51_ufd_t *ufd;
     size_t len;
     off_t off;
+    int err;
 
     len = (size_t) __xn_reg_arg1(regs);
-    ufd = (int) __xn_reg_arg2(regs);
     off = (off_t) __xn_reg_arg3(regs);
 
-    if(!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg4(regs),sizeof(umap)))
-        return -EFAULT;    
+    if(!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg4(regs),sizeof(mmap_param)))
+        return -EFAULT;
 
-    err = pse51_assoc_lookup(&pse51_ufds, &kfd, curr->mm, (u_long) ufd);
+    assoc = pse51_assoc_lookup(&pse51_ufds,curr->mm,(u_long)__xn_reg_arg2(regs));
 
-    if (err)
-        return err;
+    if (!assoc)
+        return -EBADF;
 
+    ufd = assoc2ufd(assoc);
+    
     /* We do not care for the real flags and protection, this mapping is a
        placeholder. */  
-    umap.kaddr = mmap(NULL,len,PROT_READ | PROT_WRITE,MAP_SHARED,kfd,off);
+    mmap_param.kaddr = mmap(NULL,
+                            len,
+                            PROT_READ | PROT_WRITE,
+                            MAP_SHARED,
+                            ufd->kfd,
+                            off);
 
-    if (umap.kaddr == MAP_FAILED)
+    if (mmap_param.kaddr == MAP_FAILED)
         return -thread_get_errno();
 
-    if ((err = pse51_xnheap_get(&umap.ioctl_cookie, umap.kaddr)))
+    if ((err = pse51_xnheap_get(&mmap_param.ioctl_cookie, mmap_param.kaddr)))
         {
-        munmap(umap.kaddr, len);
+        munmap(mmap_param.kaddr, len);
         return err;
         }
 
-    umap.len = len;
-    umap.heapsize = xnheap_size(umap.ioctl_cookie);
-    umap.offset = xnheap_mapped_offset(umap.ioctl_cookie, umap.kaddr);
+    mmap_param.len = len;
+    mmap_param.heapsize = xnheap_size(mmap_param.ioctl_cookie);
+    mmap_param.offset = xnheap_mapped_offset(mmap_param.ioctl_cookie,
+                                             mmap_param.kaddr);
 
     __xn_copy_to_user(curr,
                       (void __user *)__xn_reg_arg4(regs),
-                      &umap,
-                      sizeof(umap));
+                      &mmap_param,
+                      sizeof(mmap_param));
 
     return 0;
 }
 
-/* mmap_epilogue(uaddr, pse51_umap_t *umap) */
+/* mmap_epilogue(uaddr, pse51_mmap_param_t *mmap_param) */
 static int __mmap_epilogue (struct task_struct *curr, struct pt_regs *regs)
 {
-    pse51_umap_t umap;
+    pse51_mmap_param_t mmap_param;
+    pse51_umap_t *umap;
     void *uaddr;
     int err;
+    spl_t s;
 
     uaddr = (void *) __xn_reg_arg1(regs);
  
-    if(!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg2(regs),sizeof(umap)))
+    if(!__xn_access_ok(curr,VERIFY_READ,__xn_reg_arg2(regs),sizeof(mmap_param)))
         return -EFAULT;
 
     __xn_copy_from_user(curr,
-                        &umap,
+                        &mmap_param,
                         (void __user *)__xn_reg_arg2(regs),
-                        sizeof(umap));
+                        sizeof(mmap_param));
 
     if (uaddr == MAP_FAILED)
         {
-        munmap(umap.kaddr, umap.len);
+        munmap(mmap_param.kaddr, mmap_param.len);
         return 0;
         }
-    
-    err = pse51_assoc_create(&pse51_umaps,
-                             (u_long) umap.kaddr,
-                             curr->mm,
-                             (u_long) uaddr);
+
+    umap = (pse51_umap_t *) xnmalloc(sizeof(*umap));
+
+    if (!umap)
+        {
+        munmap(mmap_param.kaddr, mmap_param.len);
+        return -EAGAIN;
+        }
+
+    umap->kaddr = mmap_param.kaddr;
+    umap->len = mmap_param.len;
+
+    xnlock_get_irqsave(&pse51_assoc_lock, s);
+    err = pse51_assoc_insert(&pse51_umaps,&umap->assoc,curr->mm,(u_long)uaddr);
     /* pse51_assoc_create returning -EBUSY means that the same mm and user
        space mapping are already registered. This happens if an mm_struct got
        recycled and the application did not unmap properly a shared memory
        area. */
-    if (err == -EBUSY) {
-        unsigned long old_kaddr;
+    if (err == -EBUSY)
+        {
+        pse51_assoc_t *old_assoc;
+        pse51_umap_t *old_umap;
 #ifdef CONFIG_XENO_OPT_DEBUG
         xnprintf("POSIX user-space mapping 0x%08lx not unmapped,"
-                 " leaking until posix skin is shut down.\n", (u_long) uaddr);
+                 " unmapping now.\n", (u_long) uaddr);
 #endif /* CONFIG_XENO_OPT_DEBUG. */
-        pse51_assoc_remove(&pse51_umaps,&old_kaddr,curr->mm,(u_long)uaddr);
+        old_assoc = pse51_assoc_remove(&pse51_umaps,curr->mm,(u_long)uaddr);
 
-        err = pse51_assoc_create(&pse51_umaps,
-                                 (u_long) umap.kaddr,
+        old_umap = assoc2umap(old_assoc);
+        munmap(old_umap->kaddr, old_umap->len);
+        xnfree(old_umap);
+
+        err = pse51_assoc_insert(&pse51_umaps,
+                                 &umap->assoc,
                                  curr->mm,
-                                 (u_long) uaddr);
-    }
+                                 (u_long)uaddr);
+        }
+    xnlock_put_irqrestore(&pse51_assoc_lock, s);
 
     if (err)
-        munmap(umap.kaddr, umap.len);        
+        munmap(mmap_param.kaddr, mmap_param.len);        
     
-    return err == -ENOSPC ? -EAGAIN : err;
+    return err;
 }
 
 /* munmap_prologue(uaddr, len, &unmap) */
@@ -1931,9 +2110,10 @@ static int __munmap_prologue (struct task_struct *curr, struct pt_regs *regs)
         unsigned long mapsize;
         unsigned long offset;
     } uunmap;
+    pse51_assoc_t *assoc;
     unsigned long uaddr;
+    pse51_umap_t *umap;
     xnheap_t *heap;
-    void *kaddr;
     size_t len;
     int err;
 
@@ -1942,18 +2122,20 @@ static int __munmap_prologue (struct task_struct *curr, struct pt_regs *regs)
     if (!__xn_access_ok(curr,VERIFY_WRITE,__xn_reg_arg3(regs),sizeof(uunmap)))
         return -EFAULT;
 
-    err = pse51_assoc_lookup(&pse51_umaps, (u_long *)&kaddr, curr->mm, uaddr);
+    assoc = pse51_assoc_lookup(&pse51_umaps, curr->mm, uaddr);
 
-    if (err)
-        return err;
+    if (!assoc)
+        return -EBADF;
 
-    err = pse51_xnheap_get(&heap, kaddr);
+    umap = assoc2umap(assoc);
+    
+    err = pse51_xnheap_get(&heap, umap->kaddr);
 
     if (err)
         return err;
    
     uunmap.mapsize = xnheap_size(heap);
-    uunmap.offset = xnheap_mapped_offset(heap, kaddr);
+    uunmap.offset = xnheap_mapped_offset(heap, umap->kaddr);
     __xn_copy_to_user(curr,
                       (void __user *)__xn_reg_arg3(regs),
                       &uunmap,
@@ -1965,20 +2147,37 @@ static int __munmap_prologue (struct task_struct *curr, struct pt_regs *regs)
 /* munmap_epilogue(uaddr, len) */
 static int __munmap_epilogue (struct task_struct *curr, struct pt_regs *regs)
 {
+    pse51_assoc_t *assoc;
     unsigned long uaddr;
-    void *kaddr;
+    pse51_umap_t *umap;
     size_t len;
+    spl_t s;
     int err;
 
     uaddr = (unsigned long) __xn_reg_arg1(regs);
     len = (size_t) __xn_reg_arg2(regs);
 
-    err = pse51_assoc_remove(&pse51_umaps, (u_long *)&kaddr, curr->mm, uaddr);
+    xnlock_get_irqsave(&pse51_assoc_lock, s);
+    assoc = pse51_assoc_lookup(&pse51_umaps, curr->mm, uaddr);
 
-    if (err)
-        return err;
+    if (!assoc)
+        {
+        xnlock_put_irqrestore(&pse51_assoc_lock, s);
+        return -EBADF;
+        }
 
-    err = munmap(kaddr, len);
+    umap = assoc2umap(assoc);
+
+    if (umap->len != len)
+        {
+        xnlock_put_irqrestore(&pse51_assoc_lock, s);
+        return -EINVAL;
+        }
+
+    pse51_assoc_remove(&pse51_umaps, curr->mm, uaddr);
+    xnlock_put_irqrestore(&pse51_assoc_lock, s);
+
+    err = munmap(umap->kaddr, len);
 
     return !err ? 0 : -thread_get_errno();
 }

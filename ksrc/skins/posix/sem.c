@@ -782,100 +782,15 @@ int sem_getvalue (sem_t *sm, int *value)
 }
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-/* Must be called nklock locked, irq off. */
-unsigned long pse51_usem_open (struct __shadow_sem *shadow,
-                               struct mm_struct *mm,
-                               unsigned long uaddr)
-{
-    xnholder_t *holder;
-    pse51_uptr_t *uptr;
-    nsem_t *nsem;
-
-    if (shadow->magic != PSE51_NAMED_SEM_MAGIC)
-        return 0;
-
-    nsem = sem2named_sem(shadow->sem);
-     
-    for(holder = getheadq(&nsem->userq);
-        holder;
-        holder = nextq(&nsem->userq, holder))
-        {
-        pse51_uptr_t *uptr = link2uptr(holder);
-
-        if (uptr->mm == mm)
-            {
-            ++uptr->refcnt;
-            return uptr->uaddr;
-            }
-        }
-
-    uptr = (pse51_uptr_t *) xnmalloc(sizeof(*uptr));
-    uptr->mm = mm;
-    uptr->uaddr = uaddr;
-    uptr->refcnt = 1;
-    inith(&uptr->link);
-    appendq(&nsem->userq, &uptr->link);
-    return uaddr;
-}
-
-/* Must be called nklock locked, irq off. */
-int pse51_usem_close (struct __shadow_sem *shadow, struct mm_struct *mm)
-{
-    nsem_t *nsem;
-    pse51_uptr_t *uptr = NULL;
-    xnholder_t *holder;
-
-    if (shadow->magic != PSE51_NAMED_SEM_MAGIC)
-        return -EINVAL;
-
-    nsem = sem2named_sem(shadow->sem);
- 
-    for(holder = getheadq(&nsem->userq);
-        holder;
-        holder = nextq(&nsem->userq, holder))
-        {
-        uptr = link2uptr(holder);
-
-        if (uptr->mm == mm)
-            {
-            if (--uptr->refcnt)
-                return 0;
-            break;
-            }
-        }
-
-    if (!uptr)
-        return -EINVAL;
-
-    removeq(&nsem->userq, &uptr->link);
-    xnfree(uptr);
-    return 1;
-}
-
-/* Must be called nklock locked, irq off. */
-void pse51_usems_cleanup (pse51_sem_t *sem)
-{
-    nsem_t *nsem = sem2named_sem(sem);
-    xnholder_t *holder;
-    
-    while((holder = getheadq(&nsem->userq)))
-        {
-        pse51_uptr_t *uptr = link2uptr(holder);
-
-#ifdef CONFIG_XENO_OPT_DEBUG
-        xnprintf("POSIX semaphore \"%s\" binding for user process"
-                 " discarded.\n", nsem->nodebase.name);
-#endif /* CONFIG_XENO_OPT_DEBUG */
-
-        removeq(&nsem->userq, &uptr->link);
-        xnfree(uptr);
-        }
-}
+pse51_assocq_t pse51_usems;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 void pse51_sem_pkg_init (void) {
 
     initq(&pse51_semq);
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    pse51_assocq_init(&pse51_usems);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 }
 
 void pse51_sem_pkg_cleanup (void)
@@ -884,16 +799,15 @@ void pse51_sem_pkg_cleanup (void)
     xnholder_t *holder;
     spl_t s;
 
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    pse51_assocq_destroy(&pse51_usems, NULL);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
     xnlock_get_irqsave(&nklock, s);
 
     while ((holder = getheadq(&pse51_semq)) != NULL)
         {
         pse51_sem_t *sem = link2sem(holder);
-
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-        if (sem->magic == PSE51_NAMED_SEM_MAGIC)
-            pse51_usems_cleanup(sem);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_OPT_DEBUG
         if (sem->magic == PSE51_SEM_MAGIC)
