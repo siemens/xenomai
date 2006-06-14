@@ -751,23 +751,11 @@ static inline int xnarch_init (void)
 
     xnarch_old_trap_handler = rthal_trap_catch(&xnarch_trap_fault);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-    err = xnshadow_mount();
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-
-    if (err)
-        goto release_trap;
-
     err = xnarch_stack_pool_init();
 
     if (!err)
         return 0;
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-    xnshadow_cleanup();
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-
- release_trap:
     rthal_trap_catch(xnarch_old_trap_handler);
     rthal_free_virq(xnarch_escalation_virq);
 
@@ -777,9 +765,6 @@ static inline int xnarch_init (void)
 static inline void xnarch_exit (void)
 
 {
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-    xnshadow_cleanup();
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
     rthal_trap_catch(xnarch_old_trap_handler);
     rthal_free_virq(xnarch_escalation_virq);
     xnarch_stack_pool_destroy();

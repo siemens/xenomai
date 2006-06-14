@@ -729,10 +729,15 @@ int __init __xeno_sys_init(void)
 #endif /* CONFIG_XENO_OPT_PIPE */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-    err = xnheap_mount();
+    err = xnshadow_mount();
 
     if (err)
         goto cleanup_pipe;
+
+    err = xnheap_mount();
+
+    if (err)
+        goto cleanup_shadow;
 
     err = xncore_mount();
 
@@ -757,6 +762,10 @@ int __init __xeno_sys_init(void)
   cleanup_heap:
 
     xnheap_umount();
+
+  cleanup_shadow:
+
+    xnshadow_cleanup();
 
   cleanup_pipe:
 
@@ -790,7 +799,7 @@ void __exit __xeno_sys_exit(void)
 {
     xnpod_shutdown(XNPOD_NORMAL_EXIT);
 
-#if defined(__KERNEL__) && defined(CONFIG_PROC_FS)
+#if defined(__KERNEL__) &&  defined(CONFIG_PROC_FS)
     xnpod_delete_proc();
 #endif /* __KERNEL__ && CONFIG_PROC_FS */
 
@@ -800,6 +809,7 @@ void __exit __xeno_sys_exit(void)
 #ifdef CONFIG_XENO_OPT_PERVASIVE
     xncore_umount();
     xnheap_umount();
+    xnshadow_cleanup();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 #ifdef CONFIG_XENO_OPT_PIPE
     xnpipe_umount();

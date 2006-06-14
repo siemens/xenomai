@@ -794,6 +794,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
     for (muxid = 0; muxid < XENOMAI_MUX_NR; muxid++) {
         if (muxtable[muxid].magic == magic) {
             xnarch_atomic_inc(&muxtable[muxid].refcnt);
+            xnarch_atomic_inc(&muxtable[0].refcnt);
             break;
         }
     }
@@ -855,6 +856,8 @@ void xnshadow_unmap(xnthread_t *thread)
 
     for (muxid = 0; muxid < XENOMAI_MUX_NR; muxid++) {
         if (muxtable[muxid].magic == magic) {
+            if (xnarch_atomic_dec_and_test(&muxtable[0].refcnt))
+                xnarch_atomic_dec(&muxtable[0].refcnt);
             if (xnarch_atomic_dec_and_test(&muxtable[muxid].refcnt))
                 /* We were the last thread, decrement the counter,
                    since it was incremented by the xn_sys_bind
@@ -1075,6 +1078,8 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 
     if (!xnarch_atomic_inc_and_test(&muxtable[muxid].refcnt))
         xnarch_atomic_dec(&muxtable[muxid].refcnt);
+    if (!xnarch_atomic_inc_and_test(&muxtable[0].refcnt))
+        xnarch_atomic_dec(&muxtable[0].refcnt);
 
     xnlock_put_irqrestore(&nklock, s);
 
@@ -1095,6 +1100,7 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 
             if (IS_ERR(ppd)) {
                 xnarch_atomic_dec(&muxtable[muxid].refcnt);
+                xnarch_atomic_dec(&muxtable[0].refcnt);
                 return PTR_ERR(ppd);
             }
 
@@ -1119,6 +1125,7 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
         }
 
         xnarch_atomic_dec(&muxtable[muxid].refcnt);
+        xnarch_atomic_dec(&muxtable[0].refcnt);
         return -ENOSYS;
     }
 
@@ -1910,8 +1917,8 @@ int xnshadow_mount(void)
         initq(&xnshadow_ppd_hash[i]);
 
     xnshadow_nucleus_muxid =
-        xnshadow_register_interface("xenomai",
-                                    0x58454E4F,
+        xnshadow_register_interface("core",
+                                    0x434F5245,
                                     sizeof(xnshadow_systab)/sizeof(xnsysent_t),
                                     xnshadow_systab,
                                     NULL);
