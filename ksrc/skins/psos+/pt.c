@@ -23,226 +23,227 @@ static xnqueue_t psosptq;
 
 void psospt_init(void)
 {
-    initq(&psosptq);
+	initq(&psosptq);
 }
 
 void psospt_cleanup(void)
 {
 
-    xnholder_t *holder;
+	xnholder_t *holder;
 
-    while ((holder = getq(&psosptq)) != NULL)
-        psos_mark_deleted(link2psospt(holder));
+	while ((holder = getq(&psosptq)) != NULL)
+		psos_mark_deleted(link2psospt(holder));
 }
 
-u_long pt_create(char name[4], void *paddr, void *laddr,    /* unused */
-                 u_long psize,
-                 u_long bsize, u_long flags, u_long *ptid, u_long *nbuf)
+u_long pt_create(char name[4], void *paddr, void *laddr,	/* unused */
+		 u_long psize,
+		 u_long bsize, u_long flags, u_long *ptid, u_long *nbuf)
 {
-    u_long bitmapsize;
-    psospt_t *pt;
-    char *mp;
-    u_long n;
-    spl_t s;
+	u_long bitmapsize;
+	psospt_t *pt;
+	char *mp;
+	u_long n;
+	spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	xnpod_check_context(XNPOD_THREAD_CONTEXT);
 
-    if ((u_long)paddr & (sizeof(u_long) - 1))
-        return ERR_PTADDR;
+	if ((u_long)paddr & (sizeof(u_long) - 1))
+		return ERR_PTADDR;
 
-    if (bsize <= pt_align_mask)
-        return ERR_BUFSIZE;
+	if (bsize <= pt_align_mask)
+		return ERR_BUFSIZE;
 
-    if (bsize & (bsize - 1))
-        return ERR_BUFSIZE;     /* Not a power of two. */
+	if (bsize & (bsize - 1))
+		return ERR_BUFSIZE;	/* Not a power of two. */
 
-    if (psize < sizeof(psospt_t))
-        return ERR_TINYPT;
+	if (psize < sizeof(psospt_t))
+		return ERR_TINYPT;
 
-    psize -= sizeof(psospt_t);
-    pt = (psospt_t *)paddr;
-    inith(&pt->link);
+	psize -= sizeof(psospt_t);
+	pt = (psospt_t *)paddr;
+	inith(&pt->link);
 
-    pt->name[0] = name[0];
-    pt->name[1] = name[1];
-    pt->name[2] = name[2];
-    pt->name[3] = name[3];
-    pt->name[4] = '\0';
-    pt->flags = flags;
-    pt->bsize = (bsize + pt_align_mask) & ~pt_align_mask;
+	pt->name[0] = name[0];
+	pt->name[1] = name[1];
+	pt->name[2] = name[2];
+	pt->name[3] = name[3];
+	pt->name[4] = '\0';
+	pt->flags = flags;
+	pt->bsize = (bsize + pt_align_mask) & ~pt_align_mask;
 
-    bitmapsize = (psize * 8) / (pt->bsize + 8);
-    bitmapsize = (bitmapsize + pt_align_mask) & ~pt_align_mask;
+	bitmapsize = (psize * 8) / (pt->bsize + 8);
+	bitmapsize = (bitmapsize + pt_align_mask) & ~pt_align_mask;
 
-    if (bitmapsize <= pt_align_mask)
-        return ERR_TINYPT;
+	if (bitmapsize <= pt_align_mask)
+		return ERR_TINYPT;
 
-    pt->nblks = (psize - bitmapsize) / pt->bsize;
-    pt->psize = pt->nblks * pt->bsize;
-    pt->data = (char *)pt->bitmap + bitmapsize;
-    pt->freelist = mp = pt->data;
-    pt->ublks = 0;
+	pt->nblks = (psize - bitmapsize) / pt->bsize;
+	pt->psize = pt->nblks * pt->bsize;
+	pt->data = (char *)pt->bitmap + bitmapsize;
+	pt->freelist = mp = pt->data;
+	pt->ublks = 0;
 
-    for (n = pt->nblks; n > 1; n--) {
-        char *nmp = mp + pt->bsize;
-        *((void **)mp) = nmp;
-        mp = nmp;
-    }
+	for (n = pt->nblks; n > 1; n--) {
+		char *nmp = mp + pt->bsize;
+		*((void **)mp) = nmp;
+		mp = nmp;
+	}
 
-    *((void **)mp) = NULL;
+	*((void **)mp) = NULL;
 
-    for (n = 0; n < bitmapsize / sizeof(u_long); n++)
-        pt->bitmap[n] = 0;
+	for (n = 0; n < bitmapsize / sizeof(u_long); n++)
+		pt->bitmap[n] = 0;
 
-    pt->magic = PSOS_PT_MAGIC;
+	pt->magic = PSOS_PT_MAGIC;
 
-    xnlock_get_irqsave(&nklock, s);
-    appendq(&psosptq, &pt->link);
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
+	appendq(&psosptq, &pt->link);
+	xnlock_put_irqrestore(&nklock, s);
 
-    *nbuf = pt->nblks;
-    *ptid = (u_long)pt;
+	*nbuf = pt->nblks;
+	*ptid = (u_long)pt;
 
-    return SUCCESS;
+	return SUCCESS;
 }
 
 u_long pt_delete(u_long ptid)
 {
-    u_long err = SUCCESS;
-    psospt_t *pt;
-    spl_t s;
+	u_long err = SUCCESS;
+	psospt_t *pt;
+	spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	xnpod_check_context(XNPOD_THREAD_CONTEXT);
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    pt = psos_h2obj_active(ptid, PSOS_PT_MAGIC, psospt_t);
+	pt = psos_h2obj_active(ptid, PSOS_PT_MAGIC, psospt_t);
 
-    if (!pt) {
-        err = psos_handle_error(ptid, PSOS_PT_MAGIC, psospt_t);
-        goto unlock_and_exit;
-    }
+	if (!pt) {
+		err = psos_handle_error(ptid, PSOS_PT_MAGIC, psospt_t);
+		goto unlock_and_exit;
+	}
 
-    if (!(pt->flags & PT_DEL) && pt->ublks > 0) {
-        err = ERR_BUFINUSE;
-        goto unlock_and_exit;
-    }
+	if (!(pt->flags & PT_DEL) && pt->ublks > 0) {
+		err = ERR_BUFINUSE;
+		goto unlock_and_exit;
+	}
 
-    psos_mark_deleted(pt);
-    removeq(&psosptq, &pt->link);
+	psos_mark_deleted(pt);
+	removeq(&psosptq, &pt->link);
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 u_long pt_getbuf(u_long ptid, void **bufaddr)
 {
-    u_long numblk, err = SUCCESS;
-    psospt_t *pt;
-    void *buf;
-    spl_t s;
+	u_long numblk, err = SUCCESS;
+	psospt_t *pt;
+	void *buf;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    pt = psos_h2obj_active(ptid, PSOS_PT_MAGIC, psospt_t);
+	pt = psos_h2obj_active(ptid, PSOS_PT_MAGIC, psospt_t);
 
-    if (!pt) {
-        err = psos_handle_error(ptid, PSOS_PT_MAGIC, psospt_t);
-        goto unlock_and_exit;
-    }
+	if (!pt) {
+		err = psos_handle_error(ptid, PSOS_PT_MAGIC, psospt_t);
+		goto unlock_and_exit;
+	}
 
-    if ((buf = pt->freelist) != NULL) {
-        pt->freelist = *((void **)buf);
-        pt->ublks++;
-        numblk = ((char *)buf - pt->data) / pt->bsize;
-        pt_bitmap_setbit(pt, numblk);
-    }
+	if ((buf = pt->freelist) != NULL) {
+		pt->freelist = *((void **)buf);
+		pt->ublks++;
+		numblk = ((char *)buf - pt->data) / pt->bsize;
+		pt_bitmap_setbit(pt, numblk);
+	}
 
-    *bufaddr = buf;
+	*bufaddr = buf;
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 u_long pt_retbuf(u_long ptid, void *buf)
 {
-    u_long numblk, err = SUCCESS;
-    psospt_t *pt;
-    spl_t s;
+	u_long numblk, err = SUCCESS;
+	psospt_t *pt;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    pt = psos_h2obj_active(ptid, PSOS_PT_MAGIC, psospt_t);
+	pt = psos_h2obj_active(ptid, PSOS_PT_MAGIC, psospt_t);
 
-    if (!pt) {
-        err = psos_handle_error(ptid, PSOS_PT_MAGIC, psospt_t);
-        goto unlock_and_exit;
-    }
+	if (!pt) {
+		err = psos_handle_error(ptid, PSOS_PT_MAGIC, psospt_t);
+		goto unlock_and_exit;
+	}
 
-    if ((char *)buf < pt->data ||
-        (char *)buf >= pt->data + pt->psize ||
-        (((char *)buf - pt->data) % pt->bsize) != 0) {
-        err = ERR_BUFADDR;
-        goto unlock_and_exit;
-    }
+	if ((char *)buf < pt->data ||
+	    (char *)buf >= pt->data + pt->psize ||
+	    (((char *)buf - pt->data) % pt->bsize) != 0) {
+		err = ERR_BUFADDR;
+		goto unlock_and_exit;
+	}
 
-    numblk = ((char *)buf - pt->data) / pt->bsize;
+	numblk = ((char *)buf - pt->data) / pt->bsize;
 
-    if (!pt_bitmap_tstbit(pt, numblk)) {
-        err = ERR_BUFFREE;
-        goto unlock_and_exit;
-    }
+	if (!pt_bitmap_tstbit(pt, numblk)) {
+		err = ERR_BUFFREE;
+		goto unlock_and_exit;
+	}
 
-    pt_bitmap_clrbit(pt, numblk);
-    *((void **)buf) = pt->freelist;
-    pt->freelist = buf;
-    pt->ublks--;
+	pt_bitmap_clrbit(pt, numblk);
+	*((void **)buf) = pt->freelist;
+	pt->freelist = buf;
+	pt->ublks--;
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 u_long pt_ident(char name[4], u_long node, u_long *ptid)
 {
-    u_long err = SUCCESS;
-    xnholder_t *holder;
-    psospt_t *pt;
-    spl_t s;
+	u_long err = SUCCESS;
+	xnholder_t *holder;
+	psospt_t *pt;
+	spl_t s;
 
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	xnpod_check_context(XNPOD_THREAD_CONTEXT);
 
-    if (node > 1)
-        return ERR_NODENO;
+	if (node > 1)
+		return ERR_NODENO;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    for (holder = getheadq(&psosptq); holder; holder = nextq(&psosptq, holder)) {
-        pt = link2psospt(holder);
+	for (holder = getheadq(&psosptq); holder;
+	     holder = nextq(&psosptq, holder)) {
+		pt = link2psospt(holder);
 
-        if (pt->name[0] == name[0] &&
-            pt->name[1] == name[1] &&
-            pt->name[2] == name[2] && pt->name[3] == name[3]) {
-            *ptid = (u_long)pt;
-            goto unlock_and_exit;
-        }
-    }
+		if (pt->name[0] == name[0] &&
+		    pt->name[1] == name[1] &&
+		    pt->name[2] == name[2] && pt->name[3] == name[3]) {
+			*ptid = (u_long)pt;
+			goto unlock_and_exit;
+		}
+	}
 
-    err = ERR_OBJNF;
+	err = ERR_OBJNF;
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 /*

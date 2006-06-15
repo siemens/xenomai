@@ -27,37 +27,35 @@ MODULE_LICENSE("GPL");
 
 int SKIN_INIT(uvm)
 {
-    int err;
+	int err;
 
-    nktickdef = XN_APERIODIC_TICK;	/* Force aperiodic. */
+	nktickdef = XN_APERIODIC_TICK;	/* Force aperiodic. */
 
-    err = xncore_attach();
+	err = xncore_attach();
 
-    if (err)
+	if (err)
+		return err;
+
+	err = xnpod_start_timer(XN_APERIODIC_TICK, XNPOD_DEFAULT_TICKHANDLER);
+
+	if (!err)
+		err = __uvm_syscall_init();
+
+	if (err) {
+		xncore_detach(err);
+		xnlogerr("UVM skin init failed, code %d.\n", err);
+
+	} else
+		xnprintf("starting UVM services.\n");
+
 	return err;
-
-    err = xnpod_start_timer(XN_APERIODIC_TICK, XNPOD_DEFAULT_TICKHANDLER);
-
-    if (!err)
-        err = __uvm_syscall_init();
-
-    if (err)
-	{
-        xncore_detach(err);
-	xnlogerr("UVM skin init failed, code %d.\n",err);
-
-	}
-    else
-	xnprintf("starting UVM services.\n");
-
-    return err;
 }
 
 void SKIN_EXIT(uvm)
 {
-    xnprintf("stopping UVM services.\n");
-    __uvm_syscall_cleanup();
-    xncore_detach(XNPOD_NORMAL_EXIT);
+	xnprintf("stopping UVM services.\n");
+	__uvm_syscall_cleanup();
+	xncore_detach(XNPOD_NORMAL_EXIT);
 }
 
 module_init(__uvm_skin_init);
