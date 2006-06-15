@@ -20,35 +20,30 @@
 
 #include <rtai/intr.h>
 
-int rt_request_irq (unsigned irq,
-		    void (*handler)(unsigned irq, void *cookie),
-		    void *cookie)
+int rt_request_irq(unsigned irq,
+		   void (*handler) (unsigned irq, void *cookie), void *cookie)
 {
-    return rthal_irq_request(irq,handler,NULL,cookie);
+	return rthal_irq_request(irq, handler, NULL, cookie);
 }
 
-int rt_release_irq (unsigned irq)
-
+int rt_release_irq(unsigned irq)
 {
-    return rthal_irq_release(irq);
+	return rthal_irq_release(irq);
 }
 
-void rt_ack_irq (unsigned irq)
-
+void rt_ack_irq(unsigned irq)
 {
-    rthal_irq_enable(irq);
+	rthal_irq_enable(irq);
 }
 
-void rt_enable_irq (unsigned irq)
-
+void rt_enable_irq(unsigned irq)
 {
-    rthal_irq_enable(irq);
+	rthal_irq_enable(irq);
 }
 
-void rt_disable_irq (unsigned irq)
-
+void rt_disable_irq(unsigned irq)
 {
-    rthal_irq_disable(irq);
+	rthal_irq_disable(irq);
 }
 
 EXPORT_SYMBOL(rt_request_irq);

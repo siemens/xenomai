@@ -24,38 +24,34 @@
 
 static int __rtai_muxid;
 
-static void __shadow_delete_hook (xnthread_t *thread)
-
+static void __shadow_delete_hook(xnthread_t *thread)
 {
-    if (xnthread_get_magic(thread) == RTAI_SKIN_MAGIC &&
-	testbits(thread->status,XNSHADOW))
-	xnshadow_unmap(thread);
+	if (xnthread_get_magic(thread) == RTAI_SKIN_MAGIC &&
+	    testbits(thread->status, XNSHADOW))
+		xnshadow_unmap(thread);
 }
 
 static xnsysent_t __systab[] = {
-    [0] = { NULL, 0  },
+	[0] = {NULL, 0},
 };
 
-int __rtai_syscall_init (void)
-
+int __rtai_syscall_init(void)
 {
-    __rtai_muxid =
-	xnshadow_register_interface("rtai",
-				    RTAI_SKIN_MAGIC,
-				    sizeof(__systab) / sizeof(__systab[0]),
-				    __systab,
-				    NULL);
-    if (__rtai_muxid < 0)
-	return -ENOSYS;
+	__rtai_muxid =
+	    xnshadow_register_interface("rtai",
+					RTAI_SKIN_MAGIC,
+					sizeof(__systab) / sizeof(__systab[0]),
+					__systab, NULL);
+	if (__rtai_muxid < 0)
+		return -ENOSYS;
 
-    xnpod_add_hook(XNHOOK_THREAD_DELETE,&__shadow_delete_hook);
-    
-    return 0;
+	xnpod_add_hook(XNHOOK_THREAD_DELETE, &__shadow_delete_hook);
+
+	return 0;
 }
 
-void __rtai_syscall_cleanup (void)
-
+void __rtai_syscall_cleanup(void)
 {
-    xnpod_remove_hook(XNHOOK_THREAD_DELETE,&__shadow_delete_hook);
-    xnshadow_unregister_interface(__rtai_muxid);
+	xnpod_remove_hook(XNHOOK_THREAD_DELETE, &__shadow_delete_hook);
+	xnshadow_unregister_interface(__rtai_muxid);
 }

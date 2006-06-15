@@ -24,46 +24,39 @@
 
 static int __rtai_oneshot;
 
-void rt_set_oneshot_mode (void)
-
+void rt_set_oneshot_mode(void)
 {
-    xnpod_stop_timer();
-    __rtai_oneshot = 1;
+	xnpod_stop_timer();
+	__rtai_oneshot = 1;
 }
 
-void rt_set_periodic_mode (void)
-
+void rt_set_periodic_mode(void)
 {
-    xnpod_stop_timer();
-    __rtai_oneshot = 0;
+	xnpod_stop_timer();
+	__rtai_oneshot = 0;
 }
 
-RTIME start_rt_timer (int period)
-
+RTIME start_rt_timer(int period)
 {
-    /* count2nano() and nano2count() are no-ops, so we should have
-       been passed nanoseconds, as xnpod_start_timer() expects. */
-    xnpod_start_timer(__rtai_oneshot ? XN_APERIODIC_TICK : period,
-		      XNPOD_DEFAULT_TICKHANDLER);
-    return period;
+	/* count2nano() and nano2count() are no-ops, so we should have
+	   been passed nanoseconds, as xnpod_start_timer() expects. */
+	xnpod_start_timer(__rtai_oneshot ? XN_APERIODIC_TICK : period,
+			  XNPOD_DEFAULT_TICKHANDLER);
+	return period;
 }
 
-void stop_rt_timer (void)
-
+void stop_rt_timer(void)
 {
-    xnpod_stop_timer();
+	xnpod_stop_timer();
 }
 
-void rt_sleep (RTIME delay)
-
+void rt_sleep(RTIME delay)
 {
-    if (delay <= 0)
-	return;
+	if (delay <= 0)
+		return;
 
-    xnpod_suspend_thread(&rtai_current_task()->thread_base,
-			 XNDELAY,
-			 delay,
-			 NULL);
+	xnpod_suspend_thread(&rtai_current_task()->thread_base,
+			     XNDELAY, delay, NULL);
 }
 
 RTIME rt_get_time_ns(void)
@@ -71,10 +64,9 @@ RTIME rt_get_time_ns(void)
 	RTIME ret;
 
 	ret = xnpod_get_time();
-	
+
 	return __rtai_oneshot ? count2nano(ret) : ret;
 }
-
 
 EXPORT_SYMBOL(rt_set_oneshot_mode);
 EXPORT_SYMBOL(rt_set_periodic_mode);
