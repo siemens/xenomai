@@ -617,6 +617,8 @@ int main(int argc, const char *argv[])
             cpu->tasks = (struct task_params *) realloc(cpu->tasks, size);
         }
 
+        params.thread = 0;
+        params.swt.index = params.swt.flags = 0;
         cpu->tasks[cpu->tasks_count - 1] = params;
     }
 
