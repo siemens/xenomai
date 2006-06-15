@@ -49,76 +49,79 @@
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 static int __heap_read_proc(char *page,
-                            char **start,
-                            off_t off, int count, int *eof, void *data)
+			    char **start,
+			    off_t off, int count, int *eof, void *data)
 {
-    RT_HEAP *heap = (RT_HEAP *)data;
-    char *p = page;
-    int len;
-    spl_t s;
+	RT_HEAP *heap = (RT_HEAP *)data;
+	char *p = page;
+	int len;
+	spl_t s;
 
-    p += sprintf(p, "type=%s:size=%lu:used=%lu\n",
-                 (heap->mode & H_SHARED) == H_SHARED ? "shared" :
-                 (heap->mode & H_MAPPABLE) ? "mappable" : "kernel",
-                 (u_long) heap->csize, xnheap_used_mem(&heap->heap_base));
+	p += sprintf(p, "type=%s:size=%lu:used=%lu\n",
+		     (heap->mode & H_SHARED) == H_SHARED ? "shared" :
+		     (heap->mode & H_MAPPABLE) ? "mappable" : "kernel",
+		     (u_long)heap->csize, xnheap_used_mem(&heap->heap_base));
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (xnsynch_nsleepers(&heap->synch_base) > 0) {
-        xnpholder_t *holder;
+	if (xnsynch_nsleepers(&heap->synch_base) > 0) {
+		xnpholder_t *holder;
 
-        /* Pended heap -- dump waiters. */
+		/* Pended heap -- dump waiters. */
 
-        holder = getheadpq(xnsynch_wait_queue(&heap->synch_base));
+		holder = getheadpq(xnsynch_wait_queue(&heap->synch_base));
 
-        while (holder) {
-            xnthread_t *sleeper = link2thread(holder, plink);
-            RT_TASK *task = thread2rtask(sleeper);
-            size_t size = task->wait_args.heap.size;
-            p += sprintf(p, "+%s (size=%zd)\n", xnthread_name(sleeper), size);
-            holder = nextpq(xnsynch_wait_queue(&heap->synch_base), holder);
-        }
-    }
+		while (holder) {
+			xnthread_t *sleeper = link2thread(holder, plink);
+			RT_TASK *task = thread2rtask(sleeper);
+			size_t size = task->wait_args.heap.size;
+			p += sprintf(p, "+%s (size=%zd)\n",
+				     xnthread_name(sleeper), size);
+			holder =
+			    nextpq(xnsynch_wait_queue(&heap->synch_base),
+				   holder);
+		}
+	}
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    len = (p - page) - off;
-    if (len <= off + count)
-        *eof = 1;
-    *start = page + off;
-    if (len > count)
-        len = count;
-    if (len < 0)
-        len = 0;
+	len = (p - page) - off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
 
-    return len;
+	return len;
 }
 
 extern xnptree_t __native_ptree;
 
 static xnpnode_t __heap_pnode = {
 
-    .dir = NULL,
-    .type = "heaps",
-    .entries = 0,
-    .read_proc = &__heap_read_proc,
-    .write_proc = NULL,
-    .root = &__native_ptree,
+	.dir = NULL,
+	.type = "heaps",
+	.entries = 0,
+	.read_proc = &__heap_read_proc,
+	.write_proc = NULL,
+	.root = &__native_ptree,
 };
 
 #elif defined(CONFIG_XENO_OPT_REGISTRY)
 
 static xnpnode_t __heap_pnode = {
 
-    .type = "heaps"
+	.type = "heaps"
 };
 
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 static void __heap_flush_private(xnheap_t *heap,
-                                 void *heapmem, u_long heapsize, void *cookie)
+				 void *heapmem, u_long heapsize, void *cookie)
 {
-    xnarch_sysfree(heapmem, heapsize);
+	xnarch_sysfree(heapmem, heapsize);
 }
 
 /*! 
@@ -227,92 +230,94 @@ static void __heap_flush_private(xnheap_t *heap,
 
 int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 {
-    int err;
+	int err;
 
-    if (!xnpod_root_p())
-        return -EPERM;
+	if (!xnpod_root_p())
+		return -EPERM;
 
-    if (heapsize == 0)
-        return -EINVAL;
+	if (heapsize == 0)
+		return -EINVAL;
 
-    /* Make sure we won't hit trivial argument errors when calling
-       xnheap_init(). */
+	/* Make sure we won't hit trivial argument errors when calling
+	   xnheap_init(). */
 
-    if (heapsize < 2 * PAGE_SIZE)
-        heapsize = 2 * PAGE_SIZE;
+	if (heapsize < 2 * PAGE_SIZE)
+		heapsize = 2 * PAGE_SIZE;
 
-    heap->csize = heapsize;     /* Record this for SBA management and inquiry. */
+	heap->csize = heapsize;	/* Record this for SBA management and inquiry. */
 
-    /* Account for the overhead so that the actual free space is large
-       enough to match the requested size. Using PAGE_SIZE for large
-       single-block heaps might reserve way too much useless page map
-       memory, but this should never get pathological anyway, since we
-       are only consuming 1 byte per page. */
+	/* Account for the overhead so that the actual free space is large
+	   enough to match the requested size. Using PAGE_SIZE for large
+	   single-block heaps might reserve way too much useless page map
+	   memory, but this should never get pathological anyway, since we
+	   are only consuming 1 byte per page. */
 
-    heapsize += xnheap_overhead(heapsize, PAGE_SIZE);
-    heapsize = PAGE_ALIGN(heapsize);
+	heapsize += xnheap_overhead(heapsize, PAGE_SIZE);
+	heapsize = PAGE_ALIGN(heapsize);
 
 #ifdef __KERNEL__
-    if (mode & H_MAPPABLE) {
-        if (!name || !*name)
-            return -EINVAL;
+	if (mode & H_MAPPABLE) {
+		if (!name || !*name)
+			return -EINVAL;
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-        err = xnheap_init_mapped(&heap->heap_base,
-                                 heapsize, (mode & H_DMA) ? GFP_DMA : 0);
-        if (err)
-            return err;
+		err = xnheap_init_mapped(&heap->heap_base,
+					 heapsize,
+					 (mode & H_DMA) ? GFP_DMA : 0);
+		if (err)
+			return err;
 
-        heap->cpid = 0;
+		heap->cpid = 0;
 #else /* !CONFIG_XENO_OPT_PERVASIVE */
-        return -ENOSYS;
+		return -ENOSYS;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
-    } else
+	} else
 #endif /* __KERNEL__ */
-    {
-        void *heapmem = xnarch_sysalloc(heapsize);
+	{
+		void *heapmem = xnarch_sysalloc(heapsize);
 
-        if (!heapmem)
-            return -ENOMEM;
+		if (!heapmem)
+			return -ENOMEM;
 
-        err = xnheap_init(&heap->heap_base, heapmem, heapsize, PAGE_SIZE);  /* Use natural page size */
-        if (err) {
-            xnarch_sysfree(heapmem, heapsize);
-            return err;
-        }
-    }
+		err = xnheap_init(&heap->heap_base, heapmem, heapsize, PAGE_SIZE);	/* Use natural page size */
+		if (err) {
+			xnarch_sysfree(heapmem, heapsize);
+			return err;
+		}
+	}
 
-    xnsynch_init(&heap->synch_base, mode & (H_PRIO | H_FIFO));
-    heap->handle = 0;           /* i.e. (still) unregistered heap. */
-    heap->magic = XENO_HEAP_MAGIC;
-    heap->mode = mode;
-    heap->sba = NULL;
-    xnobject_copy_name(heap->name, name);
+	xnsynch_init(&heap->synch_base, mode & (H_PRIO | H_FIFO));
+	heap->handle = 0;	/* i.e. (still) unregistered heap. */
+	heap->magic = XENO_HEAP_MAGIC;
+	heap->mode = mode;
+	heap->sba = NULL;
+	xnobject_copy_name(heap->name, name);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
-    /* <!> Since xnregister_enter() may reschedule, only register
-       complete objects, so that the registry cannot return handles to
-       half-baked objects... */
+	/* <!> Since xnregister_enter() may reschedule, only register
+	   complete objects, so that the registry cannot return handles to
+	   half-baked objects... */
 
-    if (name) {
-        xnpnode_t *pnode = &__heap_pnode;
+	if (name) {
+		xnpnode_t *pnode = &__heap_pnode;
 
-        if (!*name) {
-            /* Since this is an anonymous object (empty name on entry)
-               from user-space, it gets registered under an unique
-               internal name but is not exported through /proc. */
-            xnobject_create_name(heap->name, sizeof(heap->name), (void *)heap);
-            pnode = NULL;
-        }
+		if (!*name) {
+			/* Since this is an anonymous object (empty name on entry)
+			   from user-space, it gets registered under an unique
+			   internal name but is not exported through /proc. */
+			xnobject_create_name(heap->name, sizeof(heap->name),
+					     (void *)heap);
+			pnode = NULL;
+		}
 
-        err = xnregistry_enter(heap->name, heap, &heap->handle, pnode);
+		err = xnregistry_enter(heap->name, heap, &heap->handle, pnode);
 
-        if (err)
-            rt_heap_delete(heap);
-    }
+		if (err)
+			rt_heap_delete(heap);
+	}
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-    return err;
+	return err;
 }
 
 /**
@@ -348,55 +353,57 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 
 int rt_heap_delete(RT_HEAP *heap)
 {
-    int err = 0, rc;
-    spl_t s;
+	int err = 0, rc;
+	spl_t s;
 
-    if (!xnpod_root_p())
-        return -EPERM;
+	if (!xnpod_root_p())
+		return -EPERM;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    heap = xeno_h2obj_validate(heap, XENO_HEAP_MAGIC, RT_HEAP);
+	heap = xeno_h2obj_validate(heap, XENO_HEAP_MAGIC, RT_HEAP);
 
-    if (!heap) {
-        err = xeno_handle_error(heap, XENO_HEAP_MAGIC, RT_HEAP);
-        xnlock_put_irqrestore(&nklock, s);
-        return err;
-    }
+	if (!heap) {
+		err = xeno_handle_error(heap, XENO_HEAP_MAGIC, RT_HEAP);
+		xnlock_put_irqrestore(&nklock, s);
+		return err;
+	}
 
-    rc = xnsynch_destroy(&heap->synch_base);
+	rc = xnsynch_destroy(&heap->synch_base);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
-    if (heap->handle)
-        xnregistry_remove(heap->handle);
+	if (heap->handle)
+		xnregistry_remove(heap->handle);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-    xeno_mark_deleted(heap);
+	xeno_mark_deleted(heap);
 
-    /* Get out of the nklocked section before releasing the heap
-       memory, since we are about to invoke Linux kernel
-       services. */
+	/* Get out of the nklocked section before releasing the heap
+	   memory, since we are about to invoke Linux kernel
+	   services. */
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    /* The heap descriptor has been marked as deleted before we
-       released the superlock thus preventing any sucessful subsequent
-       calls of rt_heap_delete(), so now we can actually destroy
-       it safely. */
+	/* The heap descriptor has been marked as deleted before we
+	   released the superlock thus preventing any sucessful subsequent
+	   calls of rt_heap_delete(), so now we can actually destroy
+	   it safely. */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    if (heap->mode & H_MAPPABLE)
-        err = xnheap_destroy_mapped(&heap->heap_base);
-    else
+	if (heap->mode & H_MAPPABLE)
+		err = xnheap_destroy_mapped(&heap->heap_base);
+	else
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-        err = xnheap_destroy(&heap->heap_base, &__heap_flush_private, NULL);
+		err =
+		    xnheap_destroy(&heap->heap_base, &__heap_flush_private,
+				   NULL);
 
-    if (rc == XNSYNCH_RESCHED)
-        /* Some task has been woken up as a result of the deletion:
-           reschedule now. */
-        xnpod_schedule();
+	if (rc == XNSYNCH_RESCHED)
+		/* Some task has been woken up as a result of the deletion:
+		   reschedule now. */
+		xnpod_schedule();
 
-    return err;
+	return err;
 }
 
 /**
@@ -480,87 +487,87 @@ int rt_heap_delete(RT_HEAP *heap)
 
 int rt_heap_alloc(RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)
 {
-    void *block = NULL;
-    RT_TASK *task;
-    int err = 0;
-    spl_t s;
+	void *block = NULL;
+	RT_TASK *task;
+	int err = 0;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    heap = xeno_h2obj_validate(heap, XENO_HEAP_MAGIC, RT_HEAP);
+	heap = xeno_h2obj_validate(heap, XENO_HEAP_MAGIC, RT_HEAP);
 
-    if (!heap) {
-        err = -EINVAL;
-        goto unlock_and_exit;
-    }
+	if (!heap) {
+		err = -EINVAL;
+		goto unlock_and_exit;
+	}
 
-    /* In single-block mode, there is only a single allocation
-       returning the whole addressable heap space to the user. All
-       users referring to this heap are then returned the same
-       block. */
+	/* In single-block mode, there is only a single allocation
+	   returning the whole addressable heap space to the user. All
+	   users referring to this heap are then returned the same
+	   block. */
 
-    if (heap->mode & H_SINGLE) {
-        block = heap->sba;
+	if (heap->mode & H_SINGLE) {
+		block = heap->sba;
 
-        if (!block) {
-            /* It's ok to pass zero for size here, since the requested
-               size is implicitely the whole heap space; but if
-               non-zero is given, it must match the original heap
-               size. */
+		if (!block) {
+			/* It's ok to pass zero for size here, since the requested
+			   size is implicitely the whole heap space; but if
+			   non-zero is given, it must match the original heap
+			   size. */
 
-            if (size > 0 && size != heap->csize) {
-                err = -EINVAL;
-                goto unlock_and_exit;
-            }
+			if (size > 0 && size != heap->csize) {
+				err = -EINVAL;
+				goto unlock_and_exit;
+			}
 
-            block = heap->sba = xnheap_alloc(&heap->heap_base,
-                                             xnheap_max_contiguous(&heap->
-                                                                   heap_base));
-        }
+			block = heap->sba = xnheap_alloc(&heap->heap_base,
+							 xnheap_max_contiguous
+							 (&heap->heap_base));
+		}
 
-        if (block)
-            goto unlock_and_exit;
+		if (block)
+			goto unlock_and_exit;
 
-        err = -ENOMEM;          /* This should never happen. Paranoid. */
-        goto unlock_and_exit;
-    }
+		err = -ENOMEM;	/* This should never happen. Paranoid. */
+		goto unlock_and_exit;
+	}
 
-    block = xnheap_alloc(&heap->heap_base, size);
+	block = xnheap_alloc(&heap->heap_base, size);
 
-    if (block)
-        goto unlock_and_exit;
+	if (block)
+		goto unlock_and_exit;
 
-    if (timeout == TM_NONBLOCK) {
-        err = -EWOULDBLOCK;
-        goto unlock_and_exit;
-    }
+	if (timeout == TM_NONBLOCK) {
+		err = -EWOULDBLOCK;
+		goto unlock_and_exit;
+	}
 
-    if (xnpod_unblockable_p()) {
-        err = -EPERM;
-        goto unlock_and_exit;
-    }
+	if (xnpod_unblockable_p()) {
+		err = -EPERM;
+		goto unlock_and_exit;
+	}
 
-    task = xeno_current_task();
-    task->wait_args.heap.size = size;
-    task->wait_args.heap.block = NULL;
-    xnsynch_sleep_on(&heap->synch_base, timeout);
+	task = xeno_current_task();
+	task->wait_args.heap.size = size;
+	task->wait_args.heap.block = NULL;
+	xnsynch_sleep_on(&heap->synch_base, timeout);
 
-    if (xnthread_test_flags(&task->thread_base, XNRMID))
-        err = -EIDRM;           /* Heap deleted while pending. */
-    else if (xnthread_test_flags(&task->thread_base, XNTIMEO))
-        err = -ETIMEDOUT;       /* Timeout. */
-    else if (xnthread_test_flags(&task->thread_base, XNBREAK))
-        err = -EINTR;           /* Unblocked. */
-    else
-        block = task->wait_args.heap.block;
+	if (xnthread_test_flags(&task->thread_base, XNRMID))
+		err = -EIDRM;	/* Heap deleted while pending. */
+	else if (xnthread_test_flags(&task->thread_base, XNTIMEO))
+		err = -ETIMEDOUT;	/* Timeout. */
+	else if (xnthread_test_flags(&task->thread_base, XNBREAK))
+		err = -EINTR;	/* Unblocked. */
+	else
+		block = task->wait_args.heap.block;
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    *blockp = block;
+	*blockp = block;
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 /**
@@ -599,58 +606,63 @@ int rt_heap_alloc(RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)
 
 int rt_heap_free(RT_HEAP *heap, void *block)
 {
-    int err, nwake;
-    spl_t s;
+	int err, nwake;
+	spl_t s;
 
-    if (block == NULL)
-        return -EINVAL;
+	if (block == NULL)
+		return -EINVAL;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    heap = xeno_h2obj_validate(heap, XENO_HEAP_MAGIC, RT_HEAP);
+	heap = xeno_h2obj_validate(heap, XENO_HEAP_MAGIC, RT_HEAP);
 
-    if (!heap) {
-        err = xeno_handle_error(heap, XENO_HEAP_MAGIC, RT_HEAP);
-        goto unlock_and_exit;
-    }
+	if (!heap) {
+		err = xeno_handle_error(heap, XENO_HEAP_MAGIC, RT_HEAP);
+		goto unlock_and_exit;
+	}
 
-    if (heap->mode & H_SINGLE) {    /* No-op in single-block mode. */
-        err = 0;
-        goto unlock_and_exit;
-    }
+	if (heap->mode & H_SINGLE) {	/* No-op in single-block mode. */
+		err = 0;
+		goto unlock_and_exit;
+	}
 
-    err = xnheap_free(&heap->heap_base, block);
+	err = xnheap_free(&heap->heap_base, block);
 
-    if (!err && xnsynch_nsleepers(&heap->synch_base) > 0) {
-        xnpholder_t *holder, *nholder;
+	if (!err && xnsynch_nsleepers(&heap->synch_base) > 0) {
+		xnpholder_t *holder, *nholder;
 
-        nholder = getheadpq(xnsynch_wait_queue(&heap->synch_base));
-        nwake = 0;
+		nholder = getheadpq(xnsynch_wait_queue(&heap->synch_base));
+		nwake = 0;
 
-        while ((holder = nholder) != NULL) {
-            RT_TASK *sleeper = thread2rtask(link2thread(holder, plink));
-            void *block;
+		while ((holder = nholder) != NULL) {
+			RT_TASK *sleeper =
+			    thread2rtask(link2thread(holder, plink));
+			void *block;
 
-            block = xnheap_alloc(&heap->heap_base,
-                                 sleeper->wait_args.heap.size);
-            if (block) {
-                nholder =
-                    xnsynch_wakeup_this_sleeper(&heap->synch_base, holder);
-                sleeper->wait_args.heap.block = block;
-                nwake++;
-            } else
-                nholder = nextpq(xnsynch_wait_queue(&heap->synch_base), holder);
-        }
+			block = xnheap_alloc(&heap->heap_base,
+					     sleeper->wait_args.heap.size);
+			if (block) {
+				nholder =
+				    xnsynch_wakeup_this_sleeper(&heap->
+								synch_base,
+								holder);
+				sleeper->wait_args.heap.block = block;
+				nwake++;
+			} else
+				nholder =
+				    nextpq(xnsynch_wait_queue
+					   (&heap->synch_base), holder);
+		}
 
-        if (nwake > 0)
-            xnpod_schedule();
-    }
+		if (nwake > 0)
+			xnpod_schedule();
+	}
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 /**
@@ -686,28 +698,28 @@ int rt_heap_free(RT_HEAP *heap, void *block)
 
 int rt_heap_inquire(RT_HEAP *heap, RT_HEAP_INFO *info)
 {
-    int err = 0;
-    spl_t s;
+	int err = 0;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    heap = xeno_h2obj_validate(heap, XENO_HEAP_MAGIC, RT_HEAP);
+	heap = xeno_h2obj_validate(heap, XENO_HEAP_MAGIC, RT_HEAP);
 
-    if (!heap) {
-        err = xeno_handle_error(heap, XENO_HEAP_MAGIC, RT_HEAP);
-        goto unlock_and_exit;
-    }
+	if (!heap) {
+		err = xeno_handle_error(heap, XENO_HEAP_MAGIC, RT_HEAP);
+		goto unlock_and_exit;
+	}
 
-    strcpy(info->name, heap->name);
-    info->nwaiters = xnsynch_nsleepers(&heap->synch_base);
-    info->heapsize = heap->csize;
-    info->mode = heap->mode;
+	strcpy(info->name, heap->name);
+	info->nwaiters = xnsynch_nsleepers(&heap->synch_base);
+	info->heapsize = heap->csize;
+	info->mode = heap->mode;
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 /**
@@ -792,7 +804,7 @@ int rt_heap_inquire(RT_HEAP *heap, RT_HEAP_INFO *info)
 
 int __native_heap_pkg_init(void)
 {
-    return 0;
+	return 0;
 }
 
 void __native_heap_pkg_cleanup(void)

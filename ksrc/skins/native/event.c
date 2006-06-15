@@ -45,68 +45,71 @@
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 static int __event_read_proc(char *page,
-                             char **start,
-                             off_t off, int count, int *eof, void *data)
+			     char **start,
+			     off_t off, int count, int *eof, void *data)
 {
-    RT_EVENT *event = (RT_EVENT *)data;
-    char *p = page;
-    int len;
-    spl_t s;
+	RT_EVENT *event = (RT_EVENT *)data;
+	char *p = page;
+	int len;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    p += sprintf(p, "=0x%lx\n", event->value);
+	p += sprintf(p, "=0x%lx\n", event->value);
 
-    if (xnsynch_nsleepers(&event->synch_base) > 0) {
-        xnpholder_t *holder;
+	if (xnsynch_nsleepers(&event->synch_base) > 0) {
+		xnpholder_t *holder;
 
-        /* Pended event -- dump waiters. */
+		/* Pended event -- dump waiters. */
 
-        holder = getheadpq(xnsynch_wait_queue(&event->synch_base));
+		holder = getheadpq(xnsynch_wait_queue(&event->synch_base));
 
-        while (holder) {
-            xnthread_t *sleeper = link2thread(holder, plink);
-            RT_TASK *task = thread2rtask(sleeper);
-            const char *mode =
-                (task->wait_args.event.mode & EV_ANY) ? "any" : "all";
-            unsigned long mask = task->wait_args.event.mask;
-            p += sprintf(p, "+%s (mask=0x%lx, %s)\n", xnthread_name(sleeper),
-                         mask, mode);
-            holder = nextpq(xnsynch_wait_queue(&event->synch_base), holder);
-        }
-    }
+		while (holder) {
+			xnthread_t *sleeper = link2thread(holder, plink);
+			RT_TASK *task = thread2rtask(sleeper);
+			const char *mode =
+			    (task->wait_args.event.
+			     mode & EV_ANY) ? "any" : "all";
+			unsigned long mask = task->wait_args.event.mask;
+			p += sprintf(p, "+%s (mask=0x%lx, %s)\n",
+				     xnthread_name(sleeper), mask, mode);
+			holder =
+			    nextpq(xnsynch_wait_queue(&event->synch_base),
+				   holder);
+		}
+	}
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    len = (p - page) - off;
-    if (len <= off + count)
-        *eof = 1;
-    *start = page + off;
-    if (len > count)
-        len = count;
-    if (len < 0)
-        len = 0;
+	len = (p - page) - off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
 
-    return len;
+	return len;
 }
 
 extern xnptree_t __native_ptree;
 
 static xnpnode_t __event_pnode = {
 
-    .dir = NULL,
-    .type = "events",
-    .entries = 0,
-    .read_proc = &__event_read_proc,
-    .write_proc = NULL,
-    .root = &__native_ptree,
+	.dir = NULL,
+	.type = "events",
+	.entries = 0,
+	.read_proc = &__event_read_proc,
+	.write_proc = NULL,
+	.root = &__native_ptree,
 };
 
 #elif defined(CONFIG_XENO_OPT_REGISTRY)
 
 static xnpnode_t __event_pnode = {
 
-    .type = "events"
+	.type = "events"
 };
 
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
@@ -169,48 +172,49 @@ static xnpnode_t __event_pnode = {
  */
 
 int rt_event_create(RT_EVENT *event,
-                    const char *name, unsigned long ivalue, int mode)
+		    const char *name, unsigned long ivalue, int mode)
 {
-    int err = 0;
+	int err = 0;
 
-    if (xnpod_asynch_p())
-        return -EPERM;
+	if (xnpod_asynch_p())
+		return -EPERM;
 
-    xnsynch_init(&event->synch_base, mode & EV_PRIO);
-    event->value = ivalue;
-    event->handle = 0;          /* i.e. (still) unregistered event. */
-    event->magic = XENO_EVENT_MAGIC;
-    xnobject_copy_name(event->name, name);
+	xnsynch_init(&event->synch_base, mode & EV_PRIO);
+	event->value = ivalue;
+	event->handle = 0;	/* i.e. (still) unregistered event. */
+	event->magic = XENO_EVENT_MAGIC;
+	xnobject_copy_name(event->name, name);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    event->cpid = 0;
+	event->cpid = 0;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
-    /* <!> Since xnregister_enter() may reschedule, only register
-       complete objects, so that the registry cannot return handles to
-       half-baked objects... */
+	/* <!> Since xnregister_enter() may reschedule, only register
+	   complete objects, so that the registry cannot return handles to
+	   half-baked objects... */
 
-    if (name) {
-        xnpnode_t *pnode = &__event_pnode;
+	if (name) {
+		xnpnode_t *pnode = &__event_pnode;
 
-        if (!*name) {
-            /* Since this is an anonymous object (empty name on entry)
-               from user-space, it gets registered under an unique
-               internal name but is not exported through /proc. */
-            xnobject_create_name(event->name, sizeof(event->name),
-                                 (void *)event);
-            pnode = NULL;
-        }
+		if (!*name) {
+			/* Since this is an anonymous object (empty name on entry)
+			   from user-space, it gets registered under an unique
+			   internal name but is not exported through /proc. */
+			xnobject_create_name(event->name, sizeof(event->name),
+					     (void *)event);
+			pnode = NULL;
+		}
 
-        err = xnregistry_enter(event->name, event, &event->handle, pnode);
+		err =
+		    xnregistry_enter(event->name, event, &event->handle, pnode);
 
-        if (err)
-            rt_event_delete(event);
-    }
+		if (err)
+			rt_event_delete(event);
+	}
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-    return err;
+	return err;
 }
 
 /**
@@ -246,40 +250,40 @@ int rt_event_create(RT_EVENT *event,
 
 int rt_event_delete(RT_EVENT *event)
 {
-    int err = 0, rc;
-    spl_t s;
+	int err = 0, rc;
+	spl_t s;
 
-    if (xnpod_asynch_p())
-        return -EPERM;
+	if (xnpod_asynch_p())
+		return -EPERM;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    event = xeno_h2obj_validate(event, XENO_EVENT_MAGIC, RT_EVENT);
+	event = xeno_h2obj_validate(event, XENO_EVENT_MAGIC, RT_EVENT);
 
-    if (!event) {
-        err = xeno_handle_error(event, XENO_EVENT_MAGIC, RT_EVENT);
-        goto unlock_and_exit;
-    }
+	if (!event) {
+		err = xeno_handle_error(event, XENO_EVENT_MAGIC, RT_EVENT);
+		goto unlock_and_exit;
+	}
 
-    rc = xnsynch_destroy(&event->synch_base);
+	rc = xnsynch_destroy(&event->synch_base);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
-    if (event->handle)
-        xnregistry_remove(event->handle);
+	if (event->handle)
+		xnregistry_remove(event->handle);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-    xeno_mark_deleted(event);
+	xeno_mark_deleted(event);
 
-    if (rc == XNSYNCH_RESCHED)
-        /* Some task has been woken up as a result of the deletion:
-           reschedule now. */
-        xnpod_schedule();
+	if (rc == XNSYNCH_RESCHED)
+		/* Some task has been woken up as a result of the deletion:
+		   reschedule now. */
+		xnpod_schedule();
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 /**
@@ -313,49 +317,53 @@ int rt_event_delete(RT_EVENT *event)
 
 int rt_event_signal(RT_EVENT *event, unsigned long mask)
 {
-    xnpholder_t *holder, *nholder;
-    int err = 0, resched = 0;
-    spl_t s;
+	xnpholder_t *holder, *nholder;
+	int err = 0, resched = 0;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    event = xeno_h2obj_validate(event, XENO_EVENT_MAGIC, RT_EVENT);
+	event = xeno_h2obj_validate(event, XENO_EVENT_MAGIC, RT_EVENT);
 
-    if (!event) {
-        err = xeno_handle_error(event, XENO_EVENT_MAGIC, RT_EVENT);
-        goto unlock_and_exit;
-    }
+	if (!event) {
+		err = xeno_handle_error(event, XENO_EVENT_MAGIC, RT_EVENT);
+		goto unlock_and_exit;
+	}
 
-    /* Post the flags. */
+	/* Post the flags. */
 
-    event->value |= mask;
+	event->value |= mask;
 
-    /* And wakeup any sleeper having its request fulfilled. */
+	/* And wakeup any sleeper having its request fulfilled. */
 
-    nholder = getheadpq(xnsynch_wait_queue(&event->synch_base));
+	nholder = getheadpq(xnsynch_wait_queue(&event->synch_base));
 
-    while ((holder = nholder) != NULL) {
-        RT_TASK *sleeper = thread2rtask(link2thread(holder, plink));
-        int mode = sleeper->wait_args.event.mode;
-        unsigned long bits = sleeper->wait_args.event.mask;
+	while ((holder = nholder) != NULL) {
+		RT_TASK *sleeper = thread2rtask(link2thread(holder, plink));
+		int mode = sleeper->wait_args.event.mode;
+		unsigned long bits = sleeper->wait_args.event.mask;
 
-        if (((mode & EV_ANY) && (bits & event->value) != 0) ||
-            (!(mode & EV_ANY) && ((bits & event->value) == bits))) {
-            sleeper->wait_args.event.mask = (bits & event->value);
-            nholder = xnsynch_wakeup_this_sleeper(&event->synch_base, holder);
-            resched = 1;
-        } else
-            nholder = nextpq(xnsynch_wait_queue(&event->synch_base), holder);
-    }
+		if (((mode & EV_ANY) && (bits & event->value) != 0) ||
+		    (!(mode & EV_ANY) && ((bits & event->value) == bits))) {
+			sleeper->wait_args.event.mask = (bits & event->value);
+			nholder =
+			    xnsynch_wakeup_this_sleeper(&event->synch_base,
+							holder);
+			resched = 1;
+		} else
+			nholder =
+			    nextpq(xnsynch_wait_queue(&event->synch_base),
+				   holder);
+	}
 
-    if (resched)
-        xnpod_schedule();
+	if (resched)
+		xnpod_schedule();
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 /**
@@ -439,71 +447,71 @@ int rt_event_signal(RT_EVENT *event, unsigned long mask)
  */
 
 int rt_event_wait(RT_EVENT *event,
-                  unsigned long mask,
-                  unsigned long *mask_r, int mode, RTIME timeout)
+		  unsigned long mask,
+		  unsigned long *mask_r, int mode, RTIME timeout)
 {
-    RT_TASK *task;
-    int err = 0;
-    spl_t s;
+	RT_TASK *task;
+	int err = 0;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    event = xeno_h2obj_validate(event, XENO_EVENT_MAGIC, RT_EVENT);
+	event = xeno_h2obj_validate(event, XENO_EVENT_MAGIC, RT_EVENT);
 
-    if (!event) {
-        err = xeno_handle_error(event, XENO_EVENT_MAGIC, RT_EVENT);
-        goto unlock_and_exit;
-    }
+	if (!event) {
+		err = xeno_handle_error(event, XENO_EVENT_MAGIC, RT_EVENT);
+		goto unlock_and_exit;
+	}
 
-    if (!mask) {
-        *mask_r = event->value;
-        goto unlock_and_exit;
-    }
+	if (!mask) {
+		*mask_r = event->value;
+		goto unlock_and_exit;
+	}
 
-    if (timeout == TM_NONBLOCK) {
-        unsigned long bits = (event->value & mask);
-        *mask_r = bits;
+	if (timeout == TM_NONBLOCK) {
+		unsigned long bits = (event->value & mask);
+		*mask_r = bits;
 
-        if (mode & EV_ANY) {
-            if (!bits)
-                err = -EWOULDBLOCK;
-        } else if (bits != mask)
-            err = -EWOULDBLOCK;
+		if (mode & EV_ANY) {
+			if (!bits)
+				err = -EWOULDBLOCK;
+		} else if (bits != mask)
+			err = -EWOULDBLOCK;
 
-        goto unlock_and_exit;
-    }
+		goto unlock_and_exit;
+	}
 
-    if (((mode & EV_ANY) && (mask & event->value) != 0) ||
-        (!(mode & EV_ANY) && ((mask & event->value) == mask))) {
-        *mask_r = (event->value & mask);
-        goto unlock_and_exit;
-    }
+	if (((mode & EV_ANY) && (mask & event->value) != 0) ||
+	    (!(mode & EV_ANY) && ((mask & event->value) == mask))) {
+		*mask_r = (event->value & mask);
+		goto unlock_and_exit;
+	}
 
-    if (xnpod_unblockable_p()) {
-        err = -EPERM;
-        goto unlock_and_exit;
-    }
+	if (xnpod_unblockable_p()) {
+		err = -EPERM;
+		goto unlock_and_exit;
+	}
 
-    task = xeno_current_task();
-    task->wait_args.event.mode = mode;
-    task->wait_args.event.mask = mask;
-    xnsynch_sleep_on(&event->synch_base, timeout);
-    /* The returned mask is only significant if the operation has
-       succeeded, but do always write it back anyway. */
-    *mask_r = task->wait_args.event.mask;
+	task = xeno_current_task();
+	task->wait_args.event.mode = mode;
+	task->wait_args.event.mask = mask;
+	xnsynch_sleep_on(&event->synch_base, timeout);
+	/* The returned mask is only significant if the operation has
+	   succeeded, but do always write it back anyway. */
+	*mask_r = task->wait_args.event.mask;
 
-    if (xnthread_test_flags(&task->thread_base, XNRMID))
-        err = -EIDRM;           /* Event group deleted while pending. */
-    else if (xnthread_test_flags(&task->thread_base, XNTIMEO))
-        err = -ETIMEDOUT;       /* Timeout. */
-    else if (xnthread_test_flags(&task->thread_base, XNBREAK))
-        err = -EINTR;           /* Unblocked. */
+	if (xnthread_test_flags(&task->thread_base, XNRMID))
+		err = -EIDRM;	/* Event group deleted while pending. */
+	else if (xnthread_test_flags(&task->thread_base, XNTIMEO))
+		err = -ETIMEDOUT;	/* Timeout. */
+	else if (xnthread_test_flags(&task->thread_base, XNBREAK))
+		err = -EINTR;	/* Unblocked. */
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 /**
@@ -540,30 +548,30 @@ int rt_event_wait(RT_EVENT *event,
 
 int rt_event_clear(RT_EVENT *event, unsigned long mask, unsigned long *mask_r)
 {
-    int err = 0;
-    spl_t s;
+	int err = 0;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    event = xeno_h2obj_validate(event, XENO_EVENT_MAGIC, RT_EVENT);
+	event = xeno_h2obj_validate(event, XENO_EVENT_MAGIC, RT_EVENT);
 
-    if (!event) {
-        err = xeno_handle_error(event, XENO_EVENT_MAGIC, RT_EVENT);
-        goto unlock_and_exit;
-    }
+	if (!event) {
+		err = xeno_handle_error(event, XENO_EVENT_MAGIC, RT_EVENT);
+		goto unlock_and_exit;
+	}
 
-    if (mask_r)
-        *mask_r = event->value;
+	if (mask_r)
+		*mask_r = event->value;
 
-    /* Clear the flags. */
+	/* Clear the flags. */
 
-    event->value &= ~mask;
+	event->value &= ~mask;
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 /**
@@ -600,27 +608,27 @@ int rt_event_clear(RT_EVENT *event, unsigned long mask, unsigned long *mask_r)
 
 int rt_event_inquire(RT_EVENT *event, RT_EVENT_INFO *info)
 {
-    int err = 0;
-    spl_t s;
+	int err = 0;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    event = xeno_h2obj_validate(event, XENO_EVENT_MAGIC, RT_EVENT);
+	event = xeno_h2obj_validate(event, XENO_EVENT_MAGIC, RT_EVENT);
 
-    if (!event) {
-        err = xeno_handle_error(event, XENO_EVENT_MAGIC, RT_EVENT);
-        goto unlock_and_exit;
-    }
+	if (!event) {
+		err = xeno_handle_error(event, XENO_EVENT_MAGIC, RT_EVENT);
+		goto unlock_and_exit;
+	}
 
-    strcpy(info->name, event->name);
-    info->value = event->value;
-    info->nwaiters = xnsynch_nsleepers(&event->synch_base);
+	strcpy(info->name, event->name);
+	info->value = event->value;
+	info->nwaiters = xnsynch_nsleepers(&event->synch_base);
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 /**
@@ -703,7 +711,7 @@ int rt_event_inquire(RT_EVENT *event, RT_EVENT_INFO *info)
 
 int __native_event_pkg_init(void)
 {
-    return 0;
+	return 0;
 }
 
 void __native_event_pkg_cleanup(void)
