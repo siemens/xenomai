@@ -57,100 +57,100 @@ static DECLARE_XNQUEUE(__pipe_flush_q);
 
 static ssize_t __pipe_link_proc(char *buf, int count, void *data)
 {
-    RT_PIPE *pipe = (RT_PIPE *)data;
-    return snprintf(buf, count, "/dev/rtp%d", pipe->minor);
+	RT_PIPE *pipe = (RT_PIPE *)data;
+	return snprintf(buf, count, "/dev/rtp%d", pipe->minor);
 }
 
 extern xnptree_t __native_ptree;
 
 static xnpnode_t __pipe_pnode = {
 
-    .dir = NULL,
-    .type = "pipes",
-    .entries = 0,
-    .link_proc = &__pipe_link_proc,
-    .root = &__native_ptree,
+	.dir = NULL,
+	.type = "pipes",
+	.entries = 0,
+	.link_proc = &__pipe_link_proc,
+	.root = &__native_ptree,
 };
 
 #elif defined(CONFIG_XENO_OPT_REGISTRY)
 
 static xnpnode_t __pipe_pnode = {
 
-    .type = "pipes"
+	.type = "pipes"
 };
 
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 static void __pipe_flush_pool(xnheap_t *heap,
-                              void *poolmem, u_long poolsize, void *cookie)
+			      void *poolmem, u_long poolsize, void *cookie)
 {
-    xnarch_sysfree(poolmem, poolsize);
+	xnarch_sysfree(poolmem, poolsize);
 }
 
 static inline ssize_t __pipe_flush(RT_PIPE *pipe)
 {
-    ssize_t nbytes = pipe->fillsz + sizeof(RT_PIPE_MSG);
-    void *buffer = pipe->buffer;
+	ssize_t nbytes = pipe->fillsz + sizeof(RT_PIPE_MSG);
+	void *buffer = pipe->buffer;
 
-    pipe->buffer = NULL;
-    pipe->fillsz = 0;
+	pipe->buffer = NULL;
+	pipe->fillsz = 0;
 
-    return xnpipe_send(pipe->minor, buffer, nbytes, P_NORMAL);
-    /* The buffer will be freed by the output handler. */
+	return xnpipe_send(pipe->minor, buffer, nbytes, P_NORMAL);
+	/* The buffer will be freed by the output handler. */
 }
 
 static void __pipe_flush_handler(void *cookie)
 {
-    xnholder_t *holder;
-    spl_t s;
+	xnholder_t *holder;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    /* Flush all pipes with pending messages. */
+	/* Flush all pipes with pending messages. */
 
-    while ((holder = getq(&__pipe_flush_q)) != NULL) {
-        RT_PIPE *pipe = link2rtpipe(holder);
-        __clear_bit(0, &pipe->flushable);
-        xnlock_put_irqrestore(&nklock, s);
-        __pipe_flush(pipe);     /* Cannot do anything upon error here. */
-        xnlock_get_irqsave(&nklock, s);
-    }
+	while ((holder = getq(&__pipe_flush_q)) != NULL) {
+		RT_PIPE *pipe = link2rtpipe(holder);
+		__clear_bit(0, &pipe->flushable);
+		xnlock_put_irqrestore(&nklock, s);
+		__pipe_flush(pipe);	/* Cannot do anything upon error here. */
+		xnlock_get_irqsave(&nklock, s);
+	}
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 static void *__pipe_alloc_handler(int bminor, size_t size, void *cookie)
 {
-    RT_PIPE *pipe = (RT_PIPE *)cookie;
+	RT_PIPE *pipe = (RT_PIPE *)cookie;
 
-    /* Allocate memory for the incoming message. */
-    return xnheap_alloc(pipe->bufpool, size);
+	/* Allocate memory for the incoming message. */
+	return xnheap_alloc(pipe->bufpool, size);
 }
 
 static int __pipe_output_handler(int bminor,
-                                 xnpipe_mh_t *mh, int retval, void *cookie)
+				 xnpipe_mh_t *mh, int retval, void *cookie)
 {
-    RT_PIPE *pipe = (RT_PIPE *)cookie;
+	RT_PIPE *pipe = (RT_PIPE *)cookie;
 
-    /* Free memory from output/discarded message. */
-    xnheap_free(pipe->bufpool, mh);
-    return retval;
+	/* Free memory from output/discarded message. */
+	xnheap_free(pipe->bufpool, mh);
+	return retval;
 }
 
 int __native_pipe_pkg_init(void)
 {
-    __pipe_flush_apc =
-        rthal_apc_alloc("pipe_flush", &__pipe_flush_handler, NULL);
+	__pipe_flush_apc =
+	    rthal_apc_alloc("pipe_flush", &__pipe_flush_handler, NULL);
 
-    if (__pipe_flush_apc < 0)
-        return __pipe_flush_apc;
+	if (__pipe_flush_apc < 0)
+		return __pipe_flush_apc;
 
-    return 0;
+	return 0;
 }
 
 void __native_pipe_pkg_cleanup(void)
 {
-    rthal_apc_free(__pipe_flush_apc);
+	rthal_apc_free(__pipe_flush_apc);
 }
 
 /**
@@ -236,87 +236,89 @@ void __native_pipe_pkg_cleanup(void)
 
 int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 {
-    int err = 0;
-    void *poolmem;
+	int err = 0;
+	void *poolmem;
 
-    if (!xnpod_root_p())
-        return -EPERM;
+	if (!xnpod_root_p())
+		return -EPERM;
 
-    pipe->buffer = NULL;
-    pipe->bufpool = &kheap;
-    pipe->fillsz = 0;
-    pipe->flushable = 0;
-    pipe->handle = 0;           /* i.e. (still) unregistered pipe. */
-    pipe->magic = XENO_PIPE_MAGIC;
-    xnobject_copy_name(pipe->name, name);
+	pipe->buffer = NULL;
+	pipe->bufpool = &kheap;
+	pipe->fillsz = 0;
+	pipe->flushable = 0;
+	pipe->handle = 0;	/* i.e. (still) unregistered pipe. */
+	pipe->magic = XENO_PIPE_MAGIC;
+	xnobject_copy_name(pipe->name, name);
 
-    if (poolsize > 0) {
-        /* Make sure we won't hit trivial argument errors when calling
-           xnheap_init(). */
+	if (poolsize > 0) {
+		/* Make sure we won't hit trivial argument errors when calling
+		   xnheap_init(). */
 
-        if (poolsize < 2 * PAGE_SIZE)
-            poolsize = 2 * PAGE_SIZE;
+		if (poolsize < 2 * PAGE_SIZE)
+			poolsize = 2 * PAGE_SIZE;
 
-        /* Account for the overhead so that the actual free space is large
-           enough to match the requested size. */
+		/* Account for the overhead so that the actual free space is large
+		   enough to match the requested size. */
 
-        poolsize += xnheap_overhead(poolsize, PAGE_SIZE);
-        poolsize = PAGE_ALIGN(poolsize);
+		poolsize += xnheap_overhead(poolsize, PAGE_SIZE);
+		poolsize = PAGE_ALIGN(poolsize);
 
-        poolmem = xnarch_sysalloc(poolsize);
+		poolmem = xnarch_sysalloc(poolsize);
 
-        if (!poolmem)
-            return -ENOMEM;
+		if (!poolmem)
+			return -ENOMEM;
 
-        err = xnheap_init(&pipe->privpool, poolmem, poolsize, PAGE_SIZE);   /* Use natural page size */
-        if (err) {
-            xnarch_sysfree(poolmem, poolsize);
-            return err;
-        }
+		err = xnheap_init(&pipe->privpool, poolmem, poolsize, PAGE_SIZE);	/* Use natural page size */
+		if (err) {
+			xnarch_sysfree(poolmem, poolsize);
+			return err;
+		}
 
-        pipe->bufpool = &pipe->privpool;
-    }
+		pipe->bufpool = &pipe->privpool;
+	}
 
-    minor = xnpipe_connect(minor,
-                           &__pipe_output_handler,
-                           NULL, &__pipe_alloc_handler, pipe);
+	minor = xnpipe_connect(minor,
+			       &__pipe_output_handler,
+			       NULL, &__pipe_alloc_handler, pipe);
 
-    if (minor < 0) {
-        if (pipe->bufpool == &pipe->privpool)
-            xnheap_destroy(&pipe->privpool, __pipe_flush_pool, NULL);
+	if (minor < 0) {
+		if (pipe->bufpool == &pipe->privpool)
+			xnheap_destroy(&pipe->privpool, __pipe_flush_pool,
+				       NULL);
 
-        return minor;
-    }
-    pipe->minor = minor;
+		return minor;
+	}
+	pipe->minor = minor;
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-    pipe->cpid = 0;
+	pipe->cpid = 0;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
-    /* <!> Since xnregister_enter() may reschedule, only register
-       complete objects, so that the registry cannot return handles to
-       half-baked objects... */
+	/* <!> Since xnregister_enter() may reschedule, only register
+	   complete objects, so that the registry cannot return handles to
+	   half-baked objects... */
 
-    if (name) {
-        xnpnode_t *pnode = &__pipe_pnode;
+	if (name) {
+		xnpnode_t *pnode = &__pipe_pnode;
 
-        if (!*name) {
-            /* Since this is an anonymous object (empty name on entry)
-               from user-space, it gets registered under an unique
-               internal name but is not exported through /proc. */
-            xnobject_create_name(pipe->name, sizeof(pipe->name), (void *)pipe);
-            pnode = NULL;
-        }
+		if (!*name) {
+			/* Since this is an anonymous object (empty name on entry)
+			   from user-space, it gets registered under an unique
+			   internal name but is not exported through /proc. */
+			xnobject_create_name(pipe->name, sizeof(pipe->name),
+					     (void *)pipe);
+			pnode = NULL;
+		}
 
-        err = xnregistry_enter(pipe->name, pipe, &pipe->handle, pnode);
+		err = xnregistry_enter(pipe->name, pipe, &pipe->handle, pnode);
 
-        if (err)
-            rt_pipe_delete(pipe);
-    }
+		if (err)
+			rt_pipe_delete(pipe);
+	}
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-    return err;
+	return err;
 }
 
 /**
@@ -353,43 +355,43 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 
 int rt_pipe_delete(RT_PIPE *pipe)
 {
-    int err;
-    spl_t s;
+	int err;
+	spl_t s;
 
-    if (xnpod_asynch_p())
-        return -EPERM;
+	if (xnpod_asynch_p())
+		return -EPERM;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    pipe = xeno_h2obj_validate(pipe, XENO_PIPE_MAGIC, RT_PIPE);
+	pipe = xeno_h2obj_validate(pipe, XENO_PIPE_MAGIC, RT_PIPE);
 
-    if (!pipe) {
-        err = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
-        xnlock_put_irqrestore(&nklock, s);
-        return err;
-    }
+	if (!pipe) {
+		err = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
+		xnlock_put_irqrestore(&nklock, s);
+		return err;
+	}
 
-    if (__test_and_clear_bit(0, &pipe->flushable)) {
-        /* Purge data waiting for flush. */
-        removeq(&__pipe_flush_q, &pipe->link);
-        rt_pipe_free(pipe, pipe->buffer);
-    }
+	if (__test_and_clear_bit(0, &pipe->flushable)) {
+		/* Purge data waiting for flush. */
+		removeq(&__pipe_flush_q, &pipe->link);
+		rt_pipe_free(pipe, pipe->buffer);
+	}
 
-    err = xnpipe_disconnect(pipe->minor);
+	err = xnpipe_disconnect(pipe->minor);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
-    if (pipe->handle)
-        xnregistry_remove(pipe->handle);
+	if (pipe->handle)
+		xnregistry_remove(pipe->handle);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-    xeno_mark_deleted(pipe);
+	xeno_mark_deleted(pipe);
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    if (pipe->bufpool == &pipe->privpool)
-        xnheap_destroy(&pipe->privpool, __pipe_flush_pool, NULL);
+	if (pipe->bufpool == &pipe->privpool)
+		xnheap_destroy(&pipe->privpool, __pipe_flush_pool, NULL);
 
-    return err;
+	return err;
 }
 
 /**
@@ -471,28 +473,28 @@ int rt_pipe_delete(RT_PIPE *pipe)
 
 ssize_t rt_pipe_receive(RT_PIPE *pipe, RT_PIPE_MSG **msgp, RTIME timeout)
 {
-    ssize_t n;
-    spl_t s;
+	ssize_t n;
+	spl_t s;
 
-    if (timeout != TM_NONBLOCK && xnpod_unblockable_p())
-        return -EPERM;
+	if (timeout != TM_NONBLOCK && xnpod_unblockable_p())
+		return -EPERM;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    pipe = xeno_h2obj_validate(pipe, XENO_PIPE_MAGIC, RT_PIPE);
+	pipe = xeno_h2obj_validate(pipe, XENO_PIPE_MAGIC, RT_PIPE);
 
-    if (!pipe) {
-        n = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
-        goto unlock_and_exit;
-    }
+	if (!pipe) {
+		n = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
+		goto unlock_and_exit;
+	}
 
-    n = xnpipe_recv(pipe->minor, msgp, timeout);
+	n = xnpipe_recv(pipe->minor, msgp, timeout);
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return n;
+	return n;
 }
 
 /**
@@ -578,28 +580,28 @@ ssize_t rt_pipe_receive(RT_PIPE *pipe, RT_PIPE_MSG **msgp, RTIME timeout)
 
 ssize_t rt_pipe_read(RT_PIPE *pipe, void *buf, size_t size, RTIME timeout)
 {
-    RT_PIPE_MSG *msg;
-    ssize_t nbytes;
+	RT_PIPE_MSG *msg;
+	ssize_t nbytes;
 
-    if (size == 0)
-        return 0;
+	if (size == 0)
+		return 0;
 
-    nbytes = rt_pipe_receive(pipe, &msg, timeout);
+	nbytes = rt_pipe_receive(pipe, &msg, timeout);
 
-    if (nbytes < 0)
-        return nbytes;
+	if (nbytes < 0)
+		return nbytes;
 
-    if (size < P_MSGSIZE(msg))
-        nbytes = -ENOBUFS;
-    else if (P_MSGSIZE(msg) > 0)
-        memcpy(buf, P_MSGPTR(msg), P_MSGSIZE(msg));
+	if (size < P_MSGSIZE(msg))
+		nbytes = -ENOBUFS;
+	else if (P_MSGSIZE(msg) > 0)
+		memcpy(buf, P_MSGPTR(msg), P_MSGSIZE(msg));
 
-    /* Zero-sized messages are allowed, so we still need to free the
-       message buffer even if no data copy took place. */
+	/* Zero-sized messages are allowed, so we still need to free the
+	   message buffer even if no data copy took place. */
 
-    rt_pipe_free(pipe, msg);
+	rt_pipe_free(pipe, msg);
 
-    return nbytes;
+	return nbytes;
 }
 
  /**
@@ -678,35 +680,36 @@ ssize_t rt_pipe_read(RT_PIPE *pipe, void *buf, size_t size, RTIME timeout)
 
 ssize_t rt_pipe_send(RT_PIPE *pipe, RT_PIPE_MSG *msg, size_t size, int mode)
 {
-    ssize_t n = 0;
-    spl_t s;
+	ssize_t n = 0;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    pipe = xeno_h2obj_validate(pipe, XENO_PIPE_MAGIC, RT_PIPE);
+	pipe = xeno_h2obj_validate(pipe, XENO_PIPE_MAGIC, RT_PIPE);
 
-    if (!pipe) {
-        n = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
-        goto unlock_and_exit;
-    }
+	if (!pipe) {
+		n = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
+		goto unlock_and_exit;
+	}
 
-    if (__test_and_clear_bit(0, &pipe->flushable)) {
-        removeq(&__pipe_flush_q, &pipe->link);
-        n = __pipe_flush(pipe);
+	if (__test_and_clear_bit(0, &pipe->flushable)) {
+		removeq(&__pipe_flush_q, &pipe->link);
+		n = __pipe_flush(pipe);
 
-        if (n < 0)
-            goto unlock_and_exit;
-    }
+		if (n < 0)
+			goto unlock_and_exit;
+	}
 
-    if (size > 0)
-        /* We need to add the size of the message header here. */
-        n = xnpipe_send(pipe->minor, msg, size + sizeof(RT_PIPE_MSG), mode);
+	if (size > 0)
+		/* We need to add the size of the message header here. */
+		n = xnpipe_send(pipe->minor, msg, size + sizeof(RT_PIPE_MSG),
+				mode);
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return n <= 0 ? n : n - sizeof(RT_PIPE_MSG);
+	return n <= 0 ? n : n - sizeof(RT_PIPE_MSG);
 }
 
  /**
@@ -777,28 +780,28 @@ ssize_t rt_pipe_send(RT_PIPE *pipe, RT_PIPE_MSG *msg, size_t size, int mode)
 
 ssize_t rt_pipe_write(RT_PIPE *pipe, const void *buf, size_t size, int mode)
 {
-    RT_PIPE_MSG *msg;
-    ssize_t nbytes;
+	RT_PIPE_MSG *msg;
+	ssize_t nbytes;
 
-    if (size == 0)
-        /* Try flushing the streaming buffer in any case. */
-        return rt_pipe_send(pipe, NULL, 0, mode);
+	if (size == 0)
+		/* Try flushing the streaming buffer in any case. */
+		return rt_pipe_send(pipe, NULL, 0, mode);
 
-    msg = rt_pipe_alloc(pipe, size);
+	msg = rt_pipe_alloc(pipe, size);
 
-    if (!msg)
-        return -ENOMEM;
+	if (!msg)
+		return -ENOMEM;
 
-    memcpy(P_MSGPTR(msg), buf, size);
+	memcpy(P_MSGPTR(msg), buf, size);
 
-    nbytes = rt_pipe_send(pipe, msg, size, mode);
+	nbytes = rt_pipe_send(pipe, msg, size, mode);
 
-    if (nbytes != size)
-        /* If the operation failed, we need to free the message buffer
-           by ourselves. */
-        rt_pipe_free(pipe, msg);
+	if (nbytes != size)
+		/* If the operation failed, we need to free the message buffer
+		   by ourselves. */
+		rt_pipe_free(pipe, msg);
 
-    return nbytes;
+	return nbytes;
 }
 
 /**
@@ -858,76 +861,77 @@ ssize_t rt_pipe_write(RT_PIPE *pipe, const void *buf, size_t size, int mode)
 
 ssize_t rt_pipe_stream(RT_PIPE *pipe, const void *buf, size_t size)
 {
-    ssize_t outbytes = 0;
-    size_t n;
-    spl_t s;
+	ssize_t outbytes = 0;
+	size_t n;
+	spl_t s;
 
 #if CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ <= 0
-    return -ENOSYS;
+	return -ENOSYS;
 #else /* CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ > 0 */
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    pipe = xeno_h2obj_validate(pipe, XENO_PIPE_MAGIC, RT_PIPE);
+	pipe = xeno_h2obj_validate(pipe, XENO_PIPE_MAGIC, RT_PIPE);
 
-    if (!pipe) {
-        outbytes = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
-        goto unlock_and_exit;
-    }
+	if (!pipe) {
+		outbytes = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
+		goto unlock_and_exit;
+	}
 
-    while (size > 0) {
-        if (size >= CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ - pipe->fillsz)
-            n = CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ - pipe->fillsz;
-        else
-            n = size;
+	while (size > 0) {
+		if (size >= CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ - pipe->fillsz)
+			n = CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ - pipe->fillsz;
+		else
+			n = size;
 
-        if (n == 0) {
-            ssize_t err = __pipe_flush(pipe);
+		if (n == 0) {
+			ssize_t err = __pipe_flush(pipe);
 
-            if (__test_and_clear_bit(0, &pipe->flushable))
-                removeq(&__pipe_flush_q, &pipe->link);
+			if (__test_and_clear_bit(0, &pipe->flushable))
+				removeq(&__pipe_flush_q, &pipe->link);
 
-            if (err < 0) {
-                outbytes = err;
-                goto unlock_and_exit;
-            }
+			if (err < 0) {
+				outbytes = err;
+				goto unlock_and_exit;
+			}
 
-            continue;
-        }
+			continue;
+		}
 
-        if (pipe->buffer == NULL) {
-            pipe->buffer =
-                rt_pipe_alloc(pipe, CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ);
+		if (pipe->buffer == NULL) {
+			pipe->buffer =
+			    rt_pipe_alloc(pipe,
+					  CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ);
 
-            if (pipe->buffer == NULL) {
-                outbytes = -ENOMEM;
-                goto unlock_and_exit;
-            }
-        }
+			if (pipe->buffer == NULL) {
+				outbytes = -ENOMEM;
+				goto unlock_and_exit;
+			}
+		}
 
-        memcpy(P_MSGPTR(pipe->buffer) + pipe->fillsz, (caddr_t) buf + outbytes,
-               n);
-        pipe->fillsz += n;
-        outbytes += n;
-        size -= n;
-    }
+		memcpy(P_MSGPTR(pipe->buffer) + pipe->fillsz,
+		       (caddr_t) buf + outbytes, n);
+		pipe->fillsz += n;
+		outbytes += n;
+		size -= n;
+	}
 
-    /* The flushable bit is not that elegant, but we must make sure
-       that we won't enqueue the pipe descriptor twice in the flush
-       queue, but we still have to enqueue it before the virq is made
-       pending if necessary since it could preempt a Linux-based
-       caller, so... */
+	/* The flushable bit is not that elegant, but we must make sure
+	   that we won't enqueue the pipe descriptor twice in the flush
+	   queue, but we still have to enqueue it before the virq is made
+	   pending if necessary since it could preempt a Linux-based
+	   caller, so... */
 
-    if (pipe->fillsz > 0 && !__test_and_set_bit(0, &pipe->flushable)) {
-        appendq(&__pipe_flush_q, &pipe->link);
-        rthal_apc_schedule(__pipe_flush_apc);
-    }
+	if (pipe->fillsz > 0 && !__test_and_set_bit(0, &pipe->flushable)) {
+		appendq(&__pipe_flush_q, &pipe->link);
+		rthal_apc_schedule(__pipe_flush_apc);
+	}
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return outbytes;
+	return outbytes;
 #endif /* CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ <= 0 */
 }
 
@@ -966,28 +970,28 @@ ssize_t rt_pipe_stream(RT_PIPE *pipe, const void *buf, size_t size)
 
 ssize_t rt_pipe_flush(RT_PIPE *pipe)
 {
-    ssize_t n = 0;
-    spl_t s;
+	ssize_t n = 0;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    pipe = xeno_h2obj_validate(pipe, XENO_PIPE_MAGIC, RT_PIPE);
+	pipe = xeno_h2obj_validate(pipe, XENO_PIPE_MAGIC, RT_PIPE);
 
-    if (!pipe) {
-        n = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
-        goto unlock_and_exit;
-    }
+	if (!pipe) {
+		n = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
+		goto unlock_and_exit;
+	}
 
-    if (__test_and_clear_bit(0, &pipe->flushable)) {
-        removeq(&__pipe_flush_q, &pipe->link);
-        n = __pipe_flush(pipe);
-    }
+	if (__test_and_clear_bit(0, &pipe->flushable)) {
+		removeq(&__pipe_flush_q, &pipe->link);
+		n = __pipe_flush(pipe);
+	}
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return n <= 0 ? n : n - sizeof(RT_PIPE_MSG);
+	return n <= 0 ? n : n - sizeof(RT_PIPE_MSG);
 }
 
 /**
@@ -1021,15 +1025,16 @@ ssize_t rt_pipe_flush(RT_PIPE *pipe)
 
 RT_PIPE_MSG *rt_pipe_alloc(RT_PIPE *pipe, size_t size)
 {
-    RT_PIPE_MSG *msg =
-        (RT_PIPE_MSG *)xnheap_alloc(pipe->bufpool, size + sizeof(RT_PIPE_MSG));
+	RT_PIPE_MSG *msg =
+	    (RT_PIPE_MSG *)xnheap_alloc(pipe->bufpool,
+					size + sizeof(RT_PIPE_MSG));
 
-    if (msg) {
-        inith(&msg->link);
-        msg->size = size;
-    }
+	if (msg) {
+		inith(&msg->link);
+		msg->size = size;
+	}
 
-    return msg;
+	return msg;
 }
 
 /**
@@ -1061,7 +1066,7 @@ RT_PIPE_MSG *rt_pipe_alloc(RT_PIPE *pipe, size_t size)
 
 int rt_pipe_free(RT_PIPE *pipe, RT_PIPE_MSG *msg)
 {
-    return xnheap_free(pipe->bufpool, msg);
+	return xnheap_free(pipe->bufpool, msg);
 }
 
 /*@}*/

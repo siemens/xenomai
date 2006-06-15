@@ -50,66 +50,69 @@
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 static int __mutex_read_proc(char *page,
-                             char **start,
-                             off_t off, int count, int *eof, void *data)
+			     char **start,
+			     off_t off, int count, int *eof, void *data)
 {
-    RT_MUTEX *mutex = (RT_MUTEX *)data;
-    char *p = page;
-    int len;
-    spl_t s;
+	RT_MUTEX *mutex = (RT_MUTEX *)data;
+	char *p = page;
+	int len;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (mutex->owner) {
-        xnpholder_t *holder;
+	if (mutex->owner) {
+		xnpholder_t *holder;
 
-        /* Locked mutex -- dump owner and waiters, if any. */
+		/* Locked mutex -- dump owner and waiters, if any. */
 
-        p += sprintf(p, "=locked by %s depth=%d\n",
-                     xnthread_name(&mutex->owner->thread_base), mutex->lockcnt);
+		p += sprintf(p, "=locked by %s depth=%d\n",
+			     xnthread_name(&mutex->owner->thread_base),
+			     mutex->lockcnt);
 
-        holder = getheadpq(xnsynch_wait_queue(&mutex->synch_base));
+		holder = getheadpq(xnsynch_wait_queue(&mutex->synch_base));
 
-        while (holder) {
-            xnthread_t *sleeper = link2thread(holder, plink);
-            p += sprintf(p, "+%s\n", xnthread_name(sleeper));
-            holder = nextpq(xnsynch_wait_queue(&mutex->synch_base), holder);
-        }
-    } else
-        /* Mutex unlocked. */
-        p += sprintf(p, "=unlocked\n");
+		while (holder) {
+			xnthread_t *sleeper = link2thread(holder, plink);
+			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
+			holder =
+			    nextpq(xnsynch_wait_queue(&mutex->synch_base),
+				   holder);
+		}
+	} else
+		/* Mutex unlocked. */
+		p += sprintf(p, "=unlocked\n");
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    len = (p - page) - off;
-    if (len <= off + count)
-        *eof = 1;
-    *start = page + off;
-    if (len > count)
-        len = count;
-    if (len < 0)
-        len = 0;
+	len = (p - page) - off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
 
-    return len;
+	return len;
 }
 
 extern xnptree_t __native_ptree;
 
 static xnpnode_t __mutex_pnode = {
 
-    .dir = NULL,
-    .type = "mutexes",
-    .entries = 0,
-    .read_proc = &__mutex_read_proc,
-    .write_proc = NULL,
-    .root = &__native_ptree,
+	.dir = NULL,
+	.type = "mutexes",
+	.entries = 0,
+	.read_proc = &__mutex_read_proc,
+	.write_proc = NULL,
+	.root = &__native_ptree,
 };
 
 #elif defined(CONFIG_XENO_OPT_REGISTRY)
 
 static xnpnode_t __mutex_pnode = {
 
-    .type = "mutexes"
+	.type = "mutexes"
 };
 
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
@@ -158,47 +161,48 @@ static xnpnode_t __mutex_pnode = {
 
 int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 {
-    int err = 0;
+	int err = 0;
 
-    if (xnpod_asynch_p())
-        return -EPERM;
+	if (xnpod_asynch_p())
+		return -EPERM;
 
-    xnsynch_init(&mutex->synch_base, XNSYNCH_PRIO | XNSYNCH_PIP);
-    mutex->handle = 0;          /* i.e. (still) unregistered mutex. */
-    mutex->magic = XENO_MUTEX_MAGIC;
-    mutex->owner = NULL;
-    mutex->lockcnt = 0;
-    xnobject_copy_name(mutex->name, name);
+	xnsynch_init(&mutex->synch_base, XNSYNCH_PRIO | XNSYNCH_PIP);
+	mutex->handle = 0;	/* i.e. (still) unregistered mutex. */
+	mutex->magic = XENO_MUTEX_MAGIC;
+	mutex->owner = NULL;
+	mutex->lockcnt = 0;
+	xnobject_copy_name(mutex->name, name);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    mutex->cpid = 0;
+	mutex->cpid = 0;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
-    /* <!> Since xnregister_enter() may reschedule, only register
-       complete objects, so that the registry cannot return handles to
-       half-baked objects... */
+	/* <!> Since xnregister_enter() may reschedule, only register
+	   complete objects, so that the registry cannot return handles to
+	   half-baked objects... */
 
-    if (name) {
-        xnpnode_t *pnode = &__mutex_pnode;
+	if (name) {
+		xnpnode_t *pnode = &__mutex_pnode;
 
-        if (!*name) {
-            /* Since this is an anonymous object (empty name on entry)
-               from user-space, it gets registered under an unique
-               internal name but is not exported through /proc. */
-            xnobject_create_name(mutex->name, sizeof(mutex->name),
-                                 (void *)mutex);
-            pnode = NULL;
-        }
+		if (!*name) {
+			/* Since this is an anonymous object (empty name on entry)
+			   from user-space, it gets registered under an unique
+			   internal name but is not exported through /proc. */
+			xnobject_create_name(mutex->name, sizeof(mutex->name),
+					     (void *)mutex);
+			pnode = NULL;
+		}
 
-        err = xnregistry_enter(mutex->name, mutex, &mutex->handle, pnode);
+		err =
+		    xnregistry_enter(mutex->name, mutex, &mutex->handle, pnode);
 
-        if (err)
-            rt_mutex_delete(mutex);
-    }
+		if (err)
+			rt_mutex_delete(mutex);
+	}
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-    return err;
+	return err;
 }
 
 /**
@@ -235,40 +239,40 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 
 int rt_mutex_delete(RT_MUTEX *mutex)
 {
-    int err = 0, rc;
-    spl_t s;
+	int err = 0, rc;
+	spl_t s;
 
-    if (xnpod_asynch_p())
-        return -EPERM;
+	if (xnpod_asynch_p())
+		return -EPERM;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    mutex = xeno_h2obj_validate(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
+	mutex = xeno_h2obj_validate(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
 
-    if (!mutex) {
-        err = xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
-        goto unlock_and_exit;
-    }
+	if (!mutex) {
+		err = xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
+		goto unlock_and_exit;
+	}
 
-    rc = xnsynch_destroy(&mutex->synch_base);
+	rc = xnsynch_destroy(&mutex->synch_base);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
-    if (mutex->handle)
-        xnregistry_remove(mutex->handle);
+	if (mutex->handle)
+		xnregistry_remove(mutex->handle);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-    xeno_mark_deleted(mutex);
+	xeno_mark_deleted(mutex);
 
-    if (rc == XNSYNCH_RESCHED)
-        /* Some task has been woken up as a result of the deletion:
-           reschedule now. */
-        xnpod_schedule();
+	if (rc == XNSYNCH_RESCHED)
+		/* Some task has been woken up as a result of the deletion:
+		   reschedule now. */
+		xnpod_schedule();
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 /**
@@ -338,60 +342,60 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 
 int rt_mutex_lock(RT_MUTEX *mutex, RTIME timeout)
 {
-    RT_TASK *task;
-    int err = 0;
-    spl_t s;
+	RT_TASK *task;
+	int err = 0;
+	spl_t s;
 
-    if (xnpod_unblockable_p())
-        return -EPERM;
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    mutex = xeno_h2obj_validate(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
+	mutex = xeno_h2obj_validate(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
 
-    if (!mutex) {
-        err = xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
-        goto unlock_and_exit;
-    }
+	if (!mutex) {
+		err = xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
+		goto unlock_and_exit;
+	}
 
-    task = xeno_current_task();
+	task = xeno_current_task();
 
-    if (mutex->owner == NULL) {
-        xnsynch_set_owner(&mutex->synch_base, &task->thread_base);
-        goto grab_mutex;
-    }
+	if (mutex->owner == NULL) {
+		xnsynch_set_owner(&mutex->synch_base, &task->thread_base);
+		goto grab_mutex;
+	}
 
-    if (mutex->owner == task) {
-        mutex->lockcnt++;
-        goto unlock_and_exit;
-    }
+	if (mutex->owner == task) {
+		mutex->lockcnt++;
+		goto unlock_and_exit;
+	}
 
-    if (timeout == TM_NONBLOCK) {
-        err = -EWOULDBLOCK;
-        goto unlock_and_exit;
-    }
+	if (timeout == TM_NONBLOCK) {
+		err = -EWOULDBLOCK;
+		goto unlock_and_exit;
+	}
 
-    xnsynch_sleep_on(&mutex->synch_base, timeout);
+	xnsynch_sleep_on(&mutex->synch_base, timeout);
 
-    if (xnthread_test_flags(&task->thread_base, XNRMID))
-        err = -EIDRM;           /* Mutex deleted while pending. */
-    else if (xnthread_test_flags(&task->thread_base, XNTIMEO))
-        err = -ETIMEDOUT;       /* Timeout. */
-    else if (xnthread_test_flags(&task->thread_base, XNBREAK))
-        err = -EINTR;           /* Unblocked. */
-    else {
- grab_mutex:
-         /* xnsynch_sleep_on() might have stolen the resource, so we
-	    need to put our internal data in sync. */
-         mutex->owner = task;
-	 mutex->lockcnt = 1;
-    }
+	if (xnthread_test_flags(&task->thread_base, XNRMID))
+		err = -EIDRM;	/* Mutex deleted while pending. */
+	else if (xnthread_test_flags(&task->thread_base, XNTIMEO))
+		err = -ETIMEDOUT;	/* Timeout. */
+	else if (xnthread_test_flags(&task->thread_base, XNBREAK))
+		err = -EINTR;	/* Unblocked. */
+	else {
+	      grab_mutex:
+		/* xnsynch_sleep_on() might have stolen the resource, so we
+		   need to put our internal data in sync. */
+		mutex->owner = task;
+		mutex->lockcnt = 1;
+	}
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 /**
@@ -428,41 +432,43 @@ int rt_mutex_lock(RT_MUTEX *mutex, RTIME timeout)
 
 int rt_mutex_unlock(RT_MUTEX *mutex)
 {
-    int err = 0;
-    spl_t s;
+	int err = 0;
+	spl_t s;
 
-    if (xnpod_asynch_p() || testbits(xnpod_current_thread()->status, XNROOT))
-        return -EPERM;
+	if (xnpod_asynch_p()
+	    || testbits(xnpod_current_thread()->status, XNROOT))
+		return -EPERM;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    mutex = xeno_h2obj_validate(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
+	mutex = xeno_h2obj_validate(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
 
-    if (!mutex) {
-        err = xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
-        goto unlock_and_exit;
-    }
+	if (!mutex) {
+		err = xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
+		goto unlock_and_exit;
+	}
 
-    if (xeno_current_task() != mutex->owner) {
-        err = -EPERM;
-        goto unlock_and_exit;
-    }
+	if (xeno_current_task() != mutex->owner) {
+		err = -EPERM;
+		goto unlock_and_exit;
+	}
 
-    if (--mutex->lockcnt > 0)
-        goto unlock_and_exit;
+	if (--mutex->lockcnt > 0)
+		goto unlock_and_exit;
 
-    mutex->owner = thread2rtask(xnsynch_wakeup_one_sleeper(&mutex->synch_base));
+	mutex->owner =
+	    thread2rtask(xnsynch_wakeup_one_sleeper(&mutex->synch_base));
 
-    if (mutex->owner != NULL) {
-        mutex->lockcnt = 1;
-        xnpod_schedule();
-    }
+	if (mutex->owner != NULL) {
+		mutex->lockcnt = 1;
+		xnpod_schedule();
+	}
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 /**
@@ -498,27 +504,27 @@ int rt_mutex_unlock(RT_MUTEX *mutex)
 
 int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)
 {
-    int err = 0;
-    spl_t s;
+	int err = 0;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    mutex = xeno_h2obj_validate(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
+	mutex = xeno_h2obj_validate(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
 
-    if (!mutex) {
-        err = xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
-        goto unlock_and_exit;
-    }
+	if (!mutex) {
+		err = xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
+		goto unlock_and_exit;
+	}
 
-    strcpy(info->name, mutex->name);
-    info->lockcnt = mutex->lockcnt;
-    info->nwaiters = xnsynch_nsleepers(&mutex->synch_base);
+	strcpy(info->name, mutex->name);
+	info->lockcnt = mutex->lockcnt;
+	info->nwaiters = xnsynch_nsleepers(&mutex->synch_base);
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 /**
@@ -599,7 +605,7 @@ int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)
 
 int __native_mutex_pkg_init(void)
 {
-    return 0;
+	return 0;
 }
 
 void __native_mutex_pkg_cleanup(void)

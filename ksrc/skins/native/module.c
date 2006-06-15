@@ -57,230 +57,230 @@ static xnpod_t __native_pod;
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 xnptree_t __native_ptree = {
 
-    .dir = NULL,
-    .name = "native",
-    .entries = 0,
+	.dir = NULL,
+	.name = "native",
+	.entries = 0,
 };
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 int SKIN_INIT(native)
 {
-    int err;
+	int err;
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    /* The native skin is stacked over the core pod. */
-    err = xncore_attach();
+	/* The native skin is stacked over the core pod. */
+	err = xncore_attach();
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-    /* The native skin is standalone, there is no priority level to
-       reserve for interrupt servers in user-space, since there is no
-       user-space support in the first place. */
-    err = xnpod_init(&__native_pod, T_LOPRIO, T_HIPRIO, XNREUSE);
+	/* The native skin is standalone, there is no priority level to
+	   reserve for interrupt servers in user-space, since there is no
+	   user-space support in the first place. */
+	err = xnpod_init(&__native_pod, T_LOPRIO, T_HIPRIO, XNREUSE);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-    if (err)
-        goto fail;
+	if (err)
+		goto fail;
 
-    err = __native_task_pkg_init();
+	err = __native_task_pkg_init();
 
-    if (err)
-        goto cleanup_pod;
+	if (err)
+		goto cleanup_pod;
 
 #ifdef CONFIG_XENO_OPT_NATIVE_SEM
-    err = __native_sem_pkg_init();
+	err = __native_sem_pkg_init();
 
-    if (err)
-        goto cleanup_task;
+	if (err)
+		goto cleanup_task;
 #endif /* CONFIG_XENO_OPT_NATIVE_SEM */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_EVENT
-    err = __native_event_pkg_init();
+	err = __native_event_pkg_init();
 
-    if (err)
-        goto cleanup_sem;
+	if (err)
+		goto cleanup_sem;
 #endif /* CONFIG_XENO_OPT_NATIVE_EVENT */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_MUTEX
-    err = __native_mutex_pkg_init();
+	err = __native_mutex_pkg_init();
 
-    if (err)
-        goto cleanup_event;
+	if (err)
+		goto cleanup_event;
 #endif /* CONFIG_XENO_OPT_NATIVE_MUTEX */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_COND
-    err = __native_cond_pkg_init();
+	err = __native_cond_pkg_init();
 
-    if (err)
-        goto cleanup_mutex;
+	if (err)
+		goto cleanup_mutex;
 #endif /* CONFIG_XENO_OPT_NATIVE_MUTEX */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_PIPE
-    err = __native_pipe_pkg_init();
+	err = __native_pipe_pkg_init();
 
-    if (err)
-        goto cleanup_cond;
+	if (err)
+		goto cleanup_cond;
 #endif /* CONFIG_XENO_OPT_NATIVE_PIPE */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_QUEUE
-    err = __native_queue_pkg_init();
+	err = __native_queue_pkg_init();
 
-    if (err)
-        goto cleanup_pipe;
+	if (err)
+		goto cleanup_pipe;
 #endif /* CONFIG_XENO_OPT_NATIVE_QUEUE */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_HEAP
-    err = __native_heap_pkg_init();
+	err = __native_heap_pkg_init();
 
-    if (err)
-        goto cleanup_queue;
+	if (err)
+		goto cleanup_queue;
 #endif /* CONFIG_XENO_OPT_NATIVE_HEAP */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_ALARM
-    err = __native_alarm_pkg_init();
+	err = __native_alarm_pkg_init();
 
-    if (err)
-        goto cleanup_heap;
+	if (err)
+		goto cleanup_heap;
 #endif /* CONFIG_XENO_OPT_NATIVE_HEAP */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_INTR
-    err = __native_intr_pkg_init();
+	err = __native_intr_pkg_init();
 
-    if (err)
-        goto cleanup_alarm;
+	if (err)
+		goto cleanup_alarm;
 #endif /* CONFIG_XENO_OPT_NATIVE_INTR */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    err = __native_syscall_init();
+	err = __native_syscall_init();
 
-    if (err)
-        goto cleanup_intr;
+	if (err)
+		goto cleanup_intr;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-    xnprintf("starting native API services.\n");
+	xnprintf("starting native API services.\n");
 
-    return 0;                   /* SUCCESS. */
+	return 0;		/* SUCCESS. */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-  cleanup_intr:
+      cleanup_intr:
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_INTR
-    __native_intr_pkg_cleanup();
+	__native_intr_pkg_cleanup();
 
-  cleanup_alarm:
+      cleanup_alarm:
 #endif /* CONFIG_XENO_OPT_NATIVE_INTR */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_ALARM
-    __native_alarm_pkg_cleanup();
+	__native_alarm_pkg_cleanup();
 
-  cleanup_heap:
+      cleanup_heap:
 #endif /* CONFIG_XENO_OPT_NATIVE_ALARM */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_HEAP
-    __native_heap_pkg_cleanup();
+	__native_heap_pkg_cleanup();
 
-  cleanup_queue:
+      cleanup_queue:
 #endif /* CONFIG_XENO_OPT_NATIVE_HEAP */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_QUEUE
-    __native_queue_pkg_cleanup();
+	__native_queue_pkg_cleanup();
 
-  cleanup_pipe:
+      cleanup_pipe:
 #endif /* CONFIG_XENO_OPT_NATIVE_QUEUE */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_PIPE
-    __native_pipe_pkg_cleanup();
+	__native_pipe_pkg_cleanup();
 
-  cleanup_cond:
+      cleanup_cond:
 #endif /* CONFIG_XENO_OPT_NATIVE_PIPE */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_COND
-    __native_cond_pkg_cleanup();
+	__native_cond_pkg_cleanup();
 
-  cleanup_mutex:
+      cleanup_mutex:
 #endif /* CONFIG_XENO_OPT_NATIVE_COND */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_MUTEX
-    __native_mutex_pkg_cleanup();
+	__native_mutex_pkg_cleanup();
 
-  cleanup_event:
+      cleanup_event:
 #endif /* CONFIG_XENO_OPT_NATIVE_MUTEX */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_EVENT
-    __native_event_pkg_cleanup();
+	__native_event_pkg_cleanup();
 
-  cleanup_sem:
+      cleanup_sem:
 #endif /* CONFIG_XENO_OPT_NATIVE_EVENT */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_SEM
-    __native_sem_pkg_cleanup();
+	__native_sem_pkg_cleanup();
 
-  cleanup_task:
+      cleanup_task:
 #endif /* CONFIG_XENO_OPT_NATIVE_SEM */
 
-    __native_task_pkg_cleanup();
+	__native_task_pkg_cleanup();
 
-  cleanup_pod:
+      cleanup_pod:
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    xncore_detach(err);
+	xncore_detach(err);
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-    xnpod_shutdown(err);
+	xnpod_shutdown(err);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-  fail:
+      fail:
 
-    xnlogerr("native skin init failed, code %d.\n", err);
+	xnlogerr("native skin init failed, code %d.\n", err);
 
-    return err;
+	return err;
 }
 
 void SKIN_EXIT(native)
 {
-    xnprintf("stopping native API services.\n");
+	xnprintf("stopping native API services.\n");
 
 #ifdef CONFIG_XENO_OPT_NATIVE_INTR
-    __native_intr_pkg_cleanup();
+	__native_intr_pkg_cleanup();
 #endif /* CONFIG_XENO_OPT_NATIVE_INTR */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_ALARM
-    __native_alarm_pkg_cleanup();
+	__native_alarm_pkg_cleanup();
 #endif /* CONFIG_XENO_OPT_NATIVE_ALARM */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_HEAP
-    __native_heap_pkg_cleanup();
+	__native_heap_pkg_cleanup();
 #endif /* CONFIG_XENO_OPT_NATIVE_HEAP */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_QUEUE
-    __native_queue_pkg_cleanup();
+	__native_queue_pkg_cleanup();
 #endif /* CONFIG_XENO_OPT_NATIVE_QUEUE */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_PIPE
-    __native_pipe_pkg_cleanup();
+	__native_pipe_pkg_cleanup();
 #endif /* CONFIG_XENO_OPT_NATIVE_PIPE */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_COND
-    __native_cond_pkg_cleanup();
+	__native_cond_pkg_cleanup();
 #endif /* CONFIG_XENO_OPT_NATIVE_COND */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_MUTEX
-    __native_mutex_pkg_cleanup();
+	__native_mutex_pkg_cleanup();
 #endif /* CONFIG_XENO_OPT_NATIVE_MUTEX */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_EVENT
-    __native_event_pkg_cleanup();
+	__native_event_pkg_cleanup();
 #endif /* CONFIG_XENO_OPT_NATIVE_EVENT */
 
 #ifdef CONFIG_XENO_OPT_NATIVE_SEM
-    __native_sem_pkg_cleanup();
+	__native_sem_pkg_cleanup();
 #endif /* CONFIG_XENO_OPT_NATIVE_SEM */
 
-    __native_task_pkg_cleanup();
+	__native_task_pkg_cleanup();
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    __native_syscall_cleanup();
-    xncore_detach(XNPOD_NORMAL_EXIT);
+	__native_syscall_cleanup();
+	xncore_detach(XNPOD_NORMAL_EXIT);
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-    xnpod_shutdown(XNPOD_NORMAL_EXIT);
+	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 }
 
