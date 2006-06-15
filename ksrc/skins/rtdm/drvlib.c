@@ -31,6 +31,7 @@
 
 
 #include <asm/io.h>
+#include <asm/page.h>
 #include <linux/delay.h>
 #include <linux/mman.h>
 
@@ -1355,13 +1356,36 @@ struct rtdm_mmap_data {
 static int rtdm_mmap_buffer(struct file *filp, struct vm_area_struct *vma)
 {
     struct rtdm_mmap_data *mmap_data = filp->private_data;
+    unsigned long vaddr, maddr, size;
 
     vma->vm_ops = mmap_data->vm_ops;
     vma->vm_private_data = mmap_data->vm_private_data;
 
-    return xnarch_remap_io_page_range(vma, vma->vm_start,
-				      virt_to_phys(mmap_data->src_addr),
-				      vma->vm_end - vma->vm_start, PAGE_SHARED);
+    vaddr = (unsigned long)mmap_data->src_addr;
+    maddr = vma->vm_start;
+    size  = vma->vm_end - vma->vm_start;
+
+#ifdef CONFIG_MMU
+    if ((vaddr >= VMALLOC_START) && (vaddr < VMALLOC_END)) {
+        unsigned long mapped_size = 0;
+
+        XENO_ASSERT(RTDM, (vaddr == PAGE_ALIGN(vaddr)), return -EINVAL);
+        XENO_ASSERT(RTDM, (size % PAGE_SIZE == 0), return -EINVAL);
+
+        while (mapped_size < size) {
+            if (xnarch_remap_vm_page(vma, maddr,vaddr))
+                return -EAGAIN;
+
+            maddr += PAGE_SIZE;
+            vaddr += PAGE_SIZE;
+            mapped_size += PAGE_SIZE;
+        }
+        return 0;
+    } else
+#endif /* CONFIG_MMU */
+        return xnarch_remap_io_page_range(vma, maddr,
+                                          virt_to_phys((void *)vaddr),
+                                          size, PAGE_SHARED);
 }
 
 static struct file_operations rtdm_mmap_fops = {
