@@ -333,13 +333,13 @@ static int rtswitch_ioctl_nrt(struct rtdm_dev_context *context,
     switch (request)
         {
         case RTSWITCH_RTIOC_TASKS_COUNT:
-            return rtswitch_set_tasks_count(ctx, (unsigned) arg);
+            return rtswitch_set_tasks_count(ctx, (unsigned long) arg);
 
         case RTSWITCH_RTIOC_SET_CPU:
-            if ((unsigned) arg > xnarch_num_online_cpus())
+            if ((unsigned long) arg > xnarch_num_online_cpus() - 1)
                 return -EINVAL;
 
-            ctx->cpu = (unsigned) arg;
+            ctx->cpu = (unsigned long) arg;
             return 0;
 
         case RTSWITCH_RTIOC_REGISTER_UTASK:
