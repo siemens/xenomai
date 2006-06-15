@@ -27,46 +27,43 @@ MODULE_LICENSE("GPL");
 
 static xnpod_t pod;
 
-static void uitron_shutdown (int xtype)
-
+static void uitron_shutdown(int xtype)
 {
-    uimbx_cleanup();
-    uiflag_cleanup();
-    uisem_cleanup();
-    uitask_cleanup();
+	uimbx_cleanup();
+	uiflag_cleanup();
+	uisem_cleanup();
+	uitask_cleanup();
 
-    xnpod_shutdown(xtype);
+	xnpod_shutdown(xtype);
 }
 
 int SKIN_INIT(uitron)
-
 {
-    int err;
+	int err;
 
 #if CONFIG_XENO_OPT_TIMING_PERIOD == 0
-    nktickdef = 1000000;	/* Defaults to 1ms. */
+	nktickdef = 1000000;	/* Defaults to 1ms. */
 #endif
 
-    err = xnpod_init(&pod,uITRON_MIN_PRI,uITRON_MAX_PRI,0);
+	err = xnpod_init(&pod, uITRON_MIN_PRI, uITRON_MAX_PRI, 0);
 
-    if (err != 0)
-        return err;
+	if (err != 0)
+		return err;
 
-    uitask_init();
-    uisem_init();
-    uiflag_init();
-    uimbx_init();
+	uitask_init();
+	uisem_init();
+	uiflag_init();
+	uimbx_init();
 
-    xnprintf("starting uITRON services.\n");
+	xnprintf("starting uITRON services.\n");
 
-    return 0;
+	return 0;
 }
 
 void SKIN_EXIT(uitron)
-
 {
-    xnprintf("stopping uITRON services.\n");
-    uitron_shutdown(XNPOD_NORMAL_EXIT);
+	xnprintf("stopping uITRON services.\n");
+	uitron_shutdown(XNPOD_NORMAL_EXIT);
 }
 
 module_init(__uitron_skin_init);
