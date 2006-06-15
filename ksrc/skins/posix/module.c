@@ -67,9 +67,9 @@ MODULE_DESCRIPTION("POSIX/PSE51 interface");
 MODULE_AUTHOR("gilles.chanteperdrix@laposte.net");
 MODULE_LICENSE("GPL");
 
-static u_long time_slice_arg = 1; /* Default (round-robin) time slice */
-module_param_named(time_slice,time_slice_arg,ulong,0444);
-MODULE_PARM_DESC(time_slice,"Default time slice (in ticks)");
+static u_long time_slice_arg = 1;	/* Default (round-robin) time slice */
+module_param_named(time_slice, time_slice_arg, ulong, 0444);
+MODULE_PARM_DESC(time_slice, "Default time slice (in ticks)");
 
 #if !defined(__KERNEL__) || !defined(CONFIG_XENO_OPT_PERVASIVE)
 static xnpod_t pod;
@@ -77,80 +77,77 @@ static xnpod_t pod;
 
 static void pse51_shutdown(int xtype)
 {
-    pse51_thread_pkg_cleanup();
-    pse51_shm_pkg_cleanup();
-    pse51_timer_pkg_cleanup();
-    pse51_mq_pkg_cleanup();
-    pse51_cond_pkg_cleanup();
-    pse51_tsd_pkg_cleanup();
-    pse51_sem_pkg_cleanup();
-    pse51_mutex_pkg_cleanup();
-    pse51_signal_pkg_cleanup();
-    pse51_reg_pkg_cleanup();
-    pse51_intr_pkg_cleanup();
+	pse51_thread_pkg_cleanup();
+	pse51_shm_pkg_cleanup();
+	pse51_timer_pkg_cleanup();
+	pse51_mq_pkg_cleanup();
+	pse51_cond_pkg_cleanup();
+	pse51_tsd_pkg_cleanup();
+	pse51_sem_pkg_cleanup();
+	pse51_mutex_pkg_cleanup();
+	pse51_signal_pkg_cleanup();
+	pse51_reg_pkg_cleanup();
+	pse51_intr_pkg_cleanup();
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    pse51_syscall_cleanup();
-    xncore_detach(xtype);
+	pse51_syscall_cleanup();
+	xncore_detach(xtype);
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-    xnpod_shutdown(xtype);
+	xnpod_shutdown(xtype);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 }
 
 int SKIN_INIT(posix)
 {
-    int err;
+	int err;
 
-    xnprintf("starting POSIX services.\n");
+	xnprintf("starting POSIX services.\n");
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    /* The POSIX skin is stacked over the core pod. */
-    err = xncore_attach();
+	/* The POSIX skin is stacked over the core pod. */
+	err = xncore_attach();
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-    /* The POSIX skin is standalone. */
-    err = xnpod_init(&pod,PSE51_MIN_PRIORITY,PSE51_MAX_PRIORITY,XNREUSE);
+	/* The POSIX skin is standalone. */
+	err = xnpod_init(&pod, PSE51_MIN_PRIORITY, PSE51_MAX_PRIORITY, XNREUSE);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-    if (err != 0)
-	{
-	xnlogerr("POSIX skin init failed, code %d.\n",err);
-	return err;
-	}	
-
+	if (err != 0) {
+		xnlogerr("POSIX skin init failed, code %d.\n", err);
+		return err;
+	}
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    err = pse51_syscall_init();
+	err = pse51_syscall_init();
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-    
-    if (err != 0)
-        {
+
+	if (err != 0) {
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	xncore_detach(err);
+		xncore_detach(err);
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-        xnpod_shutdown(err);    
+		xnpod_shutdown(err);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-	xnlogerr("POSIX skin init failed, code %d.\n",err);
-	return err;
-        }
+		xnlogerr("POSIX skin init failed, code %d.\n", err);
+		return err;
+	}
 
-    pse51_reg_pkg_init(64, 128); /* FIXME: replace with compilation constants. */
-    pse51_signal_pkg_init();
-    pse51_mutex_pkg_init();
-    pse51_sem_pkg_init();
-    pse51_tsd_pkg_init();
-    pse51_cond_pkg_init();
-    pse51_mq_pkg_init();
-    pse51_intr_pkg_init();
-    pse51_timer_pkg_init();
-    pse51_shm_pkg_init();
+	pse51_reg_pkg_init(64, 128);	/* FIXME: replace with compilation constants. */
+	pse51_signal_pkg_init();
+	pse51_mutex_pkg_init();
+	pse51_sem_pkg_init();
+	pse51_tsd_pkg_init();
+	pse51_cond_pkg_init();
+	pse51_mq_pkg_init();
+	pse51_intr_pkg_init();
+	pse51_timer_pkg_init();
+	pse51_shm_pkg_init();
 
-    pse51_thread_pkg_init(module_param_value(time_slice_arg));
+	pse51_thread_pkg_init(module_param_value(time_slice_arg));
 
-    return 0;
+	return 0;
 }
 
 void SKIN_EXIT(posix)
 {
-    xnprintf("stopping POSIX services.\n");
-    pse51_shutdown(XNPOD_NORMAL_EXIT);
+	xnprintf("stopping POSIX services.\n");
+	pse51_shutdown(XNPOD_NORMAL_EXIT);
 }
 
 module_init(__posix_skin_init);

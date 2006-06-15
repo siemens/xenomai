@@ -40,60 +40,57 @@ xnqueue_t pse51_threadq;
 
 static pthread_attr_t default_attr;
 
-static void thread_destroy (pthread_t thread)
-
+static void thread_destroy(pthread_t thread)
 {
-    removeq(&pse51_threadq, &thread->link);
-    /* join_sync wait queue may not be empty only when this function is called
-       from pse51_thread_pkg_cleanup, hence the absence of xnpod_schedule(). */
-    xnsynch_destroy(&thread->join_synch);
-    xnfree(thread);
+	removeq(&pse51_threadq, &thread->link);
+	/* join_sync wait queue may not be empty only when this function is called
+	   from pse51_thread_pkg_cleanup, hence the absence of xnpod_schedule(). */
+	xnsynch_destroy(&thread->join_synch);
+	xnfree(thread);
 }
 
-static void thread_trampoline (void *cookie)
+static void thread_trampoline(void *cookie)
 {
-    pthread_t thread = (pthread_t) cookie;
-    pthread_exit(thread->entry(thread->arg));
+	pthread_t thread = (pthread_t)cookie;
+	pthread_exit(thread->entry(thread->arg));
 }
 
-static void thread_delete_hook (xnthread_t *xnthread)
-
+static void thread_delete_hook(xnthread_t *xnthread)
 {
-    pthread_t thread = thread2pthread(xnthread);
-    spl_t s;
+	pthread_t thread = thread2pthread(xnthread);
+	spl_t s;
 
-    if (!thread)
-        return;
+	if (!thread)
+		return;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    pse51_cancel_cleanup_thread(thread);
-    pse51_tsd_cleanup_thread(thread);
-    pse51_mark_deleted(thread);
-    pse51_signal_cleanup_thread(thread);
-    pse51_timer_cleanup_thread(thread);
+	pse51_cancel_cleanup_thread(thread);
+	pse51_tsd_cleanup_thread(thread);
+	pse51_mark_deleted(thread);
+	pse51_signal_cleanup_thread(thread);
+	pse51_timer_cleanup_thread(thread);
 
-    switch (thread_getdetachstate(thread))
-        {
-        case PTHREAD_CREATE_DETACHED:
+	switch (thread_getdetachstate(thread)) {
+	case PTHREAD_CREATE_DETACHED:
 
-            thread_destroy(thread);
-            break;
+		thread_destroy(thread);
+		break;
 
-        case PTHREAD_CREATE_JOINABLE:
+	case PTHREAD_CREATE_JOINABLE:
 
-            xnsynch_wakeup_one_sleeper(&thread->join_synch);
-            /* Do not call xnpod_schedule here, this thread will be dead soon,
-               so that xnpod_schedule will be called anyway. The TCB will be
-               freed by the last joiner. */
-            break;
+		xnsynch_wakeup_one_sleeper(&thread->join_synch);
+		/* Do not call xnpod_schedule here, this thread will be dead soon,
+		   so that xnpod_schedule will be called anyway. The TCB will be
+		   freed by the last joiner. */
+		break;
 
-        default:
+	default:
 
-            break;
-        }
+		break;
+	}
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 /**
@@ -138,109 +135,99 @@ static void thread_delete_hook (xnthread_t *xnthread)
  * Specification.</a>
  * 
  */
-int pthread_create (pthread_t *tid,
-                    const pthread_attr_t *attr,
-                    void *(*start) (void *),
-                    void *arg)
+int pthread_create(pthread_t *tid,
+		   const pthread_attr_t * attr,
+		   void *(*start) (void *), void *arg)
 {
-    pthread_t thread, cur;
-    xnflags_t flags = 0;
-    size_t stacksize;
-    const char *name;
-    int prio;
-    spl_t s;
+	pthread_t thread, cur;
+	xnflags_t flags = 0;
+	size_t stacksize;
+	const char *name;
+	int prio;
+	spl_t s;
 
-    if (attr && attr->magic != PSE51_THREAD_ATTR_MAGIC)
-        return EINVAL;
+	if (attr && attr->magic != PSE51_THREAD_ATTR_MAGIC)
+		return EINVAL;
 
-    thread = (pthread_t)xnmalloc(sizeof(*thread));
+	thread = (pthread_t)xnmalloc(sizeof(*thread));
 
-    if (!thread)
-        return EAGAIN;
+	if (!thread)
+		return EAGAIN;
 
-    thread->attr = attr ? *attr : default_attr;
+	thread->attr = attr ? *attr : default_attr;
 
-    cur = pse51_current_thread();
+	cur = pse51_current_thread();
 
-    if (thread->attr.inheritsched == PTHREAD_INHERIT_SCHED)
-        {
-        /* cur may be NULL if pthread_create is not called by a pse51
-           thread, in which case trying to inherit scheduling
-           parameters is treated as an error. */
+	if (thread->attr.inheritsched == PTHREAD_INHERIT_SCHED) {
+		/* cur may be NULL if pthread_create is not called by a pse51
+		   thread, in which case trying to inherit scheduling
+		   parameters is treated as an error. */
 
-        if (!cur)
-            {
-            xnfree(thread);
-            return EINVAL;
-            }
+		if (!cur) {
+			xnfree(thread);
+			return EINVAL;
+		}
 
-        thread->attr.policy = cur->attr.policy;
-        thread->attr.schedparam = cur->attr.schedparam;
-        }
+		thread->attr.policy = cur->attr.policy;
+		thread->attr.schedparam = cur->attr.schedparam;
+	}
 
-    prio = thread->attr.schedparam.sched_priority;
-    stacksize = thread->attr.stacksize;
-    name = thread->attr.name;
-    
-    if (thread->attr.fp)
-        flags |= XNFPU;
+	prio = thread->attr.schedparam.sched_priority;
+	stacksize = thread->attr.stacksize;
+	name = thread->attr.name;
 
-    if (!start)
-        flags |= XNSHADOW;      /* Note: no interrupt shield. */
-    
-    if (xnpod_init_thread(&thread->threadbase,
-                          name,
-                          prio,
-                          flags,
-                          stacksize) != 0)
-        {
-        xnfree(thread);
-        return EAGAIN;
-        }
+	if (thread->attr.fp)
+		flags |= XNFPU;
 
-    xnthread_set_magic(&thread->threadbase,PSE51_SKIN_MAGIC);
-    
-    thread->attr.name = xnthread_name(&thread->threadbase);
-    
-    inith(&thread->link);
-    
-    thread->magic = PSE51_THREAD_MAGIC;
-    thread->entry = start;
-    thread->arg = arg;
-    xnsynch_init(&thread->join_synch, XNSYNCH_PRIO);
+	if (!start)
+		flags |= XNSHADOW;	/* Note: no interrupt shield. */
 
-    pse51_cancel_init_thread(thread);
-    pse51_signal_init_thread(thread, cur);
-    pse51_tsd_init_thread(thread);
-    pse51_timer_init_thread(thread);
-    
-    if (thread->attr.policy == SCHED_RR)
-        {
-        xnthread_time_slice(&thread->threadbase) = pse51_time_slice;
-        flags = XNRRB;
-        }
-    else
-        flags = 0;
+	if (xnpod_init_thread(&thread->threadbase,
+			      name, prio, flags, stacksize) != 0) {
+		xnfree(thread);
+		return EAGAIN;
+	}
 
-    xnlock_get_irqsave(&nklock, s);
-    appendq(&pse51_threadq,&thread->link);
-    xnlock_put_irqrestore(&nklock, s);
+	xnthread_set_magic(&thread->threadbase, PSE51_SKIN_MAGIC);
+
+	thread->attr.name = xnthread_name(&thread->threadbase);
+
+	inith(&thread->link);
+
+	thread->magic = PSE51_THREAD_MAGIC;
+	thread->entry = start;
+	thread->arg = arg;
+	xnsynch_init(&thread->join_synch, XNSYNCH_PRIO);
+
+	pse51_cancel_init_thread(thread);
+	pse51_signal_init_thread(thread, cur);
+	pse51_tsd_init_thread(thread);
+	pse51_timer_init_thread(thread);
+
+	if (thread->attr.policy == SCHED_RR) {
+		xnthread_time_slice(&thread->threadbase) = pse51_time_slice;
+		flags = XNRRB;
+	} else
+		flags = 0;
+
+	xnlock_get_irqsave(&nklock, s);
+	appendq(&pse51_threadq, &thread->link);
+	xnlock_put_irqrestore(&nklock, s);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    thread->hkey.u_tid = 0;
-    thread->hkey.mm = NULL;
+	thread->hkey.u_tid = 0;
+	thread->hkey.mm = NULL;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-    
-    *tid = thread; /* Must be done before the thread is started. */
 
-    if (start)  /* Do not start shadow threads (i.e. start == NULL). */
-        xnpod_start_thread(&thread->threadbase,
-                           flags,
-                           0,
-                           thread->attr.affinity,
-                           thread_trampoline,
-                           thread);
-    return 0;
+	*tid = thread;		/* Must be done before the thread is started. */
+
+	if (start)		/* Do not start shadow threads (i.e. start == NULL). */
+		xnpod_start_thread(&thread->threadbase,
+				   flags,
+				   0,
+				   thread->attr.affinity,
+				   thread_trampoline, thread);
+	return 0;
 }
 
 /**
@@ -266,34 +253,31 @@ int pthread_create (pthread_t *tid,
  * Specification.</a>
  * 
  */
-int pthread_detach (pthread_t thread)
-
+int pthread_detach(pthread_t thread)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
-        {
-        xnlock_put_irqrestore(&nklock, s);
-        return ESRCH;
-        }
+	if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return ESRCH;
+	}
 
-    if (thread_getdetachstate(thread) != PTHREAD_CREATE_JOINABLE)
-        {
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
-        }
+	if (thread_getdetachstate(thread) != PTHREAD_CREATE_JOINABLE) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
+	}
 
-    thread_setdetachstate(thread, PTHREAD_CREATE_DETACHED);
+	thread_setdetachstate(thread, PTHREAD_CREATE_DETACHED);
 
-    if (xnsynch_flush(&thread->join_synch,
-                      PSE51_JOINED_DETACHED) == XNSYNCH_RESCHED)
-        xnpod_schedule();
+	if (xnsynch_flush(&thread->join_synch,
+			  PSE51_JOINED_DETACHED) == XNSYNCH_RESCHED)
+		xnpod_schedule();
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -315,9 +299,9 @@ int pthread_detach (pthread_t thread)
  * Specification.</a>
  * 
  */
-int pthread_equal (pthread_t t1, pthread_t t2)
+int pthread_equal(pthread_t t1, pthread_t t2)
 {
-    return t1 == t2;
+	return t1 == t2;
 }
 
 /**
@@ -338,19 +322,18 @@ int pthread_equal (pthread_t t1, pthread_t t2)
  * Specification.</a>
  * 
  */
-void pthread_exit (void *value_ptr)
-
+void pthread_exit(void *value_ptr)
 {
-    pthread_t cur;
-    spl_t s;
+	pthread_t cur;
+	spl_t s;
 
-    cur = pse51_current_thread();
+	cur = pse51_current_thread();
 
-    if (!cur)
-        return;
+	if (!cur)
+		return;
 
-    xnlock_get_irqsave(&nklock, s);
-    pse51_thread_abort(cur, value_ptr);
+	xnlock_get_irqsave(&nklock, s);
+	pse51_thread_abort(cur, value_ptr);
 }
 
 /**
@@ -395,76 +378,72 @@ void pthread_exit (void *value_ptr)
  * Specification.</a>
  * 
  */
-int pthread_join (pthread_t thread, void **value_ptr)
-
+int pthread_join(pthread_t thread, void **value_ptr)
 {
-    int is_last_joiner;
-    xnthread_t *cur;
-    spl_t s;
-    
-    cur = xnpod_current_thread();
+	int is_last_joiner;
+	xnthread_t *cur;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	cur = xnpod_current_thread();
 
-    if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)
-        && !pse51_obj_deleted(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
-        {
-        xnlock_put_irqrestore(&nklock, s);
-        return ESRCH;
-        }
+	xnlock_get_irqsave(&nklock, s);
 
-    if (&thread->threadbase == cur)
-        {
-        xnlock_put_irqrestore(&nklock, s);
-        return EDEADLK;
-        }
+	if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)
+	    && !pse51_obj_deleted(thread, PSE51_THREAD_MAGIC,
+				  struct pse51_thread)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return ESRCH;
+	}
 
-    if (thread_getdetachstate(thread) != PTHREAD_CREATE_JOINABLE)
-        {
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
-        }
+	if (&thread->threadbase == cur) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EDEADLK;
+	}
 
-    is_last_joiner = 1;
-    while (pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
-        {
-        if (xnpod_unblockable_p())
-            {
-            xnlock_put_irqrestore(&nklock, s);
-            return EPERM;
-            }
+	if (thread_getdetachstate(thread) != PTHREAD_CREATE_JOINABLE) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
+	}
 
-        thread_cancellation_point(cur);
+	is_last_joiner = 1;
+	while (pse51_obj_active
+	       (thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+		if (xnpod_unblockable_p()) {
+			xnlock_put_irqrestore(&nklock, s);
+			return EPERM;
+		}
 
-        xnsynch_sleep_on(&thread->join_synch, XN_INFINITE);
+		thread_cancellation_point(cur);
 
-        is_last_joiner = xnsynch_wakeup_one_sleeper(&thread->join_synch) == NULL;
+		xnsynch_sleep_on(&thread->join_synch, XN_INFINITE);
 
-        thread_cancellation_point(cur);
+		is_last_joiner =
+		    xnsynch_wakeup_one_sleeper(&thread->join_synch) == NULL;
 
-        /* In case another thread called pthread_detach. */
-        if (xnthread_test_flags(cur, PSE51_JOINED_DETACHED))
-            {
-            xnlock_put_irqrestore(&nklock, s);
-            return EINVAL;
-            }
-        }
+		thread_cancellation_point(cur);
 
-    /* If we reach this point, at least one joiner is going to succeed, we can
-       mark the joined thread as detached. */
-    thread_setdetachstate(thread, PTHREAD_CREATE_DETACHED);
+		/* In case another thread called pthread_detach. */
+		if (xnthread_test_flags(cur, PSE51_JOINED_DETACHED)) {
+			xnlock_put_irqrestore(&nklock, s);
+			return EINVAL;
+		}
+	}
 
-    if (value_ptr)
-        *value_ptr = thread_exit_status(thread);
+	/* If we reach this point, at least one joiner is going to succeed, we can
+	   mark the joined thread as detached. */
+	thread_setdetachstate(thread, PTHREAD_CREATE_DETACHED);
 
-    if(is_last_joiner)
-        thread_destroy(thread);
-    else
-        xnpod_schedule();
+	if (value_ptr)
+		*value_ptr = thread_exit_status(thread);
 
-    xnlock_put_irqrestore(&nklock, s);
+	if (is_last_joiner)
+		thread_destroy(thread);
+	else
+		xnpod_schedule();
 
-    return 0;
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
 }
 
 /**
@@ -480,10 +459,9 @@ int pthread_join (pthread_t thread, void **value_ptr)
  * Specification.</a>
  * 
  */
-pthread_t pthread_self (void)
-
+pthread_t pthread_self(void)
 {
-    return pse51_current_thread();
+	return pse51_current_thread();
 }
 
 /**
@@ -505,33 +483,31 @@ pthread_t pthread_self (void)
  * - ESRCH, @a thread is invalid;
  * - ETIMEDOUT, the start time has already passed.
  */
-int pthread_make_periodic_np (pthread_t thread,
-                              struct timespec *starttp,
-                              struct timespec *periodtp)
-
+int pthread_make_periodic_np(pthread_t thread,
+			     struct timespec *starttp,
+			     struct timespec *periodtp)
 {
 
-    xnticks_t start, period;
-    int err;
-    spl_t s;
+	xnticks_t start, period;
+	int err;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
-        {
-        err = ESRCH;
-        goto unlock_and_exit;
-        }
+	if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+		err = ESRCH;
+		goto unlock_and_exit;
+	}
 
-    start = ts2ticks_ceil(starttp);
-    period = ts2ticks_ceil(periodtp);
-    err = -xnpod_set_thread_periodic(&thread->threadbase, start, period);
+	start = ts2ticks_ceil(starttp);
+	period = ts2ticks_ceil(periodtp);
+	err = -xnpod_set_thread_periodic(&thread->threadbase, start, period);
 
- unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return err;
+	return err;
 }
 
 /**
@@ -561,18 +537,18 @@ int pthread_make_periodic_np (pthread_t thread,
  */
 int pthread_wait_np(unsigned long *overruns_r)
 {
-    xnthread_t *cur;
-    int err;
+	xnthread_t *cur;
+	int err;
 
-    if (xnpod_unblockable_p())
-        return EPERM;
+	if (xnpod_unblockable_p())
+		return EPERM;
 
-    cur = xnpod_current_thread();
-    thread_cancellation_point(cur);
-    err = -xnpod_wait_thread_period(overruns_r);
-    thread_cancellation_point(cur);
+	cur = xnpod_current_thread();
+	thread_cancellation_point(cur);
+	err = -xnpod_wait_thread_period(overruns_r);
+	thread_cancellation_point(cur);
 
-    return err;
+	return err;
 }
 
 /**
@@ -606,33 +582,32 @@ int pthread_wait_np(unsigned long *overruns_r)
  * - EINVAL, some bit in @a clrmask or @a setmask is invalid.
  * 
  */
-int pthread_set_mode_np (int clrmask, int setmask)
-
+int pthread_set_mode_np(int clrmask, int setmask)
 {
-    xnthread_t *cur = xnpod_current_thread();
-    xnflags_t valid_flags = XNLOCK;
-    int err;
+	xnthread_t *cur = xnpod_current_thread();
+	xnflags_t valid_flags = XNLOCK;
+	int err;
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    if (testbits(cur->status, XNSHADOW))
-        valid_flags |= XNTHREAD_SPARE1|XNSHIELD|XNTRAPSW;
+	if (testbits(cur->status, XNSHADOW))
+		valid_flags |= XNTHREAD_SPARE1 | XNSHIELD | XNTRAPSW;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-    /* XNTHREAD_SPARE1 is used for primary mode switch. */
+	/* XNTHREAD_SPARE1 is used for primary mode switch. */
 
-    if ((clrmask & ~valid_flags) != 0 || (setmask & ~valid_flags) != 0)
-        return EINVAL;
+	if ((clrmask & ~valid_flags) != 0 || (setmask & ~valid_flags) != 0)
+		return EINVAL;
 
-    err = -xnpod_set_thread_mode(cur,
-                                 clrmask & ~XNTHREAD_SPARE1,
-                                 setmask & ~XNTHREAD_SPARE1);
+	err = -xnpod_set_thread_mode(cur,
+				     clrmask & ~XNTHREAD_SPARE1,
+				     setmask & ~XNTHREAD_SPARE1);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    if (testbits(cur->status, XNSHADOW) && (clrmask & XNTHREAD_SPARE1) != 0)
-        xnshadow_relax(0);
+	if (testbits(cur->status, XNSHADOW) && (clrmask & XNTHREAD_SPARE1) != 0)
+		xnshadow_relax(0);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-    return err;
+	return err;
 }
 
 /**
@@ -652,77 +627,71 @@ int pthread_set_mode_np (int clrmask, int setmask)
  * - ESRCH, @a thread is invalid.
  * 
  */
-int pthread_set_name_np (pthread_t thread,
-			 const char *name)
+int pthread_set_name_np(pthread_t thread, const char *name)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
-        {
-        xnlock_put_irqrestore(&nklock, s);
-        return ESRCH;
-        }
+	if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return ESRCH;
+	}
 
-    snprintf(xnthread_name(&thread->threadbase),XNOBJECT_NAME_LEN,"%s",name);
+	snprintf(xnthread_name(&thread->threadbase), XNOBJECT_NAME_LEN, "%s",
+		 name);
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
-void pse51_thread_abort (pthread_t thread, void *status)
-
+void pse51_thread_abort(pthread_t thread, void *status)
 {
-    thread_exit_status(thread) = status;
-    thread_setcancelstate(thread, PTHREAD_CANCEL_DISABLE);
-    thread_setcanceltype(thread, PTHREAD_CANCEL_DEFERRED);
-    xnpod_delete_thread(&thread->threadbase);
+	thread_exit_status(thread) = status;
+	thread_setcancelstate(thread, PTHREAD_CANCEL_DISABLE);
+	thread_setcanceltype(thread, PTHREAD_CANCEL_DEFERRED);
+	xnpod_delete_thread(&thread->threadbase);
 }
 
-void pse51_thread_pkg_init (u_long rrperiod)
-
+void pse51_thread_pkg_init(u_long rrperiod)
 {
-    initq(&pse51_threadq);
-    pthread_attr_init(&default_attr);
-    pse51_time_slice = rrperiod;
-    xnpod_add_hook(XNHOOK_THREAD_DELETE,thread_delete_hook);
+	initq(&pse51_threadq);
+	pthread_attr_init(&default_attr);
+	pse51_time_slice = rrperiod;
+	xnpod_add_hook(XNHOOK_THREAD_DELETE, thread_delete_hook);
 }
 
-void pse51_thread_pkg_cleanup (void)
-
+void pse51_thread_pkg_cleanup(void)
 {
-    xnholder_t *holder;
-    spl_t s;
+	xnholder_t *holder;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    while ((holder = getheadq(&pse51_threadq)) != NULL)
-        {
-        pthread_t thread = link2pthread(holder);
+	while ((holder = getheadq(&pse51_threadq)) != NULL) {
+		pthread_t thread = link2pthread(holder);
 
-        if (pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
-            {
-            /* Remaining running thread. */
-            thread_setdetachstate(thread, PTHREAD_CREATE_DETACHED);
-            pse51_thread_abort(thread, NULL);
-            }
-        else
-            {
-            /* Remaining TCB (joinable thread, which was never joined). */
+		if (pse51_obj_active
+		    (thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+			/* Remaining running thread. */
+			thread_setdetachstate(thread, PTHREAD_CREATE_DETACHED);
+			pse51_thread_abort(thread, NULL);
+		} else {
+			/* Remaining TCB (joinable thread, which was never joined). */
 #ifdef CONFIG_XENO_OPT_DEBUG
-            xnprintf("Posix thread %p(\"%s\") was created joinable, died, but"
-                     " was not joined, destroying it now.\n",
-                     thread, thread->threadbase.name);
+			xnprintf
+			    ("Posix thread %p(\"%s\") was created joinable, died, but"
+			     " was not joined, destroying it now.\n", thread,
+			     thread->threadbase.name);
 #endif /* CONFIG_XENO_OPT_DEBUG */
-            thread_destroy(thread);
-            }
-        }
+			thread_destroy(thread);
+		}
+	}
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    xnpod_remove_hook(XNHOOK_THREAD_DELETE,thread_delete_hook);
+	xnpod_remove_hook(XNHOOK_THREAD_DELETE, thread_delete_hook);
 }
 
 /*@}*/
@@ -736,4 +705,3 @@ EXPORT_SYMBOL(pthread_self);
 EXPORT_SYMBOL(sched_yield);
 EXPORT_SYMBOL(pthread_make_periodic_np);
 EXPORT_SYMBOL(pthread_wait_np);
-

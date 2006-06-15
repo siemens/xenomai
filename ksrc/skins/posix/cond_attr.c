@@ -25,10 +25,9 @@
 
 static pthread_condattr_t default_cond_attr = {
 
-    magic: PSE51_COND_ATTR_MAGIC,
-    clock: CLOCK_REALTIME
+      magic:PSE51_COND_ATTR_MAGIC,
+      clock:CLOCK_REALTIME
 };
-
 
 /**
  * Initialize a condition variable attributes object.
@@ -60,15 +59,14 @@ static pthread_condattr_t default_cond_attr = {
  * Specification.</a>
  * 
  */
-int pthread_condattr_init (pthread_condattr_t *attr)
-
+int pthread_condattr_init(pthread_condattr_t * attr)
 {
-    if (!attr)
-        return ENOMEM;
+	if (!attr)
+		return ENOMEM;
 
-    *attr = default_cond_attr;
+	*attr = default_cond_attr;
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -93,23 +91,21 @@ int pthread_condattr_init (pthread_condattr_t *attr)
  * Specification.</a>
  * 
  */
-int pthread_condattr_destroy (pthread_condattr_t *attr)
-
+int pthread_condattr_destroy(pthread_condattr_t * attr)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_COND_ATTR_MAGIC, pthread_condattr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_COND_ATTR_MAGIC, pthread_condattr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
-    
-    pse51_mark_deleted(attr);
-    xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	pse51_mark_deleted(attr);
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
 }
 
 /**
@@ -141,23 +137,22 @@ int pthread_condattr_destroy (pthread_condattr_t *attr)
  * Specification.</a>
  * 
  */
-int pthread_condattr_getclock (const pthread_condattr_t *attr, clockid_t *clk_id)
-
+int pthread_condattr_getclock(const pthread_condattr_t * attr,
+			      clockid_t * clk_id)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_COND_ATTR_MAGIC, pthread_condattr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_COND_ATTR_MAGIC, pthread_condattr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    *clk_id = attr->clock;
-    xnlock_put_irqrestore(&nklock, s);
+	*clk_id = attr->clock;
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -188,35 +183,32 @@ int pthread_condattr_getclock (const pthread_condattr_t *attr, clockid_t *clk_id
  * Specification.</a>
  * 
  */
-int pthread_condattr_setclock (pthread_condattr_t *attr, clockid_t clk_id)
-
+int pthread_condattr_setclock(pthread_condattr_t * attr, clockid_t clk_id)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_COND_ATTR_MAGIC, pthread_condattr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_COND_ATTR_MAGIC, pthread_condattr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    switch (clk_id)
-	{
+	switch (clk_id) {
 	default:
 
-	    xnlock_put_irqrestore(&nklock, s);
-	    return EINVAL;
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 
 	case CLOCK_REALTIME:
 	case CLOCK_MONOTONIC:
-	    break;
+		break;
 	}
 
-    attr->clock = clk_id;
-    xnlock_put_irqrestore(&nklock, s);
+	attr->clock = clk_id;
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /*@}*/

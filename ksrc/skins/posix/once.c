@@ -42,30 +42,27 @@
  * Specification.</a>
  * 
  */
-int pthread_once (pthread_once_t *once, void (*init_routine)(void))
-
+int pthread_once(pthread_once_t * once, void (*init_routine) (void))
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(once,PSE51_ONCE_MAGIC,pthread_once_t))
-        {
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
-        }
+	if (!pse51_obj_active(once, PSE51_ONCE_MAGIC, pthread_once_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
+	}
 
-    if (!once->routine_called)
-        {
-        init_routine();
-        /* If the calling thread is canceled while executing init_routine,
-           routine_called will not be set to 1. */
-        once->routine_called = 1;
-        } 
+	if (!once->routine_called) {
+		init_routine();
+		/* If the calling thread is canceled while executing init_routine,
+		   routine_called will not be set to 1. */
+		once->routine_called = 1;
+	}
 
-    xnlock_put_irqrestore(&nklock, s);
-    
-    return 0;    
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
 }
 
 /*@}*/

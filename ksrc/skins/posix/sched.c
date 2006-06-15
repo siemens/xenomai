@@ -68,21 +68,19 @@
  * Specification.</a>
  * 
  */
-int sched_get_priority_min (int policy)
-
+int sched_get_priority_min(int policy)
 {
-    switch (policy)
-	{
+	switch (policy) {
 	case SCHED_FIFO:
 	case SCHED_RR:
-	    return PSE51_MIN_PRIORITY;
+		return PSE51_MIN_PRIORITY;
 
 	case SCHED_OTHER:
-            return 0;
+		return 0;
 
 	default:
-	    thread_set_errno(EINVAL);
-	    return -1;
+		thread_set_errno(EINVAL);
+		return -1;
 	}
 }
 
@@ -104,21 +102,19 @@ int sched_get_priority_min (int policy)
  * Specification.</a>
  *
  */
-int sched_get_priority_max (int policy)
-
+int sched_get_priority_max(int policy)
 {
-    switch (policy)
-	{
+	switch (policy) {
 	case SCHED_FIFO:
 	case SCHED_RR:
-	    return PSE51_MAX_PRIORITY;
+		return PSE51_MAX_PRIORITY;
 
 	case SCHED_OTHER:
-            return 0;
+		return 0;
 
 	default:
-	    thread_set_errno(EINVAL);
-	    return -1;
+		thread_set_errno(EINVAL);
+		return -1;
 	}
 }
 
@@ -146,19 +142,17 @@ int sched_get_priority_max (int policy)
  * Specification.</a>
  * 
  */
-int sched_rr_get_interval (int pid, struct timespec *interval)
-
+int sched_rr_get_interval(int pid, struct timespec *interval)
 {
-    /* The only valid pid is 0. */
-    if (pid)
-	{
-        thread_set_errno(ESRCH);
-        return -1;
+	/* The only valid pid is 0. */
+	if (pid) {
+		thread_set_errno(ESRCH);
+		return -1;
 	}
 
-    ticks2ts(interval, pse51_time_slice);
+	ticks2ts(interval, pse51_time_slice);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -185,25 +179,23 @@ int sched_rr_get_interval (int pid, struct timespec *interval)
  * Specification.</a>
  * 
  */
-int pthread_getschedparam (pthread_t tid, int *pol, struct sched_param *par)
-
+int pthread_getschedparam(pthread_t tid, int *pol, struct sched_param *par)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(tid, PSE51_THREAD_MAGIC, struct pse51_thread))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return ESRCH;
+	if (!pse51_obj_active(tid, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return ESRCH;
 	}
 
-    *pol = tid->attr.policy;
-    *par = tid->attr.schedparam;
-    
-    xnlock_put_irqrestore(&nklock, s);
+	*pol = tid->attr.policy;
+	*par = tid->attr.schedparam;
 
-    return 0;
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
 }
 
 /**
@@ -238,63 +230,60 @@ int pthread_getschedparam (pthread_t tid, int *pol, struct sched_param *par)
  * Specification.</a>
  * 
  */
-int pthread_setschedparam (pthread_t tid, int pol, const struct sched_param *par)
-
+int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 {
-    xnflags_t clrmask, setmask;
-    spl_t s;
+	xnflags_t clrmask, setmask;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(tid, PSE51_THREAD_MAGIC, struct pse51_thread))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return ESRCH;
+	if (!pse51_obj_active(tid, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return ESRCH;
 	}
 
-    switch (pol)
-	{
+	switch (pol) {
 	default:
 
-	    xnlock_put_irqrestore(&nklock, s);
-	    return EINVAL;
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 
 	case SCHED_FIFO:
 
-	    setmask = 0;
-	    clrmask = XNRRB;
-	    break;
+		setmask = 0;
+		clrmask = XNRRB;
+		break;
 
 	case SCHED_OTHER:
 
-	    pol = SCHED_RR;
+		pol = SCHED_RR;
 
 	case SCHED_RR:
 
-	    xnthread_time_slice(&tid->threadbase) = pse51_time_slice;
-	    setmask = XNRRB;
-	    clrmask = 0;
+		xnthread_time_slice(&tid->threadbase) = pse51_time_slice;
+		setmask = XNRRB;
+		clrmask = 0;
 	}
 
-    if ((pol != SCHED_OTHER && (par->sched_priority < PSE51_MIN_PRIORITY
-                                 || par->sched_priority > PSE51_MAX_PRIORITY))
-        || (pol == SCHED_OTHER && par->sched_priority != 0))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if ((pol != SCHED_OTHER && (par->sched_priority < PSE51_MIN_PRIORITY
+				    || par->sched_priority >
+				    PSE51_MAX_PRIORITY))
+	    || (pol == SCHED_OTHER && par->sched_priority != 0)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    tid->attr.policy = pol;
-    tid->attr.schedparam = *par;
+	tid->attr.policy = pol;
+	tid->attr.schedparam = *par;
 
-    xnpod_renice_thread(&tid->threadbase, par->sched_priority);
-    xnpod_set_thread_mode(&tid->threadbase, clrmask, setmask);
+	xnpod_renice_thread(&tid->threadbase, par->sched_priority);
+	xnpod_set_thread_mode(&tid->threadbase, clrmask, setmask);
 
-    xnpod_schedule();
+	xnpod_schedule();
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -309,11 +298,10 @@ int pthread_setschedparam (pthread_t tid, int pol, const struct sched_param *par
  * Specification.</a>
  *
  */
-int sched_yield (void)
-
+int sched_yield(void)
 {
-    xnpod_yield();
-    return 0;
+	xnpod_yield();
+	return 0;
 }
 
 /*@}*/

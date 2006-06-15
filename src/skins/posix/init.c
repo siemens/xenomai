@@ -28,51 +28,48 @@
 #include <rtdm/syscall.h>
 
 int __pse51_muxid = -1;
-int __rtdm_muxid  = -1;
+int __rtdm_muxid = -1;
 int __rtdm_fd_start = INT_MAX;
 
 int __wrap_pthread_setschedparam(pthread_t, int, const struct sched_param *);
 
-static __attribute__((constructor)) void __init_posix_interface(void)
-
+static __attribute__ ((constructor))
+void __init_posix_interface(void)
 {
-    sighandler_t oldhandler;
-    struct sched_param parm;
-    int muxid, err;
-    
-    __pse51_muxid = xeno_user_skin_init(PSE51_SKIN_MAGIC, "POSIX", "xeno_posix");
+	sighandler_t oldhandler;
+	struct sched_param parm;
+	int muxid, err;
 
-    muxid = XENOMAI_SYSBIND(RTDM_SKIN_MAGIC,
-			    XENOMAI_FEAT_DEP,
-			    XENOMAI_ABI_REV,
-			    NULL);
-    if (muxid > 0)
-        {
-        __rtdm_muxid    = muxid;
-        __rtdm_fd_start = FD_SETSIZE - XENOMAI_SKINCALL0(__rtdm_muxid,
-                                                         __rtdm_fdcount);
-        }
+	__pse51_muxid =
+	    xeno_user_skin_init(PSE51_SKIN_MAGIC, "POSIX", "xeno_posix");
 
-    /* Shadow the main thread. Ignoring SIGXCPU for now, but in order to do
-       anything useful the application will have to call other services. */
-    oldhandler = signal(SIGXCPU, SIG_IGN);
+	muxid = XENOMAI_SYSBIND(RTDM_SKIN_MAGIC,
+				XENOMAI_FEAT_DEP, XENOMAI_ABI_REV, NULL);
+	if (muxid > 0) {
+		__rtdm_muxid = muxid;
+		__rtdm_fd_start = FD_SETSIZE - XENOMAI_SKINCALL0(__rtdm_muxid,
+								 __rtdm_fdcount);
+	}
 
-    if (oldhandler == SIG_ERR) 
-        {
-        perror("signal");
-        exit(EXIT_FAILURE);
-        }
+	/* Shadow the main thread. Ignoring SIGXCPU for now, but in order to do
+	   anything useful the application will have to call other services. */
+	oldhandler = signal(SIGXCPU, SIG_IGN);
 
-    parm.sched_priority = 0;
-    if ((err = __wrap_pthread_setschedparam(pthread_self(),SCHED_OTHER,&parm)))
-        {
-        fprintf(stderr, "pthread_setschedparam: %s\n", strerror(err));
-        exit(EXIT_FAILURE);
-        }
+	if (oldhandler == SIG_ERR) {
+		perror("signal");
+		exit(EXIT_FAILURE);
+	}
 
-    if (signal(SIGXCPU, oldhandler) == SIG_ERR)
-        {
-        perror("signal");
-        exit(EXIT_FAILURE);
-        }
+	parm.sched_priority = 0;
+	if ((err =
+	     __wrap_pthread_setschedparam(pthread_self(), SCHED_OTHER,
+					  &parm))) {
+		fprintf(stderr, "pthread_setschedparam: %s\n", strerror(err));
+		exit(EXIT_FAILURE);
+	}
+
+	if (signal(SIGXCPU, oldhandler) == SIG_ERR) {
+		perror("signal");
+		exit(EXIT_FAILURE);
+	}
 }

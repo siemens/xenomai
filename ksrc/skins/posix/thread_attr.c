@@ -45,18 +45,17 @@
 #include <posix/internal.h>
 
 static const pthread_attr_t default_thread_attr = {
-    magic: PSE51_THREAD_ATTR_MAGIC,
-    detachstate: PTHREAD_CREATE_JOINABLE,
-    stacksize: PTHREAD_STACK_MIN,
-    inheritsched: PTHREAD_EXPLICIT_SCHED,
-    policy: SCHED_OTHER,
-    schedparam: {
-        sched_priority: 0
-    },
+      magic:PSE51_THREAD_ATTR_MAGIC,
+      detachstate:PTHREAD_CREATE_JOINABLE,
+      stacksize:PTHREAD_STACK_MIN,
+      inheritsched:PTHREAD_EXPLICIT_SCHED,
+      policy:SCHED_OTHER,
+      schedparam:{
+      sched_priority:0},
 
-    name: NULL,
-    fp: 1,
-    affinity: XNPOD_ALL_CPUS,
+      name:NULL,
+      fp:1,
+      affinity:XNPOD_ALL_CPUS,
 };
 
 /**
@@ -78,12 +77,11 @@ static const pthread_attr_t default_thread_attr = {
  * Specification.</a>
  * 
  */
-int pthread_attr_init (pthread_attr_t *attr)
-
+int pthread_attr_init(pthread_attr_t * attr)
 {
-    *attr = default_thread_attr;
+	*attr = default_thread_attr;
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -98,27 +96,25 @@ int pthread_attr_init (pthread_attr_t *attr)
  * Specification.</a>
  * 
  */
-int pthread_attr_destroy (pthread_attr_t *attr)
-
+int pthread_attr_destroy(pthread_attr_t * attr)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    if (attr->name)
-        xnfree(attr->name);
+	if (attr->name)
+		xnfree(attr->name);
 
-    pse51_mark_deleted(attr);
+	pse51_mark_deleted(attr);
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -150,24 +146,22 @@ int pthread_attr_destroy (pthread_attr_t *attr)
  * Specification.</a>
  * 
  */
-int pthread_attr_getdetachstate (const pthread_attr_t *attr, int *detachstate)
-
+int pthread_attr_getdetachstate(const pthread_attr_t * attr, int *detachstate)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    *detachstate = attr->detachstate;
+	*detachstate = attr->detachstate;
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -198,27 +192,25 @@ int pthread_attr_getdetachstate (const pthread_attr_t *attr, int *detachstate)
  * Specification.</a>
  * 
  */
-int pthread_attr_setdetachstate (pthread_attr_t *attr, int detachstate)
-
+int pthread_attr_setdetachstate(pthread_attr_t * attr, int detachstate)
 {
-    spl_t s;
+	spl_t s;
 
-    if (detachstate != PTHREAD_CREATE_JOINABLE
-        && detachstate != PTHREAD_CREATE_DETACHED)
-        return EINVAL;
+	if (detachstate != PTHREAD_CREATE_JOINABLE
+	    && detachstate != PTHREAD_CREATE_DETACHED)
+		return EINVAL;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    attr->detachstate = detachstate;
-    xnlock_put_irqrestore(&nklock, s);
-       
-    return 0;
+	attr->detachstate = detachstate;
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
 }
 
 /**
@@ -244,24 +236,22 @@ int pthread_attr_setdetachstate (pthread_attr_t *attr, int detachstate)
  * Specification.</a>
  *
  */
-int pthread_attr_getstacksize (const pthread_attr_t *attr, size_t *stacksize)
-
+int pthread_attr_getstacksize(const pthread_attr_t * attr, size_t * stacksize)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    *stacksize = attr->stacksize;
+	*stacksize = attr->stacksize;
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -288,26 +278,24 @@ int pthread_attr_getstacksize (const pthread_attr_t *attr, size_t *stacksize)
  * Specification.</a>
  * 
  */
-int pthread_attr_setstacksize (pthread_attr_t *attr, size_t stacksize)
-
+int pthread_attr_setstacksize(pthread_attr_t * attr, size_t stacksize)
 {
-    spl_t s;
+	spl_t s;
 
-    if (stacksize < PTHREAD_STACK_MIN)
-        return EINVAL;
-    
-    xnlock_get_irqsave(&nklock, s);
+	if (stacksize < PTHREAD_STACK_MIN)
+		return EINVAL;
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	xnlock_get_irqsave(&nklock, s);
+
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    attr->stacksize = stacksize;
-    xnlock_put_irqrestore(&nklock, s);
+	attr->stacksize = stacksize;
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -337,22 +325,20 @@ int pthread_attr_setstacksize (pthread_attr_t *attr, size_t stacksize)
  * Specification.</a>
  * 
  */
-int pthread_attr_getinheritsched (const pthread_attr_t *attr,int *inheritsched)
-
+int pthread_attr_getinheritsched(const pthread_attr_t * attr, int *inheritsched)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    *inheritsched = attr->inheritsched;
+	*inheritsched = attr->inheritsched;
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -382,34 +368,31 @@ int pthread_attr_getinheritsched (const pthread_attr_t *attr,int *inheritsched)
  * Specification.</a>
  * 
  */
-int pthread_attr_setinheritsched (pthread_attr_t *attr, int inheritsched)
-
+int pthread_attr_setinheritsched(pthread_attr_t * attr, int inheritsched)
 {
-    spl_t s;
+	spl_t s;
 
-    switch (inheritsched)
-	{
+	switch (inheritsched) {
 	default:
-	    return EINVAL;
+		return EINVAL;
 
 	case PTHREAD_INHERIT_SCHED:
 	case PTHREAD_EXPLICIT_SCHED:
-	    break;
+		break;
 	}
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    attr->inheritsched = inheritsched;
+	attr->inheritsched = inheritsched;
 
-    xnlock_put_irqrestore(&nklock, s);
-    
-    return 0;
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
 }
 
 /**
@@ -437,24 +420,22 @@ int pthread_attr_setinheritsched (pthread_attr_t *attr, int inheritsched)
  * Specification.</a>
  * 
  */
-int pthread_attr_getschedpolicy (const pthread_attr_t *attr,int *policy)
-
+int pthread_attr_getschedpolicy(const pthread_attr_t * attr, int *policy)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    *policy = attr->policy;
+	*policy = attr->policy;
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -481,43 +462,39 @@ int pthread_attr_getschedpolicy (const pthread_attr_t *attr,int *policy)
  * Specification.</a>
  * 
  */
-int pthread_attr_setschedpolicy (pthread_attr_t *attr, int policy)
-
+int pthread_attr_setschedpolicy(pthread_attr_t * attr, int policy)
 {
-    spl_t s;
+	spl_t s;
 
-    switch (policy)
-	{
+	switch (policy) {
 	default:
 
-	    return EINVAL;
+		return EINVAL;
 
 	case SCHED_OTHER:
 	case SCHED_FIFO:
 	case SCHED_RR:
 
-	    break;
+		break;
 	}
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    attr->policy = policy;
-    if (policy == SCHED_OTHER) {
-        if (attr->schedparam.sched_priority != 0)
-            attr->schedparam.sched_priority = 0;
-    } else
-        if (attr->schedparam.sched_priority == 0)
-            attr->schedparam.sched_priority = PSE51_MIN_PRIORITY;
+	attr->policy = policy;
+	if (policy == SCHED_OTHER) {
+		if (attr->schedparam.sched_priority != 0)
+			attr->schedparam.sched_priority = 0;
+	} else if (attr->schedparam.sched_priority == 0)
+		attr->schedparam.sched_priority = PSE51_MIN_PRIORITY;
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -545,24 +522,23 @@ int pthread_attr_setschedpolicy (pthread_attr_t *attr, int policy)
  * Specification.</a>
  * 
  */
-int pthread_attr_getschedparam (const pthread_attr_t *attr, struct sched_param *par)
-
+int pthread_attr_getschedparam(const pthread_attr_t * attr,
+			       struct sched_param *par)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    *par = attr->schedparam;
+	*par = attr->schedparam;
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -590,34 +566,31 @@ int pthread_attr_getschedparam (const pthread_attr_t *attr, struct sched_param *
  * Specification.</a>
  * 
  */
-int pthread_attr_setschedparam (pthread_attr_t *attr,
-                                const struct sched_param *par)
-
+int pthread_attr_setschedparam(pthread_attr_t * attr,
+			       const struct sched_param *par)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    if ((attr->policy != SCHED_OTHER &&
-         (par->sched_priority < PSE51_MIN_PRIORITY
-          || par->sched_priority > PSE51_MAX_PRIORITY))
-        || (attr->policy == SCHED_OTHER && par->sched_priority != 0))
-        {
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
-        }
+	if ((attr->policy != SCHED_OTHER &&
+	     (par->sched_priority < PSE51_MIN_PRIORITY
+	      || par->sched_priority > PSE51_MAX_PRIORITY))
+	    || (attr->policy == SCHED_OTHER && par->sched_priority != 0)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
+	}
 
-    attr->schedparam = *par;
+	attr->schedparam = *par;
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -644,24 +617,22 @@ int pthread_attr_setschedparam (pthread_attr_t *attr,
  * Specification.</a>
  * 
  */
-int pthread_attr_getscope (const pthread_attr_t *attr, int *scope)
-
+int pthread_attr_getscope(const pthread_attr_t * attr, int *scope)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    *scope = PTHREAD_SCOPE_SYSTEM;
+	*scope = PTHREAD_SCOPE_SYSTEM;
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -688,25 +659,23 @@ int pthread_attr_getscope (const pthread_attr_t *attr, int *scope)
  * Specification.</a>
  * 
  */
-int pthread_attr_setscope (pthread_attr_t *attr, int scope)
-
+int pthread_attr_setscope(pthread_attr_t * attr, int scope)
 {
-    spl_t s;
+	spl_t s;
 
-    if (scope != PTHREAD_SCOPE_SYSTEM)
-        return ENOTSUP;
+	if (scope != PTHREAD_SCOPE_SYSTEM)
+		return ENOTSUP;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -735,24 +704,22 @@ int pthread_attr_setscope (pthread_attr_t *attr, int scope)
  * @return an error number if:
  * - EINVAL, @a attr is invalid.
  */
-int pthread_attr_getname_np (const pthread_attr_t *attr, const char **name)
-
+int pthread_attr_getname_np(const pthread_attr_t * attr, const char **name)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    *name = attr->name;
+	*name = attr->name;
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -776,38 +743,34 @@ int pthread_attr_getname_np (const pthread_attr_t *attr, const char **name)
  * @return an error number if:
  * - EINVAL, @a attr is invalid.
  */
-int pthread_attr_setname_np (pthread_attr_t *attr, const char *name)
-
+int pthread_attr_setname_np(pthread_attr_t * attr, const char *name)
 {
-    int err = 0;
-    spl_t s;
+	int err = 0;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    if (attr->name)
-        xnfree(attr->name);
+	if (attr->name)
+		xnfree(attr->name);
 
-    if (name)
-        {
-        attr->name = xnmalloc(strlen(name)+1);
+	if (name) {
+		attr->name = xnmalloc(strlen(name) + 1);
 
-        if (attr->name)
-            strcpy(attr->name, name);
-        else
-            err = ENOMEM;
-        }
-    else
-        attr->name = NULL;
-        
-    xnlock_put_irqrestore(&nklock, s);
+		if (attr->name)
+			strcpy(attr->name, name);
+		else
+			err = ENOMEM;
+	} else
+		attr->name = NULL;
 
-    return err;
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
 }
 
 /**
@@ -830,24 +793,22 @@ int pthread_attr_setname_np (pthread_attr_t *attr, const char *name)
  * @return an error number if:
  * - EINVAL, @a attr is invalid.
  */
-int pthread_attr_getfp_np (const pthread_attr_t *attr, int *fp)
-
+int pthread_attr_getfp_np(const pthread_attr_t * attr, int *fp)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    *fp = attr->fp;
+	*fp = attr->fp;
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -869,24 +830,22 @@ int pthread_attr_getfp_np (const pthread_attr_t *attr, int *fp)
  * @return an error number if:
  * - EINVAL, @a attr is invalid.
  */
-int pthread_attr_setfp_np (pthread_attr_t *attr, int fp)
-
+int pthread_attr_setfp_np(pthread_attr_t * attr, int fp)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    attr->fp = fp;
+	attr->fp = fp;
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -911,24 +870,22 @@ int pthread_attr_setfp_np (pthread_attr_t *attr, int fp)
  * - EINVAL, @a attr is invalid.
  */
 int
-pthread_attr_getaffinity_np (const pthread_attr_t *attr, xnarch_cpumask_t *mask)
-
+pthread_attr_getaffinity_np(const pthread_attr_t * attr, xnarch_cpumask_t *mask)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    *mask = attr->affinity;
+	*mask = attr->affinity;
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -952,23 +909,22 @@ pthread_attr_getaffinity_np (const pthread_attr_t *attr, xnarch_cpumask_t *mask)
  * @return an error number if:
  * - EINVAL, @a attr is invalid.
  */
-int pthread_attr_setaffinity_np (pthread_attr_t *attr, xnarch_cpumask_t mask)
+int pthread_attr_setaffinity_np(pthread_attr_t * attr, xnarch_cpumask_t mask)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
 	}
 
-    attr->affinity = mask;
+	attr->affinity = mask;
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /*@}*/
@@ -991,5 +947,5 @@ EXPORT_SYMBOL(pthread_attr_getname_np);
 EXPORT_SYMBOL(pthread_attr_setname_np);
 EXPORT_SYMBOL(pthread_attr_getfp_np);
 EXPORT_SYMBOL(pthread_attr_setfp_np);
-EXPORT_SYMBOL(pthread_attr_getaffinity_np );
-EXPORT_SYMBOL(pthread_attr_setaffinity_np );
+EXPORT_SYMBOL(pthread_attr_getaffinity_np);
+EXPORT_SYMBOL(pthread_attr_setaffinity_np);
