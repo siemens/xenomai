@@ -87,16 +87,17 @@
 
 void xnsynch_init(xnsynch_t *synch, xnflags_t flags)
 {
-    initph(&synch->link);
+	initph(&synch->link);
 
-    if (flags & XNSYNCH_PIP)
-        flags |= XNSYNCH_PRIO;  /* Obviously... */
+	if (flags & XNSYNCH_PIP)
+		flags |= XNSYNCH_PRIO;	/* Obviously... */
 
-    synch->status = flags & ~(XNSYNCH_CLAIMED | XNSYNCH_PENDING);
-    synch->owner = NULL;
-    synch->cleanup = NULL;	/* Only works for PIP-enabled objects. */
-    initpq(&synch->pendq, xnpod_get_qdir(nkpod), xnpod_get_maxprio(nkpod, 0));
-    xnarch_init_display_context(synch);
+	synch->status = flags & ~(XNSYNCH_CLAIMED | XNSYNCH_PENDING);
+	synch->owner = NULL;
+	synch->cleanup = NULL;	/* Only works for PIP-enabled objects. */
+	initpq(&synch->pendq, xnpod_get_qdir(nkpod),
+	       xnpod_get_maxprio(nkpod, 0));
+	xnarch_init_display_context(synch);
 }
 
 /*
@@ -108,20 +109,20 @@ void xnsynch_init(xnsynch_t *synch, xnflags_t flags)
 
 static inline void xnsynch_renice_thread(xnthread_t *thread, int prio)
 {
-    thread->cprio = prio;
+	thread->cprio = prio;
 
-    if (thread->wchan)
-        /* Ignoring the XNSYNCH_DREORD flag on purpose here. */
-        xnsynch_renice_sleeper(thread);
-    else if (thread != xnpod_current_thread() &&
-             testbits(thread->status, XNREADY))
-        /* xnpod_resume_thread() must be called for runnable threads
-           but the running one. */
-        xnpod_resume_thread(thread, 0);
+	if (thread->wchan)
+		/* Ignoring the XNSYNCH_DREORD flag on purpose here. */
+		xnsynch_renice_sleeper(thread);
+	else if (thread != xnpod_current_thread() &&
+		 testbits(thread->status, XNREADY))
+		/* xnpod_resume_thread() must be called for runnable threads
+		   but the running one. */
+		xnpod_resume_thread(thread, 0);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    if (testbits(thread->status, XNRELAX))
-        xnshadow_renice(thread);
+	if (testbits(thread->status, XNRELAX))
+		xnshadow_renice(thread);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 }
 
@@ -161,77 +162,82 @@ static inline void xnsynch_renice_thread(xnthread_t *thread, int prio)
 
 void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout)
 {
-    xnthread_t *thread = xnpod_current_thread(), *owner;
-    spl_t s;
+	xnthread_t *thread = xnpod_current_thread(), *owner;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    xnltt_log_event(xeno_ev_sleepon, thread->name, synch);
+	xnltt_log_event(xeno_ev_sleepon, thread->name, synch);
 
-    if (testbits(synch->status, XNSYNCH_PRIO)) {
+	if (testbits(synch->status, XNSYNCH_PRIO)) {
 
-        if (testbits(synch->status, XNSYNCH_PIP)) {
-  redo:
-	    owner = synch->owner;
-	    
-            if (owner && xnpod_compare_prio(thread->cprio, owner->cprio) > 0) {
+		if (testbits(synch->status, XNSYNCH_PIP)) {
+		      redo:
+			owner = synch->owner;
 
-        	if (testbits(synch->status, XNSYNCH_PENDING)) {
-            	    /* Ownership is still pending, steal the resource. */
-            	    synch->owner = thread;
-            	    __clrbits(thread->status, XNRMID | XNTIMEO | XNBREAK);
-            	    goto grab_ownership;
-        	}
+			if (owner
+			    && xnpod_compare_prio(thread->cprio,
+						  owner->cprio) > 0) {
 
-        	if (!testbits(owner->status, XNBOOST)) {
-            	    owner->bprio = owner->cprio;
-            	    __setbits(owner->status, XNBOOST);
-        	}
+				if (testbits(synch->status, XNSYNCH_PENDING)) {
+					/* Ownership is still pending, steal the resource. */
+					synch->owner = thread;
+					__clrbits(thread->status,
+						  XNRMID | XNTIMEO | XNBREAK);
+					goto grab_ownership;
+				}
 
-        	if (testbits(synch->status, XNSYNCH_CLAIMED))
-            	    removepq(&owner->claimq, &synch->link);
-        	else
-            	    __setbits(synch->status, XNSYNCH_CLAIMED);
+				if (!testbits(owner->status, XNBOOST)) {
+					owner->bprio = owner->cprio;
+					__setbits(owner->status, XNBOOST);
+				}
 
-        	insertpqf(&synch->pendq, &thread->plink, thread->cprio);
-        	insertpqf(&owner->claimq, &synch->link, thread->cprio);
-        	xnsynch_renice_thread(owner, thread->cprio);
-	    }
-	    else
-        	insertpqf(&synch->pendq, &thread->plink, thread->cprio);
+				if (testbits(synch->status, XNSYNCH_CLAIMED))
+					removepq(&owner->claimq, &synch->link);
+				else
+					__setbits(synch->status,
+						  XNSYNCH_CLAIMED);
 
-            xnpod_suspend_thread(thread, XNPEND, timeout, synch);
+				insertpqf(&synch->pendq, &thread->plink,
+					  thread->cprio);
+				insertpqf(&owner->claimq, &synch->link,
+					  thread->cprio);
+				xnsynch_renice_thread(owner, thread->cprio);
+			} else
+				insertpqf(&synch->pendq, &thread->plink,
+					  thread->cprio);
 
-            if (unlikely(synch->owner != thread)) {
-                /* Somebody stole us the ownership while we were ready to
-                   run, waiting for the CPU: we need to wait again for the
-                   resource. */
-                if (timeout == XN_INFINITE)
-                    goto redo;
-                timeout = xnthread_timeout(thread);
-                if (timeout > 1) /* Otherwise, it's too late, time elapsed. */
-                    goto redo;
-		__setbits(thread->status, XNTIMEO);
-		goto unlock_and_exit;
-            }
-        }
-        else {
-            insertpqf(&synch->pendq, &thread->plink, thread->cprio);
-            xnpod_suspend_thread(thread, XNPEND, timeout, synch);
-        }
-    } else {            /* otherwise FIFO */
-        appendpq(&synch->pendq, &thread->plink);
-        xnpod_suspend_thread(thread, XNPEND, timeout, synch);
-    }
+			xnpod_suspend_thread(thread, XNPEND, timeout, synch);
 
-grab_ownership:
+			if (unlikely(synch->owner != thread)) {
+				/* Somebody stole us the ownership while we were ready to
+				   run, waiting for the CPU: we need to wait again for the
+				   resource. */
+				if (timeout == XN_INFINITE)
+					goto redo;
+				timeout = xnthread_timeout(thread);
+				if (timeout > 1)	/* Otherwise, it's too late, time elapsed. */
+					goto redo;
+				__setbits(thread->status, XNTIMEO);
+				goto unlock_and_exit;
+			}
+		} else {
+			insertpqf(&synch->pendq, &thread->plink, thread->cprio);
+			xnpod_suspend_thread(thread, XNPEND, timeout, synch);
+		}
+	} else {		/* otherwise FIFO */
+		appendpq(&synch->pendq, &thread->plink);
+		xnpod_suspend_thread(thread, XNPEND, timeout, synch);
+	}
 
-    /* Now the resource is truely owned by the caller. */
-    __clrbits(synch->status, XNSYNCH_PENDING);
+      grab_ownership:
 
-unlock_and_exit:
+	/* Now the resource is truely owned by the caller. */
+	__clrbits(synch->status, XNSYNCH_PENDING);
 
-    xnlock_put_irqrestore(&nklock, s);
+      unlock_and_exit:
+
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 /*! 
@@ -253,24 +259,24 @@ unlock_and_exit:
 
 static void xnsynch_clear_boost(xnsynch_t *synch, xnthread_t *lastowner)
 {
-    int downprio;
+	int downprio;
 
-    removepq(&lastowner->claimq, &synch->link);
-    __clrbits(synch->status, XNSYNCH_CLAIMED);
-    downprio = lastowner->bprio;
+	removepq(&lastowner->claimq, &synch->link);
+	__clrbits(synch->status, XNSYNCH_CLAIMED);
+	downprio = lastowner->bprio;
 
-    if (emptypq_p(&lastowner->claimq))
-        __clrbits(lastowner->status, XNBOOST);
-    else {
-        /* Find the highest priority needed to enforce the PIP. */
-        int rprio = getheadpq(&lastowner->claimq)->prio;
+	if (emptypq_p(&lastowner->claimq))
+		__clrbits(lastowner->status, XNBOOST);
+	else {
+		/* Find the highest priority needed to enforce the PIP. */
+		int rprio = getheadpq(&lastowner->claimq)->prio;
 
-        if (xnpod_compare_prio(rprio, downprio) > 0)
-            downprio = rprio;
-    }
+		if (xnpod_compare_prio(rprio, downprio) > 0)
+			downprio = rprio;
+	}
 
-    if (lastowner->cprio != downprio)
-        xnsynch_renice_thread(lastowner, downprio);
+	if (lastowner->cprio != downprio)
+		xnsynch_renice_thread(lastowner, downprio);
 }
 
 /*! 
@@ -288,21 +294,21 @@ static void xnsynch_clear_boost(xnsynch_t *synch, xnthread_t *lastowner)
 
 void xnsynch_renice_sleeper(xnthread_t *thread)
 {
-    xnsynch_t *synch = thread->wchan;
+	xnsynch_t *synch = thread->wchan;
 
-    if (testbits(synch->status, XNSYNCH_PRIO)) {
-        xnthread_t *owner = synch->owner;
+	if (testbits(synch->status, XNSYNCH_PRIO)) {
+		xnthread_t *owner = synch->owner;
 
-        removepq(&synch->pendq, &thread->plink);
-        insertpqf(&synch->pendq, &thread->plink, thread->cprio);
+		removepq(&synch->pendq, &thread->plink);
+		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
 
-        if (testbits(synch->status, XNSYNCH_CLAIMED) &&
-            xnpod_compare_prio(thread->cprio, owner->cprio) > 0) {
-            removepq(&owner->claimq, &synch->link);
-            insertpqf(&owner->claimq, &synch->link, thread->cprio);
-            xnsynch_renice_thread(owner, thread->cprio);
-        }
-    }
+		if (testbits(synch->status, XNSYNCH_CLAIMED) &&
+		    xnpod_compare_prio(thread->cprio, owner->cprio) > 0) {
+			removepq(&owner->claimq, &synch->link);
+			insertpqf(&owner->claimq, &synch->link, thread->cprio);
+			xnsynch_renice_thread(owner, thread->cprio);
+		}
+	}
 }
 
 /*! 
@@ -345,34 +351,34 @@ void xnsynch_renice_sleeper(xnthread_t *thread)
 
 xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
 {
-    xnthread_t *thread = NULL, *lastowner = synch->owner;
-    xnpholder_t *holder;
-    spl_t s;
+	xnthread_t *thread = NULL, *lastowner = synch->owner;
+	xnpholder_t *holder;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    holder = getpq(&synch->pendq);
+	holder = getpq(&synch->pendq);
 
-    if (holder) {
-        thread = link2thread(holder, plink);
-        thread->wchan = NULL;
-        synch->owner = thread;
-        __setbits(synch->status, XNSYNCH_PENDING);
-        xnltt_log_event(xeno_ev_wakeup1, thread->name, synch);
-        xnpod_resume_thread(thread, XNPEND);
-    } else {
-        synch->owner = NULL;
-        __clrbits(synch->status, XNSYNCH_PENDING);
-    }
+	if (holder) {
+		thread = link2thread(holder, plink);
+		thread->wchan = NULL;
+		synch->owner = thread;
+		__setbits(synch->status, XNSYNCH_PENDING);
+		xnltt_log_event(xeno_ev_wakeup1, thread->name, synch);
+		xnpod_resume_thread(thread, XNPEND);
+	} else {
+		synch->owner = NULL;
+		__clrbits(synch->status, XNSYNCH_PENDING);
+	}
 
-    if (testbits(synch->status, XNSYNCH_CLAIMED))
-        xnsynch_clear_boost(synch, lastowner);
+	if (testbits(synch->status, XNSYNCH_CLAIMED))
+		xnsynch_clear_boost(synch, lastowner);
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
+	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
 
-    return thread;
+	return thread;
 }
 
 /*! 
@@ -420,28 +426,28 @@ xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
 
 xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder)
 {
-    xnthread_t *thread, *lastowner = synch->owner;
-    xnpholder_t *nholder;
-    spl_t s;
+	xnthread_t *thread, *lastowner = synch->owner;
+	xnpholder_t *nholder;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    nholder = poppq(&synch->pendq, holder);
-    thread = link2thread(holder, plink);
-    thread->wchan = NULL;
-    synch->owner = thread;
-    __setbits(synch->status, XNSYNCH_PENDING);
-    xnltt_log_event(xeno_ev_wakeupx, thread->name, synch);
-    xnpod_resume_thread(thread, XNPEND);
+	nholder = poppq(&synch->pendq, holder);
+	thread = link2thread(holder, plink);
+	thread->wchan = NULL;
+	synch->owner = thread;
+	__setbits(synch->status, XNSYNCH_PENDING);
+	xnltt_log_event(xeno_ev_wakeupx, thread->name, synch);
+	xnpod_resume_thread(thread, XNPEND);
 
-    if (testbits(synch->status, XNSYNCH_CLAIMED))
-        xnsynch_clear_boost(synch, lastowner);
+	if (testbits(synch->status, XNSYNCH_CLAIMED))
+		xnsynch_clear_boost(synch, lastowner);
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
+	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
 
-    return nholder;
+	return nholder;
 }
 
 /*! 
@@ -495,36 +501,36 @@ xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder)
 
 int xnsynch_flush(xnsynch_t *synch, xnflags_t reason)
 {
-    xnpholder_t *holder;
-    int status;
-    spl_t s;
+	xnpholder_t *holder;
+	int status;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    xnltt_log_event(xeno_ev_syncflush, synch, reason);
+	xnltt_log_event(xeno_ev_syncflush, synch, reason);
 
-    status = emptypq_p(&synch->pendq) ? XNSYNCH_DONE : XNSYNCH_RESCHED;
+	status = emptypq_p(&synch->pendq) ? XNSYNCH_DONE : XNSYNCH_RESCHED;
 
-    while ((holder = getpq(&synch->pendq)) != NULL) {
-        xnthread_t *sleeper = link2thread(holder, plink);
-        __setbits(sleeper->status, reason);
-        sleeper->wchan = NULL;
-        xnpod_resume_thread(sleeper, XNPEND);
-    }
+	while ((holder = getpq(&synch->pendq)) != NULL) {
+		xnthread_t *sleeper = link2thread(holder, plink);
+		__setbits(sleeper->status, reason);
+		sleeper->wchan = NULL;
+		xnpod_resume_thread(sleeper, XNPEND);
+	}
 
-    if (testbits(synch->status, XNSYNCH_CLAIMED)) {
-        xnsynch_clear_boost(synch, synch->owner);
-        status = XNSYNCH_RESCHED;
-    }
+	if (testbits(synch->status, XNSYNCH_CLAIMED)) {
+		xnsynch_clear_boost(synch, synch->owner);
+		status = XNSYNCH_RESCHED;
+	}
 
-    synch->owner = NULL;
-    __clrbits(synch->status, XNSYNCH_PENDING);
+	synch->owner = NULL;
+	__clrbits(synch->status, XNSYNCH_PENDING);
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
+	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
 
-    return status;
+	return status;
 }
 
 /*! 
@@ -548,40 +554,40 @@ int xnsynch_flush(xnsynch_t *synch, xnflags_t reason)
 
 void xnsynch_forget_sleeper(xnthread_t *thread)
 {
-    xnsynch_t *synch = thread->wchan;
+	xnsynch_t *synch = thread->wchan;
 
-    xnltt_log_event(xeno_ev_syncforget, thread->name, synch);
+	xnltt_log_event(xeno_ev_syncforget, thread->name, synch);
 
-    __clrbits(thread->status, XNPEND);
-    thread->wchan = NULL;
-    removepq(&synch->pendq, &thread->plink);
+	__clrbits(thread->status, XNPEND);
+	thread->wchan = NULL;
+	removepq(&synch->pendq, &thread->plink);
 
-    if (testbits(synch->status, XNSYNCH_CLAIMED)) {
-        /* Find the highest priority needed to enforce the PIP. */
-        xnthread_t *owner = synch->owner;
-        int rprio;
+	if (testbits(synch->status, XNSYNCH_CLAIMED)) {
+		/* Find the highest priority needed to enforce the PIP. */
+		xnthread_t *owner = synch->owner;
+		int rprio;
 
-        if (emptypq_p(&synch->pendq))
-            /* No more sleepers: clear the boost. */
-            xnsynch_clear_boost(synch, owner);
-        else if (getheadpq(&synch->pendq)->prio !=
-                 getheadpq(&owner->claimq)->prio) {
-            /* Reorder the claim queue, and lower the priority to the
-               required minimum needed to prevent priority
-               inversion. */
-            removepq(&owner->claimq, &synch->link);
+		if (emptypq_p(&synch->pendq))
+			/* No more sleepers: clear the boost. */
+			xnsynch_clear_boost(synch, owner);
+		else if (getheadpq(&synch->pendq)->prio !=
+			 getheadpq(&owner->claimq)->prio) {
+			/* Reorder the claim queue, and lower the priority to the
+			   required minimum needed to prevent priority
+			   inversion. */
+			removepq(&owner->claimq, &synch->link);
 
-            insertpqf(&owner->claimq,
-                      &synch->link, getheadpq(&synch->pendq)->prio);
+			insertpqf(&owner->claimq,
+				  &synch->link, getheadpq(&synch->pendq)->prio);
 
-            rprio = getheadpq(&owner->claimq)->prio;
+			rprio = getheadpq(&owner->claimq)->prio;
 
-            if (xnpod_compare_prio(rprio, owner->cprio) < 0)
-                xnsynch_renice_thread(owner, rprio);
-        }
-    }
+			if (xnpod_compare_prio(rprio, owner->cprio) < 0)
+				xnsynch_renice_thread(owner, rprio);
+		}
+	}
 
-    xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
+	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
 }
 
 /*! 
@@ -600,17 +606,18 @@ void xnsynch_forget_sleeper(xnthread_t *thread)
 
 void xnsynch_release_all_ownerships(xnthread_t *thread)
 {
-    xnpholder_t *holder, *nholder;
+	xnpholder_t *holder, *nholder;
 
-    for (holder = getheadpq(&thread->claimq); holder != NULL; holder = nholder) {
-        /* Since xnsynch_wakeup_one_sleeper() alters the claim queue,
-           we need to be conservative while scanning it. */
-        xnsynch_t *synch = link2synch(holder);
-        nholder = nextpq(&thread->claimq, holder);
-        xnsynch_wakeup_one_sleeper(synch);
-	if (synch->cleanup)
-             synch->cleanup(synch);
-    }
+	for (holder = getheadpq(&thread->claimq); holder != NULL;
+	     holder = nholder) {
+		/* Since xnsynch_wakeup_one_sleeper() alters the claim queue,
+		   we need to be conservative while scanning it. */
+		xnsynch_t *synch = link2synch(holder);
+		nholder = nextpq(&thread->claimq, holder);
+		xnsynch_wakeup_one_sleeper(synch);
+		if (synch->cleanup)
+			synch->cleanup(synch);
+	}
 }
 
 /*@}*/
