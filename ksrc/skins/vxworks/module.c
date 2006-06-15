@@ -34,76 +34,77 @@ static xnpod_t __vxworks_pod;
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 xnptree_t __vxworks_ptree = {
 
-    .dir = NULL,
-    .name = "vxworks",
-    .entries = 0,
+	.dir = NULL,
+	.name = "vxworks",
+	.entries = 0,
 };
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 int SKIN_INIT(vxworks)
 {
-    int err;
+	int err;
 
 #if CONFIG_XENO_OPT_TIMING_PERIOD == 0
-    nktickdef = 1000000;        /* Defaults to 1ms. */
+	nktickdef = 1000000;	/* Defaults to 1ms. */
 #endif
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    /* The VxWorks skin is stacked over the core pod. */
-    err = xncore_attach();
+	/* The VxWorks skin is stacked over the core pod. */
+	err = xncore_attach();
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-    /* The VxWorks skin is standalone. */
-    err = xnpod_init(&__vxworks_pod, 255, 0, XNREUSE);
+	/* The VxWorks skin is standalone. */
+	err = xnpod_init(&__vxworks_pod, 255, 0, XNREUSE);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-    if (err != 0)
-        goto fail;
+	if (err != 0)
+		goto fail;
 
-    if (!testbits(nkpod->status, XNTMPER)) {
-        xnlogerr("incompatible timer mode (aperiodic found, need periodic).\n");
-        err = -EBUSY;           /* Cannot work in aperiodic timing mode. */
-    } else
-        err = wind_sysclk_init(1000000000 / xnpod_get_tickval());
+	if (!testbits(nkpod->status, XNTMPER)) {
+		xnlogerr
+		    ("incompatible timer mode (aperiodic found, need periodic).\n");
+		err = -EBUSY;	/* Cannot work in aperiodic timing mode. */
+	} else
+		err = wind_sysclk_init(1000000000 / xnpod_get_tickval());
 
-    if (err != 0) {
+	if (err != 0) {
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-        xncore_detach(err);
+		xncore_detach(err);
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-        xnpod_shutdown(err);
+		xnpod_shutdown(err);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-      fail:
-        xnlogerr("VxWorks skin init failed, code %d.\n", err);
-        return err;
-    }
+	      fail:
+		xnlogerr("VxWorks skin init failed, code %d.\n", err);
+		return err;
+	}
 
-    wind_wd_init();
-    wind_task_hooks_init();
-    wind_sem_init();
-    wind_msgq_init();
-    wind_task_init();
+	wind_wd_init();
+	wind_task_hooks_init();
+	wind_sem_init();
+	wind_msgq_init();
+	wind_task_init();
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    wind_syscall_init();
+	wind_syscall_init();
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-    xnprintf("starting VxWorks services.\n");
+	xnprintf("starting VxWorks services.\n");
 
-    return 0;
+	return 0;
 }
 
 void SKIN_EXIT(vxworks)
 {
-    xnprintf("stopping VxWorks services.\n");
-    wind_task_cleanup();
-    wind_sysclk_cleanup();
-    wind_msgq_cleanup();
-    wind_sem_cleanup();
-    wind_wd_cleanup();
-    wind_task_hooks_cleanup();
+	xnprintf("stopping VxWorks services.\n");
+	wind_task_cleanup();
+	wind_sysclk_cleanup();
+	wind_msgq_cleanup();
+	wind_sem_cleanup();
+	wind_wd_cleanup();
+	wind_task_hooks_cleanup();
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    wind_syscall_cleanup();
-    xncore_detach(XNPOD_NORMAL_EXIT);
+	wind_syscall_cleanup();
+	xncore_detach(XNPOD_NORMAL_EXIT);
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-    xnpod_shutdown(XNPOD_NORMAL_EXIT);
+	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 }
 

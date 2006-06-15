@@ -32,568 +32,575 @@ static void wind_task_trampoline(void *cookie);
 
 void wind_task_init(void)
 {
-    initq(&wind_tasks_q);
-    xnpod_add_hook(XNHOOK_THREAD_DELETE, wind_task_delete_hook);
+	initq(&wind_tasks_q);
+	xnpod_add_hook(XNHOOK_THREAD_DELETE, wind_task_delete_hook);
 }
 
 void wind_task_cleanup(void)
 {
-    xnholder_t *holder;
+	xnholder_t *holder;
 
-    while ((holder = getheadq(&wind_tasks_q)) != NULL)
-        taskDeleteForce((TASK_ID) link2wind_task(holder));
+	while ((holder = getheadq(&wind_tasks_q)) != NULL)
+		taskDeleteForce((TASK_ID) link2wind_task(holder));
 
-    xnpod_remove_hook(XNHOOK_THREAD_DELETE, wind_task_delete_hook);
+	xnpod_remove_hook(XNHOOK_THREAD_DELETE, wind_task_delete_hook);
 }
 
 void wind_set_rrperiod(xnticks_t ticks)
 {
-    rrperiod = ticks;
+	rrperiod = ticks;
 }
 
 STATUS taskInit(WIND_TCB *pTcb,
-                const char *name,
-                int prio,
-                int flags,
-                char *stack __attribute__ ((unused)),
-                int stacksize,
-                FUNCPTR entry,
-                long arg0, long arg1, long arg2, long arg3, long arg4,
-                long arg5, long arg6, long arg7, long arg8, long arg9)
+		const char *name,
+		int prio,
+		int flags,
+		char *stack __attribute__ ((unused)),
+		int stacksize,
+		FUNCPTR entry,
+		long arg0, long arg1, long arg2, long arg3, long arg4,
+		long arg5, long arg6, long arg7, long arg8, long arg9)
 {
-    xnflags_t bflags = 0;
-    spl_t s;
+	xnflags_t bflags = 0;
+	spl_t s;
 
-    check_NOT_ISR_CALLABLE(return ERROR);
+	check_NOT_ISR_CALLABLE(return ERROR);
 
-    if (prio < 0 || prio > WIND_MAX_PRIORITIES) {
-        wind_errnoset(S_taskLib_ILLEGAL_PRIORITY);
-        return ERROR;
-    }
+	if (prio < 0 || prio > WIND_MAX_PRIORITIES) {
+		wind_errnoset(S_taskLib_ILLEGAL_PRIORITY);
+		return ERROR;
+	}
 
-    /* We forbid to use twice the same tcb */
-    if (!pTcb || pTcb->magic == WIND_TASK_MAGIC) {
-        wind_errnoset(S_objLib_OBJ_ID_ERROR);
-        return ERROR;
-    }
+	/* We forbid to use twice the same tcb */
+	if (!pTcb || pTcb->magic == WIND_TASK_MAGIC) {
+		wind_errnoset(S_objLib_OBJ_ID_ERROR);
+		return ERROR;
+	}
 
-    /* VxWorks does not check for invalid option flags, so we
-       neither. */
+	/* VxWorks does not check for invalid option flags, so we
+	   neither. */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    /* VxWorks priority scale is inverted compared to the core
-       pod's we are going to use for hosting our threads. */
-    bflags |= XNINVPS;
+	/* VxWorks priority scale is inverted compared to the core
+	   pod's we are going to use for hosting our threads. */
+	bflags |= XNINVPS;
 
-    if (flags & VX_SHADOW)
-        bflags |= XNSHADOW;
+	if (flags & VX_SHADOW)
+		bflags |= XNSHADOW;
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-    if (stacksize < 1024)
-        return ERROR;
+	if (stacksize < 1024)
+		return ERROR;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-    if (flags & VX_FP_TASK)
-        bflags |= XNFPU;
+	if (flags & VX_FP_TASK)
+		bflags |= XNFPU;
 
-    /*  not implemented: VX_PRIVATE_ENV, VX_NO_STACK_FILL, VX_UNBREAKABLE */
+	/*  not implemented: VX_PRIVATE_ENV, VX_NO_STACK_FILL, VX_UNBREAKABLE */
 
-    pTcb->flow_id = task_ids++;
+	pTcb->flow_id = task_ids++;
 
-    if (name && *name)
-        xnobject_copy_name(pTcb->name, name);
-    else
-        /* i.e. Anonymous object which must be accessible from
-           user-space. */
-        sprintf(pTcb->name, "t%lu", pTcb->flow_id);
+	if (name && *name)
+		xnobject_copy_name(pTcb->name, name);
+	else
+		/* i.e. Anonymous object which must be accessible from
+		   user-space. */
+		sprintf(pTcb->name, "t%lu", pTcb->flow_id);
 
-    if (xnpod_init_thread(&pTcb->threadbase,
-                          pTcb->name,
-                          wind_normalized_prio(prio), bflags, stacksize) != 0) {
-        /* Assume this is the only possible failure. */
-        wind_errnoset(S_memLib_NOT_ENOUGH_MEMORY);
-        return ERROR;
-    }
+	if (xnpod_init_thread(&pTcb->threadbase,
+			      pTcb->name,
+			      wind_normalized_prio(prio), bflags,
+			      stacksize) != 0) {
+		/* Assume this is the only possible failure. */
+		wind_errnoset(S_memLib_NOT_ENOUGH_MEMORY);
+		return ERROR;
+	}
 
-    xnthread_set_magic(&pTcb->threadbase, VXWORKS_SKIN_MAGIC);
+	xnthread_set_magic(&pTcb->threadbase, VXWORKS_SKIN_MAGIC);
 
-    /* finally set the Tcb after error conditions checking */
-    pTcb->magic = WIND_TASK_MAGIC;
-    pTcb->flags = flags & ~VX_SHADOW;
-    pTcb->prio = prio;
-    pTcb->entry = entry;
+	/* finally set the Tcb after error conditions checking */
+	pTcb->magic = WIND_TASK_MAGIC;
+	pTcb->flags = flags & ~VX_SHADOW;
+	pTcb->prio = prio;
+	pTcb->entry = entry;
 
-    xnthread_time_slice(&pTcb->threadbase) = rrperiod;
+	xnthread_time_slice(&pTcb->threadbase) = rrperiod;
 
-    pTcb->safecnt = 0;
-    xnsynch_init(&pTcb->safesync, 0);
+	pTcb->safecnt = 0;
+	xnsynch_init(&pTcb->safesync, 0);
 
-    /* TODO: fill in attributes of wind_task_t:
-       pTcb->status
-     */
+	/* TODO: fill in attributes of wind_task_t:
+	   pTcb->status
+	 */
 
-    pTcb->auto_delete = 0;
-    inith(&pTcb->link);
+	pTcb->auto_delete = 0;
+	inith(&pTcb->link);
 
-    pTcb->arg0 = arg0;
-    pTcb->arg1 = arg1;
-    pTcb->arg2 = arg2;
-    pTcb->arg3 = arg3;
-    pTcb->arg4 = arg4;
-    pTcb->arg5 = arg5;
-    pTcb->arg6 = arg6;
-    pTcb->arg7 = arg7;
-    pTcb->arg8 = arg8;
-    pTcb->arg9 = arg9;
+	pTcb->arg0 = arg0;
+	pTcb->arg1 = arg1;
+	pTcb->arg2 = arg2;
+	pTcb->arg3 = arg3;
+	pTcb->arg4 = arg4;
+	pTcb->arg5 = arg5;
+	pTcb->arg6 = arg6;
+	pTcb->arg7 = arg7;
+	pTcb->arg8 = arg8;
+	pTcb->arg9 = arg9;
 
-    xnlock_get_irqsave(&nklock, s);
-    appendq(&wind_tasks_q, &pTcb->link);
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
+	appendq(&wind_tasks_q, &pTcb->link);
+	xnlock_put_irqrestore(&nklock, s);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
-    if (xnregistry_enter(pTcb->name,
-                         pTcb, &xnthread_handle(&pTcb->threadbase), NULL)) {
-        wind_errnoset(S_objLib_OBJ_ID_ERROR);
-        taskDeleteForce((TASK_ID) pTcb);
-        return ERROR;
-    }
+	if (xnregistry_enter(pTcb->name,
+			     pTcb, &xnthread_handle(&pTcb->threadbase), NULL)) {
+		wind_errnoset(S_objLib_OBJ_ID_ERROR);
+		taskDeleteForce((TASK_ID) pTcb);
+		return ERROR;
+	}
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-    return OK;
+	return OK;
 }
 
 STATUS taskActivate(TASK_ID task_id)
 {
-    wind_task_t *task;
-    spl_t s;
+	wind_task_t *task;
+	spl_t s;
 
-    if (task_id == 0)
-        return ERROR;
+	if (task_id == 0)
+		return ERROR;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC, goto error);
+	check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
+			   goto error);
 
-    if (!xnthread_test_flags(&(task->threadbase), XNDORMANT))
-        goto error;
+	if (!xnthread_test_flags(&(task->threadbase), XNDORMANT))
+		goto error;
 
-    xnpod_start_thread(&task->threadbase, XNRRB, 0,
-                       XNPOD_ALL_CPUS, wind_task_trampoline, task);
+	xnpod_start_thread(&task->threadbase, XNRRB, 0,
+			   XNPOD_ALL_CPUS, wind_task_trampoline, task);
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return OK;
+	return OK;
 
-  error:
-    xnlock_put_irqrestore(&nklock, s);
-    return ERROR;
+      error:
+	xnlock_put_irqrestore(&nklock, s);
+	return ERROR;
 
 }
 
 TASK_ID taskSpawn(const char *name,
-                  int prio,
-                  int flags,
-                  int stacksize,
-                  FUNCPTR entry,
-                  long arg0, long arg1, long arg2, long arg3, long arg4,
-                  long arg5, long arg6, long arg7, long arg8, long arg9)
+		  int prio,
+		  int flags,
+		  int stacksize,
+		  FUNCPTR entry,
+		  long arg0, long arg1, long arg2, long arg3, long arg4,
+		  long arg5, long arg6, long arg7, long arg8, long arg9)
 {
-    wind_task_t *task;
-    TASK_ID task_id;
-    STATUS status;
+	wind_task_t *task;
+	TASK_ID task_id;
+	STATUS status;
 
-    check_NOT_ISR_CALLABLE(return ERROR);
+	check_NOT_ISR_CALLABLE(return ERROR);
 
-    check_alloc(wind_task_t, task, return ERROR);
-    task_id = (TASK_ID) task;
+	check_alloc(wind_task_t, task, return ERROR);
+	task_id = (TASK_ID) task;
 
-    status = taskInit(task,
-                      name,
-                      prio,
-                      flags,
-                      NULL,
-                      stacksize,
-                      entry,
-                      arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8,
-                      arg9);
+	status = taskInit(task,
+			  name,
+			  prio,
+			  flags,
+			  NULL,
+			  stacksize,
+			  entry,
+			  arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8,
+			  arg9);
 
-    if (status == ERROR)
-        goto error;
+	if (status == ERROR)
+		goto error;
 
-    task->auto_delete = 1;
-    status = taskActivate(task_id);
+	task->auto_delete = 1;
+	status = taskActivate(task_id);
 
-    if (status == ERROR)
-        goto error;
+	if (status == ERROR)
+		goto error;
 
-    return task_id;
+	return task_id;
 
-  error:
-    taskDeleteForce(task_id);
-    return ERROR;
+      error:
+	taskDeleteForce(task_id);
+	return ERROR;
 }
 
 STATUS taskDeleteForce(TASK_ID task_id)
 {
-    wind_task_t *task;
-    spl_t s;
+	wind_task_t *task;
+	spl_t s;
 
-    check_NOT_ISR_CALLABLE(return ERROR);
+	check_NOT_ISR_CALLABLE(return ERROR);
 
-    if (task_id == 0)
-        xnpod_delete_self();    /* Never returns */
+	if (task_id == 0)
+		xnpod_delete_self();	/* Never returns */
 
-    xnlock_get_irqsave(&nklock, s);
-    check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC, goto error);
-    xnpod_delete_thread(&task->threadbase);
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
+	check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
+			   goto error);
+	xnpod_delete_thread(&task->threadbase);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return OK;
+	return OK;
 
-  error:
-    xnlock_put_irqrestore(&nklock, s);
-    return ERROR;
+      error:
+	xnlock_put_irqrestore(&nklock, s);
+	return ERROR;
 }
 
 STATUS taskDelete(TASK_ID task_id)
 {
-    wind_task_t *task;
-    unsigned long int flow_id;
-    spl_t s;
+	wind_task_t *task;
+	unsigned long int flow_id;
+	spl_t s;
 
-    check_NOT_ISR_CALLABLE(return ERROR);
+	check_NOT_ISR_CALLABLE(return ERROR);
 
-    if (task_id == 0)
-        xnpod_delete_self();
+	if (task_id == 0)
+		xnpod_delete_self();
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC, goto error);
-    flow_id = task->flow_id;
+	check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
+			   goto error);
+	flow_id = task->flow_id;
 
-    if (testSafe(task) == ERROR)
-        goto error;
+	if (testSafe(task) == ERROR)
+		goto error;
 
-    /* we use flow_id here just in case task was destroyed and the block
-       reused for another task by the allocator */
-    if (!wind_h2obj_active(task, WIND_TASK_MAGIC, wind_task_t)
-        || task->flow_id != flow_id) {
-        wind_errnoset(S_objLib_OBJ_DELETED);
-        goto error;
-    }
+	/* we use flow_id here just in case task was destroyed and the block
+	   reused for another task by the allocator */
+	if (!wind_h2obj_active(task, WIND_TASK_MAGIC, wind_task_t)
+	    || task->flow_id != flow_id) {
+		wind_errnoset(S_objLib_OBJ_DELETED);
+		goto error;
+	}
 
-    xnpod_delete_thread(&task->threadbase);
-    xnlock_put_irqrestore(&nklock, s);
+	xnpod_delete_thread(&task->threadbase);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return OK;
+	return OK;
 
-  error:
-    xnlock_put_irqrestore(&nklock, s);
-    return ERROR;
+      error:
+	xnlock_put_irqrestore(&nklock, s);
+	return ERROR;
 }
 
 void taskExit(int code)
 {
-    xnpod_check_context(XNPOD_THREAD_CONTEXT);
-    wind_errnoset(code);
-    xnpod_delete_self();
+	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	wind_errnoset(code);
+	xnpod_delete_self();
 }
 
 STATUS taskSuspend(TASK_ID task_id)
 {
-    wind_task_t *task;
-    spl_t s;
+	wind_task_t *task;
+	spl_t s;
 
-    if (task_id == 0) {
-        xnpod_suspend_self();
-        return OK;
-    }
+	if (task_id == 0) {
+		xnpod_suspend_self();
+		return OK;
+	}
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC, goto error);
+	check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
+			   goto error);
 
 /*     if (testbits(xnthread_status_flags(&task->threadbase),XNSUSP)) */
 /*         goto error; */
 
-    xnpod_suspend_thread(&task->threadbase, XNSUSP, XN_INFINITE, NULL);
+	xnpod_suspend_thread(&task->threadbase, XNSUSP, XN_INFINITE, NULL);
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return OK;
+	return OK;
 
-  error:
-    xnlock_put_irqrestore(&nklock, s);
-    return ERROR;
+      error:
+	xnlock_put_irqrestore(&nklock, s);
+	return ERROR;
 }
 
 STATUS taskResume(TASK_ID task_id)
 {
-    wind_task_t *task;
-    spl_t s;
+	wind_task_t *task;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC, goto error);
+	check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
+			   goto error);
 
-    xnpod_resume_thread(&task->threadbase, XNSUSP);
+	xnpod_resume_thread(&task->threadbase, XNSUSP);
 
-    xnpod_schedule();
+	xnpod_schedule();
 
-    xnlock_put_irqrestore(&nklock, s);
-    return OK;
+	xnlock_put_irqrestore(&nklock, s);
+	return OK;
 
-  error:
-    xnlock_put_irqrestore(&nklock, s);
-    return ERROR;
+      error:
+	xnlock_put_irqrestore(&nklock, s);
+	return ERROR;
 }
 
 STATUS taskRestart(TASK_ID task_id)
 {
-    wind_task_t *task;
-    spl_t s;
+	wind_task_t *task;
+	spl_t s;
 
-    check_NOT_ISR_CALLABLE(return ERROR);
+	check_NOT_ISR_CALLABLE(return ERROR);
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (task_id == 0)
-        task = wind_current_task();
-    else
-        check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
-                           goto error);
+	if (task_id == 0)
+		task = wind_current_task();
+	else
+		check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
+				   goto error);
 
-    xnpod_restart_thread(&task->threadbase);
+	xnpod_restart_thread(&task->threadbase);
 
-    xnlock_put_irqrestore(&nklock, s);
-    return OK;
+	xnlock_put_irqrestore(&nklock, s);
+	return OK;
 
-  error:
-    xnlock_put_irqrestore(&nklock, s);
-    return ERROR;
+      error:
+	xnlock_put_irqrestore(&nklock, s);
+	return ERROR;
 }
 
 STATUS taskPrioritySet(TASK_ID task_id, int prio)
 {
-    wind_task_t *task;
-    spl_t s;
+	wind_task_t *task;
+	spl_t s;
 
-    if (prio < 0 || prio > WIND_MAX_PRIORITIES) {
-        wind_errnoset(S_taskLib_ILLEGAL_PRIORITY);
-        return ERROR;
-    }
+	if (prio < 0 || prio > WIND_MAX_PRIORITIES) {
+		wind_errnoset(S_taskLib_ILLEGAL_PRIORITY);
+		return ERROR;
+	}
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (task_id == 0)
-        task = wind_current_task();
-    else
-        check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
-                           goto error);
+	if (task_id == 0)
+		task = wind_current_task();
+	else
+		check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
+				   goto error);
 
-    xnpod_renice_thread(&task->threadbase, wind_normalized_prio(prio));
-    task->prio = prio;
+	xnpod_renice_thread(&task->threadbase, wind_normalized_prio(prio));
+	task->prio = prio;
 
-    xnpod_schedule();
+	xnpod_schedule();
 
-    xnlock_put_irqrestore(&nklock, s);
-    return OK;
+	xnlock_put_irqrestore(&nklock, s);
+	return OK;
 
-  error:
-    xnlock_put_irqrestore(&nklock, s);
-    return ERROR;
+      error:
+	xnlock_put_irqrestore(&nklock, s);
+	return ERROR;
 }
 
 STATUS taskPriorityGet(TASK_ID task_id, int *pprio)
 {
-    wind_task_t *task;
-    spl_t s;
+	wind_task_t *task;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (task_id == 0)
-        task = wind_current_task();
-    else
-        check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
-                           goto error);
+	if (task_id == 0)
+		task = wind_current_task();
+	else
+		check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
+				   goto error);
 
-    *pprio =
-        wind_denormalized_prio(xnthread_current_priority(&task->threadbase));
+	*pprio =
+	    wind_denormalized_prio(xnthread_current_priority
+				   (&task->threadbase));
 
-    xnlock_put_irqrestore(&nklock, s);
-    return OK;
+	xnlock_put_irqrestore(&nklock, s);
+	return OK;
 
-  error:
-    xnlock_put_irqrestore(&nklock, s);
-    return ERROR;
+      error:
+	xnlock_put_irqrestore(&nklock, s);
+	return ERROR;
 }
 
 STATUS taskLock(void)
 {
-    check_NOT_ISR_CALLABLE(return ERROR);
+	check_NOT_ISR_CALLABLE(return ERROR);
 
-    xnpod_lock_sched();
+	xnpod_lock_sched();
 
-    return OK;
+	return OK;
 }
 
 STATUS taskUnlock(void)
 {
-    check_NOT_ISR_CALLABLE(return ERROR);
+	check_NOT_ISR_CALLABLE(return ERROR);
 
-    xnpod_unlock_sched();
+	xnpod_unlock_sched();
 
-    return OK;
+	return OK;
 }
 
 TASK_ID taskIdSelf(void)
 {
-    check_NOT_ISR_CALLABLE(return ERROR);
+	check_NOT_ISR_CALLABLE(return ERROR);
 
-    return (TASK_ID) wind_current_task();
+	return (TASK_ID) wind_current_task();
 }
 
 STATUS taskSafe(void)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
-    taskSafeInner(wind_current_task());
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
+	taskSafeInner(wind_current_task());
+	xnlock_put_irqrestore(&nklock, s);
 
-    return OK;
+	return OK;
 }
 
 STATUS taskUnsafe(void)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    switch (taskUnsafeInner(wind_current_task())) {
+	switch (taskUnsafeInner(wind_current_task())) {
 
-        case ERROR:
-            wind_errnoset(-EPERM);
-            xnlock_put_irqrestore(&nklock, s);
-            return ERROR;
+	case ERROR:
+		wind_errnoset(-EPERM);
+		xnlock_put_irqrestore(&nklock, s);
+		return ERROR;
 
-        case OK:
-            break;
+	case OK:
+		break;
 
-        case 1:
-            xnpod_schedule();
-            break;
-    }
+	case 1:
+		xnpod_schedule();
+		break;
+	}
 
-    xnlock_put_irqrestore(&nklock, s);
-    return OK;
+	xnlock_put_irqrestore(&nklock, s);
+	return OK;
 }
 
 STATUS taskDelay(int ticks)
 {
-    check_NOT_ISR_CALLABLE(return ERROR);
+	check_NOT_ISR_CALLABLE(return ERROR);
 
-    if (ticks > 0) {
-        xnpod_delay(ticks);
-        error_check(xnthread_test_flags
-                    (&wind_current_task()->threadbase, XNBREAK), -EINTR,
-                    return ERROR);
-    } else
-        xnpod_yield();
+	if (ticks > 0) {
+		xnpod_delay(ticks);
+		error_check(xnthread_test_flags
+			    (&wind_current_task()->threadbase, XNBREAK), -EINTR,
+			    return ERROR);
+	} else
+		xnpod_yield();
 
-    return OK;
+	return OK;
 }
 
 STATUS taskIdVerify(TASK_ID task_id)
 {
-    wind_task_t *task;
+	wind_task_t *task;
 
-    check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
-                       return ERROR);
+	check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
+			   return ERROR);
 
-    return OK;
+	return OK;
 }
 
 wind_task_t *taskTcb(TASK_ID task_id)
 {
-    wind_task_t *task;
+	wind_task_t *task;
 
-    check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
-                       return NULL);
+	check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
+			   return NULL);
 
-    return task;
+	return task;
 }
 
 /* We put this function here and not in taskInfo.c because it needs access to
    wind_tasks_q */
 TASK_ID taskNameToId(const char *name)
 {
-    xnholder_t *holder;
-    wind_task_t *task;
-    int result = ERROR;
-    spl_t s;
+	xnholder_t *holder;
+	wind_task_t *task;
+	int result = ERROR;
+	spl_t s;
 
-    if (!name)
-        return ERROR;
+	if (!name)
+		return ERROR;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    for (holder = getheadq(&wind_tasks_q);
-         holder; holder = nextq(&wind_tasks_q, holder)) {
-        task = link2wind_task(holder);
-        if (!strcmp(name, task->name)) {
-            result = (TASK_ID) task;
-            break;
-        }
-    }
+	for (holder = getheadq(&wind_tasks_q);
+	     holder; holder = nextq(&wind_tasks_q, holder)) {
+		task = link2wind_task(holder);
+		if (!strcmp(name, task->name)) {
+			result = (TASK_ID) task;
+			break;
+		}
+	}
 
-    if (result == ERROR)
-        wind_errnoset(S_taskLib_NAME_NOT_FOUND);
+	if (result == ERROR)
+		wind_errnoset(S_taskLib_NAME_NOT_FOUND);
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return result;
+	return result;
 }
 
 /* nklock must be locked on entry, interrupts off */
 static int testSafe(wind_task_t *task)
 {
-    while (task->safecnt > 0) {
-        xnsynch_sleep_on(&task->safesync, XN_INFINITE);
-        error_check(xnthread_test_flags(&task->threadbase, XNBREAK), -EINTR,
-                    return ERROR);
-    }
-    return OK;
+	while (task->safecnt > 0) {
+		xnsynch_sleep_on(&task->safesync, XN_INFINITE);
+		error_check(xnthread_test_flags(&task->threadbase, XNBREAK),
+			    -EINTR, return ERROR);
+	}
+	return OK;
 }
 
 static void wind_task_delete_hook(xnthread_t *xnthread)
 {
-    wind_task_t *task;
+	wind_task_t *task;
 
-    if (xnthread_get_magic(xnthread) != VXWORKS_SKIN_MAGIC)
-        return;
+	if (xnthread_get_magic(xnthread) != VXWORKS_SKIN_MAGIC)
+		return;
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
-    xnregistry_remove(xnthread_handle(xnthread));
+	xnregistry_remove(xnthread_handle(xnthread));
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-    task = thread2wind_task(xnthread);
+	task = thread2wind_task(xnthread);
 
-    xnsynch_destroy(&task->safesync);
+	xnsynch_destroy(&task->safesync);
 
-    removeq(&wind_tasks_q, &task->link);
+	removeq(&wind_tasks_q, &task->link);
 
-    wind_mark_deleted(task);
+	wind_mark_deleted(task);
 
-    if (task->auto_delete)
-        xnfree(task);
+	if (task->auto_delete)
+		xnfree(task);
 }
 
 static void wind_task_trampoline(void *cookie)
 {
-    wind_task_t *task = (wind_task_t *)cookie;
+	wind_task_t *task = (wind_task_t *)cookie;
 
-    task->entry(task->arg0, task->arg1, task->arg2, task->arg3, task->arg4,
-                task->arg5, task->arg6, task->arg7, task->arg8, task->arg9);
+	task->entry(task->arg0, task->arg1, task->arg2, task->arg3, task->arg4,
+		    task->arg5, task->arg6, task->arg7, task->arg8, task->arg9);
 
-    taskDeleteForce((TASK_ID) task);
+	taskDeleteForce((TASK_ID) task);
 }

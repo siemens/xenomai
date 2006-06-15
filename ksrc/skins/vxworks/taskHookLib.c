@@ -21,8 +21,8 @@
 #include <vxworks/defs.h>
 
 typedef struct wind_hook {
-    FUNCPTR function;
-    xnholder_t link;
+	FUNCPTR function;
+	xnholder_t link;
 
 #define link2wind_hook(laddr)                                           \
 ((wind_hook_t *)(((char *)laddr) - (int)(&((wind_hook_t *)0)->link)))
@@ -40,44 +40,44 @@ static void delete_hook(xnthread_t *xnthread);
 
 void wind_task_hooks_init(void)
 {
-    initq(&wind_create_hooks_q);
-    initq(&wind_switch_hooks_q);
-    initq(&wind_delete_hooks_q);
+	initq(&wind_create_hooks_q);
+	initq(&wind_switch_hooks_q);
+	initq(&wind_delete_hooks_q);
 
-    previous_task = NULL;
+	previous_task = NULL;
 
-    xnpod_add_hook(XNHOOK_THREAD_START, create_hook);
-    xnpod_add_hook(XNHOOK_THREAD_SWITCH, switch_hook);
-    xnpod_add_hook(XNHOOK_THREAD_DELETE, delete_hook);
+	xnpod_add_hook(XNHOOK_THREAD_START, create_hook);
+	xnpod_add_hook(XNHOOK_THREAD_SWITCH, switch_hook);
+	xnpod_add_hook(XNHOOK_THREAD_DELETE, delete_hook);
 }
 
 static inline void free_hooks_queue(xnqueue_t *queue)
 {
-    xnholder_t *holder;
-    xnholder_t *next_holder;
+	xnholder_t *holder;
+	xnholder_t *next_holder;
 
-    for (holder = getheadq(queue); holder; holder = next_holder) {
-        next_holder = nextq(queue, holder);
-        removeq(queue, holder);
-        xnfree(link2wind_hook(holder));
-    }
+	for (holder = getheadq(queue); holder; holder = next_holder) {
+		next_holder = nextq(queue, holder);
+		removeq(queue, holder);
+		xnfree(link2wind_hook(holder));
+	}
 }
 
 void wind_task_hooks_cleanup(void)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    free_hooks_queue(&wind_create_hooks_q);
-    free_hooks_queue(&wind_switch_hooks_q);
-    free_hooks_queue(&wind_delete_hooks_q);
+	free_hooks_queue(&wind_create_hooks_q);
+	free_hooks_queue(&wind_switch_hooks_q);
+	free_hooks_queue(&wind_delete_hooks_q);
 
-    xnpod_remove_hook(XNHOOK_THREAD_START, create_hook);
-    xnpod_remove_hook(XNHOOK_THREAD_SWITCH, switch_hook);
-    xnpod_remove_hook(XNHOOK_THREAD_DELETE, delete_hook);
+	xnpod_remove_hook(XNHOOK_THREAD_START, create_hook);
+	xnpod_remove_hook(XNHOOK_THREAD_SWITCH, switch_hook);
+	xnpod_remove_hook(XNHOOK_THREAD_DELETE, delete_hook);
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 #define hook_add( queue,adder,wind_hook ) \
@@ -100,105 +100,105 @@ hook_done: \
 
 static inline STATUS hook_del(xnqueue_t *queue, FUNCPTR wind_hook)
 {
-    xnholder_t *holder;
-    spl_t s;
+	xnholder_t *holder;
+	spl_t s;
 
-    for (holder = getheadq(queue); holder; holder = nextq(queue, holder))
-        if (link2wind_hook(holder)->function == wind_hook)
-            break;
+	for (holder = getheadq(queue); holder; holder = nextq(queue, holder))
+		if (link2wind_hook(holder)->function == wind_hook)
+			break;
 
-    if (!holder) {
-        wind_errnoset(S_taskLib_TASK_HOOK_NOT_FOUND);
-        return ERROR;
-    }
+	if (!holder) {
+		wind_errnoset(S_taskLib_TASK_HOOK_NOT_FOUND);
+		return ERROR;
+	}
 
-    xnlock_get_irqsave(&nklock, s);
-    removeq(queue, holder);
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
+	removeq(queue, holder);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return OK;
+	return OK;
 }
 
 STATUS taskCreateHookAdd(wind_create_hook hook)
 {
-    error_check(xnpod_asynch_p(), -EPERM, return ERROR);
+	error_check(xnpod_asynch_p(), -EPERM, return ERROR);
 
-    return hook_add(&wind_create_hooks_q, appendq, (FUNCPTR) hook);
+	return hook_add(&wind_create_hooks_q, appendq, (FUNCPTR) hook);
 }
 
 STATUS taskCreateHookDelete(wind_create_hook hook)
 {
-    error_check(xnpod_asynch_p(), -EPERM, return ERROR);
+	error_check(xnpod_asynch_p(), -EPERM, return ERROR);
 
-    return hook_del(&wind_create_hooks_q, (FUNCPTR) hook);
+	return hook_del(&wind_create_hooks_q, (FUNCPTR) hook);
 }
 
 STATUS taskSwitchHookAdd(wind_switch_hook hook)
 {
-    error_check(xnpod_asynch_p(), -EPERM, return ERROR);
+	error_check(xnpod_asynch_p(), -EPERM, return ERROR);
 
-    return hook_add(&wind_switch_hooks_q, appendq, (FUNCPTR) hook);
+	return hook_add(&wind_switch_hooks_q, appendq, (FUNCPTR) hook);
 }
 
 STATUS taskSwitchHookDelete(wind_switch_hook hook)
 {
-    error_check(xnpod_asynch_p(), -EPERM, return ERROR);
+	error_check(xnpod_asynch_p(), -EPERM, return ERROR);
 
-    return hook_del(&wind_switch_hooks_q, (FUNCPTR) hook);
+	return hook_del(&wind_switch_hooks_q, (FUNCPTR) hook);
 }
 
 STATUS taskDeleteHookAdd(wind_delete_hook hook)
 {
-    error_check(xnpod_asynch_p(), -EPERM, return ERROR);
+	error_check(xnpod_asynch_p(), -EPERM, return ERROR);
 
-    return hook_add(&wind_delete_hooks_q, prependq, (FUNCPTR) hook);
+	return hook_add(&wind_delete_hooks_q, prependq, (FUNCPTR) hook);
 }
 
 STATUS taskDeleteHookDelete(wind_delete_hook hook)
 {
-    error_check(xnpod_asynch_p(), -EPERM, return ERROR);
+	error_check(xnpod_asynch_p(), -EPERM, return ERROR);
 
-    return hook_del(&wind_delete_hooks_q, (FUNCPTR) hook);
+	return hook_del(&wind_delete_hooks_q, (FUNCPTR) hook);
 }
 
 static void create_hook(xnthread_t *xnthread)
 {
-    xnholder_t *holder;
-    wind_task_t *task = thread2wind_task(xnthread);
-    wind_create_hook hook;
+	xnholder_t *holder;
+	wind_task_t *task = thread2wind_task(xnthread);
+	wind_create_hook hook;
 
-    for (holder = getheadq(&wind_create_hooks_q); holder != NULL;
-         holder = nextq(&wind_create_hooks_q, holder)) {
-        hook = (wind_create_hook) (link2wind_hook(holder)->function);
-        hook(task);
-    }
+	for (holder = getheadq(&wind_create_hooks_q); holder != NULL;
+	     holder = nextq(&wind_create_hooks_q, holder)) {
+		hook = (wind_create_hook) (link2wind_hook(holder)->function);
+		hook(task);
+	}
 }
 
 static void switch_hook(xnthread_t *xnthread)
 {
-    xnholder_t *holder;
-    wind_task_t *task;
-    wind_switch_hook hook;
+	xnholder_t *holder;
+	wind_task_t *task;
+	wind_switch_hook hook;
 
-    task = thread2wind_task(xnthread);
+	task = thread2wind_task(xnthread);
 
-    for (holder = getheadq(&wind_switch_hooks_q); holder != NULL;
-         holder = nextq(&wind_switch_hooks_q, holder)) {
-        hook = (wind_switch_hook) (link2wind_hook(holder)->function);
-        hook(previous_task, task);
-    }
-    previous_task = task;
+	for (holder = getheadq(&wind_switch_hooks_q); holder != NULL;
+	     holder = nextq(&wind_switch_hooks_q, holder)) {
+		hook = (wind_switch_hook) (link2wind_hook(holder)->function);
+		hook(previous_task, task);
+	}
+	previous_task = task;
 }
 
 static void delete_hook(xnthread_t *xnthread)
 {
-    xnholder_t *holder;
-    wind_task_t *task = thread2wind_task(xnthread);
-    wind_delete_hook hook;
+	xnholder_t *holder;
+	wind_task_t *task = thread2wind_task(xnthread);
+	wind_delete_hook hook;
 
-    for (holder = getheadq(&wind_delete_hooks_q); holder != NULL;
-         holder = nextq(&wind_delete_hooks_q, holder)) {
-        hook = (wind_delete_hook) (link2wind_hook(holder)->function);
-        hook(task);
-    }
+	for (holder = getheadq(&wind_delete_hooks_q); holder != NULL;
+	     holder = nextq(&wind_delete_hooks_q, holder)) {
+		hook = (wind_delete_hook) (link2wind_hook(holder)->function);
+		hook(task);
+	}
 }

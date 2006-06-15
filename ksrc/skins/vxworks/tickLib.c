@@ -22,10 +22,10 @@
 
 ULONG tickGet(void)
 {
-    return (ULONG)xnpod_get_time();
+	return (ULONG)xnpod_get_time();
 }
 
 void tickSet(ULONG newtime)
 {
-    xnpod_set_time(newtime);
+	xnpod_set_time(newtime);
 }
