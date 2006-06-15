@@ -22,76 +22,61 @@
 
 extern int __pse51_muxid;
 
-int pthread_intr_attach_np (pthread_intr_t *intr,
-			    unsigned irq,
-			    int mode)
+int pthread_intr_attach_np(pthread_intr_t * intr, unsigned irq, int mode)
 {
-    int err;
+	int err;
 
-    err = -XENOMAI_SKINCALL3(__pse51_muxid,
-			     __pse51_intr_attach,
-			     intr,
-			     irq,
-			     mode);
-    if (!err)
-	return 0;
+	err = -XENOMAI_SKINCALL3(__pse51_muxid,
+				 __pse51_intr_attach, intr, irq, mode);
+	if (!err)
+		return 0;
 
-    errno = err;
+	errno = err;
 
-    return -1;
+	return -1;
 }
 
-int pthread_intr_detach_np (pthread_intr_t intr)
-
+int pthread_intr_detach_np(pthread_intr_t intr)
 {
-    int err;
+	int err;
 
-    err = -XENOMAI_SKINCALL1(__pse51_muxid,
-			     __pse51_intr_detach,
-			     intr);
-    if (!err)
-	return 0;
+	err = -XENOMAI_SKINCALL1(__pse51_muxid, __pse51_intr_detach, intr);
+	if (!err)
+		return 0;
 
-    errno = err;
+	errno = err;
 
-    return -1;
+	return -1;
 }
 
-int pthread_intr_wait_np (pthread_intr_t intr,
-			  const struct timespec *to)
+int pthread_intr_wait_np(pthread_intr_t intr, const struct timespec *to)
 {
-    int err, oldtype;
+	int err, oldtype;
 
-    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-    err = XENOMAI_SKINCALL2(__pse51_muxid,
-			    __pse51_intr_wait,
-			    intr,
-			    to);
+	err = XENOMAI_SKINCALL2(__pse51_muxid, __pse51_intr_wait, intr, to);
 
-    pthread_setcanceltype(oldtype, NULL);
+	pthread_setcanceltype(oldtype, NULL);
 
-    if (err > 0)
-	return err;
+	if (err > 0)
+		return err;
 
-    errno = -err;
+	errno = -err;
 
-    return -1;
+	return -1;
 }
 
-int pthread_intr_control_np (pthread_intr_t intr,
-			     int cmd)
+int pthread_intr_control_np(pthread_intr_t intr, int cmd)
 {
-    int err;
+	int err;
 
-    err = -XENOMAI_SKINCALL2(__pse51_muxid,
-			     __pse51_intr_control,
-			     intr,
-			     cmd);
-    if (!err)
-	return 0;
+	err = -XENOMAI_SKINCALL2(__pse51_muxid,
+				 __pse51_intr_control, intr, cmd);
+	if (!err)
+		return 0;
 
-    errno = err;
+	errno = err;
 
-    return -1;
+	return -1;
 }

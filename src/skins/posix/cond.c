@@ -22,84 +22,74 @@
 
 extern int __pse51_muxid;
 
-int __wrap_pthread_cond_init (pthread_cond_t *cond,
-			      const pthread_condattr_t *attr)
+int __wrap_pthread_cond_init(pthread_cond_t * cond,
+			     const pthread_condattr_t * attr)
 {
-    union __xeno_cond *_cond = (union __xeno_cond *)cond;
-    int err;
+	union __xeno_cond *_cond = (union __xeno_cond *)cond;
+	int err;
 
-    err = -XENOMAI_SKINCALL1(__pse51_muxid,
-			     __pse51_cond_init,
-			     &_cond->shadow_cond);
-    return err;
+	err = -XENOMAI_SKINCALL1(__pse51_muxid,
+				 __pse51_cond_init, &_cond->shadow_cond);
+	return err;
 }
 
-int __wrap_pthread_cond_destroy (pthread_cond_t *cond)
-
+int __wrap_pthread_cond_destroy(pthread_cond_t * cond)
 {
-    union __xeno_cond *_cond = (union __xeno_cond *)cond;
+	union __xeno_cond *_cond = (union __xeno_cond *)cond;
 
-    return -XENOMAI_SKINCALL1(__pse51_muxid,
-			      __pse51_cond_destroy,
-			      &_cond->shadow_cond);
+	return -XENOMAI_SKINCALL1(__pse51_muxid,
+				  __pse51_cond_destroy, &_cond->shadow_cond);
 }
 
-int __wrap_pthread_cond_wait (pthread_cond_t *cond,
-			      pthread_mutex_t *mutex)
+int __wrap_pthread_cond_wait(pthread_cond_t * cond, pthread_mutex_t * mutex)
 {
-    union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
-    union __xeno_cond *_cond = (union __xeno_cond *)cond;
-    int err, oldtype;
+	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
+	union __xeno_cond *_cond = (union __xeno_cond *)cond;
+	int err, oldtype;
 
-    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-    err = XENOMAI_SKINCALL2(__pse51_muxid,
-                            __pse51_cond_wait,
-                            &_cond->shadow_cond,
-                            &_mutex->shadow_mutex);
+	err = XENOMAI_SKINCALL2(__pse51_muxid,
+				__pse51_cond_wait,
+				&_cond->shadow_cond, &_mutex->shadow_mutex);
 
-    pthread_setcanceltype(oldtype, NULL);
+	pthread_setcanceltype(oldtype, NULL);
 
-    return err == -EINTR ? 0 : -err;
+	return err == -EINTR ? 0 : -err;
 }
 
-int __wrap_pthread_cond_timedwait (pthread_cond_t *cond,
-				   pthread_mutex_t *mutex,
-				   const struct timespec *abstime)
+int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
+				  pthread_mutex_t * mutex,
+				  const struct timespec *abstime)
 {
-    union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
-    union __xeno_cond *_cond = (union __xeno_cond *)cond;
-    int err, oldtype;
+	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
+	union __xeno_cond *_cond = (union __xeno_cond *)cond;
+	int err, oldtype;
 
-    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-    err = XENOMAI_SKINCALL3(__pse51_muxid,
-                            __pse51_cond_timedwait,
-                            &_cond->shadow_cond,
-                            &_mutex->shadow_mutex,
-                            abstime);
+	err = XENOMAI_SKINCALL3(__pse51_muxid,
+				__pse51_cond_timedwait,
+				&_cond->shadow_cond,
+				&_mutex->shadow_mutex, abstime);
 
-    pthread_setcanceltype(oldtype, NULL);
+	pthread_setcanceltype(oldtype, NULL);
 
-    return err == -EINTR ? 0 : -err;
+	return err == -EINTR ? 0 : -err;
 }
 
-int __wrap_pthread_cond_signal (pthread_cond_t *cond)
-
+int __wrap_pthread_cond_signal(pthread_cond_t * cond)
 {
-    union __xeno_cond *_cond = (union __xeno_cond *)cond;
+	union __xeno_cond *_cond = (union __xeno_cond *)cond;
 
-    return -XENOMAI_SKINCALL1(__pse51_muxid,
-			      __pse51_cond_signal,
-			      &_cond->shadow_cond);
+	return -XENOMAI_SKINCALL1(__pse51_muxid,
+				  __pse51_cond_signal, &_cond->shadow_cond);
 }
 
-int __wrap_pthread_cond_broadcast (pthread_cond_t *cond)
-
+int __wrap_pthread_cond_broadcast(pthread_cond_t * cond)
 {
-    union __xeno_cond *_cond = (union __xeno_cond *)cond;
+	union __xeno_cond *_cond = (union __xeno_cond *)cond;
 
-    return -XENOMAI_SKINCALL1(__pse51_muxid,
-			      __pse51_cond_broadcast,
-			      &_cond->shadow_cond);
+	return -XENOMAI_SKINCALL1(__pse51_muxid,
+				  __pse51_cond_broadcast, &_cond->shadow_cond);
 }

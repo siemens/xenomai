@@ -49,11 +49,11 @@ typedef void pse51_key_destructor_t(void *);
 
 struct pse51_key {
 
-    unsigned magic;
-    unsigned key;
-    pse51_key_destructor_t *destructor;
-    xnholder_t link;            /* link in the list of free keys or
-                                   valid keys. */
+	unsigned magic;
+	unsigned key;
+	pse51_key_destructor_t *destructor;
+	xnholder_t link;	/* link in the list of free keys or
+				   valid keys. */
 #define link2key(laddr) ({                                              \
         void *_laddr = laddr;                                           \
         (!_laddr                                                        \
@@ -63,10 +63,8 @@ struct pse51_key {
 })
 
 };
-    
 
-static xnqueue_t free_keys,
-                 valid_keys;
+static xnqueue_t free_keys, valid_keys;
 
 static unsigned allocated_keys;
 
@@ -95,56 +93,50 @@ static unsigned allocated_keys;
  * Specification.</a>
  * 
  */
-int pthread_key_create (pthread_key_t *key, void (*destructor)(void *))
-
+int pthread_key_create(pthread_key_t *key, void (*destructor) (void *))
 {
-    pthread_key_t result;
-    xnholder_t *holder;
-    spl_t s;
+	pthread_key_t result;
+	xnholder_t *holder;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (allocated_keys == PTHREAD_KEYS_MAX)
-        {
-        result = link2key(getq(&free_keys));
+	if (allocated_keys == PTHREAD_KEYS_MAX) {
+		result = link2key(getq(&free_keys));
 
-        if (!result)
-            {
-            xnlock_put_irqrestore(&nklock, s);
-            return EAGAIN;
-            }
+		if (!result) {
+			xnlock_put_irqrestore(&nklock, s);
+			return EAGAIN;
+		}
 
-        /* We are reusing a deleted key, we hence need to make sure
-           that the values previously associated with this key are
-           NULL. */
+		/* We are reusing a deleted key, we hence need to make sure
+		   that the values previously associated with this key are
+		   NULL. */
 
-        for (holder = getheadq(&pse51_threadq); holder;
-             holder = nextq(&pse51_threadq, holder))
-            thread_settsd(link2pthread(holder), result->key, NULL);
-        }
-    else
-        {
-        result = xnmalloc(sizeof(*result));
+		for (holder = getheadq(&pse51_threadq); holder;
+		     holder = nextq(&pse51_threadq, holder))
+			thread_settsd(link2pthread(holder), result->key, NULL);
+	} else {
+		result = xnmalloc(sizeof(*result));
 
-        if (!result)
-            {
-            xnlock_put_irqrestore(&nklock, s);
-            return ENOMEM;
-            }
+		if (!result) {
+			xnlock_put_irqrestore(&nklock, s);
+			return ENOMEM;
+		}
 
-        result->key = allocated_keys++;
-        }
+		result->key = allocated_keys++;
+	}
 
-    result->magic = PSE51_KEY_MAGIC;
-    result->destructor = destructor;
-    inith(&result->link);
-    prependq(&valid_keys, &result->link);
+	result->magic = PSE51_KEY_MAGIC;
+	result->destructor = destructor;
+	inith(&result->link);
+	prependq(&valid_keys, &result->link);
 
-    *key = result;
+	*key = result;
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -170,28 +162,26 @@ int pthread_key_create (pthread_key_t *key, void (*destructor)(void *))
  * Specification.</a>
  * 
  */
-int pthread_setspecific (pthread_key_t key, const void *value)
-
+int pthread_setspecific(pthread_key_t key, const void *value)
 {
-    pthread_t cur = pse51_current_thread();
-    spl_t s;
+	pthread_t cur = pse51_current_thread();
+	spl_t s;
 
-    if (!cur)
-        return EPERM;
+	if (!cur)
+		return EPERM;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(key, PSE51_KEY_MAGIC, struct pse51_key))
-        {
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
-        }
+	if (!pse51_obj_active(key, PSE51_KEY_MAGIC, struct pse51_key)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
+	}
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    thread_settsd(cur, key->key, value);
-    
-    return 0;
+	thread_settsd(cur, key->key, value);
+
+	return 0;
 }
 
 /**
@@ -213,29 +203,27 @@ int pthread_setspecific (pthread_key_t key, const void *value)
  * Specification.</a>
  * 
  */
-void *pthread_getspecific (pthread_key_t key)
-
+void *pthread_getspecific(pthread_key_t key)
 {
-    pthread_t cur = pse51_current_thread();
-    const void *value;
-    spl_t s;
-    
-    if (!cur)
-        return NULL;
+	pthread_t cur = pse51_current_thread();
+	const void *value;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	if (!cur)
+		return NULL;
 
-    if (!pse51_obj_active(key, PSE51_KEY_MAGIC, struct pse51_key))
-        {
-        xnlock_put_irqrestore(&nklock, s);
-        return NULL;
-        }
+	xnlock_get_irqsave(&nklock, s);
 
-    xnlock_put_irqrestore(&nklock, s);
-    
-    value = thread_gettsd(cur, key->key);
-    
-    return (void *)value;
+	if (!pse51_obj_active(key, PSE51_KEY_MAGIC, struct pse51_key)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return NULL;
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	value = thread_gettsd(cur, key->key);
+
+	return (void *)value;
 }
 
 /**
@@ -257,105 +245,94 @@ void *pthread_getspecific (pthread_key_t key)
  * Specification.</a>
  * 
  */
-int pthread_key_delete (pthread_key_t key)
-
+int pthread_key_delete(pthread_key_t key)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(key, PSE51_KEY_MAGIC, struct pse51_key))
-        {
-        xnlock_put_irqrestore(&nklock, s);
-        return EINVAL;
-        }
+	if (!pse51_obj_active(key, PSE51_KEY_MAGIC, struct pse51_key)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
+	}
 
-    pse51_mark_deleted(key);
-    removeq(&valid_keys, &key->link);
-    inith(&key->link);
-    appendq(&free_keys, &key->link);
+	pse51_mark_deleted(key);
+	removeq(&valid_keys, &key->link);
+	inith(&key->link);
+	appendq(&free_keys, &key->link);
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
-void pse51_tsd_init_thread (pthread_t thread)
-
+void pse51_tsd_init_thread(pthread_t thread)
 {
-    unsigned key;
-    
-    for(key = 0; key < PTHREAD_KEYS_MAX; key++)
-        thread_settsd(thread, key, NULL);
+	unsigned key;
+
+	for (key = 0; key < PTHREAD_KEYS_MAX; key++)
+		thread_settsd(thread, key, NULL);
 }
 
-void pse51_tsd_cleanup_thread (pthread_t thread)
-
+void pse51_tsd_cleanup_thread(pthread_t thread)
 {
-    int i, again = 1;
-    spl_t s;
+	int i, again = 1;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    for (i = 0; again && i < PTHREAD_DESTRUCTOR_ITERATIONS; i++)
-        {
-        xnholder_t *holder = getheadq(&valid_keys);
+	for (i = 0; again && i < PTHREAD_DESTRUCTOR_ITERATIONS; i++) {
+		xnholder_t *holder = getheadq(&valid_keys);
 
-        again = 0;
+		again = 0;
 
-        while(holder)
-            {
-            pthread_key_t key = link2key(holder);
-            const void *value;
+		while (holder) {
+			pthread_key_t key = link2key(holder);
+			const void *value;
 
-            if (!pse51_obj_active(key, PSE51_KEY_MAGIC, struct pse51_key))
-                {
-                /* A destructor destroyed this key. */
-                again = 1;
-                break;
-                }
+			if (!pse51_obj_active
+			    (key, PSE51_KEY_MAGIC, struct pse51_key)) {
+				/* A destructor destroyed this key. */
+				again = 1;
+				break;
+			}
 
-            holder = nextq(&valid_keys, holder);
-            value = thread_gettsd(thread, key->key);
+			holder = nextq(&valid_keys, holder);
+			value = thread_gettsd(thread, key->key);
 
-            if (value)
-                {
-                thread_settsd(thread, key->key, NULL);
+			if (value) {
+				thread_settsd(thread, key->key, NULL);
 
-                if (key->destructor)
-                    {
-                    again = 1;
-                    xnlock_put_irqrestore(&nklock, s);
-                    key->destructor((void *) value);
-                    xnlock_get_irqsave(&nklock, s);
-                    }
-                }
-            }
-        }
+				if (key->destructor) {
+					again = 1;
+					xnlock_put_irqrestore(&nklock, s);
+					key->destructor((void *)value);
+					xnlock_get_irqsave(&nklock, s);
+				}
+			}
+		}
+	}
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 }
 
-void pse51_tsd_pkg_init (void)
-
+void pse51_tsd_pkg_init(void)
 {
-    initq(&free_keys);
-    initq(&valid_keys);    
+	initq(&free_keys);
+	initq(&valid_keys);
 }
 
-void pse51_tsd_pkg_cleanup (void)
-
+void pse51_tsd_pkg_cleanup(void)
 {
-    pthread_key_t key;
+	pthread_key_t key;
 
-    while ((key = link2key(getq(&valid_keys))) != NULL)
-        {
-        pse51_mark_deleted(key);
-        xnfree(key);
-        }
+	while ((key = link2key(getq(&valid_keys))) != NULL) {
+		pse51_mark_deleted(key);
+		xnfree(key);
+	}
 
-    while ((key = link2key(getq(&free_keys))) != NULL)
-        xnfree(key);
+	while ((key = link2key(getq(&free_keys))) != NULL)
+		xnfree(key);
 }
 
 /*@}*/

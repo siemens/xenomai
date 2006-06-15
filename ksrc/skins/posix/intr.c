@@ -95,46 +95,43 @@ static xnqueue_t pse51_intrq;
  * - EINVAL, a low-level error occured while attaching the interrupt;
  * - EBUSY, an interrupt handler was already registered for the irq line @a irq.
  */
-int pthread_intr_attach_np (pthread_intr_t *intrp,
-                            unsigned irq,
-                            int (*isr)(xnintr_t *),
-                            int (*iack)(unsigned irq))
+int pthread_intr_attach_np(pthread_intr_t * intrp,
+			   unsigned irq,
+			   int (*isr) (xnintr_t *), int (*iack) (unsigned irq))
 {
-    pthread_intr_t intr;
-    int err;
-    spl_t s;
+	pthread_intr_t intr;
+	int err;
+	spl_t s;
 
-    intr = (pthread_intr_t) xnmalloc(sizeof(*intr));
-    if (!intr)
-        {
-        err = ENOMEM;
-        goto error;
-        }
+	intr = (pthread_intr_t) xnmalloc(sizeof(*intr));
+	if (!intr) {
+		err = ENOMEM;
+		goto error;
+	}
 
-    xnintr_init(&intr->intr_base,NULL,irq,isr,iack,0);
+	xnintr_init(&intr->intr_base, NULL, irq, isr, iack, 0);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    xnsynch_init(&intr->synch_base,XNSYNCH_PRIO);
-    intr->pending = 0;
+	xnsynch_init(&intr->synch_base, XNSYNCH_PRIO);
+	intr->pending = 0;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-    intr->magic = PSE51_INTR_MAGIC;
-    inith(&intr->link);
-    xnlock_get_irqsave(&nklock, s);
-    appendq(&pse51_intrq, &intr->link);
-    xnlock_put_irqrestore(&nklock, s);
+	intr->magic = PSE51_INTR_MAGIC;
+	inith(&intr->link);
+	xnlock_get_irqsave(&nklock, s);
+	appendq(&pse51_intrq, &intr->link);
+	xnlock_put_irqrestore(&nklock, s);
 
-    err = -xnintr_attach(&intr->intr_base,intr);
+	err = -xnintr_attach(&intr->intr_base, intr);
 
-    if (!err)
-        {
-        *intrp = intr;
-        return 0;
-        }
+	if (!err) {
+		*intrp = intr;
+		return 0;
+	}
 
-    pthread_intr_detach_np(intr);
-  error:
-    thread_set_errno(err);
-    return -1;
+	pthread_intr_detach_np(intr);
+      error:
+	thread_set_errno(err);
+	return -1;
 }
 
 /**
@@ -156,40 +153,37 @@ int pthread_intr_attach_np (pthread_intr_t *intrp,
  * @retval -1 with @a errno set if:
  * - EINVAL, the interrupt object @a intr is invalid.
  */
-int pthread_intr_detach_np (pthread_intr_t intr)
-
+int pthread_intr_detach_np(pthread_intr_t intr)
 {
-    int rc = XNSYNCH_DONE;
-    spl_t s;
+	int rc = XNSYNCH_DONE;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(intr, PSE51_INTR_MAGIC, struct pse51_interrupt))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        thread_set_errno(EINVAL);
-        return -1;
+	if (!pse51_obj_active(intr, PSE51_INTR_MAGIC, struct pse51_interrupt)) {
+		xnlock_put_irqrestore(&nklock, s);
+		thread_set_errno(EINVAL);
+		return -1;
 	}
-
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    rc = xnsynch_destroy(&intr->synch_base);
+	rc = xnsynch_destroy(&intr->synch_base);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-    pse51_mark_deleted(intr);
+	pse51_mark_deleted(intr);
 
-    removeq(&pse51_intrq, &intr->link);
+	removeq(&pse51_intrq, &intr->link);
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    xnintr_detach(&intr->intr_base);
-    xnintr_destroy(&intr->intr_base);
+	xnintr_detach(&intr->intr_base);
+	xnintr_destroy(&intr->intr_base);
 
-    if (rc == XNSYNCH_RESCHED)
-        xnpod_schedule();
+	if (rc == XNSYNCH_RESCHED)
+		xnpod_schedule();
 
-    xnfree(intr);
+	xnfree(intr);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -207,64 +201,60 @@ int pthread_intr_detach_np (pthread_intr_t intr)
  * @retval -1 with @a errno set if:
  * - EINVAL, the identifier @a intr or @a cmd is invalid.
  */
-int pthread_intr_control_np (pthread_intr_t intr, int cmd)
-
+int pthread_intr_control_np(pthread_intr_t intr, int cmd)
 {
-    int err;
-    spl_t s;
+	int err;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock,s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!pse51_obj_active(intr, PSE51_INTR_MAGIC, struct pse51_interrupt))
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        thread_set_errno(EINVAL);
-        return -1;
+	if (!pse51_obj_active(intr, PSE51_INTR_MAGIC, struct pse51_interrupt)) {
+		xnlock_put_irqrestore(&nklock, s);
+		thread_set_errno(EINVAL);
+		return -1;
 	}
 
-    switch (cmd)
-	{
+	switch (cmd) {
 	case PTHREAD_IENABLE:
 
-	    err = xnintr_enable(&intr->intr_base);
-	    break;
+		err = xnintr_enable(&intr->intr_base);
+		break;
 
 	case PTHREAD_IDISABLE:
 
-	    err = xnintr_disable(&intr->intr_base);
-	    break;
+		err = xnintr_disable(&intr->intr_base);
+		break;
 
 	default:
 
-	    err = EINVAL;
+		err = EINVAL;
 	}
 
-    xnlock_put_irqrestore(&nklock,s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    if (!err)
-        return 0;
+	if (!err)
+		return 0;
 
-    thread_set_errno(err);
-    return -1;
+	thread_set_errno(err);
+	return -1;
 }
 
-void pse51_intr_pkg_init (void)
+void pse51_intr_pkg_init(void)
 {
-    initq(&pse51_intrq);
+	initq(&pse51_intrq);
 }
 
-void pse51_intr_pkg_cleanup (void)
-
+void pse51_intr_pkg_cleanup(void)
 {
-    xnholder_t *holder;
-    spl_t s;
+	xnholder_t *holder;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    while ((holder = getheadq(&pse51_intrq)) != NULL)
-	pthread_intr_detach_np(link2intr(holder));
+	while ((holder = getheadq(&pse51_intrq)) != NULL)
+		pthread_intr_detach_np(link2intr(holder));
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 #ifdef DOXYGEN_CPP
@@ -289,8 +279,7 @@ void pse51_intr_pkg_cleanup (void)
  * - ETIMEDOUT, the timeout specified by @a to expired;
  * - EINTR, pthread_intr_wait_np() was interrupted by a signal.
  */
-int pthread_intr_wait_np (pthread_intr_t intr,
-			  const struct timespec *to);
+int pthread_intr_wait_np(pthread_intr_t intr, const struct timespec *to);
 #endif /* Doxygen */
 
 /*@}*/

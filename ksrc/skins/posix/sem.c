@@ -34,77 +34,75 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-#include <posix/registry.h>     /* For named semaphores. */
+#include <posix/registry.h>	/* For named semaphores. */
 #include <posix/thread.h>
 #include <posix/sem.h>
 
 typedef struct pse51_sem {
-    unsigned magic;
-    xnsynch_t synchbase;
-    xnholder_t link;            /* Link in pse51_semq */
+	unsigned magic;
+	xnsynch_t synchbase;
+	xnholder_t link;	/* Link in pse51_semq */
 
 #define link2sem(laddr)                                                 \
     ((pse51_sem_t *)(((char *)(laddr)) - offsetof(pse51_sem_t, link)))
 
-    int value;
+	int value;
 } pse51_sem_t;
 
 typedef struct pse51_named_sem {
-    pse51_sem_t sembase;        /* Has to be the first member. */
+	pse51_sem_t sembase;	/* Has to be the first member. */
 #define sem2named_sem(saddr) ((nsem_t *) (saddr))
-    
-    pse51_node_t nodebase;
+
+	pse51_node_t nodebase;
 #define node2sem(naddr) \
     ((nsem_t *)((char *)(naddr) - offsetof(nsem_t, nodebase)))
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    xnqueue_t userq;            /* List of user-space bindings. */
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */    
+	xnqueue_t userq;	/* List of user-space bindings. */
+#endif				/* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-    union __xeno_sem descriptor;
+	union __xeno_sem descriptor;
 } nsem_t;
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 typedef struct pse51_uptr {
-    struct mm_struct *mm;
-    unsigned refcnt;
-    unsigned long uaddr;
+	struct mm_struct *mm;
+	unsigned refcnt;
+	unsigned long uaddr;
 
-    xnholder_t link;
+	xnholder_t link;
 
 #define link2uptr(laddr) \
     ((pse51_uptr_t *)((char *)(laddr) - offsetof(pse51_uptr_t, link)))
 } pse51_uptr_t;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */    
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 static xnqueue_t pse51_semq;
 
-static void sem_destroy_internal (pse51_sem_t *sem)
-
+static void sem_destroy_internal(pse51_sem_t * sem)
 {
-    removeq(&pse51_semq, &sem->link);    
-    if (xnsynch_destroy(&sem->synchbase) == XNSYNCH_RESCHED)
-        xnpod_schedule();
+	removeq(&pse51_semq, &sem->link);
+	if (xnsynch_destroy(&sem->synchbase) == XNSYNCH_RESCHED)
+		xnpod_schedule();
 
-    pse51_mark_deleted(sem);
-    xnfree(sem);
+	pse51_mark_deleted(sem);
+	xnfree(sem);
 }
 
 /* Called with nklock locked, irq off. */
-static int pse51_sem_init_inner (pse51_sem_t *sem, int pshared, unsigned value)
+static int pse51_sem_init_inner(pse51_sem_t * sem, int pshared, unsigned value)
 {
-    if (value > (unsigned) SEM_VALUE_MAX)
-        return EINVAL;
-    
-    sem->magic = PSE51_SEM_MAGIC;
-    inith(&sem->link);
-    appendq(&pse51_semq, &sem->link);    
-    xnsynch_init(&sem->synchbase, XNSYNCH_PRIO);
-    sem->value = value;
+	if (value > (unsigned)SEM_VALUE_MAX)
+		return EINVAL;
 
-    return 0;
+	sem->magic = PSE51_SEM_MAGIC;
+	inith(&sem->link);
+	appendq(&pse51_semq, &sem->link);
+	xnsynch_init(&sem->synchbase, XNSYNCH_PRIO);
+	sem->value = value;
+
+	return 0;
 }
-
 
 /**
  * Initialize an unnamed semaphore.
@@ -135,55 +133,51 @@ static int pse51_sem_init_inner (pse51_sem_t *sem, int pshared, unsigned value)
  * Specification.</a>
  * 
  */
-int sem_init (sem_t *sm, int pshared, unsigned value)
+int sem_init(sem_t * sm, int pshared, unsigned value)
 {
-    struct __shadow_sem *shadow = &((union __xeno_sem *) sm)->shadow_sem;
-    pse51_sem_t *sem;
-    int err;
-    spl_t s;
+	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
+	pse51_sem_t *sem;
+	int err;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (shadow->magic == PSE51_SEM_MAGIC
-        || shadow->magic == PSE51_NAMED_SEM_MAGIC
-        || shadow->magic == ~PSE51_NAMED_SEM_MAGIC)
-        {
-        xnholder_t *holder;
-        
-        for (holder = getheadq(&pse51_semq); holder;
-             holder = nextq(&pse51_semq, holder))
-            if (holder == &shadow->sem->link)
-                {
-                err = EBUSY;
-                goto error;
-                }
-        }
+	if (shadow->magic == PSE51_SEM_MAGIC
+	    || shadow->magic == PSE51_NAMED_SEM_MAGIC
+	    || shadow->magic == ~PSE51_NAMED_SEM_MAGIC) {
+		xnholder_t *holder;
 
-    sem = (pse51_sem_t *) xnmalloc(sizeof(pse51_sem_t));
-    if (!sem)
-        {
-        err = ENOSPC;
-        goto error;
-        }
+		for (holder = getheadq(&pse51_semq); holder;
+		     holder = nextq(&pse51_semq, holder))
+			if (holder == &shadow->sem->link) {
+				err = EBUSY;
+				goto error;
+			}
+	}
 
-    err = pse51_sem_init_inner(sem, pshared, value);
-    if (err)
-        {
-        xnfree(sem);
-        goto error;
-        }
+	sem = (pse51_sem_t *) xnmalloc(sizeof(pse51_sem_t));
+	if (!sem) {
+		err = ENOSPC;
+		goto error;
+	}
 
-    shadow->magic = PSE51_SEM_MAGIC;
-    shadow->sem = sem;
-    xnlock_put_irqrestore(&nklock, s);
+	err = pse51_sem_init_inner(sem, pshared, value);
+	if (err) {
+		xnfree(sem);
+		goto error;
+	}
 
-    return 0;
+	shadow->magic = PSE51_SEM_MAGIC;
+	shadow->sem = sem;
+	xnlock_put_irqrestore(&nklock, s);
 
-  error:
-    xnlock_put_irqrestore(&nklock, s);
-    thread_set_errno(err);
+	return 0;
 
-    return -1;
+      error:
+	xnlock_put_irqrestore(&nklock, s);
+	thread_set_errno(err);
+
+	return -1;
 }
 
 /**
@@ -207,32 +201,30 @@ int sem_init (sem_t *sm, int pshared, unsigned value)
  * Specification.</a>
  * 
  */
-int sem_destroy (sem_t *sm)
-
+int sem_destroy(sem_t * sm)
 {
-    struct __shadow_sem *shadow = &((union __xeno_sem *) sm)->shadow_sem;
-    spl_t s;
+	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (shadow->magic != PSE51_SEM_MAGIC)
-        {
-        thread_set_errno(EINVAL);
-        goto error;
-        }
-    
-    sem_destroy_internal(shadow->sem);
-    pse51_mark_deleted(shadow);
+	if (shadow->magic != PSE51_SEM_MAGIC) {
+		thread_set_errno(EINVAL);
+		goto error;
+	}
 
-    xnlock_put_irqrestore(&nklock, s);
+	sem_destroy_internal(shadow->sem);
+	pse51_mark_deleted(shadow);
 
-    return 0;
+	xnlock_put_irqrestore(&nklock, s);
 
-  error:
+	return 0;
 
-    xnlock_put_irqrestore(&nklock, s);
+      error:
 
-    return -1;
+	xnlock_put_irqrestore(&nklock, s);
+
+	return -1;
 }
 
 /**
@@ -278,79 +270,75 @@ int sem_destroy (sem_t *sm)
  * Specification.</a>
  * 
  */
-sem_t *sem_open (const char *name, int oflags, ...)
+sem_t *sem_open(const char *name, int oflags, ...)
 {
-    nsem_t *named_sem;
-    pse51_node_t *node;
-    spl_t s;
-    int err;
+	nsem_t *named_sem;
+	pse51_node_t *node;
+	spl_t s;
+	int err;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    err = pse51_node_get(&node, name, PSE51_NAMED_SEM_MAGIC, oflags);
+	err = pse51_node_get(&node, name, PSE51_NAMED_SEM_MAGIC, oflags);
 
-    if (err)
-        goto error;
+	if (err)
+		goto error;
 
-    if (!node)
-        {
-        unsigned value;
-        mode_t mode;
-        va_list ap;
+	if (!node) {
+		unsigned value;
+		mode_t mode;
+		va_list ap;
 
-        named_sem = (nsem_t *) xnmalloc(sizeof(*named_sem));
+		named_sem = (nsem_t *) xnmalloc(sizeof(*named_sem));
 
-        if (!named_sem)
-            {
-            err = ENOSPC;
-            goto error;
-            }
-        
-        va_start(ap, oflags);
-        mode = va_arg(ap, int); /* unused */
-        value = va_arg(ap, unsigned);
-        va_end(ap);
+		if (!named_sem) {
+			err = ENOSPC;
+			goto error;
+		}
 
-        err = pse51_sem_init_inner(&named_sem->sembase, 1, value);
+		va_start(ap, oflags);
+		mode = va_arg(ap, int);	/* unused */
+		value = va_arg(ap, unsigned);
+		va_end(ap);
 
-        if (err)
-            {
-            xnfree(named_sem);
-            goto error;
-            }
+		err = pse51_sem_init_inner(&named_sem->sembase, 1, value);
 
-        err = pse51_node_add(&named_sem->nodebase, name, PSE51_NAMED_SEM_MAGIC);
+		if (err) {
+			xnfree(named_sem);
+			goto error;
+		}
 
-        if (err)
-            {
-            xnfree(named_sem);
-            goto error;
-            }
+		err =
+		    pse51_node_add(&named_sem->nodebase, name,
+				   PSE51_NAMED_SEM_MAGIC);
 
+		if (err) {
+			xnfree(named_sem);
+			goto error;
+		}
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-        initq(&named_sem->userq);
+		initq(&named_sem->userq);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-        named_sem->descriptor.shadow_sem.sem = &named_sem->sembase;
-        named_sem->sembase.magic = PSE51_NAMED_SEM_MAGIC;
-        }
-    else
-        named_sem = node2sem(node);
-    
-    /* Set the magic, needed both at creation and when re-opening a semaphore
-       that was closed but not unlinked. */
-    named_sem->descriptor.shadow_sem.magic = PSE51_NAMED_SEM_MAGIC;
+		named_sem->descriptor.shadow_sem.sem = &named_sem->sembase;
+		named_sem->sembase.magic = PSE51_NAMED_SEM_MAGIC;
+	} else
+		named_sem = node2sem(node);
 
-    xnlock_put_irqrestore(&nklock, s);
+	/* Set the magic, needed both at creation and when re-opening a semaphore
+	   that was closed but not unlinked. */
+	named_sem->descriptor.shadow_sem.magic = PSE51_NAMED_SEM_MAGIC;
 
-    return &named_sem->descriptor.native_sem;
+	xnlock_put_irqrestore(&nklock, s);
 
-  error:
+	return &named_sem->descriptor.native_sem;
 
-    xnlock_put_irqrestore(&nklock, s);
+      error:
 
-    thread_set_errno(err);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return SEM_FAILED;
+	thread_set_errno(err);
+
+	return SEM_FAILED;
 }
 
 /**
@@ -377,48 +365,45 @@ sem_t *sem_open (const char *name, int oflags, ...)
  * Specification.</a>
  * 
  */
-int sem_close (sem_t *sm)
+int sem_close(sem_t * sm)
 {
-    struct __shadow_sem *shadow = &((union __xeno_sem *) sm)->shadow_sem;
-    nsem_t *named_sem;
-    spl_t s;
-    int err;
+	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
+	nsem_t *named_sem;
+	spl_t s;
+	int err;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if(shadow->magic != PSE51_NAMED_SEM_MAGIC)
-        {
-        err = EINVAL;
-        goto error;
-        }
+	if (shadow->magic != PSE51_NAMED_SEM_MAGIC) {
+		err = EINVAL;
+		goto error;
+	}
 
-    named_sem = sem2named_sem(shadow->sem);
-    
-    err = pse51_node_put(&named_sem->nodebase);
+	named_sem = sem2named_sem(shadow->sem);
 
-    if (err)
-        goto error;
-    
-    if (pse51_node_removed_p(&named_sem->nodebase))
-        {
-        /* unlink was called, and this semaphore is no longer referenced. */
-        sem_destroy_internal(&named_sem->sembase);
-        pse51_mark_deleted(shadow);
-        }
-    else if (!pse51_node_ref_p(&named_sem->nodebase))
-        /* this semaphore is no longer referenced, but not unlinked. */
-        pse51_mark_deleted(shadow);
+	err = pse51_node_put(&named_sem->nodebase);
 
-    xnlock_put_irqrestore(&nklock, s);
+	if (err)
+		goto error;
 
-    return 0;
+	if (pse51_node_removed_p(&named_sem->nodebase)) {
+		/* unlink was called, and this semaphore is no longer referenced. */
+		sem_destroy_internal(&named_sem->sembase);
+		pse51_mark_deleted(shadow);
+	} else if (!pse51_node_ref_p(&named_sem->nodebase))
+		/* this semaphore is no longer referenced, but not unlinked. */
+		pse51_mark_deleted(shadow);
 
-  error:
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    thread_set_errno(err);
+	return 0;
 
-    return -1;
+      error:
+	xnlock_put_irqrestore(&nklock, s);
+
+	thread_set_errno(err);
+
+	return -1;
 }
 
 /**
@@ -445,54 +430,53 @@ int sem_close (sem_t *sm)
  * Specification.</a>
  * 
  */
-int sem_unlink (const char *name)
+int sem_unlink(const char *name)
 {
-    pse51_node_t *node;
-    nsem_t *named_sem;
-    spl_t s;
-    int err;
+	pse51_node_t *node;
+	nsem_t *named_sem;
+	spl_t s;
+	int err;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    err = pse51_node_remove(&node, name, PSE51_NAMED_SEM_MAGIC);
+	err = pse51_node_remove(&node, name, PSE51_NAMED_SEM_MAGIC);
 
-    if (err)
-        goto error;
+	if (err)
+		goto error;
 
-    named_sem = node2sem(node);
-    
-    if (pse51_node_removed_p(&named_sem->nodebase))
-        sem_destroy_internal(&named_sem->sembase);
+	named_sem = node2sem(node);
 
-    xnlock_put_irqrestore(&nklock, s);
+	if (pse51_node_removed_p(&named_sem->nodebase))
+		sem_destroy_internal(&named_sem->sembase);
 
-    return 0;
+	xnlock_put_irqrestore(&nklock, s);
 
-  error:
-    xnlock_put_irqrestore(&nklock, s);
+	return 0;
 
-    thread_set_errno(err);
+      error:
+	xnlock_put_irqrestore(&nklock, s);
 
-    return -1;
+	thread_set_errno(err);
+
+	return -1;
 }
 
-static inline int sem_trywait_internal (struct __shadow_sem *shadow)
-
+static inline int sem_trywait_internal(struct __shadow_sem *shadow)
 {
-    pse51_sem_t *sem;
+	pse51_sem_t *sem;
 
-    if (shadow->magic != PSE51_SEM_MAGIC
-        && shadow->magic != PSE51_NAMED_SEM_MAGIC)
-        return EINVAL;
+	if (shadow->magic != PSE51_SEM_MAGIC
+	    && shadow->magic != PSE51_NAMED_SEM_MAGIC)
+		return EINVAL;
 
-    sem = shadow->sem;
- 
-    if (sem->value == 0)
-        return EAGAIN;
+	sem = shadow->sem;
 
-    --sem->value;
+	if (sem->value == 0)
+		return EAGAIN;
 
-    return 0;
+	--sem->value;
+
+	return 0;
 }
 
 /**
@@ -514,63 +498,61 @@ static inline int sem_trywait_internal (struct __shadow_sem *shadow)
  * Specification.</a>
  * 
  */
-int sem_trywait (sem_t *sm)
-
+int sem_trywait(sem_t * sm)
 {
-    struct __shadow_sem *shadow = &((union __xeno_sem *) sm)->shadow_sem;
-    int err;
-    spl_t s;
-    
-    xnlock_get_irqsave(&nklock, s);
+	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
+	int err;
+	spl_t s;
 
-    err = sem_trywait_internal(shadow);
+	xnlock_get_irqsave(&nklock, s);
 
-    xnlock_put_irqrestore(&nklock, s);
-    
-    if (err)
-        {
-        thread_set_errno(err);
-        return -1;
-        }
+	err = sem_trywait_internal(shadow);
 
-    return 0;
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (err) {
+		thread_set_errno(err);
+		return -1;
+	}
+
+	return 0;
 }
 
-static inline int sem_timedwait_internal (struct __shadow_sem *shadow,
-                                          xnticks_t to)
+static inline int sem_timedwait_internal(struct __shadow_sem *shadow,
+					 xnticks_t to)
 {
-    pse51_sem_t *sem = shadow->sem;
-    xnthread_t *cur;
-    int err;
+	pse51_sem_t *sem = shadow->sem;
+	xnthread_t *cur;
+	int err;
 
-    if (xnpod_unblockable_p())
-        return EPERM;
+	if (xnpod_unblockable_p())
+		return EPERM;
 
-    cur = xnpod_current_thread();
+	cur = xnpod_current_thread();
 
-    if ((err = sem_trywait_internal(shadow)) != EAGAIN)
-        return err;
+	if ((err = sem_trywait_internal(shadow)) != EAGAIN)
+		return err;
 
-    if((err = clock_adjust_timeout(&to, CLOCK_REALTIME)))
-        return err;
+	if ((err = clock_adjust_timeout(&to, CLOCK_REALTIME)))
+		return err;
 
-    thread_cancellation_point(cur);
+	thread_cancellation_point(cur);
 
-    xnsynch_sleep_on(&sem->synchbase, to);
-            
-    /* Handle cancellation requests. */
-    thread_cancellation_point(cur);
+	xnsynch_sleep_on(&sem->synchbase, to);
 
-    if (xnthread_test_flags(cur, XNRMID))
-        return EINVAL;
-    
-    if (xnthread_test_flags(cur, XNBREAK))
-        return EINTR;
-    
-    if (xnthread_test_flags(cur, XNTIMEO))
-        return ETIMEDOUT;
+	/* Handle cancellation requests. */
+	thread_cancellation_point(cur);
 
-    return 0;
+	if (xnthread_test_flags(cur, XNRMID))
+		return EINVAL;
+
+	if (xnthread_test_flags(cur, XNBREAK))
+		return EINTR;
+
+	if (xnthread_test_flags(cur, XNTIMEO))
+		return ETIMEDOUT;
+
+	return 0;
 }
 
 /**
@@ -604,24 +586,22 @@ static inline int sem_timedwait_internal (struct __shadow_sem *shadow,
  * Specification.</a>
  * 
  */
-int sem_wait (sem_t *sm)
-
+int sem_wait(sem_t * sm)
 {
-    struct __shadow_sem *shadow = &((union __xeno_sem *) sm)->shadow_sem;
-    spl_t s;
-    int err;
+	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
+	spl_t s;
+	int err;
 
-    xnlock_get_irqsave(&nklock, s);
-    err = sem_timedwait_internal(shadow, XN_INFINITE);
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
+	err = sem_timedwait_internal(shadow, XN_INFINITE);
+	xnlock_put_irqrestore(&nklock, s);
 
-    if(err)
-        {
-        thread_set_errno(err);
-        return -1;
-        }
-    
-    return 0;
+	if (err) {
+		thread_set_errno(err);
+		return -1;
+	}
+
+	return 0;
 }
 
 /**
@@ -654,24 +634,22 @@ int sem_wait (sem_t *sm)
  * Specification.</a>
  * 
  */
-int sem_timedwait (sem_t *sm, const struct timespec *abs_timeout)
-
+int sem_timedwait(sem_t * sm, const struct timespec *abs_timeout)
 {
-    struct __shadow_sem *shadow = &((union __xeno_sem *) sm)->shadow_sem;
-    spl_t s;
-    int err;
+	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
+	spl_t s;
+	int err;
 
-    xnlock_get_irqsave(&nklock, s);
-    err = sem_timedwait_internal(shadow, ts2ticks_ceil(abs_timeout)+1);
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
+	err = sem_timedwait_internal(shadow, ts2ticks_ceil(abs_timeout) + 1);
+	xnlock_put_irqrestore(&nklock, s);
 
-    if(err)
-        {
-        thread_set_errno(err);
-        return -1;
-        }
-    
-    return 0;
+	if (err) {
+		thread_set_errno(err);
+		return -1;
+	}
+
+	return 0;
 }
 
 /**
@@ -694,44 +672,41 @@ int sem_timedwait (sem_t *sm, const struct timespec *abs_timeout)
  * Specification.</a>
  * 
  */
-int sem_post (sem_t *sm)
-
+int sem_post(sem_t * sm)
 {
-    struct __shadow_sem *shadow = &((union __xeno_sem *) sm)->shadow_sem;
-    pse51_sem_t *sem;
-    spl_t s;
-    
-    xnlock_get_irqsave(&nklock, s);
+	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
+	pse51_sem_t *sem;
+	spl_t s;
 
-    if (shadow->magic != PSE51_SEM_MAGIC
-        && shadow->magic != PSE51_NAMED_SEM_MAGIC)
-        {
-        thread_set_errno(EINVAL);
-        goto error;
-        }
+	xnlock_get_irqsave(&nklock, s);
 
-    sem = shadow->sem;
+	if (shadow->magic != PSE51_SEM_MAGIC
+	    && shadow->magic != PSE51_NAMED_SEM_MAGIC) {
+		thread_set_errno(EINVAL);
+		goto error;
+	}
 
-    if (sem->value == SEM_VALUE_MAX)
-        {
-        thread_set_errno(EAGAIN);
-        goto error;
-        }
+	sem = shadow->sem;
 
-    if(xnsynch_wakeup_one_sleeper(&sem->synchbase) != NULL)
-        xnpod_schedule();
-    else
-        ++sem->value;
+	if (sem->value == SEM_VALUE_MAX) {
+		thread_set_errno(EAGAIN);
+		goto error;
+	}
 
-    xnlock_put_irqrestore(&nklock, s);
+	if (xnsynch_wakeup_one_sleeper(&sem->synchbase) != NULL)
+		xnpod_schedule();
+	else
+		++sem->value;
 
-    return 0;
+	xnlock_put_irqrestore(&nklock, s);
 
- error:
+	return 0;
 
-    xnlock_put_irqrestore(&nklock, s);
+      error:
 
-    return -1;
+	xnlock_put_irqrestore(&nklock, s);
+
+	return -1;
 }
 
 /**
@@ -755,72 +730,68 @@ int sem_post (sem_t *sm)
  * Specification.</a>
  * 
  */
-int sem_getvalue (sem_t *sm, int *value)
-
+int sem_getvalue(sem_t * sm, int *value)
 {
-    struct __shadow_sem *shadow = &((union __xeno_sem *) sm)->shadow_sem;
-    pse51_sem_t *sem;
-    spl_t s;
+	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
+	pse51_sem_t *sem;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    if (shadow->magic != PSE51_SEM_MAGIC
-        && shadow->magic != PSE51_NAMED_SEM_MAGIC)
-        {
-        xnlock_put_irqrestore(&nklock, s);
-        thread_set_errno(EINVAL);
-        return -1;
-        }
+	if (shadow->magic != PSE51_SEM_MAGIC
+	    && shadow->magic != PSE51_NAMED_SEM_MAGIC) {
+		xnlock_put_irqrestore(&nklock, s);
+		thread_set_errno(EINVAL);
+		return -1;
+	}
 
-    sem = shadow->sem;
+	sem = shadow->sem;
 
-    *value = sem->value;
+	*value = sem->value;
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 pse51_assocq_t pse51_usems;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-void pse51_sem_pkg_init (void) {
+void pse51_sem_pkg_init(void)
+{
 
-    initq(&pse51_semq);
+	initq(&pse51_semq);
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    pse51_assocq_init(&pse51_usems);
+	pse51_assocq_init(&pse51_usems);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 }
 
-void pse51_sem_pkg_cleanup (void)
-
+void pse51_sem_pkg_cleanup(void)
 {
-    xnholder_t *holder;
-    spl_t s;
+	xnholder_t *holder;
+	spl_t s;
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    pse51_assocq_destroy(&pse51_usems, NULL);
+	pse51_assocq_destroy(&pse51_usems, NULL);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    while ((holder = getheadq(&pse51_semq)) != NULL)
-        {
-        pse51_sem_t *sem = link2sem(holder);
+	while ((holder = getheadq(&pse51_semq)) != NULL) {
+		pse51_sem_t *sem = link2sem(holder);
 
 #ifdef CONFIG_XENO_OPT_DEBUG
-        if (sem->magic == PSE51_SEM_MAGIC)
-            xnprintf("POSIX semaphore %p discarded.\n",
-                     sem);
-        else
-            xnprintf("POSIX semaphore \"%s\" discarded.\n",
-                     sem2named_sem(sem)->nodebase.name);
+		if (sem->magic == PSE51_SEM_MAGIC)
+			xnprintf("POSIX semaphore %p discarded.\n", sem);
+		else
+			xnprintf("POSIX semaphore \"%s\" discarded.\n",
+				 sem2named_sem(sem)->nodebase.name);
 #endif /* CONFIG_XENO_OPT_DEBUG */
-        sem_destroy_internal(sem);
-        }
+		sem_destroy_internal(sem);
+	}
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 /*@}*/

@@ -56,9 +56,9 @@
 typedef void cleanup_routine_t(void *);
 
 typedef struct {
-    cleanup_routine_t *routine;
-    void *arg;
-    xnholder_t link;
+	cleanup_routine_t *routine;
+	void *arg;
+	xnholder_t link;
 
 #define link2cleanup_handler(laddr) \
 ((cleanup_handler_t *)(((char *)laddr)-(int)(&((cleanup_handler_t *)0)->link)))
@@ -86,42 +86,39 @@ typedef struct {
  * Specification.</a>
  *
  */
-int pthread_cancel (pthread_t thread)
-
+int pthread_cancel(pthread_t thread)
 {
-    int cancel_enabled;
-    spl_t s;
-    
-    xnlock_get_irqsave(&nklock, s);
+	int cancel_enabled;
+	spl_t s;
 
-    if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
-	xnlock_put_irqrestore(&nklock, s);
-	return ESRCH;
-    }
+	xnlock_get_irqsave(&nklock, s);
 
-    cancel_enabled = thread_getcancelstate(thread) == PTHREAD_CANCEL_ENABLE;
-
-    if (cancel_enabled
-	&& thread_getcanceltype(thread) == PTHREAD_CANCEL_ASYNCHRONOUS)
-        pse51_thread_abort(thread, PTHREAD_CANCELED);
-    else
-	{
-	/* pthread_cancel is not a cancellation point, so
-           thread == pthread_self() is not a special case. */
-
-        thread_setcancel(thread);
-
-        if (cancel_enabled)
-	    {
-            /* Unblock thread, so that it can honor the cancellation request. */
-            xnpod_unblock_thread(&thread->threadbase);
-            xnpod_schedule();
-	    }
+	if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return ESRCH;
 	}
 
-    xnlock_put_irqrestore(&nklock, s);
+	cancel_enabled = thread_getcancelstate(thread) == PTHREAD_CANCEL_ENABLE;
 
-    return 0;
+	if (cancel_enabled
+	    && thread_getcanceltype(thread) == PTHREAD_CANCEL_ASYNCHRONOUS)
+		pse51_thread_abort(thread, PTHREAD_CANCELED);
+	else {
+		/* pthread_cancel is not a cancellation point, so
+		   thread == pthread_self() is not a special case. */
+
+		thread_setcancel(thread);
+
+		if (cancel_enabled) {
+			/* Unblock thread, so that it can honor the cancellation request. */
+			xnpod_unblock_thread(&thread->threadbase);
+			xnpod_schedule();
+		}
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
 }
 
 /**
@@ -153,38 +150,36 @@ int pthread_cancel (pthread_t thread)
  * Specification.</a>
  * 
  */
-void pthread_cleanup_push (cleanup_routine_t *routine, void *arg)
-
+void pthread_cleanup_push(cleanup_routine_t * routine, void *arg)
 {
-    pthread_t cur = pse51_current_thread();
-    cleanup_handler_t *handler;
-    spl_t s;
-    
-    if (!routine || !cur || xnpod_interrupt_p() || xnpod_callout_p())
-        return;
+	pthread_t cur = pse51_current_thread();
+	cleanup_handler_t *handler;
+	spl_t s;
 
-    /* The allocation is inside the critical section in order to make the
-       function async-signal safe, that is in order to avoid leaks if an
-       asynchronous cancellation request could occur between the call to
-       xnmalloc and xnlock_get_irqsave. */
+	if (!routine || !cur || xnpod_interrupt_p() || xnpod_callout_p())
+		return;
 
-    xnlock_get_irqsave(&nklock, s);
+	/* The allocation is inside the critical section in order to make the
+	   function async-signal safe, that is in order to avoid leaks if an
+	   asynchronous cancellation request could occur between the call to
+	   xnmalloc and xnlock_get_irqsave. */
 
-    handler = xnmalloc(sizeof(*handler));
+	xnlock_get_irqsave(&nklock, s);
 
-    if (!handler)
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return ;
+	handler = xnmalloc(sizeof(*handler));
+
+	if (!handler) {
+		xnlock_put_irqrestore(&nklock, s);
+		return;
 	}
 
-    handler->routine = routine;
-    handler->arg = arg;
-    inith(&handler->link);
+	handler->routine = routine;
+	handler->arg = arg;
+	inith(&handler->link);
 
-    prependq(thread_cleanups(cur), &handler->link);
+	prependq(thread_cleanups(cur), &handler->link);
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 /**
@@ -213,41 +208,39 @@ void pthread_cleanup_push (cleanup_routine_t *routine, void *arg)
  * Specification.</a>
  * 
  */
-void pthread_cleanup_pop (int execute)
-
+void pthread_cleanup_pop(int execute)
 {
-    pthread_t cur = pse51_current_thread();
-    cleanup_handler_t *handler;
-    cleanup_routine_t *routine;
-    xnholder_t *holder;
-    void *arg;
-    spl_t s;
+	pthread_t cur = pse51_current_thread();
+	cleanup_handler_t *handler;
+	cleanup_routine_t *routine;
+	xnholder_t *holder;
+	void *arg;
+	spl_t s;
 
-    if (!cur || xnpod_interrupt_p() || xnpod_callout_p())
-        return;
+	if (!cur || xnpod_interrupt_p() || xnpod_callout_p())
+		return;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    holder = getq(thread_cleanups(cur));
+	holder = getq(thread_cleanups(cur));
 
-    if (!holder)
-	{
-        xnlock_put_irqrestore(&nklock, s);
-        return;
+	if (!holder) {
+		xnlock_put_irqrestore(&nklock, s);
+		return;
 	}
 
-    handler = link2cleanup_handler(holder);
+	handler = link2cleanup_handler(holder);
 
-    routine = handler->routine;
-    arg = handler->arg;
+	routine = handler->routine;
+	arg = handler->arg;
 
-    /* Same remark as xnmalloc in pthread_cleanup_push */
-    xnfree(handler);
+	/* Same remark as xnmalloc in pthread_cleanup_push */
+	xnfree(handler);
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    if (execute)
-        routine(arg);
+	if (execute)
+		routine(arg);
 }
 
 /**
@@ -283,46 +276,44 @@ void pthread_cleanup_pop (int execute)
  * Specification.</a>
  * 
  */
-int pthread_setcanceltype (int type, int *oldtype_ptr)
-
+int pthread_setcanceltype(int type, int *oldtype_ptr)
 {
-    pthread_t cur;
-    int oldtype;
-    spl_t s;
+	pthread_t cur;
+	int oldtype;
+	spl_t s;
 
-    switch (type)
-	{
+	switch (type) {
 	default:
 
-	    return EINVAL;
+		return EINVAL;
 
 	case PTHREAD_CANCEL_DEFERRED:
 	case PTHREAD_CANCEL_ASYNCHRONOUS:
 
-	    break;
+		break;
 	}
 
-    cur = pse51_current_thread();
+	cur = pse51_current_thread();
 
-    if (!cur  || xnpod_interrupt_p())
-        return EPERM;
+	if (!cur || xnpod_interrupt_p())
+		return EPERM;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    oldtype = thread_getcanceltype(cur);
+	oldtype = thread_getcanceltype(cur);
 
-    thread_setcanceltype(cur, type);
+	thread_setcanceltype(cur, type);
 
-    if (type == PTHREAD_CANCEL_ASYNCHRONOUS
-	&& thread_getcancelstate(cur) == PTHREAD_CANCEL_ENABLE)
-        thread_cancellation_point(&cur->threadbase);
+	if (type == PTHREAD_CANCEL_ASYNCHRONOUS
+	    && thread_getcancelstate(cur) == PTHREAD_CANCEL_ENABLE)
+		thread_cancellation_point(&cur->threadbase);
 
-    if (oldtype_ptr)
-        *oldtype_ptr=oldtype;
+	if (oldtype_ptr)
+		*oldtype_ptr = oldtype;
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -358,45 +349,43 @@ int pthread_setcanceltype (int type, int *oldtype_ptr)
  * Specification.</a>
  * 
  */
-int pthread_setcancelstate (int state, int *oldstate_ptr)
-
+int pthread_setcancelstate(int state, int *oldstate_ptr)
 {
-    pthread_t cur;
-    int oldstate;
-    spl_t s;
-    
-    switch (state)
-	{
+	pthread_t cur;
+	int oldstate;
+	spl_t s;
+
+	switch (state) {
 	default:
 
-	    return EINVAL;
+		return EINVAL;
 
 	case PTHREAD_CANCEL_ENABLE:
 	case PTHREAD_CANCEL_DISABLE:
 
-        break;
+		break;
 	}
 
-    cur = pse51_current_thread();
+	cur = pse51_current_thread();
 
-    if (!cur  || xnpod_interrupt_p())
-        return EPERM;
+	if (!cur || xnpod_interrupt_p())
+		return EPERM;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    oldstate = thread_getcancelstate(cur);
-    thread_setcancelstate(cur, state);
+	oldstate = thread_getcancelstate(cur);
+	thread_setcancelstate(cur, state);
 
-    if (state == PTHREAD_CANCEL_ENABLE
-	&& thread_getcanceltype(cur) == PTHREAD_CANCEL_ASYNCHRONOUS)
-        thread_cancellation_point(&cur->threadbase);
-    
-    if (oldstate_ptr)
-        *oldstate_ptr=oldstate;
+	if (state == PTHREAD_CANCEL_ENABLE
+	    && thread_getcanceltype(cur) == PTHREAD_CANCEL_ASYNCHRONOUS)
+		thread_cancellation_point(&cur->threadbase);
 
-    xnlock_put_irqrestore(&nklock, s);
+	if (oldstate_ptr)
+		*oldstate_ptr = oldstate;
 
-    return 0;
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
 }
 
 /**
@@ -417,35 +406,31 @@ int pthread_setcancelstate (int state, int *oldstate_ptr)
  * Specification.</a>
  * 
  */
-void pthread_testcancel (void)
-
+void pthread_testcancel(void)
 {
-    spl_t s;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
-    thread_cancellation_point(xnpod_current_thread());
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
+	thread_cancellation_point(xnpod_current_thread());
+	xnlock_put_irqrestore(&nklock, s);
 }
 
-void pse51_cancel_init_thread (pthread_t thread)
-
+void pse51_cancel_init_thread(pthread_t thread)
 {
-    thread_setcancelstate(thread, PTHREAD_CANCEL_ENABLE);
-    thread_setcanceltype(thread, PTHREAD_CANCEL_DEFERRED);
-    thread_clrcancel(thread);
-    initq(thread_cleanups(thread));
+	thread_setcancelstate(thread, PTHREAD_CANCEL_ENABLE);
+	thread_setcanceltype(thread, PTHREAD_CANCEL_DEFERRED);
+	thread_clrcancel(thread);
+	initq(thread_cleanups(thread));
 }
 
-void pse51_cancel_cleanup_thread (pthread_t thread)
-
+void pse51_cancel_cleanup_thread(pthread_t thread)
 {
-    xnholder_t *holder;
+	xnholder_t *holder;
 
-    while((holder = getq(thread_cleanups(thread))))
-	{
-        cleanup_handler_t *handler = link2cleanup_handler(holder);
-        handler->routine(handler->arg);
-        xnfree(handler);
+	while ((holder = getq(thread_cleanups(thread)))) {
+		cleanup_handler_t *handler = link2cleanup_handler(holder);
+		handler->routine(handler->arg);
+		xnfree(handler);
 	}
 }
 

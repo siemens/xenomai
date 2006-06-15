@@ -22,78 +22,69 @@
 
 extern int __pse51_muxid;
 
-int __wrap_pthread_mutex_init (pthread_mutex_t *mutex,
-			       const pthread_mutexattr_t *attr)
+int __wrap_pthread_mutex_init(pthread_mutex_t * mutex,
+			      const pthread_mutexattr_t * attr)
 {
-    union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
-    int err;
+	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
+	int err;
 
-    /* Mutex attributes are ignored, since we always build recursive,
-       PIP-enabled mutexes. */
+	/* Mutex attributes are ignored, since we always build recursive,
+	   PIP-enabled mutexes. */
 
-    err = -XENOMAI_SKINCALL1(__pse51_muxid,
-			     __pse51_mutex_init,
-			     &_mutex->shadow_mutex);
-    return err;
+	err = -XENOMAI_SKINCALL1(__pse51_muxid,
+				 __pse51_mutex_init, &_mutex->shadow_mutex);
+	return err;
 }
 
-int __wrap_pthread_mutex_destroy (pthread_mutex_t *mutex)
-
+int __wrap_pthread_mutex_destroy(pthread_mutex_t * mutex)
 {
-    union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
+	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 
-    return -XENOMAI_SKINCALL1(__pse51_muxid,
-			      __pse51_mutex_destroy,
-			      &_mutex->shadow_mutex);
+	return -XENOMAI_SKINCALL1(__pse51_muxid,
+				  __pse51_mutex_destroy, &_mutex->shadow_mutex);
 }
 
-int __wrap_pthread_mutex_lock (pthread_mutex_t *mutex)
-
+int __wrap_pthread_mutex_lock(pthread_mutex_t * mutex)
 {
-    union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
-    int err;
+	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
+	int err;
 
-    do {
-        err = XENOMAI_SKINCALL1(__pse51_muxid,
-                                __pse51_mutex_lock,
-                                &_mutex->shadow_mutex);
-    } while (err == -EINTR);
+	do {
+		err = XENOMAI_SKINCALL1(__pse51_muxid,
+					__pse51_mutex_lock,
+					&_mutex->shadow_mutex);
+	} while (err == -EINTR);
 
-    return -err;
+	return -err;
 }
 
-int __wrap_pthread_mutex_timedlock (pthread_mutex_t *mutex,
-				    const struct timespec *to)
+int __wrap_pthread_mutex_timedlock(pthread_mutex_t * mutex,
+				   const struct timespec *to)
 {
-    union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
-    int err;
+	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
+	int err;
 
-    do {
-        err = XENOMAI_SKINCALL2(__pse51_muxid,
-                                __pse51_mutex_timedlock,
-                                &_mutex->shadow_mutex,
-                                to);
-    } while (err == -EINTR);
+	do {
+		err = XENOMAI_SKINCALL2(__pse51_muxid,
+					__pse51_mutex_timedlock,
+					&_mutex->shadow_mutex, to);
+	} while (err == -EINTR);
 
-    return -err;
+	return -err;
 }
 
-int __wrap_pthread_mutex_trylock (pthread_mutex_t *mutex)
-
+int __wrap_pthread_mutex_trylock(pthread_mutex_t * mutex)
 {
-    union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
+	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 
-    return -XENOMAI_SKINCALL1(__pse51_muxid,
-                              __pse51_mutex_trylock,
-                              &_mutex->shadow_mutex);
+	return -XENOMAI_SKINCALL1(__pse51_muxid,
+				  __pse51_mutex_trylock, &_mutex->shadow_mutex);
 }
 
-int __wrap_pthread_mutex_unlock (pthread_mutex_t *mutex)
-
+int __wrap_pthread_mutex_unlock(pthread_mutex_t * mutex)
 {
-    union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
+	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 
-    return -XENOMAI_SKINCALL1(__pse51_muxid,
-			      __pse51_mutex_unlock,
-			      &_mutex->shadow_mutex);
+	return -XENOMAI_SKINCALL1(__pse51_muxid,
+				  __pse51_mutex_unlock, &_mutex->shadow_mutex);
 }
