@@ -24,61 +24,42 @@ int sc_qecreate(int qid, int qsize, int opt, int *errp)
 {
 	int qid_r = -1;
 
-    *errp = XENOMAI_SKINCALL4(__vrtx_muxid,
-							  __vrtx_qecreate,
-							  qid,
-							  qsize,
-							  opt,
-							  &qid_r);
+	*errp = XENOMAI_SKINCALL4(__vrtx_muxid,
+				  __vrtx_qecreate, qid, qsize, opt, &qid_r);
 	return qid_r;
 }
-  
+
 int sc_qcreate(int qid, int qsize, int *errp)
 {
-	return sc_qecreate(qid,qsize,1,errp);
+	return sc_qecreate(qid, qsize, 1, errp);
 }
 
 void sc_qdelete(int qid, int opt, int *errp)
 {
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-							  __vrtx_qdelete,
-							  qid,
-							  opt);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_qdelete, qid, opt);
 }
-  
+
 void sc_qpost(int qid, char *msg, int *errp)
 {
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-							  __vrtx_qpost,
-							  qid,
-							  msg);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_qpost, qid, msg);
 }
 
 void sc_qjam(int qid, char *msg, int *errp)
 {
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-							  __vrtx_qjam,
-							  qid,
-							  msg);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_qjam, qid, msg);
 }
 
 void sc_qbrdcst(int qid, char *msg, int *errp)
 {
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-							  __vrtx_qbrdcst,
-							  qid,
-							  msg);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_qbrdcst, qid, msg);
 }
 
 char *sc_qpend(int qid, long timeout, int *errp)
 {
 	char *msg_r = NULL;
 
-    *errp = XENOMAI_SKINCALL3(__vrtx_muxid,
-							  __vrtx_qpend,
-							  qid,
-							  timeout,
-							  &msg_r);
+	*errp = XENOMAI_SKINCALL3(__vrtx_muxid,
+				  __vrtx_qpend, qid, timeout, &msg_r);
 	return msg_r;
 }
 
@@ -86,10 +67,7 @@ char *sc_qaccept(int qid, int *errp)
 {
 	char *msg_r = NULL;
 
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-							  __vrtx_qaccept,
-							  qid,
-							  &msg_r);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_qaccept, qid, &msg_r);
 	return msg_r;
 }
 
@@ -97,10 +75,7 @@ char *sc_qinquiry(int qid, int *countp, int *errp)
 {
 	char *msg_r = NULL;
 
-    *errp = XENOMAI_SKINCALL3(__vrtx_muxid,
-							  __vrtx_qinquiry,
-							  qid,
-							  countp,
-							  &msg_r);
+	*errp = XENOMAI_SKINCALL3(__vrtx_muxid,
+				  __vrtx_qinquiry, qid, countp, &msg_r);
 	return msg_r;
 }

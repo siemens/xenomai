@@ -24,51 +24,36 @@ int sc_screate(unsigned initval, int opt, int *errp)
 {
 	int semid = -1;
 
-    *errp = XENOMAI_SKINCALL3(__vrtx_muxid,
-							  __vrtx_screate,
-							  initval,
-							  opt,
-							  &semid);
+	*errp = XENOMAI_SKINCALL3(__vrtx_muxid,
+				  __vrtx_screate, initval, opt, &semid);
 	return semid;
 }
 
 void sc_sdelete(int semid, int opt, int *errp)
 {
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-							  __vrtx_sdelete,
-							  semid,
-							  opt);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_sdelete, semid, opt);
 }
 
 void sc_spost(int semid, int *errp)
 {
-    *errp = XENOMAI_SKINCALL1(__vrtx_muxid,
-							  __vrtx_spost,
-							  semid);
+	*errp = XENOMAI_SKINCALL1(__vrtx_muxid, __vrtx_spost, semid);
 }
 
 void sc_spend(int semid, long timeout, int *errp)
 {
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-							  __vrtx_spend,
-							  semid,
-							  timeout);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_spend, semid, timeout);
 }
 
 void sc_saccept(int semid, int *errp)
 {
-    *errp = XENOMAI_SKINCALL1(__vrtx_muxid,
-							  __vrtx_saccept,
-							  semid);
+	*errp = XENOMAI_SKINCALL1(__vrtx_muxid, __vrtx_saccept, semid);
 }
 
 int sc_sinquiry(int semid, int *errp)
 {
 	int count_r = -1;
 
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-							  __vrtx_sinquiry,
-							  semid,
-							  &count_r);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid,
+				  __vrtx_sinquiry, semid, &count_r);
 	return count_r;
 }

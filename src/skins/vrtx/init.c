@@ -28,35 +28,33 @@ pthread_key_t __vrtx_tskey;
 
 int __vrtx_muxid = -1;
 
-static void __flush_tsd (void *tsd)
-
+static void __flush_tsd(void *tsd)
 {
-    /* Free the TCB struct. */
-    free(tsd);
+	/* Free the TCB struct. */
+	free(tsd);
 }
 
-static __attribute__((constructor)) void __init_xeno_interface(void)
-
+static __attribute__ ((constructor))
+void __init_xeno_interface(void)
 {
-    TCB *tcb;
+	TCB *tcb;
 
-    __vrtx_muxid = xeno_user_skin_init(VRTX_SKIN_MAGIC, "VRTX", "xeno_vrtx");
-    
-    /* Allocate a TSD key for indexing self task pointers. */
+	__vrtx_muxid =
+	    xeno_user_skin_init(VRTX_SKIN_MAGIC, "VRTX", "xeno_vrtx");
 
-    if (pthread_key_create(&__vrtx_tskey,&__flush_tsd) != 0)
-        {
-        fprintf(stderr,"Xenomai: failed to allocate new TSD key?!\n");
-        exit(1);
-        }
+	/* Allocate a TSD key for indexing self task pointers. */
 
-    tcb = (TCB *)malloc(sizeof(*tcb));
-    
-    if (!tcb)
-        {
-        fprintf(stderr,"Xenomai: failed to allocate local TCB?!\n");
-        exit(1);
-        }
-    
-    pthread_setspecific(__vrtx_tskey,tcb);
+	if (pthread_key_create(&__vrtx_tskey, &__flush_tsd) != 0) {
+		fprintf(stderr, "Xenomai: failed to allocate new TSD key?!\n");
+		exit(1);
+	}
+
+	tcb = (TCB *) malloc(sizeof(*tcb));
+
+	if (!tcb) {
+		fprintf(stderr, "Xenomai: failed to allocate local TCB?!\n");
+		exit(1);
+	}
+
+	pthread_setspecific(__vrtx_tskey, tcb);
 }

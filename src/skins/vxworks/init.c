@@ -30,20 +30,20 @@ int __vxworks_muxid = -1;
 
 static void __flush_tsd(void *tsd)
 {
-    /* Free the task descriptor allocated by taskIdSelf(). */
-    free(tsd);
+	/* Free the task descriptor allocated by taskIdSelf(). */
+	free(tsd);
 }
 
 static __attribute__ ((constructor))
 void __init_xeno_interface(void)
 {
-    __vxworks_muxid = xeno_user_skin_init(VXWORKS_SKIN_MAGIC,
-                                          "VxWorks", "xeno_vxworks");
+	__vxworks_muxid = xeno_user_skin_init(VXWORKS_SKIN_MAGIC,
+					      "VxWorks", "xeno_vxworks");
 
-    /* Allocate a TSD key for indexing self task pointers. */
+	/* Allocate a TSD key for indexing self task pointers. */
 
-    if (pthread_key_create(&__vxworks_tskey, &__flush_tsd) != 0) {
-        fprintf(stderr, "Xenomai: failed to allocate new TSD key?!\n");
-        exit(1);
-    }
+	if (pthread_key_create(&__vxworks_tskey, &__flush_tsd) != 0) {
+		fprintf(stderr, "Xenomai: failed to allocate new TSD key?!\n");
+		exit(1);
+	}
 }

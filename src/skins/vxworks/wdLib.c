@@ -23,84 +23,86 @@ extern int __vxworks_muxid;
 
 static inline int __wdWait(WDOG_ID wdog_id, wind_wd_utarget_t *wdt)
 {
-    return XENOMAI_SKINCALL2(__vxworks_muxid, __vxworks_wd_wait, wdog_id, wdt);
+	return XENOMAI_SKINCALL2(__vxworks_muxid, __vxworks_wd_wait, wdog_id,
+				 wdt);
 }
 
 static void wdServer(WDOG_ID wdog_id)
 {
-    wind_wd_utarget_t wdt;
+	wind_wd_utarget_t wdt;
 
-    for (;;) {
-        switch (__wdWait(wdog_id, &wdt)) {
-            case 0:
-                wdt.handler(wdt.arg);
-            case -EINTR:
-                break;
-            default:           /* includes -EIDRM */
-                taskDeleteForce(0);
-        }
-    }
+	for (;;) {
+		switch (__wdWait(wdog_id, &wdt)) {
+		case 0:
+			wdt.handler(wdt.arg);
+		case -EINTR:
+			break;
+		default:	/* includes -EIDRM */
+			taskDeleteForce(0);
+		}
+	}
 }
 
 WDOG_ID wdCreate(void)
 {
-    WDOG_ID wdog_id;
-    int err;
+	WDOG_ID wdog_id;
+	int err;
 
-    err = XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_wd_create, &wdog_id);
-    if (err) {
-        errno = abs(err);
-        return 0;
-    }
+	err = XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_wd_create, &wdog_id);
+	if (err) {
+		errno = abs(err);
+		return 0;
+	}
 
-    /* Start a watchdog server in user-space which will fire the
-       handler as needed. */
+	/* Start a watchdog server in user-space which will fire the
+	   handler as needed. */
 
-    if (taskSpawn("wdserver", 0, 0, 0, (FUNCPTR) & wdServer,
-                  wdog_id, 0, 0, 0, 0, 0, 0, 0, 0, 0) == ERROR) {
-        wdCancel(wdog_id);
-        return 0;
-    }
+	if (taskSpawn("wdserver", 0, 0, 0, (FUNCPTR) & wdServer,
+		      wdog_id, 0, 0, 0, 0, 0, 0, 0, 0, 0) == ERROR) {
+		wdCancel(wdog_id);
+		return 0;
+	}
 
-    return wdog_id;
+	return wdog_id;
 }
 
 STATUS wdDelete(WDOG_ID wdog_id)
 {
-    int err;
+	int err;
 
-    err = XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_wd_delete, wdog_id);
-    if (err) {
-        errno = abs(err);
-        return ERROR;
-    }
+	err = XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_wd_delete, wdog_id);
+	if (err) {
+		errno = abs(err);
+		return ERROR;
+	}
 
-    return OK;
+	return OK;
 }
 
 STATUS wdStart(WDOG_ID wdog_id, int timeout, wind_timer_t handler, long arg)
 {
-    int err;
+	int err;
 
-    err = XENOMAI_SKINCALL4(__vxworks_muxid,
-                            __vxworks_wd_start, wdog_id, timeout, handler, arg);
-    if (err) {
-        errno = abs(err);
-        return ERROR;
-    }
+	err = XENOMAI_SKINCALL4(__vxworks_muxid,
+				__vxworks_wd_start, wdog_id, timeout, handler,
+				arg);
+	if (err) {
+		errno = abs(err);
+		return ERROR;
+	}
 
-    return OK;
+	return OK;
 }
 
 STATUS wdCancel(WDOG_ID wdog_id)
 {
-    int err;
+	int err;
 
-    err = XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_wd_cancel, wdog_id);
-    if (err) {
-        errno = abs(err);
-        return ERROR;
-    }
+	err = XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_wd_cancel, wdog_id);
+	if (err) {
+		errno = abs(err);
+		return ERROR;
+	}
 
-    return OK;
+	return OK;
 }

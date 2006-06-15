@@ -24,50 +24,34 @@ int sc_mcreate(unsigned int opt, int *errp)
 {
 	int mid = -1;
 
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-							  __vrtx_mcreate,
-							  opt,
-							  &mid);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_mcreate, opt, &mid);
 	return mid;
 }
 
-void sc_mdelete (int mid, int opt, int *errp)
+void sc_mdelete(int mid, int opt, int *errp)
 {
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-							  __vrtx_mdelete,
-							  mid,
-							  opt);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_mdelete, mid, opt);
 }
 
-void sc_mpost (int mid, int *errp)
+void sc_mpost(int mid, int *errp)
 {
-    *errp = XENOMAI_SKINCALL1(__vrtx_muxid,
-							  __vrtx_mpost,
-							  mid);
+	*errp = XENOMAI_SKINCALL1(__vrtx_muxid, __vrtx_mpost, mid);
 }
 
-void sc_maccept (int mid, int *errp)
+void sc_maccept(int mid, int *errp)
 {
-    *errp = XENOMAI_SKINCALL1(__vrtx_muxid,
-							  __vrtx_maccept,
-							  mid);
+	*errp = XENOMAI_SKINCALL1(__vrtx_muxid, __vrtx_maccept, mid);
 }
 
-void sc_mpend (int mid, unsigned long timeout, int *errp)
+void sc_mpend(int mid, unsigned long timeout, int *errp)
 {
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-							  __vrtx_mpend,
-							  mid,
-							  timeout);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_mpend, mid, timeout);
 }
 
-int sc_minquiry (int mid, int *errp)
+int sc_minquiry(int mid, int *errp)
 {
 	int status = 0;
 
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-							  __vrtx_minquiry,
-							  mid,
-							  &status);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_minquiry, mid, &status);
 	return status;
 }

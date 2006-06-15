@@ -24,74 +24,74 @@ extern int __vxworks_muxid;
 
 MSG_Q_ID msgQCreate(int nb_msgs, int length, int flags)
 {
-    MSG_Q_ID qid;
-    int err;
+	MSG_Q_ID qid;
+	int err;
 
-    err = XENOMAI_SKINCALL4(__vxworks_muxid,
-                            __vxworks_msgq_create,
-                            nb_msgs, length, flags, &qid);
-    if (err) {
-        errno = abs(err);
-        return 0;
-    }
+	err = XENOMAI_SKINCALL4(__vxworks_muxid,
+				__vxworks_msgq_create,
+				nb_msgs, length, flags, &qid);
+	if (err) {
+		errno = abs(err);
+		return 0;
+	}
 
-    return qid;
+	return qid;
 }
 
 STATUS msgQDelete(MSG_Q_ID qid)
 {
-    int err;
+	int err;
 
-    err = XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_msgq_delete, qid);
-    if (err) {
-        errno = abs(err);
-        return ERROR;
-    }
+	err = XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_msgq_delete, qid);
+	if (err) {
+		errno = abs(err);
+		return ERROR;
+	}
 
-    return OK;
+	return OK;
 }
 
 int msgQNumMsgs(MSG_Q_ID qid)
 {
-    int err, nummsgs;
+	int err, nummsgs;
 
-    err = XENOMAI_SKINCALL2(__vxworks_muxid,
-                            __vxworks_msgq_nummsgs, qid, &nummsgs);
-    if (err) {
-        errno = abs(err);
-        return ERROR;
-    }
+	err = XENOMAI_SKINCALL2(__vxworks_muxid,
+				__vxworks_msgq_nummsgs, qid, &nummsgs);
+	if (err) {
+		errno = abs(err);
+		return ERROR;
+	}
 
-    return nummsgs;
+	return nummsgs;
 }
 
 int msgQReceive(MSG_Q_ID qid, char *buf, UINT nbytes, int timeout)
 {
-    int err, rbytes;
+	int err, rbytes;
 
-    err = XENOMAI_SKINCALL5(__vxworks_muxid,
-                            __vxworks_msgq_receive,
-                            qid, buf, nbytes, timeout, &rbytes);
-    if (err) {
-        errno = abs(err);
-        return ERROR;
-    }
+	err = XENOMAI_SKINCALL5(__vxworks_muxid,
+				__vxworks_msgq_receive,
+				qid, buf, nbytes, timeout, &rbytes);
+	if (err) {
+		errno = abs(err);
+		return ERROR;
+	}
 
-    return rbytes;
+	return rbytes;
 }
 
 STATUS msgQSend(MSG_Q_ID qid, const char *buf, UINT nbytes, int timeout,
-                int prio)
+		int prio)
 {
-    int err;
+	int err;
 
-    err = XENOMAI_SKINCALL5(__vxworks_muxid,
-                            __vxworks_msgq_send,
-                            qid, buf, nbytes, timeout, prio);
-    if (err) {
-        errno = abs(err);
-        return ERROR;
-    }
+	err = XENOMAI_SKINCALL5(__vxworks_muxid,
+				__vxworks_msgq_send,
+				qid, buf, nbytes, timeout, prio);
+	if (err) {
+		errno = abs(err);
+		return ERROR;
+	}
 
-    return OK;
+	return OK;
 }

@@ -22,13 +22,13 @@ extern int __vxworks_muxid;
 
 ULONG tickGet(void)
 {
-    ULONG ticks;
+	ULONG ticks;
 
-    XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_tick_get, &ticks);
-    return ticks;
+	XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_tick_get, &ticks);
+	return ticks;
 }
 
 void tickSet(ULONG ticks)
 {
-    XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_tick_set, ticks);
+	XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_tick_set, ticks);
 }

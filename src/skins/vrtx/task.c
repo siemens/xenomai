@@ -35,211 +35,178 @@ extern int __vrtx_muxid;
 /* Public Xenomai interface. */
 
 struct vrtx_task_iargs {
-    int tid;
-    int *tid_r;
-    int prio;
-    int mode;
-    void (*entry)(void *);
-    void *param;
-    xncompletion_t *completionp;
+	int tid;
+	int *tid_r;
+	int prio;
+	int mode;
+	void (*entry) (void *);
+	void *param;
+	xncompletion_t *completionp;
 };
 
-static void vrtx_task_sigharden (int sig)
+static void vrtx_task_sigharden(int sig)
 {
-    XENOMAI_SYSCALL1(__xn_sys_migrate,XENOMAI_XENO_DOMAIN);
+	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 }
 
-static void *vrtx_task_trampoline (void *cookie)
+static void *vrtx_task_trampoline(void *cookie)
 {
-    struct vrtx_task_iargs *iargs = (struct vrtx_task_iargs *)cookie, _iargs;
-    struct vrtx_arg_bulk bulk;
-    struct sched_param param;
-    long err;
+	struct vrtx_task_iargs *iargs =
+	    (struct vrtx_task_iargs *)cookie, _iargs;
+	struct vrtx_arg_bulk bulk;
+	struct sched_param param;
+	long err;
 
-    /* Backup the arg struct, it might vanish after completion. */
-    memcpy(&_iargs,iargs,sizeof(_iargs));
+	/* Backup the arg struct, it might vanish after completion. */
+	memcpy(&_iargs, iargs, sizeof(_iargs));
 
-    /* Ok, this looks like weird, but we need this. */
-    param.sched_priority = sched_get_priority_max(SCHED_FIFO);
-    pthread_setschedparam(pthread_self(),SCHED_FIFO,&param);
+	/* Ok, this looks like weird, but we need this. */
+	param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+	pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 
-    /* vrtx_task_delete requires asynchronous cancellation */
-    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+	/* vrtx_task_delete requires asynchronous cancellation */
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-    signal(SIGCHLD,&vrtx_task_sigharden);
+	signal(SIGCHLD, &vrtx_task_sigharden);
 
-    bulk.a1 = (u_long)iargs->tid;
-    bulk.a2 = (u_long)iargs->prio;
-    bulk.a3 = (u_long)iargs->mode;
+	bulk.a1 = (u_long)iargs->tid;
+	bulk.a2 = (u_long)iargs->prio;
+	bulk.a3 = (u_long)iargs->mode;
 
-    err = XENOMAI_SKINCALL3(__vrtx_muxid,
-			    __vrtx_tecreate,
-			    &bulk,
-			    iargs->tid_r,
-			    iargs->completionp);
-    if (err)
-	goto fail;
+	err = XENOMAI_SKINCALL3(__vrtx_muxid,
+				__vrtx_tecreate,
+				&bulk, iargs->tid_r, iargs->completionp);
+	if (err)
+		goto fail;
 
-    /* Wait on the barrier for the task to be started. The barrier
-       could be released in order to process Linux signals while the
-       Xenomai shadow is still dormant; in such a case, resume wait. */
+	/* Wait on the barrier for the task to be started. The barrier
+	   could be released in order to process Linux signals while the
+	   Xenomai shadow is still dormant; in such a case, resume wait. */
 
-    do
-	err = XENOMAI_SYSCALL2(__xn_sys_barrier,NULL,NULL);
-    while (err == -EINTR);
+	do
+		err = XENOMAI_SYSCALL2(__xn_sys_barrier, NULL, NULL);
+	while (err == -EINTR);
 
-    if (!err)
-	_iargs.entry(_iargs.param);
+	if (!err)
+		_iargs.entry(_iargs.param);
 
- fail:
+      fail:
 
-    pthread_exit((void *)err);
+	pthread_exit((void *)err);
 }
 
-int sc_tecreate (void (*entry)(void *),
-		 int tid,
-		 int prio,
-		 int mode,
-		 u_long ustacksz,
-		 u_long sstacksz __attribute__ ((unused)),
-		 char *paddr,
-		 u_long psize,
-		 int *errp)
-{
-    struct vrtx_task_iargs iargs;
-    xncompletion_t completion;
-    struct sched_param param;
-    pthread_attr_t thattr;
-    pthread_t thid;
-    int err, tid_r;
-
-    /* Migrate this thread to the Linux domain since we are about to
-       issue a series of regular kernel syscalls in order to create
-       the new Linux thread, which in turn will be mapped to a VRTX
-       shadow. */
-
-    XENOMAI_SYSCALL1(__xn_sys_migrate,XENOMAI_LINUX_DOMAIN);
-
-    completion.syncflag = 0;
-    completion.pid = -1;
-
-    iargs.tid = tid;
-    iargs.tid_r = &tid_r;
-    iargs.prio = prio;
-    iargs.mode = mode;
-    iargs.entry = entry;
-    iargs.param = paddr;
-    iargs.completionp = &completion;
-
-    pthread_attr_init(&thattr);
-
-    if (ustacksz == 0)
-	ustacksz = PTHREAD_STACK_MIN * 4;
-    else if (ustacksz < PTHREAD_STACK_MIN)
-	ustacksz = PTHREAD_STACK_MIN;
-
-    pthread_attr_setstacksize(&thattr,ustacksz);
-    pthread_attr_setdetachstate(&thattr,PTHREAD_CREATE_DETACHED);
-    pthread_attr_setschedpolicy(&thattr,SCHED_FIFO);
-    param.sched_priority = sched_get_priority_max(SCHED_FIFO);
-    pthread_attr_setschedparam(&thattr,&param);
-
-    err = pthread_create(&thid,&thattr,&vrtx_task_trampoline,&iargs);
-
-    if (!err)
-	/* Wait for sync with vrtx_task_trampoline() */
-	err = XENOMAI_SYSCALL1(__xn_sys_completion,&completion);
-
-    /* POSIX codes returned by internal calls do not conflict with
-       VRTX ones, so both can be returned through the error
-       pointer. */
-
-    *errp = err;
-
-    return tid_r;
-}
-
-int sc_tcreate (void (*entry)(void*),
+int sc_tecreate(void (*entry) (void *),
 		int tid,
 		int prio,
-		int *errp)
+		int mode,
+		u_long ustacksz,
+		u_long sstacksz __attribute__ ((unused)),
+		char *paddr, u_long psize, int *errp)
 {
-    return sc_tecreate(entry,
-		       tid,
-		       prio,
-		       0,
-		       0,
-		       0,
-		       NULL,
-		       0,
-		       errp);
-    /* Eh, this one was easy. */
+	struct vrtx_task_iargs iargs;
+	xncompletion_t completion;
+	struct sched_param param;
+	pthread_attr_t thattr;
+	pthread_t thid;
+	int err, tid_r;
+
+	/* Migrate this thread to the Linux domain since we are about to
+	   issue a series of regular kernel syscalls in order to create
+	   the new Linux thread, which in turn will be mapped to a VRTX
+	   shadow. */
+
+	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_LINUX_DOMAIN);
+
+	completion.syncflag = 0;
+	completion.pid = -1;
+
+	iargs.tid = tid;
+	iargs.tid_r = &tid_r;
+	iargs.prio = prio;
+	iargs.mode = mode;
+	iargs.entry = entry;
+	iargs.param = paddr;
+	iargs.completionp = &completion;
+
+	pthread_attr_init(&thattr);
+
+	if (ustacksz == 0)
+		ustacksz = PTHREAD_STACK_MIN * 4;
+	else if (ustacksz < PTHREAD_STACK_MIN)
+		ustacksz = PTHREAD_STACK_MIN;
+
+	pthread_attr_setstacksize(&thattr, ustacksz);
+	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
+	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
+	param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+	pthread_attr_setschedparam(&thattr, &param);
+
+	err = pthread_create(&thid, &thattr, &vrtx_task_trampoline, &iargs);
+
+	if (!err)
+		/* Wait for sync with vrtx_task_trampoline() */
+		err = XENOMAI_SYSCALL1(__xn_sys_completion, &completion);
+
+	/* POSIX codes returned by internal calls do not conflict with
+	   VRTX ones, so both can be returned through the error
+	   pointer. */
+
+	*errp = err;
+
+	return tid_r;
 }
 
-void sc_tdelete (int tid, int opt, int *errp)
+int sc_tcreate(void (*entry) (void *), int tid, int prio, int *errp)
 {
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-			      __vrtx_tdelete,
-			      tid,
-			      opt);
+	return sc_tecreate(entry, tid, prio, 0, 0, 0, NULL, 0, errp);
+	/* Eh, this one was easy. */
 }
 
-void sc_tpriority (int tid, int prio, int *errp)
+void sc_tdelete(int tid, int opt, int *errp)
 {
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-			      __vrtx_tpriority,
-			      tid,
-			      prio);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_tdelete, tid, opt);
 }
 
-void sc_tresume (int tid, int opt, int *errp)
+void sc_tpriority(int tid, int prio, int *errp)
 {
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-			      __vrtx_tresume,
-			      tid,
-			      opt);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_tpriority, tid, prio);
 }
 
-void sc_tsuspend (int tid, int opt, int *errp)
+void sc_tresume(int tid, int opt, int *errp)
 {
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-			      __vrtx_tsuspend,
-			      tid,
-			      opt);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_tresume, tid, opt);
 }
 
-TCB *sc_tinquiry (int pinfo[], int tid, int *errp)
+void sc_tsuspend(int tid, int opt, int *errp)
 {
-    TCB *tcb;
-
-    tcb = (TCB *)pthread_getspecific(__vrtx_tskey); /* Cannot fail. */
-
-    *errp = XENOMAI_SKINCALL3(__vrtx_muxid,
-			      __vrtx_tinquiry,
-			      pinfo,
-			      tcb,
-			      tid);
-    if (*errp)
-	return NULL;
-
-    return tcb;
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_tsuspend, tid, opt);
 }
 
-void sc_tslice (unsigned short ticks)
+TCB *sc_tinquiry(int pinfo[], int tid, int *errp)
 {
-    XENOMAI_SKINCALL1(__vrtx_muxid,
-		      __vrtx_tslice,
-		      ticks);
+	TCB *tcb;
+
+	tcb = (TCB *) pthread_getspecific(__vrtx_tskey);	/* Cannot fail. */
+
+	*errp = XENOMAI_SKINCALL3(__vrtx_muxid,
+				  __vrtx_tinquiry, pinfo, tcb, tid);
+	if (*errp)
+		return NULL;
+
+	return tcb;
 }
 
-void sc_lock (void)
+void sc_tslice(unsigned short ticks)
 {
-    XENOMAI_SKINCALL0(__vrtx_muxid,
-		      __vrtx_lock);
+	XENOMAI_SKINCALL1(__vrtx_muxid, __vrtx_tslice, ticks);
 }
 
-void sc_unlock (void)
+void sc_lock(void)
 {
-    XENOMAI_SKINCALL0(__vrtx_muxid,
-		      __vrtx_unlock);
+	XENOMAI_SKINCALL0(__vrtx_muxid, __vrtx_lock);
+}
+
+void sc_unlock(void)
+{
+	XENOMAI_SKINCALL0(__vrtx_muxid, __vrtx_unlock);
 }

@@ -23,35 +23,36 @@ extern int __native_muxid;
 
 int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 {
-    return XENOMAI_SKINCALL4(__native_muxid,
-                             __native_pipe_create, pipe, name, minor, poolsize);
+	return XENOMAI_SKINCALL4(__native_muxid,
+				 __native_pipe_create, pipe, name, minor,
+				 poolsize);
 }
 
 int rt_pipe_bind(RT_PIPE *pipe, const char *name, RTIME timeout)
 {
-    return XENOMAI_SKINCALL3(__native_muxid,
-                             __native_pipe_bind, pipe, name, &timeout);
+	return XENOMAI_SKINCALL3(__native_muxid,
+				 __native_pipe_bind, pipe, name, &timeout);
 }
 
 int rt_pipe_delete(RT_PIPE *pipe)
 {
-    return XENOMAI_SKINCALL1(__native_muxid, __native_pipe_delete, pipe);
+	return XENOMAI_SKINCALL1(__native_muxid, __native_pipe_delete, pipe);
 }
 
 ssize_t rt_pipe_read(RT_PIPE *pipe, void *buf, size_t size, RTIME timeout)
 {
-    return XENOMAI_SKINCALL4(__native_muxid,
-                             __native_pipe_read, pipe, buf, size, &timeout);
+	return XENOMAI_SKINCALL4(__native_muxid,
+				 __native_pipe_read, pipe, buf, size, &timeout);
 }
 
 ssize_t rt_pipe_write(RT_PIPE *pipe, const void *buf, size_t size, int mode)
 {
-    return XENOMAI_SKINCALL4(__native_muxid,
-                             __native_pipe_write, pipe, buf, size, mode);
+	return XENOMAI_SKINCALL4(__native_muxid,
+				 __native_pipe_write, pipe, buf, size, mode);
 }
 
 ssize_t rt_pipe_stream(RT_PIPE *pipe, const void *buf, size_t size)
 {
-    return XENOMAI_SKINCALL3(__native_muxid,
-                             __native_pipe_stream, pipe, buf, size);
+	return XENOMAI_SKINCALL3(__native_muxid,
+				 __native_pipe_stream, pipe, buf, size);
 }

@@ -23,33 +23,34 @@ extern int __native_muxid;
 
 int rt_alarm_create(RT_ALARM *alarm, const char *name)
 {
-    return XENOMAI_SKINCALL2(__native_muxid,
-                             __native_alarm_create, alarm, name);
+	return XENOMAI_SKINCALL2(__native_muxid,
+				 __native_alarm_create, alarm, name);
 }
 
 int rt_alarm_delete(RT_ALARM *alarm)
 {
-    return XENOMAI_SKINCALL1(__native_muxid, __native_alarm_delete, alarm);
+	return XENOMAI_SKINCALL1(__native_muxid, __native_alarm_delete, alarm);
 }
 
 int rt_alarm_wait(RT_ALARM *alarm)
 {
-    return XENOMAI_SKINCALL1(__native_muxid, __native_alarm_wait, alarm);
+	return XENOMAI_SKINCALL1(__native_muxid, __native_alarm_wait, alarm);
 }
 
 int rt_alarm_start(RT_ALARM *alarm, RTIME value, RTIME interval)
 {
-    return XENOMAI_SKINCALL3(__native_muxid,
-                             __native_alarm_start, alarm, &value, &interval);
+	return XENOMAI_SKINCALL3(__native_muxid,
+				 __native_alarm_start, alarm, &value,
+				 &interval);
 }
 
 int rt_alarm_stop(RT_ALARM *alarm)
 {
-    return XENOMAI_SKINCALL1(__native_muxid, __native_alarm_stop, alarm);
+	return XENOMAI_SKINCALL1(__native_muxid, __native_alarm_stop, alarm);
 }
 
 int rt_alarm_inquire(RT_ALARM *alarm, RT_ALARM_INFO *info)
 {
-    return XENOMAI_SKINCALL2(__native_muxid,
-                             __native_alarm_inquire, alarm, info);
+	return XENOMAI_SKINCALL2(__native_muxid,
+				 __native_alarm_inquire, alarm, info);
 }

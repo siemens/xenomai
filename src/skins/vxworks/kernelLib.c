@@ -22,11 +22,11 @@ extern int __vxworks_muxid;
 
 STATUS kernelTimeSlice(int ticks)
 {
-    XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_kernel_timeslice, ticks);
-    return OK;
+	XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_kernel_timeslice, ticks);
+	return OK;
 }
 
 const char *kernelVersion(void)
 {
-    return "VxWorks/VM version " VXWORKS_SKIN_VERSION_STRING;
+	return "VxWorks/VM version " VXWORKS_SKIN_VERSION_STRING;
 }
