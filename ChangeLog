@@ -1,3 +1,8 @@
+2006-06-15  Alexis Berlemont  <alexis.berlemont@free.fr>
+
+	* ksrc/skins/rtdm/drvlib.c (rtdm_mmap_buffer): Add support for
+	mapping vmalloc'ed memory.
+
 2006-06-13  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
 
 	* ksrc/nucleus/synch.c (xnsynch_sleep_on): Handle stolen ownership
