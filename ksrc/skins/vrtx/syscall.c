@@ -37,12 +37,12 @@ static int __muxid;
 #if 0
 static vrtxtask_t *__vrtx_task_current(struct task_struct *curr)
 {
-    xnthread_t *thread = xnshadow_thread(curr);
+	xnthread_t *thread = xnshadow_thread(curr);
 
-    if (!thread || xnthread_get_magic(thread) != VRTX_SKIN_MAGIC)
-        return NULL;
+	if (!thread || xnthread_get_magic(thread) != VRTX_SKIN_MAGIC)
+		return NULL;
 
-    return thread2vrtxtask(thread); /* Convert TCB pointers. */
+	return thread2vrtxtask(thread);	/* Convert TCB pointers. */
 }
 #endif
 
@@ -59,54 +59,57 @@ static vrtxtask_t *__vrtx_task_current(struct task_struct *curr)
 
 static int __sc_tecreate(struct task_struct *curr, struct pt_regs *regs)
 {
-    xncompletion_t __user *u_completion;
-    struct vrtx_arg_bulk bulk;
-    int prio, mode, tid, err;
-    vrtxtask_t *task;
+	xncompletion_t __user *u_completion;
+	struct vrtx_arg_bulk bulk;
+	int prio, mode, tid, err;
+	vrtxtask_t *task;
 
-    if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(bulk)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(bulk)))
+		return -EFAULT;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(tid)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(tid)))
+		return -EFAULT;
 
-    __xn_copy_from_user(curr, &bulk, (void __user *)__xn_reg_arg1(regs),
-                        sizeof(bulk));
+	__xn_copy_from_user(curr, &bulk, (void __user *)__xn_reg_arg1(regs),
+			    sizeof(bulk));
 
-    /* Suggested task id. */
-    tid = bulk.a1;
-    /* Task priority. */
-    prio = bulk.a2;
-    /* Task mode. */
-    mode = bulk.a3 | 0x100;
+	/* Suggested task id. */
+	tid = bulk.a1;
+	/* Task priority. */
+	prio = bulk.a2;
+	/* Task mode. */
+	mode = bulk.a3 | 0x100;
 
-    /* Completion descriptor our parent thread is pending on. */
-    u_completion = (xncompletion_t __user *)__xn_reg_arg3(regs);
+	/* Completion descriptor our parent thread is pending on. */
+	u_completion = (xncompletion_t __user *)__xn_reg_arg3(regs);
 
-    task = xnmalloc(sizeof(*task));
+	task = xnmalloc(sizeof(*task));
 
-    if (!task) {
-        err = ER_TCB;
-        goto done;
-    }
+	if (!task) {
+		err = ER_TCB;
+		goto done;
+	}
 
-    tid = sc_tecreate_inner(task, NULL, tid, prio, mode, 0, 0, NULL, 0, &err);
+	tid =
+	    sc_tecreate_inner(task, NULL, tid, prio, mode, 0, 0, NULL, 0, &err);
 
-    if (tid < 0) {
-        if (u_completion)
-            xnshadow_signal_completion(u_completion, err);
-    } else {
-        __xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &tid,
-                          sizeof(tid));
-        err = xnshadow_map(&task->threadbase, u_completion);
-    }
+	if (tid < 0) {
+		if (u_completion)
+			xnshadow_signal_completion(u_completion, err);
+	} else {
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
+				  &tid, sizeof(tid));
+		err = xnshadow_map(&task->threadbase, u_completion);
+	}
 
-    if (err)
-        xnfree(task);
+	if (err)
+		xnfree(task);
 
-done:
+      done:
 
-    return err;
+	return err;
 }
 
 /*
@@ -115,13 +118,13 @@ done:
 
 static int __sc_tdelete(struct task_struct *curr, struct pt_regs *regs)
 {
-    int err, tid, opt;
+	int err, tid, opt;
 
-    tid = __xn_reg_arg1(regs);
-    opt = __xn_reg_arg2(regs);
-    sc_tdelete(tid, opt, &err);
+	tid = __xn_reg_arg1(regs);
+	opt = __xn_reg_arg2(regs);
+	sc_tdelete(tid, opt, &err);
 
-    return err;
+	return err;
 }
 
 /*
@@ -130,13 +133,13 @@ static int __sc_tdelete(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_tpriority(struct task_struct *curr, struct pt_regs *regs)
 {
-    int err, tid, prio;
+	int err, tid, prio;
 
-    tid = __xn_reg_arg1(regs);
-    prio = __xn_reg_arg2(regs);
-    sc_tpriority(tid, prio, &err);
+	tid = __xn_reg_arg1(regs);
+	prio = __xn_reg_arg2(regs);
+	sc_tpriority(tid, prio, &err);
 
-    return err;
+	return err;
 }
 
 /*
@@ -145,13 +148,13 @@ static int __sc_tpriority(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_tresume(struct task_struct *curr, struct pt_regs *regs)
 {
-    int err, tid, opt;
+	int err, tid, opt;
 
-    tid = __xn_reg_arg1(regs);
-    opt = __xn_reg_arg2(regs);
-    sc_tpriority(tid, opt, &err);
+	tid = __xn_reg_arg1(regs);
+	opt = __xn_reg_arg2(regs);
+	sc_tpriority(tid, opt, &err);
 
-    return err;
+	return err;
 }
 
 /*
@@ -160,13 +163,13 @@ static int __sc_tresume(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_tsuspend(struct task_struct *curr, struct pt_regs *regs)
 {
-    int err, tid, opt;
+	int err, tid, opt;
 
-    tid = __xn_reg_arg1(regs);
-    opt = __xn_reg_arg2(regs);
-    sc_tsuspend(tid, opt, &err);
+	tid = __xn_reg_arg1(regs);
+	opt = __xn_reg_arg2(regs);
+	sc_tsuspend(tid, opt, &err);
 
-    return err;
+	return err;
 }
 
 /*
@@ -175,12 +178,12 @@ static int __sc_tsuspend(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_tslice(struct task_struct *curr, struct pt_regs *regs)
 {
-    unsigned short ticks;
+	unsigned short ticks;
 
-    ticks = (unsigned short)__xn_reg_arg1(regs);
-    sc_tslice(ticks);
+	ticks = (unsigned short)__xn_reg_arg1(regs);
+	sc_tslice(ticks);
 
-    return 0;
+	return 0;
 }
 
 /*
@@ -189,26 +192,28 @@ static int __sc_tslice(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_tinquiry(struct task_struct *curr, struct pt_regs *regs)
 {
-    int err, tid, pinfo[3];
-    TCB *tcb;
+	int err, tid, pinfo[3];
+	TCB *tcb;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pinfo)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pinfo)))
+		return -EFAULT;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(*tcb)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(*tcb)))
+		return -EFAULT;
 
-    tid = __xn_reg_arg3(regs);
-    tcb = sc_tinquiry(pinfo, tid, &err);
+	tid = __xn_reg_arg3(regs);
+	tcb = sc_tinquiry(pinfo, tid, &err);
 
-    if (!err) {
-        __xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), pinfo,
-                          sizeof(pinfo));
-        __xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), tcb,
-                          sizeof(*tcb));
-    }
+	if (!err) {
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs),
+				  pinfo, sizeof(pinfo));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), tcb,
+				  sizeof(*tcb));
+	}
 
-    return err;
+	return err;
 }
 
 /*
@@ -217,8 +222,8 @@ static int __sc_tinquiry(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_lock(struct task_struct *curr, struct pt_regs *regs)
 {
-    sc_lock();
-    return 0;
+	sc_lock();
+	return 0;
 }
 
 /*
@@ -227,8 +232,8 @@ static int __sc_lock(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_unlock(struct task_struct *curr, struct pt_regs *regs)
 {
-    sc_unlock();
-    return 0;
+	sc_unlock();
+	return 0;
 }
 
 /*
@@ -237,8 +242,8 @@ static int __sc_unlock(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_delay(struct task_struct *curr, struct pt_regs *regs)
 {
-    sc_delay(__xn_reg_arg1(regs));
-    return 0;
+	sc_delay(__xn_reg_arg1(regs));
+	return 0;
 }
 
 /*
@@ -247,18 +252,19 @@ static int __sc_delay(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_adelay(struct task_struct *curr, struct pt_regs *regs)
 {
-    struct timespec time;
-    int err;
+	struct timespec time;
+	int err;
 
-    if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(time)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(time)))
+		return -EFAULT;
 
-    __xn_copy_from_user(curr, &time, (void __user *)__xn_reg_arg1(regs),
-                        sizeof(time));
+	__xn_copy_from_user(curr, &time, (void __user *)__xn_reg_arg1(regs),
+			    sizeof(time));
 
-    sc_adelay(time,&err);
+	sc_adelay(time, &err);
 
-    return err;
+	return err;
 }
 
 /*
@@ -267,8 +273,8 @@ static int __sc_adelay(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_stime(struct task_struct *curr, struct pt_regs *regs)
 {
-    sc_stime(__xn_reg_arg1(regs));
-    return 0;
+	sc_stime(__xn_reg_arg1(regs));
+	return 0;
 }
 
 /*
@@ -279,14 +285,15 @@ static int __sc_gtime(struct task_struct *curr, struct pt_regs *regs)
 {
 	unsigned long ticks;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(ticks)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(ticks)))
+		return -EFAULT;
 
-    ticks = sc_gtime();
+	ticks = sc_gtime();
 
 	__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &ticks,
-					  sizeof(ticks));
-    return 0;
+			  sizeof(ticks));
+	return 0;
 }
 
 /*
@@ -295,21 +302,22 @@ static int __sc_gtime(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_sclock(struct task_struct *curr, struct pt_regs *regs)
 {
-    struct timespec time;
+	struct timespec time;
 	unsigned long ns;
 	int err;
 
-    if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(time)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(time)))
+		return -EFAULT;
 
-    __xn_copy_from_user(curr, &time, (void __user *)__xn_reg_arg1(regs),
-                        sizeof(time));
+	__xn_copy_from_user(curr, &time, (void __user *)__xn_reg_arg1(regs),
+			    sizeof(time));
 
 	ns = __xn_reg_arg1(regs);
 
-	sc_sclock(time,ns,&err);
+	sc_sclock(time, ns, &err);
 
-    return err;
+	return err;
 }
 
 /*
@@ -318,26 +326,28 @@ static int __sc_sclock(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_gclock(struct task_struct *curr, struct pt_regs *regs)
 {
-    struct timespec time;
+	struct timespec time;
 	unsigned long ns;
 	int err;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(time)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(time)))
+		return -EFAULT;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(ns)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(ns)))
+		return -EFAULT;
 
-	sc_gclock(&time,&ns,&err);
+	sc_gclock(&time, &ns, &err);
 
 	if (!err) {
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &time,
-						  sizeof(time));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs),
+				  &time, sizeof(time));
 		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &ns,
-						  sizeof(ns));
+				  sizeof(ns));
 	}
 
-    return err;
+	return err;
 }
 
 /*
@@ -348,14 +358,15 @@ static int __sc_mcreate(struct task_struct *curr, struct pt_regs *regs)
 {
 	int opt = __xn_reg_arg1(regs), mid, err;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(mid)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(mid)))
+		return -EFAULT;
 
-	mid = sc_mcreate(opt,&err);
+	mid = sc_mcreate(opt, &err);
 
 	if (!err)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &mid,
-						  sizeof(mid));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
+				  &mid, sizeof(mid));
 	return err;
 }
 
@@ -369,7 +380,7 @@ static int __sc_mdelete(struct task_struct *curr, struct pt_regs *regs)
 
 	mid = __xn_reg_arg1(regs);
 	opt = __xn_reg_arg2(regs);
-	sc_mdelete(mid,opt,&err);
+	sc_mdelete(mid, opt, &err);
 
 	return err;
 }
@@ -383,7 +394,7 @@ static int __sc_mpost(struct task_struct *curr, struct pt_regs *regs)
 	int mid, err;
 
 	mid = __xn_reg_arg1(regs);
-	sc_mpost(mid,&err);
+	sc_mpost(mid, &err);
 
 	return err;
 }
@@ -397,7 +408,7 @@ static int __sc_maccept(struct task_struct *curr, struct pt_regs *regs)
 	int mid, err;
 
 	mid = __xn_reg_arg1(regs);
-	sc_maccept(mid,&err);
+	sc_maccept(mid, &err);
 
 	return err;
 }
@@ -413,7 +424,7 @@ static int __sc_mpend(struct task_struct *curr, struct pt_regs *regs)
 
 	mid = __xn_reg_arg1(regs);
 	timeout = __xn_reg_arg2(regs);
-	sc_mpend(mid,timeout,&err);
+	sc_mpend(mid, timeout, &err);
 
 	return err;
 }
@@ -426,15 +437,16 @@ static int __sc_minquiry(struct task_struct *curr, struct pt_regs *regs)
 {
 	int mid, status, err;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(status)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(status)))
+		return -EFAULT;
 
 	mid = __xn_reg_arg1(regs);
-	status = sc_minquiry(mid,&err);
+	status = sc_minquiry(mid, &err);
 
 	if (!err)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &status,
-						  sizeof(status));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
+				  &status, sizeof(status));
 	return err;
 }
 
@@ -444,19 +456,20 @@ static int __sc_minquiry(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_qecreate(struct task_struct *curr, struct pt_regs *regs)
 {
-    int qid, qsize, opt, err;
+	int qid, qsize, opt, err;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(qid)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(qid)))
+		return -EFAULT;
 
-    qid = __xn_reg_arg1(regs);
-    qsize = __xn_reg_arg2(regs);
-    opt = __xn_reg_arg3(regs);
-    qid = sc_qecreate(qid,qsize,opt,&err);
+	qid = __xn_reg_arg1(regs);
+	qsize = __xn_reg_arg2(regs);
+	opt = __xn_reg_arg3(regs);
+	qid = sc_qecreate(qid, qsize, opt, &err);
 
 	if (!err)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg4(regs), &qid,
-						  sizeof(qid));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg4(regs),
+				  &qid, sizeof(qid));
 	return err;
 }
 
@@ -466,11 +479,11 @@ static int __sc_qecreate(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_qdelete(struct task_struct *curr, struct pt_regs *regs)
 {
-    int qid, opt, err;
+	int qid, opt, err;
 
-    qid = __xn_reg_arg1(regs);
-    opt = __xn_reg_arg2(regs);
-    sc_qdelete(qid,opt,&err);
+	qid = __xn_reg_arg1(regs);
+	opt = __xn_reg_arg2(regs);
+	sc_qdelete(qid, opt, &err);
 
 	return err;
 }
@@ -481,12 +494,12 @@ static int __sc_qdelete(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_qpost(struct task_struct *curr, struct pt_regs *regs)
 {
-    int qid, err;
+	int qid, err;
 	char *msg;
 
-    qid = __xn_reg_arg1(regs);
-    msg = (char *)__xn_reg_arg2(regs);
-    sc_qpost(qid,msg,&err);
+	qid = __xn_reg_arg1(regs);
+	msg = (char *)__xn_reg_arg2(regs);
+	sc_qpost(qid, msg, &err);
 
 	return err;
 }
@@ -497,12 +510,12 @@ static int __sc_qpost(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_qbrdcst(struct task_struct *curr, struct pt_regs *regs)
 {
-    int qid, err;
+	int qid, err;
 	char *msg;
 
-    qid = __xn_reg_arg1(regs);
-    msg = (char *)__xn_reg_arg2(regs);
-    sc_qbrdcst(qid,msg,&err);
+	qid = __xn_reg_arg1(regs);
+	msg = (char *)__xn_reg_arg2(regs);
+	sc_qbrdcst(qid, msg, &err);
 
 	return err;
 }
@@ -513,12 +526,12 @@ static int __sc_qbrdcst(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_qjam(struct task_struct *curr, struct pt_regs *regs)
 {
-    int qid, err;
+	int qid, err;
 	char *msg;
 
-    qid = __xn_reg_arg1(regs);
-    msg = (char *)__xn_reg_arg2(regs);
-    sc_qjam(qid,msg,&err);
+	qid = __xn_reg_arg1(regs);
+	msg = (char *)__xn_reg_arg2(regs);
+	sc_qjam(qid, msg, &err);
 
 	return err;
 }
@@ -530,19 +543,20 @@ static int __sc_qjam(struct task_struct *curr, struct pt_regs *regs)
 static int __sc_qpend(struct task_struct *curr, struct pt_regs *regs)
 {
 	long timeout;
-    int qid, err;
+	int qid, err;
 	char *msg;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(msg)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(msg)))
+		return -EFAULT;
 
-    qid = __xn_reg_arg1(regs);
-    timeout = __xn_reg_arg2(regs);
-    msg = sc_qpend(qid,timeout,&err);
+	qid = __xn_reg_arg1(regs);
+	timeout = __xn_reg_arg2(regs);
+	msg = sc_qpend(qid, timeout, &err);
 
 	if (!err)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &msg,
-						  sizeof(msg));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs),
+				  &msg, sizeof(msg));
 	return err;
 }
 
@@ -552,18 +566,19 @@ static int __sc_qpend(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_qaccept(struct task_struct *curr, struct pt_regs *regs)
 {
-    int qid, err;
+	int qid, err;
 	char *msg;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(msg)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(msg)))
+		return -EFAULT;
 
-    qid = __xn_reg_arg1(regs);
-    msg = sc_qaccept(qid,&err);
+	qid = __xn_reg_arg1(regs);
+	msg = sc_qaccept(qid, &err);
 
 	if (!err)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &msg,
-						  sizeof(msg));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
+				  &msg, sizeof(msg));
 	return err;
 }
 
@@ -573,23 +588,25 @@ static int __sc_qaccept(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_qinquiry(struct task_struct *curr, struct pt_regs *regs)
 {
-    int qid, count, err;
+	int qid, count, err;
 	char *msg;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(count)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(count)))
+		return -EFAULT;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(msg)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(msg)))
+		return -EFAULT;
 
-    qid = __xn_reg_arg1(regs);
-    msg = sc_qinquiry(qid,&count,&err);
+	qid = __xn_reg_arg1(regs);
+	msg = sc_qinquiry(qid, &count, &err);
 
 	if (!err) {
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &count,
-						  sizeof(count));
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &msg,
-						  sizeof(msg));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
+				  &count, sizeof(count));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs),
+				  &msg, sizeof(msg));
 	}
 
 	return err;
@@ -606,12 +623,13 @@ static int __sc_post(struct task_struct *curr, struct pt_regs *regs)
 
 	/* We should be able to write to a mailbox storage, even if we
 	 * actually don't. */
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(msg)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(msg)))
+		return -EFAULT;
 
-    mboxp = (char **)__xn_reg_arg1(regs);
-    msg = (char *)__xn_reg_arg2(regs);
-	sc_post(mboxp,msg,&err);
+	mboxp = (char **)__xn_reg_arg1(regs);
+	msg = (char *)__xn_reg_arg2(regs);
+	sc_post(mboxp, msg, &err);
 
 	return err;
 }
@@ -627,18 +645,20 @@ static int __sc_accept(struct task_struct *curr, struct pt_regs *regs)
 
 	/* We should be able to write to a mailbox storage, even if we
 	 * actually don't. */
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(msg)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(msg)))
+		return -EFAULT;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(msg)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(msg)))
+		return -EFAULT;
 
-    mboxp = (char **)__xn_reg_arg1(regs);
-	msg = sc_accept(mboxp,&err);
+	mboxp = (char **)__xn_reg_arg1(regs);
+	msg = sc_accept(mboxp, &err);
 
 	if (!err)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &msg,
-						  sizeof(msg));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
+				  &msg, sizeof(msg));
 	return err;
 }
 
@@ -654,19 +674,21 @@ static int __sc_pend(struct task_struct *curr, struct pt_regs *regs)
 
 	/* We should be able to write to a mailbox storage, even if we
 	 * actually don't. */
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(msg)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(msg)))
+		return -EFAULT;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(msg)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(msg)))
+		return -EFAULT;
 
-    mboxp = (char **)__xn_reg_arg1(regs);
-    timeout = __xn_reg_arg2(regs);
-	msg = sc_pend(mboxp,timeout,&err);
+	mboxp = (char **)__xn_reg_arg1(regs);
+	timeout = __xn_reg_arg2(regs);
+	msg = sc_pend(mboxp, timeout, &err);
 
 	if (!err)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &msg,
-						  sizeof(msg));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs),
+				  &msg, sizeof(msg));
 	return err;
 }
 
@@ -676,17 +698,18 @@ static int __sc_pend(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_fcreate(struct task_struct *curr, struct pt_regs *regs)
 {
-    int fid, err;
+	int fid, err;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(fid)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(fid)))
+		return -EFAULT;
 
-    fid = sc_fcreate(&err);
+	fid = sc_fcreate(&err);
 
-    if (!err)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &fid,
-						  sizeof(fid));
-    return err;
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs),
+				  &fid, sizeof(fid));
+	return err;
 }
 
 /*
@@ -695,11 +718,11 @@ static int __sc_fcreate(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_fdelete(struct task_struct *curr, struct pt_regs *regs)
 {
-    int fid, opt, err;
+	int fid, opt, err;
 
-    fid = __xn_reg_arg1(regs);
-    opt = __xn_reg_arg2(regs);
-    sc_fdelete(fid,opt,&err);
+	fid = __xn_reg_arg1(regs);
+	opt = __xn_reg_arg2(regs);
+	sc_fdelete(fid, opt, &err);
 
 	return err;
 }
@@ -710,11 +733,11 @@ static int __sc_fdelete(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_fpost(struct task_struct *curr, struct pt_regs *regs)
 {
-    int fid, mask, err;
+	int fid, mask, err;
 
-    fid = __xn_reg_arg1(regs);
-    mask = __xn_reg_arg2(regs);
-    sc_fpost(fid,mask,&err);
+	fid = __xn_reg_arg1(regs);
+	mask = __xn_reg_arg2(regs);
+	sc_fpost(fid, mask, &err);
 
 	return err;
 }
@@ -725,21 +748,22 @@ static int __sc_fpost(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_fpend(struct task_struct *curr, struct pt_regs *regs)
 {
-    int fid, mask, mask_r, opt, err;
+	int fid, mask, mask_r, opt, err;
 	long timeout;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg5(regs), sizeof(mask_r)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg5(regs), sizeof(mask_r)))
+		return -EFAULT;
 
-    fid = __xn_reg_arg1(regs);
-    timeout = __xn_reg_arg2(regs);
-    mask = __xn_reg_arg3(regs);
-    opt = __xn_reg_arg4(regs);
-    mask_r = sc_fpend(fid,timeout,mask,opt,&err);
+	fid = __xn_reg_arg1(regs);
+	timeout = __xn_reg_arg2(regs);
+	mask = __xn_reg_arg3(regs);
+	opt = __xn_reg_arg4(regs);
+	mask_r = sc_fpend(fid, timeout, mask, opt, &err);
 
 	if (!err)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg5(regs), &mask_r,
-						  sizeof(mask_r));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg5(regs),
+				  &mask_r, sizeof(mask_r));
 	return err;
 }
 
@@ -749,18 +773,19 @@ static int __sc_fpend(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_fclear(struct task_struct *curr, struct pt_regs *regs)
 {
-    int fid, mask, mask_r, err;
+	int fid, mask, mask_r, err;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(mask_r)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(mask_r)))
+		return -EFAULT;
 
-    fid = __xn_reg_arg1(regs);
-    mask = __xn_reg_arg2(regs);
-    mask_r = sc_fclear(fid,mask,&err);
+	fid = __xn_reg_arg1(regs);
+	mask = __xn_reg_arg2(regs);
+	mask_r = sc_fclear(fid, mask, &err);
 
 	if (!err)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &mask_r,
-						  sizeof(mask_r));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs),
+				  &mask_r, sizeof(mask_r));
 	return err;
 }
 
@@ -770,17 +795,18 @@ static int __sc_fclear(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_finquiry(struct task_struct *curr, struct pt_regs *regs)
 {
-    int fid, mask_r, err;
+	int fid, mask_r, err;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(mask_r)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(mask_r)))
+		return -EFAULT;
 
-    fid = __xn_reg_arg1(regs);
-    mask_r = sc_finquiry(fid,&err);
+	fid = __xn_reg_arg1(regs);
+	mask_r = sc_finquiry(fid, &err);
 
 	if (!err)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &mask_r,
-						  sizeof(mask_r));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
+				  &mask_r, sizeof(mask_r));
 	return err;
 }
 
@@ -790,20 +816,21 @@ static int __sc_finquiry(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_screate(struct task_struct *curr, struct pt_regs *regs)
 {
-    int semid, opt, err;
+	int semid, opt, err;
 	unsigned initval;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(semid)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(semid)))
+		return -EFAULT;
 
 	initval = __xn_reg_arg1(regs);
 	opt = __xn_reg_arg2(regs);
-    semid = sc_screate(initval,opt,&err);
+	semid = sc_screate(initval, opt, &err);
 
-    if (!err)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &semid,
-						  sizeof(semid));
-    return err;
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs),
+				  &semid, sizeof(semid));
+	return err;
 }
 
 /*
@@ -812,11 +839,11 @@ static int __sc_screate(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_sdelete(struct task_struct *curr, struct pt_regs *regs)
 {
-    int semid, opt, err;
+	int semid, opt, err;
 
-    semid = __xn_reg_arg1(regs);
-    opt = __xn_reg_arg2(regs);
-    sc_sdelete(semid,opt,&err);
+	semid = __xn_reg_arg1(regs);
+	opt = __xn_reg_arg2(regs);
+	sc_sdelete(semid, opt, &err);
 
 	return err;
 }
@@ -827,10 +854,10 @@ static int __sc_sdelete(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_spost(struct task_struct *curr, struct pt_regs *regs)
 {
-    int semid, err;
+	int semid, err;
 
-    semid = __xn_reg_arg1(regs);
-    sc_spost(semid,&err);
+	semid = __xn_reg_arg1(regs);
+	sc_spost(semid, &err);
 
 	return err;
 }
@@ -841,12 +868,12 @@ static int __sc_spost(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_spend(struct task_struct *curr, struct pt_regs *regs)
 {
-    int semid, err;
+	int semid, err;
 	long timeout;
 
-    semid = __xn_reg_arg1(regs);
-    timeout = __xn_reg_arg2(regs);
-    sc_spend(semid,timeout,&err);
+	semid = __xn_reg_arg1(regs);
+	timeout = __xn_reg_arg2(regs);
+	sc_spend(semid, timeout, &err);
 
 	return err;
 }
@@ -857,10 +884,10 @@ static int __sc_spend(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_saccept(struct task_struct *curr, struct pt_regs *regs)
 {
-    int semid, err;
+	int semid, err;
 
-    semid = __xn_reg_arg1(regs);
-    sc_saccept(semid,&err);
+	semid = __xn_reg_arg1(regs);
+	sc_saccept(semid, &err);
 
 	return err;
 }
@@ -871,91 +898,92 @@ static int __sc_saccept(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_sinquiry(struct task_struct *curr, struct pt_regs *regs)
 {
-    int semid, count_r, err;
+	int semid, count_r, err;
 
-    if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(count_r)))
-        return -EFAULT;
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(count_r)))
+		return -EFAULT;
 
-    semid = __xn_reg_arg1(regs);
-    count_r = sc_sinquiry(semid,&err);
+	semid = __xn_reg_arg1(regs);
+	count_r = sc_sinquiry(semid, &err);
 
 	if (!err)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &count_r,
-						  sizeof(count_r));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
+				  &count_r, sizeof(count_r));
 	return err;
 }
 
 static xnsysent_t __systab[] = {
-    [__vrtx_tecreate] = {&__sc_tecreate, __xn_exec_init},
-    [__vrtx_tdelete] = {&__sc_tdelete, __xn_exec_conforming},
-    [__vrtx_tpriority] = {&__sc_tpriority, __xn_exec_primary},
-    [__vrtx_tresume] = {&__sc_tresume, __xn_exec_primary},
-    [__vrtx_tsuspend] = {&__sc_tsuspend, __xn_exec_primary},
-    [__vrtx_tslice] = {&__sc_tslice, __xn_exec_any},
-    [__vrtx_tinquiry] = {&__sc_tinquiry, __xn_exec_primary},
-    [__vrtx_lock] = {&__sc_lock, __xn_exec_primary},
-    [__vrtx_unlock] = {&__sc_unlock, __xn_exec_primary},
-    [__vrtx_delay] = {&__sc_delay, __xn_exec_primary},
-    [__vrtx_adelay] = {&__sc_adelay, __xn_exec_primary},
-    [__vrtx_stime] = {&__sc_stime, __xn_exec_any},
-    [__vrtx_gtime] = {&__sc_gtime, __xn_exec_any},
-    [__vrtx_sclock] = {&__sc_sclock, __xn_exec_any},
-    [__vrtx_gclock] = {&__sc_gclock, __xn_exec_any},
-    [__vrtx_mcreate] = {&__sc_mcreate, __xn_exec_any},
-    [__vrtx_mdelete] = {&__sc_mdelete, __xn_exec_any},
-    [__vrtx_mpost] = {&__sc_mpost, __xn_exec_primary},
-    [__vrtx_maccept] = {&__sc_maccept, __xn_exec_primary},
-    [__vrtx_mpend] = {&__sc_mpend, __xn_exec_primary},
-    [__vrtx_minquiry] = {&__sc_minquiry, __xn_exec_any},
-    [__vrtx_qecreate] = {&__sc_qecreate, __xn_exec_any},
-    [__vrtx_qdelete] = {&__sc_qdelete, __xn_exec_any},
-    [__vrtx_qpost] = {&__sc_qpost, __xn_exec_any},
-    [__vrtx_qbrdcst] = {&__sc_qbrdcst, __xn_exec_any},
-    [__vrtx_qjam] = {&__sc_qjam, __xn_exec_any},
-    [__vrtx_qpend] = {&__sc_qpend, __xn_exec_primary},
-    [__vrtx_qaccept] = {&__sc_qaccept, __xn_exec_any},
-    [__vrtx_qinquiry] = {&__sc_qinquiry, __xn_exec_any},
-    [__vrtx_post] = {&__sc_post, __xn_exec_any},
-    [__vrtx_accept] = {&__sc_accept, __xn_exec_any},
-    [__vrtx_pend] = {&__sc_pend, __xn_exec_primary},
-    [__vrtx_fcreate] = {&__sc_fcreate, __xn_exec_any},
-    [__vrtx_fdelete] = {&__sc_fdelete, __xn_exec_any},
-    [__vrtx_fpost] = {&__sc_fpost, __xn_exec_any},
-    [__vrtx_fpend] = {&__sc_fpend, __xn_exec_primary},
-    [__vrtx_fclear] = {&__sc_fclear, __xn_exec_any},
-    [__vrtx_finquiry] = {&__sc_finquiry, __xn_exec_any},
-    [__vrtx_screate] = {&__sc_screate, __xn_exec_any},
-    [__vrtx_sdelete] = {&__sc_sdelete, __xn_exec_any},
-    [__vrtx_spost] = {&__sc_spost, __xn_exec_any},
-    [__vrtx_spend] = {&__sc_spend, __xn_exec_primary},
-    [__vrtx_saccept] = {&__sc_saccept, __xn_exec_any},
-    [__vrtx_sinquiry] = {&__sc_sinquiry, __xn_exec_any},
+	[__vrtx_tecreate] = {&__sc_tecreate, __xn_exec_init},
+	[__vrtx_tdelete] = {&__sc_tdelete, __xn_exec_conforming},
+	[__vrtx_tpriority] = {&__sc_tpriority, __xn_exec_primary},
+	[__vrtx_tresume] = {&__sc_tresume, __xn_exec_primary},
+	[__vrtx_tsuspend] = {&__sc_tsuspend, __xn_exec_primary},
+	[__vrtx_tslice] = {&__sc_tslice, __xn_exec_any},
+	[__vrtx_tinquiry] = {&__sc_tinquiry, __xn_exec_primary},
+	[__vrtx_lock] = {&__sc_lock, __xn_exec_primary},
+	[__vrtx_unlock] = {&__sc_unlock, __xn_exec_primary},
+	[__vrtx_delay] = {&__sc_delay, __xn_exec_primary},
+	[__vrtx_adelay] = {&__sc_adelay, __xn_exec_primary},
+	[__vrtx_stime] = {&__sc_stime, __xn_exec_any},
+	[__vrtx_gtime] = {&__sc_gtime, __xn_exec_any},
+	[__vrtx_sclock] = {&__sc_sclock, __xn_exec_any},
+	[__vrtx_gclock] = {&__sc_gclock, __xn_exec_any},
+	[__vrtx_mcreate] = {&__sc_mcreate, __xn_exec_any},
+	[__vrtx_mdelete] = {&__sc_mdelete, __xn_exec_any},
+	[__vrtx_mpost] = {&__sc_mpost, __xn_exec_primary},
+	[__vrtx_maccept] = {&__sc_maccept, __xn_exec_primary},
+	[__vrtx_mpend] = {&__sc_mpend, __xn_exec_primary},
+	[__vrtx_minquiry] = {&__sc_minquiry, __xn_exec_any},
+	[__vrtx_qecreate] = {&__sc_qecreate, __xn_exec_any},
+	[__vrtx_qdelete] = {&__sc_qdelete, __xn_exec_any},
+	[__vrtx_qpost] = {&__sc_qpost, __xn_exec_any},
+	[__vrtx_qbrdcst] = {&__sc_qbrdcst, __xn_exec_any},
+	[__vrtx_qjam] = {&__sc_qjam, __xn_exec_any},
+	[__vrtx_qpend] = {&__sc_qpend, __xn_exec_primary},
+	[__vrtx_qaccept] = {&__sc_qaccept, __xn_exec_any},
+	[__vrtx_qinquiry] = {&__sc_qinquiry, __xn_exec_any},
+	[__vrtx_post] = {&__sc_post, __xn_exec_any},
+	[__vrtx_accept] = {&__sc_accept, __xn_exec_any},
+	[__vrtx_pend] = {&__sc_pend, __xn_exec_primary},
+	[__vrtx_fcreate] = {&__sc_fcreate, __xn_exec_any},
+	[__vrtx_fdelete] = {&__sc_fdelete, __xn_exec_any},
+	[__vrtx_fpost] = {&__sc_fpost, __xn_exec_any},
+	[__vrtx_fpend] = {&__sc_fpend, __xn_exec_primary},
+	[__vrtx_fclear] = {&__sc_fclear, __xn_exec_any},
+	[__vrtx_finquiry] = {&__sc_finquiry, __xn_exec_any},
+	[__vrtx_screate] = {&__sc_screate, __xn_exec_any},
+	[__vrtx_sdelete] = {&__sc_sdelete, __xn_exec_any},
+	[__vrtx_spost] = {&__sc_spost, __xn_exec_any},
+	[__vrtx_spend] = {&__sc_spend, __xn_exec_primary},
+	[__vrtx_saccept] = {&__sc_saccept, __xn_exec_any},
+	[__vrtx_sinquiry] = {&__sc_sinquiry, __xn_exec_any},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)
 {
-    if (xnthread_get_magic(thread) == VRTX_SKIN_MAGIC &&
-        testbits(thread->status, XNSHADOW))
-        xnshadow_unmap(thread);
+	if (xnthread_get_magic(thread) == VRTX_SKIN_MAGIC &&
+	    testbits(thread->status, XNSHADOW))
+		xnshadow_unmap(thread);
 }
 
 int vrtxsys_init(void)
 {
-    __muxid =
-        xnshadow_register_interface("vrtx",
-                                    VRTX_SKIN_MAGIC,
-                                    sizeof(__systab) / sizeof(__systab[0]),
-                                    __systab, NULL);
-    if (__muxid < 0)
-        return -ENOSYS;
+	__muxid =
+	    xnshadow_register_interface("vrtx",
+					VRTX_SKIN_MAGIC,
+					sizeof(__systab) / sizeof(__systab[0]),
+					__systab, NULL);
+	if (__muxid < 0)
+		return -ENOSYS;
 
-    xnpod_add_hook(XNHOOK_THREAD_DELETE, &__shadow_delete_hook);
+	xnpod_add_hook(XNHOOK_THREAD_DELETE, &__shadow_delete_hook);
 
-    return 0;
+	return 0;
 }
 
 void vrtxsys_cleanup(void)
 {
-    xnpod_remove_hook(XNHOOK_THREAD_DELETE, &__shadow_delete_hook);
-    xnshadow_unregister_interface(__muxid);
+	xnpod_remove_hook(XNHOOK_THREAD_DELETE, &__shadow_delete_hook);
+	xnshadow_unregister_interface(__muxid);
 }

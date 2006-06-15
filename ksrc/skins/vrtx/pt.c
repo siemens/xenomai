@@ -26,292 +26,293 @@ static xnqueue_t vrtx_pt_q;
 
 static void vrtxpt_delete_internal(vrtxpt_t *pt)
 {
-    removeq(&vrtx_pt_q, &pt->link);
-    vrtx_put_id(vrtx_pt_idmap, pt->pid);
-    vrtx_mark_deleted(pt);
+	removeq(&vrtx_pt_q, &pt->link);
+	vrtx_put_id(vrtx_pt_idmap, pt->pid);
+	vrtx_mark_deleted(pt);
 }
 
 int vrtxpt_init(void)
 {
-    initq(&vrtx_pt_q);
-    vrtx_pt_idmap = vrtx_alloc_idmap(VRTX_MAX_PTS, 1);
-    return vrtx_pt_idmap ? 0 : -ENOMEM;
+	initq(&vrtx_pt_q);
+	vrtx_pt_idmap = vrtx_alloc_idmap(VRTX_MAX_PTS, 1);
+	return vrtx_pt_idmap ? 0 : -ENOMEM;
 }
 
 void vrtxpt_cleanup(void)
 {
 
-    xnholder_t *holder;
+	xnholder_t *holder;
 
-    while ((holder = getheadq(&vrtx_pt_q)) != NULL)
-        vrtxpt_delete_internal(link2vrtxpt(holder));
+	while ((holder = getheadq(&vrtx_pt_q)) != NULL)
+		vrtxpt_delete_internal(link2vrtxpt(holder));
 
-    vrtx_free_idmap(vrtx_pt_idmap);
+	vrtx_free_idmap(vrtx_pt_idmap);
 }
 
 static int vrtxpt_add_extent(vrtxpt_t *pt, char *extaddr, long extsize)
 {
-    u_long bitmapsize;
-    vrtxptext_t *ptext;
-    char *mp;
-    spl_t s;
-    long n;
+	u_long bitmapsize;
+	vrtxptext_t *ptext;
+	char *mp;
+	spl_t s;
+	long n;
 
-    if (extsize <= pt->bsize + sizeof(vrtxptext_t))
-        return ER_IIP;
+	if (extsize <= pt->bsize + sizeof(vrtxptext_t))
+		return ER_IIP;
 
-    extsize -= sizeof(vrtxptext_t);
-    ptext = (vrtxptext_t *) extaddr;
-    inith(&ptext->link);
+	extsize -= sizeof(vrtxptext_t);
+	ptext = (vrtxptext_t *) extaddr;
+	inith(&ptext->link);
 
-    bitmapsize = (extsize * 8) / (pt->bsize + 8);
-    bitmapsize = (bitmapsize + ptext_align_mask) & ~ptext_align_mask;
+	bitmapsize = (extsize * 8) / (pt->bsize + 8);
+	bitmapsize = (bitmapsize + ptext_align_mask) & ~ptext_align_mask;
 
-    if (bitmapsize <= ptext_align_mask)
-        return ER_IIP;
+	if (bitmapsize <= ptext_align_mask)
+		return ER_IIP;
 
-    ptext->nblks = (extsize - bitmapsize) / pt->bsize;
+	ptext->nblks = (extsize - bitmapsize) / pt->bsize;
 
-    if (ptext->nblks > 65534)
-        return ER_IIP;
+	if (ptext->nblks > 65534)
+		return ER_IIP;
 
-    ptext->extsize = ptext->nblks * pt->bsize;
-    ptext->data = (char *)ptext->bitmap + bitmapsize;
-    ptext->freelist = mp = ptext->data;
+	ptext->extsize = ptext->nblks * pt->bsize;
+	ptext->data = (char *)ptext->bitmap + bitmapsize;
+	ptext->freelist = mp = ptext->data;
 
-    pt->fblks += ptext->nblks;
+	pt->fblks += ptext->nblks;
 
-    for (n = ptext->nblks; n > 1; n--) {
-        char *nmp = mp + pt->bsize;
-        *((void **)mp) = nmp;
-        mp = nmp;
-    }
+	for (n = ptext->nblks; n > 1; n--) {
+		char *nmp = mp + pt->bsize;
+		*((void **)mp) = nmp;
+		mp = nmp;
+	}
 
-    *((void **)mp) = NULL;
+	*((void **)mp) = NULL;
 
-    for (n = bitmapsize / sizeof(u_long) - 1; n >= 0; n--)
-        ptext->bitmap[n] = 0;
+	for (n = bitmapsize / sizeof(u_long) - 1; n >= 0; n--)
+		ptext->bitmap[n] = 0;
 
-    xnlock_get_irqsave(&nklock, s);
-    appendq(&pt->extq, &ptext->link);
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
+	appendq(&pt->extq, &ptext->link);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return RET_OK;
+	return RET_OK;
 }
 
 int sc_pcreate(int pid, char *paddr, long psize, long bsize, int *errp)
 {
-    vrtxpt_t *pt;
-    spl_t s;
+	vrtxpt_t *pt;
+	spl_t s;
 
-    if (pid < -1 ||
-        bsize <= ptext_align_mask ||
-        psize < bsize + sizeof(vrtxpt_t) + sizeof(vrtxptext_t)) {
-        *errp = ER_IIP;
-        return -1;
-    }
+	if (pid < -1 ||
+	    bsize <= ptext_align_mask ||
+	    psize < bsize + sizeof(vrtxpt_t) + sizeof(vrtxptext_t)) {
+		*errp = ER_IIP;
+		return -1;
+	}
 
-    pt = (vrtxpt_t *)paddr;
-    inith(&pt->link);
-    initq(&pt->extq);
-    pt->bsize = (bsize + ptext_align_mask) & ~ptext_align_mask;
-    pt->ublks = 0;
-    pt->pid = pid;
+	pt = (vrtxpt_t *)paddr;
+	inith(&pt->link);
+	initq(&pt->extq);
+	pt->bsize = (bsize + ptext_align_mask) & ~ptext_align_mask;
+	pt->ublks = 0;
+	pt->pid = pid;
 
-    *errp =
-        vrtxpt_add_extent(pt, (char *)pt + sizeof(*pt), psize - sizeof(*pt));
+	*errp =
+	    vrtxpt_add_extent(pt, (char *)pt + sizeof(*pt),
+			      psize - sizeof(*pt));
 
-    if (*errp != RET_OK)
-        return -1;
+	if (*errp != RET_OK)
+		return -1;
 
-    pid = vrtx_get_id(vrtx_pt_idmap, pid, pt);
+	pid = vrtx_get_id(vrtx_pt_idmap, pid, pt);
 
-    if (pid < 0) {
-        *errp = ER_PID;
-        return -1;
-    }
+	if (pid < 0) {
+		*errp = ER_PID;
+		return -1;
+	}
 
-    pt->pid = pid;
-    pt->magic = VRTX_PT_MAGIC;
+	pt->pid = pid;
+	pt->magic = VRTX_PT_MAGIC;
 
-    xnlock_get_irqsave(&nklock, s);
-    appendq(&vrtx_pt_q, &pt->link);
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
+	appendq(&vrtx_pt_q, &pt->link);
+	xnlock_put_irqrestore(&nklock, s);
 
-    return pid;
+	return pid;
 }
 
 void sc_pdelete(int pid, int opt, int *errp)
 {
-    vrtxpt_t *pt;
-    spl_t s;
+	vrtxpt_t *pt;
+	spl_t s;
 
-    if (opt & ~1) {
-        *errp = ER_IIP;
-        return;
-    }
+	if (opt & ~1) {
+		*errp = ER_IIP;
+		return;
+	}
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
 
-    if (pt == NULL) {
-        *errp = ER_PID;
-        goto unlock_and_exit;
-    }
+	if (pt == NULL) {
+		*errp = ER_PID;
+		goto unlock_and_exit;
+	}
 
-    vrtxpt_delete_internal(pt);
+	vrtxpt_delete_internal(pt);
 
-    *errp = RET_OK;
+	*errp = RET_OK;
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 char *sc_gblock(int pid, int *errp)
 {
-    vrtxptext_t *ptext;
-    xnholder_t *holder;
-    void *buf = NULL;
-    u_long numblk;
-    vrtxpt_t *pt;
-    spl_t s;
+	vrtxptext_t *ptext;
+	xnholder_t *holder;
+	void *buf = NULL;
+	u_long numblk;
+	vrtxpt_t *pt;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
 
-    if (pt == NULL) {
-        *errp = ER_PID;
-        goto unlock_and_exit;
-    }
+	if (pt == NULL) {
+		*errp = ER_PID;
+		goto unlock_and_exit;
+	}
 
-    for (holder = getheadq(&pt->extq);
-         holder; holder = nextq(&pt->extq, holder)) {
-        ptext = link2vrtxptext(holder);
+	for (holder = getheadq(&pt->extq);
+	     holder; holder = nextq(&pt->extq, holder)) {
+		ptext = link2vrtxptext(holder);
 
-        if ((buf = ptext->freelist) != NULL) {
-            ptext->freelist = *((void **)buf);
-            pt->ublks++;
-            pt->fblks--;
-            numblk = ((char *)buf - ptext->data) / pt->bsize;
-            ptext_bitmap_setbit(ptext, numblk);
-            break;
-        }
-    }
+		if ((buf = ptext->freelist) != NULL) {
+			ptext->freelist = *((void **)buf);
+			pt->ublks++;
+			pt->fblks--;
+			numblk = ((char *)buf - ptext->data) / pt->bsize;
+			ptext_bitmap_setbit(ptext, numblk);
+			break;
+		}
+	}
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-    *errp = (buf == NULL ? ER_MEM : RET_OK);
+	*errp = (buf == NULL ? ER_MEM : RET_OK);
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    return (char *)buf;
+	return (char *)buf;
 }
 
 void sc_rblock(int pid, char *buf, int *errp)
 {
-    vrtxptext_t *ptext;
-    xnholder_t *holder;
-    u_long numblk;
-    vrtxpt_t *pt;
-    spl_t s;
+	vrtxptext_t *ptext;
+	xnholder_t *holder;
+	u_long numblk;
+	vrtxpt_t *pt;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
 
-    if (pt == NULL) {
-        *errp = ER_PID;
-        goto unlock_and_exit;
-    }
+	if (pt == NULL) {
+		*errp = ER_PID;
+		goto unlock_and_exit;
+	}
 
-    /* For each extent linked to the partition's queue */
+	/* For each extent linked to the partition's queue */
 
-    for (holder = getheadq(&pt->extq);
-         holder; holder = nextq(&pt->extq, holder)) {
-        ptext = link2vrtxptext(holder);
+	for (holder = getheadq(&pt->extq);
+	     holder; holder = nextq(&pt->extq, holder)) {
+		ptext = link2vrtxptext(holder);
 
-        /* Check if the released buffer address lays into the
-           currently scanned extent. */
+		/* Check if the released buffer address lays into the
+		   currently scanned extent. */
 
-        if (buf >= ptext->data && buf < ptext->data + ptext->extsize) {
-            if (((buf - ptext->data) % pt->bsize) != 0)
-                goto nmb;
+		if (buf >= ptext->data && buf < ptext->data + ptext->extsize) {
+			if (((buf - ptext->data) % pt->bsize) != 0)
+				goto nmb;
 
-            numblk = (buf - ptext->data) / pt->bsize;
+			numblk = (buf - ptext->data) / pt->bsize;
 
-            /* Check using the bitmap if the block was previously
-               allocated. Remember that gblock()/rblock() ops are
-               valid on behalf of ISRs, so we need to protect
-               ourselves using a hard critical section. */
+			/* Check using the bitmap if the block was previously
+			   allocated. Remember that gblock()/rblock() ops are
+			   valid on behalf of ISRs, so we need to protect
+			   ourselves using a hard critical section. */
 
-            if (ptext_bitmap_tstbit(ptext, numblk)) {
-                /* Ok, all is fine: release and exit */
-                ptext_bitmap_clrbit(ptext, numblk);
-                *((void **)buf) = ptext->freelist;
-                ptext->freelist = buf;
-                pt->ublks--;
-                pt->fblks++;
-                *errp = RET_OK;
-                goto unlock_and_exit;
-            }
-        }
-    }
+			if (ptext_bitmap_tstbit(ptext, numblk)) {
+				/* Ok, all is fine: release and exit */
+				ptext_bitmap_clrbit(ptext, numblk);
+				*((void **)buf) = ptext->freelist;
+				ptext->freelist = buf;
+				pt->ublks--;
+				pt->fblks++;
+				*errp = RET_OK;
+				goto unlock_and_exit;
+			}
+		}
+	}
 
-  nmb:
-    *errp = ER_NMB;
+      nmb:
+	*errp = ER_NMB;
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 void sc_pextend(int pid, char *extaddr, long extsize, int *errp)
 {
-    vrtxpt_t *pt;
-    spl_t s;
+	vrtxpt_t *pt;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
 
-    if (pt == NULL) {
-        *errp = ER_PID;
-        goto unlock_and_exit;
-    }
+	if (pt == NULL) {
+		*errp = ER_PID;
+		goto unlock_and_exit;
+	}
 
-    *errp = vrtxpt_add_extent(pt, extaddr, extsize);
+	*errp = vrtxpt_add_extent(pt, extaddr, extsize);
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 void sc_pinquiry(unsigned long info[3], int pid, int *errp)
 {
-    vrtxpt_t *pt;
-    spl_t s;
+	vrtxpt_t *pt;
+	spl_t s;
 
-    xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-    pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
 
-    if (pt == NULL) {
-        *errp = ER_PID;
-        goto unlock_and_exit;
-    }
+	if (pt == NULL) {
+		*errp = ER_PID;
+		goto unlock_and_exit;
+	}
 
-    info[0] = pt->ublks;
-    info[1] = pt->fblks;
-    info[2] = pt->bsize;
+	info[0] = pt->ublks;
+	info[1] = pt->fblks;
+	info[2] = pt->bsize;
 
-    *errp = RET_OK;
+	*errp = RET_OK;
 
-  unlock_and_exit:
+      unlock_and_exit:
 
-    xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 /*
