@@ -22,20 +22,14 @@ extern int __vrtx_muxid;
 
 void sc_post(char **mboxp, char *msg, int *errp)
 {
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-							  __vrtx_post,
-							  mboxp,
-							  msg);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_post, mboxp, msg);
 }
 
 char *sc_accept(char **mboxp, int *errp)
 {
 	char *msg = NULL;
 
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-							  __vrtx_accept,
-							  mboxp,
-							  &msg);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_accept, mboxp, &msg);
 	return msg;
 }
 
@@ -43,10 +37,7 @@ char *sc_pend(char **mboxp, long timeout, int *errp)
 {
 	char *msg = NULL;
 
-    *errp = XENOMAI_SKINCALL3(__vrtx_muxid,
-							  __vrtx_pend,
-							  mboxp,
-							  timeout,
-							  &msg);
+	*errp = XENOMAI_SKINCALL3(__vrtx_muxid,
+				  __vrtx_pend, mboxp, timeout, &msg);
 	return msg;
 }

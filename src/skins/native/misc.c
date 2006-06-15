@@ -23,14 +23,15 @@
 extern int __native_muxid;
 
 int rt_misc_get_io_region(unsigned long start,
-                          unsigned long len, const char *label)
+			  unsigned long len, const char *label)
 {
-    return XENOMAI_SKINCALL3(__native_muxid,
-                             __native_misc_get_io_region, start, len, label);
+	return XENOMAI_SKINCALL3(__native_muxid,
+				 __native_misc_get_io_region, start, len,
+				 label);
 }
 
 int rt_misc_put_io_region(unsigned long start, unsigned long len)
 {
-    return XENOMAI_SKINCALL2(__native_muxid,
-                             __native_misc_put_io_region, start, len);
+	return XENOMAI_SKINCALL2(__native_muxid,
+				 __native_misc_put_io_region, start, len);
 }

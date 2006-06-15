@@ -26,10 +26,10 @@ int __uvm_muxid = -1;
 
 xnsysinfo_t __uvm_info;
 
-static __attribute__((constructor)) void __init_uvm_interface(void)
-
+static __attribute__ ((constructor))
+void __init_uvm_interface(void)
 {
-    __uvm_muxid = xeno_user_skin_init(UVM_SKIN_MAGIC, "UVM", "xeno_uvm");
+	__uvm_muxid = xeno_user_skin_init(UVM_SKIN_MAGIC, "UVM", "xeno_uvm");
 
-    XENOMAI_SYSCALL2(__xn_sys_info,__uvm_muxid,&__uvm_info);
+	XENOMAI_SYSCALL2(__xn_sys_info, __uvm_muxid, &__uvm_info);
 }

@@ -34,292 +34,298 @@ extern int __native_muxid;
 /* Public Xenomai interface. */
 
 struct rt_task_iargs {
-    RT_TASK *task;
-    const char *name;
-    int prio;
-    int mode;
-    xncompletion_t *completionp;
+	RT_TASK *task;
+	const char *name;
+	int prio;
+	int mode;
+	xncompletion_t *completionp;
 };
 
 static void rt_task_sigharden(int sig)
 {
-    XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
+	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 }
 
 static void *rt_task_trampoline(void *cookie)
 {
-    struct rt_task_iargs *iargs = (struct rt_task_iargs *)cookie;
-    void (*entry) (void *cookie);
-    struct sched_param param;
-    struct rt_arg_bulk bulk;
-    long err;
+	struct rt_task_iargs *iargs = (struct rt_task_iargs *)cookie;
+	void (*entry) (void *cookie);
+	struct sched_param param;
+	struct rt_arg_bulk bulk;
+	long err;
 
-    if (iargs->prio > 0) {
+	if (iargs->prio > 0) {
 		/* Ok, this looks like weird, but we need this. */
 		param.sched_priority = sched_get_priority_max(SCHED_FIFO);
 		pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
-    }
+	}
 
-    /* rt_task_delete requires asynchronous cancellation */
-    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+	/* rt_task_delete requires asynchronous cancellation */
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-    signal(SIGCHLD, &rt_task_sigharden);
+	signal(SIGCHLD, &rt_task_sigharden);
 
-    bulk.a1 = (u_long) iargs->task;
-    bulk.a2 = (u_long) iargs->name;
-    bulk.a3 = (u_long) iargs->prio;
-    bulk.a4 = (u_long) iargs->mode;
-    bulk.a5 = (u_long) pthread_self();
+	bulk.a1 = (u_long)iargs->task;
+	bulk.a2 = (u_long)iargs->name;
+	bulk.a3 = (u_long)iargs->prio;
+	bulk.a4 = (u_long)iargs->mode;
+	bulk.a5 = (u_long)pthread_self();
 
-    err = XENOMAI_SKINCALL2(__native_muxid,
-                            __native_task_create, &bulk, iargs->completionp);
-    if (err)
-        goto fail;
+	err = XENOMAI_SKINCALL2(__native_muxid,
+				__native_task_create, &bulk,
+				iargs->completionp);
+	if (err)
+		goto fail;
 
-    /* Wait on the barrier for the task to be started. The barrier
-       could be released in order to process Linux signals while the
-       Xenomai shadow is still dormant; in such a case, resume wait. */
+	/* Wait on the barrier for the task to be started. The barrier
+	   could be released in order to process Linux signals while the
+	   Xenomai shadow is still dormant; in such a case, resume wait. */
 
-    do
-        err = XENOMAI_SYSCALL2(__xn_sys_barrier, &entry, &cookie);
-    while (err == -EINTR);
+	do
+		err = XENOMAI_SYSCALL2(__xn_sys_barrier, &entry, &cookie);
+	while (err == -EINTR);
 
-    if (!err)
-        entry(cookie);
+	if (!err)
+		entry(cookie);
 
-  fail:
+      fail:
 
-    pthread_exit((void *)err);
+	pthread_exit((void *)err);
 }
 
 int rt_task_create(RT_TASK *task,
-                   const char *name, int stksize, int prio, int mode)
+		   const char *name, int stksize, int prio, int mode)
 {
-    struct rt_task_iargs iargs;
-    xncompletion_t completion;
-    struct sched_param param;
-    pthread_attr_t thattr;
-    pthread_t thid;
-    int err;
+	struct rt_task_iargs iargs;
+	xncompletion_t completion;
+	struct sched_param param;
+	pthread_attr_t thattr;
+	pthread_t thid;
+	int err;
 
-    /* Migrate this thread to the Linux domain since we are about to
-       issue a series of regular kernel syscalls in order to create
-       the new Linux thread, which in turn will be mapped to a
-       real-time shadow. */
+	/* Migrate this thread to the Linux domain since we are about to
+	   issue a series of regular kernel syscalls in order to create
+	   the new Linux thread, which in turn will be mapped to a
+	   real-time shadow. */
 
-    XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_LINUX_DOMAIN);
+	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_LINUX_DOMAIN);
 
-    completion.syncflag = 0;
-    completion.pid = -1;
+	completion.syncflag = 0;
+	completion.pid = -1;
 
-    iargs.task = task;
-    iargs.name = name;
-    iargs.prio = prio;
-    iargs.mode = mode;
-    iargs.completionp = &completion;
+	iargs.task = task;
+	iargs.name = name;
+	iargs.prio = prio;
+	iargs.mode = mode;
+	iargs.completionp = &completion;
 
-    pthread_attr_init(&thattr);
+	pthread_attr_init(&thattr);
 
-    if (stksize == 0)
-        stksize = PTHREAD_STACK_MIN * 4;
-    else if (stksize < PTHREAD_STACK_MIN)
-        stksize = PTHREAD_STACK_MIN;
+	if (stksize == 0)
+		stksize = PTHREAD_STACK_MIN * 4;
+	else if (stksize < PTHREAD_STACK_MIN)
+		stksize = PTHREAD_STACK_MIN;
 
-    pthread_attr_setstacksize(&thattr, stksize);
-    if (!(mode & T_JOINABLE))
-        pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
-    if (prio > 0) {
+	pthread_attr_setstacksize(&thattr, stksize);
+	if (!(mode & T_JOINABLE))
+		pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
+	if (prio > 0) {
 		pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
 		param.sched_priority = sched_get_priority_max(SCHED_FIFO);
 	}
-    pthread_attr_setschedparam(&thattr, &param);
+	pthread_attr_setschedparam(&thattr, &param);
 
-    err = pthread_create(&thid, &thattr, &rt_task_trampoline, &iargs);
+	err = pthread_create(&thid, &thattr, &rt_task_trampoline, &iargs);
 
-    if (err)
-        return -err;
+	if (err)
+		return -err;
 
-    /* Wait for sync with rt_task_trampoline() */
-    return XENOMAI_SYSCALL1(__xn_sys_completion, &completion);
+	/* Wait for sync with rt_task_trampoline() */
+	return XENOMAI_SYSCALL1(__xn_sys_completion, &completion);
 }
 
 int rt_task_start(RT_TASK *task, void (*entry) (void *cookie), void *cookie)
 {
-    return XENOMAI_SKINCALL3(__native_muxid,
-                             __native_task_start, task, entry, cookie);
+	return XENOMAI_SKINCALL3(__native_muxid,
+				 __native_task_start, task, entry, cookie);
 }
 
 int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 {
-    struct rt_arg_bulk bulk;
+	struct rt_arg_bulk bulk;
 
-    /* rt_task_delete requires asynchronous cancellation */
-    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+	/* rt_task_delete requires asynchronous cancellation */
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-    signal(SIGCHLD, &rt_task_sigharden);
+	signal(SIGCHLD, &rt_task_sigharden);
 
-    bulk.a1 = (u_long) task;
-    bulk.a2 = (u_long) name;
-    bulk.a3 = (u_long) prio;
-    bulk.a4 = (u_long) mode;
-    bulk.a5 = (u_long) pthread_self();
+	bulk.a1 = (u_long)task;
+	bulk.a2 = (u_long)name;
+	bulk.a3 = (u_long)prio;
+	bulk.a4 = (u_long)mode;
+	bulk.a5 = (u_long)pthread_self();
 
-    return XENOMAI_SKINCALL2(__native_muxid, __native_task_create, &bulk, NULL);
+	return XENOMAI_SKINCALL2(__native_muxid, __native_task_create, &bulk,
+				 NULL);
 }
 
 int rt_task_bind(RT_TASK *task, const char *name, RTIME timeout)
 {
-    return XENOMAI_SKINCALL3(__native_muxid,
-                             __native_task_bind, task, name, &timeout);
+	return XENOMAI_SKINCALL3(__native_muxid,
+				 __native_task_bind, task, name, &timeout);
 }
 
 int rt_task_suspend(RT_TASK *task)
 {
-    return XENOMAI_SKINCALL1(__native_muxid, __native_task_suspend, task);
+	return XENOMAI_SKINCALL1(__native_muxid, __native_task_suspend, task);
 }
 
 int rt_task_resume(RT_TASK *task)
 {
-    return XENOMAI_SKINCALL1(__native_muxid, __native_task_resume, task);
+	return XENOMAI_SKINCALL1(__native_muxid, __native_task_resume, task);
 }
 
 int rt_task_delete(RT_TASK *task)
 {
-    int err;
+	int err;
 
-    if (task && task->opaque2) {
-        err = pthread_cancel((pthread_t)task->opaque2);
-        if (err)
-            return -err;
-    }
+	if (task && task->opaque2) {
+		err = pthread_cancel((pthread_t)task->opaque2);
+		if (err)
+			return -err;
+	}
 
-    err = XENOMAI_SKINCALL1(__native_muxid, __native_task_delete, task);
-    if (err == -ESRCH)
-        return 0;
+	err = XENOMAI_SKINCALL1(__native_muxid, __native_task_delete, task);
+	if (err == -ESRCH)
+		return 0;
 
-    return err;
+	return err;
 }
 
 int rt_task_yield(void)
 {
-    return XENOMAI_SKINCALL0(__native_muxid, __native_task_yield);
+	return XENOMAI_SKINCALL0(__native_muxid, __native_task_yield);
 }
 
 int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
 {
-    return XENOMAI_SKINCALL3(__native_muxid,
-                             __native_task_set_periodic, task, &idate, &period);
+	return XENOMAI_SKINCALL3(__native_muxid,
+				 __native_task_set_periodic, task, &idate,
+				 &period);
 }
 
 int rt_task_wait_period(unsigned long *overruns_r)
 {
-    return XENOMAI_SKINCALL1(__native_muxid,
-                             __native_task_wait_period, overruns_r);
+	return XENOMAI_SKINCALL1(__native_muxid,
+				 __native_task_wait_period, overruns_r);
 }
 
 int rt_task_set_priority(RT_TASK *task, int prio)
 {
-    return XENOMAI_SKINCALL2(__native_muxid,
-                             __native_task_set_priority, task, prio);
+	return XENOMAI_SKINCALL2(__native_muxid,
+				 __native_task_set_priority, task, prio);
 }
 
 int rt_task_sleep(RTIME delay)
 {
-    return XENOMAI_SKINCALL1(__native_muxid, __native_task_sleep, &delay);
+	return XENOMAI_SKINCALL1(__native_muxid, __native_task_sleep, &delay);
 
 }
 
 int rt_task_sleep_until(RTIME date)
 {
-    return XENOMAI_SKINCALL1(__native_muxid, __native_task_sleep_until, &date);
+	return XENOMAI_SKINCALL1(__native_muxid, __native_task_sleep_until,
+				 &date);
 
 }
 
 int rt_task_unblock(RT_TASK *task)
 {
-    return XENOMAI_SKINCALL1(__native_muxid, __native_task_unblock, task);
+	return XENOMAI_SKINCALL1(__native_muxid, __native_task_unblock, task);
 }
 
 int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 {
-    return XENOMAI_SKINCALL2(__native_muxid, __native_task_inquire, task, info);
+	return XENOMAI_SKINCALL2(__native_muxid, __native_task_inquire, task,
+				 info);
 }
 
 int rt_task_notify(RT_TASK *task, rt_sigset_t signals)
 {
-    return XENOMAI_SKINCALL2(__native_muxid,
-                             __native_task_notify, task, signals);
+	return XENOMAI_SKINCALL2(__native_muxid,
+				 __native_task_notify, task, signals);
 }
 
 int rt_task_set_mode(int clrmask, int setmask, int *oldmode)
 {
-    extern int xeno_sigxcpu_no_mlock;
-    int err;
+	extern int xeno_sigxcpu_no_mlock;
+	int err;
 
-    err = XENOMAI_SKINCALL3(__native_muxid,
-                            __native_task_set_mode, clrmask, setmask, oldmode);
+	err = XENOMAI_SKINCALL3(__native_muxid,
+				__native_task_set_mode, clrmask, setmask,
+				oldmode);
 
-    /* Silently deactivate our internal handler for SIGXCPU. At that
-       point, we know that the process memory has been properly
-       locked, otherwise we would have caught the latter signal upon
-       thread creation. */
+	/* Silently deactivate our internal handler for SIGXCPU. At that
+	   point, we know that the process memory has been properly
+	   locked, otherwise we would have caught the latter signal upon
+	   thread creation. */
 
-    if (!err && xeno_sigxcpu_no_mlock)
-        xeno_sigxcpu_no_mlock = !(setmask & T_WARNSW);
+	if (!err && xeno_sigxcpu_no_mlock)
+		xeno_sigxcpu_no_mlock = !(setmask & T_WARNSW);
 
-    return err;
+	return err;
 }
 
 RT_TASK *rt_task_self(void)
 {
-    RT_TASK *self;
+	RT_TASK *self;
 
-    self = (RT_TASK *)pthread_getspecific(__native_tskey);
+	self = (RT_TASK *)pthread_getspecific(__native_tskey);
 
-    if (self)
-        return self;
+	if (self)
+		return self;
 
-    self = (RT_TASK *)malloc(sizeof(*self));
+	self = (RT_TASK *)malloc(sizeof(*self));
 
-    if (!self ||
-        XENOMAI_SKINCALL1(__native_muxid, __native_task_self, self) != 0)
-        return NULL;
+	if (!self ||
+	    XENOMAI_SKINCALL1(__native_muxid, __native_task_self, self) != 0)
+		return NULL;
 
-    pthread_setspecific(__native_tskey, self);
+	pthread_setspecific(__native_tskey, self);
 
-    return self;
+	return self;
 }
 
 int rt_task_slice(RT_TASK *task, RTIME quantum)
 {
-    return XENOMAI_SKINCALL2(__native_muxid,
-                             __native_task_slice, task, &quantum);
+	return XENOMAI_SKINCALL2(__native_muxid,
+				 __native_task_slice, task, &quantum);
 }
 
 int rt_task_join(RT_TASK *task)
 {
-    if (!task->opaque2)
-        return -ESRCH;
+	if (!task->opaque2)
+		return -ESRCH;
 
-    return -pthread_join((pthread_t)task->opaque2, NULL);
+	return -pthread_join((pthread_t)task->opaque2, NULL);
 }
 
 ssize_t rt_task_send(RT_TASK *task,
-                     RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME timeout)
+		     RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME timeout)
 {
-    return (ssize_t) XENOMAI_SKINCALL4(__native_muxid,
-                                       __native_task_send,
-                                       task, mcb_s, mcb_r, &timeout);
+	return (ssize_t) XENOMAI_SKINCALL4(__native_muxid,
+					   __native_task_send,
+					   task, mcb_s, mcb_r, &timeout);
 }
 
 int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
 {
-    return XENOMAI_SKINCALL2(__native_muxid,
-                             __native_task_receive, mcb_r, &timeout);
+	return XENOMAI_SKINCALL2(__native_muxid,
+				 __native_task_receive, mcb_r, &timeout);
 }
 
 int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 {
-    return XENOMAI_SKINCALL2(__native_muxid,
-                             __native_task_reply, flowid, mcb_s);
+	return XENOMAI_SKINCALL2(__native_muxid,
+				 __native_task_reply, flowid, mcb_s);
 }

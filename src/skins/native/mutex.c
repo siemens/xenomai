@@ -23,34 +23,34 @@ extern int __native_muxid;
 
 int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 {
-    return XENOMAI_SKINCALL2(__native_muxid,
-                             __native_mutex_create, mutex, name);
+	return XENOMAI_SKINCALL2(__native_muxid,
+				 __native_mutex_create, mutex, name);
 }
 
 int rt_mutex_bind(RT_MUTEX *mutex, const char *name, RTIME timeout)
 {
-    return XENOMAI_SKINCALL3(__native_muxid,
-                             __native_mutex_bind, mutex, name, &timeout);
+	return XENOMAI_SKINCALL3(__native_muxid,
+				 __native_mutex_bind, mutex, name, &timeout);
 }
 
 int rt_mutex_delete(RT_MUTEX *mutex)
 {
-    return XENOMAI_SKINCALL1(__native_muxid, __native_mutex_delete, mutex);
+	return XENOMAI_SKINCALL1(__native_muxid, __native_mutex_delete, mutex);
 }
 
 int rt_mutex_lock(RT_MUTEX *mutex, RTIME timeout)
 {
-    return XENOMAI_SKINCALL2(__native_muxid,
-                             __native_mutex_lock, mutex, &timeout);
+	return XENOMAI_SKINCALL2(__native_muxid,
+				 __native_mutex_lock, mutex, &timeout);
 }
 
 int rt_mutex_unlock(RT_MUTEX *mutex)
 {
-    return XENOMAI_SKINCALL1(__native_muxid, __native_mutex_unlock, mutex);
+	return XENOMAI_SKINCALL1(__native_muxid, __native_mutex_unlock, mutex);
 }
 
 int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)
 {
-    return XENOMAI_SKINCALL2(__native_muxid,
-                             __native_mutex_inquire, mutex, info);
+	return XENOMAI_SKINCALL2(__native_muxid,
+				 __native_mutex_inquire, mutex, info);
 }

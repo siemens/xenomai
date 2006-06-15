@@ -20,49 +20,35 @@
 
 extern int __vrtx_muxid;
 
-void sc_delay (long timeout)
+void sc_delay(long timeout)
 {
-    XENOMAI_SKINCALL1(__vrtx_muxid,
-					  __vrtx_delay,
-					  timeout);
+	XENOMAI_SKINCALL1(__vrtx_muxid, __vrtx_delay, timeout);
 }
 
-void sc_adelay (struct timespec time, int *errp)
+void sc_adelay(struct timespec time, int *errp)
 {
-    *errp = XENOMAI_SKINCALL1(__vrtx_muxid,
-							  __vrtx_adelay,
-							  &time);
+	*errp = XENOMAI_SKINCALL1(__vrtx_muxid, __vrtx_adelay, &time);
 }
 
 void sc_stime(unsigned long ticks)
 {
-    XENOMAI_SKINCALL1(__vrtx_muxid,
-					  __vrtx_stime,
-					  ticks);
+	XENOMAI_SKINCALL1(__vrtx_muxid, __vrtx_stime, ticks);
 }
 
 unsigned long sc_gtime(void)
 {
 	unsigned long ticks;
 
-    XENOMAI_SKINCALL1(__vrtx_muxid,
-					  __vrtx_gtime,
-					  &ticks);
+	XENOMAI_SKINCALL1(__vrtx_muxid, __vrtx_gtime, &ticks);
 	return ticks;
 }
 
 void sc_sclock(struct timespec time, unsigned long ns, int *errp)
 {
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-							  __vrtx_sclock,
-							  &time,
-							  ns);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_sclock, &time, ns);
 }
 
 void sc_gclock(struct timespec *timep, unsigned long *nsp, int *errp)
 {
-    *errp = XENOMAI_SKINCALL2(__vrtx_muxid,
-							  __vrtx_gclock,
-							  timep,
-							  nsp);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_gclock, timep, nsp);
 }
