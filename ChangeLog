@@ -1,3 +1,8 @@
+2006-06-15  Daniel Rossier <Daniel.Rossier@heig-vd.ch>
+
+	* ksrc/arch/arm/patches/imx21: Add support for the Freescale
+	iMX21/csb535fs board.
+
 2006-06-15  Alexis Berlemont  <alexis.berlemont@free.fr>
 
 	* ksrc/skins/rtdm/drvlib.c (rtdm_mmap_buffer): Add support for

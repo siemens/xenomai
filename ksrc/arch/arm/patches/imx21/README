@@ -1,0 +1,12 @@
+This directory contains the needed support for running Adeos over the
+Freescale iMX21/csb535fs board, contributed by S.Gerber, G.Boutillier
+and D.Rossier from the University of Applied Sciences Western
+Switzerland, Reconfigurable & Embedded Digital Systems (REDS)
+Institute.
+
+Apply the following patches in this order, against a vanilla 2.6.14
+kernel:
+
+- patch-linux-2.6.14.imx21_1.0.0
+- ../adeos-ipipe-2.6.14-arm-1.3-04.patch
+- ipipe-2.6.14-imx21-1.3-04.patch
