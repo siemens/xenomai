@@ -171,6 +171,7 @@ int timer_create(clockid_t clockid,
 	timer->overruns = 0;
 	timer->owner = NULL;
 	timer->clockid = clockid;
+	appendq(&pse51_kqueues(0)->timerq, &timer->link);
 	xnlock_put_irqrestore(&nklock, s);
 
 	*timerid = (timer_t) (timer - timer_pool);
@@ -211,6 +212,8 @@ int timer_delete(timer_t timerid)
 	xnlock_get_irqsave(&nklock, s);
 
 	timer = &timer_pool[(unsigned long)timerid];
+
+	removeq(&pse51_kqueues(0)->timerq, &timer->link);
 
 	if (!xntimer_active_p(&timer->timerbase))
 		goto unlock_and_einval;
@@ -498,11 +501,32 @@ void pse51_timer_cleanup_thread(pthread_t zombie)
 	}
 }
 
+void pse51_timerq_cleanup(pse51_kqueues_t *q)
+{
+	xnholder_t *holder;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	while ((holder = getheadq(&q->timerq))) {
+		timer_t tm = (timer_t) (link2tm(holder) - timer_pool);
+		timer_delete(tm);
+		xnlock_put_irqrestore(&nklock, s);
+#ifdef CONFIG_XENO_OPT_DEBUG
+		xnprintf("Posix timer %u deleted\n", (unsigned) tm);
+#endif /* CONFIG_XENO_OPT_DEBUG */
+		xnlock_get_irqsave(&nklock, s);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+}
+
 int pse51_timer_pkg_init(void)
 {
 	int n;
 
 	initq(&timer_freeq);
+	initq(&pse51_global_kqueues.timerq);
 
 	for (n = 0; n < PSE51_TIMER_MAX; n++) {
 		inith(&timer_pool[n].link);
@@ -514,16 +538,7 @@ int pse51_timer_pkg_init(void)
 
 void pse51_timer_pkg_cleanup(void)
 {
-#ifdef CONFIG_XENO_OPT_DEBUG
-	int n;
-
-	for (n = 0; n < PSE51_TIMER_MAX; n++)
-		if (timer_pool[n].owner)
-			xnprintf
-			    ("Posix timer %d was not deleted, deleting now.\n",
-			     n);
-	/* Nothing to be done for deletion, since the pool is in static memory. */
-#endif /* CONFIG_XENO_OPT_DEBUG */
+	pse51_timerq_cleanup(&pse51_global_kqueues);
 }
 
 /*@}*/

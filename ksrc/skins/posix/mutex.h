@@ -35,6 +35,8 @@ typedef struct pse51_mutex {
 				   mutex. */
 } pse51_mutex_t;
 
+void pse51_mutexq_cleanup(pse51_kqueues_t *q);
+
 void pse51_mutex_pkg_init(void);
 
 void pse51_mutex_pkg_cleanup(void);

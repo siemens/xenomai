@@ -866,9 +866,6 @@ int munmap(void *addr, size_t len)
 }
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-pse51_assocq_t pse51_umaps;	/* List of user-space mappings. */
-pse51_assocq_t pse51_ufds;	/* List of user-space descriptors. */
-
 int pse51_xnheap_get(xnheap_t **pheap, void *addr)
 {
 	pse51_shm_t *shm;
@@ -881,15 +878,44 @@ int pse51_xnheap_get(xnheap_t **pheap, void *addr)
 	*pheap = &shm->heapbase;
 	return 0;
 }
+
+static void ufd_cleanup(pse51_assoc_t *assoc)
+{
+	pse51_ufd_t *ufd = assoc2ufd(assoc);
+#ifdef CONFIG_XENO_OPT_DEBUG
+	xnprintf("Posix: closing shared memory descriptor %lu.\n",
+		 pse51_assoc_key(assoc));
+#endif /* CONFIG_XENO_OPT_DEBUG */
+	pse51_shm_close(ufd->kfd);
+	xnfree(ufd);
+}
+
+static void umap_cleanup(pse51_assoc_t *assoc)
+{
+	pse51_umap_t *umap = assoc2umap(assoc);
+#ifdef CONFIG_XENO_OPT_DEBUG
+	xnprintf("Posix: unmapping shared memory 0x%08lx.\n",
+		 pse51_assoc_key(assoc));
+#endif /* CONFIG_XENO_OPT_DEBUG */
+	munmap(umap->kaddr, umap->len);
+	xnfree(umap);
+}
+
+void pse51_shm_ufds_cleanup(pse51_queues_t *q)
+{
+	pse51_assocq_destroy(&q->ufds, &ufd_cleanup);
+}
+
+void pse51_shm_umaps_cleanup(pse51_queues_t *q)
+{
+	pse51_assocq_destroy(&q->umaps, &umap_cleanup);
+}
+
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 int pse51_shm_pkg_init(void)
 {
 	initq(&pse51_shmq);
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	pse51_assocq_init(&pse51_umaps);
-	pse51_assocq_init(&pse51_ufds);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 	return 0;
 }
@@ -897,26 +923,25 @@ int pse51_shm_pkg_init(void)
 void pse51_shm_pkg_cleanup(void)
 {
 	xnholder_t *holder;
+	spl_t s;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	pse51_assocq_destroy(&pse51_umaps, NULL);
-	pse51_assocq_destroy(&pse51_ufds, NULL);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+	xnlock_get_irqsave(&nklock, s);
 
 	while ((holder = getheadq(&pse51_shmq))) {
 		pse51_shm_t *shm = link2shm(holder);
 		pse51_node_t *node;
-		spl_t s;
 
+		pse51_node_remove(&node, shm->nodebase.name, PSE51_SHM_MAGIC);
+		xnlock_put_irqrestore(&nklock, s);
 #ifdef CONFIG_XENO_OPT_DEBUG
-		xnprintf("POSIX shared memory \"%s\" discarded.\n",
+		xnprintf("Posix: unlinking shared memory \"%s\".\n",
 			 shm->nodebase.name);
 #endif /* CONFIG_XENO_OPT_DEBUG */
 		xnlock_get_irqsave(&nklock, s);
-		pse51_node_remove(&node, shm->nodebase.name, PSE51_SHM_MAGIC);
 		pse51_shm_destroy(shm, 1);
-		xnlock_put_irqrestore(&nklock, s);
 	}
+
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 /*@}*/

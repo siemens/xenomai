@@ -7,7 +7,7 @@
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 
-extern pse51_assocq_t pse51_uqds; /* List of user-space queues descriptors. */
+void pse51_mq_uqds_cleanup(pse51_queues_t *q);
 
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */    
 

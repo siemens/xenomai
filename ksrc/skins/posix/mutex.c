@@ -35,15 +35,12 @@
  * Before it can be used, a mutex has to be initialized with
  * pthread_mutex_init(). An attribute object, which reference may be passed to
  * this service, allows to select the features of the created mutex, namely its
- * @a type (see pthread_mutexattr_settype()) and the priority @a protocol it
- * uses (see pthread_mutexattr_setprotocol()).
+ * @a type (see pthread_mutexattr_settype()), the priority @a protocol it
+ * uses (see pthread_mutexattr_setprotocol()) and whether it may be shared
+ * between several processes (see pthread_mutexattr_setpshared()).
  *
- * There is no support for the @a pshared attribute; mutexes created by Xenomai
- * POSIX skin may be shared by kernel-space modules and user-space processes
- * through shared memory.
- *
- * By default, Xenomai POSIX skin mutexes are of the recursive type and use no
- * priority protocol.
+ * By default, Xenomai POSIX skin mutexes are of the recursive type, use no
+ * priority protocol and may not be shared between several processes.
  *
  * Note that only pthread_mutex_init() may be used to initialize a mutex, using
  * the static initializer @a PTHREAD_MUTEX_INITIALIZER is not supported.
@@ -54,39 +51,13 @@
 
 static pthread_mutexattr_t default_attr;
 
-static xnqueue_t pse51_mutexq;
-
 static void pse51_mutex_destroy_internal(pse51_mutex_t * mutex)
 {
-	removeq(&pse51_mutexq, &mutex->link);
+	removeq(&pse51_kqueues(mutex->attr.pshared)->mutexq, &mutex->link);
 	/* synchbase wait queue may not be empty only when this function is called
 	   from pse51_mutex_pkg_cleanup, hence the absence of xnpod_schedule(). */
 	xnsynch_destroy(&mutex->synchbase);
 	xnfree(mutex);
-}
-
-void pse51_mutex_pkg_init(void)
-{
-	initq(&pse51_mutexq);
-	pthread_mutexattr_init(&default_attr);
-}
-
-void pse51_mutex_pkg_cleanup(void)
-{
-	xnholder_t *holder;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	while ((holder = getheadq(&pse51_mutexq)) != NULL) {
-#ifdef CONFIG_XENO_OPT_DEBUG
-		xnprintf("Posix mutex %p was not destroyed, destroying now.\n",
-			 link2mutex(holder));
-#endif /* CONFIG_XENO_OPT_DEBUG */
-		pse51_mutex_destroy_internal(link2mutex(holder));
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
 }
 
 /**
@@ -118,6 +89,7 @@ int pthread_mutex_init(pthread_mutex_t * mx, const pthread_mutexattr_t * attr)
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
 	xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP;
 	pse51_mutex_t *mutex;
+	xnqueue_t *mutexq;
 	spl_t s;
 
 	if (!attr)
@@ -130,10 +102,12 @@ int pthread_mutex_init(pthread_mutex_t * mx, const pthread_mutexattr_t * attr)
 		return EINVAL;
 	}
 
+	mutexq = &pse51_kqueues(attr->pshared)->mutexq;
+
 	if (shadow->magic == PSE51_MUTEX_MAGIC) {
 		xnholder_t *holder;
-		for (holder = getheadq(&pse51_mutexq); holder;
-		     holder = nextq(&pse51_mutexq, holder))
+		for (holder = getheadq(mutexq); holder;
+		     holder = nextq(mutexq, holder))
 			if (holder == &shadow->mutex->link) {
 				/* mutex is already in the queue. */
 				xnlock_put_irqrestore(&nklock, s);
@@ -158,7 +132,7 @@ int pthread_mutex_init(pthread_mutex_t * mx, const pthread_mutexattr_t * attr)
 	mutex->attr = *attr;
 	mutex->count = 0;
 
-	appendq(&pse51_mutexq, &mutex->link);
+	appendq(mutexq, &mutex->link);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -516,6 +490,36 @@ int pthread_mutex_unlock(pthread_mutex_t * mx)
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
+}
+
+void pse51_mutexq_cleanup(pse51_kqueues_t *q)
+{
+	xnholder_t *holder;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	while ((holder = getheadq(&q->mutexq)) != NULL) {
+		pse51_mutex_destroy_internal(link2mutex(holder));
+		xnlock_put_irqrestore(&nklock, s);
+#ifdef CONFIG_XENO_OPT_DEBUG
+		xnprintf("Posix: destroying mutex %p.\n", link2mutex(holder));
+#endif /* CONFIG_XENO_OPT_DEBUG */
+		xnlock_get_irqsave(&nklock, s);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+}
+
+void pse51_mutex_pkg_init(void)
+{
+	initq(&pse51_global_kqueues.mutexq);
+	pthread_mutexattr_init(&default_attr);
+}
+
+void pse51_mutex_pkg_cleanup(void)
+{
+	pse51_mutexq_cleanup(&pse51_global_kqueues);
 }
 
 /*@}*/

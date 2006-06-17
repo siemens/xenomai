@@ -52,6 +52,9 @@
 #define PTHREAD_PRIO_INHERIT 1
 #define PTHREAD_PRIO_PROTECT 2
 
+#define PTHREAD_PROCESS_PRIVATE 0
+#define PTHREAD_PROCESS_SHARED  1
+
 #define PTHREAD_CANCEL_ENABLE  0
 #define PTHREAD_CANCEL_DISABLE 1
 
@@ -73,37 +76,41 @@ typedef struct pse51_thread *pthread_t;
 
 typedef struct pse51_threadattr {
 
-    unsigned magic;
-    int detachstate;
-    size_t stacksize;
-    int inheritsched;
-    int policy;
-    struct sched_param schedparam;
+	unsigned magic;
+	int detachstate;
+	size_t stacksize;
+	int inheritsched;
+	int policy;
+	struct sched_param schedparam;
 
-    /* Non portable */
-    char *name;
-    int fp;
-    xnarch_cpumask_t affinity;
+	/* Non portable */
+	char *name;
+	int fp;
+	xnarch_cpumask_t affinity;
 
 } pthread_attr_t;
 
+/* pthread_mutexattr_t and pthread_condattr_t fit on 32 bits, for compatibility
+   with libc. */
 typedef struct pse51_mutexattr {
-    unsigned magic;
-    int type;
-    int protocol;
+	unsigned magic: 24;
+	unsigned type: 2;
+	unsigned protocol: 2;
+	unsigned pshared: 1;
 } pthread_mutexattr_t;
 
 typedef struct pse51_condattr {
-    unsigned magic;
-    clockid_t clock;
+	unsigned magic: 24;
+	unsigned clock: 2;
+	unsigned pshared: 1;
 } pthread_condattr_t;
 
 struct pse51_key;
 typedef struct pse51_key *pthread_key_t;
 
 typedef struct pse51_once {
-    unsigned magic;
-    int routine_called;
+	unsigned magic;
+	int routine_called;
 } pthread_once_t;
 
 #ifdef __KERNEL__
@@ -131,6 +138,7 @@ typedef struct
   int __m_kind;
   struct _pthread_fastlock __m_lock;
 } pthread_mutex_t;
+
 #endif /* __KERNEL__ */
 
 #else /* !(__KERNEL__ || __XENO_SIM__) */
@@ -289,6 +297,10 @@ int pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
 int pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
 				  int proto);
 
+int pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr, int *pshared);
+
+int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared);
+
 int pthread_mutex_init(pthread_mutex_t *mutex,
 		       const pthread_mutexattr_t *attr);
 
@@ -312,6 +324,10 @@ int pthread_condattr_getclock(const pthread_condattr_t *attr,
 
 int pthread_condattr_setclock(pthread_condattr_t *attr,
 			      clockid_t clk_id);
+
+int pthread_condattr_getpshared(const pthread_condattr_t *attr, int *pshared);
+
+int pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared);
 
 int pthread_cond_init(pthread_cond_t *cond,
 		      const pthread_condattr_t *attr);

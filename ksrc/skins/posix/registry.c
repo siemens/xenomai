@@ -328,7 +328,7 @@ xnlock_t pse51_assoc_lock;
 
 static int pse51_assoc_lookup_inner(pse51_assocq_t * q,
 				    pse51_assoc_t ** passoc,
-				    struct mm_struct *mm, u_long uobj)
+				    u_long key)
 {
 	pse51_assoc_t *assoc;
 	xnholder_t *holder;
@@ -345,17 +345,16 @@ static int pse51_assoc_lookup_inner(pse51_assocq_t * q,
 		assoc = link2assoc(holder);
 		holder = nextq(q, holder);
 	}
-	while (holder && (assoc->uobj < uobj ||
-			  (assoc->uobj == uobj && assoc->mm < mm)));
+	while (holder && (assoc->key < key));
 
-	if (assoc->mm == mm && assoc->uobj == uobj) {
+	if (assoc->key == key) {
 		/* found */
 		*passoc = assoc;
 		return 1;
 	}
 
 	/* not found. */
-	if (assoc->uobj < uobj || (assoc->uobj == uobj && assoc->mm < mm))
+	if (assoc->key < key)
 		*passoc = holder ? link2assoc(holder) : NULL;
 	else
 		*passoc = assoc;
@@ -363,21 +362,19 @@ static int pse51_assoc_lookup_inner(pse51_assocq_t * q,
 	return 0;
 }
 
-int pse51_assoc_insert(pse51_assocq_t * q,
-		       pse51_assoc_t * assoc, struct mm_struct *mm, u_long uobj)
+int pse51_assoc_insert(pse51_assocq_t * q, pse51_assoc_t * assoc, u_long key)
 {
 	pse51_assoc_t *next;
 	spl_t s;
 
 	xnlock_get_irqsave(&pse51_assoc_lock, s);
 
-	if (pse51_assoc_lookup_inner(q, &next, mm, uobj)) {
+	if (pse51_assoc_lookup_inner(q, &next, key)) {
 		xnlock_put_irqrestore(&pse51_assoc_lock, s);
 		return -EBUSY;
 	}
 
-	assoc->mm = mm;
-	assoc->uobj = uobj;
+	assoc->key = key;
 	inith(&assoc->link);
 	if (next)
 		insertq(q, &next->link, &assoc->link);
@@ -389,28 +386,26 @@ int pse51_assoc_insert(pse51_assocq_t * q,
 	return 0;
 }
 
-pse51_assoc_t *pse51_assoc_lookup(pse51_assocq_t * q,
-				  struct mm_struct * mm, u_long uobj)
+pse51_assoc_t *pse51_assoc_lookup(pse51_assocq_t * q, u_long key)
 {
 	pse51_assoc_t *assoc;
 	unsigned found;
 	spl_t s;
 
 	xnlock_get_irqsave(&pse51_assoc_lock, s);
-	found = pse51_assoc_lookup_inner(q, &assoc, mm, uobj);
+	found = pse51_assoc_lookup_inner(q, &assoc, key);
 	xnlock_put_irqrestore(&pse51_assoc_lock, s);
 
 	return found ? assoc : NULL;
 }
 
-pse51_assoc_t *pse51_assoc_remove(pse51_assocq_t * q,
-				  struct mm_struct * mm, u_long uobj)
+pse51_assoc_t *pse51_assoc_remove(pse51_assocq_t * q, u_long key)
 {
 	pse51_assoc_t *assoc;
 	spl_t s;
 
 	xnlock_get_irqsave(&pse51_assoc_lock, s);
-	if (!pse51_assoc_lookup_inner(q, &assoc, mm, uobj)) {
+	if (!pse51_assoc_lookup_inner(q, &assoc, key)) {
 		xnlock_put_irqrestore(&pse51_assoc_lock, s);
 		return NULL;
 	}
@@ -439,6 +434,8 @@ void pse51_assocq_destroy(pse51_assocq_t * q, void (*destroy) (pse51_assoc_t *))
 }
 
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+pse51_kqueues_t pse51_global_kqueues;
 
 int pse51_reg_pkg_init(unsigned buckets_count, unsigned maxfds)
 {
@@ -491,9 +488,7 @@ void pse51_reg_pkg_cleanup(void)
 	for (i = 0; i < pse51_reg.maxfds; i++)
 		if (pse51_reg.descs[i]) {
 #ifdef CONFIG_XENO_OPT_DEBUG
-			xnprintf
-			    ("Posix descriptor %d was not destroyed, destroying now.\n",
-			     i);
+			xnprintf("Posix: destroying descriptor %d.\n",i);
 #endif /* CONFIG_XENO_OPT_DEBUG */
 			pse51_desc_destroy(pse51_reg.descs[i]);
 		}
@@ -501,7 +496,7 @@ void pse51_reg_pkg_cleanup(void)
 	for (i = 0; i < pse51_reg.buckets_count; i++) {
 		pse51_node_t *node;
 		for (node = pse51_reg.node_buckets[i]; node; node = node->next)
-			xnprintf("POSIX node \"%s\" left aside.\n", node->name);
+			xnprintf("Posix: node \"%s\" left aside.\n", node->name);
 	}
 #endif /* CONFIG_XENO_OPT_DEBUG */
 

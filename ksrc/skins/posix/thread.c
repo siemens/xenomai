@@ -36,15 +36,14 @@
 
 xnticks_t pse51_time_slice;
 
-xnqueue_t pse51_threadq;
-
 static pthread_attr_t default_attr;
 
 static void thread_destroy(pthread_t thread)
 {
-	removeq(&pse51_threadq, &thread->link);
-	/* join_sync wait queue may not be empty only when this function is called
-	   from pse51_thread_pkg_cleanup, hence the absence of xnpod_schedule(). */
+	removeq(&pse51_kqueues(0)->threadq, &thread->link);
+	/* join_sync wait queue may not be empty only when this function is
+	   called from pse51_thread_pkg_cleanup, hence the absence of
+	   xnpod_schedule(). */
 	xnsynch_destroy(&thread->join_synch);
 	xnfree(thread);
 }
@@ -211,7 +210,7 @@ int pthread_create(pthread_t *tid,
 		flags = 0;
 
 	xnlock_get_irqsave(&nklock, s);
-	appendq(&pse51_threadq, &thread->link);
+	appendq(&pse51_kqueues(0)->threadq, &thread->link);
 	xnlock_put_irqrestore(&nklock, s);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
@@ -654,22 +653,14 @@ void pse51_thread_abort(pthread_t thread, void *status)
 	xnpod_delete_thread(&thread->threadbase);
 }
 
-void pse51_thread_pkg_init(u_long rrperiod)
-{
-	initq(&pse51_threadq);
-	pthread_attr_init(&default_attr);
-	pse51_time_slice = rrperiod;
-	xnpod_add_hook(XNHOOK_THREAD_DELETE, thread_delete_hook);
-}
-
-void pse51_thread_pkg_cleanup(void)
+void pse51_threadq_cleanup(pse51_kqueues_t *q)
 {
 	xnholder_t *holder;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	while ((holder = getheadq(&pse51_threadq)) != NULL) {
+	while ((holder = getheadq(&q->threadq)) != NULL) {
 		pthread_t thread = link2pthread(holder);
 
 		if (pse51_obj_active
@@ -677,20 +668,30 @@ void pse51_thread_pkg_cleanup(void)
 			/* Remaining running thread. */
 			thread_setdetachstate(thread, PTHREAD_CREATE_DETACHED);
 			pse51_thread_abort(thread, NULL);
-		} else {
+		} else
 			/* Remaining TCB (joinable thread, which was never joined). */
-#ifdef CONFIG_XENO_OPT_DEBUG
-			xnprintf
-			    ("Posix thread %p(\"%s\") was created joinable, died, but"
-			     " was not joined, destroying it now.\n", thread,
-			     thread->threadbase.name);
-#endif /* CONFIG_XENO_OPT_DEBUG */
 			thread_destroy(thread);
-		}
+		xnlock_put_irqrestore(&nklock, s);
+#ifdef CONFIG_XENO_OPT_DEBUG
+		xnprintf("POSIX: destroyed thread %p\n", thread);
+#endif /* CONFIG_XENO_OPT_DEBUG */
+		xnlock_get_irqsave(&nklock, s);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
+}
 
+void pse51_thread_pkg_init(u_long rrperiod)
+{
+	initq(&pse51_global_kqueues.threadq);
+	pthread_attr_init(&default_attr);
+	pse51_time_slice = rrperiod;
+	xnpod_add_hook(XNHOOK_THREAD_DELETE, thread_delete_hook);
+}
+
+void pse51_thread_pkg_cleanup(void)
+{
+	pse51_threadq_cleanup(&pse51_global_kqueues);
 	xnpod_remove_hook(XNHOOK_THREAD_DELETE, thread_delete_hook);
 }
 

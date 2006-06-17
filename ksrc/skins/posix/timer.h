@@ -27,6 +27,8 @@ void pse51_timer_init_thread(pthread_t new);
 
 void pse51_timer_cleanup_thread(pthread_t zombie);
 
+void pse51_timerq_cleanup(pse51_kqueues_t *q);
+
 int pse51_timer_pkg_init(void);
 
 void pse51_timer_pkg_cleanup(void);

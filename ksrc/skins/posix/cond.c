@@ -37,11 +37,9 @@
  * pthread_cond_init(). An attribute object, which reference may be passed to
  * this service, allows to select the features of the created condition
  * variable, namely the @a clock used by the pthread_cond_timedwait() service
- * (@a CLOCK_REALTIME is used by default).
- *
- * There is no support for the @a pshared attribute; condition variables created
- * by Xenomai POSIX skin may be shared by kernel-space modules and user-space
- * processes through shared memory.
+ * (@a CLOCK_REALTIME is used by default), and whether it may be shared between
+ * several processes (it may not be shared by default, see
+ * pthread_condattr_setpshared()).
  *
  * Note that only pthread_cond_init() may be used to initialize a condition
  * variable, using the static initializer @a PTHREAD_COND_INITIALIZER is
@@ -65,13 +63,12 @@ typedef struct pse51_cond {
 
 static pthread_condattr_t default_cond_attr;
 
-static xnqueue_t pse51_condq;
-
 static void cond_destroy_internal(pse51_cond_t * cond)
 {
-	removeq(&pse51_condq, &cond->link);
-	/* synchbase wait queue may not be empty only when this function is called
-	   from pse51_cond_pkg_cleanup, hence the absence of xnpod_schedule(). */
+	removeq(&pse51_kqueues(cond->attr.pshared)->condq, &cond->link);
+	/* synchbase wait queue may not be empty only when this function is
+	   called from pse51_cond_pkg_cleanup, hence the absence of
+	   xnpod_schedule(). */
 	xnsynch_destroy(&cond->synchbase);
 	xnfree(cond);
 }
@@ -106,6 +103,7 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 	struct __shadow_cond *shadow = &((union __xeno_cond *)cnd)->shadow_cond;
 	xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP;
 	pse51_cond_t *cond;
+	xnqueue_t *condq;
 	spl_t s;
 
 	if (!attr)
@@ -118,10 +116,12 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 		return EINVAL;
 	}
 
+	condq = &pse51_kqueues(attr->pshared)->condq;
+
 	if (shadow->magic == PSE51_COND_MAGIC) {
 		xnholder_t *holder;
-		for (holder = getheadq(&pse51_condq); holder;
-		     holder = nextq(&pse51_condq, holder))
+		for (holder = getheadq(condq); holder;
+		     holder = nextq(condq, holder))
 			if (holder == &shadow->cond->link) {
 				/* cond is already in the queue. */
 				xnlock_put_irqrestore(&nklock, s);
@@ -143,7 +143,7 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 	cond->attr = *attr;
 	cond->mutex = NULL;
 
-	appendq(&pse51_condq, &cond->link);
+	appendq(condq, &cond->link);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -222,8 +222,8 @@ static inline int mutex_save_count(xnthread_t *cur,
 		mutex->count = 1;
 	else
 		mutex->count = 0;
-	/* Do not reschedule here, releasing the mutex and suspension must be done
-	   atomically in pthread_cond_*wait. */
+	/* Do not reschedule here, releasing the mutex and suspension must be
+	   done atomically in pthread_cond_*wait. */
 
 	return 0;
 }
@@ -293,18 +293,18 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
 
 	/* There are four possible wakeup conditions :
 	   - cond_signal / cond_broadcast, no status bit is set, and the function
-	   should return 0 ;
+	     should return 0 ;
 	   - timeout, the status XNTIMEO is set, and the function should return
-	   ETIMEDOUT ;
-	   - pthread_kill, the status bit XNBREAK is set, but ignored, the function
-	   simply returns EINTR (used only by the user-space interface, replaced
-	   by 0 anywhere else), causing a wakeup, spurious or not whether
-	   pthread_cond_signal was called between pthread_kill and the moment
-	   when xnsynch_sleep_on returned ;
-	   - pthread_cancel, no status bit is set, but cancellation specific bits are
-	   set, and tested only once the mutex is reacquired, so that the
-	   cancellation handler can be called with the mutex locked, as required by
-	   the specification.
+	     ETIMEDOUT ;
+	   - pthread_kill, the status bit XNBREAK is set, but ignored, the
+	     function simply returns EINTR (used only by the user-space
+	     interface, replaced by 0 anywhere else), causing a wakeup, spurious
+	     or not whether pthread_cond_signal was called between pthread_kill
+	     and the moment when xnsynch_sleep_on returned ;
+	   - pthread_cancel, no status bit is set, but cancellation specific
+	     bits are set, and tested only once the mutex is reacquired, so that
+	     the cancellation handler can be called with the mutex locked, as
+	     required by the specification.
 	 */
 
 	err = 0;
@@ -314,8 +314,8 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
 	else if (xnthread_test_flags(cur, XNTIMEO))
 		err = ETIMEDOUT;
 
-	/* Unbind mutex and cond, if no other thread is waiting, if the job was not
-	   already done. */
+	/* Unbind mutex and cond, if no other thread is waiting, if the job was
+	   not already done. */
 	if (!xnsynch_nsleepers(&cond->synchbase) && cond->mutex == mutex) {
 		--mutex->mutex->condvars;
 		cond->mutex = NULL;
@@ -477,9 +477,9 @@ int pthread_cond_signal(pthread_cond_t * cnd)
 
 	cond = shadow->cond;
 
-	/* FIXME: If the mutex associated with cnd is owned by the current thread,
-	   we could postpone rescheduling until pthread_mutex_unlock is called, this
-	   would save two useless context switches. */
+	/* FIXME: If the mutex associated with cnd is owned by the current
+	   thread, we could postpone rescheduling until pthread_mutex_unlock is
+	   called, this would save two useless context switches. */
 	if (xnsynch_wakeup_one_sleeper(&cond->synchbase) != NULL)
 		xnpod_schedule();
 
@@ -527,29 +527,36 @@ int pthread_cond_broadcast(pthread_cond_t * cnd)
 	return 0;
 }
 
-void pse51_cond_pkg_init(void)
-{
-	initq(&pse51_condq);
-	pthread_condattr_init(&default_cond_attr);
-}
-
-void pse51_cond_pkg_cleanup(void)
+void pse51_condq_cleanup(pse51_kqueues_t *q)
 {
 	xnholder_t *holder;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	while ((holder = getheadq(&pse51_condq)) != NULL) {
+	while ((holder = getheadq(&q->condq)) != NULL) {
+		cond_destroy_internal(link2cond(holder));
+		xnlock_put_irqrestore(&nklock, s);
 #ifdef CONFIG_XENO_OPT_DEBUG
 		xnprintf
-		    ("Posix condition variable %p was not destroyed, destroying"
-		     " now.\n", link2cond(holder));
+		    ("Posix: destroying condition variable %p.\n",
+		     link2cond(holder));
 #endif /* CONFIG_XENO_OPT_DEBUG */
-		cond_destroy_internal(link2cond(holder));
+		xnlock_get_irqsave(&nklock, s);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
+}
+
+void pse51_cond_pkg_init(void)
+{
+	initq(&pse51_global_kqueues.condq);
+	pthread_condattr_init(&default_cond_attr);
+}
+
+void pse51_cond_pkg_cleanup(void)
+{
+	pse51_condq_cleanup(&pse51_global_kqueues);
 }
 
 /*@}*/
