@@ -125,16 +125,16 @@ static void *sleeper(void *cookie)
             ++rtsw.to;
 
         fp_regs_set(rtsw.from + i * 1000);
-        if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw)) {
-            perror("sleeper: ioctl(RTSWITCH_RTIOC_SWITCH_TO)");
-            exit(EXIT_FAILURE);
-        }
+        if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw))
+            break;
         if (fp_regs_check(rtsw.from + i * 1000))
             pthread_kill(pthread_self(), SIGSTOP);
 
         if(++i == 4000000)
             i = 0;
     }
+
+    return NULL;
 }
 
 static void *rtup(void *cookie)
@@ -165,10 +165,8 @@ static void *rtup(void *cookie)
         exit(EXIT_FAILURE);
     }    
 
-    if (ioctl(fd, RTSWITCH_RTIOC_PEND, &param->swt)) {
-        perror("rtup: ioctl(RTSWITCH_RTIOC_PEND)");
-        exit(EXIT_FAILURE);
-    }
+    if (ioctl(fd, RTSWITCH_RTIOC_PEND, &param->swt))
+        return NULL;
 
     for (;;) {
         if (++rtsw.to == rtsw.from)
@@ -180,10 +178,8 @@ static void *rtup(void *cookie)
 
         if (param->fp & UFPP)
             fp_regs_set(rtsw.from + i * 1000);
-        if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw)) {
-            perror("ioctl(RTSWITCH_RTIOC_SWITCH_TO)");
-            exit(EXIT_FAILURE);
-        }
+        if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw))
+            break;
         if (param->fp & UFPP)
             if (fp_regs_check(rtsw.from + i * 1000))
                 pthread_kill(pthread_self(), SIGSTOP);
@@ -191,6 +187,8 @@ static void *rtup(void *cookie)
         if(++i == 4000000)
             i = 0;
     }
+
+    return NULL;
 }
 
 static void *rtus(void *cookie)
@@ -221,10 +219,8 @@ static void *rtus(void *cookie)
         exit(EXIT_FAILURE);
     }
 
-    if (ioctl(fd, RTSWITCH_RTIOC_PEND, &param->swt)) {
-        perror("rtus: ioctl(RTSWITCH_RTIOC_PEND)");
-        exit(EXIT_FAILURE);
-    }
+    if (ioctl(fd, RTSWITCH_RTIOC_PEND, &param->swt))
+        return NULL;
 
     for (;;) {
         if (++rtsw.to == rtsw.from)
@@ -236,10 +232,8 @@ static void *rtus(void *cookie)
 
         if (param->fp & UFPS)
             fp_regs_set(rtsw.from + i * 1000);
-        if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw)) {
-            perror("ioctl(RTSWITCH_RTIOC_SWITCH_TO)");
-            exit(EXIT_FAILURE);
-        }
+        if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw))
+            break;
         if (param->fp & UFPS)
             if (fp_regs_check(rtsw.from + i * 1000))
                 pthread_kill(pthread_self(), SIGSTOP);
@@ -247,6 +241,8 @@ static void *rtus(void *cookie)
         if(++i == 4000000)
             i = 0;
     }
+
+    return NULL;
 }
 
 static void *rtuo(void *cookie)
@@ -276,10 +272,8 @@ static void *rtuo(void *cookie)
         fprintf(stderr, "rtup: pthread_set_mode_np: %s\n", strerror(err));
         exit(EXIT_FAILURE);
     }    
-    if (ioctl(fd, RTSWITCH_RTIOC_PEND, &param->swt)) {
-        perror("ioctl(RTSWITCH_RTIOC_PEND)");
-        exit(EXIT_FAILURE);
-    }
+    if (ioctl(fd, RTSWITCH_RTIOC_PEND, &param->swt))
+        return NULL;
 
     mode = PTHREAD_PRIMARY;
     for (;;) {
@@ -292,10 +286,8 @@ static void *rtuo(void *cookie)
 
         if ((mode && param->fp & UFPP) || (!mode && param->fp & UFPS))
             fp_regs_set(rtsw.from + i * 1000);
-        if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw)) {
-            perror("rtuo: ioctl(RTSWITCH_RTIOC_SWITCH_TO)");
-            exit(EXIT_FAILURE);
-        }
+        if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw))
+            break;
         if ((mode && param->fp & UFPP) || (!mode && param->fp & UFPS))
             if (fp_regs_check(rtsw.from + i * 1000))
                 pthread_kill(pthread_self(), SIGSTOP);
@@ -310,6 +302,8 @@ static void *rtuo(void *cookie)
         if(++i == 4000000)
             i = 0;
     }
+
+    return NULL;
 }
 
 static int parse_arg(struct task_params *param,
@@ -510,8 +504,14 @@ int main(int argc, const char *argv[])
     struct cpu_tasks *cpus;
     pthread_attr_t rt_attr, sleeper_attr;
     struct sched_param sp;
+    int status;
 
     /* Initializations. */
+    if (mlockall(MCL_CURRENT|MCL_FUTURE)) {
+        perror("mlockall");
+        exit(EXIT_FAILURE);
+    }
+
     if (__real_sem_init(&sleeper_start, 0, 0)) {
         perror("sem_init");
         exit(EXIT_FAILURE);
@@ -522,11 +522,6 @@ int main(int argc, const char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    if (mlockall(MCL_CURRENT|MCL_FUTURE)) {
-        perror("mlockall");
-        exit(EXIT_FAILURE);
-    }
-
     all = all_fp;
     count = sizeof(all_fp) / sizeof(char *);
     nr_cpus = sysconf(_SC_NPROCESSORS_ONLN);
@@ -534,20 +529,6 @@ int main(int argc, const char *argv[])
         fprintf(stderr, "Error %d while getting the number of cpus (%s)\n",
                 errno, strerror(errno));
         exit(EXIT_FAILURE);
-    }
-
-    cpus = (struct cpu_tasks *) malloc(sizeof(*cpus) * nr_cpus);
-
-    for (i = 0; i < nr_cpus; i++) {
-        size_t size;
-        cpus[i].index = i;
-        cpus[i].capacity = 2;
-        size = cpus[i].capacity * sizeof(struct task_params);
-        cpus[i].tasks_count = 1;
-        cpus[i].tasks = (struct task_params *) malloc(size);
-        cpus[i].tasks[0].type = SLEEPER;
-        cpus[i].tasks[0].fp = 0;
-        cpus[i].tasks[0].cpu = &cpus[i];        
     }
 
     /* Check for -n, -h or --help flag. */
@@ -592,6 +573,33 @@ int main(int argc, const char *argv[])
             }
     }
 
+    cpus = (struct cpu_tasks *) malloc(sizeof(*cpus) * nr_cpus);
+    if (!cpus) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+
+    for (i = 0; i < nr_cpus; i++) {
+        size_t size;
+        cpus[i].fd = -1;
+        cpus[i].index = i;
+        cpus[i].capacity = 2;
+        size = cpus[i].capacity * sizeof(struct task_params);
+        cpus[i].tasks_count = 1;
+        cpus[i].tasks = (struct task_params *) malloc(size);
+
+        if (!cpus[i].tasks) {
+            perror("malloc");
+            exit(EXIT_FAILURE);
+        }
+
+        cpus[i].tasks[0].type = SLEEPER;
+        cpus[i].tasks[0].fp = 0;
+        cpus[i].tasks[0].cpu = &cpus[i];        
+        cpus[i].tasks[0].thread = 0;
+        cpus[i].tasks[0].swt.index = cpus[i].tasks[0].swt.flags = 0;
+    }
+
     /* Parse arguments and build data structures. */
     for(i = 1; i < argc; i++) {
         struct task_params params;
@@ -615,6 +623,10 @@ int main(int argc, const char *argv[])
             cpu->capacity += cpu->capacity / 2;
             size = cpu->capacity * sizeof(struct task_params);
             cpu->tasks = (struct task_params *) realloc(cpu->tasks, size);
+            if (!cpu->tasks) {
+                perror("realloc");
+                exit(EXIT_FAILURE);
+            }
         }
 
         params.thread = 0;
@@ -652,17 +664,17 @@ int main(int argc, const char *argv[])
 
         if (cpu->fd == -1) {
             perror("open(\"rtswitch0\")");
-            exit(EXIT_FAILURE);
+            goto failure;
         }
 
         if (ioctl(cpu->fd, RTSWITCH_RTIOC_TASKS_COUNT, cpu->tasks_count)) {
             perror("ioctl(RTSWITCH_RTIOC_TASKS_COUNT)");
-            exit(EXIT_FAILURE);
+            goto failure;
         }
 
         if (ioctl(cpu->fd, RTSWITCH_RTIOC_SET_CPU, i)) {
             perror("ioctl(RTSWITCH_RTIOC_SET_CPU)");
-            exit(EXIT_FAILURE);
+            goto failure;
         }
 
         for (j = 0; j < cpu->tasks_count; j++) {
@@ -679,7 +691,7 @@ int main(int argc, const char *argv[])
 
                 if (ioctl(cpu->fd, RTSWITCH_RTIOC_CREATE_KTASK, &param->swt)) {
                     perror("ioctl(RTSWITCH_RTIOC_CREATE_KTASK)");
-                    exit(EXIT_FAILURE);
+                    goto failure;
                 }
                 break;
 
@@ -706,13 +718,13 @@ int main(int argc, const char *argv[])
 
                 if (ioctl(cpu->fd, RTSWITCH_RTIOC_REGISTER_UTASK, &param->swt)) {
                     perror("ioctl(RTSWITCH_RTIOC_REGISTER_UTASK)");
-                    exit(EXIT_FAILURE);
+                    goto failure;
                 }
                 break;
 
             default:
                 fprintf(stderr, "Invalid type %d. Aborting\n", param->type);
-                exit(EXIT_FAILURE);
+                goto failure;
             }
 
             if (param->type != RTK) {
@@ -723,7 +735,7 @@ int main(int argc, const char *argv[])
                     
                     if (err) {
                         fprintf(stderr, "pthread_create: %s\n", strerror(err));
-                        exit(EXIT_FAILURE);
+                        goto failure;
                     }
 
                     snprintf(name, sizeof(name), "%s%u/%u",
@@ -734,7 +746,7 @@ int main(int argc, const char *argv[])
                     if (err) {
                         fprintf(stderr, "pthread_set_name_np: %s\n",
                                 strerror(err));
-                        exit(EXIT_FAILURE);
+                        goto failure;
                     }
                 } else {
                     err = __real_pthread_create(&param->thread,
@@ -744,7 +756,9 @@ int main(int argc, const char *argv[])
 
                     if (err) {
                         fprintf(stderr, "pthread_create: %s\n", strerror(err));
-                        exit(EXIT_FAILURE);
+                      failure:
+                        status = EXIT_FAILURE;
+                        goto cleanup;
                     }
                 }
             }
@@ -758,29 +772,34 @@ int main(int argc, const char *argv[])
     /* Wait for interruption. */
     sem_wait(&terminate);
 
+    status = 0;
+
     /* Cleanup. */
+  cleanup:
+    for (i = 0; i < nr_cpus; i++)
+        if (cpus[i].fd != -1)
+            close(cpus[i].fd);  /* Free RTDM devices ASAP. */
+
     for (i = 0; i < nr_cpus; i ++) {
         struct cpu_tasks *cpu = &cpus[i];
         for (j = 0; j < cpu->tasks_count; j++) {
             struct task_params *param = &cpu->tasks[j];
 
-            if (param->type != RTK)
+            if (param->type != RTK && param->thread)
                 pthread_cancel(param->thread); /* kill the user-space tasks. */
         }
         
         for (j = 0; j < cpu->tasks_count; j++) {
             struct task_params *param = &cpu->tasks[j];
 
-            if (param->type != RTK)
+            if (param->type != RTK && param->thread)
                 pthread_join(param->thread, NULL);
         }
-
-        close(cpu->fd);         /* kill the kernel-space tasks. */
         free(cpu->tasks);
     }
     free(cpus);
     __real_sem_destroy(&sleeper_start);
     sem_destroy(&terminate);
 
-    return 0;
+    return status;
 }
