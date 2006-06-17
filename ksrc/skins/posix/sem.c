@@ -81,16 +81,9 @@ static void sem_destroy_inner(pse51_sem_t * sem)
 	if (xnsynch_destroy(&sem->synchbase) == XNSYNCH_RESCHED)
 		xnpod_schedule();
 
-	if (sem->is_named) {
-		nsem_t *nsem = sem2named_sem(sem);
-		pse51_node_t *node;
-
-		pse51_node_remove(&node,
-				  nsem->nodebase.name,
-				  PSE51_NAMED_SEM_MAGIC);
-
-		xnfree(nsem);
-	} else
+	if (sem->is_named)
+		xnfree(sem2named_sem(sem));
+	else
 		xnfree(sem);
 }
 
@@ -789,6 +782,7 @@ void pse51_semq_cleanup(pse51_kqueues_t *q)
 
 	while ((holder = getheadq(&q->semq)) != NULL) {
 		pse51_sem_t *sem = link2sem(holder);
+		pse51_node_t *node;
 		xnlock_put_irqrestore(&nklock, s);
 #ifdef CONFIG_XENO_OPT_DEBUG
 		if (sem->is_named) 
@@ -798,6 +792,10 @@ void pse51_semq_cleanup(pse51_kqueues_t *q)
 			xnprintf("Posix: destroying semaphore %p.\n",sem);
 #endif /* CONFIG_XENO_OPT_DEBUG */
 		xnlock_get_irqsave(&nklock, s);
+		if (sem->is_named)
+			pse51_node_remove(&node,
+					  sem2named_sem(sem)->nodebase.name,
+					  PSE51_NAMED_SEM_MAGIC);
 		sem_destroy_inner(sem);
 	}
 
