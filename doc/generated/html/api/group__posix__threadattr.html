@@ -18,11 +18,11 @@ Collaboration diagram for Thread creation attributes.:<center><table><tr><td><im
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Thread creation attributes. 
 <p>
-The services described in this section allow to set the attributes of a <b>pthread_attr_t</b> object, passed to the <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a> service in order to set the attributes of a created thread.<p>
+The services described in this section allow to set the attributes of a <b>pthread_attr_t</b> object, passed to the <a class="el" href="group__posix__thread.html#ga6">pthread_create()</a> service in order to set the attributes of a created thread.<p>
 A <b>pthread_attr_t</b> object has to be initialized with <a class="el" href="group__posix__threadattr.html#ga1">pthread_attr_init()</a> first, which sets attributes to their default values, i.e. in kernel-space:<ul>
-<li><em>detachstate</em> to PTHREAD_CREATE_JOINABLE,</li><li><em>stacksize</em> to PTHREAD_STACK_MIN,</li><li><em>inheritsched</em> to PTHREAD_EXPLICIT_SCHED,</li><li><em>schedpolicy</em> to SCHED_FIFO,</li><li>scheduling priority to the minimum,</li><li>floating-point hardware enabled (only available in kernel-space),</li><li>processor affinity set to all available processors (only available as a thread attribute in kernel-space).</li></ul>
+<li><em>detachstate</em> to PTHREAD_CREATE_JOINABLE,</li><li><em>stacksize</em> to PTHREAD_STACK_MIN,</li><li><em>inheritsched</em> to PTHREAD_EXPLICIT_SCHED,</li><li><em>schedpolicy</em> to SCHED_OTHER,</li><li>scheduling priority to the minimum,</li><li>floating-point hardware enabled (only available in kernel-space),</li><li>processor affinity set to all available processors (only available as a thread attribute in kernel-space).</li></ul>
 <p>
-In user-space, the defaults are those documented by the underlying threading library (LinuxThreads or NPTL), and only threads created with the SCHED_FIFO policy are Xenomai threads, i.e. permitted to run in primary mode. 
+In user-space, the defaults are those documented by the underlying threading library (LinuxThreads or NPTL). 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
@@ -210,8 +210,8 @@ an error number if:<ul>
 Get detachstate attribute. 
 <p>
 This service returns, at the address <em>detachstate</em>, the value of the <em>detachstate</em> attribute in the thread attribute object <em>attr</em>.<p>
-Valid values of this attribute are PTHREAD_CREATE_JOINABLE and PTHREAD_CREATE_DETACHED. A detached thread is a thread which control block is automatically reclaimed when it terminates. The control block of a joinable thread, on the other hand, is only reclaimed when joined with the service <a class="el" href="group__posix__thread.html#ga11">pthread_join()</a>.<p>
-A thread that was created joinable may be detached after creation by using the <a class="el" href="group__posix__thread.html#ga8">pthread_detach()</a> service.<p>
+Valid values of this attribute are PTHREAD_CREATE_JOINABLE and PTHREAD_CREATE_DETACHED. A detached thread is a thread which control block is automatically reclaimed when it terminates. The control block of a joinable thread, on the other hand, is only reclaimed when joined with the service <a class="el" href="group__posix__thread.html#ga10">pthread_join()</a>.<p>
+A thread that was created joinable may be detached after creation by using the <a class="el" href="group__posix__thread.html#ga7">pthread_detach()</a> service.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object</td></tr>
@@ -315,7 +315,7 @@ an error number if:<ul>
 Get inheritsched attribute. 
 <p>
 This service returns at the address <em>inheritsched</em> the value of the <em>inheritsched</em> attribute in the attribute object <em>attr</em>.<p>
-Threads created with this attribute set to PTHREAD_EXPLICIT_SCHED will use the same scheduling policy and priority as the thread calling <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a>. Threads created with this attribute set to PTHREAD_INHERIT_SCHED will use the value of the <em>schedpolicy</em> attribute as scheduling policy, and the value of the <em>schedparam</em> attribute as scheduling priority.<p>
+Threads created with this attribute set to PTHREAD_EXPLICIT_SCHED will use the same scheduling policy and priority as the thread calling <a class="el" href="group__posix__thread.html#ga6">pthread_create()</a>. Threads created with this attribute set to PTHREAD_INHERIT_SCHED will use the value of the <em>schedpolicy</em> attribute as scheduling policy, and the value of the <em>schedparam</em> attribute as scheduling priority.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -473,7 +473,7 @@ an error number if:<ul>
 Get schedpolicy attribute. 
 <p>
 This service stores, at the address <em>policy</em>, the value of the <em>policy</em> attribute in the attribute object <em>attr</em>.<p>
-Threads created with the attribute object <em>attr</em> use the value of this attribute as scheduling policy if the <em>inheritsched</em> attribute is set to PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO or SCHED_RR, SCHED_OTHER is equivalent to SCHED_RR.<p>
+Threads created with the attribute object <em>attr</em> use the value of this attribute as scheduling policy if the <em>inheritsched</em> attribute is set to PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO, SCHED_RR or SCHED_OTHER.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -720,8 +720,8 @@ an error number if:<ul>
 Set detachstate attribute. 
 <p>
 This service sets to <em>detachstate</em> the value of the <em>detachstate</em> attribute in the attribute object <em>attr</em>.<p>
-Valid values of this attribute are PTHREAD_CREATE_JOINABLE and PTHREAD_CREATE_DETACHED. A detached thread is a thread which control block is automatically reclaimed when it terminates. The control block of a joinable thread, on the other hand, is only reclaimed when joined with the service <a class="el" href="group__posix__thread.html#ga11">pthread_join()</a>.<p>
-A thread that was created joinable may be detached after creation by using the <a class="el" href="group__posix__thread.html#ga8">pthread_detach()</a> service.<p>
+Valid values of this attribute are PTHREAD_CREATE_JOINABLE and PTHREAD_CREATE_DETACHED. A detached thread is a thread which control block is automatically reclaimed when it terminates. The control block of a joinable thread, on the other hand, is only reclaimed when joined with the service <a class="el" href="group__posix__thread.html#ga10">pthread_join()</a>.<p>
+A thread that was created joinable may be detached after creation by using the <a class="el" href="group__posix__thread.html#ga7">pthread_detach()</a> service.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -825,7 +825,7 @@ an error number if:<ul>
 Set inheritsched attribute. 
 <p>
 This service set to <em>inheritsched</em> the value of the <em>inheritsched</em> attribute in the attribute object <em>attr</em>.<p>
-Threads created with this attribute set to PTHREAD_INHERIT_SCHED will use the same scheduling policy and priority as the thread calling <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a>. Threads created with this attribute set to PTHREAD_EXPLICIT_SCHED will use the value of the <em>schedpolicy</em> attribute as scheduling policy, and the value of the <em>schedparam</em> attribute as scheduling priority.<p>
+Threads created with this attribute set to PTHREAD_INHERIT_SCHED will use the same scheduling policy and priority as the thread calling <a class="el" href="group__posix__thread.html#ga6">pthread_create()</a>. Threads created with this attribute set to PTHREAD_EXPLICIT_SCHED will use the value of the <em>schedpolicy</em> attribute as scheduling policy, and the value of the <em>schedparam</em> attribute as scheduling priority.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -982,7 +982,7 @@ an error number if:<ul>
 Set schedpolicy attribute. 
 <p>
 This service set to <em>policy</em> the value of the <em>policy</em> attribute in the attribute object <em>attr</em>.<p>
-Threads created with the attribute object <em>attr</em> use the value of this attribute as scheduling policy if the <em>inheritsched</em> attribute is set to PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO or SCHED_RR, SCHED_OTHER is equivalent to SCHED_RR.<p>
+Threads created with the attribute object <em>attr</em> use the value of this attribute as scheduling policy if the <em>inheritsched</em> attribute is set to PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO, SCHED_RR or SCHED_OTHER.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -1102,7 +1102,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:05:38 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:14 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

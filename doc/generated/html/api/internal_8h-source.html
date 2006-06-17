@@ -31,91 +31,155 @@
 00021 <span class="preprocessor"></span>
 00022 <span class="preprocessor">#include &lt;nucleus/xenomai.h&gt;</span>
 00023 <span class="preprocessor">#include &lt;nucleus/core.h&gt;</span>
-00024 <span class="preprocessor">#include &lt;posix/posix.h&gt;</span>
-00025 
-00026 <span class="preprocessor">#define PSE51_MAGIC(n) (0x8686##n##n)</span>
-00027 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_ANY_MAGIC         PSE51_MAGIC(00)</span>
-00028 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_THREAD_MAGIC      PSE51_MAGIC(01)</span>
-00029 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_THREAD_ATTR_MAGIC PSE51_MAGIC(02)</span>
-00030 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_MUTEX_MAGIC       PSE51_MAGIC(03)</span>
-00031 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_MUTEX_ATTR_MAGIC  PSE51_MAGIC(04)</span>
-00032 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_COND_MAGIC        PSE51_MAGIC(05)</span>
-00033 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_COND_ATTR_MAGIC   PSE51_MAGIC(05)</span>
-00034 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_SEM_MAGIC         PSE51_MAGIC(06)</span>
-00035 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_KEY_MAGIC         PSE51_MAGIC(07)</span>
-00036 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_ONCE_MAGIC        PSE51_MAGIC(08)</span>
-00037 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_MQ_MAGIC          PSE51_MAGIC(09)</span>
-00038 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_MQD_MAGIC         PSE51_MAGIC(0A)</span>
-00039 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_INTR_MAGIC        PSE51_MAGIC(0B)</span>
-00040 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_NAMED_SEM_MAGIC   PSE51_MAGIC(0C)</span>
-00041 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_TIMER_MAGIC       PSE51_MAGIC(0D)</span>
-00042 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_SHM_MAGIC         PSE51_MAGIC(0E)</span>
-00043 <span class="preprocessor"></span>
-00044 <span class="preprocessor">#define PSE51_MIN_PRIORITY      XNCORE_LOW_PRIO</span>
-00045 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_MAX_PRIORITY      XNCORE_HIGH_PRIO</span>
-00046 <span class="preprocessor"></span>
-00047 <span class="preprocessor">#define ONE_BILLION             1000000000</span>
+00024 <span class="preprocessor">#include &lt;nucleus/ppd.h&gt;</span>
+00025 <span class="preprocessor">#include &lt;posix/posix.h&gt;</span>
+00026 <span class="preprocessor">#include &lt;posix/registry.h&gt;</span>
+00027 
+00028 <span class="preprocessor">#define PSE51_MAGIC(n) (0x8686##n##n)</span>
+00029 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_ANY_MAGIC         PSE51_MAGIC(00)</span>
+00030 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_THREAD_MAGIC      PSE51_MAGIC(01)</span>
+00031 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_THREAD_ATTR_MAGIC PSE51_MAGIC(02)</span>
+00032 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_MUTEX_MAGIC       PSE51_MAGIC(03)</span>
+00033 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_MUTEX_ATTR_MAGIC  (PSE51_MAGIC(04) &amp; ((1 &lt;&lt; 24) - 1))</span>
+00034 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_COND_MAGIC        PSE51_MAGIC(05)</span>
+00035 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_COND_ATTR_MAGIC   (PSE51_MAGIC(05) &amp; ((1 &lt;&lt; 24) - 1))</span>
+00036 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_SEM_MAGIC         PSE51_MAGIC(06)</span>
+00037 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_KEY_MAGIC         PSE51_MAGIC(07)</span>
+00038 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_ONCE_MAGIC        PSE51_MAGIC(08)</span>
+00039 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_MQ_MAGIC          PSE51_MAGIC(09)</span>
+00040 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_MQD_MAGIC         PSE51_MAGIC(0A)</span>
+00041 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_INTR_MAGIC        PSE51_MAGIC(0B)</span>
+00042 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_NAMED_SEM_MAGIC   PSE51_MAGIC(0C)</span>
+00043 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_TIMER_MAGIC       PSE51_MAGIC(0D)</span>
+00044 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_SHM_MAGIC         PSE51_MAGIC(0E)</span>
+00045 <span class="preprocessor"></span>
+00046 <span class="preprocessor">#define PSE51_MIN_PRIORITY      XNCORE_LOW_PRIO</span>
+00047 <span class="preprocessor"></span><span class="preprocessor">#define PSE51_MAX_PRIORITY      XNCORE_HIGH_PRIO</span>
 00048 <span class="preprocessor"></span>
-00049 <span class="preprocessor">#define pse51_obj_active(h,m,t) \</span>
-00050 <span class="preprocessor">((h) &amp;&amp; ((t *)(h))-&gt;magic == (m))</span>
-00051 <span class="preprocessor"></span>
-00052 <span class="preprocessor">#define pse51_obj_deleted(h,m,t) \</span>
-00053 <span class="preprocessor">((h) &amp;&amp; ((t *)(h))-&gt;magic == ~(m))</span>
-00054 <span class="preprocessor"></span>
-00055 <span class="preprocessor">#define pse51_mark_deleted(t) ((t)-&gt;magic = ~(t)-&gt;magic)</span>
+00049 <span class="preprocessor">#define ONE_BILLION             1000000000</span>
+00050 <span class="preprocessor"></span>
+00051 <span class="preprocessor">#define pse51_obj_active(h,m,t) \</span>
+00052 <span class="preprocessor">        ((h) &amp;&amp; ((t *)(h))-&gt;magic == (m))</span>
+00053 <span class="preprocessor"></span>
+00054 <span class="preprocessor">#define pse51_obj_deleted(h,m,t) \</span>
+00055 <span class="preprocessor">        ((h) &amp;&amp; ((t *)(h))-&gt;magic == ~(m))</span>
 00056 <span class="preprocessor"></span>
-00057 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> ticks2ts(<span class="keyword">struct</span> timespec *ts, xnticks_t ticks)
-00058 {
-00059     ts-&gt;tv_sec = xnarch_uldivrem(xnpod_ticks2ns(ticks),
-00060                                  ONE_BILLION,
-00061                                  &amp;ts-&gt;tv_nsec);
-00062 }
-00063 
-00064 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t ts2ticks_floor(<span class="keyword">const</span> <span class="keyword">struct</span> timespec *ts)
-00065 {
-00066     xntime_t nsecs = ts-&gt;tv_nsec;
-00067     <span class="keywordflow">if</span>(ts-&gt;tv_sec)
-00068         nsecs += (xntime_t) ts-&gt;tv_sec * ONE_BILLION;
-00069     <span class="keywordflow">return</span> xnpod_ns2ticks(nsecs);
-00070 }
-00071 
-00072 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t ts2ticks_ceil(<span class="keyword">const</span> <span class="keyword">struct</span> timespec *ts)
-00073 {
-00074     xntime_t nsecs = ts-&gt;tv_nsec;
-00075     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rem;
-00076     xnticks_t ticks;
-00077     <span class="keywordflow">if</span>(ts-&gt;tv_sec)
-00078         nsecs += (xntime_t) ts-&gt;tv_sec * ONE_BILLION;
-00079     ticks = xnarch_ulldiv(nsecs, xnpod_get_tickval(), &amp;rem);
-00080     <span class="keywordflow">return</span> rem ? ticks+1 : ticks;
-00081 }
+00057 <span class="preprocessor">#define pse51_mark_deleted(t) ((t)-&gt;magic = ~(t)-&gt;magic)</span>
+00058 <span class="preprocessor"></span>
+00059 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
+00060         xnqueue_t condq;
+00061         xnqueue_t intrq;
+00062         xnqueue_t mutexq;
+00063         xnqueue_t semq;
+00064         xnqueue_t threadq;
+00065         xnqueue_t timerq;
+00066 } pse51_kqueues_t;
+00067 
+00068 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_PERVASIVE)</span>
+00069 <span class="preprocessor"></span><span class="keyword">typedef</span> <span class="keyword">struct </span>{
+00070         pse51_kqueues_t kqueues;
+00071         pse51_assocq_t uqds;
+00072         pse51_assocq_t usems;
+00073         pse51_assocq_t umaps;
+00074         pse51_assocq_t ufds;
+00075 
+00076         xnshadow_ppd_t ppd;
+00077 
+00078 <span class="preprocessor">#define ppd2queues(addr)                                                        \</span>
+00079 <span class="preprocessor">        ((pse51_queues_t *) ((char *) (addr) - offsetof(pse51_queues_t, ppd)))</span>
+00080 <span class="preprocessor"></span>
+00081 } pse51_queues_t;
 00082 
-00083 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t clock_get_ticks(clockid_t clock_id)
-00084 {
-00085     <span class="keywordflow">if</span>(clock_id == CLOCK_REALTIME)
-00086         <span class="keywordflow">return</span> <a class="code" href="group__pod.html#ga53">xnpod_get_time</a>();
-00087     <span class="keywordflow">else</span>
-00088         <span class="keywordflow">return</span> xnpod_ns2ticks(xnpod_get_cpu_time());
-00089 }
-00090 
-00091 <span class="comment">/* Convert an absolute timeout for clock clock_id to a relative timeout. */</span>
-00092 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> clock_adjust_timeout(xnticks_t *timeoutp, clockid_t clock_id)
-00093 {
-00094     xnsticks_t delay;
+00083 <span class="keyword">extern</span> <span class="keywordtype">int</span> pse51_muxid;
+00084 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_PERVASIVE */</span>
+00085 
+00086 <span class="keyword">extern</span> pse51_kqueues_t pse51_global_kqueues;
+00087 
+00088 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_PERVASIVE)</span>
+00089 <span class="preprocessor"></span><span class="keyword">static</span> <span class="keyword">inline</span> pse51_queues_t *pse51_queues(<span class="keywordtype">void</span>)
+00090 {
+00091         xnshadow_ppd_t *ppd;
+00092         spl_t s;
+00093 
+00094         xnlock_get_irqsave(&amp;nklock, s);
 00095 
-00096     <span class="keywordflow">if</span>(*timeoutp == XN_INFINITE)
-00097         <span class="keywordflow">return</span> 0;
-00098 
-00099     delay = *timeoutp - clock_get_ticks(clock_id);
-00100     <span class="keywordflow">if</span>(delay &lt;= 0)
-00101         <span class="keywordflow">return</span> ETIMEDOUT;
+00096         ppd = <a class="code" href="group__shadow.html#ga60">xnshadow_ppd_get</a>(pse51_muxid);
+00097         
+00098         xnlock_put_irqrestore(&amp;nklock, s);
+00099 
+00100         <span class="keywordflow">if</span> (!ppd)
+00101                 <span class="keywordflow">return</span> NULL;
 00102 
-00103     *timeoutp = delay;
-00104     <span class="keywordflow">return</span> 0;
-00105 }
+00103         <span class="keywordflow">return</span> ppd2queues(ppd);
+00104 }
+00105 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_PERVASIVE */</span>
 00106 
-00107 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_INTERNAL_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:04:29 2006 for Xenomai API by&nbsp;
+00107 <span class="keyword">static</span> <span class="keyword">inline</span> pse51_kqueues_t *pse51_kqueues(<span class="keywordtype">int</span> pshared)
+00108 {
+00109 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_PERVASIVE)</span>
+00110 <span class="preprocessor"></span>        xnshadow_ppd_t *ppd;
+00111 
+00112         <span class="keywordflow">if</span> (pshared || !(ppd = <a class="code" href="group__shadow.html#ga60">xnshadow_ppd_get</a>(pse51_muxid)))
+00113                 <span class="keywordflow">return</span> &amp;pse51_global_kqueues;
+00114 
+00115         <span class="keywordflow">return</span> &amp;ppd2queues(ppd)-&gt;kqueues;
+00116 <span class="preprocessor">#else </span><span class="comment">/* !__KERNEL__ || !CONFIG_XENO_OPT_PERVASIVE */</span>
+00117         <span class="keywordflow">return</span> &amp;pse51_global_kqueues;
+00118 <span class="preprocessor">#endif </span><span class="comment">/* !__KERNEL__ || !CONFIG_XENO_OPT_PERVASIVE */</span>
+00119 }
+00120 
+00121 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> ticks2ts(<span class="keyword">struct</span> timespec *ts, xnticks_t ticks)
+00122 {
+00123     ts-&gt;tv_sec = xnarch_uldivrem(xnpod_ticks2ns(ticks),
+00124                                  ONE_BILLION,
+00125                                  &amp;ts-&gt;tv_nsec);
+00126 }
+00127 
+00128 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t ts2ticks_floor(<span class="keyword">const</span> <span class="keyword">struct</span> timespec *ts)
+00129 {
+00130     xntime_t nsecs = ts-&gt;tv_nsec;
+00131     <span class="keywordflow">if</span>(ts-&gt;tv_sec)
+00132         nsecs += (xntime_t) ts-&gt;tv_sec * ONE_BILLION;
+00133     <span class="keywordflow">return</span> xnpod_ns2ticks(nsecs);
+00134 }
+00135 
+00136 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t ts2ticks_ceil(<span class="keyword">const</span> <span class="keyword">struct</span> timespec *ts)
+00137 {
+00138     xntime_t nsecs = ts-&gt;tv_nsec;
+00139     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rem;
+00140     xnticks_t ticks;
+00141     <span class="keywordflow">if</span>(ts-&gt;tv_sec)
+00142         nsecs += (xntime_t) ts-&gt;tv_sec * ONE_BILLION;
+00143     ticks = xnarch_ulldiv(nsecs, xnpod_get_tickval(), &amp;rem);
+00144     <span class="keywordflow">return</span> rem ? ticks+1 : ticks;
+00145 }
+00146 
+00147 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t clock_get_ticks(clockid_t clock_id)
+00148 {
+00149     <span class="keywordflow">if</span>(clock_id == CLOCK_REALTIME)
+00150         <span class="keywordflow">return</span> <a class="code" href="group__pod.html#ga53">xnpod_get_time</a>();
+00151     <span class="keywordflow">else</span>
+00152         <span class="keywordflow">return</span> xnpod_ns2ticks(xnpod_get_cpu_time());
+00153 }
+00154 
+00155 <span class="comment">/* Convert an absolute timeout for clock clock_id to a relative timeout. */</span>
+00156 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> clock_adjust_timeout(xnticks_t *timeoutp, clockid_t clock_id)
+00157 {
+00158     xnsticks_t delay;
+00159 
+00160     <span class="keywordflow">if</span>(*timeoutp == XN_INFINITE)
+00161         <span class="keywordflow">return</span> 0;
+00162 
+00163     delay = *timeoutp - clock_get_ticks(clock_id);
+00164     <span class="keywordflow">if</span>(delay &lt;= 0)
+00165         <span class="keywordflow">return</span> ETIMEDOUT;
+00166 
+00167     *timeoutp = delay;
+00168     <span class="keywordflow">return</span> 0;
+00169 }
+00170 
+00171 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_INTERNAL_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:03 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

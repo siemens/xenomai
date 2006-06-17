@@ -20,32 +20,31 @@ Mutex services.
 <p>
 A mutex is a MUTual EXclusion device, and is useful for protecting shared data structures from concurrent modifications, and implementing critical sections and monitors.<p>
 A mutex has two possible states: unlocked (not owned by any thread), and locked (owned by one thread). A mutex can never be owned by two different threads simultaneously. A thread attempting to lock a mutex that is already locked by another thread is suspended until the owning thread unlocks the mutex first.<p>
-Before it can be used, a mutex has to be initialized with <a class="el" href="group__posix__mutex.html#ga6">pthread_mutex_init()</a>. An attribute object, which reference may be passed to this service, allows to select the features of the created mutex, namely its <em>type</em> (see <a class="el" href="group__posix__mutex.html#ga17">pthread_mutexattr_settype()</a>) and the priority <em>protocol</em> it uses (see <a class="el" href="group__posix__mutex.html#ga19">pthread_mutexattr_setprotocol()</a>).<p>
-There is no support for the <em>pshared</em> attribute; mutexes created by Xenomai POSIX skin may be shared by kernel-space modules and user-space processes through shared memory.<p>
-By default, Xenomai POSIX skin mutexes are of the recursive type and use no priority protocol.<p>
-Note that only <a class="el" href="group__posix__mutex.html#ga6">pthread_mutex_init()</a> may be used to initialize a mutex, using the static initializer <em>PTHREAD_MUTEX_INITIALIZER</em> is not supported. 
+Before it can be used, a mutex has to be initialized with <a class="el" href="group__posix__mutex.html#ga3">pthread_mutex_init()</a>. An attribute object, which reference may be passed to this service, allows to select the features of the created mutex, namely its <em>type</em> (see <a class="el" href="group__posix__mutex.html#ga17">pthread_mutexattr_settype()</a>), the priority <em>protocol</em> it uses (see <a class="el" href="group__posix__mutex.html#ga19">pthread_mutexattr_setprotocol()</a>) and whether it may be shared between several processes (see <a class="el" href="group__posix__mutex.html#ga21">pthread_mutexattr_setpshared()</a>).<p>
+By default, Xenomai POSIX skin mutexes are of the recursive type, use no priority protocol and may not be shared between several processes.<p>
+Note that only <a class="el" href="group__posix__mutex.html#ga3">pthread_mutex_init()</a> may be used to initialize a mutex, using the static initializer <em>PTHREAD_MUTEX_INITIALIZER</em> is not supported. 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mutex.html#ga6">pthread_mutex_init</a> (pthread_mutex_t *mx, const pthread_mutexattr_t *attr)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mutex.html#ga3">pthread_mutex_init</a> (pthread_mutex_t *mx, const pthread_mutexattr_t *attr)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a mutex.  <a href="#ga6"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mutex.html#ga7">pthread_mutex_destroy</a> (pthread_mutex_t *mx)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a mutex.  <a href="#ga3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mutex.html#ga4">pthread_mutex_destroy</a> (pthread_mutex_t *mx)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy a mutex.  <a href="#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mutex.html#ga9">pthread_mutex_trylock</a> (pthread_mutex_t *mx)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy a mutex.  <a href="#ga4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mutex.html#ga6">pthread_mutex_trylock</a> (pthread_mutex_t *mx)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Attempt to lock a mutex.  <a href="#ga9"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mutex.html#ga10">pthread_mutex_lock</a> (pthread_mutex_t *mx)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Attempt to lock a mutex.  <a href="#ga6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mutex.html#ga7">pthread_mutex_lock</a> (pthread_mutex_t *mx)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Lock a mutex.  <a href="#ga10"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mutex.html#ga11">pthread_mutex_timedlock</a> (pthread_mutex_t *mx, const struct timespec *to)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Lock a mutex.  <a href="#ga7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mutex.html#ga8">pthread_mutex_timedlock</a> (pthread_mutex_t *mx, const struct timespec *to)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Attempt, during a bounded time, to lock a mutex.  <a href="#ga11"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mutex.html#ga13">pthread_mutex_unlock</a> (pthread_mutex_t *mx)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Attempt, during a bounded time, to lock a mutex.  <a href="#ga8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mutex.html#ga10">pthread_mutex_unlock</a> (pthread_mutex_t *mx)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unlock a mutex.  <a href="#ga13"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unlock a mutex.  <a href="#ga10"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mutex.html#ga14">pthread_mutexattr_init</a> (pthread_mutexattr_t *attr)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a mutex attributes object.  <a href="#ga14"></a><br></td></tr>
@@ -64,9 +63,15 @@ Note that only <a class="el" href="group__posix__mutex.html#ga6">pthread_mutex_i
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mutex.html#ga19">pthread_mutexattr_setprotocol</a> (pthread_mutexattr_t *attr, int proto)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the protocol attribute of a mutex attributes object.  <a href="#ga19"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mutex.html#ga20">pthread_mutexattr_getpshared</a> (const pthread_mutexattr_t *attr, int *pshared)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the process-shared attribute of a mutex attributes object.  <a href="#ga20"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__mutex.html#ga21">pthread_mutexattr_setpshared</a> (pthread_mutexattr_t *attr, int pshared)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the process-shared attribute of a mutex attributes object.  <a href="#ga21"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="ga7" doxytag="mutex.c::pthread_mutex_destroy"></a><p>
+<a class="anchor" name="ga4" doxytag="mutex.c::pthread_mutex_destroy"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -93,7 +98,7 @@ Note that only <a class="el" href="group__posix__mutex.html#ga6">pthread_mutex_i
 <p>
 Destroy a mutex. 
 <p>
-This service destroys the mutex <em>mx</em>, if it is unlocked and not referenced by any condition variable. The mutex becomes invalid for all mutex services (they all return the EINVAL error) except <a class="el" href="group__posix__mutex.html#ga6">pthread_mutex_init()</a>.<p>
+This service destroys the mutex <em>mx</em>, if it is unlocked and not referenced by any condition variable. The mutex becomes invalid for all mutex services (they all return the EINVAL error) except <a class="el" href="group__posix__mutex.html#ga3">pthread_mutex_init()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>mx</em>&nbsp;</td><td>the mutex to be destroyed.</td></tr>
@@ -107,7 +112,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga6" doxytag="mutex.c::pthread_mutex_init"></a><p>
+<a class="anchor" name="ga3" doxytag="mutex.c::pthread_mutex_init"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -158,7 +163,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga10" doxytag="mutex.c::pthread_mutex_lock"></a><p>
+<a class="anchor" name="ga7" doxytag="mutex.c::pthread_mutex_lock"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -204,7 +209,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga11" doxytag="mutex.c::pthread_mutex_timedlock"></a><p>
+<a class="anchor" name="ga8" doxytag="mutex.c::pthread_mutex_timedlock"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -240,7 +245,7 @@ an error number if:<ul>
 <p>
 Attempt, during a bounded time, to lock a mutex. 
 <p>
-This service is equivalent to <a class="el" href="group__posix__mutex.html#ga10">pthread_mutex_lock()</a>, except that if the mutex <em>mx</em> is locked by another thread than the current one, this service only suspends the current thread until the timeout specified by <em>to</em> expires.<p>
+This service is equivalent to <a class="el" href="group__posix__mutex.html#ga7">pthread_mutex_lock()</a>, except that if the mutex <em>mx</em> is locked by another thread than the current one, this service only suspends the current thread until the timeout specified by <em>to</em> expires.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>mx</em>&nbsp;</td><td>the mutex to be locked;</td></tr>
@@ -258,7 +263,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga9" doxytag="mutex.c::pthread_mutex_trylock"></a><p>
+<a class="anchor" name="ga6" doxytag="mutex.c::pthread_mutex_trylock"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -285,7 +290,7 @@ an error number if:<ul>
 <p>
 Attempt to lock a mutex. 
 <p>
-This service is equivalent to <a class="el" href="group__posix__mutex.html#ga10">pthread_mutex_lock()</a>, except that if the mutex <em>mx</em> is locked by another thread than the current one, this service returns immediately.<p>
+This service is equivalent to <a class="el" href="group__posix__mutex.html#ga7">pthread_mutex_lock()</a>, except that if the mutex <em>mx</em> is locked by another thread than the current one, this service returns immediately.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>mx</em>&nbsp;</td><td>the mutex to be locked.</td></tr>
@@ -302,7 +307,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga13" doxytag="mutex.c::pthread_mutex_unlock"></a><p>
+<a class="anchor" name="ga10" doxytag="mutex.c::pthread_mutex_unlock"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -384,9 +389,6 @@ This service destroys the mutex attributes object <em>attr</em>. The object beco
 an error number if:<ul>
 <li>EINVAL, the mutex attributes object <em>attr</em> is invalid.</li></ul>
 </dd></dl>
-<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
-<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread.</li></ul>
-</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_destroy.html">Specification.</a> </dd></dl>
     </td>
   </tr>
@@ -428,7 +430,7 @@ an error number if:<ul>
 Get the protocol attribute from a mutex attributes object. 
 <p>
 This service stores, at the address <em>proto</em>, the value of the <em>protocol</em> attribute in the mutex attributes object <em>attr</em>.<p>
-The <em>protcol</em> attribute may only be one of <em>PTHREAD_PRIO_NONE</em> and <em>PTHREAD_PRIO_INHERIT</em>.<p>
+The <em>protcol</em> attribute may only be one of <em>PTHREAD_PRIO_NONE</em> or <em>PTHREAD_PRIO_INHERIT</em>. See <a class="el" href="group__posix__mutex.html#ga19">pthread_mutexattr_setprotocol()</a> for the meaning of these two constants.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>an initialized mutex attributes object;</td></tr>
@@ -439,10 +441,59 @@ The <em>protcol</em> attribute may only be one of <em>PTHREAD_PRIO_NONE</em> and
 an error number if:<ul>
 <li>EINVAL, the <em>proto</em> address is invalid;</li><li>EINVAL, the mutex attributes object <em>attr</em> is invalid.</li></ul>
 </dd></dl>
-<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
-<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread.</li></ul>
-</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_getprotocol.html">Specification.</a> </dd></dl>
+    </td>
+  </tr>
+</table>
+<a class="anchor" name="ga20" doxytag="mutex_attr.c::pthread_mutexattr_getpshared"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">int pthread_mutexattr_getpshared           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">const pthread_mutexattr_t *&nbsp;</td>
+          <td class="mdname" nowrap> <em>attr</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>int *&nbsp;</td>
+          <td class="mdname" nowrap> <em>pshared</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Get the process-shared attribute of a mutex attributes object. 
+<p>
+This service stores, at the address <em>pshared</em>, the value of the <em>pshared</em> attribute in the mutex attributes object <em>attr</em>.<p>
+The <em>pashared</em> attribute may only be one of <em>PTHREAD_PROCESS_PRIVATE</em> or <em>PTHREAD_PROCESS_SHARED</em>. See <a class="el" href="group__posix__mutex.html#ga21">pthread_mutexattr_setpshared()</a> for the meaning of these two constants.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>an initialized mutex attributes object;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>pshared</em>&nbsp;</td><td>address where the value of the <em>pshared</em> attribute will be stored on success.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
+an error number if:<ul>
+<li>EINVAL, the <em>pshared</em> address is invalid;</li><li>EINVAL, the mutex attributes object <em>attr</em> is invalid.</li></ul>
+</dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_getpshared.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
@@ -483,7 +534,7 @@ an error number if:<ul>
 Get the mutex type attribute from a mutex attributes object. 
 <p>
 This service stores, at the address <em>type</em>, the value of the <em>type</em> attribute in the mutex attributes object <em>attr</em>.<p>
-See <a class="el" href="group__posix__mutex.html#ga10">pthread_mutex_lock()</a> and <a class="el" href="group__posix__mutex.html#ga13">pthread_mutex_unlock()</a> documentations for a description of the values of the <em>type</em> attribute and their effect on a mutex.<p>
+See <a class="el" href="group__posix__mutex.html#ga7">pthread_mutex_lock()</a> and <a class="el" href="group__posix__mutex.html#ga10">pthread_mutex_unlock()</a> documentations for a description of the values of the <em>type</em> attribute and their effect on a mutex.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>an initialized mutex attributes object,</td></tr>
@@ -493,9 +544,6 @@ See <a class="el" href="group__posix__mutex.html#ga10">pthread_mutex_lock()</a> 
 <dl compact><dt><b>Returns:</b></dt><dd>0 on sucess, <p>
 an error number if:<ul>
 <li>EINVAL, the <em>type</em> address is invalid;</li><li>EINVAL, the mutex attributes object <em>attr</em> is invalid.</li></ul>
-</dd></dl>
-<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
-<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread.</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_gettype.html">Specification.</a> </dd></dl>
     </td>
@@ -529,9 +577,8 @@ an error number if:<ul>
 Initialize a mutex attributes object. 
 <p>
 This services initializes the mutex attributes object <em>attr</em> with default values for all attributes. Default value are :<ul>
-<li>for the <em>type</em> attribute, <em>PTHREAD_MUTEX_RECURSIVE</em>;</li><li>for the <em>protocol</em> attribute, <em>PTHREAD_PRIO_NONE</em>.</li></ul>
+<li>for the <em>type</em> attribute, <em>PTHREAD_MUTEX_RECURSIVE</em>;</li><li>for the <em>protocol</em> attribute, <em>PTHREAD_PRIO_NONE</em>;</li><li>for the <em>pshared</em> attribute, <em>PTHREAD_PROCESS_PRIVATE</em>.</li></ul>
 <p>
-Note that the <em>pshared</em> attribute is not supported: mutexes created by Xenomai POSIX skin may be shared by kernel-space modules and user-space processes through shared memory.<p>
 If this service is called specifying a mutex attributes object that was already initialized, the attributes object is reinitialized.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -541,9 +588,6 @@ If this service is called specifying a mutex attributes object that was already 
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
 an error number if:<ul>
 <li>ENOMEM, the mutex attributes object pointer <em>attr</em> is <em>NULL</em>.</li></ul>
-</dd></dl>
-<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
-<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread.</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_init.html">Specification.</a> </dd></dl>
     </td>
@@ -596,13 +640,63 @@ This service set the <em>type</em> attribute of the mutex attributes object <em>
 </dl>
 The value PTHREAD_PRIO_PROTECT (priority ceiling protocol) is unsupported.<p>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, <p>
-an error status if:<ul>
+an error number if:<ul>
 <li>EINVAL, the mutex attributes object <em>attr</em> is invalid;</li><li>ENOTSUP, the value of <em>proto</em> is unsupported;</li><li>EINVAL, the value of <em>proto</em> is invalid.</li></ul>
 </dd></dl>
-<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
-<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread.</li></ul>
-</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_setprotocol.html">Specification.</a> </dd></dl>
+    </td>
+  </tr>
+</table>
+<a class="anchor" name="ga21" doxytag="mutex_attr.c::pthread_mutexattr_setpshared"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">int pthread_mutexattr_setpshared           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">pthread_mutexattr_t *&nbsp;</td>
+          <td class="mdname" nowrap> <em>attr</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>int&nbsp;</td>
+          <td class="mdname" nowrap> <em>pshared</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Set the process-shared attribute of a mutex attributes object. 
+<p>
+This service set the <em>pshared</em> attribute of the mutex attributes object <em>attr</em>.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>an initialized mutex attributes object.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>pshared</em>&nbsp;</td><td>value of the <em>pshared</em> attribute, may be one of:<ul>
+<li>PTHREAD_PROCESS_PRIVATE, meaning that a mutex created with the attributes object <em>attr</em> will only be accessible by threads within the same process as the thread that initialized the mutex;</li><li>PTHREAD_PROCESS_SHARED, meaning that a mutex created with the attributes object <em>attr</em> will be accessible by any thread that has access to the memory where the mutex is allocated.</li></ul>
+</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on success, <p>
+an error status if:<ul>
+<li>EINVAL, the mutex attributes object <em>attr</em> is invalid;</li><li>EINVAL, the value of <em>pshared</em> is invalid.</li></ul>
+</dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_setpshared.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
@@ -643,8 +737,8 @@ an error status if:<ul>
 Set the mutex type attribute of a mutex attributes object. 
 <p>
 This service set the <em>type</em> attribute of the mutex attributes object <em>attr</em>.<p>
-See <a class="el" href="group__posix__mutex.html#ga10">pthread_mutex_lock()</a> and <a class="el" href="group__posix__mutex.html#ga13">pthread_mutex_unlock()</a> documentations for a description of the values of the <em>type</em> attribute and their effect on a mutex.<p>
-The <em>PTHREAD_MUTEX_DEFAULT</em> default <em>type</em> is the same as <em>PTHREAD_MUTEX_RECURSIVE</em>. Note that using a Xenomai POSIX skin recursive mutex with a Xenomai POSIX skin condition variable is safe (see <a class="el" href="group__posix__cond.html#ga10">pthread_cond_wait()</a> documentation).<p>
+See <a class="el" href="group__posix__mutex.html#ga7">pthread_mutex_lock()</a> and <a class="el" href="group__posix__mutex.html#ga10">pthread_mutex_unlock()</a> documentations for a description of the values of the <em>type</em> attribute and their effect on a mutex.<p>
+The <em>PTHREAD_MUTEX_DEFAULT</em> default <em>type</em> is the same as <em>PTHREAD_MUTEX_RECURSIVE</em>. Note that using a Xenomai POSIX skin recursive mutex with a Xenomai POSIX skin condition variable is safe (see <a class="el" href="group__posix__cond.html#ga9">pthread_cond_wait()</a> documentation).<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>an initialized mutex attributes object,</td></tr>
@@ -655,14 +749,11 @@ The <em>PTHREAD_MUTEX_DEFAULT</em> default <em>type</em> is the same as <em>PTHR
 an error number if:<ul>
 <li>EINVAL, the mutex attributes object <em>attr</em> is invalid;</li><li>EINVAL, the value of <em>type</em> is invalid for the <em>type</em> attribute.</li></ul>
 </dd></dl>
-<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
-<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread.</li></ul>
-</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_settype.html">Specification.</a> </dd></dl>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:05:36 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:13 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

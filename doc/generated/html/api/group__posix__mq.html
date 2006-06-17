@@ -200,7 +200,7 @@ Register the current thread to be notified of message arrival at an empty messag
 If <em>evp</em> is not <em>NULL</em> and is the address of a <b>sigevent</b> structure with the <em>sigev_notify</em> member set to SIGEV_SIGNAL, the current thread will be notified by a signal when a message is sent to the message queue <em>fd</em>, the queue is empty, and no thread is blocked in call to <a class="el" href="group__posix__mq.html#ga18">mq_receive()</a> or <a class="el" href="group__posix__mq.html#ga19">mq_timedreceive()</a>. After the notification, the thread is unregistered.<p>
 If <em>evp</em> is <em>NULL</em> or the <em>sigev_notify</em> member is SIGEV_NONE, the current thread is unregistered.<p>
 Only one thread may be registered at a time.<p>
-If the current thread is not a Xenomai POSIX skin thread (created with <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a>), this service fails.<p>
+If the current thread is not a Xenomai POSIX skin thread (created with <a class="el" href="group__posix__thread.html#ga6">pthread_create()</a>), this service fails.<p>
 Note that signals sent to user-space Xenomai POSIX skin threads will cause them to switch to secondary mode.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -695,7 +695,7 @@ This service unlinks the message queue named <em>name</em>. The message queue is
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:05:36 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:13 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -16,10 +16,10 @@ Collaboration diagram for Timer services.:<center><table><tr><td><img src="group
 <area href="group__nucleus.html" shape="rect" coords="9,8,137,32" alt="">
 </map></td></tr></table></center>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
-The Xenomai timer facility behaves slightly differently depending on the underlying system timer mode, i.e. periodic or aperiodic. In periodic mode, the hardware timer ticks periodically without any external programming (aside of the initial one which sets its period). In such a case, a BSD timer wheel (see "Redesigning the BSD Callout and Timer Facilities" by Adam M. Costello and George Varghese) is used to its full addressing capabilities.<p>
-If the underlying timer source is aperiodic, we need to reprogram the next shot after each tick at hardware level, and we do not need any periodic source. In such a case, the timer manager only uses a single slot (#0) from the wheel as a plain linked list, which is ordered by increasing timeout values of the running timers.<p>
-Depending on the above mode, the timer object stores time values either as count of periodic ticks, or as count of CPU ticks.<p>
-The current implementation assumes that the maximum number of outstanding timers in aperiodic mode is low (&lt; 16?). Would this assumption prove false, we would need to go for an AVL of some sort, likely a RB tree. The periodic mode is already based on a timer wheel, so there should not be any problem here, unless your application is some ugly monster from the dark ages... 
+The Xenomai timer facility behaves slightly differently depending on the underlying system timer mode, i.e. periodic or aperiodic.<p>
+In periodic mode, the hardware timer ticks periodically without any external programming (aside of the initial one which sets its period).<p>
+If the underlying timer source is aperiodic, we need to reprogram the next shot after each tick at hardware level, and we do not need any periodic source.<p>
+Depending on the above mode, the timer object stores time values either as count of periodic ticks, or as count of CPU ticks. 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
@@ -381,7 +381,7 @@ Rescheduling: never.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:05:28 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:05 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

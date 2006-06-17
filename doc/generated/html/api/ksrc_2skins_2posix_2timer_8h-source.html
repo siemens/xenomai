@@ -37,12 +37,14 @@
 00027 
 00028 <span class="keywordtype">void</span> pse51_timer_cleanup_thread(pthread_t zombie);
 00029 
-00030 <span class="keywordtype">int</span> pse51_timer_pkg_init(<span class="keywordtype">void</span>);
+00030 <span class="keywordtype">void</span> pse51_timerq_cleanup(pse51_kqueues_t *q);
 00031 
-00032 <span class="keywordtype">void</span> pse51_timer_pkg_cleanup(<span class="keywordtype">void</span>);
+00032 <span class="keywordtype">int</span> pse51_timer_pkg_init(<span class="keywordtype">void</span>);
 00033 
-00034 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_TIMER_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:04:28 2006 for Xenomai API by&nbsp;
+00034 <span class="keywordtype">void</span> pse51_timer_pkg_cleanup(<span class="keywordtype">void</span>);
+00035 
+00036 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_TIMER_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:03 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

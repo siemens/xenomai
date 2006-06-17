@@ -18,9 +18,9 @@ Collaboration diagram for Thread cancellation.:<center><table><tr><td><img src="
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Thread cancellation. 
 <p>
-Cancellation is the mechanism by which a thread can terminate the execution of a Xenomai POSIX skin thread (created with <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a>). More precisely, a thread can send a cancellation request to a Xenomai POSIX skin thread and depending on its cancelability type (see <a class="el" href="group__posix__cancel.html#ga4">pthread_setcanceltype()</a>) and state (see <a class="el" href="group__posix__cancel.html#ga5">pthread_setcancelstate()</a>), the target thread can then either ignore the request, honor it immediately, or defer it till it reaches a cancellation point. When threads are first created by <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a>, they always defer cancellation requests.<p>
-When a thread eventually honors a cancellation request, it behaves as if <em>pthread_exit(PTHREAD_CANCELED)</em> was called. All cleanup handlers are executed in reverse order, finalization functions for thread-specific data are called, and finally the thread stops executing. If the canceled thread was joinable, the return value PTHREAD_CANCELED is provided to whichever thread calls <a class="el" href="group__posix__thread.html#ga11">pthread_join()</a> on it. See <a class="el" href="group__posix__thread.html#ga10">pthread_exit()</a> for more information.<p>
-Cancellation points are the points where the thread checks for pending cancellation requests and performs them. The POSIX threads functions <a class="el" href="group__posix__thread.html#ga11">pthread_join()</a>, <a class="el" href="group__posix__cond.html#ga10">pthread_cond_wait()</a>, <a class="el" href="group__posix__cond.html#ga11">pthread_cond_timedwait()</a>, <a class="el" href="group__posix__cancel.html#ga6">pthread_testcancel()</a>, <a class="el" href="group__posix__sem.html#ga13">sem_wait()</a>, <a class="el" href="group__posix__sem.html#ga14">sem_timedwait()</a>, <a class="el" href="group__posix__signal.html#ga30">sigwait()</a>, <a class="el" href="group__posix__signal.html#ga31">sigwaitinfo()</a> and <a class="el" href="group__posix__signal.html#ga32">sigtimedwait()</a> are cancellation points.<p>
+Cancellation is the mechanism by which a thread can terminate the execution of a Xenomai POSIX skin thread (created with <a class="el" href="group__posix__thread.html#ga6">pthread_create()</a>). More precisely, a thread can send a cancellation request to a Xenomai POSIX skin thread and depending on its cancelability type (see <a class="el" href="group__posix__cancel.html#ga4">pthread_setcanceltype()</a>) and state (see <a class="el" href="group__posix__cancel.html#ga5">pthread_setcancelstate()</a>), the target thread can then either ignore the request, honor it immediately, or defer it till it reaches a cancellation point. When threads are first created by <a class="el" href="group__posix__thread.html#ga6">pthread_create()</a>, they always defer cancellation requests.<p>
+When a thread eventually honors a cancellation request, it behaves as if <em>pthread_exit(PTHREAD_CANCELED)</em> was called. All cleanup handlers are executed in reverse order, finalization functions for thread-specific data are called, and finally the thread stops executing. If the canceled thread was joinable, the return value PTHREAD_CANCELED is provided to whichever thread calls <a class="el" href="group__posix__thread.html#ga10">pthread_join()</a> on it. See <a class="el" href="group__posix__thread.html#ga9">pthread_exit()</a> for more information.<p>
+Cancellation points are the points where the thread checks for pending cancellation requests and performs them. The POSIX threads functions <a class="el" href="group__posix__thread.html#ga10">pthread_join()</a>, <a class="el" href="group__posix__cond.html#ga9">pthread_cond_wait()</a>, <a class="el" href="group__posix__cond.html#ga10">pthread_cond_timedwait()</a>, <a class="el" href="group__posix__cancel.html#ga6">pthread_testcancel()</a>, <a class="el" href="group__posix__sem.html#ga12">sem_wait()</a>, <a class="el" href="group__posix__sem.html#ga13">sem_timedwait()</a>, <a class="el" href="group__posix__signal.html#ga30">sigwait()</a>, <a class="el" href="group__posix__signal.html#ga31">sigwaitinfo()</a> and <a class="el" href="group__posix__signal.html#ga32">sigtimedwait()</a> are cancellation points.<p>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_09.html#tag_02_09_05">Specification.</a> </dd></dl>
 
 <p>
@@ -111,7 +111,7 @@ an error number if:<ul>
 <p>
 Unregister the last registered cleanup handler. 
 <p>
-If the calling thread is a Xenomai POSIX skin thread (i.e. created with <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a>), this service unregisters the last routine which was registered with <a class="el" href="group__posix__cancel.html#ga2">pthread_cleanup_push()</a> and call it if <em>execute</em> is not null.<p>
+If the calling thread is a Xenomai POSIX skin thread (i.e. created with <a class="el" href="group__posix__thread.html#ga6">pthread_create()</a>), this service unregisters the last routine which was registered with <a class="el" href="group__posix__cancel.html#ga2">pthread_cleanup_push()</a> and call it if <em>execute</em> is not null.<p>
 If the caller context is invalid (not a Xenomai POSIX skin thread), this service has no effect.<p>
 This service may be called at any place, but for maximal portability, should only called in the same lexical scope as the matching call to <a class="el" href="group__posix__cancel.html#ga2">pthread_cleanup_push()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
@@ -162,9 +162,9 @@ This service may be called at any place, but for maximal portability, should onl
 <p>
 Register a cleanup handler to be executed at the time of cancellation. 
 <p>
-This service registers the given <em>routine</em> to be executed a the time of cancellation of the calling thread, if this thread is a Xenomai POSIX skin thread (i.e. created with the <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a> service). If the caller context is invalid (not a Xenomai POSIX skin thread), this service has no effect.<p>
+This service registers the given <em>routine</em> to be executed a the time of cancellation of the calling thread, if this thread is a Xenomai POSIX skin thread (i.e. created with the <a class="el" href="group__posix__thread.html#ga6">pthread_create()</a> service). If the caller context is invalid (not a Xenomai POSIX skin thread), this service has no effect.<p>
 If allocation from the system heap fails (because the system heap size is to small), this service fails silently.<p>
-The routines registered with this service get called in LIFO order when the calling thread calls <a class="el" href="group__posix__thread.html#ga10">pthread_exit()</a> or is canceled, or when it calls the <a class="el" href="group__posix__cancel.html#ga3">pthread_cleanup_pop()</a> service with a non null argument.<p>
+The routines registered with this service get called in LIFO order when the calling thread calls <a class="el" href="group__posix__thread.html#ga9">pthread_exit()</a> or is canceled, or when it calls the <a class="el" href="group__posix__cancel.html#ga3">pthread_cleanup_pop()</a> service with a non null argument.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>routine</em>&nbsp;</td><td>the cleanup routine to be registered;</td></tr>
@@ -271,7 +271,7 @@ an error number if:<ul>
 <p>
 Set cancelability type of the current thread. 
 <p>
-This service atomically sets the cancelability type of the calling thread, and return its previous value at the address <em>oldtype_ptr</em>, if this thread is a Xenomai POSIX skin thread (i.e. was created with the <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a> service).<p>
+This service atomically sets the cancelability type of the calling thread, and return its previous value at the address <em>oldtype_ptr</em>, if this thread is a Xenomai POSIX skin thread (i.e. was created with the <a class="el" href="group__posix__thread.html#ga6">pthread_create()</a> service).<p>
 The cancelability type of a POSIX thread may be:<ul>
 <li>PTHREAD_CANCEL_DEFERRED, meaning that cancellation requests are only handled in services which are cancellation points;</li><li>PTHREAD_CANCEL_ASYNCHRONOUS, meaning that cancellation requests are handled as soon as they are sent.</li></ul>
 <p>
@@ -319,7 +319,7 @@ an error number if:<ul>
 <p>
 Test if a cancellation request is pending. 
 <p>
-This function creates a cancellation point if the calling thread is a Xenomai POSIX skin thread (i.e. created with the <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a> service).<p>
+This function creates a cancellation point if the calling thread is a Xenomai POSIX skin thread (i.e. created with the <a class="el" href="group__posix__thread.html#ga6">pthread_create()</a> service).<p>
 This function is a cancellation point. It has no effect if cancellation is disabled.<p>
 <dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
 <li>Xenomai POSIX skin kernel-space thread,</li><li>Xenomai POSIX skin user-space thread (switches to primary mode).</li></ul>
@@ -328,7 +328,7 @@ This function is a cancellation point. It has no effect if cancellation is disab
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:05:35 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:12 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
