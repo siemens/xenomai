@@ -26,6 +26,8 @@
 #undef PTHREAD_CANCEL_DEFERRED
 #undef PTHREAD_CANCEL_ASYNCHRONOUS
 #undef PTHREAD_CANCELED
+#undef PTHREAD_PROCESS_PRIVATE
+#undef PTHREAD_PROCESS_SHARED
 #undef PTHREAD_ONCE_INIT
 #undef SCHED_FIFO
 #undef SCHED_RR
@@ -88,6 +90,8 @@
 #define pthread_mutexattr_settype pse51_mutexattr_settype
 #define pthread_mutexattr_getprotocol pse51_mutexattr_getprotocol
 #define pthread_mutexattr_setprotocol pse51_mutexattr_setprotocol
+#define pthread_mutexattr_getpshared pse51_mutexattr_getpshared
+#define pthread_mutexattr_setpshared pse51_mutexattr_setpshared
 #define pthread_mutex_init pse51_mutex_init
 #define pthread_mutex_destroy pse51_mutex_destroy
 #define pthread_mutex_trylock pse51_mutex_trylock
@@ -100,6 +104,8 @@
 #define pthread_condattr_destroy pse51_condattr_destroy
 #define pthread_condattr_getclock pse51_condattr_getclock
 #define pthread_condattr_setclock pse51_condattr_setclock
+#define pthread_condattr_getpshared pse51_condattr_getpshared
+#define pthread_condattr_setpshared pse51_condattr_setpshared
 #define pthread_cond_init pse51_cond_init
 #define pthread_cond_destroy pse51_cond_destroy
 #define pthread_cond_wait pse51_cond_wait

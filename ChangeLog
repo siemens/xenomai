@@ -1,3 +1,13 @@
+2006-06-17  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/syscall.c: Make user-space pthread_mutex_init,
+	pthread_mutex_destroy, pthread_cond_init, pthread_cond_destroy,
+	sem_init and sem_destroy atomic.
+
+	* ksrc/skins/posix, src/skins/posix: Add support for user-space
+	mutex and condition variable attributes. Cleanup per-process
+	objects on process termination.
+
 2006-06-15  Daniel Rossier <Daniel.Rossier@heig-vd.ch>
 
 	* ksrc/arch/arm/patches/imx21: Add support for the Freescale

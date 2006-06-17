@@ -39,14 +39,15 @@
 #include <posix/sem.h>
 
 typedef struct pse51_sem {
-	unsigned magic;
 	xnsynch_t synchbase;
-	xnholder_t link;	/* Link in pse51_semq */
+	xnholder_t link;	/* Link in semq */
 
 #define link2sem(laddr)                                                 \
     ((pse51_sem_t *)(((char *)(laddr)) - offsetof(pse51_sem_t, link)))
 
 	int value;
+	unsigned pshared;
+	unsigned is_named;
 } pse51_sem_t;
 
 typedef struct pse51_named_sem {
@@ -56,10 +57,6 @@ typedef struct pse51_named_sem {
 	pse51_node_t nodebase;
 #define node2sem(naddr) \
     ((nsem_t *)((char *)(naddr) - offsetof(nsem_t, nodebase)))
-
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	xnqueue_t userq;	/* List of user-space bindings. */
-#endif				/* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 	union __xeno_sem descriptor;
 } nsem_t;
@@ -77,16 +74,24 @@ typedef struct pse51_uptr {
 } pse51_uptr_t;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-static xnqueue_t pse51_semq;
-
-static void sem_destroy_internal(pse51_sem_t * sem)
+/* Called with nklock locked, irqs off. */
+static void sem_destroy_inner(pse51_sem_t * sem)
 {
-	removeq(&pse51_semq, &sem->link);
+	removeq(&pse51_kqueues(sem->pshared)->semq, &sem->link);
 	if (xnsynch_destroy(&sem->synchbase) == XNSYNCH_RESCHED)
 		xnpod_schedule();
 
-	pse51_mark_deleted(sem);
-	xnfree(sem);
+	if (sem->is_named) {
+		nsem_t *nsem = sem2named_sem(sem);
+		pse51_node_t *node;
+
+		pse51_node_remove(&node,
+				  nsem->nodebase.name,
+				  PSE51_NAMED_SEM_MAGIC);
+
+		xnfree(nsem);
+	} else
+		xnfree(sem);
 }
 
 /* Called with nklock locked, irq off. */
@@ -95,11 +100,12 @@ static int pse51_sem_init_inner(pse51_sem_t * sem, int pshared, unsigned value)
 	if (value > (unsigned)SEM_VALUE_MAX)
 		return EINVAL;
 
-	sem->magic = PSE51_SEM_MAGIC;
 	inith(&sem->link);
-	appendq(&pse51_semq, &sem->link);
+	appendq(&pse51_kqueues(pshared)->semq, &sem->link);
 	xnsynch_init(&sem->synchbase, XNSYNCH_PRIO);
 	sem->value = value;
+	sem->pshared = pshared;
+	sem->is_named = 0;
 
 	return 0;
 }
@@ -109,15 +115,14 @@ static int pse51_sem_init_inner(pse51_sem_t * sem, int pshared, unsigned value)
  *
  * This service initializes the semaphore @a sm, with the value @a value.
  *
- * The @a pshared argument is ignored by this implementation, semaphores created
- * by this service may be shared by kernel-space modules and user-space
- * processes through shared memory.
- *
  * This service fails if @a sm is already initialized or is a named semaphore.
  *
  * @param sm the semaphore to be initialized;
  *
- * @param pshared ignored;
+ * @param pshared if zero, means that the new semaphore may only be used by
+ * threads in the same process as the thread calling sem_init(); if non zero,
+ * means that the new semaphore may be used by any thread that has access to the
+ * memory where the semaphore is allocated.
  *
  * @param value the semaphore initial value.
  *
@@ -137,18 +142,21 @@ int sem_init(sem_t * sm, int pshared, unsigned value)
 {
 	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
 	pse51_sem_t *sem;
+	xnqueue_t *semq;
 	int err;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
+	semq = &pse51_kqueues(pshared)->semq;
+	
 	if (shadow->magic == PSE51_SEM_MAGIC
 	    || shadow->magic == PSE51_NAMED_SEM_MAGIC
 	    || shadow->magic == ~PSE51_NAMED_SEM_MAGIC) {
 		xnholder_t *holder;
 
-		for (holder = getheadq(&pse51_semq); holder;
-		     holder = nextq(&pse51_semq, holder))
+		for (holder = getheadq(semq); holder;
+		     holder = nextq(semq, holder))
 			if (holder == &shadow->sem->link) {
 				err = EBUSY;
 				goto error;
@@ -213,7 +221,7 @@ int sem_destroy(sem_t * sm)
 		goto error;
 	}
 
-	sem_destroy_internal(shadow->sem);
+	sem_destroy_inner(shadow->sem);
 	pse51_mark_deleted(shadow);
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -316,11 +324,9 @@ sem_t *sem_open(const char *name, int oflags, ...)
 			xnfree(named_sem);
 			goto error;
 		}
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-		initq(&named_sem->userq);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+		named_sem->sembase.is_named = 1;
 		named_sem->descriptor.shadow_sem.sem = &named_sem->sembase;
-		named_sem->sembase.magic = PSE51_NAMED_SEM_MAGIC;
 	} else
 		named_sem = node2sem(node);
 
@@ -388,7 +394,7 @@ int sem_close(sem_t * sm)
 
 	if (pse51_node_removed_p(&named_sem->nodebase)) {
 		/* unlink was called, and this semaphore is no longer referenced. */
-		sem_destroy_internal(&named_sem->sembase);
+		sem_destroy_inner(&named_sem->sembase);
 		pse51_mark_deleted(shadow);
 	} else if (!pse51_node_ref_p(&named_sem->nodebase))
 		/* this semaphore is no longer referenced, but not unlinked. */
@@ -447,7 +453,7 @@ int sem_unlink(const char *name)
 	named_sem = node2sem(node);
 
 	if (pse51_node_removed_p(&named_sem->nodebase))
-		sem_destroy_internal(&named_sem->sembase);
+		sem_destroy_inner(&named_sem->sembase);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -755,43 +761,57 @@ int sem_getvalue(sem_t * sm, int *value)
 }
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-pse51_assocq_t pse51_usems;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-
-void pse51_sem_pkg_init(void)
+static void usem_cleanup(pse51_assoc_t *assoc)
 {
+	struct pse51_sem *sem = (struct pse51_sem *) pse51_assoc_key(assoc);
+	pse51_usem_t *usem = assoc2usem(assoc);
+	nsem_t *nsem = sem2named_sem(sem);
 
-	initq(&pse51_semq);
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	pse51_assocq_init(&pse51_usems);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#ifdef CONFIG_XENO_OPT_DEBUG
+	xnprintf("Posix: closing semaphore \"%s\".\n", nsem->nodebase.name);
+#endif /* CONFIG_XENO_OPT_DEBUG */
+	sem_close(&nsem->descriptor.native_sem);
+	xnfree(usem);
 }
 
-void pse51_sem_pkg_cleanup(void)
+void pse51_sem_usems_cleanup(pse51_queues_t *q)
+{
+	pse51_assocq_destroy(&q->usems, &usem_cleanup);
+}
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+void pse51_semq_cleanup(pse51_kqueues_t *q)
 {
 	xnholder_t *holder;
 	spl_t s;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	pse51_assocq_destroy(&pse51_usems, NULL);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-
 	xnlock_get_irqsave(&nklock, s);
 
-	while ((holder = getheadq(&pse51_semq)) != NULL) {
+	while ((holder = getheadq(&q->semq)) != NULL) {
 		pse51_sem_t *sem = link2sem(holder);
-
+		xnlock_put_irqrestore(&nklock, s);
 #ifdef CONFIG_XENO_OPT_DEBUG
-		if (sem->magic == PSE51_SEM_MAGIC)
-			xnprintf("POSIX semaphore %p discarded.\n", sem);
-		else
-			xnprintf("POSIX semaphore \"%s\" discarded.\n",
+		if (sem->is_named) 
+			xnprintf("Posix: unlinking semaphore \"%s\".\n",
 				 sem2named_sem(sem)->nodebase.name);
+		else
+			xnprintf("Posix: destroying semaphore %p.\n",sem);
 #endif /* CONFIG_XENO_OPT_DEBUG */
-		sem_destroy_internal(sem);
+		xnlock_get_irqsave(&nklock, s);
+		sem_destroy_inner(sem);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
+}
+
+void pse51_sem_pkg_init(void)
+{
+	initq(&pse51_global_kqueues.semq);
+}
+
+void pse51_sem_pkg_cleanup(void)
+{
+	pse51_semq_cleanup(&pse51_global_kqueues);
 }
 
 /*@}*/

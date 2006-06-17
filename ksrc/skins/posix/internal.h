@@ -21,16 +21,18 @@
 
 #include <nucleus/xenomai.h>
 #include <nucleus/core.h>
+#include <nucleus/ppd.h>
 #include <posix/posix.h>
+#include <posix/registry.h>
 
 #define PSE51_MAGIC(n) (0x8686##n##n)
 #define PSE51_ANY_MAGIC         PSE51_MAGIC(00)
 #define PSE51_THREAD_MAGIC      PSE51_MAGIC(01)
 #define PSE51_THREAD_ATTR_MAGIC PSE51_MAGIC(02)
 #define PSE51_MUTEX_MAGIC       PSE51_MAGIC(03)
-#define PSE51_MUTEX_ATTR_MAGIC  PSE51_MAGIC(04)
+#define PSE51_MUTEX_ATTR_MAGIC  (PSE51_MAGIC(04) & ((1 << 24) - 1))
 #define PSE51_COND_MAGIC        PSE51_MAGIC(05)
-#define PSE51_COND_ATTR_MAGIC   PSE51_MAGIC(05)
+#define PSE51_COND_ATTR_MAGIC   (PSE51_MAGIC(05) & ((1 << 24) - 1))
 #define PSE51_SEM_MAGIC         PSE51_MAGIC(06)
 #define PSE51_KEY_MAGIC         PSE51_MAGIC(07)
 #define PSE51_ONCE_MAGIC        PSE51_MAGIC(08)
@@ -47,12 +49,74 @@
 #define ONE_BILLION             1000000000
 
 #define pse51_obj_active(h,m,t) \
-((h) && ((t *)(h))->magic == (m))
+	((h) && ((t *)(h))->magic == (m))
 
 #define pse51_obj_deleted(h,m,t) \
-((h) && ((t *)(h))->magic == ~(m))
+	((h) && ((t *)(h))->magic == ~(m))
 
 #define pse51_mark_deleted(t) ((t)->magic = ~(t)->magic)
+
+typedef struct {
+	xnqueue_t condq;
+	xnqueue_t intrq;
+	xnqueue_t mutexq;
+	xnqueue_t semq;
+	xnqueue_t threadq;
+	xnqueue_t timerq;
+} pse51_kqueues_t;
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+typedef struct {
+	pse51_kqueues_t kqueues;
+	pse51_assocq_t uqds;
+	pse51_assocq_t usems;
+	pse51_assocq_t umaps;
+	pse51_assocq_t ufds;
+
+	xnshadow_ppd_t ppd;
+
+#define ppd2queues(addr)							\
+	((pse51_queues_t *) ((char *) (addr) - offsetof(pse51_queues_t, ppd)))
+
+} pse51_queues_t;
+
+extern int pse51_muxid;
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+extern pse51_kqueues_t pse51_global_kqueues;
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+static inline pse51_queues_t *pse51_queues(void)
+{
+	xnshadow_ppd_t *ppd;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	ppd = xnshadow_ppd_get(pse51_muxid);
+	
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (!ppd)
+		return NULL;
+
+	return ppd2queues(ppd);
+}
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+static inline pse51_kqueues_t *pse51_kqueues(int pshared)
+{
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+	xnshadow_ppd_t *ppd;
+
+	if (pshared || !(ppd = xnshadow_ppd_get(pse51_muxid)))
+		return &pse51_global_kqueues;
+
+	return &ppd2queues(ppd)->kqueues;
+#else /* !__KERNEL__ || !CONFIG_XENO_OPT_PERVASIVE */
+	return &pse51_global_kqueues;
+#endif /* !__KERNEL__ || !CONFIG_XENO_OPT_PERVASIVE */
+}
 
 static inline void ticks2ts(struct timespec *ts, xnticks_t ticks)
 {

@@ -26,6 +26,8 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *cond,
                                   struct __shadow_mutex *mutex,
                                   xnticks_t to);
 
+void pse51_condq_cleanup(pse51_kqueues_t *q);
+
 void pse51_cond_pkg_init(void);
 
 void pse51_cond_pkg_cleanup(void);

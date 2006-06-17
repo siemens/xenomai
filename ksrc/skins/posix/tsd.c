@@ -111,10 +111,11 @@ int pthread_key_create(pthread_key_t *key, void (*destructor) (void *))
 
 		/* We are reusing a deleted key, we hence need to make sure
 		   that the values previously associated with this key are
-		   NULL. */
+		   NULL. We only check the global threads queue, because
+		   user-space threads do not use these TSD services. */
 
-		for (holder = getheadq(&pse51_threadq); holder;
-		     holder = nextq(&pse51_threadq, holder))
+		for (holder = getheadq(&pse51_global_kqueues.threadq); holder;
+		     holder = nextq(&pse51_global_kqueues.threadq, holder))
 			thread_settsd(link2pthread(holder), result->key, NULL);
 	} else {
 		result = xnmalloc(sizeof(*result));

@@ -22,14 +22,51 @@
 
 extern int __pse51_muxid;
 
+int __wrap_pthread_condattr_init(pthread_condattr_t *attr)
+{
+	return -XENOMAI_SKINCALL1(__pse51_muxid, __pse51_condattr_init, attr);
+}
+
+int __wrap_pthread_condattr_destroy(pthread_condattr_t *attr)
+{
+	return -XENOMAI_SKINCALL1(__pse51_muxid,__pse51_condattr_destroy,attr);
+}
+
+int __wrap_pthread_condattr_getclock(const pthread_condattr_t *attr,
+				     clockid_t *clk_id)
+{
+	return -XENOMAI_SKINCALL2(__pse51_muxid,
+				  __pse51_condattr_getclock, attr, clk_id);
+}
+
+int __wrap_pthread_condattr_setclock(pthread_condattr_t *attr,
+				     clockid_t clk_id)
+{
+	return -XENOMAI_SKINCALL2(__pse51_muxid,
+				  __pse51_condattr_setclock, attr, clk_id);
+}
+
+int __wrap_pthread_condattr_getpshared(const pthread_condattr_t *attr,
+				       int *pshared)
+{
+	return -XENOMAI_SKINCALL2(__pse51_muxid,
+				  __pse51_condattr_getpshared, attr, pshared);
+}
+
+int __wrap_pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared)
+{
+	return -XENOMAI_SKINCALL2(__pse51_muxid,
+				  __pse51_condattr_setpshared, attr, pshared);
+}
+
 int __wrap_pthread_cond_init(pthread_cond_t * cond,
 			     const pthread_condattr_t * attr)
 {
 	union __xeno_cond *_cond = (union __xeno_cond *)cond;
 	int err;
 
-	err = -XENOMAI_SKINCALL1(__pse51_muxid,
-				 __pse51_cond_init, &_cond->shadow_cond);
+	err = -XENOMAI_SKINCALL2(__pse51_muxid,
+				 __pse51_cond_init, &_cond->shadow_cond, attr);
 	return err;
 }
 

@@ -144,14 +144,13 @@ static inline void thread_cancellation_point (xnthread_t *thread)
         pse51_thread_abort(cur, PTHREAD_CANCELED);
 }
 
+void pse51_threadq_cleanup(pse51_kqueues_t *q);
+
 void pse51_thread_pkg_init(u_long rrperiod);
 
 void pse51_thread_pkg_cleanup(void);
 
 /* round-robin period. */
 extern xnticks_t pse51_time_slice;
-
-/* threads list */
-extern xnqueue_t pse51_threadq;
 
 #endif /* !_POSIX_THREAD_H */

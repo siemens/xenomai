@@ -1124,15 +1124,26 @@ int mq_notify(mqd_t fd, const struct sigevent *evp)
 }
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-pse51_assocq_t pse51_uqds;
+static void uqd_cleanup(pse51_assoc_t *assoc)
+{
+	pse51_ufd_t *ufd = assoc2ufd(assoc);
+#ifdef CONFIG_XENO_OPT_DEBUG
+	xnprintf("Posix: closing message queue descriptor %lu.\n",
+		 pse51_assoc_key(assoc));
+#endif /* CONFIG_XENO_OPT_DEBUG */
+	mq_close(ufd->kfd);
+	xnfree(ufd);
+}
+
+void pse51_mq_uqds_cleanup(pse51_queues_t *q)
+{
+	pse51_assocq_destroy(&q->uqds, &uqd_cleanup);
+}
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 int pse51_mq_pkg_init(void)
 {
 	initq(&pse51_mqq);
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	pse51_assocq_init(&pse51_uqds);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 	return 0;
 }
@@ -1140,23 +1151,23 @@ int pse51_mq_pkg_init(void)
 void pse51_mq_pkg_cleanup(void)
 {
 	xnholder_t *holder;
+	spl_t s;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	pse51_assocq_destroy(&pse51_uqds, NULL);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-
+	xnlock_get_irqsave(&nklock, s);
 	while ((holder = getheadq(&pse51_mqq))) {
 		pse51_mq_t *mq = link2mq(holder);
 		pse51_node_t *node;
-#ifdef CONFIG_XENO_OPT_DEBUG
-		xnprintf
-		    ("Posix message queue %s was not unlinked, unlinking now.\n",
-		     mq->nodebase.name);
-#endif /* CONFIG_XENO_OPT_DEBUG */
 		pse51_node_remove(&node, mq->nodebase.name, PSE51_MQ_MAGIC);
+		xnlock_put_irqrestore(&nklock, s);
 		pse51_mq_destroy(mq);
+#ifdef CONFIG_XENO_OPT_DEBUG
+		xnprintf("Posix: unlinking message queue \"%s\".\n",
+			 mq->nodebase.name);
+#endif /* CONFIG_XENO_OPT_DEBUG */
 		xnfree(mq);
+		xnlock_get_irqsave(&nklock, s);
 	}
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 /*@}*/

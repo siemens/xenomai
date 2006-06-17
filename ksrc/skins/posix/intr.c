@@ -18,8 +18,6 @@
 #include <posix/thread.h>
 #include <posix/intr.h>
 
-static xnqueue_t pse51_intrq;
-
 /**
  * @ingroup posix
  * @defgroup posix_intr Interruptions management services.
@@ -118,7 +116,7 @@ int pthread_intr_attach_np(pthread_intr_t * intrp,
 	intr->magic = PSE51_INTR_MAGIC;
 	inith(&intr->link);
 	xnlock_get_irqsave(&nklock, s);
-	appendq(&pse51_intrq, &intr->link);
+	appendq(&pse51_kqueues(0)->intrq, &intr->link);
 	xnlock_put_irqrestore(&nklock, s);
 
 	err = -xnintr_attach(&intr->intr_base, intr);
@@ -171,7 +169,7 @@ int pthread_intr_detach_np(pthread_intr_t intr)
 
 	pse51_mark_deleted(intr);
 
-	removeq(&pse51_intrq, &intr->link);
+	removeq(&pse51_kqueues(0)->intrq, &intr->link);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -239,22 +237,35 @@ int pthread_intr_control_np(pthread_intr_t intr, int cmd)
 	return -1;
 }
 
-void pse51_intr_pkg_init(void)
-{
-	initq(&pse51_intrq);
-}
-
-void pse51_intr_pkg_cleanup(void)
+void pse51_intrq_cleanup(pse51_kqueues_t *q)
 {
 	xnholder_t *holder;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	while ((holder = getheadq(&pse51_intrq)) != NULL)
+	while ((holder = getheadq(&q->intrq)) != NULL) {
 		pthread_intr_detach_np(link2intr(holder));
+		xnlock_put_irqrestore(&nklock, s);
+#ifdef CONFIG_XENO_OPT_DEBUG
+		xnprintf
+		    ("Posix interruption handler %p was not destroyed,"
+		     " destroying now.\n", link2intr(holder));
+#endif /* CONFIG_XENO_OPT_DEBUG */
+		xnlock_get_irqsave(&nklock, s);
+	}
 
 	xnlock_put_irqrestore(&nklock, s);
+}
+
+void pse51_intr_pkg_init(void)
+{
+	initq(&pse51_global_kqueues.intrq);
+}
+
+void pse51_intr_pkg_cleanup(void)
+{
+	pse51_intrq_cleanup(&pse51_global_kqueues);
 }
 
 #ifdef DOXYGEN_CPP

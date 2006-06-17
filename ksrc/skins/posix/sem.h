@@ -34,9 +34,15 @@ typedef struct {
     ((pse51_usem_t *)((unsigned long) (laddr) - offsetof(pse51_usem_t, assoc)))
 } pse51_usem_t;
 
-extern pse51_assocq_t pse51_usems;
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */    
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+
+void pse51_sem_usems_cleanup(pse51_queues_t *q);
 
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */    
+
+void pse51_semq_cleanup(pse51_kqueues_t *q);
 
 void pse51_sem_pkg_init(void);
 

@@ -51,6 +51,8 @@ struct pse51_interrupt {
 extern "C" {
 #endif
 
+void pse51_intrq_cleanup(pse51_kqueues_t *q);
+
 void pse51_intr_pkg_init(void);
 
 void pse51_intr_pkg_cleanup(void);
