@@ -89,6 +89,7 @@ int __wrap_pthread_create(pthread_t *tid,
 	struct pthread_iargs iargs;
 	int inherit, policy, err;
 	struct sched_param param;
+	pthread_t ltid;
 
 	if (!attr) {
 		policy = SCHED_OTHER;
@@ -113,12 +114,17 @@ int __wrap_pthread_create(pthread_t *tid,
 	iargs.ret = EAGAIN;
 	__real_sem_init(&iargs.sync, 0, 0);
 
-	err = __real_pthread_create(tid, attr, &__pthread_trampoline, &iargs);
+	err = __real_pthread_create(&ltid, attr, &__pthread_trampoline, &iargs);
 	if (!err)
 		while (__real_sem_wait(&iargs.sync) && errno == EINTR) ;
 	__real_sem_destroy(&iargs.sync);
 
-	return err ? : iargs.ret;
+	err = err ?: iargs.ret;
+
+	if (!err)
+		*tid = ltid;
+
+	return err;
 }
 
 int __wrap_pthread_detach(pthread_t thread)
