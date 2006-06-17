@@ -603,7 +603,7 @@ This service stores, at the address <em>value</em>, the expiration date (member 
 Start or stop a timer. 
 <p>
 This service sets a timer expiration date and reload value of the timer <em>timerid</em>. If <em>ovalue</em> is not <em>NULL</em>, the current expiration date and reload value are stored at the address <em>ovalue</em> as with <a class="el" href="group__posix__time.html#ga13">timer_gettime()</a>.<p>
-If the member <em>it_value</em> of the <b>itimerspec</b> structure at <em>value</em> is zero, the timer is stopped, otherwise the timer is started. If the member <em>it_interval</em> is not zero, the timer is periodic. The current thread must be a POSIX skin thread (created with <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a>) and will be notified via signal of timer expirations. Note that these notifications will cause user-space threads to switch to secondary mode.<p>
+If the member <em>it_value</em> of the <b>itimerspec</b> structure at <em>value</em> is zero, the timer is stopped, otherwise the timer is started. If the member <em>it_interval</em> is not zero, the timer is periodic. The current thread must be a POSIX skin thread (created with <a class="el" href="group__posix__thread.html#ga6">pthread_create()</a>) and will be notified via signal of timer expirations. Note that these notifications will cause user-space threads to switch to secondary mode.<p>
 When starting the timer, if <em>flags</em> is TIMER_ABSTIME, the expiration value is interpreted as an absolute date of the clock passed to the <a class="el" href="group__posix__time.html#ga9">timer_create()</a> service. Otherwise, the expiration value is interpreted as a time interval.<p>
 Expiration date and reload value are rounded to an integer count of system clock ticks (see note in section <a class="el" href="group__posix__time.html">Clocks and timers services</a> for details on the duration of the system tick).<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
@@ -629,7 +629,7 @@ Expiration date and reload value are rounded to an integer count of system clock
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:05:35 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:12 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

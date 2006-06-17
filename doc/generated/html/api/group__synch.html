@@ -306,9 +306,10 @@ Release all ownerships.
 This call is used internally to release all the ownerships obtained by a thread on synchronization objects. This routine must be entered interrupts off.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread.</td></tr>
   </table>
 </dl>
+<dl compact><dt><b>Note:</b></dt><dd>This routine must be entered nklock locked, interrupts off. </dd></dl>
 </p>
     </td>
   </tr>
@@ -345,9 +346,10 @@ Change a sleeper's priority.
 This service is used by the PIP code to update the pending priority of a sleeping thread.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread.</td></tr>
   </table>
 </dl>
+<dl compact><dt><b>Note:</b></dt><dd>This routine must be entered nklock locked, interrupts off. </dd></dl>
 </p>
     </td>
   </tr>
@@ -516,7 +518,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:05:28 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:05 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

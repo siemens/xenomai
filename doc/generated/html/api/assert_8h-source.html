@@ -42,12 +42,12 @@
 00032 <span class="preprocessor">} while(0)</span>
 00033 <span class="preprocessor"></span>
 00034 <span class="preprocessor">#define XENO_BUGON(subsystem,cond)  do { \</span>
-00035 <span class="preprocessor">    if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem &gt; 0 &amp;&amp; !(cond))) \</span>
-00036 <span class="preprocessor">        xnpod_fatal("assertion failed at %s:%d (%s)", __FILE__, __LINE__, (#cond)); \</span>
+00035 <span class="preprocessor">    if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem &gt; 0 &amp;&amp; (cond))) \</span>
+00036 <span class="preprocessor">        xnpod_fatal("bug at %s:%d (%s)", __FILE__, __LINE__, (#cond)); \</span>
 00037 <span class="preprocessor">} while(0)</span>
 00038 <span class="preprocessor"></span>
 00039 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_ASSERT_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:04:28 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:03 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

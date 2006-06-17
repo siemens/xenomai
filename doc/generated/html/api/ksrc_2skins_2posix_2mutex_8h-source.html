@@ -45,76 +45,78 @@
 00035 <span class="comment">                                   mutex. */</span>
 00036 } pse51_mutex_t;
 00037 
-00038 <span class="keywordtype">void</span> pse51_mutex_pkg_init(<span class="keywordtype">void</span>);
+00038 <span class="keywordtype">void</span> pse51_mutexq_cleanup(pse51_kqueues_t *q);
 00039 
-00040 <span class="keywordtype">void</span> pse51_mutex_pkg_cleanup(<span class="keywordtype">void</span>);
+00040 <span class="keywordtype">void</span> pse51_mutex_pkg_init(<span class="keywordtype">void</span>);
 00041 
-00042 <span class="comment">/* Interruptible versions of pthread_mutex_*. Exposed for use by syscall.c. */</span>
-00043 <span class="keywordtype">int</span> pse51_mutex_timedlock_break(<span class="keyword">struct</span> __shadow_mutex *shadow, xnticks_t to);
-00044 
-00045 <span class="comment">/* must be called with nklock locked, interrupts off. */</span>
-00046 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> mutex_trylock_internal(xnthread_t *cur,
-00047                                          <span class="keyword">struct</span> __shadow_mutex *shadow)
-00048 {
-00049     pse51_mutex_t *mutex = shadow-&gt;mutex;
-00050 
-00051     <span class="keywordflow">if</span> (xnpod_unblockable_p())
-00052         <span class="keywordflow">return</span> EPERM;
-00053 
-00054     <span class="keywordflow">if</span> (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, <span class="keyword">struct</span> __shadow_mutex))
-00055         <span class="keywordflow">return</span> EINVAL;
-00056 
-00057     <span class="keywordflow">if</span> (mutex-&gt;count)
-00058         <span class="keywordflow">return</span> EBUSY;
-00059 
-00060     xnsynch_set_owner(&amp;mutex-&gt;synchbase, cur);
-00061     mutex-&gt;count = 1;
-00062     <span class="keywordflow">return</span> 0;
-00063 }
-00064 
-00065 <span class="comment">/* must be called with nklock locked, interrupts off. */</span>
-00066 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> mutex_timedlock_internal(xnthread_t *cur,
-00067                                            <span class="keyword">struct</span> __shadow_mutex *shadow,
-00068                                            xnticks_t abs_to)
-00069 
-00070 {
-00071     <span class="keywordtype">int</span> err;
-00072 
-00073     err = mutex_trylock_internal(cur, shadow);
+00042 <span class="keywordtype">void</span> pse51_mutex_pkg_cleanup(<span class="keywordtype">void</span>);
+00043 
+00044 <span class="comment">/* Interruptible versions of pthread_mutex_*. Exposed for use by syscall.c. */</span>
+00045 <span class="keywordtype">int</span> pse51_mutex_timedlock_break(<span class="keyword">struct</span> __shadow_mutex *shadow, xnticks_t to);
+00046 
+00047 <span class="comment">/* must be called with nklock locked, interrupts off. */</span>
+00048 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> mutex_trylock_internal(xnthread_t *cur,
+00049                                          <span class="keyword">struct</span> __shadow_mutex *shadow)
+00050 {
+00051     pse51_mutex_t *mutex = shadow-&gt;mutex;
+00052 
+00053     <span class="keywordflow">if</span> (xnpod_unblockable_p())
+00054         <span class="keywordflow">return</span> EPERM;
+00055 
+00056     <span class="keywordflow">if</span> (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, <span class="keyword">struct</span> __shadow_mutex))
+00057         <span class="keywordflow">return</span> EINVAL;
+00058 
+00059     <span class="keywordflow">if</span> (mutex-&gt;count)
+00060         <span class="keywordflow">return</span> EBUSY;
+00061 
+00062     xnsynch_set_owner(&amp;mutex-&gt;synchbase, cur);
+00063     mutex-&gt;count = 1;
+00064     <span class="keywordflow">return</span> 0;
+00065 }
+00066 
+00067 <span class="comment">/* must be called with nklock locked, interrupts off. */</span>
+00068 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> mutex_timedlock_internal(xnthread_t *cur,
+00069                                            <span class="keyword">struct</span> __shadow_mutex *shadow,
+00070                                            xnticks_t abs_to)
+00071 
+00072 {
+00073     <span class="keywordtype">int</span> err;
 00074 
-00075     <span class="keywordflow">if</span> (err == EBUSY)
-00076         {
-00077         pse51_mutex_t *mutex = shadow-&gt;mutex;
-00078 
-00079         <span class="keywordflow">if</span> (xnsynch_owner(&amp;mutex-&gt;synchbase) != cur)
-00080             {
-00081             xnticks_t to = abs_to;
-00082                 
-00083             err = clock_adjust_timeout(&amp;to, CLOCK_REALTIME);
+00075     err = mutex_trylock_internal(cur, shadow);
+00076 
+00077     <span class="keywordflow">if</span> (err == EBUSY)
+00078         {
+00079         pse51_mutex_t *mutex = shadow-&gt;mutex;
+00080 
+00081         <span class="keywordflow">if</span> (xnsynch_owner(&amp;mutex-&gt;synchbase) != cur)
+00082             {
+00083             xnticks_t to = abs_to;
 00084                 
-00085             <span class="keywordflow">if</span> (err)
-00086                 <span class="keywordflow">return</span> err;
-00087             
-00088             <a class="code" href="group__synch.html#ga2">xnsynch_sleep_on</a>(&amp;mutex-&gt;synchbase, to);
+00085             err = clock_adjust_timeout(&amp;to, CLOCK_REALTIME);
+00086                 
+00087             <span class="keywordflow">if</span> (err)
+00088                 <span class="keywordflow">return</span> err;
 00089             
-00090             <span class="keywordflow">if</span> (xnthread_test_flags(cur, XNBREAK))
-00091                 <span class="keywordflow">return</span> EINTR;
-00092             
-00093             <span class="keywordflow">if</span> (xnthread_test_flags(cur, XNRMID))
-00094                 <span class="keywordflow">return</span> EINVAL;
-00095             
-00096             <span class="keywordflow">if</span> (xnthread_test_flags(cur, XNTIMEO))
-00097                 <span class="keywordflow">return</span> ETIMEDOUT;
-00098 
-00099             mutex-&gt;count = 1;
-00100             }
-00101         }
-00102 
-00103     <span class="keywordflow">return</span> err;
-00104 }
-00105 
-00106 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_MUTEX_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:04:28 2006 for Xenomai API by&nbsp;
+00090             <a class="code" href="group__synch.html#ga2">xnsynch_sleep_on</a>(&amp;mutex-&gt;synchbase, to);
+00091             
+00092             <span class="keywordflow">if</span> (xnthread_test_flags(cur, XNBREAK))
+00093                 <span class="keywordflow">return</span> EINTR;
+00094             
+00095             <span class="keywordflow">if</span> (xnthread_test_flags(cur, XNRMID))
+00096                 <span class="keywordflow">return</span> EINVAL;
+00097             
+00098             <span class="keywordflow">if</span> (xnthread_test_flags(cur, XNTIMEO))
+00099                 <span class="keywordflow">return</span> ETIMEDOUT;
+00100 
+00101             mutex-&gt;count = 1;
+00102             }
+00103         }
+00104 
+00105     <span class="keywordflow">return</span> err;
+00106 }
+00107 
+00108 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_MUTEX_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:03 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

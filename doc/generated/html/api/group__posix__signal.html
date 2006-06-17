@@ -103,7 +103,7 @@ The action to be taken upon reception of a signal depends on the thread signal m
 <p>
 Send a signal to a thread. 
 <p>
-This service send the signal <em>sig</em> to the Xenomai POSIX skin thread <em>thread</em> (created with <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a>). If <em>sig</em> is zero, this service check for existence of the thread <em>thread</em>, but no signal is sent.<p>
+This service send the signal <em>sig</em> to the Xenomai POSIX skin thread <em>thread</em> (created with <a class="el" href="group__posix__thread.html#ga6">pthread_create()</a>). If <em>sig</em> is zero, this service check for existence of the thread <em>thread</em>, but no signal is sent.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>thread identifier;</td></tr>
@@ -226,7 +226,7 @@ an error number if:<ul>
 <p>
 Queue a signal to a thread. 
 <p>
-This service send the signal <em>sig</em> to the Xenomai POSIX skin thread <em>thread</em> (created with <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a>), with the value <em>value</em>. If <em>sig</em> is zero, this service check for existence of the thread <em>thread</em>, but no signal is sent.<p>
+This service send the signal <em>sig</em> to the Xenomai POSIX skin thread <em>thread</em> (created with <a class="el" href="group__posix__thread.html#ga6">pthread_create()</a>), with the value <em>value</em>. If <em>sig</em> is zero, this service check for existence of the thread <em>thread</em>, but no signal is sent.<p>
 This service is equivalent to the POSIX service sigqueue(), except that the signal is directed to a thread instead of being directed to a process.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -796,7 +796,7 @@ This service is equivalent to the <a class="el" href="group__posix__signal.html#
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:05:37 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:14 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

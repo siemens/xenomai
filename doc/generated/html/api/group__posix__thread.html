@@ -43,42 +43,42 @@ Threads management services.
 
 <p>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga3">pthread_once</a> (pthread_once_t *once, void(*init_routine)(void))</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga2">pthread_once</a> (pthread_once_t *once, void(*init_routine)(void))</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Execute an initialization routine.  <a href="#ga3"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga7">pthread_create</a> (pthread_t *tid, const pthread_attr_t *attr, void *(*start)(void *), void *arg)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Execute an initialization routine.  <a href="#ga2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga6">pthread_create</a> (pthread_t *tid, const pthread_attr_t *attr, void *(*start)(void *), void *arg)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a thread.  <a href="#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga8">pthread_detach</a> (pthread_t thread)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a thread.  <a href="#ga6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga7">pthread_detach</a> (pthread_t thread)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Detach a running thread.  <a href="#ga8"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga9">pthread_equal</a> (pthread_t t1, pthread_t t2)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Detach a running thread.  <a href="#ga7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga8">pthread_equal</a> (pthread_t t1, pthread_t t2)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Compare thread identifiers.  <a href="#ga9"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga10">pthread_exit</a> (void *value_ptr)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Compare thread identifiers.  <a href="#ga8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga9">pthread_exit</a> (void *value_ptr)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Terminate the current thread.  <a href="#ga10"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga11">pthread_join</a> (pthread_t thread, void **value_ptr)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Terminate the current thread.  <a href="#ga9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga10">pthread_join</a> (pthread_t thread, void **value_ptr)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for termination of a specified thread.  <a href="#ga11"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">pthread_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga12">pthread_self</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for termination of a specified thread.  <a href="#ga10"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">pthread_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga11">pthread_self</a> (void)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the identifier of the calling thread.  <a href="#ga12"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga13">pthread_make_periodic_np</a> (pthread_t thread, struct timespec *starttp, struct timespec *periodtp)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the identifier of the calling thread.  <a href="#ga11"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga12">pthread_make_periodic_np</a> (pthread_t thread, struct timespec *starttp, struct timespec *periodtp)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Make a thread periodic.  <a href="#ga13"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga14">pthread_wait_np</a> (unsigned long *overruns_r)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Make a thread periodic.  <a href="#ga12"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga13">pthread_wait_np</a> (unsigned long *overruns_r)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for current thread next period.  <a href="#ga14"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga15">pthread_set_mode_np</a> (int clrmask, int setmask)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for current thread next period.  <a href="#ga13"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga14">pthread_set_mode_np</a> (int clrmask, int setmask)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the mode of the current thread.  <a href="#ga15"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga16">pthread_set_name_np</a> (pthread_t thread, const char *name)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the mode of the current thread.  <a href="#ga14"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__thread.html#ga15">pthread_set_name_np</a> (pthread_t thread, const char *name)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set a thread name.  <a href="#ga16"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set a thread name.  <a href="#ga15"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="ga7" doxytag="thread.c::pthread_create"></a><p>
+<a class="anchor" name="ga6" doxytag="thread.c::pthread_create"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -128,9 +128,9 @@ Create a thread.
 <p>
 This service create a thread. The created thread may be used with all POSIX skin services.<p>
 The new thread run the <em>start</em> routine, with the <em>arg</em> argument.<p>
-The new thread signal mask is inherited from the current thread, if it was also created with <a class="el" href="group__posix__thread.html#ga7">pthread_create()</a>, otherwise the new thread signal mask is empty.<p>
+The new thread signal mask is inherited from the current thread, if it was also created with <a class="el" href="group__posix__thread.html#ga6">pthread_create()</a>, otherwise the new thread signal mask is empty.<p>
 Other attributes of the new thread depend on the <em>attr</em> argument. If <em>attr</em> is null, default values for these attributes are used. See <a class="el" href="group__posix__threadattr.html">Thread creation attributes.</a> for a definition of thread creation attributes and their default values.<p>
-Returning from the <em>start</em> routine has the same effect as calling <a class="el" href="group__posix__thread.html#ga10">pthread_exit()</a> with the return value.<p>
+Returning from the <em>start</em> routine has the same effect as calling <a class="el" href="group__posix__thread.html#ga9">pthread_exit()</a> with the return value.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>tid</em>&nbsp;</td><td>address where the identifier of the new thread will be stored on success;</td></tr>
@@ -147,7 +147,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga8" doxytag="thread.c::pthread_detach"></a><p>
+<a class="anchor" name="ga7" doxytag="thread.c::pthread_detach"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -174,8 +174,8 @@ an error number if:<ul>
 <p>
 Detach a running thread. 
 <p>
-This service detaches a joinable thread. A detached thread is a thread which control block is automatically reclaimed when it terminates. The control block of a joinable thread, on the other hand, is only reclaimed when joined with the service <a class="el" href="group__posix__thread.html#ga11">pthread_join()</a>.<p>
-If some threads are currently blocked in the <a class="el" href="group__posix__thread.html#ga11">pthread_join()</a> service with <em>thread</em> as a target, they are unblocked and <a class="el" href="group__posix__thread.html#ga11">pthread_join()</a> returns EINVAL.<p>
+This service detaches a joinable thread. A detached thread is a thread which control block is automatically reclaimed when it terminates. The control block of a joinable thread, on the other hand, is only reclaimed when joined with the service <a class="el" href="group__posix__thread.html#ga10">pthread_join()</a>.<p>
+If some threads are currently blocked in the <a class="el" href="group__posix__thread.html#ga10">pthread_join()</a> service with <em>thread</em> as a target, they are unblocked and <a class="el" href="group__posix__thread.html#ga10">pthread_join()</a> returns EINVAL.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>target thread.</td></tr>
@@ -189,7 +189,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga9" doxytag="thread.c::pthread_equal"></a><p>
+<a class="anchor" name="ga8" doxytag="thread.c::pthread_equal"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -238,7 +238,7 @@ This service compare the thread identifiers <em>t1</em> and <em>t2</em>. No atte
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga10" doxytag="thread.c::pthread_exit"></a><p>
+<a class="anchor" name="ga9" doxytag="thread.c::pthread_exit"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -265,7 +265,7 @@ This service compare the thread identifiers <em>t1</em> and <em>t2</em>. No atte
 <p>
 Terminate the current thread. 
 <p>
-This service terminate the current thread with the return value <em>value_ptr</em>. If the current thread is joinable, the return value is returned to any thread joining the current thread with the <a class="el" href="group__posix__thread.html#ga11">pthread_join()</a> service.<p>
+This service terminate the current thread with the return value <em>value_ptr</em>. If the current thread is joinable, the return value is returned to any thread joining the current thread with the <a class="el" href="group__posix__thread.html#ga10">pthread_join()</a> service.<p>
 When a thread terminates, cancellation cleanup handlers are executed in the reverse order that they were pushed. Then, thread-specific data destructors are executed.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -276,7 +276,7 @@ When a thread terminates, cancellation cleanup handlers are executed in the reve
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga11" doxytag="thread.c::pthread_join"></a><p>
+<a class="anchor" name="ga10" doxytag="thread.c::pthread_join"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -315,7 +315,7 @@ Wait for termination of a specified thread.
 If the thread <em>thread</em> is running and joinable, this service blocks the calling thread until the thread <em>thread</em> terminates or detaches. In this case, the calling context must be blockable, i.e. a Xenomai thread. When <em>thread</em> terminates, its return value is stored at the address <em>value_ptr</em>.<p>
 If, on the other hand, the thread <em>thread</em> has already finished execution, its return value is stored at the address <em>value_ptr</em> and this service returns immediately. In this case, this service may be called from any context, and in particular from modules cleanup routines.<p>
 This service is a cancelation point for POSIX skin threads: if the calling thread is canceled while blocked in a call to this service, the cancelation request is honored and <em>thread</em> remains joinable.<p>
-Multiple simultaneous calls to <a class="el" href="group__posix__thread.html#ga11">pthread_join()</a> specifying the same running target thread block all the callers until the target thread terminates.<p>
+Multiple simultaneous calls to <a class="el" href="group__posix__thread.html#ga10">pthread_join()</a> specifying the same running target thread block all the callers until the target thread terminates.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>identifier of the thread to wait for;</td></tr>
@@ -333,7 +333,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga13" doxytag="thread.c::pthread_make_periodic_np"></a><p>
+<a class="anchor" name="ga12" doxytag="thread.c::pthread_make_periodic_np"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -391,7 +391,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga3" doxytag="once.c::pthread_once"></a><p>
+<a class="anchor" name="ga2" doxytag="once.c::pthread_once"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -437,7 +437,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga12" doxytag="thread.c::pthread_self"></a><p>
+<a class="anchor" name="ga11" doxytag="thread.c::pthread_self"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -471,7 +471,7 @@ NULL if the calling thread is not a POSIX skin thread.</dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga15" doxytag="thread.c::pthread_set_mode_np"></a><p>
+<a class="anchor" name="ga14" doxytag="thread.c::pthread_set_mode_np"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -525,7 +525,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga16" doxytag="thread.c::pthread_set_name_np"></a><p>
+<a class="anchor" name="ga15" doxytag="thread.c::pthread_set_name_np"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -576,7 +576,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga14" doxytag="thread.c::pthread_wait_np"></a><p>
+<a class="anchor" name="ga13" doxytag="thread.c::pthread_wait_np"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -621,7 +621,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat May 13 15:05:37 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:14 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
