@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * Description: Testing VxWorks services:
+ * Description: Testing VxWorks services (task to task and int to task):
  * - msgQCreate
  * - msgQDelete
  * - msgQNumMsgs
@@ -46,6 +46,62 @@ static unsigned message_list[] = {
 };
 
 #define NMESSAGES (sizeof(message_list) / sizeof(message_list[0]))
+
+static WDOG_ID wid;
+
+static int int2taskQid ;
+
+void msgDuringInt (long arg)
+
+{
+    int qid = 0, rc = 0, msg = 0;
+    TEST_ASSERT(intContext());
+    TEST_MARK();
+
+    qid = msgQCreate(NMESSAGES,sizeof(int),MSG_Q_FIFO);
+    TEST_ASSERT(qid == 0 && errno == S_intLib_NOT_ISR_CALLABLE);
+
+    rc = msgQNumMsgs(int2taskQid);
+    TEST_ASSERT(rc == 0);
+
+    rc = msgQReceive(int2taskQid,(char *)&msg,sizeof(msg), 0);
+    TEST_ASSERT(rc == ERROR && errno == S_intLib_NOT_ISR_CALLABLE);
+    msg = 0x5555affe;
+
+    rc = msgQSend(int2taskQid,(char *)&msg,sizeof(int),0, MSG_PRI_NORMAL);
+    TEST_ASSERT_OK(rc);
+
+    rc = msgQSend(int2taskQid,(char *)&msg,sizeof(int),WAIT_FOREVER, MSG_PRI_NORMAL);
+    TEST_ASSERT(rc == ERROR && errno == S_msgQLib_NON_ZERO_TIMEOUT_AT_INT_LEVEL);
+    TEST_MARK();
+}
+
+void testMsqInterrupt()
+{
+   int nmsg = 0, qid, rc, msg = 0;
+   int2taskQid = msgQCreate(NMESSAGES,sizeof(int),MSG_Q_FIFO);
+   TEST_ASSERT(int2taskQid != 0);
+
+   wid = wdCreate();
+
+   TEST_ASSERT(wid != 0);
+
+   TEST_ASSERT_OK(wdStart(wid,1,msgDuringInt,0x25262728));
+
+   TEST_MARK();
+
+   TEST_ASSERT_OK(taskDelay(2));
+   TEST_ASSERT_OK(wdCancel(wid));
+   TEST_ASSERT_OK(wdDelete(wid));
+
+   TEST_MARK();
+
+   rc = msgQReceive(int2taskQid,(char *)&msg,sizeof(msg), 0);
+   TEST_ASSERT(rc == sizeof(msg) && msg == 0x5555affe);
+
+   TEST_MARK();
+
+}
 
 void peerTask (long a0, long a1, long a2, long a3, long a4,
                long a5, long a6, long a7, long a8, long a9)
@@ -105,6 +161,7 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
 {
     int nmsg = 0, qid, rc, msg = 0;
     WIND_TCB *pTcb;
+    char *buffer;
 
     TEST_START(0);
 
@@ -116,11 +173,51 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
     qid = msgQCreate(NMESSAGES,sizeof(int),0xffff);
     TEST_ASSERT(qid == 0 && errno == S_msgQLib_INVALID_QUEUE_TYPE);
 
+#ifndef VXWORKS
+    /* This is undesirable behaviour in vxWorks (at least tested under version 5.5.1. 
+       Some might even call it a bug.
+       Passing a negative argument to maxMsgs for msgQCreate returns a  non null MSG_Q_ID.
+       Freeing it leads to a  a memPartFree: invalid block.
+       For maxMsgs bigger than the available memory, vxWorks returns 0, 
+       but does not set errno to a consistent value.
+    */
     qid = msgQCreate(-1,sizeof(int),MSG_Q_FIFO);
     TEST_ASSERT(qid == 0 && errno == S_msgQLib_INVALID_QUEUE_TYPE);
+#endif
 
+    /* Test mailbox with 0 length messages */
     qid = msgQCreate(NMESSAGES,0,MSG_Q_FIFO);
-    TEST_ASSERT(qid == 0 && errno == S_msgQLib_INVALID_MSG_LENGTH);
+    TEST_ASSERT(qid != 0);
+    rc = msgQNumMsgs(qid);
+    TEST_ASSERT(rc == 0);
+    rc = msgQSend(qid,(char *)&message_list[0],0, NO_WAIT, MSG_PRI_NORMAL);
+    TEST_ASSERT(rc == OK);
+    rc = msgQNumMsgs(qid);
+    TEST_ASSERT(rc == 1);
+    rc = msgQSend(qid,(char *)&message_list[0],0, NO_WAIT, MSG_PRI_NORMAL);
+    TEST_ASSERT(rc == OK);
+    rc = msgQNumMsgs(qid);
+    TEST_ASSERT(rc == 2);
+    rc = msgQReceive(qid,(char *)&msg,0,NO_WAIT);
+    TEST_ASSERT_OK(rc);
+    rc = msgQNumMsgs(qid);
+    TEST_ASSERT(rc == 1);
+    rc = msgQReceive(qid,(char *)&msg,0,NO_WAIT);
+    TEST_ASSERT_OK(rc);
+    rc = msgQNumMsgs(qid);
+    TEST_ASSERT(rc == 0);
+
+    rc = msgQSend(qid,(char *)&message_list[0],0, NO_WAIT, MSG_PRI_NORMAL);
+    rc = msgQSend(qid,(char *)&message_list[0],0, NO_WAIT, MSG_PRI_NORMAL);
+    rc = msgQNumMsgs(qid);
+    TEST_ASSERT(rc == 2);
+    rc = msgQReceive(qid,(char *)&msg,2,NO_WAIT);
+    TEST_ASSERT_OK(rc);
+    rc = msgQNumMsgs(qid);
+    TEST_ASSERT(rc == 1);
+
+    rc = msgQDelete(qid);
+    TEST_ASSERT(rc == OK);
 
     qid = msgQCreate(NMESSAGES,sizeof(int),MSG_Q_FIFO);
     TEST_ASSERT(qid != 0);
@@ -148,22 +245,32 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
 
     TEST_MARK();
 
-    rc = msgQSend(qid,(char *)&message_list[0],0,WAIT_FOREVER,MSG_PRI_NORMAL);
+    rc = msgQSend(qid,(char *)&message_list[0],2*message_list[0], WAIT_FOREVER,MSG_PRI_NORMAL);
     TEST_ASSERT(rc == ERROR && errno == S_msgQLib_INVALID_MSG_LENGTH);
 
     rc = msgQSend(qid,(char *)&message_list[0],sizeof(int),WAIT_FOREVER,MSG_PRI_NORMAL);
     TEST_ASSERT_OK(rc);
+
+    rc = msgQSend(qid,(char *)&message_list[0], 2*sizeof(int),WAIT_FOREVER,MSG_PRI_NORMAL);
+    TEST_ASSERT(rc == ERROR && errno == S_msgQLib_INVALID_MSG_LENGTH);
 
     TEST_MARK();
 
     rc = msgQReceive(0,(char *)&msg,sizeof(msg),NO_WAIT);
     TEST_ASSERT(rc == ERROR && errno == S_objLib_OBJ_ID_ERROR);
 
-    rc = msgQReceive(qid,(char *)&msg,0,NO_WAIT);
-    TEST_ASSERT(rc == ERROR && errno == S_msgQLib_INVALID_MSG_LENGTH);
-
     rc = msgQReceive(qid,(char *)&msg,sizeof(msg),NO_WAIT);
     TEST_ASSERT(rc == sizeof(msg));
+
+    rc = msgQSend(qid,(char *)&message_list[0],sizeof(int),WAIT_FOREVER,MSG_PRI_NORMAL);
+    TEST_ASSERT_OK(rc);
+    rc = msgQReceive(qid,(char *)&msg,0,NO_WAIT);
+    TEST_ASSERT_OK(rc);
+
+    buffer = malloc(2*sizeof(message_list));
+    rc = msgQReceive(qid,buffer,2*sizeof(message_list),NO_WAIT);
+    TEST_ASSERT(rc == ERROR && errno == S_objLib_OBJ_UNAVAILABLE);
+    free(buffer);
 
     TEST_MARK();
 
@@ -209,6 +316,8 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
     rc = msgQDelete(qid);
     TEST_ASSERT_OK(rc);
 
+    testMsqInterrupt();
+
     /*
     TEST_ASSERT(!ckObjectExists(qid));
     */
@@ -219,10 +328,10 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
                         SEQ("Peer",2),
                         SEQ("root",8),
                         SEQ("Peer",14),
-                        SEQ("root",1),
+                        SEQ("root",2),
                         END_SEQ);
 
-    TEST_ASSERT_OK(taskDelete(peerTid));
+   if (peerTid) TEST_ASSERT_OK(taskDelete(peerTid));
     
     TEST_FINISH();
 }

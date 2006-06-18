@@ -33,6 +33,7 @@ void watchdogHandler (long arg)
 
 {
     TEST_ASSERT(arg == 0x25262728);
+    TEST_ASSERT(intContext());
     TEST_MARK();
 }
 

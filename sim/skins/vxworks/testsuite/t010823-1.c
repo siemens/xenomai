@@ -63,6 +63,7 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
     char *pstackBase = NULL;
     WIND_TCB *pTcb;
     int prio = 0;
+    TASK_ID id;
 
     TEST_START(0);
 
@@ -70,7 +71,7 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
     TEST_ASSERT(pTcb != NULL);
 
 #ifdef VXWORKS
-    pstackBase = (char *) malloc(stackSize) + stacksize;
+    pstackBase = (char *) malloc(stackSize) + stackSize;
 #endif
   
     TEST_ASSERT(taskInit(&peerTcb,
@@ -100,7 +101,11 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
 
     TEST_MARK();
 
-    TEST_ASSERT(taskIdVerify(0) == ERROR && errno == S_objLib_OBJ_ID_ERROR);
+    TEST_ASSERT(taskIdVerify(0) == ERROR);
+    id = (TASK_ID) malloc(20);
+    memset(id, '\0', 20);
+    TEST_ASSERT(taskIdVerify(id) == ERROR && errno == S_objLib_OBJ_ID_ERROR);
+    free(id);
 
     TEST_ASSERT_OK(taskIdVerify((TASK_ID)&peerTcb));
 
