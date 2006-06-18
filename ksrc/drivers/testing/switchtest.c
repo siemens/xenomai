@@ -307,7 +307,7 @@ static int rtswitch_close(struct rtdm_dev_context *context,
 	if (ctx->tasks) {
 		set_cpus_allowed(current, cpumask_of_cpu(ctx->cpu));
 
-		for (i = 0; i < ctx->tasks_count; i++) {
+		for (i = 0; i < ctx->next_index; i++) {
 			rtswitch_task_t *task = &ctx->tasks[i];
 
 			if (task->base.flags & RTSWITCH_KERNEL)
