@@ -11,8 +11,6 @@
 #include <sys/mman.h>
 #include <semaphore.h>
 
-#include <execinfo.h>
-
 #include <asm/xenomai/fptest.h>
 #include <rtdm/rttesting.h>
 
@@ -433,17 +431,6 @@ static void post_sem_on_sig(int sig)
 	signal(sig, SIG_DFL);
 }
 
-static void backtrace_on_segv(int sig)
-{
-	static void *buffer[200];
-	int depth = backtrace(buffer, sizeof(buffer)/sizeof(void *));
-	backtrace_symbols_fd(buffer, depth, STDERR_FILENO);
-
-	fsync(STDERR_FILENO);
-	signal(sig, SIG_DFL);
-	raise(sig);
-}
-
 const char *all_nofp [] = {
 	"rtk",
 	"rtk",
@@ -680,10 +667,6 @@ int main(int argc, const char *argv[])
 		exit(EXIT_FAILURE);
 	}
 	if (signal(SIGTERM, &post_sem_on_sig)) {
-		perror("signal");
-		exit(EXIT_FAILURE);
-	}
-	if (signal(SIGSEGV, &backtrace_on_segv)) {
 		perror("signal");
 		exit(EXIT_FAILURE);
 	}
