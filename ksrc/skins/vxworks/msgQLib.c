@@ -159,7 +159,7 @@ MSG_Q_ID msgQCreate(int nb_msgs, int length, int flags)
 	error_check(flags & ~WIND_MSG_Q_OPTION_MASK,
 		    S_msgQLib_INVALID_QUEUE_TYPE, return 0);
 
-	error_check(length <= 0, S_msgQLib_INVALID_MSG_LENGTH, return 0);
+	error_check(length < 0, S_msgQLib_INVALID_MSG_LENGTH, return 0);
 
 	msgs_mem = xnmalloc(sizeof(wind_msgq_t) +
 			    nb_msgs * (sizeof(wind_msg_t) + length));
@@ -265,15 +265,13 @@ int msgQReceive(MSG_Q_ID qid, char *buf, UINT bytes, int to)
 
 	error_check(buf == NULL, 0, return ERROR);
 
+	check_NOT_ISR_CALLABLE(return ERROR);
+	
 	xnlock_get_irqsave(&nklock, s);
 
 	check_OBJ_ID_ERROR(qid, wind_msgq_t, queue, WIND_MSGQ_MAGIC,
 			   goto error);
 
-	error_check(bytes <= 0 || bytes > queue->msg_length,
-		    S_msgQLib_INVALID_MSG_LENGTH, goto error);
-
-	/* here, we are finished with error checking, the real work can begin */
 	if ((msg = unqueue_msg(queue)) == NULL) {
 		/* message queue is empty */
 
@@ -339,10 +337,8 @@ STATUS msgQSend(MSG_Q_ID qid, const char *buf, UINT bytes, int to, int prio)
 	check_OBJ_ID_ERROR(qid, wind_msgq_t, queue, WIND_MSGQ_MAGIC,
 			   goto error);
 
-	error_check(buf == NULL || bytes <= 0 || bytes > queue->msg_length,
+	error_check(buf == NULL || bytes > queue->msg_length,
 		    S_msgQLib_INVALID_MSG_LENGTH, goto error);
-
-	/* here, we are finished with error checking, the real work can begin */
 
 	if (queue->msgq.elems == 0 &&
 	    (thread = xnsynch_wakeup_one_sleeper(&queue->synchbase)) != NULL) {
