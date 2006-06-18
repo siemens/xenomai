@@ -1229,7 +1229,7 @@ static int __pthread_condattr_getclock(struct task_struct *curr,
 
 	uattrp = (pthread_condattr_t *) __xn_reg_arg1(regs);
 
-	uclockp = (int *) __xn_reg_arg2(regs);
+	uclockp = (clockid_t *) __xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
 	    (curr, VERIFY_READ, (void __user *)uattrp, sizeof(*uattrp)))
@@ -1259,7 +1259,7 @@ static int __pthread_condattr_setclock(struct task_struct *curr,
 
 	uattrp = (pthread_condattr_t *) __xn_reg_arg1(regs);
 
-	clock = (int) __xn_reg_arg2(regs);
+	clock = (clockid_t) __xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
 	    (curr, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
