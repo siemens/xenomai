@@ -1092,7 +1092,7 @@ static const struct rtdm_device __initdata device_tmpl = {
 
 void __16550A_exit(void);
 
-int __16550A_init(void)
+int __init __16550A_init(void)
 {
     struct rtdm_device  *dev;
     int                 ret;
@@ -1161,7 +1161,7 @@ int __16550A_init(void)
 }
 
 
-void __16550A_exit(void)
+void __exit __16550A_exit(void)
 {
     int i;
 

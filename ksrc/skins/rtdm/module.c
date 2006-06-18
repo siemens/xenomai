@@ -61,7 +61,7 @@ static xnpod_t __rtdm_pod;
 #endif /* !__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
 
 
-static void rtdm_skin_shutdown(int xtype)
+static void __exit rtdm_skin_shutdown(int xtype)
 {
     rtdm_dev_cleanup();
 
@@ -78,7 +78,7 @@ static void rtdm_skin_shutdown(int xtype)
 }
 
 
-int SKIN_INIT(rtdm)
+int __init SKIN_INIT(rtdm)
 {
     int err;
 
@@ -143,7 +143,7 @@ int SKIN_INIT(rtdm)
     return err;
 }
 
-void SKIN_EXIT(rtdm)
+void __exit SKIN_EXIT(rtdm)
 {
     xnprintf("stopping RTDM services.\n");
     rtdm_skin_shutdown(XNPOD_NORMAL_EXIT);

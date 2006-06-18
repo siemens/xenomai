@@ -304,7 +304,7 @@ int __init rtdm_proc_init(void)
 }
 
 
-void rtdm_proc_cleanup(void)
+void __exit rtdm_proc_cleanup(void)
 {
     remove_proc_entry("fildes", rtdm_proc_root);
     remove_proc_entry("open_fildes", rtdm_proc_root);
