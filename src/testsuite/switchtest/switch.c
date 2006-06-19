@@ -35,24 +35,24 @@ struct cpu_tasks {
 /* Thread type. */
 typedef enum {
 	SLEEPER = 0,
-	RTK  = 1,        /* kernel-space thread. */
-	RTUP = 2,        /* user-space real-time thread in primary mode. */
-	RTUS = 3,        /* user-space real-time thread in secondary mode. */
-	RTUO = 4,        /* user-space real-time thread oscillating
+	RTK  = 1,	 /* kernel-space thread. */
+	RTUP = 2,	 /* user-space real-time thread in primary mode. */
+	RTUS = 3,	 /* user-space real-time thread in secondary mode. */
+	RTUO = 4,	 /* user-space real-time thread oscillating
 			    between primary and secondary mode. */
 } threadtype;
 
 typedef enum {
-	AFP  = 1,        /* arm the FPU task bit (only make sense for RTK) */
-	UFPP = 2,        /* use the FPU while in primary mode. */
-	UFPS = 4         /* use the FPU while in secondary mode. */
+	AFP  = 1,	 /* arm the FPU task bit (only make sense for RTK) */
+	UFPP = 2,	 /* use the FPU while in primary mode. */
+	UFPS = 4	 /* use the FPU while in secondary mode. */
 } fpflags;
 
 sem_t sleeper_start, terminate;
 
 void timespec_substract(struct timespec *result,
-                        const struct timespec *lhs,
-                        const struct timespec *rhs)
+			const struct timespec *lhs,
+			const struct timespec *rhs)
 {
 	result->tv_sec = lhs->tv_sec - rhs->tv_sec;
 	if (lhs->tv_nsec >= rhs->tv_nsec)
@@ -113,7 +113,7 @@ static void *sleeper(void *cookie)
 				       "SWITCHES_COUNT)");
 				exit(EXIT_FAILURE);
 			}
-            
+	    
 			printf("cpu %u: %lu\n",
 			       param->cpu->index,
 			       switches_count);
@@ -121,7 +121,7 @@ static void *sleeper(void *cookie)
 
 		if (tasks_count == 1)
 			continue;
-        
+	
 		if (++rtsw.to == rtsw.from)
 			++rtsw.to;
 		if (rtsw.to > tasks_count - 1)
@@ -320,8 +320,8 @@ static void *rtuo(void *cookie)
 }
 
 static int parse_arg(struct task_params *param,
-                     const char *text,
-                     struct cpu_tasks *cpus)
+		     const char *text,
+		     struct cpu_tasks *cpus)
 {
 	struct t2f {
 		const char *text;
@@ -336,7 +336,7 @@ static int parse_arg(struct task_params *param,
 	};
 
 	static struct t2f fp2flags [] = {
-		{ "_fp",   AFP   },
+		{ "_fp",   AFP	 },
 		{ "_ufpp", UFPP },
 		{ "_ufps", UFPS }
 	};
@@ -369,11 +369,11 @@ static int parse_arg(struct task_params *param,
     
 	for(i = 0; i < sizeof(fp2flags)/sizeof(struct t2f); i++) {
 		size_t len = strlen(fp2flags[i].text);
-        
+	
 		if(!strncmp(text, fp2flags[i].text, len)) {
 			param->fp |= fp2flags[i].flag;
 			text += len;
-            
+	    
 			goto fpflags;
 		}
 	}
@@ -486,15 +486,15 @@ void usage(FILE *fd, const char *progname)
 		"rtus for a user-space real-time thread running in secondary"
 		" mode,\n"
 		"rtuo for a user-space real-time thread oscillating between"
-		" primary and\n     secondary mode,\n\n"
+		" primary and\n	    secondary mode,\n\n"
 		"_fp means that the created thread will have the XNFPU bit"
 		" armed (only valid for\n     rtk),\n"
 		"_ufpp means that the created thread will use the FPU when in "
-		"primary mode\n     (invalid for rtus),\n"
+		"primary mode\n	    (invalid for rtus),\n"
 		"_ufps means that the created thread will use the FPU when in "
 		"secondary mode\n     (invalid for rtk and rtup),\n\n"
 		"[0-9]* specifies the ID of the CPU where the created thread "
-		"will run, 0 if\n       unspecified.\n\n"
+		"will run, 0 if\n	unspecified.\n\n"
 		"Passing no argument is equivalent to running:\n%s",
 		progname, progname, progname);
 
@@ -617,7 +617,7 @@ int main(int argc, const char *argv[])
 
 		cpus[i].tasks[0].type = SLEEPER;
 		cpus[i].tasks[0].fp = 0;
-		cpus[i].tasks[0].cpu = &cpus[i];        
+		cpus[i].tasks[0].cpu = &cpus[i];	
 		cpus[i].tasks[0].thread = 0;
 		cpus[i].tasks[0].swt.index = cpus[i].tasks[0].swt.flags = 0;
 	}
@@ -687,10 +687,10 @@ int main(int argc, const char *argv[])
 	for (i = 0; i < nr_cpus; i ++) {
 		struct cpu_tasks *cpu = &cpus[i];
 
-		cpu->fd = open("rtswitch0", O_RDWR);
+		cpu->fd = open("rtswitch", O_RDWR);
 
 		if (cpu->fd == -1) {
-			perror("open(\"rtswitch0\")");
+			perror("open(\"rtswitch\")");
 			goto failure;
 		}
 
@@ -735,17 +735,17 @@ int main(int argc, const char *argv[])
 				task_routine = sleeper;
 				attr = &sleeper_attr;
 				goto do_register;
-                
+		
 			case RTUP:
 				task_routine = rtup;
 				basename = "rtup";
 				goto do_register;
-                
+		
 			case RTUS:
 				task_routine = rtus;
 				basename = "rtus";
 				goto do_register;
-                
+		
 			case RTUO:
 				task_routine = rtuo;
 				basename = "rtuo";
@@ -768,50 +768,50 @@ int main(int argc, const char *argv[])
 				goto failure;
 			}
 
-			if (param->type != RTK) {
-				if (param->type != SLEEPER) {
-					char name [64];
+			if (param->type == RTK)
+				continue;
 
-					err = pthread_create(&param->thread,
-							     attr,
-							     task_routine,
-							     param);
-                    
-					if (err) {
-						fprintf(stderr,
-							"pthread_create: %s\n",
-							strerror(err));
-						goto failure;
-					}
+			if (param->type != SLEEPER) {
+				char name [64];
 
-					snprintf(name, sizeof(name), "%s%u/%u",
-						 basename, param->swt.index, i);
+				err = pthread_create(&param->thread,
+						     attr,
+						     task_routine,
+						     param);
+		    
+				if (err) {
+					fprintf(stderr,
+						"pthread_create: %s\n",
+						strerror(err));
+					goto failure;
+				}
 
-					err = pthread_set_name_np(param->thread,
-								  name);
-                        
-					if (err) {
-						fprintf(stderr,
-							"pthread_set_name_np: "
-							"%s\n",
-							strerror(err));
-						goto failure;
-					}
-				} else {
-					err = __real_pthread_create
-						(&param->thread,
-						 attr,
-						 task_routine,
-						 param);
+				snprintf(name, sizeof(name), "%s%u/%u",
+					 basename, param->swt.index, i);
 
-					if (err) {
-						fprintf(stderr,
-							"pthread_create: %s\n",
-							strerror(err));
-					  failure:
-						status = EXIT_FAILURE;
-						goto cleanup;
-					}
+				err = pthread_set_name_np(param->thread,name);
+			
+				if (err) {
+					fprintf(stderr,
+						"pthread_set_name_np: "
+						"%s\n",
+						strerror(err));
+					goto failure;
+				}
+			} else {
+				err = __real_pthread_create
+					(&param->thread,
+					 attr,
+					 task_routine,
+					 param);
+
+				if (err) {
+					fprintf(stderr,
+						"pthread_create: %s\n",
+						strerror(err));
+				  failure:
+					status = EXIT_FAILURE;
+					goto cleanup;
 				}
 			}
 		}
@@ -824,27 +824,34 @@ int main(int argc, const char *argv[])
 	/* Wait for interruption. */
 	sem_wait(&terminate);
 
-	status = 0;
+	status = EXIT_SUCCESS;
 
 	/* Cleanup. */
   cleanup:
-	for (i = 0; i < nr_cpus; i++)
-		if (cpus[i].fd != -1)
-			/* Free RTDM devices ASAP. */
-			close(cpus[i].fd);
-
 	for (i = 0; i < nr_cpus; i ++) {
 		struct cpu_tasks *cpu = &cpus[i];
+		cpu_set_t cpu_set;
+
+		CPU_ZERO(&cpu_set);
+		CPU_SET(cpu->index, &cpu_set);
+		if (sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
+			perror("sleeper: sched_setaffinity");
+			exit(EXIT_FAILURE);
+		}
+
+		/* kill the user-space tasks. */
 		for (j = 0; j < cpu->tasks_count; j++) {
 			struct task_params *param = &cpu->tasks[j];
 
 			if (param->type != RTK && param->thread) {
-				/* kill the user-space tasks. */
 				pthread_detach(param->thread);
 				pthread_cancel(param->thread);
 			}
 		}
 
+		/* Kill the kernel-space tasks. */
+		if (cpus[i].fd != -1)
+			close(cpus[i].fd);
 		free(cpu->tasks);
 	}
 	free(cpus);
