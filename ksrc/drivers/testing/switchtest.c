@@ -460,7 +460,7 @@ static struct rtdm_device device = {
 
 	device_flags: RTDM_NAMED_DEVICE,
 	context_size: sizeof(rtswitch_context_t),
-	device_name:  "rtswitch0",
+	device_name:  "rtswitch",
 
 	open_rt: NULL,
 	open_nrt: rtswitch_open,
