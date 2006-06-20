@@ -1,5 +1,7 @@
 2006-06-20  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/i386/patches: Upgrade to 2.6.1{6,7}-1.3-05.
+
 	* configure.in, src/testsuite/switchtest/switch.c: Fix
 	sched_setaffinity() issue with varying glibc prototypes.
 
