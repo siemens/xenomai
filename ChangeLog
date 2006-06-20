@@ -1,5 +1,8 @@
 2006-06-20  Philippe Gerum  <rpm@xenomai.org>
 
+	* configure.in, src/testsuite/switchtest/switch.c: Fix
+	sched_setaffinity() issue with varying glibc prototypes.
+
 	* ksrc/skins/rtdm/drvlib.c: Including missing <asm/highmem.h>.
 
 2006-06-18  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
