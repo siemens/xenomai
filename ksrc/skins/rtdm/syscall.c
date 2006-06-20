@@ -142,7 +142,7 @@ int __init rtdm_syscall_init(void)
 {
     __rtdm_muxid = xnshadow_register_interface("rtdm", RTDM_SKIN_MAGIC,
                                                sizeof(systab) / sizeof(systab[0]),
-                                               systab, NULL);
+                                               systab, NULL, THIS_MODULE);
     if (__rtdm_muxid < 0)
         return -ENOSYS;
 

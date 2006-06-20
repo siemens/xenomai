@@ -973,7 +973,7 @@ int vrtxsys_init(void)
 	    xnshadow_register_interface("vrtx",
 					VRTX_SKIN_MAGIC,
 					sizeof(__systab) / sizeof(__systab[0]),
-					__systab, NULL);
+					__systab, NULL, THIS_MODULE);
 	if (__muxid < 0)
 		return -ENOSYS;
 
