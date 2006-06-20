@@ -61,10 +61,24 @@ linux/%: linux/.xenomai-prepared FORCE
 	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
 	cd linux && $(MAKE) $* \
 		ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross
+
+linux/all: linux/.xenomai-prepared FORCE
+	$(top_srcdir)/scripts/prepare-kernel.sh \
+             --adeos="$(ADEOS_PATCH)" --linux=linux \
+	     --arch=$(XENO_LINUX_ARCH) && \
+	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
+	cd linux && $(MAKE) $(XENO_LINUX_ALL_TARGETS) \
+		ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross
+
 else
 linux/%: linux/.xenomai-prepared FORCE
 	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
 	cd linux && $(MAKE) $* \
+		ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross
+
+linux/all: linux/.xenomai-prepared FORCE
+	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
+	cd linux && $(MAKE) $(XENO_LINUX_ALL_TARGETS) \
 		ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross
 endif
 
@@ -77,8 +91,9 @@ linux/install: linux/all
 	@targets=modules_install; \
 	sudo=; if test x`id -u` != x0 && test \! "x`type $(SUDO)`" = x && \
 	$(SUDO) true; then sudo=$(SUDO); targets="$$targets install"; fi && \
-	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
+	$(mkinstalldirs) $(DESTDIR) && \
 	$$sudo $(mkinstalldirs) $(DESTDIR)/boot && \
+	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
 	cd linux && $$sudo $(MAKE) $$targets \
            ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross \
            INSTALL_PATH=$(DESTDIR)/boot \
@@ -94,7 +109,7 @@ distclean-linux:
 config oldconfig mconfig menuconfig gconfig xconfig:
 	$(MAKE) linux/$@
 
-all-recursive: linux/all
+all-recursive: linux/all linux/modules
 
 clean-recursive: linux/clean
 
