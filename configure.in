@@ -240,6 +240,13 @@ else
      else
         AC_MSG_RESULT([$XENO_LINUX_SRCDIR (kernel ${linux_full_version})])
      fi
+
+     case "$linux_base_version" in
+	2.4.*) XENO_LINUX_ALL_TARGETS="bzImage modules";;
+        2.6.*) XENO_LINUX_ALL_TARGETS="all";;
+	*) AC_MSG_ERROR([Unknown Linux version $linux_full_version]);;
+     esac
+     AC_SUBST(XENO_LINUX_ALL_TARGETS)
   fi
 
   AC_MSG_CHECKING(for Adeos patch)
