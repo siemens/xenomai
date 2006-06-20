@@ -20,6 +20,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <asm/xenomai/wrappers.h>
 #include <nucleus/jhash.h>
 #include <nucleus/ppd.h>
 #include <posix/syscall.h>
@@ -2716,6 +2717,9 @@ static void *pse51_eventcb(int event, void *data)
 	
 	switch(event) {
 	case XNSHADOW_CLIENT_ATTACH:
+		if (!try_module_get(THIS_MODULE))
+			return ERR_PTR(-ENOSYS);
+
 		q = (pse51_queues_t *) xnarch_sysalloc(sizeof(*q));
 		if (!q)
 			return ERR_PTR(-ENOSPC);
@@ -2749,6 +2753,7 @@ static void *pse51_eventcb(int event, void *data)
 		
 		xnarch_sysfree(q, sizeof(*q));
 
+		module_put(THIS_MODULE);
 		return NULL;
 	}
 	
