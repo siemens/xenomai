@@ -2,6 +2,12 @@
 
 	* ksrc/skins/rtdm/drvlib.c: Including missing <asm/highmem.h>.
 
+2006-06-18  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/vxworks/msgQLib.c: Allow reception buffer to be
+	larger than queue maximum messages length. Allow null length
+	messages. Return ERROR when msgQReceive is called from ISR.
+
 2006-06-17  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/syscall.c: Make user-space pthread_mutex_init,
