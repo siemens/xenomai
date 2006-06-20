@@ -139,8 +139,13 @@ static inline void finish_wait(wait_queue_head_t *q,
 } while(0)
 #endif
 
+#ifdef MODULE
 #define try_module_get(mod) try_inc_mod_count(mod)
 #define module_put(mod) __MOD_DEC_USE_COUNT(mod)
+#else /* !__MODULE__ */
+#define try_module_get(mod) (1)
+#define module_put(mod) do { } while (0)
+#endif /* !__MODULE__ */
 
 /* Types */
 typedef enum __kernel_clockid_t {
