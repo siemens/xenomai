@@ -59,6 +59,12 @@
 /* Define to 1 if you have the <mqueue.h> header file. */
 #undef HAVE_MQUEUE_H
 
+/* config */
+#undef HAVE_OLD_SETAFFINITY
+
+/* config */
+#undef HAVE_RECENT_SETAFFINITY
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 

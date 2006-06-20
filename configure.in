@@ -305,6 +305,7 @@ patch. Default is to infer the patch name from Linux kernel version.]),
               test x"$CONFIG_PPC" = xy && cfg_arch=ppc || :
               test x"$CONFIG_IA64" = xy && cfg_arch=ia64 || :
               test x"$CONFIG_PPC64" = xy && cfg_arch=ppc64 || :
+              test x"$CONFIG_BLACKFIN" = xy && cfg_arch=blackfin || :
               if test $cfg_arch = $XENO_TARGET_ARCH; then
                  cp $XENO_LINUX_SRCDIR/.config .xenomai.config
               fi
@@ -461,6 +462,31 @@ AM_CONDITIONAL(CONFIG_XENO_UVM,[test "$CONFIG_XENO_UVM" = y])
 
 dnl Documentation.
 AM_CONDITIONAL(CONFIG_XENO_DOC_DOX,[test "$CONFIG_XENO_DOC_DOX" = y])
+
+AC_MSG_CHECKING([for sched_setaffinity])
+AC_CACHE_VAL(ac_cv_sched_setaffinity,
+ save_CFLAGS="$CFLAGS"
+ CFLAGS="-Werror"
+ [AC_TRY_COMPILE([#include <pthread.h>],
+ [cpu_set_t cpu_set; sched_setaffinity(0, sizeof(cpu_set), &cpu_set);],
+ [ac_cv_sched_setaffinity=new],
+ [ac_cv_sched_setaffinity=bad])]
+ if test $ac_cv_sched_setaffinity = bad ; then
+   [AC_TRY_COMPILE([#include <pthread.h>],
+   [cpu_set_t cpu_set;],
+   [ac_cv_sched_setaffinity=old],
+   [ac_cv_sched_setaffinity=no])]
+ fi
+ if test $ac_cv_sched_setaffinity = old; then
+     AC_MSG_RESULT(old)
+     AC_DEFINE(HAVE_OLD_SETAFFINITY,1,[config])
+ elif test $ac_cv_sched_setaffinity = new; then
+     AC_MSG_RESULT(ok)
+     AC_DEFINE(HAVE_RECENT_SETAFFINITY,1,[config])
+ else
+     AC_MSG_RESULT(no)
+ fi
+ CFLAGS="$save_CFLAGS")
 
 AC_MSG_CHECKING([for specific GCC switches])
 AC_CACHE_VAL(ac_cv_gcc_wnoalias,

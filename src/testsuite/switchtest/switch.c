@@ -1,3 +1,4 @@
+#include <xeno_config.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -13,6 +14,15 @@
 
 #include <asm/xenomai/fptest.h>
 #include <rtdm/rttesting.h>
+
+#ifndef HAVE_RECENT_SETAFFINITY
+typedef unsigned long cpu_set;
+#ifndef HAVE_OLD_SETAFFINITY
+#define sched_setaffinity(pid,len,mask) do { } while(0)
+#define	 CPU_ZERO(set)		do { (set) = 0; } while(0)
+#define	 CPU_SET(n,set) 	do { (set) |= (1 << n); } while(0)
+#endif /* HAVE_OLD_SETAFFINITY */
+#endif /* HAVE_RECENT_SETAFFINITY */
 
 struct cpu_tasks;
 
