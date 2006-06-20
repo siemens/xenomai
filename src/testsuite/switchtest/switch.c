@@ -15,10 +15,14 @@
 #include <asm/xenomai/fptest.h>
 #include <rtdm/rttesting.h>
 
-#ifndef HAVE_RECENT_SETAFFINITY
+#ifdef HAVE_RECENT_SETAFFINITY
+#define do_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,len,mask)
+#else /* !HAVE_RECENT_SETAFFINITY */
+#ifdef HAVE_OLD_SETAFFINITY
+#define do_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,mask)
+#else /* !HAVE_OLD_SETAFFINITY */
 typedef unsigned long cpu_set;
-#ifndef HAVE_OLD_SETAFFINITY
-#define sched_setaffinity(pid,len,mask) do { } while(0)
+#define do_sched_setaffinity(pid,len,mask) do { } while(0)
 #define	 CPU_ZERO(set)		do { (set) = 0; } while(0)
 #define	 CPU_SET(n,set) 	do { (set) |= (1 << n); } while(0)
 #endif /* HAVE_OLD_SETAFFINITY */
@@ -85,7 +89,7 @@ static void *sleeper(void *cookie)
 
 	CPU_ZERO(&cpu_set);
 	CPU_SET(param->cpu->index, &cpu_set);
-	if (sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
+	if (do_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
 		perror("sleeper: sched_setaffinity");
 		exit(EXIT_FAILURE);
 	}
@@ -163,7 +167,7 @@ static void *rtup(void *cookie)
 
 	CPU_ZERO(&cpu_set);
 	CPU_SET(param->cpu->index, &cpu_set);
-	if (sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
+	if (do_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
 		perror("rtup: sched_setaffinity");
 		exit(EXIT_FAILURE);
 	}
@@ -219,7 +223,7 @@ static void *rtus(void *cookie)
 
 	CPU_ZERO(&cpu_set);
 	CPU_SET(param->cpu->index, &cpu_set);
-	if (sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
+	if (do_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
 		perror("rtus: sched_setaffinity");
 		exit(EXIT_FAILURE);
 	}
@@ -275,7 +279,7 @@ static void *rtuo(void *cookie)
 
 	CPU_ZERO(&cpu_set);
 	CPU_SET(param->cpu->index, &cpu_set);
-	if (sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
+	if (do_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
 		perror("rtuo: sched_setaffinity");
 		exit(EXIT_FAILURE);
 	}
@@ -844,7 +848,7 @@ int main(int argc, const char *argv[])
 
 		CPU_ZERO(&cpu_set);
 		CPU_SET(cpu->index, &cpu_set);
-		if (sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
+		if (do_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
 			perror("sleeper: sched_setaffinity");
 			exit(EXIT_FAILURE);
 		}
