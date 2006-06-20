@@ -2717,8 +2717,10 @@ static void *pse51_eventcb(int event, void *data)
 	
 	switch(event) {
 	case XNSHADOW_CLIENT_ATTACH:
+#if 0
 		if (!try_module_get(THIS_MODULE))
 			return ERR_PTR(-ENOSYS);
+#endif
 
 		q = (pse51_queues_t *) xnarch_sysalloc(sizeof(*q));
 		if (!q)
@@ -2753,7 +2755,9 @@ static void *pse51_eventcb(int event, void *data)
 		
 		xnarch_sysfree(q, sizeof(*q));
 
+#if 0
 		module_put(THIS_MODULE);
+#endif
 		return NULL;
 	}
 	
@@ -2767,7 +2771,8 @@ int pse51_syscall_init(void)
 					    PSE51_SKIN_MAGIC,
 					    sizeof(__systab)/sizeof(__systab[0]),
 					    __systab,
-					    pse51_eventcb);
+					    pse51_eventcb,
+					    THIS_MODULE);
 	if (pse51_muxid < 0)
 		return -ENOSYS;
 	
