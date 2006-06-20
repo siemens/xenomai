@@ -74,8 +74,8 @@
  struct task_struct;
  
 --- 2.6.17/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.17-ipipe/include/linux/ipipe.h	2006-06-15 16:18:35.000000000 +0200
-@@ -0,0 +1,724 @@
++++ 2.6.17-ipipe/include/linux/ipipe.h	2006-06-20 19:06:25.000000000 +0200
+@@ -0,0 +1,726 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -695,6 +695,7 @@
 +{
 +	/* Must be called hw interrupts off. */
 +	ipipe_declare_cpuid;
++	ipipe_load_cpuid();
 +	__set_bit(IPIPE_NOSTACK_FLAG, &ipd->cpudata[cpuid].status);
 +}
 +
@@ -702,6 +703,7 @@
 +{
 +	/* Must be called hw interrupts off. */
 +	ipipe_declare_cpuid;
++	ipipe_load_cpuid();
 +	__clear_bit(IPIPE_NOSTACK_FLAG, &ipd->cpudata[cpuid].status);
 +}
 +
@@ -4282,8 +4284,8 @@
 +EXPORT_SYMBOL(ipipe_get_sysinfo);
 +EXPORT_SYMBOL(ipipe_tune_timer);
 --- 2.6.17/arch/i386/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.17-ipipe/arch/i386/kernel/ipipe-root.c	2006-06-07 16:53:53.000000000 +0200
-@@ -0,0 +1,640 @@
++++ 2.6.17-ipipe/arch/i386/kernel/ipipe-root.c	2006-06-20 19:01:21.000000000 +0200
+@@ -0,0 +1,642 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/i386/kernel/ipipe-root.c
 + *
@@ -4709,6 +4711,8 @@
 +};
 +
 +#ifdef CONFIG_KGDB
++#include <linux/kgdb.h>
++
 +static int __ipipe_xlate_signo[] = {
 +
 +	[ex_do_divide_error] = SIGFPE,
