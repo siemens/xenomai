@@ -27,6 +27,7 @@
 
 #include <linux/config.h>
 #include <linux/version.h>
+#include <linux/module.h>
 #include <asm/io.h>
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
@@ -137,6 +138,9 @@ static inline void finish_wait(wait_queue_head_t *q,
 	schedule_timeout((x)*(HZ/1000));         \
 } while(0)
 #endif
+
+#define try_module_get(mod) try_inc_mod_count(mod)
+#define module_put(mod) __MOD_DEC_USE_COUNT(mod)
 
 /* Types */
 typedef enum __kernel_clockid_t {
