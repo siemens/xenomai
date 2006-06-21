@@ -466,7 +466,7 @@ AM_CONDITIONAL(CONFIG_XENO_DOC_DOX,[test "$CONFIG_XENO_DOC_DOX" = y])
 AC_MSG_CHECKING([for sched_setaffinity])
 AC_CACHE_VAL(ac_cv_sched_setaffinity,
  save_CFLAGS="$CFLAGS"
- CFLAGS="-Werror -D_GNU_SOURCE"
+ CFLAGS="-Wimplicit-function-declaration -Werror -D_GNU_SOURCE"
  [AC_TRY_COMPILE([#include <sched.h>],
  [cpu_set_t cpu_set; sched_setaffinity(0, sizeof(cpu_set), &cpu_set);],
  [ac_cv_sched_setaffinity=new],
