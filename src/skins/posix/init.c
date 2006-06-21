@@ -36,7 +36,6 @@ int __wrap_pthread_setschedparam(pthread_t, int, const struct sched_param *);
 static __attribute__ ((constructor))
 void __init_posix_interface(void)
 {
-	sighandler_t oldhandler;
 	struct sched_param parm;
 	int muxid, err;
 
@@ -51,12 +50,10 @@ void __init_posix_interface(void)
 								 __rtdm_fdcount);
 	}
 
-	/* Shadow the main thread. Ignoring SIGXCPU for now, but in order to do
-	   anything useful the application will have to call other services. */
-	oldhandler = signal(SIGXCPU, SIG_IGN);
-
-	if (oldhandler == SIG_ERR) {
-		perror("signal");
+	/* Shadow the main thread. mlock the whole memory for the time of the
+	   syscall, in order to avoid the SIGXCPU signal. */
+	if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
+		perror("Xenomai Posix skin init: mlockall");
 		exit(EXIT_FAILURE);
 	}
 
@@ -64,12 +61,13 @@ void __init_posix_interface(void)
 	if ((err =
 	     __wrap_pthread_setschedparam(pthread_self(), SCHED_OTHER,
 					  &parm))) {
-		fprintf(stderr, "pthread_setschedparam: %s\n", strerror(err));
+		fprintf(stderr, "Xenomai Posix skin init: "
+			"pthread_setschedparam: %s\n", strerror(err));
 		exit(EXIT_FAILURE);
 	}
 
-	if (signal(SIGXCPU, oldhandler) == SIG_ERR) {
-		perror("signal");
+	if (munlockall()) {
+		perror("Xenomai Posix skin init: munlockall");
 		exit(EXIT_FAILURE);
 	}
 }
