@@ -674,7 +674,12 @@ static int iface_read_proc(char *page,
 	struct xnskentry *iface = (struct xnskentry *)data;
 	int len, refcnt = xnarch_atomic_get(&iface->refcnt);
 
-	len = sprintf(page, "%d\n", refcnt < 0 ? 0 : refcnt);
+	len = sprintf(page, "%d\n",
+#if 1
+		      refcnt);
+#else
+		      refcnt < 0 ? 0 : refcnt);
+#endif
 	len -= off;
 	if (len <= off + count)
 		*eof = 1;
@@ -811,6 +816,11 @@ void __exit __xeno_sys_exit(void)
 {
 	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	/* Must take place before xnpod_delete_proc. */
+	xnshadow_cleanup();
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+
 #if defined(__KERNEL__) &&  defined(CONFIG_PROC_FS)
 	xnpod_delete_proc();
 #endif /* __KERNEL__ && CONFIG_PROC_FS */
@@ -821,7 +831,6 @@ void __exit __xeno_sys_exit(void)
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	xncore_umount();
 	xnheap_umount();
-	xnshadow_cleanup();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 #ifdef CONFIG_XENO_OPT_PIPE
 	xnpipe_umount();
