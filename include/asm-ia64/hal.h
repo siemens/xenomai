@@ -65,11 +65,18 @@ static inline unsigned long long rthal_rdtsc (void)
 
 static inline void rthal_timer_program_shot (unsigned long delay)
 {
+/* With head-optimization, callers are expected to have switched off
+   hard-IRQs already -- no need for additional protection in this case. */
+#ifndef CONFIG_XENO_OPT_PIPELINE_HEAD
     unsigned long flags;
-    if (!delay) { delay = 10; }
+
     rthal_local_irq_save_hw(flags);
+#endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
+    if (!delay) { delay = 10; }
     ia64_set_itm(ia64_get_itc() + delay);
+#ifndef CONFIG_XENO_OPT_PIPELINE_HEAD
     rthal_local_irq_restore_hw(flags);
+#endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
 }
 
     /* Private interface -- Internal use only */

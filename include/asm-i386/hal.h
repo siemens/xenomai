@@ -177,9 +177,13 @@ rthal_time_t rthal_get_8254_tsc(void);
 
 static inline void rthal_timer_program_shot (unsigned long delay)
 {
+/* With head-optimization, callers are expected to have switched off
+   hard-IRQs already -- no need for additional protection in this case. */
+#ifndef CONFIG_XENO_OPT_PIPELINE_HEAD
     unsigned long flags;
 
     rthal_local_irq_save_hw(flags);
+#endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
 #ifdef CONFIG_X86_LOCAL_APIC
     if (!delay) {
         /* Kick the timer interrupt immediately. */
@@ -201,7 +205,9 @@ static inline void rthal_timer_program_shot (unsigned long delay)
 	outb(delay >> 8,0x40);
     }
 #endif /* CONFIG_X86_LOCAL_APIC */
+#ifndef CONFIG_XENO_OPT_PIPELINE_HEAD
     rthal_local_irq_restore_hw(flags);
+#endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
 }
 
 static const char *const rthal_fault_labels[] = {
