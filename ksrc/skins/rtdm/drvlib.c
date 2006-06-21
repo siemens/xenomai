@@ -31,11 +31,11 @@
 
 
 #include <asm/io.h>
-#include <asm/highmem.h>
 #include <asm/pgtable.h>
 #include <asm/page.h>
 #include <linux/delay.h>
 #include <linux/mman.h>
+#include <linux/highmem.h>
 
 #include <rtdm/rtdm_driver.h>
 
