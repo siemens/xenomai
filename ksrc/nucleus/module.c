@@ -675,11 +675,8 @@ static int iface_read_proc(char *page,
 	int len, refcnt = xnarch_atomic_get(&iface->refcnt);
 
 	len = sprintf(page, "%d\n",
-#if 1
-		      refcnt);
-#else
 		      refcnt < 0 ? 0 : refcnt);
-#endif
+
 	len -= off;
 	if (len <= off + count)
 		*eof = 1;
