@@ -62,7 +62,7 @@ typedef enum {
 	UFPS = 4	 /* use the FPU while in secondary mode. */
 } fpflags;
 
-sem_t sleeper_start, terminate;
+sem_t sleeper_start;
 
 void timespec_substract(struct timespec *result,
 			const struct timespec *lhs,
@@ -439,12 +439,6 @@ static int check_arg(const struct task_params *param, struct cpu_tasks *end_cpu)
 	return 0;
 }
 
-static void post_sem_on_sig(int sig)
-{
-	sem_post(&terminate);
-	signal(sig, SIG_DFL);
-}
-
 const char *all_nofp [] = {
 	"rtk",
 	"rtk",
@@ -533,7 +527,8 @@ int main(int argc, const char *argv[])
 	struct cpu_tasks *cpus;
 	pthread_attr_t rt_attr, sleeper_attr;
 	struct sched_param sp;
-	int status;
+	int status, sig;
+	sigset_t mask;
 
 	/* Initializations. */
 	if (mlockall(MCL_CURRENT|MCL_FUTURE)) {
@@ -542,11 +537,6 @@ int main(int argc, const char *argv[])
 	}
 
 	if (__real_sem_init(&sleeper_start, 0, 0)) {
-		perror("sem_init");
-		exit(EXIT_FAILURE);
-	}
-
-	if (sem_init(&terminate, 0, 0)) {
 		perror("sem_init");
 		exit(EXIT_FAILURE);
 	}
@@ -675,16 +665,13 @@ int main(int argc, const char *argv[])
 		cpu->tasks[cpu->tasks_count - 1] = params;
 	}
 
-	/* Post the semaphore "terminate" on termination signals. */
-	if (signal(SIGINT, &post_sem_on_sig)) {
-		perror("signal");
-		exit(EXIT_FAILURE);
-	}
-	if (signal(SIGTERM, &post_sem_on_sig)) {
-		perror("signal");
-		exit(EXIT_FAILURE);
-	}
-
+	/* For best compatibility with both LinuxThreads and NPTL, block the
+	   termination signals on all threads. */
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGINT);
+	sigaddset(&mask, SIGTERM);
+	pthread_sigmask(SIG_BLOCK, &mask, NULL);
+	
 	/* Prepare attributes for real-time tasks. */
 	pthread_attr_init(&rt_attr);
 	pthread_attr_setinheritsched(&rt_attr, PTHREAD_EXPLICIT_SCHED);
@@ -836,7 +823,10 @@ int main(int argc, const char *argv[])
 		__real_sem_post(&sleeper_start);
 
 	/* Wait for interruption. */
-	sem_wait(&terminate);
+	sigwait(&mask, &sig);
+
+	/* Allow a second Ctrl-C in case of lockup. */
+	pthread_sigmask(SIG_UNBLOCK, &mask, NULL);
 
 	status = EXIT_SUCCESS;
 
@@ -857,10 +847,16 @@ int main(int argc, const char *argv[])
 		for (j = 0; j < cpu->tasks_count; j++) {
 			struct task_params *param = &cpu->tasks[j];
 
-			if (param->type != RTK && param->thread) {
-				pthread_detach(param->thread);
+			if (param->type != RTK && param->thread)
 				pthread_cancel(param->thread);
-			}
+		}
+
+		/* join them. */
+		for (j = 0; j < cpu->tasks_count; j++) {
+			struct task_params *param = &cpu->tasks[j];
+
+			if (param->type != RTK && param->thread)
+				pthread_join(param->thread, NULL);
 		}
 
 		/* Kill the kernel-space tasks. */
@@ -870,7 +866,6 @@ int main(int argc, const char *argv[])
 	}
 	free(cpus);
 	__real_sem_destroy(&sleeper_start);
-	sem_destroy(&terminate);
 
 	return status;
 }
