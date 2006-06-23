@@ -1,3 +1,12 @@
+2006-06-23  Philippe Gerum  <rpm@xenomai.org>
+
+	* scripts/xeno-test.in: Add missing -v option to getopts list.
+
+2006-06-23  Niklaus Giger <niklaus.giger@member.fsf.org>
+
+	* scripts/: Better busybox support; Kill dd load jobs correctly;
+	Add verbosity to -m / -L. Provide ruby test script to maintainers.
+
 2006-06-23  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/rtdm/device.c (rtdm_dev_register): Remove warning to
