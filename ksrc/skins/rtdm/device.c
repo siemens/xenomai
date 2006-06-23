@@ -281,8 +281,6 @@ int rtdm_dev_register(struct rtdm_device* device)
             existing_dev =
                 list_entry(entry, struct rtdm_device, reserved.entry);
             if (strcmp(device->device_name, existing_dev->device_name) == 0) {
-                xnlogerr("RTDM: device name \"%s\" already exists\n",
-                         device->device_name);
                 ret = -EEXIST;
                 goto err;
             }
