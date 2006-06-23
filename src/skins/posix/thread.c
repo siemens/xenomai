@@ -72,10 +72,9 @@ static void *__pthread_trampoline(void *arg)
 	__real_sem_post(&iargs->sync);
 
 	if (!err) {
-		if (iargs->policy != SCHED_OTHER) {
+		if (iargs->policy != SCHED_OTHER)
 			XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
-			status = start(cookie);
-		}
+		status = start(cookie);
 	} else
 		status = (void *)-err;
 
