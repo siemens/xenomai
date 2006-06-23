@@ -513,12 +513,15 @@ XENO_USER_LDFLAGS=
 case $XENO_TARGET_ARCH in
  i386)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -fstrict-aliasing $gcc_w_noalias"
+	XENO_USER_LDFLAGS="-rdynamic"
         ;;
  powerpc)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
+	XENO_USER_LDFLAGS="-rdynamic"
         ;;
  ia64)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
+	XENO_USER_LDFLAGS="-rdynamic"
         ;;
  blackfin)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
@@ -528,6 +531,7 @@ case $XENO_TARGET_ARCH in
         ;;
  arm)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
+	XENO_USER_LDFLAGS="-rdynamic"
         ;;
 esac
 
