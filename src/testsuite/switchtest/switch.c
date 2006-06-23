@@ -21,10 +21,10 @@
 #ifdef HAVE_OLD_SETAFFINITY
 #define do_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,mask)
 #else /* !HAVE_OLD_SETAFFINITY */
-typedef unsigned long cpu_set;
-#define do_sched_setaffinity(pid,len,mask) do { } while(0)
-#define	 CPU_ZERO(set)		do { (set) = 0; } while(0)
-#define	 CPU_SET(n,set) 	do { (set) |= (1 << n); } while(0)
+typedef unsigned long cpu_set_t;
+#define do_sched_setaffinity(pid,len,mask) 0
+#define	 CPU_ZERO(set)		do { *(set) = 0; } while(0)
+#define	 CPU_SET(n,set) 	do { *(set) |= (1 << n); } while(0)
 #endif /* HAVE_OLD_SETAFFINITY */
 #endif /* HAVE_RECENT_SETAFFINITY */
 

@@ -6,7 +6,7 @@ switch_SOURCES = switch.c
 
 switch_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -g -I$(top_srcdir)/include
 
-switch_LDFLAGS =  -rdynamic $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
+switch_LDFLAGS =  $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 
 switch_LDADD = \
 	-lpthread -lrt \

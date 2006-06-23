@@ -1,5 +1,13 @@
 2006-06-23  Philippe Gerum  <rpm@xenomai.org>
 
+	* src/testsuite/switchtest/Makefile.am (switch_LDFLAGS): Move
+	-rdynamic option to XENO_USER_LDFLAGS, since gcc targeting
+	MMU-less platforms won't understand it.
+
+	* src/testsuite/switchtest/switch.c (do_sched_setaffinity): Fix
+	massive breakage with !(HAVE_RECENT_SETAFFINITY ||
+	HAVE_OLD_SETAFFINITY).
+
 	* ksrc/skins/rtdm/proc.c (rtdm_proc_cleanup): Remove from __exit
 	section since it is referenced from init code.
 
