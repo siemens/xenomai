@@ -120,9 +120,9 @@ void vrtxmb_cleanup(void)
 
 /*
  * Manages a hash of xnsynch_t objects, indexed by mailboxes
- * addresses.  Given a mailbox, returns its synch.  If the synch is
- * not found, creates one. Must be called interrupts off, nklock
- * locked.
+ * addresses.  Given a mailbox, returns its descriptor address.  If
+ * the mailbox is not found, creates a descriptor for it. Must be
+ * called interrupts off, nklock locked.
  */
 
 vrtxmb_t *mb_map(char **mboxp)
