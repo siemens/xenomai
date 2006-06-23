@@ -263,6 +263,12 @@ inline __attribute__((weak)) int mlockall (int flags)
     return 0;
 }
 
+/* The same goes with munlockall(). */
+inline __attribute__((weak)) int munlockall (void)
+{
+    return 0;
+}
+
 #endif /* __KERNEL__ */
 
 #endif /* !_XENO_ASM_BFINNOMMU_SYSCALL_H */
