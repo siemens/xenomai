@@ -589,7 +589,8 @@ int xnshadow_harden(void)
 	if (!thread)
 		return -EPERM;
 
-	if (signal_pending(this_task) || down_interruptible(&gk->sync))	/* Grab the request token. */
+	if (signal_pending(this_task) || down_interruptible(&gk->sync))
+                /* Grab the request token. */
 		return -ERESTARTSYS;
 
 	xnltt_log_event(xeno_ev_primarysw, this_task->comm);
@@ -1531,7 +1532,8 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 
 	__xn_status_return(regs, err);
 
-	if (xnpod_shadow_p() && signal_pending(current))
+	if (nkpod && !testbits(nkpod->status, XNPIDLE)
+	    && xnpod_shadow_p() && signal_pending(current))
 		request_syscall_restart(xnshadow_thread(current), regs);
 	else if ((sysflags & __xn_exec_switchback) != 0 && switched)
 		xnshadow_relax(0);
