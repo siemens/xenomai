@@ -1,3 +1,9 @@
+2006-06-24  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/drivers/testing/Makefile, ksrc/drivers/16550A/Makefile,
+	scripts/Modules.frag: fix testing drivers compilation under 2.4,
+	clean up Makefiles from useless list-multi.
+
 2006-06-23  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/testsuite/switchtest/Makefile.am (switch_LDFLAGS): Move
