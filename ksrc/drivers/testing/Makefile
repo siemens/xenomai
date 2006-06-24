@@ -20,11 +20,9 @@ else
 
 O_TARGET := built-in.o
 
-obj-$(CONFIG_XENO_DRIVERS_TIMERBENCH) := xeno_timerbench.o
+obj-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += xeno_timerbench.o
 
-obj-$(CONFIG_XENO_DRIVERS_SWITCHTEST) := xeno_switchtest.o
-
-list-multi := xeno_timerbench.o
+obj-$(CONFIG_XENO_DRIVERS_SWITCHTEST) += xeno_switchtest.o
 
 xeno_timerbench-objs := timerbench.o
 

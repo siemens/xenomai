@@ -16,8 +16,6 @@ O_TARGET := built-in.o
 
 obj-$(CONFIG_XENO_DRIVERS_16550A) := xeno_16550A.o
 
-list-multi := xeno_16550A.o
-
 xeno_16550A-objs := 16550A.o
 
 export-objs := $(xeno_16550A-objs)
