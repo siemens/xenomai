@@ -1,5 +1,9 @@
 2006-06-25  Philippe Gerum  <rpm@xenomai.org>
 
+ 	* RELEASE: Xenomai 2.2-rc3
+
+2006-06-25  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/arch/blackfin/patches: Upgrade to
 	2.6.16-bf53x-CVS-20060625.
 
