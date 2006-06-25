@@ -1,7 +1,7 @@
-diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/Kconfig linux-2.6.x/arch/blackfin/Kconfig
---- linux-2.6.x-orig/arch/blackfin/Kconfig	2006-06-04 19:26:42.000000000 +0200
-+++ linux-2.6.x/arch/blackfin/Kconfig	2006-06-04 22:08:49.000000000 +0200
-@@ -638,6 +638,8 @@ config PM
+diff --exclude CVS -uNrp linux-2.6.x-cvs/arch/blackfin/Kconfig linux-2.6.16-ipipe/arch/blackfin/Kconfig
+--- linux-2.6.x-cvs/arch/blackfin/Kconfig	2006-06-21 09:51:53.000000000 +0200
++++ linux-2.6.16-ipipe/arch/blackfin/Kconfig	2006-06-23 16:48:36.000000000 +0200
+@@ -630,6 +630,8 @@ config PM
  	  Support processor power management modes
  endmenu
  
@@ -10,9 +10,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/Kconfig linux-2.6.x/arch
  if (BF537 || BF533)
  
  menu "CPU Frequency scaling"
-diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/Makefile linux-2.6.x/arch/blackfin/Makefile
---- linux-2.6.x-orig/arch/blackfin/Makefile	2006-03-22 07:13:56.000000000 +0100
-+++ linux-2.6.x/arch/blackfin/Makefile	2006-06-04 23:56:26.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/arch/blackfin/Makefile linux-2.6.16-ipipe/arch/blackfin/Makefile
+--- linux-2.6.x-cvs/arch/blackfin/Makefile	2006-03-22 07:13:56.000000000 +0100
++++ linux-2.6.16-ipipe/arch/blackfin/Makefile	2006-06-04 23:56:26.000000000 +0200
 @@ -1,3 +1,4 @@
 +
  #
@@ -23,24 +23,24 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/Makefile linux-2.6.x/arc
  archprepare: include/asm-blackfin/.mach
  archclean:
 -
-diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/Makefile linux-2.6.x/arch/blackfin/kernel/Makefile
---- linux-2.6.x-orig/arch/blackfin/kernel/Makefile	2006-03-28 11:16:59.000000000 +0200
-+++ linux-2.6.x/arch/blackfin/kernel/Makefile	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/arch/blackfin/kernel/Makefile linux-2.6.16-ipipe/arch/blackfin/kernel/Makefile
+--- linux-2.6.x-cvs/arch/blackfin/kernel/Makefile	2006-03-28 11:16:59.000000000 +0200
++++ linux-2.6.16-ipipe/arch/blackfin/kernel/Makefile	2006-06-04 22:08:50.000000000 +0200
 @@ -7,4 +7,5 @@ obj-y:= entry.o process.o bfin_ksyms.o p
  
  obj-$(CONFIG_MODULES)		+= module.o
  obj-$(CONFIG_BFIN_DMA_5XX)	+= bfin_dma_5xx.o
 +obj-$(CONFIG_IPIPE)		+= ipipe-core.o ipipe-root.o
  obj-$(CONFIG_DUAL_CORE_TEST_MODULE)	+= dualcore_test.o
-diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/entry.S linux-2.6.x/arch/blackfin/kernel/entry.S
---- linux-2.6.x-orig/arch/blackfin/kernel/entry.S	2006-06-04 19:26:43.000000000 +0200
-+++ linux-2.6.x/arch/blackfin/kernel/entry.S	2006-06-04 22:17:13.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/arch/blackfin/kernel/entry.S linux-2.6.16-ipipe/arch/blackfin/kernel/entry.S
+--- linux-2.6.x-cvs/arch/blackfin/kernel/entry.S	2006-06-21 09:49:05.000000000 +0200
++++ linux-2.6.16-ipipe/arch/blackfin/kernel/entry.S	2006-06-24 16:48:46.000000000 +0200
 @@ -5,7 +5,7 @@
   *
   * Created:
   * Description:
-- * Rev:	          $Id: entry.S,v 1.18 2006/06/01 12:14:06 bernds Exp $
-+ * Rev:	          $Id: entry.S,v 1.2 2006/06/04 20:17:13 rpm Exp $
+- * Rev:	          $Id: entry.S,v 1.20 2006/06/21 07:49:05 vapier Exp $
++ * Rev:	          $Id: entry.S,v 1.3 2006/06/24 14:48:46 rpm Exp $
   *
   * Modified:
   *               Copyright 2004-2005 Analog Devices Inc.
@@ -55,9 +55,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/entry.S linux-2.6
  	SP += -12;
  	call _schedule_tail;
  	SP += 12;
-diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/ipipe-core.c linux-2.6.x/arch/blackfin/kernel/ipipe-core.c
---- linux-2.6.x-orig/arch/blackfin/kernel/ipipe-core.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.x/arch/blackfin/kernel/ipipe-core.c	2006-05-03 12:28:19.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/arch/blackfin/kernel/ipipe-core.c linux-2.6.16-ipipe/arch/blackfin/kernel/ipipe-core.c
+--- linux-2.6.x-cvs/arch/blackfin/kernel/ipipe-core.c	1970-01-01 01:00:00.000000000 +0100
++++ linux-2.6.16-ipipe/arch/blackfin/kernel/ipipe-core.c	2006-05-03 12:28:19.000000000 +0200
 @@ -0,0 +1,215 @@
 +/* -*- linux-c -*-
 + * linux/arch/blackfin/kernel/ipipe-core.c
@@ -274,9 +274,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/ipipe-core.c linu
 +EXPORT_SYMBOL(ipipe_trigger_irq);
 +EXPORT_SYMBOL(ipipe_get_sysinfo);
 +EXPORT_SYMBOL(ipipe_tune_timer);
-diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/ipipe-root.c linux-2.6.x/arch/blackfin/kernel/ipipe-root.c
---- linux-2.6.x-orig/arch/blackfin/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.x/arch/blackfin/kernel/ipipe-root.c	2006-05-07 18:06:10.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/arch/blackfin/kernel/ipipe-root.c linux-2.6.16-ipipe/arch/blackfin/kernel/ipipe-root.c
+--- linux-2.6.x-cvs/arch/blackfin/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
++++ linux-2.6.16-ipipe/arch/blackfin/kernel/ipipe-root.c	2006-05-07 18:06:10.000000000 +0200
 @@ -0,0 +1,278 @@
 +/* -*- linux-c -*-
 + * linux/arch/blackfin/kernel/ipipe-root.c
@@ -556,9 +556,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/ipipe-root.c linu
 +EXPORT_SYMBOL(__ipipe_core_clock);
 +EXPORT_SYMBOL(__ipipe_freq_scale);
 +EXPORT_SYMBOL(show_stack);
-diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/irqchip.c linux-2.6.x/arch/blackfin/kernel/irqchip.c
---- linux-2.6.x-orig/arch/blackfin/kernel/irqchip.c	2006-03-22 07:13:56.000000000 +0100
-+++ linux-2.6.x/arch/blackfin/kernel/irqchip.c	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/arch/blackfin/kernel/irqchip.c linux-2.6.16-ipipe/arch/blackfin/kernel/irqchip.c
+--- linux-2.6.x-cvs/arch/blackfin/kernel/irqchip.c	2006-03-22 07:13:56.000000000 +0100
++++ linux-2.6.16-ipipe/arch/blackfin/kernel/irqchip.c	2006-06-04 22:08:50.000000000 +0200
 @@ -6,7 +6,7 @@
   * Created:
   * Description:  This file contains the simple DMA Implementation for Blackfin
@@ -747,15 +747,15 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/irqchip.c linux-2
  	spin_lock_irqsave(&irq_controller_lock, flags);
  	p = &desc->action;
  	if ((old = *p) != NULL) {
-diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/process.c linux-2.6.x/arch/blackfin/kernel/process.c
---- linux-2.6.x-orig/arch/blackfin/kernel/process.c	2006-06-04 19:26:43.000000000 +0200
-+++ linux-2.6.x/arch/blackfin/kernel/process.c	2006-06-04 22:17:13.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/arch/blackfin/kernel/process.c linux-2.6.16-ipipe/arch/blackfin/kernel/process.c
+--- linux-2.6.x-cvs/arch/blackfin/kernel/process.c	2006-06-06 23:06:26.000000000 +0200
++++ linux-2.6.16-ipipe/arch/blackfin/kernel/process.c	2006-06-24 16:48:46.000000000 +0200
 @@ -7,7 +7,7 @@
   * Description:  This file handles the architecture-dependent parts
   *              of process handling.
   *
-- * Rev:          $Id: process.c,v 1.34 2006/05/25 08:27:21 magicyang Exp $
-+ * Rev:          $Id: process.c,v 1.2 2006/06/04 20:17:13 rpm Exp $
+- * Rev:          $Id: process.c,v 1.35 2006/06/06 21:06:26 bernds Exp $
++ * Rev:          $Id: process.c,v 1.3 2006/06/24 14:48:46 rpm Exp $
   *
   * Modified:
   *               Copyright 2004-2005 Analog Devices Inc.
@@ -767,15 +767,15 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/process.c linux-2
  	      __asm__("nop;\n\t \
                           nop;\n\t \
                           nop;\n\t \
-diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/time.c linux-2.6.x/arch/blackfin/kernel/time.c
---- linux-2.6.x-orig/arch/blackfin/kernel/time.c	2006-06-04 19:26:43.000000000 +0200
-+++ linux-2.6.x/arch/blackfin/kernel/time.c	2006-06-04 22:17:13.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/arch/blackfin/kernel/time.c linux-2.6.16-ipipe/arch/blackfin/kernel/time.c
+--- linux-2.6.x-cvs/arch/blackfin/kernel/time.c	2006-05-25 10:27:21.000000000 +0200
++++ linux-2.6.16-ipipe/arch/blackfin/kernel/time.c	2006-06-05 16:58:46.000000000 +0200
 @@ -7,7 +7,7 @@
   * Description:  This file contains the bfin-specific time handling details.
   *               Most of the stuff is located in the machine specific files.
   *
 - * Rev:          $Id: time.c,v 1.36 2006/05/25 08:27:21 magicyang Exp $
-+ * Rev:          $Id: time.c,v 1.3 2006/06/04 20:17:13 rpm Exp $
++ * Rev:          $Id: time.c,v 1.4 2006/06/05 14:58:46 rpm Exp $
   *
   * Modified:
   *               Copyright 2004-2005 Analog Devices Inc.
@@ -822,7 +822,7 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/time.c linux-2.6.
  }
  
  /*
-@@ -170,13 +192,19 @@ static unsigned long gettimeoffset(void)
+@@ -170,13 +192,20 @@ static unsigned long gettimeoffset(void)
  	unsigned long offset;
  	unsigned long clocks_per_jiffy ;
  
@@ -835,7 +835,7 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/time.c linux-2.6.
 +#else /* !CONFIG_IPIPE */
  	clocks_per_jiffy =  *pTPERIOD ;
  	offset =  (clocks_per_jiffy - *pTCOUNT)  / (( (clocks_per_jiffy + 1) *  HZ * TIME_SCALE) /  USEC_PER_SEC ) ;
--
+ 
  	/* Check if we just wrapped the counters and maybe missed a tick */
 -	if ((*pILAT & (1 << IRQ_CORETMR)) && (offset < (100000 / HZ / 2)))
 -		offset += ( USEC_PER_SEC / HZ);
@@ -846,19 +846,19 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/time.c linux-2.6.
  
  	return offset;
  }
-diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/traps.c linux-2.6.x/arch/blackfin/kernel/traps.c
---- linux-2.6.x-orig/arch/blackfin/kernel/traps.c	2006-06-04 19:26:44.000000000 +0200
-+++ linux-2.6.x/arch/blackfin/kernel/traps.c	2006-06-04 22:17:13.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/arch/blackfin/kernel/traps.c linux-2.6.16-ipipe/arch/blackfin/kernel/traps.c
+--- linux-2.6.x-cvs/arch/blackfin/kernel/traps.c	2006-06-17 04:42:34.000000000 +0200
++++ linux-2.6.16-ipipe/arch/blackfin/kernel/traps.c	2006-06-24 16:48:46.000000000 +0200
 @@ -6,7 +6,7 @@
   * Created:
   * Description:  uses S/W interrupt 15 for the system calls
   *
-- * Rev:          $Id: traps.c,v 1.49 2006/05/31 02:22:56 vapier Exp $
-+ * Rev:          $Id: traps.c,v 1.2 2006/06/04 20:17:13 rpm Exp $
+- * Rev:          $Id: traps.c,v 1.50 2006/06/17 02:42:34 vapier Exp $
++ * Rev:          $Id: traps.c,v 1.3 2006/06/24 14:48:46 rpm Exp $
   *
   * Modified:
   *               Copyright 2004-2005 Analog Devices Inc.
-@@ -240,11 +240,7 @@ asmlinkage void trap_c(struct pt_regs *f
+@@ -249,11 +249,7 @@ asmlinkage void trap_c(struct pt_regs *f
  		break;
  	case VEC_CPLB_MHIT:
  		info.si_code = ILL_CPLB_MULHIT;
@@ -870,7 +870,7 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/traps.c linux-2.6
  		DPRINTK3(EXC_0x27);
  		DPRINTK3("DCPLB_FAULT_ADDR=%p\n", *pDCPLB_FAULT_ADDR);
  		break;
-@@ -253,6 +249,10 @@ asmlinkage void trap_c(struct pt_regs *f
+@@ -262,6 +258,10 @@ asmlinkage void trap_c(struct pt_regs *f
  		sig = SIGTRAP;
  		break;
  	}
@@ -881,15 +881,15 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/kernel/traps.c linux-2.6
  	info.si_signo = sig;
  	info.si_errno = 0;
  	info.si_addr = (void *)fp->pc;
-diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/lib/ins.S linux-2.6.x/arch/blackfin/lib/ins.S
---- linux-2.6.x-orig/arch/blackfin/lib/ins.S	2005-10-28 06:02:10.000000000 +0200
-+++ linux-2.6.x/arch/blackfin/lib/ins.S	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/arch/blackfin/lib/ins.S linux-2.6.16-ipipe/arch/blackfin/lib/ins.S
+--- linux-2.6.x-cvs/arch/blackfin/lib/ins.S	2006-06-21 09:49:11.000000000 +0200
++++ linux-2.6.16-ipipe/arch/blackfin/lib/ins.S	2006-06-24 16:48:46.000000000 +0200
 @@ -1,7 +1,7 @@
  /*
   * File:	ins.S
   * Description:	Implementation of ins{bwl} for BlackFin processors using zero overhead loops.
-- * Rev:		$Id: ins.S,v 1.7 2005/10/28 04:02:10 magicyang Exp $
-+ * Rev:		$Id: ins.S,v 1.1 2006/05/04 12:46:36 rpm Exp $
+- * Rev:		$Id: ins.S,v 1.8 2006/06/21 07:49:11 vapier Exp $
++ * Rev:		$Id: ins.S,v 1.2 2006/06/24 14:48:46 rpm Exp $
   * Created:	Tue Mar 22 15:27:24 CEST 2005
   * Author:	Bas Vermeulen
   * Email:	bas@buyways.nl
@@ -911,8 +911,8 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/lib/ins.S linux-2.6.x/ar
  	NOP;
  
 @@ -39,14 +48,30 @@ ENTRY(_insl)
- long_loop_s: R0 = [P0];
- long_loop_e: [P1++] = R0;
+ .Llong_loop_s: R0 = [P0];
+ .Llong_loop_e: [P1++] = R0;
  
 -    sti R2;
 +#ifdef CONFIG_IPIPE
@@ -943,8 +943,8 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/lib/ins.S linux-2.6.x/ar
  	NOP;
  
 @@ -54,19 +79,42 @@ ENTRY(_insw)
- word_loop_s: R0 = W[P0];
- word_loop_e: W[P1++] = R0;
+ .Lword_loop_s: R0 = W[P0];
+ .Lword_loop_e: W[P1++] = R0;
  
 +#ifdef CONFIG_IPIPE
 +	sp += -12
@@ -973,9 +973,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/lib/ins.S linux-2.6.x/ar
  	NOP;
  	NOP;
  
- 	LSETUP( byte_loop_s, byte_loop_e) LC0 = P2;
- byte_loop_s: R0 = B[P0];
- byte_loop_e: B[P1++] = R0;
+ 	LSETUP( .Lbyte_loop_s, .Lbyte_loop_e) LC0 = P2;
+ .Lbyte_loop_s: R0 = B[P0];
+ .Lbyte_loop_e: B[P1++] = R0;
 +#ifdef CONFIG_IPIPE
 +	sp += -12
 +	call ___ipipe_unstall_root_raw
@@ -985,9 +985,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/lib/ins.S linux-2.6.x/ar
  	sti R2;
 +#endif	
  	RTS;
-diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/mach-bf533/Kconfig linux-2.6.x/arch/blackfin/mach-bf533/Kconfig
---- linux-2.6.x-orig/arch/blackfin/mach-bf533/Kconfig	2005-10-28 06:07:34.000000000 +0200
-+++ linux-2.6.x/arch/blackfin/mach-bf533/Kconfig	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/arch/blackfin/mach-bf533/Kconfig linux-2.6.16-ipipe/arch/blackfin/mach-bf533/Kconfig
+--- linux-2.6.x-cvs/arch/blackfin/mach-bf533/Kconfig	2005-10-28 06:07:34.000000000 +0200
++++ linux-2.6.16-ipipe/arch/blackfin/mach-bf533/Kconfig	2006-06-04 22:08:50.000000000 +0200
 @@ -60,7 +60,7 @@ config  DMA7_UARTTX
  
  config 	TIMER0
@@ -997,10 +997,10 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/mach-bf533/Kconfig linux
  config 	TIMER1
  	int "TIMER1"
  	default 11
-diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/mach-bf537/Kconfig linux-2.6.x/arch/blackfin/mach-bf537/Kconfig
---- linux-2.6.x-orig/arch/blackfin/mach-bf537/Kconfig	2006-02-22 04:20:06.000000000 +0100
-+++ linux-2.6.x/arch/blackfin/mach-bf537/Kconfig	2006-06-04 22:08:50.000000000 +0200
-@@ -83,7 +83,7 @@ config	IRQ_MAC_TX
+diff --exclude CVS -uNrp linux-2.6.x-cvs/arch/blackfin/mach-bf537/Kconfig linux-2.6.16-ipipe/arch/blackfin/mach-bf537/Kconfig
+--- linux-2.6.x-cvs/arch/blackfin/mach-bf537/Kconfig	2006-06-09 12:08:27.000000000 +0200
++++ linux-2.6.16-ipipe/arch/blackfin/mach-bf537/Kconfig	2006-06-23 16:49:28.000000000 +0200
+@@ -91,7 +91,7 @@ config	IRQ_MAC_TX
      default 11
  config	IRQ_TMR0
      int "IRQ_TMR0"
@@ -1009,18 +1009,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/mach-bf537/Kconfig linux
  config	IRQ_TMR1
      int "IRQ_TMR1"
      default 12
-diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/mach-common/entry.S linux-2.6.x/arch/blackfin/mach-common/entry.S
---- linux-2.6.x-orig/arch/blackfin/mach-common/entry.S	2006-06-04 19:26:48.000000000 +0200
-+++ linux-2.6.x/arch/blackfin/mach-common/entry.S	2006-06-04 22:08:50.000000000 +0200
-@@ -307,7 +307,7 @@ ENTRY(_trap) /* Exception: 4th entry int
- badsys:
- 	r7 = -ENOSYS; 		/* signextending enough */
- 	[sp + PT_R0] = r7;	/* return value from system call */
--	rti;
-+	jump syscall_really_exit;
- 
- ENTRY(_execve)
- 	link SIZEOF_PTREGS;
+diff --exclude CVS -uNrp linux-2.6.x-cvs/arch/blackfin/mach-common/entry.S linux-2.6.16-ipipe/arch/blackfin/mach-common/entry.S
+--- linux-2.6.x-cvs/arch/blackfin/mach-common/entry.S	2006-06-21 09:49:20.000000000 +0200
++++ linux-2.6.16-ipipe/arch/blackfin/mach-common/entry.S	2006-06-23 14:48:24.000000000 +0200
 @@ -383,6 +383,19 @@ ENTRY(system_call)
  	p2 = [p2];
  
@@ -1031,9 +1022,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/mach-common/entry.S linu
 +	call ___ipipe_syscall_root; 
 +	SP += 12;
 +	cc = r0 == 1;
-+	if cc jump syscall_really_exit;
++	if cc jump .Lsyscall_really_exit;
 +	cc = r0 == -1;
-+	if cc jump resume_userspace;
++	if cc jump .Lresume_userspace;
 +	r3 = [sp + PT_R3]; 
 +	r4 = [sp + PT_R4]; 
 +	p0 = [sp + PT_ORIG_P0]; 
@@ -1041,10 +1032,11 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/mach-common/entry.S linu
  
  	/* Check the System Call */
  	r7 = __NR_syscall;
-@@ -465,6 +478,10 @@ syscall_do_signals:
+@@ -467,6 +480,11 @@ ENTRY(system_call)
  	SP += 12;
  
- syscall_really_exit:
+ .Lsyscall_really_exit:
++syscall_really_exit:
 +#ifdef CONFIG_IPIPE
 +	[--sp] = reti;
 +	r5 = [sp++];
@@ -1052,7 +1044,7 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/mach-common/entry.S linu
  	r5 = [sp + PT_RESERVED];
  	rets = r5;
  	rts;
-@@ -568,6 +585,15 @@ new_old_task:
+@@ -549,6 +567,15 @@ new_old_task:
  	rts;
  
  ENTRY(ret_from_exception)
@@ -1065,10 +1057,10 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/mach-common/entry.S linu
 +	cc = r0 == 0;
 +        if cc jump 4f;		/* not on behalf of Linux, get out */
 +#endif /* CONFIG_IPIPE */
-         p2.l = lo(IPEND);
-         p2.h = hi(IPEND);
+ 	p2.l = lo(IPEND);
+ 	p2.h = hi(IPEND);
  
-@@ -662,7 +688,7 @@ ENTRY(return_from_int)
+@@ -643,7 +670,7 @@ ENTRY(return_from_int)
  2:
  	rts;
  
@@ -1077,9 +1069,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/mach-common/entry.S linu
  	/* FIXME : This is a temp workaround for a pipeline/architecture issue */
  	r0 = 0x1000;
  	reti = r0;
-diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/mach-common/interrupt.S linux-2.6.x/arch/blackfin/mach-common/interrupt.S
---- linux-2.6.x-orig/arch/blackfin/mach-common/interrupt.S	2006-05-23 17:53:08.000000000 +0200
-+++ linux-2.6.x/arch/blackfin/mach-common/interrupt.S	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/arch/blackfin/mach-common/interrupt.S linux-2.6.16-ipipe/arch/blackfin/mach-common/interrupt.S
+--- linux-2.6.x-cvs/arch/blackfin/mach-common/interrupt.S	2006-06-21 09:49:20.000000000 +0200
++++ linux-2.6.16-ipipe/arch/blackfin/mach-common/interrupt.S	2006-06-23 14:49:56.000000000 +0200
 @@ -141,8 +141,15 @@ __common_int_entry:
  #endif
  	r1 =  sp;
@@ -1088,18 +1080,18 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/mach-common/interrupt.S 
 +	call ___ipipe_grab_irq
 +	SP += 12;
 +	cc = r0 == 0;
-+	if cc jump common_restore_context;
++	if cc jump .Lcommon_restore_context;
 +#else /* CONFIG_IPIPE */
  	call _do_irq;
  	SP += 12;
 +#endif /* CONFIG_IPIPE */
  	call return_from_int;
- common_restore_context:
+ .Lcommon_restore_context:
  	RESTORE_CONTEXT
 @@ -228,3 +235,53 @@ ENTRY(_evt_system_call)
  #endif
  	call system_call;
- 	jump common_restore_context; 
+ 	jump .Lcommon_restore_context; 
 +
 +#ifdef CONFIG_IPIPE
 +
@@ -1150,15 +1142,15 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/mach-common/interrupt.S 
 +	rts;
 +
 +#endif /* CONFIG_IPIPE */	
-diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-2.6.x/arch/blackfin/mach-common/ints-priority-sc.c
---- linux-2.6.x-orig/arch/blackfin/mach-common/ints-priority-sc.c	2006-04-22 17:58:41.000000000 +0200
-+++ linux-2.6.x/arch/blackfin/mach-common/ints-priority-sc.c	2006-06-04 22:17:13.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/arch/blackfin/mach-common/ints-priority-sc.c linux-2.6.16-ipipe/arch/blackfin/mach-common/ints-priority-sc.c
+--- linux-2.6.x-cvs/arch/blackfin/mach-common/ints-priority-sc.c	2006-06-05 13:16:55.000000000 +0200
++++ linux-2.6.16-ipipe/arch/blackfin/mach-common/ints-priority-sc.c	2006-06-24 16:48:46.000000000 +0200
 @@ -6,7 +6,7 @@
    * Created:     ?
    * Description: Set up the interupt priorities
    *
--  * Rev:          $Id: ints-priority-sc.c,v 1.28 2006/04/21 07:43:02 sonicz Exp $
-+  * Rev:          $Id: ints-priority-sc.c,v 1.2 2006/06/04 20:17:13 rpm Exp $
+-  * Rev:          $Id: ints-priority-sc.c,v 1.29 2006/06/05 11:16:55 vapier Exp $
++  * Rev:          $Id: ints-priority-sc.c,v 1.3 2006/06/24 14:48:46 rpm Exp $
    *
    * Modified:
    *              1996 Roman Zippel
@@ -1317,9 +1309,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/arch/blackfin/mach-common/ints-priorit
 +}
 +
 +#endif /* CONFIG_IPIPE */
-diff --exclude CVS -uNrp linux-2.6.x-orig/include/asm-blackfin/bitops.h linux-2.6.x/include/asm-blackfin/bitops.h
---- linux-2.6.x-orig/include/asm-blackfin/bitops.h	2006-03-22 08:43:31.000000000 +0100
-+++ linux-2.6.x/include/asm-blackfin/bitops.h	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/include/asm-blackfin/bitops.h linux-2.6.16-ipipe/include/asm-blackfin/bitops.h
+--- linux-2.6.x-cvs/include/asm-blackfin/bitops.h	2006-03-22 08:43:31.000000000 +0100
++++ linux-2.6.16-ipipe/include/asm-blackfin/bitops.h	2006-06-04 22:08:50.000000000 +0200
 @@ -121,9 +121,9 @@ static __inline__ void set_bit(int nr, v
  
  	a += nr >> 5;
@@ -1395,9 +1387,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/asm-blackfin/bitops.h linux-2.
  	return retval;
  }
  
-diff --exclude CVS -uNrp linux-2.6.x-orig/include/asm-blackfin/entry.h linux-2.6.x/include/asm-blackfin/entry.h
---- linux-2.6.x-orig/include/asm-blackfin/entry.h	2006-05-23 18:21:46.000000000 +0200
-+++ linux-2.6.x/include/asm-blackfin/entry.h	2006-06-04 22:10:23.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/include/asm-blackfin/entry.h linux-2.6.16-ipipe/include/asm-blackfin/entry.h
+--- linux-2.6.x-cvs/include/asm-blackfin/entry.h	2006-05-22 16:03:11.000000000 +0200
++++ linux-2.6.16-ipipe/include/asm-blackfin/entry.h	2006-06-04 22:10:23.000000000 +0200
 @@ -23,6 +23,19 @@
  #define SAVE_ALL_SYS		save_context_no_interrupts
  /* This is used for all normal interrupts.  It saves a minimum of registers
@@ -1426,9 +1418,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/asm-blackfin/entry.h linux-2.6
  
  /* For timer interrupts, we need to save IPEND, since the user_mode
  	   macro accesses it to determine where to account time.  */
-diff --exclude CVS -uNrp linux-2.6.x-orig/include/asm-blackfin/ipipe.h linux-2.6.x/include/asm-blackfin/ipipe.h
---- linux-2.6.x-orig/include/asm-blackfin/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.x/include/asm-blackfin/ipipe.h	2006-06-04 22:12:31.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/include/asm-blackfin/ipipe.h linux-2.6.16-ipipe/include/asm-blackfin/ipipe.h
+--- linux-2.6.x-cvs/include/asm-blackfin/ipipe.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-2.6.16-ipipe/include/asm-blackfin/ipipe.h	2006-06-04 22:12:31.000000000 +0200
 @@ -0,0 +1,243 @@
 +/*   -*- linux-c -*-
 + *   include/asm-blackfin/ipipe.h
@@ -1467,10 +1459,10 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/asm-blackfin/ipipe.h linux-2.6
 +#include <asm/traps.h>
 +#include <asm/irqchip.h>
 +
-+#define IPIPE_ARCH_STRING     "1.4-03"
++#define IPIPE_ARCH_STRING     "1.4-04"
 +#define IPIPE_MAJOR_NUMBER    1
 +#define IPIPE_MINOR_NUMBER    4
-+#define IPIPE_PATCH_NUMBER    3
++#define IPIPE_PATCH_NUMBER    4
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 2^5 for 32bits arch. */
@@ -1673,9 +1665,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/asm-blackfin/ipipe.h linux-2.6
 +int init_irqthreads(void);
 +
 +#endif	/* !__BFINNOMMU_IPIPE_H */
-diff --exclude CVS -uNrp linux-2.6.x-orig/include/asm-blackfin/irqchip.h linux-2.6.x/include/asm-blackfin/irqchip.h
---- linux-2.6.x-orig/include/asm-blackfin/irqchip.h	2005-10-28 05:01:42.000000000 +0200
-+++ linux-2.6.x/include/asm-blackfin/irqchip.h	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/include/asm-blackfin/irqchip.h linux-2.6.16-ipipe/include/asm-blackfin/irqchip.h
+--- linux-2.6.x-cvs/include/asm-blackfin/irqchip.h	2005-10-28 05:01:42.000000000 +0200
++++ linux-2.6.16-ipipe/include/asm-blackfin/irqchip.h	2006-06-04 22:08:50.000000000 +0200
 @@ -14,6 +14,10 @@
  struct irqdesc;
  struct pt_regs;
@@ -1699,9 +1691,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/asm-blackfin/irqchip.h linux-2
  
  	unsigned int triggered:1;	/* IRQ has occurred           */
  	unsigned int running:1;	/* IRQ is running             */
-diff --exclude CVS -uNrp linux-2.6.x-orig/include/asm-blackfin/system.h linux-2.6.x/include/asm-blackfin/system.h
---- linux-2.6.x-orig/include/asm-blackfin/system.h	2006-03-17 04:46:47.000000000 +0100
-+++ linux-2.6.x/include/asm-blackfin/system.h	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/include/asm-blackfin/system.h linux-2.6.16-ipipe/include/asm-blackfin/system.h
+--- linux-2.6.x-cvs/include/asm-blackfin/system.h	2006-03-17 04:46:47.000000000 +0100
++++ linux-2.6.16-ipipe/include/asm-blackfin/system.h	2006-06-04 22:08:50.000000000 +0200
 @@ -36,6 +36,84 @@ asmlinkage struct task_struct *resume(st
  
  extern volatile unsigned long irq_flags;
@@ -1838,9 +1830,24 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/asm-blackfin/system.h linux-2.
  	return tmp;
  }
  
-diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/hardirq.h linux-2.6.x/include/linux/hardirq.h
---- linux-2.6.x-orig/include/linux/hardirq.h	2006-03-23 06:54:07.000000000 +0100
-+++ linux-2.6.x/include/linux/hardirq.h	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/include/config/inet/esp.h linux-2.6.16-ipipe/include/config/inet/esp.h
+--- linux-2.6.x-cvs/include/config/inet/esp.h	2005-08-12 05:36:43.000000000 +0200
++++ linux-2.6.16-ipipe/include/config/inet/esp.h	1970-01-01 01:00:00.000000000 +0100
+@@ -1 +0,0 @@
+-#undef CONFIG_INET_ESP
+diff --exclude CVS -uNrp linux-2.6.x-cvs/include/config/inet/ipcomp.h linux-2.6.16-ipipe/include/config/inet/ipcomp.h
+--- linux-2.6.x-cvs/include/config/inet/ipcomp.h	2005-08-12 05:36:43.000000000 +0200
++++ linux-2.6.16-ipipe/include/config/inet/ipcomp.h	1970-01-01 01:00:00.000000000 +0100
+@@ -1 +0,0 @@
+-#undef CONFIG_INET_IPCOMP
+diff --exclude CVS -uNrp linux-2.6.x-cvs/include/config/inet/tunnel.h linux-2.6.16-ipipe/include/config/inet/tunnel.h
+--- linux-2.6.x-cvs/include/config/inet/tunnel.h	2005-08-12 05:36:43.000000000 +0200
++++ linux-2.6.16-ipipe/include/config/inet/tunnel.h	1970-01-01 01:00:00.000000000 +0100
+@@ -1 +0,0 @@
+-#undef CONFIG_INET_TUNNEL
+diff --exclude CVS -uNrp linux-2.6.x-cvs/include/linux/hardirq.h linux-2.6.16-ipipe/include/linux/hardirq.h
+--- linux-2.6.x-cvs/include/linux/hardirq.h	2006-03-23 06:54:07.000000000 +0100
++++ linux-2.6.16-ipipe/include/linux/hardirq.h	2006-06-04 22:08:50.000000000 +0200
 @@ -87,8 +87,21 @@ extern void synchronize_irq(unsigned int
  # define synchronize_irq(irq)	barrier()
  #endif
@@ -1863,10 +1870,10 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/hardirq.h linux-2.6.x/in
  
  struct task_struct;
  
-diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/ipipe.h linux-2.6.x/include/linux/ipipe.h
---- linux-2.6.x-orig/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.x/include/linux/ipipe.h	2006-05-19 16:35:06.000000000 +0200
-@@ -0,0 +1,699 @@
+diff --exclude CVS -uNrp linux-2.6.x-cvs/include/linux/ipipe.h linux-2.6.16-ipipe/include/linux/ipipe.h
+--- linux-2.6.x-cvs/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-2.6.16-ipipe/include/linux/ipipe.h	2006-06-20 19:06:25.000000000 +0200
+@@ -0,0 +1,726 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -1921,6 +1928,7 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/ipipe.h linux-2.6.x/incl
 +
 +#define IPIPE_STALL_FLAG	0	/* Stalls a pipeline stage -- guaranteed at bit #0 */
 +#define IPIPE_SYNC_FLAG		1	/* The interrupt syncer is running for the domain */
++#define IPIPE_NOSTACK_FLAG	2	/* Domain currently runs on a foreign stack */
 +
 +#define IPIPE_SYNC_MASK		(1 << IPIPE_SYNC_FLAG)
 +
@@ -1993,18 +2001,18 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/ipipe.h linux-2.6.x/incl
 +#endif /* CONFIG_SMP */
 +
 +#define ipipe_virtual_irq_p(irq)	((irq) >= IPIPE_VIRQ_BASE && \
-+									 (irq) < IPIPE_NR_IRQS)
++					 (irq) < IPIPE_NR_IRQS)
 +
 +typedef void (*ipipe_irq_handler_t)(unsigned irq,
-+									void *cookie);
++				    void *cookie);
 +
 +#define IPIPE_SAME_HANDLER	((ipipe_irq_handler_t)(-1))
 +
 +typedef int (*ipipe_irq_ackfn_t)(unsigned irq);
 +
 +typedef int (*ipipe_event_handler_t)(unsigned event,
-+									 struct ipipe_domain *from,
-+									 void *data);
++				     struct ipipe_domain *from,
++				     void *data);
 +struct ipipe_domain {
 +
 +	struct list_head p_link;	/* Link in pipeline */
@@ -2198,9 +2206,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/ipipe.h linux-2.6.x/incl
 +void ipipe_init_proc(void);
 +
 +#ifdef CONFIG_IPIPE_TRACE
-+void __ipipe_init_trace_proc(void);
++void __ipipe_init_tracer(void);
 +#else /* !CONFIG_IPIPE_TRACE */
-+#define __ipipe_init_trace_proc()   do { } while(0)
++#define __ipipe_init_tracer()       do { } while(0)
 +#endif /* CONFIG_IPIPE_TRACE */
 +
 +#else	/* !CONFIG_PROC_FS */
@@ -2324,34 +2332,34 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/ipipe.h linux-2.6.x/incl
 +/* Public interface */
 +
 +int ipipe_register_domain(struct ipipe_domain *ipd,
-+						  struct ipipe_domain_attr *attr);
++			  struct ipipe_domain_attr *attr);
 +
 +int ipipe_unregister_domain(struct ipipe_domain *ipd);
 +
 +void ipipe_suspend_domain(void);
 +
 +int ipipe_virtualize_irq(struct ipipe_domain *ipd,
-+						 unsigned irq,
-+						 ipipe_irq_handler_t handler,
-+						 void *cookie,
-+						 ipipe_irq_ackfn_t acknowledge,
-+						 unsigned modemask);
++			 unsigned irq,
++			 ipipe_irq_handler_t handler,
++			 void *cookie,
++			 ipipe_irq_ackfn_t acknowledge,
++			 unsigned modemask);
 +
 +static inline int ipipe_share_irq(unsigned irq,
-+								  ipipe_irq_ackfn_t acknowledge)
++				  ipipe_irq_ackfn_t acknowledge)
 +{
 +	return ipipe_virtualize_irq(ipipe_current_domain,
-+								irq,
-+								IPIPE_SAME_HANDLER,
-+								NULL,
-+								acknowledge,
-+								IPIPE_SHARED_MASK | IPIPE_HANDLE_MASK |
-+								IPIPE_PASS_MASK);
++				    irq,
++				    IPIPE_SAME_HANDLER,
++				    NULL,
++				    acknowledge,
++				    IPIPE_SHARED_MASK | IPIPE_HANDLE_MASK |
++				    IPIPE_PASS_MASK);
 +}
 +
 +int ipipe_control_irq(unsigned irq,
-+					  unsigned clrmask,
-+					  unsigned setmask);
++		      unsigned clrmask,
++		      unsigned setmask);
 +
 +unsigned ipipe_alloc_virq(void);
 +
@@ -2378,7 +2386,7 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/ipipe.h linux-2.6.x/incl
 +unsigned long fastcall ipipe_test_and_unstall_pipeline_from(struct ipipe_domain *ipd);
 +
 +void fastcall ipipe_restore_pipeline_from(struct ipipe_domain *ipd,
-+										  unsigned long x);
++					  unsigned long x);
 +
 +static inline unsigned long ipipe_test_pipeline_from(struct ipipe_domain *ipd)
 +{
@@ -2393,7 +2401,7 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/ipipe.h linux-2.6.x/incl
 +}
 +
 +static inline void ipipe_restore_pipeline_nosync(struct ipipe_domain *ipd,
-+												 unsigned long x, int cpuid)
++						 unsigned long x, int cpuid)
 +{
 +	/*
 +	 * If cpuid is current, then it must be held on entry
@@ -2427,7 +2435,7 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/ipipe.h linux-2.6.x/incl
 +void ipipe_unstall_pipeline_head(void);
 +
 +void fastcall __ipipe_restore_pipeline_head(struct ipipe_domain *head,
-+											unsigned long x);
++					    unsigned long x);
 +
 +static inline void ipipe_restore_pipeline_head(unsigned long x)
 +{
@@ -2465,7 +2473,7 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/ipipe.h linux-2.6.x/incl
 +int ipipe_get_sysinfo(struct ipipe_sysinfo *sysinfo);
 +
 +int ipipe_tune_timer(unsigned long ns,
-+					 int flags);
++		     int flags);
 +
 +unsigned long ipipe_critical_enter(void (*syncfn) (void));
 +
@@ -2481,30 +2489,56 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/ipipe.h linux-2.6.x/incl
 +	clear_bit(IPIPE_SPRINTK_FLAG, &ipd->flags);
 +}
 +
++static inline void ipipe_set_foreign_stack(struct ipipe_domain *ipd)
++{
++	/* Must be called hw interrupts off. */
++	ipipe_declare_cpuid;
++	ipipe_load_cpuid();
++	__set_bit(IPIPE_NOSTACK_FLAG, &ipd->cpudata[cpuid].status);
++}
++
++static inline void ipipe_clear_foreign_stack(struct ipipe_domain *ipd)
++{
++	/* Must be called hw interrupts off. */
++	ipipe_declare_cpuid;
++	ipipe_load_cpuid();
++	__clear_bit(IPIPE_NOSTACK_FLAG, &ipd->cpudata[cpuid].status);
++}
++
++#define ipipe_safe_current()					\
++({								\
++	ipipe_declare_cpuid;					\
++	struct task_struct *p;					\
++	ipipe_load_cpuid();					\
++	p = test_bit(IPIPE_NOSTACK_FLAG,			\
++		     &ipipe_percpu_domain[cpuid]->cpudata[cpuid].status) ? &init_task : current; \
++	p; \
++})
++
 +ipipe_event_handler_t ipipe_catch_event(struct ipipe_domain *ipd,
-+										unsigned event,
-+										ipipe_event_handler_t handler);
++					unsigned event,
++					ipipe_event_handler_t handler);
 +
 +cpumask_t ipipe_set_irq_affinity(unsigned irq,
-+								 cpumask_t cpumask);
++				 cpumask_t cpumask);
 +
 +int fastcall ipipe_send_ipi(unsigned ipi,
-+							cpumask_t cpumask);
++			    cpumask_t cpumask);
 +
 +int ipipe_setscheduler_root(struct task_struct *p,
-+							int policy,
-+							int prio);
++			    int policy,
++			    int prio);
 +
 +int ipipe_reenter_root(struct task_struct *prev,
-+					   int policy,
-+					   int prio);
++		       int policy,
++		       int prio);
 +
 +int ipipe_alloc_ptdkey(void);
 +
 +int ipipe_free_ptdkey(int key);
 +
 +int fastcall ipipe_set_ptd(int key,
-+						   void *value);
++			   void *value);
 +
 +void fastcall *ipipe_get_ptd(int key);
 +
@@ -2530,20 +2564,20 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/ipipe.h linux-2.6.x/incl
 +		__ipipe_unlock_irq(ipipe_percpu_domain[cpuid], irq);	\
 +	} while(0)
 +
-+#define ipipe_root_domain_p			(ipipe_current_domain == ipipe_root_domain)
++#define ipipe_root_domain_p		(ipipe_current_domain == ipipe_root_domain)
 +
 +#else	/* !CONFIG_IPIPE */
 +
-+#define ipipe_init()				do { } while(0)
++#define ipipe_init()			do { } while(0)
 +#define ipipe_suspend_domain()		do { } while(0)
 +#define ipipe_sigwake_notify(p)		do { } while(0)
 +#define ipipe_setsched_notify(p)	do { } while(0)
 +#define ipipe_exit_notify(p)		do { } while(0)
-+#define ipipe_init_proc()			do { } while(0)
++#define ipipe_init_proc()		do { } while(0)
 +#define ipipe_trap_notify(t,r)		0
 +#define ipipe_cleanup_notify(mm)	do { } while(0)
 +
-+#define spin_lock_hw(lock)				spin_lock(lock)
++#define spin_lock_hw(lock)			spin_lock(lock)
 +#define spin_unlock_hw(lock)			spin_unlock(lock)
 +#define spin_lock_irq_hw(lock)			spin_lock_irq(lock)
 +#define spin_unlock_irq_hw(lock)		spin_unlock_irq(lock)
@@ -2558,7 +2592,7 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/ipipe.h linux-2.6.x/incl
 +#define spin_unlock_irqrestore_hw_cond(lock,flags)	spin_unlock(lock)
 +#define smp_processor_id_hw()			smp_processor_id()
 +
-+#define ipipe_irq_lock(irq)			do { } while(0)
++#define ipipe_irq_lock(irq)		do { } while(0)
 +#define ipipe_irq_unlock(irq)		do { } while(0)
 +
 +#define ipipe_root_domain_p			1
@@ -2566,9 +2600,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/ipipe.h linux-2.6.x/incl
 +#endif	/* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_H */
-diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/preempt.h linux-2.6.x/include/linux/preempt.h
---- linux-2.6.x-orig/include/linux/preempt.h	2006-03-23 06:54:07.000000000 +0100
-+++ linux-2.6.x/include/linux/preempt.h	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/include/linux/preempt.h linux-2.6.16-ipipe/include/linux/preempt.h
+--- linux-2.6.x-cvs/include/linux/preempt.h	2006-03-23 06:54:07.000000000 +0100
++++ linux-2.6.16-ipipe/include/linux/preempt.h	2006-06-04 22:08:50.000000000 +0200
 @@ -27,29 +27,43 @@
  
  asmlinkage void preempt_schedule(void);
@@ -2629,9 +2663,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/preempt.h linux-2.6.x/in
  } while (0)
  
  #else
-diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/sched.h linux-2.6.x/include/linux/sched.h
---- linux-2.6.x-orig/include/linux/sched.h	2006-03-23 06:54:07.000000000 +0100
-+++ linux-2.6.x/include/linux/sched.h	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/include/linux/sched.h linux-2.6.16-ipipe/include/linux/sched.h
+--- linux-2.6.x-cvs/include/linux/sched.h	2006-03-23 06:54:07.000000000 +0100
++++ linux-2.6.16-ipipe/include/linux/sched.h	2006-06-04 22:08:50.000000000 +0200
 @@ -4,6 +4,7 @@
  #include <asm/param.h>	/* for HZ */
  
@@ -2662,9 +2696,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/include/linux/sched.h linux-2.6.x/incl
  };
  
  static inline pid_t process_group(struct task_struct *tsk)
-diff --exclude CVS -uNrp linux-2.6.x-orig/init/Kconfig linux-2.6.x/init/Kconfig
---- linux-2.6.x-orig/init/Kconfig	2006-03-29 10:50:14.000000000 +0200
-+++ linux-2.6.x/init/Kconfig	2006-06-04 23:56:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/init/Kconfig linux-2.6.16-ipipe/init/Kconfig
+--- linux-2.6.x-cvs/init/Kconfig	2006-06-19 09:42:35.000000000 +0200
++++ linux-2.6.16-ipipe/init/Kconfig	2006-06-23 16:48:53.000000000 +0200
 @@ -58,6 +58,7 @@ menu "General setup"
  
  config LOCALVERSION
@@ -2673,9 +2707,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/init/Kconfig linux-2.6.x/init/Kconfig
  	help
  	  Append an extra string to the end of your kernel version.
  	  This will show up when you type uname, for example.
-diff --exclude CVS -uNrp linux-2.6.x-orig/init/main.c linux-2.6.x/init/main.c
---- linux-2.6.x-orig/init/main.c	2006-04-20 19:43:52.000000000 +0200
-+++ linux-2.6.x/init/main.c	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/init/main.c linux-2.6.16-ipipe/init/main.c
+--- linux-2.6.x-cvs/init/main.c	2006-03-22 03:34:07.000000000 +0100
++++ linux-2.6.16-ipipe/init/main.c	2006-06-04 22:08:50.000000000 +0200
 @@ -486,6 +486,11 @@ asmlinkage void __init start_kernel(void
  	hrtimers_init();
  	softirq_init();
@@ -2705,9 +2739,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/init/main.c linux-2.6.x/init/main.c
  	do_pre_smp_initcalls();
  
  	fixup_cpu_present_map();
-diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/Makefile linux-2.6.x/kernel/Makefile
---- linux-2.6.x-orig/kernel/Makefile	2006-03-22 03:36:56.000000000 +0100
-+++ linux-2.6.x/kernel/Makefile	2006-06-04 23:57:46.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/kernel/Makefile linux-2.6.16-ipipe/kernel/Makefile
+--- linux-2.6.x-cvs/kernel/Makefile	2006-03-22 03:36:56.000000000 +0100
++++ linux-2.6.16-ipipe/kernel/Makefile	2006-06-04 23:57:46.000000000 +0200
 @@ -34,6 +34,7 @@ obj-$(CONFIG_DETECT_SOFTLOCKUP) += softl
  obj-$(CONFIG_GENERIC_HARDIRQS) += irq/
  obj-$(CONFIG_SECCOMP) += seccomp.o
@@ -2716,9 +2750,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/Makefile linux-2.6.x/kernel/Mak
  
  ifneq ($(CONFIG_SCHED_NO_NO_OMIT_FRAME_POINTER),y)
  # According to Alan Modra <alan@linuxcare.com.au>, the -fno-omit-frame-pointer is
-diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/exit.c linux-2.6.x/kernel/exit.c
---- linux-2.6.x-orig/kernel/exit.c	2006-03-22 03:36:56.000000000 +0100
-+++ linux-2.6.x/kernel/exit.c	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/kernel/exit.c linux-2.6.16-ipipe/kernel/exit.c
+--- linux-2.6.x-cvs/kernel/exit.c	2006-03-22 03:36:56.000000000 +0100
++++ linux-2.6.16-ipipe/kernel/exit.c	2006-06-04 22:08:50.000000000 +0200
 @@ -852,6 +852,7 @@ fastcall NORET_TYPE void do_exit(long co
  		exit_itimers(tsk->signal);
  		acct_process(code);
@@ -2727,9 +2761,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/exit.c linux-2.6.x/kernel/exit.
  	exit_mm(tsk);
  
  	exit_sem(tsk);
-diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/fork.c linux-2.6.x/kernel/fork.c
---- linux-2.6.x-orig/kernel/fork.c	2006-05-04 17:16:40.000000000 +0200
-+++ linux-2.6.x/kernel/fork.c	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/kernel/fork.c linux-2.6.16-ipipe/kernel/fork.c
+--- linux-2.6.x-cvs/kernel/fork.c	2006-04-27 17:03:18.000000000 +0200
++++ linux-2.6.16-ipipe/kernel/fork.c	2006-06-04 22:08:50.000000000 +0200
 @@ -371,6 +371,7 @@ void fastcall __mmdrop(struct mm_struct 
  void mmput(struct mm_struct *mm)
  {
@@ -2753,9 +2787,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/fork.c linux-2.6.x/kernel/fork.
  	return p;
  
  bad_fork_cleanup_namespace:
-diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/ipipe/Kconfig linux-2.6.x/kernel/ipipe/Kconfig
---- linux-2.6.x-orig/kernel/ipipe/Kconfig	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.x/kernel/ipipe/Kconfig	2006-05-02 16:08:58.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/kernel/ipipe/Kconfig linux-2.6.16-ipipe/kernel/ipipe/Kconfig
+--- linux-2.6.x-cvs/kernel/ipipe/Kconfig	1970-01-01 01:00:00.000000000 +0100
++++ linux-2.6.16-ipipe/kernel/ipipe/Kconfig	2006-06-15 16:18:35.000000000 +0200
 @@ -0,0 +1,6 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
@@ -2763,17 +2797,17 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/ipipe/Kconfig linux-2.6.x/kerne
 +	---help---
 +	  Activate this option if you want the interrupt pipeline to be
 +	  compiled in.
-diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/ipipe/Makefile linux-2.6.x/kernel/ipipe/Makefile
---- linux-2.6.x-orig/kernel/ipipe/Makefile	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.x/kernel/ipipe/Makefile	2005-12-29 14:04:04.000000000 +0100
+diff --exclude CVS -uNrp linux-2.6.x-cvs/kernel/ipipe/Makefile linux-2.6.16-ipipe/kernel/ipipe/Makefile
+--- linux-2.6.x-cvs/kernel/ipipe/Makefile	1970-01-01 01:00:00.000000000 +0100
++++ linux-2.6.16-ipipe/kernel/ipipe/Makefile	2005-12-29 14:04:04.000000000 +0100
 @@ -0,0 +1,3 @@
 +
 +obj-$(CONFIG_IPIPE)	+= core.o generic.o
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
-diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/ipipe/core.c linux-2.6.x/kernel/ipipe/core.c
---- linux-2.6.x-orig/kernel/ipipe/core.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.x/kernel/ipipe/core.c	2006-05-15 17:27:29.000000000 +0200
-@@ -0,0 +1,1044 @@
+diff --exclude CVS -uNrp linux-2.6.x-cvs/kernel/ipipe/core.c linux-2.6.16-ipipe/kernel/ipipe/core.c
+--- linux-2.6.x-cvs/kernel/ipipe/core.c	1970-01-01 01:00:00.000000000 +0100
++++ linux-2.6.16-ipipe/kernel/ipipe/core.c	2006-06-15 16:18:35.000000000 +0200
+@@ -0,0 +1,1045 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -3788,8 +3822,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/ipipe/core.c linux-2.6.x/kernel
 +{
 +	ipipe_proc_root = create_proc_entry("ipipe",S_IFDIR, 0);
 +	create_proc_read_entry("version",0444,ipipe_proc_root,&__ipipe_version_info_proc,NULL);
-+	__ipipe_init_trace_proc();
 +	__ipipe_add_domain_proc(ipipe_root_domain);
++
++	__ipipe_init_tracer();
 +}
 +
 +#endif	/* CONFIG_PROC_FS */
@@ -3818,9 +3853,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/ipipe/core.c linux-2.6.x/kernel
 +EXPORT_SYMBOL(__ipipe_pipeline);
 +EXPORT_SYMBOL(__ipipe_pipelock);
 +EXPORT_SYMBOL(__ipipe_virtual_irq_map);
-diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/ipipe/generic.c linux-2.6.x/kernel/ipipe/generic.c
---- linux-2.6.x-orig/kernel/ipipe/generic.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.x/kernel/ipipe/generic.c	2006-05-03 12:07:57.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/kernel/ipipe/generic.c linux-2.6.16-ipipe/kernel/ipipe/generic.c
+--- linux-2.6.x-cvs/kernel/ipipe/generic.c	1970-01-01 01:00:00.000000000 +0100
++++ linux-2.6.16-ipipe/kernel/ipipe/generic.c	2006-05-03 12:07:57.000000000 +0200
 @@ -0,0 +1,396 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/generic.c
@@ -4218,9 +4253,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/ipipe/generic.c linux-2.6.x/ker
 +EXPORT_SYMBOL(ipipe_set_irq_affinity);
 +EXPORT_SYMBOL(ipipe_send_ipi);
 +EXPORT_SYMBOL(__ipipe_schedule_irq);
-diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/irq/handle.c linux-2.6.x/kernel/irq/handle.c
---- linux-2.6.x-orig/kernel/irq/handle.c	2006-03-22 03:36:57.000000000 +0100
-+++ linux-2.6.x/kernel/irq/handle.c	2006-06-04 22:11:17.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/kernel/irq/handle.c linux-2.6.16-ipipe/kernel/irq/handle.c
+--- linux-2.6.x-cvs/kernel/irq/handle.c	2006-03-22 03:36:57.000000000 +0100
++++ linux-2.6.16-ipipe/kernel/irq/handle.c	2006-06-04 22:11:17.000000000 +0200
 @@ -81,6 +81,17 @@ fastcall int handle_IRQ_event(unsigned i
  {
  	int ret, retval = 0, status = 0;
@@ -4260,9 +4295,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/irq/handle.c linux-2.6.x/kernel
  	/*
  	 * REPLAY is when Linux resends an IRQ that was dropped earlier
  	 * WAITING is used by probe to mark irqs that are being tested
-diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/printk.c linux-2.6.x/kernel/printk.c
---- linux-2.6.x-orig/kernel/printk.c	2006-03-22 03:36:56.000000000 +0100
-+++ linux-2.6.x/kernel/printk.c	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/kernel/printk.c linux-2.6.16-ipipe/kernel/printk.c
+--- linux-2.6.x-cvs/kernel/printk.c	2006-03-22 03:36:56.000000000 +0100
++++ linux-2.6.16-ipipe/kernel/printk.c	2006-06-04 22:08:50.000000000 +0200
 @@ -511,6 +511,78 @@ __attribute__((weak)) unsigned long long
   * printf(3)
   */
@@ -4350,9 +4385,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/printk.c linux-2.6.x/kernel/pri
  
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
-diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/sched.c linux-2.6.x/kernel/sched.c
---- linux-2.6.x-orig/kernel/sched.c	2006-05-04 17:16:42.000000000 +0200
-+++ linux-2.6.x/kernel/sched.c	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/kernel/sched.c linux-2.6.16-ipipe/kernel/sched.c
+--- linux-2.6.x-cvs/kernel/sched.c	2006-04-27 17:03:18.000000000 +0200
++++ linux-2.6.16-ipipe/kernel/sched.c	2006-06-04 22:08:50.000000000 +0200
 @@ -2872,13 +2872,18 @@ asmlinkage void __sched schedule(void)
  	unsigned long run_time;
  	int cpu, idx, new_prio;
@@ -4473,9 +4508,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/sched.c linux-2.6.x/kernel/sche
 +EXPORT_SYMBOL(ipipe_reenter_root);
 +
 +#endif /* CONFIG_IPIPE */
-diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/signal.c linux-2.6.x/kernel/signal.c
---- linux-2.6.x-orig/kernel/signal.c	2006-05-04 17:16:42.000000000 +0200
-+++ linux-2.6.x/kernel/signal.c	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/kernel/signal.c linux-2.6.16-ipipe/kernel/signal.c
+--- linux-2.6.x-cvs/kernel/signal.c	2006-04-27 17:03:18.000000000 +0200
++++ linux-2.6.16-ipipe/kernel/signal.c	2006-06-04 22:08:50.000000000 +0200
 @@ -604,6 +604,7 @@ void signal_wake_up(struct task_struct *
  	unsigned int mask;
  
@@ -4484,9 +4519,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/kernel/signal.c linux-2.6.x/kernel/sig
  
  	/*
  	 * For SIGKILL, we want to wake it up in the stopped/traced case.
-diff --exclude CVS -uNrp linux-2.6.x-orig/lib/smp_processor_id.c linux-2.6.x/lib/smp_processor_id.c
---- linux-2.6.x-orig/lib/smp_processor_id.c	2006-03-22 03:37:51.000000000 +0100
-+++ linux-2.6.x/lib/smp_processor_id.c	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/lib/smp_processor_id.c linux-2.6.16-ipipe/lib/smp_processor_id.c
+--- linux-2.6.x-cvs/lib/smp_processor_id.c	2006-03-22 03:37:51.000000000 +0100
++++ linux-2.6.16-ipipe/lib/smp_processor_id.c	2006-06-04 22:08:50.000000000 +0200
 @@ -13,6 +13,11 @@ unsigned int debug_smp_processor_id(void
  	int this_cpu = raw_smp_processor_id();
  	cpumask_t this_mask;
@@ -4499,9 +4534,9 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/lib/smp_processor_id.c linux-2.6.x/lib
  	if (likely(preempt_count))
  		goto out;
  
-diff --exclude CVS -uNrp linux-2.6.x-orig/lib/spinlock_debug.c linux-2.6.x/lib/spinlock_debug.c
---- linux-2.6.x-orig/lib/spinlock_debug.c	2006-03-22 03:37:51.000000000 +0100
-+++ linux-2.6.x/lib/spinlock_debug.c	2006-06-04 22:08:50.000000000 +0200
+diff --exclude CVS -uNrp linux-2.6.x-cvs/lib/spinlock_debug.c linux-2.6.16-ipipe/lib/spinlock_debug.c
+--- linux-2.6.x-cvs/lib/spinlock_debug.c	2006-03-22 03:37:51.000000000 +0100
++++ linux-2.6.16-ipipe/lib/spinlock_debug.c	2006-06-04 22:08:50.000000000 +0200
 @@ -10,6 +10,7 @@
  #include <linux/spinlock.h>
  #include <linux/interrupt.h>
@@ -4584,4 +4619,3 @@ diff --exclude CVS -uNrp linux-2.6.x-orig/lib/spinlock_debug.c linux-2.6.x/lib/s
  }
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
-Binary files linux-2.6.x-orig/linux and linux-2.6.x/linux differ
