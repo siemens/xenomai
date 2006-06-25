@@ -458,8 +458,13 @@ AC_DEFUN([SC_PATH_TIX], [
     TIX_TCL_LIB=$ac_cv_tix_libdir
     AC_SUBST(TIX_TCL_LIB)
 
-    SC_LIB_SPEC(tix)
-    TIX_LIB_SPEC=$tix_LIB_SPEC
+    SC_LIB_SPEC(tix,probe)
+    if test "x$tix_LIB_SPEC" = x; then
+       SC_LIB_SPEC(Tix)
+       TIX_LIB_SPEC=$Tix_LIB_SPEC
+    else
+       TIX_LIB_SPEC=$tix_LIB_SPEC
+    fi
     AC_SUBST(TIX_LIB_SPEC)
 ])
 
@@ -483,7 +488,6 @@ AC_DEFUN([SC_PATH_TIX], [
 #------------------------------------------------------------------------
 
 AC_DEFUN([SC_LIB_SPEC], [
-    AC_MSG_CHECKING(for $1 library)
     eval "sc_lib_name_dir=${libdir}"
     for i in \
 	    `ls -dr ${sc_lib_name_dir}/$1[[0-9]]*.lib 2>/dev/null ` \
@@ -517,8 +521,14 @@ AC_DEFUN([SC_LIB_SPEC], [
 	    ;;
     esac
     if test "x${sc_lib_name_lib}" = x ; then
-	AC_MSG_ERROR(not found)
+       if test \! "$2" = probe; then
+          AC_MSG_CHECKING(for $1 library)
+	  AC_MSG_ERROR(not found)
+       else
+	  $1_LIB_SPEC=
+       fi
     else
+        AC_MSG_CHECKING(for $1 library)
 	AC_MSG_RESULT(${$1_LIB_SPEC})
     fi
 ])
