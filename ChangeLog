@@ -1,5 +1,9 @@
 2006-06-25  Philippe Gerum  <rpm@xenomai.org>
 
+	* sim/acinclude.m4 (SC_PATH_TIX): Fix for Ubuntu namings.
+
+2006-06-25  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/arch/i386/patches: Upgrade to 	2.4.32-1.2-04.
 
 2006-06-24  Jan Kiszka  <jan.kiszka@web.de>
