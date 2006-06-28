@@ -291,7 +291,7 @@ double dump_histogram (long *histogram, char* kind)
     double avg = 0;             /* used to sum hits 1st */
 
     if (do_histogram)
-        fprintf(stderr,"---|--param|----range-|--samples\n");
+        printf("---|--param|----range-|--samples\n");
 
     for (n = 0; n < histogram_size; n++)
         {
@@ -302,12 +302,11 @@ double dump_histogram (long *histogram, char* kind)
             total_hits += hits;
             avg += n * hits;
             if (do_histogram)
-                fprintf(stderr,
-                        "HSD|    %s| %3d -%3d | %8ld\n",
-                        kind,
-                        n,
-                        n+1,
-                        hits);
+                printf("HSD|    %s| %3d -%3d | %8ld\n",
+                       kind,
+                       n,
+                       n+1,
+                       hits);
             }
         }
 
@@ -336,8 +335,8 @@ void dump_stats (long *histogram, char* kind, double avg)
     variance /= total_hits - 1;
     variance = sqrt(variance);
 
-    fprintf(stderr,"HSS|    %s| %9d| %10.3f| %10.3f\n",
-            kind, total_hits, avg, variance);
+    printf("HSS|    %s| %9d| %10.3f| %10.3f\n",
+           kind, total_hits, avg, variance);
 }
 
 void dump_hist_stats (void)
@@ -349,22 +348,17 @@ void dump_hist_stats (void)
     avgavg = dump_histogram (histogram_avg, "avg");
     maxavg = dump_histogram (histogram_max, "max");
 
-    fprintf(stderr,"HSH|--param|--samples-|--average--|---stddev--\n");
+    printf("HSH|--param|--samples-|--average--|---stddev--\n");
 
     dump_stats (histogram_min, "min", minavg);
     dump_stats (histogram_avg, "avg", avgavg);
     dump_stats (histogram_max, "max", maxavg);
 }
 
-void cleanup_upon_sig(int sig __attribute__((unused)))
+void cleanup(void)
 {
     time_t actual_duration;
     long gmaxj, gminj, gavgj;
-
-    if (finished)
-        return;
-
-    finished = 1;
 
     if (test_mode == USER_TASK) {
         rt_sem_delete(&display_sem);
@@ -417,6 +411,11 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
     if (histogram_min)  free(histogram_min);
 
     exit(0);
+}
+
+void sighand(int sig __attribute__((unused)))
+{
+    finished = 1;
 }
 
 int main (int argc, char **argv)
@@ -525,15 +524,15 @@ int main (int argc, char **argv)
     histogram_min = calloc(histogram_size, sizeof(long));
 
     if (!(histogram_avg && histogram_max && histogram_min)) 
-        cleanup_upon_sig(0);
+        cleanup();
 
     if (period_ns == 0)
         period_ns = 100000LL; /* ns */
 
-    signal(SIGINT, cleanup_upon_sig);
-    signal(SIGTERM, cleanup_upon_sig);
-    signal(SIGHUP, cleanup_upon_sig);
-    signal(SIGALRM, cleanup_upon_sig);
+    signal(SIGINT, sighand);
+    signal(SIGTERM, sighand);
+    signal(SIGHUP, sighand);
+    signal(SIGALRM, sighand);
 
     setlinebuf(stdout);
 
@@ -598,7 +597,10 @@ int main (int argc, char **argv)
             }
     }
 
-    pause();
+    while (!finished)
+        pause();
+
+    cleanup();
 
     return 0;
 }
