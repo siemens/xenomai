@@ -1,3 +1,9 @@
+2006-06-28  Jan Kiszka  <jan.kiszka@web.de>
+
+	* src/testsuite/latency/latency.c: Print test results only from
+	main thread context to avoid deadlocks. This also switches the
+	output back to stdout instead of stderr.
+
 2006-06-25  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.2-rc3
