@@ -562,6 +562,9 @@ int pthread_wait_np(unsigned long *overruns_r)
  * - PTHREAD_SHIELD, when set, activates the interrupt shield, which improve the
  *   execution determinism of the current thread by blocking Linux interrupts
  *   when it runs in secondary mode;
+ * - PTHREAD_RPIOFF, when set, prevents the root Linux thread from inheriting
+ *   the priority of the calling thread, when this thread is running in
+ *   secondary mode;
  * - PTHREAD_WARNSW, when set, cause the signal SIGXCPU to be sent to the
  *   current thread, whenever it involontary switches to secondary mode;
  * - PTHREAD_PRIMARY, cause the migration of the current thread to primary
