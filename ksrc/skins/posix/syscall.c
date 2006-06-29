@@ -261,13 +261,53 @@ static int __pthread_setschedparam(struct task_struct *curr,
 	} else if (k_tid)
 		err = -pthread_setschedparam(k_tid, policy, &param);
 	else
-		/* noop. */
-		err = 0;
+		/* target thread is not a real-time thread, and is not current,
+		   so can not be promoted, try again with the real
+		   pthread_setschedparam service. */
+		err = -EAGAIN;
 
 	if (!err)
 		__xn_put_user(curr, promoted,
 			      (int __user *)__xn_reg_arg5(regs));
 
+	return err;
+}
+
+static int __pthread_getschedparam(struct task_struct *curr,
+				   struct pt_regs *regs)
+{
+	struct sched_param param;
+	struct pse51_hkey hkey;
+	pthread_t k_tid;
+	int policy, err;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(int)))
+		return -EFAULT;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(param)))
+		return -EFAULT;
+
+	hkey.u_tid = __xn_reg_arg1(regs);
+	hkey.mm = curr->mm;
+	k_tid = __pthread_find(&hkey);
+
+	if (!k_tid)
+		return -ESRCH;
+
+	err = -pthread_getschedparam(k_tid, &policy, &param);
+
+	if (!err) {
+		__xn_copy_to_user(curr,
+				  (void __user *)__xn_reg_arg2(regs),
+				  &policy, sizeof(int));
+
+		__xn_copy_to_user(curr,
+				  (void __user *)__xn_reg_arg3(regs),
+				  &param, sizeof(param));
+	}
+	
 	return err;
 }
 
@@ -2613,6 +2653,8 @@ static xnsysent_t __systab[] = {
 	[__pse51_thread_detach] = {&__pthread_detach, __xn_exec_any},
 	[__pse51_thread_setschedparam] =
 	    {&__pthread_setschedparam, __xn_exec_conforming},
+	[__pse51_thread_getschedparam] =
+	{&__pthread_getschedparam, __xn_exec_any},
 	[__pse51_sched_yield] = {&__sched_yield, __xn_exec_primary},
 	[__pse51_thread_make_periodic] =
 	    {&__pthread_make_periodic_np, __xn_exec_conforming},

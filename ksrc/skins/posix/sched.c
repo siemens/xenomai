@@ -160,7 +160,9 @@ int sched_rr_get_interval(int pid, struct timespec *interval)
  *
  * This service returns, at the addresses @a pol and @a par, the current
  * scheduling policy and scheduling parameters (i.e. priority) of the Xenomai
- * POSIX skin thread @a tid.
+ * POSIX skin thread @a tid. If this service is called from user-space and @a
+ * tid is not the identifier of a Xenomai POSIX skin thread, this service
+ * fallback to Linux regular pthread_getschedparam service.
  *
  * @param tid target thread;
  *
@@ -206,10 +208,11 @@ int pthread_getschedparam(pthread_t tid, int *pol, struct sched_param *par)
  * to the value pointed to by @a par.
  *
  * When used in user-space, passing the current thread ID as @a tid argument,
- * and SCHED_FIFO as @a pol argument, this service turns the current thread into
- * a Xenomai POSIX skin thread. If @a tid is neither the identifier of the
- * current thread nor the identifier of a Xenomai POSIX skin thread, this
- * service falls back to the regular pthread_setschedparam() service.
+ * this service turns the current thread into a Xenomai POSIX skin thread. If @a
+ * tid is neither the identifier of the current thread nor the identifier of a
+ * Xenomai POSIX skin thread this service falls back to the regular
+ * pthread_setschedparam() service, hereby causing the current thread to switch
+ * to secondary mode if it is Xenomai thread.
  *
  * @param tid target thread;
  *
