@@ -17,6 +17,46 @@ config XENO_OPT_PERVASIVE
 	applications, which directly call the real-time APIs from
 	kernel modules.
 
+config XENO_OPT_ISHIELD
+	depends on XENO_OPT_PERVASIVE
+	bool "Interrupt shield support"
+	default n
+	help
+	
+	This option builds in the interrupt shield support, which can
+	be further enabled on a thread-by-thread basis. When enabled
+	for a thread, the interrupt shield prevents it from being
+	preempted by Linux interrupt handlers when it executes in the
+	secondary domain (i.e. under the control of the Linux
+	scheduler), thus increasing the execution time accuracy for
+	CPU-bound tasks.
+
+	Note: since the interrupt shield adds extra-computation to the
+	critical path, applications based on threads running in the
+	primary Xenomai domain, hence for which preemption by any kind
+	of Linux kernel activities is already prevented by design,
+	should leave this option disabled.
+
+config XENO_OPT_RPIDISABLE
+	depends on XENO_OPT_PERVASIVE
+	bool "Disable priority coupling"
+	default n
+	help
+	
+	This option globally disables thread priority coupling between
+	Xenomai and Linux schedulers. Decoupling priority prevents the
+	Linux kernel from inheriting the priority of the associated
+	Xenomai thread when the latter executes in secondary mode.
+
+	The net effect is that user-space Xenomai threads executing
+	under the control of the Linux scheduler (i.e. in secondary
+	mode) will always have lower absolute priority than any
+	runnable real-time thread left under the control of the
+	Xenomai scheduler (i.e. in primary mode), and as such, will be
+	scheduled after.
+
+	If in doubt, say N.
+
 config XENO_OPT_SECURITY_ACCESS
 	bool "Enforce syscall access control"
 	depends on XENO_OPT_PERVASIVE
@@ -30,6 +70,24 @@ config XENO_OPT_SECURITY_ACCESS
 	Disabling this option means that *any* user from the system
 	could invoke Xenomai services without permission. Therefore,
 	think twice before switching this off.
+
+config XENO_OPT_PIPELINE_HEAD
+	bool "Optimize as pipeline head"
+	default y
+	help
+	
+	This option causes Xenomai to declare itself as always leading
+	the interrupt pipeline, which in turn allows Adeos to optimize
+	for faster interrupt delivery and stall/unstall operations.
+
+	However, enabling this option prevents inserting Adeos domains
+	with higher priority than Xenomai in the pipeline, which
+	should be rarely needed though.
+
+	This feature requires Adeos to support invariant pipeline head
+	optimizations, which some older patches might not provide. In
+	the latter case, this option will simply have no effect. If in
+	doubt, say 'Y' here.
 
 config XENO_OPT_PIPE
 	bool
@@ -77,44 +135,6 @@ config XENO_OPT_SYS_HEAPSZ
 	The system heap is used for various internal allocations by
 	the nucleus and the real-time skins. The size is expressed in
 	Kilobytes.
-
-config XENO_OPT_ISHIELD
-	depends on XENO_OPT_PERVASIVE
-	bool "Interrupt shield support"
-	default n
-	help
-	
-	This option builds in the interrupt shield support, which can
-	be further enabled on a thread-by-thread basis. When enabled
-	for a thread, the interrupt shield prevents it from being
-	preempted by Linux interrupt handlers when it executes in the
-	secondary domain (i.e. under the control of the Linux
-	scheduler), thus increasing the execution time accuracy for
-	CPU-bound tasks.
-
-	Note: since the interrupt shield adds extra-computation to the
-	critical path, applications based on threads running in the
-	primary Xenomai domain, hence for which preemption by any kind
-	of Linux kernel activities is already prevented by design,
-	should leave this option disabled.
-
-config XENO_OPT_PIPELINE_HEAD
-	bool "Optimize as pipeline head"
-	default y
-	help
-	
-	This option causes Xenomai to declare itself as always leading
-	the interrupt pipeline, which in turn allows Adeos to optimize
-	for faster interrupt delivery and stall/unstall operations.
-
-	However, enabling this option prevents inserting Adeos domains
-	with higher priority than Xenomai in the pipeline, which
-	should be rarely needed though.
-
-	This feature requires Adeos to support invariant pipeline head
-	optimizations, which some older patches might not provide. In
-	the latter case, this option will simply have no effect. If in
-	doubt, say 'Y' here.
 
 config XENO_OPT_STATS
 	bool "Statistics collection"
