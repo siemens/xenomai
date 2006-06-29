@@ -1,6 +1,7 @@
 pthread_create
 pthread_detach
 pthread_setschedparam
+pthread_getschedparam
 pthread_yield
 sched_yield
 sem_init

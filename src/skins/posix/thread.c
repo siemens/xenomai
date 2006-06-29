@@ -25,6 +25,54 @@
 
 extern int __pse51_muxid;
 
+static void __pthread_sigharden_handler(int sig)
+{
+	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
+}
+
+int __wrap_pthread_detach(pthread_t thread)
+{
+	return -XENOMAI_SKINCALL1(__pse51_muxid, __pse51_thread_detach, thread);
+}
+
+int __wrap_pthread_setschedparam(pthread_t thread,
+				 int policy, const struct sched_param *param)
+{
+	pthread_t myself = pthread_self();
+	int err, promoted;
+
+	err = -XENOMAI_SKINCALL5(__pse51_muxid,
+				 __pse51_thread_setschedparam,
+				 thread, policy, param, myself, &promoted);
+
+	if (err == EAGAIN)
+		return __real_pthread_setschedparam(thread, policy, param);
+
+	if (!err && promoted) {
+		signal(SIGCHLD, &__pthread_sigharden_handler);
+		if (policy != SCHED_OTHER)
+			XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
+	}
+
+	return err;
+}
+
+int __wrap_pthread_getschedparam(pthread_t thread,
+				 int *__restrict__ policy,
+				 struct sched_param *__restrict__ param)
+{
+	int err;
+
+	err = -XENOMAI_SKINCALL3(__pse51_muxid,
+				 __pse51_thread_getschedparam,
+				 thread, policy, param);
+
+	if (err == ESRCH)
+		return __real_pthread_getschedparam(thread, policy, param);
+
+	return err;
+}
+
 struct pthread_iargs {
 	void *(*start) (void *);
 	void *arg;
@@ -33,11 +81,6 @@ struct pthread_iargs {
 	sem_t sync;
 	int ret;
 };
-
-static void __pthread_sigharden_handler(int sig)
-{
-	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
-}
 
 static void *__pthread_trampoline(void *arg)
 {
@@ -100,7 +143,8 @@ int __wrap_pthread_create(pthread_t *tid,
 			pthread_attr_getschedparam(attr, &param);
 		} else
 			/* inherit == PTHREAD_INHERIT_SCHED */
-			pthread_getschedparam(pthread_self(), &policy, &param);
+			__wrap_pthread_getschedparam(pthread_self(),
+						     &policy, &param);
 	}
 
 	/* First start a native POSIX thread, then associate a Xenomai shadow to
@@ -122,40 +166,6 @@ int __wrap_pthread_create(pthread_t *tid,
 
 	if (!err)
 		*tid = ltid;
-
-	return err;
-}
-
-int __wrap_pthread_detach(pthread_t thread)
-{
-	return -XENOMAI_SKINCALL1(__pse51_muxid, __pse51_thread_detach, thread);
-}
-
-int __wrap_pthread_setschedparam(pthread_t thread,
-				 int policy, const struct sched_param *param)
-{
-	pthread_t myself = pthread_self();
-	int err, promoted;
-
-	/* The NPTL version of pthread_getschedparam does not issue a syscall to
-	   know the scheduling policy and parameters of the target thread, instead,
-	   the values passed to the last call to pthread_setschedparam are used. We
-	   hence call __real_pthread_setschedparam so that the NPTL is informed of
-	   the current setting. */
-	err = __real_pthread_setschedparam(thread, policy, param);
-
-	if (err)
-		return err;
-
-	err = -XENOMAI_SKINCALL5(__pse51_muxid,
-				 __pse51_thread_setschedparam,
-				 thread, policy, param, myself, &promoted);
-
-	if (!err && promoted) {
-		signal(SIGCHLD, &__pthread_sigharden_handler);
-		if (policy != SCHED_OTHER)
-			XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
-	}
 
 	return err;
 }

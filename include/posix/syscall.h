@@ -98,6 +98,7 @@
 #define __pse51_condattr_setclock     72
 #define __pse51_condattr_getpshared   73
 #define __pse51_condattr_setpshared   74
+#define __pse51_thread_getschedparam  75
 
 #ifdef __KERNEL__
 
