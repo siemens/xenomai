@@ -1098,6 +1098,11 @@ void xnpod_restart_thread(xnthread_t *thread)
  * enabled at configuration time; otherwise, this flag is simply
  * ignored.
  *
+ * - XNRPIOFF disables thread priority coupling between Xenomai and
+ * Linux schedulers. This bit prevents the root Linux thread from
+ * inheriting the priority of the running shadow Xenomai thread. Use
+ * CONFIG_XENO_OPT_RPIOFF to globally disable priority coupling.
+ *
  * Environments:
  *
  * This service can be called from:

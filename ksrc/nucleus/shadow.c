@@ -430,6 +430,7 @@ static void lostage_handler(void *cookie)
 				set_cpus_allowed(p, cpumask_of_cpu(cpuid));
 #endif /* CONFIG_SMP */
 
+#ifndef CONFIG_XENO_OPT_RPIDISABLE
 			/* We need to downgrade the root thread priority
 			   whenever the APC runs over a non-shadow, so that
 			   the temporary boost we applied in xnshadow_relax()
@@ -439,6 +440,7 @@ static void lostage_handler(void *cookie)
 
 			if (!xnshadow_thread(current))
 				xnpod_renice_root(XNPOD_ROOT_PRIO_BASE);
+#endif /* CONFIG_XENO_OPT_RPIDISABLE */
 		      do_wakeup:
 
 #ifdef CONFIG_XENO_OPT_ISHIELD
@@ -546,7 +548,9 @@ static int gatekeeper_thread(void *data)
 			thread->sched = xnpod_sched_slot(cpu);
 #endif /* CONFIG_SMP */
 			xnpod_resume_thread(thread, XNRELAX);
+#ifndef CONFIG_XENO_OPT_RPIDISABLE
 			xnpod_renice_root(XNPOD_ROOT_PRIO_BASE);
+#endif /* CONFIG_XENO_OPT_RPIDISABLE */
 			xnpod_schedule();
 		}
 
@@ -705,14 +709,24 @@ void xnshadow_relax(int notify)
 	schedule_linux_call(LO_WAKEUP_REQ, current, 0);
 
 	splhigh(s);
-	xnpod_renice_root(thread->cprio);
+
+#ifndef CONFIG_XENO_OPT_RPIDISABLE
+	if (likely(!testbits(thread->status, XNRPIOFF)))
+		xnpod_renice_root(thread->cprio);
+	else
+		xnpod_renice_root(XNPOD_ROOT_PRIO_BASE);
+#endif /* CONFIG_XENO_OPT_RPIDISABLE */
+
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, NULL);
+
 	splexit(s);
+
 #ifdef CONFIG_XENO_OPT_DEBUG
 	if (rthal_current_domain != rthal_root_domain)
 		xnpod_fatal("xnshadow_relax() failed for thread %s[%d]",
 			    thread->name, xnthread_user_pid(thread));
 #endif /* CONFIG_XENO_OPT_DEBUG */
+
 	cprio = thread->cprio < MAX_RT_PRIO ? thread->cprio : MAX_RT_PRIO - 1;
 	rthal_reenter_root(get_switch_lock_owner(),
 			   cprio ? SCHED_FIFO : SCHED_NORMAL, cprio);
@@ -899,12 +913,16 @@ void xnshadow_unmap(xnthread_t *thread)
 	}
 
       renice_and_exit:
+#ifndef CONFIG_XENO_OPT_RPIDISABLE
 	/* Otherwise, if the shadow is being unmapped in secondary mode
 	   and running, we only detach the shadow thread from its Linux
 	   mate, and renice the root thread appropriately. We do not
 	   reschedule since xnshadow_unmap() must be called from a thread
 	   deletion hook. */
 	xnpod_renice_root(XNPOD_ROOT_PRIO_BASE);
+#else /* !CONFIG_XENO_OPT_RPIDISABLE */
+	return;
+#endif /* CONFIG_XENO_OPT_RPIDISABLE */
 }
 
 int xnshadow_wait_barrier(struct pt_regs *regs)
@@ -1577,6 +1595,7 @@ static inline void do_schedule_event(struct task_struct *next)
 
 	prev = current;
 	threadin = xnshadow_thread(next);
+	oldrprio = xnpod_current_thread()->cprio;
 
 	rthal_load_cpuid();	/* Linux is running in a migration-safe
 				   portion of code. */
@@ -1610,7 +1629,12 @@ static inline void do_schedule_event(struct task_struct *next)
 
 	      no_ptrace:
 
-		newrprio = threadin->cprio;
+#ifndef CONFIG_XENO_OPT_RPIDISABLE
+		if (likely(!testbits(threadin->status, XNRPIOFF)))
+			newrprio = threadin->cprio;
+		else
+#endif /* CONFIG_XENO_OPT_RPIDISABLE */
+			newrprio = XNPOD_ROOT_PRIO_BASE; /* Decouple priority scales. */
 
 #ifdef CONFIG_XENO_OPT_DEBUG
 		{
@@ -1653,8 +1677,7 @@ static inline void do_schedule_event(struct task_struct *next)
 	   we can safely renice the nucleus's runthread (i.e. as returned
 	   by xnpod_current_thread()). */
 
-	oldrprio = xnpod_current_thread()->cprio;
-
+#ifndef CONFIG_XENO_OPT_RPIDISABLE
 	if (oldrprio != newrprio) {
 		xnpod_renice_root(newrprio);
 
@@ -1666,6 +1689,7 @@ static inline void do_schedule_event(struct task_struct *next)
 			   let's call the rescheduling procedure ourselves. */
 			xnpod_schedule();
 	}
+#endif /* CONFIG_XENO_OPT_RPIDISABLE */
 }
 
 RTHAL_DECLARE_SCHEDULE_EVENT(schedule_event);
@@ -1745,8 +1769,12 @@ static inline void do_setsched_event(struct task_struct *p, int priority)
 	if (thread->cprio != priority)
 		xnpod_renice_thread_inner(thread, priority, 0);
 
-	if (current == p && thread->cprio != xnpod_current_root()->cprio)
+#ifndef CONFIG_XENO_OPT_RPIDISABLE
+	if (current == p && 
+	    likely(!testbits(thread->status, XNRPIOFF)) &&
+	    thread->cprio != xnpod_current_root()->cprio)
 		xnpod_renice_root(thread->cprio);
+#endif /* CONFIG_XENO_OPT_RPIDISABLE */
 
 	if (xnsched_resched_p())
 		xnpod_schedule();

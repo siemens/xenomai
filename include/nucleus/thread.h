@@ -47,11 +47,12 @@
 #define XNASDI    0x00040000	/* ASR are disabled */
 #define XNSHIELD  0x00080000	/* IRQ shield is enabled (shadow only) */
 #define XNTRAPSW  0x00100000	/* Trap execution mode switches */
+#define XNRPIOFF  0x00200000	/* Stop root priority inheritance (shadow only) */
 
-#define XNFPU     0x00200000	/* Thread uses FPU */
-#define XNSHADOW  0x00400000	/* Shadow thread */
-#define XNROOT    0x00800000	/* Root thread (i.e. Linux/IDLE) */
-#define XNINVPS   0x01000000	/* Using inverted priority scale */
+#define XNFPU     0x00400000	/* Thread uses FPU */
+#define XNSHADOW  0x00800000	/* Shadow thread */
+#define XNROOT    0x01000000	/* Root thread (i.e. Linux/IDLE) */
+#define XNINVPS   0x02000000	/* Using inverted priority scale */
 
 /*
   Must follow the declaration order of the above bits. Status symbols
@@ -80,7 +81,7 @@
 }
 
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNHELD)
-#define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNSHIELD|XNTRAPSW)
+#define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNSHIELD|XNTRAPSW|XNRPIOFF)
 
 /* These flags are available to the real-time interfaces */
 #define XNTHREAD_SPARE0  0x10000000

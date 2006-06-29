@@ -589,7 +589,7 @@ int pthread_set_mode_np(int clrmask, int setmask)
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	if (testbits(cur->status, XNSHADOW))
-		valid_flags |= XNTHREAD_SPARE1 | XNSHIELD | XNTRAPSW;
+		valid_flags |= XNTHREAD_SPARE1 | XNSHIELD | XNTRAPSW | XNRPIOFF;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 	/* XNTHREAD_SPARE1 is used for primary mode switch. */

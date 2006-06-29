@@ -1,3 +1,9 @@
+2006-06-29  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus, ksrc/skins/posix, ksrc/skins/native
+	(XENO_OPT_RPIDISABLE): Allow disabling priority coupling between
+	Linux and Xenomai schedulers.
+
 2006-06-28  Jan Kiszka  <jan.kiszka@web.de>
 
 	* src/testsuite/latency/latency.c: Print test results only from
