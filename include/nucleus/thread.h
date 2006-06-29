@@ -47,7 +47,7 @@
 #define XNASDI    0x00040000	/* ASR are disabled */
 #define XNSHIELD  0x00080000	/* IRQ shield is enabled (shadow only) */
 #define XNTRAPSW  0x00100000	/* Trap execution mode switches */
-#define XNRPIOFF  0x00200000	/* Stop root priority inheritance (shadow only) */
+#define XNRPIOFF  0x00200000	/* Stop priority coupling (shadow only) */
 
 #define XNFPU     0x00400000	/* Thread uses FPU */
 #define XNSHADOW  0x00800000	/* Shadow thread */
@@ -70,14 +70,15 @@
   'r' -> Undergoes round-robin .
   's' -> Interrupt shield enabled.
   't' -> Mode switches trapped.
+  'o' -> Priority coupling off.
   'f' -> FPU enabled (for kernel threads).
 */
 #define XNTHREAD_SLABEL_INIT { \
   'S', 'W', 'D', 'R', 'U', \
   '.', '.', '.', 'X', 'H', \
   '.', '.', '.', '.', 'b', 'T', \
-  'l', 'r', '.', 's', 't', 'f', \
-  '.', '.', '.'  \
+  'l', 'r', '.', 's', 't', 'o', \
+  'f', '.', '.', '.'		\
 }
 
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNHELD)
