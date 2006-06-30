@@ -437,6 +437,10 @@ int __real_pthread_create(pthread_t *tid,
 
 int __real_pthread_detach(pthread_t thread);
 
+int __real_pthread_getschedparam(pthread_t thread,
+				 int *policy,
+				 struct sched_param *param);
+
 int __real_pthread_setschedparam(pthread_t thread,
 				 int policy,
 				 const struct sched_param *param);
