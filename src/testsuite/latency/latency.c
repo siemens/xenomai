@@ -267,9 +267,9 @@ void display (void *cookie)
                 time_t now, dt;
                 time(&now);
                 dt = now - start - WARMUP_TIME;
-                printf("RTT|  %.2ld:%.2ld:%.2ld  (%s, %Ld us period)\n",
-                       dt / 3600,(dt / 60) % 60,dt % 60,
-                       test_mode_names[test_mode],period_ns / 1000);
+                printf("RTT|  %.2ld:%.2ld:%.2ld  (%s, %Ld us period, "
+                       "priority %d)\n",dt / 3600,(dt / 60) % 60,dt % 60,
+                       test_mode_names[test_mode],period_ns / 1000,priority);
                 printf("RTH|%12s|%12s|%12s|%8s|%12s|%12s\n",
                        "-----lat min","-----lat avg","-----lat max","-overrun",
                        "----lat best","---lat worst");
