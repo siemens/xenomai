@@ -35,7 +35,7 @@ struct task_params {
 	unsigned fp;
 	pthread_t thread;
 	struct cpu_tasks *cpu;
-	struct rtswitch_task swt;
+	struct rttst_swtest_task swt;
 };
 
 struct cpu_tasks {
@@ -83,7 +83,7 @@ static void *sleeper(void *cookie)
 	unsigned tasks_count = param->cpu->tasks_count;
 	struct timespec ts, last;
 	int fd = param->cpu->fd;
-	struct rtswitch rtsw;
+	struct rttst_swtest_dir rtsw;
 	cpu_set_t cpu_set;
 	unsigned i = 0;
 
@@ -121,13 +121,13 @@ static void *sleeper(void *cookie)
 			last = now;
 
 			if (ioctl(fd,
-				  RTSWITCH_RTIOC_GET_SWITCHES_COUNT,
+				  RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT,
 				  &switches_count)) {
-				perror("sleeper: ioctl(RTSWITCH_RTIOC_GET_"
-				       "SWITCHES_COUNT)");
+				perror("sleeper: ioctl(RTTST_RTIOC_SWTEST_"
+				       "GET_SWITCHES_COUNT)");
 				exit(EXIT_FAILURE);
 			}
-	    
+
 			printf("cpu %u: %lu\n",
 			       param->cpu->index,
 			       switches_count);
@@ -144,7 +144,7 @@ static void *sleeper(void *cookie)
 			++rtsw.to;
 
 		fp_regs_set(rtsw.from + i * 1000);
-		if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw))
+		if (ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw))
 			break;
 		if (fp_regs_check(rtsw.from + i * 1000))
 			pthread_kill(pthread_self(), SIGSTOP);
@@ -161,7 +161,7 @@ static void *rtup(void *cookie)
 	struct task_params *param = (struct task_params *) cookie;
 	unsigned tasks_count = param->cpu->tasks_count;
 	int err, fd = param->cpu->fd;
-	struct rtswitch rtsw;
+	struct rttst_swtest_dir rtsw;
 	cpu_set_t cpu_set;
 	unsigned i = 0;
 
@@ -186,7 +186,7 @@ static void *rtup(void *cookie)
 		exit(EXIT_FAILURE);
 	}    
 
-	if (ioctl(fd, RTSWITCH_RTIOC_PEND, &param->swt))
+	if (ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt))
 		return NULL;
 
 	for (;;) {
@@ -199,7 +199,7 @@ static void *rtup(void *cookie)
 
 		if (param->fp & UFPP)
 			fp_regs_set(rtsw.from + i * 1000);
-		if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw))
+		if (ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw))
 			break;
 		if (param->fp & UFPP)
 			if (fp_regs_check(rtsw.from + i * 1000))
@@ -217,7 +217,7 @@ static void *rtus(void *cookie)
 	struct task_params *param = (struct task_params *) cookie;
 	unsigned tasks_count = param->cpu->tasks_count;
 	int err, fd = param->cpu->fd;
-	struct rtswitch rtsw;
+	struct rttst_swtest_dir rtsw;
 	cpu_set_t cpu_set;
 	unsigned i = 0;
 
@@ -242,7 +242,7 @@ static void *rtus(void *cookie)
 		exit(EXIT_FAILURE);
 	}
 
-	if (ioctl(fd, RTSWITCH_RTIOC_PEND, &param->swt))
+	if (ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt))
 		return NULL;
 
 	for (;;) {
@@ -255,7 +255,7 @@ static void *rtus(void *cookie)
 
 		if (param->fp & UFPS)
 			fp_regs_set(rtsw.from + i * 1000);
-		if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw))
+		if (ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw))
 			break;
 		if (param->fp & UFPS)
 			if (fp_regs_check(rtsw.from + i * 1000))
@@ -273,7 +273,7 @@ static void *rtuo(void *cookie)
 	struct task_params *param = (struct task_params *) cookie;
 	unsigned mode, tasks_count = param->cpu->tasks_count;
 	int err, fd = param->cpu->fd;
-	struct rtswitch rtsw;
+	struct rttst_swtest_dir rtsw;
 	cpu_set_t cpu_set;
 	unsigned i = 0;
 
@@ -296,8 +296,8 @@ static void *rtuo(void *cookie)
 			"rtup: pthread_set_mode_np: %s\n",
 			strerror(err));
 		exit(EXIT_FAILURE);
-	}    
-	if (ioctl(fd, RTSWITCH_RTIOC_PEND, &param->swt))
+	}
+	if (ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt))
 		return NULL;
 
 	mode = PTHREAD_PRIMARY;
@@ -311,7 +311,7 @@ static void *rtuo(void *cookie)
 
 		if ((mode && param->fp & UFPP) || (!mode && param->fp & UFPS))
 			fp_regs_set(rtsw.from + i * 1000);
-		if (ioctl(fd, RTSWITCH_RTIOC_SWITCH_TO, &rtsw))
+		if (ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw))
 			break;
 		if ((mode && param->fp & UFPP) || (!mode && param->fp & UFPS))
 			if (fp_regs_check(rtsw.from + i * 1000))
@@ -341,7 +341,7 @@ static int parse_arg(struct task_params *param,
 		const char *text;
 		unsigned flag;
 	};
-    
+
 	static struct t2f type2flags [] = {
 		{ "rtk",  RTK  },
 		{ "rtup", RTUP },
@@ -380,14 +380,14 @@ static int parse_arg(struct task_params *param,
 
 	if (isdigit(*text))
 		goto cpu_nr;
-    
+
 	for(i = 0; i < sizeof(fp2flags)/sizeof(struct t2f); i++) {
 		size_t len = strlen(fp2flags[i].text);
 	
 		if(!strncmp(text, fp2flags[i].text, len)) {
 			param->fp |= fp2flags[i].flag;
 			text += len;
-	    
+
 			goto fpflags;
 		}
 	}
@@ -688,22 +688,23 @@ int main(int argc, const char *argv[])
 	for (i = 0; i < nr_cpus; i ++) {
 		struct cpu_tasks *cpu = &cpus[i];
 
-		cpu->fd = open("rtswitch", O_RDWR);
+		/* FIXME: grab number from -D option when provided */
+		cpu->fd = open("rttest0", O_RDWR);
 
 		if (cpu->fd == -1) {
-			perror("open(\"rtswitch\")");
+			perror("open(\"rttest0\")");
 			goto failure;
 		}
 
 		if (ioctl(cpu->fd,
-			  RTSWITCH_RTIOC_TASKS_COUNT,
+			  RTTST_RTIOC_SWTEST_SET_TASKS_COUNT,
 			  cpu->tasks_count)) {
-			perror("ioctl(RTSWITCH_RTIOC_TASKS_COUNT)");
+			perror("ioctl(RTTST_RTIOC_SWTEST_SET_TASKS_COUNT)");
 			goto failure;
 		}
 
-		if (ioctl(cpu->fd, RTSWITCH_RTIOC_SET_CPU, i)) {
-			perror("ioctl(RTSWITCH_RTIOC_SET_CPU)");
+		if (ioctl(cpu->fd, RTTST_RTIOC_SWTEST_SET_CPU, i)) {
+			perror("ioctl(RTTST_RTIOC_SWTEST_SET_CPU)");
 			goto failure;
 		}
 
@@ -717,17 +718,17 @@ int main(int argc, const char *argv[])
 			switch(param->type) {
 			case RTK:
 				param->swt.flags = (param->fp & AFP
-						    ? RTSWITCH_FPU
+						    ? RTTST_SWTEST_FPU
 						    : 0)
 					| (param->fp & UFPP
-					   ? RTSWITCH_USE_FPU
+					   ? RTTST_SWTEST_USE_FPU
 					   : 0);
 
 				if (ioctl(cpu->fd,
-					  RTSWITCH_RTIOC_CREATE_KTASK,
+					  RTTST_RTIOC_SWTEST_CREATE_KTASK,
 					  &param->swt)) {
-					perror("ioctl(RTSWITCH_RTIOC_CREATE_"
-					       "KTASK)");
+					perror("ioctl(RTTST_RTIOC_SWTEST_"
+					       "CREATE_KTASK)");
 					goto failure;
 				}
 				break;
@@ -754,10 +755,10 @@ int main(int argc, const char *argv[])
 				param->swt.flags = 0;
 
 				if (ioctl(cpu->fd,
-					  RTSWITCH_RTIOC_REGISTER_UTASK,
+					  RTTST_RTIOC_SWTEST_REGISTER_UTASK,
 					  &param->swt)) {
-					perror("ioctl(RTSWITCH_RTIOC_REGISTER_"
-					       "UTASK)");
+					perror("ioctl(RTTST_RTIOC_SWTEST_"
+					       "REGISTER_UTASK)");
 					goto failure;
 				}
 				break;

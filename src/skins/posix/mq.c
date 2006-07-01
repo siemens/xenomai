@@ -18,6 +18,7 @@
 
 #include <errno.h>
 #include <stdarg.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <posix/syscall.h>
 #include <pthread.h>

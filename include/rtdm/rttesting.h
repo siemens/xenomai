@@ -1,6 +1,6 @@
 /**
  * @file
- * Real-Time Driver Model for Xenomai, benchmark device profile header
+ * Real-Time Driver Model for Xenomai, testing device profile header
  *
  * @note Copyright (C) 2005 Jan Kiszka <jan.kiszka@web.de>
  *
@@ -18,22 +18,22 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * @ingroup rtbenchmark
+ * @ingroup rttesting
  */
 
 /*!
  * @ingroup profiles
- * @defgroup rtbenchmark Timer benchmark Device
+ * @defgroup rttesting Testing Device
  *
- * This group of devices is intended to provide in-kernel benchmark results.
+ * This group of devices is intended to provide in-kernel testing results.
  * Feel free to comment on this profile via the Xenomai mailing list
- * (Xenomai-help@gna.org) or directly to the author (jan.kiszka@web.de). @n
+ * (xenomai-core@gna.org) or directly to the author (jan.kiszka@web.de). @n
  * @n
  *
  * @par Device Characteristics
- * @ref rtdm_device.device_flags "Device Flags": @c RTDM_NAMED_DEVICE, @c RTDM_EXCLUSIVE @n
+ * @ref rtdm_device.device_flags "Device Flags": @c RTDM_NAMED_DEVICE @n
  * @n
- * @ref rtdm_device.device_name "Device Name": @c "rtbenchmark<N>", N >= 0 @n
+ * @ref rtdm_device.device_name "Device Name": @c "rttest<N>", N >= 0 @n
  * @n
  * @ref rtdm_device.device_class "Device Class": @c RTDM_CLASS_TESTING @n
  * @n
@@ -48,8 +48,8 @@
  * Specific return values: none @n
  * @n
  * @b IOCTL @n
- * Mandatory Environments: see @ref TIMER_IOCTLs "below" @n
- * Specific return values: see @ref TIMER_IOCTLs "below" @n
+ * Mandatory Environments: see @ref IOCTLs below @n
+ * Specific return values: see @ref IOCTLs below @n
  *
  * @{
  */
@@ -59,128 +59,139 @@
 
 #include <rtdm/rtdm.h>
 
-#define RTBNCH_TIMER_TASK       0
-#define RTBNCH_TIMER_HANDLER    1
-
-typedef struct rtbnch_result {
+typedef struct rttst_bench_res {
     long long               avg;
     long                    min;
     long                    max;
     long                    overruns;
     long                    test_loops;
-} rtbnch_result_t;
+} rttst_bench_res_t;
 
-typedef struct rtbnch_timerconfig {
+typedef struct rttst_interm_bench_res {
+    struct rttst_bench_res  last;
+    struct rttst_bench_res  overall;
+} rttst_interm_bench_res_t;
+
+typedef struct rttst_overall_bench_res {
+    struct rttst_bench_res  result;
+    long                    *histogram_avg;
+    long                    *histogram_min;
+    long                    *histogram_max;
+} rttst_overall_bench_res_t;
+
+
+#define RTTST_TMBENCH_TASK       0
+#define RTTST_TMBENCH_HANDLER    1
+
+typedef struct rttst_tmbench_config {
     int                     mode;
     uint64_t                period;
+    int                     priority;
     int                     warmup_loops;
     int                     histogram_size;
     int                     histogram_bucketsize;
     int                     freeze_max;
-} rtbnch_timerconfig_t;
-
-typedef struct rtbnch_interm_result {
-    struct rtbnch_result    last;
-    struct rtbnch_result    overall;
-} rtbnch_interm_result_t;
-
-typedef struct rtbnch_overall_result {
-    struct rtbnch_result    result;
-    long                    *histogram_avg;
-    long                    *histogram_min;
-    long                    *histogram_max;
-} rtbnch_overall_result_t;
-
-typedef struct rtbnch_trace_special {
-    unsigned char           id;
-    long                    v;
-} rtbnch_trace_special_t;
+} rttst_tmbench_config_t;
 
 
-#define RTIOC_TYPE_BENCHMARK        RTDM_CLASS_TESTING
+#define RTTST_IRQBENCH_USER_TASK    0
+#define RTTST_IRQBENCH_KERNEL_TASK  1
+#define RTTST_IRQBENCH_HANDLER      2
 
-/*!
- * @name Sub-Classes of RTDM_CLASS_TESTING
- * @{ */
-#define RTDM_SUBCLASS_TIMER         0
+#define RTTST_IRQBENCH_SERPORT      0
+#define RTTST_IRQBENCH_PARPORT      1
 
-#define RTDM_SUBCLASS_SWITCH        1
-/** @} */
+struct rttst_irqbench_config {
+    int                     mode;
+    int                     priority;
+    int                     calibration_loops;
+    unsigned int            port_type;
+    unsigned long           port_ioaddr;
+    unsigned int            port_irq;
+} rttst_irqbench_config_t;
 
-
-/*!
- * @anchor TIMER_IOCTLs @name TIMER_IOCTLs
- * Timer benchmark device IOCTLs
- * @{ */
-#define RTBNCH_RTIOC_INTERM_RESULT      \
-    _IOWR(RTIOC_TYPE_BENCHMARK, 0x00, struct rtbnch_interm_result)
-
-#define RTBNCH_RTIOC_START_TMTEST       \
-    _IOW(RTIOC_TYPE_BENCHMARK, 0x10, struct rtbnch_timerconfig)
-
-#define RTBNCH_RTIOC_STOP_TMTEST        \
-    _IOWR(RTIOC_TYPE_BENCHMARK, 0x11, struct rtbnch_overall_result)
-
-#define RTBNCH_RTIOC_BEGIN_TRACE        \
-    _IOW(RTIOC_TYPE_BENCHMARK, 0x20, long)
-
-#define RTBNCH_RTIOC_END_TRACE          \
-    _IOW(RTIOC_TYPE_BENCHMARK, 0x21, long)
-
-#define RTBNCH_RTIOC_FREEZE_TRACE       \
-    _IOW(RTIOC_TYPE_BENCHMARK, 0x22, long)
-
-#define RTBNCH_RTIOC_REFREEZE_TRACE     \
-    _IOW(RTIOC_TYPE_BENCHMARK, 0x23, long)
-
-#define RTBNCH_RTIOC_SPECIAL_TRACE      \
-    _IOW(RTIOC_TYPE_BENCHMARK, 0x24, unsigned char)
-
-#define RTBNCH_RTIOC_SPECIAL_TRACE_EX   \
-    _IOW(RTIOC_TYPE_BENCHMARK, 0x25, struct rtbnch_trace_special)
-/** @} */
+struct rttst_irqbench_stats {
+    unsigned long long      irqs_received;
+    unsigned long long      irqs_acknowledged;
+} rttst_irqbench_stats_t;
 
 
-#define RTIOC_TYPE_SWITCH           RTDM_CLASS_TESTING
+#define RTTST_SWTEST_FPU            0x1
+#define RTTST_SWTEST_USE_FPU        0x2 /* Only for kernel-space tasks. */
 
-#define RTSWITCH_FPU     0x1
-#define RTSWITCH_USE_FPU 0x2 /* Only for kernel-space tasks. */
-
-
-struct rtswitch_task {
+struct rttst_swtest_task {
     unsigned index;
     unsigned flags;
 };
 
-struct rtswitch {
+struct rttst_swtest_dir {
     unsigned from;
     unsigned to;
 };
 
-/**
- * @anchor SWITCH_IOCTLs @name @SWITCH_IOCTLs
- * Context-switch testing device IOCTLs
+
+#define RTIOC_TYPE_TESTING          RTDM_CLASS_TESTING
+
+/*!
+ * @name Sub-Classes of RTDM_CLASS_TESTING
  * @{ */
-#define RTSWITCH_RTIOC_TASKS_COUNT                   \
-    _IOW(RTIOC_TYPE_SWITCH, 0x30, unsigned long)
+#define RTDM_SUBCLASS_TIMERBENCH    0
+#define RTDM_SUBCLASS_IRQBENCH      1
+#define RTDM_SUBCLASS_SWITCHTEST    2
+/** @} */
 
-#define RTSWITCH_RTIOC_SET_CPU \
-    _IOW(RTIOC_TYPE_SWITCH, 0x31, unsigned long)
 
-#define RTSWITCH_RTIOC_REGISTER_UTASK \
-    _IOW(RTIOC_TYPE_SWITCH, 0x32, struct rtswitch_task)
+/*!
+ * @anchor IOCTLs @name IOCTLs
+ * Testing device IOCTLs
+ * @{ */
+#define RTTST_RTIOC_INTERM_BENCH_RES \
+    _IOWR(RTIOC_TYPE_TESTING, 0x00, struct rttst_interm_bench_res)
 
-#define RTSWITCH_RTIOC_CREATE_KTASK \
-    _IOWR(RTIOC_TYPE_SWITCH, 0x33, struct rtswitch_task)
 
-#define RTSWITCH_RTIOC_PEND \
-    _IOR(RTIOC_TYPE_SWITCH, 0x34, struct rtswitch_task)
+#define RTTST_RTIOC_TMBENCH_START \
+    _IOW(RTIOC_TYPE_TESTING, 0x10, struct rttst_tmbench_config)
 
-#define RTSWITCH_RTIOC_SWITCH_TO \
-    _IOR(RTIOC_TYPE_SWITCH, 0x35, struct rtswitch)
+#define RTTST_RTIOC_TMBENCH_STOP \
+    _IOWR(RTIOC_TYPE_TESTING, 0x11, struct rttst_overall_bench_res)
 
-#define RTSWITCH_RTIOC_GET_SWITCHES_COUNT \
-    _IOR(RTIOC_TYPE_SWITCH, 0x36, unsigned long)
+
+#define RTTST_RTIOC_IRQBENCH_START \
+    _IOW(RTIOC_TYPE_TESTING, 0x20, struct rttst_irqbench_config)
+
+#define RTTST_RTIOC_IRQBENCH_STOP \
+    _IO(RTIOC_TYPE_TESTING, 0x21)
+
+#define RTTST_RTIOC_IRQBENCH_GET_STATS \
+    _IOR(RTIOC_TYPE_TESTING, 0x22, struct rttst_irqbench_stats)
+
+#define RTTST_RTIOC_IRQBENCH_WAIT_IRQ \
+    _IO(RTIOC_TYPE_TESTING, 0x23)
+
+#define RTTST_RTIOC_IRQBENCH_REPLY_IRQ \
+    _IO(RTIOC_TYPE_TESTING, 0x24)
+
+
+#define RTTST_RTIOC_SWTEST_SET_TASKS_COUNT \
+    _IOW(RTIOC_TYPE_TESTING, 0x30, unsigned long)
+
+#define RTTST_RTIOC_SWTEST_SET_CPU \
+    _IOW(RTIOC_TYPE_TESTING, 0x31, unsigned long)
+
+#define RTTST_RTIOC_SWTEST_REGISTER_UTASK \
+    _IOW(RTIOC_TYPE_TESTING, 0x32, struct rttst_swtest_task)
+
+#define RTTST_RTIOC_SWTEST_CREATE_KTASK \
+    _IOWR(RTIOC_TYPE_TESTING, 0x33, struct rttst_swtest_task)
+
+#define RTTST_RTIOC_SWTEST_PEND \
+    _IOR(RTIOC_TYPE_TESTING, 0x34, struct rttst_swtest_task)
+
+#define RTTST_RTIOC_SWTEST_SWITCH_TO \
+    _IOR(RTIOC_TYPE_TESTING, 0x35, struct rttst_swtest_dir)
+
+#define RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT \
+    _IOR(RTIOC_TYPE_TESTING, 0x36, unsigned long)
 /** @} */
 
 /** @} */

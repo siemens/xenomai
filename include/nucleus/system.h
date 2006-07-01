@@ -34,6 +34,7 @@ static inline unsigned long ffnz (unsigned long ul)
 #else /* !__XENO_UVM__ */
 #include <asm/xenomai/atomic.h>
 #include <nucleus/core.h>
+#include <nucleus/trace.h>
 #endif /* __XENO_UVM__ */
 
 #endif /* !_XENO_NUCLEUS_SYSTEM_H */

@@ -41,10 +41,15 @@ static inline int set_errno(int ret)
 int __wrap_open(const char *path, int oflag, ...)
 {
 	int ret, oldtype;
+	const char *rtdm_path = path;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = XENOMAI_SKINCALL2(__rtdm_muxid, __rtdm_open, path, oflag);
+	/* skip path prefix for RTDM invocation */
+	if (strncmp(path, "/dev/", 5) == 0)
+		rtdm_path += 5;
+
+	ret = XENOMAI_SKINCALL2(__rtdm_muxid, __rtdm_open, rtdm_path, oflag);
 
 	pthread_setcanceltype(oldtype, NULL);
 

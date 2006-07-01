@@ -10,7 +10,7 @@
 #define RTSWITCH_KERNEL  0x8
 
 typedef struct {
-	struct rtswitch_task base;
+	struct rttst_swtest_task base;
 	xnsynch_t rt_synch;
 	struct semaphore nrt_synch;
 	xnthread_t ktask;          /* For kernel-space real-time tasks. */
@@ -24,6 +24,11 @@ typedef struct rtswitch_context {
 	unsigned cpu;
 	unsigned switches_count;
 } rtswitch_context_t;
+
+static unsigned int start_index;
+
+module_param(start_index, uint, 0400);
+MODULE_PARM_DESC(start_index, "First device instance number to be used");
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Gilles.Chanteperdrix@laposte.net");
@@ -163,9 +168,9 @@ static int rtswitch_set_tasks_count(rtswitch_context_t *ctx, unsigned count)
 
 	if (!tasks)
 		return -ENOMEM;
-    
+
 	down(&ctx->lock);
-    
+
 	if (ctx->tasks)
 		kfree(ctx->tasks);
 
@@ -179,7 +184,7 @@ static int rtswitch_set_tasks_count(rtswitch_context_t *ctx, unsigned count)
 }
 
 static int rtswitch_register_task(rtswitch_context_t *ctx,
-                                  struct rtswitch_task *arg)
+                                  struct rttst_swtest_task *arg)
 {
 	rtswitch_task_t *t;
 
@@ -226,10 +231,10 @@ static void rtswitch_ktask(void *cookie)
 		if (to == task->base.index)
 			++to;
 
-		if (task->base.flags & RTSWITCH_USE_FPU)
+		if (task->base.flags & RTTST_SWTEST_USE_FPU)
 			fp_regs_set(task->base.index + i * 1000);
 		rtswitch_to_rt(ctx, task->base.index, to);
-		if (task->base.flags & RTSWITCH_USE_FPU)
+		if (task->base.flags & RTTST_SWTEST_USE_FPU)
 			if (fp_regs_check(task->base.index + i * 1000))
 				xnpod_suspend_self();
 
@@ -239,7 +244,7 @@ static void rtswitch_ktask(void *cookie)
 }
 
 static int rtswitch_create_ktask(rtswitch_context_t *ctx,
-                                 struct rtswitch_task *ptask)
+                                 struct rttst_swtest_task *ptask)
 {
 	rtswitch_task_t *task;
 	xnflags_t init_flags;
@@ -260,14 +265,14 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 	arg.ctx = ctx;
 	arg.task = task;
 
-	init_flags = (ptask->flags & RTSWITCH_FPU) ? XNFPU : 0;
+	init_flags = (ptask->flags & RTTST_SWTEST_FPU) ? XNFPU : 0;
 
 	/* Migrate the calling thread to the same CPU as the created task, in
 	   order to be sure that the created task is suspended when this function
 	   returns. This also allow us to use the stack to pass the parameters to
 	   the created task. */
 	set_cpus_allowed(current, cpumask_of_cpu(ctx->cpu));
-    
+
 	err = xnpod_init_thread(&task->ktask, name, 1, init_flags, 0);
 
 	if (!err)
@@ -331,25 +336,25 @@ static int rtswitch_ioctl_nrt(struct rtdm_dev_context *context,
                               void *arg)
 {
 	rtswitch_context_t *ctx = (rtswitch_context_t *) context->dev_private;
-	struct rtswitch_task task;
-	struct rtswitch fromto;
+	struct rttst_swtest_task task;
+	struct rttst_swtest_dir fromto;
 	unsigned long count;
 	int err;
 
 	switch (request)
 		{
-		case RTSWITCH_RTIOC_TASKS_COUNT:
+		case RTTST_RTIOC_SWTEST_SET_TASKS_COUNT:
 			return rtswitch_set_tasks_count(ctx,
 							(unsigned long) arg);
 
-		case RTSWITCH_RTIOC_SET_CPU:
+		case RTTST_RTIOC_SWTEST_SET_CPU:
 			if ((unsigned long) arg > xnarch_num_online_cpus() - 1)
 				return -EINVAL;
 
 			ctx->cpu = (unsigned long) arg;
 			return 0;
 
-		case RTSWITCH_RTIOC_REGISTER_UTASK:
+		case RTTST_RTIOC_SWTEST_REGISTER_UTASK:
 			if (!rtdm_rw_user_ok(user_info, arg, sizeof(task)))
 				return -EFAULT;
 
@@ -365,7 +370,7 @@ static int rtswitch_ioctl_nrt(struct rtdm_dev_context *context,
 
 			return err;
 
-		case RTSWITCH_RTIOC_CREATE_KTASK:
+		case RTTST_RTIOC_SWTEST_CREATE_KTASK:
 			if (!rtdm_rw_user_ok(user_info, arg, sizeof(task)))
 				return -EFAULT;
 
@@ -381,15 +386,15 @@ static int rtswitch_ioctl_nrt(struct rtdm_dev_context *context,
 
 			return err;
 
-		case RTSWITCH_RTIOC_PEND:
+		case RTTST_RTIOC_SWTEST_PEND:
 			if (!rtdm_read_user_ok(user_info, arg, sizeof(task)))
 				return -EFAULT;
 
 			rtdm_copy_from_user(user_info, &task, arg, sizeof(task));
-            
+
 			return rtswitch_pend_nrt(ctx, task.index);
 
-		case RTSWITCH_RTIOC_SWITCH_TO:
+		case RTTST_RTIOC_SWTEST_SWITCH_TO:
 			if (!rtdm_read_user_ok(user_info, arg, sizeof(fromto)))
 				return -EFAULT;
 
@@ -402,7 +407,7 @@ static int rtswitch_ioctl_nrt(struct rtdm_dev_context *context,
 
 			return 0;
 
-		case RTSWITCH_RTIOC_GET_SWITCHES_COUNT:
+		case RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT:
 			if (!rtdm_rw_user_ok(user_info, arg, sizeof(count)))
 				return -EFAULT;
 
@@ -411,7 +416,7 @@ static int rtswitch_ioctl_nrt(struct rtdm_dev_context *context,
 			rtdm_copy_to_user(user_info, arg, &count, sizeof(count));
 
 			return 0;
-            
+
 		default:
 			return -ENOTTY;
 		}
@@ -423,25 +428,25 @@ static int rtswitch_ioctl_rt(struct rtdm_dev_context *context,
                              void *arg)
 {
 	rtswitch_context_t *ctx = (rtswitch_context_t *) context->dev_private;
-	struct rtswitch_task task;
-	struct rtswitch fromto;
+	struct rttst_swtest_task task;
+	struct rttst_swtest_dir fromto;
 
-	switch (request) 
+	switch (request)
 		{
-		case RTSWITCH_RTIOC_REGISTER_UTASK:
-		case RTSWITCH_RTIOC_CREATE_KTASK:
-		case RTSWITCH_RTIOC_GET_SWITCHES_COUNT:
+		case RTTST_RTIOC_SWTEST_REGISTER_UTASK:
+		case RTTST_RTIOC_SWTEST_CREATE_KTASK:
+		case RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT:
 			return -ENOSYS;
 
-		case RTSWITCH_RTIOC_PEND:
+		case RTTST_RTIOC_SWTEST_PEND:
 			if (!rtdm_read_user_ok(user_info, arg, sizeof(task)))
 				return -EFAULT;
 
 			rtdm_copy_from_user(user_info, &task, arg, sizeof(task));
-            
+
 			return rtswitch_pend_rt(ctx, task.index);
 
-		case RTSWITCH_RTIOC_SWITCH_TO:
+		case RTTST_RTIOC_SWTEST_SWITCH_TO:
 			if (!rtdm_read_user_ok(user_info, arg, sizeof(fromto)))
 				return -EFAULT;
 
@@ -464,7 +469,7 @@ static struct rtdm_device device = {
 
 	device_flags: RTDM_NAMED_DEVICE,
 	context_size: sizeof(rtswitch_context_t),
-	device_name:  "rtswitch",
+	device_name:  "",
 
 	open_rt: NULL,
 	open_nrt: rtswitch_open,
@@ -490,10 +495,10 @@ static struct rtdm_device device = {
 	},
 
 	device_class: RTDM_CLASS_TESTING,
-	device_sub_class: RTDM_SUBCLASS_SWITCH,
-	driver_name: "xeno_switchbench",
-	driver_version: RTDM_DRIVER_VER(0, 1, 0),
-	peripheral_name: "Context switch benchmark",
+	device_sub_class: RTDM_SUBCLASS_SWITCHTEST,
+	driver_name: "xeno_switchtest",
+	driver_version: RTDM_DRIVER_VER(0, 1, 1),
+	peripheral_name: "Context Switch Test",
 	provider_name: "Gilles Chanteperdrix",
 	proc_name: device.device_name,
 };
@@ -503,7 +508,7 @@ void rtswitch_utask_waker(rtdm_nrtsig_t sig)
 	up(&rtswitch_utask[xnarch_current_cpu()]->nrt_synch);
 }
 
-int __init __switchbench_init(void)
+int __init __switchtest_init(void)
 {
 	int err;
 
@@ -511,17 +516,23 @@ int __init __switchbench_init(void)
 
 	if (err)
 		return err;
-    
-	return rtdm_dev_register(&device);
+
+	do {
+		snprintf(device.device_name, RTDM_MAX_DEVNAME_LEN, "rttest%d",
+			 start_index);
+		err = rtdm_dev_register(&device);
+
+		start_index++;
+	} while (err == -EEXIST);
+
+	return err;
 }
 
-void __switchbench_exit(void)
+void __switchtest_exit(void)
 {
-	if(rtdm_dev_unregister(&device, 0))
-		printk("Warning: could not unregister driver %s\n",
-		       device.device_name);
+	rtdm_dev_unregister(&device, 1000);
 	rtdm_nrtsig_destroy(&rtswitch_wake_utask);
 }
 
-module_init(__switchbench_init);
-module_exit(__switchbench_exit);
+module_init(__switchtest_init);
+module_exit(__switchtest_exit);

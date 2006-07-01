@@ -35,17 +35,28 @@
 #include <asm/uaccess.h>
 #include <asm/param.h>
 #include <asm/mmu_context.h>
+#include <asm/ptrace.h>
 #include <linux/config.h>
 #include <asm/xenomai/hal.h>
 #include <asm/xenomai/atomic.h>
 #include <nucleus/shadow.h>
 
-#ifdef CONFIG_IPIPE_TRACE
-#include <linux/ipipe_trace.h>
-#else /* !CONFIG_IPIPE_TRACE */
-#define ipipe_trace_panic_freeze()
-#define ipipe_trace_panic_dump()
-#endif /* CONFIG_IPIPE_TRACE */
+/* Tracer interface */
+#define xnarch_trace_max_begin(v)		rthal_trace_max_begin(v)
+#define xnarch_trace_max_end(v)		rthal_trace_max_end(v)
+#define xnarch_trace_max_reset()		rthal_trace_max_reset()
+#define xnarch_trace_user_start()		rthal_trace_user_start()
+#define xnarch_trace_user_stop(v)		rthal_trace_user_stop(v)
+#define xnarch_trace_user_freeze(v, once) 	rthal_trace_user_freeze(v, once)
+#define xnarch_trace_special(id, v)		rthal_trace_special(id, v)
+#define xnarch_trace_special_u64(id, v)	rthal_trace_special_u64(id, v)
+#define xnarch_trace_pid(pid, prio)		rthal_trace_pid(pid, prio)
+#define xnarch_trace_panic_freeze()		rthal_trace_panic_freeze()
+#define xnarch_trace_panic_dump()		rthal_trace_panic_dump()
+
+#ifndef xnarch_fault_um
+#define xnarch_fault_um(fi) user_mode(fi->regs)
+#endif
 
 #define module_param_value(parm) (parm)
 
@@ -199,7 +210,7 @@ do { \
     rthal_emergency_console(); \
     xnarch_logerr("fatal: %s\n",emsg); \
     show_stack(NULL,NULL);			\
-    ipipe_trace_panic_dump();			\
+    xnarch_trace_panic_dump();			\
     for (;;) cpu_relax();			\
 } while(0)
 

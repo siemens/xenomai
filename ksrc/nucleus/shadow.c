@@ -51,6 +51,7 @@
 #include <nucleus/ltt.h>
 #include <nucleus/jhash.h>
 #include <nucleus/ppd.h>
+#include <nucleus/trace.h>
 #include <asm/xenomai/features.h>
 
 int nkthrptd;
@@ -807,7 +808,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 {
 	xnarch_cpumask_t affinity;
 	unsigned muxid, magic;
-	int mode, prio;
+	int mode, prio, err;
 
 	/* Increment the interface reference count. */
 	magic = xnthread_get_magic(thread);
@@ -862,7 +863,12 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 	mode = thread->rrperiod != XN_INFINITE ? XNRRB : 0;
 	xnpod_start_thread(thread, mode, 0, affinity, NULL, NULL);
 
-	return xnshadow_harden();
+	err = xnshadow_harden();
+
+	xnarch_trace_pid(xnarch_user_pid(xnthread_archtcb(thread)),
+			 xnthread_current_priority(thread));
+
+	return err;
 }
 
 void xnshadow_unmap(xnthread_t *thread)
@@ -1280,6 +1286,50 @@ static int xnshadow_sys_barrier(struct task_struct *curr, struct pt_regs *regs)
 	return xnshadow_wait_barrier(regs);
 }
 
+static int xnshadow_sys_trace(struct task_struct *curr, struct pt_regs *regs)
+{
+	int err = -ENOSYS;
+
+	switch (__xn_reg_arg1(regs)) {
+	case __xntrace_op_max_begin:
+		err = xnarch_trace_max_begin(__xn_reg_arg2(regs));
+		break;
+
+	case __xntrace_op_max_end:
+		err = xnarch_trace_max_end(__xn_reg_arg2(regs));
+		break;
+
+	case __xntrace_op_max_reset:
+		err = xnarch_trace_max_reset();
+		break;
+
+	case __xntrace_op_user_start:
+		err = xnarch_trace_user_start();
+		break;
+
+	case __xntrace_op_user_stop:
+		err = xnarch_trace_user_stop(__xn_reg_arg2(regs));
+		break;
+
+	case __xntrace_op_user_freeze:
+		err = xnarch_trace_user_freeze(__xn_reg_arg2(regs),
+					       __xn_reg_arg3(regs));
+		break;
+
+	case __xntrace_op_special:
+		err = xnarch_trace_special(__xn_reg_arg2(regs) & 0xFF,
+					   __xn_reg_arg3(regs));
+		break;
+
+	case __xntrace_op_special_u64:
+		err = xnarch_trace_special_u64(__xn_reg_arg2(regs) & 0xFF,
+					(((u64)__xn_reg_arg3(regs)) << 32) |
+					__xn_reg_arg4(regs));
+		break;
+	}
+	return err;
+}
+
 static xnsysent_t xnshadow_systab[] = {
 	[__xn_sys_migrate] = {&xnshadow_sys_migrate, __xn_exec_current},
 	[__xn_sys_arch] = {&xnshadow_sys_arch, __xn_exec_any},
@@ -1287,6 +1337,7 @@ static xnsysent_t xnshadow_systab[] = {
 	[__xn_sys_info] = {&xnshadow_sys_info, __xn_exec_lostage},
 	[__xn_sys_completion] = {&xnshadow_sys_completion, __xn_exec_lostage},
 	[__xn_sys_barrier] = {&xnshadow_sys_barrier, __xn_exec_lostage},
+	[__xn_sys_trace] = {&xnshadow_sys_trace, __xn_exec_any},
 };
 
 static inline int substitute_linux_syscall(struct task_struct *curr,
@@ -1652,7 +1703,7 @@ static inline void do_schedule_event(struct task_struct *next)
 				      properly recover from a stopped state. */
 				   testbits(status, XNSTARTED)
 				   && testbits(status, XNPEND)) {
-				ipipe_trace_panic_freeze();
+				xnarch_trace_panic_freeze();
 				show_stack(xnthread_user_task(threadin), NULL);
 				xnpod_fatal
 				    ("blocked thread %s[%d] rescheduled?! (status=0x%lx, sig=%d, prev=%s[%d])",

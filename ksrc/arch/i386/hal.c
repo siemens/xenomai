@@ -61,9 +61,6 @@
 #endif /* CONFIG_X86_LOCAL_APIC */
 #include <asm/xenomai/hal.h>
 #include <stdarg.h>
-#ifdef CONFIG_IPIPE_TRACE
-#include <linux/ipipe_trace.h>
-#endif /* CONFIG_IPIPE_TRACE */
 
 extern struct desc_struct idt_table[];
 
@@ -176,7 +173,7 @@ unsigned long rthal_timer_calibrate(void)
 
 #ifdef CONFIG_IPIPE_TRACE_IRQSOFF
     /* reset the max trace, it contains the excessive calibration now */
-    ipipe_trace_max_reset();
+    rthal_trace_max_reset();
 #endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
 
     return rthal_imuldiv(dt, 100000, RTHAL_CPU_FREQ);
@@ -211,16 +208,16 @@ void die_nmi(struct pt_regs *regs, const char *msg)
 
 static void rthal_latency_above_max(struct pt_regs *regs)
 {
-#ifdef CONFIG_IPIPE_TRACE
-    ipipe_trace_freeze(rthal_maxlat_us);
-#else /* !CONFIG_IPIPE_TRACE */
-    char buf[128];
-    snprintf(buf,
-             sizeof(buf),
-             "NMI watchdog detected timer latency above %u us\n",
-             rthal_maxlat_us);
-    die_nmi(regs, buf);
-#endif /* CONFIG_IPIPE_TRACE */
+    /* Try to report via latency tracer first, then fall back to panic. */
+    if (rthal_trace_user_freeze(rthal_maxlat_us, 1) < 0) {
+        char buf[128];
+
+        snprintf(buf,
+                 sizeof(buf),
+                 "NMI watchdog detected timer latency above %u us\n",
+                 rthal_maxlat_us);
+        die_nmi(regs, buf);
+    }
 }
 
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
@@ -341,7 +338,7 @@ unsigned long rthal_timer_calibrate(void)
 
 #ifdef CONFIG_IPIPE_TRACE_IRQSOFF
     /* reset the max trace, it contains the excessive calibration now */
-    ipipe_trace_max_reset();
+    rthal_trace_max_reset();
 #endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
 
     return rthal_imuldiv(dt, 100000, RTHAL_CPU_FREQ);
