@@ -35,10 +35,6 @@
 #include <sys/time.h>
 #include <sys/mman.h>
 
-#if IPIPE_TRACE
-#include <rtdm/rttesting.h>
-#endif
-
 /* Ugly, but .... */
 #define gettid() syscall(__NR_gettid)
 #define sigev_notify_thread_id _sigev_un._tid
@@ -93,11 +89,6 @@ struct thread_stat {
 static int test_shutdown;
 static int tracelimit = 100000;
 static struct timespec start;
-#if IPIPE_TRACE
-static int benchdev = -1;
-#else
-#define benchdev -1
-#endif
 
 static inline void tsnorm(struct timespec *ts)
 {
@@ -266,7 +257,7 @@ void *timerthread(void *param)
 			stat->max = diff;
 #if IPIPE_TRACE
 			if (stat->traced)
-				ioctl(benchdev, RTBNCH_RTIOC_REFREEZE_TRACE, diff);
+				xntrace_user_freeze(diff, 0);
 #endif
 		}
 
@@ -411,9 +402,6 @@ static void process_options (int argc, char *argv[])
 
 static void sighand(int sig)
 {
-#if IPIPE_TRACE
-	close(benchdev);
-#endif
 	test_shutdown = 1;
 }
 
@@ -469,10 +457,6 @@ int main(int argc, char **argv)
 	if (!stat)
 		goto outpar;
 
-#if IPIPE_TRACE
-	benchdev = open("rtbenchmark0", O_RDWR);
-#endif
-
 	clock_gettime(clocksources[clocksel], &start);
 
 	for (i = 0; i < num_threads; i++) {
@@ -500,7 +484,7 @@ int main(int argc, char **argv)
 		pthread_attr_setstacksize(&thattr, 131072);
 		pthread_create(&stat[i].thread, &thattr, timerthread, &par[i]);
 		stat[i].threadstarted = 1;
-		stat[i].traced = (i == 0 && benchdev >= 0);
+		stat[i].traced = (i == 0 && IPIPE_TRACE > 0);
 	}
 	
 	while (!test_shutdown) {

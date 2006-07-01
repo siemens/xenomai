@@ -1,0 +1,51 @@
+IRQ Latency Benchmark
+---------------------
+
+This latency benchmark for external interrupts consists of three parts:
+
+1. xeno_irqbench (ksrc/drivers/testing)
+   RTDM driver for the test target to handle and reply to the IRQ events, or
+   forward them to user-space.
+
+2. irqloop (src/testsuite/irqbench)
+   xeno_irqbench control front-end and user-space loop-closer. Runs against
+   the POSIX skin on the test target.
+
+3. irqbench (src/testsuite/irqbench)
+   IRQ triggering and reaction measuring tool for the log system. Runs over
+   plain Linux on x86 hosts. Note that this tool will only be compiled
+   automatically with Xenomai if the target architecture is x86. To compile
+   it manually, invoke
+
+        <gcc-x86-compiler> irqbench.c -o irqbench -O2
+
+To link both test and log system, a null-modem cable between 8250-compatible
+two RS232 ports is required. The infrastructure for parallel port cross-over
+is prepared as well, but yet untested and incomplete. The null-modem cable
+must provide at least the following links:
+
+        test target             log system
+        -----------             ----------
+          CTS(8)      <------     RTS(7)        IRQ trigger
+          RTS(7)      ------>     CTS(8)        reply
+
+          DCD(1)
+          and/or      <------     DTR(4)        trace trigger (optional)
+          DSR(6)
+
+        (Pin number on 9-pin sub-D socket)
+
+Test and log system can be started in arbitrary order, they will wait on
+each other.
+
+The log system runs each single IRQ measurement with local IRQs disabled. It
+will wait up to 100 times the current period on the test system's reply (after
+initial successful synchronisation, which happens with IRQs enabled). Note that
+these timeouts may disturb other processes or drivers on the log system.
+
+Keep in mind for test evaluations that, by design, irqbench will not trigger a
+new IRQ event before the reply on the previous one has arrived or timed out.
+Thus the specified test period may be dynamically expended in case of
+overload. But maximum a latency close or above the period will clearly
+indicate this.
+

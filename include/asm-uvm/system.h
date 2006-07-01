@@ -192,6 +192,7 @@ typedef void *xnarch_fltinfo_t;	/* Unused but required */
 #define xnarch_fault_code(fi)   0
 #define xnarch_fault_pc(fi)     0L
 #define xnarch_fault_notify(fi) 1
+#define xnarch_fault_um(fi)     0
 
 typedef struct xnarch_heapcb {
 
@@ -768,9 +769,9 @@ static inline void xnarch_sysfree (void *chunk, u_long bytes)
 }
 
 #define xnarch_current_cpu()  0
-#define xnarch_declare_cpuid  const int cpuid = 0
-#define xnarch_get_cpu(x)     do  { (x) = (x); } while(0)
-#define xnarch_put_cpu(x)     do { } while(0)
+#define xnarch_declare_cpuid    const int cpuid = 0
+#define xnarch_get_cpu(x)      do  { (void)(x); } while(0)
+#define xnarch_put_cpu(x)      do { } while(0)
 
 #ifdef __cplusplus
 }
@@ -784,7 +785,17 @@ static inline void xnarch_sysfree (void *chunk, u_long bytes)
 #define xnarch_post_graph(obj,state)
 #define xnarch_post_graph_if(obj,state,cond)
 
-/* Ipipe-tracer */
-#define ipipe_trace_panic_freeze()
+/* Tracer interface */
+#define xnarch_trace_max_begin(v)		({int err = -ENOSYS; err; })
+#define xnarch_trace_max_end(v)			({int err = -ENOSYS; err; })
+#define xnarch_trace_max_reset()		({int err = -ENOSYS; err; })
+#define xnarch_trace_user_start()		({int err = -ENOSYS; err; })
+#define xnarch_trace_user_stop(v)		({int err = -ENOSYS; err; })
+#define xnarch_trace_user_freeze(v, once)	({int err = -ENOSYS; err; })
+#define xnarch_trace_special(id, v)		({int err = -ENOSYS; err; })
+#define xnarch_trace_special_u64(id, v)		({int err = -ENOSYS; err; })
+#define xnarch_trace_pid(pid, prio)		({int err = -ENOSYS; err; })
+#define xnarch_trace_panic_freeze()		({int err = -ENOSYS; err; })
+#define xnarch_trace_panic_dump()		({int err = -ENOSYS; err; })
 
 #endif /* !_XENO_ASM_UVM_SYSTEM_H */

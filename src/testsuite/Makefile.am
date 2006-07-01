@@ -1,1 +1,1 @@
-SUBDIRS = latency switchbench cyclic switchtest
+SUBDIRS = latency switchbench cyclic switchtest irqbench

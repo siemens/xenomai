@@ -589,6 +589,96 @@ struct proc_dir_entry *__rthal_add_proc_leaf (const char *name,
 					      struct proc_dir_entry *parent);
 #endif /* CONFIG_PROC_FS */
 
+#ifdef CONFIG_IPIPE_TRACE
+#include <linux/ipipe_trace.h>
+
+static inline int rthal_trace_max_begin(unsigned long v)
+{
+	ipipe_trace_begin(v);
+	return 0;
+}
+
+static inline int rthal_trace_max_end(unsigned long v)
+{
+	ipipe_trace_end(v);
+	return 0;
+}
+
+static inline int rthal_trace_max_reset(void)
+{
+	ipipe_trace_max_reset();
+	return 0;
+}
+
+static inline int rthal_trace_user_start(void)
+{
+	return ipipe_trace_frozen_reset();
+}
+
+static inline int rthal_trace_user_stop(unsigned long v)
+{
+	ipipe_trace_freeze(v);
+	return 0;
+}
+
+static inline int rthal_trace_user_freeze(unsigned long v, int once)
+{
+	int err = 0;
+
+	if (!once)
+		err = ipipe_trace_frozen_reset();
+	ipipe_trace_freeze(v);
+	return err;
+}
+
+static inline int rthal_trace_special(unsigned char id, unsigned long v)
+{
+	ipipe_trace_special(id, v);
+	return 0;
+}
+
+static inline int rthal_trace_special_u64(unsigned char id,
+					  unsigned long long v)
+{
+	ipipe_trace_special(id, (unsigned long)(v >> 32));
+	ipipe_trace_special(id, (unsigned long)(v & 0xFFFFFFFF));
+	return 0;
+}
+
+static inline int rthal_trace_pid(pid_t pid, short prio)
+{
+	ipipe_trace_pid(pid, prio);
+	return 0;
+}
+
+static inline int rthal_trace_panic_freeze(void)
+{
+	ipipe_trace_panic_freeze();
+	return 0;
+}
+
+static inline int rthal_trace_panic_dump(void)
+{
+	ipipe_trace_panic_dump();
+	return 0;
+}
+
+#else /* !CONFIG_IPIPE_TRACE */
+
+#define rthal_trace_max_begin(v)		({int err = -ENOSYS; err; })
+#define rthal_trace_max_end(v)		({int err = -ENOSYS; err; })
+#define rthal_trace_max_reset(v)		({int err = -ENOSYS; err; })
+#define rthal_trace_user_start()		({int err = -ENOSYS; err; })
+#define rthal_trace_user_stop(v)		({int err = -ENOSYS; err; })
+#define rthal_trace_user_freeze(v, once)	({int err = -ENOSYS; err; })
+#define rthal_trace_special(id, v)		({int err = -ENOSYS; err; })
+#define rthal_trace_special_u64(id, v)	({int err = -ENOSYS; err; })
+#define rthal_trace_pid(pid, prio)		({int err = -ENOSYS; err; })
+#define rthal_trace_panic_freeze()		({int err = -ENOSYS; err; })
+#define rthal_trace_panic_dump()		({int err = -ENOSYS; err; })
+
+#endif /* CONFIG_IPIPE_TRACE */
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

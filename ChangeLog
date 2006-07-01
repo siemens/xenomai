@@ -1,3 +1,10 @@
+2006-07-01  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/include, ksrc/nucleus: Add generic tracing support;
+	connect it the the I-pipe tracer when available.
+
+	* src/testsuite/irqbench: Add interrupt latency measurement tool.
+	
 2006-06-29  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus, ksrc/skins/posix, ksrc/skins/native

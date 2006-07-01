@@ -56,6 +56,7 @@ typedef void *xnarch_fltinfo_t;	/* Unused but required */
 #define xnarch_fault_code(fi)   0
 #define xnarch_fault_pc(fi)     0L
 #define xnarch_fault_notify(fi) 1
+#define xnarch_fault_um(fi)     0
 
 typedef int spl_t;
 
@@ -762,8 +763,18 @@ if (cond) \
 __mvm_breakable(mvm_post_graph)(&(obj)->__mvm_display_context,state); \
 while(0)
 
-/* Ipipe-tracer */
-#define ipipe_trace_panic_freeze()
+/* Tracer interface */
+#define xnarch_trace_max_begin(v)		({int err = -ENOSYS; err; })
+#define xnarch_trace_max_end(v)			({int err = -ENOSYS; err; })
+#define xnarch_trace_max_reset()		({int err = -ENOSYS; err; })
+#define xnarch_trace_user_start()		({int err = -ENOSYS; err; })
+#define xnarch_trace_user_stop(v)		({int err = -ENOSYS; err; })
+#define xnarch_trace_user_freeze(v, once)	({int err = -ENOSYS; err; })
+#define xnarch_trace_special(id, v)		({int err = -ENOSYS; err; })
+#define xnarch_trace_special_u64(id, v)		({int err = -ENOSYS; err; })
+#define xnarch_trace_pid(pid, prio)		({int err = -ENOSYS; err; })
+#define xnarch_trace_panic_freeze()		({int err = -ENOSYS; err; })
+#define xnarch_trace_panic_dump()		({int err = -ENOSYS; err; })
 
 #ifndef PAGE_SIZE
 #define PAGE_SIZE sysconf(_SC_PAGESIZE)

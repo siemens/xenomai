@@ -466,7 +466,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP target target_cpu target_vendor target_os CC CFLAGS CPPFLAGS CC_FOR_BUILD ac_ct_CC_FOR_BUILD CPP CPPFLAGS CPP_FOR_BUILD BUILD_EXEEXT BUILD_OBJEXT CFLAGS_FOR_BUILD CPPFLAGS_FOR_BUILD CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL CCAS CCASFLAGS LEX LEXLIB LEX_OUTPUT_ROOT XENO_LINUX_ALL_TARGETS ADEOS_PATCH XENO_BUILD_LINUX_TRUE XENO_BUILD_LINUX_FALSE XENO_MAYBE_DOCDIR DOXYGEN DOXYGEN_HAVE_DOT DBX_DOC_ROOT DBX_DOC_TRUE DBX_DOC_FALSE DBX_GEN_DOC_ROOT DBX_LINT DBX_XSLTPROC DBX_FOP DBX_MAYBE_NONET DBX_ROOT DBX_XSL_ROOT DBX_ABS_SRCDIR_TRUE DBX_ABS_SRCDIR_FALSE CONFIG_XENO_UVM_TRUE CONFIG_XENO_UVM_FALSE CONFIG_XENO_DOC_DOX_TRUE CONFIG_XENO_DOC_DOX_FALSE DOXYGEN_SHOW_INCLUDE_FILES LATEX_BATCHMODE LATEX_MODE XENO_TARGET_ARCH XENO_LINUX_ARCH XENO_BUILD_STRING XENO_HOST_STRING XENO_USER_CFLAGS XENO_USER_LDFLAGS XENO_USER_APP_CFLAGS XENO_USER_APP_LDFLAGS CONFIG_STATUS_DEPENDENCIES XENO_POSIX_WRAPPERS LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP target target_cpu target_vendor target_os CC CFLAGS CPPFLAGS CC_FOR_BUILD ac_ct_CC_FOR_BUILD CPP CPPFLAGS CPP_FOR_BUILD BUILD_EXEEXT BUILD_OBJEXT CFLAGS_FOR_BUILD CPPFLAGS_FOR_BUILD CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL CCAS CCASFLAGS LEX LEXLIB LEX_OUTPUT_ROOT XENO_TARGET_ARCH_I386_TRUE XENO_TARGET_ARCH_I386_FALSE XENO_LINUX_ALL_TARGETS ADEOS_PATCH XENO_BUILD_LINUX_TRUE XENO_BUILD_LINUX_FALSE XENO_MAYBE_DOCDIR DOXYGEN DOXYGEN_HAVE_DOT DBX_DOC_ROOT DBX_DOC_TRUE DBX_DOC_FALSE DBX_GEN_DOC_ROOT DBX_LINT DBX_XSLTPROC DBX_FOP DBX_MAYBE_NONET DBX_ROOT DBX_XSL_ROOT DBX_ABS_SRCDIR_TRUE DBX_ABS_SRCDIR_FALSE CONFIG_XENO_UVM_TRUE CONFIG_XENO_UVM_FALSE CONFIG_XENO_DOC_DOX_TRUE CONFIG_XENO_DOC_DOX_FALSE DOXYGEN_SHOW_INCLUDE_FILES LATEX_BATCHMODE LATEX_MODE XENO_TARGET_ARCH XENO_LINUX_ARCH XENO_BUILD_STRING XENO_HOST_STRING XENO_USER_CFLAGS XENO_USER_LDFLAGS XENO_USER_APP_CFLAGS XENO_USER_APP_LDFLAGS CONFIG_STATUS_DEPENDENCIES XENO_POSIX_WRAPPERS LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -20002,6 +20002,16 @@ echo "$as_me:$LINENO: result: $XENO_TARGET_ARCH" >&5
 echo "${ECHO_T}$XENO_TARGET_ARCH" >&6
 
 
+if test $XENO_TARGET_ARCH = i386; then
+  XENO_TARGET_ARCH_I386_TRUE=
+  XENO_TARGET_ARCH_I386_FALSE='#'
+else
+  XENO_TARGET_ARCH_I386_TRUE='#'
+  XENO_TARGET_ARCH_I386_FALSE=
+fi
+
+
+
 
 CONFIG_XENO_UVM=y
 echo "$as_me:$LINENO: checking for UVM support" >&5
@@ -21192,7 +21202,7 @@ base=asm-generic
           ac_config_links="$ac_config_links src/include/$base/xenomai:include/$base"
 
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno-load scripts/xeno-test src/Makefile src/skins/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/vxworks/Makefile src/skins/vrtx/Makefile src/skins/rtdm/Makefile src/skins/rtai/Makefile src/skins/uvm/Makefile src/skins/uvm/nucleus/Makefile src/skins/uvm/vxworks/Makefile src/skins/uvm/psos+/Makefile src/skins/uvm/vrtx/Makefile src/skins/uvm/uitron/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/switchbench/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile include/Makefile include/asm-generic/Makefile include/asm-blackfin/Makefile include/asm-i386/Makefile include/asm-powerpc/Makefile include/asm-ia64/Makefile include/asm-arm/Makefile include/asm-uvm/Makefile include/asm-sim/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtai/Makefile include/rtdm/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno-load scripts/xeno-test src/Makefile src/skins/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/vxworks/Makefile src/skins/vrtx/Makefile src/skins/rtdm/Makefile src/skins/rtai/Makefile src/skins/uvm/Makefile src/skins/uvm/nucleus/Makefile src/skins/uvm/vxworks/Makefile src/skins/uvm/psos+/Makefile src/skins/uvm/vrtx/Makefile src/skins/uvm/uitron/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/switchbench/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/irqbench/Makefile include/Makefile include/asm-generic/Makefile include/asm-blackfin/Makefile include/asm-i386/Makefile include/asm-powerpc/Makefile include/asm-ia64/Makefile include/asm-arm/Makefile include/asm-uvm/Makefile include/asm-sim/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtai/Makefile include/rtdm/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x; then
@@ -21316,6 +21326,13 @@ if test -z "${am__fastdepCXX_TRUE}" && test -z "${am__fastdepCXX_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"am__fastdepCXX\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"am__fastdepCXX\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${XENO_TARGET_ARCH_I386_TRUE}" && test -z "${XENO_TARGET_ARCH_I386_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"XENO_TARGET_ARCH_I386\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"XENO_TARGET_ARCH_I386\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -21832,6 +21849,7 @@ do
   "src/testsuite/switchbench/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/testsuite/switchbench/Makefile" ;;
   "src/testsuite/cyclic/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/testsuite/cyclic/Makefile" ;;
   "src/testsuite/switchtest/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/testsuite/switchtest/Makefile" ;;
+  "src/testsuite/irqbench/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/testsuite/irqbench/Makefile" ;;
   "include/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
   "include/asm-generic/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-generic/Makefile" ;;
   "include/asm-blackfin/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-blackfin/Makefile" ;;
@@ -22051,6 +22069,8 @@ s,@CCASFLAGS@,$CCASFLAGS,;t t
 s,@LEX@,$LEX,;t t
 s,@LEXLIB@,$LEXLIB,;t t
 s,@LEX_OUTPUT_ROOT@,$LEX_OUTPUT_ROOT,;t t
+s,@XENO_TARGET_ARCH_I386_TRUE@,$XENO_TARGET_ARCH_I386_TRUE,;t t
+s,@XENO_TARGET_ARCH_I386_FALSE@,$XENO_TARGET_ARCH_I386_FALSE,;t t
 s,@XENO_LINUX_ALL_TARGETS@,$XENO_LINUX_ALL_TARGETS,;t t
 s,@ADEOS_PATCH@,$ADEOS_PATCH,;t t
 s,@XENO_BUILD_LINUX_TRUE@,$XENO_BUILD_LINUX_TRUE,;t t

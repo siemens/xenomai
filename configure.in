@@ -82,6 +82,7 @@ case "$host" in
 esac
 
 AC_MSG_RESULT([$XENO_TARGET_ARCH])
+AM_CONDITIONAL(XENO_TARGET_ARCH_I386,[test $XENO_TARGET_ARCH = i386])
 
 dnl
 dnl Parse options
@@ -602,6 +603,7 @@ AC_CONFIG_FILES([ \
        	src/testsuite/switchbench/Makefile \
        	src/testsuite/cyclic/Makefile \
        	src/testsuite/switchtest/Makefile \
+	src/testsuite/irqbench/Makefile \
        	include/Makefile \
        	include/asm-generic/Makefile \
        	include/asm-blackfin/Makefile \

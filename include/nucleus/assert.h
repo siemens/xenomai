@@ -24,9 +24,9 @@
 
 #define XENO_ASSERT(subsystem,cond,action)  do { \
     if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem > 0 && !(cond))) { \
-        ipipe_trace_panic_freeze(); \
+        xnarch_trace_panic_freeze(); \
         xnlogerr("assertion failed at %s:%d (%s)\n", __FILE__, __LINE__, (#cond)); \
-        ipipe_trace_panic_dump(); \
+        xnarch_trace_panic_dump(); \
         action; \
     } \
 } while(0)

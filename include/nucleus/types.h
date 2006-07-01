@@ -112,7 +112,7 @@ void __xeno_user_exit(void);
 #define xnpod_fatal(format,args...) \
 do { \
     const char *panic; \
-    ipipe_trace_panic_freeze(); \
+    xnarch_trace_panic_freeze(); \
     panic = xnpod_fatal_helper(format,##args); \
     xnarch_halt(panic); \
 } while (0)

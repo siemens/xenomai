@@ -194,7 +194,16 @@ static int xnpod_fault_handler(xnarch_fltinfo_t *fltinfo)
 
 	if (xnpod_shadow_p()) {
 #ifdef CONFIG_XENO_OPT_DEBUG
-		if (xnarch_fault_notify(fltinfo))	/* Don't report debug traps */
+		if (!xnarch_fault_um(fltinfo)) {
+			xnarch_trace_panic_freeze();
+			xnprintf
+			    ("Switching %s to secondary mode after exception #%u in "
+			     "kernel-space at 0x%lx (pid %d)\n", thread->name,
+			     xnarch_fault_trap(fltinfo),
+			     xnarch_fault_pc(fltinfo),
+			     xnthread_user_pid(thread));
+			xnarch_trace_panic_dump();
+		} else if (xnarch_fault_notify(fltinfo)) /* Don't report debug traps */
 			xnprintf
 			    ("Switching %s to secondary mode after exception #%u from "
 			     "user-space at 0x%lx (pid %d)\n", thread->name,
@@ -664,6 +673,10 @@ static inline void xnpod_switch_zombie(xnthread_t *threadout,
 				   xnthread_archtcb(threadin));
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+	xnarch_trace_pid(xnthread_user_task(threadin) ?
+			 xnarch_user_pid(xnthread_archtcb(threadin)) : -1,
+			 xnthread_current_priority(threadin));
+
 	if (shadow)
 		/* Reap the user-space mate of a deleted real-time shadow.
 		   The Linux task has resumed into the Linux domain at the
@@ -1530,6 +1543,9 @@ void xnpod_resume_thread(xnthread_t *thread, xnflags_t mask)
 	xnlock_get_irqsave(&nklock, s);
 
 	xnltt_log_event(xeno_ev_thresume, thread->name, mask);
+	xnarch_trace_pid(xnthread_user_task(thread) ?
+			 xnarch_user_pid(xnthread_archtcb(thread)) : -1,
+			 xnthread_current_priority(thread));
 
 	sched = thread->sched;
 
@@ -2110,6 +2126,8 @@ void xnpod_welcome_thread(xnthread_t *thread)
 
 	xnltt_log_event(xeno_ev_thrboot, thread->name);
 
+	xnarch_trace_pid(-1, xnthread_current_priority(thread));
+
 	if (xnthread_signaled_p(thread))
 		xnpod_dispatch_signals();
 
@@ -2311,6 +2329,10 @@ void xnpod_schedule(void)
 	sched = xnpod_current_sched();
 	runthread = sched->runthread;
 
+	xnarch_trace_pid(xnthread_user_task(runthread) ?
+			 xnarch_user_pid(xnthread_archtcb(runthread)) : -1,
+			 xnthread_current_priority(runthread));
+
 #if defined(CONFIG_SMP) || defined(CONFIG_XENO_OPT_DEBUG)
 	need_resched = xnsched_tst_resched(sched);
 #endif
@@ -2422,6 +2444,10 @@ void xnpod_schedule(void)
 	 * relaxed/hardened transitions. */
 	runthread = sched->runthread;
 
+	xnarch_trace_pid(xnthread_user_task(runthread) ?
+			 xnarch_user_pid(xnthread_archtcb(runthread)) : -1,
+			 xnthread_current_priority(runthread));
+
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	/* Test whether we are relaxing a thread. In such a case, we are here the
 	   epilogue of Linux' schedule, and should skip xnpod_schedule epilogue. */
@@ -2494,6 +2520,9 @@ void xnpod_schedule_runnable(xnthread_t *thread, int flags)
 	xnthread_t *runthread = sched->runthread, *threadin;
 
 	xnltt_log_event(xeno_ev_fastsched);
+	xnarch_trace_pid(xnthread_user_task(runthread) ?
+			 xnarch_user_pid(xnthread_archtcb(runthread)) : -1,
+			 xnthread_current_priority(runthread));
 
 	if (thread != runthread) {
 		sched_removepq(&sched->readyq, &thread->rlink);
@@ -2577,6 +2606,10 @@ void xnpod_schedule_runnable(xnthread_t *thread, int flags)
 
 	xnarch_switch_to(xnthread_archtcb(runthread),
 			 xnthread_archtcb(threadin));
+
+	xnarch_trace_pid(xnthread_user_task(runthread) ?
+			 xnarch_user_pid(xnthread_archtcb(runthread)) : -1,
+			 xnthread_current_priority(runthread));
 
 #ifdef CONFIG_SMP
 	/* If runthread migrated while suspended, sched is no longer correct. */

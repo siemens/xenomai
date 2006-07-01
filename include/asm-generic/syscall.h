@@ -29,6 +29,7 @@
 #define __xn_sys_barrier    3	/* started = xnshadow_wait_barrier(&entry,&cookie) */
 #define __xn_sys_info       4	/* xnshadow_get_info(muxid,&info) */
 #define __xn_sys_arch       5	/* r = xnarch_local_syscall(args) */
+#define __xn_sys_trace      6	/* r = xntrace_xxx(...) */
 
 #define XENOMAI_LINUX_DOMAIN  0
 #define XENOMAI_XENO_DOMAIN   1
