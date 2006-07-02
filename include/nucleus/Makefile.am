@@ -21,6 +21,7 @@ include_HEADERS = \
 	system.h \
 	thread.h \
 	timer.h \
+	trace.h \
 	types.h \
 	version.h \
 	xenomai.h
