@@ -132,6 +132,39 @@ int pthread_intr_attach_np(pthread_intr_t * intrp,
 	return -1;
 }
 
+int pse51_intr_detach_inner(pthread_intr_t intr, pse51_kqueues_t *q)
+{
+	int rc = XNSYNCH_DONE;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (!pse51_obj_active(intr, PSE51_INTR_MAGIC, struct pse51_interrupt)) {
+		xnlock_put_irqrestore(&nklock, s);
+		thread_set_errno(EINVAL);
+		return -1;
+	}
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+	rc = xnsynch_destroy(&intr->synch_base);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+	pse51_mark_deleted(intr);
+
+	removeq(&q->intrq, &intr->link);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	xnintr_detach(&intr->intr_base);
+	xnintr_destroy(&intr->intr_base);
+
+	if (rc == XNSYNCH_RESCHED)
+		xnpod_schedule();
+
+	xnfree(intr);
+
+	return 0;
+}
+
 /**
  * Destroy an interrupt object.
  *
@@ -153,35 +186,7 @@ int pthread_intr_attach_np(pthread_intr_t * intrp,
  */
 int pthread_intr_detach_np(pthread_intr_t intr)
 {
-	int rc = XNSYNCH_DONE;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (!pse51_obj_active(intr, PSE51_INTR_MAGIC, struct pse51_interrupt)) {
-		xnlock_put_irqrestore(&nklock, s);
-		thread_set_errno(EINVAL);
-		return -1;
-	}
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	rc = xnsynch_destroy(&intr->synch_base);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-
-	pse51_mark_deleted(intr);
-
-	removeq(&pse51_kqueues(0)->intrq, &intr->link);
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	xnintr_detach(&intr->intr_base);
-	xnintr_destroy(&intr->intr_base);
-
-	if (rc == XNSYNCH_RESCHED)
-		xnpod_schedule();
-
-	xnfree(intr);
-
-	return 0;
+	return pse51_intr_detach_inner(intr, pse51_kqueues(0));
 }
 
 /**

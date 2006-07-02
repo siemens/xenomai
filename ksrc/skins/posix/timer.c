@@ -185,23 +185,7 @@ int timer_create(clockid_t clockid,
 	return -1;
 }
 
-/**
- * Delete a timer object.
- *
- * This service deletes the timer @a timerid.
- *
- * @param timerid identifier of the timer to be removed;
- *
- * @retval 0 on success;
- * @retval -1 with @a errno set if:
- * - EINVAL, @a timerid is invalid.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_delete.html">
- * Specification.</a>
- * 
- */
-int timer_delete(timer_t timerid)
+int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q)
 {
 	struct pse51_timer *timer;
 	spl_t s;
@@ -213,7 +197,7 @@ int timer_delete(timer_t timerid)
 
 	timer = &timer_pool[(unsigned long)timerid];
 
-	removeq(&pse51_kqueues(0)->timerq, &timer->link);
+	removeq(&q->timerq, &timer->link);
 
 	if (!xntimer_active_p(&timer->timerbase))
 		goto unlock_and_einval;
@@ -239,6 +223,27 @@ int timer_delete(timer_t timerid)
       einval:
 	thread_set_errno(EINVAL);
 	return -1;
+}
+
+/**
+ * Delete a timer object.
+ *
+ * This service deletes the timer @a timerid.
+ *
+ * @param timerid identifier of the timer to be removed;
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a timerid is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_delete.html">
+ * Specification.</a>
+ * 
+ */
+int timer_delete_inner(timer_t timerid)
+{
+	return pse51_timer_delete_inner(timerid, pse51_kqueues(0));
 }
 
 static void pse51_timer_gettime_inner(struct pse51_timer *__restrict__ timer,
@@ -510,7 +515,7 @@ void pse51_timerq_cleanup(pse51_kqueues_t *q)
 
 	while ((holder = getheadq(&q->timerq))) {
 		timer_t tm = (timer_t) (link2tm(holder) - timer_pool);
-		timer_delete(tm);
+		pse51_timer_delete_inner(tm, q);
 		xnlock_put_irqrestore(&nklock, s);
 #ifdef CONFIG_XENO_OPT_DEBUG
 		xnprintf("Posix timer %u deleted\n", (unsigned) tm);
