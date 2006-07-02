@@ -241,7 +241,7 @@ int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q)
  * Specification.</a>
  * 
  */
-int timer_delete_inner(timer_t timerid)
+int timer_delete(timer_t timerid)
 {
 	return pse51_timer_delete_inner(timerid, pse51_kqueues(0));
 }
