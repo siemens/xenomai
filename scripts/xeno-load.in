@@ -140,7 +140,7 @@ cleanup () {
     fi
 }
 
-trap cleanup SIGINT
+trap cleanup INT
 
 while test -n "$target_deps" ; do
   mod=`echo $target_deps|cut -d+ -f1`
