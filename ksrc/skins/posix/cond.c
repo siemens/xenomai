@@ -63,9 +63,9 @@ typedef struct pse51_cond {
 
 static pthread_condattr_t default_cond_attr;
 
-static void cond_destroy_internal(pse51_cond_t * cond)
+static void cond_destroy_internal(pse51_cond_t * cond, pse51_kqueues_t *q)
 {
-	removeq(&pse51_kqueues(cond->attr.pshared)->condq, &cond->link);
+	removeq(&q->condq, &cond->link);
 	/* synchbase wait queue may not be empty only when this function is
 	   called from pse51_cond_pkg_cleanup, hence the absence of
 	   xnpod_schedule(). */
@@ -190,7 +190,7 @@ int pthread_cond_destroy(pthread_cond_t * cnd)
 		return EBUSY;
 	}
 
-	cond_destroy_internal(cond);
+	cond_destroy_internal(cond, pse51_kqueues(cond->attr.pshared));
 	pse51_mark_deleted(shadow);
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -535,7 +535,7 @@ void pse51_condq_cleanup(pse51_kqueues_t *q)
 	xnlock_get_irqsave(&nklock, s);
 
 	while ((holder = getheadq(&q->condq)) != NULL) {
-		cond_destroy_internal(link2cond(holder));
+		cond_destroy_internal(link2cond(holder), q);
 		xnlock_put_irqrestore(&nklock, s);
 #ifdef CONFIG_XENO_OPT_DEBUG
 		xnprintf

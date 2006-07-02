@@ -75,9 +75,9 @@ typedef struct pse51_uptr {
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 /* Called with nklock locked, irqs off. */
-static void sem_destroy_inner(pse51_sem_t * sem)
+static void sem_destroy_inner(pse51_sem_t * sem, pse51_kqueues_t *q)
 {
-	removeq(&pse51_kqueues(sem->pshared)->semq, &sem->link);
+	removeq(&q->semq, &sem->link);
 	if (xnsynch_destroy(&sem->synchbase) == XNSYNCH_RESCHED)
 		xnpod_schedule();
 
@@ -214,7 +214,7 @@ int sem_destroy(sem_t * sm)
 		goto error;
 	}
 
-	sem_destroy_inner(shadow->sem);
+	sem_destroy_inner(shadow->sem, pse51_kqueues(shadow->sem->pshared));
 	pse51_mark_deleted(shadow);
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -387,7 +387,7 @@ int sem_close(sem_t * sm)
 
 	if (pse51_node_removed_p(&named_sem->nodebase)) {
 		/* unlink was called, and this semaphore is no longer referenced. */
-		sem_destroy_inner(&named_sem->sembase);
+		sem_destroy_inner(&named_sem->sembase, pse51_kqueues(1));
 		pse51_mark_deleted(shadow);
 	} else if (!pse51_node_ref_p(&named_sem->nodebase))
 		/* this semaphore is no longer referenced, but not unlinked. */
@@ -446,7 +446,7 @@ int sem_unlink(const char *name)
 	named_sem = node2sem(node);
 
 	if (pse51_node_removed_p(&named_sem->nodebase))
-		sem_destroy_inner(&named_sem->sembase);
+		sem_destroy_inner(&named_sem->sembase, pse51_kqueues(1));
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -796,7 +796,7 @@ void pse51_semq_cleanup(pse51_kqueues_t *q)
 			pse51_node_remove(&node,
 					  sem2named_sem(sem)->nodebase.name,
 					  PSE51_NAMED_SEM_MAGIC);
-		sem_destroy_inner(sem);
+		sem_destroy_inner(sem, q);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
