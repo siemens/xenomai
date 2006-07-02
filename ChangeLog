@@ -10,6 +10,12 @@
 
 	* src/testsuite/irqbench: Add interrupt latency measurement tool.
 	
+2006-06-29  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* src/skins/posix/thread.c (__wrap_pthread_setschedparam,
+	__wrap_pthread_getschedparam): No longer rely on the libc for
+	shadowed threads.
+
 2006-06-29  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus, ksrc/skins/posix, ksrc/skins/native
