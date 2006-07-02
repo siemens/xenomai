@@ -132,6 +132,7 @@ int pthread_mutex_init(pthread_mutex_t * mx, const pthread_mutexattr_t * attr)
 	inith(&mutex->link);
 	mutex->attr = *attr;
 	mutex->count = 0;
+	mutex->condvars = 0;
 
 	appendq(mutexq, &mutex->link);
 
