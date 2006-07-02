@@ -1,3 +1,8 @@
+2006-07-02  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/arch/i386/smi.c: Fix deadlock by not unregistering the reboot
+	notifier from its own handler.
+
 2006-07-01  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/include, ksrc/nucleus: Add generic tracing support;

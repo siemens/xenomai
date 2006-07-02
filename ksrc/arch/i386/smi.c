@@ -140,12 +140,11 @@ static struct notifier_block rthal_smi_notifier = {
 
 static int rthal_smi_reboot(struct notifier_block *nb, ulong event, void *buf)
 {
-    if ((event != SYS_RESTART) && (event != SYS_HALT) &&
-        (event != SYS_POWER_OFF))
-        return NOTIFY_DONE;
+    if (((event == SYS_RESTART) || (event == SYS_HALT) ||
+         (event == SYS_POWER_OFF)) && rthal_smi_en_addr)
+        set_bits(rthal_smi_saved_bits, rthal_smi_en_addr);
 
-    rthal_smi_restore();
-    return NOTIFY_OK;
+    return NOTIFY_DONE;
 }
 
 void rthal_smi_disable(void)
