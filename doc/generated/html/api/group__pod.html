@@ -1178,6 +1178,9 @@ Change the control mode of a given thread. The control mode affects the behaviou
 <ul>
 <li>XNSHIELD enables the interrupt shield for the current user-space task. When engaged, the interrupt shield protects the shadow task running in secondary mode from any preemption by the regular Linux interrupt handlers, without delaying in any way Xenomai's interrupt handling. The shield is operated on a per-task basis at each context switch, depending on the setting of this flag. This feature is only available if the CONFIG_XENO_OPT_ISHIELD option has been enabled at configuration time; otherwise, this flag is simply ignored.</li></ul>
 <p>
+<ul>
+<li>XNRPIOFF disables thread priority coupling between Xenomai and Linux schedulers. This bit prevents the root Linux thread from inheriting the priority of the running shadow Xenomai thread. Use CONFIG_XENO_OPT_RPIOFF to globally disable priority coupling.</li></ul>
+<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -1781,7 +1784,7 @@ This internal routine is called on behalf of a (re)starting thread's prologue be
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:04 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jul 3 18:26:04 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -63,70 +63,72 @@
 00053 <span class="preprocessor">#ifdef CONFIG_PROC_FS</span>
 00054 <span class="preprocessor"></span>    <span class="keyword">struct </span>proc_dir_entry *proc;
 00055 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_PROC_FS */</span>
-00056 };
-00057 
-00058 <span class="keywordtype">int</span> xnshadow_mount(<span class="keywordtype">void</span>);
-00059 
-00060 <span class="keywordtype">void</span> xnshadow_cleanup(<span class="keywordtype">void</span>);
-00061 
-00062 <span class="keywordtype">void</span> xnshadow_grab_events(<span class="keywordtype">void</span>);
-00063 
-00064 <span class="keywordtype">void</span> xnshadow_release_events(<span class="keywordtype">void</span>);
-00065 
-00066 <span class="keywordtype">int</span> <a class="code" href="group__shadow.html#ga27">xnshadow_map</a>(<span class="keyword">struct</span> xnthread *thread,
-00067                  xncompletion_t __user *u_completion);
-00068 
-00069 <span class="keywordtype">void</span> xnshadow_unmap(<span class="keyword">struct</span> xnthread *thread);
-00070 
-00071 <span class="keywordtype">int</span> <a class="code" href="group__shadow.html#ga24">xnshadow_harden</a>(<span class="keywordtype">void</span>);
-00072 
-00073 <span class="keywordtype">void</span> <a class="code" href="group__shadow.html#ga25">xnshadow_relax</a>(<span class="keywordtype">int</span> notify);
-00074 
-00075 <span class="keywordtype">void</span> xnshadow_renice(<span class="keyword">struct</span> xnthread *thread);
-00076 
-00077 <span class="keywordtype">void</span> xnshadow_suspend(<span class="keyword">struct</span> xnthread *thread);
-00078 
-00079 <span class="keywordtype">int</span> xnshadow_wait_barrier(<span class="keyword">struct</span> pt_regs *regs);
-00080 
-00081 <span class="keywordtype">void</span> xnshadow_start(<span class="keyword">struct</span> xnthread *thread);
-00082 
-00083 <span class="keywordtype">void</span> xnshadow_signal_completion(xncompletion_t __user *u_completion,
-00084                                 <span class="keywordtype">int</span> err);
-00085 
-00086 <span class="keywordtype">void</span> xnshadow_exit(<span class="keywordtype">void</span>);
-00087 
-00088 <span class="keywordtype">int</span> xnshadow_register_interface(<span class="keyword">const</span> <span class="keywordtype">char</span> *name,
-00089                                 <span class="keywordtype">unsigned</span> magic,
-00090                                 <span class="keywordtype">int</span> nrcalls,
-00091                                 xnsysent_t *systab,
-00092                                 <span class="keywordtype">void</span> *(*eventcb)(<span class="keywordtype">int</span> event, <span class="keywordtype">void</span> *data));
-00093 
-00094 <span class="keywordtype">int</span> xnshadow_unregister_interface(<span class="keywordtype">int</span> muxid);
+00056     <span class="keyword">struct </span>module *module;
+00057 };
+00058 
+00059 <span class="keywordtype">int</span> xnshadow_mount(<span class="keywordtype">void</span>);
+00060 
+00061 <span class="keywordtype">void</span> xnshadow_cleanup(<span class="keywordtype">void</span>);
+00062 
+00063 <span class="keywordtype">void</span> xnshadow_grab_events(<span class="keywordtype">void</span>);
+00064 
+00065 <span class="keywordtype">void</span> xnshadow_release_events(<span class="keywordtype">void</span>);
+00066 
+00067 <span class="keywordtype">int</span> <a class="code" href="group__shadow.html#ga27">xnshadow_map</a>(<span class="keyword">struct</span> xnthread *thread,
+00068                  xncompletion_t __user *u_completion);
+00069 
+00070 <span class="keywordtype">void</span> xnshadow_unmap(<span class="keyword">struct</span> xnthread *thread);
+00071 
+00072 <span class="keywordtype">int</span> <a class="code" href="group__shadow.html#ga24">xnshadow_harden</a>(<span class="keywordtype">void</span>);
+00073 
+00074 <span class="keywordtype">void</span> <a class="code" href="group__shadow.html#ga25">xnshadow_relax</a>(<span class="keywordtype">int</span> notify);
+00075 
+00076 <span class="keywordtype">void</span> xnshadow_renice(<span class="keyword">struct</span> xnthread *thread);
+00077 
+00078 <span class="keywordtype">void</span> xnshadow_suspend(<span class="keyword">struct</span> xnthread *thread);
+00079 
+00080 <span class="keywordtype">int</span> xnshadow_wait_barrier(<span class="keyword">struct</span> pt_regs *regs);
+00081 
+00082 <span class="keywordtype">void</span> xnshadow_start(<span class="keyword">struct</span> xnthread *thread);
+00083 
+00084 <span class="keywordtype">void</span> xnshadow_signal_completion(xncompletion_t __user *u_completion,
+00085                                 <span class="keywordtype">int</span> err);
+00086 
+00087 <span class="keywordtype">void</span> xnshadow_exit(<span class="keywordtype">void</span>);
+00088 
+00089 <span class="keywordtype">int</span> xnshadow_register_interface(<span class="keyword">const</span> <span class="keywordtype">char</span> *name,
+00090                                 <span class="keywordtype">unsigned</span> magic,
+00091                                 <span class="keywordtype">int</span> nrcalls,
+00092                                 xnsysent_t *systab,
+00093                                 <span class="keywordtype">void</span> *(*eventcb)(<span class="keywordtype">int</span> event, <span class="keywordtype">void</span> *data),
+00094                                 <span class="keyword">struct</span> module *module);
 00095 
-00096 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> xnshadow_ts2ticks(<span class="keyword">const</span> <span class="keyword">struct</span> timespec *v);
+00096 <span class="keywordtype">int</span> xnshadow_unregister_interface(<span class="keywordtype">int</span> muxid);
 00097 
-00098 <span class="keywordtype">void</span> xnshadow_ticks2ts(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>,
-00099                        <span class="keyword">struct</span> timespec *v);
-00100 
-00101 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> xnshadow_tv2ticks(<span class="keyword">const</span> <span class="keyword">struct</span> timeval *v);
+00098 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> xnshadow_ts2ticks(<span class="keyword">const</span> <span class="keyword">struct</span> timespec *v);
+00099 
+00100 <span class="keywordtype">void</span> xnshadow_ticks2ts(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>,
+00101                        <span class="keyword">struct</span> timespec *v);
 00102 
-00103 <span class="keywordtype">void</span> xnshadow_ticks2tv(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> ticks,
-00104                        <span class="keyword">struct</span> timeval *v);
-00105 
-00106 <span class="keywordtype">void</span> xnshadow_reset_shield(<span class="keywordtype">void</span>);
+00103 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> xnshadow_tv2ticks(<span class="keyword">const</span> <span class="keyword">struct</span> timeval *v);
+00104 
+00105 <span class="keywordtype">void</span> xnshadow_ticks2tv(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> ticks,
+00106                        <span class="keyword">struct</span> timeval *v);
 00107 
-00108 <span class="keywordtype">void</span> xnshadow_send_sig(<span class="keyword">struct</span> xnthread *thread,
-00109                        <span class="keywordtype">int</span> sig,
-00110                        <span class="keywordtype">int</span> specific);
-00111 
-00112 <span class="keyword">extern</span> <span class="keyword">struct </span>xnskentry muxtable[];
+00108 <span class="keywordtype">void</span> xnshadow_reset_shield(<span class="keywordtype">void</span>);
+00109 
+00110 <span class="keywordtype">void</span> xnshadow_send_sig(<span class="keyword">struct</span> xnthread *thread,
+00111                        <span class="keywordtype">int</span> sig,
+00112                        <span class="keywordtype">int</span> specific);
 00113 
-00114 <span class="preprocessor">#ifdef __cplusplus</span>
-00115 <span class="preprocessor"></span>}
-00116 <span class="preprocessor">#endif</span>
-00117 <span class="preprocessor"></span>
-00118 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SHADOW_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:03 2006 for Xenomai API by&nbsp;
+00114 <span class="keyword">extern</span> <span class="keyword">struct </span>xnskentry muxtable[];
+00115 
+00116 <span class="preprocessor">#ifdef __cplusplus</span>
+00117 <span class="preprocessor"></span>}
+00118 <span class="preprocessor">#endif</span>
+00119 <span class="preprocessor"></span>
+00120 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SHADOW_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jul 3 18:26:02 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

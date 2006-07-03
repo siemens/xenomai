@@ -508,7 +508,7 @@ NULL if the calling thread is not a POSIX skin thread.</dd></dl>
 Set the mode of the current thread. 
 <p>
 This service sets the mode of the calling thread. <em>clrmask</em> and <em>setmask</em> are two bit masks which are respectively cleared and set in the calling thread status. They are a bitwise OR of the following values:<ul>
-<li>PTHREAD_LOCK_SCHED, when set, locks the scheduler, which prevents the current thread from being switched out by the scheduler until the scheduler is unlocked;</li><li>PTHREAD_SHIELD, when set, activates the interrupt shield, which improve the execution determinism of the current thread by blocking Linux interrupts when it runs in secondary mode;</li><li>PTHREAD_WARNSW, when set, cause the signal SIGXCPU to be sent to the current thread, whenever it involontary switches to secondary mode;</li><li>PTHREAD_PRIMARY, cause the migration of the current thread to primary mode.</li></ul>
+<li>PTHREAD_LOCK_SCHED, when set, locks the scheduler, which prevents the current thread from being switched out by the scheduler until the scheduler is unlocked;</li><li>PTHREAD_SHIELD, when set, activates the interrupt shield, which improve the execution determinism of the current thread by blocking Linux interrupts when it runs in secondary mode;</li><li>PTHREAD_RPIOFF, when set, prevents the root Linux thread from inheriting the priority of the calling thread, when this thread is running in secondary mode;</li><li>PTHREAD_WARNSW, when set, cause the signal SIGXCPU to be sent to the current thread, whenever it involontary switches to secondary mode;</li><li>PTHREAD_PRIMARY, cause the migration of the current thread to primary mode.</li></ul>
 <p>
 PTHREAD_LOCK_SCHED is valid for any Xenomai thread, the other bits are only valid for Xenomai user-space threads.<p>
 This service is a non-portable extension of the POSIX interface.<p>
@@ -621,7 +621,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:14 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jul 3 18:26:13 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

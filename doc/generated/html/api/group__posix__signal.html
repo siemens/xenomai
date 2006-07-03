@@ -298,7 +298,7 @@ When using <em>sa_handler</em> as a signal handler, it is passed the number of t
 <p>
 The following members of the <b>siginfo_t</b> structure are filled by this implementation:<ul>
 <li><em>si_signo</em>, the signal number;</li><li><em>si_code</em>, the provenance of the signal, one of:<ul>
-<li>SI_QUEUE, the signal was queued with <a class="el" href="group__posix__signal.html#ga26">pthread_sigqueue_np()</a>,</li><li>SI_USER, the signal was queued with <a class="el" href="group__posix__signal.html#ga25">pthread_kill()</a>,</li><li>SI_TIMER, the signal was queued by a timer (see <a class="el" href="group__posix__time.html#ga12">timer_settime()</a>),</li><li>SI_MESQ, the signal was queued by a message queue (see <a class="el" href="group__posix__mq.html#ga22">mq_notify()</a>);</li></ul>
+<li>SI_QUEUE, the signal was queued with <a class="el" href="group__posix__signal.html#ga26">pthread_sigqueue_np()</a>,</li><li>SI_USER, the signal was queued with <a class="el" href="group__posix__signal.html#ga25">pthread_kill()</a>,</li><li>SI_TIMER, the signal was queued by a timer (see <a class="el" href="group__posix__time.html#ga13">timer_settime()</a>),</li><li>SI_MESQ, the signal was queued by a message queue (see <a class="el" href="group__posix__mq.html#ga22">mq_notify()</a>);</li></ul>
 </li><li><em>si_value</em>, an additional datum, of type <b>union</b> <b>sigval</b>.</li></ul>
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
@@ -796,7 +796,7 @@ This service is equivalent to the <a class="el" href="group__posix__signal.html#
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:14 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jul 3 18:26:13 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
