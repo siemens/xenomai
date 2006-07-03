@@ -1,3 +1,9 @@
+2006-07-03  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* include/asm-sim/system.h (xnarch_sysalloc, xnarch_sysfree):
+	Memset allocated and freed memory to catch use of uninitialized
+	memory.or use of freed memory. 
+
 2006-07-02  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/arch/i386/smi.c: Fix deadlock by not unregistering the reboot
