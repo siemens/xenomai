@@ -113,7 +113,9 @@ patch_link() {
             d=`dirname $f`
             if test "x$output_patch" = "x"; then
                 mkdir -p $linux_tree/$link_dir/$d
-                if test x$forcelink = x1 -o ! -h $linux_tree/$link_dir/$f; then
+                if test x$forcelink = x1 -o \
+		   ! $xenomai_root/$target_dir/$f -ef $linux_tree/$link_dir/$f;
+		then
                     ln -sf $xenomai_root/$target_dir/$f $linux_tree/$link_dir/$f
                 fi
             else
