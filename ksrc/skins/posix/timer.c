@@ -35,14 +35,14 @@ struct pse51_timer {
 	unsigned overruns;
 	unsigned last_overruns;
 
-	xnholder_t link;
+	xnholder_t link; /* link in process or global timers queue. */
 
-#define link2tm(laddr) \
-    ((struct pse51_timer *)(((char *)laddr) - offsetof(struct pse51_timer, link)))
+#define link2tm(laddr, member)							\
+    ((struct pse51_timer *)(((char *)laddr) - offsetof(struct pse51_timer, member)))
+
+	xnholder_t tlink; /* link in thread timers queue. */
+
 	pse51_siginfo_t si;
-
-#define si2tm(saddr) \
-    ((struct pse51_timer *)(((char *)saddr) - offsetof(struct pse51_timer, si)))
 
 	clockid_t clockid;
 	pthread_t owner;
@@ -69,7 +69,7 @@ static void pse51_base_timer_handler(void *cookie)
 /* Must be called with nklock locked, irq off. */
 void pse51_timer_notified(pse51_siginfo_t * si)
 {
-	struct pse51_timer *timer = si2tm(si);
+	struct pse51_timer *timer = link2tm(si, si);
 
 	timer->queued = 0;
 	/* We need this two staged overruns count. The overruns count returned by
@@ -154,7 +154,7 @@ int timer_create(clockid_t clockid,
 		goto unlock_and_error;
 	}
 
-	timer = link2tm(holder);
+	timer = link2tm(holder, link);
 
 	if (evp) {
 		timer->si.info.si_signo = evp->sigev_signo;
@@ -171,6 +171,7 @@ int timer_create(clockid_t clockid,
 	timer->overruns = 0;
 	timer->owner = NULL;
 	timer->clockid = clockid;
+	inith(&timer->link);
 	appendq(&pse51_kqueues(0)->timerq, &timer->link);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -210,7 +211,7 @@ int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q)
 
 	xntimer_destroy(&timer->timerbase);
 	if (timer->owner)
-		removeq(&timer->owner->timersq, &timer->link);
+		removeq(&timer->owner->timersq, &timer->tlink);
 	timer->owner = NULL;	/* Used for debugging. */
 	prependq(&timer_freeq, &timer->link);	/* Favour earliest reuse. */
 
@@ -351,7 +352,7 @@ int timer_settime(timer_t timerid,
 	}
 
 	if (timer->owner)
-		removeq(&timer->owner->timersq, &timer->link);
+		removeq(&timer->owner->timersq, &timer->tlink);
 
 	if (value->it_value.tv_nsec == 0 && value->it_value.tv_sec == 0) {
 		xntimer_stop(&timer->timerbase);
@@ -372,8 +373,8 @@ int timer_settime(timer_t timerid,
 		xntimer_start(&timer->timerbase,
 			      start, ts2ticks_ceil(&value->it_interval));
 		timer->owner = cur;
-		inith(&timer->link);
-		appendq(&timer->owner->timersq, &timer->link);
+		inith(&timer->tlink);
+		appendq(&timer->owner->timersq, &timer->tlink);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -500,7 +501,7 @@ void pse51_timer_cleanup_thread(pthread_t zombie)
 {
 	xnholder_t *holder;
 	while ((holder = getq(&zombie->timersq)) != NULL) {
-		struct pse51_timer *timer = link2tm(holder);
+		struct pse51_timer *timer = link2tm(holder, tlink);
 		xntimer_stop(&timer->timerbase);
 		timer->owner = NULL;
 	}
@@ -514,7 +515,7 @@ void pse51_timerq_cleanup(pse51_kqueues_t *q)
 	xnlock_get_irqsave(&nklock, s);
 
 	while ((holder = getheadq(&q->timerq))) {
-		timer_t tm = (timer_t) (link2tm(holder) - timer_pool);
+		timer_t tm = (timer_t) (link2tm(holder, link) - timer_pool);
 		pse51_timer_delete_inner(tm, q);
 		xnlock_put_irqrestore(&nklock, s);
 #ifdef CONFIG_XENO_OPT_DEBUG
