@@ -257,50 +257,19 @@ int __xeno_user_init (void)
     pthread_attr_setinheritsched(&attr, 1);
     pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
 
-#ifdef CONSUMER
-    mattr.mq_maxmsg = 30;
-    mattr.mq_msgsize = sizeof(unsigned);
-    consumer_mq = mq_open(MQ_NAME, O_CREAT| O_NONBLOCK| O_RDONLY, 0, &mattr);
-    if (consumer_mq == (mqd_t) -1)
-        {
-        xnprintf("mq_open(consumer_mq): %d\n", errno);
-        goto out;
-        }
-
-    consumer_shm = mmap(NULL, 65536, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (consumer_shm == MAP_FAILED)
-        {
-        xnprintf("mmap(consumer_shm): %d\n", errno);
-        goto out;
-        }
-
-    evt.sigev_notify = SIGEV_SIGNAL;
-    evt.sigev_signo = SIGALRM;
-    evt.sigev_value.sival_ptr = &consumer_tm;
-    if(timer_create(CLOCK_REALTIME, &evt, &consumer_tm))
-        {
-        xnprintf("timer_create(consumer_tm): %d\n", errno);
-        goto out;
-        }
-
-    pthread_attr_setstacksize(&attr, CONSUMER_STACK_SIZE);
-    parm.sched_priority = CONSUMER_TASK_PRI;
-    pthread_attr_setschedparam(&attr, &parm);
-    rc = pthread_create(&consumer_task, &attr, &consumer, NULL);
-    if (rc)
-        {
-        xnprintf("pthread_create(consumer_task): %d\n", rc);
-        goto out;
-        }
-
-#endif /* CONSUMER */
-
 #ifdef PRODUCER
     mattr.mq_maxmsg = 30;
     mattr.mq_msgsize = sizeof(unsigned);
-    producer_mq = mq_open(MQ_NAME, O_CREAT| O_WRONLY, 0, &mattr);
+    producer_mq = mq_open(MQ_NAME, O_CREAT| O_EXCL| O_WRONLY, 0, &mattr);
     if (producer_mq == (mqd_t) -1)
         {
+	if (errno == EEXIST)
+	    {
+	    xnprintf("Satch: producer module is already running, please "
+		     "only launch one producer instance.\n");
+	    goto out;
+	    }
+
         xnprintf("mq_open(producer_mq): %d\n", errno);
         goto out;
         }
@@ -333,16 +302,66 @@ int __xeno_user_init (void)
         }
 #endif /* PRODUCER */
 
+#ifdef CONSUMER
+    mattr.mq_maxmsg = 30;
+    mattr.mq_msgsize = sizeof(unsigned);
+    consumer_mq = mq_open(MQ_NAME, O_NONBLOCK| O_RDONLY, 0, &mattr);
+    if (consumer_mq == (mqd_t) -1)
+        {
+	if (errno == ENOENT)
+	    {
+	    xnprintf("Satch: producer module not running, please launch producer"
+		     " module before\nlaunching consumer application.\n");
+	    goto out;
+	    }
+
+        xnprintf("mq_open(consumer_mq): %d\n", errno);
+        goto out;
+        }
+
+    consumer_shm = mmap(NULL, 65536, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (consumer_shm == MAP_FAILED)
+        {
+        xnprintf("mmap(consumer_shm): %d\n", errno);
+        goto out;
+        }
+
+    evt.sigev_notify = SIGEV_SIGNAL;
+    evt.sigev_signo = SIGALRM;
+    evt.sigev_value.sival_ptr = &consumer_tm;
+    if(timer_create(CLOCK_REALTIME, &evt, &consumer_tm))
+        {
+        xnprintf("timer_create(consumer_tm): %d\n", errno);
+        goto out;
+        }
+
+    pthread_attr_setstacksize(&attr, CONSUMER_STACK_SIZE);
+    parm.sched_priority = CONSUMER_TASK_PRI;
+    pthread_attr_setschedparam(&attr, &parm);
+    rc = pthread_create(&consumer_task, &attr, &consumer, NULL);
+    if (rc)
+        {
+        xnprintf("pthread_create(consumer_task): %d\n", rc);
+        goto out;
+        }
+#endif /* CONSUMER */
+
     if (close(fd))
         {
         xnprintf("close: %d\n", errno);
-out:
-        rc = -rc ?: -errno;
-        __xeno_user_exit();
-        return rc;
+        rc = -errno;
+	goto err;
         }
 
     return 0;
+
+  out:
+    rc = -rc ?: -errno;
+    if (close(fd))
+        xnprintf("close: %d (%s)\n", errno, strerror(errno));
+  err:
+    __xeno_user_exit();
+    return rc;
 }
 
 #ifdef __KERNEL__
