@@ -1,5 +1,12 @@
 2006-07-03  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
+	* ksrc/skins/posix/demos/satch.c (__xeno_user_init): Rework satch
+	start-up in order to get a clear error when the producer is not
+	running.
+
+	* ksrc/skins/posix/timer.c (pse51_timer_cleanup_thread): Use a
+	separate link for per-thread and per-process timers lists.
+
 	* include/asm-sim/system.h (xnarch_sysalloc, xnarch_sysfree):
 	Memset allocated and freed memory to catch use of uninitialized
 	memory.or use of freed memory. 
