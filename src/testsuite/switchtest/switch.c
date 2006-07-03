@@ -712,6 +712,8 @@ int main(int argc, const char *argv[])
 						);
 					goto failure;
 				}
+				if (cpu->fd != -1)
+					close(cpu->fd);
 
 				snprintf(devname,
 					 sizeof(devname),
