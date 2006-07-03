@@ -1,5 +1,8 @@
 2006-07-03  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
+	* scripts/prepare-kernel.sh (patch_link): Only avoid creating
+	a link when it is already correct.
+
 	* ksrc/skins/posix/demos/satch.c (__xeno_user_init): Rework satch
 	start-up in order to get a clear error when the producer is not
 	running.
