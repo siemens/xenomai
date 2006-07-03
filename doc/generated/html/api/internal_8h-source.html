@@ -103,7 +103,7 @@
 00093 
 00094         xnlock_get_irqsave(&amp;nklock, s);
 00095 
-00096         ppd = <a class="code" href="group__shadow.html#ga60">xnshadow_ppd_get</a>(pse51_muxid);
+00096         ppd = <a class="code" href="group__shadow.html#ga61">xnshadow_ppd_get</a>(pse51_muxid);
 00097         
 00098         xnlock_put_irqrestore(&amp;nklock, s);
 00099 
@@ -119,7 +119,7 @@
 00109 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_PERVASIVE)</span>
 00110 <span class="preprocessor"></span>        xnshadow_ppd_t *ppd;
 00111 
-00112         <span class="keywordflow">if</span> (pshared || !(ppd = <a class="code" href="group__shadow.html#ga60">xnshadow_ppd_get</a>(pse51_muxid)))
+00112         <span class="keywordflow">if</span> (pshared || !(ppd = <a class="code" href="group__shadow.html#ga61">xnshadow_ppd_get</a>(pse51_muxid)))
 00113                 <span class="keywordflow">return</span> &amp;pse51_global_kqueues;
 00114 
 00115         <span class="keywordflow">return</span> &amp;ppd2queues(ppd)-&gt;kqueues;
@@ -179,7 +179,7 @@
 00169 }
 00170 
 00171 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_INTERNAL_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:03 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jul 3 18:26:02 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

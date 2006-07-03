@@ -1124,6 +1124,9 @@ The following bits can be part of the bitmask:<p>
 <li>When set, T_WARNSW causes the SIGXCPU signal to be sent to the current user-space task whenever it switches to the secondary mode. This feature is useful to detect unwanted migrations to the Linux domain.</li></ul>
 <p>
 <ul>
+<li>T_RPIOFF disables thread priority coupling between Xenomai and Linux schedulers. This bit prevents the root Linux thread from inheriting the priority of the running shadow Xenomai thread. Use CONFIG_XENO_OPT_RPIOFF to globally disable priority coupling.</li></ul>
+<p>
+<ul>
 <li>T_PRIMARY can be passed to switch the current user-space task to primary mode (setmask |= T_PRIMARY), or secondary mode (clrmask |= T_PRIMARY). Upon return from <a class="el" href="group__task.html#ga25">rt_task_set_mode()</a>, the user-space task will run into the specified domain.</li></ul>
 <p>
 Normally, this service can only be called on behalf of a regular real-time task, either running in kernel or user-space. However, as a special exception, requests for setting/clearing the T_LOCK bit from asynchronous contexts are silently dropped, and the call returns successfully if no other mode bits have been specified. This is consistent with the fact that Xenomai enforces a scheduler lock until the outer interrupt handler has returned.<p>
@@ -1984,7 +1987,7 @@ This service can be called from:<p>
 Rescheduling: always if a next equal-priority task is ready to run, otherwise, this service leads to a no-op.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:08 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jul 3 18:26:07 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

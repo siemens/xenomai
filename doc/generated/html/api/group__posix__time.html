@@ -48,18 +48,18 @@ Timer objects may be created with the <a class="el" href="group__posix__time.htm
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__time.html#ga9">timer_create</a> (clockid_t clockid, const struct sigevent *__restrict__ evp, timer_t *__restrict__ timerid)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a timer object.  <a href="#ga9"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__time.html#ga10">timer_delete</a> (timer_t timerid)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__time.html#ga11">timer_delete</a> (timer_t timerid)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a timer object.  <a href="#ga10"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__time.html#ga12">timer_settime</a> (timer_t timerid, int flags, const struct itimerspec *__restrict__ value, struct itimerspec *__restrict__ ovalue)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a timer object.  <a href="#ga11"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__time.html#ga13">timer_settime</a> (timer_t timerid, int flags, const struct itimerspec *__restrict__ value, struct itimerspec *__restrict__ ovalue)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start or stop a timer.  <a href="#ga12"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__time.html#ga13">timer_gettime</a> (timer_t timerid, struct itimerspec *value)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start or stop a timer.  <a href="#ga13"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__time.html#ga14">timer_gettime</a> (timer_t timerid, struct itimerspec *value)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get timer next expiration date and reload value.  <a href="#ga13"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__time.html#ga14">timer_getoverrun</a> (timer_t timerid)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get timer next expiration date and reload value.  <a href="#ga14"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__time.html#ga15">timer_getoverrun</a> (timer_t timerid)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get expiration overruns count since the most recent timer expiration signal delivery.  <a href="#ga14"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get expiration overruns count since the most recent timer expiration signal delivery.  <a href="#ga15"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
 <a class="anchor" name="ga2" doxytag="clock.c::clock_getres"></a><p>
@@ -391,9 +391,9 @@ The resolution of this service is one system clock tick.<p>
 Create a timer object. 
 <p>
 This service creates a time object using the clock <em>clockid</em>.<p>
-If <em>evp</em> is not <em>NULL</em>, it describes the notification mechanism used on timer expiration. Only notification via signal delivery is supported (member <em>sigev_notify</em> of <em>evp</em> set to <em>SIGEV_SIGNAL</em>). The signal will be sent to the thread starting the timer with the <a class="el" href="group__posix__time.html#ga12">timer_settime()</a> service. If <em>evp</em> is <em>NULL</em>, the SIGALRM signal will be used.<p>
+If <em>evp</em> is not <em>NULL</em>, it describes the notification mechanism used on timer expiration. Only notification via signal delivery is supported (member <em>sigev_notify</em> of <em>evp</em> set to <em>SIGEV_SIGNAL</em>). The signal will be sent to the thread starting the timer with the <a class="el" href="group__posix__time.html#ga13">timer_settime()</a> service. If <em>evp</em> is <em>NULL</em>, the SIGALRM signal will be used.<p>
 Note that signals sent to user-space threads will cause them to switch to secondary mode.<p>
-If this service succeeds, an identifier for the created timer is returned at the address <em>timerid</em>. The timer is unarmed until started with the <a class="el" href="group__posix__time.html#ga12">timer_settime()</a> service.<p>
+If this service succeeds, an identifier for the created timer is returned at the address <em>timerid</em>. The timer is unarmed until started with the <a class="el" href="group__posix__time.html#ga13">timer_settime()</a> service.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>clockid</em>&nbsp;</td><td>clock used as a timing base;</td></tr>
@@ -413,7 +413,7 @@ If this service succeeds, an identifier for the created timer is returned at the
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga10" doxytag="timer.c::timer_delete"></a><p>
+<a class="anchor" name="ga11" doxytag="timer.c::timer_delete"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -458,7 +458,7 @@ This service deletes the timer <em>timerid</em>.<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga14" doxytag="timer.c::timer_getoverrun"></a><p>
+<a class="anchor" name="ga15" doxytag="timer.c::timer_getoverrun"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -499,7 +499,7 @@ This service returns <em>timerid</em> expiration overruns count since the most r
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga13" doxytag="timer.c::timer_gettime"></a><p>
+<a class="anchor" name="ga14" doxytag="timer.c::timer_gettime"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -554,7 +554,7 @@ This service stores, at the address <em>value</em>, the expiration date (member 
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga12" doxytag="timer.c::timer_settime"></a><p>
+<a class="anchor" name="ga13" doxytag="timer.c::timer_settime"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -602,7 +602,7 @@ This service stores, at the address <em>value</em>, the expiration date (member 
 <p>
 Start or stop a timer. 
 <p>
-This service sets a timer expiration date and reload value of the timer <em>timerid</em>. If <em>ovalue</em> is not <em>NULL</em>, the current expiration date and reload value are stored at the address <em>ovalue</em> as with <a class="el" href="group__posix__time.html#ga13">timer_gettime()</a>.<p>
+This service sets a timer expiration date and reload value of the timer <em>timerid</em>. If <em>ovalue</em> is not <em>NULL</em>, the current expiration date and reload value are stored at the address <em>ovalue</em> as with <a class="el" href="group__posix__time.html#ga14">timer_gettime()</a>.<p>
 If the member <em>it_value</em> of the <b>itimerspec</b> structure at <em>value</em> is zero, the timer is stopped, otherwise the timer is started. If the member <em>it_interval</em> is not zero, the timer is periodic. The current thread must be a POSIX skin thread (created with <a class="el" href="group__posix__thread.html#ga6">pthread_create()</a>) and will be notified via signal of timer expirations. Note that these notifications will cause user-space threads to switch to secondary mode.<p>
 When starting the timer, if <em>flags</em> is TIMER_ABSTIME, the expiration value is interpreted as an absolute date of the clock passed to the <a class="el" href="group__posix__time.html#ga9">timer_create()</a> service. Otherwise, the expiration value is interpreted as a time interval.<p>
 Expiration date and reload value are rounded to an integer count of system clock ticks (see note in section <a class="el" href="group__posix__time.html">Clocks and timers services</a> for details on the duration of the system tick).<p>
@@ -629,7 +629,7 @@ Expiration date and reload value are rounded to an integer count of system clock
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:12 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jul 3 18:26:11 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

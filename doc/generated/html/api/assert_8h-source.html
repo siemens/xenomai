@@ -34,9 +34,9 @@
 00024 
 00025 <span class="preprocessor">#define XENO_ASSERT(subsystem,cond,action)  do { \</span>
 00026 <span class="preprocessor">    if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem &gt; 0 &amp;&amp; !(cond))) { \</span>
-00027 <span class="preprocessor">        ipipe_trace_panic_freeze(); \</span>
+00027 <span class="preprocessor">        xnarch_trace_panic_freeze(); \</span>
 00028 <span class="preprocessor">        xnlogerr("assertion failed at %s:%d (%s)\n", __FILE__, __LINE__, (#cond)); \</span>
-00029 <span class="preprocessor">        ipipe_trace_panic_dump(); \</span>
+00029 <span class="preprocessor">        xnarch_trace_panic_dump(); \</span>
 00030 <span class="preprocessor">        action; \</span>
 00031 <span class="preprocessor">    } \</span>
 00032 <span class="preprocessor">} while(0)</span>
@@ -47,7 +47,7 @@
 00037 <span class="preprocessor">} while(0)</span>
 00038 <span class="preprocessor"></span>
 00039 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_ASSERT_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:03 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jul 3 18:26:02 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

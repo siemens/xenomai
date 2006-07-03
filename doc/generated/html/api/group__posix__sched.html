@@ -91,7 +91,7 @@ The scheduling policy and priority of a thread is set when creating a thread, by
 <p>
 Get the scheduling policy and parameters of the specified thread. 
 <p>
-This service returns, at the addresses <em>pol</em> and <em>par</em>, the current scheduling policy and scheduling parameters (i.e. priority) of the Xenomai POSIX skin thread <em>tid</em>.<p>
+This service returns, at the addresses <em>pol</em> and <em>par</em>, the current scheduling policy and scheduling parameters (i.e. priority) of the Xenomai POSIX skin thread <em>tid</em>. If this service is called from user-space and <em>tid</em> is not the identifier of a Xenomai POSIX skin thread, this service fallback to Linux regular pthread_getschedparam service.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>tid</em>&nbsp;</td><td>target thread;</td></tr>
@@ -150,7 +150,7 @@ an error number if:<ul>
 Set the scheduling policy and parameters of the specified thread. 
 <p>
 This service set the scheduling policy of the Xenomai POSIX skin thread <em>tid</em> to the value <em>pol</em>, and its scheduling parameters (i.e. its priority) to the value pointed to by <em>par</em>.<p>
-When used in user-space, passing the current thread ID as <em>tid</em> argument, and SCHED_FIFO as <em>pol</em> argument, this service turns the current thread into a Xenomai POSIX skin thread. If <em>tid</em> is neither the identifier of the current thread nor the identifier of a Xenomai POSIX skin thread, this service falls back to the regular <a class="el" href="group__posix__sched.html#ga4">pthread_setschedparam()</a> service.<p>
+When used in user-space, passing the current thread ID as <em>tid</em> argument, this service turns the current thread into a Xenomai POSIX skin thread. If <em>tid</em> is neither the identifier of the current thread nor the identifier of a Xenomai POSIX skin thread this service falls back to the regular <a class="el" href="group__posix__sched.html#ga4">pthread_setschedparam()</a> service, hereby causing the current thread to switch to secondary mode if it is Xenomai thread.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>tid</em>&nbsp;</td><td>target thread;</td></tr>
@@ -349,7 +349,7 @@ This function move the current thread at the end of its priority group.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Jun 17 19:24:13 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jul 3 18:26:12 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
