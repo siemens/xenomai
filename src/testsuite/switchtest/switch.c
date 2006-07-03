@@ -520,12 +520,16 @@ void usage(FILE *fd, const char *progname)
 	fprintf(fd, "\n\n");
 }
 
+#define DEV_NR_MAX 256
+
 int main(int argc, const char *argv[])
 {
 	const char **all, *progname = argv[0];
-	unsigned i, j, count, nr_cpus;
-	struct cpu_tasks *cpus;
 	pthread_attr_t rt_attr, sleeper_attr;
+	unsigned i, j, count, nr_cpus;
+	char devname[21] = "/dev/rttest0";
+	unsigned dev_nr = 0;
+	struct cpu_tasks *cpus;
 	struct sched_param sp;
 	int status, sig;
 	sigset_t mask;
@@ -688,20 +692,33 @@ int main(int argc, const char *argv[])
 	for (i = 0; i < nr_cpus; i ++) {
 		struct cpu_tasks *cpu = &cpus[i];
 
-		/* FIXME: grab number from -D option when provided */
-		cpu->fd = open("rttest0", O_RDWR);
+		do {
+			status = cpu->fd = open(devname, O_RDWR);
 
-		if (cpu->fd == -1) {
-			perror("open(\"rttest0\")");
-			goto failure;
-		}
+			if (status == -1)
+				goto next_dev;
 
-		if (ioctl(cpu->fd,
-			  RTTST_RTIOC_SWTEST_SET_TASKS_COUNT,
-			  cpu->tasks_count)) {
-			perror("ioctl(RTTST_RTIOC_SWTEST_SET_TASKS_COUNT)");
-			goto failure;
-		}
+			status = ioctl(cpu->fd,
+				       RTTST_RTIOC_SWTEST_SET_TASKS_COUNT,
+				       cpu->tasks_count);
+
+			if (status == -1) {
+			  next_dev:
+				if (++dev_nr == DEV_NR_MAX) {
+					fprintf(stderr,
+						"switchtest: Unable to open "
+						"switchtest device.\n"
+						"(modprobe xeno_switchtest ?)\n"
+						);
+					goto failure;
+				}
+
+				snprintf(devname,
+					 sizeof(devname),
+					 "/dev/rttest%u",
+					 dev_nr);
+			}
+		} while (status == -1);
 
 		if (ioctl(cpu->fd, RTTST_RTIOC_SWTEST_SET_CPU, i)) {
 			perror("ioctl(RTTST_RTIOC_SWTEST_SET_CPU)");
@@ -835,14 +852,6 @@ int main(int argc, const char *argv[])
   cleanup:
 	for (i = 0; i < nr_cpus; i ++) {
 		struct cpu_tasks *cpu = &cpus[i];
-		cpu_set_t cpu_set;
-
-		CPU_ZERO(&cpu_set);
-		CPU_SET(cpu->index, &cpu_set);
-		if (do_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
-			perror("sleeper: sched_setaffinity");
-			exit(EXIT_FAILURE);
-		}
 
 		/* kill the user-space tasks. */
 		for (j = 0; j < cpu->tasks_count; j++) {
