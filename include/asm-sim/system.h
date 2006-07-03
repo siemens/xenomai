@@ -684,11 +684,15 @@ static inline void xnarch_halt (const char *emsg)
 
 static inline void *xnarch_sysalloc (u_long bytes)
 {
-    return malloc(bytes);
+    void *chunk = malloc(bytes);
+    if (chunk)
+	    memset(chunk, 0xa5, bytes);
+    return chunk;
 }
 
 static inline void xnarch_sysfree (void *chunk, u_long bytes)
 {
+    memset(chunk, 0xdb, bytes);
     free(chunk);
 }
 
