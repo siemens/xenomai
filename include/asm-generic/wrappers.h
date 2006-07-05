@@ -71,7 +71,7 @@ unsigned long __va_to_kva(unsigned long va);
 /* Seqfiles */
 #define SEQ_START_TOKEN ((void *)1)
 
-/* Sched */
+/* Sched and process flags */
 #define MAX_RT_PRIO 100
 #define task_cpu(p) ((p)->processor)
 #ifndef CONFIG_PREEMPT
@@ -81,6 +81,7 @@ unsigned long __va_to_kva(unsigned long va);
 #ifndef SCHED_NORMAL
 #define SCHED_NORMAL SCHED_OTHER
 #endif /* !SCHED_NORMAL */
+#define PF_NOFREEZE 0
 
 /* Signals */
 #define wrap_sighand_lock(p)     ((p)->sigmask_lock)
