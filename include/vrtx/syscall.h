@@ -67,6 +67,12 @@
 #define __vrtx_spend       41
 #define __vrtx_saccept     42
 #define __vrtx_sinquiry    43
+#define __vrtx_hcreate     44
+#define __vrtx_hbind       45	/* Internal call */
+#define __vrtx_hdelete     46
+#define __vrtx_halloc      47
+#define __vrtx_hfree       48
+#define __vrtx_hinquiry    49
 
 struct vrtx_arg_bulk {
 

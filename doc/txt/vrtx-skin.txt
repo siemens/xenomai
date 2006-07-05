@@ -76,6 +76,26 @@ system is idle.
 * sc_getc()/sc_waitc()/sc_acceptc() calls are not implemented in the
 emulator.
 
+* When called from user-space, sc_hcreate() ignores the "heapaddr"
+parameter, since the heap memory is going to be allocated in kernel
+space, and automatically mapped to the caller's address space. A
+warning will be emitted to stderr if this paramater is non-zero.
+
+* When created from user-space through sc_hcreate(), VRTX heaps scope
+is restricted to the address space of the creating process. In other
+words, sc_halloc() and sc_hfree() must be called from the same
+process which initially invoked sc_hcreate(); any thread which
+belongs to such process can allocate/deallocate memory, though. This
+limitation does not apply neither to sc_hinquiry() nor sc_hdelete().
+
+* VRTX system calls invoked from user-space might return negative
+POSIX error codes under certain conditions, along with the standard
+positive VRTX codes. Make sure to always check error status codes
+throughfully, especially for system calls that might block the caller.
+E.g. sc_spend(), sc_fpend(), sc_qpend(), and sc_pend() might return
+-EINTR as error code, whenever a Linux signal is received by the
+blocked task.
+
 Module parameters
 =================
 

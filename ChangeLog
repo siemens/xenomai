@@ -1,3 +1,8 @@
+2006-07-05  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/shadow.c: Raise the PF_NOFREEZE flag for the
+	gatekeeper so that it survives swsusp.
+
 2006-07-03  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* scripts/prepare-kernel.sh (patch_link): Only avoid creating

@@ -62,9 +62,17 @@
 
 typedef struct _TCB {
 
-    int TCBSTAT;
+	int TCBSTAT;
 
 } TCB;
+
+typedef struct _vrtx_hdesc {
+
+	int hid;
+	void *hcb;
+	size_t hsize;
+
+} vrtx_hdesc_t;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)  || defined(__XENO_UVM__)
 

@@ -37,6 +37,8 @@ typedef struct vrtxuslt { /* Region unit slot */
 
 #define heap_align_mask   (sizeof(vrtxuslt_t)-1)
 
+struct mm_struct;
+
 typedef struct vrtxheap {
 
     unsigned magic;   /* Magic code - must be first */
@@ -57,6 +59,11 @@ typedef struct vrtxheap {
     u_long released;	/* count of allocated then released blocks */
 
     xnheap_t sysheap;	/* memory heap */
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    struct mm_struct *mm;	/* !< Creator's mm. */
+    caddr_t mapbase;		/* !< Heap mapping in creator's address space. */
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 } vrtxheap_t;
 
