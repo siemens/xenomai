@@ -513,6 +513,7 @@ static int gatekeeper_thread(void *data)
 	cpumask_t cpumask;
 	spl_t s;
 
+	this_task->flags |= PF_NOFREEZE;
 	sigfillset(&this_task->blocked);
 	cpumask = cpumask_of_cpu(cpu);
 	set_cpus_allowed(this_task, cpumask);
