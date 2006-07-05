@@ -101,7 +101,7 @@ typedef struct rttst_tmbench_config {
 #define RTTST_IRQBENCH_SERPORT      0
 #define RTTST_IRQBENCH_PARPORT      1
 
-struct rttst_irqbench_config {
+typedef struct rttst_irqbench_config {
     int                     mode;
     int                     priority;
     int                     calibration_loops;
@@ -110,7 +110,7 @@ struct rttst_irqbench_config {
     unsigned int            port_irq;
 } rttst_irqbench_config_t;
 
-struct rttst_irqbench_stats {
+typedef struct rttst_irqbench_stats {
     unsigned long long      irqs_received;
     unsigned long long      irqs_acknowledged;
 } rttst_irqbench_stats_t;
