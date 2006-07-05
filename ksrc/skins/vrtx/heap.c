@@ -21,7 +21,7 @@
 #include "vrtx/task.h"
 #include "vrtx/heap.h"
 
-static vrtxidmap_t *vrtx_heap_idmap;
+vrtxidmap_t *vrtx_heap_idmap;
 
 static xnqueue_t vrtx_heap_q;
 
@@ -33,8 +33,16 @@ static void heap_destroy_internal(vrtxheap_t *heap)
 	removeq(&vrtx_heap_q, &heap->link);
 	vrtx_put_id(vrtx_heap_idmap, heap->hid);
 	vrtx_mark_deleted(heap);
+	xnlock_clear_irqon(&nklock);
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+	if (xnheap_mapped_p(&heap->sysheap))
+		xnheap_destroy_mapped(&heap->sysheap);
+	else
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+		xnheap_destroy(&heap->sysheap, NULL, NULL);
+
 	xnlock_put_irqrestore(&nklock, s);
-	xnheap_destroy(&heap->sysheap, NULL, NULL);
 }
 
 int vrtxheap_init(u_long heap0size)
@@ -101,18 +109,36 @@ int sc_hcreate(char *heapaddr, u_long heapsize, unsigned log2psize, int *errp)
 		*errp = ER_NOCB;
 		return 0;
 	}
+#ifdef __KERNEL__
+	if (heapaddr == NULL) {
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+		err = xnheap_init_mapped(&heap->sysheap, heapsize, 0);
 
-	err = xnheap_init(&heap->sysheap, heapaddr, heapsize, pagesize);
+		if (err) {
+			*errp = ER_MEM;
+			return 0;
+		}
 
-	if (err) {
-		if (err == -EINVAL)
-			*errp = ER_IIP;
-		else
-			*errp = ER_NOCB;
-
-		xnfree(heap);
-
+		heap->mm = NULL;
+#else /* !CONFIG_XENO_OPT_PERVASIVE */
+		*errp = ER_IIP;
 		return 0;
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+	} else
+#endif /* __KERNEL__ */
+	{
+		err = xnheap_init(&heap->sysheap, heapaddr, heapsize, pagesize);
+
+		if (err) {
+			if (err == -EINVAL)
+				*errp = ER_IIP;
+			else
+				*errp = ER_NOCB;
+
+			xnfree(heap);
+
+			return 0;
+		}
 	}
 
 	heap->magic = VRTX_HEAP_MAGIC;

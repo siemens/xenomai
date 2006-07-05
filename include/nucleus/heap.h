@@ -149,6 +149,9 @@ int xnheap_destroy_mapped(xnheap_t *heap);
 #define xnheap_mapped_address(heap,off) \
 (((caddr_t)(heap)->archdep.heapbase) + (off))
 
+#define xnheap_mapped_p(heap) \
+((heap)->archdep.heapbase != NULL)
+
 #endif /* __KERNEL__ */
 
 /* Public interface. */

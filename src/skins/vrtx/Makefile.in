@@ -58,9 +58,10 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libvrtx_la_LIBADD =
-am_libvrtx_la_OBJECTS = libvrtx_la-event.lo libvrtx_la-init.lo \
-	libvrtx_la-mb.lo libvrtx_la-mx.lo libvrtx_la-queue.lo \
-	libvrtx_la-sem.lo libvrtx_la-task.lo libvrtx_la-time.lo
+am_libvrtx_la_OBJECTS = libvrtx_la-event.lo libvrtx_la-heap.lo \
+	libvrtx_la-init.lo libvrtx_la-mb.lo libvrtx_la-mx.lo \
+	libvrtx_la-queue.lo libvrtx_la-sem.lo libvrtx_la-task.lo \
+	libvrtx_la-time.lo
 libvrtx_la_OBJECTS = $(am_libvrtx_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/src/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
@@ -235,6 +236,7 @@ lib_LTLIBRARIES = libvrtx.la
 libvrtx_la_LDFLAGS = -module -version-info 0:0:0 -lpthread
 libvrtx_la_SOURCES = \
 	event.c \
+	heap.c \
 	init.c \
 	mb.c \
 	mx.c \
@@ -317,6 +319,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvrtx_la-event.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvrtx_la-heap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvrtx_la-init.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvrtx_la-mb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvrtx_la-mx.Plo@am__quote@
@@ -352,6 +355,13 @@ libvrtx_la-event.lo: event.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='event.c' object='libvrtx_la-event.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvrtx_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libvrtx_la-event.lo `test -f 'event.c' || echo '$(srcdir)/'`event.c
+
+libvrtx_la-heap.lo: heap.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvrtx_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libvrtx_la-heap.lo -MD -MP -MF "$(DEPDIR)/libvrtx_la-heap.Tpo" -c -o libvrtx_la-heap.lo `test -f 'heap.c' || echo '$(srcdir)/'`heap.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libvrtx_la-heap.Tpo" "$(DEPDIR)/libvrtx_la-heap.Plo"; else rm -f "$(DEPDIR)/libvrtx_la-heap.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='heap.c' object='libvrtx_la-heap.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvrtx_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libvrtx_la-heap.lo `test -f 'heap.c' || echo '$(srcdir)/'`heap.c
 
 libvrtx_la-init.lo: init.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvrtx_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libvrtx_la-init.lo -MD -MP -MF "$(DEPDIR)/libvrtx_la-init.Tpo" -c -o libvrtx_la-init.lo `test -f 'init.c' || echo '$(srcdir)/'`init.c; \

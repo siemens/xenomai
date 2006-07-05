@@ -4,6 +4,7 @@ libvrtx_la_LDFLAGS = -module -version-info 0:0:0 -lpthread
 
 libvrtx_la_SOURCES = \
 	event.c \
+	heap.c \
 	init.c \
 	mb.c \
 	mx.c \

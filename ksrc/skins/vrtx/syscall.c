@@ -22,7 +22,10 @@
 #include <nucleus/shadow.h>
 #include <vrtx/defs.h>
 #include <vrtx/task.h>
+#include <vrtx/heap.h>
 #include <vrtx/syscall.h>
+
+extern vrtxidmap_t *vrtx_heap_idmap;
 
 /*
  * By convention, error codes are passed back through the syscall
@@ -811,7 +814,7 @@ static int __sc_finquiry(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
- * int __sc_screate(unsigned initval, int opt, int *semid)
+ * int __sc_screate(unsigned initval, int opt, int *semidp)
  */
 
 static int __sc_screate(struct task_struct *curr, struct pt_regs *regs)
@@ -913,6 +916,215 @@ static int __sc_sinquiry(struct task_struct *curr, struct pt_regs *regs)
 	return err;
 }
 
+/*
+ * int __sc_hcreate(u_long heapsize, unsigned log2psize, vrtx_hdesc_t *hdesc)
+ */
+
+static int __sc_hcreate(struct task_struct *curr, struct pt_regs *regs)
+{
+	u_long heapsize, pagesize;
+	unsigned log2psize;
+	vrtx_hdesc_t hdesc;
+	vrtxheap_t *heap;
+	int err, hid;
+	spl_t s;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(hdesc)))
+		return -EFAULT;
+
+	/* Size of heap space. */
+	heapsize = __xn_reg_arg1(regs);
+	/* Page size. */
+	log2psize = (int)__xn_reg_arg2(regs);
+
+	if (log2psize == 0)
+		pagesize = 512;	/* VRTXsa system call reference */
+	else
+		pagesize = 1 << log2psize;
+
+	heapsize += xnheap_overhead(heapsize, pagesize);
+	heapsize = PAGE_ALIGN(heapsize);
+	hid = sc_hcreate(NULL, heapsize, log2psize, &err);
+
+	if (err)
+		return err;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	heap = (vrtxheap_t *)vrtx_get_object(vrtx_heap_idmap, hid);
+
+	if (heap) {		/* Paranoid. */
+		heap->mm = curr->mm;
+		hdesc.hid = hid;
+		hdesc.hcb = &heap->sysheap;
+		hdesc.hsize = xnheap_size(&heap->sysheap);
+
+		xnlock_put_irqrestore(&nklock, s);
+
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs),
+				  &hdesc, sizeof(hdesc));
+	} else {
+		xnlock_put_irqrestore(&nklock, s);
+		err = ER_ID;
+	}
+
+	return err;
+}
+
+/*
+ * int __sc_hbind(int hid, caddr_t mapbase)
+ */
+
+static int __sc_hbind(struct task_struct *curr, struct pt_regs *regs)
+{
+	caddr_t mapbase = (caddr_t) __xn_reg_arg2(regs);
+	int hid = __xn_reg_arg1(regs), err = 0;
+	vrtxheap_t *heap;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	heap = (vrtxheap_t *)vrtx_get_object(vrtx_heap_idmap, hid);
+
+	if (heap && heap->mm == curr->mm)
+		heap->mapbase = mapbase;
+	else
+		err = ER_ID;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+
+/*
+ * int __sc_hdelete(int hid, int opt)
+ */
+
+static int __sc_hdelete(struct task_struct *curr, struct pt_regs *regs)
+{
+	int err, hid, opt;
+
+	hid = __xn_reg_arg1(regs);
+	opt = __xn_reg_arg2(regs);
+	sc_hdelete(hid, opt, &err);
+
+	return err;
+}
+
+/*
+ * int __sc_halloc(int hid, unsigned long bsize, char **bufp)
+ */
+
+static int __sc_halloc(struct task_struct *curr, struct pt_regs *regs)
+{
+	vrtxheap_t *heap;
+	char *buf = NULL;
+	u_long bsize;
+	int err, hid;
+	spl_t s;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(buf)))
+		return -EFAULT;
+
+	hid = __xn_reg_arg1(regs);
+	bsize = (u_long)__xn_reg_arg2(regs);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	heap = (vrtxheap_t *)vrtx_get_object(vrtx_heap_idmap, hid);
+
+	if (!heap || heap->mm != curr->mm) {
+		/* Allocation requests must be issued from the same
+		 * process which created the heap. */
+		err = ER_ID;
+		goto unlock_and_exit;
+	}
+
+	buf = sc_halloc(hid, bsize, &err);
+
+	/* Convert the allocated buffer kernel-based address to the
+	   equivalent area into the caller's address space. */
+
+	if (!err)
+		buf = heap->mapbase + xnheap_mapped_offset(&heap->sysheap, buf);
+
+      unlock_and_exit:
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &buf,
+			  sizeof(buf));
+
+	return err;
+}
+
+/*
+ * int __sc_hfree(int hid, char *buf)
+ */
+
+static int __sc_hfree(struct task_struct *curr, struct pt_regs *regs)
+{
+	char __user *buf;
+	vrtxheap_t *heap;
+	int hid, err;
+	spl_t s;
+
+	hid = __xn_reg_arg1(regs);
+	buf = (char __user *)__xn_reg_arg2(regs);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	heap = (vrtxheap_t *)vrtx_get_object(vrtx_heap_idmap, hid);
+
+	if (!heap || heap->mm != curr->mm) {
+		/* Deallocation requests must be issued from the same
+		 * process which created the heap. */
+		err = ER_ID;
+		goto unlock_and_exit;
+	}
+
+	/* Convert the caller-based address of buf to the equivalent area
+	   into the kernel address space. */
+
+	if (buf) {
+		buf =
+		    xnheap_mapped_address(&heap->sysheap,
+					  (caddr_t) buf - heap->mapbase);
+		sc_hfree(hid, buf, &err);
+	} else
+		err = ER_IIP;
+
+      unlock_and_exit:
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+
+/*
+ * int __sc_hinquiry(int info[3], int hid)
+ */
+
+static int __sc_hinquiry(struct task_struct *curr, struct pt_regs *regs)
+{
+	int err, hid, pinfo[3];
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pinfo)))
+		return -EFAULT;
+
+	hid = __xn_reg_arg2(regs);
+	sc_tinquiry(pinfo, hid, &err);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs),
+				  pinfo, sizeof(pinfo));
+
+	return err;
+}
+
 static xnsysent_t __systab[] = {
 	[__vrtx_tecreate] = {&__sc_tecreate, __xn_exec_init},
 	[__vrtx_tdelete] = {&__sc_tdelete, __xn_exec_conforming},
@@ -958,6 +1170,12 @@ static xnsysent_t __systab[] = {
 	[__vrtx_spend] = {&__sc_spend, __xn_exec_primary},
 	[__vrtx_saccept] = {&__sc_saccept, __xn_exec_any},
 	[__vrtx_sinquiry] = {&__sc_sinquiry, __xn_exec_any},
+	[__vrtx_hcreate] = {&__sc_hcreate, __xn_exec_lostage},
+	[__vrtx_hbind] = {&__sc_hbind, __xn_exec_any},
+	[__vrtx_hdelete] = {&__sc_hdelete, __xn_exec_lostage},
+	[__vrtx_halloc] = {&__sc_halloc, __xn_exec_conforming},
+	[__vrtx_hfree] = {&__sc_hfree, __xn_exec_any},
+	[__vrtx_hinquiry] = {&__sc_hinquiry, __xn_exec_any},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)
