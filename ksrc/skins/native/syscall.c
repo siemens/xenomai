@@ -2655,11 +2655,11 @@ static int __rt_heap_delete(struct task_struct *curr, struct pt_regs *regs)
 static int __rt_heap_alloc(struct task_struct *curr, struct pt_regs *regs)
 {
 	RT_HEAP_PLACEHOLDER ph;
+	void *buf = NULL;
 	RT_HEAP *heap;
 	RTIME timeout;
 	size_t size;
 	int err = 0;
-	void *buf;
 	spl_t s;
 
 	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(ph)))
