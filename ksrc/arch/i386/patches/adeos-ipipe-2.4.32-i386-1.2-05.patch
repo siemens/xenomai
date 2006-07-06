@@ -1,6 +1,6 @@
 diff -uNrp 2.4.32/arch/i386/config.in 2.4.32-i386-ipipe/arch/i386/config.in
 --- 2.4.32/arch/i386/config.in	2004-11-17 12:54:21.000000000 +0100
-+++ 2.4.32-i386-ipipe/arch/i386/config.in	2006-06-25 09:34:43.000000000 +0200
++++ 2.4.32-i386-ipipe/arch/i386/config.in	2006-07-06 14:46:10.000000000 +0200
 @@ -266,6 +266,7 @@ endmenu
  mainmenu_option next_comment
  comment 'General setup'
@@ -1954,7 +1954,7 @@ diff -uNrp 2.4.32/include/asm-i386/hw_irq.h 2.4.32-i386-ipipe/include/asm-i386/h
   * system calls and interrupted 'random user-space'. Thus we have
 diff -uNrp 2.4.32/include/asm-i386/ipipe.h 2.4.32-i386-ipipe/include/asm-i386/ipipe.h
 --- 2.4.32/include/asm-i386/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.4.32-i386-ipipe/include/asm-i386/ipipe.h	2006-06-25 09:40:04.000000000 +0200
++++ 2.4.32-i386-ipipe/include/asm-i386/ipipe.h	2006-07-06 10:34:55.000000000 +0200
 @@ -0,0 +1,271 @@
 +/*   -*- linux-c -*-
 + *   include/asm-i386/ipipe.h
@@ -2192,26 +2192,26 @@ diff -uNrp 2.4.32/include/asm-i386/ipipe.h 2.4.32-i386-ipipe/include/asm-i386/ip
 +	return ul;
 +}
 +
++/* When running handlers, enable hw interrupts for all domains but the
++ * one heading the pipeline, so that IRQs can never be significantly
++ * deferred for the latter. */
 +#define __ipipe_run_isr(ipd, irq, cpuid) \
 +do { \
-+	if (ipd == ipipe_root_domain) {				      \
-+		/* Linux handlers are called hw interrupts on so that \
-+		   they could not defer interrupts for higher priority \
-+		   domains. */					       \
-+		local_irq_enable_hw();				 \
++	local_irq_enable_nohead(ipd);				 \
++	if (ipd == ipipe_root_domain) {				 \
 +		if (likely(!ipipe_virtual_irq_p(irq))) {	 \
 +			__ipipe_call_root_xirq_handler(ipd,irq); \
 +		} else {					 \
 +			irq_enter(cpuid, irq);			 \
 +			__ipipe_call_root_virq_handler(ipd,irq); \
-+			irq_exit(cpuid, irq); \
++			irq_exit(cpuid, irq);			 \
 +		}						\
-+		local_irq_disable_hw();				\
 +	} else {						\
 +		__clear_bit(IPIPE_SYNC_FLAG, &cpudata->status); \
 +		ipd->irqs[irq].handler(irq, ipd->irqs[irq].cookie); \
 +		__set_bit(IPIPE_SYNC_FLAG, &cpudata->status);	\
 +	}							\
++	local_irq_disable_nohead(ipd);				\
 +} while(0)
 +
 +#endif /* __ASSEMBLY__ */
@@ -2370,8 +2370,8 @@ diff -uNrp 2.4.32/include/asm-i386/system.h 2.4.32-i386-ipipe/include/asm-i386/s
  extern void __global_cli(void);
 diff -uNrp 2.4.32/include/linux/ipipe.h 2.4.32-i386-ipipe/include/linux/ipipe.h
 --- 2.4.32/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.4.32-i386-ipipe/include/linux/ipipe.h	2006-06-24 19:23:21.000000000 +0200
-@@ -0,0 +1,716 @@
++++ 2.4.32-i386-ipipe/include/linux/ipipe.h	2006-07-06 10:33:56.000000000 +0200
+@@ -0,0 +1,729 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -3034,8 +3034,21 @@ diff -uNrp 2.4.32/include/linux/ipipe.h 2.4.32-i386-ipipe/include/linux/ipipe.h
 +
 +#define local_irq_enable_hw_cond()		local_irq_enable_hw()
 +#define local_irq_disable_hw_cond()		local_irq_disable_hw()
-+#define local_irq_save_hw_cond(flags)		local_irq_save_hw(flags)
++#define local_irq_save_hw_cond(flags)	local_irq_save_hw(flags)
 +#define local_irq_restore_hw_cond(flags)	local_irq_restore_hw(flags)
++
++#define local_irq_enable_nohead(ipd)			\
++	do {						\
++		if (!__ipipe_pipeline_head_p(ipd))	\
++			local_irq_enable_hw();		\
++	} while(0)
++
++#define local_irq_disable_nohead(ipd)		\
++	do {						\
++		if (!__ipipe_pipeline_head_p(ipd))	\
++			local_irq_disable_hw();		\
++	} while(0)
++
 +#define spin_lock_irqsave_hw_cond(lock,flags)	spin_lock_irqsave_hw(lock,flags)
 +#define spin_unlock_irqrestore_hw_cond(lock,flags) spin_unlock_irqrestore_hw(lock,flags)
 +#define spin_lock_hw_cond(lock)			spin_lock_hw(lock)
@@ -3090,7 +3103,7 @@ diff -uNrp 2.4.32/include/linux/ipipe.h 2.4.32-i386-ipipe/include/linux/ipipe.h
 +#endif	/* !__LINUX_IPIPE_H */
 diff -uNrp 2.4.32/include/linux/sched.h 2.4.32-i386-ipipe/include/linux/sched.h
 --- 2.4.32/include/linux/sched.h	2005-01-19 15:10:12.000000000 +0100
-+++ 2.4.32-i386-ipipe/include/linux/sched.h	2006-06-24 19:23:21.000000000 +0200
++++ 2.4.32-i386-ipipe/include/linux/sched.h	2006-07-05 10:01:27.000000000 +0200
 @@ -6,6 +6,7 @@
  extern unsigned long event;
  
@@ -3135,7 +3148,7 @@ diff -uNrp 2.4.32/init/main.c 2.4.32-i386-ipipe/init/main.c
  	 * Ok, at this point all CPU's should be initialized, so
 diff -uNrp 2.4.32/kernel/Makefile 2.4.32-i386-ipipe/kernel/Makefile
 --- 2.4.32/kernel/Makefile	2001-09-17 06:22:40.000000000 +0200
-+++ 2.4.32-i386-ipipe/kernel/Makefile	2006-06-25 09:35:04.000000000 +0200
++++ 2.4.32-i386-ipipe/kernel/Makefile	2006-07-06 14:51:27.000000000 +0200
 @@ -16,6 +16,7 @@ obj-y     = sched.o dma.o fork.o exec_do
  	    sysctl.o acct.o capability.o ptrace.o timer.o user.o \
  	    signal.o sys.o kmod.o context.o
