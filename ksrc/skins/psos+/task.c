@@ -201,16 +201,20 @@ u_long t_restart(u_long tid, u_long targs[])
 
 	xnlock_get_irqsave(&nklock, s);
 
-	task = psos_h2obj_active(tid, PSOS_TASK_MAGIC, psostask_t);
+	if (tid == 0)
+		task = psos_current_task();
+	else {
+		task = psos_h2obj_active(tid, PSOS_TASK_MAGIC, psostask_t);
 
-	if (!task) {
-		err = psos_handle_error(tid, PSOS_TASK_MAGIC, psostask_t);
-		goto unlock_and_exit;
-	}
+		if (!task) {
+			err = psos_handle_error(tid, PSOS_TASK_MAGIC, psostask_t);
+			goto unlock_and_exit;
+		}
 
-	if (xnthread_test_flags(&task->threadbase, XNDORMANT)) {
-		err = ERR_NACTIVE;
-		goto unlock_and_exit;
+		if (xnthread_test_flags(&task->threadbase, XNDORMANT)) {
+			err = ERR_NACTIVE;
+			goto unlock_and_exit;
+		}
 	}
 
 	for (n = 0; n < 4; n++)
@@ -317,11 +321,15 @@ u_long t_getreg(u_long tid, u_long regnum, u_long *regvalue)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	task = psos_h2obj_active(tid, PSOS_TASK_MAGIC, psostask_t);
+	if (tid == 0)
+		task = psos_current_task();
+	else {
+		task = psos_h2obj_active(tid, PSOS_TASK_MAGIC, psostask_t);
 
-	if (!task) {
-		err = psos_handle_error(tid, PSOS_TASK_MAGIC, psostask_t);
-		goto unlock_and_exit;
+		if (!task) {
+			err = psos_handle_error(tid, PSOS_TASK_MAGIC, psostask_t);
+			goto unlock_and_exit;
+		}
 	}
 
 	if (regnum >= PSOSTASK_NOTEPAD_REGS) {
@@ -346,11 +354,18 @@ u_long t_resume(u_long tid)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	task = psos_h2obj_active(tid, PSOS_TASK_MAGIC, psostask_t);
+	if (tid == 0)
+		/* Would be admittedly silly, but silly code does
+		 * exist, and it's a matter of returning ERR_NOTSUSP
+		 * instead of ERR_OBJID. */
+		task = psos_current_task();
+	else {
+		task = psos_h2obj_active(tid, PSOS_TASK_MAGIC, psostask_t);
 
-	if (!task) {
-		err = psos_handle_error(tid, PSOS_TASK_MAGIC, psostask_t);
-		goto unlock_and_exit;
+		if (!task) {
+			err = psos_handle_error(tid, PSOS_TASK_MAGIC, psostask_t);
+			goto unlock_and_exit;
+		}
 	}
 
 	if (!xnthread_test_flags(&task->threadbase, XNSUSP)) {
@@ -455,11 +470,15 @@ u_long t_setreg(u_long tid, u_long regnum, u_long regvalue)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	task = psos_h2obj_active(tid, PSOS_TASK_MAGIC, psostask_t);
+	if (tid == 0)
+		task = psos_current_task();
+	else {
+		task = psos_h2obj_active(tid, PSOS_TASK_MAGIC, psostask_t);
 
-	if (!task) {
-		err = psos_handle_error(tid, PSOS_TASK_MAGIC, psostask_t);
-		goto unlock_and_exit;
+		if (!task) {
+			err = psos_handle_error(tid, PSOS_TASK_MAGIC, psostask_t);
+			goto unlock_and_exit;
+		}
 	}
 
 	if (regnum >= PSOSTASK_NOTEPAD_REGS) {
