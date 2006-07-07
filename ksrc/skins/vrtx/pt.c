@@ -20,7 +20,7 @@
 
 #include <vrtx/pt.h>
 
-static vrtxidmap_t *vrtx_pt_idmap;
+vrtxidmap_t *vrtx_pt_idmap;
 
 static xnqueue_t vrtx_pt_q;
 

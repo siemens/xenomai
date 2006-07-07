@@ -23,9 +23,12 @@
 #include <vrtx/defs.h>
 #include <vrtx/task.h>
 #include <vrtx/heap.h>
+#include <vrtx/pt.h>
 #include <vrtx/syscall.h>
 
 extern vrtxidmap_t *vrtx_heap_idmap;
+
+extern vrtxidmap_t *vrtx_pt_idmap;
 
 /*
  * By convention, error codes are passed back through the syscall
@@ -36,18 +39,6 @@ extern vrtxidmap_t *vrtx_heap_idmap;
  */
 
 static int __muxid;
-
-#if 0
-static vrtxtask_t *__vrtx_task_current(struct task_struct *curr)
-{
-	xnthread_t *thread = xnshadow_thread(curr);
-
-	if (!thread || xnthread_get_magic(thread) != VRTX_SKIN_MAGIC)
-		return NULL;
-
-	return thread2vrtxtask(thread);	/* Convert TCB pointers. */
-}
-#endif
 
 /*
  * int __sc_tecreate(struct vrtx_arg_bulk *bulk,
@@ -1094,7 +1085,7 @@ static int __sc_hfree(struct task_struct *curr, struct pt_regs *regs)
 					  (caddr_t) buf - heap->mapbase);
 		sc_hfree(hid, buf, &err);
 	} else
-		err = ER_IIP;
+		err = ER_NMB;
 
       unlock_and_exit:
 
@@ -1117,6 +1108,235 @@ static int __sc_hinquiry(struct task_struct *curr, struct pt_regs *regs)
 
 	hid = __xn_reg_arg2(regs);
 	sc_tinquiry(pinfo, hid, &err);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs),
+				  pinfo, sizeof(pinfo));
+
+	return err;
+}
+
+/*
+ * int __sc_pcreate(int pid, long ptsize, long bsize, vrtx_pdesc_t *pdesc)
+ */
+
+static int __sc_pcreate(struct task_struct *curr, struct pt_regs *regs)
+{
+	u_long ptsize, bsize;
+	vrtx_pdesc_t pdesc;
+	xnheap_t *ptheap;
+	vrtxpt_t *pt;
+	int err, pid;
+	char *ptaddr;
+	spl_t s;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(pdesc)))
+		return -EFAULT;
+
+	ptheap = (xnheap_t *)xnmalloc(sizeof(*ptheap));
+
+	if (!ptheap)
+		return ER_NOCB;
+
+	/* Suggested partition ID. */
+	pid = __xn_reg_arg1(regs);
+	/* Size of partition space -- account for the heap mgmt overhead. */
+	ptsize = __xn_reg_arg2(regs);
+	ptsize += xnheap_overhead(ptsize, PAGE_SIZE);
+	ptsize = PAGE_ALIGN(ptsize);
+	/* Block size. */
+	bsize = __xn_reg_arg3(regs);
+
+	err = xnheap_init_mapped(ptheap, ptsize, 0);
+
+	if (err)
+		goto free_heap;
+
+	/* Allocate the partition space as a single shared heap block. */
+	ptaddr = xnheap_alloc(ptheap, ptsize);
+	pid = sc_pcreate(pid, ptaddr, ptsize, bsize, &err);
+
+	if (err)
+		goto unmap_pt;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+
+	if (pt) {		/* Paranoid. */
+		pt->mm = curr->mm;
+		pt->sysheap = ptheap;
+		pdesc.pid = pid;
+		pdesc.ptcb = ptheap;
+		pdesc.ptsize = xnheap_size(ptheap);
+
+		xnlock_put_irqrestore(&nklock, s);
+
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg4(regs),
+				  &pdesc, sizeof(pdesc));
+		return 0;
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	err = ER_PID;
+
+unmap_pt:
+
+	xnheap_destroy_mapped(ptheap);
+
+free_heap:
+
+	xnfree(ptheap);
+
+	return err;
+}
+
+/*
+ * int __sc_pbind(int pid, caddr_t mapbase)
+ */
+
+static int __sc_pbind(struct task_struct *curr, struct pt_regs *regs)
+{
+	caddr_t mapbase = (caddr_t) __xn_reg_arg2(regs);
+	int pid = __xn_reg_arg1(regs), err = 0;
+	vrtxpt_t *pt;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+
+	if (pt && pt->mm == curr->mm)
+		pt->mapbase = mapbase;
+	else
+		err = ER_PID;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+
+/*
+ * int __sc_pdelete(int pid, int opt)
+ */
+
+static int __sc_pdelete(struct task_struct *curr, struct pt_regs *regs)
+{
+	int err, pid, opt;
+
+	pid = __xn_reg_arg1(regs);
+	opt = __xn_reg_arg2(regs);
+	sc_pdelete(pid, opt, &err);
+
+	return err;
+}
+
+/*
+ * int __sc_gblock(int pid, char **bufp)
+ */
+
+static int __sc_gblock(struct task_struct *curr, struct pt_regs *regs)
+{
+	char *buf = NULL;
+	vrtxpt_t *pt;
+	int err, pid;
+	spl_t s;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(buf)))
+		return -EFAULT;
+
+	pid = __xn_reg_arg1(regs);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+
+	if (!pt || pt->mm != curr->mm) {
+		/* Allocation requests must be issued from the same
+		 * process which created the partition. */
+		err = ER_PID;
+		goto unlock_and_exit;
+	}
+
+	buf = sc_gblock(pid, &err);
+
+	/* Convert the allocated buffer kernel-based address to the
+	   equivalent area into the caller's address space. */
+
+	if (!err)
+		buf = pt->mapbase + xnheap_mapped_offset(pt->sysheap, buf);
+
+      unlock_and_exit:
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &buf,
+			  sizeof(buf));
+
+	return err;
+}
+
+/*
+ * int __sc_rblock(int pid, char *buf)
+ */
+
+static int __sc_rblock(struct task_struct *curr, struct pt_regs *regs)
+{
+	char __user *buf;
+	vrtxpt_t *pt;
+	int pid, err;
+	spl_t s;
+
+	pid = __xn_reg_arg1(regs);
+	buf = (char __user *)__xn_reg_arg2(regs);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+
+	if (!pt || pt->mm != curr->mm) {
+		/* Deallocation requests must be issued from the same
+		 * process which created the partition. */
+		err = ER_ID;
+		goto unlock_and_exit;
+	}
+
+	/* Convert the caller-based address of buf to the equivalent area
+	   into the kernel address space. */
+
+	if (buf) {
+		buf =
+		    xnheap_mapped_address(pt->sysheap,
+					  (caddr_t) buf - pt->mapbase);
+		sc_rblock(pid, buf, &err);
+	} else
+		err = ER_NMB;
+
+      unlock_and_exit:
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+
+/*
+ * int __sc_pinquiry(u_long info[3], int pid)
+ */
+
+static int __sc_pinquiry(struct task_struct *curr, struct pt_regs *regs)
+{
+	u_long pinfo[3];
+	int err, pid;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pinfo)))
+		return -EFAULT;
+
+	pid = __xn_reg_arg2(regs);
+	sc_pinquiry(pinfo, pid, &err);
 
 	if (!err)
 		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs),
@@ -1176,6 +1396,12 @@ static xnsysent_t __systab[] = {
 	[__vrtx_halloc] = {&__sc_halloc, __xn_exec_conforming},
 	[__vrtx_hfree] = {&__sc_hfree, __xn_exec_any},
 	[__vrtx_hinquiry] = {&__sc_hinquiry, __xn_exec_any},
+	[__vrtx_pcreate] = {&__sc_pcreate, __xn_exec_lostage},
+	[__vrtx_pbind] = {&__sc_pbind, __xn_exec_any},
+	[__vrtx_pdelete] = {&__sc_pdelete, __xn_exec_lostage},
+	[__vrtx_gblock] = {&__sc_gblock, __xn_exec_conforming},
+	[__vrtx_rblock] = {&__sc_rblock, __xn_exec_any},
+	[__vrtx_pinquiry] = {&__sc_pinquiry, __xn_exec_any},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)

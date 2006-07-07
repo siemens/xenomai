@@ -76,17 +76,22 @@ system is idle.
 * sc_getc()/sc_waitc()/sc_acceptc() calls are not implemented in the
 emulator.
 
-* When called from user-space, sc_hcreate() ignores the "heapaddr"
-parameter, since the heap memory is going to be allocated in kernel
-space, and automatically mapped to the caller's address space. A
-warning will be emitted to stderr if this paramater is non-zero.
+* When called from user-space, sc_hcreate()/sc_pcreate() ignore the
+heap or partition address parameter, since the memory is going to be
+allocated in kernel space, and automatically mapped to the caller's
+address space. A warning will be emitted to stderr if this paramater
+is non-zero.
 
-* When created from user-space through sc_hcreate(), VRTX heaps scope
-is restricted to the address space of the creating process. In other
-words, sc_halloc() and sc_hfree() must be called from the same
-process which initially invoked sc_hcreate(); any thread which
+* When created from user-space through sc_hcreate()/sc_pcreate(), VRTX
+memory managers have a scope restricted to the address space of the
+creating process. In other words, sc_halloc()/sc_gblock() and
+sc_hfree()/sc_rblock() must be called from the same process which
+initially invoked sc_hcreate()/sc_pcreate(); any thread which
 belongs to such process can allocate/deallocate memory, though. This
-limitation does not apply neither to sc_hinquiry() nor sc_hdelete().
+limitation does not apply neither to sc_hinquiry()/sc_pinquiry() nor
+sc_hdelete()/sc_pdelete().
+
+* sc_pextend() is not supported from user-space context.
 
 * VRTX system calls invoked from user-space might return negative
 POSIX error codes under certain conditions, along with the standard
