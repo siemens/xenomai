@@ -25,11 +25,83 @@ static vrtxidmap_t *vrtx_mx_idmap;
 
 static xnqueue_t vrtx_mx_q;
 
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
+
+static int __mutex_read_proc(char *page,
+			     char **start,
+			     off_t off, int count, int *eof, void *data)
+{
+	vrtxmx_t *mx = (vrtxmx_t *)data;
+	char *p = page;
+	int len;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (mx->owner) {
+		xnpholder_t *holder;
+
+		/* Locked mx -- dump owner and waiters, if any. */
+
+		p += sprintf(p, "=locked by %s\n",
+			     xnthread_name(mx->owner));
+
+		holder = getheadpq(xnsynch_wait_queue(&mx->synchbase));
+
+		while (holder) {
+			xnthread_t *sleeper = link2thread(holder, plink);
+			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
+			holder =
+			    nextpq(xnsynch_wait_queue(&mx->synchbase),
+				   holder);
+		}
+	} else
+		/* Mutex unlocked. */
+		p += sprintf(p, "=unlocked\n");
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	len = (p - page) - off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+extern xnptree_t __vrtx_ptree;
+
+static xnpnode_t __mutex_pnode = {
+
+	.dir = NULL,
+	.type = "mutexes",
+	.entries = 0,
+	.read_proc = &__mutex_read_proc,
+	.write_proc = NULL,
+	.root = &__vrtx_ptree,
+};
+
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
+
+static xnpnode_t __mutex_pnode = {
+
+	.type = "mutexes"
+};
+
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+
 int mx_destroy_internal(vrtxmx_t *mx)
 {
 	int s = xnsynch_destroy(&mx->synchbase);
 	vrtx_put_id(vrtx_mx_idmap, mx->mid);
 	removeq(&vrtx_mx_q, &mx->link);
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	xnregistry_remove(mx->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 	xnfree(mx);
 	return s;
 }
@@ -94,6 +166,11 @@ int sc_mcreate(unsigned int opt, int *errp)
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&vrtx_mx_q, &mx->link);
 	xnlock_put_irqrestore(&nklock, s);
+
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	sprintf(mx->name, "mx%d", mid);
+	xnregistry_enter(mx->name, mx, &mx->handle, &__mutex_pnode);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	*errp = RET_OK;
 

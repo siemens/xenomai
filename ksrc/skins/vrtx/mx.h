@@ -36,6 +36,11 @@ typedef struct vrtxmx {
 
     xnsynch_t synchbase;
 
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    xnhandle_t handle;
+    char name[XNOBJECT_NAME_LEN];
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
 } vrtxmx_t;
 
 #ifdef __cplusplus

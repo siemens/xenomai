@@ -89,6 +89,11 @@ typedef struct vrtxpt {
     struct xnheap *sysheap;	/* !< Underlying heap */
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    xnhandle_t handle;
+    char name[XNOBJECT_NAME_LEN];
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
 } vrtxpt_t;
 
 #ifdef __cplusplus

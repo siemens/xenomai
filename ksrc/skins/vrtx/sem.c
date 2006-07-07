@@ -25,6 +25,71 @@ static vrtxidmap_t *vrtx_sem_idmap;
 
 static xnqueue_t vrtx_sem_q;
 
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
+
+static int sem_read_proc(char *page,
+			 char **start,
+			 off_t off, int count, int *eof, void *data)
+{
+	vrtxsem_t *sem = (vrtxsem_t *)data;
+	char *p = page;
+	int len;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	p += sprintf(p, "value=%lu\n", sem->count);
+
+	if (xnsynch_nsleepers(&sem->synchbase) == 0) {
+		xnpholder_t *holder;
+
+		/* Pended semaphore -- dump waiters. */
+
+		holder = getheadpq(xnsynch_wait_queue(&sem->synchbase));
+
+		while (holder) {
+			xnthread_t *sleeper = link2thread(holder, plink);
+			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
+			holder =
+			    nextpq(xnsynch_wait_queue(&sem->synchbase), holder);
+		}
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	len = (p - page) - off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+extern xnptree_t __vrtx_ptree;
+
+static xnpnode_t __sem_pnode = {
+
+	.dir = NULL,
+	.type = "semaphores",
+	.entries = 0,
+	.read_proc = &sem_read_proc,
+	.write_proc = NULL,
+	.root = &__vrtx_ptree,
+};
+
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
+
+static xnpnode_t __sem_pnode = {
+
+	.type = "semaphores"
+};
+
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+
 static int sem_destroy_internal(vrtxsem_t *sem)
 {
 	int s;
@@ -32,6 +97,9 @@ static int sem_destroy_internal(vrtxsem_t *sem)
 	removeq(&vrtx_sem_q, &sem->link);
 	vrtx_put_id(vrtx_sem_idmap, sem->semid);
 	s = xnsynch_destroy(&sem->synchbase);
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	xnregistry_remove(sem->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 	vrtx_mark_deleted(sem);
 	xnfree(sem);
 
@@ -96,6 +164,11 @@ int sc_screate(unsigned initval, int opt, int *errp)
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&vrtx_sem_q, &sem->link);
 	xnlock_put_irqrestore(&nklock, s);
+
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	sprintf(sem->name, "sem%d", semid);
+	xnregistry_enter(sem->name, sem, &sem->handle, &__sem_pnode);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	*errp = RET_OK;
 

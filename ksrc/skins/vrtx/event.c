@@ -25,15 +25,90 @@ static vrtxidmap_t *vrtx_event_idmap;
 
 static xnqueue_t vrtx_event_q;
 
-static int event_destroy_internal(vrtxevent_t *event)
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
+
+static int __event_read_proc(char *page,
+			     char **start,
+			     off_t off, int count, int *eof, void *data)
+{
+	vrtxevent_t *evgroup = (vrtxevent_t *)data;
+	char *p = page;
+	int len;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	p += sprintf(p, "=0x%x\n", evgroup->events);
+
+	if (xnsynch_nsleepers(&evgroup->synchbase) > 0) {
+		xnpholder_t *holder;
+
+		/* Pended event -- dump waiters. */
+
+		holder = getheadpq(xnsynch_wait_queue(&evgroup->synchbase));
+
+		while (holder) {
+			xnthread_t *sleeper = link2thread(holder, plink);
+			vrtxtask_t *task = thread2vrtxtask(sleeper);
+			const char *mode =
+			    (task->waitargs.evgroup.
+			     opt & 1) ? "all" : "any";
+			int mask = task->waitargs.evgroup.mask;
+			p += sprintf(p, "+%s (mask=0x%x, %s)\n",
+				     xnthread_name(sleeper), mask, mode);
+			holder =
+			    nextpq(xnsynch_wait_queue(&evgroup->synchbase),
+				   holder);
+		}
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	len = (p - page) - off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+extern xnptree_t __vrtx_ptree;
+
+static xnpnode_t __event_pnode = {
+
+	.dir = NULL,
+	.type = "events",
+	.entries = 0,
+	.read_proc = &__event_read_proc,
+	.write_proc = NULL,
+	.root = &__vrtx_ptree,
+};
+
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
+
+static xnpnode_t __event_pnode = {
+
+	.type = "events"
+};
+
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+
+static int event_destroy_internal(vrtxevent_t *evgroup)
 {
 	int s;
 
-	removeq(&vrtx_event_q, &event->link);
-	s = xnsynch_destroy(&event->synchbase);
-	vrtx_put_id(vrtx_event_idmap, event->evid);
-	vrtx_mark_deleted(event);
-	xnfree(event);
+	removeq(&vrtx_event_q, &evgroup->link);
+	s = xnsynch_destroy(&evgroup->synchbase);
+	vrtx_put_id(vrtx_event_idmap, evgroup->evid);
+	vrtx_mark_deleted(evgroup);
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	xnregistry_remove(evgroup->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+	xnfree(evgroup);
 
 	return s;
 }
@@ -85,6 +160,11 @@ int sc_fcreate(int *errp)
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&vrtx_event_q, &evgroup->link);
 	xnlock_put_irqrestore(&nklock, s);
+
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	sprintf(evgroup->name, "ev%d", evid);
+	xnregistry_enter(evgroup->name, evgroup, &evgroup->handle, &__event_pnode);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	*errp = RET_OK;
 

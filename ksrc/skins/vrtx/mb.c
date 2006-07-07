@@ -28,6 +28,70 @@ static xnqueue_t vrtx_mbox_q;
  * the VRTX services are never dereferenced, but only used as hash
  * keys. */
 
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
+
+static int __mb_read_proc(char *page,
+			  char **start,
+			  off_t off, int count, int *eof, void *data)
+{
+	vrtxmb_t *mb = (vrtxmb_t *)data;
+	char *p = page;
+	int len;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (xnsynch_nsleepers(&mb->synchbase) > 0) {
+		xnpholder_t *holder;
+
+		holder = getheadpq(xnsynch_wait_queue(&mb->synchbase));
+
+		while (holder) {
+			xnthread_t *sleeper = link2thread(holder, plink);
+			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
+			holder =
+			    nextpq(xnsynch_wait_queue(&mb->synchbase),
+				   holder);
+		}
+	} else
+		/* Mailbox not pended. */
+		p += sprintf(p, "=%p\n", mb->msg);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	len = (p - page) - off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+extern xnptree_t __vrtx_ptree;
+
+static xnpnode_t __mb_pnode = {
+
+	.dir = NULL,
+	.type = "mailboxes",
+	.entries = 0,
+	.read_proc = &__mb_read_proc,
+	.write_proc = NULL,
+	.root = &__vrtx_ptree,
+};
+
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
+
+static xnpnode_t __mb_pnode = {
+
+	.type = "mailboxes"
+};
+
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+
 #define MB_HASHBITS 8
 
 static vrtxmb_t *jhash_buckets[1 << MB_HASHBITS];	/* Guaranteed zero */
@@ -113,6 +177,9 @@ void vrtxmb_cleanup(void)
 	while ((holder = getq(&vrtx_mbox_q)) != NULL) {
 		mb = link2vrtxmb(holder);
 		xnsynch_destroy(&mb->synchbase);
+#ifdef CONFIG_XENO_OPT_REGISTRY
+		xnregistry_remove(mb->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 		mb_unhash(mb->mboxp);
 		xnfree(mb);
 	}
@@ -146,6 +213,11 @@ vrtxmb_t *mb_map(char **mboxp)
 	xnsynch_init(&mb->synchbase, XNSYNCH_PRIO | XNSYNCH_DREORD);
 	appendq(&vrtx_mbox_q, &mb->link);
 	mb_hash(mboxp, mb);
+
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	sprintf(mb->name, "mb@%p", mboxp);
+	xnregistry_enter(mb->name, mb, &mb->handle, &__mb_pnode);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	return mb;
 }

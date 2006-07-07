@@ -40,6 +40,11 @@ typedef struct vrtxevent {
 
     int events;   /* Event flags */
 
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    xnhandle_t handle;
+    char name[XNOBJECT_NAME_LEN];
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
 } vrtxevent_t;
 
 #ifdef __cplusplus

@@ -48,6 +48,11 @@ typedef struct vrtxqueue {
 
     int qsize;	/* Does not account for the jamming slot. */
 
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    xnhandle_t handle;
+    char name[XNOBJECT_NAME_LEN];
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
 } vrtxqueue_t;
 
 #ifdef __cplusplus

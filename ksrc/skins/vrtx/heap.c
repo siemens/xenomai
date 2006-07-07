@@ -25,6 +25,52 @@ vrtxidmap_t *vrtx_heap_idmap;
 
 static xnqueue_t vrtx_heap_q;
 
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
+
+static int __heap_read_proc(char *page,
+			    char **start,
+			    off_t off, int count, int *eof, void *data)
+{
+	vrtxheap_t *heap = (vrtxheap_t *)data;
+	char *p = page;
+	int len;
+
+	p += sprintf(p, "size=%lu:used=%lu\n",
+		     xnheap_size(&heap->sysheap), xnheap_used_mem(&heap->sysheap));
+
+	len = (p - page) - off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+extern xnptree_t __vrtx_ptree;
+
+static xnpnode_t __heap_pnode = {
+
+	.dir = NULL,
+	.type = "heaps",
+	.entries = 0,
+	.read_proc = &__heap_read_proc,
+	.write_proc = NULL,
+	.root = &__vrtx_ptree,
+};
+
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
+
+static xnpnode_t __heap_pnode = {
+
+	.type = "heaps"
+};
+
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+
 static void heap_destroy_internal(vrtxheap_t *heap)
 {
 	spl_t s;
@@ -33,6 +79,9 @@ static void heap_destroy_internal(vrtxheap_t *heap)
 	removeq(&vrtx_heap_q, &heap->link);
 	vrtx_put_id(vrtx_heap_idmap, heap->hid);
 	vrtx_mark_deleted(heap);
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	xnregistry_remove(heap->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 	xnlock_clear_irqon(&nklock);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
@@ -109,6 +158,7 @@ int sc_hcreate(char *heapaddr, u_long heapsize, unsigned log2psize, int *errp)
 		*errp = ER_NOCB;
 		return 0;
 	}
+
 #ifdef __KERNEL__
 	if (heapaddr == NULL) {
 #ifdef CONFIG_XENO_OPT_PERVASIVE
@@ -161,6 +211,11 @@ int sc_hcreate(char *heapaddr, u_long heapsize, unsigned log2psize, int *errp)
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&vrtx_heap_q, &heap->link);
 	xnlock_put_irqrestore(&nklock, s);
+
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	sprintf(heap->name, "heap%d", hid);
+	xnregistry_enter(heap->name, heap, &heap->handle, &__heap_pnode);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	*errp = RET_OK;
 
