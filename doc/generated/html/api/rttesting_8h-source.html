@@ -56,7 +56,7 @@
 00101 <span class="preprocessor">#define RTTST_IRQBENCH_SERPORT      0</span>
 00102 <span class="preprocessor"></span><span class="preprocessor">#define RTTST_IRQBENCH_PARPORT      1</span>
 00103 <span class="preprocessor"></span>
-00104 <span class="keyword">struct </span>rttst_irqbench_config {
+00104 <span class="keyword">typedef</span> <span class="keyword">struct </span>rttst_irqbench_config {
 00105     <span class="keywordtype">int</span>                     mode;
 00106     <span class="keywordtype">int</span>                     priority;
 00107     <span class="keywordtype">int</span>                     calibration_loops;
@@ -65,7 +65,7 @@
 00110     <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>            port_irq;
 00111 } rttst_irqbench_config_t;
 00112 
-00113 <span class="keyword">struct </span>rttst_irqbench_stats {
+00113 <span class="keyword">typedef</span> <span class="keyword">struct </span>rttst_irqbench_stats {
 00114     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>      irqs_received;
 00115     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>      irqs_acknowledged;
 00116 } rttst_irqbench_stats_t;
@@ -140,7 +140,7 @@
 00194 <span class="preprocessor">    _IOR(RTIOC_TYPE_TESTING, 0x36, unsigned long)</span>
 00195 <span class="preprocessor"></span>
 00199 <span class="preprocessor">#endif </span><span class="comment">/* _RTTESTING_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jul 3 18:26:02 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Fri Jul 7 22:47:05 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
