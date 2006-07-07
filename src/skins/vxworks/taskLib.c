@@ -393,5 +393,5 @@ TASK_ID taskNameToId(const char *name)
 
 void taskExit(int code)
 {
-	exit(code);
+	pthread_exit((void *) code);
 }
