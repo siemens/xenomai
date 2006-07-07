@@ -297,7 +297,9 @@ STATUS taskDelete(TASK_ID task_id)
 
 void taskExit(int code)
 {
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_interrupt_p())
+		return;
+
 	wind_errnoset(code);
 	xnpod_delete_self();
 }
@@ -316,9 +318,6 @@ STATUS taskSuspend(TASK_ID task_id)
 
 	check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
 			   goto error);
-
-/*     if (testbits(xnthread_status_flags(&task->threadbase),XNSUSP)) */
-/*         goto error; */
 
 	xnpod_suspend_thread(&task->threadbase, XNSUSP, XN_INFINITE, NULL);
 
