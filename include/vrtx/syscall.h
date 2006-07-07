@@ -73,6 +73,12 @@
 #define __vrtx_halloc      47
 #define __vrtx_hfree       48
 #define __vrtx_hinquiry    49
+#define __vrtx_pcreate     50
+#define __vrtx_pbind       51	/* Internal call */
+#define __vrtx_pdelete     52
+#define __vrtx_gblock      53
+#define __vrtx_rblock      54
+#define __vrtx_pinquiry    55
 
 struct vrtx_arg_bulk {
 

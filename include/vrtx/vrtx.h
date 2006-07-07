@@ -74,6 +74,14 @@ typedef struct _vrtx_hdesc {
 
 } vrtx_hdesc_t;
 
+typedef struct _vrtx_pdesc {
+
+	int pid;
+	void *ptcb;
+	size_t ptsize;
+
+} vrtx_pdesc_t;
+
 #if defined(__KERNEL__) || defined(__XENO_SIM__)  || defined(__XENO_UVM__)
 
 #ifdef __cplusplus

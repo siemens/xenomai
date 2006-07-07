@@ -27,12 +27,12 @@
 
 extern int __vrtx_muxid;
 
-static int __map_heap_memory(const vrtx_hdesc_t *hdesc)
+static int __map_pt_memory(const vrtx_pdesc_t *pdesc)
 {
 	int err = 0, heapfd;
 	caddr_t mapbase;
 
-	/* Open the heap device to share the heap memory with the
+	/* Open the heap device to share the partition memory with the
 	   in-kernel skin. */
 	heapfd = open(XNHEAP_DEV_NAME, O_RDWR);
 
@@ -40,14 +40,14 @@ static int __map_heap_memory(const vrtx_hdesc_t *hdesc)
 		return -ENOENT;
 
 	/* Bind this file instance to the shared heap. */
-	err = ioctl(heapfd, 0, hdesc->hcb);
+	err = ioctl(heapfd, 0, pdesc->ptcb);
 
 	if (err)
 		goto close_and_exit;
 
 	/* Map the heap memory into our address space. */
 	mapbase = (caddr_t) mmap(NULL,
-				 hdesc->hsize,
+				 pdesc->ptsize,
 				 PROT_READ | PROT_WRITE,
 				 MAP_SHARED, heapfd, 0L);
 
@@ -55,7 +55,7 @@ static int __map_heap_memory(const vrtx_hdesc_t *hdesc)
 		err = -ENOMEM;
 	else
 		err =
-		    XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_hbind, hdesc->hid,
+		    XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_pbind, pdesc->pid,
 				      mapbase);
 
       close_and_exit:
@@ -65,50 +65,49 @@ static int __map_heap_memory(const vrtx_hdesc_t *hdesc)
 	return err;
 }
 
-int sc_hcreate(char *heapaddr,
-	       unsigned long heapsize, unsigned log2psize, int *errp)
+int sc_pcreate(int pid, char *paddr,
+	       long psize, long bsize, int *errp)
 {
-	vrtx_hdesc_t hdesc;
-	int hid;
+	vrtx_pdesc_t pdesc;
 
-	if (heapaddr)
+	if (paddr)
 		fprintf(stderr,
-			"sc_hcreate() - heapaddr parameter ignored from user-space context\n");
+			"sc_pcreate() - paddr parameter ignored from user-space context\n");
 
 	*errp = XENOMAI_SKINCALL3(__vrtx_muxid,
-				  __vrtx_hcreate, heapsize, log2psize, &hdesc);
+				  __vrtx_pcreate, psize, bsize, &pdesc);
 	if (*errp)
 		return 0;
 
-	hid = hdesc.hid;
-	*errp = __map_heap_memory(&hdesc);
+	pid = pdesc.pid;
+	*errp = __map_pt_memory(&pdesc);
 
 	if (*errp)
 		/* If the mapping fails, make sure we don't leave a dandling
-		   heap in kernel space -- remove it. */
-		XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_hdelete, hid, 1);
+		   partition in kernel space -- remove it. */
+	    XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_pdelete, pid, 1);
 
-	return hid;
+	return pid;
 }
 
-void sc_hdelete(int hid, int opt, int *errp)
+void sc_pdelete(int pid, int opt, int *errp)
 {
-	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_hdelete, hid, opt);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_pdelete, pid, opt);
 }
 
-char *sc_halloc(int hid, unsigned long size, int *errp)
+char *sc_gblock(int pid, int *errp)
 {
 	char *buf = NULL;
-	*errp = XENOMAI_SKINCALL3(__vrtx_muxid, __vrtx_halloc, hid, size, &buf);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_gblock, pid, &buf);
 	return buf;
 }
 
-void sc_hfree(int hid, char *buf, int *errp)
+void sc_rblock(int pid, char *buf, int *errp)
 {
-	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_hfree, hid, buf);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_rblock, pid, buf);
 }
 
-void sc_hinquiry(int info[3], int hid, int *errp)
+void sc_pinquiry(u_long info[3], int pid, int *errp)
 {
-	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_hinquiry, info, hid);
+	*errp = XENOMAI_SKINCALL2(__vrtx_muxid, __vrtx_pinquiry, info, pid);
 }

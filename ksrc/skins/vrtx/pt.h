@@ -61,6 +61,9 @@ typedef struct vrtxptext {
 
 } vrtxptext_t;
 
+struct mm_struct;
+struct xnheap;
+
 typedef struct vrtxpt {
 
     unsigned magic;   /* Magic code - must be first */
@@ -79,6 +82,12 @@ typedef struct vrtxpt {
     u_long ublks;	/* Overall number of used blocks */
 
     u_long fblks;	/* Overall number of free blocks */
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    struct mm_struct *mm;	/* !< Creator's mm. */
+    caddr_t mapbase;		/* !< Partition mapping in creator's address space. */
+    struct xnheap *sysheap;	/* !< Underlying heap */
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 } vrtxpt_t;
 
