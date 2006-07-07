@@ -65,6 +65,11 @@ typedef struct vrtxheap {
     caddr_t mapbase;		/* !< Heap mapping in creator's address space. */
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    xnhandle_t handle;
+    char name[XNOBJECT_NAME_LEN];
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
 } vrtxheap_t;
 
 #ifdef __cplusplus

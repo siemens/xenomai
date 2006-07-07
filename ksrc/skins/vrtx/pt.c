@@ -24,6 +24,52 @@ vrtxidmap_t *vrtx_pt_idmap;
 
 static xnqueue_t vrtx_pt_q;
 
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
+
+static int __pt_read_proc(char *page,
+			  char **start,
+			  off_t off, int count, int *eof, void *data)
+{
+	vrtxpt_t *pt = (vrtxpt_t *)data;
+	char *p = page;
+	int len;
+
+	p += sprintf(p, "bsize=%lu:f_blocks=%lu:u_blocks=%lu\n",
+		     pt->bsize, pt->fblks, pt->ublks);
+
+	len = (p - page) - off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+extern xnptree_t __vrtx_ptree;
+
+static xnpnode_t __pt_pnode = {
+
+	.dir = NULL,
+	.type = "partitions",
+	.entries = 0,
+	.read_proc = &__pt_read_proc,
+	.write_proc = NULL,
+	.root = &__vrtx_ptree,
+};
+
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
+
+static xnpnode_t __pt_pnode = {
+
+	.type = "partitions"
+};
+
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+
 static void vrtxpt_delete_internal(vrtxpt_t *pt)
 {
 	spl_t s;
@@ -31,6 +77,9 @@ static void vrtxpt_delete_internal(vrtxpt_t *pt)
 	xnlock_get_irqsave(&nklock, s);
 	removeq(&vrtx_pt_q, &pt->link);
 	vrtx_put_id(vrtx_pt_idmap, pt->pid);
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	xnregistry_remove(pt->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 	vrtx_mark_deleted(pt);
 	xnlock_clear_irqon(&nklock);
 
@@ -156,6 +205,10 @@ int sc_pcreate(int pid, char *paddr, long psize, long bsize, int *errp)
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&vrtx_pt_q, &pt->link);
 	xnlock_put_irqrestore(&nklock, s);
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	sprintf(pt->name, "pt%d", pid);
+	xnregistry_enter(pt->name, pt, &pt->handle, &__pt_pnode);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	return pid;
 }

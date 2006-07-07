@@ -41,6 +41,11 @@ typedef struct vrtxsem {
 
     u_long count;   /* Available resource count */
 
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    xnhandle_t handle;
+    char name[XNOBJECT_NAME_LEN];
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
 } vrtxsem_t;
 
 #ifdef __cplusplus
