@@ -72,8 +72,9 @@ list. Here are the known variations:
 - The error S_taskLib_TASK_HOOK_TABLE_FULL has not the same value as in the
   genuine OS.
 
-- The exit() service is called taskExit() for kernel-space based
-  applications. User-space applications may invoke exit() normally.
+- The exit() service, only exiting the current thread, is called
+  taskExit(). The user-space "exit" service is the regular service that
+  exits all threads.
 
 - Functions taking function pointers as arguments do not use FUNCPTR, which mean
   that the function pointer types are verified at compile time.
