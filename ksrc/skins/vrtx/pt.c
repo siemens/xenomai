@@ -26,9 +26,22 @@ static xnqueue_t vrtx_pt_q;
 
 static void vrtxpt_delete_internal(vrtxpt_t *pt)
 {
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
 	removeq(&vrtx_pt_q, &pt->link);
 	vrtx_put_id(vrtx_pt_idmap, pt->pid);
 	vrtx_mark_deleted(pt);
+	xnlock_clear_irqon(&nklock);
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+	if (pt->sysheap) {
+		xnheap_destroy_mapped(pt->sysheap);
+		xnfree(pt->sysheap);
+	}
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 int vrtxpt_init(void)
@@ -43,8 +56,10 @@ void vrtxpt_cleanup(void)
 
 	xnholder_t *holder;
 
-	while ((holder = getheadq(&vrtx_pt_q)) != NULL)
-		vrtxpt_delete_internal(link2vrtxpt(holder));
+	while ((holder = getheadq(&vrtx_pt_q)) != NULL) {
+		vrtxpt_t *pt = link2vrtxpt(holder);
+		vrtxpt_delete_internal(pt);
+	}
 
 	vrtx_free_idmap(vrtx_pt_idmap);
 }
@@ -117,6 +132,9 @@ int sc_pcreate(int pid, char *paddr, long psize, long bsize, int *errp)
 	pt->bsize = (bsize + ptext_align_mask) & ~ptext_align_mask;
 	pt->ublks = 0;
 	pt->pid = pid;
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+	pt->sysheap = NULL;
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 	*errp =
 	    vrtxpt_add_extent(pt, (char *)pt + sizeof(*pt),
