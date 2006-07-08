@@ -97,6 +97,7 @@ typedef struct rttst_tmbench_config {
 #define RTTST_IRQBENCH_USER_TASK    0
 #define RTTST_IRQBENCH_KERNEL_TASK  1
 #define RTTST_IRQBENCH_HANDLER      2
+#define RTTST_IRQBENCH_HARD_IRQ     3
 
 #define RTTST_IRQBENCH_SERPORT      0
 #define RTTST_IRQBENCH_PARPORT      1

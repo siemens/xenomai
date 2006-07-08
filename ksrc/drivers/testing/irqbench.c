@@ -56,11 +56,13 @@ struct rt_irqbench_context {
     int                         mode;
     int                         port_type;
     unsigned long               port_ioaddr;
+    unsigned int                port_irq;
     unsigned int                toggle;
     struct rttst_irqbench_stats stats;
     rtdm_irq_t                  irq_handle;
     rtdm_event_t                irq_event;
     rtdm_task_t                 irq_task;
+    rthal_pipeline_stage_t      domain;
     struct semaphore            nrt_mutex;
 };
 
@@ -156,6 +158,25 @@ static int rt_irqbench_direct_irq(rtdm_irq_t *irq_handle)
 }
 
 
+static void rt_irqbench_domain_irq(unsigned irq, void *arg)
+{
+    struct rt_irqbench_context *ctx = (struct rt_irqbench_context *)arg;
+
+
+    if (rt_irqbench_check_irq(ctx))
+        rt_irqbench_hwreply(ctx);
+
+    rthal_irq_end(ctx->port_irq);
+}
+
+
+static inline void do_rt_irqbench_domain_entry(void)
+{
+}
+
+RTHAL_DECLARE_DOMAIN(rt_irqbench_domain_entry);
+
+
 static int rt_irqbench_stop(struct rt_irqbench_context *ctx)
 {
     if (ctx->mode < 0)
@@ -172,7 +193,12 @@ static int rt_irqbench_stop(struct rt_irqbench_context *ctx)
             break;
     }
 
-    rtdm_irq_free(&ctx->irq_handle);
+    if (ctx->mode == RTTST_IRQBENCH_HARD_IRQ) {
+        rthal_virtualize_irq(&ctx->domain, ctx->port_irq, NULL, NULL, NULL,
+                             IPIPE_PASS_MASK);
+        rthal_unregister_domain(&ctx->domain);
+    } else
+        rtdm_irq_free(&ctx->irq_handle);
 
     if (ctx->mode == RTTST_IRQBENCH_KERNEL_TASK)
         rtdm_task_destroy(&ctx->irq_task);
@@ -304,6 +330,24 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
                                            "irqbench", ctx);
                     break;
 
+                case RTTST_IRQBENCH_HARD_IRQ:
+                    ret = rthal_register_domain(&ctx->domain, "irqbench",
+                                                0x49525142,
+                                                IPIPE_HEAD_PRIORITY,
+                                                rt_irqbench_domain_entry);
+                    if (ret < 0)
+                        goto unlock_start_out;
+
+                    ctx->port_irq = config->port_irq;
+                    ret = rthal_virtualize_irq(&ctx->domain, config->port_irq,
+                                               rt_irqbench_domain_irq, ctx,
+                                               NULL, IPIPE_HANDLE_MASK |
+                                               IPIPE_WIRED_MASK |
+                                               IPIPE_EXCLUSIVE_MASK);
+                    if (ret < 0)
+                        rthal_unregister_domain(&ctx->domain);
+                    break;
+
                 default:
                     ret = -EINVAL;
                     break;
@@ -315,7 +359,10 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 
             memset(&ctx->stats, 0, sizeof(ctx->stats));
 
-            rtdm_irq_enable(&ctx->irq_handle);
+            if (ctx->mode == RTTST_IRQBENCH_HARD_IRQ)
+                rthal_irq_enable(ctx->port_irq);
+            else
+                rtdm_irq_enable(&ctx->irq_handle);
 
             /* Arm IRQ */
             switch (ctx->port_type) {
