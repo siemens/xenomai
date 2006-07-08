@@ -99,7 +99,7 @@ struct sched_seq_iterator {
 	struct sched_seq_info {
 		int cpu;
 		pid_t pid;
-               char name[XNOBJECT_NAME_LEN];
+		char name[XNOBJECT_NAME_LEN];
 		int cprio;
 		xnticks_t timeout;
 		xnflags_t status;
@@ -177,26 +177,26 @@ static struct seq_operations sched_op = {
 
 static int sched_seq_open(struct inode *inode, struct file *file)
 {
-       struct sched_seq_iterator *iter = NULL;
+	struct sched_seq_iterator *iter = NULL;
 	struct seq_file *seq;
 	xnholder_t *holder;
-       int err, count, rev;
+	int err, count, rev;
 	spl_t s;
 
 	if (!nkpod)
 		return -ESRCH;
 
       restart:
-       xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-       rev = nkpod->threadq_rev;
+	rev = nkpod->threadq_rev;
 	count = countq(&nkpod->threadq);	/* Cannot be empty (ROOT) */
-       holder = getheadq(&nkpod->threadq);
+	holder = getheadq(&nkpod->threadq);
 
-       xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-       if (iter)
-               kfree(iter);
+	if (iter)
+		kfree(iter);
 	iter = kmalloc(sizeof(*iter)
 		       + (count - 1) * sizeof(struct sched_seq_info),
 		       GFP_KERNEL);
@@ -211,37 +211,37 @@ static int sched_seq_open(struct inode *inode, struct file *file)
 	}
 
 	iter->nentries = 0;
-       iter->start_time = xntimer_get_jiffies();
+	iter->start_time = xntimer_get_jiffies();
 
-       /* Take a snapshot element-wise, restart if something changes
-          underneath us. */
+	/* Take a snapshot element-wise, restart if something changes
+	   underneath us. */
 
-       while (holder) {
-               xnthread_t *thread;
-               int n;
+	while (holder) {
+		xnthread_t *thread;
+		int n;
 
-               xnlock_get_irqsave(&nklock, s);
+		xnlock_get_irqsave(&nklock, s);
 
-               if (nkpod->threadq_rev != rev)
-                       goto restart;
-               rev = nkpod->threadq_rev;
+		if (nkpod->threadq_rev != rev)
+			goto restart;
+		rev = nkpod->threadq_rev;
 
-               thread = link2thread(holder, glink);
-               n = iter->nentries++;
+		thread = link2thread(holder, glink);
+		n = iter->nentries++;
 
 		iter->sched_info[n].cpu = xnsched_cpu(thread->sched);
 		iter->sched_info[n].pid = xnthread_user_pid(thread);
-               memcpy(iter->sched_info[n].name, thread->name,
-                      sizeof(iter->sched_info[n].name));
+		memcpy(iter->sched_info[n].name, thread->name,
+		       sizeof(iter->sched_info[n].name));
 		iter->sched_info[n].cprio = thread->cprio;
 		iter->sched_info[n].timeout =
 		    xnthread_get_timeout(thread, iter->start_time);
 		iter->sched_info[n].status = thread->status;
 
-               holder = nextq(&nkpod->threadq, holder);
+		holder = nextq(&nkpod->threadq, holder);
 
-               xnlock_put_irqrestore(&nklock, s);
-       }
+		xnlock_put_irqrestore(&nklock, s);
+	}
 
 	seq = (struct seq_file *)file->private_data;
 	seq->private = iter;
@@ -265,12 +265,12 @@ struct stat_seq_iterator {
 		int cpu;
 		pid_t pid;
 		xnflags_t status;
-               char name[XNOBJECT_NAME_LEN];
+		char name[XNOBJECT_NAME_LEN];
 		unsigned long ssw;
 		unsigned long csw;
 		unsigned long pf;
-               xnticks_t exec_time;
-               xnticks_t exec_period;
+		xnticks_t exec_time;
+		xnticks_t exec_period;
 	} stat_info[1];
 };
 
@@ -311,27 +311,28 @@ static void stat_seq_stop(struct seq_file *seq, void *v)
 static int stat_seq_show(struct seq_file *seq, void *v)
 {
 	if (v == SEQ_START_TOKEN)
-               seq_printf(seq, "%-3s  %-6s %-10s %-10s %-4s  %-8s  %5s"
-                          "  %s\n",
-                          "CPU", "PID", "MSW", "CSW", "PF", "STAT", "%CPU",
-                          "NAME");
+		seq_printf(seq, "%-3s  %-6s %-10s %-10s %-4s  %-8s  %5s"
+			   "  %s\n",
+			   "CPU", "PID", "MSW", "CSW", "PF", "STAT", "%CPU",
+			   "NAME");
 	else {
 		struct stat_seq_info *p = (struct stat_seq_info *)v;
-               int usage = 0;
+		int usage = 0;
 
-               if (p->exec_period) {
-                       while (p->exec_period > 0xFFFFFFFF) {
-                               p->exec_time >>= 16;
-                               p->exec_period >>= 16;
-                       }
-                       usage = xnarch_ulldiv(
-                               p->exec_time * 1000LL + (p->exec_period >> 1),
-                               p->exec_period, NULL);
-               }
-               seq_printf(seq, "%3u  %-6d %-10lu %-10lu %-4lu  %.8lx  %3u.%u"
-                          "  %s\n",
+		if (p->exec_period) {
+			while (p->exec_period > 0xFFFFFFFF) {
+				p->exec_time >>= 16;
+				p->exec_period >>= 16;
+			}
+			usage =
+			    xnarch_ulldiv(p->exec_time * 1000LL +
+					  (p->exec_period >> 1), p->exec_period,
+					  NULL);
+		}
+		seq_printf(seq, "%3u  %-6d %-10lu %-10lu %-4lu  %.8lx  %3u.%u"
+			   "  %s\n",
 			   p->cpu, p->pid, p->ssw, p->csw, p->pf, p->status,
-                          usage / 10, usage % 10, p->name);
+			   usage / 10, usage % 10, p->name);
 	}
 
 	return 0;
@@ -346,26 +347,26 @@ static struct seq_operations stat_op = {
 
 static int stat_seq_open(struct inode *inode, struct file *file)
 {
-       struct stat_seq_iterator *iter = NULL;
+	struct stat_seq_iterator *iter = NULL;
 	struct seq_file *seq;
 	xnholder_t *holder;
-       int err, count, rev;
+	int err, count, rev;
 	spl_t s;
 
 	if (!nkpod)
 		return -ESRCH;
 
       restart:
-       xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&nklock, s);
 
-       rev = nkpod->threadq_rev;
+	rev = nkpod->threadq_rev;
 	count = countq(&nkpod->threadq);	/* Cannot be empty (ROOT) */
-       holder = getheadq(&nkpod->threadq);
+	holder = getheadq(&nkpod->threadq);
 
-       xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
-       if (iter)
-               kfree(iter);
+	if (iter)
+		kfree(iter);
 	iter = kmalloc(sizeof(*iter)
 		       + (count - 1) * sizeof(struct stat_seq_info),
 		       GFP_KERNEL);
@@ -381,49 +382,49 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 
 	iter->nentries = 0;
 
-       /* Take a snapshot element-wise, restart if something changes
-          underneath us. */
+	/* Take a snapshot element-wise, restart if something changes
+	   underneath us. */
 
-       while (holder) {
-               xnthread_t *thread;
-               xnsched_t *sched;
-               xnticks_t period;
-               int n;
+	while (holder) {
+		xnthread_t *thread;
+		xnsched_t *sched;
+		xnticks_t period;
+		int n;
 
-               xnlock_get_irqsave(&nklock, s);
+		xnlock_get_irqsave(&nklock, s);
 
-               if (nkpod->threadq_rev != rev)
-                       goto restart;
-               rev = nkpod->threadq_rev;
+		if (nkpod->threadq_rev != rev)
+			goto restart;
+		rev = nkpod->threadq_rev;
 
-               thread = link2thread(holder, glink);
-               n = iter->nentries++;
+		thread = link2thread(holder, glink);
+		n = iter->nentries++;
 
-               sched = thread->sched;
-               iter->stat_info[n].cpu = xnsched_cpu(sched);
+		sched = thread->sched;
+		iter->stat_info[n].cpu = xnsched_cpu(sched);
 		iter->stat_info[n].pid = xnthread_user_pid(thread);
-               memcpy(iter->stat_info[n].name, thread->name,
-                      sizeof(iter->stat_info[n].name));
+		memcpy(iter->stat_info[n].name, thread->name,
+		       sizeof(iter->stat_info[n].name));
 		iter->stat_info[n].status = thread->status;
 		iter->stat_info[n].ssw = thread->stat.ssw;
 		iter->stat_info[n].csw = thread->stat.csw;
 		iter->stat_info[n].pf = thread->stat.pf;
 
-               period = sched->last_csw - thread->stat.exec_start;
-               if (!period && thread == sched->runthread) {
-                       iter->stat_info[n].exec_time = 1;
-                       iter->stat_info[n].exec_period = 1;
-               } else {
-                       iter->stat_info[n].exec_time = thread->stat.exec_time;
-                       iter->stat_info[n].exec_period = period;
-               }
-               thread->stat.exec_time = 0;
-               thread->stat.exec_start = sched->last_csw;
+		period = sched->last_csw - thread->stat.exec_start;
+		if (!period && thread == sched->runthread) {
+			iter->stat_info[n].exec_time = 1;
+			iter->stat_info[n].exec_period = 1;
+		} else {
+			iter->stat_info[n].exec_time = thread->stat.exec_time;
+			iter->stat_info[n].exec_period = period;
+		}
+		thread->stat.exec_time = 0;
+		thread->stat.exec_start = sched->last_csw;
 
-               holder = nextq(&nkpod->threadq, holder);
+		holder = nextq(&nkpod->threadq, holder);
 
-               xnlock_put_irqrestore(&nklock, s);
-       }
+		xnlock_put_irqrestore(&nklock, s);
+	}
 
 	seq = (struct seq_file *)file->private_data;
 	seq->private = iter;
@@ -736,8 +737,7 @@ static int iface_read_proc(char *page,
 	struct xnskentry *iface = (struct xnskentry *)data;
 	int len, refcnt = xnarch_atomic_get(&iface->refcnt);
 
-	len = sprintf(page, "%d\n",
-		      refcnt < 0 ? 0 : refcnt);
+	len = sprintf(page, "%d\n", refcnt < 0 ? 0 : refcnt);
 
 	len -= off;
 	if (len <= off + count)

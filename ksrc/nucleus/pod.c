@@ -203,7 +203,7 @@ static int xnpod_fault_handler(xnarch_fltinfo_t *fltinfo)
 			     xnarch_fault_pc(fltinfo),
 			     xnthread_user_pid(thread));
 			xnarch_trace_panic_dump();
-		} else if (xnarch_fault_notify(fltinfo)) /* Don't report debug traps */
+		} else if (xnarch_fault_notify(fltinfo))	/* Don't report debug traps */
 			xnprintf
 			    ("Switching %s to secondary mode after exception #%u from "
 			     "user-space at 0x%lx (pid %d)\n", thread->name,
@@ -669,8 +669,8 @@ static inline void xnpod_switch_zombie(xnthread_t *threadout,
 
 	xnthread_cleanup_tcb(threadout);
 
-       /* no need to update stats of dying thread */
-       xnpod_update_csw_date(sched);
+	/* no need to update stats of dying thread */
+	xnpod_update_csw_date(sched);
 
 	xnarch_finalize_and_switch(xnthread_archtcb(threadout),
 				   xnthread_archtcb(threadin));
@@ -818,7 +818,7 @@ int xnpod_init_thread(xnthread_t *thread,
 	xnlock_get_irqsave(&nklock, s);
 	thread->sched = xnpod_current_sched();
 	appendq(&nkpod->threadq, &thread->glink);
-       nkpod->threadq_rev++;
+	nkpod->threadq_rev++;
 	xnpod_suspend_thread(thread, XNDORMANT | (flags & XNSUSP), XN_INFINITE,
 			     NULL);
 	xnlock_put_irqrestore(&nklock, s);
@@ -1229,7 +1229,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 	sched = thread->sched;
 
 	removeq(&nkpod->threadq, &thread->glink);
-       nkpod->threadq_rev++;
+	nkpod->threadq_rev++;
 
 	if (!testbits(thread->status, XNTHREAD_BLOCK_BITS)) {
 		if (testbits(thread->status, XNREADY)) {
@@ -1892,8 +1892,8 @@ int xnpod_migrate_thread(int cpu)
 
 	xnpod_schedule();
 
-       /* Reset execution time stats due to unsync'ed TSCs */
-       xnpod_reset_exec_stats(thread);
+	/* Reset execution time stats due to unsync'ed TSCs */
+	xnpod_reset_exec_stats(thread);
 
       unlock_and_exit:
 
@@ -2084,8 +2084,7 @@ void xnpod_dispatch_signals(void)
 	/* Process user-defined signals if the ASR is enabled for this
 	   thread. */
 
-	if (thread->signals == 0 ||
-	    testbits(thread->status, XNASDI)
+	if (thread->signals == 0 || testbits(thread->status, XNASDI)
 	    || thread->asr == XNTHREAD_INVALID_ASR)
 		return;
 
@@ -2439,7 +2438,7 @@ void xnpod_schedule(void)
 		xnarch_enter_root(xnthread_archtcb(threadin));
 	}
 
-       xnpod_acc_exec_time(sched, threadout);
+	xnpod_acc_exec_time(sched, threadout);
 	xnthread_inc_csw(threadin);
 
 	xnarch_switch_to(xnthread_archtcb(threadout),
@@ -2611,7 +2610,7 @@ void xnpod_schedule_runnable(xnthread_t *thread, int flags)
 		nkpod->schedhook(runthread, XNREADY);
 #endif /* __XENO_SIM__ */
 
-       xnpod_acc_exec_time(sched, runthread);
+	xnpod_acc_exec_time(sched, runthread);
 	xnthread_inc_csw(threadin);
 
 	xnarch_switch_to(xnthread_archtcb(runthread),
@@ -3127,8 +3126,7 @@ void xnpod_stop_timer(void)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!nkpod ||
-	    testbits(nkpod->status, XNPIDLE)
+	if (!nkpod || testbits(nkpod->status, XNPIDLE)
 	    || !testbits(nkpod->status, XNTIMED)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return;

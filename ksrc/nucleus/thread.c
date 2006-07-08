@@ -90,8 +90,8 @@ int xnthread_init(xnthread_t *thread,
 	thread->stat.ssw = 0;
 	thread->stat.csw = 0;
 	thread->stat.pf = 0;
-       thread->stat.exec_time = 0;
-       thread->stat.exec_start = 0;
+	thread->stat.exec_time = 0;
+	thread->stat.exec_start = 0;
 #endif /* CONFIG_XENO_OPT_STATS */
 
 	/* These will be filled by xnpod_start_thread() */
