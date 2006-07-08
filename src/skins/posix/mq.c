@@ -40,7 +40,7 @@ mqd_t __wrap_mq_open(const char *name, int oflags, ...)
 		va_end(ap);
 	}
 
-	q = __real_open("/dev/null", oflags, 0);
+	q = __real_open("/dev/null", O_RDWR, 0);
 
 	if (q == -1)
 		return (mqd_t) - 1;
