@@ -152,6 +152,8 @@ typedef struct xnthread {
 	unsigned long csw;	/* Context switches (includes
 				   secondary -> primary switches) */
 	unsigned long pf;	/* Number of page faults */
+       xnticks_t exec_time;    /* Accumulated execution time (tsc) */
+       xnticks_t exec_start;   /* Start of execution time accumulation (tsc) */
     } stat;
 #endif /* CONFIG_XENO_OPT_STATS */
 

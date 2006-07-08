@@ -145,6 +145,10 @@ typedef struct xnsched {
 
     xnthread_t rootcb;          /*!< Root thread control block. */
 
+#ifdef CONFIG_XENO_OPT_STATS
+    xnticks_t last_csw;         /*!< Last context switch (ticks). */
+#endif /* CONFIG_XENO_OPT_STATS */
+
 } xnsched_t;
 
 #ifdef CONFIG_SMP
@@ -195,6 +199,7 @@ struct xnpod {
     xnsched_t sched[XNARCH_NR_CPUS]; /*!< Per-cpu scheduler slots. */
 
     xnqueue_t threadq;          /*!< All existing threads. */
+    int threadq_rev;            /*!< Modification counter of threadq. */
 
     volatile u_long schedlck;	/*!< Scheduler lock count. */
 
@@ -543,6 +548,40 @@ static inline void xnpod_delete_self (void)
 {
     xnpod_delete_thread(xnpod_current_thread());
 }
+
+#ifdef CONFIG_XENO_OPT_STATS
+static inline void xnpod_acc_exec_time(xnsched_t *sched, xnthread_t *thread)
+{
+    xnticks_t now = xnarch_get_cpu_tsc();
+
+    thread->stat.exec_time += now - sched->last_csw;
+    sched->last_csw = now;
+}
+
+static inline void xnpod_reset_exec_stats(xnthread_t *thread)
+{
+    thread->stat.exec_time = 0;
+    thread->stat.exec_start = xnarch_get_cpu_tsc();
+}
+
+static inline void xnpod_update_csw_date(xnsched_t *sched)
+{
+    sched->last_csw = xnarch_get_cpu_tsc();
+}
+
+#else /* !CONFIG_XENO_OPT_STATS */
+static inline void xnpod_acc_exec_time(xnsched_t *sched, xnthread_t *thread)
+{
+}
+
+static inline void xnpod_reset_exec_stats(xnthread_t *thread)
+{
+}
+
+static inline void xnpod_update_csw_date(xnsched_t *sched)
+{
+}
+#endif /* CONFIG_XENO_OPT_STATS */
 
 #ifdef __cplusplus
 }

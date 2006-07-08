@@ -1,3 +1,14 @@
+2006-07-08  Jan Kiszka  <jan.kiszka@web.de>
+
+	* src/testsuite/irqbench/irqloop.c: Provide test for running the
+	irq loopback ahead of Xenomai in its own domain.
+	
+	* ksrc/nucleus/module.c: Improve scalability of "stat" and "sched"
+	entries in presence of a large number of threads. Display
+	per-thread execution time statistics.
+
+	* ksrc/nucleus/pod.c: Collect per-thread execution statistics.
+	
 2006-07-07  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* src/skins/vxworks/taskLib.c (taskExit): Only exit the calling
