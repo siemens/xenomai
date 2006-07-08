@@ -1,6 +1,8 @@
 IRQ Latency Benchmark
 ---------------------
 
+1. Overview
+
 This latency benchmark for external interrupts consists of three parts:
 
 1. xeno_irqbench (ksrc/drivers/testing)
@@ -18,6 +20,9 @@ This latency benchmark for external interrupts consists of three parts:
    it manually, invoke
 
         <gcc-x86-compiler> irqbench.c -o irqbench -O2
+
+
+2. Hardware Setup
 
 To link both test and log system, a null-modem cable between 8250-compatible
 two RS232 ports is required. The infrastructure for parallel port cross-over
@@ -38,6 +43,36 @@ must provide at least the following links:
 Test and log system can be started in arbitrary order, they will wait on
 each other.
 
+
+3. Test Scenarios
+
+The xeno_irqbench driver supports four different IRQ handling scenarios,
+selectable via "-t <test_mode>" on irqloop start-up:
+
+Mode 0 - Installs an IRQ handler that wakes up a user-space task. This task
+         is provided by irqloop. Once it is woken up, it will issue an IOCTL
+         to xeno_irqbench in order to generate the reply. This scenario is
+         typical for kernel-based device drivers.
+
+Mode 1 - Same as mode 0, except that the task resides inside the kernel and is
+         provided by xeno_irqbench itself. A typical scenario for kernel-based
+         RT-applications or drivers that handle IRQ requests inside a kernel
+         task.
+
+Mode 2 - Installs an IRQ handler that directly replies to the event. This
+         scenario measures the reactivity of driver IRQ handlers when handling
+         events immediately or taking timestamps.
+
+Mode 3 - In this mode, an additional I-pipe domain is registered on top of
+         Xenomai. The IRQ handler for immediate reply is then assigned to the
+         new domain. By pushing the handling above Xenomai, the IRQ reply
+         latency can widely be decoupled from RT-application-related delays.
+         The drawback is that no direct interaction with the Xenomai scheduler
+         is possible from the higher domain.
+
+
+4. Measuring
+
 The log system runs each single IRQ measurement with local IRQs disabled. It
 will wait up to 100 times the current period on the test system's reply (after
 initial successful synchronisation, which happens with IRQs enabled). Note that
@@ -48,4 +83,3 @@ new IRQ event before the reply on the previous one has arrived or timed out.
 Thus the specified test period may be dynamically expended in case of
 overload. But maximum a latency close or above the period will clearly
 indicate this.
-

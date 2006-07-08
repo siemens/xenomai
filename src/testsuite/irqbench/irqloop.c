@@ -54,7 +54,8 @@ void sighand(int sig)
 int main(int argc, char *argv[])
 {
     const char *mode_name[] =
-        { "user-space task", "kernel-space task", "IRQ handler" };
+        { "user-space task", "kernel-space task",
+          "IRQ handler", "hard-IRQ handler" };
     const char *port_type_name[] = { "serial", "parallel" };
     char devname[RTDM_MAX_DEVNAME_LEN];
     int benchdev_no = 0;
@@ -102,7 +103,8 @@ int main(int argc, char *argv[])
             default:
                 fprintf(stderr, "usage: irqloop [options]\n"
                         "  [-D <testing_device_no>] # number of testing device, default=0\n"
-                        "  [-t <test_mode>]         # 0=user task (default), 1=kernel task, 2=IRQ\n"
+                        "  [-t <test_mode>]         # 0=user task (default), 1=kernel task,\n"
+                        "                           # 2=IRQ handler, 3=hard-IRQ handler\n"
                         "  [-P <priority>]          # task priority (test mode 0 and 1 only)\n"
                         "  [-o <port_type>]         # 0=serial (default), 1=parallel\n"
                         "  [-a <port_io_address>]   # default=0x3f8\n"
