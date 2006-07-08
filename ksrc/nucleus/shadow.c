@@ -596,7 +596,7 @@ int xnshadow_harden(void)
 		return -EPERM;
 
 	if (signal_pending(this_task) || down_interruptible(&gk->sync))
-                /* Grab the request token. */
+		/* Grab the request token. */
 		return -ERESTARTSYS;
 
 	xnltt_log_event(xeno_ev_primarysw, this_task->comm);
@@ -891,7 +891,7 @@ void xnshadow_unmap(xnthread_t *thread)
 			if (xnarch_atomic_dec_and_test(&muxtable[0].refcnt))
 				xnarch_atomic_dec(&muxtable[0].refcnt);
 			if (xnarch_atomic_dec_and_test(&muxtable[muxid].refcnt))
-				
+
 				/* We were the last thread, decrement the counter,
 				   since it was incremented by the xn_sys_bind
 				   operation. */
@@ -1130,7 +1130,7 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 
 	if (!muxtable[muxid].eventcb)
 		goto eventcb_done;
-	
+
 	xnlock_get_irqsave(&nklock, s);
 	ppd = xnshadow_ppd_lookup(muxid, curr->mm);
 	xnlock_put_irqrestore(&nklock, s);
@@ -1149,10 +1149,10 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 
 	if (!ppd)
 		goto eventcb_done;
-	
+
 	ppd->key.muxid = muxid;
 	ppd->key.mm = curr->mm;
-	
+
 	if (xnshadow_ppd_insert(ppd) == -EBUSY) {
 		/* In case of concurrent binding (which can not happen with
 		   Xenomai libraries), detach right away the second ppd. */
@@ -1160,13 +1160,13 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 		ppd = NULL;
 		goto eventcb_done;
 	}
-	
+
 	if (muxtable[muxid].module && !try_module_get(muxtable[muxid].module)) {
 		err = -ESRCH;
 		goto fail;
 	}
-	
-  eventcb_done:
+
+      eventcb_done:
 	if (!nkpod || testbits(nkpod->status, XNPIDLE)) {
 		/* Ok mate, but you really ought to create some pod in a way
 		   or another if you want me to be of some help here... */
@@ -1179,7 +1179,7 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 
 		err = -ENOSYS;
 
-	  fail:
+	      fail:
 		if (!xnarch_atomic_get(&muxtable[muxid].refcnt))
 			xnarch_atomic_dec(&muxtable[muxid].refcnt);
 		if (!xnarch_atomic_get(&muxtable[muxid].refcnt))
@@ -1324,8 +1324,8 @@ static int xnshadow_sys_trace(struct task_struct *curr, struct pt_regs *regs)
 
 	case __xntrace_op_special_u64:
 		err = xnarch_trace_special_u64(__xn_reg_arg2(regs) & 0xFF,
-					(((u64)__xn_reg_arg3(regs)) << 32) |
-					__xn_reg_arg4(regs));
+					       (((u64) __xn_reg_arg3(regs)) <<
+						32) | __xn_reg_arg4(regs));
 		break;
 	}
 	return err;
@@ -1686,7 +1686,7 @@ static inline void do_schedule_event(struct task_struct *next)
 			newrprio = threadin->cprio;
 		else
 #endif /* CONFIG_XENO_OPT_RPIDISABLE */
-			newrprio = XNPOD_ROOT_PRIO_BASE; /* Decouple priority scales. */
+			newrprio = XNPOD_ROOT_PRIO_BASE;	/* Decouple priority scales. */
 
 #ifdef CONFIG_XENO_OPT_DEBUG
 		{
@@ -1822,7 +1822,7 @@ static inline void do_setsched_event(struct task_struct *p, int priority)
 		xnpod_renice_thread_inner(thread, priority, 0);
 
 #ifndef CONFIG_XENO_OPT_RPIDISABLE
-	if (current == p && 
+	if (current == p &&
 	    likely(!testbits(thread->status, XNRPIOFF)) &&
 	    thread->cprio != xnpod_current_root()->cprio)
 		xnpod_renice_root(thread->cprio);
