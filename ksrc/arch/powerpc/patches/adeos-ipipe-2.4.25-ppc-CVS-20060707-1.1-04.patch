@@ -1,7 +1,7 @@
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/config.in 2.4.25-ppc-ipipe/arch/ppc/config.in
---- linuxppc_2_4_denx-20060430/arch/ppc/config.in	2006-04-30 18:48:09.000000000 +0200
-+++ 2.4.25-ppc-ipipe/arch/ppc/config.in	2006-07-06 15:53:08.000000000 +0200
-@@ -814,6 +814,7 @@ else
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/arch/ppc/config.in 2.4.25-ppc-ipipe/arch/ppc/config.in
+--- linuxppc_2_4_denx-20060707/arch/ppc/config.in	2006-07-07 17:58:49.000000000 +0200
++++ 2.4.25-ppc-ipipe/arch/ppc/config.in	2006-07-07 18:27:05.000000000 +0200
+@@ -818,6 +818,7 @@ else
    fi
  fi
  
@@ -9,8 +9,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/config.in 2.4.25-pp
  bool 'Networking support' CONFIG_NET
  bool 'Sysctl support' CONFIG_SYSCTL
  bool 'System V IPC' CONFIG_SYSVIPC
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/Makefile 2.4.25-ppc-ipipe/arch/ppc/kernel/Makefile
---- linuxppc_2_4_denx-20060430/arch/ppc/kernel/Makefile	2006-04-30 18:48:10.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/arch/ppc/kernel/Makefile 2.4.25-ppc-ipipe/arch/ppc/kernel/Makefile
+--- linuxppc_2_4_denx-20060707/arch/ppc/kernel/Makefile	2006-04-30 18:48:10.000000000 +0200
 +++ 2.4.25-ppc-ipipe/arch/ppc/kernel/Makefile	2006-04-30 19:30:18.000000000 +0200
 @@ -46,12 +46,14 @@ export-objs			:= ppc_ksyms.o time.o ocp.
  					ppc4xx_dma.o ppc4xx_sgdma.o \
@@ -28,8 +28,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/Makefile 2.4
  ifneq ($(CONFIG_6xx),y)
  obj-y				+= idle_gen.o
  endif
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/entry.S 2.4.25-ppc-ipipe/arch/ppc/kernel/entry.S
---- linuxppc_2_4_denx-20060430/arch/ppc/kernel/entry.S	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/arch/ppc/kernel/entry.S 2.4.25-ppc-ipipe/arch/ppc/kernel/entry.S
+--- linuxppc_2_4_denx-20060707/arch/ppc/kernel/entry.S	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/arch/ppc/kernel/entry.S	2006-04-28 11:18:33.000000000 +0200
 @@ -53,6 +53,21 @@ _GLOBAL(DoSyscall)
  	lis	r10,0x1000
@@ -88,8 +88,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/entry.S 2.4.
  	lwz	r3,_MSR(r1)	/* Returning to user mode? */
  	andi.	r3,r3,MSR_PR
  	beq+	do_signal_ret	/* if so, check need_resched and signals */
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/head.S 2.4.25-ppc-ipipe/arch/ppc/kernel/head.S
---- linuxppc_2_4_denx-20060430/arch/ppc/kernel/head.S	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/arch/ppc/kernel/head.S 2.4.25-ppc-ipipe/arch/ppc/kernel/head.S
+--- linuxppc_2_4_denx-20060707/arch/ppc/kernel/head.S	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/arch/ppc/kernel/head.S	2005-11-09 15:26:12.000000000 +0100
 @@ -435,7 +435,11 @@ HardwareInterrupt:
  	bl	transfer_to_handler
@@ -116,8 +116,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/head.S 2.4.2
  	.long	ret_from_intercept
  
  	STD_EXCEPTION(0xa00, Trap_0a, UnknownException)
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/head_440.S 2.4.25-ppc-ipipe/arch/ppc/kernel/head_440.S
---- linuxppc_2_4_denx-20060430/arch/ppc/kernel/head_440.S	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/arch/ppc/kernel/head_440.S 2.4.25-ppc-ipipe/arch/ppc/kernel/head_440.S
+--- linuxppc_2_4_denx-20060707/arch/ppc/kernel/head_440.S	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/arch/ppc/kernel/head_440.S	2005-11-09 15:14:35.000000000 +0100
 @@ -539,7 +539,11 @@ interrupt_base:
  	li      r4,0
@@ -145,8 +145,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/head_440.S 2
  	.long   ret_from_intercept
  	.long	0x1000
  
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/head_44x.S 2.4.25-ppc-ipipe/arch/ppc/kernel/head_44x.S
---- linuxppc_2_4_denx-20060430/arch/ppc/kernel/head_44x.S	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/arch/ppc/kernel/head_44x.S 2.4.25-ppc-ipipe/arch/ppc/kernel/head_44x.S
+--- linuxppc_2_4_denx-20060707/arch/ppc/kernel/head_44x.S	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/arch/ppc/kernel/head_44x.S	2005-11-09 15:15:12.000000000 +0100
 @@ -552,7 +552,11 @@ interrupt_base:
  	li      r4,0
@@ -174,8 +174,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/head_44x.S 2
  	.long   ret_from_intercept
  	.long	0x1000
  
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/head_4xx.S 2.4.25-ppc-ipipe/arch/ppc/kernel/head_4xx.S
---- linuxppc_2_4_denx-20060430/arch/ppc/kernel/head_4xx.S	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/arch/ppc/kernel/head_4xx.S 2.4.25-ppc-ipipe/arch/ppc/kernel/head_4xx.S
+--- linuxppc_2_4_denx-20060707/arch/ppc/kernel/head_4xx.S	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/arch/ppc/kernel/head_4xx.S	2005-11-09 15:14:57.000000000 +0100
 @@ -384,7 +384,11 @@ label:
  	li	r4,0
@@ -201,8 +201,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/head_4xx.S 2
  	.long	ret_from_intercept
  
  #if 0
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/head_8xx.S 2.4.25-ppc-ipipe/arch/ppc/kernel/head_8xx.S
---- linuxppc_2_4_denx-20060430/arch/ppc/kernel/head_8xx.S	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/arch/ppc/kernel/head_8xx.S 2.4.25-ppc-ipipe/arch/ppc/kernel/head_8xx.S
+--- linuxppc_2_4_denx-20060707/arch/ppc/kernel/head_8xx.S	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/arch/ppc/kernel/head_8xx.S	2005-11-19 19:02:03.000000000 +0100
 @@ -231,7 +231,11 @@ HardwareInterrupt:
  	bl	transfer_to_handler
@@ -230,8 +230,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/head_8xx.S 2
  	.long	ret_from_intercept
  
  	STD_EXCEPTION(0xa00, Trap_0a, UnknownException)
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/head_e500.S 2.4.25-ppc-ipipe/arch/ppc/kernel/head_e500.S
---- linuxppc_2_4_denx-20060430/arch/ppc/kernel/head_e500.S	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/arch/ppc/kernel/head_e500.S 2.4.25-ppc-ipipe/arch/ppc/kernel/head_e500.S
+--- linuxppc_2_4_denx-20060707/arch/ppc/kernel/head_e500.S	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/arch/ppc/kernel/head_e500.S	2005-11-09 15:15:31.000000000 +0100
 @@ -618,7 +618,11 @@ interrupt_base:
  	li      r4,0
@@ -259,8 +259,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/head_e500.S 
  	.long   ret_from_intercept
  	.long	0x900
  
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/idle.c 2.4.25-ppc-ipipe/arch/ppc/kernel/idle.c
---- linuxppc_2_4_denx-20060430/arch/ppc/kernel/idle.c	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/arch/ppc/kernel/idle.c 2.4.25-ppc-ipipe/arch/ppc/kernel/idle.c
+--- linuxppc_2_4_denx-20060707/arch/ppc/kernel/idle.c	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/arch/ppc/kernel/idle.c	2005-11-09 15:37:16.000000000 +0100
 @@ -50,6 +50,7 @@ int idled(void)
  	current->counter = -100;
@@ -270,8 +270,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/idle.c 2.4.2
  #ifdef CONFIG_SMP
  		if (!do_power_save) {
  			/*
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/ipipe-core.c 2.4.25-ppc-ipipe/arch/ppc/kernel/ipipe-core.c
---- linuxppc_2_4_denx-20060430/arch/ppc/kernel/ipipe-core.c	1970-01-01 01:00:00.000000000 +0100
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/arch/ppc/kernel/ipipe-core.c 2.4.25-ppc-ipipe/arch/ppc/kernel/ipipe-core.c
+--- linuxppc_2_4_denx-20060707/arch/ppc/kernel/ipipe-core.c	1970-01-01 01:00:00.000000000 +0100
 +++ 2.4.25-ppc-ipipe/arch/ppc/kernel/ipipe-core.c	2006-05-03 09:45:46.000000000 +0200
 @@ -0,0 +1,265 @@
 +/* -*- linux-c -*-
@@ -539,8 +539,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/ipipe-core.c
 +EXPORT_SYMBOL(ipipe_trigger_irq);
 +EXPORT_SYMBOL(ipipe_get_sysinfo);
 +EXPORT_SYMBOL(ipipe_tune_timer);
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/ipipe-root.c 2.4.25-ppc-ipipe/arch/ppc/kernel/ipipe-root.c
---- linuxppc_2_4_denx-20060430/arch/ppc/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/arch/ppc/kernel/ipipe-root.c 2.4.25-ppc-ipipe/arch/ppc/kernel/ipipe-root.c
+--- linuxppc_2_4_denx-20060707/arch/ppc/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
 +++ 2.4.25-ppc-ipipe/arch/ppc/kernel/ipipe-root.c	2006-05-07 18:07:59.000000000 +0200
 @@ -0,0 +1,417 @@
 +/* -*- linux-c -*-
@@ -960,8 +960,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/ipipe-root.c
 +EXPORT_SYMBOL(context_mm);
 +EXPORT_SYMBOL(steal_context);
 +#endif
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/irq.c 2.4.25-ppc-ipipe/arch/ppc/kernel/irq.c
---- linuxppc_2_4_denx-20060430/arch/ppc/kernel/irq.c	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/arch/ppc/kernel/irq.c 2.4.25-ppc-ipipe/arch/ppc/kernel/irq.c
+--- linuxppc_2_4_denx-20060707/arch/ppc/kernel/irq.c	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/arch/ppc/kernel/irq.c	2005-11-09 17:22:26.000000000 +0100
 @@ -433,7 +433,9 @@ void ppc_irq_dispatch_handler(struct pt_
  
@@ -973,8 +973,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/irq.c 2.4.25
  	/*
  	   REPLAY is when Linux resends an IRQ that was dropped earlier
  	   WAITING is used by probe to mark irqs that are being tested
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/ppc_ksyms.c 2.4.25-ppc-ipipe/arch/ppc/kernel/ppc_ksyms.c
---- linuxppc_2_4_denx-20060430/arch/ppc/kernel/ppc_ksyms.c	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/arch/ppc/kernel/ppc_ksyms.c 2.4.25-ppc-ipipe/arch/ppc/kernel/ppc_ksyms.c
+--- linuxppc_2_4_denx-20060707/arch/ppc/kernel/ppc_ksyms.c	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/arch/ppc/kernel/ppc_ksyms.c	2005-11-12 23:32:06.000000000 +0100
 @@ -314,6 +314,7 @@ EXPORT_SYMBOL(screen_info);
  #endif
@@ -992,8 +992,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/ppc_ksyms.c 
  EXPORT_SYMBOL(timer_interrupt_intercept);
  EXPORT_SYMBOL(timer_interrupt);
  EXPORT_SYMBOL(do_IRQ_intercept);
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/traps.c 2.4.25-ppc-ipipe/arch/ppc/kernel/traps.c
---- linuxppc_2_4_denx-20060430/arch/ppc/kernel/traps.c	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/arch/ppc/kernel/traps.c 2.4.25-ppc-ipipe/arch/ppc/kernel/traps.c
+--- linuxppc_2_4_denx-20060707/arch/ppc/kernel/traps.c	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/arch/ppc/kernel/traps.c	2005-11-09 15:48:16.000000000 +0100
 @@ -211,6 +211,9 @@ MachineCheckException(struct pt_regs *re
  {
@@ -1108,8 +1108,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/kernel/traps.c 2.4.
  	spefscr = current->thread.spefscr;
  	fpexc_mode = current->thread.fpexc_mode;
  
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/mm/fault.c 2.4.25-ppc-ipipe/arch/ppc/mm/fault.c
---- linuxppc_2_4_denx-20060430/arch/ppc/mm/fault.c	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/arch/ppc/mm/fault.c 2.4.25-ppc-ipipe/arch/ppc/mm/fault.c
+--- linuxppc_2_4_denx-20060707/arch/ppc/mm/fault.c	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/arch/ppc/mm/fault.c	2005-11-09 15:44:32.000000000 +0100
 @@ -119,6 +119,9 @@ void do_page_fault(struct pt_regs *regs,
  		is_write = error_code & 0x02000000;
@@ -1121,9 +1121,9 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/arch/ppc/mm/fault.c 2.4.25-p
  #if defined(CONFIG_XMON) || defined(CONFIG_KGDB)
  	if (debugger_fault_handler && regs->trap == 0x300) {
  		debugger_fault_handler(regs);
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/include/asm-ppc/hw_irq.h 2.4.25-ppc-ipipe/include/asm-ppc/hw_irq.h
---- linuxppc_2_4_denx-20060430/include/asm-ppc/hw_irq.h	2006-04-28 17:21:04.000000000 +0200
-+++ 2.4.25-ppc-ipipe/include/asm-ppc/hw_irq.h	2006-05-08 23:50:59.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/include/asm-ppc/hw_irq.h 2.4.25-ppc-ipipe/include/asm-ppc/hw_irq.h
+--- linuxppc_2_4_denx-20060707/include/asm-ppc/hw_irq.h	2006-04-28 17:21:04.000000000 +0200
++++ 2.4.25-ppc-ipipe/include/asm-ppc/hw_irq.h	2006-07-07 18:27:05.000000000 +0200
 @@ -10,6 +10,60 @@ extern unsigned long do_IRQ_intercept;
  extern int timer_interrupt(struct pt_regs *);
  extern void ppc_irq_dispatch_handler(struct pt_regs *regs, int irq);
@@ -1194,9 +1194,9 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/include/asm-ppc/hw_irq.h 2.4
  extern void do_lost_interrupts(unsigned long);
  
  #define mask_irq(irq) ({if (irq_desc[irq].handler && irq_desc[irq].handler->disable) irq_desc[irq].handler->disable(irq);})
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/include/asm-ppc/ipipe.h 2.4.25-ppc-ipipe/include/asm-ppc/ipipe.h
---- linuxppc_2_4_denx-20060430/include/asm-ppc/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.4.25-ppc-ipipe/include/asm-ppc/ipipe.h	2006-07-06 15:57:09.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/include/asm-ppc/ipipe.h 2.4.25-ppc-ipipe/include/asm-ppc/ipipe.h
+--- linuxppc_2_4_denx-20060707/include/asm-ppc/ipipe.h	1970-01-01 01:00:00.000000000 +0100
++++ 2.4.25-ppc-ipipe/include/asm-ppc/ipipe.h	2006-07-06 16:20:23.000000000 +0200
 @@ -0,0 +1,206 @@
 +/* -*- linux-c -*-
 + * include/asm-ppc/ipipe.h
@@ -1404,8 +1404,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/include/asm-ppc/ipipe.h 2.4.
 +#endif /* CONFIG_IPIPE */
 +
 +#endif	/* !__PPC_IPIPE_H */
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/include/asm-ppc/mmu_context.h 2.4.25-ppc-ipipe/include/asm-ppc/mmu_context.h
---- linuxppc_2_4_denx-20060430/include/asm-ppc/mmu_context.h	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/include/asm-ppc/mmu_context.h 2.4.25-ppc-ipipe/include/asm-ppc/mmu_context.h
+--- linuxppc_2_4_denx-20060707/include/asm-ppc/mmu_context.h	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/include/asm-ppc/mmu_context.h	2006-05-09 10:03:11.000000000 +0200
 @@ -148,12 +148,15 @@ static inline void get_mmu_context(struc
   */
@@ -1436,8 +1436,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/include/asm-ppc/mmu_context.
  }
  
  extern void mmu_context_init(void);
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/include/asm-ppc/system.h 2.4.25-ppc-ipipe/include/asm-ppc/system.h
---- linuxppc_2_4_denx-20060430/include/asm-ppc/system.h	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/include/asm-ppc/system.h 2.4.25-ppc-ipipe/include/asm-ppc/system.h
+--- linuxppc_2_4_denx-20060707/include/asm-ppc/system.h	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/include/asm-ppc/system.h	2006-05-09 10:03:20.000000000 +0200
 @@ -81,7 +81,9 @@ struct device_node;
  extern void note_scsi_host(struct device_node *, void *);
@@ -1450,8 +1450,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/include/asm-ppc/system.h 2.4
  #define switch_to(prev,next,last) _switch_to((prev),(next),&(last))
  extern void _switch_to(struct task_struct *, struct task_struct *,
  		       struct task_struct **);
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/include/linux/ipipe.h 2.4.25-ppc-ipipe/include/linux/ipipe.h
---- linuxppc_2_4_denx-20060430/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/include/linux/ipipe.h 2.4.25-ppc-ipipe/include/linux/ipipe.h
+--- linuxppc_2_4_denx-20060707/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
 +++ 2.4.25-ppc-ipipe/include/linux/ipipe.h	2006-07-06 10:33:56.000000000 +0200
 @@ -0,0 +1,729 @@
 +/* -*- linux-c -*-
@@ -2183,8 +2183,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/include/linux/ipipe.h 2.4.25
 +#endif	/* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_H */
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/include/linux/sched.h 2.4.25-ppc-ipipe/include/linux/sched.h
---- linuxppc_2_4_denx-20060430/include/linux/sched.h	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/include/linux/sched.h 2.4.25-ppc-ipipe/include/linux/sched.h
+--- linuxppc_2_4_denx-20060707/include/linux/sched.h	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/include/linux/sched.h	2006-05-09 10:04:44.000000000 +0200
 @@ -6,6 +6,7 @@
  extern unsigned long event;
@@ -2204,8 +2204,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/include/linux/sched.h 2.4.25
  };
  
  /*
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/init/main.c 2.4.25-ppc-ipipe/init/main.c
---- linuxppc_2_4_denx-20060430/init/main.c	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/init/main.c 2.4.25-ppc-ipipe/init/main.c
+--- linuxppc_2_4_denx-20060707/init/main.c	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/init/main.c	2006-05-03 09:04:10.000000000 +0200
 @@ -409,6 +409,11 @@ asmlinkage void __init start_kernel(void
  	softirq_init();
@@ -2227,8 +2227,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/init/main.c 2.4.25-ppc-ipipe
  
  	/*
  	 * Ok, at this point all CPU's should be initialized, so
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/Makefile 2.4.25-ppc-ipipe/kernel/Makefile
---- linuxppc_2_4_denx-20060430/kernel/Makefile	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/kernel/Makefile 2.4.25-ppc-ipipe/kernel/Makefile
+--- linuxppc_2_4_denx-20060707/kernel/Makefile	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/kernel/Makefile	2006-07-06 15:53:15.000000000 +0200
 @@ -16,6 +16,7 @@ obj-y     = sched.o dma.o fork.o exec_do
  	    sysctl.o acct.o capability.o ptrace.o timer.o user.o \
@@ -2245,8 +2245,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/Makefile 2.4.25-ppc-i
 +subdir-$(CONFIG_IPIPE) += ipipe
 +
  include $(TOPDIR)/Rules.make
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/exit.c 2.4.25-ppc-ipipe/kernel/exit.c
---- linuxppc_2_4_denx-20060430/kernel/exit.c	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/kernel/exit.c 2.4.25-ppc-ipipe/kernel/exit.c
+--- linuxppc_2_4_denx-20060707/kernel/exit.c	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/kernel/exit.c	2005-11-09 11:50:05.000000000 +0100
 @@ -439,6 +439,7 @@ fake_volatile:
  #ifdef CONFIG_BSD_PROCESS_ACCT
@@ -2256,8 +2256,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/exit.c 2.4.25-ppc-ipi
  	__exit_mm(tsk);
  
  	lock_kernel();
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/fork.c 2.4.25-ppc-ipipe/kernel/fork.c
---- linuxppc_2_4_denx-20060430/kernel/fork.c	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/kernel/fork.c 2.4.25-ppc-ipipe/kernel/fork.c
+--- linuxppc_2_4_denx-20060707/kernel/fork.c	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/kernel/fork.c	2006-05-08 11:16:04.000000000 +0200
 @@ -239,7 +239,9 @@ static struct mm_struct * mm_init(struct
  	atomic_set(&mm->mm_count, 1);
@@ -2306,8 +2306,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/fork.c 2.4.25-ppc-ipi
  	wake_up_process(p);		/* do this last */
  	++total_forks;
  	if (clone_flags & CLONE_VFORK)
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/ipipe/Makefile 2.4.25-ppc-ipipe/kernel/ipipe/Makefile
---- linuxppc_2_4_denx-20060430/kernel/ipipe/Makefile	1970-01-01 01:00:00.000000000 +0100
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/kernel/ipipe/Makefile 2.4.25-ppc-ipipe/kernel/ipipe/Makefile
+--- linuxppc_2_4_denx-20060707/kernel/ipipe/Makefile	1970-01-01 01:00:00.000000000 +0100
 +++ 2.4.25-ppc-ipipe/kernel/ipipe/Makefile	2005-11-12 16:11:55.000000000 +0100
 @@ -0,0 +1,7 @@
 +O_TARGET := ipipe.o
@@ -2317,8 +2317,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/ipipe/Makefile 2.4.25
 +export-objs := $(obj-y)
 +
 +include $(TOPDIR)/Rules.make
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/ipipe/core.c 2.4.25-ppc-ipipe/kernel/ipipe/core.c
---- linuxppc_2_4_denx-20060430/kernel/ipipe/core.c	1970-01-01 01:00:00.000000000 +0100
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/kernel/ipipe/core.c 2.4.25-ppc-ipipe/kernel/ipipe/core.c
+--- linuxppc_2_4_denx-20060707/kernel/ipipe/core.c	1970-01-01 01:00:00.000000000 +0100
 +++ 2.4.25-ppc-ipipe/kernel/ipipe/core.c	2006-06-24 19:42:18.000000000 +0200
 @@ -0,0 +1,1049 @@
 +/* -*- linux-c -*-
@@ -3370,8 +3370,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/ipipe/core.c 2.4.25-p
 +EXPORT_SYMBOL(__ipipe_pipeline);
 +EXPORT_SYMBOL(__ipipe_pipelock);
 +EXPORT_SYMBOL(__ipipe_virtual_irq_map);
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/ipipe/generic.c 2.4.25-ppc-ipipe/kernel/ipipe/generic.c
---- linuxppc_2_4_denx-20060430/kernel/ipipe/generic.c	1970-01-01 01:00:00.000000000 +0100
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/kernel/ipipe/generic.c 2.4.25-ppc-ipipe/kernel/ipipe/generic.c
+--- linuxppc_2_4_denx-20060707/kernel/ipipe/generic.c	1970-01-01 01:00:00.000000000 +0100
 +++ 2.4.25-ppc-ipipe/kernel/ipipe/generic.c	2006-06-24 19:42:51.000000000 +0200
 @@ -0,0 +1,413 @@
 +/* -*- linux-c -*-
@@ -3787,8 +3787,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/ipipe/generic.c 2.4.2
 +EXPORT_SYMBOL(ipipe_set_irq_affinity);
 +EXPORT_SYMBOL(ipipe_send_ipi);
 +EXPORT_SYMBOL(__ipipe_schedule_irq);
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/printk.c 2.4.25-ppc-ipipe/kernel/printk.c
---- linuxppc_2_4_denx-20060430/kernel/printk.c	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/kernel/printk.c 2.4.25-ppc-ipipe/kernel/printk.c
+--- linuxppc_2_4_denx-20060707/kernel/printk.c	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/kernel/printk.c	2006-01-03 18:33:25.000000000 +0100
 @@ -413,7 +413,88 @@ static void emit_log_char(char c)
   * then changes console_loglevel may break. This is because console_loglevel
@@ -3887,8 +3887,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/printk.c 2.4.25-ppc-i
  EXPORT_SYMBOL(printk);
  
  /**
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/sched.c 2.4.25-ppc-ipipe/kernel/sched.c
---- linuxppc_2_4_denx-20060430/kernel/sched.c	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/kernel/sched.c 2.4.25-ppc-ipipe/kernel/sched.c
+--- linuxppc_2_4_denx-20060707/kernel/sched.c	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/kernel/sched.c	2006-04-28 17:51:10.000000000 +0200
 @@ -29,6 +29,7 @@
  #include <linux/completion.h>
@@ -4009,8 +4009,8 @@ diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/sched.c 2.4.25-ppc-ip
 +}
 +
 +#endif /* CONFIG_IPIPE */
-diff --exclude CVS -uNrp linuxppc_2_4_denx-20060430/kernel/signal.c 2.4.25-ppc-ipipe/kernel/signal.c
---- linuxppc_2_4_denx-20060430/kernel/signal.c	2006-04-28 17:21:04.000000000 +0200
+diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/kernel/signal.c 2.4.25-ppc-ipipe/kernel/signal.c
+--- linuxppc_2_4_denx-20060707/kernel/signal.c	2006-04-28 17:21:04.000000000 +0200
 +++ 2.4.25-ppc-ipipe/kernel/signal.c	2005-11-09 12:19:11.000000000 +0100
 @@ -495,6 +495,7 @@ static int send_signal(int sig, struct s
  static inline void signal_wake_up(struct task_struct *t)
