@@ -115,7 +115,8 @@ this modules by hand before launching your application.
 
 A2: If those modules are loaded but the error persists, check that
 your Xenomai configuration enables the pervasive real-time support in
-user-space, in the top-level "Nucleus" menu.
+user-space, in the top-level "Nucleus" menu
+(i.e. CONFIG_XENO_OPT_PERVASIVE).
 
 ______________________________________________________________________
 
