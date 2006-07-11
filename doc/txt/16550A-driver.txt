@@ -37,6 +37,17 @@ Arguments:
                   (=> "rtser0")
 
 
+In-Kernel Driver Setup
+----------------------
+(kernel 2.6 only!)
+
+If you prefer to compile xeno_16550A into the kernel, the arguments listed
+above have to be provided as kernel parameter. Just prepend the prefix
+"xeno_16550A.", e.g. "xeno_16550A.ioaddr=0x3f8,0x2f8". To control the standard
+Linux 8250 serial driver, either disable it at compile time or set the number
+of managed ports via "8250.nr_uarts=N".
+
+
 Usage
 -----
 
