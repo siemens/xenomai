@@ -62,9 +62,9 @@ typedef enum {
 	UFPS = 4	 /* use the FPU while in secondary mode. */
 } fpflags;
 
-sem_t sleeper_start;
+static sem_t sleeper_start;
 
-void timespec_substract(struct timespec *result,
+static void timespec_substract(struct timespec *result,
 			const struct timespec *lhs,
 			const struct timespec *rhs)
 {
@@ -75,6 +75,49 @@ void timespec_substract(struct timespec *result,
 		result->tv_sec -= 1;
 		result->tv_nsec = lhs->tv_nsec + (1000000000 - rhs->tv_nsec);
 	}
+}
+
+static char *task_name(struct cpu_tasks *cpu, unsigned task)
+{
+	char *basename [] = {
+		[SLEEPER] = "sleeper",
+		[RTK] = "rtk",
+		[RTUP] = "rtup",
+		[RTUS] = "rtus",
+		[RTUO] = "rtuo"
+	};
+	struct task_params *param;
+	static char buffer[64];
+	
+	if (task >= cpu->tasks_count)
+		return "???";
+
+	param = &cpu->tasks[task];
+	snprintf(buffer, sizeof(buffer), "%s%u/%u",
+		 basename[param->type], param->swt.index, cpu->index);
+
+	return buffer;
+}
+
+static void handle_bad_fpreg(struct cpu_tasks *cpu, unsigned fp_val)
+{
+	struct rttst_swtest_error err;
+	unsigned from, to;
+
+	ioctl(cpu->fd, RTTST_RTIOC_SWTEST_GET_LAST_ERROR, &err);
+
+	if (fp_val == ~0)
+		fp_val = err.fp_val;
+
+	from = err.last_switch.from;
+	to = err.last_switch.to;
+
+	fprintf(stderr, "Error after context switch from task %d(%s) to"
+		" task %d(%s),\nFPU registers were set to %d (maybe task %s)\n",
+		from, task_name(cpu, from),
+		to, task_name(cpu, to),
+		fp_val, task_name(cpu, fp_val % 1000));
+	pthread_kill(pthread_self(), SIGSTOP);
 }
 
 static void *sleeper(void *cookie)
@@ -110,6 +153,8 @@ static void *sleeper(void *cookie)
 
 	for (;;) {
 		struct timespec now, diff;
+		unsigned expected, fp_val;
+		int err;
 
 		__real_nanosleep(&ts, NULL);
 
@@ -143,11 +188,23 @@ static void *sleeper(void *cookie)
 		if (rtsw.to == rtsw.from)
 			++rtsw.to;
 
-		fp_regs_set(rtsw.from + i * 1000);
-		if (ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw))
+		expected = rtsw.from + i * 1000;
+		fp_regs_set(expected);
+		err = ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw);
+		while (err == -1 && errno == EINTR)
+			err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
+
+		switch (err) {
+		case 0:
 			break;
-		if (fp_regs_check(rtsw.from + i * 1000))
-			pthread_kill(pthread_self(), SIGSTOP);
+		case 1:
+			handle_bad_fpreg(param->cpu, ~0);
+		case -1:
+			pthread_exit(NULL);
+		}
+		fp_val = fp_regs_check(expected);
+		if (fp_val != expected)
+			handle_bad_fpreg(param->cpu, fp_val);
 
 		if(++i == 4000000)
 			i = 0;
@@ -186,10 +243,16 @@ static void *rtup(void *cookie)
 		exit(EXIT_FAILURE);
 	}    
 
-	if (ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt))
+	do {
+		err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
+	} while (err == -1 && errno == EINTR);
+
+	if (err == -1)
 		return NULL;
 
 	for (;;) {
+		unsigned expected, fp_val;
+
 		if (++rtsw.to == rtsw.from)
 			++rtsw.to;
 		if (rtsw.to > tasks_count - 1)
@@ -197,13 +260,26 @@ static void *rtup(void *cookie)
 		if (rtsw.to == rtsw.from)
 			++rtsw.to;
 
+		expected = rtsw.from + i * 1000;
 		if (param->fp & UFPP)
-			fp_regs_set(rtsw.from + i * 1000);
-		if (ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw))
+			fp_regs_set(expected);
+		err = ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw);
+		while (err == -1 && errno == EINTR)
+			err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
+
+		switch (err) {
+		case 0:
 			break;
-		if (param->fp & UFPP)
-			if (fp_regs_check(rtsw.from + i * 1000))
-				pthread_kill(pthread_self(), SIGSTOP);
+		case 1:
+			handle_bad_fpreg(param->cpu, ~0);
+		case -1:
+			pthread_exit(NULL);
+		}
+		if (param->fp & UFPP) {
+			fp_val = fp_regs_check(expected);
+			if (fp_val != expected)
+				handle_bad_fpreg(param->cpu, fp_val);
+		}
 
 		if(++i == 4000000)
 			i = 0;
@@ -242,10 +318,16 @@ static void *rtus(void *cookie)
 		exit(EXIT_FAILURE);
 	}
 
-	if (ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt))
+	do {
+		err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
+	} while (err == -1 && errno == EINTR);
+
+	if (err == -1)
 		return NULL;
 
 	for (;;) {
+		unsigned expected, fp_val;
+
 		if (++rtsw.to == rtsw.from)
 			++rtsw.to;
 		if (rtsw.to > tasks_count - 1)
@@ -253,13 +335,26 @@ static void *rtus(void *cookie)
 		if (rtsw.to == rtsw.from)
 			++rtsw.to;
 
+		expected = rtsw.from + i * 1000;
 		if (param->fp & UFPS)
-			fp_regs_set(rtsw.from + i * 1000);
-		if (ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw))
+			fp_regs_set(expected);
+		err = ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw);
+		while (err == -1 && errno == EINTR)
+			err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
+
+		switch (err) {
+		case 0:
 			break;
-		if (param->fp & UFPS)
-			if (fp_regs_check(rtsw.from + i * 1000))
-				pthread_kill(pthread_self(), SIGSTOP);
+		case 1:
+			handle_bad_fpreg(param->cpu, ~0);
+		case -1:
+			pthread_exit(NULL);
+		}
+		if (param->fp & UFPS) {
+			fp_val = fp_regs_check(expected);
+			if (fp_val != expected)
+				handle_bad_fpreg(param->cpu, fp_val);
+		}
 
 		if(++i == 4000000)
 			i = 0;
@@ -297,11 +392,17 @@ static void *rtuo(void *cookie)
 			strerror(err));
 		exit(EXIT_FAILURE);
 	}
-	if (ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt))
+	do {
+		err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
+	} while (err == -1 && errno == EINTR);
+
+	if (err == -1)
 		return NULL;
 
 	mode = PTHREAD_PRIMARY;
 	for (;;) {
+		unsigned expected, fp_val;
+
 		if (++rtsw.to == rtsw.from)
 			++rtsw.to;
 		if (rtsw.to > tasks_count - 1)
@@ -309,13 +410,26 @@ static void *rtuo(void *cookie)
 		if (rtsw.to == rtsw.from)
 			++rtsw.to;
 
+		expected = rtsw.from + i * 1000;
 		if ((mode && param->fp & UFPP) || (!mode && param->fp & UFPS))
-			fp_regs_set(rtsw.from + i * 1000);
-		if (ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw))
+			fp_regs_set(expected);
+		err = ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw);
+		while (err == -1 && errno == EINTR)
+			err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
+
+		switch (err) {
+		case 0:
 			break;
-		if ((mode && param->fp & UFPP) || (!mode && param->fp & UFPS))
-			if (fp_regs_check(rtsw.from + i * 1000))
-				pthread_kill(pthread_self(), SIGSTOP);
+		case 1:
+			handle_bad_fpreg(param->cpu, ~0);
+		case -1:
+			pthread_exit(NULL);
+		}
+		if ((mode && param->fp & UFPP) || (!mode && param->fp & UFPS)) {
+			fp_val = fp_regs_check(expected);
+			if (fp_val != expected)
+				handle_bad_fpreg(param->cpu, fp_val);
+		}
 
 		/* Switch mode. */
 		mode = PTHREAD_PRIMARY - mode;
@@ -439,6 +553,116 @@ static int check_arg(const struct task_params *param, struct cpu_tasks *end_cpu)
 	return 0;
 }
 
+static int task_create(struct cpu_tasks *cpu,
+		       struct task_params *param,
+		       pthread_attr_t *rt_attr,
+		       pthread_attr_t *sleeper_attr)
+{
+	typedef void *thread_routine(void *);
+	thread_routine *task_routine [] = {
+		[RTUP] = &rtup,
+		[RTUS] = &rtus,
+		[RTUO] = &rtuo
+	};
+	int err;
+
+	switch(param->type) {
+	case RTK:
+		param->swt.flags = (param->fp & AFP ? RTTST_SWTEST_FPU : 0)
+			| (param->fp & UFPP ? RTTST_SWTEST_USE_FPU : 0);
+
+		err=ioctl(cpu->fd,RTTST_RTIOC_SWTEST_CREATE_KTASK,&param->swt);
+		if (err) {
+			perror("ioctl(RTTST_RTIOC_SWTEST_CREATE_KTASK)");
+			return -1;
+		}
+		break;
+
+	case RTUP:
+	case RTUS:
+	case RTUO:
+	case SLEEPER:
+		param->swt.flags = 0;
+
+		err=ioctl(cpu->fd,RTTST_RTIOC_SWTEST_REGISTER_UTASK,&param->swt);
+		if (err) {
+			perror("ioctl(RTTST_RTIOC_SWTEST_REGISTER_UTASK)");
+			return -1;
+		}
+		break;
+
+	default:
+		fprintf(stderr, "Invalid task type %d. Aborting\n", param->type);
+		return EINVAL;
+	}
+
+	if (param->type == RTK)
+		return 0;
+
+	if (param->type == SLEEPER) {
+		err = __real_pthread_create(&param->thread,
+					    sleeper_attr,
+					    sleeper,
+					    param);
+
+		if (err)
+			fprintf(stderr,"pthread_create: %s\n",strerror(err));
+
+		return err;
+	}
+
+	err = pthread_create(&param->thread, rt_attr,
+			     task_routine[param->type], param);
+	if (err) {
+		fprintf(stderr, "pthread_create: %s\n", strerror(err));
+		return err;
+	}
+
+	err = pthread_set_name_np(param->thread,
+				  task_name(param->cpu,param->swt.index));
+			
+	if (err)
+		fprintf(stderr,"pthread_set_name_np: %s\n", strerror(err));
+
+	return err;
+}
+
+#define DEV_NR_MAX 256
+
+static int open_rttest(char *buf, size_t size, unsigned count)
+{
+	static unsigned dev_nr = 0;
+	int fd, status;
+
+	do {
+		snprintf(buf, size, "/dev/rttest%u", dev_nr);
+
+		status = fd = open(buf, O_RDWR);
+		
+		if (fd == -1)
+			goto next_dev;
+		
+		status = ioctl(fd, RTTST_RTIOC_SWTEST_SET_TASKS_COUNT, count);
+
+		if (status == 0)
+			break;
+		
+	  next_dev:
+		if (fd != -1)
+			close(fd);
+
+		if (++dev_nr != DEV_NR_MAX)
+			continue;
+
+		fprintf(stderr, "switchtest: Unable to open switchtest device.\n"
+			"(modprobe xeno_switchtest ?)\n");
+
+		return -1;
+	} while (status == -1);
+
+	return fd;
+}
+
 const char *all_nofp [] = {
 	"rtk",
 	"rtk",
@@ -520,17 +744,14 @@ void usage(FILE *fd, const char *progname)
 	fprintf(fd, "\n\n");
 }
 
-#define DEV_NR_MAX 256
-
 int main(int argc, const char *argv[])
 {
 	const char **all, *progname = argv[0];
 	pthread_attr_t rt_attr, sleeper_attr;
 	unsigned i, j, count, nr_cpus;
-	char devname[21] = "/dev/rttest0";
-	unsigned dev_nr = 0;
 	struct cpu_tasks *cpus;
 	struct sched_param sp;
+	char devname[21];
 	int status, sig;
 	sigset_t mask;
 
@@ -584,10 +805,24 @@ int main(int argc, const char *argv[])
 	}
 
 	/* If no argument was passed (or only -n), replace argc and argv with
-	   default values, given by all_fp or all_nofp depending on the presence of
-	   the -n flag. */
+	   default values, given by all_fp or all_nofp depending on the presence
+	   of the -n flag. */
 	if (argc == 1) {
 		char buffer[32];
+
+		/* Check if fp routines are dummy. */
+		if (all == all_fp) {
+			fprintf(stderr, "Testing FPU check routines...\n");
+			fp_regs_set(1);
+			if (fp_regs_check(2) != 1) {
+				fprintf(stderr,
+					"FPU check routines unimplemented, "
+					"skipping FPU switches tests.\n");
+				all = all_nofp;
+				count = sizeof(all_nofp) / sizeof(char *);
+			} else
+				fprintf(stderr, "FPU check routines OK.\n");
+		}
 
 		argc = count * nr_cpus + 1;
 		argv = (const char **) malloc(argc * sizeof(char *));
@@ -686,41 +921,16 @@ int main(int argc, const char *argv[])
 
 	/* Prepare attribute for sleeper tasks. */
 	pthread_attr_init(&sleeper_attr);
-	pthread_attr_setstacksize(&rt_attr, 20 * 1024);
+	pthread_attr_setstacksize(&sleeper_attr, 20 * 1024);
 
 	/* Create and register all tasks. */
 	for (i = 0; i < nr_cpus; i ++) {
 		struct cpu_tasks *cpu = &cpus[i];
 
-		do {
-			status = cpu->fd = open(devname, O_RDWR);
+		cpu->fd = open_rttest(devname,sizeof(devname),cpu->tasks_count);
 
-			if (status == -1)
-				goto next_dev;
-
-			status = ioctl(cpu->fd,
-				       RTTST_RTIOC_SWTEST_SET_TASKS_COUNT,
-				       cpu->tasks_count);
-
-			if (status == -1) {
-			  next_dev:
-				if (++dev_nr == DEV_NR_MAX) {
-					fprintf(stderr,
-						"switchtest: Unable to open "
-						"switchtest device.\n"
-						"(modprobe xeno_switchtest ?)\n"
-						);
-					goto failure;
-				}
-				if (cpu->fd != -1)
-					close(cpu->fd);
-
-				snprintf(devname,
-					 sizeof(devname),
-					 "/dev/rttest%u",
-					 dev_nr);
-			}
-		} while (status == -1);
+		if (cpu->fd == -1)
+			goto failure;
 
 		if (ioctl(cpu->fd, RTTST_RTIOC_SWTEST_SET_CPU, i)) {
 			perror("ioctl(RTTST_RTIOC_SWTEST_SET_CPU)");
@@ -729,111 +939,10 @@ int main(int argc, const char *argv[])
 
 		for (j = 0; j < cpu->tasks_count; j++) {
 			struct task_params *param = &cpu->tasks[j];
-			void *(*task_routine)(void *) = NULL;
-			pthread_attr_t *attr = &rt_attr;
-			const char *basename = NULL;
-			int err;
-
-			switch(param->type) {
-			case RTK:
-				param->swt.flags = (param->fp & AFP
-						    ? RTTST_SWTEST_FPU
-						    : 0)
-					| (param->fp & UFPP
-					   ? RTTST_SWTEST_USE_FPU
-					   : 0);
-
-				if (ioctl(cpu->fd,
-					  RTTST_RTIOC_SWTEST_CREATE_KTASK,
-					  &param->swt)) {
-					perror("ioctl(RTTST_RTIOC_SWTEST_"
-					       "CREATE_KTASK)");
-					goto failure;
-				}
-				break;
-
-			case SLEEPER:
-				task_routine = sleeper;
-				attr = &sleeper_attr;
-				goto do_register;
-		
-			case RTUP:
-				task_routine = rtup;
-				basename = "rtup";
-				goto do_register;
-		
-			case RTUS:
-				task_routine = rtus;
-				basename = "rtus";
-				goto do_register;
-		
-			case RTUO:
-				task_routine = rtuo;
-				basename = "rtuo";
-			do_register:
-				param->swt.flags = 0;
-
-				if (ioctl(cpu->fd,
-					  RTTST_RTIOC_SWTEST_REGISTER_UTASK,
-					  &param->swt)) {
-					perror("ioctl(RTTST_RTIOC_SWTEST_"
-					       "REGISTER_UTASK)");
-					goto failure;
-				}
-				break;
-
-			default:
-				fprintf(stderr,
-					"Invalid type %d. Aborting\n",
-					param->type);
-				goto failure;
-			}
-
-			if (param->type == RTK)
-				continue;
-
-			if (param->type != SLEEPER) {
-				char name [64];
-
-				err = pthread_create(&param->thread,
-						     attr,
-						     task_routine,
-						     param);
-		    
-				if (err) {
-					fprintf(stderr,
-						"pthread_create: %s\n",
-						strerror(err));
-					goto failure;
-				}
-
-				snprintf(name, sizeof(name), "%s%u/%u",
-					 basename, param->swt.index, i);
-
-				err = pthread_set_name_np(param->thread,name);
-			
-				if (err) {
-					fprintf(stderr,
-						"pthread_set_name_np: "
-						"%s\n",
-						strerror(err));
-					goto failure;
-				}
-			} else {
-				err = __real_pthread_create
-					(&param->thread,
-					 attr,
-					 task_routine,
-					 param);
-
-				if (err) {
-					fprintf(stderr,
-						"pthread_create: %s\n",
-						strerror(err));
-				  failure:
-					status = EXIT_FAILURE;
-					goto cleanup;
-				}
+			if (task_create(cpu, param, &rt_attr, &sleeper_attr)) {
+			  failure:
+				status = EXIT_FAILURE;
+				goto cleanup;
 			}
 		}
 	}

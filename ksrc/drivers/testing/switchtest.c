@@ -23,6 +23,9 @@ typedef struct rtswitch_context {
 	struct semaphore lock;
 	unsigned cpu;
 	unsigned switches_count;
+
+	unsigned failed;
+	struct rttst_swtest_error error;
 } rtswitch_context_t;
 
 static unsigned int start_index;
@@ -55,6 +58,9 @@ static int rtswitch_pend_rt(rtswitch_context_t *ctx,
 	if (xnthread_test_flags(xnpod_current_thread(), XNRMID))
 		return -EIDRM;
 
+	if (ctx->failed)
+		return 1;
+
 	return 0;
 }
 
@@ -73,6 +79,8 @@ static int rtswitch_to_rt(rtswitch_context_t *ctx,
 
 	from->base.flags |= RTSWITCH_RT;
 	++ctx->switches_count;
+	ctx->error.last_switch.from = from_idx;
+	ctx->error.last_switch.to = to_idx;
 
 	switch (to->base.flags & RTSWITCH_RT) {
 	case RTSWITCH_NRT:
@@ -101,6 +109,9 @@ static int rtswitch_to_rt(rtswitch_context_t *ctx,
 	if (xnthread_test_flags(xnpod_current_thread(), XNRMID))
 		return -EIDRM;
 
+	if (ctx->failed)
+		return 1;
+
 	return 0;
 }
 
@@ -119,6 +130,9 @@ static int rtswitch_pend_nrt(rtswitch_context_t *ctx,
 	if (down_interruptible(&task->nrt_synch))
 		return -EINTR;
 
+	if (ctx->failed)
+		return 1;
+
 	return 0;
 }
 
@@ -136,6 +150,8 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 
 	from->base.flags &= ~RTSWITCH_RT;
 	++ctx->switches_count;
+	ctx->error.last_switch.from = from_idx;
+	ctx->error.last_switch.to = to_idx;
 
 	switch (to->base.flags & RTSWITCH_RT) {
 	case RTSWITCH_NRT:
@@ -153,6 +169,9 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 
 	if (down_interruptible(&from->nrt_synch))
 		return -EINTR;
+
+	if (ctx->failed)
+		return 1;
 
 	return 0;
 }
@@ -212,6 +231,36 @@ struct taskarg {
 	rtswitch_task_t *task;
 };
 
+static void handle_ktask_error(rtswitch_context_t *ctx, unsigned fp_val)
+{
+	unsigned i;
+	
+	ctx->failed = 1;
+	ctx->error.fp_val = fp_val;
+
+	for (i = 0; i < ctx->tasks_count; i++) {
+		rtswitch_task_t *task = &ctx->tasks[i];
+
+		/* Find the first non kernel-space task. */
+		if ((task->base.flags & RTSWITCH_KERNEL))
+			continue;
+
+		/* Unblock it. */
+		switch(task->base.flags & RTSWITCH_RT) {
+		case RTSWITCH_NRT:
+			rtswitch_utask[ctx->cpu] = task;
+			rtdm_nrtsig_pend(&rtswitch_wake_utask);
+			break;
+
+		case RTSWITCH_RT:
+			xnsynch_wakeup_one_sleeper(&task->rt_synch);
+			break;
+		}
+
+		xnpod_suspend_self();
+	}
+}
+
 static void rtswitch_ktask(void *cookie)
 {
 	struct taskarg *arg = (struct taskarg *) cookie;
@@ -234,10 +283,16 @@ static void rtswitch_ktask(void *cookie)
 		if (task->base.flags & RTTST_SWTEST_USE_FPU)
 			fp_regs_set(task->base.index + i * 1000);
 		rtswitch_to_rt(ctx, task->base.index, to);
-		if (task->base.flags & RTTST_SWTEST_USE_FPU)
-			if (fp_regs_check(task->base.index + i * 1000))
-				xnpod_suspend_self();
+		if (task->base.flags & RTTST_SWTEST_USE_FPU) {
+			unsigned fp_val, expected;
 
+			expected = task->base.index + i * 1000;
+			fp_val = fp_regs_check(expected);
+
+			if (fp_val != expected)
+				handle_ktask_error(ctx, fp_val);
+		}
+				
 		if (++i == 4000000)
 			i = 0;
 	}
@@ -302,6 +357,8 @@ static int rtswitch_open(struct rtdm_dev_context *context,
 	ctx->tasks = NULL;
 	ctx->tasks_count = ctx->next_index = ctx->cpu = ctx->switches_count = 0;
 	init_MUTEX(&ctx->lock);
+	ctx->failed = 0;
+	ctx->error.last_switch.from = ctx->error.last_switch.to = -1;
 
 	return 0;
 }
@@ -414,6 +471,17 @@ static int rtswitch_ioctl_nrt(struct rtdm_dev_context *context,
 			count = ctx->switches_count;
 
 			rtdm_copy_to_user(user_info, arg, &count, sizeof(count));
+
+			return 0;
+
+		case RTTST_RTIOC_SWTEST_GET_LAST_ERROR:
+			if (!rtdm_rw_user_ok(user_info, arg, sizeof(ctx->error)))
+				return -EFAULT;
+
+			rtdm_copy_to_user(user_info,
+					  arg,
+					  &ctx->error,
+					  sizeof(ctx->error));
 
 			return 0;
 
