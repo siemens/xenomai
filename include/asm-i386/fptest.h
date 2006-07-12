@@ -16,9 +16,9 @@ static inline void fp_regs_set(unsigned val)
         __asm__ __volatile__ ("fildl %0" : /* no output */ : "m"(val));
 }
 
-static inline int fp_regs_check(unsigned val)
+static inline unsigned fp_regs_check(unsigned val)
 {
-    unsigned i, failed = 0;
+    unsigned i, result = val;
     unsigned e[8];
 
     for (i = 0; i < 8; i++)
@@ -27,10 +27,10 @@ static inline int fp_regs_check(unsigned val)
     for (i = 0; i < 8; i++)
         if (e[i] != val) {
             printk("r%d: %u != %u\n", i, e[i], val);
-            failed = 1;
+            result = e[i];
         }
 
-    return failed;
+    return result;
 }
 
 

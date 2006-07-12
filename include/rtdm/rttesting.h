@@ -130,6 +130,11 @@ struct rttst_swtest_dir {
     unsigned to;
 };
 
+struct rttst_swtest_error {
+    struct rttst_swtest_dir last_switch;
+    unsigned fp_val;
+};
+
 
 #define RTIOC_TYPE_TESTING          RTDM_CLASS_TESTING
 
@@ -193,6 +198,9 @@ struct rttst_swtest_dir {
 
 #define RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT \
     _IOR(RTIOC_TYPE_TESTING, 0x36, unsigned long)
+
+#define RTTST_RTIOC_SWTEST_GET_LAST_ERROR \
+    _IOR(RTIOC_TYPE_TESTING, 0x37, struct rttst_swtest_error)
 /** @} */
 
 /** @} */

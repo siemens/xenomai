@@ -53,9 +53,9 @@ static inline void fp_regs_set(unsigned val)
 	e[n] = (unsigned)t;						\
 	}
 
-static inline int fp_regs_check(unsigned val)
+static inline unsigned fp_regs_check(unsigned val)
 {
-	unsigned i, failed = 0;
+	unsigned i, result = val;
 	uint32_t e[32];
 
 	FPTEST_REGVAL(0);
@@ -94,10 +94,10 @@ static inline int fp_regs_check(unsigned val)
 	for (i = 0; i < 32; i++)
 		if (e[i] != val) {
 			printk("r%d: %u != %u\n", i, e[i], val);
-			failed = 1;
+			result = e[i];
 		}
 
-	return failed;
+	return result;
 }
 
 #endif /* FPTEST_H */

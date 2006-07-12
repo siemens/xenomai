@@ -12,9 +12,9 @@ static inline void fp_regs_set(unsigned val)
 {
 }
 
-static inline int fp_regs_check(unsigned val)
+static inline unsigned fp_regs_check(unsigned val)
 {
-    return 0;
+    return val;
 }
 
 #endif /* FPTEST_H */

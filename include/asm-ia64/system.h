@@ -25,6 +25,9 @@
 
 #include <linux/config.h>
 #include <linux/ptrace.h>
+
+#define xnarch_fault_um(fi)     (user_mode((fi)->ia64.regs))
+
 #include <asm-generic/xenomai/system.h>
 
 #ifdef CONFIG_IA64_HP_SIM
