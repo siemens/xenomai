@@ -391,9 +391,8 @@ int rt_task_start(RT_TASK *task, void (*entry) (void *cookie), void *cookie)
  *
  * - -EINVAL is returned if @a task is not a task descriptor.
  *
- * - -EPERM is returned if @a task is NULL but not called from a task
- * context, or this service was called from a context which cannot
- * sleep (e.g. interrupt, non-realtime or scheduler locked).
+ * - -EPERM is returned if the addressed @a task is not allowed to sleep
+ * (e.g. in interrupt context, non-realtime task, or scheduler locked).
  *
  * - -EIDRM is returned if @a task is a deleted task descriptor.
  *
@@ -432,7 +431,8 @@ int rt_task_suspend(RT_TASK *task)
 		goto unlock_and_exit;
 	}
 
-	if (xnpod_unblockable_p()) {
+	/* We are about to suspend a task, let's check whether it may sleep */
+	if (xnthread_test_flags(&task->thread_base, XNLOCK|XNROOT)) {
 		err = -EPERM;
 		goto unlock_and_exit;
 	}
