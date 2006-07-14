@@ -392,7 +392,7 @@ int rt_task_start(RT_TASK *task, void (*entry) (void *cookie), void *cookie)
  * - -EINVAL is returned if @a task is not a task descriptor.
  *
  * - -EPERM is returned if the addressed @a task is not allowed to sleep
- * (e.g. in interrupt context, non-realtime task, or scheduler locked).
+ * (i.e. scheduler locked).
  *
  * - -EIDRM is returned if @a task is a deleted task descriptor.
  *
@@ -432,7 +432,7 @@ int rt_task_suspend(RT_TASK *task)
 	}
 
 	/* We are about to suspend a task, let's check whether it may sleep */
-	if (xnthread_test_flags(&task->thread_base, XNLOCK|XNROOT)) {
+	if (xnthread_test_flags(&task->thread_base, XNLOCK)) {
 		err = -EPERM;
 		goto unlock_and_exit;
 	}
