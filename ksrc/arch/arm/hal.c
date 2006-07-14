@@ -231,5 +231,7 @@ void rthal_arch_cleanup(void)
 
 EXPORT_SYMBOL(rthal_arch_init);
 EXPORT_SYMBOL(rthal_arch_cleanup);
+EXPORT_SYMBOL(rthal_thread_switch);
+EXPORT_SYMBOL(rthal_thread_trampoline);
 
 // vim: ts=4 et sw=4 sts=4
