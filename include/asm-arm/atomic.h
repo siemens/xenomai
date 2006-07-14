@@ -89,9 +89,6 @@ static __inline__ unsigned long
 __xchg(volatile void *ptr, unsigned long x, unsigned int size)
 {
     unsigned long ret;
-#ifdef CONFIG_XENO_ARM_SA1100
-    unsigned long flags;
-#endif
 #if CONFIG_XENO_ARM_ARCH >= 6
     unsigned int tmp;
 #endif
