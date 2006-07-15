@@ -1,5 +1,8 @@
 2006-07-15  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/nucleus/heap.h (XNHEAP_MAXEXTSZ): Raise maximum extent
+	size to 2Gb.
+
 	* include/nucleus/thread.h: Kill extinfo field.
 
 2006-07-12  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
