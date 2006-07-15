@@ -59,7 +59,7 @@
 00049 <span class="preprocessor"></span><span class="preprocessor">#define XNHEAP_MINALLOCSZ (1 &lt;&lt; XNHEAP_MINLOG2)</span>
 00050 <span class="preprocessor"></span><span class="preprocessor">#define XNHEAP_MINALIGNSZ (1 &lt;&lt; 4) </span><span class="comment">/* i.e. 16 bytes */</span>
 00051 <span class="preprocessor">#define XNHEAP_NBUCKETS   (XNHEAP_MAXLOG2 - XNHEAP_MINLOG2 + 2)</span>
-00052 <span class="preprocessor"></span><span class="preprocessor">#define XNHEAP_MAXEXTSZ   (1 &lt;&lt; 24) </span><span class="comment">/* i.e. 16Mb */</span>
+00052 <span class="preprocessor"></span><span class="preprocessor">#define XNHEAP_MAXEXTSZ   (1 &lt;&lt; 31) </span><span class="comment">/* i.e. 2Gb */</span>
 00053 
 00054 <span class="preprocessor">#define XNHEAP_PFREE   0</span>
 00055 <span class="preprocessor"></span><span class="preprocessor">#define XNHEAP_PCONT   1</span>
@@ -216,7 +216,7 @@
 00206 <span class="preprocessor">#define XNHEAP_DEV_NAME  "/dev/rtheap"</span>
 00207 <span class="preprocessor"></span>
 00208 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_HEAP_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Fri Jul 7 22:47:04 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:56 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -1788,7 +1788,7 @@ A nesting count is maintained so that <a class="el" href="group__task.html#ga10"
 <li>-EINVAL is returned if <em>task</em> is not a task descriptor.</li></ul>
 <p>
 <ul>
-<li>-EPERM is returned if <em>task</em> is NULL but not called from a task context, or this service was called from a context which cannot sleep (e.g. interrupt, non-realtime or scheduler locked).</li></ul>
+<li>-EPERM is returned if the addressed <em>task</em> is not allowed to sleep (i.e. scheduler locked).</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>task</em> is a deleted task descriptor.</li></ul>
@@ -1987,7 +1987,7 @@ This service can be called from:<p>
 Rescheduling: always if a next equal-priority task is ready to run, otherwise, this service leads to a no-op.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Fri Jul 7 22:47:10 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:58:05 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
