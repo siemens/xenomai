@@ -44,12 +44,12 @@
 
 #if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)
 
-#define	XNHEAP_MINLOG2    3
-#define	XNHEAP_MAXLOG2    22
-#define	XNHEAP_MINALLOCSZ (1 << XNHEAP_MINLOG2)
-#define	XNHEAP_MINALIGNSZ (1 << 4) /* i.e. 16 bytes */
-#define	XNHEAP_NBUCKETS   (XNHEAP_MAXLOG2 - XNHEAP_MINLOG2 + 2)
-#define	XNHEAP_MAXEXTSZ   (1 << 24) /* i.e. 16Mb */
+#define XNHEAP_MINLOG2    3
+#define XNHEAP_MAXLOG2    22
+#define XNHEAP_MINALLOCSZ (1 << XNHEAP_MINLOG2)
+#define XNHEAP_MINALIGNSZ (1 << 4) /* i.e. 16 bytes */
+#define XNHEAP_NBUCKETS   (XNHEAP_MAXLOG2 - XNHEAP_MINLOG2 + 2)
+#define XNHEAP_MAXEXTSZ   (1 << 24) /* i.e. 16Mb */
 
 #define XNHEAP_PFREE   0
 #define XNHEAP_PCONT   1

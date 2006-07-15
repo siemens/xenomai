@@ -1,3 +1,7 @@
+2006-07-15  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/thread.h: Kill extinfo field.
+
 2006-07-12  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
 
 	* ksrc/skins/native/task.c (rt_task_suspend): Fix context checking.

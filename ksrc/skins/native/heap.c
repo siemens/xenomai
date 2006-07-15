@@ -246,11 +246,11 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 
 	heap->csize = heapsize;	/* Record this for SBA management and inquiry. */
 
-	/* Account for the overhead so that the actual free space is large
-	   enough to match the requested size. Using PAGE_SIZE for large
-	   single-block heaps might reserve way too much useless page map
-	   memory, but this should never get pathological anyway, since we
-	   are only consuming 1 byte per page. */
+	/* Account for the overhead so that the actual free space is
+	   large enough to match the requested size. Using PAGE_SIZE
+	   for large single-block heaps might reserve a lot of useless
+	   page map memory, but this should never get pathological
+	   anyway, since we are only consuming 1 byte per page. */
 
 	heapsize += xnheap_overhead(heapsize, PAGE_SIZE);
 	heapsize = PAGE_ALIGN(heapsize);

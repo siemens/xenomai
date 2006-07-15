@@ -100,7 +100,6 @@ int xnthread_init(xnthread_t *thread,
 	thread->entry = NULL;
 	thread->cookie = 0;
 	thread->stime = 0;
-	thread->extinfo = NULL;
 
 	if (name)
 		xnobject_copy_name(thread->name, name);
