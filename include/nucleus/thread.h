@@ -190,8 +190,6 @@ typedef struct xnthread {
 
     void *cookie;		/* Cookie to pass to the entry routine */
 
-    void *extinfo;		/* Extended information -- user-defined */
-
     XNARCH_DECL_DISPLAY_CONTEXT();
 
 } xnthread_t;
@@ -229,7 +227,6 @@ typedef struct xnhook {
 #define xnthread_pending_signals(thread)   ((thread)->signals)
 #define xnthread_timeout(thread)           xntimer_get_timeout(&(thread)->rtimer)
 #define xnthread_stack_size(thread)        xnarch_stack_size(xnthread_archtcb(thread))
-#define xnthread_extended_info(thread)     ((thread)->extinfo)
 #define xnthread_handle(thread)            ((thread)->registry.handle)
 #define xnthread_set_magic(thread,m)       do { (thread)->magic = (m); } while(0)
 #define xnthread_get_magic(thread)         ((thread)->magic)
