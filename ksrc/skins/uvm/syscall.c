@@ -103,8 +103,6 @@ static int __vm_shadow_helper(struct task_struct *curr,
 		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
 				  &thread, sizeof(thread));
 
-	xnthread_extended_info(thread) = (void *)__xn_reg_arg3(regs);
-
 	return xnshadow_map(thread, u_completion);
 }
 
