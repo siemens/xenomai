@@ -50,53 +50,56 @@ This group of devices is intended to provide in-kernel testing results. Feel fre
 <p>
 <tr><td colspan="2"><br><h2>IOCTLs</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="IOCTLs"></a> Testing device IOCTLs <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga19" doxytag="rttesting::RTTST_RTIOC_INTERM_BENCH_RES"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga20" doxytag="rttesting::RTTST_RTIOC_INTERM_BENCH_RES"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_INTERM_BENCH_RES</b>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_TESTING, 0x00, struct rttst_interm_bench_res)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga20" doxytag="rttesting::RTTST_RTIOC_TMBENCH_START"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga21" doxytag="rttesting::RTTST_RTIOC_TMBENCH_START"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_TMBENCH_START</b>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_TESTING, 0x10, struct rttst_tmbench_config)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga21" doxytag="rttesting::RTTST_RTIOC_TMBENCH_STOP"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga22" doxytag="rttesting::RTTST_RTIOC_TMBENCH_STOP"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_TMBENCH_STOP</b>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_TESTING, 0x11, struct rttst_overall_bench_res)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga22" doxytag="rttesting::RTTST_RTIOC_IRQBENCH_START"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga23" doxytag="rttesting::RTTST_RTIOC_IRQBENCH_START"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_IRQBENCH_START</b>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_TESTING, 0x20, struct rttst_irqbench_config)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga23" doxytag="rttesting::RTTST_RTIOC_IRQBENCH_STOP"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga24" doxytag="rttesting::RTTST_RTIOC_IRQBENCH_STOP"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_IRQBENCH_STOP</b>&nbsp;&nbsp;&nbsp;_IO(RTIOC_TYPE_TESTING, 0x21)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga24" doxytag="rttesting::RTTST_RTIOC_IRQBENCH_GET_STATS"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga25" doxytag="rttesting::RTTST_RTIOC_IRQBENCH_GET_STATS"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_IRQBENCH_GET_STATS</b>&nbsp;&nbsp;&nbsp;_IOR(RTIOC_TYPE_TESTING, 0x22, struct rttst_irqbench_stats)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga25" doxytag="rttesting::RTTST_RTIOC_IRQBENCH_WAIT_IRQ"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga26" doxytag="rttesting::RTTST_RTIOC_IRQBENCH_WAIT_IRQ"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_IRQBENCH_WAIT_IRQ</b>&nbsp;&nbsp;&nbsp;_IO(RTIOC_TYPE_TESTING, 0x23)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga26" doxytag="rttesting::RTTST_RTIOC_IRQBENCH_REPLY_IRQ"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga27" doxytag="rttesting::RTTST_RTIOC_IRQBENCH_REPLY_IRQ"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_IRQBENCH_REPLY_IRQ</b>&nbsp;&nbsp;&nbsp;_IO(RTIOC_TYPE_TESTING, 0x24)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga27" doxytag="rttesting::RTTST_RTIOC_SWTEST_SET_TASKS_COUNT"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga28" doxytag="rttesting::RTTST_RTIOC_SWTEST_SET_TASKS_COUNT"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_SET_TASKS_COUNT</b>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_TESTING, 0x30, unsigned long)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga28" doxytag="rttesting::RTTST_RTIOC_SWTEST_SET_CPU"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga29" doxytag="rttesting::RTTST_RTIOC_SWTEST_SET_CPU"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_SET_CPU</b>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_TESTING, 0x31, unsigned long)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga29" doxytag="rttesting::RTTST_RTIOC_SWTEST_REGISTER_UTASK"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga30" doxytag="rttesting::RTTST_RTIOC_SWTEST_REGISTER_UTASK"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_REGISTER_UTASK</b>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_TESTING, 0x32, struct rttst_swtest_task)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga30" doxytag="rttesting::RTTST_RTIOC_SWTEST_CREATE_KTASK"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga31" doxytag="rttesting::RTTST_RTIOC_SWTEST_CREATE_KTASK"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_CREATE_KTASK</b>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_TESTING, 0x33, struct rttst_swtest_task)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga31" doxytag="rttesting::RTTST_RTIOC_SWTEST_PEND"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga32" doxytag="rttesting::RTTST_RTIOC_SWTEST_PEND"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_PEND</b>&nbsp;&nbsp;&nbsp;_IOR(RTIOC_TYPE_TESTING, 0x34, struct rttst_swtest_task)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga32" doxytag="rttesting::RTTST_RTIOC_SWTEST_SWITCH_TO"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga33" doxytag="rttesting::RTTST_RTIOC_SWTEST_SWITCH_TO"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_SWITCH_TO</b>&nbsp;&nbsp;&nbsp;_IOR(RTIOC_TYPE_TESTING, 0x35, struct rttst_swtest_dir)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga33" doxytag="rttesting::RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga34" doxytag="rttesting::RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT</b>&nbsp;&nbsp;&nbsp;_IOR(RTIOC_TYPE_TESTING, 0x36, unsigned long)</td></tr>
 
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga35" doxytag="rttesting::RTTST_RTIOC_SWTEST_GET_LAST_ERROR"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_GET_LAST_ERROR</b>&nbsp;&nbsp;&nbsp;_IOR(RTIOC_TYPE_TESTING, 0x37, struct rttst_swtest_error)</td></tr>
+
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Fri Jul 7 22:47:11 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:58:06 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
