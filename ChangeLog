@@ -1,5 +1,14 @@
 2006-07-16  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins, ksrc/nucleus: Use xnheap_rounded_size() instead of
+	open-coded calls to xnheap_overhead().
+
+	* include/nucleus/heap.h (xnheap_rounded_size): Provide helper
+	which computes the minimum heap size to pass the heap manager to
+	get at least a certain amount of contiguous memory available for
+	allocation, taking into account the internal overhead and rounding
+	effects.
+
 	* ksrc/arch/arm/patches: Upgrade to 2.6.1{4,5}-1.3-05.
 
 	* ksrc/drivers/16550A/16550A.c (__16550A_exit): Remove __exit

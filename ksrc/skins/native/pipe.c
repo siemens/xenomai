@@ -260,9 +260,7 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 		/* Account for the overhead so that the actual free space is large
 		   enough to match the requested size. */
 
-		poolsize += xnheap_overhead(poolsize, PAGE_SIZE);
-		poolsize = PAGE_ALIGN(poolsize);
-
+		poolsize = xnheap_rounded_size(poolsize, PAGE_SIZE);
 		poolmem = xnarch_sysalloc(poolsize);
 
 		if (!poolmem)

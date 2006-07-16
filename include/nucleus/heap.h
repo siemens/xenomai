@@ -111,6 +111,8 @@ extern xnheap_t kheap;
 #define xnheap_overhead(hsize,psize) \
 ((sizeof(xnextent_t) + (((hsize) - sizeof(xnextent_t)) / (psize)) + \
  XNHEAP_MINALIGNSZ - 1) & ~(XNHEAP_MINALIGNSZ - 1))
+/* The alignment value must be a power of 2 */
+#define xnheap_align(size,al)		(((size)+(al)-1)&(~((al)-1)))
 
 #define xnmalloc(size)     xnheap_alloc(&kheap,size)
 #define xnfree(ptr)        xnheap_free(&kheap,ptr)
@@ -122,6 +124,18 @@ do { \
     else \
 	xnheap_free(&kheap,ptr); \
 } while(0)
+
+static inline size_t xnheap_rounded_size (size_t hsize, size_t psize)
+{
+	/* Account for the overhead so that the actual heap space is
+	   large enough to match the requested size. Using a large
+	   page size for large single-block heaps might reserve a lot
+	   of useless page map memory, but this should never get
+	   pathological anyway, since we are only consuming 1 byte per
+	   page. */
+	hsize = xnheap_align(hsize,psize) + xnheap_overhead(hsize,psize);
+	return xnheap_align(hsize,psize);
+}
 
 #ifdef __cplusplus
 extern "C" {

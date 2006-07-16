@@ -934,8 +934,7 @@ static int __sc_hcreate(struct task_struct *curr, struct pt_regs *regs)
 	else
 		pagesize = 1 << log2psize;
 
-	heapsize += xnheap_overhead(heapsize, pagesize);
-	heapsize = PAGE_ALIGN(heapsize);
+	heapsize = xnheap_rounded_size(heapsize, pagesize);
 	hid = sc_hcreate(NULL, heapsize, log2psize, &err);
 
 	if (err)
@@ -1143,8 +1142,7 @@ static int __sc_pcreate(struct task_struct *curr, struct pt_regs *regs)
 	pid = __xn_reg_arg1(regs);
 	/* Size of partition space -- account for the heap mgmt overhead. */
 	ptsize = __xn_reg_arg2(regs);
-	ptsize += xnheap_overhead(ptsize, PAGE_SIZE);
-	ptsize = PAGE_ALIGN(ptsize);
+	ptsize = xnheap_rounded_size(ptsize, PAGE_SIZE);
 	/* Block size. */
 	bsize = __xn_reg_arg3(regs);
 
