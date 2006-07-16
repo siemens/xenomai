@@ -223,8 +223,7 @@ int rt_queue_create(RT_QUEUE *q,
 	/* Account for the overhead so that the actual free space is large
 	   enough to match the requested size. */
 
-	poolsize += xnheap_overhead(poolsize, PAGE_SIZE);
-	poolsize = PAGE_ALIGN(poolsize);
+	poolsize = xnheap_rounded_size(poolsize, PAGE_SIZE);
 
 #ifdef __KERNEL__
 	if (mode & Q_SHARED) {
