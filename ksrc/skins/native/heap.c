@@ -265,7 +265,10 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 					 heapsize,
 					 (mode & H_DMA) ? GFP_DMA : 0);
 		if (err)
+		    {
+		    printk("NO MAP?\n");
 			return err;
+		    }
 
 		heap->cpid = 0;
 #else /* !CONFIG_XENO_OPT_PERVASIVE */

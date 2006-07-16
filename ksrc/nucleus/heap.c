@@ -173,7 +173,10 @@ int xnheap_init(xnheap_t *heap,
 	    (pagesize & (pagesize - 1)) != 0 ||
 	    heapsize <= sizeof(xnextent_t) ||
 	    heapsize > XNHEAP_MAXEXTSZ || (heapsize & (pagesize - 1)) != 0)
+	    {
+	    printk("FAILURE #1 pagesize=%lu, heapsize=%lu\n",pagesize,heapsize);
 		return -EINVAL;
+	    }
 
 	/* Determine the page map overhead inside the given extent
 	   size. We need to reserve a byte in a page map for each page
@@ -189,7 +192,10 @@ int xnheap_init(xnheap_t *heap,
 	/* An extent must contain at least two addressable pages to cope
 	   with allocation sizes between pagesize and 2 * pagesize. */
 	if (hdrsize + 2 * pagesize > heapsize)
+	    {
+	    printk("FAILURE #2 pagesize=%lu, hdrsize=%lu\n",pagesize,hdrsize);
 		return -EINVAL;
+	    }
 
 	/* Compute the page shiftmask from the page size (i.e. log2 value). */
 	for (pageshift = 0, shiftsize = pagesize; shiftsize > 1; shiftsize >>= 1, pageshift++) ;	/* Loop */
