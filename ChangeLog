@@ -1,5 +1,7 @@
 2006-07-16  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/arm/patches: Upgrade to 2.6.1{4,5}-1.3-05.
+
 	* ksrc/drivers/16550A/16550A.c (__16550A_exit): Remove __exit
 	qualifier since __16550_init - which is marked as __init code -
 	calls it.
