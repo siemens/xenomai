@@ -2544,10 +2544,7 @@ static int __rt_heap_create(struct task_struct *curr, struct pt_regs *regs)
 	err = rt_heap_create(heap, name, heapsize, mode);
 
 	if (err)
-	    {
-	    printk("HEAP CREATE FAILED %d\n",err);
 		goto free_and_fail;
-	    }
 
 	heap->cpid = curr->pid;
 
