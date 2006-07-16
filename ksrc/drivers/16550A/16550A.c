@@ -1161,7 +1161,7 @@ int __init __16550A_init(void)
 }
 
 
-void __exit __16550A_exit(void)
+void __16550A_exit(void)
 {
     int i;
 
