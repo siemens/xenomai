@@ -1,4 +1,4 @@
 base referer
-rect $alarm_8c.html 202,8 341,32
-rect $skins_2native_2module_8c.html 197,56 346,80
-rect $native_2syscall_8c.html 198,104 345,128
+rect $ksrc_2skins_2native_2alarm_8c.html 213,8 381,32
+rect $skins_2native_2module_8c.html 208,56 386,80
+rect $native_2syscall_8c.html 210,104 384,128

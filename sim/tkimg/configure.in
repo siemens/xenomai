@@ -74,4 +74,4 @@ AC_SUBST(Tkimg_LIB_FILE)
 AC_SUBST(SHLIB_LD_LIBS)
 AC_SUBST(CYGPATH)
 
-AC_OUTPUT(GNUmakefile pkgIndex.tcl)
+AC_OUTPUT(Makefile pkgIndex.tcl)

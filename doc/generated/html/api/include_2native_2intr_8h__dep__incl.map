@@ -1,0 +1,4 @@
+base referer
+rect $ksrc_2skins_2native_2intr_8c.html 207,8 359,32
+rect $skins_2native_2module_8c.html 194,56 373,80
+rect $native_2syscall_8c.html 197,104 370,128

@@ -2,11 +2,11 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
 
-AC_INIT([Xenomai simulator],m4_normalize(m4_include([../config/version])),xenomai-help@gna.org,sim)
+AC_INIT([Xenomai simulator],m4_normalize(m4_include([../config/version])),xenomai-help@gna.org,xenosim)
 AC_CONFIG_HEADERS(include/xeno_config.h)
-AC_CONFIG_AUX_DIR(../config/autoconf)
+AC_CONFIG_AUX_DIR(../config)
 AC_CONFIG_SRCDIR(vm/thread.cc)
-AC_PREFIX_DEFAULT(/usr/realtime)
+AC_PREFIX_DEFAULT(/usr/xenomai)
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 AC_PROG_INSTALL
@@ -45,80 +45,54 @@ AM_MAINTAINER_MODE
 AC_PROG_LIBTOOL
 AM_PROG_LEX
 
-CONFIG_XENO_MVM_INSTALLDIR=$prefix
-
-AC_MSG_CHECKING(for Xenomai installation directory)
-AC_ARG_WITH(xeno-dir,
-    AS_HELP_STRING([--with-xeno-dir=<xeno-install-dir>], [Xenomai installation directory]),
-    [
-	case "$withval" in
-	"" | y | ye | yes | n | no)
-	    AC_MSG_ERROR([You must supply an argument to --with-xeno-dir.])
-	  ;;
-	esac
-	CONFIG_XENO_MVM_INSTALLDIR="$withval"
-    ])
-AC_MSG_RESULT(${CONFIG_XENO_MVM_INSTALLDIR})
-
-dnl If a sign of a complete Xenomai source tree is found in the parent
-dnl directory, we assume that the $installdir/source link will be
-dnl properly installed thus do not check for it here. Otherwise, it's likely
-dnl an incremental build of the simulator alone, and we need to find
-dnl such link right away.
-
-if test -r $srcdir/../include/xeno_config.h.in; then
-    XENO_INSTALLDIR=`cd .. && pwd`
-    test -d ../source || ln -sf `cd $srcdir/.. && pwd` ../source
-    test -d ../build || ln -sf `pwd` ../build
-elif test -h $CONFIG_XENO_MVM_INSTALLDIR/source; then
-    XENO_INSTALLDIR=${CONFIG_XENO_MVM_INSTALLDIR}
-else
-    AC_MSG_ERROR([Cannot infere sources location from installation directory])
+if test \! -r $srcdir/../ksrc/nucleus; then
+    AC_MSG_ERROR([Missing Xenomai source tree in parent directory])
 fi
 
-AC_MSG_CHECKING(for MVM debug support)
-AC_ARG_ENABLE(mvm-debug,
-	AS_HELP_STRING([--enable-mvm-debug], [Enable MVM debug]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_MVM_DEBUG=y ;;
-	*) unset CONFIG_XENO_MVM_DEBUG ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_MVM_DEBUG:-no})
-
-if test x$CONFIG_XENO_MVM_DEBUG = xy; then
-   CXXFLAGS="-g"
-   CFLAGS="-g"
-   defaultwrap=yes
-else
-   defaultwrap=no
-fi
-
-AC_MSG_CHECKING(for MVM atomic core mode)
-AC_ARG_ENABLE(mvm-atomic_core,
-	AS_HELP_STRING([--enable-mvm-atomic-core], [Enable MVM atomic core mode]),
+AC_MSG_CHECKING(for atomic core mode)
+AC_ARG_ENABLE(atomic_core,
+	AS_HELP_STRING([--enable-atomic-core], [Enable MVM atomic core mode]),
 	[case "$enableval" in
 	y | yes) CONFIG_XENO_MVM_ATOMIC_CORE=y ;;
 	*) unset CONFIG_XENO_MVM_ATOMIC_CORE ;;
 	esac])
 AC_MSG_RESULT(${CONFIG_XENO_MVM_ATOMIC_CORE:-no})
 
-AC_MSG_CHECKING(for statistics collection in nucleus)
-AC_ARG_ENABLE(nucleus-stats,
-	AS_HELP_STRING([--enable-stats], [Enable statistics collection in nucleus]),
+AC_MSG_CHECKING(for scalable scheduler)
+AC_ARG_ENABLE(nucleus-scalable-sched,
+	AS_HELP_STRING([--enable-nucleus-scalable-sched], 
+                        [Enable scalable scheduler in nucleus]),
 	[case "$enableval" in
-	y | yes) CONFIG_XENO_OPT_STATS=y ;;
-	*) unset CONFIG_XENO_OPT_STATS ;;
+	y | yes) CONFIG_XENO_OPT_SCALABLE_SCHED=y ;;
+	*) unset CONFIG_XENO_OPT_SCALABLE_SCHED ;;
 	esac])
-AC_MSG_RESULT(${CONFIG_XENO_OPT_STATS:-no})
+AC_MSG_RESULT(${CONFIG_XENO_OPT_SCALABLE_SCHED:-no})
 
-AC_MSG_CHECKING(for Xenomai nucleus debug support)
-AC_ARG_ENABLE(nucleus-debug,
-	AS_HELP_STRING([--enable-nucleus-debug], [Enable Xenomai nucleus debug]),
+AC_MSG_CHECKING(for debug support)
+AC_ARG_ENABLE(debug,
+	AS_HELP_STRING([--enable-debug], [Enable debug support]),
 	[case "$enableval" in
 	y | yes) CONFIG_XENO_OPT_DEBUG=y ;;
 	*) unset CONFIG_XENO_OPT_DEBUG ;;
 	esac])
 AC_MSG_RESULT(${CONFIG_XENO_OPT_DEBUG:-no})
+
+AC_MSG_CHECKING(for watchdog support)
+AC_ARG_ENABLE(nucleus-debug,
+	AS_HELP_STRING([--enable-nucleus-watchdog], [Enable watchdog support in nucleus]),
+	[case "$enableval" in
+	y | yes) CONFIG_XENO_OPT_WATCHDOG=y ;;
+	*) unset CONFIG_XENO_OPT_WATCHDOG ;;
+	esac])
+AC_MSG_RESULT(${CONFIG_XENO_OPT_WATCHDOG:-no})
+
+if test x$CONFIG_XENO_OPT_DEBUG = xy; then
+   CXXFLAGS="-g"
+   CFLAGS="-g"
+   defaultwrap=yes
+else
+   defaultwrap=no
+fi
 
 AC_MSG_CHECKING([for GCC tarball])
 
@@ -162,76 +136,6 @@ AC_ARG_ENABLE(tclwrap,
 	[CONFIG_XENO_MVM_TCLWRAP=$enableval],
 	[CONFIG_XENO_MVM_TCLWRAP=$defaultwrap])
 AC_MSG_RESULT($CONFIG_XENO_MVM_TCLWRAP)
-
-CONFIG_XENO_MVM_SKIN_PSOS=y
-AC_MSG_CHECKING(for pSOS+ simulator)
-AC_ARG_ENABLE(psos,
-	AS_HELP_STRING([--enable-psos],	[Build pSOS+ simulator]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_MVM_SKIN_PSOS=y ;;
-	*) unset CONFIG_XENO_MVM_SKIN_PSOS ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_MVM_SKIN_PSOS:-no})
-
-CONFIG_XENO_MVM_SKIN_VXWORKS=y
-AC_MSG_CHECKING(for VxWorks simulator)
-AC_ARG_ENABLE(vxworks,
-	AS_HELP_STRING([--enable-vxworks], [Build VxWorks simulator]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_MVM_SKIN_VXWORKS=y ;;
-	*) unset CONFIG_XENO_MVM_SKIN_VXWORKS ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_MVM_SKIN_VXWORKS:-no})
-
-CONFIG_XENO_MVM_SKIN_VRTX=y
-AC_MSG_CHECKING(for VRTX simulator)
-AC_ARG_ENABLE(vrtx,
-	AS_HELP_STRING([--enable-vrtx],	[Build VRTX simulator]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_MVM_SKIN_VRTX=y ;;
-	*) unset CONFIG_XENO_MVM_SKIN_VRTX ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_MVM_SKIN_VRTX:-no})
-
-CONFIG_XENO_MVM_SKIN_UITRON=y
-AC_MSG_CHECKING(for uITRON simulator)
-AC_ARG_ENABLE(uitron,
-	AS_HELP_STRING([--enable-uitron], [Build uITRON simulator]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_MVM_SKIN_UITRON=y ;;
-	*) unset CONFIG_XENO_MVM_SKIN_UITRON ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_MVM_SKIN_UITRON:-no})
-
-CONFIG_XENO_MVM_SKIN_POSIX=y
-AC_MSG_CHECKING(for POSIX simulator)
-AC_ARG_ENABLE(pse51,
-	AS_HELP_STRING([--enable-pse51], [Build POSIX simulator]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_MVM_SKIN_POSIX=y ;;
-	*) unset CONFIG_XENO_MVM_SKIN_POSIX ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_MVM_SKIN_POSIX:-no})
-
-CONFIG_XENO_MVM_SKIN_NATIVE=y
-AC_MSG_CHECKING(for native API simulator)
-AC_ARG_ENABLE(native,
-	AS_HELP_STRING([--enable-native],	[Build native API simulator]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_MVM_SKIN_NATIVE=y ;;
-	*) unset CONFIG_XENO_MVM_SKIN_NATIVE ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_MVM_SKIN_NATIVE:-no})
-
-CONFIG_XENO_MVM_SKIN_RTAI=y
-AC_MSG_CHECKING(for RTAI simulator)
-AC_ARG_ENABLE(rtai,
-	AS_HELP_STRING([--enable-rtai],	[Build RTAI simulator]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_MVM_SKIN_RTAI=y ;;
-	*) unset CONFIG_XENO_MVM_SKIN_RTAI ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_MVM_SKIN_RTAI:-no})
 
 dnl Some programs and libs.
 
@@ -387,17 +291,14 @@ AC_CACHE_CHECK(for usleep declaration, ac_cv_header_usleep,
   ac_cv_header_usleep=yes, ac_cv_header_usleep=no)])
 test $ac_cv_header_usleep = yes && AC_DEFINE(HAVE_USLEEP,1,[Kconfig])
 
-if test x$CONFIG_XENO_MVM_DEBUG = xy; then
-  AC_DEFINE(CONFIG_XENO_MVM_DEBUG,1,[Kconfig])
-fi
-
-if test x$CONFIG_XENO_OPT_STATS = xy; then
-  AC_DEFINE(CONFIG_XENO_OPT_STATS,1,[Kconfig])
-fi
+test x$CONFIG_XENO_OPT_SCALABLE_SCHED = xy && AC_DEFINE(CONFIG_XENO_OPT_SCALABLE_SCHED,1,[config])
 
 if test x$CONFIG_XENO_OPT_DEBUG = xy; then
-  AC_DEFINE(CONFIG_XENO_OPT_DEBUG,1,[Kconfig])
+  AC_DEFINE(CONFIG_XENO_OPT_DEBUG,1,[config])
+  AC_DEFINE(CONFIG_XENO_MVM_DEBUG,1,[config])
 fi
+
+test x$CONFIG_XENO_OPT_WATCHDOG = xy && AC_DEFINE(CONFIG_XENO_OPT_WATCHDOG,1,[config])
 
 dnl Some required routines.
 AC_FUNC_ALLOCA
@@ -411,21 +312,21 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(gethostname gettimeofday mkdir putenv select socket strcspn strdup strerror strspn strstr strtod strtol strtoul select socket)
 
 AC_CHECK_HEADER(netinet/tcp.h,
-	[AC_DEFINE(HAVE_NETINET_TCP,1,[Kconfig])]
+	[AC_DEFINE(HAVE_NETINET_TCP,1,[config])]
 )
 MVM_LDADD=
 AC_CHECK_LIB(elf, elf_begin,
-	[MVM_LDADD="$MVM_LDADD -lelf"; AC_DEFINE(HAVE_LIBELF,1,[Kconfig])],
+	[MVM_LDADD="$MVM_LDADD -lelf"; AC_DEFINE(HAVE_LIBELF,1,[config])],
 	AC_MSG_ERROR([Cannot find libelf (development version) on this system])
 )
 AC_CHECK_LIB(dl, dlopen,
-	[MVM_LDADD="$MVM_LDADD -ldl"; AC_DEFINE(HAVE_LIBDL,1,[Kconfig])]
+	[MVM_LDADD="$MVM_LDADD -ldl"; AC_DEFINE(HAVE_LIBDL,1,[config])]
 )
 AC_CHECK_LIB(nsl, gethostbyname,
-	[MVM_LDADD="$MVM_LDADD -lnsl"; AC_DEFINE(HAVE_LIBNSL,1,[Kconfig])]
+	[MVM_LDADD="$MVM_LDADD -lnsl"; AC_DEFINE(HAVE_LIBNSL,1,[config])]
 )
 AC_CHECK_LIB(socket, connect,
-	[MVM_LDADD="$MVM_LDADD -lsocket"; AC_DEFINE(HAVE_LIBSOCKET,1,[Kconfig])]
+	[MVM_LDADD="$MVM_LDADD -lsocket"; AC_DEFINE(HAVE_LIBSOCKET,1,[config])]
 )
 AC_CHECK_LIB(png, png_read_init, [LIBPNG_OK=1],
 	AC_MSG_ERROR([Cannot find libpng (development version) on this system])
@@ -474,24 +375,25 @@ typedef u_quad_t u_gnuquad_t;
 
 AH_BOTTOM([#endif /* !_XENO_SIM_CONFIG_H */])
 
-dnl Nucleus limits -- set reasonable values.
-AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_SYS_HEAPSZ,128,[Kconfig])
-AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_SCALABLE_PRIOS,256,[Kconfig])
+dnl Nucleus setup -- set reasonable values.
+AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_TIMING_PERIODIC,1,[config])
+AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_TIMING_PERIOD,0,[config])
+AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_SYS_HEAPSZ,128,[config])
+AC_DEFINE(CONFIG_XENO_OPT_REGISTRY,1,[config])
+AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_REGISTRY_NRSLOTS,1024,[config])
 
 dnl Native skin options -- force all in.
-AC_DEFINE(CONFIG_XENO_OPT_NATIVE_REGISTRY,1,[Kconfig])
-AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_NATIVE_REGISTRY_NRSLOTS,1024,[Kconfig])
-AC_DEFINE(CONFIG_XENO_OPT_NATIVE_SEM,1,[Kconfig])
-AC_DEFINE(CONFIG_XENO_OPT_NATIVE_EVENT,1,[Kconfig])
-AC_DEFINE(CONFIG_XENO_OPT_NATIVE_MUTEX,1,[Kconfig])
-AC_DEFINE(CONFIG_XENO_OPT_NATIVE_COND,1,[Kconfig])
-AC_DEFINE(CONFIG_XENO_OPT_NATIVE_QUEUE,1,[Kconfig])
-AC_DEFINE(CONFIG_XENO_OPT_NATIVE_HEAP,1,[Kconfig])
-AC_DEFINE(CONFIG_XENO_OPT_NATIVE_ALARM,1,[Kconfig])
-AC_DEFINE(CONFIG_XENO_OPT_NATIVE_MPS,1,[Kconfig])
+AC_DEFINE(CONFIG_XENO_OPT_NATIVE_SEM,1,[config])
+AC_DEFINE(CONFIG_XENO_OPT_NATIVE_EVENT,1,[config])
+AC_DEFINE(CONFIG_XENO_OPT_NATIVE_MUTEX,1,[config])
+AC_DEFINE(CONFIG_XENO_OPT_NATIVE_COND,1,[config])
+AC_DEFINE(CONFIG_XENO_OPT_NATIVE_QUEUE,1,[config])
+AC_DEFINE(CONFIG_XENO_OPT_NATIVE_HEAP,1,[config])
+AC_DEFINE(CONFIG_XENO_OPT_NATIVE_ALARM,1,[config])
+AC_DEFINE(CONFIG_XENO_OPT_NATIVE_MPS,1,[config])
 
 dnl Compatibility skin options -- force all in.
-AC_DEFINE(CONFIG_XENO_OPT_RTAI_SEM,1,[Kconfig])
+AC_DEFINE(CONFIG_XENO_OPT_RTAI_SEM,1,[config])
 
 AC_SUBST(MVM_LDADD)
 AC_SUBST(MVM_CFLAGS)
@@ -499,47 +401,43 @@ AC_SUBST(MVM_CXXFLAGS)
 AC_SUBST(MVM_GCC_TARBALL)
 AC_SUBST(MVM_BUILD_STRING)
 AC_SUBST(MVM_HOST_STRING)
-AC_SUBST(XENO_INSTALLDIR)
 
 dnl
 dnl Produce automake conditionals.
 dnl
 
 AM_CONDITIONAL(CONFIG_XENO_MVM_TCLWRAP,test x$tclwrap = xyes)
-AM_CONDITIONAL(CONFIG_XENO_MVM_SKIN_PSOS,[test x$CONFIG_XENO_MVM_SKIN_PSOS = xy])
-AM_CONDITIONAL(CONFIG_XENO_MVM_SKIN_VXWORKS,[test x$CONFIG_XENO_MVM_SKIN_VXWORKS = xy])
-AM_CONDITIONAL(CONFIG_XENO_MVM_SKIN_VRTX,[test x$CONFIG_XENO_MVM_SKIN_VRTX = xy])
-AM_CONDITIONAL(CONFIG_XENO_MVM_SKIN_UITRON,[test x$CONFIG_XENO_MVM_SKIN_UITRON = xy])
-AM_CONDITIONAL(CONFIG_XENO_MVM_SKIN_POSIX,[test x$CONFIG_XENO_MVM_SKIN_POSIX = xy])
-AM_CONDITIONAL(CONFIG_XENO_MVM_SKIN_NATIVE,[test x$CONFIG_XENO_MVM_SKIN_NATIVE = xy])
-AM_CONDITIONAL(CONFIG_XENO_MVM_SKIN_RTAI,[test x$CONFIG_XENO_MVM_SKIN_RTAI = xy])
 AM_CONDITIONAL(CONFIG_XENO_MVM_ATOMIC_CORE,test x$CONFIG_XENO_MVM_ATOMIC_CORE = xy)
 
 dnl
 dnl Build the Makefiles
 dnl
 
+base=asm-sim
+AC_CONFIG_LINKS([include/asm/xenomai:../include/$base])
+
 AC_CONFIG_SUBDIRS(tkimg)
 
 AC_CONFIG_FILES([ \
-     GNUmakefile \
-     vmutils/GNUmakefile \
-     vm/GNUmakefile \
-     include/GNUmakefile \
-     include/nucleus/GNUmakefile \
-     adapter/GNUmakefile \
-     skins/GNUmakefile \
-     nucleus/GNUmakefile \
-     skins/psos+/GNUmakefile \
-     skins/vxworks/GNUmakefile \
-     skins/vrtx/GNUmakefile \
-     skins/uitron/GNUmakefile \
-     skins/posix/GNUmakefile \
-     skins/posix/testsuite/GNUmakefile \
-     skins/native/GNUmakefile \
-     skins/rtai/GNUmakefile \
-     gcic/GNUmakefile \
-     scope/GNUmakefile \
+     Makefile \
+     vmutils/Makefile \
+     vm/Makefile \
+     adapter/Makefile \
+     skins/Makefile \
+     nucleus/Makefile \
+     include/Makefile \
+     skins/psos+/Makefile \
+     skins/vxworks/Makefile \
+     skins/vxworks/testsuite/Makefile \
+     skins/vrtx/Makefile \
+     skins/uitron/Makefile \
+     skins/posix/Makefile \
+     skins/posix/testsuite/Makefile \
+     skins/posix/demos/Makefile \
+     skins/native/Makefile \
+     skins/rtai/Makefile \
+     gcic/Makefile \
+     scope/Makefile \
      ])
 
 AC_OUTPUT()

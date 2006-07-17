@@ -1,0 +1,398 @@
+config XENO_OPT_NUCLEUS
+	depends on XENOMAI
+	tristate "Nucleus"
+	default y
+
+if XENO_OPT_NUCLEUS != n
+
+config XENO_OPT_PERVASIVE
+	bool "Pervasive real-time support in user-space"
+	default y
+	help
+
+	Enable pervasive real-time support for user-space Linux
+	processes, which is the default operating mode for
+	Xenomai. Switching this option out only leaves the
+	minimal support needed for running in-kernel
+	applications, which directly call the real-time APIs from
+	kernel modules.
+
+config XENO_OPT_ISHIELD
+	depends on XENO_OPT_PERVASIVE
+	bool "Interrupt shield support"
+	default n
+	help
+	
+	This option builds in the interrupt shield support, which can
+	be further enabled on a thread-by-thread basis. When enabled
+	for a thread, the interrupt shield prevents it from being
+	preempted by Linux interrupt handlers when it executes in the
+	secondary domain (i.e. under the control of the Linux
+	scheduler), thus increasing the execution time accuracy for
+	CPU-bound tasks.
+
+	Note: since the interrupt shield adds extra-computation to the
+	critical path, applications based on threads running in the
+	primary Xenomai domain, hence for which preemption by any kind
+	of Linux kernel activities is already prevented by design,
+	should leave this option disabled.
+
+config XENO_OPT_RPIDISABLE
+	depends on XENO_OPT_PERVASIVE
+	bool "Disable priority coupling"
+	default n
+	help
+	
+	This option globally disables thread priority coupling between
+	Xenomai and Linux schedulers. Decoupling priority prevents the
+	Linux kernel from inheriting the priority of the associated
+	Xenomai thread when the latter executes in secondary mode.
+
+	The net effect is that user-space Xenomai threads executing
+	under the control of the Linux scheduler (i.e. in secondary
+	mode) will always have lower absolute priority than any
+	runnable real-time thread left under the control of the
+	Xenomai scheduler (i.e. in primary mode), and as such, will be
+	scheduled after.
+
+	If in doubt, say N.
+
+config XENO_OPT_SECURITY_ACCESS
+	bool "Enforce syscall access control"
+	depends on XENO_OPT_PERVASIVE
+	default y
+	help
+
+	When enabled, the nucleus requires applications running in
+	user-space to have the CAP_SYS_NICE capability turned on for
+	executing Xenomai syscalls, such as skin services.
+
+	Disabling this option means that *any* user from the system
+	could invoke Xenomai services without permission. Therefore,
+	think twice before switching this off.
+
+config XENO_OPT_PIPELINE_HEAD
+	bool "Optimize as pipeline head"
+	default y
+	help
+	
+	This option causes Xenomai to declare itself as always leading
+	the interrupt pipeline, which in turn allows Adeos to optimize
+	for faster interrupt delivery and stall/unstall operations.
+
+	However, enabling this option prevents inserting Adeos domains
+	with higher priority than Xenomai in the pipeline, which
+	should be rarely needed though.
+
+	This feature requires Adeos to support invariant pipeline head
+	optimizations, which some older patches might not provide. In
+	the latter case, this option will simply have no effect. If in
+	doubt, say 'Y' here.
+
+config XENO_OPT_PIPE
+	bool
+
+config XENO_OPT_PIPE_NRDEV
+	int "Number of pipe devices"
+	depends on XENO_OPT_PIPE
+	default 32
+	help
+	
+	Message pipes are bi-directional FIFO communication
+	channels allowing data exchange between real-time kernel
+	threads and regular user-space processes. Pipes natively
+	preserve message boundaries, but can also be used in byte
+	streaming mode from kernel to user-space.
+	
+	This option sets the maximum number of pipe devices supported
+	in the system. Pipe devices are named /dev/rtpN where N is a
+	device minor number ranging from 0 to XENO_OPT_PIPE_NRDEV - 1.
+
+config XENO_OPT_REGISTRY
+	bool
+
+config XENO_OPT_REGISTRY_NRSLOTS
+	int "Number of registry slots"
+	depends on XENO_OPT_REGISTRY
+	default 512
+	help
+	
+	The registry is used by Xenomai skins to bind real-time
+	objects they create to symbolic names, so that these objects
+	can be further retrieved and shared by real-time applications
+	regardless of their runtime space (i.e. kernel or user). Each
+	named object occupies a registry slot.
+	
+	This option sets the maximum number of real-time objects the
+	registry can handle. All skins using the registry share this
+	storage.
+
+config XENO_OPT_SYS_HEAPSZ
+	int "Size of the system heap (Kb)"
+	default 128
+	help
+
+	The system heap is used for various internal allocations by
+	the nucleus and the real-time skins. The size is expressed in
+	Kilobytes.
+
+config XENO_OPT_STATS
+	bool "Statistics collection"
+	default y
+	help
+	
+	This option causes the real-time nucleus to collect various
+	per-thread runtime statistics, which are accessible through
+	the /proc/xenomai/stats interface.
+
+config XENO_OPT_DEBUG
+	bool "Debug support"
+	default n
+	help
+	
+	This option activates various debugging checks inside the core
+	system. Doing so adds a significant runtime overhead,
+	worsening the latency figures especially on SMP kernels.
+	Do not switch this option on unless you really know what you
+	are doing.
+
+config XENO_OPT_DEBUG_QUEUES
+	bool "Queue Debugging support"
+	depends on XENO_OPT_DEBUG
+	help
+	
+	This option activates debugging checks for all queueing
+	operations of the Xenomai core. It adds even more runtime
+	overhead then CONFIG_XENO_OPT_DEBUG, use with care.
+
+config XENO_OPT_DEBUG_BHEAP
+	bool
+	default y if XENO_OPT_DEBUG
+
+config XENO_OPT_WATCHDOG
+	bool "Watchdog support"
+	default n
+	help
+	
+	This option activates a watchdog aimed at detecting runaway
+	real-time threads. If enabled, the watchdog triggers after 4
+	seconds of uninterrupted real-time activity without Linux
+	interaction; in such event, the current real-time thread is
+	forcibly suspended. The built-in watchdog support operates on
+	behalf of the timer tick handler, thus is only active after
+	the timer has been started.
+
+menu "Timing"
+
+config XENO_OPT_TIMING_PERIODIC
+	bool "Use periodic timer hardware"
+	default n
+	help
+	WARNING: This value must be <= CONFIG_HZ.
+
+	The nucleus can manage the timer hardware provided by the
+	underlying architecture either in aperiodic (one-shot) or
+	periodic timing modes. Aperiodic mode provides for
+	non-constant delays between timer ticks, whilst periodic mode
+	makes the hardware timer tick at constant frequency.
+
+	In aperiodic mode, timing accuracy is higher - since timeouts
+	are not rounded to a constant time slice. The aperiodic mode
+	gives better results in configuration involving threads
+	requesting timing services over different time scales
+	that cannot be easily expressed as multiples of a single base
+	tick, or would lead to a waste of high frequency periodic ticks.
+
+	Enabling this option allows the nucleus to use the timer
+	hardware as a pure Programmable Interval Timer. You can leave
+	this option disabled in order to save a few hundreds bytes and
+	some cycles on the fast path if you plan to use the system
+	timer in aperiodic mode only.
+
+	This option must not be confused with the ability to run
+	periodic threads, which is possible is both timing
+	modes. Periodic threads needing high timing accuracy will even
+	require	aperiodic timing.
+
+config XENO_OPT_TIMING_PERIOD
+	depends on XENO_OPT_TIMING_PERIODIC
+	int "Timer period (ns)"
+	default 0
+	help
+	Duration of a base periodic tick (in nanoseconds). This value
+	is used to program the tick frequency for the underlying timer
+	hardware used as a pure PIT.
+
+	This option defines the duration of the base period for the
+	whole system; it must not be confused with per-thread periodic
+	settings, which are expressed in units of such base period.
+	Passing zero for the base period tells the nucleus to use the
+	high precision aperiodic timing instead, which in turn allows
+	to use time delays expressed as counts of nanoseconds.
+
+	When a real-time interface actually needs a valid base
+	period because its idea of time is tick/jiffy-based, a default
+	base period will be substituted to zero in this field.
+
+	The base period can be overriden at runtime using the
+	"tick_arg" module parameter when loading the nucleus.
+
+	If in doubt, leave zero in this field.
+
+if XENO_OPT_TIMING_PERIODIC != y
+
+config XENO_OPT_TIMING_PERIOD
+	int
+	default 0
+
+endif
+
+config XENO_OPT_TIMING_PERIOD
+
+
+config XENO_OPT_TIMING_TIMERLAT
+	int "Timer tuning latency (ns)"
+	default 0
+	help
+	This parameter accounts for the time (in nanoseconds) needed
+	to program the underlying timer hardware in aperiodic
+	(one-shot) timing mode.
+
+	This value will be used to reduce the scheduling jitter induced
+	by the time needed to setup the timer for its next shot. A
+	default value of 0 (recommended) will cause this value to be
+	estimated by the nucleus at startup.
+	Depending on whether CONFIG_X86_LOCAL_APIC is enabled or not
+	in the kernel configuration Xenomai is compiled
+	against, this option will either refer to the local APIC or
+	8254 timer latency value.
+
+config XENO_OPT_TIMING_SCHEDLAT
+	int "Scheduling latency (ns)"
+	default 0
+	help
+	Scheduling latency is the time between the termination of an
+	interrupt handler and the execution of the first instruction
+	of the real-time thread this handler resumes. A default value
+	of 0 (recommended) will cause a pre-calibrated value to be
+	used.
+
+endmenu
+
+menu "Scalability"
+
+config XENO_OPT_SCALABLE_SCHED
+	bool "O(1) scheduler"
+	default n
+	help
+	
+	This option causes a multi-level priority queue to be
+	used in the real-time thread scheduler, so that it operates
+	in constant-time regardless of the number of _concurrently
+	runnable_ threads (which might be much lower than the total
+	number of active threads). Its use is recommended for
+	large multi-threaded systems involving more than 10 of such
+	threads; otherwise, the default linear method usually performs
+	better with lower memory footprints.
+
+choice
+        prompt "Timer indexing method"
+        default XENO_OPT_TIMER_LIST
+        help
+
+	This option allows to select the underlying data structure
+	which is going to be used for ordering the outstanding
+	software timers managed by the nucleus when operating in
+	aperiodic timing mode. In periodic mode, a fast timer wheel
+	data structure is always used, regardless of this option.
+
+config XENO_OPT_TIMER_LIST
+        bool "Linear"
+        help
+
+        Use a linked list. Albeit O(N), this simple data structure is
+        particularly efficient when only a few timers (< 10) may be
+        concurrently outstanding at any point in time.
+
+config XENO_OPT_TIMER_HEAP
+        bool "Tree"
+        help
+
+        Use a binary heap. This data structure is efficient when a
+        high number of software timers may be concurrently
+        outstanding at any point in time.
+
+endchoice
+
+config XENO_OPT_TIMER_HEAP_CAPACITY
+	int "Binary heap capacity"
+	depends on XENO_OPT_TIMER_HEAP
+	default 256
+        help 
+
+        Set the maximum number of timers in the nucleus timers list.
+
+endmenu
+
+menu "Shared interrupts"
+
+config XENO_OPT_SHIRQ_LEVEL
+	bool "Level-triggered interrupts"
+	default n
+	help
+	
+	Enables support for shared level-triggered interrupts, so that
+	multiple real-time interrupt handlers are allowed to control
+	dedicated hardware devices which are configured to share
+	the same interrupt channel.
+
+config XENO_OPT_SHIRQ_EDGE
+	bool "Edge-triggered interrupts"
+	default n
+	help
+
+	Enables support for shared edge-triggered interrupts, so that
+	multiple real-time interrupt handlers are allowed to control
+	dedicated hardware devices which are configured to share
+	the same interrupt channel.
+
+endmenu
+
+menu "LTT tracepoints filtering"
+
+	depends on LTT
+
+config XENO_OPT_FILTER_EVIRQ
+	bool "Disable IRQ-related tracepoints"
+	default y if XENO_OPT_FILTER_EVALL=y
+	help
+	
+	When LTT support is active, this option disables tracepoints
+	inside real-time interrupt handlers.
+
+config XENO_OPT_FILTER_EVTHR
+	bool "Disable thread-related tracepoints"
+	default y if XENO_OPT_FILTER_EVALL=y
+	help
+	
+	When LTT support is active, this option disables tracepoints
+	inside most thread-related services.
+
+config XENO_OPT_FILTER_EVSYS
+	bool "Disable syscall-related tracepoints"
+	default y if XENO_OPT_FILTER_EVALL=y
+	help
+	
+	When LTT support is active, this option disables tracepoints
+	inside the shadow syscall dispatcher.
+
+config XENO_OPT_FILTER_EVALL
+	bool "Disable all tracepoints"
+	default n
+	help
+	
+	This option disables all LTT tracepoints inside Xenomai.
+
+endmenu
+
+endif

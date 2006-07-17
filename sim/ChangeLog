@@ -1,3 +1,45 @@
+2006-06-09  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* skins/posix/testsuite/xntest.c: Make verbosity configurable.
+
+	* skins/vxworks/testsuite/xntest.c: Make verbosity configurable.
+
+	* skins/vxworks/testsuite/*.c: Delete the created tasks before
+	test end.
+
+	* skins/vxworks/testsuite/*.c (rootTask): Replace
+	S_semlib_INVALID_OPTION with S_semlib_INVALID_QUEUE_TYPE.
+
+	* skins/vxworks/testsuite/t010823-1.c (rootTask): Pass a non NULL
+	stack pointer to taskInit when running this test under vxworks.
+
+2006-05-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* sim/vm/thread.cc (XenoThread): Raise stack size to 32k.
+
+2006-04-09  Philippe Gerum  <rpm@xenomai.org>
+
+	* sim/scope/gdbhelper.cc (splitInput): Re-init the result buffer
+	so that large GDB output involving multiple read loops don't
+	recycle old contents spuriously.
+
+	* sim/scope/tcl/gdb.tcl (gdb:seek): Auto-limit the backtrace dump
+	to the inner last 32 frames in order to work-around issues GDB 6.x
+	has with ucontext(2) driven co-routines.
+
+2006-01-04  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* configure.in: Add nucleus scalable scheduler and watchdog
+	options.
+
+2005-12-19  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* gcic/GNUmakefile.am: reconfigure instrumented gcc whenever
+	installation directory changes.
+
+	* adapter/adapter.cc (kroot): call xnpod_delete_thread at thread
+	death.
+
 2005-09-28  Philippe Gerum  <rpm@xenomai.org>
 
 	* sim: Xenomai migration.

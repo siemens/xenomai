@@ -104,6 +104,18 @@ ac_cv_using_gcc_for_mvm_cxx=no, ac_cv_using_gcc_for_mvm_cxx=yes)])dnl
 if test $ac_cv_using_gcc_for_mvm_cxx = yes; then
 AC_MSG_RESULT(yes)
 save_CXXFLAGS="$CXXFLAGS"
+
+AC_MSG_CHECKING([if C++ compiler supports -fwritable-strings -fdollars-in-identifiers])
+CXXFLAGS="-fwritable-strings -fdollars-in-identifiers -Werror"
+AC_CACHE_VAL(ac_cv_cxx_mvm_wsdollars,
+[AC_TRY_COMPILE([],
+[int i = 0; return i; ],
+ac_cv_cxx_mvm_wsdollars="-fwritable-strings -fdollars-in-identifiers", ac_cv_cxx_mvm_wsdollars="")])dnl
+if test -z "$ac_cv_cxx_mvm_wsdollars"; then
+AC_MSG_RESULT(no)
+else
+AC_MSG_RESULT(yes)
+fi
 AC_MSG_CHECKING([if C++ compiler supports -fno-exceptions])
 CXXFLAGS="-fno-exceptions -Werror"
 AC_CACHE_VAL(ac_cv_cxx_mvm_noex,
@@ -126,7 +138,7 @@ AC_MSG_RESULT(no)
 else
 AC_MSG_RESULT(yes)
 fi
-MVM_CXXFLAGS="-fwritable-strings -fdollars-in-identifiers $ac_cv_cxx_mvm_noex $ac_cv_cxx_mvm_nonnull"
+MVM_CXXFLAGS="$ac_cv_cxx_mvm_wsdollars $ac_cv_cxx_mvm_noex $ac_cv_cxx_mvm_nonnull"
 CXXFLAGS="$save_CXXFLAGS"
 else
 AC_MSG_RESULT(no)
@@ -446,8 +458,13 @@ AC_DEFUN([SC_PATH_TIX], [
     TIX_TCL_LIB=$ac_cv_tix_libdir
     AC_SUBST(TIX_TCL_LIB)
 
-    SC_LIB_SPEC(tix)
-    TIX_LIB_SPEC=$tix_LIB_SPEC
+    SC_LIB_SPEC(tix,probe)
+    if test "x$tix_LIB_SPEC" = x; then
+       SC_LIB_SPEC(Tix)
+       TIX_LIB_SPEC=$Tix_LIB_SPEC
+    else
+       TIX_LIB_SPEC=$tix_LIB_SPEC
+    fi
     AC_SUBST(TIX_LIB_SPEC)
 ])
 
@@ -471,7 +488,6 @@ AC_DEFUN([SC_PATH_TIX], [
 #------------------------------------------------------------------------
 
 AC_DEFUN([SC_LIB_SPEC], [
-    AC_MSG_CHECKING(for $1 library)
     eval "sc_lib_name_dir=${libdir}"
     for i in \
 	    `ls -dr ${sc_lib_name_dir}/$1[[0-9]]*.lib 2>/dev/null ` \
@@ -505,8 +521,14 @@ AC_DEFUN([SC_LIB_SPEC], [
 	    ;;
     esac
     if test "x${sc_lib_name_lib}" = x ; then
-	AC_MSG_ERROR(not found)
+       if test \! "$2" = probe; then
+          AC_MSG_CHECKING(for $1 library)
+	  AC_MSG_ERROR(not found)
+       else
+	  $1_LIB_SPEC=
+       fi
     else
+        AC_MSG_CHECKING(for $1 library)
 	AC_MSG_RESULT(${$1_LIB_SPEC})
     fi
 ])

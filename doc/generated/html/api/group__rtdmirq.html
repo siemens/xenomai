@@ -19,20 +19,30 @@ Collaboration diagram for Interrupt Management Services:<center><table><tr><td><
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
+<tr><td colspan="2"><br><h2>RTDM_IRQTYPE_xxx</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="RTDM_IRQTYPE_xxx"></a> Interrupt registrations flags <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga6" doxytag="rtdmirq::RTDM_IRQTYPE_SHARED"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmirq.html#ga6">RTDM_IRQTYPE_SHARED</a>&nbsp;&nbsp;&nbsp;XN_ISR_SHARED</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Enable IRQ-sharing with other real-time drivers. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga7" doxytag="rtdmirq::RTDM_IRQTYPE_EDGE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmirq.html#ga7">RTDM_IRQTYPE_EDGE</a>&nbsp;&nbsp;&nbsp;XN_ISR_EDGE</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Mark IRQ as edge-triggered, relevant for correct handling of shared edge-triggered IRQs. <br></td></tr>
 <tr><td colspan="2"><br><h2>RTDM_IRQ_xxx</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="RTDM_IRQ_xxx"></a> Return flags of interrupt handlers <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga6" doxytag="rtdmirq::RTDM_IRQ_PROPAGATE"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmirq.html#ga6">RTDM_IRQ_PROPAGATE</a>&nbsp;&nbsp;&nbsp;XN_ISR_CHAINED</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga8" doxytag="rtdmirq::RTDM_IRQ_NONE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmirq.html#ga8">RTDM_IRQ_NONE</a>&nbsp;&nbsp;&nbsp;XN_ISR_NONE</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Propagate unhandled interrupt to possible other handlers. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga7" doxytag="rtdmirq::RTDM_IRQ_ENABLE"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmirq.html#ga7">RTDM_IRQ_ENABLE</a>&nbsp;&nbsp;&nbsp;XN_ISR_ENABLE</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unhandled interrupt. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga9" doxytag="rtdmirq::RTDM_IRQ_HANDLED"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmirq.html#ga9">RTDM_IRQ_HANDLED</a>&nbsp;&nbsp;&nbsp;XN_ISR_HANDLED</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Re-enable interrupt line on return. <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Denote handled interrupt. <br></td></tr>
 <tr><td colspan="2"><br><h2>Defines</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmirq.html#ga8">rtdm_irq_get_arg</a>(irq_handle, type)&nbsp;&nbsp;&nbsp;((type *)irq_handle-&gt;cookie)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmirq.html#ga10">rtdm_irq_get_arg</a>(irq_handle, type)&nbsp;&nbsp;&nbsp;((type *)irq_handle-&gt;cookie)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Retrieve IRQ handler argument.  <a href="#ga8"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Retrieve IRQ handler argument.  <a href="#ga10"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>Typedefs</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmirq.html#ga1">rtdm_irq_handler_t</a> )(rtdm_irq_t *irq_handle)</td></tr>
 
@@ -52,7 +62,7 @@ Collaboration diagram for Interrupt Management Services:<center><table><tr><td><
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disable interrupt line.  <a href="#ga5"></a><br></td></tr>
 </table>
 <hr><h2>Define Documentation</h2>
-<a class="anchor" name="ga8" doxytag="rtdm_driver.h::rtdm_irq_get_arg"></a><p>
+<a class="anchor" name="ga10" doxytag="rtdm_driver.h::rtdm_irq_get_arg"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -88,7 +98,7 @@ Retrieve IRQ handler argument.
     <tr><td valign="top"></td><td valign="top"><em>type</em>&nbsp;</td><td>Type of the pointer to return</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Returns:</b></dt><dd>The argument pointer registered on <a class="el" href="group__rtdmirq.html#ga2">rtdm_irq_request()</a> is returned, type-casted to the specified <em>type</em>.</dd></dl>
+<dl compact><dt><b>Returns:</b></dt><dd>The argument pointer registered on rtdm_irq_request() is returned, type-casted to the specified <em>type</em>.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -122,7 +132,7 @@ Interrupt handler.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle as returned by <a class="el" href="group__rtdmirq.html#ga2">rtdm_irq_request()</a></td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle as returned by rtdm_irq_request()</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 or a combination of <a class="el" href="group__rtdmirq.html#RTDM_IRQ_xxx">RTDM_IRQ_xxx</a> flags </dd></dl>
@@ -159,7 +169,7 @@ Disable interrupt line.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle as returned by <a class="el" href="group__rtdmirq.html#ga2">rtdm_irq_request()</a></td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle as returned by rtdm_irq_request()</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise negative error code</dd></dl>
@@ -200,7 +210,7 @@ Enable interrupt line.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle as returned by <a class="el" href="group__rtdmirq.html#ga2">rtdm_irq_request()</a></td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle as returned by rtdm_irq_request()</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise negative error code</dd></dl>
@@ -241,7 +251,7 @@ Release an interrupt handler.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle as returned by <a class="el" href="group__rtdmirq.html#ga2">rtdm_irq_request()</a></td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle as returned by rtdm_irq_request()</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise negative error code</dd></dl>
@@ -318,7 +328,7 @@ Register an interrupt handler.
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>irq_no</em>&nbsp;</td><td>Line number of the addressed IRQ </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>handler</em>&nbsp;</td><td>Interrupt handler </td></tr>
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>flags</em>&nbsp;</td><td>Currently unused, pass 0 </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>flags</em>&nbsp;</td><td>Registration flags, see <a class="el" href="group__rtdmirq.html#RTDM_IRQTYPE_xxx">RTDM_IRQTYPE_xxx</a> for details </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>device_name</em>&nbsp;</td><td>Optional device name to show up in real-time IRQ lists (not yet implemented) </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>arg</em>&nbsp;</td><td>Pointer to be passed to the interrupt handler on invocation</td></tr>
   </table>
@@ -330,7 +340,7 @@ Register an interrupt handler.
 <ul>
 <li>-EBUSY is returned if the specified IRQ line is already in use.</li></ul>
 <p>
-<dl compact><dt><b>Note:</b></dt><dd>To receive interrupts on the requested line, you have to call <a class="el" href="group__rtdmirq.html#ga4">rtdm_irq_enable()</a> after registering the handler.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>To receive interrupts on the requested line, you have to call rtdm_irq_enable() after registering the handler.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -339,7 +349,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:34 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:58:07 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

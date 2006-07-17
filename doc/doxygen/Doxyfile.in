@@ -363,10 +363,15 @@ WARN_LOGFILE           =
 
 INPUT                  = \
         @top_srcdir@/include/nucleus \
-        @top_srcdir@/nucleus \
-        @top_srcdir@/arch \
-        @top_srcdir@/skins/native \
-        @top_srcdir@/skins/rtdm \
+        @top_srcdir@/ksrc/nucleus \
+        @top_srcdir@/ksrc/arch \
+        @top_srcdir@/include/native \
+        @top_srcdir@/src/skins/native \
+        @top_srcdir@/ksrc/skins/native \
+        @top_srcdir@/include/rtdm \
+        @top_srcdir@/src/skins/rtdm \
+        @top_srcdir@/ksrc/skins/rtdm \
+        @top_srcdir@/ksrc/skins/posix \
         @top_srcdir@/doc/doxygen
 
 # If the value of the INPUT tag contains directories, you can use the 
@@ -871,10 +876,12 @@ SEARCH_INCLUDES        = YES
 # Added top_buildir/include here for the definition of XENO_PROTO in
 # xeno_config.h
 INCLUDE_PATH           = \
-@top_srcdir@/skins/native \
-@top_srcdir@/skins/rtdm \
+@top_srcdir@/ksrc/skins/native \
+@top_srcdir@/ksrc/skins/rtdm \
+@top_srcdir@/ksrc/skins \
 @top_builddir@/include \
-@top_srcdir@/include
+@top_srcdir@/include \
+@top_srcdir@/include/posix \
 
 
 
@@ -891,7 +898,9 @@ INCLUDE_FILE_PATTERNS  =
 # or name=definition (no spaces). If the definition and the = are 
 # omitted =1 is assumed.
 
-PREDEFINED             = DOXYGEN_CPP
+PREDEFINED             = DOXYGEN_CPP \
+        EXPORT_SYMBOL(symbol)=// \
+        CONFIG_XENO_OPT_NATIVE_MPS
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then 
 # this tag can be used to specify a list of macro names that should be expanded. 

@@ -1,0 +1,29 @@
+config XENO_SKIN_RTDM
+	depends on XENO_OPT_NUCLEUS
+	tristate "Real-Time Driver Model"
+	default y
+	help
+
+	This API skin allows to write real-time drivers against a common
+	light weight interface in kernel mode, but use them across all other
+	skins in both kernel and user mode.
+
+config XENO_OPT_RTDM_FILDES
+	int "Maximum number of RTDM file descriptors"
+	depends on XENO_SKIN_RTDM
+	default 128
+	help
+
+	This option defines the maximum number of RTDM file descriptors
+	which can be opened at the same time. RTDM file descriptors are
+	a global resource all applications share, either via the RTDM skin
+	directly or via the embedded services of the POSIX skin.
+
+config XENO_OPT_DEBUG_RTDM
+	bool "RTDM debugging support"
+	depends on XENO_OPT_DEBUG && XENO_SKIN_RTDM
+	help
+
+	This option activates debugging checks for the RTDM subsystem.
+	It is a recommended option for analysing potential issues in RTDM
+	drivers. A minor runtime overhead is added.

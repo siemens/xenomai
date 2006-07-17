@@ -850,8 +850,10 @@ proc gdb:seek {context focuscmd location {focusvar {}} {localsvar {}}} {
 	regexp "\[^\"\]+.(\[^\"\]+).*" $matched mvar curfocus
     }
 
-    # query stack information
-    set rl [gdb:command where ls]
+    # query stack information -- auto-limit to the inner last 32
+    # frames in order to work-around the issue GDB 6.x has with
+    # ucontext(2) driven co-routines.
+    set rl [gdb:command "where 32" ls]
     set stackinfo [lindex $rl 2]
 
     if {$stackinfo == {}} {

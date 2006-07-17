@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 
 staging=${DESTDIR}
 prefix="@prefix@"
@@ -12,22 +12,14 @@ XENO_VERSION="@PACKAGE_VERSION@"
 XENO_PREFIX="${staging}${prefix}"
 XENO_CC="@CC@"
 XENO_TARGET_ARCH="@XENO_TARGET_ARCH@"
-XENO_TARGET_SUBARCH="@XENO_TARGET_SUBARCH@"
-XENO_CONFIG="${staging}${pkgdatadir}/config-xenomai-${XENO_VERSION}"
-XENO_LINUX_DIR="@XENO_LINUX_DIR@"
-XENO_LINUX_VERSION="@XENO_LINUX_VERSION@"
-XENO_KERNEL_CFLAGS="-I. -I${staging}${includedir} @XENO_KMOD_APP_CFLAGS@ @XENO_FP_CFLAGS@"
-XENO_MODULE_DIR="${staging}@XENO_MODULE_DIR@"
-XENO_SYMBOL_DIR="${staging}@XENO_SYMBOL_DIR@"
 XENO_BASE_CFLAGS="-I. -I${staging}${includedir} @XENO_USER_APP_CFLAGS@"
-XENO_BASE_LDFLAGS="-L${staging}${libdir} -lpthread"
+XENO_BASE_LDFLAGS="-L${staging}${libdir} -lpthread @XENO_USER_APP_LDFLAGS@"
 XENO_POSIX_CFLAGS="-I. -I${staging}${includedir} -I${staging}${includedir}/posix @XENO_USER_APP_CFLAGS@"
-XENO_POSIX_LDFLAGS="-L${staging}${libdir} -lpthread_rt -lpthread -lrt"
+XENO_POSIX_LDFLAGS="-L${staging}${libdir} -lpthread_rt -lpthread -lrt @XENO_USER_APP_LDFLAGS@"
 XENO_POSIX_WRAPPERS="${staging}${libdir}/posix.wrappers"
 XENO_UVM_CFLAGS="-I. -I${staging}${includedir} @XENO_USER_APP_CFLAGS@ -D__XENO_UVM__"
-XENO_UVM_LDFLAGS="-u__xeno_skin_init -L${staging}${libdir} -luvm -lnucleus -lpthread"
+XENO_UVM_LDFLAGS="-u__xeno_skin_init -L${staging}${libdir} -luvm -lnucleus_uvm -lpthread"
 XENO_LIBRARY_DIR="${staging}${libdir}"
-CROSS_COMPILE="@CROSS_COMPILE@"
 
 unset prefix exec_prefix libdir datadir pkgdatadir includedir
 
@@ -40,22 +32,14 @@ Options :
         --v,--verbose
         --version
         --cc
-        --cross-compile
         --arch
-        --subarch
         --prefix
-        --config
-        --mod*-cflags,--kernel-cflags
-        --xeno-cflags,--fusion-cflags
-        --xeno-ldflags,--fusion-ldflags
+        --xeno-cflags
+        --xeno-ldflags
         --posix-cflags
         --posix-ldflags
         --uvm-cflags
         --uvm-ldflags
-        --linux-dir,--linux
-        --linux-ver*
-        --mod*-dir
-        --sym*-dir
         --lib*-dir,--libdir,--user-libdir
 EOF
     exit $1
@@ -64,28 +48,17 @@ EOF
 verbose ()
 {
     echo xeno-config --verbose
-
     echo "   " --version="\"${XENO_VERSION}\""
     echo "   " --cc="\"$XENO_CC\""
-    echo "   " --cross-compile="\"$CROSS_COMPILE\""
     echo "   " --arch="\"$XENO_TARGET_ARCH\""
-    echo "   " --subarch="\"$XENO_TARGET_SUBARCH\""
     echo "   " --prefix="\"$XENO_PREFIX\""
-    echo "   " --config="\"$XENO_CONFIG\""
-    echo "   " --kernel-cflags="\"$XENO_KERNEL_CFLAGS\""
-
     echo "   " --xeno-cflags="\"$XENO_BASE_CFLAGS\""
     echo "   " --xeno-ldflags="\"$XENO_BASE_LDFLAGS\""
     echo "   " --posix-cflags="\"$XENO_POSIX_CFLAGS\""
     echo "   " --posix-ldflags="\"$XENO_POSIX_LDFLAGS\""
     echo "   " --uvm-cflags="\"$XENO_UVM_CFLAGS \""
     echo "   " --uvm-ldflags="\"$XENO_UVM_LDFLAGS\""
-
-    echo "   " --module-dir="\"$XENO_MODULE_DIR\""
-    echo "   " --symbol-dir="\"$XENO_SYMBOL_DIR\""
     echo "   " --library-dir="\"$XENO_LIBRARY_DIR\""
-    echo "   " --linux-dir="\"$XENO_LINUX_DIR\""
-    echo "   " --linux-version="\"$XENO_LINUX_VERSION\""
 }
 
 if test $# -eq 0; then
@@ -105,28 +78,16 @@ while test $# -gt 0; do
         --cc)
             echo $XENO_CC
             ;;
-        --cross-compile)
-            echo $CROSS_COMPILE
-            ;;
         --arch)
             echo $XENO_TARGET_ARCH
-            ;;
-        --subarch)
-            echo $XENO_TARGET_SUBARCH
             ;;
         --prefix)
             echo $XENO_PREFIX
             ;;
-        --config)
-            echo $XENO_CONFIG
-            ;;
-        --mod*-cflags|--kernel-cflags)
-            echo $XENO_KERNEL_CFLAGS
-            ;;
-        --fusion-cflags|--xeno-cflags)
+        --xeno-cflags)
             echo $XENO_BASE_CFLAGS
             ;;
-        --fusion-ldflags|--xeno-ldflags)
+        --xeno-ldflags)
             echo $XENO_BASE_LDFLAGS
             ;;
         --posix-cflags)
@@ -139,7 +100,7 @@ while test $# -gt 0; do
 	    fi
 	    wrappers=`cat $XENO_POSIX_WRAPPERS | \
 	    while read symbol; do \
-                echo -n "-Wl,--wrap -Wl,$symbol " ; \
+                echo -n "-Wl,--wrap,$symbol " ; \
 	     done`
             echo "$wrappers $XENO_POSIX_LDFLAGS"
             ;;
@@ -149,20 +110,8 @@ while test $# -gt 0; do
         --uvm-ldflags)
             echo $XENO_UVM_LDFLAGS
             ;;
-        --mod*-dir)
-            echo $XENO_MODULE_DIR
-            ;;
-        --sym*-dir)
-            echo $XENO_SYMBOL_DIR
-            ;;
         --lib*-dir|--libdir|--user-libdir)
             echo $XENO_LIBRARY_DIR
-            ;;
-        --linux-dir|--linux)
-            echo $XENO_LINUX_DIR
-            ;;
-        --linux-ver*)
-            echo $XENO_LINUX_VERSION
             ;;
         --help)
             usage 0 1>&2

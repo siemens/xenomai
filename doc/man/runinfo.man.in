@@ -2,7 +2,7 @@
 .\" ** The above line should force tbl to be a preprocessor **
 .\" Man page for runinfo
 .\"
-.\" Copyright (C) 2005 Romain Lenglet <rlenglet@users.forge.objectweb.org>
+.\" Copyright (C) 2005, 2006 Romain Lenglet <rlenglet@users.forge.objectweb.org>
 .\"
 .\" You may distribute under the terms of the GNU General Public
 .\" License as specified in the file COPYING that comes with the
@@ -148,6 +148,3 @@ In this example, target \fBuserspace\fP is the default target, since it is the f
 .BR insmod (8),
 .BR modprobe (8),
 .BR rmmod (8)
-.SH HISTORY
-2005-10-18 \- Written by Romain Lenglet <rlenglet@users.forge.objectweb.org>
-

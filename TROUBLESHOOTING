@@ -6,6 +6,57 @@ arch-specific or generic.
                            GENERIC
 ===================================================================
 
+Q: Which CONFIG_* items are latency killers, and should be avoided ?
+
+A: Heres an enumeration.  Several of these are discussed in greater
+detail in following sections.
+
+CONFIG_CPU_FREQ: This allows the CPU frequency to be modulated with
+workload, but many CPUs change the TSC counting frequency also, which
+makes it useless for accurate timing when the CPU clock can change.
+Also some CPUs can take several milliseconds to ramp up to full speed.
+
+APM: The APM model assigns power management control to the BIOS, and
+BIOS code is never written with RT-latency in mind.  If configured,
+APM routines are invoked with SMI priority, which breaks the rule that
+adeos-ipipe must be in charge of such things.  DISABLE_SMI doesnt help
+here (more later).
+
+ACPI_PROCESSOR: For systems with ACPI support in the BIOS, this ACPI
+sub-option installs an 'idle' handler that uses ACPI C2 and C3
+processor states to save power.  The CPU must 'warm-up' from these
+sleep states, increasing latency in ways dependent upon both the
+BIOS's ACPI tables and code.  You may be able to suppress the sleeping
+with 'idle=poll' boot-arg, test to find out
+
+Summarizing, the latencies incurred here are dependent upon CPU, BIOS,
+and motherboard; ie they're hard to predict, so we are conservative.
+Feel free to test on your platform, (xeno-test runs testsuite/latency
+in 3 modes), but keep in mind that before you rely on the numbers, you
+must test with workloads that will exercise all the hardware used for
+your RT application.
+
+______________________________________________________________________
+
+Q: How do I adequately stress-test ?
+
+A: xeno-test has a very basic workload generator, whose main virtue is
+that its nearly universally available.
+
+    dd if=/dev/zero of=/dev/null
+
+You can change the input device (-d /dev/hda1) to get real device
+activity and interrupts, and/or -w 4 to run more workload tasks.  For
+more thorough testing, use -W <your-script>.
+
+If you are looking for real heavy loads, cache benchmarks tend to
+stress your system the most, http://www.cwi.nl/~manegold/Calibrator
+for example. Combine them with heavy i/o load (flood ping etc.) to
+generate device interrupts.  Also consider benchmarking software, such
+as bonnie++, cpuburn, lmbench.
+
+______________________________________________________________________
+
 Q: My user-space application has unexpected latencies which seem to
 appear when transitioning from primary (Xenomai) to secondary (native
 Linux) real-time modes. Why?
@@ -56,14 +107,16 @@ ______________________________________________________________________
 Q: Any Xenomai syscall invoked by my user-space application fails with
 error code -38 (-ENOSYS).
 
-A1: Did you load the required modules?
-e.g. xeno_hal.ko + xeno_nucleus.ko + xeno_native.ko? Normally, you
-should be using a run script (see xeno-load) that does this for you;
-but if you don't, make sure to load this modules by hand before
-launching your application.
+A1: In case you did not build the Xenomai sub-system statically into
+your kernel, did you load the required modules?  e.g. xeno_nucleus.ko
++ xeno_native.ko? Normally, you should be using a run script (see
+xeno-load) that does this for you; but if you don't, make sure to load
+this modules by hand before launching your application.
+
 A2: If those modules are loaded but the error persists, check that
 your Xenomai configuration enables the pervasive real-time support in
-user-space, in the top-level "Nucleus" menu.
+user-space, in the top-level "Nucleus" menu
+(i.e. CONFIG_XENO_OPT_PERVASIVE).
 
 ______________________________________________________________________
 
@@ -87,35 +140,16 @@ lower user-limit for initial stack allocation, like calling "ulimit -s
 <initial-size-in-kbytes>" in your parent shell before running your
 application (defaults to 8192).
 
-______________________________________________________________________
-
-Q: When running a real-time application with LTT support enabled, I
-get a slew of scary messages like this one:
-"TraceDaemon: WARNING!!!!
- TraceDaemon: INCOMPLETE EVENT BUFFER LOST (buffer size: ..."
-Sometimes, my real-time application even seems to go out of the
-window, what's this?!
-
-A: It's likely that your application was running, thus indirectly
-producing trace events, when LTT's trace daemon finished and closed
-its internal trace buffers (e.g. the tracing duration you passed to
-the "tracedaemon" command has elapsed, causing the daemon to
-exit). Since this particular operation is not synchronized with
-Xenomai's activity, some real-time task has probably referred to stale
-memory.
-
-The cure is simple: just make sure to stop all Xenomai activities
-before the tracedaemon exits.
-
 ======================================================================
 
                              x86
 
 ======================================================================
 
-Q: When inserting xeno_hal.ko, I get a message in the console saying :
-"Xenomai: Intel chipset found and SMI workaround not enabled, you may
-encounter high interrupt latencies." What should I do?
+Q: When looking at the kernel message log, I get a message in the
+console saying : "Xenomai: Intel chipset found and SMI workaround not
+enabled, you may encounter high interrupt latencies." What should I
+do?
 
 A: First you should run the latency test under some load and see if
 you experience any pathological latency ("pathological" meaning more
@@ -184,14 +218,14 @@ the same move.
 
 ______________________________________________________________________
 
-Q: Insmod'ing xeno_hal.ko fails with error: -1 no such device
+Q: Xenomai HAL's initialization fails with error: -1 no such device
 
 A: Dumping the kernel message log using "dmesg" will likely give you
 the reason.
 
 ______________________________________________________________________
 
-Q: Upon insmod'ing xeno_hal.ko, the kernel message log says:
+Q: The kernel message log says:
    "Xenomai: Local APIC absent or disabled!
     Disable APIC support or pass "lapic" as bootparam."
 
@@ -214,7 +248,7 @@ A: Xenomai sends this message if the kernel configuration Xenomai was
 
 ======================================================================
 
-                           PowerPC*
+                           PowerPC
 
 ======================================================================
 ======================================================================
@@ -224,4 +258,10 @@ A: Xenomai sends this message if the kernel configuration Xenomai was
 ======================================================================
 ======================================================================
 
-Last Updated: Tue Mar 29 12:03:42 CEST 2005
+                           Blackfin
+
+======================================================================
+======================================================================
+
+Last Updated: Mon Mar 27 09:14:35 CEST 2006
+

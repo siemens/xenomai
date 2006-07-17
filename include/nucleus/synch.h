@@ -27,10 +27,12 @@
 #define XNSYNCH_PRIO    0x1
 #define XNSYNCH_NOPIP   0x0
 #define XNSYNCH_PIP     0x2
+#define XNSYNCH_DREORD  0x4
 
 #if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)
 
-#define XNSYNCH_CLAIMED 0x4	/* Claimed by other thread(s) w/ PIP */
+#define XNSYNCH_CLAIMED 0x8	/* Claimed by other thread(s) w/ PIP */
+#define XNSYNCH_PENDING 0x10	/* Pending ownership -- may be stolen  */
 
 /* Spare flags usable by upper interfaces */
 #define XNSYNCH_SPARE0  0x01000000
@@ -64,6 +66,8 @@ typedef struct xnsynch {
 
     struct xnthread *owner; /* Thread which owns the resource */
 
+    void (*cleanup)(struct xnsynch *synch); /* Cleanup handler */
+
     XNARCH_DECL_DISPLAY_CONTEXT();
 
 } xnsynch_t;
@@ -85,8 +89,15 @@ void xnsynch_init(xnsynch_t *synch,
 #define xnsynch_destroy(synch) \
 xnsynch_flush(synch,XNRMID)
 
-static inline void xnsynch_set_owner (xnsynch_t *synch, struct xnthread *thread) {
+static inline void xnsynch_set_owner (xnsynch_t *synch, struct xnthread *thread)
+{
     synch->owner = thread;
+    __clrbits(synch->status, XNSYNCH_PENDING);
+}
+
+static inline void xnsynch_register_cleanup (xnsynch_t *synch, void (*handler)(xnsynch_t *))
+{
+    synch->cleanup = handler;
 }
 
 void xnsynch_sleep_on(xnsynch_t *synch,

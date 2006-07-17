@@ -1,7 +1,9 @@
-#! /bin/bash
+#! /bin/sh
 # Xenomai application loader script.
 # (Processes the .runinfo files)
 # June 2004, <rpm@xenomai.org>
+# Adapted to be run also under the BusyBox. If you want to test it under the BusyBox use
+# busybox sh xeno-info 
 
 usage='usage: xeno-load [[dir:]target]'
 prefix="@prefix@"
@@ -9,7 +11,7 @@ exec_prefix="@exec_prefix@"
 insmod=/sbin/insmod
 modprobe=/sbin/modprobe
 rmmod=/sbin/rmmod
-modext=@XENO_MODULE_EXT@
+modext=.ko
 verbose=0
 spc=" 	"
 
@@ -23,7 +25,7 @@ if test "x$1" = x--verbose; then
   shift
 fi
 
-if test "x$1" = x--; then
+if test -z "$1" || test "x$1" = x--; then
   target_dir=`pwd`
   target_name=default
 else
@@ -56,7 +58,7 @@ if test \! -r $run_info_file; then
 fi
 
 if test $target_name = default; then
-  target_name=`cut -s -d: -f1 $run_info_file | head -1`
+  target_name=`cut -s -d: -f1 $run_info_file | head -n1`
   if test "x$target_name" = x; then
      echo "xeno-load: no target defined in $run_info_file"
      exit 2
@@ -74,27 +76,27 @@ fi
 xeno_moddir=`grep "^[$spc]*xeno_moddir[$spc]*=" $run_info_file`
 user_moddir=`grep "^[$spc]*user_moddir[$spc]*=" $run_info_file`
 
-if test "x$xeno_moddir" = x; then
-  eval xeno_moddir='${DESTDIR}@XENO_MODULE_DIR@'
-else
+if test \! "x$xeno_moddir" = x; then
   eval $xeno_moddir
 fi
 
 eval $user_moddir
 
-if `$modprobe -nq adeos >& /dev/null`; then
-   target_deps="adeos+"
+if `$sudo $modprobe -nq xeno_nucleus > /dev/null 2>&1`; then
+   target_deps="${target_deps}nucleus+"
 else
    target_deps=
 fi
 
-target_deps="${target_deps}hal+nucleus+`echo $stanza | cut -d: -f2`"
+target_deps="${target_deps}`echo $stanza | cut -d: -f2`"
 target_info=`echo $stanza | cut -d: -f3`
 target_mesg=`echo $stanza | cut -s -d: -f4`
 
 test $verbose = 1 && echo "Running $target_name from $run_info_file"
 
-if test \! "x`type -t sudo`" = x; then
+if test -n "`which sudo 2>/dev/null`"; then
+  sudo=`which sudo`
+elif test -n "`type -t sudo 2>/dev/null`"; then
   sudo=sudo
 fi
 
@@ -113,7 +115,7 @@ fi
 
 sync
 
-loadlist=`cat /proc/modules | ( \
+loadlist=`cat /proc/modules 2>/dev/null | ( \
   while read lm; do \
     set -- $lm; \
     loadlist="$loadlist $1"; \
@@ -140,7 +142,7 @@ cleanup () {
     fi
 }
 
-trap cleanup SIGINT
+trap cleanup INT
 
 while test -n "$target_deps" ; do
   mod=`echo $target_deps|cut -d+ -f1`
@@ -163,10 +165,10 @@ while test -n "$target_deps" ; do
 	   echo "ERROR: cannot load $xeno_moddir/xeno_$mod$modext"
 	   break
         fi
-     elif `$modprobe -n $mod >& /dev/null`; then
-        test $verbose = 1 && echo "+ $modprobe $mod"
-        $sudo $modprobe $mod
-        inslist="$mod $inslist"
+     elif `$sudo $modprobe -n xeno_$mod > /dev/null 2>&1`; then
+        test $verbose = 1 && echo "+ $modprobe xeno_$mod"
+        $sudo $modprobe xeno_$mod
+        inslist="xeno_$mod $inslist"
         loadlist="$loadlist $mod"
      fi
   fi

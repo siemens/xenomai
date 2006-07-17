@@ -1,0 +1,13 @@
+DRIVERS-$(CONFIG_XENO_OPT_NUCLEUS) += kernel/xenomai/nucleus/xeno_nucleus.o
+DRIVERS-$(CONFIG_XENO_SKIN_NATIVE) += kernel/xenomai/skins/native/xeno_native.o
+DRIVERS-$(CONFIG_XENO_SKIN_POSIX) += kernel/xenomai/skins/posix/xeno_posix.o
+DRIVERS-$(CONFIG_XENO_SKIN_RTDM) += kernel/xenomai/skins/rtdm/xeno_rtdm.o
+DRIVERS-$(CONFIG_XENO_SKIN_UVM) += kernel/xenomai/skins/uvm/xeno_uvm.o
+DRIVERS-$(CONFIG_XENO_SKIN_PSOS) += kernel/xenomai/skins/psos+/xeno_psos.o
+DRIVERS-$(CONFIG_XENO_SKIN_VRTX) += kernel/xenomai/skins/vrtx/xeno_vrtx.o
+DRIVERS-$(CONFIG_XENO_SKIN_VXWORKS) += kernel/xenomai/skins/vxworks/xeno_vxworks.o
+DRIVERS-$(CONFIG_XENO_SKIN_UITRON) += kernel/xenomai/skins/uitron/xeno_uitron.o
+DRIVERS-$(CONFIG_XENO_SKIN_RTAI) += kernel/xenomai/skins/rtai/xeno_rtai.o
+DRIVERS-$(CONFIG_XENO_DRIVERS_16550A) += drivers/xenomai/16550A/xeno_16550A.o
+DRIVERS-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += drivers/xenomai/testing/xeno_timerbench.o
+DRIVERS-$(CONFIG_XENO_DRIVERS_SWITCHTEST) += drivers/xenomai/testing/xeno_switchtest.o

@@ -21,36 +21,36 @@ Alarms are general watchdog timers. Any Xenomai task may create any number of al
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Files</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="alarm_8c.html">alarm.c</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="ksrc_2skins_2native_2alarm_8c.html">alarm.c</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">This file is part of the Xenomai project. <br></td></tr>
 
 <p>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga4">rt_alarm_create</a> (RT_ALARM *alarm, const char *name, rt_alarm_t handler, void *cookie)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga3">rt_alarm_create</a> (RT_ALARM *alarm, const char *name, rt_alarm_t handler, void *cookie)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create an alarm object from kernel space.  <a href="#ga4"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga5">rt_alarm_delete</a> (RT_ALARM *alarm)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create an alarm object from kernel space.  <a href="#ga3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga4">rt_alarm_delete</a> (RT_ALARM *alarm)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete an alarm.  <a href="#ga5"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga6">rt_alarm_start</a> (RT_ALARM *alarm, RTIME value, RTIME interval)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete an alarm.  <a href="#ga4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga5">rt_alarm_start</a> (RT_ALARM *alarm, RTIME value, RTIME interval)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start an alarm.  <a href="#ga6"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga7">rt_alarm_stop</a> (RT_ALARM *alarm)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start an alarm.  <a href="#ga5"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga6">rt_alarm_stop</a> (RT_ALARM *alarm)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stop an alarm.  <a href="#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga8">rt_alarm_inquire</a> (RT_ALARM *alarm, RT_ALARM_INFO *info)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stop an alarm.  <a href="#ga6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga7">rt_alarm_inquire</a> (RT_ALARM *alarm, RT_ALARM_INFO *info)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about an alarm.  <a href="#ga8"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga9">rt_alarm_create</a> (RT_ALARM *alarm, const char *name)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about an alarm.  <a href="#ga7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga8">rt_alarm_create</a> (RT_ALARM *alarm, const char *name)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create an alarm object from user-space.  <a href="#ga9"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga10">rt_alarm_wait</a> (RT_ALARM *alarm)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create an alarm object from user-space.  <a href="#ga8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#ga9">rt_alarm_wait</a> (RT_ALARM *alarm)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next alarm shot.  <a href="#ga10"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next alarm shot.  <a href="#ga9"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="ga9" doxytag="alarm.h::rt_alarm_create"></a><p>
+<a class="anchor" name="ga8" doxytag="alarm.h::rt_alarm_create"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -86,7 +86,7 @@ Alarms are general watchdog timers. Any Xenomai task may create any number of al
 <p>
 Create an alarm object from user-space. 
 <p>
-Initializes an alarm object from a user-space application. Alarms can be made periodic or oneshot, depending on the reload interval value passed to <a class="el" href="group__alarm.html#ga6">rt_alarm_start()</a> for them. In this mode, the basic principle is to define some alarm server task which routinely waits for the next incoming alarm event through the <a class="el" href="group__alarm.html#ga10">rt_alarm_wait()</a> syscall.<p>
+Initializes an alarm object from a user-space application. Alarms can be made periodic or oneshot, depending on the reload interval value passed to <a class="el" href="group__alarm.html#ga5">rt_alarm_start()</a> for them. In this mode, the basic principle is to define some alarm server task which routinely waits for the next incoming alarm event through the <a class="el" href="group__alarm.html#ga9">rt_alarm_wait()</a> syscall.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>alarm</em>&nbsp;</td><td>The address of an alarm descriptor Xenomai will use to store the alarm-related data. This descriptor must always be valid while the alarm is active therefore it must be allocated in permanent memory.</td></tr>
@@ -109,11 +109,11 @@ This service can be called from:<p>
 <li>User-space task</li></ul>
 <p>
 Rescheduling: possible.<p>
-<dl compact><dt><b>Note:</b></dt><dd>It is possible to combine kernel-based alarm handling with waiter threads pending on the same alarm object from user-space through the <a class="el" href="group__alarm.html#ga10">rt_alarm_wait()</a> service. For this purpose, the rt_alarm_handler() routine which is internally invoked to wake up alarm servers in user-space is accessible to user-provided alarm handlers in kernel space, and should be called from there in order to unblock any thread sleeping on the <a class="el" href="group__alarm.html#ga10">rt_alarm_wait()</a> service. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>It is possible to combine kernel-based alarm handling with waiter threads pending on the same alarm object from user-space through the <a class="el" href="group__alarm.html#ga9">rt_alarm_wait()</a> service. For this purpose, the rt_alarm_handler() routine which is internally invoked to wake up alarm servers in user-space is accessible to user-provided alarm handlers in kernel space, and should be called from there in order to unblock any thread sleeping on the <a class="el" href="group__alarm.html#ga9">rt_alarm_wait()</a> service. </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga4" doxytag="alarm.c::rt_alarm_create"></a><p>
+<a class="anchor" name="ga3" doxytag="alarm.c::rt_alarm_create"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -161,7 +161,7 @@ Rescheduling: possible.<p>
 <p>
 Create an alarm object from kernel space. 
 <p>
-Create an object triggering an alarm routine at a specified time in the future. Alarms can be made periodic or oneshot, depending on the reload interval value passed to <a class="el" href="group__alarm.html#ga6">rt_alarm_start()</a> for them. In kernel space, alarms are immediately notified on behalf of the timer interrupt to a user-defined handler.<p>
+Create an object triggering an alarm routine at a specified time in the future. Alarms can be made periodic or oneshot, depending on the reload interval value passed to <a class="el" href="group__alarm.html#ga5">rt_alarm_start()</a> for them. In kernel space, alarms are immediately notified on behalf of the timer interrupt to a user-defined handler.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>alarm</em>&nbsp;</td><td>The address of an alarm descriptor Xenomai will use to store the alarm-related data. This descriptor must always be valid while the alarm is active therefore it must be allocated in permanent memory.</td></tr>
@@ -186,11 +186,11 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li></ul>
 <p>
 Rescheduling: possible.<p>
-<dl compact><dt><b>Note:</b></dt><dd>It is possible to combine kernel-based alarm handling with waiter threads pending on the same alarm object from user-space through the <a class="el" href="group__alarm.html#ga10">rt_alarm_wait()</a> service. For this purpose, the rt_alarm_handler() routine which is internally invoked to wake up alarm servers in user-space is accessible to user-provided alarm handlers in kernel space, and should be called from there in order to unblock any thread sleeping on the <a class="el" href="group__alarm.html#ga10">rt_alarm_wait()</a> service. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>It is possible to combine kernel-based alarm handling with waiter threads pending on the same alarm object from user-space through the <a class="el" href="group__alarm.html#ga9">rt_alarm_wait()</a> service. For this purpose, the rt_alarm_handler() routine which is internally invoked to wake up alarm servers in user-space is accessible to user-provided alarm handlers in kernel space, and should be called from there in order to unblock any thread sleeping on the <a class="el" href="group__alarm.html#ga9">rt_alarm_wait()</a> service. </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga5" doxytag="alarm.c::rt_alarm_delete"></a><p>
+<a class="anchor" name="ga4" doxytag="alarm.c::rt_alarm_delete"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -217,7 +217,7 @@ Rescheduling: possible.<p>
 <p>
 Delete an alarm. 
 <p>
-Destroy an alarm. An alarm exists in the system since <a class="el" href="group__alarm.html#ga4">rt_alarm_create()</a> has been called to create it, so this service must be called in order to destroy it afterwards.<p>
+Destroy an alarm. An alarm exists in the system since <a class="el" href="group__alarm.html#ga8">rt_alarm_create()</a> has been called to create it, so this service must be called in order to destroy it afterwards.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>alarm</em>&nbsp;</td><td>The descriptor address of the affected alarm.</td></tr>
@@ -241,7 +241,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga8" doxytag="alarm.c::rt_alarm_inquire"></a><p>
+<a class="anchor" name="ga7" doxytag="alarm.c::rt_alarm_inquire"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -300,7 +300,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga6" doxytag="alarm.c::rt_alarm_start"></a><p>
+<a class="anchor" name="ga5" doxytag="alarm.c::rt_alarm_start"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -342,7 +342,7 @@ Rescheduling: never.     </td>
 <p>
 Start an alarm. 
 <p>
-Program the trigger date of an alarm object. An alarm can be either periodic or oneshot, depending on the reload value passed to this routine. The given alarm must have been previously created by a call to <a class="el" href="group__alarm.html#ga4">rt_alarm_create()</a>.<p>
+Program the trigger date of an alarm object. An alarm can be either periodic or oneshot, depending on the reload value passed to this routine. The given alarm must have been previously created by a call to <a class="el" href="group__alarm.html#ga8">rt_alarm_create()</a>.<p>
 Alarm handlers are always called on behalf of Xenomai's internal timer tick handler, so the Xenomai services which can be called from such handlers are restricted to the set of services available on behalf of any ISR.<p>
 This service overrides any previous setup of the expiry date and reload interval for the given alarm.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
@@ -362,11 +362,11 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__native__timer.html#ga8">rt_timer_start()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD parameter. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="ga7" doxytag="alarm.c::rt_alarm_stop"></a><p>
+<a class="anchor" name="ga6" doxytag="alarm.c::rt_alarm_stop"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -393,7 +393,7 @@ Rescheduling: never.<p>
 <p>
 Stop an alarm. 
 <p>
-Disarm an alarm object previously armed using <a class="el" href="group__alarm.html#ga6">rt_alarm_start()</a> so that it will not trigger until is is re-armed.<p>
+Disarm an alarm object previously armed using <a class="el" href="group__alarm.html#ga5">rt_alarm_start()</a> so that it will not trigger until is is re-armed.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>alarm</em>&nbsp;</td><td>The descriptor address of the released alarm.</td></tr>
@@ -414,7 +414,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga10" doxytag="alarm.h::rt_alarm_wait"></a><p>
+<a class="anchor" name="ga9" doxytag="alarm.h::rt_alarm_wait"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -441,7 +441,7 @@ Rescheduling: never.     </td>
 <p>
 Wait for the next alarm shot. 
 <p>
-This user-space only call allows the current task to suspend execution until the specified alarm triggers. The priority of the current task is raised above all other Xenomai tasks - except those also undergoing an alarm or interrupt wait (see <a class="el" href="group__interrupt.html#ga10">rt_intr_wait()</a>) - so that it would preempt any of them under normal circumstances (i.e. no scheduler lock).<p>
+This user-space only call allows the current task to suspend execution until the specified alarm triggers. The priority of the current task is raised above all other Xenomai tasks - except those also undergoing an alarm or interrupt wait (see <a class="el" href="group__interrupt.html#ga9">rt_intr_wait()</a>) - so that it would preempt any of them under normal circumstances (i.e. no scheduler lock).<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>alarm</em>&nbsp;</td><td>The descriptor address of the awaited alarm.</td></tr>
@@ -458,7 +458,7 @@ This user-space only call allows the current task to suspend execution until the
 <li>-EIDRM is returned if <em>alarm</em> is a deleted alarm descriptor, including if the deletion occurred while the caller was waiting for its next shot.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#ga15">rt_task_unblock()</a> has been called for the current task before the next alarm shot.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#ga19">rt_task_unblock()</a> has been called for the current task before the next alarm shot.</li></ul>
 <p>
 Environments:<p>
 This service can be called from:<p>
@@ -468,7 +468,7 @@ This service can be called from:<p>
 Rescheduling: always.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:23 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:58:02 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

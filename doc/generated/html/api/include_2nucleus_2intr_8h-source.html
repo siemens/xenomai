@@ -7,7 +7,7 @@
 <div class="qindex">  <form class="search" action="search.php" method="get">
 <a class="qindex" href="main.html">Main&nbsp;Page</a> | <a class="qindex" href="modules.html">Modules</a> | <a class="qindex" href="annotated.html">Data&nbsp;Structures</a> | <a class="qindex" href="dirs.html">Directories</a> | <a class="qindex" href="files.html">File&nbsp;List</a> | <a class="qindex" href="functions.html">Data&nbsp;Fields</a> | <a class="qindex" href="globals.html">Globals</a>  | <span class="search"><u>S</u>earch&nbsp;for&nbsp;<input class="search" type="text" name="query" value="" size="20" accesskey="s"/></span></form></div>
 <div class="nav">
-<a class="el" href="dir_000011.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000012.html">nucleus</a></div>
+<a class="el" href="dir_000000.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000006.html">nucleus</a></div>
 <h1>intr.h</h1><div class="fragment"><pre class="fragment">00001 <span class="comment">/*</span>
 00002 <span class="comment"> * Copyright (C) 2001,2002,2003 Philippe Gerum &lt;rpm@xenomai.org&gt;.</span>
 00003 <span class="comment"> *</span>
@@ -32,66 +32,88 @@
 00022 <span class="preprocessor"></span>
 00023 <span class="preprocessor">#include &lt;nucleus/types.h&gt;</span>
 00024 
-00025 <span class="preprocessor">#define XN_ISR_HANDLED   0x0</span>
-00026 <span class="preprocessor"></span><span class="preprocessor">#define XN_ISR_CHAINED   0x1</span>
-00027 <span class="preprocessor"></span><span class="preprocessor">#define XN_ISR_ENABLE    0x2</span>
-00028 <span class="preprocessor"></span>
-00029 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)</span>
-00030 <span class="preprocessor"></span>
-00031 <span class="keyword">struct </span>xnintr;
-00032 
-00033 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnintr {
-00034 
-00035     <span class="keywordtype">unsigned</span> irq;       <span class="comment">/* !&lt; IRQ number. */</span>
-00036 
-00037     xnisr_t isr;        <span class="comment">/* !&lt; Interrupt service routine. */</span>
-00038 
-00039     xniack_t iack;      <span class="comment">/* !&lt; Interrupt acknowledge routine. */</span>
-00040 
-00041     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> hits; <span class="comment">/* !&lt; Number of receipts (since attachment). */</span>
-00042 
-00043     <span class="keywordtype">void</span> *cookie;       <span class="comment">/* !&lt; User-defined cookie value. */</span>
-00044 
-00045 } xnintr_t;
-00046 
-00047 <span class="keyword">extern</span> xnintr_t nkclock;
-00048 
-00049 <span class="preprocessor">#ifdef __cplusplus</span>
-00050 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-00051 <span class="preprocessor">#endif</span>
-00052 <span class="preprocessor"></span>
-00053 <span class="keywordtype">void</span> xnintr_clock_handler(<span class="keywordtype">void</span>);
-00054 
-00055     <span class="comment">/* Public interface. */</span>
-00056 
-00057 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga2">xnintr_init</a>(xnintr_t *intr,
-00058                 <span class="keywordtype">unsigned</span> irq,
-00059                 xnisr_t isr,
-00060                 xniack_t iack,
-00061                 xnflags_t flags);
-00062 
-00063 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga3">xnintr_destroy</a>(xnintr_t *intr);
-00064 
-00065 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga4">xnintr_attach</a>(xnintr_t *intr,
-00066                   <span class="keywordtype">void</span> *cookie);
-00067 
-00068 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga5">xnintr_detach</a>(xnintr_t *intr);
-00069 
-00070 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga6">xnintr_enable</a>(xnintr_t *intr);
+00025 <span class="comment">/* Possible return values of ISR. */</span>
+00026 <span class="preprocessor">#define XN_ISR_NONE      0x1</span>
+00027 <span class="preprocessor"></span><span class="preprocessor">#define XN_ISR_HANDLED   0x2</span>
+00028 <span class="preprocessor"></span><span class="comment">/* Additional bits. */</span>
+00029 <span class="preprocessor">#define XN_ISR_PROPAGATE 0x100</span>
+00030 <span class="preprocessor"></span><span class="preprocessor">#define XN_ISR_NOENABLE  0x200</span>
+00031 <span class="preprocessor"></span><span class="preprocessor">#define XN_ISR_BITMASK   (~0xff)</span>
+00032 <span class="preprocessor"></span>
+00033 <span class="comment">/* Creation flags. */</span>
+00034 <span class="preprocessor">#define XN_ISR_SHARED    0x1</span>
+00035 <span class="preprocessor"></span><span class="preprocessor">#define XN_ISR_EDGE      0x2</span>
+00036 <span class="preprocessor"></span>
+00037 <span class="comment">/* Operational flags. */</span>
+00038 <span class="preprocessor">#define XN_ISR_ATTACHED  0x10000</span>
+00039 <span class="preprocessor"></span>
+00040 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)</span>
+00041 <span class="preprocessor"></span>
+00042 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnintr {
+00043 
+00044 <span class="preprocessor">#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)</span>
+00045 <span class="preprocessor"></span>    <span class="keyword">struct </span>xnintr *next; <span class="comment">/* !&lt; Next object in the IRQ-sharing chain. */</span>
+00046 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */</span>
+00047 
+00048     xnisr_t isr;        <span class="comment">/* !&lt; Interrupt service routine. */</span>
+00049 
+00050     <span class="keywordtype">void</span> *cookie;       <span class="comment">/* !&lt; User-defined cookie value. */</span>
+00051 
+00052     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> hits; <span class="comment">/* !&lt; Number of receipts (since attachment). */</span>
+00053 
+00054     xnflags_t flags;    <span class="comment">/* !&lt; Creation flags. */</span>
+00055 
+00056     <span class="keywordtype">unsigned</span> irq;       <span class="comment">/* !&lt; IRQ number. */</span>
+00057 
+00058     xniack_t iack;      <span class="comment">/* !&lt; Interrupt acknowledge routine. */</span>
+00059 
+00060     <span class="keyword">const</span> <span class="keywordtype">char</span> *name;   <span class="comment">/* !&lt; Symbolic name. */</span>
+00061 
+00062 } xnintr_t;
+00063 
+00064 <span class="keyword">extern</span> xnintr_t nkclock;
+00065 
+00066 <span class="preprocessor">#ifdef __cplusplus</span>
+00067 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+00068 <span class="preprocessor">#endif</span>
+00069 <span class="preprocessor"></span>
+00070 <span class="keywordtype">int</span> xnintr_mount(<span class="keywordtype">void</span>);
 00071 
-00072 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga7">xnintr_disable</a>(xnintr_t *intr);
-00073     
-00074 xnarch_cpumask_t <a class="code" href="group__intr.html#ga8">xnintr_affinity</a>(xnintr_t *intr,
-00075                                  xnarch_cpumask_t cpumask);
-00076 
-00077 <span class="preprocessor">#ifdef __cplusplus</span>
-00078 <span class="preprocessor"></span>}
-00079 <span class="preprocessor">#endif</span>
-00080 <span class="preprocessor"></span>
-00081 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
-00082 
-00083 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_INTR_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:14 2005 for Xenomai API by&nbsp;
+00072 <span class="keywordtype">void</span> xnintr_clock_handler(<span class="keywordtype">void</span>);
+00073 
+00074 <span class="keywordtype">int</span> xnintr_irq_proc(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> irq, <span class="keywordtype">char</span> *str);
+00075 
+00076     <span class="comment">/* Public interface. */</span>
+00077 
+00078 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga2">xnintr_init</a>(xnintr_t *intr,
+00079                 <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
+00080                 <span class="keywordtype">unsigned</span> irq,
+00081                 xnisr_t isr,
+00082                 xniack_t iack,
+00083                 xnflags_t flags);
+00084 
+00085 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga3">xnintr_destroy</a>(xnintr_t *intr);
+00086 
+00087 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga4">xnintr_attach</a>(xnintr_t *intr,
+00088                   <span class="keywordtype">void</span> *cookie);
+00089 
+00090 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga5">xnintr_detach</a>(xnintr_t *intr);
+00091 
+00092 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga6">xnintr_enable</a>(xnintr_t *intr);
+00093 
+00094 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga7">xnintr_disable</a>(xnintr_t *intr);
+00095     
+00096 xnarch_cpumask_t <a class="code" href="group__intr.html#ga8">xnintr_affinity</a>(xnintr_t *intr,
+00097                                  xnarch_cpumask_t cpumask);
+00098 
+00099 <span class="preprocessor">#ifdef __cplusplus</span>
+00100 <span class="preprocessor"></span>}
+00101 <span class="preprocessor">#endif</span>
+00102 <span class="preprocessor"></span>
+00103 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
+00104 
+00105 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_INTR_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:56 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

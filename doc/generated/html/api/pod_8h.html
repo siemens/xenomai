@@ -7,12 +7,12 @@
 <div class="qindex">  <form class="search" action="search.php" method="get">
 <a class="qindex" href="main.html">Main&nbsp;Page</a> | <a class="qindex" href="modules.html">Modules</a> | <a class="qindex" href="annotated.html">Data&nbsp;Structures</a> | <a class="qindex" href="dirs.html">Directories</a> | <a class="qindex" href="files.html">File&nbsp;List</a> | <a class="qindex" href="functions.html">Data&nbsp;Fields</a> | <a class="qindex" href="globals.html">Globals</a>  | <span class="search"><u>S</u>earch&nbsp;for&nbsp;<input class="search" type="text" name="query" value="" size="20" accesskey="s"/></span></form></div>
 <div class="nav">
-<a class="el" href="dir_000011.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000012.html">nucleus</a></div>
+<a class="el" href="dir_000000.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000006.html">nucleus</a></div>
 <h1>pod.h File Reference</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 Real-time pod interface header. 
 <p>
 <dl compact><dt><b>Author:</b></dt><dd>Philippe Gerum</dd></dl>
-Copyright (C) 2001,2002,2003,2004,2005 Philippe Gerum &lt;<a href="mailto:rpm@xenomai.org">rpm@xenomai.org</a>&gt;. Copyright (C) 2004 The RTAI project &lt;<a href="http://www.rtai.org">http://www.rtai.org</a>&gt; Copyright (C) 2004 The HYADES project &lt;<a href="http://www.hyades-itea.org">http://www.hyades-itea.org</a>&gt; Copyright (C) 2004 The Xenomai project &lt;<a href="http://www.Xenomai.org">http://www.Xenomai.org</a>&gt;<p>
+Copyright (C) 2001,2002,2003,2004,2005 Philippe Gerum &lt;<a href="mailto:rpm@xenomai.org">rpm@xenomai.org</a>&gt;. Copyright (C) 2004 The RTAI project &lt;<a href="http://www.rtai.org">http://www.rtai.org</a>&gt; Copyright (C) 2004 The HYADES project &lt;<a href="http://www.hyades-itea.org">http://www.hyades-itea.org</a>&gt; Copyright (C) 2004 The Xenomai project &lt;<a href="http://www.xenomai.org">http://www.xenomai.org</a>&gt;<p>
 Xenomai is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.<p>
 Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with Xenomai; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
@@ -21,42 +21,43 @@ You should have received a copy of the GNU General Public License along with Xen
 <p>
 Include dependency graph for pod.h:<p><center><img src="pod_8h__incl.png" border="0" usemap="#include/nucleus/pod.h_map" alt=""></center>
 <map name="include/nucleus/pod.h_map">
-<area href="thread_8h-source.html" shape="rect" coords="209,78,329,102" alt="">
-<area href="include_2nucleus_2intr_8h-source.html" shape="rect" coords="385,128,486,152" alt="">
-<area href="include_2nucleus_2timer_8h-source.html" shape="rect" coords="380,78,492,102" alt="">
-<area href="include_2nucleus_2queue_8h-source.html" shape="rect" coords="541,78,661,102" alt="">
-<area href="include_2nucleus_2types_8h-source.html" shape="rect" coords="709,104,824,128" alt="">
+<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="209,8,329,32" alt="">
+<area href="include_2nucleus_2intr_8h-source.html" shape="rect" coords="385,57,486,81" alt="">
+<area href="include_2nucleus_2timer_8h-source.html" shape="rect" coords="380,8,492,32" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="541,8,661,32" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="709,56,824,80" alt="">
+<area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="712,8,821,32" alt="">
 </map>
 
 <p>
 This graph shows which files directly or indirectly include this file:<p><center><img src="pod_8h__dep__incl.png" border="0" usemap="#include/nucleus/pod.hdep_map" alt=""></center>
 <map name="include/nucleus/pod.hdep_map">
-<area href="xenomai_8h-source.html" shape="rect" coords="208,162,386,186" alt="">
-<area href="rtdm__driver_8h.html" shape="rect" coords="434,137,600,161" alt="">
-<area href="skins_2rtdm_2core_8c.html" shape="rect" coords="844,113,966,137" alt="">
-<area href="skins_2rtdm_2core_8h-source.html" shape="rect" coords="656,88,778,112" alt="">
-<area href="skins_2rtdm_2module_8c.html" shape="rect" coords="834,186,976,210" alt="">
-<area href="device_8h-source.html" shape="rect" coords="649,186,785,210" alt="">
-<area href="nucleus_2heap_8c.html" shape="rect" coords="241,312,353,336" alt="">
-<area href="nucleus_2intr_8c.html" shape="rect" coords="246,360,348,384" alt="">
-<area href="pod_8c.html" shape="rect" coords="245,408,349,432" alt="">
-<area href="shadow_8c.html" shape="rect" coords="233,456,361,480" alt="">
-<area href="synch_8c.html" shape="rect" coords="238,504,356,528" alt="">
-<area href="nucleus_2timer_8c.html" shape="rect" coords="241,552,353,576" alt="">
-<area href="alarm_8c.html" shape="rect" coords="228,600,366,624" alt="">
-<area href="cond_8c.html" shape="rect" coords="230,648,364,672" alt="">
-<area href="event_8c.html" shape="rect" coords="228,696,366,720" alt="">
-<area href="skins_2native_2heap_8c.html" shape="rect" coords="229,744,365,768" alt="">
-<area href="skins_2native_2intr_8c.html" shape="rect" coords="234,792,360,816" alt="">
-<area href="skins_2native_2module_8c.html" shape="rect" coords="222,840,372,864" alt="">
-<area href="mutex_8c.html" shape="rect" coords="226,888,368,912" alt="">
-<area href="skins_2native_2pipe_8c.html" shape="rect" coords="232,936,362,960" alt="">
-<area href="queue_8c.html" shape="rect" coords="226,984,368,1008" alt="">
-<area href="registry_8c.html" shape="rect" coords="222,1032,372,1056" alt="">
-<area href="sem_8c.html" shape="rect" coords="232,1080,362,1104" alt="">
-<area href="native_2syscall_8c.html" shape="rect" coords="224,1128,370,1152" alt="">
-<area href="task_8c.html" shape="rect" coords="232,1176,362,1200" alt="">
-<area href="skins_2native_2timer_8c.html" shape="rect" coords="229,1224,365,1248" alt="">
+<area href="xenomai_8h-source.html" shape="rect" coords="207,138,386,162" alt="">
+<area href="rtdm__driver_8h.html" shape="rect" coords="435,162,611,186" alt="">
+<area href="ksrc_2skins_2rtdm_2core_8c.html" shape="rect" coords="883,138,1035,162" alt="">
+<area href="ksrc_2skins_2rtdm_2core_8h-source.html" shape="rect" coords="667,113,819,137" alt="">
+<area href="device_8h-source.html" shape="rect" coords="661,225,826,249" alt="">
+<area href="skins_2rtdm_2module_8c.html" shape="rect" coords="875,257,1043,281" alt="">
+<area href="ksrc_2nucleus_2heap_8c.html" shape="rect" coords="227,338,366,362" alt="">
+<area href="ksrc_2nucleus_2intr_8c.html" shape="rect" coords="233,386,361,410" alt="">
+<area href="pod_8c.html" shape="rect" coords="230,434,363,458" alt="">
+<area href="nucleus_2registry_8c.html" shape="rect" coords="219,482,374,506" alt="">
+<area href="shadow_8c.html" shape="rect" coords="219,530,374,554" alt="">
+<area href="synch_8c.html" shape="rect" coords="225,578,369,602" alt="">
+<area href="ksrc_2nucleus_2timer_8c.html" shape="rect" coords="227,626,366,650" alt="">
+<area href="ksrc_2skins_2native_2alarm_8c.html" shape="rect" coords="213,674,381,698" alt="">
+<area href="ksrc_2skins_2native_2cond_8c.html" shape="rect" coords="215,722,378,746" alt="">
+<area href="ksrc_2skins_2native_2event_8c.html" shape="rect" coords="213,770,381,794" alt="">
+<area href="ksrc_2skins_2native_2heap_8c.html" shape="rect" coords="215,818,378,842" alt="">
+<area href="ksrc_2skins_2native_2intr_8c.html" shape="rect" coords="221,866,373,890" alt="">
+<area href="skins_2native_2module_8c.html" shape="rect" coords="207,914,386,938" alt="">
+<area href="ksrc_2skins_2native_2mutex_8c.html" shape="rect" coords="211,962,382,986" alt="">
+<area href="ksrc_2skins_2native_2pipe_8c.html" shape="rect" coords="217,1010,377,1034" alt="">
+<area href="ksrc_2skins_2native_2queue_8c.html" shape="rect" coords="211,1058,382,1082" alt="">
+<area href="ksrc_2skins_2native_2sem_8c.html" shape="rect" coords="217,1106,377,1130" alt="">
+<area href="native_2syscall_8c.html" shape="rect" coords="210,1154,383,1178" alt="">
+<area href="ksrc_2skins_2native_2task_8c.html" shape="rect" coords="217,1202,377,1226" alt="">
+<area href="ksrc_2skins_2native_2timer_8c.html" shape="rect" coords="215,1250,378,1274" alt="">
 </map>
 
 <p>
@@ -68,83 +69,86 @@ typedef <a class="el" href="structxnsched.html">xnsched</a>&nbsp;</td><td class=
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Scheduling information structure. <br></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga11">xnpod_schedule_runnable</a> (xnthread_t *thread, int flags)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga14">xnpod_schedule_runnable</a> (xnthread_t *thread, int flags)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Hidden rescheduling procedure.  <a href="group__pod.html#ga11"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga24">xnpod_init</a> (<a class="el" href="structxnpod.html">xnpod_t</a> *pod, int minpri, int maxpri, xnflags_t flags)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Hidden rescheduling procedure.  <a href="group__pod.html#ga14"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga27">xnpod_init</a> (<a class="el" href="structxnpod.html">xnpod_t</a> *pod, int minpri, int maxpri, xnflags_t flags)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a new pod.  <a href="group__pod.html#ga24"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga25">xnpod_start_timer</a> (u_long nstick, xnisr_t tickhandler)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a new pod.  <a href="group__pod.html#ga27"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga28">xnpod_start_timer</a> (u_long nstick, xnisr_t tickhandler)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start the system timer.  <a href="group__pod.html#ga25"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga26">xnpod_stop_timer</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start the system timer.  <a href="group__pod.html#ga28"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga29">xnpod_stop_timer</a> (void)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stop the system timer.  <a href="group__pod.html#ga26"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga27">xnpod_shutdown</a> (int xtype)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stop the system timer.  <a href="group__pod.html#ga29"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga30">xnpod_reset_timer</a> (void)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Shutdown the current pod.  <a href="group__pod.html#ga27"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga28">xnpod_init_thread</a> (xnthread_t *thread, const char *name, int prio, xnflags_t flags, unsigned stacksize)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Reset the system timer.  <a href="group__pod.html#ga30"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga31">xnpod_shutdown</a> (int xtype)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a new thread.  <a href="group__pod.html#ga28"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga29">xnpod_start_thread</a> (xnthread_t *thread, xnflags_t mode, int imask, xnarch_cpumask_t affinity, void(*entry)(void *cookie), void *cookie)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Shutdown the current pod.  <a href="group__pod.html#ga31"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga32">xnpod_init_thread</a> (xnthread_t *thread, const char *name, int prio, xnflags_t flags, unsigned stacksize)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initial start of a newly created thread.  <a href="group__pod.html#ga29"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga30">xnpod_restart_thread</a> (xnthread_t *thread)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a new thread.  <a href="group__pod.html#ga32"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga33">xnpod_start_thread</a> (xnthread_t *thread, xnflags_t mode, int imask, xnarch_cpumask_t affinity, void(*entry)(void *cookie), void *cookie)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Restart a thread.  <a href="group__pod.html#ga30"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga31">xnpod_delete_thread</a> (xnthread_t *thread)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initial start of a newly created thread.  <a href="group__pod.html#ga33"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga34">xnpod_restart_thread</a> (xnthread_t *thread)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a thread.  <a href="group__pod.html#ga31"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">xnflags_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga32">xnpod_set_thread_mode</a> (xnthread_t *thread, xnflags_t clrmask, xnflags_t setmask)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Restart a thread.  <a href="group__pod.html#ga34"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga35">xnpod_delete_thread</a> (xnthread_t *thread)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change a thread's control mode.  <a href="group__pod.html#ga32"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga34">xnpod_resume_thread</a> (xnthread_t *thread, xnflags_t mask)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a thread.  <a href="group__pod.html#ga35"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">xnflags_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga36">xnpod_set_thread_mode</a> (xnthread_t *thread, xnflags_t clrmask, xnflags_t setmask)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Resume a thread.  <a href="group__pod.html#ga34"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga35">xnpod_unblock_thread</a> (xnthread_t *thread)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change a thread's control mode.  <a href="group__pod.html#ga36"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga38">xnpod_resume_thread</a> (xnthread_t *thread, xnflags_t mask)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unblock a thread.  <a href="group__pod.html#ga35"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga36">xnpod_renice_thread</a> (xnthread_t *thread, int prio)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Resume a thread.  <a href="group__pod.html#ga38"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga39">xnpod_unblock_thread</a> (xnthread_t *thread)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change the base priority of a thread.  <a href="group__pod.html#ga36"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga37">xnpod_migrate_thread</a> (int cpu)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unblock a thread.  <a href="group__pod.html#ga39"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga40">xnpod_renice_thread</a> (xnthread_t *thread, int prio)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Migrate the current thread.  <a href="group__pod.html#ga37"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga38">xnpod_rotate_readyq</a> (int prio)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change the base priority of a thread.  <a href="group__pod.html#ga40"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga41">xnpod_migrate_thread</a> (int cpu)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Rotate a priority level in the ready queue.  <a href="group__pod.html#ga38"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga39">xnpod_schedule</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Migrate the current thread.  <a href="group__pod.html#ga41"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga42">xnpod_rotate_readyq</a> (int prio)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Rescheduling procedure entry point.  <a href="group__pod.html#ga39"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga40">xnpod_dispatch_signals</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Rotate a priority level in the ready queue.  <a href="group__pod.html#ga42"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga43">xnpod_schedule</a> (void)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Deliver pending asynchronous signals to the running thread.  <a href="group__pod.html#ga40"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga46">xnpod_activate_rr</a> (xnticks_t quantum)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Rescheduling procedure entry point.  <a href="group__pod.html#ga43"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga44">xnpod_dispatch_signals</a> (void)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Globally activate the round-robin scheduling.  <a href="group__pod.html#ga46"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga47">xnpod_deactivate_rr</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Deliver pending asynchronous signals to the running thread.  <a href="group__pod.html#ga44"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga48">xnpod_activate_rr</a> (xnticks_t quantum)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Globally deactivate the round-robin scheduling.  <a href="group__pod.html#ga47"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga48">xnpod_set_time</a> (xnticks_t newtime)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Globally activate the round-robin scheduling.  <a href="group__pod.html#ga48"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga49">xnpod_deactivate_rr</a> (void)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the nucleus idea of time.  <a href="group__pod.html#ga48"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga49">xnpod_set_thread_periodic</a> (xnthread_t *thread, xnticks_t idate, xnticks_t period)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Globally deactivate the round-robin scheduling.  <a href="group__pod.html#ga49"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga50">xnpod_set_time</a> (xnticks_t newtime)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Make a thread periodic.  <a href="group__pod.html#ga49"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga50">xnpod_wait_thread_period</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the nucleus idea of time.  <a href="group__pod.html#ga50"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga51">xnpod_set_thread_periodic</a> (xnthread_t *thread, xnticks_t idate, xnticks_t period)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next periodic release point.  <a href="group__pod.html#ga50"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">xnticks_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga51">xnpod_get_time</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Make a thread periodic.  <a href="group__pod.html#ga51"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga52">xnpod_wait_thread_period</a> (unsigned long *overruns_r)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the nucleus idea of time.  <a href="group__pod.html#ga51"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga53">xnpod_add_hook</a> (int type, void(*routine)(xnthread_t *))</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next periodic release point.  <a href="group__pod.html#ga52"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">xnticks_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga53">xnpod_get_time</a> (void)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a nucleus hook.  <a href="group__pod.html#ga53"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga54">xnpod_remove_hook</a> (int type, void(*routine)(xnthread_t *))</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the nucleus idea of time.  <a href="group__pod.html#ga53"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga55">xnpod_add_hook</a> (int type, void(*routine)(xnthread_t *))</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Remove a nucleus hook.  <a href="group__pod.html#ga54"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a nucleus hook.  <a href="group__pod.html#ga55"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga56">xnpod_remove_hook</a> (int type, void(*routine)(xnthread_t *))</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Remove a nucleus hook.  <a href="group__pod.html#ga56"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:15 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:57 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

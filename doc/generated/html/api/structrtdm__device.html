@@ -24,11 +24,11 @@ This structure specifies a RTDM device. As some fields, especially the reserved 
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o0" doxytag="rtdm_device::struct_version"></a>
 int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o0">struct_version</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Revision number of this structure, see <a class="el" href="rtdm__driver_8h.html#versioning">Versioning</a> defines. <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Revision number of this structure, see <a class="el" href="group__devregister.html#versioning">Versioning</a> defines. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o1" doxytag="rtdm_device::device_flags"></a>
 int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o1">device_flags</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Device flags, see <a class="el" href="rtdm__driver_8h.html#dev_flags">Device Flags</a> for details. <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Device flags, see <a class="el" href="group__devregister.html#dev_flags">Device Flags</a> for details. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o2" doxytag="rtdm_device::context_size"></a>
 size_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o2">context_size</a></td></tr>
 
@@ -36,7 +36,7 @@ size_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o3" doxytag="rtdm_device::device_name"></a>
 char&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o3">device_name</a> [RTDM_MAX_DEVNAME_LEN+1]</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Named device identification. <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Named device identification (orthogonal to Linux device name space). <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o4" doxytag="rtdm_device::protocol_family"></a>
 int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o4">protocol_family</a></td></tr>
 
@@ -46,19 +46,19 @@ int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Protocol device identification: socket type (SOCK_xxx). <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o6" doxytag="rtdm_device::open_rt"></a>
-<a class="el" href="rtdm__driver_8h.html#a54">rtdm_open_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o6">open_rt</a></td></tr>
+<a class="el" href="group__devregister.html#ga0">rtdm_open_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o6">open_rt</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Named device instance creation for real-time contexts, optional if open_nrt is non-NULL, ignored for protocol devices. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o7" doxytag="rtdm_device::open_nrt"></a>
-<a class="el" href="rtdm__driver_8h.html#a54">rtdm_open_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o7">open_nrt</a></td></tr>
+<a class="el" href="group__devregister.html#ga0">rtdm_open_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o7">open_nrt</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Named device instance creation for non-real-time contexts, optional if open_rt is non-NULL, ignored for protocol devices. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o8" doxytag="rtdm_device::socket_rt"></a>
-<a class="el" href="rtdm__driver_8h.html#a55">rtdm_socket_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o8">socket_rt</a></td></tr>
+<a class="el" href="group__devregister.html#ga1">rtdm_socket_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o8">socket_rt</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Protocol socket creation for real-time contexts, optional if socket_nrt is non-NULL, ignored for named devices. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o9" doxytag="rtdm_device::socket_nrt"></a>
-<a class="el" href="rtdm__driver_8h.html#a55">rtdm_socket_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o9">socket_nrt</a></td></tr>
+<a class="el" href="group__devregister.html#ga1">rtdm_socket_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o9">socket_nrt</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Protocol socket creation for non-real-time contexts, optional if socket_rt is non-NULL, ignored for named devices. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o10" doxytag="rtdm_device::ops"></a>
@@ -80,7 +80,7 @@ const char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o14" doxytag="rtdm_device::driver_version"></a>
 int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o14">driver_version</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Driver version, see <a class="el" href="rtdm__driver_8h.html#versioning">Versioning</a> defines. <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Driver version, see <a class="el" href="group__devregister.html#versioning">Versioning</a> defines. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="o15" doxytag="rtdm_device::peripheral_name"></a>
 const char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#o15">peripheral_name</a></td></tr>
 
@@ -107,8 +107,8 @@ rtdm_dev_reserved&nbsp;</td><td class="memItemRight" valign="bottom"><a class="e
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Data stored by RTDM inside a registered device (internal use only). <br></td></tr>
 </table>
 <hr>The documentation for this struct was generated from the following file:<ul>
-<li>skins/rtdm/<a class="el" href="rtdm__driver_8h-source.html">rtdm_driver.h</a></ul>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:16 2005 for Xenomai API by&nbsp;
+<li>include/rtdm/<a class="el" href="rtdm__driver_8h-source.html">rtdm_driver.h</a></ul>
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:59 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

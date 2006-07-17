@@ -27,7 +27,7 @@ proc Inspector:initialize {context} {
 
     # Update autopath with rt-iface plugin libs
  
-    foreach dir [globDir $tkbridge_prefixdir/share/sim/tcl] {
+    foreach dir [globDir $tkbridge_prefixdir/share/xenosim/tcl] {
 	lappend auto_path $dir
     }
 

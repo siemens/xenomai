@@ -20,24 +20,25 @@
 #ifndef _XENO_NUCLEUS_TYPES_H
 #define _XENO_NUCLEUS_TYPES_H
 
-#ifndef __XENO_SIM__
-
+#ifdef __KERNEL__
 #include <linux/config.h>
-
+#include <linux/errno.h>
 #ifdef CONFIG_PREEMPT_RT
 #define linux_semaphore compat_semaphore
 #else /* CONFIG_PREEMPT_RT */
 #define linux_semaphore semaphore
 #endif /* !CONFIG_PREEMPT_RT */
-
-#endif /* __XENO_SIM__ */
-
-#ifndef __KERNEL__
+#else /* !__KERNEL__ */
 #include <sys/types.h>
+#include <errno.h>
+#ifndef BITS_PER_LONG
+#include <stdint.h>
+#define BITS_PER_LONG __WORDSIZE
+#endif /* !BITS_PER_LONG */
 #endif /* __KERNEL__ */
 
-#include <linux/errno.h>
-#include <nucleus/asm/system.h>
+#include <asm/xenomai/system.h>
+#include <nucleus/compiler.h>
 
 typedef unsigned long xnsigmask_t;
 
@@ -48,6 +49,10 @@ typedef long long xnsticks_t;
 typedef unsigned long long xntime_t; /* ns */
 
 typedef long long xnstime_t;
+
+typedef unsigned long xnhandle_t;
+
+#define XN_NO_HANDLE ((xnhandle_t)0)
 
 struct xnintr;
 
@@ -90,11 +95,6 @@ do { \
 #define minval(a,b) ((a) < (b) ? (a) : (b))
 #define maxval(a,b) ((a) > (b) ? (a) : (b))
 
-#if !defined(__KERNEL__) && !defined(BITS_PER_LONG)
-#include <stdint.h>
-#define BITS_PER_LONG __WORDSIZE
-#endif /* !__KERNEL__ */
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -111,9 +111,19 @@ void __xeno_user_exit(void);
 
 #define xnpod_fatal(format,args...) \
 do { \
-   const char *panic = xnpod_fatal_helper(format,##args); \
-   xnarch_halt(panic); \
+    const char *panic; \
+    xnarch_trace_panic_freeze(); \
+    panic = xnpod_fatal_helper(format,##args); \
+    xnarch_halt(panic); \
 } while (0)
+
+#if defined(__XENO_SIM__) || defined(__XENO_UVM__)
+#define SKIN_INIT(name)  __xeno_skin_init(void)
+#define SKIN_EXIT(name)  __xeno_skin_exit(void)
+#else /* !__XENO_SIM__ */
+#define SKIN_INIT(name)  __ ## name ## _skin_init(void)
+#define SKIN_EXIT(name)  __ ## name ## _skin_exit(void)
+#endif /* __XENO_SIM__ */
 
 #define root_thread_init __xeno_user_init
 #define root_thread_exit __xeno_user_exit

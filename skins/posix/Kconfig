@@ -1,6 +1,0 @@
-config XENO_SKIN_POSIX
-	bool "POSIX API"
-	default n
-	help
-
-	A POSIX-compliant skin in kernel space.

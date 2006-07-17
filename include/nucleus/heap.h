@@ -44,12 +44,12 @@
 
 #if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)
 
-#define	XNHEAP_MINLOG2    3
-#define	XNHEAP_MAXLOG2    22
-#define	XNHEAP_MINALLOCSZ (1 << XNHEAP_MINLOG2)
-#define	XNHEAP_MINALIGNSZ (1 << 4) /* i.e. 16 bytes */
-#define	XNHEAP_NBUCKETS   (XNHEAP_MAXLOG2 - XNHEAP_MINLOG2 + 2)
-#define	XNHEAP_MAXEXTSZ   (1 << 24) /* i.e. 16Mb */
+#define XNHEAP_MINLOG2    3
+#define XNHEAP_MAXLOG2    22
+#define XNHEAP_MINALLOCSZ (1 << XNHEAP_MINLOG2)
+#define XNHEAP_MINALIGNSZ (1 << 4) /* i.e. 16 bytes */
+#define XNHEAP_NBUCKETS   (XNHEAP_MAXLOG2 - XNHEAP_MINLOG2 + 2)
+#define XNHEAP_MAXEXTSZ   (1 << 31) /* i.e. 2Gb */
 
 #define XNHEAP_PFREE   0
 #define XNHEAP_PCONT   1
@@ -111,6 +111,8 @@ extern xnheap_t kheap;
 #define xnheap_overhead(hsize,psize) \
 ((sizeof(xnextent_t) + (((hsize) - sizeof(xnextent_t)) / (psize)) + \
  XNHEAP_MINALIGNSZ - 1) & ~(XNHEAP_MINALIGNSZ - 1))
+/* The alignment value must be a power of 2 */
+#define xnheap_align(size,al)		(((size)+(al)-1)&(~((al)-1)))
 
 #define xnmalloc(size)     xnheap_alloc(&kheap,size)
 #define xnfree(ptr)        xnheap_free(&kheap,ptr)
@@ -122,6 +124,18 @@ do { \
     else \
 	xnheap_free(&kheap,ptr); \
 } while(0)
+
+static inline size_t xnheap_rounded_size (size_t hsize, size_t psize)
+{
+	/* Account for the overhead so that the actual heap space is
+	   large enough to match the requested size. Using a large
+	   page size for large single-block heaps might reserve a lot
+	   of useless page map memory, but this should never get
+	   pathological anyway, since we are only consuming 1 byte per
+	   page. */
+	hsize = xnheap_align(hsize,psize) + xnheap_overhead(hsize,psize);
+	return xnheap_align(hsize,psize);
+}
 
 #ifdef __cplusplus
 extern "C" {
@@ -137,17 +151,20 @@ int xnheap_mount(void);
 
 void xnheap_umount(void);
 
-int xnheap_init_shared(xnheap_t *heap,
+int xnheap_init_mapped(xnheap_t *heap,
 		       u_long heapsize,
 		       int memflags);
 
-int xnheap_destroy_shared(xnheap_t *heap);
+int xnheap_destroy_mapped(xnheap_t *heap);
 
-#define xnheap_shared_offset(heap,ptr) \
+#define xnheap_mapped_offset(heap,ptr) \
 (((caddr_t)(ptr)) - ((caddr_t)(heap)->archdep.heapbase))
 
-#define xnheap_shared_address(heap,off) \
+#define xnheap_mapped_address(heap,off) \
 (((caddr_t)(heap)->archdep.heapbase) + (off))
+
+#define xnheap_mapped_p(heap) \
+((heap)->archdep.heapbase != NULL)
 
 #endif /* __KERNEL__ */
 
@@ -190,6 +207,9 @@ static inline void xnheap_finalize_free(xnheap_t *heap)
     if (heap->idleq)
 	xnheap_finalize_free_inner(heap);
 }
+
+int xnheap_check_block(xnheap_t *heap,
+		       void *block);
 
 #ifdef __cplusplus
 }

@@ -18,6 +18,8 @@
 
 #include <posix_test.h>
 
+static pthread_t root_thread_tcb;
+
 void test_sigsets(void)
 {
     int i;
@@ -118,7 +120,7 @@ void test_sigwait(void)
     sched_yield();
     TEST_ASSERT_OK(pthread_attr_destroy(&tattr));
 
-    TEST_ASSERT_OK(sigqueue(thread, SIGRTMIN+1, (union sigval) 42));
+    TEST_ASSERT_OK(pthread_sigqueue_np(thread, SIGRTMIN+1, (union sigval) 42));
     TEST_ASSERT_OK(pthread_kill(thread, SIGRTMIN));
     TEST_ASSERT_OK(pthread_kill(thread, SIGRTMIN+2));
 
@@ -403,4 +405,26 @@ void *root_thread(void *cookie)
     TEST_FINISH();
 
     return cookie;
+}
+
+int __xeno_user_init (void)
+{
+    int rc;
+    pthread_attr_t attr;
+    
+
+    pthread_attr_init(&attr);
+    pthread_attr_setname_np(&attr, "root");
+    
+    rc=pthread_create(&root_thread_tcb, &attr, root_thread, NULL);
+
+    pthread_attr_destroy(&attr);
+
+    return rc;
+}
+
+void __xeno_user_exit (void)
+{
+    pthread_kill(root_thread_tcb, 30);
+    pthread_join(root_thread_tcb, NULL);
 }

@@ -1,0 +1,5 @@
+#
+# Xenomai configuration for Linux v2.4
+#
+
+dep_tristate 'uITRON-compliant skin' CONFIG_XENO_SKIN_UITRON $CONFIG_XENO_OPT_NUCLEUS

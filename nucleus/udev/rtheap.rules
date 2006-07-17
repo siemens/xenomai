@@ -1,2 +1,0 @@
-# real-time heap device (Xenomai:rtheap)
-KERNEL="rtheap",  NAME="rtheap", MODE="0666"

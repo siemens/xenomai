@@ -60,7 +60,7 @@ Non-real-time signal handler.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>nrt_sig</em>&nbsp;</td><td>signal handle as returned by <a class="el" href="group__nrtsignal.html#ga2">rtdm_nrtsig_init()</a></td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>nrt_sig</em>&nbsp;</td><td>signal handle as returned by rtdm_nrtsig_init()</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Note:</b></dt><dd>The signal handler will run in soft-IRQ context of the non-real-time subsystem. Note the implications of this context, e.g. no invocation of blocking operations. </dd></dl>
@@ -202,7 +202,7 @@ This service can be called from:<p>
 Rescheduling: never in real-time context, possible in non-real-time environments.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:34 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:58:07 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

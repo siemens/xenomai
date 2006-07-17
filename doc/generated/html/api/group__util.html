@@ -20,36 +20,42 @@ Collaboration diagram for Utility Services:<center><table><tr><td><img src="grou
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga0">rtdm_printk</a> (const char *format,...)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga2">rtdm_mmap_to_user</a> (rtdm_user_info_t *user_info, void *src_addr, size_t len, int prot, void **pptr, struct vm_operations_struct *vm_ops, void *vm_private_data)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Real-time safe message printing on kernel console.  <a href="#ga0"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga1">rtdm_malloc</a> (size_t size)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Map a kernel memory range into the address space of the user.  <a href="#ga2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga3">rtdm_munmap</a> (rtdm_user_info_t *user_info, void *ptr, size_t len)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate memory block in real-time context.  <a href="#ga1"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga2">rtdm_free</a> (void *ptr)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unmap a user memory range.  <a href="#ga3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga4">rtdm_printk</a> (const char *format,...)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release real-time memory block.  <a href="#ga2"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga3">rtdm_read_user_ok</a> (rtdm_user_info_t *user_info, const void __user *ptr, size_t size)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Real-time safe message printing on kernel console.  <a href="#ga4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga5">rtdm_malloc</a> (size_t size)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Check if read access to user-space memory block is safe.  <a href="#ga3"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga4">rtdm_rw_user_ok</a> (rtdm_user_info_t *user_info, const void __user *ptr, size_t size)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate memory block in real-time context.  <a href="#ga5"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga6">rtdm_free</a> (void *ptr)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Check if read/write access to user-space memory block is safe.  <a href="#ga4"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga5">rtdm_copy_from_user</a> (rtdm_user_info_t *user_info, void *dst, const void __user *src, size_t size)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release real-time memory block.  <a href="#ga6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga7">rtdm_read_user_ok</a> (rtdm_user_info_t *user_info, const void __user *ptr, size_t size)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Copy user-space memory block to specified buffer.  <a href="#ga5"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga6">rtdm_copy_to_user</a> (rtdm_user_info_t *user_info, void __user *dst, const void *src, size_t size)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Check if read access to user-space memory block is safe.  <a href="#ga7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga8">rtdm_rw_user_ok</a> (rtdm_user_info_t *user_info, const void __user *ptr, size_t size)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Copy specified buffer to user-space memory block.  <a href="#ga6"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga7">rtdm_strncpy_from_user</a> (rtdm_user_info_t *user_info, char *dst, const char __user *src, size_t count)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Check if read/write access to user-space memory block is safe.  <a href="#ga8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga9">rtdm_copy_from_user</a> (rtdm_user_info_t *user_info, void *dst, const void __user *src, size_t size)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Copy user-space string to specified buffer.  <a href="#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga8">rtdm_in_rt_context</a> (void)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Copy user-space memory block to specified buffer.  <a href="#ga9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga10">rtdm_copy_to_user</a> (rtdm_user_info_t *user_info, void __user *dst, const void *src, size_t size)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Test if running in a real-time task.  <a href="#ga8"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Copy specified buffer to user-space memory block.  <a href="#ga10"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga11">rtdm_strncpy_from_user</a> (rtdm_user_info_t *user_info, char *dst, const char __user *src, size_t count)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Copy user-space string to specified buffer.  <a href="#ga11"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga12">rtdm_in_rt_context</a> (void)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Test if running in a real-time task.  <a href="#ga12"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="ga5" doxytag="drvlib.c::rtdm_copy_from_user"></a><p>
+<a class="anchor" name="ga9" doxytag="drvlib.c::rtdm_copy_from_user"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -109,7 +115,7 @@ Copy user-space memory block to specified buffer.
 <ul>
 <li>-EFAULT is returned if an invalid memory area was accessed.</li></ul>
 <p>
-<dl compact><dt><b>Note:</b></dt><dd>Before invoking this service, verify via <a class="el" href="group__util.html#ga3">rtdm_read_user_ok()</a> that the provided user-space address can securely be accessed.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>Before invoking this service, verify via rtdm_read_user_ok() that the provided user-space address can securely be accessed.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -118,7 +124,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga6" doxytag="drvlib.c::rtdm_copy_to_user"></a><p>
+<a class="anchor" name="ga10" doxytag="drvlib.c::rtdm_copy_to_user"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -178,7 +184,7 @@ Copy specified buffer to user-space memory block.
 <ul>
 <li>-EFAULT is returned if an invalid memory area was accessed.</li></ul>
 <p>
-<dl compact><dt><b>Note:</b></dt><dd>Before invoking this service, verify via <a class="el" href="group__util.html#ga4">rtdm_rw_user_ok()</a> that the provided user-space address can securely be accessed.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>Before invoking this service, verify via rtdm_rw_user_ok() that the provided user-space address can securely be accessed.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -187,7 +193,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga2" doxytag="drvlib.c::rtdm_free"></a><p>
+<a class="anchor" name="ga6" doxytag="drvlib.c::rtdm_free"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -216,7 +222,7 @@ Release real-time memory block.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>ptr</em>&nbsp;</td><td>Pointer to memory block as returned by <a class="el" href="group__util.html#ga1">rtdm_malloc()</a></td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>ptr</em>&nbsp;</td><td>Pointer to memory block as returned by rtdm_malloc()</td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -227,7 +233,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga8" doxytag="drvlib.c::rtdm_in_rt_context"></a><p>
+<a class="anchor" name="ga12" doxytag="drvlib.c::rtdm_in_rt_context"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -263,7 +269,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga1" doxytag="drvlib.c::rtdm_malloc"></a><p>
+<a class="anchor" name="ga5" doxytag="drvlib.c::rtdm_malloc"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -304,7 +310,170 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga0" doxytag="drvlib.c::rtdm_printk"></a><p>
+<a class="anchor" name="ga2" doxytag="drvlib.c::rtdm_mmap_to_user"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">int rtdm_mmap_to_user           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">rtdm_user_info_t *&nbsp;</td>
+          <td class="mdname" nowrap> <em>user_info</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>void *&nbsp;</td>
+          <td class="mdname" nowrap> <em>src_addr</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>size_t&nbsp;</td>
+          <td class="mdname" nowrap> <em>len</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>int&nbsp;</td>
+          <td class="mdname" nowrap> <em>prot</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>void **&nbsp;</td>
+          <td class="mdname" nowrap> <em>pptr</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>struct vm_operations_struct *&nbsp;</td>
+          <td class="mdname" nowrap> <em>vm_ops</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>void *&nbsp;</td>
+          <td class="mdname" nowrap> <em>vm_private_data</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Map a kernel memory range into the address space of the user. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>user_info</em>&nbsp;</td><td>User information pointer as passed to the invoked device operation handler </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>src_addr</em>&nbsp;</td><td>Kernel address to be mapped </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>len</em>&nbsp;</td><td>Length of the memory range </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>prot</em>&nbsp;</td><td>Protection flags for the user's memory range, typically either PROT_READ or PROT_READ|PROT_WRITE </td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>pptr</em>&nbsp;</td><td>Address of a pointer containing the desired user address or NULL on entry and the finally assigned address on return </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>vm_ops</em>&nbsp;</td><td>vm_operations to be executed on the vma_area of the user memory range or NULL </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>vm_private_data</em>&nbsp;</td><td>Private data to be stored in the vma_area, primarily useful for vm_operation handlers</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise (most common values):</dd></dl>
+<ul>
+<li>-EINVAL is returned if an invalid start address, size, or destination address was passed.</li></ul>
+<p>
+<ul>
+<li>-ENOMEM is returned if there is insufficient free memory or the limit of memory mapping for the user process was reached.</li></ul>
+<p>
+<ul>
+<li>-EAGAIN is returned if too much memory has been already locked by the user process.</li></ul>
+<p>
+<ul>
+<li>-EPERM <em>may</em> be returned if an illegal invocation environment is detected.</li></ul>
+<p>
+<dl compact><dt><b>Note:</b></dt><dd>RTDM supports two models for unmapping the user memory range again. One is explicite unmapping via <a class="el" href="group__util.html#ga3">rtdm_munmap()</a>, either performed when the user requests it via an IOCTL etc. or when the related device is closed. The other is automatic unmapping, triggered by the user invoking standard <a class="el" href="group__posix__shm.html#ga14">munmap()</a> or by the termination of the related process. To track release of the mapping and therefore relinquishment of the referenced physical memory, the caller of <a class="el" href="group__util.html#ga2">rtdm_mmap_to_user()</a> can pass a vm_operations_struct on invocation, defining a close handler for the vm_area. See Linux documentaion (e.g. Linux Device Drivers book) on virtual memory management for details.</dd></dl>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>User-space task (non-RT)</li></ul>
+<p>
+Rescheduling: possible.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga3" doxytag="drvlib.c::rtdm_munmap"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">int rtdm_munmap           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">rtdm_user_info_t *&nbsp;</td>
+          <td class="mdname" nowrap> <em>user_info</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>void *&nbsp;</td>
+          <td class="mdname" nowrap> <em>ptr</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>size_t&nbsp;</td>
+          <td class="mdname" nowrap> <em>len</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Unmap a user memory range. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>user_info</em>&nbsp;</td><td>User information pointer as passed to <a class="el" href="group__util.html#ga2">rtdm_mmap_to_user()</a> when requesting to map the memory range </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>ptr</em>&nbsp;</td><td>User address or the memory range </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>len</em>&nbsp;</td><td>Length of the memory range</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
+<ul>
+<li>-EINVAL is returned if an invalid address or size was passed.</li></ul>
+<p>
+<ul>
+<li>-EPERM <em>may</em> be returned if an illegal invocation environment is detected.</li></ul>
+<p>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>User-space task (non-RT)</li></ul>
+<p>
+Rescheduling: possible.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga4" doxytag="drvlib.c::rtdm_printk"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -355,7 +524,7 @@ This service can be called from:<p>
 Rescheduling: never in real-time context, possible in non-real-time environments.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga3" doxytag="drvlib.c::rtdm_read_user_ok"></a><p>
+<a class="anchor" name="ga7" doxytag="drvlib.c::rtdm_read_user_ok"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -413,7 +582,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga4" doxytag="drvlib.c::rtdm_rw_user_ok"></a><p>
+<a class="anchor" name="ga8" doxytag="drvlib.c::rtdm_rw_user_ok"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -471,7 +640,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ga7" doxytag="drvlib.c::rtdm_strncpy_from_user"></a><p>
+<a class="anchor" name="ga11" doxytag="drvlib.c::rtdm_strncpy_from_user"></a><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -531,7 +700,7 @@ Copy user-space string to specified buffer.
 <ul>
 <li>-EFAULT is returned if an invalid memory area was accessed.</li></ul>
 <p>
-<dl compact><dt><b>Note:</b></dt><dd>This services already includes a check of the source address, calling <a class="el" href="group__util.html#ga3">rtdm_read_user_ok()</a> for <em>src</em> explicitly is not required.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>This services already includes a check of the source address, calling rtdm_read_user_ok() for <em>src</em> explicitly is not required.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -540,7 +709,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:34 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:58:08 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -1,0 +1,7 @@
+config XENO_SKIN_POSIX
+	depends on XENO_OPT_NUCLEUS
+	tristate "POSIX API"
+	default y
+	help
+
+	A POSIX-compliant skin.

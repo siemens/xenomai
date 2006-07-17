@@ -5335,7 +5335,7 @@ fi
 
 
 
-                    ac_config_files="$ac_config_files GNUmakefile pkgIndex.tcl"
+                    ac_config_files="$ac_config_files Makefile pkgIndex.tcl"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -5887,7 +5887,7 @@ for ac_config_target in $ac_config_targets
 do
   case "$ac_config_target" in
   # Handling of arguments.
-  "GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES GNUmakefile" ;;
+  "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "pkgIndex.tcl" ) CONFIG_FILES="$CONFIG_FILES pkgIndex.tcl" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}

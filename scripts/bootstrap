@@ -29,7 +29,7 @@ if test -r acinclude.m4; then
    touch acinclude.m4
    aclocal-1.9
 else
-   aclocal-1.9 -I config/autoconf
+   aclocal-1.9 -I config
 fi
 if [ "$?" != "0" ]; then die "running aclocal"; fi
 echo "done"

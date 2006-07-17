@@ -136,7 +136,7 @@ Accept a connection requests.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>addr</em>&nbsp;</td><td>Buffer for remote address </td></tr>
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>addrlen</em>&nbsp;</td><td>Address buffer size</td></tr>
   </table>
@@ -193,7 +193,7 @@ Bind to local address.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>my_addr</em>&nbsp;</td><td>Address buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>addrlen</em>&nbsp;</td><td>Address buffer size</td></tr>
   </table>
@@ -235,17 +235,17 @@ Close a device or socket.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga0">rt_dev_open()</a> or <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a></td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_open() or rt_dev_socket()</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise a negative error code.</dd></dl>
-<dl compact><dt><b>Note:</b></dt><dd>If the matching <a class="el" href="group__userapi.html#ga0">rt_dev_open()</a> or <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> call took place in non-real-time context, <a class="el" href="group__userapi.html#ga2">rt_dev_close()</a> must be issued within non-real-time as well. Otherwise, the call will fail.<p>
+<dl compact><dt><b>Note:</b></dt><dd>If the matching rt_dev_open() or rt_dev_socket() call took place in non-real-time context, rt_dev_close() must be issued within non-real-time as well. Otherwise, the call will fail.<p>
 Killing a real-time task that is blocked on some device operation can lead to stalled file descriptors. To avoid such scenarios, always close the device before explicitely terminating any real-time task which may use it. To cleanup a stalled file descriptor, send its number to the <code>open_fildes</code> /proc entry, e.g. via <div class="fragment"><pre class="fragment"><span class="preprocessor"> #&gt; echo 3 &gt; /proc/xenomai/rtdm/open_fildes </span>
 </pre></div></dd></dl>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.<p>
-<dl compact><dt><b>See also:</b></dt><dd><code>close()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+<dl compact><dt><b>See also:</b></dt><dd><code><a class="el" href="group__posix__shm.html#ga9">close()</a></code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
     </td>
   </tr>
 </table>
@@ -293,7 +293,7 @@ Connect to remote address.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>serv_addr</em>&nbsp;</td><td>Address buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>addrlen</em>&nbsp;</td><td>Address buffer size</td></tr>
   </table>
@@ -350,7 +350,7 @@ Get socket destination address.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>name</em>&nbsp;</td><td>Address buffer </td></tr>
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>namelen</em>&nbsp;</td><td>Address buffer size</td></tr>
   </table>
@@ -407,7 +407,7 @@ Get local socket address.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>name</em>&nbsp;</td><td>Address buffer </td></tr>
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>namelen</em>&nbsp;</td><td>Address buffer size</td></tr>
   </table>
@@ -476,7 +476,7 @@ Get socket option.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>level</em>&nbsp;</td><td>Addressed stack level </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>optname</em>&nbsp;</td><td>Option name ID </td></tr>
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>optval</em>&nbsp;</td><td>Value buffer </td></tr>
@@ -535,7 +535,7 @@ Issue an IOCTL.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga0">rt_dev_open()</a> or <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_open() or rt_dev_socket() </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>request</em>&nbsp;</td><td>IOCTL code </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>...</em>&nbsp;</td><td>Optional third argument, depending on IOCTL function (<code>void</code> <code>*</code> or <code>unsigned</code> <code>long</code>)</td></tr>
   </table>
@@ -586,7 +586,7 @@ Listen for incomming connection requests.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>backlog</em>&nbsp;</td><td>Maximum queue length</td></tr>
   </table>
 </dl>
@@ -699,7 +699,7 @@ Read from device.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga0">rt_dev_open()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_open() </td></tr>
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>buf</em>&nbsp;</td><td>Input buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>nbyte</em>&nbsp;</td><td>Number of bytes to read</td></tr>
   </table>
@@ -762,7 +762,7 @@ Receive message from socket.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>buf</em>&nbsp;</td><td>Message buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>len</em>&nbsp;</td><td>Message buffer size </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>flags</em>&nbsp;</td><td>Message flags</td></tr>
@@ -838,7 +838,7 @@ Receive message from socket.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>buf</em>&nbsp;</td><td>Message buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>len</em>&nbsp;</td><td>Message buffer size </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>flags</em>&nbsp;</td><td>Message flags </td></tr>
@@ -898,7 +898,7 @@ Receive message from socket.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>msg</em>&nbsp;</td><td>Message descriptor </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>flags</em>&nbsp;</td><td>Message flags</td></tr>
   </table>
@@ -961,7 +961,7 @@ Transmit message to socket.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>buf</em>&nbsp;</td><td>Message buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>len</em>&nbsp;</td><td>Message buffer size </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>flags</em>&nbsp;</td><td>Message flags</td></tr>
@@ -1019,7 +1019,7 @@ Transmit message to socket.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>msg</em>&nbsp;</td><td>Message descriptor </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>flags</em>&nbsp;</td><td>Message flags</td></tr>
   </table>
@@ -1094,7 +1094,7 @@ Transmit message to socket.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>buf</em>&nbsp;</td><td>Message buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>len</em>&nbsp;</td><td>Message buffer size </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>flags</em>&nbsp;</td><td>Message flags </td></tr>
@@ -1166,7 +1166,7 @@ Set socket option.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>level</em>&nbsp;</td><td>Addressed stack level </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>optname</em>&nbsp;</td><td>Option name ID </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>optval</em>&nbsp;</td><td>Value buffer </td></tr>
@@ -1219,7 +1219,7 @@ Shut down parts of a connection.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga1">rt_dev_socket()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>how</em>&nbsp;</td><td>Specifies the part to be shut down (<code>SHUT_xxx</code>)</td></tr>
   </table>
 </dl>
@@ -1332,7 +1332,7 @@ Write to device.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga0">rt_dev_open()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_open() </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>buf</em>&nbsp;</td><td>Output buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>nbyte</em>&nbsp;</td><td>Number of bytes to write</td></tr>
   </table>
@@ -1345,7 +1345,7 @@ Rescheduling: possible.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:35 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:58:05 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

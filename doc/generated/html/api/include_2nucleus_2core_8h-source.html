@@ -7,7 +7,7 @@
 <div class="qindex">  <form class="search" action="search.php" method="get">
 <a class="qindex" href="main.html">Main&nbsp;Page</a> | <a class="qindex" href="modules.html">Modules</a> | <a class="qindex" href="annotated.html">Data&nbsp;Structures</a> | <a class="qindex" href="dirs.html">Directories</a> | <a class="qindex" href="files.html">File&nbsp;List</a> | <a class="qindex" href="functions.html">Data&nbsp;Fields</a> | <a class="qindex" href="globals.html">Globals</a>  | <span class="search"><u>S</u>earch&nbsp;for&nbsp;<input class="search" type="text" name="query" value="" size="20" accesskey="s"/></span></form></div>
 <div class="nav">
-<a class="el" href="dir_000011.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000012.html">nucleus</a></div>
+<a class="el" href="dir_000000.html">include</a>&nbsp;/&nbsp;<a class="el" href="dir_000006.html">nucleus</a></div>
 <h1>core.h</h1><div class="fragment"><pre class="fragment">00001 <span class="comment">/*</span>
 00002 <span class="comment"> * Copyright (C) 2001,2002,2003,2004,2005 Philippe Gerum &lt;rpm@xenomai.org&gt;.</span>
 00003 <span class="comment"> *</span>
@@ -25,44 +25,59 @@
 00015 <span class="comment"> * along with Xenomai; if not, write to the Free Software</span>
 00016 <span class="comment"> * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</span>
 00017 <span class="comment"> * 02111-1307, USA.</span>
-00018 <span class="comment"> */</span>
-00019 
-00020 <span class="preprocessor">#ifndef _XENO_NUCLEUS_CORE_H</span>
-00021 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_NUCLEUS_CORE_H</span>
-00022 <span class="preprocessor"></span>
-00023 <span class="preprocessor">#include &lt;xeno_config.h&gt;</span>
-00024 
-00025 <span class="comment">/* Thread priority levels. */</span>
-00026 <span class="preprocessor">#define XNCORE_LOW_PRIO     1</span>
-00027 <span class="preprocessor"></span><span class="preprocessor">#define XNCORE_HIGH_PRIO    99</span>
-00028 <span class="preprocessor"></span><span class="comment">/* Extra level for IRQ servers in user-space. */</span>
-00029 <span class="preprocessor">#define XNCORE_IRQ_PRIO     (XNCORE_HIGH_PRIO + 1)</span>
-00030 <span class="preprocessor"></span>
-00031 <span class="preprocessor">#define XNCORE_MIN_PRIO     XNCORE_LOW_PRIO</span>
-00032 <span class="preprocessor"></span><span class="preprocessor">#define XNCORE_MAX_PRIO     XNCORE_IRQ_PRIO</span>
-00033 <span class="preprocessor"></span>
-00034 <span class="preprocessor">#ifdef __KERNEL__</span>
-00035 <span class="preprocessor"></span>
-00036 <span class="preprocessor">#ifdef __cplusplus</span>
-00037 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-00038 <span class="preprocessor">#endif </span><span class="comment">/* __cplusplus */</span>
-00039 
-00040 <span class="keywordtype">int</span> xncore_mount(<span class="keywordtype">void</span>);
-00041 
-00042 <span class="keywordtype">int</span> xncore_umount(<span class="keywordtype">void</span>);
-00043 
-00044 <span class="keywordtype">int</span> xncore_attach(<span class="keywordtype">void</span>);
-00045 
-00046 <span class="keywordtype">int</span> xncore_detach(<span class="keywordtype">void</span>);
-00047 
-00048 <span class="preprocessor">#ifdef __cplusplus</span>
-00049 <span class="preprocessor"></span>};
-00050 <span class="preprocessor">#endif </span><span class="comment">/* __cplusplus */</span>
-00051 
-00052 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
-00053 
-00054 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_CORE_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:14 2005 for Xenomai API by&nbsp;
+00018 <span class="comment"> *</span>
+00019 <span class="comment"> * Core pod definitions. The core pod supports all APIs providing a</span>
+00020 <span class="comment"> * system call interface to user-space applications. Core APIs, namely</span>
+00021 <span class="comment"> * POSIX, native, RTDM and UVM, only use a sub-range of the available</span>
+00022 <span class="comment"> * priority levels of the core pod, in order to have them exhibit a</span>
+00023 <span class="comment"> * 1:1 mapping with Linux's SCHED_FIFO ascending priority</span>
+00024 <span class="comment"> * scale. Non-core APIs may also rely on the core pod, provided they</span>
+00025 <span class="comment"> * normalize the priority levels of their threads when calling the</span>
+00026 <span class="comment"> * nucleus, in order to match the priority scale enforced by the</span>
+00027 <span class="comment"> * former.</span>
+00028 <span class="comment"> */</span>
+00029 
+00030 <span class="preprocessor">#ifndef _XENO_NUCLEUS_CORE_H</span>
+00031 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_NUCLEUS_CORE_H</span>
+00032 <span class="preprocessor"></span>
+00033 <span class="comment">/* Visible priority range supported by the core pod. */</span>
+00034 <span class="preprocessor">#define XNCORE_MIN_PRIO     0</span>
+00035 <span class="preprocessor"></span><span class="preprocessor">#define XNCORE_MAX_PRIO     256</span>
+00036 <span class="preprocessor"></span>
+00037 <span class="comment">/* Total number of priority levels (including the hidden root one) */</span>
+00038 <span class="preprocessor">#define XNCORE_NR_PRIO      (XNCORE_MAX_PRIO - XNCORE_MIN_PRIO + 2)</span>
+00039 <span class="preprocessor"></span>
+00040 <span class="comment">/* Priority sub-range used by core APIs. */</span>
+00041 <span class="preprocessor">#define XNCORE_LOW_PRIO     0</span>
+00042 <span class="preprocessor"></span><span class="preprocessor">#define XNCORE_HIGH_PRIO    99</span>
+00043 <span class="preprocessor"></span>
+00044 <span class="comment">/* Priority of IRQ servers in user-space. */</span>
+00045 <span class="preprocessor">#define XNCORE_IRQ_PRIO     XNCORE_MAX_PRIO</span>
+00046 <span class="preprocessor"></span>
+00047 <span class="preprocessor">#ifdef __KERNEL__</span>
+00048 <span class="preprocessor"></span>
+00049 <span class="preprocessor">#include &lt;linux/config.h&gt;</span>
+00050 
+00051 <span class="preprocessor">#ifdef __cplusplus</span>
+00052 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+00053 <span class="preprocessor">#endif </span><span class="comment">/* __cplusplus */</span>
+00054 
+00055 <span class="keywordtype">int</span> xncore_mount(<span class="keywordtype">void</span>);
+00056 
+00057 <span class="keywordtype">int</span> xncore_umount(<span class="keywordtype">void</span>);
+00058 
+00059 <span class="keywordtype">int</span> xncore_attach(<span class="keywordtype">void</span>);
+00060 
+00061 <span class="keywordtype">void</span> xncore_detach(<span class="keywordtype">int</span> xtype);
+00062 
+00063 <span class="preprocessor">#ifdef __cplusplus</span>
+00064 <span class="preprocessor"></span>};
+00065 <span class="preprocessor">#endif </span><span class="comment">/* __cplusplus */</span>
+00066 
+00067 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
+00068 
+00069 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_CORE_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:56 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

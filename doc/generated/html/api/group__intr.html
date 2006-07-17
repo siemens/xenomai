@@ -21,13 +21,13 @@ Interrupt management.
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Files</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="nucleus_2intr_8c.html">intr.c</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="ksrc_2nucleus_2intr_8c.html">intr.c</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Interrupt management. <br></td></tr>
 
 <p>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__intr.html#ga2">xnintr_init</a> (xnintr_t *intr, unsigned irq, xnisr_t isr, xniack_t iack, xnflags_t flags)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__intr.html#ga2">xnintr_init</a> (xnintr_t *intr, const char *name, unsigned irq, xnisr_t isr, xniack_t iack, xnflags_t flags)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize an interrupt object.  <a href="#ga2"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__intr.html#ga3">xnintr_destroy</a> (xnintr_t *intr)</td></tr>
@@ -86,7 +86,7 @@ Interrupt management.
 <p>
 Set interrupt's processor affinity. 
 <p>
-xnarch_cpumask_t xnintr_affinity (xnintr_t *intr, xnarch_cpumask_t cpumask) Causes the IRQ associated with the interrupt object <em>intr</em> to be received only on processors which bits are set in <em>cpumask</em>.<p>
+Causes the IRQ associated with the interrupt object <em>intr</em> to be received only on processors which bits are set in <em>cpumask</em>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>intr</em>&nbsp;</td><td>The descriptor address of the interrupt object which affinity is to be changed.</td></tr>
@@ -334,6 +334,12 @@ Rescheduling: never.     </td>
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
+          <td class="md" nowrap>const char *&nbsp;</td>
+          <td class="mdname" nowrap> <em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
           <td class="md" nowrap>unsigned&nbsp;</td>
           <td class="mdname" nowrap> <em>irq</em>, </td>
         </tr>
@@ -376,23 +382,39 @@ Initialize an interrupt object.
 <p>
 Associates an interrupt object with an IRQ line.<p>
 When an interrupt occurs on the given <em>irq</em> line, the ISR is fired in order to deal with the hardware event. The interrupt service code may call any non-suspensive service from the nucleus.<p>
-Upon receipt of an IRQ, the ISR is immediately called on behalf of the interrupted stack context, the rescheduling procedure is locked, and the interrupt source is masked at hardware level. The status value returned by the ISR is then checked for the following bits:<p>
+Upon receipt of an IRQ, the ISR is immediately called on behalf of the interrupted stack context, the rescheduling procedure is locked, and the interrupt source is masked at hardware level. The status value returned by the ISR is then checked for the following values:<p>
 <ul>
-<li>XN_ISR_ENABLE asks the nucleus to re-enable the IRQ line. Over some real-time control layers which mask and acknowledge IRQs, this operation is necessary to revalidate the interrupt channel so that more interrupts can be notified. The presence of such bit in the ISR's return code causes the nucleus to ask the real-time control layer to re-enable the interrupt.</li></ul>
+<li>XN_ISR_HANDLED indicates that the interrupt request has been fulfilled by the ISR.</li></ul>
 <p>
 <ul>
-<li>XN_ISR_CHAINED tells the nucleus to require the real-time control layer to forward the IRQ. For instance, this would cause the Adeos control layer to propagate the interrupt down the interrupt pipeline to other Adeos domains, such as Linux. This is the regular way to share interrupts between the nucleus and the host system. At the opposite, RT_INTR_HANDLED can be used instead to indicate that the interrupt request has been fulfilled.</li></ul>
+<li>XN_ISR_NONE indicates the opposite to XN_ISR_HANDLED. The ISR must always return this value when it determines that the interrupt request has not been issued by the dedicated hardware device.</li></ul>
 <p>
+In addition, one of the following bits may be set by the ISR :<p>
+NOTE: use these bits with care and only when you do understand their effect on the system. The ISR is not encouraged to use these bits in case it shares the IRQ line with other ISRs in the real-time domain.<p>
+<ul>
+<li>XN_ISR_PROPAGATE tells the nucleus to require the real-time control layer to forward the IRQ. For instance, this would cause the Adeos control layer to propagate the interrupt down the interrupt pipeline to other Adeos domains, such as Linux. This is the regular way to share interrupts between the nucleus and the host system.</li></ul>
+<p>
+<ul>
+<li>XN_ISR_NOENABLE causes the nucleus to ask the real-time control layer _not_ to re-enable the IRQ line (read the following section). xnarch_end_irq() must be called to re-enable the IRQ line later.</li></ul>
+<p>
+The nucleus re-enables the IRQ line by default. Over some real-time control layers which mask and acknowledge IRQs, this operation is necessary to revalidate the interrupt channel so that more interrupts can be notified.<p>
 A count of interrupt receipts is tracked into the interrupt descriptor, and reset to zero each time the interrupt object is attached. Since this count could wrap around, it should be used as an indication of interrupt activity only.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>intr</em>&nbsp;</td><td>The address of a interrupt object descriptor the nucleus will use to store the object-specific data. This descriptor must always be valid while the object is active therefore it must be allocated in permanent memory.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>An ASCII string standing for the symbolic name of the interrupt object.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>irq</em>&nbsp;</td><td>The hardware interrupt channel associated with the interrupt object. This value is architecture-dependent. An interrupt object must then be attached to the hardware interrupt vector using the <a class="el" href="group__intr.html#ga4">xnintr_attach()</a> service for the associated IRQs to be directed to this object.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>isr</em>&nbsp;</td><td>The address of a valid low-level interrupt service routine if this parameter is non-zero. This handler will be called each time the corresponding IRQ is delivered on behalf of an interrupt context. When called, the ISR is passed the descriptor address of the interrupt object.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>iack</em>&nbsp;</td><td>The address of an optional interrupt acknowledge routine, aimed at replacing the default one. Only very specific situations actually require to override the default setting for this parameter, like having to acknowledge non-standard PIC hardware. <em>iack</em> should return a non-zero value to indicate that the interrupt has been properly acknowledged. If <em>iack</em> is NULL, the default routine will be used instead.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>flags</em>&nbsp;</td><td>A set of creation flags affecting the operation. Since no flags are currently defined, zero should be passed for this parameter.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>flags</em>&nbsp;</td><td>A set of creation flags affecting the operation. The valid flags are:</td></tr>
   </table>
 </dl>
+<ul>
+<li>XN_ISR_SHARED enables IRQ-sharing with other interrupt objects.</li></ul>
+<p>
+<ul>
+<li>XN_ISR_EDGE is an additional flag need to be set together with XN_ISR_SHARED to enable IRQ-sharing of edge-triggered interrupts.</li></ul>
+<p>
 <dl compact><dt><b>Returns:</b></dt><dd>No error condition being defined, 0 is always returned.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
@@ -402,7 +424,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Nov 1 23:34:22 2005 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:58:00 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
