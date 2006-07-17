@@ -28,6 +28,6 @@
 
 #define XENO_VERSION_NAME	"Engines Of Creation"
 
-#define XENO_VERSION_STRING	"2.2-rc3"
+#define XENO_VERSION_STRING	"2.2"
 
 #endif /* _XENO_NUCLEUS_VERSION_H */
