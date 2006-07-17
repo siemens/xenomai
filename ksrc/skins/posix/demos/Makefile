@@ -20,7 +20,7 @@ accuracy.o: CPPFLAGS+=-DSPERIOD=2000
 
 satch_rt.o: CPPFLAGS=-DCONSUMER
 
-# To use this makefile with xeno-config not located in PATH, type :
+# To use this makefile with xeno-config not located at /usr/xenomai/bin, type :
 # make XENO_CONFIG=/path/to/xeno-config
 XENO_CONFIG=$(DESTDIR)/usr/xenomai/bin/xeno-config
 prefix := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --prefix)
