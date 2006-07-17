@@ -337,6 +337,10 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 					 xnarch_cpumask_of_cpu(ctx->cpu),
 					 rtswitch_ktask,
 					 &arg);
+	else
+		/* In order to avoid calling xnpod_delete_thread with invalid
+		   thread. */
+		task->base.flags = 0;
 
 	/* Putting the argument on stack is safe, because the new thread will
 	   preempt the current thread immediately, and will suspend only once the
