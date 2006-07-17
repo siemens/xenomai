@@ -316,7 +316,7 @@ STATUS taskPrioritySet(TASK_ID task_id,
 STATUS taskPriorityGet(TASK_ID task_id,
 		       int *pprio);
 
-void taskExit(int code); /* User-space may directly use exit(3). */
+void taskExit(int code);
     
 STATUS taskLock(void);
 
