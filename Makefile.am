@@ -109,7 +109,7 @@ distclean-linux:
 config oldconfig mconfig menuconfig gconfig xconfig:
 	$(MAKE) linux/$@
 
-all-recursive: linux/all linux/modules
+all-recursive: linux/all
 
 clean-recursive: linux/clean
 
