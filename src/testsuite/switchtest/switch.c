@@ -15,18 +15,22 @@
 #include <asm/xenomai/fptest.h>
 #include <rtdm/rttesting.h>
 
+#if CONFIG_SMP
 #ifdef HAVE_RECENT_SETAFFINITY
-#define do_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,len,mask)
+#define smp_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,len,mask)
 #else /* !HAVE_RECENT_SETAFFINITY */
 #ifdef HAVE_OLD_SETAFFINITY
-#define do_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,mask)
+#define smp_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,mask)
 #else /* !HAVE_OLD_SETAFFINITY */
 typedef unsigned long cpu_set_t;
-#define do_sched_setaffinity(pid,len,mask) 0
+#define smp_sched_setaffinity(pid,len,mask) 0
 #define	 CPU_ZERO(set)		do { *(set) = 0; } while(0)
 #define	 CPU_SET(n,set) 	do { *(set) |= (1 << n); } while(0)
 #endif /* HAVE_OLD_SETAFFINITY */
 #endif /* HAVE_RECENT_SETAFFINITY */
+#else /* !CONFIG_SMP */
+#define smp_sched_setaffinity(pid,len,mask) 0
+#endif /* !CONFIG_SMP */
 
 struct cpu_tasks;
 
@@ -132,7 +136,7 @@ static void *sleeper(void *cookie)
 
 	CPU_ZERO(&cpu_set);
 	CPU_SET(param->cpu->index, &cpu_set);
-	if (do_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
+	if (smp_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
 		perror("sleeper: sched_setaffinity");
 		exit(EXIT_FAILURE);
 	}
@@ -224,7 +228,7 @@ static void *rtup(void *cookie)
 
 	CPU_ZERO(&cpu_set);
 	CPU_SET(param->cpu->index, &cpu_set);
-	if (do_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
+	if (smp_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
 		perror("rtup: sched_setaffinity");
 		exit(EXIT_FAILURE);
 	}
@@ -299,7 +303,7 @@ static void *rtus(void *cookie)
 
 	CPU_ZERO(&cpu_set);
 	CPU_SET(param->cpu->index, &cpu_set);
-	if (do_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
+	if (smp_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
 		perror("rtus: sched_setaffinity");
 		exit(EXIT_FAILURE);
 	}
@@ -374,7 +378,7 @@ static void *rtuo(void *cookie)
 
 	CPU_ZERO(&cpu_set);
 	CPU_SET(param->cpu->index, &cpu_set);
-	if (do_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
+	if (smp_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
 		perror("rtuo: sched_setaffinity");
 		exit(EXIT_FAILURE);
 	}
@@ -511,7 +515,7 @@ static int parse_arg(struct task_params *param,
   cpu_nr:
 	cpu = strtoul(text, &cpu_end, 0);
 
-	if (*cpu_end != '\0' || ((cpu == 0 || cpu == ULONG_MAX) && errno))
+	if (*cpu_end != '\0' || (cpu == ULONG_MAX && errno))
 		return -1;
 
 	param->cpu = &cpus[cpu];
