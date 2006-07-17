@@ -494,12 +494,10 @@ int ftruncate(int fd, off_t len)
 		goto err_shm_put;
 	}
 
-	/* Allocate one page more for alignment (the address returned by mmap
-	   is aligned). */
-	if (len) {
-		len += PAGE_SIZE + PAGE_ALIGN(xnheap_overhead(len, PAGE_SIZE));
-		len = PAGE_ALIGN(len);
-	}
+	/* Allocate one more page for alignment (the address returned by mmap
+	   must be aligned). */
+	if (len)
+		len = xnheap_rounded_size(len + PAGE_SIZE, PAGE_SIZE);
 
 	err = 0;
 	if (emptyq_p(&shm->mappings)) {
