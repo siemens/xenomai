@@ -94,8 +94,10 @@ target_mesg=`echo $stanza | cut -s -d: -f4`
 
 test $verbose = 1 && echo "Running $target_name from $run_info_file"
 
-if test -n "`which sudo`"; then
+if test -n "`which sudo 2>/dev/null`"; then
   sudo=`which sudo`
+elif test -n "`type -t sudo 2>/dev/null`"; then
+  sudo=sudo
 fi
 
 if test \! "x$target_mesg" = x; then
