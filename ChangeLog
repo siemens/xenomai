@@ -1,3 +1,7 @@
+2006-07-18  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.14-1.3-05.
+
 2006-07-17  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.2 (Engines Of Creation)
