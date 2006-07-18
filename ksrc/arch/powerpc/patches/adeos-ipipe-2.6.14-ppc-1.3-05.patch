@@ -2911,6 +2911,17 @@
  	} while (pgd++, addr = next, addr != end);
  	spin_unlock(&init_mm.page_table_lock);
  	flush_cache_vmap((unsigned long) area->addr, end);
+--- 2.6.14/arch/ppc/Kconfig	2005-10-28 02:02:08.000000000 +0200
++++ 2.6.14-ipipe/arch/ppc/Kconfig	2005-10-31 10:15:17.000000000 +0100
+@@ -917,6 +917,8 @@ config NR_CPUS
+ 	depends on SMP
+ 	default "4"
+ 
++source "kernel/ipipe/Kconfig"
++
+ config HIGHMEM
+ 	bool "High memory support"
+ 
 --- 2.6.14/arch/ppc/kernel/Makefile	2005-10-28 02:02:08.000000000 +0200
 +++ 2.6.14-ipipe/arch/ppc/kernel/Makefile	2006-03-27 18:27:41.000000000 +0200
 @@ -29,6 +29,8 @@ obj-$(CONFIG_ALTIVEC)		+= vecemu.o vecto
@@ -4182,6 +4193,18 @@
  	spefscr = current->thread.spefscr;
  	fpexc_mode = current->thread.fpexc_mode;
  
+--- 2.6.14/arch/ppc/mm/fault.c	2005-10-28 02:02:08.000000000 +0200
++++ 2.6.14-ipipe/arch/ppc/mm/fault.c	2005-10-31 10:15:18.000000000 +0100
+@@ -116,6 +116,9 @@ int do_page_fault(struct pt_regs *regs, 
+ 		is_write = error_code & 0x02000000;
+ #endif /* CONFIG_4xx || CONFIG_BOOKE */
+ 
++	if (ipipe_trap_notify(IPIPE_TRAP_ACCESS,regs))
++	    	return 0;
++
+ #if defined(CONFIG_XMON) || defined(CONFIG_KGDB)
+ 	if (debugger_fault_handler && TRAP(regs) == 0x300) {
+ 		debugger_fault_handler(regs);
 --- 2.6.14/arch/ppc/platforms/83xx/mpc834x_sys.h	2005-10-28 02:02:08.000000000 +0200
 +++ 2.6.14-ipipe/arch/ppc/platforms/83xx/mpc834x_sys.h	2006-04-15 19:57:12.000000000 +0200
 @@ -19,7 +19,6 @@
@@ -4222,6 +4245,17 @@
  #include <asm/ppcboot.h>
  
  #define BOARD_CCSRBAR		((uint)0xe0000000)
+--- 2.6.14/arch/ppc/platforms/pmac_pic.c	2005-10-28 02:02:08.000000000 +0200
++++ 2.6.14-ipipe/arch/ppc/platforms/pmac_pic.c	2006-07-18 17:59:11.000000000 +0200
+@@ -387,7 +387,7 @@ static irqreturn_t k2u3_action(int cpl, 
+ 	return IRQ_HANDLED;
+ }
+ 
+-static struct irqaction k2u3_cascade_action = {
++struct irqaction k2u3_cascade_action = {
+ 	.handler	= k2u3_action,
+ 	.flags		= 0,
+ 	.mask		= CPU_MASK_NONE,
 --- 2.6.14/arch/ppc/syslib/ipic.c	2005-10-28 02:02:08.000000000 +0200
 +++ 2.6.14-ipipe/arch/ppc/syslib/ipic.c	2006-02-11 23:06:09.000000000 +0100
 @@ -415,7 +415,8 @@ static void ipic_disable_irq_and_ack(uns
@@ -4464,7 +4498,7 @@
  
  #define mask_irq(irq) ({if (irq_desc[irq].handler && irq_desc[irq].handler->disable) irq_desc[irq].handler->disable(irq);})
 --- 2.6.14/include/asm-ppc/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/include/asm-ppc/ipipe.h	2006-07-06 10:41:16.000000000 +0200
++++ 2.6.14-ipipe/include/asm-ppc/ipipe.h	2006-07-18 17:48:09.000000000 +0200
 @@ -0,0 +1,207 @@
 +/* -*- linux-c -*-
 + * include/asm-ppc/ipipe.h
@@ -4502,10 +4536,10 @@
 +#include <linux/cpumask.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.3-04"
++#define IPIPE_ARCH_STRING	"1.3-05"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	3
-+#define IPIPE_PATCH_NUMBER	4
++#define IPIPE_PATCH_NUMBER	5
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
@@ -4709,3 +4743,16 @@
  
  extern void mmu_context_init(void);
  
+--- 2.6.14/include/asm-ppc/pgalloc.h	2005-10-28 02:02:08.000000000 +0200
++++ 2.6.14-ipipe/include/asm-ppc/pgalloc.h	2006-07-18 17:59:56.000000000 +0200
+@@ -40,5 +40,10 @@ extern void pte_free(struct page *pte);
+ 
+ #define check_pgt_cache()	do { } while (0)
+ 
++static inline void set_pgdir(unsigned long address, pgd_t entry)
++{
++    /* nop */
++}
++
+ #endif /* _PPC_PGALLOC_H */
+ #endif /* __KERNEL__ */
