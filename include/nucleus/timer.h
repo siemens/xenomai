@@ -24,11 +24,12 @@
 
 #if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)
 
-#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
+#if defined(CONFIG_XENO_OPT_TIMING_PERIODIC) \
+	|| defined(CONFIG_XENO_OPT_TIMER_WHEEL)
 /* Number of outstanding timers (hint only) -- must be ^2 */
 #define XNTIMER_WHEELSIZE 64
 #define XNTIMER_WHEELMASK (XNTIMER_WHEELSIZE - 1)
-#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC || CONFIG_XENO_OPT_TIMER_WHEEL */
 
 #define XNTIMER_DEQUEUED  0x00000001
 #define XNTIMER_KILLED    0x00000002
@@ -99,6 +100,94 @@ typedef DECLARE_BHEAP_CONTAINER(xntimerq_t, CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY)
 #define xntimerq_head(q)       bheap_gethead(q)
 #define xntimerq_insert(q, h)  bheap_insert((q),(h))
 #define xntimerq_remove(q, h)  bheap_delete((q),(h))
+
+#elif defined(CONFIG_XENO_OPT_TIMER_WHEEL)
+typedef xntlholder_t xntimerh_t;
+#define xntimerh_date(h)       xntlholder_date(h)
+#define xntimerh_prio(h)       xntlholder_prio(h)
+#define xntimerh_init(h)       xntlholder_init(h)
+typedef struct {
+	unsigned date_shift;
+	unsigned long long next_shot;
+	unsigned long long shot_wrap;
+	xnqueue_t bucket[XNTIMER_WHEELSIZE];
+} xntimerq_t;
+
+static inline void xntimerq_init(xntimerq_t *q)
+{
+	unsigned long long step_tsc;
+	unsigned i;
+
+	step_tsc = xnarch_ns_to_tsc(CONFIG_XENO_OPT_TIMER_WHEEL_STEP);
+	/* q->date_shift = fls(step_tsc); */
+	for (q->date_shift = 0; (1 << q->date_shift) < step_tsc; q->date_shift++)
+		;
+	q->next_shot = q->shot_wrap = ((~0ULL) >> q->date_shift) + 1;
+	for (i = 0; i < sizeof(q->bucket)/sizeof(xnqueue_t); i++)
+		xntlist_init(&q->bucket[i]);
+}
+
+#define xntimerq_destroy(q)    do { } while (0)
+
+static inline xntlholder_t *xntimerq_head(xntimerq_t *q)
+{
+	unsigned bucket = ((unsigned) q->next_shot) & XNTIMER_WHEELMASK;
+	xntlholder_t *result;
+	unsigned i;
+
+	if (q->next_shot == q->shot_wrap)
+		return NULL;
+
+	result = xntlist_head(&q->bucket[bucket]);
+
+	if (result && (xntlholder_date(result) >> q->date_shift) == q->next_shot)
+		return result;
+
+	/* We could not find the next timer in the first bucket, iterate over
+	   the other buckets. */
+	for (i = (bucket + 1) & XNTIMER_WHEELMASK ;
+	     i != bucket; i = (i + 1) & XNTIMER_WHEELMASK) {
+		xntlholder_t *candidate = xntlist_head(&q->bucket[i]);
+
+		if(++q->next_shot == q->shot_wrap)
+			q->next_shot = 0;
+
+		if (!candidate)
+			continue;
+
+		if ((xntlholder_date(candidate) >> q->date_shift) == q->next_shot)
+			return candidate;
+
+		if (!result
+		    || xntlholder_date(candidate) < xntlholder_date(result))
+			result = candidate;
+	}
+
+	if (result)
+		q->next_shot = (xntlholder_date(result) >> q->date_shift);
+	else
+		q->next_shot = q->shot_wrap;
+	return result;
+}
+
+static inline void xntimerq_insert(xntimerq_t *q, xntimerh_t *h)
+{
+	unsigned long long shifted_date = xntlholder_date(h) >> q->date_shift;
+	unsigned bucket = ((unsigned) shifted_date) & XNTIMER_WHEELMASK;
+
+	if (shifted_date < q->next_shot)
+		q->next_shot = shifted_date;
+	xntlist_insert(&q->bucket[bucket], h);
+}
+
+static inline void xntimerq_remove(xntimerq_t *q, xntimerh_t *h)
+{
+	unsigned long long shifted_date = xntlholder_date(h) >> q->date_shift;
+	unsigned bucket = ((unsigned) shifted_date) & XNTIMER_WHEELMASK;
+
+	xntlist_remove(&q->bucket[bucket], h);
+	/* Do not attempt to update q->next_shot, xntimerq_head will recover. */
+}
 
 #else /* CONFIG_XENO_OPT_TIMER_LIST */
 typedef xntlholder_t xntimerh_t;

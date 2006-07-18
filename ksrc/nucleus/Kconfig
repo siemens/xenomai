@@ -322,6 +322,17 @@ config XENO_OPT_TIMER_HEAP
         high number of software timers may be concurrently
         outstanding at any point in time.
 
+config XENO_OPT_TIMER_WHEEL
+	bool "Hash"
+	help
+
+	Use a hash table. Timers operations using this data structure
+	should have an O(1) complexity if the timers follow two 
+	conditions:
+        - timers expiration dates do not collide too much;
+        - there is at least one periodic timer using a period near 
+	the wheel step (around 100000 ns by default).
+
 endchoice
 
 config XENO_OPT_TIMER_HEAP_CAPACITY
@@ -332,7 +343,17 @@ config XENO_OPT_TIMER_HEAP_CAPACITY
 
         Set the maximum number of timers in the nucleus timers list.
 
+config XENO_OPT_TIMER_WHEEL_STEP
+	int "Timer wheel step"
+	depends on XENO_OPT_TIMER_WHEEL
+	default 100000
+	help
+
+	Set the duration in ns of a timer wheel step. At each step, 
+	the timer wheel use the next hash bucket.
+
 endmenu
+
 
 menu "Shared interrupts"
 
