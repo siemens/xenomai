@@ -27,5 +27,5 @@ static __attribute__ ((constructor))
 void __init_rtai_interface(void)
 {
 	__rtai_muxid =
-	    xeno_user_skin_init(RTAI_SKIN_MAGIC, "RTAI", "xeno_rtai");
+	    xeno_bind_skin(RTAI_SKIN_MAGIC, "RTAI", "xeno_rtai");
 }

@@ -1,3 +1,8 @@
+2006-07-19  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/bind.h: Provide for optional skin binding
+	routine (used by RTDM).
+
 2006-17-19  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/nucleus/timer.h, ksrc/nucleus/timer.c: Kill timer cookie

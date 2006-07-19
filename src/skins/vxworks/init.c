@@ -37,8 +37,8 @@ static void __flush_tsd(void *tsd)
 static __attribute__ ((constructor))
 void __init_xeno_interface(void)
 {
-	__vxworks_muxid = xeno_user_skin_init(VXWORKS_SKIN_MAGIC,
-					      "VxWorks", "xeno_vxworks");
+	__vxworks_muxid = xeno_bind_skin(VXWORKS_SKIN_MAGIC,
+					 "vxworks", "xeno_vxworks");
 
 	/* Allocate a TSD key for indexing self task pointers. */
 
