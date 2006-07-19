@@ -9,8 +9,7 @@ switch_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -g -I$(top_s
 switch_LDFLAGS =  $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 
 switch_LDADD = \
-	-lpthread -lrt \
-	../../skins/posix/.libs/libpthread_rt.a
+	../../skins/posix/.libs/libpthread_rt.a	-lpthread -lrt
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(testdir)
