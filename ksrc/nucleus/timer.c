@@ -99,20 +99,15 @@ static void xntimer_do_start_aperiodic(xntimer_t *timer,
 	if (!testbits(timer->status, XNTIMER_DEQUEUED))
 		xntimer_dequeue_aperiodic(timer);
 
-	if (value != XN_INFINITE) {
-		xntimerh_date(&timer->aplink) =
-		    xnarch_get_cpu_tsc() + xnarch_ns_to_tsc(value);
-		timer->interval = xnarch_ns_to_tsc(interval);
-		xntimer_enqueue_aperiodic(timer);
-		if (xntimer_heading_p(timer)) {
-			if (xntimer_sched(timer) != xnpod_current_sched())
-				xntimer_next_remote_shot(xntimer_sched(timer));
-			else
-				xntimer_next_local_shot(xntimer_sched(timer));
-		}
-	} else {
-		xntimerh_date(&timer->aplink) = XN_INFINITE;
-		timer->interval = XN_INFINITE;
+	xntimerh_date(&timer->aplink) =
+	    xnarch_get_cpu_tsc() + xnarch_ns_to_tsc(value);
+	timer->interval = xnarch_ns_to_tsc(interval);
+	xntimer_enqueue_aperiodic(timer);
+	if (xntimer_heading_p(timer)) {
+		if (xntimer_sched(timer) != xnpod_current_sched())
+			xntimer_next_remote_shot(xntimer_sched(timer));
+		else
+			xntimer_next_local_shot(xntimer_sched(timer));
 	}
 }
 
@@ -298,14 +293,9 @@ static void xntimer_do_start_periodic(xntimer_t *timer,
 	if (!testbits(timer->status, XNTIMER_DEQUEUED))
 		xntimer_dequeue_periodic(timer);
 
-	if (value != XN_INFINITE) {
-		xntlholder_date(&timer->plink) = nkpod->jiffies + value;
-		timer->interval = interval;
-		xntimer_enqueue_periodic(timer);
-	} else {
-		xntlholder_date(&timer->plink) = XN_INFINITE;
-		timer->interval = XN_INFINITE;
-	}
+	xntlholder_date(&timer->plink) = nkpod->jiffies + value;
+	timer->interval = interval;
+	xntimer_enqueue_periodic(timer);
 }
 
 static void xntimer_do_stop_periodic(xntimer_t *timer)
