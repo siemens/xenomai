@@ -42,9 +42,7 @@
 extern "C" {
 #endif
 
-
 extern int __rtdm_muxid;
-
 
 int __init rtdm_syscall_init(void);
 
@@ -56,6 +54,10 @@ static inline void rtdm_syscall_cleanup(void)
 #ifdef __cplusplus
 }
 #endif
+
+#elif !defined(__XENO_SIM__)
+
+#include <nucleus/bind.h>
 
 #endif /* __KERNEL__ */
 

@@ -40,7 +40,7 @@ void __init_xeno_interface(void)
 	TCB *tcb;
 
 	__vrtx_muxid =
-	    xeno_user_skin_init(VRTX_SKIN_MAGIC, "VRTX", "xeno_vrtx");
+	    xeno_bind_skin(VRTX_SKIN_MAGIC, "vrtx", "xeno_vrtx");
 
 	/* Allocate a TSD key for indexing self task pointers. */
 

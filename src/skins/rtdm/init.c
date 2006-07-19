@@ -24,52 +24,13 @@
 
 int __rtdm_muxid = -1;
 
-static __attribute__((constructor)) void __init_rtdm_interface(void)
-
+static __attribute__ ((constructor))
+void __init_rtdm_interface(void)
 {
-    xnfeatinfo_t finfo;
-    int muxid;
+	/* The following call may fail; binding errors will be
+	   eventually caught later when the user tries to open a
+	   device or socket. */
 
-#ifdef xeno_arch_features_check
-    xeno_arch_features_check();
-#endif /* xeno_arch_features_check */
-
-    muxid = XENOMAI_SYSBIND(RTDM_SKIN_MAGIC,
-			    XENOMAI_FEAT_DEP,
-			    XENOMAI_ABI_REV,
-			    &finfo);
-    switch (muxid)
-	{
-	case -EINVAL:
-
-	    fprintf(stderr,"Xenomai: incompatible feature set\n");
-	    fprintf(stderr,"(required=\"%s\", present=\"%s\", missing=\"%s\").\n",
-		    finfo.feat_man_s,finfo.feat_all_s,finfo.feat_mis_s);
-	    exit(1);
-
-	case -ENOEXEC:
-
-	    fprintf(stderr,"Xenomai: incompatible ABI revision level\n");
-	    fprintf(stderr,"(needed=%lu, current=%lu).\n",
-		    XENOMAI_ABI_REV,finfo.abirev);
-	    exit(1);
-
-	case -ENOSYS:
-	case -ESRCH:
-
-	    /* we ignore this and fail later when the user tries to open
-	       a device or socket. */
-	    break;
-
-	default:
-
-	    if (muxid < 0)
-		{
-		fprintf(stderr,"Xenomai: binding failed: %s.\n",strerror(-muxid));
-		exit(1);
-		}
-
-	    __rtdm_muxid = muxid;
-	    break;
-	}
+	__rtdm_muxid =
+		xeno_bind_skin_opt(RTDM_SKIN_MAGIC, "rtdm", "xeno_rtdm");
 }

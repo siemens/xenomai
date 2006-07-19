@@ -40,7 +40,7 @@ void __init_posix_interface(void)
 	int muxid, err;
 
 	__pse51_muxid =
-	    xeno_user_skin_init(PSE51_SKIN_MAGIC, "POSIX", "xeno_posix");
+	    xeno_bind_skin(PSE51_SKIN_MAGIC, "POSIX", "xeno_posix");
 
 	muxid = XENOMAI_SYSBIND(RTDM_SKIN_MAGIC,
 				XENOMAI_FEAT_DEP, XENOMAI_ABI_REV, NULL);

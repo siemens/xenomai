@@ -3095,7 +3095,7 @@ int xnpod_start_timer(u_long nstick, xnisr_t tickhandler)
 
 	xntimer_set_sched(&nkpod->htimer, xnpod_sched_slot(XNTIMER_KEEPER_ID));
 
-	if (delta) {
+	if (XNARCH_HOST_TICK) {
 		xnlock_get_irqsave(&nklock, s);
 		xntimer_start(&nkpod->htimer, delta,
 			      XNARCH_HOST_TICK / nkpod->tickvalue);
