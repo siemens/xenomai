@@ -87,11 +87,13 @@ static u_long tm_start_event_timer(u_long ticks,
 	tm->magic = PSOS_TM_MAGIC;
 
 	xnlock_get_irqsave(&nklock, s);
+
 	appendq(&psostimerq, &tm->link);
 	appendgq(&tm->owner->alarmq, tm);
-	xnlock_put_irqrestore(&nklock, s);
 
 	xntimer_start(&tm->timerbase, ticks, interval);
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	return SUCCESS;
 }
