@@ -90,6 +90,13 @@ static xnpnode_t wd_pnode = {
 
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
+static void wind_wd_trampoline(xntimer_t *timer)
+{
+	wind_wd_t *wd = container_of(timer, wind_wd_t, timerbase);
+
+	wd->handler(wd->arg);
+}
+
 void wind_wd_init(void)
 {
 	initq(&wind_wd_q);
@@ -172,7 +179,9 @@ STATUS wdStart(WDOG_ID wdog_id, int timeout, wind_timer_t handler, long arg)
 	else
 		xntimer_stop(&wd->timerbase);
 
-	xntimer_init(&wd->timerbase, (void (*)(void *))handler, (void *)arg);
+	xntimer_init(&wd->timerbase, wind_wd_trampoline);
+	wd->handler = handler;
+	wd->arg = arg;
 
 	xntimer_start(&wd->timerbase, timeout, XN_INFINITE);
 

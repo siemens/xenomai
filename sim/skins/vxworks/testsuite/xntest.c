@@ -63,7 +63,7 @@ static inline int strings_differ(const char *str1, const char *str2)
     return ((!str1 || !str2) ? str1!=str2 : strcmp(str1, str2));
 }
 
-static void interrupt_test (void *dummy)
+static void interrupt_test (xntimer_t *dummy)
 {
    xnpod_fatal("\ntest interrupted by watchdog.\n");
 }
@@ -78,7 +78,7 @@ void xntest_start(void)
         xntest_verbose = module_param_value(xntest_verbose);
 
     xnlock_get_irqsave(&test_lock, s);
-    xntimer_init(&watchdog, interrupt_test, 0);
+    xntimer_init(&watchdog, interrupt_test);
     xntimer_start(&watchdog, xnpod_ns2ticks(test_timeout * 1000000000ULL), XN_INFINITE);
 
     initq(&marks_q);

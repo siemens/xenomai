@@ -139,6 +139,9 @@ typedef struct wind_wd {
 
     xntimer_t timerbase;
 
+    wind_timer_t handler;
+    long arg;
+
 #ifdef CONFIG_XENO_OPT_REGISTRY
     xnhandle_t handle;
     char name[XNOBJECT_NAME_LEN];

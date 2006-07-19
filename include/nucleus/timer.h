@@ -226,9 +226,7 @@ typedef struct xntimer {
     struct xnsched *sched;      /* !< Sched structure to which the timer is
                                    attached. */
 
-    void (*handler)(void *cookie); /* !< Timeout handler. */
-
-    void *cookie;	/* !< Cookie to pass to the timeout handler. */
+    void (*handler)(struct xntimer *timer); /* !< Timeout handler. */
 
     XNARCH_DECL_DISPLAY_CONTEXT();
 
@@ -288,8 +286,7 @@ extern "C" {
 extern xntmops_t *nktimer;
 
 void xntimer_init(xntimer_t *timer,
-		  void (*handler)(void *cookie),
-		  void *cookie);
+		  void (*handler)(xntimer_t *timer));
 
 void xntimer_destroy(xntimer_t *timer);
 

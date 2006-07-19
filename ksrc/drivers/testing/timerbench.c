@@ -165,9 +165,10 @@ void timer_task_proc(void *arg)
 }
 
 
-void timer_proc(void *arg)
+void timer_proc(xntimer_t *timer)
 {
-    struct rt_tmbench_context   *ctx = (struct rt_tmbench_context *)arg;
+    struct rt_tmbench_context   *ctx =
+        container_of(timer, struct rt_tmbench_context, timer);
 
 
     eval_inner_loop(ctx, (long)(rtdm_clock_read() - ctx->date));
@@ -309,7 +310,7 @@ int rt_tmbench_ioctl_nrt(struct rtdm_dev_context *context,
                 }
             } else {
                 /* FIXME: convert to RTDM timers */
-                xntimer_init(&ctx->timer, timer_proc, ctx);
+                xntimer_init(&ctx->timer, timer_proc);
 
                 ctx->curr.test_loops = 0;
 

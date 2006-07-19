@@ -390,7 +390,7 @@ int xnpod_init(xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
 	/* No direct handler here since the host timer processing is
 	   postponed to xnintr_irq_handler(), as part of the interrupt
 	   exit code. */
-	xntimer_init(&pod->htimer, NULL, NULL);
+	xntimer_init(&pod->htimer, NULL);
 	xntimer_set_priority(&pod->htimer, XNTIMER_LOPRIO);
 
 	xnlock_put_irqrestore(&nklock, s);

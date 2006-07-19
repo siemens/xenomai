@@ -25,16 +25,16 @@
 #include <nucleus/thread.h>
 #include <nucleus/module.h>
 
-static void xnthread_timeout_handler(void *cookie)
+static void xnthread_timeout_handler(xntimer_t *timer)
 {
-	xnthread_t *thread = (xnthread_t *)cookie;
+	xnthread_t *thread = container_of(timer, xnthread_t, rtimer);
 	__setbits(thread->status, XNTIMEO);	/* Interrupts are off. */
 	xnpod_resume_thread(thread, XNDELAY);
 }
 
-static void xnthread_periodic_handler(void *cookie)
+static void xnthread_periodic_handler(xntimer_t *timer)
 {
-	xnthread_t *thread = (xnthread_t *)cookie;
+	xnthread_t *thread = container_of(timer, xnthread_t, ptimer);
 
 	if (xnthread_test_flags(thread, XNDELAY))	/* Prevent unwanted round-robin. */
 		xnpod_resume_thread(thread, XNDELAY);
@@ -46,9 +46,9 @@ int xnthread_init(xnthread_t *thread,
 {
 	int err;
 
-	xntimer_init(&thread->rtimer, &xnthread_timeout_handler, thread);
+	xntimer_init(&thread->rtimer, &xnthread_timeout_handler);
 	xntimer_set_priority(&thread->rtimer, XNTIMER_HIPRIO);
-	xntimer_init(&thread->ptimer, &xnthread_periodic_handler, thread);
+	xntimer_init(&thread->ptimer, &xnthread_periodic_handler);
 	xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
 
 	/* Setup the TCB. */
