@@ -1,3 +1,9 @@
+2006-07-19  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* src/skins/posix/init.c (__init_posix_interface): Register
+	__init_posix_interface to be called by process children when
+	forking.
+
 2006-07-18  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.14-1.3-05.

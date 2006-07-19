@@ -30,6 +30,7 @@
 int __pse51_muxid = -1;
 int __rtdm_muxid = -1;
 int __rtdm_fd_start = INT_MAX;
+static int fork_handler_registered;
 
 int __wrap_pthread_setschedparam(pthread_t, int, const struct sched_param *);
 
@@ -58,9 +59,9 @@ void __init_posix_interface(void)
 	}
 
 	parm.sched_priority = 0;
-	if ((err =
-	     __wrap_pthread_setschedparam(pthread_self(), SCHED_OTHER,
-					  &parm))) {
+	err = __wrap_pthread_setschedparam(pthread_self(), SCHED_OTHER,
+					   &parm);
+	if (err) {
 		fprintf(stderr, "Xenomai Posix skin init: "
 			"pthread_setschedparam: %s\n", strerror(err));
 		exit(EXIT_FAILURE);
@@ -69,5 +70,15 @@ void __init_posix_interface(void)
 	if (munlockall()) {
 		perror("Xenomai Posix skin init: munlockall");
 		exit(EXIT_FAILURE);
+	}
+
+	if (!fork_handler_registered) {
+		err = pthread_atfork(NULL, NULL, &__init_posix_interface);
+		if (err) {
+			fprintf(stderr, "Xenomai Posix skin init: "
+				"pthread_atfork: %s\n", strerror(err));
+			exit(EXIT_FAILURE);
+		}
+		fork_handler_registered = 1;
 	}
 }
