@@ -74,7 +74,7 @@
  #ifndef CONFIG_VIRT_CPU_ACCOUNTING
  static inline void account_user_vtime(struct task_struct *tsk)
 --- 2.6.14/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/include/linux/ipipe.h	2006-07-06 09:56:39.000000000 +0200
++++ 2.6.14-ipipe/include/linux/ipipe.h	2006-07-19 18:11:28.000000000 +0200
 @@ -0,0 +1,739 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
@@ -306,32 +306,32 @@
 +} while(0)
 +
 +#ifdef __RAW_SPIN_LOCK_UNLOCKED
-+#define spin_lock_hw(x)			_raw_spin_lock(x)
-+#define spin_trylock_hw(x)		_raw_spin_trylock(x)
-+#define spin_unlock_hw(x)		_raw_spin_unlock(x)
++#define spin_lock_hw(x)		__raw_spin_lock(&(x)->raw_lock)
++#define spin_trylock_hw(x)		__raw_spin_trylock(&(x)->raw_lock)
++#define spin_unlock_hw(x)		__raw_spin_unlock(&(x)->raw_lock)
 +#if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
-+#define write_lock_hw(x)		_raw_write_lock(x)
-+#define write_trylock_hw(x)		_raw_write_trylock(x)
-+#define write_unlock_hw(x)		_raw_write_unlock(x)
-+#define read_lock_hw(x)			_raw_read_lock(x)
-+#define read_trylock_hw(x)		_raw_read_trylock(x)
-+#define read_unlock_hw(x)		_raw_read_unlock(x)
++#define write_lock_hw(x)		__raw_write_lock(&(x)->raw_lock)
++#define write_trylock_hw(x)		__raw_write_trylock(&(x)->raw_lock)
++#define write_unlock_hw(x)		__raw_write_unlock(&(x)->raw_lock)
++#define read_lock_hw(x)		__raw_read_lock(&(x)->raw_lock)
++#define read_trylock_hw(x)		__raw_read_trylock(&(x)->raw_lock)
++#define read_unlock_hw(x)		__raw_read_unlock(&(x)->raw_lock)
 +#else /* UP non-debug */
 +#define write_lock_hw(lock)		do { (void)(lock); } while (0)
-+#define write_trylock_hw(lock)		({ (void)(lock); 1; })
++#define write_trylock_hw(lock)	({ (void)(lock); 1; })
 +#define write_unlock_hw(lock)		do { (void)(lock); } while (0)
 +#define read_lock_hw(lock)		do { (void)(lock); } while (0)
 +#define read_trylock_hw(lock)		({ (void)(lock); 1; })
 +#define read_unlock_hw(lock)		do { (void)(lock); } while (0)
 +#endif /* CONFIG_SMP || CONFIG_DEBUG_SPINLOCK */
 +#else	/* !__RAW_SPIN_LOCK_UNLOCKED */
-+#define spin_lock_hw(x)			_spin_lock(x)
++#define spin_lock_hw(x)		_spin_lock(x)
 +#define spin_unlock_hw(x)		_spin_unlock(x)
 +#define spin_trylock_hw(x)		_spin_trylock(x)
 +#define write_lock_hw(x)		_write_lock(x)
 +#define write_unlock_hw(x)		_write_unlock(x)
 +#define write_trylock_hw(x)		_write_trylock(x)
-+#define read_lock_hw(x)			_read_lock(x)
++#define read_lock_hw(x)		_read_lock(x)
 +#define read_unlock_hw(x)		_read_unlock(x)
 +#endif	/* __RAW_SPIN_LOCK_UNLOCKED */
 +
@@ -4498,7 +4498,7 @@
  
  #define mask_irq(irq) ({if (irq_desc[irq].handler && irq_desc[irq].handler->disable) irq_desc[irq].handler->disable(irq);})
 --- 2.6.14/include/asm-ppc/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/include/asm-ppc/ipipe.h	2006-07-18 17:48:09.000000000 +0200
++++ 2.6.14-ipipe/include/asm-ppc/ipipe.h	2006-07-19 16:43:51.000000000 +0200
 @@ -0,0 +1,207 @@
 +/* -*- linux-c -*-
 + * include/asm-ppc/ipipe.h
@@ -4536,10 +4536,10 @@
 +#include <linux/cpumask.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.3-05"
++#define IPIPE_ARCH_STRING	"1.3-06"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	3
-+#define IPIPE_PATCH_NUMBER	5
++#define IPIPE_PATCH_NUMBER	6
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
