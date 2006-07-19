@@ -290,9 +290,52 @@ void xntimer_init(xntimer_t *timer,
 
 void xntimer_destroy(xntimer_t *timer);
 
-void xntimer_start(xntimer_t *timer,
-		   xnticks_t value,
-		   xnticks_t interval);
+/*!
+ * \fn void xntimer_start(xntimer_t *timer,xnticks_t value,xnticks_t interval)
+ * \brief Arm a timer.
+ *
+ * Activates a timer so that the associated timeout handler will be
+ * fired after each expiration time. A timer can be either periodic or
+ * single-shot, depending on the reload value passed to this
+ * routine. The given timer must have been previously initialized by a
+ * call to xntimer_init().
+ *
+ * @param timer The address of a valid timer descriptor.
+ *
+ * @param value The relative date of the initial timer shot, expressed
+ * in clock ticks (see note).
+ *
+ * @param interval The reload value of the timer. It is a periodic
+ * interval value to be used for reprogramming the next timer shot,
+ * expressed in clock ticks (see note). If @a interval is equal to
+ * XN_INFINITE, the timer will not be reloaded after it has expired.
+ *
+ * @return 0 is always returned.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: never.
+ *
+ * @note This service is sensitive to the current operation mode of
+ * the system timer, as defined by the xnpod_start_timer() service. In
+ * periodic mode, clock ticks are interpreted as periodic jiffies. In
+ * oneshot mode, clock ticks are interpreted as nanoseconds.
+ *
+ * @note Must be called with nklock held, IRQs off.
+ */
+
+static inline void xntimer_start(xntimer_t *timer,
+                                 xnticks_t value, xnticks_t interval)
+{
+    nktimer->do_timer_start(timer, value, interval);
+}
 
 /*!
  * \fn int xntimer_stop(xntimer_t *timer)
@@ -315,6 +358,8 @@ void xntimer_start(xntimer_t *timer,
  * - User-space task
  *
  * Rescheduling: never.
+ *
+ * @note Must be called with nklock held, IRQs off.
  */
 
 static inline void xntimer_stop(xntimer_t *timer)
