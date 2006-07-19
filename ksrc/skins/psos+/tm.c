@@ -57,9 +57,9 @@ void tm_destroy_internal(psostm_t *tm)
 	xnfree(tm);
 }
 
-static void tm_evpost_handler(void *cookie)
+static void tm_evpost_handler(xntimer_t *timer)
 {
-	psostm_t *tm = (psostm_t *)cookie;
+	psostm_t *tm = container_of(timer, psostm_t, timerbase);
 
 	ev_send((u_long)tm->owner, tm->events);
 
@@ -83,7 +83,7 @@ static u_long tm_start_event_timer(u_long ticks,
 	tm->owner = psos_current_task();
 	*tmid = (u_long)tm;
 
-	xntimer_init(&tm->timerbase, tm_evpost_handler, tm);
+	xntimer_init(&tm->timerbase, tm_evpost_handler);
 	tm->magic = PSOS_TM_MAGIC;
 
 	xnlock_get_irqsave(&nklock, s);

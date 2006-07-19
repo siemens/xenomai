@@ -117,9 +117,9 @@ void __native_alarm_pkg_cleanup(void)
 {
 }
 
-static void __alarm_trampoline(void *cookie)
+static void __alarm_trampoline(xntimer_t *timer)
 {
-	RT_ALARM *alarm = (RT_ALARM *)cookie;
+	RT_ALARM *alarm = container_of(timer, RT_ALARM, timer_base);
 	++alarm->expiries;
 	alarm->handler(alarm, alarm->cookie);
 }
@@ -189,7 +189,7 @@ int rt_alarm_create(RT_ALARM *alarm,
 	if (xnpod_asynch_p())
 		return -EPERM;
 
-	xntimer_init(&alarm->timer_base, &__alarm_trampoline, alarm);
+	xntimer_init(&alarm->timer_base, &__alarm_trampoline);
 	alarm->handle = 0;	/* i.e. (still) unregistered alarm. */
 	alarm->magic = XENO_ALARM_MAGIC;
 	alarm->expiries = 0;

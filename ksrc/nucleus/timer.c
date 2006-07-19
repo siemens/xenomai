@@ -212,7 +212,7 @@ static void xntimer_do_tick_aperiodic(void)
 
 		if (timer != &nkpod->htimer) {
 			if (!testbits(nkpod->status, XNTLOCK)) {
-				timer->handler(timer->cookie);
+				timer->handler(timer);
 
 				if (timer->interval == XN_INFINITE ||
 				    !testbits(timer->status, XNTIMER_DEQUEUED)
@@ -388,7 +388,7 @@ static void xntimer_do_tick_periodic(void)
 
 		if (timer != &nkpod->htimer) {
 			if (!testbits(nkpod->status, XNTLOCK)) {
-				timer->handler(timer->cookie);
+				timer->handler(timer);
 
 				if (timer->interval == XN_INFINITE ||
 				    !testbits(timer->status, XNTIMER_DEQUEUED)
@@ -461,7 +461,7 @@ void xntimer_set_periodic_mode(void)
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
 /*! 
- * \fn void xntimer_init(xntimer_t *timer,void (*handler)(void *cookie),void *cookie)
+ * \fn void xntimer_init(xntimer_t *timer,void (*handler)(xntimer_t *timer))
  * \brief Initialize a timer object.
  *
  * Creates a timer. When created, a timer is left disarmed; it must be
@@ -473,9 +473,6 @@ void xntimer_set_periodic_mode(void)
  * permanent memory.
  *
  * @param handler The routine to call upon expiration of the timer.
- *
- * @param cookie A user-defined opaque cookie the nucleus will pass
- * unmodified to the handler as its unique argument.
  *
  * There is no limitation on the number of timers which can be
  * created/active concurrently.
@@ -492,8 +489,7 @@ void xntimer_set_periodic_mode(void)
  * Rescheduling: never.
  */
 
-void xntimer_init(xntimer_t *timer,
-		  void (*handler) (void *cookie), void *cookie)
+void xntimer_init(xntimer_t *timer, void (*handler) (xntimer_t *timer))
 {
 	/* CAUTION: Setup from xntimer_init() must not depend on the
 	   periodic/aperiodic timing mode. */
@@ -507,7 +503,6 @@ void xntimer_init(xntimer_t *timer,
 	xntimer_set_priority(timer, XNTIMER_STDPRIO);
 	timer->status = XNTIMER_DEQUEUED;
 	timer->handler = handler;
-	timer->cookie = cookie;
 	timer->interval = 0;
 	timer->sched = xnpod_current_sched();
 
