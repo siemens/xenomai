@@ -23,7 +23,8 @@
 
 #include <asm-generic/xenomai/syscall.h>
 
-#define __xn_mux_code(id,op)        ((op << 24)|(((id << 16) & 0xff0000UL)|(__xn_sys_mux & 0xffffUL)))
+#define __xn_mux_code(shifted_id,op) ((op << 24)|shifted_id|(__xn_sys_mux & 0xffffUL))
+#define __xn_mux_shifted_id(id) ((id << 16) & 0xff0000UL)
 
 #ifdef __KERNEL__
 
@@ -151,17 +152,17 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
   /* Branch registers.  */						\
   "b6", "b7"
 
-#define XENOMAI_SKIN_MUX(nr, id, op, args...)                   \
-  ({                                                            \
-    register long _r15 asm ("r15") = (__xn_mux_code(id,op));    \
-    register long _retval asm ("r8");                           \
-    register long err asm ("r10");                              \
-    LOAD_ARGS_##nr (args);                                      \
-    __asm __volatile ("break %3;;\n\t"                          \
-                      : "=r" (_retval), "=r" (_r15), "=r" (err) \
-                      : "i" (__BREAK_SYSCALL), "1" (_r15)       \
-			ASM_ARGS_##nr                           \
-                      : "memory" ASM_CLOBBERS_##nr);            \
+#define XENOMAI_SKIN_MUX(nr, shifted_id, op, args...)			\
+  ({									\
+    register long _r15 asm ("r15") = (__xn_mux_code(shifted_id,op));	\
+    register long _retval asm ("r8");					\
+    register long err asm ("r10");					\
+    LOAD_ARGS_##nr (args);						\
+    __asm __volatile ("break %3;;\n\t"					\
+		      : "=r" (_retval), "=r" (_r15), "=r" (err)		\
+		      : "i" (__BREAK_SYSCALL), "1" (_r15)		\
+			ASM_ARGS_##nr					\
+		      : "memory" ASM_CLOBBERS_##nr);			\
     err < 0 ? -_retval : _retval; })
 
 #define XENOMAI_SYS_MUX(nr, op, args...) XENOMAI_SKIN_MUX(nr, 0, op , ##args)

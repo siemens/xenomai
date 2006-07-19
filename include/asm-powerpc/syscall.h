@@ -25,7 +25,8 @@
 
 #include <asm-generic/xenomai/syscall.h>
 
-#define __xn_mux_code(id,op)        ((op << 24)|((id << 16) & 0xff0000)|(__xn_sys_mux & 0xffff))
+#define __xn_mux_code(shifted_id,op) ((op << 24)|shifted_id|(__xn_sys_mux & 0xffff))
+#define __xn_mux_shifted_id(id) ((id << 16) & 0xff0000)
 
 #ifdef __KERNEL__
 
@@ -123,7 +124,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define ASM_INPUT_4 ASM_INPUT_3, "4" (__sc_6)
 #define ASM_INPUT_5 ASM_INPUT_4, "5" (__sc_7)
 
-#define XENOMAI_DO_SYSCALL(nr, id, op, args...)			\
+#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)		\
   ({								\
 	register unsigned long __sc_0  __asm__ ("r0");		\
 	register unsigned long __sc_3  __asm__ ("r3");		\
@@ -132,7 +133,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 	register unsigned long __sc_6  __asm__ ("r6");		\
 	register unsigned long __sc_7  __asm__ ("r7");		\
 								\
-	LOADARGS_##nr(__xn_mux_code(id,op), args);		\
+	LOADARGS_##nr(__xn_mux_code(shifted_id,op), args);	\
 	__asm__ __volatile__					\
 		("sc           \n\t"				\
 		 "mfcr %0      "				\

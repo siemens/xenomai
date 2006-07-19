@@ -25,7 +25,8 @@
 
 #include <asm-generic/xenomai/syscall.h>
 
-#define __xn_mux_code(id,op)    ((op << 24)|((id << 16) & 0xff0000)|(__xn_sys_mux & 0xffff))
+#define __xn_mux_code(shifted_id,op) ((op << 24)|shifted_id|(__xn_sys_mux & 0xffff))
+#define __xn_mux_shifted_id(id) ((id << 16) & 0xff0000)
 
 #define XENO_ARM_SYSCALL        0x009F0042	/* carefully chosen... */
 
@@ -130,20 +131,20 @@ static inline int __xn_interrupted_p(struct pt_regs *regs) {
 #define __sys2(x)	#x
 #define __sys1(x)	__sys2(x)
 
-#define XENOMAI_DO_SYSCALL(nr, id, op, args...)			\
-  ({								                    \
-        unsigned long __res;					        \
+#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)		\
+  ({								\
+        unsigned long __res;					\
 	register unsigned long __res_r0 __asm__ ("r0");		\
-   	ASM_INDECL_##nr;					                \
-								                        \
-	LOADARGS_##nr(__xn_mux_code(id,op), args);		    \
-	__asm__ __volatile__ (					            \
-"       swi " __sys1(XENO_ARM_SYSCALL)			        \
-		: "=r" (__res_r0)				                \
-		: ASM_INPUT_##nr				                \
-		: "memory");					                \
-   	__res = __res_r0;					                \
-   	(int) __res;						                \
+   	ASM_INDECL_##nr;					\
+								\
+	LOADARGS_##nr(__xn_mux_code(shifted_id,op), args);	\
+	__asm__ __volatile__ (					\
+"       swi " __sys1(XENO_ARM_SYSCALL)				\
+		: "=r" (__res_r0)				\
+		: ASM_INPUT_##nr				\
+		: "memory");					\
+   	__res = __res_r0;					\
+   	(int) __res;						\
   })
 
 #define XENOMAI_SYSCALL0(op)                XENOMAI_DO_SYSCALL(0,0,op)
