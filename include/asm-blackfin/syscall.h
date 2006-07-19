@@ -26,7 +26,8 @@
    marker. Note: watch out for the p0 sign convention used by Linux
    (i.e. negative syscall number in orig_p0 meaning "non-syscall
    entry"). */
-#define __xn_mux_code(id,op)   ((id << 24)|((op << 16) & 0xff0000)|(__xn_sys_mux & 0xffff))
+#define __xn_mux_code(shifted_id,op) (shifted_id|((op << 16) & 0xff0000)|(__xn_sys_mux & 0xffff))
+#define __xn_mux_shifted_id(id) (id << 24)
 
 /* Local syscalls -- the braindamage thing about this arch is the
    absence of atomic ops usable from user-space; so we export what
@@ -213,7 +214,8 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
   __res;								\
 })
 
-#define XENOMAI_DO_SYSCALL(nr, id, op, args...)	__emit_syscall##nr(__xn_mux_code(id,op), ##args)
+#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...) \
+    __emit_syscall##nr(__xn_mux_code(shifted_id,op), ##args)
 
 #define XENOMAI_SYSCALL0(op)                XENOMAI_DO_SYSCALL(0,0,op)
 #define XENOMAI_SYSCALL1(op,a1)             XENOMAI_DO_SYSCALL(1,0,op,a1)

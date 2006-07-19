@@ -22,7 +22,8 @@
 
 #include <asm-generic/xenomai/syscall.h>
 
-#define __xn_mux_code(id,op)  ((op << 24)|((id << 16) & 0xff0000)|(__xn_sys_mux & 0x7fff))
+#define __xn_mux_code(shifted_id,op) ((op << 24)|shifted_id|(__xn_sys_mux & 0x7fff))
+#define __xn_mux_shifted_id(id) ((id << 16) & 0xff0000)
 
 #ifdef __KERNEL__
 
@@ -165,9 +166,9 @@ asm (".L__X'%ebx = 1\n\t"
     : "i" (__xn_mux_code(0,op)) ASMFMT_##nr(args) : "memory", "cc");  \
     (int) resultvar; })
 
-#define XENOMAI_SKIN_MUX(nr, id, op, args...) \
+#define XENOMAI_SKIN_MUX(nr, shifted_id, op, args...) \
   ({								      \
-    int muxcode = __xn_mux_code(id,op);                               \
+    int muxcode = __xn_mux_code(shifted_id,op);			      \
     unsigned resultvar;						      \
     asm volatile (						      \
     LOADARGS_##nr						      \

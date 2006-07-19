@@ -45,7 +45,7 @@ void __init_posix_interface(void)
 	muxid = XENOMAI_SYSBIND(RTDM_SKIN_MAGIC,
 				XENOMAI_FEAT_DEP, XENOMAI_ABI_REV, NULL);
 	if (muxid > 0) {
-		__rtdm_muxid = muxid;
+		__rtdm_muxid = __xn_mux_shifted_id(muxid);
 		__rtdm_fd_start = FD_SETSIZE - XENOMAI_SKINCALL0(__rtdm_muxid,
 								 __rtdm_fdcount);
 	}

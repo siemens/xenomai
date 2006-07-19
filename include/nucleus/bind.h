@@ -88,7 +88,7 @@ xeno_user_skin_init(unsigned skin_magic, const char *skin, const char *module)
     sa.sa_flags = 0;
     sigaction(SIGXCPU,&sa,NULL);
 
-    return muxid;
+    return __xn_mux_shifted_id(muxid);
 }
 
 #endif /* _XENO_NUCLEUS_BIND_H */
