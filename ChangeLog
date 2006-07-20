@@ -1,3 +1,7 @@
+2006-07-20  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/drivers/testing/Config.in: Add irqbench to 2.4 build.
+
 2006-07-20  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-*/system.h: Cleanup the arch-dep layer, splitting
