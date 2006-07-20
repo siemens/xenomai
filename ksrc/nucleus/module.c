@@ -35,8 +35,6 @@
 #include <nucleus/core.h>
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 #include <nucleus/ltt.h>
-#include <linux/init.h>
-#include <asm/xenomai/calibration.h>
 #include <asm/xenomai/bits/init.h>
 
 MODULE_DESCRIPTION("Xenomai nucleus");
