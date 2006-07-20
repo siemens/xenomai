@@ -1,6 +1,6 @@
 config XENO_SKIN_UVM
 	depends on XENO_OPT_NUCLEUS && XENO_OPT_PERVASIVE
-	tristate "User-space VM support"
+	tristate "User-space VM support (DEPRECATED)"
 	default n
 	help
 
@@ -9,3 +9,11 @@ config XENO_SKIN_UVM
 	with hard real-time capabilities. The application and the RTOS
 	will be self-contained and sandboxed in a single regular Linux
 	process.
+
+	This feature is deprecated, and will be removed from the next
+	major Xenomai release. Applications should rather use
+	the system call interface library available with the
+	real-time skin of interest (e.g. link against libvxworks.so
+	instead of libvxworks_uvm.so), which directly invokes
+	real-time services implemented by the skin module, on behalf
+	of the Linux process.

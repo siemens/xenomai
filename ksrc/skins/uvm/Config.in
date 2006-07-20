@@ -3,5 +3,5 @@
 #
 
 if [ "$CONFIG_XENO_OPT_PERVASIVE" = "y" ]; then
-    dep_tristate 'User-space VM support' CONFIG_XENO_SKIN_UVM $CONFIG_XENO_OPT_NUCLEUS
+    dep_tristate 'User-space VM support (DEPRECATED)' CONFIG_XENO_SKIN_UVM $CONFIG_XENO_OPT_NUCLEUS
 fi
