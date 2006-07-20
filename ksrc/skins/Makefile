@@ -2,7 +2,7 @@ ifeq ($(PATCHLEVEL),6)
 
 # Makefile frag for Linux v2.6
 
-obj-$(CONFIG_XENOMAI) += native/ posix/ rtdm/ uvm/ psos+/ vrtx/ vxworks/ uitron/ rtai/
+obj-$(CONFIG_XENOMAI) += native/ posix/ rtdm/ psos+/ vrtx/ vxworks/ uitron/ rtai/
 
 else
 
@@ -11,7 +11,6 @@ else
 subdir-$(CONFIG_XENO_SKIN_NATIVE) += native
 subdir-$(CONFIG_XENO_SKIN_POSIX) += posix
 subdir-$(CONFIG_XENO_SKIN_RTDM) += rtdm
-subdir-$(CONFIG_XENO_SKIN_UVM) += uvm
 subdir-$(CONFIG_XENO_SKIN_PSOS) += psos+
 subdir-$(CONFIG_XENO_SKIN_VRTX) += vrtx
 subdir-$(CONFIG_XENO_SKIN_VXWORKS) += vxworks

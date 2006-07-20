@@ -136,8 +136,6 @@ binding is strong.
 NAME                 DESCRIPTION                     [BINDING,]DEFAULT(*)
 
 --prefix             Installation directory          /usr/xenomai
---enable-uvm         Build UVM support               enabled
---enable-uvm-heapsz  system heap size for UVMs       128 (kb)
 --enable-debug       Enable debug symbols (-g)       disabled
 --enable-smp         Enable SMP support              weak,disabled
 

@@ -42,7 +42,7 @@
  * requests ranging from the maximum page size to twice this size.
  */
 
-#if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)
+#if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #define XNHEAP_MINLOG2    3
 #define XNHEAP_MAXLOG2    22
@@ -215,7 +215,7 @@ int xnheap_check_block(xnheap_t *heap,
 }
 #endif
 
-#endif /* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */
+#endif /* __KERNEL__ || __XENO_SIM__ */
 
 #define XNHEAP_DEV_NAME  "/dev/rtheap"
 

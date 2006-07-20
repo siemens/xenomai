@@ -1,3 +1,9 @@
+2006-07-20  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/uvm, src/skins/uvm, include/asm-uvm: Remove the UVM
+	support, which became obsolete with the generalization of direct
+	syscall interfaces to skin modules.
+
 2006-07-19  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* src/skins/posix/init.c (__init_posix_interface): Register

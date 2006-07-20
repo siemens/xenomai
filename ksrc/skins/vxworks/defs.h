@@ -167,7 +167,7 @@ typedef struct wind_wd {
    uses an ascending [0-256] priority scale (include/nucleus/core.h),
    whilst the VxWorks personality exhibits a decreasing scale
    [255-0]. Normalization is not needed when the underlying pod
-   supporting the VxWorks skin is standalone, i.e. pure kernel, UVM or
+   supporting the VxWorks skin is standalone, i.e. pure kernel, or
    simulation modes. */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
