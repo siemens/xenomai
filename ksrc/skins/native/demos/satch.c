@@ -115,18 +115,3 @@ void root_thread_exit (void)
     rt_task_delete(&producer_task);
     rt_task_delete(&consumer_task);
 }
-
-#ifndef __XENO_SIM__
-
-int main (int ac, char *av[])
-
-{
-    mlockall(MCL_CURRENT|MCL_FUTURE);
-    root_thread_init();
-    pause();
-    root_thread_exit();
-
-    return 0;
-}
-
-#endif /* __XENO_SIM__ */

@@ -24,6 +24,9 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
+#include <linux/init.h>
+#include <asm/xenomai/calibration.h>
+
 int xnarch_escalation_virq;
 
 int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo);
