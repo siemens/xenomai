@@ -17,8 +17,8 @@
  * 02111-1307, USA.
  */
 
-#ifndef _XENO_ASM_BFINNOMMU_CALIBRATION_H
-#define _XENO_ASM_BFINNOMMU_CALIBRATION_H
+#ifndef _XENO_ASM_BLACKFIN_CALIBRATION_H
+#define _XENO_ASM_BLACKFIN_CALIBRATION_H
 
 #include <linux/config.h>
 
@@ -42,4 +42,4 @@ static inline unsigned long xnarch_get_sched_latency (void)
 
 #undef __sched_latency
 
-#endif /* !_XENO_ASM_BFINNOMMU_CALIBRATION_H */
+#endif /* !_XENO_ASM_BLACKFIN_CALIBRATION_H */

@@ -17,8 +17,8 @@
  * 02111-1307, USA.
  */
 
-#ifndef _XENO_ASM_BFINNOMMU_ATOMIC_H
-#define _XENO_ASM_BFINNOMMU_ATOMIC_H
+#ifndef _XENO_ASM_BLACKFIN_ATOMIC_H
+#define _XENO_ASM_BLACKFIN_ATOMIC_H
 
 #ifdef __KERNEL__
 
@@ -59,4 +59,4 @@ static __inline__ unsigned long xnarch_atomic_xchg(unsigned long *ptr, unsigned 
 
 typedef unsigned long atomic_flags_t;
 
-#endif /* !_XENO_ASM_BFINNOMMU_ATOMIC_H */
+#endif /* !_XENO_ASM_BLACKFIN_ATOMIC_H */

@@ -17,8 +17,8 @@
  * 02111-1307, USA.
  */
 
-#ifndef _XENO_ASM_BFINNOMMU_WRAPPERS_H
-#define _XENO_ASM_BFINNOMMU_WRAPPERS_H
+#ifndef _XENO_ASM_BLACKFIN_WRAPPERS_H
+#define _XENO_ASM_BLACKFIN_WRAPPERS_H
 
 #ifndef __KERNEL__
 #error "Pure kernel header included from user-space!"
@@ -28,4 +28,4 @@
 
 #define wrap_access_ok(task,addr,size) _access_ok((unsigned long)(addr),(size))
 
-#endif /* _XENO_ASM_BFINNOMMU_WRAPPERS_H */
+#endif /* _XENO_ASM_BLACKFIN_WRAPPERS_H */

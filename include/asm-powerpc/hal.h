@@ -33,13 +33,14 @@
 
 typedef unsigned long long rthal_time_t;
 
-static inline __attribute_const__ unsigned long ffnz (unsigned long ul) {
+static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
+{
 #ifdef CONFIG_PPC64
-    __asm__ ("cntlzd %0, %1" : "=r" (ul) : "r" (ul & (-ul)));
-    return 63 - ul;
+      __asm__("cntlzd %0, %1": "=r"(ul):"r"(ul & (-ul)));
+	return 63 - ul;
 #else
-    __asm__ ("cntlzw %0, %1" : "=r" (ul) : "r" (ul & (-ul)));
-    return 31 - ul;
+      __asm__("cntlzw %0, %1": "=r"(ul):"r"(ul & (-ul)));
+	return 31 - ul;
 #endif
 }
 
@@ -62,19 +63,21 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul) {
 #define rthal_grab_control()     do { } while(0)
 #define rthal_release_control()  do { } while(0)
 
-static inline unsigned long long rthal_rdtsc (void) {
-    unsigned long long t;
-    rthal_read_tsc(t);
-    return t;
+static inline unsigned long long rthal_rdtsc(void)
+{
+	unsigned long long t;
+	rthal_read_tsc(t);
+	return t;
 }
 
-static inline void rthal_timer_program_shot (unsigned long delay)
+static inline void rthal_timer_program_shot(unsigned long delay)
 {
-    if(!delay) delay = 1;
+	if (!delay)
+		delay = 1;
 #ifdef CONFIG_40x
-    mtspr(SPRN_PIT,delay);
+	mtspr(SPRN_PIT, delay);
 #else /* !CONFIG_40x */
-    set_dec((int)delay); /* decrementer is only 32-bits */
+	set_dec((int)delay);	/* decrementer is only 32-bits */
 #endif /* CONFIG_40x */
 }
 
@@ -96,25 +99,25 @@ asmlinkage void rthal_thread_trampoline(void);
 #ifdef CONFIG_XENO_HW_FPU
 
 typedef struct rthal_fpenv {
-    
-    /* This layout must follow exactely the definition of the FPU
-       backup area in a PPC thread struct available from
-       <asm-ppc/processor.h>. Specifically, fpr[] an fpscr words must
-       be contiguous in memory (see arch/powerpc/hal/fpu.S). */
 
-    double fpr[32];
+	/* This layout must follow exactely the definition of the FPU
+	   backup area in a PPC thread struct available from
+	   <asm-ppc/processor.h>. Specifically, fpr[] an fpscr words must
+	   be contiguous in memory (see arch/powerpc/hal/fpu.S). */
+
+	double fpr[32];
 #ifndef CONFIG_PPC64
-    unsigned long fpscr_pad;	/* <= Hi-word of the FPR used to */
+	unsigned long fpscr_pad;	/* <= Hi-word of the FPR used to */
 #endif
-    unsigned long fpscr;	/* retrieve the FPSCR. */
+	unsigned long fpscr;	/* retrieve the FPSCR. */
 
 } rthal_fpenv_t;
 
-void rthal_init_fpu(rthal_fpenv_t *fpuenv);
+void rthal_init_fpu(rthal_fpenv_t * fpuenv);
 
-void rthal_save_fpu(rthal_fpenv_t *fpuenv);
+void rthal_save_fpu(rthal_fpenv_t * fpuenv);
 
-void rthal_restore_fpu(rthal_fpenv_t *fpuenv);
+void rthal_restore_fpu(rthal_fpenv_t * fpuenv);
 
 #ifndef CONFIG_SMP
 #define rthal_get_fpu_owner(cur) last_task_used_math
@@ -168,36 +171,36 @@ void rthal_restore_fpu(rthal_fpenv_t *fpuenv);
 
 static const char *const rthal_fault_labels[] = {
 #ifdef CONFIG_PPC64
-    [0] = "Data or instruction access",
-    [1] = "Alignment",
-    [2] =  "AltiVec unavailable",
-    [3] =  "Program check exception",
-    [4] =  "Machine check exception",
-    [5] =  "Unknown",
-    [6] =  "Instruction breakpoint",
-    [7] =  "Single-step exception",
-    [8] =  "Non-recoverable exception",
-    [9] =  "AltiVec assist",
-    [10] = "System reset exception",
-    [11] = "Kernel FP unavailable",
-    [12] = "Performance monitor",
-    [13] = NULL
+	[0] = "Data or instruction access",
+	[1] = "Alignment",
+	[2] = "AltiVec unavailable",
+	[3] = "Program check exception",
+	[4] = "Machine check exception",
+	[5] = "Unknown",
+	[6] = "Instruction breakpoint",
+	[7] = "Single-step exception",
+	[8] = "Non-recoverable exception",
+	[9] = "AltiVec assist",
+	[10] = "System reset exception",
+	[11] = "Kernel FP unavailable",
+	[12] = "Performance monitor",
+	[13] = NULL
 #else /* !CONFIG_PPC64 */
-    [0] = "Data or instruction access",
-    [1] = "Alignment",
-    [2] = "Altivec unavailable",
-    [3] = "Program check exception",
-    [4] = "Machine check exception",
-    [5] = "Unknown",
-    [6] = "Instruction breakpoint",
-    [7] = "Run mode exception",
-    [8] = "Single-step exception",
-    [9] = "Non-recoverable exception",
-    [10] = "Software emulation",
-    [11] = "Debug",
-    [12] = "SPE",
-    [13] = "Altivec assist",
-    [14] = NULL
+	[0] = "Data or instruction access",
+	[1] = "Alignment",
+	[2] = "Altivec unavailable",
+	[3] = "Program check exception",
+	[4] = "Machine check exception",
+	[5] = "Unknown",
+	[6] = "Instruction breakpoint",
+	[7] = "Run mode exception",
+	[8] = "Single-step exception",
+	[9] = "Non-recoverable exception",
+	[10] = "Software emulation",
+	[11] = "Debug",
+	[12] = "SPE",
+	[13] = "Altivec assist",
+	[14] = NULL
 #endif /* CONFIG_PPC64 */
 };
 

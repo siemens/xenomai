@@ -17,8 +17,8 @@
  * 02111-1307, USA.
  */
 
-#ifndef _XENO_ASM_BFINNOMMU_SYSCALL_H
-#define _XENO_ASM_BFINNOMMU_SYSCALL_H
+#ifndef _XENO_ASM_BLACKFIN_SYSCALL_H
+#define _XENO_ASM_BLACKFIN_SYSCALL_H
 
 #include <asm-generic/xenomai/syscall.h>
 
@@ -273,4 +273,4 @@ inline __attribute__((weak)) int munlockall (void)
 
 #endif /* __KERNEL__ */
 
-#endif /* !_XENO_ASM_BFINNOMMU_SYSCALL_H */
+#endif /* !_XENO_ASM_BLACKFIN_SYSCALL_H */

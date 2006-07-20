@@ -568,12 +568,19 @@ AC_CONFIG_FILES([ \
 	src/testsuite/irqbench/Makefile \
        	include/Makefile \
        	include/asm-generic/Makefile \
+       	include/asm-generic/bits/Makefile \
        	include/asm-blackfin/Makefile \
+       	include/asm-blackfin/bits/Makefile \
        	include/asm-i386/Makefile \
+       	include/asm-i386/bits/Makefile \
        	include/asm-powerpc/Makefile \
+       	include/asm-powerpc/bits/Makefile \
        	include/asm-ia64/Makefile \
+       	include/asm-ia64/bits/Makefile \
        	include/asm-arm/Makefile \
+       	include/asm-arm/bits/Makefile \
        	include/asm-sim/Makefile \
+       	include/asm-sim/bits/Makefile \
        	include/native/Makefile \
        	include/nucleus/Makefile \
        	include/posix/Makefile \

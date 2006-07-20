@@ -1,5 +1,9 @@
 2006-07-20  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/asm-*/system.h: Cleanup the arch-dep layer, splitting
+	headers, and moving the nucleus bits to a related
+	include/asm-*/bits directory.
+
 	* ksrc/skins/uvm, src/skins/uvm, include/asm-uvm: Remove the UVM
 	support, which became obsolete with the generalization of direct
 	syscall interfaces to skin modules.

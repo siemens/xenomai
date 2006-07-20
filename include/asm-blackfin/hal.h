@@ -23,8 +23,8 @@
  *   02111-1307, USA.
  */
 
-#ifndef _XENO_ASM_BFINNOMMU_HAL_H
-#define _XENO_ASM_BFINNOMMU_HAL_H
+#ifndef _XENO_ASM_BLACKFIN_HAL_H
+#define _XENO_ASM_BLACKFIN_HAL_H
 
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 #include <asm/div64.h>
@@ -106,4 +106,4 @@ static const char *const rthal_fault_labels[] = {
 
 #endif /* !__cplusplus */
 
-#endif /* !_XENO_ASM_BFINNOMMU_HAL_H */
+#endif /* !_XENO_ASM_BLACKFIN_HAL_H */

@@ -34,8 +34,6 @@
  *
  *@{*/
 
-#define XENO_SHADOW_MODULE 1
-
 #include <stdarg.h>
 #include <linux/unistd.h>
 #include <linux/wait.h>
@@ -53,6 +51,8 @@
 #include <nucleus/ppd.h>
 #include <nucleus/trace.h>
 #include <asm/xenomai/features.h>
+#include <asm/xenomai/syscall.h>
+#include <asm/xenomai/bits/shadow.h>
 
 int nkthrptd;
 

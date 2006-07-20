@@ -30,11 +30,10 @@
  *
  *@{*/
 
-#define XENO_INTR_MODULE 1
-
 #include <nucleus/pod.h>
 #include <nucleus/intr.h>
 #include <nucleus/ltt.h>
+#include <asm/xenomai/bits/intr.h>
 
 xnintr_t nkclock;
 

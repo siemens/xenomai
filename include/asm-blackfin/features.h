@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#ifndef _XENO_ASM_BFINNOMMU_FEATURES_H
-#define _XENO_ASM_BFINNOMMU_FEATURES_H
+#ifndef _XENO_ASM_BLACKFIN_FEATURES_H
+#define _XENO_ASM_BLACKFIN_FEATURES_H
 
 #include <asm-generic/xenomai/features.h>
 
@@ -38,4 +38,4 @@ static inline const char *get_feature_label (unsigned feature)
     return get_generic_feature_label(feature);
 }
 
-#endif /* !_XENO_ASM_BFINNOMMU_FEATURES_H */
+#endif /* !_XENO_ASM_BLACKFIN_FEATURES_H */
