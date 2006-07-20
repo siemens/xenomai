@@ -88,18 +88,6 @@ dnl
 dnl Parse options
 dnl
 
-dnl UVM support (default: on)
-
-CONFIG_XENO_UVM=y
-AC_MSG_CHECKING(for UVM support)
-AC_ARG_ENABLE(uvm,
-	AS_HELP_STRING([--enable-uvm], [Build UVM support]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_UVM=y ;;
-	*) unset CONFIG_XENO_UVM ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_UVM:-no})
-
 dnl Debug build (default: off)
 
 debug_symbols=
@@ -123,17 +111,6 @@ AC_ARG_ENABLE(smp,
 	*) unset CONFIG_SMP ;;
 	esac])
 AC_MSG_RESULT(${CONFIG_SMP:-no})
-
-dnl Size of system heap for UVMs (default: 128Kb)
-CONFIG_XENO_OPT_SYS_HEAPSZ=128
-AC_MSG_CHECKING(for size of system heap)
-AC_ARG_ENABLE(uvm-heapsz,
-	AS_HELP_STRING([--enable-uvm-heapsz], [Set system heap size for UVMs]),
-	[case "$enableval" in
-	[[0-9]]*) CONFIG_XENO_OPT_SYS_HEAPSZ=$enableval ;;
-	*) AC_MSG_ERROR([Bad argument to option: --enable-uvm-heapsz=<Kbytes>]) ;;
-	esac])
-AC_MSG_RESULT([$CONFIG_XENO_OPT_SYS_HEAPSZ Kb])
 
 dnl SEP (default: disabled) and TSC support for x86 (default: enabled)
 
@@ -424,12 +401,6 @@ test x$CONFIG_X86_TSC = xy && AC_DEFINE(CONFIG_X86_TSC,1,[config])
 test -n "$CONFIG_XENO_ARM_ARCH" && AC_DEFINE_UNQUOTED(CONFIG_XENO_ARM_ARCH,$CONFIG_XENO_ARM_ARCH,[config])
 test x$CONFIG_XENO_ARM_SA1100 = xy && AC_DEFINE(CONFIG_XENO_ARM_SA1100,1,[config])
 
-dnl Unconditionally support periodic timing for UVMs
-AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_TIMING_PERIODIC,1,[config])
-AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_TIMING_PERIOD,0,[config])
-test x$debug_symbols = xy && AC_DEFINE(CONFIG_XENO_OPT_DEBUG,1,[Kconfig])
-AC_DEFINE_UNQUOTED(CONFIG_XENO_OPT_SYS_HEAPSZ,$CONFIG_XENO_OPT_SYS_HEAPSZ,[config])
-
 dnl CAUTION: We need to have the CONFIG_XENO_XX symbols always
 dnl defined when the configuration header is read, but we want the
 dnl Autoconf-produced symbols to be defined only when compiling
@@ -457,9 +428,6 @@ AH_BOTTOM([#endif /* __IN_XENO__ */])
 dnl
 dnl Produce automake conditionals.
 dnl
-
-dnl UVM support.
-AM_CONDITIONAL(CONFIG_XENO_UVM,[test "$CONFIG_XENO_UVM" = y])
 
 dnl Documentation.
 AM_CONDITIONAL(CONFIG_XENO_DOC_DOX,[test "$CONFIG_XENO_DOC_DOX" = y])
@@ -591,12 +559,6 @@ AC_CONFIG_FILES([ \
        	src/skins/vrtx/Makefile \
        	src/skins/rtdm/Makefile \
        	src/skins/rtai/Makefile \
-       	src/skins/uvm/Makefile \
-       	src/skins/uvm/nucleus/Makefile \
-       	src/skins/uvm/vxworks/Makefile \
-       	src/skins/uvm/psos+/Makefile \
-       	src/skins/uvm/vrtx/Makefile \
-       	src/skins/uvm/uitron/Makefile \
 	src/include/Makefile \
        	src/testsuite/Makefile \
        	src/testsuite/latency/Makefile \
@@ -611,7 +573,6 @@ AC_CONFIG_FILES([ \
        	include/asm-powerpc/Makefile \
        	include/asm-ia64/Makefile \
        	include/asm-arm/Makefile \
-       	include/asm-uvm/Makefile \
        	include/asm-sim/Makefile \
        	include/native/Makefile \
        	include/nucleus/Makefile \

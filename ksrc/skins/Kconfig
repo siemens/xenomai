@@ -18,6 +18,4 @@ source "kernel/xenomai/skins/rtai/Kconfig"
 
 source "kernel/xenomai/skins/rtdm/Kconfig"
 
-source "kernel/xenomai/skins/uvm/Kconfig"
-
 endmenu

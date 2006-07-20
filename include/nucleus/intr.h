@@ -37,7 +37,7 @@
 /* Operational flags. */
 #define XN_ISR_ATTACHED	 0x10000
 
-#if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)
+#if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 typedef struct xnintr {
 
@@ -100,6 +100,6 @@ xnarch_cpumask_t xnintr_affinity(xnintr_t *intr,
 }
 #endif
 
-#endif /* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */
+#endif /* __KERNEL__ || __XENO_SIM__ */
 
 #endif /* !_XENO_NUCLEUS_INTR_H */

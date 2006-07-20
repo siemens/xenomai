@@ -117,7 +117,7 @@ do { \
     xnarch_halt(panic); \
 } while (0)
 
-#if defined(__XENO_SIM__) || defined(__XENO_UVM__)
+#ifdef __XENO_SIM__
 #define SKIN_INIT(name)  __xeno_skin_init(void)
 #define SKIN_EXIT(name)  __xeno_skin_exit(void)
 #else /* !__XENO_SIM__ */

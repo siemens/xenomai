@@ -3,13 +3,11 @@ Overview
 
 The VxWorks (R) emulation module on top of Xenomai is currently
 available to kernel-based applications, and to user-space applications
-either through a direct call interface to the module or over the
-UVM. The VxWorks module can also be used over the event-driven
-simulation engine.
+through a direct call interface to the module. The VxWorks module can
+also be used over the event-driven simulation engine.
 
  xeno_vxworks.ko: VxWorks emulator in kernel space.
-libvxworks_uvm.a: VxWorks emulation in user-space over the UVM.
-libvxworks.so: Direct call interface.
+libvxworks.so: System call interface from user-space.
 libvxworks_sim.a: VxWorks emulation over the event-driven simulator.
 
 The VxWorks (R) emulation module currently mimicks the following

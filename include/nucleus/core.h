@@ -18,13 +18,13 @@
  *
  * Core pod definitions. The core pod supports all APIs providing a
  * system call interface to user-space applications. Core APIs, namely
- * POSIX, native, RTDM and UVM, only use a sub-range of the available
+ * POSIX, native and RTDM, only use a sub-range of the available
  * priority levels of the core pod, in order to have them exhibit a
  * 1:1 mapping with Linux's SCHED_FIFO ascending priority
- * scale. Non-core APIs may also rely on the core pod, provided they
- * normalize the priority levels of their threads when calling the
- * nucleus, in order to match the priority scale enforced by the
- * former.
+ * scale. Non-core APIs (e.g. VxWorks, VRTX) may also rely on the core
+ * pod, provided they normalize the priority levels of their threads
+ * when calling the nucleus, in order to match the priority scale
+ * enforced by the former.
  */
 
 #ifndef _XENO_NUCLEUS_CORE_H

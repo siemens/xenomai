@@ -1,26 +1,4 @@
 
-As a special exception to the following license, the Xenomai
-project gives permission for additional uses of the code contained in
-this directory.
-
-The exception is that, if you link the compiled form of this code
-unmodified with other files to produce a self-contained real-time
-virtual machine in a regular user-space executable, as defined by
-Xenomai's UVM support, this does not by itself cause the resulting
-executable to be covered by the GNU General Public License.
-
-This exception does not however invalidate any other reasons why the
-executable file might be covered by the GNU General Public License. In
-any case, this exception never applies when the code is built as a
-static or dynamically loadable portion of the Linux kernel.
-
-This exception applies only to the code released by the Xenomai
-project under the name Xenomai and bearing this exception notice.
-If you copy code from other sources into a copy of Xenomai, the
-exception does not apply to the code that you add in this way.
-
-----------------------------------------------------------------------
-
 		    GNU GENERAL PUBLIC LICENSE
 		       Version 2, June 1991
 

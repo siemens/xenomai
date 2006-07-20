@@ -32,7 +32,7 @@
 int root_thread_init(void);
 void root_thread_exit(void);
 
-#if !defined(__KERNEL__) && !defined(__XENO_UVM__) && !defined(__XENO_SIM__)
+#if !defined(__KERNEL__) && !defined(__XENO_SIM__)
 
 #include <sys/mman.h>
 #include <stdlib.h>

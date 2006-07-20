@@ -466,7 +466,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP target target_cpu target_vendor target_os CC CFLAGS CPPFLAGS CC_FOR_BUILD ac_ct_CC_FOR_BUILD CPP CPPFLAGS CPP_FOR_BUILD BUILD_EXEEXT BUILD_OBJEXT CFLAGS_FOR_BUILD CPPFLAGS_FOR_BUILD CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL CCAS CCASFLAGS LEX LEXLIB LEX_OUTPUT_ROOT XENO_TARGET_ARCH_I386_TRUE XENO_TARGET_ARCH_I386_FALSE XENO_LINUX_ALL_TARGETS ADEOS_PATCH XENO_BUILD_LINUX_TRUE XENO_BUILD_LINUX_FALSE XENO_MAYBE_DOCDIR DOXYGEN DOXYGEN_HAVE_DOT DBX_DOC_ROOT DBX_DOC_TRUE DBX_DOC_FALSE DBX_GEN_DOC_ROOT DBX_LINT DBX_XSLTPROC DBX_FOP DBX_MAYBE_NONET DBX_ROOT DBX_XSL_ROOT DBX_ABS_SRCDIR_TRUE DBX_ABS_SRCDIR_FALSE CONFIG_XENO_UVM_TRUE CONFIG_XENO_UVM_FALSE CONFIG_XENO_DOC_DOX_TRUE CONFIG_XENO_DOC_DOX_FALSE DOXYGEN_SHOW_INCLUDE_FILES LATEX_BATCHMODE LATEX_MODE XENO_TARGET_ARCH XENO_LINUX_ARCH XENO_BUILD_STRING XENO_HOST_STRING XENO_USER_CFLAGS XENO_USER_LDFLAGS XENO_USER_APP_CFLAGS XENO_USER_APP_LDFLAGS CONFIG_STATUS_DEPENDENCIES XENO_POSIX_WRAPPERS LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP target target_cpu target_vendor target_os CC CFLAGS CPPFLAGS CC_FOR_BUILD ac_ct_CC_FOR_BUILD CPP CPPFLAGS CPP_FOR_BUILD BUILD_EXEEXT BUILD_OBJEXT CFLAGS_FOR_BUILD CPPFLAGS_FOR_BUILD CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL CCAS CCASFLAGS LEX LEXLIB LEX_OUTPUT_ROOT XENO_TARGET_ARCH_I386_TRUE XENO_TARGET_ARCH_I386_FALSE XENO_LINUX_ALL_TARGETS ADEOS_PATCH XENO_BUILD_LINUX_TRUE XENO_BUILD_LINUX_FALSE XENO_MAYBE_DOCDIR DOXYGEN DOXYGEN_HAVE_DOT DBX_DOC_ROOT DBX_DOC_TRUE DBX_DOC_FALSE DBX_GEN_DOC_ROOT DBX_LINT DBX_XSLTPROC DBX_FOP DBX_MAYBE_NONET DBX_ROOT DBX_XSL_ROOT DBX_ABS_SRCDIR_TRUE DBX_ABS_SRCDIR_FALSE CONFIG_XENO_DOC_DOX_TRUE CONFIG_XENO_DOC_DOX_FALSE DOXYGEN_SHOW_INCLUDE_FILES LATEX_BATCHMODE LATEX_MODE XENO_TARGET_ARCH XENO_LINUX_ARCH XENO_BUILD_STRING XENO_HOST_STRING XENO_USER_CFLAGS XENO_USER_LDFLAGS XENO_USER_APP_CFLAGS XENO_USER_APP_LDFLAGS CONFIG_STATUS_DEPENDENCIES XENO_POSIX_WRAPPERS LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1048,11 +1048,9 @@ Optional Features:
   --enable-fast-install[=PKGS]
                           optimize for fast installation [default=yes]
   --disable-libtool-lock  avoid locking (might break parallel builds)
-  --enable-uvm            Build UVM support
   --enable-debug          Enable debug support in nucleus and debug symbols in
                           programs
   --enable-smp            Enable SMP support
-  --enable-uvm-heapsz     Set system heap size for UVMs
   --enable-x86-sep        Enable x86 SEP instructions for issuing syscalls
   --enable-x86-tsc        Enable x86 TSC for timings
   --enable-arm-arch=<version>
@@ -5011,7 +5009,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5014 "configure"' > conftest.$ac_ext
+  echo '#line 5012 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -6368,7 +6366,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6371:" \
+echo "$as_me:6369:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -7429,11 +7427,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7432: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7430: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7436: \$? = $ac_status" >&5
+   echo "$as_me:7434: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7697,11 +7695,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7700: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7698: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7704: \$? = $ac_status" >&5
+   echo "$as_me:7702: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7801,11 +7799,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7804: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7802: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7808: \$? = $ac_status" >&5
+   echo "$as_me:7806: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -10159,7 +10157,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10162 "configure"
+#line 10160 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10259,7 +10257,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10262 "configure"
+#line 10260 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12597,11 +12595,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12600: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12598: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12604: \$? = $ac_status" >&5
+   echo "$as_me:12602: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -12701,11 +12699,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12704: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12702: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12708: \$? = $ac_status" >&5
+   echo "$as_me:12706: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -14289,11 +14287,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14292: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14290: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14296: \$? = $ac_status" >&5
+   echo "$as_me:14294: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -14393,11 +14391,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14396: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14394: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14400: \$? = $ac_status" >&5
+   echo "$as_me:14398: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16616,11 +16614,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16619: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16617: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16623: \$? = $ac_status" >&5
+   echo "$as_me:16621: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16884,11 +16882,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16887: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16885: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16891: \$? = $ac_status" >&5
+   echo "$as_me:16889: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16988,11 +16986,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16991: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16989: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16995: \$? = $ac_status" >&5
+   echo "$as_me:16993: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -20013,21 +20011,6 @@ fi
 
 
 
-CONFIG_XENO_UVM=y
-echo "$as_me:$LINENO: checking for UVM support" >&5
-echo $ECHO_N "checking for UVM support... $ECHO_C" >&6
-# Check whether --enable-uvm or --disable-uvm was given.
-if test "${enable_uvm+set}" = set; then
-  enableval="$enable_uvm"
-  case "$enableval" in
-	y | yes) CONFIG_XENO_UVM=y ;;
-	*) unset CONFIG_XENO_UVM ;;
-	esac
-fi;
-echo "$as_me:$LINENO: result: ${CONFIG_XENO_UVM:-no}" >&5
-echo "${ECHO_T}${CONFIG_XENO_UVM:-no}" >&6
-
-
 debug_symbols=
 echo "$as_me:$LINENO: checking for debug symbols" >&5
 echo $ECHO_N "checking for debug symbols... $ECHO_C" >&6
@@ -20056,22 +20039,6 @@ if test "${enable_smp+set}" = set; then
 fi;
 echo "$as_me:$LINENO: result: ${CONFIG_SMP:-no}" >&5
 echo "${ECHO_T}${CONFIG_SMP:-no}" >&6
-
-CONFIG_XENO_OPT_SYS_HEAPSZ=128
-echo "$as_me:$LINENO: checking for size of system heap" >&5
-echo $ECHO_N "checking for size of system heap... $ECHO_C" >&6
-# Check whether --enable-uvm-heapsz or --disable-uvm-heapsz was given.
-if test "${enable_uvm_heapsz+set}" = set; then
-  enableval="$enable_uvm_heapsz"
-  case "$enableval" in
-	[0-9]*) CONFIG_XENO_OPT_SYS_HEAPSZ=$enableval ;;
-	*) { { echo "$as_me:$LINENO: error: Bad argument to option: --enable-uvm-heapsz=<Kbytes>" >&5
-echo "$as_me: error: Bad argument to option: --enable-uvm-heapsz=<Kbytes>" >&2;}
-   { (exit 1); exit 1; }; } ;;
-	esac
-fi;
-echo "$as_me:$LINENO: result: $CONFIG_XENO_OPT_SYS_HEAPSZ Kb" >&5
-echo "${ECHO_T}$CONFIG_XENO_OPT_SYS_HEAPSZ Kb" >&6
 
 
 CONFIG_XENO_X86_SEP=
@@ -20889,42 +20856,10 @@ _ACEOF
 
 
 
-cat >>confdefs.h <<_ACEOF
-#define CONFIG_XENO_OPT_TIMING_PERIODIC 1
-_ACEOF
-
-
-cat >>confdefs.h <<_ACEOF
-#define CONFIG_XENO_OPT_TIMING_PERIOD 0
-_ACEOF
-
-test x$debug_symbols = xy &&
-cat >>confdefs.h <<\_ACEOF
-#define CONFIG_XENO_OPT_DEBUG 1
-_ACEOF
-
-
-cat >>confdefs.h <<_ACEOF
-#define CONFIG_XENO_OPT_SYS_HEAPSZ $CONFIG_XENO_OPT_SYS_HEAPSZ
-_ACEOF
 
 
 
 
-
-
-
-
-
-
-
-if test "$CONFIG_XENO_UVM" = y; then
-  CONFIG_XENO_UVM_TRUE=
-  CONFIG_XENO_UVM_FALSE='#'
-else
-  CONFIG_XENO_UVM_TRUE='#'
-  CONFIG_XENO_UVM_FALSE=
-fi
 
 
 
@@ -21202,7 +21137,7 @@ base=asm-generic
           ac_config_links="$ac_config_links src/include/$base/xenomai:include/$base"
 
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno-load scripts/xeno-test src/Makefile src/skins/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/vxworks/Makefile src/skins/vrtx/Makefile src/skins/rtdm/Makefile src/skins/rtai/Makefile src/skins/uvm/Makefile src/skins/uvm/nucleus/Makefile src/skins/uvm/vxworks/Makefile src/skins/uvm/psos+/Makefile src/skins/uvm/vrtx/Makefile src/skins/uvm/uitron/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/switchbench/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/irqbench/Makefile include/Makefile include/asm-generic/Makefile include/asm-blackfin/Makefile include/asm-i386/Makefile include/asm-powerpc/Makefile include/asm-ia64/Makefile include/asm-arm/Makefile include/asm-uvm/Makefile include/asm-sim/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtai/Makefile include/rtdm/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
+                                                                                                                                                                                                                                                                                                                                                                                                      ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno-load scripts/xeno-test src/Makefile src/skins/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/vxworks/Makefile src/skins/vrtx/Makefile src/skins/rtdm/Makefile src/skins/rtai/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/switchbench/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/irqbench/Makefile include/Makefile include/asm-generic/Makefile include/asm-blackfin/Makefile include/asm-i386/Makefile include/asm-powerpc/Makefile include/asm-ia64/Makefile include/asm-arm/Makefile include/asm-sim/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtai/Makefile include/rtdm/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x; then
@@ -21354,13 +21289,6 @@ if test -z "${DBX_ABS_SRCDIR_TRUE}" && test -z "${DBX_ABS_SRCDIR_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"DBX_ABS_SRCDIR\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"DBX_ABS_SRCDIR\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${CONFIG_XENO_UVM_TRUE}" && test -z "${CONFIG_XENO_UVM_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"CONFIG_XENO_UVM\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"CONFIG_XENO_UVM\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -21837,12 +21765,6 @@ do
   "src/skins/vrtx/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/skins/vrtx/Makefile" ;;
   "src/skins/rtdm/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/skins/rtdm/Makefile" ;;
   "src/skins/rtai/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/skins/rtai/Makefile" ;;
-  "src/skins/uvm/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/skins/uvm/Makefile" ;;
-  "src/skins/uvm/nucleus/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/skins/uvm/nucleus/Makefile" ;;
-  "src/skins/uvm/vxworks/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/skins/uvm/vxworks/Makefile" ;;
-  "src/skins/uvm/psos+/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/skins/uvm/psos+/Makefile" ;;
-  "src/skins/uvm/vrtx/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/skins/uvm/vrtx/Makefile" ;;
-  "src/skins/uvm/uitron/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/skins/uvm/uitron/Makefile" ;;
   "src/include/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/include/Makefile" ;;
   "src/testsuite/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/testsuite/Makefile" ;;
   "src/testsuite/latency/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/testsuite/latency/Makefile" ;;
@@ -21857,7 +21779,6 @@ do
   "include/asm-powerpc/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-powerpc/Makefile" ;;
   "include/asm-ia64/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-ia64/Makefile" ;;
   "include/asm-arm/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-arm/Makefile" ;;
-  "include/asm-uvm/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-uvm/Makefile" ;;
   "include/asm-sim/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/asm-sim/Makefile" ;;
   "include/native/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/native/Makefile" ;;
   "include/nucleus/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/nucleus/Makefile" ;;
@@ -22090,8 +22011,6 @@ s,@DBX_ROOT@,$DBX_ROOT,;t t
 s,@DBX_XSL_ROOT@,$DBX_XSL_ROOT,;t t
 s,@DBX_ABS_SRCDIR_TRUE@,$DBX_ABS_SRCDIR_TRUE,;t t
 s,@DBX_ABS_SRCDIR_FALSE@,$DBX_ABS_SRCDIR_FALSE,;t t
-s,@CONFIG_XENO_UVM_TRUE@,$CONFIG_XENO_UVM_TRUE,;t t
-s,@CONFIG_XENO_UVM_FALSE@,$CONFIG_XENO_UVM_FALSE,;t t
 s,@CONFIG_XENO_DOC_DOX_TRUE@,$CONFIG_XENO_DOC_DOX_TRUE,;t t
 s,@CONFIG_XENO_DOC_DOX_FALSE@,$CONFIG_XENO_DOC_DOX_FALSE,;t t
 s,@DOXYGEN_SHOW_INCLUDE_FILES@,$DOXYGEN_SHOW_INCLUDE_FILES,;t t

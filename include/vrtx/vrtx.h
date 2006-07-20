@@ -82,7 +82,7 @@ typedef struct _vrtx_pdesc {
 
 } vrtx_pdesc_t;
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)  || defined(__XENO_UVM__)
+#if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #ifdef __cplusplus
 extern "C" {
@@ -94,11 +94,11 @@ void ui_timer(void);
 };
 #endif /* __cplusplus */
 
-#else /* !(__KERNEL__ || __XENO_SIM__ || __XENO_UVM__) */
+#else /* !(__KERNEL__ || __XENO_SIM__) */
 
 #include <vrtx/syscall.h>
 
-#endif /* __KERNEL__ || __XENO_SIM__ || __XENO_UVM__ */
+#endif /* __KERNEL__ || __XENO_SIM__ */
 
 #ifdef __cplusplus
 extern "C" {

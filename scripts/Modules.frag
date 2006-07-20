@@ -2,7 +2,6 @@ DRIVERS-$(CONFIG_XENO_OPT_NUCLEUS) += kernel/xenomai/nucleus/xeno_nucleus.o
 DRIVERS-$(CONFIG_XENO_SKIN_NATIVE) += kernel/xenomai/skins/native/xeno_native.o
 DRIVERS-$(CONFIG_XENO_SKIN_POSIX) += kernel/xenomai/skins/posix/xeno_posix.o
 DRIVERS-$(CONFIG_XENO_SKIN_RTDM) += kernel/xenomai/skins/rtdm/xeno_rtdm.o
-DRIVERS-$(CONFIG_XENO_SKIN_UVM) += kernel/xenomai/skins/uvm/xeno_uvm.o
 DRIVERS-$(CONFIG_XENO_SKIN_PSOS) += kernel/xenomai/skins/psos+/xeno_psos.o
 DRIVERS-$(CONFIG_XENO_SKIN_VRTX) += kernel/xenomai/skins/vrtx/xeno_vrtx.o
 DRIVERS-$(CONFIG_XENO_SKIN_VXWORKS) += kernel/xenomai/skins/vxworks/xeno_vxworks.o

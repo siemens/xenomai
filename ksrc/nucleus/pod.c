@@ -255,7 +255,8 @@ static void xnpod_flush_heap(xnheap_t *heap,
  * real-time activities. Once a pod is active, real-time APIs can be
  * stacked over. There can only be a single pod active in the host
  * environment. Such environment can be confined to a process
- * (e.g. simulator or UVM), or expand machine-wide (e.g. Adeos).
+ * (i.e. when running over the simulation engine), or expand
+ * machine-wide (e.g. when running over Adeos).
  *
  * @param pod The address of a pod descriptor the nucleus will use to
  * store the pod-specific data.  This descriptor must always be valid

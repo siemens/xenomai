@@ -29,7 +29,7 @@
 #define XNSYNCH_PIP     0x2
 #define XNSYNCH_DREORD  0x4
 
-#if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)
+#if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #define XNSYNCH_CLAIMED 0x8	/* Claimed by other thread(s) w/ PIP */
 #define XNSYNCH_PENDING 0x10	/* Pending ownership -- may be stolen  */
@@ -123,6 +123,6 @@ struct xnthread *xnsynch_forget_one_sleeper(xnsynch_t *synch);
 }
 #endif
 
-#endif /* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */
+#endif /* __KERNEL__ || __XENO_SIM__ */
 
 #endif /* !_XENO_NUCLEUS_SYNCH_H_ */

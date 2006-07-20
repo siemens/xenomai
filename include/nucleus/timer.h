@@ -22,7 +22,7 @@
 
 #include <nucleus/queue.h>
 
-#if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)
+#if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #if defined(CONFIG_XENO_OPT_TIMING_PERIODIC) \
 	|| defined(CONFIG_XENO_OPT_TIMER_WHEEL)
@@ -419,6 +419,6 @@ int xntimer_set_sched(xntimer_t *timer, struct xnsched *sched);
 }
 #endif
 
-#endif /* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */
+#endif /* __KERNEL__ || __XENO_SIM__ */
 
 #endif /* !_XENO_NUCLEUS_TIMER_H */

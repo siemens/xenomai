@@ -17,8 +17,6 @@ XENO_BASE_LDFLAGS="-L${staging}${libdir} -lpthread @XENO_USER_APP_LDFLAGS@"
 XENO_POSIX_CFLAGS="-I. -I${staging}${includedir} -I${staging}${includedir}/posix @XENO_USER_APP_CFLAGS@"
 XENO_POSIX_LDFLAGS="-L${staging}${libdir} -lpthread_rt -lpthread -lrt @XENO_USER_APP_LDFLAGS@"
 XENO_POSIX_WRAPPERS="${staging}${libdir}/posix.wrappers"
-XENO_UVM_CFLAGS="-I. -I${staging}${includedir} @XENO_USER_APP_CFLAGS@ -D__XENO_UVM__"
-XENO_UVM_LDFLAGS="-u__xeno_skin_init -L${staging}${libdir} -luvm -lnucleus_uvm -lpthread"
 XENO_LIBRARY_DIR="${staging}${libdir}"
 
 unset prefix exec_prefix libdir datadir pkgdatadir includedir
@@ -38,8 +36,6 @@ Options :
         --xeno-ldflags
         --posix-cflags
         --posix-ldflags
-        --uvm-cflags
-        --uvm-ldflags
         --lib*-dir,--libdir,--user-libdir
 EOF
     exit $1
@@ -56,8 +52,6 @@ verbose ()
     echo "   " --xeno-ldflags="\"$XENO_BASE_LDFLAGS\""
     echo "   " --posix-cflags="\"$XENO_POSIX_CFLAGS\""
     echo "   " --posix-ldflags="\"$XENO_POSIX_LDFLAGS\""
-    echo "   " --uvm-cflags="\"$XENO_UVM_CFLAGS \""
-    echo "   " --uvm-ldflags="\"$XENO_UVM_LDFLAGS\""
     echo "   " --library-dir="\"$XENO_LIBRARY_DIR\""
 }
 
@@ -103,12 +97,6 @@ while test $# -gt 0; do
                 echo -n "-Wl,--wrap,$symbol " ; \
 	     done`
             echo "$wrappers $XENO_POSIX_LDFLAGS"
-            ;;
-        --uvm-cflags)
-            echo $XENO_UVM_CFLAGS
-            ;;
-        --uvm-ldflags)
-            echo $XENO_UVM_LDFLAGS
             ;;
         --lib*-dir|--libdir|--user-libdir)
             echo $XENO_LIBRARY_DIR

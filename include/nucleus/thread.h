@@ -91,7 +91,7 @@
 #define XNTHREAD_SPARE3  0x80000000
 #define XNTHREAD_SPARES  0xf0000000
 
-#if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)
+#if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #ifdef __XENO_SIM__
 /* Pseudo-status (must not conflict with other bits) */
@@ -281,6 +281,6 @@ static inline xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t now)
 }
 #endif
 
-#endif /* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */
+#endif /* __KERNEL__ || __XENO_SIM__ */
 
 #endif /* !_XENO_NUCLEUS_THREAD_H */
