@@ -30,12 +30,12 @@
 
 static inline int check_abi_revision(unsigned long abirev)
 {
-    return abirev == XENOMAI_ABI_REV;
+	return abirev == XENOMAI_ABI_REV;
 }
 
-static inline const char *get_feature_label (unsigned feature)
+static inline const char *get_feature_label(unsigned feature)
 {
-    return get_generic_feature_label(feature);
+	return get_generic_feature_label(feature);
 }
 
 #endif /* !_XENO_ASM_POWERPC_FEATURES_H */

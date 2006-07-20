@@ -63,11 +63,10 @@ HEAP {
  *
  *@{*/
 
-#define XENO_HEAP_MODULE 1
-
 #include <nucleus/pod.h>
 #include <nucleus/thread.h>
 #include <nucleus/heap.h>
+#include <asm/xenomai/bits/heap.h>
 
 xnheap_t kheap;			/* System heap */
 

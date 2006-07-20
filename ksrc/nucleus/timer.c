@@ -42,11 +42,10 @@
  *
  *@{*/
 
-#define XENO_TIMER_MODULE 1
-
 #include <nucleus/pod.h>
 #include <nucleus/thread.h>
 #include <nucleus/timer.h>
+#include <asm/xenomai/bits/timer.h>
 
 static inline void xntimer_enqueue_aperiodic(xntimer_t *timer)
 {

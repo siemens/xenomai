@@ -24,14 +24,14 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
-#include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
+#include <asm-generic/xenomai/wrappers.h>	/* Read the generic portion. */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
 
 #define CONFIG_MMU 1
 
 #define atomic_inc_and_test(v) (atomic_inc_return(v) == 0)
-#define show_stack(p,sp)       print_backtrace(sp) /* Only works for current. */
+#define show_stack(p,sp)       print_backtrace(sp)	/* Only works for current. */
 
 #define wrap_range_ok(task,addr,size) \
     (segment_eq((task)->thread.fs, KERNEL_DS) || __user_ok((unsigned long)(addr),(size)))

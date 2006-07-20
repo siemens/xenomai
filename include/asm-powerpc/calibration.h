@@ -28,8 +28,7 @@
 
 #define __bogomips (loops_per_jiffy/(500000/HZ))
 
-static inline unsigned long xnarch_get_sched_latency (void)
-
+static inline unsigned long xnarch_get_sched_latency(void)
 {
 #if CONFIG_XENO_OPT_TIMING_SCHEDLAT != 0
 #define __sched_latency CONFIG_XENO_OPT_TIMING_SCHEDLAT
@@ -40,10 +39,10 @@ static inline unsigned long xnarch_get_sched_latency (void)
 #else
 #define __sched_latency 9500
 #endif
-	
+
 #endif /* CONFIG_XENO_OPT_TIMING_SCHEDLAT */
 
-    return __sched_latency;
+	return __sched_latency;
 }
 
 #undef __sched_latency

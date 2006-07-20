@@ -12,3 +12,5 @@ install-data-local:
 uninstall-local:
 	rm -f $(DESTDIR)$(includedir)/asm
 	rm -f $(DESTDIR)$(includedir)/xenomai
+
+SUBDIRS = bits

@@ -23,8 +23,6 @@
  * An abstract RTOS core.
  */
 
-#define XENO_MAIN_MODULE 1
-
 #include <nucleus/module.h>
 #include <nucleus/pod.h>
 #include <nucleus/timer.h>
@@ -37,6 +35,9 @@
 #include <nucleus/core.h>
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 #include <nucleus/ltt.h>
+#include <linux/init.h>
+#include <asm/xenomai/calibration.h>
+#include <asm/xenomai/bits/init.h>
 
 MODULE_DESCRIPTION("Xenomai nucleus");
 MODULE_AUTHOR("rpm@xenomai.org");
