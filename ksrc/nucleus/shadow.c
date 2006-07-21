@@ -1694,6 +1694,7 @@ static inline void do_schedule_event(struct task_struct *next)
 			int sigpending = signal_pending(next);
 
 			if (!testbits(status, XNRELAX)) {
+				xnarch_trace_panic_freeze();
 				show_stack(xnthread_user_task(threadin), NULL);
 				xnpod_fatal
 				    ("Hardened thread %s[%d] running in Linux domain?! (status=0x%lx, sig=%d, prev=%s[%d])",
