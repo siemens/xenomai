@@ -49,22 +49,29 @@ case "$host" in
  i*86*-*)
 	XENO_TARGET_ARCH=i386
         XENO_LINUX_ARCH=i386
+	XENO_LINUX_INSTALL_TARGET=install
         ;;
  powerpc-*|ppc-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=ppc
+	XENO_LINUX_INSTALL_TARGET=install_image
+	XENO_LINUX_IMAGE=arch/ppc/boot/images/zImage.elf
         ;;
  powerpc64-*|ppc64-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=ppc64
+	XENO_LINUX_INSTALL_TARGET=install_image
+	XENO_LINUX_IMAGE=arch/ppc64/boot/images/zImage
         ;;
  ia64-*)
 	XENO_TARGET_ARCH=ia64
         XENO_LINUX_ARCH=ia64
+	XENO_LINUX_INSTALL_TARGET=install
         ;;
  bfin-*|bfinnommu-*|blackfin-*)
 	XENO_TARGET_ARCH=blackfin
         XENO_LINUX_ARCH=bfinnommu
+	XENO_LINUX_INSTALL_TARGET=install
 	if test x$enable_shared = xyes; then
 	   AC_MSG_ERROR([Shared libraries unsupported -- reconfigure passing --disable-shared])
 	fi
@@ -72,6 +79,8 @@ case "$host" in
  arm-*)
  	XENO_TARGET_ARCH=arm
  	XENO_LINUX_ARCH=arm
+	XENO_LINUX_INSTALL_TARGET=install_image
+	XENO_LINUX_IMAGE=arch/arm/boot/zImage
 	;;
  *) echo ""
    echo "*******************************************"
@@ -225,6 +234,8 @@ else
 	*) AC_MSG_ERROR([Unknown Linux version $linux_full_version]);;
      esac
      AC_SUBST(XENO_LINUX_ALL_TARGETS)
+     AC_SUBST(XENO_LINUX_INSTALL_TARGET)
+     AC_SUBST(XENO_LINUX_IMAGE)
   fi
 
   AC_MSG_CHECKING(for Adeos patch)

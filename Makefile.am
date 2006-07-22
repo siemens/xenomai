@@ -99,6 +99,19 @@ linux/install: linux/all
            INSTALL_PATH=$(DESTDIR)/boot \
            INSTALL_MOD_PATH=$(DESTDIR)
 
+# For architectures that do not support the install target, provide our own
+# installation target that simply copy the kernel image and System.map.
+linux/install_image: linux/all
+	sudo=; if test x`id -u` != x0 && test \! "x`type $(SUDO)`" = x && \
+	$(SUDO) true; then sudo=$(SUDO); fi && \
+	$(mkinstalldirs) $(DESTDIR) && \
+	$$sudo $(mkinstalldirs) $(DESTDIR)/boot && \
+	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
+	cd linux && $$sudo $(MAKE) modules_install \
+           ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross \
+           INSTALL_MOD_PATH=$(DESTDIR) && \
+	$$sudo cp $(XENO_LINUX_IMAGE) System.map $(DESTDIR)/boot
+
 distclean-linux:
 	@test -e linux/.config && \
 		mv linux/.config linux/.config.saved.xenomai; \
@@ -115,5 +128,5 @@ clean-recursive: linux/clean
 
 distclean-recursive: distclean-linux
 
-install-recursive: linux/install
+install-recursive: linux/$(XENO_LINUX_INSTALL_TARGET)
 endif
