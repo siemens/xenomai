@@ -34,7 +34,7 @@ else
 
 O_TARGET := built-in.o
 
-obj-$(CONFIG_XENO_OPT_NUCLEUS) := xeno_native.o
+obj-$(CONFIG_XENO_SKIN_NATIVE) := xeno_native.o
 
 xeno_native-objs := module.o task.o timer.o
 
