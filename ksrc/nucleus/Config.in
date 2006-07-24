@@ -50,9 +50,13 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 		bool 'O(1) scheduler' CONFIG_XENO_OPT_SCALABLE_SCHED
         choice 'Timer indexing method'			\
 	"Linear			CONFIG_XENO_OPT_TIMER_LIST	\
-	 Tree			CONFIG_XENO_OPT_TIMER_HEAP"	Linear
+	 Tree			CONFIG_XENO_OPT_TIMER_HEAP	\
+	 Hash			CONFIG_XENO_OPT_TIMER_WHEEL"	Linear
 	if [ "$CONFIG_XENO_OPT_TIMER_HEAP" = "y" ]; then
 		int 'Max. number of timers' CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY 256
+	fi
+	if [ "$CONFIG_XENO_OPT_TIMER_WHEEL" = "y" ]; then
+		int 'Timer wheel step (ns)' CONFIG_XENO_OPT_TIMER_WHEEL_STEP 100000
 	fi
 	endmenu
 
