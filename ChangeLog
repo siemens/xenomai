@@ -1,3 +1,14 @@
+2006-07-26  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/drivers/16550A/16550A.c, ksrc/drivers/testing/irqbench.c,
+	ksrc/drivers/testing/timerbench.c: Apply rtdm_safe_copy_to/from_user
+	and refactor code.
+
+2006-07-26  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* include/rtdm/rtdm_driver.h, ksrc/skins/rtdm/drvlib.c: Add combined
+	services rtdm_safe_copy_to/from_user.
+
 2006-07-25  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/native/task.h, ksrc/native/task.c: Kill unused timer field
