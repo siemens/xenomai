@@ -1118,7 +1118,7 @@ int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 	info->bprio = xnthread_base_priority(&task->thread_base);
 	info->cprio = xnthread_current_priority(&task->thread_base);
 	info->status = xnthread_status_flags(&task->thread_base);
-	info->relpoint = xntimer_get_date(&task->timer);
+	info->relpoint = xntimer_get_date(&task->thread_base.ptimer);
 
       unlock_and_exit:
 
