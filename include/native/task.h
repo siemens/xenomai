@@ -76,7 +76,7 @@ typedef struct rt_task_info {
 
     unsigned status;		/* !< Status. */
 
-    RTIME relpoint;		/* !< Periodic release point. */
+    RTIME relpoint;		/* !< Next periodic release point. */
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 
@@ -108,8 +108,6 @@ typedef struct rt_task {
 
 #define link2rtask(laddr) \
 ((RT_TASK *)(((char *)laddr) - (int)(&((RT_TASK *)0)->link)))
-
-    xntimer_t timer;
 
     xnthread_t thread_base;
 
