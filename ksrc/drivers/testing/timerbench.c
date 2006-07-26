@@ -237,7 +237,7 @@ int rt_tmbench_ioctl_nrt(struct rtdm_dev_context *context,
                          rtdm_user_info_t *user_info, int request, void *arg)
 {
     struct rt_tmbench_context   *ctx;
-    int                         ret = 0;
+    int                         err = 0;
 
 
     ctx = (struct rt_tmbench_context *)context->dev_private;
@@ -250,10 +250,8 @@ int rt_tmbench_ioctl_nrt(struct rtdm_dev_context *context,
 
             config = (struct rttst_tmbench_config *)arg;
             if (user_info) {
-                if (!rtdm_read_user_ok(user_info, arg,
-                                       sizeof(struct rttst_tmbench_config)) ||
-                    rtdm_copy_from_user(user_info, &config_buf, arg,
-                                        sizeof(struct rttst_tmbench_config)))
+                if (rtdm_safe_copy_from_user(user_info, &config_buf, arg,
+                                    sizeof(struct rttst_tmbench_config)) < 0)
                     return -EFAULT;
 
                 config = &config_buf;
@@ -304,7 +302,7 @@ int rt_tmbench_ioctl_nrt(struct rtdm_dev_context *context,
             if (config->mode == RTTST_TMBENCH_TASK) {
                 if (!test_bit(RTDM_CLOSING, &context->context_flags)) {
                     ctx->mode = RTTST_TMBENCH_TASK;
-                    ret = rtdm_task_init(&ctx->timer_task, "timerbench",
+                    err = rtdm_task_init(&ctx->timer_task, "timerbench",
                                          timer_task_proc, ctx,
                                          config->priority, 0);
                 }
@@ -362,35 +360,33 @@ int rt_tmbench_ioctl_nrt(struct rtdm_dev_context *context,
                        ((ctx->result.overall.test_loops) > 1 ?
                        ctx->result.overall.test_loops : 2) - 1);
 
-            if (user_info) {
-                if (!rtdm_rw_user_ok(user_info, usr_res,
-                                    sizeof(struct rttst_overall_bench_res)) ||
-                    rtdm_copy_to_user(user_info, &usr_res->result,
-                                      &ctx->result.overall,
-                                      sizeof(struct rttst_bench_res)))
-                    ret = -EFAULT;
-            } else {
+            if (user_info)
+                err = rtdm_safe_copy_to_user(user_info, &usr_res->result,
+                                             &ctx->result.overall,
+                                             sizeof(struct rttst_bench_res));
+                /* Do not break on error here - we may have to free a
+                   histogram buffer first. */
+            else
                 memcpy(&usr_res->result, &ctx->result.overall,
                        sizeof(struct rttst_bench_res));
-            }
 
-            if (ctx->histogram_size) {
+            if (ctx->histogram_size > 0) {
                 int size = ctx->histogram_size * sizeof(long);
 
                 if (user_info) {
-                    if (!rtdm_rw_user_ok(user_info, usr_res->histogram_min,
-                                         size) ||
-                        rtdm_copy_to_user(user_info, usr_res->histogram_min,
-                                          ctx->histogram_min, size) ||
-                        !rtdm_rw_user_ok(user_info, usr_res->histogram_max,
-                                         size) ||
-                        rtdm_copy_to_user(user_info, usr_res->histogram_max,
-                                          ctx->histogram_max, size) ||
-                        !rtdm_rw_user_ok(user_info, usr_res->histogram_avg,
-                                         size) ||
-                        rtdm_copy_to_user(user_info, usr_res->histogram_avg,
-                                          ctx->histogram_avg, size))
-                        ret = -EFAULT;
+                    if ((rtdm_safe_copy_to_user(user_info,
+                                                usr_res->histogram_min,
+                                                ctx->histogram_min,
+                                                size) < 0) ||
+                        (rtdm_safe_copy_to_user(user_info,
+                                                usr_res->histogram_max,
+                                                ctx->histogram_max,
+                                                size) < 0) ||
+                        (rtdm_safe_copy_to_user(user_info,
+                                                usr_res->histogram_avg,
+                                                ctx->histogram_avg,
+                                                size) < 0))
+                        err = -EFAULT;
                 } else {
                     memcpy(usr_res->histogram_min, ctx->histogram_min, size);
                     memcpy(usr_res->histogram_max, ctx->histogram_max, size);
@@ -406,14 +402,14 @@ int rt_tmbench_ioctl_nrt(struct rtdm_dev_context *context,
         }
 
         case RTTST_RTIOC_INTERM_BENCH_RES:
-            ret = -ENOSYS;
+            err = -ENOSYS;
             break;
 
         default:
-            ret = -ENOTTY;
+            err = -ENOTTY;
     }
 
-    return ret;
+    return err;
 }
 
 
@@ -421,7 +417,7 @@ int rt_tmbench_ioctl_rt(struct rtdm_dev_context *context,
                         rtdm_user_info_t *user_info, int request, void *arg)
 {
     struct rt_tmbench_context   *ctx;
-    int                         ret = 0;
+    int                         err = 0;
 
 
     ctx = (struct rt_tmbench_context *)context->dev_private;
@@ -433,17 +429,14 @@ int rt_tmbench_ioctl_rt(struct rtdm_dev_context *context,
 
             usr_res = (struct rttst_interm_bench_res *)arg;
 
-            ret = rtdm_event_wait(&ctx->result_event);
-            if (ret < 0)
-                return ret;
+            err = rtdm_event_wait(&ctx->result_event);
+            if (err)
+                return err;
 
-            if (user_info) {
-                if (!rtdm_rw_user_ok(user_info, usr_res,
-                                     sizeof(struct rttst_interm_bench_res)) ||
-                    rtdm_copy_to_user(user_info, usr_res, &ctx->result,
-                                      sizeof(struct rttst_interm_bench_res)))
-                    ret = -EFAULT;
-            } else
+            if (user_info)
+                err = rtdm_safe_copy_to_user(user_info, usr_res, &ctx->result,
+                                       sizeof(struct rttst_interm_bench_res));
+            else
                 memcpy(usr_res, &ctx->result,
                        sizeof(struct rttst_interm_bench_res));
 
@@ -452,14 +445,14 @@ int rt_tmbench_ioctl_rt(struct rtdm_dev_context *context,
 
         case RTTST_RTIOC_TMBENCH_START:
         case RTTST_RTIOC_TMBENCH_STOP:
-            ret = -ENOSYS;
+            err = -ENOSYS;
             break;
 
         default:
-            ret = -ENOTTY;
+            err = -ENOTTY;
     }
 
-    return ret;
+    return err;
 }
 
 
@@ -496,7 +489,7 @@ static struct rtdm_device device = {
     device_class:       RTDM_CLASS_TESTING,
     device_sub_class:   RTDM_SUBCLASS_TIMERBENCH,
     driver_name:        "xeno_timerbench",
-    driver_version:     RTDM_DRIVER_VER(0, 2, 0),
+    driver_version:     RTDM_DRIVER_VER(0, 2, 1),
     peripheral_name:    "Timer Latency Benchmark",
     provider_name:      "Jan Kiszka",
     proc_name:          device.device_name,
@@ -504,17 +497,17 @@ static struct rtdm_device device = {
 
 int __init __timerbench_init(void)
 {
-    int ret;
+    int err;
 
     do {
         snprintf(device.device_name, RTDM_MAX_DEVNAME_LEN, "rttest%d",
                  start_index);
-        ret = rtdm_dev_register(&device);
+        err = rtdm_dev_register(&device);
 
         start_index++;
-    } while (ret == -EEXIST);
+    } while (err == -EEXIST);
 
-    return ret;
+    return err;
 }
 
 

@@ -316,7 +316,7 @@ static int rt_16550_set_config(struct rt_16550_context *ctx,
 {
     rtdm_lockctx_t  lock_ctx;
     int             dev_id;
-    int             ret = 0;
+    int             err = 0;
     int             baud_div = 0;
 
 
@@ -375,7 +375,7 @@ static int rt_16550_set_config(struct rt_16550_context *ctx,
                 ctx->in_history = *in_history_ptr;
                 *in_history_ptr = NULL;
                 if (!ctx->in_history)
-                    ret = -ENOMEM;
+                    err = -ENOMEM;
             }
         } else {
             *in_history_ptr = ctx->in_history;
@@ -430,7 +430,7 @@ static int rt_16550_set_config(struct rt_16550_context *ctx,
         rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
     }
 
-    return ret;
+    return err;
 }
 
 
@@ -448,7 +448,7 @@ int rt_16550_open(struct rtdm_dev_context *context,
 {
     struct rt_16550_context *ctx;
     int                     dev_id = context->device->device_id;
-    int                     ret;
+    int                     err;
     uint64_t                *dummy;
     rtdm_lockctx_t          lock_ctx;
 
@@ -481,16 +481,16 @@ int rt_16550_open(struct rtdm_dev_context *context,
 
     rt_16550_set_config(ctx, &default_config, &dummy);
 
-    ret = rtdm_irq_request(&ctx->irq_handle, irq[dev_id], rt_16550_interrupt,
+    err = rtdm_irq_request(&ctx->irq_handle, irq[dev_id], rt_16550_interrupt,
                            RTDM_IRQTYPE_SHARED | RTDM_IRQTYPE_EDGE,
                            context->device->proc_name, ctx);
-    if (ret < 0) {
+    if (err) {
         /* reset DTR and RTS */
         outb(0, MCR(dev_id));
 
         rt_16550_cleanup_ctx(ctx);
 
-        return ret;
+        return err;
     }
     rtdm_irq_enable(&ctx->irq_handle);
 
@@ -559,7 +559,7 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
                    rtdm_user_info_t *user_info, int request, void *arg)
 {
     struct rt_16550_context *ctx;
-    int                     ret = 0;
+    int                     err = 0;
     int                     dev_id = context->device->device_id;
 
 
@@ -567,13 +567,10 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 
     switch (request) {
         case RTSER_RTIOC_GET_CONFIG:
-            if (user_info) {
-                if (!rtdm_rw_user_ok(user_info, arg,
-                                     sizeof(struct rtser_config)) ||
-                    rtdm_copy_to_user(user_info, arg, &ctx->config,
-                                      sizeof(struct rtser_config)))
-                    return -EFAULT;
-            } else
+            if (user_info)
+                err = rtdm_safe_copy_to_user(user_info, arg, &ctx->config,
+                                             sizeof(struct rtser_config));
+            else
                 memcpy(arg, &ctx->config, sizeof(struct rtser_config));
             break;
 
@@ -586,12 +583,10 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
             config = (struct rtser_config *)arg;
 
             if (user_info) {
-
-                if (!rtdm_read_user_ok(user_info, arg,
-                                       sizeof(struct rtser_config)) ||
-                    rtdm_copy_from_user(user_info, &config_buf, arg,
-                                        sizeof(struct rtser_config)))
-                    return -EFAULT;
+                err = rtdm_safe_copy_from_user(user_info, &config_buf, arg,
+                                               sizeof(struct rtser_config));
+                if (err)
+                    return err;
 
                 config = &config_buf;
             }
@@ -645,11 +640,10 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
                 status_buf.line_status  = inb(LSR(ctx->dev_id));
                 status_buf.modem_status = inb(MSR(ctx->dev_id));
 
-                if (!rtdm_rw_user_ok(user_info, arg,
-                                     sizeof(struct rtser_status)) ||
-                    rtdm_copy_to_user(user_info, arg, &status_buf,
-                                      sizeof(struct rtser_status)))
-                    return -EFAULT;
+                err = rtdm_safe_copy_to_user(user_info, arg, &status_buf,
+                                             sizeof(struct rtser_status));
+                if (err)
+                    return err;
             } else {
                 ((struct rtser_status *)arg)->line_status  =
                     inb(LSR(ctx->dev_id));
@@ -664,12 +658,10 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
         }
 
         case RTSER_RTIOC_GET_CONTROL:
-            if (user_info) {
-                if (!rtdm_rw_user_ok(user_info, arg, sizeof(int)) ||
-                    rtdm_copy_to_user(user_info, arg, &ctx->mcr_status,
-                                      sizeof(int)))
-                    ret = -EFAULT;
-            } else
+            if (user_info)
+                err = rtdm_safe_copy_to_user(user_info, arg, &ctx->mcr_status,
+                                             sizeof(int));
+            else
                 *(int *)arg = ctx->mcr_status;
 
             break;
@@ -713,12 +705,12 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 
                 rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
 
-                ret = rtdm_event_timedwait(&ctx->ioc_event,
+                err = rtdm_event_timedwait(&ctx->ioc_event,
                                            ctx->config.event_timeout,
                                            &timeout_seq);
-                if (ret < 0) {
-                    if (ret == -EIDRM)  /* device has been closed */
-                        ret = -EBADF;
+                if (err) {
+                    if (err == -EIDRM)  /* device has been closed */
+                        err = -EBADF;
                     goto wait_unlock_out;
                 }
 
@@ -736,13 +728,10 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 
             rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
 
-            if (user_info) {
-                if (!rtdm_rw_user_ok(user_info, arg,
-                                     sizeof(struct rtser_event)) ||
-                    rtdm_copy_to_user(user_info, arg, &ev,
-                                      sizeof(struct rtser_event)))
-                    ret = -EFAULT;
-            } else
+            if (user_info)
+                err = rtdm_safe_copy_to_user(user_info, arg, &ev,
+                                             sizeof(struct rtser_event));
+            else
                 memcpy(arg, &ev, sizeof(struct rtser_event));
 
           wait_unlock_out:
@@ -779,10 +768,10 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
         }
 
         default:
-            ret = -ENOTTY;
+            err = -ENOTTY;
     }
 
-    return ret;
+    return err;
 }
 
 
@@ -1085,7 +1074,7 @@ static const struct rtdm_device __initdata device_tmpl = {
     device_class:       RTDM_CLASS_SERIAL,
     device_sub_class:   RTDM_SUBCLASS_16550A,
     driver_name:        "xeno_16550A",
-    driver_version:     RTDM_DRIVER_VER(1, 3, 2),
+    driver_version:     RTDM_DRIVER_VER(1, 3, 3),
     peripheral_name:    "UART 16550A",
     provider_name:      "Jan Kiszka",
 };
@@ -1095,7 +1084,7 @@ void __16550A_exit(void);
 int __init __16550A_init(void)
 {
     struct rtdm_device  *dev;
-    int                 ret;
+    int                 err;
     int                 i;
 
 
@@ -1103,13 +1092,12 @@ int __init __16550A_init(void)
         if (!ioaddr[i])
             continue;
 
-        ret = -EINVAL;
-        if (!irq[i]) {
+        err = -EINVAL;
+        if (!irq[i])
             goto cleanup_out;
-        }
 
         dev = kmalloc(sizeof(struct rtdm_device), GFP_KERNEL);
-        ret = -ENOMEM;
+        err = -ENOMEM;
         if (!dev)
             goto cleanup_out;
 
@@ -1120,7 +1108,7 @@ int __init __16550A_init(void)
 
         dev->proc_name = dev->device_name;
 
-        ret = -EBUSY;
+        err = -EBUSY;
         if (!request_region(ioaddr[i], 8, dev->device_name))
             goto kfree_out;
 
@@ -1137,9 +1125,9 @@ int __init __16550A_init(void)
         inb(RHR(i));
         inb(MSR(i));
 
-        ret = rtdm_dev_register(dev);
+        err = rtdm_dev_register(dev);
 
-        if (ret < 0)
+        if (err)
             goto rel_region_out;
 
         device[i] = dev;
@@ -1157,7 +1145,7 @@ int __init __16550A_init(void)
  cleanup_out:
     __16550A_exit();
 
-    return ret;
+    return err;
 }
 
 
