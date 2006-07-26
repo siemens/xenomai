@@ -111,7 +111,7 @@ struct rtdm_dev_context;
 #define RTDM_CONTEXT_STRUCT_VER     3
 
 /** Driver API version */
-#define RTDM_API_VER                4
+#define RTDM_API_VER                5
 
 /** Minimum API revision compatible with the current release */
 #define RTDM_API_MIN_COMPAT_VER     4
@@ -1044,10 +1044,28 @@ static inline int rtdm_copy_from_user(rtdm_user_info_t *user_info,
     return __xn_copy_from_user(user_info, dst, src, size);
 }
 
+static inline int rtdm_safe_copy_from_user(rtdm_user_info_t *user_info,
+                                           void *dst, const void __user *src,
+                                           size_t size)
+{
+    if (unlikely(!__xn_access_ok(user_info, VERIFY_READ, src, size)))
+        return -EFAULT;
+    return __xn_copy_from_user(user_info, dst, src, size);
+}
+
 static inline int rtdm_copy_to_user(rtdm_user_info_t *user_info,
                                     void __user *dst, const void *src,
                                     size_t size)
 {
+    return __xn_copy_to_user(user_info, dst, src, size);
+}
+
+static inline int rtdm_safe_copy_to_user(rtdm_user_info_t *user_info,
+                                         void __user *dst, const void *src,
+                                         size_t size)
+{
+    if (unlikely(!__xn_access_ok(user_info, VERIFY_WRITE, dst, size)))
+        return -EFAULT;
     return __xn_copy_to_user(user_info, dst, src, size);
 }
 

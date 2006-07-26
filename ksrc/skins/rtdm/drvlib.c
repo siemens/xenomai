@@ -57,7 +57,7 @@
  * value will be limited to multiples of the timer tick period.
  *
  * @note The system timer may have to be started to obtain valid results.
- * Wether this happens automatically (as on Xenomai) or is controlled by the
+ * Whether this happens automatically (as on Xenomai) or is controlled by the
  * application depends on the RTDM host environment.
  *
  * Environments:
@@ -1671,6 +1671,36 @@ int rtdm_copy_from_user(rtdm_user_info_t *user_info, void *dst,
                         const void __user *src, size_t size);
 
 /**
+ * Check if read access to user-space memory block and copy it to specified
+ * buffer
+ *
+ * @param[in] user_info User information pointer as passed to the invoked
+ * device operation handler
+ * @param[in] dst Destination buffer address
+ * @param[in] src Address of the user-space memory block
+ * @param[in] size Size of the memory block
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EFAULT is returned if an invalid memory area was accessed.
+ *
+ * @note This service is a combination of rtdm_read_user_ok and
+ * rtdm_copy_from_user.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task (RT, non-RT)
+ *
+ * Rescheduling: never.
+ */
+int rtdm_safe_copy_from_user(rtdm_user_info_t *user_info, void *dst,
+                             const void __user *src, size_t size);
+
+/**
  * Copy specified buffer to user-space memory block
  *
  * @param[in] user_info User information pointer as passed to the invoked
@@ -1698,6 +1728,36 @@ int rtdm_copy_from_user(rtdm_user_info_t *user_info, void *dst,
  */
 int rtdm_copy_to_user(rtdm_user_info_t *user_info, void __user *dst,
                       const void *src, size_t size);
+
+/**
+ * Check if read/write access to user-space memory block is safe and copy
+ * specified buffer to it
+ *
+ * @param[in] user_info User information pointer as passed to the invoked
+ * device operation handler
+ * @param[in] dst Address of the user-space memory block
+ * @param[in] src Source buffer address
+ * @param[in] size Size of the memory block
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EFAULT is returned if an invalid memory area was accessed.
+ *
+ * @note This service is a combination of rtdm_rw_user_ok and
+ * rtdm_copy_to_user.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task (RT, non-RT)
+ *
+ * Rescheduling: never.
+ */
+int rtdm_safe_copy_to_user(rtdm_user_info_t *user_info, void __user *dst,
+                           const void *src, size_t size);
 
 /**
  * Copy user-space string to specified buffer
