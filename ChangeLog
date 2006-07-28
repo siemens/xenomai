@@ -1,3 +1,18 @@
+2006-07-28  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.4.32-1.2-06.
+
+2006-07-27  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pod.c (xnpod_suspend_thread): Don't send migration
+	signal to dormant threads.
+
+2006-07-26  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/hal.c (rthal_arch_init, rthal_arch_cleanup):
+	Prevent the 2.4 speaker code from bugging our TSC emulation, also
+	based on PIT channel 2.
+
 2006-07-26  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/16550A/16550A.c, ksrc/drivers/testing/irqbench.c,
