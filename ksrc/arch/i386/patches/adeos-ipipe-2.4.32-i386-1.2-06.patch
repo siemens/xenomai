@@ -910,8 +910,8 @@ diff -uNrp 2.4.32/arch/i386/kernel/ipipe-core.c 2.4.32-i386-ipipe/arch/i386/kern
 +EXPORT_SYMBOL(ipipe_tune_timer);
 diff -uNrp 2.4.32/arch/i386/kernel/ipipe-root.c 2.4.32-i386-ipipe/arch/i386/kernel/ipipe-root.c
 --- 2.4.32/arch/i386/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.4.32-i386-ipipe/arch/i386/kernel/ipipe-root.c	2006-06-24 19:49:46.000000000 +0200
-@@ -0,0 +1,548 @@
++++ 2.4.32-i386-ipipe/arch/i386/kernel/ipipe-root.c	2006-07-28 15:49:14.000000000 +0200
+@@ -0,0 +1,556 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/i386/kernel/ipipe-root.c
 + *
@@ -942,6 +942,7 @@ diff -uNrp 2.4.32/arch/i386/kernel/ipipe-root.c 2.4.32-i386-ipipe/arch/i386/kern
 +#include <linux/smp.h>
 +#include <linux/interrupt.h>
 +#include <linux/slab.h>
++#include <linux/vt_kern.h>
 +#include <asm/system.h>
 +#include <asm/atomic.h>
 +#include <asm/hw_irq.h>
@@ -1245,10 +1246,13 @@ diff -uNrp 2.4.32/arch/i386/kernel/ipipe-root.c 2.4.32-i386-ipipe/arch/i386/kern
 +}
 +
 +asmlinkage void do_divide_error(struct pt_regs *regs, long error_code);
++asmlinkage void do_debug(struct pt_regs *regs, long error_code);
++asmlinkage void do_int3(struct pt_regs *regs, long error_code);
 +asmlinkage void do_overflow(struct pt_regs *regs, long error_code);
 +asmlinkage void do_bounds(struct pt_regs *regs, long error_code);
 +asmlinkage void do_invalid_op(struct pt_regs *regs, long error_code);
 +asmlinkage void do_coprocessor_segment_overrun(struct pt_regs *regs, long error_code);
++asmlinkage void do_double_fault(struct pt_regs *regs, long error_code);
 +asmlinkage void do_invalid_TSS(struct pt_regs *regs, long error_code);
 +asmlinkage void do_segment_not_present(struct pt_regs *regs, long error_code);
 +asmlinkage void do_stack_segment(struct pt_regs *regs, long error_code);
@@ -1269,10 +1273,13 @@ diff -uNrp 2.4.32/arch/i386/kernel/ipipe-root.c 2.4.32-i386-ipipe/arch/i386/kern
 +static __ipipe_exptr __ipipe_std_extable[] = {
 +
 +	[ex_do_divide_error] = &do_divide_error,
++	[ex_do_debug] = &do_debug,
++	[ex_do_int3] = &do_int3,
 +	[ex_do_overflow] = &do_overflow,
 +	[ex_do_bounds] = &do_bounds,
 +	[ex_do_invalid_op] = &do_invalid_op,
 +	[ex_do_coprocessor_segment_overrun] = &do_coprocessor_segment_overrun,
++	[ex_do_double_fault] = &do_double_fault,
 +	[ex_do_invalid_TSS] = &do_invalid_TSS,
 +	[ex_do_segment_not_present] = &do_segment_not_present,
 +	[ex_do_stack_segment] = &do_stack_segment,
@@ -1460,6 +1467,7 @@ diff -uNrp 2.4.32/arch/i386/kernel/ipipe-root.c 2.4.32-i386-ipipe/arch/i386/kern
 +EXPORT_SYMBOL(do_exit);
 +void (*nmi_watchdog_tick) (struct pt_regs * regs);
 +EXPORT_SYMBOL(nmi_watchdog_tick);
++EXPORT_SYMBOL(kd_mksound);
 diff -uNrp 2.4.32/arch/i386/kernel/irq.c 2.4.32-i386-ipipe/arch/i386/kernel/irq.c
 --- 2.4.32/arch/i386/kernel/irq.c	2003-11-28 19:26:19.000000000 +0100
 +++ 2.4.32-i386-ipipe/arch/i386/kernel/irq.c	2006-01-03 19:05:17.000000000 +0100
@@ -1751,8 +1759,19 @@ diff -uNrp 2.4.32/arch/i386/kernel/smpboot.c 2.4.32-i386-ipipe/arch/i386/kernel/
  	current->processor = 0;
 diff -uNrp 2.4.32/arch/i386/kernel/time.c 2.4.32-i386-ipipe/arch/i386/kernel/time.c
 --- 2.4.32/arch/i386/kernel/time.c	2004-02-18 14:36:30.000000000 +0100
-+++ 2.4.32-i386-ipipe/arch/i386/kernel/time.c	2006-01-03 19:05:17.000000000 +0100
-@@ -210,14 +210,15 @@ static unsigned long do_slow_gettimeoffs
++++ 2.4.32-i386-ipipe/arch/i386/kernel/time.c	2006-07-23 11:57:08.000000000 +0200
+@@ -167,6 +167,10 @@ static unsigned long do_slow_gettimeoffs
+ 	 */
+ 	unsigned long jiffies_t;
+ 
++#ifdef CONFIG_IPIPE
++	if (!__ipipe_pipeline_head_p(ipipe_root_domain))
++		return 0;	/* We don't really own the PIT. */
++#endif /* CONFIG_IPIPE */
+ 	/* gets recalled with irq locally disabled */
+ 	spin_lock(&i8253_lock);
+ 	/* timer count may underflow right here */
+@@ -210,14 +214,15 @@ static unsigned long do_slow_gettimeoffs
  			/* the nutcase */
  
  			int i;
@@ -1770,7 +1789,29 @@ diff -uNrp 2.4.32/arch/i386/kernel/time.c 2.4.32-i386-ipipe/arch/i386/kernel/tim
  
  			/* assumption about timer being IRQ0 */
  			if (i & 0x01) {
-@@ -577,14 +578,15 @@ static inline void do_timer_interrupt(in
+@@ -281,6 +286,10 @@ static inline void mark_timeoffset_cyclo
+ 	int count;
+ 	unsigned long lost;
+ 	unsigned long delta = last_cyclone_timer;
++#ifdef CONFIG_IPIPE
++	if (!__ipipe_pipeline_head_p(ipipe_root_domain))
++		return;	/* We don't really own the PIT. */
++#endif /* CONFIG_IPIPE */
+ 	spin_lock(&i8253_lock);
+ 	/* quickly read the cyclone timer */
+ 	if(cyclone_timer)
+@@ -309,6 +318,10 @@ static unsigned long do_gettimeoffset_cy
+ {
+ 	u32 offset;
+ 
++#ifdef CONFIG_IPIPE
++	if (!__ipipe_pipeline_head_p(ipipe_root_domain))
++		return 0;
++#endif /* CONFIG_IPIPE */
+ 	if(!cyclone_timer)
+ 		return delay_at_last_interrupt;
+ 
+@@ -577,14 +590,15 @@ static inline void do_timer_interrupt(in
  		 * This will also deassert NMI lines for the watchdog if run
  		 * on an 82489DX-based system.
  		 */
@@ -1789,7 +1830,7 @@ diff -uNrp 2.4.32/arch/i386/kernel/time.c 2.4.32-i386-ipipe/arch/i386/kernel/tim
  #ifdef CONFIG_VISWS
  	/* Clear the interrupt */
  	co_cpu_write(CO_CPU_STAT,co_cpu_read(CO_CPU_STAT) & ~CO_STAT_TIMEINTR);
-@@ -644,8 +646,10 @@ static int use_tsc;
+@@ -644,8 +658,10 @@ static int use_tsc;
   */
  static void timer_interrupt(int irq, void *dev_id, struct pt_regs *regs)
  {
@@ -1801,7 +1842,7 @@ diff -uNrp 2.4.32/arch/i386/kernel/time.c 2.4.32-i386-ipipe/arch/i386/kernel/tim
  	/*
  	 * Here we are in the timer irq handler. We just have irqs locally
  	 * disabled but we don't know if the timer_bh is running on the other
-@@ -674,6 +678,7 @@ static void timer_interrupt(int irq, voi
+@@ -674,6 +690,7 @@ static void timer_interrupt(int irq, voi
  
  		rdtscl(last_tsc_low);
  
@@ -1809,7 +1850,7 @@ diff -uNrp 2.4.32/arch/i386/kernel/time.c 2.4.32-i386-ipipe/arch/i386/kernel/tim
  		spin_lock(&i8253_lock);
  		outb_p(0x00, 0x43);     /* latch the count ASAP */
  
-@@ -705,6 +710,8 @@ static void timer_interrupt(int irq, voi
+@@ -705,6 +722,8 @@ static void timer_interrupt(int irq, voi
  
  		count = ((LATCH-1) - count) * TICK_SIZE;
  		delay_at_last_interrupt = (count + LATCH/2) / LATCH;
@@ -1954,7 +1995,7 @@ diff -uNrp 2.4.32/include/asm-i386/hw_irq.h 2.4.32-i386-ipipe/include/asm-i386/h
   * system calls and interrupted 'random user-space'. Thus we have
 diff -uNrp 2.4.32/include/asm-i386/ipipe.h 2.4.32-i386-ipipe/include/asm-i386/ipipe.h
 --- 2.4.32/include/asm-i386/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.4.32-i386-ipipe/include/asm-i386/ipipe.h	2006-07-06 10:34:55.000000000 +0200
++++ 2.4.32-i386-ipipe/include/asm-i386/ipipe.h	2006-07-28 15:47:16.000000000 +0200
 @@ -0,0 +1,271 @@
 +/*   -*- linux-c -*-
 + *   include/asm-i386/ipipe.h
@@ -1988,10 +2029,10 @@ diff -uNrp 2.4.32/include/asm-i386/ipipe.h 2.4.32-i386-ipipe/include/asm-i386/ip
 +#include <asm/irq.h>
 +#endif /* __ASSEMBLY__ */
 +
-+#define IPIPE_ARCH_STRING	"1.2-04"
++#define IPIPE_ARCH_STRING	"1.2-06"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	2
-+#define IPIPE_PATCH_NUMBER	4
++#define IPIPE_PATCH_NUMBER	6
 +
 +#define __clear_bit(nr,addr) clear_bit(nr,addr)
 +#define __test_bit(nr,addr)  test_bit(nr,addr)
@@ -2028,7 +2069,7 @@ diff -uNrp 2.4.32/include/asm-i386/ipipe.h 2.4.32-i386-ipipe/include/asm-i386/ip
 +#define ex_do_bounds			5
 +#define ex_do_invalid_op		6
 +#define ex_device_not_available		7
-+/* Double fault not pipelined. */
++#define ex_do_double_fault		8
 +#define ex_do_coprocessor_segment_overrun 9
 +#define ex_do_invalid_TSS		10
 +#define ex_do_segment_not_present	11
