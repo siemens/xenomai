@@ -607,7 +607,7 @@ int rthal_arch_init(void)
        patch. */
     old_mksound = kd_mksound;
     kd_mksound = &dummy_mksound;
-#endif /* Linux < 2.6 && !CONFIG_X86_TSC */
+#endif /* !CONFIG_X86_LOCAL_APIC && Linux < 2.6 && !CONFIG_X86_TSC */
 
     if (rthal_cpufreq_arg == 0)
 #ifdef CONFIG_X86_TSC
