@@ -182,6 +182,9 @@ unsigned long rthal_timer_calibrate(void)
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
+
+#include <linux/vt_kern.h>
+
 extern void show_registers(struct pt_regs *regs);
 
 extern spinlock_t nmi_print_lock;
@@ -202,6 +205,13 @@ void die_nmi(struct pt_regs *regs, const char *msg)
     bust_spinlocks(0);
     do_exit(SIGSEGV);
 }
+
+static void (*old_mksound)(unsigned int hz, unsigned int ticks);
+
+static void dummy_mksound (unsigned int hz, unsigned int ticks)
+{
+}
+
 #else /* Linux >= 2.6 */
 #include <asm/nmi.h>
 #endif /* Linux < 2.6 */
@@ -591,6 +601,13 @@ int rthal_arch_init(void)
         rthal_smi_restore();
         return -ENODEV;
     }
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) && !defined(CONFIG_X86_TSC)
+    /* Prevent the speaker code from bugging our TSC emulation, also
+       based on PIT channel 2. kd_mksound is exported by the Adeos
+       patch. */
+    old_mksound = kd_mksound;
+    kd_mksound = &dummy_mksound;
+#endif /* Linux < 2.6 && !CONFIG_X86_TSC */
 #endif /* CONFIG_X86_LOCAL_APIC */
 
     if (rthal_cpufreq_arg == 0)
@@ -615,6 +632,10 @@ int rthal_arch_init(void)
 
 void rthal_arch_cleanup(void)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) && !defined(CONFIG_X86_TSC)
+    /* Restore previous PC speaker code. */
+    kd_mksound = old_mksound;
+#endif /* Linux < 2.6 && !CONFIG_X86_TSC */
     printk(KERN_INFO "Xenomai: hal/x86 stopped.\n");
 }
 
