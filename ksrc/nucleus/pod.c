@@ -1509,12 +1509,11 @@ void xnpod_suspend_thread (xnthread_t *thread,
        issue when the about to be suspended thread is current, since
        it must not be relaxed anyway.
 
-       - among all blocking bits (XNTHREAD_BLOCK_BITS), only
-       XNSUSP, XNDELAY and XNHELD may be applied by the current
-       thread to a non-current thread. XNPEND is always added by
-       the caller to its own state, XNDORMANT is a pre-runtime
-       state, and XNRELAX has special semantics escaping this
-       issue.
+       - among all blocking bits (XNTHREAD_BLOCK_BITS), only XNSUSP
+       and XNDELAY may be applied by the current thread to a
+       non-current thread. XNPEND is always added by the caller to its
+       own state, XNDORMANT is a pre-runtime state, and XNRELAX has
+       special semantics escaping this issue.
 
        Also note that we don't signal threads which are in a
        dormant state, since they are suspended by definition.
