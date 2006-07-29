@@ -15,19 +15,21 @@
 #include <asm/xenomai/fptest.h>
 #include <rtdm/rttesting.h>
 
-#if CONFIG_SMP
 #ifdef HAVE_RECENT_SETAFFINITY
-#define smp_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,len,mask)
+#define do_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,len,mask)
 #else /* !HAVE_RECENT_SETAFFINITY */
 #ifdef HAVE_OLD_SETAFFINITY
-#define smp_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,mask)
+#define do_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,mask)
 #else /* !HAVE_OLD_SETAFFINITY */
 typedef unsigned long cpu_set_t;
-#define smp_sched_setaffinity(pid,len,mask) 0
+#define do_sched_setaffinity(pid,len,mask) 0
 #define	 CPU_ZERO(set)		do { *(set) = 0; } while(0)
 #define	 CPU_SET(n,set) 	do { *(set) |= (1 << n); } while(0)
 #endif /* HAVE_OLD_SETAFFINITY */
 #endif /* HAVE_RECENT_SETAFFINITY */
+
+#if CONFIG_SMP
+#define smp_sched_setaffinity(pid,len,mask) do_sched_setaffinity(pid,len,mask)
 #else /* !CONFIG_SMP */
 #define smp_sched_setaffinity(pid,len,mask) 0
 #endif /* !CONFIG_SMP */
@@ -707,7 +709,11 @@ void usage(FILE *fd, const char *progname)
 {
 	unsigned i, j, nr_cpus;
 
+#if CONFIG_SMP
 	nr_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+#else /* !CONFIG_SMP */
+	nr_cpus = 1;
+#endif /* !CONFIG_SMP */
 
 	fprintf(fd,
 		"Usage:\n"
@@ -772,7 +778,13 @@ int main(int argc, const char *argv[])
 
 	all = all_fp;
 	count = sizeof(all_fp) / sizeof(char *);
+
+#if CONFIG_SMP
 	nr_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+#else /* !CONFIG_SMP */
+	nr_cpus = 1;
+#endif /* !CONFIG_SMP */
+
 	if (nr_cpus == -1) {
 		fprintf(stderr,
 			"Error %d while getting the number of cpus (%s)\n",
