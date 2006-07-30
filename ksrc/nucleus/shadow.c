@@ -957,7 +957,7 @@ int xnshadow_wait_barrier(struct pt_regs *regs)
 	if (signal_pending(current))
 		return -ERESTARTSYS;
 
-	if (!testbits(thread->status, XNSTARTED))	/* Paranoid. */
+	if (!testbits(thread->status, XNSTARTED))	/* Not really paranoid. */
 		return -EPERM;
 
       release_task:
@@ -1018,6 +1018,13 @@ static int xnshadow_sys_migrate(struct task_struct *curr, struct pt_regs *regs)
 		if (__xn_reg_arg1(regs) == XENOMAI_XENO_DOMAIN) {
 			if (!xnshadow_thread(curr))
 				return -EPERM;
+
+			/* Paranoid: a corner case where the
+			   user-space side fiddles with SIGCHLD while
+			   the target thread is still waiting to be
+			   started. */
+			if (testbits(xnshadow_thread(curr)->status, XNDORMANT))
+				return 0;
 
 			return xnshadow_harden()? : 1;
 		} else
@@ -1795,8 +1802,7 @@ static inline void do_sigwake_event(struct task_struct *p)
 
 	if (p->state & TASK_INTERRUPTIBLE)
 		set_task_state(p,
-			       (p->
-				state & ~TASK_INTERRUPTIBLE) |
+			       (p->state & ~TASK_INTERRUPTIBLE) |
 			       TASK_UNINTERRUPTIBLE);
 
 	xnpod_schedule();
