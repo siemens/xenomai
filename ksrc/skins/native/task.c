@@ -634,9 +634,20 @@ int rt_task_delete (RT_TASK *task)
        sure we have an associated Linux mate before trying to send it
        a signal. This will also prevent any action on kernel-based
        Xenomai threads for which the user TCB extension is always
-       NULL. */
-    if (xnthread_user_task(&task->thread_base) && task != xeno_current_task())
-	xnshadow_send_sig(&task->thread_base,SIGKILL,1);
+       NULL.  We don't send any signal to dormant threads because GDB
+       (6.x) has some problems dealing with vanishing threads under
+       some circumstances, likely when asynchronous cancellation is in
+       effect. In most cases, this is a non-issue since
+       pthread_cancel() is requested from the skin interface library
+       in parallel on the target thread, but when calling
+       rt_task_delete() from kernel space against a created but
+       unstarted user-space task, the Linux thread mated to the
+       Xenomai shadow might linger unexpectedly on the startup
+       barrier. */
+    if (xnthread_user_task(&task->thread_base) != NULL
+	&& !xnthread_test_flags(&task->thread_base,XNDORMANT)
+	&& (!xnpod_primary_p() || task != xeno_current_task()))
+	xnshadow_send_sig(&task->thread_base, SIGKILL, 1);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
     /* Does not return if task is current. */
