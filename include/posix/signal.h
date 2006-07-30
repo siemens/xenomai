@@ -110,6 +110,9 @@ int sigqueue (struct pse51_thread *thread, int sig, union sigval value);
 #else /* __KERNEL__ || __XENO_SIM__ */
 
 #include_next <signal.h>
+/* In case signal.h is included for a side effect of an __need* macro, include
+   it a second time to get all definitions. */
+#include_next <signal.h>
 
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
