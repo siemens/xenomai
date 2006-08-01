@@ -218,6 +218,17 @@ the same move.
 
 ______________________________________________________________________
 
+Q: I am seeing high latency spots when running under X-window, what 
+   can I do?
+
+A: Try disabling hardware acceleration in the X-window server 
+   configuration file; in the "Device" section of /etc/X11/XF86Config-4,
+   add the following line:
+
+   Option "NoAccel"
+
+______________________________________________________________________
+
 Q: Xenomai HAL's initialization fails with error: -1 no such device
 
 A: Dumping the kernel message log using "dmesg" will likely give you
