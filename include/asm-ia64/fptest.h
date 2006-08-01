@@ -82,7 +82,7 @@ static inline unsigned fp_regs_check(unsigned long val)
 
 	for (i = 14; i < 127; i++)
 		if (e[i] != val) {
-			printk("f%d= %llu != %u\n", i + 1, e[i], val);
+			printk("f%d= %lu != %lu\n", i + 1, e[i], val);
 			result = e[i];
 		}
 	return result;
