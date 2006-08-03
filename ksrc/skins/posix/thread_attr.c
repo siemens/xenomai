@@ -32,13 +32,14 @@
  * - @a stacksize to PTHREAD_STACK_MIN,
  * - @a inheritsched to PTHREAD_EXPLICIT_SCHED,
  * - @a schedpolicy to SCHED_OTHER,
+ * - @a name to NULL (only available in kernel-space),
  * - scheduling priority to the minimum,
  * - floating-point hardware enabled (only available in kernel-space),
  * - processor affinity set to all available processors (only available as a
  *   thread attribute in kernel-space).
  *
- * In user-space, the defaults are those documented by the underlying threading
- * library (LinuxThreads or NPTL).
+ * In user-space, the attributes and their defaults values are those documented
+ * by the underlying threading library (LinuxThreads or NPTL).
  * 
  *@{*/
 
@@ -693,7 +694,7 @@ int pthread_attr_setscope(pthread_attr_t * attr, int scope)
  *
  * If @a name is @a NULL, a unique default name will be used.
  *
- * The @a name attribute is not portable.
+ * This service is a non-portable extension of the POSIX interface.
  *
  * @param attr attribute object;
  *
@@ -703,6 +704,10 @@ int pthread_attr_setscope(pthread_attr_t * attr, int scope)
  * @return 0 on success;
  * @return an error number if:
  * - EINVAL, @a attr is invalid.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - Xenomai kernel-space thread.
  */
 int pthread_attr_getname_np(const pthread_attr_t * attr, const char **name)
 {
@@ -733,7 +738,7 @@ int pthread_attr_getname_np(const pthread_attr_t * attr, const char **name)
  *
  * If @a name is @a NULL, a unique default name will be used.
  *
- * The @a name attribute is not portable.
+ * This service is a non-portable extension of the POSIX interface.
  *
  * @param attr attribute object;
  *
@@ -741,7 +746,13 @@ int pthread_attr_getname_np(const pthread_attr_t * attr, const char **name)
  *
  * @return 0 on success;
  * @return an error number if:
- * - EINVAL, @a attr is invalid.
+ * - EINVAL, @a attr is invalid;
+ * - ENOMEM, insufficient memory exists in the system heap to duplicate the name
+ *   string, increase CONFIG_XENO_OPT_SYS_HEAPSZ.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - Xenomai kernel-space thread.
  */
 int pthread_attr_setname_np(pthread_attr_t * attr, const char *name)
 {
@@ -782,7 +793,7 @@ int pthread_attr_setname_np(pthread_attr_t * attr, const char *name)
  * The @a fp attribute is a boolean attribute indicating whether a thread
  * created with the attribute @a attr may use floating-point hardware.
  *
- * The @a fp attribute is not portable.
+ * This service is a non-portable extension of the POSIX interface.
  *
  * @param attr attribute object;
  *
@@ -792,6 +803,10 @@ int pthread_attr_setname_np(pthread_attr_t * attr, const char *name)
  * @return 0 on success;
  * @return an error number if:
  * - EINVAL, @a attr is invalid.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - Xenomai kernel-space thread.
  */
 int pthread_attr_getfp_np(const pthread_attr_t * attr, int *fp)
 {
@@ -820,7 +835,7 @@ int pthread_attr_getfp_np(const pthread_attr_t * attr, int *fp)
  * The @a fp attribute is a boolean attribute indicating whether a thread
  * created with the attribute @a attr may use floating-point hardware.
  *
- * The @a fp attribute is not portable.
+ * This service is a non-portable extension of the POSIX interface.
  *
  * @param attr attribute object;
  *
@@ -829,6 +844,10 @@ int pthread_attr_getfp_np(const pthread_attr_t * attr, int *fp)
  * @return 0 on success;
  * @return an error number if:
  * - EINVAL, @a attr is invalid.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - Xenomai kernel-space thread.
  */
 int pthread_attr_setfp_np(pthread_attr_t * attr, int fp)
 {
@@ -858,7 +877,7 @@ int pthread_attr_setfp_np(pthread_attr_t * attr, int fp)
  * where a thread created with the attribute @a attr may run. The least
  * significant bit corresponds to the first logical processor.
  *
- * The @a affinity attribute is not portable.
+ * This service is a non-portable extension of the POSIX interface.
  *
  * @param attr attribute object;
  *
@@ -868,6 +887,10 @@ int pthread_attr_setfp_np(pthread_attr_t * attr, int fp)
  * @return 0 on success;
  * @return an error number if:
  * - EINVAL, @a attr is invalid.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - Xenomai kernel-space thread.
  */
 int
 pthread_attr_getaffinity_np(const pthread_attr_t * attr, xnarch_cpumask_t *mask)
@@ -898,7 +921,7 @@ pthread_attr_getaffinity_np(const pthread_attr_t * attr, xnarch_cpumask_t *mask)
  * where a thread created with the attribute @a attr may run. The least
  * significant bit corresponds to the first logical processor.
  *
- * The @a affinity attribute is not portable.
+ * This service is a non-portable extension of the POSIX interface.
  *
  * @param attr attribute object;
  *
@@ -908,6 +931,10 @@ pthread_attr_getaffinity_np(const pthread_attr_t * attr, xnarch_cpumask_t *mask)
  * @return 0 on success;
  * @return an error number if:
  * - EINVAL, @a attr is invalid.
+ *
+ * @par Valid contexts:
+ * - kernel module initialization or cleanup routine;
+ * - Xenomai kernel-space thread.
  */
 int pthread_attr_setaffinity_np(pthread_attr_t * attr, xnarch_cpumask_t mask)
 {
