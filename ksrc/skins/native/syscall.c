@@ -2430,7 +2430,7 @@ static int __rt_queue_read(struct task_struct *curr, struct pt_regs *regs)
 	    (curr, VERIFY_READ, __xn_reg_arg4(regs), sizeof(timeout)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr, &timeout, (void __user *)__xn_reg_arg3(regs),
+	__xn_copy_from_user(curr, &timeout, (void __user *)__xn_reg_arg4(regs),
 			    sizeof(timeout));
 
 	rsize = rt_queue_receive(q, &mbuf, timeout);
