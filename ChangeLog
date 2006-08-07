@@ -1,3 +1,9 @@
+2006-08-07  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/rtdm/rtdm_driver.h, ksrc/skins/rtdm/{core.c,proc.c}:
+	Cleanup volatile device pointer in context structure, enhance
+	non-RT locking during /proc access.
+
 2006-08-05  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/syscall.c (__rt_queue_read): Use proper

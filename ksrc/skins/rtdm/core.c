@@ -342,9 +342,9 @@ int _rtdm_close(rtdm_user_info_t *user_info, int fd, int forced)
         goto unlock_out;
     }
 
-    cleanup_instance((struct rtdm_device *)context->device,
-        context, &fildes_table[fd],
-        test_bit(RTDM_CREATED_IN_NRT, &context->context_flags), &s);
+    cleanup_instance(context->device, context, &fildes_table[fd],
+                     test_bit(RTDM_CREATED_IN_NRT, &context->context_flags),
+                     &s);
 
     return ret;
 
