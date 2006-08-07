@@ -343,7 +343,7 @@ struct rtdm_operations {
  * RTDM takes care of its creation and destruction and passes it to the
  * operation handlers when being invoked.
  *
- * Driver get attach arbitrary data immediately after the official structure.
+ * Drivers can attach arbitrary data immediately after the official structure.
  * The size of this data is provided via rtdm_device.context_size during
  * device registration.
  */
@@ -358,7 +358,7 @@ struct rtdm_dev_context {
     /** Set of active device operation handlers */
     struct rtdm_operations          *ops;
     /** Reference to owning device */
-    volatile struct rtdm_device     *device;
+    struct rtdm_device              *device;
     /** Begin of driver defined context data structure */
     char                            dev_private[0];
 };

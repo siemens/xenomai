@@ -130,6 +130,9 @@ static int proc_read_open_fildes(char* buf, char** start, off_t offset,
     if (!RTDM_PROC_PRINT("Index\tLocked\tDevice\n"))
         goto done;
 
+    if (down_interruptible(&nrt_dev_lock))
+        return -ERESTARTSYS;
+
     for (i = 0; i < RTDM_FD_MAX; i++) {
         xnlock_get_irqsave(&rt_fildes_lock, s);
 
@@ -140,7 +143,7 @@ static int proc_read_open_fildes(char* buf, char** start, off_t offset,
 
         close_lock_count =
             atomic_read(&fildes_table[i].context->close_lock_count);
-        device = (struct rtdm_device *)fildes_table[i].context->device;
+        device = fildes_table[i].context->device;
 
         xnlock_put_irqrestore(&rt_fildes_lock, s);
 
@@ -149,6 +152,8 @@ static int proc_read_open_fildes(char* buf, char** start, off_t offset,
                              device->device_name : device->proc_name))
             break;
     }
+
+    up(&nrt_dev_lock);
 
   done:
     RTDM_PROC_PRINT_DONE;
