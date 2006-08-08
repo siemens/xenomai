@@ -1006,55 +1006,6 @@
 +	---help---
 +	  Activate this option if you want the interrupt pipeline to be
 +	  compiled in.
---- 2.6.17/kernel/ipipe/Kconfig.trace	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.17-ipipe/kernel/ipipe/Kconfig.trace	2006-06-15 16:20:46.000000000 +0200
-@@ -0,0 +1,46 @@
-+config IPIPE
-+	bool "Interrupt pipeline"
-+	default y
-+	---help---
-+	  Activate this option if you want the interrupt pipeline to be
-+	  compiled in.
-+
-+config IPIPE_TRACE
-+ 	bool "Latency Tracing"
-+	depends on IPIPE && PROC_FS
-+	select FRAME_POINTER
-+	default n
-+	---help---
-+	  Activate this option if you want to use per-function tracing of
-+	  the kernel. The tracer will collect data via instrumentation
-+	  features like the one below or with the help of explicite calls
-+	  of ipipe_trace_xxx(). See include/linux/ipipe_trace.h for the
-+	  in-kernel tracing API. The collected data and runtime control
-+	  is available via /proc/ipipe/trace/*.
-+
-+config IPIPE_TRACE_IRQSOFF
-+	bool "Trace IRQs-off times"
-+	depends on IPIPE_TRACE
-+	default y
-+	---help---
-+	  Activate this option if I-pipe shall trace the longest path
-+	  with hard-IRQs switched off.
-+
-+config IPIPE_TRACE_SHIFT
-+	int "Depth of trace log (14 => 16Kpoints, 15 => 32Kpoints)"
-+	range 10 18
-+	default 14
-+	depends on IPIPE_TRACE
-+	---help---
-+	  The number of trace points to hold tracing data for each
-+	  trace path, as a power of 2.
-+
-+config IPIPE_TRACE_VMALLOC
-+	bool "Use vmalloc'ed trace buffer"
-+	depends on IPIPE_TRACE
-+	---help---
-+	  Instead of reserving static kernel data, the required buffer
-+	  is allocated via vmalloc during boot-up when this option is
-+	  enabled. This can help to start systems that are low on memory,
-+	  but it slightly degrades overall performance. Try this option
-+	  when a traced kernel hangs unexpectedly at boot time.
 --- 2.6.17/kernel/ipipe/Makefile	1970-01-01 01:00:00.000000000 +0100
 +++ 2.6.17-ipipe/kernel/ipipe/Makefile	2006-07-03 17:32:57.000000000 +0200
 @@ -0,0 +1,3 @@
