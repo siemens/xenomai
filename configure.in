@@ -577,6 +577,8 @@ AC_CONFIG_FILES([ \
        	src/testsuite/cyclic/Makefile \
        	src/testsuite/switchtest/Makefile \
 	src/testsuite/irqbench/Makefile \
+	src/utils/Makefile \
+	src/utils/can/Makefile \
        	include/Makefile \
        	include/asm-generic/Makefile \
        	include/asm-generic/bits/Makefile \

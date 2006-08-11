@@ -1,2 +1,3 @@
 source "drivers/xenomai/16550A/Kconfig"
 source "drivers/xenomai/testing/Kconfig"
+source "drivers/xenomai/can/Kconfig"
