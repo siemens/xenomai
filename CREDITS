@@ -12,6 +12,8 @@ This file is an attempt to give proper credit to the people who have
 contributed to this project so far. List entries are sorted by name
 and provide the usual tags for automated processing.
 
+See also "ksrc/drivers/<subsystem>/CREDITS" for further contributors.
+
 [1] http://www.xenomai.org/
 [2] http://www.rtai.org/
 

@@ -9,5 +9,6 @@ mainmenu_option next_comment
 comment 'Real-time drivers'
 	source drivers/xenomai/16550A/Config.in
 	source drivers/xenomai/testing/Config.in
+	source drivers/xenomai/can/Config.in
 endmenu
 fi

@@ -1,2 +1,2 @@
 
-SUBDIRS = include skins testsuite
+SUBDIRS = include skins testsuite utils
