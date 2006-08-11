@@ -153,6 +153,8 @@ XENO_BUILD_STRING = @XENO_BUILD_STRING@
 XENO_HOST_STRING = @XENO_HOST_STRING@
 XENO_LINUX_ALL_TARGETS = @XENO_LINUX_ALL_TARGETS@
 XENO_LINUX_ARCH = @XENO_LINUX_ARCH@
+XENO_LINUX_IMAGE = @XENO_LINUX_IMAGE@
+XENO_LINUX_INSTALL_TARGET = @XENO_LINUX_INSTALL_TARGET@
 XENO_MAYBE_DOCDIR = @XENO_MAYBE_DOCDIR@
 XENO_POSIX_WRAPPERS = @XENO_POSIX_WRAPPERS@
 XENO_TARGET_ARCH = @XENO_TARGET_ARCH@
@@ -210,7 +212,7 @@ target_alias = @target_alias@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
-SUBDIRS = include skins testsuite
+SUBDIRS = include skins testsuite utils
 all: all-recursive
 
 .SUFFIXES:
