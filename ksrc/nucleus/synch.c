@@ -209,7 +209,10 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout)
 
 			xnpod_suspend_thread(thread, XNPEND, timeout, synch);
 
-			if (unlikely(synch->owner != thread)) {
+			if (unlikely(testbits(thread->status, XNRMID | XNTIMEO | XNBREAK)))
+				goto unlock_and_exit;
+
+			if (unlikely(synch->owner != thread))
 				/* Somebody stole us the ownership while we were ready to
 				   run, waiting for the CPU: we need to wait again for the
 				   resource. */
@@ -228,6 +231,8 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout)
 	} else {		/* otherwise FIFO */
 		appendpq(&synch->pendq, &thread->plink);
 		xnpod_suspend_thread(thread, XNPEND, timeout, synch);
+		if (unlikely(testbits(thread->status, XNRMID | XNTIMEO | XNBREAK)))
+			goto unlock_and_exit;
 	}
 
       grab_ownership:

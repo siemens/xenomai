@@ -1,3 +1,8 @@
+2006-08-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/synch.c (xnsynch_sleep_on): Check for wait abortion
+	bits after returning from xnpod_suspend_thread().
+
 2006-08-07  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/rtdm/rtdm_driver.h, ksrc/skins/rtdm/{core.c,proc.c}:
