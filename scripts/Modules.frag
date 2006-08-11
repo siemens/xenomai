@@ -9,6 +9,7 @@ DRIVERS-$(CONFIG_XENO_SKIN_UITRON) += kernel/xenomai/skins/uitron/xeno_uitron.o
 DRIVERS-$(CONFIG_XENO_SKIN_RTAI) += kernel/xenomai/skins/rtai/xeno_rtai.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_16550A) += drivers/xenomai/16550A/xeno_16550A.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += drivers/xenomai/testing/xeno_timerbench.o
+DRIVERS-$(CONFIG_XENO_DRIVERS_IRQBENCH) += drivers/xenomai/testing/xeno_irqbench.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_SWITCHTEST) += drivers/xenomai/testing/xeno_switchtest.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_RTCAN) += drivers/xenomai/can/xeno_rtcan.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_RTCAN_MSCAN) += drivers/xenomai/can/mscan/xeno_rtcan_mscan.o
