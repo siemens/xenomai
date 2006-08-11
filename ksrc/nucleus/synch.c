@@ -212,7 +212,7 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout)
 			if (unlikely(testbits(thread->status, XNRMID | XNTIMEO | XNBREAK)))
 				goto unlock_and_exit;
 
-			if (unlikely(synch->owner != thread))
+			if (unlikely(synch->owner != thread)) {
 				/* Somebody stole us the ownership while we were ready to
 				   run, waiting for the CPU: we need to wait again for the
 				   resource. */
