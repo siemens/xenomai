@@ -1,3 +1,7 @@
+2006-08-12  Ulrich Schwab  <schwab@inmess.de>
+ 
+ 	* ksrc/arch/i386/smi.c added id of Intel ICH7 to list of SMI chipsets
+ 	
 2006-08-12  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/thread.c (thread_destroy): Do not assume that

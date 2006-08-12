@@ -31,6 +31,13 @@
 #include <linux/reboot.h>
 #include <asm/xenomai/smi.h>
 
+/* DEVICE_IDs needed for 2.4 support */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+#ifndef PCI_DEVICE_ID_INTEL_ICH7_0
+#define PCI_DEVICE_ID_INTEL_ICH7_0 0x27b8
+#endif
+#endif
+
 static struct pci_device_id rthal_smi_pci_tbl[] = {
 { PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801AA_0) },
 { PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801AB_0) },
@@ -45,6 +52,7 @@ static struct pci_device_id rthal_smi_pci_tbl[] = {
 { PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH6_0) },
 { PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH6_1) },
 { PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH6_2) },
+{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH7_0) },
 { 0, },
 };
 
