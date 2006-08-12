@@ -58,7 +58,7 @@ typedef struct pse51_cond {
     ((pse51_cond_t *)(((char *)laddr) - offsetof(pse51_cond_t, link)))
 
 	pthread_condattr_t attr;
-	struct __shadow_mutex *mutex;
+	struct pse51_mutex *mutex;
 } pse51_cond_t;
 
 static pthread_condattr_t default_cond_attr;
@@ -163,7 +163,7 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
  * @return 0 on succes,
  * @return an error number if:
  * - EINVAL, the condition variable @a cnd is invalid;
- * - EBUSY, some thread is currently blocked on the condition variable.
+ * - EBUSY, some thread is currently using the condition variable.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_destroy.html">
@@ -185,7 +185,7 @@ int pthread_cond_destroy(pthread_cond_t * cnd)
 
 	cond = shadow->cond;
 
-	if (xnsynch_nsleepers(&cond->synchbase)) {
+	if (xnsynch_nsleepers(&cond->synchbase) || cond->mutex) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EBUSY;
 	}
@@ -200,7 +200,7 @@ int pthread_cond_destroy(pthread_cond_t * cnd)
 
 /* must be called with nklock locked, interrupts off.
 
-   Note: this function is very similar to mutex_unlock_internal() in mutex.h.
+   Note: this function is very similar to mutex_unlock_internal() in mutex.c.
 */
 static inline int mutex_save_count(xnthread_t *cur,
 				   struct __shadow_mutex *shadow,
@@ -228,26 +228,13 @@ static inline int mutex_save_count(xnthread_t *cur,
 	return 0;
 }
 
-/* must be called with nklock locked, interrupts off. */
-static inline void mutex_restore_count(xnthread_t *cur,
-				       struct __shadow_mutex *shadow,
-				       unsigned count)
+int pse51_cond_timedwait_prologue(xnthread_t *cur,
+				  struct __shadow_cond *shadow,
+				  struct __shadow_mutex *mutex,
+				  unsigned *count_ptr,
+				  xnticks_t to)
 {
-	pse51_mutex_t *mutex = shadow->mutex;
-
-	/* Relock the mutex */
-	mutex_timedlock_internal(cur, shadow, XN_INFINITE);
-
-	/* Restore the mutex lock count. */
-	mutex->count = count;
-}
-
-int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
-				  struct __shadow_mutex *mutex, xnticks_t to)
-{
-	xnthread_t *cur = xnpod_current_thread();
 	pse51_cond_t *cond;
-	unsigned count;
 	spl_t s;
 	int err;
 
@@ -265,7 +252,7 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
 
 	/* If another thread waiting for cond does not use the same mutex */
 	if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond)
-	    || (cond->mutex && cond->mutex != mutex)) {
+	    || (cond->mutex && cond->mutex != mutex->mutex)) {
 		err = EINVAL;
 		goto unlock_and_return;
 	}
@@ -276,15 +263,15 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
 		goto unlock_and_return;
 
 	/* Unlock mutex, with its previous recursive lock count stored
-	   in "count". */
-	err = mutex_save_count(cur, mutex, &count);
+	   in "*count_ptr". */
+	err = mutex_save_count(cur, mutex, count_ptr);
 
 	if (err)
 		goto unlock_and_return;
 
 	/* Bind mutex to cond. */
 	if (cond->mutex == NULL) {
-		cond->mutex = mutex;
+		cond->mutex = mutex->mutex;
 		++mutex->mutex->condvars;
 	}
 
@@ -302,9 +289,9 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
 	     or not whether pthread_cond_signal was called between pthread_kill
 	     and the moment when xnsynch_sleep_on returned ;
 	   - pthread_cancel, no status bit is set, but cancellation specific
-	     bits are set, and tested only once the mutex is reacquired, so that
-	     the cancellation handler can be called with the mutex locked, as
-	     required by the specification.
+	     bits are set, and tested only once the mutex is reacquired in
+	     pse51_cond_timedwait_epilogue, so that the cancellation handler can
+	     be called with the mutex locked, as required by the specification.
 	 */
 
 	err = 0;
@@ -314,15 +301,38 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
 	else if (xnthread_test_flags(cur, XNTIMEO))
 		err = ETIMEDOUT;
 
+      unlock_and_return:
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+
+int pse51_cond_timedwait_epilogue(xnthread_t *cur,
+				  struct __shadow_cond *shadow,
+				  struct __shadow_mutex *mutex, unsigned count)
+{
+	pse51_cond_t *cond;
+	int err;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	cond = shadow->cond;
+
+	err = pse51_mutex_timedlock_internal(cur, mutex, count, XN_INFINITE);
+
+	if (err == EINTR)
+		goto unlock_and_return;
+
+
 	/* Unbind mutex and cond, if no other thread is waiting, if the job was
 	   not already done. */
-	if (!xnsynch_nsleepers(&cond->synchbase) && cond->mutex == mutex) {
+	if (!xnsynch_nsleepers(&cond->synchbase)
+	    && cond->mutex == mutex->mutex) {
+	
 		--mutex->mutex->condvars;
 		cond->mutex = NULL;
 	}
-
-	/* relock mutex */
-	mutex_restore_count(cur, mutex, count);
 
 	thread_cancellation_point(cur);
 
@@ -382,14 +392,22 @@ int pse51_cond_timedwait_internal(struct __shadow_cond *shadow,
  */
 int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 {
+	struct __shadow_cond *cond = &((union __xeno_cond *)cnd)->shadow_cond;
 	struct __shadow_mutex *mutex =
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	struct __shadow_cond *cond = &((union __xeno_cond *)cnd)->shadow_cond;
+	xnthread_t *cur = xnpod_current_thread();
+	unsigned count;
 	int err;
 
-	err = pse51_cond_timedwait_internal(cond, mutex, XN_INFINITE);
+	err = pse51_cond_timedwait_prologue(cur, cond, mutex,
+					    &count, XN_INFINITE);
 
-	return err == EINTR ? 0 : err;
+	if (!err)
+		while (EINTR == pse51_cond_timedwait_epilogue(cur, cond,
+							      mutex, count))
+			;
+
+	return err != EINTR ? err : 0;
 }
 
 /**
@@ -431,16 +449,22 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 int pthread_cond_timedwait(pthread_cond_t * cnd,
 			   pthread_mutex_t * mx, const struct timespec *abstime)
 {
+	struct __shadow_cond *cond = &((union __xeno_cond *)cnd)->shadow_cond;
 	struct __shadow_mutex *mutex =
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	struct __shadow_cond *cond = &((union __xeno_cond *)cnd)->shadow_cond;
+	xnthread_t *cur = xnpod_current_thread();
+	unsigned count;
 	int err;
 
-	err =
-	    pse51_cond_timedwait_internal(cond, mutex,
-					  ts2ticks_ceil(abstime) + 1);
+	err = pse51_cond_timedwait_prologue(cur, cond, mutex, &count,
+					    ts2ticks_ceil(abstime) + 1);
 
-	return err == EINTR ? 0 : err;
+	if (!err || err == ETIMEDOUT)
+		while (EINTR == pse51_cond_timedwait_epilogue(cur, cond,
+							      mutex, count))
+			;
+
+	return err != EINTR ? err : 0;
 }
 
 /**

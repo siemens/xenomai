@@ -78,7 +78,9 @@ static xnpod_t pod;
 static void pse51_shutdown(int xtype)
 {
 	pse51_thread_pkg_cleanup();
+#ifdef CONFIG_XENO_OPT_POSIX_SHM
 	pse51_shm_pkg_cleanup();
+#endif /* CONFIG_XENO_OPT_POSIX_SHM */
 	pse51_timer_pkg_cleanup();
 	pse51_mq_pkg_cleanup();
 	pse51_cond_pkg_cleanup();
@@ -87,7 +89,9 @@ static void pse51_shutdown(int xtype)
 	pse51_mutex_pkg_cleanup();
 	pse51_signal_pkg_cleanup();
 	pse51_reg_pkg_cleanup();
+#ifdef CONFIG_XENO_OPT_POSIX_INTR
 	pse51_intr_pkg_cleanup();
+#endif /* CONFIG_XENO_OPT_POSIX_INTR */
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	pse51_syscall_cleanup();
 	xncore_detach(xtype);
@@ -135,9 +139,13 @@ int SKIN_INIT(posix)
 	pse51_tsd_pkg_init();
 	pse51_cond_pkg_init();
 	pse51_mq_pkg_init();
+#ifdef CONFIG_XENO_OPT_POSIX_INTR
 	pse51_intr_pkg_init();
+#endif /* CONFIG_XENO_OPT_POSIX_INTR */
 	pse51_timer_pkg_init();
+#ifdef CONFIG_XENO_OPT_POSIX_SHM
 	pse51_shm_pkg_init();
+#endif /* CONFIG_XENO_OPT_POSIX_SHM */
 
 	pse51_thread_pkg_init(module_param_value(time_slice_arg));
 

@@ -40,7 +40,7 @@ static pthread_attr_t default_attr;
 
 static void thread_destroy(pthread_t thread)
 {
-	removeq(&pse51_kqueues(0)->threadq, &thread->link);
+	removeq(thread->container, &thread->link);
 	/* join_sync wait queue may not be empty only when this function is
 	   called from pse51_thread_pkg_cleanup, hence the absence of
 	   xnpod_schedule(). */
@@ -210,7 +210,8 @@ int pthread_create(pthread_t *tid,
 		flags = 0;
 
 	xnlock_get_irqsave(&nklock, s);
-	appendq(&pse51_kqueues(0)->threadq, &thread->link);
+	thread->container = &pse51_kqueues(0)->threadq;
+	appendq(thread->container, &thread->link);
 	xnlock_put_irqrestore(&nklock, s);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)

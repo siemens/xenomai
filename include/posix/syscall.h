@@ -49,8 +49,8 @@
 #define __pse51_mutex_unlock          23
 #define __pse51_cond_init             24
 #define __pse51_cond_destroy          25
-#define __pse51_cond_wait             26
-#define __pse51_cond_timedwait        27
+#define __pse51_cond_wait_prologue    26
+#define __pse51_cond_wait_epilogue    27
 #define __pse51_cond_signal           28
 #define __pse51_cond_broadcast        29
 #define __pse51_mq_open               30

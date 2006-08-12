@@ -1464,10 +1464,16 @@ static int __pthread_cond_destroy(struct task_struct *curr,
 	return 0;
 }
 
-static int __pthread_cond_wait(struct task_struct *curr, struct pt_regs *regs)
+/* pthread_cond_wait_prologue(cond, mutex, count_ptr, timed, timeout) */
+static int __pthread_cond_wait_prologue(struct task_struct *curr,
+					struct pt_regs *regs)
 {
+	xnthread_t *cur = xnshadow_thread(curr);
 	union __xeno_cond cnd, *ucnd;
 	union __xeno_mutex mx, *umx;
+	unsigned timed, count;
+	struct timespec ts;
+	int err;
 
 	ucnd = (union __xeno_cond *)__xn_reg_arg1(regs);
 	umx = (union __xeno_mutex *)__xn_reg_arg2(regs);
@@ -1480,6 +1486,15 @@ static int __pthread_cond_wait(struct task_struct *curr, struct pt_regs *regs)
 	    (curr, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
 		return -EFAULT;
 
+	if (!__xn_access_ok(curr, VERIFY_WRITE,
+			    (void __user *)__xn_reg_arg3(regs), sizeof(count)))
+		return -EFAULT;
+	
+	timed = __xn_reg_arg4(regs);
+	if (timed && !__xn_access_ok
+	    (curr, VERIFY_READ, (void __user *)__xn_reg_arg5(regs), sizeof(ts)))
+		return -EFAULT;
+
 	__xn_copy_from_user(curr,
 			    &cnd.shadow_cond,
 			    (void __user *)&ucnd->shadow_cond,
@@ -1490,16 +1505,38 @@ static int __pthread_cond_wait(struct task_struct *curr, struct pt_regs *regs)
 			    (void __user *)&umx->shadow_mutex,
 			    sizeof(mx.shadow_mutex));
 
-	return -pse51_cond_timedwait_internal(&cnd.shadow_cond,
-					      &mx.shadow_mutex, XN_INFINITE);
+	if (timed) {
+		__xn_copy_from_user(curr, &ts,
+				    (void __user *)__xn_reg_arg5(regs),
+				    sizeof(ts));
+
+		err = pse51_cond_timedwait_prologue(cur,
+						    &cnd.shadow_cond,
+						    &mx.shadow_mutex,
+						    &count,
+						    ts2ticks_ceil(&ts) + 1);
+	} else
+		err = pse51_cond_timedwait_prologue(cur,
+						    &cnd.shadow_cond,
+						    &mx.shadow_mutex,
+						    &count,
+						    XN_INFINITE);
+
+	if (!err || err == EINTR)
+		__xn_copy_to_user(curr, (void __user *) __xn_reg_arg3(regs),
+				  &count, sizeof(count));
+
+	return -err;
 }
 
-static int __pthread_cond_timedwait(struct task_struct *curr,
-				    struct pt_regs *regs)
+/* pthread_cond_wait_epilogue(cond, mutex, count) */
+static int __pthread_cond_wait_epilogue(struct task_struct *curr,
+					struct pt_regs *regs)
 {
+	xnthread_t *cur = xnshadow_thread(curr);
 	union __xeno_cond cnd, *ucnd;
 	union __xeno_mutex mx, *umx;
-	struct timespec ts;
+	unsigned count;
 
 	ucnd = (union __xeno_cond *)__xn_reg_arg1(regs);
 	umx = (union __xeno_mutex *)__xn_reg_arg2(regs);
@@ -1512,8 +1549,7 @@ static int __pthread_cond_timedwait(struct task_struct *curr,
 	    (curr, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
 		return -EFAULT;
 
-	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg3(regs), sizeof(ts)))
-		return -EFAULT;
+	count = __xn_reg_arg3(regs);
 
 	__xn_copy_from_user(curr,
 			    &cnd.shadow_cond,
@@ -1525,13 +1561,9 @@ static int __pthread_cond_timedwait(struct task_struct *curr,
 			    (void __user *)&umx->shadow_mutex,
 			    sizeof(mx.shadow_mutex));
 
-	__xn_copy_from_user(curr,
-			    &ts,
-			    (void __user *)__xn_reg_arg3(regs), sizeof(ts));
-
-	return -pse51_cond_timedwait_internal(&cnd.shadow_cond,
-					      &mx.shadow_mutex,
-					      ts2ticks_ceil(&ts) + 1);
+	
+	return -pse51_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
+					      &mx.shadow_mutex, count);
 }
 
 static int __pthread_cond_signal(struct task_struct *curr, struct pt_regs *regs)
@@ -2043,6 +2075,8 @@ static int __mq_notify(struct task_struct *curr, struct pt_regs *regs)
 	return 0;
 }
 
+#ifdef CONFIG_XENO_OPT_POSIX_INTR
+
 static int __pse51_intr_handler(xnintr_t *cookie)
 {
 	pthread_intr_t intr = PTHREAD_IDESC(cookie);
@@ -2169,6 +2203,15 @@ static int __intr_control(struct task_struct *curr, struct pt_regs *regs)
 	return !err ? 0 : -thread_get_errno();
 }
 
+#else /* !CONFIG_XENO_OPT_POSIX_INTR */
+
+#define __intr_attach  __pse51_call_not_available
+#define __intr_detach  __pse51_call_not_available
+#define __intr_wait    __pse51_call_not_available
+#define __intr_control __pse51_call_not_available
+
+#endif /* !CONFIG_XENO_OPT_POSIX_INTR */
+
 static int __timer_create(struct task_struct *curr, struct pt_regs *regs)
 {
 	struct sigevent sev;
@@ -2268,6 +2311,8 @@ static int __timer_getoverrun(struct task_struct *curr, struct pt_regs *regs)
 
 	return rc >= 0 ? rc : -thread_get_errno();
 }
+
+#ifdef CONFIG_XENO_OPT_POSIX_SHM
 
 /* shm_open(name, oflag, mode, ufd) */
 static int __shm_open(struct task_struct *curr, struct pt_regs *regs)
@@ -2568,6 +2613,25 @@ static int __munmap_epilogue(struct task_struct *curr, struct pt_regs *regs)
 
 	return !err ? 0 : -thread_get_errno();
 }
+#else /* !CONFIG_XENO_OPT_POSIX_SHM */
+
+#define __shm_open        __pse51_call_not_available
+#define __shm_unlink      __pse51_call_not_available
+#define __shm_close       __pse51_call_not_available
+#define __ftruncate       __pse51_call_not_available
+#define __mmap_prologue   __pse51_call_not_available
+#define __mmap_epilogue   __pse51_call_not_available
+#define __munmap_prologue __pse51_call_not_available
+#define __munmap_epilogue __pse51_call_not_available
+
+#endif /* !CONFIG_XENO_OPT_POSIX_SHM */
+
+#if !defined(CONFIG_XENO_OPT_POSIX_SHM) || !defined(CONFIG_XENO_OPT_POSIX_INTR)
+int __pse51_call_not_available(struct task_struct *curr, struct pt_regs *regs)
+{
+	return -ENOSYS;
+}
+#endif /* !CONFIG_XENO_OPT_POSIX_SHM || !CONFIG_XENO_OPT_POSIX_INTR */
 
 #if 0
 int __itimer_set(struct task_struct *curr, struct pt_regs *regs)
@@ -2684,9 +2748,10 @@ static xnsysent_t __systab[] = {
 	[__pse51_mutex_unlock] = {&__pthread_mutex_unlock, __xn_exec_primary},
 	[__pse51_cond_init] = {&__pthread_cond_init, __xn_exec_any},
 	[__pse51_cond_destroy] = {&__pthread_cond_destroy, __xn_exec_any},
-	[__pse51_cond_wait] = {&__pthread_cond_wait, __xn_exec_primary},
-	[__pse51_cond_timedwait] =
-	    {&__pthread_cond_timedwait, __xn_exec_primary},
+	[__pse51_cond_wait_prologue] =
+	{&__pthread_cond_wait_prologue, __xn_exec_primary},
+	[__pse51_cond_wait_epilogue] =
+	    {&__pthread_cond_wait_epilogue, __xn_exec_primary},
 	[__pse51_cond_signal] = {&__pthread_cond_signal, __xn_exec_any},
 	[__pse51_cond_broadcast] = {&__pthread_cond_broadcast, __xn_exec_any},
 	[__pse51_mq_open] = {&__mq_open, __xn_exec_lostage},
@@ -2765,30 +2830,38 @@ static void *pse51_eventcb(int event, void *data)
 			return ERR_PTR(-ENOSPC);
 
 		initq(&q->kqueues.condq);
+#ifdef CONFIG_XENO_OPT_POSIX_INTR
 		initq(&q->kqueues.intrq);
+#endif /* CONFIG_XENO_OPT_POSIX_INTR */
 		initq(&q->kqueues.mutexq);
 		initq(&q->kqueues.semq);
 		initq(&q->kqueues.threadq);
 		initq(&q->kqueues.timerq);
 		pse51_assocq_init(&q->uqds);
 		pse51_assocq_init(&q->usems);
+#ifdef CONFIG_XENO_OPT_POSIX_SHM
 		pse51_assocq_init(&q->umaps);
 		pse51_assocq_init(&q->ufds);
+#endif /* CONFIG_XENO_OPT_POSIX_SHM */
 		
 		return &q->ppd;
 		
 	case XNSHADOW_CLIENT_DETACH:
 		q = ppd2queues((xnshadow_ppd_t *) data);
 
+#ifdef CONFIG_XENO_OPT_POSIX_SHM
 		pse51_shm_ufds_cleanup(q);
 		pse51_shm_umaps_cleanup(q);
+#endif /* CONFIG_XENO_OPT_POSIX_SHM */
 		pse51_sem_usems_cleanup(q);
 		pse51_mq_uqds_cleanup(q);
 		pse51_timerq_cleanup(&q->kqueues);
 		pse51_threadq_cleanup(&q->kqueues);
 		pse51_semq_cleanup(&q->kqueues);
 		pse51_mutexq_cleanup(&q->kqueues);
+#ifdef CONFIG_XENO_OPT_POSIX_INTR
 		pse51_intrq_cleanup(&q->kqueues);
+#endif /* CONFIG_XENO_OPT_POSIX_INTR */
 		pse51_condq_cleanup(&q->kqueues);
 		
 		xnarch_sysfree(q, sizeof(*q));

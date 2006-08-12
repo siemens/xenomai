@@ -52,7 +52,8 @@ struct pse51_thread {
 })
 
 
-    xnholder_t link;	/* Link in pse51_threadq */
+   xnholder_t link;	/* Link in pse51_threadq */
+   xnqueue_t *container;
     
 #define link2pthread(laddr) \
     ((pthread_t)(((char *)laddr) - offsetof(struct pse51_thread, link)))
