@@ -34,21 +34,28 @@
 #define T_CPU(cpu) (1 << (24 + (cpu & 7))) /* Up to 8 cpus [0-7] */
 #define T_CPUMASK  0xff000000
 
-/* Status/mode flags. */
-#define T_BLOCKED  XNPEND
-#define T_DELAYED  XNDELAY
-#define T_READY    XNREADY
-#define T_DORMANT  XNDORMANT
-#define T_STARTED  XNSTARTED
-#define T_BOOST    XNBOOST
-#define T_LOCK     XNLOCK
-#define T_RRB      XNRRB
-#define T_NOSIG    XNASDI
-#define T_SHIELD   XNSHIELD
-#define T_WARNSW   XNTRAPSW
-#define T_RPIOFF   XNRPIOFF
+/*! 
+  \ingroup native
+  @defgroup native_task_status Task Status 
+  @brief Defines used to specify task state and/or mode 
+  @{
+ */
+
+#define T_BLOCKED  XNPEND     /**< See #XNPEND    */
+#define T_DELAYED  XNDELAY    /**< See #XNDELAY   */
+#define T_READY    XNREADY    /**< See #XNREADY   */
+#define T_DORMANT  XNDORMANT  /**< See #XNDORMANT */
+#define T_STARTED  XNSTARTED  /**< See #XNSTARTED */
+#define T_BOOST    XNBOOST    /**< See #XNBOOST   */
+#define T_LOCK     XNLOCK     /**< See #XNLOCK    */
+#define T_RRB      XNRRB      /**< See #XNRRB     */
+#define T_NOSIG    XNASDI     /**< See #XNASDI    */ 
+#define T_SHIELD   XNSHIELD   /**< See #XNSHIELD  */ 
+#define T_WARNSW   XNTRAPSW   /**< See #XNTRAPSW  */ 
+#define T_RPIOFF   XNRPIOFF   /**< See #XNRPIOFF  */ 
 #define T_PRIMARY  0x00000200	/* Recycle internal bits status which */
 #define T_JOINABLE 0x00000400	/* won't be passed to the nucleus.  */
+/*! @} */ /* Ends doxygen-group native_task_status */
 
 /* Task hook types. */
 #define T_HOOK_START  XNHOOK_THREAD_START
@@ -68,31 +75,38 @@ typedef struct rt_task_placeholder {
 struct rt_queue_msg;
 struct rt_task;
 
+/** Structure containing task-information useful to users.
+ *
+ *  @see rt_task_inquire()
+ */
 typedef struct rt_task_info {
+    
+    int bprio;  /**< Base priority. */
 
-    int bprio;			/* !< Base priority. */
-
-    int cprio;			/* !< Current priority. */
-
-    unsigned status;		/* !< Status. */
-
-    RTIME relpoint;		/* !< Next periodic release point. */
-
-    char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
+    int cprio; /**< Current priority. May change through Priority Inheritance.*/
+    
+    unsigned status; /**< Task's status. @see native_task_status */ 
+    
+    RTIME relpoint; /**< Time of next release.*/ 
+    
+    char name[XNOBJECT_NAME_LEN];  /**< Symbolic name assigned at creation. */
 
 } RT_TASK_INFO;
 
 #define RT_MCB_FSTORE_LIMIT  64
 
+/** Structure used in passing messages between tasks.
+  @see rt_task_send(), rt_task_reply(), rt_task_receive()
+*/
 typedef struct rt_task_mcb {
 
-    int flowid;			/* !< Flow identifier. */
+    int flowid;   /**< Flow identifier. */
 
-    int opcode;			/* !< Operation code. */
+    int opcode;   /**< Operation code. */
 
-    caddr_t data;		/* !< Address of message. */
+    caddr_t data; /**< Message address. */
 
-    size_t size;		/* !< Size of message. */
+    size_t size;  /**< Message size (bytes). */
 
 } RT_TASK_MCB;
 
