@@ -39,6 +39,9 @@ int __wrap_shm_open(const char *name, int oflag, mode_t mode)
 	if (!err)
 		return fd;
 
+	if (err == ENOSYS)
+		return __real_shm_open(name, oflag, mode);
+
 	close(fd);
 	errno = err;
 	return -1;
@@ -52,6 +55,9 @@ int __wrap_shm_unlink(const char *name)
 	if (!err)
 		return 0;
 
+	if (err == ENOSYS)
+		return __real_shm_unlink(name);
+	
 	errno = err;
 	return -1;
 }
@@ -65,7 +71,7 @@ int __wrap_ftruncate(int fildes, off_t length)
 	if (!err)
 		return 0;
 
-	if (err == EBADF)
+	if (err == EBADF || err == ENOSYS)
 		return __real_ftruncate(fildes, length);
 
 	errno = err;
@@ -88,7 +94,7 @@ void *__wrap_mmap(void *addr,
 	err = -XENOMAI_SKINCALL4(__pse51_muxid,
 				 __pse51_mmap_prologue, len, fildes, off, &map);
 
-	if (err == EBADF)
+	if (err == EBADF || err == ENOSYS)
 		return __real_mmap(addr, len, prot, flags, fildes, off);
 
 	if (err)
@@ -139,7 +145,7 @@ int __shm_close(int fd)
 
 	err = XENOMAI_SKINCALL1(__pse51_muxid, __pse51_shm_close, fd);
 
-	if (!err)
+	if (!err || err == ENOSYS)
 		return __real_close(fd);
 
 	errno = -err;
@@ -157,7 +163,7 @@ int __wrap_munmap(void *addr, size_t len)
 	err = -XENOMAI_SKINCALL3(__pse51_muxid,
 				 __pse51_munmap_prologue, addr, len, &map);
 
-	if (err == ENXIO)
+	if (err == ENXIO || err == ENOSYS)
 		return __real_munmap(addr, len);
 
 	if (err)

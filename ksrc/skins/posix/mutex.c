@@ -39,7 +39,7 @@
  * uses (see pthread_mutexattr_setprotocol()) and whether it may be shared
  * between several processes (see pthread_mutexattr_setpshared()).
  *
- * By default, Xenomai POSIX skin mutexes are of the recursive type, use no
+ * By default, Xenomai POSIX skin mutexes are of the normal type, use no
  * priority protocol and may not be shared between several processes.
  *
  * Note that only pthread_mutex_init() may be used to initialize a mutex, using
@@ -198,7 +198,7 @@ int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow, xnticks_t abs_to)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	err = mutex_timedlock_internal(cur, shadow, abs_to);
+	err = pse51_mutex_timedlock_internal(cur, shadow, 1, abs_to);
 
 	if (err == EBUSY) {
 		mutex = shadow->mutex;
@@ -292,7 +292,7 @@ int pthread_mutex_trylock(pthread_mutex_t * mx)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	err = mutex_trylock_internal(cur, shadow);
+	err = pse51_mutex_trylock_internal(cur, shadow, 1);
 
 	if (err == EBUSY) {
 		pse51_mutex_t *mutex = shadow->mutex;

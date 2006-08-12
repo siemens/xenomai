@@ -193,6 +193,16 @@ int __real_shutdown(int fd, int how)
 }
 
 /* shm */
+int __real_shm_open(const char *name, int oflag, mode_t mode)
+{
+	return shm_open(name, oflag, mode);
+}
+
+int __real_shm_unlink(const char *name)
+{
+	return shm_unlink(name);
+}
+
 int __real_ftruncate(int fildes, off_t length)
 {
 	return ftruncate(fildes, length);

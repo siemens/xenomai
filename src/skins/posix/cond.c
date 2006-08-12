@@ -78,41 +78,88 @@ int __wrap_pthread_cond_destroy(pthread_cond_t * cond)
 				  __pse51_cond_destroy, &_cond->shadow_cond);
 }
 
+struct pse51_cond_cleanup_t {
+	union __xeno_cond *cond;
+	union __xeno_mutex *mutex;
+	unsigned count;
+};
+
+static void __pthread_cond_cleanup(void *data)
+{
+	struct pse51_cond_cleanup_t *c = (struct pse51_cond_cleanup_t *) data;
+
+	while (-EINTR == XENOMAI_SKINCALL3(__pse51_muxid,
+					   __pse51_cond_wait_epilogue,
+					   &c->cond->shadow_cond,
+					   &c->mutex->shadow_mutex,
+					   c->count))
+		;
+}
+
 int __wrap_pthread_cond_wait(pthread_cond_t * cond, pthread_mutex_t * mutex)
 {
-	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
-	union __xeno_cond *_cond = (union __xeno_cond *)cond;
+	struct pse51_cond_cleanup_t c = {
+		.cond = (union __xeno_cond *)cond,
+		.mutex = (union __xeno_mutex *)mutex,
+	};
 	int err, oldtype;
+
+	pthread_cleanup_push(&__pthread_cond_cleanup, &c);
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = XENOMAI_SKINCALL2(__pse51_muxid,
-				__pse51_cond_wait,
-				&_cond->shadow_cond, &_mutex->shadow_mutex);
+	err = -XENOMAI_SKINCALL5(__pse51_muxid,
+				 __pse51_cond_wait_prologue,
+				 &c.cond->shadow_cond,
+				 &c.mutex->shadow_mutex, &c.count, 0, NULL);
+
+	if (err == EINTR)
+		err = 0;
 
 	pthread_setcanceltype(oldtype, NULL);
 
-	return err == -EINTR ? 0 : -err;
+	if (err)
+		return err;
+
+	pthread_cleanup_pop(1);
+
+	pthread_testcancel();
+
+	return 0;
 }
 
 int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
 				  pthread_mutex_t * mutex,
 				  const struct timespec *abstime)
 {
-	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
-	union __xeno_cond *_cond = (union __xeno_cond *)cond;
+	struct pse51_cond_cleanup_t c = {
+		.cond = (union __xeno_cond *)cond,
+		.mutex = (union __xeno_mutex *)mutex,
+	};
 	int err, oldtype;
+
+	pthread_cleanup_push(&__pthread_cond_cleanup, &c);
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = XENOMAI_SKINCALL3(__pse51_muxid,
-				__pse51_cond_timedwait,
-				&_cond->shadow_cond,
-				&_mutex->shadow_mutex, abstime);
+	err = -XENOMAI_SKINCALL5(__pse51_muxid,
+				 __pse51_cond_wait_prologue,
+				 &c.cond->shadow_cond,
+				 &c.mutex->shadow_mutex, &c.count, 1, abstime);
+
+	if (err == EINTR)
+		err = 0;
 
 	pthread_setcanceltype(oldtype, NULL);
 
-	return err == -EINTR ? 0 : -err;
+	if (err && err != ETIMEDOUT)
+		return err;
+
+	pthread_cleanup_pop(1);
+
+	pthread_testcancel();
+
+	return err;
 }
 
 int __wrap_pthread_cond_signal(pthread_cond_t * cond)

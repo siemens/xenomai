@@ -25,7 +25,7 @@
 
 static const pthread_mutexattr_t default_mutex_attr = {
 	magic: PSE51_MUTEX_ATTR_MAGIC,
-	type: PTHREAD_MUTEX_RECURSIVE,
+	type: PTHREAD_MUTEX_NORMAL,
 	protocol: PTHREAD_PRIO_NONE,
 	pshared: PTHREAD_PROCESS_PRIVATE
 };
@@ -35,7 +35,7 @@ static const pthread_mutexattr_t default_mutex_attr = {
  *
  * This services initializes the mutex attributes object @a attr with default
  * values for all attributes. Default value are :
- * - for the @a type attribute, @a PTHREAD_MUTEX_RECURSIVE;
+ * - for the @a type attribute, @a PTHREAD_MUTEX_NORMAL;
  * - for the @a protocol attribute, @a PTHREAD_PRIO_NONE;
  * - for the @a pshared attribute, @a PTHREAD_PROCESS_PRIVATE.
  *
@@ -155,7 +155,7 @@ int pthread_mutexattr_gettype(const pthread_mutexattr_t * attr, int *type)
  * mutex.
  *
  * The @a PTHREAD_MUTEX_DEFAULT default @a type is the same as @a
- * PTHREAD_MUTEX_RECURSIVE. Note that using a Xenomai POSIX skin recursive mutex
+ * PTHREAD_MUTEX_NORMAL. Note that using a Xenomai POSIX skin recursive mutex
  * with a Xenomai POSIX skin condition variable is safe (see pthread_cond_wait()
  * documentation).
  *
@@ -192,9 +192,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int type)
 
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
-
-	case PTHREAD_MUTEX_DEFAULT:
-		type = PTHREAD_MUTEX_RECURSIVE;
 
 	case PTHREAD_MUTEX_NORMAL:
 	case PTHREAD_MUTEX_RECURSIVE:

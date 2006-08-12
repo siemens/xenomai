@@ -45,8 +45,9 @@ void pse51_mutex_pkg_cleanup(void);
 int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow, xnticks_t to);
 
 /* must be called with nklock locked, interrupts off. */
-static inline int mutex_trylock_internal(xnthread_t *cur,
-                                         struct __shadow_mutex *shadow)
+static inline int pse51_mutex_trylock_internal(xnthread_t *cur,
+					       struct __shadow_mutex *shadow,
+					       unsigned count)
 {
     pse51_mutex_t *mutex = shadow->mutex;
 
@@ -60,19 +61,20 @@ static inline int mutex_trylock_internal(xnthread_t *cur,
         return EBUSY;
 
     xnsynch_set_owner(&mutex->synchbase, cur);
-    mutex->count = 1;
+    mutex->count = count;
     return 0;
 }
 
 /* must be called with nklock locked, interrupts off. */
-static inline int mutex_timedlock_internal(xnthread_t *cur,
-                                           struct __shadow_mutex *shadow,
-                                           xnticks_t abs_to)
+static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
+						 struct __shadow_mutex *shadow,
+						 unsigned count,
+						 xnticks_t abs_to)
 
 {
     int err;
 
-    err = mutex_trylock_internal(cur, shadow);
+    err = pse51_mutex_trylock_internal(cur, shadow, count);
 
     if (err == EBUSY)
         {
@@ -98,7 +100,7 @@ static inline int mutex_timedlock_internal(xnthread_t *cur,
             if (xnthread_test_flags(cur, XNTIMEO))
                 return ETIMEDOUT;
 
-            mutex->count = 1;
+            mutex->count = count;
             }
         }
 
