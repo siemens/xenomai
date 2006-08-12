@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -22,37 +22,47 @@
 
 #include <nucleus/timer.h>
 
-/* Status flags */
-#define XNSUSP    0x00000001	/* Suspended */
-#define XNPEND    0x00000002	/* Sleep-wait for a resource */
-#define XNDELAY   0x00000004	/* Delayed */
-#define XNREADY   0x00000008	/* Linked to the ready queue */
-#define XNDORMANT 0x00000010	/* Not started yet or killed */
-#define XNZOMBIE  0x00000020	/* Zombie thread in deletion process */
-#define XNRESTART 0x00000040	/* Restarting thread */
-#define XNSTARTED 0x00000080	/* Could be restarted */
-#define XNRELAX   0x00000100	/* Relaxed shadow thread (blocking bit) */
-#define XNHELD    0x00000200	/* Held thread from suspended partition */
+/*! @ingroup nucleus 
+  @defgroup nucleus_status_mode Status and Mode Defines.
+  @brief These defines are the used by the skins to report status of 
+         tasks and other objects. 
+  @{
+*/
 
-#define XNTIMEO   0x00000400	/* Woken up due to a timeout condition */
-#define XNRMID    0x00000800	/* Pending on a removed resource */
-#define XNBREAK   0x00001000	/* Forcibly awaken from a wait state */
-#define XNKICKED  0x00002000	/* Kicked upon Linux signal (shadow only) */
-#define XNBOOST   0x00004000	/* Undergoes regular PIP boost */
-#define XNDEBUG   0x00008000	/* Hit debugger breakpoint (shadow only) */
+/* Status flags */
+
+#define XNSUSP    0x00000001 /**< Suspended. */
+#define XNPEND    0x00000002 /**< Sleep-wait for a resource. */
+#define XNDELAY   0x00000004 /**< Delayed */
+#define XNREADY   0x00000008 /**< Linked to the ready queue. */
+#define XNDORMANT 0x00000010 /**< Not started yet or killed */
+#define XNZOMBIE  0x00000020 /**< Zombie thread in deletion process */
+#define XNRESTART 0x00000040 /**< Restarting thread */
+#define XNSTARTED 0x00000080 /**< Could be restarted */
+#define XNRELAX   0x00000100 /**< Relaxed shadow thread (blocking bit) */
+#define XNHELD    0x00000200 /**< Held thread from suspended partition */
+
+#define XNTIMEO   0x00000400 /**< Woken up due to a timeout condition */
+#define XNRMID    0x00000800 /**< Pending on a removed resource */
+#define XNBREAK   0x00001000 /**< Forcibly awaken from a wait state */
+#define XNKICKED  0x00002000 /**< Kicked upon Linux signal (shadow only) */
+#define XNBOOST   0x00004000 /**< Undergoes regular PIP boost */
+#define XNDEBUG   0x00008000 /**< Hit debugger breakpoint (shadow only) */
 
 /* Mode flags. */
-#define XNLOCK    0x00010000	/* Not preemptible */
-#define XNRRB     0x00020000	/* Undergoes a round-robin scheduling */
-#define XNASDI    0x00040000	/* ASR are disabled */
-#define XNSHIELD  0x00080000	/* IRQ shield is enabled (shadow only) */
-#define XNTRAPSW  0x00100000	/* Trap execution mode switches */
-#define XNRPIOFF  0x00200000	/* Stop priority coupling (shadow only) */
+#define XNLOCK    0x00010000 /**< Not preemptible */
+#define XNRRB     0x00020000 /**< Undergoes a round-robin scheduling */
+#define XNASDI    0x00040000 /**< ASR are disabled */
+#define XNSHIELD  0x00080000 /**< IRQ shield is enabled (shadow only) */
+#define XNTRAPSW  0x00100000 /**< Trap execution mode switches */
+#define XNRPIOFF  0x00200000 /**< Stop priority coupling (shadow only) */
 
-#define XNFPU     0x00400000	/* Thread uses FPU */
-#define XNSHADOW  0x00800000	/* Shadow thread */
-#define XNROOT    0x01000000	/* Root thread (i.e. Linux/IDLE) */
-#define XNINVPS   0x02000000	/* Using inverted priority scale */
+#define XNFPU     0x00400000 /**< Thread uses FPU */
+#define XNSHADOW  0x00800000 /**< Shadow thread */
+#define XNROOT    0x01000000 /**< Root thread (that is, Linux/IDLE) */
+#define XNINVPS   0x02000000 /**< Using inverted priority scale */
+
+/*! @} */ /* Ends doxygen comment group: nucleus_status_modes */
 
 /*
   Must follow the declaration order of the above bits. Status symbols
