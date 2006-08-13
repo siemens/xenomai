@@ -127,7 +127,7 @@
 00117 <span class="preprocessor">    xnarch_halt(panic); \</span>
 00118 <span class="preprocessor">} while (0)</span>
 00119 <span class="preprocessor"></span>
-00120 <span class="preprocessor">#if defined(__XENO_SIM__) || defined(__XENO_UVM__)</span>
+00120 <span class="preprocessor">#ifdef __XENO_SIM__</span>
 00121 <span class="preprocessor"></span><span class="preprocessor">#define SKIN_INIT(name)  __xeno_skin_init(void)</span>
 00122 <span class="preprocessor"></span><span class="preprocessor">#define SKIN_EXIT(name)  __xeno_skin_exit(void)</span>
 00123 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !__XENO_SIM__ */</span>
@@ -139,7 +139,7 @@
 00129 <span class="preprocessor"></span><span class="preprocessor">#define root_thread_exit __xeno_user_exit</span>
 00130 <span class="preprocessor"></span>
 00131 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_TYPES_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:57 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

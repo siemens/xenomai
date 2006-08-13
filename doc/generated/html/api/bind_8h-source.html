@@ -19,90 +19,131 @@
 00009 <span class="preprocessor">#include &lt;pthread.h&gt;</span>
 00010 <span class="preprocessor">#include &lt;asm/xenomai/syscall.h&gt;</span>
 00011 
-00012 __attribute__((weak)) int xeno_sigxcpu_no_mlock = 1;
-00013 
-00014 static <span class="keywordtype">void</span>  xeno_handle_mlock_alert (<span class="keywordtype">int</span> sig)
-00015 
+00012 __attribute__ ((weak))
+00013 int xeno_sigxcpu_no_mlock = 1;
+00014 
+00015 static <span class="keywordtype">void</span> xeno_handle_mlock_alert(<span class="keywordtype">int</span> sig)
 00016 {
-00017     <span class="keywordflow">if</span> (xeno_sigxcpu_no_mlock)
-00018         {
-00019         fprintf(stderr,<span class="stringliteral">"Xenomai: process memory not locked (missing mlockall?)\n"</span>);
-00020         fflush(stderr);
-00021         exit(4);
-00022         }
-00023     <span class="keywordflow">else</span>
-00024         {
-00025         <span class="comment">/* XNTRAPSW was set for the thread but no user-defined</span>
-00026 <span class="comment">           handler has been set to override our internal handler, so</span>
-00027 <span class="comment">           let's invoke the default signal action. */</span>
-00028         <span class="keyword">struct </span><a class="code" href="group__posix__signal.html#ga24">sigaction</a> sa;
+00017         <span class="keyword">struct </span><a class="code" href="group__posix__signal.html#ga24">sigaction</a> sa;
+00018 
+00019         <span class="keywordflow">if</span> (xeno_sigxcpu_no_mlock) {
+00020                 fprintf(stderr,
+00021                         <span class="stringliteral">"Xenomai: process memory not locked (missing mlockall?)\n"</span>);
+00022                 fflush(stderr);
+00023                 exit(4);
+00024         }
+00025 
+00026         <span class="comment">/* XNTRAPSW was set for the thread but no user-defined handler</span>
+00027 <span class="comment">           has been set to override our internal handler, so let's</span>
+00028 <span class="comment">           invoke the default signal action. */</span>
 00029 
 00030         sa.sa_handler = SIG_DFL;
 00031         <a class="code" href="group__posix__signal.html#ga16">sigemptyset</a>(&amp;sa.sa_mask);
 00032         sa.sa_flags = 0;
-00033         <a class="code" href="group__posix__signal.html#ga24">sigaction</a>(SIGXCPU,&amp;sa,NULL);
-00034         <a class="code" href="group__posix__signal.html#ga25">pthread_kill</a>(<a class="code" href="group__posix__thread.html#ga11">pthread_self</a>(),SIGXCPU);
-00035         }
-00036 }
-00037 
-00038 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span>
-00039 xeno_user_skin_init(<span class="keywordtype">unsigned</span> skin_magic, <span class="keyword">const</span> <span class="keywordtype">char</span> *skin, <span class="keyword">const</span> <span class="keywordtype">char</span> *module)
-00040 {
-00041     <span class="keyword">struct </span><a class="code" href="group__posix__signal.html#ga24">sigaction</a> sa;
-00042     xnfeatinfo_t finfo;
-00043     <span class="keywordtype">int</span> muxid;
-00044 
-00045 <span class="preprocessor">#ifdef xeno_arch_features_check</span>
-00046 <span class="preprocessor"></span>    xeno_arch_features_check();
-00047 <span class="preprocessor">#endif </span><span class="comment">/* xeno_arch_features_check */</span>
-00048     
-00049     muxid = XENOMAI_SYSBIND(skin_magic,
-00050                             XENOMAI_FEAT_DEP,
-00051                             XENOMAI_ABI_REV,
-00052                             &amp;finfo);
-00053     <span class="keywordflow">switch</span> (muxid)
-00054         {
-00055         <span class="keywordflow">case</span> -EINVAL:
-00056 
-00057             fprintf(stderr,<span class="stringliteral">"Xenomai: incompatible feature set\n"</span>);
-00058             fprintf(stderr,<span class="stringliteral">"(required=\"%s\", present=\"%s\", missing=\"%s\").\n"</span>,
-00059                     finfo.feat_man_s,finfo.feat_all_s,finfo.feat_mis_s);
-00060             exit(1);
-00061 
-00062         <span class="keywordflow">case</span> -ENOEXEC:
-00063 
-00064             fprintf(stderr,<span class="stringliteral">"Xenomai: incompatible ABI revision level\n"</span>);
-00065             fprintf(stderr,<span class="stringliteral">"(needed=%lu, current=%lu).\n"</span>,
-00066                     XENOMAI_ABI_REV,finfo.abirev);
-00067             exit(1);
+00033         <a class="code" href="group__posix__signal.html#ga24">sigaction</a>(SIGXCPU, &amp;sa, NULL);
+00034         <a class="code" href="group__posix__signal.html#ga25">pthread_kill</a>(<a class="code" href="group__posix__thread.html#ga11">pthread_self</a>(), SIGXCPU);
+00035 }
+00036 
+00037 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span>
+00038 xeno_bind_skin(<span class="keywordtype">unsigned</span> skin_magic, <span class="keyword">const</span> <span class="keywordtype">char</span> *skin, <span class="keyword">const</span> <span class="keywordtype">char</span> *module)
+00039 {
+00040         <span class="keyword">struct </span><a class="code" href="group__posix__signal.html#ga24">sigaction</a> sa;
+00041         xnfeatinfo_t finfo;
+00042         <span class="keywordtype">int</span> muxid;
+00043 
+00044 <span class="preprocessor">#ifdef xeno_arch_features_check</span>
+00045 <span class="preprocessor"></span>        xeno_arch_features_check();
+00046 <span class="preprocessor">#endif </span><span class="comment">/* xeno_arch_features_check */</span>
+00047 
+00048         muxid = XENOMAI_SYSBIND(skin_magic,
+00049                                 XENOMAI_FEAT_DEP, XENOMAI_ABI_REV, &amp;finfo);
+00050         <span class="keywordflow">switch</span> (muxid) {
+00051         <span class="keywordflow">case</span> -EINVAL:
+00052 
+00053                 fprintf(stderr, <span class="stringliteral">"Xenomai: incompatible feature set\n"</span>);
+00054                 fprintf(stderr,
+00055                         <span class="stringliteral">"(required=\"%s\", present=\"%s\", missing=\"%s\").\n"</span>,
+00056                         finfo.feat_man_s, finfo.feat_all_s, finfo.feat_mis_s);
+00057                 exit(1);
+00058 
+00059         <span class="keywordflow">case</span> -ENOEXEC:
+00060 
+00061                 fprintf(stderr, <span class="stringliteral">"Xenomai: incompatible ABI revision level\n"</span>);
+00062                 fprintf(stderr, <span class="stringliteral">"(needed=%lu, current=%lu).\n"</span>,
+00063                         XENOMAI_ABI_REV, finfo.abirev);
+00064                 exit(1);
+00065 
+00066         <span class="keywordflow">case</span> -ENOSYS:
+00067         <span class="keywordflow">case</span> -ESRCH:
 00068 
-00069         <span class="keywordflow">case</span> -ENOSYS:
-00070         <span class="keywordflow">case</span> -ESRCH:
-00071 
-00072             fprintf(stderr,<span class="stringliteral">"Xenomai: %s skin or CONFIG_XENO_OPT_PERVASIVE disabled.\n"</span>
-00073                     <span class="stringliteral">"(modprobe %s?)\n"</span>, skin, module);
-00074             exit(1);
-00075         }
-00076     
-00077     <span class="keywordflow">if</span> (muxid &lt; 0)
-00078         {
-00079         fprintf(stderr,<span class="stringliteral">"Xenomai: binding failed: %s.\n"</span>,strerror(-muxid));
-00080         exit(1);
-00081         }
-00082 
-00083     <span class="comment">/* Install a SIGXCPU handler to intercept alerts about unlocked</span>
-00084 <span class="comment">       process memory. */</span>
-00085 
-00086     sa.sa_handler = &amp;xeno_handle_mlock_alert;
-00087     <a class="code" href="group__posix__signal.html#ga16">sigemptyset</a>(&amp;sa.sa_mask);
-00088     sa.sa_flags = 0;
-00089     <a class="code" href="group__posix__signal.html#ga24">sigaction</a>(SIGXCPU,&amp;sa,NULL);
-00090 
-00091     <span class="keywordflow">return</span> muxid;
-00092 }
-00093 
-00094 <span class="preprocessor">#endif </span><span class="comment">/* _XENO_NUCLEUS_BIND_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:56 2006 for Xenomai API by&nbsp;
+00069                 fprintf(stderr,
+00070                         <span class="stringliteral">"Xenomai: %s skin or CONFIG_XENO_OPT_PERVASIVE disabled.\n"</span>
+00071                         <span class="stringliteral">"(modprobe %s?)\n"</span>, skin, module);
+00072                 exit(1);
+00073         }
+00074 
+00075         <span class="keywordflow">if</span> (muxid &lt; 0) {
+00076                 fprintf(stderr, <span class="stringliteral">"Xenomai: binding failed: %s.\n"</span>,
+00077                         strerror(-muxid));
+00078                 exit(1);
+00079         }
+00080 
+00081         <span class="comment">/* Install a SIGXCPU handler to intercept alerts about unlocked</span>
+00082 <span class="comment">           process memory. */</span>
+00083 
+00084         sa.sa_handler = &amp;xeno_handle_mlock_alert;
+00085         <a class="code" href="group__posix__signal.html#ga16">sigemptyset</a>(&amp;sa.sa_mask);
+00086         sa.sa_flags = 0;
+00087         <a class="code" href="group__posix__signal.html#ga24">sigaction</a>(SIGXCPU, &amp;sa, NULL);
+00088 
+00089         <span class="keywordflow">return</span> __xn_mux_shifted_id(muxid);
+00090 }
+00091 
+00092 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span>
+00093 xeno_bind_skin_opt(<span class="keywordtype">unsigned</span> skin_magic, <span class="keyword">const</span> <span class="keywordtype">char</span> *skin, <span class="keyword">const</span> <span class="keywordtype">char</span> *module)
+00094 {
+00095         xnfeatinfo_t finfo;
+00096         <span class="keywordtype">int</span> muxid;
+00097 
+00098 <span class="preprocessor">#ifdef xeno_arch_features_check</span>
+00099 <span class="preprocessor"></span>        xeno_arch_features_check();
+00100 <span class="preprocessor">#endif </span><span class="comment">/* xeno_arch_features_check */</span>
+00101 
+00102         muxid = XENOMAI_SYSBIND(skin_magic,
+00103                                 XENOMAI_FEAT_DEP, XENOMAI_ABI_REV, &amp;finfo);
+00104         <span class="keywordflow">switch</span> (muxid) {
+00105         <span class="keywordflow">case</span> -EINVAL:
+00106 
+00107                 fprintf(stderr, <span class="stringliteral">"Xenomai: incompatible feature set\n"</span>);
+00108                 fprintf(stderr,
+00109                         <span class="stringliteral">"(required=\"%s\", present=\"%s\", missing=\"%s\").\n"</span>,
+00110                         finfo.feat_man_s, finfo.feat_all_s, finfo.feat_mis_s);
+00111                 exit(1);
+00112 
+00113         <span class="keywordflow">case</span> -ENOEXEC:
+00114 
+00115                 fprintf(stderr, <span class="stringliteral">"Xenomai: incompatible ABI revision level\n"</span>);
+00116                 fprintf(stderr, <span class="stringliteral">"(needed=%lu, current=%lu).\n"</span>,
+00117                         XENOMAI_ABI_REV, finfo.abirev);
+00118                 exit(1);
+00119 
+00120         <span class="keywordflow">case</span> -ENOSYS:
+00121         <span class="keywordflow">case</span> -ESRCH:
+00122 
+00123                 <span class="keywordflow">return</span> -1;
+00124         }
+00125 
+00126         <span class="keywordflow">if</span> (muxid &lt; 0) {
+00127                 fprintf(stderr, <span class="stringliteral">"Xenomai: binding failed: %s.\n"</span>,
+00128                         strerror(-muxid));
+00129                 exit(1);
+00130         }
+00131 
+00132         <span class="keywordflow">return</span> __xn_mux_shifted_id(muxid);
+00133 }
+00134 
+00135 <span class="preprocessor">#endif </span><span class="comment">/* _XENO_NUCLEUS_BIND_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

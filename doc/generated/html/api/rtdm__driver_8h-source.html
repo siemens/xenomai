@@ -58,7 +58,7 @@
 00109 <span class="preprocessor"></span>
 <a name="l00111"></a><a class="code" href="group__devregister.html#ga20">00111</a> <span class="preprocessor">#define RTDM_CONTEXT_STRUCT_VER     3</span>
 00112 <span class="preprocessor"></span>
-<a name="l00114"></a><a class="code" href="group__devregister.html#ga21">00114</a> <span class="preprocessor">#define RTDM_API_VER                4</span>
+<a name="l00114"></a><a class="code" href="group__devregister.html#ga21">00114</a> <span class="preprocessor">#define RTDM_API_VER                5</span>
 00115 <span class="preprocessor"></span>
 <a name="l00117"></a><a class="code" href="group__devregister.html#ga22">00117</a> <span class="preprocessor">#define RTDM_API_MIN_COMPAT_VER     4</span>
 00118 <span class="preprocessor"></span>
@@ -123,18 +123,18 @@
 00296 
 00297 
 <a name="l00301"></a><a class="code" href="structrtdm__operations.html">00301</a> <span class="keyword">struct </span><a class="code" href="structrtdm__operations.html">rtdm_operations</a> {
-<a name="l00305"></a><a class="code" href="structrtdm__operations.html#z34_0">00305</a>     <a class="code" href="group__devregister.html#ga2">rtdm_close_handler_t</a>            <a class="code" href="structrtdm__operations.html#z34_0">close_rt</a>;
-<a name="l00307"></a><a class="code" href="structrtdm__operations.html#z34_1">00307</a>     <a class="code" href="group__devregister.html#ga2">rtdm_close_handler_t</a>            <a class="code" href="structrtdm__operations.html#z34_1">close_nrt</a>;
-<a name="l00309"></a><a class="code" href="structrtdm__operations.html#z34_2">00309</a>     <a class="code" href="group__devregister.html#ga3">rtdm_ioctl_handler_t</a>            <a class="code" href="structrtdm__operations.html#z34_2">ioctl_rt</a>;
-<a name="l00311"></a><a class="code" href="structrtdm__operations.html#z34_3">00311</a>     <a class="code" href="group__devregister.html#ga3">rtdm_ioctl_handler_t</a>            <a class="code" href="structrtdm__operations.html#z34_3">ioctl_nrt</a>;
-<a name="l00317"></a><a class="code" href="structrtdm__operations.html#z35_0">00317</a>     <a class="code" href="group__devregister.html#ga4">rtdm_read_handler_t</a>             <a class="code" href="structrtdm__operations.html#z35_0">read_rt</a>;
-<a name="l00319"></a><a class="code" href="structrtdm__operations.html#z35_1">00319</a>     <a class="code" href="group__devregister.html#ga4">rtdm_read_handler_t</a>             <a class="code" href="structrtdm__operations.html#z35_1">read_nrt</a>;
-<a name="l00321"></a><a class="code" href="structrtdm__operations.html#z35_2">00321</a>     <a class="code" href="group__devregister.html#ga5">rtdm_write_handler_t</a>            <a class="code" href="structrtdm__operations.html#z35_2">write_rt</a>;
-<a name="l00323"></a><a class="code" href="structrtdm__operations.html#z35_3">00323</a>     <a class="code" href="group__devregister.html#ga5">rtdm_write_handler_t</a>            <a class="code" href="structrtdm__operations.html#z35_3">write_nrt</a>;
-<a name="l00329"></a><a class="code" href="structrtdm__operations.html#z36_0">00329</a>     <a class="code" href="group__devregister.html#ga6">rtdm_recvmsg_handler_t</a>          <a class="code" href="structrtdm__operations.html#z36_0">recvmsg_rt</a>;
-<a name="l00331"></a><a class="code" href="structrtdm__operations.html#z36_1">00331</a>     <a class="code" href="group__devregister.html#ga6">rtdm_recvmsg_handler_t</a>          <a class="code" href="structrtdm__operations.html#z36_1">recvmsg_nrt</a>;
-<a name="l00333"></a><a class="code" href="structrtdm__operations.html#z36_2">00333</a>     <a class="code" href="group__devregister.html#ga7">rtdm_sendmsg_handler_t</a>          <a class="code" href="structrtdm__operations.html#z36_2">sendmsg_rt</a>;
-<a name="l00335"></a><a class="code" href="structrtdm__operations.html#z36_3">00335</a>     <a class="code" href="group__devregister.html#ga7">rtdm_sendmsg_handler_t</a>          <a class="code" href="structrtdm__operations.html#z36_3">sendmsg_nrt</a>;
+<a name="l00305"></a><a class="code" href="structrtdm__operations.html#z51_0">00305</a>     <a class="code" href="group__devregister.html#ga2">rtdm_close_handler_t</a>            <a class="code" href="structrtdm__operations.html#z51_0">close_rt</a>;
+<a name="l00307"></a><a class="code" href="structrtdm__operations.html#z51_1">00307</a>     <a class="code" href="group__devregister.html#ga2">rtdm_close_handler_t</a>            <a class="code" href="structrtdm__operations.html#z51_1">close_nrt</a>;
+<a name="l00309"></a><a class="code" href="structrtdm__operations.html#z51_2">00309</a>     <a class="code" href="group__devregister.html#ga3">rtdm_ioctl_handler_t</a>            <a class="code" href="structrtdm__operations.html#z51_2">ioctl_rt</a>;
+<a name="l00311"></a><a class="code" href="structrtdm__operations.html#z51_3">00311</a>     <a class="code" href="group__devregister.html#ga3">rtdm_ioctl_handler_t</a>            <a class="code" href="structrtdm__operations.html#z51_3">ioctl_nrt</a>;
+<a name="l00317"></a><a class="code" href="structrtdm__operations.html#z52_0">00317</a>     <a class="code" href="group__devregister.html#ga4">rtdm_read_handler_t</a>             <a class="code" href="structrtdm__operations.html#z52_0">read_rt</a>;
+<a name="l00319"></a><a class="code" href="structrtdm__operations.html#z52_1">00319</a>     <a class="code" href="group__devregister.html#ga4">rtdm_read_handler_t</a>             <a class="code" href="structrtdm__operations.html#z52_1">read_nrt</a>;
+<a name="l00321"></a><a class="code" href="structrtdm__operations.html#z52_2">00321</a>     <a class="code" href="group__devregister.html#ga5">rtdm_write_handler_t</a>            <a class="code" href="structrtdm__operations.html#z52_2">write_rt</a>;
+<a name="l00323"></a><a class="code" href="structrtdm__operations.html#z52_3">00323</a>     <a class="code" href="group__devregister.html#ga5">rtdm_write_handler_t</a>            <a class="code" href="structrtdm__operations.html#z52_3">write_nrt</a>;
+<a name="l00329"></a><a class="code" href="structrtdm__operations.html#z53_0">00329</a>     <a class="code" href="group__devregister.html#ga6">rtdm_recvmsg_handler_t</a>          <a class="code" href="structrtdm__operations.html#z53_0">recvmsg_rt</a>;
+<a name="l00331"></a><a class="code" href="structrtdm__operations.html#z53_1">00331</a>     <a class="code" href="group__devregister.html#ga6">rtdm_recvmsg_handler_t</a>          <a class="code" href="structrtdm__operations.html#z53_1">recvmsg_nrt</a>;
+<a name="l00333"></a><a class="code" href="structrtdm__operations.html#z53_2">00333</a>     <a class="code" href="group__devregister.html#ga7">rtdm_sendmsg_handler_t</a>          <a class="code" href="structrtdm__operations.html#z53_2">sendmsg_rt</a>;
+<a name="l00335"></a><a class="code" href="structrtdm__operations.html#z53_3">00335</a>     <a class="code" href="group__devregister.html#ga7">rtdm_sendmsg_handler_t</a>          <a class="code" href="structrtdm__operations.html#z53_3">sendmsg_nrt</a>;
 00337 };
 00338 
 <a name="l00350"></a><a class="code" href="structrtdm__dev__context.html">00350</a> <span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> {
@@ -142,7 +142,7 @@
 <a name="l00354"></a><a class="code" href="structrtdm__dev__context.html#o1">00354</a>     <span class="keywordtype">int</span>                             <a class="code" href="structrtdm__dev__context.html#o1">fd</a>;
 <a name="l00357"></a><a class="code" href="structrtdm__dev__context.html#o2">00357</a>     atomic_t                        <a class="code" href="structrtdm__dev__context.html#o2">close_lock_count</a>;
 <a name="l00359"></a><a class="code" href="structrtdm__dev__context.html#o3">00359</a>     <span class="keyword">struct </span><a class="code" href="structrtdm__operations.html">rtdm_operations</a>          *<a class="code" href="structrtdm__dev__context.html#o3">ops</a>;
-<a name="l00361"></a><a class="code" href="structrtdm__dev__context.html#o4">00361</a>     <span class="keyword">volatile</span> <span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a>     *<a class="code" href="structrtdm__dev__context.html#o4">device</a>;
+<a name="l00361"></a><a class="code" href="structrtdm__dev__context.html#o4">00361</a>     <span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a>              *<a class="code" href="structrtdm__dev__context.html#o4">device</a>;
 <a name="l00363"></a><a class="code" href="structrtdm__dev__context.html#o5">00363</a>     <span class="keywordtype">char</span>                            <a class="code" href="structrtdm__dev__context.html#o5">dev_private</a>[0];
 00364 };
 00365 
@@ -427,7 +427,7 @@
 00936 
 00937 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_event_destroy(rtdm_event_t *event)
 00938 {
-00939     _rtdm_synch_flush(&amp;event-&gt;synch_base, XNRMID);
+00939     _rtdm_synch_flush(&amp;event-&gt;synch_base, <a class="code" href="group__nucleus__status__mode.html#ga11">XNRMID</a>);
 00940 }
 00941 
 00942 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga7">rtdm_event_wait</a>(rtdm_event_t *event);
@@ -458,7 +458,7 @@
 00967 
 00968 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_sem_destroy(rtdm_sem_t *sem)
 00969 {
-00970     _rtdm_synch_flush(&amp;sem-&gt;synch_base, XNRMID);
+00970     _rtdm_synch_flush(&amp;sem-&gt;synch_base, <a class="code" href="group__nucleus__status__mode.html#ga11">XNRMID</a>);
 00971 }
 00972 
 00973 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga12">rtdm_sem_down</a>(rtdm_sem_t *sem);
@@ -480,7 +480,7 @@
 00989 
 00990 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_mutex_destroy(rtdm_mutex_t *mutex)
 00991 {
-00992     _rtdm_synch_flush(&amp;mutex-&gt;synch_base, XNRMID);
+00992     _rtdm_synch_flush(&amp;mutex-&gt;synch_base, <a class="code" href="group__nucleus__status__mode.html#ga11">XNRMID</a>);
 00993 }
 00994 
 00995 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga18">rtdm_mutex_lock</a>(rtdm_mutex_t *mutex);
@@ -535,34 +535,52 @@
 01044     <span class="keywordflow">return</span> __xn_copy_from_user(user_info, dst, src, size);
 01045 }
 01046 
-01047 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_copy_to_user(rtdm_user_info_t *user_info,
-01048                                     <span class="keywordtype">void</span> __user *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> *src,
-01049                                     size_t size)
+01047 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_safe_copy_from_user(rtdm_user_info_t *user_info,
+01048                                            <span class="keywordtype">void</span> *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> __user *src,
+01049                                            size_t size)
 01050 {
-01051     <span class="keywordflow">return</span> __xn_copy_to_user(user_info, dst, src, size);
-01052 }
-01053 
-01054 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_strncpy_from_user(rtdm_user_info_t *user_info,
-01055                                          <span class="keywordtype">char</span> *dst,
-01056                                          <span class="keyword">const</span> <span class="keywordtype">char</span> __user *src,
-01057                                          size_t count)
-01058 {
-01059     <span class="keywordflow">if</span> (unlikely(!__xn_access_ok(user_info, VERIFY_READ, src, 1)))
-01060         <span class="keywordflow">return</span> -EFAULT;
-01061     <span class="keywordflow">return</span> __xn_strncpy_from_user(user_info, dst, src, count);
-01062 }
-01063 
-01064 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_in_rt_context(<span class="keywordtype">void</span>)
-01065 {
-01066     <span class="keywordflow">return</span> (rthal_current_domain != rthal_root_domain);
-01067 }
-01068 
-01069 <span class="keywordtype">int</span> rtdm_exec_in_rt(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context,
-01070                     rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *arg,
-01071                     rtdm_rt_handler_t handler);
-01072 
-01073 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DRIVER_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:57 2006 for Xenomai API by&nbsp;
+01051     <span class="keywordflow">if</span> (unlikely(!__xn_access_ok(user_info, VERIFY_READ, src, size)))
+01052         <span class="keywordflow">return</span> -EFAULT;
+01053     <span class="keywordflow">return</span> __xn_copy_from_user(user_info, dst, src, size);
+01054 }
+01055 
+01056 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_copy_to_user(rtdm_user_info_t *user_info,
+01057                                     <span class="keywordtype">void</span> __user *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> *src,
+01058                                     size_t size)
+01059 {
+01060     <span class="keywordflow">return</span> __xn_copy_to_user(user_info, dst, src, size);
+01061 }
+01062 
+01063 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_safe_copy_to_user(rtdm_user_info_t *user_info,
+01064                                          <span class="keywordtype">void</span> __user *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> *src,
+01065                                          size_t size)
+01066 {
+01067     <span class="keywordflow">if</span> (unlikely(!__xn_access_ok(user_info, VERIFY_WRITE, dst, size)))
+01068         <span class="keywordflow">return</span> -EFAULT;
+01069     <span class="keywordflow">return</span> __xn_copy_to_user(user_info, dst, src, size);
+01070 }
+01071 
+01072 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_strncpy_from_user(rtdm_user_info_t *user_info,
+01073                                          <span class="keywordtype">char</span> *dst,
+01074                                          <span class="keyword">const</span> <span class="keywordtype">char</span> __user *src,
+01075                                          size_t count)
+01076 {
+01077     <span class="keywordflow">if</span> (unlikely(!__xn_access_ok(user_info, VERIFY_READ, src, 1)))
+01078         <span class="keywordflow">return</span> -EFAULT;
+01079     <span class="keywordflow">return</span> __xn_strncpy_from_user(user_info, dst, src, count);
+01080 }
+01081 
+01082 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_in_rt_context(<span class="keywordtype">void</span>)
+01083 {
+01084     <span class="keywordflow">return</span> (rthal_current_domain != rthal_root_domain);
+01085 }
+01086 
+01087 <span class="keywordtype">int</span> rtdm_exec_in_rt(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context,
+01088                     rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *arg,
+01089                     rtdm_rt_handler_t handler);
+01090 
+01091 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DRIVER_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

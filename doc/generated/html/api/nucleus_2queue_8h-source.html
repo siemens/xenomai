@@ -95,7 +95,7 @@
 00085 
 00086 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_DEBUG_QUEUES</span>
 00087 <span class="preprocessor"></span>
-00088 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)</span>
+00088 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_SIM__)</span>
 00089 <span class="preprocessor"></span>
 00090 <span class="preprocessor">#define XENO_DEBUG_CHECK_QUEUE(__qslot)         \</span>
 00091 <span class="preprocessor">do { \</span>
@@ -150,7 +150,7 @@
 00140 <span class="preprocessor">    xnlock_put_irqrestore(&amp;(__qslot)-&gt;lock,s);  \</span>
 00141 <span class="preprocessor">} while(0)</span>
 00142 <span class="preprocessor"></span>
-00143 <span class="preprocessor">#else </span><span class="comment">/* !(__KERNEL__ || __XENO_UVM__ || __XENO_SIM__) */</span>
+00143 <span class="preprocessor">#else </span><span class="comment">/* !(__KERNEL__ || __XENO_SIM__) */</span>
 00144 
 00145 <span class="comment">/* Disable queue checks in user-space code which does not run as part</span>
 00146 <span class="comment">   of any virtual machine, e.g. skin call interface libs. */</span>
@@ -159,7 +159,7 @@
 00149 <span class="preprocessor"></span><span class="preprocessor">#define XENO_DEBUG_INSERT_QUEUE(__qslot,__holder)</span>
 00150 <span class="preprocessor"></span><span class="preprocessor">#define XENO_DEBUG_REMOVE_QUEUE(__qslot,__holder)</span>
 00151 <span class="preprocessor"></span>
-00152 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
+00152 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
 00153 
 00154 <span class="comment">/* Write the following as macros so that line numbering information</span>
 00155 <span class="comment">   keeps pointing at the real caller in diagnosis messages. */</span>
@@ -796,7 +796,7 @@
 00786 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_SCALABLE_SCHED */</span>
 00787 
 00788 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_QUEUE_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:56 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
