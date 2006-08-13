@@ -1,1 +1,1 @@
-switch:native:!./switch;popall:control_c
+switchbench:native:!./switchbench;popall:control_c

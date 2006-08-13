@@ -1,16 +1,16 @@
 testdir = $(prefix)/testsuite/switchbench
 
-test_PROGRAMS = switch
+test_PROGRAMS = switchbench
 
-switch_SOURCES = switch.c
+switchbench_SOURCES = switchbench.c
 
-switch_CPPFLAGS = \
+switchbench_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
 
-switch_LDFLAGS = @XENO_USER_LDFLAGS@
+switchbench_LDFLAGS = @XENO_USER_LDFLAGS@
 
-switch_LDADD = \
+switchbench_LDADD = \
 	../../skins/native/.libs/libnative.a \
 	-lpthread
 
