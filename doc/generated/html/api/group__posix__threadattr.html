@@ -20,9 +20,9 @@ Thread creation attributes.
 <p>
 The services described in this section allow to set the attributes of a <b>pthread_attr_t</b> object, passed to the <a class="el" href="group__posix__thread.html#ga6">pthread_create()</a> service in order to set the attributes of a created thread.<p>
 A <b>pthread_attr_t</b> object has to be initialized with <a class="el" href="group__posix__threadattr.html#ga1">pthread_attr_init()</a> first, which sets attributes to their default values, i.e. in kernel-space:<ul>
-<li><em>detachstate</em> to PTHREAD_CREATE_JOINABLE,</li><li><em>stacksize</em> to PTHREAD_STACK_MIN,</li><li><em>inheritsched</em> to PTHREAD_EXPLICIT_SCHED,</li><li><em>schedpolicy</em> to SCHED_OTHER,</li><li>scheduling priority to the minimum,</li><li>floating-point hardware enabled (only available in kernel-space),</li><li>processor affinity set to all available processors (only available as a thread attribute in kernel-space).</li></ul>
+<li><em>detachstate</em> to PTHREAD_CREATE_JOINABLE,</li><li><em>stacksize</em> to PTHREAD_STACK_MIN,</li><li><em>inheritsched</em> to PTHREAD_EXPLICIT_SCHED,</li><li><em>schedpolicy</em> to SCHED_OTHER,</li><li><em>name</em> to NULL (only available in kernel-space),</li><li>scheduling priority to the minimum,</li><li>floating-point hardware enabled (only available in kernel-space),</li><li>processor affinity set to all available processors (only available as a thread attribute in kernel-space).</li></ul>
 <p>
-In user-space, the defaults are those documented by the underlying threading library (LinuxThreads or NPTL). 
+In user-space, the attributes and their defaults values are those documented by the underlying threading library (LinuxThreads or NPTL). 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
@@ -159,7 +159,7 @@ Get the processor affinity attribute.
 <p>
 This service stores, at the address <em>mask</em>, the value of the <em>affinity</em> attribute in the attribute object <em>attr</em>.<p>
 The <em>affinity</em> attributes is a bitmask where bits set indicate processor where a thread created with the attribute <em>attr</em> may run. The least significant bit corresponds to the first logical processor.<p>
-The <em>affinity</em> attribute is not portable.<p>
+This service is a non-portable extension of the POSIX interface.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -168,7 +168,10 @@ The <em>affinity</em> attribute is not portable.<p>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
 an error number if:<ul>
-<li>EINVAL, <em>attr</em> is invalid. </li></ul>
+<li>EINVAL, <em>attr</em> is invalid.</li></ul>
+</dd></dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread. </li></ul>
 </dd></dl>
     </td>
   </tr>
@@ -264,7 +267,7 @@ Get the floating point attribute.
 <p>
 This service returns, at the address <em>fp</em>, the value of the <em>fp</em> attribute in the attribute object <em>attr</em>.<p>
 The <em>fp</em> attribute is a boolean attribute indicating whether a thread created with the attribute <em>attr</em> may use floating-point hardware.<p>
-The <em>fp</em> attribute is not portable.<p>
+This service is a non-portable extension of the POSIX interface.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -273,7 +276,10 @@ The <em>fp</em> attribute is not portable.<p>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
 an error number if:<ul>
-<li>EINVAL, <em>attr</em> is invalid. </li></ul>
+<li>EINVAL, <em>attr</em> is invalid.</li></ul>
+</dd></dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread. </li></ul>
 </dd></dl>
     </td>
   </tr>
@@ -370,7 +376,7 @@ This service stores, at the address <em>name</em>, the value of the <em>name</em
 The <em>name</em> attribute is the name under which a thread created with the attribute object <em>attr</em> will appear under /proc/xenomai/sched.<p>
 The name returned by this function is only valid until the name is changed with <a class="el" href="group__posix__threadattr.html#ga16">pthread_attr_setname_np()</a> or the <em>attr</em> object is destroyed with <a class="el" href="group__posix__threadattr.html#ga2">pthread_attr_destroy()</a>.<p>
 If <em>name</em> is <em>NULL</em>, a unique default name will be used.<p>
-The <em>name</em> attribute is not portable.<p>
+This service is a non-portable extension of the POSIX interface.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -379,7 +385,10 @@ The <em>name</em> attribute is not portable.<p>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
 an error number if:<ul>
-<li>EINVAL, <em>attr</em> is invalid. </li></ul>
+<li>EINVAL, <em>attr</em> is invalid.</li></ul>
+</dd></dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread. </li></ul>
 </dd></dl>
     </td>
   </tr>
@@ -669,7 +678,7 @@ Set the processor affinity attribute.
 <p>
 This service sets to <em>mask</em>, the value of the <em>affinity</em> attribute in the attribute object <em>attr</em>.<p>
 The <em>affinity</em> attributes is a bitmask where bits set indicate processor where a thread created with the attribute <em>attr</em> may run. The least significant bit corresponds to the first logical processor.<p>
-The <em>affinity</em> attribute is not portable.<p>
+This service is a non-portable extension of the POSIX interface.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -678,7 +687,10 @@ The <em>affinity</em> attribute is not portable.<p>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
 an error number if:<ul>
-<li>EINVAL, <em>attr</em> is invalid. </li></ul>
+<li>EINVAL, <em>attr</em> is invalid.</li></ul>
+</dd></dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread. </li></ul>
 </dd></dl>
     </td>
   </tr>
@@ -774,7 +786,7 @@ Set the floating point attribute.
 <p>
 This service set to <em>fp</em>, the value of the <em>fp</em> attribute in the attribute object <em>attr</em>.<p>
 The <em>fp</em> attribute is a boolean attribute indicating whether a thread created with the attribute <em>attr</em> may use floating-point hardware.<p>
-The <em>fp</em> attribute is not portable.<p>
+This service is a non-portable extension of the POSIX interface.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -783,7 +795,10 @@ The <em>fp</em> attribute is not portable.<p>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
 an error number if:<ul>
-<li>EINVAL, <em>attr</em> is invalid. </li></ul>
+<li>EINVAL, <em>attr</em> is invalid.</li></ul>
+</dd></dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread. </li></ul>
 </dd></dl>
     </td>
   </tr>
@@ -879,7 +894,7 @@ Set name attribute.
 This service set to <em>name</em>, the value of the <em>name</em> attribute in the attribute object <em>attr</em>.<p>
 The <em>name</em> attribute is the name under which a thread created with the attribute object <em>attr</em> will appear under /proc/xenomai/sched.<p>
 If <em>name</em> is <em>NULL</em>, a unique default name will be used.<p>
-The <em>name</em> attribute is not portable.<p>
+This service is a non-portable extension of the POSIX interface.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -888,7 +903,10 @@ The <em>name</em> attribute is not portable.<p>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
 an error number if:<ul>
-<li>EINVAL, <em>attr</em> is invalid. </li></ul>
+<li>EINVAL, <em>attr</em> is invalid;</li><li>ENOMEM, insufficient memory exists in the system heap to duplicate the name string, increase CONFIG_XENO_OPT_SYS_HEAPSZ.</li></ul>
+</dd></dl>
+<dl compact><dt><b>Valid contexts:</b></dt><dd><ul>
+<li>kernel module initialization or cleanup routine;</li><li>Xenomai kernel-space thread. </li></ul>
 </dd></dl>
     </td>
   </tr>
@@ -1102,7 +1120,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:58:11 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:59 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

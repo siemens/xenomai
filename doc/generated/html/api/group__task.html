@@ -64,7 +64,7 @@ The Xenomai scheduler ensures that concurrent tasks are run according to one of 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga19">rt_task_unblock</a> (RT_TASK *task)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unblock a real-time task.  <a href="#ga19"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga20">rt_task_inquire</a> (RT_TASK *task, RT_TASK_INFO *info)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga20">rt_task_inquire</a> (RT_TASK *task, <a class="el" href="structrt__task__info.html">RT_TASK_INFO</a> *info)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about a real-time task.  <a href="#ga20"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga21">rt_task_add_hook</a> (int type, void(*routine)(void *cookie))</td></tr>
@@ -88,13 +88,13 @@ The Xenomai scheduler ensures that concurrent tasks are run according to one of 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga27">rt_task_slice</a> (RT_TASK *task, RTIME quantum)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set a task's round-robin quantum.  <a href="#ga27"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga28">rt_task_send</a> (RT_TASK *task, RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME timeout)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga28">rt_task_send</a> (RT_TASK *task, <a class="el" href="structrt__task__mcb.html">RT_TASK_MCB</a> *mcb_s, <a class="el" href="structrt__task__mcb.html">RT_TASK_MCB</a> *mcb_r, RTIME timeout)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Send a message to a task.  <a href="#ga28"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga29">rt_task_receive</a> (RT_TASK_MCB *mcb_r, RTIME timeout)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga29">rt_task_receive</a> (<a class="el" href="structrt__task__mcb.html">RT_TASK_MCB</a> *mcb_r, RTIME timeout)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive a message from a task.  <a href="#ga29"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga30">rt_task_reply</a> (int flowid, RT_TASK_MCB *mcb_s)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga30">rt_task_reply</a> (int flowid, <a class="el" href="structrt__task__mcb.html">RT_TASK_MCB</a> *mcb_s)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Reply to a task.  <a href="#ga30"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#ga31">rt_task_spawn</a> (RT_TASK *task, const char *name, int stksize, int prio, int mode, void(*entry)(void *cookie), void *cookie)</td></tr>
@@ -484,7 +484,7 @@ Rescheduling: always if <em>task</em> is NULL, and possible if the deleted task 
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
-          <td class="md" nowrap>RT_TASK_INFO *&nbsp;</td>
+          <td class="md" nowrap><a class="el" href="structrt__task__info.html">RT_TASK_INFO</a> *&nbsp;</td>
           <td class="mdname" nowrap> <em>info</em></td>
         </tr>
         <tr>
@@ -656,7 +656,7 @@ Rescheduling: possible.     </td>
         <tr>
           <td class="md" nowrap valign="top">int rt_task_receive           </td>
           <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">RT_TASK_MCB *&nbsp;</td>
+          <td class="md" nowrap valign="top"><a class="el" href="structrt__task__mcb.html">RT_TASK_MCB</a> *&nbsp;</td>
           <td class="mdname" nowrap> <em>mcb_r</em>, </td>
         </tr>
         <tr>
@@ -806,7 +806,7 @@ Rescheduling: never.     </td>
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
-          <td class="md" nowrap>RT_TASK_MCB *&nbsp;</td>
+          <td class="md" nowrap><a class="el" href="structrt__task__mcb.html">RT_TASK_MCB</a> *&nbsp;</td>
           <td class="mdname" nowrap> <em>mcb_s</em></td>
         </tr>
         <tr>
@@ -965,13 +965,13 @@ Rescheduling: never.     </td>
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
-          <td class="md" nowrap>RT_TASK_MCB *&nbsp;</td>
+          <td class="md" nowrap><a class="el" href="structrt__task__mcb.html">RT_TASK_MCB</a> *&nbsp;</td>
           <td class="mdname" nowrap> <em>mcb_s</em>, </td>
         </tr>
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
-          <td class="md" nowrap>RT_TASK_MCB *&nbsp;</td>
+          <td class="md" nowrap><a class="el" href="structrt__task__mcb.html">RT_TASK_MCB</a> *&nbsp;</td>
           <td class="mdname" nowrap> <em>mcb_r</em>, </td>
         </tr>
         <tr>
@@ -1987,7 +1987,7 @@ This service can be called from:<p>
 Rescheduling: always if a next equal-priority task is ready to run, otherwise, this service leads to a no-op.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:58:05 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:53 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

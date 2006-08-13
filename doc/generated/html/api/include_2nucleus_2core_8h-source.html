@@ -28,13 +28,13 @@
 00018 <span class="comment"> *</span>
 00019 <span class="comment"> * Core pod definitions. The core pod supports all APIs providing a</span>
 00020 <span class="comment"> * system call interface to user-space applications. Core APIs, namely</span>
-00021 <span class="comment"> * POSIX, native, RTDM and UVM, only use a sub-range of the available</span>
+00021 <span class="comment"> * POSIX, native and RTDM, only use a sub-range of the available</span>
 00022 <span class="comment"> * priority levels of the core pod, in order to have them exhibit a</span>
 00023 <span class="comment"> * 1:1 mapping with Linux's SCHED_FIFO ascending priority</span>
-00024 <span class="comment"> * scale. Non-core APIs may also rely on the core pod, provided they</span>
-00025 <span class="comment"> * normalize the priority levels of their threads when calling the</span>
-00026 <span class="comment"> * nucleus, in order to match the priority scale enforced by the</span>
-00027 <span class="comment"> * former.</span>
+00024 <span class="comment"> * scale. Non-core APIs (e.g. VxWorks, VRTX) may also rely on the core</span>
+00025 <span class="comment"> * pod, provided they normalize the priority levels of their threads</span>
+00026 <span class="comment"> * when calling the nucleus, in order to match the priority scale</span>
+00027 <span class="comment"> * enforced by the former.</span>
 00028 <span class="comment"> */</span>
 00029 
 00030 <span class="preprocessor">#ifndef _XENO_NUCLEUS_CORE_H</span>
@@ -77,7 +77,7 @@
 00067 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
 00068 
 00069 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_CORE_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:56 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

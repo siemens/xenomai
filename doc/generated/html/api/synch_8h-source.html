@@ -39,7 +39,7 @@
 00029 <span class="preprocessor"></span><span class="preprocessor">#define XNSYNCH_PIP     0x2</span>
 00030 <span class="preprocessor"></span><span class="preprocessor">#define XNSYNCH_DREORD  0x4</span>
 00031 <span class="preprocessor"></span>
-00032 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_UVM__) || defined(__XENO_SIM__)</span>
+00032 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_SIM__)</span>
 00033 <span class="preprocessor"></span>
 00034 <span class="preprocessor">#define XNSYNCH_CLAIMED 0x8     </span><span class="comment">/* Claimed by other thread(s) w/ PIP */</span>
 00035 <span class="preprocessor">#define XNSYNCH_PENDING 0x10    </span><span class="comment">/* Pending ownership -- may be stolen  */</span>
@@ -133,10 +133,10 @@
 00123 <span class="preprocessor"></span>}
 00124 <span class="preprocessor">#endif</span>
 00125 <span class="preprocessor"></span>
-00126 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_UVM__ || __XENO_SIM__ */</span>
+00126 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
 00127 
 00128 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SYNCH_H_ */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:56 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

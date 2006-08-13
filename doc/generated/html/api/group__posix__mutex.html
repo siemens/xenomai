@@ -21,7 +21,7 @@ Mutex services.
 A mutex is a MUTual EXclusion device, and is useful for protecting shared data structures from concurrent modifications, and implementing critical sections and monitors.<p>
 A mutex has two possible states: unlocked (not owned by any thread), and locked (owned by one thread). A mutex can never be owned by two different threads simultaneously. A thread attempting to lock a mutex that is already locked by another thread is suspended until the owning thread unlocks the mutex first.<p>
 Before it can be used, a mutex has to be initialized with <a class="el" href="group__posix__mutex.html#ga3">pthread_mutex_init()</a>. An attribute object, which reference may be passed to this service, allows to select the features of the created mutex, namely its <em>type</em> (see <a class="el" href="group__posix__mutex.html#ga17">pthread_mutexattr_settype()</a>), the priority <em>protocol</em> it uses (see <a class="el" href="group__posix__mutex.html#ga19">pthread_mutexattr_setprotocol()</a>) and whether it may be shared between several processes (see <a class="el" href="group__posix__mutex.html#ga21">pthread_mutexattr_setpshared()</a>).<p>
-By default, Xenomai POSIX skin mutexes are of the recursive type, use no priority protocol and may not be shared between several processes.<p>
+By default, Xenomai POSIX skin mutexes are of the normal type, use no priority protocol and may not be shared between several processes.<p>
 Note that only <a class="el" href="group__posix__mutex.html#ga3">pthread_mutex_init()</a> may be used to initialize a mutex, using the static initializer <em>PTHREAD_MUTEX_INITIALIZER</em> is not supported. 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
@@ -577,7 +577,7 @@ an error number if:<ul>
 Initialize a mutex attributes object. 
 <p>
 This services initializes the mutex attributes object <em>attr</em> with default values for all attributes. Default value are :<ul>
-<li>for the <em>type</em> attribute, <em>PTHREAD_MUTEX_RECURSIVE</em>;</li><li>for the <em>protocol</em> attribute, <em>PTHREAD_PRIO_NONE</em>;</li><li>for the <em>pshared</em> attribute, <em>PTHREAD_PROCESS_PRIVATE</em>.</li></ul>
+<li>for the <em>type</em> attribute, <em>PTHREAD_MUTEX_NORMAL</em>;</li><li>for the <em>protocol</em> attribute, <em>PTHREAD_PRIO_NONE</em>;</li><li>for the <em>pshared</em> attribute, <em>PTHREAD_PROCESS_PRIVATE</em>.</li></ul>
 <p>
 If this service is called specifying a mutex attributes object that was already initialized, the attributes object is reinitialized.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
@@ -738,7 +738,7 @@ Set the mutex type attribute of a mutex attributes object.
 <p>
 This service set the <em>type</em> attribute of the mutex attributes object <em>attr</em>.<p>
 See <a class="el" href="group__posix__mutex.html#ga7">pthread_mutex_lock()</a> and <a class="el" href="group__posix__mutex.html#ga10">pthread_mutex_unlock()</a> documentations for a description of the values of the <em>type</em> attribute and their effect on a mutex.<p>
-The <em>PTHREAD_MUTEX_DEFAULT</em> default <em>type</em> is the same as <em>PTHREAD_MUTEX_RECURSIVE</em>. Note that using a Xenomai POSIX skin recursive mutex with a Xenomai POSIX skin condition variable is safe (see <a class="el" href="group__posix__cond.html#ga9">pthread_cond_wait()</a> documentation).<p>
+The <em>PTHREAD_MUTEX_DEFAULT</em> default <em>type</em> is the same as <em>PTHREAD_MUTEX_NORMAL</em>. Note that using a Xenomai POSIX skin recursive mutex with a Xenomai POSIX skin condition variable is safe (see <a class="el" href="group__posix__cond.html#ga9">pthread_cond_wait()</a> documentation).<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>an initialized mutex attributes object,</td></tr>
@@ -753,7 +753,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:58:10 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:58 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -112,7 +112,7 @@ The return values are identical in kernel-space and user-space.<p>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
-<li>ENOMEM, insufficient memory exists in the system heap to create the interrupt object, increase CONFIG_XENO_OPT_SYS_HEAPSZ;</li><li>EINVAL, a low-level error occured while attaching the interrupt;</li><li>EBUSY, an interrupt handler was already registered for the irq line <em>irq</em>. </li></ul>
+<li>ENOMEM, insufficient memory exists in the system heap to create the interrupt object, increase CONFIG_XENO_OPT_SYS_HEAPSZ;</li><li>EINVAL, a low-level error occured while attaching the interrupt;</li><li>EBUSY, an interrupt handler was already registered for the irq line <em>irq</em>;</li><li>ENOSYS, kernel-space Xenomai POSIX skin was built without support for interrupts, use RTDM or enable CONFIG_XENO_OPT_POSIX_INTR in kernel configuration. </li></ul>
 </td></tr>
   </table>
 </dl>
@@ -167,7 +167,7 @@ This service is a non-portable extension of the POSIX interface.<p>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
-<li>EINVAL, the identifier <em>intr</em> or <em>cmd</em> is invalid. </li></ul>
+<li>EINVAL, the identifier <em>intr</em> or <em>cmd</em> is invalid;</li><li>ENOSYS, kernel-space Xenomai POSIX skin was built without support for interrupts, use RTDM or enable CONFIG_XENO_OPT_POSIX_INTR in kernel configuration. </li></ul>
 </td></tr>
   </table>
 </dl>
@@ -213,7 +213,7 @@ This service is a non-portable extension of the POSIX interface.<p>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
-<li>EINVAL, the interrupt object <em>intr</em> is invalid. </li></ul>
+<li>EINVAL, the interrupt object <em>intr</em> is invalid;</li><li>ENOSYS, kernel-space Xenomai POSIX skin was built without support for interrupts, use RTDM or enable CONFIG_XENO_OPT_POSIX_INTR in kernel configuration. </li></ul>
 </td></tr>
   </table>
 </dl>
@@ -267,12 +267,12 @@ This service is a non-portable extension of the POSIX interface.<p>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>the number of interrupt received on success; <p>
 -1 with <em>errno</em> set if:<ul>
-<li>EIDRM, the interrupt object was deleted;</li><li>ETIMEDOUT, the timeout specified by <em>to</em> expired;</li><li>EINTR, <a class="el" href="group__posix__intr.html#ga7">pthread_intr_wait_np()</a> was interrupted by a signal. </li></ul>
+<li>EIDRM, the interrupt object was deleted;</li><li>ETIMEDOUT, the timeout specified by <em>to</em> expired;</li><li>EINTR, <a class="el" href="group__posix__intr.html#ga7">pthread_intr_wait_np()</a> was interrupted by a signal;</li><li>ENOSYS, kernel-space Xenomai POSIX skin was built without support for interrupts, use RTDM or enable CONFIG_XENO_OPT_POSIX_INTR in kernel configuration. </li></ul>
 </dd></dl>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:58:09 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:57 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -428,7 +428,7 @@
 00479     xnlock_get_irqsave(&amp;nklock,s);
 00480 
 00481     <span class="keywordflow">if</span> (nkpod-&gt;<a class="code" href="structxnpod.html#o7">schedlck</a>++ == 0)
-00482         __setbits(xnpod_current_sched()-&gt;runthread-&gt;status,XNLOCK);
+00482         __setbits(xnpod_current_sched()-&gt;runthread-&gt;status,<a class="code" href="group__nucleus__status__mode.html#ga16">XNLOCK</a>);
 00483 
 00484     xnlock_put_irqrestore(&amp;nklock,s);
 00485 }
@@ -441,7 +441,7 @@
 00492 
 00493     <span class="keywordflow">if</span> (--nkpod-&gt;<a class="code" href="structxnpod.html#o7">schedlck</a> == 0)
 00494         {
-00495         __clrbits(xnpod_current_sched()-&gt;runthread-&gt;status,XNLOCK);
+00495         __clrbits(xnpod_current_sched()-&gt;runthread-&gt;status,<a class="code" href="group__nucleus__status__mode.html#ga16">XNLOCK</a>);
 00496         <a class="code" href="group__pod.html#ga43">xnpod_schedule</a>();
 00497         }
 00498 
@@ -485,12 +485,12 @@
 00536 
 00537 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_delay (xnticks_t timeout)
 00538 {
-00539     xnpod_suspend_thread(xnpod_current_thread(),XNDELAY,timeout,NULL);
+00539     xnpod_suspend_thread(xnpod_current_thread(),<a class="code" href="group__nucleus__status__mode.html#ga2">XNDELAY</a>,timeout,NULL);
 00540 }
 00541 
 00542 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_suspend_self (<span class="keywordtype">void</span>)
 00543 {
-00544     xnpod_suspend_thread(xnpod_current_thread(),XNSUSP,XN_INFINITE,NULL);
+00544     xnpod_suspend_thread(xnpod_current_thread(),<a class="code" href="group__nucleus__status__mode.html#ga0">XNSUSP</a>,XN_INFINITE,NULL);
 00545 }
 00546 
 00547 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_delete_self (<span class="keywordtype">void</span>)
@@ -537,7 +537,7 @@
 00588 <span class="preprocessor">#endif</span>
 00589 <span class="preprocessor"></span>
 00592 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_POD_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:56 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -24,285 +24,274 @@
 00034 <span class="preprocessor">#define T_CPU(cpu) (1 &lt;&lt; (24 + (cpu &amp; 7))) </span><span class="comment">/* Up to 8 cpus [0-7] */</span>
 00035 <span class="preprocessor">#define T_CPUMASK  0xff000000</span>
 00036 <span class="preprocessor"></span>
-00037 <span class="comment">/* Status/mode flags. */</span>
-00038 <span class="preprocessor">#define T_BLOCKED  XNPEND</span>
-00039 <span class="preprocessor"></span><span class="preprocessor">#define T_DELAYED  XNDELAY</span>
-00040 <span class="preprocessor"></span><span class="preprocessor">#define T_READY    XNREADY</span>
-00041 <span class="preprocessor"></span><span class="preprocessor">#define T_DORMANT  XNDORMANT</span>
-00042 <span class="preprocessor"></span><span class="preprocessor">#define T_STARTED  XNSTARTED</span>
-00043 <span class="preprocessor"></span><span class="preprocessor">#define T_BOOST    XNBOOST</span>
-00044 <span class="preprocessor"></span><span class="preprocessor">#define T_LOCK     XNLOCK</span>
-00045 <span class="preprocessor"></span><span class="preprocessor">#define T_RRB      XNRRB</span>
-00046 <span class="preprocessor"></span><span class="preprocessor">#define T_NOSIG    XNASDI</span>
-00047 <span class="preprocessor"></span><span class="preprocessor">#define T_SHIELD   XNSHIELD</span>
-00048 <span class="preprocessor"></span><span class="preprocessor">#define T_WARNSW   XNTRAPSW</span>
-00049 <span class="preprocessor"></span><span class="preprocessor">#define T_RPIOFF   XNRPIOFF</span>
-00050 <span class="preprocessor"></span><span class="preprocessor">#define T_PRIMARY  0x00000200   </span><span class="comment">/* Recycle internal bits status which */</span>
-00051 <span class="preprocessor">#define T_JOINABLE 0x00000400   </span><span class="comment">/* won't be passed to the nucleus.  */</span>
-00052 
-00053 <span class="comment">/* Task hook types. */</span>
-00054 <span class="preprocessor">#define T_HOOK_START  XNHOOK_THREAD_START</span>
-00055 <span class="preprocessor"></span><span class="preprocessor">#define T_HOOK_SWITCH XNHOOK_THREAD_SWITCH</span>
-00056 <span class="preprocessor"></span><span class="preprocessor">#define T_HOOK_DELETE XNHOOK_THREAD_DELETE</span>
-00057 <span class="preprocessor"></span><span class="preprocessor">#define T_DESC(cookie) thread2rtask(cookie)</span>
-00058 <span class="preprocessor"></span>
-00059 <span class="comment">/* Priority range (POSIXish, same bounds as Xenomai's). */</span>
-00060 <span class="preprocessor">#define T_LOPRIO  XNCORE_LOW_PRIO</span>
-00061 <span class="preprocessor"></span><span class="preprocessor">#define T_HIPRIO  XNCORE_HIGH_PRIO</span>
-00062 <span class="preprocessor"></span>
-00063 <span class="keyword">typedef</span> <span class="keyword">struct </span>rt_task_placeholder {
-00064     xnhandle_t opaque;
-00065     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> opaque2;
-00066 } RT_TASK_PLACEHOLDER;
-00067 
-00068 <span class="keyword">struct </span>rt_queue_msg;
-00069 <span class="keyword">struct </span>rt_task;
-00070 
-00071 <span class="keyword">typedef</span> <span class="keyword">struct </span>rt_task_info {
-00072 
-00073     <span class="keywordtype">int</span> bprio;                  <span class="comment">/* !&lt; Base priority. */</span>
+<a name="l00044"></a><a class="code" href="group__native__task__status.html#ga0">00044</a> <span class="preprocessor">#define T_BLOCKED  XNPEND     </span>
+<a name="l00045"></a><a class="code" href="group__native__task__status.html#ga1">00045</a> <span class="preprocessor">#define T_DELAYED  XNDELAY    </span>
+<a name="l00046"></a><a class="code" href="group__native__task__status.html#ga2">00046</a> <span class="preprocessor">#define T_READY    XNREADY    </span>
+<a name="l00047"></a><a class="code" href="group__native__task__status.html#ga3">00047</a> <span class="preprocessor">#define T_DORMANT  XNDORMANT  </span>
+<a name="l00048"></a><a class="code" href="group__native__task__status.html#ga4">00048</a> <span class="preprocessor">#define T_STARTED  XNSTARTED  </span>
+<a name="l00049"></a><a class="code" href="group__native__task__status.html#ga5">00049</a> <span class="preprocessor">#define T_BOOST    XNBOOST    </span>
+<a name="l00050"></a><a class="code" href="group__native__task__status.html#ga6">00050</a> <span class="preprocessor">#define T_LOCK     XNLOCK     </span>
+<a name="l00051"></a><a class="code" href="group__native__task__status.html#ga7">00051</a> <span class="preprocessor">#define T_RRB      XNRRB      </span>
+<a name="l00052"></a><a class="code" href="group__native__task__status.html#ga8">00052</a> <span class="preprocessor">#define T_NOSIG    XNASDI     </span>
+<a name="l00053"></a><a class="code" href="group__native__task__status.html#ga9">00053</a> <span class="preprocessor">#define T_SHIELD   XNSHIELD   </span>
+<a name="l00054"></a><a class="code" href="group__native__task__status.html#ga10">00054</a> <span class="preprocessor">#define T_WARNSW   XNTRAPSW   </span>
+<a name="l00055"></a><a class="code" href="group__native__task__status.html#ga11">00055</a> <span class="preprocessor">#define T_RPIOFF   XNRPIOFF   </span>
+00056 <span class="preprocessor">#define T_PRIMARY  0x00000200   </span><span class="comment">/* Recycle internal bits status which */</span>
+00057 <span class="preprocessor">#define T_JOINABLE 0x00000400   </span><span class="comment">/* won't be passed to the nucleus.  */</span>
+00058  <span class="comment">/* Ends doxygen-group native_task_status */</span>
+00059 
+00060 <span class="comment">/* Task hook types. */</span>
+00061 <span class="preprocessor">#define T_HOOK_START  XNHOOK_THREAD_START</span>
+00062 <span class="preprocessor"></span><span class="preprocessor">#define T_HOOK_SWITCH XNHOOK_THREAD_SWITCH</span>
+00063 <span class="preprocessor"></span><span class="preprocessor">#define T_HOOK_DELETE XNHOOK_THREAD_DELETE</span>
+00064 <span class="preprocessor"></span><span class="preprocessor">#define T_DESC(cookie) thread2rtask(cookie)</span>
+00065 <span class="preprocessor"></span>
+00066 <span class="comment">/* Priority range (POSIXish, same bounds as Xenomai's). */</span>
+00067 <span class="preprocessor">#define T_LOPRIO  XNCORE_LOW_PRIO</span>
+00068 <span class="preprocessor"></span><span class="preprocessor">#define T_HIPRIO  XNCORE_HIGH_PRIO</span>
+00069 <span class="preprocessor"></span>
+00070 <span class="keyword">typedef</span> <span class="keyword">struct </span>rt_task_placeholder {
+00071     xnhandle_t opaque;
+00072     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> opaque2;
+00073 } RT_TASK_PLACEHOLDER;
 00074 
-00075     <span class="keywordtype">int</span> cprio;                  <span class="comment">/* !&lt; Current priority. */</span>
-00076 
-00077     <span class="keywordtype">unsigned</span> status;            <span class="comment">/* !&lt; Status. */</span>
-00078 
-00079     RTIME relpoint;             <span class="comment">/* !&lt; Periodic release point. */</span>
-00080 
-00081     <span class="keywordtype">char</span> name[XNOBJECT_NAME_LEN]; <span class="comment">/* !&lt; Symbolic name. */</span>
-00082 
-00083 } RT_TASK_INFO;
-00084 
-00085 <span class="preprocessor">#define RT_MCB_FSTORE_LIMIT  64</span>
-00086 <span class="preprocessor"></span>
-00087 <span class="keyword">typedef</span> <span class="keyword">struct </span>rt_task_mcb {
-00088 
-00089     <span class="keywordtype">int</span> flowid;                 <span class="comment">/* !&lt; Flow identifier. */</span>
-00090 
-00091     <span class="keywordtype">int</span> opcode;                 <span class="comment">/* !&lt; Operation code. */</span>
-00092 
-00093     caddr_t data;               <span class="comment">/* !&lt; Address of message. */</span>
-00094 
-00095     size_t size;                <span class="comment">/* !&lt; Size of message. */</span>
-00096 
-00097 } RT_TASK_MCB;
-00098 
-00099 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_SIM__)</span>
-00100 <span class="preprocessor"></span>
-00101 <span class="preprocessor">#define XENO_TASK_MAGIC 0x55550101</span>
-00102 <span class="preprocessor"></span>
-00103 <span class="keyword">typedef</span> <span class="keyword">struct </span>rt_task {
-00104 
-00105     <span class="keywordtype">unsigned</span> magic;   <span class="comment">/* !&lt; Magic code - must be first */</span>
-00106 
-00107     xnholder_t link;
-00108 
-00109 <span class="preprocessor">#define link2rtask(laddr) \</span>
-00110 <span class="preprocessor">((RT_TASK *)(((char *)laddr) - (int)(&amp;((RT_TASK *)0)-&gt;link)))</span>
-00111 <span class="preprocessor"></span>
-00112     xntimer_t timer;
-00113 
-00114     xnthread_t thread_base;
-00115 
-00116     <span class="keywordtype">char</span> rname[XNOBJECT_NAME_LEN]; <span class="comment">/* !&lt; Name in registry. Not the same as</span>
-00117 <span class="comment">                                      thread name for anonymous threads. */</span>
-00118     <span class="keywordtype">int</span> suspend_depth;
-00119 
-00120     <span class="keywordtype">int</span> overrun;
-00121 
-00122     xnsynch_t safesynch; <span class="comment">/* !&lt; Safe synchronization object. */</span>
-00123 
-00124     u_long safelock;     <span class="comment">/* !&lt; Safe lock count. */</span>
-00125 
-00126     u_long cstamp;      <span class="comment">/* !&lt; Creation stamp. */</span>
+00075 <span class="keyword">struct </span>rt_queue_msg;
+00076 <span class="keyword">struct </span>rt_task;
+00077 
+<a name="l00082"></a><a class="code" href="structrt__task__info.html">00082</a> <span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structrt__task__info.html">rt_task_info</a> {
+00083     
+<a name="l00084"></a><a class="code" href="structrt__task__info.html#o0">00084</a>     <span class="keywordtype">int</span> <a class="code" href="structrt__task__info.html#o0">bprio</a>;  
+<a name="l00086"></a><a class="code" href="structrt__task__info.html#o1">00086</a>     <span class="keywordtype">int</span> <a class="code" href="structrt__task__info.html#o1">cprio</a>; 
+<a name="l00088"></a><a class="code" href="structrt__task__info.html#o2">00088</a>     <span class="keywordtype">unsigned</span> <a class="code" href="structrt__task__info.html#o2">status</a>; 
+<a name="l00090"></a><a class="code" href="structrt__task__info.html#o3">00090</a>     RTIME <a class="code" href="structrt__task__info.html#o3">relpoint</a>; 
+<a name="l00092"></a><a class="code" href="structrt__task__info.html#o4">00092</a>     <span class="keywordtype">char</span> <a class="code" href="structrt__task__info.html#o4">name</a>[XNOBJECT_NAME_LEN];  
+00094 } <a class="code" href="structrt__task__info.html">RT_TASK_INFO</a>;
+00095 
+00096 <span class="preprocessor">#define RT_MCB_FSTORE_LIMIT  64</span>
+00097 <span class="preprocessor"></span>
+<a name="l00101"></a><a class="code" href="structrt__task__mcb.html">00101</a> <span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structrt__task__mcb.html">rt_task_mcb</a> {
+00102 
+<a name="l00103"></a><a class="code" href="structrt__task__mcb.html#o0">00103</a>     <span class="keywordtype">int</span> <a class="code" href="structrt__task__mcb.html#o0">flowid</a>;   
+<a name="l00105"></a><a class="code" href="structrt__task__mcb.html#o1">00105</a>     <span class="keywordtype">int</span> <a class="code" href="structrt__task__mcb.html#o1">opcode</a>;   
+<a name="l00107"></a><a class="code" href="structrt__task__mcb.html#o2">00107</a>     caddr_t <a class="code" href="structrt__task__mcb.html#o2">data</a>; 
+<a name="l00109"></a><a class="code" href="structrt__task__mcb.html#o3">00109</a>     size_t <a class="code" href="structrt__task__mcb.html#o3">size</a>;  
+00111 } <a class="code" href="structrt__task__mcb.html">RT_TASK_MCB</a>;
+00112 
+00113 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_SIM__)</span>
+00114 <span class="preprocessor"></span>
+00115 <span class="preprocessor">#define XENO_TASK_MAGIC 0x55550101</span>
+00116 <span class="preprocessor"></span>
+00117 <span class="keyword">typedef</span> <span class="keyword">struct </span>rt_task {
+00118 
+00119     <span class="keywordtype">unsigned</span> magic;   <span class="comment">/* !&lt; Magic code - must be first */</span>
+00120 
+00121     xnholder_t link;
+00122 
+00123 <span class="preprocessor">#define link2rtask(laddr) \</span>
+00124 <span class="preprocessor">((RT_TASK *)(((char *)laddr) - (int)(&amp;((RT_TASK *)0)-&gt;link)))</span>
+00125 <span class="preprocessor"></span>
+00126     xnthread_t thread_base;
 00127 
-00128     xnarch_cpumask_t affinity;
-00129 
-00130     <span class="keyword">union </span>{ <span class="comment">/* Saved args for current synch. wait operation. */</span>
+00128     <span class="keywordtype">char</span> rname[XNOBJECT_NAME_LEN]; <span class="comment">/* !&lt; Name in registry. Not the same as</span>
+00129 <span class="comment">                                      thread name for anonymous threads. */</span>
+00130     <span class="keywordtype">int</span> suspend_depth;
 00131 
-00132         <span class="keyword">struct </span>{
-00133             <span class="keywordtype">int</span> mode;
-00134             <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> mask;
-00135         } event;
-00136 
-00137         <span class="keyword">struct </span>rt_queue_msg *qmsg;
-00138 
-00139         <span class="keyword">struct </span>{
-00140             size_t size;
-00141             <span class="keywordtype">void</span> *block;
-00142         } heap;
-00143         
-00144 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_NATIVE_MPS</span>
-00145 <span class="preprocessor"></span>        <span class="keyword">struct </span>{
-00146             RT_TASK_MCB mcb_s; <span class="comment">/* Send area. */</span>
-00147             RT_TASK_MCB mcb_r; <span class="comment">/* Reply area. */</span>
-00148         } mps;
-00149 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_NATIVE_MPS */</span>
+00132     <span class="keywordtype">int</span> overrun;
+00133 
+00134     xnsynch_t safesynch; <span class="comment">/* !&lt; Safe synchronization object. */</span>
+00135 
+00136     u_long safelock;     <span class="comment">/* !&lt; Safe lock count. */</span>
+00137 
+00138     u_long cstamp;      <span class="comment">/* !&lt; Creation stamp. */</span>
+00139 
+00140     xnarch_cpumask_t affinity;
+00141 
+00142     <span class="keyword">union </span>{ <span class="comment">/* Saved args for current synch. wait operation. */</span>
+00143 
+00144         <span class="keyword">struct </span>{
+00145             <span class="keywordtype">int</span> mode;
+00146             <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> mask;
+00147         } event;
+00148 
+00149         <span class="keyword">struct </span>rt_queue_msg *qmsg;
 00150 
-00151     } wait_args;
-00152 
-00153 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_NATIVE_MPS</span>
-00154 <span class="preprocessor"></span>    xnsynch_t mrecv,
-00155               msendq;
-00156 
-00157     <span class="keywordtype">int</span> flowgen;                <span class="comment">/* !&lt; Flow id. generator. */</span>
-00158 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_NATIVE_MPS */</span>
-00159 
-00160 } RT_TASK;
-00161 
-00162 <span class="keyword">static</span> <span class="keyword">inline</span> RT_TASK *thread2rtask (xnthread_t *t)
-00163 {
-00164     <span class="keywordflow">return</span> t ? ((RT_TASK *)(((<span class="keywordtype">char</span> *)(t)) - (int)(&amp;((RT_TASK *)0)-&gt;thread_base))) : NULL;
-00165 }
-00166 
-00167 <span class="preprocessor">#define xeno_current_task() thread2rtask(xnpod_current_thread())</span>
-00168 <span class="preprocessor"></span>
-00169 <span class="preprocessor">#ifdef __cplusplus</span>
-00170 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-00171 <span class="preprocessor">#endif</span>
-00172 <span class="preprocessor"></span>
-00173 <span class="keywordtype">void</span> __native_task_safe(<span class="keywordtype">void</span>);
-00174 
-00175 <span class="keywordtype">void</span> __native_task_unsafe(<span class="keywordtype">void</span>);
-00176 
-00177 <span class="keywordtype">int</span> __native_task_safewait(RT_TASK *task);
+00151         <span class="keyword">struct </span>{
+00152             size_t size;
+00153             <span class="keywordtype">void</span> *block;
+00154         } heap;
+00155         
+00156 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_NATIVE_MPS</span>
+00157 <span class="preprocessor"></span>        <span class="keyword">struct </span>{
+00158             <a class="code" href="structrt__task__mcb.html">RT_TASK_MCB</a> mcb_s; <span class="comment">/* Send area. */</span>
+00159             <a class="code" href="structrt__task__mcb.html">RT_TASK_MCB</a> mcb_r; <span class="comment">/* Reply area. */</span>
+00160         } mps;
+00161 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_NATIVE_MPS */</span>
+00162 
+00163     } wait_args;
+00164 
+00165 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_NATIVE_MPS</span>
+00166 <span class="preprocessor"></span>    xnsynch_t mrecv,
+00167               msendq;
+00168 
+00169     <span class="keywordtype">int</span> flowgen;                <span class="comment">/* !&lt; Flow id. generator. */</span>
+00170 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_NATIVE_MPS */</span>
+00171 
+00172 } RT_TASK;
+00173 
+00174 <span class="keyword">static</span> <span class="keyword">inline</span> RT_TASK *thread2rtask (xnthread_t *t)
+00175 {
+00176     <span class="keywordflow">return</span> t ? ((RT_TASK *)(((<span class="keywordtype">char</span> *)(t)) - (int)(&amp;((RT_TASK *)0)-&gt;thread_base))) : NULL;
+00177 }
 00178 
-00179 <span class="keywordtype">int</span> __native_task_pkg_init(<span class="keywordtype">void</span>);
-00180 
-00181 <span class="keywordtype">void</span> __native_task_pkg_cleanup(<span class="keywordtype">void</span>);
-00182 
-00183 <span class="comment">/* Public kernel interface */</span>
-00184 
-00185 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga21">rt_task_add_hook</a>(<span class="keywordtype">int</span> type,
-00186                      <span class="keywordtype">void</span> (*routine)(<span class="keywordtype">void</span> *cookie));
-00187 
-00188 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga22">rt_task_remove_hook</a>(<span class="keywordtype">int</span> type,
-00189                         <span class="keywordtype">void</span> (*routine)(<span class="keywordtype">void</span> *cookie));
+00179 <span class="preprocessor">#define xeno_current_task() thread2rtask(xnpod_current_thread())</span>
+00180 <span class="preprocessor"></span>
+00181 <span class="preprocessor">#ifdef __cplusplus</span>
+00182 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+00183 <span class="preprocessor">#endif</span>
+00184 <span class="preprocessor"></span>
+00185 <span class="keywordtype">void</span> __native_task_safe(<span class="keywordtype">void</span>);
+00186 
+00187 <span class="keywordtype">void</span> __native_task_unsafe(<span class="keywordtype">void</span>);
+00188 
+00189 <span class="keywordtype">int</span> __native_task_safewait(RT_TASK *task);
 00190 
-00191 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga23">rt_task_catch</a>(<span class="keywordtype">void</span> (*handler)(rt_sigset_t));
+00191 <span class="keywordtype">int</span> __native_task_pkg_init(<span class="keywordtype">void</span>);
 00192 
-00193 <span class="preprocessor">#ifdef __cplusplus</span>
-00194 <span class="preprocessor"></span>}
-00195 <span class="preprocessor">#endif</span>
-00196 <span class="preprocessor"></span>
-00197 <span class="preprocessor">#else </span><span class="comment">/* !(__KERNEL__ || __XENO_SIM__) */</span>
-00198 
-00199 <span class="keyword">typedef</span> RT_TASK_PLACEHOLDER RT_TASK;
-00200 
-00201 <span class="preprocessor">#ifdef __cplusplus</span>
-00202 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-00203 <span class="preprocessor">#endif</span>
-00204 <span class="preprocessor"></span>
-00205 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga32">rt_task_shadow</a>(RT_TASK *task,
-00206                    <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
-00207                    <span class="keywordtype">int</span> prio,
-00208                    <span class="keywordtype">int</span> mode);
-00209 
-00210 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga33">rt_task_bind</a>(RT_TASK *task,
-00211                  <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
-00212                  RTIME timeout);
-00213 
-<a name="l00214"></a><a class="code" href="group__task.html#ga34">00214</a> <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga34">rt_task_unbind</a> (RT_TASK *task)
-00215 
-00216 {
-00217     task-&gt;opaque = XN_NO_HANDLE;
-00218     <span class="keywordflow">return</span> 0;
-00219 }
-00220 
-00221 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga35">rt_task_join</a>(RT_TASK *task);
-00222 
-00223 <span class="preprocessor">#ifdef __cplusplus</span>
-00224 <span class="preprocessor"></span>}
-00225 <span class="preprocessor">#endif</span>
-00226 <span class="preprocessor"></span>
-00227 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
-00228 
-00229 <span class="preprocessor">#ifdef __cplusplus</span>
-00230 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-00231 <span class="preprocessor">#endif</span>
-00232 <span class="preprocessor"></span>
-00233 <span class="comment">/* Public interface */</span>
+00193 <span class="keywordtype">void</span> __native_task_pkg_cleanup(<span class="keywordtype">void</span>);
+00194 
+00195 <span class="comment">/* Public kernel interface */</span>
+00196 
+00197 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga21">rt_task_add_hook</a>(<span class="keywordtype">int</span> type,
+00198                      <span class="keywordtype">void</span> (*routine)(<span class="keywordtype">void</span> *cookie));
+00199 
+00200 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga22">rt_task_remove_hook</a>(<span class="keywordtype">int</span> type,
+00201                         <span class="keywordtype">void</span> (*routine)(<span class="keywordtype">void</span> *cookie));
+00202 
+00203 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga23">rt_task_catch</a>(<span class="keywordtype">void</span> (*handler)(rt_sigset_t));
+00204 
+00205 <span class="preprocessor">#ifdef __cplusplus</span>
+00206 <span class="preprocessor"></span>}
+00207 <span class="preprocessor">#endif</span>
+00208 <span class="preprocessor"></span>
+00209 <span class="preprocessor">#else </span><span class="comment">/* !(__KERNEL__ || __XENO_SIM__) */</span>
+00210 
+00211 <span class="keyword">typedef</span> RT_TASK_PLACEHOLDER RT_TASK;
+00212 
+00213 <span class="preprocessor">#ifdef __cplusplus</span>
+00214 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+00215 <span class="preprocessor">#endif</span>
+00216 <span class="preprocessor"></span>
+00217 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga32">rt_task_shadow</a>(RT_TASK *task,
+00218                    <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
+00219                    <span class="keywordtype">int</span> prio,
+00220                    <span class="keywordtype">int</span> mode);
+00221 
+00222 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga33">rt_task_bind</a>(RT_TASK *task,
+00223                  <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
+00224                  RTIME timeout);
+00225 
+<a name="l00226"></a><a class="code" href="group__task.html#ga34">00226</a> <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga34">rt_task_unbind</a> (RT_TASK *task)
+00227 
+00228 {
+00229     task-&gt;opaque = XN_NO_HANDLE;
+00230     <span class="keywordflow">return</span> 0;
+00231 }
+00232 
+00233 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga35">rt_task_join</a>(RT_TASK *task);
 00234 
-00235 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga8">rt_task_create</a>(RT_TASK *task,
-00236                    <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
-00237                    <span class="keywordtype">int</span> stksize,
-00238                    <span class="keywordtype">int</span> prio,
-00239                    <span class="keywordtype">int</span> mode);
+00235 <span class="preprocessor">#ifdef __cplusplus</span>
+00236 <span class="preprocessor"></span>}
+00237 <span class="preprocessor">#endif</span>
+00238 <span class="preprocessor"></span>
+00239 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
 00240 
-00241 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga9">rt_task_start</a>(RT_TASK *task,
-00242                   <span class="keywordtype">void</span> (*fun)(<span class="keywordtype">void</span> *cookie),
-00243                   <span class="keywordtype">void</span> *cookie);
-00244 
-00245 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga10">rt_task_suspend</a>(RT_TASK *task);
+00241 <span class="preprocessor">#ifdef __cplusplus</span>
+00242 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+00243 <span class="preprocessor">#endif</span>
+00244 <span class="preprocessor"></span>
+00245 <span class="comment">/* Public interface */</span>
 00246 
-00247 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga11">rt_task_resume</a>(RT_TASK *task);
-00248 
-00249 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga12">rt_task_delete</a>(RT_TASK *task);
-00250 
-00251 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga13">rt_task_yield</a>(<span class="keywordtype">void</span>);
+00247 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga8">rt_task_create</a>(RT_TASK *task,
+00248                    <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
+00249                    <span class="keywordtype">int</span> stksize,
+00250                    <span class="keywordtype">int</span> prio,
+00251                    <span class="keywordtype">int</span> mode);
 00252 
-00253 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga14">rt_task_set_periodic</a>(RT_TASK *task,
-00254                          RTIME idate,
-00255                          RTIME period);
+00253 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga9">rt_task_start</a>(RT_TASK *task,
+00254                   <span class="keywordtype">void</span> (*fun)(<span class="keywordtype">void</span> *cookie),
+00255                   <span class="keywordtype">void</span> *cookie);
 00256 
-00257 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga15">rt_task_wait_period</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *overruns_r);
+00257 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga10">rt_task_suspend</a>(RT_TASK *task);
 00258 
-00259 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga16">rt_task_set_priority</a>(RT_TASK *task,
-00260                          <span class="keywordtype">int</span> prio);
-00261 
-00262 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga17">rt_task_sleep</a>(RTIME delay);
-00263 
-00264 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga18">rt_task_sleep_until</a>(RTIME date);
-00265 
-00266 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga19">rt_task_unblock</a>(RT_TASK *task);
-00267 
-00268 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga20">rt_task_inquire</a>(RT_TASK *task,
-00269                      RT_TASK_INFO *info);
+00259 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga11">rt_task_resume</a>(RT_TASK *task);
+00260 
+00261 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga12">rt_task_delete</a>(RT_TASK *task);
+00262 
+00263 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga13">rt_task_yield</a>(<span class="keywordtype">void</span>);
+00264 
+00265 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga14">rt_task_set_periodic</a>(RT_TASK *task,
+00266                          RTIME idate,
+00267                          RTIME period);
+00268 
+00269 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga15">rt_task_wait_period</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *overruns_r);
 00270 
-00271 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga24">rt_task_notify</a>(RT_TASK *task,
-00272                    rt_sigset_t signals);
+00271 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga16">rt_task_set_priority</a>(RT_TASK *task,
+00272                          <span class="keywordtype">int</span> prio);
 00273 
-00274 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga25">rt_task_set_mode</a>(<span class="keywordtype">int</span> clrmask,
-00275                      <span class="keywordtype">int</span> setmask,
-00276                      <span class="keywordtype">int</span> *mode_r);
+00274 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga17">rt_task_sleep</a>(RTIME delay);
+00275 
+00276 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga18">rt_task_sleep_until</a>(RTIME date);
 00277 
-00278 RT_TASK *<a class="code" href="group__task.html#ga26">rt_task_self</a>(<span class="keywordtype">void</span>);
+00278 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga19">rt_task_unblock</a>(RT_TASK *task);
 00279 
-00280 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga27">rt_task_slice</a>(RT_TASK *task,
-00281                   RTIME quantum);
+00280 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga20">rt_task_inquire</a>(RT_TASK *task,
+00281                      <a class="code" href="structrt__task__info.html">RT_TASK_INFO</a> *info);
 00282 
-00283 ssize_t <a class="code" href="group__task.html#ga28">rt_task_send</a>(RT_TASK *task,
-00284                      RT_TASK_MCB *mcb_s,
-00285                      RT_TASK_MCB *mcb_r,
-00286                      RTIME timeout);
-00287 
-00288 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga29">rt_task_receive</a>(RT_TASK_MCB *mcb_r,
-00289                     RTIME timeout);
-00290 
-00291 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga30">rt_task_reply</a>(<span class="keywordtype">int</span> flowid,
-00292                   RT_TASK_MCB *mcb_s);
-00293 
-<a name="l00294"></a><a class="code" href="group__task.html#ga31">00294</a> <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga31">rt_task_spawn</a>(RT_TASK *task,
-00295                                 <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
-00296                                 <span class="keywordtype">int</span> stksize,
-00297                                 <span class="keywordtype">int</span> prio,
-00298                                 <span class="keywordtype">int</span> mode,
-00299                                 <span class="keywordtype">void</span> (*entry)(<span class="keywordtype">void</span> *cookie),
-00300                                 <span class="keywordtype">void</span> *cookie)
-00301 {
-00302     <span class="keywordtype">int</span> err = <a class="code" href="group__task.html#ga8">rt_task_create</a>(task,name,stksize,prio,mode);
-00303 
-00304     <span class="keywordflow">if</span> (!err)
-00305         err = <a class="code" href="group__task.html#ga9">rt_task_start</a>(task,entry,cookie);
-00306 
-00307     <span class="keywordflow">return</span> err;
-00308 }
-00309 
-00310 <span class="preprocessor">#ifdef __cplusplus</span>
-00311 <span class="preprocessor"></span>}
-00312 <span class="preprocessor">#endif</span>
-00313 <span class="preprocessor"></span>
-00314 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_TASK_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:56 2006 for Xenomai API by&nbsp;
+00283 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga24">rt_task_notify</a>(RT_TASK *task,
+00284                    rt_sigset_t signals);
+00285 
+00286 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga25">rt_task_set_mode</a>(<span class="keywordtype">int</span> clrmask,
+00287                      <span class="keywordtype">int</span> setmask,
+00288                      <span class="keywordtype">int</span> *mode_r);
+00289 
+00290 RT_TASK *<a class="code" href="group__task.html#ga26">rt_task_self</a>(<span class="keywordtype">void</span>);
+00291 
+00292 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga27">rt_task_slice</a>(RT_TASK *task,
+00293                   RTIME quantum);
+00294 
+00295 ssize_t <a class="code" href="group__task.html#ga28">rt_task_send</a>(RT_TASK *task,
+00296                      <a class="code" href="structrt__task__mcb.html">RT_TASK_MCB</a> *mcb_s,
+00297                      <a class="code" href="structrt__task__mcb.html">RT_TASK_MCB</a> *mcb_r,
+00298                      RTIME timeout);
+00299 
+00300 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga29">rt_task_receive</a>(<a class="code" href="structrt__task__mcb.html">RT_TASK_MCB</a> *mcb_r,
+00301                     RTIME timeout);
+00302 
+00303 <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga30">rt_task_reply</a>(<span class="keywordtype">int</span> flowid,
+00304                   <a class="code" href="structrt__task__mcb.html">RT_TASK_MCB</a> *mcb_s);
+00305 
+<a name="l00306"></a><a class="code" href="group__task.html#ga31">00306</a> <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__task.html#ga31">rt_task_spawn</a>(RT_TASK *task,
+00307                                 <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
+00308                                 <span class="keywordtype">int</span> stksize,
+00309                                 <span class="keywordtype">int</span> prio,
+00310                                 <span class="keywordtype">int</span> mode,
+00311                                 <span class="keywordtype">void</span> (*entry)(<span class="keywordtype">void</span> *cookie),
+00312                                 <span class="keywordtype">void</span> *cookie)
+00313 {
+00314     <span class="keywordtype">int</span> err = <a class="code" href="group__task.html#ga8">rt_task_create</a>(task,name,stksize,prio,mode);
+00315 
+00316     <span class="keywordflow">if</span> (!err)
+00317         err = <a class="code" href="group__task.html#ga9">rt_task_start</a>(task,entry,cookie);
+00318 
+00319     <span class="keywordflow">return</span> err;
+00320 }
+00321 
+00322 <span class="preprocessor">#ifdef __cplusplus</span>
+00323 <span class="preprocessor"></span>}
+00324 <span class="preprocessor">#endif</span>
+00325 <span class="preprocessor"></span>
+00326 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_TASK_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

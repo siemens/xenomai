@@ -39,16 +39,12 @@
 00029     <span class="keywordflow">return</span> ffs((<span class="keywordtype">int</span>)ul) - 1;
 00030 }
 00031 
-00032 <span class="preprocessor">#ifdef __XENO_UVM__</span>
-00033 <span class="preprocessor"></span><span class="preprocessor">#include &lt;asm-uvm/system.h&gt;</span>
-00034 <span class="preprocessor">#else </span><span class="comment">/* !__XENO_UVM__ */</span>
-00035 <span class="preprocessor">#include &lt;asm/xenomai/atomic.h&gt;</span>
-00036 <span class="preprocessor">#include &lt;nucleus/core.h&gt;</span>
-00037 <span class="preprocessor">#include &lt;nucleus/trace.h&gt;</span>
-00038 <span class="preprocessor">#endif </span><span class="comment">/* __XENO_UVM__ */</span>
-00039 
-00040 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SYSTEM_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:56 2006 for Xenomai API by&nbsp;
+00032 <span class="preprocessor">#include &lt;asm/xenomai/atomic.h&gt;</span>
+00033 <span class="preprocessor">#include &lt;nucleus/core.h&gt;</span>
+00034 <span class="preprocessor">#include &lt;nucleus/trace.h&gt;</span>
+00035 
+00036 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SYSTEM_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

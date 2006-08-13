@@ -52,25 +52,27 @@
 00042 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
 00043 <span class="preprocessor">#endif</span>
 00044 <span class="preprocessor"></span>
-00045 
-00046 <span class="keyword">extern</span> <span class="keywordtype">int</span> __rtdm_muxid;
-00047 
+00045 <span class="keyword">extern</span> <span class="keywordtype">int</span> __rtdm_muxid;
+00046 
+00047 <span class="keywordtype">int</span> __init rtdm_syscall_init(<span class="keywordtype">void</span>);
 00048 
-00049 <span class="keywordtype">int</span> __init rtdm_syscall_init(<span class="keywordtype">void</span>);
-00050 
-00051 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_syscall_cleanup(<span class="keywordtype">void</span>)
-00052 {
-00053     xnshadow_unregister_interface(__rtdm_muxid);
-00054 }
-00055 
-00056 <span class="preprocessor">#ifdef __cplusplus</span>
-00057 <span class="preprocessor"></span>}
-00058 <span class="preprocessor">#endif</span>
+00049 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_syscall_cleanup(<span class="keywordtype">void</span>)
+00050 {
+00051     xnshadow_unregister_interface(__rtdm_muxid);
+00052 }
+00053 
+00054 <span class="preprocessor">#ifdef __cplusplus</span>
+00055 <span class="preprocessor"></span>}
+00056 <span class="preprocessor">#endif</span>
+00057 <span class="preprocessor"></span>
+00058 <span class="preprocessor">#elif !defined(__XENO_SIM__)</span>
 00059 <span class="preprocessor"></span>
-00060 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
+00060 <span class="preprocessor">#include &lt;nucleus/bind.h&gt;</span>
 00061 
-00062 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_SYSCALL_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:56 2006 for Xenomai API by&nbsp;
+00062 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
+00063 
+00064 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_SYSCALL_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
