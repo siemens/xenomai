@@ -38,8 +38,9 @@ int ignore = 5;
 
 static inline void add_histogram(long addval)
 {
-       long inabs = rt_timer_tsc2ns(addval >= 0 ? addval : -addval) / 1000;  /* usec steps */
-       histogram[inabs < HISTOGRAM_CELLS ? inabs : HISTOGRAM_CELLS - 1]++;
+	/* usec steps */
+	long inabs = rt_timer_tsc2ns(addval >= 0 ? addval : -addval) / 1000;
+	histogram[inabs < HISTOGRAM_CELLS ? inabs : HISTOGRAM_CELLS - 1]++;
 }
 
 void dump_histogram(void)
@@ -134,10 +135,10 @@ void worker(void *cookie)
        printf("RTH|%12s|%12s|%12s|%12s\n",
                       "lat min", "lat avg", "lat max", "lost");
 
-       printf("RTD|%12Ld|%12Ld|%12Ld|%12lld\n",
-                      rt_timer_tsc2ns(minjitter),
-                      rt_timer_tsc2ns(avgjitter),
-                      rt_timer_tsc2ns(maxjitter), lost);
+       printf("RTD|%12.3f|%12.3f|%12.3f|%12lld\n",
+                      rt_timer_tsc2ns(minjitter) / 1000,
+                      rt_timer_tsc2ns(avgjitter) / 1000,
+                      rt_timer_tsc2ns(maxjitter) / 1000, lost);
 
        if (do_histogram)
                dump_histogram();

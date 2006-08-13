@@ -45,7 +45,7 @@ D: janitor. SMP support. ia64 port. Fixes and improvements all over
 D: the map.
 
 N: Jim Cromie
-E: jcromie@divsol.com
+E: jim.cromie@gmail.com
 D: Comprehensive statistics collection for the testsuite.
 D: Validation test script. Various script fixes and sanitization.
 
