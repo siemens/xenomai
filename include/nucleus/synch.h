@@ -32,7 +32,6 @@
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #define XNSYNCH_CLAIMED 0x8	/* Claimed by other thread(s) w/ PIP */
-#define XNSYNCH_PENDING 0x10	/* Pending ownership -- may be stolen  */
 
 /* Spare flags usable by upper interfaces */
 #define XNSYNCH_SPARE0  0x01000000
@@ -86,13 +85,11 @@ extern "C" {
 void xnsynch_init(xnsynch_t *synch,
 		  xnflags_t flags);
 
-#define xnsynch_destroy(synch) \
-xnsynch_flush(synch,XNRMID)
+#define xnsynch_destroy(synch) xnsynch_flush(synch,XNRMID)
 
 static inline void xnsynch_set_owner (xnsynch_t *synch, struct xnthread *thread)
 {
     synch->owner = thread;
-    __clrbits(synch->status, XNSYNCH_PENDING);
 }
 
 static inline void xnsynch_register_cleanup (xnsynch_t *synch, void (*handler)(xnsynch_t *))

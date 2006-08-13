@@ -1419,7 +1419,7 @@ void xnpod_suspend_thread(xnthread_t *thread,
 			__clrbits(thread->status, XNREADY);
 		}
 
-		__clrbits(thread->status, XNRMID | XNTIMEO | XNBREAK);
+		__clrbits(thread->status, XNRMID | XNTIMEO | XNBREAK | XNWAKEN | XNROBBED);
 	}
 
 	__setbits(thread->status, mask);

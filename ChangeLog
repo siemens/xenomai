@@ -1,3 +1,9 @@
+2006-08-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/synch.c (xnsynch_flush): Do not clear the current
+	owner: flushing should not alter ownership.
+	(xnsynch_sleep_on): Fully refactor the resource stealing feature.
+
 2006-08-12  Ulrich Schwab  <schwab@inmess.de>
  
  	* ksrc/arch/i386/smi.c added id of Intel ICH7 to list of SMI chipsets
