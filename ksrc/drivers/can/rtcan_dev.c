@@ -284,16 +284,16 @@ int rtcan_dev_unregister(struct rtcan_device *dev)
 }
 
 
-EXPORT_SYMBOL(rtcan_socket_lock);
-EXPORT_SYMBOL(rtcan_recv_list_lock);
+EXPORT_SYMBOL_GPL(rtcan_socket_lock);
+EXPORT_SYMBOL_GPL(rtcan_recv_list_lock);
 
-EXPORT_SYMBOL(rtcan_dev_free);
+EXPORT_SYMBOL_GPL(rtcan_dev_free);
 
-EXPORT_SYMBOL(rtcan_dev_alloc);
-EXPORT_SYMBOL(rtcan_dev_alloc_name);
+EXPORT_SYMBOL_GPL(rtcan_dev_alloc);
+EXPORT_SYMBOL_GPL(rtcan_dev_alloc_name);
 
-EXPORT_SYMBOL(rtcan_dev_register);
-EXPORT_SYMBOL(rtcan_dev_unregister);
+EXPORT_SYMBOL_GPL(rtcan_dev_register);
+EXPORT_SYMBOL_GPL(rtcan_dev_unregister);
 
-EXPORT_SYMBOL(rtcan_dev_get_by_name);
-EXPORT_SYMBOL(rtcan_dev_get_by_index);
+EXPORT_SYMBOL_GPL(rtcan_dev_get_by_name);
+EXPORT_SYMBOL_GPL(rtcan_dev_get_by_index);
