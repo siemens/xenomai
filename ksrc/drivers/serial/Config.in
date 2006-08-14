@@ -2,4 +2,9 @@
 # Xenomai configuration for Linux v2.4
 #
 
+mainmenu_option next_comment
+comment 'Serial drivers'
+
 dep_tristate '16550A compatible UARTs' CONFIG_XENO_DRIVERS_16550A $CONFIG_XENO_SKIN_RTDM
+
+endmenu
