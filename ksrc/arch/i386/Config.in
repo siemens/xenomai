@@ -1,7 +1,7 @@
 mainmenu_option next_comment
 comment 'Real-time sub-system'
 
-if [ "$CONFIG_APM" != "n" -o "$CONFIG_APM_CPU_IDLE" != "n" -o "$CONFIG_APM_DISPLAY_BLANK" != "n" -o "$CONFIG_ACPI_PROCESSOR" != "n" ]; then
+if [ "$CONFIG_APM" = "m" -o "$CONFIG_APM" = "y" -o "$CONFIG_ACPI_PROCESSOR" = "y" -o "$CONFIG_ACPI_PROCESSOR" = "m" ]; then
     comment "WARNING! You enabled APM or ACPI 'processor' option"
     comment "These options are known to cause troubles with Xenomai"
 fi
