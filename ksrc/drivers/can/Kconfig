@@ -1,27 +1,26 @@
-menu "CAN driver"
+menu "CAN drivers"
 
 config XENO_DRIVERS_RTCAN
        depends on XENO_SKIN_RTDM
        tristate "RT-Socket-CAN, CAN raw socket interface"
-       default n
        help
-       RT-Socket-CAN is a real-time socket interface for CAN controllers. 
-	
+       RT-Socket-CAN is a real-time socket interface for CAN controllers.
+
 config XENO_DRIVERS_RTCAN_DEBUG
        depends on XENO_DRIVERS_RTCAN
        bool "Enable debug output"
        default y
-       
+
 config XENO_DRIVERS_RTCAN_RXBUF_SIZE
        depends on XENO_DRIVERS_RTCAN
        int "Size of receive ring buffers (must be 2^N)"
        default 1024
-       
+
 config XENO_DRIVERS_RTCAN_MAX_DEVICES
        depends on XENO_DRIVERS_RTCAN
        int "Maximum number of devices"
-       default 4       
-       
+       default 4
+
 config XENO_DRIVERS_RTCAN_MAX_RECEIVERS
        depends on XENO_DRIVERS_RTCAN
        int "Maximum number of receive filters per device"

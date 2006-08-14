@@ -3,7 +3,7 @@
 #
 
 mainmenu_option next_comment
-comment 'CAN driver'
+comment 'CAN drivers'
 
 dep_tristate 'RT-Socket-CAN, CAN raw socket interface' CONFIG_XENO_DRIVERS_RTCAN $CONFIG_XENO_SKIN_RTDM
 
@@ -15,8 +15,7 @@ if [ "$CONFIG_XENO_DRIVERS_RTCAN" != "n" ]; then
 
    source drivers/xenomai/can/mscan/Config.in
    source drivers/xenomai/can/sja1000/Config.in
-   
+
 fi
 
 endmenu
-
