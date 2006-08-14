@@ -67,10 +67,12 @@ void __init_posix_interface(void)
 		exit(EXIT_FAILURE);
 	}
 
+#ifndef CONFIG_XENO_POSIX_AUTO_MLOCKALL
 	if (munlockall()) {
 		perror("Xenomai Posix skin init: munlockall");
 		exit(EXIT_FAILURE);
 	}
+#endif /* !CONFIG_XENO_POSIX_AUTO_MLOCKALL */
 
 	if (!fork_handler_registered) {
 		err = pthread_atfork(NULL, NULL, &__init_posix_interface);

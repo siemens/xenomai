@@ -313,7 +313,14 @@ static int __pthread_getschedparam(struct task_struct *curr,
 
 static int __sched_yield(struct task_struct *curr, struct pt_regs *regs)
 {
-	return -sched_yield();
+	pthread_t thread = thread2pthread(xnshadow_thread(curr));
+	struct sched_param param;
+	int policy;
+
+	pthread_getschedparam(thread, &policy, &param);
+	sched_yield();
+
+	return policy == SCHED_OTHER;
 }
 
 static int __pthread_make_periodic_np(struct task_struct *curr,
