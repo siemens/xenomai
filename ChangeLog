@@ -1,3 +1,11 @@
+2006-08-14  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* configure.in: Add the --enable-posix-auto-mlockall option.
+
+	* src/skins/posix/thread.c (__wrap_sched_yield): Also yield to
+	threads running in secondary mode when running under the
+	SCHED_OTHER policy.
+
 2006-08-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/synch.c (xnsynch_flush): Do not clear the current
