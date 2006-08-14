@@ -798,5 +798,5 @@ void __exit rtcan_sja_exit(void)
 module_init(rtcan_sja_init);
 module_exit(rtcan_sja_exit);
 
-EXPORT_SYMBOL(rtcan_sja1000_register);
-EXPORT_SYMBOL(rtcan_sja1000_unregister);
+EXPORT_SYMBOL_GPL(rtcan_sja1000_register);
+EXPORT_SYMBOL_GPL(rtcan_sja1000_unregister);
