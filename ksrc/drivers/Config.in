@@ -7,7 +7,7 @@ if [ "$CONFIG_XENOMAI" = "y" \
      -a "$CONFIG_XENO_SKIN_RTDM" != "n" ]; then
 mainmenu_option next_comment
 comment 'Real-time drivers'
-	source drivers/xenomai/16550A/Config.in
+	source drivers/xenomai/serial/Config.in
 	source drivers/xenomai/testing/Config.in
 	source drivers/xenomai/can/Config.in
 endmenu
