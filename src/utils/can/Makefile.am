@@ -12,11 +12,17 @@ LDFLAGS = \
 	-L../../skins/native \
 	-L../../skins/rtdm
 
-LDADD = -lpthread -lnative -lrtdm
-
 
 rtcanconfig_SOURCES = rtcanconfig.c
 
+rtcanconfig_LDADD = -lrtdm
+
+
 rtcanrecv_SOURCES = rtcanrecv.c
 
+rtcanrecv_LDADD = -lnative -lrtdm
+
+
 rtcansend_SOURCES = rtcansend.c
+
+rtcansend_LDADD = -lnative -lrtdm
