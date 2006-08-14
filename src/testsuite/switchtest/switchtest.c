@@ -856,7 +856,7 @@ int main(int argc, const char *argv[])
 			{ NULL,      0, NULL, 0   }
 		};
 		int i = 0;
-		int c = getopt_long(argc, argv, ":hnqT:",
+		int c = getopt_long(argc, (char *const *) argv, ":hnqT:",
 				    long_options, &i);
 
 		if (c == -1)
