@@ -136,9 +136,9 @@ void worker(void *cookie)
                       "lat min", "lat avg", "lat max", "lost");
 
        printf("RTD|%12.3f|%12.3f|%12.3f|%12lld\n",
-                      rt_timer_tsc2ns(minjitter) / 1000,
-                      rt_timer_tsc2ns(avgjitter) / 1000,
-                      rt_timer_tsc2ns(maxjitter) / 1000, lost);
+                      rt_timer_tsc2ns(minjitter) / 1000.0,
+                      rt_timer_tsc2ns(avgjitter) / 1000.0,
+                      rt_timer_tsc2ns(maxjitter) / 1000.0, lost);
 
        if (do_histogram)
                dump_histogram();
