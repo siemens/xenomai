@@ -56,15 +56,12 @@ sbinPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS) $(sbin_PROGRAMS)
 am_rtcanconfig_OBJECTS = rtcanconfig.$(OBJEXT)
 rtcanconfig_OBJECTS = $(am_rtcanconfig_OBJECTS)
-rtcanconfig_LDADD = $(LDADD)
 rtcanconfig_DEPENDENCIES =
 am_rtcanrecv_OBJECTS = rtcanrecv.$(OBJEXT)
 rtcanrecv_OBJECTS = $(am_rtcanrecv_OBJECTS)
-rtcanrecv_LDADD = $(LDADD)
 rtcanrecv_DEPENDENCIES =
 am_rtcansend_OBJECTS = rtcansend.$(OBJEXT)
 rtcansend_OBJECTS = $(am_rtcansend_OBJECTS)
-rtcansend_LDADD = $(LDADD)
 rtcansend_DEPENDENCIES =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/src/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
@@ -244,10 +241,12 @@ target_alias = @target_alias@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
-LDADD = -lpthread -lnative -lrtdm
 rtcanconfig_SOURCES = rtcanconfig.c
+rtcanconfig_LDADD = -lrtdm
 rtcanrecv_SOURCES = rtcanrecv.c
+rtcanrecv_LDADD = -lnative -lrtdm
 rtcansend_SOURCES = rtcansend.c
+rtcansend_LDADD = -lnative -lrtdm
 all: all-am
 
 .SUFFIXES:
