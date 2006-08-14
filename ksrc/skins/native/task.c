@@ -1190,7 +1190,6 @@ int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 
 int rt_task_add_hook(int type, void (*routine) (void *cookie))
 {
-
 	return xnpod_add_hook(type, (void (*)(xnthread_t *))routine);
 }
 
@@ -1229,7 +1228,6 @@ int rt_task_add_hook(int type, void (*routine) (void *cookie))
 
 int rt_task_remove_hook(int type, void (*routine) (void *cookie))
 {
-
 	return xnpod_remove_hook(type, (void (*)(xnthread_t *))routine);
 }
 
@@ -1707,7 +1705,7 @@ int rt_task_slice(RT_TASK *task, RTIME quantum)
 ssize_t rt_task_send(RT_TASK *task,
 		     RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME timeout)
 {
-	RT_TASK *sender;
+	RT_TASK *client;
 	size_t rsize;
 	ssize_t err;
 	spl_t s;
@@ -1722,7 +1720,7 @@ ssize_t rt_task_send(RT_TASK *task,
 	}
 
 	if (timeout == TM_NONBLOCK && xnsynch_nsleepers(&task->mrecv) == 0) {
-		/* Can't block and no receiver pending; just bail out. */
+		/* Can't block and no server listening; just bail out. */
 		err = -EWOULDBLOCK;
 		goto unlock_and_exit;
 	}
@@ -1732,7 +1730,7 @@ ssize_t rt_task_send(RT_TASK *task,
 		goto unlock_and_exit;
 	}
 
-	sender = xeno_current_task();
+	client = xeno_current_task();
 
 	/* First, setup the send control block. Compute the flow
 	   identifier, making sure that we won't draw a null or negative
@@ -1743,37 +1741,42 @@ ssize_t rt_task_send(RT_TASK *task,
 
 	mcb_s->flowid = task->flowgen;
 
-	sender->wait_args.mps.mcb_s = *mcb_s;
+	client->wait_args.mps.mcb_s = *mcb_s;
 
 	/* Then, setup the reply control block. */
 
 	if (mcb_r)
-		sender->wait_args.mps.mcb_r = *mcb_r;
+		client->wait_args.mps.mcb_r = *mcb_r;
 	else
-		sender->wait_args.mps.mcb_r.size = 0;
+		client->wait_args.mps.mcb_r.size = 0;
 
-	/* Wake up the receiver if it is currently waiting for a message,
-	   then sleep on the send queue, waiting for the remote
-	   reply. xnsynch_sleep_on() will reschedule as needed. */
+	/* Wake up the server if it is currently waiting for a
+	   message, then sleep on the send queue, waiting for the
+	   remote reply. xnsynch_sleep_on() will reschedule as
+	   needed. */
 
 	xnsynch_flush(&task->mrecv, 0);
 
-	/* Since the receiver is perpetually marked as the current owner
-	   of its own send queue which has been declared as a PIP-enabled
-	   object, it will inherit the priority of the sender in the case
-	   required by the priority inheritance protocol
-	   (i.e. prio(sender) > prio(receiver)). */
+	/* Since the server is perpetually marked as the current owner
+	   of its own send queue which has been declared as a
+	   PIP-enabled object, it will inherit the priority of the
+	   client in the case required by the priority inheritance
+	   protocol (i.e. prio(client) > prio(server)). */
 
 	xnsynch_sleep_on(&task->msendq, timeout);
 
-	if (xnthread_test_flags(&sender->thread_base, XNRMID))
+	/* At this point, the server task might have exited right
+	 * after having replied to us, so do not make optimistic
+	 * assumption regarding its existence. */
+
+	if (xnthread_test_flags(&client->thread_base, XNRMID))
 		err = -EIDRM;	/* Receiver deleted while pending. */
-	else if (xnthread_test_flags(&sender->thread_base, XNTIMEO))
+	else if (xnthread_test_flags(&client->thread_base, XNTIMEO))
 		err = -ETIMEDOUT;	/* Timeout. */
-	else if (xnthread_test_flags(&sender->thread_base, XNBREAK))
+	else if (xnthread_test_flags(&client->thread_base, XNBREAK))
 		err = -EINTR;	/* Unblocked. */
 	else {
-		rsize = sender->wait_args.mps.mcb_r.size;
+		rsize = client->wait_args.mps.mcb_r.size;
 
 		if (rsize > 0) {
 			/* Ok, the message has been processed and answered by the
@@ -1783,7 +1786,7 @@ ssize_t rt_task_send(RT_TASK *task,
 
 			if (mcb_r != NULL && rsize <= mcb_r->size) {
 				memcpy(mcb_r->data,
-				       sender->wait_args.mps.mcb_r.data, rsize);
+				       client->wait_args.mps.mcb_r.data, rsize);
 				err = (ssize_t) rsize;
 			} else
 				err = -ENOBUFS;
@@ -1795,7 +1798,7 @@ ssize_t rt_task_send(RT_TASK *task,
 		   return it. */
 
 		if (mcb_r) {
-			mcb_r->opcode = sender->wait_args.mps.mcb_r.opcode;
+			mcb_r->opcode = client->wait_args.mps.mcb_r.opcode;
 			mcb_r->size = rsize;
 		}
 	}
@@ -1818,7 +1821,7 @@ ssize_t rt_task_send(RT_TASK *task,
  * caller invokes rt_task_reply() to finish the transaction.
  *
  * A basic message control block is used to store the location and
- * size of the data area to receive from the sender, in addition to a
+ * size of the data area to receive from the client, in addition to a
  * user-defined operation code.
  *
  * @param mcb_r The address of a message control block referring to
@@ -1889,7 +1892,7 @@ ssize_t rt_task_send(RT_TASK *task,
 
 int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
 {
-	RT_TASK *receiver, *sender;
+	RT_TASK *server, *client;
 	xnpholder_t *holder;
 	size_t rsize;
 	int err;
@@ -1898,15 +1901,15 @@ int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
 	if (!xnpod_primary_p())
 		return -EPERM;
 
-	receiver = xeno_current_task();
+	server = xeno_current_task();
 
 	xnlock_get_irqsave(&nklock, s);
 
-	/* Fetch the first available message, but don't wake up the sender
-	   until our caller invokes rt_task_reply(). IOW,
-	   rt_task_receive() will fetch back the exact same message until
-	   rt_task_reply() is called to release the heading sender. */
-	holder = getheadpq(xnsynch_wait_queue(&receiver->msendq));
+	/* Fetch the first available message, but don't wake up the
+	   client until our caller invokes rt_task_reply(). IOW,
+	   rt_task_receive() will fetch back the exact same message
+	   until rt_task_reply() is called to release the client. */
+	holder = getheadpq(xnsynch_wait_queue(&server->msendq));
 
 	if (holder)
 		goto pull_message;
@@ -1921,42 +1924,42 @@ int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
 		goto unlock_and_exit;
 	}
 
-	/* Wait on our receive slot for some sender to enqueue itself in
+	/* Wait on our receive slot for some client to enqueue itself in
 	   our send queue. */
 
-	xnsynch_sleep_on(&receiver->mrecv, timeout);
+	xnsynch_sleep_on(&server->mrecv, timeout);
 
 	/* XNRMID cannot happen, since well, the current task would be the
 	   deleted object, so... */
 
-	if (xnthread_test_flags(&receiver->thread_base, XNTIMEO)) {
+	if (xnthread_test_flags(&server->thread_base, XNTIMEO)) {
 		err = -ETIMEDOUT;	/* Timeout. */
 		goto unlock_and_exit;
-	} else if (xnthread_test_flags(&receiver->thread_base, XNBREAK)) {
+	} else if (xnthread_test_flags(&server->thread_base, XNBREAK)) {
 		err = -EINTR;	/* Unblocked. */
 		goto unlock_and_exit;
 	}
 
-	holder = getheadpq(xnsynch_wait_queue(&receiver->msendq));
+	holder = getheadpq(xnsynch_wait_queue(&server->msendq));
 	/* There must be a valid holder since we waited for it. */
 
       pull_message:
 
-	sender = thread2rtask(link2thread(holder, plink));
+	client = thread2rtask(link2thread(holder, plink));
 
-	rsize = sender->wait_args.mps.mcb_s.size;
+	rsize = client->wait_args.mps.mcb_s.size;
 
 	if (rsize <= mcb_r->size) {
 		if (rsize > 0)
-			memcpy(mcb_r->data, sender->wait_args.mps.mcb_s.data,
+			memcpy(mcb_r->data, client->wait_args.mps.mcb_s.data,
 			       rsize);
 
 		/* The flow identifier can't be either null or negative. */
-		err = sender->wait_args.mps.mcb_s.flowid;
+		err = client->wait_args.mps.mcb_s.flowid;
 	} else
 		err = -ENOBUFS;
 
-	mcb_r->opcode = sender->wait_args.mps.mcb_s.opcode;
+	mcb_r->opcode = client->wait_args.mps.mcb_s.opcode;
 	mcb_r->size = rsize;
 
       unlock_and_exit:
@@ -1972,7 +1975,7 @@ int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
  *
  * This service is part of the synchronous message passing support
  * available to Xenomai tasks. It allows the caller to send back a
- * variable-sized message to the sender task, once the initial message
+ * variable-sized message to the client task, once the initial message
  * from this task has been pulled using rt_task_receive() and
  * processed. As a consequence of this call, the remote task will be
  * unblocked from the rt_task_send() service.
@@ -1987,7 +1990,7 @@ int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
  *
  * @param mcb_s The address of an optional message control block
  * referring to the message to be sent back. If @a mcb_s is NULL, the
- * sender will be unblocked without getting any reply data. When @a
+ * client will be unblocked without getting any reply data. When @a
  * mcb_s is valid, the fields from this control block should be set as
  * follows:
  *
@@ -2003,15 +2006,15 @@ int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
  * transfer the caller can fill with any appropriate value. It will be
  * made available "as is" to the remote task into the status code
  * field by the rt_task_send() service. If @a mcb_s is NULL, 0 will be
- * returned to the initial sender into the status code field.
+ * returned to the client into the status code field.
  *
  * @return O is returned upon success. Otherwise:
  *
  * - -ENXIO is returned if @a flowid does not match the expected
  * identifier returned from the latest call of the current task to
  * rt_task_receive(), or if the remote task stopped waiting for the
- * reply in the meantime (e.g. the initial sender could have been
- * deleted or forcibly unblocked).
+ * reply in the meantime (e.g. the client could have been deleted or
+ * forcibly unblocked).
  *
  * - -EPERM is returned if this service was called from an invalid
  * context (e.g. interrupt, or non-primary).
@@ -2033,7 +2036,7 @@ int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
 
 int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 {
-	RT_TASK *sender, *receiver;
+	RT_TASK *server, *client;
 	xnpholder_t *holder;
 	size_t rsize;
 	int err;
@@ -2042,57 +2045,59 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 	if (!xnpod_primary_p())
 		return -EPERM;
 
-	sender = xeno_current_task();
+	server = xeno_current_task();
 
 	xnlock_get_irqsave(&nklock, s);
 
-	for (holder = getheadpq(xnsynch_wait_queue(&sender->msendq)), receiver =
-	     NULL; holder != NULL;
-	     holder = nextpq(xnsynch_wait_queue(&sender->msendq), holder)) {
-		receiver = thread2rtask(link2thread(holder, plink));
+	for (holder = getheadpq(xnsynch_wait_queue(&server->msendq)),
+		     client = NULL; holder != NULL;
+	     holder = nextpq(xnsynch_wait_queue(&server->msendq), holder)) {
+		client = thread2rtask(link2thread(holder, plink));
 
-		/* Check the flow identifier, just in case the sender has
-		   vanished away while we were processing its last
+		/* Check the flow identifier, just in case the client
+		   has vanished away while we were processing its last
 		   message. Each sent message carries a distinct flow
-		   identifier from other senders wrt to a given receiver. */
+		   identifier from other clients wrt to a given
+		   server. */
 
-		if (receiver->wait_args.mps.mcb_s.flowid == flowid) {
-			/* Note that the following will cause the receiver to be
-			   unblocked without transferring the ownership of the
-			   msendq object, since we want the sender to keep it. */
-			xnpod_resume_thread(&receiver->thread_base, XNPEND);
+		if (client->wait_args.mps.mcb_s.flowid == flowid) {
+			/* Note that the following will cause the
+			   client to be unblocked without transferring
+			   the ownership of the msendq object which
+			   must always belong to the server. */
+			xnpod_resume_thread(&client->thread_base, XNPEND);
 			break;
 		}
 	}
 
-	if (!receiver) {
+	if (!client) {
 		err = -ENXIO;
 		goto unlock_and_exit;
 	}
 
-	/* Copy the reply data to a location where the receiver can find
+	/* Copy the reply data to a location where the client can find
 	   it. */
 
 	rsize = mcb_s ? mcb_s->size : 0;
 	err = 0;
 
-	if (receiver->wait_args.mps.mcb_r.size >= rsize) {
-		/* Sending back a NULL or zero-length reply is perfectly
-		   valid; it just means to unblock the initial sender without
-		   passing it back any reply data. */
+	if (client->wait_args.mps.mcb_r.size >= rsize) {
+		/* Sending back a NULL or zero-length reply is
+		   perfectly valid; it just means to unblock the
+		   client without passing it back any reply data. */
 
 		if (rsize > 0)
-			memcpy(receiver->wait_args.mps.mcb_r.data, mcb_s->data,
+			memcpy(client->wait_args.mps.mcb_r.data, mcb_s->data,
 			       rsize);
 	} else
-		/* The receiver will get the same error code. Falldown
+		/* The client will get the same error code. Falldown
 		   through the rescheduling is wanted. */
 		err = -ENOBUFS;
 
 	/* Copy back the actual size of the reply data, */
-	receiver->wait_args.mps.mcb_r.size = rsize;
+	client->wait_args.mps.mcb_r.size = rsize;
 	/* And the status code. */
-	receiver->wait_args.mps.mcb_r.opcode = mcb_s ? mcb_s->opcode : 0;
+	client->wait_args.mps.mcb_r.opcode = mcb_s ? mcb_s->opcode : 0;
 
 	/* That's it, we just need to start the rescheduling procedure
 	   now. */
