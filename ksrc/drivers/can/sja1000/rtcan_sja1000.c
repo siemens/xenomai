@@ -700,7 +700,7 @@ static int rtcan_sja_start_xmit(struct rtcan_device *dev,
 /*
  *  SJA1000 chip configuration
  */
-static void __init sja1000_chip_config(struct rtcan_device *dev)
+static void sja1000_chip_config(struct rtcan_device *dev)
 {
     struct rtcan_sja1000 *chip = (struct rtcan_sja1000* )dev->priv;
 
