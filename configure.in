@@ -528,6 +528,21 @@ XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
 XENO_POSIX_WRAPPERS=`while read symbol; do echo -n "-Wl,--wrap,$symbol "; done \
         < $srcdir/src/skins/posix/posix.wrappers`
 
+AC_MSG_CHECKING(whether POSIX skin library automatically calls mlockall)
+AC_ARG_ENABLE(posix-auto-mlockall,
+	AS_HELP_STRING([--enable-posix-auto-mlockall], [Enable Xenomai POSIX
+skin library to automatically call mlockall at startup. This option is mainly
+useful for running third-parties programs such as the Open Posix Testsuite
+unmodified with Xenomai POSIX skin]),
+	[case "$enableval" in
+	y | yes) CONFIG_XENO_POSIX_AUTO_MLOCKALL=y ;;
+	*) unset CONFIG_XENO_POSIX_AUTO_MLOCKALL ;;
+	esac])
+AC_MSG_RESULT(${CONFIG_XENO_POSIX_AUTO_MLOCKALL:-no})
+if test x$CONFIG_XENO_POSIX_AUTO_MLOCKALL = xy; then
+	AC_DEFINE(CONFIG_XENO_POSIX_AUTO_MLOCKALL,1,[config])
+fi
+
 dnl
 dnl Build the Makefiles
 dnl

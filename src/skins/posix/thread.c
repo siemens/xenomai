@@ -172,13 +172,17 @@ int __wrap_pthread_create(pthread_t *tid,
 
 int __wrap_sched_yield(void)
 {
-	return -XENOMAI_SKINCALL0(__pse51_muxid, __pse51_sched_yield);
+	int err = -XENOMAI_SKINCALL0(__pse51_muxid, __pse51_sched_yield);
+
+	if (err == -1)
+		err = __real_sched_yield();
+
+	return err;
 }
 
 int __wrap_pthread_yield(void)
 {
-	__wrap_sched_yield();
-	return 0;
+	return __wrap_sched_yield();
 }
 
 int pthread_make_periodic_np(pthread_t thread,
