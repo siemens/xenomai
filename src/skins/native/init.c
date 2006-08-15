@@ -24,6 +24,8 @@
 #include <pthread.h>
 #include <native/syscall.h>
 #include <native/task.h>
+#include <asm-generic/bits/bind.h>
+#include <asm-generic/bits/mlock_alert.h>
 
 pthread_key_t __native_tskey;
 

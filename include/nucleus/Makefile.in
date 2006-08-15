@@ -219,7 +219,6 @@ target_vendor = @target_vendor@
 include_HEADERS = \
 	assert.h \
 	bheap.h \
-	bind.h \
 	compiler.h \
 	core.h \
 	heap.h \

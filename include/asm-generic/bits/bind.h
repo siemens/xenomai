@@ -1,38 +1,14 @@
-#ifndef _XENO_NUCLEUS_BIND_H
-#define _XENO_NUCLEUS_BIND_H
+#ifndef _XENO_ASM_GENERIC_BITS_BIND_H
+#define _XENO_ASM_GENERIC_BITS_BIND_H
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
-#include <pthread.h>
 #include <asm/xenomai/syscall.h>
 
-__attribute__ ((weak))
-int xeno_sigxcpu_no_mlock = 1;
-
-static void xeno_handle_mlock_alert(int sig)
-{
-	struct sigaction sa;
-
-	if (xeno_sigxcpu_no_mlock) {
-		fprintf(stderr,
-			"Xenomai: process memory not locked (missing mlockall?)\n");
-		fflush(stderr);
-		exit(4);
-	}
-
-	/* XNTRAPSW was set for the thread but no user-defined handler
-	   has been set to override our internal handler, so let's
-	   invoke the default signal action. */
-
-	sa.sa_handler = SIG_DFL;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = 0;
-	sigaction(SIGXCPU, &sa, NULL);
-	pthread_kill(pthread_self(), SIGXCPU);
-}
+void xeno_handle_mlock_alert(int sig);
 
 static inline int
 xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
@@ -132,4 +108,4 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 	return __xn_mux_shifted_id(muxid);
 }
 
-#endif /* _XENO_NUCLEUS_BIND_H */
+#endif /* _XENO_ASM_GENERIC_BITS_BIND_H */

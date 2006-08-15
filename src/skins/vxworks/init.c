@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <vxworks/vxworks.h>
+#include <asm-generic/bits/bind.h>
+#include <asm-generic/bits/mlock_alert.h>
 
 pthread_key_t __vxworks_tskey;
 

@@ -26,6 +26,8 @@
 #include <posix/posix.h>
 #include <posix/syscall.h>
 #include <rtdm/syscall.h>
+#include <asm-generic/bits/bind.h>
+#include <asm-generic/bits/mlock_alert.h>
 
 int __pse51_muxid = -1;
 int __rtdm_muxid = -1;

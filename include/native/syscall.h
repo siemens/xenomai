@@ -143,10 +143,6 @@ void __native_syscall_cleanup(void);
 }
 #endif
 
-#elif !defined(__XENO_SIM__)
-
-#include <nucleus/bind.h>
-
 #endif /* __KERNEL__ */
 
 #endif /* _NATIVE_SYSCALL_H */

@@ -55,10 +55,6 @@ static inline void rtdm_syscall_cleanup(void)
 }
 #endif
 
-#elif !defined(__XENO_SIM__)
-
-#include <nucleus/bind.h>
-
 #endif /* __KERNEL__ */
 
 #endif /* _RTDM_SYSCALL_H */
