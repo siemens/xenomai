@@ -216,7 +216,13 @@ target_alias = @target_alias@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
-include_HEADERS = pod.h intr.h heap.h
+include_HEADERS = \
+	bind.h \
+	heap.h \
+	intr.h \
+	mlock_alert.h \
+	pod.h
+
 all: all-am
 
 .SUFFIXES:

@@ -1,3 +1,9 @@
+2006-08-15  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/asm-generic/bits/{bind.h,mlock_alert.h},
+	include/<skin>/syscall.h, src/skins/<skin>/init.c: Split up
+	include/nucleus/bind.h and move the fragments to asm-generic/bits.
+
 2006-08-14  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/{serial,Kconfig,Config.in,Makefile},

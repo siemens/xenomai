@@ -1,3 +1,8 @@
 includedir = $(prefix)/include/asm-generic/bits
 
-include_HEADERS = pod.h intr.h heap.h
+include_HEADERS = \
+	bind.h \
+	heap.h \
+	intr.h \
+	mlock_alert.h \
+	pod.h

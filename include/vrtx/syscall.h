@@ -103,10 +103,6 @@ void vrtxsys_cleanup(void);
 }
 #endif
 
-#elif !defined(__XENO_SIM__)
-
-#include <nucleus/bind.h>
-
 #endif /* __KERNEL__ */
 
 #endif /* _XENO_VRTX_SYSCALL_H */
