@@ -1077,7 +1077,7 @@ typedef uint64_t    nanosecs_abs_t;
 
 
 /*!
- * @anchor Error2 @name Protocoll error type
+ * @anchor Error2 @name Protocol error type
  * Error in the data[2] field of struct can_frame.
  * @{ */
 /* error in CAN protocol (type) / data[2] */
@@ -1093,7 +1093,7 @@ typedef uint64_t    nanosecs_abs_t;
 /** @} */
 
 /*!
- * @anchor Error3 @name Protocoll error location
+ * @anchor Error3 @name Protocol error location
  * Error in the data[3] field of struct can_frame.
  * @{ */
 /* error in CAN protocol (location) / data[3] */
@@ -1120,7 +1120,7 @@ typedef uint64_t    nanosecs_abs_t;
 /** @} */
 
 /*!
- * @anchor Error4 @name Protocoll error location
+ * @anchor Error4 @name Protocol error location
  * Error in the data[4] field of struct can_frame.
  * @{ */
 /* error status of CAN-transceiver / data[4] */
