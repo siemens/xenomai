@@ -32,18 +32,24 @@
 00022 <span class="preprocessor"></span>
 00023 <span class="preprocessor">#include &lt;posix/posix.h&gt;</span>
 00024 
-00025 <span class="keywordtype">int</span> pse51_cond_timedwait_internal(<span class="keyword">struct</span> __shadow_cond *cond,
-00026                                   <span class="keyword">struct</span> __shadow_mutex *mutex,
-00027                                   xnticks_t to);
-00028 
-00029 <span class="keywordtype">void</span> pse51_condq_cleanup(pse51_kqueues_t *q);
+00025 <span class="keywordtype">int</span> pse51_cond_timedwait_prologue(xnthread_t *cur,
+00026                                   <span class="keyword">struct</span> __shadow_cond *shadow,
+00027                                   <span class="keyword">struct</span> __shadow_mutex *mutex,
+00028                                   <span class="keywordtype">unsigned</span> *count_ptr,
+00029                                   xnticks_t to);
 00030 
-00031 <span class="keywordtype">void</span> pse51_cond_pkg_init(<span class="keywordtype">void</span>);
-00032 
-00033 <span class="keywordtype">void</span> pse51_cond_pkg_cleanup(<span class="keywordtype">void</span>);
+00031 <span class="keywordtype">int</span> pse51_cond_timedwait_epilogue(xnthread_t *cur,
+00032                                   <span class="keyword">struct</span> __shadow_cond *shadow,
+00033                                   <span class="keyword">struct</span> __shadow_mutex *mutex, <span class="keywordtype">unsigned</span> count);
 00034 
-00035 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_COND_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:56 2006 for Xenomai API by&nbsp;
+00035 <span class="keywordtype">void</span> pse51_condq_cleanup(pse51_kqueues_t *q);
+00036 
+00037 <span class="keywordtype">void</span> pse51_cond_pkg_init(<span class="keywordtype">void</span>);
+00038 
+00039 <span class="keywordtype">void</span> pse51_cond_pkg_cleanup(<span class="keywordtype">void</span>);
+00040 
+00041 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_COND_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Wed Aug 16 16:25:50 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

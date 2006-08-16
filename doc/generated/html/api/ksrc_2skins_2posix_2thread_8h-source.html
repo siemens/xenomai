@@ -62,109 +62,110 @@
 00052 <span class="preprocessor">})</span>
 00053 <span class="preprocessor"></span>
 00054 
-00055     xnholder_t link;    <span class="comment">/* Link in pse51_threadq */</span>
-00056     
-00057 <span class="preprocessor">#define link2pthread(laddr) \</span>
-00058 <span class="preprocessor">    ((pthread_t)(((char *)laddr) - offsetof(struct pse51_thread, link)))</span>
-00059 <span class="preprocessor"></span>    
-00060 
-00061     pthread_attr_t attr;        <span class="comment">/* creation attributes */</span>
-00062 
-00063     <span class="keywordtype">void</span> *(*entry)(<span class="keywordtype">void</span> *arg);  <span class="comment">/* start routine */</span>
-00064     <span class="keywordtype">void</span> *arg;                  <span class="comment">/* start routine argument */</span>
-00065 
-00066     <span class="comment">/* For pthread_join */</span>
-00067     <span class="keywordtype">void</span> *exit_status;
-00068     xnsynch_t join_synch;       <span class="comment">/* synchronization object, used by other threads</span>
-00069 <span class="comment">                                   waiting for this one to finish. */</span>
-00070 
-00071     <span class="comment">/* For pthread_cancel */</span>
-00072     <span class="keywordtype">unsigned</span> cancelstate : 2;
-00073     <span class="keywordtype">unsigned</span> canceltype : 2;
-00074     <span class="keywordtype">unsigned</span> cancel_request : 1;
-00075     xnqueue_t cleanup_handlers_q;
-00076 
-00077     <span class="comment">/* errno value for this thread. */</span>
-00078     <span class="keywordtype">int</span> err;
-00079 
-00080     <span class="comment">/* For signals handling. */</span>
-00081     pse51_sigset_t sigmask;     <span class="comment">/* signals mask. */</span>
-00082     pse51_sigqueue_t pending;   <span class="comment">/* Pending signals */</span>
-00083     pse51_sigqueue_t blocked_received; <span class="comment">/* Blocked signals received. */</span>
-00084 
-00085     <span class="comment">/* For thread specific data. */</span>
-00086     <span class="keyword">const</span> <span class="keywordtype">void</span> *tsd [PTHREAD_KEYS_MAX];
-00087 
-00088     <span class="comment">/* For timers. */</span>
-00089     xnqueue_t timersq;
-00090     
-00091 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_PERVASIVE)</span>
-00092 <span class="preprocessor"></span>    <span class="keyword">struct </span>pse51_hkey hkey;
-00093 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_PERVASIVE */</span>
-00094 };
-00095 
-00096 <span class="preprocessor">#define PSE51_JOINED_DETACHED XNTHREAD_SPARE0</span>
-00097 <span class="preprocessor"></span>
-00098 <span class="preprocessor">#define pse51_current_thread() thread2pthread(xnpod_current_thread())</span>
-00099 <span class="preprocessor"></span>
-00100 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> thread_set_errno (<span class="keywordtype">int</span> err)
-00101 {
-00102     *xnthread_get_errno_location() = err;
-00103 }
-00104 
-00105 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> thread_get_errno (<span class="keywordtype">void</span>)
-00106 {
-00107     <span class="keywordflow">return</span> *xnthread_get_errno_location();
-00108 }
-00109 
-00110 <span class="preprocessor">#define thread_name(thread) ((thread)-&gt;attr.name)</span>
-00111 <span class="preprocessor"></span>
-00112 <span class="preprocessor">#define thread_exit_status(thread) ((thread)-&gt;exit_status)</span>
-00113 <span class="preprocessor"></span>
-00114 <span class="preprocessor">#define thread_getdetachstate(thread) ((thread)-&gt;attr.detachstate)</span>
-00115 <span class="preprocessor"></span>
-00116 <span class="preprocessor">#define thread_setdetachstate(thread, state) ((thread)-&gt;attr.detachstate=state)</span>
-00117 <span class="preprocessor"></span>
-00118 <span class="preprocessor">#define thread_getcancelstate(thread) ((thread)-&gt;cancelstate)</span>
-00119 <span class="preprocessor"></span>
-00120 <span class="preprocessor">#define thread_setcancelstate(thread, state) ((thread)-&gt;cancelstate=state)</span>
-00121 <span class="preprocessor"></span>
-00122 <span class="preprocessor">#define thread_setcanceltype(thread, type) ((thread)-&gt;canceltype=type)</span>
-00123 <span class="preprocessor"></span>
-00124 <span class="preprocessor">#define thread_getcanceltype(thread) ((thread)-&gt;canceltype)</span>
-00125 <span class="preprocessor"></span>
-00126 <span class="preprocessor">#define thread_clrcancel(thread) ((thread)-&gt;cancel_request = 0)</span>
-00127 <span class="preprocessor"></span>
-00128 <span class="preprocessor">#define thread_setcancel(thread) ((thread)-&gt;cancel_request = 1)</span>
-00129 <span class="preprocessor"></span>
-00130 <span class="preprocessor">#define thread_cleanups(thread) (&amp;(thread)-&gt;cleanup_handlers_q)</span>
-00131 <span class="preprocessor"></span>
-00132 <span class="preprocessor">#define thread_gettsd(thread, key) ((thread)-&gt;tsd[key])</span>
-00133 <span class="preprocessor"></span>
-00134 <span class="preprocessor">#define thread_settsd(thread, key, value) ((thread)-&gt;tsd[key]=(value))</span>
-00135 <span class="preprocessor"></span>
-00136 <span class="keywordtype">void</span> pse51_thread_abort(pthread_t thread, <span class="keywordtype">void</span> *status);
-00137 
-00138 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> thread_cancellation_point (xnthread_t *thread)
-00139 {
-00140     pthread_t cur = thread2pthread(thread);
-00141     
-00142     <span class="keywordflow">if</span>(cur &amp;&amp; cur-&gt;cancel_request
-00143         &amp;&amp; thread_getcancelstate(cur) == PTHREAD_CANCEL_ENABLE )
-00144         pse51_thread_abort(cur, PTHREAD_CANCELED);
-00145 }
-00146 
-00147 <span class="keywordtype">void</span> pse51_threadq_cleanup(pse51_kqueues_t *q);
-00148 
-00149 <span class="keywordtype">void</span> pse51_thread_pkg_init(u_long rrperiod);
-00150 
-00151 <span class="keywordtype">void</span> pse51_thread_pkg_cleanup(<span class="keywordtype">void</span>);
-00152 
-00153 <span class="comment">/* round-robin period. */</span>
-00154 <span class="keyword">extern</span> xnticks_t pse51_time_slice;
-00155 
-00156 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_THREAD_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Jul 15 14:57:56 2006 for Xenomai API by&nbsp;
+00055    xnholder_t link;     <span class="comment">/* Link in pse51_threadq */</span>
+00056    xnqueue_t *container;
+00057     
+00058 <span class="preprocessor">#define link2pthread(laddr) \</span>
+00059 <span class="preprocessor">    ((pthread_t)(((char *)laddr) - offsetof(struct pse51_thread, link)))</span>
+00060 <span class="preprocessor"></span>    
+00061 
+00062     pthread_attr_t attr;        <span class="comment">/* creation attributes */</span>
+00063 
+00064     <span class="keywordtype">void</span> *(*entry)(<span class="keywordtype">void</span> *arg);  <span class="comment">/* start routine */</span>
+00065     <span class="keywordtype">void</span> *arg;                  <span class="comment">/* start routine argument */</span>
+00066 
+00067     <span class="comment">/* For pthread_join */</span>
+00068     <span class="keywordtype">void</span> *exit_status;
+00069     xnsynch_t join_synch;       <span class="comment">/* synchronization object, used by other threads</span>
+00070 <span class="comment">                                   waiting for this one to finish. */</span>
+00071 
+00072     <span class="comment">/* For pthread_cancel */</span>
+00073     <span class="keywordtype">unsigned</span> cancelstate : 2;
+00074     <span class="keywordtype">unsigned</span> canceltype : 2;
+00075     <span class="keywordtype">unsigned</span> cancel_request : 1;
+00076     xnqueue_t cleanup_handlers_q;
+00077 
+00078     <span class="comment">/* errno value for this thread. */</span>
+00079     <span class="keywordtype">int</span> err;
+00080 
+00081     <span class="comment">/* For signals handling. */</span>
+00082     pse51_sigset_t sigmask;     <span class="comment">/* signals mask. */</span>
+00083     pse51_sigqueue_t pending;   <span class="comment">/* Pending signals */</span>
+00084     pse51_sigqueue_t blocked_received; <span class="comment">/* Blocked signals received. */</span>
+00085 
+00086     <span class="comment">/* For thread specific data. */</span>
+00087     <span class="keyword">const</span> <span class="keywordtype">void</span> *tsd [PTHREAD_KEYS_MAX];
+00088 
+00089     <span class="comment">/* For timers. */</span>
+00090     xnqueue_t timersq;
+00091     
+00092 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_PERVASIVE)</span>
+00093 <span class="preprocessor"></span>    <span class="keyword">struct </span>pse51_hkey hkey;
+00094 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_PERVASIVE */</span>
+00095 };
+00096 
+00097 <span class="preprocessor">#define PSE51_JOINED_DETACHED XNTHREAD_SPARE0</span>
+00098 <span class="preprocessor"></span>
+00099 <span class="preprocessor">#define pse51_current_thread() thread2pthread(xnpod_current_thread())</span>
+00100 <span class="preprocessor"></span>
+00101 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> thread_set_errno (<span class="keywordtype">int</span> err)
+00102 {
+00103     *xnthread_get_errno_location() = err;
+00104 }
+00105 
+00106 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> thread_get_errno (<span class="keywordtype">void</span>)
+00107 {
+00108     <span class="keywordflow">return</span> *xnthread_get_errno_location();
+00109 }
+00110 
+00111 <span class="preprocessor">#define thread_name(thread) ((thread)-&gt;attr.name)</span>
+00112 <span class="preprocessor"></span>
+00113 <span class="preprocessor">#define thread_exit_status(thread) ((thread)-&gt;exit_status)</span>
+00114 <span class="preprocessor"></span>
+00115 <span class="preprocessor">#define thread_getdetachstate(thread) ((thread)-&gt;attr.detachstate)</span>
+00116 <span class="preprocessor"></span>
+00117 <span class="preprocessor">#define thread_setdetachstate(thread, state) ((thread)-&gt;attr.detachstate=state)</span>
+00118 <span class="preprocessor"></span>
+00119 <span class="preprocessor">#define thread_getcancelstate(thread) ((thread)-&gt;cancelstate)</span>
+00120 <span class="preprocessor"></span>
+00121 <span class="preprocessor">#define thread_setcancelstate(thread, state) ((thread)-&gt;cancelstate=state)</span>
+00122 <span class="preprocessor"></span>
+00123 <span class="preprocessor">#define thread_setcanceltype(thread, type) ((thread)-&gt;canceltype=type)</span>
+00124 <span class="preprocessor"></span>
+00125 <span class="preprocessor">#define thread_getcanceltype(thread) ((thread)-&gt;canceltype)</span>
+00126 <span class="preprocessor"></span>
+00127 <span class="preprocessor">#define thread_clrcancel(thread) ((thread)-&gt;cancel_request = 0)</span>
+00128 <span class="preprocessor"></span>
+00129 <span class="preprocessor">#define thread_setcancel(thread) ((thread)-&gt;cancel_request = 1)</span>
+00130 <span class="preprocessor"></span>
+00131 <span class="preprocessor">#define thread_cleanups(thread) (&amp;(thread)-&gt;cleanup_handlers_q)</span>
+00132 <span class="preprocessor"></span>
+00133 <span class="preprocessor">#define thread_gettsd(thread, key) ((thread)-&gt;tsd[key])</span>
+00134 <span class="preprocessor"></span>
+00135 <span class="preprocessor">#define thread_settsd(thread, key, value) ((thread)-&gt;tsd[key]=(value))</span>
+00136 <span class="preprocessor"></span>
+00137 <span class="keywordtype">void</span> pse51_thread_abort(pthread_t thread, <span class="keywordtype">void</span> *status);
+00138 
+00139 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> thread_cancellation_point (xnthread_t *thread)
+00140 {
+00141     pthread_t cur = thread2pthread(thread);
+00142     
+00143     <span class="keywordflow">if</span>(cur &amp;&amp; cur-&gt;cancel_request
+00144         &amp;&amp; thread_getcancelstate(cur) == PTHREAD_CANCEL_ENABLE )
+00145         pse51_thread_abort(cur, PTHREAD_CANCELED);
+00146 }
+00147 
+00148 <span class="keywordtype">void</span> pse51_threadq_cleanup(pse51_kqueues_t *q);
+00149 
+00150 <span class="keywordtype">void</span> pse51_thread_pkg_init(u_long rrperiod);
+00151 
+00152 <span class="keywordtype">void</span> pse51_thread_pkg_cleanup(<span class="keywordtype">void</span>);
+00153 
+00154 <span class="comment">/* round-robin period. */</span>
+00155 <span class="keyword">extern</span> xnticks_t pse51_time_slice;
+00156 
+00157 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_THREAD_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Wed Aug 16 16:25:50 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
