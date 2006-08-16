@@ -556,7 +556,7 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
     /* Set RX timeout */
     rtdm_lock_get_irqsave(&rtcan_socket_lock, lock_ctx);
 
-    timeout = (flags & MSG_DONTWAIT) ? RTCAN_TIMEOUT_NONE : sock->rx_timeout;
+    timeout = (flags & MSG_DONTWAIT) ? RTDM_TIMEOUT_NONE : sock->rx_timeout;
 
     rtdm_lock_put_irqrestore(&rtcan_socket_lock, lock_ctx);
 
@@ -839,7 +839,7 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
    
     rtdm_lock_get_irqsave(&rtcan_socket_lock, lock_ctx);
 
-    timeout = (flags & MSG_DONTWAIT) ? RTCAN_TIMEOUT_NONE : sock->tx_timeout;
+    timeout = (flags & MSG_DONTWAIT) ? RTDM_TIMEOUT_NONE : sock->tx_timeout;
 
     rtdm_lock_put_irqrestore(&rtcan_socket_lock, lock_ctx);
 

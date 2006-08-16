@@ -507,16 +507,6 @@ typedef struct can_frame {
 /** @} */
 
 
-/*!
- * @anchor RTCAN_TIMEOUTS   @name Timeouts
- * Special reception and transmission timeouts
- * @{ */
-#define RTCAN_TIMEOUT_INFINITE    0     /**< wait for ever  */
-#define RTCAN_TIMEOUT_NONE        (-1)  /**< equivalent to non-blocking */
-/** @} */
-
-
-
 #define RTIOC_TYPE_CAN              RTDM_CLASS_CAN
 
 
@@ -946,7 +936,7 @@ typedef struct can_frame {
  * @param [in] arg Pointer to @ref nanosecs_rel_t variable. The value is
  *                interpreted as relative timeout in nanoseconds in case
  *                of a positive value.
- *                See @ref RTCAN_TIMEOUTS "Timeouts" for special timeouts.
+ *                See @ref RTDM_TIMEOUT_xxx "Timeouts" for special timeouts.
  *
  * @return 0 on success, otherwise:
  * - -EFAULT: It was not possible to access user space memory area at the
@@ -976,7 +966,7 @@ typedef struct can_frame {
  * @param [in] arg Pointer to @ref nanosecs_rel_t variable. The value is
  *                interpreted as relative timeout in nanoseconds in case
  *                of a positive value.
- *                See @ref RTCAN_TIMEOUTS "Timeouts" for special timeouts.
+ *                See @ref RTDM_TIMEOUT_xxx "Timeouts" for special timeouts.
  *
  * @return 0 on success, otherwise:
  * - -EFAULT: It was not possible to access user space memory area at the

@@ -49,8 +49,8 @@ void rtcan_socket_init(struct rtdm_dev_context *context)
     sock->err_mask = 0;
     sock->rx_buf_full = 0;
 
-    sock->tx_timeout = RTCAN_TIMEOUT_INFINITE;
-    sock->rx_timeout = RTCAN_TIMEOUT_INFINITE;
+    sock->tx_timeout = RTDM_TIMEOUT_INFINITE;
+    sock->rx_timeout = RTDM_TIMEOUT_INFINITE;
 
     INIT_LIST_HEAD(&sock->tx_wait_head);
     list_add(&sock->socket_list, &rtcan_socket_list);
