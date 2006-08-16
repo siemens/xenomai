@@ -112,7 +112,7 @@ static void rtcan_dev_get_bittime_name(struct can_bittime *bit_time,
 static void rtcan_get_timeout_name(nanosecs_rel_t timeout,
 				   char* name, int max_len)
 {
-    if (timeout == RTCAN_TIMEOUT_INFINITE) 
+    if (timeout == RTDM_TIMEOUT_INFINITE) 
 	strncpy(name, "infinite", max_len);
     else
 	sprintf(name, "%lld", timeout);

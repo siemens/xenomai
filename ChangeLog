@@ -1,3 +1,8 @@
+2006-08-16  Sebastian Smolorz  <Sebastian.Smolorz@stud.uni-hannover.de>
+
+	* include/rtdm/rtcan.h, ksrc/drivers/can/rtcan_{module,socket,raw}.c:
+	Get rid of RTCAN_TIMEOUT_* defines and replace them with RTDM_TIMEOUT_*
+
 2006-08-16  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/rtdm/*.h, ksrc/skins/rtdm/drvlib.c: Refactor RTDM types
