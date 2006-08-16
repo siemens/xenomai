@@ -1,11 +1,23 @@
-Scheduled modifications:
- o Counting, thus nestable rtdm_irq_enable/disable. This will provide a clean
-   interface to leave the IRQ line disabled when returning from an ISR and
-   re-enable it later from task context.
+Scheduled modifications (unsorted):
  o Timer API. This will allow to execute timed operations with lower jitter
    inside the timer IRQ context.
  o Packet pool management (generalised variant of RTnet's and RT-Firerwire's
    buffer pools).
+ o Threaded IRQ handlers.
+ o Support for deferring IRQ line re-enabling from handler to thread context.
+ o Support for user-space drivers.
+
+Revision 5:
+ o Introduced generic time types nanosecs_abs_t and nanosecs_rel_t.
+ o Switched the following functions parameters from unsigned to signed
+   (uint64_t -> nanosecs_rel_t) and adopted their semantics:
+    - period in rtdm_task_init, period < 0 means non-periodic
+    - period in rtdm_task_set_period, period < 0 means non-periodic
+    - delay in rtdm_task_sleep, now clearly specified: delay = 0 means
+      infinite delay, delay < 0 means no delay at all
+    - delay in rtdm_task_busy_sleep, same semantics as before (delay <= 0
+      means no delay)
+  o Added rtdm_safe_copy_to/from_user.
 
 Revision 4:
  o Dropped RTDM_IRQ_PROPAGATE ISR return flag. Generic deterministic RTDM

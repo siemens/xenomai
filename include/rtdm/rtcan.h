@@ -499,21 +499,6 @@ typedef struct can_frame {
 
 
 /*!
- * @name Types of time values
- * Absolute and relative time values
- * @{ */
-
-/** Representing a relative time in nanoseconds */
-typedef int64_t     nanosecs_rel_t;
-
-/** Representing an absolute time in nanoseconds */
-typedef uint64_t    nanosecs_abs_t;
-
-/** @} */
-
-
-
-/*!
  * @anchor RTCAN_TIMESTAMPS   @name Timestamp switches
  * Arguments to pass to @ref RTCAN_RTIOC_TAKE_TIMESTAMP
  * @{ */

@@ -48,7 +48,7 @@ typedef struct task_struct          rtdm_user_info_t;
 #else  /* !__KERNEL__ */
 
 #include <fcntl.h>
-#include <inttypes.h>
+#include <stdint.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
@@ -57,6 +57,29 @@ typedef struct task_struct          rtdm_user_info_t;
 
 /** Maximum length of device names */
 #define RTDM_MAX_DEVNAME_LEN        31
+
+
+/** RTDM type for representing absolute dates. Its base type is a 64 bit
+ *  unsigned integer. The unit is 1 nanosecond. */
+typedef uint64_t                    nanosecs_abs_t;
+
+/** RTDM type for representing relative intervals. Its base type is a 64 bit
+ *  signed integer. The unit is 1 nanosecond. Relative intervals can also
+ *  encode the special timeouts "infinite" and "non-blocking", see
+ *  @ref RTDM_TIMEOUT_xxx. */
+typedef int64_t                     nanosecs_rel_t;
+
+
+/*!
+ * @anchor RTDM_TIMEOUT_xxx @name RTDM_TIMEOUT_xxx
+ * Special timeout values
+ * @{ */
+/** Block forever. */
+#define RTDM_TIMEOUT_INFINITE       0
+
+/** Any negative timeout means non-blocking. */
+#define RTDM_TIMEOUT_NONE           (-1)
+/** @} */
 
 
 /*!
