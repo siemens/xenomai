@@ -1,3 +1,8 @@
+2006-08-16  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/rtdm/*.h, ksrc/skins/rtdm/drvlib.c: Refactor RTDM types
+	for timeouts and dates.
+
 2006-08-15  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/asm-generic/bits/{bind.h,mlock_alert.h},

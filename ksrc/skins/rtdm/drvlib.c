@@ -71,7 +71,7 @@
  *
  * Rescheduling: never.
  */
-uint64_t rtdm_clock_read(void);
+nanosecs_abs_t rtdm_clock_read(void);
 #endif /* DOXYGEN_CPP */
 /** @} */
 
@@ -108,7 +108,7 @@ uint64_t rtdm_clock_read(void);
  */
 int rtdm_task_init(rtdm_task_t *task, const char *name,
                    rtdm_task_proc_t task_proc, void *arg,
-                   int priority, uint64_t period)
+                   int priority, nanosecs_rel_t period)
 {
     int res;
 
@@ -117,7 +117,7 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
     if (res)
         goto error_out;
 
-    if (period != XN_INFINITE) {
+    if (period > 0) {
         res = xnpod_set_thread_periodic(task, XN_INFINITE,
                                         xnpod_ns2ticks(period));
         if (res)
@@ -197,7 +197,7 @@ void rtdm_task_set_priority(rtdm_task_t *task, int priority);
  *
  * Rescheduling: possible.
  */
-int rtdm_task_set_period(rtdm_task_t *task, uint64_t period);
+int rtdm_task_set_period(rtdm_task_t *task, nanosecs_rel_t period);
 
 /**
  * @brief Wait on next real-time task period
@@ -303,7 +303,8 @@ EXPORT_SYMBOL(rtdm_task_join_nrt);
 /**
  * @brief Sleep a specified amount of time
  *
- * @param[in] delay Delay in nanoseconds
+ * @param[in] delay Delay in nanoseconds, see @ref RTDM_TIMEOUT_xxx for
+ * special values.
  *
  * @return 0 on success, otherwise:
  *
@@ -322,12 +323,15 @@ EXPORT_SYMBOL(rtdm_task_join_nrt);
  *
  * Rescheduling: always.
  */
-int rtdm_task_sleep(uint64_t delay)
+int rtdm_task_sleep(nanosecs_rel_t delay)
 {
     xnthread_t  *thread = xnpod_current_thread();
 
 
     XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
+
+    if (delay < 0)
+        return 0;
 
     xnpod_suspend_thread(thread, XNDELAY, xnpod_ns2ticks(delay), NULL);
 
@@ -359,7 +363,7 @@ EXPORT_SYMBOL(rtdm_task_sleep);
  *
  * Rescheduling: always, unless the specified time already passed.
  */
-int rtdm_task_sleep_until(uint64_t wakeup_time)
+int rtdm_task_sleep_until(nanosecs_abs_t wakeup_time)
 {
     xnthread_t  *thread = xnpod_current_thread();
     xnsticks_t  delay;
@@ -391,20 +395,24 @@ EXPORT_SYMBOL(rtdm_task_sleep_until);
 /**
  * @brief Busy-wait a specified amount of time
  *
- * @param[in] delay Delay in nanoseconds
+ * @param[in] delay Delay in nanoseconds. Note that a zero delay does @b not
+ * have the meaning of RTDM_TIMEOUT_INFINITE here.
+ *
+ * @note The caller must not be migratable to different CPUs while executing
+ * this service. Otherwise, the actual delay will be undefined.
  *
  * Environments:
  *
  * This service can be called from:
  *
  * - Kernel module initialization/cleanup code
- * - Interrupt service routine (but you should rather avoid this...)
+ * - Interrupt service routine (should be avoided or kept short)
  * - Kernel-based task
  * - User-space task (RT, non-RT)
  *
- * Rescheduling: never.
+ * Rescheduling: never (except due to external interruptions).
  */
-void rtdm_task_busy_sleep(uint64_t delay)
+void rtdm_task_busy_sleep(nanosecs_rel_t delay)
 {
     xnticks_t wakeup = xnarch_get_cpu_tsc() + xnarch_ns_to_tsc(delay);
 
@@ -462,8 +470,8 @@ EXPORT_SYMBOL(_rtdm_synch_flush);
  * application scenario is given below.
  *
  * @param[in,out] timeout_seq Timeout sequence handle
- * @param[in] timeout Relative timeout in nanoseconds, 0 for infinite, or any
- * negative value for non-blocking
+ * @param[in] timeout Relative timeout in nanoseconds, see
+ * @ref RTDM_TIMEOUT_xxx for special values
  *
  * Application Scenario:
  * @code
@@ -502,7 +510,7 @@ int device_service_routine(...)
  *
  * Rescheduling: never.
  */
-void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, int64_t timeout);
+void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout);
 #endif /* DOXYGEN_CPP */
 /** @} */
 
@@ -651,8 +659,8 @@ EXPORT_SYMBOL(rtdm_event_wait);
  * reset.
  *
  * @param[in,out] event Event handle as returned by rtdm_event_init()
- * @param[in] timeout Relative timeout in nanoseconds, 0 for infinite, or any
- * negative value for non-blocking (test for event occurrence)
+ * @param[in] timeout Relative timeout in nanoseconds, see
+ * @ref RTDM_TIMEOUT_xxx for special values
  * @param[in,out] timeout_seq Handle of a timeout sequence as returned by
  * rtdm_toseq_init() or rtdm_toseq_absinit(), or NULL
  *
@@ -678,7 +686,7 @@ EXPORT_SYMBOL(rtdm_event_wait);
  *
  * Rescheduling: possible.
  */
-int rtdm_event_timedwait(rtdm_event_t *event, int64_t timeout,
+int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
                          rtdm_toseq_t *timeout_seq)
 {
     xnthread_t  *thread;
@@ -854,8 +862,8 @@ EXPORT_SYMBOL(rtdm_sem_down);
  * operation was selected.
  *
  * @param[in,out] sem Semaphore handle as returned by rtdm_sem_init()
- * @param[in] timeout Relative timeout in nanoseconds, 0 for infinite, or any
- * negative value for non-blocking operation
+ * @param[in] timeout Relative timeout in nanoseconds, see
+ * @ref RTDM_TIMEOUT_xxx for special values
  * @param[in,out] timeout_seq Handle of a timeout sequence as returned by
  * rtdm_toseq_init() or rtdm_toseq_absinit(), or NULL
  *
@@ -884,7 +892,7 @@ EXPORT_SYMBOL(rtdm_sem_down);
  *
  * Rescheduling: possible.
  */
-int rtdm_sem_timeddown(rtdm_sem_t *sem, int64_t timeout,
+int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
                        rtdm_toseq_t *timeout_seq)
 {
     xnthread_t  *thread;
@@ -1080,8 +1088,8 @@ EXPORT_SYMBOL(rtdm_mutex_lock);
  * caller is blocked unless non-blocking operation was selected.
  *
  * @param[in,out] mutex Mutex handle as returned by rtdm_mutex_init()
- * @param[in] timeout Relative timeout in nanoseconds, 0 for infinite, or any
- * negative value for non-blocking operation
+ * @param[in] timeout Relative timeout in nanoseconds, see
+ * @ref RTDM_TIMEOUT_xxx for special values
  * @param[in,out] timeout_seq Handle of a timeout sequence as returned by
  * rtdm_toseq_init() or rtdm_toseq_absinit(), or NULL
  *
@@ -1107,7 +1115,7 @@ EXPORT_SYMBOL(rtdm_mutex_lock);
  *
  * Rescheduling: possible.
  */
-int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, int64_t timeout,
+int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
                          rtdm_toseq_t *timeout_seq)
 {
     xnthread_t  *thread = xnpod_current_thread();
