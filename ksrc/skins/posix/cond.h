@@ -22,9 +22,15 @@
 
 #include <posix/posix.h>
 
-int pse51_cond_timedwait_internal(struct __shadow_cond *cond,
-                                  struct __shadow_mutex *mutex,
-                                  xnticks_t to);
+int pse51_cond_timedwait_prologue(xnthread_t *cur,
+				  struct __shadow_cond *shadow,
+				  struct __shadow_mutex *mutex,
+				  unsigned *count_ptr,
+				  xnticks_t to);
+
+int pse51_cond_timedwait_epilogue(xnthread_t *cur,
+				  struct __shadow_cond *shadow,
+				  struct __shadow_mutex *mutex, unsigned count);
 
 void pse51_condq_cleanup(pse51_kqueues_t *q);
 

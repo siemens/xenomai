@@ -1,3 +1,14 @@
+2006-08-12  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/thread.c (thread_destroy): Do not assume that
+	current->mm is valid when called upon process destruction.
+
+	* include/posix/pthread.h, ksrc/skins/posix/mutex_attr.c: Handle
+	correctly mutex attributes in user-space.
+
+	* ksrc/skins/posix/cond.c (pthread_cond_wait): Split this service
+	in order to correctly handle cancellation requests in user-space.
+
 2006-08-10  Jan Kiszka  <jan.kiszka@web.de>
 
 	* scripts/Modules.frag: Fix 2.4 in-kernel build of irqbench.
@@ -56,6 +67,7 @@
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.14-1.3-06.
 	
+>>>>>>> .r1446
 2006-07-19  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* src/skins/posix/init.c (__init_posix_interface): Register

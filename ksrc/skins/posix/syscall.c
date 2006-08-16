@@ -1464,10 +1464,16 @@ static int __pthread_cond_destroy(struct task_struct *curr,
 	return 0;
 }
 
-static int __pthread_cond_wait(struct task_struct *curr, struct pt_regs *regs)
+/* pthread_cond_wait_prologue(cond, mutex, count_ptr, timed, timeout) */
+static int __pthread_cond_wait_prologue(struct task_struct *curr,
+					struct pt_regs *regs)
 {
+	xnthread_t *cur = xnshadow_thread(curr);
 	union __xeno_cond cnd, *ucnd;
 	union __xeno_mutex mx, *umx;
+	unsigned timed, count;
+	struct timespec ts;
+	int err;
 
 	ucnd = (union __xeno_cond *)__xn_reg_arg1(regs);
 	umx = (union __xeno_mutex *)__xn_reg_arg2(regs);
@@ -1480,6 +1486,15 @@ static int __pthread_cond_wait(struct task_struct *curr, struct pt_regs *regs)
 	    (curr, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
 		return -EFAULT;
 
+	if (!__xn_access_ok(curr, VERIFY_WRITE,
+			    (void __user *)__xn_reg_arg3(regs), sizeof(count)))
+		return -EFAULT;
+	
+	timed = __xn_reg_arg4(regs);
+	if (timed && !__xn_access_ok
+	    (curr, VERIFY_READ, (void __user *)__xn_reg_arg5(regs), sizeof(ts)))
+		return -EFAULT;
+
 	__xn_copy_from_user(curr,
 			    &cnd.shadow_cond,
 			    (void __user *)&ucnd->shadow_cond,
@@ -1490,16 +1505,38 @@ static int __pthread_cond_wait(struct task_struct *curr, struct pt_regs *regs)
 			    (void __user *)&umx->shadow_mutex,
 			    sizeof(mx.shadow_mutex));
 
-	return -pse51_cond_timedwait_internal(&cnd.shadow_cond,
-					      &mx.shadow_mutex, XN_INFINITE);
+	if (timed) {
+		__xn_copy_from_user(curr, &ts,
+				    (void __user *)__xn_reg_arg5(regs),
+				    sizeof(ts));
+
+		err = pse51_cond_timedwait_prologue(cur,
+						    &cnd.shadow_cond,
+						    &mx.shadow_mutex,
+						    &count,
+						    ts2ticks_ceil(&ts) + 1);
+	} else
+		err = pse51_cond_timedwait_prologue(cur,
+						    &cnd.shadow_cond,
+						    &mx.shadow_mutex,
+						    &count,
+						    XN_INFINITE);
+
+	if (!err || err == EINTR)
+		__xn_copy_to_user(curr, (void __user *) __xn_reg_arg3(regs),
+				  &count, sizeof(count));
+
+	return -err;
 }
 
-static int __pthread_cond_timedwait(struct task_struct *curr,
-				    struct pt_regs *regs)
+/* pthread_cond_wait_epilogue(cond, mutex, count) */
+static int __pthread_cond_wait_epilogue(struct task_struct *curr,
+					struct pt_regs *regs)
 {
+	xnthread_t *cur = xnshadow_thread(curr);
 	union __xeno_cond cnd, *ucnd;
 	union __xeno_mutex mx, *umx;
-	struct timespec ts;
+	unsigned count;
 
 	ucnd = (union __xeno_cond *)__xn_reg_arg1(regs);
 	umx = (union __xeno_mutex *)__xn_reg_arg2(regs);
@@ -1512,8 +1549,7 @@ static int __pthread_cond_timedwait(struct task_struct *curr,
 	    (curr, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
 		return -EFAULT;
 
-	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg3(regs), sizeof(ts)))
-		return -EFAULT;
+	count = __xn_reg_arg3(regs);
 
 	__xn_copy_from_user(curr,
 			    &cnd.shadow_cond,
@@ -1525,13 +1561,9 @@ static int __pthread_cond_timedwait(struct task_struct *curr,
 			    (void __user *)&umx->shadow_mutex,
 			    sizeof(mx.shadow_mutex));
 
-	__xn_copy_from_user(curr,
-			    &ts,
-			    (void __user *)__xn_reg_arg3(regs), sizeof(ts));
-
-	return -pse51_cond_timedwait_internal(&cnd.shadow_cond,
-					      &mx.shadow_mutex,
-					      ts2ticks_ceil(&ts) + 1);
+	
+	return -pse51_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
+					      &mx.shadow_mutex, count);
 }
 
 static int __pthread_cond_signal(struct task_struct *curr, struct pt_regs *regs)
@@ -2684,9 +2716,10 @@ static xnsysent_t __systab[] = {
 	[__pse51_mutex_unlock] = {&__pthread_mutex_unlock, __xn_exec_primary},
 	[__pse51_cond_init] = {&__pthread_cond_init, __xn_exec_any},
 	[__pse51_cond_destroy] = {&__pthread_cond_destroy, __xn_exec_any},
-	[__pse51_cond_wait] = {&__pthread_cond_wait, __xn_exec_primary},
-	[__pse51_cond_timedwait] =
-	    {&__pthread_cond_timedwait, __xn_exec_primary},
+	[__pse51_cond_wait_prologue] =
+	{&__pthread_cond_wait_prologue, __xn_exec_primary},
+	[__pse51_cond_wait_epilogue] =
+	    {&__pthread_cond_wait_epilogue, __xn_exec_primary},
 	[__pse51_cond_signal] = {&__pthread_cond_signal, __xn_exec_any},
 	[__pse51_cond_broadcast] = {&__pthread_cond_broadcast, __xn_exec_any},
 	[__pse51_mq_open] = {&__mq_open, __xn_exec_lostage},
