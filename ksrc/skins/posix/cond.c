@@ -402,7 +402,7 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 	err = pse51_cond_timedwait_prologue(cur, cond, mutex,
 					    &count, XN_INFINITE);
 
-	if (!err)
+	if (!err || err == EINTR)
 		while (EINTR == pse51_cond_timedwait_epilogue(cur, cond,
 							      mutex, count))
 			;
@@ -459,7 +459,7 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
 	err = pse51_cond_timedwait_prologue(cur, cond, mutex, &count,
 					    ts2ticks_ceil(abstime) + 1);
 
-	if (!err || err == ETIMEDOUT)
+	if (!err || err == EINTR || err == ETIMEDOUT)
 		while (EINTR == pse51_cond_timedwait_epilogue(cur, cond,
 							      mutex, count))
 			;
