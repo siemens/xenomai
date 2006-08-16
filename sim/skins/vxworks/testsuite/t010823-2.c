@@ -160,7 +160,7 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
 			SEQ("root",1),
 			SEQ("Test1",1),
 			SEQ("root",2),
-			SEQ("Test2",2009),
+			SEQ("Test2",2003),
 			SEQ("root",1),
 			END_SEQ);
     TEST_FINISH();
