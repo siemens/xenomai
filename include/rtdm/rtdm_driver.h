@@ -114,7 +114,7 @@ struct rtdm_dev_context;
 #define RTDM_API_VER                5
 
 /** Minimum API revision compatible with the current release */
-#define RTDM_API_MIN_COMPAT_VER     4
+#define RTDM_API_MIN_COMPAT_VER     5
 
 /** Flag indicating a secure variant of RTDM (not supported here) */
 #define RTDM_SECURE_DEVICE          0x80000000
