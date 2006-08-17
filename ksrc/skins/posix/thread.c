@@ -707,6 +707,5 @@ EXPORT_SYMBOL(pthread_equal);
 EXPORT_SYMBOL(pthread_exit);
 EXPORT_SYMBOL(pthread_join);
 EXPORT_SYMBOL(pthread_self);
-EXPORT_SYMBOL(sched_yield);
 EXPORT_SYMBOL(pthread_make_periodic_np);
 EXPORT_SYMBOL(pthread_wait_np);

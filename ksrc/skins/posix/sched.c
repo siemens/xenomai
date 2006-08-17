@@ -314,3 +314,4 @@ EXPORT_SYMBOL(sched_get_priority_max);
 EXPORT_SYMBOL(sched_rr_get_interval);
 EXPORT_SYMBOL(pthread_getschedparam);
 EXPORT_SYMBOL(pthread_setschedparam);
+EXPORT_SYMBOL(sched_yield);
