@@ -31,13 +31,19 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
-/* pthread */
+/* sched */
 int __real_pthread_setschedparam(pthread_t thread,
 				 int policy, const struct sched_param *param)
 {
 	return pthread_setschedparam(thread, policy, param);
 }
 
+int __real_sched_yield(void)
+{
+	return sched_yield();
+}
+
+/* pthread */
 int __real_pthread_create(pthread_t *tid,
 			  const pthread_attr_t * attr,
 			  void *(*start) (void *), void *arg)
