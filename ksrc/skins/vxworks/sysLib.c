@@ -24,19 +24,20 @@
 
 static wind_tick_handler_t tick_handler;
 static long tick_handler_arg;
+static int tick_status [XNARCH_NR_CPUS];
 
 void tickAnnounce(void)
 {
 	if (tick_handler != NULL)
 		tick_handler(tick_handler_arg);
 
-	xnpod_announce_tick(&nkclock);
+	tick_status[xnarch_current_cpu()] = xnpod_announce_tick(&nkclock);
 }
 
 static int __tickAnnounce(xnintr_t *intr)
 {
 	tickAnnounce();
-	return XN_ISR_HANDLED | XN_ISR_NOENABLE;
+	return tick_status[xnarch_current_cpu()];
 }
 
 int wind_sysclk_init(u_long init_rate)
