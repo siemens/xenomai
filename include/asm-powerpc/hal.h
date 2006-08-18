@@ -73,11 +73,12 @@ static inline unsigned long long rthal_rdtsc(void)
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
 	if (!delay)
-		delay = 1;
+		rthal_trigger_irq(RTHAL_TIMER_IRQ);
+	else
 #ifdef CONFIG_40x
-	mtspr(SPRN_PIT, delay);
+		mtspr(SPRN_PIT, delay);
 #else /* !CONFIG_40x */
-	set_dec((int)delay);	/* decrementer is only 32-bits */
+	        set_dec((int)delay);	/* decrementer is only 32-bits */
 #endif /* CONFIG_40x */
 }
 
