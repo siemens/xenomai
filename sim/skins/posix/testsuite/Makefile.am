@@ -59,4 +59,4 @@ tclock_SOURCES = tclock.c
 tmq_SOURCES = tmq.c
 ttimers_SOURCES = ttimers.c
 
-EXTRA_DIST = skeleton.c
+EXTRA_DIST = skeleton.c $(libtests_a_DEPENDENCIES)
