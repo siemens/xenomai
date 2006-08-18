@@ -61,11 +61,14 @@ static inline unsigned long long rthal_rdtsc (void)
 
 static inline void rthal_timer_program_shot (unsigned long delay)
 {
-    if (delay < 2) delay = 10;
-    *pTCOUNT = delay - 1;
-    __builtin_bfin_csync();
-    *pTCNTL = 3; /* Oneshot mode, no auto-reload. */
-    __builtin_bfin_csync();
+    if (delay < 2)
+	rthal_trigger_irq(RTHAL_TIMER_IRQ);
+    else {
+	*pTCOUNT = delay - 1;
+	__builtin_bfin_csync();
+	*pTCNTL = 3; /* Oneshot mode, no auto-reload. */
+	__builtin_bfin_csync();
+    }
 }
 
     /* Private interface -- Internal use only */
