@@ -1,3 +1,9 @@
+2006-08-18  Jan Kiszka  <jan.kiszka@web.de>
+
+	* src/skins/posix/posix.wrappers, configure.in,
+	scripts/xeno-config.in: Read wrapping options from file instead of
+	passing them via command line.
+
 2006-08-18  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* include/asm-generic, include/asm-arm, ksrc/nucleus/pod.c:
@@ -9,7 +15,8 @@
 2006-08-16  Sebastian Smolorz  <Sebastian.Smolorz@stud.uni-hannover.de>
 
 	* include/rtdm/rtcan.h, ksrc/drivers/can/rtcan_{module,socket,raw}.c:
-	Get rid of RTCAN_TIMEOUT_* defines and replace them with RTDM_TIMEOUT_*
+	Get rid of RTCAN_TIMEOUT_* defines and replace them with
+	RTDM_TIMEOUT_*.
 
 2006-08-16  Jan Kiszka  <jan.kiszka@web.de>
 
@@ -44,8 +51,8 @@
 
 2006-08-12  Ulrich Schwab  <schwab@inmess.de>
  
- 	* ksrc/arch/i386/smi.c added id of Intel ICH7 to list of SMI chipsets
- 	
+	* ksrc/arch/i386/smi.c added id of Intel ICH7 to list of SMI chipsets
+
 2006-08-12  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/thread.c (thread_destroy): Do not assume that
