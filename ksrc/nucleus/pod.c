@@ -3249,6 +3249,9 @@ int xnpod_announce_tick(xnintr_t *intr)
 {
 	xnsched_t *sched;
 
+	if (!xnarch_timer_irq_p())
+		return XN_ISR_NONE | XN_ISR_NOENABLE | XN_ISR_PROPAGATE;
+	
 	sched = xnpod_current_sched();
 
 	xnlock_get(&nklock);
