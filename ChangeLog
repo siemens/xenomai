@@ -1,3 +1,11 @@
+2006-08-18  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* include/asm-generic, include/asm-arm, ksrc/nucleus/pod.c:
+	Provide support for shared timer IRQ.
+
+	* ksrc/skins/vxworks/sysLib.c (__tickAnnounce): Properly forward
+	xnpod_announce_tick() status.
+
 2006-08-16  Sebastian Smolorz  <Sebastian.Smolorz@stud.uni-hannover.de>
 
 	* include/rtdm/rtcan.h, ksrc/drivers/can/rtcan_{module,socket,raw}.c:

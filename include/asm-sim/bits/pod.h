@@ -154,4 +154,6 @@ static inline unsigned long long xnarch_get_sys_time(void)
     return tv.tv_sec * 1000000000ULL + tv.tv_usec * 1000;
 }
 
+#define xnarch_timer_irq_p()  1
+
 #endif /* !_XENO_ASM_SIM_BITS_POD_H */
