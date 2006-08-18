@@ -1,7 +1,9 @@
 #! /bin/sh
-# Adapted to be run also under the BusyBox. If you want to test it under the BusyBox use
-# busybox sh xeno-test 
-# A BusyBox >= 1.1.3 with a make defconfig should provide all needed applets.
+
+# Adapted to be run also under the BusyBox. 
+# If you want to test it this way, do: sh xeno-test
+# BusyBox >= 1.1.3 with a make defconfig should provide all needed applets.
+
 myusage() {
     cat >&1 <<EOF
 xeno-test [options]
@@ -190,16 +192,30 @@ run_w_load() {
     boxstatus
     (
         cd `dirname $0`/../testsuite/latency
-	loudly ./run --  $opts -t0
-	loudly ./run --  $opts -t1
-	loudly ./run --  $opts -t2
+	loudly ./run -- $XENOT_LATENCY $opts -t0 '# latency'
+	loudly ./run -- $XENOT_LATENCY $opts -t1 '# latency'
+	loudly ./run -- $XENOT_LATENCY $opts -t2 '# latency'
     )
-    (	cd `dirname $0`/../testsuite/switch
-	loudly ./run --  '# switch'
+    (	cd `dirname $0`/../testsuite/switchtest
+	loudly ./run -- -T 120 $XENOT_SWITCHTEST '# switchtest'
+    )
+    (	cd `dirname $0`/../testsuite/switchbench
+	loudly ./run -- -p 10 -n -l 1000 $XENOT_SWITCHBENCH '# switchbench'
     )
     (	cd `dirname $0`/../testsuite/cyclic
-	loudly ./run -- -p 10 -n -l 1000 '# cyclictest'
+	loudly ./run -- -p 10 -n -l 1000 $XENOT_CYCLIC '# cyclictest'
     )
+
+    if [ "$XENOT_IRQBENCH" != "" ] ; then
+	(
+	    cd `dirname $0`/../testsuite/irqbench
+	    loudly ./run -- -P 10 $XENOT_IRQBENCH -t0 '# irqbench user'
+	    loudly ./run -- -P 10 $XENOT_IRQBENCH -t1 '# irqbench kernel'
+	    loudly ./run -- -P 10 $XENOT_IRQBENCH -t2 '# irqbench irq-handler'
+	    loudly ./run -- -P 10 $XENOT_IRQBENCH -t3 '# irqbench hard-irq-handler'
+	)
+    fi
+
     boxstatus
     cleanup_load
 }

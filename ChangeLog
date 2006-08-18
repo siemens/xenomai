@@ -1,3 +1,7 @@
+2006-08-18  Jim Cromie <jim.cromie@gmail.com>
+
+	* scripts/xeno-test.in: Add switchtest, switchbench and irqbench.
+
 2006-08-18  Jan Kiszka  <jan.kiszka@web.de>
 
 	* src/skins/posix/posix.wrappers, configure.in,
