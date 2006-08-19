@@ -53,6 +53,8 @@
 #define XNSHADOW  0x00800000	/* Shadow thread */
 #define XNROOT    0x01000000	/* Root thread (i.e. Linux/IDLE) */
 #define XNINVPS   0x02000000	/* Using inverted priority scale */
+#define XNWAKEN   0x04000000	/* Thread waken up upon resource availability */
+#define XNROBBED  0x08000000	/* Robbed from resource ownership */
 
 /*
   Must follow the declaration order of the above bits. Status symbols
@@ -73,12 +75,12 @@
   'o' -> Priority coupling off.
   'f' -> FPU enabled (for kernel threads).
 */
-#define XNTHREAD_SLABEL_INIT { \
-  'S', 'W', 'D', 'R', 'U', \
-  '.', '.', '.', 'X', 'H', \
-  '.', '.', '.', '.', 'b', 'T', \
-  'l', 'r', '.', 's', 't', 'o', \
-  'f', '.', '.', '.'		\
+#define XNTHREAD_SLABEL_INIT  {		\
+	'S', 'W', 'D', 'R', 'U',	\
+	'.', '.', '.', 'X', 'H',	\
+	'.', '.', '.', '.', 'b', 'T',	\
+	'l', 'r', '.', 's', 't', 'o',	\
+	'f', '.', '.', '.', '.', '.'	\
 }
 
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNHELD)

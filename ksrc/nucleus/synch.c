@@ -92,7 +92,7 @@ void xnsynch_init(xnsynch_t *synch, xnflags_t flags)
 	if (flags & XNSYNCH_PIP)
 		flags |= XNSYNCH_PRIO;	/* Obviously... */
 
-	synch->status = flags & ~(XNSYNCH_CLAIMED | XNSYNCH_PENDING);
+	synch->status = flags & ~XNSYNCH_CLAIMED;
 	synch->owner = NULL;
 	synch->cleanup = NULL;	/* Only works for PIP-enabled objects. */
 	initpq(&synch->pendq, xnpod_get_qdir(nkpod),
@@ -169,78 +169,73 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout)
 
 	xnltt_log_event(xeno_ev_sleepon, thread->name, synch);
 
-	if (testbits(synch->status, XNSYNCH_PRIO)) {
-
-		if (testbits(synch->status, XNSYNCH_PIP)) {
-		      redo:
-			owner = synch->owner;
-
-			if (owner
-			    && xnpod_compare_prio(thread->cprio,
-						  owner->cprio) > 0) {
-
-				if (testbits(synch->status, XNSYNCH_PENDING)) {
-					/* Ownership is still pending, steal the resource. */
-					synch->owner = thread;
-					__clrbits(thread->status,
-						  XNRMID | XNTIMEO | XNBREAK);
-					goto grab_ownership;
-				}
-
-				if (!testbits(owner->status, XNBOOST)) {
-					owner->bprio = owner->cprio;
-					__setbits(owner->status, XNBOOST);
-				}
-
-				if (testbits(synch->status, XNSYNCH_CLAIMED))
-					removepq(&owner->claimq, &synch->link);
-				else
-					__setbits(synch->status,
-						  XNSYNCH_CLAIMED);
-
-				insertpqf(&synch->pendq, &thread->plink,
-					  thread->cprio);
-				insertpqf(&owner->claimq, &synch->link,
-					  thread->cprio);
-				xnsynch_renice_thread(owner, thread->cprio);
-			} else
-				insertpqf(&synch->pendq, &thread->plink,
-					  thread->cprio);
-
-			xnpod_suspend_thread(thread, XNPEND, timeout, synch);
-
-			if (unlikely(testbits(thread->status, XNRMID | XNTIMEO | XNBREAK)))
-				goto unlock_and_exit;
-
-			if (unlikely(synch->owner != thread)) {
-				/* Somebody stole us the ownership while we were ready to
-				   run, waiting for the CPU: we need to wait again for the
-				   resource. */
-				if (timeout == XN_INFINITE)
-					goto redo;
-				timeout = xnthread_timeout(thread);
-				if (timeout > 1)	/* Otherwise, it's too late, time elapsed. */
-					goto redo;
-				__setbits(thread->status, XNTIMEO);
-				goto unlock_and_exit;
-			}
-		} else {
-			insertpqf(&synch->pendq, &thread->plink, thread->cprio);
-			xnpod_suspend_thread(thread, XNPEND, timeout, synch);
-		}
-	} else {		/* otherwise FIFO */
+	if (!testbits(synch->status, XNSYNCH_PRIO)) { /* i.e. FIFO */
 		appendpq(&synch->pendq, &thread->plink);
 		xnpod_suspend_thread(thread, XNPEND, timeout, synch);
-		if (unlikely(testbits(thread->status, XNRMID | XNTIMEO | XNBREAK)))
-			goto unlock_and_exit;
+		goto unlock_and_exit;
 	}
 
-      grab_ownership:
+	if (!testbits(synch->status, XNSYNCH_PIP)) { /* i.e. no ownership */
+		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
+		xnpod_suspend_thread(thread, XNPEND, timeout, synch);
+		goto unlock_and_exit;
+	}
 
-	/* Now the resource is truely owned by the caller. */
-	__clrbits(synch->status, XNSYNCH_PENDING);
+redo:
+	owner = synch->owner;
+
+	if (!owner) {
+		synch->owner = thread;
+		__clrbits(thread->status, XNRMID | XNTIMEO | XNBREAK);
+		goto unlock_and_exit;
+	}
+
+	if (xnpod_compare_prio(thread->cprio, owner->cprio) > 0) {
+
+		if (testbits(owner->status, XNWAKEN)) {
+			/* Ownership is still pending, steal the resource. */
+			synch->owner = thread;
+			__clrbits(thread->status, XNRMID | XNTIMEO | XNBREAK);
+			__setbits(owner->status, XNROBBED);
+			goto unlock_and_exit;
+		}
+
+		if (!testbits(owner->status, XNBOOST)) {
+			owner->bprio = owner->cprio;
+			__setbits(owner->status, XNBOOST);
+		}
+
+		if (testbits(synch->status, XNSYNCH_CLAIMED))
+			removepq(&owner->claimq, &synch->link);
+		else
+			__setbits(synch->status, XNSYNCH_CLAIMED);
+
+		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
+		insertpqf(&owner->claimq, &synch->link, thread->cprio);
+		xnsynch_renice_thread(owner, thread->cprio);
+	} else
+		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
+
+	xnpod_suspend_thread(thread, XNPEND, timeout, synch);
+
+	if (testbits(thread->status, XNRMID | XNTIMEO | XNBREAK))
+		goto unlock_and_exit;
+
+	if (testbits(thread->status, XNROBBED)) {
+		/* Somebody stole us the ownership while we were ready
+		   to run, waiting for the CPU: we need to wait again
+		   for the resource. */
+		if (timeout == XN_INFINITE)
+			goto redo;
+		timeout = xnthread_timeout(thread);
+		if (timeout > 1) /* Otherwise, it's too late. */
+			goto redo;
+		__setbits(thread->status, XNTIMEO);
+	}
 
       unlock_and_exit:
+
+	__clrbits(thread->status, XNWAKEN);
 
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -368,13 +363,11 @@ xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
 		thread = link2thread(holder, plink);
 		thread->wchan = NULL;
 		synch->owner = thread;
-		__setbits(synch->status, XNSYNCH_PENDING);
+		__setbits(thread->status, XNWAKEN);
 		xnltt_log_event(xeno_ev_wakeup1, thread->name, synch);
 		xnpod_resume_thread(thread, XNPEND);
-	} else {
+	} else
 		synch->owner = NULL;
-		__clrbits(synch->status, XNSYNCH_PENDING);
-	}
 
 	if (testbits(synch->status, XNSYNCH_CLAIMED))
 		xnsynch_clear_boost(synch, lastowner);
@@ -441,7 +434,7 @@ xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder)
 	thread = link2thread(holder, plink);
 	thread->wchan = NULL;
 	synch->owner = thread;
-	__setbits(synch->status, XNSYNCH_PENDING);
+	__setbits(thread->status, XNWAKEN);
 	xnltt_log_event(xeno_ev_wakeupx, thread->name, synch);
 	xnpod_resume_thread(thread, XNPEND);
 
@@ -467,7 +460,7 @@ xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder)
  * is cleared, such as before the resource is deleted.
  *
  * @param synch The descriptor address of the synchronization object
- * whose ownership is changed.
+ * to be flushed.
  *
  * @param reason Some flags to set in the status mask of every
  * unblocked thread. Zero is an acceptable value. The following bits
@@ -527,9 +520,6 @@ int xnsynch_flush(xnsynch_t *synch, xnflags_t reason)
 		xnsynch_clear_boost(synch, synch->owner);
 		status = XNSYNCH_RESCHED;
 	}
-
-	synch->owner = NULL;
-	__clrbits(synch->status, XNSYNCH_PENDING);
 
 	xnlock_put_irqrestore(&nklock, s);
 
