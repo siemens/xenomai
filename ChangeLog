@@ -1,3 +1,11 @@
+2006-08-19  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.4.3{2,3}-1.2-07,
+	2.6.17-1.3-09.
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.14-1.3-06,
+	2.4.25-CVS-20060707-1.1-04.
+
 2006-07-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/task.c (rt_task_delete): Do not send SIGKILL
