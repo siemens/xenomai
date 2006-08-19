@@ -93,7 +93,7 @@ while test $# -gt 0; do
                echo "POSIX support is not available" >&2
                exit 1
             fi
-            if test "$XENO_POSIX_FAST_WRAPPING" = "y"; then
+            if test "$XENO_POSIX_FAST_WRAPPING" = "yes"; then
                 echo "-Wl,@$XENO_POSIX_WRAPPERS $XENO_POSIX_LDFLAGS"
             else
                 wrappers=`cat $XENO_POSIX_WRAPPERS | \
