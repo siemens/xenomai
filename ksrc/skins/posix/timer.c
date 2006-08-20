@@ -198,10 +198,10 @@ int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q)
 
 	timer = &timer_pool[(unsigned long)timerid];
 
-	removeq(&q->timerq, &timer->link);
-
 	if (!xntimer_active_p(&timer->timerbase))
 		goto unlock_and_einval;
+
+	removeq(&q->timerq, &timer->link);
 
 	if (timer->queued) {
 		/* timer signal is queued, unqueue it. */

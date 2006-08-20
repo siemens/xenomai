@@ -1,5 +1,8 @@
 2006-08-20  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
+	* ksrc/skins/posix/timer.c (pse51_timer_delete_inner): Check if
+	the timer is active before removing it from queue.
+
 	* ksrc/skins/posix/sched.c (pthread_setschedparam): No longer map
 	SCHED_OTHER to SCHED_RR.
 
