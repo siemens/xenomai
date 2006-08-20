@@ -8,6 +8,9 @@
 	(__pthread_setschedparam): Use EPERM instead of EAGAIN to signal
 	to user-space that __real_pthread_setschedparam should be used.
 
+	* ksrc/skins/posix/timer.c (timer_settime): Bind the timer to the
+	timer owner (i.e. the caller) CPU.
+
 2006-08-18  Philippe Gerum  <rpm@xenomai.org>
 	
  	* RELEASE: Xenomai 2.2.1 (Tumble)
