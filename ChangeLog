@@ -1,5 +1,13 @@
 2006-08-20  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
+	* ksrc/skins/posix/sched.c (pthread_setschedparam): No longer map
+	SCHED_OTHER to SCHED_RR.
+
+	* ksrc/skins/posix/syscall.c (__pthread_setschedparam): always
+	pass through pthread_setschedparam in order to check parameters.
+	(__pthread_setschedparam): Use EPERM instead of EAGAIN to signal
+	to user-space that __real_pthread_setschedparam should be used.
+
 	* src/testsuite/switchtest/switchtest.c: Reformat output.
 
 	* ksrc/skins/posix/timer.c (timer_settime): Bind the timer to the
