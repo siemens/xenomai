@@ -52,6 +52,7 @@ struct cpu_tasks {
 	unsigned tasks_count;
 	unsigned capacity;
 	unsigned fd;
+	unsigned long last_switches_count;
 };
 
 /* Thread type. */
@@ -72,11 +73,18 @@ typedef enum {
 
 static sem_t sleeper_start;
 static int quiet, status;
+static struct timespec start;
+static pthread_mutex_t headers_lock;
+static unsigned long data_lines = 21;
 
 static inline void clean_exit(int retval)
 {
 	status = retval;
 	raise(SIGTERM);
+	for (;;) {
+		sched_yield();
+		pthread_testcancel();
+	}
 }
 
 static void timespec_substract(struct timespec *result,
@@ -101,16 +109,37 @@ static char *task_name(struct cpu_tasks *cpu, unsigned task)
 		[RTUS] = "rtus",
 		[RTUO] = "rtuo"
 	};
+	struct {
+		unsigned flag;
+		char *name;
+	} flags [] = {
+		{ .flag = AFP, .name = "fp" },
+		{ .flag = UFPP, .name = "ufpp" },
+		{ .flag = UFPS, .name = "ufps" },
+	};
 	struct task_params *param;
 	static char buffer[64];
+	unsigned pos, i;
 	
 	if (task >= cpu->tasks_count)
 		return "???";
 
 	param = &cpu->tasks[task];
-	snprintf(buffer, sizeof(buffer), "%s%u/%u",
-		 basename[param->type], param->swt.index, cpu->index);
+	pos = snprintf(buffer, sizeof(buffer), "%s", basename[param->type]);
+	for (i = 0; i < sizeof(flags) / sizeof(flags[0]); i++) {
+		if (!(param->fp & flags[i].flag))
+			continue;
 
+		pos += snprintf(&buffer[pos],
+				sizeof(buffer) - pos, "_%s", flags[i].name);
+	}
+	
+#ifdef CONFIG_SMP
+	pos += snprintf(&buffer[pos], sizeof(buffer) - pos, "%u", cpu->index);
+#endif /* !CONFIG_SMP */
+
+	snprintf(&buffer[pos], sizeof(buffer) - pos, "-%u", param->swt.index);
+	
 	return buffer;
 }
 
@@ -133,6 +162,59 @@ static void handle_bad_fpreg(struct cpu_tasks *cpu, unsigned fp_val)
 		to, task_name(cpu, to),
 		fp_val, task_name(cpu, fp_val % 1000));
 	clean_exit(EXIT_FAILURE);
+}
+
+void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
+{
+	unsigned long switches_count;
+	static unsigned nlines = 0;
+
+	if (ioctl(cpu->fd,
+		  RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT,&switches_count)) {
+		perror("sleeper: ioctl(RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT)");
+		clean_exit(EXIT_FAILURE);
+	}
+	
+	if (switches_count &&
+	    switches_count == cpu->last_switches_count) {
+		fprintf(stderr, "No context switches during one second, "
+			"aborting.\n");
+		clean_exit(EXIT_FAILURE);
+	}
+
+	if (quiet)
+		return;
+	
+	pthread_mutex_lock(&headers_lock);
+
+	if (data_lines && (nlines++ % data_lines) == 0) {
+		struct timespec diff;
+		long dt;
+
+		timespec_substract(&diff, now, &start);
+		dt = diff.tv_sec;
+		
+		printf("RTT|  %.2ld:%.2ld:%.2ld\n",
+		       dt / 3600, (dt / 60) % 60, dt % 60);
+#ifdef CONFIG_SMP
+		printf("RTH|%12s|%12s|%12s\n",
+		       "---------cpu","ctx switches","-------total");
+#else /* !CONFIG_SMP */
+		printf("RTH|%12s|%12s\n", "ctx switches","-------total");
+#endif /* !CONFIG_SMP */
+	}
+
+	pthread_mutex_unlock(&headers_lock);
+
+#ifdef CONFIG_SMP
+	printf("RTD|%12u|%12lu|%12lu\n", cpu,
+	       switches_count - cpu->last_switches_count, switches_count);
+#else /* !CONFIG_SMP */
+	printf("RTD|%12lu|%12lu\n",
+	       switches_count - cpu->last_switches_count, switches_count);
+#endif /* !CONFIG_SMP */
+
+	cpu->last_switches_count = switches_count;
 }
 
 static void *sleeper(void *cookie)
@@ -177,31 +259,9 @@ static void *sleeper(void *cookie)
 
 		timespec_substract(&diff, &now, &last);
 		if (diff.tv_sec >= 1) {
-			static unsigned long last_switches_count = 0;
-			unsigned long switches_count;
 			last = now;
 
-			if (ioctl(fd,
-				  RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT,
-				  &switches_count)) {
-				perror("sleeper: ioctl(RTTST_RTIOC_SWTEST_"
-				       "GET_SWITCHES_COUNT)");
-				clean_exit(EXIT_FAILURE);
-			}
-
-			if (!quiet)
-				printf("cpu %u: %lu context switches.\n",
-				       param->cpu->index,
-				       switches_count);
-
-			if (switches_count &&
-			    switches_count == last_switches_count) {
-				fprintf(stderr, "No context switches during one"
-					"second, aborting.\n");
-				clean_exit(EXIT_FAILURE);
-			}
-			
-			last_switches_count = switches_count;
+			display_switches_count(param->cpu, &now);
 		}
 
 		if (tasks_count == 1)
@@ -561,16 +621,18 @@ static int check_arg(const struct task_params *param, struct cpu_tasks *end_cpu)
 		break;
 
 	case RTUP:
-		if (param->fp & UFPS)
+		if (param->fp & (AFP|UFPS))
 			return -1;
 		break;
 
 	case RTUS:
-		if (param->fp & UFPP)
+		if (param->fp & (AFP|UFPP))
 			return -1;
 		break;
 
 	case RTUO:
+		if (param->fp & AFP)
+			return -1;
 		break;
 	default:
 		return -1;
@@ -765,6 +827,8 @@ void usage(FILE *fd, const char *progname)
 		"Available options are:\n"
 		"--help or -h, cause this program to print this help string and "
 		"exit;\n"
+		"--lines <lines> or -l <lines> print headers every <lines> "
+		"lines.\n"
 		"--quiet or -q, prevent this program from printing every "
 		"second the count of\ncontext switches;\n"
 		"--timeout <duration> or -T <duration>, limit the test duration "
@@ -850,13 +914,14 @@ int main(int argc, const char *argv[])
 	for (;;) {
 		static struct option long_options[] = {
 			{ "help",    0, NULL, 'h' },
+			{ "lines",   0, NULL, 'l' },
 			{ "nofpu",   0, NULL, 'n' },
 			{ "quiet",   0, NULL, 'q' },
 			{ "timeout", 0, NULL, 'T' },
 			{ NULL,      0, NULL, 0   }
 		};
 		int i = 0;
-		int c = getopt_long(argc, (char *const *) argv, ":hnqT:",
+		int c = getopt_long(argc, (char *const *) argv, ":hl:nqT:",
 				    long_options, &i);
 
 		if (c == -1)
@@ -866,6 +931,10 @@ int main(int argc, const char *argv[])
 		case 'h':
 			usage(stdout, progname);
 			exit(EXIT_SUCCESS);
+
+		case 'l':
+			data_lines = xatoul(optarg);
+			break;
 
 		case 'n':
 			all = all_nofp;
@@ -913,16 +982,16 @@ int main(int argc, const char *argv[])
 
 		/* Check if fp routines are dummy. */
 		if (all == all_fp) {
-			fprintf(stderr, "Testing FPU check routines...\n");
+			fprintf(stderr, "== Testing FPU check routines...\n");
 			fp_regs_set(1);
 			if (fp_regs_check(2) != 1) {
 				fprintf(stderr,
-					"FPU check routines unimplemented, "
+					"== FPU check routines: unimplemented, "
 					"skipping FPU switches tests.\n");
 				all = all_nofp;
 				count = sizeof(all_nofp) / sizeof(char *);
 			} else
-				fprintf(stderr, "FPU check routines OK.\n");
+				fprintf(stderr, "== FPU check routines: OK.\n");
 		}
 
 		argc = count * nr_cpus + 1;
@@ -1013,7 +1082,9 @@ int main(int argc, const char *argv[])
 	sigaddset(&mask, SIGTERM);
 	sigaddset(&mask, SIGALRM);
 	pthread_sigmask(SIG_BLOCK, &mask, NULL);
-	
+
+	pthread_mutex_init(&headers_lock, NULL);
+
 	/* Prepare attributes for real-time tasks. */
 	pthread_attr_init(&rt_attr);
 	pthread_attr_setinheritsched(&rt_attr, PTHREAD_EXPLICIT_SCHED);
@@ -1026,6 +1097,7 @@ int main(int argc, const char *argv[])
 	pthread_attr_init(&sleeper_attr);
 	pthread_attr_setstacksize(&sleeper_attr, 20 * 1024);
 
+	printf("== Threads:");
 	/* Create and register all tasks. */
 	for (i = 0; i < nr_cpus; i ++) {
 		struct cpu_tasks *cpu = &cpus[i];
@@ -1047,8 +1119,12 @@ int main(int argc, const char *argv[])
 				status = EXIT_FAILURE;
 				goto cleanup;
 			}
+			printf(" %s", task_name(param->cpu,param->swt.index));
 		}
 	}
+	printf("\n");
+
+	clock_gettime(CLOCK_REALTIME, &start);
 
 	/* Start the sleeper tasks. */
 	for (i = 0; i < nr_cpus; i ++)
@@ -1082,14 +1158,12 @@ int main(int argc, const char *argv[])
 		}
 
 		if (cpus[i].fd != -1) {
-			unsigned long switches_count;
+			struct timespec now;
 
-			/* Display the count of context switches. */
-			if (!ioctl(cpus[i].fd,
-				  RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT,
-				  &switches_count))
-				printf("cpu %u: %lu context switches.\n",
-				       i, switches_count);
+			clock_gettime(CLOCK_REALTIME, &now);
+
+			quiet = 0;
+			display_switches_count(&cpus[i], &now);
 
 			/* Kill the kernel-space tasks. */
 			close(cpus[i].fd);
