@@ -199,36 +199,33 @@ static int __pthread_detach(struct task_struct *curr, struct pt_regs *regs)
 	return -pthread_detach(k_tid);
 }
 
-static int __pthread_shadow(struct task_struct *curr,
-			    struct pse51_hkey *hkey, struct sched_param *param)
+static pthread_t __pthread_shadow(struct task_struct *curr,
+				  struct pse51_hkey *hkey)
 {
 	pthread_attr_t attr;
 	pthread_t k_tid;
 	int err;
 
 	pthread_attr_init(&attr);
-	attr.policy = SCHED_FIFO;
 	attr.detachstate = PTHREAD_CREATE_DETACHED;
-	attr.schedparam = *param;
-	attr.fp = 1;
 	attr.name = curr->comm;
 
 	err = pthread_create(&k_tid, &attr, NULL, NULL);
 
 	if (err)
-		return -err;
+		return ERR_PTR(-err);
 
 	err = xnshadow_map(&k_tid->threadbase, NULL);
 
 	if (!err && !__pthread_hash(hkey, k_tid))
-		err = -ENOMEM;
+		err = -EAGAIN;
 
 	if (err)
 		pse51_thread_abort(k_tid, NULL);
 	else
 		k_tid->hkey = *hkey;
 
-	return err;
+	return err ? ERR_PTR(err) : k_tid;
 }
 
 static int __pthread_setschedparam(struct task_struct *curr,
@@ -256,15 +253,19 @@ static int __pthread_setschedparam(struct task_struct *curr,
 	if (!k_tid && __xn_reg_arg1(regs) == __xn_reg_arg4(regs)) {
 		/* If the syscall applies to "current", and the latter is not
 		   a Xenomai thread already, then shadow it. */
-		err = __pthread_shadow(curr, &hkey, &param);
+		k_tid = __pthread_shadow(curr, &hkey);
+		if (IS_ERR(k_tid))
+			return PTR_ERR(k_tid);
+
 		promoted = 1;
-	} else if (k_tid)
+	}
+	if (k_tid)
 		err = -pthread_setschedparam(k_tid, policy, &param);
 	else
 		/* target thread is not a real-time thread, and is not current,
 		   so can not be promoted, try again with the real
 		   pthread_setschedparam service. */
-		err = -EAGAIN;
+		err = -EPERM;
 
 	if (!err)
 		__xn_put_user(curr, promoted,

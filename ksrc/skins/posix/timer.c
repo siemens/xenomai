@@ -370,6 +370,7 @@ int timer_settime(timer_t timerid,
 				   timer, we pass 1. */
 				start = 1;
 
+		xntimer_set_sched(&timer->timerbase, xnpod_current_sched());
 		xntimer_start(&timer->timerbase,
 			      start, ts2ticks_ceil(&value->it_interval));
 		timer->owner = cur;

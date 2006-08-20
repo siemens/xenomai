@@ -224,6 +224,8 @@ int pthread_getschedparam(pthread_t tid, int *pol, struct sched_param *par)
  * @return an error number if:
  * - ESRCH, @a tid is invalid;
  * - EINVAL, @a pol or @a par->sched_priority is invalid;
+ * - EAGAIN, in user-space, insufficient memory exists in the system heap,
+ *   increase CONFIG_XENO_OPT_SYS_HEAPSZ;
  * - EFAULT, in user-space, @a par is an invalid address;
  * - EPERM, in user-space, the calling process does not have superuser
  *   permissions.
@@ -251,18 +253,14 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 
+	case SCHED_OTHER:
 	case SCHED_FIFO:
-
 		setmask = 0;
 		clrmask = XNRRB;
 		break;
 
-	case SCHED_OTHER:
-
-		pol = SCHED_RR;
 
 	case SCHED_RR:
-
 		xnthread_time_slice(&tid->threadbase) = pse51_time_slice;
 		setmask = XNRRB;
 		clrmask = 0;

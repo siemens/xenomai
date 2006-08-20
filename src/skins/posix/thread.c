@@ -45,7 +45,7 @@ int __wrap_pthread_setschedparam(pthread_t thread,
 				 __pse51_thread_setschedparam,
 				 thread, policy, param, myself, &promoted);
 
-	if (err == EAGAIN)
+	if (err == EPERM)
 		return __real_pthread_setschedparam(thread, policy, param);
 
 	if (!err && promoted) {
