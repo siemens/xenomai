@@ -207,6 +207,7 @@ static pthread_t __pthread_shadow(struct task_struct *curr,
 	int err;
 
 	pthread_attr_init(&attr);
+	attr.detachstate = PTHREAD_CREATE_DETACHED;
 	attr.name = curr->comm;
 
 	err = pthread_create(&k_tid, &attr, NULL, NULL);
