@@ -1,3 +1,8 @@
+2006-08-21  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
+
+	* ksrc/nucleus/pipe.c (xnpipe_recv): Re-evaluate the timeout value
+	as we iterate over the message acquisition.
+
 2006-08-20  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/timer.c (pse51_timer_delete_inner): Check if
@@ -25,6 +30,19 @@
 	* src/skins/posix/posix.wrappers, configure.in,
 	scripts/xeno-config.in: Read wrapping options from file instead of
 	passing them via command line.
+
+2006-08-18  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* include/asm-*/hal.h (rthal_timer_program_shot): Directly trigger
+	IRQ through Adeos upon null delay.
+
+2006-08-18  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.4.3{2,3}-1.2-07.
+
+2006-08-18  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/arch/i386/hal.c: Fix mksound workaround.
 
 2006-08-18  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
