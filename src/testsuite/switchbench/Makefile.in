@@ -236,7 +236,7 @@ switchbench_CPPFLAGS = \
 switchbench_LDFLAGS = @XENO_USER_LDFLAGS@
 switchbench_LDADD = \
 	../../skins/native/.libs/libnative.a \
-	-lpthread
+	-lpthread -lm
 
 EXTRA_DIST = runinfo
 all: all-am

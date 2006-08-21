@@ -200,7 +200,7 @@ run_w_load() {
 	loudly ./run -- -T 120 $XENOT_SWITCHTEST '# switchtest'
     )
     (	cd `dirname $0`/../testsuite/switchbench
-	loudly ./run -- -p 10 -n -l 1000 $XENOT_SWITCHBENCH '# switchbench'
+	loudly ./run -- -h $XENOT_SWITCHBENCH '# switchbench'
     )
     (	cd `dirname $0`/../testsuite/cyclic
 	loudly ./run -- -p 10 -n -l 1000 $XENOT_CYCLIC '# cyclictest'

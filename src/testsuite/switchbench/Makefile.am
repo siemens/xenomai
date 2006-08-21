@@ -12,7 +12,7 @@ switchbench_LDFLAGS = @XENO_USER_LDFLAGS@
 
 switchbench_LDADD = \
 	../../skins/native/.libs/libnative.a \
-	-lpthread
+	-lpthread -lm
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(testdir)
