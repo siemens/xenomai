@@ -450,6 +450,9 @@ ssize_t xnpipe_recv(int minor, struct xnpipe_mh **pmh, xnticks_t timeout)
 			ret = -EIDRM;
 			goto unlock_and_exit;
 		}
+
+		/* remaining timeout */		
+		timeout = xnthread_timeout(thread);
 	}
 
 	*pmh = link2mh(holder);
