@@ -6,6 +6,7 @@ depends on XENO_OPT_NUCLEUS
 
 config XENO_HW_FPU
 	bool "Enable FPU support"
+	depends on PPC_FPU
 	default y
 	help
 	The FPU executes instructions from the processor's normal
