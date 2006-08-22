@@ -121,8 +121,8 @@ static inline int xnarch_release_ipi (void)
 static inline void xnarch_notify_shutdown(void)
 {
 #ifdef CONFIG_SMP
-    /* The HAL layer also sets the same CPU affinity so that both
-       modules keep their execution sequence on SMP boxen. */
+    /* Make sure the shutdown sequence is kept on the same CPU when
+       running as a module. */
     set_cpus_allowed(current,cpumask_of_cpu(0));
 #endif /* CONFIG_SMP */
 #ifdef CONFIG_XENO_OPT_PERVASIVE

@@ -80,8 +80,8 @@ static inline int xnarch_init(void)
 		return err;
 
 #ifdef CONFIG_SMP
-	/* The HAL layer also sets the same CPU affinity so that both
-	   modules keep their execution sequence on SMP boxen. */
+	/* Make sure the init sequence is kept on the same CPU when
+	   running as a module. */
 	set_cpus_allowed(current, cpumask_of_cpu(0));
 #endif /* CONFIG_SMP */
 

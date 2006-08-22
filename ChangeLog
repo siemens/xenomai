@@ -1,3 +1,14 @@
+2006-08-23  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/generic/hal.c (rthal_init, rthal_exit): Do not force CPU
+	affinity for the current task, which is useless since the HAL must
+	be statically built into the kernel.
+
+2006-08-21  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/arch/powerpc/Kconfig: Make CONFIG_XENO_HW_FPU depend on
+	CONFIG_PPC_FPU.
+
 2006-08-21  Jim Cromie <jim.cromie@gmail.com>
 
 	* scripts/xeno-test.in (run_w_load): Do not pass -n option to
