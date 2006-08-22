@@ -28,10 +28,10 @@
  * Queue services.
  *
  * Message queueing is a method by which real-time tasks can exchange
- * or pass data through a xeno-managed queue of messages. Messages can
- * vary in length and be assigned different types or usages. A message
- * queue can be created by one task and used by multiple tasks that
- * send and/or receive messages to the queue.
+ * or pass data through a Xenomai-managed queue of messages. Messages
+ * can vary in length and be assigned different types or usages. A
+ * message queue can be created by one task and used by multiple tasks
+ * that send and/or receive messages to the queue.
  *
  * This implementation is based on a zero-copy scheme for message
  * buffers. Message buffer pools are built over the nucleus's heap
