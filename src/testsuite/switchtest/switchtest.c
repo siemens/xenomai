@@ -207,7 +207,7 @@ void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
 	pthread_mutex_unlock(&headers_lock);
 
 #ifdef CONFIG_SMP
-	printf("RTD|%12u|%12lu|%12lu\n", cpu,
+	printf("RTD|%12u|%12lu|%12lu\n", cpu->index,
 	       switches_count - cpu->last_switches_count, switches_count);
 #else /* !CONFIG_SMP */
 	printf("RTD|%12lu|%12lu\n",
@@ -1172,6 +1172,7 @@ int main(int argc, const char *argv[])
 	}
 	free(cpus);
 	__real_sem_destroy(&sleeper_start);
+	pthread_mutex_destroy(&headers_lock);
 
 	return status;
 }
