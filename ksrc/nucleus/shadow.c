@@ -700,13 +700,7 @@ void xnshadow_relax(int notify)
 		engage_irq_shield();
 #endif /* CONFIG_XENO_OPT_ISHIELD */
 
-	if (current->state & TASK_UNINTERRUPTIBLE)
-		/* Just to avoid wrecking Linux's accounting of non-
-		   interruptible tasks, move back kicked tasks to
-		   interruptible state, like schedule() saw them initially. */
-		set_current_state((current->
-				   state & ~TASK_UNINTERRUPTIBLE) |
-				  TASK_INTERRUPTIBLE);
+	clear_task_nowakeup(current);
 
 	schedule_linux_call(LO_WAKEUP_REQ, current, 0);
 
@@ -1794,16 +1788,13 @@ static inline void do_sigwake_event(struct task_struct *p)
 
 	/* If we are kicking a shadow thread, make sure Linux won't
 	   schedule in its mate under our feet as a result of running
-	   signal_wake_up(). The Xenomai scheduler must remain in control for
-	   now, until we explicitely relax the shadow thread to allow for
-	   processing the pending signals. Make sure we keep the
-	   additional state flags unmodified so that we don't break any
-	   undergoing ptrace. */
+	   signal_wake_up(). The Xenomai scheduler must remain in
+	   control for now, until we explicitely relax the shadow
+	   thread to allow for processing the pending signals. Make
+	   sure we keep the additional state flags unmodified so that
+	   we don't break any undergoing ptrace. */
 
-	if (p->state & TASK_INTERRUPTIBLE)
-		set_task_state(p,
-			       (p->state & ~TASK_INTERRUPTIBLE) |
-			       TASK_UNINTERRUPTIBLE);
+	set_task_nowakeup(p);
 
 	xnpod_schedule();
 
