@@ -17,8 +17,8 @@ doxygen-api: Doxyfile
 	$(DOXYGEN) $(DOXYDOC_OPTS)
 
 distclean-local:
-	for dir in $(HTML_DOCS); do \
-	    if test -d $$dir; then $(RM) -R $$dir; fi; \
+	for dir in $(HTML_DOCS) ; do \
+	    if test -d $$dir ; then $(RM) -R $$dir ; fi ; \
 	done
 
 .PHONY: doxygen-api

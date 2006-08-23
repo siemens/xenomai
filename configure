@@ -19991,7 +19991,7 @@ case "$host" in
 	XENO_TARGET_ARCH=blackfin
         XENO_LINUX_ARCH=bfinnommu
 	XENO_LINUX_INSTALL_TARGET=install
-	if test x$enable_shared = xyes; then
+	if test x$enable_shared = xyes ; then
 	   { { echo "$as_me:$LINENO: error: Shared libraries unsupported -- reconfigure passing --disable-shared" >&5
 echo "$as_me: error: Shared libraries unsupported -- reconfigure passing --disable-shared" >&2;}
    { (exit 1); exit 1; }; }
@@ -20088,7 +20088,7 @@ echo "${ECHO_T}${CONFIG_X86_TSC:-no}" >&6
 fi
 
 
-if test $XENO_TARGET_ARCH = arm; then
+if test $XENO_TARGET_ARCH = arm ; then
   echo "$as_me:$LINENO: checking for ARM architecture version" >&5
 echo $ECHO_N "checking for ARM architecture version... $ECHO_C" >&6
   CONFIG_XENO_ARM_ARCH=4
@@ -20131,11 +20131,11 @@ if test "${enable_linux_build+set}" = set; then
   case "$enableval" in
 	y | yes) XENO_LINUX_SRCDIR=y ;;
 	n | no) unset XENO_LINUX_SRCDIR ;;
-        *) XENO_LINUX_SRCDIR="`/bin/bash -c \"echo $enableval\"`";;
+        *) XENO_LINUX_SRCDIR="`/bin/bash -c \"echo $enableval\"`" ;;
 	esac
 fi;
 
-if test x"$XENO_LINUX_SRCDIR" = x; then
+if test x"$XENO_LINUX_SRCDIR" = x ; then
   echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
 else
@@ -20145,17 +20145,17 @@ echo "${ECHO_T}yes" >&6
 echo $ECHO_N "checking for Linux sources... $ECHO_C" >&6
   if test x"$XENO_LINUX_SRCDIR" = xy; then
       candidates="linux-* $srcdir/linux-* $srcdir/linux linux"
-      if test x"$cross_compiling" = xno; then
+      if test x"$cross_compiling" = xno ; then
           candidates="$candidates /lib/modules/`uname -r`/source /usr/src/linux"
       fi
-      for dir in $candidates; do
-          if test -r $dir/Makefile; then
+      for dir in $candidates ; do
+          if test -r $dir/Makefile ; then
               XENO_LINUX_SRCDIR=$dir
-              break;
+              break ;
           fi
       done
   fi
-  if test x"$XENO_LINUX_SRCDIR" = xy || test ! -r $XENO_LINUX_SRCDIR/Makefile; then
+  if test x"$XENO_LINUX_SRCDIR" = xy || test ! -r $XENO_LINUX_SRCDIR/Makefile ; then
      { { echo "$as_me:$LINENO: error: Unable to find Linux kernel sources tree, please pass a valid Linux sources directory to --enable-linux-build" >&5
 echo "$as_me: error: Unable to find Linux kernel sources tree, please pass a valid Linux sources directory to --enable-linux-build" >&2;}
    { (exit 1); exit 1; }; }
@@ -20175,7 +20175,7 @@ echo "$as_me: error: Unable to find Linux kernel sources tree, please pass a val
      linux_full_version="$linux_base_version$linux_EXTRAVERSION"
 
      if test x"$linux_PATCHLEVEL" = x -o x"$linux_SUBLEVEL" = x ||
-        test x"$linux_VERSION" = x; then
+        test x"$linux_VERSION" = x ; then
         { { echo "$as_me:$LINENO: error: Unable to get version of $XENO_LINUX_SRCDIR, aborting." >&5
 echo "$as_me: error: Unable to get version of $XENO_LINUX_SRCDIR, aborting." >&2;}
    { (exit 1); exit 1; }; }
@@ -20185,11 +20185,11 @@ echo "${ECHO_T}$XENO_LINUX_SRCDIR (kernel ${linux_full_version})" >&6
      fi
 
      case "$linux_base_version" in
-	2.4.*) XENO_LINUX_ALL_TARGETS="bzImage modules";;
+	2.4.*) XENO_LINUX_ALL_TARGETS="bzImage modules" ;;
         2.6.*) XENO_LINUX_ALL_TARGETS="all";;
 	*) { { echo "$as_me:$LINENO: error: Unknown Linux version $linux_full_version" >&5
 echo "$as_me: error: Unknown Linux version $linux_full_version" >&2;}
-   { (exit 1); exit 1; }; };;
+   { (exit 1); exit 1; }; } ;;
      esac
 
 
@@ -20206,11 +20206,11 @@ if test "${with_adeos_patch+set}" = set; then
   ADEOS_PATCH="`/bin/bash -c \"echo $withval\"`"
 fi;
 
-  if test x"$ADEOS_PATCH" = x && test x"$linux_base_version" != x; then
+  if test x"$ADEOS_PATCH" = x && test x"$linux_base_version" != x ; then
         set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version-$XENO_LINUX_ARCH-*
         ADEOS_PATCH=$1
   fi
-  if test x"$ADEOS_PATCH" = x || test ! -e $ADEOS_PATCH; then
+  if test x"$ADEOS_PATCH" = x || test ! -e $ADEOS_PATCH ; then
      { { echo "$as_me:$LINENO: error: Unable to find Adeos patch, please use --with-adeos-patch" >&5
 echo "$as_me: error: Unable to find Adeos patch, please use --with-adeos-patch" >&2;}
    { (exit 1); exit 1; }; }
@@ -20235,7 +20235,7 @@ fi
 
 
 
-if test \! -d $srcdir/doc; then
+if test \! -d $srcdir/doc ; then
     unset XENO_MAYBE_DOCDIR
 else
     XENO_MAYBE_DOCDIR=doc
@@ -20253,7 +20253,7 @@ if test "${enable_dox_doc+set}" = set; then
 	esac
 fi;
 
-if test \! -d $srcdir/doc; then
+if test \! -d $srcdir/doc ; then
     if test x$CONFIG_XENO_DOC_DOX = xy ;
     then
         { { echo "$as_me:$LINENO: error: documentation tree is missing." >&5
@@ -20303,7 +20303,7 @@ echo "${ECHO_T}no" >&6
 fi
 
 
-if test x${CONFIG_XENO_DOC_DOX} = xy -a x"$DOXYGEN" = x; then
+if test x${CONFIG_XENO_DOC_DOX} = xy -a x"$DOXYGEN" = x ; then
    { { echo "$as_me:$LINENO: error: Missing the Doxygen tools to generate the documentation." >&5
 echo "$as_me: error: Missing the Doxygen tools to generate the documentation." >&2;}
    { (exit 1); exit 1; }; }
@@ -20345,7 +20345,7 @@ else
 echo "${ECHO_T}no" >&6
 fi
 
-if test x"$DOXYGEN_HAVE_DOT" = xYES; then
+if test x"$DOXYGEN_HAVE_DOT" = xYES ; then
    DOXYGEN_SHOW_INCLUDE_FILES=NO
 else
    DOXYGEN_SHOW_INCLUDE_FILES=YES
@@ -20353,9 +20353,9 @@ fi
 
 case "$CONFIG_XENO_DOC_DBX" in
 y | ye | yes)
-    DBX_DOC=yes;;
+    DBX_DOC=yes ;;
 *)
-    DBX_DOC="";;
+    DBX_DOC="" ;;
 esac
 DBX_NET="$CONFIG_XENO_DBX_NET"
 DBX_ROOT="$CONFIG_XENO_DBX_ROOT"
@@ -20987,7 +20987,7 @@ ac_cv_sched_setaffinity=no
 fi
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
  fi
- if test $ac_cv_sched_setaffinity = old; then
+ if test $ac_cv_sched_setaffinity = old ; then
      echo "$as_me:$LINENO: result: old" >&5
 echo "${ECHO_T}old" >&6
 
@@ -20995,7 +20995,7 @@ cat >>confdefs.h <<\_ACEOF
 #define HAVE_OLD_SETAFFINITY 1
 _ACEOF
 
- elif test $ac_cv_sched_setaffinity = new; then
+ elif test $ac_cv_sched_setaffinity = new ; then
      echo "$as_me:$LINENO: result: ok" >&5
 echo "${ECHO_T}ok" >&6
 
@@ -21185,8 +21185,8 @@ fi
 if [ $ac_cv_ld_file_option = yes ]; then
 	XENO_POSIX_WRAPPERS="-Wl,@`cd $srcdir && pwd`/src/skins/posix/posix.wrappers"
 else
-	XENO_POSIX_WRAPPERS=`while read wrap_option symbol; do \
-			echo -n "-Wl,$wrap_option,$symbol "; \
+	XENO_POSIX_WRAPPERS=`while read wrap_option symbol ; do \
+			echo -n "-Wl,$wrap_option,$symbol " ; \
 		done < $srcdir/src/skins/posix/posix.wrappers`
 fi
 echo "$as_me:$LINENO: result: ${ac_cv_ld_file_option:-no}" >&5
@@ -21243,7 +21243,7 @@ base=asm-generic
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno-load scripts/xeno-test src/Makefile src/skins/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/vxworks/Makefile src/skins/vrtx/Makefile src/skins/rtdm/Makefile src/skins/rtai/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/switchbench/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/irqbench/Makefile src/utils/Makefile src/utils/can/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-i386/Makefile include/asm-i386/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-ia64/Makefile include/asm-ia64/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtai/Makefile include/rtdm/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
 
 
-if test \! x$XENO_MAYBE_DOCDIR = x; then
+if test \! x$XENO_MAYBE_DOCDIR = x ; then
                                                                                                                                                                                                               ac_config_files="$ac_config_files doc/Makefile doc/txt/Makefile doc/man/Makefile doc/man/runinfo.man doc/man/xeno-config.man doc/man/xeno-info.man doc/man/xeno-load.man doc/man/xeno-test.man doc/doxygen/Makefile doc/doxygen/Doxyfile doc/docbook/Makefile doc/docbook/catalog doc/docbook/custom-stylesheets/Makefile doc/docbook/custom-stylesheets/xsl/Makefile doc/docbook/custom-stylesheets/xsl/common/Makefile doc/docbook/custom-stylesheets/xsl/fo/Makefile doc/docbook/custom-stylesheets/xsl/html/Makefile doc/docbook/custom-stylesheets/xsl/html/chunk.xsl doc/docbook/custom-stylesheets/xsl/html/onechunk.xsl doc/docbook/xenomai/Makefile"
 
 fi
@@ -22965,10 +22965,10 @@ echo "$as_me: error: cannot create directory $dirpart/$fdir" >&2;}
 done
  ;;
     linux )
-     if test -e linux/.xenomai-prepared; then
+     if test -e linux/.xenomai-prepared ; then
         . linux/.xenomai-prepared
         if test x"$XENO_LINUX_VERSION" != x"$PREPARED_LINUX_VERSION" ||
-           test x"`basename $ADEOS_PATCH`" != x"$PREPARED_ADEOS_PATCH"; then
+           test x"`basename $ADEOS_PATCH`" != x"$PREPARED_ADEOS_PATCH" ; then
            echo "*** Warning: built version of linux and requested versions are "
            echo "*** different. If you want to build the requested version of "
            echo "*** linux, remove the file: linux/.xenomai-prepared."
@@ -22978,8 +22978,8 @@ done
      else
            set -e
            targetdir=$PWD/linux
-           if test \! -e linux || test \! $XENO_LINUX_SRCDIR -ef linux; then
-               if test -e linux; then
+           if test \! -e linux || test \! $XENO_LINUX_SRCDIR -ef linux ; then
+               if test -e linux ; then
                    test -e linux/.config && mv linux/.config .xenomai.config
                    echo $ECHO_N "Removing existing linux directory... $ECHO_C"
                    rm -Rf linux
@@ -22988,7 +22988,7 @@ done
                mkdir linux
                echo $ECHO_N "Making linux a shadow copy of $XENO_LINUX_SRCDIR... $ECHO_C"
                cd $XENO_LINUX_SRCDIR
-               find . -! -type d | while read f; do
+               find . -! -type d | while read f ; do
                    d=$targetdir/`dirname $f`
                    mkdir -p $d && ln -sf $XENO_LINUX_SRCDIR/$f $d/`basename $f`
                done
@@ -22996,14 +22996,14 @@ done
            fi
            cd $targetdir
 
-           if test -e $XENO_LINUX_SRCDIR/.config; then
+           if test -e $XENO_LINUX_SRCDIR/.config ; then
               . $XENO_LINUX_SRCDIR/.config
               test x"$CONFIG_X86" = xy && cfg_arch=i386 || :
               test x"$CONFIG_PPC" = xy && cfg_arch=ppc || :
               test x"$CONFIG_IA64" = xy && cfg_arch=ia64 || :
               test x"$CONFIG_PPC64" = xy && cfg_arch=ppc64 || :
               test x"$CONFIG_BLACKFIN" = xy && cfg_arch=blackfin || :
-              if test $cfg_arch = $XENO_TARGET_ARCH; then
+              if test $cfg_arch = $XENO_TARGET_ARCH ; then
                  cp $XENO_LINUX_SRCDIR/.config .xenomai.config
               fi
               echo "Cleaning linux directory..."

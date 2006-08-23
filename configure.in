@@ -72,7 +72,7 @@ case "$host" in
 	XENO_TARGET_ARCH=blackfin
         XENO_LINUX_ARCH=bfinnommu
 	XENO_LINUX_INSTALL_TARGET=install
-	if test x$enable_shared = xyes; then
+	if test x$enable_shared = xyes ; then
 	   AC_MSG_ERROR([Shared libraries unsupported -- reconfigure passing --disable-shared])
 	fi
         ;;
@@ -148,7 +148,7 @@ fi
 
 dnl ARCH support for ARM (default: 4)
 
-if test $XENO_TARGET_ARCH = arm; then
+if test $XENO_TARGET_ARCH = arm ; then
   AC_MSG_CHECKING(for ARM architecture version)
   CONFIG_XENO_ARM_ARCH=4
   CONFIG_XENO_ARM_SA1100=
@@ -184,27 +184,27 @@ try the sources of the running kernel and finally /usr/src/linux.]),
 	[case "$enableval" in
 	y | yes) XENO_LINUX_SRCDIR=y ;;
 	n | no) unset XENO_LINUX_SRCDIR ;;
-        *) XENO_LINUX_SRCDIR="`/bin/bash -c \"echo $enableval\"`";;
+        *) XENO_LINUX_SRCDIR="`/bin/bash -c \"echo $enableval\"`" ;;
 	esac])
 
-if test x"$XENO_LINUX_SRCDIR" = x; then
+if test x"$XENO_LINUX_SRCDIR" = x ; then
   AC_MSG_RESULT(no)
 else
   AC_MSG_RESULT(yes)
   AC_MSG_CHECKING(for Linux sources)
   if test x"$XENO_LINUX_SRCDIR" = xy; then
       candidates="linux-* $srcdir/linux-* $srcdir/linux linux"
-      if test x"$cross_compiling" = xno; then
+      if test x"$cross_compiling" = xno ; then
           candidates="$candidates /lib/modules/`uname -r`/source /usr/src/linux"
       fi
-      for dir in $candidates; do
-          if test -r $dir/Makefile; then 
+      for dir in $candidates ; do
+          if test -r $dir/Makefile ; then 
               XENO_LINUX_SRCDIR=$dir
-              break; 
+              break ; 
           fi
       done
   fi
-  if test x"$XENO_LINUX_SRCDIR" = xy || test ! -r $XENO_LINUX_SRCDIR/Makefile; then
+  if test x"$XENO_LINUX_SRCDIR" = xy || test ! -r $XENO_LINUX_SRCDIR/Makefile ; then
      AC_MSG_ERROR([Unable to find Linux kernel sources tree, please pass a valid Linux sources directory to --enable-linux-build])
   else
      XENO_LINUX_SRCDIR=`cd $XENO_LINUX_SRCDIR && pwd`
@@ -222,16 +222,16 @@ else
      linux_full_version="$linux_base_version$linux_EXTRAVERSION"
 
      if test x"$linux_PATCHLEVEL" = x -o x"$linux_SUBLEVEL" = x || 
-        test x"$linux_VERSION" = x; then
+        test x"$linux_VERSION" = x ; then
         AC_MSG_ERROR([Unable to get version of $XENO_LINUX_SRCDIR, aborting.])
      else
         AC_MSG_RESULT([$XENO_LINUX_SRCDIR (kernel ${linux_full_version})])
      fi
 
      case "$linux_base_version" in
-	2.4.*) XENO_LINUX_ALL_TARGETS="bzImage modules";;
+	2.4.*) XENO_LINUX_ALL_TARGETS="bzImage modules" ;;
         2.6.*) XENO_LINUX_ALL_TARGETS="all";;
-	*) AC_MSG_ERROR([Unknown Linux version $linux_full_version]);;
+	*) AC_MSG_ERROR([Unknown Linux version $linux_full_version]) ;;
      esac
      AC_SUBST(XENO_LINUX_ALL_TARGETS)
      AC_SUBST(XENO_LINUX_INSTALL_TARGET)
@@ -245,11 +245,11 @@ else
 patch. Default is to infer the patch name from Linux kernel version.]),
         [ADEOS_PATCH="`/bin/bash -c \"echo $withval\"`"])
 
-  if test x"$ADEOS_PATCH" = x && test x"$linux_base_version" != x; then
+  if test x"$ADEOS_PATCH" = x && test x"$linux_base_version" != x ; then
         set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version-$XENO_LINUX_ARCH-*
         ADEOS_PATCH=$1
   fi
-  if test x"$ADEOS_PATCH" = x || test ! -e $ADEOS_PATCH; then
+  if test x"$ADEOS_PATCH" = x || test ! -e $ADEOS_PATCH ; then
      AC_MSG_ERROR([Unable to find Adeos patch, please use --with-adeos-patch])
   else
      AC_MSG_RESULT([$ADEOS_PATCH])
@@ -257,10 +257,10 @@ patch. Default is to infer the patch name from Linux kernel version.]),
   AC_SUBST(ADEOS_PATCH)
 
   AC_CONFIG_COMMANDS(linux, [
-     if test -e linux/.xenomai-prepared; then
+     if test -e linux/.xenomai-prepared ; then
         . linux/.xenomai-prepared
         if test x"$XENO_LINUX_VERSION" != x"$PREPARED_LINUX_VERSION" ||
-           test x"`basename $ADEOS_PATCH`" != x"$PREPARED_ADEOS_PATCH"; then
+           test x"`basename $ADEOS_PATCH`" != x"$PREPARED_ADEOS_PATCH" ; then
            echo "*** Warning: built version of linux and requested versions are "
            echo "*** different. If you want to build the requested version of "
            echo "*** linux, remove the file: linux/.xenomai-prepared."
@@ -270,8 +270,8 @@ patch. Default is to infer the patch name from Linux kernel version.]),
      else
            set -e
            targetdir=$PWD/linux
-           if test \! -e linux || test \! $XENO_LINUX_SRCDIR -ef linux; then
-               if test -e linux; then
+           if test \! -e linux || test \! $XENO_LINUX_SRCDIR -ef linux ; then
+               if test -e linux ; then
                    test -e linux/.config && mv linux/.config .xenomai.config
                    echo $ECHO_N "Removing existing linux directory... $ECHO_C" 
                    rm -Rf linux
@@ -280,7 +280,7 @@ patch. Default is to infer the patch name from Linux kernel version.]),
                mkdir linux
                echo $ECHO_N "Making linux a shadow copy of $XENO_LINUX_SRCDIR... $ECHO_C" 
                cd $XENO_LINUX_SRCDIR
-               find . -! -type d | while read f; do
+               find . -! -type d | while read f ; do
                    d=$targetdir/`dirname $f`
                    mkdir -p $d && ln -sf $XENO_LINUX_SRCDIR/$f $d/`basename $f`
                done
@@ -288,14 +288,14 @@ patch. Default is to infer the patch name from Linux kernel version.]),
            fi
            cd $targetdir
 
-           if test -e $XENO_LINUX_SRCDIR/.config; then
+           if test -e $XENO_LINUX_SRCDIR/.config ; then
               . $XENO_LINUX_SRCDIR/.config
               test x"$CONFIG_X86" = xy && cfg_arch=i386 || :
               test x"$CONFIG_PPC" = xy && cfg_arch=ppc || :
               test x"$CONFIG_IA64" = xy && cfg_arch=ia64 || :
               test x"$CONFIG_PPC64" = xy && cfg_arch=ppc64 || :
               test x"$CONFIG_BLACKFIN" = xy && cfg_arch=blackfin || :
-              if test $cfg_arch = $XENO_TARGET_ARCH; then
+              if test $cfg_arch = $XENO_TARGET_ARCH ; then
                  cp $XENO_LINUX_SRCDIR/.config .xenomai.config
               fi
               echo "Cleaning linux directory..." 
@@ -322,7 +322,7 @@ AM_CONDITIONAL(XENO_BUILD_LINUX, [test \! x"$XENO_LINUX_SRCDIR" = x])
 
 dnl Documentation package.
 
-if test \! -d $srcdir/doc; then 
+if test \! -d $srcdir/doc ; then 
     unset XENO_MAYBE_DOCDIR
 else
     XENO_MAYBE_DOCDIR=doc
@@ -337,7 +337,7 @@ AC_ARG_ENABLE(dox-doc,
 	*) unset CONFIG_XENO_DOC_DOX ;;
 	esac])
 
-if test \! -d $srcdir/doc; then
+if test \! -d $srcdir/doc ; then
     if test x$CONFIG_XENO_DOC_DOX = xy ; 
     then
         AC_MSG_ERROR([documentation tree is missing.])
@@ -349,12 +349,12 @@ fi
 
 AC_CHECK_PROG(DOXYGEN, doxygen, doxygen)
 
-if test x${CONFIG_XENO_DOC_DOX} = xy -a x"$DOXYGEN" = x; then
+if test x${CONFIG_XENO_DOC_DOX} = xy -a x"$DOXYGEN" = x ; then
    AC_MSG_ERROR([Missing the Doxygen tools to generate the documentation.])
 fi
 
 AC_CHECK_PROG(DOXYGEN_HAVE_DOT, dot, YES, NO)
-if test x"$DOXYGEN_HAVE_DOT" = xYES; then
+if test x"$DOXYGEN_HAVE_DOT" = xYES ; then
    DOXYGEN_SHOW_INCLUDE_FILES=NO
 else
    DOXYGEN_SHOW_INCLUDE_FILES=YES
@@ -362,9 +362,9 @@ fi
 
 case "$CONFIG_XENO_DOC_DBX" in
 y | ye | yes)
-    DBX_DOC=yes;;
+    DBX_DOC=yes ;;
 *)
-    DBX_DOC="";;
+    DBX_DOC="" ;;
 esac
 DBX_NET="$CONFIG_XENO_DBX_NET"
 DBX_ROOT="$CONFIG_XENO_DBX_ROOT"
@@ -457,10 +457,10 @@ AC_CACHE_VAL(ac_cv_sched_setaffinity,
    [ac_cv_sched_setaffinity=old],
    [ac_cv_sched_setaffinity=no])]
  fi
- if test $ac_cv_sched_setaffinity = old; then
+ if test $ac_cv_sched_setaffinity = old ; then
      AC_MSG_RESULT(old)
      AC_DEFINE(HAVE_OLD_SETAFFINITY,1,[config])
- elif test $ac_cv_sched_setaffinity = new; then
+ elif test $ac_cv_sched_setaffinity = new ; then
      AC_MSG_RESULT(ok)
      AC_DEFINE(HAVE_RECENT_SETAFFINITY,1,[config])
  else
@@ -539,8 +539,8 @@ AC_CACHE_VAL(ac_cv_ld_file_option,
 if [[ $ac_cv_ld_file_option = yes ]]; then
 	XENO_POSIX_WRAPPERS="-Wl,@`cd $srcdir && pwd`/src/skins/posix/posix.wrappers"
 else
-	XENO_POSIX_WRAPPERS=`while read wrap_option symbol; do \
-			echo -n "-Wl,$wrap_option,$symbol "; \
+	XENO_POSIX_WRAPPERS=`while read wrap_option symbol ; do \
+			echo -n "-Wl,$wrap_option,$symbol " ; \
 		done < $srcdir/src/skins/posix/posix.wrappers`
 fi
 AC_MSG_RESULT(${ac_cv_ld_file_option:-no})
@@ -640,7 +640,7 @@ AC_CONFIG_FILES([ \
        	include/vxworks/Makefile \
 	])
 
-if test \! x$XENO_MAYBE_DOCDIR = x; then
+if test \! x$XENO_MAYBE_DOCDIR = x ; then
       AC_CONFIG_FILES([ \
 	doc/Makefile \
 	doc/txt/Makefile \

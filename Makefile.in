@@ -658,38 +658,38 @@ dist-hook:
 
 dev devices:
 	@if test x`id -u` = x0; then \
-           sudo=; \
-        else if test \! "x`type $(SUDO)`" = x; then \
-           echo "sudo found (sudo is $(SUDO)), testing it..."; \
+           sudo= ; \
+        else if test \! "x`type $(SUDO)`" = x ; then \
+           echo "sudo found (sudo is $(SUDO)), testing it..." ; \
            $(SUDO) true && sudo="$(SUDO)" || { \
 echo '*** Warning: you are not super-user and sudo does not work, real-time\
-devices'; \
-echo '*** nodes will not be created.'; \
+devices' ; \
+echo '*** nodes will not be created.' ; \
 echo '*** If you do not create these devices by hand, Xenomai test programs\
-will not'; \
-echo '*** work.'; \
-echo '*** To create these devices please run "make devices" with super-user'; \
-echo '*** privileges.'; \
-             exit 0; }; \
-           echo sudo is working.; \
-           fi; \
-        fi; \
-        if test -r $(DESTDIR)/etc/udev/udev.rules; then \
-           for f in $(srcdir)/ksrc/nucleus/udev/*.rules; do \
+will not' ; \
+echo '*** work.' ; \
+echo '*** To create these devices please run "make devices" with super-user' ; \
+echo '*** privileges.' ; \
+             exit 0 ; } ; \
+           echo 'sudo is working.' ; \
+           fi ; \
+        fi ; \
+        if test -r $(DESTDIR)/etc/udev/udev.rules ; then \
+           for f in $(srcdir)/ksrc/nucleus/udev/*.rules ; do \
            b=`basename $$f` ; \
            grep -q Xenomai:`basename $$b .rules` $(DESTDIR)/etc/udev/udev.rules || \
-           $$sudo sh -c "( echo ; cat $$f ) >> $(DESTDIR)/etc/udev/udev.rules"; \
-           done; \
-	fi; \
-        $(mkinstalldirs) $(DESTDIR)/dev; \
-	for n in `seq 0 31`; do \
-           f="$(DESTDIR)/dev/rtp$$n"; \
-           if test \! -c $$f; then \
-              $$sudo mknod -m 666 $$f c 150 $$n; \
-           fi; \
+           $$sudo sh -c "( echo ; cat $$f ) >> $(DESTDIR)/etc/udev/udev.rules" ; \
+           done ; \
+	fi ; \
+        $(mkinstalldirs) $(DESTDIR)/dev ; \
+	for n in `seq 0 31` ; do \
+           f="$(DESTDIR)/dev/rtp$$n" ; \
+           if test \! -c $$f ; then \
+              $$sudo mknod -m 666 $$f c 150 $$n ; \
+           fi ; \
         done ; \
-        if test \! -c $(DESTDIR)/dev/rtheap; then \
-          $$sudo mknod -m 666 $(DESTDIR)/dev/rtheap c 10 254; \
+        if test \! -c $(DESTDIR)/dev/rtheap ; then \
+          $$sudo mknod -m 666 $(DESTDIR)/dev/rtheap c 10 254 ; \
         fi
 
 install-exec-local: devices
@@ -729,9 +729,9 @@ install-user:
 @XENO_BUILD_LINUX_TRUE@.PHONY: FORCE
 
 @XENO_BUILD_LINUX_TRUE@linux/install: linux/all
-@XENO_BUILD_LINUX_TRUE@	@targets=modules_install; \
+@XENO_BUILD_LINUX_TRUE@	@targets=modules_install ; \
 @XENO_BUILD_LINUX_TRUE@	sudo=; if test x`id -u` != x0 && test \! "x`type $(SUDO)`" = x && \
-@XENO_BUILD_LINUX_TRUE@	$(SUDO) true; then sudo=$(SUDO); targets="$$targets install"; fi && \
+@XENO_BUILD_LINUX_TRUE@	$(SUDO) true ; then sudo=$(SUDO) ; targets="$$targets install" ; fi && \
 @XENO_BUILD_LINUX_TRUE@	$(mkinstalldirs) $(DESTDIR) && \
 @XENO_BUILD_LINUX_TRUE@	$$sudo $(mkinstalldirs) $(DESTDIR)/boot && \
 @XENO_BUILD_LINUX_TRUE@	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
@@ -744,7 +744,7 @@ install-user:
 # installation target that simply copy the kernel image and System.map.
 @XENO_BUILD_LINUX_TRUE@linux/install_image: linux/all
 @XENO_BUILD_LINUX_TRUE@	sudo=; if test x`id -u` != x0 && test \! "x`type $(SUDO)`" = x && \
-@XENO_BUILD_LINUX_TRUE@	$(SUDO) true; then sudo=$(SUDO); fi && \
+@XENO_BUILD_LINUX_TRUE@	$(SUDO) true ; then sudo=$(SUDO) ; fi && \
 @XENO_BUILD_LINUX_TRUE@	$(mkinstalldirs) $(DESTDIR) && \
 @XENO_BUILD_LINUX_TRUE@	$$sudo $(mkinstalldirs) $(DESTDIR)/boot && \
 @XENO_BUILD_LINUX_TRUE@	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
@@ -755,8 +755,8 @@ install-user:
 
 @XENO_BUILD_LINUX_TRUE@distclean-linux:
 @XENO_BUILD_LINUX_TRUE@	@test -e linux/.config && \
-@XENO_BUILD_LINUX_TRUE@		mv linux/.config linux/.config.saved.xenomai; \
-@XENO_BUILD_LINUX_TRUE@	$(MAKE) linux/distclean; \
+@XENO_BUILD_LINUX_TRUE@		mv linux/.config linux/.config.saved.xenomai ; \
+@XENO_BUILD_LINUX_TRUE@	$(MAKE) linux/distclean ; \
 @XENO_BUILD_LINUX_TRUE@	test -e linux/.config.saved.xenomai && \
 @XENO_BUILD_LINUX_TRUE@		mv linux/.config.saved.xenomai linux/.config
 
