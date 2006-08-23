@@ -36,8 +36,6 @@
 #include "rtcan_list.h"
 
 
-#define RTCAN_DEV_VERS_0_1   0x0001
-
 /* Number of MSCAN devices the driver can handle */
 #define RTCAN_MAX_DEVICES    CONFIG_XENO_DRIVERS_RTCAN_MAX_DEVICES
 
@@ -45,10 +43,13 @@
  * for reception at the same time using Bind */
 #define RTCAN_MAX_RECEIVERS  CONFIG_XENO_DRIVERS_RTCAN_MAX_RECEIVERS
 
+/* Suppress handling of refcount if module support is not enabled
+ * or modules cannot be unloaded */
+#if defined(CONFIG_MODULES) && !defined(CONFIG_MODULE_UNLOAD)
+#define RTCAN_USE_REFCOUNT
+#endif
 
-/**
- *  rtcan_device
- */
+
 struct rtcan_device {
     unsigned int        version;
 
@@ -61,7 +62,9 @@ struct rtcan_device {
     rtdm_irq_t          irq_handle; /* RTDM IRQ handle */
  
     int                 ifindex;
+#ifdef RTCAN_USE_REFCOUNT
     atomic_t            refcount;
+#endif
 
     void                *priv;      /* pointer to chip private data */
 
@@ -153,8 +156,13 @@ void rtcan_dev_alloc_name (struct rtcan_device *dev, const char *name_mask);
 struct rtcan_device *rtcan_dev_get_by_name(const char *if_name);
 struct rtcan_device *rtcan_dev_get_by_index(int ifindex);
 
+#ifdef RTCAN_USE_REFCOUNT
 #define rtcan_dev_reference(dev)      atomic_inc(&(dev)->refcount)
 #define rtcan_dev_dereference(dev)    atomic_dec(&(dev)->refcount)
+#else
+#define rtcan_dev_reference(dev)      do {} while(0)
+#define rtcan_dev_dereference(dev)    do {} while(0)
+#endif
 
 int rtcan_dev_create_proc(struct rtcan_device* dev);
 void rtcan_dev_remove_proc(struct rtcan_device* dev);

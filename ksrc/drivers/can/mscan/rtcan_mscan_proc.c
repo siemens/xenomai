@@ -20,13 +20,13 @@
 #include <linux/module.h>
 #include <linux/ioport.h>
 #include <linux/delay.h>
-#include <asm/mpc5xxx.h>
 
 #include <rtdm/rtdm_driver.h>
 
 /* CAN device profile */
 #include "rtcan_dev.h"
 #include "rtcan_internal.h"
+#include "rtcan_mscan_regs.h"
 
 #define MSCAN_REG_ARGS(reg) "%-8s 0x%02x\n", #reg, (int)((regs)->reg) & 0xff
 
@@ -36,7 +36,7 @@ static int rtcan_mscan_proc_regs(char *buf, char **start, off_t offset,
 				 int count, int *eof, void *data)
 {
     struct rtcan_device *dev = (struct rtcan_device *)data;
-    struct mpc5xxx_mscan *regs = (struct mpc5xxx_mscan *)dev->base_addr;
+    struct mscan_regs *regs = (struct mscan_regs *)dev->base_addr;
     struct mpc5xxx_gpio *gpio = (struct mpc5xxx_gpio *)MPC5xxx_GPIO;
     RTCAN_PROC_PRINT_VARS(80);
 
@@ -44,24 +44,24 @@ static int rtcan_mscan_proc_regs(char *buf, char **start, off_t offset,
 	goto done;
     if (!RTCAN_PROC_PRINT("canctl0  0x%02x%s%s%s%s%s%s%s%s\n",
 			  regs->canctl0,
-			  (regs->canctl0 & MPC5xxx_MSCAN_RXFRM) ? " rxfrm" :"",
-			  (regs->canctl0 & MPC5xxx_MSCAN_RXACT) ? " rxact" :"",
-			  (regs->canctl0 & MPC5xxx_MSCAN_CSWAI) ? " cswai" :"",
-			  (regs->canctl0 & MPC5xxx_MSCAN_SYNCH) ? " synch" :"",
-			  (regs->canctl0 & MPC5xxx_MSCAN_TIME)  ? " time"  :"",
-			  (regs->canctl0 & MPC5xxx_MSCAN_WUPE)  ? " wupe"  :"",
-			  (regs->canctl0 & MPC5xxx_MSCAN_SLPRQ) ? " slprq" :"",
-			  (regs->canctl0 & MPC5xxx_MSCAN_INITRQ)? " initrq":"" ))
+			  (regs->canctl0 & MSCAN_RXFRM) ? " rxfrm" :"",
+			  (regs->canctl0 & MSCAN_RXACT) ? " rxact" :"",
+			  (regs->canctl0 & MSCAN_CSWAI) ? " cswai" :"",
+			  (regs->canctl0 & MSCAN_SYNCH) ? " synch" :"",
+			  (regs->canctl0 & MSCAN_TIME)  ? " time"  :"",
+			  (regs->canctl0 & MSCAN_WUPE)  ? " wupe"  :"",
+			  (regs->canctl0 & MSCAN_SLPRQ) ? " slprq" :"",
+			  (regs->canctl0 & MSCAN_INITRQ)? " initrq":"" ))
 	goto done;
     if (!RTCAN_PROC_PRINT("canctl1  0x%02x%s%s%s%s%s%s%s\n",
 			  regs->canctl1,
-			  (regs->canctl1 & MPC5xxx_MSCAN_CANE)  ? " cane"  :"",
-			  (regs->canctl1 & MPC5xxx_MSCAN_CLKSRC)? " clksrc":"",
-			  (regs->canctl1 & MPC5xxx_MSCAN_LOOPB) ? " loopb" :"",
-			  (regs->canctl1 & MPC5xxx_MSCAN_LISTEN)? " listen":"",
-			  (regs->canctl1 & MPC5xxx_MSCAN_WUPM)  ? " wump"  :"",
-			  (regs->canctl1 & MPC5xxx_MSCAN_SLPAK) ? " slpak" :"",
-			  (regs->canctl1 & MPC5xxx_MSCAN_INITAK)? " initak":""))
+			  (regs->canctl1 & MSCAN_CANE)  ? " cane"  :"",
+			  (regs->canctl1 & MSCAN_CLKSRC)? " clksrc":"",
+			  (regs->canctl1 & MSCAN_LOOPB) ? " loopb" :"",
+			  (regs->canctl1 & MSCAN_LISTEN)? " listen":"",
+			  (regs->canctl1 & MSCAN_WUPM)  ? " wump"  :"",
+			  (regs->canctl1 & MSCAN_SLPAK) ? " slpak" :"",
+			  (regs->canctl1 & MSCAN_INITAK)? " initak":""))
 	goto done;
     if (!RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canbtr0 )) |
 	!RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canbtr1 )) |

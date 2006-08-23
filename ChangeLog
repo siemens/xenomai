@@ -1,3 +1,17 @@
+2006-08-23  Wolfgang Grandegger <wg@grandegger.com>
+
+	* ksrc/drivers/can/rtcan_dev.c, ksrc/drivers/can/rtcan_dev.h,
+	ksrc/drivers/can/rtcan_modules.c: Suppress handling of refcount 
+	if module support is not enabled or modules cannot be unloaded.
+
+	* ksrc/drivers/can/mscan/rtcan_mscan.c,
+	ksrc/drivers/can/mscan/rtcan_mscan_proc.c,
+	ksrc/drivers/can/mscan/rtcan_mscan_regs.h: Make the MSCAN driver
+	work on Linux 2.6. We now use our own set of MSCAN register
+	definitions because they differ between 2.4 and 2.6 (prefix).
+	
+	* scripts/Modules.frag: bug fix for making PEAK device drivers.
+
 2006-08-23  Paul Corner <paul_c@tuxcnc.org>
 
 	* configure.in: Fix possibly ambiguous use of semicolons and
