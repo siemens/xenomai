@@ -1,3 +1,9 @@
+2006-08-23  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (do_sigwake_event, xnshadow_relax): Use
+	TASK_NOWAKEUP when available, to prevent Linux from waking up the
+	signaled task until it has been relaxed.
+
 2006-08-21  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/arch/powerpc/Kconfig: Make CONFIG_XENO_HW_FPU depend on

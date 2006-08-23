@@ -232,6 +232,35 @@ static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
 #endif /* CONFIG_PREEMPT */
 #endif /* !TASK_ATOMICSWITCH */
 
+#ifndef TASK_NOWAKEUP
+/* Yet another one possibly missing from older Adeos patches. */
+static inline void set_task_nowakeup(struct task_struct *p)
+{
+    if (p->state & TASK_INTERRUPTIBLE)
+	set_task_state(p,
+		       (p->state & ~TASK_INTERRUPTIBLE) |
+		       TASK_UNINTERRUPTIBLE);
+}
+static inline void clear_task_nowakeup(struct task_struct *p)
+{
+    if (p->state & TASK_UNINTERRUPTIBLE)
+	set_task_state(p, (p->state & ~TASK_UNINTERRUPTIBLE) |
+		       TASK_INTERRUPTIBLE);
+
+}
+#else /* !TASK_NOWAKEUP */
+static inline void set_task_nowakeup(struct task_struct *p)
+{
+    if (p->state & (TASK_INTERRUPTIBLE|TASK_UNINTERRUPTIBLE))
+	set_task_state(p, p->state | TASK_NOWAKEUP);
+
+}
+static inline void clear_task_nowakeup(struct task_struct *p)
+{
+    set_task_state(p, p->state & ~TASK_NOWAKEUP);
+}
+#endif /* TASK_NOWAKEUP */
+
 #define rthal_catch_taskexit(hdlr)	\
     ipipe_catch_event(ipipe_root_domain,IPIPE_EVENT_EXIT,hdlr)
 #define rthal_catch_sigwake(hdlr)	\
