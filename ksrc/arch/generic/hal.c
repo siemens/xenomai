@@ -620,25 +620,9 @@ static int hal_read_proc(char *page,
 {
     int len, major, minor, patchlevel;
 
-#ifdef CONFIG_IPIPE
     major = IPIPE_MAJOR_NUMBER;
     minor = IPIPE_MINOR_NUMBER;
     patchlevel = IPIPE_PATCH_NUMBER;
-#else /* !CONFIG_IPIPE */
-    /* Canonicalize the Adeos relno-candidate information to some
-       major.minor.patchlevel format to be parser-friendly. */
-
-    major = ADEOS_MAJOR_NUMBER;
-
-    if (ADEOS_MINOR_NUMBER < 255) {
-        --major;
-        minor = 99;
-        patchlevel = ADEOS_MINOR_NUMBER;
-    } else {
-        minor = 0;
-        patchlevel = 0;
-    }
-#endif /* CONFIG_IPIPE */
 
     len = sprintf(page, "%d.%d-%.2d\n", major, minor, patchlevel);
     len -= off;
