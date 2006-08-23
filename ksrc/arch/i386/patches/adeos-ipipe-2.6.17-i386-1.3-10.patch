@@ -74,7 +74,7 @@
  struct task_struct;
  
 --- 2.6.17/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.17-ipipe/include/linux/ipipe.h	2006-07-19 18:11:28.000000000 +0200
++++ 2.6.17-ipipe/include/linux/ipipe.h	2006-08-16 15:18:01.000000000 +0200
 @@ -0,0 +1,739 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
@@ -325,14 +325,14 @@
 +#define read_unlock_hw(lock)		do { (void)(lock); } while (0)
 +#endif /* CONFIG_SMP || CONFIG_DEBUG_SPINLOCK */
 +#else	/* !__RAW_SPIN_LOCK_UNLOCKED */
-+#define spin_lock_hw(x)		_spin_lock(x)
-+#define spin_unlock_hw(x)		_spin_unlock(x)
-+#define spin_trylock_hw(x)		_spin_trylock(x)
-+#define write_lock_hw(x)		_write_lock(x)
-+#define write_unlock_hw(x)		_write_unlock(x)
-+#define write_trylock_hw(x)		_write_trylock(x)
-+#define read_lock_hw(x)		_read_lock(x)
-+#define read_unlock_hw(x)		_read_unlock(x)
++#define spin_lock_hw(x)		_raw_spin_lock(x)
++#define spin_unlock_hw(x)		_raw_spin_unlock(x)
++#define spin_trylock_hw(x)		_raw_spin_trylock(x)
++#define write_lock_hw(x)		_raw_write_lock(x)
++#define write_unlock_hw(x)		_raw_write_unlock(x)
++#define write_trylock_hw(x)		_raw_write_trylock(x)
++#define read_lock_hw(x)		_raw_read_lock(x)
++#define read_unlock_hw(x)		_raw_read_unlock(x)
 +#endif	/* __RAW_SPIN_LOCK_UNLOCKED */
 +
 +typedef spinlock_t			ipipe_spinlock_t;
@@ -889,7 +889,7 @@
  
  #else
 --- 2.6.17/include/linux/sched.h	2006-06-18 03:49:35.000000000 +0200
-+++ 2.6.17-ipipe/include/linux/sched.h	2006-06-20 11:58:37.000000000 +0200
++++ 2.6.17-ipipe/include/linux/sched.h	2006-08-23 12:06:34.000000000 +0200
 @@ -4,6 +4,7 @@
  #include <asm/param.h>	/* for HZ */
  
@@ -898,19 +898,21 @@
  #include <linux/capability.h>
  #include <linux/threads.h>
  #include <linux/kernel.h>
-@@ -131,6 +132,11 @@ extern unsigned long nr_iowait(void);
+@@ -131,6 +132,13 @@ extern unsigned long nr_iowait(void);
  #define EXIT_DEAD		32
  /* in tsk->state again */
  #define TASK_NONINTERACTIVE	64
 +#ifdef CONFIG_IPIPE
 +#define TASK_ATOMICSWITCH	512
++#define TASK_NOWAKEUP          1024
 +#else  /* !CONFIG_IPIPE */
 +#define TASK_ATOMICSWITCH	0
++#define TASK_NOWAKEUP          0
 +#endif /* CONFIG_IPIPE */
  
  #define __set_task_state(tsk, state_value)		\
  	do { (tsk)->state = (state_value); } while (0)
-@@ -883,6 +889,9 @@ struct task_struct {
+@@ -883,6 +891,9 @@ struct task_struct {
  
  	atomic_t fs_excl;	/* holding fs exclusive resources */
  	struct rcu_head rcu;
@@ -998,7 +1000,7 @@
  
  bad_fork_cleanup_namespace:
 --- 2.6.17/kernel/ipipe/Kconfig	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.17-ipipe/kernel/ipipe/Kconfig	2006-07-03 17:32:57.000000000 +0200
++++ 2.6.17-ipipe/kernel/ipipe/Kconfig	2006-08-08 19:49:19.000000000 +0200
 @@ -0,0 +1,6 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
@@ -2590,14 +2592,23 @@
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
 --- 2.6.17/kernel/sched.c	2006-06-18 03:49:35.000000000 +0200
-+++ 2.6.17-ipipe/kernel/sched.c	2006-06-20 11:58:37.000000000 +0200
++++ 2.6.17-ipipe/kernel/sched.c	2006-08-23 13:20:55.000000000 +0200
+@@ -1173,7 +1173,7 @@ static int try_to_wake_up(task_t *p, uns
+ 
+ 	rq = task_rq_lock(p, &flags);
+ 	old_state = p->state;
+-	if (!(old_state & state))
++	if (!(old_state & state) || (old_state & TASK_NOWAKEUP))
+ 		goto out;
+ 
+ 	if (p->array)
 @@ -2903,12 +2903,17 @@ asmlinkage void __sched schedule(void)
  	unsigned long run_time;
  	int cpu, idx, new_prio;
  
 +#ifdef CONFIG_IPIPE
-+	if (unlikely(ipipe_current_domain != ipipe_root_domain))
-+		goto need_resched;
++	if (unlikely(!ipipe_root_domain_p))
++		return;
 +#endif /* CONFIG_IPIPE */
  	/*
  	 * Test if we are atomic.  Since do_exit() needs to call into
@@ -2610,27 +2621,21 @@
  		printk(KERN_ERR "BUG: scheduling while atomic: "
  			"%s/0x%08x/%d\n",
  			current->comm, preempt_count(), current->pid);
-@@ -2916,8 +2921,19 @@ asmlinkage void __sched schedule(void)
+@@ -2916,8 +2921,13 @@ asmlinkage void __sched schedule(void)
  	}
  	profile_hit(SCHED_PROFILING, __builtin_return_address(0));
  
 +	if (unlikely(current->state & TASK_ATOMICSWITCH)) {
 +		current->state &= ~TASK_ATOMICSWITCH;
-+		goto preemption_off;
++		goto need_resched_nodisable;
 +	}
  need_resched:
  	preempt_disable();
-+preemption_off:
-+#ifdef CONFIG_IPIPE
-+	if (unlikely(ipipe_current_domain != ipipe_root_domain)) {
-+		preempt_enable();
-+		return;
-+	}
-+#endif /* CONFIG_IPIPE */
++need_resched_nodisable:
  	prev = current;
  	release_kernel_lock(prev);
  need_resched_nonpreemptible:
-@@ -3055,6 +3071,8 @@ switch_tasks:
+@@ -3055,6 +3065,8 @@ switch_tasks:
  		prepare_task_switch(rq, next);
  		prev = context_switch(rq, prev, next);
  		barrier();
@@ -2639,19 +2644,28 @@
  		/*
  		 * this_rq must be evaluated again because prev may have moved
  		 * CPUs since it called schedule(), thus the 'rq' on its stack
-@@ -3087,6 +3105,11 @@ asmlinkage void __sched preempt_schedule
+@@ -3068,7 +3080,7 @@ switch_tasks:
+ 	if (unlikely(reacquire_kernel_lock(prev) < 0))
+ 		goto need_resched_nonpreemptible;
+ 	preempt_enable_no_resched();
+-	if (unlikely(test_thread_flag(TIF_NEED_RESCHED)))
++	if (unlikely(test_thread_flag(TIF_NEED_RESCHED) && ipipe_root_domain_p))
+ 		goto need_resched;
+ }
+ 
+@@ -3087,6 +3099,11 @@ asmlinkage void __sched preempt_schedule
  	struct task_struct *task = current;
  	int saved_lock_depth;
  #endif
 +#ifdef CONFIG_IPIPE
 +	/* Do not reschedule over non-Linux domains. */
-+	if (ipipe_current_domain != ipipe_root_domain)
++	if (unlikely(!ipipe_root_domain_p))
 +		return;
 +#endif /* CONFIG_IPIPE */
  	/*
  	 * If there is a non-zero preempt_count or interrupts are disabled,
  	 * we do not want to preempt the current task.  Just return..
-@@ -3725,6 +3748,7 @@ recheck:
+@@ -3725,6 +3742,7 @@ recheck:
  		deactivate_task(p, rq);
  	oldprio = p->prio;
  	__setscheduler(p, policy, param->sched_priority);
@@ -2659,7 +2673,7 @@
  	if (array) {
  		__activate_task(p, rq);
  		/*
-@@ -6252,3 +6276,50 @@ void set_curr_task(int cpu, task_t *p)
+@@ -6252,3 +6270,50 @@ void set_curr_task(int cpu, task_t *p)
  }
  
  #endif
@@ -5320,7 +5334,7 @@
  #define shutdown_level_ioapic	mask_IO_APIC_irq
  #define enable_level_ioapic	unmask_IO_APIC_irq
 --- 2.6.17/include/asm-i386/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.17-ipipe/include/asm-i386/ipipe.h	2006-07-28 19:13:27.000000000 +0200
++++ 2.6.17-ipipe/include/asm-i386/ipipe.h	2006-08-23 13:16:35.000000000 +0200
 @@ -0,0 +1,281 @@
 +/*   -*- linux-c -*-
 + *   include/asm-i386/ipipe.h
@@ -5353,10 +5367,10 @@
 +#include <linux/threads.h>
 +#include <irq_vectors.h>
 +
-+#define IPIPE_ARCH_STRING	"1.3-09"
++#define IPIPE_ARCH_STRING	"1.3-10"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	3
-+#define IPIPE_PATCH_NUMBER	9
++#define IPIPE_PATCH_NUMBER	10
 +
 +#ifdef CONFIG_X86_LOCAL_APIC
 +/* We want to cover the whole IRQ space when the APIC is enabled. */

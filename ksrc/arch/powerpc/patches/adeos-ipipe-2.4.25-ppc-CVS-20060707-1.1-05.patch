@@ -1196,7 +1196,7 @@ diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/include/asm-ppc/hw_irq.h 2.4
  #define mask_irq(irq) ({if (irq_desc[irq].handler && irq_desc[irq].handler->disable) irq_desc[irq].handler->disable(irq);})
 diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/include/asm-ppc/ipipe.h 2.4.25-ppc-ipipe/include/asm-ppc/ipipe.h
 --- linuxppc_2_4_denx-20060707/include/asm-ppc/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.4.25-ppc-ipipe/include/asm-ppc/ipipe.h	2006-07-06 16:20:23.000000000 +0200
++++ 2.4.25-ppc-ipipe/include/asm-ppc/ipipe.h	2006-08-23 19:29:24.000000000 +0200
 @@ -0,0 +1,206 @@
 +/* -*- linux-c -*-
 + * include/asm-ppc/ipipe.h
@@ -1231,10 +1231,10 @@ diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/include/asm-ppc/ipipe.h 2.4.
 +#include <asm/bitops.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.1-04"
++#define IPIPE_ARCH_STRING	"1.1-05"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	1
-+#define IPIPE_PATCH_NUMBER	4
++#define IPIPE_PATCH_NUMBER	5
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
@@ -2185,7 +2185,7 @@ diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/include/linux/ipipe.h 2.4.25
 +#endif	/* !__LINUX_IPIPE_H */
 diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/include/linux/sched.h 2.4.25-ppc-ipipe/include/linux/sched.h
 --- linuxppc_2_4_denx-20060707/include/linux/sched.h	2006-04-28 17:21:04.000000000 +0200
-+++ 2.4.25-ppc-ipipe/include/linux/sched.h	2006-05-09 10:04:44.000000000 +0200
++++ 2.4.25-ppc-ipipe/include/linux/sched.h	2006-08-23 17:56:19.000000000 +0200
 @@ -6,6 +6,7 @@
  extern unsigned long event;
  
@@ -2194,7 +2194,19 @@ diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/include/linux/sched.h 2.4.25
  #include <linux/binfmts.h>
  #include <linux/threads.h>
  #include <linux/kernel.h>
-@@ -418,6 +419,9 @@ struct task_struct {
+@@ -91,6 +92,11 @@ extern int last_pid;
+ #define TASK_UNINTERRUPTIBLE	2
+ #define TASK_ZOMBIE		4
+ #define TASK_STOPPED		8
++#ifdef CONFIG_IPIPE
++#define TASK_NOWAKEUP          1024
++#else  /* !CONFIG_IPIPE */
++#define TASK_NOWAKEUP          0
++#endif /* CONFIG_IPIPE */
+ 
+ #define __set_task_state(tsk, state_value)		\
+ 	do { (tsk)->state = (state_value); } while (0)
+@@ -418,6 +424,9 @@ struct task_struct {
  #ifdef CONFIG_PDSP1881_DISPLAY
  	char PName[8]; /* 8 characters from the ProcessName for the Display */
  #endif
@@ -3889,7 +3901,7 @@ diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/kernel/printk.c 2.4.25-ppc-i
  /**
 diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/kernel/sched.c 2.4.25-ppc-ipipe/kernel/sched.c
 --- linuxppc_2_4_denx-20060707/kernel/sched.c	2006-04-28 17:21:04.000000000 +0200
-+++ 2.4.25-ppc-ipipe/kernel/sched.c	2006-04-28 17:51:10.000000000 +0200
++++ 2.4.25-ppc-ipipe/kernel/sched.c	2006-08-23 17:56:33.000000000 +0200
 @@ -29,6 +29,7 @@
  #include <linux/completion.h>
  #include <linux/prefetch.h>
@@ -3898,7 +3910,16 @@ diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/kernel/sched.c 2.4.25-ppc-ip
  
  #include <asm/uaccess.h>
  #include <asm/mmu_context.h>
-@@ -538,6 +539,48 @@ asmlinkage void schedule_tail(struct tas
+@@ -359,6 +360,8 @@ static inline int try_to_wake_up(struct 
+ 	 * We want the common case fall through straight, thus the goto.
+ 	 */
+ 	spin_lock_irqsave(&runqueue_lock, flags);
++	if (p->state & TASK_NOWAKEUP)
++		goto out;
+ 	p->state = TASK_RUNNING;
+ 	if (task_on_runqueue(p))
+ 		goto out;
+@@ -538,6 +541,48 @@ asmlinkage void schedule_tail(struct tas
  	__schedule_tail(prev);
  }
  
@@ -3947,7 +3968,7 @@ diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/kernel/sched.c 2.4.25-ppc-ip
  /*
   *  'schedule()' is the scheduler function. It's a very simple and nice
   * scheduler: it's not perfect, but certainly works for most things.
-@@ -672,7 +715,8 @@ repeat_schedule:
+@@ -672,7 +717,8 @@ repeat_schedule:
  	 * but prev is set to (the just run) 'last' process by switch_to().
  	 * This might sound slightly confusing but makes tons of sense.
  	 */
@@ -3957,7 +3978,7 @@ diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/kernel/sched.c 2.4.25-ppc-ip
  	{
  		struct mm_struct *mm = next->mm;
  		struct mm_struct *oldmm = prev->active_mm;
-@@ -706,6 +750,9 @@ repeat_schedule:
+@@ -706,6 +752,9 @@ repeat_schedule:
  	}
  #endif
  	switch_to(prev, next, prev);
@@ -3967,7 +3988,7 @@ diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/kernel/sched.c 2.4.25-ppc-ip
  	__schedule_tail(prev);
  
  same_process:
-@@ -1004,6 +1051,7 @@ static int setscheduler(pid_t pid, int p
+@@ -1004,6 +1053,7 @@ static int setscheduler(pid_t pid, int p
  	retval = 0;
  	p->policy = policy;
  	p->rt_priority = lp.sched_priority;
@@ -3975,7 +3996,7 @@ diff -uNrp --exclude CVS linuxppc_2_4_denx-20060707/kernel/sched.c 2.4.25-ppc-ip
  
  	current->need_resched = 1;
  
-@@ -1408,3 +1456,33 @@ void __init sched_init(void)
+@@ -1408,3 +1458,33 @@ void __init sched_init(void)
  	atomic_inc(&init_mm.mm_count);
  	enter_lazy_tlb(&init_mm, current, cpu);
  }
