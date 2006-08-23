@@ -45,7 +45,7 @@ AM_MAINTAINER_MODE
 AC_PROG_LIBTOOL
 AM_PROG_LEX
 
-if test \! -r $srcdir/../ksrc/nucleus; then
+if test \! -r $srcdir/../ksrc/nucleus ; then
     AC_MSG_ERROR([Missing Xenomai source tree in parent directory])
 fi
 
@@ -107,15 +107,15 @@ AC_ARG_WITH(gcc-tarball,
 	CONFIG_XENO_MVM_GCC_TARBALL="$withval"
     ])
 
-if test x$CONFIG_XENO_MVM_GCC_TARBALL = x; then
+if test x$CONFIG_XENO_MVM_GCC_TARBALL = x ; then
    CONFIG_XENO_MVM_GCC_TARBALL="/tmp/gcc-2.95.3.tar.bz2"
 fi
 
-if test \! -r $prefix/libexec/gcic/.gcic-installed; then
-   if test \! -r "${CONFIG_XENO_MVM_GCC_TARBALL}"; then
+if test \! -r $prefix/libexec/gcic/.gcic-installed ; then
+   if test \! -r "${CONFIG_XENO_MVM_GCC_TARBALL}" ; then
       dnl We are going to need the source GCC tarball to build the
       dnl instrumenter and we cannot find it: this is bad news.
-      if test x$CONFIG_XENO_MVM_GCC_TARBALL = x; then
+      if test x$CONFIG_XENO_MVM_GCC_TARBALL = x ; then
          AC_MSG_RESULT([unspecified (use --with-gcc-tarball to specify one)])
       else
          AC_MSG_RESULT([not found at $CONFIG_XENO_MVM_GCC_TARBALL])
@@ -316,17 +316,17 @@ AC_CHECK_HEADER(netinet/tcp.h,
 )
 MVM_LDADD=
 AC_CHECK_LIB(elf, elf_begin,
-	[MVM_LDADD="$MVM_LDADD -lelf"; AC_DEFINE(HAVE_LIBELF,1,[config])],
+	[MVM_LDADD="$MVM_LDADD -lelf" ; AC_DEFINE(HAVE_LIBELF,1,[config])],
 	AC_MSG_ERROR([Cannot find libelf (development version) on this system])
 )
 AC_CHECK_LIB(dl, dlopen,
-	[MVM_LDADD="$MVM_LDADD -ldl"; AC_DEFINE(HAVE_LIBDL,1,[config])]
+	[MVM_LDADD="$MVM_LDADD -ldl" ; AC_DEFINE(HAVE_LIBDL,1,[config])]
 )
 AC_CHECK_LIB(nsl, gethostbyname,
-	[MVM_LDADD="$MVM_LDADD -lnsl"; AC_DEFINE(HAVE_LIBNSL,1,[config])]
+	[MVM_LDADD="$MVM_LDADD -lnsl" ; AC_DEFINE(HAVE_LIBNSL,1,[config])]
 )
 AC_CHECK_LIB(socket, connect,
-	[MVM_LDADD="$MVM_LDADD -lsocket"; AC_DEFINE(HAVE_LIBSOCKET,1,[config])]
+	[MVM_LDADD="$MVM_LDADD -lsocket" ; AC_DEFINE(HAVE_LIBSOCKET,1,[config])]
 )
 AC_CHECK_LIB(png, png_read_init, [LIBPNG_OK=1],
 	AC_MSG_ERROR([Cannot find libpng (development version) on this system])

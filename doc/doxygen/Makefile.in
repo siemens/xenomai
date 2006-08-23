@@ -407,8 +407,8 @@ uninstall-am: uninstall-info-am uninstall-local
 @CONFIG_XENO_DOC_DOX_TRUE@	$(DOXYGEN) $(DOXYDOC_OPTS)
 
 @CONFIG_XENO_DOC_DOX_TRUE@distclean-local:
-@CONFIG_XENO_DOC_DOX_TRUE@	for dir in $(HTML_DOCS); do \
-@CONFIG_XENO_DOC_DOX_TRUE@	    if test -d $$dir; then $(RM) -R $$dir; fi; \
+@CONFIG_XENO_DOC_DOX_TRUE@	for dir in $(HTML_DOCS) ; do \
+@CONFIG_XENO_DOC_DOX_TRUE@	    if test -d $$dir ; then $(RM) -R $$dir ; fi ; \
 @CONFIG_XENO_DOC_DOX_TRUE@	done
 
 @CONFIG_XENO_DOC_DOX_TRUE@.PHONY: doxygen-api

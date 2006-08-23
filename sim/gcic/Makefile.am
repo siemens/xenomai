@@ -14,7 +14,7 @@ INCLUDES = \
 
 GCCTOP=$(shell basename @MVM_GCC_TARBALL@ | sed -e 's,^\(.*\)\.tar.*,\1,')
 GCCVER=$(shell basename @MVM_GCC_TARBALL@ | sed -e 's,gcc-\(.*\)\.tar.*,\1,g')
-GCCDEP=$(shell test -r $(libexecdir)/gcic/.gcic-installed || echo $(libexecdir)/gcic/.gcic-installed)
+GCCDEP=$(shell test -r $(libexecdir)/gcic/.gcic-installed || echo "$(libexecdir)/gcic/.gcic-installed")
 
 all-local: $(GCCDEP)
 
@@ -31,7 +31,7 @@ $(GCCTOP)/.gcic-patched: $(GCCTOP)/.gcic-untarred
 	$(srcdir)/gcc-$(GCCVER).patch && touch $@
 
 gcc-build/.gcic-configured: $(GCCTOP)/.gcic-patched $(top_builddir)/config.status
-	@( $(RM) -Rf gcc-build; mkdir gcc-build && cd gcc-build && \
+	@( $(RM) -Rf gcc-build ; mkdir gcc-build && cd gcc-build && \
 	LC_ALL=C CC=$(CC) ../$(GCCTOP)/configure --prefix=$(libexecdir)/gcic \
 	--with-gnu-ld --with-gnu-as && cd .. ) && touch $@
 

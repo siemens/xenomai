@@ -13,38 +13,38 @@ dist-hook:
 
 dev devices:
 	@if test x`id -u` = x0; then \
-           sudo=; \
-        else if test \! "x`type $(SUDO)`" = x; then \
-           echo "sudo found (sudo is $(SUDO)), testing it..."; \
+           sudo= ; \
+        else if test \! "x`type $(SUDO)`" = x ; then \
+           echo "sudo found (sudo is $(SUDO)), testing it..." ; \
            $(SUDO) true && sudo="$(SUDO)" || { \
 echo '*** Warning: you are not super-user and sudo does not work, real-time\
-devices'; \
-echo '*** nodes will not be created.'; \
+devices' ; \
+echo '*** nodes will not be created.' ; \
 echo '*** If you do not create these devices by hand, Xenomai test programs\
-will not'; \
-echo '*** work.'; \
-echo '*** To create these devices please run "make devices" with super-user'; \
-echo '*** privileges.'; \
-             exit 0; }; \
-           echo sudo is working.; \
-           fi; \
-        fi; \
-        if test -r $(DESTDIR)/etc/udev/udev.rules; then \
-           for f in $(srcdir)/ksrc/nucleus/udev/*.rules; do \
+will not' ; \
+echo '*** work.' ; \
+echo '*** To create these devices please run "make devices" with super-user' ; \
+echo '*** privileges.' ; \
+             exit 0 ; } ; \
+           echo 'sudo is working.' ; \
+           fi ; \
+        fi ; \
+        if test -r $(DESTDIR)/etc/udev/udev.rules ; then \
+           for f in $(srcdir)/ksrc/nucleus/udev/*.rules ; do \
            b=`basename $$f` ; \
            grep -q Xenomai:`basename $$b .rules` $(DESTDIR)/etc/udev/udev.rules || \
-           $$sudo sh -c "( echo ; cat $$f ) >> $(DESTDIR)/etc/udev/udev.rules"; \
-           done; \
-	fi; \
-        $(mkinstalldirs) $(DESTDIR)/dev; \
-	for n in `seq 0 31`; do \
-           f="$(DESTDIR)/dev/rtp$$n"; \
-           if test \! -c $$f; then \
-              $$sudo mknod -m 666 $$f c 150 $$n; \
-           fi; \
+           $$sudo sh -c "( echo ; cat $$f ) >> $(DESTDIR)/etc/udev/udev.rules" ; \
+           done ; \
+	fi ; \
+        $(mkinstalldirs) $(DESTDIR)/dev ; \
+	for n in `seq 0 31` ; do \
+           f="$(DESTDIR)/dev/rtp$$n" ; \
+           if test \! -c $$f ; then \
+              $$sudo mknod -m 666 $$f c 150 $$n ; \
+           fi ; \
         done ; \
-        if test \! -c $(DESTDIR)/dev/rtheap; then \
-          $$sudo mknod -m 666 $(DESTDIR)/dev/rtheap c 10 254; \
+        if test \! -c $(DESTDIR)/dev/rtheap ; then \
+          $$sudo mknod -m 666 $(DESTDIR)/dev/rtheap c 10 254 ; \
         fi
 
 install-exec-local: devices
@@ -88,9 +88,9 @@ linux/.xenomai-prepared: config.status
 .PHONY: FORCE
 
 linux/install: linux/all
-	@targets=modules_install; \
+	@targets=modules_install ; \
 	sudo=; if test x`id -u` != x0 && test \! "x`type $(SUDO)`" = x && \
-	$(SUDO) true; then sudo=$(SUDO); targets="$$targets install"; fi && \
+	$(SUDO) true ; then sudo=$(SUDO) ; targets="$$targets install" ; fi && \
 	$(mkinstalldirs) $(DESTDIR) && \
 	$$sudo $(mkinstalldirs) $(DESTDIR)/boot && \
 	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
@@ -103,7 +103,7 @@ linux/install: linux/all
 # installation target that simply copy the kernel image and System.map.
 linux/install_image: linux/all
 	sudo=; if test x`id -u` != x0 && test \! "x`type $(SUDO)`" = x && \
-	$(SUDO) true; then sudo=$(SUDO); fi && \
+	$(SUDO) true ; then sudo=$(SUDO) ; fi && \
 	$(mkinstalldirs) $(DESTDIR) && \
 	$$sudo $(mkinstalldirs) $(DESTDIR)/boot && \
 	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
@@ -114,8 +114,8 @@ linux/install_image: linux/all
 
 distclean-linux:
 	@test -e linux/.config && \
-		mv linux/.config linux/.config.saved.xenomai; \
-	$(MAKE) linux/distclean; \
+		mv linux/.config linux/.config.saved.xenomai ; \
+	$(MAKE) linux/distclean ; \
 	test -e linux/.config.saved.xenomai && \
 		mv linux/.config.saved.xenomai linux/.config
 

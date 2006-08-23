@@ -11,7 +11,7 @@ librtdm_la_CPPFLAGS = \
 	-I$(top_srcdir)/include
 
 install-exec-hook:
-	for la in $(lib_LTLIBRARIES); do \
-	    sed -e 's/shouldnotlink=yes/shouldnotlink=no/' $(DESTDIR)$(libdir)/$$la > $(DESTDIR)$(libdir)/$$la.patched; \
-	    mv $(DESTDIR)$(libdir)/$$la.patched $(DESTDIR)$(libdir)/$$la; \
+	for la in $(lib_LTLIBRARIES) ; do \
+	    sed -e 's/shouldnotlink=yes/shouldnotlink=no/' $(DESTDIR)$(libdir)/$$la > $(DESTDIR)$(libdir)/$$la.patched ; \
+	    mv $(DESTDIR)$(libdir)/$$la.patched $(DESTDIR)$(libdir)/$$la ; \
 	done
