@@ -79,16 +79,22 @@ static inline struct rtcan_device *__rtcan_dev_get_by_name(const char *name)
 struct rtcan_device *rtcan_dev_get_by_name(const char *name)
 {
     struct rtcan_device *dev;
+#ifdef RTCAN_USE_REFCOUNT
     rtdm_lockctx_t context;
+#endif
 
 
+#ifdef RTCAN_USE_REFCOUNT
     rtdm_lock_get_irqsave(&rtcan_devices_rt_lock, context);
+#endif
 
     dev = __rtcan_dev_get_by_name(name);
+
+#ifdef RTCAN_USE_REFCOUNT
     if (dev != NULL)
         atomic_inc(&dev->refcount);
-
     rtdm_lock_put_irqrestore(&rtcan_devices_rt_lock, context);
+#endif
 
     return dev;
 }
@@ -103,19 +109,25 @@ static inline struct rtcan_device *__rtcan_dev_get_by_index(int ifindex)
 struct rtcan_device *rtcan_dev_get_by_index(int ifindex)
 {
     struct rtcan_device *dev;
+#ifdef RTCAN_USE_REFCOUNT
     rtdm_lockctx_t context;
+#endif
 
 
     if ((ifindex <= 0) || (ifindex > RTCAN_MAX_DEVICES))
         return NULL;
 
+#ifdef RTCAN_USE_REFCOUNT
     rtdm_lock_get_irqsave(&rtcan_devices_rt_lock, context);
+#endif
 
     dev = __rtcan_dev_get_by_index(ifindex);
+
+#ifdef RTCAN_USE_REFCOUNT
     if (dev != NULL)
         atomic_inc(&dev->refcount);
-
     rtdm_lock_put_irqrestore(&rtcan_devices_rt_lock, context);
+#endif
 
     return dev;
 }
@@ -134,8 +146,10 @@ void rtcan_dev_alloc_name(struct rtcan_device *dev, const char *mask)
             strncpy(dev->name, buf, IFNAMSIZ);
             break;
         }
+#ifdef RTCAN_USE_REFCOUNT
         else
             rtcan_dev_dereference(tmp);
+#endif
     }
 }
 
@@ -165,8 +179,9 @@ struct rtcan_device *rtcan_dev_alloc(int sizeof_priv, int sizeof_board_priv)
     /* Init TX Semaphore, will be destroyed forthwith
      * when setting stop mode */
     rtdm_sem_init(&dev->tx_sem, 0);
-
+#ifdef RTCAN_USE_REFCOUNT
     atomic_set(&dev->refcount, 0);
+#endif
 
     /* Initialize receive list */
     dev->empty_list = recv_list_elem = dev->receivers;
@@ -241,6 +256,7 @@ int rtcan_dev_register(struct rtcan_device *dev)
 
 int rtcan_dev_unregister(struct rtcan_device *dev)
 {
+#ifdef RTCAN_USE_REFCOUNT
     rtdm_lockctx_t context;
 
 
@@ -281,6 +297,10 @@ int rtcan_dev_unregister(struct rtcan_device *dev)
     printk("RTCAN: unregistered %s\n", dev->name);
 
     return 0;
+#else
+    printk("RTCAN: Oops, unexpected call of rtcan_dev_unregister()\n");
+    return -EINVAL;
+#endif
 }
 
 

@@ -237,10 +237,14 @@ static int rtcan_read_proc_info(char *buf, char **start, off_t offset,
 	!RTCAN_PROC_PRINT("%s %s\n", "State     ", state_name) ||
 	!RTCAN_PROC_PRINT("%s %d\n", "TX-Counter", dev->tx_count) ||
 	!RTCAN_PROC_PRINT("%s %d\n", "RX-Counter", dev->rx_count) ||
-	!RTCAN_PROC_PRINT("%s %d\n", "Errors    ", dev->err_count) ||
-	!RTCAN_PROC_PRINT("%s %d\n", "Refcount  ", atomic_read(&dev->refcount)))
+	!RTCAN_PROC_PRINT("%s %d\n", "Errors    ", dev->err_count))
         goto done;
-    
+
+#ifdef RTCAN_USE_REFCOUNT
+    if (!RTCAN_PROC_PRINT("%s %d\n", "Refcount  ", atomic_read(&dev->refcount)))
+	goto done;
+#endif
+
   done:
     up(&rtcan_devices_nrt_lock);
     RTCAN_PROC_PRINT_DONE;

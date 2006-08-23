@@ -29,7 +29,6 @@
 #include <linux/module.h>
 #include <linux/ioport.h>
 #include <linux/delay.h>
-#include <asm/mpc5xxx.h>
 #include <asm/ppcboot.h>
 
 #include <rtdm/rtdm_driver.h>
@@ -38,6 +37,7 @@
 #include <rtdm/rtcan.h>
 #include "rtcan_dev.h"
 #include "rtcan_raw.h"
+#include "rtcan_mscan_regs.h"
 
 extern int rtcan_mscan_create_proc(struct rtcan_device* dev);
 extern void rtcan_mscan_remove_proc(struct rtcan_device* dev);
@@ -48,39 +48,6 @@ extern void rtcan_mscan_remove_proc(struct rtcan_device* dev);
 
 static char *mscan_ctlr_name  = "MSCAN-MPC5200";
 static char *mscan_board_name = "unkown";
-
-/** Value for the interrupt enable register */
-#define MSCAN_RIER                  (MPC5xxx_MSCAN_OVRIE | \
-				     MPC5xxx_MSCAN_RXFIE | \
-				     MPC5xxx_MSCAN_WUPIF | \
-				     MPC5xxx_MSCAN_CSCIE | \
-				     MPC5xxx_MSCAN_RSTATE0 | \
-				     MPC5xxx_MSCAN_RSTATE1 | \
-				     MPC5xxx_MSCAN_TSTATE0 | \
-				     MPC5xxx_MSCAN_TSTATE1)
-
-#define BTR0_BRP_MASK    0x3f
-#define BTR0_SJW_SHIFT   6
-#define BTR0_SJW_MASK    (0x3 << BTR0_SJW_SHIFT)
-
-#define BTR1_TSEG1_MASK  0xf
-#define BTR1_TSEG2_SHIFT 4
-#define BTR1_TSEG2_MASK  (0x7 << BTR1_TSEG2_SHIFT)
-#define BTR1_SAM_SHIFT   7
-
-#define BTR0_SET_BRP(brp)     (((brp) - 1) & BTR0_BRP_MASK)
-#define BTR0_SET_SJW(sjw)     ((((sjw) - 1) << BTR0_SJW_SHIFT) & BTR0_SJW_MASK)
-
-#define BTR1_SET_TSEG1(tseg1) (((tseg1) - 1) & BTR1_TSEG1_MASK)
-#define BTR1_SET_TSEG2(tseg2) ((((tseg2) - 1) << BTR1_TSEG2_SHIFT) & BTR1_TSEG2_MASK)
-#define BTR1_SET_SAM(sam)     (((sam) & 1) << BTR1_SAM_SHIFT)
-
-/* Message type access macros.
- */
-#define MSCAN_BUF_STD_RTR       0x10
-#define MSCAN_BUF_EXT_RTR       0x01
-#define MSCAN_BUF_EXTENDED      0x08
-#define MSCAN_TX_BUFS           3
 
 MODULE_AUTHOR("Wolfgang Grandegger <wg@grandegger.com>");
 MODULE_DESCRIPTION("RT-Socket-CAN driver for MSCAN-MPC2500");
@@ -143,7 +110,7 @@ static inline void rtcan_mscan_rx_interrupt(struct rtcan_device *dev,
     int i;
     unsigned char size;
     struct rtcan_rb_frame *frame = &skb->rb_frame;
-    struct mpc5xxx_mscan *regs = (struct mpc5xxx_mscan *)dev->base_addr;
+    struct mscan_regs *regs = (struct mscan_regs *)dev->base_addr;
 
     skb->rb_frame_size = EMPTY_RB_FRAME_SIZE;
 
@@ -201,7 +168,7 @@ static inline void rtcan_mscan_err_interrupt(struct rtcan_device *dev,
 {
     u8 rstat, tstat;
     struct rtcan_rb_frame *frame = &skb->rb_frame;
-    struct mpc5xxx_mscan *regs = (struct mpc5xxx_mscan *)dev->base_addr;
+    struct mscan_regs *regs = (struct mscan_regs *)dev->base_addr;
 
     skb->rb_frame_size = EMPTY_RB_FRAME_SIZE + CAN_ERR_DLC;
 
@@ -210,16 +177,16 @@ static inline void rtcan_mscan_err_interrupt(struct rtcan_device *dev,
 
     memset(&frame->data[0], 0, frame->can_dlc);
 
-    if ((r_status & MPC5xxx_MSCAN_OVRIF)) {
+    if ((r_status & MSCAN_OVRIF)) {
 	frame->can_id |= CAN_ERR_CRTL;
 	frame->data[1] = CAN_ERR_CRTL_RX_OVERFLOW;
 
-    } else if ((r_status & (MPC5xxx_MSCAN_CSCIF))) {
+    } else if ((r_status & (MSCAN_CSCIF))) {
 	
-	rstat = (r_status & (MPC5xxx_MSCAN_TSTAT0 | 
-			     MPC5xxx_MSCAN_TSTAT1)) >> 2 & 0x3;  
-	tstat = (r_status & (MPC5xxx_MSCAN_RSTAT0 | 
-			     MPC5xxx_MSCAN_RSTAT1)) >> 4 & 0x3;  
+	rstat = (r_status & (MSCAN_TSTAT0 | 
+			     MSCAN_TSTAT1)) >> 2 & 0x3;  
+	tstat = (r_status & (MSCAN_RSTAT0 | 
+			     MSCAN_RSTAT1)) >> 4 & 0x3;  
 	dev->state = mscan_stat_map[max(rstat, tstat)];
 
 	switch (dev->state) {
@@ -266,14 +233,14 @@ static int rtcan_mscan_interrupt(rtdm_irq_t *irq_handle)
     nanosecs_abs_t timestamp = rtdm_clock_read();
     struct rtcan_skb skb;
     struct rtcan_device *dev;
-    struct mpc5xxx_mscan *regs;
+    struct mscan_regs *regs;
     u8 t_status, r_status;
     int recv_lock_free = 1;
     int ret = RTDM_IRQ_NONE;
 
 
     dev = (struct rtcan_device *)rtdm_irq_get_arg(irq_handle, void);
-    regs = (struct mpc5xxx_mscan *)dev->base_addr;
+    regs = (struct mscan_regs *)dev->base_addr;
 
     rtdm_lock_get(&dev->device_lock);
 
@@ -283,23 +250,23 @@ static int rtcan_mscan_interrupt(rtdm_irq_t *irq_handle)
     ret = RTDM_IRQ_HANDLED;
 
     /* Transmit Interrupt? */
-    if ((t_status & MPC5xxx_MSCAN_TXE)) {
+    if ((t_status & MSCAN_TXE)) {
 	/* Disable transmit interrupt here or it will
 	 * constantly be pending.
 	 */
-	regs->cantier &= ~MPC5xxx_MSCAN_TXIE;
+	regs->cantier &= ~MSCAN_TXIE;
 
 	/* Wake up a sender */
 	rtdm_sem_up(&dev->tx_sem);
     }
 
     /* Wakeup interrupt?  */
-    if ((r_status & MPC5xxx_MSCAN_WUPIF)) {
+    if ((r_status & MSCAN_WUPIF)) {
 	rtdm_printk("WUPIF interrupt\n");
     }
 
     /* Receive Interrupt? */
-    if ((r_status & MPC5xxx_MSCAN_RXF)) {
+    if ((r_status & MSCAN_RXF)) {
 	
 	/* Read out HW registers */
 	rtcan_mscan_rx_interrupt(dev, &skb);
@@ -324,7 +291,7 @@ static int rtcan_mscan_interrupt(rtdm_irq_t *irq_handle)
     }
 
     /* Error Interrupt? */
-    if ((r_status & (MPC5xxx_MSCAN_CSCIF | MPC5xxx_MSCAN_OVRIF))) {
+    if ((r_status & (MSCAN_CSCIF | MSCAN_OVRIF))) {
 	/* Check error condition and fill error frame */
 	rtcan_mscan_err_interrupt(dev, &skb, r_status);
 
@@ -345,8 +312,8 @@ static int rtcan_mscan_interrupt(rtdm_irq_t *irq_handle)
 	regs->canrflg = r_status;
 
     if (!recv_lock_free) {
-        rtdm_lock_put(&socket_lock);
-        rtdm_lock_put(&recv_list_lock);
+        rtdm_lock_put(&rtcan_socket_lock);
+        rtdm_lock_put(&rtcan_recv_list_lock);
     }
     rtdm_lock_put(&dev->device_lock);
 
@@ -381,8 +348,8 @@ static int rtcan_mscan_mode_stop(struct rtcan_device *dev,
     int ret = 0;
     int rinit = 0;
     can_state_t state;
-    volatile struct mpc5xxx_mscan *regs = 
-	(struct mpc5xxx_mscan *)dev->base_addr;
+    volatile struct mscan_regs *regs = 
+	(struct mscan_regs *)dev->base_addr;
     u8 reg;
 
     state = dev->state;
@@ -391,12 +358,12 @@ static int rtcan_mscan_mode_stop(struct rtcan_device *dev,
         goto out;
 
     /* Switch to sleep mode */
-    regs->canctl0 |= MPC5xxx_MSCAN_SLPRQ;
-    regs->canctl0 |= MPC5xxx_MSCAN_INITRQ;
+    regs->canctl0 |= MSCAN_SLPRQ;
+    regs->canctl0 |= MSCAN_INITRQ;
     
     reg = regs->canctl1;
-    while (!(reg & MPC5xxx_MSCAN_SLPAK) ||
-	   !(reg & MPC5xxx_MSCAN_INITAK)) {
+    while (!(reg & MSCAN_SLPAK) ||
+	   !(reg & MSCAN_INITAK)) {
         if (likely(lock_ctx != NULL))
             rtdm_lock_put_irqrestore(&dev->device_lock, *lock_ctx);
         /* Busy sleep 1 microsecond */
@@ -440,8 +407,8 @@ static int rtcan_mscan_mode_start(struct rtcan_device *dev,
 {
     int ret = 0, retries = 0;
     can_state_t state;
-    volatile struct mpc5xxx_mscan *regs = 
-	(struct mpc5xxx_mscan *)dev->base_addr;
+    volatile struct mscan_regs *regs = 
+	(struct mscan_regs *)dev->base_addr;
 
     /* We won't forget that state in the device structure is volatile and
      * access to it will not be optimized by the compiler. So ... */
@@ -461,21 +428,21 @@ static int rtcan_mscan_mode_start(struct rtcan_device *dev,
 	rtdm_sem_init(&dev->tx_sem, MSCAN_TX_BUFS);
 
 	if ((dev->ctrl_mode & CAN_CTRLMODE_LISTENONLY)) {
-	    regs->canctl1 |= MPC5xxx_MSCAN_LISTEN;
+	    regs->canctl1 |= MSCAN_LISTEN;
 	} else {
-	    regs->canctl1 &= ~MPC5xxx_MSCAN_LISTEN;
+	    regs->canctl1 &= ~MSCAN_LISTEN;
 	}
 	if ((dev->ctrl_mode & CAN_CTRLMODE_LOOPBACK)) {
-	    regs->canctl1 |= MPC5xxx_MSCAN_LOOPB;
+	    regs->canctl1 |= MSCAN_LOOPB;
 	} else {
-	    regs->canctl1 &= ~MPC5xxx_MSCAN_LOOPB;
+	    regs->canctl1 &= ~MSCAN_LOOPB;
 	}
 
 	/* Switch to normal mode */
-	regs->canctl0 &= ~MPC5xxx_MSCAN_INITRQ;
-	regs->canctl0 &= ~MPC5xxx_MSCAN_SLPRQ;
-	while ((regs->canctl1 & MPC5xxx_MSCAN_INITAK) ||
-	       (regs->canctl1 & MPC5xxx_MSCAN_SLPAK)) {
+	regs->canctl0 &= ~MSCAN_INITRQ;
+	regs->canctl0 &= ~MSCAN_SLPRQ;
+	while ((regs->canctl1 & MSCAN_INITAK) ||
+	       (regs->canctl1 & MSCAN_SLPAK)) {
 	    if (likely(lock_ctx != NULL))
 		rtdm_lock_put_irqrestore(&dev->device_lock, *lock_ctx);
 	    /* Busy sleep 1 microsecond */
@@ -513,7 +480,7 @@ int rtcan_mscan_set_bit_time(struct rtcan_device *dev,
 			     struct can_bittime *bit_time,
 			     rtdm_lockctx_t *lock_ctx)
 {
-    struct mpc5xxx_mscan *regs = (struct mpc5xxx_mscan *)dev->base_addr; 
+    struct mscan_regs *regs = (struct mscan_regs *)dev->base_addr; 
     u8 btr0, btr1;
 	
     switch (bit_time->type) {
@@ -549,7 +516,7 @@ int rtcan_mscan_set_mode(struct rtcan_device *dev,
 {
     int ret = 0, retries = 0;
     can_state_t state;
-    struct mpc5xxx_mscan *regs = (struct mpc5xxx_mscan *)dev->base_addr; 
+    struct mscan_regs *regs = (struct mscan_regs *)dev->base_addr; 
 
     switch (mode) {
 
@@ -584,8 +551,8 @@ int rtcan_mscan_set_mode(struct rtcan_device *dev,
 	 * the meaning of interrupts ...) */
 	regs->canrier = 0;
 	regs->cantier = 0;
-	regs->canctl0 |= MPC5xxx_MSCAN_SLPRQ /*| MPC5xxx_MSCAN_INITRQ*/ | MPC5xxx_MSCAN_WUPE;
-	while (!(regs->canctl1 & MPC5xxx_MSCAN_SLPAK)) {
+	regs->canctl0 |= MSCAN_SLPRQ /*| MSCAN_INITRQ*/ | MSCAN_WUPE;
+	while (!(regs->canctl1 & MSCAN_SLPAK)) {
 	    rtdm_lock_put_irqrestore(&dev->device_lock, *lock_ctx);
 	    /* Busy sleep 1 microsecond */
 	    rtdm_task_busy_sleep(1000);
@@ -594,8 +561,8 @@ int rtcan_mscan_set_mode(struct rtcan_device *dev,
 		break;
 	}
 	rtdm_printk("Fallen asleep after %d tries.\n", retries);
-	regs->canctl0 &= ~MPC5xxx_MSCAN_INITRQ;
-	while ((regs->canctl1 & MPC5xxx_MSCAN_INITAK)) {
+	regs->canctl0 &= ~MSCAN_INITRQ;
+	while ((regs->canctl1 & MSCAN_INITAK)) {
 	    rtdm_lock_put_irqrestore(&dev->device_lock, *lock_ctx);
 	    /* Busy sleep 1 microsecond */
 	    rtdm_task_busy_sleep(1000);
@@ -604,7 +571,7 @@ int rtcan_mscan_set_mode(struct rtcan_device *dev,
 		break;
 	}
 	rtdm_printk("Back to normal after %d tries.\n", retries);
-	regs->canrier = MPC5xxx_MSCAN_WUPIE;
+	regs->canrier = MSCAN_WUPIE;
 	
     mode_sleep_out:
 	dev->state = state;
@@ -636,7 +603,7 @@ static int rtcan_mscan_start_xmit(struct rtcan_device *dev,
     /* Content of frame information register */
     unsigned char   dlc;
 
-    struct mpc5xxx_mscan *regs = (struct mpc5xxx_mscan *)dev->base_addr;
+    struct mscan_regs *regs = (struct mscan_regs *)dev->base_addr;
 
     /* Find an empty TX buffer. */
     for (buf = 0; buf < MSCAN_TX_BUFS; buf++) {
@@ -718,12 +685,12 @@ static int rtcan_mscan_start_xmit(struct rtcan_device *dev,
  *
  *  @param[in] dev Device ID of the controller to be configured
  */
-static inline void __init mscan_chip_config(struct mpc5xxx_mscan *regs)
+static inline void __init mscan_chip_config(struct mscan_regs *regs)
 {
     /* Choose IP bus as clock source.
      */
-    regs->canctl1 |= MPC5xxx_MSCAN_CLKSRC;
-    regs->canctl1 &= ~MPC5xxx_MSCAN_LISTEN;
+    regs->canctl1 |= MSCAN_CLKSRC;
+    regs->canctl1 &= ~MSCAN_LISTEN;
 
     /* Configure MSCAN to accept all incoming messages.
      */
@@ -735,7 +702,7 @@ static inline void __init mscan_chip_config(struct mpc5xxx_mscan *regs)
     regs->canidar6 = regs->canidar7 = 0x00;
     regs->canidmr4 = regs->canidmr5 = 0xFF;
     regs->canidmr6 = regs->canidmr7 = 0xFF;
-    regs->canidac &= ~(MPC5xxx_MSCAN_IDAM0 | MPC5xxx_MSCAN_IDAM1);
+    regs->canidac &= ~(MSCAN_IDAM0 | MSCAN_IDAM1);
 }
 
 static inline void __init mscan_gpio_config(void)
@@ -779,16 +746,16 @@ int __init rtcan_mscan_init_one(int idx)
     unsigned long addr;
     struct rtcan_device *dev;
     struct rtcan_priv *priv;
-    struct mpc5xxx_mscan *regs;
+    struct mscan_regs *regs;
 
     switch (port[idx]) {
     case 1:
-	addr = MPC5xxx_MSCAN1;
-	irq = MPC5xxx_CAN1_IRQ;
+	addr = MSCAN_CAN1_ADDR;
+	irq = MSCAN_CAN1_IRQ;
 	break;
     case 2:
-	addr = MPC5xxx_MSCAN2;
-	irq = MPC5xxx_CAN2_IRQ;
+	addr = MSCAN_CAN2_ADDR;
+	irq = MSCAN_CAN2_IRQ;
 	break;
     default:
 	return 0;
@@ -805,10 +772,10 @@ int __init rtcan_mscan_init_one(int idx)
 
     priv = dev->priv;
     dev->base_addr = addr;
-    regs = (struct mpc5xxx_mscan *)dev->base_addr;
+    regs = (struct mscan_regs *)dev->base_addr;
     
     /* Enable MSCAN module. */
-    regs->canctl1 |= MPC5xxx_MSCAN_CANE;
+    regs->canctl1 |= MSCAN_CANE;
     udelay(100);
     
     /* Set dummy state for following call */
@@ -862,7 +829,7 @@ int __init rtcan_mscan_init_one(int idx)
 
  out_dev_free:
     /* Disable MSCAN module. */
-    regs->canctl1 &= ~MPC5xxx_MSCAN_CANE;
+    regs->canctl1 &= ~MSCAN_CANE;
     rtcan_dev_free(dev);
 
     return ret;
