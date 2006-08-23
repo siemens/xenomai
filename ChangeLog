@@ -1,5 +1,11 @@
 2006-08-23  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/shadow.c (do_sigwake_event, xnshadow_relax): Use
+	TASK_NOWAKEUP when available, to prevent Linux from waking up the
+	signaled task until it has been relaxed.
+
+2006-08-23  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/generic/hal.c (rthal_init, rthal_exit): Do not force CPU
 	affinity for the current task, which is useless since the HAL must
 	be statically built into the kernel.
