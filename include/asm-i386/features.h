@@ -96,9 +96,10 @@ static inline void xeno_x86_features_check(void)
           return;
       }
 
-  fprintf(stderr, "Xenomai: SEP instruction needs NPTL and NPTL was not detected"
-          "\nplease install NPTL or rebuild the user-space support passing "
-          "--disable-x86-sep.\n"); 
+  fprintf(stderr,
+	  "Xenomai: --enable-x86-sep needs NPTL and Linux 2.6.x or higher,\n"
+	  "which does not match your configuration. Please upgrade, or\n"
+          "rebuild the user-space support passing --disable-x86-sep.\n");
   exit(1);
 #endif /* CONFIG_XENO_X86_SEP */
 }
