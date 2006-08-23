@@ -1,5 +1,12 @@
 2006-08-23  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/i386/patches: Upgrade to 2.4.33-1.2-08, 2.6.17-1.3-10.
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.14-ppc-1.3-07,
+	2.6.14-ppc64-1.2-04, 2.4.25-CVS-20060707-1.1-05.
+	
+	* ksrc/arch/ia64/patches: Upgrade to 2.6.16-1.3-03.
+	
 	* include/asm-i386/features.h (xeno_x86_features_check): Try
 	explaining the requirements for SEP a bit better.
 
