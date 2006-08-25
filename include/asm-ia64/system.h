@@ -118,7 +118,7 @@ static inline void xnarch_sysfree (void *chunk, u_long bytes)
 
 #ifdef XENO_POD_MODULE
 
-void xnpod_welcome_thread(struct xnthread *);
+void xnpod_welcome_thread(struct xnthread *, int);
 
 void xnpod_delete_thread(struct xnthread *);
 
@@ -330,9 +330,7 @@ static void xnarch_thread_trampoline (struct xnthread *self,
 {
     /* xnpod_welcome_thread() will do ia64_fpu_enable() if needed. */
     ia64_fph_disable();
-    rthal_local_irq_restore(!!imask);
-    rthal_local_irq_enable_hw();
-    xnpod_welcome_thread(self);
+    xnpod_welcome_thread(self, imask);
     entry(cookie);
     xnpod_delete_thread(self);
 }

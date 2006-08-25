@@ -249,7 +249,7 @@ xnarch_read_environ (const char *name, const char **ptype, void *pvar)
 extern "C" {
 #endif
 
-void xnpod_welcome_thread(struct xnthread *);
+void xnpod_welcome_thread(struct xnthread *, int);
 
 void mvm_init(int argc,
 	      char *argv[]);

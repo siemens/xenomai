@@ -141,7 +141,7 @@ static inline void xnarch_sysfree (void *chunk, u_long bytes)
 
 #ifdef XENO_POD_MODULE
 
-void xnpod_welcome_thread(struct xnthread *);
+void xnpod_welcome_thread(struct xnthread *, int);
 
 void xnpod_delete_thread(struct xnthread *);
 
@@ -262,8 +262,7 @@ static inline void xnarch_init_root_tcb (xnarchtcb_t *tcb,
 asmlinkage static void xnarch_thread_trampoline (xnarchtcb_t *tcb)
 
 {
-    rthal_local_irq_restore(!!tcb->imask);
-    xnpod_welcome_thread(tcb->self);
+    xnpod_welcome_thread(tcb->self, tcb->imask);
     tcb->entry(tcb->cookie);
     xnpod_delete_thread(tcb->self);
 }
