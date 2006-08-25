@@ -165,9 +165,7 @@ static void kroot(mvm_thread_trampoline) (void *tcbarg)
     tcb->vmthread = mvm_thread_self();
 
     if (tcb->kthread)
-	xnpod_welcome_thread(tcb->kthread);
-
-    mvm_set_irqmask(tcb->imask);
+	    xnpod_welcome_thread(tcb->kthread, tcb->imask);
 
     tcb->entry(tcb->cookie);
 

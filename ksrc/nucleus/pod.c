@@ -175,10 +175,19 @@ static int xnpod_fault_handler(xnarch_fltinfo_t *fltinfo)
 #endif /* __KERNEL__ */
 
 	if (!xnpod_userspace_p()) {
-		xnprintf
-		    ("suspending kernel thread %p ('%s') at 0x%lx after exception #%u\n",
-		     thread, thread->name, xnarch_fault_pc(fltinfo),
-		     xnarch_fault_trap(fltinfo));
+		struct i387_fxsave_struct *fpenv = &thread->tcb.fpuenv.fxsave;
+		xnprintf("suspending kernel thread %p ('%s') at 0x%lx",
+			 thread, thread->name, xnarch_fault_pc(fltinfo));
+		print_symbol("(%s)\n", xnarch_fault_pc(fltinfo));
+		printk(" after exception #%u, ",xnarch_fault_trap(fltinfo));
+		printk("eax: 0x%lx\n", fltinfo->regs->eax);
+		printk("FPU state:\n");
+		printk("cwd: %08x, swd: %08x\n", fpenv->cwd, fpenv->swd);
+		printk("twd: %08x, fop: %08x\n", fpenv->twd, fpenv->fop);
+		printk("fip: %08lx, fcs: %08lx\n", fpenv->fip, fpenv->fcs);
+		printk("foo: %08lx, fos: %08lx\n", fpenv->foo, fpenv->fos);
+		printk("mxcsr: %08lx, mxcsr_mask: %08lx\n",
+		       fpenv->mxcsr, fpenv->mxcsr_mask);
 
 		xnpod_suspend_thread(thread, XNSUSP, XN_INFINITE, NULL);
 
@@ -197,10 +206,11 @@ static int xnpod_fault_handler(xnarch_fltinfo_t *fltinfo)
 			xnarch_trace_panic_freeze();
 			xnprintf
 			    ("Switching %s to secondary mode after exception #%u in "
-			     "kernel-space at 0x%lx (pid %d)\n", thread->name,
+			     "kernel-space at 0x%lx (pid %d)", thread->name,
 			     xnarch_fault_trap(fltinfo),
 			     xnarch_fault_pc(fltinfo),
 			     xnthread_user_pid(thread));
+			print_symbol(", i.e. %s\n", xnarch_fault_pc(fltinfo));
 			xnarch_trace_panic_dump();
 		} else if (xnarch_fault_notify(fltinfo))	/* Don't report debug traps */
 			xnprintf
@@ -2120,26 +2130,21 @@ void xnpod_dispatch_signals(void)
 
 /*!
  * @internal
- * \fn void xnpod_welcome_thread(xnthread_t *thread)
+ * \fn void xnpod_welcome_thread(xnthread_t *thread, int imask)
  * \brief Thread prologue.
  *
  * This internal routine is called on behalf of a (re)starting
  * thread's prologue before the user entry point is invoked. This call
  * is reserved for internal housekeeping chores and cannot be inlined.
+ *
+ * Entered with nklock locked, irqs off.
  */
 
-void xnpod_welcome_thread(xnthread_t *thread)
+void xnpod_welcome_thread(xnthread_t *thread, int imask)
 {
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
 	xnltt_log_event(xeno_ev_thrboot, thread->name);
 
 	xnarch_trace_pid(-1, xnthread_current_priority(thread));
-
-	if (xnthread_signaled_p(thread))
-		xnpod_dispatch_signals();
 
 	if (testbits(thread->status, XNLOCK))
 		/* Actually grab the scheduler lock. */
@@ -2165,12 +2170,11 @@ void xnpod_welcome_thread(xnthread_t *thread)
 
 	__clrbits(thread->status, XNRESTART);
 
+	if (xnthread_signaled_p(thread))
+		xnpod_dispatch_signals();
+
 	xnlock_clear_irqoff(&nklock);
-
-	/* The xnarch trampoline already took care of the interrupt
-	   mask. */
-
-	splexit(s);
+	splexit(!!imask);
 }
 
 #ifdef CONFIG_XENO_HW_FPU
