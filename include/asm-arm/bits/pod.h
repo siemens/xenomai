@@ -116,7 +116,7 @@ static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
 
 asmlinkage static void xnarch_thread_trampoline(xnarchtcb_t * tcb)
 {
-	xnpod_welcome_thread(tcb->self);
+	xnpod_welcome_thread(tcb->self, tcb->imask);
 	tcb->entry(tcb->cookie);
 	xnpod_delete_thread(tcb->self);
 }
