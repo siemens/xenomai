@@ -117,7 +117,7 @@ static inline int xnarch_shadow_p (xnarchtcb_t *tcb, struct task_struct *task)
 
 #ifdef XENO_POD_MODULE
 
-void xnpod_welcome_thread(struct xnthread *);
+void xnpod_welcome_thread(struct xnthread *, int);
 
 void xnpod_delete_thread(struct xnthread *);
 
@@ -309,8 +309,7 @@ asmlinkage static void xnarch_thread_redirect (struct xnthread *self,
 {
     /* xnpod_welcome_thread() will do clts() if needed. */
     stts();
-    rthal_local_irq_restore(!!imask);
-    xnpod_welcome_thread(self);
+    xnpod_welcome_thread(self, imask);
     entry(cookie);
     xnpod_delete_thread(self);
 }

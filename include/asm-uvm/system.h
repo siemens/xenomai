@@ -255,7 +255,7 @@ int xnarch_setimask(int imask);
 extern "C" {
 #endif
 
-void xnpod_welcome_thread(struct xnthread *);
+void xnpod_welcome_thread(struct xnthread *, int);
 
 #ifdef XENO_INTR_MODULE
 
@@ -601,9 +601,7 @@ static void *xnarch_thread_trampoline (void *cookie)
 	    pthread_exit((void *)err);
 	}
 
-    xnarch_setimask(tcb->imask);
-
-    xnpod_welcome_thread(tcb->thread);
+    xnpod_welcome_thread(tcb->thread, tcb->imask);
 
     tcb->entry(tcb->cookie);
 

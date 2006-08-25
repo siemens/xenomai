@@ -1,3 +1,8 @@
+2006-08-25  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/nucleus/pod.c (xnpod_welcome_thread): Only release the
+	nklock and interrupts when the initialization work is finished.
+
 2006-08-23  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (do_sigwake_event, xnshadow_relax): Use

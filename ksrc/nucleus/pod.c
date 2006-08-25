@@ -2189,20 +2189,20 @@ void xnpod_dispatch_signals (void)
 
 /*!
  * @internal
- * \fn void xnpod_welcome_thread(xnthread_t *thread)
+ * \fn void xnpod_welcome_thread(xnthread_t *thread, int imask)
  * \brief Thread prologue.
  *
  * This internal routine is called on behalf of a (re)starting
  * thread's prologue before the user entry point is invoked. This call
  * is reserved for internal housekeeping chores and cannot be inlined.
+ *
+ * Entered nklock locked, irqs off.
  */
 
-void xnpod_welcome_thread (xnthread_t *thread)
+void xnpod_welcome_thread (xnthread_t *thread, int imask)
 
 {
     spl_t s;
-
-    xnlock_get_irqsave(&nklock,s);
 
     xnltt_log_event(xeno_ev_thrboot,thread->name);
 
@@ -2235,11 +2235,7 @@ void xnpod_welcome_thread (xnthread_t *thread)
     __clrbits(thread->status,XNRESTART);
 
     xnlock_clear_irqoff(&nklock);
-
-    /* The xnarch trampoline already took care of the interrupt
-       mask. */
-
-    splexit(s);
+    splexit(!!imask);
 }
 
 #ifdef CONFIG_XENO_HW_FPU
