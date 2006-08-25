@@ -172,7 +172,6 @@ static int xnpod_fault_handler(xnarch_fltinfo_t *fltinfo)
 		print_symbol("invalid use of FPU in Xenomai context at %s\n",
 			     xnarch_fault_pc(fltinfo));
 	}
-#endif /* __KERNEL__ */
 
 	if (!xnpod_userspace_p()) {
 		xnprintf
@@ -181,10 +180,10 @@ static int xnpod_fault_handler(xnarch_fltinfo_t *fltinfo)
 		     xnarch_fault_trap(fltinfo));
 
 		xnpod_suspend_thread(thread, XNSUSP, XN_INFINITE, NULL);
-
 		return 1;
 	}
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	/* If we experienced a trap on behalf of a shadow thread, just
 	   move the second to the Linux domain, so that the host O/S
 	   (e.g. Linux) can attempt to process the exception. This is
@@ -218,7 +217,8 @@ static int xnpod_fault_handler(xnarch_fltinfo_t *fltinfo)
 
 		xnshadow_relax(xnarch_fault_notify(fltinfo));
 	}
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* __KERNEL__ */
 
 	return 0;
 }
