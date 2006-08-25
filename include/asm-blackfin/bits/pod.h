@@ -22,7 +22,7 @@
 
 #include <asm-generic/xenomai/bits/pod.h>
 
-void xnpod_welcome_thread(struct xnthread *);
+void xnpod_welcome_thread(struct xnthread *, int);
 
 void xnpod_delete_thread(struct xnthread *);
 
@@ -84,7 +84,6 @@ static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
 
 asmlinkage static void xnarch_thread_trampoline(xnarchtcb_t * tcb)
 {
-	rthal_local_irq_restore(!!tcb->imask);
 	xnpod_welcome_thread(tcb->self);
 	tcb->entry(tcb->cookie);
 	xnpod_delete_thread(tcb->self);

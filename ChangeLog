@@ -1,3 +1,8 @@
+2006-08-25  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/nucleus/pod.c (xnpod_welcome_thread): Only release the
+	nklock and interrupts when the initialization work is finished.
+
 2006-08-23  Wolfgang Grandegger <wg@grandegger.com>
 
 	* ksrc/drivers/can/rtcan_dev.c, ksrc/drivers/can/rtcan_dev.h,
