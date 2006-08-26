@@ -7,8 +7,7 @@ all:
 
 bin_PROGRAMS= accuracy accuracy_rt satch_rt
 
-CFLAGS= -D_GNU_SOURCE -D_REENTRANT
-CFLAGS= -Wstrict-prototypes -g -O2 -Wall
+CFLAGS= -D_GNU_SOURCE -D_REENTRANT -Wstrict-prototypes -g -O2 -Wall
 LDFLAGS= -lpthread -lrt
 
 accuracy: CFLAGS+=-DSPERIOD=2000
