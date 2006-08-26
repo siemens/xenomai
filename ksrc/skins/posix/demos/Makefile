@@ -1,24 +1,21 @@
 # Using a single source image, this demo illustrates the real-time
 # guarantees provided by Xenomai's POSIX skin in user-space
 # (accuracy_rt) compared to those available from the native
-# NPTL/LinuxThreads supports (accuracy). You need the xeno_hal.ko +
-# xno_nucleus.ko + xeno_posix.ko modules to be loaded to run the
-# accuracy_rt test.
+# NPTL/LinuxThreads supports (accuracy).
 
 all:
 
 bin_PROGRAMS= accuracy accuracy_rt satch_rt
-lib_LIBRARIES=
 
-CPPFLAGS= -D_GNU_SOURCE -D_REENTRANT
+CFLAGS= -D_GNU_SOURCE -D_REENTRANT
 CFLAGS= -Wstrict-prototypes -g -O2 -Wall
 LDFLAGS= -lpthread -lrt
 
-accuracy_rt.o: CPPFLAGS=-DSPERIOD=100
+accuracy: CFLAGS+=-DSPERIOD=2000
 
-accuracy.o: CPPFLAGS+=-DSPERIOD=2000
+accuracy_rt.o: CFLAGS_RT=-DSPERIOD=100
 
-satch_rt.o: CPPFLAGS=-DCONSUMER
+satch_rt.o: CFLAGS_RT+=-DCONSUMER
 
 # To use this makefile with xeno-config not located at /usr/xenomai/bin, type :
 # make XENO_CONFIG=/path/to/xeno-config
@@ -35,12 +32,12 @@ CC:= $(shell $(XENO_CONFIG) --cc)
 CFLAGS_RT:= $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --posix-cflags) -g
 LDFLAGS_RT:= $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --posix-ldflags)
 
-all: $(bin_PROGRAMS) $(lib_LIBRARIES)
+all: $(bin_PROGRAMS)
 
 %_rt.o: %.c
-	$(CC) $(CPPFLAGS) $(CFLAGS_RT) $< -c -o $@
+	$(CC) $(CFLAGS_RT) $< -c -o $@
 
 %_rt: LDFLAGS=$(LDFLAGS_RT)
 
 clean:
-	$(RM) $(bin_PROGRAMS) $(lib_LIBRARIES) *.o
+	$(RM) $(bin_PROGRAMS) *.o
