@@ -259,23 +259,41 @@ static void xnsynch_clear_boost (xnsynch_t *synch,
 void xnsynch_renice_sleeper (xnthread_t *thread)
 
 {
-    xnsynch_t *synch = thread->wchan;
+	xnsynch_t *synch = thread->wchan;
+	xnthread_t *owner;
 
-    if (testbits(synch->status,XNSYNCH_PRIO))
-	{
-	xnthread_t *owner = synch->owner;
+	if (!testbits(synch->status, XNSYNCH_PRIO))
+		return;
 
-	removepq(&synch->pendq,&thread->plink);
-	insertpqf(&synch->pendq,&thread->plink,thread->cprio);
+	owner = synch->owner;
+	removepq(&synch->pendq, &thread->plink);
+	insertpqf(&synch->pendq, &thread->plink, thread->cprio);
 
-	if (testbits(synch->status,XNSYNCH_CLAIMED) &&
-	    xnpod_priocompare(thread->cprio,owner->cprio) > 0)
+	if (xnpod_compare_prio(thread->cprio, owner->cprio) > 0)
 	    {
-	    removepq(&owner->claimq,&synch->link);
-	    insertpqf(&owner->claimq,&synch->link,thread->cprio);
-	    xnsynch_renice_thread(owner,thread->cprio);
+	    /* The new priority of the sleeping thread is higher than
+	     * the priority of the current owner of the resource: we
+	     * need to update the PI state. */
+	    if (testbits(synch->status, XNSYNCH_CLAIMED))
+		{
+		/* The resource is already claimed, just reorder the
+		   claim queue. */
+		removepq(&owner->claimq, &synch->link);
+		insertpqf(&owner->claimq, &synch->link, thread->cprio);
+		}
+	    else
+		{
+		/* The resource was NOT claimed, claim it now and
+		 * boost the owner. */
+		__setbits(synch->status, XNSYNCH_CLAIMED);
+		insertpqf(&owner->claimq, &synch->link, thread->cprio);
+		owner->bprio = owner->cprio;
+		__setbits(owner->status, XNBOOST);
+		}
+	    /* Renice the owner thread, progressing in the PI chain as
+	       needed. */
+	    xnsynch_renice_thread(owner, thread->cprio);
 	    }
-	}
 }
 
 /*! 
