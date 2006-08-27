@@ -1,5 +1,7 @@
 2006-08-27  Philippe Gerum  <rpm@xenomai.org>
 
+	* src/skins: Remove -module from LDFLAGS for all libraries.
+
 	* ksrc/nucleus/timer.c (xntimer_get_interval): Add timing
 	mode-dependent accessor for the interval value.
 
