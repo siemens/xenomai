@@ -12,7 +12,7 @@ libmvmutils_la_SOURCES = \
 	tclist++.cc \
 	utils.c
 
-libmvmutils_la_LDFLAGS = -module -version-info 1:0:0
+libmvmutils_la_LDFLAGS = -version-info 1:0:0
 
 noinst_HEADERS = \
 	clock.h \

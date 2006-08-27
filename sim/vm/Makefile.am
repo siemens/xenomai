@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libmvm.la
 
-libmvm_la_LDFLAGS = -module -version-info 2:0:0
+libmvm_la_LDFLAGS = -version-info 2:0:0
 
 libmvm_la_SOURCES = \
 	daemon.cc \
