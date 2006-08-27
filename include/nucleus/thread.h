@@ -279,6 +279,25 @@ static inline xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t now)
     return timeout - now;
 }
 
+static inline xnticks_t xnthread_get_period(xnthread_t *thread)
+{
+    xnticks_t period = 0;
+
+    /*
+     * The current thread period might be:
+     * - the value of the timer interval for periodic threads (ns/ticks)
+     * - or, the value of the alloted round-robin quantum (ticks)
+     * - or zero, meaning "no periodic activity".
+     */
+       
+    if (xntimer_running_p(&thread->ptimer))
+	period = xntimer_get_interval(&thread->ptimer);
+    else if (xnthread_test_flags(thread,XNRRB))
+	period = xnthread_time_slice(thread);
+
+    return period;
+}
+
 #ifdef __cplusplus
 }
 #endif

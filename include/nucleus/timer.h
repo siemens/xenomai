@@ -185,6 +185,7 @@ typedef struct xntmops {
     void (*do_timer_stop)(xntimer_t *timer);
     xnticks_t (*get_timer_date)(xntimer_t *timer);
     xnticks_t (*get_timer_timeout)(xntimer_t *timer);
+    xnticks_t (*get_timer_interval)(xntimer_t *timer);
     xnticks_t (*get_timer_raw_expiry)(xntimer_t *timer);
     void (*set_timer_remote)(xntimer_t *timer);
     const char *(*get_type)(void);
@@ -273,6 +274,8 @@ void xntimer_freeze(void);
 xnticks_t xntimer_get_date(xntimer_t *timer);
 
 xnticks_t xntimer_get_timeout(xntimer_t *timer);
+
+xnticks_t xntimer_get_interval(xntimer_t *timer);
 
 void xntimer_set_periodic_mode(void);
 

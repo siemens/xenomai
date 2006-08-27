@@ -101,6 +101,7 @@ struct sched_seq_iterator {
 		pid_t pid;
 		char name[XNOBJECT_NAME_LEN];
 		int cprio;
+		xnticks_t period;
 		xnticks_t timeout;
 		xnflags_t status;
 	} sched_info[1];
@@ -145,8 +146,8 @@ static int sched_seq_show(struct seq_file *seq, void *v)
 	char sbuf[64], pbuf[16];
 
 	if (v == SEQ_START_TOKEN)
-		seq_printf(seq, "%-3s  %-6s %-8s %-8s %-10s %s\n",
-			   "CPU", "PID", "PRI", "TIMEOUT", "STAT", "NAME");
+		seq_printf(seq, "%-3s  %-6s %-8s %-8s %-10s %-10s %s\n",
+			   "CPU", "PID", "PRI", "PERIOD", "TIMEOUT", "STAT", "NAME");
 	else {
 		struct sched_seq_info *p = (struct sched_seq_info *)v;
 
@@ -156,10 +157,11 @@ static int sched_seq_show(struct seq_file *seq, void *v)
 		else
 			snprintf(pbuf, sizeof(pbuf), "%3d", p->cprio);
 
-		seq_printf(seq, "%3u  %-6d %-8s %-8Lu %-10s %s\n",
+		seq_printf(seq, "%3u  %-6d %-8s %-8Lu %-10Lu %-10s %s\n",
 			   p->cpu,
 			   p->pid,
 			   pbuf,
+			   p->period,
 			   p->timeout,
 			   xnthread_symbolic_status(p->status, sbuf,
 						    sizeof(sbuf)), p->name);
@@ -231,11 +233,10 @@ static int sched_seq_open(struct inode *inode, struct file *file)
 
 		iter->sched_info[n].cpu = xnsched_cpu(thread->sched);
 		iter->sched_info[n].pid = xnthread_user_pid(thread);
-		memcpy(iter->sched_info[n].name, thread->name,
-		       sizeof(iter->sched_info[n].name));
+		memcpy(iter->sched_info[n].name, thread->name, sizeof(iter->sched_info[n].name));
 		iter->sched_info[n].cprio = thread->cprio;
-		iter->sched_info[n].timeout =
-		    xnthread_get_timeout(thread, iter->start_time);
+		iter->sched_info[n].period = xnthread_get_period(thread);
+		iter->sched_info[n].timeout = xnthread_get_timeout(thread, iter->start_time);
 		iter->sched_info[n].status = thread->status;
 
 		holder = nextq(&nkpod->threadq, holder);

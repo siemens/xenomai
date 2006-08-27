@@ -149,6 +149,11 @@ static xnticks_t xntimer_get_timeout_aperiodic(xntimer_t *timer)
 	return xnarch_tsc_to_ns(xntimerh_date(&timer->aplink) - tsc);
 }
 
+static xnticks_t xntimer_get_interval_aperiodic(xntimer_t *timer)
+{
+	return xnarch_tsc_to_ns(timer->interval);
+}
+
 static xnticks_t xntimer_get_raw_expiry_aperiodic(xntimer_t *timer)
 {
 	return xntimerh_date(&timer->aplink);
@@ -327,6 +332,11 @@ static xnticks_t xntimer_get_timeout_periodic(xntimer_t *timer)
 	return xntlholder_date(&timer->plink) - nkpod->jiffies;
 }
 
+static xnticks_t xntimer_get_interval_periodic(xntimer_t *timer)
+{
+	return timer->interval;
+}
+
 static xnticks_t xntimer_get_raw_expiry_periodic(xntimer_t *timer)
 {
 	return xntlholder_date(&timer->plink);
@@ -447,6 +457,7 @@ static xntmops_t timer_ops_periodic = {
 	.do_timer_stop = &xntimer_do_stop_periodic,
 	.get_timer_date = &xntimer_get_date_periodic,
 	.get_timer_timeout = &xntimer_get_timeout_periodic,
+	.get_timer_interval = &xntimer_get_interval_periodic,
 	.get_timer_raw_expiry = &xntimer_get_raw_expiry_periodic,
 	.set_timer_remote = &xntimer_set_remote_periodic,
 	.get_type = &xntimer_get_type_periodic,
@@ -730,6 +741,41 @@ xnticks_t xntimer_get_timeout(xntimer_t *timer)
 }
 
 /*!
+ * \fn xnticks_t xntimer_get_interval(xntimer_t *timer)
+ *
+ * \brief Return the timer interval value.
+ *
+ * Return the timer interval value in clock ticks (see note).
+ *
+ * @param timer The address of a valid timer descriptor.
+ *
+ * @return The expiration date converted to the current time unit. The
+ * special value XN_INFINITE is returned if @a timer is currently
+ * inactive or aperiodic.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: never.
+ *
+ * @note This service is sensitive to the current operation mode of
+ * the system timer, as defined by the xnpod_start_timer() service. In
+ * periodic mode, clock ticks are expressed as periodic jiffies. In
+ * oneshot mode, clock ticks are expressed as nanoseconds.
+ */
+
+xnticks_t xntimer_get_interval(xntimer_t *timer)
+{
+	return nktimer->get_timer_interval(timer);
+}
+
+/*!
  * @internal
  * \fn void xntimer_freeze(void)
  *
@@ -764,6 +810,7 @@ static xntmops_t timer_ops_aperiodic = {
 	.do_timer_stop = &xntimer_do_stop_aperiodic,
 	.get_timer_date = &xntimer_get_date_aperiodic,
 	.get_timer_timeout = &xntimer_get_timeout_aperiodic,
+	.get_timer_interval = &xntimer_get_interval_aperiodic,
 	.get_timer_raw_expiry = &xntimer_get_raw_expiry_aperiodic,
 	.set_timer_remote = &xntimer_set_remote_aperiodic,
 	.get_type = &xntimer_get_type_aperiodic,

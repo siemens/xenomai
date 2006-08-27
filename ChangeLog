@@ -1,4 +1,18 @@
+2006-08-27  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/timer.c (xntimer_get_interval): Add timing
+	mode-dependent accessor for the interval value.
+
+	* include/nucleus/thread.h (xnthread_get_period): Return periodic
+	interval or round-robin quantum depending on the undergoing
+	periodic activity.
+
+	* ksrc/nucleus/module.c (sched_seq_open): Display thread period.
+
 2006-08-26  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/module.c (sched_seq_show): Make timeout field
+	wider.
 
 	* ksrc/nucleus/synch.c (xnsynch_renice_sleeper): Make sure to
 	boost an unclaimed resource owner as needed, in order to walk the
