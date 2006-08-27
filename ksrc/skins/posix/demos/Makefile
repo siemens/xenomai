@@ -3,18 +3,9 @@
 # (accuracy_rt) compared to those available from the native
 # NPTL/LinuxThreads supports (accuracy).
 
-all:
-
 bin_PROGRAMS= accuracy accuracy_rt satch_rt
 
-CFLAGS= -D_GNU_SOURCE -D_REENTRANT -Wstrict-prototypes -g -O2 -Wall
-LDFLAGS= -lpthread -lrt
-
-accuracy: CFLAGS+=-DSPERIOD=2000
-
-accuracy_rt.o: CFLAGS_RT=-DSPERIOD=100
-
-satch_rt.o: CFLAGS_RT+=-DCONSUMER
+all: $(bin_PROGRAMS)
 
 # To use this makefile with xeno-config not located at /usr/xenomai/bin, type :
 # make XENO_CONFIG=/path/to/xeno-config
@@ -27,11 +18,16 @@ make XENO_CONFIG=<xenomai-install-path>/bin/xeno-config)
 endif
 
 CC:= $(shell $(XENO_CONFIG) --cc)
-
 CFLAGS_RT:= $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --posix-cflags) -g
 LDFLAGS_RT:= $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --posix-ldflags)
+CFLAGS= -D_GNU_SOURCE -D_REENTRANT -Wstrict-prototypes -g -O2 -Wall
+LDFLAGS= -lpthread -lrt
 
-all: $(bin_PROGRAMS)
+accuracy: CFLAGS+=-DSPERIOD=2000
+
+accuracy_rt.o: CFLAGS_RT=-DSPERIOD=100
+
+satch_rt.o: CFLAGS_RT+=-DCONSUMER
 
 %_rt.o: %.c
 	$(CC) $(CFLAGS_RT) $< -c -o $@
