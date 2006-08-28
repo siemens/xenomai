@@ -101,6 +101,7 @@ struct rt_16550_context {
     int                     ier_status;
     int                     mcr_status;
     int                     status;
+    int                     saved_errors;
 };
 
 
@@ -225,7 +226,7 @@ static inline void rt_16550_stat_interrupt(struct rt_16550_context *ctx)
 {
     ctx->status |= (inb(LSR(ctx->dev_id)) &
                     (RTSER_LSR_OVERRUN_ERR | RTSER_LSR_PARITY_ERR |
-                     RTSER_LSR_FRAMING_ERR |RTSER_LSR_BREAK_IND));
+                     RTSER_LSR_FRAMING_ERR | RTSER_LSR_BREAK_IND));
 }
 
 
@@ -478,6 +479,7 @@ int rt_16550_open(struct rtdm_dev_context *context,
     ctx->ioc_events     = 0;
     ctx->ioc_event_lock = 0;
     ctx->status         = 0;
+    ctx->saved_errors   = 0;
 
     rt_16550_set_config(ctx, &default_config, &dummy);
 
@@ -633,27 +635,31 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 
         case RTSER_RTIOC_GET_STATUS: {
             rtdm_lockctx_t lock_ctx;
+            int status;
+
+            rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
+
+            status = ctx->saved_errors | ctx->status;
+            ctx->status = 0;
+            ctx->saved_errors = 0;
+            ctx->ioc_events &= ~RTSER_EVENT_ERRPEND;
+
+            rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
 
             if (user_info) {
                 struct rtser_status status_buf;
 
-                status_buf.line_status  = inb(LSR(ctx->dev_id));
+                status_buf.line_status  = inb(LSR(ctx->dev_id)) | status;
                 status_buf.modem_status = inb(MSR(ctx->dev_id));
 
                 err = rtdm_safe_copy_to_user(user_info, arg, &status_buf,
                                              sizeof(struct rtser_status));
-                if (err)
-                    return err;
             } else {
                 ((struct rtser_status *)arg)->line_status  =
-                    inb(LSR(ctx->dev_id));
+                    inb(LSR(ctx->dev_id)) | status;
                 ((struct rtser_status *)arg)->modem_status =
                     inb(MSR(ctx->dev_id));
             }
-            rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
-            ctx->status = 0;
-            ctx->ioc_events &= ~RTSER_EVENT_ERRPEND;
-            rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
             break;
         }
 
@@ -824,6 +830,9 @@ ssize_t rt_16550_read(struct rtdm_dev_context *context,
                 ret = -EPIPE;
             else
                 ret = -EIO;
+            ctx->saved_errors = ctx->status &
+                (RTSER_LSR_OVERRUN_ERR | RTSER_LSR_PARITY_ERR |
+                 RTSER_LSR_FRAMING_ERR | RTSER_SOFT_OVERRUN_ERR);
             ctx->status = 0;
 
             rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
@@ -1074,7 +1083,7 @@ static const struct rtdm_device __initdata device_tmpl = {
     device_class:       RTDM_CLASS_SERIAL,
     device_sub_class:   RTDM_SUBCLASS_16550A,
     driver_name:        "xeno_16550A",
-    driver_version:     RTDM_DRIVER_VER(1, 3, 3),
+    driver_version:     RTDM_DRIVER_VER(1, 4, 0),
     peripheral_name:    "UART 16550A",
     provider_name:      "Jan Kiszka",
 };

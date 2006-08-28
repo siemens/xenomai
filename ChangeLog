@@ -1,3 +1,9 @@
+2006-08-28  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/rtdm/rtser.h, ksrc/drivers/serial/16550A.c: Refine
+	RTSER_RTIOC_GET_STATUS so that it returns also past errors (and
+	cleared) occured during read access.
+
 2006-08-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/skins: Remove -module from LDFLAGS for all libraries.

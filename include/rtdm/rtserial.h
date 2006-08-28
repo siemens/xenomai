@@ -2,7 +2,7 @@
  * @file
  * Real-Time Driver Model for Xenomai, serial device profile header
  *
- * @note Copyright (C) 2005 Jan Kiszka <jan.kiszka@web.de>
+ * @note Copyright (C) 2005, 2006 Jan Kiszka <jan.kiszka@web.de>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -379,6 +379,12 @@ typedef struct rtser_event {
  * - Kernel module initialization/cleanup code
  * - Kernel-based task
  * - User-space task (RT, non-RT)
+ *
+ * @note The error states @c RTSER_LSR_OVERRUN_ERR, @c RTSER_LSR_PARITY_ERR,
+ * @c RTSER_LSR_FRAMING_ERR, and @c RTSER_SOFT_OVERRUN_ERR that may have
+ * occured during previous read accesses to the device will be saved for being
+ * reported via this IOCTL. Upon return from @c RTSER_RTIOC_GET_STATUS, the
+ * saved state will be cleared.
  *
  * Rescheduling: never.
  */
