@@ -546,8 +546,27 @@ XENO_USER_APP_CFLAGS=$XENO_USER_CFLAGS
 XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__IN_XENO__ -Wstrict-prototypes"
 XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
 
-XENO_POSIX_WRAPPERS=`while read symbol; do echo -n "-Wl,--wrap,$symbol "; done \
-        < $srcdir/src/skins/posix/posix.wrappers`
+AC_MSG_CHECKING([whether ld supports @file])
+AC_CACHE_VAL(ac_cv_ld_file_option,
+  AC_LANG_SAVE
+  AC_LANG_C
+  save_LDFLAGS="$LDFLAGS"
+  [LDFLAGS="-Wl,@/dev/null"]
+  AC_LINK_IFELSE([main(){}],
+    [ac_cv_ld_file_option=yes],
+    [ac_cv_ld_file_option=no])
+  LDFLAGS="$save_LDFLAGS"
+  AC_LANG_RESTORE)
+if [[ $ac_cv_ld_file_option = yes ]]; then
+	XENO_POSIX_WRAPPERS="-Wl,@`cd $srcdir && pwd`/src/skins/posix/posix.wrappers"
+else
+	XENO_POSIX_WRAPPERS=`while read wrap_option symbol; do \
+			echo -n "-Wl,$wrap_option,$symbol "; \
+		done < $srcdir/src/skins/posix/posix.wrappers`
+fi
+AC_MSG_RESULT(${ac_cv_ld_file_option:-no})
+LD_FILE_OPTION=$ac_cv_ld_file_option
+AC_SUBST(LD_FILE_OPTION)
 
 dnl
 dnl Build the Makefiles

@@ -1,3 +1,9 @@
+2006-08-28  Philippe Gerum  <rpm@xenomai.org>
+
+	* src/skins/posix/posix.wrappers, configure.in,
+	scripts/xeno-config.in: Backport from trunk/ optimization for
+	reading wrapping directives from a file.
+
 2006-08-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/skins: Remove -module from LDFLAGS for all libraries.
@@ -59,6 +65,12 @@
 
 	* ksrc/skins/posix/timer.c (timer_settime): Bind the timer to the
 	timer owner (i.e. the caller) CPU.
+
+2006-08-18  Jan Kiszka  <jan.kiszka@web.de>
+
+	* src/skins/posix/posix.wrappers, configure.in,
+	scripts/xeno-config.in: Read wrapping options from file instead of
+	passing them via command line.
 
 2006-08-18  Philippe Gerum  <rpm@xenomai.org>
 	
