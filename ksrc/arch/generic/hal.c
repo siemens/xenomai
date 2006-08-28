@@ -485,7 +485,8 @@ void rthal_apc_kicker(unsigned virq, void *cookie)
  * threaded IRQ model.
  *
  * @param name is a symbolic name identifying the APC which will get
- * reported through the /proc/xenomai/apc interface.
+ * reported through the /proc/xenomai/apc interface. Passing NULL to
+ * create an anonymous APC is allowed.
  *
  * @param handler The address of the fault handler to call upon
  * exception condition. The handle will be passed the @a cookie value
@@ -701,7 +702,8 @@ static int apc_read_proc(char *page,
             p += sprintf(p, "%12lu", rthal_apc_table[apc].hits[cpu]);
         }
 
-        p += sprintf(p, "    (%s)", rthal_apc_table[apc].name);
+	if (rthal_apc_table[apc].name)
+	    p += sprintf(p, "    (%s)", rthal_apc_table[apc].name);
     }
 
     p += sprintf(p, "\n");
