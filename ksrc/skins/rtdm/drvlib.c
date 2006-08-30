@@ -1357,6 +1357,7 @@ void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig);
  * @{
  */
 
+#if defined(CONFIG_XENO_OPT_PERVASIVE) || defined(DOXYGEN_CPP)
 struct rtdm_mmap_data {
     void *src_addr;
     struct vm_operations_struct *vm_ops;
@@ -1535,6 +1536,7 @@ int rtdm_munmap(rtdm_user_info_t *user_info, void *ptr, size_t len)
 }
 
 EXPORT_SYMBOL(rtdm_munmap);
+#endif /* CONFIG_XENO_OPT_PERVASIVE || DOXYGEN_CPP */
 
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
