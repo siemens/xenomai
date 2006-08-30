@@ -1,4 +1,4 @@
-2006-08-28  Jan Kiszka  <jan.kiszka@web.de>
+2006-08-30  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/rtdm/rtdm_driver.h, ksrc/skins/rtdm/drvlib.c: Void
 	kernel<->user RTDM services if CONFIG_XENO_OPT_PERVASIVE is not
