@@ -395,10 +395,12 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	s = intr->isr(intr);
 	++intr->hits;
 
-	if (unlikely(s == XN_ISR_NONE && ++intr->unhandled == XNINTR_MAX_UNHANDLED)) {
-		xnlogerr("%s: IRQ%d not handled. Disabling IRQ line.\n",
-			 __FUNCTION__, irq);
-		s |= XN_ISR_NOENABLE;
+	if (unlikely(s == XN_ISR_NONE)) {
+		if (++intr->unhandled == XNINTR_MAX_UNHANDLED) {
+			xnlogerr("%s: IRQ%d not handled. Disabling IRQ "
+				 "line.\n", __FUNCTION__, irq);
+			s |= XN_ISR_NOENABLE;
+		}
 	} else
 		intr->unhandled = 0;
 
@@ -499,11 +501,13 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 
 	xnintr_shirq_unlock(shirq);
 
-	if (unlikely(s == XN_ISR_NONE && ++shirq->unhandled == XNINTR_MAX_UNHANDLED)) {
-		xnlogerr("%s: IRQ%d not handled. Disabling IRQ line.\n",
-			 __FUNCTION__, irq);
-		s |= XN_ISR_NOENABLE;
-	} else	
+	if (unlikely(s == XN_ISR_NONE)) {
+		if (++shirq->unhandled == XNINTR_MAX_UNHANDLED) {
+			xnlogerr("%s: IRQ%d not handled. Disabling IRQ "
+				 "line.\n", __FUNCTION__, irq);
+			s |= XN_ISR_NOENABLE;
+		}
+	} else
 		shirq->unhandled = 0;
 
 	if (s & XN_ISR_PROPAGATE)
@@ -571,11 +575,13 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 		    ("xnintr_edge_shirq_handler() : failed to get the IRQ%d line free.\n",
 		     irq);
 
-	if (unlikely(s == XN_ISR_NONE && ++shirq->unhandled == XNINTR_MAX_UNHANDLED)) {
-		xnlogerr("%s: IRQ%d not handled. Disabling IRQ line.\n",
-			 __FUNCTION__, irq);
-		s |= XN_ISR_NOENABLE;
-	} else	
+	if (unlikely(s == XN_ISR_NONE)) {
+		if (++shirq->unhandled == XNINTR_MAX_UNHANDLED) {
+			xnlogerr("%s: IRQ%d not handled. Disabling IRQ "
+			         "line.\n", __FUNCTION__, irq);
+			s |= XN_ISR_NOENABLE;
+		}
+	} else
 		shirq->unhandled = 0;
 
 	if (s & XN_ISR_PROPAGATE)
