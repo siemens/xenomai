@@ -1,3 +1,8 @@
+2006-08-30  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
+
+	* ksrc/nucleus/intr.c (xnintr_*irq_handler): Disable unhandled IRQ
+	line after a given number of unsuccessful tries.
+
 2006-08-30  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/rtdm/rtdm_driver.h, ksrc/skins/rtdm/drvlib.c: Void
