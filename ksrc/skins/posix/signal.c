@@ -64,7 +64,7 @@ typedef void siginfo_handler_t(int, siginfo_t *, void *);
 static struct sigaction actions[SIGRTMAX];
 static pse51_siginfo_t pse51_infos_pool[PSE51_SIGQUEUE_MAX];
 #ifdef CONFIG_SMP
-static xnlock_t pse51_infos_lock;
+static xnlock_t pse51_infos_lock = XNARCH_LOCK_UNLOCKED;
 #endif
 static xnpqueue_t pse51_infos_free_list;
 
