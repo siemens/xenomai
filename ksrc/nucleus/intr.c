@@ -159,6 +159,8 @@ int xnintr_init(xnintr_t *intr,
 	intr->flags = flags;
 #if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
 	intr->next = NULL;
+#else
+	intr->unhandled = 0;
 #endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */
 
 	return 0;
@@ -374,6 +376,7 @@ void xnintr_clock_handler(void)
 	xnintr_irq_handler(nkclock.irq, &nkclock);
 }
 
+#define XNINTR_MAX_UNHANDLED	1000
 /*
  * Low-level interrupt handler dispatching the ISRs -- Called with
  * interrupts off.
@@ -392,6 +395,13 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	++sched->inesting;
 	s = intr->isr(intr);
 	++intr->hits;
+
+	if (unlikely(s == XN_ISR_NONE && ++intr->unhandled == XNINTR_MAX_UNHANDLED)) {
+		xnlogerr("%s: IRQ%d not handled. Disabling IRQ line.\n",
+			 __FUNCTION__, irq);
+		s |= XN_ISR_NOENABLE;
+	} else
+		intr->unhandled = 0;
 
 	if (s & XN_ISR_PROPAGATE)
 		xnarch_chain_irq(irq);
@@ -422,6 +432,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 typedef struct xnintr_shirq {
 
 	xnintr_t *handlers;
+	int unhandled;
 #ifdef CONFIG_SMP
 	atomic_counter_t active;
 #endif				/* CONFIG_SMP */
@@ -482,11 +493,19 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 	intr = shirq->handlers;
 
 	while (intr) {
-		s |= intr->isr(intr) & XN_ISR_BITMASK;
+		s |= intr->isr(intr);
 		++intr->hits;
 		intr = intr->next;
 	}
+
 	xnintr_shirq_unlock(shirq);
+
+	if (unlikely(s == XN_ISR_NONE && ++shirq->unhandled == XNINTR_MAX_UNHANDLED)) {
+		xnlogerr("%s: IRQ%d not handled. Disabling IRQ line.\n",
+			 __FUNCTION__, irq);
+		s |= XN_ISR_NOENABLE;
+	} else	
+		shirq->unhandled = 0;
 
 	if (s & XN_ISR_PROPAGATE)
 		xnarch_chain_irq(irq);
@@ -527,16 +546,15 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	intr = shirq->handlers;
 
 	while (intr != end) {
-		int ret, code, bits;
+		int ret, code;
 
 		ret = intr->isr(intr);
 		code = ret & ~XN_ISR_BITMASK;
-		bits = ret & XN_ISR_BITMASK;
+		s |= ret;
 
 		if (code == XN_ISR_HANDLED) {
 			++intr->hits;
 			end = NULL;
-			s |= bits;
 		} else if (code == XN_ISR_NONE && end == NULL)
 			end = intr;
 
@@ -553,6 +571,13 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 		xnlogerr
 		    ("xnintr_edge_shirq_handler() : failed to get the IRQ%d line free.\n",
 		     irq);
+
+	if (unlikely(s == XN_ISR_NONE && ++shirq->unhandled == XNINTR_MAX_UNHANDLED)) {
+		xnlogerr("%s: IRQ%d not handled. Disabling IRQ line.\n",
+			 __FUNCTION__, irq);
+		s |= XN_ISR_NOENABLE;
+	} else	
+		shirq->unhandled = 0;
 
 	if (s & XN_ISR_PROPAGATE)
 		xnarch_chain_irq(irq);
@@ -613,6 +638,7 @@ static int xnintr_shirq_attach(xnintr_t *intr, void *cookie)
 				handler = &xnintr_edge_shirq_handler;
 #endif /* CONFIG_XENO_OPT_SHIRQ_EDGE */
 		}
+		shirq->unhandled = 0;
 
 		err = xnarch_hook_irq(intr->irq, handler, intr->iack, intr);
 		if (err)
