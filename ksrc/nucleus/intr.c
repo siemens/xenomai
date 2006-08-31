@@ -157,10 +157,9 @@ int xnintr_init(xnintr_t *intr,
 	intr->hits = 0;
 	intr->name = name;
 	intr->flags = flags;
+	intr->unhandled = 0;
 #if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
 	intr->next = NULL;
-#else
-	intr->unhandled = 0;
 #endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */
 
 	return 0;
