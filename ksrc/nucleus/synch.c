@@ -295,12 +295,11 @@ static void xnsynch_clear_boost(xnsynch_t *synch, xnthread_t *lastowner)
 void xnsynch_renice_sleeper(xnthread_t *thread)
 {
 	xnsynch_t *synch = thread->wchan;
-	xnthread_t *owner;
+	xnthread_t *owner = synch->owner;
 
-	if (!testbits(synch->status, XNSYNCH_PRIO))
+	if (!testbits(synch->status, XNSYNCH_PRIO) || owner == NULL)
 		return;
 
-	owner = synch->owner;
 	removepq(&synch->pendq, &thread->plink);
 	insertpqf(&synch->pendq, &thread->plink, thread->cprio);
 
