@@ -2133,8 +2133,6 @@ void xnpod_dispatch_signals(void)
 
 void xnpod_welcome_thread(xnthread_t *thread, int imask)
 {
-	spl_t s;
-
 	xnltt_log_event(xeno_ev_thrboot, thread->name);
 
 	xnarch_trace_pid(-1, xnthread_current_priority(thread));
