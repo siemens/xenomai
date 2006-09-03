@@ -69,7 +69,7 @@ void cleanup_and_exit(int sig)
     exit(0);
 }
 
-void rt_task(void *arg)
+void rt_task(void)
 {
     int i, j, ret;
 
@@ -107,7 +107,6 @@ void rt_task(void *arg)
 	    printf("\n");
 	}
     }
-    loops = 0;
 }
 
 int main(int argc, char **argv)
@@ -115,6 +114,7 @@ int main(int argc, char **argv)
     struct sockaddr_can addr;
     int i, opt, ret;
     struct ifreq ifr;
+    char name[32];
 
     struct option long_options[] = {
 	{ "help", no_argument, 0, 'h' },
@@ -252,16 +252,14 @@ int main(int argc, char **argv)
 	}
     }
 
-     rt_timer_set_mode(TM_ONESHOT);
-
-    ret = rt_task_spawn(&rt_task_desc, "", 0, 99, 0, &rt_task, 0);
+    snprintf(name, sizeof(name), "rtcansend-%d", getpid());
+    ret = rt_task_shadow(&rt_task_desc, name, 1, 0);
     if (ret) {
-        fprintf(stderr, "rt_task_spawn: %s\n", strerror(-ret));
+	fprintf(stderr, "rt_task_shadow: %s\n", strerror(-ret));
 	goto failure;
     }
 
-    while (loops)
-	usleep(100000);
+    rt_task();
 
     cleanup();
     return 0;

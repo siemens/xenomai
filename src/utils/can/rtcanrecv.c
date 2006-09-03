@@ -15,14 +15,13 @@
 static void print_usage(char *prg)
 {
     fprintf(stderr,
-	    "Usage: %s <can-interface> [Options]\n"
+	    "Usage: %s [<can-interface>] [Options]\n"
 	    "Options:\n"
 	    " -f  --filter=id:mask[:id:mask]... apply filter\n"
 	    " -e  --error=mask      receive error messages\n"
 	    " -t, --timeout=MS      timeout in ms\n"
 	    " -v, --verbose         be verbose\n"
 	    " -p, --print=MODULO    print every MODULO message\n"
-	    " -n, --name=STRING     name of the RT task\n"
 	    " -h, --help            this help\n",
 	    prg);
 }
@@ -30,7 +29,7 @@ static void print_usage(char *prg)
 
 extern int optind, opterr, optopt;
 
-static int s = -1, running = 1, verbose = 0, print = 1;
+static int s = -1, verbose = 0, print = 1;
 static nanosecs_rel_t timeout = 0;
 
 RT_TASK rt_task_desc;
@@ -75,18 +74,20 @@ void cleanup_and_exit(int sig)
 {
     if (verbose)
 	printf("Signal %d received\n", sig);
-    running = 0;
     cleanup();
     exit(0);
 }
 
-void rt_task(void *arg)
+void rt_task(void)
 {
     int i, ret, count = 0;
     struct can_frame frame;
+    struct sockaddr_can addr;
+    socklen_t addrlen = sizeof(addr);
 
-    while (running) {
-	ret = rt_dev_recv(s, (void *)&frame, sizeof(can_frame_t), 0);
+    while (1) {
+	ret = rt_dev_recvfrom(s, (void *)&frame, sizeof(can_frame_t), 0,
+	                      (struct sockaddr *)&addr, &addrlen);
 	if (ret < 0) {
 	    switch (ret) {
 	    case -ETIMEDOUT:
@@ -100,12 +101,11 @@ void rt_task(void *arg)
 	    default:
 		fprintf(stderr, "rt_dev_recv: %s\n", strerror(-ret));
 	    }
-	    running = 0;
 	    break;
 	}
 
 	if (print && (count % print) == 0) {
-	    printf("#%d: ", count);
+	    printf("#%d: (%d) ", count, addr.can_ifindex);
 	    if (frame.can_id & CAN_ERR_FLAG)
 		printf("!0x%08x!", frame.can_id & CAN_ERR_MASK);
 	    else if (frame.can_id & CAN_EFF_FLAG)
@@ -114,9 +114,10 @@ void rt_task(void *arg)
 		printf("<0x%03x>", frame.can_id & CAN_SFF_MASK);
 
 	    printf(" [%d]", frame.can_dlc);
-	    for (i = 0; i < frame.can_dlc; i++) {
-		printf(" %02x", frame.data[i]);
-	    }
+	    if (!(frame.can_id & CAN_RTR_FLAG))
+		for (i = 0; i < frame.can_dlc; i++) {
+		    printf(" %02x", frame.data[i]);
+		}
 	    if (frame.can_id & CAN_ERR_FLAG) {
 		printf(" ERROR ");
 		if (frame.can_id & CAN_ERR_BUSOFF)
@@ -138,6 +139,7 @@ int main(int argc, char **argv)
     u_int32_t err_mask = 0;
     struct ifreq ifr;
     char *ptr;
+    char name[32];
 
     struct option long_options[] = {
 	{ "help", no_argument, 0, 'h' },
@@ -153,7 +155,7 @@ int main(int argc, char **argv)
     signal(SIGTERM, cleanup_and_exit);
     signal(SIGINT, cleanup_and_exit);
 
-    while ((opt = getopt_long(argc, argv, "hve:f:t:p:n:",
+    while ((opt = getopt_long(argc, argv, "hve:f:t:p:",
 			      long_options, NULL)) != -1) {
 	switch (opt) {
 	case 'h':
@@ -200,19 +202,6 @@ int main(int argc, char **argv)
 	}
     }
 
-    if (optind == argc) {
-	print_usage(argv[0]);
-	exit(0);
-    }
-
-    if (argv[optind] == NULL) {
-	fprintf(stderr, "No Interface supplied\n");
-	exit(-1);
-    }
-
-    if (verbose)
-	printf("interface %s\n", argv[optind]);
-
     ret = rt_dev_socket(PF_CAN, SOCK_RAW, 0);
     if (ret < 0) {
 	fprintf(stderr, "rt_dev_socket: %s\n", strerror(-ret));
@@ -220,16 +209,25 @@ int main(int argc, char **argv)
     }
     s = ret;
 
-    strncpy(ifr.ifr_name, argv[optind], IFNAMSIZ);
-    if (verbose)
-	printf("s=%d, ifr_name=%s\n", s, ifr.ifr_name);
+    if (argv[optind] == NULL) {
+	if (verbose)
+	    printf("interface all\n");
 
-    ret = rt_dev_ioctl(s, SIOCGIFINDEX, &ifr);
-    if (ret < 0) {
-	fprintf(stderr, "rt_dev_ioctl GET_IFINDEX: %s\n", strerror(-ret));
-	goto failure;
+	ifr.ifr_ifindex = 0;
+    } else {
+	if (verbose)
+	    printf("interface %s\n", argv[optind]);
+	
+	strncpy(ifr.ifr_name, argv[optind], IFNAMSIZ);
+	if (verbose)
+	    printf("s=%d, ifr_name=%s\n", s, ifr.ifr_name);
+	
+	ret = rt_dev_ioctl(s, SIOCGIFINDEX, &ifr);
+	if (ret < 0) {
+	    fprintf(stderr, "rt_dev_ioctl GET_IFINDEX: %s\n", strerror(-ret));
+	    goto failure;
+	}
     }
-
 
     if (err_mask) {
 	ret = rt_dev_setsockopt(s, SOL_CAN_RAW, CAN_RAW_ERR_FILTER,
@@ -271,19 +269,15 @@ int main(int argc, char **argv)
 	}
     }
 
-    rt_timer_set_mode(TM_ONESHOT);
-
-    ret = rt_task_spawn(&rt_task_desc, "", 0, 99, 0, &rt_task, 0);
+    snprintf(name, sizeof(name), "rtcanrecv-%d", getpid());
+    ret = rt_task_shadow(&rt_task_desc, name, 1, 0);
     if (ret) {
-        fprintf(stderr, "rt_task_spawn: %s\n", strerror(-ret));
+	fprintf(stderr, "rt_task_shadow: %s\n", strerror(-ret));
 	goto failure;
     }
 
-    while (running)
-	usleep(100000);
-
-    cleanup();
-    return 0;
+    rt_task();
+    /* never returns */
 
  failure:
     cleanup();
