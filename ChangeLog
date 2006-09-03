@@ -1,3 +1,10 @@
+2006-09-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/synch.c (xnsynch_renice_sleeper): Do not assume
+	that the synch. object is always owned (i.e. xnsynch::owner may be
+	NULL for resources pended on by priority but which do not enforce
+	PIP).
+
 2006-08-28  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/skins/posix/posix.wrappers, configure.in,
@@ -65,12 +72,6 @@
 
 	* ksrc/skins/posix/timer.c (timer_settime): Bind the timer to the
 	timer owner (i.e. the caller) CPU.
-
-2006-08-18  Jan Kiszka  <jan.kiszka@web.de>
-
-	* src/skins/posix/posix.wrappers, configure.in,
-	scripts/xeno-config.in: Read wrapping options from file instead of
-	passing them via command line.
 
 2006-08-18  Philippe Gerum  <rpm@xenomai.org>
 	
