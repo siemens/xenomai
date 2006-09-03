@@ -1,3 +1,10 @@
+2006-09-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/synch.c (xnsynch_renice_sleeper): Do not assume
+	that the synch. object is always owned (i.e. xnsynch::owner may be
+	NULL for resources pended on by priority but which do not enforce
+	PIP).
+
 2006-08-26  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/synch.c (xnsynch_renice_sleeper): Make sure to
