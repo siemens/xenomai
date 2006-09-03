@@ -1,3 +1,17 @@
+2006-09-03  Wolfgang Grandegger <wg@grandegger.com>
+
+	* ksrc/drivers/can/rtcan_dev.c (rtcan_dev_register): Bug fixed
+	when maximum number of devices is exceeded.
+
+2006-09-03  Jan Kiszka <jan.kiszka@web.de>
+
+	* ksrc/drivers/can/{Config.in,Kconfig,Makefile,rtcan_virt.c},
+	scripts/Modules.frag: Add virtual CAN bus driver.
+
+	* src/utils/can/rtcan{recv,send}: Refactor rtcanrecv/send thread
+	management, print input device in rtcanrecv, support for listening
+	on all CAN devices, fix output of RTR frames.
+
 2006-09-03  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* src/testsuite/switchtest/switchtest.c (clean_exit): Fix
