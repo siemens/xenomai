@@ -80,11 +80,10 @@ static unsigned long data_lines = 21;
 static inline void clean_exit(int retval)
 {
 	status = retval;
-	raise(SIGTERM);
-	for (;;) {
-		sched_yield();
-		pthread_testcancel();
-	}
+	kill(getpid(), SIGTERM);
+	for (;;)
+		/* Wait for cancellation. */
+		__real_sem_wait(&sleeper_start);
 }
 
 static void timespec_substract(struct timespec *result,
@@ -100,7 +99,8 @@ static void timespec_substract(struct timespec *result,
 	}
 }
 
-static char *task_name(struct cpu_tasks *cpu, unsigned task)
+static char *task_name(char *buf, size_t sz, 
+		       struct cpu_tasks *cpu, unsigned task)
 {
 	char *basename [] = {
 		[SLEEPER] = "sleeper",
@@ -118,35 +118,35 @@ static char *task_name(struct cpu_tasks *cpu, unsigned task)
 		{ .flag = UFPS, .name = "ufps" },
 	};
 	struct task_params *param;
-	static char buffer[64];
 	unsigned pos, i;
 	
 	if (task >= cpu->tasks_count)
 		return "???";
 
 	param = &cpu->tasks[task];
-	pos = snprintf(buffer, sizeof(buffer), "%s", basename[param->type]);
+	pos = snprintf(buf, sz, "%s", basename[param->type]);
 	for (i = 0; i < sizeof(flags) / sizeof(flags[0]); i++) {
 		if (!(param->fp & flags[i].flag))
 			continue;
 
-		pos += snprintf(&buffer[pos],
-				sizeof(buffer) - pos, "_%s", flags[i].name);
+		pos += snprintf(&buf[pos],
+				sz - pos, "_%s", flags[i].name);
 	}
 	
 #ifdef CONFIG_SMP
-	pos += snprintf(&buffer[pos], sizeof(buffer) - pos, "%u", cpu->index);
+	pos += snprintf(&buf[pos], sz - pos, "%u", cpu->index);
 #endif /* !CONFIG_SMP */
 
-	snprintf(&buffer[pos], sizeof(buffer) - pos, "-%u", param->swt.index);
+	snprintf(&buf[pos], sz - pos, "-%u", param->swt.index);
 	
-	return buffer;
+	return buf;
 }
 
 static void handle_bad_fpreg(struct cpu_tasks *cpu, unsigned fp_val)
 {
 	struct rttst_swtest_error err;
 	unsigned from, to;
+	char buffer[64];
 
 	ioctl(cpu->fd, RTTST_RTIOC_SWTEST_GET_LAST_ERROR, &err);
 
@@ -156,12 +156,19 @@ static void handle_bad_fpreg(struct cpu_tasks *cpu, unsigned fp_val)
 	from = err.last_switch.from;
 	to = err.last_switch.to;
 
-	fprintf(stderr, "Error after context switch from task %d(%s) to"
-		" task %d(%s),\nFPU registers were set to %d (maybe task %s)\n",
-		from, task_name(cpu, from),
-		to, task_name(cpu, to),
-		fp_val, task_name(cpu, fp_val % 1000));
+	fprintf(stderr, "Error after context switch from task %d(%s) ",
+		from, task_name(buffer, sizeof(buffer), cpu, from));
+	fprintf(stderr, "to task %d(%s),\nFPU registers were set to %u ",
+		to, task_name(buffer, sizeof(buffer), cpu, to), fp_val);
+	fprintf(stderr, "(maybe task %s)\n", 
+		task_name(buffer, sizeof(buffer), cpu, fp_val % 1000));
 	clean_exit(EXIT_FAILURE);
+}
+
+void display_cleanup(void *cookie)
+{
+	pthread_mutex_t *mutex = (pthread_mutex_t *) cookie;
+	__real_pthread_mutex_unlock(mutex);
 }
 
 void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
@@ -184,8 +191,10 @@ void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
 
 	if (quiet)
 		return;
-	
-	pthread_mutex_lock(&headers_lock);
+
+	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+	pthread_cleanup_push(display_cleanup, &headers_lock);
+	__real_pthread_mutex_lock(&headers_lock);
 
 	if (data_lines && (nlines++ % data_lines) == 0) {
 		struct timespec diff;
@@ -204,8 +213,6 @@ void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
 #endif /* !CONFIG_SMP */
 	}
 
-	pthread_mutex_unlock(&headers_lock);
-
 #ifdef CONFIG_SMP
 	printf("RTD|%12u|%12lu|%12lu\n", cpu->index,
 	       switches_count - cpu->last_switches_count, switches_count);
@@ -213,6 +220,9 @@ void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
 	printf("RTD|%12lu|%12lu\n",
 	       switches_count - cpu->last_switches_count, switches_count);
 #endif /* !CONFIG_SMP */
+
+	pthread_cleanup_pop(1);
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
 	cpu->last_switches_count = switches_count;
 }
@@ -646,6 +656,7 @@ static int task_create(struct cpu_tasks *cpu,
 		       pthread_attr_t *rt_attr,
 		       pthread_attr_t *sleeper_attr)
 {
+	char buffer[64];
 	typedef void *thread_routine(void *);
 	thread_routine *task_routine [] = {
 		[RTUP] = &rtup,
@@ -706,8 +717,9 @@ static int task_create(struct cpu_tasks *cpu,
 		return err;
 	}
 
-	err = pthread_set_name_np(param->thread,
-				  task_name(param->cpu,param->swt.index));
+	err = pthread_set_name_np(param->thread, 
+				  task_name(buffer, sizeof(buffer), 
+				  param->cpu,param->swt.index));
 			
 	if (err)
 		fprintf(stderr,"pthread_set_name_np: %s\n", strerror(err));
@@ -1083,7 +1095,7 @@ int main(int argc, const char *argv[])
 	sigaddset(&mask, SIGALRM);
 	pthread_sigmask(SIG_BLOCK, &mask, NULL);
 
-	pthread_mutex_init(&headers_lock, NULL);
+	__real_pthread_mutex_init(&headers_lock, NULL);
 
 	/* Prepare attributes for real-time tasks. */
 	pthread_attr_init(&rt_attr);
@@ -1101,6 +1113,7 @@ int main(int argc, const char *argv[])
 	/* Create and register all tasks. */
 	for (i = 0; i < nr_cpus; i ++) {
 		struct cpu_tasks *cpu = &cpus[i];
+		char buffer[64];
 
 		cpu->fd = open_rttest(devname,sizeof(devname),cpu->tasks_count);
 
@@ -1119,7 +1132,8 @@ int main(int argc, const char *argv[])
 				status = EXIT_FAILURE;
 				goto cleanup;
 			}
-			printf(" %s", task_name(param->cpu,param->swt.index));
+			printf(" %s", 
+			       task_name(buffer, sizeof(buffer), param->cpu,param->swt.index));
 		}
 	}
 	printf("\n");
@@ -1172,7 +1186,7 @@ int main(int argc, const char *argv[])
 	}
 	free(cpus);
 	__real_sem_destroy(&sleeper_start);
-	pthread_mutex_destroy(&headers_lock);
+	__real_pthread_mutex_destroy(&headers_lock);
 
 	return status;
 }
