@@ -260,15 +260,16 @@ void xnsynch_renice_sleeper (xnthread_t *thread)
 
 {
 	xnsynch_t *synch = thread->wchan;
-	xnthread_t *owner = synch->owner;
+	xnthread_t *owner;
 
-	if (!testbits(synch->status, XNSYNCH_PRIO) || owner == NULL)
+	if (!testbits(synch->status, XNSYNCH_PRIO))
 		return;
 
 	removepq(&synch->pendq, &thread->plink);
 	insertpqf(&synch->pendq, &thread->plink, thread->cprio);
+	owner = synch->owner;
 
-	if (xnpod_compare_prio(thread->cprio, owner->cprio) > 0)
+	if (owner != NULL && xnpod_compare_prio(thread->cprio, owner->cprio) > 0)
 	    {
 	    /* The new priority of the sleeping thread is higher than
 	     * the priority of the current owner of the resource: we
