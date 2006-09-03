@@ -12,6 +12,7 @@ DRIVERS-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += drivers/xenomai/testing/xeno_timerb
 DRIVERS-$(CONFIG_XENO_DRIVERS_IRQBENCH) += drivers/xenomai/testing/xeno_irqbench.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_SWITCHTEST) += drivers/xenomai/testing/xeno_switchtest.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_RTCAN) += drivers/xenomai/can/xeno_rtcan.o
+DRIVERS-$(CONFIG_XENO_DRIVERS_RTCAN_VIRT) += drivers/xenomai/can/xeno_rtcan_virt.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_RTCAN_MSCAN) += drivers/xenomai/can/mscan/xeno_rtcan_mscan.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_RTCAN_SJA1000) += drivers/xenomai/can/sja1000/xeno_rtcan_sja1000.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_RTCAN_SJA1000_PEAK_PCI) += drivers/xenomai/can/sja1000/xeno_rtcan_peak_pci.o

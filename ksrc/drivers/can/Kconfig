@@ -26,6 +26,10 @@ config XENO_DRIVERS_RTCAN_MAX_RECEIVERS
        int "Maximum number of receive filters per device"
        default 16
 
+config XENO_DRIVERS_RTCAN_VIRT
+	depends on XENO_DRIVERS_RTCAN
+	tristate "Virtual tunnelling driver"
+
 source drivers/xenomai/can/mscan/Kconfig
 source drivers/xenomai/can/sja1000/Kconfig
 
