@@ -223,13 +223,17 @@ static inline int __rtcan_dev_new_index(void)
 int rtcan_dev_register(struct rtcan_device *dev)
 {
     rtdm_lockctx_t context;
-
+    int ret;
 
     down(&rtcan_devices_nrt_lock);
 
     rtcan_global_init();
 
-    dev->ifindex = __rtcan_dev_new_index();
+    if ((ret = __rtcan_dev_new_index()) < 0) {
+        up(&rtcan_devices_nrt_lock);
+        return ret;	
+    }
+    dev->ifindex = ret;
 
     if (strchr(dev->name,'%') != NULL)
         rtcan_dev_alloc_name(dev, dev->name);
