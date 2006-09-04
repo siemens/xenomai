@@ -2,7 +2,7 @@
  * @file
  * Real-Time Driver Model for Xenomai
  *
- * @note Copyright (C) 2005 Jan Kiszka <jan.kiszka@web.de>
+ * @note Copyright (C) 2005, 2006 Jan Kiszka <jan.kiszka@web.de>
  * @note Copyright (C) 2005 Joerg Langenberg <joerg.langenberg@gmx.net>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
@@ -18,18 +18,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- */
-
-/*!
- * @defgroup rtdm Real-Time Driver Model
- *
- * The Real-Time Driver Model (RTDM) provides a unified interface to
- * both users and developers of real-time device
- * drivers. Specifically, it addresses the constraints of mixed
- * RT/non-RT systems like Xenomai. RTDM conforms to POSIX
- * semantics (IEEE Std 1003.1) where available and applicable.
- *
- * @b API @b Revision: 4
  */
 
 /*!

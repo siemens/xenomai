@@ -99,9 +99,9 @@ struct rtdm_dev_context;
 
 
 /*!
- * @anchor versioning @name Versioning
- * Current revisions of RTDM structures and interfaces, encoding of driver
- * versions.
+ * @anchor drv_versioning @name Driver Versioning
+ * Current revisions of RTDM structures, encoding of driver versions. See
+ * @ref api_versioning "API Versioning" for the interface revision.
  * @{
  */
 /** Version of struct rtdm_device */
@@ -109,12 +109,6 @@ struct rtdm_dev_context;
 
 /** Version of struct rtdm_dev_context */
 #define RTDM_CONTEXT_STRUCT_VER     3
-
-/** Driver API version */
-#define RTDM_API_VER                5
-
-/** Minimum API revision compatible with the current release */
-#define RTDM_API_MIN_COMPAT_VER     5
 
 /** Flag indicating a secure variant of RTDM (not supported here) */
 #define RTDM_SECURE_DEVICE          0x80000000
@@ -131,7 +125,7 @@ struct rtdm_dev_context;
 
 /** Get patch version number from driver revision code */
 #define RTDM_DRIVER_PATCH_VER(ver)  ((ver) & 0xFF)
-/** @} Versioning */
+/** @} Driver Versioning */
 
 
 /*!
@@ -378,7 +372,7 @@ struct rtdm_dev_reserved {
  */
 struct rtdm_device {
     /** Revision number of this structure, see
-     *  @ref versioning "Versioning" defines */
+     *  @ref drv_versioning "Driver Versioning" defines */
     int                             struct_version;
 
     /** Device flags, see @ref dev_flags "Device Flags" for details */
@@ -418,7 +412,7 @@ struct rtdm_device {
     int                             device_sub_class;
     /** Informational driver name (reported via /proc) */
     const char                      *driver_name;
-    /** Driver version, see @ref versioning "Versioning" defines */
+    /** Driver version, see @ref drv_versioning "Driver Versioning" defines */
     int                             driver_version;
     /** Informational peripheral name the device is attached to
      *  (reported via /proc) */

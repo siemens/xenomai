@@ -1,3 +1,9 @@
+2006-09-04  Jan Kiszka <jan.kiszka@web.de>
+
+	* include/rtdm/{rtdm.h,rtdm_driver.h}: Move API version to rtdm.h
+	in order to include user API into the revisioning. Minor doc
+	refactoring.
+
 2006-09-03  Wolfgang Grandegger <wg@grandegger.com>
 
 	* ksrc/drivers/can/rtcan_dev.c (rtcan_dev_register): Bug fixed
