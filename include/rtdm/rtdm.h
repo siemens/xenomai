@@ -2,7 +2,7 @@
  * @file
  * Real-Time Driver Model for Xenomai, user API header
  *
- * @note Copyright (C) 2005 Jan Kiszka <jan.kiszka@web.de>
+ * @note Copyright (C) 2005, 2006 Jan Kiszka <jan.kiszka@web.de>
  * @note Copyright (C) 2005 Joerg Langenberg <joerg.langenberg@gmx.net>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
@@ -20,6 +20,18 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * @ingroup userapi
+ */
+
+/*!
+ * @defgroup rtdm Real-Time Driver Model
+ *
+ * The Real-Time Driver Model (RTDM) provides a unified interface to
+ * both users and developers of real-time device
+ * drivers. Specifically, it addresses the constraints of mixed
+ * RT/non-RT systems like Xenomai. RTDM conforms to POSIX
+ * semantics (IEEE Std 1003.1) where available and applicable.
+ *
+ * @b API @b Revision: 5
  */
 
 /*!
@@ -55,8 +67,20 @@ typedef struct task_struct          rtdm_user_info_t;
 #endif /* !__KERNEL__ */
 
 
-/** Maximum length of device names */
-#define RTDM_MAX_DEVNAME_LEN        31
+/*!
+ * @addtogroup rtdm
+ * @{
+ */
+
+/*!
+ * @anchor api_versioning @name API Versioning
+ * @{ */
+/** Common user and driver API version */
+#define RTDM_API_VER                5
+
+/** Minimum API revision compatible with the current release */
+#define RTDM_API_MIN_COMPAT_VER     5
+/** @} API Versioning */
 
 
 /** RTDM type for representing absolute dates. Its base type is a 64 bit
@@ -79,8 +103,14 @@ typedef int64_t                     nanosecs_rel_t;
 
 /** Any negative timeout means non-blocking. */
 #define RTDM_TIMEOUT_NONE           (-1)
-/** @} */
+/** @} RTDM_TIMEOUT_xxx */
+/** @} rtdm */
 
+
+/*!
+ * @addtogroup profiles
+ * @{
+ */
 
 /*!
  * @anchor RTDM_CLASS_xxx   @name RTDM_CLASS_xxx
@@ -101,31 +131,43 @@ typedef int64_t                     nanosecs_rel_t;
 */
 #define RTDM_CLASS_EXPERIMENTAL     224
 #define RTDM_CLASS_MAX              255
-/** @} */
+/** @} RTDM_CLASS_xxx */
 
 
 #define RTIOC_TYPE_COMMON           0
 
 
 /*!
- * @name Common IOCTLs
+ * @anchor device_naming    @name Device Naming
+ * Maximum length of device names (excluding the final null character)
  * @{
  */
+#define RTDM_MAX_DEVNAME_LEN        31
+/** @} Device Naming */
 
-/**
- * Purge internal device buffers.
- * @param[in] arg Purge mask, see @ref RTDM_PURGE_xxx_BUFFER
- */
-#define RTIOC_PURGE                 _IOW(RTIOC_TYPE_COMMON, 0x10, int)
-/** @} */
 
 /*!
- * @anchor RTDM_PURGE_xxx_BUFFER   @name RTDM_PURGE_xxx_BUFFER
+ * @anchor RTDM_PURGE_xxx_BUFFER    @name RTDM_PURGE_xxx_BUFFER
  * Flags selecting buffers to be purged
  * @{ */
 #define RTDM_PURGE_RX_BUFFER        0x0001
 #define RTDM_PURGE_TX_BUFFER        0x0002
-/** @} */
+/** @} RTDM_PURGE_xxx_BUFFER*/
+
+
+/*!
+ * @anchor common_IOCTLs    @name Common IOCTLs
+ * The following IOCTLs shall be supported by any device profile if applicable
+ * @{
+ */
+
+/**
+ * Purge internal device or socket buffers.
+ * @param[in] arg Purge mask, see @ref RTDM_PURGE_xxx_BUFFER
+ */
+#define RTIOC_PURGE                 _IOW(RTIOC_TYPE_COMMON, 0x10, int)
+/** @} Common IOCTLs */
+/** @} rtdm */
 
 
 /* Internally used for mapping socket functions on IOCTLs */
