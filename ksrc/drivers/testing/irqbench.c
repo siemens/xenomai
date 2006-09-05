@@ -306,6 +306,7 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
                     err = rtdm_irq_request(&ctx->irq_handle, config->port_irq,
                                            rt_irqbench_task_irq, 0,
                                            "irqbench", ctx);
+                    rtdm_irq_enable(&ctx->irq_handle);
                     break;
 
                 case RTTST_IRQBENCH_KERNEL_TASK:
@@ -314,6 +315,7 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
                                            "irqbench", ctx);
                     if (err)
                         goto unlock_start_out;
+                    rtdm_irq_enable(&ctx->irq_handle);
 
                     err = rtdm_task_init(&ctx->irq_task, "irqbench",
                                          rt_irqbench_task, ctx,
@@ -326,6 +328,7 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
                     err = rtdm_irq_request(&ctx->irq_handle, config->port_irq,
                                            rt_irqbench_direct_irq, 0,
                                            "irqbench", ctx);
+                    rtdm_irq_enable(&ctx->irq_handle);
                     break;
 
                 case RTTST_IRQBENCH_HARD_IRQ:
@@ -344,6 +347,7 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
                                                IPIPE_EXCLUSIVE_MASK);
                     if (err)
                         rthal_unregister_domain(&ctx->domain);
+                    rthal_irq_enable(ctx->port_irq);
                     break;
 
                 default:
@@ -356,11 +360,6 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
             ctx->mode = config->mode;
 
             memset(&ctx->stats, 0, sizeof(ctx->stats));
-
-            if (ctx->mode == RTTST_IRQBENCH_HARD_IRQ)
-                rthal_irq_enable(ctx->port_irq);
-            else
-                rtdm_irq_enable(&ctx->irq_handle);
 
             /* Arm IRQ */
             switch (ctx->port_type) {
