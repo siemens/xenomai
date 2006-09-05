@@ -1,3 +1,8 @@
+2006-09-06  Jan Kiszka <jan.kiszka@web.de>
+
+	* src/testsuite/irqbench/irqloop.c: Make cleanup more robust
+	against busy device on close.
+
 2006-09-05  Jan Kiszka <jan.kiszka@web.de>
 
 	* ksrc/drivers/testing/irqbench.c: Reorder IRQ enabling during

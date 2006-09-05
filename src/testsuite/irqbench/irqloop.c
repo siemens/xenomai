@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
     struct rttst_irqbench_stats stats;
     unsigned long long last_received = 0;
     pthread_t thr;
-    int c;
+    int c, err;
 
 
     while ((c = getopt(argc,argv,"D:t:P:o:a:i:")) != EOF)
@@ -165,11 +165,14 @@ int main(int argc, char *argv[])
     ioctl(benchdev, RTTST_RTIOC_IRQBENCH_STOP);
 
   cleanup:
-    close(benchdev);
+    err = close(benchdev);
     if (config.mode == RTTST_IRQBENCH_USER_TASK) {
         pthread_cancel(thr);
         pthread_join(thr, NULL);
     }
+    /* device may have been busy, close again if previous call failed */
+    if (err)
+        close(benchdev);
 
     return 0;
 }
