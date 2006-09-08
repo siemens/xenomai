@@ -1,3 +1,8 @@
+2006-09-08  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* scripts/xeno-load.in: Find whether sudo is available in a
+	way compatible with busybox.
+
 2006-09-06  Jan Kiszka <jan.kiszka@web.de>
 
 	* src/testsuite/irqbench/irqloop.c: Make cleanup more robust
