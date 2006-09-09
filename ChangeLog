@@ -1,3 +1,11 @@
+2006-09-09  Jan Kiszka <jan.kiszka@web.de>
+
+	* ksrc/drivers/can/sja1000/rtcan_isa.c: Fix type of irq mod-param,
+	fix cleanup of devices.
+
+	* ksrc/nucleus/Config.in: Add CONFIG_XENO_OPT_RPIDISABLE switch to
+	2.4 configuration.
+
 2006-09-08  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* scripts/xeno-load.in: Find whether sudo is available in a
