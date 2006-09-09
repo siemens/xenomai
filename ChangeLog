@@ -1,3 +1,8 @@
+2006-09-09  Philippe Gerum  <rpm@xenomai.org>
+
+ 	* ksrc/nucleus/module.c (heap_read_proc): Export system heap
+ 	information.
+
 2006-09-09  Jan Kiszka <jan.kiszka@web.de>
 
 	* ksrc/nucleus/Config.in: Add CONFIG_XENO_OPT_RPIDISABLE switch to

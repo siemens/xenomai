@@ -628,6 +628,32 @@ static int irq_read_proc(char *page,
 	return len;
 }
 
+static int heap_read_proc(char *page,
+			  char **start,
+			  off_t off, int count, int *eof, void *data)
+{
+	int len;
+
+	if (!nkpod)
+		return -ESRCH;
+
+	len = sprintf(page, "size=%lu:used=%lu:pagesz=%lu\n",
+		      xnheap_size(&kheap),
+		      xnheap_used_mem(&kheap),
+		      xnheap_page_size(&kheap));
+
+	len -= off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
 static struct proc_dir_entry *add_proc_leaf(const char *name,
 					    read_proc_t rdproc,
 					    write_proc_t wrproc,
@@ -698,6 +724,8 @@ void xnpod_init_proc(void)
 
 	add_proc_leaf("irq", &irq_read_proc, NULL, NULL, rthal_proc_root);
 
+	add_proc_leaf("heap", &heap_read_proc, NULL, NULL, rthal_proc_root);
+
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	iface_proc_root =
 	    create_proc_entry("interfaces", S_IFDIR, rthal_proc_root);
@@ -716,6 +744,7 @@ void xnpod_delete_proc(void)
 
 	remove_proc_entry("interfaces", rthal_proc_root);
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
+	remove_proc_entry("heap", rthal_proc_root);
 	remove_proc_entry("irq", rthal_proc_root);
 	remove_proc_entry("timer", rthal_proc_root);
 	remove_proc_entry("version", rthal_proc_root);
