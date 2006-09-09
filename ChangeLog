@@ -1,3 +1,8 @@
+2006-09-09  Jan Kiszka <jan.kiszka@web.de>
+
+	* ksrc/nucleus/Config.in: Add CONFIG_XENO_OPT_RPIDISABLE switch to
+	2.4 configuration.
+
 2006-09-03  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.2.2 (Ride)
