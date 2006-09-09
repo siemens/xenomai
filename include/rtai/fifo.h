@@ -26,6 +26,8 @@
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
+#define RTFIFO_SYNCWAIT  0
+
 typedef struct rt_fifo {
 
     xnholder_t link;		/* !< Link in flush queue. */
@@ -43,7 +45,7 @@ typedef struct rt_fifo {
 
     size_t fillsz;		/* !< Bytes written to the buffer.  */
 
-    u_long flushable;		/* !< Flush request flag. */
+    u_long status;		/* !< Status information. */
 
     int (*handler)(unsigned minor); /* !< Input handler. */
 
