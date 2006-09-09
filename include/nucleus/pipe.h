@@ -130,6 +130,10 @@ ssize_t xnpipe_send(int minor,
 		    size_t size,
 		    int flags);
 
+ssize_t xnpipe_send_more(int minor,
+			 struct xnpipe_mh *mh,
+			 ssize_t size);
+
 ssize_t xnpipe_recv(int minor,
 		    struct xnpipe_mh **pmh,
 		    xnticks_t timeout);

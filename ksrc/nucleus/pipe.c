@@ -306,6 +306,12 @@ int xnpipe_disconnect(int minor)
 
 	__clrbits(state->status, XNPIPE_KERN_CONN);
 
+	if (state->output_handler != NULL) {
+		while ((holder = getq(&state->outq)) != NULL)
+			state->output_handler(minor, link2mh(holder),
+					      -EPIPE, state->cookie);
+	}
+
 	if (testbits(state->status, XNPIPE_USER_CONN)) {
 		while ((holder = getq(&state->inq)) != NULL) {
 			if (state->input_handler != NULL)
@@ -313,12 +319,6 @@ int xnpipe_disconnect(int minor)
 						     -EPIPE, state->cookie);
 			else if (state->alloc_handler == NULL)
 				xnfree(link2mh(holder));
-		}
-
-		if (state->output_handler != NULL) {
-			while ((holder = getq(&state->outq)) != NULL)
-				state->output_handler(minor, link2mh(holder),
-						      -EPIPE, state->cookie);
 		}
 
 		if (xnsynch_destroy(&state->synchbase) == XNSYNCH_RESCHED)
@@ -369,11 +369,6 @@ ssize_t xnpipe_send(int minor, struct xnpipe_mh *mh, size_t size, int flags)
 		return -EBADF;
 	}
 
-	if (!testbits(state->status, XNPIPE_USER_CONN)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return -EPIPE;
-	}
-
 	inith(xnpipe_m_link(mh));
 	xnpipe_m_size(mh) = size - sizeof(*mh);
 	state->ionrd += xnpipe_m_size(mh);
@@ -382,6 +377,11 @@ ssize_t xnpipe_send(int minor, struct xnpipe_mh *mh, size_t size, int flags)
 		prependq(&state->outq, xnpipe_m_link(mh));
 	else
 		appendq(&state->outq, xnpipe_m_link(mh));
+
+	if (!testbits(state->status, XNPIPE_USER_CONN)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return (ssize_t) size;
+	}
 
 	if (testbits(state->status, XNPIPE_USER_WREAD)) {
 		/* Wake up the userland thread waiting for input
@@ -399,6 +399,34 @@ ssize_t xnpipe_send(int minor, struct xnpipe_mh *mh, size_t size, int flags)
 
 	if (need_sched)
 		xnpipe_schedule_request();
+
+	return (ssize_t) size;
+}
+
+ssize_t xnpipe_send_more(int minor, struct xnpipe_mh *mh, ssize_t size)
+{
+	xnpipe_state_t *state;
+	spl_t s;
+
+	if (minor < 0 || minor >= XNPIPE_NDEVS)
+		return -ENODEV;
+
+	if (size < 0)
+		return -EINVAL;
+
+	state = &xnpipe_states[minor];
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (!testbits(state->status, XNPIPE_KERN_CONN)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return -EBADF;
+	}
+
+	xnpipe_m_size(mh) += size;
+	state->ionrd += size;
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	return (ssize_t) size;
 }
@@ -640,10 +668,11 @@ static ssize_t xnpipe_read(struct file *file,
 			   char *buf, size_t count, loff_t *ppos)
 {
 	xnpipe_state_t *state = (xnpipe_state_t *)file->private_data;
+	size_t nbytes, inbytes;
 	struct xnpipe_mh *mh;
+	int sigpending, err;
 	xnholder_t *holder;
-	int sigpending;
-	ssize_t ret;
+	ssize_t ret = 0;
 	spl_t s;
 
 	if (!access_ok(VERIFY_WRITE, buf, count))
@@ -679,29 +708,50 @@ static ssize_t xnpipe_read(struct file *file,
 	}
 
 	if (mh) {
-		xnpipe_io_handler *handler = state->output_handler;
-		void *cookie = state->cookie;
+		nbytes = xnpipe_m_size(mh); /* Cannot be zero */
+		inbytes = 0;
 
-		ret = (ssize_t) xnpipe_m_size(mh);	/* Cannot be zero */
-		state->ionrd -= ret;
+		/*
+		 * We allow more data to be appended to the current
+		 * message bucket while its contents is being copied
+		 * to the user buffer, therefore, we need to loop
+		 * until:
+		 * 1) all the data has been copied,
+		 * 2) we consumed the user buffer space entirely.
+		 */
 
-		xnlock_put_irqrestore(&nklock, s);
+		do {
+			if (inbytes <= count) {
+				xnlock_put_irqrestore(&nklock, s);
+				/* More data could be appended while doing this: */
+				err = __copy_to_user(buf + inbytes, xnpipe_m_data(mh) + inbytes, nbytes);
+				xnlock_get_irqsave(&nklock, s);
+				if (err) {
+					ret = -EFAULT;
+					break;
+				}
+				inbytes += nbytes;
+				nbytes = xnpipe_m_size(mh) - inbytes;
+			} else {
+				/* Return buffer is too small - message is lost. */
+				ret = -ENOBUFS;
+				break;
+			}
+		} while(nbytes > 0);
 
-		if (ret <= count) {
-			if (__copy_to_user(buf, xnpipe_m_data(mh), ret))
-				ret = -EFAULT;
-		} else
-			/* Return buffer is too small - message is lost. */
-			ret = -ENOBUFS;
+		if (ret < 0)
+			inbytes = xnpipe_m_size(mh);
+		else
+			ret = (ssize_t) inbytes;
 
-		if (handler != NULL)
-			ret =
-			    handler(xnminor_from_state(state), mh, ret, cookie);
-	} else {		/* Closed by peer. */
+		state->ionrd -= inbytes;
 
-		xnlock_put_irqrestore(&nklock, s);
-		ret = 0;
+		if (state->output_handler != NULL)
+			ret = state->output_handler(xnminor_from_state(state),
+						    mh, ret, state->cookie);
 	}
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
 }
@@ -999,6 +1049,7 @@ void xnpipe_umount(void)
 EXPORT_SYMBOL(xnpipe_connect);
 EXPORT_SYMBOL(xnpipe_disconnect);
 EXPORT_SYMBOL(xnpipe_send);
+EXPORT_SYMBOL(xnpipe_send_more);
 EXPORT_SYMBOL(xnpipe_recv);
 EXPORT_SYMBOL(xnpipe_inquire);
 EXPORT_SYMBOL(xnpipe_setup);
