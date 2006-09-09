@@ -56,7 +56,7 @@ static u8 ocr[RTCAN_ISA_MAX_DEV];
 static u8 cdr[RTCAN_ISA_MAX_DEV];
 
 compat_module_short_param_array(isa, RTCAN_ISA_MAX_DEV);
-compat_module_byte_param_array(irq, RTCAN_ISA_MAX_DEV);
+compat_module_int_param_array(irq, RTCAN_ISA_MAX_DEV);
 compat_module_int_param_array(clock, RTCAN_ISA_MAX_DEV);
 compat_module_byte_param_array(ocr, RTCAN_ISA_MAX_DEV);
 compat_module_byte_param_array(cdr, RTCAN_ISA_MAX_DEV);
@@ -187,9 +187,10 @@ static void __exit rtcan_isa_exit(void)
     int i;
     struct rtcan_device *dev;
 
-    for (i = 0, dev = rtcan_isa_devs[i]; 
-	 i < RTCAN_ISA_MAX_DEV && dev != NULL;
-	 i++) {
+    for (i = 0; i < RTCAN_ISA_MAX_DEV; i++) {
+	dev = rtcan_isa_devs[i];
+	if (!dev)
+	    continue;
 	rtcan_sja1000_unregister(dev);
     }
 }
