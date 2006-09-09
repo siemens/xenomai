@@ -1,3 +1,24 @@
+2006-09-09  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/rtai/fifo.c: Globally rework the emulation to
+	optimize for highly scattered data sent over a short period of
+	time.
+
+	* ksrc/nucleus/pipe.c (xnpipe_send_more): Allow adding more data
+	to a message bucket while it is waiting on the output queue.
+	(xnpipe_read): Handle the interaction with
+	xnpipe_send_more(). Note: the output handler is now always called
+	with nklock held, interrupts off.
+
+2006-09-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pipe.c (xnpipe_disconnect): Flush the output queue
+	even if the user-space side did not connect to the closed pipe;
+	some data might linger there.
+	(xnpipe_send): Allow sending data from the kernel side of a pipe
+	which has not been opened by any user-space process (i.e. buffer
+	until open).
+
 2006-09-09  Jan Kiszka <jan.kiszka@web.de>
 
 	* ksrc/drivers/can/sja1000/rtcan_isa.c: Fix type of irq mod-param,
@@ -46,6 +67,7 @@
 	* src/testsuite/switchtest/switchtest.c (clean_exit): Fix
 	switchtest termination on FPU bug.
 
+>>>>>>> .r1562
 2006-09-03  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/synch.c (xnsynch_renice_sleeper): Do not assume
