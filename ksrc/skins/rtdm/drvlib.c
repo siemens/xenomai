@@ -85,6 +85,10 @@ nanosecs_abs_t rtdm_clock_read(void);
 /**
  * @brief Intialise and start a real-time task
  *
+ * After initialising a task, the task handle remains valid and can be passed
+ * to RTDM services until either rtdm_task_destroy() or rtdm_task_join_nrt()
+ * was invoked.
+ *
  * @param[in,out] task Task handle
  * @param[in] name Optional task name
  * @param[in] task_proc Procedure to be executed by the task
@@ -146,6 +150,9 @@ EXPORT_SYMBOL(rtdm_task_init);
  * @brief Destroy a real-time task
  *
  * @param[in,out] task Task handle as returned by rtdm_task_init()
+ *
+ * @note Passing the same task handle to RTDM services after the completion of
+ * this function is not allowed.
  *
  * Environments:
  *
@@ -263,9 +270,11 @@ rtdm_task_t *rtdm_task_current(void);
  * @param[in,out] task Task handle as returned by rtdm_task_init()
  * @param[in] poll_delay Polling delay in milliseconds
  *
- * @note It is not required to call rtdm_task_destroy() for a task which has
- * been passed to rtdm_task_join_nrt(). Moreover, don't forget to inform the
- * targeted task that it has to terminate. Otherwise, this function will never
+ * @note Passing the same task handle to RTDM services after the completion of
+ * this function is not allowed.
+ *
+ * @note This service does not trigger the termination of the targeted task.
+ * The user has to take of this, otherwise rtdm_task_join_nrt() will never
  * return.
  *
  * Environments:
@@ -396,7 +405,7 @@ EXPORT_SYMBOL(rtdm_task_sleep_until);
  * @brief Busy-wait a specified amount of time
  *
  * @param[in] delay Delay in nanoseconds. Note that a zero delay does @b not
- * have the meaning of RTDM_TIMEOUT_INFINITE here.
+ * have the meaning of @c RTDM_TIMEOUT_INFINITE here.
  *
  * @note The caller must not be migratable to different CPUs while executing
  * this service. Otherwise, the actual delay will be undefined.
@@ -560,7 +569,7 @@ void rtdm_event_destroy(rtdm_event_t *event);
  *
  * This function wakes up all current waiters of the given event, but it does
  * not change the event state. Subsequently callers of rtdm_event_wait() or
- * rtdm_event_wait_until() will therefore be blocked first.
+ * rtdm_event_timedwait() will therefore be blocked first.
  *
  * @param[in,out] event Event handle as returned by rtdm_event_init()
  *
@@ -584,7 +593,7 @@ void rtdm_event_pulse(rtdm_event_t *event);
  *
  * This function sets the given event and wakes up all current waiters. If no
  * waiter is presently registered, the next call to rtdm_event_wait() or
- * rtdm_event_wait_until() will return immediately.
+ * rtdm_event_timedwait() will return immediately.
  *
  * @param[in,out] event Event handle as returned by rtdm_event_init()
  *
