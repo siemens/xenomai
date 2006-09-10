@@ -403,7 +403,7 @@ ssize_t xnpipe_send(int minor, struct xnpipe_mh *mh, size_t size, int flags)
 	return (ssize_t) size;
 }
 
-ssize_t xnpipe_send_more(int minor, struct xnpipe_mh *mh, ssize_t size)
+ssize_t xnpipe_mfixup(int minor, struct xnpipe_mh *mh, ssize_t size)
 {
 	xnpipe_state_t *state;
 	spl_t s;
@@ -1049,7 +1049,7 @@ void xnpipe_umount(void)
 EXPORT_SYMBOL(xnpipe_connect);
 EXPORT_SYMBOL(xnpipe_disconnect);
 EXPORT_SYMBOL(xnpipe_send);
-EXPORT_SYMBOL(xnpipe_send_more);
+EXPORT_SYMBOL(xnpipe_mfixup);
 EXPORT_SYMBOL(xnpipe_recv);
 EXPORT_SYMBOL(xnpipe_inquire);
 EXPORT_SYMBOL(xnpipe_setup);

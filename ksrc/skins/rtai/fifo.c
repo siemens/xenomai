@@ -309,7 +309,7 @@ int rtf_put(unsigned minor, const void *buf, int count)
 		xnlock_get_irqsave(&nklock, s);
 
 		if (__test_and_set_bit(RTFIFO_SYNCWAIT, &fifo->status))
-			outbytes = xnpipe_send_more(fifo->minor, fifo->buffer, outbytes);
+			outbytes = xnpipe_mfixup(fifo->minor, fifo->buffer, outbytes);
 		else {
 			outbytes = xnpipe_send(fifo->minor, fifo->buffer,
 					       outbytes + sizeof(xnpipe_mh_t), XNPIPE_NORMAL);
