@@ -445,7 +445,7 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 		goto unlock_and_exit;
 	}
 
-	err = rt_mutex_unlock(mutex);
+	err = rt_mutex_release(mutex);
 
 	if (err)
 		goto unlock_and_exit;
@@ -461,7 +461,7 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 	else if (xnthread_test_flags(&task->thread_base, XNBREAK))
 		err = -EINTR;	/* Unblocked. */
 
-	rt_mutex_lock(mutex, TM_INFINITE);
+	rt_mutex_acquire(mutex, TM_INFINITE);
 
       unlock_and_exit:
 

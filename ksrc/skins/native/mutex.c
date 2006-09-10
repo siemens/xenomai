@@ -276,7 +276,7 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 }
 
 /**
- * @fn int rt_mutex_lock(RT_MUTEX *mutex, RTIME timeout)
+ * @fn int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
  *
  * @brief Acquire a mutex.
  *
@@ -340,7 +340,7 @@ int rt_mutex_delete(RT_MUTEX *mutex)
  * nanoseconds.
  */
 
-int rt_mutex_lock(RT_MUTEX *mutex, RTIME timeout)
+int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
 {
 	RT_TASK *task;
 	int err = 0;
@@ -399,7 +399,7 @@ int rt_mutex_lock(RT_MUTEX *mutex, RTIME timeout)
 }
 
 /**
- * @fn int rt_mutex_unlock(RT_MUTEX *mutex)
+ * @fn int rt_mutex_release(RT_MUTEX *mutex)
  *
  * @brief Unlock mutex.
  *
@@ -430,7 +430,7 @@ int rt_mutex_lock(RT_MUTEX *mutex, RTIME timeout)
  * Rescheduling: possible.
  */
 
-int rt_mutex_unlock(RT_MUTEX *mutex)
+int rt_mutex_release(RT_MUTEX *mutex)
 {
 	int err = 0;
 	spl_t s;
@@ -616,6 +616,6 @@ void __native_mutex_pkg_cleanup(void)
 
 EXPORT_SYMBOL(rt_mutex_create);
 EXPORT_SYMBOL(rt_mutex_delete);
-EXPORT_SYMBOL(rt_mutex_lock);
-EXPORT_SYMBOL(rt_mutex_unlock);
+EXPORT_SYMBOL(rt_mutex_acquire);
+EXPORT_SYMBOL(rt_mutex_release);
 EXPORT_SYMBOL(rt_mutex_inquire);

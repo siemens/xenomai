@@ -29,16 +29,16 @@ struct rt_task;
 
 typedef struct rt_mutex_info {
 
-    int lockcnt;	/* !< Lock nesting level (> 0 means "locked"). */
+	int lockcnt;		/* !< Lock nesting level (> 0 means "locked"). */
 
-    int nwaiters;	/* !< Number of pending tasks. */
+	int nwaiters;		/* !< Number of pending tasks. */
 
-    char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
+	char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 
 } RT_MUTEX_INFO;
 
 typedef struct rt_mutex_placeholder {
-    xnhandle_t opaque;
+	xnhandle_t opaque;
 } RT_MUTEX_PLACEHOLDER;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
@@ -47,20 +47,20 @@ typedef struct rt_mutex_placeholder {
 
 typedef struct __rt_mutex {
 
-    unsigned magic;   /* !< Magic code - must be first */
+	unsigned magic;		/* !< Magic code - must be first */
 
-    xnsynch_t synch_base; /* !< Base synchronization object. */
+	xnsynch_t synch_base;	/* !< Base synchronization object. */
 
-    xnhandle_t handle;	/* !< Handle in registry -- zero if unregistered. */
+	xnhandle_t handle;	/* !< Handle in registry -- zero if unregistered. */
 
-    struct rt_task *owner;	/* !< Current mutex owner. */
+	struct rt_task *owner;	/* !< Current mutex owner. */
 
-    int lockcnt;	/* !< Lock nesting level (> 0 means "locked"). */
-
-    char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
+	int lockcnt;		/* !< Lock nesting level (> 0 means "locked"). */
+	
+	char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    pid_t cpid;			/* !< Creator's pid. */
+	pid_t cpid;		/* !< Creator's pid. */
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 } RT_MUTEX;
@@ -92,8 +92,8 @@ int rt_mutex_bind(RT_MUTEX *mutex,
 static inline int rt_mutex_unbind (RT_MUTEX *mutex)
 
 {
-    mutex->opaque = XN_NO_HANDLE;
-    return 0;
+	mutex->opaque = XN_NO_HANDLE;
+	return 0;
 }
 
 #ifdef __cplusplus
@@ -113,10 +113,10 @@ int rt_mutex_create(RT_MUTEX *mutex,
 
 int rt_mutex_delete(RT_MUTEX *mutex);
 
-int rt_mutex_lock(RT_MUTEX *mutex,
-		  RTIME timeout);
+int rt_mutex_acquire(RT_MUTEX *mutex,
+		     RTIME timeout);
 
-int rt_mutex_unlock(RT_MUTEX *mutex);
+int rt_mutex_release(RT_MUTEX *mutex);
 
 int rt_mutex_inquire(RT_MUTEX *mutex,
 		     RT_MUTEX_INFO *info);
@@ -124,5 +124,19 @@ int rt_mutex_inquire(RT_MUTEX *mutex,
 #ifdef __cplusplus
 }
 #endif
+
+#ifdef __KERNEL__
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
+static inline int __deprecated_call__ rt_mutex_lock(RT_MUTEX *mutex, RTIME timeout)
+{
+	return rt_mutex_acquire(mutex, timeout);
+}
+
+static inline int __deprecated_call__ rt_mutex_unlock(RT_MUTEX *mutex)
+{
+	return rt_mutex_release(mutex);
+}
+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */
+#endif /* __KERNEL__ */
 
 #endif /* !_XENO_MUTEX_H */
