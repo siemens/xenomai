@@ -1,6 +1,6 @@
-diff -uNrp 2.6.14-imx21-base/arch/arm/kernel/process.c 2.6.14-imx21-ipipe/arch/arm/kernel/process.c
---- 2.6.14-imx21-base/arch/arm/kernel/process.c	2006-06-05 13:39:44.000000000 +0200
-+++ 2.6.14-imx21-ipipe/arch/arm/kernel/process.c	2006-06-05 12:02:28.000000000 +0200
+diff -uNrp 2.6.14-imx-orig/arch/arm/kernel/process.c 2.6.14-imx/arch/arm/kernel/process.c
+--- 2.6.14-imx-orig/arch/arm/kernel/process.c	2006-09-10 19:13:17.000000000 +0200
++++ 2.6.14-imx/arch/arm/kernel/process.c	2006-09-10 18:56:27.000000000 +0200
 @@ -39,6 +39,10 @@ extern void setup_mm_for_reboot(char mod
  
  static volatile int hlt_counter;
@@ -59,9 +59,9 @@ diff -uNrp 2.6.14-imx21-base/arch/arm/kernel/process.c 2.6.14-imx21-ipipe/arch/a
  		leds_event(led_idle_end);
  		preempt_enable();
  		schedule();
-diff -uNrp 2.6.14-imx21-base/arch/arm/mach-imx21/irq.c 2.6.14-imx21-ipipe/arch/arm/mach-imx21/irq.c
---- 2.6.14-imx21-base/arch/arm/mach-imx21/irq.c	2006-06-05 13:16:16.000000000 +0200
-+++ 2.6.14-imx21-ipipe/arch/arm/mach-imx21/irq.c	2006-06-05 12:02:28.000000000 +0200
+diff -uNrp 2.6.14-imx-orig/arch/arm/mach-imx21/irq.c 2.6.14-imx/arch/arm/mach-imx21/irq.c
+--- 2.6.14-imx-orig/arch/arm/mach-imx21/irq.c	2006-09-10 19:12:58.000000000 +0200
++++ 2.6.14-imx/arch/arm/mach-imx21/irq.c	2006-09-10 18:56:38.000000000 +0200
 @@ -23,6 +23,12 @@
   *  03/03/2004   Sascha Hauer <sascha@saschahauer.de>
   *               Copied from the motorola bsp package and added gpio demux
@@ -75,37 +75,48 @@ diff -uNrp 2.6.14-imx21-base/arch/arm/mach-imx21/irq.c 2.6.14-imx21-ipipe/arch/a
    */
  #include <linux/init.h>
  extern int x1;
-@@ -154,11 +160,18 @@ static void
- imx21_gpio_handler(unsigned int irq_unused, struct irqdesc *desc,
-                    struct pt_regs *regs)
- {
-+#ifdef CONFIG_IPIPE
-+    struct irqdesc *desc_unused;
-+#endif
-     unsigned int mask;
-     unsigned int port;
-     unsigned int irq_base;
-     unsigned int irq = 0;
- 
-+#ifdef CONFIG_IPIPE
-+    desc_unused = desc;
-+#endif
-+
-     for (port = 0; port < 6; port++) {
-         if (ISR(port) & IMR(port)) {
-             break;
-@@ -179,6 +192,10 @@ imx21_gpio_handler(unsigned int irq_unus
-         desc++;
-         mask >>= 1;
+@@ -181,6 +187,40 @@ imx21_gpio_handler(unsigned int irq_unus
      }
-+
-+#ifdef CONFIG_IPIPE
-+    desc_unused->chip->unmask(irq_unused);
-+#endif
  }
  
++#ifdef CONFIG_IPIPE
++void __ipipe_mach_demux_irq(unsigned irq_unused, struct pt_regs *regs)
++{
++    struct irqdesc *desc_unused = irq_desc + irq_unused;
++    unsigned int mask;
++    unsigned int port;
++    unsigned int irq_base;
++    unsigned int irq = 0;
++
++    for (port = 0; port < 6; port++) {
++        if (ISR(port) & IMR(port)) {
++            break;
++        }
++    }
++
++    mask = ISR(port);
++    irq_base = IRQ_GPIOA(0) + (port * 32);
++
++    desc = irq_desc + irq_base;
++    while (mask) {
++        if (mask & 1) {
++            DEBUG_IRQ("handling irq %d (port %d)\n", irq, port);
++	    __ipipe_handler_irq(irq + irq_base, regs);	    
++            ISR(port) = (1 << irq);
++        }
++        irq++;
++        desc++;
++        mask >>= 1;
++    }
++
++    desc_unused->chip->unmask(irq_unused);
++}
++#endif /* CONFIG_IPIPE */
++
  static struct irqchip imx21_gpio_chip = {
-@@ -209,6 +226,16 @@ imx21_init_irq(void)
+ 	.ack = imx21_gpio_ack_irq,
+ 	.mask = imx21_gpio_mask_irq,
+@@ -209,6 +249,16 @@ imx21_init_irq(void)
  	IMR(4) = 0;
  	IMR(5) = 0;
  
@@ -122,9 +133,9 @@ diff -uNrp 2.6.14-imx21-base/arch/arm/mach-imx21/irq.c 2.6.14-imx21-ipipe/arch/a
  	for (irq = 0; irq < IMX21_IRQS; irq++) {
  		set_irq_chip(irq, &imx21_internal_chip);
  		set_irq_handler(irq, do_level_IRQ);
-diff -uNrp 2.6.14-imx21-base/arch/arm/mach-imx21/time.c 2.6.14-imx21-ipipe/arch/arm/mach-imx21/time.c
---- 2.6.14-imx21-base/arch/arm/mach-imx21/time.c	2006-06-05 13:16:16.000000000 +0200
-+++ 2.6.14-imx21-ipipe/arch/arm/mach-imx21/time.c	2006-06-05 12:02:28.000000000 +0200
+diff -uNrp 2.6.14-imx-orig/arch/arm/mach-imx21/time.c 2.6.14-imx/arch/arm/mach-imx21/time.c
+--- 2.6.14-imx-orig/arch/arm/mach-imx21/time.c	2006-09-10 19:12:58.000000000 +0200
++++ 2.6.14-imx/arch/arm/mach-imx21/time.c	2006-09-10 18:56:27.000000000 +0200
 @@ -10,7 +10,16 @@
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of the GNU General Public License version 2 as
@@ -372,9 +383,9 @@ diff -uNrp 2.6.14-imx21-base/arch/arm/mach-imx21/time.c 2.6.14-imx21-ipipe/arch/
  };
 +
 +
-diff -uNrp 2.6.14-imx21-base/include/asm-arm/arch-imx/imx-regs.h 2.6.14-imx21-ipipe/include/asm-arm/arch-imx/imx-regs.h
---- 2.6.14-imx21-base/include/asm-arm/arch-imx/imx-regs.h	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-imx21-ipipe/include/asm-arm/arch-imx/imx-regs.h	2006-06-05 12:02:28.000000000 +0200
+diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx/imx-regs.h 2.6.14-imx/include/asm-arm/arch-imx/imx-regs.h
+--- 2.6.14-imx-orig/include/asm-arm/arch-imx/imx-regs.h	2005-10-28 02:02:08.000000000 +0200
++++ 2.6.14-imx/include/asm-arm/arch-imx/imx-regs.h	2006-09-10 18:56:27.000000000 +0200
 @@ -1,481 +1,618 @@
 -#ifndef _IMX_REGS_H
 -#define _IMX_REGS_H
@@ -1567,9 +1578,9 @@ diff -uNrp 2.6.14-imx21-base/include/asm-arm/arch-imx/imx-regs.h 2.6.14-imx21-ip
  
 -#endif				// _IMX_REGS_H
 +#endif				// _MX2ADS_REGS_H
-diff -uNrp 2.6.14-imx21-base/include/asm-arm/arch-imx21/csb535.h 2.6.14-imx21-ipipe/include/asm-arm/arch-imx21/csb535.h
---- 2.6.14-imx21-base/include/asm-arm/arch-imx21/csb535.h	2006-06-05 13:16:17.000000000 +0200
-+++ 2.6.14-imx21-ipipe/include/asm-arm/arch-imx21/csb535.h	2006-06-05 12:02:28.000000000 +0200
+diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx21/csb535.h 2.6.14-imx/include/asm-arm/arch-imx21/csb535.h
+--- 2.6.14-imx-orig/include/asm-arm/arch-imx21/csb535.h	2006-09-10 19:12:59.000000000 +0200
++++ 2.6.14-imx/include/asm-arm/arch-imx21/csb535.h	2006-09-10 18:56:27.000000000 +0200
 @@ -20,6 +20,16 @@
   * along with this program; if not, write to the Free Software
   * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -1600,9 +1611,9 @@ diff -uNrp 2.6.14-imx21-base/include/asm-arm/arch-imx21/csb535.h 2.6.14-imx21-ip
  
  #define CSB535_ETH_VIRT IMX21_CS1_VIRT
  #define CSB535_ETH_PHYS IMX21_CS1_PHYS
-diff -uNrp 2.6.14-imx21-base/include/asm-arm/arch-imx21/imx-regs.h 2.6.14-imx21-ipipe/include/asm-arm/arch-imx21/imx-regs.h
---- 2.6.14-imx21-base/include/asm-arm/arch-imx21/imx-regs.h	2006-06-05 13:16:17.000000000 +0200
-+++ 2.6.14-imx21-ipipe/include/asm-arm/arch-imx21/imx-regs.h	2006-06-05 12:02:28.000000000 +0200
+diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx21/imx-regs.h 2.6.14-imx/include/asm-arm/arch-imx21/imx-regs.h
+--- 2.6.14-imx-orig/include/asm-arm/arch-imx21/imx-regs.h	2006-09-10 19:12:59.000000000 +0200
++++ 2.6.14-imx/include/asm-arm/arch-imx21/imx-regs.h	2006-09-10 18:56:27.000000000 +0200
 @@ -8,7 +8,13 @@
   * Copyright (C) 2005 TimeSys Corporation 
   *
@@ -1729,3 +1740,14 @@ diff -uNrp 2.6.14-imx21-base/include/asm-arm/arch-imx21/imx-regs.h 2.6.14-imx21-
  #define IMX21_TPRER(x)       __REG( 0x04 + MX2ADS_GPT1_BASE + WHICH_TIMER(x))
  #define IMX21_TCMP(x)        __REG( 0x08 + MX2ADS_GPT1_BASE + WHICH_TIMER(x))
  #define IMX21_TCR(x)         __REG( 0x0C + MX2ADS_GPT1_BASE + WHICH_TIMER(x))
+diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx21/irqs.h 2.6.14-imx/include/asm-arm/arch-imx21/irqs.h
+--- 2.6.14-imx-orig/include/asm-arm/arch-imx21/irqs.h	2006-09-10 19:12:59.000000000 +0200
++++ 2.6.14-imx/include/asm-arm/arch-imx21/irqs.h	2006-09-10 18:56:38.000000000 +0200
+@@ -125,3 +125,7 @@
+ #define NR_IRQS (IRQ_GPIOF(32) + 1)
+ #define IRQ_GPIO(x)
+ #endif
++
++#ifdef CONFIG_IPIPE
++#define __ipipe_mach_irq_mux_p(irq) ((irq) == INT_GPIO)
++#endif /* CONFIG_IPIPE */
