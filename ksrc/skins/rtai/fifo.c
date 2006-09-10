@@ -24,42 +24,6 @@
 
 static RT_FIFO __fifo_table[CONFIG_XENO_OPT_PIPE_NRDEV];
 
-static int __fifo_flush_apc;
-
-static DECLARE_XNQUEUE(__fifo_flush_q);
-
-static inline ssize_t __fifo_flush(RT_FIFO * fifo)
-{
-	ssize_t nbytes = fifo->fillsz + sizeof(xnpipe_mh_t);
-	void *buffer = fifo->buffer;
-
-	fifo->buffer = NULL;
-	fifo->fillsz = 0;
-
-	return xnpipe_send(fifo->minor, buffer, nbytes, XNPIPE_NORMAL);
-	/* The buffer will be freed by the output handler. */
-}
-
-static void __fifo_flush_handler(void *cookie)
-{
-	xnholder_t *holder;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	/* Flush all fifos with pending data. */
-
-	while ((holder = getq(&__fifo_flush_q)) != NULL) {
-		RT_FIFO *fifo = link2rtfifo(holder);
-		__clear_bit(0, &fifo->flushable);
-		xnlock_put_irqrestore(&nklock, s);
-		__fifo_flush(fifo);
-		xnlock_get_irqsave(&nklock, s);
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-}
-
 #define X_FIFO_HANDLER2(handler) ((int (*)(int, ...))(handler))
 
 static int __fifo_exec_handler(int minor,
@@ -82,7 +46,8 @@ static int __fifo_output_handler(int minor,
 	RT_FIFO *fifo = __fifo_table + minor;
 	int err;
 
-	xnfree(mh);
+	fifo->fillsz = 0;
+	__clear_bit(RTFIFO_SYNCWAIT, &fifo->status);
 
 	if (retval >= 0 &&
 	    fifo->handler != NULL &&
@@ -96,32 +61,36 @@ int __rtai_fifo_pkg_init(void)
 {
 	int i;
 
-	__fifo_flush_apc =
-	    rthal_apc_alloc("fifo_flush", &__fifo_flush_handler, NULL);
-
-	for (i = 0; i < CONFIG_XENO_OPT_PIPE_NRDEV; i++) {
+	for (i = 0; i < CONFIG_XENO_OPT_PIPE_NRDEV; i++)
 		inith(&__fifo_table[i].link);
-	}
-
-	if (__fifo_flush_apc < 0)
-		return __fifo_flush_apc;
 
 	return 0;
 }
 
 void __rtai_fifo_pkg_cleanup(void)
 {
-	rthal_apc_free(__fifo_flush_apc);
 }
 
 int rtf_create(unsigned minor, int size)
 {
+	int err, oldsize;
 	RT_FIFO *fifo;
-	int err;
+	void *buffer;
 	spl_t s;
 
 	if (minor >= CONFIG_XENO_OPT_PIPE_NRDEV)
 		return -ENODEV;
+
+	/* <!> We do check for the calling context albeit the original
+	   API doesn't, but we don't want the box to break for
+	   whatever reason, so sanity takes precedence over
+	   compatibility here. */
+
+	if (!xnpod_root_p())
+		return -EPERM;
+
+	if (!size)
+		return -EINVAL;
 
 	fifo = __fifo_table + minor;
 
@@ -129,33 +98,59 @@ int rtf_create(unsigned minor, int size)
 			     &__fifo_output_handler,
 			     &__fifo_exec_handler, NULL, fifo);
 
+	if (err < 0 && err != -EBUSY)
+	    return err;
+
 	xnlock_get_irqsave(&nklock, s);
 
 	++fifo->refcnt;
 
 	if (err == -EBUSY) {
-		if (fifo->bufsz < size) {
-			/* Resize the fifo on-the-fly if the specified buffer size
-			   for the fifo is larger than the current one; we first
-			   flush any pending output. */
+		/* Resize the fifo on-the-fly if the specified buffer
+		   size is different from the current one. */
 
-			if (__test_and_clear_bit(0, &fifo->flushable)) {
-				removeq(&__fifo_flush_q, &fifo->link);
-				__fifo_flush(fifo);
-			}
-			/* Otherwise, there is no currently allocated buffer. */
-			fifo->bufsz = size;
+		buffer = fifo->buffer;
+		oldsize = fifo->bufsz;
+
+		if (buffer == NULL) /* Conflicting create/resize requests. */
+			goto unlock_and_exit;
+
+		if (oldsize == size) {
+			err = minor;
+			goto unlock_and_exit; /* Same size, nop. */
 		}
 
+		fifo->buffer = NULL;
+		/* We must not keep the nucleus lock while running
+		 * Linux services. */
+		xnlock_put_irqrestore(&nklock, s);
+		xnarch_sysfree(buffer, oldsize);
+		xnlock_get_irqsave(&nklock, s);
+	} else
+		fifo->buffer = NULL;
+
+	xnlock_put_irqrestore(&nklock, s);
+	buffer = xnarch_sysalloc(size + sizeof(xnpipe_mh_t));
+	xnlock_get_irqsave(&nklock, s);
+
+	if (buffer == NULL) {
+		if (!err)
+			/* First open, we need to disconnect upon
+			 * error. Caveat: we still hold the lock while
+			 * flushing the message pipe's input and
+			 * output queues during disconnection. */
+			xnpipe_disconnect(minor);
+
+		--fifo->refcnt;
+		err = -ENOMEM;
 		goto unlock_and_exit;
 	}
 
-	/* <!> We don't pre-allocate the internal buffer unlike the
-	   original API. */
-	fifo->buffer = NULL;
+	err = minor;
+	fifo->buffer = buffer;
 	fifo->bufsz = size;
 	fifo->fillsz = 0;
-	fifo->flushable = 0;
+	fifo->status = 0;
 	fifo->minor = minor;
 	fifo->handler = NULL;
 
@@ -163,17 +158,21 @@ int rtf_create(unsigned minor, int size)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return 0;
+	return err;
 }
 
 int rtf_destroy(unsigned minor)
 {
+	int refcnt, err = 0, oldsize;
 	RT_FIFO *fifo;
-	int refcnt;
+	void *buffer;
 	spl_t s;
 
 	if (minor >= CONFIG_XENO_OPT_PIPE_NRDEV)
 		return -ENODEV;
+
+	if (!xnpod_root_p())
+		return -EPERM;
 
 	fifo = __fifo_table + minor;
 
@@ -182,23 +181,33 @@ int rtf_destroy(unsigned minor)
 	refcnt = fifo->refcnt;
 
 	if (refcnt == 0)
-		refcnt = -EINVAL;
+		err = -EINVAL;
 	else {
 		if (--refcnt == 0) {
-			if (__test_and_clear_bit(0, &fifo->flushable)) {
-				removeq(&__fifo_flush_q, &fifo->link);
-				xnfree(fifo->buffer);
+			buffer = fifo->buffer;
+			oldsize = fifo->bufsz;
+
+			if (buffer == NULL) { /* Fifo under (re-)construction. */
+				err = -EBUSY;
+				goto unlock_and_exit;
 			}
 
 			xnpipe_disconnect(minor);
+			fifo->refcnt = 0;
+			xnlock_put_irqrestore(&nklock, s);
+			xnarch_sysfree(buffer, oldsize);
+
+			return 0;
 		}
 
 		fifo->refcnt = refcnt;
 	}
 
+unlock_and_exit:
+
 	xnlock_put_irqrestore(&nklock, s);
 
-	return refcnt;
+	return err;
 }
 
 int rtf_get(unsigned minor, void *buf, int count)
@@ -220,6 +229,11 @@ int rtf_get(unsigned minor, void *buf, int count)
 
 	if (fifo->refcnt == 0) {
 		nbytes = -EINVAL;
+		goto unlock_and_exit;
+	}
+
+	if (fifo->buffer == NULL) {
+		nbytes = -EBUSY;
 		goto unlock_and_exit;
 	}
 
@@ -256,9 +270,9 @@ int rtf_get(unsigned minor, void *buf, int count)
 
 int rtf_put(unsigned minor, const void *buf, int count)
 {
-	ssize_t outbytes = 0;
+	ssize_t outbytes;
+	size_t fillptr;
 	RT_FIFO *fifo;
-	size_t n;
 	spl_t s;
 
 	if (minor >= CONFIG_XENO_OPT_PIPE_NRDEV)
@@ -273,50 +287,35 @@ int rtf_put(unsigned minor, const void *buf, int count)
 		goto unlock_and_exit;
 	}
 
-	while (count > 0) {
-		if (count >= fifo->bufsz - fifo->fillsz)
-			n = fifo->bufsz - fifo->fillsz;
-		else
-			n = count;
-
-		if (n == 0) {
-			ssize_t err = __fifo_flush(fifo);
-
-			if (__test_and_clear_bit(0, &fifo->flushable))
-				removeq(&__fifo_flush_q, &fifo->link);
-
-			if (err < 0) {
-				outbytes = err;
-				goto unlock_and_exit;
-			}
-
-			continue;
-		}
-
-		if (fifo->buffer == NULL) {
-			fifo->buffer =
-			    (xnpipe_mh_t *)xnmalloc(fifo->bufsz +
-						    sizeof(xnpipe_mh_t));
-
-			if (fifo->buffer == NULL) {
-				outbytes = -ENOMEM;
-				goto unlock_and_exit;
-			}
-
-			inith(&fifo->buffer->link);
-			fifo->buffer->size = count;
-		}
-
-		memcpy(xnpipe_m_data(fifo->buffer) + fifo->fillsz,
-		       (caddr_t) buf + outbytes, n);
-		fifo->fillsz += n;
-		outbytes += n;
-		count -= n;
+	if (fifo->buffer == NULL) {
+		outbytes = -EBUSY;
+		goto unlock_and_exit;
 	}
 
-	if (fifo->fillsz > 0 && !__test_and_set_bit(0, &fifo->flushable)) {
-		appendq(&__fifo_flush_q, &fifo->link);
-		rthal_apc_schedule(__fifo_flush_apc);
+	if (count > fifo->bufsz - fifo->fillsz)
+		outbytes = fifo->bufsz - fifo->fillsz;
+	else
+		outbytes = count;
+
+	if (outbytes > 0) {
+		fillptr = fifo->fillsz;
+		fifo->fillsz += outbytes;
+
+		xnlock_put_irqrestore(&nklock, s);
+
+		memcpy(xnpipe_m_data(fifo->buffer) + fillptr,
+		       (caddr_t) buf, outbytes);
+
+		xnlock_get_irqsave(&nklock, s);
+
+		if (__test_and_set_bit(RTFIFO_SYNCWAIT, &fifo->status))
+			outbytes = xnpipe_mfixup(fifo->minor, fifo->buffer, outbytes);
+		else {
+			outbytes = xnpipe_send(fifo->minor, fifo->buffer,
+					       outbytes + sizeof(xnpipe_mh_t), XNPIPE_NORMAL);
+			if (outbytes > 0)
+				outbytes -= sizeof(xnpipe_mh_t);
+		}
 	}
 
       unlock_and_exit:
@@ -329,23 +328,12 @@ int rtf_put(unsigned minor, const void *buf, int count)
 int rtf_reset(unsigned minor)
 {
 	RT_FIFO *fifo;
-	spl_t s;
 
 	if (minor >= CONFIG_XENO_OPT_PIPE_NRDEV)
 		return -ENODEV;
 
 	fifo = __fifo_table + minor;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (__test_and_clear_bit(0, &fifo->flushable)) {
-		removeq(&__fifo_flush_q, &fifo->link);
-		xnfree(fifo->buffer);
-		fifo->buffer = NULL;
-		fifo->fillsz = 0;
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
+	fifo->fillsz = 0;
 
 	return 0;
 }

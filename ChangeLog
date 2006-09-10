@@ -1,7 +1,17 @@
 2006-09-09  Philippe Gerum  <rpm@xenomai.org>
 
- 	* ksrc/nucleus/module.c (heap_read_proc): Export system heap
- 	information.
+	* ksrc/nucleus/module.c (heap_read_proc): Export system heap
+	information.
+
+	* ksrc/skins/rtai/fifo.c: Globally rework the emulation to
+	optimize for highly scattered data sent over a short period of
+	time.
+
+	* ksrc/nucleus/pipe.c (xnpipe_mfixup): Allow adding more data to a
+	message bucket while it is waiting on the output queue.
+	(xnpipe_read): Handle the interaction with
+	xnpipe_send_more(). Note: the output handler is now always called
+	with nklock held, interrupts off.
 
 2006-09-09  Jan Kiszka <jan.kiszka@web.de>
 
