@@ -1,3 +1,7 @@
+2006-09-10  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/arm/patches: Upgrade to 2.6.1{4,5}-1.4-00.
+
 2006-09-09  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/module.c (heap_read_proc): Export system heap
