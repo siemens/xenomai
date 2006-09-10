@@ -38,15 +38,15 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 	return XENOMAI_SKINCALL1(__native_muxid, __native_mutex_delete, mutex);
 }
 
-int rt_mutex_lock(RT_MUTEX *mutex, RTIME timeout)
+int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
 {
 	return XENOMAI_SKINCALL2(__native_muxid,
-				 __native_mutex_lock, mutex, &timeout);
+				 __native_mutex_acquire, mutex, &timeout);
 }
 
-int rt_mutex_unlock(RT_MUTEX *mutex)
+int rt_mutex_release(RT_MUTEX *mutex)
 {
-	return XENOMAI_SKINCALL1(__native_muxid, __native_mutex_unlock, mutex);
+	return XENOMAI_SKINCALL1(__native_muxid, __native_mutex_release, mutex);
 }
 
 int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)

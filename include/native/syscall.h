@@ -69,8 +69,8 @@
 #define __native_mutex_create       43
 #define __native_mutex_bind         44
 #define __native_mutex_delete       45
-#define __native_mutex_lock         46
-#define __native_mutex_unlock       47
+#define __native_mutex_acquire      46
+#define __native_mutex_release      47
 #define __native_mutex_inquire      48
 #define __native_cond_create        49
 #define __native_cond_bind          50

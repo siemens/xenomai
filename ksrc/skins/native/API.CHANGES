@@ -131,3 +131,13 @@ ___________________________________________________________________
 	o New services rt_queue_read() and rt_queue_write() have been
 	provided, accepting user-defined buffers instead of blocks
 	from the internal buffer pool.
+___________________________________________________________________
+
+2.2 -> 2.3-rc1
+
+	o rt_mutex_lock() and rt_mutex_unlock() have been renamed as
+	rt_mutex_acquire() and rt_mutex_release() respectively. This
+	change was needed to solve a conflict with stock kernel
+	releases beyond 2.6.17. The former API is still available to
+	software configurations using older kernels up to 2.6.17
+	(included).

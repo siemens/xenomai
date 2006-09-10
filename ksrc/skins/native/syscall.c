@@ -1639,12 +1639,12 @@ static int __rt_mutex_delete(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
- * int __rt_mutex_lock(RT_MUTEX_PLACEHOLDER *ph,
- *                     RTIME *timeoutp)
+ * int __rt_mutex_acquire(RT_MUTEX_PLACEHOLDER *ph,
+ *                        RTIME *timeoutp)
  *
  */
 
-static int __rt_mutex_lock(struct task_struct *curr, struct pt_regs *regs)
+static int __rt_mutex_acquire(struct task_struct *curr, struct pt_regs *regs)
 {
 	RT_MUTEX_PLACEHOLDER ph;
 	RT_MUTEX *mutex;
@@ -1663,14 +1663,14 @@ static int __rt_mutex_lock(struct task_struct *curr, struct pt_regs *regs)
 	if (!mutex)
 		return -ESRCH;
 
-	return rt_mutex_lock(mutex, timeout);
+	return rt_mutex_acquire(mutex, timeout);
 }
 
 /*
- * int __rt_mutex_unlock(RT_MUTEX_PLACEHOLDER *ph)
+ * int __rt_mutex_release(RT_MUTEX_PLACEHOLDER *ph)
  */
 
-static int __rt_mutex_unlock(struct task_struct *curr, struct pt_regs *regs)
+static int __rt_mutex_release(struct task_struct *curr, struct pt_regs *regs)
 {
 	RT_MUTEX_PLACEHOLDER ph;
 	RT_MUTEX *mutex;
@@ -1686,7 +1686,7 @@ static int __rt_mutex_unlock(struct task_struct *curr, struct pt_regs *regs)
 	if (!mutex)
 		return -ESRCH;
 
-	return rt_mutex_unlock(mutex);
+	return rt_mutex_release(mutex);
 }
 
 /*
@@ -1730,8 +1730,8 @@ static int __rt_mutex_inquire(struct task_struct *curr, struct pt_regs *regs)
 #define __rt_mutex_create  __rt_call_not_available
 #define __rt_mutex_bind    __rt_call_not_available
 #define __rt_mutex_delete  __rt_call_not_available
-#define __rt_mutex_lock    __rt_call_not_available
-#define __rt_mutex_unlock  __rt_call_not_available
+#define __rt_mutex_acquire __rt_call_not_available
+#define __rt_mutex_release __rt_call_not_available
 #define __rt_mutex_inquire __rt_call_not_available
 
 #endif /* CONFIG_XENO_OPT_NATIVE_MUTEX */
@@ -3749,8 +3749,8 @@ static xnsysent_t __systab[] = {
 	[__native_mutex_create] = {&__rt_mutex_create, __xn_exec_any},
 	[__native_mutex_bind] = {&__rt_mutex_bind, __xn_exec_conforming},
 	[__native_mutex_delete] = {&__rt_mutex_delete, __xn_exec_any},
-	[__native_mutex_lock] = {&__rt_mutex_lock, __xn_exec_primary},
-	[__native_mutex_unlock] = {&__rt_mutex_unlock, __xn_exec_primary},
+	[__native_mutex_acquire] = {&__rt_mutex_acquire, __xn_exec_primary},
+	[__native_mutex_release] = {&__rt_mutex_release, __xn_exec_primary},
 	[__native_mutex_inquire] = {&__rt_mutex_inquire, __xn_exec_any},
 	[__native_cond_create] = {&__rt_cond_create, __xn_exec_any},
 	[__native_cond_bind] = {&__rt_cond_bind, __xn_exec_conforming},
