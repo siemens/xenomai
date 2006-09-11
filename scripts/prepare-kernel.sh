@@ -259,12 +259,16 @@ while : ; do
       linux_arch=i386
       xenomai_arch=i386
       ;;
-   ppc|ppc32|powerpc)
+   ppc|ppc32)
       linux_arch=ppc
       xenomai_arch=powerpc
       ;;
    ppc64|powerpc64)
       linux_arch=ppc64
+      xenomai_arch=powerpc
+      ;;
+   powerpc)
+      linux_arch=powerpc
       xenomai_arch=powerpc
       ;;
    ia64)
@@ -288,13 +292,6 @@ while : ; do
       break
    fi
 done
-
-# Some kernel versions have merged 32/64 bit powperpc trees:
-# canonicalize if needed.
-
-if test "$xenomai_arch" = powerpc -a -d $linux_tree/arch/powerpc; then
-   linux_arch=powerpc
-fi
 
 # Post-2005R3 RC3 blackfin kernels use "blackfin" instead of
 # "bfinnommu": canonicalize if needed.

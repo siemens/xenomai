@@ -96,7 +96,11 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 #else /* !CONFIG_PPC64 */
 		next->thread.pgdir = mm->pgd;
 		get_mmu_context(mm);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
 		set_context(mm->context, mm->pgd);
+#else /* !(LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18))*/
+		set_context(mm->context.id, mm->pgd);
+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */
 		current = prev;	/* Make sure r2 is valid. */
 #endif /* CONFIG_PPC64 */
 	}

@@ -26,10 +26,13 @@
 #ifdef __KERNEL__
 
 #include <linux/bitops.h>
+#include <linux/version.h>
 #include <asm/atomic.h>
 #include <asm/system.h>
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) 
 #define atomic_xchg(ptr,v)       xchg(ptr,v)
+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */ 
 #define xnarch_memory_barrier()  smp_mb()
 
 #ifdef CONFIG_PPC64
