@@ -134,7 +134,7 @@ int rtf_create(unsigned minor, int size)
 	xnlock_get_irqsave(&nklock, s);
 
 	if (buffer == NULL) {
-		if (!err)
+		if (err >= 0)
 			/* First open, we need to disconnect upon
 			 * error. Caveat: we still hold the lock while
 			 * flushing the message pipe's input and
