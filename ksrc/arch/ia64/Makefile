@@ -1,6 +1,6 @@
 ifeq ($(PATCHLEVEL),6)
 
-EXTRA_CFLAGS += -Iinclude/xenomai
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
 
 EXTRA_AFLAGS += -Iarch/ia64/kernel
 

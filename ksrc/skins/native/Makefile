@@ -26,7 +26,7 @@ xeno_native-$(CONFIG_XENO_OPT_NATIVE_ALARM) += alarm.o
 
 xeno_native-$(CONFIG_XENO_OPT_NATIVE_INTR) += intr.o
 
-EXTRA_CFLAGS += -Iinclude/xenomai
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
 
 else
 
@@ -54,7 +54,7 @@ xeno_native-objs += $(opt_objs-y)
 
 export-objs := $(xeno_native-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
 

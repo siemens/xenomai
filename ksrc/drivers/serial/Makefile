@@ -2,7 +2,7 @@ ifeq ($(PATCHLEVEL),6)
 
 # Makefile frag for Linux v2.6
 
-EXTRA_CFLAGS += -Iinclude/xenomai
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
 
 obj-$(CONFIG_XENO_DRIVERS_16550A) += xeno_16550A.o
 
@@ -20,7 +20,7 @@ xeno_16550A-objs := 16550A.o
 
 export-objs := $(xeno_16550A-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
 

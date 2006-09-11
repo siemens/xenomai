@@ -13,7 +13,7 @@ else
 xeno_hal-$(CONFIG_PPC) += switch.o
 endif
 
-EXTRA_CFLAGS += -Iinclude/xenomai
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
 
 else
 
@@ -34,7 +34,7 @@ endif
 
 export-objs := hal.o
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
 
 EXTRA_AFLAGS += -I$(TOPDIR)/arch/ppc/kernel
 

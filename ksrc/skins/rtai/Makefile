@@ -14,7 +14,7 @@ xeno_rtai-$(CONFIG_XENO_OPT_RTAI_SEM) += sem.o
 
 xeno_rtai-$(CONFIG_XENO_OPT_RTAI_SHM) += shm.o
 
-EXTRA_CFLAGS += -Iinclude/xenomai
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
 
 else
 
@@ -38,7 +38,7 @@ xeno_rtai-objs += $(opt_objs-y)
 
 export-objs := $(xeno_rtai-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
 

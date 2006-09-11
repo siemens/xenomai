@@ -9,7 +9,7 @@ xeno_vxworks-y := errnoLib.o intLib.o kernelLib.o module.o msgQLib.o semLib.o \
 
 xeno_vxworks-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
 
-EXTRA_CFLAGS += -Iinclude/xenomai -I$(src)/..
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai -I$(src)/..
 
 else
 
@@ -29,7 +29,7 @@ xeno_vxworks-objs := errnoLib.o intLib.o kernelLib.o module.o msgQLib.o semLib.o
 
 export-objs := $(xeno_vxworks-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat -I..
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat -I..
 
 include $(TOPDIR)/Rules.make
 

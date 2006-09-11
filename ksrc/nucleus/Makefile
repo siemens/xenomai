@@ -14,7 +14,7 @@ xeno_nucleus-$(CONFIG_XENO_OPT_REGISTRY) += registry.o
 
 xeno_nucleus-$(CONFIG_LTT) += ltt.o
 
-EXTRA_CFLAGS += -Iinclude/xenomai
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
 
 else
 
@@ -38,7 +38,7 @@ xeno_nucleus-objs += $(opt_objs-y)
 
 export-objs := $(xeno_nucleus-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
 
