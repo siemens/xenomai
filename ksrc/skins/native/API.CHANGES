@@ -141,3 +141,6 @@ ___________________________________________________________________
 	releases beyond 2.6.17. The former API is still available to
 	software configurations using older kernels up to 2.6.17
 	(included).
+
+	o Deprecate rt_pipe_flush() since the optimization of the data
+	streaming mode made it useless.

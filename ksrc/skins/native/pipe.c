@@ -49,10 +49,6 @@
 #include <nucleus/registry.h>
 #include <native/pipe.h>
 
-static int __pipe_flush_apc;
-
-static DECLARE_XNQUEUE(__pipe_flush_q);
-
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 static ssize_t __pipe_link_proc(char *buf, int count, void *data)
@@ -87,38 +83,6 @@ static void __pipe_flush_pool(xnheap_t *heap,
 	xnarch_sysfree(poolmem, poolsize);
 }
 
-static inline ssize_t __pipe_flush(RT_PIPE *pipe)
-{
-	ssize_t nbytes = pipe->fillsz + sizeof(RT_PIPE_MSG);
-	void *buffer = pipe->buffer;
-
-	pipe->buffer = NULL;
-	pipe->fillsz = 0;
-
-	return xnpipe_send(pipe->minor, buffer, nbytes, P_NORMAL);
-	/* The buffer will be freed by the output handler. */
-}
-
-static void __pipe_flush_handler(void *cookie)
-{
-	xnholder_t *holder;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	/* Flush all pipes with pending messages. */
-
-	while ((holder = getq(&__pipe_flush_q)) != NULL) {
-		RT_PIPE *pipe = link2rtpipe(holder);
-		__clear_bit(0, &pipe->flushable);
-		xnlock_put_irqrestore(&nklock, s);
-		__pipe_flush(pipe);	/* Cannot do anything upon error here. */
-		xnlock_get_irqsave(&nklock, s);
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-}
-
 static void *__pipe_alloc_handler(int bminor, size_t size, void *cookie)
 {
 	RT_PIPE *pipe = (RT_PIPE *)cookie;
@@ -131,26 +95,25 @@ static int __pipe_output_handler(int bminor,
 				 xnpipe_mh_t *mh, int retval, void *cookie)
 {
 	RT_PIPE *pipe = (RT_PIPE *)cookie;
+	
+	if (mh == pipe->buffer) {
+		/* We do not recycle the streaming buffer. */
+		pipe->fillsz = 0;
+		__clear_bit(P_SYNCWAIT, &pipe->status);
+	} else
+		/* Free memory from output/discarded message. */
+		xnheap_free(pipe->bufpool, mh);
 
-	/* Free memory from output/discarded message. */
-	xnheap_free(pipe->bufpool, mh);
 	return retval;
 }
 
 int __native_pipe_pkg_init(void)
 {
-	__pipe_flush_apc =
-	    rthal_apc_alloc("pipe_flush", &__pipe_flush_handler, NULL);
-
-	if (__pipe_flush_apc < 0)
-		return __pipe_flush_apc;
-
 	return 0;
 }
 
 void __native_pipe_pkg_cleanup(void)
 {
-	rthal_apc_free(__pipe_flush_apc);
 }
 
 /**
@@ -236,8 +199,8 @@ void __native_pipe_pkg_cleanup(void)
 
 int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 {
-	int err = 0;
 	void *poolmem;
+	int err = 0;
 
 	if (!xnpod_root_p())
 		return -EPERM;
@@ -245,7 +208,7 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 	pipe->buffer = NULL;
 	pipe->bufpool = &kheap;
 	pipe->fillsz = 0;
-	pipe->flushable = 0;
+	pipe->status = 0;
 	pipe->handle = 0;	/* i.e. (still) unregistered pipe. */
 	pipe->magic = XENO_PIPE_MAGIC;
 	xnobject_copy_name(pipe->name, name);
@@ -266,7 +229,8 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 		if (!poolmem)
 			return -ENOMEM;
 
-		err = xnheap_init(&pipe->privpool, poolmem, poolsize, PAGE_SIZE);	/* Use natural page size */
+		/* Use natural page size */
+		err = xnheap_init(&pipe->privpool, poolmem, poolsize, PAGE_SIZE);
 		if (err) {
 			xnarch_sysfree(poolmem, poolsize);
 			return err;
@@ -369,11 +333,8 @@ int rt_pipe_delete(RT_PIPE *pipe)
 		return err;
 	}
 
-	if (__test_and_clear_bit(0, &pipe->flushable)) {
-		/* Purge data waiting for flush. */
-		removeq(&__pipe_flush_q, &pipe->link);
+	if (pipe->buffer != NULL)
 		rt_pipe_free(pipe, pipe->buffer);
-	}
 
 	err = xnpipe_disconnect(pipe->minor);
 
@@ -638,12 +599,6 @@ ssize_t rt_pipe_read(RT_PIPE *pipe, void *buf, size_t size, RTIME timeout)
  * know how much space you needed at the time of allocation. In all
  * other cases it may be more convenient to just pass P_MSGSIZE(msg).
  *
- * Additionally, rt_pipe_send() causes any data buffered by
- * rt_pipe_stream() to be flushed prior to sending the message. For
- * this reason, rt_pipe_send() can return a non-zero byte count to the
- * caller if some pending data has been flushed, even if @a size was
- * zero on entry.
- *
  * @param mode A set of flags affecting the operation:
  *
  * - P_URGENT causes the message to be prepended to the output
@@ -652,9 +607,8 @@ ssize_t rt_pipe_read(RT_PIPE *pipe, void *buf, size_t size, RTIME timeout)
  * - P_NORMAL causes the message to be appended to the output
  * queue, ensuring a FIFO ordering.
  *
- * @return Upon success, this service returns @a size if the latter is
- * non-zero, or the number of bytes flushed otherwise. Upon error, one
- * of the following error codes is returned:
+ * @return Upon success, this service returns @a size.  Upon error,
+ * one of the following error codes is returned:
  *
  * - -EINVAL is returned if @a pipe is not a pipe descriptor.
  *
@@ -688,14 +642,6 @@ ssize_t rt_pipe_send(RT_PIPE *pipe, RT_PIPE_MSG *msg, size_t size, int mode)
 	if (!pipe) {
 		n = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
 		goto unlock_and_exit;
-	}
-
-	if (__test_and_clear_bit(0, &pipe->flushable)) {
-		removeq(&__pipe_flush_q, &pipe->link);
-		n = __pipe_flush(pipe);
-
-		if (n < 0)
-			goto unlock_and_exit;
 	}
 
 	if (size > 0)
@@ -734,12 +680,6 @@ ssize_t rt_pipe_send(RT_PIPE *pipe, RT_PIPE_MSG *msg, size_t size, int mode)
  * only). Zero is a valid value, in which case the service returns
  * immediately without sending any message.
  *
- * Additionally, rt_pipe_write() causes any data buffered by
- * rt_pipe_stream() to be flushed prior to sending the message. For
- * this reason, rt_pipe_write() can return a non-zero byte count to
- * the caller if some pending data has been flushed, even if @a size
- * was zero on entry.
- *
  * @param mode A set of flags affecting the operation:
  *
  * - P_URGENT causes the message to be prepended to the output
@@ -748,8 +688,7 @@ ssize_t rt_pipe_send(RT_PIPE *pipe, RT_PIPE_MSG *msg, size_t size, int mode)
  * - P_NORMAL causes the message to be appended to the output
  * queue, ensuring a FIFO ordering.
  *
- * @return Upon success, this service returns @a size if the latter is
- * non-zero, or the number of bytes flushed otherwise. Upon error, one
+ * @return Upon success, this service returns @a size. Upon error, one
  * of the following error codes is returned:
  *
  * - -EINVAL is returned if @a pipe is not a pipe descriptor.
@@ -810,9 +749,8 @@ ssize_t rt_pipe_write(RT_PIPE *pipe, const void *buf, size_t size, int mode)
  * This service writes a sequence of bytes to be received from the
  * associated special device. Unlike rt_pipe_send(), this service does
  * not preserve message boundaries. Instead, an internal buffer is
- * filled on the fly with the data. The actual sending may be delayed
- * until the internal buffer is full, or the Linux kernel is
- * re-entered after the real-time system enters a quiescent state.
+ * filled on the fly with the data, which will be consumed as soon as
+ * the receiver wakes up.
  *
  * Data buffers sent by the rt_pipe_stream() service are always
  * transmitted in FIFO order (i.e. P_NORMAL mode).
@@ -859,8 +797,8 @@ ssize_t rt_pipe_write(RT_PIPE *pipe, const void *buf, size_t size, int mode)
 
 ssize_t rt_pipe_stream(RT_PIPE *pipe, const void *buf, size_t size)
 {
-	ssize_t outbytes = 0;
-	size_t n;
+	ssize_t outbytes;
+ 	size_t fillptr;
 	spl_t s;
 
 #if CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ <= 0
@@ -876,53 +814,38 @@ ssize_t rt_pipe_stream(RT_PIPE *pipe, const void *buf, size_t size)
 		goto unlock_and_exit;
 	}
 
-	while (size > 0) {
-		if (size >= CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ - pipe->fillsz)
-			n = CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ - pipe->fillsz;
-		else
-			n = size;
-
-		if (n == 0) {
-			ssize_t err = __pipe_flush(pipe);
-
-			if (__test_and_clear_bit(0, &pipe->flushable))
-				removeq(&__pipe_flush_q, &pipe->link);
-
-			if (err < 0) {
-				outbytes = err;
-				goto unlock_and_exit;
-			}
-
-			continue;
-		}
-
+	if (pipe->buffer == NULL) {
+		pipe->buffer = rt_pipe_alloc(pipe, CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ);
 		if (pipe->buffer == NULL) {
-			pipe->buffer =
-			    rt_pipe_alloc(pipe,
-					  CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ);
-
-			if (pipe->buffer == NULL) {
-				outbytes = -ENOMEM;
-				goto unlock_and_exit;
-			}
+			outbytes = -ENOMEM;
+			goto unlock_and_exit;
 		}
-
-		memcpy(P_MSGPTR(pipe->buffer) + pipe->fillsz,
-		       (caddr_t) buf + outbytes, n);
-		pipe->fillsz += n;
-		outbytes += n;
-		size -= n;
 	}
 
-	/* The flushable bit is not that elegant, but we must make sure
-	   that we won't enqueue the pipe descriptor twice in the flush
-	   queue, but we still have to enqueue it before the virq is made
-	   pending if necessary since it could preempt a Linux-based
-	   caller, so... */
+	if (size > CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ - pipe->fillsz)
+		outbytes = CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ - pipe->fillsz;
+	else
+		outbytes = size;
 
-	if (pipe->fillsz > 0 && !__test_and_set_bit(0, &pipe->flushable)) {
-		appendq(&__pipe_flush_q, &pipe->link);
-		rthal_apc_schedule(__pipe_flush_apc);
+	if (outbytes > 0) {
+		fillptr = pipe->fillsz;
+		pipe->fillsz += outbytes;
+
+		xnlock_put_irqrestore(&nklock, s);
+
+		memcpy(P_MSGPTR(pipe->buffer) + fillptr,
+		       (caddr_t) buf, outbytes);
+
+		xnlock_get_irqsave(&nklock, s);
+
+		if (__test_and_set_bit(P_SYNCWAIT, &pipe->status))
+			outbytes = xnpipe_mfixup(pipe->minor, pipe->buffer, outbytes);
+		else {
+			outbytes = xnpipe_send(pipe->minor, pipe->buffer,
+					       outbytes + sizeof(RT_PIPE_MSG), XNPIPE_NORMAL);
+			if (outbytes > 0)
+				outbytes -= sizeof(RT_PIPE_MSG);
+		}
 	}
 
       unlock_and_exit:
@@ -938,13 +861,12 @@ ssize_t rt_pipe_stream(RT_PIPE *pipe, const void *buf, size_t size)
  *
  * @brief Flush the pipe.
  *
- * This service flushes any pending data buffered by rt_pipe_stream().
  * This operation makes the data available for reading from the
  * associated special device.
  *
  * @param pipe The descriptor address of the pipe to flush.
  *
- * @return The number of bytes flushed upon success. Otherwise:
+ * @return Zero upon success. Otherwise:
  *
  * - -EINVAL is returned if @a pipe is not a pipe descriptor.
  *
@@ -964,32 +886,26 @@ ssize_t rt_pipe_stream(RT_PIPE *pipe, const void *buf, size_t size)
  * - Kernel-based task
  *
  * Rescheduling: possible.
+ *
+ * @note This service is deprecated, since the streamed data is now
+ * immediately available to the receiving side.
  */
 
 ssize_t rt_pipe_flush(RT_PIPE *pipe)
 {
-	ssize_t n = 0;
+	int err = 0;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	pipe = xeno_h2obj_validate(pipe, XENO_PIPE_MAGIC, RT_PIPE);
 
-	if (!pipe) {
-		n = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
-		goto unlock_and_exit;
-	}
-
-	if (__test_and_clear_bit(0, &pipe->flushable)) {
-		removeq(&__pipe_flush_q, &pipe->link);
-		n = __pipe_flush(pipe);
-	}
-
-      unlock_and_exit:
+	if (!pipe)
+		err = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return n <= 0 ? n : n - sizeof(RT_PIPE_MSG);
+	return err;
 }
 
 /**
@@ -1026,7 +942,6 @@ RT_PIPE_MSG *rt_pipe_alloc(RT_PIPE *pipe, size_t size)
 	RT_PIPE_MSG *msg =
 	    (RT_PIPE_MSG *)xnheap_alloc(pipe->bufpool,
 					size + sizeof(RT_PIPE_MSG));
-
 	if (msg) {
 		inith(&msg->link);
 		msg->size = size;

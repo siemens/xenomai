@@ -112,7 +112,7 @@
 #define __native_pipe_read          86
 #define __native_pipe_write         87
 #define __native_pipe_stream        88
-#define __native_pipe_flush         89
+#define __native_unimp_89           89
 #define __native_misc_get_io_region 90
 #define __native_misc_put_io_region 91
 #define __native_timer_ns2tsc       92

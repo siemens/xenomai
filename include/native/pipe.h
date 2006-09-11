@@ -38,7 +38,9 @@ typedef struct rt_pipe_placeholder {
 
 #ifdef __KERNEL__
 
-#define XENO_PIPE_MAGIC 0x55550202
+#define XENO_PIPE_MAGIC  0x55550202
+
+#define P_SYNCWAIT  0
 
 typedef xnpipe_mh_t RT_PIPE_MSG;
 
@@ -64,7 +66,7 @@ typedef struct rt_pipe {
 
     size_t fillsz;		/* !< Bytes written to the buffer.  */
 
-    u_long flushable;		/* !< Flush request flag. */
+    u_long status;		/* !< Status information. */
 
     xnhandle_t handle;		/* !< Handle in registry -- zero if unregistered. */
 
@@ -109,8 +111,6 @@ ssize_t rt_pipe_stream(RT_PIPE *pipe,
 		       const void *buf,
 		       size_t size);
 
-ssize_t rt_pipe_flush(RT_PIPE *pipe);
-
 #ifdef __KERNEL__
 
 ssize_t rt_pipe_receive(RT_PIPE *pipe,
@@ -128,6 +128,8 @@ RT_PIPE_MSG *rt_pipe_alloc(RT_PIPE *pipe,
 int rt_pipe_free(RT_PIPE *pipe,
                  RT_PIPE_MSG *msg);
 
+ssize_t __deprecated_call__ rt_pipe_flush(RT_PIPE *pipe);
+
 int __native_pipe_pkg_init(void);
 
 void __native_pipe_pkg_cleanup(void);
@@ -138,8 +140,7 @@ int rt_pipe_bind(RT_PIPE *pipe,
 		 const char *name,
 		 RTIME timeout);
 
-static inline int rt_pipe_unbind (RT_PIPE *pipe)
-
+static inline int rt_pipe_unbind(RT_PIPE *pipe)
 {
     pipe->opaque = XN_NO_HANDLE;
     return 0;
