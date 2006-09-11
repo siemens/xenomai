@@ -1,8 +1,20 @@
+2006-09-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc: Define -D__IN_XENOMAI__ when compiling the kernel support.
+
+	* include/nucleus/types.h: Never send deprecation warnings when
+	compiling the kernel support.
+
 2006-09-11  Wolfgang Grandegger <wg@grandegger.com>
 
 	* include/asm-powerpc, ksrc/arch/powerpc/hal.c,
 	scripts/prepare-kernel.sh: Fix porting issues for running over
 	2.6.18/ppc.
+
+2006-09-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/pipe.c: Optimize for data streaming.
+	Deprecate rt_pipe_flush().
 
 2006-09-10  Philippe Gerum  <rpm@xenomai.org>
 
@@ -80,7 +92,6 @@
 	* src/testsuite/switchtest/switchtest.c (clean_exit): Fix
 	switchtest termination on FPU bug.
 
->>>>>>> .r1562
 2006-09-03  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/synch.c (xnsynch_renice_sleeper): Do not assume
