@@ -1,3 +1,9 @@
+2006-09-11  Wolfgang Grandegger <wg@grandegger.com>
+
+	* include/asm-powerpc, ksrc/arch/powerpc/hal.c,
+	scripts/prepare-kernel.sh: Fix porting issues for running over
+	2.6.18/ppc.
+
 2006-09-10  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.1{4,5}-1.4-00.
@@ -11,8 +17,8 @@
 	optimize for highly scattered data sent over a short period of
 	time.
 
-	* ksrc/nucleus/pipe.c (xnpipe_send_more): Allow adding more data
-	to a message bucket while it is waiting on the output queue.
+	* ksrc/nucleus/pipe.c (xnpipe_mfixup): Allow adding more data to a
+	message bucket while it is waiting on the output queue.
 	(xnpipe_read): Handle the interaction with
 	xnpipe_send_more(). Note: the output handler is now always called
 	with nklock held, interrupts off.
