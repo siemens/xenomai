@@ -8,7 +8,7 @@ xeno_vrtx-y := event.o heap.o mb.o module.o mx.o pt.o queue.o sem.o task.o time.
 
 xeno_vrtx-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
 
-EXTRA_CFLAGS += -I$(src)/.. -Iinclude/xenomai
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(src)/.. -Iinclude/xenomai
 
 else
 
@@ -27,7 +27,7 @@ xeno_vrtx-objs := event.o heap.o mb.o module.o mx.o pt.o queue.o sem.o task.o ti
 
 export-objs := $(xeno_vrtx-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat -I..
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat -I..
 
 include $(TOPDIR)/Rules.make
 

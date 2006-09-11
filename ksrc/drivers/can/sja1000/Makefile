@@ -2,7 +2,7 @@ ifeq ($(PATCHLEVEL),6)
 
 # Makefile frag for Linux v2.6
 
-EXTRA_CFLAGS += -Iinclude/xenomai -Idrivers/xenomai/can -Idrivers/xenomai/can/sja1000
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai -Idrivers/xenomai/can -Idrivers/xenomai/can/sja1000
 
 obj-$(CONFIG_XENO_DRIVERS_RTCAN_SJA1000) += xeno_rtcan_sja1000.o
 obj-$(CONFIG_XENO_DRIVERS_RTCAN_SJA1000_PEAK_PCI) += xeno_rtcan_peak_pci.o
@@ -34,7 +34,7 @@ xeno_rtcan_isa-objs := rtcan_isa.o
 
 export-objs := $(xeno_rtcan_sja1000-objs)
 
-EXTRA_CFLAGS += -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat -I..  -I.
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat -I..  -I.
 
 include $(TOPDIR)/Rules.make
 
