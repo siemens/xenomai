@@ -59,6 +59,12 @@
 #define DBG(fmt...)
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
+#define rthal_irq_handlerp(irq) rthal_irq_descp(irq)->handler
+#else
+#define rthal_irq_handlerp(irq) rthal_irq_descp(irq)->chip
+#endif
+
 static struct {
 
     unsigned long flags;
@@ -322,11 +328,11 @@ int rthal_irq_enable(unsigned irq)
     if (irq >= IPIPE_NR_XIRQS)
         return -EINVAL;
 
-    if (rthal_irq_descp(irq)->handler == NULL ||
-        rthal_irq_descp(irq)->handler->enable == NULL)
+    if (rthal_irq_handlerp(irq) == NULL ||
+        rthal_irq_handlerp(irq)->enable == NULL)
         return -ENODEV;
 
-    rthal_irq_descp(irq)->handler->enable(irq);
+    rthal_irq_handlerp(irq)->enable(irq);
 
     return 0;
 }
@@ -337,11 +343,11 @@ int rthal_irq_disable(unsigned irq)
     if (irq >= IPIPE_NR_XIRQS)
         return -EINVAL;
 
-    if (rthal_irq_descp(irq)->handler == NULL ||
-        rthal_irq_descp(irq)->handler->disable == NULL)
+    if (rthal_irq_handlerp(irq) == NULL ||
+        rthal_irq_handlerp(irq)->disable == NULL)
         return -ENODEV;
 
-    rthal_irq_descp(irq)->handler->disable(irq);
+    rthal_irq_handlerp(irq)->disable(irq);
 
     return 0;
 }
@@ -351,11 +357,11 @@ int rthal_irq_end(unsigned irq)
     if (irq >= IPIPE_NR_XIRQS)
         return -EINVAL;
 
-    if (rthal_irq_descp(irq)->handler != NULL) {
-        if (rthal_irq_descp(irq)->handler->end != NULL)
-            rthal_irq_descp(irq)->handler->end(irq);
-        else if (rthal_irq_descp(irq)->handler->enable != NULL)
-            rthal_irq_descp(irq)->handler->enable(irq);
+    if (rthal_irq_handlerp(irq) != NULL) {
+        if (rthal_irq_handlerp(irq)->end != NULL)
+            rthal_irq_handlerp(irq)->end(irq);
+        else if (rthal_irq_handlerp(irq)->enable != NULL)
+            rthal_irq_handlerp(irq)->enable(irq);
         else
             return -ENODEV;
     } else
