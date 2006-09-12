@@ -36,11 +36,7 @@
 #define RTCAN_DEV_NAME    "rtcan%d"
 #define RTCAN_DRV_NAME    "sja1000-isa"
 
-#ifdef CONFIG_XENO_DRIVERS_RTCAN_ISA_MAX_DEVS
-#define RTCAN_ISA_MAX_DEV CONFIG_XENO_DRIVERS_RTCAN_ISA_MAX_DEV
-#else
-#define RTCAN_ISA_MAX_DEV 2
-#endif
+#define RTCAN_ISA_MAX_DEV CONFIG_XENO_DRIVERS_RTCAN_SJA1000_ISA_MAX_DEV
 
 static char *isa_board_name = "ISA-Board";
 
@@ -71,128 +67,129 @@ MODULE_PARM_DESC(cdr, "Value of clock divider register (default 0xc8");
 
 struct rtcan_isa
 {
-    u16 io; 
+	u16 io;
 };
 
 static struct rtcan_device *rtcan_isa_devs[RTCAN_ISA_MAX_DEV];
 
 static u8 rtcan_isa_readreg(struct rtcan_device *dev, int port)
 {
-    struct rtcan_isa *board = (struct rtcan_isa *)dev->board_priv;
-    return inb(board->io + port);
+	struct rtcan_isa *board = (struct rtcan_isa *)dev->board_priv;
+	return inb(board->io + port);
 }
 
 static void rtcan_isa_writereg(struct rtcan_device *dev, int port, u8 val)
 {
-    struct rtcan_isa *board = (struct rtcan_isa *)dev->board_priv;
-    outb(val, board->io + port);
+	struct rtcan_isa *board = (struct rtcan_isa *)dev->board_priv;
+	outb(val, board->io + port);
 }
 
 
 int __init rtcan_isa_init_one(int idx)
 {
-    struct rtcan_device *dev;
-    struct rtcan_sja1000 *chip;
-    struct rtcan_isa *board;
-    int ret;
-    
-    if ((dev = rtcan_dev_alloc(sizeof(struct rtcan_sja1000),
-			       sizeof(struct rtcan_isa))) == NULL)
-        return -ENOMEM;
+	struct rtcan_device *dev;
+	struct rtcan_sja1000 *chip;
+	struct rtcan_isa *board;
+	int ret;
 
-    chip = (struct rtcan_sja1000 *)dev->priv;
-    board = (struct rtcan_isa *)dev->board_priv;
+	if ((dev = rtcan_dev_alloc(sizeof(struct rtcan_sja1000),
+				   sizeof(struct rtcan_isa))) == NULL)
+		return -ENOMEM;
 
-    dev->board_name = isa_board_name;
+	chip = (struct rtcan_sja1000 *)dev->priv;
+	board = (struct rtcan_isa *)dev->board_priv;
 
-    board->io = io[idx];
-  
-    chip->irq_num = irq[idx];
-    chip->irq_flags = RTDM_IRQTYPE_SHARED | RTDM_IRQTYPE_EDGE;
-  
-    chip->read_reg = rtcan_isa_readreg;
-    chip->write_reg = rtcan_isa_writereg;
+	dev->board_name = isa_board_name;
 
-    /* Check and request I/O ports */
-    if (!request_region(board->io, RTCAN_ISA_PORT_SIZE, RTCAN_DRV_NAME)) {
-	ret = -EBUSY;
-	goto out_dev_free;
-    }
+	board->io = io[idx];
 
-    /* Clock frequency in Hz */
-    if (clock[idx])
-	dev->can_sys_clock = clock[idx] / 2;
-    else
-	dev->can_sys_clock = 8000000; /* 16/2 MHz */
+	chip->irq_num = irq[idx];
+	chip->irq_flags = RTDM_IRQTYPE_SHARED | RTDM_IRQTYPE_EDGE;
 
-    /* Output control register */
-    if (ocr[idx])
-	chip->ocr = ocr[idx];
-    else
-	chip->ocr = SJA_OCR_MODE_NORMAL | SJA_OCR_TX0_PUSHPULL;
+	chip->read_reg = rtcan_isa_readreg;
+	chip->write_reg = rtcan_isa_writereg;
 
-    if (cdr[idx])
-	chip->cdr = cdr[idx];
-    else
-	chip->cdr = SJA_CDR_CAN_MODE | SJA_CDR_CLK_OFF | SJA_CDR_CBP;
+	/* Check and request I/O ports */
+	if (!request_region(board->io, RTCAN_ISA_PORT_SIZE, RTCAN_DRV_NAME)) {
+		ret = -EBUSY;
+		goto out_dev_free;
+	}
 
-    strncpy(dev->name, RTCAN_DEV_NAME, IFNAMSIZ);
+	/* Clock frequency in Hz */
+	if (clock[idx])
+		dev->can_sys_clock = clock[idx] / 2;
+	else
+		dev->can_sys_clock = 8000000; /* 16/2 MHz */
 
-    ret = rtcan_sja1000_register(dev);
-    if (ret) {
-	printk(KERN_ERR "ERROR %d while trying to register SJA1000 device!\n",
-	       ret);
-	goto out_free_region;
-    }
-    
-    rtcan_isa_devs[idx] = dev;
-    return 0;
-    
+	/* Output control register */
+	if (ocr[idx])
+		chip->ocr = ocr[idx];
+	else
+		chip->ocr = SJA_OCR_MODE_NORMAL | SJA_OCR_TX0_PUSHPULL;
+
+	if (cdr[idx])
+		chip->cdr = cdr[idx];
+	else
+		chip->cdr = SJA_CDR_CAN_MODE | SJA_CDR_CLK_OFF | SJA_CDR_CBP;
+
+	strncpy(dev->name, RTCAN_DEV_NAME, IFNAMSIZ);
+
+	ret = rtcan_sja1000_register(dev);
+	if (ret) {
+		printk(KERN_ERR "ERROR %d while trying to register SJA1000 "
+		       "device!\n", ret);
+		goto out_free_region;
+	}
+
+	rtcan_isa_devs[idx] = dev;
+	return 0;
+
  out_free_region:
-    release_region(board->io, RTCAN_ISA_PORT_SIZE);
+	release_region(board->io, RTCAN_ISA_PORT_SIZE);
 
  out_dev_free:
-    rtcan_dev_free(dev);
+	rtcan_dev_free(dev);
 
-    return ret;
+	return ret;
 }
+
+static void rtcan_isa_exit(void);
 
 /** Init module */
 static int __init rtcan_isa_init(void)
 {
-    int i, ret;
-    int done = 0;
+	int i, err;
+	int devices = 0;
 
-    for (i = 0;
-	 i < RTCAN_ISA_MAX_DEV && io[i] != 0;
-	 i++) {
-
-	if ((ret = rtcan_isa_init_one(i) != 0)) {
-	    return ret;
+	for (i = 0; i < RTCAN_ISA_MAX_DEV && io[i] != 0; i++) {
+		err = rtcan_isa_init_one(i);
+		if (err) {
+			rtcan_isa_exit();
+			return err;
+		}
+		devices++;
 	}
-	done++;
-    }
-    if (done)
-	return 0;
-    printk(KERN_ERR "ERROR! No devices specified! "
-	   "Use io=<port1>[,...] irq=<irq1>[,...]\n");
+	if (devices)
+		return 0;
 
-    return -EINVAL;
+	printk(KERN_ERR "ERROR! No devices specified! "
+	       "Use io=<port1>[,...] irq=<irq1>[,...]\n");
+	return -EINVAL;
 }
 
 
 /** Cleanup module */
-static void __exit rtcan_isa_exit(void)
+static void rtcan_isa_exit(void)
 {
-    int i;
-    struct rtcan_device *dev;
-
-    for (i = 0; i < RTCAN_ISA_MAX_DEV; i++) {
-	dev = rtcan_isa_devs[i];
-	if (!dev)
-	    continue;
-	rtcan_sja1000_unregister(dev);
-    }
+	int i;
+	struct rtcan_device *dev;
+	
+	for (i = 0; i < RTCAN_ISA_MAX_DEV; i++) {
+		dev = rtcan_isa_devs[i];
+		if (!dev)
+			continue;
+		rtcan_sja1000_unregister(dev);
+	}
 }
 
 module_init(rtcan_isa_init);

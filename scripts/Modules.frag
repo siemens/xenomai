@@ -15,5 +15,7 @@ DRIVERS-$(CONFIG_XENO_DRIVERS_RTCAN) += drivers/xenomai/can/xeno_rtcan.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_RTCAN_VIRT) += drivers/xenomai/can/xeno_rtcan_virt.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_RTCAN_MSCAN) += drivers/xenomai/can/mscan/xeno_rtcan_mscan.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_RTCAN_SJA1000) += drivers/xenomai/can/sja1000/xeno_rtcan_sja1000.o
+DRIVERS-$(CONFIG_XENO_DRIVERS_RTCAN_SJA1000_ISA) += drivers/xenomai/can/sja1000/xeno_rtcan_isa.o
+DRIVERS-$(CONFIG_XENO_DRIVERS_RTCAN_SJA1000_MEM) += drivers/xenomai/can/sja1000/xeno_rtcan_mem.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_RTCAN_SJA1000_PEAK_PCI) += drivers/xenomai/can/sja1000/xeno_rtcan_peak_pci.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_RTCAN_SJA1000_PEAK_DNG) += drivers/xenomai/can/sja1000/xeno_rtcan_peak_dng.o
