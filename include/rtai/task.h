@@ -77,6 +77,34 @@ int __rtai_task_pkg_init(void);
 
 void __rtai_task_pkg_cleanup(void);
 
+void __rtai_task_wait_period(void);
+
+static inline void rt_task_wait_period(void)
+{
+    __rtai_task_wait_period();
+}
+
+int __rtai_task_suspend(RT_TASK *task);
+
+static inline int rt_task_suspend(RT_TASK *task)
+{
+    return __rtai_task_suspend(task);
+}
+
+int __rtai_task_resume(RT_TASK *task);
+
+static inline int rt_task_resume(RT_TASK *task)
+{
+    return __rtai_task_resume(task);
+}
+
+int __rtai_task_delete(RT_TASK *task);
+
+static inline int rt_task_delete(RT_TASK *task)
+{
+    return __rtai_task_delete(task);
+}
+
 #ifdef __cplusplus
 }
 #endif
@@ -88,6 +116,22 @@ void __rtai_task_pkg_cleanup(void);
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
 typedef RT_TASK_PLACEHOLDER RT_TASK;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void rt_task_wait_period(void);
+
+int rt_task_suspend(RT_TASK *task);
+
+int rt_task_resume(RT_TASK *task);
+
+int rt_task_delete(RT_TASK *task);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
@@ -112,13 +156,6 @@ int rt_task_make_periodic(RT_TASK *task,
 int rt_task_make_periodic_relative_ns(RT_TASK *task,
 				      RTIME start_delay,
 				      RTIME period);
-void rt_task_wait_period(void);
-
-int rt_task_suspend(RT_TASK *task);
-
-int rt_task_resume(RT_TASK *task);
-
-int rt_task_delete(RT_TASK *task);
 
 #ifdef __cplusplus
 }

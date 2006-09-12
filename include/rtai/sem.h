@@ -65,6 +65,13 @@ int __rtai_sem_pkg_init(void);
 
 void __rtai_sem_pkg_cleanup(void);
 
+int __rtai_sem_delete(SEM *sem);
+
+static inline int rt_sem_delete(SEM *sem)
+{
+    return __rtai_sem_delete(sem);
+}
+
 #ifdef __cplusplus
 }
 #endif
@@ -72,6 +79,16 @@ void __rtai_sem_pkg_cleanup(void);
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
 typedef RT_SEM_PLACEHOLDER SEM;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int rt_sem_delete(SEM *sem);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
@@ -82,8 +99,6 @@ extern "C" {
 void rt_typed_sem_init(SEM *sem,
 		       int value,
 		       int type);
-
-int rt_sem_delete(SEM *sem);
 
 int rt_sem_signal(SEM *sem);
 
