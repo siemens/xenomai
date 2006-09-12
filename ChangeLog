@@ -1,3 +1,8 @@
+2006-09-12  Wolfgang Grandegger <wg@grandegger.com>
+
+	* ksrc/drivers/can/sja1000/rtcan_isa.c: Rename module parameter
+	"isa" to "io", switch "clock" parameter to external frequency.
+
 2006-09-12  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/rtai/{sem.h,task.h}, ksrc/skins/rtai/{sem.c,task.c},

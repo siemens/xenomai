@@ -49,21 +49,21 @@ MODULE_DESCRIPTION("RTCAN board driver for standard ISA boards");
 MODULE_SUPPORTED_DEVICE("ISA board");
 MODULE_LICENSE("GPL");
 
-static u16 isa[RTCAN_ISA_MAX_DEV];
+static u16 io[RTCAN_ISA_MAX_DEV];
 static int irq[RTCAN_ISA_MAX_DEV];
 static u32 clock[RTCAN_ISA_MAX_DEV];
 static u8 ocr[RTCAN_ISA_MAX_DEV];
 static u8 cdr[RTCAN_ISA_MAX_DEV];
 
-compat_module_short_param_array(isa, RTCAN_ISA_MAX_DEV);
+compat_module_short_param_array(io, RTCAN_ISA_MAX_DEV);
 compat_module_int_param_array(irq, RTCAN_ISA_MAX_DEV);
 compat_module_int_param_array(clock, RTCAN_ISA_MAX_DEV);
 compat_module_byte_param_array(ocr, RTCAN_ISA_MAX_DEV);
 compat_module_byte_param_array(cdr, RTCAN_ISA_MAX_DEV);
 
-MODULE_PARM_DESC(isa, "The io-port address");
+MODULE_PARM_DESC(io, "The io-port address");
 MODULE_PARM_DESC(irq, "The interrupt number");
-MODULE_PARM_DESC(clock, "CAN system clock frequency (default 8 MHz)");
+MODULE_PARM_DESC(clock, "External clock frequency (default 16 MHz)");
 MODULE_PARM_DESC(ocr, "Value of output control register (default 0x1a)");
 MODULE_PARM_DESC(cdr, "Value of clock divider register (default 0xc8");
 
@@ -71,7 +71,7 @@ MODULE_PARM_DESC(cdr, "Value of clock divider register (default 0xc8");
 
 struct rtcan_isa
 {
-    u16 isa; 
+    u16 io; 
 };
 
 static struct rtcan_device *rtcan_isa_devs[RTCAN_ISA_MAX_DEV];
@@ -79,13 +79,13 @@ static struct rtcan_device *rtcan_isa_devs[RTCAN_ISA_MAX_DEV];
 static u8 rtcan_isa_readreg(struct rtcan_device *dev, int port)
 {
     struct rtcan_isa *board = (struct rtcan_isa *)dev->board_priv;
-    return inb(board->isa + port);
+    return inb(board->io + port);
 }
 
 static void rtcan_isa_writereg(struct rtcan_device *dev, int port, u8 val)
 {
     struct rtcan_isa *board = (struct rtcan_isa *)dev->board_priv;
-    outb(val, board->isa + port);
+    outb(val, board->io + port);
 }
 
 
@@ -105,7 +105,7 @@ int __init rtcan_isa_init_one(int idx)
 
     dev->board_name = isa_board_name;
 
-    board->isa = isa[idx];
+    board->io = io[idx];
   
     chip->irq_num = irq[idx];
     chip->irq_flags = RTDM_IRQTYPE_SHARED | RTDM_IRQTYPE_EDGE;
@@ -114,14 +114,14 @@ int __init rtcan_isa_init_one(int idx)
     chip->write_reg = rtcan_isa_writereg;
 
     /* Check and request I/O ports */
-    if (!request_region(board->isa, RTCAN_ISA_PORT_SIZE, RTCAN_DRV_NAME)) {
+    if (!request_region(board->io, RTCAN_ISA_PORT_SIZE, RTCAN_DRV_NAME)) {
 	ret = -EBUSY;
 	goto out_dev_free;
     }
 
     /* Clock frequency in Hz */
     if (clock[idx])
-	dev->can_sys_clock = clock[idx];
+	dev->can_sys_clock = clock[idx] / 2;
     else
 	dev->can_sys_clock = 8000000; /* 16/2 MHz */
 
@@ -149,7 +149,7 @@ int __init rtcan_isa_init_one(int idx)
     return 0;
     
  out_free_region:
-    release_region(board->isa, RTCAN_ISA_PORT_SIZE);
+    release_region(board->io, RTCAN_ISA_PORT_SIZE);
 
  out_dev_free:
     rtcan_dev_free(dev);
@@ -160,11 +160,11 @@ int __init rtcan_isa_init_one(int idx)
 /** Init module */
 static int __init rtcan_isa_init(void)
 {
-    int                         i;
-    int                         ret;
+    int i, ret;
     int done = 0;
-    for (i = 0; 
-	 i < RTCAN_ISA_MAX_DEV && isa[i] != 0; 
+
+    for (i = 0;
+	 i < RTCAN_ISA_MAX_DEV && io[i] != 0;
 	 i++) {
 
 	if ((ret = rtcan_isa_init_one(i) != 0)) {
@@ -175,7 +175,7 @@ static int __init rtcan_isa_init(void)
     if (done)
 	return 0;
     printk(KERN_ERR "ERROR! No devices specified! "
-	   "Use isa=<port1>[,...] irq=<irq1>[,...]\n");
+	   "Use io=<port1>[,...] irq=<irq1>[,...]\n");
 
     return -EINVAL;
 }
