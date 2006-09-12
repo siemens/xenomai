@@ -46,8 +46,9 @@
 /* Suppress handling of refcount if module support is not enabled
  * or modules cannot be unloaded */
 
-#ifdef CONFIG_MODULES
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) || defined(CONFIG_MODULE_UNLOAD)
+#if defined(CONFIG_MODULES) && \
+    (LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) || \
+     defined(CONFIG_MODULE_UNLOAD))
 #define RTCAN_USE_REFCOUNT
 #endif
 
