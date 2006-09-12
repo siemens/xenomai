@@ -1,8 +1,8 @@
 2006-09-12  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/rtai/{sem.h,task.h}, ksrc/skins/rtai/{sem.c,task.c},
-	ksrc/skins/rtai/Kconfig: Resolve naming conflict with native skin
-	and relax dependencies.
+	ksrc/skins/rtai/{Kconfig,Config.in}: Resolve naming conflict with
+	native skin and relax dependencies.
 
 2006-09-11  Philippe Gerum  <rpm@xenomai.org>
 
