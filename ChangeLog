@@ -18,6 +18,8 @@
 
 2006-09-12  Jan Kiszka  <jan.kiszka@web.de>
 
+	* scripts/xeno-test: Fix test for getopts in busybox.
+
 	* ksrc/drivers/can/sja1000/rtcan_isa.c: Refactor code and add
 	roll-back on init error.
 
