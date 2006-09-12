@@ -66,6 +66,11 @@ typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
     unsigned long *eipp;        /* Pointer to EIP backup area (&eip or &user->thread.eip) */
     union i387_union *fpup;     /* Pointer to the FPU backup area (&fpuenv or &user->thread.i387.f[x]save */
 
+    /* FPU context bits for root thread. */
+    unsigned is_root: 1;
+    unsigned cr0_ts: 1;
+    unsigned ts_usedfpu: 1;
+
 } xnarchtcb_t;
 
 typedef struct xnarch_fltinfo {
@@ -137,8 +142,13 @@ static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
 {
     /* Remember the preempted Linux task pointer. */
     rootcb->user_task = rootcb->active_task = current;
+    rootcb->cr0_ts = (read_cr0() & 8) != 0;
+    rootcb->ts_usedfpu = wrap_test_fpu_used(current) != 0;
     /* So that xnarch_save_fpu() will operate on the right FPU area. */
-    rootcb->fpup = &rootcb->user_task->thread.i387;
+    if (rootcb->ts_usedfpu)
+        rootcb->fpup = &rootcb->user_task->thread.i387;
+    else
+	rootcb->fpup = &rootcb->fpuenv;
 }
 
 static inline void xnarch_enter_root (xnarchtcb_t *rootcb)
@@ -296,6 +306,7 @@ static inline void xnarch_init_root_tcb (xnarchtcb_t *tcb,
     tcb->espp = &tcb->esp;
     tcb->eipp = &tcb->eip;
     tcb->fpup = NULL;
+    tcb->is_root = 1;
 }
 
 asmlinkage static void xnarch_thread_redirect (struct xnthread *self,
@@ -371,15 +382,28 @@ static inline void xnarch_save_fpu (xnarchtcb_t *tcb)
 {
     struct task_struct *task = tcb->user_task;
     
-    if(task)
-        {
-        if (!wrap_test_fpu_used(task))
-            return;
+    if (!tcb->is_root)
+	{
+        if (task)
+	    {	
+            if (!wrap_test_fpu_used(task))
+		return;
 
-        /* Tell Linux that we already saved the state of the FPU
-           hardware of this task. */
-        wrap_clear_fpu_used(task);
-        }
+	    /* Tell Linux that we already saved the state of the FPU
+	       hardware of this task. */
+	    wrap_clear_fpu_used(task);
+	    }
+	}
+    else
+	{
+	    /* Do not save root context FPU if cr0 bit ts is armed . */
+	    if (tcb->cr0_ts)
+		return;
+
+	    if (tcb->ts_usedfpu)
+		wrap_clear_fpu_used(task);
+	}
+
 
     clts();
     
@@ -394,18 +418,33 @@ static inline void xnarch_restore_fpu (xnarchtcb_t *tcb)
 {
     struct task_struct *task = tcb->user_task;
 
-    if (task)
-        {
-        if (!xnarch_fpu_init_p(task))
-            {
-            stts();
-            return;     /* Uninit fpu area -- do not restore. */
-            }
+    if (!tcb->is_root)
+	{
+	if (task)
+	    {
+	    if (!xnarch_fpu_init_p(task))
+		{
+		stts();
+		return;	/* Uninit fpu area -- do not restore. */
+		}
+		    
+	    /* Tell Linux that this task has altered the state of
+	     * the FPU hardware. */
+	    wrap_set_fpu_used(task);
+	    }
+	}
+    else
+	{
+	/* Restore state of ts bit if armed. */
+	if (tcb->cr0_ts)
+	    {
+	    stts();
+	    return;
+	    }
 
-        /* Tell Linux that this task has altered the state of the FPU
-           hardware. */
-        wrap_set_fpu_used(task);
-        }
+	if (tcb->ts_usedfpu)
+	    wrap_set_fpu_used(task);
+	}
 
     /* Restore the FPU hardware with valid fp registers from a
        user-space or kernel thread. */
@@ -422,19 +461,30 @@ static inline void xnarch_enable_fpu(xnarchtcb_t *tcb)
 {
     struct task_struct *task = tcb->user_task;
 
-    if (task)
-        {
-        if (!xnarch_fpu_init_p(task))
-            return;
+    if (!tcb->is_root)
+	{
+	if (task)
+	    {
+	    if (!xnarch_fpu_init_p(task))
+		return;
 
-        /* If "task" switched while in Linux domain, its FPU context may have
-           been overriden, restore it. */
-        if (!wrap_test_fpu_used(task))
-            {
-            xnarch_restore_fpu(tcb);
-            return;
-            }
-        }
+	    /* If "task" switched while in Linux domain, its FPU
+	     * context may have been overriden, restore it. */
+	    if (!wrap_test_fpu_used(task))
+		{
+		xnarch_restore_fpu(tcb);
+		return;
+		}
+	    }
+	}
+    else
+	{
+	if (tcb->cr0_ts)
+	    return;
+
+	xnarch_restore_fpu(tcb);
+	return;
+	}
 
     clts();
 
@@ -490,6 +540,7 @@ static inline void xnarch_init_tcb (xnarchtcb_t *tcb)
     tcb->espp = &tcb->esp;
     tcb->eipp = &tcb->eip;
     tcb->fpup = &tcb->fpuenv;
+    tcb->is_root = 0;
     /* Must be followed by xnarch_init_thread(). */
 }
 
