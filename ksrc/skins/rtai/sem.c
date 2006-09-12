@@ -45,7 +45,7 @@ void rt_typed_sem_init(SEM * sem, int value, int type)
 	sem->magic = RTAI_SEM_MAGIC;
 }
 
-int rt_sem_delete(SEM * sem)
+int __rtai_sem_delete(SEM * sem)
 {
 	int err = 0, rc;
 	spl_t s;
@@ -209,7 +209,7 @@ void __rtai_sem_pkg_cleanup(void)
 }
 
 EXPORT_SYMBOL(rt_typed_sem_init);
-EXPORT_SYMBOL(rt_sem_delete);
+EXPORT_SYMBOL(__rtai_sem_delete);
 EXPORT_SYMBOL(rt_sem_signal);
 EXPORT_SYMBOL(rt_sem_wait);
 EXPORT_SYMBOL(rt_sem_wait_if);
