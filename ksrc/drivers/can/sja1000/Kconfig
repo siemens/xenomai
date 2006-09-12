@@ -1,24 +1,29 @@
 config XENO_DRIVERS_RTCAN_SJA1000
-       depends on XENO_DRIVERS_RTCAN
-       tristate "Philips SJA1000 CAN controller"
-       default n
+	depends on XENO_DRIVERS_RTCAN
+	tristate "Philips SJA1000 CAN controller"
 
 config XENO_DRIVERS_RTCAN_SJA1000_ISA
-       depends on XENO_DRIVERS_RTCAN_SJA1000
-       tristate "Standard ISA devices"
-       default n
+	depends on XENO_DRIVERS_RTCAN_SJA1000
+	tristate "Standard ISA controllers"
 
 config XENO_DRIVERS_RTCAN_SJA1000_ISA_MAX_DEV
-       depends on XENO_DRIVERS_RTCAN_SJA1000_ISA
-       int "Maximum number of ISA devices"
-       default 4       
+	depends on XENO_DRIVERS_RTCAN_SJA1000_ISA
+	int "Maximum number of controllers"
+	default 4
+
+config XENO_DRIVERS_RTCAN_SJA1000_MEM
+	depends on XENO_DRIVERS_RTCAN_SJA1000
+	tristate "Memory mapped controllers"
+
+config XENO_DRIVERS_RTCAN_SJA1000_MEM_MAX_DEV
+	depends on XENO_DRIVERS_RTCAN_SJA1000_MEM
+	int "Maximum number of controllers"
+	default 4
 
 config XENO_DRIVERS_RTCAN_SJA1000_PEAK_PCI
-       depends on XENO_DRIVERS_RTCAN_SJA1000
-       tristate "PEAK PCI Card"
-       default n
+	depends on XENO_DRIVERS_RTCAN_SJA1000
+	tristate "PEAK PCI Card"
 
 config XENO_DRIVERS_RTCAN_SJA1000_PEAK_DNG
-       depends on XENO_DRIVERS_RTCAN_SJA1000
-       tristate "PEAK Parallel Port Dongle"
-       default n
+	depends on XENO_DRIVERS_RTCAN_SJA1000
+	tristate "PEAK Parallel Port Dongle"

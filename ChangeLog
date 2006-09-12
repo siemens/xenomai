@@ -1,3 +1,9 @@
+2006-09-12  Matthias Fuchs  <matthias.fuchs@esd-electronics.com>
+
+	* ksrc/drivers/can/sja1000/{rtcan_mem.c,Makefile,Kconfig,Config.in},
+	scripts/Modules.frag: Add memory mapped driver for SJA1000
+	controllers.
+
 2006-09-12  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* include/asm-i386/bits/pod.h (xnarch_*_fpu): Restore root thread
@@ -5,12 +11,18 @@
 	that occured when Xenomai preempted Linux in the middle of 
 	dup_task_struct().
 
-2006-09-12  Wolfgang Grandegger <wg@grandegger.com>
+2006-09-12  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* ksrc/drivers/can/sja1000/rtcan_isa.c: Rename module parameter
 	"isa" to "io", switch "clock" parameter to external frequency.
 
 2006-09-12  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/drivers/can/sja1000/rtcan_isa.c: Refactor code and add
+	roll-back on init error.
+
+	* ksrc/drivers/can/sja1000/Config.in: Include Peak dongle in 2.4
+	config, refactoring.
 
 	* include/rtai/{sem.h,task.h}, ksrc/skins/rtai/{sem.c,task.c},
 	ksrc/skins/rtai/{Kconfig,Config.in}: Resolve naming conflict with
