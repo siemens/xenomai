@@ -66,6 +66,11 @@ typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
     unsigned long *eipp;        /* Pointer to EIP backup area (&eip or &user->thread.eip) */
     union i387_union *fpup;     /* Pointer to the FPU backup area (&fpuenv or &user->thread.i387.f[x]save */
 
+    /* FPU context bits for root thread. */
+    unsigned is_root: 1;
+    unsigned cr0_ts: 1;
+    unsigned ts_usedfpu: 1;
+
 } xnarchtcb_t;
 
 typedef struct xnarch_fltinfo {
