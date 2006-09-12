@@ -31,6 +31,7 @@ static inline void xnarch_init_tcb(xnarchtcb_t * tcb)
 	tcb->espp = &tcb->esp;
 	tcb->eipp = &tcb->eip;
 	tcb->fpup = &tcb->fpuenv;
+	tcb->is_root = 0;
 	/* Must be followed by xnarch_init_thread(). */
 }
 
