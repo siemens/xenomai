@@ -57,8 +57,8 @@ pidFile=/var/lock/`basename $0.$$`.pids
 
 checkUtilities() {
   # Check for needed helper utilities
-  local neededApplets="awk basename cut date dd dirname egrep grep getopt
-		       head kill md5sum mount sleep test top uname zcat"
+  local neededApplets="awk basename cut date dd dirname egrep grep head
+		       kill md5sum mount sleep test top uname zcat"
   local foundAll=1
   for  _j in $neededApplets
   do
@@ -67,6 +67,10 @@ checkUtilities() {
       foundAll=0
     fi
   done
+  if ! type getopts 2>&1 >/dev/null; then
+    echo "Please build busybox's ash with support for getopts"
+    foundAll=0
+  fi
   if test $foundAll -eq 0 ; then exit 3 ; fi
 }
 
