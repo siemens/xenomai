@@ -285,7 +285,8 @@ static void *sleeper(void *cookie)
 			++rtsw.to;
 
 		expected = rtsw.from + i * 1000;
-		fp_regs_set(expected);
+		if (param->fp & UFPS)
+			fp_regs_set(expected);
 		err = ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw);
 		while (err == -1 && errno == EINTR)
 			err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
@@ -298,9 +299,11 @@ static void *sleeper(void *cookie)
 		case -1:
 			clean_exit(EXIT_FAILURE);
 		}
-		fp_val = fp_regs_check(expected);
-		if (fp_val != expected)
-			handle_bad_fpreg(param->cpu, fp_val);
+		if (param->fp & UFPS) {
+			fp_val = fp_regs_check(expected);
+			if (fp_val != expected)
+				handle_bad_fpreg(param->cpu, fp_val);
+		}
 
 		if(++i == 4000000)
 			i = 0;
@@ -832,7 +835,6 @@ void usage(FILE *fd, const char *progname)
 	fprintf(fd,
 		"Usage:\n"
 		"%s [options] threadspec threadspec...\n"
-		"or %s [options] [-n]\n\n"
 		"Create threads of various types and attempt to switch context "
 		"between these\nthreads, printing the count of context switches "
 		"every second.\n\n"
@@ -844,7 +846,8 @@ void usage(FILE *fd, const char *progname)
 		"--quiet or -q, prevent this program from printing every "
 		"second the count of\ncontext switches;\n"
 		"--timeout <duration> or -T <duration>, limit the test duration "
-		"to <duration>\nseconds.\n\n"
+		"to <duration>\nseconds;\n"
+		"--nofpu or -n, disables any use of FPU instructions.\n\n"
 		"Each 'threadspec' specifies the characteristics of a "
 		"thread to be created:\n"
 		"threadspec = (rtk|rtup|rtus|rtuo)(_fp|_ufpp|_ufps)*[0-9]*\n"
@@ -864,7 +867,7 @@ void usage(FILE *fd, const char *progname)
 		"[0-9]* specifies the ID of the CPU where the created thread "
 		"will run, 0 if\nunspecified.\n\n"
 		"Passing no 'threadspec' is equivalent to running:\n%s",
-		progname, progname, progname);
+		progname, progname);
 
 	for (i = 0; i < nr_cpus; i++)
 		for (j = 0; j < sizeof(all_fp)/sizeof(char *); j++)
@@ -882,9 +885,9 @@ void usage(FILE *fd, const char *progname)
 
 int main(int argc, const char *argv[])
 {
-	const char **all, *progname = argv[0];
 	pthread_attr_t rt_attr, sleeper_attr;
-	unsigned i, j, count, nr_cpus;
+	unsigned i, j, nr_cpus, use_fp = 1;
+	const char *progname = argv[0];
 	struct cpu_tasks *cpus;
 	struct sched_param sp;
 	char devname[21];
@@ -903,9 +906,6 @@ int main(int argc, const char *argv[])
 		perror("sem_init");
 		exit(EXIT_FAILURE);
 	}
-
-	all = all_fp;
-	count = sizeof(all_fp) / sizeof(char *);
 
 #if CONFIG_SMP
 	nr_cpus = sysconf(_SC_NPROCESSORS_ONLN);
@@ -949,8 +949,7 @@ int main(int argc, const char *argv[])
 			break;
 
 		case 'n':
-			all = all_nofp;
-			count = sizeof(all_nofp) / sizeof(char *);
+			use_fp = 0;
 			break;
 
 		case 'q':
@@ -974,13 +973,6 @@ int main(int argc, const char *argv[])
 		}
 	}
 
-	if (all == all_nofp && optind < argc) {
-		usage(stderr, progname);
-		fprintf(stderr,"-n or --nofpu option may only be used with no "
-			"other argument.\n");
-		exit(EXIT_FAILURE);
-	}
-
 	if (setvbuf(stdout, NULL, _IOLBF, 0)) {
 		perror("setvbuf");
 		exit(EXIT_FAILURE);
@@ -990,20 +982,29 @@ int main(int argc, const char *argv[])
 	   default values, given by all_fp or all_nofp depending on the presence
 	   of the -n flag. */
 	if (optind == argc) {
+		const char **all;
 		char buffer[32];
+		unsigned count;
 
 		/* Check if fp routines are dummy. */
-		if (all == all_fp) {
+		if (use_fp) {
 			fprintf(stderr, "== Testing FPU check routines...\n");
 			fp_regs_set(1);
 			if (fp_regs_check(2) != 1) {
 				fprintf(stderr,
 					"== FPU check routines: unimplemented, "
 					"skipping FPU switches tests.\n");
-				all = all_nofp;
-				count = sizeof(all_nofp) / sizeof(char *);
+				use_fp = 0;
 			} else
 				fprintf(stderr, "== FPU check routines: OK.\n");
+		}
+
+		if (use_fp) {
+			all = all_fp;
+			count = sizeof(all_fp)/sizeof(char *);
+		} else {
+			all = all_nofp;
+			count = sizeof(all_nofp)/sizeof(char *);
 		}
 
 		argc = count * nr_cpus + 1;
@@ -1036,6 +1037,7 @@ int main(int argc, const char *argv[])
 		size = cpus[i].capacity * sizeof(struct task_params);
 		cpus[i].tasks_count = 1;
 		cpus[i].tasks = (struct task_params *) malloc(size);
+		cpus[i].last_switches_count = 0;
 
 		if (!cpus[i].tasks) {
 			perror("malloc");
@@ -1043,7 +1045,7 @@ int main(int argc, const char *argv[])
 		}
 
 		cpus[i].tasks[0].type = SLEEPER;
-		cpus[i].tasks[0].fp = 0;
+		cpus[i].tasks[0].fp = use_fp ? UFPS : 0;
 		cpus[i].tasks[0].cpu = &cpus[i];	
 		cpus[i].tasks[0].thread = 0;
 		cpus[i].tasks[0].swt.index = cpus[i].tasks[0].swt.flags = 0;
@@ -1065,6 +1067,14 @@ int main(int argc, const char *argv[])
 			usage(stderr, progname);
 			fprintf(stderr,
 				"Invalid parameters %s. Aborting\n",
+				argv[i]);
+			exit(EXIT_FAILURE);
+		}
+
+		if (!use_fp && params.fp) {
+			usage(stderr, progname);
+			fprintf(stderr,
+				"%s is invalid because FPU is disabled.\n",
 				argv[i]);
 			exit(EXIT_FAILURE);
 		}
@@ -1133,7 +1143,8 @@ int main(int argc, const char *argv[])
 				goto cleanup;
 			}
 			printf(" %s", 
-			       task_name(buffer, sizeof(buffer), param->cpu,param->swt.index));
+			       task_name(buffer, sizeof(buffer),
+					 param->cpu, param->swt.index));
 		}
 	}
 	printf("\n");

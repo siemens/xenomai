@@ -1,3 +1,8 @@
+2006-09-13  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* src/testsuite/switchtest/switchtest.c (main): Change the meaning
+	of the -n flag: disable any use of FPU hardware.
+
 2006-09-12  Matthias Fuchs  <matthias.fuchs@esd-electronics.com>
 
 	* ksrc/drivers/can/sja1000/{rtcan_mem.c,Makefile,Kconfig,Config.in},
