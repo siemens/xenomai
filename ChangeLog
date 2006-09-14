@@ -1,5 +1,8 @@
 2006-09-14  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
+	* ksrc/skins/posix/registry.c (pse51_reg_pkg_init): Do not use the
+	system heap for allocating the registry memory.
+
 	* ksrc/skins/posix/thread.c (pthread_join): Have pthread_join work
 	when called from module initialization or cleanup routine.
 

@@ -450,7 +450,7 @@ int pse51_reg_pkg_init(unsigned buckets_count, unsigned maxfds)
 	size = sizeof(pse51_node_t) * buckets_count +
 	    sizeof(pse51_desc_t) * maxfds + sizeof(long) * mapsize;
 
-	chunk = (char *)xnmalloc(size);
+	chunk = (char *)xnarch_sysalloc(size);
 	if (!chunk)
 		return ENOMEM;
 
@@ -484,6 +484,7 @@ int pse51_reg_pkg_init(unsigned buckets_count, unsigned maxfds)
 
 void pse51_reg_pkg_cleanup(void)
 {
+	size_t size;
 	unsigned i;
 	for (i = 0; i < pse51_reg.maxfds; i++)
 		if (pse51_reg.descs[i]) {
@@ -500,5 +501,9 @@ void pse51_reg_pkg_cleanup(void)
 	}
 #endif /* CONFIG_XENO_OPT_DEBUG */
 
-	xnfree(pse51_reg.node_buckets);
+	size = sizeof(pse51_node_t) * pse51_reg.buckets_count
+		+ sizeof(pse51_desc_t) * pse51_reg.maxfds
+		+ sizeof(long) * pse51_reg.mapsz;
+
+	xnarch_sysfree(pse51_reg.node_buckets, size);
 }
