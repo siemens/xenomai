@@ -371,6 +371,7 @@ ssize_t xnpipe_send(int minor, struct xnpipe_mh *mh, size_t size, int flags)
 
 	inith(xnpipe_m_link(mh));
 	xnpipe_m_size(mh) = size - sizeof(*mh);
+	xnpipe_m_rdoff(mh) = 0;
 	state->ionrd += xnpipe_m_size(mh);
 
 	if (flags & XNPIPE_URGENT)
@@ -668,11 +669,11 @@ static ssize_t xnpipe_read(struct file *file,
 			   char *buf, size_t count, loff_t *ppos)
 {
 	xnpipe_state_t *state = (xnpipe_state_t *)file->private_data;
+	int sigpending, err = 0;
 	size_t nbytes, inbytes;
 	struct xnpipe_mh *mh;
-	int sigpending, err;
 	xnholder_t *holder;
-	ssize_t ret = 0;
+	ssize_t ret;
 	spl_t s;
 
 	if (!access_ok(VERIFY_WRITE, buf, count))
@@ -701,59 +702,57 @@ static ssize_t xnpipe_read(struct file *file,
 		holder = getq(&state->outq);
 		mh = link2mh(holder);
 
-		if (sigpending && !mh) {
+		if (!mh) {
 			xnlock_put_irqrestore(&nklock, s);
-			return -ERESTARTSYS;
+			return sigpending ? -ERESTARTSYS : 0;
 		}
 	}
 
-	if (mh) {
-		nbytes = xnpipe_m_size(mh); /* Cannot be zero */
-		inbytes = 0;
+	/*
+	 * We allow more data to be appended to the current message
+	 * bucket while its contents is being copied to the user
+	 * buffer, therefore, we need to loop until: 1) all the data
+	 * has been copied, 2) we consumed the user buffer space
+	 * entirely.
+	 */
 
-		/*
-		 * We allow more data to be appended to the current
-		 * message bucket while its contents is being copied
-		 * to the user buffer, therefore, we need to loop
-		 * until:
-		 * 1) all the data has been copied,
-		 * 2) we consumed the user buffer space entirely.
-		 */
+	inbytes = 0;
 
-		do {
-			if (inbytes <= count) {
-				xnlock_put_irqrestore(&nklock, s);
-				/* More data could be appended while doing this: */
-				err = __copy_to_user(buf + inbytes, xnpipe_m_data(mh) + inbytes, nbytes);
-				xnlock_get_irqsave(&nklock, s);
-				if (err) {
-					ret = -EFAULT;
-					break;
-				}
-				inbytes += nbytes;
-				nbytes = xnpipe_m_size(mh) - inbytes;
-			} else {
-				/* Return buffer is too small - message is lost. */
-				ret = -ENOBUFS;
-				break;
-			}
-		} while(nbytes > 0);
+	for (;;) {
+		nbytes = xnpipe_m_size(mh) - xnpipe_m_rdoff(mh);
 
-		if (ret < 0)
-			inbytes = xnpipe_m_size(mh);
-		else
-			ret = (ssize_t) inbytes;
+		if (nbytes + inbytes > count)
+			nbytes = count - inbytes;
 
-		state->ionrd -= inbytes;
+		if (nbytes == 0)
+			break;
 
-		if (state->output_handler != NULL)
-			ret = state->output_handler(xnminor_from_state(state),
-						    mh, ret, state->cookie);
+		xnlock_put_irqrestore(&nklock, s);
+		/* More data could be appended while doing this: */
+		err = __copy_to_user(buf + inbytes, xnpipe_m_data(mh) + xnpipe_m_rdoff(mh), nbytes);
+		xnlock_get_irqsave(&nklock, s);
+
+		if (err) {
+			err = -EFAULT;
+			break;
+		}
+
+		inbytes += nbytes;
+		xnpipe_m_rdoff(mh) += nbytes;
 	}
+
+	state->ionrd -= inbytes;
+	ret = inbytes;
+
+	if (xnpipe_m_size(mh) > xnpipe_m_rdoff(mh))
+		prependq(&state->outq, &mh->link);
+	else if (state->output_handler != NULL)
+		ret = state->output_handler(xnminor_from_state(state),
+					    mh, err ?: ret, state->cookie);
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return ret;
+	return err ?: ret;
 }
 
 static ssize_t xnpipe_write(struct file *file,
@@ -799,6 +798,7 @@ static ssize_t xnpipe_write(struct file *file,
 
 	inith(xnpipe_m_link(mh));
 	xnpipe_m_size(mh) = count;
+	xnpipe_m_rdoff(mh) = 0;
 	__copy_from_user(xnpipe_m_data(mh), buf, count);
 
 	xnlock_get_irqsave(&nklock, s);
