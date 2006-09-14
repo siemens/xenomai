@@ -68,6 +68,7 @@ struct pse51_thread {
     void *exit_status;
     xnsynch_t join_synch;       /* synchronization object, used by other threads
                                    waiting for this one to finish. */
+    int nrt_joiners;
 
     /* For pthread_cancel */
     unsigned cancelstate : 2;
