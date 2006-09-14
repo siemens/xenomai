@@ -1,3 +1,8 @@
+2006-09-14  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/thread.c (pthread_join): Have pthread_join work
+	when called from module initialization or cleanup routine.
+
 2006-09-14  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pipe.c: Support partial buffer reading from the

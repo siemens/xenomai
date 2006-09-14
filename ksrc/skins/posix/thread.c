@@ -197,6 +197,7 @@ int pthread_create(pthread_t *tid,
 	thread->entry = start;
 	thread->arg = arg;
 	xnsynch_init(&thread->join_synch, XNSYNCH_PRIO);
+	thread->nrt_joiners = 0;
 
 	pse51_cancel_init_thread(thread);
 	pse51_signal_init_thread(thread, cur);
@@ -271,6 +272,7 @@ int pthread_detach(pthread_t thread)
 
 	thread_setdetachstate(thread, PTHREAD_CREATE_DETACHED);
 
+	thread->nrt_joiners = -1;
 	if (xnsynch_flush(&thread->join_synch,
 			  PSE51_JOINED_DETACHED) == XNSYNCH_RESCHED)
 		xnpod_schedule();
@@ -341,14 +343,15 @@ void pthread_exit(void *value_ptr)
  *
  * If the thread @a thread is running and joinable, this service blocks the
  * calling thread until the thread @a thread terminates or detaches. In this
- * case, the calling context must be blockable, i.e. a Xenomai thread. When @a
- * thread terminates, its return value is stored at the address @a
- * value_ptr.
+ * case, the calling context must be a blockable context (i.e. a Xenomai thread
+ * without the scheduler locked) or the root thread (i.e. a module initilization
+ * or cleanup routine). When @a thread terminates, the calling thread is
+ * unblocked and its return value is stored at* the address @a value_ptr.
  *
  * If, on the other hand, the thread @a thread has already finished execution,
  * its return value is stored at the address @a value_ptr and this service
  * returns immediately. In this case, this service may be called from any
- * context, and in particular from modules cleanup routines.
+ * context.
  *
  * This service is a cancelation point for POSIX skin threads: if the calling
  * thread is canceled while blocked in a call to this service, the cancelation
@@ -371,6 +374,7 @@ void pthread_exit(void *value_ptr)
  *
  * @par Valid contexts, if this service has to block its caller:
  * - Xenomai kernel-space thread;
+ * - kernel module initilization or cleanup routine;
  * - Xenomai user-space thread (switches to primary mode).
  *
  * @see
@@ -408,29 +412,57 @@ int pthread_join(pthread_t thread, void **value_ptr)
 	is_last_joiner = 1;
 	while (pse51_obj_active
 	       (thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
-		if (xnpod_unblockable_p()) {
+		if (xnpod_asynch_p() || xnpod_locked_p()) {
 			xnlock_put_irqrestore(&nklock, s);
 			return EPERM;
 		}
 
-		thread_cancellation_point(cur);
+		if (!xnpod_root_p()) {
+			thread_cancellation_point(cur);
 
-		xnsynch_sleep_on(&thread->join_synch, XN_INFINITE);
+			xnsynch_sleep_on(&thread->join_synch, XN_INFINITE);
 
-		is_last_joiner =
-		    xnsynch_wakeup_one_sleeper(&thread->join_synch) == NULL;
+			is_last_joiner =
+				xnsynch_wakeup_one_sleeper(&thread->join_synch)
+				== NULL && !thread->nrt_joiners;
 
-		thread_cancellation_point(cur);
+			thread_cancellation_point(cur);
 
-		/* In case another thread called pthread_detach. */
-		if (xnthread_test_flags(cur, PSE51_JOINED_DETACHED)) {
-			xnlock_put_irqrestore(&nklock, s);
-			return EINVAL;
+			/* In case another thread called pthread_detach. */
+			if (xnthread_test_flags(cur, PSE51_JOINED_DETACHED)) {
+				xnlock_put_irqrestore(&nklock, s);
+				return EINVAL;
+			}
 		}
+#ifndef __KERNEL__
+		else {
+			xnlock_put_irqrestore(&nklock, s);
+			return EPERM;
+		}
+#else /* __KERNEL__ */
+		else {
+			spl_t ignored;
+
+			++thread->nrt_joiners;
+			xnlock_clear_irqon(&nklock);
+
+			schedule_timeout_interruptible(HZ/100);
+
+			xnlock_get_irqsave(&nklock, ignored);
+
+			if (thread->nrt_joiners == -1) {
+				/* Another thread detached the target thread. */
+				xnlock_put_irqrestore(&nklock, s);
+				return EINVAL;
+			}
+			
+			is_last_joiner = (--thread->nrt_joiners == 0);
+		}
+#endif /* __KERNEL__ */
 	}
 
-	/* If we reach this point, at least one joiner is going to succeed, we can
-	   mark the joined thread as detached. */
+	/* If we reach this point, at least one joiner is going to succeed, we
+	   can mark the joined thread as detached. */
 	thread_setdetachstate(thread, PTHREAD_CREATE_DETACHED);
 
 	if (value_ptr)
