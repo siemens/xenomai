@@ -5,6 +5,9 @@
 
 2006-09-14  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/thread.c (xnthread_periodic_handler): Do not wake
+	up threads blocked on a resource.
+
 	* ksrc/nucleus/pipe.c: Support partial buffer reading from the
 	character device endpoint.
 
