@@ -1,7 +1,8 @@
-/* 
+/*
  * High resolution timer test software
  *
  * (C) 2005 Thomas Gleixner <tglx@linutronix.de>
+ * (Enhanced by the Xenomai crew)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License Version
@@ -309,9 +310,9 @@ out:
 /* Print usage information */
 static void display_help(void)
 {
-	printf("cyclictest %s\n", VERSION_STRING);
+	printf("cyclictest %s (jittertest)\n", VERSION_STRING);
 	printf("Usage:\n"
-	       "jittertest <options>\n\n"
+	       "cyclictest <options>\n\n"
 	       "-b USEC  --breaktrace=USEC send break trace command when latency > USEC\n"
 	       "-c CLOCK --clock=CLOCK     select clock\n"
 	       "                           0 = CLOCK_MONOTONIC (default)\n"
@@ -321,6 +322,7 @@ static void display_help(void)
 	       "-l LOOPS --loops=LOOPS     number of loops: default=0(endless)\n"
 	       "-n       --nanosleep       use clock_nanosleep\n"
 	       "-p PRIO  --prio=PRIO       priority of highest prio thread\n"
+	       "-q       --quiet	   minimal output\n"
 	       "-r       --relative        use relative timer instead of absolute\n"
 	       "-s       --system          use sys_nanosleep and sys_setitimer\n"
 	       "-t NUM   --threads=NUM     number of threads: default=1\n"
@@ -337,6 +339,7 @@ static int num_threads = 1;
 static int max_cycles;
 static int clocksel = 0;
 static int verbose;
+static int quiet;
 static int interval = 1000;
 static int distance = 500;
 
@@ -364,10 +367,11 @@ static void process_options (int argc, char *argv[])
 			{"system", no_argument, NULL, 's'},
 			{"threads", required_argument, NULL, 't'},
 			{"verbose", no_argument, NULL, 'v'},
+			{"quiet", no_argument, NULL, 'q'},
 			{"help", no_argument, NULL, '?'},
 			{NULL, 0, NULL, 0}
 		};
-		int c = getopt_long (argc, argv, "b:c:d:i:l:np:rst:v",
+		int c = getopt_long (argc, argv, "b:c:d:i:l:np:qrst:v",
 			long_options, &option_index);
 		if (c == -1)
 			break;
@@ -379,6 +383,7 @@ static void process_options (int argc, char *argv[])
 		case 'l': max_cycles = atoi(optarg); break;
 		case 'n': use_nanosleep = MODE_CLOCK_NANOSLEEP; break;
 		case 'p': priority = atoi(optarg); break;
+		case 'q': quiet = 1; break;
 		case 'r': timermode = TIMER_RELTIME; break;	
 		case 's': use_system = MODE_SYS_OFFSET; break;
 		case 't': num_threads = atoi(optarg); break;
@@ -410,9 +415,10 @@ static void print_stat(struct thread_param *par, int index, int verbose)
 	struct thread_stat *stat = par->stats;
 	
 	if (!verbose) {
-		printf("T:%2d (%5d) P:%2d I:%8ld C:%8lu Min:%8ld Act:%8ld Max:%8ld\n", 
-		       index, stat->tid, par->prio, par->interval,
-		       stat->cycles, stat->min, stat->act, stat->max);
+		if (!quiet)
+			printf("T:%2d (%5d) P:%2d I:%8ld C:%8lu Min:%8ld Act:%8ld Max:%8ld\n",
+			       index, stat->tid, par->prio, par->interval,
+			       stat->cycles, stat->min, stat->act, stat->max);
 	} else {
 		while (stat->cycles != stat->cyclesread) {
 			long diff = stat->values[stat->cyclesread & par->bufmsk];
@@ -496,7 +502,8 @@ int main(int argc, char **argv)
 			len = read(fd, &lavg, 255);
 			close(fd);
 			lavg[len-1] = 0x0;
-			printf("%s          \n\n", lavg);
+			if (!quiet)
+				printf("%s          \n\n", lavg);
 		}
 
 		for (i = 0; i < num_threads; i++) {
@@ -509,8 +516,14 @@ int main(int argc, char **argv)
 		usleep(10000);
 		if (test_shutdown || allstopped == num_threads)
 			break;
-		if (!verbose)
+		if (!verbose && !quiet)
 			printf("\033[%dA", num_threads + 2);
+	}
+	if (quiet) {
+		quiet = 0; /* Now we want to output the statistics */
+		for (i = 0; i < num_threads; i++) {
+			print_stat(&par[i], i, verbose);
+		}
 	}
 	ret = 0;
  outall:

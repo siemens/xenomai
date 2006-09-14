@@ -1,3 +1,7 @@
+2006-09-14  Niklaus Giger <niklaus.giger@member.fsf.org>
+
+	* src/testsuite/cyclic/cyclictest.c: Add quiet mode.
+
 2006-09-13  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* src/testsuite/switchtest/switchtest.c (main): Change the meaning
