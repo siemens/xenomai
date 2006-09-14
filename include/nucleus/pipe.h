@@ -57,6 +57,7 @@ typedef struct xnpipe_mh {
 
     xnholder_t link;
     unsigned size;
+    unsigned rdoff;
     
 } xnpipe_mh_t;
 
@@ -155,6 +156,8 @@ static inline char *xnpipe_m_data(xnpipe_mh_t *mh)
 }
 
 #define xnpipe_m_size(mh) ((mh)->size)
+
+#define xnpipe_m_rdoff(mh) ((mh)->rdoff)
 
 #endif /* __KERNEL__ */
 
