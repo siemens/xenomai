@@ -36,7 +36,9 @@ static void xnthread_periodic_handler(void *cookie)
 {
 	xnthread_t *thread = (xnthread_t *)cookie;
 
-	if (xnthread_test_flags(thread, XNDELAY))	/* Prevent unwanted round-robin. */
+	/* Prevent unwanted round-robin, and do not wake up threads
+	   blocked on a resource. */
+	if (xnthread_test_flags(thread, XNDELAY|XNPEND) == XNDELAY)
 		xnpod_resume_thread(thread, XNDELAY);
 }
 
