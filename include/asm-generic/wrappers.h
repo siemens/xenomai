@@ -166,6 +166,8 @@ struct task_struct;
 void show_stack(struct task_struct *task,
 		unsigned long *sp);
 
+#define atomic_cmpxchg(v, old, new) ((int)cmpxchg(&((v)->counter), old, new))
+
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0) */
 
 /* VM */
