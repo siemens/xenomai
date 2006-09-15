@@ -144,6 +144,12 @@ static inline void finish_wait(wait_queue_head_t *q,
 } while(0)
 #endif
 
+/* Shorthand for timeout setup */
+#define schedule_timeout_interruptible(t) do {		\
+		set_current_state(TASK_INTERRUPTIBLE);	\
+		schedule_timeout(t);				\
+} while(0)
+
 #ifdef MODULE
 #define try_module_get(mod) try_inc_mod_count(mod)
 #define module_put(mod) __MOD_DEC_USE_COUNT(mod)
