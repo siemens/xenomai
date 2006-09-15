@@ -30,6 +30,9 @@
 
 #ifdef __XENO_SIM__
 #include <posix_overrides.h>
+#define PTHREAD_STACK_MIN   8192
+#else /* __XENO_SIM__ */
+#define PTHREAD_STACK_MIN   1024
 #endif /* __XENO_SIM__ */
 
 #define PTHREAD_CREATE_JOINABLE 0
