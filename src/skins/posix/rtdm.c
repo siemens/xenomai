@@ -122,7 +122,7 @@ int __wrap_close(int fd)
 	} else
 		ret = __shm_close(fd);
 
-	if (ret == -1 && errno == EBADF)
+	if (ret == -1 && (errno == EBADF || errno == ENOSYS))
 		return __real_close(fd);
 
 	return ret;
