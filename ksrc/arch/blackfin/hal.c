@@ -172,6 +172,7 @@ int rthal_irq_enable(unsigned irq)
     if (rthal_irq_descp(irq)->chip->unmask == NULL)
         return -ENODEV;
 
+    rthal_irq_descp(irq)->status &= ~IRQ_DISABLED;
     rthal_irq_descp(irq)->chip->unmask(irq);
 
     return 0;
@@ -187,6 +188,7 @@ int rthal_irq_disable(unsigned irq)
         return -ENODEV;
 
     rthal_irq_descp(irq)->chip->mask(irq);
+    rthal_irq_descp(irq)->status |= IRQ_DISABLED;
 
     return 0;
 }

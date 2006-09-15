@@ -156,6 +156,7 @@ int rthal_irq_enable(unsigned irq)
     if (irq >= IPIPE_NR_XIRQS)
         return -EINVAL;
 
+    rthal_irq_descp(irq)->status &= ~IRQ_DISABLED;
     rthal_irq_descp(irq)->chip->unmask(irq);
 
     return 0;
@@ -167,6 +168,7 @@ int rthal_irq_disable(unsigned irq)
         return -EINVAL;
 
     rthal_irq_descp(irq)->chip->mask(irq);
+    rthal_irq_descp(irq)->status |= IRQ_DISABLED;
 
     return 0;
 }
