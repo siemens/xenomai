@@ -145,7 +145,7 @@ int __shm_close(int fd)
 
 	err = XENOMAI_SKINCALL1(__pse51_muxid, __pse51_shm_close, fd);
 
-	if (!err || err == ENOSYS)
+	if (!err)
 		return __real_close(fd);
 
 	errno = -err;
