@@ -1,4 +1,4 @@
-testdir = $(prefix)/testsuite/latency
+testdir = $(exec_prefix)/testsuite/latency
 
 test_PROGRAMS = latency
 
