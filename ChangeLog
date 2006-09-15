@@ -68,7 +68,6 @@
 	ksrc/skins/rtai/{Kconfig,Config.in}: Resolve naming conflict with
 	native skin and relax dependencies.
 
->>>>>>> .r1606
 2006-09-11  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc: Define -D__IN_XENOMAI__ when compiling the kernel support.
