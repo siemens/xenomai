@@ -1,4 +1,4 @@
-testdir = $(prefix)/testsuite/cyclic
+testdir = $(exec_prefix)/testsuite/cyclic
 
 test_PROGRAMS = cyclictest
 
