@@ -332,6 +332,7 @@ int rthal_irq_enable(unsigned irq)
         rthal_irq_handlerp(irq)->enable == NULL)
         return -ENODEV;
 
+    rthal_irq_descp(irq)->status &= ~IRQ_DISABLED;
     rthal_irq_handlerp(irq)->enable(irq);
 
     return 0;
@@ -348,6 +349,7 @@ int rthal_irq_disable(unsigned irq)
         return -ENODEV;
 
     rthal_irq_handlerp(irq)->disable(irq);
+    rthal_irq_descp(irq)->status |= IRQ_DISABLED;
 
     return 0;
 }
