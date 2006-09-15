@@ -1,3 +1,9 @@
+2006-09-15  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* ksrc/arch/*/hal.c (rthal_irq_enable, rthal_irq_disable): Switch
+	the IRQ_DISABLED bit appropriately in the status field of the IRQ
+	descriptor.
+ 
 2006-09-15  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/pipe.c: Backport optimization for data
