@@ -1,4 +1,4 @@
-testdir = $(prefix)/testsuite/irqbench
+testdir = $(exec_prefix)/testsuite/irqbench
 
 test_PROGRAMS = irqloop
 

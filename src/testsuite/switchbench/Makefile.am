@@ -1,4 +1,4 @@
-testdir = $(prefix)/testsuite/switchbench
+testdir = $(exec_prefix)/testsuite/switchbench
 
 test_PROGRAMS = switchbench
 
