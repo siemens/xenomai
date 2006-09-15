@@ -97,7 +97,7 @@ static int __pipe_output_handler(int bminor,
 	RT_PIPE *pipe = (RT_PIPE *)cookie;
 	
 	if (mh == pipe->buffer) {
-		/* We do not recycle the streaming buffer. */
+		/* Reuse the streaming buffer. */
 		pipe->fillsz = 0;
 		__clear_bit(P_SYNCWAIT, &pipe->status);
 	} else
@@ -172,7 +172,8 @@ void __native_pipe_pkg_cleanup(void)
  *
  * - -ENOMEM is returned if the system fails to get enough dynamic
  * memory from the global real-time heap in order to register the
- * pipe.
+ * pipe, or if not enough memory could be obtained from the selected
+ * buffer pool for allocating the internal streaming buffer.
  *
  * - -EEXIST is returned if the @a name is already in use by some
  * registered object.
@@ -238,6 +239,19 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 
 		pipe->bufpool = &pipe->privpool;
 	}
+
+#if CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ > 0
+	pipe->buffer = xnheap_alloc(pipe->bufpool,
+				    CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ + sizeof(RT_PIPE_MSG));
+	if (pipe->buffer == NULL) {
+		if (pipe->bufpool == &pipe->privpool)
+			xnheap_destroy(&pipe->privpool, __pipe_flush_pool,
+				       NULL);
+		return -ENOMEM;
+	}
+	inith(&pipe->buffer->link);
+	pipe->buffer->size = CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ;
+#endif /* CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ > 0 */
 
 	minor = xnpipe_connect(minor,
 			       &__pipe_output_handler,
@@ -333,10 +347,12 @@ int rt_pipe_delete(RT_PIPE *pipe)
 		return err;
 	}
 
-	if (pipe->buffer != NULL)
-		rt_pipe_free(pipe, pipe->buffer);
-
 	err = xnpipe_disconnect(pipe->minor);
+
+	if (pipe->buffer != NULL) {
+		xnheap_free(pipe->bufpool, pipe->buffer);
+		pipe->buffer = NULL;
+	}
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	if (pipe->handle)
@@ -721,8 +737,7 @@ ssize_t rt_pipe_write(RT_PIPE *pipe, const void *buf, size_t size, int mode)
 	ssize_t nbytes;
 
 	if (size == 0)
-		/* Try flushing the streaming buffer in any case. */
-		return rt_pipe_send(pipe, NULL, 0, mode);
+		return 0;
 
 	msg = rt_pipe_alloc(pipe, size);
 
@@ -764,16 +779,14 @@ ssize_t rt_pipe_write(RT_PIPE *pipe, const void *buf, size_t size, int mode)
  * in which case the service returns immediately without buffering any
  * data.
  *
- * @return The number of sent bytes upon success; this value will be
- * equal to @a size. Otherwise:
+ * @return The number of bytes sent upon success; this value may be
+ * lower than @a size, depending on the available space in the
+ * internal buffer. Otherwise:
  *
  * - -EINVAL is returned if @a pipe is not a pipe descriptor.
  *
  * - -EPIPE is returned if the associated special device is not yet
  * open.
- *
- * - -ENOMEM is returned if not enough buffer space is available to
- * complete the operation.
  *
  * - -EIDRM is returned if @a pipe is a closed pipe descriptor.
  *
@@ -812,14 +825,6 @@ ssize_t rt_pipe_stream(RT_PIPE *pipe, const void *buf, size_t size)
 	if (!pipe) {
 		outbytes = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
 		goto unlock_and_exit;
-	}
-
-	if (pipe->buffer == NULL) {
-		pipe->buffer = rt_pipe_alloc(pipe, CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ);
-		if (pipe->buffer == NULL) {
-			outbytes = -ENOMEM;
-			goto unlock_and_exit;
-		}
 	}
 
 	if (size > CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ - pipe->fillsz)
