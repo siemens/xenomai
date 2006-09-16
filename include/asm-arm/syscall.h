@@ -69,19 +69,23 @@
 /* Purposedly used inlines and not macros for the following routines
    so that we don't risk spurious side-effects on the value arg. */
 
-static inline void __xn_success_return(struct pt_regs *regs, int v) {
+static inline void __xn_success_return(struct pt_regs *regs, int v)
+{
     __xn_reg_rval(regs) = v;
 }
 
-static inline void __xn_error_return(struct pt_regs *regs, int v) {
+static inline void __xn_error_return(struct pt_regs *regs, int v)
+{
     __xn_reg_rval(regs) = v;
 }
 
-static inline void __xn_status_return(struct pt_regs *regs, int v) {
+static inline void __xn_status_return(struct pt_regs *regs, int v)
+{
     __xn_reg_rval(regs) = v;
 }
 
-static inline int __xn_interrupted_p(struct pt_regs *regs) {
+static inline int __xn_interrupted_p(struct pt_regs *regs)
+{
     return __xn_reg_rval(regs) == -EINTR;
 }
 
@@ -96,23 +100,23 @@ static inline int __xn_interrupted_p(struct pt_regs *regs) {
  * services in kernel space.
  */
 
-#define LOADARGS_0(muxcode, dummy...)	    		        \
-	__r0 = (unsigned long) (muxcode)
-#define LOADARGS_1(muxcode, arg1)                           \
-	LOADARGS_0(muxcode);			    	            	\
-	__r1 = (unsigned long) (arg1)
-#define LOADARGS_2(muxcode, arg1, arg2)			        	\
-	LOADARGS_1(muxcode, arg1);		            	    	\
-	__r2 = (unsigned long) (arg2)
-#define LOADARGS_3(muxcode, arg1, arg2, arg3)		    	\
-	LOADARGS_2(muxcode, arg1, arg2);			        	\
-	__r3 = (unsigned long) (arg3)
-#define LOADARGS_4(muxcode, arg1, arg2, arg3, arg4)	    	\
-	LOADARGS_3(muxcode, arg1, arg2, arg3);		        	\
-	__r4 = (unsigned long) (arg4)
+#define LOADARGS_0(muxcode, dummy...)		\
+    __r0 = (unsigned long) (muxcode)
+#define LOADARGS_1(muxcode, arg1)		\
+    LOADARGS_0(muxcode);			\
+    __r1 = (unsigned long) (arg1)
+#define LOADARGS_2(muxcode, arg1, arg2)       	\
+    LOADARGS_1(muxcode, arg1);			\
+    __r2 = (unsigned long) (arg2)
+#define LOADARGS_3(muxcode, arg1, arg2, arg3) 	\
+    LOADARGS_2(muxcode, arg1, arg2);		\
+    __r3 = (unsigned long) (arg3)
+#define LOADARGS_4(muxcode, arg1, arg2, arg3, arg4)	\
+    LOADARGS_3(muxcode, arg1, arg2, arg3);		\
+    __r4 = (unsigned long) (arg4)
 #define LOADARGS_5(muxcode, arg1, arg2, arg3, arg4, arg5)	\
-	LOADARGS_4(muxcode, arg1, arg2, arg3, arg4);	    	\
-	__r5 = (unsigned long) (arg5)
+    LOADARGS_4(muxcode, arg1, arg2, arg3, arg4);	    	\
+    __r5 = (unsigned long) (arg5)
 
 #define ASM_INDECL_0 register unsigned long __r0  __asm__ ("r0")
 #define ASM_INDECL_1 ASM_INDECL_0; register unsigned long __r1  __asm__ ("r1")
@@ -131,7 +135,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs) {
 #define __sys2(x)	#x
 #define __sys1(x)	__sys2(x)
 
-#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)		\
+#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)	\
   ({								\
         unsigned long __res;					\
 	register unsigned long __res_r0 __asm__ ("r0");		\
@@ -169,7 +173,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs) {
 #define XENOMAI_SYSARCH_ATOMIC_ADD_RETURN	0
 #define XENOMAI_SYSARCH_ATOMIC_SET_MASK		1
 #define XENOMAI_SYSARCH_ATOMIC_CLEAR_MASK	2
-#define XENOMAI_SYSARCH_XCHG			    3
+#define XENOMAI_SYSARCH_XCHG			3
 
 #endif /* !_XENO_ASM_ARM_SYSCALL_H */
 
