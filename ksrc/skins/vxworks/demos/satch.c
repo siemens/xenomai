@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
  *
- * pSOS and pSOS+ are registered trademarks of Wind River Systems, Inc.
+ * VxWorks is a registered trademark of Wind River Systems, Inc.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -19,6 +19,9 @@
  */
 
 #include <vxworks/vxworks.h>
+
+#define ROOT_TASK_PRI        100
+#define ROOT_STACK_SIZE      16*1024
 
 #define CONSUMER_TASK_PRI    115
 #define CONSUMER_STACK_SIZE  24*1024
@@ -45,17 +48,22 @@ void root_thread_exit(void);
 
 int main (int argc, char *argv[])
 {
-    int err;
+    int tid;
 
     mlockall(MCL_CURRENT|MCL_FUTURE);
 
     atexit(&root_thread_exit);
-    err = root_thread_init();
 
-    if (!err)
+    tid = taskSpawn("RootTask",
+		    ROOT_TASK_PRI,
+		    0,
+		    ROOT_STACK_SIZE,
+		    (FUNCPTR)&root_thread_init,
+		    0,0,0,0,0,0,0,0,0,0);
+    if (tid)
 	pause();
 
-    return err;
+    return 1;
 }
 
 #endif /* Native, user-space execution */
