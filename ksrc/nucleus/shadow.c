@@ -1190,9 +1190,9 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 
 	/* Switch on propagation of normal kernel events for the bound
 	   task. This is basically a per-task event filter which
-	   restricts syscall and exit event pipelining to tasks
+	   restricts event notifications (e.g. syscalls) to tasks
 	   bearing the PF_EVNOTIFY flag, so that we don't uselessly
-	   intercept those events when they happent to be caused by
+	   intercept those events when they happen to be caused by
 	   plain (i.e. non-Xenomai) Linux tasks. */
 	curr->flags |= PF_EVNOTIFY;
 
