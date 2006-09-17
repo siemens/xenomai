@@ -319,8 +319,8 @@ When a thread terminates, cancellation cleanup handlers are executed in the reve
 <p>
 Wait for termination of a specified thread. 
 <p>
-If the thread <em>thread</em> is running and joinable, this service blocks the calling thread until the thread <em>thread</em> terminates or detaches. In this case, the calling context must be blockable, i.e. a Xenomai thread. When <em>thread</em> terminates, its return value is stored at the address <em>value_ptr</em>.<p>
-If, on the other hand, the thread <em>thread</em> has already finished execution, its return value is stored at the address <em>value_ptr</em> and this service returns immediately. In this case, this service may be called from any context, and in particular from modules cleanup routines.<p>
+If the thread <em>thread</em> is running and joinable, this service blocks the calling thread until the thread <em>thread</em> terminates or detaches. In this case, the calling context must be a blockable context (i.e. a Xenomai thread without the scheduler locked) or the root thread (i.e. a module initilization or cleanup routine). When <em>thread</em> terminates, the calling thread is unblocked and its return value is stored at* the address <em>value_ptr</em>.<p>
+If, on the other hand, the thread <em>thread</em> has already finished execution, its return value is stored at the address <em>value_ptr</em> and this service returns immediately. In this case, this service may be called from any context.<p>
 This service is a cancelation point for POSIX skin threads: if the calling thread is canceled while blocked in a call to this service, the cancelation request is honored and <em>thread</em> remains joinable.<p>
 Multiple simultaneous calls to <a class="el" href="group__posix__thread.html#ga79c99cc7b194918a2def257246f11c6">pthread_join()</a> specifying the same running target thread block all the callers until the target thread terminates.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
@@ -334,7 +334,7 @@ an error number if:<ul>
 <li>ESRCH, <em>thread</em> is invalid;</li><li>EDEADLK, attempting to join the calling thread;</li><li>EINVAL, <em>thread</em> is detached;</li><li>EPERM, the caller context is invalid.</li></ul>
 </dd></dl>
 <dl compact><dt><b>Valid contexts, if this service has to block its caller:</b></dt><dd><ul>
-<li>Xenomai kernel-space thread;</li><li>Xenomai user-space thread (switches to primary mode).</li></ul>
+<li>Xenomai kernel-space thread;</li><li>kernel module initilization or cleanup routine;</li><li>Xenomai user-space thread (switches to primary mode).</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_join.html">Specification.</a> </dd></dl>
     </td>
@@ -628,7 +628,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Sep 3 16:27:24 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Sep 17 19:19:14 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

@@ -97,94 +97,95 @@
 <a name="l00068"></a>00068     <span class="keywordtype">void</span> *exit_status;
 <a name="l00069"></a>00069     xnsynch_t join_synch;       <span class="comment">/* synchronization object, used by other threads</span>
 <a name="l00070"></a>00070 <span class="comment">                                   waiting for this one to finish. */</span>
-<a name="l00071"></a>00071 
-<a name="l00072"></a>00072     <span class="comment">/* For pthread_cancel */</span>
-<a name="l00073"></a>00073     <span class="keywordtype">unsigned</span> cancelstate : 2;
-<a name="l00074"></a>00074     <span class="keywordtype">unsigned</span> canceltype : 2;
-<a name="l00075"></a>00075     <span class="keywordtype">unsigned</span> cancel_request : 1;
-<a name="l00076"></a>00076     xnqueue_t cleanup_handlers_q;
-<a name="l00077"></a>00077 
-<a name="l00078"></a>00078     <span class="comment">/* errno value for this thread. */</span>
-<a name="l00079"></a>00079     <span class="keywordtype">int</span> err;
-<a name="l00080"></a>00080 
-<a name="l00081"></a>00081     <span class="comment">/* For signals handling. */</span>
-<a name="l00082"></a>00082     pse51_sigset_t sigmask;     <span class="comment">/* signals mask. */</span>
-<a name="l00083"></a>00083     pse51_sigqueue_t pending;   <span class="comment">/* Pending signals */</span>
-<a name="l00084"></a>00084     pse51_sigqueue_t blocked_received; <span class="comment">/* Blocked signals received. */</span>
-<a name="l00085"></a>00085 
-<a name="l00086"></a>00086     <span class="comment">/* For thread specific data. */</span>
-<a name="l00087"></a>00087     <span class="keyword">const</span> <span class="keywordtype">void</span> *tsd [PTHREAD_KEYS_MAX];
-<a name="l00088"></a>00088 
-<a name="l00089"></a>00089     <span class="comment">/* For timers. */</span>
-<a name="l00090"></a>00090     xnqueue_t timersq;
-<a name="l00091"></a>00091     
-<a name="l00092"></a>00092 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_PERVASIVE)</span>
-<a name="l00093"></a>00093 <span class="preprocessor"></span>    <span class="keyword">struct </span>pse51_hkey hkey;
-<a name="l00094"></a>00094 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_PERVASIVE */</span>
-<a name="l00095"></a>00095 };
-<a name="l00096"></a>00096 
-<a name="l00097"></a>00097 <span class="preprocessor">#define PSE51_JOINED_DETACHED XNTHREAD_SPARE0</span>
-<a name="l00098"></a>00098 <span class="preprocessor"></span>
-<a name="l00099"></a>00099 <span class="preprocessor">#define pse51_current_thread() thread2pthread(xnpod_current_thread())</span>
-<a name="l00100"></a>00100 <span class="preprocessor"></span>
-<a name="l00101"></a>00101 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> thread_set_errno (<span class="keywordtype">int</span> err)
-<a name="l00102"></a>00102 {
-<a name="l00103"></a>00103     *xnthread_get_errno_location() = err;
-<a name="l00104"></a>00104 }
-<a name="l00105"></a>00105 
-<a name="l00106"></a>00106 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> thread_get_errno (<span class="keywordtype">void</span>)
-<a name="l00107"></a>00107 {
-<a name="l00108"></a>00108     <span class="keywordflow">return</span> *xnthread_get_errno_location();
-<a name="l00109"></a>00109 }
-<a name="l00110"></a>00110 
-<a name="l00111"></a>00111 <span class="preprocessor">#define thread_name(thread) ((thread)-&gt;attr.name)</span>
-<a name="l00112"></a>00112 <span class="preprocessor"></span>
-<a name="l00113"></a>00113 <span class="preprocessor">#define thread_exit_status(thread) ((thread)-&gt;exit_status)</span>
-<a name="l00114"></a>00114 <span class="preprocessor"></span>
-<a name="l00115"></a>00115 <span class="preprocessor">#define thread_getdetachstate(thread) ((thread)-&gt;attr.detachstate)</span>
-<a name="l00116"></a>00116 <span class="preprocessor"></span>
-<a name="l00117"></a>00117 <span class="preprocessor">#define thread_setdetachstate(thread, state) ((thread)-&gt;attr.detachstate=state)</span>
-<a name="l00118"></a>00118 <span class="preprocessor"></span>
-<a name="l00119"></a>00119 <span class="preprocessor">#define thread_getcancelstate(thread) ((thread)-&gt;cancelstate)</span>
-<a name="l00120"></a>00120 <span class="preprocessor"></span>
-<a name="l00121"></a>00121 <span class="preprocessor">#define thread_setcancelstate(thread, state) ((thread)-&gt;cancelstate=state)</span>
-<a name="l00122"></a>00122 <span class="preprocessor"></span>
-<a name="l00123"></a>00123 <span class="preprocessor">#define thread_setcanceltype(thread, type) ((thread)-&gt;canceltype=type)</span>
-<a name="l00124"></a>00124 <span class="preprocessor"></span>
-<a name="l00125"></a>00125 <span class="preprocessor">#define thread_getcanceltype(thread) ((thread)-&gt;canceltype)</span>
-<a name="l00126"></a>00126 <span class="preprocessor"></span>
-<a name="l00127"></a>00127 <span class="preprocessor">#define thread_clrcancel(thread) ((thread)-&gt;cancel_request = 0)</span>
-<a name="l00128"></a>00128 <span class="preprocessor"></span>
-<a name="l00129"></a>00129 <span class="preprocessor">#define thread_setcancel(thread) ((thread)-&gt;cancel_request = 1)</span>
-<a name="l00130"></a>00130 <span class="preprocessor"></span>
-<a name="l00131"></a>00131 <span class="preprocessor">#define thread_cleanups(thread) (&amp;(thread)-&gt;cleanup_handlers_q)</span>
-<a name="l00132"></a>00132 <span class="preprocessor"></span>
-<a name="l00133"></a>00133 <span class="preprocessor">#define thread_gettsd(thread, key) ((thread)-&gt;tsd[key])</span>
-<a name="l00134"></a>00134 <span class="preprocessor"></span>
-<a name="l00135"></a>00135 <span class="preprocessor">#define thread_settsd(thread, key, value) ((thread)-&gt;tsd[key]=(value))</span>
-<a name="l00136"></a>00136 <span class="preprocessor"></span>
-<a name="l00137"></a>00137 <span class="keywordtype">void</span> pse51_thread_abort(pthread_t thread, <span class="keywordtype">void</span> *status);
-<a name="l00138"></a>00138 
-<a name="l00139"></a>00139 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> thread_cancellation_point (xnthread_t *thread)
-<a name="l00140"></a>00140 {
-<a name="l00141"></a>00141     pthread_t cur = thread2pthread(thread);
-<a name="l00142"></a>00142     
-<a name="l00143"></a>00143     <span class="keywordflow">if</span>(cur &amp;&amp; cur-&gt;cancel_request
-<a name="l00144"></a>00144         &amp;&amp; thread_getcancelstate(cur) == PTHREAD_CANCEL_ENABLE )
-<a name="l00145"></a>00145         pse51_thread_abort(cur, PTHREAD_CANCELED);
-<a name="l00146"></a>00146 }
-<a name="l00147"></a>00147 
-<a name="l00148"></a>00148 <span class="keywordtype">void</span> pse51_threadq_cleanup(pse51_kqueues_t *q);
-<a name="l00149"></a>00149 
-<a name="l00150"></a>00150 <span class="keywordtype">void</span> pse51_thread_pkg_init(u_long rrperiod);
-<a name="l00151"></a>00151 
-<a name="l00152"></a>00152 <span class="keywordtype">void</span> pse51_thread_pkg_cleanup(<span class="keywordtype">void</span>);
-<a name="l00153"></a>00153 
-<a name="l00154"></a>00154 <span class="comment">/* round-robin period. */</span>
-<a name="l00155"></a>00155 <span class="keyword">extern</span> xnticks_t pse51_time_slice;
-<a name="l00156"></a>00156 
-<a name="l00157"></a>00157 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_THREAD_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Sep 3 16:27:23 2006 for Xenomai API by&nbsp;
+<a name="l00071"></a>00071     <span class="keywordtype">int</span> nrt_joiners;
+<a name="l00072"></a>00072 
+<a name="l00073"></a>00073     <span class="comment">/* For pthread_cancel */</span>
+<a name="l00074"></a>00074     <span class="keywordtype">unsigned</span> cancelstate : 2;
+<a name="l00075"></a>00075     <span class="keywordtype">unsigned</span> canceltype : 2;
+<a name="l00076"></a>00076     <span class="keywordtype">unsigned</span> cancel_request : 1;
+<a name="l00077"></a>00077     xnqueue_t cleanup_handlers_q;
+<a name="l00078"></a>00078 
+<a name="l00079"></a>00079     <span class="comment">/* errno value for this thread. */</span>
+<a name="l00080"></a>00080     <span class="keywordtype">int</span> err;
+<a name="l00081"></a>00081 
+<a name="l00082"></a>00082     <span class="comment">/* For signals handling. */</span>
+<a name="l00083"></a>00083     pse51_sigset_t sigmask;     <span class="comment">/* signals mask. */</span>
+<a name="l00084"></a>00084     pse51_sigqueue_t pending;   <span class="comment">/* Pending signals */</span>
+<a name="l00085"></a>00085     pse51_sigqueue_t blocked_received; <span class="comment">/* Blocked signals received. */</span>
+<a name="l00086"></a>00086 
+<a name="l00087"></a>00087     <span class="comment">/* For thread specific data. */</span>
+<a name="l00088"></a>00088     <span class="keyword">const</span> <span class="keywordtype">void</span> *tsd [PTHREAD_KEYS_MAX];
+<a name="l00089"></a>00089 
+<a name="l00090"></a>00090     <span class="comment">/* For timers. */</span>
+<a name="l00091"></a>00091     xnqueue_t timersq;
+<a name="l00092"></a>00092     
+<a name="l00093"></a>00093 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_PERVASIVE)</span>
+<a name="l00094"></a>00094 <span class="preprocessor"></span>    <span class="keyword">struct </span>pse51_hkey hkey;
+<a name="l00095"></a>00095 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_PERVASIVE */</span>
+<a name="l00096"></a>00096 };
+<a name="l00097"></a>00097 
+<a name="l00098"></a>00098 <span class="preprocessor">#define PSE51_JOINED_DETACHED XNTHREAD_SPARE0</span>
+<a name="l00099"></a>00099 <span class="preprocessor"></span>
+<a name="l00100"></a>00100 <span class="preprocessor">#define pse51_current_thread() thread2pthread(xnpod_current_thread())</span>
+<a name="l00101"></a>00101 <span class="preprocessor"></span>
+<a name="l00102"></a>00102 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> thread_set_errno (<span class="keywordtype">int</span> err)
+<a name="l00103"></a>00103 {
+<a name="l00104"></a>00104     *xnthread_get_errno_location() = err;
+<a name="l00105"></a>00105 }
+<a name="l00106"></a>00106 
+<a name="l00107"></a>00107 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> thread_get_errno (<span class="keywordtype">void</span>)
+<a name="l00108"></a>00108 {
+<a name="l00109"></a>00109     <span class="keywordflow">return</span> *xnthread_get_errno_location();
+<a name="l00110"></a>00110 }
+<a name="l00111"></a>00111 
+<a name="l00112"></a>00112 <span class="preprocessor">#define thread_name(thread) ((thread)-&gt;attr.name)</span>
+<a name="l00113"></a>00113 <span class="preprocessor"></span>
+<a name="l00114"></a>00114 <span class="preprocessor">#define thread_exit_status(thread) ((thread)-&gt;exit_status)</span>
+<a name="l00115"></a>00115 <span class="preprocessor"></span>
+<a name="l00116"></a>00116 <span class="preprocessor">#define thread_getdetachstate(thread) ((thread)-&gt;attr.detachstate)</span>
+<a name="l00117"></a>00117 <span class="preprocessor"></span>
+<a name="l00118"></a>00118 <span class="preprocessor">#define thread_setdetachstate(thread, state) ((thread)-&gt;attr.detachstate=state)</span>
+<a name="l00119"></a>00119 <span class="preprocessor"></span>
+<a name="l00120"></a>00120 <span class="preprocessor">#define thread_getcancelstate(thread) ((thread)-&gt;cancelstate)</span>
+<a name="l00121"></a>00121 <span class="preprocessor"></span>
+<a name="l00122"></a>00122 <span class="preprocessor">#define thread_setcancelstate(thread, state) ((thread)-&gt;cancelstate=state)</span>
+<a name="l00123"></a>00123 <span class="preprocessor"></span>
+<a name="l00124"></a>00124 <span class="preprocessor">#define thread_setcanceltype(thread, type) ((thread)-&gt;canceltype=type)</span>
+<a name="l00125"></a>00125 <span class="preprocessor"></span>
+<a name="l00126"></a>00126 <span class="preprocessor">#define thread_getcanceltype(thread) ((thread)-&gt;canceltype)</span>
+<a name="l00127"></a>00127 <span class="preprocessor"></span>
+<a name="l00128"></a>00128 <span class="preprocessor">#define thread_clrcancel(thread) ((thread)-&gt;cancel_request = 0)</span>
+<a name="l00129"></a>00129 <span class="preprocessor"></span>
+<a name="l00130"></a>00130 <span class="preprocessor">#define thread_setcancel(thread) ((thread)-&gt;cancel_request = 1)</span>
+<a name="l00131"></a>00131 <span class="preprocessor"></span>
+<a name="l00132"></a>00132 <span class="preprocessor">#define thread_cleanups(thread) (&amp;(thread)-&gt;cleanup_handlers_q)</span>
+<a name="l00133"></a>00133 <span class="preprocessor"></span>
+<a name="l00134"></a>00134 <span class="preprocessor">#define thread_gettsd(thread, key) ((thread)-&gt;tsd[key])</span>
+<a name="l00135"></a>00135 <span class="preprocessor"></span>
+<a name="l00136"></a>00136 <span class="preprocessor">#define thread_settsd(thread, key, value) ((thread)-&gt;tsd[key]=(value))</span>
+<a name="l00137"></a>00137 <span class="preprocessor"></span>
+<a name="l00138"></a>00138 <span class="keywordtype">void</span> pse51_thread_abort(pthread_t thread, <span class="keywordtype">void</span> *status);
+<a name="l00139"></a>00139 
+<a name="l00140"></a>00140 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> thread_cancellation_point (xnthread_t *thread)
+<a name="l00141"></a>00141 {
+<a name="l00142"></a>00142     pthread_t cur = thread2pthread(thread);
+<a name="l00143"></a>00143     
+<a name="l00144"></a>00144     <span class="keywordflow">if</span>(cur &amp;&amp; cur-&gt;cancel_request
+<a name="l00145"></a>00145         &amp;&amp; thread_getcancelstate(cur) == PTHREAD_CANCEL_ENABLE )
+<a name="l00146"></a>00146         pse51_thread_abort(cur, PTHREAD_CANCELED);
+<a name="l00147"></a>00147 }
+<a name="l00148"></a>00148 
+<a name="l00149"></a>00149 <span class="keywordtype">void</span> pse51_threadq_cleanup(pse51_kqueues_t *q);
+<a name="l00150"></a>00150 
+<a name="l00151"></a>00151 <span class="keywordtype">void</span> pse51_thread_pkg_init(u_long rrperiod);
+<a name="l00152"></a>00152 
+<a name="l00153"></a>00153 <span class="keywordtype">void</span> pse51_thread_pkg_cleanup(<span class="keywordtype">void</span>);
+<a name="l00154"></a>00154 
+<a name="l00155"></a>00155 <span class="comment">/* round-robin period. */</span>
+<a name="l00156"></a>00156 <span class="keyword">extern</span> xnticks_t pse51_time_slice;
+<a name="l00157"></a>00157 
+<a name="l00158"></a>00158 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_THREAD_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Sep 17 19:19:13 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

@@ -188,7 +188,7 @@ Named pipes are supported through the use of the registry. When the registry sup
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
 <ul>
-<li>-ENOMEM is returned if the system fails to get enough dynamic memory from the global real-time heap in order to register the pipe.</li></ul>
+<li>-ENOMEM is returned if the system fails to get enough dynamic memory from the global real-time heap in order to register the pipe, or if not enough memory could be obtained from the selected buffer pool for allocating the internal streaming buffer.</li></ul>
 <p>
 <ul>
 <li>-EEXIST is returned if the <em>name</em> is already in use by some registered object.</li></ul>
@@ -291,13 +291,13 @@ Rescheduling: possible.     </td>
 <p>
 Flush the pipe. 
 <p>
-This service flushes any pending data buffered by <a class="el" href="group__pipe.html#gd8edc920499d2c5c5d821ee7b9fa2bcd">rt_pipe_stream()</a>. This operation makes the data available for reading from the associated special device.<p>
+This operation makes the data available for reading from the associated special device.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>pipe</em>&nbsp;</td><td>The descriptor address of the pipe to flush.</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Returns:</b></dt><dd>The number of bytes flushed upon success. Otherwise:</dd></dl>
+<dl compact><dt><b>Returns:</b></dt><dd>Zero upon success. Otherwise:</dd></dl>
 <ul>
 <li>-EINVAL is returned if <em>pipe</em> is not a pipe descriptor.</li></ul>
 <p>
@@ -315,7 +315,9 @@ This service can be called from:<p>
 <ul>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li></ul>
 <p>
-Rescheduling: possible.     </td>
+Rescheduling: possible.<p>
+<dl compact><dt><b>Note:</b></dt><dd>This service is obsolete, since the streamed data is now immediately available to the receiving side. </dd></dl>
+    </td>
   </tr>
 </table>
 <a class="anchor" name="g8face1c57df99cf43b029b3e3b6a05c6"></a><!-- doxytag: member="pipe.c::rt_pipe_free" ref="g8face1c57df99cf43b029b3e3b6a05c6" args="(RT_PIPE *pipe, RT_PIPE_MSG *msg)" --><p>
@@ -606,11 +608,6 @@ This service writes a complete message to be received from the associated specia
     <tr><td valign="top"></td><td valign="top"><em>pipe</em>&nbsp;</td><td>The descriptor address of the pipe to send to.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>msg</em>&nbsp;</td><td>The address of the message to be sent. The message space must have been allocated using the <a class="el" href="group__pipe.html#g62bb4c8e2133cb028035c07e310f7e07">rt_pipe_alloc()</a> service. Once passed to <a class="el" href="group__pipe.html#gf40b20cad1dcd7bedcda72beaa16c057">rt_pipe_send()</a>, the memory pointed to by <em>msg</em> is no more under the control of the application code and thus should not be referenced by it anymore; deallocation of this memory will be automatically handled as needed. As a special exception, <em>msg</em> can be NULL and will not be dereferenced if <em>size</em> is zero.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>size</em>&nbsp;</td><td>The size in bytes of the message (payload data only). Zero is a valid value, in which case the service returns immediately without sending any message. This parameter allows you to actually send less data than you reserved using the <a class="el" href="group__pipe.html#g62bb4c8e2133cb028035c07e310f7e07">rt_pipe_alloc()</a> service, which may be the case if you did not know how much space you needed at the time of allocation. In all other cases it may be more convenient to just pass P_MSGSIZE(msg).</td></tr>
-  </table>
-</dl>
-Additionally, <a class="el" href="group__pipe.html#gf40b20cad1dcd7bedcda72beaa16c057">rt_pipe_send()</a> causes any data buffered by <a class="el" href="group__pipe.html#gd8edc920499d2c5c5d821ee7b9fa2bcd">rt_pipe_stream()</a> to be flushed prior to sending the message. For this reason, <a class="el" href="group__pipe.html#gf40b20cad1dcd7bedcda72beaa16c057">rt_pipe_send()</a> can return a non-zero byte count to the caller if some pending data has been flushed, even if <em>size</em> was zero on entry.<p>
-<dl compact><dt><b>Parameters:</b></dt><dd>
-  <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>A set of flags affecting the operation:</td></tr>
   </table>
 </dl>
@@ -620,7 +617,7 @@ Additionally, <a class="el" href="group__pipe.html#gf40b20cad1dcd7bedcda72beaa16
 <ul>
 <li>P_NORMAL causes the message to be appended to the output queue, ensuring a FIFO ordering.</li></ul>
 <p>
-<dl compact><dt><b>Returns:</b></dt><dd>Upon success, this service returns <em>size</em> if the latter is non-zero, or the number of bytes flushed otherwise. Upon error, one of the following error codes is returned:</dd></dl>
+<dl compact><dt><b>Returns:</b></dt><dd>Upon success, this service returns <em>size</em>. Upon error, one of the following error codes is returned:</dd></dl>
 <ul>
 <li>-EINVAL is returned if <em>pipe</em> is not a pipe descriptor.</li></ul>
 <p>
@@ -683,7 +680,7 @@ Rescheduling: possible.     </td>
 <p>
 Stream bytes to a pipe. 
 <p>
-This service writes a sequence of bytes to be received from the associated special device. Unlike <a class="el" href="group__pipe.html#gf40b20cad1dcd7bedcda72beaa16c057">rt_pipe_send()</a>, this service does not preserve message boundaries. Instead, an internal buffer is filled on the fly with the data. The actual sending may be delayed until the internal buffer is full, or the Linux kernel is re-entered after the real-time system enters a quiescent state.<p>
+This service writes a sequence of bytes to be received from the associated special device. Unlike <a class="el" href="group__pipe.html#gf40b20cad1dcd7bedcda72beaa16c057">rt_pipe_send()</a>, this service does not preserve message boundaries. Instead, an internal buffer is filled on the fly with the data, which will be consumed as soon as the receiver wakes up.<p>
 Data buffers sent by the <a class="el" href="group__pipe.html#gd8edc920499d2c5c5d821ee7b9fa2bcd">rt_pipe_stream()</a> service are always transmitted in FIFO order (i.e. P_NORMAL mode).<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -692,15 +689,12 @@ Data buffers sent by the <a class="el" href="group__pipe.html#gd8edc920499d2c5c5
     <tr><td valign="top"></td><td valign="top"><em>size</em>&nbsp;</td><td>The size in bytes of the buffer. Zero is a valid value, in which case the service returns immediately without buffering any data.</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Returns:</b></dt><dd>The number of sent bytes upon success; this value will be equal to <em>size</em>. Otherwise:</dd></dl>
+<dl compact><dt><b>Returns:</b></dt><dd>The number of bytes sent upon success; this value may be lower than <em>size</em>, depending on the available space in the internal buffer. Otherwise:</dd></dl>
 <ul>
 <li>-EINVAL is returned if <em>pipe</em> is not a pipe descriptor.</li></ul>
 <p>
 <ul>
 <li>-EPIPE is returned if the associated special device is not yet open.</li></ul>
-<p>
-<ul>
-<li>-ENOMEM is returned if not enough buffer space is available to complete the operation.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>pipe</em> is a closed pipe descriptor.</li></ul>
@@ -773,11 +767,6 @@ This service writes a complete message to be received from the associated specia
     <tr><td valign="top"></td><td valign="top"><em>pipe</em>&nbsp;</td><td>The descriptor address of the pipe to write to.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>buf</em>&nbsp;</td><td>The address of the first data byte to send. The data will be copied to an internal buffer before transmission.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>size</em>&nbsp;</td><td>The size in bytes of the message (payload data only). Zero is a valid value, in which case the service returns immediately without sending any message.</td></tr>
-  </table>
-</dl>
-Additionally, <a class="el" href="group__pipe.html#g12f801963d0db6aa60bc6cf92f65697a">rt_pipe_write()</a> causes any data buffered by <a class="el" href="group__pipe.html#gd8edc920499d2c5c5d821ee7b9fa2bcd">rt_pipe_stream()</a> to be flushed prior to sending the message. For this reason, <a class="el" href="group__pipe.html#g12f801963d0db6aa60bc6cf92f65697a">rt_pipe_write()</a> can return a non-zero byte count to the caller if some pending data has been flushed, even if <em>size</em> was zero on entry.<p>
-<dl compact><dt><b>Parameters:</b></dt><dd>
-  <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>A set of flags affecting the operation:</td></tr>
   </table>
 </dl>
@@ -787,7 +776,7 @@ Additionally, <a class="el" href="group__pipe.html#g12f801963d0db6aa60bc6cf92f65
 <ul>
 <li>P_NORMAL causes the message to be appended to the output queue, ensuring a FIFO ordering.</li></ul>
 <p>
-<dl compact><dt><b>Returns:</b></dt><dd>Upon success, this service returns <em>size</em> if the latter is non-zero, or the number of bytes flushed otherwise. Upon error, one of the following error codes is returned:</dd></dl>
+<dl compact><dt><b>Returns:</b></dt><dd>Upon success, this service returns <em>size</em>. Upon error, one of the following error codes is returned:</dd></dl>
 <ul>
 <li>-EINVAL is returned if <em>pipe</em> is not a pipe descriptor.</li></ul>
 <p>
@@ -811,7 +800,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Sep 3 16:27:24 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Sep 17 19:19:14 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
