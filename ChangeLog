@@ -1,5 +1,9 @@
 2006-09-17  Philippe Gerum  <rpm@xenomai.org>
 
+ 	* RELEASE: Xenomai 2.2.3 (Memories)
+
+2006-09-17  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/arch/arm/patches: Upgrade to 2.6.1{4,5}-1.5-00.
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.17-1.4-00, and
