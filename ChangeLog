@@ -1,3 +1,13 @@
+2006-09-16  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c: Use per-task I-pipe event filter
+	(PF_EVNOTIFY) when available.
+
+2006-09-15  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-generic/wrappers.h: Wrap
+	schedule_timeout_interruptible() for 2.4.
+
 2006-09-15  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* ksrc/arch/*/hal.c (rthal_irq_enable, rthal_irq_disable): Switch

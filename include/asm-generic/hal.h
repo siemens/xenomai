@@ -299,6 +299,11 @@ static inline void clear_task_nowakeup(struct task_struct *p)
 #define ipipe_clear_foreign_stack(ipd)	do { } while(0)
 #endif /* !IPIPE_NOSTACK_FLAG */
 
+#ifndef PF_EVNOTIFY
+/* In case the I-pipe does not provide per-task event filter. */
+#define PF_EVNOTIFY  0
+#endif	/* !PF_EVNOTIFY */
+
 #ifdef CONFIG_KGDB
 #define rthal_set_foreign_stack(ipd)	ipipe_set_foreign_stack(ipd)
 #define rthal_clear_foreign_stack(ipd)	ipipe_clear_foreign_stack(ipd)
