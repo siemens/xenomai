@@ -239,6 +239,10 @@ unsigned long __va_to_kva(unsigned long va);
 #define class_destroy class_simple_destroy
 #endif  /* >= 2.6.13 */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,15)
+#define atomic_cmpxchg(v, old, new) ((int)cmpxchg(&((v)->counter), old, new))
+#endif /* < 2.6.15 */
+
 /* Signals */
 #define wrap_sighand_lock(p)     ((p)->sighand->siglock)
 #define wrap_get_sigpending(m,p) sigorsets(m, \
