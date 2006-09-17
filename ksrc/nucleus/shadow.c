@@ -823,6 +823,14 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 			thread->name, current->pid,
 			xnthread_base_priority(thread));
 
+	/* Switch on propagation of normal kernel events for the bound
+	   task. This is basically a per-task event filter which
+	   restricts event notifications (e.g. syscalls) to tasks
+	   bearing the PF_EVNOTIFY flag, so that we don't uselessly
+	   intercept those events when they happen to be caused by
+	   plain (i.e. non-Xenomai) Linux tasks. */
+	current->flags |= PF_EVNOTIFY;
+
 #ifdef CONFIG_MMU
 	if (!(current->mm->def_flags & VM_LOCKED))
 		send_sig(SIGXCPU, current, 1);
@@ -1187,14 +1195,6 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 			xnarch_atomic_dec(&muxtable[0].refcnt);
 		return err;
 	}
-
-	/* Switch on propagation of normal kernel events for the bound
-	   task. This is basically a per-task event filter which
-	   restricts event notifications (e.g. syscalls) to tasks
-	   bearing the PF_EVNOTIFY flag, so that we don't uselessly
-	   intercept those events when they happen to be caused by
-	   plain (i.e. non-Xenomai) Linux tasks. */
-	curr->flags |= PF_EVNOTIFY;
 
 	return muxid;
 }
