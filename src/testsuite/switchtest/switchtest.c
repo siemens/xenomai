@@ -12,6 +12,8 @@
 #include <sys/mman.h>
 #include <semaphore.h>
 
+#include <getopt.h>
+
 #include <asm/xenomai/fptest.h>
 #include <rtdm/rttesting.h>
 
@@ -27,6 +29,12 @@ typedef unsigned long cpu_set_t;
 #define	 CPU_SET(n,set) 	do { *(set) |= (1 << n); } while(0)
 #endif /* HAVE_OLD_SETAFFINITY */
 #endif /* HAVE_RECENT_SETAFFINITY */
+
+#if CONFIG_SMP
+#define smp_sched_setaffinity(pid,len,mask) do_sched_setaffinity(pid,len,mask)
+#else /* !CONFIG_SMP */
+#define smp_sched_setaffinity(pid,len,mask) 0
+#endif /* !CONFIG_SMP */
 
 struct cpu_tasks;
 
@@ -44,6 +52,7 @@ struct cpu_tasks {
 	unsigned tasks_count;
 	unsigned capacity;
 	unsigned fd;
+	unsigned long last_switches_count;
 };
 
 /* Thread type. */
@@ -63,6 +72,19 @@ typedef enum {
 } fpflags;
 
 static sem_t sleeper_start;
+static int quiet, status;
+static struct timespec start;
+static pthread_mutex_t headers_lock;
+static unsigned long data_lines = 21;
+
+static inline void clean_exit(int retval)
+{
+	status = retval;
+	kill(getpid(), SIGTERM);
+	for (;;)
+		/* Wait for cancellation. */
+		__real_sem_wait(&sleeper_start);
+}
 
 static void timespec_substract(struct timespec *result,
 			const struct timespec *lhs,
@@ -77,7 +99,8 @@ static void timespec_substract(struct timespec *result,
 	}
 }
 
-static char *task_name(struct cpu_tasks *cpu, unsigned task)
+static char *task_name(char *buf, size_t sz, 
+		       struct cpu_tasks *cpu, unsigned task)
 {
 	char *basename [] = {
 		[SLEEPER] = "sleeper",
@@ -86,23 +109,44 @@ static char *task_name(struct cpu_tasks *cpu, unsigned task)
 		[RTUS] = "rtus",
 		[RTUO] = "rtuo"
 	};
+	struct {
+		unsigned flag;
+		char *name;
+	} flags [] = {
+		{ .flag = AFP, .name = "fp" },
+		{ .flag = UFPP, .name = "ufpp" },
+		{ .flag = UFPS, .name = "ufps" },
+	};
 	struct task_params *param;
-	static char buffer[64];
+	unsigned pos, i;
 	
 	if (task >= cpu->tasks_count)
 		return "???";
 
 	param = &cpu->tasks[task];
-	snprintf(buffer, sizeof(buffer), "%s%u/%u",
-		 basename[param->type], param->swt.index, cpu->index);
+	pos = snprintf(buf, sz, "%s", basename[param->type]);
+	for (i = 0; i < sizeof(flags) / sizeof(flags[0]); i++) {
+		if (!(param->fp & flags[i].flag))
+			continue;
 
-	return buffer;
+		pos += snprintf(&buf[pos],
+				sz - pos, "_%s", flags[i].name);
+	}
+	
+#ifdef CONFIG_SMP
+	pos += snprintf(&buf[pos], sz - pos, "%u", cpu->index);
+#endif /* !CONFIG_SMP */
+
+	snprintf(&buf[pos], sz - pos, "-%u", param->swt.index);
+	
+	return buf;
 }
 
 static void handle_bad_fpreg(struct cpu_tasks *cpu, unsigned fp_val)
 {
 	struct rttst_swtest_error err;
 	unsigned from, to;
+	char buffer[64];
 
 	ioctl(cpu->fd, RTTST_RTIOC_SWTEST_GET_LAST_ERROR, &err);
 
@@ -112,12 +156,75 @@ static void handle_bad_fpreg(struct cpu_tasks *cpu, unsigned fp_val)
 	from = err.last_switch.from;
 	to = err.last_switch.to;
 
-	fprintf(stderr, "Error after context switch from task %d(%s) to"
-		" task %d(%s),\nFPU registers were set to %d (maybe task %s)\n",
-		from, task_name(cpu, from),
-		to, task_name(cpu, to),
-		fp_val, task_name(cpu, fp_val % 1000));
-	pthread_kill(pthread_self(), SIGSTOP);
+	fprintf(stderr, "Error after context switch from task %d(%s) ",
+		from, task_name(buffer, sizeof(buffer), cpu, from));
+	fprintf(stderr, "to task %d(%s),\nFPU registers were set to %u ",
+		to, task_name(buffer, sizeof(buffer), cpu, to), fp_val);
+	fprintf(stderr, "(maybe task %s)\n", 
+		task_name(buffer, sizeof(buffer), cpu, fp_val % 1000));
+	clean_exit(EXIT_FAILURE);
+}
+
+void display_cleanup(void *cookie)
+{
+	pthread_mutex_t *mutex = (pthread_mutex_t *) cookie;
+	__real_pthread_mutex_unlock(mutex);
+}
+
+void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
+{
+	unsigned long switches_count;
+	static unsigned nlines = 0;
+
+	if (ioctl(cpu->fd,
+		  RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT,&switches_count)) {
+		perror("sleeper: ioctl(RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT)");
+		clean_exit(EXIT_FAILURE);
+	}
+	
+	if (switches_count &&
+	    switches_count == cpu->last_switches_count) {
+		fprintf(stderr, "No context switches during one second, "
+			"aborting.\n");
+		clean_exit(EXIT_FAILURE);
+	}
+
+	if (quiet)
+		return;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+	pthread_cleanup_push(display_cleanup, &headers_lock);
+	__real_pthread_mutex_lock(&headers_lock);
+
+	if (data_lines && (nlines++ % data_lines) == 0) {
+		struct timespec diff;
+		long dt;
+
+		timespec_substract(&diff, now, &start);
+		dt = diff.tv_sec;
+		
+		printf("RTT|  %.2ld:%.2ld:%.2ld\n",
+		       dt / 3600, (dt / 60) % 60, dt % 60);
+#ifdef CONFIG_SMP
+		printf("RTH|%12s|%12s|%12s\n",
+		       "---------cpu","ctx switches","-------total");
+#else /* !CONFIG_SMP */
+		printf("RTH|%12s|%12s\n", "ctx switches","-------total");
+#endif /* !CONFIG_SMP */
+	}
+
+#ifdef CONFIG_SMP
+	printf("RTD|%12u|%12lu|%12lu\n", cpu->index,
+	       switches_count - cpu->last_switches_count, switches_count);
+#else /* !CONFIG_SMP */
+	printf("RTD|%12lu|%12lu\n",
+	       switches_count - cpu->last_switches_count, switches_count);
+#endif /* !CONFIG_SMP */
+
+	pthread_cleanup_pop(1);
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
+	cpu->last_switches_count = switches_count;
 }
 
 static void *sleeper(void *cookie)
@@ -132,9 +239,9 @@ static void *sleeper(void *cookie)
 
 	CPU_ZERO(&cpu_set);
 	CPU_SET(param->cpu->index, &cpu_set);
-	if (do_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
+	if (smp_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
 		perror("sleeper: sched_setaffinity");
-		exit(EXIT_FAILURE);
+		clean_exit(EXIT_FAILURE);
 	}
 
 	rtsw.from = param->swt.index;
@@ -162,20 +269,9 @@ static void *sleeper(void *cookie)
 
 		timespec_substract(&diff, &now, &last);
 		if (diff.tv_sec >= 1) {
-			unsigned long switches_count;
 			last = now;
 
-			if (ioctl(fd,
-				  RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT,
-				  &switches_count)) {
-				perror("sleeper: ioctl(RTTST_RTIOC_SWTEST_"
-				       "GET_SWITCHES_COUNT)");
-				exit(EXIT_FAILURE);
-			}
-
-			printf("cpu %u: %lu\n",
-			       param->cpu->index,
-			       switches_count);
+			display_switches_count(param->cpu, &now);
 		}
 
 		if (tasks_count == 1)
@@ -189,7 +285,8 @@ static void *sleeper(void *cookie)
 			++rtsw.to;
 
 		expected = rtsw.from + i * 1000;
-		fp_regs_set(expected);
+		if (param->fp & UFPS)
+			fp_regs_set(expected);
 		err = ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw);
 		while (err == -1 && errno == EINTR)
 			err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
@@ -200,11 +297,13 @@ static void *sleeper(void *cookie)
 		case 1:
 			handle_bad_fpreg(param->cpu, ~0);
 		case -1:
-			pthread_exit(NULL);
+			clean_exit(EXIT_FAILURE);
 		}
-		fp_val = fp_regs_check(expected);
-		if (fp_val != expected)
-			handle_bad_fpreg(param->cpu, fp_val);
+		if (param->fp & UFPS) {
+			fp_val = fp_regs_check(expected);
+			if (fp_val != expected)
+				handle_bad_fpreg(param->cpu, fp_val);
+		}
 
 		if(++i == 4000000)
 			i = 0;
@@ -224,9 +323,9 @@ static void *rtup(void *cookie)
 
 	CPU_ZERO(&cpu_set);
 	CPU_SET(param->cpu->index, &cpu_set);
-	if (do_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
+	if (smp_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
 		perror("rtup: sched_setaffinity");
-		exit(EXIT_FAILURE);
+		clean_exit(EXIT_FAILURE);
 	}
 
 	rtsw.from = param->swt.index;
@@ -240,7 +339,7 @@ static void *rtup(void *cookie)
 		fprintf(stderr,
 			"rtup: pthread_set_mode_np: %s\n",
 			strerror(err));
-		exit(EXIT_FAILURE);
+		clean_exit(EXIT_FAILURE);
 	}    
 
 	do {
@@ -273,7 +372,7 @@ static void *rtup(void *cookie)
 		case 1:
 			handle_bad_fpreg(param->cpu, ~0);
 		case -1:
-			pthread_exit(NULL);
+			clean_exit(EXIT_FAILURE);
 		}
 		if (param->fp & UFPP) {
 			fp_val = fp_regs_check(expected);
@@ -299,9 +398,9 @@ static void *rtus(void *cookie)
 
 	CPU_ZERO(&cpu_set);
 	CPU_SET(param->cpu->index, &cpu_set);
-	if (do_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
+	if (smp_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
 		perror("rtus: sched_setaffinity");
-		exit(EXIT_FAILURE);
+		clean_exit(EXIT_FAILURE);
 	}
 
 	rtsw.from = param->swt.index;
@@ -315,7 +414,7 @@ static void *rtus(void *cookie)
 		fprintf(stderr,
 			"rtus: pthread_set_mode_np: %s\n",
 			strerror(err));
-		exit(EXIT_FAILURE);
+		clean_exit(EXIT_FAILURE);
 	}
 
 	do {
@@ -348,7 +447,7 @@ static void *rtus(void *cookie)
 		case 1:
 			handle_bad_fpreg(param->cpu, ~0);
 		case -1:
-			pthread_exit(NULL);
+			clean_exit(EXIT_FAILURE);
 		}
 		if (param->fp & UFPS) {
 			fp_val = fp_regs_check(expected);
@@ -374,9 +473,9 @@ static void *rtuo(void *cookie)
 
 	CPU_ZERO(&cpu_set);
 	CPU_SET(param->cpu->index, &cpu_set);
-	if (do_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
+	if (smp_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
 		perror("rtuo: sched_setaffinity");
-		exit(EXIT_FAILURE);
+		clean_exit(EXIT_FAILURE);
 	}
 
 	rtsw.from = param->swt.index;
@@ -390,7 +489,7 @@ static void *rtuo(void *cookie)
 		fprintf(stderr,
 			"rtup: pthread_set_mode_np: %s\n",
 			strerror(err));
-		exit(EXIT_FAILURE);
+		clean_exit(EXIT_FAILURE);
 	}
 	do {
 		err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
@@ -423,7 +522,7 @@ static void *rtuo(void *cookie)
 		case 1:
 			handle_bad_fpreg(param->cpu, ~0);
 		case -1:
-			pthread_exit(NULL);
+			clean_exit(EXIT_FAILURE);
 		}
 		if ((mode && param->fp & UFPP) || (!mode && param->fp & UFPS)) {
 			fp_val = fp_regs_check(expected);
@@ -437,7 +536,7 @@ static void *rtuo(void *cookie)
 			fprintf(stderr,
 				"rtuo: pthread_set_mode_np: %s\n",
 				strerror(err));
-			exit(EXIT_FAILURE);
+			clean_exit(EXIT_FAILURE);
 		}
 
 		if(++i == 4000000)
@@ -511,7 +610,7 @@ static int parse_arg(struct task_params *param,
   cpu_nr:
 	cpu = strtoul(text, &cpu_end, 0);
 
-	if (*cpu_end != '\0' || ((cpu == 0 || cpu == ULONG_MAX) && errno))
+	if (*cpu_end != '\0' || (cpu == ULONG_MAX && errno))
 		return -1;
 
 	param->cpu = &cpus[cpu];
@@ -535,16 +634,18 @@ static int check_arg(const struct task_params *param, struct cpu_tasks *end_cpu)
 		break;
 
 	case RTUP:
-		if (param->fp & UFPS)
+		if (param->fp & (AFP|UFPS))
 			return -1;
 		break;
 
 	case RTUS:
-		if (param->fp & UFPP)
+		if (param->fp & (AFP|UFPP))
 			return -1;
 		break;
 
 	case RTUO:
+		if (param->fp & AFP)
+			return -1;
 		break;
 	default:
 		return -1;
@@ -558,6 +659,7 @@ static int task_create(struct cpu_tasks *cpu,
 		       pthread_attr_t *rt_attr,
 		       pthread_attr_t *sleeper_attr)
 {
+	char buffer[64];
 	typedef void *thread_routine(void *);
 	thread_routine *task_routine [] = {
 		[RTUP] = &rtup,
@@ -618,8 +720,9 @@ static int task_create(struct cpu_tasks *cpu,
 		return err;
 	}
 
-	err = pthread_set_name_np(param->thread,
-				  task_name(param->cpu,param->swt.index));
+	err = pthread_set_name_np(param->thread, 
+				  task_name(buffer, sizeof(buffer), 
+				  param->cpu,param->swt.index));
 			
 	if (err)
 		fprintf(stderr,"pthread_set_name_np: %s\n", strerror(err));
@@ -699,18 +802,54 @@ const char *all_fp [] = {
 	"rtuo_ufpp_ufps"
 };
 
+unsigned long xatoul(const char *str)
+{
+	unsigned long result;
+	char *endptr;
+
+	result = strtoul(str, &endptr, 0);
+
+	if (result == ULONG_MAX && errno == ERANGE) {
+		fprintf(stderr, "Overflow while parsing %s\n", str);
+		exit(EXIT_FAILURE);
+	}
+
+	if (*endptr != '\0') {
+		fprintf(stderr, "Error while parsing \"%s\" as a number\n", str);
+		exit(EXIT_FAILURE);
+	}
+
+	return result;
+}
+
 void usage(FILE *fd, const char *progname)
 {
 	unsigned i, j, nr_cpus;
 
+#if CONFIG_SMP
 	nr_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+#else /* !CONFIG_SMP */
+	nr_cpus = 1;
+#endif /* !CONFIG_SMP */
 
 	fprintf(fd,
 		"Usage:\n"
-		"%s threadspec threadspec...\n"
-		"or %s [-n]\n\n"
-		"Where threadspec specifies the characteristics of a thread to"
-		" be created:\n"
+		"%s [options] threadspec threadspec...\n"
+		"Create threads of various types and attempt to switch context "
+		"between these\nthreads, printing the count of context switches "
+		"every second.\n\n"
+		"Available options are:\n"
+		"--help or -h, cause this program to print this help string and "
+		"exit;\n"
+		"--lines <lines> or -l <lines> print headers every <lines> "
+		"lines.\n"
+		"--quiet or -q, prevent this program from printing every "
+		"second the count of\ncontext switches;\n"
+		"--timeout <duration> or -T <duration>, limit the test duration "
+		"to <duration>\nseconds;\n"
+		"--nofpu or -n, disables any use of FPU instructions.\n\n"
+		"Each 'threadspec' specifies the characteristics of a "
+		"thread to be created:\n"
 		"threadspec = (rtk|rtup|rtus|rtuo)(_fp|_ufpp|_ufps)*[0-9]*\n"
 		"rtk for a kernel-space real-time thread;\n"
 		"rtup for a user-space real-time thread running in primary"
@@ -718,25 +857,25 @@ void usage(FILE *fd, const char *progname)
 		"rtus for a user-space real-time thread running in secondary"
 		" mode,\n"
 		"rtuo for a user-space real-time thread oscillating between"
-		" primary and\n	    secondary mode,\n\n"
+		" primary and\nsecondary mode,\n\n"
 		"_fp means that the created thread will have the XNFPU bit"
-		" armed (only valid for\n     rtk),\n"
+		" armed (only valid for\nrtk),\n"
 		"_ufpp means that the created thread will use the FPU when in "
-		"primary mode\n	    (invalid for rtus),\n"
+		"primary mode\n(invalid for rtus),\n"
 		"_ufps means that the created thread will use the FPU when in "
-		"secondary mode\n     (invalid for rtk and rtup),\n\n"
+		"secondary mode\n(invalid for rtk and rtup),\n\n"
 		"[0-9]* specifies the ID of the CPU where the created thread "
-		"will run, 0 if\n	unspecified.\n\n"
-		"Passing no argument is equivalent to running:\n%s",
-		progname, progname, progname);
+		"will run, 0 if\nunspecified.\n\n"
+		"Passing no 'threadspec' is equivalent to running:\n%s",
+		progname, progname);
 
 	for (i = 0; i < nr_cpus; i++)
 		for (j = 0; j < sizeof(all_fp)/sizeof(char *); j++)
 			fprintf(fd, " %s%d", all_fp[j], i);
 
 	fprintf(fd,
-		"\n\nPassing only the -n argument is equivalent to running:\n%s",
-		progname);
+		"\n\nPassing only the --nofpu or -n argument is equivalent to "
+                "running:\n%s", progname);
 
 	for (i = 0; i < nr_cpus; i++)
 		for (j = 0; j < sizeof(all_nofp)/sizeof(char *); j++)
@@ -746,14 +885,16 @@ void usage(FILE *fd, const char *progname)
 
 int main(int argc, const char *argv[])
 {
-	const char **all, *progname = argv[0];
 	pthread_attr_t rt_attr, sleeper_attr;
-	unsigned i, j, count, nr_cpus;
+	unsigned i, j, nr_cpus, use_fp = 1;
+	const char *progname = argv[0];
 	struct cpu_tasks *cpus;
 	struct sched_param sp;
 	char devname[21];
-	int status, sig;
 	sigset_t mask;
+	int sig;
+
+	status = EXIT_SUCCESS;
 
 	/* Initializations. */
 	if (mlockall(MCL_CURRENT|MCL_FUTURE)) {
@@ -766,9 +907,12 @@ int main(int argc, const char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	all = all_fp;
-	count = sizeof(all_fp) / sizeof(char *);
+#if CONFIG_SMP
 	nr_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+#else /* !CONFIG_SMP */
+	nr_cpus = 1;
+#endif /* !CONFIG_SMP */
+
 	if (nr_cpus == -1) {
 		fprintf(stderr,
 			"Error %d while getting the number of cpus (%s)\n",
@@ -777,25 +921,55 @@ int main(int argc, const char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	/* Check for -n, -h or --help flag. */
-	for (i = 1; i < argc; i++) {
-		if (!strcmp(argv[i], "-n")) {
-			if (argc != 2) {
-				usage(stderr, progname);
-				fprintf(stderr,
-					"-n option may only be used with no "
-					"other argument.\n");
-				exit(EXIT_FAILURE);
-			}
+	/* Parse command line options. */
+	opterr = 0;
+	for (;;) {
+		static struct option long_options[] = {
+			{ "help",    0, NULL, 'h' },
+			{ "lines",   0, NULL, 'l' },
+			{ "nofpu",   0, NULL, 'n' },
+			{ "quiet",   0, NULL, 'q' },
+			{ "timeout", 0, NULL, 'T' },
+			{ NULL,      0, NULL, 0   }
+		};
+		int i = 0;
+		int c = getopt_long(argc, (char *const *) argv, ":hl:nqT:",
+				    long_options, &i);
 
-			all = all_nofp;
-			count = sizeof(all_nofp) / sizeof(char *);
-			--argc;
-		}
+		if (c == -1)
+			break;
 
-		if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
+		switch(c) {
+		case 'h':
 			usage(stdout, progname);
 			exit(EXIT_SUCCESS);
+
+		case 'l':
+			data_lines = xatoul(optarg);
+			break;
+
+		case 'n':
+			use_fp = 0;
+			break;
+
+		case 'q':
+			quiet = 1;
+			break;
+
+		case 'T':
+			alarm(xatoul(optarg));
+			break;
+
+		case '?':
+			usage(stderr, progname);
+			fprintf(stderr, "%s: Invalid option.\n", argv[optind-1]);
+			exit(EXIT_FAILURE);
+
+		case ':':
+			usage(stderr, progname);
+			fprintf(stderr, "Missing argument of option %s.\n",
+				argv[optind-1]);
+			exit(EXIT_FAILURE);
 		}
 	}
 
@@ -807,21 +981,30 @@ int main(int argc, const char *argv[])
 	/* If no argument was passed (or only -n), replace argc and argv with
 	   default values, given by all_fp or all_nofp depending on the presence
 	   of the -n flag. */
-	if (argc == 1) {
+	if (optind == argc) {
+		const char **all;
 		char buffer[32];
+		unsigned count;
 
 		/* Check if fp routines are dummy. */
-		if (all == all_fp) {
-			fprintf(stderr, "Testing FPU check routines...\n");
+		if (use_fp) {
+			fprintf(stderr, "== Testing FPU check routines...\n");
 			fp_regs_set(1);
 			if (fp_regs_check(2) != 1) {
 				fprintf(stderr,
-					"FPU check routines unimplemented, "
+					"== FPU check routines: unimplemented, "
 					"skipping FPU switches tests.\n");
-				all = all_nofp;
-				count = sizeof(all_nofp) / sizeof(char *);
+				use_fp = 0;
 			} else
-				fprintf(stderr, "FPU check routines OK.\n");
+				fprintf(stderr, "== FPU check routines: OK.\n");
+		}
+
+		if (use_fp) {
+			all = all_fp;
+			count = sizeof(all_fp)/sizeof(char *);
+		} else {
+			all = all_nofp;
+			count = sizeof(all_nofp)/sizeof(char *);
 		}
 
 		argc = count * nr_cpus + 1;
@@ -836,6 +1019,8 @@ int main(int argc, const char *argv[])
 					 i);
 				argv[i * count + j + 1] = strdup(buffer);
 			}
+
+		optind = 1;
 	}
 
 	cpus = (struct cpu_tasks *) malloc(sizeof(*cpus) * nr_cpus);
@@ -852,6 +1037,7 @@ int main(int argc, const char *argv[])
 		size = cpus[i].capacity * sizeof(struct task_params);
 		cpus[i].tasks_count = 1;
 		cpus[i].tasks = (struct task_params *) malloc(size);
+		cpus[i].last_switches_count = 0;
 
 		if (!cpus[i].tasks) {
 			perror("malloc");
@@ -859,22 +1045,21 @@ int main(int argc, const char *argv[])
 		}
 
 		cpus[i].tasks[0].type = SLEEPER;
-		cpus[i].tasks[0].fp = 0;
+		cpus[i].tasks[0].fp = use_fp ? UFPS : 0;
 		cpus[i].tasks[0].cpu = &cpus[i];	
 		cpus[i].tasks[0].thread = 0;
 		cpus[i].tasks[0].swt.index = cpus[i].tasks[0].swt.flags = 0;
 	}
 
 	/* Parse arguments and build data structures. */
-	for(i = 1; i < argc; i++) {
+	for(i = optind; i < argc; i++) {
 		struct task_params params;
 		struct cpu_tasks *cpu;
 
 		if(parse_arg(&params, argv[i], cpus)) {
 			usage(stderr, progname);
-			fprintf(stderr,
-				"Unable to parse %s. Aborting.\n",
-				argv[i]);
+			fprintf(stderr, "Unable to parse %s as a thread type. "
+				"Aborting.\n", argv[i]);
 			exit(EXIT_FAILURE);
 		}
 
@@ -882,6 +1067,14 @@ int main(int argc, const char *argv[])
 			usage(stderr, progname);
 			fprintf(stderr,
 				"Invalid parameters %s. Aborting\n",
+				argv[i]);
+			exit(EXIT_FAILURE);
+		}
+
+		if (!use_fp && params.fp) {
+			usage(stderr, progname);
+			fprintf(stderr,
+				"%s is invalid because FPU is disabled.\n",
 				argv[i]);
 			exit(EXIT_FAILURE);
 		}
@@ -909,8 +1102,11 @@ int main(int argc, const char *argv[])
 	sigemptyset(&mask);
 	sigaddset(&mask, SIGINT);
 	sigaddset(&mask, SIGTERM);
+	sigaddset(&mask, SIGALRM);
 	pthread_sigmask(SIG_BLOCK, &mask, NULL);
-	
+
+	__real_pthread_mutex_init(&headers_lock, NULL);
+
 	/* Prepare attributes for real-time tasks. */
 	pthread_attr_init(&rt_attr);
 	pthread_attr_setinheritsched(&rt_attr, PTHREAD_EXPLICIT_SCHED);
@@ -923,9 +1119,11 @@ int main(int argc, const char *argv[])
 	pthread_attr_init(&sleeper_attr);
 	pthread_attr_setstacksize(&sleeper_attr, 20 * 1024);
 
+	printf("== Threads:");
 	/* Create and register all tasks. */
 	for (i = 0; i < nr_cpus; i ++) {
 		struct cpu_tasks *cpu = &cpus[i];
+		char buffer[64];
 
 		cpu->fd = open_rttest(devname,sizeof(devname),cpu->tasks_count);
 
@@ -944,8 +1142,14 @@ int main(int argc, const char *argv[])
 				status = EXIT_FAILURE;
 				goto cleanup;
 			}
+			printf(" %s", 
+			       task_name(buffer, sizeof(buffer),
+					 param->cpu, param->swt.index));
 		}
 	}
+	printf("\n");
+
+	clock_gettime(CLOCK_REALTIME, &start);
 
 	/* Start the sleeper tasks. */
 	for (i = 0; i < nr_cpus; i ++)
@@ -956,8 +1160,6 @@ int main(int argc, const char *argv[])
 
 	/* Allow a second Ctrl-C in case of lockup. */
 	pthread_sigmask(SIG_UNBLOCK, &mask, NULL);
-
-	status = EXIT_SUCCESS;
 
 	/* Cleanup. */
   cleanup:
@@ -980,13 +1182,22 @@ int main(int argc, const char *argv[])
 				pthread_join(param->thread, NULL);
 		}
 
-		/* Kill the kernel-space tasks. */
-		if (cpus[i].fd != -1)
+		if (cpus[i].fd != -1) {
+			struct timespec now;
+
+			clock_gettime(CLOCK_REALTIME, &now);
+
+			quiet = 0;
+			display_switches_count(&cpus[i], &now);
+
+			/* Kill the kernel-space tasks. */
 			close(cpus[i].fd);
+		}
 		free(cpu->tasks);
 	}
 	free(cpus);
 	__real_sem_destroy(&sleeper_start);
+	__real_pthread_mutex_destroy(&headers_lock);
 
 	return status;
 }

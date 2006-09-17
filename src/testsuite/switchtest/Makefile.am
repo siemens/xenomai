@@ -1,14 +1,14 @@
 testdir = $(exec_prefix)/testsuite/switchtest
 
-test_PROGRAMS = switch
+test_PROGRAMS = switchtest
 
-switch_SOURCES = switch.c
+switchtest_SOURCES = switchtest.c
 
-switch_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -g -I$(top_srcdir)/include
+switchtest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -g -I$(top_srcdir)/include
 
-switch_LDFLAGS =  $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
+switchtest_LDFLAGS =  $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 
-switch_LDADD = \
+switchtest_LDADD = \
 	../../skins/posix/.libs/libpthread_rt.a	-lpthread -lrt
 
 install-data-local:

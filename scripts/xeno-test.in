@@ -194,8 +194,8 @@ run_w_load() {
 	loudly ./run --  $opts -t1
 	loudly ./run --  $opts -t2
     )
-    (	cd `dirname $0`/../testsuite/switch
-	loudly ./run --  '# switch'
+    (	cd `dirname $0`/../testsuite/switchbench
+	loudly ./run --  '# switchbench'
     )
     (	cd `dirname $0`/../testsuite/cyclic
 	loudly ./run -- -p 10 -n -l 1000 '# cyclictest'
