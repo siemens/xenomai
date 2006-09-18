@@ -30,7 +30,6 @@ static const u_long tm_secbymin = 60;
 
 void psostm_init(void)
 {
-
 	initq(&psostimerq);
 }
 
