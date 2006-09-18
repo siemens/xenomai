@@ -1,3 +1,7 @@
+2006-09-18  Thomas Necker <thomas.necker@marconi.com>
+
+	* ksrc/skins/psos/queue.c: Fix sizeof(msgbuf) expr.
+
 2006-09-17  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.2.3 (Memories)

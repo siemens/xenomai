@@ -632,7 +632,7 @@ u_long q_receive(u_long qid, u_long flags, u_long timeout, u_long msgbuf[4])
 
 	return q_receive_internal(qid,
 				  flags & ~Q_VARIABLE,
-				  timeout, msgbuf, sizeof(msgbuf), NULL);
+				  timeout, msgbuf, sizeof(u_long[4]), NULL);
 }
 
 u_long q_vreceive(u_long qid,
@@ -648,7 +648,7 @@ u_long q_vreceive(u_long qid,
 u_long q_send(u_long qid, u_long msgbuf[4])
 {
 
-	return q_send_internal(qid, 0, msgbuf, sizeof(msgbuf));
+	return q_send_internal(qid, 0, msgbuf, sizeof(u_long[4]));
 }
 
 u_long q_vsend(u_long qid, void *msgbuf, u_long msglen)
@@ -660,7 +660,7 @@ u_long q_vsend(u_long qid, void *msgbuf, u_long msglen)
 u_long q_broadcast(u_long qid, u_long msgbuf[4], u_long *count)
 {
 
-	return q_broadcast_internal(qid, 0, msgbuf, sizeof(msgbuf), count);
+	return q_broadcast_internal(qid, 0, msgbuf, sizeof(u_long[4]), count);
 }
 
 u_long q_vbroadcast(u_long qid, void *msgbuf, u_long msglen, u_long *count)
@@ -672,7 +672,7 @@ u_long q_vbroadcast(u_long qid, void *msgbuf, u_long msglen, u_long *count)
 u_long q_urgent(u_long qid, u_long msgbuf[4])
 {
 
-	return q_send_internal(qid, Q_JAMMED, msgbuf, sizeof(msgbuf));
+	return q_send_internal(qid, Q_JAMMED, msgbuf, sizeof(u_long[4]));
 }
 
 u_long q_vurgent(u_long qid, void *msgbuf, u_long msglen)
