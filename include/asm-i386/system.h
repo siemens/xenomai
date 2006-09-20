@@ -68,7 +68,6 @@ typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
 
     /* FPU context bits for root thread. */
     unsigned is_root: 1;
-    unsigned cr0_ts: 1;
     unsigned ts_usedfpu: 1;
 
 } xnarchtcb_t;
