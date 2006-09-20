@@ -68,7 +68,6 @@ typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
 
     /* FPU context bits for root thread. */
     unsigned is_root: 1;
-    unsigned cr0_ts: 1;
     unsigned ts_usedfpu: 1;
 
 } xnarchtcb_t;
@@ -142,7 +141,6 @@ static inline void xnarch_leave_root (xnarchtcb_t *rootcb)
 {
     /* Remember the preempted Linux task pointer. */
     rootcb->user_task = rootcb->active_task = current;
-    rootcb->cr0_ts = (read_cr0() & 8) != 0;
     rootcb->ts_usedfpu = wrap_test_fpu_used(current) != 0;
     /* So that xnarch_save_fpu() will operate on the right FPU area. */
     rootcb->fpup = &rootcb->user_task->thread.i387;
@@ -377,119 +375,96 @@ static inline void xnarch_init_fpu (xnarchtcb_t *tcb)
 static inline void xnarch_save_fpu (xnarchtcb_t *tcb)
 
 {
-    struct task_struct *task = tcb->user_task;
-    
-    if (!tcb->is_root)
-	{
-        if (task)
-	    {	
-            if (!wrap_test_fpu_used(task))
-		return;
+	struct task_struct *task = tcb->user_task;
 
-	    /* Tell Linux that we already saved the state of the FPU
-	       hardware of this task. */
-	    wrap_clear_fpu_used(task);
-	    }
-	}
-    else
-	{
-	    /* Do not save root context FPU if cr0 bit ts is armed . */
-	    if (tcb->cr0_ts)
-		return;
+	if (task) {
+		if (!wrap_test_fpu_used(task))
+			return;
 
-	    if (tcb->ts_usedfpu)
+		/* Tell Linux that we already saved the state of the FPU
+		   hardware of this task. */
 		wrap_clear_fpu_used(task);
 	}
 
+	clts();
 
-    clts();
-    
-    if (cpu_has_fxsr)
-        __asm__ __volatile__ ("fxsave %0; fnclex" : "=m" (*tcb->fpup));
-    else
-        __asm__ __volatile__ ("fnsave %0; fwait" : "=m" (*tcb->fpup));
+	if (cpu_has_fxsr)
+		__asm__ __volatile__("fxsave %0; fnclex":"=m"(*tcb->fpup));
+	else
+      __asm__ __volatile__("fnsave %0; fwait":"=m"(*tcb->fpup));
 }
 
 static inline void xnarch_restore_fpu (xnarchtcb_t *tcb)
 
 {
-    struct task_struct *task = tcb->user_task;
+	struct task_struct *task = tcb->user_task;
 
-    if (!tcb->is_root)
-	{
-	if (task)
-	    {
-	    if (!xnarch_fpu_init_p(task))
-		{
-		stts();
-		return;	/* Uninit fpu area -- do not restore. */
+	if (!tcb->is_root) {
+		if (task) {
+			if (!xnarch_fpu_init_p(task)) {
+				stts();
+				return;	/* Uninit fpu area -- do not restore. */
+			}
+
+			/* Tell Linux that this task has altered the state of
+			 * the FPU hardware. */
+			wrap_set_fpu_used(task);
 		}
-		    
-	    /* Tell Linux that this task has altered the state of
-	     * the FPU hardware. */
-	    wrap_set_fpu_used(task);
-	    }
-	}
-    else
-	{
-	/* Restore state of ts bit if armed. */
-	if (tcb->cr0_ts)
-	    {
-	    stts();
-	    return;
-	    }
+	} else {
+		/* Restore state of FPU if TS_USEFPU bit was armed. */
+		if (!tcb->ts_usedfpu) {
+			stts();
+			return;
+		}
 
-	if (tcb->ts_usedfpu)
-	    wrap_set_fpu_used(task);
+		wrap_set_fpu_used(task);
 	}
 
-    /* Restore the FPU hardware with valid fp registers from a
-       user-space or kernel thread. */
-    clts();
+	/* Restore the FPU hardware with valid fp registers from a
+	   user-space or kernel thread. */
+	clts();
 
-    if (cpu_has_fxsr)
-        __asm__ __volatile__ ("fxrstor %0": /* no output */ : "m" (*tcb->fpup));
-    else
-        __asm__ __volatile__ ("frstor %0": /* no output */ : "m" (*tcb->fpup));
+	if (cpu_has_fxsr)
+		__asm__ __volatile__("fxrstor %0": /* no output */
+				     :"m"(*tcb->fpup));
+	else
+      __asm__ __volatile__("frstor %0": /* no output */ :"m"(*tcb->
+	    fpup));
 }
 
 static inline void xnarch_enable_fpu(xnarchtcb_t *tcb)
 
 {
-    struct task_struct *task = tcb->user_task;
+	struct task_struct *task = tcb->user_task;
 
-    if (!tcb->is_root)
-	{
-	if (task)
-	    {
-	    if (!xnarch_fpu_init_p(task))
-		return;
+	if (!tcb->is_root) {
+		if (task) {
+			if (!xnarch_fpu_init_p(task))
+				return;
 
-	    /* If "task" switched while in Linux domain, its FPU
-	     * context may have been overriden, restore it. */
-	    if (!wrap_test_fpu_used(task))
-		{
+			/* If "task" switched while in Linux domain, its FPU
+			 * context may have been overriden, restore it. */
+			if (!wrap_test_fpu_used(task)) {
+				xnarch_restore_fpu(tcb);
+				return;
+			}
+		}
+	} else {
+		if (!tcb->ts_usedfpu)
+			return;
+
 		xnarch_restore_fpu(tcb);
 		return;
-		}
-	    }
-	}
-    else
-	{
-	if (tcb->cr0_ts)
-	    return;
-
-	xnarch_restore_fpu(tcb);
-	return;
 	}
 
-    clts();
+	clts();
 
-    if (!cpu_has_fxsr && task)
-        /* fnsave, called by switch_to, initialized the FPU state, so that on
-           cpus prior to PII (i.e. without fxsr), we need to restore the saved
-           state. */
-        __asm__ __volatile__ ("frstor %0": /* no output */ : "m" (*tcb->fpup));
+	if (!cpu_has_fxsr && task)
+		/* fnsave, called by switch_to, initialized the FPU state, so that on
+		   cpus prior to PII (i.e. without fxsr), we need to restore the saved
+		   state. */
+		__asm__ __volatile__("frstor %0": /* no output */
+				     :"m"(*tcb->fpup));
 }
 
 #else /* !CONFIG_XENO_HW_FPU */
