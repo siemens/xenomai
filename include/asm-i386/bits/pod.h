@@ -43,7 +43,6 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 {
 	/* Remember the preempted Linux task pointer. */
 	rootcb->user_task = rootcb->active_task = current;
-	rootcb->cr0_ts = (read_cr0() & 8) != 0;
 	rootcb->ts_usedfpu = wrap_test_fpu_used(current) != 0;
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
 	rootcb->fpup = &rootcb->user_task->thread.i387;
@@ -80,11 +79,11 @@ static inline void __switch_threads(xnarchtcb_t * out_tcb,
 			     "popl %%ecx\n\t"
 			     "popfl\n\t":	/* no output */
 			     :"m"(out_tcb->espp),
-			     "m"(out_tcb->eipp),
-			     "m"(in_tcb->espp),
-			     "m"(in_tcb->eipp),
-			     "b"(out_tcb),
-			     "S"(in_tcb), "a"(outproc), "d"(inproc));
+			      "m"(out_tcb->eipp),
+			      "m"(in_tcb->espp),
+			      "m"(in_tcb->eipp),
+			      "b"(out_tcb),
+			      "S"(in_tcb), "a"(outproc), "d"(inproc));
 
 #else /* GCC version >= 3.2 */
 
@@ -109,8 +108,8 @@ static inline void __switch_threads(xnarchtcb_t * out_tcb,
 			     "=S"(esi_out),
 			     "=D"(edi_out), "+a"(outproc), "+d"(inproc)
 			     :"m"(out_tcb->espp),
-			     "m"(out_tcb->eipp),
-			     "m"(in_tcb->espp), "m"(in_tcb->eipp));
+			      "m"(out_tcb->eipp),
+			      "m"(in_tcb->espp), "m"(in_tcb->eipp));
 
 #endif /* GCC version < 3.2 */
 }
@@ -220,8 +219,8 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 	tcb->esp = (unsigned long)tcb->stackbase;
 	**psp = 0;		/* Commit bottom stack memory */
 	*psp =
-	    (unsigned long *)(((unsigned long)*psp + tcb->stacksize - 0x10) &
-			      ~0xf);
+		(unsigned long *)(((unsigned long)*psp + tcb->stacksize - 0x10) &
+				  ~0xf);
 	*--(*psp) = (unsigned long)cookie;
 	*--(*psp) = (unsigned long)entry;
 	*--(*psp) = (unsigned long)imask;
@@ -266,22 +265,13 @@ static inline void xnarch_save_fpu(xnarchtcb_t * tcb)
 {
 	struct task_struct *task = tcb->user_task;
 
-	if (!tcb->is_root) {
-		if (task) {
-			if (!wrap_test_fpu_used(task))
-				return;
-
-			/* Tell Linux that we already saved the state of the FPU
-			   hardware of this task. */
-			wrap_clear_fpu_used(task);
-		}
-	} else {
-		/* Do not save root context FPU if cr0 bit ts is armed . */
-		if (tcb->cr0_ts)
+	if (task) {
+		if (!wrap_test_fpu_used(task))
 			return;
 
-		if (tcb->ts_usedfpu)
-			wrap_clear_fpu_used(task);
+		/* Tell Linux that we already saved the state of the FPU
+		   hardware of this task. */
+		wrap_clear_fpu_used(task);
 	}
 
 	clts();
@@ -289,7 +279,7 @@ static inline void xnarch_save_fpu(xnarchtcb_t * tcb)
 	if (cpu_has_fxsr)
 		__asm__ __volatile__("fxsave %0; fnclex":"=m"(*tcb->fpup));
 	else
-      __asm__ __volatile__("fnsave %0; fwait":"=m"(*tcb->fpup));
+		__asm__ __volatile__("fnsave %0; fwait":"=m"(*tcb->fpup));
 }
 
 static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
@@ -308,14 +298,13 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 			wrap_set_fpu_used(task);
 		}
 	} else {
-		/* Restore state of ts bit if armed. */
-		if (tcb->cr0_ts) {
+		/* Restore state of FPU if TS_USEFPU bit was armed. */
+		if (!tcb->ts_usedfpu) {
 			stts();
 			return;
 		}
 
-		if (tcb->ts_usedfpu)
-			wrap_set_fpu_used(task);
+		wrap_set_fpu_used(task);
 	}
 
 	/* Restore the FPU hardware with valid fp registers from a
@@ -326,8 +315,8 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 		__asm__ __volatile__("fxrstor %0": /* no output */
 				     :"m"(*tcb->fpup));
 	else
-      __asm__ __volatile__("frstor %0": /* no output */ :"m"(*tcb->
-	    fpup));
+		__asm__ __volatile__("frstor %0": /* no output */ :"m"(*tcb->
+								       fpup));
 }
 
 static inline void xnarch_enable_fpu(xnarchtcb_t * tcb)
@@ -347,7 +336,7 @@ static inline void xnarch_enable_fpu(xnarchtcb_t * tcb)
 			}
 		}
 	} else {
-		if (tcb->cr0_ts)
+		if (!tcb->ts_usedfpu)
 			return;
 
 		xnarch_restore_fpu(tcb);
