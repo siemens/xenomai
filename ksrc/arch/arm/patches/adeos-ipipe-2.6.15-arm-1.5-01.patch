@@ -74,7 +74,7 @@
  struct task_struct;
  
 --- 2.6.15/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.15-ipipe/include/linux/ipipe.h	2006-09-17 10:50:15.000000000 +0200
++++ 2.6.15-ipipe/include/linux/ipipe.h	2006-09-21 15:14:24.000000000 +0200
 @@ -0,0 +1,764 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
@@ -914,7 +914,7 @@
  
  #else
 --- 2.6.15/include/linux/sched.h	2006-01-03 04:21:10.000000000 +0100
-+++ 2.6.15-ipipe/include/linux/sched.h	2006-09-16 13:03:59.000000000 +0200
++++ 2.6.15-ipipe/include/linux/sched.h	2006-09-21 15:31:17.000000000 +0200
 @@ -4,6 +4,7 @@
  #include <asm/param.h>	/* for HZ */
  
@@ -947,12 +947,14 @@
  };
  
  static inline pid_t process_group(struct task_struct *tsk)
-@@ -908,6 +919,9 @@ do { if (atomic_dec_and_test(&(tsk)->usa
+@@ -908,6 +919,11 @@ do { if (atomic_dec_and_test(&(tsk)->usa
  #define PF_SYNCWRITE	0x00200000	/* I am doing a sync write */
  #define PF_BORROWED_MM	0x00400000	/* I am a kthread doing use_mm */
  #define PF_RANDOMIZE	0x00800000	/* randomize virtual address space */
 +#ifdef CONFIG_IPIPE
 +#define PF_EVNOTIFY    0x40000000	/* Notify other domains about internal events */
++#else
++#define PF_EVNOTIFY    0
 +#endif /* CONFIG_IPIPE */
  
  /*
@@ -1010,7 +1012,7 @@
  
  	exit_sem(tsk);
 --- 2.6.15/kernel/fork.c	2006-01-03 04:21:10.000000000 +0100
-+++ 2.6.15-ipipe/kernel/fork.c	2006-05-08 11:09:34.000000000 +0200
++++ 2.6.15-ipipe/kernel/fork.c	2006-09-21 15:29:08.000000000 +0200
 @@ -368,6 +368,7 @@ void fastcall __mmdrop(struct mm_struct 
  void mmput(struct mm_struct *mm)
  {
@@ -1019,6 +1021,15 @@
  		exit_aio(mm);
  		exit_mmap(mm);
  		if (!list_empty(&mm->mmlist)) {
+@@ -837,7 +838,7 @@ static inline void copy_flags(unsigned l
+ {
+ 	unsigned long new_flags = p->flags;
+ 
+-	new_flags &= ~(PF_SUPERPRIV | PF_NOFREEZE);
++	new_flags &= ~(PF_SUPERPRIV | PF_NOFREEZE | PF_EVNOTIFY);
+ 	new_flags |= PF_FORKNOEXEC;
+ 	if (!(clone_flags & CLONE_PTRACE))
+ 		p->ptrace = 0;
 @@ -1142,6 +1143,14 @@ static task_t *copy_process(unsigned lon
  	proc_fork_connector(p);
  	cpuset_fork(p);
@@ -3437,7 +3448,7 @@
 +EXPORT_SYMBOL(ipipe_get_sysinfo);
 +EXPORT_SYMBOL(ipipe_tune_timer);
 --- 2.6.15/arch/arm/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.15-ipipe/arch/arm/kernel/ipipe-root.c	2006-09-16 17:28:44.000000000 +0200
++++ 2.6.15-ipipe/arch/arm/kernel/ipipe-root.c	2006-09-21 15:46:02.000000000 +0200
 @@ -0,0 +1,387 @@
 +/* -*- linux-c -*-
 + * linux/arch/arm/kernel/ipipe-root.c
@@ -3790,7 +3801,7 @@
 +	 * tail work has to be performed (for handling signals etc).
 +	 */
 +
-+	if (__ipipe_syscall_watched_p(current, scno) &&
++	if (__ipipe_syscall_watched_p(current, regs->ARM_r7) &&
 +	    __ipipe_event_monitored_p(IPIPE_EVENT_SYSCALL) &&
 +	    __ipipe_dispatch_event(IPIPE_EVENT_SYSCALL,regs) > 0) {
 +		/*
@@ -4921,7 +4932,7 @@
  	return res & mask;
  }
 --- 2.6.15/include/asm-arm/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.15-ipipe/include/asm-arm/ipipe.h	2006-09-17 10:39:17.000000000 +0200
++++ 2.6.15-ipipe/include/asm-arm/ipipe.h	2006-09-21 17:39:23.000000000 +0200
 @@ -0,0 +1,198 @@
 +/* -*- linux-c -*-
 + * include/asm-arm/ipipe.h
@@ -4960,10 +4971,10 @@
 +#include <asm/bitops.h>
 +#include <asm/mach/irq.h>
 +
-+#define IPIPE_ARCH_STRING	"1.5-00"
++#define IPIPE_ARCH_STRING	"1.5-01"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	5
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
