@@ -1,3 +1,7 @@
+2006-09-21  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/arm/patches: Upgrade to 2.6.1{4,5}-1.5-01.
+
 2006-09-20  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* include/asm-i386/bits/pod.h, include/asm-i386/system.h:
