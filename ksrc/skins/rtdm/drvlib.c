@@ -1368,7 +1368,8 @@ void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig);
 
 #if defined(CONFIG_XENO_OPT_PERVASIVE) || defined(DOXYGEN_CPP)
 struct rtdm_mmap_data {
-    void *src_addr;
+    void *src_vaddr;
+    unsigned long src_paddr;
     struct vm_operations_struct *vm_ops;
     void *vm_private_data;
 };
@@ -1376,16 +1377,22 @@ struct rtdm_mmap_data {
 static int rtdm_mmap_buffer(struct file *filp, struct vm_area_struct *vma)
 {
     struct rtdm_mmap_data *mmap_data = filp->private_data;
-    unsigned long vaddr, maddr, size;
+    unsigned long vaddr, paddr, maddr, size;
 
     vma->vm_ops = mmap_data->vm_ops;
     vma->vm_private_data = mmap_data->vm_private_data;
 
-    vaddr = (unsigned long)mmap_data->src_addr;
+    vaddr = (unsigned long)mmap_data->src_vaddr;
+    paddr = (unsigned long)mmap_data->src_paddr;
+    if (!paddr)
+        /* kmalloc memory */
+        paddr = virt_to_phys((void *)vaddr);
+
     maddr = vma->vm_start;
     size  = vma->vm_end - vma->vm_start;
 
 #ifdef CONFIG_MMU
+    /* Catch vmalloc memory (vaddr is 0 for I/O mapping) */
     if ((vaddr >= VMALLOC_START) && (vaddr < VMALLOC_END)) {
         unsigned long mapped_size = 0;
 
@@ -1403,21 +1410,129 @@ static int rtdm_mmap_buffer(struct file *filp, struct vm_area_struct *vma)
         return 0;
     } else
 #endif /* CONFIG_MMU */
-        return xnarch_remap_io_page_range(vma, maddr,
-                                          virt_to_phys((void *)vaddr),
+        return xnarch_remap_io_page_range(vma, maddr, paddr,
                                           size, PAGE_SHARED);
 }
+
 
 static struct file_operations rtdm_mmap_fops = {
     .mmap = rtdm_mmap_buffer,
 };
+
+static int rtdm_do_mmap(rtdm_user_info_t *user_info,
+                        struct rtdm_mmap_data *mmap_data,
+                        size_t len, int prot, void **pptr)
+{
+    struct file                     *filp;
+    const struct file_operations    *old_fops;
+    void                            *old_priv_data;
+    void                            *user_ptr;
+
+    XENO_ASSERT(RTDM, xnpod_root_p(), return -EPERM;);
+
+    filp = filp_open("/dev/zero", O_RDWR, 0);
+    if (IS_ERR(filp))
+        return PTR_ERR(filp);
+
+    old_fops = filp->f_op;
+    filp->f_op = &rtdm_mmap_fops;
+
+    old_priv_data = filp->private_data;
+    filp->private_data = mmap_data;
+
+    down_write(&user_info->mm->mmap_sem);
+    user_ptr = (void *)do_mmap(filp, (unsigned long)*pptr, len, prot,
+                               MAP_SHARED, 0);
+    up_write(&user_info->mm->mmap_sem);
+
+    filp->f_op = (typeof(filp->f_op))old_fops;
+    filp->private_data = old_priv_data;
+
+    filp_close(filp, user_info->files);
+
+    if (IS_ERR(user_ptr))
+        return PTR_ERR(user_ptr);
+
+    *pptr = user_ptr;
+    return 0;
+}
+
 
 /**
  * Map a kernel memory range into the address space of the user.
  *
  * @param[in] user_info User information pointer as passed to the invoked
  * device operation handler
- * @param[in] src_addr Kernel address to be mapped
+ * @param[in] src_addr Kernel virtual address to be mapped
+ * @param[in] len Length of the memory range
+ * @param[in] prot Protection flags for the user's memory range, typically
+ * either PROT_READ or PROT_READ|PROT_WRITE
+ * @param[in,out] pptr Address of a pointer containing the desired user
+ * address or NULL on entry and the finally assigned address on return
+ * @param[in] vm_ops vm_operations to be executed on the vma_area of the
+ * user memory range or NULL
+ * @param[in] vm_private_data Private data to be stored in the vma_area,
+ * primarily useful for vm_operation handlers
+ *
+ * @return 0 on success, otherwise (most common values):
+ *
+ * - -EINVAL is returned if an invalid start address, size, or destination
+ * address was passed.
+ *
+ * - -ENOMEM is returned if there is insufficient free memory or the limit of
+ * memory mapping for the user process was reached.
+ *
+ * - -EAGAIN is returned if too much memory has been already locked by the
+ * user process.
+ *
+ * - -EPERM @e may be returned if an illegal invocation environment is
+ * detected.
+ *
+ * @note This service only works on memory regions allocated via kmalloc() or
+ * vmalloc(). To map physical I/O memory to user-space use
+ * rtdm_iomap_to_user() instead.
+ *
+ * @note RTDM supports two models for unmapping the user memory range again.
+ * One is explicite unmapping via rtdm_munmap(), either performed when the
+ * user requests it via an IOCTL etc. or when the related device is closed.
+ * The other is automatic unmapping, triggered by the user invoking standard
+ * munmap() or by the termination of the related process. To track release of
+ * the mapping and therefore relinquishment of the referenced physical memory,
+ * the caller of rtdm_mmap_to_user() can pass a vm_operations_struct on
+ * invocation, defining a close handler for the vm_area. See Linux
+ * documentaion (e.g. Linux Device Drivers book) on virtual memory management
+ * for details.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - User-space task (non-RT)
+ *
+ * Rescheduling: possible.
+ */
+int rtdm_mmap_to_user(rtdm_user_info_t *user_info,
+                      void *src_addr, size_t len,
+                      int prot, void **pptr,
+                      struct vm_operations_struct *vm_ops,
+                      void *vm_private_data)
+{
+    struct rtdm_mmap_data   mmap_data = { src_addr, 0,
+                                          vm_ops, vm_private_data };
+
+    return rtdm_do_mmap(user_info, &mmap_data, len, prot, pptr);
+}
+
+EXPORT_SYMBOL(rtdm_mmap_to_user);
+
+
+/**
+ * Map an I/O memory range into the address space of the user.
+ *
+ * @param[in] user_info User information pointer as passed to the invoked
+ * device operation handler
+ * @param[in] src_addr physical I/O address to be mapped
  * @param[in] len Length of the memory range
  * @param[in] prot Protection flags for the user's memory range, typically
  * either PROT_READ or PROT_READ|PROT_WRITE
@@ -1448,7 +1563,7 @@ static struct file_operations rtdm_mmap_fops = {
  * The other is automatic unmapping, triggered by the user invoking standard
  * munmap() or by the termination of the related process. To track release of
  * the mapping and therefore relinquishment of the referenced physical memory,
- * the caller of rtdm_mmap_to_user() can pass a vm_operations_struct on
+ * the caller of rtdm_iomap_to_user() can pass a vm_operations_struct on
  * invocation, defining a close handler for the vm_area. See Linux
  * documentaion (e.g. Linux Device Drivers book) on virtual memory management
  * for details.
@@ -1462,48 +1577,19 @@ static struct file_operations rtdm_mmap_fops = {
  *
  * Rescheduling: possible.
  */
-int rtdm_mmap_to_user(rtdm_user_info_t *user_info, void *src_addr, size_t len,
-                      int prot, void **pptr,
-                      struct vm_operations_struct *vm_ops,
-                      void *vm_private_data)
+int rtdm_iomap_to_user(rtdm_user_info_t *user_info,
+                       unsigned long src_addr, size_t len,
+                       int prot, void **pptr,
+                       struct vm_operations_struct *vm_ops,
+                       void *vm_private_data)
 {
-    struct rtdm_mmap_data   mmap_data = {src_addr, vm_ops, vm_private_data};
-    struct file             *filp;
-    const struct file_operations    *old_fops;
-    void                    *old_priv_data;
-    void                    *user_ptr;
+    struct rtdm_mmap_data   mmap_data = { NULL, src_addr,
+                                          vm_ops, vm_private_data };
 
-
-    XENO_ASSERT(RTDM, xnpod_root_p(), return -EPERM;);
-
-    filp = filp_open("/dev/zero", O_RDWR, 0);
-    if (IS_ERR(filp))
-        return PTR_ERR(filp);
-
-    old_fops = filp->f_op;
-    filp->f_op = &rtdm_mmap_fops;
-
-    old_priv_data = filp->private_data;
-    filp->private_data = &mmap_data;
-
-    down_write(&user_info->mm->mmap_sem);
-    user_ptr = (void *)do_mmap(filp, (unsigned long)*pptr, len, prot,
-                               MAP_SHARED, 0);
-    up_write(&user_info->mm->mmap_sem);
-
-    filp->f_op = (typeof(filp->f_op))old_fops;
-    filp->private_data = old_priv_data;
-
-    filp_close(filp, user_info->files);
-
-    if (IS_ERR(user_ptr))
-        return PTR_ERR(user_ptr);
-
-    *pptr = user_ptr;
-    return 0;
+    return rtdm_do_mmap(user_info, &mmap_data, len, prot, pptr);
 }
 
-EXPORT_SYMBOL(rtdm_mmap_to_user);
+EXPORT_SYMBOL(rtdm_iomap_to_user);
 
 
 /**
