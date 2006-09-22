@@ -18,6 +18,7 @@ Revision 5:
     - delay in rtdm_task_busy_sleep, same semantics as before (delay <= 0
       means no delay)
   o Added rtdm_safe_copy_to/from_user.
+  o Added rtdm_iomap_to_user.
 
 Revision 4:
  o Dropped RTDM_IRQ_PROPAGATE ISR return flag. Generic deterministic RTDM
