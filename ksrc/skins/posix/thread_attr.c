@@ -305,10 +305,10 @@ int pthread_attr_setstacksize(pthread_attr_t * attr, size_t stacksize)
  * This service returns at the address @a inheritsched the value of the @a
  * inheritsched attribute in the attribute object @a attr.
  *
- * Threads created with this attribute set to PTHREAD_EXPLICIT_SCHED will use
+ * Threads created with this attribute set to PTHREAD_INHERIT_SCHED will use
  * the same scheduling policy and priority as the thread calling
  * pthread_create(). Threads created with this attribute set to
- * PTHREAD_INHERIT_SCHED will use the value of the @a schedpolicy attribute as
+ * PTHREAD_EXPLICIT_SCHED will use the value of the @a schedpolicy attribute as
  * scheduling policy, and the value of the @a schedparam  attribute as scheduling
  * priority.
  *
