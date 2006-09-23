@@ -30,8 +30,8 @@
  */
 
 
-#include <asm/io.h>
 #include <asm/page.h>
+#include <asm/io.h>
 #include <asm/pgtable.h>
 #include <linux/delay.h>
 #include <linux/mman.h>

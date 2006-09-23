@@ -17,7 +17,7 @@ switchbench_LDADD = \
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(testdir)
 	$(INSTALL_DATA) $(srcdir)/runinfo $(DESTDIR)$(testdir)/.runinfo
-	@echo "\$${DESTDIR}$(prefix)/bin/xeno-load \$$*" > $(DESTDIR)$(testdir)/run
+	@echo "\$${DESTDIR}$(exec_prefix)/bin/xeno-load \$$*" > $(DESTDIR)$(testdir)/run
 	@chmod +x $(DESTDIR)$(testdir)/run
 
 uninstall-local:
