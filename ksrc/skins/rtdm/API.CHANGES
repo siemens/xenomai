@@ -11,8 +11,8 @@ Revision 5:
  o Introduced generic time types nanosecs_abs_t and nanosecs_rel_t.
  o Switched the following functions parameters from unsigned to signed
    (uint64_t -> nanosecs_rel_t) and adopted their semantics:
-    - period in rtdm_task_init, period < 0 means non-periodic
-    - period in rtdm_task_set_period, period < 0 means non-periodic
+    - period in rtdm_task_init, period 0 means non-periodic
+    - period in rtdm_task_set_period, period 0 means non-periodic
     - delay in rtdm_task_sleep, now clearly specified: delay = 0 means
       infinite delay, delay < 0 means no delay at all
     - delay in rtdm_task_busy_sleep, same semantics as before (delay <= 0
