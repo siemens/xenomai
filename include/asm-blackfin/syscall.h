@@ -257,18 +257,14 @@ static inline unsigned long long __xn_rdtsc (void)
     return u.t;
 }
 
-/* uClibc does not provide any dummy mlockall() call for this arch;
-   provide it here. Note: let the compiler decides whether it wants to
-   actually inline this routine, i.e. do not force always_inline. */
-inline __attribute__((weak)) int mlockall (int flags)
+/* uClibc does not provide pthread_atfork() for this arch; provide it
+   here. Note: let the compiler decides whether it wants to actually
+   inline this routine, i.e. do not force always_inline. */
+inline __attribute__((weak)) int pthread_atfork(void (*prepare)(void),
+						void (*parent)(void),
+						void (*child)(void))
 {
-    return 0;
-}
-
-/* The same goes with munlockall(). */
-inline __attribute__((weak)) int munlockall (void)
-{
-    return 0;
+	return 0;
 }
 
 #endif /* __KERNEL__ */
