@@ -1,4 +1,14 @@
+2006-09-24  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (xnshadow_signal_completion,
+	xnshadow_sys_completion): Copy to/from user the whole completion
+	struct (basically to work around a Blackfin issue).
+
 2006-09-21  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-blackfin/syscall.h: Assume mlockall() and
+	munlockall() are now being defined by uClibc. Add placeholder for
+	pthread_atfork().
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.1{4,5}-1.5-01.
 
