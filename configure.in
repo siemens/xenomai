@@ -8,6 +8,12 @@ CONFIG_XENO_VERSION_MINOR=`expr $PACKAGE_VERSION : '[[0-9]]*\.\([[0-9]]*\)'`
 CONFIG_XENO_REVISION_LEVEL=`expr $PACKAGE_VERSION : '[[0-9]]*\.[[0-9]]*\.\([[0-9]]*\)'`
 test "x$CONFIG_XENO_REVISION_LEVEL" = "x" && CONFIG_XENO_REVISION_LEVEL=0
 
+if test "x$CFLAGS" = "x"; then
+	XENO_EMPTY_CFLAGS=true
+else
+	XENO_EMPTY_CFLAGS=false
+fi
+
 AC_CONFIG_HEADERS(src/include/xeno_config.h)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(src/skins/native/task.c)
@@ -27,6 +33,11 @@ AC_ARG_WITH(cc,
 	CC="$withval"
     ])
 AC_PROG_CC
+
+# Do not let autoconf set the default value of CFLAGS
+if $XENO_EMPTY_CFLAGS; then
+	CFLAGS=""
+fi
 
 AC_PROG_CC_FOR_BUILD
 
