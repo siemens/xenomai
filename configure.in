@@ -27,7 +27,6 @@ AC_ARG_WITH(cc,
 	CC="$withval"
     ])
 AC_PROG_CC
-CFLAGS=""
 
 AC_PROG_CC_FOR_BUILD
 
