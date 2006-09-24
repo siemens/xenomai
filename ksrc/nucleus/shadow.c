@@ -1794,7 +1794,7 @@ static inline void do_sigwake_event(struct task_struct *p)
 
 	if (testbits(thread->status, XNSUSP)) {
 		xnpod_resume_thread(thread, XNSUSP);
-		__setbits(thread->status, XNKICKED);
+		__setbits(thread->status, XNBREAK|XNKICKED);
 	}
 
 	/* If we are kicking a shadow thread, make sure Linux won't

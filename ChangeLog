@@ -3,6 +3,9 @@
 	* ksrc/nucleus/shadow.c (xnshadow_signal_completion,
 	xnshadow_sys_completion): Copy to/from user the whole completion
 	struct (basically to work around a Blackfin issue).
+	(do_sigwake_event): Raise XNBREAK when resuming a forcibly
+	suspended thread upon Linux signal receipt, to give a chance to
+	the interrupted Xenomai syscall to check this situation properly.
 
 2006-09-21  Philippe Gerum  <rpm@xenomai.org>
 
