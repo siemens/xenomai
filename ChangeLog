@@ -1,3 +1,10 @@
+2006-09-24  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (do_sigwake_event): Raise XNBREAK when
+	resuming a forcibly suspended thread upon Linux signal receipt, to
+	give a chance to the interrupted Xenomai syscall to check this
+	situation properly.
+
 2006-09-13  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* include/asm-i386/bits/pod.h (xnarch_*_fpu): Restore root thread
