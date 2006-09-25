@@ -1,3 +1,9 @@
+2006-09-25  Niklaus Giger <niklaus.giger@member.fsf.org>
+
+	* ksrc/arch/powerpc/hal.c (rthal_set_cpu_timers_unsafe): Fix
+	computation of periodic tick value to prevent 32bit arithmetic
+	overflow.
+
 2006-09-24  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (xnshadow_signal_completion,
