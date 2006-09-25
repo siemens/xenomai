@@ -81,16 +81,17 @@ static int rthal_periodic_p;
  */
 static void rthal_set_local_cpu_timer(void)
 {
-    long ticks;
     rthal_declare_cpuid;
+    long ticks;
 
     rthal_load_cpuid();
 
     disarm_decr[cpuid] = (__ipipe_decr_ticks != tb_ticks_per_jiffy);
 #ifdef CONFIG_40x
     /* Enable and set auto-reload. */
+    ticks = __ipipe_decr_ticks;
     mtspr(SPRN_TCR, mfspr(SPRN_TCR) | TCR_ARE);
-    mtspr(SPRN_PIT, __ipipe_decr_ticks);
+    mtspr(SPRN_PIT, ticks);
 #else /* !CONFIG_40x */
     ticks = (long)(__ipipe_decr_next[cpuid] - __ipipe_read_timebase());
     set_dec(ticks > 0 ? ticks : 0);
@@ -110,7 +111,7 @@ static int rthal_set_cpu_timers_unsafe(unsigned long ns)
     if (ns == 0)
         ticks = tb_ticks_per_jiffy;
     else {
-        ticks = ns * tb_ticks_per_jiffy / (1000000000 / HZ);
+        ticks = (ns / 1000) * tb_ticks_per_jiffy / (1000000 / HZ);
 
         if (ticks > tb_ticks_per_jiffy) {
             DBG("rthal_set_cpu_timers_unsafe: -EINVAL (%lu)\n", ticks);
