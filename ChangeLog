@@ -1,3 +1,10 @@
+2006-09-26  Jan Kiszka  <jan.kiszka@web.de>
+            Dmitry Adamushko  <dmitry.adamushko@gmail.com>
+
+	* ksrc/nucleus/intr.c: Reorganise locking around xnintr_attach,
+	and xnintr_detach in order to avoid races with xnintr_irq_proc,
+	provide IRQ owner names also for non-shared setups, refactor code.
+
 2006-09-25  Niklaus Giger <niklaus.giger@member.fsf.org>
 
 	* ksrc/arch/powerpc/hal.c (rthal_set_cpu_timers_unsafe): Fix
