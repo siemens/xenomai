@@ -139,8 +139,8 @@ typedef struct xnsched {
 #endif /* CONFIG_XENO_HW_FPU */
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
-    xnticks_t watchdog_trigger; /* !< Watchdog trigger value. */
-    int watchdog_armed;         /* !< Watchdog state. */
+    xntimer_t wd_timer;		/*!< Watchdog timer object. */
+    int wd_count;		/*!< Watchdog tick count. */
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
 
     xnthread_t rootcb;          /*!< Root thread control block. */
@@ -229,10 +229,6 @@ struct xnpod {
         int (*unload)(void);    /*!< Unloading hook. */
     } svctable;                 /*!< Table of overridable service entry points. */
 
-#ifdef CONFIG_XENO_OPT_WATCHDOG
-    xnticks_t watchdog_reload;  /* !< Watchdog reload value. */
-#endif /* CONFIG_XENO_OPT_WATCHDOG */
-
 #ifdef __XENO_SIM__
     void (*schedhook)(xnthread_t *thread,
                       xnflags_t mask); /*!< Internal scheduling hook. */
@@ -278,8 +274,7 @@ void xnpod_switch_fpu(xnsched_t *sched);
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 static inline void xnpod_reset_watchdog (xnsched_t *sched)
 {
-    sched->watchdog_trigger = xnarch_get_cpu_tsc() + nkpod->watchdog_reload;
-    sched->watchdog_armed = 0;
+    sched->wd_count = 0;
 }
 #else /* !CONFIG_XENO_OPT_WATCHDOG */
 static inline void xnpod_reset_watchdog (xnsched_t *sched)
