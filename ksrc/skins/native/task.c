@@ -674,7 +674,11 @@ int rt_task_yield(void)
  *
  * @return 0 is returned upon success. Otherwise:
  *
- * - -EINVAL is returned if @a task is not a task descriptor.
+ * - -EINVAL is returned if @a task is not a task descriptor, or @a
+ * period is different from TM_INFINITE but shorter than the
+ * scheduling latency value for the target system, as available from
+ * /proc/xenomai/latency.
+ *
  *
  * - -EIDRM is returned if @a task is a deleted task descriptor.
  *
