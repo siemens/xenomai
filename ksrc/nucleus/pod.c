@@ -3094,7 +3094,7 @@ int xnpod_start_timer(u_long nstick, xnisr_t tickhandler)
 
 		for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++) {
 			xnsched_t *sched = xnpod_sched_slot(cpu);
-			xntimer_init(&sched->wd_timer, &xnpod_watchdog_handler, NULL);
+			xntimer_init(&sched->wd_timer, &xnpod_watchdog_handler);
 			xntimer_set_priority(&sched->wd_timer, XNTIMER_LOPRIO);
 			xntimer_set_sched(&sched->wd_timer, sched);
 			xntimer_start(&sched->wd_timer, wdperiod, wdperiod);
