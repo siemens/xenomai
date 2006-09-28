@@ -7,6 +7,8 @@
 	(e.g. x86 + CONFIG_X86_LOCAL_APIC enabled). Also kill the runaway
 	thread, instead of just disabling it, since it could be awaken by
 	a Linux signal otherwise, and start spinning anew.
+	(xnpod_set_thread_periodic): Add LART to catch periods shorter
+	than the declared scheduling latency value.
 
 2006-09-25  Niklaus Giger <niklaus.giger@member.fsf.org>
 
