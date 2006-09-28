@@ -3371,6 +3371,10 @@ int xnpod_announce_tick(xnintr_t *intr)
  * - -EWOULDBLOCK is returned if the system timer has not been
  * started using xnpod_start_timer().
  *
+ * - -EINVAL is returned if @a period is different from XN_INFINITE
+ * but shorter than the scheduling latency value for the target
+ * system, as available from /proc/xenomai/latency.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -3406,6 +3410,11 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
 		if (xntimer_running_p(&thread->ptimer))
 			xntimer_stop(&thread->ptimer);
 
+		goto unlock_and_exit;
+	} else if (period < nkschedlat) {
+		/* LART: detect periods which are shorter than the
+		 * intrinsic latency figure; this must be a joke... */
+		err = -EINVAL;
 		goto unlock_and_exit;
 	}
 
