@@ -2907,6 +2907,40 @@ int xnpod_trap_fault(void *fltinfo)
 	return nkpod->svctable.faulthandler(fltinfo);
 }
 
+#ifdef CONFIG_XENO_OPT_WATCHDOG
+
+/*! 
+ * @internal
+ * \fn void xnpod_watchdog_handler(void *cookie)
+ * \brief Process watchdog ticks.
+ *
+ * This internal routine handles incoming watchdog ticks to detect
+ * software lockups. It kills any offending thread which is found to
+ * monopolize the CPU so as to starve the Linux kernel for more than
+ * four seconds.
+ */
+
+void xnpod_watchdog_handler(void *cookie)
+{
+	xnsched_t *sched = xnpod_current_sched();
+	xnthread_t *thread = sched->runthread;
+
+	if (likely(testbits(thread->status, XNROOT))) {
+		xnpod_reset_watchdog(sched);
+		return;
+	}
+		
+	if (unlikely(++sched->wd_count >= 4)) {
+		xnltt_log_event(xeno_ev_watchdog, thread->name);
+		xnprintf("watchdog triggered -- killing runaway thread '%s'\n",
+			 thread->name);
+		xnpod_delete_thread(thread);
+		xnpod_reset_watchdog(sched);
+	}
+}
+
+#endif /* CONFIG_XENO_OPT_WATCHDOG */
+
 /*! 
  * \fn int xnpod_start_timer(u_long nstick,xnisr_t tickhandler)
  * \brief Start the system timer.
@@ -3053,11 +3087,19 @@ int xnpod_start_timer(u_long nstick, xnisr_t tickhandler)
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 	{
+		xnticks_t wdperiod;
 		unsigned cpu;
 
-		nkpod->watchdog_reload = xnarch_ns_to_tsc(4000000000LL);
-		for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++)
-			xnpod_reset_watchdog(xnpod_sched_slot(cpu));
+		wdperiod = 1000000000UL / nkpod->tickvalue;
+
+		for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++) {
+			xnsched_t *sched = xnpod_sched_slot(cpu);
+			xntimer_init(&sched->wd_timer, &xnpod_watchdog_handler, NULL);
+			xntimer_set_priority(&sched->wd_timer, XNTIMER_LOPRIO);
+			xntimer_set_sched(&sched->wd_timer, sched);
+			xntimer_start(&sched->wd_timer, wdperiod, wdperiod);
+			xnpod_reset_watchdog(sched);
+		}
 	}
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
 
@@ -3251,23 +3293,6 @@ int xnpod_announce_tick(xnintr_t *intr)
 	xnlock_get(&nklock);
 
 	xnltt_log_event(xeno_ev_tmtick, xnpod_current_thread()->name);
-
-#ifdef CONFIG_XENO_OPT_WATCHDOG
-	if (xnarch_get_cpu_tsc() >= sched->watchdog_trigger) {
-		if (!xnpod_root_p() && sched->watchdog_armed) {
-			xnltt_log_event(xeno_ev_watchdog,
-					xnpod_current_thread()->name);
-			xnprintf
-			    ("watchdog triggered -- suspending runaway thread '%s'\n",
-			     xnpod_current_thread()->name);
-			xnpod_suspend_thread(xnpod_current_thread(), XNSUSP,
-					     XN_INFINITE, NULL);
-		} else {
-			xnpod_reset_watchdog(sched);
-		}
-	}
-	sched->watchdog_armed = !xnpod_root_p();
-#endif /* CONFIG_XENO_OPT_WATCHDOG */
 
 	nktimer->do_tick();	/* Fire the timeouts, if any. */
 
