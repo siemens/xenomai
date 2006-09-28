@@ -1237,7 +1237,6 @@ void xnshadow_signal_completion(xncompletion_t __user *u_completion, int err)
 		/* The waiter did not enter xnshadow_wait_completion() yet:
 		   just raise the flag and exit. */
 		xnlock_put_irqrestore(&nklock, s);
-		printk("NO TASK WAITING\n");
 		return;
 	}
 
