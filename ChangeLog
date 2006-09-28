@@ -1,3 +1,13 @@
+2006-09-28  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pod.c (xnpod_watchdog_handler): Rework the watchdog
+	support so that it does _not_ depend on xnpod_announce_tick()
+	being called: the latter does not happen whenever host ticks are
+	attached to another IRQ channel than the nucleus timer one
+	(e.g. x86 + CONFIG_X86_LOCAL_APIC enabled). Also kill the runaway
+	thread, instead of just disabling it, since it could be awaken by
+	a Linux signal otherwise, and start spinning anew.
+
 2006-09-25  Niklaus Giger <niklaus.giger@member.fsf.org>
 
 	* ksrc/arch/powerpc/hal.c (rthal_set_cpu_timers_unsafe): Fix
