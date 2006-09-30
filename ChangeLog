@@ -1,3 +1,8 @@
+2006-09-30  Stelian Pop  <stelian.pop@openwide.fr>
+
+	* ksrc/skins/posix/thread.c (pthread_make_periodic_np): Clarify
+	usage.
+
 2006-09-28  Philippe Gerum  <rpm@xenomai.org>
 
  	* ksrc/nucleus/pod.c (xnpod_watchdog_handler): Rework the watchdog
