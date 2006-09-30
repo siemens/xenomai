@@ -503,10 +503,12 @@ pthread_t pthread_self(void)
  *
  * This service is a non-portable extension of the POSIX interface.
  *
- * @param thread thread identifier;
+ * @param thread thread identifier. This thread is immediately delayed
+ * until the first periodic release point is reached.
  *
  * @param starttp start time, expressed as an absolute value of the
- * CLOCK_REALTIME clock;
+ * CLOCK_REALTIME clock. The affected thread will be delayed until
+ * this point is reached.
  *
  * @param periodtp period, expressed as a time interval.
  *
@@ -514,6 +516,8 @@ pthread_t pthread_self(void)
  * @return an error number if:
  * - ESRCH, @a thread is invalid;
  * - ETIMEDOUT, the start time has already passed.
+ *
+ * Rescheduling: always, until the @starttp start time has been reached.
  */
 int pthread_make_periodic_np(pthread_t thread,
 			     struct timespec *starttp,
