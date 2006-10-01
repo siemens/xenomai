@@ -122,9 +122,16 @@ int uvm_thread_sync(xncompletion_t *completionp)
 	return XENOMAI_SYSCALL1(__xn_sys_completion, completionp);
 }
 
-int uvm_thread_wait_period(void)
+int uvm_thread_init_timer(nanotime_t period)
 {
-	return XENOMAI_SKINCALL0(__uvm_muxid, __uvm_thread_wait_period);
+	return XENOMAI_SKINCALL1(__uvm_muxid,
+				 __uvm_thread_init_timer, &period);
+}
+
+int uvm_thread_wait_timer(unsigned long *lockp, unsigned long *pendp)
+{
+	return XENOMAI_SKINCALL2(__uvm_muxid,
+				 __uvm_thread_wait_timer, lockp, pendp);
 }
 
 int uvm_thread_idle(unsigned long *lockp)
@@ -144,20 +151,9 @@ int uvm_thread_activate(void *nexthandle, void *prevhandle)
 				 __uvm_thread_activate, nexthandle, prevhandle);
 }
 
-int uvm_thread_hold(unsigned long *pendp)
+int uvm_thread_release(void)
 {
-	return XENOMAI_SKINCALL1(__uvm_muxid, __uvm_thread_hold, pendp);
-}
-
-int uvm_thread_release(unsigned long *lockp)
-{
-	return XENOMAI_SKINCALL1(__uvm_muxid, __uvm_thread_release, lockp);
-}
-
-int uvm_thread_set_periodic(nanotime_t idate, nanotime_t period)
-{
-	return XENOMAI_SKINCALL2(__uvm_muxid,
-				 __uvm_thread_set_periodic, &idate, &period);
+	return XENOMAI_SKINCALL0(__uvm_muxid, __uvm_thread_release);
 }
 
 int uvm_timer_read(nanotime_t *tp)
@@ -193,4 +189,9 @@ int uvm_timer_tsc2ns(nanostime_t tsc, nanostime_t *pns)
 	*pns = llimd(tsc, 1000000000, __uvm_info.cpufreq);
 
 	return 0;
+}
+
+int uvm_debug(int spot)
+{
+	return XENOMAI_SKINCALL1(__uvm_muxid, __uvm_debug, spot);
 }

@@ -55,14 +55,12 @@ int uvm_thread_cancel(void *deadhandle,
 int uvm_thread_activate(void *nexthandle,
 			void *prevhandle);
 
-int uvm_thread_hold(unsigned long *pendp);
+int uvm_thread_release(void);
 
-int uvm_thread_release(unsigned long *lockp);
+int uvm_thread_init_timer(nanotime_t period);
 
-int uvm_thread_set_periodic(nanotime_t idate,
-			    nanotime_t period);
-
-int uvm_thread_wait_period(void);
+int uvm_thread_wait_timer(unsigned long *lockp,
+			  unsigned long *pendp);
 
 int uvm_timer_read(nanotime_t *tp);
 
@@ -73,6 +71,8 @@ int uvm_timer_ns2tsc(nanostime_t ns,
 
 int uvm_timer_tsc2ns(nanostime_t tsc,
 		     nanostime_t *pns);
+
+int uvm_debug(int spot);
 
 #ifdef __cplusplus
 };
