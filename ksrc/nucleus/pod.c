@@ -2911,7 +2911,7 @@ int xnpod_trap_fault(void *fltinfo)
 
 /*! 
  * @internal
- * \fn void xnpod_watchdog_handler(void *cookie)
+ * \fn void xnpod_watchdog_handler(xntimer_t *timer)
  * \brief Process watchdog ticks.
  *
  * This internal routine handles incoming watchdog ticks to detect
@@ -2920,7 +2920,7 @@ int xnpod_trap_fault(void *fltinfo)
  * four seconds.
  */
 
-void xnpod_watchdog_handler(void *cookie)
+void xnpod_watchdog_handler(xntimer_t *timer)
 {
 	xnsched_t *sched = xnpod_current_sched();
 	xnthread_t *thread = sched->runthread;
