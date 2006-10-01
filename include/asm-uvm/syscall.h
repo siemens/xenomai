@@ -27,15 +27,15 @@
 #define __uvm_thread_shadow       0
 #define __uvm_thread_create       1
 #define __uvm_thread_start        2
-#define __uvm_thread_set_periodic 3
-#define __uvm_thread_wait_period  4
+#define __uvm_thread_init_timer   3
+#define __uvm_thread_wait_timer   4
 #define __uvm_thread_idle         5
 #define __uvm_thread_cancel       6
 #define __uvm_thread_activate     7
-#define __uvm_thread_hold         8
-#define __uvm_thread_release      9
-#define __uvm_timer_read          10
-#define __uvm_timer_tsc           11
+#define __uvm_thread_release      8
+#define __uvm_timer_read          9
+#define __uvm_timer_tsc           10
+#define __uvm_debug               11
 
 #ifdef __KERNEL__
 
