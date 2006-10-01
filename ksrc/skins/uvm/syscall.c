@@ -24,6 +24,8 @@
 #include <asm-uvm/syscall.h>
 #include <asm-uvm/uvm.h>
 
+#define UVM_SLEEPING  XNTHREAD_SPARE0
+
 static int __vm_muxid;
 
 static xnsynch_t __vm_thread_irqsync;
@@ -173,42 +175,44 @@ static int __vm_timer_tsc(struct task_struct *curr, struct pt_regs *regs)
 	return 0;
 }
 
-static int __vm_thread_set_periodic(struct task_struct *curr,
-				    struct pt_regs *regs)
+static int __vm_thread_init_timer(struct task_struct *curr,
+				  struct pt_regs *regs)
 {
 	xnthread_t *thread = xnshadow_thread(curr);	/* Can't be NULL. */
-	nanotime_t idate, period;
+	nanotime_t period;
 
-	__xn_copy_from_user(curr, &idate, (void __user *)__xn_reg_arg1(regs),
-			    sizeof(idate));
-	__xn_copy_from_user(curr, &period, (void __user *)__xn_reg_arg2(regs),
+	__xn_copy_from_user(curr, &period, (void __user *)__xn_reg_arg1(regs),
 			    sizeof(period));
 
-	return xnpod_set_thread_periodic(thread, idate, period);
+	return xnpod_set_thread_periodic(thread, XN_INFINITE, period);
 }
 
-static int __vm_thread_wait_period(struct task_struct *curr,
-				   struct pt_regs *regs)
+static int __vm_thread_wait_timer(struct task_struct *curr,
+				  struct pt_regs *regs)
 {
-	return xnpod_wait_thread_period(NULL);
-}
-
-static int __vm_thread_hold(struct task_struct *curr, struct pt_regs *regs)
-{
-	int err = 0;
+	unsigned long irqlock;
 	spl_t s;
+	int err;
+
+	err = xnpod_wait_thread_period(NULL);
+
+	if (err)
+		return err;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	/* Raise the 'irq pending' flag. */
-	__xn_put_user(curr, 1, (unsigned long __user *)__xn_reg_arg1(regs));
+	__xn_get_user(curr, irqlock, (unsigned long __user *)__xn_reg_arg1(regs));
 
-	xnsynch_sleep_on(&__vm_thread_irqsync, XN_INFINITE);
+	if (unlikely(irqlock)) {
+		__xn_put_user(curr, 1, (unsigned long __user *)__xn_reg_arg2(regs));
 
-	if (xnthread_test_flags(xnpod_current_thread(), XNBREAK))
-		err = -EINTR;	/* Unblocked. */
-	else if (xnthread_test_flags(xnpod_current_thread(), XNRMID))
-		err = -EIDRM;	/* Sync deleted. */
+		xnsynch_sleep_on(&__vm_thread_irqsync, XN_INFINITE);
+
+		if (xnthread_test_flags(xnpod_current_thread(), XNBREAK))
+			err = -EINTR;	/* Unblocked. */
+		else if (xnthread_test_flags(xnpod_current_thread(), XNRMID))
+			err = -EIDRM;	/* Sync deleted. */
+	}
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -221,9 +225,7 @@ static int __vm_thread_release(struct task_struct *curr, struct pt_regs *regs)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	__xn_put_user(curr, 0, (unsigned long __user *)__xn_reg_arg1(regs));	/* Clear the irqlock flag */
-
-	if (xnsynch_flush(&__vm_thread_irqsync, XNBREAK) == XNSYNCH_RESCHED)
+	if (xnsynch_flush(&__vm_thread_irqsync, 0) == XNSYNCH_RESCHED)
 		xnpod_schedule();
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -239,11 +241,15 @@ static int __vm_thread_idle(struct task_struct *curr, struct pt_regs *regs)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	/* Emulate sti() for the UVM before returning to idle mode. */
-	__xn_put_user(curr, 0, (unsigned long __user *)__xn_reg_arg1(regs));	/* Clear the irqlock flag */
+	if (!testbits(thread->status, UVM_SLEEPING)) {
+		/* Emulate sti() for the UVM before returning to idle mode. */
+		__xn_put_user(curr, 0, (unsigned long __user *)__xn_reg_arg1(regs));
 
-	if (xnsynch_nsleepers(&__vm_thread_irqsync) > 0)
-		xnsynch_flush(&__vm_thread_irqsync, XNBREAK);
+		if (xnsynch_nsleepers(&__vm_thread_irqsync) > 0)
+			xnsynch_flush(&__vm_thread_irqsync, 0);
+
+		setbits(thread->status, UVM_SLEEPING);
+	}
 
 	xnpod_suspend_thread(thread, XNSUSP, XN_INFINITE, NULL);
 
@@ -280,7 +286,12 @@ static int __vm_thread_activate(struct task_struct *curr, struct pt_regs *regs)
 		    xnpod_start_thread(next, 0, 0, XNPOD_ALL_CPUS, NULL, NULL);
 	}
 
-	xnpod_resume_thread(next, XNSUSP);
+	if (prev != xnpod_current_thread() ||
+	    !testbits(prev->status, UVM_SLEEPING)) {
+		clrbits(next->status, UVM_SLEEPING);
+		xnpod_resume_thread(next, XNSUSP);
+		setbits(prev->status, UVM_SLEEPING);
+	}
 
 	xnpod_suspend_thread(prev, XNSUSP, XN_INFINITE, NULL);
 
@@ -321,6 +332,7 @@ static int __vm_thread_cancel(struct task_struct *curr, struct pt_regs *regs)
 		if (!next)
 			goto out;
 
+		clrbits(next->status, UVM_SLEEPING);
 		xnpod_resume_thread(next, XNSUSP);
 	}
 
@@ -335,6 +347,11 @@ static int __vm_thread_cancel(struct task_struct *curr, struct pt_regs *regs)
 	return err;
 }
 
+static int __vm_debug(struct task_struct *curr, struct pt_regs *regs)
+{
+	return 0;
+}
+
 static void __shadow_delete_hook(xnthread_t *thread)
 {
 	if (xnthread_get_magic(thread) == UVM_SKIN_MAGIC) {
@@ -347,17 +364,15 @@ static xnsysent_t __systab[] = {
 	[__uvm_thread_shadow] = {&__vm_thread_shadow, __xn_exec_init},
 	[__uvm_thread_create] = {&__vm_thread_create, __xn_exec_init},
 	[__uvm_thread_start] = {&__vm_thread_start, __xn_exec_any},
-	[__uvm_thread_set_periodic] =
-	    {&__vm_thread_set_periodic, __xn_exec_primary},
-	[__uvm_thread_wait_period] =
-	    {&__vm_thread_wait_period, __xn_exec_primary},
+	[__uvm_thread_init_timer] = {&__vm_thread_init_timer, __xn_exec_primary},
+	[__uvm_thread_wait_timer] = {&__vm_thread_wait_timer, __xn_exec_primary},
 	[__uvm_thread_idle] = {&__vm_thread_idle, __xn_exec_primary},
 	[__uvm_thread_cancel] = {&__vm_thread_cancel, __xn_exec_conforming},
 	[__uvm_thread_activate] = {&__vm_thread_activate, __xn_exec_primary},
-	[__uvm_thread_hold] = {&__vm_thread_hold, __xn_exec_primary},
 	[__uvm_thread_release] = {&__vm_thread_release, __xn_exec_any},
 	[__uvm_timer_read] = {&__vm_timer_read, __xn_exec_any},
 	[__uvm_timer_tsc] = {&__vm_timer_tsc, __xn_exec_any},
+	[__uvm_debug] = {&__vm_debug, __xn_exec_primary},
 };
 
 int __uvm_syscall_init(void)

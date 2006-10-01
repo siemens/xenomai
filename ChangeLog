@@ -1,3 +1,11 @@
+2006-10-01  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/uvm/syscall.c (__vm_thread_activate): Iron interrupt
+	mask handling and deeply rework context switch emulation to
+	prevent spurious wakeups upon Linux signals.
+
+	* ksrc/skins/psos+/task.c (t_mode): Reschedule after mode change.
+
 2006-09-28  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pod.c (xnpod_watchdog_handler): Rework the watchdog
