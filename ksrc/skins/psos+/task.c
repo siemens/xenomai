@@ -310,6 +310,9 @@ u_long t_mode(u_long clrmask, u_long setmask, u_long *oldmode)
 			       psos_mode_to_xeno(setmask)));
 	*oldmode |= ((psos_current_task()->threadbase.imask & 0x7) << 8);
 
+	/* Reschedule in case the scheduler has been unlocked. */
+	xnpod_schedule();
+
 	return SUCCESS;
 }
 
