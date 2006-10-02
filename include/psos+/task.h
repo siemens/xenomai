@@ -74,8 +74,8 @@ typedef struct psostask {
 extern "C" {
 #endif
 
-static inline xnflags_t psos_mode_to_xeno (u_long mode) {
-
+static inline xnflags_t psos_mode_to_xeno (u_long mode)
+{
     xnflags_t xnmode = 0;
 
     if (mode & T_NOPREEMPT)
@@ -90,8 +90,8 @@ static inline xnflags_t psos_mode_to_xeno (u_long mode) {
     return xnmode;
 }
 
-static inline u_long xeno_mode_to_psos (xnflags_t xnmode) {
-
+static inline u_long xeno_mode_to_psos (xnflags_t xnmode)
+{
     u_long mode = 0;
 
     if (xnmode & XNLOCK)
