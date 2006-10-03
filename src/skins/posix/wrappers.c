@@ -38,6 +38,12 @@ int __real_pthread_setschedparam(pthread_t thread,
 	return pthread_setschedparam(thread, policy, param);
 }
 
+int __real_pthread_getschedparam(pthread_t thread,
+				 int *policy, struct sched_param *param)
+{
+	return pthread_getschedparam(thread, policy, param);
+}
+
 int __real_pthread_create(pthread_t *tid,
 			  const pthread_attr_t * attr,
 			  void *(*start) (void *), void *arg)
