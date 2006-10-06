@@ -1,7 +1,7 @@
 /*
  * High resolution timer test software
  *
- * (C) 2005 Thomas Gleixner <tglx@linutronix.de>
+ * Copyright (C) 2005,2006 Thomas Gleixner <tglx@linutronix.de>
  * (Enhanced by the Xenomai crew)
  *
  * This program is free software; you can redistribute it and/or
@@ -10,7 +10,7 @@
  *
  */
 
-#define VERSION_STRING "V 0.5"
+#define VERSION_STRING "V 0.11xn"
 
 #define INGO_TRACE 0
 #define TGLX_TRACE 0
@@ -35,6 +35,8 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/mman.h>
+
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 /* Ugly, but .... */
 #define gettid() syscall(__NR_gettid)
@@ -80,6 +82,7 @@ struct thread_stat {
 	long min;
 	long max;
 	long act;
+	double avg;
 	long *values;
 	pthread_t thread;
 	int threadstarted;
@@ -261,6 +264,7 @@ void *timerthread(void *param)
 				xntrace_user_freeze(diff, 0);
 #endif
 		}
+		stat->avg += (double) diff;
 
 #if (INGO_TRACE + TGLX_TRACE)
 		if (!stopped && (diff > tracelimit)) {
@@ -310,7 +314,7 @@ out:
 /* Print usage information */
 static void display_help(void)
 {
-	printf("cyclictest %s (jittertest)\n", VERSION_STRING);
+	printf("cyclictest %s\n", VERSION_STRING);
 	printf("Usage:\n"
 	       "cyclictest <options>\n\n"
 	       "-b USEC  --breaktrace=USEC send break trace command when latency > USEC\n"
@@ -322,11 +326,11 @@ static void display_help(void)
 	       "-l LOOPS --loops=LOOPS     number of loops: default=0(endless)\n"
 	       "-n       --nanosleep       use clock_nanosleep\n"
 	       "-p PRIO  --prio=PRIO       priority of highest prio thread\n"
-	       "-q       --quiet	   minimal output\n"
+	       "-q       --quiet	   print only a summary on exit\n"
 	       "-r       --relative        use relative timer instead of absolute\n"
 	       "-s       --system          use sys_nanosleep and sys_setitimer\n"
 	       "-t NUM   --threads=NUM     number of threads: default=1\n"
-	       "-v       --verbose         output values on stdout for statistic\n"
+	       "-v       --verbose         output values on stdout for statistics\n"
 	       "                           format: n:c:v n=tasknum c=count v=value in us\n");
 	exit(0);
 }
@@ -363,11 +367,11 @@ static void process_options (int argc, char *argv[])
 			{"loops", required_argument, NULL, 'l'},
 			{"nanosleep", no_argument, NULL, 'n'},
 			{"priority", required_argument, NULL, 'p'},
+			{"quiet", no_argument, NULL, 'q'},
 			{"relative", no_argument, NULL, 'r'},
 			{"system", no_argument, NULL, 's'},
 			{"threads", required_argument, NULL, 't'},
 			{"verbose", no_argument, NULL, 'v'},
-			{"quiet", no_argument, NULL, 'q'},
 			{"help", no_argument, NULL, '?'},
 			{NULL, 0, NULL, 0}
 		};
@@ -392,7 +396,7 @@ static void process_options (int argc, char *argv[])
 		}				
 	}
 
-	if (clocksel < 0 || clocksel > sizeof(clocksources))
+	if (clocksel < 0 || clocksel > ARRAY_SIZE(clocksources))
 		error = 1;
 
 	if (priority < 0 || priority > 99)
@@ -416,9 +420,12 @@ static void print_stat(struct thread_param *par, int index, int verbose)
 	
 	if (!verbose) {
 		if (!quiet)
-			printf("T:%2d (%5d) P:%2d I:%8ld C:%8lu Min:%8ld Act:%8ld Max:%8ld\n",
+			printf("T:%2d (%5d) P:%2d I:%8ld C:%8lu "
+			       "Min:%8ld Act:%8ld Avg:%8ld Max:%8ld\n",
 			       index, stat->tid, par->prio, par->interval,
-			       stat->cycles, stat->min, stat->act, stat->max);
+			       stat->cycles, stat->min, stat->act,
+			       stat->cycles ?
+			       (long)(stat->avg/stat->cycles) : 0, stat->max);
 	} else {
 		while (stat->cycles != stat->cyclesread) {
 			long diff = stat->values[stat->cyclesread & par->bufmsk];
@@ -486,6 +493,7 @@ int main(int argc, char **argv)
 		par[i].stats = &stat[i];
 		stat[i].min = 1000000;
 		stat[i].max = -1000000;
+		stat[i].avg = 0.0;
 		pthread_attr_init(&thattr);
 		pthread_attr_setstacksize(&thattr, 131072);
 		pthread_create(&stat[i].thread, &thattr, timerthread, &par[i]);
@@ -497,19 +505,16 @@ int main(int argc, char **argv)
 		char lavg[256];
 		int fd, len, allstopped = 0;
 
-		if (!verbose) {
+		if (!verbose && !quiet) {
 			fd = open("/proc/loadavg", O_RDONLY, 0666);
 			len = read(fd, &lavg, 255);
 			close(fd);
 			lavg[len-1] = 0x0;
-			if (!quiet)
-				printf("%s          \n\n", lavg);
+			printf("%s          \n\n", lavg);
 		}
 
 		for (i = 0; i < num_threads; i++) {
-			
 			print_stat(&par[i], i, verbose);
-			
 			if(max_cycles && stat[i].cycles >= max_cycles)
 				allstopped++;
 		}

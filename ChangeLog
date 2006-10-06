@@ -1,3 +1,8 @@
+2006-10-06  Jan Kiszka  <jan.kiszka@web.de>
+
+	* src/testsuite/cyclic/cyclictest.c: Align to latest v0.11,
+	specifically integrating average stats.
+
 2006-10-03  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* src/skins/posix/wrappers.c (__real_pthread_getschedparam): Add
