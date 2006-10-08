@@ -37,6 +37,7 @@
 #include <rtdm/rtcan.h>
 #include "rtcan_dev.h"
 #include "rtcan_raw.h"
+#include "rtcan_internal.h"
 #include "rtcan_mscan_regs.h"
 
 extern int rtcan_mscan_create_proc(struct rtcan_device* dev);
@@ -56,7 +57,7 @@ MODULE_LICENSE("GPL");
 
 /** Module parameter for the CAN controllers' */
 
-static int port[RTCAN_MSCAN_DEVS] = {
+int port[RTCAN_MSCAN_DEVS] = {
 #ifdef CONFIG_XENO_DRIVERS_RTCAN_MSCAN_1
 #ifdef CONFIG_XENO_DRIVERS_RTCAN_MSCAN_2
 	1, 2  /* Enable CAN 1 and 2 */
@@ -71,24 +72,21 @@ static int port[RTCAN_MSCAN_DEVS] = {
 #endif
 #endif
 };
-
-static int port_count = RTCAN_MSCAN_DEVS;
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,10)
-module_param_array(port, int, &port_count, 0400);
-#else
-MODULE_PARM(port, "2" __MODULE_STRING(RTCAN_MSCAN_DEVS) "i");
-#endif
+compat_module_param_array(port, int, RTCAN_MSCAN_DEVS, 0444);
 MODULE_PARM_DESC(port, "Port numbers of enabled controllers, e.g. 1,2");
 
-unsigned long mscan_clock = CONFIG_XENO_DRIVERS_RTCAN_MSCAN_CLOCK;
-MODULE_PARM(mscan_clock,"i");
+/* 
+ * Note: on the MPC5200 the MSCAN clock source is the IP bus 
+ * clock (IP_CLK) while on the MPC5200B it is the oscillator 
+ * clock (SYS_XTAL_IN).
+ */
+unsigned int mscan_clock = CONFIG_XENO_DRIVERS_RTCAN_MSCAN_CLOCK;
+module_param(mscan_clock, int, 0444);
 MODULE_PARM_DESC(mscan_clock, "Clock frequency in Hz");
 
 char *mscan_pins = NULL;
-MODULE_PARM(mscan_pins,"s");
+module_param(mscan_pins, charp, 0444);
 MODULE_PARM_DESC(mscan_pins, "Routing to GPIO pins (PSC2 or I2C1/TMR01)");
-
  
 struct rtcan_device *rtcan_mscan_devs[RTCAN_MSCAN_DEVS];
 
@@ -739,7 +737,6 @@ static inline void __init mscan_gpio_config(void)
     }
 }
 
-/** Init module */
 int __init rtcan_mscan_init_one(int idx)
 {
     int ret, irq;
@@ -836,32 +833,13 @@ int __init rtcan_mscan_init_one(int idx)
 
 }
 
-/** Init module */
-static int __init rtcan_mscan_init(void)
-{
-    int i, ret;
-
-    mscan_gpio_config();
-
-    for (i = 0; i < RTCAN_MSCAN_DEVS; i++) {
-	if (port[i] < 1 || port[i] > RTCAN_MSCAN_DEVS)
-	    continue;
-
-	if ((ret = rtcan_mscan_init_one(i) != 0))
-	    return ret;
-    }
-
-    return 0;
-}
-
-
-/** Cleanup module */
 static void __exit rtcan_mscan_exit(void)
 {
     int i;
     struct rtcan_device *dev;
 
-    for (i = 0; i < port_count; i++) {
+    for (i = 0; i < RTCAN_MSCAN_DEVS; i++) {
+
 	if ((dev = rtcan_mscan_devs[i]) == NULL)
 	    continue;
 	
@@ -874,6 +852,25 @@ static void __exit rtcan_mscan_exit(void)
         rtcan_dev_free(dev);
     }
 
+}
+
+static int __init rtcan_mscan_init(void)
+{
+    int i, err;
+
+    mscan_gpio_config();
+
+    for (i = 0; i < RTCAN_MSCAN_DEVS; i++) {
+	if (port[i] < 1 || port[i] > RTCAN_MSCAN_DEVS)
+	    continue;
+
+	if ((err = rtcan_mscan_init_one(i) != 0)) {
+	    rtcan_mscan_exit();
+	    return err;
+	}
+    }
+
+    return 0;
 }
 
 module_init(rtcan_mscan_init);

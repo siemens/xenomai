@@ -1,3 +1,24 @@
+2006-10-08  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* include/asm-generic/wrappers.h: MODULE_PARM has been removed
+	in Linux 2.6.17. Module parameter compatibility functions
+	reimplemented and moved to Xenomai's wrapping header.
+
+	* ksrc/drivers/can/mscan/rtcan_mscan.c,
+	ksrc/drivers/can/sja1000/rtcan_isa.c,
+	ksrc/drivers/can/sja1000/rtcan_mem.c: Use new module parameter
+	compatibility functions.
+
+	* ksrc/drivers/can/mscan/rtcan_mscan.c (rtcan_mscan_init): Error
+	handling corrected.
+
+	* ksrc/drivers/can/mscan/rtcan_mscan_regs.h: Fix invalid address
+	for MPC5200 GPIO registers. Now the MSCAN driver works for Linux
+	2.6.17.
+
+	* ksrc/drivers/can/rtcan_module.c (rtcan_dev_get_state_name): Bug
+	fix. Function did return invalid state name.
+
 2006-10-06  Jan Kiszka  <jan.kiszka@web.de>
 
 	* src/testsuite/cyclic/cyclictest.c: Align to latest v0.11,
