@@ -1063,32 +1063,30 @@ static inline int rtdm_copy_from_user(rtdm_user_info_t *user_info,
                                       void *dst, const void __user *src,
                                       size_t size)
 {
-    return __xn_copy_from_user(user_info, dst, src, size);
+    return __xn_copy_from_user(user_info, dst, src, size) ? -EFAULT : 0;
 }
 
 static inline int rtdm_safe_copy_from_user(rtdm_user_info_t *user_info,
                                            void *dst, const void __user *src,
                                            size_t size)
 {
-    if (unlikely(!__xn_access_ok(user_info, VERIFY_READ, src, size)))
-        return -EFAULT;
-    return __xn_copy_from_user(user_info, dst, src, size);
+    return (!__xn_access_ok(user_info, VERIFY_READ, src, size) ||
+            __xn_copy_from_user(user_info, dst, src, size)) ? -EFAULT : 0;
 }
 
 static inline int rtdm_copy_to_user(rtdm_user_info_t *user_info,
                                     void __user *dst, const void *src,
                                     size_t size)
 {
-    return __xn_copy_to_user(user_info, dst, src, size);
+    return __xn_copy_to_user(user_info, dst, src, size) ? -EFAULT : 0;
 }
 
 static inline int rtdm_safe_copy_to_user(rtdm_user_info_t *user_info,
                                          void __user *dst, const void *src,
                                          size_t size)
 {
-    if (unlikely(!__xn_access_ok(user_info, VERIFY_WRITE, dst, size)))
-        return -EFAULT;
-    return __xn_copy_to_user(user_info, dst, src, size);
+    return (!__xn_access_ok(user_info, VERIFY_WRITE, dst, size) ||
+            __xn_copy_to_user(user_info, dst, src, size)) ? -EFAULT : 0;
 }
 
 static inline int rtdm_strncpy_from_user(rtdm_user_info_t *user_info,
