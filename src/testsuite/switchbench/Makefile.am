@@ -11,7 +11,7 @@ switchbench_CPPFLAGS = \
 switchbench_LDFLAGS = @XENO_USER_LDFLAGS@
 
 switchbench_LDADD = \
-	../../skins/native/.libs/libnative.a \
+	../../skins/native/libnative.la \
 	-lpthread
 
 install-data-local:

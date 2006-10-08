@@ -1,3 +1,9 @@
+2006-10-08  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* src/testsuite/*/Makefile.am: Link with libtool libraries, in
+	order to have configure --(enable|disable)-(static|shared) options
+	working correctly.
+
 2006-10-08  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/rtdm/rtdm_driver.h (rtdm_copy_to/from_user): Fix
