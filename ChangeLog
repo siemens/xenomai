@@ -1,3 +1,11 @@
+2006-10-08  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/rtdm/rtdm_driver.h (rtdm_*copy_to/from_user): Fix
+	return code.
+
+	* ksrc/skins/rtdm/drvlib.c (rtdm_strncpy_from_user): Adopt doc to
+	actual success return code, the string length.
+
 2006-10-08  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* include/asm-generic/wrappers.h: MODULE_PARM has been removed
