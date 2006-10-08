@@ -56,7 +56,7 @@ testPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(test_PROGRAMS)
 am_switchbench_OBJECTS = switchbench-switchbench.$(OBJEXT)
 switchbench_OBJECTS = $(am_switchbench_OBJECTS)
-switchbench_DEPENDENCIES = ../../skins/native/.libs/libnative.a
+switchbench_DEPENDENCIES = ../../skins/native/libnative.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/src/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -235,7 +235,7 @@ switchbench_CPPFLAGS = \
 
 switchbench_LDFLAGS = @XENO_USER_LDFLAGS@
 switchbench_LDADD = \
-	../../skins/native/.libs/libnative.a \
+	../../skins/native/libnative.la \
 	-lpthread -lm
 
 EXTRA_DIST = runinfo
