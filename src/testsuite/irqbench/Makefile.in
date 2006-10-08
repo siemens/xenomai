@@ -61,7 +61,7 @@ irqbench_OBJECTS = $(am_irqbench_OBJECTS)
 irqbench_LDADD = $(LDADD)
 am_irqloop_OBJECTS = irqloop-irqloop.$(OBJEXT)
 irqloop_OBJECTS = $(am_irqloop_OBJECTS)
-irqloop_DEPENDENCIES = ../../skins/posix/.libs/libpthread_rt.a
+irqloop_DEPENDENCIES = ../../skins/posix/libpthread_rt.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/src/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -244,7 +244,7 @@ irqloop_LDFLAGS = \
 	$(XENO_USER_LDFLAGS)
 
 irqloop_LDADD = \
-	../../skins/posix/.libs/libpthread_rt.a -lpthread -lrt
+	../../skins/posix/libpthread_rt.la -lpthread -lrt
 
 irqbench_SOURCES = irqbench.c
 irqbench_CPPFLAGS = \

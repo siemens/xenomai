@@ -11,8 +11,8 @@ latency_CPPFLAGS = \
 latency_LDFLAGS = @XENO_USER_LDFLAGS@
 
 latency_LDADD = \
-	../../skins/native/.libs/libnative.a \
-	../../skins/rtdm/.libs/librtdm.a \
+	../../skins/native/libnative.la \
+	../../skins/rtdm/librtdm.la \
 	-lpthread -lm
 
 install-data-local:
