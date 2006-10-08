@@ -46,6 +46,10 @@
 #endif
 
 #define module_param_named(name,var,type,mode)  module_param(var,type,mode)
+#define _MODULE_PARM_STRING_charp "s"
+#define compat_module_param_array(name, type, count, perm) \
+	static inline void *__check_existence_##name(void) { return &name; } \
+	MODULE_PARM(name, "1-" __MODULE_STRING(count) _MODULE_PARM_STRING_##type)
 
 #define container_of(ptr, type, member) ({			\
 	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
@@ -175,6 +179,9 @@ void show_stack(struct task_struct *task,
 #define atomic_cmpxchg(v, old, new) ((int)cmpxchg(&((v)->counter), old, new))
 
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0) */
+
+#define compat_module_param_array(name, type, count, perm) \
+	module_param_array(name, type, NULL, perm)
 
 /* VM */
 
