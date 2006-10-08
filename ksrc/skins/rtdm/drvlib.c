@@ -1709,7 +1709,8 @@ int rtdm_copy_to_user(rtdm_user_info_t *user_info, void __user *dst,
  * @param[in] count Maximum number of bytes to copy, including the trailing
  * '0'
  *
- * @return 0 on success, otherwise:
+ * @return Length of the string on success (not including the trailing '0'),
+ * otherwise:
  *
  * - -EFAULT is returned if an invalid memory area was accessed.
  *
