@@ -51,11 +51,11 @@ static u32 clock[RTCAN_ISA_MAX_DEV];
 static u8 ocr[RTCAN_ISA_MAX_DEV];
 static u8 cdr[RTCAN_ISA_MAX_DEV];
 
-compat_module_short_param_array(io, RTCAN_ISA_MAX_DEV);
-compat_module_int_param_array(irq, RTCAN_ISA_MAX_DEV);
-compat_module_int_param_array(clock, RTCAN_ISA_MAX_DEV);
-compat_module_byte_param_array(ocr, RTCAN_ISA_MAX_DEV);
-compat_module_byte_param_array(cdr, RTCAN_ISA_MAX_DEV);
+compat_module_param_array(io, ushort, RTCAN_ISA_MAX_DEV, 0444);
+compat_module_param_array(irq, int, RTCAN_ISA_MAX_DEV, 0444);
+compat_module_param_array(clock, uint, RTCAN_ISA_MAX_DEV, 0444);
+compat_module_param_array(ocr, byte, RTCAN_ISA_MAX_DEV, 0444);
+compat_module_param_array(cdr, byte, RTCAN_ISA_MAX_DEV, 0444);
 
 MODULE_PARM_DESC(io, "The io-port address");
 MODULE_PARM_DESC(irq, "The interrupt number");

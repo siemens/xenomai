@@ -54,15 +54,15 @@ static void rtcan_dev_get_ctrlmode_name(can_ctrlmode_t ctrlmode,
 }
 
 static char *rtcan_state_names[] = {
-    "active", "stopped", "sleeping", "warning", 
-    "passive" , "bus-off", "scanning"
+    "active", "warning", "passive" , "bus-off",
+    "scanning", "stopped", "sleeping"
 };
 
 static void rtcan_dev_get_state_name(can_state_t state, 
 				     char* name, int max_len)
 {
     if (state >= CAN_STATE_ACTIVE && 
-	state <= CAN_STATE_SCANNING_BAUDRATE)
+	state <= CAN_STATE_SLEEPING)
 	strncpy(name, rtcan_state_names[state], max_len);
     else
 	strncpy(name, "unknown", max_len);

@@ -108,25 +108,6 @@
 
 #endif /* CONFIG_PROC_FS */
 
-
-#ifndef compat_module_int_param_array
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10)
-# define compat_module_byte_param_array(name, count) \
-    MODULE_PARM(name, "1-" __MODULE_STRING(count) "b")
-# define compat_module_short_param_array(name, count) \
-    MODULE_PARM(name, "1-" __MODULE_STRING(count) "h")
-# define compat_module_int_param_array(name, count) \
-    MODULE_PARM(name, "1-" __MODULE_STRING(count) "i")
-#else
-# define compat_module_byte_param_array(name, count) \
-    module_param_array(name, byte, NULL, 0444)
-# define compat_module_short_param_array(name, count) \
-    module_param_array(name, short, NULL, 0444)
-# define compat_module_int_param_array(name, count) \
-    module_param_array(name, int, NULL, 0444)
-#endif
-#endif
-
 #ifdef CONFIG_XENO_DRIVERS_RTCAN_DEBUG
 # define RTCAN_DBG(fmt,args...) do { printk(fmt ,##args); } while (0)
 # define RTCAN_RTDM_DBG(fmt,args...) do { rtdm_printk(fmt ,##args); } while (0)

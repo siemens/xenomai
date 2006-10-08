@@ -50,15 +50,9 @@ static char   *type[RTCAN_PEAK_DNG_MAX_DEV];
 static ushort io[RTCAN_PEAK_DNG_MAX_DEV];
 static char   irq[RTCAN_PEAK_DNG_MAX_DEV];
 
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,10)
-module_param_array(type, charp,  NULL, 0444);
-module_param_array(io,   ushort, NULL, 0444);
-module_param_array(irq,  byte,   NULL, 0444);
-#else
-MODULE_PARM(type, "0-" __MODULE_STRING(RTCAN_PEAK_DNG_MAX_DEV) "s");
-MODULE_PARM(io,   "0-" __MODULE_STRING(RTCAN_PEAK_DNG_MAX_DEV) "h");
-MODULE_PARM(irq,  "0-" __MODULE_STRING(RTCAN_PEAK_DNG_MAX_DEV) "b");
-#endif
+compat_module_param_array(type, charp,  RTCAN_PEAK_DNG_MAX_DEV, 0444);
+compat_module_param_array(io,   ushort, RTCAN_PEAK_DNG_MAX_DEV, 0444);
+compat_module_param_array(irq,  byte,   RTCAN_PEAK_DNG_MAX_DEV, 0444);
 
 MODULE_PARM_DESC(type, "The type of interface (sp, epp)");
 MODULE_PARM_DESC(io,   "The io-port address");
