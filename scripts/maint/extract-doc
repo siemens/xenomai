@@ -2,7 +2,7 @@
 
 set -e
 
-repository=svn://svn.gna.org/svn/xenomai
+repository=http://svn.gna.org/svn/xenomai
 tmpdir=/tmp/xenomai-documentation
 
 USAGE="$0 [ -q | -v ] [ -d ] [ -h ] installdir dirs
