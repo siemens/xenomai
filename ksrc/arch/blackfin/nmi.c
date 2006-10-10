@@ -44,49 +44,49 @@ asmlinkage void rthal_nmi_handler(struct pt_regs *regs);
 
 asmlinkage void rthal_nmi_tick(struct pt_regs *regs)
 {
-    rthal_nmi_emergency(regs);
+	rthal_nmi_emergency(regs);
 }
 
 int rthal_nmi_request(void (*emergency) (struct pt_regs *))
 {
-    if (rthal_nmi_emergency)
-        return -EBUSY;
+	if (rthal_nmi_emergency)
+		return -EBUSY;
 
-    rthal_nmi_disarm();
-    __builtin_bfin_csync();
-    rthal_nmi_emergency = emergency;
-    rthal_old_nmi_handler = *pEVT2;
-    *pEVT2 = &rthal_nmi_handler;
-    __builtin_bfin_csync();
+	rthal_nmi_disarm();
+	__builtin_bfin_csync();
+	rthal_nmi_emergency = emergency;
+	rthal_old_nmi_handler = bfin_read_EVT2();
+	bfin_write_EVT2(&rthal_nmi_handler);
+	__builtin_bfin_csync();
 
-    return 0;
+	return 0;
 }
 
 void rthal_nmi_release(void)
 {
-    if (rthal_nmi_emergency == NULL)
-        return;
+	if (rthal_nmi_emergency == NULL)
+		return;
 
-    rthal_nmi_disarm();
-    __builtin_bfin_csync();
-    *pEVT2 = rthal_old_nmi_handler;
-    __builtin_bfin_csync();
-    rthal_nmi_emergency = NULL;
+	rthal_nmi_disarm();
+	__builtin_bfin_csync();
+	bfin_write_EVT2(rthal_old_nmi_handler);
+	__builtin_bfin_csync();
+	rthal_nmi_emergency = NULL;
 }
 
 void rthal_nmi_arm(unsigned long delay)
 {
-    *pWDOG_CTL = 0xad0;         /* Disable */
-    __builtin_bfin_csync();
-    *pWDOG_CNT = delay;
-    *pWDOG_CTL = 0x2;           /* Enable, generate NMIs */
-    __builtin_bfin_csync();
+	bfin_write_WDOG_CTL(0xad0);	/* Disable */
+	__builtin_bfin_csync();
+	bfin_write_WDOG_CNT(delay);
+	bfin_write_WDOG_CTL(0x2);	/* Enable, generate NMIs */
+	__builtin_bfin_csync();
 }
 
 void rthal_nmi_disarm(void)
 {
-    *pWDOG_CTL = 0xad0;         /* Disable */
-    __builtin_bfin_csync();
+	bfin_write_WDOG_CTL(0xad0);	/* Disable */
+	__builtin_bfin_csync();
 }
 
 EXPORT_SYMBOL(rthal_nmi_request);
