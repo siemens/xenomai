@@ -31,9 +31,9 @@
 
 typedef unsigned long long rthal_time_t;
 
-static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
+static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 {
-    return ffs(ul) - 1;
+	return ffs(ul) - 1;
 }
 
 #ifndef __cplusplus
@@ -52,23 +52,23 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #define rthal_grab_control()     do { } while(0)
 #define rthal_release_control()  do { } while(0)
 
-static inline unsigned long long rthal_rdtsc (void)
+static inline unsigned long long rthal_rdtsc(void)
 {
-    unsigned long long t;
-    rthal_read_tsc(t);
-    return t;
+	unsigned long long t;
+	rthal_read_tsc(t);
+	return t;
 }
 
-static inline void rthal_timer_program_shot (unsigned long delay)
+static inline void rthal_timer_program_shot(unsigned long delay)
 {
-    if (delay < 2)
-	rthal_trigger_irq(RTHAL_TIMER_IRQ);
-    else {
-	*pTCOUNT = delay - 1;
-	__builtin_bfin_csync();
-	*pTCNTL = 3; /* Oneshot mode, no auto-reload. */
-	__builtin_bfin_csync();
-    }
+	if (delay < 2)
+		rthal_trigger_irq(RTHAL_TIMER_IRQ);
+	else {
+		bfin_write_TCOUNT(delay - 1);
+		__builtin_bfin_csync();
+		bfin_write_TCNTL(3);	/* Oneshot mode, no auto-reload. */
+		__builtin_bfin_csync();
+	}
 }
 
     /* Private interface -- Internal use only */
@@ -87,24 +87,24 @@ asmlinkage void rthal_thread_trampoline(void);
 asmlinkage int rthal_defer_switch_p(void);
 
 static const char *const rthal_fault_labels[] = {
-    [1] = "Single step",
-    [4] = "TAS",
-    [17] = "Performance Monitor Overflow",
-    [33] = "Undefined instruction",
-    [34] = "Illegal instruction",
-    [36] = "Data access misaligned",
-    [35] = "DCPLB fault",
-    [37] = "Unrecoverable event",
-    [38] = "DCPLB fault",
-    [39] = "DCPLB fault",
-    [40] = "Watchpoint",
-    [42] = "Instruction fetch misaligned",
-    [41] = "Undef",
-    [43] = "ICPLB fault",
-    [44] = "ICPLB fault",
-    [45] = "ICPLB fault",
-    [46] = "Illegal resource",
-    [47] = NULL
+	[1] = "Single step",
+	[4] = "TAS",
+	[17] = "Performance Monitor Overflow",
+	[33] = "Undefined instruction",
+	[34] = "Illegal instruction",
+	[36] = "Data access misaligned",
+	[35] = "DCPLB fault",
+	[37] = "Unrecoverable event",
+	[38] = "DCPLB fault",
+	[39] = "DCPLB fault",
+	[40] = "Watchpoint",
+	[42] = "Instruction fetch misaligned",
+	[41] = "Undef",
+	[43] = "ICPLB fault",
+	[44] = "ICPLB fault",
+	[45] = "ICPLB fault",
+	[46] = "Illegal resource",
+	[47] = NULL
 };
 
 #endif /* !__cplusplus */

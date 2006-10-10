@@ -1,3 +1,8 @@
+2006-10-10  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/blackfin, include/asm-blackfin/hal.h: Use
+	kernel-defined accessors for reading/writing MMIO registers.
+
 2006-10-10  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/serial/16550A.c: Switch to compat_module_param_array.
