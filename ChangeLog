@@ -1,3 +1,7 @@
+2006-10-10  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/drivers/serial/16550A.c: Switch to compat_module_param_array.
+
 2006-10-08  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* src/testsuite/*/Makefile.am: Link with libtool libraries, in

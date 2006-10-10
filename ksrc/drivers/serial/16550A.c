@@ -120,22 +120,10 @@ static unsigned int         baud_base[MAX_DEVICES];
 static int                  tx_fifo[MAX_DEVICES];
 static unsigned int         start_index;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,10)
-static int                  ioaddr_c;
-static int                  irq_c;
-static int                  baud_base_c;
-static int                  tx_fifo_c;
-
-module_param_array(ioaddr, ulong, &ioaddr_c, 0400);
-module_param_array(irq, uint, &irq_c, 0400);
-module_param_array(baud_base, uint, &baud_base_c, 0400);
-module_param_array(tx_fifo, int, &tx_fifo_c, 0400);
-#else /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10) */
-MODULE_PARM(ioaddr, "1-" __MODULE_STRING(MAX_DEVICES) "i");
-MODULE_PARM(irq, "1-" __MODULE_STRING(MAX_DEVICES) "i");
-MODULE_PARM(baud_base, "1-" __MODULE_STRING(MAX_DEVICES) "i");
-MODULE_PARM(tx_fifo, "1-" __MODULE_STRING(MAX_DEVICES) "i");
-#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,10) */
+compat_module_param_array(ioaddr, ulong, MAX_DEVICES, 0400);
+compat_module_param_array(irq, uint, MAX_DEVICES, 0400);
+compat_module_param_array(baud_base, uint, MAX_DEVICES, 0400);
+compat_module_param_array(tx_fifo, int, MAX_DEVICES, 0400);
 
 MODULE_PARM_DESC(ioaddr, "I/O addresses of the serial devices");
 MODULE_PARM_DESC(irq, "IRQ numbers of the serial devices");
