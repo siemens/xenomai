@@ -747,6 +747,7 @@ int rtcan_sja1000_register(struct rtcan_device *dev)
 	printk("ERROR! IRQ %d busy or invalid (code=%d)!\n", chip->irq_num, ret);
 	return ret;
     }
+    rtdm_irq_enable(&dev->irq_handle);
 
     sja1000_chip_config(dev);
 
@@ -759,8 +760,6 @@ int rtcan_sja1000_register(struct rtcan_device *dev)
 
     rtcan_sja_create_proc(dev);
 
-    rtdm_irq_enable(&dev->irq_handle);
-    
     return 0;
 
  out_irq_free:

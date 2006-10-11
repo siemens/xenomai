@@ -1,5 +1,9 @@
 2006-10-11  Jan Kiszka  <jan.kiszka@web.de>
 
+	* ksrc/drivers/can/{mscan/rtcan_mscan.c,sja1000/rtcan_sja1000.c}:
+	Bundle rtdm_irq_request with immediate rtdm_irq_enable to pave the
+	way for according RTDM change.
+
 	* ksrc/skins/rtdm/device.c (rtdm_dev_register): Turn static sanity
 	checks on into XENO_ASSERTs to save object size.
 
