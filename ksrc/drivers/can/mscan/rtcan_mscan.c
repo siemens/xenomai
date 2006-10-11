@@ -798,7 +798,8 @@ int __init rtcan_mscan_init_one(int idx)
 	printk("ERROR! rtdm_irq_request for IRQ %d failed\n", irq);
 	goto out_dev_free;
     }
-    
+    rtdm_irq_enable(&dev->irq_handle);
+
     mscan_chip_config(regs);
     
 
@@ -811,8 +812,6 @@ int __init rtcan_mscan_init_one(int idx)
 
     rtcan_mscan_create_proc(dev);
 
-    rtdm_irq_enable(&dev->irq_handle);
-    
     /* Remember initialized devices */
     rtcan_mscan_devs[idx] = dev;
 
