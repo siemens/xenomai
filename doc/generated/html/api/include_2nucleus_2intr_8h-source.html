@@ -55,65 +55,67 @@
 00045 <span class="preprocessor"></span>    <span class="keyword">struct </span>xnintr *next; <span class="comment">/* !&lt; Next object in the IRQ-sharing chain. */</span>
 00046 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */</span>
 00047 
-00048     xnisr_t isr;        <span class="comment">/* !&lt; Interrupt service routine. */</span>
+00048     <span class="keywordtype">unsigned</span> unhandled; <span class="comment">/* !&lt; Number of consequent unhandled interrupts */</span>
 00049 
-00050     <span class="keywordtype">void</span> *cookie;       <span class="comment">/* !&lt; User-defined cookie value. */</span>
+00050     xnisr_t isr;        <span class="comment">/* !&lt; Interrupt service routine. */</span>
 00051 
-00052     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> hits; <span class="comment">/* !&lt; Number of receipts (since attachment). */</span>
+00052     <span class="keywordtype">void</span> *cookie;       <span class="comment">/* !&lt; User-defined cookie value. */</span>
 00053 
-00054     xnflags_t flags;    <span class="comment">/* !&lt; Creation flags. */</span>
+00054     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> hits; <span class="comment">/* !&lt; Number of receipts (since attachment). */</span>
 00055 
-00056     <span class="keywordtype">unsigned</span> irq;       <span class="comment">/* !&lt; IRQ number. */</span>
+00056     xnflags_t flags;    <span class="comment">/* !&lt; Creation flags. */</span>
 00057 
-00058     xniack_t iack;      <span class="comment">/* !&lt; Interrupt acknowledge routine. */</span>
+00058     <span class="keywordtype">unsigned</span> irq;       <span class="comment">/* !&lt; IRQ number. */</span>
 00059 
-00060     <span class="keyword">const</span> <span class="keywordtype">char</span> *name;   <span class="comment">/* !&lt; Symbolic name. */</span>
+00060     xniack_t iack;      <span class="comment">/* !&lt; Interrupt acknowledge routine. */</span>
 00061 
-00062 } xnintr_t;
+00062     <span class="keyword">const</span> <span class="keywordtype">char</span> *name;   <span class="comment">/* !&lt; Symbolic name. */</span>
 00063 
-00064 <span class="keyword">extern</span> xnintr_t nkclock;
+00064 } xnintr_t;
 00065 
-00066 <span class="preprocessor">#ifdef __cplusplus</span>
-00067 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-00068 <span class="preprocessor">#endif</span>
-00069 <span class="preprocessor"></span>
-00070 <span class="keywordtype">int</span> xnintr_mount(<span class="keywordtype">void</span>);
-00071 
-00072 <span class="keywordtype">void</span> xnintr_clock_handler(<span class="keywordtype">void</span>);
+00066 <span class="keyword">extern</span> xnintr_t nkclock;
+00067 
+00068 <span class="preprocessor">#ifdef __cplusplus</span>
+00069 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+00070 <span class="preprocessor">#endif</span>
+00071 <span class="preprocessor"></span>
+00072 <span class="keywordtype">int</span> xnintr_mount(<span class="keywordtype">void</span>);
 00073 
-00074 <span class="keywordtype">int</span> xnintr_irq_proc(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> irq, <span class="keywordtype">char</span> *str);
+00074 <span class="keywordtype">void</span> xnintr_clock_handler(<span class="keywordtype">void</span>);
 00075 
-00076     <span class="comment">/* Public interface. */</span>
+00076 <span class="keywordtype">int</span> xnintr_irq_proc(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> irq, <span class="keywordtype">char</span> *str);
 00077 
-00078 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga2">xnintr_init</a>(xnintr_t *intr,
-00079                 <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
-00080                 <span class="keywordtype">unsigned</span> irq,
-00081                 xnisr_t isr,
-00082                 xniack_t iack,
-00083                 xnflags_t flags);
-00084 
-00085 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga3">xnintr_destroy</a>(xnintr_t *intr);
+00078     <span class="comment">/* Public interface. */</span>
+00079 
+00080 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga7">xnintr_init</a>(xnintr_t *intr,
+00081                 <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
+00082                 <span class="keywordtype">unsigned</span> irq,
+00083                 xnisr_t isr,
+00084                 xniack_t iack,
+00085                 xnflags_t flags);
 00086 
-00087 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga4">xnintr_attach</a>(xnintr_t *intr,
-00088                   <span class="keywordtype">void</span> *cookie);
-00089 
-00090 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga5">xnintr_detach</a>(xnintr_t *intr);
+00087 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga8">xnintr_destroy</a>(xnintr_t *intr);
+00088 
+00089 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga9">xnintr_attach</a>(xnintr_t *intr,
+00090                   <span class="keywordtype">void</span> *cookie);
 00091 
-00092 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga6">xnintr_enable</a>(xnintr_t *intr);
+00092 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga10">xnintr_detach</a>(xnintr_t *intr);
 00093 
-00094 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga7">xnintr_disable</a>(xnintr_t *intr);
-00095     
-00096 xnarch_cpumask_t <a class="code" href="group__intr.html#ga8">xnintr_affinity</a>(xnintr_t *intr,
-00097                                  xnarch_cpumask_t cpumask);
-00098 
-00099 <span class="preprocessor">#ifdef __cplusplus</span>
-00100 <span class="preprocessor"></span>}
-00101 <span class="preprocessor">#endif</span>
-00102 <span class="preprocessor"></span>
-00103 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
-00104 
-00105 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_INTR_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
+00094 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga11">xnintr_enable</a>(xnintr_t *intr);
+00095 
+00096 <span class="keywordtype">int</span> <a class="code" href="group__intr.html#ga12">xnintr_disable</a>(xnintr_t *intr);
+00097     
+00098 xnarch_cpumask_t <a class="code" href="group__intr.html#ga13">xnintr_affinity</a>(xnintr_t *intr,
+00099                                  xnarch_cpumask_t cpumask);
+00100 
+00101 <span class="preprocessor">#ifdef __cplusplus</span>
+00102 <span class="preprocessor"></span>}
+00103 <span class="preprocessor">#endif</span>
+00104 <span class="preprocessor"></span>
+00105 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
+00106 
+00107 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_INTR_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:49:58 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

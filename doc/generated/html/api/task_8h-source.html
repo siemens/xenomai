@@ -149,9 +149,9 @@
 00182 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
 00183 <span class="preprocessor">#endif</span>
 00184 <span class="preprocessor"></span>
-00185 <span class="keywordtype">void</span> __native_task_safe(<span class="keywordtype">void</span>);
+00185 <span class="keywordtype">void</span> __native_task_safe(RT_TASK *task);
 00186 
-00187 <span class="keywordtype">void</span> __native_task_unsafe(<span class="keywordtype">void</span>);
+00187 <span class="keywordtype">void</span> __native_task_unsafe(RT_TASK *task);
 00188 
 00189 <span class="keywordtype">int</span> __native_task_safewait(RT_TASK *task);
 00190 
@@ -291,7 +291,7 @@
 00324 <span class="preprocessor">#endif</span>
 00325 <span class="preprocessor"></span>
 00326 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_TASK_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:49:58 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

@@ -89,7 +89,7 @@ Create and attach an interrupt object.
 This service creates and attaches an interrupt object.<p>
 <dl compact><dt><b>In kernel-space:</b></dt><dd></dd></dl>
 This service installs <em>isr</em> as the handler for the interrupt <em>irq</em>. If <em>iack</em> is not null it is a custom interrupt acknowledge routine.<p>
-When called upon reception of an interrupt, the <em>isr</em> function is passed the address of an underlying <b>xnintr_t</b> object, and should use the macro <em>PTHREAD_IDESC()</em> to get the <b>pthread_intr_t</b> object. The meaning of the <em>isr</em> and <em>iack</em> function and what they should return is explained in <a class="el" href="group__intr.html#ga2">xnintr_init()</a> documentation.<p>
+When called upon reception of an interrupt, the <em>isr</em> function is passed the address of an underlying <b>xnintr_t</b> object, and should use the macro <em>PTHREAD_IDESC()</em> to get the <b>pthread_intr_t</b> object. The meaning of the <em>isr</em> and <em>iack</em> function and what they should return is explained in <a class="el" href="group__intr.html#ga7">xnintr_init()</a> documentation.<p>
 This service is a non-portable extension of the POSIX interface.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -272,7 +272,7 @@ This service is a non-portable extension of the POSIX interface.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:57 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:50:11 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

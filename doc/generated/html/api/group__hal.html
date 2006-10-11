@@ -155,7 +155,7 @@ APC is the acronym for Asynchronous Procedure Call, a mean by which activities f
 The HAL guarantees that any Linux kernel service which would be callable from a regular Linux interrupt handler is also available to APC handlers, including over PREEMPT_RT kernels exhibiting a threaded IRQ model.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>is a symbolic name identifying the APC which will get reported through the /proc/xenomai/apc interface.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>is a symbolic name identifying the APC which will get reported through the /proc/xenomai/apc interface. Passing NULL to create an anonymous APC is allowed.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>handler</em>&nbsp;</td><td>The address of the fault handler to call upon exception condition. The handle will be passed the <em>cookie</em> value unmodified.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>cookie</em>&nbsp;</td><td>A user-defined opaque cookie the HAL will pass to the APC handler as its sole argument.</td></tr>
   </table>
@@ -836,7 +836,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:49 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:50:01 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

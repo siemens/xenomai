@@ -146,7 +146,7 @@ This service atomically releases all threads which currently sleep on a given re
 This service should be called by upper interfaces under circumstances requiring that the pending queue of a given resource is cleared, such as before the resource is deleted.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>synch</em>&nbsp;</td><td>The descriptor address of the synchronization object whose ownership is changed.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>synch</em>&nbsp;</td><td>The descriptor address of the synchronization object to be flushed.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>reason</em>&nbsp;</td><td>Some flags to set in the status mask of every unblocked thread. Zero is an acceptable value. The following bits are pre-defined by the nucleus:</td></tr>
   </table>
 </dl>
@@ -518,7 +518,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:49 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:50:01 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

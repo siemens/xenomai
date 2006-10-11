@@ -98,7 +98,7 @@ Retrieve IRQ handler argument.
     <tr><td valign="top"></td><td valign="top"><em>type</em>&nbsp;</td><td>Type of the pointer to return</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Returns:</b></dt><dd>The argument pointer registered on rtdm_irq_request() is returned, type-casted to the specified <em>type</em>.</dd></dl>
+<dl compact><dt><b>Returns:</b></dt><dd>The argument pointer registered on <a class="el" href="group__rtdmirq.html#ga2">rtdm_irq_request()</a> is returned, type-casted to the specified <em>type</em>.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -132,7 +132,7 @@ Interrupt handler.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle as returned by rtdm_irq_request()</td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle as returned by <a class="el" href="group__rtdmirq.html#ga2">rtdm_irq_request()</a></td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 or a combination of <a class="el" href="group__rtdmirq.html#RTDM_IRQ_xxx">RTDM_IRQ_xxx</a> flags </dd></dl>
@@ -169,7 +169,7 @@ Disable interrupt line.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle as returned by rtdm_irq_request()</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle as returned by <a class="el" href="group__rtdmirq.html#ga2">rtdm_irq_request()</a></td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise negative error code</dd></dl>
@@ -210,7 +210,7 @@ Enable interrupt line.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle as returned by rtdm_irq_request()</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle as returned by <a class="el" href="group__rtdmirq.html#ga2">rtdm_irq_request()</a></td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise negative error code</dd></dl>
@@ -251,7 +251,7 @@ Release an interrupt handler.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle as returned by rtdm_irq_request()</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>irq_handle</em>&nbsp;</td><td>IRQ handle as returned by <a class="el" href="group__rtdmirq.html#ga2">rtdm_irq_request()</a></td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise negative error code</dd></dl>
@@ -340,7 +340,7 @@ Register an interrupt handler.
 <ul>
 <li>-EBUSY is returned if the specified IRQ line is already in use.</li></ul>
 <p>
-<dl compact><dt><b>Note:</b></dt><dd>To receive interrupts on the requested line, you have to call rtdm_irq_enable() after registering the handler.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>To receive interrupts on the requested line, you have to call <a class="el" href="group__rtdmirq.html#ga4">rtdm_irq_enable()</a> after registering the handler.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -349,7 +349,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:55 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:50:09 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

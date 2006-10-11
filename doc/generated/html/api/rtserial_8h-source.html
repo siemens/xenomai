@@ -43,9 +43,9 @@
 00138 <span class="preprocessor"></span><span class="preprocessor">#define RTSER_FIFO_DEPTH_14         0xC0</span>
 00139 <span class="preprocessor"></span><span class="preprocessor">#define RTSER_DEF_FIFO_DEPTH        RTSER_FIFO_DEPTH_1</span>
 00140 <span class="preprocessor"></span>
-00146 <span class="preprocessor">#define RTSER_TIMEOUT_INFINITE      0</span>
-00147 <span class="preprocessor"></span><span class="preprocessor">#define RTSER_TIMEOUT_NONE          (-1)</span>
-00148 <span class="preprocessor"></span><span class="preprocessor">#define RTSER_DEF_TIMEOUT           RTSER_TIMEOUT_INFINITE</span>
+00146 <span class="preprocessor">#define RTSER_TIMEOUT_INFINITE      RTDM_TIMEOUT_INFINITE</span>
+00147 <span class="preprocessor"></span><span class="preprocessor">#define RTSER_TIMEOUT_NONE          RTDM_TIMEOUT_NONE</span>
+00148 <span class="preprocessor"></span><span class="preprocessor">#define RTSER_DEF_TIMEOUT           RTDM_TIMEOUT_INFINITE</span>
 00149 <span class="preprocessor"></span>
 00155 <span class="preprocessor">#define RTSER_RX_TIMESTAMP_HISTORY  0x01</span>
 00156 <span class="preprocessor"></span><span class="preprocessor">#define RTSER_DEF_TIMESTAMP_HISTORY 0x00</span>
@@ -94,58 +94,73 @@
 00228 <span class="preprocessor"></span><span class="preprocessor">#define RTSER_MCR_LOOP              0x10</span>
 00229 <span class="preprocessor"></span>
 <a name="l00235"></a><a class="code" href="structrtser__config.html">00235</a> <span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structrtser__config.html">rtser_config</a> {
-<a name="l00236"></a><a class="code" href="structrtser__config.html#o0">00236</a>     <span class="keywordtype">int</span>     <a class="code" href="structrtser__config.html#o0">config_mask</a>;        
-<a name="l00238"></a><a class="code" href="structrtser__config.html#o1">00238</a>     <span class="keywordtype">int</span>     <a class="code" href="structrtser__config.html#o1">baud_rate</a>;          
-<a name="l00239"></a><a class="code" href="structrtser__config.html#o2">00239</a>     <span class="keywordtype">int</span>     <a class="code" href="structrtser__config.html#o2">parity</a>;             
-<a name="l00241"></a><a class="code" href="structrtser__config.html#o3">00241</a>     <span class="keywordtype">int</span>     <a class="code" href="structrtser__config.html#o3">data_bits</a>;          
-<a name="l00243"></a><a class="code" href="structrtser__config.html#o4">00243</a>     <span class="keywordtype">int</span>     <a class="code" href="structrtser__config.html#o4">stop_bits</a>;          
-<a name="l00245"></a><a class="code" href="structrtser__config.html#o5">00245</a>     <span class="keywordtype">int</span>     <a class="code" href="structrtser__config.html#o5">handshake</a>;          
-<a name="l00247"></a><a class="code" href="structrtser__config.html#o6">00247</a>     <span class="keywordtype">int</span>     <a class="code" href="structrtser__config.html#o6">fifo_depth</a>;         
-<a name="l00249"></a><a class="code" href="structrtser__config.html#o7">00249</a>     int64_t <a class="code" href="structrtser__config.html#o7">rx_timeout</a>;         
-<a name="l00252"></a><a class="code" href="structrtser__config.html#o8">00252</a>     int64_t <a class="code" href="structrtser__config.html#o8">tx_timeout</a>;         
-<a name="l00255"></a><a class="code" href="structrtser__config.html#o9">00255</a>     int64_t <a class="code" href="structrtser__config.html#o9">event_timeout</a>;      
-<a name="l00258"></a><a class="code" href="structrtser__config.html#o10">00258</a>     <span class="keywordtype">int</span>     <a class="code" href="structrtser__config.html#o10">timestamp_history</a>;  
-<a name="l00260"></a><a class="code" href="structrtser__config.html#o11">00260</a>     <span class="keywordtype">int</span>     <a class="code" href="structrtser__config.html#o11">event_mask</a>;         
-00263 } <a class="code" href="structrtser__config.html">rtser_config_t</a>;
-00264 
-<a name="l00268"></a><a class="code" href="structrtser__status.html">00268</a> <span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structrtser__status.html">rtser_status</a> {
-<a name="l00269"></a><a class="code" href="structrtser__status.html#o0">00269</a>     <span class="keywordtype">int</span>     <a class="code" href="structrtser__status.html#o0">line_status</a>;    
-<a name="l00271"></a><a class="code" href="structrtser__status.html#o1">00271</a>     <span class="keywordtype">int</span>     <a class="code" href="structrtser__status.html#o1">modem_status</a>;   
-00273 } <a class="code" href="structrtser__status.html">rtser_status_t</a>;
-00274 
-<a name="l00278"></a><a class="code" href="structrtser__event.html">00278</a> <span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structrtser__event.html">rtser_event</a> {
-<a name="l00279"></a><a class="code" href="structrtser__event.html#o0">00279</a>     <span class="keywordtype">int</span>     <a class="code" href="structrtser__event.html#o0">events</a>;             
-<a name="l00281"></a><a class="code" href="structrtser__event.html#o1">00281</a>     <span class="keywordtype">int</span>     <a class="code" href="structrtser__event.html#o1">rx_pending</a>;         
-<a name="l00282"></a><a class="code" href="structrtser__event.html#o2">00282</a>     uint64_t <a class="code" href="structrtser__event.html#o2">last_timestamp</a>;    
-<a name="l00284"></a><a class="code" href="structrtser__event.html#o3">00284</a>     uint64_t <a class="code" href="structrtser__event.html#o3">rxpend_timestamp</a>;  
-00286 } <a class="code" href="structrtser__event.html">rtser_event_t</a>;
-00287 
-00288 
-00289 <span class="preprocessor">#define RTIOC_TYPE_SERIAL           RTDM_CLASS_SERIAL</span>
-00290 <span class="preprocessor"></span>
+<a name="l00237"></a><a class="code" href="structrtser__config.html#o0">00237</a>     <span class="keywordtype">int</span>             <a class="code" href="structrtser__config.html#o0">config_mask</a>;
+00238 
+<a name="l00240"></a><a class="code" href="structrtser__config.html#o1">00240</a>     <span class="keywordtype">int</span>             <a class="code" href="structrtser__config.html#o1">baud_rate</a>;
+00241 
+<a name="l00243"></a><a class="code" href="structrtser__config.html#o2">00243</a>     <span class="keywordtype">int</span>             <a class="code" href="structrtser__config.html#o2">parity</a>;
+00244 
+<a name="l00246"></a><a class="code" href="structrtser__config.html#o3">00246</a>     <span class="keywordtype">int</span>             <a class="code" href="structrtser__config.html#o3">data_bits</a>;
+00247 
+<a name="l00249"></a><a class="code" href="structrtser__config.html#o4">00249</a>     <span class="keywordtype">int</span>             <a class="code" href="structrtser__config.html#o4">stop_bits</a>;
+00250 
+<a name="l00252"></a><a class="code" href="structrtser__config.html#o5">00252</a>     <span class="keywordtype">int</span>             <a class="code" href="structrtser__config.html#o5">handshake</a>;
+00253 
+<a name="l00255"></a><a class="code" href="structrtser__config.html#o6">00255</a>     <span class="keywordtype">int</span>             <a class="code" href="structrtser__config.html#o6">fifo_depth</a>;
+00256 
+<a name="l00258"></a><a class="code" href="structrtser__config.html#o7">00258</a>     <a class="code" href="group__rtdm.html#ga1">nanosecs_rel_t</a>  <a class="code" href="structrtser__config.html#o7">rx_timeout</a>;
+00259 
+<a name="l00261"></a><a class="code" href="structrtser__config.html#o8">00261</a>     <a class="code" href="group__rtdm.html#ga1">nanosecs_rel_t</a>  <a class="code" href="structrtser__config.html#o8">tx_timeout</a>;
+00262 
+<a name="l00264"></a><a class="code" href="structrtser__config.html#o9">00264</a>     <a class="code" href="group__rtdm.html#ga1">nanosecs_rel_t</a>  <a class="code" href="structrtser__config.html#o9">event_timeout</a>;
+00265 
+<a name="l00267"></a><a class="code" href="structrtser__config.html#o10">00267</a>     <span class="keywordtype">int</span>             <a class="code" href="structrtser__config.html#o10">timestamp_history</a>;
+00268 
+<a name="l00271"></a><a class="code" href="structrtser__config.html#o11">00271</a>     <span class="keywordtype">int</span>             <a class="code" href="structrtser__config.html#o11">event_mask</a>;
+00272 } <a class="code" href="structrtser__config.html">rtser_config_t</a>;
+00273 
+<a name="l00277"></a><a class="code" href="structrtser__status.html">00277</a> <span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structrtser__status.html">rtser_status</a> {
+<a name="l00279"></a><a class="code" href="structrtser__status.html#o0">00279</a>     <span class="keywordtype">int</span>             <a class="code" href="structrtser__status.html#o0">line_status</a>;
+00280 
+<a name="l00282"></a><a class="code" href="structrtser__status.html#o1">00282</a>     <span class="keywordtype">int</span>             <a class="code" href="structrtser__status.html#o1">modem_status</a>;
+00283 } <a class="code" href="structrtser__status.html">rtser_status_t</a>;
+00284 
+<a name="l00288"></a><a class="code" href="structrtser__event.html">00288</a> <span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structrtser__event.html">rtser_event</a> {
+<a name="l00290"></a><a class="code" href="structrtser__event.html#o0">00290</a>     <span class="keywordtype">int</span>             <a class="code" href="structrtser__event.html#o0">events</a>;
 00291 
-00295 <span class="preprocessor">#define RTDM_SUBCLASS_16550A        0</span>
-00296 <span class="preprocessor"></span>
-<a name="l00321"></a><a class="code" href="group__rtserial.html#ga70">00321</a> <span class="preprocessor">#define RTSER_RTIOC_GET_CONFIG      \</span>
-00322 <span class="preprocessor">    _IOR(RTIOC_TYPE_SERIAL, 0x00, struct rtser_config)</span>
-00323 <span class="preprocessor"></span>
-<a name="l00351"></a><a class="code" href="group__rtserial.html#ga71">00351</a> <span class="preprocessor">#define RTSER_RTIOC_SET_CONFIG      \</span>
-00352 <span class="preprocessor">    _IOW(RTIOC_TYPE_SERIAL, 0x01, struct rtser_config)</span>
-00353 <span class="preprocessor"></span>
-<a name="l00371"></a><a class="code" href="group__rtserial.html#ga72">00371</a> <span class="preprocessor">#define RTSER_RTIOC_GET_STATUS      \</span>
-00372 <span class="preprocessor">    _IOR(RTIOC_TYPE_SERIAL, 0x02, struct rtser_status)</span>
-00373 <span class="preprocessor"></span>
-<a name="l00392"></a><a class="code" href="group__rtserial.html#ga73">00392</a> <span class="preprocessor">#define RTSER_RTIOC_GET_CONTROL     \</span>
-00393 <span class="preprocessor">    _IOR(RTIOC_TYPE_SERIAL, 0x03, int)</span>
-00394 <span class="preprocessor"></span>
-<a name="l00412"></a><a class="code" href="group__rtserial.html#ga74">00412</a> <span class="preprocessor">#define RTSER_RTIOC_SET_CONTROL     \</span>
-00413 <span class="preprocessor">    _IOW(RTIOC_TYPE_SERIAL, 0x04, int)</span>
+<a name="l00293"></a><a class="code" href="structrtser__event.html#o1">00293</a>     <span class="keywordtype">int</span>             <a class="code" href="structrtser__event.html#o1">rx_pending</a>;
+00294 
+<a name="l00296"></a><a class="code" href="structrtser__event.html#o2">00296</a>     <a class="code" href="group__rtdm.html#ga0">nanosecs_abs_t</a>  <a class="code" href="structrtser__event.html#o2">last_timestamp</a>;
+00297 
+<a name="l00299"></a><a class="code" href="structrtser__event.html#o3">00299</a>     <a class="code" href="group__rtdm.html#ga0">nanosecs_abs_t</a>  <a class="code" href="structrtser__event.html#o3">rxpend_timestamp</a>;
+00300 } <a class="code" href="structrtser__event.html">rtser_event_t</a>;
+00301 
+00302 
+00303 <span class="preprocessor">#define RTIOC_TYPE_SERIAL           RTDM_CLASS_SERIAL</span>
+00304 <span class="preprocessor"></span>
+00305 
+00309 <span class="preprocessor">#define RTDM_SUBCLASS_16550A        0</span>
+00310 <span class="preprocessor"></span>
+<a name="l00335"></a><a class="code" href="group__rtserial.html#ga70">00335</a> <span class="preprocessor">#define RTSER_RTIOC_GET_CONFIG      \</span>
+00336 <span class="preprocessor">    _IOR(RTIOC_TYPE_SERIAL, 0x00, struct rtser_config)</span>
+00337 <span class="preprocessor"></span>
+<a name="l00365"></a><a class="code" href="group__rtserial.html#ga71">00365</a> <span class="preprocessor">#define RTSER_RTIOC_SET_CONFIG      \</span>
+00366 <span class="preprocessor">    _IOW(RTIOC_TYPE_SERIAL, 0x01, struct rtser_config)</span>
+00367 <span class="preprocessor"></span>
+<a name="l00391"></a><a class="code" href="group__rtserial.html#ga72">00391</a> <span class="preprocessor">#define RTSER_RTIOC_GET_STATUS      \</span>
+00392 <span class="preprocessor">    _IOR(RTIOC_TYPE_SERIAL, 0x02, struct rtser_status)</span>
+00393 <span class="preprocessor"></span>
+<a name="l00412"></a><a class="code" href="group__rtserial.html#ga73">00412</a> <span class="preprocessor">#define RTSER_RTIOC_GET_CONTROL     \</span>
+00413 <span class="preprocessor">    _IOR(RTIOC_TYPE_SERIAL, 0x03, int)</span>
 00414 <span class="preprocessor"></span>
-<a name="l00437"></a><a class="code" href="group__rtserial.html#ga75">00437</a> <span class="preprocessor">#define RTSER_RTIOC_WAIT_EVENT      \</span>
-00438 <span class="preprocessor">    _IOR(RTIOC_TYPE_SERIAL, 0x05, struct rtser_event)</span>
-00439 <span class="preprocessor"></span>
-00443 <span class="preprocessor">#endif </span><span class="comment">/* _RTSERIAL_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
+<a name="l00432"></a><a class="code" href="group__rtserial.html#ga74">00432</a> <span class="preprocessor">#define RTSER_RTIOC_SET_CONTROL     \</span>
+00433 <span class="preprocessor">    _IOW(RTIOC_TYPE_SERIAL, 0x04, int)</span>
+00434 <span class="preprocessor"></span>
+<a name="l00457"></a><a class="code" href="group__rtserial.html#ga75">00457</a> <span class="preprocessor">#define RTSER_RTIOC_WAIT_EVENT      \</span>
+00458 <span class="preprocessor">    _IOR(RTIOC_TYPE_SERIAL, 0x05, struct rtser_event)</span>
+00459 <span class="preprocessor"></span>
+00463 <span class="preprocessor">#endif </span><span class="comment">/* _RTSERIAL_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:49:58 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

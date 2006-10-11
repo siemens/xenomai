@@ -40,7 +40,7 @@ Collaboration diagram for Task Services:<center><table><tr><td><img src="group__
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Real-time task procedure.  <a href="#ga1"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga2">rtdm_task_init</a> (rtdm_task_t *task, const char *name, <a class="el" href="group__rtdmtask.html#ga1">rtdm_task_proc_t</a> task_proc, void *arg, int priority, uint64_t period)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga2">rtdm_task_init</a> (rtdm_task_t *task, const char *name, <a class="el" href="group__rtdmtask.html#ga1">rtdm_task_proc_t</a> task_proc, void *arg, int priority, <a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a> period)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Intialise and start a real-time task.  <a href="#ga2"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga3">rtdm_task_destroy</a> (rtdm_task_t *task)</td></tr>
@@ -49,7 +49,7 @@ Collaboration diagram for Task Services:<center><table><tr><td><img src="group__
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga4">rtdm_task_set_priority</a> (rtdm_task_t *task, int priority)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Adjust real-time task priority.  <a href="#ga4"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga5">rtdm_task_set_period</a> (rtdm_task_t *task, uint64_t period)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga5">rtdm_task_set_period</a> (rtdm_task_t *task, <a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a> period)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Adjust real-time task period.  <a href="#ga5"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga6">rtdm_task_wait_period</a> (void)</td></tr>
@@ -64,13 +64,13 @@ Collaboration diagram for Task Services:<center><table><tr><td><img src="group__
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga9">rtdm_task_join_nrt</a> (rtdm_task_t *task, unsigned int poll_delay)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on a real-time task to terminate.  <a href="#ga9"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga10">rtdm_task_sleep</a> (uint64_t delay)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga10">rtdm_task_sleep</a> (<a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a> delay)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sleep a specified amount of time.  <a href="#ga10"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga11">rtdm_task_sleep_until</a> (uint64_t wakeup_time)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga11">rtdm_task_sleep_until</a> (<a class="el" href="group__rtdm.html#ga0">nanosecs_abs_t</a> wakeup_time)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sleep until a specified absolute time.  <a href="#ga11"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga12">rtdm_task_busy_sleep</a> (uint64_t delay)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga12">rtdm_task_busy_sleep</a> (<a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a> delay)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Busy-wait a specified amount of time.  <a href="#ga12"></a><br></td></tr>
 </table>
@@ -114,7 +114,7 @@ Real-time task procedure.
         <tr>
           <td class="md" nowrap valign="top">void rtdm_task_busy_sleep           </td>
           <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">uint64_t&nbsp;</td>
+          <td class="md" nowrap valign="top"><a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a>&nbsp;</td>
           <td class="mdname1" valign="top" nowrap> <em>delay</em>          </td>
           <td class="md" valign="top">&nbsp;)&nbsp;</td>
           <td class="md" nowrap></td>
@@ -135,15 +135,16 @@ Busy-wait a specified amount of time.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>delay</em>&nbsp;</td><td>Delay in nanoseconds</td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>delay</em>&nbsp;</td><td>Delay in nanoseconds. Note that a zero delay does <b>not</b> have the meaning of <code>RTDM_TIMEOUT_INFINITE</code> here.</td></tr>
   </table>
 </dl>
+<dl compact><dt><b>Note:</b></dt><dd>The caller must not be migratable to different CPUs while executing this service. Otherwise, the actual delay will be undefined.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
-<li>Kernel module initialization/cleanup code</li><li>Interrupt service routine (but you should rather avoid this...)</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
+<li>Kernel module initialization/cleanup code</li><li>Interrupt service routine (should be avoided or kept short)</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
 <p>
-Rescheduling: never.     </td>
+Rescheduling: never (except due to external interruptions).     </td>
   </tr>
 </table>
 <a class="anchor" name="ga8" doxytag="drvlib.c::rtdm_task_current"></a><p>
@@ -214,6 +215,7 @@ Destroy a real-time task.
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>task</em>&nbsp;</td><td>Task handle as returned by <a class="el" href="group__rtdmtask.html#ga2">rtdm_task_init()</a></td></tr>
   </table>
 </dl>
+<dl compact><dt><b>Note:</b></dt><dd>Passing the same task handle to RTDM services after the completion of this function is not allowed.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -260,7 +262,7 @@ Rescheduling: never.     </td>
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
-          <td class="md" nowrap>uint64_t&nbsp;</td>
+          <td class="md" nowrap><a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a>&nbsp;</td>
           <td class="mdname" nowrap> <em>period</em></td>
         </tr>
         <tr>
@@ -282,6 +284,7 @@ Rescheduling: never.     </td>
 <p>
 Intialise and start a real-time task. 
 <p>
+After initialising a task, the task handle remains valid and can be passed to RTDM services until either <a class="el" href="group__rtdmtask.html#ga3">rtdm_task_destroy()</a> or <a class="el" href="group__rtdmtask.html#ga9">rtdm_task_join_nrt()</a> was invoked.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>task</em>&nbsp;</td><td>Task handle </td></tr>
@@ -343,7 +346,8 @@ Wait on a real-time task to terminate.
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>poll_delay</em>&nbsp;</td><td>Polling delay in milliseconds</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Note:</b></dt><dd>It is not required to call rtdm_task_destroy() for a task which has been passed to <a class="el" href="group__rtdmtask.html#ga9">rtdm_task_join_nrt()</a>. Moreover, don't forget to inform the targeted task that it has to terminate. Otherwise, this function will never return.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>Passing the same task handle to RTDM services after the completion of this function is not allowed.<p>
+This service does not trigger the termination of the targeted task. The user has to take of this, otherwise <a class="el" href="group__rtdmtask.html#ga9">rtdm_task_join_nrt()</a> will never return.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -366,7 +370,7 @@ Rescheduling: possible.     </td>
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
-          <td class="md" nowrap>uint64_t&nbsp;</td>
+          <td class="md" nowrap><a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a>&nbsp;</td>
           <td class="mdname" nowrap> <em>period</em></td>
         </tr>
         <tr>
@@ -460,7 +464,7 @@ Rescheduling: possible.     </td>
         <tr>
           <td class="md" nowrap valign="top">int rtdm_task_sleep           </td>
           <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">uint64_t&nbsp;</td>
+          <td class="md" nowrap valign="top"><a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a>&nbsp;</td>
           <td class="mdname1" valign="top" nowrap> <em>delay</em>          </td>
           <td class="md" valign="top">&nbsp;)&nbsp;</td>
           <td class="md" nowrap></td>
@@ -481,12 +485,12 @@ Sleep a specified amount of time.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>delay</em>&nbsp;</td><td>Delay in nanoseconds</td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>delay</em>&nbsp;</td><td>Delay in nanoseconds, see <a class="el" href="group__rtdm.html#RTDM_TIMEOUT_xxx">RTDM_TIMEOUT_xxx</a> for special values.</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
 <ul>
-<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via rtdm_task_unblock().</li></ul>
+<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ga7">rtdm_task_unblock()</a>.</li></ul>
 <p>
 <ul>
 <li>-EPERM <em>may</em> be returned if an illegal invocation environment is detected.</li></ul>
@@ -507,7 +511,7 @@ Rescheduling: always.     </td>
         <tr>
           <td class="md" nowrap valign="top">int rtdm_task_sleep_until           </td>
           <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">uint64_t&nbsp;</td>
+          <td class="md" nowrap valign="top"><a class="el" href="group__rtdm.html#ga0">nanosecs_abs_t</a>&nbsp;</td>
           <td class="mdname1" valign="top" nowrap> <em>wakeup_time</em>          </td>
           <td class="md" valign="top">&nbsp;)&nbsp;</td>
           <td class="md" nowrap></td>
@@ -533,7 +537,7 @@ Sleep until a specified absolute time.
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
 <ul>
-<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via rtdm_task_unblock().</li></ul>
+<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ga7">rtdm_task_unblock()</a>.</li></ul>
 <p>
 <ul>
 <li>-EPERM <em>may</em> be returned if an illegal invocation environment is detected.</li></ul>
@@ -624,7 +628,7 @@ This service can be called from:<p>
 Rescheduling: always, unless a timer overrun occured.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:55 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:50:08 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

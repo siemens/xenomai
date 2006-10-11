@@ -160,7 +160,7 @@ When used in user-space, passing the current thread ID as <em>tid</em> argument,
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
 an error number if:<ul>
-<li>ESRCH, <em>tid</em> is invalid;</li><li>EINVAL, <em>pol</em> or <em>par-&gt;sched_priority</em> is invalid;</li><li>EFAULT, in user-space, <em>par</em> is an invalid address;</li><li>EPERM, in user-space, the calling process does not have superuser permissions.</li></ul>
+<li>ESRCH, <em>tid</em> is invalid;</li><li>EINVAL, <em>pol</em> or <em>par-&gt;sched_priority</em> is invalid;</li><li>EAGAIN, in user-space, insufficient memory exists in the system heap, increase CONFIG_XENO_OPT_SYS_HEAPSZ;</li><li>EFAULT, in user-space, <em>par</em> is an invalid address;</li><li>EPERM, in user-space, the calling process does not have superuser permissions.</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setschedparam.html">Specification.</a> </dd></dl>
     </td>
@@ -349,7 +349,7 @@ This function move the current thread at the end of its priority group.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:58 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:50:13 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
