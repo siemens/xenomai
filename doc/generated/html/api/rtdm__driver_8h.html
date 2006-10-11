@@ -86,8 +86,8 @@ This graph shows which files directly or indirectly include this file:<p><center
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga18">RTDM_USER_CONTEXT_FLAG</a>&nbsp;&nbsp;&nbsp;8</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Lowest bit number the driver developer can use freely. <br></td></tr>
-<tr><td colspan="2"><br><h2>Versioning</h2></td></tr>
-<tr><td colspan="2"><a class="anchor" name="versioning"></a> Current revisions of RTDM structures and interfaces, encoding of driver versions. <br><br></td></tr>
+<tr><td colspan="2"><br><h2>Driver Versioning</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="drv_versioning"></a> Current revisions of RTDM structures, encoding of driver versions. See <a class="el" href="group__rtdm.html#api_versioning">API Versioning</a> for the interface revision. <br><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga19" doxytag="rtdm_driver.h::RTDM_DEVICE_STRUCT_VER"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga19">RTDM_DEVICE_STRUCT_VER</a>&nbsp;&nbsp;&nbsp;3</td></tr>
 
@@ -96,32 +96,24 @@ This graph shows which files directly or indirectly include this file:<p><center
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga20">RTDM_CONTEXT_STRUCT_VER</a>&nbsp;&nbsp;&nbsp;3</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Version of struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a>. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga21" doxytag="rtdm_driver.h::RTDM_API_VER"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga21">RTDM_API_VER</a>&nbsp;&nbsp;&nbsp;5</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Driver API version. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga22" doxytag="rtdm_driver.h::RTDM_API_MIN_COMPAT_VER"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga22">RTDM_API_MIN_COMPAT_VER</a>&nbsp;&nbsp;&nbsp;4</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Minimum API revision compatible with the current release. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga23" doxytag="rtdm_driver.h::RTDM_SECURE_DEVICE"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga23">RTDM_SECURE_DEVICE</a>&nbsp;&nbsp;&nbsp;0x80000000</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga21" doxytag="rtdm_driver.h::RTDM_SECURE_DEVICE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga21">RTDM_SECURE_DEVICE</a>&nbsp;&nbsp;&nbsp;0x80000000</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Flag indicating a secure variant of RTDM (not supported here). <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga24" doxytag="rtdm_driver.h::RTDM_DRIVER_VER"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga24">RTDM_DRIVER_VER</a>(major, minor, patch)&nbsp;&nbsp;&nbsp;(((major &amp; 0xFF) &lt;&lt; 16) | ((minor &amp; 0xFF) &lt;&lt; 8) | (patch &amp; 0xFF))</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga22" doxytag="rtdm_driver.h::RTDM_DRIVER_VER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga22">RTDM_DRIVER_VER</a>(major, minor, patch)&nbsp;&nbsp;&nbsp;(((major &amp; 0xFF) &lt;&lt; 16) | ((minor &amp; 0xFF) &lt;&lt; 8) | (patch &amp; 0xFF))</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Version code constructor for driver revisions. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga25" doxytag="rtdm_driver.h::RTDM_DRIVER_MAJOR_VER"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga25">RTDM_DRIVER_MAJOR_VER</a>(ver)&nbsp;&nbsp;&nbsp;(((ver) &gt;&gt; 16) &amp; 0xFF)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga23" doxytag="rtdm_driver.h::RTDM_DRIVER_MAJOR_VER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga23">RTDM_DRIVER_MAJOR_VER</a>(ver)&nbsp;&nbsp;&nbsp;(((ver) &gt;&gt; 16) &amp; 0xFF)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get major version number from driver revision code. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga26" doxytag="rtdm_driver.h::RTDM_DRIVER_MINOR_VER"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga26">RTDM_DRIVER_MINOR_VER</a>(ver)&nbsp;&nbsp;&nbsp;(((ver) &gt;&gt; 8) &amp; 0xFF)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga24" doxytag="rtdm_driver.h::RTDM_DRIVER_MINOR_VER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga24">RTDM_DRIVER_MINOR_VER</a>(ver)&nbsp;&nbsp;&nbsp;(((ver) &gt;&gt; 8) &amp; 0xFF)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get minor version number from driver revision code. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga27" doxytag="rtdm_driver.h::RTDM_DRIVER_PATCH_VER"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga27">RTDM_DRIVER_PATCH_VER</a>(ver)&nbsp;&nbsp;&nbsp;((ver) &amp; 0xFF)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga25" doxytag="rtdm_driver.h::RTDM_DRIVER_PATCH_VER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga25">RTDM_DRIVER_PATCH_VER</a>(ver)&nbsp;&nbsp;&nbsp;((ver) &amp; 0xFF)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get patch version number from driver revision code. <br></td></tr>
 <tr><td colspan="2"><br><h2>Global Lock across Scheduler Invocation</h2></td></tr>
@@ -247,25 +239,22 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga3">rtdm_context_get</a> (int fd)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Resolve file descriptor to device context.  <a href="group__interdrv.html#ga3"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga2">rtdm_task_init</a> (rtdm_task_t *task, const char *name, <a class="el" href="group__rtdmtask.html#ga1">rtdm_task_proc_t</a> task_proc, void *arg, int priority, uint64_t period)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga2">rtdm_task_init</a> (rtdm_task_t *task, const char *name, <a class="el" href="group__rtdmtask.html#ga1">rtdm_task_proc_t</a> task_proc, void *arg, int priority, <a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a> period)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Intialise and start a real-time task.  <a href="group__rtdmtask.html#ga2"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga9">rtdm_task_join_nrt</a> (rtdm_task_t *task, unsigned int poll_delay)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on a real-time task to terminate.  <a href="group__rtdmtask.html#ga9"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga10">rtdm_task_sleep</a> (uint64_t delay)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga10">rtdm_task_sleep</a> (<a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a> delay)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sleep a specified amount of time.  <a href="group__rtdmtask.html#ga10"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga11">rtdm_task_sleep_until</a> (uint64_t wakeup_time)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga11">rtdm_task_sleep_until</a> (<a class="el" href="group__rtdm.html#ga0">nanosecs_abs_t</a> wakeup_time)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sleep until a specified absolute time.  <a href="group__rtdmtask.html#ga11"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga12">rtdm_task_busy_sleep</a> (uint64_t delay)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga12">rtdm_task_busy_sleep</a> (<a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a> delay)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Busy-wait a specified amount of time.  <a href="group__rtdmtask.html#ga12"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga7">rtdm_event_wait</a> (rtdm_event_t *event)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on event occurrence.  <a href="group__rtdmsync.html#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga8">rtdm_event_timedwait</a> (rtdm_event_t *event, int64_t timeout, rtdm_toseq_t *timeout_seq)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga8">rtdm_event_timedwait</a> (rtdm_event_t *event, <a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a> timeout, rtdm_toseq_t *timeout_seq)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on event occurrence with timeout.  <a href="group__rtdmsync.html#ga8"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga6">rtdm_event_signal</a> (rtdm_event_t *event)</td></tr>
@@ -277,7 +266,7 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga12">rtdm_sem_down</a> (rtdm_sem_t *sem)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement a semaphore.  <a href="group__rtdmsync.html#ga12"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga13">rtdm_sem_timeddown</a> (rtdm_sem_t *sem, int64_t timeout, rtdm_toseq_t *timeout_seq)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga13">rtdm_sem_timeddown</a> (rtdm_sem_t *sem, <a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a> timeout, rtdm_toseq_t *timeout_seq)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement a semaphore with timeout.  <a href="group__rtdmsync.html#ga13"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga14">rtdm_sem_up</a> (rtdm_sem_t *sem)</td></tr>
@@ -286,17 +275,11 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga18">rtdm_mutex_lock</a> (rtdm_mutex_t *mutex)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex.  <a href="group__rtdmsync.html#ga18"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga19">rtdm_mutex_timedlock</a> (rtdm_mutex_t *mutex, int64_t timeout, rtdm_toseq_t *timeout_seq)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga19">rtdm_mutex_timedlock</a> (rtdm_mutex_t *mutex, <a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a> timeout, rtdm_toseq_t *timeout_seq)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex with timeout.  <a href="group__rtdmsync.html#ga19"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga2">rtdm_mmap_to_user</a> (rtdm_user_info_t *user_info, void *src_addr, size_t len, int prot, void **pptr, struct vm_operations_struct *vm_ops, void *vm_private_data)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Map a kernel memory range into the address space of the user.  <a href="group__util.html#ga2"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga3">rtdm_munmap</a> (rtdm_user_info_t *user_info, void *ptr, size_t len)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unmap a user memory range.  <a href="group__util.html#ga3"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:49:58 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

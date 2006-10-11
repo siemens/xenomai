@@ -1,3 +1,8 @@
+2006-10-11    <gilles.chanteperdrix@laposte.net>
+
+	* doc/doxygen/Makefile.am: Generate API documentation in pdf
+	format.
+
 2006-10-10  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/blackfin, include/asm-blackfin/hal.h: Use

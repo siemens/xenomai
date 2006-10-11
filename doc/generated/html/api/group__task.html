@@ -454,9 +454,6 @@ The DELETE hooks are called on behalf of the calling context (if any). The infor
 <li>-EINTR is returned if <a class="el" href="group__task.html#ga19">rt_task_unblock()</a> has been invoked for the caller while it was waiting for <em>task</em> to exit a safe section. In such a case, the deletion process has been aborted and <em>task</em> remains unaffected.</li></ul>
 <p>
 <ul>
-<li>-EDEADLK is returned if the caller is self-deleting while running in the middle of a safe section.</li></ul>
-<p>
-<ul>
 <li>-EIDRM is returned if <em>task</em> is a deleted task descriptor.</li></ul>
 <p>
 Environments:<p>
@@ -685,7 +682,7 @@ Rescheduling: possible.     </td>
 Receive a message from a task. 
 <p>
 This service is part of the synchronous message passing support available to Xenomai tasks. It allows the caller to receive a variable-sized message sent from another task using the <a class="el" href="group__task.html#ga28">rt_task_send()</a> service. The sending task is blocked until the caller invokes <a class="el" href="group__task.html#ga30">rt_task_reply()</a> to finish the transaction.<p>
-A basic message control block is used to store the location and size of the data area to receive from the sender, in addition to a user-defined operation code.<p>
+A basic message control block is used to store the location and size of the data area to receive from the client, in addition to a user-defined operation code.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>mcb_r</em>&nbsp;</td><td>The address of a message control block referring to the receive message area. The fields from this control block should be set as follows:</td></tr>
@@ -828,12 +825,12 @@ Rescheduling: never.     </td>
 <p>
 Reply to a task. 
 <p>
-This service is part of the synchronous message passing support available to Xenomai tasks. It allows the caller to send back a variable-sized message to the sender task, once the initial message from this task has been pulled using <a class="el" href="group__task.html#ga29">rt_task_receive()</a> and processed. As a consequence of this call, the remote task will be unblocked from the <a class="el" href="group__task.html#ga28">rt_task_send()</a> service.<p>
+This service is part of the synchronous message passing support available to Xenomai tasks. It allows the caller to send back a variable-sized message to the client task, once the initial message from this task has been pulled using <a class="el" href="group__task.html#ga29">rt_task_receive()</a> and processed. As a consequence of this call, the remote task will be unblocked from the <a class="el" href="group__task.html#ga28">rt_task_send()</a> service.<p>
 A basic message control block is used to store the location and size of the data area to send back, in addition to a user-defined status code.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>flowid</em>&nbsp;</td><td>The flow identifier returned by a previous call to <a class="el" href="group__task.html#ga29">rt_task_receive()</a> which uniquely identifies the current transaction.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>mcb_s</em>&nbsp;</td><td>The address of an optional message control block referring to the message to be sent back. If <em>mcb_s</em> is NULL, the sender will be unblocked without getting any reply data. When <em>mcb_s</em> is valid, the fields from this control block should be set as follows:</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mcb_s</em>&nbsp;</td><td>The address of an optional message control block referring to the message to be sent back. If <em>mcb_s</em> is NULL, the client will be unblocked without getting any reply data. When <em>mcb_s</em> is valid, the fields from this control block should be set as follows:</td></tr>
   </table>
 </dl>
 <ul>
@@ -843,11 +840,11 @@ A basic message control block is used to store the location and size of the data
 <li>mcb_s-&gt;size should contain the size in bytes of the payload data pointed at by mcb_s-&gt;data. 0 is a legitimate value, and indicates that no payload data will be transferred. In the latter case, mcb_s-&gt;data will be ignored. See note.</li></ul>
 <p>
 <ul>
-<li>mcb_s-&gt;opcode is an opaque status code carried during the message transfer the caller can fill with any appropriate value. It will be made available "as is" to the remote task into the status code field by the <a class="el" href="group__task.html#ga28">rt_task_send()</a> service. If <em>mcb_s</em> is NULL, 0 will be returned to the initial sender into the status code field.</li></ul>
+<li>mcb_s-&gt;opcode is an opaque status code carried during the message transfer the caller can fill with any appropriate value. It will be made available "as is" to the remote task into the status code field by the <a class="el" href="group__task.html#ga28">rt_task_send()</a> service. If <em>mcb_s</em> is NULL, 0 will be returned to the client into the status code field.</li></ul>
 <p>
 <dl compact><dt><b>Returns:</b></dt><dd>O is returned upon success. Otherwise:</dd></dl>
 <ul>
-<li>-ENXIO is returned if <em>flowid</em> does not match the expected identifier returned from the latest call of the current task to <a class="el" href="group__task.html#ga29">rt_task_receive()</a>, or if the remote task stopped waiting for the reply in the meantime (e.g. the initial sender could have been deleted or forcibly unblocked).</li></ul>
+<li>-ENXIO is returned if <em>flowid</em> does not match the expected identifier returned from the latest call of the current task to <a class="el" href="group__task.html#ga29">rt_task_receive()</a>, or if the remote task stopped waiting for the reply in the meantime (e.g. the client could have been deleted or forcibly unblocked).</li></ul>
 <p>
 <ul>
 <li>-EPERM is returned if this service was called from an invalid context (e.g. interrupt, or non-primary).</li></ul>
@@ -1204,7 +1201,7 @@ Make a task periodic by programing its first release point and its period in the
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
 <ul>
-<li>-EINVAL is returned if <em>task</em> is not a task descriptor.</li></ul>
+<li>-EINVAL is returned if <em>task</em> is not a task descriptor, or <em>period</em> is different from TM_INFINITE but shorter than the scheduling latency value for the target system, as available from /proc/xenomai/latency.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>task</em> is a deleted task descriptor.</li></ul>
@@ -1987,7 +1984,7 @@ This service can be called from:<p>
 Rescheduling: always if a next equal-priority task is ready to run, otherwise, this service leads to a no-op.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:53 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:50:06 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

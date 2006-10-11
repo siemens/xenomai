@@ -11,7 +11,7 @@
 <h1>rtdm.h File Reference</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 Real-Time Driver Model for Xenomai, user API header. 
 <p>
-<dl compact><dt><b>Note:</b></dt><dd>Copyright (C) 2005 Jan Kiszka &lt;<a href="mailto:jan.kiszka@web.de">jan.kiszka@web.de</a>&gt; <p>
+<dl compact><dt><b>Note:</b></dt><dd>Copyright (C) 2005, 2006 Jan Kiszka &lt;<a href="mailto:jan.kiszka@web.de">jan.kiszka@web.de</a>&gt; <p>
 Copyright (C) 2005 Joerg Langenberg &lt;<a href="mailto:joerg.langenberg@gmx.net">joerg.langenberg@gmx.net</a>&gt;</dd></dl>
 Xenomai is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.<p>
 Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
@@ -39,82 +39,79 @@ This graph shows which files directly or indirectly include this file:<p><center
 <p>
 <a href="rtdm_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
+<tr><td colspan="2"><br><h2>API Versioning</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="api_versioning"></a> <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga2" doxytag="rtdm.h::RTDM_API_VER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#ga2">RTDM_API_VER</a>&nbsp;&nbsp;&nbsp;5</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Common user and driver API version. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga3" doxytag="rtdm.h::RTDM_API_MIN_COMPAT_VER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#ga3">RTDM_API_MIN_COMPAT_VER</a>&nbsp;&nbsp;&nbsp;5</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Minimum API revision compatible with the current release. <br></td></tr>
+<tr><td colspan="2"><br><h2>RTDM_TIMEOUT_xxx</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="RTDM_TIMEOUT_xxx"></a> Special timeout values <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga4" doxytag="rtdm.h::RTDM_TIMEOUT_INFINITE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#ga4">RTDM_TIMEOUT_INFINITE</a>&nbsp;&nbsp;&nbsp;0</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Block forever. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga5" doxytag="rtdm.h::RTDM_TIMEOUT_NONE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#ga5">RTDM_TIMEOUT_NONE</a>&nbsp;&nbsp;&nbsp;(-1)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Any negative timeout means non-blocking. <br></td></tr>
 <tr><td colspan="2"><br><h2>RTDM_CLASS_xxx</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="RTDM_CLASS_xxx"></a> Device classes <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a1" doxytag="rtdm.h::RTDM_CLASS_PARPORT"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga0" doxytag="rtdm.h::RTDM_CLASS_PARPORT"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_PARPORT</b>&nbsp;&nbsp;&nbsp;1</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a2" doxytag="rtdm.h::RTDM_CLASS_SERIAL"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga1" doxytag="rtdm.h::RTDM_CLASS_SERIAL"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_SERIAL</b>&nbsp;&nbsp;&nbsp;2</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a3" doxytag="rtdm.h::RTDM_CLASS_CAN"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga2" doxytag="rtdm.h::RTDM_CLASS_CAN"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_CAN</b>&nbsp;&nbsp;&nbsp;3</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a4" doxytag="rtdm.h::RTDM_CLASS_NETWORK"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga3" doxytag="rtdm.h::RTDM_CLASS_NETWORK"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_NETWORK</b>&nbsp;&nbsp;&nbsp;4</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a5" doxytag="rtdm.h::RTDM_CLASS_RTMAC"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga4" doxytag="rtdm.h::RTDM_CLASS_RTMAC"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_RTMAC</b>&nbsp;&nbsp;&nbsp;5</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a6" doxytag="rtdm.h::RTDM_CLASS_TESTING"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga5" doxytag="rtdm.h::RTDM_CLASS_TESTING"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_TESTING</b>&nbsp;&nbsp;&nbsp;6</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a7" doxytag="rtdm.h::RTDM_CLASS_EXPERIMENTAL"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga6" doxytag="rtdm.h::RTDM_CLASS_EXPERIMENTAL"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_EXPERIMENTAL</b>&nbsp;&nbsp;&nbsp;224</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a8" doxytag="rtdm.h::RTDM_CLASS_MAX"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga7" doxytag="rtdm.h::RTDM_CLASS_MAX"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_MAX</b>&nbsp;&nbsp;&nbsp;255</td></tr>
 
-<tr><td colspan="2"><br><h2>Common IOCTLs</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm_8h.html#a10">RTIOC_PURGE</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_COMMON, 0x10, int)</td></tr>
+<tr><td colspan="2"><br><h2>Device Naming</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="device_naming"></a> Maximum length of device names (excluding the final null character) <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga9" doxytag="rtdm.h::RTDM_MAX_DEVNAME_LEN"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_MAX_DEVNAME_LEN</b>&nbsp;&nbsp;&nbsp;31</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Purge internal device buffers.  <a href="#a10"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>RTDM_PURGE_xxx_BUFFER</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="RTDM_PURGE_xxx_BUFFER"></a> Flags selecting buffers to be purged <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a11" doxytag="rtdm.h::RTDM_PURGE_RX_BUFFER"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga10" doxytag="rtdm.h::RTDM_PURGE_RX_BUFFER"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_PURGE_RX_BUFFER</b>&nbsp;&nbsp;&nbsp;0x0001</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a12" doxytag="rtdm.h::RTDM_PURGE_TX_BUFFER"></a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga11" doxytag="rtdm.h::RTDM_PURGE_TX_BUFFER"></a>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_PURGE_TX_BUFFER</b>&nbsp;&nbsp;&nbsp;0x0002</td></tr>
 
-<tr><td colspan="2"><br><h2>Defines</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a0" doxytag="rtdm.h::RTDM_MAX_DEVNAME_LEN"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="rtdm_8h.html#a0">RTDM_MAX_DEVNAME_LEN</a>&nbsp;&nbsp;&nbsp;31</td></tr>
+<tr><td colspan="2"><br><h2>Common IOCTLs</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="common_IOCTLs"></a> The following IOCTLs shall be supported by any device profile if applicable <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__profiles.html#ga12">RTIOC_PURGE</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_COMMON, 0x10, int)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Maximum length of device names. <br></td></tr>
-</table>
-<hr><h2>Define Documentation</h2>
-<a class="anchor" name="a10" doxytag="rtdm.h::RTIOC_PURGE"></a><p>
-<table class="mdTable" cellpadding="2" cellspacing="0">
-  <tr>
-    <td class="mdRow">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td class="md" nowrap valign="top">#define RTIOC_PURGE&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_COMMON, 0x10, int)          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table cellspacing="5" cellpadding="0" border="0">
-  <tr>
-    <td>
-      &nbsp;
-    </td>
-    <td>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Purge internal device or socket buffers.  <a href="group__profiles.html#ga12"></a><br></td></tr>
+<tr><td colspan="2"><br><h2>Typedefs</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef uint64_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#ga0">nanosecs_abs_t</a></td></tr>
 
-<p>
-Purge internal device buffers. 
-<p>
-<dl compact><dt><b>Parameters:</b></dt><dd>
-  <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>arg</em>&nbsp;</td><td>Purge mask, see <a class="el" href="rtdm_8h.html#RTDM_PURGE_xxx_BUFFER">RTDM_PURGE_xxx_BUFFER</a> </td></tr>
-  </table>
-</dl>
-    </td>
-  </tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">RTDM type for representing absolute dates.  <a href="group__rtdm.html#ga0"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int64_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">RTDM type for representing relative intervals.  <a href="group__rtdm.html#ga1"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:49:58 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

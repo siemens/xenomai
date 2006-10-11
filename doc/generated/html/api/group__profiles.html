@@ -30,8 +30,83 @@ Device profiles define which operation handlers a driver of a certain class has 
 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rttesting.html">Testing Device</a></td></tr>
 
+<tr><td colspan="2"><br><h2>RTDM_CLASS_xxx</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="RTDM_CLASS_xxx"></a> Device classes <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga0" doxytag="profiles::RTDM_CLASS_PARPORT"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_PARPORT</b>&nbsp;&nbsp;&nbsp;1</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga1" doxytag="profiles::RTDM_CLASS_SERIAL"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_SERIAL</b>&nbsp;&nbsp;&nbsp;2</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga2" doxytag="profiles::RTDM_CLASS_CAN"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_CAN</b>&nbsp;&nbsp;&nbsp;3</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga3" doxytag="profiles::RTDM_CLASS_NETWORK"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_NETWORK</b>&nbsp;&nbsp;&nbsp;4</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga4" doxytag="profiles::RTDM_CLASS_RTMAC"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_RTMAC</b>&nbsp;&nbsp;&nbsp;5</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga5" doxytag="profiles::RTDM_CLASS_TESTING"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_TESTING</b>&nbsp;&nbsp;&nbsp;6</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga6" doxytag="profiles::RTDM_CLASS_EXPERIMENTAL"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_EXPERIMENTAL</b>&nbsp;&nbsp;&nbsp;224</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga7" doxytag="profiles::RTDM_CLASS_MAX"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_CLASS_MAX</b>&nbsp;&nbsp;&nbsp;255</td></tr>
+
+<tr><td colspan="2"><br><h2>Device Naming</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="device_naming"></a> Maximum length of device names (excluding the final null character) <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga9" doxytag="profiles::RTDM_MAX_DEVNAME_LEN"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_MAX_DEVNAME_LEN</b>&nbsp;&nbsp;&nbsp;31</td></tr>
+
+<tr><td colspan="2"><br><h2>RTDM_PURGE_xxx_BUFFER</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="RTDM_PURGE_xxx_BUFFER"></a> Flags selecting buffers to be purged <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga10" doxytag="profiles::RTDM_PURGE_RX_BUFFER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_PURGE_RX_BUFFER</b>&nbsp;&nbsp;&nbsp;0x0001</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga11" doxytag="profiles::RTDM_PURGE_TX_BUFFER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_PURGE_TX_BUFFER</b>&nbsp;&nbsp;&nbsp;0x0002</td></tr>
+
+<tr><td colspan="2"><br><h2>Common IOCTLs</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="common_IOCTLs"></a> The following IOCTLs shall be supported by any device profile if applicable <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__profiles.html#ga12">RTIOC_PURGE</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_COMMON, 0x10, int)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Purge internal device or socket buffers.  <a href="#ga12"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:56 2006 for Xenomai API by&nbsp;
+<hr><h2>Define Documentation</h2>
+<a class="anchor" name="ga12" doxytag="rtdm.h::RTIOC_PURGE"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">#define RTIOC_PURGE&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_COMMON, 0x10, int)          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Purge internal device or socket buffers. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>arg</em>&nbsp;</td><td>Purge mask, see <a class="el" href="group__profiles.html#RTDM_PURGE_xxx_BUFFER">RTDM_PURGE_xxx_BUFFER</a> </td></tr>
+  </table>
+</dl>
+    </td>
+  </tr>
+</table>
+<hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:50:10 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

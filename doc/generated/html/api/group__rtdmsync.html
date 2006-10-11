@@ -58,7 +58,7 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Variable to save the context while holding a lock. <br></td></tr>
 <tr><td colspan="2"><br><h2>Timeout Sequence Management</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga2">rtdm_toseq_init</a> (rtdm_toseq_t *timeout_seq, int64_t timeout)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga2">rtdm_toseq_init</a> (rtdm_toseq_t *timeout_seq, <a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a> timeout)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a timeout sequence.  <a href="#ga2"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>Event Services</h2></td></tr>
@@ -77,7 +77,7 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga7">rtdm_event_wait</a> (rtdm_event_t *event)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on event occurrence.  <a href="#ga7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga8">rtdm_event_timedwait</a> (rtdm_event_t *event, int64_t timeout, rtdm_toseq_t *timeout_seq)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga8">rtdm_event_timedwait</a> (rtdm_event_t *event, <a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a> timeout, rtdm_toseq_t *timeout_seq)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on event occurrence with timeout.  <a href="#ga8"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga9">rtdm_event_clear</a> (rtdm_event_t *event)</td></tr>
@@ -93,7 +93,7 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga12">rtdm_sem_down</a> (rtdm_sem_t *sem)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement a semaphore.  <a href="#ga12"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga13">rtdm_sem_timeddown</a> (rtdm_sem_t *sem, int64_t timeout, rtdm_toseq_t *timeout_seq)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga13">rtdm_sem_timeddown</a> (rtdm_sem_t *sem, <a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a> timeout, rtdm_toseq_t *timeout_seq)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement a semaphore with timeout.  <a href="#ga13"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga14">rtdm_sem_up</a> (rtdm_sem_t *sem)</td></tr>
@@ -112,7 +112,7 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga18">rtdm_mutex_lock</a> (rtdm_mutex_t *mutex)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex.  <a href="#ga18"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga19">rtdm_mutex_timedlock</a> (rtdm_mutex_t *mutex, int64_t timeout, rtdm_toseq_t *timeout_seq)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga19">rtdm_mutex_timedlock</a> (rtdm_mutex_t *mutex, <a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a> timeout, rtdm_toseq_t *timeout_seq)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex with timeout.  <a href="#ga19"></a><br></td></tr>
 </table>
@@ -484,7 +484,7 @@ Clear event state.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by rtdm_event_init()</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga3">rtdm_event_init()</a></td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -524,7 +524,7 @@ Destroy an event.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by rtdm_event_init()</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga3">rtdm_event_init()</a></td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -612,10 +612,10 @@ Rescheduling: never.     </td>
 <p>
 Signal an event occurrence to currently listening waiters. 
 <p>
-This function wakes up all current waiters of the given event, but it does not change the event state. Subsequently callers of <a class="el" href="group__rtdmsync.html#ga7">rtdm_event_wait()</a> or rtdm_event_wait_until() will therefore be blocked first.<p>
+This function wakes up all current waiters of the given event, but it does not change the event state. Subsequently callers of <a class="el" href="group__rtdmsync.html#ga7">rtdm_event_wait()</a> or <a class="el" href="group__rtdmsync.html#ga8">rtdm_event_timedwait()</a> will therefore be blocked first.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by rtdm_event_init()</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga3">rtdm_event_init()</a></td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -653,10 +653,10 @@ Rescheduling: possible.     </td>
 <p>
 Signal an event occurrence. 
 <p>
-This function sets the given event and wakes up all current waiters. If no waiter is presently registered, the next call to <a class="el" href="group__rtdmsync.html#ga7">rtdm_event_wait()</a> or rtdm_event_wait_until() will return immediately.<p>
+This function sets the given event and wakes up all current waiters. If no waiter is presently registered, the next call to <a class="el" href="group__rtdmsync.html#ga7">rtdm_event_wait()</a> or <a class="el" href="group__rtdmsync.html#ga8">rtdm_event_timedwait()</a> will return immediately.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by rtdm_event_init()</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga3">rtdm_event_init()</a></td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -681,7 +681,7 @@ Rescheduling: possible.     </td>
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
-          <td class="md" nowrap>int64_t&nbsp;</td>
+          <td class="md" nowrap><a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a>&nbsp;</td>
           <td class="mdname" nowrap> <em>timeout</em>, </td>
         </tr>
         <tr>
@@ -712,9 +712,9 @@ Wait on event occurrence with timeout.
 This function waits or tests for the occurence of the given event, taking the provided timeout into account. On successful return, the event is reset.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by rtdm_event_init() </td></tr>
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>timeout</em>&nbsp;</td><td>Relative timeout in nanoseconds, 0 for infinite, or any negative value for non-blocking (test for event occurrence) </td></tr>
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by rtdm_toseq_init() or rtdm_toseq_absinit(), or NULL</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga3">rtdm_event_init()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>timeout</em>&nbsp;</td><td>Relative timeout in nanoseconds, see <a class="el" href="group__rtdm.html#RTDM_TIMEOUT_xxx">RTDM_TIMEOUT_xxx</a> for special values </td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by <a class="el" href="group__rtdmsync.html#ga2">rtdm_toseq_init()</a> or rtdm_toseq_absinit(), or NULL</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
@@ -722,7 +722,7 @@ This function waits or tests for the occurence of the given event, taking the pr
 <li>-ETIMEDOUT is returned if the if the request has not been satisfied within the specified amount of time.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via rtdm_task_unblock().</li></ul>
+<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ga7">rtdm_task_unblock()</a>.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>event</em> has been destroyed.</li></ul>
@@ -768,12 +768,12 @@ Wait on event occurrence.
 This is the light-weight version of <a class="el" href="group__rtdmsync.html#ga8">rtdm_event_timedwait()</a>, implying an infinite timeout.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by rtdm_event_init()</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#ga3">rtdm_event_init()</a></td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
 <ul>
-<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via rtdm_task_unblock().</li></ul>
+<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ga7">rtdm_task_unblock()</a>.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>event</em> has been destroyed.</li></ul>
@@ -818,7 +818,7 @@ Destroy a mutex.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by rtdm_mutex_init()</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by <a class="el" href="group__rtdmsync.html#ga15">rtdm_mutex_init()</a></td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -900,7 +900,7 @@ Request a mutex.
 This is the light-weight version of <a class="el" href="group__rtdmsync.html#ga19">rtdm_mutex_timedlock()</a>, implying an infinite timeout.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by rtdm_mutex_init()</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by <a class="el" href="group__rtdmsync.html#ga15">rtdm_mutex_init()</a></td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
@@ -932,7 +932,7 @@ Rescheduling: possible.     </td>
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
-          <td class="md" nowrap>int64_t&nbsp;</td>
+          <td class="md" nowrap><a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a>&nbsp;</td>
           <td class="mdname" nowrap> <em>timeout</em>, </td>
         </tr>
         <tr>
@@ -963,9 +963,9 @@ Request a mutex with timeout.
 This function tries to acquire the given mutex. If it is not available, the caller is blocked unless non-blocking operation was selected.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by rtdm_mutex_init() </td></tr>
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>timeout</em>&nbsp;</td><td>Relative timeout in nanoseconds, 0 for infinite, or any negative value for non-blocking operation </td></tr>
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by rtdm_toseq_init() or rtdm_toseq_absinit(), or NULL</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by <a class="el" href="group__rtdmsync.html#ga15">rtdm_mutex_init()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>timeout</em>&nbsp;</td><td>Relative timeout in nanoseconds, see <a class="el" href="group__rtdm.html#RTDM_TIMEOUT_xxx">RTDM_TIMEOUT_xxx</a> for special values </td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by <a class="el" href="group__rtdmsync.html#ga2">rtdm_toseq_init()</a> or rtdm_toseq_absinit(), or NULL</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
@@ -1019,7 +1019,7 @@ Release a mutex.
 This function releases the given mutex, waking up a potential waiter which was blocked upon <a class="el" href="group__rtdmsync.html#ga18">rtdm_mutex_lock()</a> or <a class="el" href="group__rtdmsync.html#ga19">rtdm_mutex_timedlock()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by rtdm_mutex_init()</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by <a class="el" href="group__rtdmsync.html#ga15">rtdm_mutex_init()</a></td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -1059,7 +1059,7 @@ Destroy a semaphore.
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by rtdm_sem_init()</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by <a class="el" href="group__rtdmsync.html#ga10">rtdm_sem_init()</a></td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -1100,12 +1100,12 @@ Decrement a semaphore.
 This is the light-weight version of <a class="el" href="group__rtdmsync.html#ga13">rtdm_sem_timeddown()</a>, implying an infinite timeout.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by rtdm_sem_init()</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by <a class="el" href="group__rtdmsync.html#ga10">rtdm_sem_init()</a></td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
 <ul>
-<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via rtdm_task_unblock().</li></ul>
+<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ga7">rtdm_task_unblock()</a>.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>sem</em> has been destroyed.</li></ul>
@@ -1185,7 +1185,7 @@ Rescheduling: never.     </td>
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
-          <td class="md" nowrap>int64_t&nbsp;</td>
+          <td class="md" nowrap><a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a>&nbsp;</td>
           <td class="mdname" nowrap> <em>timeout</em>, </td>
         </tr>
         <tr>
@@ -1216,9 +1216,9 @@ Decrement a semaphore with timeout.
 This function tries to decrement the given semphore's value if it is positive on entry. If not, the caller is blocked unless non-blocking operation was selected.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by rtdm_sem_init() </td></tr>
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>timeout</em>&nbsp;</td><td>Relative timeout in nanoseconds, 0 for infinite, or any negative value for non-blocking operation </td></tr>
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by rtdm_toseq_init() or rtdm_toseq_absinit(), or NULL</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by <a class="el" href="group__rtdmsync.html#ga10">rtdm_sem_init()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>timeout</em>&nbsp;</td><td>Relative timeout in nanoseconds, see <a class="el" href="group__rtdm.html#RTDM_TIMEOUT_xxx">RTDM_TIMEOUT_xxx</a> for special values </td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by <a class="el" href="group__rtdmsync.html#ga2">rtdm_toseq_init()</a> or rtdm_toseq_absinit(), or NULL</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
@@ -1229,7 +1229,7 @@ This function tries to decrement the given semphore's value if it is positive on
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is negative and the semaphore value is currently not positive.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via rtdm_task_unblock().</li></ul>
+<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ga7">rtdm_task_unblock()</a>.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>sem</em> has been destroyed.</li></ul>
@@ -1275,7 +1275,7 @@ Increment a semaphore.
 This function increments the given semphore's value, waking up a potential waiter which was blocked upon <a class="el" href="group__rtdmsync.html#ga12">rtdm_sem_down()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by rtdm_sem_init()</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by <a class="el" href="group__rtdmsync.html#ga10">rtdm_sem_init()</a></td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -1300,7 +1300,7 @@ Rescheduling: possible.     </td>
         <tr>
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
-          <td class="md" nowrap>int64_t&nbsp;</td>
+          <td class="md" nowrap><a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a>&nbsp;</td>
           <td class="mdname" nowrap> <em>timeout</em></td>
         </tr>
         <tr>
@@ -1326,7 +1326,7 @@ This service initialises a timeout sequence handle according to the given timeou
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Timeout sequence handle </td></tr>
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>timeout</em>&nbsp;</td><td>Relative timeout in nanoseconds, 0 for infinite, or any negative value for non-blocking</td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>timeout</em>&nbsp;</td><td>Relative timeout in nanoseconds, see <a class="el" href="group__rtdm.html#RTDM_TIMEOUT_xxx">RTDM_TIMEOUT_xxx</a> for special values</td></tr>
   </table>
 </dl>
 Application Scenario: <div class="fragment"><pre class="fragment"><span class="keywordtype">int</span> device_service_routine(...)
@@ -1355,7 +1355,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:55 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:50:09 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

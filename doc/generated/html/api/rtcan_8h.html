@@ -33,387 +33,367 @@ Include dependency graph for rtcan.h:<p><center><img src="rtcan_8h__incl.png" bo
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>CAN ID masks</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="CAN_xxx_MASK"></a> Bit masks for masking CAN IDs <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga14" doxytag="rtcan.h::CAN_EFF_MASK"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga14">CAN_EFF_MASK</a>&nbsp;&nbsp;&nbsp;0x1FFFFFFF</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga12" doxytag="rtcan.h::CAN_EFF_MASK"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga12">CAN_EFF_MASK</a>&nbsp;&nbsp;&nbsp;0x1FFFFFFF</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bit mask for extended CAN IDs. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga15" doxytag="rtcan.h::CAN_SFF_MASK"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga15">CAN_SFF_MASK</a>&nbsp;&nbsp;&nbsp;0x000007FF</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga13" doxytag="rtcan.h::CAN_SFF_MASK"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga13">CAN_SFF_MASK</a>&nbsp;&nbsp;&nbsp;0x000007FF</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bit mask for standard CAN IDs. <br></td></tr>
 <tr><td colspan="2"><br><h2>CAN ID flags</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="CAN_xxx_FLAG"></a> Flags within a CAN ID indicating special CAN frame attributes <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga16" doxytag="rtcan.h::CAN_EFF_FLAG"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga16">CAN_EFF_FLAG</a>&nbsp;&nbsp;&nbsp;0x80000000</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga14" doxytag="rtcan.h::CAN_EFF_FLAG"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga14">CAN_EFF_FLAG</a>&nbsp;&nbsp;&nbsp;0x80000000</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">extended frame <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga17" doxytag="rtcan.h::CAN_RTR_FLAG"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga17">CAN_RTR_FLAG</a>&nbsp;&nbsp;&nbsp;0x40000000</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga15" doxytag="rtcan.h::CAN_RTR_FLAG"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga15">CAN_RTR_FLAG</a>&nbsp;&nbsp;&nbsp;0x40000000</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">remote transmission flag <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga18" doxytag="rtcan.h::CAN_ERR_FLAG"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga18">CAN_ERR_FLAG</a>&nbsp;&nbsp;&nbsp;0x20000000</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga16" doxytag="rtcan.h::CAN_ERR_FLAG"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga16">CAN_ERR_FLAG</a>&nbsp;&nbsp;&nbsp;0x20000000</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">error frame (see <a class="el" href="group__rtcan.html#Errors">Errors</a>) <br></td></tr>
 <tr><td colspan="2"><br><h2>CAN controller modes</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="CAN_CTRLMODE"></a> Special CAN controllers modes, which can be or'ed together. <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga21" doxytag="rtcan.h::CAN_CTRLMODE_LISTENONLY"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga21">CAN_CTRLMODE_LISTENONLY</a>&nbsp;&nbsp;&nbsp;0x1</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga19" doxytag="rtcan.h::CAN_CTRLMODE_LISTENONLY"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga19">CAN_CTRLMODE_LISTENONLY</a>&nbsp;&nbsp;&nbsp;0x1</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Listen-Only mode. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga22" doxytag="rtcan.h::CAN_CTRLMODE_LOOPBACK"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga22">CAN_CTRLMODE_LOOPBACK</a>&nbsp;&nbsp;&nbsp;0x2</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga20" doxytag="rtcan.h::CAN_CTRLMODE_LOOPBACK"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga20">CAN_CTRLMODE_LOOPBACK</a>&nbsp;&nbsp;&nbsp;0x2</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Loopback mode. <br></td></tr>
 <tr><td colspan="2"><br><h2>Timestamp switches</h2></td></tr>
-<tr><td colspan="2"><a class="anchor" name="RTCAN_TIMESTAMPS"></a> Arguments to pass to <a class="el" href="group__rtcan.html#ga41">RTCAN_RTIOC_TAKE_TIMESTAMP</a> <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga24" doxytag="rtcan.h::RTCAN_TAKE_NO_TIMESTAMPS"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga24">RTCAN_TAKE_NO_TIMESTAMPS</a>&nbsp;&nbsp;&nbsp;0</td></tr>
+<tr><td colspan="2"><a class="anchor" name="RTCAN_TIMESTAMPS"></a> Arguments to pass to <a class="el" href="group__rtcan.html#ga37">RTCAN_RTIOC_TAKE_TIMESTAMP</a> <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga22" doxytag="rtcan.h::RTCAN_TAKE_NO_TIMESTAMPS"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga22">RTCAN_TAKE_NO_TIMESTAMPS</a>&nbsp;&nbsp;&nbsp;0</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Switch off taking timestamps. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga25" doxytag="rtcan.h::RTCAN_TAKE_TIMESTAMPS"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga25">RTCAN_TAKE_TIMESTAMPS</a>&nbsp;&nbsp;&nbsp;1</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga23" doxytag="rtcan.h::RTCAN_TAKE_TIMESTAMPS"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga23">RTCAN_TAKE_TIMESTAMPS</a>&nbsp;&nbsp;&nbsp;1</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Do take timestamps. <br></td></tr>
-<tr><td colspan="2"><br><h2>Timeouts</h2></td></tr>
-<tr><td colspan="2"><a class="anchor" name="RTCAN_TIMEOUTS"></a> Special reception and transmission timeouts <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga26" doxytag="rtcan.h::RTCAN_TIMEOUT_INFINITE"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga26">RTCAN_TIMEOUT_INFINITE</a>&nbsp;&nbsp;&nbsp;0</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">wait for ever <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga27" doxytag="rtcan.h::RTCAN_TIMEOUT_NONE"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga27">RTCAN_TIMEOUT_NONE</a>&nbsp;&nbsp;&nbsp;(-1)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">equivalent to non-blocking <br></td></tr>
 <tr><td colspan="2"><br><h2>RAW socket options</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="Rawsockopts"></a> Setting and getting CAN RAW socket options. <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga30">CAN_RAW_FILTER</a>&nbsp;&nbsp;&nbsp;0x1</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga26">CAN_RAW_FILTER</a>&nbsp;&nbsp;&nbsp;0x1</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN filter definition.  <a href="group__rtcan.html#ga30"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga31">CAN_RAW_ERR_FILTER</a>&nbsp;&nbsp;&nbsp;0x2</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN filter definition.  <a href="group__rtcan.html#ga26"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga27">CAN_RAW_ERR_FILTER</a>&nbsp;&nbsp;&nbsp;0x2</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN error mask.  <a href="group__rtcan.html#ga31"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN error mask.  <a href="group__rtcan.html#ga27"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>IOCTLs</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="IOCTLs"></a> CAN device IOCTLs <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga32">SIOCGIFINDEX</a>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_CAN, 0x00, struct ifreq)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga28">SIOCGIFINDEX</a>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_CAN, 0x00, struct ifreq)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get CAN interface index by name.  <a href="group__rtcan.html#ga32"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga33">SIOCSCANBAUDRATE</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_CAN, 0x01, struct ifreq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get CAN interface index by name.  <a href="group__rtcan.html#ga28"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga29">SIOCSCANBAUDRATE</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_CAN, 0x01, struct ifreq)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set baud rate.  <a href="group__rtcan.html#ga33"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga34">SIOCGCANBAUDRATE</a>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_CAN, 0x02, struct ifreq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set baud rate.  <a href="group__rtcan.html#ga29"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga30">SIOCGCANBAUDRATE</a>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_CAN, 0x02, struct ifreq)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get baud rate.  <a href="group__rtcan.html#ga34"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga35">SIOCSCANCUSTOMBITTIME</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_CAN, 0x03, struct ifreq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get baud rate.  <a href="group__rtcan.html#ga30"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga31">SIOCSCANCUSTOMBITTIME</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_CAN, 0x03, struct ifreq)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set custom bit time parameter.  <a href="group__rtcan.html#ga35"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga36">SIOCGCANCUSTOMBITTIME</a>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_CAN, 0x04, struct ifreq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set custom bit time parameter.  <a href="group__rtcan.html#ga31"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga32">SIOCGCANCUSTOMBITTIME</a>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_CAN, 0x04, struct ifreq)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get custum bit-time parameters.  <a href="group__rtcan.html#ga36"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga37">SIOCSCANMODE</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_CAN, 0x05, struct ifreq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get custum bit-time parameters.  <a href="group__rtcan.html#ga32"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga33">SIOCSCANMODE</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_CAN, 0x05, struct ifreq)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set operation mode of CAN controller.  <a href="group__rtcan.html#ga37"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga38">SIOCGCANSTATE</a>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_CAN, 0x06, struct ifreq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set operation mode of CAN controller.  <a href="group__rtcan.html#ga33"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga34">SIOCGCANSTATE</a>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_CAN, 0x06, struct ifreq)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get current state of CAN controller.  <a href="group__rtcan.html#ga38"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga39">SIOCSCANCTRLMODE</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_CAN, 0x07, struct ifreq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get current state of CAN controller.  <a href="group__rtcan.html#ga34"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga35">SIOCSCANCTRLMODE</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_CAN, 0x07, struct ifreq)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set special controller modes.  <a href="group__rtcan.html#ga39"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga40">SIOCGCANCTRLMODE</a>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_CAN, 0x08, struct ifreq)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set special controller modes.  <a href="group__rtcan.html#ga35"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga36">SIOCGCANCTRLMODE</a>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_CAN, 0x08, struct ifreq)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get special controller modes.  <a href="group__rtcan.html#ga40"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga41">RTCAN_RTIOC_TAKE_TIMESTAMP</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_CAN, 0x09, int)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get special controller modes.  <a href="group__rtcan.html#ga36"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga37">RTCAN_RTIOC_TAKE_TIMESTAMP</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_CAN, 0x09, int)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Enable or disable storing a high precision timestamp upon reception of a CAN frame.  <a href="group__rtcan.html#ga41"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga42">RTCAN_RTIOC_RCV_TIMEOUT</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_CAN, 0x0A, nanosecs_rel_t)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Enable or disable storing a high precision timestamp upon reception of a CAN frame.  <a href="group__rtcan.html#ga37"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga38">RTCAN_RTIOC_RCV_TIMEOUT</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_CAN, 0x0A, nanosecs_rel_t)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Specify a reception timeout for a socket.  <a href="group__rtcan.html#ga42"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga43">RTCAN_RTIOC_SND_TIMEOUT</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_CAN, 0x0B, nanosecs_rel_t)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Specify a reception timeout for a socket.  <a href="group__rtcan.html#ga38"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga39">RTCAN_RTIOC_SND_TIMEOUT</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_CAN, 0x0B, nanosecs_rel_t)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Specify a transmission timeout for a socket.  <a href="group__rtcan.html#ga43"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Specify a transmission timeout for a socket.  <a href="group__rtcan.html#ga39"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>Error mask</h2></td></tr>
-<tr><td colspan="2"><a class="anchor" name="Errors"></a> Error class (mask) in <code>can_id</code> field of struct <a class="el" href="structcan__frame.html">can_frame</a> to be used with <a class="el" href="group__rtcan.html#ga31">CAN_RAW_ERR_FILTER</a>. <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga45" doxytag="rtcan.h::CAN_ERR_TX_TIMEOUT"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga45">CAN_ERR_TX_TIMEOUT</a>&nbsp;&nbsp;&nbsp;0x00000001U</td></tr>
+<tr><td colspan="2"><a class="anchor" name="Errors"></a> Error class (mask) in <code>can_id</code> field of struct <a class="el" href="structcan__frame.html">can_frame</a> to be used with <a class="el" href="group__rtcan.html#ga27">CAN_RAW_ERR_FILTER</a>. <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga41" doxytag="rtcan.h::CAN_ERR_TX_TIMEOUT"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga41">CAN_ERR_TX_TIMEOUT</a>&nbsp;&nbsp;&nbsp;0x00000001U</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">TX timeout (netdevice driver). <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga46" doxytag="rtcan.h::CAN_ERR_LOSTARB"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga46">CAN_ERR_LOSTARB</a>&nbsp;&nbsp;&nbsp;0x00000002U</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga42" doxytag="rtcan.h::CAN_ERR_LOSTARB"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga42">CAN_ERR_LOSTARB</a>&nbsp;&nbsp;&nbsp;0x00000002U</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Lost arbitration (see <a class="el" href="group__rtcan.html#Error0">data[0]</a>). <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga47" doxytag="rtcan.h::CAN_ERR_CRTL"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga47">CAN_ERR_CRTL</a>&nbsp;&nbsp;&nbsp;0x00000004U</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga43" doxytag="rtcan.h::CAN_ERR_CRTL"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga43">CAN_ERR_CRTL</a>&nbsp;&nbsp;&nbsp;0x00000004U</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Controller problems (see <a class="el" href="group__rtcan.html#Error1">data[1]</a>). <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga48" doxytag="rtcan.h::CAN_ERR_PROT"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga48">CAN_ERR_PROT</a>&nbsp;&nbsp;&nbsp;0x00000008U</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga44" doxytag="rtcan.h::CAN_ERR_PROT"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga44">CAN_ERR_PROT</a>&nbsp;&nbsp;&nbsp;0x00000008U</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Protocol violations (see <a class="el" href="group__rtcan.html#Error2">data[2]</a>, <a class="el" href="group__rtcan.html#Error3">data[3]</a>). <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga49" doxytag="rtcan.h::CAN_ERR_TRX"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga49">CAN_ERR_TRX</a>&nbsp;&nbsp;&nbsp;0x00000010U</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga45" doxytag="rtcan.h::CAN_ERR_TRX"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga45">CAN_ERR_TRX</a>&nbsp;&nbsp;&nbsp;0x00000010U</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Transceiver status (see <a class="el" href="group__rtcan.html#Error4">data[4]</a>). <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga50" doxytag="rtcan.h::CAN_ERR_ACK"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga50">CAN_ERR_ACK</a>&nbsp;&nbsp;&nbsp;0x00000020U</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga46" doxytag="rtcan.h::CAN_ERR_ACK"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga46">CAN_ERR_ACK</a>&nbsp;&nbsp;&nbsp;0x00000020U</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Received no ACK on transmission. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga51" doxytag="rtcan.h::CAN_ERR_BUSOFF"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga51">CAN_ERR_BUSOFF</a>&nbsp;&nbsp;&nbsp;0x00000040U</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga47" doxytag="rtcan.h::CAN_ERR_BUSOFF"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga47">CAN_ERR_BUSOFF</a>&nbsp;&nbsp;&nbsp;0x00000040U</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bus off. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga52" doxytag="rtcan.h::CAN_ERR_BUSERROR"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga52">CAN_ERR_BUSERROR</a>&nbsp;&nbsp;&nbsp;0x00000080U</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga48" doxytag="rtcan.h::CAN_ERR_BUSERROR"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga48">CAN_ERR_BUSERROR</a>&nbsp;&nbsp;&nbsp;0x00000080U</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bus error (may flood!). <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga53" doxytag="rtcan.h::CAN_ERR_RESTARTED"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga53">CAN_ERR_RESTARTED</a>&nbsp;&nbsp;&nbsp;0x00000100U</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga49" doxytag="rtcan.h::CAN_ERR_RESTARTED"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga49">CAN_ERR_RESTARTED</a>&nbsp;&nbsp;&nbsp;0x00000100U</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Controller restarted. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga54" doxytag="rtcan.h::CAN_ERR_MASK"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga54">CAN_ERR_MASK</a>&nbsp;&nbsp;&nbsp;0x1FFFFFFFU</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga50" doxytag="rtcan.h::CAN_ERR_MASK"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga50">CAN_ERR_MASK</a>&nbsp;&nbsp;&nbsp;0x1FFFFFFFU</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Omit EFF, RTR, ERR flags. <br></td></tr>
 <tr><td colspan="2"><br><h2>Arbitration lost error</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="Error0"></a> Error in the data[0] field of struct <a class="el" href="structcan__frame.html">can_frame</a>. <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga55" doxytag="rtcan.h::CAN_ERR_LOSTARB_UNSPEC"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga55">CAN_ERR_LOSTARB_UNSPEC</a>&nbsp;&nbsp;&nbsp;0x00</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga51" doxytag="rtcan.h::CAN_ERR_LOSTARB_UNSPEC"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga51">CAN_ERR_LOSTARB_UNSPEC</a>&nbsp;&nbsp;&nbsp;0x00</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">else bit number in bitstream <br></td></tr>
 <tr><td colspan="2"><br><h2>Controller problems</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="Error1"></a> Error in the data[1] field of struct <a class="el" href="structcan__frame.html">can_frame</a>. <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga56" doxytag="rtcan.h::CAN_ERR_CRTL_UNSPEC"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga56">CAN_ERR_CRTL_UNSPEC</a>&nbsp;&nbsp;&nbsp;0x00</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga52" doxytag="rtcan.h::CAN_ERR_CRTL_UNSPEC"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga52">CAN_ERR_CRTL_UNSPEC</a>&nbsp;&nbsp;&nbsp;0x00</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">unspecified <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga57" doxytag="rtcan.h::CAN_ERR_CRTL_RX_OVERFLOW"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga57">CAN_ERR_CRTL_RX_OVERFLOW</a>&nbsp;&nbsp;&nbsp;0x01</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga53" doxytag="rtcan.h::CAN_ERR_CRTL_RX_OVERFLOW"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga53">CAN_ERR_CRTL_RX_OVERFLOW</a>&nbsp;&nbsp;&nbsp;0x01</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">RX buffer overflow. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga58" doxytag="rtcan.h::CAN_ERR_CRTL_TX_OVERFLOW"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga58">CAN_ERR_CRTL_TX_OVERFLOW</a>&nbsp;&nbsp;&nbsp;0x02</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga54" doxytag="rtcan.h::CAN_ERR_CRTL_TX_OVERFLOW"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga54">CAN_ERR_CRTL_TX_OVERFLOW</a>&nbsp;&nbsp;&nbsp;0x02</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">TX buffer overflow. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga59" doxytag="rtcan.h::CAN_ERR_CRTL_RX_WARNING"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga59">CAN_ERR_CRTL_RX_WARNING</a>&nbsp;&nbsp;&nbsp;0x04</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga55" doxytag="rtcan.h::CAN_ERR_CRTL_RX_WARNING"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga55">CAN_ERR_CRTL_RX_WARNING</a>&nbsp;&nbsp;&nbsp;0x04</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">reached warning level for RX errors <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga60" doxytag="rtcan.h::CAN_ERR_CRTL_TX_WARNING"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga60">CAN_ERR_CRTL_TX_WARNING</a>&nbsp;&nbsp;&nbsp;0x08</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga56" doxytag="rtcan.h::CAN_ERR_CRTL_TX_WARNING"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga56">CAN_ERR_CRTL_TX_WARNING</a>&nbsp;&nbsp;&nbsp;0x08</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">reached warning level for TX errors <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga61" doxytag="rtcan.h::CAN_ERR_CRTL_RX_PASSIVE"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga61">CAN_ERR_CRTL_RX_PASSIVE</a>&nbsp;&nbsp;&nbsp;0x10</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga57" doxytag="rtcan.h::CAN_ERR_CRTL_RX_PASSIVE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga57">CAN_ERR_CRTL_RX_PASSIVE</a>&nbsp;&nbsp;&nbsp;0x10</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">reached passive level for RX errors <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga62" doxytag="rtcan.h::CAN_ERR_CRTL_TX_PASSIVE"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga62">CAN_ERR_CRTL_TX_PASSIVE</a>&nbsp;&nbsp;&nbsp;0x20</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga58" doxytag="rtcan.h::CAN_ERR_CRTL_TX_PASSIVE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga58">CAN_ERR_CRTL_TX_PASSIVE</a>&nbsp;&nbsp;&nbsp;0x20</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">reached passive level for TX errors <br></td></tr>
-<tr><td colspan="2"><br><h2>Protocoll error type</h2></td></tr>
+<tr><td colspan="2"><br><h2>Protocol error type</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="Error2"></a> Error in the data[2] field of struct <a class="el" href="structcan__frame.html">can_frame</a>. <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga63" doxytag="rtcan.h::CAN_ERR_PROT_UNSPEC"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga63">CAN_ERR_PROT_UNSPEC</a>&nbsp;&nbsp;&nbsp;0x00</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga59" doxytag="rtcan.h::CAN_ERR_PROT_UNSPEC"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga59">CAN_ERR_PROT_UNSPEC</a>&nbsp;&nbsp;&nbsp;0x00</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">unspecified <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga64" doxytag="rtcan.h::CAN_ERR_PROT_BIT"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga64">CAN_ERR_PROT_BIT</a>&nbsp;&nbsp;&nbsp;0x01</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga60" doxytag="rtcan.h::CAN_ERR_PROT_BIT"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga60">CAN_ERR_PROT_BIT</a>&nbsp;&nbsp;&nbsp;0x01</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">single bit error <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga65" doxytag="rtcan.h::CAN_ERR_PROT_FORM"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga65">CAN_ERR_PROT_FORM</a>&nbsp;&nbsp;&nbsp;0x02</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga61" doxytag="rtcan.h::CAN_ERR_PROT_FORM"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga61">CAN_ERR_PROT_FORM</a>&nbsp;&nbsp;&nbsp;0x02</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">frame format error <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga66" doxytag="rtcan.h::CAN_ERR_PROT_STUFF"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga66">CAN_ERR_PROT_STUFF</a>&nbsp;&nbsp;&nbsp;0x04</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga62" doxytag="rtcan.h::CAN_ERR_PROT_STUFF"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga62">CAN_ERR_PROT_STUFF</a>&nbsp;&nbsp;&nbsp;0x04</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">bit stuffing error <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga67" doxytag="rtcan.h::CAN_ERR_PROT_BIT0"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga67">CAN_ERR_PROT_BIT0</a>&nbsp;&nbsp;&nbsp;0x08</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga63" doxytag="rtcan.h::CAN_ERR_PROT_BIT0"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga63">CAN_ERR_PROT_BIT0</a>&nbsp;&nbsp;&nbsp;0x08</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">unable to send dominant bit <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga68" doxytag="rtcan.h::CAN_ERR_PROT_BIT1"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga68">CAN_ERR_PROT_BIT1</a>&nbsp;&nbsp;&nbsp;0x10</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga64" doxytag="rtcan.h::CAN_ERR_PROT_BIT1"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga64">CAN_ERR_PROT_BIT1</a>&nbsp;&nbsp;&nbsp;0x10</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">unable to send recessive bit <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga69" doxytag="rtcan.h::CAN_ERR_PROT_OVERLOAD"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga69">CAN_ERR_PROT_OVERLOAD</a>&nbsp;&nbsp;&nbsp;0x20</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga65" doxytag="rtcan.h::CAN_ERR_PROT_OVERLOAD"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga65">CAN_ERR_PROT_OVERLOAD</a>&nbsp;&nbsp;&nbsp;0x20</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">bus overload <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga70" doxytag="rtcan.h::CAN_ERR_PROT_ACTIVE"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga70">CAN_ERR_PROT_ACTIVE</a>&nbsp;&nbsp;&nbsp;0x40</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga66" doxytag="rtcan.h::CAN_ERR_PROT_ACTIVE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga66">CAN_ERR_PROT_ACTIVE</a>&nbsp;&nbsp;&nbsp;0x40</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">active error announcement <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga71" doxytag="rtcan.h::CAN_ERR_PROT_TX"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga71">CAN_ERR_PROT_TX</a>&nbsp;&nbsp;&nbsp;0x80</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga67" doxytag="rtcan.h::CAN_ERR_PROT_TX"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga67">CAN_ERR_PROT_TX</a>&nbsp;&nbsp;&nbsp;0x80</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">error occured on transmission <br></td></tr>
-<tr><td colspan="2"><br><h2>Protocoll error location</h2></td></tr>
+<tr><td colspan="2"><br><h2>Protocol error location</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="Error3"></a> Error in the data[3] field of struct <a class="el" href="structcan__frame.html">can_frame</a>. <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga72" doxytag="rtcan.h::CAN_ERR_PROT_LOC_UNSPEC"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga72">CAN_ERR_PROT_LOC_UNSPEC</a>&nbsp;&nbsp;&nbsp;0x00</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga68" doxytag="rtcan.h::CAN_ERR_PROT_LOC_UNSPEC"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga68">CAN_ERR_PROT_LOC_UNSPEC</a>&nbsp;&nbsp;&nbsp;0x00</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">unspecified <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga73" doxytag="rtcan.h::CAN_ERR_PROT_LOC_SOF"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga73">CAN_ERR_PROT_LOC_SOF</a>&nbsp;&nbsp;&nbsp;0x03</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga69" doxytag="rtcan.h::CAN_ERR_PROT_LOC_SOF"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga69">CAN_ERR_PROT_LOC_SOF</a>&nbsp;&nbsp;&nbsp;0x03</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">start of frame <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga74" doxytag="rtcan.h::CAN_ERR_PROT_LOC_ID28_21"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga74">CAN_ERR_PROT_LOC_ID28_21</a>&nbsp;&nbsp;&nbsp;0x02</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga70" doxytag="rtcan.h::CAN_ERR_PROT_LOC_ID28_21"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga70">CAN_ERR_PROT_LOC_ID28_21</a>&nbsp;&nbsp;&nbsp;0x02</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">ID bits 28 - 21 (SFF: 10 - 3). <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga75" doxytag="rtcan.h::CAN_ERR_PROT_LOC_ID20_18"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga75">CAN_ERR_PROT_LOC_ID20_18</a>&nbsp;&nbsp;&nbsp;0x06</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga71" doxytag="rtcan.h::CAN_ERR_PROT_LOC_ID20_18"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga71">CAN_ERR_PROT_LOC_ID20_18</a>&nbsp;&nbsp;&nbsp;0x06</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">ID bits 20 - 18 (SFF: 2 - 0 ). <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga76" doxytag="rtcan.h::CAN_ERR_PROT_LOC_SRTR"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga76">CAN_ERR_PROT_LOC_SRTR</a>&nbsp;&nbsp;&nbsp;0x04</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga72" doxytag="rtcan.h::CAN_ERR_PROT_LOC_SRTR"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga72">CAN_ERR_PROT_LOC_SRTR</a>&nbsp;&nbsp;&nbsp;0x04</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">substitute RTR (SFF: RTR) <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga77" doxytag="rtcan.h::CAN_ERR_PROT_LOC_IDE"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga77">CAN_ERR_PROT_LOC_IDE</a>&nbsp;&nbsp;&nbsp;0x05</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga73" doxytag="rtcan.h::CAN_ERR_PROT_LOC_IDE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga73">CAN_ERR_PROT_LOC_IDE</a>&nbsp;&nbsp;&nbsp;0x05</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">identifier extension <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga78" doxytag="rtcan.h::CAN_ERR_PROT_LOC_ID17_13"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga78">CAN_ERR_PROT_LOC_ID17_13</a>&nbsp;&nbsp;&nbsp;0x07</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga74" doxytag="rtcan.h::CAN_ERR_PROT_LOC_ID17_13"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga74">CAN_ERR_PROT_LOC_ID17_13</a>&nbsp;&nbsp;&nbsp;0x07</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">ID bits 17-13. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga79" doxytag="rtcan.h::CAN_ERR_PROT_LOC_ID12_05"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga79">CAN_ERR_PROT_LOC_ID12_05</a>&nbsp;&nbsp;&nbsp;0x0F</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga75" doxytag="rtcan.h::CAN_ERR_PROT_LOC_ID12_05"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga75">CAN_ERR_PROT_LOC_ID12_05</a>&nbsp;&nbsp;&nbsp;0x0F</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">ID bits 12-5. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga80" doxytag="rtcan.h::CAN_ERR_PROT_LOC_ID04_00"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga80">CAN_ERR_PROT_LOC_ID04_00</a>&nbsp;&nbsp;&nbsp;0x0E</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga76" doxytag="rtcan.h::CAN_ERR_PROT_LOC_ID04_00"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga76">CAN_ERR_PROT_LOC_ID04_00</a>&nbsp;&nbsp;&nbsp;0x0E</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">ID bits 4-0. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga81" doxytag="rtcan.h::CAN_ERR_PROT_LOC_RTR"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga81">CAN_ERR_PROT_LOC_RTR</a>&nbsp;&nbsp;&nbsp;0x0C</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga77" doxytag="rtcan.h::CAN_ERR_PROT_LOC_RTR"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga77">CAN_ERR_PROT_LOC_RTR</a>&nbsp;&nbsp;&nbsp;0x0C</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">RTR. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga82" doxytag="rtcan.h::CAN_ERR_PROT_LOC_RES1"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga82">CAN_ERR_PROT_LOC_RES1</a>&nbsp;&nbsp;&nbsp;0x0D</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga78" doxytag="rtcan.h::CAN_ERR_PROT_LOC_RES1"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga78">CAN_ERR_PROT_LOC_RES1</a>&nbsp;&nbsp;&nbsp;0x0D</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">reserved bit 1 <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga83" doxytag="rtcan.h::CAN_ERR_PROT_LOC_RES0"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga83">CAN_ERR_PROT_LOC_RES0</a>&nbsp;&nbsp;&nbsp;0x09</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga79" doxytag="rtcan.h::CAN_ERR_PROT_LOC_RES0"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga79">CAN_ERR_PROT_LOC_RES0</a>&nbsp;&nbsp;&nbsp;0x09</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">reserved bit 0 <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga84" doxytag="rtcan.h::CAN_ERR_PROT_LOC_DLC"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga84">CAN_ERR_PROT_LOC_DLC</a>&nbsp;&nbsp;&nbsp;0x0B</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga80" doxytag="rtcan.h::CAN_ERR_PROT_LOC_DLC"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga80">CAN_ERR_PROT_LOC_DLC</a>&nbsp;&nbsp;&nbsp;0x0B</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">data length code <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga85" doxytag="rtcan.h::CAN_ERR_PROT_LOC_DATA"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga85">CAN_ERR_PROT_LOC_DATA</a>&nbsp;&nbsp;&nbsp;0x0A</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga81" doxytag="rtcan.h::CAN_ERR_PROT_LOC_DATA"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga81">CAN_ERR_PROT_LOC_DATA</a>&nbsp;&nbsp;&nbsp;0x0A</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">data section <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga86" doxytag="rtcan.h::CAN_ERR_PROT_LOC_CRC_SEQ"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga86">CAN_ERR_PROT_LOC_CRC_SEQ</a>&nbsp;&nbsp;&nbsp;0x08</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga82" doxytag="rtcan.h::CAN_ERR_PROT_LOC_CRC_SEQ"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga82">CAN_ERR_PROT_LOC_CRC_SEQ</a>&nbsp;&nbsp;&nbsp;0x08</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CRC sequence. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga87" doxytag="rtcan.h::CAN_ERR_PROT_LOC_CRC_DEL"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga87">CAN_ERR_PROT_LOC_CRC_DEL</a>&nbsp;&nbsp;&nbsp;0x18</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga83" doxytag="rtcan.h::CAN_ERR_PROT_LOC_CRC_DEL"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga83">CAN_ERR_PROT_LOC_CRC_DEL</a>&nbsp;&nbsp;&nbsp;0x18</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CRC delimiter. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga88" doxytag="rtcan.h::CAN_ERR_PROT_LOC_ACK"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga88">CAN_ERR_PROT_LOC_ACK</a>&nbsp;&nbsp;&nbsp;0x19</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga84" doxytag="rtcan.h::CAN_ERR_PROT_LOC_ACK"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga84">CAN_ERR_PROT_LOC_ACK</a>&nbsp;&nbsp;&nbsp;0x19</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">ACK slot. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga89" doxytag="rtcan.h::CAN_ERR_PROT_LOC_ACK_DEL"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga89">CAN_ERR_PROT_LOC_ACK_DEL</a>&nbsp;&nbsp;&nbsp;0x1B</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga85" doxytag="rtcan.h::CAN_ERR_PROT_LOC_ACK_DEL"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga85">CAN_ERR_PROT_LOC_ACK_DEL</a>&nbsp;&nbsp;&nbsp;0x1B</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">ACK delimiter. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga90" doxytag="rtcan.h::CAN_ERR_PROT_LOC_EOF"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga90">CAN_ERR_PROT_LOC_EOF</a>&nbsp;&nbsp;&nbsp;0x1A</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga86" doxytag="rtcan.h::CAN_ERR_PROT_LOC_EOF"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga86">CAN_ERR_PROT_LOC_EOF</a>&nbsp;&nbsp;&nbsp;0x1A</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">end of frame <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga91" doxytag="rtcan.h::CAN_ERR_PROT_LOC_INTERM"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga91">CAN_ERR_PROT_LOC_INTERM</a>&nbsp;&nbsp;&nbsp;0x12</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga87" doxytag="rtcan.h::CAN_ERR_PROT_LOC_INTERM"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga87">CAN_ERR_PROT_LOC_INTERM</a>&nbsp;&nbsp;&nbsp;0x12</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">intermission <br></td></tr>
-<tr><td colspan="2"><br><h2>Protocoll error location</h2></td></tr>
+<tr><td colspan="2"><br><h2>Protocol error location</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="Error4"></a> Error in the data[4] field of struct <a class="el" href="structcan__frame.html">can_frame</a>. <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga92" doxytag="rtcan.h::CAN_ERR_TRX_UNSPEC"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga92">CAN_ERR_TRX_UNSPEC</a>&nbsp;&nbsp;&nbsp;0x00</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga88" doxytag="rtcan.h::CAN_ERR_TRX_UNSPEC"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga88">CAN_ERR_TRX_UNSPEC</a>&nbsp;&nbsp;&nbsp;0x00</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">0000 0000 <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga93" doxytag="rtcan.h::CAN_ERR_TRX_CANH_NO_WIRE"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga93">CAN_ERR_TRX_CANH_NO_WIRE</a>&nbsp;&nbsp;&nbsp;0x04</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga89" doxytag="rtcan.h::CAN_ERR_TRX_CANH_NO_WIRE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga89">CAN_ERR_TRX_CANH_NO_WIRE</a>&nbsp;&nbsp;&nbsp;0x04</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">0000 0100 <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga94" doxytag="rtcan.h::CAN_ERR_TRX_CANH_SHORT_TO_BAT"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga94">CAN_ERR_TRX_CANH_SHORT_TO_BAT</a>&nbsp;&nbsp;&nbsp;0x05</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga90" doxytag="rtcan.h::CAN_ERR_TRX_CANH_SHORT_TO_BAT"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga90">CAN_ERR_TRX_CANH_SHORT_TO_BAT</a>&nbsp;&nbsp;&nbsp;0x05</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">0000 0101 <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga95" doxytag="rtcan.h::CAN_ERR_TRX_CANH_SHORT_TO_VCC"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga95">CAN_ERR_TRX_CANH_SHORT_TO_VCC</a>&nbsp;&nbsp;&nbsp;0x06</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga91" doxytag="rtcan.h::CAN_ERR_TRX_CANH_SHORT_TO_VCC"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga91">CAN_ERR_TRX_CANH_SHORT_TO_VCC</a>&nbsp;&nbsp;&nbsp;0x06</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">0000 0110 <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga96" doxytag="rtcan.h::CAN_ERR_TRX_CANH_SHORT_TO_GND"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga96">CAN_ERR_TRX_CANH_SHORT_TO_GND</a>&nbsp;&nbsp;&nbsp;0x07</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga92" doxytag="rtcan.h::CAN_ERR_TRX_CANH_SHORT_TO_GND"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga92">CAN_ERR_TRX_CANH_SHORT_TO_GND</a>&nbsp;&nbsp;&nbsp;0x07</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">0000 0111 <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga97" doxytag="rtcan.h::CAN_ERR_TRX_CANL_NO_WIRE"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga97">CAN_ERR_TRX_CANL_NO_WIRE</a>&nbsp;&nbsp;&nbsp;0x40</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga93" doxytag="rtcan.h::CAN_ERR_TRX_CANL_NO_WIRE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga93">CAN_ERR_TRX_CANL_NO_WIRE</a>&nbsp;&nbsp;&nbsp;0x40</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">0100 0000 <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga98" doxytag="rtcan.h::CAN_ERR_TRX_CANL_SHORT_TO_BAT"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga98">CAN_ERR_TRX_CANL_SHORT_TO_BAT</a>&nbsp;&nbsp;&nbsp;0x50</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga94" doxytag="rtcan.h::CAN_ERR_TRX_CANL_SHORT_TO_BAT"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga94">CAN_ERR_TRX_CANL_SHORT_TO_BAT</a>&nbsp;&nbsp;&nbsp;0x50</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">0101 0000 <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga99" doxytag="rtcan.h::CAN_ERR_TRX_CANL_SHORT_TO_VCC"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga99">CAN_ERR_TRX_CANL_SHORT_TO_VCC</a>&nbsp;&nbsp;&nbsp;0x60</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga95" doxytag="rtcan.h::CAN_ERR_TRX_CANL_SHORT_TO_VCC"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga95">CAN_ERR_TRX_CANL_SHORT_TO_VCC</a>&nbsp;&nbsp;&nbsp;0x60</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">0110 0000 <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga100" doxytag="rtcan.h::CAN_ERR_TRX_CANL_SHORT_TO_GND"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga100">CAN_ERR_TRX_CANL_SHORT_TO_GND</a>&nbsp;&nbsp;&nbsp;0x70</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga96" doxytag="rtcan.h::CAN_ERR_TRX_CANL_SHORT_TO_GND"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga96">CAN_ERR_TRX_CANL_SHORT_TO_GND</a>&nbsp;&nbsp;&nbsp;0x70</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">0111 0000 <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga101" doxytag="rtcan.h::CAN_ERR_TRX_CANL_SHORT_TO_CANH"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga101">CAN_ERR_TRX_CANL_SHORT_TO_CANH</a>&nbsp;&nbsp;&nbsp;0x80</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga97" doxytag="rtcan.h::CAN_ERR_TRX_CANL_SHORT_TO_CANH"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga97">CAN_ERR_TRX_CANL_SHORT_TO_CANH</a>&nbsp;&nbsp;&nbsp;0x80</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">1000 0000 <br></td></tr>
-<tr><td colspan="2"><br><h2>Types of time values</h2></td></tr>
-<tr><td colspan="2">Absolute and relative time values <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga10" doxytag="rtcan.h::nanosecs_rel_t"></a>
-typedef int64_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga10">nanosecs_rel_t</a></td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Representing a relative time in nanoseconds. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga11" doxytag="rtcan.h::nanosecs_abs_t"></a>
-typedef uint64_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga11">nanosecs_abs_t</a></td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Representing an absolute time in nanoseconds. <br></td></tr>
 <tr><td colspan="2"><br><h2>CAN protocols</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="CAN_PROTO"></a> Possible protocols for PF_CAN protocol family <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga102">CAN_PROTO</a> { <a class="el" href="group__rtcan.html#gga102a102">CAN_PROTO_RAW</a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga98">CAN_PROTO</a> { <a class="el" href="group__rtcan.html#gga98a98">CAN_PROTO_RAW</a>
  }</td></tr>
 
 <tr><td colspan="2"><br><h2>CAN operation modes</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="CAN_MODE"></a> Modes into which CAN controllers can be set <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga104">CAN_MODE</a> { <a class="el" href="group__rtcan.html#gga104a106">CAN_MODE_STOP</a> =  0, 
-<a class="el" href="group__rtcan.html#gga104a107">CAN_MODE_START</a>, 
-<a class="el" href="group__rtcan.html#gga104a108">CAN_MODE_SLEEP</a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga100">CAN_MODE</a> { <a class="el" href="group__rtcan.html#gga100a102">CAN_MODE_STOP</a> =  0, 
+<a class="el" href="group__rtcan.html#gga100a103">CAN_MODE_START</a>, 
+<a class="el" href="group__rtcan.html#gga100a104">CAN_MODE_SLEEP</a>
  }</td></tr>
 
 <tr><td colspan="2"><br><h2>CAN controller states</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="CAN_STATE"></a> States a CAN controller can be in. <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga105">CAN_STATE</a> { <br>
-&nbsp;&nbsp;<a class="el" href="group__rtcan.html#gga105a109">CAN_STATE_ACTIVE</a> =  0, 
-<a class="el" href="group__rtcan.html#gga105a110">CAN_STATE_BUS_WARNING</a>, 
-<a class="el" href="group__rtcan.html#gga105a111">CAN_STATE_BUS_PASSIVE</a>, 
-<a class="el" href="group__rtcan.html#gga105a112">CAN_STATE_BUS_OFF</a>, 
+<tr><td class="memItemLeft" nowrap align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga101">CAN_STATE</a> { <br>
+&nbsp;&nbsp;<a class="el" href="group__rtcan.html#gga101a105">CAN_STATE_ACTIVE</a> =  0, 
+<a class="el" href="group__rtcan.html#gga101a106">CAN_STATE_BUS_WARNING</a>, 
+<a class="el" href="group__rtcan.html#gga101a107">CAN_STATE_BUS_PASSIVE</a>, 
+<a class="el" href="group__rtcan.html#gga101a108">CAN_STATE_BUS_OFF</a>, 
 <br>
-&nbsp;&nbsp;<a class="el" href="group__rtcan.html#gga105a113">CAN_STATE_SCANNING_BAUDRATE</a>, 
-<a class="el" href="group__rtcan.html#gga105a114">CAN_STATE_STOPPED</a>, 
-<a class="el" href="group__rtcan.html#gga105a115">CAN_STATE_SLEEPING</a>
+&nbsp;&nbsp;<a class="el" href="group__rtcan.html#gga101a109">CAN_STATE_SCANNING_BAUDRATE</a>, 
+<a class="el" href="group__rtcan.html#gga101a110">CAN_STATE_STOPPED</a>, 
+<a class="el" href="group__rtcan.html#gga101a111">CAN_STATE_SLEEPING</a>
 <br>
  }</td></tr>
 
 <tr><td colspan="2"><br><h2>Defines</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga12" doxytag="rtcan.h::AF_CAN"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga12">AF_CAN</a>&nbsp;&nbsp;&nbsp;29</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga10" doxytag="rtcan.h::AF_CAN"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga10">AF_CAN</a>&nbsp;&nbsp;&nbsp;29</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN address family. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga13" doxytag="rtcan.h::PF_CAN"></a>
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga13">PF_CAN</a>&nbsp;&nbsp;&nbsp;AF_CAN</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga11" doxytag="rtcan.h::PF_CAN"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga11">PF_CAN</a>&nbsp;&nbsp;&nbsp;AF_CAN</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN protocol family. <br></td></tr>
 <tr><td colspan="2"><br><h2>Typedefs</h2></td></tr>
@@ -430,11 +410,11 @@ typedef uint32_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Baudrate definition in bits per second. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga4" doxytag="rtcan.h::can_bittime_type_t"></a>
-typedef enum <a class="el" href="group__rtcan.html#ga103">CAN_BITTIME_TYPE</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga4">can_bittime_type_t</a></td></tr>
+typedef enum <a class="el" href="group__rtcan.html#ga99">CAN_BITTIME_TYPE</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga4">can_bittime_type_t</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">See <a class="el" href="group__rtcan.html#ga103">CAN_BITTIME_TYPE</a>. <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">See <a class="el" href="group__rtcan.html#ga99">CAN_BITTIME_TYPE</a>. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga5" doxytag="rtcan.h::can_mode_t"></a>
-typedef enum <a class="el" href="group__rtcan.html#ga104">CAN_MODE</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga5">can_mode_t</a></td></tr>
+typedef enum <a class="el" href="group__rtcan.html#ga100">CAN_MODE</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga5">can_mode_t</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">See <a class="el" href="group__rtcan.html#CAN_MODE">CAN_MODE</a>. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga6" doxytag="rtcan.h::can_ctrlmode_t"></a>
@@ -442,7 +422,7 @@ typedef int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" hre
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">See <a class="el" href="group__rtcan.html#CAN_CTRLMODE">CAN_CTRLMODE</a>. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga7" doxytag="rtcan.h::can_state_t"></a>
-typedef enum <a class="el" href="group__rtcan.html#ga105">CAN_STATE</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga7">can_state_t</a></td></tr>
+typedef enum <a class="el" href="group__rtcan.html#ga101">CAN_STATE</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga7">can_state_t</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">See <a class="el" href="group__rtcan.html#CAN_STATE">CAN_STATE</a>. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">typedef <a class="el" href="structcan__filter.html">can_filter</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga8">can_filter_t</a></td></tr>
@@ -452,13 +432,13 @@ typedef enum <a class="el" href="group__rtcan.html#ga105">CAN_STATE</a>&nbsp;</t
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Raw CAN frame.  <a href="group__rtcan.html#ga9"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>Enumerations</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga103">CAN_BITTIME_TYPE</a> { <a class="el" href="group__rtcan.html#gga103a104">CAN_BITTIME_STD</a>, 
-<a class="el" href="group__rtcan.html#gga103a105">CAN_BITTIME_BTR</a>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga99">CAN_BITTIME_TYPE</a> { <a class="el" href="group__rtcan.html#gga99a100">CAN_BITTIME_STD</a>, 
+<a class="el" href="group__rtcan.html#gga99a101">CAN_BITTIME_BTR</a>
  }</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Supported CAN bit-time types.  <a href="group__rtcan.html#ga103">More...</a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Supported CAN bit-time types.  <a href="group__rtcan.html#ga99">More...</a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:49:58 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

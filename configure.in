@@ -661,7 +661,12 @@ if test \! x$XENO_MAYBE_DOCDIR = x ; then
 	doc/man/xeno-load.man \
 	doc/man/xeno-test.man \
 	doc/doxygen/Makefile \
+	doc/doxygen/Doxyfile-common \
 	doc/doxygen/Doxyfile \
+	doc/doxygen/Doxyfile-native \
+	doc/doxygen/Doxyfile-nucleus \
+	doc/doxygen/Doxyfile-posix \
+	doc/doxygen/Doxyfile-rtdm \
 	doc/docbook/Makefile \
 	doc/docbook/catalog \
 	doc/docbook/custom-stylesheets/Makefile \

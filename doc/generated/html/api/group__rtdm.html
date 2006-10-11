@@ -16,7 +16,7 @@ Collaboration diagram for Real-Time Driver Model:<center><table><tr><td><img src
 </map></td></tr></table></center>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 The Real-Time Driver Model (RTDM) provides a unified interface to both users and developers of real-time device drivers. Specifically, it addresses the constraints of mixed RT/non-RT systems like Xenomai. RTDM conforms to POSIX semantics (IEEE Std 1003.1) where available and applicable.<p>
-<b>API</b> <b>Revision:</b> 4 
+<b>API</b> <b>Revision:</b> 5 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
@@ -27,8 +27,86 @@ The Real-Time Driver Model (RTDM) provides a unified interface to both users and
 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__profiles.html">Device Profiles</a></td></tr>
 
+<tr><td colspan="2"><br><h2>API Versioning</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="api_versioning"></a> <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga2" doxytag="rtdm::RTDM_API_VER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#ga2">RTDM_API_VER</a>&nbsp;&nbsp;&nbsp;5</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Common user and driver API version. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga3" doxytag="rtdm::RTDM_API_MIN_COMPAT_VER"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#ga3">RTDM_API_MIN_COMPAT_VER</a>&nbsp;&nbsp;&nbsp;5</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Minimum API revision compatible with the current release. <br></td></tr>
+<tr><td colspan="2"><br><h2>RTDM_TIMEOUT_xxx</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="RTDM_TIMEOUT_xxx"></a> Special timeout values <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga4" doxytag="rtdm::RTDM_TIMEOUT_INFINITE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#ga4">RTDM_TIMEOUT_INFINITE</a>&nbsp;&nbsp;&nbsp;0</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Block forever. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ga5" doxytag="rtdm::RTDM_TIMEOUT_NONE"></a>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#ga5">RTDM_TIMEOUT_NONE</a>&nbsp;&nbsp;&nbsp;(-1)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Any negative timeout means non-blocking. <br></td></tr>
+<tr><td colspan="2"><br><h2>Typedefs</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef uint64_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#ga0">nanosecs_abs_t</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">RTDM type for representing absolute dates.  <a href="#ga0"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int64_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">RTDM type for representing relative intervals.  <a href="#ga1"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:56 2006 for Xenomai API by&nbsp;
+<hr><h2>Typedef Documentation</h2>
+<a class="anchor" name="ga0" doxytag="rtdm.h::nanosecs_abs_t"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">typedef uint64_t <a class="el" href="group__rtdm.html#ga0">nanosecs_abs_t</a>          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+RTDM type for representing absolute dates. 
+<p>
+Its base type is a 64 bit unsigned integer. The unit is 1 nanosecond.     </td>
+  </tr>
+</table>
+<a class="anchor" name="ga1" doxytag="rtdm.h::nanosecs_rel_t"></a><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">typedef int64_t <a class="el" href="group__rtdm.html#ga1">nanosecs_rel_t</a>          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+RTDM type for representing relative intervals. 
+<p>
+Its base type is a 64 bit signed integer. The unit is 1 nanosecond. Relative intervals can also encode the special timeouts "infinite" and "non-blocking", see <a class="el" href="group__rtdm.html#RTDM_TIMEOUT_xxx">RTDM_TIMEOUT_xxx</a>.     </td>
+  </tr>
+</table>
+<hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:50:07 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

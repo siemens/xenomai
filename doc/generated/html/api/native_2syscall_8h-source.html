@@ -79,8 +79,8 @@
 00069 <span class="preprocessor"></span><span class="preprocessor">#define __native_mutex_create       43</span>
 00070 <span class="preprocessor"></span><span class="preprocessor">#define __native_mutex_bind         44</span>
 00071 <span class="preprocessor"></span><span class="preprocessor">#define __native_mutex_delete       45</span>
-00072 <span class="preprocessor"></span><span class="preprocessor">#define __native_mutex_lock         46</span>
-00073 <span class="preprocessor"></span><span class="preprocessor">#define __native_mutex_unlock       47</span>
+00072 <span class="preprocessor"></span><span class="preprocessor">#define __native_mutex_acquire      46</span>
+00073 <span class="preprocessor"></span><span class="preprocessor">#define __native_mutex_release      47</span>
 00074 <span class="preprocessor"></span><span class="preprocessor">#define __native_mutex_inquire      48</span>
 00075 <span class="preprocessor"></span><span class="preprocessor">#define __native_cond_create        49</span>
 00076 <span class="preprocessor"></span><span class="preprocessor">#define __native_cond_bind          50</span>
@@ -122,7 +122,7 @@
 00112 <span class="preprocessor"></span><span class="preprocessor">#define __native_pipe_read          86</span>
 00113 <span class="preprocessor"></span><span class="preprocessor">#define __native_pipe_write         87</span>
 00114 <span class="preprocessor"></span><span class="preprocessor">#define __native_pipe_stream        88</span>
-00115 <span class="preprocessor"></span><span class="preprocessor">#define __native_pipe_flush         89</span>
+00115 <span class="preprocessor"></span><span class="preprocessor">#define __native_unimp_89           89</span>
 00116 <span class="preprocessor"></span><span class="preprocessor">#define __native_misc_get_io_region 90</span>
 00117 <span class="preprocessor"></span><span class="preprocessor">#define __native_misc_put_io_region 91</span>
 00118 <span class="preprocessor"></span><span class="preprocessor">#define __native_timer_ns2tsc       92</span>
@@ -153,14 +153,10 @@
 00143 <span class="preprocessor"></span>}
 00144 <span class="preprocessor">#endif</span>
 00145 <span class="preprocessor"></span>
-00146 <span class="preprocessor">#elif !defined(__XENO_SIM__)</span>
-00147 <span class="preprocessor"></span>
-00148 <span class="preprocessor">#include &lt;nucleus/bind.h&gt;</span>
-00149 
-00150 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
-00151 
-00152 <span class="preprocessor">#endif </span><span class="comment">/* _NATIVE_SYSCALL_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:47 2006 for Xenomai API by&nbsp;
+00146 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
+00147 
+00148 <span class="preprocessor">#endif </span><span class="comment">/* _NATIVE_SYSCALL_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:49:58 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

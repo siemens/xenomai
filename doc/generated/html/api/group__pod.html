@@ -125,7 +125,7 @@ typedef <a class="el" href="structxnsched.html">xnsched</a>&nbsp;</td><td class=
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga73">xnpod_suspend_thread</a> (xnthread_t *thread, xnflags_t mask, xnticks_t timeout, xnsynch_t *wchan)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Suspend a thread.  <a href="#ga73"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga74">xnpod_welcome_thread</a> (xnthread_t *thread)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga74">xnpod_welcome_thread</a> (xnthread_t *thread, int imask)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Thread prologue.  <a href="#ga74"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga75">xnpod_preempt_current_thread</a> (<a class="el" href="structxnsched.html">xnsched_t</a> *sched)</td></tr>
@@ -1246,6 +1246,9 @@ Make a thread periodic by programming its first release point and its period in 
 <ul>
 <li>-EWOULDBLOCK is returned if the system timer has not been started using <a class="el" href="group__pod.html#ga28">xnpod_start_timer()</a>.</li></ul>
 <p>
+<ul>
+<li>-EINVAL is returned if <em>period</em> is different from XN_INFINITE but shorter than the scheduling latency value for the target system, as available from /proc/xenomai/latency.</li></ul>
+<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -1760,9 +1763,18 @@ Rescheduling: always, unless the current release point has already been reached.
           <td class="md" nowrap valign="top">void xnpod_welcome_thread           </td>
           <td class="md" valign="top">(&nbsp;</td>
           <td class="md" nowrap valign="top">xnthread_t *&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap> <em>thread</em>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
+          <td class="mdname" nowrap> <em>thread</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>int&nbsp;</td>
+          <td class="mdname" nowrap> <em>imask</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
         </tr>
       </table>
     </td>
@@ -1780,11 +1792,12 @@ Thread prologue.
 <p>
 <p><b>For internal use only.</b></p>
 <p>
-This internal routine is called on behalf of a (re)starting thread's prologue before the user entry point is invoked. This call is reserved for internal housekeeping chores and cannot be inlined. </p>
+This internal routine is called on behalf of a (re)starting thread's prologue before the user entry point is invoked. This call is reserved for internal housekeeping chores and cannot be inlined.<p>
+Entered with nklock locked, irqs off. </p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:49 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:50:00 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>

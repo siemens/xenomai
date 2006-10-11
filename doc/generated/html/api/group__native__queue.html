@@ -17,7 +17,7 @@ Collaboration diagram for Message queue services.:<center><table><tr><td><img sr
 </map></td></tr></table></center>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Queue services.<p>
-Message queueing is a method by which real-time tasks can exchange or pass data through a xeno-managed queue of messages. Messages can vary in length and be assigned different types or usages. A message queue can be created by one task and used by multiple tasks that send and/or receive messages to the queue.<p>
+Message queueing is a method by which real-time tasks can exchange or pass data through a Xenomai-managed queue of messages. Messages can vary in length and be assigned different types or usages. A message queue can be created by one task and used by multiple tasks that send and/or receive messages to the queue.<p>
 This implementation is based on a zero-copy scheme for message buffers. Message buffer pools are built over the nucleus's heap objects, which in turn provide the needed support for exchanging messages between kernel and user-space using direct memory mapping. 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
@@ -838,7 +838,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Aug 13 11:47:52 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Oct 10 22:50:05 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.2 </small></address>
 </body>
