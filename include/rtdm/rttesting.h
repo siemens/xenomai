@@ -23,7 +23,7 @@
 
 /*!
  * @ingroup profiles
- * @defgroup rttesting Testing Device
+ * @defgroup rttesting Testing Devices
  *
  * This group of devices is intended to provide in-kernel testing results.
  * Feel free to comment on this profile via the Xenomai mailing list
