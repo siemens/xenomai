@@ -1,4 +1,9 @@
-2006-10-11    <gilles.chanteperdrix@laposte.net>
+2006-10-11  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/rtdm/device.c (rtdm_dev_register): Turn static sanity
+	checks on into XENO_ASSERTs to save object size.
+
+2006-10-11  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* doc/doxygen/Makefile.am: Generate API documentation in pdf
 	format.
