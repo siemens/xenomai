@@ -558,19 +558,22 @@ static int timer_read_proc(char *page,
 			   char **start,
 			   off_t off, int count, int *eof, void *data)
 {
+	const char *tm_status = "off", *wd_status = "";
 	xnticks_t jiffies = 0, tickval = 0;
-	const char *status = "off";
 	int len;
 
 	if (nkpod && testbits(nkpod->status, XNTIMED)) {
-		status = nktimer->get_type();
+		tm_status = nktimer->get_type();
 		tickval = xnpod_get_tickval();
 		jiffies = xntimer_get_jiffies();
+#ifdef CONFIG_XENO_OPT_WATCHDOG
+		wd_status = "+watchdog";
+#endif /* CONFIG_XENO_OPT_WATCHDOG */
 	}
 
 	len = sprintf(page,
-		      "status=%s:setup=%Lu:tickval=%Lu:jiffies=%Lu\n",
-		      status, xnarch_tsc_to_ns(nktimerlat), tickval, jiffies);
+		      "status=%s%s:setup=%Lu:tickval=%Lu:jiffies=%Lu\n",
+		      tm_status, wd_status, xnarch_tsc_to_ns(nktimerlat), tickval, jiffies);
 
 	len -= off;
 	if (len <= off + count)
