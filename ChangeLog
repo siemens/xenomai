@@ -1,5 +1,10 @@
 2006-10-10  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/pod.c (xnpod_start_timer): Set up the watchdog
+	after the timer hardware has been initialized.
+
+	* ksrc/nucleus/module.c (timer_read_proc): Export watchdog status.
+
 	* ksrc/arch/blackfin, include/asm-blackfin/hal.h: Use
 	kernel-defined accessors for reading/writing MMIO registers.
 

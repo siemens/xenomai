@@ -3086,24 +3086,6 @@ int xnpod_start_timer(u_long nstick, xnisr_t tickhandler)
 
 	__setbits(nkpod->status, XNTIMED);
 
-#ifdef CONFIG_XENO_OPT_WATCHDOG
-	{
-		xnticks_t wdperiod;
-		unsigned cpu;
-
-		wdperiod = 1000000000UL / nkpod->tickvalue;
-
-		for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++) {
-			xnsched_t *sched = xnpod_sched_slot(cpu);
-			xntimer_init(&sched->wd_timer, &xnpod_watchdog_handler, NULL);
-			xntimer_set_priority(&sched->wd_timer, XNTIMER_LOPRIO);
-			xntimer_set_sched(&sched->wd_timer, sched);
-			xntimer_start(&sched->wd_timer, wdperiod, wdperiod);
-			xnpod_reset_watchdog(sched);
-		}
-	}
-#endif /* CONFIG_XENO_OPT_WATCHDOG */
-
 	xnlock_put_irqrestore(&nklock, s);
 
 	/* The following service should return the remaining time before
@@ -3137,6 +3119,24 @@ int xnpod_start_timer(u_long nstick, xnisr_t tickhandler)
 
 	xntimer_start(&nkpod->htimer, delta,
 		      XNARCH_HOST_TICK / nkpod->tickvalue);
+
+#ifdef CONFIG_XENO_OPT_WATCHDOG
+	{
+		xnticks_t wdperiod;
+		unsigned cpu;
+
+		wdperiod = 1000000000ULL / nkpod->tickvalue;
+
+		for_each_online_cpu(cpu) {
+			xnsched_t *sched = xnpod_sched_slot(cpu);
+			xnpod_reset_watchdog(sched);
+			xntimer_init(&sched->wd_timer, &xnpod_watchdog_handler, NULL);
+			xntimer_set_priority(&sched->wd_timer, XNTIMER_LOPRIO);
+			xntimer_set_sched(&sched->wd_timer, sched);
+			xntimer_start(&sched->wd_timer, wdperiod, wdperiod);
+		}
+	}
+#endif /* CONFIG_XENO_OPT_WATCHDOG */
 
 	return 0;
 }
