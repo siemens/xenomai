@@ -55,7 +55,7 @@ int rthal_nmi_request(void (*emergency) (struct pt_regs *))
 	rthal_nmi_disarm();
 	__builtin_bfin_csync();
 	rthal_nmi_emergency = emergency;
-	rthal_old_nmi_handler = bfin_read_EVT2();
+	rthal_old_nmi_handler = (void *)bfin_read_EVT2();
 	bfin_write_EVT2(&rthal_nmi_handler);
 	__builtin_bfin_csync();
 
