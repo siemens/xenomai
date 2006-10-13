@@ -244,10 +244,6 @@ int rtdm_proc_register_device(struct rtdm_device* device)
     struct proc_dir_entry   *dev_dir;
     struct proc_dir_entry   *proc_entry;
 
-    if (device->proc_name == NULL) {
-        xnlogerr("RTDM: missing device proc name\n");
-        return -EINVAL;
-    }
 
     dev_dir = create_proc_entry(device->proc_name, S_IFDIR, rtdm_proc_root);
     if (!dev_dir)

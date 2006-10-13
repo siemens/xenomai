@@ -1,3 +1,8 @@
+2006-10-13  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/rtdm/{proc.c,device.c}: Turn static proc_name sanity
+	check into XENO_ASSERT and move to more prominent place.
+
 2006-10-11  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/can/{mscan/rtcan_mscan.c,sja1000/rtcan_sja1000.c}:
@@ -5,7 +10,7 @@
 	way for according RTDM change.
 
 	* ksrc/skins/rtdm/device.c (rtdm_dev_register): Turn static sanity
-	checks on into XENO_ASSERTs to save object size.
+	checks into XENO_ASSERTs to save object size.
 
 2006-10-11  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
