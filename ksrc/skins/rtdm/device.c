@@ -216,6 +216,12 @@ int rtdm_dev_register(struct rtdm_device* device)
         return -EINVAL;
     );
 
+    /* Sanity check: proc_name specified? */
+    XENO_ASSERT(RTDM, (device->proc_name),
+        xnlogerr("RTDM: no /proc entry name specified\n");
+        return -EINVAL;
+    );
+
     switch (device->device_flags & RTDM_DEVICE_TYPE_MASK) {
         case RTDM_NAMED_DEVICE:
             /* Sanity check: any open handler? */
@@ -287,10 +293,8 @@ int rtdm_dev_register(struct rtdm_device* device)
         }
 
 #ifdef CONFIG_PROC_FS
-        if ((ret = rtdm_proc_register_device(device)) < 0) {
-            xnlogerr("RTDM: error while creating device proc entry\n");
+        if ((ret = rtdm_proc_register_device(device)) < 0)
             goto err;
-        }
 #endif /* CONFIG_PROC_FS */
 
         xnlock_get_irqsave(&rt_dev_lock, s);
