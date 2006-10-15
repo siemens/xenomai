@@ -1,5 +1,8 @@
 2006-10-15  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/blackfin/patches: Upgrade to
+	2.6.16-bf53x-CVS-20061008.
+
 	* include/asm-*/syscall.h (__xn_copy_from_user,
 	__xn_copy_to_user): Make sure the local variable used to
 	temporarily store the return value won't match any copy argument.
