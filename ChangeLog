@@ -1,5 +1,7 @@
 2006-10-15  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.14-ppc-1.5-00.
+
 	* ksrc/arch/blackfin/patches: Upgrade to
 	2.6.16-bf53x-CVS-20061008.
 
