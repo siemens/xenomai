@@ -1214,7 +1214,7 @@ Make a task periodic by programing its first release point and its period in the
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
 <ul>
-<li>-EINVAL is returned if <em>task</em> is not a task descriptor.</li></ul>
+<li>-EINVAL is returned if <em>task</em> is not a task descriptor, or <em>period</em> is different from TM_INFINITE but shorter than the scheduling latency value for the target system, as available from /proc/xenomai/latency.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>task</em> is a deleted task descriptor.</li></ul>
@@ -1997,7 +1997,7 @@ This service can be called from:<p>
 Rescheduling: always if a next equal-priority task is ready to run, otherwise, this service leads to a no-op.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Sep 17 19:19:14 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Oct 15 23:09:01 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

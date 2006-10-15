@@ -551,14 +551,14 @@
 <a name="l01041"></a>01041                                       <span class="keywordtype">void</span> *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> __user *src,
 <a name="l01042"></a>01042                                       size_t size)
 <a name="l01043"></a>01043 {
-<a name="l01044"></a>01044     <span class="keywordflow">return</span> __xn_copy_from_user(user_info, dst, src, size);
+<a name="l01044"></a>01044     <span class="keywordflow">return</span> __xn_copy_from_user(user_info, dst, src, size) ? -EFAULT : 0;
 <a name="l01045"></a>01045 }
 <a name="l01046"></a>01046 
 <a name="l01047"></a>01047 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_copy_to_user(rtdm_user_info_t *user_info,
 <a name="l01048"></a>01048                                     <span class="keywordtype">void</span> __user *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> *src,
 <a name="l01049"></a>01049                                     size_t size)
 <a name="l01050"></a>01050 {
-<a name="l01051"></a>01051     <span class="keywordflow">return</span> __xn_copy_to_user(user_info, dst, src, size);
+<a name="l01051"></a>01051     <span class="keywordflow">return</span> __xn_copy_to_user(user_info, dst, src, size) ? -EFAULT : 0;
 <a name="l01052"></a>01052 }
 <a name="l01053"></a>01053 
 <a name="l01054"></a>01054 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_strncpy_from_user(rtdm_user_info_t *user_info,
@@ -581,7 +581,7 @@
 <a name="l01071"></a>01071                     rtdm_rt_handler_t handler);
 <a name="l01072"></a>01072 
 <a name="l01073"></a>01073 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DRIVER_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Sep 17 19:19:13 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Oct 15 23:09:00 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

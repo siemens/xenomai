@@ -706,7 +706,7 @@ Copy user-space string to specified buffer.
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>count</em>&nbsp;</td><td>Maximum number of bytes to copy, including the trailing '0'</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
+<dl compact><dt><b>Returns:</b></dt><dd>Length of the string on success (not including the trailing '0'), otherwise:</dd></dl>
 <ul>
 <li>-EFAULT is returned if an invalid memory area was accessed.</li></ul>
 <p>
@@ -719,7 +719,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Sep 17 19:19:14 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Oct 15 23:09:02 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

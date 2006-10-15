@@ -325,7 +325,7 @@ an error number if:<ul>
 Get inheritsched attribute. 
 <p>
 This service returns at the address <em>inheritsched</em> the value of the <em>inheritsched</em> attribute in the attribute object <em>attr</em>.<p>
-Threads created with this attribute set to PTHREAD_EXPLICIT_SCHED will use the same scheduling policy and priority as the thread calling <a class="el" href="group__posix__thread.html#ge6e819ed048e4c4a4ee96fa6f426852c">pthread_create()</a>. Threads created with this attribute set to PTHREAD_INHERIT_SCHED will use the value of the <em>schedpolicy</em> attribute as scheduling policy, and the value of the <em>schedparam</em> attribute as scheduling priority.<p>
+Threads created with this attribute set to PTHREAD_INHERIT_SCHED will use the same scheduling policy and priority as the thread calling <a class="el" href="group__posix__thread.html#ge6e819ed048e4c4a4ee96fa6f426852c">pthread_create()</a>. Threads created with this attribute set to PTHREAD_EXPLICIT_SCHED will use the value of the <em>schedpolicy</em> attribute as scheduling policy, and the value of the <em>schedparam</em> attribute as scheduling priority.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -1112,7 +1112,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Sep 17 19:19:14 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Oct 15 23:09:02 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

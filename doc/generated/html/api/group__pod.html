@@ -1256,6 +1256,9 @@ Make a thread periodic by programming its first release point and its period in 
 <ul>
 <li>-EWOULDBLOCK is returned if the system timer has not been started using <a class="el" href="group__pod.html#g2559408f64fdd09fd055bb85221ce485">xnpod_start_timer()</a>.</li></ul>
 <p>
+<ul>
+<li>-EINVAL is returned if <em>period</em> is different from XN_INFINITE but shorter than the scheduling latency value for the target system, as available from /proc/xenomai/latency.</li></ul>
+<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -1804,7 +1807,7 @@ Entered nklock locked, irqs off. </p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Sep 17 19:19:13 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Oct 15 23:09:01 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
