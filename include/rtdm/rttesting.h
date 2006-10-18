@@ -85,8 +85,8 @@ typedef struct rttst_overall_bench_res {
 
 typedef struct rttst_tmbench_config {
     int                     mode;
-    nanosecs_rel_t          period;
     int                     priority;
+    nanosecs_rel_t          period;
     int                     warmup_loops;
     int                     histogram_size;
     int                     histogram_bucketsize;
