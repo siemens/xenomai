@@ -497,21 +497,23 @@ else
 fi
 AC_MSG_RESULT([done])
 
-XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -D__XENO__"
+dnl Common CFLAGS and LDFLAGS
+XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT"
 XENO_USER_LDFLAGS=
+
+dnl Exported CFLAGS and LDFLAGS, may be enhanced per-arch below
+XENO_USER_APP_CFLAGS=$XENO_USER_CFLAGS
+XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
 
 case $XENO_TARGET_ARCH in
  i386)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -fstrict-aliasing $gcc_w_noalias"
-	XENO_USER_LDFLAGS="-rdynamic"
         ;;
  powerpc)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
-	XENO_USER_LDFLAGS="-rdynamic"
         ;;
  ia64)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
-	XENO_USER_LDFLAGS="-rdynamic"
         ;;
  blackfin)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
@@ -521,7 +523,6 @@ case $XENO_TARGET_ARCH in
         ;;
  arm)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
-	XENO_USER_LDFLAGS="-rdynamic"
         ;;
 esac
 
@@ -531,9 +532,7 @@ else
    XENO_USER_CFLAGS="-O2 $XENO_USER_CFLAGS"
 fi
 
-XENO_USER_APP_CFLAGS=$XENO_USER_CFLAGS
-XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__IN_XENO__ -Wstrict-prototypes"
-XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
+XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__XENO__ -D__IN_XENO__ -Wstrict-prototypes"
 
 AC_MSG_CHECKING([whether ld supports @file])
 AC_CACHE_VAL(ac_cv_ld_file_option,
