@@ -195,7 +195,7 @@ static int proc_read_fildes(char* buf, char** start, off_t offset,
     RTDM_PROC_PRINT_VARS(80);
 
 
-    RTDM_PROC_PRINT("total:\t%d\nopen:\t%d\nfree:\t%d\n", RTDM_FD_MAX,
+    RTDM_PROC_PRINT("total=%d:open=%d:free=%d\n", RTDM_FD_MAX,
                     open_fildes, RTDM_FD_MAX - open_fildes);
 
     RTDM_PROC_PRINT_DONE;
