@@ -1,3 +1,9 @@
+2006-10-19  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* include/asm-powerpc/wrappers.h, include/asm-powerpc/syscall.h:
+	Since Linux 2.4.15, __put_user and __get_user call migth_sleep.
+	To avoid that, wrapper functions have been added.
+
 2006-10-16  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.2.4 (Headless Horseman)
