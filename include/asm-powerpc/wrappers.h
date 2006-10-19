@@ -49,4 +49,38 @@
 
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,15)
+
+#define wrap_put_user(src,dstP)           __put_user(src,dstP)
+#define wrap_get_user(dst,srcP)           __get_user(dst,srcP)
+
+#else /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,15) */
+
+/* from linux/include/asm-powerpc/uaccess.h */
+#define wrap_get_user(x, ptr)					\
+({								\
+	int __gu_size = sizeof(*(ptr));				\
+	long __gu_err;						\
+	unsigned long __gu_val;					\
+	const __typeof__(*(ptr)) __user *__gu_addr = (ptr);	\
+	__chk_user_ptr(ptr);					\
+	__get_user_size(__gu_val, __gu_addr, gu_size, __gu_err);\
+	(x) = (__typeof__(*(ptr)))__gu_val;			\
+	__gu_err;						\
+})
+
+#define wrap_put_user(x, ptr)					\
+({								\
+	int __pu_size = sizeof(*(ptr));				\
+	long __pu_err;						\
+	__typeof__(*(ptr)) __user *__pu_addr = (ptr);		\
+	__chk_user_ptr(ptr);					\
+	__put_user_size((__typeof__(*(ptr)))(x),		\
+			__pu_addr, __pu_size, __pu_err);	\
+	__pu_err;						\
+})
+
+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,15) */
+
+
 #endif /* _XENO_ASM_POWERPC_WRAPPERS_H */
