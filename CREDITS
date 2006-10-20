@@ -43,6 +43,7 @@ E: gilles.chanteperdrix@laposte.net
 D: POSIX and VxWorks skins author and maintainer. Autoconfiscation
 D: janitor. SMP support. ia64 port. Fixes and improvements all over
 D: the map.
+D: ARM port maintainer.
 
 N: Jim Cromie
 E: jim.cromie@gmail.com
