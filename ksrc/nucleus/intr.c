@@ -295,14 +295,19 @@ static inline int xnintr_irq_attach(xnintr_t *intr)
 		void (*handler) (unsigned, void *) = &xnintr_irq_handler;
 
 		if (intr->flags & XN_ISR_SHARED) {
+			if (intr->flags & XN_ISR_EDGE)
+#if defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
+				handler = &xnintr_edge_shirq_handler;
+#else /* !CONFIG_XENO_OPT_SHIRQ_EDGE */
+				return -ENOSYS;
+#endif /* CONFIG_XENO_OPT_SHIRQ_EDGE */
+			else
 #if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL)
-			handler = &xnintr_shirq_handler;
+				handler = &xnintr_shirq_handler;
+#else /* !CONFIG_XENO_OPT_SHIRQ_LEVEL */
+				return -ENOSYS;
 #endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL */
 
-#if defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
-			if (intr->flags & XN_ISR_EDGE)
-				handler = &xnintr_edge_shirq_handler;
-#endif /* CONFIG_XENO_OPT_SHIRQ_EDGE */
 		}
 		shirq->unhandled = 0;
 
