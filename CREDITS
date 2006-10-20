@@ -61,6 +61,16 @@ N: Philippe Gerum
 E: rpm@xenomai.org
 D: Core stuff here and there.
 
+N: Niklaus Giger
+E: niklaus.giger@member.fsf.org
+D: ppc32 port and VxWorks debugging.
+D: Xenomai buildbot maintainer.
+
+N: Wolfgang Grandegger
+E: wg@grandegger.com
+D: Real-time socket CAN.
+D: Various ppc32 contributions.
+
 N: Panagiotis Issaris
 E: panagiotis.issaris@mech.kuleuven.ac.be
 D: RTAI LiveCD author and maintainer. Code sanity checks.
@@ -72,6 +82,7 @@ E: kiszka@rts.uni-hannover.de
 D: RTDM author and maintainer. 16550A UART driver and
    benchmark suite over RTDM. Latency tracer.
 D: Various cleanups and fixes.
+D: Real-time socket CAN.
 
 N: Marc Kleine-Budde
 E: kleine-budde@gmx.de
@@ -99,7 +110,7 @@ E: Andrew.Noren@xerox.com
 D: User-space POSIX tortur^H^H^H^H^H^Hesting.
 
 N: Julien Pinon
-D: VRTX skin author.
+D: Original VRTX skin author.
 
 N: Ivan Raikov
 E: raikov@cc.gatech.edu
@@ -109,6 +120,10 @@ N: Bruno Rouchouse
 E: bsd@neuf.fr
 D: WEB site author and documentation maintainer.
 W: http://www.xenomai.org/
+
+N: Sebastian Smolorz
+E: sebastian.smolorz@stud.uni-hannover.de
+D: Real-time socket CAN.
 
 N: Evgeny Sinelnikov
 E: linux4sin@mail.ru
