@@ -1213,8 +1213,8 @@
 +obj-$(CONFIG_IPIPE)	+= core.o generic.o
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 --- 2.6.14/kernel/ipipe/core.c	1970-01-01 01:00:00.000000000 +0100
-+++ 2.6.14-ipipe/kernel/ipipe/core.c	2006-10-12 22:27:51.000000000 +0200
-@@ -0,0 +1,1049 @@
++++ 2.6.14-ipipe/kernel/ipipe/core.c	2006-10-20 15:35:21.000000000 +0200
+@@ -0,0 +1,1051 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -2018,7 +2018,6 @@
 +	 */
 +	while ((mask = (cpudata->irq_pending_hi & syncmask)) != 0) {
 +		level = __ipipe_ffnz(mask);
-+		__clear_bit(level, &cpudata->irq_pending_hi);
 +
 +		while ((submask = cpudata->irq_pending_lo[level]) != 0) {
 +			rank = __ipipe_ffnz(submask);
@@ -2029,8 +2028,11 @@
 +				continue;
 +			}
 +
-+			if (--cpudata->irq_counters[irq].pending_hits == 0)
++			if (--cpudata->irq_counters[irq].pending_hits == 0) {
 +				__clear_bit(rank, &cpudata->irq_pending_lo[level]);
++				if (cpudata->irq_pending_lo[level] == 0)
++					__clear_bit(level, &cpudata->irq_pending_hi);
++			}
 +
 +			__set_bit(IPIPE_STALL_FLAG, &cpudata->status);
 +			__ipipe_run_isr(ipd, irq, cpuid);
@@ -5801,6 +5803,26 @@
  	.handler	= k2u3_action,
  	.flags		= 0,
  	.mask		= CPU_MASK_NONE,
+--- 2.6.14/arch/ppc/syslib/open_pic.c	2005-10-28 02:02:08.000000000 +0200
++++ 2.6.14-ipipe/arch/ppc/syslib/open_pic.c	2006-10-20 22:47:17.000000000 +0200
+@@ -820,7 +820,7 @@ static void openpic_set_sense(u_int irq,
+  */
+ static void openpic_ack_irq(unsigned int irq_nr)
+ {
+-#ifdef __SLOW_VERSION__
++#if defined(__SLOW_VERSION__) || defined(CONFIG_IPIPE)
+ 	openpic_disable_irq(irq_nr);
+ 	openpic_eoi();
+ #else
+@@ -831,7 +831,7 @@ static void openpic_ack_irq(unsigned int
+ 
+ static void openpic_end_irq(unsigned int irq_nr)
+ {
+-#ifdef __SLOW_VERSION__
++#if defined(__SLOW_VERSION__) || defined(CONFIG_IPIPE)
+ 	if (!(irq_desc[irq_nr].status & (IRQ_DISABLED|IRQ_INPROGRESS))
+ 	    && irq_desc[irq_nr].action)
+ 		openpic_enable_irq(irq_nr);
 --- 2.6.14/include/asm-ppc/hw_irq.h	2005-10-28 02:02:08.000000000 +0200
 +++ 2.6.14-ipipe/include/asm-ppc/hw_irq.h	2006-03-27 23:10:46.000000000 +0200
 @@ -12,6 +12,142 @@ extern void timer_interrupt(struct pt_re
@@ -6006,10 +6028,10 @@
 +#include <linux/cpumask.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.5-00"
++#define IPIPE_ARCH_STRING	"1.5-01"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	5
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
