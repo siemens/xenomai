@@ -1165,7 +1165,7 @@
 +	  boot time on slow embedded devices due to the tracer overhead.
 +
 +config IPIPE_TRACE_MCOUNT
-+	bool "Intrument function entries"
++	bool "Instrument function entries"
 +	depends on IPIPE_TRACE
 +	default y
 +	---help---
