@@ -12,7 +12,7 @@ STD_TARGETS := satch
 GCIC := $(prefix)/bin/gcic
 SIM_CFLAGS  := -g
 SIM_LDFLAGS := -lvxworks_sim
-SIM_TARGETS := satch_sim koan_sim
+SIM_TARGETS := satch_sim
 
 # "std" makes all demos running natively in user-space.
 # "sim" makes all demos running over the simulator.
@@ -29,12 +29,6 @@ satch: satch.c
 
 satch_sim: satch_sim.o
 	$(GCIC) -o $@ $< $(SIM_LDFLAGS)
-
-koan: koan.c
-	$(CC) -o $@ $< $(STD_CFLAGS) $(STD_LDFLAGS) -lnative
-
-koan_sim: koan_sim.o
-	$(GCIC) -o $@ $< $(SIM_LDFLAGS) -lnative_sim
 
 %_sim.o: %.c
 	$(GCIC) -o $@ -c $< $(SIM_CFLAGS)
