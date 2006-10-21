@@ -77,6 +77,7 @@ typedef struct rttst_overall_bench_res {
     long                    *histogram_avg;
     long                    *histogram_min;
     long                    *histogram_max;
+    void                    *__padding; /* align to dwords on 32-bit archs */
 } rttst_overall_bench_res_t;
 
 
