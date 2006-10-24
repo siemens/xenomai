@@ -72,7 +72,10 @@ int main(int argc, char *argv[])
     struct rttst_irqbench_stats stats;
     unsigned long long last_received = 0;
     pthread_t thr;
+    int ioaddr_set = 0;
+    int irq_set = 0;
     int c, err;
+    int timeout = 10;
 
 
     while ((c = getopt(argc,argv,"D:t:P:o:a:i:")) != EOF)
@@ -96,10 +99,12 @@ int main(int argc, char *argv[])
             case 'a':
                 config.port_ioaddr = strtol(optarg, NULL,
                     (strncmp(optarg, "0x", 2) == 0) ? 16 : 10);
+                ioaddr_set = 1;
                 break;
 
             case 'i':
                 config.port_irq = atoi(optarg);
+                irq_set = 1;
                 break;
 
             default:
@@ -109,10 +114,18 @@ int main(int argc, char *argv[])
                         "                           # 2=IRQ handler, 3=hard-IRQ handler\n"
                         "  [-P <priority>]          # task priority (test mode 0 and 1 only)\n"
                         "  [-o <port_type>]         # 0=serial (default), 1=parallel\n"
-                        "  [-a <port_io_address>]   # default=0x3f8\n"
-                        "  [-i <port_irq>]          # default=4\n");
+                        "  [-a <port_io_address>]   # default=0x3f8/0x378\n"
+                        "  [-i <port_irq>]          # default=4/7\n");
                 exit(2);
         }
+
+    /* set defaults for parallel port */
+    if (config.port_type == 1) {
+        if (!ioaddr_set)
+            config.port_ioaddr = 0x378;
+        if (!irq_set)
+            config.port_irq = 0x7;
+    }
 
     signal(SIGINT, sighand);
     signal(SIGTERM, sighand);
@@ -155,8 +168,11 @@ int main(int argc, char *argv[])
             break;
         }
 
-        if ((last_received > 0) && (stats.irqs_received == last_received))
-            break; /* timed out */
+        if ((last_received > 0) && (stats.irqs_received == last_received)) {
+            if (--timeout == 0)
+                break; /* timed out */
+        } else
+            timeout = 10;
         last_received = stats.irqs_received;
 
         printf("\033[2AReceived IRQs:     %lld\nAcknowledged IRQs: %lld\n",

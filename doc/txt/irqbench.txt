@@ -25,9 +25,8 @@ This latency benchmark for external interrupts consists of three parts:
 2. Hardware Setup
 
 To link both test and log system, a null-modem cable between 8250-compatible
-two RS232 ports is required. The infrastructure for parallel port cross-over
-is prepared as well, but yet untested and incomplete. The null-modem cable
-must provide at least the following links:
+two RS232 ports or a Laplink cable between two PC parallel ports is required.
+The null-modem cable must provide at least the following links:
 
         test target             log system
         -----------             ----------
@@ -39,6 +38,15 @@ must provide at least the following links:
           DSR(6)
 
         (Pin number on 9-pin sub-D socket)
+
+The relevant links of the Laplink cable are:
+
+        test target             log system
+        -----------             ----------
+         /ACK(10)     <------    DATA3(5)       IRQ trigger
+         DATA3(5)     ------>    /ACK(10)       reply
+
+         BUSY(11)     <------    DATA4(6)       trace trigger (optional)
 
 Test and log system can be started in arbitrary order, they will wait on
 each other.
@@ -81,5 +89,5 @@ these timeouts may disturb other processes or drivers on the log system.
 Keep in mind for test evaluations that, by design, irqbench will not trigger a
 new IRQ event before the reply on the previous one has arrived or timed out.
 Thus the specified test period may be dynamically expended in case of
-overload. But maximum a latency close or above the period will clearly
+overload. But a maximum latency close or above the period will clearly
 indicate this.
