@@ -301,6 +301,7 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
                     break;
 
                 case RTTST_IRQBENCH_PARPORT:
+                    ctx->toggle = 0;
                     outb(0, DATA(ctx));
                     outb(CTRL_INIT, CTRL(ctx));
                     break;
