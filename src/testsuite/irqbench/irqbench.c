@@ -45,8 +45,7 @@
 /* --- Parallel port --- */
 
 #define CTRL_INIT               0x04
-
-#define STAT_STROBE             0x10
+#define CTRL_STROBE             0x10
 
 #define DATA(base) (base + 0) /* Data register */
 #define STAT(base) (base + 1) /* Status register */
@@ -126,14 +125,16 @@ void sighand(int signal)
 
 int main(int argc, char *argv[])
 {
-    int             port_type   = SERPORT;
-    unsigned long   port_ioaddr = 0x3F8;
-    long long       period = 100000;
-    long long       timeout;
-    long long       start, delay;
-    unsigned int    toggle;
-    int             trigger_trace = 0;
-    int             c;
+    int                 port_type   = SERPORT;
+    unsigned long       port_ioaddr = 0x3F8;
+    int                 ioaddr_set = 0;
+    long long           period = 100000;
+    long long           timeout;
+    long long           start, delay;
+    unsigned long long  count = 1;
+    unsigned int        toggle;
+    int                 trigger_trace = 0;
+    int                 c;
 
 
     signal(SIGINT, sighand);
@@ -160,6 +161,7 @@ int main(int argc, char *argv[])
             case 'a':
                 port_ioaddr = strtol(optarg, NULL,
                     (strncmp(optarg, "0x", 2) == 0) ? 16 : 10);
+                ioaddr_set = 1;
                 break;
 
             case 'f':
@@ -171,10 +173,14 @@ int main(int argc, char *argv[])
                         "  [-p <period_us>]             # signal period, default=100 us\n"
                         "  [-T <test_duration_seconds>] # default=0, so ^C to end\n"
                         "  [-o <port_type>]             # 0=serial (default), 1=parallel\n"
-                        "  [-a <port_io_address>]       # default=0x3f8\n"
+                        "  [-a <port_io_address>]       # default=0x3f8/0x378\n"
                         "  [-f]                         # freeze trace for each new max latency\n");
                 exit(2);
         }
+
+    /* set defaults for parallel port */
+    if (port_type == 1 && !ioaddr_set)
+        port_ioaddr = 0x378;
 
     if (iopl(3) < 0) {
         fprintf(stderr, "irqbench: superuser permissions required\n");
@@ -189,8 +195,6 @@ int main(int argc, char *argv[])
             break;
 
         case PARPORT:
-            toggle = 0xAA;
-            outb(0xAA, DATA(port_ioaddr));
             outb(CTRL_INIT, CTRL(port_ioaddr));
             break;
 
@@ -217,8 +221,9 @@ int main(int argc, char *argv[])
         } else {
             int status = inb(STAT(port_ioaddr));
 
-            toggle ^= 0xFF;
-            outb(toggle, DATA(port_ioaddr));
+            outb(0x08, DATA(port_ioaddr));
+            outb(0x00, DATA(port_ioaddr));
+            usleep(100000);
             if (inb(STAT(port_ioaddr)) != status)
                 break;
         }
@@ -228,9 +233,9 @@ int main(int argc, char *argv[])
     while (!terminate) {
         long long loop_timeout = rdtsc() + ns2tsc(1000000000LL);
         long loop_avg = 0;
-        int inner_loops;
+        int inner_loops = 0;
 
-        for (inner_loops = 0; rdtsc() < loop_timeout; inner_loops++) {
+        while (rdtsc() < loop_timeout) {
             long lat;
 
             __asm__ __volatile__("cli");
@@ -249,10 +254,11 @@ int main(int argc, char *argv[])
             } else {
                 int status = inb(STAT(port_ioaddr));
 
+                outb(0x08, DATA(port_ioaddr));
+
                 start = rdtsc();
 
-                toggle ^= 0xFF;
-                outb(toggle, DATA(port_ioaddr));
+                outb(0x00, DATA(port_ioaddr));
 
                 timeout = start + period * 100;
                 while ((inb(STAT(port_ioaddr)) == status) &&
@@ -274,7 +280,8 @@ int main(int argc, char *argv[])
                             toggle ^= MCR_DTR;
                             outb(toggle, MCR(port_ioaddr));
                         } else {
-                            // todo
+                            outb(0x18, DATA(port_ioaddr));
+                            outb(0x10, DATA(port_ioaddr));
                         }
                     }
                 }
@@ -282,12 +289,17 @@ int main(int argc, char *argv[])
 
             __asm__ __volatile__("sti");
 
+            inner_loops++;
+
             while (rdtsc() < start + period);
         }
+
+        count += inner_loops;
+
         if (!warmup && !terminate) {
             loop_avg /= inner_loops;
 
-            printf("%.3f / %.3f / %.3f us\n",
+            printf("%llu: %.3f / %.3f / %.3f us\n", count,
                 ((double)min_lat) / 1000.0, ((double)loop_avg) / 1000.0,
                 ((double)max_lat) / 1000.0);
 
@@ -298,7 +310,7 @@ int main(int argc, char *argv[])
     }
 
     avg_lat /= outer_loops;
-    printf("---\n%.3f / %.3f / %.3f us\n",
+    printf("---\n%llu: %.3f / %.3f / %.3f us\n", count,
            ((double)min_lat) / 1000.0, ((double)avg_lat) / 1000.0,
            ((double)max_lat) / 1000.0);
 

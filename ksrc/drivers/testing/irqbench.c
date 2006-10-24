@@ -44,9 +44,10 @@
 
 /* --- Parallel port --- */
 
-#define CTRL_INIT               0x04
+#define STAT_BUSY               0x80
 
-#define STAT_STROBE             0x10
+#define CTRL_INIT               0x04
+#define CTRL_STROBE             0x10
 
 #define DATA(ctx) (ctx->port_ioaddr + 0) /* Data register */
 #define STAT(ctx) (ctx->port_ioaddr + 1) /* Status register */
@@ -83,6 +84,7 @@ static inline int rt_irqbench_check_irq(struct rt_irqbench_context *ctx)
     switch (ctx->port_type) {
         case RTTST_IRQBENCH_SERPORT:
             status = inb(MSR(ctx));
+            /* any change on DSR or DCD triggers trace freeze */
             if (status & (MSR_DDSR | MSR_DDCD))
                 xntrace_user_freeze(0, 0);
             if (!(status & MSR_DCTS))
@@ -90,7 +92,11 @@ static inline int rt_irqbench_check_irq(struct rt_irqbench_context *ctx)
             break;
 
         case RTTST_IRQBENCH_PARPORT:
-            // todo
+            /* a set BUSY line on /ACK IRW triggers trace freeze */
+            if (!(inb(STAT(ctx)) & STAT_BUSY)) {
+                xntrace_user_freeze(0, 0);
+                return 0;
+            }
             break;
     }
     ctx->stats.irqs_received++;
@@ -108,7 +114,7 @@ static inline void rt_irqbench_hwreply(struct rt_irqbench_context *ctx)
             break;
 
         case RTTST_IRQBENCH_PARPORT:
-            ctx->toggle ^= 0xFF;
+            ctx->toggle ^= 0x08;
             outb(ctx->toggle, DATA(ctx));
             break;
     }
@@ -295,8 +301,7 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
                     break;
 
                 case RTTST_IRQBENCH_PARPORT:
-                    ctx->toggle = 0xAA;
-                    outb(0xAA, DATA(ctx));
+                    outb(0, DATA(ctx));
                     outb(CTRL_INIT, CTRL(ctx));
                     break;
             }
@@ -368,7 +373,7 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
                     break;
 
                 case RTTST_IRQBENCH_PARPORT:
-                    outb(STAT_STROBE, CTRL(ctx));
+                    outb(CTRL_STROBE, CTRL(ctx));
                     break;
             }
 
