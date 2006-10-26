@@ -185,10 +185,12 @@ static int rt_irqbench_stop(struct rt_irqbench_context *ctx)
 	switch (ctx->port_type) {
 	case RTTST_IRQBENCH_SERPORT:
 		outb(0, IER(ctx));
+		release_region(ctx->port_ioaddr, 8);
 		break;
 
 	case RTTST_IRQBENCH_PARPORT:
 		outb(0, CTRL(ctx));
+		release_region(ctx->port_ioaddr, 3);
 		break;
 	}
 
@@ -366,6 +368,7 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 			break;
 
 		default:
+			ctx->port_type = -1;
 			err = -EINVAL;
 			break;
 		}
@@ -376,7 +379,7 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 				break;
 
 			case RTTST_IRQBENCH_PARPORT:
-				release_region(ctx->port_ioaddr, 8);
+				release_region(ctx->port_ioaddr, 3);
 				break;
 			}
 			goto unlock_start_out;
