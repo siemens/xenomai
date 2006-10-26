@@ -277,7 +277,7 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 			if (!request_region(ctx->port_ioaddr, 8,
 					    context->device->device_name)) {
 				err = -EBUSY;
-				break;
+				goto unlock_start_out;
 			}
 
 			ctx->toggle = MCR_OUT2;
@@ -298,7 +298,7 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 			if (!request_region(ctx->port_ioaddr, 3,
 					    context->device->device_name)) {
 				err = -EBUSY;
-				break;
+				goto unlock_start_out;
 			}
 
 			ctx->toggle = 0;
@@ -368,11 +368,11 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 			break;
 
 		default:
-			ctx->port_type = -1;
 			err = -EINVAL;
-			break;
+			goto unlock_start_out;
 		}
-		if (err) {
+
+		if (err)
 			switch (ctx->port_type) {
 			case RTTST_IRQBENCH_SERPORT:
 				release_region(ctx->port_ioaddr, 8);
@@ -382,22 +382,21 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 				release_region(ctx->port_ioaddr, 3);
 				break;
 			}
-			goto unlock_start_out;
-		}
-
-		ctx->mode = config->mode;
-
-		memset(&ctx->stats, 0, sizeof(ctx->stats));
-
-		/* Arm IRQ */
-		switch (ctx->port_type) {
-		case RTTST_IRQBENCH_SERPORT:
-			outb(IER_MODEM, IER(ctx));
-			break;
-
-		case RTTST_IRQBENCH_PARPORT:
-			outb(CTRL_STROBE, CTRL(ctx));
-			break;
+		else {
+			ctx->mode = config->mode;
+	
+			memset(&ctx->stats, 0, sizeof(ctx->stats));
+	
+			/* Arm IRQ */
+			switch (ctx->port_type) {
+			case RTTST_IRQBENCH_SERPORT:
+				outb(IER_MODEM, IER(ctx));
+				break;
+	
+			case RTTST_IRQBENCH_PARPORT:
+				outb(CTRL_STROBE, CTRL(ctx));
+				break;
+			}
 		}
 
 	      unlock_start_out:
