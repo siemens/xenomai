@@ -16,8 +16,14 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <linux/version.h>
 #include <linux/module.h>
+#include <linux/ioport.h>
 #include <asm/semaphore.h>
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+#include <linux/pnp.h>
+#endif /* Linux >= 2.6.0 */
 
 #include <rtdm/rttesting.h>
 #include <rtdm/rtdm_driver.h>
@@ -266,6 +272,12 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 		/* Initialise hardware */
 		switch (ctx->port_type) {
 		case RTTST_IRQBENCH_SERPORT:
+			if (!request_region(ctx->port_ioaddr, 8,
+					    context->device->device_name)) {
+				err = -EBUSY;
+				break;
+			}
+
 			ctx->toggle = MCR_OUT2;
 
 			/* Reset DLAB, reset RTS, enable OUT2 */
@@ -281,6 +293,12 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 			break;
 
 		case RTTST_IRQBENCH_PARPORT:
+			if (!request_region(ctx->port_ioaddr, 3,
+					    context->device->device_name)) {
+				err = -EBUSY;
+				break;
+			}
+
 			ctx->toggle = 0;
 			outb(0, DATA(ctx));
 			outb(CTRL_INIT, CTRL(ctx));
@@ -304,7 +322,7 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 					     rt_irqbench_task_irq, 0,
 					     "irqbench", ctx);
 			if (err)
-				goto unlock_start_out;
+				break;
 			rtdm_irq_enable(&ctx->irq_handle);
 
 			err = rtdm_task_init(&ctx->irq_task, "irqbench",
@@ -331,7 +349,7 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 						  IPIPE_HEAD_PRIORITY,
 						  rt_irqbench_domain_entry);
 			if (err)
-				goto unlock_start_out;
+				break;
 
 			ctx->port_irq = config->port_irq;
 			err =
@@ -351,8 +369,18 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 			err = -EINVAL;
 			break;
 		}
-		if (err)
+		if (err) {
+			switch (ctx->port_type) {
+			case RTTST_IRQBENCH_SERPORT:
+				release_region(ctx->port_ioaddr, 8);
+				break;
+
+			case RTTST_IRQBENCH_PARPORT:
+				release_region(ctx->port_ioaddr, 8);
+				break;
+			}
 			goto unlock_start_out;
+		}
 
 		ctx->mode = config->mode;
 
@@ -463,6 +491,32 @@ static struct rtdm_device device = {
 	.proc_name         = device.device_name,
 };
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+static const struct pnp_device_id irqbench_pnp_tbl[] = {
+	/* Standard LPT Printer Port */
+	{.id = "PNP0400", .driver_data = 0},
+	/* ECP Printer Port */
+	{.id = "PNP0401", .driver_data = 0},
+	{ }
+};
+
+MODULE_DEVICE_TABLE(pnp, irqbench_pnp_tbl);
+
+static int irqbench_pnp_probe(struct pnp_dev *dev,
+			      const struct pnp_device_id *id)
+{
+	return 0;
+}
+
+static struct pnp_driver irqbench_pnp_driver = {
+	.name     = "irqbench",
+	.id_table = irqbench_pnp_tbl,
+	.probe    = irqbench_pnp_probe,
+};
+
+static int pnp_registered;
+#endif /* Linux >= 2.6.0 */
+
 int __init __irqbench_init(void)
 {
 	int err;
@@ -475,12 +529,22 @@ int __init __irqbench_init(void)
 		start_index++;
 	} while (err == -EEXIST);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+	if (!err && pnp_register_driver(&irqbench_pnp_driver) == 0)
+		pnp_registered = 1;
+#endif /* Linux >= 2.6.0 */
+
 	return err;
 }
 
 void __exit __irqbench_exit(void)
 {
 	rtdm_dev_unregister(&device, 1000);
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+	if (pnp_registered)
+		pnp_unregister_driver(&irqbench_pnp_driver);
+#endif /* Linux >= 2.6.0 */
 }
 
 module_init(__irqbench_init);
