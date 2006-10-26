@@ -1,3 +1,8 @@
+2006-10-26  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/drivers/testing/irqbench.c: Register with pnp subsystem to
+	enabled parport on modern PCs. Register I/O regions.
+
 2006-10-25  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/testing/irqbench.c, doc/txt/irqbench.txt,
