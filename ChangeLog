@@ -1,3 +1,9 @@
+2006-10-27    <gilles.chanteperdrix@laposte.net>
+
+	* src/testsuite/switchtest/switchtest.c (main): Only join the
+	threads once they all have been canceled in order to avoid
+	deadlocks.
+
 2006-10-26  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/testing/irqbench.c: Register with pnp subsystem to
