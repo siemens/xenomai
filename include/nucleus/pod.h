@@ -146,7 +146,9 @@ typedef struct xnsched {
     xnthread_t rootcb;          /*!< Root thread control block. */
 
 #ifdef CONFIG_XENO_OPT_STATS
-    xnticks_t last_csw;         /*!< Last context switch (ticks). */
+    xnticks_t last_account_switch; /*!< Last account switch date (ticks). */
+
+    xnstat_runtime_t *current_account;  /*!< Currently active account */
 #endif /* CONFIG_XENO_OPT_STATS */
 
 } xnsched_t;
@@ -543,40 +545,6 @@ static inline void xnpod_delete_self (void)
 {
     xnpod_delete_thread(xnpod_current_thread());
 }
-
-#ifdef CONFIG_XENO_OPT_STATS
-static inline void xnpod_acc_exec_time(xnsched_t *sched, xnthread_t *thread)
-{
-    xnticks_t now = xnarch_get_cpu_tsc();
-
-    thread->stat.exec_time += now - sched->last_csw;
-    sched->last_csw = now;
-}
-
-static inline void xnpod_reset_exec_stats(xnthread_t *thread)
-{
-    thread->stat.exec_time = 0;
-    thread->stat.exec_start = xnarch_get_cpu_tsc();
-}
-
-static inline void xnpod_update_csw_date(xnsched_t *sched)
-{
-    sched->last_csw = xnarch_get_cpu_tsc();
-}
-
-#else /* !CONFIG_XENO_OPT_STATS */
-static inline void xnpod_acc_exec_time(xnsched_t *sched, xnthread_t *thread)
-{
-}
-
-static inline void xnpod_reset_exec_stats(xnthread_t *thread)
-{
-}
-
-static inline void xnpod_update_csw_date(xnsched_t *sched)
-{
-}
-#endif /* CONFIG_XENO_OPT_STATS */
 
 #ifdef __cplusplus
 }

@@ -41,6 +41,7 @@
 #include <nucleus/registry.h>
 #include <nucleus/module.h>
 #include <nucleus/ltt.h>
+#include <nucleus/stat.h>
 #include <asm/xenomai/bits/pod.h>
 
 /* NOTE: We need to initialize the globals: remember that this code
@@ -213,7 +214,7 @@ static int xnpod_fault_handler(xnarch_fltinfo_t *fltinfo)
 			/* The page fault counter is not SMP-safe, but it's a
 			   simple indicator that something went wrong wrt memory
 			   locking anyway. */
-			xnthread_inc_pf(thread);
+			xnstat_counter_inc(&thread->stat.pf);
 
 		xnshadow_relax(xnarch_fault_notify(fltinfo));
 	}
@@ -503,6 +504,8 @@ int xnpod_init(xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
 		sched->rootcb.sched = sched;
 
 		sched->rootcb.affinity = xnarch_cpumask_of_cpu(cpu);
+
+		xnstat_runtime_set_current(sched, &sched->rootcb.stat.account);
 	}
 
 	xnarch_hook_ipi(&xnpod_schedule_handler);
@@ -668,8 +671,7 @@ static inline void xnpod_switch_zombie(xnthread_t *threadout,
 
 	xnthread_cleanup_tcb(threadout);
 
-	/* no need to update stats of dying thread */
-	xnpod_update_csw_date(sched);
+	xnstat_runtime_finalize(sched);
 
 	xnarch_finalize_and_switch(xnthread_archtcb(threadout),
 				   xnthread_archtcb(threadin));
@@ -1896,7 +1898,7 @@ int xnpod_migrate_thread(int cpu)
 	xnpod_schedule();
 
 	/* Reset execution time stats due to unsync'ed TSCs */
-	xnpod_reset_exec_stats(thread);
+	xnstat_runtime_reset_stats(&thread->stat.account);
 
       unlock_and_exit:
 
@@ -2435,8 +2437,8 @@ void xnpod_schedule(void)
 		xnarch_enter_root(xnthread_archtcb(threadin));
 	}
 
-	xnpod_acc_exec_time(sched, threadout);
-	xnthread_inc_csw(threadin);
+	xnstat_runtime_switch(sched, &threadin->stat.account);
+	xnstat_counter_inc(&threadin->stat.csw);
 
 	xnarch_switch_to(xnthread_archtcb(threadout),
 			 xnthread_archtcb(threadin));
@@ -2607,8 +2609,8 @@ void xnpod_schedule_runnable(xnthread_t *thread, int flags)
 		nkpod->schedhook(runthread, XNREADY);
 #endif /* __XENO_SIM__ */
 
-	xnpod_acc_exec_time(sched, runthread);
-	xnthread_inc_csw(threadin);
+	xnstat_runtime_switch(sched, &threadin->stat.account);
+	xnstat_counter_inc(&threadin->stat.csw);
 
 	xnarch_switch_to(xnthread_archtcb(runthread),
 			 xnthread_archtcb(threadin));

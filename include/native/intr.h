@@ -36,7 +36,8 @@ typedef struct rt_intr_info {
 
     unsigned irq;	/* !< Interrupt request number. */
 
-    unsigned long hits;	/* !< Number of receipts (since attachment). */
+    unsigned long hits;	/* !< Number of receipts (since attachment), 0 if
+                              statistics support is disable in the nucleus. */
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 

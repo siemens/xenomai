@@ -50,6 +50,7 @@
 #include <nucleus/jhash.h>
 #include <nucleus/ppd.h>
 #include <nucleus/trace.h>
+#include <nucleus/stat.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
 #include <asm/xenomai/bits/shadow.h>
@@ -727,7 +728,7 @@ void xnshadow_relax(int notify)
 	rthal_reenter_root(get_switch_lock_owner(),
 			   cprio ? SCHED_FIFO : SCHED_NORMAL, cprio);
 
-	xnthread_inc_ssw(thread);	/* Account for secondary mode switch. */
+	xnstat_counter_inc(&thread->stat.ssw);	/* Account for secondary mode switch. */
 
 	if (notify && testbits(thread->status, XNTRAPSW))
 		/* Help debugging spurious relaxes. */

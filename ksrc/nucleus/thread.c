@@ -86,14 +86,7 @@ int xnthread_init(xnthread_t *thread,
 	thread->registry.handle = XN_NO_HANDLE;
 	thread->registry.waitkey = NULL;
 #endif /* CONFIG_XENO_OPT_REGISTRY */
-
-#ifdef CONFIG_XENO_OPT_STATS
-	thread->stat.ssw = 0;
-	thread->stat.csw = 0;
-	thread->stat.pf = 0;
-	thread->stat.exec_time = 0;
-	thread->stat.exec_start = 0;
-#endif /* CONFIG_XENO_OPT_STATS */
+	memset(&thread->stat, 0, sizeof(thread->stat));
 
 	/* These will be filled by xnpod_start_thread() */
 	thread->imask = 0;

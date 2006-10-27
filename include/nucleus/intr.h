@@ -39,6 +39,8 @@
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
+#include <nucleus/stat.h>
+
 typedef struct xnintr {
 
 #if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
@@ -51,8 +53,6 @@ typedef struct xnintr {
 
     void *cookie;	/* !< User-defined cookie value. */
 
-    unsigned long hits;	/* !< Number of receipts (since attachment). */
-
     xnflags_t flags; 	/* !< Creation flags. */
 
     unsigned irq;	/* !< IRQ number. */
@@ -61,9 +61,18 @@ typedef struct xnintr {
 
     const char *name;	/* !< Symbolic name. */
 
+    struct {
+	xnstat_counter_t hits;	  /* !< Number of handled receipts since attachment. */
+	xnstat_runtime_t account; /* !< Runtime accounting entity */
+    } stat[RTHAL_NR_CPUS];
+
 } xnintr_t;
 
 extern xnintr_t nkclock;
+#ifdef CONFIG_XENO_OPT_STATS
+extern int xnintr_count;
+extern int xnintr_list_rev;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -94,9 +103,13 @@ int xnintr_detach(xnintr_t *intr);
 int xnintr_enable(xnintr_t *intr);
 
 int xnintr_disable(xnintr_t *intr);
-    
+
 xnarch_cpumask_t xnintr_affinity(xnintr_t *intr,
                                  xnarch_cpumask_t cpumask);
+
+int xnintr_query(int irq, int *cpu, xnintr_t **prev, int revision, char *name,
+		 unsigned long *hits, xnticks_t *runtime,
+		 xnticks_t *account_period);
 
 #ifdef __cplusplus
 }
