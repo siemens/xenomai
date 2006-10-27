@@ -1,4 +1,10 @@
-2006-10-27    <gilles.chanteperdrix@laposte.net>
+2006-10-27  Dmitry Adamushko  <dmitry.adamushko@gmail.com>, Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus: Introduce xnstat accounting support.
+
+	* ksrc/nucleus/intr.c: Improve IRQ-related accounting.
+
+2006-10-27  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* src/testsuite/switchtest/switchtest.c (main): Only join the
 	threads once they all have been canceled in order to avoid
@@ -178,8 +184,7 @@
  	(xnpod_set_thread_periodic): Add LART to catch periods shorter
  	than the declared scheduling latency value.
  
-2006-09-26  Jan Kiszka  <jan.kiszka@web.de>
-            Dmitry Adamushko  <dmitry.adamushko@gmail.com>
+2006-09-26  Jan Kiszka  <jan.kiszka@web.de>, Dmitry Adamushko  <dmitry.adamushko@gmail.com>
 
 	* ksrc/nucleus/intr.c: Reorganise locking around xnintr_attach,
 	and xnintr_detach in order to avoid races with xnintr_irq_proc,

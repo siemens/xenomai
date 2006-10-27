@@ -269,8 +269,8 @@ struct stat_seq_iterator {
 		unsigned long ssw;
 		unsigned long csw;
 		unsigned long pf;
-		xnticks_t exec_time;
-		xnticks_t exec_period;
+		xnticks_t runtime;
+		xnticks_t account_period;
 	} stat_info[1];
 };
 
@@ -319,15 +319,15 @@ static int stat_seq_show(struct seq_file *seq, void *v)
 		struct stat_seq_info *p = (struct stat_seq_info *)v;
 		int usage = 0;
 
-		if (p->exec_period) {
-			while (p->exec_period > 0xFFFFFFFF) {
-				p->exec_time >>= 16;
-				p->exec_period >>= 16;
+		if (p->account_period) {
+			while (p->account_period > 0xFFFFFFFF) {
+				p->runtime >>= 16;
+				p->account_period >>= 16;
 			}
 			usage =
-			    xnarch_ulldiv(p->exec_time * 1000LL +
-					  (p->exec_period >> 1), p->exec_period,
-					  NULL);
+			    xnarch_ulldiv(p->runtime * 1000LL +
+					  (p->account_period >> 1),
+					  p->account_period, NULL);
 		}
 		seq_printf(seq, "%3u  %-6d %-10lu %-10lu %-4lu  %.8lx  %3u.%u"
 			   "  %s\n",
@@ -350,7 +350,8 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 	struct stat_seq_iterator *iter = NULL;
 	struct seq_file *seq;
 	xnholder_t *holder;
-	int err, count, rev;
+	struct stat_seq_info *stat_info;
+	int err, count, thrq_rev, intr_rev, irq;
 	spl_t s;
 
 	if (!nkpod)
@@ -359,9 +360,12 @@ static int stat_seq_open(struct inode *inode, struct file *file)
       restart:
 	xnlock_get_irqsave(&nklock, s);
 
-	rev = nkpod->threadq_rev;
 	count = countq(&nkpod->threadq);	/* Cannot be empty (ROOT) */
 	holder = getheadq(&nkpod->threadq);
+	thrq_rev = nkpod->threadq_rev;
+
+	count += xnintr_count * RTHAL_NR_CPUS;
+	intr_rev = xnintr_list_rev;
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -389,41 +393,69 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 		xnthread_t *thread;
 		xnsched_t *sched;
 		xnticks_t period;
-		int n;
 
 		xnlock_get_irqsave(&nklock, s);
 
-		if (nkpod->threadq_rev != rev)
+		if (nkpod->threadq_rev != thrq_rev)
 			goto restart;
-		rev = nkpod->threadq_rev;
 
 		thread = link2thread(holder, glink);
-		n = iter->nentries++;
+		stat_info = &iter->stat_info[iter->nentries++];
 
 		sched = thread->sched;
-		iter->stat_info[n].cpu = xnsched_cpu(sched);
-		iter->stat_info[n].pid = xnthread_user_pid(thread);
-		memcpy(iter->stat_info[n].name, thread->name,
-		       sizeof(iter->stat_info[n].name));
-		iter->stat_info[n].status = thread->status;
-		iter->stat_info[n].ssw = thread->stat.ssw;
-		iter->stat_info[n].csw = thread->stat.csw;
-		iter->stat_info[n].pf = thread->stat.pf;
+		stat_info->cpu = xnsched_cpu(sched);
+		stat_info->pid = xnthread_user_pid(thread);
+		memcpy(stat_info->name, thread->name,
+		       sizeof(stat_info->name));
+		stat_info->status = thread->status;
+		stat_info->ssw = xnstat_counter_get(&thread->stat.ssw);
+		stat_info->csw = xnstat_counter_get(&thread->stat.csw);
+		stat_info->pf = xnstat_counter_get(&thread->stat.pf);
 
-		period = sched->last_csw - thread->stat.exec_start;
+		period = sched->last_account_switch - thread->stat.account.start;
 		if (!period && thread == sched->runthread) {
-			iter->stat_info[n].exec_time = 1;
-			iter->stat_info[n].exec_period = 1;
+			stat_info->runtime = 1;
+			stat_info->account_period = 1;
 		} else {
-			iter->stat_info[n].exec_time = thread->stat.exec_time;
-			iter->stat_info[n].exec_period = period;
+			stat_info->runtime = thread->stat.account.total;
+			stat_info->account_period = period;
 		}
-		thread->stat.exec_time = 0;
-		thread->stat.exec_start = sched->last_csw;
+		thread->stat.account.total = 0;
+		thread->stat.account.start = sched->last_account_switch;
 
 		holder = nextq(&nkpod->threadq, holder);
 
 		xnlock_put_irqrestore(&nklock, s);
+	}
+
+	/* Iterate over all IRQ numbers, ... */
+	for (irq = 0; irq < RTHAL_NR_IRQS; irq++) {
+		xnintr_t *prev = NULL;
+		int cpu = 0;
+		int err;
+
+		/* ...over all shared IRQs on all CPUs */
+		while (1) {
+			stat_info = &iter->stat_info[iter->nentries];
+			stat_info->cpu = cpu;
+
+			err = xnintr_query(irq, &cpu, &prev, intr_rev,
+					   stat_info->name,
+					   &stat_info->csw,
+					   &stat_info->runtime,
+					   &stat_info->account_period);
+			if (err == EAGAIN)
+				goto restart;
+			if (err)
+				break; /* line unused or end of chain */
+
+			stat_info->pid = 0;
+			stat_info->status =  0;
+			stat_info->ssw = 0;
+			stat_info->pf = 0;
+
+			iter->nentries++;
+		};
 	}
 
 	seq = (struct seq_file *)file->private_data;

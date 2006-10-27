@@ -47,6 +47,17 @@ void __native_intr_pkg_cleanup(void)
 		rt_intr_delete(link2intr(holder));
 }
 
+static unsigned long __intr_get_hits(RT_INTR *intr)
+{
+	unsigned long sum = 0;
+	int cpu;
+
+	for (cpu = 0; cpu < XNARCH_NR_CPUS; cpu++)
+		sum += xnstat_counter_get(&intr->intr_base.stat[cpu].hits);
+
+	return sum;
+}
+
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 static int __intr_read_proc(char *page,
@@ -56,16 +67,17 @@ static int __intr_read_proc(char *page,
 	RT_INTR *intr = (RT_INTR *)data;
 	char *p = page;
 	int len;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	{
 		xnpholder_t *holder;
-		spl_t s;
-
-		xnlock_get_irqsave(&nklock, s);
 
 		p += sprintf(p, "hits=%lu, pending=%u, mode=0x%x\n",
-			     intr->intr_base.hits, intr->pending, intr->mode);
+			     __intr_get_hits(intr), intr->pending,
+			     intr->mode);
 
 		/* Pended interrupt -- dump waiters. */
 
@@ -78,12 +90,12 @@ static int __intr_read_proc(char *page,
 			    nextpq(xnsynch_wait_queue(&intr->synch_base),
 				   holder);
 		}
-
-		xnlock_put_irqrestore(&nklock, s);
 	}
 #else /* !CONFIG_XENO_OPT_PERVASIVE */
-	p += sprintf(p, "hits=%lu\n", intr->intr_base.hits);
+	p += sprintf(p, "hits=%lu\n", __intr_get_hits(intr));
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	len = (p - page) - off;
 	if (len <= off + count)
@@ -512,7 +524,7 @@ int rt_intr_inquire(RT_INTR *intr, RT_INTR_INFO *info)
 	}
 
 	strcpy(info->name, intr->name);
-	info->hits = intr->intr_base.hits;
+	info->hits = __intr_get_hits(intr);
 	info->irq = intr->intr_base.irq;
 
       unlock_and_exit:

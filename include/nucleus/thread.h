@@ -105,6 +105,8 @@
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
+#include <nucleus/stat.h>
+
 #ifdef __XENO_SIM__
 /* Pseudo-status (must not conflict with other bits) */
 #define XNRUNNING  XNTHREAD_SPARE0
@@ -158,16 +160,12 @@ typedef struct xnthread {
 
     xnticks_t rrcredit;		/* Remaining round-robin time credit (ticks) */
 
-#ifdef CONFIG_XENO_OPT_STATS
     struct {
-	unsigned long ssw;	/* Primary -> secondary mode switch count */
-	unsigned long csw;	/* Context switches (includes
-				   secondary -> primary switches) */
-	unsigned long pf;	/* Number of page faults */
-       xnticks_t exec_time;    /* Accumulated execution time (tsc) */
-       xnticks_t exec_start;   /* Start of execution time accumulation (tsc) */
+	xnstat_counter_t ssw;	/* Primary -> secondary mode switch count */
+	xnstat_counter_t csw;	/* Context switches (includes secondary -> primary switches) */
+	xnstat_counter_t pf;	/* Number of page faults */
+	xnstat_runtime_t account; /* Runtime accounting entity */
     } stat;
-#endif /* CONFIG_XENO_OPT_STATS */
 
     int errcode;		/* Local errno */
 
@@ -247,16 +245,6 @@ typedef struct xnhook {
 #define xnthread_user_pid(thread) \
     (testbits((thread)->status,XNROOT) || !xnthread_user_task(thread) ? \
     0 : xnarch_user_pid(xnthread_archtcb(thread)))
-
-#ifdef CONFIG_XENO_OPT_STATS
-#define xnthread_inc_ssw(thread)     ++(thread)->stat.ssw
-#define xnthread_inc_csw(thread)     ++(thread)->stat.csw
-#define xnthread_inc_pf(thread)      ++(thread)->stat.pf
-#else /* CONFIG_XENO_OPT_STATS */
-#define xnthread_inc_ssw(thread)     do { } while(0)
-#define xnthread_inc_csw(thread)     do { } while(0)
-#define xnthread_inc_pf(thread)      do { } while(0)
-#endif /* CONFIG_XENO_OPT_STATS */
 
 #ifdef __cplusplus
 extern "C" {

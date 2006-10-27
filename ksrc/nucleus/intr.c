@@ -34,6 +34,7 @@
 #include <nucleus/pod.h>
 #include <nucleus/intr.h>
 #include <nucleus/ltt.h>
+#include <nucleus/stat.h>
 #include <asm/xenomai/bits/intr.h>
 
 #define XNINTR_MAX_UNHANDLED	1000
@@ -44,6 +45,11 @@ xnlock_t intrlock;
 
 xnintr_t nkclock;
 
+#ifdef CONFIG_XENO_OPT_STATS
+int xnintr_count = 1;	/* Number of attached xnintr objects + nkclock */
+int xnintr_list_rev;	/* Modification counter of xnintr list */
+#endif /* CONFIG_XENO_OPT_STATS */
+
 /*
  * Low-level interrupt handler dispatching the ISRs -- Called with
  * interrupts off.
@@ -53,15 +59,18 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 {
 	xnsched_t *sched = xnpod_current_sched();
 	xnintr_t *intr = (xnintr_t *)cookie;
+	xnstat_runtime_t *prev;
+	xnticks_t start;
 	int s;
 
 	xnarch_memory_barrier();
 
+	prev  = xnstat_runtime_get_current(sched);
+	start = xnstat_runtime_now();
 	xnltt_log_event(xeno_ev_ienter, irq);
 
 	++sched->inesting;
 	s = intr->isr(intr);
-	++intr->hits;
 
 	if (unlikely(s == XN_ISR_NONE)) {
 		if (++intr->unhandled == XNINTR_MAX_UNHANDLED) {
@@ -69,8 +78,13 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 				 "line.\n", __FUNCTION__, irq);
 			s |= XN_ISR_NOENABLE;
 		}
-	} else
+	} else {
+		xnstat_counter_inc(&intr->stat[xnsched_cpu(sched)].hits);
+		xnstat_runtime_lazy_switch(sched,
+			&intr->stat[xnsched_cpu(sched)].account,
+			start);
 		intr->unhandled = 0;
+	}
 
 	if (s & XN_ISR_PROPAGATE)
 		xnarch_chain_irq(irq);
@@ -90,6 +104,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	}
 
 	xnltt_log_event(xeno_ev_iexit, irq);
+	xnstat_runtime_switch(sched, prev);
 }
 
 /* Low-level clock irq handler. */
@@ -149,12 +164,16 @@ void xnintr_synchronize(xnintr_t *intr)
 static void xnintr_shirq_handler(unsigned irq, void *cookie)
 {
 	xnsched_t *sched = xnpod_current_sched();
+	xnstat_runtime_t *prev;
+	xnticks_t start;
 	xnintr_shirq_t *shirq = &xnshirqs[irq];
 	xnintr_t *intr;
 	int s = 0;
 
 	xnarch_memory_barrier();
 
+	prev  = xnstat_runtime_get_current(sched);
+	start = xnstat_runtime_now();
 	xnltt_log_event(xeno_ev_ienter, irq);
 
 	++sched->inesting;
@@ -163,8 +182,20 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 	intr = shirq->handlers;
 
 	while (intr) {
-		s |= intr->isr(intr);
-		++intr->hits;
+		int ret;
+
+		ret = intr->isr(intr);
+		s |= ret;
+
+		if (ret & XN_ISR_HANDLED) {
+			xnstat_counter_inc(
+				&intr->stat[xnsched_cpu(sched)].hits);
+			xnstat_runtime_lazy_switch(sched,
+				&intr->stat[xnsched_cpu(sched)].account,
+				start);
+			start = xnstat_runtime_now();
+		}
+
 		intr = intr->next;
 	}
 
@@ -188,6 +219,7 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 		xnpod_schedule();
 
 	xnltt_log_event(xeno_ev_iexit, irq);
+	xnstat_runtime_switch(sched, prev);
 }
 
 #endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL */
@@ -203,12 +235,16 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	const int MAX_EDGEIRQ_COUNTER = 128;
 
 	xnsched_t *sched = xnpod_current_sched();
+	xnstat_runtime_t *prev;
+	xnticks_t start;
 	xnintr_shirq_t *shirq = &xnshirqs[irq];
 	xnintr_t *intr, *end = NULL;
 	int s = 0, counter = 0;
 
 	xnarch_memory_barrier();
 
+	prev  = xnstat_runtime_get_current(sched);
+	start = xnstat_runtime_now();
 	xnltt_log_event(xeno_ev_ienter, irq);
 
 	++sched->inesting;
@@ -219,13 +255,21 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	while (intr != end) {
 		int ret, code;
 
+		xnstat_runtime_switch(sched,
+			&intr->stat[xnsched_cpu(sched)].account);
+
 		ret = intr->isr(intr);
 		code = ret & ~XN_ISR_BITMASK;
 		s |= ret;
 
 		if (code == XN_ISR_HANDLED) {
-			++intr->hits;
 			end = NULL;
+			xnstat_counter_inc(
+				&intr->stat[xnsched_cpu(sched)].hits);
+			xnstat_runtime_lazy_switch(sched,
+				&intr->stat[xnsched_cpu(sched)].account,
+				start);
+			start = xnstat_runtime_now();
 		} else if (code == XN_ISR_NONE && end == NULL)
 			end = intr;
 
@@ -261,6 +305,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 		xnpod_schedule();
 
 	xnltt_log_event(xeno_ev_iexit, irq);
+	xnstat_runtime_switch(sched, prev);
 }
 
 #endif /* CONFIG_XENO_OPT_SHIRQ_EDGE */
@@ -494,10 +539,10 @@ int xnintr_init(xnintr_t *intr,
 	intr->isr = isr;
 	intr->iack = iack;
 	intr->cookie = NULL;
-	intr->hits = 0;
 	intr->name = name;
 	intr->flags = flags;
 	intr->unhandled = 0;
+	memset(&intr->stat, 0, sizeof(intr->stat));
 #if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
 	intr->next = NULL;
 #endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */
@@ -577,7 +622,6 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 	int err;
 	spl_t s;
 
-	intr->hits = 0;
 	intr->cookie = cookie;
 
 	xnlock_get_irqsave(&intrlock, s);
@@ -585,6 +629,14 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 	err = xnintr_irq_attach(intr);
 
 	xnlock_put_irqrestore(&intrlock, s);
+
+#ifdef CONFIG_XENO_OPT_STATS
+	if (!err) {
+		memset(&intr->stat, 0, sizeof(intr->stat));
+		xnintr_count++;
+		xnintr_list_rev++;
+	}
+#endif /* CONFIG_XENO_OPT_STATS */
 
 	return err;
 }
@@ -628,6 +680,14 @@ int xnintr_detach(xnintr_t *intr)
 	err = xnintr_irq_detach(intr);
 
 	xnlock_put_irqrestore(&intrlock, s);
+
+#ifdef CONFIG_XENO_OPT_STATS
+	if (!err) {
+		xnintr_count--;
+		xnintr_list_rev++;
+	}
+#endif /* CONFIG_XENO_OPT_STATS */
+
 
 	/* The idea here is to keep a detached interrupt object valid as long
 	   as the corresponding irq handler is running. This is one of the
@@ -765,6 +825,74 @@ int xnintr_irq_proc(unsigned int irq, char *str)
 	return p - str;
 }
 #endif /* CONFIG_PROC_FS */
+
+#ifdef CONFIG_XENO_OPT_STATS
+int xnintr_query(int irq, int *cpu, xnintr_t **prev, int revision, char *name,
+		 unsigned long *hits, xnticks_t *runtime,
+		 xnticks_t *account_period)
+{
+	xnintr_t *intr;
+	xnticks_t last_switch;
+	int head;
+	int cpu_no = *cpu;
+	int err = 0;
+	spl_t s;
+
+	head = snprintf(name, XNOBJECT_NAME_LEN, "IRQ%d: ", irq);
+	name += head;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (revision != xnintr_list_rev) {
+		err = -EAGAIN;
+		goto unlock_and_exit;
+	}
+
+#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
+	if (*prev)
+		intr = (*prev)->next;
+	else if (irq == XNARCH_TIMER_IRQ)
+		intr = &nkclock;
+	else
+		intr = xnshirqs[irq].handlers;
+#else /* !CONFIG_XENO_OPT_SHIRQ_LEVEL && !CONFIG_XENO_OPT_SHIRQ_EDGE */
+	if (*prev)
+		intr = NULL;
+	else if (irq == XNARCH_TIMER_IRQ)
+		intr = &nkclock;
+	else
+		intr = rthal_irq_cookie(&rthal_domain, irq);
+#endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */
+
+	if (!intr) {
+		err = -ENODEV;
+		goto unlock_and_exit;
+	}
+
+	strncpy(name, intr->name, XNOBJECT_NAME_LEN-head);
+
+	*hits = xnstat_counter_get(&intr->stat[cpu_no].hits);
+
+	last_switch = xnpod_sched_slot(cpu_no)->last_account_switch;
+
+	*runtime        = intr->stat[cpu_no].account.total;
+	*account_period = last_switch - intr->stat[cpu_no].account.start;
+
+	intr->stat[cpu_no].account.total  = 0;
+	intr->stat[cpu_no].account.start = last_switch;
+
+	if (++cpu_no == xnarch_num_online_cpus()) {
+		cpu_no = 0;
+		*prev  = intr;
+	}
+	*cpu = cpu_no;
+
+     unlock_and_exit:
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+#endif /* CONFIG_XENO_OPT_STATS */
 
 EXPORT_SYMBOL(xnintr_attach);
 EXPORT_SYMBOL(xnintr_destroy);
