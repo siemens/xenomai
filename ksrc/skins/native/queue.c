@@ -631,7 +631,9 @@ int rt_queue_send(RT_QUEUE *q, void *mbuf, size_t size, int mode)
 			prependq(&q->pendq, &msg->link);
 		else
 			appendq(&q->pendq, &msg->link);
-	}
+	} else
+		/* Ownership did not change, so update reference count. */
+		msg->refcount++;
 
 	err = nrecv;
 
