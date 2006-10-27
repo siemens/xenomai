@@ -21,6 +21,11 @@
 
 2006-10-26  Jan Kiszka  <jan.kiszka@web.de>
 
+	* ksrc/skins/native/queue.c (rt_queue_send): Track message count
+	correctly when broadcasting to a queue without listeners.
+
+2006-10-26  Jan Kiszka  <jan.kiszka@web.de>
+
 	* ksrc/drivers/testing/irqbench.c: Register with pnp subsystem to
 	enabled parport on modern PCs. Register I/O regions.
 
