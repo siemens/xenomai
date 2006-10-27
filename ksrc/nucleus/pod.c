@@ -671,7 +671,7 @@ static inline void xnpod_switch_zombie(xnthread_t *threadout,
 
 	xnthread_cleanup_tcb(threadout);
 
-	xnstat_runtime_finalize(sched);
+	xnstat_runtime_finalize(sched, &threadin->stat.account);
 
 	xnarch_finalize_and_switch(xnthread_archtcb(threadout),
 				   xnthread_archtcb(threadin));
