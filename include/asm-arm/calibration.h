@@ -28,9 +28,9 @@
 static inline unsigned long xnarch_get_sched_latency (void)
 {
 #if CONFIG_XENO_OPT_TIMING_SCHEDLAT != 0
-	return CONFIG_XENO_OPT_TIMING_SCHEDLAT
+	return CONFIG_XENO_OPT_TIMING_SCHEDLAT;
 #else
-    return 9500;	/* XXX sane ? */
+	return 9500;	/* XXX sane ? */
 #endif
 }
 
