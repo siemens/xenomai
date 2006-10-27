@@ -1195,7 +1195,14 @@ int main(int argc, const char *argv[])
 			display_switches_count(&cpus[i], &now);
 
 			/* Kill the kernel-space tasks. */
-			close(cpus[i].fd);
+			while (close(cpus[i].fd) == -1 && errno == EAGAIN) {
+				struct timespec ts;
+
+				ts.tv_nsec = 10000000; /* 10 ms */
+				ts.tv_sec = 0;
+
+				nanosleep(&ts, NULL);
+			}
 		}
 		free(cpu->tasks);
 	}

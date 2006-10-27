@@ -355,9 +355,6 @@ static int rtswitch_open(struct rtdm_dev_context *context,
 {
 	rtswitch_context_t *ctx = (rtswitch_context_t *) context->dev_private;
 
-	if (!try_module_get(THIS_MODULE))
-		return -ENODEV;
-	
 	ctx->tasks = NULL;
 	ctx->tasks_count = ctx->next_index = ctx->cpu = ctx->switches_count = 0;
 	init_MUTEX(&ctx->lock);
@@ -387,7 +384,6 @@ static int rtswitch_close(struct rtdm_dev_context *context,
 		kfree(ctx->tasks);
 	}
 
-	module_put(THIS_MODULE);
 	return 0;
 }
 
