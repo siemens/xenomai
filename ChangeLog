@@ -1,3 +1,12 @@
+2006-10-27  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/pod.c (xnpod_set_thread_periodic): Fix LART in
+	periodic timing mode.
+
+2006-10-27  Andrew Dennison <andrewd.lists@gmail.com>
+
+	* scripts/prepare-kernel.sh: Fix patch code for 2.4 drivers/Makefile.
+
 2006-10-27  Dmitry Adamushko  <dmitry.adamushko@gmail.com>, Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus: Introduce xnstat accounting support.
