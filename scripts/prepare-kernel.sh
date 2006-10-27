@@ -454,7 +454,7 @@ EOF
 	patch_ed drivers/Makefile <<EOF
 /include \$(TOPDIR)\/Rules.make
 i
-mod-subdirs := xenomai
+mod-subdirs += xenomai
 subdir-\$(CONFIG_XENOMAI) += xenomai
 
 .
