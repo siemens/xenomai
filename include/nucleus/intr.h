@@ -64,7 +64,7 @@ typedef struct xnintr {
     struct {
 	xnstat_counter_t hits;	  /* !< Number of handled receipts since attachment. */
 	xnstat_runtime_t account; /* !< Runtime accounting entity */
-    } stat[RTHAL_NR_CPUS];
+    } stat[XNARCH_NR_CPUS];
 
 } xnintr_t;
 
