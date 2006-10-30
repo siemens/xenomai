@@ -49,7 +49,7 @@ do { \
 #define xnstat_runtime_set_current(sched, new_account) \
 ({ \
 	xnstat_runtime_t *__prev; \
-	__prev = xchg(&(sched)->current_account, (new_account)); \
+	__prev = xnarch_atomic_xchg(&(sched)->current_account, (new_account)); \
 	__prev; \
 })
 
