@@ -182,7 +182,6 @@ struct mscan_regs {
 #define MSCAN_BUF_STD_RTR       0x10
 #define MSCAN_BUF_EXT_RTR       0x01
 #define MSCAN_BUF_EXTENDED      0x08
-#define MSCAN_TX_BUFS           3
 
 #define MSCAN_IDAM1	0x20
 /* Value for the interrupt enable register */

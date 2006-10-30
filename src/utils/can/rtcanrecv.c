@@ -20,6 +20,7 @@ static void print_usage(char *prg)
 	    " -f  --filter=id:mask[:id:mask]... apply filter\n"
 	    " -e  --error=mask      receive error messages\n"
 	    " -t, --timeout=MS      timeout in ms\n"
+	    " -T, --timestamp       with timestamp\n"
 	    " -v, --verbose         be verbose\n"
 	    " -p, --print=MODULO    print every MODULO message\n"
 	    " -h, --help            this help\n",
@@ -30,7 +31,7 @@ static void print_usage(char *prg)
 extern int optind, opterr, optopt;
 
 static int s = -1, verbose = 0, print = 1;
-static nanosecs_rel_t timeout = 0;
+static nanosecs_rel_t timeout = 0, with_timestamp = 0;
 
 RT_TASK rt_task_desc;
 
@@ -84,10 +85,27 @@ void rt_task(void)
     struct can_frame frame;
     struct sockaddr_can addr;
     socklen_t addrlen = sizeof(addr);
+    struct msghdr msg;
+    struct iovec iov;
+    nanosecs_abs_t timestamp;
+
+    if (with_timestamp) {
+	msg.msg_iov = &iov;
+	msg.msg_iovlen = 1;
+	msg.msg_name = (void *)&addr;
+	msg.msg_namelen = sizeof(struct sockaddr_can);
+	msg.msg_control = (void *)&timestamp;
+	msg.msg_controllen = sizeof(nanosecs_abs_t);
+    }
 
     while (1) {
-	ret = rt_dev_recvfrom(s, (void *)&frame, sizeof(can_frame_t), 0,
-	                      (struct sockaddr *)&addr, &addrlen);
+	if (with_timestamp) {
+	    iov.iov_base = (void *)&frame;
+	    iov.iov_len = sizeof(can_frame_t);
+	    ret = rt_dev_recvmsg(s, &msg, 0);
+	} else
+	    ret = rt_dev_recvfrom(s, (void *)&frame, sizeof(can_frame_t), 0,
+				  (struct sockaddr *)&addr, &addrlen);
 	if (ret < 0) {
 	    switch (ret) {
 	    case -ETIMEDOUT:
@@ -106,6 +124,8 @@ void rt_task(void)
 
 	if (print && (count % print) == 0) {
 	    printf("#%d: (%d) ", count, addr.can_ifindex);
+	    if (with_timestamp && msg.msg_controllen)
+		printf("%lldns ", timestamp);
 	    if (frame.can_id & CAN_ERR_FLAG)
 		printf("!0x%08x!", frame.can_id & CAN_ERR_MASK);
 	    else if (frame.can_id & CAN_EFF_FLAG)
@@ -147,6 +167,7 @@ int main(int argc, char **argv)
 	{ "filter", required_argument, 0, 'f'},
 	{ "error", required_argument, 0, 'e'},
 	{ "timeout", required_argument, 0, 't'},
+	{ "timestamp", no_argument, 0, 'T'},
 	{ 0, 0, 0, 0},
     };
 
@@ -155,7 +176,7 @@ int main(int argc, char **argv)
     signal(SIGTERM, cleanup_and_exit);
     signal(SIGINT, cleanup_and_exit);
 
-    while ((opt = getopt_long(argc, argv, "hve:f:t:p:",
+    while ((opt = getopt_long(argc, argv, "hve:f:t:p:T",
 			      long_options, NULL)) != -1) {
 	switch (opt) {
 	case 'h':
@@ -194,6 +215,10 @@ int main(int argc, char **argv)
 
 	case 't':
 	    timeout = (nanosecs_rel_t)strtoul(optarg, NULL, 0) * 1000000;
+	    break;
+
+	case 'T':
+	    with_timestamp = 1;
 	    break;
 
 	default:
@@ -265,6 +290,14 @@ int main(int argc, char **argv)
 	ret = rt_dev_ioctl(s, RTCAN_RTIOC_RCV_TIMEOUT, &timeout);
 	if (ret) {
 	    fprintf(stderr, "rt_dev_ioctl RCV_TIMEOUT: %s\n", strerror(-ret));
+	    goto failure;
+	}
+    }
+
+    if (with_timestamp) {
+	ret = rt_dev_ioctl(s, RTCAN_RTIOC_TAKE_TIMESTAMP, RTCAN_TAKE_TIMESTAMPS);
+	if (ret) {
+	    fprintf(stderr, "rt_dev_ioctl TAKE_TIMESTAMP: %s\n", strerror(-ret));
 	    goto failure;
 	}
     }
