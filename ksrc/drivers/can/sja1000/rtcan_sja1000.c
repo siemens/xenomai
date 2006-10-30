@@ -299,6 +299,9 @@ static int rtcan_sja_interrupt(rtdm_irq_t *irq_handle)
 	    /* Check error condition and fill error frame */
 	    rtcan_sja_err_interrupt(dev, chip, &skb, irq_source);
 
+            memcpy((void *)&skb.rb_frame + skb.rb_frame_size,
+		   &timestamp, TIMESTAMP_SIZE);
+
 	    if (recv_lock_free) {
 		recv_lock_free = 0;
 		rtdm_lock_get(&rtcan_recv_list_lock);

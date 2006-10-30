@@ -232,7 +232,7 @@ static int rtcan_mscan_interrupt(rtdm_irq_t *irq_handle)
     struct rtcan_skb skb;
     struct rtcan_device *dev;
     struct mscan_regs *regs;
-    u8 t_status, r_status;
+    u8 canrflg;
     int recv_lock_free = 1;
     int ret = RTDM_IRQ_NONE;
 
@@ -242,29 +242,24 @@ static int rtcan_mscan_interrupt(rtdm_irq_t *irq_handle)
 
     rtdm_lock_get(&dev->device_lock);
 
-    t_status = regs->cantflg;
-    r_status = regs->canrflg;
+    canrflg = regs->canrflg;
 
     ret = RTDM_IRQ_HANDLED;
 
     /* Transmit Interrupt? */
-    if ((t_status & MSCAN_TXE)) {
-	/* Disable transmit interrupt here or it will
-	 * constantly be pending.
-	 */
-	regs->cantier &= ~MSCAN_TXIE;
-
+    if ((regs->cantier & MSCAN_TXIE0) && (regs->cantflg & MSCAN_TXE0)) {
+	regs->cantier = 0;
 	/* Wake up a sender */
 	rtdm_sem_up(&dev->tx_sem);
     }
 
     /* Wakeup interrupt?  */
-    if ((r_status & MSCAN_WUPIF)) {
+    if ((canrflg & MSCAN_WUPIF)) {
 	rtdm_printk("WUPIF interrupt\n");
     }
 
     /* Receive Interrupt? */
-    if ((r_status & MSCAN_RXF)) {
+    if ((canrflg & MSCAN_RXF)) {
 	
 	/* Read out HW registers */
 	rtcan_mscan_rx_interrupt(dev, &skb);
@@ -289,9 +284,12 @@ static int rtcan_mscan_interrupt(rtdm_irq_t *irq_handle)
     }
 
     /* Error Interrupt? */
-    if ((r_status & (MSCAN_CSCIF | MSCAN_OVRIF))) {
+    if ((canrflg & (MSCAN_CSCIF | MSCAN_OVRIF))) {
 	/* Check error condition and fill error frame */
-	rtcan_mscan_err_interrupt(dev, &skb, r_status);
+	rtcan_mscan_err_interrupt(dev, &skb, canrflg);
+
+	memcpy((void *)&skb.rb_frame + skb.rb_frame_size,
+	       &timestamp, TIMESTAMP_SIZE);
 
 	if (recv_lock_free) {
 	    recv_lock_free = 0;
@@ -306,8 +304,8 @@ static int rtcan_mscan_interrupt(rtdm_irq_t *irq_handle)
     /* Acknowledge the handled interrupt within the controller.
      * Only do so for the receiver interrupts.
      */
-    if (r_status)
-	regs->canrflg = r_status;
+    if (canrflg)
+	regs->canrflg = canrflg;
 
     if (!recv_lock_free) {
         rtdm_lock_put(&rtcan_socket_lock);
@@ -422,8 +420,8 @@ static int rtcan_mscan_mode_start(struct rtcan_device *dev,
     case CAN_STATE_STOPPED:
 	/* Set error active state */
 	state = CAN_STATE_ACTIVE;
-	/* Set up sender "mutex", we have three TX buffer in HW */
-	rtdm_sem_init(&dev->tx_sem, MSCAN_TX_BUFS);
+	/* Set up sender "mutex" */
+	rtdm_sem_init(&dev->tx_sem, 1);
 
 	if ((dev->ctrl_mode & CAN_CTRLMODE_LISTENONLY)) {
 	    regs->canctl1 |= MSCAN_LISTEN;
@@ -458,7 +456,7 @@ static int rtcan_mscan_mode_start(struct rtcan_device *dev,
 	/* Trigger bus-off recovery */
 	regs->canrier = MSCAN_RIER;
 	/* Set up sender "mutex" */
-	rtdm_sem_init(&dev->tx_sem, MSCAN_TX_BUFS);
+	rtdm_sem_init(&dev->tx_sem, 1);
 	/* Set error active state */
 	state = CAN_STATE_ACTIVE;
 
@@ -595,7 +593,7 @@ int rtcan_mscan_set_mode(struct rtcan_device *dev,
 static int rtcan_mscan_start_xmit(struct rtcan_device *dev,
 				  can_frame_t *frame)
 {
-    int             i, id, buf;
+    int             i, id;
     /* "Real" size of the payload */
     unsigned char   size;
     /* Content of frame information register */
@@ -603,18 +601,13 @@ static int rtcan_mscan_start_xmit(struct rtcan_device *dev,
 
     struct mscan_regs *regs = (struct mscan_regs *)dev->base_addr;
 
-    /* Find an empty TX buffer. */
-    for (buf = 0; buf < MSCAN_TX_BUFS; buf++) {
-	if ((regs->cantflg & (1 << buf)))
-	    break;
-    }
-    if (buf == MSCAN_TX_BUFS) {
-	/* No buffer is available. */
-	rtdm_printk("rtcan_mscan_start_xmit: no TX buffer availabe");
+    /* Is TX buffer empty? */
+    if (!(regs->cantflg & MSCAN_TXE0)) {
+	rtdm_printk("rtcan_mscan_start_xmit: TX buffer not empty");
 	return -EIO;
     }
     /* Select the buffer we've found. */
-    regs->cantbsel = 1 << buf;
+    regs->cantbsel = MSCAN_TXE0;
 
     /* Get DLC and ID */
     dlc = frame->can_dlc;
@@ -663,10 +656,10 @@ static int rtcan_mscan_start_xmit(struct rtcan_device *dev,
     regs->cantxfg.tbpr = 0;	/* all messages have the same prio */
 
     /* Trigger transmission. */
-    regs->cantflg = (1 << buf);
-    
+    regs->cantflg = MSCAN_TXE0;
+
     /* Enable interrupt. */
-    regs->cantier |= (1 << buf);
+    regs->cantier |= MSCAN_TXIE0;
 
     return 0;
 }
@@ -742,7 +735,6 @@ int __init rtcan_mscan_init_one(int idx)
     int ret, irq;
     unsigned long addr;
     struct rtcan_device *dev;
-    struct rtcan_priv *priv;
     struct mscan_regs *regs;
 
     switch (port[idx]) {
@@ -767,7 +759,6 @@ int __init rtcan_mscan_init_one(int idx)
 
     dev->can_sys_clock = mscan_clock;
 
-    priv = dev->priv;
     dev->base_addr = addr;
     regs = (struct mscan_regs *)dev->base_addr;
     

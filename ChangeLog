@@ -1,3 +1,15 @@
+2006-10-30  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* src/utils/can/rtcanrecv: Add timestamp support via rt_dev_recvmsg().
+
+	* ksrc/drivers/can/mscan/rtcan_mscan.c (rtcan_mscan_interrupt),
+	ksrc/drivers/can/mscan/rtcan_mscan_regs.h: Restrict MSCAN TX hardware
+	buffer usage to one for the sake of real-time. Fix bug with TX IRQ
+	handling. Copy timestamp also for error messages.
+
+	* ksrc/drivers/can/sja1000/rtcan_sja1000.c (rtcan_sja_interrupt):
+	Copy timestamp also for error messages.
+
 2006-10-27  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus/pod.c (xnpod_set_thread_periodic): Fix LART in
