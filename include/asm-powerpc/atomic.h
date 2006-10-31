@@ -165,12 +165,13 @@ static __inline__ unsigned long
 	(__typeof__(*(ptr))) __xchg((ptr), (unsigned long)_x_, sizeof(*(ptr)));\
     })
 
-#define xnarch_atomic_xchg(ptr,v)   atomic_xchg(ptr,v)
 #define xnarch_memory_barrier()     __asm__ __volatile__("": : :"memory")
 
 #define cpu_relax()  xnarch_memory_barrier()
 
 #endif /* __KERNEL__ */
+
+#define xnarch_atomic_xchg(ptr,v)   atomic_xchg(ptr,v)
 
 typedef unsigned long atomic_flags_t;
 
