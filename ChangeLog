@@ -36,6 +36,7 @@
 	* src/testsuite/switchtest/switchtest.c (main): Only join the
 	threads once they all have been canceled in order to avoid
 	deadlocks.
+	(main): Loop when closing RTDM devices.
 
 2006-10-26  Jan Kiszka  <jan.kiszka@web.de>
 
