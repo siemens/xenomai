@@ -42,7 +42,6 @@
 #include <linux/slab.h>
 #include <linux/errno.h>
 #include <linux/module.h>
-#include <linux/interrupt.h>
 #include <linux/console.h>
 #include <asm/system.h>
 #include <asm/hardirq.h>
@@ -463,7 +462,7 @@ rthal_time_t rthal_get_8254_tsc(void)
 #endif /* !CONFIG_X86_TSC */
 
 int rthal_irq_host_request(unsigned irq,
-                           irq_handler_t handler,
+                           rthal_irq_host_handler_t handler,
                            char *name, void *dev_id)
 {
     unsigned long flags;

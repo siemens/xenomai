@@ -25,6 +25,7 @@
 #endif
 
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
+#include <linux/interrupt.h>
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
 
@@ -104,21 +105,36 @@ static inline void wrap_switch_iobitmap (struct task_struct *p, int cpu)
 
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
 
-#define wrap_irq_descp(irq)		(irq_desc + irq)
-#define wrap_irq_desc_status(irq)	(wrap_irq_descp(irq)->status)
+#define rthal_irq_descp(irq)		(irq_desc + irq)
+#define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-#define wrap_irq_chip_enable(irq)  \
-	({ int __err__ = wrap_irq_descp(irq)->handler != NULL ?		\
-			wrap_irq_descp(irq)->handler->enable(irq) :	\
-			-ENODEV; __err__; })
-#define wrap_irq_chip_disable(irq) \
-	({ int __err__ = wrap_irq_descp(irq)->handler != NULL ?		\
-			wrap_irq_descp(irq)->handler->disable(irq) :	\
-			-ENODEV; __err__; })
+#define rthal_irq_chip_enable(irq)					\
+	({								\
+		int __err__ = 0;					\
+		if (rthal_irq_descp(irq)->handler == NULL)		\
+			__err__ = -ENODEV;				\
+		else							\
+			rthal_irq_descp(irq)->handler->enable(irq);	\
+		__err__;						\
+	})
+#define rthal_irq_chip_disable(irq)					\
+	({								\
+		int __err__ = 0;					\
+		if (rthal_irq_descp(irq)->handler == NULL)		\
+			__err__ = -ENODEV;				\
+		else							\
+			rthal_irq_descp(irq)->handler->disable(irq);	\
+		__err__;						\
+	})
+typedef irqreturn_t (*rthal_irq_host_handler_t)(int irq,
+						void *dev_id,
+						struct pt_regs *regs);
+
 #else /* >= 2.6.19 */
-#define wrap_irq_chip_enable(irq)   ({ wrap_irq_descp(irq)->chip->enable(irq); 0; })
-#define wrap_irq_chip_disable(irq)  ({ wrap_irq_descp(irq)->chip->disable(irq); 0; })
+#define rthal_irq_chip_enable(irq)   ({ rthal_irq_descp(irq)->chip->enable(irq); 0; })
+#define rthal_irq_chip_disable(irq)  ({ rthal_irq_descp(irq)->chip->disable(irq); 0; })
+typedef irq_handler_t rthal_irq_host_handler_t;
 #endif
 
 #endif /* _XENO_ASM_I386_WRAPPERS_H */

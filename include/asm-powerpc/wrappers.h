@@ -25,6 +25,7 @@
 #endif
 
 #include <asm-generic/xenomai/wrappers.h>	/* Read the generic portion. */
+#include <linux/interrupt.h>
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
 
@@ -82,5 +83,8 @@
 
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,15) */
 
+typedef irqreturn_t (*rthal_irq_host_handler_t)(int irq,
+						void *dev_id,
+						struct pt_regs *regs);
 
 #endif /* _XENO_ASM_POWERPC_WRAPPERS_H */

@@ -34,7 +34,6 @@
 
 #include <linux/kernel.h>
 #include <linux/sched.h>
-#include <linux/interrupt.h>
 #include <linux/kallsyms.h>
 #include <linux/init.h>
 #include <asm/byteorder.h>
@@ -49,11 +48,6 @@
 
 #define RTHAL_EVENT_PROPAGATE   0
 #define RTHAL_EVENT_STOP        1
-
-#ifdef CONFIG_ADEOS_CORE
-#error "Adeos oldgen support has been deprecated; please upgrade to the I-pipe series."
-#error "See http://download.gna.org/adeos/patches/"
-#endif /* CONFIG_ADEOS_CORE */
 
 #ifndef CONFIG_IPIPE
 #error "Adeos kernel support is required to run this software."
@@ -578,7 +572,7 @@ int rthal_irq_disable(unsigned irq);
 int rthal_irq_end(unsigned irq);
 
 int rthal_irq_host_request(unsigned irq,
-                           irq_handler_t handler,
+                           rthal_irq_host_handler_t handler,
 			   char *name,
 			   void *dev_id);
 

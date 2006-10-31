@@ -28,4 +28,8 @@
 
 #define wrap_access_ok(task,addr,size) _access_ok((unsigned long)(addr),(size))
 
+typedef irqreturn_t (*rthal_irq_host_handler_t)(int irq,
+						void *dev_id,
+						struct pt_regs *regs);
+
 #endif /* _XENO_ASM_BLACKFIN_WRAPPERS_H */
