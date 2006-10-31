@@ -49,9 +49,7 @@ extern int clock_nanosleep (clockid_t __clock_id, int __flags,
 #define USEC_PER_SEC	1000000
 #define NSEC_PER_SEC	1000000000
 
-#ifdef __UNSUPPORTED
 #define MODE_CYCLIC		0
-#endif
 #define MODE_CLOCK_NANOSLEEP	1
 #define MODE_SYS_ITIMER		2
 #define MODE_SYS_NANOSLEEP	3
@@ -130,11 +128,11 @@ void *timerthread(void *param)
 	struct sched_param schedp;
 	sigset_t sigset;
 	struct timespec now, next, interval;
-	struct itimerval itimer;
 	struct thread_stat *stat = par->stats;
 	int policy = par->prio ? SCHED_FIFO : SCHED_OTHER;
 	int err;
 #ifdef __UNSUPPORTED
+	struct itimerval itimer;
 	struct sigevent sigev;
 	timer_t timer;
 	struct itimerspec tspec;
@@ -201,7 +199,6 @@ void *timerthread(void *param)
 		}
 		timer_settime(timer, par->timermode, &tspec, NULL);
 	}
-#endif
 	
 	if (par->mode == MODE_SYS_ITIMER) {
 		itimer.it_value.tv_sec = 1;
@@ -210,6 +207,7 @@ void *timerthread(void *param)
 		itimer.it_interval.tv_usec = interval.tv_nsec / 1000;
 		setitimer (ITIMER_REAL,  &itimer, NULL);
 	}
+#endif
 
 	stat->threadstarted++;
 
@@ -220,17 +218,19 @@ void *timerthread(void *param)
 	while (!test_shutdown) {
 
 		long diff;
+#ifdef __UNSUPPORTED
 		int sigs;
+#endif
 
 		/* Wait for next period */
 		switch (par->mode) {
 #ifdef __UNSUPPORTED
 		case MODE_CYCLIC:
-#endif
 		case MODE_SYS_ITIMER:
 			if (sigwait(&sigset, &sigs) < 0)
 				goto out;
 			break;
+#endif
 			
 		case MODE_CLOCK_NANOSLEEP:
 			if (par->timermode == TIMER_ABSTIME)
@@ -244,6 +244,7 @@ void *timerthread(void *param)
 			}
 			break;
 			
+#ifdef __UNSUPPORTED
 		case MODE_SYS_NANOSLEEP:
 			clock_gettime(par->clock, &now);
 			nanosleep(&interval, NULL);
@@ -251,7 +252,8 @@ void *timerthread(void *param)
 			next.tv_nsec = now.tv_nsec + interval.tv_nsec;
 			tsnorm(&next);
 			break;
-		}	
+#endif
+		}
 		clock_gettime(par->clock, &now);
 
 		diff = calcdiff(now, next);
@@ -287,11 +289,10 @@ void *timerthread(void *param)
 			break;
 	}
 
-out:		
 #ifdef __UNSUPPORTED
+out:		
 	if (par->mode == MODE_CYCLIC)
 		timer_delete(timer);
-#endif
 
 	if (par->mode == MODE_SYS_ITIMER) {
 		itimer.it_value.tv_sec = 0;
@@ -300,6 +301,7 @@ out:
 		itimer.it_interval.tv_usec = 0;
 		setitimer (ITIMER_REAL,  &itimer, NULL);
 	}
+#endif
 
 	/* switch to normal */
 	schedp.sched_priority = 0;
@@ -328,14 +330,16 @@ static void display_help(void)
 	       "-p PRIO  --prio=PRIO       priority of highest prio thread\n"
 	       "-q       --quiet	   print only a summary on exit\n"
 	       "-r       --relative        use relative timer instead of absolute\n"
+#ifdef __UNSUPPORTED
 	       "-s       --system          use sys_nanosleep and sys_setitimer\n"
+#endif
 	       "-t NUM   --threads=NUM     number of threads: default=1\n"
 	       "-v       --verbose         output values on stdout for statistics\n"
 	       "                           format: n:c:v n=tasknum c=count v=value in us\n");
 	exit(0);
 }
 
-static int use_nanosleep;
+static int use_nanosleep = MODE_CLOCK_NANOSLEEP; /* make this default for now */
 static int timermode  = TIMER_ABSTIME;
 static int use_system;
 static int priority;
@@ -369,13 +373,15 @@ static void process_options (int argc, char *argv[])
 			{"priority", required_argument, NULL, 'p'},
 			{"quiet", no_argument, NULL, 'q'},
 			{"relative", no_argument, NULL, 'r'},
+#ifdef __UNSUPPORTED
 			{"system", no_argument, NULL, 's'},
+#endif
 			{"threads", required_argument, NULL, 't'},
 			{"verbose", no_argument, NULL, 'v'},
 			{"help", no_argument, NULL, '?'},
 			{NULL, 0, NULL, 0}
 		};
-		int c = getopt_long (argc, argv, "b:c:d:i:l:np:qrst:v",
+		int c = getopt_long (argc, argv, "b:c:d:i:l:np:qrt:v",
 			long_options, &option_index);
 		if (c == -1)
 			break;
@@ -389,7 +395,9 @@ static void process_options (int argc, char *argv[])
 		case 'p': priority = atoi(optarg); break;
 		case 'q': quiet = 1; break;
 		case 'r': timermode = TIMER_RELTIME; break;	
+#ifdef __UNSUPPORTED
 		case 's': use_system = MODE_SYS_OFFSET; break;
+#endif
 		case 't': num_threads = atoi(optarg); break;
 		case 'v': verbose = 1; break;
 		case '?': error = 1; break;
