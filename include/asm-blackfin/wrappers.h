@@ -25,6 +25,7 @@
 #endif
 
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
+#include <linux/interrupt.h>
 
 #define wrap_access_ok(task,addr,size) _access_ok((unsigned long)(addr),(size))
 
