@@ -104,4 +104,21 @@ static inline void wrap_switch_iobitmap (struct task_struct *p, int cpu)
 
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
 
+#define wrap_irq_descp(irq)		(irq_desc + irq)
+#define wrap_irq_desc_status(irq)	(wrap_irq_descp(irq)->status)
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
+#define wrap_irq_chip_enable(irq)  \
+	({ int __err__ = wrap_irq_descp(irq)->handler != NULL ?		\
+			wrap_irq_descp(irq)->handler->enable(irq) :	\
+			-ENODEV; __err__; })
+#define wrap_irq_chip_disable(irq) \
+	({ int __err__ = wrap_irq_descp(irq)->handler != NULL ?		\
+			wrap_irq_descp(irq)->handler->disable(irq) :	\
+			-ENODEV; __err__; })
+#else /* >= 2.6.19 */
+#define wrap_irq_chip_enable(irq)   ({ wrap_irq_descp(irq)->chip->enable(irq); 0; })
+#define wrap_irq_chip_disable(irq)  ({ wrap_irq_descp(irq)->chip->disable(irq); 0; })
+#endif
+
 #endif /* _XENO_ASM_I386_WRAPPERS_H */
