@@ -25,6 +25,7 @@
 #endif
 
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
+#include <linux/interrupt.h>
 
 #define wrap_range_ok(task,addr,size) ({ \
 	unsigned long flag, sum; \

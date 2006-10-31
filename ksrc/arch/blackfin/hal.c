@@ -211,7 +211,7 @@ int rthal_irq_end(unsigned irq)
 }
 
 int rthal_irq_host_request(unsigned irq,
-			   irq_handler_t handler,
+			   rthal_irq_host_handler_t handler,
 			   char *name, void *dev_id)
 {
 	if (irq >= IPIPE_NR_XIRQS || !handler)
