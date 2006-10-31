@@ -257,12 +257,4 @@ unsigned long __va_to_kva(unsigned long va);
 
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-#include <linux/interrupt.h>
-/* Type of an interrupt handler within the kernel */
-typedef irqreturn_t(*irq_handler_t) (int irq,
-				     void *dev_id,
-				     struct pt_regs *regs);
-#endif /* < 2.6.19 */
-
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */

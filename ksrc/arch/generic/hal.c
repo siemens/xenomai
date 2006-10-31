@@ -32,7 +32,6 @@
 #include <linux/slab.h>
 #include <linux/errno.h>
 #include <linux/module.h>
-#include <linux/interrupt.h>
 #include <linux/console.h>
 #include <linux/kallsyms.h>
 #include <asm/system.h>

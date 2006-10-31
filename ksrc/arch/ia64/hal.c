@@ -36,7 +36,6 @@
 #include <linux/errno.h>
 #include <linux/module.h>
 #include <linux/console.h>
-#include <linux/interrupt.h>
 #include <asm/system.h>
 #include <asm/io.h>
 #include <asm/uaccess.h>

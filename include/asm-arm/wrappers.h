@@ -34,6 +34,10 @@
 		: "cc"); \
 	(flag == 0); })
 
+typedef irqreturn_t (*rthal_irq_host_handler_t)(int irq,
+						void *dev_id,
+						struct pt_regs *regs);
+
 #endif /* _XENO_ASM_ARM_WRAPPERS_H */
 
 // vim: ts=4 et sw=4 sts=4

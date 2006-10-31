@@ -37,7 +37,6 @@
 #include <linux/slab.h>
 #include <linux/errno.h>
 #include <linux/module.h>
-#include <linux/interrupt.h>
 #include <linux/irq.h>
 #include <linux/console.h>
 #include <asm/system.h>
@@ -283,7 +282,7 @@ unsigned long rthal_timer_calibrate(void)
 }
 
 int rthal_irq_host_request(unsigned irq,
-                           irq_handler_t handler,
+                           rthal_irq_host_handler_t handler,
                            char *name, void *dev_id)
 {
     unsigned long flags;
