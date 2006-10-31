@@ -23,7 +23,6 @@
 
 #ifdef __KERNEL__
 
-#include <linux/config.h>
 #include <linux/ptrace.h>
 
 #define xnarch_fault_um(fi)     (user_mode((fi)->ia64.regs))

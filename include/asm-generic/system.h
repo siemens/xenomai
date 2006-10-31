@@ -36,7 +36,6 @@
 #include <asm/param.h>
 #include <asm/mmu_context.h>
 #include <asm/ptrace.h>
-#include <linux/config.h>
 #include <asm/xenomai/hal.h>
 #include <asm/xenomai/atomic.h>
 #include <nucleus/shadow.h>

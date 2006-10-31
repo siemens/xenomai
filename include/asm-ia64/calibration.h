@@ -21,7 +21,9 @@
 #ifndef _XENO_ASM_IA64_CALIBRATION_H
 #define _XENO_ASM_IA64_CALIBRATION_H
 
-#include <linux/config.h>
+#ifndef _XENO_ASM_IA64_BITS_INIT_H
+#error "please don't include asm/calibration.h directly"
+#endif
 
 static inline unsigned long xnarch_get_sched_latency (void)
 

@@ -23,7 +23,10 @@
 #ifndef _XENO_ASM_POWERPC_CALIBRATION_H
 #define _XENO_ASM_POWERPC_CALIBRATION_H
 
-#include <linux/config.h>
+#ifndef _XENO_ASM_POWERPC_BITS_INIT_H
+#error "please don't include asm/calibration.h directly"
+#endif
+
 #include <asm/delay.h>
 
 #define __bogomips (loops_per_jiffy/(500000/HZ))

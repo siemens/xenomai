@@ -32,7 +32,6 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
-#include <linux/config.h>
 #include <linux/kernel.h>
 #include <linux/sched.h>
 #include <linux/interrupt.h>
@@ -579,9 +578,7 @@ int rthal_irq_disable(unsigned irq);
 int rthal_irq_end(unsigned irq);
 
 int rthal_irq_host_request(unsigned irq,
-			   irqreturn_t (*handler)(int irq,
-						  void *dev_id,
-						  struct pt_regs *regs), 
+                           irq_handler_t handler,
 			   char *name,
 			   void *dev_id);
 

@@ -20,7 +20,6 @@
 #define _XENO_ASM_GENERIC_FEATURES_H
 
 #ifdef __KERNEL__
-#include <linux/config.h>
 #include <linux/version.h>
 #else /* !__KERNEL__ */
 #include <xeno_config.h>

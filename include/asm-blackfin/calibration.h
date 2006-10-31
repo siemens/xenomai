@@ -20,7 +20,9 @@
 #ifndef _XENO_ASM_BLACKFIN_CALIBRATION_H
 #define _XENO_ASM_BLACKFIN_CALIBRATION_H
 
-#include <linux/config.h>
+#ifndef _XENO_ASM_BLACKFIN_BITS_INIT_H
+#error "please don't include asm/calibration.h directly"
+#endif
 
 static inline unsigned long xnarch_get_sched_latency (void)
 

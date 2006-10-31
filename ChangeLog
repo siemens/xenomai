@@ -1,5 +1,8 @@
 2006-10-31  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/asm-i386/wrappers.h: Add accessors to the IRQ descriptor
+	fields.
+
 	* ksrc/skins/rtdm/proc.c: Build only if CONFIG_PROC_FS is enabled.
 
 2006-10-31  Jan Kiszka  <jan.kiszka@web.de>

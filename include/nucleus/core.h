@@ -46,8 +46,6 @@
 
 #ifdef __KERNEL__
 
-#include <linux/config.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

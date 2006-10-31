@@ -20,7 +20,10 @@
 #ifndef _XENO_ASM_I386_CALIBRATION_H
 #define _XENO_ASM_I386_CALIBRATION_H
 
-#include <linux/config.h>
+#ifndef _XENO_ASM_I386_BITS_INIT_H
+#error "please don't include asm/calibration.h directly"
+#endif
+
 #include <asm/processor.h>
 
 #define __bogomips (current_cpu_data.loops_per_jiffy/(500000/HZ))

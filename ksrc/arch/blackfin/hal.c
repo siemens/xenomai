@@ -31,7 +31,6 @@
  *
  *@{*/
 
-#include <linux/config.h>
 #include <linux/version.h>
 #include <linux/slab.h>
 #include <linux/errno.h>
@@ -212,9 +211,7 @@ int rthal_irq_end(unsigned irq)
 }
 
 int rthal_irq_host_request(unsigned irq,
-			   irqreturn_t(*handler) (int irq,
-						  void *dev_id,
-						  struct pt_regs *regs),
+			   irq_handler_t handler,
 			   char *name, void *dev_id)
 {
 	if (irq >= IPIPE_NR_XIRQS || !handler)
