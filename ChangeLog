@@ -1,3 +1,7 @@
+2006-10-31  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/rtdm/proc.c: Build only if CONFIG_PROC_FS is enabled.
+
 2006-10-31  Jan Kiszka  <jan.kiszka@web.de>
 
 	* src/testsuite/cyclic/cyclictest.c: Make -n the one and only mode for

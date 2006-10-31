@@ -8,6 +8,8 @@ xeno_rtdm-y := core.o device.o drvlib.o module.o proc.o
 
 xeno_rtdm-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
 
+xeno_rtdm-$(CONFIG_PROC_FS) += proc.o
+
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai -I$(src)/..
 
 else
@@ -24,6 +26,7 @@ xeno_rtdm-objs := core.o device.o drvlib.o module.o proc.o
 
 opt_objs-y :=
 opt_objs-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
+opt_objs-$(CONFIG_PROC_FS) += proc.o
 
 xeno_rtdm-objs += $(opt_objs-y)
 
