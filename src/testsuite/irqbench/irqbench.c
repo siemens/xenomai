@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
     long long           timeout;
     long long           start, delay;
     unsigned long long  count = 1;
-    unsigned int        toggle;
+    unsigned int        toggle = 0;
     int                 trigger_trace = 0;
     int                 c;
 
