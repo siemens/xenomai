@@ -1,3 +1,8 @@
+2006-10-31  Jan Kiszka  <jan.kiszka@web.de>
+
+	* src/testsuite/cyclic/cyclictest.c: Make -n the one and only mode for
+	now. It is default also when -n is not explicitely given.
+
 2006-10-30  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* src/utils/can/rtcanrecv: Add timestamp support via rt_dev_recvmsg().
@@ -19,7 +24,8 @@
 
 	* scripts/prepare-kernel.sh: Fix patch code for 2.4 drivers/Makefile.
 
-2006-10-27  Dmitry Adamushko  <dmitry.adamushko@gmail.com>, Jan Kiszka  <jan.kiszka@web.de>
+2006-10-27  Dmitry Adamushko  <dmitry.adamushko@gmail.com>,
+            Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus: Introduce xnstat accounting support.
 
@@ -33,8 +39,8 @@
 
 2006-10-26  Jan Kiszka  <jan.kiszka@web.de>
 
-	* ksrc/skins/native/queue.c (rt_queue_send): Track message count
-	correctly when broadcasting to a queue without listeners.
+	* ksrc/skins/native/queue.c (rt_queue_send): Track message reference
+	count correctly when broadcasting to a queue without listeners.
 
 2006-10-26  Jan Kiszka  <jan.kiszka@web.de>
 
