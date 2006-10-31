@@ -27,7 +27,6 @@
 
 #ifdef __KERNEL__
 
-#include <linux/config.h>
 #include <linux/errno.h>
 #include <asm/uaccess.h>
 #include <asm/ptrace.h>

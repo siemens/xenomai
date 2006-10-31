@@ -29,7 +29,7 @@
 #include <linux/pci.h>
 #include <linux/pci_ids.h>
 #include <linux/reboot.h>
-#include <asm/xenomai/smi.h>
+#include <asm/xenomai/hal.h>
 
 /* DEVICE_IDs needed for 2.4 support */
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)

@@ -19,7 +19,6 @@
  * 02111-1307, USA.
  */
 
-#include <linux/config.h>
 #include <linux/init.h>
 #include <linux/module.h>
 #include <stdarg.h>

@@ -26,7 +26,6 @@
 
 #ifdef __KERNEL__
 
-#include <linux/config.h>
 #include <linux/bitops.h>
 #include <asm/atomic.h>
 #include <asm/system.h>

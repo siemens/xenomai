@@ -20,10 +20,12 @@
  *   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <linux/config.h>
-
 #ifndef __KERNEL__
 #error "Pure kernel header included from user-space!"
+#endif
+
+#ifndef _XENO_ASM_I386_HAL_H
+#error "please don't include asm/smi.h directly"
 #endif
 
 #ifdef __cplusplus

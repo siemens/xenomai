@@ -24,7 +24,6 @@
 
 #ifdef __KERNEL__
 
-#include <linux/config.h>
 #include <linux/ptrace.h>
 #include <asm-generic/xenomai/system.h>
 

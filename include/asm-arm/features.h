@@ -26,8 +26,6 @@
 
 #ifdef __KERNEL__
 
-#include <linux/config.h>
-
 #if defined(CONFIG_CPU_SA1100) || defined(CONFIG_CPU_SA110)
 #define CONFIG_XENO_ARM_SA1000	1
 #endif

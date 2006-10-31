@@ -21,7 +21,6 @@
 #define _XENO_NUCLEUS_TYPES_H
 
 #ifdef __KERNEL__
-#include <linux/config.h>
 #include <linux/errno.h>
 #ifdef CONFIG_PREEMPT_RT
 #define linux_semaphore compat_semaphore
