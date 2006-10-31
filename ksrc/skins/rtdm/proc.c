@@ -17,12 +17,7 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <linux/config.h>
-
-#ifdef CONFIG_PROC_FS
-
 #include <linux/proc_fs.h>
-
 #include "rtdm/core.h"
 #include "rtdm/device.h"
 
@@ -313,5 +308,3 @@ void rtdm_proc_cleanup(void)
     remove_proc_entry("named_devices", rtdm_proc_root);
     remove_proc_entry("xenomai/rtdm", NULL);
 }
-
-#endif /* CONFIG_PROC_FS */
