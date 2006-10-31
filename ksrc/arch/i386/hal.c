@@ -145,8 +145,13 @@ static void rthal_critical_sync(void)
     }
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
 irqreturn_t rthal_broadcast_to_local_timers(int irq,
                                             void *dev_id, struct pt_regs *regs)
+#else /* >= 2.6.19 */
+irqreturn_t rthal_broadcast_to_local_timers(int irq,
+                                            void *dev_id)
+#endif
 {
     unsigned long flags;
 
@@ -458,9 +463,7 @@ rthal_time_t rthal_get_8254_tsc(void)
 #endif /* !CONFIG_X86_TSC */
 
 int rthal_irq_host_request(unsigned irq,
-                           irqreturn_t(*handler) (int irq,
-                                                  void *dev_id,
-                                                  struct pt_regs *regs),
+                           irq_handler_t handler,
                            char *name, void *dev_id)
 {
     unsigned long flags;
@@ -504,14 +507,9 @@ int rthal_irq_enable(unsigned irq)
     if (irq >= NR_IRQS)
         return -EINVAL;
 
-    if (rthal_irq_descp(irq)->handler == NULL ||
-        rthal_irq_descp(irq)->handler->enable == NULL)
-        return -ENODEV;
+    rthal_irq_desc_status(irq) &= ~IRQ_DISABLED;
 
-    rthal_irq_descp(irq)->status &= ~IRQ_DISABLED;
-    rthal_irq_descp(irq)->handler->enable(irq);
-
-    return 0;
+    return rthal_irq_chip_enable(irq);
 }
 
 int rthal_irq_disable(unsigned irq)
@@ -520,14 +518,9 @@ int rthal_irq_disable(unsigned irq)
     if (irq >= NR_IRQS)
         return -EINVAL;
 
-    if (rthal_irq_descp(irq)->handler == NULL ||
-        rthal_irq_descp(irq)->handler->disable == NULL)
-        return -ENODEV;
+    rthal_irq_desc_status(irq) |= IRQ_DISABLED;
 
-    rthal_irq_descp(irq)->handler->disable(irq);
-    rthal_irq_descp(irq)->status |= IRQ_DISABLED;
-
-    return 0;
+    return rthal_irq_chip_disable(irq);
 }
 
 int rthal_irq_end(unsigned irq)
@@ -535,13 +528,7 @@ int rthal_irq_end(unsigned irq)
     if (irq >= NR_IRQS)
         return -EINVAL;
 
-    if (rthal_irq_descp(irq)->handler == NULL ||
-        rthal_irq_descp(irq)->handler->enable == NULL)
-        return -ENODEV;
-
-    rthal_irq_descp(irq)->handler->enable(irq);
-
-    return 0;
+    return rthal_irq_chip_enable(irq);
 }
 
 static inline int do_exception_event(unsigned event, unsigned domid, void *data)
