@@ -1,3 +1,9 @@
+2006-11-01  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* include/asm-powerpc/atomic.h: remove atomic_xchg because it's
+	used in the kernel since 2.6.18 with different arguments (pointer
+	of type atomic_t).
+
 2006-10-31  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-i386/wrappers.h: Add accessors to the IRQ descriptor
