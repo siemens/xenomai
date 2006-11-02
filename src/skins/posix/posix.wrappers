@@ -1,5 +1,4 @@
 --wrap pthread_create
---wrap pthread_detach
 --wrap pthread_setschedparam
 --wrap pthread_getschedparam
 --wrap pthread_yield

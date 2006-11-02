@@ -30,11 +30,6 @@ static void __pthread_sigharden_handler(int sig)
 	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 }
 
-int __wrap_pthread_detach(pthread_t thread)
-{
-	return -XENOMAI_SKINCALL1(__pse51_muxid, __pse51_thread_detach, thread);
-}
-
 int __wrap_pthread_setschedparam(pthread_t thread,
 				 int policy, const struct sched_param *param)
 {
