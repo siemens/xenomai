@@ -187,17 +187,7 @@ static int __pthread_create(struct task_struct *curr, struct pt_regs *regs)
 	return err;
 }
 
-static int __pthread_detach(struct task_struct *curr, struct pt_regs *regs)
-{
-	struct pse51_hkey hkey;
-	pthread_t k_tid;
-
-	hkey.u_tid = __xn_reg_arg1(regs);
-	hkey.mm = curr->mm;
-	k_tid = __pthread_find(&hkey);
-
-	return -pthread_detach(k_tid);
-}
+#define __pthread_detach  __pse51_call_not_available
 
 static pthread_t __pthread_shadow(struct task_struct *curr,
 				  struct pse51_hkey *hkey)
@@ -2634,12 +2624,10 @@ static int __munmap_epilogue(struct task_struct *curr, struct pt_regs *regs)
 
 #endif /* !CONFIG_XENO_OPT_POSIX_SHM */
 
-#if !defined(CONFIG_XENO_OPT_POSIX_SHM) || !defined(CONFIG_XENO_OPT_POSIX_INTR)
 int __pse51_call_not_available(struct task_struct *curr, struct pt_regs *regs)
 {
 	return -ENOSYS;
 }
-#endif /* !CONFIG_XENO_OPT_POSIX_SHM || !CONFIG_XENO_OPT_POSIX_INTR */
 
 #if 0
 int __itimer_set(struct task_struct *curr, struct pt_regs *regs)
