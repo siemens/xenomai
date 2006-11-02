@@ -187,17 +187,7 @@ static int __pthread_create(struct task_struct *curr, struct pt_regs *regs)
 	return err;
 }
 
-static int __pthread_detach(struct task_struct *curr, struct pt_regs *regs)
-{
-	struct pse51_hkey hkey;
-	pthread_t k_tid;
-
-	hkey.u_tid = __xn_reg_arg1(regs);
-	hkey.mm = curr->mm;
-	k_tid = __pthread_find(&hkey);
-
-	return -pthread_detach(k_tid);
-}
+#define __pthread_detach  __pse51_call_not_available
 
 static pthread_t __pthread_shadow(struct task_struct *curr,
 				  struct pse51_hkey *hkey)
@@ -2680,6 +2670,11 @@ int __itimer_get(struct task_struct *curr, struct pt_regs *regs)
 	return 0;
 }
 #endif
+
+nt __pse51_call_not_available(struct task_struct *curr, struct pt_regs *regs)
+{
+	return -ENOSYS;
+}
 
 static xnsysent_t __systab[] = {
 	[__pse51_thread_create] = {&__pthread_create, __xn_exec_init},
