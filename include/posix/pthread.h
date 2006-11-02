@@ -147,10 +147,11 @@ typedef struct
 #include <sched.h>
 #include_next <pthread.h>
 #include <nucleus/thread.h>
+#include <nucleus/intr.h>
 
 struct timespec;
 
-#endif /* !(__KERNEL__ || __XENO_SIM__) */
+#endif /* __KERNEL__ || __XENO_SIM__ */
 
 #define PTHREAD_PRIO_NONE    0
 #define PTHREAD_PRIO_INHERIT 1
@@ -497,6 +498,6 @@ int __real_pthread_cond_broadcast(pthread_cond_t *cond);
 }
 #endif
 
-#endif /* !(__KERNEL__ || __XENO_SIM__) */
+#endif /* __KERNEL__ || __XENO_SIM__ */
 
 #endif /* _XENO_POSIX_PTHREAD_H */
