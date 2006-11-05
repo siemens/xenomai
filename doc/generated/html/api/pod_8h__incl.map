@@ -1,7 +1,0 @@
-base referer
-rect $include_2nucleus_2thread_8h-source.html 209,8 329,32
-rect $include_2nucleus_2intr_8h-source.html 385,57 486,81
-rect $include_2nucleus_2timer_8h-source.html 380,8 492,32
-rect $nucleus_2queue_8h-source.html 541,8 661,32
-rect $nucleus_2types_8h-source.html 709,56 824,80
-rect $include_2nucleus_2core_8h-source.html 712,8 821,32
