@@ -1897,6 +1897,18 @@ diff -uNrp 2.4.33/arch/i386/kernel/traps.c 2.4.33-i386-ipipe/arch/i386/kernel/tr
  }
  
  #ifndef CONFIG_MATH_EMULATION
+diff -uNrp 2.4.33/arch/i386/lib/mmx.c 2.4.33-i386-ipipe/arch/i386/lib/mmx.c
+--- 2.4.33/arch/i386/lib/mmx.c	2002-08-03 02:39:42.000000000 +0200
++++ 2.4.33-i386-ipipe/arch/i386/lib/mmx.c	2006-11-05 16:48:00.000000000 +0100
+@@ -31,7 +31,7 @@ void *_mmx_memcpy(void *to, const void *
+ 	void *p;
+ 	int i;
+ 
+-	if (in_interrupt())
++	if (unlikely(!ipipe_root_domain_p || in_interrupt()))
+ 		return __memcpy(to, from, len);
+ 
+ 	p = to;
 diff -uNrp 2.4.33/arch/i386/mm/fault.c 2.4.33-i386-ipipe/arch/i386/mm/fault.c
 --- 2.4.33/arch/i386/mm/fault.c	2004-08-08 01:26:04.000000000 +0200
 +++ 2.4.33-i386-ipipe/arch/i386/mm/fault.c	2006-08-18 18:34:23.000000000 +0200
@@ -2134,10 +2146,10 @@ diff -uNrp 2.4.33/include/asm-i386/ipipe.h 2.4.33-i386-ipipe/include/asm-i386/ip
 +#include <asm/irq.h>
 +#endif /* __ASSEMBLY__ */
 +
-+#define IPIPE_ARCH_STRING	"1.3-02"
++#define IPIPE_ARCH_STRING	"1.3-03"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	3
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#define __clear_bit(nr,addr) clear_bit(nr,addr)
 +#define __test_bit(nr,addr)  test_bit(nr,addr)
