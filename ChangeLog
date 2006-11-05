@@ -1,3 +1,12 @@
+2006-11-05  Philippe Gerum  <rpm@xenomai.org>
+
+ 	* RELEASE: Xenomai 2.3-rc1
+
+2006-11-02  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/posix/pthread.h: Include nucleus/intr.h for user-space
+	readers.
+
 2006-11-01  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* include/asm-powerpc/atomic.h: remove atomic_xchg because it's

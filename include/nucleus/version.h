@@ -28,6 +28,6 @@
 
 #define XENO_VERSION_NAME	"Baroque"
 
-#define XENO_VERSION_STRING	"2.3-devel"
+#define XENO_VERSION_STRING	"2.3-rc1"
 
 #endif /* _XENO_NUCLEUS_VERSION_H */
