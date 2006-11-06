@@ -28,7 +28,7 @@ config XENO_DRIVERS_RTCAN_MAX_RECEIVERS
 
 config XENO_DRIVERS_RTCAN_VIRT
 	depends on XENO_DRIVERS_RTCAN
-	tristate "Virtual tunnelling driver"
+	tristate "Virtual CAN bus driver"
 
 source drivers/xenomai/can/mscan/Kconfig
 source drivers/xenomai/can/sja1000/Kconfig
