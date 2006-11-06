@@ -13,7 +13,7 @@ if [ "$CONFIG_XENO_DRIVERS_RTCAN" != "n" ]; then
    int 'Maximum number of devices' CONFIG_XENO_DRIVERS_RTCAN_MAX_DEVICES 4
    int 'Maximum number of receive filters per device' CONFIG_XENO_DRIVERS_RTCAN_MAX_RECEIVERS 16
 
-   dep_tristate 'Virtual tunnelling driver' CONFIG_XENO_DRIVERS_RTCAN_VIRT $CONFIG_XENO_DRIVERS_RTCAN
+   dep_tristate 'Virtual CAN bus driver' CONFIG_XENO_DRIVERS_RTCAN_VIRT $CONFIG_XENO_DRIVERS_RTCAN
 
    source drivers/xenomai/can/mscan/Config.in
    source drivers/xenomai/can/sja1000/Config.in
