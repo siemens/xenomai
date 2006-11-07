@@ -2671,7 +2671,7 @@ int __itimer_get(struct task_struct *curr, struct pt_regs *regs)
 }
 #endif
 
-nt __pse51_call_not_available(struct task_struct *curr, struct pt_regs *regs)
+int __pse51_call_not_available(struct task_struct *curr, struct pt_regs *regs)
 {
 	return -ENOSYS;
 }
