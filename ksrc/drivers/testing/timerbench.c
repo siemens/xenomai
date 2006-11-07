@@ -409,7 +409,6 @@ int rt_tmbench_ioctl_nrt(struct rtdm_dev_context *context,
             break;
 
         default:
-	    printk("%s: bad ioctl code (0x%x)\n", __FUNCTION_, request);
             ret = -ENOTTY;
     }
 
