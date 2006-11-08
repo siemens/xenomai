@@ -154,7 +154,7 @@ int __init rtcan_mem_init_one(int idx)
 	return 0;
 
  out_iounmap:
-	iounmap(board->vmem);
+	iounmap((void *)board->vmem);
 
  out_release_mem:
 	release_mem_region(mem[idx], RTCAN_MEM_RANGE);
@@ -203,7 +203,7 @@ static void rtcan_mem_exit(void)
 			continue;
 		vmem = ((struct rtcan_mem *)dev->board_priv)->vmem;
 		rtcan_sja1000_unregister(dev);
-		iounmap(vmem);
+		iounmap((void *)vmem);
 		release_mem_region(mem[i], RTCAN_MEM_RANGE);
 	}
 }
