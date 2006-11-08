@@ -88,15 +88,15 @@ static unsigned char nibble_decode[32] =
 };
 
 /* Enable and disable irqs */
-static inline void rtcan_parport_disable_irq(int port)
+static inline void rtcan_parport_disable_irq(u32 port)
 {
-    u16 pc = (u16)port + 2;
+    u32 pc = port + 2;
     outb(inb(pc) & ~0x10, pc);
 }
 
-static inline void rtcan_parport_enable_irq(int port)
+static inline void rtcan_parport_enable_irq(u32 port)
 {
-    u16 pc = (u16)port + 2;
+    u32 pc = port + 2;
     outb(inb(pc) | 0x10, pc);
 }
 
@@ -104,9 +104,9 @@ static inline void rtcan_parport_enable_irq(int port)
 static u8 rtcan_peak_dng_sp_readreg(struct rtcan_device *dev, int port)
 {
     struct rtcan_peak_dng *dng = (struct rtcan_peak_dng *)dev->board_priv;
-    u16 pa = dng->ioport;
-    u16 pb = pa + 1;
-    u16 pc = pb + 1;
+    u32 pa = dng->ioport;
+    u32 pb = pa + 1;
+    u32 pc = pb + 1;
     u8  b0, b1 ;
     u8  irq_enable = inb(pc) & 0x10; /* don't influence irq_enable */
 
@@ -124,8 +124,8 @@ static u8 rtcan_peak_dng_sp_readreg(struct rtcan_device *dev, int port)
 static void rtcan_peak_dng_writereg(struct rtcan_device *dev, int port, u8 data)
 {
     struct rtcan_peak_dng *dng = (struct rtcan_peak_dng *)dev->board_priv;
-    u16 pa = dng->ioport;
-    u16 pc = pa + 2;
+    u32 pa = dng->ioport;
+    u32 pc = pa + 2;
     u8  irq_enable = inb(pc) & 0x10; /* don't influence irq_enable */
 
     outb((0x0B ^ 0x0D) | irq_enable, pc);
@@ -139,8 +139,8 @@ static void rtcan_peak_dng_writereg(struct rtcan_device *dev, int port, u8 data)
 static u8 rtcan_peak_dng_epp_readreg(struct rtcan_device *dev, int port)
 {
     struct rtcan_peak_dng *dng = (struct rtcan_peak_dng *)dev->board_priv;
-    u16 pa = dng->ioport;
-    u16 pc = pa + 2;
+    u32 pa = dng->ioport;
+    u32 pc = pa + 2;
     u8  val;
     u8  irq_enable = inb(pc) & 0x10; /* don't influence irq_enable */
 
@@ -157,7 +157,7 @@ static u8 rtcan_peak_dng_epp_readreg(struct rtcan_device *dev, int port)
 /* to switch epp on or restore register */
 static void dongle_set_ecr(u16 port, struct rtcan_peak_dng *dng)
 {
-    u16 ecr = dng->ecr;
+    u32 ecr = dng->ecr;
 
     dng->old_ecr = inb(ecr);
     outb((dng->old_ecr & 0x1F) | 0x20, ecr);
@@ -168,7 +168,7 @@ static void dongle_set_ecr(u16 port, struct rtcan_peak_dng *dng)
 
 static void dongle_restore_ecr(u16 port, struct rtcan_peak_dng *dng)
 {
-    u16 ecr = dng->ecr;
+    u32 ecr = dng->ecr;
 
     outb(dng->old_ecr, ecr);
 
@@ -178,29 +178,29 @@ static void dongle_restore_ecr(u16 port, struct rtcan_peak_dng *dng)
 static inline void rtcan_peak_dng_enable(struct rtcan_device *dev)
 {
     struct rtcan_peak_dng *dng = (struct rtcan_peak_dng *)dev->board_priv;
-    u16 port = dng->ioport;
+    u32 port = dng->ioport;
 
     /* save old port contents */
     dng->old_data = inb(port);
     dng->old_ctrl = inb(port + 2);
-  
+
     /* switch to epp mode if possible */
     if (dng->type == DONGLE_TYPE_EPP)
 	dongle_set_ecr(port, dng); 
-  
+
     rtcan_parport_enable_irq(port);
 }
 
 static inline void rtcan_peak_dng_disable(struct rtcan_device *dev)
 {
     struct rtcan_peak_dng *dng = (struct rtcan_peak_dng *)dev->board_priv;
-    u16 port = dng->ioport;
+    u32 port = dng->ioport;
 
     rtcan_parport_disable_irq(port);
-    
+
     if (dng->type == DONGLE_TYPE_EPP)
 	dongle_restore_ecr(port, dng);
-    
+
     /* restore port state */
     outb(dng->old_data, port);
     outb(dng->old_ctrl, port + 2);
@@ -213,7 +213,7 @@ int __init rtcan_peak_dng_init_one(int idx)
     struct rtcan_device *dev;
     struct rtcan_sja1000 *sja;
     struct rtcan_peak_dng *dng;
-    
+
     if (strncmp(type[idx], "sp", 2) == 0)
 	dtype = DONGLE_TYPE_SP;
     else if (strncmp(type[idx], "epp", 3) == 0)
@@ -237,13 +237,13 @@ int __init rtcan_peak_dng_init_one(int idx)
 	dng->ioport = io[idx];
     else
 	dng->ioport = dng_ports[idx];
-  
+
     if (irq[idx])
 	sja->irq_num = irq[idx];
     else
 	sja->irq_num = dng_irqs[idx];
     sja->irq_flags = 0;
-  
+
     if (dtype == DONGLE_TYPE_SP) {
 	sja->read_reg = rtcan_peak_dng_sp_readreg;
 	sja->write_reg = rtcan_peak_dng_writereg;
@@ -278,7 +278,7 @@ int __init rtcan_peak_dng_init_one(int idx)
     strncpy(dev->name, RTCAN_DEV_NAME, IFNAMSIZ);
 
     rtcan_peak_dng_enable(dev);
-    
+
     /* Register RTDM device */
     ret = rtcan_sja1000_register(dev);
     if (ret) {
@@ -286,14 +286,14 @@ int __init rtcan_peak_dng_init_one(int idx)
 	       ret);
 	goto out_free_region2;
     }
-    
+
     rtcan_peak_dng_devs[idx] = dev;
     return 0;
 
  out_free_region2:
     if (dng->type == DONGLE_TYPE_EPP)
 	release_region(dng->ecr, ECR_PORT_SIZE);
-    
+
  out_free_region:
     release_region(dng->ioport, DNG_PORT_SIZE);
 
@@ -301,6 +301,17 @@ int __init rtcan_peak_dng_init_one(int idx)
     rtcan_dev_free(dev);
 
     return ret;
+}
+
+void __exit rtcan_peak_dng_exit_one(struct rtcan_device *dev)
+{
+    struct rtcan_peak_dng *dng = (struct rtcan_peak_dng *)dev->board_priv;
+
+    rtcan_peak_dng_disable(dev);
+    if (dng->type == DONGLE_TYPE_EPP)
+	release_region(dng->ecr, ECR_PORT_SIZE);
+    release_region(dng->ioport, DNG_PORT_SIZE);
+    rtcan_sja1000_unregister(dev);
 }
 
 /** Init module */
@@ -312,7 +323,7 @@ static int __init rtcan_peak_dng_init(void)
 	 i < RTCAN_PEAK_DNG_MAX_DEV && type[i] != 0; 
 	 i++) {
 
-	if ((ret = rtcan_peak_dng_init_one(i) != 0)) {
+	if ((ret = rtcan_peak_dng_init_one(i)) != 0) {
 	    printk("Init failed with %d\n", ret);
 	    return ret;
 	}
@@ -333,10 +344,8 @@ static void __exit rtcan_peak_dng_exit(void)
 
     for (i = 0, dev = rtcan_peak_dng_devs[i]; 
 	 i < RTCAN_PEAK_DNG_MAX_DEV && dev != NULL;
-	 i++) {
-	rtcan_peak_dng_disable(dev);
-	rtcan_sja1000_unregister(dev);
-    }
+	 i++)
+	rtcan_peak_dng_exit_one(dev);
 }
 
 module_init(rtcan_peak_dng_init);

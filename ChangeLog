@@ -1,3 +1,11 @@
+2006-11-08  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* ksrc/drivers/can/sja1000/rtcan_peak_dng.c: Fix warnings when
+	building for ARM and fix bugs in the exit code.
+
+	* ksrc/drivers/can/sja1000/rtcan_mem.c: Fix warnings when
+	building for ARM.
+
 2006-11-05  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.3-rc1
