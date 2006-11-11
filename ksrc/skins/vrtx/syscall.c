@@ -1136,7 +1136,7 @@ static int __sc_pcreate(struct task_struct *curr, struct pt_regs *regs)
 	ptheap = (xnheap_t *)xnmalloc(sizeof(*ptheap));
 
 	if (!ptheap)
-		return ER_NOCB;
+		return ER_MEM;
 
 	/* Suggested partition ID. */
 	pid = __xn_reg_arg1(regs);
