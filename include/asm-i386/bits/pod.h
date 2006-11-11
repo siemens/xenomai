@@ -44,6 +44,7 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 	/* Remember the preempted Linux task pointer. */
 	rootcb->user_task = rootcb->active_task = current;
 	rootcb->ts_usedfpu = wrap_test_fpu_used(current) != 0;
+	rootcb->cr0_ts = (read_cr0() & 8) != 0;
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
 	rootcb->fpup = &rootcb->user_task->thread.i387;
 }
@@ -265,12 +266,21 @@ static inline void xnarch_save_fpu(xnarchtcb_t * tcb)
 {
 	struct task_struct *task = tcb->user_task;
 
-	if (task) {
-		if (!wrap_test_fpu_used(task))
+	if (!tcb->is_root) {
+		if (task) {
+			/* fpu not used or already saved by __switch_to. */
+			if (!wrap_test_fpu_used(task))
+				return;
+
+			/* Tell Linux that we already saved the state of the FPU
+		   	hardware of this task. */
+			wrap_clear_fpu_used(task);
+		}
+	} else {
+		if (tcb->cr0_ts || 
+		    (tcb->ts_usedfpu && !wrap_test_fpu_used(task)))
 			return;
 
-		/* Tell Linux that we already saved the state of the FPU
-		   hardware of this task. */
 		wrap_clear_fpu_used(task);
 	}
 
@@ -298,13 +308,14 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 			wrap_set_fpu_used(task);
 		}
 	} else {
-		/* Restore state of FPU if TS_USEFPU bit was armed. */
-		if (!tcb->ts_usedfpu) {
+		/* Restore state of FPU only if TS bit in cr0 was clear. */
+		if (tcb->cr0_ts) {
 			stts();
 			return;
 		}
 
-		wrap_set_fpu_used(task);
+		if (tcb->ts_usedfpu)
+			wrap_set_fpu_used(task);
 	}
 
 	/* Restore the FPU hardware with valid fp registers from a
@@ -336,7 +347,7 @@ static inline void xnarch_enable_fpu(xnarchtcb_t * tcb)
 			}
 		}
 	} else {
-		if (!tcb->ts_usedfpu)
+		if (tcb->cr0_ts)
 			return;
 
 		xnarch_restore_fpu(tcb);
