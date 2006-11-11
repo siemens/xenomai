@@ -1,3 +1,8 @@
+2006-11-09  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vrtx/syscall.c (__sc_pcreate): Return ER_MEM upon
+	initial heap allocation failure.
+
 2006-11-08  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* ksrc/drivers/can/sja1000/rtcan_peak_dng.c: Fix warnings when
