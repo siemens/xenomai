@@ -1,3 +1,15 @@
+2006-11-11  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* scripts/prepare_kernel.sh, scripts/help_from_kconfig.pl:
+	prepare_kernel.sh will now add help for Xenomai configuration
+	parameters to the Configure.help file of 2.4 kernels. The help
+	is extracted from Xenomai's Kconfig files using a perl script.
+ 
+2006-11-10  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/heap.c (xnheap_alloc): Fix ubytes leakage for
+	allocation requests larger than 2 * pagesize.
+
 2006-11-05  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.2.5 (Redshift Riders)

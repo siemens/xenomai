@@ -468,7 +468,7 @@ void *xnheap_alloc(xnheap_t *heap, u_long size)
 		block = get_free_range(heap, size, 0);
 
 		if (block)
-			heap->ubytes += size;
+			heap->ubytes += xnheap_align(size, heap->pagesize);
 	}
 
       release_and_exit:

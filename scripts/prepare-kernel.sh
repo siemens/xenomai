@@ -129,6 +129,23 @@ patch_link() {
 
 }
 
+patch_help() {
+    if which perl > /dev/null; then
+	hfile=$linux_tree/Documentation/Configure.help
+	if ! grep -iq CONFIG_XENO $hfile; then
+	    kfiles=$xenomai_root/scripts/Kconfig.frag
+	    for d in ksrc/nucleus ksrc/skins ksrc/arch/$xenomai_arch \
+		ksrc/drivers sim; do
+		kfiles="$kfiles `find $xenomai_root/$d -name Kconfig`"
+	    done
+	    perl $xenomai_root/scripts/help_from_kconfig.pl $kfiles >> $hfile
+	    if test x$verbose = x1; then
+		echo 'Configuration help added.'
+	    fi
+	fi
+    fi
+}
+
 generate_patch() {
     (
     cd "$temp_tree"
@@ -486,7 +503,10 @@ source arch/$linux_arch/xenomai/Config.in
 .
 wq
 EOF
+
     fi
+
+    patch_help
     ;;
 
     #
