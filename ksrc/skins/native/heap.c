@@ -756,7 +756,11 @@ int rt_heap_inquire(RT_HEAP *heap, RT_HEAP_INFO *info)
  * from a context which cannot sleep (e.g. interrupt, non-realtime or
  * scheduler locked).
  *
- * Environments:
+ * - -ENOENT is returned if the special file /dev/rtheap
+ * (character-mode, major 10, minor 254) is not available from the
+ * filesystem. This device is needed to map the shared heap memory
+ * into the caller's address space. udev-based systems should not need
+ * manual creation of such device entry.  Environments:
  *
  * This service can be called from:
  *

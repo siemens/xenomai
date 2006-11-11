@@ -1037,6 +1037,12 @@ int rt_queue_inquire(RT_QUEUE *q, RT_QUEUE_INFO *info)
  * from a context which cannot sleep (e.g. interrupt, non-realtime or
  * scheduler locked).
  *
+ * - -ENOENT is returned if the special file /dev/rtheap
+ * (character-mode, major 10, minor 254) is not available from the
+ * filesystem. This device is needed to map the memory pool used by
+ * the shared queue into the caller's address space. udev-based
+ * systems should not need manual creation of such device entry.
+ *
  * Environments:
  *
  * This service can be called from:
