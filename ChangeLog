@@ -1,3 +1,9 @@
+2006-11-11  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* include/asm-i386/system.h, include/asm-i386/bits/pod.h: Another
+	attempt to cope with vanilla Linux drivers using FPU in
+	kernel-space.
+
 2006-11-11  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* scripts/prepare_kernel.sh, scripts/help_from_kconfig.pl:
