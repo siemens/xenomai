@@ -104,25 +104,27 @@ int vrtxheap_init(u_long heap0size)
 	if (heap0size < 2048)
 		heap0size = 2048;
 
-	heap0addr = (char *)xnmalloc(heap0size);
+	vrtx_heap_idmap = vrtx_alloc_idmap(VRTX_MAX_HEAPS, 0);
 
-	if (!heap0addr)
+	if (!vrtx_heap_idmap)
 		return -ENOMEM;
 
-	hid = sc_hcreate(heap0addr, heap0size, 7, &err);	/* Must be #0 */
+	heap0addr = (char *)xnmalloc(heap0size);
+
+	if (!heap0addr) {
+		vrtx_free_idmap(vrtx_heap_idmap);
+		return -ENOMEM;
+	}
+
+	hid = sc_hcreate(heap0addr, heap0size, 7, &err); /* Must be #0 */
 
 	if (err) {
+		vrtx_free_idmap(vrtx_heap_idmap);
+
 		if (err == ER_IIP)
 			return -EINVAL;
 		else
 			return -ENOMEM;
-	}
-
-	vrtx_heap_idmap = vrtx_alloc_idmap(VRTX_MAX_HEAPS, 0);
-
-	if (!vrtx_heap_idmap) {
-		sc_hdelete(hid, 1, &err);
-		return -ENOMEM;
 	}
 
 	return 0;
