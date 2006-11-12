@@ -79,8 +79,8 @@ extern int rthal_periodic_p;
 #define rthal_periodic_p  0
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
-asmlinkage void rthal_thread_switch(struct thread_struct *prev,
-				    struct thread_struct *next);
+asmlinkage struct task_struct *rthal_thread_switch(struct thread_struct *prev,
+						   struct thread_struct *next);
 
 asmlinkage void rthal_thread_trampoline(void);
 
