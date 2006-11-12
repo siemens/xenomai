@@ -83,12 +83,12 @@ static inline void rthal_timer_program_shot (unsigned long delay)
 #define RTHAL_SWITCH_FRAME_SIZE  (STACK_FRAME_OVERHEAD + sizeof(struct pt_regs))
 
 #ifdef CONFIG_PPC64
-asmlinkage void rthal_thread_switch(struct thread_struct *prev,
-				    struct thread_struct *next,
-				    int kernel_thread);
+asmlinkage struct task_struct *rthal_thread_switch(struct thread_struct *prev,
+						   struct thread_struct *next,
+						   int kernel_thread);
 #else /* !CONFIG_PPC64 */
-asmlinkage void rthal_thread_switch(struct thread_struct *prev,
-				    struct thread_struct *next);
+asmlinkage struct task_struct *rthal_thread_switch(struct thread_struct *prev,
+						   struct thread_struct *next);
 #endif /* CONFIG_PPC64 */
 
 asmlinkage void rthal_thread_trampoline(void);

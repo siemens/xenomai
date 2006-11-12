@@ -76,6 +76,7 @@ END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 
 	lwz	r1,KSP(r4)	/* Load new stack pointer */
 
+	mr	r3,r2
 	lwz	r0,PGDIR(r4)
         cmpwi   r0, 0
         beq-	same_current
@@ -155,6 +156,7 @@ END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 
 	lwz	r1,KSP(r4)	/* Load new stack pointer */
 		
+	mr	r3,r2
 	lwz	r0,PGDIR(r4)
         cmpwi   r0, 0
         beq-	same_current
