@@ -101,10 +101,6 @@ int vrtx_get_id(vrtxidmap_t * map, int id, void *objaddr)
 		   the bitmap space which cannot be used to draw ids. */
 
 		hi = ffnz(map->himap & ~map->himask);
-
-		if (!hi)
-			goto unlock_and_exit;
-
 		lo = ffnz(map->lomap[hi]);
 		id = hi * BITS_PER_LONG + lo;
 		++map->usedids;
