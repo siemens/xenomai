@@ -57,53 +57,54 @@
 
 typedef struct xnextent {
 
-    xnholder_t link;
+	xnholder_t link;
 
 #define link2extent(laddr) \
 ((xnextent_t *)(((char *)laddr) - (int)(&((xnextent_t *)0)->link)))
 
-    caddr_t membase,	/* Base address of the page array */
-	    memlim,	/* Memory limit of page array */
-	    freelist;	/* Head of the free page list */
+	caddr_t membase,	/* Base address of the page array */
+		memlim,		/* Memory limit of page array */
+		freelist;	/* Head of the free page list */
 
-    u_char pagemap[1];	/* Beginning of page map */
+	u_char pagemap[1];	/* Beginning of page map */
 
 } xnextent_t;
 
 typedef struct xnheap {
 
-    xnholder_t link;
+	xnholder_t link;
 
 #define link2heap(laddr) \
 ((xnheap_t *)(((char *)laddr) - (int)(&((xnheap_t *)0)->link)))
 
-    u_long extentsize,
-           pagesize,
-           pageshift,
-	   hdrsize,
-	   npages,	/* Number of pages per extent */
-	   ubytes,
-           maxcont;
+	u_long extentsize,
+		totalsize,
+		pagesize,
+		pageshift,
+		hdrsize,
+		npages,		/* Number of pages per extent */
+		ubytes,
+		maxcont;
 
-    xnqueue_t extents;
+	xnqueue_t extents;
 
 #ifdef CONFIG_SMP
-    xnlock_t lock;
+	xnlock_t lock;
 #endif /* CONFIG_SMP */
 
-    caddr_t buckets[XNHEAP_NBUCKETS];
+	caddr_t buckets[XNHEAP_NBUCKETS];
 
-    xnholder_t *idleq;
+	xnholder_t *idleq;
 
-    xnarch_heapcb_t archdep;
+	xnarch_heapcb_t archdep;
 
-    XNARCH_DECL_DISPLAY_CONTEXT();
+	XNARCH_DECL_DISPLAY_CONTEXT();
 
 } xnheap_t;
 
 extern xnheap_t kheap;
 
-#define xnheap_size(heap)            ((heap)->extentsize)
+#define xnheap_size(heap)            ((heap)->totalsize)
 #define xnheap_page_size(heap)       ((heap)->pagesize)
 #define xnheap_page_count(heap)      ((heap)->npages)
 #define xnheap_used_mem(heap)        ((heap)->ubytes)

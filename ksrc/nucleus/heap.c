@@ -200,6 +200,7 @@ int xnheap_init(xnheap_t *heap,
 	heap->npages = (heapsize - hdrsize) >> pageshift;
 	heap->ubytes = 0;
 	heap->maxcont = heap->npages * pagesize;
+	heap->totalsize = heap->maxcont;
 	heap->idleq = NULL;
 	inith(&heap->link);
 	initq(&heap->extents);
@@ -700,6 +701,7 @@ int xnheap_extend(xnheap_t *heap, void *extaddr, u_long extsize)
 	xnlock_get_irqsave(&heap->lock, s);
 
 	appendq(&heap->extents, &extent->link);
+	heap->totalsize += extsize;
 
 	xnlock_put_irqrestore(&heap->lock, s);
 
