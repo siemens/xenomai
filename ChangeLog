@@ -1,5 +1,8 @@
 2006-11-12  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/heap.c (xnheap_extend): Account for new extents
+	when reporting the total heap size through xnheap_size().
+
 	* ksrc/skins/vrtx/module.c (vrtx_get_id): Remove silly test upon
 	return value from ffnz() against the hi-word.
 
