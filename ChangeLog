@@ -1,3 +1,8 @@
+2006-11-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/switch.S (rthal_thread_switch): Make sure r3
+	contains the last "current" value upon return.
+
 2006-11-11  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* include/asm-i386/system.h, include/asm-i386/bits/pod.h: Another
