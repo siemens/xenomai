@@ -1,5 +1,11 @@
 2006-11-12  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/vrtx/module.c (vrtx_get_id): Remove silly test upon
+	return value from ffnz() against the hi-word.
+
+	* ksrc/skins/vrtx/heap.c (vrtxheap_init): Allocate the heap ID map
+	before trying to create the VRTX workspace.
+
 	* ksrc/arch/powerpc/switch.S (rthal_thread_switch): Make sure r3
 	contains the last "current" value upon return.
 
