@@ -53,13 +53,14 @@
  *      CONFIG_HAS_TLS_REG
  *      CONFIG_VFP
  *
- *  Calling args: r0 = previous thread_info, r1 = next thread_info
+ *  Calling args: 
+ * r0 = previous task_struct, r1 = previous thread_info, r2 = next thread_info
  */
 ENTRY(rthal_thread_switch)
-    add     ip, r0, #TI_CPU_SAVE
-    ldr     r3, [r1, #TI_TP_VALUE]
+    add     ip, r1, #TI_CPU_SAVE
+    ldr     r3, [r2, #TI_TP_VALUE]
     stmia   ip!, {r4 - sl, fp, sp, lr}      @ Store most regs on stack
-    ldr     r6, [r1, #TI_CPU_DOMAIN]!
+    ldr     r6, [r2, #TI_CPU_DOMAIN]!
 #if __LINUX_ARM_ARCH__ >= 6
 #ifdef CONFIG_CPU_MPCORE
     clrex
@@ -88,11 +89,11 @@ ENTRY(rthal_thread_switch)
 #if defined(CONFIG_IWMMXT)
     bl      iwmmxt_task_switch
 #elif defined(CONFIG_CPU_XSCALE)
-    add     r4, r1, #40                     @ cpu_context_save->extra
+    add     r4, r2, #40                     @ cpu_context_save->extra
     ldmib   r4, {r4, r5}
     mar     acc0, r4, r5
 #endif
-    ldmib   r1, {r4 - sl, fp, sp, pc}       @ Load all regs saved previously
+    ldmib   r2, {r4 - sl, fp, sp, pc}       @ Load all regs saved previously
 
 /*
  * r4 = xnarch_thread_trampoline

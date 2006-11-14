@@ -82,7 +82,7 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 	}
 
 	/* Kernel-to-kernel context switch. */
-	rthal_thread_switch(out_tcb->tip, in_tcb->tip);
+	rthal_thread_switch(prev, out_tcb->tip, in_tcb->tip);
 }
 
 static inline void xnarch_finalize_and_switch(xnarchtcb_t * dead_tcb,
