@@ -111,7 +111,7 @@ static inline void rthal_timer_program_shot (unsigned long delay)
 
     /* Private interface -- Internal use only */
 
-asmlinkage void rthal_thread_switch(struct thread_info *out, struct thread_info *in);
+asmlinkage void rthal_thread_switch(struct task_struct *prev, struct thread_info *out, struct thread_info *in);
 
 asmlinkage void rthal_thread_trampoline(void);
 
