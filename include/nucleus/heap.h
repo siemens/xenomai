@@ -78,7 +78,6 @@ typedef struct xnheap {
 ((xnheap_t *)(((char *)laddr) - (int)(&((xnheap_t *)0)->link)))
 
 	u_long extentsize,
-		totalsize,
 		pagesize,
 		pageshift,
 		hdrsize,
@@ -104,9 +103,10 @@ typedef struct xnheap {
 
 extern xnheap_t kheap;
 
-#define xnheap_size(heap)            ((heap)->totalsize)
+#define xnheap_extentsize(heap)      ((heap)->extentsize)
 #define xnheap_page_size(heap)       ((heap)->pagesize)
 #define xnheap_page_count(heap)      ((heap)->npages)
+#define xnheap_usable_mem(heap)      ((heap)->maxcont * countq(&(heap)->extents))
 #define xnheap_used_mem(heap)        ((heap)->ubytes)
 #define xnheap_max_contiguous(heap)  ((heap)->maxcont)
 #define xnheap_overhead(hsize,psize) \

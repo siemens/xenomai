@@ -2480,7 +2480,7 @@ static int __mmap_prologue(struct task_struct *curr, struct pt_regs *regs)
 	}
 
 	mmap_param.len = len;
-	mmap_param.heapsize = xnheap_size(mmap_param.ioctl_cookie);
+	mmap_param.heapsize = xnheap_extentsize(mmap_param.ioctl_cookie);
 	mmap_param.offset = xnheap_mapped_offset(mmap_param.ioctl_cookie,
 						 mmap_param.kaddr);
 
@@ -2567,7 +2567,7 @@ static int __munmap_prologue(struct task_struct *curr, struct pt_regs *regs)
 	if (err)
 		return err;
 
-	uunmap.mapsize = xnheap_size(heap);
+	uunmap.mapsize = xnheap_extentsize(heap);
 	uunmap.offset = xnheap_mapped_offset(heap, umap->kaddr);
 	__xn_copy_to_user(curr,
 			  (void __user *)__xn_reg_arg3(regs),
