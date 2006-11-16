@@ -1,5 +1,9 @@
 2006-11-16  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/nucleus/heap.h, ksrc/skins/posix, ksrc/skins/native,
+	ksrc/skins/vrtx: Renamed some heap size accessors for consistency
+	purpose.
+
 	* ksrc/nucleus/registry.c (registry_proc_callback): Use a single
 	request queue for exporting/unexporting objects in order to
 	prevent out-of-sequence handling.

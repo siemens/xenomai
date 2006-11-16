@@ -951,7 +951,7 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 	size = vma->vm_end - vma->vm_start;
 	heap = (xnheap_t *)file->private_data;
 
-	if (size != xnheap_size(heap))
+	if (size != xnheap_extentsize(heap))
 		return -ENXIO;	/* Doesn't match the heap size. */
 
 	if (countq(&heap->extents) > 1)
@@ -1137,7 +1137,7 @@ int xnheap_destroy_mapped(xnheap_t *heap)
 	xnlock_put_irqrestore(&nklock, s);
 
 	__unreserve_and_free_heap(heap->archdep.heapbase,
-				  heap->extentsize, heap->archdep.kmflags);
+				  xnheap_extentsize(heap), heap->archdep.kmflags);
 	return 0;
 }
 

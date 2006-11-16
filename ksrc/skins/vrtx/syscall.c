@@ -948,7 +948,7 @@ static int __sc_hcreate(struct task_struct *curr, struct pt_regs *regs)
 		heap->mm = curr->mm;
 		hdesc.hid = hid;
 		hdesc.hcb = &heap->sysheap;
-		hdesc.hsize = xnheap_size(&heap->sysheap);
+		hdesc.hsize = xnheap_extentsize(&heap->sysheap);
 
 		xnlock_put_irqrestore(&nklock, s);
 
@@ -1167,7 +1167,7 @@ static int __sc_pcreate(struct task_struct *curr, struct pt_regs *regs)
 		pt->sysheap = ptheap;
 		pdesc.pid = pid;
 		pdesc.ptcb = ptheap;
-		pdesc.ptsize = xnheap_size(ptheap);
+		pdesc.ptsize = xnheap_extentsize(ptheap);
 
 		xnlock_put_irqrestore(&nklock, s);
 

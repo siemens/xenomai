@@ -58,7 +58,7 @@ static int __queue_read_proc(char *page,
 
 	p += sprintf(p, "type=%s:poolsz=%lu:limit=%d:mcount=%d\n",
 		     q->mode & Q_SHARED ? "shared" : "local",
-		     xnheap_size(&q->bufpool), q->qlimit, countq(&q->pendq));
+		     xnheap_usable_mem(&q->bufpool), q->qlimit, countq(&q->pendq));
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -986,7 +986,7 @@ int rt_queue_inquire(RT_QUEUE *q, RT_QUEUE_INFO *info)
 	info->nwaiters = xnsynch_nsleepers(&q->synch_base);
 	info->nmessages = countq(&q->pendq);
 	info->qlimit = q->qlimit;
-	info->poolsize = xnheap_size(&q->bufpool);
+	info->poolsize = xnheap_usable_mem(&q->bufpool);
 	info->mode = q->mode;
 
       unlock_and_exit:
