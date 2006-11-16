@@ -1,3 +1,9 @@
+2006-11-16  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/registry.c (registry_proc_callback): Use a single
+	request queue for exporting/unexporting objects in order to
+	prevent out-of-sequence handling.
+
 2006-11-15  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/heap.c (xnheap_mmap): Prevent from mapping
