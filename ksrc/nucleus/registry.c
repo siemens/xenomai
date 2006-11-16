@@ -65,9 +65,7 @@ static void registry_proc_callback(void *cookie);
 
 static void registry_proc_schedule(void *cookie);
 
-static xnqueue_t registry_obj_exportq;	/* Objects waiting for /proc export. */
-
-static xnqueue_t registry_obj_unexportq;	/* Objects waiting for /proc unexport. */
+static xnqueue_t registry_obj_procq;	/* Objects waiting for /proc handling. */
 
 #ifndef CONFIG_PREEMPT_RT
 static DECLARE_WORK(registry_proc_work, &registry_proc_callback, NULL);
@@ -106,8 +104,7 @@ int xnregistry_init(void)
 		return -ENOMEM;
 	}
 
-	initq(&registry_obj_exportq);
-	initq(&registry_obj_unexportq);
+	initq(&registry_obj_procq);
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 	initq(&registry_obj_freeq);
@@ -274,16 +271,20 @@ static void registry_proc_callback(void *cookie)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	while ((holder = getq(&registry_obj_exportq)) != NULL) {
+	while ((holder = getq(&registry_obj_procq)) != NULL) {
 		object = link2xnobj(holder);
 		pnode = object->pnode;
 		type = pnode->type;
+		dir = pnode->dir;
+		rdir = pnode->root->dir;
 		root = pnode->root->name;
+
+		if (object->proc != XNOBJECT_PROC_RESERVED1)
+			goto unexport;
+
 		++pnode->entries;
 		object->proc = XNOBJECT_PROC_RESERVED2;
 		appendq(&registry_obj_busyq, holder);
-		dir = pnode->dir;
-		rdir = pnode->root->dir;
 
 		xnlock_put_irqrestore(&nklock, s);
 
@@ -334,19 +335,14 @@ static void registry_proc_callback(void *cookie)
 			object->pnode = NULL;
 			--pnode->entries;
 		}
-	}
 
-	while ((holder = getq(&registry_obj_unexportq)) != NULL) {
-		object = link2xnobj(holder);
-		pnode = object->pnode;
-		object->pnode = NULL;
+		continue;
+
+	unexport:
+		entries = --pnode->entries;
 		entry = object->proc;
 		object->proc = NULL;
-		type = pnode->type;
-		dir = pnode->dir;
-		rdir = pnode->root->dir;
-		root = pnode->root->name;
-		entries = --pnode->entries;
+		object->pnode = NULL;
 
 		if (entries <= 0) {
 			pnode->dir = NULL;
@@ -398,7 +394,7 @@ static inline void registry_proc_export(xnobject_t *object, xnpnode_t *pnode)
 	object->proc = XNOBJECT_PROC_RESERVED1;
 	object->pnode = pnode;
 	removeq(&registry_obj_busyq, &object->link);
-	appendq(&registry_obj_exportq, &object->link);
+	appendq(&registry_obj_procq, &object->link);
 	rthal_apc_schedule(registry_proc_apc);
 }
 
@@ -406,13 +402,13 @@ static inline void registry_proc_unexport(xnobject_t *object)
 {
 	if (object->proc != XNOBJECT_PROC_RESERVED1) {
 		removeq(&registry_obj_busyq, &object->link);
-		appendq(&registry_obj_unexportq, &object->link);
+		appendq(&registry_obj_procq, &object->link);
 		rthal_apc_schedule(registry_proc_apc);
 	} else {
 		/* Unexporting before the lower stage has had a chance to
 		   export. Move back the object to the busyq just like if no
 		   export had been requested. */
-		removeq(&registry_obj_exportq, &object->link);
+		removeq(&registry_obj_procq, &object->link);
 		appendq(&registry_obj_busyq, &object->link);
 		object->pnode = NULL;
 		object->proc = NULL;
