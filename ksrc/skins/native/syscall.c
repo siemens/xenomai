@@ -153,7 +153,7 @@ static int __rt_task_create(struct task_struct *curr, struct pt_regs *regs)
 	/* Task priority. */
 	prio = bulk.a3;
 	/* Task init mode & CPU affinity. */
-	mode = bulk.a4 & (T_CPUMASK | T_SUSP);
+	mode = bulk.a4 & (T_CPUMASK | T_SUSP | T_SHIELD);
 	/* Completion descriptor our parent thread is pending on -- may be NULL. */
 	u_completion = (xncompletion_t __user *)__xn_reg_arg2(regs);
 
