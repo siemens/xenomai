@@ -672,7 +672,7 @@ static int heap_read_proc(char *page,
 		return -ESRCH;
 
 	len = sprintf(page, "size=%lu:used=%lu:pagesz=%lu\n",
-		      xnheap_size(&kheap),
+		      xnheap_usable_mem(&kheap),
 		      xnheap_used_mem(&kheap),
 		      xnheap_page_size(&kheap));
 

@@ -563,7 +563,7 @@ int ftruncate(int fd, off_t len)
 
 		if (addr)
 			xnarch_sysfree(addr, size);
-	} else if (len != xnheap_size(&shm->heapbase))
+	} else if (len != xnheap_extentsize(&shm->heapbase))
 		err = EBUSY;
 
       err_up:
