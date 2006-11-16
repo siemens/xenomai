@@ -1138,7 +1138,7 @@ int xnheap_destroy_mapped(xnheap_t *heap)
 	xnlock_put_irqrestore(&nklock, s);
 
 	__unreserve_and_free_heap(heap->archdep.heapbase,
-				  heap->extensize, heap->archdep.kmflags);
+				  heap->extentsize, heap->archdep.kmflags);
 	return 0;
 }
 
