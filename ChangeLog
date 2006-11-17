@@ -1,5 +1,8 @@
 2006-11-17  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/pod.c (xnpod_set_thread_mode): Reset the interrupt
+	shield for secondary mode threads only.
+
 	* ksrc/nucleus/shadow.c (gatekeeper_thread): Make sure to
 	disengage the interrupt shield before escalating the Xenomai
 	rescheduling request.

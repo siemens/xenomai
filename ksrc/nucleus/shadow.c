@@ -390,7 +390,7 @@ void xnshadow_reset_shield(void)
 	xnthread_t *thread = xnshadow_thread(current);
 
 	if (!thread)
-		return;		/* uh?! */
+		return;
 
 	reset_shield(thread);
 }
