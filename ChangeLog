@@ -1,3 +1,9 @@
+2006-11-17  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (gatekeeper_thread): Make sure to
+	disengage the interrupt shield before escalating the Xenomai
+	rescheduling request.
+
 2006-11-16  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/heap.h, ksrc/skins/posix, ksrc/skins/native,
