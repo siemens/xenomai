@@ -554,6 +554,9 @@ static int gatekeeper_thread(void *data)
 #ifndef CONFIG_XENO_OPT_RPIDISABLE
 			xnpod_renice_root(XNPOD_ROOT_PRIO_BASE);
 #endif /* CONFIG_XENO_OPT_RPIDISABLE */
+#ifdef CONFIG_XENO_OPT_ISHIELD
+			disengage_irq_shield();
+#endif /* CONFIG_XENO_OPT_ISHIELD */
 			xnpod_schedule();
 		}
 
