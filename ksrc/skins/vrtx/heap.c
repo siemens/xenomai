@@ -36,7 +36,7 @@ static int __heap_read_proc(char *page,
 	int len;
 
 	p += sprintf(p, "size=%lu:used=%lu\n",
-		     xnheap_usable_size(&heap->sysheap), xnheap_used_mem(&heap->sysheap));
+		     xnheap_usable_mem(&heap->sysheap), xnheap_used_mem(&heap->sysheap));
 
 	len = (p - page) - off;
 	if (len <= off + count)
