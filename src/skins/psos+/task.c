@@ -1,0 +1,157 @@
+/*
+ * Copyright (C) 2006 Philippe Gerum <rpm@xenomai.org>.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+ */
+
+#include <sys/types.h>
+#include <stdio.h>
+#include <memory.h>
+#include <malloc.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <signal.h>
+#include <errno.h>
+#include <limits.h>
+#include <psos+/psos.h>
+
+extern int __psos_muxid;
+
+struct psos_task_iargs {
+
+	const char *name;
+	u_long prio;
+	u_long flags;
+	u_long *tid_r;
+	xncompletion_t *completionp;
+};
+
+static void psos_task_sigharden(int sig)
+{
+	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
+}
+
+static void *psos_task_trampoline(void *cookie)
+{
+	struct psos_task_iargs *iargs = (struct psos_task_iargs *)cookie;
+	void (*entry)(u_long, u_long, u_long, u_long);
+	struct sched_param param;
+	u_long *targs;
+	long err;
+
+	/* Ok, this looks like weird, but we need this. */
+	param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+	pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
+	signal(SIGCHLD, &psos_task_sigharden);
+
+	err = XENOMAI_SKINCALL5(__psos_muxid,
+				__psos_t_create,
+				iargs->name, iargs->prio, iargs->flags,
+				iargs->tid_r, iargs->completionp);
+	if (err)
+		goto fail;
+
+	/* Wait on the barrier for the task to be started. The barrier
+	   could be released in order to process Linux signals while the
+	   Xenomai shadow is still dormant; in such a case, resume wait. */
+
+	do
+		err = XENOMAI_SYSCALL2(__xn_sys_barrier, &entry, &targs);
+	while (err == -EINTR);
+
+	if (!err)
+		entry(targs[0], targs[1], targs[2], targs[3]);
+
+      fail:
+
+	pthread_exit((void *)err);
+}
+
+u_long t_create(char name[4],
+		u_long prio,
+		u_long sstack,	/* Ignored. */
+		u_long ustack,
+		u_long flags,
+		u_long *tid_r)
+{
+	struct psos_task_iargs iargs;
+	xncompletion_t completion;
+	struct sched_param param;
+	pthread_attr_t thattr;
+	pthread_t thid;
+	long err;
+
+	/* Migrate this thread to the Linux domain since we are about
+	   to issue a series of regular kernel syscalls in order to
+	   create the new Linux thread, which in turn will be mapped
+	   to a pSOS shadow. */
+
+	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_LINUX_DOMAIN);
+
+	completion.syncflag = 0;
+	completion.pid = -1;
+
+	iargs.name = name;
+	iargs.prio = prio;
+	iargs.flags = flags;
+	iargs.tid_r = tid_r;
+	iargs.completionp = &completion;
+
+	pthread_attr_init(&thattr);
+
+	if (ustack == 0)
+		ustack = PTHREAD_STACK_MIN * 4;
+	else if (ustack < PTHREAD_STACK_MIN)
+		ustack = PTHREAD_STACK_MIN;
+
+	pthread_attr_setstacksize(&thattr, ustack);
+	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
+	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
+	param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+	pthread_attr_setschedparam(&thattr, &param);
+
+	err = pthread_create(&thid, &thattr, &psos_task_trampoline, &iargs);
+
+	/* Pass back POSIX codes returned by internal calls as
+	   negative values to distinguish them from pSOS ones. */
+
+	if (err)
+		return -err;
+
+	/* Sync with psos_task_trampoline() then return.*/
+
+	return XENOMAI_SYSCALL1(__xn_sys_completion, &completion);
+}
+
+u_long t_start(u_long tid,
+	       u_long mode,
+	       void (*startaddr)(u_long a0,
+				 u_long a1,
+				 u_long a2,
+				 u_long a3),
+	       u_long targs[])
+{
+	return XENOMAI_SKINCALL4(__psos_muxid, __psos_t_start,
+				 tid, mode, startaddr, targs);
+}
+
+u_long t_delete(u_long tid)
+{
+	return XENOMAI_SKINCALL1(__psos_muxid, __psos_t_delete, tid);
+}

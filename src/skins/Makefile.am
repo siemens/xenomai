@@ -1,2 +1,2 @@
 
-SUBDIRS = native posix rtdm vxworks vrtx rtai
+SUBDIRS = native posix rtdm vxworks psos+ vrtx rtai

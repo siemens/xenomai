@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2006 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -25,298 +25,76 @@
 #ifndef _XENO_SKIN_PSOS_H
 #define _XENO_SKIN_PSOS_H
 
-#include <nucleus/xenomai.h>
+#include <nucleus/types.h>
 
-#define PSOS_SKIN_VERSION_CODE    0x00000004
-#define PSOS_SKIN_MAGIC           0x50534F53
+#define PSOS_SKIN_MAGIC     0x50534F53
+#define PSOS_SKIN_VERSION   5
 
 #ifndef SUCCESS
 #define SUCCESS 0
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#define T_NOPREEMPT   0x0001
+#define T_PREEMPT     0x0000
+#define T_TSLICE      0x0002
+#define T_NOTSLICE    0x0000
+#define T_NOASR       0x0004
+#define T_ASR         0x0000
+#define T_SUPV        0x2000
+#define T_USER        0x0000
+#define T_LEVELMASK0  0x0000
+#define T_LEVELMASK1  0x0100
+#define T_LEVELMASK2  0x0200
+#define T_LEVELMASK3  0x0300
+#define T_LEVELMASK4  0x0400
+#define T_LEVELMASK5  0x0500
+#define T_LEVELMASK6  0x0600
+#define T_LEVELMASK7  0x0700
+#define T_NOISR       0x0700
+#define T_ISR         0x0000
+#define T_GLOBAL      0x0001
+#define T_LOCAL       0x0000
+#define T_NOFPU       0x0000
+#define T_FPU         0x0002
+#define T_SHADOW      0x8000
 
-u_long as_catch(void (*routine)(void),
-		u_long mode);
+#define RN_PRIOR      0x0002
+#define RN_FIFO       0x0000
+#define RN_DEL        0x0004
+#define RN_NODEL      0x0000
+#define RN_NOWAIT     0x0001
+#define RN_WAIT       0x0000
 
-u_long as_send(u_long tid,
-	       u_long signals);
+#define SM_GLOBAL     0x0001
+#define SM_LOCAL      0x0000
+#define SM_PRIOR      0x0002
+#define SM_FIFO       0x0000
+#define SM_NOWAIT     0x0001
+#define SM_WAIT       0x0000
 
-#define as_return() return
-#define i_return()  return
+#define EV_NOWAIT     0x0001
+#define EV_WAIT       0x0000
+#define EV_ANY        0x0002
+#define EV_ALL        0x0000
 
-#define EV_NOWAIT       0x0001
-#define EV_WAIT         0x0000
-#define EV_ANY          0x0002
-#define EV_ALL          0x0000
+#define K_GLOBAL      0x0001
+#define K_LOCAL       0x0000
 
-u_long ev_receive(u_long events,
-		  u_long flags,
-		  u_long timeout,
-		  u_long *events_r);
+#define PT_GLOBAL     0x0001
+#define PT_LOCAL      0x0000
+#define PT_DEL        0x0004
+#define PT_NODEL      0x0000
 
-u_long ev_send(u_long tid,
-	       u_long events);
-
-#define K_GLOBAL        0x0001
-#define K_LOCAL         0x0000
-
-void k_fatal(u_long err_code,
-	     u_long flags);
-
-#define PT_GLOBAL       0x0001
-#define PT_LOCAL        0x0000
-#define PT_DEL          0x0004
-#define PT_NODEL        0x0000
-
-u_long pt_create(char name[4],
-		 void *paddr,
-		 void *laddr,
-		 u_long psize,
-		 u_long bsize,
-		 u_long flags,
-		 u_long *ptid,
-		 u_long *nbuf);
-
-u_long pt_delete(u_long ptid);
-
-u_long pt_getbuf(u_long ptid,
-		 void **bufaddr);
-
-u_long pt_ident(char name[4],
-		u_long node,
-		u_long *ptid);
-
-u_long pt_retbuf(u_long ptid,
-		 void *buf);
-
-#define Q_GLOBAL        0x0001
-#define Q_LOCAL         0x0000
-#define Q_PRIOR         0x0002
-#define Q_FIFO          0x0000
-#define Q_LIMIT         0x0004
-#define Q_NOLIMIT       0x0000
-#define Q_PRIBUF        0x0008
-#define Q_SYSBUF        0x0000
-#define Q_NOWAIT        0x0001
-#define Q_WAIT          0x0000
-
-u_long q_broadcast(u_long qid,
-		   u_long msgbuf[4],
-		   u_long *count);
-
-u_long q_create(char name[4],
-		u_long maxnum,
-		u_long flags,
-		u_long *qid);
-
-u_long q_delete(u_long qid);
-
-u_long q_ident(char name[4],
-	       u_long node,
-	       u_long *qid);
-
-u_long q_receive(u_long qid,
-		 u_long flags,
-		 u_long timeout,
-		 u_long msgbuf[4]);
-
-u_long q_send(u_long qid,
-	      u_long msgbuf[4]);
-
-u_long q_urgent(u_long qid,
-		u_long msgbuf[4]);
-
-u_long q_vcreate(char name[4],
-		 u_long flags,
-		 u_long maxnum,
-		 u_long maxlen,
-		 u_long *qid);
-
-u_long q_vdelete(u_long qid);
-
-u_long q_vident(char name[4],
-		u_long node,
-		u_long *qid);
-
-u_long q_vreceive(u_long qid,
-		  u_long flags,
-		  u_long timeout,
-		  void *msgbuf,
-		  u_long buflen,
-		  u_long *msglen);
-
-u_long q_vsend(u_long qid,
-	       void *msgbuf,
-	       u_long msglen);
-
-u_long q_vurgent(u_long qid,
-		 void *msgbuf,
-		 u_long msglen);
-
-u_long q_vbroadcast(u_long qid,
-		    void *msgbuf,
-		    u_long msglen,
-		    u_long *count);
-
-#define RN_PRIOR        0x0002
-#define RN_FIFO         0x0000
-#define RN_DEL          0x0004
-#define RN_NODEL        0x0000
-#define RN_NOWAIT       0x0001
-#define RN_WAIT         0x0000
-
-u_long rn_create(char name[4],
-		 void *rnaddr,
-		 u_long rnsize,
-		 u_long usize,
-		 u_long flags,
-		 u_long *rnid,
-		 u_long *allocsize);
-
-u_long rn_delete(u_long rnid);
-
-u_long rn_getseg(u_long rnid,
-		 u_long size,
-		 u_long flags,
-		 u_long timeout,
-		 void **segaddr);
-
-u_long rn_ident(char name[4],
-		u_long *rnid);
-
-u_long rn_retseg(u_long rnid,
-		 void *segaddr);
-
-#define SM_GLOBAL       0x0001
-#define SM_LOCAL        0x0000
-#define SM_PRIOR        0x0002
-#define SM_FIFO         0x0000
-#define SM_NOWAIT       0x0001
-#define SM_WAIT         0x0000
-
-u_long sm_create(char name[4],
-		 u_long icount,
-		 u_long flags,
-		 u_long *smid);
-
-u_long sm_delete(u_long smid);
-
-u_long sm_ident(char name[4],
-		u_long node,
-		u_long *smid);
-
-u_long sm_p(u_long smid,
-	    u_long flags,
-	    u_long timeout);
-
-u_long sm_v(u_long smid);
-
-#define T_NOPREEMPT     0x0001
-#define T_PREEMPT       0x0000
-#define T_TSLICE        0x0002
-#define T_NOTSLICE      0x0000
-#define T_NOASR         0x0004
-#define T_ASR           0x0000
-#define T_SUPV          0x2000
-#define T_USER          0x0000
-#define T_LEVELMASK0    0x0000
-#define T_LEVELMASK1    0x0100
-#define T_LEVELMASK2    0x0200
-#define T_LEVELMASK3    0x0300
-#define T_LEVELMASK4    0x0400
-#define T_LEVELMASK5    0x0500
-#define T_LEVELMASK6    0x0600
-#define T_LEVELMASK7    0x0700
-#define T_NOISR         0x0700
-#define T_ISR           0x0000
-#define T_GLOBAL        0x0001
-#define T_LOCAL         0x0000
-#define T_NOFPU         0x0000
-#define T_FPU           0x0002
-#define T_SHADOW        0x8000
-
-u_long t_create(char name[4],
-		u_long prio,
-		u_long sstack,
-		u_long ustack,
-		u_long flags,
-		u_long *tid);
-
-u_long t_delete(u_long tid);
-
-u_long t_getreg(u_long tid,
-		u_long regnum,
-		u_long *regvalue);
-
-u_long t_ident(char name[4],
-	       u_long node,
-	       u_long *tid);
-
-u_long t_mode(u_long clrmask,
-	      u_long setmask,
-	      u_long *oldmode);
-
-u_long t_restart(u_long tid,
-		 u_long targs[]);
-
-u_long t_resume(u_long tid);
-
-u_long t_setpri(u_long tid,
-		u_long newprio,
-		u_long *oldprio);
-
-u_long t_setreg(u_long tid,
-		u_long regnum,
-		u_long regvalue);
-
-u_long t_start(u_long tid,
-	       u_long mode,
-	       void (*startaddr)(u_long a0,
-				 u_long a1,
-				 u_long a2,
-				 u_long a3),
-	       u_long targs[]);
-
-u_long t_suspend(u_long tid);
-
-u_long tm_cancel(u_long tmid);
-
-u_long tm_evafter(u_long ticks,
-		  u_long events,
-		  u_long *tmid);
-
-u_long tm_evevery(u_long ticks,
-		  u_long events,
-		  u_long *tmid);
-
-u_long tm_evwhen(u_long date,
-		 u_long time,
-		 u_long ticks,
-		 u_long events,
-		 u_long *tmid);
-
-u_long tm_get(u_long *date,
-	      u_long *time,
-	      u_long *ticks);
-
-u_long tm_set(u_long date,
-	      u_long time,
-	      u_long ticks);
-
-u_long tm_tick(void);
-
-u_long tm_wkafter(u_long ticks);
-
-u_long tm_wkwhen(u_long date,
-		 u_long time,
-		 u_long ticks);
-
-#ifdef __cplusplus
-};
-#endif /* __cplusplus */
+#define Q_GLOBAL      0x0001
+#define Q_LOCAL       0x0000
+#define Q_PRIOR       0x0002
+#define Q_FIFO        0x0000
+#define Q_LIMIT       0x0004
+#define Q_NOLIMIT     0x0000
+#define Q_PRIBUF      0x0008
+#define Q_SYSBUF      0x0000
+#define Q_NOWAIT      0x0001
+#define Q_WAIT        0x0000
 
 #define ERR_TIMEOUT  0x01
 #define ERR_NODENO   0x04
@@ -385,5 +163,243 @@ u_long tm_wkwhen(u_long date,
 #define ERR_BADTMID  0x4C
 #define ERR_TMNOTSET 0x4D
 #define ERR_TOOLATE  0x4E
+
+#if defined(__KERNEL__) || defined(__XENO_SIM__)
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+#define as_return() return
+#define i_return()  return
+
+u_long as_catch(void (*routine)(void),
+		u_long mode);
+
+void k_fatal(u_long err_code,
+	     u_long flags);
+
+u_long tm_tick(void);
+
+u_long t_restart(u_long tid,
+		 u_long targs[]);
+
+#ifdef __cplusplus
+};
+#endif /* __cplusplus */
+
+#else /* !(__KERNEL__ || __XENO_SIM__) */
+
+#include <psos+/syscall.h>
+
+#endif /* __KERNEL__ || __XENO_SIM__ */
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+u_long as_send(u_long tid,
+	       u_long signals);
+
+u_long ev_receive(u_long events,
+		  u_long flags,
+		  u_long timeout,
+		  u_long *events_r);
+
+u_long ev_send(u_long tid,
+	       u_long events);
+
+u_long pt_create(char name[4],
+		 void *paddr,
+		 void *laddr,
+		 u_long psize,
+		 u_long bsize,
+		 u_long flags,
+		 u_long *tid_r,
+		 u_long *nbuf_r);
+
+u_long pt_delete(u_long tid);
+
+u_long pt_getbuf(u_long tid,
+		 void **bufaddr);
+
+u_long pt_ident(char name[4],
+		u_long node,
+		u_long *tid_r);
+
+u_long pt_retbuf(u_long tid,
+		 void *buf);
+
+u_long q_broadcast(u_long qid,
+		   u_long msgbuf[4],
+		   u_long *count_r);
+
+u_long q_create(char name[4],
+		u_long maxnum,
+		u_long flags,
+		u_long *qid_r);
+
+u_long q_delete(u_long qid);
+
+u_long q_ident(char name[4],
+	       u_long node,
+	       u_long *qid_r);
+
+u_long q_receive(u_long qid,
+		 u_long flags,
+		 u_long timeout,
+		 u_long msgbuf[4]);
+
+u_long q_send(u_long qid,
+	      u_long msgbuf[4]);
+
+u_long q_urgent(u_long qid,
+		u_long msgbuf[4]);
+
+u_long q_vcreate(char name[4],
+		 u_long flags,
+		 u_long maxnum,
+		 u_long maxlen,
+		 u_long *qid_r);
+
+u_long q_vdelete(u_long qid);
+
+u_long q_vident(char name[4],
+		u_long node,
+		u_long *qid_r);
+
+u_long q_vreceive(u_long qid,
+		  u_long flags,
+		  u_long timeout,
+		  void *msgbuf,
+		  u_long buflen,
+		  u_long *msglen_r);
+
+u_long q_vsend(u_long qid,
+	       void *msgbuf,
+	       u_long msglen);
+
+u_long q_vurgent(u_long qid,
+		 void *msgbuf,
+		 u_long msglen);
+
+u_long q_vbroadcast(u_long qid,
+		    void *msgbuf,
+		    u_long msglen,
+		    u_long *count_r);
+
+u_long rn_create(char name[4],
+		 void *rnaddr,
+		 u_long rnsize,
+		 u_long usize,
+		 u_long flags,
+		 u_long *rnid_r,
+		 u_long *allocsize_r);
+
+u_long rn_delete(u_long rnid);
+
+u_long rn_getseg(u_long rnid,
+		 u_long size,
+		 u_long flags,
+		 u_long timeout,
+		 void **segaddr);
+
+u_long rn_ident(char name[4],
+		u_long *rnid_r);
+
+u_long rn_retseg(u_long rnid,
+		 void *segaddr);
+
+u_long sm_create(char name[4],
+		 u_long icount,
+		 u_long flags,
+		 u_long *smid_r);
+
+u_long sm_delete(u_long smid);
+
+u_long sm_ident(char name[4],
+		u_long node,
+		u_long *smid_r);
+
+u_long sm_p(u_long smid,
+	    u_long flags,
+	    u_long timeout);
+
+u_long sm_v(u_long smid);
+
+u_long t_create(char name[4],
+		u_long prio,
+		u_long sstack,
+		u_long ustack,
+		u_long flags,
+		u_long *tid_r);
+
+u_long t_delete(u_long tid);
+
+u_long t_getreg(u_long tid,
+		u_long regnum,
+		u_long *regvalue_r);
+
+u_long t_ident(char name[4],
+	       u_long node,
+	       u_long *tid_r);
+
+u_long t_mode(u_long clrmask,
+	      u_long setmask,
+	      u_long *oldmode_r);
+
+u_long t_resume(u_long tid);
+
+u_long t_setpri(u_long tid,
+		u_long newprio,
+		u_long *oldprio_r);
+
+u_long t_setreg(u_long tid,
+		u_long regnum,
+		u_long regvalue);
+
+u_long t_start(u_long tid,
+	       u_long mode,
+	       void (*startaddr)(u_long a0,
+				 u_long a1,
+				 u_long a2,
+				 u_long a3),
+	       u_long targs[]);
+
+u_long t_suspend(u_long tid);
+
+u_long tm_cancel(u_long tmid);
+
+u_long tm_evafter(u_long ticks,
+		  u_long events,
+		  u_long *tmid_r);
+
+u_long tm_evevery(u_long ticks,
+		  u_long events,
+		  u_long *tmid_r);
+
+u_long tm_evwhen(u_long date,
+		 u_long time,
+		 u_long ticks,
+		 u_long events,
+		 u_long *tmid_r);
+
+u_long tm_get(u_long *date_r,
+	      u_long *time_r,
+	      u_long *ticks_r);
+
+u_long tm_set(u_long date,
+	      u_long time,
+	      u_long ticks);
+
+u_long tm_wkafter(u_long ticks);
+
+u_long tm_wkwhen(u_long date,
+		 u_long time,
+		 u_long ticks);
+
+#ifdef __cplusplus
+};
+#endif /* __cplusplus */
 
 #endif /* !_XENO_SKIN_PSOS_H */
