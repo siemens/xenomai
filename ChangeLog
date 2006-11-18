@@ -1,5 +1,9 @@
 2006-11-17  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/shadow.c (do_taskexit_event): Make sure to force a
+	rescheduling since we are removing the shadow part of a relaxed
+	thread, so the former can't be current Xenomai-wise.
+
 	* ksrc/nucleus/pod.c (xnpod_set_thread_mode): Reset the interrupt
 	shield for secondary mode threads only.
 

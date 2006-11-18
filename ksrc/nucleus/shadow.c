@@ -1630,7 +1630,8 @@ RTHAL_DECLARE_EVENT(losyscall_event);
 
 static inline void do_taskexit_event(struct task_struct *p)
 {
-	xnthread_t *thread = xnshadow_thread(p);	/* p == current */
+	xnthread_t *thread = xnshadow_thread(p); /* p == current */
+	spl_t s;
 
 	if (!thread)
 		return;
@@ -1638,12 +1639,15 @@ static inline void do_taskexit_event(struct task_struct *p)
 	if (xnpod_shadow_p())
 		xnshadow_relax(0);
 
-	/* So that we won't attempt to further wakeup the exiting task in
-	   xnshadow_unmap(). */
-
+	xnlock_get_irqsave(&nklock, s);
+	/* Prevent wakeup call from xnshadow_unmap() */
 	xnshadow_thrptd(p) = NULL;
 	xnthread_archtcb(thread)->user_task = NULL;
-	xnpod_delete_thread(thread);	/* Should indirectly call xnshadow_unmap(). */
+	/* xnpod_delete_thread() -> hook -> xnshadow_unmap(). */
+	xnpod_delete_thread(thread);
+	xnsched_set_resched(thread->sched);
+	xnpod_schedule();
+	xnlock_put_irqrestore(&nklock, s);
 
 	xnltt_log_event(xeno_ev_shadowexit, thread->name);
 }
