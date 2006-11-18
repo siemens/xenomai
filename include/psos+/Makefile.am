@@ -9,5 +9,6 @@ include_HEADERS = \
 	queue.h \
 	rn.h \
 	sem.h \
+	syscall.h \
 	task.h \
 	tm.h

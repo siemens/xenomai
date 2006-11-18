@@ -35,10 +35,9 @@ typedef struct psostask {
 #define link2psostask(laddr) \
 ((psostask_t *)(((char *)laddr) - (int)(&((psostask_t *)0)->link)))
 
-    xnthread_t threadbase;
+    char name[XNOBJECT_NAME_LEN];
 
-#define thread2psostask(taddr) \
-((taddr) ? ((psostask_t *)(((char *)(taddr)) - (int)(&((psostask_t *)0)->threadbase))) : NULL)
+    xnthread_t threadbase;
 
     void (*entry)(u_long,u_long,u_long,u_long);
 
@@ -67,6 +66,11 @@ typedef struct psostask {
     } waitargs;
 
 } psostask_t;
+
+static inline psostask_t *thread2psostask (xnthread_t *t)
+{
+    return t ? ((psostask_t *)(((char *)(t)) - (int)(&((psostask_t *)0)->threadbase))) : NULL;
+}
 
 #define psos_current_task() thread2psostask(xnpod_current_thread())
 
