@@ -116,6 +116,8 @@ static int __wind_task_init(struct task_struct *curr, struct pt_regs *regs)
 
 	if (taskInit(task, name, prio, flags, NULL, 0, NULL,
 		     0, 0, 0, 0, 0, 0, 0, 0, 0, 0) == OK) {
+		/* Let the skin discard the TCB memory upon exit. */
+		task->auto_delete = 1;
 		/* Copy back the registry handle to the ph struct. */
 		ph.handle = xnthread_handle(&task->threadbase);
 		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &ph,

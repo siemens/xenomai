@@ -285,6 +285,13 @@ STATUS taskDelete(TASK_ID task_id)
 		goto error;
 	}
 
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+	if (xnthread_user_task(&task->threadbase) != NULL
+	    && !xnthread_test_flags(&task->threadbase,XNDORMANT)
+	    && (!xnpod_primary_p() || task != wind_current_task()))
+		xnshadow_send_sig(&task->threadbase, SIGKILL, 1);
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
 	xnpod_delete_thread(&task->threadbase);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -571,18 +578,19 @@ static int testSafe(wind_task_t *task)
 	return OK;
 }
 
-static void wind_task_delete_hook(xnthread_t *xnthread)
+static void wind_task_delete_hook(xnthread_t *thread)
 {
 	wind_task_t *task;
 
-	if (xnthread_get_magic(xnthread) != VXWORKS_SKIN_MAGIC)
+	if (xnthread_get_magic(thread) != VXWORKS_SKIN_MAGIC)
 		return;
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
-	xnregistry_remove(xnthread_handle(xnthread));
+	if (xnthread_handle(thread) != XN_NO_HANDLE)
+	    xnregistry_remove(xnthread_handle(thread));
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-	task = thread2wind_task(xnthread);
+	task = thread2wind_task(thread);
 
 	xnsynch_destroy(&task->safesync);
 
@@ -591,7 +599,7 @@ static void wind_task_delete_hook(xnthread_t *xnthread)
 	wind_mark_deleted(task);
 
 	if (task->auto_delete)
-		xnfree(task);
+		xnfreesafe(&task->threadbase, task, &task->link);
 }
 
 static void wind_task_trampoline(void *cookie)
