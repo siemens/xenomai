@@ -82,9 +82,6 @@ case "$host" in
 	XENO_TARGET_ARCH=blackfin
         XENO_LINUX_ARCH=bfinnommu
 	XENO_LINUX_INSTALL_TARGET=install
-	if test x$enable_shared = xyes ; then
-	   AC_MSG_ERROR([Shared libraries unsupported -- reconfigure passing --disable-shared])
-	fi
         ;;
  arm-*)
  	XENO_TARGET_ARCH=arm
@@ -516,10 +513,9 @@ case $XENO_TARGET_ARCH in
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
         ;;
  blackfin)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
-	# uClinux wants flat format executables; assume that our
-	# source format is ELF.
-	XENO_USER_LDFLAGS="-Wl,-elf2flt"
+	# Produce libraries in FDPIC format.
+	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -mfdpic"
+	XENO_USER_LDFLAGS="$XENO_USER_CFLAGS -mfdpic"
         ;;
  arm)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
@@ -610,6 +606,7 @@ AC_CONFIG_FILES([ \
        	src/skins/posix/Makefile \
        	src/skins/native/Makefile \
        	src/skins/vxworks/Makefile \
+       	src/skins/psos+/Makefile \
        	src/skins/vrtx/Makefile \
        	src/skins/rtdm/Makefile \
        	src/skins/rtai/Makefile \
