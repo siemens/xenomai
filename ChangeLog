@@ -1,5 +1,13 @@
 2006-11-18  Philippe Gerum  <rpm@xenomai.org>
 
+	* src/skins/psos+/task.c: Add preliminary user-space support.
+
+	* ksrc/skins/vxworks/syscall.c (__wind_task_init): Set TCB
+	auto-delete flag for user-space VxWorks tasks.
+
+	* ksrc/skins/vrtx/task.c (vrtxtask_delete_hook): Release the TCB
+	using safe memory release call.
+
 	* ksrc/nucleus/shadow.c (do_taskexit_event): Make sure to force a
 	rescheduling since we are removing the shadow part of a relaxed
 	thread, so the former can't be current Xenomai-wise.
