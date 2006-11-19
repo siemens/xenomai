@@ -155,6 +155,7 @@ u_long sm_ident(char name[4], u_long node, u_long *smid)
 u_long sm_p(u_long smid, u_long flags, u_long timeout)
 {
 	u_long err = SUCCESS;
+	psostask_t *task;
 	psossem_t *sem;
 	spl_t s;
 
@@ -173,18 +174,23 @@ u_long sm_p(u_long smid, u_long flags, u_long timeout)
 		else
 			err = ERR_NOSEM;
 	} else {
-		xnpod_check_context(XNPOD_THREAD_CONTEXT);
+		if (xnpod_unblockable_p()) {
+			err = -EPERM;
+			goto unlock_and_exit;
+		}
 
 		if (sem->count > 0)
 			sem->count--;
 		else {
 			xnsynch_sleep_on(&sem->synchbase, timeout);
 
-			if (xnthread_test_flags
-			    (&psos_current_task()->threadbase, XNRMID))
+			task = psos_current_task();
+
+			if (xnthread_test_flags(&task->threadbase, XNBREAK))
+				err = -EINTR;
+			else if (xnthread_test_flags(&task->threadbase, XNRMID))
 				err = ERR_SKILLD;	/* Semaphore deleted while pending. */
-			else if (xnthread_test_flags
-				 (&psos_current_task()->threadbase, XNTIMEO))
+			else if (xnthread_test_flags(&task->threadbase, XNTIMEO))
 				err = ERR_TIMEOUT;	/* Timeout. */
 		}
 	}

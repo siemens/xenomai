@@ -171,12 +171,10 @@ u_long rn_getseg(u_long rnid,
 		 u_long size, u_long flags, u_long timeout, void **segaddr)
 {
 	u_long err = SUCCESS;
-	psostask_t *caller;
+	psostask_t *task;
 	psosrn_t *rn;
 	void *chunk;
 	spl_t s;
-
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -207,17 +205,24 @@ u_long rn_getseg(u_long rnid,
 			goto unlock_and_exit;
 		}
 
-		caller = psos_current_task();
-		caller->waitargs.region.size = size;
-		caller->waitargs.region.chunk = NULL;
+		if (xnpod_unblockable_p()) {
+		    err = -EPERM;
+		    goto unlock_and_exit;
+		}
+
+		task = psos_current_task();
+		task->waitargs.region.size = size;
+		task->waitargs.region.chunk = NULL;
 		xnsynch_sleep_on(&rn->synchbase, timeout);
 
-		if (xnthread_test_flags(&caller->threadbase, XNRMID))
+		if (xnthread_test_flags(&task->threadbase, XNBREAK))
+			err = -EINTR;	/* Unblocked. */
+		else if (xnthread_test_flags(&task->threadbase, XNRMID))
 			err = ERR_RNKILLD;	/* Region deleted while pending. */
-		else if (xnthread_test_flags(&caller->threadbase, XNTIMEO))
+		else if (xnthread_test_flags(&task->threadbase, XNTIMEO))
 			err = ERR_TIMEOUT;	/* Timeout. */
 
-		chunk = caller->waitargs.region.chunk;
+		chunk = task->waitargs.region.chunk;
 	}
 
 	*segaddr = chunk;

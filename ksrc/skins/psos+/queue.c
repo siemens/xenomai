@@ -325,6 +325,7 @@ static u_long q_receive_internal(u_long qid,
 	u_long err = SUCCESS;
 	xnholder_t *holder;
 	psosqueue_t *queue;
+	psostask_t *task;
 	psosmbuf_t *mbuf;
 	spl_t s;
 
@@ -337,8 +338,10 @@ static u_long q_receive_internal(u_long qid,
 		goto unlock_and_exit;
 	}
 
-	if (!(flags & Q_NOWAIT))
-		xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (!(flags & Q_NOWAIT) && xnpod_unblockable_p()) {
+		err = -EPERM;
+		goto unlock_and_exit;
+	}
 
 	if ((flags & Q_VARIABLE) &&
 	    !xnsynch_test_flags(&queue->synchbase, Q_VARIABLE)) {
@@ -367,24 +370,29 @@ static u_long q_receive_internal(u_long qid,
 
 		xnsynch_sleep_on(&queue->synchbase, timeout);
 
-		if (xnthread_test_flags
-		    (&psos_current_task()->threadbase, XNRMID)) {
+		task = psos_current_task();
+
+		if (xnthread_test_flags(&task->threadbase, XNBREAK)) {
+			err = -EINTR;
+			goto unlock_and_exit;
+		}
+
+		if (xnthread_test_flags(&task->threadbase, XNRMID)) {
 			err = ERR_QKILLD;	/* Queue deleted while pending. */
 			goto unlock_and_exit;
 		}
 
-		if (xnthread_test_flags
-		    (&psos_current_task()->threadbase, XNTIMEO)) {
+		if (xnthread_test_flags(&task->threadbase, XNTIMEO)) {
 			err = ERR_TIMEOUT;	/* Timeout. */
 			goto unlock_and_exit;
 		}
 
-		mbuf = psos_current_task()->waitargs.qmsg;
+		mbuf = taskwaitargs.qmsg;
 
 		if (!mbuf)	/* Rare, but spurious wakeups might */
 			goto again;	/* occur during memory contention. */
 
-		psos_current_task()->waitargs.qmsg = NULL;
+		task->waitargs.qmsg = NULL;
 	} else {
 		mbuf = link2psosmbuf(holder);
 
