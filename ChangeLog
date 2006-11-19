@@ -1,5 +1,9 @@
 2006-11-19  Philippe Gerum  <rpm@xenomai.org>
 
+ 	* RELEASE: Xenomai 2.3-rc2
+
+2006-11-19  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/skins/vrtx/syscall.c: Fix exec mode for sc_tsuspend() and
 	sc_tresume().
 
