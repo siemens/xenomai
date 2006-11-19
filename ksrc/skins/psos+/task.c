@@ -79,7 +79,6 @@ u_long t_create(char name[4],
 	xnflags_t bflags = 0;
 	psostask_t *task;
 	char aname[5];
-	u_long err;
 	spl_t s;
 	int n;
 
@@ -148,11 +147,13 @@ u_long t_create(char name[4],
 	xnlock_put_irqrestore(&nklock, s);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
-	err = xnregistry_enter(task->name,
-			       task, &xnthread_handle(&task->threadbase), NULL);
-	if (err) {
-		t_delete((u_long)task);
-		return err;
+	{
+		u_long err = xnregistry_enter(task->name,
+					      task, &xnthread_handle(&task->threadbase), NULL);
+		if (err) {
+			t_delete((u_long)task);
+			return err;
+		}
 	}
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
