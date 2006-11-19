@@ -30,6 +30,7 @@
 #define __psos_t_resume    4
 #define __psos_t_ident     5
 #define __psos_t_mode      6
+#define __psos_t_setpri    7
 
 #ifdef __KERNEL__
 
