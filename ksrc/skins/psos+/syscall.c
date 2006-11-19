@@ -62,7 +62,7 @@ static int __t_create(struct task_struct *curr, struct pt_regs *regs)
 	xncompletion_t __user *u_completion;
 	u_long prio, flags, tid, *tid_r, err;
 	psostask_t *task;
-	char name[4];
+	char name[5];
 
 	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(name)))
 		return -EFAULT;
@@ -153,10 +153,85 @@ static int __t_delete(struct task_struct *curr, struct pt_regs *regs)
 	return t_delete((u_long)task);
 }
 
+/*
+ * int __t_suspend(u_long tid)
+ */
+
+static int __t_suspend(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	psostask_t *task;
+
+	if (handle)
+		task = (psostask_t *)xnregistry_fetch(handle);
+	else
+		task = __psos_task_current(curr);
+
+	if (!task)
+		return ERR_OBJID;
+
+	return t_suspend((u_long)task);
+}
+
+/*
+ * int __t_resume(u_long tid)
+ */
+
+static int __t_resume(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	psostask_t *task;
+
+	if (handle)
+		task = (psostask_t *)xnregistry_fetch(handle);
+	else
+		task = __psos_task_current(curr);
+
+	if (!task)
+		return ERR_OBJID;
+
+	return t_resume((u_long)task);
+}
+
+/*
+ * int __t_ident(char name[4], u_long *tid_r)
+ */
+
+static int __t_ident(struct task_struct *curr, struct pt_regs *regs)
+{
+	char name[4], *namep;
+	u_long err, tid;
+
+	if (__xn_reg_arg1(regs)) {
+		if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(name)))
+			return -EFAULT;
+
+		/* Get task name. */
+		__xn_strncpy_from_user(curr, name, (const char __user *)__xn_reg_arg1(regs),
+				       sizeof(name));
+		namep = name;
+	} else
+		namep = NULL;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(tid)))
+		return -EFAULT;
+
+	err = t_ident(namep, 0, &tid);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &tid,
+				  sizeof(tid));
+	return err;
+}
+
 static xnsysent_t __systab[] = {
 	[__psos_t_create] = {&__t_create, __xn_exec_init},
 	[__psos_t_start] = {&__t_start, __xn_exec_any},
 	[__psos_t_delete] = {&__t_delete, __xn_exec_conforming},
+	[__psos_t_suspend] = {&__t_suspend, __xn_exec_conforming},
+	[__psos_t_resume] = {&__t_resume, __xn_exec_any},
+	[__psos_t_ident] = {&__t_ident, __xn_exec_any},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)

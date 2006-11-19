@@ -294,13 +294,12 @@ u_long t_ident(char name[4], u_long node, u_long *tid_r)
 	psostask_t *task;
 	spl_t s;
 
-	if (xnpod_unblockable_p())
-		return -EPERM;
-
 	if (node > 1)
 		return ERR_NODENO;
 
 	if (!name) {
+		if (xnpod_unblockable_p())
+			return ERR_OBJID;
 		*tid_r = (u_long)psos_current_task();
 		return SUCCESS;
 	}
@@ -331,15 +330,19 @@ u_long t_ident(char name[4], u_long node, u_long *tid_r)
 
 u_long t_mode(u_long clrmask, u_long setmask, u_long *oldmode)
 {
+	psostask_t *task;
+
 	if (xnpod_unblockable_p())
 		return -EPERM;
 
+	task = psos_current_task();
+
 	*oldmode =
 	    xeno_mode_to_psos(xnpod_set_thread_mode
-			      (&psos_current_task()->threadbase,
+			      (&task->threadbase,
 			       psos_mode_to_xeno(clrmask),
 			       psos_mode_to_xeno(setmask)));
-	*oldmode |= ((psos_current_task()->threadbase.imask & 0x7) << 8);
+	*oldmode |= ((task->threadbase.imask & 0x7) << 8);
 
 	/* Reschedule in case the scheduler has been unlocked. */
 	xnpod_schedule();
@@ -388,11 +391,17 @@ u_long t_resume(u_long tid)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (tid == 0)
+	if (tid == 0) {
+		if (xnpod_unblockable_p()) {
+			err = -EPERM;
+			goto unlock_and_exit;
+		}
+
 		/* Would be admittedly silly, but silly code does
 		 * exist, and it's a matter of returning ERR_NOTSUSP
 		 * instead of ERR_OBJID. */
 		task = psos_current_task();
+	}
 	else {
 		task = psos_h2obj_active(tid, PSOS_TASK_MAGIC, psostask_t);
 
