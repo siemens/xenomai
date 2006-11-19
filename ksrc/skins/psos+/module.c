@@ -17,7 +17,6 @@
  * 02111-1307, USA.
  */
 
-#include <nucleus/shadow.h>
 #include <psos+/event.h>
 #include <psos+/task.h>
 #include <psos+/sem.h>
