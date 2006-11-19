@@ -155,3 +155,18 @@ u_long t_delete(u_long tid)
 {
 	return XENOMAI_SKINCALL1(__psos_muxid, __psos_t_delete, tid);
 }
+
+u_long t_suspend(u_long tid)
+{
+	return XENOMAI_SKINCALL1(__psos_muxid, __psos_t_suspend, tid);
+}
+
+u_long t_resume(u_long tid)
+{
+	return XENOMAI_SKINCALL1(__psos_muxid, __psos_t_resume, tid);
+}
+
+u_long t_ident(char name[4], u_long nodeno, u_long *tid_r)
+{
+	return XENOMAI_SKINCALL2(__psos_muxid, __psos_t_ident, name, tid_r);
+}
