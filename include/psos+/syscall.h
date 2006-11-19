@@ -26,6 +26,9 @@
 #define __psos_t_create    0
 #define __psos_t_start     1
 #define __psos_t_delete    2
+#define __psos_t_suspend   3
+#define __psos_t_resume    4
+#define __psos_t_ident     5
 
 #ifdef __KERNEL__
 
