@@ -179,3 +179,14 @@ u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio_r)
 	return XENOMAI_SKINCALL3(__psos_muxid, __psos_t_setpri,
 				 tid, newprio, oldprio_r);
 }
+
+u_long ev_send(u_long tid, u_long events)
+{
+	return XENOMAI_SKINCALL2(__psos_muxid, __psos_ev_send, tid, events);
+}
+
+u_long ev_receive(u_long events, u_long flags, u_long timeout, u_long *events_r)
+{
+	return XENOMAI_SKINCALL4(__psos_muxid, __psos_ev_receive,
+				 events, flags, timeout, events_r);
+}

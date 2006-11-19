@@ -269,6 +269,10 @@ static int __t_setpri(struct task_struct *curr, struct pt_regs *regs)
 	if (!task)
 		return ERR_OBJID;
 
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(oldprio)))
+		return -EFAULT;
+
 	newprio = __xn_reg_arg2(regs);
 
 	err = t_setpri((u_long)task, newprio, &oldprio);
@@ -276,6 +280,54 @@ static int __t_setpri(struct task_struct *curr, struct pt_regs *regs)
 	if (!err)
 		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &oldprio,
 				  sizeof(oldprio));
+
+	return err;
+}
+
+/*
+ * int __ev_send(u_long tid, u_long events)
+ */
+
+static int __ev_send(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	psostask_t *task;
+	u_long events;
+
+	if (handle)
+		task = (psostask_t *)xnregistry_fetch(handle);
+	else
+		task = __psos_task_current(curr);
+
+	if (!task)
+		return ERR_OBJID;
+
+	events = __xn_reg_arg2(regs);
+
+	return ev_send((u_long)task, events);
+}
+
+/*
+ * int __ev_receive(u_long events, u_long flags, u_long timeout, u_long *events_r)
+ */
+
+static int __ev_receive(struct task_struct *curr, struct pt_regs *regs)
+{
+	u_long err, flags, timeout, events, events_r;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(events_r)))
+		return -EFAULT;
+
+	events = __xn_reg_arg1(regs);
+	flags = __xn_reg_arg2(regs);
+	timeout = __xn_reg_arg3(regs);
+
+	err = ev_receive(events, flags, timeout, &events_r);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg4(regs), &events_r,
+				  sizeof(events_r));
 
 	return err;
 }
@@ -320,6 +372,23 @@ static int __q_create(struct task_struct *curr, struct pt_regs *regs)
 	return err;
 }
 
+/*
+ * int __q_delete(u_long qid)
+ */
+
+static int __q_delete(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	psosqueue_t *queue;
+
+	queue = (psosqueue_t *)xnregistry_fetch(handle);
+
+	if (!queue)
+		return ERR_OBJID;
+
+	return q_delete((u_long)queue);
+}
+
 static xnsysent_t __systab[] = {
 	[__psos_t_create] = {&__t_create, __xn_exec_init},
 	[__psos_t_start] = {&__t_start, __xn_exec_any},
@@ -329,7 +398,10 @@ static xnsysent_t __systab[] = {
 	[__psos_t_ident] = {&__t_ident, __xn_exec_any},
 	[__psos_t_mode] = {&__t_mode, __xn_exec_primary},
 	[__psos_t_setpri] = {&__t_setpri, __xn_exec_conforming},
+	[__psos_ev_send] = {&__ev_send, __xn_exec_any},
+	[__psos_ev_receive] = {&__ev_receive, __xn_exec_primary},
 	[__psos_q_create] = {&__q_create, __xn_exec_any},
+	[__psos_q_delete] = {&__q_delete, __xn_exec_any},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)
