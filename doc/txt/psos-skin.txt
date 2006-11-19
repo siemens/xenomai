@@ -3,7 +3,8 @@ Overview
 
 The pSOS+ (R) emulation module on top of Xenomai is currently
 available to kernel-based applications. The pSOS+ module can also be
-used over the event-driven simulation engine.
+used over the event-driven simulation engine. A direct call interface
+from user-space is under development.
 
  xeno_psos.ko: pSOS+ emulator in kernel space.
 libpsos_sim.a: pSOS+ emulation over the event-driven simulator.
@@ -73,6 +74,13 @@ error status when given.
 for an internal timer from the nucleus heap.
 
 * rn_retseg() does not check for the ERR_SEGFREE condition.
+
+* pSOS system calls invoked from user-space might return negative
+POSIX error codes under certain conditions, along with the standard
+positive pSOS codes. Make sure to always check error status codes
+throughfully, especially for system calls that might block the caller.
+E.g. ev_receive(), sm_p(), q_receive() might return -EINTR as error
+code, whenever a Linux signal is received by the blocked task.
 
 Module parameters
 =================
