@@ -33,15 +33,19 @@ void ev_destroy(psosevent_t *evgroup)
 
 u_long ev_receive(u_long events, u_long flags, u_long timeout, u_long *events_r)
 {
-	psosevent_t *evgroup;
 	u_long err = SUCCESS;
+	psosevent_t *evgroup;
+	psostask_t *task;
 	spl_t s;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	evgroup = &psos_current_task()->evgroup;
+	task = psos_current_task();
+
+	evgroup = &task->evgroup;
 
 	if (!events) {
 		*events_r = evgroup->events;
@@ -69,15 +73,16 @@ u_long ev_receive(u_long events, u_long flags, u_long timeout, u_long *events_r)
 		goto unlock_and_exit;
 	}
 
-	psos_current_task()->waitargs.evgroup.flags = flags;
-	psos_current_task()->waitargs.evgroup.events = events;
+	task->waitargs.evgroup.flags = flags;
+	task->waitargs.evgroup.events = events;
 	xnsynch_sleep_on(&evgroup->synchbase, timeout);
 
-	if (xnthread_test_flags(&psos_current_task()->threadbase, XNTIMEO)) {
-		*events_r = psos_current_task()->waitargs.evgroup.events;
+	if (xnthread_test_flags(&task->threadbase, XNBREAK))
+		err = -EINTR;
+	else if (xnthread_test_flags(&task->threadbase, XNTIMEO)) {
+		*events_r = task->waitargs.evgroup.events;
 		err = ERR_TIMEOUT;
-	} else
-		*events_r = psos_current_task()->waitargs.evgroup.events;
+	}
 
       unlock_and_exit:
 
