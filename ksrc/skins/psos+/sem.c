@@ -44,7 +44,8 @@ u_long sm_create(char name[4], u_long icount, u_long flags, u_long *smid)
 	int bflags = 0;
 	spl_t s;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	sem = (psossem_t *)xnmalloc(sizeof(*sem));
 
@@ -96,7 +97,8 @@ u_long sm_delete(u_long smid)
 	psossem_t *sem;
 	spl_t s;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -124,7 +126,8 @@ u_long sm_ident(char name[4], u_long node, u_long *smid)
 	psossem_t *sem;
 	spl_t s;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	if (node > 1)
 		return ERR_NODENO;

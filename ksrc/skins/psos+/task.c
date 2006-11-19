@@ -220,7 +220,8 @@ u_long t_restart(u_long tid, u_long targs[])
 	spl_t s;
 	int n;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -293,7 +294,8 @@ u_long t_ident(char name[4], u_long node, u_long *tid_r)
 	psostask_t *task;
 	spl_t s;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	if (node > 1)
 		return ERR_NODENO;
@@ -329,7 +331,8 @@ u_long t_ident(char name[4], u_long node, u_long *tid_r)
 
 u_long t_mode(u_long clrmask, u_long setmask, u_long *oldmode)
 {
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	*oldmode =
 	    xeno_mode_to_psos(xnpod_set_thread_mode
@@ -420,7 +423,8 @@ u_long t_suspend(u_long tid)
 	psostask_t *task;
 	spl_t s;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	if (tid == 0) {
 		xnpod_suspend_self();
@@ -456,7 +460,8 @@ u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio)
 	psostask_t *task;
 	spl_t s;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);
 

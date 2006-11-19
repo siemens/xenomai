@@ -30,14 +30,17 @@ void psosasr_cleanup(void)
 
 u_long as_catch(void (*routine) (void), u_long mode)
 {
+	psostask_t *task;
 	spl_t s;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
+	task = psos_current_task();
 	xnlock_get_irqsave(&nklock, s);
-	psos_current_task()->threadbase.asr = (xnasr_t) routine;
-	psos_current_task()->threadbase.asrmode = psos_mode_to_xeno(mode);
-	psos_current_task()->threadbase.asrimask = ((mode >> 8) & 0x7);
+	task->threadbase.asr = (xnasr_t) routine;
+	task->threadbase.asrmode = psos_mode_to_xeno(mode);
+	task->threadbase.asrimask = ((mode >> 8) & 0x7);
 	xnlock_put_irqrestore(&nklock, s);
 
 	/* The rescheduling procedure checks for pending signals. */
