@@ -17,6 +17,7 @@
  * 02111-1307, USA.
  */
 
+#include <nucleus/registry.h>
 #include <psos+/event.h>
 #include <psos+/task.h>
 #include <psos+/sem.h>
@@ -54,7 +55,7 @@ xnptree_t __psos_ptree = {
 
 void k_fatal(u_long err_code, u_long flags)
 {
-	xnpod_fatal("pSOS/vm: fatal error, code 0x%x", err_code);
+	xnpod_fatal("pSOS skin: fatal error, code 0x%x", err_code);
 }
 
 int SKIN_INIT(psos)

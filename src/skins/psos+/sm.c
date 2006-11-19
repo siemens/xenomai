@@ -17,14 +17,5 @@
  */
 
 #include <psos+/psos.h>
-#include <asm-generic/bits/bind.h>
-#include <asm-generic/bits/mlock_alert.h>
 
-int __psos_muxid = -1;
-
-static __attribute__ ((constructor))
-void __init_xeno_interface(void)
-{
-	__psos_muxid =
-	    xeno_bind_skin(PSOS_SKIN_MAGIC, "psos", "xeno_psos");
-}
+extern int __psos_muxid;

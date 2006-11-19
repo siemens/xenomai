@@ -24,6 +24,7 @@
 #include <psos+/defs.h>
 #include <psos+/task.h>
 #include <psos+/syscall.h>
+#include <psos+/queue.h>
 
 /*
  * By convention, error codes are passed back through the syscall
@@ -60,7 +61,7 @@ static psostask_t *__psos_task_current(struct task_struct *curr)
 static int __t_create(struct task_struct *curr, struct pt_regs *regs)
 {
 	xncompletion_t __user *u_completion;
-	u_long prio, flags, tid, *tid_r, err;
+	u_long prio, flags, tid, err;
 	psostask_t *task;
 	char name[5];
 
@@ -75,7 +76,7 @@ static int __t_create(struct task_struct *curr, struct pt_regs *regs)
 	curr->comm[sizeof(curr->comm) - 1] = '\0';
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(*tid_r)))
+	    (curr, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(tid)))
 		return -EFAULT;
 
 	/* Task priority. */
@@ -279,6 +280,46 @@ static int __t_setpri(struct task_struct *curr, struct pt_regs *regs)
 	return err;
 }
 
+/*
+ * int __q_create(char name[4], u_long maxnum, u_long flags, u_long *qid)
+ */
+
+static int __q_create(struct task_struct *curr, struct pt_regs *regs)
+{
+	u_long maxnum, flags, qid, err;
+	psosqueue_t *queue;
+	char name[5];
+
+	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(name)))
+		return -EFAULT;
+
+	/* Get queue name. */
+	__xn_strncpy_from_user(curr, name, (const char __user *)__xn_reg_arg1(regs),
+			       sizeof(name) - 1);
+	name[sizeof(name) - 1] = '\0';
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(qid)))
+		return -EFAULT;
+
+	/* Max message number. */
+	maxnum = __xn_reg_arg2(regs);
+	/* Queue flags. */
+	flags = __xn_reg_arg3(regs);
+
+	err = q_create(name, maxnum, flags, &qid);
+
+	if (err == SUCCESS) {
+		queue = (psosqueue_t *)qid;
+		/* Copy back the registry handle. */
+		qid = queue->handle;
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg4(regs), &qid,
+				  sizeof(qid));
+	}
+
+	return err;
+}
+
 static xnsysent_t __systab[] = {
 	[__psos_t_create] = {&__t_create, __xn_exec_init},
 	[__psos_t_start] = {&__t_start, __xn_exec_any},
@@ -288,6 +329,7 @@ static xnsysent_t __systab[] = {
 	[__psos_t_ident] = {&__t_ident, __xn_exec_any},
 	[__psos_t_mode] = {&__t_mode, __xn_exec_primary},
 	[__psos_t_setpri] = {&__t_setpri, __xn_exec_conforming},
+	[__psos_q_create] = {&__q_create, __xn_exec_any},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)

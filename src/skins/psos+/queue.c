@@ -17,14 +17,11 @@
  */
 
 #include <psos+/psos.h>
-#include <asm-generic/bits/bind.h>
-#include <asm-generic/bits/mlock_alert.h>
 
-int __psos_muxid = -1;
+extern int __psos_muxid;
 
-static __attribute__ ((constructor))
-void __init_xeno_interface(void)
+u_long q_create(char name[4], u_long maxnum, u_long flags, u_long *qid_r)
 {
-	__psos_muxid =
-	    xeno_bind_skin(PSOS_SKIN_MAGIC, "psos", "xeno_psos");
+	return XENOMAI_SKINCALL4(__psos_muxid, __psos_q_create,
+				 name, maxnum, flags, qid_r);
 }

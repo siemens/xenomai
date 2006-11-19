@@ -58,7 +58,9 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libpsos_la_LIBADD =
-am_libpsos_la_OBJECTS = libpsos_la-init.lo libpsos_la-task.lo
+am_libpsos_la_OBJECTS = libpsos_la-init.lo libpsos_la-queue.lo \
+	libpsos_la-rn.lo libpsos_la-sm.lo libpsos_la-task.lo \
+	libpsos_la-tm.lo
 libpsos_la_OBJECTS = $(am_libpsos_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/src/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
@@ -234,7 +236,11 @@ lib_LTLIBRARIES = libpsos.la
 libpsos_la_LDFLAGS = -version-info 0:0:0 -lpthread
 libpsos_la_SOURCES = \
 	init.c \
-	task.c
+	queue.c \
+	rn.c \
+	sm.c \
+	task.c \
+	tm.c
 
 libpsos_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
@@ -310,7 +316,11 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpsos_la-init.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpsos_la-queue.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpsos_la-rn.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpsos_la-sm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpsos_la-task.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpsos_la-tm.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -340,12 +350,40 @@ libpsos_la-init.lo: init.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpsos_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpsos_la-init.lo `test -f 'init.c' || echo '$(srcdir)/'`init.c
 
+libpsos_la-queue.lo: queue.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpsos_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpsos_la-queue.lo -MD -MP -MF "$(DEPDIR)/libpsos_la-queue.Tpo" -c -o libpsos_la-queue.lo `test -f 'queue.c' || echo '$(srcdir)/'`queue.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpsos_la-queue.Tpo" "$(DEPDIR)/libpsos_la-queue.Plo"; else rm -f "$(DEPDIR)/libpsos_la-queue.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='queue.c' object='libpsos_la-queue.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpsos_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpsos_la-queue.lo `test -f 'queue.c' || echo '$(srcdir)/'`queue.c
+
+libpsos_la-rn.lo: rn.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpsos_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpsos_la-rn.lo -MD -MP -MF "$(DEPDIR)/libpsos_la-rn.Tpo" -c -o libpsos_la-rn.lo `test -f 'rn.c' || echo '$(srcdir)/'`rn.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpsos_la-rn.Tpo" "$(DEPDIR)/libpsos_la-rn.Plo"; else rm -f "$(DEPDIR)/libpsos_la-rn.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rn.c' object='libpsos_la-rn.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpsos_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpsos_la-rn.lo `test -f 'rn.c' || echo '$(srcdir)/'`rn.c
+
+libpsos_la-sm.lo: sm.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpsos_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpsos_la-sm.lo -MD -MP -MF "$(DEPDIR)/libpsos_la-sm.Tpo" -c -o libpsos_la-sm.lo `test -f 'sm.c' || echo '$(srcdir)/'`sm.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpsos_la-sm.Tpo" "$(DEPDIR)/libpsos_la-sm.Plo"; else rm -f "$(DEPDIR)/libpsos_la-sm.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sm.c' object='libpsos_la-sm.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpsos_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpsos_la-sm.lo `test -f 'sm.c' || echo '$(srcdir)/'`sm.c
+
 libpsos_la-task.lo: task.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpsos_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpsos_la-task.lo -MD -MP -MF "$(DEPDIR)/libpsos_la-task.Tpo" -c -o libpsos_la-task.lo `test -f 'task.c' || echo '$(srcdir)/'`task.c; \
 @am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpsos_la-task.Tpo" "$(DEPDIR)/libpsos_la-task.Plo"; else rm -f "$(DEPDIR)/libpsos_la-task.Tpo"; exit 1; fi
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='task.c' object='libpsos_la-task.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpsos_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpsos_la-task.lo `test -f 'task.c' || echo '$(srcdir)/'`task.c
+
+libpsos_la-tm.lo: tm.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpsos_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpsos_la-tm.lo -MD -MP -MF "$(DEPDIR)/libpsos_la-tm.Tpo" -c -o libpsos_la-tm.lo `test -f 'tm.c' || echo '$(srcdir)/'`tm.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpsos_la-tm.Tpo" "$(DEPDIR)/libpsos_la-tm.Plo"; else rm -f "$(DEPDIR)/libpsos_la-tm.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='tm.c' object='libpsos_la-tm.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpsos_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpsos_la-tm.lo `test -f 'tm.c' || echo '$(srcdir)/'`tm.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
