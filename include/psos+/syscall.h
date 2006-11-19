@@ -31,7 +31,10 @@
 #define __psos_t_ident     5
 #define __psos_t_mode      6
 #define __psos_t_setpri    7
-#define __psos_q_create    8
+#define __psos_ev_send     8
+#define __psos_ev_receive  9
+#define __psos_q_create    10
+#define __psos_q_delete    11
 
 #ifdef __KERNEL__
 

@@ -25,3 +25,8 @@ u_long q_create(char name[4], u_long maxnum, u_long flags, u_long *qid_r)
 	return XENOMAI_SKINCALL4(__psos_muxid, __psos_q_create,
 				 name, maxnum, flags, qid_r);
 }
+
+u_long q_delete(u_long qid)
+{
+	return XENOMAI_SKINCALL1(__psos_muxid, __psos_q_delete, qid);
+}
