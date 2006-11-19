@@ -1170,10 +1170,10 @@ static int __wind_wd_wait(struct task_struct *curr, struct pt_regs *regs)
 
 	xnsynch_sleep_on(&wd->synchbase, XN_INFINITE);
 
-	if (xnthread_test_flags(&pTcb->threadbase, XNRMID))
-		err = -EIDRM;	/* Watchdog deleted while pending. */
-	else if (xnthread_test_flags(&pTcb->threadbase, XNBREAK))
+	if (xnthread_test_flags(&pTcb->threadbase, XNBREAK))
 		err = -EINTR;	/* Unblocked. */
+	else if (xnthread_test_flags(&pTcb->threadbase, XNRMID))
+		err = -EIDRM;	/* Watchdog deleted while pending. */
 	else
 		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
 				  &wd->wdt, sizeof(wd->wdt));
