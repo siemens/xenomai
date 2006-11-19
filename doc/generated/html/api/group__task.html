@@ -1125,7 +1125,7 @@ The following bits can be part of the bitmask:<p>
 <li>T_NOSIG disables the asynchronous signal delivery for the current task.</li></ul>
 <p>
 <ul>
-<li>T_SHIELD enables the interrupt shield for the current user-space task. When engaged, the interrupt shield protects the Xenomai task running in secondary mode from any preemption by the regular Linux interrupt handlers, without delaying in any way the Xenomai interrupt handling. The shield is operated on a per-task basis at each context switch, depending on the setting of this flag. This flag is set by default upon user-space task creation. This feature is only available if the CONFIG_XENO_OPT_ISHIELD option has been enabled at configuration time; otherwise, this flag is simply ignored.</li></ul>
+<li>T_SHIELD enables the interrupt shield for the current user-space task. When engaged, the interrupt shield protects the Xenomai task running in secondary mode from any preemption by the regular Linux interrupt handlers, without delaying in any way the Xenomai interrupt handling. The shield is operated on a per-task basis at each context switch, depending on the setting of this flag. This flag is cleared by default for new user-space tasks. This feature is only available if the CONFIG_XENO_OPT_ISHIELD option has been enabled at configuration time; otherwise, this flag is simply ignored.</li></ul>
 <p>
 <ul>
 <li>When set, T_WARNSW causes the SIGXCPU signal to be sent to the current user-space task whenever it switches to the secondary mode. This feature is useful to detect unwanted migrations to the Linux domain.</li></ul>
@@ -1994,7 +1994,7 @@ This service can be called from:<p>
 Rescheduling: always if a next equal-priority task is ready to run, otherwise, this service leads to a no-op.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Nov 5 18:53:22 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Nov 19 19:58:44 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

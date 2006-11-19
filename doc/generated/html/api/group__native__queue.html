@@ -192,6 +192,9 @@ This user-space only service retrieves the uniform descriptor of a given shared 
 <ul>
 <li>-EPERM is returned if this service should block, but was called from a context which cannot sleep (e.g. interrupt, non-realtime or scheduler locked).</li></ul>
 <p>
+<ul>
+<li>-ENOENT is returned if the special file /dev/rtheap (character-mode, major 10, minor 254) is not available from the filesystem. This device is needed to map the memory pool used by the shared queue into the caller's address space. udev-based systems should not need manual creation of such device entry.</li></ul>
+<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -848,7 +851,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Nov 5 18:53:21 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Nov 19 19:58:44 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
