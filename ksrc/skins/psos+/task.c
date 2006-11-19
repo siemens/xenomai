@@ -469,13 +469,13 @@ u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio)
 	psostask_t *task;
 	spl_t s;
 
-	if (xnpod_unblockable_p())
-		return -EPERM;
-
 	xnlock_get_irqsave(&nklock, s);
 
-	if (tid == 0)
+	if (tid == 0) {
+		if (xnpod_unblockable_p())
+			return -EPERM;
 		task = psos_current_task();
+	}
 	else {
 		task = psos_h2obj_active(tid, PSOS_TASK_MAGIC, psostask_t);
 

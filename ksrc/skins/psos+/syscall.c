@@ -250,6 +250,35 @@ static int __t_mode(struct task_struct *curr, struct pt_regs *regs)
 	return err;
 }
 
+/*
+ * int __t_setpri(u_long tid, u_long newprio, u_long *oldprio_r)
+ */
+
+static int __t_setpri(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	u_long err, newprio, oldprio;
+	psostask_t *task;
+
+	if (handle)
+		task = (psostask_t *)xnregistry_fetch(handle);
+	else
+		task = __psos_task_current(curr);
+
+	if (!task)
+		return ERR_OBJID;
+
+	newprio = __xn_reg_arg2(regs);
+
+	err = t_setpri((u_long)task, newprio, &oldprio);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &oldprio,
+				  sizeof(oldprio));
+
+	return err;
+}
+
 static xnsysent_t __systab[] = {
 	[__psos_t_create] = {&__t_create, __xn_exec_init},
 	[__psos_t_start] = {&__t_start, __xn_exec_any},
@@ -258,6 +287,7 @@ static xnsysent_t __systab[] = {
 	[__psos_t_resume] = {&__t_resume, __xn_exec_any},
 	[__psos_t_ident] = {&__t_ident, __xn_exec_any},
 	[__psos_t_mode] = {&__t_mode, __xn_exec_primary},
+	[__psos_t_setpri] = {&__t_setpri, __xn_exec_conforming},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)

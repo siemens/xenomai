@@ -176,3 +176,9 @@ u_long t_mode(u_long clrmask, u_long setmask, u_long *oldmode_r)
 	return XENOMAI_SKINCALL3(__psos_muxid, __psos_t_mode,
 				 clrmask, setmask, oldmode_r);
 }
+
+u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio_r)
+{
+	return XENOMAI_SKINCALL3(__psos_muxid, __psos_t_setpri,
+				 tid, newprio, oldprio_r);
+}
