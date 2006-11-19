@@ -202,7 +202,8 @@ static void tm_ticks_to_date(u_long *date,
 
 u_long tm_wkafter(u_long ticks)
 {
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	if (ticks > 0)
 		xnpod_delay(ticks);
@@ -214,15 +215,17 @@ u_long tm_wkafter(u_long ticks)
 
 u_long tm_evafter(u_long ticks, u_long events, u_long *tmid)
 {
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
 	return tm_start_event_timer(ticks, XN_INFINITE, events, tmid);
 }
 
 u_long tm_evevery(u_long ticks, u_long events, u_long *tmid)
 {
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
 	return tm_start_event_timer(ticks, ticks, events, tmid);
 }
 
@@ -232,7 +235,8 @@ u_long tm_cancel(u_long tmid)
 	psostm_t *tm;
 	spl_t s;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -265,7 +269,8 @@ u_long tm_evwhen(u_long date,
 	xnticks_t when, now;
 	u_long err;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	if (!xnpod_timeset_p())
 		return ERR_NOTIME;	/* Must call tm_set() first. */
@@ -288,7 +293,8 @@ u_long tm_wkwhen(u_long date, u_long time, u_long ticks)
 	xnticks_t when, now;
 	u_long err;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	if (!xnpod_timeset_p())
 		return ERR_NOTIME;	/* Must call tm_set() first. */

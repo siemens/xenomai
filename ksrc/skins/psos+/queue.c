@@ -122,7 +122,8 @@ static u_long q_create_internal(char name[4],
 	u_long rc;
 	spl_t s;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	bflags = (flags & Q_VARIABLE);
 
@@ -281,7 +282,8 @@ static u_long q_delete_internal(u_long qid, u_long flags)
 	u_long err;
 	spl_t s;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -562,7 +564,8 @@ static u_long q_ident_internal(char name[4],
 	psosqueue_t *queue;
 	spl_t s;
 
-	xnpod_check_context(XNPOD_THREAD_CONTEXT);
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	if (node > 1)
 		return ERR_NODENO;
