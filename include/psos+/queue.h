@@ -54,6 +54,12 @@ typedef struct psosqueue {
 
     xnholder_t link;  /* Link in psosqueueq */
 
+    char name[XNOBJECT_NAME_LEN];
+
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    xnhandle_t handle;
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
 #define link2psosqueue(laddr) \
 ((psosqueue_t *)(((char *)laddr) - (int)(&((psosqueue_t *)0)->link)))
 
@@ -69,8 +75,6 @@ typedef struct psosqueue {
 
     xnqueue_t inq,	/* Incoming message queue */
 	      freeq;	/* Free (cache) message queue */
-
-    char name[5];
 
 } psosqueue_t;
 

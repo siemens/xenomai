@@ -17,9 +17,6 @@
  */
 
 #include <sys/types.h>
-#include <stdio.h>
-#include <memory.h>
-#include <malloc.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <pthread.h>

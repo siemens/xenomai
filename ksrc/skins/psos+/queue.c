@@ -17,8 +17,9 @@
  * 02111-1307, USA.
  */
 
-#include "psos+/task.h"
-#include "psos+/queue.h"
+#include <nucleus/registry.h>
+#include <psos+/task.h>
+#include <psos+/queue.h>
 
 static xnqueue_t psosqueueq;
 
@@ -27,6 +28,73 @@ static xnqueue_t psoschunkq;	/* Shared chunks */
 static xnqueue_t psosmbufq;	/* Shared msg buffers (in chunks) */
 
 static u_long q_destroy_internal(psosqueue_t *queue);
+
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
+
+static int msgq_read_proc(char *page,
+			  char **start,
+			  off_t off, int count, int *eof, void *data)
+{
+	psosqueue_t *queue = (psosqueue_t *)data;
+	char *p = page;
+	int len;
+	spl_t s;
+
+	p += sprintf(p, "maxnum=%lu:maxlen=%lu:mcount=%d\n",
+		     queue->maxnum, queue->maxlen, countq(&queue->inq));
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (xnsynch_nsleepers(&queue->synchbase) > 0) {
+		xnpholder_t *holder;
+
+		/* Pended queue -- dump waiters. */
+
+		holder = getheadpq(xnsynch_wait_queue(&queue->synchbase));
+
+		while (holder) {
+			xnthread_t *sleeper = link2thread(holder, plink);
+			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
+			holder =
+			    nextpq(xnsynch_wait_queue(&queue->synchbase),
+				   holder);
+		}
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	len = (p - page) - off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+extern xnptree_t __psos_ptree;
+
+static xnpnode_t msgq_pnode = {
+
+	.dir = NULL,
+	.type = "queues",
+	.entries = 0,
+	.read_proc = &msgq_read_proc,
+	.write_proc = NULL,
+	.root = &__psos_ptree,
+};
+
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
+
+static xnpnode_t msgq_pnode = {
+
+	.type = "queues"
+};
+
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 void psosqueue_init(void)
 {
@@ -122,9 +190,6 @@ static u_long q_create_internal(char name[4],
 	u_long rc;
 	spl_t s;
 
-	if (xnpod_unblockable_p())
-		return -EPERM;
-
 	bflags = (flags & Q_VARIABLE);
 
 	if (flags & Q_PRIOR)
@@ -208,6 +273,24 @@ static u_long q_create_internal(char name[4],
 	appendq(&psosqueueq, &queue->link);
 	xnlock_put_irqrestore(&nklock, s);
 
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	{
+		static unsigned long msgq_ids;
+		u_long err;
+
+		if (!*name)
+			/* > 4 bytes: won't be reachable by q_ident() on purpose. */
+			sprintf(queue->name, "anon%lu", msgq_ids++);
+
+		err = xnregistry_enter(queue->name, queue, &queue->handle, &msgq_pnode);
+
+		if (err) {
+			q_delete((u_long)queue);
+			return err;
+		}
+	}
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
 	*qid = (u_long)queue;
 
 	xnarch_create_display(&queue->synchbase, queue->name, psosqueue);
@@ -219,9 +302,6 @@ static u_long q_destroy_internal(psosqueue_t *queue)
 {
 	xnholder_t *holder;
 	u_long err, flags;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
 
 	removeq(&psosqueueq, &queue->link);
 
@@ -236,7 +316,9 @@ static u_long q_destroy_internal(psosqueue_t *queue)
 	psos_mark_deleted(queue);
 	xnsynch_destroy(&queue->synchbase);
 
-	xnlock_put_irqrestore(&nklock, s);
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	xnregistry_remove(queue->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	if (testbits(flags, Q_NOCACHE)) {
 		/* No cache used -- return the buffers waiting to be received
@@ -250,15 +332,11 @@ static u_long q_destroy_internal(psosqueue_t *queue)
 		if (testbits(flags, Q_SHAREDINIT)) {
 			/* Buffers come from the global shared queue. */
 
-			xnlock_get_irqsave(&nklock, s);
-
 			while ((holder = getq(&queue->inq)) != NULL)
 				appendq(&psosmbufq, holder);
 
 			while ((holder = getq(&queue->freeq)) != NULL)
 				appendq(&psosmbufq, holder);
-
-			xnlock_put_irqrestore(&nklock, s);
 		} else {
 			/* Private chunks (i.e. containing all the buffers used by
 			   the queue) are directly returned to the heap manager
@@ -281,9 +359,6 @@ static u_long q_delete_internal(u_long qid, u_long flags)
 	psosqueue_t *queue;
 	u_long err;
 	spl_t s;
-
-	if (xnpod_unblockable_p())
-		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -564,9 +639,6 @@ static u_long q_ident_internal(char name[4],
 	psosqueue_t *queue;
 	spl_t s;
 
-	if (xnpod_unblockable_p())
-		return -EPERM;
-
 	if (node > 1)
 		return ERR_NODENO;
 
@@ -603,7 +675,6 @@ static u_long q_ident_internal(char name[4],
 
 u_long q_create(char name[4], u_long maxnum, u_long flags, u_long *qid)
 {
-
 	return q_create_internal(name,
 				 maxnum,
 				 sizeof(u_long[4]), flags & ~Q_VARIABLE, qid);
@@ -612,7 +683,6 @@ u_long q_create(char name[4], u_long maxnum, u_long flags, u_long *qid)
 u_long q_vcreate(char name[4],
 		 u_long flags, u_long maxnum, u_long maxlen, u_long *qid)
 {
-
 	return q_create_internal(name, maxnum, maxlen, flags | Q_VARIABLE, qid);
 }
 

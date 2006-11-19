@@ -31,6 +31,7 @@
 #define __psos_t_ident     5
 #define __psos_t_mode      6
 #define __psos_t_setpri    7
+#define __psos_q_create    8
 
 #ifdef __KERNEL__
 
