@@ -387,7 +387,7 @@ static u_long q_receive_internal(u_long qid,
 			goto unlock_and_exit;
 		}
 
-		mbuf = taskwaitargs.qmsg;
+		mbuf = task->waitargs.qmsg;
 
 		if (!mbuf)	/* Rare, but spurious wakeups might */
 			goto again;	/* occur during memory contention. */
