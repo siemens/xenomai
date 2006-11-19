@@ -222,6 +222,31 @@ static int __t_ident(struct task_struct *curr, struct pt_regs *regs)
 	if (!err)
 		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &tid,
 				  sizeof(tid));
+
+	return err;
+}
+
+/*
+ * int __t_mode(u_long clrmask, u_long setmask, u_long *oldmode_r)
+ */
+
+static int __t_mode(struct task_struct *curr, struct pt_regs *regs)
+{
+	u_long clrmask, setmask, oldmode, err;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(oldmode)))
+		return -EFAULT;
+
+	clrmask = __xn_reg_arg1(regs);
+	setmask = __xn_reg_arg2(regs);
+
+	err = t_mode(clrmask, setmask, &oldmode);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &oldmode,
+				  sizeof(oldmode));
+
 	return err;
 }
 
@@ -232,6 +257,7 @@ static xnsysent_t __systab[] = {
 	[__psos_t_suspend] = {&__t_suspend, __xn_exec_conforming},
 	[__psos_t_resume] = {&__t_resume, __xn_exec_any},
 	[__psos_t_ident] = {&__t_ident, __xn_exec_any},
+	[__psos_t_mode] = {&__t_mode, __xn_exec_primary},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)

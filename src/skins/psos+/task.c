@@ -170,3 +170,9 @@ u_long t_ident(char name[4], u_long nodeno, u_long *tid_r)
 {
 	return XENOMAI_SKINCALL2(__psos_muxid, __psos_t_ident, name, tid_r);
 }
+
+u_long t_mode(u_long clrmask, u_long setmask, u_long *oldmode_r)
+{
+	return XENOMAI_SKINCALL3(__psos_muxid, __psos_t_mode,
+				 clrmask, setmask, oldmode_r);
+}

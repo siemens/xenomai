@@ -29,6 +29,7 @@
 #define __psos_t_suspend   3
 #define __psos_t_resume    4
 #define __psos_t_ident     5
+#define __psos_t_mode      6
 
 #ifdef __KERNEL__
 
