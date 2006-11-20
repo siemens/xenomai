@@ -438,6 +438,8 @@ u_long t_suspend(u_long tid)
 
 	if (tid == 0) {
 		xnpod_suspend_self();
+		if (xnthread_test_flags(&psos_current_task()->threadbase, XNBREAK))
+		    return -EINTR;
 		return SUCCESS;
 	}
 
@@ -456,6 +458,9 @@ u_long t_suspend(u_long tid)
 	}
 
 	xnpod_suspend_thread(&task->threadbase, XNSUSP, XN_INFINITE, NULL);
+
+	if (xnthread_test_flags(&task->threadbase, XNBREAK))
+		err = -EINTR;
 
       unlock_and_exit:
 
