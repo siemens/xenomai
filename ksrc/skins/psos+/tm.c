@@ -205,8 +205,11 @@ u_long tm_wkafter(u_long ticks)
 	if (xnpod_unblockable_p())
 		return -EPERM;
 
-	if (ticks > 0)
+	if (ticks > 0) {
 		xnpod_delay(ticks);
+		if (xnthread_test_flags(&psos_current_task()->threadbase, XNBREAK))
+		    return -EINTR;
+	}
 	else
 		xnpod_yield();	/* Perform manual round-robin */
 
@@ -310,6 +313,9 @@ u_long tm_wkwhen(u_long date, u_long time, u_long ticks)
 		return ERR_TOOLATE;
 
 	xnpod_delay(when - now);
+
+	if (xnthread_test_flags(&psos_current_task()->threadbase, XNBREAK))
+	    return -EINTR;
 
 	return SUCCESS;
 }

@@ -421,6 +421,9 @@ void sc_tsuspend(int tid, int opt, int *errp)
 
 				xnpod_suspend_thread(&task->threadbase,
 						     XNSUSP, XN_INFINITE, NULL);
+
+				if (xnthread_test_flags(&task->threadbase, XNBREAK))
+					*errp = -EINTR;
 			}
 		}
 
@@ -452,6 +455,10 @@ void sc_tsuspend(int tid, int opt, int *errp)
 	*errp = RET_OK;
 
 	xnpod_suspend_thread(&task->threadbase, XNSUSP, XN_INFINITE, NULL);
+
+	if (xnthread_test_flags(&task->threadbase, XNBREAK))
+		*errp = -EINTR;
+
       unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);

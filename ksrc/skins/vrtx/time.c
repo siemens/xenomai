@@ -72,8 +72,11 @@ void sc_stime(unsigned long time)
 void sc_delay(long ticks)
 {
 	if (ticks > 0) {
-		vrtx_current_task()->vrtxtcb.TCBSTAT = TBSDELAY;
+		vrtxtask_t *task = vrtx_current_task();
+		task->vrtxtcb.TCBSTAT = TBSDELAY;
 		xnpod_delay(ticks);
+		/* XNBREAK can only be checked in syscall.c due to
+		 * call protoype. */
 	} else
 		xnpod_yield();	/* Perform manual round-robin */
 }
@@ -92,8 +95,11 @@ void sc_adelay(struct timespec time, int *errp)
 	*errp = RET_OK;
 
 	if (etime > now) {
-		vrtx_current_task()->vrtxtcb.TCBSTAT = TBSADELAY;
+		vrtxtask_t *task = vrtx_current_task();
+		task->vrtxtcb.TCBSTAT = TBSADELAY;
 		xnpod_delay(etime - now);
+		if (xnthread_test_flags(&task->threadbase, XNBREAK))
+		    *errp = -EINTR;
 	} else
 		xnpod_yield();	/* Perform manual round-robin */
 }

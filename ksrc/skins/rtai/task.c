@@ -187,9 +187,13 @@ int __rtai_task_suspend(RT_TASK *task)
 		goto unlock_and_exit;
 	}
 
-	if (task->suspend_depth++ == 0)
+	if (task->suspend_depth++ == 0) {
 		xnpod_suspend_thread(&task->thread_base,
 				     XNSUSP, XN_INFINITE, NULL);
+		if (xnthread_test_flags(&task->thread_base, XNBREAK))
+		    err = -EINTR;
+	}
+
       unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);

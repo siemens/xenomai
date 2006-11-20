@@ -1,3 +1,17 @@
+2006-11-20  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/psos+/tm.c (tm_wkafter, tm_wkwhen, t_suspend): 
+	Check for XNBREAK condition.
+
+	* ksrc/skins/rtai/task.c (__rtai_task_suspend): 
+	Check for XNBREAK condition.
+
+	* ksrc/skins/vrtx/task.c (sc_tsuspend, sc_delay, sc_adelay): 
+	Check for XNBREAK condition.
+
+	* ksrc/skins/vxworks/taskLib.c (taskSuspend, taskDeleteForce):
+	Check for XNBREAK condition.
+
 2006-11-19  Philippe Gerum  <rpm@xenomai.org>
 
  	* RELEASE: Xenomai 2.3-rc2
