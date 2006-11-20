@@ -236,7 +236,10 @@ static int __sc_unlock(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_delay(struct task_struct *curr, struct pt_regs *regs)
 {
+	vrtxtask_t *task = vrtx_current_task();
 	sc_delay(__xn_reg_arg1(regs));
+	if (xnthread_test_flags(&task->threadbase, XNBREAK))
+		return -EINTR;
 	return 0;
 }
 

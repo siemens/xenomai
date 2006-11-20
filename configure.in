@@ -75,9 +75,6 @@ case "$host" in
  bfin-*|bfinnommu-*|blackfin-*)
 	XENO_TARGET_ARCH=blackfin
         XENO_LINUX_ARCH=bfinnommu
-	if test x$enable_shared = xyes; then
-	   AC_MSG_ERROR([Shared libraries unsupported -- reconfigure passing --disable-shared])
-	fi
         ;;
  arm-*)
  	XENO_TARGET_ARCH=arm
@@ -535,10 +532,9 @@ case $XENO_TARGET_ARCH in
 	XENO_USER_LDFLAGS="-rdynamic"
         ;;
  blackfin)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
-	# uClinux wants flat format executables; assume that our
-	# source format is ELF.
-	XENO_USER_LDFLAGS="-Wl,-elf2flt"
+	# Produce libraries in FDPIC format.
+	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -mfdpic"
+	XENO_USER_LDFLAGS="$XENO_USER_CFLAGS -mfdpic"
         ;;
  arm)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"

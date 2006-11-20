@@ -1,3 +1,14 @@
+2006-11-20  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/rtai/task.c (__rtai_task_suspend): 
+	Check for XNBREAK condition.
+
+	* ksrc/skins/vrtx/task.c (sc_tsuspend, sc_delay, sc_adelay): 
+	Check for XNBREAK condition.
+
+	* ksrc/skins/vxworks/taskLib.c (taskSuspend, taskDeleteForce):
+	Check for XNBREAK condition.
+
 2006-11-17  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (do_taskexit_event): Make sure to force a

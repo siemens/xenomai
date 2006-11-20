@@ -311,6 +311,9 @@ STATUS taskSuspend(TASK_ID task_id)
 
 	if (task_id == 0) {
 		xnpod_suspend_self();
+		error_check(xnthread_test_flags
+			    (&wind_current_task()->threadbase, XNBREAK), -EINTR,
+			    return ERROR);
 		return OK;
 	}
 
@@ -320,6 +323,9 @@ STATUS taskSuspend(TASK_ID task_id)
 			   goto error);
 
 	xnpod_suspend_thread(&task->threadbase, XNSUSP, XN_INFINITE, NULL);
+
+	error_check(xnthread_test_flags(&task->threadbase, XNBREAK), -EINTR,
+		    goto error);
 
 	xnlock_put_irqrestore(&nklock, s);
 

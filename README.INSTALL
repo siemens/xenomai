@@ -270,12 +270,11 @@ $ cd $linux_tree
 $ make ARCH=bfinnommu CROSS_COMPILE=bfin-uclinux- xconfig/gconfig/menuconfig # select the kernel and Xenomai options
 $ make ARCH=bfinnommu CROSS_COMPILE=bfin-uclinux- bzImage modules # then install as needed
 $ mkdir $build_root && cd $build_root
-$ $xenomai_root/configure --build=i686-pc-linux-gnu --host=bfinnommu-unknown-linux-gnu CC=bfin-uclinux-gcc CXX=bfin-uclinux-gcc AR=bfin-uclinux-ar LD=bfin-uclinux-ld --disable-shared
+$ $xenomai_root/configure --build=i686-pc-linux-gnu --host=bfinnommu-unknown-linux-gnu CC=bfin-uclinux-gcc CXX=bfin-uclinux-gcc AR=bfin-uclinux-ar LD=bfin-uclinux-ld
 $ make install
-
-CAUTION: note the --disabled-shared flag configuring out the shared
-library support, which is unavailable for this architecture.
 
 You may also want to have a look at this hands-on description about
 configuring and building a Xenomai system for the Blackfin
 architecture: http://docs.blackfin.uclinux.org/doku.php?id=adeos
+
+NOTE: Xenomai uses the FDPIC library format.
