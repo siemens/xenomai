@@ -1,3 +1,8 @@
+2006-11-23    <gilles.chanteperdrix@laposte.net>
+
+	* src/skins/posix/thread.c (__pthread_trampoline): Do not use
+	iargs->policy after having posted the semaphore.
+
 2006-11-20  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/psos+/tm.c (tm_wkafter, tm_wkwhen, t_suspend): 
