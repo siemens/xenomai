@@ -30,3 +30,77 @@ u_long q_delete(u_long qid)
 {
 	return XENOMAI_SKINCALL1(__psos_muxid, __psos_q_delete, qid);
 }
+
+u_long q_ident(char name[4], u_long nodeno, u_long *qid_r)
+{
+	return XENOMAI_SKINCALL2(__psos_muxid, __psos_q_ident, name, qid_r);
+}
+
+u_long q_receive(u_long qid, u_long flags, u_long timeout, u_long msgbuf_r[4])
+{
+	return XENOMAI_SKINCALL4(__psos_muxid, __psos_q_receive,
+				 qid, flags, timeout, msgbuf_r);
+}
+
+u_long q_send(u_long qid, u_long msgbuf[4])
+{
+	return XENOMAI_SKINCALL2(__psos_muxid, __psos_q_send, qid, msgbuf);
+}
+
+u_long q_urgent(u_long qid, u_long msgbuf[4])
+{
+	return XENOMAI_SKINCALL2(__psos_muxid, __psos_q_urgent, qid, msgbuf);
+}
+
+u_long q_broadcast(u_long qid, u_long msgbuf[4], u_long *count_r)
+{
+	return XENOMAI_SKINCALL3(__psos_muxid, __psos_q_broadcast, qid,
+				 msgbuf, count_r);
+}
+
+u_long q_vcreate(char name[4], u_long flags, u_long maxnum,
+		 u_long maxlen, u_long *qid_r)
+{
+	return XENOMAI_SKINCALL5(__psos_muxid, __psos_q_vcreate,
+				 name, maxnum, maxlen, flags, qid_r);
+}
+
+u_long q_vdelete(u_long qid)
+{
+	return XENOMAI_SKINCALL1(__psos_muxid, __psos_q_vdelete, qid);
+}
+
+u_long q_vident(char name[4], u_long node, u_long *qid_r)
+{
+	return XENOMAI_SKINCALL2(__psos_muxid, __psos_q_vident, name, qid_r);
+}
+
+u_long q_vreceive(u_long qid, u_long flags, u_long timeout,
+		  void *msgbuf_r, u_long buflen, u_long *msglen_r)
+{
+	struct {
+		u_long flags;
+		u_long timeout;
+	} modifiers;	/* Combine to fit into available arg space (i.e. 5) */
+	return XENOMAI_SKINCALL5(__psos_muxid, __psos_q_vreceive,
+				 qid, &modifiers, msgbuf_r, buflen, msglen_r);
+}
+
+u_long q_vsend(u_long qid, void *msgbuf, u_long msglen)
+{
+	return XENOMAI_SKINCALL3(__psos_muxid, __psos_q_vsend, qid,
+				 msgbuf, msglen);
+}
+
+u_long q_vurgent(u_long qid, void *msgbuf, u_long msglen)
+{
+	return XENOMAI_SKINCALL3(__psos_muxid, __psos_q_vurgent, qid,
+				 msgbuf, msglen);
+}
+
+u_long q_vbroadcast(u_long qid, void *msgbuf, u_long msglen,
+		    u_long *count_r)
+{
+	return XENOMAI_SKINCALL4(__psos_muxid, __psos_q_vbroadcast, qid,
+				 msgbuf, msglen, count_r);
+}

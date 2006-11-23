@@ -23,18 +23,30 @@
 #include <asm/xenomai/syscall.h>
 #endif /* __XENO_SIM__ */
 
-#define __psos_t_create    0
-#define __psos_t_start     1
-#define __psos_t_delete    2
-#define __psos_t_suspend   3
-#define __psos_t_resume    4
-#define __psos_t_ident     5
-#define __psos_t_mode      6
-#define __psos_t_setpri    7
-#define __psos_ev_send     8
-#define __psos_ev_receive  9
-#define __psos_q_create    10
-#define __psos_q_delete    11
+#define __psos_t_create     0
+#define __psos_t_start      1
+#define __psos_t_delete     2
+#define __psos_t_suspend    3
+#define __psos_t_resume     4
+#define __psos_t_ident      5
+#define __psos_t_mode       6
+#define __psos_t_setpri     7
+#define __psos_ev_send      8
+#define __psos_ev_receive   9
+#define __psos_q_create     10
+#define __psos_q_delete     11
+#define __psos_q_ident      12
+#define __psos_q_receive    13
+#define __psos_q_send       14
+#define __psos_q_urgent     15
+#define __psos_q_broadcast  16
+#define __psos_q_vcreate    11
+#define __psos_q_vdelete    12
+#define __psos_q_vident     13
+#define __psos_q_vreceive   14
+#define __psos_q_vsend      15
+#define __psos_q_vurgent    16
+#define __psos_q_vbroadcast 17
 
 #ifdef __KERNEL__
 
