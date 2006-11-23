@@ -84,6 +84,7 @@ static void *__pthread_trampoline(void *arg)
 	pthread_t tid = pthread_self();
 	struct sched_param param;
 	void *status = NULL;
+	int policy;
 	long err;
 
 	signal(SIGCHLD, &__pthread_sigharden_handler);
@@ -92,7 +93,8 @@ static void *__pthread_trampoline(void *arg)
 	   passed to pthread_create(3), so we force the scheduling policy
 	   once again here. */
 	param.sched_priority = iargs->prio;
-	__real_pthread_setschedparam(tid, iargs->policy, &param);
+	policy = iargs->policy;
+	__real_pthread_setschedparam(tid, policy, &param);
 
 	/* Do _not_ inline the call to pthread_self() in the syscall
 	   macro: this trashes the syscall regs on some archs. */
@@ -110,7 +112,7 @@ static void *__pthread_trampoline(void *arg)
 	__real_sem_post(&iargs->sync);
 
 	if (!err) {
-		if (iargs->policy != SCHED_OTHER)
+		if (policy != SCHED_OTHER)
 			XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 		status = start(cookie);
 	} else
