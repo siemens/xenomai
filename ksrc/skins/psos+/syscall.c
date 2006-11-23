@@ -708,6 +708,8 @@ static int __q_vreceive(struct task_struct *curr, struct pt_regs *regs)
 		if (msgbuf == NULL)
 			return -ENOMEM;
 	} else
+		/* Optimize a bit: if the message can fit in a small
+		 * temp buffer in stack space, use the latter. */
 		msgbuf = tmp_buf;
 	
 	err = q_vreceive((u_long)queue, flags, timeout, msgbuf, buflen, &msglen);
@@ -721,6 +723,139 @@ static int __q_vreceive(struct task_struct *curr, struct pt_regs *regs)
 
 	if (msgbuf != tmp_buf)
 		xnfree(msgbuf);
+
+	return err;
+}
+
+/*
+ * int __q_vsend(u_long qid, void *msgbuf, u_long msglen)
+ */
+
+static int __q_vsend(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	u_long msglen, err;
+	psosqueue_t *queue;
+	char tmp_buf[64];
+	void *msgbuf;
+
+	queue = (psosqueue_t *)xnregistry_fetch(handle);
+
+	if (!queue)
+		return ERR_OBJID;
+
+	msglen = __xn_reg_arg3(regs);
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_READ, __xn_reg_arg2(regs), msglen))
+		return -EFAULT;
+
+	if (msglen > sizeof(tmp_buf)) {
+		msgbuf = xnmalloc(msglen);
+		if (msgbuf == NULL)
+			return -ENOMEM;
+	} else
+		/* Optimize a bit: if the message can fit in a small
+		 * temp buffer in stack space, use the latter. */
+		msgbuf = tmp_buf;
+	
+	__xn_copy_from_user(curr, msgbuf, (void __user *)__xn_reg_arg2(regs),
+			    msglen);
+
+	err = q_vsend((u_long)queue, msgbuf, msglen);
+
+	if (msgbuf != tmp_buf)
+		xnfree(msgbuf);
+
+	return err;
+}
+
+/*
+ * int __q_vurgent(u_long qid, void *msgbuf, u_long msglen)
+ */
+
+static int __q_vurgent(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	u_long msglen, err;
+	psosqueue_t *queue;
+	char tmp_buf[64];
+	void *msgbuf;
+
+	queue = (psosqueue_t *)xnregistry_fetch(handle);
+
+	if (!queue)
+		return ERR_OBJID;
+
+	msglen = __xn_reg_arg3(regs);
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_READ, __xn_reg_arg2(regs), msglen))
+		return -EFAULT;
+
+	if (msglen > sizeof(tmp_buf)) {
+		msgbuf = xnmalloc(msglen);
+		if (msgbuf == NULL)
+			return -ENOMEM;
+	} else
+		/* Optimize a bit: if the message can fit in a small
+		 * temp buffer in stack space, use the latter. */
+		msgbuf = tmp_buf;
+	
+	__xn_copy_from_user(curr, msgbuf, (void __user *)__xn_reg_arg2(regs),
+			    msglen);
+
+	err = q_vurgent((u_long)queue, msgbuf, msglen);
+
+	if (msgbuf != tmp_buf)
+		xnfree(msgbuf);
+
+	return err;
+}
+
+/*
+ * int __q_vbroadcast(u_long qid, void *msgbuf, u_long msglen, u_long *count_r)
+ */
+
+static int __q_vbroadcast(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	u_long msglen, count, err;
+	psosqueue_t *queue;
+	char tmp_buf[64];
+	void *msgbuf;
+
+	queue = (psosqueue_t *)xnregistry_fetch(handle);
+
+	if (!queue)
+		return ERR_OBJID;
+
+	msglen = __xn_reg_arg3(regs);
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_READ, __xn_reg_arg2(regs), msglen))
+		return -EFAULT;
+
+	if (msglen > sizeof(tmp_buf)) {
+		msgbuf = xnmalloc(msglen);
+		if (msgbuf == NULL)
+			return -ENOMEM;
+	} else
+		/* Optimize a bit: if the message can fit in a small
+		 * temp buffer in stack space, use the latter. */
+		msgbuf = tmp_buf;
+	
+	__xn_copy_from_user(curr, msgbuf, (void __user *)__xn_reg_arg2(regs),
+			    msglen);
+
+	err = q_vbroadcast((u_long)queue, msgbuf, msglen, &count);
+
+	if (msgbuf != tmp_buf)
+		xnfree(msgbuf);
+
+	if (err == SUCCESS)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg4(regs), &count,
+				  sizeof(count));
 
 	return err;
 }
@@ -747,11 +882,9 @@ static xnsysent_t __systab[] = {
 	[__psos_q_vdelete] = {&__q_vdelete, __xn_exec_any},
 	[__psos_q_vident] = {&__q_vident, __xn_exec_any},
 	[__psos_q_vreceive] = {&__q_vreceive, __xn_exec_primary},
-#if 0
 	[__psos_q_vsend] = {&__q_vsend, __xn_exec_any},
 	[__psos_q_vurgent] = {&__q_vurgent, __xn_exec_any},
 	[__psos_q_vbroadcast] = {&__q_vbroadcast, __xn_exec_any},
-#endif
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)
