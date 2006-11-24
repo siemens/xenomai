@@ -1,6 +1,6 @@
 SUBDIRS = include vmutils vm adapter gcic tkimg scope nucleus skins
 
-EXTRA_DIST = Kconfig doc
+EXTRA_DIST = doc
 
 dist-hook:
 #	rm -fr $(distdir)/include/xenomai $(distdir)/include/asm
