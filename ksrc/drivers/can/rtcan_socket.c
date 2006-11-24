@@ -48,6 +48,9 @@ void rtcan_socket_init(struct rtdm_dev_context *context)
     sock->flist = NULL;
     sock->err_mask = 0;
     sock->rx_buf_full = 0;
+#ifdef CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK
+    sock->tx_loopback = 1;
+#endif
 
     sock->tx_timeout = RTDM_TIMEOUT_INFINITE;
     sock->rx_timeout = RTDM_TIMEOUT_INFINITE;

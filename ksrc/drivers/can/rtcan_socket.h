@@ -38,7 +38,7 @@
 
 
 /* This MUST BE 2^N */
-#define RTCAN_RXBUF_SIZE    CONFIG_XENO_DRIVERS_RTCAN_RXBUF_SIZE
+#define RTCAN_RXBUF_SIZE    CONFIG_XENO_DRIVERS_CAN_RXBUF_SIZE
 
 /* Size of timestamp */
 #define TIMESTAMP_SIZE      sizeof(nanosecs_abs_t)
@@ -167,6 +167,10 @@ struct rtcan_socket {
     uint32_t            rx_buf_full;
 
     struct rtcan_filter_list *flist;
+
+#ifdef CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK
+    int tx_loopback;
+#endif
 };
 
 

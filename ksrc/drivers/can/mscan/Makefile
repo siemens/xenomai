@@ -4,9 +4,9 @@ ifeq ($(PATCHLEVEL),6)
 
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai -Idrivers/xenomai/can -Idrivers/xenomai/can/mscan
 
-obj-$(CONFIG_XENO_DRIVERS_RTCAN_MSCAN) += xeno_rtcan_mscan.o
+obj-$(CONFIG_XENO_DRIVERS_CAN_MSCAN) += xeno_can_mscan.o
 
-xeno_rtcan_mscan-y := rtcan_mscan.o rtcan_mscan_proc.o
+xeno_can_mscan-y := rtcan_mscan.o rtcan_mscan_proc.o
 
 else
 
@@ -14,19 +14,19 @@ else
 
 O_TARGET := built-in.o
 
-obj-$(CONFIG_XENO_DRIVERS_RTCAN_MSCAN) := xeno_rtcan_mscan.o 
+obj-$(CONFIG_XENO_DRIVERS_CAN_MSCAN) := xeno_can_mscan.o 
 
-list-multi := xeno_rtcan_mscan.o 
+list-multi := xeno_can_mscan.o 
 
-xeno_rtcan_mscan-objs := rtcan_mscan.o rtcan_mscan_proc.o
+xeno_can_mscan-objs := rtcan_mscan.o rtcan_mscan_proc.o
 
-export-objs := $(xeno_rtcan_mscan-objs)
+export-objs := $(xeno_can_mscan-objs)
 
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat -I..
 
 include $(TOPDIR)/Rules.make
 
-xeno_rtcan_mscan.o: $(xeno_rtcan_mscan-objs)
-	$(LD) -r -o $@ $(xeno_rtcan_mscan-objs)
+xeno_can_mscan.o: $(xeno_can_mscan-objs)
+	$(LD) -r -o $@ $(xeno_can_mscan-objs)
 
 endif

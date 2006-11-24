@@ -20,7 +20,8 @@ static void print_usage(char *prg)
 	    " -f  --filter=id:mask[:id:mask]... apply filter\n"
 	    " -e  --error=mask      receive error messages\n"
 	    " -t, --timeout=MS      timeout in ms\n"
-	    " -T, --timestamp       with timestamp\n"
+	    " -T, --timestamp       with absolute timestamp\n"
+	    " -R, --timestamp-rel   with relative timestamp\n"
 	    " -v, --verbose         be verbose\n"
 	    " -p, --print=MODULO    print every MODULO message\n"
 	    " -h, --help            this help\n",
@@ -31,7 +32,7 @@ static void print_usage(char *prg)
 extern int optind, opterr, optopt;
 
 static int s = -1, verbose = 0, print = 1;
-static nanosecs_rel_t timeout = 0, with_timestamp = 0;
+static nanosecs_rel_t timeout = 0, with_timestamp = 0, timestamp_rel = 0;
 
 RT_TASK rt_task_desc;
 
@@ -87,7 +88,7 @@ void rt_task(void)
     socklen_t addrlen = sizeof(addr);
     struct msghdr msg;
     struct iovec iov;
-    nanosecs_abs_t timestamp;
+    nanosecs_abs_t timestamp, timestamp_prev = 0;
 
     if (with_timestamp) {
 	msg.msg_iov = &iov;
@@ -124,8 +125,13 @@ void rt_task(void)
 
 	if (print && (count % print) == 0) {
 	    printf("#%d: (%d) ", count, addr.can_ifindex);
-	    if (with_timestamp && msg.msg_controllen)
-		printf("%lldns ", timestamp);
+	    if (with_timestamp && msg.msg_controllen) {
+		if (timestamp_rel) {
+		    printf("%lldns ", timestamp - timestamp_prev);
+		    timestamp_prev = timestamp;
+		} else
+		    printf("%lldns ", timestamp);
+	    }
 	    if (frame.can_id & CAN_ERR_FLAG)
 		printf("!0x%08x!", frame.can_id & CAN_ERR_MASK);
 	    else if (frame.can_id & CAN_EFF_FLAG)
@@ -168,6 +174,7 @@ int main(int argc, char **argv)
 	{ "error", required_argument, 0, 'e'},
 	{ "timeout", required_argument, 0, 't'},
 	{ "timestamp", no_argument, 0, 'T'},
+	{ "timestamp-rel", no_argument, 0, 'R'},
 	{ 0, 0, 0, 0},
     };
 
@@ -176,7 +183,7 @@ int main(int argc, char **argv)
     signal(SIGTERM, cleanup_and_exit);
     signal(SIGINT, cleanup_and_exit);
 
-    while ((opt = getopt_long(argc, argv, "hve:f:t:p:T",
+    while ((opt = getopt_long(argc, argv, "hve:f:t:p:RT",
 			      long_options, NULL)) != -1) {
 	switch (opt) {
 	case 'h':
@@ -217,6 +224,8 @@ int main(int argc, char **argv)
 	    timeout = (nanosecs_rel_t)strtoul(optarg, NULL, 0) * 1000000;
 	    break;
 
+	case 'R':
+	    timestamp_rel = 1;
 	case 'T':
 	    with_timestamp = 1;
 	    break;
@@ -242,11 +251,11 @@ int main(int argc, char **argv)
     } else {
 	if (verbose)
 	    printf("interface %s\n", argv[optind]);
-	
+
 	strncpy(ifr.ifr_name, argv[optind], IFNAMSIZ);
 	if (verbose)
 	    printf("s=%d, ifr_name=%s\n", s, ifr.ifr_name);
-	
+
 	ret = rt_dev_ioctl(s, SIOCGIFINDEX, &ifr);
 	if (ret < 0) {
 	    fprintf(stderr, "rt_dev_ioctl GET_IFINDEX: %s\n", strerror(-ret));

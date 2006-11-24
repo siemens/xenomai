@@ -34,10 +34,9 @@
 #define LIST_POISON1  ((void *) 0x0)
 #endif
 
-#ifdef CONFIG_RTCAN_CHECKED
+#ifdef CONFIG_XENO_DRIVERS_CAN_DEBUG
 #define RTCAN_ASSERT(expr, func) \
-    if (!(expr)) \
-    { \
+    if (!(expr)) { \
         rtdm_printk("Assertion failed! %s:%s:%d %s\n", \
         __FILE__, __FUNCTION__, __LINE__, (#expr)); \
         func \
@@ -108,7 +107,7 @@
 
 #endif /* CONFIG_PROC_FS */
 
-#ifdef CONFIG_XENO_DRIVERS_RTCAN_DEBUG
+#ifdef CONFIG_XENO_DRIVERS_CAN_DEBUG
 # define RTCAN_DBG(fmt,args...) do { printk(fmt ,##args); } while (0)
 # define RTCAN_RTDM_DBG(fmt,args...) do { rtdm_printk(fmt ,##args); } while (0)
 #else

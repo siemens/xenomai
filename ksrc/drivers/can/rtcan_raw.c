@@ -59,6 +59,9 @@ MODULE_AUTHOR("RT-Socket-CAN Development Team");
 MODULE_DESCRIPTION("RTDM CAN raw socket device driver");
 MODULE_LICENSE("GPL");
 
+void rtcan_tx_push(struct rtcan_device *dev, struct rtcan_socket *sock,
+		   can_frame_t *frame);
+
 static struct rtdm_device rtcan_proto_raw_dev;
 
 
@@ -68,7 +71,7 @@ static inline int rtcan_accept_msg(uint32_t can_id, can_filter_t *filter)
 }
 
 
-static inline void rtcan_rcv_deliver(struct rtcan_recv *recv_listener, 
+static void rtcan_rcv_deliver(struct rtcan_recv *recv_listener, 
 				     struct rtcan_skb *skb)
 {
     int size_free;
@@ -127,9 +130,14 @@ static inline void rtcan_rcv_deliver(struct rtcan_recv *recv_listener,
 
 void rtcan_rcv(struct rtcan_device *dev, struct rtcan_skb *skb)
 {
+    nanosecs_abs_t timestamp = rtdm_clock_read();
     /* Entry in reception list, begin with head */
     struct rtcan_recv *recv_listener = dev->recv_list;
     struct rtcan_rb_frame *frame = &skb->rb_frame;
+
+    /* Copy timestamp to skb */
+    memcpy((void *)&skb->rb_frame + skb->rb_frame_size,
+	   &timestamp, TIMESTAMP_SIZE);
 
     if ((frame->can_id & CAN_ERR_FLAG)) {
 	dev->err_count++;
@@ -151,6 +159,53 @@ void rtcan_rcv(struct rtcan_device *dev, struct rtcan_skb *skb)
 	}
     }
 }
+
+#ifdef CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK
+
+void rtcan_tx_push(struct rtcan_device *dev, struct rtcan_socket *sock,
+		   can_frame_t *frame)
+{
+    struct rtcan_rb_frame *rb_frame = &dev->tx_skb.rb_frame;
+
+    RTCAN_ASSERT(dev->tx_socket == 0,
+		 rtdm_printk("(%d) TX skb still in use", dev->ifindex););
+
+    rb_frame->can_id = frame->can_id;
+    rb_frame->can_dlc = frame->can_dlc;
+    dev->tx_skb.rb_frame_size = EMPTY_RB_FRAME_SIZE;
+    if (frame->can_dlc && !(frame->can_id & CAN_RTR_FLAG)) {
+	memcpy(rb_frame->data, frame->data, frame->can_dlc);
+	dev->tx_skb.rb_frame_size += frame->can_dlc;
+    }
+    rb_frame->can_ifindex = dev->ifindex;
+    dev->tx_socket = sock;
+}
+
+void rtcan_tx_loopback(struct rtcan_device *dev)
+{
+    nanosecs_abs_t timestamp = rtdm_clock_read();
+    /* Entry in reception list, begin with head */
+    struct rtcan_recv *recv_listener = dev->recv_list;
+    struct rtcan_rb_frame *frame = &dev->tx_skb.rb_frame;
+
+    memcpy((void *)&dev->tx_skb.rb_frame + dev->tx_skb.rb_frame_size,
+	   &timestamp, TIMESTAMP_SIZE);
+
+    while (recv_listener != NULL) {
+	dev->rx_count++;
+	if ((dev->tx_socket != recv_listener->sock) &&
+	    rtcan_accept_msg(frame->can_id, &recv_listener->can_filter)) {
+	    recv_listener->match_count++;
+	    rtcan_rcv_deliver(recv_listener, &dev->tx_skb);
+	}
+	recv_listener = recv_listener->next;
+    }
+    dev->tx_socket = NULL;
+}
+
+EXPORT_SYMBOL_GPL(rtcan_tx_loopback);
+
+#endif /* CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK */
 
 
 int rtcan_raw_socket(struct rtdm_dev_context *context,
@@ -252,7 +307,7 @@ static int rtcan_raw_setsockopt(struct rtdm_dev_context *context,
     rtdm_lockctx_t lock_ctx;
     can_err_mask_t err_mask;
     int flistlen;
-    int ret = 0;
+    int val, ret = 0;
 
     if (so->level != SOL_CAN_RAW)
         return -ENOPROTOOPT;
@@ -304,7 +359,7 @@ static int rtcan_raw_setsockopt(struct rtdm_dev_context *context,
 	break;
 
     case CAN_RAW_ERR_FILTER:
-	
+
 	if (so->optlen != sizeof(can_err_mask_t))
 	    return -EINVAL;
 
@@ -321,11 +376,31 @@ static int rtcan_raw_setsockopt(struct rtdm_dev_context *context,
 	rtdm_lock_put_irqrestore(&rtcan_recv_list_lock, lock_ctx);
 
 	break;
-	
+
+    case CAN_RAW_TX_LOOPBACK:
+
+	if (so->optlen != sizeof(int))
+	    return -EINVAL;
+
+	if (user_info) {
+	    if (!rtdm_read_user_ok(user_info, so->optval, so->optlen) ||
+		rtdm_copy_from_user(user_info, &val, so->optval, so->optlen))
+		return -EFAULT;
+	} else
+	    memcpy(&val, so->optval, so->optlen);
+
+#ifdef CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK
+	sock->tx_loopback = val;
+#else
+	if (val)
+	    return -EOPNOTSUPP;
+#endif
+	break;
+
     default:
 	ret = -ENOPROTOOPT;
     }
-    
+
     return ret;
 }
 
@@ -334,7 +409,6 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
 		    rtdm_user_info_t *user_info, int request, void *arg)
 {
     int ret = 0;
-    rtdm_lockctx_t lock_ctx;
 
     switch (request) {
     case _RTIOC_BIND: {
@@ -422,19 +496,10 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
 	}
 
 	/* Now the differences begin between the requests. */
-	if (request == RTCAN_RTIOC_RCV_TIMEOUT) {
-	    rtdm_lock_get_irqsave(&rtcan_socket_lock, lock_ctx);
-
+	if (request == RTCAN_RTIOC_RCV_TIMEOUT)
 	    sock->rx_timeout = *timeout;
-
-	    rtdm_lock_put_irqrestore(&rtcan_socket_lock, lock_ctx);
-	} else {
-	    rtdm_lock_get_irqsave(&rtcan_socket_lock, lock_ctx);
-
+	else
 	    sock->tx_timeout = *timeout;
-
-	    rtdm_lock_put_irqrestore(&rtcan_socket_lock, lock_ctx);
-	}
 
 	break;
     }
@@ -554,12 +619,7 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
 
 
     /* Set RX timeout */
-    rtdm_lock_get_irqsave(&rtcan_socket_lock, lock_ctx);
-
     timeout = (flags & MSG_DONTWAIT) ? RTDM_TIMEOUT_NONE : sock->rx_timeout;
-
-    rtdm_lock_put_irqrestore(&rtcan_socket_lock, lock_ctx);
-
 
     /* Fetch message (ok, try it ...) */
     ret = rtdm_sem_timeddown(&sock->recv_sem, timeout, NULL);
@@ -836,13 +896,8 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
 
     if ((dev = rtcan_dev_get_by_index(ifindex)) == NULL)
         return -ENXIO;
-   
-    rtdm_lock_get_irqsave(&rtcan_socket_lock, lock_ctx);
 
     timeout = (flags & MSG_DONTWAIT) ? RTDM_TIMEOUT_NONE : sock->tx_timeout;
-
-    rtdm_lock_put_irqrestore(&rtcan_socket_lock, lock_ctx);
-
 
     tx_wait.rt_task = rtdm_task_current();
 
@@ -894,6 +949,10 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
     /* We got access */
 
 
+    /* Push message onto stack for loopback when TX done */
+    if (rtcan_tx_loopback_enabled(sock))
+	rtcan_tx_push(dev, sock, frame);
+
     rtdm_lock_get_irqsave(&dev->device_lock, lock_ctx);
 
     /* Controller should be operating */
@@ -909,7 +968,7 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
     dev->tx_count++;
     if ((ret = dev->hard_start_xmit(dev, frame)) != 0)
 	goto send_out2;
-    
+
     /* Return number of bytes sent upon successful completion */
     ret = sizeof(can_frame_t);
 
@@ -956,7 +1015,7 @@ static struct rtdm_device rtcan_proto_raw_dev = {
     device_class:       RTDM_CLASS_CAN,
 
 
-    driver_name:        "xeno_rtcan",
+    driver_name:        "xeno_can",
     driver_version:     RTDM_DRIVER_VER(RTCAN_MAJOR_VER, 
 					RTCAN_MINOR_VER, 
 					RTCAN_BUGFIX_VER),

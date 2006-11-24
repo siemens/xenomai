@@ -120,6 +120,7 @@
  * - Level @b SOL_CAN_RAW : CAN RAW protocol (see @ref CAN_PROTO_RAW)
  *   - Option @ref CAN_RAW_FILTER : CAN filter list
  *   - Option @ref CAN_RAW_ERR_FILTER : CAN error mask
+ *   - Option @ref CAN_RAW_TX_LOOPBACK : CAN TX loopback to local sockets
  *   .
  * .
  * @n
@@ -543,11 +544,9 @@ typedef struct can_frame {
  * - -EFAULT (It was not possible to access user space memory area at the
  *            specified address.)
  * - -ENOMEM (Not enough memory to fulfill the operation)
- * - -EINVAL (Invalid address family, or invalid length of address structure)
- * - -ENODEV (Invalid CAN interface index)
- * - -EBADF  (Socket is about to be closed)
- * - -EAGAIN (Too many receivers. Old binding (if any) is still active.
- *            Close some sockets and try again.)
+ * - -EINVAL (Invalid length "optlen")
+ * - -ENOSPC (No space to store filter list, check RT-Socket-CAN kernel
+ *            parameters)
  * .
  */
 #define CAN_RAW_FILTER      0x1
@@ -577,15 +576,38 @@ typedef struct can_frame {
  * Specific return values:
  * - -EFAULT (It was not possible to access user space memory area at the
  *            specified address.)
- * - -ENOMEM (Not enough memory to fulfill the operation)
- * - -EINVAL (Invalid address family, or invalid length of address structure)
- * - -ENODEV (Invalid CAN interface index)
- * - -EBADF  (Socket is about to be closed)
- * - -EAGAIN (Too many receivers. Old binding (if any) is still active.
- *            Close some sockets and try again.)
+ * - -EINVAL (Invalid length "optlen")
  * .
  */
 #define CAN_RAW_ERR_FILTER  0x2
+
+/**
+ * CAN TX loopback
+ *
+ * The TX loopback to other local sockets can be selected with this
+ * @c setsockopt.
+ *
+ * @note The TX loopback feature must be enabled in the kernel and then
+ * the loopback to other local TX sockets is enabled by default.
+ *
+ * @n
+ * @param [in] level @b SOL_CAN_RAW
+ *
+ * @param [in] optname @b CAN_RAW_TX_LOOPBACK
+ *
+ * @param [in] optval Pointer to integer value.
+ *
+ * @param [in] optlen Size of int: sizeof(int).
+ *
+ * Environments: non-RT (RT optional)@n
+ * @n
+ * Specific return values:
+ * - -EFAULT (It was not possible to access user space memory area at the
+ *            specified address.)
+ * - -EINVAL (Invalid length "optlen")
+ * - -EOPNOTSUPP (not supported, check RT-Socket-CAN kernel parameters).
+ */
+#define CAN_RAW_TX_LOOPBACK  0x3
 
 /** @} */
 
@@ -933,6 +955,9 @@ typedef struct can_frame {
  *
  * The default value for a newly created socket is an infinite timeout.
  *
+ * @note The setting of the timeout value is not done atomically to avoid
+ * locks. Please set the value before receiving messages from the socket.
+ *
  * @param [in] arg Pointer to @ref nanosecs_rel_t variable. The value is
  *                interpreted as relative timeout in nanoseconds in case
  *                of a positive value.
@@ -962,6 +987,9 @@ typedef struct can_frame {
  * is called without the @c MSG_DONTWAIT flag set.
  *
  * The default value for a newly created socket is an infinite timeout.
+ *
+ * @note The setting of the timeout value is not done atomically to avoid
+ * locks. Please set the value before sending messages to the socket.
  *
  * @param [in] arg Pointer to @ref nanosecs_rel_t variable. The value is
  *                interpreted as relative timeout in nanoseconds in case

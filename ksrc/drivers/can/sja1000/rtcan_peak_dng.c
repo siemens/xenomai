@@ -307,11 +307,12 @@ void __exit rtcan_peak_dng_exit_one(struct rtcan_device *dev)
 {
     struct rtcan_peak_dng *dng = (struct rtcan_peak_dng *)dev->board_priv;
 
+    rtcan_sja1000_unregister(dev);
     rtcan_peak_dng_disable(dev);
     if (dng->type == DONGLE_TYPE_EPP)
 	release_region(dng->ecr, ECR_PORT_SIZE);
     release_region(dng->ioport, DNG_PORT_SIZE);
-    rtcan_sja1000_unregister(dev);
+    rtcan_free_dev(dev);
 }
 
 /** Init module */

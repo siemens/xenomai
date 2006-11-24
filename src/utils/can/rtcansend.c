@@ -26,7 +26,9 @@ static void print_usage(char *prg)
 	    " -l  --loop=COUNT      send message COUNT times\n"
 	    " -c, --count           message count in data[0-3]\n"
 	    " -d, --delay=MS        delay in ms (default = 1ms)\n"
+	    " -s, --send            use send instead of sendto\n"
 	    " -t, --timeout=MS      timeout in ms\n"
+	    " -T, --tx-loopback=0|1 switch TX loopback off or on\n"
 	    " -v, --verbose         be verbose\n"
 	    " -p, --print=MODULO    print every MODULO message\n"
 	    " -h, --help            this help\n",
@@ -37,9 +39,10 @@ static void print_usage(char *prg)
 RT_TASK rt_task_desc;
 
 static int s=-1, dlc=0, rtr=0, extended=0, verbose=0, loops=1, delay=1000000;
-static int count=0, print=1;
+static int count=0, print=1, use_send=0, tx_loopback=-1;
 static nanosecs_rel_t timeout = 0;
 static struct can_frame frame;
+static struct sockaddr_can to_addr;
 
 
 void cleanup(void)
@@ -77,16 +80,21 @@ void rt_task(void)
         rt_task_sleep(delay);
 	if (count)
 	    memcpy(&frame.data[0], &i, sizeof(i));
-        ret = rt_dev_send(s, (void *)&frame, sizeof(can_frame_t), 0);
+	/* Note: sendto avoids the definiton of a receive filter list */ 
+	if (use_send)
+	    ret = rt_dev_send(s, (void *)&frame, sizeof(can_frame_t), 0);
+	else
+	    ret = rt_dev_sendto(s, (void *)&frame, sizeof(can_frame_t), 0,
+				(struct sockaddr *)&to_addr, sizeof(to_addr));
 	if (ret < 0) {
 	    switch (ret) {
 	    case -ETIMEDOUT:
 		if (verbose)
-		    printf("rt_dev_send: timed out");
+		    printf("rt_dev_send(to): timed out");
 		break;
 	    case -EBADF:
 		if (verbose)
-		    printf("rt_dev_send: aborted because socket was closed");
+		    printf("rt_dev_send(to): aborted because socket was closed");
 		break;
 	    default:
 		fprintf(stderr, "rt_dev_send: %s\n", strerror(-ret));
@@ -111,7 +119,6 @@ void rt_task(void)
 
 int main(int argc, char **argv)
 {
-    struct sockaddr_can addr;
     int i, opt, ret;
     struct ifreq ifr;
     char name[32];
@@ -126,7 +133,9 @@ int main(int argc, char **argv)
 	{ "print", required_argument, 0, 'p'},
 	{ "loop", required_argument, 0, 'l'},
 	{ "delay", required_argument, 0, 'd'},
+	{ "send", no_argument, 0, 's'},
 	{ "timeout", required_argument, 0, 't'},
+	{ "tx-loopbcak", required_argument, 0, 'T'},
 	{ 0, 0, 0, 0},
     };
 
@@ -137,7 +146,7 @@ int main(int argc, char **argv)
 
     frame.can_id = 1;
 
-    while ((opt = getopt_long(argc, argv, "hvi:l:red:t:cp:",
+    while ((opt = getopt_long(argc, argv, "hvi:l:red:t:cp:sT:",
 			      long_options, NULL)) != -1) {
 	switch (opt) {
 	case 'h':
@@ -175,8 +184,16 @@ int main(int argc, char **argv)
 	    delay = strtoul(optarg, NULL, 0) * 1000000;
 	    break;
 
+	case 's':
+	    use_send = 1;
+	    break;
+
 	case 't':
 	    timeout = strtoul(optarg, NULL, 0) * 1000000;
+	    break;
+
+	case 'T':
+	    tx_loopback = strtoul(optarg, NULL, 0);
 	    break;
 
 	default:
@@ -205,6 +222,17 @@ int main(int argc, char **argv)
     }
     s = ret;
 
+    if (tx_loopback >= 0) {
+	ret = rt_dev_setsockopt(s, SOL_CAN_RAW, CAN_RAW_TX_LOOPBACK,
+				&tx_loopback, sizeof(tx_loopback));
+	if (ret < 0) {
+	    fprintf(stderr, "rt_dev_setsockopt: %s\n", strerror(-ret));
+	    goto failure;
+	}
+	if (verbose)
+	    printf("Using tx_loopback=%d\n", tx_loopback);
+    }
+
     strncpy(ifr.ifr_name, argv[optind], IFNAMSIZ);
     if (verbose)
 	printf("s=%d, ifr_name=%s\n", s, ifr.ifr_name);
@@ -215,13 +243,15 @@ int main(int argc, char **argv)
 	goto failure;
     }
 
-    memset(&addr, 0, sizeof(addr));
-    addr.can_ifindex = ifr.ifr_ifindex;
-    addr.can_family = AF_CAN;
-    ret = rt_dev_bind(s, (struct sockaddr *)&addr, sizeof(addr));
-    if (ret < 0) {
-	fprintf(stderr, "rt_dev_bind: %s\n", strerror(-ret));
-	goto failure;
+    memset(&to_addr, 0, sizeof(to_addr));
+    to_addr.can_ifindex = ifr.ifr_ifindex;
+    to_addr.can_family = AF_CAN;
+    if (use_send) {
+	ret = rt_dev_bind(s, (struct sockaddr *)&to_addr, sizeof(to_addr));
+	if (ret < 0) {
+	    fprintf(stderr, "rt_dev_bind: %s\n", strerror(-ret));
+	    goto failure;
+	}
     }
 
     if (count)
