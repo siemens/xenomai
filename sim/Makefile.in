@@ -224,7 +224,7 @@ subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUBDIRS = include vmutils vm adapter gcic tkimg scope nucleus skins
-EXTRA_DIST = Kconfig doc
+EXTRA_DIST = doc
 all: all-recursive
 
 .SUFFIXES:
