@@ -285,6 +285,7 @@ static u_long q_create_internal(char name[4],
 		err = xnregistry_enter(queue->name, queue, &queue->handle, &msgq_pnode);
 
 		if (err) {
+			queue->handle = XN_NO_HANDLE;
 			q_delete((u_long)queue);
 			return err;
 		}
