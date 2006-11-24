@@ -312,7 +312,7 @@ void __exit rtcan_peak_dng_exit_one(struct rtcan_device *dev)
     if (dng->type == DONGLE_TYPE_EPP)
 	release_region(dng->ecr, ECR_PORT_SIZE);
     release_region(dng->ioport, DNG_PORT_SIZE);
-    rtcan_free_dev(dev);
+    rtcan_dev_free(dev);
 }
 
 /** Init module */
