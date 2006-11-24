@@ -540,8 +540,10 @@ int xnheap_test_and_free(xnheap_t *heap, void *block, int (*ckfn) (void *block))
 			break;
 	}
 
-	if (!holder)
-		goto bad_block;
+	if (!holder) {
+		err = -EFAULT;
+		goto unlock_and_fail;
+	}
 
 	/* Compute the heading page number in the page map. */
 	pagenum = ((caddr_t) block - extent->membase) >> heap->pageshift;
@@ -638,8 +640,14 @@ int xnheap_test_and_free(xnheap_t *heap, void *block, int (*ckfn) (void *block))
  *
  * @param block The address of the region to be returned to the heap.
  *
- * @return 0 is returned upon success, or -EINVAL is returned whenever
- * the block is not a valid region of the specified heap.
+ * @return 0 is returned upon success, or one of the following error
+ * codes:
+ *
+ * - -EFAULT is returned whenever the memory address is outside the
+ * heap address space.
+ *
+ * - -EINVAL is returned whenever the memory address does not
+ * represent a valid block.
  *
  * Environments:
  *
