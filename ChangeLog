@@ -1,5 +1,8 @@
 2006-11-24  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/vrtx/heap.c (heap_destroy_internal): Free heap
+	control block.
+
 	* src/skins/vxworks/taskLib.c (taskInit): Pass user-defined args
 	to the trampoline as expected.
 
