@@ -132,16 +132,25 @@ patch_link() {
 patch_help() {
     if which perl > /dev/null; then
 	hfile=$linux_tree/Documentation/Configure.help
-	if ! grep -iq CONFIG_XENO $hfile; then
-	    kfiles=$xenomai_root/scripts/Kconfig.frag
-	    for d in ksrc/nucleus ksrc/skins ksrc/arch/$xenomai_arch \
-		ksrc/drivers sim; do
-		kfiles="$kfiles `find $xenomai_root/$d -name Kconfig`"
-	    done
-	    perl $xenomai_root/scripts/help_from_kconfig.pl $kfiles >> $hfile
-	    if test x$verbose = x1; then
-		echo 'Configuration help added.'
-	    fi
+	if grep -iq "XENOMAI PARAMETERS" $hfile; then
+	    tmp=$hfile.tmp
+	    sed -n -e \
+		'/# BEGIN XENOMAI PARAMETERS/,/# END XENOMAI PARAMETERS/!p' \
+		$hfile > $tmp
+	    mv $tmp $hfile
+	    msg="updated"
+	else
+	    msg="added"
+	fi
+	kfiles=$xenomai_root/scripts/Kconfig.frag
+	for d in nucleus skins arch/$xenomai_arch drivers; do
+	  kfiles="$kfiles `find $xenomai_root/ksrc/$d -name Kconfig`"
+	done
+	echo "# BEGIN XENOMAI PARAMETERS" >> $hfile
+	perl $xenomai_root/scripts/help_from_kconfig.pl $kfiles >> $hfile
+	echo "# END XENOMAI PARAMETERS" >> $hfile
+	if test x$verbose = x1; then
+	    echo "Configuration help $msg."
 	fi
     fi
 }
