@@ -90,6 +90,7 @@ static void heap_destroy_internal(vrtxheap_t *heap)
 	else
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 		xnheap_destroy(&heap->sysheap, NULL, NULL);
+	xnfree(heap);
 
 	xnlock_put_irqrestore(&nklock, s);
 }
