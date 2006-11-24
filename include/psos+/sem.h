@@ -31,12 +31,16 @@ typedef struct psossem {
 
     xnholder_t link;  /* Link in psossemq */
 
+    char name[XNOBJECT_NAME_LEN]; /* Name of semaphore */
+
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    xnhandle_t handle;
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
 #define link2psossem(laddr) \
 ((psossem_t *)(((char *)laddr) - (int)(&((psossem_t *)0)->link)))
 
     xnsynch_t synchbase;
-
-    char name[5];     /* Name of semaphore */
 
     unsigned count;   /* Available resource count */
 
