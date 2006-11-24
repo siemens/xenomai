@@ -47,6 +47,8 @@
 #define __psos_q_vsend      15
 #define __psos_q_vurgent    16
 #define __psos_q_vbroadcast 17
+#define __psos_sm_create    18
+#define __psos_sm_delete    19
 
 #ifdef __KERNEL__
 

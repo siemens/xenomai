@@ -17,12 +17,78 @@
  * 02111-1307, USA.
  */
 
-#include "psos+/task.h"
-#include "psos+/sem.h"
+#include <nucleus/registry.h>
+#include <psos+/task.h>
+#include <psos+/sem.h>
 
 static xnqueue_t psossemq;
 
 static int sm_destroy_internal(psossem_t *sem);
+
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
+
+static int sem_read_proc(char *page,
+			 char **start,
+			 off_t off, int count, int *eof, void *data)
+{
+	psossem_t *sem = (psossem_t *)data;
+	char *p = page;
+	int len;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	p += sprintf(p, "value=%u\n", sem->count);
+
+	if (xnsynch_nsleepers(&sem->synchbase) == 0) {
+		xnpholder_t *holder;
+
+		/* Pended semaphore -- dump waiters. */
+
+		holder = getheadpq(xnsynch_wait_queue(&sem->synchbase));
+
+		while (holder) {
+			xnthread_t *sleeper = link2thread(holder, plink);
+			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
+			holder =
+			    nextpq(xnsynch_wait_queue(&sem->synchbase), holder);
+		}
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	len = (p - page) - off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+extern xnptree_t __psos_ptree;
+
+static xnpnode_t sem_pnode = {
+
+	.dir = NULL,
+	.type = "semaphores",
+	.entries = 0,
+	.read_proc = &sem_read_proc,
+	.write_proc = NULL,
+	.root = &__psos_ptree,
+};
+
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
+
+static xnpnode_t sem_pnode = {
+
+	.type = "semaphores"
+};
+
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 void psossem_init(void)
 {
@@ -69,6 +135,24 @@ u_long sm_create(char name[4], u_long icount, u_long flags, u_long *smid)
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&psossemq, &sem->link);
 	xnlock_put_irqrestore(&nklock, s);
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	{
+		static unsigned long sem_ids;
+		u_long err;
+
+		if (!*name)
+			/* > 4 bytes: won't be reachable by sm_ident() on purpose. */
+			sprintf(sem->name, "anon%lu", sem_ids++);
+
+		err = xnregistry_enter(sem->name, sem, &sem->handle, &sem_pnode);
+
+		if (err) {
+			sem->handle = XN_NO_HANDLE;
+			sm_delete((u_long)sem);
+			return err;
+		}
+	}
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	*smid = (u_long)sem;
 
@@ -77,14 +161,14 @@ u_long sm_create(char name[4], u_long icount, u_long flags, u_long *smid)
 
 static int sm_destroy_internal(psossem_t *sem)
 {
-	spl_t s;
 	int rc;
 
-	xnlock_get_irqsave(&nklock, s);
 	removeq(&psossemq, &sem->link);
 	rc = xnsynch_destroy(&sem->synchbase);
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	xnregistry_remove(sem->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 	psos_mark_deleted(sem);
-	xnlock_put_irqrestore(&nklock, s);
 
 	xnfree(sem);
 

@@ -19,3 +19,14 @@
 #include <psos+/psos.h>
 
 extern int __psos_muxid;
+
+u_long sm_create(char name[4], u_long icount, u_long flags, u_long *smid_r)
+{
+	return XENOMAI_SKINCALL4(__psos_muxid, __psos_sm_create,
+				 name, icount, flags, smid_r);
+}
+
+u_long sm_delete(u_long smid)
+{
+	return XENOMAI_SKINCALL1(__psos_muxid, __psos_sm_delete, smid);
+}

@@ -25,6 +25,7 @@
 #include <psos+/task.h>
 #include <psos+/syscall.h>
 #include <psos+/queue.h>
+#include <psos+/sem.h>
 
 /*
  * By convention, error codes are passed back through the syscall
@@ -138,7 +139,7 @@ static int __t_start(struct task_struct *curr, struct pt_regs *regs)
 
 	mode = __xn_reg_arg2(regs);
 	startaddr = (typeof(startaddr))__xn_reg_arg3(regs);
-	argp = (u_long *)__xn_reg_arg4(regs);
+	argp = (u_long *)__xn_reg_arg4(regs); /* May be NULL. */
 
 	return t_start((u_long)task, mode, startaddr, argp);
 }
@@ -860,6 +861,63 @@ static int __q_vbroadcast(struct task_struct *curr, struct pt_regs *regs)
 	return err;
 }
 
+/*
+ * int __sm_create(char name[4], u_long icount, u_long flags, u_long *smid_r)
+ */
+
+static int __sm_create(struct task_struct *curr, struct pt_regs *regs)
+{
+	u_long icount, flags, smid, err;
+	psossem_t *sem;
+	char name[5];
+
+	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(name)))
+		return -EFAULT;
+
+	/* Get queue name. */
+	__xn_strncpy_from_user(curr, name, (const char __user *)__xn_reg_arg1(regs),
+			       sizeof(name) - 1);
+	name[sizeof(name) - 1] = '\0';
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(smid)))
+		return -EFAULT;
+
+	/* Initial value. */
+	icount = __xn_reg_arg2(regs);
+	/* Creation flags. */
+	flags = __xn_reg_arg3(regs);
+
+	err = sm_create(name, icount, flags, &smid);
+
+	if (err == SUCCESS) {
+		sem = (psossem_t *)smid;
+		/* Copy back the registry handle. */
+		smid = sem->handle;
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg4(regs), &smid,
+				  sizeof(smid));
+	}
+
+	return err;
+}
+
+/*
+ * int __sm_delete(u_long smid)
+ */
+
+static int __sm_delete(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	psossem_t *sem;
+
+	sem = (psossem_t *)xnregistry_fetch(handle);
+
+	if (!sem)
+		return ERR_OBJID;
+
+	return sm_delete((u_long)sem);
+}
+
 static xnsysent_t __systab[] = {
 	[__psos_t_create] = {&__t_create, __xn_exec_init},
 	[__psos_t_start] = {&__t_start, __xn_exec_any},
@@ -885,6 +943,8 @@ static xnsysent_t __systab[] = {
 	[__psos_q_vsend] = {&__q_vsend, __xn_exec_any},
 	[__psos_q_vurgent] = {&__q_vurgent, __xn_exec_any},
 	[__psos_q_vbroadcast] = {&__q_vbroadcast, __xn_exec_any},
+	[__psos_sm_create] = {&__sm_create, __xn_exec_any},
+	[__psos_sm_delete] = {&__sm_delete, __xn_exec_any},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)
