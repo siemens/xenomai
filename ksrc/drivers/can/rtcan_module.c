@@ -167,17 +167,17 @@ static int rtcan_read_proc_sockets(char *buf, char **start, off_t offset,
     char rx_timeout[20], tx_timeout[16];
     rtdm_lockctx_t lock_ctx;
     int ifindex;
-    RTCAN_PROC_PRINT_VARS(80);
+    RTCAN_PROC_PRINT_VARS(120);
 
     if (down_interruptible(&rtcan_devices_nrt_lock))
         return -ERESTARTSYS;
 
-    /* fd Name___________ Filter ErrMask RX_Timeout TX_Timeout RX_BufFull 
-     *  0 rtcan0               1 0x00010 1234567890 1234567890 1234567890
+    /* fd Name___________ Filter ErrMask RX_Timeout TX_Timeout RX_BufFull TX_Lo
+     *  0 rtcan0               1 0x00010 1234567890 1234567890 1234567890 12345
      */
-    if (!RTCAN_PROC_PRINT("fd Name___________ Filter ErrMask "
-			  "RX_Timeout_ns TX_Timeout_ns RX_BufFull\n"))
-        goto done;
+    if (!RTCAN_PROC_PRINT("fd Name___________ Filter ErrMask RX_Timeout_ns "
+			  "TX_Timeout_ns RX_BufFull TX_Lo\n"))
+	goto done;
 
     rtdm_lock_get_irqsave(&rtcan_recv_list_lock, lock_ctx);
 
@@ -196,15 +196,16 @@ static int rtcan_read_proc_sockets(char *buf, char **start, off_t offset,
 	}
 	rtcan_get_timeout_name(sock->tx_timeout, tx_timeout, 20);
 	rtcan_get_timeout_name(sock->rx_timeout, rx_timeout, 20);
-	if(!RTCAN_PROC_PRINT("%2d %-15s %6d 0x%05x %13s %13s %10d\n", 
-			     context->fd, name, sock->flistlen,
-			     sock->err_mask, rx_timeout, tx_timeout,
-			     sock->rx_buf_full))
+	if (!RTCAN_PROC_PRINT("%2d %-15s %6d 0x%05x %13s %13s %10d %5d\n",
+			      context->fd, name, sock->flistlen,
+			      sock->err_mask, rx_timeout, tx_timeout,
+			      sock->rx_buf_full,
+			      rtcan_tx_loopback_enabled(sock)))
 	    break;
     }
 
     rtdm_lock_put_irqrestore(&rtcan_recv_list_lock, lock_ctx);
-    
+
   done:
     up(&rtcan_devices_nrt_lock);
     RTCAN_PROC_PRINT_DONE;

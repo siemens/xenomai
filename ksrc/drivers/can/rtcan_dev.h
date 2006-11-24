@@ -37,11 +37,11 @@
 
 
 /* Number of MSCAN devices the driver can handle */
-#define RTCAN_MAX_DEVICES    CONFIG_XENO_DRIVERS_RTCAN_MAX_DEVICES
+#define RTCAN_MAX_DEVICES    CONFIG_XENO_DRIVERS_CAN_MAX_DEVICES
 
 /* Maximum number of single filters per controller which can be registered
  * for reception at the same time using Bind */
-#define RTCAN_MAX_RECEIVERS  CONFIG_XENO_DRIVERS_RTCAN_MAX_RECEIVERS
+#define RTCAN_MAX_RECEIVERS  CONFIG_XENO_DRIVERS_CAN_MAX_RECEIVERS
 
 /* Suppress handling of refcount if module support is not enabled
  * or modules cannot be unloaded */
@@ -141,7 +141,11 @@ struct rtcan_device {
 
 #ifdef CONFIG_PROC_FS
     struct proc_dir_entry *proc_root;
-#endif    
+#endif
+#ifdef CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK
+    struct rtcan_skb tx_skb;
+    struct rtcan_socket *tx_socket;
+#endif /* CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK */
 };
 
 

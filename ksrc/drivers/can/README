@@ -10,12 +10,15 @@ developed for standard Linux using the Linux networking stack.
 Status:
 ------
 
-Currently it is available for the following CAN controller and 
+Currently drivers are available for the following CAN controllers and 
 devices:
 
    SJA1000 ISA devices
+   SJA1000 Memory-mapped devices
+   SJA1000 esd EPPC405 embedded controller and CPCI405 boards
    SJA1000 PEAK PCI card
    SJA1000 PEAK parallel port Dongle
+   SJA1000 IXXAT PCI card
    MSCAN for MPC5200 boards
 
 Utilities for RT-Socket-CAN are available in "src/utils/can".
@@ -76,12 +79,12 @@ o Kernel space part:
     $ make modules_install INSTALL_MOD_PATH=$DESTDIR
     $ find $DESTDIR/lib/modules/2.4.25/kernel/drivers/xenomai/rtcan
     .../rtcan
-    .../rtcan/xeno_rtcan.o
+    .../rtcan/xeno_can.o
     .../rtcan/mscan
-    .../rtcan/mscan/xeno_rtcan_mscan.o
-    .../rtcan/sja1000/xeno_rtcan_sja1000.o
-    .../rtcan/sja1000/xeno_rtcan_peak_pci.o
-    .../rtcan/sja1000/xeno_rtcan_isa.o
+    .../rtcan/mscan/xeno_can_mscan.o
+    .../rtcan/sja1000/xeno_can_sja1000.o
+    .../rtcan/sja1000/xeno_can_peak_pci.o
+    .../rtcan/sja1000/xeno_can_isa.o
 
   - Loading the RT-Socket-CAN modules
 
@@ -91,10 +94,10 @@ o Kernel space part:
     them using modprobe or insmod, e.g. for this example build:
 
     # export MODDIR=/lib/modules/2.4.25/kernel/drivers/xenomai/rtcan
-    # insmod $MODDIR/xeno_rtcan.o
-    # insmod $MODDIR/mscan/xeno_rtcan_mscan.o
-    # insmod $MODDIR/sja1000/xeno_rtcan_sja1000.o
-    # insmod $MODDIR/sja1000/xeno_rtcan_peak_pci.o
+    # insmod $MODDIR/xeno_can.o
+    # insmod $MODDIR/mscan/xeno_can_mscan.o
+    # insmod $MODDIR/sja1000/xeno_can_sja1000.o
+    # insmod $MODDIR/sja1000/xeno_can_peak_pci.o
 
     Note that various kernel module parameters can be passed with 
     insmod. Please use "modinfo" to list them or check the 

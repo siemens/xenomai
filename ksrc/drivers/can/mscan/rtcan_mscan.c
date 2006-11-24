@@ -58,14 +58,14 @@ MODULE_LICENSE("GPL");
 /** Module parameter for the CAN controllers' */
 
 int port[RTCAN_MSCAN_DEVS] = {
-#ifdef CONFIG_XENO_DRIVERS_RTCAN_MSCAN_1
-#ifdef CONFIG_XENO_DRIVERS_RTCAN_MSCAN_2
+#ifdef CONFIG_XENO_DRIVERS_CAN_MSCAN_1
+#ifdef CONFIG_XENO_DRIVERS_CAN_MSCAN_2
 	1, 2  /* Enable CAN 1 and 2 */
 #else
 	1, 0  /* Enable CAN 1 only  */
 #endif
 #else
-#ifdef CONFIG_XENO_DRIVERS_RTCAN_MSCAN_2
+#ifdef CONFIG_XENO_DRIVERS_CAN_MSCAN_2
 	2, 0  /* Enable CAN 2 only  */
 #else
 #error "No CAN controller enabled, fix configuration!"
@@ -80,7 +80,7 @@ MODULE_PARM_DESC(port, "Port numbers of enabled controllers, e.g. 1,2");
  * clock (IP_CLK) while on the MPC5200B it is the oscillator 
  * clock (SYS_XTAL_IN).
  */
-unsigned int mscan_clock = CONFIG_XENO_DRIVERS_RTCAN_MSCAN_CLOCK;
+unsigned int mscan_clock = CONFIG_XENO_DRIVERS_CAN_MSCAN_CLOCK;
 module_param(mscan_clock, int, 0444);
 MODULE_PARM_DESC(mscan_clock, "Clock frequency in Hz");
 
@@ -228,7 +228,6 @@ static inline void rtcan_mscan_err_interrupt(struct rtcan_device *dev,
 /** Interrupt handler */
 static int rtcan_mscan_interrupt(rtdm_irq_t *irq_handle)
 {
-    nanosecs_abs_t timestamp = rtdm_clock_read();
     struct rtcan_skb skb;
     struct rtcan_device *dev;
     struct mscan_regs *regs;
@@ -251,6 +250,17 @@ static int rtcan_mscan_interrupt(rtdm_irq_t *irq_handle)
 	regs->cantier = 0;
 	/* Wake up a sender */
 	rtdm_sem_up(&dev->tx_sem);
+
+	if (rtcan_tx_loopback_pending(dev)) {
+
+	    if (recv_lock_free) {
+		recv_lock_free = 0;
+		rtdm_lock_get(&rtcan_recv_list_lock);
+		rtdm_lock_get(&rtcan_socket_lock);
+	    }
+
+	    rtcan_tx_loopback(dev);
+	}
     }
 
     /* Wakeup interrupt?  */
@@ -264,10 +274,6 @@ static int rtcan_mscan_interrupt(rtdm_irq_t *irq_handle)
 	/* Read out HW registers */
 	rtcan_mscan_rx_interrupt(dev, &skb);
 	
-	/* Copy timestamp to skb */
-	memcpy((void *)&skb.rb_frame + skb.rb_frame_size,
-	       &timestamp, TIMESTAMP_SIZE);
-    
 	/* Take more locks. Ensure that they are taken and
 	 * released only once in the IRQ handler. */
 	/* WARNING: Nested locks are dangerous! But they are
@@ -287,9 +293,6 @@ static int rtcan_mscan_interrupt(rtdm_irq_t *irq_handle)
     if ((canrflg & (MSCAN_CSCIF | MSCAN_OVRIF))) {
 	/* Check error condition and fill error frame */
 	rtcan_mscan_err_interrupt(dev, &skb, canrflg);
-
-	memcpy((void *)&skb.rb_frame + skb.rb_frame_size,
-	       &timestamp, TIMESTAMP_SIZE);
 
 	if (recv_lock_free) {
 	    recv_lock_free = 0;
@@ -701,7 +704,7 @@ static inline void __init mscan_gpio_config(void)
     struct mpc5xxx_gpio *gpio = (struct mpc5xxx_gpio *)MPC5xxx_GPIO;
     int can_to_psc2 = 0;
 
-#ifdef CONFIG_XENO_DRIVERS_RTCAN_MSCAN_PSC2
+#ifdef CONFIG_XENO_DRIVERS_CAN_MSCAN_PSC2
     can_to_psc2 = 1;
 #endif
 

@@ -27,7 +27,7 @@
 #include <rtcan_internal.h>
 #include <rtcan_sja1000.h>
 
-#ifdef CONFIG_XENO_DRIVERS_RTCAN_DEBUG
+#ifdef CONFIG_XENO_DRIVERS_CAN_DEBUG
 
 static int rtcan_sja_proc_regs(char *buf, char **start, off_t offset,
 				 int count, int *eof, void *data)
@@ -83,7 +83,7 @@ void rtcan_sja_remove_proc(struct rtcan_device* dev)
     remove_proc_entry("registers", dev->proc_root);
 }
 
-#else /* !CONFIG_XENO_DRIVERS_RTCAN_DEBUG */
+#else /* !CONFIG_XENO_DRIVERS_CAN_DEBUG */
 
 void rtcan_sja_remove_proc(struct rtcan_device* dev)
 {
@@ -93,4 +93,4 @@ int rtcan_sja_create_proc(struct rtcan_device* dev)
 {
     return 0;
 }
-#endif	/* CONFIG_XENO_DRIVERS_RTCAN_DEBUG */
+#endif	/* CONFIG_XENO_DRIVERS_CAN_DEBUG */

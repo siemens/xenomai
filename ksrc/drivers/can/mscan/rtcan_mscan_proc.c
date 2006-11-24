@@ -30,7 +30,7 @@
 
 #define MSCAN_REG_ARGS(reg) "%-8s 0x%02x\n", #reg, (int)((regs)->reg) & 0xff
 
-#ifdef CONFIG_XENO_DRIVERS_RTCAN_DEBUG
+#ifdef CONFIG_XENO_DRIVERS_CAN_DEBUG
 
 static int rtcan_mscan_proc_regs(char *buf, char **start, off_t offset,
 				 int count, int *eof, void *data)
@@ -135,7 +135,7 @@ void rtcan_mscan_remove_proc(struct rtcan_device* dev)
     remove_proc_entry("registers", dev->proc_root);
 }
 
-#else /* !CONFIG_XENO_DRIVERS_RTCAN_DEBUG */
+#else /* !CONFIG_XENO_DRIVERS_CAN_DEBUG */
 
 void rtcan_mscan_remove_proc(struct rtcan_device* dev)
 {
@@ -145,4 +145,4 @@ int rtcan_mscan_create_proc(struct rtcan_device* dev)
 {
     return 0;
 }
-#endif	/* CONFIG_XENO_DRIVERS_RTCAN_DEBUG */
+#endif	/* CONFIG_XENO_DRIVERS_CAN_DEBUG */

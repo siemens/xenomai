@@ -32,10 +32,17 @@ void rtcan_raw_remove_filter(struct rtcan_socket *sock);
 
 void rtcan_rcv(struct rtcan_device *rtcandev, struct rtcan_skb *skb);
 
-#ifdef CONFIG_PROC_FS
+void rtcan_tx_loopback(struct rtcan_device *rtcandev);
+#ifdef CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK
+#define rtcan_tx_loopback_enabled(sock) (sock->tx_loopback)
+#define rtcan_tx_loopback_pending(dev) (dev->tx_socket)
+#else /* !CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK */
+#define rtcan_tx_loopback_enabled(sock) (0) 
+#define rtcan_tx_loopback_pending(dev) (0)
+#endif /* CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK */
+
 int __init rtcan_raw_proto_register(void);
 void __exit rtcan_raw_proto_unregister(void);
-#endif
 
 #endif  /* __KERNEL__ */
 

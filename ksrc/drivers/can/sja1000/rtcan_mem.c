@@ -44,7 +44,7 @@
 #define RTCAN_DEV_NAME    "rtcan%d"
 #define RTCAN_DRV_NAME    "sja1000-mem"
 
-#define RTCAN_MEM_MAX_DEV CONFIG_XENO_DRIVERS_RTCAN_SJA1000_MEM_MAX_DEV
+#define RTCAN_MEM_MAX_DEV CONFIG_XENO_DRIVERS_CAN_SJA1000_MEM_MAX_DEV
 
 static char *mem_board_name = "mem mapped";
 
@@ -185,7 +185,7 @@ static int __init rtcan_mem_init(void)
 		return 0;
 
 	printk(KERN_ERR "ERROR! No devices specified! "
-	       "Use io=<port1>[,...] irq=<irq1>[,...]\n");
+	       "Use mem=<port1>[,...] irq=<irq1>[,...]\n");
 	return -EINVAL;
 }
 
@@ -205,6 +205,7 @@ static void rtcan_mem_exit(void)
 		rtcan_sja1000_unregister(dev);
 		iounmap((void *)vmem);
 		release_mem_region(mem[i], RTCAN_MEM_RANGE);
+		rtcan_dev_free(dev);
 	}
 }
 

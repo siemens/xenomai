@@ -52,7 +52,6 @@ static int rtcan_virt_start_xmit(struct rtcan_device *tx_dev,
 	struct rtcan_device *rx_dev;
 	struct rtcan_skb skb;
 	struct rtcan_rb_frame *rx_frame = &skb.rb_frame;
-	nanosecs_abs_t timestamp = rtdm_clock_read();
 	rtdm_lockctx_t lock_ctx;
 
 	/* we can transmit immediately again */
@@ -68,22 +67,21 @@ static int rtcan_virt_start_xmit(struct rtcan_device *tx_dev,
 		skb.rb_frame_size += tx_frame->can_dlc;
 	}
 
-	/* Copy timestamp to skb */
-	memcpy((void *)&skb.rb_frame + skb.rb_frame_size,
-	       &timestamp, TIMESTAMP_SIZE);
-
 	rtdm_lock_get_irqsave(&rtcan_recv_list_lock, lock_ctx);
 	rtdm_lock_get(&rtcan_socket_lock);
+
 
 	/* Deliver to all other devices on the virtual bus */
 	for (i = 0; i < devices; i++) {
 		rx_dev = rtcan_virt_devs[i];
-		if (tx_dev != rx_dev && rx_dev->state == CAN_STATE_ACTIVE) {
-			rx_frame->can_ifindex = rx_dev->ifindex;
-			rtcan_rcv(rx_dev, &skb);
+		if (rx_dev->state == CAN_STATE_ACTIVE) {
+			if (tx_dev != rx_dev) {
+				rx_frame->can_ifindex = rx_dev->ifindex;
+				rtcan_rcv(rx_dev, &skb);
+			} else if (rtcan_tx_loopback_pending(tx_dev))
+				rtcan_tx_loopback(tx_dev);
 		}
 	}
-
 	rtdm_lock_put(&rtcan_socket_lock);
 	rtdm_lock_put_irqrestore(&rtcan_recv_list_lock, lock_ctx);
 
@@ -138,7 +136,7 @@ static int __init rtcan_virt_init_one(int idx)
 	/* Register RTDM device */
 	err = rtcan_dev_register(dev);
 	if (err) {
-		printk(KERN_ERR "ERROR while trying to register RTCAN device!\n");
+	    printk(KERN_ERR "ERROR %d while trying to register RTCAN device!\n", err);
 		goto error_out;
 	}
 
@@ -162,13 +160,15 @@ static int __init rtcan_virt_init(void)
 
 	for (i = 0; i < devices; i++) {
 		err = rtcan_virt_init_one(i);
-		if (err)
+		if (err) {
 			while (--i >= 0) {
 				struct rtcan_device *dev = rtcan_virt_devs[i];
 
 				rtcan_dev_unregister(dev);
 				rtcan_dev_free(dev);
 			}
+			break;
+		}
 	}
 
 	return err;

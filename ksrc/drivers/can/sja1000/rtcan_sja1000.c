@@ -267,7 +267,6 @@ static int rtcan_sja_interrupt(rtdm_irq_t *irq_handle)
 {
     struct rtcan_device *dev;
     struct rtcan_sja1000 *chip;
-    nanosecs_abs_t timestamp = rtdm_clock_read();
     struct rtcan_skb skb;
     int recv_lock_free = 1;
     int irq_count = 0;
@@ -299,9 +298,6 @@ static int rtcan_sja_interrupt(rtdm_irq_t *irq_handle)
 	    /* Check error condition and fill error frame */
 	    rtcan_sja_err_interrupt(dev, chip, &skb, irq_source);
 
-            memcpy((void *)&skb.rb_frame + skb.rb_frame_size,
-		   &timestamp, TIMESTAMP_SIZE);
-
 	    if (recv_lock_free) {
 		recv_lock_free = 0;
 		rtdm_lock_get(&rtcan_recv_list_lock);
@@ -312,20 +308,27 @@ static int rtcan_sja_interrupt(rtdm_irq_t *irq_handle)
 	}
 
         /* Transmit Interrupt? */
-        if (irq_source & SJA_IR_TI)
+        if (irq_source & SJA_IR_TI) {
             /* Wake up a sender */
             rtdm_sem_up(&dev->tx_sem);
 
+	    if (rtcan_tx_loopback_pending(dev)) {
+
+		if (recv_lock_free) {
+		    recv_lock_free = 0;
+		    rtdm_lock_get(&rtcan_recv_list_lock);
+		    rtdm_lock_get(&rtcan_socket_lock);
+		}
+
+		rtcan_tx_loopback(dev);
+	    }
+	}
 
         /* Receive Interrupt? */
         if (irq_source & SJA_IR_RI) {
 
             /* Read out HW registers */
             rtcan_sja_rx_interrupt(dev, &skb);
-
-            /* Copy timestamp to skb */
-            memcpy((void *)&skb.rb_frame + skb.rb_frame_size,
-		   &timestamp, TIMESTAMP_SIZE);
 
             /* Take more locks. Ensure that they are taken and
              * released only once in the IRQ handler. */
@@ -782,7 +785,6 @@ void rtcan_sja1000_unregister(struct rtcan_device *dev)
     rtdm_irq_free(&dev->irq_handle);
     rtcan_sja_remove_proc(dev);
     rtcan_dev_unregister(dev);
-    rtcan_dev_free(dev);
 }
 
 int __init rtcan_sja_init(void)

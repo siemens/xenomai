@@ -193,11 +193,11 @@ void rtcan_raw_remove_filter(struct rtcan_socket *sock)
     int ifindex = atomic_read(&sock->ifindex);
     struct rtcan_device *dev;
 
-    RTCAN_ASSERT(sock->flistlen < 0,
-		 rtdm_printk("%s: Ooops, unexpected flistlen=%d\n", 
-			     __FUNCTION__, sock->flistlen);
+    RTCAN_ASSERT((sock->flistlen >= 0),
+		 rtdm_printk("unexpected flistlen=%d\n",
+			     sock->flistlen);
 		 return;);
-	
+
     if (ifindex) {
         /* Socket was bound to one interface only. */
         begin = ifindex;

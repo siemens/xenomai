@@ -1,14 +1,14 @@
 Utilities for RT-Socket-CAN
 ===========================
 
-For further information on RT-Socket-CAN, especially the kernel space 
+For further information on RT-Socket-CAN, especially the kernel space
 part, please have a look to "ksrc/drivers/can/README".
 
 Installation:
 ------------
 
 Please install the Xenomai user space part as described in the
-README.INSTALL. 
+README.INSTALL.
 
   $ export CROSS_COMPILE=ppc_82xx-
   $ cd <xenomai-root>
@@ -27,20 +27,20 @@ Running and using RT-Socket-CAN:
 
 Now boot the Xenomai enabled kernel on your target system.
 
-In case RT-Socket-CAN is built as kernel modules, you need to load 
+In case RT-Socket-CAN is built as kernel modules, you need to load
 them using modprobe or insmod, e.g. for this example build:
 
   # export MODDIR=/lib/modules/2.4.25/kernel/drivers/xenomai/rtcan
-  # insmod $MODDIR/xeno_rtcan.o
-  # insmod $MODDIR/mscan/xeno_rtcan_mscan.o
-  # insmod $MODDIR/sja1000/xeno_rtcan_sja1000.o
-  # insmod $MODDIR/sja1000/xeno_rtcan_peak_pci.o
+  # insmod $MODDIR/xeno_can.o
+  # insmod $MODDIR/mscan/xeno_can_mscan.o
+  # insmod $MODDIR/sja1000/xeno_can_sja1000.o
+  # insmod $MODDIR/sja1000/xeno_can_peak_pci.o
 
 Note that various kernel module parameters can be passed with insmod.
-Please use "modinfo" to list them or check the corresponding source 
+Please use "modinfo" to list them or check the corresponding source
 code files for further information
 
-There are a few RT-Socket-CAN utilities to configure RTCAN and to send 
+There are a few RT-Socket-CAN utilities to configure RTCAN and to send
 and receive CAN messages, which have been installed in the Xenomai
 installation directory with "make install":
 
