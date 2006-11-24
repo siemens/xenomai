@@ -45,8 +45,8 @@ static void *psos_task_trampoline(void *cookie)
 {
 	struct psos_task_iargs *iargs = (struct psos_task_iargs *)cookie;
 	void (*entry)(u_long, u_long, u_long, u_long);
+	u_long dummy_args[4] = { 0, 0, 0, 0 }, *targs;
 	struct sched_param param;
-	u_long *targs;
 	long err;
 
 	/* Ok, this looks like weird, but we need this. */
@@ -72,8 +72,11 @@ static void *psos_task_trampoline(void *cookie)
 		err = XENOMAI_SYSCALL2(__xn_sys_barrier, &entry, &targs);
 	while (err == -EINTR);
 
-	if (!err)
+	if (!err) {
+		if (targs == NULL)
+			targs = dummy_args;
 		entry(targs[0], targs[1], targs[2], targs[3]);
+	}
 
       fail:
 
