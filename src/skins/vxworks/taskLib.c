@@ -139,6 +139,16 @@ STATUS taskInit(WIND_TCB *pTcb,
 	iargs.flags = flags;
 	iargs.entry = entry;
 	iargs.completionp = &completion;
+	iargs.arg0 = arg0;
+	iargs.arg1 = arg1;
+	iargs.arg2 = arg2;
+	iargs.arg3 = arg3;
+	iargs.arg4 = arg4;
+	iargs.arg5 = arg5;
+	iargs.arg6 = arg6;
+	iargs.arg7 = arg7;
+	iargs.arg8 = arg8;
+	iargs.arg9 = arg9;
 
 	pthread_attr_init(&thattr);
 

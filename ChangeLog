@@ -1,3 +1,8 @@
+2006-11-24  Philippe Gerum  <rpm@xenomai.org>
+
+	* src/skins/vxworks/taskLib.c (taskInit): Pass user-defined args
+	to the trampoline as expected.
+
 2006-11-23    <gilles.chanteperdrix@laposte.net>
 
 	* src/skins/posix/thread.c (__pthread_trampoline): Do not use
