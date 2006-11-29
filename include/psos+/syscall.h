@@ -40,15 +40,23 @@
 #define __psos_q_send       14
 #define __psos_q_urgent     15
 #define __psos_q_broadcast  16
-#define __psos_q_vcreate    11
-#define __psos_q_vdelete    12
-#define __psos_q_vident     13
-#define __psos_q_vreceive   14
-#define __psos_q_vsend      15
-#define __psos_q_vurgent    16
-#define __psos_q_vbroadcast 17
-#define __psos_sm_create    18
-#define __psos_sm_delete    19
+#define __psos_q_vcreate    17
+#define __psos_q_vdelete    18
+#define __psos_q_vident     19
+#define __psos_q_vreceive   20
+#define __psos_q_vsend      21
+#define __psos_q_vurgent    22
+#define __psos_q_vbroadcast 23
+#define __psos_sm_create    24
+#define __psos_sm_delete    25
+#define __psos_sm_ident     26
+#define __psos_sm_p         27
+#define __psos_sm_v         28
+#define __psos_rn_create    29
+#define __psos_rn_delete    30
+#define __psos_rn_ident     31
+#define __psos_rn_getseg    32
+#define __psos_rn_retseg    33
 
 #ifdef __KERNEL__
 
