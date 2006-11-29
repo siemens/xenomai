@@ -20,8 +20,8 @@
 #ifndef _psos_queue_h
 #define _psos_queue_h
 
-#include "psos+/defs.h"
-#include "psos+/psos.h"
+#include <psos+/defs.h>
+#include <psos+/psos.h>
 
 #define PSOS_QUEUE_MAGIC 0x81810303
 
