@@ -59,14 +59,15 @@ static int proc_read_named_devs(char* buf, char** start, off_t offset,
     if (down_interruptible(&nrt_dev_lock))
         return -ERESTARTSYS;
 
-    if (!RTDM_PROC_PRINT("Hash\tName\t\t\t\t/proc\n"))
+    if (!RTDM_PROC_PRINT("Hash\tName\t\t\t\tDriver\t\t/proc\n"))
         goto done;
 
     for (i = 0; i < devname_hashtab_size; i++)
         list_for_each(entry, &rtdm_named_devices[i]) {
             device = list_entry(entry, struct rtdm_device, reserved.entry);
 
-            if (!RTDM_PROC_PRINT("%02X\t%-31s\t%s\n", i, device->device_name,
+            if (!RTDM_PROC_PRINT("%02X\t%-31s\t%-15s\t%s\n", i,
+                                 device->device_name,  device->driver_name,
                                  device->proc_name))
                 break;
         }
@@ -91,7 +92,8 @@ static int proc_read_proto_devs(char* buf, char** start, off_t offset,
     if (down_interruptible(&nrt_dev_lock))
         return -ERESTARTSYS;
 
-    if (!RTDM_PROC_PRINT("Hash\tProtocolFamily:SocketType\t/proc\n"))
+    if (!RTDM_PROC_PRINT("Hash\tProtocolFamily:SocketType\tDriver\t\t"
+                         "/proc\n"))
         goto done;
 
     for (i = 0; i < protocol_hashtab_size; i++)
@@ -100,8 +102,8 @@ static int proc_read_proto_devs(char* buf, char** start, off_t offset,
 
             snprintf(txt, sizeof(txt), "%u:%u", device->protocol_family,
                      device->socket_type);
-            if (!RTDM_PROC_PRINT("%02X\t%-31s\t%s\n", i, txt,
-                                 device->proc_name))
+            if (!RTDM_PROC_PRINT("%02X\t%-31s\t%-15s\t%s\n", i, txt,
+                                 device->driver_name, device->proc_name))
                 break;
         }
 
