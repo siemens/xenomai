@@ -1,3 +1,11 @@
+2006-12-01  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.19.
+
+	* src/skins/native/mutex.c: Add actual rt_mutex_lock/unlock
+	wrappers to rt_mutex_acquire/release so resolve dynamic linking
+	properly for legacy builds.
+
 2006-11-30  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/rtdm/proc.c: Print driver names in named_devices and
