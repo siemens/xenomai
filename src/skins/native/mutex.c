@@ -54,3 +54,15 @@ int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)
 	return XENOMAI_SKINCALL2(__native_muxid,
 				 __native_mutex_inquire, mutex, info);
 }
+
+/* Compatibility wrappers for pre-2.3 builds. */
+
+int rt_mutex_lock(RT_MUTEX *mutex, RTIME timeout)
+{
+    return rt_mutex_acquire(mutex, timeout);
+}
+
+int rt_mutex_unlock(RT_MUTEX *mutex)
+{
+    return rt_mutex_release(mutex);
+}

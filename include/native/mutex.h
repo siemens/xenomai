@@ -138,8 +138,12 @@ static inline int __deprecated_call__ rt_mutex_unlock(RT_MUTEX *mutex)
 }
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */
 #else /* !__KERNEL__ */
-#define rt_mutex_lock   rt_mutex_acquire
-#define rt_mutex_unlock rt_mutex_release
+
+int rt_mutex_lock(RT_MUTEX *mutex,
+		  RTIME timeout);
+
+int rt_mutex_unlock(RT_MUTEX *mutex);
+
 #endif /* __KERNEL__ */
 
 #endif /* !_XENO_MUTEX_H */
