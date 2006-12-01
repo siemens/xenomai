@@ -492,7 +492,7 @@ static int __sem_timedwait(struct task_struct *curr, struct pt_regs *regs)
 			    &ts,
 			    (void __user *)__xn_reg_arg2(regs), sizeof(ts));
 
-	return sem_timedwait(&sm.native_sem, &ts) == 0 ? : -thread_get_errno();
+	return sem_timedwait(&sm.native_sem, &ts) == 0 ? 0 : -thread_get_errno();
 }
 
 static int __sem_trywait(struct task_struct *curr, struct pt_regs *regs)
