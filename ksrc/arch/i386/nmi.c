@@ -72,11 +72,13 @@ static rthal_nmi_wd_t rthal_nmi_wds[NR_CPUS];
 static unsigned long rthal_nmi_perfctr_msr;
 static unsigned int rthal_nmi_p4_cccr_val;
 static void (*rthal_nmi_emergency) (struct pt_regs *);
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
 static void (*rthal_linux_nmi_tick) (struct pt_regs *);
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
 #define MSR_P4_IQ_CCCR0		0x36C
-#define nmi_active (nmi_watchdog != NMI_NONE)
+#define rthal_nmi_active (nmi_watchdog != NMI_NONE)
 static inline void wrmsrl(unsigned long msr, unsigned long long val)
 {
 	unsigned long lo, hi;
@@ -84,9 +86,15 @@ static inline void wrmsrl(unsigned long msr, unsigned long long val)
 	hi = val >> 32;
 	wrmsr(msr, lo, hi);
 }
-#else /* Linux >= 2.6 */
+#else /* Linux 2.6.0..18 */
 extern int nmi_active;
-#endif /* Linux >= 2.6 */
+#define rthal_nmi_active	nmi_active
+#endif /* Linux 2.6.0..18 */
+
+#else /* Linux >= 2.6.19 */
+static int (*rthal_linux_nmi_tick) (struct pt_regs *, unsigned);
+#define rthal_nmi_active	atomic_read(&nmi_active)
+#endif /* Linux >= 2.6.19 */
 
 static void rthal_touch_nmi_watchdog(void)
 {
@@ -105,7 +113,15 @@ static void rthal_touch_nmi_watchdog(void)
 	}
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
+#define CALL_LINUX_NMI		rthal_linux_nmi_tick(regs)
+#define NMI_RETURN		return
 static void rthal_nmi_watchdog_tick(struct pt_regs *regs)
+#else /* Linux >= 2.6.19 */
+#define CALL_LINUX_NMI		rthal_linux_nmi_tick(regs, reason)
+#define NMI_RETURN		return 1
+static int rthal_nmi_watchdog_tick(struct pt_regs *regs, unsigned reason)
+#endif /* Linux >= 2.6.19 */
 {
 	int cpu = rthal_processor_id();
 	rthal_nmi_wd_t *wd = &rthal_nmi_wds[cpu];
@@ -125,7 +141,7 @@ static void rthal_nmi_watchdog_tick(struct pt_regs *regs)
 
 	if ((long long)(now - wd->next_linux_check) >= 0) {
 
-		rthal_linux_nmi_tick(regs);
+		CALL_LINUX_NMI;
 
 		do {
 			wd->next_linux_check += RTHAL_CPU_FREQ;
@@ -150,6 +166,7 @@ static void rthal_nmi_watchdog_tick(struct pt_regs *regs)
 	}
 	
 	wrmsrl(wd->perfctr_msr, now - wd->next_linux_check);
+	NMI_RETURN;
 }
 
 static int earlyshots_read_proc(char *page,
@@ -175,7 +192,7 @@ static int earlyshots_read_proc(char *page,
 
 int rthal_nmi_request(void (*emergency) (struct pt_regs *))
 {
-	if (!nmi_active || !nmi_watchdog_tick)
+	if (!rthal_nmi_active || !nmi_watchdog_tick)
 		return -ENODEV;
 
 	if (rthal_linux_nmi_tick)

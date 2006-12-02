@@ -1,3 +1,7 @@
+2006-12-02  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/arch/i386/nmi.c: Fix build against 2.6.19.
+
 2006-12-02  Jeff Webb <jeff.webb@nta-inc.net>
 
 	* ksrc/skins/posix/syscall.c (__pse51_sem_timed_wait): Fix return
