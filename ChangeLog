@@ -1,3 +1,7 @@
+2006-12-02  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.19-1.6-01.
+
 2006-12-02  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/arch/i386/nmi.c: Fix build against 2.6.19.
