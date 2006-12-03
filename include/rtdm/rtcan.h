@@ -523,7 +523,9 @@ typedef struct can_frame {
  *
  * A CAN raw filter list with elements of struct can_filter can be installed 
  * with @c setsockopt. This list is used upon reception of CAN frames to
- * decide whether the bound socket will receive a frame.
+ * decide whether the bound socket will receive a frame. An empty filter list
+ * can also be defined using optlen = 0, which is recommanded for write-only
+ * sockets.
  * @n
  * If the socket was already bound with @ref Bind, the old filter list
  * gets replaced with the new one. Be aware that already received, but 

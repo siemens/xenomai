@@ -1,3 +1,15 @@
+2006-12-03  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* ksrc/drivers/can/rtcan_module.c,
+	ksrc/drivers/can/rtcan_raw.c,
+	ksrc/drivers/can/rtcan_raw.h,
+	ksrc/drivers/can/rtcan_raw_filter.c,
+	ksrc/drivers/can/rtcan_socket.c,
+	ksrc/drivers/can/rtcan_socket.h,
+	src/utils/can/rtcansend.c,
+	include/rtdm/rtcan.h: It is now possible to define an empty filter
+	list with setsockopt, which is recommanded for write-only sockets.
+
 2006-12-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.19-1.6-01.
