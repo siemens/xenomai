@@ -183,7 +183,7 @@ static int rtcan_read_proc_sockets(char *buf, char **start, off_t offset,
 
     list_for_each_entry(sock, &rtcan_socket_list, socket_list) {
 	context = rtcan_socket_context(sock);
-	if (sock->flistlen) {
+	if (rtcan_sock_is_bound(sock)) {
 	    ifindex = atomic_read(&sock->ifindex);
 	    if (ifindex) {
 		dev = rtcan_dev_get_by_index(ifindex);

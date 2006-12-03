@@ -224,10 +224,10 @@ int rtcan_raw_socket(struct rtdm_dev_context *context,
 static inline void rtcan_raw_unbind(struct rtcan_socket *sock)
 {
     rtcan_raw_remove_filter(sock);
-    if (sock->flist)
+    if (!rtcan_flist_no_filter(sock) && sock->flist)
 	rtdm_free(sock->flist);
     sock->flist = NULL;
-    sock->flistlen = 0;
+    sock->flistlen = RTCAN_SOCK_UNBOUND;
     atomic_set(&sock->ifindex, 0);
 }
 
@@ -235,7 +235,7 @@ static inline void rtcan_raw_unbind(struct rtcan_socket *sock)
 static int rtcan_raw_close(struct rtdm_dev_context *context,
 			   rtdm_user_info_t *user_info)
 {
-    struct rtcan_socket *sock = 
+    struct rtcan_socket *sock =
 	(struct rtcan_socket *)&context->dev_private;
     rtdm_lockctx_t lock_ctx;
 
@@ -243,7 +243,7 @@ static int rtcan_raw_close(struct rtdm_dev_context *context,
     rtdm_lock_get_irqsave(&rtcan_recv_list_lock, lock_ctx);
 
     /* Check if socket is bound */
-    if (sock->flistlen)
+    if (rtcan_sock_is_bound(sock))
         rtcan_raw_unbind(sock);
 
     rtdm_lock_put_irqrestore(&rtcan_recv_list_lock, lock_ctx);
@@ -258,7 +258,7 @@ static int rtcan_raw_close(struct rtdm_dev_context *context,
 int rtcan_raw_bind(struct rtdm_dev_context *context,
 		   struct sockaddr_can *scan)
 {
-    struct rtcan_socket *sock = 
+    struct rtcan_socket *sock =
 	(struct rtcan_socket *)&context->dev_private;
     rtdm_lockctx_t lock_ctx;
     int ret = 0;
@@ -283,10 +283,10 @@ int rtcan_raw_bind(struct rtdm_dev_context *context,
     if ((ret = rtcan_raw_check_filter(sock, scan->can_ifindex,
 				      sock->flist)))
 	goto out;
-    if (sock->flistlen)
-	rtcan_raw_remove_filter(sock);
-    rtcan_raw_add_filter(sock, scan->can_ifindex);
-    
+    rtcan_raw_remove_filter(sock);
+    /* Add filter and mark socket as bound */
+    sock->flistlen = rtcan_raw_add_filter(sock, scan->can_ifindex);
+
     /* Set new interface index the socket is now bound to */
     atomic_set(&sock->ifindex, scan->can_ifindex);
 
@@ -297,7 +297,7 @@ int rtcan_raw_bind(struct rtdm_dev_context *context,
 }
 
 
-static int rtcan_raw_setsockopt(struct rtdm_dev_context *context, 
+static int rtcan_raw_setsockopt(struct rtdm_dev_context *context,
 				rtdm_user_info_t *user_info,
 				struct _rtdm_setsockopt_args *so)
 {
@@ -306,7 +306,6 @@ static int rtcan_raw_setsockopt(struct rtdm_dev_context *context,
     int ifindex = atomic_read(&sock->ifindex);
     rtdm_lockctx_t lock_ctx;
     can_err_mask_t err_mask;
-    int flistlen;
     int val, ret = 0;
 
     if (so->level != SOL_CAN_RAW)
@@ -315,30 +314,37 @@ static int rtcan_raw_setsockopt(struct rtdm_dev_context *context,
     switch (so->optname) {
 
     case CAN_RAW_FILTER:
-	flistlen = so->optlen / sizeof(struct can_filter);
-	if (flistlen < 1 || flistlen > RTCAN_MAX_RECEIVERS ||
-	    so->optlen % sizeof(struct can_filter) != 0)
-	    return -EINVAL;
+	if (so->optlen == 0) {
+	    flist = RTCAN_FLIST_NO_FILTER;
+	} else {
+	    int flistlen;
+	    flistlen = so->optlen / sizeof(struct can_filter);
+	    if (flistlen < 1 || flistlen > RTCAN_MAX_RECEIVERS ||
+		so->optlen % sizeof(struct can_filter) != 0)
+		return -EINVAL;
 
-	flist = (struct rtcan_filter_list *)rtdm_malloc(so->optlen + sizeof(int));
-	if (flist == NULL)
-	    return -ENOMEM;
-	if (user_info) {
-	    if (!rtdm_read_user_ok(user_info, so->optval, so->optlen) ||
-		rtdm_copy_from_user(user_info, flist->flist, so->optval, so->optlen)) {
-		rtdm_free(flist);
-		return -EFAULT;
-	    }
-	} else
-	    memcpy(flist, so->optval, so->optlen);
-	flist->flistlen = flistlen;
-	
+	    flist = (struct rtcan_filter_list *)rtdm_malloc(so->optlen + sizeof(int));
+	    if (flist == NULL)
+		return -ENOMEM;
+	    if (user_info) {
+		if (!rtdm_read_user_ok(user_info, so->optval, so->optlen) ||
+		    rtdm_copy_from_user(user_info, flist->flist,
+					so->optval, so->optlen)) {
+		    rtdm_free(flist);
+		    return -EFAULT;
+		}
+	    } else
+		memcpy(flist, so->optval, so->optlen);
+	    flist->flistlen = flistlen;
+	}
+
 	/* Get lock for reception lists */
 	rtdm_lock_get_irqsave(&rtcan_recv_list_lock, lock_ctx);
 
 	/* Check if there is space for the filter list if already bound */
-	if (sock->flistlen) {
-	    if ((ret = rtcan_raw_check_filter(sock, ifindex, flist))) {
+	if (rtcan_sock_is_bound(sock)) {
+	    if (!rtcan_flist_no_filter(flist) &&
+		(ret = rtcan_raw_check_filter(sock, ifindex, flist))) {
 		rtdm_free(flist);
 		goto out_filter;
 	    }
@@ -346,12 +352,12 @@ static int rtcan_raw_setsockopt(struct rtdm_dev_context *context,
 	}
 
 	/* Remove previous list and attach the new one */
-	if (sock->flist)
+	if (!rtcan_flist_no_filter(flist) && sock->flist)
 	    rtdm_free(sock->flist);
 	sock->flist = flist;
-	
-	if (sock->flistlen)
-	    rtcan_raw_add_filter(sock, ifindex);
+
+	if (rtcan_sock_is_bound(sock))
+	    sock->flistlen = rtcan_raw_add_filter(sock, ifindex);
 
     out_filter:
 	/* Release lock for reception lists */

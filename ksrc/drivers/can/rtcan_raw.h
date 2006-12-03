@@ -25,9 +25,9 @@
 int rtcan_raw_ioctl_dev(struct rtdm_dev_context *context,
 			rtdm_user_info_t *user_info, int request, void *arg);
 
-int rtcan_raw_check_filter(struct rtcan_socket *sock, 
+int rtcan_raw_check_filter(struct rtcan_socket *sock,
 			   int ifindex, struct rtcan_filter_list *flist);
-void rtcan_raw_add_filter(struct rtcan_socket *sock, int ifindex);
+int rtcan_raw_add_filter(struct rtcan_socket *sock, int ifindex);
 void rtcan_raw_remove_filter(struct rtcan_socket *sock);
 
 void rtcan_rcv(struct rtcan_device *rtcandev, struct rtcan_skb *skb);
@@ -37,7 +37,7 @@ void rtcan_tx_loopback(struct rtcan_device *rtcandev);
 #define rtcan_tx_loopback_enabled(sock) (sock->tx_loopback)
 #define rtcan_tx_loopback_pending(dev) (dev->tx_socket)
 #else /* !CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK */
-#define rtcan_tx_loopback_enabled(sock) (0) 
+#define rtcan_tx_loopback_enabled(sock) (0)
 #define rtcan_tx_loopback_pending(dev) (0)
 #endif /* CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK */
 

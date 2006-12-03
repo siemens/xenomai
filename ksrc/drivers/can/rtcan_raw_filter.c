@@ -43,9 +43,9 @@ void rtcan_raw_print_filter(struct rtcan_device *dev)
 		dev->name, dev->recv_list, dev->empty_list, dev->free_entries);
     for (i = 0; i < RTCAN_MAX_RECEIVERS; i++, r++) {
 	rtdm_printk("%2d %p sock=%p next=%p id=%x mask=%x\n",
-		    i, r, r->sock, r->next, 
+		    i, r, r->sock, r->next,
 		    r->can_filter.can_id, r->can_filter.can_mask);
-    }	
+    }
 }
 #else
 #define rtcan_raw_print_filter(dev)
@@ -71,14 +71,19 @@ int rtcan_raw_check_filter(struct rtcan_socket *sock, int ifindex,
     int old_ifindex = 0, old_flistlen_all = 0;
     int free_entries, i, begin, end;
     struct rtcan_device *dev;
+    int flistlen;
+
+    if (rtcan_flist_no_filter(flist))
+	return 0;
+
     /* Check if filter list has been defined by user */
-    int flistlen = (flist) ? flist->flistlen : 1;
+    flistlen = (flist) ? flist->flistlen : 1;
 
     /* Now we check if a reception list would overflow. This takes some
      * preparation, so let's go ... */
 
     /* Check current bind status */
-    if (sock->flistlen) {
+    if (rtcan_sock_has_filter(sock)) {
         /* Socket is bound */
         i = atomic_read(&sock->ifindex);
 
@@ -98,7 +103,7 @@ int rtcan_raw_check_filter(struct rtcan_socket *sock, int ifindex,
         begin = 1;
         end = RTCAN_MAX_DEVICES;
     }
-    
+
     /* Check if there is space for the new binding */
     for (i = begin; i <= end; i++) {
 	if ((dev = rtcan_dev_get_by_index(i)) == NULL)
@@ -116,13 +121,19 @@ int rtcan_raw_check_filter(struct rtcan_socket *sock, int ifindex,
 }
 
 
-void rtcan_raw_add_filter(struct rtcan_socket *sock, int ifindex)
+int rtcan_raw_add_filter(struct rtcan_socket *sock, int ifindex)
 {
     int i, j, begin, end;
     struct rtcan_recv *first, *last;
     struct rtcan_device *dev;
     /* Check if filter list has been defined by user */
-    int flistlen = (sock->flist) ? sock->flist->flistlen : 0;
+    int flistlen;
+
+    if (rtcan_flist_no_filter(sock->flist)) {
+	return 0;
+    }
+
+    flistlen = (sock->flist) ? sock->flist->flistlen : 0;
 
     if (ifindex) {
         /* We bind the socket to only one interface. */
@@ -144,7 +155,7 @@ void rtcan_raw_add_filter(struct rtcan_socket *sock, int ifindex)
         if (flistlen) {
             /* Filter list is not empty */
             /* Register first filter */
-            rtcan_raw_mount_filter(&last->can_filter, 
+            rtcan_raw_mount_filter(&last->can_filter,
 				   &sock->flist->flist[0]);
 	    last->match_count = 0;
             last->sock = sock;
@@ -181,8 +192,7 @@ void rtcan_raw_add_filter(struct rtcan_socket *sock, int ifindex)
 	rtcan_dev_dereference(dev);
     }
 
-
-    sock->flistlen = (flistlen) ? flistlen : 1;
+    return (flistlen) ? flistlen : 1;
 }
 
 
@@ -193,10 +203,8 @@ void rtcan_raw_remove_filter(struct rtcan_socket *sock)
     int ifindex = atomic_read(&sock->ifindex);
     struct rtcan_device *dev;
 
-    RTCAN_ASSERT((sock->flistlen >= 0),
-		 rtdm_printk("unexpected flistlen=%d\n",
-			     sock->flistlen);
-		 return;);
+    if (!rtcan_sock_has_filter(sock)) /* nothing to do */
+	return;
 
     if (ifindex) {
         /* Socket was bound to one interface only. */
@@ -238,7 +246,7 @@ void rtcan_raw_remove_filter(struct rtcan_socket *sock)
 
         /* Increase free entries counter by length of old filter list */
         dev->free_entries += sock->flistlen;
-	
+
 	rtcan_raw_print_filter(dev);
 	rtcan_dev_dereference(dev);
     }

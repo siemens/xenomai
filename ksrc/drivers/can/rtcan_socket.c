@@ -44,7 +44,7 @@ void rtcan_socket_init(struct rtdm_dev_context *context)
     sock->recv_head = 0;
     sock->recv_tail = 0;
     atomic_set(&sock->ifindex, 0);
-    sock->flistlen = 0;
+    sock->flistlen = RTCAN_SOCK_UNBOUND;
     sock->flist = NULL;
     sock->err_mask = 0;
     sock->rx_buf_full = 0;
