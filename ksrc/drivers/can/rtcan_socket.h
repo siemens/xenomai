@@ -51,6 +51,11 @@
 /* Mask for clearing bit HAS_TIMESTAMP */
 #define HAS_NO_TIMESTAMP    0x7F
 
+#define RTCAN_SOCK_UNBOUND        -1
+#define RTCAN_FLIST_NO_FILTER     (void *)-1
+#define rtcan_flist_no_filter(f)  ((f) == RTCAN_FLIST_NO_FILTER)
+#define rtcan_sock_has_filter(s)  ((s)->flistlen > 0)
+#define rtcan_sock_is_bound(s)    ((s)->flistlen >= 0)
 
 /*
  *  Internal frame representation within the ring buffer of a

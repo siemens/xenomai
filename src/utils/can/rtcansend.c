@@ -247,6 +247,13 @@ int main(int argc, char **argv)
     to_addr.can_ifindex = ifr.ifr_ifindex;
     to_addr.can_family = AF_CAN;
     if (use_send) {
+	/* Suppress definiton of a default receive filter list */
+	ret = rt_dev_setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER, NULL, 0);
+	if (ret < 0) {
+	    fprintf(stderr, "rt_dev_setsockopt: %s\n", strerror(-ret));
+	    goto failure;
+	}
+
 	ret = rt_dev_bind(s, (struct sockaddr *)&to_addr, sizeof(to_addr));
 	if (ret < 0) {
 	    fprintf(stderr, "rt_dev_bind: %s\n", strerror(-ret));
