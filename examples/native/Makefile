@@ -29,6 +29,8 @@ all::
 endif
 
 
+CC=$(shell $(XENOCONFIG) --cc)
+
 CFLAGS=$(shell $(XENOCONFIG) --xeno-cflags) $(MY_CFLAGS)
 
 LDFLAGS=$(shell $(XENOCONFIG) --xeno-ldflags) $(MY_LDFLAGS) -lnative
@@ -47,27 +49,31 @@ ifneq ($(MODULES),)
 
 OBJS     := ${patsubst %, %.o, $(MODULES)}
 CLEANMOD := ${patsubst %, .%*, $(MODULES)}
+PWD      := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
 
-# Kernel 2.6
+### Kernel 2.6
 ifeq ($(findstring 2.6,$(KSRC)),2.6)
 
 obj-m        := $(OBJS)
 EXTRA_CFLAGS := -I$(KSRC)/include/xenomai -I$(KSRC)/include/xenomai/posix $(ADD_CFLAGS)
-PWD          := $(shell pwd)
 
 all::
 	$(MAKE) -C $(KSRC) SUBDIRS=$(PWD) modules
 
-# Kernel 2.4
+### Kernel 2.4
 else
 
-INCLUDE := -I$(KSRC)/include -I$(KSRC)/include/xenomai -I$(KSRC)/include/xenomai/compat -I$(KSRC)/include/xenomai/posix
-CFLAGS  += -O2 -Wall -Wstrict-prototypes -Wno-trigraphs -DMODULE -D__KERNEL__ -DLINUX \
-           -fno-strict-aliasing -fno-common $(INCLUDE) $(ADD_CFLAGS)
+ARCH    ?= $(shell uname -i)
+INCLUDE := -I$(KSRC)/include/xenomai -I$(KSRC)/include/xenomai/compat -I$(KSRC)/include/xenomai/posix
+CFLAGS  += $(shell $(MAKE) -s -C $(KSRC) CC=$(CC) ARCH=$(ARCH) SUBDIRS=$(PWD) modules) $(INCLUDE)
 
 all:: $(OBJS)
 
 endif
+
+## Target for capturing 2.4 module CFLAGS
+modules:
+	@echo "$(CFLAGS)"
 
 clean::
 	$(RM) $(CLEANMOD) *.cmd *.o *.ko *.mod.c Module*.symvers
