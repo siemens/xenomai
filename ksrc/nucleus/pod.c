@@ -44,6 +44,13 @@
 #include <nucleus/stat.h>
 #include <asm/xenomai/bits/pod.h>
 
+/* debug support */
+#include <nucleus/assert.h>
+
+#ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
+#define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
+#endif
+
 /* NOTE: We need to initialize the globals: remember that this code
    also runs over user-space VMs... */
 
@@ -192,7 +199,7 @@ static int xnpod_fault_handler(xnarch_fltinfo_t *fltinfo)
 	   stepping properly. */
 
 	if (xnpod_shadow_p()) {
-#ifdef CONFIG_XENO_OPT_DEBUG
+#if XENO_DEBUG(NUCLEUS)
 		if (!xnarch_fault_um(fltinfo)) {
 			xnarch_trace_panic_freeze();
 			xnprintf
@@ -209,7 +216,7 @@ static int xnpod_fault_handler(xnarch_fltinfo_t *fltinfo)
 			     xnarch_fault_trap(fltinfo),
 			     xnarch_fault_pc(fltinfo),
 			     xnthread_user_pid(thread));
-#endif /* CONFIG_XENO_OPT_DEBUG */
+#endif /* XENO_DEBUG(NUCLEUS) */
 		if (xnarch_fault_pf_p(fltinfo))
 			/* The page fault counter is not SMP-safe, but it's a
 			   simple indicator that something went wrong wrt memory
@@ -1020,10 +1027,10 @@ void xnpod_restart_thread(xnthread_t *thread)
 	if (!testbits(thread->status, XNSTARTED))
 		return;		/* Not started yet or not restartable. */
 
-#if defined(CONFIG_XENO_OPT_DEBUG) || defined(__XENO_SIM__)
+#if XENO_DEBUG(NUCLEUS) || defined(__XENO_SIM__)
 	if (testbits(thread->status, XNROOT | XNSHADOW))
 		xnpod_fatal("attempt to restart a user-space thread");
-#endif /* CONFIG_XENO_OPT_DEBUG || __XENO_SIM__ */
+#endif /* XENO_DEBUG(NUCLEUS) || __XENO_SIM__ */
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1210,10 +1217,10 @@ void xnpod_delete_thread(xnthread_t *thread)
 	xnsched_t *sched;
 	spl_t s;
 
-#if defined(CONFIG_XENO_OPT_DEBUG) || defined(__XENO_SIM__)
+#if XENO_DEBUG(NUCLEUS) || defined(__XENO_SIM__)
 	if (testbits(thread->status, XNROOT))
 		xnpod_fatal("attempt to delete the root thread");
-#endif /* CONFIG_XENO_OPT_DEBUG || __XENO_SIM__ */
+#endif /* XENO_DEBUG(NUCLEUS) || __XENO_SIM__ */
 
 #ifdef __XENO_SIM__
 	if (nkpod->schedhook)
@@ -1363,14 +1370,14 @@ void xnpod_suspend_thread(xnthread_t *thread,
 	xnsched_t *sched;
 	spl_t s;
 
-#if defined(CONFIG_XENO_OPT_DEBUG) || defined(__XENO_SIM__)
+#if XENO_DEBUG(NUCLEUS) || defined(__XENO_SIM__)
 	if (testbits(thread->status, XNROOT))
 		xnpod_fatal("attempt to suspend root thread %s", thread->name);
 
 	if (thread->wchan && wchan)
 		xnpod_fatal("thread %s attempts a conjunctive wait",
 			    thread->name);
-#endif /* CONFIG_XENO_OPT_DEBUG || __XENO_SIM__ */
+#endif /* XENO_DEBUG(NUCLEUS) || __XENO_SIM__ */
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1379,11 +1386,11 @@ void xnpod_suspend_thread(xnthread_t *thread,
 	sched = thread->sched;
 
 	if (thread == sched->runthread) {
-#if defined(CONFIG_XENO_OPT_DEBUG) || defined(__XENO_SIM__)
+#if XENO_DEBUG(NUCLEUS) || defined(__XENO_SIM__)
 		if (sched == xnpod_current_sched() && xnpod_locked_p())
 			xnpod_fatal
 			    ("suspensive call issued while the scheduler was locked");
-#endif /* CONFIG_XENO_OPT_DEBUG || __XENO_SIM__ */
+#endif /* XENO_DEBUG(NUCLEUS) || __XENO_SIM__ */
 
 		xnsched_set_resched(sched);
 	}
@@ -2309,9 +2316,9 @@ void xnpod_schedule(void)
 {
 	xnthread_t *threadout, *threadin, *runthread;
 	xnsched_t *sched;
-#if defined(CONFIG_SMP) || defined(CONFIG_XENO_OPT_DEBUG)
+#if defined(CONFIG_SMP) || XENO_DEBUG(NUCLEUS)
 	int need_resched;
-#endif /* CONFIG_SMP || CONFIG_XENO_OPT_DEBUG */
+#endif /* CONFIG_SMP || XENO_DEBUG(NUCLEUS) */
 	spl_t s;
 #ifdef __KERNEL__
 #ifdef CONFIG_XENO_OPT_PERVASIVE
@@ -2339,7 +2346,7 @@ void xnpod_schedule(void)
 			 xnarch_user_pid(xnthread_archtcb(runthread)) : -1,
 			 xnthread_current_priority(runthread));
 
-#if defined(CONFIG_SMP) || defined(CONFIG_XENO_OPT_DEBUG)
+#if defined(CONFIG_SMP) || XENO_DEBUG(NUCLEUS)
 	need_resched = xnsched_tst_resched(sched);
 #endif
 #ifdef CONFIG_SMP
@@ -2350,15 +2357,15 @@ void xnpod_schedule(void)
 		xnarch_send_ipi(xnsched_resched_mask());
 		xnsched_clr_mask(sched);
 	}
-#ifndef CONFIG_XENO_OPT_DEBUG
+#if XENO_DEBUG(NUCLEUS)
 	if (!need_resched)
 		goto signal_unlock_and_exit;
 
 	xnsched_set_resched(sched);
-#else /* !CONFIG_XENO_OPT_DEBUG */
+#else /* !XENO_DEBUG(NUCLEUS) */
 	if (need_resched)
 		xnsched_set_resched(sched);
-#endif /* !CONFIG_XENO_OPT_DEBUG */
+#endif /* !XENO_DEBUG(NUCLEUS) */
 
 #endif /* CONFIG_SMP */
 
@@ -2399,7 +2406,7 @@ void xnpod_schedule(void)
 	threadout = runthread;
 	threadin = link2thread(sched_getpq(&sched->readyq), rlink);
 
-#ifdef CONFIG_XENO_OPT_DEBUG
+#if XENO_DEBUG(NUCLEUS)
 	if (!need_resched) {
 		xnprintf
 		    ("xnpod_schedule: scheduler state changed without rescheduling"
@@ -2409,7 +2416,7 @@ void xnpod_schedule(void)
 		show_stack(NULL, NULL);
 #endif
 	}
-#endif /* CONFIG_XENO_OPT_DEBUG */
+#endif /* XENO_DEBUG(NUCLEUS) */
 
 	__clrbits(threadin->status, XNREADY);
 
@@ -2527,9 +2534,9 @@ void xnpod_schedule_runnable(xnthread_t *thread, int flags)
 	xnthread_t *runthread = sched->runthread, *threadin;
 
 	xnltt_log_event(xeno_ev_fastsched);
-	xnarch_trace_pid(xnthread_user_task(runthread) ?
-			 xnarch_user_pid(xnthread_archtcb(runthread)) : -1,
-			 xnthread_current_priority(runthread));
+	xnarch_trace_pid(xnthread_user_task(thread) ?
+			 xnarch_user_pid(xnthread_archtcb(thread)) : -1,
+			 xnthread_current_priority(thread));
 
 	if (thread != runthread) {
 		sched_removepq(&sched->readyq, &thread->rlink);
