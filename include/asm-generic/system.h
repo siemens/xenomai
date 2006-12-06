@@ -40,6 +40,13 @@
 #include <asm/xenomai/atomic.h>
 #include <nucleus/shadow.h>
 
+/* debug support */
+#include <nucleus/assert.h>
+
+#ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
+#define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
+#endif
+
 /* Tracer interface */
 #define xnarch_trace_max_begin(v)		rthal_trace_max_begin(v)
 #define xnarch_trace_max_end(v)		rthal_trace_max_end(v)
@@ -66,14 +73,12 @@ typedef unsigned long spl_t;
 #define splexit(x)  rthal_local_irq_restore((x) & 1)
 #else /* !CONFIG_SMP */
 #define splexit(x)  rthal_local_irq_restore(x)
-#endif /* CONFIG_SMP */
+#endif /* !CONFIG_SMP */
 #define splnone()   rthal_local_irq_enable()
 #define spltest()   rthal_local_irq_test()
 #define splget(x)   rthal_local_irq_flags(x)
 
-#if defined(CONFIG_SMP) && \
-    (defined(CONFIG_XENO_OPT_STATS) || defined(CONFIG_XENO_OPT_DEBUG))
-
+#if defined(CONFIG_SMP) && defined(CONFIG_XENO_OPT_DEBUG)
 typedef struct {
 
         unsigned long long spin_time;
@@ -96,25 +101,22 @@ typedef struct {
 
 } xnlock_t;
 
-#define XNARCH_LOCK_UNLOCKED (xnlock_t) {       \
-	{ ~0 },				        \
-        NULL,                                   \
-        NULL,                                   \
-        0,                                      \
-        -1,                                     \
-        0LL,                                    \
-        0LL,                                    \
+#define XNARCH_LOCK_UNLOCKED (xnlock_t) {	\
+	{ ~0 },					\
+	NULL,					\
+	NULL,					\
+	0,					\
+	-1,					\
+	0LL,					\
+	0LL,					\
 }
 
-#define CONFIG_XENO_SPINLOCK_DEBUG  1
-
-#else /* !(CONFIG_XENO_OPT_STATS && CONFIG_SMP) */
+#else /* !(CONFIG_SMP && CONFIG_XENO_OPT_DEBUG) */
 
 typedef struct { atomic_t owner; } xnlock_t;
 
 #define XNARCH_LOCK_UNLOCKED (xnlock_t) { { ~0 } }
-
-#endif /* CONFIG_XENO_OPT_STATS && CONFIG_SMP */
+#endif /* !(CONFIG_SMP && CONFIG_XENO_OPT_DEBUG) */
 
 #define XNARCH_NR_CPUS               RTHAL_NR_CPUS
 
@@ -223,15 +225,15 @@ static inline int xnarch_setimask (int imask)
 
 #ifdef CONFIG_SMP
 
-#ifdef CONFIG_XENO_SPINLOCK_DEBUG
+#if XENO_DEBUG(NUCLEUS)
 #define xnlock_get(lock) \
     __xnlock_get(lock, __FILE__, __LINE__,__FUNCTION__)
 #define xnlock_get_irqsave(lock,x) \
     ((x) = __xnlock_get_irqsave(lock, __FILE__, __LINE__,__FUNCTION__))
-#else /* !CONFIG_XENO_SPINLOCK_DEBUG */
+#else /* !XENO_DEBUG(NUCLEUS) */
 #define xnlock_get(lock)            __xnlock_get(lock)
 #define xnlock_get_irqsave(lock,x)  ((x) = __xnlock_get_irqsave(lock))
-#endif /* CONFIG_XENO_SPINLOCK_DEBUG */
+#endif /* !XENO_DEBUG(NUCLEUS) */
 #define xnlock_clear_irqoff(lock)   xnlock_put_irqrestore(lock,1)
 #define xnlock_clear_irqon(lock)    xnlock_put_irqrestore(lock,0)
 
@@ -240,7 +242,7 @@ static inline void xnlock_init (xnlock_t *lock)
     *lock = XNARCH_LOCK_UNLOCKED;
 }
 
-#ifdef CONFIG_XENO_SPINLOCK_DEBUG
+#if XENO_DEBUG(NUCLEUS)
 
 #define XNARCH_DEBUG_SPIN_LIMIT 3000000
 
@@ -250,10 +252,10 @@ static inline int __xnlock_get (xnlock_t *lock,
 				 const char *function)
 {
     unsigned spin_count = 0;
-#else /* !CONFIG_XENO_SPINLOCK_DEBUG */
+#else /* !XENO_DEBUG(NUCLEUS) */
 static inline int __xnlock_get (xnlock_t *lock)
 {
-#endif /* !CONFIG_XENO_SPINLOCK_DEBUG */
+#endif /* !XENO_DEBUG(NUCLEUS) */
     rthal_declare_cpuid;
     int recursing;
 
@@ -261,14 +263,14 @@ static inline int __xnlock_get (xnlock_t *lock)
 
     recursing = (atomic_read(&lock->owner) == cpuid);
     if (!recursing) {
-#ifdef CONFIG_XENO_SPINLOCK_DEBUG
+#if XENO_DEBUG(NUCLEUS)
 	    unsigned long long lock_date = rthal_rdtsc();
-#endif /* CONFIG_XENO_SPINLOCK_DEBUG */
+#endif /* XENO_DEBUG(NUCLEUS) */
 	    while(atomic_cmpxchg(&lock->owner, ~0, cpuid) != ~0)
 		    do {
 			    cpu_relax();
 
-#ifdef CONFIG_XENO_SPINLOCK_DEBUG
+#if XENO_DEBUG(NUCLEUS)
 			    if (++spin_count == XNARCH_DEBUG_SPIN_LIMIT) {
 				    rthal_emergency_console();
 				    printk(KERN_ERR
@@ -281,17 +283,17 @@ static inline int __xnlock_get (xnlock_t *lock)
 				    for (;;)
 					    cpu_relax();
 			    }
-#endif /* CONFIG_XENO_SPINLOCK_DEBUG */
+#endif /* XENO_DEBUG(NUCLEUS) */
 		    } while(atomic_read(&lock->owner) != ~0);
 
-#ifdef CONFIG_XENO_SPINLOCK_DEBUG
+#if XENO_DEBUG(NUCLEUS)
 	    lock->spin_time = rthal_rdtsc() - lock_date;
 	    lock->lock_date = lock_date;
 	    lock->file = file;
 	    lock->function = function;
 	    lock->line = line;
 	    lock->cpu = cpuid;
-#endif /* CONFIG_XENO_SPINLOCK_DEBUG */
+#endif /* XENO_DEBUG(NUCLEUS) */
         }
 
     return recursing;
@@ -304,7 +306,7 @@ static inline void xnlock_put (xnlock_t *lock)
     rthal_load_cpuid();
     if (likely(atomic_read(&lock->owner) == cpuid)) {
 
-#ifdef CONFIG_XENO_OPT_STATS
+#if XENO_DEBUG(NUCLEUS)
 	    extern xnlockinfo_t xnlock_stats[];
 
 	    unsigned long long lock_time = rthal_rdtsc() - lock->lock_date;
@@ -316,10 +318,10 @@ static inline void xnlock_put (xnlock_t *lock)
 		    xnlock_stats[cpuid].function = lock->function;
 		    xnlock_stats[cpuid].line = lock->line;
 	    }
-#endif /* CONFIG_XENO_OPT_STATS */
+#endif /* XENO_DEBUG(NUCLEUS) */
 	    atomic_set(&lock->owner, ~0);
     }
-#ifdef CONFIG_XENO_SPINLOCK_DEBUG
+#if XENO_DEBUG(NUCLEUS)
     else {
 	    rthal_emergency_console();
 	    printk(KERN_ERR
@@ -330,31 +332,31 @@ static inline void xnlock_put (xnlock_t *lock)
 	    for (;;)
 		    cpu_relax();
     }
-#endif /* CONFIG_XENO_SPINLOCK_DEBUG */
+#endif /* XENO_DEBUG(NUCLEUS) */
 }
 
-#ifdef CONFIG_XENO_SPINLOCK_DEBUG
+#if XENO_DEBUG(NUCLEUS)
 
 static inline spl_t __xnlock_get_irqsave (xnlock_t *lock,
                                           const char *file,
                                           unsigned line,
                                           const char *function)
 {
-#else /* !CONFIG_XENO_SPINLOCK_DEBUG */
+#else /* !XENO_DEBUG(NUCLEUS) */
 static inline spl_t __xnlock_get_irqsave (xnlock_t *lock)
 {
-#endif /* !CONFIG_XENO_SPINLOCK_DEBUG */
+#endif /* !XENO_DEBUG(NUCLEUS) */
     unsigned long flags;
 
     rthal_local_irq_save(flags);
 
-#ifdef CONFIG_XENO_SPINLOCK_DEBUG
+#if XENO_DEBUG(NUCLEUS)
     if (__xnlock_get(lock, file, line, function))
 	    flags |= 2;
-#else /* !CONFIG_XENO_SPINLOCK_DEBUG */
+#else /* !XENO_DEBUG(NUCLEUS) */
     if (__xnlock_get(lock))
 	    flags |= 2;
-#endif /* !CONFIG_XENO_SPINLOCK_DEBUG */
+#endif /* !XENO_DEBUG(NUCLEUS) */
 	
     return flags;
 }
@@ -377,7 +379,7 @@ static inline void xnlock_put_irqrestore (xnlock_t *lock, spl_t flags)
 #define xnlock_clear_irqoff(lock)      rthal_local_irq_disable()
 #define xnlock_clear_irqon(lock)       rthal_local_irq_enable()
 
-#endif /* CONFIG_SMP */
+#endif /* !CONFIG_SMP */
 
 static inline int xnarch_remap_vm_page(struct vm_area_struct *vma,
 				       unsigned long from,
