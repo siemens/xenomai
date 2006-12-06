@@ -20,9 +20,8 @@ config XENO_OPT_PERVASIVE
 config XENO_OPT_ISHIELD
 	depends on XENO_OPT_PERVASIVE
 	bool "Interrupt shield support"
-	default n
 	help
-	
+
 	This option builds in the interrupt shield support, which can
 	be further enabled on a thread-by-thread basis. When enabled
 	for a thread, the interrupt shield prevents it from being
@@ -40,9 +39,8 @@ config XENO_OPT_ISHIELD
 config XENO_OPT_RPIDISABLE
 	depends on XENO_OPT_PERVASIVE
 	bool "Disable priority coupling"
-	default n
 	help
-	
+
 	This option globally disables thread priority coupling between
 	Xenomai and Linux schedulers. Decoupling priority prevents the
 	Linux kernel from inheriting the priority of the associated
@@ -97,13 +95,13 @@ config XENO_OPT_PIPE_NRDEV
 	depends on XENO_OPT_PIPE
 	default 32
 	help
-	
+
 	Message pipes are bi-directional FIFO communication
 	channels allowing data exchange between real-time kernel
 	threads and regular user-space processes. Pipes natively
 	preserve message boundaries, but can also be used in byte
 	streaming mode from kernel to user-space.
-	
+
 	This option sets the maximum number of pipe devices supported
 	in the system. Pipe devices are named /dev/rtpN where N is a
 	device minor number ranging from 0 to XENO_OPT_PIPE_NRDEV - 1.
@@ -116,13 +114,13 @@ config XENO_OPT_REGISTRY_NRSLOTS
 	depends on XENO_OPT_REGISTRY
 	default 512
 	help
-	
+
 	The registry is used by Xenomai skins to bind real-time
 	objects they create to symbolic names, so that these objects
 	can be further retrieved and shared by real-time applications
 	regardless of their runtime space (i.e. kernel or user). Each
 	named object occupies a registry slot.
-	
+
 	This option sets the maximum number of real-time objects the
 	registry can handle. All skins using the registry share this
 	storage.
@@ -140,16 +138,25 @@ config XENO_OPT_STATS
 	bool "Statistics collection"
 	default y
 	help
-	
+
 	This option causes the real-time nucleus to collect various
 	per-thread runtime statistics, which are accessible through
 	the /proc/xenomai/stats interface.
 
 config XENO_OPT_DEBUG
 	bool "Debug support"
-	default n
 	help
-	
+
+	When enabled, various debugging features can be switched on. They
+	can help to find problems in applications, drivers, and the Xenomai
+	core. XENO_OPT_DEBUG itself does not have any impact on generated
+	code.
+
+config XENO_OPT_DEBUG_NUCLEUS
+	bool "Nucleus Debugging support"
+	depends on XENO_OPT_DEBUG
+	help
+
 	This option activates various debugging checks inside the core
 	system. Doing so adds a significant runtime overhead,
 	worsening the latency figures especially on SMP kernels.
@@ -160,20 +167,17 @@ config XENO_OPT_DEBUG_QUEUES
 	bool "Queue Debugging support"
 	depends on XENO_OPT_DEBUG
 	help
-	
-	This option activates debugging checks for all queueing
-	operations of the Xenomai core. It adds even more runtime
-	overhead then CONFIG_XENO_OPT_DEBUG, use with care.
 
-config XENO_OPT_DEBUG_BHEAP
-	bool
-	default y if XENO_OPT_DEBUG
+	This option activates debugging checks for all queueing
+	operations of the Xenomai core. It adds heavy runtime overhead,
+	use with care.
 
 config XENO_OPT_WATCHDOG
 	bool "Watchdog support"
-	default n
+	depends on XENO_OPT_DEBUG
+	default y
 	help
-	
+
 	This option activates a watchdog aimed at detecting runaway
 	real-time threads. If enabled, the watchdog triggers after 4
 	seconds of uninterrupted real-time activity without Linux
@@ -186,7 +190,6 @@ menu "Timing"
 
 config XENO_OPT_TIMING_PERIODIC
 	bool "Use periodic timer hardware"
-	default n
 	help
 	WARNING: This value must be <= CONFIG_HZ.
 
@@ -283,9 +286,8 @@ menu "Scalability"
 
 config XENO_OPT_SCALABLE_SCHED
 	bool "O(1) scheduler"
-	default n
 	help
-	
+
 	This option causes a multi-level priority queue to be
 	used in the real-time thread scheduler, so that it operates
 	in constant-time regardless of the number of _concurrently
@@ -296,9 +298,9 @@ config XENO_OPT_SCALABLE_SCHED
 	better with lower memory footprints.
 
 choice
-        prompt "Timer indexing method"
-        default XENO_OPT_TIMER_LIST
-        help
+	prompt "Timer indexing method"
+	default XENO_OPT_TIMER_LIST
+	help
 
 	This option allows to select the underlying data structure
 	which is going to be used for ordering the outstanding
@@ -307,20 +309,20 @@ choice
 	data structure is always used, regardless of this option.
 
 config XENO_OPT_TIMER_LIST
-        bool "Linear"
-        help
+	bool "Linear"
+	help
 
-        Use a linked list. Albeit O(N), this simple data structure is
-        particularly efficient when only a few timers (< 10) may be
-        concurrently outstanding at any point in time.
+	Use a linked list. Albeit O(N), this simple data structure is
+	particularly efficient when only a few timers (< 10) may be
+	concurrently outstanding at any point in time.
 
 config XENO_OPT_TIMER_HEAP
-        bool "Tree"
-        help
+	bool "Tree"
+	help
 
-        Use a binary heap. This data structure is efficient when a
-        high number of software timers may be concurrently
-        outstanding at any point in time.
+	Use a binary heap. This data structure is efficient when a
+	high number of software timers may be concurrently
+	outstanding at any point in time.
 
 config XENO_OPT_TIMER_WHEEL
 	bool "Hash"
@@ -329,8 +331,8 @@ config XENO_OPT_TIMER_WHEEL
 	Use a hash table. Timers operations using this data structure
 	should have an O(1) complexity if the timers follow two 
 	conditions:
-        - timers expiration dates do not collide too much;
-        - there is at least one periodic timer using a period near 
+	- timers expiration dates do not collide too much;
+	- there is at least one periodic timer using a period near
 	the wheel step (around 100000 ns by default).
 
 endchoice
@@ -339,9 +341,9 @@ config XENO_OPT_TIMER_HEAP_CAPACITY
 	int "Binary heap capacity"
 	depends on XENO_OPT_TIMER_HEAP
 	default 256
-        help 
+	help
 
-        Set the maximum number of timers in the nucleus timers list.
+	Set the maximum number of timers in the nucleus timers list.
 
 config XENO_OPT_TIMER_WHEEL_STEP
 	int "Timer wheel step"
@@ -359,9 +361,8 @@ menu "Shared interrupts"
 
 config XENO_OPT_SHIRQ_LEVEL
 	bool "Level-triggered interrupts"
-	default n
 	help
-	
+
 	Enables support for shared level-triggered interrupts, so that
 	multiple real-time interrupt handlers are allowed to control
 	dedicated hardware devices which are configured to share
@@ -369,7 +370,6 @@ config XENO_OPT_SHIRQ_LEVEL
 
 config XENO_OPT_SHIRQ_EDGE
 	bool "Edge-triggered interrupts"
-	default n
 	help
 
 	Enables support for shared edge-triggered interrupts, so that
@@ -387,7 +387,7 @@ config XENO_OPT_FILTER_EVIRQ
 	bool "Disable IRQ-related tracepoints"
 	default y if XENO_OPT_FILTER_EVALL=y
 	help
-	
+
 	When LTT support is active, this option disables tracepoints
 	inside real-time interrupt handlers.
 
@@ -395,7 +395,7 @@ config XENO_OPT_FILTER_EVTHR
 	bool "Disable thread-related tracepoints"
 	default y if XENO_OPT_FILTER_EVALL=y
 	help
-	
+
 	When LTT support is active, this option disables tracepoints
 	inside most thread-related services.
 
@@ -403,15 +403,14 @@ config XENO_OPT_FILTER_EVSYS
 	bool "Disable syscall-related tracepoints"
 	default y if XENO_OPT_FILTER_EVALL=y
 	help
-	
+
 	When LTT support is active, this option disables tracepoints
 	inside the shadow syscall dispatcher.
 
 config XENO_OPT_FILTER_EVALL
 	bool "Disable all tracepoints"
-	default n
 	help
-	
+
 	This option disables all LTT tracepoints inside Xenomai.
 
 endmenu

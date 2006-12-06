@@ -24,6 +24,13 @@
 #include <nucleus/types.h>
 #include <nucleus/core.h>
 
+/* debug support */
+#include <nucleus/assert.h>
+
+#ifndef CONFIG_XENO_OPT_DEBUG_QUEUES
+#define CONFIG_XENO_OPT_DEBUG_QUEUES 0
+#endif
+
 /* Basic element holder */
 
 typedef struct xnholder {
@@ -62,28 +69,28 @@ typedef struct xnqueue {
 
     xnholder_t head;
     int elems;
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_DEBUG_QUEUES) && defined(CONFIG_SMP)
+#if defined(__KERNEL__) && XENO_DEBUG(QUEUES) && defined(CONFIG_SMP)
     xnlock_t lock;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_DEBUG_QUEUES && CONFIG_SMP */
+#endif /* __KERNEL__ && XENO_DEBUG(QUEUES) && CONFIG_SMP */
 
 } xnqueue_t;
 
-#if defined(CONFIG_XENO_OPT_DEBUG_QUEUES) && defined(CONFIG_SMP)
+#if XENO_DEBUG(QUEUES) && defined(CONFIG_SMP)
 #define DECLARE_XNQUEUE(q) xnqueue_t q = { { &(q).head, &(q).head }, 0, XNARCH_LOCK_UNLOCKED }
-#else /* !(CONFIG_XENO_OPT_DEBUG_QUEUES && CONFIG_SMP) */
+#else /* !(XENO_DEBUG(QUEUES) && CONFIG_SMP) */
 #define DECLARE_XNQUEUE(q) xnqueue_t q = { { &(q).head, &(q).head }, 0 }
-#endif /* CONFIG_XENO_OPT_DEBUG_QUEUES && CONFIG_SMP */
+#endif /* XENO_DEBUG(QUEUES) && CONFIG_SMP */
 
 static inline void initq (xnqueue_t *qslot)
 {
     inith(&qslot->head);
     qslot->elems = 0;
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_DEBUG_QUEUES) && defined(CONFIG_SMP)
+#if defined(__KERNEL__) && XENO_DEBUG(QUEUES) && defined(CONFIG_SMP)
     xnlock_init(&qslot->lock);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_DEBUG_QUEUES && CONFIG_SMP */
+#endif /* __KERNEL__ && XENO_DEBUG(QUEUES) && CONFIG_SMP */
 }
 
-#ifdef CONFIG_XENO_OPT_DEBUG_QUEUES
+#if XENO_DEBUG(QUEUES)
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
@@ -178,7 +185,7 @@ do { \
    dth(__holder);				\
    --(__qslot)->elems; })
 
-#else /* !CONFIG_XENO_OPT_DEBUG_QUEUES */
+#else /* !XENO_DEBUG(QUEUES) */
 
 static inline void insertq (xnqueue_t *qslot,
 			    xnholder_t *head,
@@ -212,7 +219,7 @@ static inline void removeq (xnqueue_t *qslot,
     --qslot->elems;
 }
 
-#endif /* CONFIG_XENO_OPT_DEBUG_QUEUES */
+#endif /* XENO_DEBUG(QUEUES) */
 
 static inline xnholder_t *getheadq (xnqueue_t *qslot)
 {
@@ -762,13 +769,12 @@ static inline xnpholder_t *getmlq(xnmlqueue_t *mlqslot)
     queue = &mlqslot->queue[idx];
     holder = getq(queue);
 
-#ifdef CONFIG_XENO_OPT_DEBUG_QUEUES
-    if (!holder)
+    XENO_ASSERT(QUEUES, holder,
         xnpod_fatal("corrupted multi-level queue, qslot=%p at %s:%d",
                     mlqslot,
 		    __FILE__,__LINE__);
-#endif /* CONFIG_XENO_OPT_DEBUG_QUEUES */
-        
+        );
+
     hi = idx / BITS_PER_LONG;
     lo = idx % BITS_PER_LONG;
 
@@ -779,7 +785,7 @@ static inline xnpholder_t *getmlq(xnmlqueue_t *mlqslot)
 	if (mlqslot->lomap[hi] == 0)
 	    __clrbits(mlqslot->himap,1 << hi);
     }
-    
+
     return (xnpholder_t *)holder;
 }
 

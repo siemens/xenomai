@@ -22,6 +22,8 @@
 
 #include <nucleus/compiler.h>
 
+#define XENO_DEBUG(subsystem)   (CONFIG_XENO_OPT_DEBUG_##subsystem > 0)
+
 #define XENO_ASSERT(subsystem,cond,action)  do { \
     if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem > 0 && !(cond))) { \
         xnarch_trace_panic_freeze(); \
