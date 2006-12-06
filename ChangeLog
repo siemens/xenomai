@@ -1,3 +1,10 @@
+2006-12-06  Jan Kiszka  <jan.kiszka@web.de>
+            Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/generic/hal.c (rthal_apc_schedule): Fix races by
+	keeping irqs disabled while updating rthal_apc_pending and
+	scheduling the virq. Clean up the return code.
+
 2006-12-02  Jeff Webb <jeff.webb@nta-inc.net>
 
 	* ksrc/skins/posix/syscall.c (__pse51_sem_timed_wait): Fix return

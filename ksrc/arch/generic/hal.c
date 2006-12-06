@@ -565,7 +565,7 @@ int rthal_apc_free(int apc)
 
 /**
  * @fn int rthal_apc_schedule (int apc)
- *                           
+ *
  * @brief Schedule an APC invocation.
  *
  * This service marks the APC as pending for the Linux domain, so that
@@ -580,8 +580,7 @@ int rthal_apc_free(int apc)
  *
  * @param apc The APC id. to schedule.
  *
- * @return 0 or 1 are returned upon success, the former meaning that
- * the APC was already pending. Otherwise:
+ * @return 0 is returned upon success. Otherwise:
  *
  * - -EINVAL is returned if @a apc is invalid.
  *
@@ -596,18 +595,21 @@ int rthal_apc_free(int apc)
 int rthal_apc_schedule(int apc)
 {
     rthal_declare_cpuid;
+    unsigned long flags;
 
     if (apc < 0 || apc >= RTHAL_NR_APCS)
         return -EINVAL;
 
-    rthal_load_cpuid();         /* Migration would be harmless here. */
+    rthal_local_irq_save(flags);
 
-    if (!test_and_set_bit(apc, &rthal_apc_pending[cpuid])) {
+    rthal_load_cpuid();
+
+    if (!__test_and_set_bit(apc, &rthal_apc_pending[cpuid]))
         rthal_schedule_irq(rthal_apc_virq);
-        return 1;
-    }
 
-    return 0;                   /* Already pending. */
+    rthal_local_irq_restore(flags);
+
+    return 0;
 }
 
 #ifdef CONFIG_PROC_FS
