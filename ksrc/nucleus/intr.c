@@ -40,7 +40,7 @@
 #define XNINTR_MAX_UNHANDLED	1000
 
 #ifdef CONFIG_SMP
-xnlock_t intrlock;
+xnlock_t intrlock = XNARCH_LOCK_UNLOCKED;
 #endif /* CONFIG_SMP */
 
 xnintr_t nkclock;
