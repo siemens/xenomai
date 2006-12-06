@@ -1211,15 +1211,14 @@ void pse51_signal_pkg_init(void)
 
 void pse51_signal_pkg_cleanup(void)
 {
-#ifdef CONFIG_XENO_OPT_DEBUG
+#if XENO_DEBUG(POSIX)
 	int i;
 
 	for (i = 0; i < PSE51_SIGQUEUE_MAX; i++)
 		if (pse51_infos_pool[i].info.si_signo)
-			xnprintf
-			    ("Posix siginfo structure %p was not freed, freeing now.\n",
-			     &pse51_infos_pool[i].info);
-#endif /* CONFIG_XENO_OPT_DEBUG */
+			xnprintf("Posix siginfo structure %p was not freed, "
+				 "freeing now.\n", &pse51_infos_pool[i].info);
+#endif /* XENO_DEBUG(POSIX) */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	rthal_apc_free(pse51_signals_apc);

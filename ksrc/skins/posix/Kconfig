@@ -10,7 +10,6 @@ if XENO_SKIN_POSIX != n
 
 config XENO_OPT_POSIX_SHM
 	bool "Shared memory"
-	default n
 	help
 
 	POSIX skin shared memory areas are regions of memory which can be shared
@@ -23,7 +22,6 @@ config XENO_OPT_POSIX_SHM
 
 config XENO_OPT_POSIX_INTR
 	bool "Interrupts"
-	default n
 	help
 
 	This option provides an ad-hoc API to deal with interrupts in programs
@@ -31,5 +29,13 @@ config XENO_OPT_POSIX_INTR
 	do not intend to handle interrupts in POSIX skin programs (and using the
 	RTDM skin is the preferred way of implementing drivers), leave this
 	option unselected.
+
+config XENO_OPT_DEBUG_POSIX
+	bool "Debugging support"
+	default y
+	help
+
+	When enabled, this option makes the skin warn about not properly
+	cleaned up POSIX objects it detects on process termination.
 
 endif

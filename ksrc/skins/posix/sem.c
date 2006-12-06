@@ -760,9 +760,9 @@ static void usem_cleanup(pse51_assoc_t *assoc)
 	pse51_usem_t *usem = assoc2usem(assoc);
 	nsem_t *nsem = sem2named_sem(sem);
 
-#ifdef CONFIG_XENO_OPT_DEBUG
+#if XENO_DEBUG(POSIX)
 	xnprintf("Posix: closing semaphore \"%s\".\n", nsem->nodebase.name);
-#endif /* CONFIG_XENO_OPT_DEBUG */
+#endif /* XENO_DEBUG(POSIX) */
 	sem_close(&nsem->descriptor.native_sem);
 	xnfree(usem);
 }
@@ -784,13 +784,13 @@ void pse51_semq_cleanup(pse51_kqueues_t *q)
 		pse51_sem_t *sem = link2sem(holder);
 		pse51_node_t *node;
 		xnlock_put_irqrestore(&nklock, s);
-#ifdef CONFIG_XENO_OPT_DEBUG
-		if (sem->is_named) 
+#if XENO_DEBUG(POSIX)
+		if (sem->is_named)
 			xnprintf("Posix: unlinking semaphore \"%s\".\n",
 				 sem2named_sem(sem)->nodebase.name);
 		else
-			xnprintf("Posix: destroying semaphore %p.\n",sem);
-#endif /* CONFIG_XENO_OPT_DEBUG */
+			xnprintf("Posix: destroying semaphore %p.\n", sem);
+#endif /* XENO_DEBUG(POSIX) */
 		xnlock_get_irqsave(&nklock, s);
 		if (sem->is_named)
 			pse51_node_remove(&node,

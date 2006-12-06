@@ -520,9 +520,9 @@ void pse51_timerq_cleanup(pse51_kqueues_t *q)
 		timer_t tm = (timer_t) (link2tm(holder, link) - timer_pool);
 		pse51_timer_delete_inner(tm, q);
 		xnlock_put_irqrestore(&nklock, s);
-#ifdef CONFIG_XENO_OPT_DEBUG
+#if XENO_DEBUG(POSIX)
 		xnprintf("Posix timer %u deleted\n", (unsigned) tm);
-#endif /* CONFIG_XENO_OPT_DEBUG */
+#endif /* XENO_DEBUG(POSIX) */
 		xnlock_get_irqsave(&nklock, s);
 	}
 
