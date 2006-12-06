@@ -121,10 +121,6 @@ int rt_mutex_release(RT_MUTEX *mutex);
 int rt_mutex_inquire(RT_MUTEX *mutex,
 		     RT_MUTEX_INFO *info);
 
-#ifdef __cplusplus
-}
-#endif
-
 #ifdef __KERNEL__
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
 static inline int __deprecated_call__ rt_mutex_lock(RT_MUTEX *mutex, RTIME timeout)
@@ -145,5 +141,9 @@ int rt_mutex_lock(RT_MUTEX *mutex,
 int rt_mutex_unlock(RT_MUTEX *mutex);
 
 #endif /* __KERNEL__ */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !_XENO_MUTEX_H */
