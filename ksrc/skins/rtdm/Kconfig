@@ -22,6 +22,7 @@ config XENO_OPT_RTDM_FILDES
 config XENO_OPT_DEBUG_RTDM
 	bool "RTDM debugging support"
 	depends on XENO_OPT_DEBUG && XENO_SKIN_RTDM
+	default y
 	help
 
 	This option activates debugging checks for the RTDM subsystem.
