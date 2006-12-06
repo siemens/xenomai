@@ -32,10 +32,10 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	bool 'Statistics collection' CONFIG_XENO_OPT_STATS
 	bool 'Debug support' CONFIG_XENO_OPT_DEBUG
 	if [ "$CONFIG_XENO_OPT_DEBUG" = "y" ]; then
+		bool 'Nucleus Debugging support' CONFIG_XENO_OPT_DEBUG_NUCLEUS
 		bool 'Queue Debugging support' CONFIG_XENO_OPT_DEBUG_QUEUES
-		define_bool CONFIG_XENO_OPT_DEBUG_BHEAP y
+		bool 'Watchdog support' CONFIG_XENO_OPT_WATCHDOG
 	fi
-	bool 'Watchdog support' CONFIG_XENO_OPT_WATCHDOG
 
 	bool 'Enable periodic timer support' CONFIG_XENO_OPT_TIMING_PERIODIC
 	if [ "$CONFIG_XENO_OPT_TIMING_PERIODIC" = "y" ]; then

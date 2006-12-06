@@ -55,6 +55,13 @@
 #include <asm/xenomai/syscall.h>
 #include <asm/xenomai/bits/shadow.h>
 
+/* debug support */
+#include <nucleus/assert.h>
+
+#ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
+#define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
+#endif
+
 int nkthrptd;
 
 int nkerrptd;
@@ -486,12 +493,11 @@ static void schedule_linux_call(int type, struct task_struct *p, int arg)
 	struct __lostagerq *rq = &lostagerq[cpuid];
 	spl_t s;
 
-#ifdef CONFIG_XENO_OPT_DEBUG
-	if (!p)
+	XENO_ASSERT(NUCLEUS, p,
 		xnpod_fatal("schedule_linux_call() invoked "
 			    "with NULL task pointer (req=%d, arg=%d)?!", type,
 			    arg);
-#endif /* CONFIG_XENO_OPT_DEBUG */
+		);
 
 	splhigh(s);
 	reqnum = rq->in;
@@ -628,13 +634,11 @@ int xnshadow_harden(void)
 	   fail; the caller will have to process this signal anyway. */
 
 	if (rthal_current_domain == rthal_root_domain) {
-#ifdef CONFIG_XENO_OPT_DEBUG
-		if (!signal_pending(this_task)
-		    || this_task->state != TASK_RUNNING)
+		if (XENO_DEBUG(NUCLEUS) && (!signal_pending(this_task)
+		    || this_task->state != TASK_RUNNING))
 			xnpod_fatal
 			    ("xnshadow_harden() failed for thread %s[%d]",
 			     thread->name, xnthread_user_pid(thread));
-#endif /* CONFIG_XENO_OPT_DEBUG */
 		return -ERESTARTSYS;
 	}
 
@@ -688,10 +692,7 @@ void xnshadow_relax(int notify)
 	int cprio;
 	spl_t s;
 
-#ifdef CONFIG_XENO_OPT_DEBUG
-	if (testbits(thread->status, XNROOT))
-		xnpod_fatal("xnshadow_relax() called from the Linux domain");
-#endif /* CONFIG_XENO_OPT_DEBUG */
+	XENO_BUGON(NUCLEUS, testbits(thread->status, XNROOT));
 
 	/* Enqueue the request to move the running shadow from the Xenomai
 	   domain to the Linux domain.  This will cause the Linux task
@@ -721,11 +722,9 @@ void xnshadow_relax(int notify)
 
 	splexit(s);
 
-#ifdef CONFIG_XENO_OPT_DEBUG
-	if (rthal_current_domain != rthal_root_domain)
+	if (XENO_DEBUG(NUCLEUS) && rthal_current_domain != rthal_root_domain)
 		xnpod_fatal("xnshadow_relax() failed for thread %s[%d]",
 			    thread->name, xnthread_user_pid(thread));
-#endif /* CONFIG_XENO_OPT_DEBUG */
 
 	cprio = thread->cprio < MAX_RT_PRIO ? thread->cprio : MAX_RT_PRIO - 1;
 	rthal_reenter_root(get_switch_lock_owner(),
@@ -883,10 +882,9 @@ void xnshadow_unmap(xnthread_t *thread)
 	struct task_struct *p;
 	unsigned muxid, magic;
 
-#ifdef CONFIG_XENO_OPT_DEBUG
-	if (!testbits(xnpod_current_sched()->status, XNKCOUT))
+	if (XENO_DEBUG(NUCLEUS) &&
+	    !testbits(xnpod_current_sched()->status, XNKCOUT))
 		xnpod_fatal("xnshadow_unmap() called from invalid context");
-#endif /* CONFIG_XENO_OPT_DEBUG */
 
 	p = xnthread_archtcb(thread)->user_task;	/* May be != current */
 
@@ -1708,8 +1706,7 @@ static inline void do_schedule_event(struct task_struct *next)
 #endif /* CONFIG_XENO_OPT_RPIDISABLE */
 			newrprio = XNPOD_ROOT_PRIO_BASE;	/* Decouple priority scales. */
 
-#ifdef CONFIG_XENO_OPT_DEBUG
-		{
+		if (XENO_DEBUG(NUCLEUS)) {
 			xnflags_t status = threadin->status;
 			int sigpending = signal_pending(next);
 
@@ -1717,7 +1714,7 @@ static inline void do_schedule_event(struct task_struct *next)
 				xnarch_trace_panic_freeze();
 				show_stack(xnthread_user_task(threadin), NULL);
 				xnpod_fatal
-				    ("Hardened thread %s[%d] running in Linux domain?! (status=0x%lx, sig=%d, prev=%s[%d])",
+				    ("Hardened thread %s[%d] running in Linux"" domain?! (status=0x%lx, sig=%d, prev=%s[%d])",
 				     threadin->name, next->pid, status,
 				     sigpending, prev->comm, prev->pid);
 			} else if (!(next->ptrace & PT_PTRACED) &&
@@ -1733,7 +1730,6 @@ static inline void do_schedule_event(struct task_struct *next)
 				     sigpending, prev->comm, prev->pid);
 			}
 		}
-#endif /* CONFIG_XENO_OPT_DEBUG */
 
 #ifdef CONFIG_XENO_OPT_ISHIELD
 		reset_shield(threadin);

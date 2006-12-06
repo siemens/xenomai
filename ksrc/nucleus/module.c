@@ -472,7 +472,9 @@ static struct file_operations stat_seq_operations = {
 	.release = seq_release_private,
 };
 
-#ifdef CONFIG_SMP
+#endif /* CONFIG_XENO_OPT_STATS */
+
+#if defined(CONFIG_SMP) && XENO_DEBUG(NUCLEUS)
 
 xnlockinfo_t xnlock_stats[RTHAL_NR_CPUS];
 
@@ -520,9 +522,7 @@ static int lock_read_proc(char *page,
 
 EXPORT_SYMBOL(xnlock_stats);
 
-#endif /* CONFIG_SMP */
-
-#endif /* CONFIG_XENO_OPT_STATS */
+#endif /* CONFIG_SMP && XENO_DEBUG(NUCLEUS) */
 
 static int latency_read_proc(char *page,
 			     char **start,
@@ -741,11 +741,11 @@ void xnpod_init_proc(void)
 
 #ifdef CONFIG_XENO_OPT_STATS
 	add_proc_fops("stat", &stat_seq_operations, 0, rthal_proc_root);
-#ifdef CONFIG_SMP
-	add_proc_leaf("lock", &lock_read_proc, NULL, NULL, rthal_proc_root);
-#endif /* CONFIG_SMP */
-
 #endif /* CONFIG_XENO_OPT_STATS */
+
+#if defined(CONFIG_SMP) && XENO_DEBUG(NUCLEUS)
+	add_proc_leaf("lock", &lock_read_proc, NULL, NULL, rthal_proc_root);
+#endif /* CONFIG_SMP && XENO_DEBUG(NUCLEUS) */
 
 	add_proc_leaf("latency",
 		      &latency_read_proc,
@@ -786,10 +786,10 @@ void xnpod_delete_proc(void)
 	remove_proc_entry("sched", rthal_proc_root);
 #ifdef CONFIG_XENO_OPT_STATS
 	remove_proc_entry("stat", rthal_proc_root);
-#ifdef CONFIG_SMP
-	remove_proc_entry("lock", rthal_proc_root);
-#endif /* CONFIG_SMP */
 #endif /* CONFIG_XENO_OPT_STATS */
+#if defined(CONFIG_SMP) && XENO_DEBUG(NUCLEUS)
+	remove_proc_entry("lock", rthal_proc_root);
+#endif /* CONFIG_SMP && XENO_DEBUG(NUCLEUS) */
 }
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE

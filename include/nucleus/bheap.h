@@ -21,7 +21,13 @@
 #define _XENO_NUCLEUS_BHEAP_H
 
 #include <nucleus/compiler.h>
+
+/* debug support */
 #include <nucleus/assert.h>
+
+#ifndef CONFIG_XENO_OPT_DEBUG_QUEUES
+#define CONFIG_XENO_OPT_DEBUG_QUEUES 0
+#endif
 
 /* Priority queue implementation, using a binary heap. */
 
@@ -53,11 +59,7 @@ typedef struct bheap {
         bheaph_t *elems[sz];                    \
     } name
 
-#ifdef CONFIG_XENO_OPT_DEBUG_BHEAP
-#define BHEAP_CHECK(heap)   XENO_BUGON(BHEAP, ((heap)->sz == 0))
-#else /* !CONFIG_XENO_OPT_DEBUG_BHEAP */
-#define BHEAP_CHECK(heap)   do { } while (0)
-#endif /* CONFIG_XENO_OPT_DEBUG_BHEAP */
+#define BHEAP_CHECK(heap)   XENO_BUGON(QUEUES, ((heap)->sz == 0))
 
 #define bheap_gethead(heap)                     \
 ({                                              \
