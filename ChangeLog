@@ -1,9 +1,13 @@
-2006-12-06  Jan Kiszka  <jan.kiszka@web.de>
-            Philippe Gerum  <rpm@xenomai.org>
+2006-12-06  Jan Kiszka  <jan.kiszka@web.de>, Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/generic/hal.c (rthal_apc_schedule): Fix races by
 	keeping irqs disabled while updating rthal_apc_pending and
 	scheduling the virq. Clean up the return code.
+
+2006-12-04  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pod.c (xnpod_schedule_runnable): Trace the target
+	thread instead of the active one.
 
 2006-12-03  Wolfgang Grandegger  <wg@grandegger.com>
 
@@ -17,6 +21,16 @@
 	include/rtdm/rtcan.h: It is now possible to define an empty filter
 	list with setsockopt, which is recommanded for write-only sockets.
 
+2006-12-02  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus, include/nucleus, ksrc/skins/posix: Use debug
+	assertions. Enhance granularity of debug options.
+	
+	* include/asm-generic/system.h: Decouple lock debugging from
+	runtime stats activation.
+	
+	* ksrc/skins/rtdm/Kconfig: Turn on debugging checks by default.
+	
 2006-12-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.19-1.6-01.
