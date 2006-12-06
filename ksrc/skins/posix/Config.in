@@ -9,5 +9,6 @@ if [ "$CONFIG_XENO_SKIN_POSIX" != "n" ]; then
 	comment 'POSIX interface options'
 	bool 'Shared memory' CONFIG_XENO_OPT_POSIX_SHM
 	bool 'Interrupts' CONFIG_XENO_OPT_POSIX_INTR
+	bool 'Debugging support' CONFIG_XENO_OPT_DEBUG_POSIX
 	endmenu
 fi

@@ -25,6 +25,13 @@
 #include <posix/posix.h>
 #include <posix/registry.h>
 
+/* debug support */
+#include <nucleus/assert.h>
+
+#ifndef CONFIG_XENO_OPT_DEBUG_POSIX
+#define CONFIG_XENO_OPT_DEBUG_POSIX 0
+#endif
+
 #define PSE51_MAGIC(n) (0x8686##n##n)
 #define PSE51_ANY_MAGIC         PSE51_MAGIC(00)
 #define PSE51_THREAD_MAGIC      PSE51_MAGIC(01)

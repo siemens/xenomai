@@ -488,18 +488,21 @@ void pse51_reg_pkg_cleanup(void)
 	unsigned i;
 	for (i = 0; i < pse51_reg.maxfds; i++)
 		if (pse51_reg.descs[i]) {
-#ifdef CONFIG_XENO_OPT_DEBUG
-			xnprintf("Posix: destroying descriptor %d.\n",i);
-#endif /* CONFIG_XENO_OPT_DEBUG */
+#if XENO_DEBUG(POSIX)
+			xnprintf("Posix: destroying descriptor %d.\n", i);
+#endif /* XENO_DEBUG(POSIX) */
 			pse51_desc_destroy(pse51_reg.descs[i]);
 		}
-#ifdef CONFIG_XENO_OPT_DEBUG
+#if XENO_DEBUG(POSIX)
 	for (i = 0; i < pse51_reg.buckets_count; i++) {
 		pse51_node_t *node;
-		for (node = pse51_reg.node_buckets[i]; node; node = node->next)
-			xnprintf("Posix: node \"%s\" left aside.\n", node->name);
+		for (node = pse51_reg.node_buckets[i];
+		     node;
+		     node = node->next)
+			xnprintf("Posix: node \"%s\" left aside.\n",
+				 node->name);
 	}
-#endif /* CONFIG_XENO_OPT_DEBUG */
+#endif /* XENO_DEBUG(POSIX) */
 
 	size = sizeof(pse51_node_t) * pse51_reg.buckets_count
 		+ sizeof(pse51_desc_t) * pse51_reg.maxfds

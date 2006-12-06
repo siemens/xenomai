@@ -261,11 +261,10 @@ void pse51_intrq_cleanup(pse51_kqueues_t *q)
 	while ((holder = getheadq(&q->intrq)) != NULL) {
 		pthread_intr_detach_np(link2intr(holder));
 		xnlock_put_irqrestore(&nklock, s);
-#ifdef CONFIG_XENO_OPT_DEBUG
-		xnprintf
-		    ("Posix interruption handler %p was not destroyed,"
-		     " destroying now.\n", link2intr(holder));
-#endif /* CONFIG_XENO_OPT_DEBUG */
+#if XENO_DEBUG(POSIX)
+		xnprintf("Posix interruption handler %p was not destroyed, "
+			 "destroying now.\n", link2intr(holder));
+#endif /* XENO_DEBUG(POSIX) */
 		xnlock_get_irqsave(&nklock, s);
 	}
 

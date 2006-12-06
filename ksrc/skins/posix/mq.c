@@ -1127,10 +1127,10 @@ int mq_notify(mqd_t fd, const struct sigevent *evp)
 static void uqd_cleanup(pse51_assoc_t *assoc)
 {
 	pse51_ufd_t *ufd = assoc2ufd(assoc);
-#ifdef CONFIG_XENO_OPT_DEBUG
+#if XENO_DEBUG(POSIX)
 	xnprintf("Posix: closing message queue descriptor %lu.\n",
 		 pse51_assoc_key(assoc));
-#endif /* CONFIG_XENO_OPT_DEBUG */
+#endif /* XENO_DEBUG(POSIX) */
 	mq_close(ufd->kfd);
 	xnfree(ufd);
 }
@@ -1160,10 +1160,10 @@ void pse51_mq_pkg_cleanup(void)
 		pse51_node_remove(&node, mq->nodebase.name, PSE51_MQ_MAGIC);
 		xnlock_put_irqrestore(&nklock, s);
 		pse51_mq_destroy(mq);
-#ifdef CONFIG_XENO_OPT_DEBUG
+#if XENO_DEBUG(POSIX)
 		xnprintf("Posix: unlinking message queue \"%s\".\n",
 			 mq->nodebase.name);
-#endif /* CONFIG_XENO_OPT_DEBUG */
+#endif /* XENO_DEBUG(POSIX) */
 		xnfree(mq);
 		xnlock_get_irqsave(&nklock, s);
 	}

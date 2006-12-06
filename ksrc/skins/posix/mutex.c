@@ -504,9 +504,9 @@ void pse51_mutexq_cleanup(pse51_kqueues_t *q)
 	while ((holder = getheadq(&q->mutexq)) != NULL) {
 		pse51_mutex_destroy_internal(link2mutex(holder), q);
 		xnlock_put_irqrestore(&nklock, s);
-#ifdef CONFIG_XENO_OPT_DEBUG
+#if XENO_DEBUG(POSIX)
 		xnprintf("Posix: destroying mutex %p.\n", link2mutex(holder));
-#endif /* CONFIG_XENO_OPT_DEBUG */
+#endif /* XENO_DEBUG(POSIX) */
 		xnlock_get_irqsave(&nklock, s);
 	}
 

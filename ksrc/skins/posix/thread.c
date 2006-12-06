@@ -712,9 +712,9 @@ void pse51_threadq_cleanup(pse51_kqueues_t *q)
 			/* Remaining TCB (joinable thread, which was never joined). */
 			thread_destroy(thread);
 		xnlock_put_irqrestore(&nklock, s);
-#ifdef CONFIG_XENO_OPT_DEBUG
+#if XENO_DEBUG(POSIX)
 		xnprintf("POSIX: destroyed thread %p\n", thread);
-#endif /* CONFIG_XENO_OPT_DEBUG */
+#endif /* XENO_DEBUG(POSIX) */
 		xnlock_get_irqsave(&nklock, s);
 	}
 
