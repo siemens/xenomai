@@ -643,6 +643,8 @@ int xnshadow_harden(void)
 	xnpod_switch_fpu(xnpod_current_sched());
 #endif /* CONFIG_XENO_HW_FPU */
 
+	xnarch_schedule_tail(this_task);
+
 	if (xnthread_signaled_p(thread))
 		xnpod_dispatch_signals();
 
@@ -889,6 +891,10 @@ void xnshadow_unmap(xnthread_t *thread)
 
 	p = xnthread_archtcb(thread)->user_task;	/* May be != current */
 
+	xnltt_log_event(xeno_ev_shadowunmap, thread->name, p ? p->pid : -1);
+	if (!p)
+		goto renice_and_exit;
+
 	magic = xnthread_get_magic(thread);
 
 	for (muxid = 0; muxid < XENOMAI_MUX_NR; muxid++) {
@@ -907,10 +913,6 @@ void xnshadow_unmap(xnthread_t *thread)
 			break;
 		}
 	}
-
-	xnltt_log_event(xeno_ev_shadowunmap, thread->name, p ? p->pid : -1);
-	if (!p)
-		goto renice_and_exit;
 
 	xnshadow_thrptd(p) = NULL;
 

@@ -542,6 +542,8 @@ static inline int xnarch_local_syscall (struct pt_regs *regs)
     return -ENOSYS;
 }
 
+#define xnarch_schedule_tail(prev) do { } while(0)
+
 #endif /* XENO_SHADOW_MODULE */
 
 #ifdef XENO_TIMER_MODULE
