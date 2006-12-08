@@ -34,13 +34,14 @@
  * and also in byte streaming mode from real-time to standard Linux
  * processes for optimal throughput.
  *
- * Xenomai tasks open their side of the pipe using the rt_pipe_create()
- * service; standard Linux processes do the same by opening one of the
- * /dev/rtpN special devices, where N is the minor number agreed upon
- * between both ends of each pipe. Additionally, named pipes are
- * available through the registry support, which automatically creates
- * a symbolic link from entries under /proc/xenomai/registry/pipes/ to
- * the corresponding special device file.
+ * Xenomai tasks open their side of the pipe using the
+ * rt_pipe_create() service; standard Linux processes do the same by
+ * opening one of the /dev/rtpN special devices, where N is the minor
+ * number agreed upon between both ends of each pipe. Additionally,
+ * named pipes are available through the registry support, which
+ * automatically creates a symbolic link from entries under
+ * /proc/xenomai/registry/native/pipes/ to the corresponding special
+ * device file.
  *
  *@{*/
 
