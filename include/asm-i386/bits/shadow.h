@@ -98,4 +98,9 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 	return -ENOSYS;
 }
 
+static void xnarch_schedule_tail(struct task_struct *prev)
+{
+	wrap_switch_iobitmap(prev, rthal_processor_id());
+}
+
 #endif /* !_XENO_ASM_I386_BITS_SHADOW_H */
