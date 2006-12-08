@@ -113,4 +113,6 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 	return -ENOSYS;
 }
 
+#define xnarch_schedule_tail(prev) do { } while(0)
+
 #endif /* !_XENO_ASM_POWERPC_BITS_SHADOW_H */

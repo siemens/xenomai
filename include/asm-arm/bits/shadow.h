@@ -160,4 +160,6 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 	return error;
 }
 
+#define xnarch_schedule_tail(prev) do { } while(0)
+
 #endif /* !_XENO_ASM_ARM_BITS_SHADOW_H */
