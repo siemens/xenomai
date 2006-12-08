@@ -49,7 +49,9 @@ typedef struct rt_queue_info {
 
     size_t qlimit;		/* !< Queue limit. */
 
-    size_t poolsize;		/* !< Size of pool memory. */
+    size_t poolsize;		/* !< Size of pool memory (in bytes). */
+
+    size_t usedmem;		/* !< Amount of pool memory used (in bytes). */
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 
