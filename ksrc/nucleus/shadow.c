@@ -852,6 +852,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 	    MAX_RT_PRIO ? xnthread_base_priority(thread) : MAX_RT_PRIO - 1;
 	set_linux_task_priority(current, prio);
 	xnshadow_thrptd(current) = thread;
+	thread->mapped = 1;
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, NULL);
 
 	if (u_completion) {
@@ -909,6 +910,8 @@ void xnshadow_unmap(xnthread_t *thread)
 			break;
 		}
 	}
+
+	thread->mapped = 0;
 
 	xnltt_log_event(xeno_ev_shadowunmap, thread->name, p ? p->pid : -1);
 	if (!p)

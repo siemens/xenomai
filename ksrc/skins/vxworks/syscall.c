@@ -1250,7 +1250,7 @@ static xnsysent_t __systab[] = {
 static void __shadow_delete_hook(xnthread_t *thread)
 {
 	if (xnthread_get_magic(thread) == VXWORKS_SKIN_MAGIC &&
-	    testbits(thread->status, XNSHADOW))
+	    thread->mapped)
 		xnshadow_unmap(thread);
 }
 

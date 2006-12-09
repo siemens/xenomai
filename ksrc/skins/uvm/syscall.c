@@ -354,8 +354,10 @@ static int __vm_debug(struct task_struct *curr, struct pt_regs *regs)
 
 static void __shadow_delete_hook(xnthread_t *thread)
 {
-	if (xnthread_get_magic(thread) == UVM_SKIN_MAGIC) {
-		xnshadow_unmap(thread);
+	if (xnthread_get_magic(thread) == UVM_SKIN_MAGIC &&
+	    testbits(thread->status, XNSHADOW)) {
+		if (thread->mapped)
+			xnshadow_unmap(thread);
 		xnfree(thread);
 	}
 }

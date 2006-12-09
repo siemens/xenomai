@@ -2778,7 +2778,8 @@ static void __shadow_delete_hook(xnthread_t *thread)
 	    testbits(thread->status, XNSHADOW)) {
 		pthread_t k_tid = thread2pthread(thread);
 		__pthread_unhash(&k_tid->hkey);
-		xnshadow_unmap(thread);
+		if (thread->mapped)
+			xnshadow_unmap(thread);
 	}
 }
 

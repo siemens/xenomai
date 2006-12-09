@@ -182,6 +182,10 @@ typedef struct xnthread {
     } registry;
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    int mapped;			/* Thread called xnshadow_map() */
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
     unsigned magic;		/* Skin magic. */
 
     char name[XNOBJECT_NAME_LEN]; /* Symbolic name of thread */

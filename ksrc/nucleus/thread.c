@@ -87,6 +87,9 @@ int xnthread_init(xnthread_t *thread,
 	thread->registry.handle = XN_NO_HANDLE;
 	thread->registry.waitkey = NULL;
 #endif /* CONFIG_XENO_OPT_REGISTRY */
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+	thread->mapped = 0;
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_OPT_STATS
 	thread->stat.ssw = 0;
