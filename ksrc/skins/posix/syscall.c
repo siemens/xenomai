@@ -2807,10 +2807,11 @@ static xnsysent_t __systab[] = {
 static void __shadow_delete_hook(xnthread_t *thread)
 {
 	if (xnthread_get_magic(thread) == PSE51_SKIN_MAGIC &&
-	    xnthread_test_state(thread, XNMAPPED)) {
+	    xnthread_test_state(thread, XNSHADOW)) {
 		pthread_t k_tid = thread2pthread(thread);
 		__pthread_unhash(&k_tid->hkey);
-		xnshadow_unmap(thread);
+		if (xnthread_test_state(thread, XNMAPPED))
+			xnshadow_unmap(thread);
 	}
 }
 
