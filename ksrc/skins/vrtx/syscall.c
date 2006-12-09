@@ -238,7 +238,7 @@ static int __sc_delay(struct task_struct *curr, struct pt_regs *regs)
 {
 	vrtxtask_t *task = vrtx_current_task();
 	sc_delay(__xn_reg_arg1(regs));
-	if (xnthread_test_flags(&task->threadbase, XNBREAK))
+	if (xnthread_test_info(&task->threadbase, XNBREAK))
 		return -EINTR;
 	return 0;
 }
@@ -1408,7 +1408,7 @@ static xnsysent_t __systab[] = {
 static void __shadow_delete_hook(xnthread_t *thread)
 {
 	if (xnthread_get_magic(thread) == VRTX_SKIN_MAGIC &&
-	    testbits(thread->status, XNSHADOW))
+	    xnthread_test_state(thread, XNMAPPED))
 		xnshadow_unmap(thread);
 }
 

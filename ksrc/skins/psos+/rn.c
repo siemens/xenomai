@@ -17,8 +17,9 @@
  * 02111-1307, USA.
  */
 
-#include "psos+/task.h"
-#include "psos+/rn.h"
+#include <nucleus/registry.h>
+#include <psos+/task.h>
+#include <psos+/rn.h>
 
 static xnqueue_t psosrnq;
 
@@ -28,18 +29,89 @@ static void *rn0addr;
 
 static int rn_destroy_internal(psosrn_t *rn);
 
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
+
+static int rn_read_proc(char *page,
+			char **start,
+			off_t off, int count, int *eof, void *data)
+{
+	psosrn_t *rn = (psosrn_t *)data;
+	char *p = page;
+	int len;
+	spl_t s;
+
+	p += sprintf(p, "size=%lu:used=%lu\n",
+		     (u_long)rn->rnsize, xnheap_used_mem(&rn->heapbase));
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (xnsynch_nsleepers(&rn->synchbase) == 0) {
+		xnpholder_t *holder;
+
+		/* Pended region -- dump waiters. */
+
+		holder = getheadpq(xnsynch_wait_queue(&rn->synchbase));
+
+		while (holder) {
+			xnthread_t *sleeper = link2thread(holder, plink);
+			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
+			holder =
+			    nextpq(xnsynch_wait_queue(&rn->synchbase), holder);
+		}
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	len = (p - page) - off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+extern xnptree_t __psos_ptree;
+
+static xnpnode_t rn_pnode = {
+
+	.dir = NULL,
+	.type = "regions",
+	.entries = 0,
+	.read_proc = &rn_read_proc,
+	.write_proc = NULL,
+	.root = &__psos_ptree,
+};
+
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
+
+static xnpnode_t rn_pnode = {
+
+	.type = "regions"
+};
+
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+
 int psosrn_init(u_long rn0size)
 {
 	u_long allocsize, rn0id;
+
 	initq(&psosrnq);
 
 	if (rn0size < 2048)
 		rn0size = 2048;
 
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+	rn0addr = NULL;	/* rn_create() will allocate a shared region. */
+#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
 	rn0addr = xnmalloc(rn0size);
 
 	if (!rn0addr)
 		return -ENOMEM;
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 	rn_create("RN#0", rn0addr, rn0size, 128, RN_FORCEDEL, &rn0id,
 		  &allocsize);
@@ -63,17 +135,21 @@ void psosrn_cleanup(void)
 
 static int rn_destroy_internal(psosrn_t *rn)
 {
-	spl_t s;
 	int rc;
-
-	xnlock_get_irqsave(&nklock, s);
 
 	removeq(&psosrnq, &rn->link);
 	rc = xnsynch_destroy(&rn->synchbase);
-	xnheap_destroy(&rn->heapbase, NULL, NULL);
 	psos_mark_deleted(rn);
-
-	xnlock_put_irqrestore(&nklock, s);
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	xnregistry_remove(rn->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+	if (xnheap_mapped_p(&rn->heapbase))
+		xnheap_destroy_mapped(&rn->heapbase);
+	else
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+		xnheap_destroy(&rn->heapbase, NULL, NULL);
+	xnfree(rn);
 
 	return rc;
 }
@@ -108,29 +184,61 @@ u_long rn_create(char name[4],
 	if (flags & RN_DEL)
 		bflags |= RN_FORCEDEL;
 
-	rn = (psosrn_t *)rnaddr;
-	rnsize -= sizeof(psosrn_t);
+	rn = (psosrn_t *)xnmalloc(sizeof(*rn));
+
+	if (rn == NULL)
+		return -ENOMEM;
+
+#ifdef __KERNEL__
+	if (rnaddr == NULL) {
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+		u_long err = xnheap_init_mapped(&rn->heapbase, rnsize, 0);
+
+		if (err)
+			return err;
+
+		rn->mm = NULL;
+#else /* !CONFIG_XENO_OPT_PERVASIVE */
+		return ERR_RNADDR;
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+	} else
+#endif /* __KERNEL__ */
+		if (xnheap_init(&rn->heapbase, rnaddr, rnsize, 4096) != 0)
+			return ERR_TINYRN;
 
 	inith(&rn->link);
-	rn->rnsize = rnsize;	/* Adjusted region size. */
+	rn->rnsize = rnsize;
 	rn->usize = usize;
-	rn->data = (char *)&rn[1];
 	rn->name[0] = name[0];
 	rn->name[1] = name[1];
 	rn->name[2] = name[2];
 	rn->name[3] = name[3];
 	rn->name[4] = '\0';
 
-	if (xnheap_init(&rn->heapbase, rn->data, rnsize, 4096) != 0)
-		return ERR_TINYRN;
-
 	xnsynch_init(&rn->synchbase, bflags);
-
 	rn->magic = PSOS_RN_MAGIC;
 
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&psosrnq, &rn->link);
 	xnlock_put_irqrestore(&nklock, s);
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	{
+		static unsigned long rn_ids;
+		u_long err;
+
+		if (!*name)
+			/* > 4 bytes: won't be reachable by rn_ident() on purpose. */
+			sprintf(rn->name, "anon%lu", rn_ids++);
+
+		err = xnregistry_enter(rn->name, rn, &rn->handle, &rn_pnode);
+
+		if (err) {
+			rn->handle = XN_NO_HANDLE;
+			rn_delete((u_long)rn);
+			return err;
+		}
+	}
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	*rnid = (u_long)rn;
 	*allocsize = rn->rnsize;
@@ -217,11 +325,11 @@ u_long rn_getseg(u_long rnid,
 		task->waitargs.region.chunk = NULL;
 		xnsynch_sleep_on(&rn->synchbase, timeout);
 
-		if (xnthread_test_flags(&task->threadbase, XNBREAK))
+		if (xnthread_test_info(&task->threadbase, XNBREAK))
 			err = -EINTR;	/* Unblocked. */
-		else if (xnthread_test_flags(&task->threadbase, XNRMID))
+		else if (xnthread_test_info(&task->threadbase, XNRMID))
 			err = ERR_RNKILLD;	/* Region deleted while pending. */
-		else if (xnthread_test_flags(&task->threadbase, XNTIMEO))
+		else if (xnthread_test_info(&task->threadbase, XNTIMEO))
 			err = ERR_TIMEOUT;	/* Timeout. */
 
 		chunk = task->waitargs.region.chunk;
@@ -292,13 +400,12 @@ u_long rn_retseg(u_long rnid, void *chunk)
 		}
 	}
 
-	if ((char *)chunk < rn->data || (char *)chunk >= rn->data + rn->rnsize) {
-		err = ERR_NOTINRN;
-		goto unlock_and_exit;
-	}
-
-	if (xnheap_free(&rn->heapbase, chunk) == -EINVAL) {
+	switch (xnheap_free(&rn->heapbase, chunk)) {
+	case -EINVAL:
 		err = ERR_SEGADDR;
+		goto unlock_and_exit;
+	case -EFAULT:
+		err = ERR_NOTINRN;
 		goto unlock_and_exit;
 	}
 
@@ -337,12 +444,3 @@ u_long rn_retseg(u_long rnid, void *chunk)
 
 	return err;
 }
-
-/*
- * IMPLEMENTATION NOTES:
- *
- * - All region-related services are strictly synchronous (i.e.
- * cannot be called on behalf of an ISR), so a scheduler lock
- * is enough to protect from other threads of activity when
- * accessing the region's internal data.
- */

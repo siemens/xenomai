@@ -545,11 +545,11 @@ int rt_heap_alloc(RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)
 	task->wait_args.heap.block = NULL;
 	xnsynch_sleep_on(&heap->synch_base, timeout);
 
-	if (xnthread_test_flags(&task->thread_base, XNRMID))
+	if (xnthread_test_info(&task->thread_base, XNRMID))
 		err = -EIDRM;	/* Heap deleted while pending. */
-	else if (xnthread_test_flags(&task->thread_base, XNTIMEO))
+	else if (xnthread_test_info(&task->thread_base, XNTIMEO))
 		err = -ETIMEDOUT;	/* Timeout. */
-	else if (xnthread_test_flags(&task->thread_base, XNBREAK))
+	else if (xnthread_test_info(&task->thread_base, XNBREAK))
 		err = -EINTR;	/* Unblocked. */
 	else
 		block = task->wait_args.heap.block;

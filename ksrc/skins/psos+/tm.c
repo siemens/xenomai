@@ -207,7 +207,7 @@ u_long tm_wkafter(u_long ticks)
 
 	if (ticks > 0) {
 		xnpod_delay(ticks);
-		if (xnthread_test_flags(&psos_current_task()->threadbase, XNBREAK))
+		if (xnthread_test_info(&psos_current_task()->threadbase, XNBREAK))
 		    return -EINTR;
 	}
 	else
@@ -314,7 +314,7 @@ u_long tm_wkwhen(u_long date, u_long time, u_long ticks)
 
 	xnpod_delay(when - now);
 
-	if (xnthread_test_flags(&psos_current_task()->threadbase, XNBREAK))
+	if (xnthread_test_info(&psos_current_task()->threadbase, XNBREAK))
 	    return -EINTR;
 
 	return SUCCESS;

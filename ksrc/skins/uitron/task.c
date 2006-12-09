@@ -150,7 +150,7 @@ ER del_tsk(ID tskid)
 		return E_NOEXS;
 	}
 
-	if (!xnthread_test_flags(&task->threadbase, XNDORMANT)) {
+	if (!xnthread_test_state(&task->threadbase, XNDORMANT)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return E_OBJ;
 	}
@@ -192,7 +192,7 @@ ER sta_tsk(ID tskid, INT stacd)
 		return E_NOEXS;
 	}
 
-	if (!xnthread_test_flags(&task->threadbase, XNDORMANT)) {
+	if (!xnthread_test_state(&task->threadbase, XNDORMANT)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return E_OBJ;
 	}
@@ -262,9 +262,9 @@ static void ter_tsk_helper(uitask_t * task)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnthread_clear_flags(&task->threadbase, uITRON_TERM_HOLD);
+	xnthread_clear_state(&task->threadbase, uITRON_TERM_HOLD);
 
-	if (xnthread_test_flags(&task->threadbase, XNSUSP))
+	if (xnthread_test_state(&task->threadbase, XNSUSP))
 		xnpod_resume_thread(&task->threadbase, XNSUSP);
 
 	xnpod_unblock_thread(&task->threadbase);
@@ -296,18 +296,18 @@ ER ter_tsk(ID tskid)
 		return E_NOEXS;
 	}
 
-	if (xnthread_test_flags(&task->threadbase, XNDORMANT)) {
+	if (xnthread_test_state(&task->threadbase, XNDORMANT)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return E_OBJ;
 	}
 
-	if (xnthread_test_flags(&task->threadbase, XNLOCK)) {
+	if (xnthread_test_state(&task->threadbase, XNLOCK)) {
 		/* We must be running on behalf of an IST here, so we only
 		   mark the target task as held for termination. The actual
 		   termination code will be applied by the task itself when it
 		   re-enables dispatching. */
 		xnlock_put_irqrestore(&nklock, s);
-		xnthread_set_flags(&task->threadbase, uITRON_TERM_HOLD);
+		xnthread_set_state(&task->threadbase, uITRON_TERM_HOLD);
 		return E_OK;
 	}
 
@@ -343,7 +343,7 @@ ER ena_dsp(void)
 	if (xnpod_locked_p()) {
 		xnpod_unlock_sched();
 
-		if (xnthread_test_flags(&ui_current_task()->threadbase,
+		if (xnthread_test_state(&ui_current_task()->threadbase,
 					uITRON_TERM_HOLD))
 			ter_tsk_helper(ui_current_task());
 	}
@@ -382,7 +382,7 @@ ER chg_pri(ID tskid, PRI tskpri)
 			return E_NOEXS;
 		}
 
-		if (xnthread_test_flags(&task->threadbase, XNDORMANT)) {
+		if (xnthread_test_state(&task->threadbase, XNDORMANT)) {
 			xnlock_put_irqrestore(&nklock, s);
 			return E_OBJ;
 		}
@@ -444,7 +444,7 @@ ER rel_wai(ID tskid)
 		return E_NOEXS;
 	}
 
-	if (xnthread_test_flags(&task->threadbase, XNDORMANT)) {
+	if (xnthread_test_state(&task->threadbase, XNDORMANT)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return E_OBJ;
 	}
@@ -494,14 +494,14 @@ ER ref_tsk(T_RTSK * pk_rtsk, ID tskid)
 
 	if (task == ui_current_task())
 		tskstat |= TTS_RUN;
-	else if (xnthread_test_flags(&task->threadbase, XNDORMANT))
+	else if (xnthread_test_state(&task->threadbase, XNDORMANT))
 		tskstat |= TTS_DMT;
-	else if (xnthread_test_flags(&task->threadbase, XNREADY))
+	else if (xnthread_test_state(&task->threadbase, XNREADY))
 		tskstat |= TTS_RDY;
 	else {
-		if (xnthread_test_flags(&task->threadbase, XNPEND))
+		if (xnthread_test_state(&task->threadbase, XNPEND))
 			tskstat |= TTS_WAI;
-		if (xnthread_test_flags(&task->threadbase, XNSUSP))
+		if (xnthread_test_state(&task->threadbase, XNSUSP))
 			tskstat |= TTS_SUS;
 	}
 
@@ -545,7 +545,7 @@ ER sus_tsk(ID tskid)
 		return E_NOEXS;
 	}
 
-	if (xnthread_test_flags(&task->threadbase, XNDORMANT)) {
+	if (xnthread_test_state(&task->threadbase, XNDORMANT)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return E_OBJ;
 	}
@@ -587,7 +587,7 @@ static ER rsm_tsk_helper(ID tskid, int force)
 	}
 
 	if (task->suspcnt == 0 ||
-	    xnthread_test_flags(&task->threadbase, XNDORMANT)) {
+	    xnthread_test_state(&task->threadbase, XNDORMANT)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return E_OBJ;
 	}
@@ -631,15 +631,15 @@ ER slp_tsk(void)
 		return E_OK;
 	}
 
-	xnthread_set_flags(&task->threadbase, uITRON_TASK_SLEEP);
+	xnthread_set_state(&task->threadbase, uITRON_TASK_SLEEP);
 
 	xnpod_suspend_thread(&task->threadbase, XNDELAY, XN_INFINITE, NULL);
 
-	xnthread_clear_flags(&task->threadbase, uITRON_TASK_SLEEP);
+	xnthread_clear_state(&task->threadbase, uITRON_TASK_SLEEP);
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (xnthread_test_flags(&task->threadbase, XNBREAK))
+	if (xnthread_test_info(&task->threadbase, XNBREAK))
 		return E_RLWAI;
 
 	return E_OK;
@@ -672,18 +672,18 @@ ER tslp_tsk(TMO tmout)
 	if (tmout == TMO_FEVR)
 		tmout = XN_INFINITE;
 
-	xnthread_set_flags(&task->threadbase, uITRON_TASK_SLEEP);
+	xnthread_set_state(&task->threadbase, uITRON_TASK_SLEEP);
 
 	xnpod_suspend_thread(&task->threadbase, XNDELAY, tmout, NULL);
 
-	xnthread_clear_flags(&task->threadbase, uITRON_TASK_SLEEP);
+	xnthread_clear_state(&task->threadbase, uITRON_TASK_SLEEP);
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (xnthread_test_flags(&task->threadbase, XNBREAK))
+	if (xnthread_test_info(&task->threadbase, XNBREAK))
 		return E_RLWAI;
 
-	if (xnthread_test_flags(&task->threadbase, XNTIMEO))
+	if (xnthread_test_info(&task->threadbase, XNTIMEO))
 		return E_TMOUT;
 
 	return E_OK;
@@ -712,12 +712,12 @@ ER wup_tsk(ID tskid)
 		return E_NOEXS;
 	}
 
-	if (xnthread_test_flags(&task->threadbase, XNDORMANT)) {
+	if (xnthread_test_state(&task->threadbase, XNDORMANT)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return E_OBJ;
 	}
 
-	if (!xnthread_test_flags(&task->threadbase, uITRON_TASK_SLEEP)) {
+	if (!xnthread_test_state(&task->threadbase, uITRON_TASK_SLEEP)) {
 		if (task->wkupcnt >= 0x7fffffff) {
 			xnlock_put_irqrestore(&nklock, s);
 			return E_QOVR;
@@ -758,7 +758,7 @@ ER can_wup(INT *p_wupcnt, ID tskid)
 			return E_NOEXS;
 		}
 
-		if (xnthread_test_flags(&task->threadbase, XNDORMANT)) {
+		if (xnthread_test_state(&task->threadbase, XNDORMANT)) {
 			xnlock_put_irqrestore(&nklock, s);
 			return E_OBJ;
 		}

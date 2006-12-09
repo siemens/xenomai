@@ -269,11 +269,11 @@ void sc_mpend(int mid, unsigned long timeout, int *errp)
 
 		xnsynch_sleep_on(&mx->synchbase, timeout);
 
-		if (xnthread_test_flags(&task->threadbase, XNBREAK))
+		if (xnthread_test_info(&task->threadbase, XNBREAK))
 			*errp = -EINTR;
-		else if (xnthread_test_flags(&task->threadbase, XNRMID))
+		else if (xnthread_test_info(&task->threadbase, XNRMID))
 			*errp = ER_DEL;	/* Mutex deleted while pending. */
-		else if (xnthread_test_flags(&task->threadbase, XNTIMEO))
+		else if (xnthread_test_info(&task->threadbase, XNTIMEO))
 			*errp = ER_TMO;	/* Timeout. */
 		else
 			goto grab_mutex;

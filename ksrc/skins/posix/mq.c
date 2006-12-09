@@ -585,13 +585,13 @@ static int pse51_mq_timedsend_inner(mqd_t fd,
 
 		thread_cancellation_point(cur);
 
-		if (xnthread_test_flags(cur, XNBREAK))
+		if (xnthread_test_info(cur, XNBREAK))
 			return EINTR;
 
-		if (xnthread_test_flags(cur, XNTIMEO))
+		if (xnthread_test_info(cur, XNTIMEO))
 			return ETIMEDOUT;
 
-		if (xnthread_test_flags(cur, XNRMID))
+		if (xnthread_test_info(cur, XNRMID))
 			return EBADF;
 	}
 }
@@ -650,13 +650,13 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
 		if (direct & msg.used)
 			return 0;
 
-		if (xnthread_test_flags(cur, XNRMID))
+		if (xnthread_test_info(cur, XNRMID))
 			return EBADF;
 
-		if (xnthread_test_flags(cur, XNTIMEO))
+		if (xnthread_test_info(cur, XNTIMEO))
 			return ETIMEDOUT;
 
-		if (xnthread_test_flags(cur, XNBREAK))
+		if (xnthread_test_info(cur, XNBREAK))
 			return EINTR;
 	}
 }

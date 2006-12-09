@@ -542,13 +542,13 @@ static inline int sem_timedwait_internal(struct __shadow_sem *shadow,
 	/* Handle cancellation requests. */
 	thread_cancellation_point(cur);
 
-	if (xnthread_test_flags(cur, XNRMID))
+	if (xnthread_test_info(cur, XNRMID))
 		return EINVAL;
 
-	if (xnthread_test_flags(cur, XNBREAK))
+	if (xnthread_test_info(cur, XNBREAK))
 		return EINTR;
 
-	if (xnthread_test_flags(cur, XNTIMEO))
+	if (xnthread_test_info(cur, XNTIMEO))
 		return ETIMEDOUT;
 
 	return 0;

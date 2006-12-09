@@ -47,19 +47,19 @@ static const char *mvm_get_thread_mode (void *tcbarg)
 
     // DO NOT USE pod.h accessors since it contains instrumented code!
 
-    if (kthread->status & XNLOCK)
+    if (kthread->state & XNLOCK)
 	modeString.append("lock");
 
-    if (kthread->status & XNRRB)
+    if (kthread->state & XNRRB)
 	modeString.append("rrb");
 
-    if (kthread->status & XNASDI)
+    if (kthread->state & XNASDI)
 	modeString.append("asdi");
 
     if (kthread->asrlevel > 0)
 	modeString.append("asr");
 
-    if (kthread->status & XNBOOST)
+    if (kthread->state & XNBOOST)
 	modeString.append(CString().format("boost=%d",kthread->cprio));
     else
 	modeString.append(CString().format("prio=%d",kthread->cprio));

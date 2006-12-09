@@ -377,11 +377,11 @@ int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
 
 	xnsynch_sleep_on(&mutex->synch_base, timeout);
 
-	if (xnthread_test_flags(&task->thread_base, XNRMID))
+	if (xnthread_test_info(&task->thread_base, XNRMID))
 		err = -EIDRM;	/* Mutex deleted while pending. */
-	else if (xnthread_test_flags(&task->thread_base, XNTIMEO))
+	else if (xnthread_test_info(&task->thread_base, XNTIMEO))
 		err = -ETIMEDOUT;	/* Timeout. */
-	else if (xnthread_test_flags(&task->thread_base, XNBREAK))
+	else if (xnthread_test_info(&task->thread_base, XNBREAK))
 		err = -EINTR;	/* Unblocked. */
 	else {
 	      grab_mutex:
@@ -436,7 +436,7 @@ int rt_mutex_release(RT_MUTEX *mutex)
 	spl_t s;
 
 	if (xnpod_asynch_p()
-	    || testbits(xnpod_current_thread()->status, XNROOT))
+	    || xnthread_test_state(xnpod_current_thread(), XNROOT))
 		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);

@@ -115,13 +115,13 @@ static inline void xnsynch_renice_thread(xnthread_t *thread, int prio)
 		/* Ignoring the XNSYNCH_DREORD flag on purpose here. */
 		xnsynch_renice_sleeper(thread);
 	else if (thread != xnpod_current_thread() &&
-		 testbits(thread->status, XNREADY))
+		 xnthread_test_state(thread, XNREADY))
 		/* xnpod_resume_thread() must be called for runnable
 		   threads but the running one. */
 		xnpod_resume_thread(thread, 0);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	if (testbits(thread->status, XNRELAX))
+	if (xnthread_test_state(thread, XNRELAX))
 		xnshadow_renice(thread);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 }
@@ -186,23 +186,23 @@ redo:
 
 	if (!owner) {
 		synch->owner = thread;
-		__clrbits(thread->status, XNRMID | XNTIMEO | XNBREAK);
+		xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK);
 		goto unlock_and_exit;
 	}
 
 	if (xnpod_compare_prio(thread->cprio, owner->cprio) > 0) {
 
-		if (testbits(owner->status, XNWAKEN)) {
+		if (xnthread_test_info(owner, XNWAKEN)) {
 			/* Ownership is still pending, steal the resource. */
 			synch->owner = thread;
-			__clrbits(thread->status, XNRMID | XNTIMEO | XNBREAK);
-			__setbits(owner->status, XNROBBED);
+			xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK);
+			xnthread_set_info(owner, XNROBBED);
 			goto unlock_and_exit;
 		}
 
-		if (!testbits(owner->status, XNBOOST)) {
+		if (!xnthread_test_state(owner, XNBOOST)) {
 			owner->bprio = owner->cprio;
-			__setbits(owner->status, XNBOOST);
+			xnthread_set_state(owner, XNBOOST);
 		}
 
 		if (testbits(synch->status, XNSYNCH_CLAIMED))
@@ -218,10 +218,10 @@ redo:
 
 	xnpod_suspend_thread(thread, XNPEND, timeout, synch);
 
-	if (testbits(thread->status, XNRMID | XNTIMEO | XNBREAK))
+	if (xnthread_test_info(thread, XNRMID | XNTIMEO | XNBREAK))
 		goto unlock_and_exit;
 
-	if (testbits(thread->status, XNROBBED)) {
+	if (xnthread_test_info(thread, XNROBBED)) {
 		/* Somebody stole us the ownership while we were ready
 		   to run, waiting for the CPU: we need to wait again
 		   for the resource. */
@@ -230,12 +230,12 @@ redo:
 		timeout = xnthread_timeout(thread);
 		if (timeout > 1) /* Otherwise, it's too late. */
 			goto redo;
-		__setbits(thread->status, XNTIMEO);
+		xnthread_set_info(thread, XNTIMEO);
 	}
 
       unlock_and_exit:
 
-	__clrbits(thread->status, XNWAKEN);
+	xnthread_clear_info(thread, XNWAKEN);
 
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -266,7 +266,7 @@ static void xnsynch_clear_boost(xnsynch_t *synch, xnthread_t *lastowner)
 	__clrbits(synch->status, XNSYNCH_CLAIMED);
 
 	if (emptypq_p(&lastowner->claimq))
-		__clrbits(lastowner->status, XNBOOST);
+		xnthread_clear_state(lastowner, XNBOOST);
 	else {
 		/* Find the highest priority needed to enforce the PIP. */
 		int rprio = getheadpq(&lastowner->claimq)->prio;
@@ -319,7 +319,7 @@ void xnsynch_renice_sleeper(xnthread_t *thread)
 			__setbits(synch->status, XNSYNCH_CLAIMED);
 			insertpqf(&owner->claimq, &synch->link, thread->cprio);
 			owner->bprio = owner->cprio;
-			__setbits(owner->status, XNBOOST);
+			xnthread_set_state(owner, XNBOOST);
 		}
 		/* Renice the owner thread, progressing in the PI
 		   chain as needed. */
@@ -379,7 +379,7 @@ xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
 		thread = link2thread(holder, plink);
 		thread->wchan = NULL;
 		synch->owner = thread;
-		__setbits(thread->status, XNWAKEN);
+		xnthread_set_info(thread, XNWAKEN);
 		xnltt_log_event(xeno_ev_wakeup1, thread->name, synch);
 		xnpod_resume_thread(thread, XNPEND);
 	} else
@@ -450,7 +450,7 @@ xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder)
 	thread = link2thread(holder, plink);
 	thread->wchan = NULL;
 	synch->owner = thread;
-	__setbits(thread->status, XNWAKEN);
+	xnthread_set_info(thread, XNWAKEN);
 	xnltt_log_event(xeno_ev_wakeupx, thread->name, synch);
 	xnpod_resume_thread(thread, XNPEND);
 
@@ -478,7 +478,7 @@ xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder)
  * @param synch The descriptor address of the synchronization object
  * to be flushed.
  *
- * @param reason Some flags to set in the status mask of every
+ * @param reason Some flags to set in the information mask of every
  * unblocked thread. Zero is an acceptable value. The following bits
  * are pre-defined by the nucleus:
  *
@@ -527,7 +527,7 @@ int xnsynch_flush(xnsynch_t *synch, xnflags_t reason)
 
 	while ((holder = getpq(&synch->pendq)) != NULL) {
 		xnthread_t *sleeper = link2thread(holder, plink);
-		__setbits(sleeper->status, reason);
+		xnthread_set_info(sleeper, reason);
 		sleeper->wchan = NULL;
 		xnpod_resume_thread(sleeper, XNPEND);
 	}
@@ -569,7 +569,7 @@ void xnsynch_forget_sleeper(xnthread_t *thread)
 
 	xnltt_log_event(xeno_ev_syncforget, thread->name, synch);
 
-	__clrbits(thread->status, XNPEND);
+	xnthread_clear_state(thread, XNPEND);
 	thread->wchan = NULL;
 	removepq(&synch->pendq, &thread->plink);
 

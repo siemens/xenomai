@@ -2171,11 +2171,11 @@ static int __intr_wait(struct task_struct *curr, struct pt_regs *regs)
 
 		xnsynch_sleep_on(&intr->synch_base, timeout);
 
-		if (xnthread_test_flags(thread, XNRMID))
+		if (xnthread_test_info(thread, XNRMID))
 			err = -EIDRM;	/* Interrupt object deleted while pending. */
-		else if (xnthread_test_flags(thread, XNTIMEO))
+		else if (xnthread_test_info(thread, XNTIMEO))
 			err = -ETIMEDOUT;	/* Timeout. */
-		else if (xnthread_test_flags(thread, XNBREAK))
+		else if (xnthread_test_info(thread, XNBREAK))
 			err = -EINTR;	/* Unblocked. */
 		else {
 			err = intr->pending;
@@ -2807,7 +2807,7 @@ static xnsysent_t __systab[] = {
 static void __shadow_delete_hook(xnthread_t *thread)
 {
 	if (xnthread_get_magic(thread) == PSE51_SKIN_MAGIC &&
-	    testbits(thread->status, XNSHADOW)) {
+	    xnthread_test_state(thread, XNMAPPED)) {
 		pthread_t k_tid = thread2pthread(thread);
 		__pthread_unhash(&k_tid->hkey);
 		xnshadow_unmap(thread);

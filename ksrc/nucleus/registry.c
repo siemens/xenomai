@@ -725,12 +725,12 @@ int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 		thread->registry.waitkey = key;
 		xnsynch_sleep_on(&registry_hash_synch, timeout);
 
-		if (xnthread_test_flags(thread, XNTIMEO)) {
+		if (xnthread_test_info(thread, XNTIMEO)) {
 			err = -ETIMEDOUT;
 			goto unlock_and_exit;
 		}
 
-		if (xnthread_test_flags(thread, XNBREAK)) {
+		if (xnthread_test_info(thread, XNBREAK)) {
 			err = -EINTR;
 			goto unlock_and_exit;
 		}
@@ -913,12 +913,12 @@ int xnregistry_remove_safe(xnhandle_t handle, xnticks_t timeout)
 	do {
 		xnsynch_sleep_on(&object->safesynch, timeout);
 
-		if (xnthread_test_flags(xnpod_current_thread(), XNBREAK)) {
+		if (xnthread_test_info(xnpod_current_thread(), XNBREAK)) {
 			err = -EINTR;
 			goto unlock_and_exit;
 		}
 
-		if (xnthread_test_flags(xnpod_current_thread(), XNTIMEO)) {
+		if (xnthread_test_info(xnpod_current_thread(), XNTIMEO)) {
 			err = -ETIMEDOUT;
 			goto unlock_and_exit;
 		}

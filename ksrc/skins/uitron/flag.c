@@ -256,11 +256,11 @@ static ER wai_flg_helper(UINT *p_flgptn,
 
 		xnsynch_sleep_on(&flg->synchbase, timeout);
 
-		if (xnthread_test_flags(&task->threadbase, XNRMID))
+		if (xnthread_test_info(&task->threadbase, XNRMID))
 			err = E_DLT;	/* Flag deleted while pending. */
-		else if (xnthread_test_flags(&task->threadbase, XNTIMEO))
+		else if (xnthread_test_info(&task->threadbase, XNTIMEO))
 			err = E_TMOUT;	/* Timeout. */
-		else if (xnthread_test_flags(&task->threadbase, XNBREAK))
+		else if (xnthread_test_info(&task->threadbase, XNBREAK))
 			err = E_RLWAI;	/* rel_wai() received while waiting. */
 		else
 			*p_flgptn = task->wargs.flag.waiptn;

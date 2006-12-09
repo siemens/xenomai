@@ -148,9 +148,9 @@ int rt_sem_wait(SEM * sem)
 
 	xnsynch_sleep_on(&sem->synch_base, XN_INFINITE);
 
-	if (xnthread_test_flags(&task->thread_base, XNRMID))
+	if (xnthread_test_info(&task->thread_base, XNRMID))
 		err = SEM_ERR;	/* Semaphore deleted while pending. */
-	else if (xnthread_test_flags(&task->thread_base, XNBREAK))
+	else if (xnthread_test_info(&task->thread_base, XNBREAK))
 		err = -EINTR;	/* Unblocked. */
 	else if (sem->type == RES_SEM) {
 	      grab_resource:

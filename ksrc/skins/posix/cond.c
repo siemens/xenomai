@@ -296,9 +296,9 @@ int pse51_cond_timedwait_prologue(xnthread_t *cur,
 
 	err = 0;
 
-	if (xnthread_test_flags(cur, XNBREAK))
+	if (xnthread_test_info(cur, XNBREAK))
 		err = EINTR;
-	else if (xnthread_test_flags(cur, XNTIMEO))
+	else if (xnthread_test_info(cur, XNTIMEO))
 		err = ETIMEDOUT;
 
       unlock_and_return:

@@ -102,7 +102,7 @@ struct sched_seq_iterator {
 		int cprio;
 		xnticks_t period;
 		xnticks_t timeout;
-		xnflags_t status;
+		xnflags_t state;
 	} sched_info[1];
 };
 
@@ -150,7 +150,7 @@ static int sched_seq_show(struct seq_file *seq, void *v)
 	else {
 		struct sched_seq_info *p = (struct sched_seq_info *)v;
 
-		if (p->status & XNINVPS)
+		if (p->state & XNINVPS)
 			snprintf(pbuf, sizeof(pbuf), "%3d(%d)",
 				 p->cprio, xnpod_rescale_prio(p->cprio));
 		else
@@ -162,7 +162,7 @@ static int sched_seq_show(struct seq_file *seq, void *v)
 			   pbuf,
 			   p->period,
 			   p->timeout,
-			   xnthread_symbolic_status(p->status, sbuf,
+			   xnthread_symbolic_status(p->state, sbuf,
 						    sizeof(sbuf)), p->name);
 	}
 
@@ -236,7 +236,7 @@ static int sched_seq_open(struct inode *inode, struct file *file)
 		iter->sched_info[n].cprio = thread->cprio;
 		iter->sched_info[n].period = xnthread_get_period(thread);
 		iter->sched_info[n].timeout = xnthread_get_timeout(thread, iter->start_time);
-		iter->sched_info[n].status = thread->status;
+		iter->sched_info[n].state = xnthread_state_flags(thread);
 
 		holder = nextq(&nkpod->threadq, holder);
 
@@ -264,7 +264,7 @@ struct stat_seq_iterator {
 	struct stat_seq_info {
 		int cpu;
 		pid_t pid;
-		xnflags_t status;
+		xnflags_t state;
 		char name[XNOBJECT_NAME_LEN];
 		unsigned long ssw;
 		unsigned long csw;
@@ -331,7 +331,7 @@ static int stat_seq_show(struct seq_file *seq, void *v)
 		}
 		seq_printf(seq, "%3u  %-6d %-10lu %-10lu %-4lu  %.8lx  %3u.%u"
 			   "  %s\n",
-			   p->cpu, p->pid, p->ssw, p->csw, p->pf, p->status,
+			   p->cpu, p->pid, p->ssw, p->csw, p->pf, p->state,
 			   usage / 10, usage % 10, p->name);
 	}
 
@@ -407,7 +407,7 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 		stat_info->pid = xnthread_user_pid(thread);
 		memcpy(stat_info->name, thread->name,
 		       sizeof(stat_info->name));
-		stat_info->status = thread->status;
+		stat_info->state = xnthread_state_flags(thread);
 		stat_info->ssw = xnstat_counter_get(&thread->stat.ssw);
 		stat_info->csw = xnstat_counter_get(&thread->stat.csw);
 		stat_info->pf = xnstat_counter_get(&thread->stat.pf);
@@ -450,7 +450,7 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 				break; /* line unused or end of chain */
 
 			stat_info->pid = 0;
-			stat_info->status =  0;
+			stat_info->state =  0;
 			stat_info->ssw = 0;
 			stat_info->pf = 0;
 

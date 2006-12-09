@@ -295,7 +295,7 @@ void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay)
 
     xnlock_get_irqsave(&nklock, s);
 
-    while (!xnthread_test_flags(task, XNZOMBIE)) {
+    while (!xnthread_test_state(task, XNZOMBIE)) {
         xnlock_put_irqrestore(&nklock, s);
 
         msleep(poll_delay);
@@ -344,7 +344,7 @@ int rtdm_task_sleep(nanosecs_rel_t delay)
 
     xnpod_suspend_thread(thread, XNDELAY, xnpod_ns2ticks(delay), NULL);
 
-    return xnthread_test_flags(thread, XNBREAK) ? -EINTR : 0;
+    return xnthread_test_info(thread, XNBREAK) ? -EINTR : 0;
 }
 
 EXPORT_SYMBOL(rtdm_task_sleep);
@@ -389,7 +389,7 @@ int rtdm_task_sleep_until(nanosecs_abs_t wakeup_time)
     if (likely(delay > 0)) {
         xnpod_suspend_thread(thread, XNDELAY, delay, NULL);
 
-        if (xnthread_test_flags(thread, XNBREAK))
+        if (xnthread_test_info(thread, XNBREAK))
             err = -EINTR;
     }
 
@@ -446,7 +446,7 @@ void _rtdm_synch_flush(xnsynch_t *synch, unsigned long reason)
     xnlock_get_irqsave(&nklock,s);
 
     if (reason == XNRMID)
-        setbits(synch->status, RTDM_SYNCH_DELETED);
+	xnsynch_set_flags(synch, RTDM_SYNCH_DELETED);
 
     if (likely(xnsynch_flush(synch, reason) == XNSYNCH_RESCHED))
         xnpod_schedule();
@@ -734,11 +734,11 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 
         thread = xnpod_current_thread();
 
-        if (likely(!xnthread_test_flags(thread, XNTIMEO|XNRMID|XNBREAK)))
+        if (likely(!xnthread_test_info(thread, XNTIMEO|XNRMID|XNBREAK)))
             xnsynch_clear_flags(&event->synch_base, RTDM_EVENT_PENDING);
-        else if (xnthread_test_flags(thread, XNTIMEO))
+        else if (xnthread_test_info(thread, XNTIMEO))
             err = -ETIMEDOUT;
-        else if (xnthread_test_flags(thread, XNRMID))
+        else if (xnthread_test_info(thread, XNRMID))
             err = -EIDRM;
         else /* XNBREAK */
             err = -EINTR;
@@ -935,10 +935,10 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 
         thread = xnpod_current_thread();
 
-        if (xnthread_test_flags(thread, XNTIMEO|XNRMID|XNBREAK)) {
-            if (xnthread_test_flags(thread, XNTIMEO))
+        if (xnthread_test_info(thread, XNTIMEO|XNRMID|XNBREAK)) {
+            if (xnthread_test_info(thread, XNTIMEO))
                 err = -ETIMEDOUT;
-            else if (xnthread_test_flags(thread, XNRMID))
+            else if (xnthread_test_info(thread, XNRMID))
                 err = -EIDRM;
             else /*  XNBREAK */
                 err = -EINTR;
@@ -1161,10 +1161,10 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
             xnsynch_sleep_on(&mutex->synch_base, xnpod_ns2ticks(timeout));
         }
 
-        if (unlikely(xnthread_test_flags(thread, XNTIMEO|XNRMID|XNBREAK))) {
-            if (xnthread_test_flags(thread, XNTIMEO))
+        if (unlikely(xnthread_test_info(thread, XNTIMEO|XNRMID|XNBREAK))) {
+            if (xnthread_test_info(thread, XNTIMEO))
                 err = -ETIMEDOUT;
-            else if (xnthread_test_flags(thread, XNRMID))
+            else if (xnthread_test_info(thread, XNRMID))
                 err = -EIDRM;
             else /*  XNBREAK */
                 goto restart;

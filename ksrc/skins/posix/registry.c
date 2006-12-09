@@ -183,12 +183,12 @@ int pse51_node_get(pse51_node_t ** nodep,
 
 			cur = xnpod_current_thread();
 
-			if (xnthread_test_flags(cur, XNRMID)) {
+			if (xnthread_test_info(cur, XNRMID)) {
 				err = EAGAIN;
 				break;
 			}
 
-			if (xnthread_test_flags(cur, XNBREAK)) {
+			if (xnthread_test_info(cur, XNBREAK)) {
 				pse51_node_put(node);
 				return EINTR;
 			}

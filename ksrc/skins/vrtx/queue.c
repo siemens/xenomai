@@ -319,17 +319,17 @@ char *sc_qpend(int qid, long timeout, int *errp)
 
 	xnsynch_sleep_on(&queue->synchbase, timeout);
 
-	if (xnthread_test_flags(&task->threadbase, XNBREAK)) {
+	if (xnthread_test_info(&task->threadbase, XNBREAK)) {
 		*errp = -EINTR;
 		goto unlock_and_exit;
 	}
 
-	if (xnthread_test_flags(&task->threadbase, XNRMID)) {
+	if (xnthread_test_info(&task->threadbase, XNRMID)) {
 		*errp = ER_DEL;
 		goto unlock_and_exit;
 	}
 
-	if (xnthread_test_flags(&task->threadbase, XNTIMEO)) {
+	if (xnthread_test_info(&task->threadbase, XNTIMEO)) {
 		*errp = ER_TMO;
 		goto unlock_and_exit;
 	}

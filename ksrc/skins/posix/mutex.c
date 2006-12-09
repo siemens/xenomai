@@ -216,17 +216,17 @@ int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow, xnticks_t abs_to)
 
 				xnsynch_sleep_on(&mutex->synchbase, to);
 
-				if (xnthread_test_flags(cur, XNBREAK)) {
+				if (xnthread_test_info(cur, XNBREAK)) {
 					err = EINTR;
 					break;
 				}
 
-				if (xnthread_test_flags(cur, XNTIMEO)) {
+				if (xnthread_test_info(cur, XNTIMEO)) {
 					err = ETIMEDOUT;
 					break;
 				}
 
-				if (xnthread_test_flags(cur, XNRMID)) {
+				if (xnthread_test_info(cur, XNRMID)) {
 					err = EINVAL;
 					break;
 				}

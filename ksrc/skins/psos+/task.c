@@ -190,7 +190,7 @@ u_long t_start(u_long tid,
 		goto unlock_and_exit;
 	}
 
-	if (!xnthread_test_flags(&task->threadbase, XNDORMANT)) {
+	if (!xnthread_test_state(&task->threadbase, XNDORMANT)) {
 		err = ERR_ACTIVE;	/* Task already started */
 		goto unlock_and_exit;
 	}
@@ -203,7 +203,7 @@ u_long t_start(u_long tid,
 	task->entry = startaddr;
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	if (xnthread_test_flags(&task->threadbase, XNSHADOW))
+	if (xnthread_test_state(&task->threadbase, XNSHADOW))
 		/* The shadow will be returned the exact values passed
 		 * to t_start(), since the trampoline is performed at
 		 * user-space level. We just relay the information
@@ -248,7 +248,7 @@ u_long t_restart(u_long tid, u_long targs[])
 			goto unlock_and_exit;
 		}
 
-		if (xnthread_test_flags(&task->threadbase, XNDORMANT)) {
+		if (xnthread_test_state(&task->threadbase, XNDORMANT)) {
 			err = ERR_NACTIVE;
 			goto unlock_and_exit;
 		}
@@ -286,7 +286,7 @@ u_long t_delete(u_long tid)
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	if (xnthread_user_task(&task->threadbase) != NULL
-	    && !xnthread_test_flags(&task->threadbase,XNDORMANT)
+	    && !xnthread_test_state(&task->threadbase,XNDORMANT)
 	    && (!xnpod_primary_p() || task != psos_current_task()))
 		xnshadow_send_sig(&task->threadbase, SIGKILL, 1);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
@@ -424,7 +424,7 @@ u_long t_resume(u_long tid)
 		}
 	}
 
-	if (!xnthread_test_flags(&task->threadbase, XNSUSP)) {
+	if (!xnthread_test_state(&task->threadbase, XNSUSP)) {
 		err = ERR_NOTSUSP;	/* Task not suspended. */
 		goto unlock_and_exit;
 	}
@@ -450,7 +450,7 @@ u_long t_suspend(u_long tid)
 
 	if (tid == 0) {
 		xnpod_suspend_self();
-		if (xnthread_test_flags(&psos_current_task()->threadbase, XNBREAK))
+		if (xnthread_test_info(&psos_current_task()->threadbase, XNBREAK))
 		    return -EINTR;
 		return SUCCESS;
 	}
@@ -464,14 +464,14 @@ u_long t_suspend(u_long tid)
 		goto unlock_and_exit;
 	}
 
-	if (xnthread_test_flags(&task->threadbase, XNSUSP)) {
+	if (xnthread_test_state(&task->threadbase, XNSUSP)) {
 		err = ERR_SUSP;	/* Task already suspended. */
 		goto unlock_and_exit;
 	}
 
 	xnpod_suspend_thread(&task->threadbase, XNSUSP, XN_INFINITE, NULL);
 
-	if (xnthread_test_flags(&task->threadbase, XNBREAK))
+	if (xnthread_test_info(&task->threadbase, XNBREAK))
 		err = -EINTR;
 
       unlock_and_exit:

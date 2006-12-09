@@ -95,7 +95,7 @@ struct pse51_thread {
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 };
 
-#define PSE51_JOINED_DETACHED XNTHREAD_SPARE0
+#define PSE51_JOINED_DETACHED XNTHREAD_INFO_SPARE0
 
 #define pse51_current_thread() thread2pthread(xnpod_current_thread())
 

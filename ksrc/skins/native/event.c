@@ -500,11 +500,11 @@ int rt_event_wait(RT_EVENT *event,
 	   succeeded, but do always write it back anyway. */
 	*mask_r = task->wait_args.event.mask;
 
-	if (xnthread_test_flags(&task->thread_base, XNRMID))
+	if (xnthread_test_info(&task->thread_base, XNRMID))
 		err = -EIDRM;	/* Event group deleted while pending. */
-	else if (xnthread_test_flags(&task->thread_base, XNTIMEO))
+	else if (xnthread_test_info(&task->thread_base, XNTIMEO))
 		err = -ETIMEDOUT;	/* Timeout. */
-	else if (xnthread_test_flags(&task->thread_base, XNBREAK))
+	else if (xnthread_test_info(&task->thread_base, XNBREAK))
 		err = -EINTR;	/* Unblocked. */
 
       unlock_and_exit:

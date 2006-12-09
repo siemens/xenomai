@@ -429,7 +429,7 @@ int pthread_join(pthread_t thread, void **value_ptr)
 			thread_cancellation_point(cur);
 
 			/* In case another thread called pthread_detach. */
-			if (xnthread_test_flags(cur, PSE51_JOINED_DETACHED)) {
+			if (xnthread_test_info(cur, PSE51_JOINED_DETACHED)) {
 				xnlock_put_irqrestore(&nklock, s);
 				return EINVAL;
 			}
@@ -628,21 +628,21 @@ int pthread_set_mode_np(int clrmask, int setmask)
 	int err;
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	if (testbits(cur->status, XNSHADOW))
-		valid_flags |= XNTHREAD_SPARE1 | XNSHIELD | XNTRAPSW | XNRPIOFF;
+	if (xnthread_test_state(cur, XNSHADOW))
+		valid_flags |= XNTHREAD_STATE_SPARE1 | XNSHIELD | XNTRAPSW | XNRPIOFF;
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-	/* XNTHREAD_SPARE1 is used for primary mode switch. */
+	/* XNTHREAD_STATE_SPARE1 is used for primary mode switch. */
 
 	if ((clrmask & ~valid_flags) != 0 || (setmask & ~valid_flags) != 0)
 		return EINVAL;
 
 	err = -xnpod_set_thread_mode(cur,
-				     clrmask & ~XNTHREAD_SPARE1,
-				     setmask & ~XNTHREAD_SPARE1);
+				     clrmask & ~XNTHREAD_STATE_SPARE1,
+				     setmask & ~XNTHREAD_STATE_SPARE1);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	if (testbits(cur->status, XNSHADOW) && (clrmask & XNTHREAD_SPARE1) != 0)
+	if (xnthread_test_state(cur, XNSHADOW) && (clrmask & XNTHREAD_STATE_SPARE1) != 0)
 		xnshadow_relax(0);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 

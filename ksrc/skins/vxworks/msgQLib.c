@@ -291,11 +291,11 @@ int msgQReceive(MSG_Q_ID qid, char *buf, UINT bytes, int to)
 
 		xnsynch_sleep_on(&queue->synchbase, timeout);
 
-		error_check(xnthread_test_flags(thread, XNBREAK), -EINTR,
+		error_check(xnthread_test_info(thread, XNBREAK), -EINTR,
 			    goto error);
-		error_check(xnthread_test_flags(thread, XNRMID),
+		error_check(xnthread_test_info(thread, XNRMID),
 			    S_objLib_OBJ_DELETED, goto error);
-		error_check(xnthread_test_flags(thread, XNTIMEO),
+		error_check(xnthread_test_info(thread, XNTIMEO),
 			    S_objLib_OBJ_TIMEOUT, goto error);
 
 		bytes = task->rcv_bytes;
@@ -366,11 +366,11 @@ STATUS msgQSend(MSG_Q_ID qid, const char *buf, UINT bytes, int to, int prio)
 
 			xnsynch_sleep_on(&queue->synchbase, timeout);
 
-			error_check(xnthread_test_flags(thread, XNBREAK),
+			error_check(xnthread_test_info(thread, XNBREAK),
 				    -EINTR, goto error);
-			error_check(xnthread_test_flags(thread, XNRMID),
+			error_check(xnthread_test_info(thread, XNRMID),
 				    S_objLib_OBJ_DELETED, goto error);
-			error_check(xnthread_test_flags(thread, XNTIMEO),
+			error_check(xnthread_test_info(thread, XNTIMEO),
 				    S_objLib_OBJ_TIMEOUT, goto error);
 
 			/* a receiver unblocked us, so we are sure to obtain a message

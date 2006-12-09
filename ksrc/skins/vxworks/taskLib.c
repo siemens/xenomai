@@ -175,7 +175,7 @@ STATUS taskActivate(TASK_ID task_id)
 	check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
 			   goto error);
 
-	if (!xnthread_test_flags(&(task->threadbase), XNDORMANT))
+	if (!xnthread_test_state(&(task->threadbase), XNDORMANT))
 		goto error;
 
 	xnpod_start_thread(&task->threadbase, XNRRB, 0,
@@ -287,7 +287,7 @@ STATUS taskDelete(TASK_ID task_id)
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	if (xnthread_user_task(&task->threadbase) != NULL
-	    && !xnthread_test_flags(&task->threadbase,XNDORMANT)
+	    && !xnthread_test_state(&task->threadbase,XNDORMANT)
 	    && (!xnpod_primary_p() || task != wind_current_task()))
 		xnshadow_send_sig(&task->threadbase, SIGKILL, 1);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
@@ -318,7 +318,7 @@ STATUS taskSuspend(TASK_ID task_id)
 
 	if (task_id == 0) {
 		xnpod_suspend_self();
-		error_check(xnthread_test_flags
+		error_check(xnthread_test_info
 			    (&wind_current_task()->threadbase, XNBREAK), -EINTR,
 			    return ERROR);
 		return OK;
@@ -331,7 +331,7 @@ STATUS taskSuspend(TASK_ID task_id)
 
 	xnpod_suspend_thread(&task->threadbase, XNSUSP, XN_INFINITE, NULL);
 
-	error_check(xnthread_test_flags(&task->threadbase, XNBREAK), -EINTR,
+	error_check(xnthread_test_info(&task->threadbase, XNBREAK), -EINTR,
 		    goto error);
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -513,7 +513,7 @@ STATUS taskDelay(int ticks)
 
 	if (ticks > 0) {
 		xnpod_delay(ticks);
-		error_check(xnthread_test_flags
+		error_check(xnthread_test_info
 			    (&wind_current_task()->threadbase, XNBREAK), -EINTR,
 			    return ERROR);
 	} else
@@ -578,7 +578,7 @@ static int testSafe(wind_task_t *task)
 {
 	while (task->safecnt > 0) {
 		xnsynch_sleep_on(&task->safesync, XN_INFINITE);
-		error_check(xnthread_test_flags(&task->threadbase, XNBREAK),
+		error_check(xnthread_test_info(&task->threadbase, XNBREAK),
 			    -EINTR, return ERROR);
 	}
 	return OK;

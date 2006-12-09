@@ -450,17 +450,17 @@ static u_long q_receive_internal(u_long qid,
 
 		task = psos_current_task();
 
-		if (xnthread_test_flags(&task->threadbase, XNBREAK)) {
+		if (xnthread_test_info(&task->threadbase, XNBREAK)) {
 			err = -EINTR;
 			goto unlock_and_exit;
 		}
 
-		if (xnthread_test_flags(&task->threadbase, XNRMID)) {
+		if (xnthread_test_info(&task->threadbase, XNRMID)) {
 			err = ERR_QKILLD;	/* Queue deleted while pending. */
 			goto unlock_and_exit;
 		}
 
-		if (xnthread_test_flags(&task->threadbase, XNTIMEO)) {
+		if (xnthread_test_info(&task->threadbase, XNTIMEO)) {
 			err = ERR_TIMEOUT;	/* Timeout. */
 			goto unlock_and_exit;
 		}
