@@ -945,12 +945,13 @@ static xnsysent_t __systab[] = {
 	[__psos_q_vbroadcast] = {&__q_vbroadcast, __xn_exec_any},
 	[__psos_sm_create] = {&__sm_create, __xn_exec_any},
 	[__psos_sm_delete] = {&__sm_delete, __xn_exec_any},
+	[__psos_rn_create] = {&__sm_delete, __xn_exec_lostage},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)
 {
 	if (xnthread_get_magic(thread) == PSOS_SKIN_MAGIC &&
-	    testbits(thread->status, XNSHADOW))
+	    xnthread_test_state(thread, XNMAPPED))
 		xnshadow_unmap(thread);
 }
 

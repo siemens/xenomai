@@ -254,11 +254,11 @@ static inline void xnshadow_ppd_remove_mm(struct mm_struct *mm,
 static inline void request_syscall_restart(xnthread_t *thread,
 					   struct pt_regs *regs)
 {
-	if (testbits(thread->status, XNKICKED)) {
+	if (xnthread_test_info(thread, XNKICKED)) {
 		if (__xn_interrupted_p(regs))
 			__xn_error_return(regs, -ERESTARTSYS);
 
-		clrbits(thread->status, XNKICKED);
+		xnthread_clear_info(thread, XNKICKED);
 	}
 
 	/* Relaxing due to a fault will trigger a notification from the
@@ -371,7 +371,7 @@ static void disengage_irq_shield(void)
 
 static inline void reset_shield(xnthread_t *thread)
 {
-	if (testbits(thread->status, XNSHIELD))
+	if (xnthread_test_state(thread, XNSHIELD))
 		engage_irq_shield();
 	else
 		disengage_irq_shield();
@@ -454,7 +454,7 @@ static void lostage_handler(void *cookie)
 
 #ifdef CONFIG_XENO_OPT_ISHIELD
 			if (xnshadow_thread(p) &&
-			    testbits(xnshadow_thread(p)->status, XNSHIELD))
+			    xnthread_test_state(xnshadow_thread(p), XNSHIELD))
 				engage_irq_shield();
 #endif /* CONFIG_XENO_OPT_ISHIELD */
 
@@ -694,7 +694,7 @@ void xnshadow_relax(int notify)
 	int cprio;
 	spl_t s;
 
-	XENO_BUGON(NUCLEUS, testbits(thread->status, XNROOT));
+	XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNROOT));
 
 	/* Enqueue the request to move the running shadow from the Xenomai
 	   domain to the Linux domain.  This will cause the Linux task
@@ -703,7 +703,7 @@ void xnshadow_relax(int notify)
 	xnltt_log_event(xeno_ev_secondarysw, thread->name);
 
 #ifdef CONFIG_XENO_OPT_ISHIELD
-	if (testbits(thread->status, XNSHIELD))
+	if (xnthread_test_state(thread, XNSHIELD))
 		engage_irq_shield();
 #endif /* CONFIG_XENO_OPT_ISHIELD */
 
@@ -714,7 +714,7 @@ void xnshadow_relax(int notify)
 	splhigh(s);
 
 #ifndef CONFIG_XENO_OPT_RPIDISABLE
-	if (likely(!testbits(thread->status, XNRPIOFF)))
+	if (likely(!xnthread_test_state(thread, XNRPIOFF)))
 		xnpod_renice_root(thread->cprio);
 	else
 		xnpod_renice_root(XNPOD_ROOT_PRIO_BASE);
@@ -734,7 +734,7 @@ void xnshadow_relax(int notify)
 
 	xnstat_counter_inc(&thread->stat.ssw);	/* Account for secondary mode switch. */
 
-	if (notify && testbits(thread->status, XNTRAPSW))
+	if (notify && xnthread_test_state(thread, XNTRAPSW))
 		/* Help debugging spurious relaxes. */
 		send_sig(SIGXCPU, current, 1);
 
@@ -852,6 +852,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 	    MAX_RT_PRIO ? xnthread_base_priority(thread) : MAX_RT_PRIO - 1;
 	set_linux_task_priority(current, prio);
 	xnshadow_thrptd(current) = thread;
+	xnthread_set_state(thread, XNMAPPED);
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, NULL);
 
 	if (u_completion) {
@@ -909,6 +910,8 @@ void xnshadow_unmap(xnthread_t *thread)
 		}
 	}
 
+	xnthread_clear_state(thread, XNMAPPED);
+
 	xnltt_log_event(xeno_ev_shadowunmap, thread->name, p ? p->pid : -1);
 	if (!p)
 		goto renice_and_exit;
@@ -948,7 +951,7 @@ int xnshadow_wait_barrier(struct pt_regs *regs)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (testbits(thread->status, XNSTARTED)) {
+	if (xnthread_test_state(thread, XNSTARTED)) {
 		/* Already done -- no op. */
 		xnlock_put_irqrestore(&nklock, s);
 		goto release_task;
@@ -963,7 +966,7 @@ int xnshadow_wait_barrier(struct pt_regs *regs)
 	if (signal_pending(current))
 		return -ERESTARTSYS;
 
-	if (!testbits(thread->status, XNSTARTED))	/* Not really paranoid. */
+	if (!xnthread_test_state(thread, XNSTARTED))	/* Not really paranoid. */
 		return -EPERM;
 
       release_task:
@@ -1029,7 +1032,7 @@ static int xnshadow_sys_migrate(struct task_struct *curr, struct pt_regs *regs)
 			   user-space side fiddles with SIGCHLD while
 			   the target thread is still waiting to be
 			   started. */
-			if (testbits(xnshadow_thread(curr)->status, XNDORMANT))
+			if (xnthread_test_state(xnshadow_thread(curr), XNDORMANT))
 				return 0;
 
 			return xnshadow_harden()? : 1;
@@ -1682,7 +1685,7 @@ static inline void do_schedule_event(struct task_struct *next)
 		   SIGSTOP and SIGINT in order to encompass both the NPTL and
 		   LinuxThreads behaviours. */
 
-		if (testbits(threadin->status, XNDEBUG)) {
+		if (xnthread_test_info(threadin, XNDEBUG)) {
 			if (signal_pending(next)) {
 				sigset_t pending;
 
@@ -1695,40 +1698,39 @@ static inline void do_schedule_event(struct task_struct *next)
 					goto no_ptrace;
 			}
 
-			clrbits(threadin->status, XNDEBUG);
+			xnthread_clear_info(threadin, XNDEBUG);
 			unlock_timers();
 		}
 
 	      no_ptrace:
 
 #ifndef CONFIG_XENO_OPT_RPIDISABLE
-		if (likely(!testbits(threadin->status, XNRPIOFF)))
+		if (likely(!xnthread_test_state(threadin, XNRPIOFF)))
 			newrprio = threadin->cprio;
 		else
 #endif /* CONFIG_XENO_OPT_RPIDISABLE */
 			newrprio = XNPOD_ROOT_PRIO_BASE;	/* Decouple priority scales. */
 
 		if (XENO_DEBUG(NUCLEUS)) {
-			xnflags_t status = threadin->status;
 			int sigpending = signal_pending(next);
 
-			if (!testbits(status, XNRELAX)) {
+			if (!xnthread_test_state(threadin, XNRELAX)) {
 				xnarch_trace_panic_freeze();
 				show_stack(xnthread_user_task(threadin), NULL);
 				xnpod_fatal
 				    ("Hardened thread %s[%d] running in Linux"" domain?! (status=0x%lx, sig=%d, prev=%s[%d])",
-				     threadin->name, next->pid, status,
+				     threadin->name, next->pid, xnthread_state_flags(threadin),
 				     sigpending, prev->comm, prev->pid);
 			} else if (!(next->ptrace & PT_PTRACED) &&
 				   /* Allow ptraced threads to run shortly in order to
 				      properly recover from a stopped state. */
-				   testbits(status, XNSTARTED)
-				   && testbits(status, XNPEND)) {
+				   xnthread_test_state(threadin, XNSTARTED)
+				   && xnthread_test_state(threadin, XNPEND)) {
 				xnarch_trace_panic_freeze();
 				show_stack(xnthread_user_task(threadin), NULL);
 				xnpod_fatal
 				    ("blocked thread %s[%d] rescheduled?! (status=0x%lx, sig=%d, prev=%s[%d])",
-				     threadin->name, next->pid, status,
+				     threadin->name, next->pid, xnthread_state_flags(threadin),
 				     sigpending, prev->comm, prev->pid);
 			}
 		}
@@ -1770,12 +1772,12 @@ static inline void do_sigwake_event(struct task_struct *p)
 	xnthread_t *thread = xnshadow_thread(p);
 	spl_t s;
 
-	if (!thread || testbits(thread->status, XNROOT))	/* Eh? root as shadow? */
+	if (!thread || xnthread_test_state(thread, XNROOT))	/* Eh? root as shadow? */
 		return;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if ((p->ptrace & PT_PTRACED) && !testbits(thread->status, XNDEBUG)) {
+	if ((p->ptrace & PT_PTRACED) && !xnthread_test_info(thread, XNDEBUG)) {
 		sigset_t pending;
 
 		/* We already own the siglock. */
@@ -1784,23 +1786,23 @@ static inline void do_sigwake_event(struct task_struct *p)
 		if (sigismember(&pending, SIGTRAP) ||
 		    sigismember(&pending, SIGSTOP)
 		    || sigismember(&pending, SIGINT)) {
-			__setbits(thread->status, XNDEBUG);
+			xnthread_set_info(thread, XNDEBUG);
 			lock_timers();
 		}
 	}
 
-	if (testbits(thread->status, XNRELAX))
+	if (xnthread_test_state(thread, XNRELAX))
 		goto unlock_and_exit;
 
 	if (thread == thread->sched->runthread)
 		xnsched_set_resched(thread->sched);
 
 	if (xnpod_unblock_thread(thread))
-		__setbits(thread->status, XNKICKED);
+		xnthread_set_info(thread, XNKICKED);
 
-	if (testbits(thread->status, XNSUSP)) {
+	if (xnthread_test_state(thread, XNSUSP)) {
 		xnpod_resume_thread(thread, XNSUSP);
-		__setbits(thread->status, XNKICKED|XNBREAK);
+		xnthread_set_info(thread, XNKICKED|XNBREAK);
 	}
 
 	/* If we are kicking a shadow thread, make sure Linux won't
@@ -1838,7 +1840,7 @@ static inline void do_setsched_event(struct task_struct *p, int priority)
 
 #ifndef CONFIG_XENO_OPT_RPIDISABLE
 	if (current == p &&
-	    likely(!testbits(thread->status, XNRPIOFF)) &&
+	    likely(!xnthread_test_state(thread, XNRPIOFF)) &&
 	    thread->cprio != xnpod_current_root()->cprio)
 		xnpod_renice_root(thread->cprio);
 #endif /* CONFIG_XENO_OPT_RPIDISABLE */

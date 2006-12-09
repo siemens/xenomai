@@ -58,7 +58,7 @@ BOOL taskIsReady(TASK_ID task_id)
 	if (&task->threadbase == xnpod_current_thread())
 		return 1;
 
-	return testbits(xnthread_status_flags(&task->threadbase), XNREADY);
+	return testbits(xnthread_state_flags(&task->threadbase), XNREADY);
 }
 
 BOOL taskIsSuspended(TASK_ID task_id)
@@ -68,5 +68,5 @@ BOOL taskIsSuspended(TASK_ID task_id)
 	check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
 			   return 0);
 
-	return testbits(xnthread_status_flags(&task->threadbase), XNSUSP);
+	return testbits(xnthread_state_flags(&task->threadbase), XNSUSP);
 }

@@ -254,11 +254,11 @@ int sc_fpend(int evid, long timeout, int mask, int opt, int *errp)
 
 	xnsynch_sleep_on(&evgroup->synchbase, timeout);
 
-	if (xnthread_test_flags(&task->threadbase, XNBREAK))
+	if (xnthread_test_info(&task->threadbase, XNBREAK))
 		*errp = -EINTR;
-	else if (xnthread_test_flags(&task->threadbase, XNRMID))
+	else if (xnthread_test_info(&task->threadbase, XNRMID))
 		*errp = ER_DEL;
-	else if (xnthread_test_flags(&task->threadbase, XNTIMEO))
+	else if (xnthread_test_info(&task->threadbase, XNTIMEO))
 		*errp = ER_TMO;
 	else
 		mask_r = task->waitargs.evgroup.mask;

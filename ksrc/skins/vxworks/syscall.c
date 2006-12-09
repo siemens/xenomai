@@ -680,7 +680,7 @@ static int __wind_taskinfo_status(struct task_struct *curr,
 		return S_objLib_OBJ_ID_ERROR;
 	}
 
-	status = xnthread_status_flags(&pTcb->threadbase);
+	status = xnthread_state_flags(&pTcb->threadbase);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -1170,9 +1170,9 @@ static int __wind_wd_wait(struct task_struct *curr, struct pt_regs *regs)
 
 	xnsynch_sleep_on(&wd->synchbase, XN_INFINITE);
 
-	if (xnthread_test_flags(&pTcb->threadbase, XNBREAK))
+	if (xnthread_test_info(&pTcb->threadbase, XNBREAK))
 		err = -EINTR;	/* Unblocked. */
-	else if (xnthread_test_flags(&pTcb->threadbase, XNRMID))
+	else if (xnthread_test_info(&pTcb->threadbase, XNRMID))
 		err = -EIDRM;	/* Watchdog deleted while pending. */
 	else
 		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
@@ -1252,7 +1252,7 @@ static xnsysent_t __systab[] = {
 static void __shadow_delete_hook(xnthread_t *thread)
 {
 	if (xnthread_get_magic(thread) == VXWORKS_SKIN_MAGIC &&
-	    testbits(thread->status, XNSHADOW))
+	    xnthread_test_state(thread, XNMAPPED))
 		xnshadow_unmap(thread);
 }
 

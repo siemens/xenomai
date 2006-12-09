@@ -820,11 +820,11 @@ ssize_t rt_queue_receive(RT_QUEUE *q, void **bufp, RTIME timeout)
 
 		task = xeno_current_task();
 
-		if (xnthread_test_flags(&task->thread_base, XNRMID))
+		if (xnthread_test_info(&task->thread_base, XNRMID))
 			err = -EIDRM;	/* Queue deleted while pending. */
-		else if (xnthread_test_flags(&task->thread_base, XNTIMEO))
+		else if (xnthread_test_info(&task->thread_base, XNTIMEO))
 			err = -ETIMEDOUT;	/* Timeout. */
-		else if (xnthread_test_flags(&task->thread_base, XNBREAK))
+		else if (xnthread_test_info(&task->thread_base, XNBREAK))
 			err = -EINTR;	/* Unblocked. */
 		else {
 			msg = task->wait_args.qmsg;

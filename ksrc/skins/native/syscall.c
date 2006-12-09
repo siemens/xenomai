@@ -2978,9 +2978,9 @@ static int __rt_alarm_wait(struct task_struct *curr, struct pt_regs *regs)
 
 	xnsynch_sleep_on(&alarm->synch_base, XN_INFINITE);
 
-	if (xnthread_test_flags(&task->thread_base, XNRMID))
+	if (xnthread_test_info(&task->thread_base, XNRMID))
 		err = -EIDRM;	/* Alarm deleted while pending. */
-	else if (xnthread_test_flags(&task->thread_base, XNBREAK))
+	else if (xnthread_test_info(&task->thread_base, XNBREAK))
 		err = -EINTR;	/* Unblocked. */
 
       unlock_and_exit:
@@ -3221,11 +3221,11 @@ static int __rt_intr_wait(struct task_struct *curr, struct pt_regs *regs)
 
 		xnsynch_sleep_on(&intr->synch_base, timeout);
 
-		if (xnthread_test_flags(&task->thread_base, XNRMID))
+		if (xnthread_test_info(&task->thread_base, XNRMID))
 			err = -EIDRM;	/* Interrupt object deleted while pending. */
-		else if (xnthread_test_flags(&task->thread_base, XNTIMEO))
+		else if (xnthread_test_info(&task->thread_base, XNTIMEO))
 			err = -ETIMEDOUT;	/* Timeout. */
-		else if (xnthread_test_flags(&task->thread_base, XNBREAK))
+		else if (xnthread_test_info(&task->thread_base, XNBREAK))
 			err = -EINTR;	/* Unblocked. */
 		else
 			err = intr->pending;
@@ -3785,7 +3785,7 @@ static xnsysent_t __systab[] = {
 static void __shadow_delete_hook(xnthread_t *thread)
 {
 	if (xnthread_get_magic(thread) == XENO_SKIN_MAGIC &&
-	    testbits(thread->status, XNSHADOW))
+	    xnthread_test_state(thread, XNMAPPED))
 		xnshadow_unmap(thread);
 }
 

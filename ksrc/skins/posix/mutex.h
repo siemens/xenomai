@@ -91,13 +91,13 @@ static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
             
             xnsynch_sleep_on(&mutex->synchbase, to);
             
-            if (xnthread_test_flags(cur, XNBREAK))
+            if (xnthread_test_info(cur, XNBREAK))
                 return EINTR;
             
-            if (xnthread_test_flags(cur, XNRMID))
+            if (xnthread_test_info(cur, XNRMID))
                 return EINVAL;
             
-            if (xnthread_test_flags(cur, XNTIMEO))
+            if (xnthread_test_info(cur, XNTIMEO))
                 return ETIMEDOUT;
 
             mutex->count = count;

@@ -250,7 +250,7 @@ int clock_nanosleep(clockid_t clock_id,
 
 	thread_cancellation_point(cur);
 
-	if (xnthread_test_flags(cur, XNBREAK)) {
+	if (xnthread_test_info(cur, XNBREAK)) {
 		xnlock_put_irqrestore(&nklock, s);
 
 		if (flags == 0 && rmtp) {

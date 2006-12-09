@@ -464,17 +464,17 @@ ssize_t xnpipe_recv(int minor, struct xnpipe_mh **pmh, xnticks_t timeout)
 
 		thread = xnpod_current_thread();
 
-		if (xnthread_test_flags(thread, XNTIMEO)) {
+		if (xnthread_test_info(thread, XNTIMEO)) {
 			ret = -ETIMEDOUT;
 			goto unlock_and_exit;
 		}
 
-		if (xnthread_test_flags(thread, XNBREAK)) {
+		if (xnthread_test_info(thread, XNBREAK)) {
 			ret = -EINTR;
 			goto unlock_and_exit;
 		}
 
-		if (xnthread_test_flags(thread, XNRMID)) {
+		if (xnthread_test_info(thread, XNRMID)) {
 			ret = -EIDRM;
 			goto unlock_and_exit;
 		}

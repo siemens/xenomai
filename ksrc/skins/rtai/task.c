@@ -39,7 +39,7 @@ static void __task_delete_hook(xnthread_t *thread)
 
 	rtai_mark_deleted(task);
 
-	if (xnthread_test_flags(&task->thread_base, XNSHADOW))
+	if (xnthread_test_state(&task->thread_base, XNSHADOW))
 		xnfreesafe(&task->thread_base, task, &task->link);
 }
 
@@ -190,7 +190,7 @@ int __rtai_task_suspend(RT_TASK *task)
 	if (task->suspend_depth++ == 0) {
 		xnpod_suspend_thread(&task->thread_base,
 				     XNSUSP, XN_INFINITE, NULL);
-		if (xnthread_test_flags(&task->thread_base, XNBREAK))
+		if (xnthread_test_info(&task->thread_base, XNBREAK))
 		    err = -EINTR;
 	}
 

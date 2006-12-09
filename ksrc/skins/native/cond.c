@@ -454,11 +454,11 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 
 	xnsynch_sleep_on(&cond->synch_base, timeout);
 
-	if (xnthread_test_flags(&task->thread_base, XNRMID))
+	if (xnthread_test_info(&task->thread_base, XNRMID))
 		err = -EIDRM;	/* Condvar deleted while pending. */
-	else if (xnthread_test_flags(&task->thread_base, XNTIMEO))
+	else if (xnthread_test_info(&task->thread_base, XNTIMEO))
 		err = -ETIMEDOUT;	/* Timeout. */
-	else if (xnthread_test_flags(&task->thread_base, XNBREAK))
+	else if (xnthread_test_info(&task->thread_base, XNBREAK))
 		err = -EINTR;	/* Unblocked. */
 
 	rt_mutex_acquire(mutex, TM_INFINITE);

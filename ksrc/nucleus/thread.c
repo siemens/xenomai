@@ -27,7 +27,7 @@
 static void xnthread_timeout_handler(xntimer_t *timer)
 {
 	xnthread_t *thread = container_of(timer, xnthread_t, rtimer);
-	__setbits(thread->status, XNTIMEO);	/* Interrupts are off. */
+	xnthread_set_info(thread, XNTIMEO);	/* Interrupts are off. */
 	xnpod_resume_thread(thread, XNDELAY);
 }
 
@@ -37,7 +37,7 @@ static void xnthread_periodic_handler(xntimer_t *timer)
 
 	/* Prevent unwanted round-robin, and do not wake up threads
 	   blocked on a resource. */
-	if (xnthread_test_flags(thread, XNDELAY|XNPEND) == XNDELAY)
+	if (xnthread_test_state(thread, XNDELAY|XNPEND) == XNDELAY)
 		xnpod_resume_thread(thread, XNDELAY);
 }
 
@@ -67,7 +67,8 @@ int xnthread_init(xnthread_t *thread,
 	if (err)
 		return err;
 
-	thread->status = flags;
+	thread->state = flags;
+	thread->info = 0;
 	thread->signals = 0;
 	thread->asrmode = 0;
 	thread->asrimask = 0;
@@ -125,12 +126,13 @@ void xnthread_cleanup_tcb(xnthread_t *thread)
 
 char *xnthread_symbolic_status(xnflags_t status, char *buf, int size)
 {
-	static const char labels[] = XNTHREAD_SLABEL_INIT;
+	static const char labels[] = XNTHREAD_STATE_LABELS;
 	xnflags_t mask;
 	int pos, c;
 	char *wp;
 
-	for (mask = status & ~XNTHREAD_SPARES, pos = 0, wp = buf; mask != 0 && wp - buf < size - 2;	/* 1-letter label + \0 */
+	for (mask = status & ~XNTHREAD_STATE_SPARES, pos = 0, wp = buf;
+	     mask != 0 && wp - buf < size - 2;	/* 1-letter label + \0 */
 	     mask >>= 1, pos++) {
 		c = labels[pos];
 

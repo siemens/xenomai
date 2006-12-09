@@ -39,7 +39,16 @@ typedef struct psosrn {
 #define link2psosrn(laddr) \
 ((psosrn_t *)(((char *)laddr) - (int)(&((psosrn_t *)0)->link)))
 
-    char name[5];	/* Name of region */
+    char name[XNOBJECT_NAME_LEN]; /* Name of region */
+
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    xnhandle_t handle;
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    struct mm_struct *mm;	/* !< Creator's mm. */
+    caddr_t mapbase;		/* !< Region mapping in creator's address space. */
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
     u_long rnsize;	/* Adjusted region size */
 
@@ -48,8 +57,6 @@ typedef struct psosrn {
     xnsynch_t synchbase; /* Synchronization object to pend on */
 
     xnheap_t heapbase;	/* Nucleus heap */
-
-    char *data;		/* Pointer to the heap space */
 
 } psosrn_t;
 

@@ -27,7 +27,7 @@ static int __rtai_muxid;
 static void __shadow_delete_hook(xnthread_t *thread)
 {
 	if (xnthread_get_magic(thread) == RTAI_SKIN_MAGIC &&
-	    testbits(thread->status, XNSHADOW))
+	    xnthread_test_state(thread, XNMAPPED))
 		xnshadow_unmap(thread);
 }
 

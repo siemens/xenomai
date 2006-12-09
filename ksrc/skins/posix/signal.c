@@ -353,7 +353,7 @@ void pse51_sigqueue_inner(pthread_t thread, pse51_siginfo_t * si)
 	}
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	if (testbits(thread->threadbase.status, XNSHADOW))
+	if (testbits(thread->threadbase.state, XNSHADOW))
 		pse51_signal_schedule_request(thread);
 #endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE */
 
@@ -839,13 +839,13 @@ static int pse51_sigtimedwait_inner(const sigset_t * set,
 
 		thread_cancellation_point(&thread->threadbase);
 
-		if (xnthread_test_flags(&thread->threadbase, XNBREAK)) {
+		if (xnthread_test_info(&thread->threadbase, XNBREAK)) {
 			if (!
 			    (received =
 			     pse51_getsigq(&thread->blocked_received, pse51_set,
 					   NULL)))
 				err = EINTR;
-		} else if (xnthread_test_flags(&thread->threadbase, XNTIMEO))
+		} else if (xnthread_test_info(&thread->threadbase, XNTIMEO))
 			err = EAGAIN;
 	}
 
@@ -1150,7 +1150,7 @@ void pse51_signal_init_thread(pthread_t newthread, const pthread_t parent)
 		emptyset(&newthread->sigmask);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	if (testbits(newthread->threadbase.status, XNSHADOW))
+	if (testbits(newthread->threadbase.state, XNSHADOW))
 		newthread->threadbase.asr = &pse51_dispatch_shadow_signals;
 	else
 #endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE */

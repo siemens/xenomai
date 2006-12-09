@@ -98,7 +98,7 @@ void sc_adelay(struct timespec time, int *errp)
 		vrtxtask_t *task = vrtx_current_task();
 		task->vrtxtcb.TCBSTAT = TBSADELAY;
 		xnpod_delay(etime - now);
-		if (xnthread_test_flags(&task->threadbase, XNBREAK))
+		if (xnthread_test_info(&task->threadbase, XNBREAK))
 		    *errp = -EINTR;
 	} else
 		xnpod_yield();	/* Perform manual round-robin */

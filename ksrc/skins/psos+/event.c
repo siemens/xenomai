@@ -77,9 +77,9 @@ u_long ev_receive(u_long events, u_long flags, u_long timeout, u_long *events_r)
 	task->waitargs.evgroup.events = events;
 	xnsynch_sleep_on(&evgroup->synchbase, timeout);
 
-	if (xnthread_test_flags(&task->threadbase, XNBREAK))
+	if (xnthread_test_info(&task->threadbase, XNBREAK))
 		err = -EINTR;
-	else if (xnthread_test_flags(&task->threadbase, XNTIMEO)) {
+	else if (xnthread_test_info(&task->threadbase, XNTIMEO)) {
 		*events_r = task->waitargs.evgroup.events;
 		err = ERR_TIMEOUT;
 	}

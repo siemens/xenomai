@@ -52,10 +52,10 @@ static int rtswitch_pend_rt(rtswitch_context_t *ctx,
 
 	xnsynch_sleep_on(&task->rt_synch, XN_INFINITE);
 
-	if (xnthread_test_flags(xnpod_current_thread(), XNBREAK))
+	if (xnthread_test_info(xnpod_current_thread(), XNBREAK))
 		return -EINTR;
 
-	if (xnthread_test_flags(xnpod_current_thread(), XNRMID))
+	if (xnthread_test_info(xnpod_current_thread(), XNRMID))
 		return -EIDRM;
 
 	if (ctx->failed)
@@ -103,10 +103,10 @@ static int rtswitch_to_rt(rtswitch_context_t *ctx,
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (xnthread_test_flags(xnpod_current_thread(), XNBREAK))
+	if (xnthread_test_info(xnpod_current_thread(), XNBREAK))
 		return -EINTR;
 
-	if (xnthread_test_flags(xnpod_current_thread(), XNRMID))
+	if (xnthread_test_info(xnpod_current_thread(), XNRMID))
 		return -EIDRM;
 
 	if (ctx->failed)

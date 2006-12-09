@@ -225,11 +225,11 @@ static ER rcv_msg_helper(T_MSG ** ppk_msg, ID mbxid, TMO tmout)
 
 		xnsynch_sleep_on(&mbx->synchbase, timeout);
 
-		if (xnthread_test_flags(&task->threadbase, XNRMID))
+		if (xnthread_test_info(&task->threadbase, XNRMID))
 			err = E_DLT;	/* Flag deleted while pending. */
-		else if (xnthread_test_flags(&task->threadbase, XNTIMEO))
+		else if (xnthread_test_info(&task->threadbase, XNTIMEO))
 			err = E_TMOUT;	/* Timeout. */
-		else if (xnthread_test_flags(&task->threadbase, XNBREAK))
+		else if (xnthread_test_info(&task->threadbase, XNBREAK))
 			err = E_RLWAI;	/* rel_wai() received while waiting. */
 		else
 			*ppk_msg = task->wargs.msg;

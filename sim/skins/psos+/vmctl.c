@@ -85,7 +85,7 @@ void mvm_psostask_objctl (mvm_displayctx_t *ctx,
 	    mvm_tcl_append(&_tclist,mvm_get_thread_state(xnthread_archtcb(&task->threadbase)));
 	    mvm_tcl_append_list(&tclist,&_tclist);
 
-	    if (xnthread_test_flags(&task->threadbase,XNDELAY))
+	    if (xnthread_test_state(&task->threadbase,XNDELAY))
 		{
 		mvm_tcl_set(&_tclist,"timeout");
 		mvm_tcl_append_int(&_tclist,xnthread_timeout(&task->threadbase));

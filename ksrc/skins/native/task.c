@@ -75,7 +75,7 @@ static void __task_delete_hook(xnthread_t *thread)
 
 	xeno_mark_deleted(task);
 
-	if (xnthread_test_flags(&task->thread_base, XNSHADOW))
+	if (xnthread_test_state(&task->thread_base, XNSHADOW))
 		xnfreesafe(&task->thread_base, task, &task->link);
 }
 
@@ -108,7 +108,7 @@ int __native_task_safewait(RT_TASK *task)
 	do {
 		xnsynch_sleep_on(&task->safesynch, TM_INFINITE);
 
-		if (xnthread_test_flags
+		if (xnthread_test_info
 		    (&xeno_current_task()->thread_base, XNBREAK))
 			return -EINTR;
 	}
@@ -349,7 +349,7 @@ int rt_task_start(RT_TASK *task, void (*entry) (void *cookie), void *cookie)
 		goto unlock_and_exit;
 	}
 
-	if (!xnthread_test_flags(&task->thread_base, XNDORMANT)) {
+	if (!xnthread_test_state(&task->thread_base, XNDORMANT)) {
 		err = -EBUSY;	/* Task already started. */
 		goto unlock_and_exit;
 	}
@@ -427,7 +427,7 @@ int rt_task_suspend(RT_TASK *task)
 	}
 
 	/* We are about to suspend a task, let's check whether it may sleep */
-	if (xnthread_test_flags(&task->thread_base, XNLOCK)) {
+	if (xnthread_test_state(&task->thread_base, XNLOCK)) {
 		err = -EPERM;
 		goto unlock_and_exit;
 	}
@@ -599,7 +599,7 @@ int rt_task_delete(RT_TASK *task)
 	   mated to the Xenomai shadow might linger unexpectedly on
 	   the startup barrier. */
 	if (xnthread_user_task(&task->thread_base) != NULL
-	    && !xnthread_test_flags(&task->thread_base,XNDORMANT)
+	    && !xnthread_test_state(&task->thread_base,XNDORMANT)
 	    && (!xnpod_primary_p() || task != xeno_current_task()))
 		xnshadow_send_sig(&task->thread_base, SIGKILL, 1);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
@@ -930,7 +930,7 @@ int rt_task_sleep(RTIME delay)
 	xnpod_suspend_thread(&xeno_current_task()->thread_base,
 			     XNDELAY, delay, NULL);
 
-	return xnthread_test_flags(&xeno_current_task()->thread_base,
+	return xnthread_test_info(&xeno_current_task()->thread_base,
 				   XNBREAK) ? -EINTR : 0;
 }
 
@@ -997,7 +997,7 @@ int rt_task_sleep_until(RTIME date)
 		xnpod_suspend_thread(&xeno_current_task()->thread_base,
 				     XNDELAY, delay, NULL);
 
-		if (xnthread_test_flags
+		if (xnthread_test_info
 		    (&xeno_current_task()->thread_base, XNBREAK))
 			err = -EINTR;
 	} else
@@ -1124,7 +1124,7 @@ int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 	strcpy(info->name, xnthread_name(&task->thread_base));
 	info->bprio = xnthread_base_priority(&task->thread_base);
 	info->cprio = xnthread_current_priority(&task->thread_base);
-	info->status = xnthread_status_flags(&task->thread_base);
+	info->status = xnthread_state_flags(&task->thread_base);
 	info->relpoint = xntimer_get_date(&task->thread_base.ptimer);
 
       unlock_and_exit:
@@ -1766,11 +1766,11 @@ ssize_t rt_task_send(RT_TASK *task,
 	 * after having replied to us, so do not make optimistic
 	 * assumption regarding its existence. */
 
-	if (xnthread_test_flags(&client->thread_base, XNRMID))
+	if (xnthread_test_info(&client->thread_base, XNRMID))
 		err = -EIDRM;	/* Receiver deleted while pending. */
-	else if (xnthread_test_flags(&client->thread_base, XNTIMEO))
+	else if (xnthread_test_info(&client->thread_base, XNTIMEO))
 		err = -ETIMEDOUT;	/* Timeout. */
-	else if (xnthread_test_flags(&client->thread_base, XNBREAK))
+	else if (xnthread_test_info(&client->thread_base, XNBREAK))
 		err = -EINTR;	/* Unblocked. */
 	else {
 		rsize = client->wait_args.mps.mcb_r.size;
@@ -1929,10 +1929,10 @@ int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
 	/* XNRMID cannot happen, since well, the current task would be the
 	   deleted object, so... */
 
-	if (xnthread_test_flags(&server->thread_base, XNTIMEO)) {
+	if (xnthread_test_info(&server->thread_base, XNTIMEO)) {
 		err = -ETIMEDOUT;	/* Timeout. */
 		goto unlock_and_exit;
-	} else if (xnthread_test_flags(&server->thread_base, XNBREAK)) {
+	} else if (xnthread_test_info(&server->thread_base, XNBREAK)) {
 		err = -EINTR;	/* Unblocked. */
 		goto unlock_and_exit;
 	}

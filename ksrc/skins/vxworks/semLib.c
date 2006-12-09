@@ -25,7 +25,6 @@
 #define WIND_SEMM_OPTION_MASK SEM_OPTION_MASK
 
 #define WIND_SEM_DEL_SAFE XNSYNCH_SPARE0
-#define WIND_SEM_FLUSH XNSYNCH_SPARE1
 
 static xnqueue_t wind_sem_q;
 
@@ -272,13 +271,13 @@ static STATUS semb_take(wind_sem_t *sem, xnticks_t to)
 
 		xnsynch_sleep_on(&sem->synchbase, to);
 
-		error_check(xnthread_test_flags(thread, XNBREAK), -EINTR,
+		error_check(xnthread_test_info(thread, XNBREAK), -EINTR,
 			    return ERROR);
 
-		error_check(xnthread_test_flags(thread, XNRMID),
+		error_check(xnthread_test_info(thread, XNRMID),
 			    S_objLib_OBJ_DELETED, return ERROR);
 
-		error_check(xnthread_test_flags(thread, XNTIMEO),
+		error_check(xnthread_test_info(thread, XNTIMEO),
 			    S_objLib_OBJ_TIMEOUT, return ERROR);
 	}
 
@@ -304,7 +303,7 @@ static STATUS semb_give(wind_sem_t *sem)
 /* Must be called with nklock locked, interrupts off. */
 static STATUS semb_flush(wind_sem_t *sem)
 {
-	if (xnsynch_flush(&sem->synchbase, WIND_SEM_FLUSH) == XNSYNCH_RESCHED)
+	if (xnsynch_flush(&sem->synchbase, 0) == XNSYNCH_RESCHED)
 		xnpod_schedule();
 
 	return OK;
@@ -347,13 +346,13 @@ static STATUS semm_take(wind_sem_t *sem, xnticks_t to)
 
 		xnsynch_sleep_on(&sem->synchbase, to);
 
-		error_check(xnthread_test_flags(thread, XNBREAK), -EINTR,
+		error_check(xnthread_test_info(thread, XNBREAK), -EINTR,
 			    return ERROR);
 
-		error_check(xnthread_test_flags(thread, XNRMID),
+		error_check(xnthread_test_info(thread, XNRMID),
 			    S_objLib_OBJ_DELETED, return ERROR);
 
-		error_check(xnthread_test_flags(thread, XNTIMEO),
+		error_check(xnthread_test_info(thread, XNTIMEO),
 			    S_objLib_OBJ_TIMEOUT, return ERROR);
 	}
 

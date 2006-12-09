@@ -273,11 +273,11 @@ u_long sm_p(u_long smid, u_long flags, u_long timeout)
 
 			task = psos_current_task();
 
-			if (xnthread_test_flags(&task->threadbase, XNBREAK))
+			if (xnthread_test_info(&task->threadbase, XNBREAK))
 				err = -EINTR;
-			else if (xnthread_test_flags(&task->threadbase, XNRMID))
+			else if (xnthread_test_info(&task->threadbase, XNRMID))
 				err = ERR_SKILLD;	/* Semaphore deleted while pending. */
-			else if (xnthread_test_flags(&task->threadbase, XNTIMEO))
+			else if (xnthread_test_info(&task->threadbase, XNTIMEO))
 				err = ERR_TIMEOUT;	/* Timeout. */
 		}
 	}
