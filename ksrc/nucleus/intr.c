@@ -435,10 +435,12 @@ static xnintr_shirq_t xnshirqs[RTHAL_NR_IRQS];
 static inline void xnintr_shirq_lock(xnintr_shirq_t *shirq)
 {
 	xnarch_atomic_inc(&shirq->active);
+	xnarch_memory_barrier();
 }
 
 static inline void xnintr_shirq_unlock(xnintr_shirq_t *shirq)
 {
+	xnarch_memory_barrier();
 	xnarch_atomic_dec(&shirq->active);
 }
 
