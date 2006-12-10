@@ -218,7 +218,7 @@ u_long tm_wkafter(u_long ticks)
 
 u_long tm_evafter(u_long ticks, u_long events, u_long *tmid)
 {
-	if (xnpod_unblockable_p())
+	if (xnpod_primary_p())
 		return -EPERM;
 
 	return tm_start_event_timer(ticks, XN_INFINITE, events, tmid);
@@ -226,7 +226,7 @@ u_long tm_evafter(u_long ticks, u_long events, u_long *tmid)
 
 u_long tm_evevery(u_long ticks, u_long events, u_long *tmid)
 {
-	if (xnpod_unblockable_p())
+	if (xnpod_primary_p())
 		return -EPERM;
 
 	return tm_start_event_timer(ticks, ticks, events, tmid);
@@ -237,9 +237,6 @@ u_long tm_cancel(u_long tmid)
 	u_long err = SUCCESS;
 	psostm_t *tm;
 	spl_t s;
-
-	if (xnpod_unblockable_p())
-		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -272,7 +269,7 @@ u_long tm_evwhen(u_long date,
 	xnticks_t when, now;
 	u_long err;
 
-	if (xnpod_unblockable_p())
+	if (xnpod_primary_p())
 		return -EPERM;
 
 	if (!xnpod_timeset_p())

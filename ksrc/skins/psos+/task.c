@@ -345,7 +345,7 @@ u_long t_mode(u_long clrmask, u_long setmask, u_long *oldmode)
 {
 	psostask_t *task;
 
-	if (xnpod_unblockable_p())
+	if (xnpod_primary_p())
 		return -EPERM;
 
 	task = psos_current_task();
@@ -445,13 +445,15 @@ u_long t_suspend(u_long tid)
 	psostask_t *task;
 	spl_t s;
 
-	if (xnpod_unblockable_p())
-		return -EPERM;
-
 	if (tid == 0) {
+		if (xnpod_unblockable_p())
+			return -EPERM;
+
 		xnpod_suspend_self();
+
 		if (xnthread_test_info(&psos_current_task()->threadbase, XNBREAK))
 		    return -EINTR;
+
 		return SUCCESS;
 	}
 
@@ -533,8 +535,12 @@ u_long t_setreg(u_long tid, u_long regnum, u_long regvalue)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (tid == 0)
+	if (tid == 0) {
+		if (xnpod_primary_p())
+			return -EPERM;
+
 		task = psos_current_task();
+	}
 	else {
 		task = psos_h2obj_active(tid, PSOS_TASK_MAGIC, psostask_t);
 

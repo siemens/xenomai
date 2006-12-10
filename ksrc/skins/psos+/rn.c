@@ -163,9 +163,6 @@ u_long rn_create(char name[4],
 	psosrn_t *rn;
 	spl_t s;
 
-	if (xnpod_unblockable_p())
-		return -EPERM;
-
 	if ((u_long)rnaddr & (sizeof(u_long) - 1))
 		return ERR_RNADDR;
 
@@ -251,9 +248,6 @@ u_long rn_delete(u_long rnid)
 	u_long err = SUCCESS;
 	psosrn_t *rn;
 	spl_t s;
-
-	if (xnpod_unblockable_p())
-		return -EPERM;
 
 	if (rnid == 0)		/* May not delete region #0 */
 		return ERR_OBJID;
@@ -351,9 +345,6 @@ u_long rn_ident(char name[4], u_long *rnid)
 	psosrn_t *rn;
 	spl_t s;
 
-	if (xnpod_unblockable_p())
-		return -EPERM;
-
 	xnlock_get_irqsave(&nklock, s);
 
 	for (holder = getheadq(&psosrnq); holder;
@@ -383,9 +374,6 @@ u_long rn_retseg(u_long rnid, void *chunk)
 	xnsynch_t *synch;
 	psosrn_t *rn;
 	spl_t s;
-
-	if (xnpod_unblockable_p())
-		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);
 

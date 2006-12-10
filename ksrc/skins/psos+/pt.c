@@ -45,9 +45,6 @@ u_long pt_create(char name[4], void *paddr, void *laddr,	/* unused */
 	u_long n;
 	spl_t s;
 
-	if (xnpod_unblockable_p())
-		return -EPERM;
-
 	if ((u_long)paddr & (sizeof(u_long) - 1))
 		return ERR_PTADDR;
 
@@ -112,9 +109,6 @@ u_long pt_delete(u_long ptid)
 	u_long err = SUCCESS;
 	psospt_t *pt;
 	spl_t s;
-
-	if (xnpod_unblockable_p())
-		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -219,9 +213,6 @@ u_long pt_ident(char name[4], u_long node, u_long *ptid)
 	xnholder_t *holder;
 	psospt_t *pt;
 	spl_t s;
-
-	if (xnpod_unblockable_p())
-		return -EPERM;
 
 	if (node > 1)
 		return ERR_NODENO;
