@@ -6,7 +6,7 @@ libpsos_la_SOURCES = \
 	init.c \
 	queue.c \
 	rn.c \
-	sm.c \
+	sem.c \
 	task.c \
 	tm.c
 
