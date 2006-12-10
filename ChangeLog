@@ -1,3 +1,7 @@
+2006-12-10  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/psos+: Remove useless xnpod_unblockable_p() checks.
+
 2006-12-09  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>, Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/*/syscall.c (__shadow_delete_hook): Only call
