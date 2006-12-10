@@ -37,7 +37,7 @@ else
      target_dir=`pwd`
   fi
   if test "x$target_name" = x; then
-     if `echo $target_dir | grep -q /`; then
+     if `echo $target_dir | grep -q -e / -e .`; then
         target_name=default
      else
         target_name=$target_dir
