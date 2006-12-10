@@ -918,6 +918,45 @@ static int __sm_delete(struct task_struct *curr, struct pt_regs *regs)
 	return sm_delete((u_long)sem);
 }
 
+ /*
+  * int __sm_p(u_long smid, u_long flags, u_long timeout)
+  */
+
+static int __sm_p(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	psossem_t *sem;
+
+	sem = (psossem_t *)xnregistry_fetch(handle);
+
+	if (!sem)
+		return ERR_OBJID;
+
+	u_long  flags, timeout;
+
+	flags   = __xn_reg_arg2(regs);
+	timeout = __xn_reg_arg3(regs);
+
+	return sm_p((u_long)sem, (u_long)flags, (u_long)timeout);
+}
+
+/*
+ * int __sm_v(u_long smid)
+ */
+
+static int __sm_v(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	psossem_t *sem;
+
+	sem = (psossem_t *)xnregistry_fetch(handle);
+
+	if (!sem)
+		return ERR_OBJID;
+
+	return sm_v((u_long)sem);
+}
+
 static xnsysent_t __systab[] = {
 	[__psos_t_create] = {&__t_create, __xn_exec_init},
 	[__psos_t_start] = {&__t_start, __xn_exec_any},
@@ -945,6 +984,8 @@ static xnsysent_t __systab[] = {
 	[__psos_q_vbroadcast] = {&__q_vbroadcast, __xn_exec_any},
 	[__psos_sm_create] = {&__sm_create, __xn_exec_any},
 	[__psos_sm_delete] = {&__sm_delete, __xn_exec_any},
+	[__psos_sm_p] = {&__sm_p, __xn_exec_primary},
+	[__psos_sm_v] = {&__sm_v, __xn_exec_any},
 	[__psos_rn_create] = {&__sm_delete, __xn_exec_lostage},
 };
 
