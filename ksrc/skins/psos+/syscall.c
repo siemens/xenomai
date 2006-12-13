@@ -926,13 +926,12 @@ static int __sm_p(struct task_struct *curr, struct pt_regs *regs)
 {
 	xnhandle_t handle = __xn_reg_arg1(regs);
 	psossem_t *sem;
+	u_long  flags, timeout;
 
 	sem = (psossem_t *)xnregistry_fetch(handle);
 
 	if (!sem)
 		return ERR_OBJID;
-
-	u_long  flags, timeout;
 
 	flags   = __xn_reg_arg2(regs);
 	timeout = __xn_reg_arg3(regs);
