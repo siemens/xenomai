@@ -1,3 +1,10 @@
+2006-12-14  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/hal.c (rthal_irq_end): Use I-pipe's interrupt end
+	call available with 2.6.19 and beyond.
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.19-1.6-02.
+
 2006-12-10  Thomas Necker <Thomas.Necker@marconi.com>
 
 	* ksrc/skins/psos+/syscall.c, src/skins/psos+/sem.c: Add sm_p()
