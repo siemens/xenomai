@@ -252,11 +252,6 @@ extern u_long nktickdef;
 
 extern char *nkmsgbuf;
 
-#define xnprintf(fmt,args...)  xnarch_printf(fmt , ##args)
-#define xnloginfo(fmt,args...) xnarch_loginfo(fmt , ##args)
-#define xnlogwarn(fmt,args...) xnarch_logwarn(fmt , ##args)
-#define xnlogerr(fmt,args...)  xnarch_logerr(fmt , ##args)
-
 #ifdef __cplusplus
 extern "C" {
 #endif

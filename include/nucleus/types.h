@@ -108,6 +108,11 @@ void __xeno_user_exit(void);
 }
 #endif
 
+#define xnprintf(fmt,args...)  xnarch_printf(fmt , ##args)
+#define xnloginfo(fmt,args...) xnarch_loginfo(fmt , ##args)
+#define xnlogwarn(fmt,args...) xnarch_logwarn(fmt , ##args)
+#define xnlogerr(fmt,args...)  xnarch_logerr(fmt , ##args)
+
 #define xnpod_fatal(format,args...) \
 do { \
     const char *panic; \
