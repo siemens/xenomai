@@ -1,5 +1,11 @@
 2006-12-14  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/nucleus/pod.h: Move xnprint* wrappers to
+	nucleus/types.h, since we need them early in the include stack.
+
+	* include/nucleus/assert.h: Include nucleus/types.h instead of
+	nucleus/compiler.h, since we depend on arch-dependent definitions.
+
 	* ksrc/arch/i386/hal.c (rthal_irq_end): Use I-pipe's interrupt end
 	call available with 2.6.19 and beyond.
 

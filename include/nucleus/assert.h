@@ -20,7 +20,7 @@
 #ifndef _XENO_NUCLEUS_ASSERT_H
 #define _XENO_NUCLEUS_ASSERT_H
 
-#include <nucleus/compiler.h>
+#include <nucleus/types.h>
 
 #define XENO_DEBUG(subsystem)   (CONFIG_XENO_OPT_DEBUG_##subsystem > 0)
 
