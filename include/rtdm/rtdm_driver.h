@@ -546,10 +546,10 @@ static inline nanosecs_abs_t rtdm_clock_read(void)
 /**
  * Static lock initialisation
  */
-#define RTDM_LOCK_UNLOCKED          SPIN_LOCK_UNLOCKED
+#define RTDM_LOCK_UNLOCKED          RTHAL_SPIN_LOCK_UNLOCKED
 
 /** Lock variable */
-typedef spinlock_t                  rtdm_lock_t;
+typedef rthal_spinlock_t            rtdm_lock_t;
 
 /** Variable to save the context while holding a lock */
 typedef unsigned long               rtdm_lockctx_t;
@@ -569,7 +569,7 @@ typedef unsigned long               rtdm_lockctx_t;
  *
  * Rescheduling: never.
  */
-#define rtdm_lock_init(lock)        spin_lock_init(lock)
+#define rtdm_lock_init(lock)        rthal_spin_lock_init(lock)
 
 /**
  * Acquire lock from non-preemptible contexts

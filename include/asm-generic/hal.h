@@ -135,8 +135,16 @@ typedef rwlock_t rthal_rwlock_t;
 #define rthal_write_unlock(lock)	write_unlock_hw(lock)
 #define rthal_read_lock(lock)		read_lock_hw(lock)
 #define rthal_read_unlock(lock)	read_unlock_hw(lock)
+
+#ifdef spin_lock_hw
+#define rthal_spin_lock_init(lock)	spin_lock_init(lock)
 #define rthal_spin_lock(lock)		spin_lock_hw(lock)
-#define rthal_spin_unlock(lock)	spin_unlock_hw(lock)
+#define rthal_spin_unlock(lock)		spin_unlock_hw(lock)
+#else /* !spin_lock_hw */
+#define rthal_spin_lock_init(lock)	*(lock) = IPIPE_SPIN_LOCK_UNLOCKED
+#define rthal_spin_lock(lock)		spin_lock(lock)
+#define rthal_spin_unlock(lock)		spin_unlock(lock)
+#endif /* !spin_lock_hw */
 
 #define rthal_root_domain		ipipe_root_domain
 #define rthal_current_domain		ipipe_current_domain
