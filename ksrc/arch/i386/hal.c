@@ -527,7 +527,7 @@ int rthal_irq_end(unsigned irq)
     if (irq >= NR_IRQS)
         return -EINVAL;
 
-    return rthal_irq_chip_enable(irq);
+    return rthal_irq_chip_end(irq);
 }
 
 static inline int do_exception_event(unsigned event, unsigned domid, void *data)
