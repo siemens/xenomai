@@ -26,6 +26,7 @@
 #include <psos+/syscall.h>
 #include <psos+/queue.h>
 #include <psos+/sem.h>
+#include <psos+/tm.h>
 
 /*
  * By convention, error codes are passed back through the syscall
@@ -956,6 +957,112 @@ static int __sm_v(struct task_struct *curr, struct pt_regs *regs)
 	return sm_v((u_long)sem);
 }
 
+/*
+ * u_long tm_wkafter(u_long ticks)
+ */
+
+static int __tm_wkafter(struct task_struct *curr, struct pt_regs *regs)
+{
+	u_long	ticks = __xn_reg_arg1(regs);
+
+	return tm_wkafter(ticks);
+}
+
+/*
+ * u_long tm_cancel(u_long tmid)
+ */
+
+static int __tm_cancel(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	psostm_t *tm;
+
+	tm = (psostm_t *)xnregistry_fetch(handle);
+
+	if (!tm)
+		return ERR_OBJID;
+
+	return tm_cancel((u_long)tm);
+}
+
+/*
+ * u_long tm_evafter(u_long ticks, u_long events, u_long *tmid_r)
+ */
+
+static int __tm_evafter(struct task_struct *curr, struct pt_regs *regs)
+{
+	u_long ticks, events, tmid, err;
+	psostm_t *tm;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(tmid)))
+		return -EFAULT;
+
+	ticks = __xn_reg_arg1(regs);
+	events = __xn_reg_arg2(regs);
+
+	err = tm_evafter(ticks, events, &tmid);
+
+	if (err == SUCCESS) {
+		tm = (psostm_t *)tmid;
+		/* Copy back the registry handle. */
+		tmid = tm->handle;
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &tmid,
+				  sizeof(tmid));
+	}
+
+	return err;
+}
+
+/*
+ * u_long tm_get(u_long *date_r, u_long *time_r, u_long *ticks_r)
+ */
+
+static int __tm_get(struct task_struct *curr, struct pt_regs *regs)
+{
+	u_long date, time, ticks, err;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(date)))
+		return -EFAULT;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(time)))
+		return -EFAULT;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(ticks)))
+		return -EFAULT;
+
+	err = tm_get(&date, &time, &ticks);
+
+	if (err == SUCCESS) {
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &date,
+				  sizeof(date));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &time,
+				  sizeof(time));
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &ticks,
+				  sizeof(ticks));
+	}
+
+	return err;
+}
+
+/*
+ * u_long tm_set(u_long date, u_long time, u_long ticks)
+ */
+
+static int __tm_set(struct task_struct *curr, struct pt_regs *regs)
+{
+	u_long	date, time, ticks;
+
+	date = __xn_reg_arg1(regs);
+	time = __xn_reg_arg2(regs);
+	ticks = __xn_reg_arg3(regs);
+
+	return tm_set(date, time, ticks);
+}
+
 static xnsysent_t __systab[] = {
 	[__psos_t_create] = {&__t_create, __xn_exec_init},
 	[__psos_t_start] = {&__t_start, __xn_exec_any},
@@ -986,6 +1093,11 @@ static xnsysent_t __systab[] = {
 	[__psos_sm_p] = {&__sm_p, __xn_exec_primary},
 	[__psos_sm_v] = {&__sm_v, __xn_exec_any},
 	[__psos_rn_create] = {&__sm_delete, __xn_exec_lostage},
+	[__psos_tm_wkafter] = {&__tm_wkafter, __xn_exec_primary},
+	[__psos_tm_cancel] = {&__tm_cancel, __xn_exec_any},
+	[__psos_tm_evafter] = {&__tm_evafter, __xn_exec_primary},
+	[__psos_tm_get] = {&__tm_get, __xn_exec_any},
+	[__psos_tm_set] = {&__tm_set, __xn_exec_any},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)

@@ -1,3 +1,8 @@
+2006-12-10  Thomas Necker <Thomas.Necker@marconi.com>
+
+	* src/skins/psos+/tm.c, ksrc/skins/psos+/syscall.c: Implement
+	timer-related calls.
+
 2006-12-14  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/pod.h: Move xnprint* wrappers to

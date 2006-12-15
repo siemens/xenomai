@@ -57,6 +57,11 @@
 #define __psos_rn_ident     31
 #define __psos_rn_getseg    32
 #define __psos_rn_retseg    33
+#define __psos_tm_wkafter   34
+#define __psos_tm_cancel    35
+#define __psos_tm_evafter   36
+#define __psos_tm_get       37
+#define __psos_tm_set       38
 
 #ifdef __KERNEL__
 

@@ -176,9 +176,6 @@ extern "C" {
 u_long as_catch(void (*routine)(void),
 		u_long mode);
 
-void k_fatal(u_long err_code,
-	     u_long flags);
-
 u_long tm_tick(void);
 
 u_long t_restart(u_long tid,
@@ -197,6 +194,9 @@ u_long t_restart(u_long tid,
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+
+void k_fatal(u_long err_code,
+	     u_long flags);
 
 u_long as_send(u_long tid,
 	       u_long signals);

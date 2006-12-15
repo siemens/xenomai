@@ -38,6 +38,11 @@ typedef struct psostm {
 
     u_long events;	/* Event flags */
 
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    xnhandle_t handle;
+    char name[XNOBJECT_NAME_LEN]; /* Name of timer */
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
     struct psostask *owner;	/* Timer owner */
 
     xntimer_t timerbase;

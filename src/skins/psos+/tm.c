@@ -19,3 +19,28 @@
 #include <psos+/psos.h>
 
 extern int __psos_muxid;
+
+u_long tm_wkafter(u_long ticks)
+{
+	return XENOMAI_SKINCALL1(__psos_muxid, __psos_tm_wkafter, ticks);
+}
+
+u_long tm_cancel(u_long tmid)
+{
+	return XENOMAI_SKINCALL1(__psos_muxid, __psos_tm_cancel, tmid);
+}
+
+u_long tm_evafter(u_long ticks, u_long events, u_long *tmid_r)
+{
+	return XENOMAI_SKINCALL3(__psos_muxid, __psos_tm_evafter, ticks, events, tmid_r);
+}
+
+u_long tm_get(u_long *date_r, u_long *time_r, u_long *ticks_r)
+{
+	return XENOMAI_SKINCALL3(__psos_muxid, __psos_tm_get, date_r, time_r, ticks_r);
+}
+
+u_long tm_set(u_long date, u_long time, u_long ticks)
+{
+	return XENOMAI_SKINCALL3(__psos_muxid, __psos_tm_set, date, time, ticks);
+}

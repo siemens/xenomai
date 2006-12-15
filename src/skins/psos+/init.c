@@ -28,3 +28,8 @@ void __init_xeno_interface(void)
 	__psos_muxid =
 	    xeno_bind_skin(PSOS_SKIN_MAGIC, "psos", "xeno_psos");
 }
+
+void k_fatal(u_long err_code, u_long flags)
+{
+	exit(1);
+}

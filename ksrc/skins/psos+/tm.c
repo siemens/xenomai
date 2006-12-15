@@ -17,8 +17,9 @@
  * 02111-1307, USA.
  */
 
-#include "psos+/task.h"
-#include "psos+/tm.h"
+#include <nucleus/registry.h>
+#include <psos+/task.h>
+#include <psos+/tm.h>
 
 static xnqueue_t psostimerq;
 
@@ -49,6 +50,9 @@ void tm_destroy_internal(psostm_t *tm)
 	xnlock_get_irqsave(&nklock, s);
 	removegq(&tm->owner->alarmq, tm);
 	xntimer_destroy(&tm->timerbase);
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	xnregistry_remove(tm->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 	psos_mark_deleted(tm);
 	removeq(&psostimerq, &tm->link);
 	xnlock_put_irqrestore(&nklock, s);
@@ -86,12 +90,29 @@ static u_long tm_start_event_timer(u_long ticks,
 	tm->magic = PSOS_TM_MAGIC;
 
 	xnlock_get_irqsave(&nklock, s);
-
 	appendq(&psostimerq, &tm->link);
 	appendgq(&tm->owner->alarmq, tm);
+	xnlock_put_irqrestore(&nklock, s);
 
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	{
+		static unsigned long tm_ids;
+		u_long err;
+
+		sprintf(tm->name, "anon%lu", tm_ids++);
+
+		err = xnregistry_enter(tm->name, tm, &tm->handle, 0);
+
+		if (err) {
+			tm->handle = XN_NO_HANDLE;
+			tm_cancel((u_long)tm);
+			return err;
+		}
+	}
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
+	xnlock_get_irqsave(&nklock, s);
 	xntimer_start(&tm->timerbase, ticks, interval);
-
 	xnlock_put_irqrestore(&nklock, s);
 
 	return SUCCESS;
@@ -218,7 +239,7 @@ u_long tm_wkafter(u_long ticks)
 
 u_long tm_evafter(u_long ticks, u_long events, u_long *tmid)
 {
-	if (xnpod_primary_p())
+	if (!xnpod_primary_p())
 		return -EPERM;
 
 	return tm_start_event_timer(ticks, XN_INFINITE, events, tmid);
@@ -226,7 +247,7 @@ u_long tm_evafter(u_long ticks, u_long events, u_long *tmid)
 
 u_long tm_evevery(u_long ticks, u_long events, u_long *tmid)
 {
-	if (xnpod_primary_p())
+	if (!xnpod_primary_p())
 		return -EPERM;
 
 	return tm_start_event_timer(ticks, ticks, events, tmid);
@@ -269,7 +290,7 @@ u_long tm_evwhen(u_long date,
 	xnticks_t when, now;
 	u_long err;
 
-	if (xnpod_primary_p())
+	if (!xnpod_primary_p())
 		return -EPERM;
 
 	if (!xnpod_timeset_p())
