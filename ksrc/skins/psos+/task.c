@@ -345,7 +345,7 @@ u_long t_mode(u_long clrmask, u_long setmask, u_long *oldmode)
 {
 	psostask_t *task;
 
-	if (xnpod_primary_p())
+	if (!xnpod_primary_p())
 		return -EPERM;
 
 	task = psos_current_task();
@@ -536,7 +536,7 @@ u_long t_setreg(u_long tid, u_long regnum, u_long regvalue)
 	xnlock_get_irqsave(&nklock, s);
 
 	if (tid == 0) {
-		if (xnpod_primary_p())
+		if (!xnpod_primary_p())
 			return -EPERM;
 
 		task = psos_current_task();
