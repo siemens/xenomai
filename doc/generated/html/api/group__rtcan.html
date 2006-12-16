@@ -78,7 +78,7 @@ This is the common interface a RTDM-compliant CAN device has to provide. Feel fr
  Supported Levels and Options: <br>
 <ul>
 <li>Level <b>SOL_CAN_RAW</b> : CAN RAW protocol (see <a class="el" href="group__rtcan.html#ggc99a91b141113059bd5527bad8ddbf530f5142d42281775367eb973d8a0a62d3">CAN_PROTO_RAW</a>)<ul>
-<li>Option <a class="el" href="group__rtcan.html#g87313c6e632294aa4582899a3bbc89e4">CAN_RAW_FILTER</a> : CAN filter list</li><li>Option <a class="el" href="group__rtcan.html#g451ba35aa4d0bef48cb7b0416f5b4367">CAN_RAW_ERR_FILTER</a> : CAN error mask</li></ul>
+<li>Option <a class="el" href="group__rtcan.html#g87313c6e632294aa4582899a3bbc89e4">CAN_RAW_FILTER</a> : CAN filter list</li><li>Option <a class="el" href="group__rtcan.html#g451ba35aa4d0bef48cb7b0416f5b4367">CAN_RAW_ERR_FILTER</a> : CAN error mask</li><li>Option <a class="el" href="group__rtcan.html#ga8aa773ff7721010e48129847af2c843">CAN_RAW_TX_LOOPBACK</a> : CAN TX loopback to local sockets</li></ul>
 </li></ul>
 <br>
  Environments: non-RT (RT optional)<br>
@@ -201,6 +201,9 @@ Environments: RT (non-RT optional)<br>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g451ba35aa4d0bef48cb7b0416f5b4367">CAN_RAW_ERR_FILTER</a>&nbsp;&nbsp;&nbsp;0x2</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN error mask.  <a href="#g451ba35aa4d0bef48cb7b0416f5b4367"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga8aa773ff7721010e48129847af2c843">CAN_RAW_TX_LOOPBACK</a>&nbsp;&nbsp;&nbsp;0x3</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN TX loopback.  <a href="#ga8aa773ff7721010e48129847af2c843"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>IOCTLs</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="IOCTLs"></a> CAN device IOCTLs <br><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#gee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_CAN, 0x00, struct ifreq)</td></tr>
@@ -592,7 +595,7 @@ A CAN error mask (see <a class="el" href="group__rtcan.html#Errors">Errors</a>) 
 Environments: non-RT (RT optional)<br>
  <br>
  Specific return values:<ul>
-<li>-EFAULT (It was not possible to access user space memory area at the specified address.)</li><li>-ENOMEM (Not enough memory to fulfill the operation)</li><li>-EINVAL (Invalid address family, or invalid length of address structure)</li><li>-ENODEV (Invalid CAN interface index)</li><li>-EBADF (Socket is about to be closed)</li><li>-EAGAIN (Too many receivers. Old binding (if any) is still active. Close some sockets and try again.)</li></ul>
+<li>-EFAULT (It was not possible to access user space memory area at the specified address.)</li><li>-EINVAL (Invalid length "optlen")</li></ul>
     </td>
   </tr>
 </table>
@@ -618,7 +621,7 @@ Environments: non-RT (RT optional)<br>
 <p>
 CAN filter definition. 
 <p>
-A CAN raw filter list with elements of struct <a class="el" href="structcan__filter.html">can_filter</a> can be installed with <code>setsockopt</code>. This list is used upon reception of CAN frames to decide whether the bound socket will receive a frame. <br>
+A CAN raw filter list with elements of struct <a class="el" href="structcan__filter.html">can_filter</a> can be installed with <code>setsockopt</code>. This list is used upon reception of CAN frames to decide whether the bound socket will receive a frame. An empty filter list can also be defined using optlen = 0, which is recommanded for write-only sockets. <br>
  If the socket was already bound with <a class="el" href="group__rtcan.html#Bind">Bind</a>, the old filter list gets replaced with the new one. Be aware that already received, but not read out CAN frames may stay in the socket buffer. <br>
  <br>
  <dl compact><dt><b>Parameters:</b></dt><dd>
@@ -630,10 +633,50 @@ A CAN raw filter list with elements of struct <a class="el" href="structcan__fil
  Environments: non-RT (RT optional)<br>
  <br>
  Specific return values:<ul>
-<li>-EFAULT (It was not possible to access user space memory area at the specified address.)</li><li>-ENOMEM (Not enough memory to fulfill the operation)</li><li>-EINVAL (Invalid address family, or invalid length of address structure)</li><li>-ENODEV (Invalid CAN interface index)</li><li>-EBADF (Socket is about to be closed)</li><li>-EAGAIN (Too many receivers. Old binding (if any) is still active. Close some sockets and try again.)</li></ul>
+<li>-EFAULT (It was not possible to access user space memory area at the specified address.)</li><li>-ENOMEM (Not enough memory to fulfill the operation)</li><li>-EINVAL (Invalid length "optlen")</li><li>-ENOSPC (No space to store filter list, check RT-Socket-CAN kernel parameters)</li></ul>
 </td></tr>
   </table>
 </dl>
+    </td>
+  </tr>
+</table>
+<a class="anchor" name="ga8aa773ff7721010e48129847af2c843"></a><!-- doxytag: member="rtcan.h::CAN_RAW_TX_LOOPBACK" ref="ga8aa773ff7721010e48129847af2c843" args="" --><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">#define CAN_RAW_TX_LOOPBACK&nbsp;&nbsp;&nbsp;0x3          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+CAN TX loopback. 
+<p>
+The TX loopback to other local sockets can be selected with this <code>setsockopt</code>.<p>
+<dl compact><dt><b>Note:</b></dt><dd>The TX loopback feature must be enabled in the kernel and then the loopback to other local TX sockets is enabled by default.</dd></dl>
+<br>
+ <dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>level</em>&nbsp;</td><td><b>SOL_CAN_RAW</b> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>optname</em>&nbsp;</td><td><b>CAN_RAW_TX_LOOPBACK</b> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>optval</em>&nbsp;</td><td>Pointer to integer value.</td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>optlen</em>&nbsp;</td><td>Size of int: sizeof(int).</td></tr>
+  </table>
+</dl>
+Environments: non-RT (RT optional)<br>
+ <br>
+ Specific return values:<ul>
+<li>-EFAULT (It was not possible to access user space memory area at the specified address.)</li><li>-EINVAL (Invalid length "optlen")</li><li>-EOPNOTSUPP (not supported, check RT-Socket-CAN kernel parameters). </li></ul>
     </td>
   </tr>
 </table>
@@ -661,6 +704,7 @@ Specify a reception timeout for a socket.
 <p>
 Defines a timeout for all receive operations via a socket which will take effect when one of the <a class="el" href="group__rtcan.html#Recv">receive functions</a> is called without the <code>MSG_DONTWAIT</code> flag set.<p>
 The default value for a newly created socket is an infinite timeout.<p>
+<dl compact><dt><b>Note:</b></dt><dd>The setting of the timeout value is not done atomically to avoid locks. Please set the value before receiving messages from the socket.</dd></dl>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>arg</em>&nbsp;</td><td>Pointer to <a class="el" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> variable. The value is interpreted as relative timeout in nanoseconds in case of a positive value. See <a class="el" href="group__rtdm.html#RTDM_TIMEOUT_xxx">Timeouts</a> for special timeouts.</td></tr>
@@ -701,6 +745,7 @@ Specify a transmission timeout for a socket.
 <p>
 Defines a timeout for all send operations via a socket which will take effect when one of the <a class="el" href="group__rtcan.html#Send">send functions</a> is called without the <code>MSG_DONTWAIT</code> flag set.<p>
 The default value for a newly created socket is an infinite timeout.<p>
+<dl compact><dt><b>Note:</b></dt><dd>The setting of the timeout value is not done atomically to avoid locks. Please set the value before sending messages to the socket.</dd></dl>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>arg</em>&nbsp;</td><td>Pointer to <a class="el" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> variable. The value is interpreted as relative timeout in nanoseconds in case of a positive value. See <a class="el" href="group__rtdm.html#RTDM_TIMEOUT_xxx">Timeouts</a> for special timeouts.</td></tr>
@@ -1302,7 +1347,7 @@ CAN controller is in Sleep mode. </td></tr>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Nov 19 19:58:44 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Dec 16 23:23:25 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

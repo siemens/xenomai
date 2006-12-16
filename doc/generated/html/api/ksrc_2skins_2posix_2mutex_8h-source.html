@@ -120,13 +120,13 @@
 <a name="l00091"></a>00091             
 <a name="l00092"></a>00092             <a class="code" href="group__synch.html#g5bacbd2ab91caeaf39ade357c09abd58">xnsynch_sleep_on</a>(&amp;mutex-&gt;synchbase, to);
 <a name="l00093"></a>00093             
-<a name="l00094"></a>00094             <span class="keywordflow">if</span> (xnthread_test_flags(cur, <a class="code" href="group__nucleus__status__mode.html#g6aa575e1a99b9c931d3b1feb8bc7a36f">XNBREAK</a>))
+<a name="l00094"></a>00094             <span class="keywordflow">if</span> (xnthread_test_info(cur, <a class="code" href="group__nucleus__info__flags.html#g6aa575e1a99b9c931d3b1feb8bc7a36f">XNBREAK</a>))
 <a name="l00095"></a>00095                 <span class="keywordflow">return</span> EINTR;
 <a name="l00096"></a>00096             
-<a name="l00097"></a>00097             <span class="keywordflow">if</span> (xnthread_test_flags(cur, <a class="code" href="group__nucleus__status__mode.html#gb07d9dea73645dbba353dc2452c15b40">XNRMID</a>))
+<a name="l00097"></a>00097             <span class="keywordflow">if</span> (xnthread_test_info(cur, <a class="code" href="group__nucleus__info__flags.html#gb07d9dea73645dbba353dc2452c15b40">XNRMID</a>))
 <a name="l00098"></a>00098                 <span class="keywordflow">return</span> EINVAL;
 <a name="l00099"></a>00099             
-<a name="l00100"></a>00100             <span class="keywordflow">if</span> (xnthread_test_flags(cur, <a class="code" href="group__nucleus__status__mode.html#ga11d7fc754db50d3a1f1e41611d324e9">XNTIMEO</a>))
+<a name="l00100"></a>00100             <span class="keywordflow">if</span> (xnthread_test_info(cur, <a class="code" href="group__nucleus__info__flags.html#ga11d7fc754db50d3a1f1e41611d324e9">XNTIMEO</a>))
 <a name="l00101"></a>00101                 <span class="keywordflow">return</span> ETIMEDOUT;
 <a name="l00102"></a>00102 
 <a name="l00103"></a>00103             mutex-&gt;count = count;
@@ -137,7 +137,7 @@
 <a name="l00108"></a>00108 }
 <a name="l00109"></a>00109 
 <a name="l00110"></a>00110 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_MUTEX_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Nov 19 19:58:43 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Dec 16 23:23:24 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

@@ -49,24 +49,26 @@
 <a name="l00020"></a>00020 <span class="preprocessor">#ifndef _XENO_NUCLEUS_ASSERT_H</span>
 <a name="l00021"></a>00021 <span class="preprocessor"></span><span class="preprocessor">#define _XENO_NUCLEUS_ASSERT_H</span>
 <a name="l00022"></a>00022 <span class="preprocessor"></span>
-<a name="l00023"></a>00023 <span class="preprocessor">#include &lt;nucleus/compiler.h&gt;</span>
+<a name="l00023"></a>00023 <span class="preprocessor">#include &lt;nucleus/types.h&gt;</span>
 <a name="l00024"></a>00024 
-<a name="l00025"></a>00025 <span class="preprocessor">#define XENO_ASSERT(subsystem,cond,action)  do { \</span>
-<a name="l00026"></a>00026 <span class="preprocessor">    if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem &gt; 0 &amp;&amp; !(cond))) { \</span>
-<a name="l00027"></a>00027 <span class="preprocessor">        xnarch_trace_panic_freeze(); \</span>
-<a name="l00028"></a>00028 <span class="preprocessor">        xnlogerr("assertion failed at %s:%d (%s)\n", __FILE__, __LINE__, (#cond)); \</span>
-<a name="l00029"></a>00029 <span class="preprocessor">        xnarch_trace_panic_dump(); \</span>
-<a name="l00030"></a>00030 <span class="preprocessor">        action; \</span>
-<a name="l00031"></a>00031 <span class="preprocessor">    } \</span>
-<a name="l00032"></a>00032 <span class="preprocessor">} while(0)</span>
-<a name="l00033"></a>00033 <span class="preprocessor"></span>
-<a name="l00034"></a>00034 <span class="preprocessor">#define XENO_BUGON(subsystem,cond)  do { \</span>
-<a name="l00035"></a>00035 <span class="preprocessor">    if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem &gt; 0 &amp;&amp; (cond))) \</span>
-<a name="l00036"></a>00036 <span class="preprocessor">        xnpod_fatal("bug at %s:%d (%s)", __FILE__, __LINE__, (#cond)); \</span>
-<a name="l00037"></a>00037 <span class="preprocessor">} while(0)</span>
-<a name="l00038"></a>00038 <span class="preprocessor"></span>
-<a name="l00039"></a>00039 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_ASSERT_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Nov 19 19:58:43 2006 for Xenomai API by&nbsp;
+<a name="l00025"></a>00025 <span class="preprocessor">#define XENO_DEBUG(subsystem)   (CONFIG_XENO_OPT_DEBUG_##subsystem &gt; 0)</span>
+<a name="l00026"></a>00026 <span class="preprocessor"></span>
+<a name="l00027"></a>00027 <span class="preprocessor">#define XENO_ASSERT(subsystem,cond,action)  do { \</span>
+<a name="l00028"></a>00028 <span class="preprocessor">    if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem &gt; 0 &amp;&amp; !(cond))) { \</span>
+<a name="l00029"></a>00029 <span class="preprocessor">        xnarch_trace_panic_freeze(); \</span>
+<a name="l00030"></a>00030 <span class="preprocessor">        xnlogerr("assertion failed at %s:%d (%s)\n", __FILE__, __LINE__, (#cond)); \</span>
+<a name="l00031"></a>00031 <span class="preprocessor">        xnarch_trace_panic_dump(); \</span>
+<a name="l00032"></a>00032 <span class="preprocessor">        action; \</span>
+<a name="l00033"></a>00033 <span class="preprocessor">    } \</span>
+<a name="l00034"></a>00034 <span class="preprocessor">} while(0)</span>
+<a name="l00035"></a>00035 <span class="preprocessor"></span>
+<a name="l00036"></a>00036 <span class="preprocessor">#define XENO_BUGON(subsystem,cond)  do { \</span>
+<a name="l00037"></a>00037 <span class="preprocessor">    if (unlikely(CONFIG_XENO_OPT_DEBUG_##subsystem &gt; 0 &amp;&amp; (cond))) \</span>
+<a name="l00038"></a>00038 <span class="preprocessor">        xnpod_fatal("bug at %s:%d (%s)", __FILE__, __LINE__, (#cond)); \</span>
+<a name="l00039"></a>00039 <span class="preprocessor">} while(0)</span>
+<a name="l00040"></a>00040 <span class="preprocessor"></span>
+<a name="l00041"></a>00041 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_ASSERT_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Dec 16 23:23:24 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

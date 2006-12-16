@@ -130,29 +130,33 @@
 <a name="l00121"></a>00121 <span class="keywordtype">int</span> <a class="code" href="group__mutex.html#g8f7db304bb5a839d81614f00c4cde145">rt_mutex_inquire</a>(RT_MUTEX *mutex,
 <a name="l00122"></a>00122                      RT_MUTEX_INFO *info);
 <a name="l00123"></a>00123 
-<a name="l00124"></a>00124 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00125"></a>00125 <span class="preprocessor"></span>}
-<a name="l00126"></a>00126 <span class="preprocessor">#endif</span>
-<a name="l00127"></a>00127 <span class="preprocessor"></span>
-<a name="l00128"></a>00128 <span class="preprocessor">#ifdef __KERNEL__</span>
-<a name="l00129"></a>00129 <span class="preprocessor"></span><span class="preprocessor">#if LINUX_VERSION_CODE &lt; KERNEL_VERSION(2,6,18)</span>
-<a name="l00130"></a>00130 <span class="preprocessor"></span><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __deprecated_call__ rt_mutex_lock(RT_MUTEX *mutex, RTIME timeout)
-<a name="l00131"></a>00131 {
-<a name="l00132"></a>00132         <span class="keywordflow">return</span> <a class="code" href="group__mutex.html#g8a087d5bfeaaf10b6f0a924b272d72c9">rt_mutex_acquire</a>(mutex, timeout);
-<a name="l00133"></a>00133 }
-<a name="l00134"></a>00134 
-<a name="l00135"></a>00135 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __deprecated_call__ rt_mutex_unlock(RT_MUTEX *mutex)
-<a name="l00136"></a>00136 {
-<a name="l00137"></a>00137         <span class="keywordflow">return</span> <a class="code" href="group__mutex.html#gc87911b7279f55ef2f5f9aefe36ff070">rt_mutex_release</a>(mutex);
-<a name="l00138"></a>00138 }
-<a name="l00139"></a>00139 <span class="preprocessor">#endif </span><span class="comment">/* LINUX_VERSION_CODE &lt; KERNEL_VERSION(2,6,18) */</span>
-<a name="l00140"></a>00140 <span class="preprocessor">#else </span><span class="comment">/* !__KERNEL__ */</span>
-<a name="l00141"></a>00141 <span class="preprocessor">#define rt_mutex_lock   rt_mutex_acquire</span>
-<a name="l00142"></a>00142 <span class="preprocessor"></span><span class="preprocessor">#define rt_mutex_unlock rt_mutex_release</span>
-<a name="l00143"></a>00143 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
+<a name="l00124"></a>00124 <span class="preprocessor">#ifdef __KERNEL__</span>
+<a name="l00125"></a>00125 <span class="preprocessor"></span><span class="preprocessor">#if LINUX_VERSION_CODE &lt; KERNEL_VERSION(2,6,18)</span>
+<a name="l00126"></a>00126 <span class="preprocessor"></span><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __deprecated_call__ rt_mutex_lock(RT_MUTEX *mutex, RTIME timeout)
+<a name="l00127"></a>00127 {
+<a name="l00128"></a>00128         <span class="keywordflow">return</span> <a class="code" href="group__mutex.html#g8a087d5bfeaaf10b6f0a924b272d72c9">rt_mutex_acquire</a>(mutex, timeout);
+<a name="l00129"></a>00129 }
+<a name="l00130"></a>00130 
+<a name="l00131"></a>00131 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __deprecated_call__ rt_mutex_unlock(RT_MUTEX *mutex)
+<a name="l00132"></a>00132 {
+<a name="l00133"></a>00133         <span class="keywordflow">return</span> <a class="code" href="group__mutex.html#gc87911b7279f55ef2f5f9aefe36ff070">rt_mutex_release</a>(mutex);
+<a name="l00134"></a>00134 }
+<a name="l00135"></a>00135 <span class="preprocessor">#endif </span><span class="comment">/* LINUX_VERSION_CODE &lt; KERNEL_VERSION(2,6,18) */</span>
+<a name="l00136"></a>00136 <span class="preprocessor">#else </span><span class="comment">/* !__KERNEL__ */</span>
+<a name="l00137"></a>00137 
+<a name="l00138"></a>00138 <span class="keywordtype">int</span> rt_mutex_lock(RT_MUTEX *mutex,
+<a name="l00139"></a>00139                   RTIME timeout);
+<a name="l00140"></a>00140 
+<a name="l00141"></a>00141 <span class="keywordtype">int</span> rt_mutex_unlock(RT_MUTEX *mutex);
+<a name="l00142"></a>00142 
+<a name="l00143"></a>00143 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
 <a name="l00144"></a>00144 
-<a name="l00145"></a>00145 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_MUTEX_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Nov 19 19:58:43 2006 for Xenomai API by&nbsp;
+<a name="l00145"></a>00145 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00146"></a>00146 <span class="preprocessor"></span>}
+<a name="l00147"></a>00147 <span class="preprocessor">#endif</span>
+<a name="l00148"></a>00148 <span class="preprocessor"></span>
+<a name="l00149"></a>00149 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_MUTEX_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Dec 16 23:23:24 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

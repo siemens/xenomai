@@ -964,7 +964,7 @@ Resumes the execution of a thread previously suspended by one or more calls to x
 <ul>
 <li>XNPEND. This flag removes the resource wait condition. If a watchdog is armed, it is automatically disarmed by this call. Unlike the two previous conditions, only the current thread can set this condition for itself, i.e. no thread can force another one to pend on a resource.</li></ul>
 <p>
-When the thread is eventually resumed by one or more calls to <a class="el" href="group__pod.html#gc3a7bf9e973782a8cfd6495a1786e812">xnpod_resume_thread()</a>, the caller of xnpod_suspend_thread() in the awakened thread that suspended itself should check for the following bits in its own status mask to determine what caused its wake up:<p>
+When the thread is eventually resumed by one or more calls to <a class="el" href="group__pod.html#gc3a7bf9e973782a8cfd6495a1786e812">xnpod_resume_thread()</a>, the caller of xnpod_suspend_thread() in the awakened thread that suspended itself should check for the following bits in its own information mask to determine what caused its wake up:<p>
 <ul>
 <li>XNRMID means that the caller must assume that the pended synchronization object has been destroyed (see <a class="el" href="group__synch.html#g12daeb3b0400cdbee2ca76db857ff7ac">xnsynch_flush()</a>).</li></ul>
 <p>
@@ -1622,7 +1622,7 @@ Suspends the execution of a thread according to a given suspensive condition. Th
     <tr><td valign="top"></td><td valign="top"><em>wchan</em>&nbsp;</td><td>The address of a pended resource. This parameter is used internally by the synchronization object implementation code to specify on which object the suspended thread pends. NULL is a legitimate value when this parameter does not apply to the current suspending mode (e.g. XNSUSP).</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Note:</b></dt><dd>If the target thread is a shadow which has received a Linux-originated signal, then this service immediately exits without suspending the thread, but raises the XNBREAK condition in its status.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>If the target thread is a shadow which has received a Linux-originated signal, then this service immediately exits without suspending the thread, but raises the XNBREAK condition in its information mask.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -1703,7 +1703,7 @@ Breaks the thread out of any wait it is currently in. This call removes the XNDE
   </table>
 </dl>
 This call neither releases the thread from the XNSUSP, XNRELAX nor the XNDORMANT suspensive conditions.<p>
-When the thread resumes execution, the XNBREAK bit is set in the unblocked thread's status mask. Unblocking a non-blocked thread is perfectly harmless.<p>
+When the thread resumes execution, the XNBREAK bit is set in the unblocked thread's information mask. Unblocking a non-blocked thread is perfectly harmless.<p>
 <dl compact><dt><b>Returns:</b></dt><dd>non-zero is returned if the thread was actually unblocked from a pending wait state, 0 otherwise.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
@@ -1807,7 +1807,7 @@ Entered with nklock locked, irqs off. </p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Nov 19 19:58:44 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Dec 16 23:23:25 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
