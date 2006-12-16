@@ -131,10 +131,10 @@ You should have received a copy of the GNU General Public License along with Xen
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Execute code block atomically.  <a href="group__rtdmsync.html#gbbaf52632d5dde7fa66e0b70d887493b"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>Spinlock with Preemption Deactivation</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g1dd901a6311b10ef7961b5fce7fa9d41"></a><!-- doxytag: member="rtdm_driver.h::RTDM_LOCK_UNLOCKED" ref="g1dd901a6311b10ef7961b5fce7fa9d41" args="" -->
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g1dd901a6311b10ef7961b5fce7fa9d41">RTDM_LOCK_UNLOCKED</a>&nbsp;&nbsp;&nbsp;SPIN_LOCK_UNLOCKED</td></tr>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g1dd901a6311b10ef7961b5fce7fa9d41">RTDM_LOCK_UNLOCKED</a>&nbsp;&nbsp;&nbsp;RTHAL_SPIN_LOCK_UNLOCKED</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Static lock initialisation. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g6abf985ea7a0b13ec564cf0107fd8cba">rtdm_lock_init</a>(lock)&nbsp;&nbsp;&nbsp;spin_lock_init(lock)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g6abf985ea7a0b13ec564cf0107fd8cba">rtdm_lock_init</a>(lock)&nbsp;&nbsp;&nbsp;rthal_spin_lock_init(lock)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Dynamic lock initialisation.  <a href="group__rtdmsync.html#g6abf985ea7a0b13ec564cf0107fd8cba"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g65a4897268e15bda462b871976cb3909">rtdm_lock_get</a>(lock)&nbsp;&nbsp;&nbsp;rthal_spin_lock(lock)</td></tr>
@@ -155,8 +155,8 @@ You should have received a copy of the GNU General Public License along with Xen
 <tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ge03c387fcae8a55105dd31d7c008bbb4">rtdm_lock_irqrestore</a>(context)&nbsp;&nbsp;&nbsp;rthal_local_irq_restore(context)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Restore preemption state.  <a href="group__rtdmsync.html#ge03c387fcae8a55105dd31d7c008bbb4"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g2f16a201591d5da778728ec70c00c8b5"></a><!-- doxytag: member="rtdm_driver.h::rtdm_lock_t" ref="g2f16a201591d5da778728ec70c00c8b5" args="" -->
-typedef spinlock_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g2f16a201591d5da778728ec70c00c8b5">rtdm_lock_t</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gb6398c5dab6f8614bc8310b2248ae0b6"></a><!-- doxytag: member="rtdm_driver.h::rtdm_lock_t" ref="gb6398c5dab6f8614bc8310b2248ae0b6" args="" -->
+typedef rthal_spinlock_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#gb6398c5dab6f8614bc8310b2248ae0b6">rtdm_lock_t</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Lock variable. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g7584217487c323356414e21200a57e63"></a><!-- doxytag: member="rtdm_driver.h::rtdm_lockctx_t" ref="g7584217487c323356414e21200a57e63" args="" -->
@@ -288,7 +288,7 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex with timeout.  <a href="group__rtdmsync.html#g0789968300701ba2a940f5fe8b1fd4d8"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Nov 19 19:58:43 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sat Dec 16 23:23:24 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

@@ -261,13 +261,13 @@
 <a name="l00537"></a>00537 <span class="preprocessor">    xnlock_put_irqrestore(&amp;nklock, s);                                      \</span>
 <a name="l00538"></a>00538 <span class="preprocessor">}</span>
 <a name="l00539"></a>00539 <span class="preprocessor"></span>
-<a name="l00549"></a><a class="code" href="group__rtdmsync.html#g1dd901a6311b10ef7961b5fce7fa9d41">00549</a> <span class="preprocessor">#define RTDM_LOCK_UNLOCKED          SPIN_LOCK_UNLOCKED</span>
+<a name="l00549"></a><a class="code" href="group__rtdmsync.html#g1dd901a6311b10ef7961b5fce7fa9d41">00549</a> <span class="preprocessor">#define RTDM_LOCK_UNLOCKED          RTHAL_SPIN_LOCK_UNLOCKED</span>
 <a name="l00550"></a>00550 <span class="preprocessor"></span>
-<a name="l00552"></a><a class="code" href="group__rtdmsync.html#g2f16a201591d5da778728ec70c00c8b5">00552</a> <span class="keyword">typedef</span> spinlock_t                  <a class="code" href="group__rtdmsync.html#g2f16a201591d5da778728ec70c00c8b5">rtdm_lock_t</a>;
+<a name="l00552"></a><a class="code" href="group__rtdmsync.html#gb6398c5dab6f8614bc8310b2248ae0b6">00552</a> <span class="keyword">typedef</span> rthal_spinlock_t            <a class="code" href="group__rtdmsync.html#gb6398c5dab6f8614bc8310b2248ae0b6">rtdm_lock_t</a>;
 <a name="l00553"></a>00553 
 <a name="l00555"></a><a class="code" href="group__rtdmsync.html#g7584217487c323356414e21200a57e63">00555</a> <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>               <a class="code" href="group__rtdmsync.html#g7584217487c323356414e21200a57e63">rtdm_lockctx_t</a>;
 <a name="l00556"></a>00556 
-<a name="l00572"></a><a class="code" href="group__rtdmsync.html#g6abf985ea7a0b13ec564cf0107fd8cba">00572</a> <span class="preprocessor">#define rtdm_lock_init(lock)        spin_lock_init(lock)</span>
+<a name="l00572"></a><a class="code" href="group__rtdmsync.html#g6abf985ea7a0b13ec564cf0107fd8cba">00572</a> <span class="preprocessor">#define rtdm_lock_init(lock)        rthal_spin_lock_init(lock)</span>
 <a name="l00573"></a>00573 <span class="preprocessor"></span>
 <a name="l00590"></a><a class="code" href="group__rtdmsync.html#g65a4897268e15bda462b871976cb3909">00590</a> <span class="preprocessor">#define rtdm_lock_get(lock)         rthal_spin_lock(lock)</span>
 <a name="l00591"></a>00591 <span class="preprocessor"></span>
@@ -457,7 +457,7 @@
 <a name="l00945"></a>00945 
 <a name="l00946"></a>00946 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g7b27d0206027a07958d4a09017e8a3fe">rtdm_event_destroy</a>(rtdm_event_t *event)
 <a name="l00947"></a>00947 {
-<a name="l00948"></a>00948     _rtdm_synch_flush(&amp;event-&gt;synch_base, <a class="code" href="group__nucleus__status__mode.html#gb07d9dea73645dbba353dc2452c15b40">XNRMID</a>);
+<a name="l00948"></a>00948     _rtdm_synch_flush(&amp;event-&gt;synch_base, <a class="code" href="group__nucleus__info__flags.html#gb07d9dea73645dbba353dc2452c15b40">XNRMID</a>);
 <a name="l00949"></a>00949 }
 <a name="l00950"></a>00950 
 <a name="l00951"></a>00951 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g7c9745d1db8e6de244a6c2690cbb8b22">rtdm_event_pulse</a>(rtdm_event_t *event)
@@ -490,7 +490,7 @@
 <a name="l00978"></a>00978 
 <a name="l00979"></a>00979 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gf16f45217e54201ff3f24753982c41f8">rtdm_sem_destroy</a>(rtdm_sem_t *sem)
 <a name="l00980"></a>00980 {
-<a name="l00981"></a>00981     _rtdm_synch_flush(&amp;sem-&gt;synch_base, <a class="code" href="group__nucleus__status__mode.html#gb07d9dea73645dbba353dc2452c15b40">XNRMID</a>);
+<a name="l00981"></a>00981     _rtdm_synch_flush(&amp;sem-&gt;synch_base, <a class="code" href="group__nucleus__info__flags.html#gb07d9dea73645dbba353dc2452c15b40">XNRMID</a>);
 <a name="l00982"></a>00982 }
 <a name="l00983"></a>00983 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
 <a name="l00984"></a>00984 
@@ -514,7 +514,7 @@
 <a name="l01002"></a>01002 
 <a name="l01003"></a>01003 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gd13170b569d0a4cdb46072e1e3a45527">rtdm_mutex_destroy</a>(rtdm_mutex_t *mutex)
 <a name="l01004"></a>01004 {
-<a name="l01005"></a>01005     _rtdm_synch_flush(&amp;mutex-&gt;synch_base, <a class="code" href="group__nucleus__status__mode.html#gb07d9dea73645dbba353dc2452c15b40">XNRMID</a>);
+<a name="l01005"></a>01005     _rtdm_synch_flush(&amp;mutex-&gt;synch_base, <a class="code" href="group__nucleus__info__flags.html#gb07d9dea73645dbba353dc2452c15b40">XNRMID</a>);
 <a name="l01006"></a>01006 }
 <a name="l01007"></a>01007 
 <a name="l01008"></a>01008 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gb40ed579324d8cc76387a0e06dd0f82a">rtdm_mutex_unlock</a>(rtdm_mutex_t *mutex)
@@ -634,7 +634,7 @@
 <a name="l01122"></a>01122                     rtdm_rt_handler_t handler);
 <a name="l01123"></a>01123 
 <a name="l01124"></a>01124 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DRIVER_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Nov 19 19:58:43 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Dec 16 23:23:24 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
