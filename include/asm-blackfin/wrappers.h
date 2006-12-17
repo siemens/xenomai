@@ -33,4 +33,42 @@ typedef irqreturn_t (*rthal_irq_host_handler_t)(int irq,
 						void *dev_id,
 						struct pt_regs *regs);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
+#define rthal_irq_chip_enable(irq)					\
+	({								\
+		int __err__ = 0;					\
+		if (rthal_irq_descp(irq)->chip->unmask == NULL)		\
+			__err__ = -ENODEV;				\
+		else {							\
+			rthal_irq_descp(irq)->disable_depth = 0;	\
+			rthal_irq_descp(irq)->chip->unmask(irq);	\
+		}							\
+		__err__;						\
+	})
+#define rthal_irq_chip_disable(irq)					\
+	({								\
+		int __err__ = 0;					\
+		if (rthal_irq_descp(irq)->chip->mask == NULL)		\
+			__err__ = -ENODEV;				\
+		else {							\
+			rthal_irq_descp(irq)->chip->mask(irq);		\
+			rthal_irq_descp(irq)->disable_depth = 1;	\
+		}							\
+		__err__;						\
+	})
+#define rthal_irq_chip_end(irq)						\
+	({								\
+		int __err__ = 0;					\
+		if (rthal_irq_descp(irq)->chip->unmask == NULL)		\
+			__err__ = -ENODEV;				\
+		else							\
+			rthal_irq_descp(irq)->chip->unmask(irq);	\
+		__err__;						\
+	})
+#else /* >= 2.6.19 */
+#define rthal_irq_chip_enable(irq)   ({ rthal_irq_descp(irq)->chip->enable(irq); 0; })
+#define rthal_irq_chip_disable(irq)  ({ rthal_irq_descp(irq)->chip->disable(irq); 0; })
+#define rthal_irq_chip_end(irq)      ({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
+#endif
+
 #endif /* _XENO_ASM_BLACKFIN_WRAPPERS_H */

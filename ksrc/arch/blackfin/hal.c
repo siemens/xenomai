@@ -37,7 +37,6 @@
 #include <linux/module.h>
 #include <asm/system.h>
 #include <asm/atomic.h>
-#include <asm/irqchip.h>
 #include <asm/io.h>
 #include <asm/uaccess.h>
 #include <asm/unistd.h>
@@ -171,15 +170,7 @@ int rthal_irq_enable(unsigned irq)
 	if (irq >= IPIPE_NR_XIRQS)
 		return -EINVAL;
 
-	if (rthal_irq_descp(irq)->chip->unmask == NULL)
-		return -ENODEV;
-
-	/* We don't care of disable nesting level: real-time IRQ channels
-	   are not meant to be shared with the regular kernel. */
-	rthal_irq_descp(irq)->disable_depth = 0;
-	rthal_irq_descp(irq)->chip->unmask(irq);
-
-	return 0;
+	return rthal_irq_chip_enable(irq);
 }
 
 int rthal_irq_disable(unsigned irq)
@@ -188,13 +179,7 @@ int rthal_irq_disable(unsigned irq)
 	if (irq >= IPIPE_NR_XIRQS)
 		return -EINVAL;
 
-	if (rthal_irq_descp(irq)->chip->mask == NULL)
-		return -ENODEV;
-
-	rthal_irq_descp(irq)->chip->mask(irq);
-	rthal_irq_descp(irq)->disable_depth = 1;
-
-	return 0;
+	return rthal_irq_chip_disable(irq);
 }
 
 int rthal_irq_end(unsigned irq)
@@ -202,12 +187,7 @@ int rthal_irq_end(unsigned irq)
 	if (irq >= IPIPE_NR_XIRQS)
 		return -EINVAL;
 
-	if (rthal_irq_descp(irq)->chip->unmask == NULL)
-		return -ENODEV;
-
-	rthal_irq_descp(irq)->chip->unmask(irq);
-
-	return 0;
+	return rthal_irq_chip_end(irq);
 }
 
 int rthal_irq_host_request(unsigned irq,
