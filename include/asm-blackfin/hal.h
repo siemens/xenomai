@@ -37,7 +37,11 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 }
 
 #ifndef __cplusplus
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
 #include <asm/irqchip.h>
+#else
+#include <linux/irq.h>
+#endif
 #include <asm/system.h>
 #include <asm/mach/blackfin.h>
 #include <asm/processor.h>
