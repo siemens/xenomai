@@ -23,7 +23,7 @@ list-multi := xeno_psos.o
 opt_objs-y :=
 opt_objs-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
 
-xeno_psos-objs := module.o asr.o event.o pt.o queue.o rn.o task.o tm.o sem.o
+xeno_psos-objs := module.o asr.o event.o pt.o queue.o rn.o task.o tm.o sem.o $(opt_objs-y)
 
 export-objs := $(xeno_psos-objs)
 
