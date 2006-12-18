@@ -1,3 +1,10 @@
+2006-12-18  Wolfgang Grandegger  <wg@grandegger.com>
+
+         * ksrc/arch/powerpc/patches: Upgrade to 2.6.14-ppc-1.5-02,
+	 2.6.18-ppc-1.5-01 and 2.6.19-ppc-1.5-01. These patches fix the
+	 problems with PIC for Galileo's GT64260 reported by Antonio
+	 Barbalace and add support for 2.6.19.
+
 2006-12-18  Jan Kiszka  <jan.kiszka@web.de>
 
 	* scripts/xeno-test.in, src/testsuite/*: Install testsuite binaries
