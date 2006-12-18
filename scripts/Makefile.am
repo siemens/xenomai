@@ -8,4 +8,4 @@ install-exec-local:
 
 EXTRA_DIST = bootstrap prepare-kernel.sh xeno-info \
 	Kconfig.frag Modules.frag defconfig.frag \
-	$(wildcard postinstall.sh)
+	help_from_kconfig.pl $(wildcard postinstall.sh)
