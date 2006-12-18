@@ -342,7 +342,7 @@ static void display_help(void)
 static int use_nanosleep = MODE_CLOCK_NANOSLEEP; /* make this default for now */
 static int timermode  = TIMER_ABSTIME;
 static int use_system;
-static int priority;
+static int priority = 99;
 static int num_threads = 1;
 static int max_cycles;
 static int clocksel = 0;
@@ -511,7 +511,7 @@ int main(int argc, char **argv)
 	
 	while (!test_shutdown) {
 		char lavg[256];
-		int fd, len, allstopped = 0;
+		int fd, len, allstopped;
 
 		if (!verbose && !quiet) {
 			fd = open("/proc/loadavg", O_RDONLY, 0666);
@@ -521,10 +521,12 @@ int main(int argc, char **argv)
 			printf("%s          \n\n", lavg);
 		}
 
+		allstopped = max_cycles ? 1 : 0;
+
 		for (i = 0; i < num_threads; i++) {
 			print_stat(&par[i], i, verbose);
-			if(max_cycles && stat[i].cycles >= max_cycles)
-				allstopped++;
+			if (stat[i].cycles < max_cycles)
+				allstopped = 0;
 		}
 		usleep(10000);
 		if (test_shutdown || allstopped == num_threads)

@@ -4,6 +4,10 @@
 	to $(exec_prefix)/bin and related start scripts with runinfos to
 	$(exec_prefix)/share/xenomai/testsuite.
 
+	* src/testsuite/cyclic/cyclictest.c: Clean shutdown of multiple
+	threads (patch by Pavel Pisa's against original cyclictest). Set
+	default top priority to 99.
+
 2006-12-17  Philippe Gerum  <rpm@xenomai.org>
 
 	* RELEASE: Xenomai 2.3-rc3
