@@ -4,6 +4,9 @@
 # If you want to test it this way, do: sh xeno-test
 # BusyBox >= 1.1.3 with a make defconfig should provide all needed applets.
 
+prefix="@prefix@"
+pkgdatadir="@exec_prefix@/share/xenomai"
+
 myusage() {
     cat >&1 <<EOF
 xeno-test [options]
@@ -195,24 +198,24 @@ run_w_load() {
     loudly generate_loads $workload
     boxstatus
     (
-        cd `dirname $0`/../testsuite/latency
+        cd $pkgdatadir/testsuite/latency
 	loudly ./run -- $XENOT_LATENCY $opts -t0 '# latency'
 	loudly ./run -- $XENOT_LATENCY $opts -t1 '# latency'
 	loudly ./run -- $XENOT_LATENCY $opts -t2 '# latency'
     )
-    (	cd `dirname $0`/../testsuite/switchtest
+    (	cd $pkgdatadir/testsuite/switchtest
 	loudly ./run -- -T 120 $XENOT_SWITCHTEST '# switchtest'
     )
-    (	cd `dirname $0`/../testsuite/switchbench
+    (	cd $pkgdatadir/testsuite/switchbench
 	loudly ./run -- -h $XENOT_SWITCHBENCH '# switchbench'
     )
-    (	cd `dirname $0`/../testsuite/cyclic
+    (	cd $pkgdatadir/testsuite/cyclic
 	loudly ./run -- -p 10 -n -l 1000 $XENOT_CYCLIC '# cyclictest'
     )
 
     if [ "$XENOT_IRQBENCH" != "" ] ; then
 	(
-	    cd `dirname $0`/../testsuite/irqbench
+	    cd $pkgdatadir/testsuite/irqbench
 	    loudly ./run -- -P 10 $XENOT_IRQBENCH -t0 '# irqbench user'
 	    loudly ./run -- -P 10 $XENOT_IRQBENCH -t1 '# irqbench kernel'
 	    loudly ./run -- -P 10 $XENOT_IRQBENCH -t2 '# irqbench irq-handler'

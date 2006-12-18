@@ -1,6 +1,6 @@
-testdir = $(exec_prefix)/testsuite/switchtest
+testdir = $(exec_prefix)/share/xenomai/testsuite/switchtest
 
-test_PROGRAMS = switchtest
+bin_PROGRAMS = switchtest
 
 switchtest_SOURCES = switchtest.c
 
@@ -13,8 +13,8 @@ switchtest_LDADD = \
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(testdir)
-	$(INSTALL_DATA) $(srcdir)/runinfo $(DESTDIR)$(testdir)/.runinfo
-	@echo "\$${DESTDIR}$(exec_prefix)/bin/xeno-load \$$*" > $(DESTDIR)$(testdir)/run
+	@sed -e's,@exec_prefix\@,$(exec_prefix),g' $(srcdir)/runinfo.in > $(DESTDIR)$(testdir)/.runinfo
+	@echo "\$${DESTDIR}$(exec_prefix)/bin/xeno-load \`dirname \$$0\` \$$*" > $(DESTDIR)$(testdir)/run
 	@chmod +x $(DESTDIR)$(testdir)/run
 
 uninstall-local:
