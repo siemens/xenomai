@@ -1,6 +1,6 @@
-testdir = $(exec_prefix)/testsuite/latency
+testdir = $(exec_prefix)/share/xenomai/testsuite/latency
 
-test_PROGRAMS = latency
+bin_PROGRAMS = latency
 
 latency_SOURCES = latency.c
 
@@ -17,8 +17,8 @@ latency_LDADD = \
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(testdir)
-	$(INSTALL_DATA) $(srcdir)/runinfo $(DESTDIR)$(testdir)/.runinfo
-	@echo "\$${DESTDIR}$(exec_prefix)/bin/xeno-load \$$*" > $(DESTDIR)$(testdir)/run
+	@sed -e's,@exec_prefix\@,$(exec_prefix),g' $(srcdir)/runinfo.in > $(DESTDIR)$(testdir)/.runinfo
+	@echo "\$${DESTDIR}$(exec_prefix)/bin/xeno-load \`dirname \$$0\` \$$*" > $(DESTDIR)$(testdir)/run
 	@chmod +x $(DESTDIR)$(testdir)/run
 
 uninstall-local:
