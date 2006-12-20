@@ -27,4 +27,4 @@ uninstall-local:
 run: all
 	@$(top_srcdir)/scripts/xeno-load --verbose
 
-EXTRA_DIST = runinfo
+EXTRA_DIST = runinfo.in
