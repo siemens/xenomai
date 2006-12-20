@@ -240,7 +240,7 @@ latency_LDADD = \
 	../../skins/rtdm/librtdm.la \
 	-lpthread -lm
 
-EXTRA_DIST = runinfo
+EXTRA_DIST = runinfo.in
 all: all-am
 
 .SUFFIXES:

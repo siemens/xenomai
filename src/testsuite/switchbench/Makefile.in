@@ -238,7 +238,7 @@ switchbench_LDADD = \
 	../../skins/native/libnative.la \
 	-lpthread -lm
 
-EXTRA_DIST = runinfo
+EXTRA_DIST = runinfo.in
 all: all-am
 
 .SUFFIXES:
