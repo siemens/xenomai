@@ -127,8 +127,9 @@ D: WEB site author and documentation maintainer.
 W: http://www.xenomai.org/
 
 N: Sebastian Smolorz
-E: sebastian.smolorz@stud.uni-hannover.de
+E: ssm@emlix.com
 D: Real-time socket CAN.
+D: Support for Samsung S3C24xx.
 
 N: Evgeny Sinelnikov
 E: linux4sin@mail.ru
