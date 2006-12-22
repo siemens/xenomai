@@ -94,7 +94,7 @@ void rthal_timer_release(void)
     if (rthal_periodic_p)
         rthal_reset_timer();
     else
-        __ipipe_mach_set_dec(__ipipe_mach_ticks_per_jiffy);
+        __ipipe_mach_release_timer();
 
     rthal_irq_release(RTHAL_TIMER_IRQ);
 
