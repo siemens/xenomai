@@ -129,7 +129,7 @@ do { \
 static inline size_t xnheap_rounded_size (size_t hsize, size_t psize)
 {
 	/* Account for the overhead so that the actual heap space is
-	   large enough to match the requested size. Using a large
+	   large enough to match the requested size. Using a small
 	   page size for large single-block heaps might reserve a lot
 	   of useless page map memory, but this should never get
 	   pathological anyway, since we are only consuming 1 byte per
