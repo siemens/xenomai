@@ -53,7 +53,7 @@ static psostask_t *__psos_task_current(struct task_struct *curr)
 }
 
 /*
- * int __t_create(const char *name,
+ * int __t_create(char name[4],
  *                u_long prio,
  *                u_long flags,
  *                u_long *tid_r,
@@ -1063,6 +1063,218 @@ static int __tm_set(struct task_struct *curr, struct pt_regs *regs)
 	return tm_set(date, time, ticks);
 }
 
+/*
+ * u_long rn_create(char name[4], struct sizeopt *szp, struct rninfo *rnip)
+ */
+
+static int __rn_create(struct task_struct *curr, struct pt_regs *regs)
+{
+	struct {
+		u_long rnsize;
+		u_long usize;
+		u_long flags;
+	} sizeopt;
+	struct {
+		u_long rnid;
+		u_long allocsz;
+		void *rncb;
+		u_long mapsize;
+	} rninfo;
+	psosrn_t *rn;
+	char name[5];
+	u_long err;
+
+	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(name)))
+		return -EFAULT;
+
+	/* Get region name. */
+	__xn_strncpy_from_user(curr, name, (const char __user *)__xn_reg_arg1(regs),
+			       sizeof(name) - 1);
+	name[sizeof(name) - 1] = '\0';
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(sizeopt)))
+		return -EFAULT;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(rninfo)))
+		return -EFAULT;
+
+	__xn_copy_from_user(curr, &sizeopt, (void __user *)__xn_reg_arg2(regs),
+			       sizeof(sizeopt));
+
+	err = rn_create(name, NULL,
+			xnheap_rounded_size(sizeopt.rnsize, PAGE_SIZE),
+			sizeopt.usize, sizeopt.flags,
+			&rninfo.rnid, &rninfo.allocsz);
+
+	if (err == SUCCESS) {
+		rn = (psosrn_t *)&rninfo.rnid;
+		rn->mm = curr->mm;
+		rninfo.rnid = rn->handle;
+		rninfo.rncb = &rn->heapbase;
+		rninfo.mapsize = xnheap_extentsize(&rn->heapbase);
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &rninfo,
+				  sizeof(rninfo));
+	}
+
+	return err;
+}
+
+/*
+ * u_long rn_delete(u_long rnid)
+ */
+
+static int __rn_delete(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	psosrn_t *rn;
+
+	rn = (psosrn_t *)xnregistry_fetch(handle);
+
+	if (!rn)
+		return ERR_OBJID;
+
+	return rn_delete((u_long)rn);
+}
+
+/*
+ * int __rn_ident(char name[4], u_long *rnid_r)
+ */
+
+static int __rn_ident(struct task_struct *curr, struct pt_regs *regs)
+{
+	u_long err, rnid;
+	char name[4];
+	spl_t s;
+
+	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(name)))
+		return -EFAULT;
+
+	/* Get region name. */
+	__xn_strncpy_from_user(curr, name, (const char __user *)__xn_reg_arg1(regs),
+			       sizeof(name));
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(rnid)))
+		return -EFAULT;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	err = rn_ident(name, &rnid);
+
+	if (err == SUCCESS) {
+		psosrn_t *rn = (psosrn_t *)rnid;
+		rnid = rn->handle;
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (err == SUCCESS)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &rnid,
+				  sizeof(rnid));
+	return err;
+}
+
+/*
+ * u_long rn_getseg(u_long rnid, u_long size, u_long flags,
+ *                  u_long timeout, void **segaddr)
+ */
+
+static int __rn_getseg(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	u_long size, flags, timeout, err;
+	void *segaddr;
+	psosrn_t *rn;
+	spl_t s;
+
+	rn = (psosrn_t *)xnregistry_fetch(handle);
+
+	if (!rn)
+		return ERR_OBJID;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg5(regs), sizeof(segaddr)))
+		return -EFAULT;
+
+	size = __xn_reg_arg2(regs);
+	flags = __xn_reg_arg3(regs);
+	timeout = __xn_reg_arg4(regs);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	err = rn_getseg((u_long)rn, size, flags, timeout, &segaddr);
+
+	if (err == SUCCESS) {
+		/* Convert pointer to user-space mapping. */
+		segaddr = rn->mapbase + xnheap_mapped_offset(&rn->heapbase, segaddr);
+		xnlock_put_irqrestore(&nklock, s);
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg5(regs), &segaddr,
+				  sizeof(segaddr));
+	} else
+		xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+
+/*
+ * u_long rn_retseg(u_long rnid, void *segaddr)
+ */
+
+static int __rn_retseg(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	void *segaddr;
+	psosrn_t *rn;
+	spl_t s;
+
+	segaddr = (void *)__xn_reg_arg2(regs);
+
+	if (!segaddr)
+		return ERR_SEGADDR;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	rn = (psosrn_t *)xnregistry_fetch(handle);
+
+	if (!rn) {
+		xnlock_put_irqrestore(&nklock, s);
+		return ERR_OBJID;
+	}
+
+	segaddr = xnheap_mapped_address(&rn->heapbase,
+					(caddr_t) segaddr - rn->mapbase);
+	xnlock_put_irqrestore(&nklock, s);
+
+	return rn_retseg((u_long)rn, segaddr);
+}
+
+/*
+ * u_long __rn_bind(u_long rnid, caddr_t mapbase)
+ */
+
+static int __rn_bind(struct task_struct *curr, struct pt_regs *regs)
+{
+	caddr_t mapbase = (caddr_t) __xn_reg_arg2(regs);
+	u_long handle = __xn_reg_arg1(regs), err = 0;
+	psosrn_t *rn;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	rn = (psosrn_t *)xnregistry_fetch(handle);
+
+	if (rn && rn->mm == curr->mm)
+		rn->mapbase = mapbase;
+	else
+		err = ERR_OBJID;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+
 static xnsysent_t __systab[] = {
 	[__psos_t_create] = {&__t_create, __xn_exec_init},
 	[__psos_t_start] = {&__t_start, __xn_exec_any},
@@ -1092,7 +1304,12 @@ static xnsysent_t __systab[] = {
 	[__psos_sm_delete] = {&__sm_delete, __xn_exec_any},
 	[__psos_sm_p] = {&__sm_p, __xn_exec_primary},
 	[__psos_sm_v] = {&__sm_v, __xn_exec_any},
-	[__psos_rn_create] = {&__sm_delete, __xn_exec_lostage},
+	[__psos_rn_create] = {&__rn_create, __xn_exec_lostage},
+	[__psos_rn_delete] = {&__rn_delete, __xn_exec_lostage},
+	[__psos_rn_ident] = {&__rn_ident, __xn_exec_any},
+	[__psos_rn_getseg] = {&__rn_getseg, __xn_exec_any},
+	[__psos_rn_retseg] = {&__rn_retseg, __xn_exec_any},
+	[__psos_rn_bind] = {&__rn_bind, __xn_exec_any},
 	[__psos_tm_wkafter] = {&__tm_wkafter, __xn_exec_primary},
 	[__psos_tm_cancel] = {&__tm_cancel, __xn_exec_any},
 	[__psos_tm_evafter] = {&__tm_evafter, __xn_exec_primary},
