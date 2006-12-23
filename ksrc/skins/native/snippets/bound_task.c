@@ -1,3 +1,4 @@
+#include <sys/mman.h>
 #include <native/task.h>
 
 #define SIGNALS (0x1|0x4) /* Signals to send */

@@ -1,3 +1,4 @@
+#include <sys/mman.h>
 #include <native/task.h>
 
 #define TASK_PRIO  99 /* Highest RT priority */
