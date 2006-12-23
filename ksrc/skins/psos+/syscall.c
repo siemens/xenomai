@@ -27,6 +27,7 @@
 #include <psos+/queue.h>
 #include <psos+/sem.h>
 #include <psos+/tm.h>
+#include <psos+/rn.h>
 
 /*
  * By convention, error codes are passed back through the syscall
