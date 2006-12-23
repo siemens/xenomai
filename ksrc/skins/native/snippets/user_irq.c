@@ -1,3 +1,4 @@
+#include <sys/mman.h>
 #include <native/task.h>
 #include <native/intr.h>
 
