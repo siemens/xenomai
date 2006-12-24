@@ -266,6 +266,22 @@ inline __attribute__((weak)) int pthread_atfork(void (*prepare)(void),
 	return 0;
 }
 
+#include <errno.h>
+
+inline __attribute__((weak)) int shm_open(const char *name,
+					  int oflag,
+					  mode_t mode)
+{
+	errno = ENOSYS;
+	return -1;
+}
+
+inline __attribute__((weak)) int shm_unlink(const char *name)
+{
+	errno = ENOSYS;
+	return -1;
+}
+
 #endif /* __KERNEL__ */
 
 #endif /* !_XENO_ASM_BLACKFIN_SYSCALL_H */
