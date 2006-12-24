@@ -310,8 +310,7 @@ $ make install
 2.4 Building for the Blackfin
 -----------------------------
 
-The Blackfin is an MMU-less, DSP-type architecture running
-uClinux.
+The Blackfin is an MMU-less, DSP-type architecture running uClinux.
 
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=blackfin \
   --adeos=$xenomai_root/ksrc/arch/blackfin/patches/adeos-ipipe-2.6.12-bf533-X.Y-ZZ.patch \
@@ -327,7 +326,9 @@ You may also want to have a look at this hands-on description about
 configuring and building a Xenomai system for the Blackfin
 architecture: http://docs.blackfin.uclinux.org/doku.php?id=adeos
 
-NOTE: Xenomai uses the FDPIC library format.
+NOTE: Xenomai uses the FDPIC shared library format. In case of problem
+running the testsuite, try restarting the last two build steps,
+passing the --disable-shared option to the "configure" script.
 
 2.5 Building for x86 with the --enable-linux-build option
 ---------------------------------------------------------
