@@ -19,7 +19,3 @@ the top of the Xenomai tree for more information.
 
 [1] http://www.gna.org/projects/adeos/
 [2] http://blackfin.uclinux.org/
-
-NOTE: Due to modifications introduced by the real-time enabling patch,
-you might need to lower the rsize and wsize values used to configure
-NFS mounts down to 1024, especially on low-end boards (e.g. BF533).
