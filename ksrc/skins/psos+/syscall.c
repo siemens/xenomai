@@ -1110,7 +1110,7 @@ static int __rn_create(struct task_struct *curr, struct pt_regs *regs)
 			&rninfo.rnid, &rninfo.allocsz);
 
 	if (err == SUCCESS) {
-		rn = (psosrn_t *)&rninfo.rnid;
+		rn = (psosrn_t *)rninfo.rnid;
 		rn->mm = curr->mm;
 		rninfo.rnid = rn->handle;
 		rninfo.rncb = &rn->heapbase;
