@@ -1,5 +1,10 @@
 2006-12-25  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/asm-ia64/wrappers.h: Include missing <linux/interrupt.h>.
+
+	* include/asm-ia64/atomic.h: Define xnarch_atomic_xchg() in kernel
+	section.
+
 	* ksrc/nucleus/pod.c (xnpod_preempt_current_thread): Check
 	scheduling hook value int the simulation case.
 
