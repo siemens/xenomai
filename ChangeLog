@@ -1,5 +1,7 @@
 2006-12-25  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/ia64/patches: Upgrade to 2.6.16-1.4-00.
+
 	* include/asm-ia64/wrappers.h: Include missing <linux/interrupt.h>.
 
 	* include/asm-ia64/atomic.h: Define xnarch_atomic_xchg() in kernel
