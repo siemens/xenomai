@@ -2231,17 +2231,19 @@ static inline void xnpod_preempt_current_thread(xnsched_t *sched)
 	xnthread_set_state(thread, XNREADY);
 
 #ifdef __XENO_SIM__
-	if (getheadpq(&sched->readyq) != &thread->rlink)
-		nkpod->schedhook(thread, XNREADY);
-	else if (nextpq(&sched->readyq, &thread->rlink) != NULL) {
-		/* The running thread is still heading the ready queue and
-		   more than one thread is linked to this queue, so we may
-		   refer to the following element as a thread object
-		   (obviously distinct from the running thread) safely. Note:
-		   this works because the simulator never uses multi-level
-		   queues for holding ready threads. --rpm */
-		thread = link2thread(thread->rlink.plink.next, rlink);
-		nkpod->schedhook(thread, XNREADY);
+	if (nkpod->schedhook) {
+		if (getheadpq(&sched->readyq) != &thread->rlink)
+			nkpod->schedhook(thread, XNREADY);
+		else if (nextpq(&sched->readyq, &thread->rlink) != NULL) {
+			/* The running thread is still heading the ready queue and
+			   more than one thread is linked to this queue, so we may
+			   refer to the following element as a thread object
+			   (obviously distinct from the running thread) safely. Note:
+			   this works because the simulator never uses multi-level
+			   queues for holding ready threads. --rpm */
+			thread = link2thread(thread->rlink.plink.next, rlink);
+			nkpod->schedhook(thread, XNREADY);
+		}
 	}
 #endif /* __XENO_SIM__ */
 }
