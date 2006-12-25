@@ -4,7 +4,7 @@ SUDO=sudo
 
 SUBDIRS = src include config @XENO_MAYBE_DOCDIR@ scripts
 
-EXTRA_DIST = CREDITS README.INSTALL TROUBLESHOOTING ksrc
+EXTRA_DIST = CREDITS README.INSTALL TROUBLESHOOTING ksrc examples
 
 dist-hook:
 	rm -fr `find $(distdir) -name '.svn' -o -name CVS  -o -name '.#*' \
