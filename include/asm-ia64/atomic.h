@@ -29,6 +29,8 @@
 
 typedef atomic_t atomic_counter_t;
 
+#define xnarch_atomic_xchg(ptr,v)		xchg(ptr,v)
+
 #define xnarch_atomic_set(pcounter,i)          atomic_set(pcounter,i)
 #define xnarch_atomic_get(pcounter)            atomic_read(pcounter)
 #define xnarch_atomic_inc(pcounter)            atomic_inc(pcounter)

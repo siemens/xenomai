@@ -25,6 +25,7 @@
 #endif
 
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
+#include <linux/interrupt.h>
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
 
