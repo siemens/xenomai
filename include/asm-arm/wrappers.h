@@ -39,6 +39,12 @@ typedef irqreturn_t (*rthal_irq_host_handler_t)(int irq,
 						void *dev_id,
 						struct pt_regs *regs);
 
+#if IPIPE_MAJOR_NUMBER == 1 && /* There is no version 0. */ 	\
+	(IPIPE_MINOR_NUMBER < 5 || IPIPE_PATCH_NUMBER < 3)
+#define __ipipe_mach_release_timer()  \
+	__ipipe_mach_set_dec(__ipipe_mach_ticks_per_jiffy)
+#endif /* IPIPE < 1.5-03 */
+
 #endif /* _XENO_ASM_ARM_WRAPPERS_H */
 
 // vim: ts=4 et sw=4 sts=4
