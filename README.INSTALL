@@ -192,6 +192,12 @@ this prefix. If configure is unable to infer the architecture name
 from the cross-compilation tools prefix, you will have to manually
 pass the name of all compilation tools on configure command line. 
 
+If you want to avoid to build your own cross compiler, you might if find
+easier to use ELDK (see http://www.denx.de/wiki/DULG/ELDK). It includes
+the GNU cross development tools, such as the compilers, binutils, gdb, 
+etc., and a number of pre-built target tools and libraries necessary
+to provide some functionality on the target system.
+
 See sections 2.2, 2.3 and 2.4 for examples.
 
 1.4 Building the Linux kernel in the user-space support build tree
@@ -245,6 +251,13 @@ same configuration.
 # $linux_tree = path to the target kernel sources
 # $xenomai_root = path to the Xenomai sources
 # $build_root = path to a clean build directory
+# $staging_dir = path to a directory that will hold the installed file
+# temporarily before they are moved to their final location; when used
+# in a cross-compilation setup, it is usually a NFS mount point from
+# the target's root directory to the local build host, as a
+# consequence of which running "make DESTDIR=$staging_dir install" on
+# the host immediately updates the target system with the installed
+# programs and libraries.
 
 2.1 Building for x86
 --------------------
@@ -276,20 +289,21 @@ build Xenomai.
 -----------------------------------------
 
 A typical cross-compilation setup, in order to build Xenomai for a
-PowerPC-405-based system:
+PowerPC-405-based system from a x86 host. Here we use an ELDK
+cross-compiler and a 2.6.14 kernel.
 
-$ $xenomai_root/scripts/prepare-kernel.sh --arch=powerpc \
-  --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-ipipe-2.6.14-ppc-X.Y-ZZ.patch \
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=ppc \
+  --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-ipipe-2.6.14-ppc-1.5-*.patch \
   --linux=$linux_tree
 $ cd $linux_tree
-$ mkdir ../build-powerpc-405-2.6.14
-$ make ARCH=ppc CROSS_COMPILE=powerpc-405-linux-gnu- O=../build-powerpc-405-2.6.14 xconfig/gconfig/menuconfig 
-# select the kernel and Xenomai options
-$ make ARCH=ppc CROSS_COMPILE=powerpc-405-linux-gnu- O=../build-powerpc-405-2.6.14 bzImage modules 
-# then install as needed
-$ mkdir $build_root && cd $build_root
-$ $xenomai_root/configure --build=i686-linux --host=powerpc-405-linux-gnu
-$ make install
+$ make ARCH=ppc CROSS_COMPILE=ppc_4xx- O=$build_root xconfig/gconfig/menuconfig
+# [select the kernel and Xenomai options, save the configuration]
+$ make ARCH=ppc CROSS_COMPILE=ppc_4xx- O=$build_root bzImage modules
+# [manually install the kernel image, system map and modules to the proper location]
+$ cd $build_root
+$ $xenomai_root/configure --build=i686-linux --host=ppc CC=ppc_4xx-gcc \
+  CXX=ppc_4xx-g++ LD=ppc_4xx-ld
+$ make DESTDIR=$staging_dir install
 
 2.3 Building for the IPF
 ------------------------
