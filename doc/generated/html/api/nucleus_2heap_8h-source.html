@@ -158,7 +158,7 @@
 <a name="l00129"></a>00129 <span class="keyword">static</span> <span class="keyword">inline</span> size_t xnheap_rounded_size (size_t hsize, size_t psize)
 <a name="l00130"></a>00130 {
 <a name="l00131"></a>00131         <span class="comment">/* Account for the overhead so that the actual heap space is</span>
-<a name="l00132"></a>00132 <span class="comment">           large enough to match the requested size. Using a large</span>
+<a name="l00132"></a>00132 <span class="comment">           large enough to match the requested size. Using a small</span>
 <a name="l00133"></a>00133 <span class="comment">           page size for large single-block heaps might reserve a lot</span>
 <a name="l00134"></a>00134 <span class="comment">           of useless page map memory, but this should never get</span>
 <a name="l00135"></a>00135 <span class="comment">           pathological anyway, since we are only consuming 1 byte per</span>
@@ -250,7 +250,7 @@
 <a name="l00221"></a>00221 <span class="preprocessor">#define XNHEAP_DEV_NAME  "/dev/rtheap"</span>
 <a name="l00222"></a>00222 <span class="preprocessor"></span>
 <a name="l00223"></a>00223 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_HEAP_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sat Dec 16 23:23:24 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Dec 25 13:57:10 2006 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
