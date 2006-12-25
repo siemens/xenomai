@@ -229,7 +229,7 @@ target_vendor = @target_vendor@
 ACLOCAL_AMFLAGS = -I config
 SUDO = sudo
 SUBDIRS = src include config @XENO_MAYBE_DOCDIR@ scripts
-EXTRA_DIST = CREDITS README.INSTALL TROUBLESHOOTING ksrc
+EXTRA_DIST = CREDITS README.INSTALL TROUBLESHOOTING ksrc examples
 all: all-recursive
 
 .SUFFIXES:
