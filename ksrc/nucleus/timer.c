@@ -205,12 +205,13 @@ static void xntimer_do_tick_aperiodic(void)
 	xntimerq_t *timerq = &sched->timerqueue;
 	xntimerh_t *holder;
 	xntimer_t *timer;
+	xnticks_t now;
 
 	while ((holder = xntimerq_head(timerq)) != NULL) {
 		timer = aplink2timer(holder);
 
-		if (xntimerh_date(&timer->aplink) - nkschedlat >
-		    xnarch_get_cpu_tsc())
+		now = xnarch_get_cpu_tsc();
+		if (xntimerh_date(&timer->aplink) - nkschedlat > now)
 			/* No need to continue in aperiodic mode since timeout
 			   dates are ordered by increasing values. */
 			break;
@@ -243,7 +244,8 @@ static void xntimer_do_tick_aperiodic(void)
 			   translates into precious microsecs on low-end hw. */
 			__setbits(sched->status, XNHTICK);
 
-		xntimerh_date(&timer->aplink) += timer->interval;
+		while ((xntimerh_date(&timer->aplink) += timer->interval) < now)
+		    ;
 		xntimer_enqueue_aperiodic(timer);
 	}
 
