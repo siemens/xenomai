@@ -305,6 +305,11 @@ static inline void clear_task_nowakeup(struct task_struct *p)
 #define PF_EVNOTIFY  0
 #endif	/* !PF_EVNOTIFY */
 
+#ifndef VM_NOCOW
+/* In case the I-pipe does not allow to disable COW. */
+#define VM_NOCOW  0
+#endif	/* !VM_NOCOW */
+
 #ifdef CONFIG_KGDB
 #define rthal_set_foreign_stack(ipd)	ipipe_set_foreign_stack(ipd)
 #define rthal_clear_foreign_stack(ipd)	ipipe_clear_foreign_stack(ipd)
