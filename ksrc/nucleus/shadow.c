@@ -839,6 +839,8 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 #ifdef CONFIG_MMU
 	if (!(current->mm->def_flags & VM_LOCKED))
 		send_sig(SIGXCPU, current, 1);
+	else
+	    current->mm->def_flags |= VM_NOCOW;
 #endif /* CONFIG_MMU */
 
 	current->cap_effective |=
