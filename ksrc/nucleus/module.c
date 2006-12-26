@@ -688,6 +688,59 @@ static int heap_read_proc(char *page,
 	return len;
 }
 
+static int affinity_read_proc(char *page,
+			      char **start,
+			      off_t off, int count, int *eof, void *data)
+{
+	unsigned long val = 0;
+	int len, cpu;
+
+	for (cpu = 0; cpu < sizeof(val) * 8; cpu++)
+		if (xnarch_cpu_isset(cpu, nkaffinity))
+			val |= (1 << cpu);
+
+	len = sprintf(page, "%08lx\n", val);
+	len -= off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+static int affinity_write_proc(struct file *file,
+			       const char __user * buffer,
+			       unsigned long count, void *data)
+{
+	char *end, buf[16];
+	unsigned long val;
+	xnarch_cpumask_t new_affinity;
+	int n, cpu;
+
+	n = count > sizeof(buf) - 1 ? sizeof(buf) - 1 : count;
+
+	if (copy_from_user(buf, buffer, n))
+		return -EFAULT;
+
+	buf[n] = '\0';
+	val = simple_strtol(buf, &end, 0);
+
+	if (*end != '\0' && !isspace(*end))
+		return -EINVAL;
+
+	xnarch_cpus_clear(new_affinity);
+	for (cpu = 0; cpu < sizeof(val) * 8; cpu++, val >>= 1)
+		if (val & 1)
+			xnarch_cpu_set(cpu, new_affinity);
+	nkaffinity = new_affinity;
+
+	return count;
+}
+
 static struct proc_dir_entry *add_proc_leaf(const char *name,
 					    read_proc_t rdproc,
 					    write_proc_t wrproc,
@@ -760,6 +813,9 @@ void xnpod_init_proc(void)
 
 	add_proc_leaf("heap", &heap_read_proc, NULL, NULL, rthal_proc_root);
 
+	add_proc_leaf("affinity", &affinity_read_proc, &affinity_write_proc,
+		      NULL, rthal_proc_root);
+
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	iface_proc_root =
 	    create_proc_entry("interfaces", S_IFDIR, rthal_proc_root);
@@ -778,6 +834,7 @@ void xnpod_delete_proc(void)
 
 	remove_proc_entry("interfaces", rthal_proc_root);
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
+	remove_proc_entry("affinity", rthal_proc_root);
 	remove_proc_entry("heap", rthal_proc_root);
 	remove_proc_entry("irq", rthal_proc_root);
 	remove_proc_entry("timer", rthal_proc_root);

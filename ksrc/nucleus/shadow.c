@@ -416,18 +416,6 @@ static void lostage_handler(void *cookie)
 		xnltt_log_event(xeno_ev_lohandler, reqnum, p->comm, p->pid);
 
 		switch (rq->req[reqnum].type) {
-		case LO_START_REQ:
-
-#ifdef CONFIG_SMP
-			if (xnshadow_thread(p))
-				/* Set up the initial task affinity using the
-				   information passed to xnpod_start_thread(). */
-				set_cpus_allowed(p,
-						 xnshadow_thread(p)->affinity);
-#endif /* CONFIG_SMP */
-
-			goto do_wakeup;
-
 		case LO_WAKEUP_REQ:
 
 #ifdef CONFIG_SMP
@@ -450,7 +438,9 @@ static void lostage_handler(void *cookie)
 			if (!xnshadow_thread(current))
 				xnpod_renice_root(XNPOD_ROOT_PRIO_BASE);
 #endif /* CONFIG_XENO_OPT_RPIDISABLE */
-		      do_wakeup:
+
+			/* fall through */
+		case LO_START_REQ:
 
 #ifdef CONFIG_XENO_OPT_ISHIELD
 			if (xnshadow_thread(p) &&
@@ -808,7 +798,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 {
 	xnarch_cpumask_t affinity;
 	unsigned muxid, magic;
-	int mode, prio, err;
+	int mode, prio, err, cpu;
 
 	/* Increment the interface reference count. */
 	magic = xnthread_get_magic(thread);
@@ -857,22 +847,27 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 	xnthread_set_state(thread, XNMAPPED);
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, NULL);
 
+	/* Restrict affinity to a single CPU of nkaffinity or
+	   the current set. */
+	if (xnarch_cpus_equal(current->cpus_allowed, XNPOD_ALL_CPUS))
+		cpu = xnarch_first_cpu(nkaffinity);
+	else
+		cpu = xnarch_first_cpu(current->cpus_allowed);
+	affinity = xnarch_cpumask_of_cpu(cpu);
+	set_cpus_allowed(current, affinity);
+
 	if (u_completion) {
 		xnshadow_signal_completion(u_completion, 0);
 		return 0;
 	}
 
-	/* Nobody waits for us, so we may start the shadow immediately
-	   after having forced the CPU affinity to the current
-	   processor. Note that we don't use smp_processor_id() to prevent
-	   kernel debug stuff to yell at us for calling it in a preemptible
-	   section of code. */
-
-	affinity = xnarch_cpumask_of_cpu(rthal_processor_id());
-	set_cpus_allowed(current, affinity);
+	/* Nobody waits for us, so we may start the shadow immediately. */
 
 	mode = thread->rrperiod != XN_INFINITE ? XNRRB : 0;
-	xnpod_start_thread(thread, mode, 0, affinity, NULL, NULL);
+	err = xnpod_start_thread(thread, mode, 0, affinity, NULL, NULL);
+
+	if (err)
+		return err;
 
 	err = xnshadow_harden();
 

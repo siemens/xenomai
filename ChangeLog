@@ -7,6 +7,10 @@
 
 	* ksrc/nucleus/timer.c (xntimer_start): Add relative/absolute
 	timer modifier.
+
+	* ksrc/nucleus: Restrict a shadow thread to a single
+	(i.e. first) CPU of its current affinity mask. Enforce global
+	affinity mask through /proc/xenomai/affinity.
 	
 2006-12-26  Philippe Gerum  <rpm@xenomai.org>
 

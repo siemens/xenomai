@@ -168,6 +168,9 @@ static int __rt_task_create(struct task_struct *curr, struct pt_regs *regs)
 	err = rt_task_create(task, name, 0, prio, XNFPU | XNSHADOW | mode);
 
 	if (err == 0) {
+		/* Apply CPU affinity */
+		set_cpus_allowed(current, task->affinity);
+
 		/* Copy back the registry handle to the ph struct. */
 		ph.opaque = xnthread_handle(&task->thread_base);
 		ph.opaque2 = bulk.a5;	/* hidden pthread_t identifier. */

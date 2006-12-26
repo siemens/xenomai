@@ -255,6 +255,9 @@ int rt_task_create(RT_TASK *task,
 		if (cpumask & 1)
 			xnarch_cpu_set(cpu, task->affinity);
 
+	if (xnarch_cpus_empty(task->affinity))
+		task->affinity = XNPOD_ALL_CPUS;
+
 #ifdef CONFIG_XENO_OPT_NATIVE_MPS
 	xnsynch_init(&task->mrecv, XNSYNCH_FIFO);
 	xnsynch_init(&task->msendq, XNSYNCH_PRIO | XNSYNCH_PIP);

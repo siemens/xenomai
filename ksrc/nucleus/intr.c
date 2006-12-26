@@ -628,6 +628,9 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 
 	xnlock_get_irqsave(&intrlock, s);
 
+#ifdef CONFIG_SMP
+	xnarch_set_irq_affinity(intr->irq, nkaffinity);
+#endif /* CONFIG_SMP */
 	err = xnintr_irq_attach(intr);
 
 	xnlock_put_irqrestore(&intrlock, s);
