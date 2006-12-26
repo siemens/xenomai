@@ -93,14 +93,22 @@ static inline void xntimer_next_remote_shot(xnsched_t *sched)
 }
 
 static void xntimer_do_start_aperiodic(xntimer_t *timer,
-				       xnticks_t value, xnticks_t interval)
+				       xnticks_t value, xnticks_t interval,
+				       int mode)
 {
+	xnticks_t date;
+
 	if (!testbits(timer->status, XNTIMER_DEQUEUED))
 		xntimer_dequeue_aperiodic(timer);
 
-	xntimerh_date(&timer->aplink) =
-	    xnarch_get_cpu_tsc() + xnarch_ns_to_tsc(value);
+	if (mode == XNTIMER_RELATIVE)
+		date = xnarch_ns_to_tsc(value) + xnarch_get_cpu_tsc();
+	else
+		date = xnarch_ns_to_tsc(value - nkpod->wallclock_offset);
+
+	xntimerh_date(&timer->aplink) = date;
 	timer->interval = xnarch_ns_to_tsc(interval);
+
 	xntimer_enqueue_aperiodic(timer);
 	if (xntimer_heading_p(timer)) {
 		if (xntimer_sched(timer) != xnpod_current_sched())
@@ -292,13 +300,20 @@ static inline void xntimer_dequeue_periodic(xntimer_t *timer)
 }
 
 static void xntimer_do_start_periodic(xntimer_t *timer,
-				      xnticks_t value, xnticks_t interval)
+				      xnticks_t value, xnticks_t interval,
+				      int mode)
 {
 	if (!testbits(timer->status, XNTIMER_DEQUEUED))
 		xntimer_dequeue_periodic(timer);
 
-	xntlholder_date(&timer->plink) = nkpod->jiffies + value;
+	if (mode == XNTIMER_RELATIVE)
+		value += nkpod->jiffies;
+	else
+		value -= nkpod->wallclock_offset;
+
+	xntlholder_date(&timer->plink) = value;
 	timer->interval = interval;
+
 	xntimer_enqueue_periodic(timer);
 }
 

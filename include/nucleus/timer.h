@@ -31,8 +31,13 @@
 #define XNTIMER_WHEELMASK (XNTIMER_WHEELSIZE - 1)
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC || CONFIG_XENO_OPT_TIMER_WHEEL */
 
+/* Timer status */
 #define XNTIMER_DEQUEUED  0x00000001
 #define XNTIMER_KILLED    0x00000002
+
+/* Timer mode */
+#define XNTIMER_RELATIVE  0
+#define XNTIMER_ABSOLUTE  1
 
 /* These flags are available to the real-time interfaces */
 #define XNTIMER_SPARE0  0x01000000
@@ -268,7 +273,8 @@ typedef struct xntmops {
     xnticks_t (*get_raw_clock)(void);
     void (*do_timer_start)(xntimer_t *timer,
 			   xnticks_t value,
-			   xnticks_t interval);
+			   xnticks_t interval,
+			   int mode);
     void (*do_timer_stop)(xntimer_t *timer);
     xnticks_t (*get_timer_date)(xntimer_t *timer);
     xnticks_t (*get_timer_timeout)(xntimer_t *timer);
@@ -292,7 +298,8 @@ void xntimer_init(xntimer_t *timer,
 void xntimer_destroy(xntimer_t *timer);
 
 /*!
- * \fn void xntimer_start(xntimer_t *timer,xnticks_t value,xnticks_t interval)
+ * \fn void xntimer_start(xntimer_t *timer,xnticks_t value,xnticks_t interval,
+ *                        int mode)
  * \brief Arm a timer.
  *
  * Activates a timer so that the associated timeout handler will be
@@ -303,13 +310,18 @@ void xntimer_destroy(xntimer_t *timer);
  *
  * @param timer The address of a valid timer descriptor.
  *
- * @param value The relative date of the initial timer shot, expressed
- * in clock ticks (see note).
+ * @param value The date of the initial timer shot, expressed in clock ticks
+ * (see note).
  *
  * @param interval The reload value of the timer. It is a periodic
  * interval value to be used for reprogramming the next timer shot,
  * expressed in clock ticks (see note). If @a interval is equal to
  * XN_INFINITE, the timer will not be reloaded after it has expired.
+ *
+ * @param mode The timer mode. It can be either XNTIMER_RELATIVE or
+ * XNTIMER_ABSOLUTE to define if @a value shall be interpreted as a relative
+ * or absolute date. Absolute dates are based on the nucleus time returned by
+ * xnpod_get_time().
  *
  * @return 0 is always returned.
  *
@@ -333,9 +345,10 @@ void xntimer_destroy(xntimer_t *timer);
  */
 
 static inline void xntimer_start(xntimer_t *timer,
-                                 xnticks_t value, xnticks_t interval)
+                                 xnticks_t value, xnticks_t interval,
+                                 int mode)
 {
-    nktimer->do_timer_start(timer, value, interval);
+    nktimer->do_timer_start(timer, value, interval, mode);
 }
 
 /*!
