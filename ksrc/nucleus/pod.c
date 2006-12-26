@@ -77,6 +77,8 @@ MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (ns), 0 for aperiodic mode");
 
 char *nkmsgbuf = NULL;
 
+xnarch_cpumask_t nkaffinity = XNPOD_ALL_CPUS;
+
 const char *xnpod_fatal_helper(const char *format, ...)
 {
 	const unsigned nr_cpus = xnarch_num_online_cpus();
@@ -917,8 +919,8 @@ int xnpod_start_thread(xnthread_t *thread,
 	if (!xnthread_test_state(thread, XNDORMANT))
 		return -EBUSY;
 
-	if (xnarch_cpus_empty(affinity))
-		affinity = XNARCH_CPU_MASK_ALL;
+	if (xnarch_cpus_equal(affinity, XNPOD_ALL_CPUS))
+		affinity = nkaffinity;
 
 	xnlock_get_irqsave(&nklock, s);
 

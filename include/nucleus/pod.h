@@ -252,6 +252,8 @@ extern u_long nktickdef;
 
 extern char *nkmsgbuf;
 
+extern xnarch_cpumask_t nkaffinity;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
