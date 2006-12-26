@@ -112,7 +112,7 @@ static u_long tm_start_event_timer(u_long ticks,
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	xnlock_get_irqsave(&nklock, s);
-	xntimer_start(&tm->timerbase, ticks, interval);
+	xntimer_start(&tm->timerbase, ticks, interval, XNTIMER_RELATIVE);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return SUCCESS;

@@ -79,7 +79,7 @@ void xntest_start(void)
 
     xnlock_get_irqsave(&test_lock, s);
     xntimer_init(&watchdog, interrupt_test);
-    xntimer_start(&watchdog, xnpod_ns2ticks(test_timeout * 1000000000ULL), XN_INFINITE);
+    xntimer_start(&watchdog, xnpod_ns2ticks(test_timeout * 1000000000ULL), XN_INFINITE, XNTIMER_RELATIVE);
 
     initq(&marks_q);
     tests=0;

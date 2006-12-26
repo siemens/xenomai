@@ -183,7 +183,7 @@ STATUS wdStart(WDOG_ID wdog_id, int timeout, wind_timer_t handler, long arg)
 	wd->handler = handler;
 	wd->arg = arg;
 
-	xntimer_start(&wd->timerbase, timeout, XN_INFINITE);
+	xntimer_start(&wd->timerbase, timeout, XN_INFINITE, XNTIMER_RELATIVE);
 
 	xnlock_put_irqrestore(&nklock, s);
 	return OK;

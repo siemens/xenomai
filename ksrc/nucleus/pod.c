@@ -1438,7 +1438,8 @@ void xnpod_suspend_thread(xnthread_t *thread,
 		   a call to xnpod_suspend_thread(thread,XNDELAY,0,NULL). */
 		xnthread_set_state(thread, XNDELAY);
 		xntimer_set_sched(&thread->rtimer, thread->sched);
-		xntimer_start(&thread->rtimer, timeout, XN_INFINITE);
+		xntimer_start(&thread->rtimer, timeout, XN_INFINITE,
+			      XNTIMER_RELATIVE);
 	}
 #ifdef __XENO_SIM__
 	if (nkpod->schedhook)
@@ -3130,7 +3131,8 @@ int xnpod_start_timer(u_long nstick, xnisr_t tickhandler)
 	if (XNARCH_HOST_TICK) {
 		xnlock_get_irqsave(&nklock, s);
 		xntimer_start(&nkpod->htimer, delta,
-			      XNARCH_HOST_TICK / nkpod->tickvalue);
+			      XNARCH_HOST_TICK / nkpod->tickvalue,
+			      XNTIMER_RELATIVE);
 		xnlock_put_irqrestore(&nklock, s);
 	}
 
@@ -3434,14 +3436,16 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
 	xntimer_set_sched(&thread->ptimer, thread->sched);
 
 	if (idate == XN_INFINITE) {
-		xntimer_start(&thread->ptimer, period, period);
+		xntimer_start(&thread->ptimer, period, period,
+			      XNTIMER_RELATIVE);
 		thread->pexpect = xntimer_get_raw_expiry(&thread->ptimer)
 		    + xntimer_interval(&thread->ptimer);
 	} else {
 		now = xnpod_get_time();
 
 		if (idate > now) {
-			xntimer_start(&thread->ptimer, idate - now, period);
+			xntimer_start(&thread->ptimer, idate, period,
+				      XNTIMER_ABSOLUTE);
 			thread->pexpect =
 			    xntimer_get_raw_expiry(&thread->ptimer)
 			    + xntimer_interval(&thread->ptimer);
