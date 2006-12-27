@@ -420,7 +420,7 @@ void sc_tsuspend(int tid, int opt, int *errp)
 				task->vrtxtcb.TCBSTAT = TBSSUSP;
 
 				xnpod_suspend_thread(&task->threadbase,
-						     XNSUSP, XN_INFINITE, NULL);
+						     XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
 
 				if (xnthread_test_info(&task->threadbase, XNBREAK))
 					*errp = -EINTR;
@@ -454,7 +454,7 @@ void sc_tsuspend(int tid, int opt, int *errp)
 
 	*errp = RET_OK;
 
-	xnpod_suspend_thread(&task->threadbase, XNSUSP, XN_INFINITE, NULL);
+	xnpod_suspend_thread(&task->threadbase, XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
 
 	if (xnthread_test_info(&task->threadbase, XNBREAK))
 		*errp = -EINTR;

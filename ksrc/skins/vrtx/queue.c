@@ -317,7 +317,7 @@ char *sc_qpend(int qid, long timeout, int *errp)
 	if (timeout)
 		task->vrtxtcb.TCBSTAT |= TBSDELAY;
 
-	xnsynch_sleep_on(&queue->synchbase, timeout);
+	xnsynch_sleep_on(&queue->synchbase, timeout, XN_RELATIVE);
 
 	if (xnthread_test_info(&task->threadbase, XNBREAK)) {
 		*errp = -EINTR;

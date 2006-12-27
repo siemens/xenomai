@@ -276,7 +276,7 @@ int pse51_cond_timedwait_prologue(xnthread_t *cur,
 	}
 
 	/* Wait for another thread to signal the condition. */
-	xnsynch_sleep_on(&cond->synchbase, to);
+	xnsynch_sleep_on(&cond->synchbase, to, XN_RELATIVE);
 
 	/* There are four possible wakeup conditions :
 	   - cond_signal / cond_broadcast, no status bit is set, and the function

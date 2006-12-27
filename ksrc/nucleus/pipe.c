@@ -460,7 +460,7 @@ ssize_t xnpipe_recv(int minor, struct xnpipe_mh **pmh, xnticks_t timeout)
 			goto unlock_and_exit;
 		}
 
-		xnsynch_sleep_on(&state->synchbase, timeout);
+		xnsynch_sleep_on(&state->synchbase, timeout, XN_RELATIVE);
 
 		thread = xnpod_current_thread();
 

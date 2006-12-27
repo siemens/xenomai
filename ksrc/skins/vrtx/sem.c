@@ -242,7 +242,7 @@ void sc_spend(int semid, long timeout, int *errp)
 		if (timeout)
 			task->vrtxtcb.TCBSTAT |= TBSDELAY;
 
-		xnsynch_sleep_on(&sem->synchbase, timeout);
+		xnsynch_sleep_on(&sem->synchbase, timeout, XN_RELATIVE);
 
 		if (xnthread_test_info(&task->threadbase, XNBREAK))
 			*errp = -EINTR;

@@ -146,7 +146,7 @@ int rt_sem_wait(SEM * sem)
 		goto unlock_and_exit;
 	}
 
-	xnsynch_sleep_on(&sem->synch_base, XN_INFINITE);
+	xnsynch_sleep_on(&sem->synch_base, XN_INFINITE, XN_RELATIVE);
 
 	if (xnthread_test_info(&task->thread_base, XNRMID))
 		err = SEM_ERR;	/* Semaphore deleted while pending. */

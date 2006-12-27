@@ -283,7 +283,7 @@ char *sc_pend(char **mboxp, long timeout, int *errp)
 	if (timeout)
 		task->vrtxtcb.TCBSTAT |= TBSDELAY;
 
-	xnsynch_sleep_on(&mb->synchbase, timeout);
+	xnsynch_sleep_on(&mb->synchbase, timeout, XN_RELATIVE);
 
 	if (xnthread_test_info(&task->threadbase, XNBREAK)) {
 		*errp = -EINTR;

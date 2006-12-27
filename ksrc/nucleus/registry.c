@@ -723,7 +723,7 @@ int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 
 		thread = xnpod_current_thread();
 		thread->registry.waitkey = key;
-		xnsynch_sleep_on(&registry_hash_synch, timeout);
+		xnsynch_sleep_on(&registry_hash_synch, timeout, XN_RELATIVE);
 
 		if (xnthread_test_info(thread, XNTIMEO)) {
 			err = -ETIMEDOUT;
@@ -911,7 +911,7 @@ int xnregistry_remove_safe(xnhandle_t handle, xnticks_t timeout)
 	cstamp = object->cstamp;
 
 	do {
-		xnsynch_sleep_on(&object->safesynch, timeout);
+		xnsynch_sleep_on(&object->safesynch, timeout, XN_RELATIVE);
 
 		if (xnthread_test_info(xnpod_current_thread(), XNBREAK)) {
 			err = -EINTR;

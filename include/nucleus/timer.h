@@ -35,10 +35,6 @@
 #define XNTIMER_DEQUEUED  0x00000001
 #define XNTIMER_KILLED    0x00000002
 
-/* Timer mode */
-#define XNTIMER_RELATIVE  0
-#define XNTIMER_ABSOLUTE  1
-
 /* These flags are available to the real-time interfaces */
 #define XNTIMER_SPARE0  0x01000000
 #define XNTIMER_SPARE1  0x02000000
@@ -318,8 +314,8 @@ void xntimer_destroy(xntimer_t *timer);
  * expressed in clock ticks (see note). If @a interval is equal to
  * XN_INFINITE, the timer will not be reloaded after it has expired.
  *
- * @param mode The timer mode. It can be either XNTIMER_RELATIVE or
- * XNTIMER_ABSOLUTE to define if @a value shall be interpreted as a relative
+ * @param mode The timer mode. It can be either XN_RELATIVE or
+ * XN_ABSOLUTE to define if @a value shall be interpreted as a relative
  * or absolute date. Absolute dates are based on the nucleus time returned by
  * xnpod_get_time().
  *

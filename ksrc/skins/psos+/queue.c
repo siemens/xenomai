@@ -446,7 +446,7 @@ static u_long q_receive_internal(u_long qid,
 		xnarch_post_graph_if(&queue->synchbase, 1,	/* PENDED */
 				     xnsynch_nsleepers(&queue->synchbase) == 0);
 
-		xnsynch_sleep_on(&queue->synchbase, timeout);
+		xnsynch_sleep_on(&queue->synchbase, timeout, XN_RELATIVE);
 
 		task = psos_current_task();
 

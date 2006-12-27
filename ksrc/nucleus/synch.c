@@ -140,9 +140,14 @@ static inline void xnsynch_renice_thread(xnthread_t *thread, int prio)
  * to sleep on.
  *
  * @param timeout The timeout which may be used to limit the time the
- * thread pends on the resource. This value is a count of ticks (see
- * note).  Passing XN_INFINITE specifies an unbounded wait. All other
- * values are used to initialize a nucleus watchdog timer.
+ * thread pends on the resource. This value is a wait time given in
+ * ticks (see note). It can either be relative or absolute depending
+ * on @a mode. Passing XN_INFINITE @b and setting @a mode to
+ * XN_RELATIVE specifies an unbounded wait. All other values are used
+ * to initialize a watchdog timer.
+ *
+ * @param mode The mode of the @a timeout parameter. It can either be
+ * set to XN_RELATIVE or XN_ABSOLUTE.
  *
  * Environments:
  *
@@ -160,7 +165,7 @@ static inline void xnsynch_renice_thread(xnthread_t *thread, int prio)
  * oneshot mode, clock ticks are interpreted as nanoseconds.
  */
 
-void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout)
+void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout, int mode)
 {
 	xnthread_t *thread = xnpod_current_thread(), *owner;
 	spl_t s;
@@ -171,13 +176,13 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout)
 
 	if (!testbits(synch->status, XNSYNCH_PRIO)) { /* i.e. FIFO */
 		appendpq(&synch->pendq, &thread->plink);
-		xnpod_suspend_thread(thread, XNPEND, timeout, synch);
+		xnpod_suspend_thread(thread, XNPEND, timeout, XN_RELATIVE, synch);
 		goto unlock_and_exit;
 	}
 
 	if (!testbits(synch->status, XNSYNCH_PIP)) { /* i.e. no ownership */
 		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
-		xnpod_suspend_thread(thread, XNPEND, timeout, synch);
+		xnpod_suspend_thread(thread, XNPEND, timeout, XN_RELATIVE, synch);
 		goto unlock_and_exit;
 	}
 
@@ -216,7 +221,7 @@ redo:
 	} else
 		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
 
-	xnpod_suspend_thread(thread, XNPEND, timeout, synch);
+	xnpod_suspend_thread(thread, XNPEND, timeout, XN_RELATIVE, synch);
 
 	if (xnthread_test_info(thread, XNRMID | XNTIMEO | XNBREAK))
 		goto unlock_and_exit;

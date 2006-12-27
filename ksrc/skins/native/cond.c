@@ -452,7 +452,7 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 
 	task = xeno_current_task();
 
-	xnsynch_sleep_on(&cond->synch_base, timeout);
+	xnsynch_sleep_on(&cond->synch_base, timeout, XN_RELATIVE);
 
 	if (xnthread_test_info(&task->thread_base, XNRMID))
 		err = -EIDRM;	/* Condvar deleted while pending. */

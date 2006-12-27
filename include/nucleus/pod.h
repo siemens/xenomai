@@ -429,7 +429,8 @@ xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
 
 void xnpod_suspend_thread(xnthread_t *thread,
 			  xnflags_t mask,
-			  xnticks_t timeout, struct xnsynch *resource);
+			  xnticks_t timeout, int mode,
+			  struct xnsynch *resource);
 
 void xnpod_resume_thread(xnthread_t *thread, xnflags_t mask);
 
@@ -505,12 +506,12 @@ static inline void xnpod_yield(void)
 
 static inline void xnpod_delay(xnticks_t timeout)
 {
-	xnpod_suspend_thread(xnpod_current_thread(), XNDELAY, timeout, NULL);
+	xnpod_suspend_thread(xnpod_current_thread(), XNDELAY, timeout, XN_RELATIVE, NULL);
 }
 
 static inline void xnpod_suspend_self(void)
 {
-	xnpod_suspend_thread(xnpod_current_thread(), XNSUSP, XN_INFINITE, NULL);
+	xnpod_suspend_thread(xnpod_current_thread(), XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
 }
 
 static inline void xnpod_delete_self(void)

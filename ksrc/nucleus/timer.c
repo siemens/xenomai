@@ -103,7 +103,7 @@ static int xntimer_do_start_aperiodic(xntimer_t *timer,
 
 	now = xnarch_get_cpu_tsc();
 
-	if (mode == XNTIMER_RELATIVE)
+	if (mode == XN_RELATIVE)
 		date = xnarch_ns_to_tsc(value) + now;
 	else {
 		date = xnarch_ns_to_tsc(value - nkpod->wallclock_offset);
@@ -315,7 +315,7 @@ static int xntimer_do_start_periodic(xntimer_t *timer,
 	if (!testbits(timer->status, XNTIMER_DEQUEUED))
 		xntimer_dequeue_periodic(timer);
 
-	if (mode == XNTIMER_RELATIVE)
+	if (mode == XN_RELATIVE)
 		value += nkpod->jiffies;
 	else {
 		value -= nkpod->wallclock_offset;

@@ -581,7 +581,7 @@ static int pse51_mq_timedsend_inner(mqd_t fd,
 
 		thread_cancellation_point(cur);
 
-		xnsynch_sleep_on(&mq->senders, to);
+		xnsynch_sleep_on(&mq->senders, to, XN_RELATIVE);
 
 		thread_cancellation_point(cur);
 
@@ -643,7 +643,7 @@ static int pse51_mq_timedrcv_inner(mqd_t fd,
 
 		thread_cancellation_point(cur);
 
-		xnsynch_sleep_on(&mq->receivers, to);
+		xnsynch_sleep_on(&mq->receivers, to, XN_RELATIVE);
 
 		thread_cancellation_point(cur);
 

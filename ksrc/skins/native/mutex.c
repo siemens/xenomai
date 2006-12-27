@@ -375,7 +375,7 @@ int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
 		goto unlock_and_exit;
 	}
 
-	xnsynch_sleep_on(&mutex->synch_base, timeout);
+	xnsynch_sleep_on(&mutex->synch_base, timeout, XN_RELATIVE);
 
 	if (xnthread_test_info(&task->thread_base, XNRMID))
 		err = -EIDRM;	/* Mutex deleted while pending. */
@@ -385,8 +385,8 @@ int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
 		err = -EINTR;	/* Unblocked. */
 	else {
 	      grab_mutex:
-		/* xnsynch_sleep_on() might have stolen the resource, so we
-		   need to put our internal data in sync. */
+		/* xnsynch_sleep_on() might have stolen the resource,
+		   so we need to put our internal data in sync. */
 		mutex->owner = task;
 		mutex->lockcnt = 1;
 	}

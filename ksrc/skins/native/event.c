@@ -495,7 +495,7 @@ int rt_event_wait(RT_EVENT *event,
 	task = xeno_current_task();
 	task->wait_args.event.mode = mode;
 	task->wait_args.event.mask = mask;
-	xnsynch_sleep_on(&event->synch_base, timeout);
+	xnsynch_sleep_on(&event->synch_base, timeout, XN_RELATIVE);
 	/* The returned mask is only significant if the operation has
 	   succeeded, but do always write it back anyway. */
 	*mask_r = task->wait_args.event.mask;

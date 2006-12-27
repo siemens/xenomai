@@ -289,7 +289,7 @@ int msgQReceive(MSG_Q_ID qid, char *buf, UINT bytes, int to)
 		task->rcv_buf = buf;
 		task->rcv_bytes = bytes;
 
-		xnsynch_sleep_on(&queue->synchbase, timeout);
+		xnsynch_sleep_on(&queue->synchbase, timeout, XN_RELATIVE);
 
 		error_check(xnthread_test_info(thread, XNBREAK), -EINTR,
 			    goto error);
@@ -364,7 +364,7 @@ STATUS msgQSend(MSG_Q_ID qid, const char *buf, UINT bytes, int to, int prio)
 			else
 				timeout = to;
 
-			xnsynch_sleep_on(&queue->synchbase, timeout);
+			xnsynch_sleep_on(&queue->synchbase, timeout, XN_RELATIVE);
 
 			error_check(xnthread_test_info(thread, XNBREAK),
 				    -EINTR, goto error);

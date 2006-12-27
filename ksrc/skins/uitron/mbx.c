@@ -223,7 +223,7 @@ static ER rcv_msg_helper(T_MSG ** ppk_msg, ID mbxid, TMO tmout)
 	else {
 		task = ui_current_task();
 
-		xnsynch_sleep_on(&mbx->synchbase, timeout);
+		xnsynch_sleep_on(&mbx->synchbase, timeout, XN_RELATIVE);
 
 		if (xnthread_test_info(&task->threadbase, XNRMID))
 			err = E_DLT;	/* Flag deleted while pending. */

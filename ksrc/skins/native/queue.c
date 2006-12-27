@@ -816,7 +816,7 @@ ssize_t rt_queue_receive(RT_QUEUE *q, void **bufp, RTIME timeout)
 			goto unlock_and_exit;
 		}
 
-		xnsynch_sleep_on(&q->synch_base, timeout);
+		xnsynch_sleep_on(&q->synch_base, timeout, XN_RELATIVE);
 
 		task = xeno_current_task();
 

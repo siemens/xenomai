@@ -5,6 +5,9 @@
 
 2006-12-27  Jan Kiszka  <jan.kiszka@web.de>, Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
+	* ksrc/nucleus/pod.c, ksrc/nucleus/synch.c: Introduce abs/rel
+	timeout mode for xnpod_suspend_thread() and xnsynch_sleep_on().
+
 	* ksrc/nucleus/timer.c (xntimer_do_tick_aperiodic): Fast-forward
 	to next periodic tick after an overrun has been detected.
 	

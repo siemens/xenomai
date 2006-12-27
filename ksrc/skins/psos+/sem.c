@@ -260,7 +260,7 @@ u_long sm_p(u_long smid, u_long flags, u_long timeout)
 		if (sem->count > 0)
 			sem->count--;
 		else {
-			xnsynch_sleep_on(&sem->synchbase, timeout);
+			xnsynch_sleep_on(&sem->synchbase, timeout, XN_RELATIVE);
 
 			task = psos_current_task();
 

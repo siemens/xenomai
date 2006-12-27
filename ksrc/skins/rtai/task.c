@@ -189,7 +189,7 @@ int __rtai_task_suspend(RT_TASK *task)
 
 	if (task->suspend_depth++ == 0) {
 		xnpod_suspend_thread(&task->thread_base,
-				     XNSUSP, XN_INFINITE, NULL);
+				     XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
 		if (xnthread_test_info(&task->thread_base, XNBREAK))
 		    err = -EINTR;
 	}
