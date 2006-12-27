@@ -92,19 +92,24 @@ static inline void xntimer_next_remote_shot(xnsched_t *sched)
 	xnarch_send_timer_ipi(xnarch_cpumask_of_cpu(xnsched_cpu(sched)));
 }
 
-static void xntimer_do_start_aperiodic(xntimer_t *timer,
-				       xnticks_t value, xnticks_t interval,
-				       int mode)
+static int xntimer_do_start_aperiodic(xntimer_t *timer,
+				      xnticks_t value, xnticks_t interval,
+				      int mode)
 {
-	xnticks_t date;
+	xnticks_t date, now;
 
 	if (!testbits(timer->status, XNTIMER_DEQUEUED))
 		xntimer_dequeue_aperiodic(timer);
 
+	now = xnarch_get_cpu_tsc();
+
 	if (mode == XNTIMER_RELATIVE)
-		date = xnarch_ns_to_tsc(value) + xnarch_get_cpu_tsc();
-	else
+		date = xnarch_ns_to_tsc(value) + now;
+	else {
 		date = xnarch_ns_to_tsc(value - nkpod->wallclock_offset);
+		if (date <= now)
+			return -ETIMEDOUT;
+	}
 
 	xntimerh_date(&timer->aplink) = date;
 	timer->interval = xnarch_ns_to_tsc(interval);
@@ -116,6 +121,8 @@ static void xntimer_do_start_aperiodic(xntimer_t *timer,
 		else
 			xntimer_next_local_shot(xntimer_sched(timer));
 	}
+
+	return 0;
 }
 
 static void xntimer_do_stop_aperiodic(xntimer_t *timer)
@@ -301,9 +308,9 @@ static inline void xntimer_dequeue_periodic(xntimer_t *timer)
 	__setbits(timer->status, XNTIMER_DEQUEUED);
 }
 
-static void xntimer_do_start_periodic(xntimer_t *timer,
-				      xnticks_t value, xnticks_t interval,
-				      int mode)
+static int xntimer_do_start_periodic(xntimer_t *timer,
+				     xnticks_t value, xnticks_t interval,
+				     int mode)
 {
 	if (!testbits(timer->status, XNTIMER_DEQUEUED))
 		xntimer_dequeue_periodic(timer);
@@ -317,6 +324,8 @@ static void xntimer_do_start_periodic(xntimer_t *timer,
 	timer->interval = interval;
 
 	xntimer_enqueue_periodic(timer);
+
+	return 0;
 }
 
 static void xntimer_do_stop_periodic(xntimer_t *timer)

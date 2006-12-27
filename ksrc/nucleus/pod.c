@@ -3412,7 +3412,6 @@ int xnpod_announce_tick(xnintr_t *intr)
 int xnpod_set_thread_periodic(xnthread_t *thread,
 			      xnticks_t idate, xnticks_t period)
 {
-	xnticks_t now;
 	int err = 0;
 	spl_t s;
 
@@ -3438,23 +3437,16 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
 	xntimer_set_sched(&thread->ptimer, thread->sched);
 
 	if (idate == XN_INFINITE) {
-		xntimer_start(&thread->ptimer, period, period,
-			      XNTIMER_RELATIVE);
+		xntimer_start(&thread->ptimer, period, period, XNTIMER_RELATIVE);
 		thread->pexpect = xntimer_get_raw_expiry(&thread->ptimer)
 		    + xntimer_interval(&thread->ptimer);
-	} else {
-		now = xnpod_get_time();
-
-		if (idate > now) {
-			xntimer_start(&thread->ptimer, idate, period,
-				      XNTIMER_ABSOLUTE);
-			thread->pexpect =
-			    xntimer_get_raw_expiry(&thread->ptimer)
-			    + xntimer_interval(&thread->ptimer);
-			xnpod_suspend_thread(thread, XNDELAY, XN_INFINITE,
-					     NULL);
-		} else
+	} else if (xntimer_start(&thread->ptimer, idate, period, XNTIMER_ABSOLUTE))
 			err = -ETIMEDOUT;
+	else {
+		thread->pexpect =
+			xntimer_get_raw_expiry(&thread->ptimer)
+			+ xntimer_interval(&thread->ptimer);
+		xnpod_suspend_thread(thread, XNDELAY, XN_INFINITE, NULL);
 	}
 
       unlock_and_exit:
