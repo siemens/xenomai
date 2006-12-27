@@ -3151,7 +3151,7 @@ int xnpod_start_timer(u_long nstick, xnisr_t tickhandler)
 			xntimer_set_priority(&sched->wd_timer, XNTIMER_LOPRIO);
 			xntimer_set_sched(&sched->wd_timer, sched);
 			xnlock_get_irqsave(&nklock, s);
-			xntimer_start(&sched->wd_timer, wdperiod, wdperiod);
+			xntimer_start(&sched->wd_timer, wdperiod, wdperiod, XNTIMER_RELATIVE);
 			xnpod_reset_watchdog(sched);
 			xnlock_put_irqrestore(&nklock, s);
 		}
