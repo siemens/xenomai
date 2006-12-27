@@ -63,6 +63,7 @@ void sem2Task  (long a0, long a1, long a2, long a3, long a4,
 		long a5, long a6, long a7, long a8, long a9)
 {
     WIND_TCB *pTcb = taskTcb(taskIdSelf());
+    ULONG date;
     int n;
 
     TEST_ASSERT(pTcb != NULL);
@@ -81,8 +82,14 @@ void sem2Task  (long a0, long a1, long a2, long a3, long a4,
 
     TEST_ASSERT_OK(taskResume(a0));
 
-    for (n = 0; n < 1000000; n++)
-	TEST_MARK();
+    TEST_MARK();
+    date = tickGet();
+    for (n = 0; n < 1000000; n++) {
+	    ULONG old_date = date;
+	    date = tickGet();
+	    if (date != old_date)
+		    TEST_MARK();
+    }
 
     TEST_MARK(); /* Should not pass this mark */
 }
@@ -160,7 +167,7 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
 			SEQ("root",1),
 			SEQ("Test1",1),
 			SEQ("root",2),
-			SEQ("Test2",2004),
+			SEQ("Test2",1),
 			SEQ("root",1),
 			END_SEQ);
     TEST_FINISH();
