@@ -471,7 +471,7 @@ u_long t_suspend(u_long tid)
 		goto unlock_and_exit;
 	}
 
-	xnpod_suspend_thread(&task->threadbase, XNSUSP, XN_INFINITE, NULL);
+	xnpod_suspend_thread(&task->threadbase, XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
 
 	if (xnthread_test_info(&task->threadbase, XNBREAK))
 		err = -EINTR;

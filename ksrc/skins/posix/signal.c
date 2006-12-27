@@ -835,7 +835,7 @@ static int pse51_sigtimedwait_inner(const sigset_t * set,
 
 		thread_cancellation_point(&thread->threadbase);
 
-		xnpod_suspend_thread(&thread->threadbase, XNDELAY, to, NULL);
+		xnpod_suspend_thread(&thread->threadbase, XNDELAY, to, XN_RELATIVE, NULL);
 
 		thread_cancellation_point(&thread->threadbase);
 

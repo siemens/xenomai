@@ -89,7 +89,7 @@ static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
             if (err)
                 return err;
             
-            xnsynch_sleep_on(&mutex->synchbase, to);
+            xnsynch_sleep_on(&mutex->synchbase, to, XN_RELATIVE);
             
             if (xnthread_test_info(cur, XNBREAK))
                 return EINTR;

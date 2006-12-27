@@ -214,7 +214,7 @@ int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow, xnticks_t abs_to)
 				if (err)
 					break;
 
-				xnsynch_sleep_on(&mutex->synchbase, to);
+				xnsynch_sleep_on(&mutex->synchbase, to, XN_RELATIVE);
 
 				if (xnthread_test_info(cur, XNBREAK)) {
 					err = EINTR;

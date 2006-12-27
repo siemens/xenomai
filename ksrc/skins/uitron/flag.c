@@ -254,7 +254,7 @@ static ER wai_flg_helper(UINT *p_flgptn,
 	else {
 		task = ui_current_task();
 
-		xnsynch_sleep_on(&flg->synchbase, timeout);
+		xnsynch_sleep_on(&flg->synchbase, timeout, XN_RELATIVE);
 
 		if (xnthread_test_info(&task->threadbase, XNRMID))
 			err = E_DLT;	/* Flag deleted while pending. */

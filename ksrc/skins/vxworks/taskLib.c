@@ -329,7 +329,7 @@ STATUS taskSuspend(TASK_ID task_id)
 	check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
 			   goto error);
 
-	xnpod_suspend_thread(&task->threadbase, XNSUSP, XN_INFINITE, NULL);
+	xnpod_suspend_thread(&task->threadbase, XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
 
 	error_check(xnthread_test_info(&task->threadbase, XNBREAK), -EINTR,
 		    goto error);
@@ -577,7 +577,7 @@ TASK_ID taskNameToId(const char *name)
 static int testSafe(wind_task_t *task)
 {
 	while (task->safecnt > 0) {
-		xnsynch_sleep_on(&task->safesync, XN_INFINITE);
+		xnsynch_sleep_on(&task->safesync, XN_INFINITE, XN_RELATIVE);
 		error_check(xnthread_test_info(&task->threadbase, XNBREAK),
 			    -EINTR, return ERROR);
 	}

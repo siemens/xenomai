@@ -205,7 +205,7 @@ static ER wai_sem_helper(ID semid, TMO tmout)
 	else {
 		task = ui_current_task();
 
-		xnsynch_sleep_on(&sem->synchbase, timeout);
+		xnsynch_sleep_on(&sem->synchbase, timeout, XN_RELATIVE);
 
 		if (xnthread_test_info(&task->threadbase, XNRMID))
 			err = E_DLT;	/* Semaphore deleted while pending. */

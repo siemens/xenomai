@@ -190,7 +190,7 @@ static int xnpod_fault_handler(xnarch_fltinfo_t *fltinfo)
 		     thread, thread->name, xnarch_fault_pc(fltinfo),
 		     xnarch_fault_trap(fltinfo));
 
-		xnpod_suspend_thread(thread, XNSUSP, XN_INFINITE, NULL);
+		xnpod_suspend_thread(thread, XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
 		return 1;
 	}
 
@@ -831,7 +831,7 @@ int xnpod_init_thread(xnthread_t *thread,
 	appendq(&nkpod->threadq, &thread->glink);
 	nkpod->threadq_rev++;
 	xnpod_suspend_thread(thread, XNDORMANT | (flags & XNSUSP), XN_INFINITE,
-			     NULL);
+			     XN_RELATIVE, NULL);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
@@ -1300,7 +1300,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 }
 
 /*!
- * \fn void xnpod_suspend_thread(xnthread_t *thread,xnflags_t mask,xnticks_t timeout,xnsynch_t *wchan)
+ * \fn void xnpod_suspend_thread(xnthread_t *thread,xnflags_t mask,xnticks_t timeout,int mode, xnsynch_t *wchan)
  *
  * \brief Suspend a thread.
  *
@@ -1331,12 +1331,17 @@ void xnpod_delete_thread(xnthread_t *thread)
  * through the xnsynch_sleep_on() call.
  *
  * @param timeout The timeout which may be used to limit the time the
- * thread pends for a resource. This value is a wait time given in
- * ticks (see note).  Passing XN_INFINITE specifies an unbounded
- * wait. All other values are used to initialize a watchdog timer.  If
- * the current operation mode is oneshot and @a timeout elapses before
+ * thread pends on a resource. This value is a wait time given in
+ * ticks (see note). It can either be relative or absolute depending
+ * on @a mode. Passing XN_INFINITE @b and setting @a mode to
+ * XNTIMER_RELATIVE specifies an unbounded wait. All other values are
+ * used to initialize a watchdog timer. If the current operation mode
+ * of the system timer is oneshot and @a timeout elapses before
  * xnpod_suspend_thread() has completed, then the target thread will
  * not be suspended, and this routine leads to a null effect.
+ *
+ * @param timeout_mode The mode of the @a timeout parameter. It can either
+ * be set to XNTIMER_RELATIVE or XNTIMER_ABSOLUTE.
  *
  * @param wchan The address of a pended resource. This parameter is
  * used internally by the synchronization object implementation code
@@ -1366,8 +1371,9 @@ void xnpod_delete_thread(xnthread_t *thread)
  * oneshot mode, clock ticks are interpreted as nanoseconds.
  */
 
-void xnpod_suspend_thread(xnthread_t *thread,
-			  xnflags_t mask, xnticks_t timeout, xnsynch_t *wchan)
+void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
+			  xnticks_t timeout, int mode,
+			  xnsynch_t *wchan)
 {
 	xnsched_t *sched;
 	spl_t s;
@@ -1437,11 +1443,11 @@ void xnpod_suspend_thread(xnthread_t *thread,
 
 	if (timeout != XN_INFINITE) {
 		/* Don't start the timer for a thread indefinitely delayed by
-		   a call to xnpod_suspend_thread(thread,XNDELAY,0,NULL). */
+		   a call to xnpod_suspend_thread(thread,XNDELAY,XN_INFINITE,XN_RELATIVE,NULL). */
 		xnthread_set_state(thread, XNDELAY);
 		xntimer_set_sched(&thread->rtimer, thread->sched);
 		xntimer_start(&thread->rtimer, timeout, XN_INFINITE,
-			      XNTIMER_RELATIVE);
+			      XN_RELATIVE);
 	}
 #ifdef __XENO_SIM__
 	if (nkpod->schedhook)
@@ -3134,7 +3140,7 @@ int xnpod_start_timer(u_long nstick, xnisr_t tickhandler)
 		xnlock_get_irqsave(&nklock, s);
 		xntimer_start(&nkpod->htimer, delta,
 			      XNARCH_HOST_TICK / nkpod->tickvalue,
-			      XNTIMER_RELATIVE);
+			      XN_RELATIVE);
 		xnlock_put_irqrestore(&nklock, s);
 	}
 
@@ -3151,7 +3157,7 @@ int xnpod_start_timer(u_long nstick, xnisr_t tickhandler)
 			xntimer_set_priority(&sched->wd_timer, XNTIMER_LOPRIO);
 			xntimer_set_sched(&sched->wd_timer, sched);
 			xnlock_get_irqsave(&nklock, s);
-			xntimer_start(&sched->wd_timer, wdperiod, wdperiod, XNTIMER_RELATIVE);
+			xntimer_start(&sched->wd_timer, wdperiod, wdperiod, XN_RELATIVE);
 			xnpod_reset_watchdog(sched);
 			xnlock_put_irqrestore(&nklock, s);
 		}
@@ -3437,16 +3443,16 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
 	xntimer_set_sched(&thread->ptimer, thread->sched);
 
 	if (idate == XN_INFINITE) {
-		xntimer_start(&thread->ptimer, period, period, XNTIMER_RELATIVE);
+		xntimer_start(&thread->ptimer, period, period, XN_RELATIVE);
 		thread->pexpect = xntimer_get_raw_expiry(&thread->ptimer)
 		    + xntimer_interval(&thread->ptimer);
-	} else if (xntimer_start(&thread->ptimer, idate, period, XNTIMER_ABSOLUTE))
+	} else if (xntimer_start(&thread->ptimer, idate, period, XN_ABSOLUTE))
 			err = -ETIMEDOUT;
 	else {
 		thread->pexpect =
 			xntimer_get_raw_expiry(&thread->ptimer)
 			+ xntimer_interval(&thread->ptimer);
-		xnpod_suspend_thread(thread, XNDELAY, XN_INFINITE, NULL);
+		xnpod_suspend_thread(thread, XNDELAY, XN_INFINITE, XN_RELATIVE, NULL);
 	}
 
       unlock_and_exit:
@@ -3520,7 +3526,7 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 	now = xntimer_get_rawclock();	/* Work with either TSC or periodic ticks. */
 
 	if (likely(now < thread->pexpect)) {
-		xnpod_suspend_thread(thread, XNDELAY, XN_INFINITE, NULL);
+		xnpod_suspend_thread(thread, XNDELAY, XN_INFINITE, XN_RELATIVE, NULL);
 
 		if (unlikely(xnthread_test_info(thread, XNBREAK))) {
 			err = -EINTR;

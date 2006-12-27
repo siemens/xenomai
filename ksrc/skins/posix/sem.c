@@ -537,7 +537,7 @@ static inline int sem_timedwait_internal(struct __shadow_sem *shadow,
 
 	thread_cancellation_point(cur);
 
-	xnsynch_sleep_on(&sem->synchbase, to);
+	xnsynch_sleep_on(&sem->synchbase, to, XN_RELATIVE);
 
 	/* Handle cancellation requests. */
 	thread_cancellation_point(cur);

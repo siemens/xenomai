@@ -246,7 +246,7 @@ int clock_nanosleep(clockid_t clock_id,
 
 	thread_cancellation_point(cur);
 
-	xnpod_suspend_thread(cur, XNDELAY, timeout + 1, NULL);
+	xnpod_suspend_thread(cur, XNDELAY, timeout + 1, XN_RELATIVE, NULL);
 
 	thread_cancellation_point(cur);
 

@@ -56,7 +56,7 @@ void rt_sleep(RTIME delay)
 		return;
 
 	xnpod_suspend_thread(&rtai_current_task()->thread_base,
-			     XNDELAY, delay, NULL);
+			     XNDELAY, delay, XN_RELATIVE, NULL);
 }
 
 RTIME rt_get_time_ns(void)

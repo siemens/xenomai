@@ -50,7 +50,7 @@ static int rtswitch_pend_rt(rtswitch_context_t *ctx,
 	task = &ctx->tasks[idx];
 	task->base.flags |= RTSWITCH_RT;
 
-	xnsynch_sleep_on(&task->rt_synch, XN_INFINITE);
+	xnsynch_sleep_on(&task->rt_synch, XN_INFINITE, XN_RELATIVE);
 
 	if (xnthread_test_info(xnpod_current_thread(), XNBREAK))
 		return -EINTR;
@@ -99,7 +99,7 @@ static int rtswitch_to_rt(rtswitch_context_t *ctx,
 		return -EINVAL;
 	}
 
-	xnsynch_sleep_on(&from->rt_synch, XN_INFINITE);
+	xnsynch_sleep_on(&from->rt_synch, XN_INFINITE, XN_RELATIVE);
 
 	xnlock_put_irqrestore(&nklock, s);
 

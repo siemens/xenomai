@@ -2169,7 +2169,7 @@ static int __intr_wait(struct task_struct *curr, struct pt_regs *regs)
 			/* Renice the waiter above all regular threads if needed. */
 			xnpod_renice_thread(thread, XNCORE_IRQ_PRIO);
 
-		xnsynch_sleep_on(&intr->synch_base, timeout);
+		xnsynch_sleep_on(&intr->synch_base, timeout, XN_RELATIVE);
 
 		if (xnthread_test_info(thread, XNRMID))
 			err = -EIDRM;	/* Interrupt object deleted while pending. */

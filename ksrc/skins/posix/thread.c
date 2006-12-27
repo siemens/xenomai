@@ -420,7 +420,7 @@ int pthread_join(pthread_t thread, void **value_ptr)
 		if (!xnpod_root_p()) {
 			thread_cancellation_point(cur);
 
-			xnsynch_sleep_on(&thread->join_synch, XN_INFINITE);
+			xnsynch_sleep_on(&thread->join_synch, XN_INFINITE, XN_RELATIVE);
 
 			is_last_joiner =
 				xnsynch_wakeup_one_sleeper(&thread->join_synch)

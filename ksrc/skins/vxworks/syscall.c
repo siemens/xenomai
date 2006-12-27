@@ -1168,7 +1168,7 @@ static int __wind_wd_wait(struct task_struct *curr, struct pt_regs *regs)
 		/* Renice the waiter above all regular tasks if needed. */
 		xnpod_renice_thread(&pTcb->threadbase, XNCORE_IRQ_PRIO);
 
-	xnsynch_sleep_on(&wd->synchbase, XN_INFINITE);
+	xnsynch_sleep_on(&wd->synchbase, XN_INFINITE, XN_RELATIVE);
 
 	if (xnthread_test_info(&pTcb->threadbase, XNBREAK))
 		err = -EINTR;	/* Unblocked. */

@@ -543,7 +543,7 @@ int rt_heap_alloc(RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)
 	task = xeno_current_task();
 	task->wait_args.heap.size = size;
 	task->wait_args.heap.block = NULL;
-	xnsynch_sleep_on(&heap->synch_base, timeout);
+	xnsynch_sleep_on(&heap->synch_base, timeout, XN_RELATIVE);
 
 	if (xnthread_test_info(&task->thread_base, XNRMID))
 		err = -EIDRM;	/* Heap deleted while pending. */

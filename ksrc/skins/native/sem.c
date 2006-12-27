@@ -377,7 +377,7 @@ int rt_sem_p(RT_SEM *sem, RTIME timeout)
 	else {
 		RT_TASK *task = xeno_current_task();
 
-		xnsynch_sleep_on(&sem->synch_base, timeout);
+		xnsynch_sleep_on(&sem->synch_base, timeout, XN_RELATIVE);
 
 		if (xnthread_test_info(&task->thread_base, XNRMID))
 			err = -EIDRM;	/* Semaphore deleted while pending. */

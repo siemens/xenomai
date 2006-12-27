@@ -374,7 +374,7 @@ int timer_settime(timer_t timerid,
 		xntimer_set_sched(&timer->timerbase, xnpod_current_sched());
 		xntimer_start(&timer->timerbase,
 			      start, ts2ticks_ceil(&value->it_interval),
-			      XNTIMER_RELATIVE);
+			      XN_RELATIVE);
 		timer->owner = cur;
 		inith(&timer->tlink);
 		appendq(&timer->owner->timersq, &timer->tlink);

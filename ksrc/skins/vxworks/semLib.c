@@ -269,7 +269,7 @@ static STATUS semb_take(wind_sem_t *sem, xnticks_t to)
 		error_check(to == XN_NONBLOCK, S_objLib_OBJ_UNAVAILABLE,
 			    return ERROR);
 
-		xnsynch_sleep_on(&sem->synchbase, to);
+		xnsynch_sleep_on(&sem->synchbase, to, XN_RELATIVE);
 
 		error_check(xnthread_test_info(thread, XNBREAK), -EINTR,
 			    return ERROR);
@@ -344,7 +344,7 @@ static STATUS semm_take(wind_sem_t *sem, xnticks_t to)
 		error_check(to == XN_NONBLOCK, S_objLib_OBJ_UNAVAILABLE,
 			    return ERROR);
 
-		xnsynch_sleep_on(&sem->synchbase, to);
+		xnsynch_sleep_on(&sem->synchbase, to, XN_RELATIVE);
 
 		error_check(xnthread_test_info(thread, XNBREAK), -EINTR,
 			    return ERROR);

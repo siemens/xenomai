@@ -317,7 +317,7 @@ u_long rn_getseg(u_long rnid,
 		task = psos_current_task();
 		task->waitargs.region.size = size;
 		task->waitargs.region.chunk = NULL;
-		xnsynch_sleep_on(&rn->synchbase, timeout);
+		xnsynch_sleep_on(&rn->synchbase, timeout, XN_RELATIVE);
 
 		if (xnthread_test_info(&task->threadbase, XNBREAK))
 			err = -EINTR;	/* Unblocked. */

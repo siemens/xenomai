@@ -360,7 +360,7 @@ int rt_alarm_start(RT_ALARM *alarm, RTIME value, RTIME interval)
 		goto unlock_and_exit;
 	}
 
-	xntimer_start(&alarm->timer_base, value, interval, XNTIMER_RELATIVE);
+	xntimer_start(&alarm->timer_base, value, interval, XN_RELATIVE);
 
       unlock_and_exit:
 

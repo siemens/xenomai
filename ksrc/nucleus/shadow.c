@@ -710,7 +710,7 @@ void xnshadow_relax(int notify)
 		xnpod_renice_root(XNPOD_ROOT_PRIO_BASE);
 #endif /* CONFIG_XENO_OPT_RPIDISABLE */
 
-	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, NULL);
+	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 
 	splexit(s);
 
@@ -845,7 +845,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 	set_linux_task_priority(current, prio);
 	xnshadow_thrptd(current) = thread;
 	xnthread_set_state(thread, XNMAPPED);
-	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, NULL);
+	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 
 	/* Restrict affinity to a single CPU of nkaffinity or
 	   the current set. */

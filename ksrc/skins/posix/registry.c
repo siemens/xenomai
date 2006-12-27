@@ -179,7 +179,7 @@ int pse51_node_get(pse51_node_t ** nodep,
 				return EPERM;
 			}
 
-			xnsynch_sleep_on(node->completion_synch, XN_INFINITE);
+			xnsynch_sleep_on(node->completion_synch, XN_INFINITE, XN_RELATIVE);
 
 			cur = xnpod_current_thread();
 

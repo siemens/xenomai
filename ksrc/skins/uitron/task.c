@@ -226,7 +226,7 @@ void ext_tsk(void)
 	}
 
 	xnpod_suspend_thread(&ui_current_task()->threadbase,
-			     XNDORMANT, XN_INFINITE, NULL);
+			     XNDORMANT, XN_INFINITE, XN_RELATIVE, NULL);
 }
 
 void exd_tsk(void)
@@ -269,7 +269,7 @@ static void ter_tsk_helper(uitask_t * task)
 
 	xnpod_unblock_thread(&task->threadbase);
 
-	xnpod_suspend_thread(&task->threadbase, XNDORMANT, XN_INFINITE, NULL);
+	xnpod_suspend_thread(&task->threadbase, XNDORMANT, XN_INFINITE, XN_RELATIVE, NULL);
 	xnlock_put_irqrestore(&nklock, s);
 }
 
@@ -557,7 +557,7 @@ ER sus_tsk(ID tskid)
 
 	if (task->suspcnt++ == 0)
 		xnpod_suspend_thread(&task->threadbase,
-				     XNSUSP, XN_INFINITE, NULL);
+				     XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return E_OK;
@@ -633,7 +633,7 @@ ER slp_tsk(void)
 
 	xnthread_set_state(&task->threadbase, uITRON_TASK_SLEEP);
 
-	xnpod_suspend_thread(&task->threadbase, XNDELAY, XN_INFINITE, NULL);
+	xnpod_suspend_thread(&task->threadbase, XNDELAY, XN_INFINITE, XN_RELATIVE, NULL);
 
 	xnthread_clear_state(&task->threadbase, uITRON_TASK_SLEEP);
 
@@ -674,7 +674,7 @@ ER tslp_tsk(TMO tmout)
 
 	xnthread_set_state(&task->threadbase, uITRON_TASK_SLEEP);
 
-	xnpod_suspend_thread(&task->threadbase, XNDELAY, tmout, NULL);
+	xnpod_suspend_thread(&task->threadbase, XNDELAY, tmout, XN_RELATIVE, NULL);
 
 	xnthread_clear_state(&task->threadbase, uITRON_TASK_SLEEP);
 

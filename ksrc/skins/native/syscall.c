@@ -2979,7 +2979,7 @@ static int __rt_alarm_wait(struct task_struct *curr, struct pt_regs *regs)
 		/* Renice the waiter above all regular tasks if needed. */
 		xnpod_renice_thread(&task->thread_base, XNCORE_IRQ_PRIO);
 
-	xnsynch_sleep_on(&alarm->synch_base, XN_INFINITE);
+	xnsynch_sleep_on(&alarm->synch_base, XN_INFINITE, XN_RELATIVE);
 
 	if (xnthread_test_info(&task->thread_base, XNRMID))
 		err = -EIDRM;	/* Alarm deleted while pending. */
@@ -3222,7 +3222,7 @@ static int __rt_intr_wait(struct task_struct *curr, struct pt_regs *regs)
 			xnpod_renice_thread(&task->thread_base,
 					    XNCORE_IRQ_PRIO);
 
-		xnsynch_sleep_on(&intr->synch_base, timeout);
+		xnsynch_sleep_on(&intr->synch_base, timeout, XN_RELATIVE);
 
 		if (xnthread_test_info(&task->thread_base, XNRMID))
 			err = -EIDRM;	/* Interrupt object deleted while pending. */

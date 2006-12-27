@@ -106,7 +106,7 @@ int __native_task_safewait(RT_TASK *task)
 	cstamp = task->cstamp;
 
 	do {
-		xnsynch_sleep_on(&task->safesynch, TM_INFINITE);
+		xnsynch_sleep_on(&task->safesynch, XN_INFINITE, XN_RELATIVE);
 
 		if (xnthread_test_info
 		    (&xeno_current_task()->thread_base, XNBREAK))
@@ -436,8 +436,9 @@ int rt_task_suspend(RT_TASK *task)
 	}
 
 	if (task->suspend_depth++ == 0)
-		xnpod_suspend_thread(&task->thread_base, XNSUSP, XN_INFINITE,
-				     NULL);
+		xnpod_suspend_thread(&task->thread_base, XNSUSP,
+				     XN_INFINITE, XN_RELATIVE, NULL);
+
       unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -931,7 +932,7 @@ int rt_task_sleep(RTIME delay)
 	   implicitely calls the rescheduling procedure. */
 
 	xnpod_suspend_thread(&xeno_current_task()->thread_base,
-			     XNDELAY, delay, NULL);
+			     XNDELAY, delay, XN_RELATIVE, NULL);
 
 	return xnthread_test_info(&xeno_current_task()->thread_base,
 				   XNBREAK) ? -EINTR : 0;
@@ -998,7 +999,7 @@ int rt_task_sleep_until(RTIME date)
 
 	if (delay > 0) {
 		xnpod_suspend_thread(&xeno_current_task()->thread_base,
-				     XNDELAY, delay, NULL);
+				     XNDELAY, delay, XN_RELATIVE, NULL);
 
 		if (xnthread_test_info
 		    (&xeno_current_task()->thread_base, XNBREAK))
@@ -1763,7 +1764,7 @@ ssize_t rt_task_send(RT_TASK *task,
 	   client in the case required by the priority inheritance
 	   protocol (i.e. prio(client) > prio(server)). */
 
-	xnsynch_sleep_on(&task->msendq, timeout);
+	xnsynch_sleep_on(&task->msendq, timeout, XN_RELATIVE);
 
 	/* At this point, the server task might have exited right
 	 * after having replied to us, so do not make optimistic
@@ -1927,7 +1928,7 @@ int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
 	/* Wait on our receive slot for some client to enqueue itself in
 	   our send queue. */
 
-	xnsynch_sleep_on(&server->mrecv, timeout);
+	xnsynch_sleep_on(&server->mrecv, timeout, XN_RELATIVE);
 
 	/* XNRMID cannot happen, since well, the current task would be the
 	   deleted object, so... */

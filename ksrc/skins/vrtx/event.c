@@ -252,7 +252,7 @@ int sc_fpend(int evid, long timeout, int mask, int opt, int *errp)
 	/* xnsynch_sleep_on() called for the current thread automatically
 	   reschedules. */
 
-	xnsynch_sleep_on(&evgroup->synchbase, timeout);
+	xnsynch_sleep_on(&evgroup->synchbase, timeout, XN_RELATIVE);
 
 	if (xnthread_test_info(&task->threadbase, XNBREAK))
 		*errp = -EINTR;
