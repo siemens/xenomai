@@ -271,10 +271,10 @@ typedef struct xntmops {
     void (*do_tick)(void);
     xnticks_t (*get_jiffies)(void);
     xnticks_t (*get_raw_clock)(void);
-    void (*do_timer_start)(xntimer_t *timer,
-			   xnticks_t value,
-			   xnticks_t interval,
-			   int mode);
+    int (*do_timer_start)(xntimer_t *timer,
+			  xnticks_t value,
+			  xnticks_t interval,
+			  int mode);
     void (*do_timer_stop)(xntimer_t *timer);
     xnticks_t (*get_timer_date)(xntimer_t *timer);
     xnticks_t (*get_timer_timeout)(xntimer_t *timer);
@@ -323,7 +323,8 @@ void xntimer_destroy(xntimer_t *timer);
  * or absolute date. Absolute dates are based on the nucleus time returned by
  * xnpod_get_time().
  *
- * @return 0 is always returned.
+ * @return 0 is returned upon success, or -ETIMEDOUT if an absolute
+ * date in the past has been given.
  *
  * Environments:
  *
@@ -344,11 +345,11 @@ void xntimer_destroy(xntimer_t *timer);
  * @note Must be called with nklock held, IRQs off.
  */
 
-static inline void xntimer_start(xntimer_t *timer,
-                                 xnticks_t value, xnticks_t interval,
-                                 int mode)
+static inline int xntimer_start(xntimer_t *timer,
+				xnticks_t value, xnticks_t interval,
+				int mode)
 {
-    nktimer->do_timer_start(timer, value, interval, mode);
+    return nktimer->do_timer_start(timer, value, interval, mode);
 }
 
 /*!
