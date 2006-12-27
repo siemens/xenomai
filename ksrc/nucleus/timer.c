@@ -317,8 +317,11 @@ static int xntimer_do_start_periodic(xntimer_t *timer,
 
 	if (mode == XNTIMER_RELATIVE)
 		value += nkpod->jiffies;
-	else
+	else {
 		value -= nkpod->wallclock_offset;
+		if (value <= nkpod->jiffies)
+			return -ETIMEDOUT;
+	}
 
 	xntlholder_date(&timer->plink) = value;
 	timer->interval = interval;
