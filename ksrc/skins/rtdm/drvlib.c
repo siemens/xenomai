@@ -375,27 +375,13 @@ EXPORT_SYMBOL(rtdm_task_sleep);
 int rtdm_task_sleep_until(nanosecs_abs_t wakeup_time)
 {
     xnthread_t  *thread = xnpod_current_thread();
-    xnsticks_t  delay;
-    spl_t       s;
-    int         err = 0;
-
 
     XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
 
-    xnlock_get_irqsave(&nklock, s);
-
-    delay = xnpod_ns2ticks(wakeup_time) - xnpod_get_time();
-
-    if (likely(delay > 0)) {
-        xnpod_suspend_thread(thread, XNDELAY, delay, XN_RELATIVE, NULL);
-
-        if (xnthread_test_info(thread, XNBREAK))
-            err = -EINTR;
-    }
-
-    xnlock_put_irqrestore(&nklock, s);
-
-    return err;
+    xnpod_suspend_thread(thread, XNDELAY, xnpod_ns2ticks(wakeup_time),
+                         XN_ABSOLUTE, NULL);
+ 
+    return xnthread_test_info(thread, XNBREAK) ? -EINTR : 0;
 }
 
 EXPORT_SYMBOL(rtdm_task_sleep_until);
@@ -721,12 +707,7 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 
         if (timeout_seq && (timeout > 0)) {
             /* timeout sequence */
-            timeout = *timeout_seq - xnpod_get_time();
-            if (unlikely(timeout <= 0)) {
-                err = -ETIMEDOUT;
-                goto unlock_out;
-            }
-            xnsynch_sleep_on(&event->synch_base, timeout, XN_RELATIVE);
+            xnsynch_sleep_on(&event->synch_base, *timeout_seq, XN_ABSOLUTE);
         } else {
             /* infinite or relative timeout */
             xnsynch_sleep_on(&event->synch_base, xnpod_ns2ticks(timeout), XN_RELATIVE);
@@ -922,12 +903,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
     else {
         if (timeout_seq && (timeout > 0)) {
             /* timeout sequence */
-            timeout = *timeout_seq - xnpod_get_time();
-            if (unlikely(timeout <= 0)) {
-                err = -ETIMEDOUT;
-                goto unlock_out;
-            }
-            xnsynch_sleep_on(&sem->synch_base, timeout, XN_RELATIVE);
+            xnsynch_sleep_on(&sem->synch_base, *timeout_seq, XN_ABSOLUTE);
         } else {
             /* infinite or relative timeout */
             xnsynch_sleep_on(&sem->synch_base, xnpod_ns2ticks(timeout), XN_RELATIVE);
@@ -945,8 +921,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
         }
     }
 
- unlock_out:
-    xnlock_put_irqrestore(&nklock, s);
+     xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -1150,12 +1125,7 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
      restart:
         if (timeout_seq && (timeout > 0)) {
             /* timeout sequence */
-            timeout = *timeout_seq - xnpod_get_time();
-            if (unlikely(timeout <= 0)) {
-                err = -ETIMEDOUT;
-                goto unlock_out;
-            }
-            xnsynch_sleep_on(&mutex->synch_base, timeout, XN_RELATIVE);
+            xnsynch_sleep_on(&mutex->synch_base, *timeout_seq, XN_ABSOLUTE);
         } else {
             /* infinite or relative timeout */
             xnsynch_sleep_on(&mutex->synch_base, xnpod_ns2ticks(timeout), XN_RELATIVE);
