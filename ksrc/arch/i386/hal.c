@@ -84,14 +84,6 @@ static struct {
 
 static long long rthal_timers_sync_time;
 
-struct rthal_apic_data {
-
-    int mode;
-    unsigned long count;
-};
-
-static struct rthal_apic_data rthal_timer_mode[RTHAL_NR_CPUS];
-
 static inline void rthal_setup_periodic_apic(unsigned count, unsigned vector)
 {
     apic_read(APIC_LVTT);
@@ -110,31 +102,16 @@ static inline void rthal_setup_oneshot_apic(unsigned count, unsigned vector)
 
 static void rthal_critical_sync(void)
 {
-    struct rthal_apic_data *p;
     long long sync_time;
-    rthal_declare_cpuid;
 
     switch (rthal_sync_op) {
         case 1:
-            rthal_load_cpuid();
-
-            p = &rthal_timer_mode[cpuid];
-
             sync_time = rthal_timers_sync_time;
 
-            /* Stagger local timers on SMP systems, to prevent the
-               tick handler from stupidly spinning while running on
-               other CPU. */
-            if (p->mode)
-                sync_time += rthal_imuldiv(p->count, cpuid, num_online_cpus());
+            while (rthal_rdtsc() < sync_time)
+		;
 
-            while (rthal_rdtsc() < sync_time) ;
-
-            if (p->mode)
-                rthal_setup_periodic_apic(p->count, RTHAL_APIC_TIMER_VECTOR);
-            else
-                rthal_setup_oneshot_apic(p->count, RTHAL_APIC_TIMER_VECTOR);
-
+	    rthal_setup_oneshot_apic(RTHAL_APIC_ICOUNT, RTHAL_APIC_TIMER_VECTOR);
             break;
 
         case 2:
@@ -240,13 +217,10 @@ static void rthal_latency_above_max(struct pt_regs *regs)
 
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 
-int rthal_timer_request(void (*handler) (void), unsigned long nstick)
+int rthal_timer_request(void (*handler) (void))
 {
-    struct rthal_apic_data *p;
     long long sync_time;
     unsigned long flags;
-    rthal_declare_cpuid;
-    int cpu;
 
     /* This code works both for UP+LAPIC and SMP configurations. */
 
@@ -261,40 +235,15 @@ int rthal_timer_request(void (*handler) (void), unsigned long nstick)
 
     rthal_sync_op = 1;
 
-    rthal_timers_sync_time = rthal_rdtsc() + rthal_imuldiv(LATCH,
-                                                           RTHAL_CPU_FREQ,
-                                                           CLOCK_TICK_RATE);
-
-    /* We keep the setup data array just to be able to expose it to
-       the visible interface if it happens to be really needed at some
-       point in time. */
-
-    for_each_online_cpu(cpu) {
-        p = &rthal_timer_mode[cpu];
-        p->mode = !!nstick;     /* 0=oneshot, 1=periodic */
-        p->count = nstick;
-
-        if (p->mode)
-            p->count = rthal_imuldiv(p->count, RTHAL_TIMER_FREQ, 1000000000);
-        else
-            p->count = RTHAL_APIC_ICOUNT;
-    }
-
-    rthal_load_cpuid();
-
-    p = &rthal_timer_mode[cpuid];
+    rthal_timers_sync_time = rthal_rdtsc() +
+	rthal_imuldiv(LATCH, RTHAL_CPU_FREQ, CLOCK_TICK_RATE);
 
     sync_time = rthal_timers_sync_time;
 
-    if (p->mode)
-        sync_time += rthal_imuldiv(p->count, cpuid, num_online_cpus());
+    while (rthal_rdtsc() < sync_time)
+	;
 
-    while (rthal_rdtsc() < sync_time) ;
-
-    if (p->mode)
-        rthal_setup_periodic_apic(p->count, RTHAL_APIC_TIMER_VECTOR);
-    else
-        rthal_setup_oneshot_apic(p->count, RTHAL_APIC_TIMER_VECTOR);
+    rthal_setup_oneshot_apic(RTHAL_APIC_ICOUNT, RTHAL_APIC_TIMER_VECTOR);
 
     rthal_irq_request(RTHAL_APIC_TIMER_IPI,
                       (rthal_irq_handler_t) handler, NULL, NULL);
@@ -306,8 +255,7 @@ int rthal_timer_request(void (*handler) (void), unsigned long nstick)
                            "rthal_broadcast_timer",
                            &rthal_broadcast_to_local_timers);
 
-    if (!p->mode)               /* This only works in aperiodic mode. */
-        rthal_nmi_init(&rthal_latency_above_max);
+    rthal_nmi_init(&rthal_latency_above_max);
 
     return 0;
 }

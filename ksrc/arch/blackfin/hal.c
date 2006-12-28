@@ -5,7 +5,7 @@
  *   Adeos-based Real-Time Abstraction Layer for the Blackfin
  *   architecture.
  *
- *   Copyright (C) 2005 Philippe Gerum.
+ *   Copyright (C) 2005-2006 Philippe Gerum.
  *
  *   Xenomai is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU General Public License as
@@ -42,26 +42,9 @@
 #include <asm/unistd.h>
 #include <asm/xenomai/hal.h>
 
-#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
-
-#define PERIODIC_TIME_SCALE 1
-#define CLOCKS_PER_TICK(hz) (get_cclk() / (hz) / PERIODIC_TIME_SCALE)
-
-int rthal_periodic_p;
-
-static inline void rthal_set_aperiodic(void)
-{
-	rthal_periodic_p = 0;
-}
-#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
-#define rthal_set_aperiodic() do { } while(0)
-#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
-
 static struct {
-
 	unsigned long flags;
 	int count;
-
 } rthal_linux_irq[IPIPE_NR_XIRQS];
 
 /* Acknowledge the core timer IRQ. This routine does nothing, except
@@ -96,38 +79,18 @@ static void rthal_latency_above_max(struct pt_regs *regs)
 
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX */
 
-int rthal_timer_request(void (*handler) (void), unsigned long nstick)
+int rthal_timer_request(void (*handler) (void))
 {
 	unsigned long flags;
 	int err;
 
 	flags = rthal_critical_enter(NULL);
 
-	if (nstick > 0) {
-#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
-		unsigned long tcount;
-		/* Periodic setup. */
-		bfin_write_TCNTL(1);
-		__builtin_bfin_csync();
-		bfin_write_TSCALE(PERIODIC_TIME_SCALE - 1);
-		tcount = CLOCKS_PER_TICK(1000000000L / nstick) - 1;
-		bfin_write_TCOUNT(tcount);
-		bfin_write_TPERIOD(tcount);
-		__builtin_bfin_csync();
-		bfin_write_TCNTL(7);	/* Auto-reload on. */
-		rthal_periodic_p = 1;
-#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
-		return -ENOSYS;
-#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
-	} else {
-		/* Oneshot setup. We still use the core timer, but
-		   without auto-reload. */
-		bfin_write_TCNTL(1);
-		__builtin_bfin_csync();
-		bfin_write_TSCALE(0);
-		__builtin_bfin_csync();
-		rthal_set_aperiodic();
-	}
+	/* Use the core timer without auto-reload. */
+	bfin_write_TCNTL(1);
+	__builtin_bfin_csync();
+	bfin_write_TSCALE(0);
+	__builtin_bfin_csync();
 
 	rthal_irq_release(RTHAL_TIMER_IRQ);
 
@@ -143,8 +106,7 @@ int rthal_timer_request(void (*handler) (void), unsigned long nstick)
 	rthal_irq_enable(RTHAL_TIMER_IRQ);
 
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-	if (nstick == 0)	/* This only works in aperiodic mode. */
-		rthal_nmi_init(&rthal_latency_above_max);
+	rthal_nmi_init(&rthal_latency_above_max);
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 
 	return 0;

@@ -129,6 +129,7 @@ typedef struct xnsched {
 
 	xntimerq_t timerqueue;
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
+	xntimer_t ptimer;	/*!< Periodic timer. */
 	xnqueue_t timerwheel[XNTIMER_WHEELSIZE];	/*!< BSDish timer wheel. */
 #endif				/* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
@@ -139,8 +140,8 @@ typedef struct xnsched {
 #endif				/* CONFIG_XENO_HW_FPU */
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
-	xntimer_t wd_timer;	/*!< Watchdog timer object. */
-	int wd_count;		/*!< Watchdog tick count. */
+	xntimer_t wdtimer;	/*!< Watchdog timer object. */
+	int wdcount;		/*!< Watchdog tick count. */
 #endif				/* CONFIG_XENO_OPT_WATCHDOG */
 
 	xnthread_t rootcb;	/*!< Root thread control block. */
@@ -269,7 +270,7 @@ void xnpod_switch_fpu(xnsched_t *sched);
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 static inline void xnpod_reset_watchdog(xnsched_t *sched)
 {
-	sched->wd_count = 0;
+	sched->wdcount = 0;
 }
 #else /* !CONFIG_XENO_OPT_WATCHDOG */
 static inline void xnpod_reset_watchdog(xnsched_t *sched)

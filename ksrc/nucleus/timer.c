@@ -391,7 +391,7 @@ static const char *xntimer_get_type_periodic(void)
  * @note Only active timers are inserted into the timer wheel.
  */
 
-static void xntimer_do_tick_periodic(void)
+void xntimer_do_tick_periodic(void)
 {
 	xnsched_t *sched = xnpod_current_sched();
 	xntlholder_t *holder;
@@ -468,7 +468,7 @@ static void xntimer_freeze_periodic(void)
 
 static xntmops_t timer_ops_periodic = {
 
-	.do_tick = &xntimer_do_tick_periodic,
+	.do_tick = &xntimer_do_tick_aperiodic, /* <= This is NOT a bug. */
 	.get_jiffies = &xntimer_get_jiffies_periodic,
 	.get_raw_clock = &xntimer_get_jiffies_periodic,
 	.do_timer_start = &xntimer_do_start_periodic,
@@ -485,6 +485,11 @@ static xntmops_t timer_ops_periodic = {
 void xntimer_set_periodic_mode(void)
 {
 	nktimer = &timer_ops_periodic;
+}
+
+void xntimer_periodic_handler(xntimer_t *timer)
+{
+	xntimer_do_tick_periodic();
 }
 
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
@@ -787,13 +792,21 @@ void xntimer_set_aperiodic_mode(void)
 	nktimer = &timer_ops_aperiodic;
 }
 
+int xntimer_base_start(xntimer_t *timer,
+		       xnticks_t value,
+		       xnticks_t interval,
+		       int mode)
+{
+	return timer_ops_aperiodic.do_timer_start(timer, value, interval, mode);
+}
+
 xntmops_t *nktimer = &timer_ops_aperiodic;
 
 /*@}*/
 
 EXPORT_SYMBOL(xntimer_init);
 EXPORT_SYMBOL(xntimer_destroy);
-#if defined(CONFIG_SMP)
+#ifdef CONFIG_SMP
 EXPORT_SYMBOL(xntimer_set_sched);
 #endif /* CONFIG_SMP */
 EXPORT_SYMBOL(xntimer_freeze);

@@ -75,7 +75,7 @@ static void rthal_timer_set_irq(unsigned tick_irq)
     rthal_critical_exit(flags);
 }
 
-int rthal_timer_request(void (*handler) (void), unsigned long nstick)
+int rthal_timer_request(void (*handler) (void))
 {
     unsigned long flags;
 
@@ -83,7 +83,7 @@ int rthal_timer_request(void (*handler) (void), unsigned long nstick)
 
     rthal_irq_release(RTHAL_TIMER_IRQ);
 
-    rthal_set_timer(nstick);
+    rthal_set_timer();
 
     if (rthal_irq_request(RTHAL_TIMER_IRQ,
                           (rthal_irq_handler_t) handler, NULL, NULL) < 0) {
