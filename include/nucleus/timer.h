@@ -418,14 +418,23 @@ xnticks_t xntimer_get_timeout(xntimer_t *timer);
 
 xnticks_t xntimer_get_interval(xntimer_t *timer);
 
-void xntimer_set_periodic_mode(void);
-
 void xntimer_set_aperiodic_mode(void);
 
-#if defined(CONFIG_SMP)
+int xntimer_base_start(xntimer_t *timer,
+		       xnticks_t value,
+		       xnticks_t interval,
+		       int mode);
+
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
+void xntimer_set_periodic_mode(void);
+
+void xntimer_periodic_handler(xntimer_t *timer);
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
+
+#ifdef CONFIG_SMP
 int xntimer_set_sched(xntimer_t *timer, struct xnsched *sched);
 #else /* ! CONFIG_SMP */
-#define xntimer_set_sched(timer,sched)
+#define xntimer_set_sched(timer,sched) do { } while(0)
 #endif /* CONFIG_SMP */
 
 #ifdef __cplusplus

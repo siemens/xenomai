@@ -53,9 +53,7 @@ static struct {
     int count;
 } rthal_linux_irq[IPIPE_NR_XIRQS];
 
-static int rthal_periodic_p;
-
-int rthal_timer_request(void (*handler) (void), unsigned long nstick)
+int rthal_timer_request(void (*handler)(void))
 {
     unsigned long flags;
     int err;
@@ -64,16 +62,7 @@ int rthal_timer_request(void (*handler) (void), unsigned long nstick)
 
     __ipipe_mach_timerstolen = 1;
 
-    if (nstick > 0) {
-        /* Periodic setup --
-           Use the built-in Adeos service directly. */
-        err = rthal_set_timer(nstick);
-        rthal_periodic_p = 1;
-    } else {
-        /* Oneshot setup. */
-        rthal_periodic_p = 0;
-        rthal_timer_program_shot(__ipipe_mach_ticks_per_jiffy);
-    }
+    rthal_timer_program_shot(__ipipe_mach_ticks_per_jiffy);
 
     rthal_irq_release(RTHAL_TIMER_IRQ);
 
@@ -91,10 +80,7 @@ void rthal_timer_release(void)
 
     flags = rthal_critical_enter(NULL);
 
-    if (rthal_periodic_p)
-        rthal_reset_timer();
-    else
-        __ipipe_mach_release_timer();
+    __ipipe_mach_release_timer();
 
     rthal_irq_release(RTHAL_TIMER_IRQ);
 

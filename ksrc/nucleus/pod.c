@@ -153,6 +153,40 @@ const char *xnpod_fatal_helper(const char *format, ...)
 	return nkmsgbuf;
 }
 
+#ifdef CONFIG_XENO_OPT_WATCHDOG
+
+/*! 
+ * @internal
+ * \fn void xnpod_watchdog_handler(xntimer_t *timer)
+ * \brief Process watchdog ticks.
+ *
+ * This internal routine handles incoming watchdog ticks to detect
+ * software lockups. It kills any offending thread which is found to
+ * monopolize the CPU so as to starve the Linux kernel for more than
+ * four seconds.
+ */
+
+void xnpod_watchdog_handler(xntimer_t *timer)
+{
+	xnsched_t *sched = xnpod_current_sched();
+	xnthread_t *thread = sched->runthread;
+
+	if (likely(xnthread_test_state(thread, XNROOT))) {
+		xnpod_reset_watchdog(sched);
+		return;
+	}
+		
+	if (unlikely(++sched->wdcount >= 4)) {
+		xnltt_log_event(xeno_ev_watchdog, thread->name);
+		xnprintf("watchdog triggered -- killing runaway thread '%s'\n",
+			 thread->name);
+		xnpod_delete_thread(thread);
+		xnpod_reset_watchdog(sched);
+	}
+}
+
+#endif /* CONFIG_XENO_OPT_WATCHDOG */
+
 /*
  * xnpod_fault_handler -- The default fault handler.
  */
@@ -458,14 +492,28 @@ int xnpod_init(xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
 #endif /* XNARCH_SCATTER_HEAPSZ */
 
 	for (cpu = 0; cpu < nr_cpus; cpu++) {
-#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
-		unsigned n;
+		sched = xnpod_sched_slot(cpu);
 
-		for (n = 0; n < XNTIMER_WHEELSIZE; n++)
-			xntlist_init(&pod->sched[cpu].timerwheel[n]);
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
+		{
+			int n;
+
+			for (n = 0; n < XNTIMER_WHEELSIZE; n++)
+				xntlist_init(&sched->timerwheel[n]);
+
+			xntimer_init(&sched->ptimer, &xntimer_periodic_handler);
+			xntimer_set_priority(&sched->ptimer, XNTIMER_HIPRIO);
+			xntimer_set_sched(&sched->ptimer, sched);
+		}
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
-		xntimerq_init(&pod->sched[cpu].timerqueue);
+#ifdef CONFIG_XENO_OPT_WATCHDOG
+		xntimer_init(&sched->wdtimer, &xnpod_watchdog_handler);
+		xntimer_set_priority(&sched->wdtimer, XNTIMER_LOPRIO);
+		xntimer_set_sched(&sched->wdtimer, sched);
+#endif /* CONFIG_XENO_OPT_WATCHDOG */
+
+		xntimerq_init(&sched->timerqueue);
 	}
 
 	for (cpu = 0; cpu < nr_cpus; ++cpu) {
@@ -2929,40 +2977,6 @@ int xnpod_trap_fault(void *fltinfo)
 	return nkpod->svctable.faulthandler(fltinfo);
 }
 
-#ifdef CONFIG_XENO_OPT_WATCHDOG
-
-/*! 
- * @internal
- * \fn void xnpod_watchdog_handler(xntimer_t *timer)
- * \brief Process watchdog ticks.
- *
- * This internal routine handles incoming watchdog ticks to detect
- * software lockups. It kills any offending thread which is found to
- * monopolize the CPU so as to starve the Linux kernel for more than
- * four seconds.
- */
-
-void xnpod_watchdog_handler(xntimer_t *timer)
-{
-	xnsched_t *sched = xnpod_current_sched();
-	xnthread_t *thread = sched->runthread;
-
-	if (likely(xnthread_test_state(thread, XNROOT))) {
-		xnpod_reset_watchdog(sched);
-		return;
-	}
-		
-	if (unlikely(++sched->wd_count >= 4)) {
-		xnltt_log_event(xeno_ev_watchdog, thread->name);
-		xnprintf("watchdog triggered -- killing runaway thread '%s'\n",
-			 thread->name);
-		xnpod_delete_thread(thread);
-		xnpod_reset_watchdog(sched);
-	}
-}
-
-#endif /* CONFIG_XENO_OPT_WATCHDOG */
-
 /*! 
  * \fn int xnpod_start_timer(u_long nstick,xnisr_t tickhandler)
  * \brief Start the system timer.
@@ -3083,18 +3097,6 @@ int xnpod_start_timer(u_long nstick, xnisr_t tickhandler)
 		xntimer_set_aperiodic_mode();
 	}
 
-#if XNARCH_HOST_TICK > 0
-	if (XNARCH_HOST_TICK < nkpod->tickvalue) {
-		/* Host tick needed but shorter than the timer precision;
-		   bad... */
-		xnlogerr
-		    ("bad timer setup value (%lu Hz), must be >= CONFIG_HZ (%d).\n",
-		     1000000000U / nkpod->tickvalue, HZ);
-		err = -EINVAL;
-		goto unlock_and_exit;
-	}
-#endif /* XNARCH_HOST_TICK > 0 */
-
 	xnltt_log_event(xeno_ev_tmstart, nstick);
 
 	/* The clock interrupt does not need to be attached since the
@@ -3102,8 +3104,7 @@ int xnpod_start_timer(u_long nstick, xnisr_t tickhandler)
 	   source will be attached directly by the arch-dependent layer
 	   (xnarch_start_timer). */
 
-	xnintr_init(&nkclock, "[timer]", XNARCH_TIMER_IRQ, tickhandler, NULL,
-		    0);
+	xnintr_init(&nkclock, "[timer]", XNARCH_TIMER_IRQ, tickhandler, NULL, 0);
 
 	__setbits(nkpod->status, XNTIMED);
 
@@ -3116,7 +3117,7 @@ int xnpod_start_timer(u_long nstick, xnisr_t tickhandler)
 	   current tick would be lost, but this is not that critical.
 	   Negative values are for errors. */
 
-	delta = xnarch_start_timer(nstick, &xnintr_clock_handler);
+	delta = xnarch_start_timer(&xnintr_clock_handler);
 
 	if (delta < 0)
 		return -ENODEV;
@@ -3129,42 +3130,35 @@ int xnpod_start_timer(u_long nstick, xnisr_t tickhandler)
 	if (delta == 0)
 		delta = XNARCH_HOST_TICK / nkpod->tickvalue;
 
-	/* When no host ticking service is required for the underlying
-	   arch, the host timer exists but simply never ticks since
-	   xntimer_start() is passed a null interval value. CAUTION:
-	   kernel timers over aperiodic mode may be started by
-	   xntimer_start() only _after_ the hw timer has been set up
-	   through xnarch_start_timer(). */
+	/* CAUTION: kernel timers over aperiodic mode may be started
+	   by xntimer_start() only _after_ the hw timer has been set
+	   up through xnarch_start_timer(). */
 
 	xntimer_set_sched(&nkpod->htimer, xnpod_sched_slot(XNTIMER_KEEPER_ID));
-
 	if (XNARCH_HOST_TICK) {
 		xnlock_get_irqsave(&nklock, s);
-		xntimer_start(&nkpod->htimer, delta,
-			      XNARCH_HOST_TICK / nkpod->tickvalue,
-			      XN_RELATIVE);
+		xntimer_base_start(&nkpod->htimer, delta, XNARCH_HOST_TICK, XN_RELATIVE);
 		xnlock_put_irqrestore(&nklock, s);
 	}
 
-#ifdef CONFIG_XENO_OPT_WATCHDOG
+#if defined(CONFIG_XENO_OPT_TIMING_PERIODIC) || defined(CONFIG_XENO_OPT_WATCHDOG)
 	{
-		xnticks_t wdperiod;
 		unsigned cpu;
-
-		wdperiod = 1000000000UL / nkpod->tickvalue;
-
 		for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++) {
 			xnsched_t *sched = xnpod_sched_slot(cpu);
-			xntimer_init(&sched->wd_timer, &xnpod_watchdog_handler);
-			xntimer_set_priority(&sched->wd_timer, XNTIMER_LOPRIO);
-			xntimer_set_sched(&sched->wd_timer, sched);
 			xnlock_get_irqsave(&nklock, s);
-			xntimer_start(&sched->wd_timer, wdperiod, wdperiod, XN_RELATIVE);
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
+			if (nstick != XN_APERIODIC_TICK) /* Emulate a periodic tick. */
+				xntimer_base_start(&sched->ptimer, nstick, nstick, XN_RELATIVE);
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
+#ifdef CONFIG_XENO_OPT_WATCHDOG
+			xntimer_base_start(&sched->wdtimer, 1000000000UL, 1000000000UL, XN_RELATIVE);
 			xnpod_reset_watchdog(sched);
+#endif /* CONFIG_XENO_OPT_WATCHDOG */
 			xnlock_put_irqrestore(&nklock, s);
 		}
 	}
-#endif /* CONFIG_XENO_OPT_WATCHDOG */
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC || CONFIG_XENO_OPT_WATCHDOG */
 
 	return 0;
 }
