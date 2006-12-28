@@ -981,7 +981,6 @@ int rt_task_sleep(RTIME delay)
 int rt_task_sleep_until(RTIME date)
 {
 	int err = 0;
-	SRTIME delay;
 	spl_t s;
 
 	if (xnpod_unblockable_p())
@@ -995,11 +994,9 @@ int rt_task_sleep_until(RTIME date)
 	/* Calling the suspension service on behalf of the current task
 	   implicitely calls the rescheduling procedure. */
 
-	delay = date - xnpod_get_time();
-
-	if (delay > 0) {
+	if (date > xnpod_get_time()) {
 		xnpod_suspend_thread(&xeno_current_task()->thread_base,
-				     XNDELAY, delay, XN_RELATIVE, NULL);
+				     XNDELAY, date, XN_ABSOLUTE, NULL);
 
 		if (xnthread_test_info
 		    (&xeno_current_task()->thread_base, XNBREAK))

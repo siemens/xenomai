@@ -1441,13 +1441,15 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 
 	xnthread_set_state(thread, mask);
 
-	if (timeout != XN_INFINITE) {
+	if (timeout != XN_INFINITE || mode == XN_ABSOLUTE) {
 		/* Don't start the timer for a thread indefinitely delayed by
 		   a call to xnpod_suspend_thread(thread,XNDELAY,XN_INFINITE,XN_RELATIVE,NULL). */
 		xnthread_set_state(thread, XNDELAY);
 		xntimer_set_sched(&thread->rtimer, thread->sched);
-		xntimer_start(&thread->rtimer, timeout, XN_INFINITE,
-			      XN_RELATIVE);
+		/* In case of preposterous absolute timer setting, the
+		 * thread is never going to wake up; assume that's
+		 * intended. */
+		xntimer_start(&thread->rtimer, timeout, XN_INFINITE, mode);
 	}
 #ifdef __XENO_SIM__
 	if (nkpod->schedhook)
