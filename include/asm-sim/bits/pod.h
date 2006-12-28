@@ -23,12 +23,12 @@
 #include <time.h>
 #include <xeno_config.h>
 
-static inline int xnarch_start_timer (void (*tickhandler)(void))
+static inline int xnarch_start_timer(void (*tickhandler)(void))
 {
-    return mvm_start_timer(tickhandler);
+    return mvm_start_timer(0, tickhandler);
 }
 
-static inline void xnarch_stop_timer (void)
+static inline void xnarch_stop_timer(void)
 {
     mvm_stop_timer();
 }
