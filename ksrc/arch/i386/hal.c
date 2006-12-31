@@ -310,28 +310,17 @@ unsigned long rthal_timer_calibrate(void)
     return rthal_imuldiv(dt, 100000, RTHAL_CPU_FREQ);
 }
 
-int rthal_timer_request(void (*handler) (void), unsigned long nstick)
+int rthal_timer_request(void (*handler) (void))
 {
     unsigned long flags;
     int err;
 
     flags = rthal_critical_enter(NULL);
 
-    if (nstick > 0) {
-        /* Periodic setup for 8254 channel #0. */
-        unsigned period;
-        period = (unsigned)rthal_llimd(nstick, RTHAL_TIMER_FREQ, 1000000000);
-        if (period > LATCH)
-            period = LATCH;
-        outb(0x34, PIT_MODE);
-        outb(period & 0xff, PIT_CH0);
-        outb(period >> 8, PIT_CH0);
-    } else {
-        /* Oneshot setup for 8254 channel #0. */
-        outb(0x30, PIT_MODE);
-        outb(LATCH & 0xff, PIT_CH0);
-        outb(LATCH >> 8, PIT_CH0);
-    }
+    /* Oneshot setup for 8254 channel #0. */
+    outb(0x30, PIT_MODE);
+    outb(LATCH & 0xff, PIT_CH0);
+    outb(LATCH >> 8, PIT_CH0);
 
     rthal_irq_release(RTHAL_8254_IRQ);
 
