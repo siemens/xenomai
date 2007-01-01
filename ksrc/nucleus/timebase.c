@@ -106,6 +106,10 @@ DECLARE_XNQUEUE(nktimebaseq);
  * This service can be called from:
  *
  * - Kernel module initialization code
+ *
+ * @note Any periodic time base allocated by a real-time skin must be
+ * released by a call to xntbase_free() before the kernel module
+ * implementing the skin may be unloaded.
  */
 
 int xntbase_alloc(const char *name, u_long period, xntbase_t **basep)
