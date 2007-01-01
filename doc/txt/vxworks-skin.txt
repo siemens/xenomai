@@ -107,4 +107,6 @@ list. Here are the known variations:
 Module parameters
 =================
 
-None.
+- "tick_arg", duration of a base periodic tick. The VxWorks skin
+  expresses all delays and timeouts as counts of ticks. This parameter
+  defines the duration of a VxWorks clock tick expressed in microseconds.

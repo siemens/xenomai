@@ -89,4 +89,6 @@ therefore E_OACV is never returned.
 Module parameters
 =================
 
-None.
+- "tick_arg", duration of a base periodic tick. The uITRON skin
+  expresses all delays and timeouts as counts of ticks. This parameter
+  defines the duration of a uITRON clock tick expressed in microseconds.
