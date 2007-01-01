@@ -49,6 +49,8 @@ typedef struct psostm {
 
 } psostm_t;
 
+extern xntbase_t *psos_tbase;
+
 #ifdef __cplusplus
 extern "C" {
 #endif

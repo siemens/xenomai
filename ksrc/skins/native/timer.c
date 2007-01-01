@@ -58,7 +58,7 @@
 
 SRTIME rt_timer_ns2ticks(SRTIME ns)
 {
-	return xnpod_ns2ticks(ns);
+	return xntbase_ns2ticks(__native_tbase, ns);
 }
 
 /**
@@ -114,7 +114,7 @@ SRTIME rt_timer_ns2tsc(SRTIME ns)
 
 SRTIME rt_timer_ticks2ns(SRTIME ticks)
 {
-	return xnpod_ticks2ns(ticks);
+	return xntbase_ticks2ns(__native_tbase, ticks);
 }
 
 /*!
@@ -186,25 +186,23 @@ int rt_timer_inquire(RT_TIMER_INFO *info)
 {
 	RTIME period, tsc;
 
-	if (!testbits(nkpod->status, XNTIMED))
-		period = TM_UNSET;
-	else if (!testbits(nkpod->status, XNTMPER))
-		period = TM_ONESHOT;
+	if (xntbase_periodic_p(__native_tbase))
+		period = xntbase_get_tickval(__native_tbase);
 	else
-		period = xnpod_get_tickval();
+		period = TM_ONESHOT;
 
 	tsc = xnarch_get_cpu_tsc();
 	info->period = period;
 	info->tsc = tsc;
 
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
-	if (period != TM_ONESHOT && period != TM_UNSET)
-		info->date = nkpod->jiffies + nkpod->wallclock_offset;
+	if (period != TM_ONESHOT)
+		info->date = xnpod_get_time(__native_tbase);
 	else
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 		/* In aperiodic mode, our idea of time is the same as the
 		   CPU's, and a tick equals a nanosecond. */
-		info->date = xnarch_tsc_to_ns(tsc) + nkpod->wallclock_offset;
+		info->date = xnarch_tsc_to_ns(tsc) + __native_tbase->wallclock_offset;
 
 	return 0;
 }
@@ -213,7 +211,7 @@ int rt_timer_inquire(RT_TIMER_INFO *info)
  * @fn RTIME rt_timer_read(void)
  * @brief Return the current system time.
  *
- * Return the current time maintained by the system timer.
+ * Return the current time maintained by the master time base.
  *
  * @return The current time expressed in clock ticks (see note).
  *
@@ -228,16 +226,14 @@ int rt_timer_inquire(RT_TIMER_INFO *info)
  *
  * Rescheduling: never.
  *
- * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
- * parameter. In periodic mode, clock ticks are interpreted as
- * periodic jiffies. In oneshot mode, clock ticks are interpreted as
- * nanoseconds.
+ * @note The value returned will represent a count of jiffies if the
+ * native skin is bound to a periodic time base (see
+ * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  */
 
 RTIME rt_timer_read(void)
 {
-	return xnpod_get_time();
+	return xnpod_get_time(__native_tbase);
 }
 
 /*!
@@ -307,23 +303,23 @@ void rt_timer_spin(RTIME ns)
  * This routine switches to periodic timing mode and sets the clock
  * tick rate, or resets the current timing mode to aperiodic/oneshot
  * mode depending on the value of the @a nstick parameter. Since the
- * Xenomai nucleus automatically starts the system timer according to
- * the configured policy and period when a real-time skin is loaded
- * (see CONFIG_XENO_OPT_TIMING_PERIOD), calling rt_timer_set_mode() is
- * not required from applications unless the pre-defined mode and
- * period need to be changed dynamically.
+ * native skin automatically sets its time base according to the
+ * configured policy and period at load time (see
+ * CONFIG_XENO_OPT_NATIVE_PERIOD), calling rt_timer_set_mode() is not
+ * required from applications unless the pre-defined mode and period
+ * need to be changed dynamically.
  *
- * This service also sets the time unit which will be relevant when
+ * This service sets the time unit which will be relevant when
  * specifying time intervals to the services taking timeout or delays
  * as input parameters. In periodic mode, clock ticks will represent
  * periodic jiffies. In oneshot mode, clock ticks will represent
  * nanoseconds.
  *
- * @param nstick The timer period in nanoseconds. If this parameter is
- * equal to the special TM_ONESHOT value, the timer is set to operate
- * in oneshot-programmable mode. Other values are interpreted as the
- * time between two consecutive clock ticks in periodic timing mode
- * (i.e. clock HZ = 1e9 / nstick).
+ * @param nstick The time base period in nanoseconds. If this
+ * parameter is equal to the special TM_ONESHOT value, the time base
+ * is set to operate in a tick-less fashion (i.e. oneshot mode). Other
+ * values are interpreted as the time between two consecutive clock
+ * ticks in periodic timing mode (i.e. clock HZ = 1e9 / nstick).
  *
  * @return 0 is returned on success. Otherwise:
  *
@@ -343,15 +339,7 @@ void rt_timer_spin(RTIME ns)
 
 int rt_timer_set_mode(RTIME nstick)
 {
-	if (testbits(nkpod->status, XNTIMED)) {
-		if ((nstick == TM_ONESHOT && xnpod_get_tickval() == 1) ||
-		    (nstick != TM_ONESHOT && xnpod_get_tickval() == nstick))
-			return 0;
-
-		xnpod_stop_timer();
-	}
-
-	return xnpod_start_timer(nstick, XNPOD_DEFAULT_TICKHANDLER);
+	return xntbase_switch("native", nstick, &__native_tbase);
 }
 
 /*@}*/

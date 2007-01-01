@@ -123,8 +123,8 @@ struct xnltt_evmap xnltt_evtable[] = {
 	    {"Xenomai sigdispatch", "thread=%s, sigpend=0x%x", -1, xeno_evall},
 	[xeno_ev_thrboot] =
 	    {"Xenomai thread begin", "thread=%s", -1, xeno_evthr},
-	[xeno_ev_tmtick] =
-	    {"Xenomai timer tick", "runthread=%s", -1, xeno_evirq},
+	[xeno_ev_tstick] =
+	    {"Xenomai time source tick", "runthread=%s", -1, xeno_evirq},
 	[xeno_ev_sleepon] =
 	    {"Xenomai sleepon", "thread=%s, sync=%p", -1, xeno_evthr},
 	[xeno_ev_wakeup1] =
@@ -170,9 +170,9 @@ struct xnltt_evmap xnltt_evtable[] = {
 	     xeno_evthr},
 	[xeno_ev_thrwait] =
 	    {"Xenomai thread wperiod", "thread=%s", -1, xeno_evthr},
-	[xeno_ev_tmstart] =
-	    {"Xenomai start timer", "tick=%u ns", -1, xeno_evall},
-	[xeno_ev_tmstop] = {"Xenomai stop timer", NULL, -1, xeno_evall},
+	[xeno_ev_tsenable] =
+	    {"Xenomai enable time source", "tick=%u ns", -1, xeno_evall},
+	[xeno_ev_tsdisable] = {"Xenomai disable time source", NULL, -1, xeno_evall},
 	[xeno_ev_mark] = {"Xenomai **mark**", "%s", -1, xeno_evall},
 	[xeno_ev_watchdog] =
 	    {"Xenomai watchdog", "runthread=%s", -1, xeno_evall},

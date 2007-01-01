@@ -480,7 +480,7 @@ static inline void rtdm_context_unlock(struct rtdm_dev_context *context)
 /* --- clock services --- */
 static inline nanosecs_abs_t rtdm_clock_read(void)
 {
-    return xnpod_ticks2ns(xnpod_get_time());
+    return xntbase_ticks2ns(rtdm_tbase, xnpod_get_time(rtdm_tbase));
 }
 #endif /* !DOXYGEN_CPP */
 
@@ -884,7 +884,7 @@ static inline int rtdm_task_set_period(rtdm_task_t *task,
     if (period < 0)
         period = 0;
     return xnpod_set_thread_periodic(task, XN_INFINITE,
-                                     xnpod_ns2ticks(period));
+                                     xntbase_ns2ticks(rtdm_tbase, period));
 }
 
 static inline int rtdm_task_unblock(rtdm_task_t *task)
@@ -920,7 +920,7 @@ typedef nanosecs_abs_t              rtdm_toseq_t;
 static inline void rtdm_toseq_init(rtdm_toseq_t *timeout_seq,
                                    nanosecs_rel_t timeout)
 {
-    *timeout_seq = xnpod_get_time() + xnpod_ns2ticks(timeout);
+    *timeout_seq = xnpod_get_time(rtdm_tbase) + xntbase_ns2ticks(rtdm_tbase, timeout);
 }
 #endif /* !DOXYGEN_CPP */
 

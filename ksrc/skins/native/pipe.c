@@ -440,11 +440,9 @@ int rt_pipe_delete(RT_PIPE *pipe)
  * Rescheduling: always unless the request is immediately satisfied or
  * @a timeout specifies a non-blocking operation.
  *
- * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
- * parameter. In periodic mode, clock ticks are interpreted as
- * periodic jiffies. In oneshot mode, clock ticks are interpreted as
- * nanoseconds.
+ * @note The @a timeout value will be interpreted as jiffies if the
+ * native skin is bound to a periodic time base (see
+ * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  */
 
 ssize_t rt_pipe_receive(RT_PIPE *pipe, RT_PIPE_MSG **msgp, RTIME timeout)
@@ -547,11 +545,9 @@ ssize_t rt_pipe_receive(RT_PIPE *pipe, RT_PIPE_MSG **msgp, RTIME timeout)
  * Rescheduling: always unless the request is immediately satisfied or
  * @a timeout specifies a non-blocking operation.
  *
- * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
- * parameter. In periodic mode, clock ticks are interpreted as
- * periodic jiffies. In oneshot mode, clock ticks are interpreted as
- * nanoseconds.
+ * @note The @a timeout value will be interpreted as jiffies if the
+ * native skin is bound to a periodic time base (see
+ * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  */
 
 ssize_t rt_pipe_read(RT_PIPE *pipe, void *buf, size_t size, RTIME timeout)
@@ -863,58 +859,6 @@ ssize_t rt_pipe_stream(RT_PIPE *pipe, const void *buf, size_t size)
 }
 
 /**
- * @fn ssize_t rt_pipe_flush(RT_PIPE *pipe)
- *
- * @brief Flush the pipe.
- *
- * This operation makes the data available for reading from the
- * associated special device.
- *
- * @param pipe The descriptor address of the pipe to flush.
- *
- * @return Zero upon success. Otherwise:
- *
- * - -EINVAL is returned if @a pipe is not a pipe descriptor.
- *
- * - -EPIPE is returned if the associated special device is not yet
- * open.
- *
- * - -EIDRM is returned if @a pipe is a closed pipe descriptor.
- *
- * - -ENODEV or -EBADF are returned if @a pipe is scrambled.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- *
- * Rescheduling: possible.
- *
- * @note This service is deprecated, since the streamed data is now
- * immediately available to the receiving side.
- */
-
-ssize_t rt_pipe_flush(RT_PIPE *pipe)
-{
-	int err = 0;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	pipe = xeno_h2obj_validate(pipe, XENO_PIPE_MAGIC, RT_PIPE);
-
-	if (!pipe)
-		err = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
-}
-
-/**
  * @fn RT_PIPE_MSG *rt_pipe_alloc(RT_PIPE *pipe,size_t size)
  *
  * @brief Allocate a message pipe buffer.
@@ -997,6 +941,5 @@ EXPORT_SYMBOL(rt_pipe_send);
 EXPORT_SYMBOL(rt_pipe_read);
 EXPORT_SYMBOL(rt_pipe_write);
 EXPORT_SYMBOL(rt_pipe_stream);
-EXPORT_SYMBOL(rt_pipe_flush);
 EXPORT_SYMBOL(rt_pipe_alloc);
 EXPORT_SYMBOL(rt_pipe_free);

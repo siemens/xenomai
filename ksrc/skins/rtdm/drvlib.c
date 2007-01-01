@@ -117,13 +117,13 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
     int res;
 
 
-    res = xnpod_init_thread(task, name, priority, 0, 0);
+    res = xnpod_init_thread(task, rtdm_tbase, name, priority, 0, 0);
     if (res)
         goto error_out;
 
     if (period > 0) {
         res = xnpod_set_thread_periodic(task, XN_INFINITE,
-                                        xnpod_ns2ticks(period));
+                                        xntbase_ns2ticks(rtdm_tbase, period));
         if (res)
             goto cleanup_out;
     }
@@ -342,7 +342,7 @@ int rtdm_task_sleep(nanosecs_rel_t delay)
     if (delay < 0)
         return 0;
 
-    xnpod_suspend_thread(thread, XNDELAY, xnpod_ns2ticks(delay), XN_RELATIVE, NULL);
+    xnpod_suspend_thread(thread, XNDELAY, xntbase_ns2ticks(rtdm_tbase, delay), XN_RELATIVE, NULL);
 
     return xnthread_test_info(thread, XNBREAK) ? -EINTR : 0;
 }
@@ -378,7 +378,7 @@ int rtdm_task_sleep_until(nanosecs_abs_t wakeup_time)
 
     XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
 
-    xnpod_suspend_thread(thread, XNDELAY, xnpod_ns2ticks(wakeup_time),
+    xnpod_suspend_thread(thread, XNDELAY, xntbase_ns2ticks(rtdm_tbase, wakeup_time),
                          XN_ABSOLUTE, NULL);
  
     return xnthread_test_info(thread, XNBREAK) ? -EINTR : 0;
@@ -710,7 +710,7 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
             xnsynch_sleep_on(&event->synch_base, *timeout_seq, XN_ABSOLUTE);
         } else {
             /* infinite or relative timeout */
-            xnsynch_sleep_on(&event->synch_base, xnpod_ns2ticks(timeout), XN_RELATIVE);
+		xnsynch_sleep_on(&event->synch_base, xntbase_ns2ticks(rtdm_tbase, timeout), XN_RELATIVE);
         }
 
         thread = xnpod_current_thread();
@@ -906,7 +906,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
             xnsynch_sleep_on(&sem->synch_base, *timeout_seq, XN_ABSOLUTE);
         } else {
             /* infinite or relative timeout */
-            xnsynch_sleep_on(&sem->synch_base, xnpod_ns2ticks(timeout), XN_RELATIVE);
+		xnsynch_sleep_on(&sem->synch_base, xntbase_ns2ticks(rtdm_tbase, timeout), XN_RELATIVE);
         }
 
         thread = xnpod_current_thread();
@@ -1128,7 +1128,7 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
             xnsynch_sleep_on(&mutex->synch_base, *timeout_seq, XN_ABSOLUTE);
         } else {
             /* infinite or relative timeout */
-            xnsynch_sleep_on(&mutex->synch_base, xnpod_ns2ticks(timeout), XN_RELATIVE);
+		xnsynch_sleep_on(&mutex->synch_base, xntbase_ns2ticks(rtdm_tbase, timeout), XN_RELATIVE);
         }
 
         if (unlikely(xnthread_test_info(thread, XNTIMEO|XNRMID|XNBREAK))) {

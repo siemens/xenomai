@@ -22,6 +22,8 @@
 
 static xnpod_t __core_pod;
 
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+
 static int xncore_unload_hook(void)
 {
 	/* If no thread is hosted by the Xenomai pod, unload it. We are
@@ -35,34 +37,53 @@ static int xncore_unload_hook(void)
 	return 0;
 }
 
-int xncore_attach(void)
-{
-	/* We don't want to match any compatible pod, but exactely the
-	   core one, so we emulate XNREUSE here. */
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
+int xncore_attach(int minprio, int maxprio)
+{
+	int err = 0;
+
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+	/* We don't want to match any compatible pod, but exactely the
+	   core one, so we emulate XNREUSE even more strictly here. */
 	if (nkpod) {
 		if (nkpod != &__core_pod)
 			return -ENOSYS;
 	} else {
-		int err =
-		    xnpod_init(&__core_pod, XNCORE_MIN_PRIO, XNCORE_MAX_PRIO,
-			       0);
+		err = xnpod_init(&__core_pod, XNCORE_MIN_PRIO, XNCORE_MAX_PRIO, 0);
 
 		if (err)
 			return err;
 
 		__core_pod.svctable.unload = &xncore_unload_hook;
 	}
+#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+	/* The skin is standalone, create a pod to attach to. */
+	xnpod_t *pod = xnarch_sysalloc(sizeof(*pod));
 
-	++__core_pod.refcnt;
+	if (!pod)
+		err = -ENOMEM;
+	else {
+		err =  xnpod_init(pod, minprio, maxprio, XNREUSE);
+		if (err)
+			xnarch_sysfree(pod, sizeof(*pod));
+	}
+#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-	return 0;
+	if (!err)
+		++nkpod->refcnt;
+
+	return err;
 }
 
 void xncore_detach(int xtype)
 {
-	if (--__core_pod.refcnt == 1)
+	if (nkpod && --nkpod->refcnt == 1) {
+		xnpod_t *pod = nkpod;
 		xnpod_shutdown(xtype);
+		if (pod != &__core_pod)
+		    xnarch_sysfree(pod, sizeof(*pod));
+	}
 }
 
 int xncore_mount(void)

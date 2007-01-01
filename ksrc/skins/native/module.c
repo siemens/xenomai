@@ -50,9 +50,11 @@ MODULE_DESCRIPTION("Native skin");
 MODULE_AUTHOR("rpm@xenomai.org");
 MODULE_LICENSE("GPL");
 
-#if !defined(__KERNEL__) || !defined(CONFIG_XENO_OPT_PERVASIVE)
-static xnpod_t __native_pod;
-#endif /* !__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+static u_long tick_arg = CONFIG_XENO_OPT_NATIVE_PERIOD;
+module_param_named(tick_arg, tick_arg, ulong, 0444);
+MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us), 0 for tick-less mode");
+
+xntbase_t *__native_tbase;
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 xnptree_t __native_ptree = {
@@ -67,18 +69,17 @@ int SKIN_INIT(native)
 {
 	int err;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	/* The native skin is stacked over the core pod. */
-	err = xncore_attach();
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-	/* The native skin is standalone, there is no priority level to
-	   reserve for interrupt servers in user-space, since there is no
-	   user-space support in the first place. */
-	err = xnpod_init(&__native_pod, T_LOPRIO, T_HIPRIO, XNREUSE);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+	err = xncore_attach(T_LOPRIO, T_HIPRIO);
 
 	if (err)
 		goto fail;
+
+	err = xntbase_alloc("native", tick_arg * 1000, &__native_tbase);
+
+	if (err)
+		goto fail;
+
+	xntbase_start(__native_tbase);
 
 	err = __native_task_pkg_init();
 
@@ -221,11 +222,9 @@ int SKIN_INIT(native)
 
       cleanup_pod:
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+	xntbase_free(__native_tbase);
+
 	xncore_detach(err);
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-	xnpod_shutdown(err);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
       fail:
 
@@ -278,10 +277,11 @@ void SKIN_EXIT(native)
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	__native_syscall_cleanup();
-	xncore_detach(XNPOD_NORMAL_EXIT);
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+	xntbase_free(__native_tbase);
+
+	xncore_detach(XNPOD_NORMAL_EXIT);
 }
 
 module_init(__native_skin_init);

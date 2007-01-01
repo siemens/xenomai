@@ -59,6 +59,7 @@ void uitask_cleanup(void)
 
 ER cre_tsk(ID tskid, T_CTSK * pk_ctsk)
 {
+	int bflags = XNFPU;
 	uitask_t *task;
 	char aname[16];
 	spl_t s;
@@ -98,9 +99,16 @@ ER cre_tsk(ID tskid, T_CTSK * pk_ctsk)
 
 	sprintf(aname, "t%d", tskid);
 
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+	/* uITRON priority scale is inverted compared to the core
+	   pod's we are going to use for hosting our threads. */
+	bflags |= XNINVPS;
+#endif /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+
 	if (xnpod_init_thread(&task->threadbase,
+			      uitbase,
 			      aname,
-			      pk_ctsk->itskpri, XNFPU, pk_ctsk->stksz) != 0) {
+			      ui_normalized_prio(pk_ctsk->itskpri), bflags, pk_ctsk->stksz) != 0) {
 		uitaskmap[tskid - 1] = NULL;
 		xnfree(task);
 		return E_NOMEM;
@@ -389,13 +397,13 @@ ER chg_pri(ID tskid, PRI tskpri)
 	}
 
 	if (tskpri == TPRI_INI)
-		tskpri = xnthread_initial_priority(&task->threadbase);
+		tskpri = ui_denormalized_prio(xnthread_initial_priority(&task->threadbase));
 
 	/* uITRON specs explicitely states: "If the priority specified is
 	   the same as the current priority, the task will still be moved
 	   behind other tasks of the same priority". This allows for
 	   manual round-robin. Cool! :o) */
-	xnpod_renice_thread(&task->threadbase, tskpri);
+	xnpod_renice_thread(&task->threadbase, ui_normalized_prio(tskpri));
 	xnpod_schedule();
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -413,9 +421,9 @@ ER rot_rdq(PRI tskpri)
 		tskpri = XNPOD_RUNPRIO;
 	else
 		tskpri =
-		    xnthread_current_priority(&ui_current_task()->threadbase);
+			ui_denormalized_prio(xnthread_current_priority(&ui_current_task()->threadbase));
 
-	xnpod_rotate_readyq(tskpri);
+	xnpod_rotate_readyq(ui_normalized_prio(tskpri));
 	xnpod_schedule();
 
 	return E_OK;
@@ -506,7 +514,7 @@ ER ref_tsk(T_RTSK * pk_rtsk, ID tskid)
 	}
 
 	pk_rtsk->exinf = task->exinf;
-	pk_rtsk->tskpri = xnthread_current_priority(&task->threadbase);
+	pk_rtsk->tskpri = ui_denormalized_prio(xnthread_current_priority(&task->threadbase));
 	pk_rtsk->tskstat = tskstat;
 	pk_rtsk->suscnt = task->suspcnt;
 	pk_rtsk->wupcnt = task->wkupcnt;
@@ -514,7 +522,7 @@ ER ref_tsk(T_RTSK * pk_rtsk, ID tskid)
 	pk_rtsk->wid = 0;	/* FIXME */
 	pk_rtsk->tskatr = task->tskatr;
 	pk_rtsk->task = task->entry;
-	pk_rtsk->itskpri = xnthread_initial_priority(&task->threadbase);
+	pk_rtsk->itskpri = ui_denormalized_prio(xnthread_initial_priority(&task->threadbase));
 	pk_rtsk->stksz = (INT)xnthread_stack_size(&task->threadbase);
 
 	xnlock_put_irqrestore(&nklock, s);

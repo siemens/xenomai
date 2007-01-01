@@ -43,6 +43,7 @@ struct rtdm_fildes      fildes_table[RTDM_FD_MAX] =
                             { [0 ... RTDM_FD_MAX-1] = { NULL } };
 static unsigned long    used_fildes[FD_BITMAP_SIZE];
 int                     open_fildes;    /* amount of used descriptors */
+xntbase_t               *rtdm_tbase;
 
 #ifdef CONFIG_SMP
 xnlock_t                rt_fildes_lock = XNARCH_LOCK_UNLOCKED;
@@ -1215,3 +1216,4 @@ EXPORT_SYMBOL(_rtdm_read);
 EXPORT_SYMBOL(_rtdm_write);
 EXPORT_SYMBOL(_rtdm_recvmsg);
 EXPORT_SYMBOL(_rtdm_sendmsg);
+EXPORT_SYMBOL(rtdm_tbase);

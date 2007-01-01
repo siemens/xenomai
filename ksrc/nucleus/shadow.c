@@ -280,13 +280,13 @@ static inline void set_linux_task_priority(struct task_struct *p, int prio)
 static inline void lock_timers(void)
 {
 	xnarch_atomic_inc(&nkpod->timerlck);
-	setbits(nkpod->status, XNTLOCK);
+	setbits(nktbase.status, XNTBLCK);
 }
 
 static inline void unlock_timers(void)
 {
 	if (xnarch_atomic_dec_and_test(&nkpod->timerlck))
-		clrbits(nkpod->status, XNTLOCK);
+		clrbits(nktbase.status, XNTBLCK);
 }
 
 #ifdef CONFIG_XENO_OPT_ISHIELD
@@ -1213,7 +1213,7 @@ static int xnshadow_sys_info(struct task_struct *curr, struct pt_regs *regs)
 		return -EFAULT;
 
 	info.cpufreq = xnarch_get_cpu_freq();
-	info.tickval = xnpod_get_tickval();
+	info.tickval = xntbase_get_tickval(&nktbase);
 	__xn_copy_to_user(curr, (void *)infarg, &info, sizeof(info));
 
 	return 0;
@@ -2059,7 +2059,7 @@ int xnshadow_mount(void)
 		initq(&xnshadow_ppd_hash[i]);
 
 	xnshadow_nucleus_muxid =
-	    xnshadow_register_interface("core",
+	    xnshadow_register_interface("sys",
 					0x434F5245,
 					sizeof(xnshadow_systab) /
 					sizeof(xnsysent_t), xnshadow_systab,

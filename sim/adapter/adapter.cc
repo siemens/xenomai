@@ -26,6 +26,8 @@
 #include "vm/interrupt.h"
 #include "vm/display.h"
 
+static xntbase_t *timebase = &nktbase;
+
 #define sim_current_cpu() 0	// This code must not be instrumented!
 
 extern void (*gcic_dinsn)(int);
@@ -67,9 +69,14 @@ static const char *mvm_get_thread_mode (void *tcbarg)
     return modeString;
 }
 
-static unsigned long long mvm_get_jiffies (void) {
+void mvm_declare_tbase(xntbase_t *base)
+{
+    timebase = base;
+}
 
-    return MvmManager::This->testFlags(MVM_SIMREADY) ? nkpod->jiffies : 0;
+static unsigned long long mvm_get_jiffies (void)
+{
+    return MvmManager::This->testFlags(MVM_SIMREADY) ? timebase->jiffies : 0;
 }
 
 static void kdoor(mvm_trace_sched) (xnthread_t *thread,

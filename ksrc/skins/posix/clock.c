@@ -39,11 +39,12 @@
  * the two clocks, but the resolution of these timers is one system clock tick,
  * as is the case for clock_nanosleep().
  *
- * @note The duration of the system clock tick depends on the settings of the
- * nucleus system timer (configurable at compile-time with the constant @a
- * CONFIG_XENO_OPT_TIMING_PERIOD, and at run-time with the @a xeno_nucleus
- * module parameter @a tick_arg). When the system timer is set to aperiodic
- * mode, the default, the system clock tick is one nanosecond.
+ * @note The duration of the POSIX clock tick depends on the active
+ * time base (configurable at compile-time with the constant @a
+ * CONFIG_XENO_OPT_POSIX_PERIOD, and at run-time with the @a
+ * xeno_posix module parameter @a tick_arg). When the time base is
+ * aperiodic (which is the default) the system clock tick is one
+ * nanosecond.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05">
@@ -119,7 +120,7 @@ int clock_gettime(clockid_t clock_id, struct timespec *tp)
 
 	switch (clock_id) {
 	case CLOCK_REALTIME:
-		ticks2ts(tp, xnpod_get_time());
+		ticks2ts(tp, xnpod_get_time(pse51_tbase));
 		break;
 
 	case CLOCK_MONOTONIC:

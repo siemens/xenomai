@@ -164,15 +164,16 @@ typedef struct wind_wd {
 
 /* The following macros return normalized or native priority values
    for the underlying pod. The core pod providing user-space support
-   uses an ascending [0-256] priority scale (include/nucleus/core.h),
-   whilst the VxWorks personality exhibits a decreasing scale
-   [255-0]. Normalization is not needed when the underlying pod
-   supporting the VxWorks skin is standalone, i.e. pure kernel, or
-   simulation modes. */
+   uses an ascending [0-257] priority scale (include/nucleus/core.h),
+   whilst the VxWorks personality exhibits a decreasing scale [255-0];
+   normalization is done in the [1-256] range so that priority 0 is
+   kept for non-realtime shadows. Normalization is not needed when the
+   underlying pod supporting the VxWorks skin is standalone, i.e. pure
+   kernel, or simulation modes. */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 #define wind_normalized_prio(prio)	(XNCORE_MAX_PRIO - (prio) - 1)
-#define wind_denormalized_prio(prio)	(255 - (prio))
+#define wind_denormalized_prio(prio)	(256 - (prio))
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
 #define wind_normalized_prio(prio)	prio
 #define wind_denormalized_prio(prio)	prio
@@ -258,13 +259,14 @@ static inline int taskUnsafeInner (wind_task_t *cur)
     return OK;
 }
 
+extern xntbase_t *wind_tbase;
 
 /* modules initialization and cleanup: */
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-    int wind_sysclk_init(u_long init_rate);
+    int wind_sysclk_init(u_long period);
 
     void wind_sysclk_cleanup(void);
     

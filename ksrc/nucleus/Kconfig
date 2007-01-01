@@ -189,69 +189,27 @@ config XENO_OPT_WATCHDOG
 menu "Timing"
 
 config XENO_OPT_TIMING_PERIODIC
-	bool "Use periodic timer hardware"
+	bool "Enable periodic timing"
 	help
-	WARNING: This value must be <= CONFIG_HZ.
 
-	The nucleus can manage the timer hardware provided by the
-	underlying architecture either in aperiodic (one-shot) or
-	periodic timing modes. Aperiodic mode provides for
-	non-constant delays between timer ticks, whilst periodic mode
-	makes the hardware timer tick at constant frequency.
+	Xenomai allows different skins to be clocked separately,
+	according to distinct frequencies, or aperiodically. In the
+	periodic case, delays and timeouts are given in counts of
+	ticks, which duration can be fixed by configuration or set
+	at runtime. In the aperiodic case, timings are directly
+	specified in nanoseconds. Selecting this option allows you to
+	run skins depending on a periodic time base, like most
+	traditional RTOS emulators do (e.g. VxWorks, pSOS, VRTX and
+	uITRON).
 
-	In aperiodic mode, timing accuracy is higher - since timeouts
-	are not rounded to a constant time slice. The aperiodic mode
-	gives better results in configuration involving threads
-	requesting timing services over different time scales
-	that cannot be easily expressed as multiples of a single base
-	tick, or would lead to a waste of high frequency periodic ticks.
-
-	Enabling this option allows the nucleus to use the timer
-	hardware as a pure Programmable Interval Timer. You can leave
-	this option disabled in order to save a few hundreds bytes and
-	some cycles on the fast path if you plan to use the system
-	timer in aperiodic mode only.
+	You can leave this option disabled in order to save a few
+	hundreds bytes and some cycles on the fast path if you plan to
+	use the system timer in tick-less (i.e. aperiodic) mode only.
 
 	This option must not be confused with the ability to run
 	periodic threads, which is possible is both timing
 	modes. Periodic threads needing high timing accuracy will even
-	require	aperiodic timing.
-
-config XENO_OPT_TIMING_PERIOD
-	depends on XENO_OPT_TIMING_PERIODIC
-	int "Timer period (ns)"
-	default 0
-	help
-	Duration of a base periodic tick (in nanoseconds). This value
-	is used to program the tick frequency for the underlying timer
-	hardware used as a pure PIT.
-
-	This option defines the duration of the base period for the
-	whole system; it must not be confused with per-thread periodic
-	settings, which are expressed in units of such base period.
-	Passing zero for the base period tells the nucleus to use the
-	high precision aperiodic timing instead, which in turn allows
-	to use time delays expressed as counts of nanoseconds.
-
-	When a real-time interface actually needs a valid base
-	period because its idea of time is tick/jiffy-based, a default
-	base period will be substituted to zero in this field.
-
-	The base period can be overriden at runtime using the
-	"tick_arg" module parameter when loading the nucleus.
-
-	If in doubt, leave zero in this field.
-
-if XENO_OPT_TIMING_PERIODIC != y
-
-config XENO_OPT_TIMING_PERIOD
-	int
-	default 0
-
-endif
-
-config XENO_OPT_TIMING_PERIOD
-
+	likely prefer using aperiodic timing.
 
 config XENO_OPT_TIMING_TIMERLAT
 	int "Timer tuning latency (ns)"
@@ -265,10 +223,6 @@ config XENO_OPT_TIMING_TIMERLAT
 	by the time needed to setup the timer for its next shot. A
 	default value of 0 (recommended) will cause this value to be
 	estimated by the nucleus at startup.
-	Depending on whether CONFIG_X86_LOCAL_APIC is enabled or not
-	in the kernel configuration Xenomai is compiled
-	against, this option will either refer to the local APIC or
-	8254 timer latency value.
 
 config XENO_OPT_TIMING_SCHEDLAT
 	int "Scheduling latency (ns)"

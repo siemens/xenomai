@@ -234,8 +234,8 @@ int rt_task_create(RT_TASK *task,
 			xnobject_copy_name(task->rname, name);
 	}
 
-	if (xnpod_init_thread(&task->thread_base, name, prio, bflags, stksize)
-	    != 0)
+	if (xnpod_init_thread(&task->thread_base, __native_tbase,
+			      name, prio, bflags, stksize) != 0)
 		/* Assume this is the only possible failure. */
 		return -ENOMEM;
 
@@ -707,11 +707,9 @@ int rt_task_yield(void)
  * Rescheduling: always if the operation affects the current task and
  * @a idate has not elapsed yet.
  *
- * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
- * parameter. In periodic mode, clock ticks are interpreted as
- * periodic jiffies. In oneshot mode, clock ticks are interpreted as
- * nanoseconds.
+ * @note The @a idate and @a period values will be interpreted as
+ * jiffies if the native skin is bound to a periodic time base (see
+ * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  */
 
 int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
@@ -910,32 +908,32 @@ int rt_task_set_priority(RT_TASK *task, int prio)
  *
  * Rescheduling: always unless a null delay is given.
  *
- * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
- * parameter. In periodic mode, clock ticks are interpreted as
- * periodic jiffies. In oneshot mode, clock ticks are interpreted as
- * nanoseconds.
+ * @note The @a delay value will be interpreted as jiffies if the
+ * native skin is bound to a periodic time base (see
+ * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  */
 
 int rt_task_sleep(RTIME delay)
 {
+	xnthread_t *self;
+
 	if (xnpod_unblockable_p())
 		return -EPERM;
 
 	if (delay == 0)
 		return 0;
 
-	if (!testbits(nkpod->status, XNTIMED))
+	self = xnpod_current_thread();
+
+	if (!xnthread_timed_p(self))
 		return -EWOULDBLOCK;
 
 	/* Calling the suspension service on behalf of the current task
 	   implicitely calls the rescheduling procedure. */
 
-	xnpod_suspend_thread(&xeno_current_task()->thread_base,
-			     XNDELAY, delay, XN_RELATIVE, NULL);
+	xnpod_suspend_thread(self, XNDELAY, delay, XN_RELATIVE, NULL);
 
-	return xnthread_test_info(&xeno_current_task()->thread_base,
-				   XNBREAK) ? -EINTR : 0;
+	return xnthread_test_info(self, XNBREAK) ? -EINTR : 0;
 }
 
 /**
@@ -971,22 +969,23 @@ int rt_task_sleep(RTIME delay)
  *
  * Rescheduling: always unless a date in the past is given.
  *
- * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
- * parameter. In periodic mode, clock ticks are interpreted as
- * periodic jiffies. In oneshot mode, clock ticks are interpreted as
- * nanoseconds.
+ * @note The @a date value will be interpreted as jiffies if the
+ * native skin is bound to a periodic time base (see
+ * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  */
 
 int rt_task_sleep_until(RTIME date)
 {
+	xnthread_t *self;
 	int err = 0;
 	spl_t s;
 
 	if (xnpod_unblockable_p())
 		return -EPERM;
 
-	if (!testbits(nkpod->status, XNTIMED))
+	self = xnpod_current_thread();
+
+	if (!xnthread_timed_p(self))
 		return -EWOULDBLOCK;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -994,12 +993,10 @@ int rt_task_sleep_until(RTIME date)
 	/* Calling the suspension service on behalf of the current task
 	   implicitely calls the rescheduling procedure. */
 
-	if (date > xnpod_get_time()) {
-		xnpod_suspend_thread(&xeno_current_task()->thread_base,
-				     XNDELAY, date, XN_ABSOLUTE, NULL);
+	if (date > xnpod_get_time(__native_tbase)) {
+		xnpod_suspend_thread(self, XNDELAY, date, XN_ABSOLUTE, NULL);
 
-		if (xnthread_test_info
-		    (&xeno_current_task()->thread_base, XNBREAK))
+		if (xnthread_test_info(self, XNBREAK))
 			err = -EINTR;
 	} else
 		err = -ETIMEDOUT;
@@ -1534,6 +1531,10 @@ RT_TASK *rt_task_self(void)
  * - -EINVAL is returned if @a task is not a task descriptor, or if @a
  * quantum is zero.
  *
+ * - -ENODEV is returned if the native skin is not bound to a periodic
+ * time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), in which case
+ * round-robin scheduling is not available.
+ *
  * - -EPERM is returned if @a task is NULL but not called from a task
  * context.
  *
@@ -1550,17 +1551,17 @@ RT_TASK *rt_task_self(void)
  *
  * Rescheduling: never.
  *
- * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
- * parameter. In periodic mode, clock ticks are interpreted as
- * periodic jiffies. In oneshot mode, clock ticks are interpreted as
- * nanoseconds.
+ * @note The @a quantum value is always interpreted as a count of
+ * jiffies.
  */
 
 int rt_task_slice(RT_TASK *task, RTIME quantum)
 {
 	int err = 0;
 	spl_t s;
+
+	if (!xntbase_periodic_p(__native_tbase))
+		return -ENODEV;
 
 	if (!quantum)
 		return -EINVAL;
@@ -1687,11 +1688,9 @@ int rt_task_slice(RT_TASK *task, RTIME quantum)
  *
  * Rescheduling: Always.
  *
- * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
- * parameter. In periodic mode, clock ticks are interpreted as
- * periodic jiffies. In oneshot mode, clock ticks are interpreted as
- * nanoseconds.
+ * @note The @a timeout value will be interpreted as jiffies if the
+ * native skin is bound to a periodic time base (see
+ * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  *
  * @note When called from a user-space task, this service may need to
  * allocate some temporary buffer space from the system heap to hold
@@ -1875,11 +1874,9 @@ ssize_t rt_task_send(RT_TASK *task,
  *
  * Rescheduling: Always.
  *
- * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
- * parameter. In periodic mode, clock ticks are interpreted as
- * periodic jiffies. In oneshot mode, clock ticks are interpreted as
- * nanoseconds.
+ * @note The @a timeout value will be interpreted as jiffies if the
+ * native skin is bound to a periodic time base (see
+ * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  *
  * @note When called from a user-space task, this service may need to
  * allocate some temporary buffer space from the system heap to hold
@@ -2301,11 +2298,9 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
  * Rescheduling: always unless the request is immediately satisfied or
  * @a timeout specifies a non-blocking operation.
  *
- * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
- * parameter. In periodic mode, clock ticks are interpreted as
- * periodic jiffies. In oneshot mode, clock ticks are interpreted as
- * nanoseconds.
+ * @note The @a timeout value will be interpreted as jiffies if the
+ * native skin is bound to a periodic time base (see
+ * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  */
 
 /**
