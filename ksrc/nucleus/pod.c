@@ -3084,7 +3084,7 @@ int xnpod_enable_timesource(void)
 
 	xnintr_init(&nkclock, "[timer]", XNARCH_TIMER_IRQ, &xnpod_announce_tick, NULL, 0);
 
-	__setbits(nktbase.status, XNTBRUN);
+	nktbase.status = XNTBRUN;
 
 	xnlock_put_irqrestore(&nklock, s);
 
