@@ -58,15 +58,15 @@ The data structures hierarchy is as follows:<p>
 
 <p>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#g0cafba0b8abdff03dc1d210932f2b394">xnheap_init</a> (xnheap_t *heap, void *heapaddr, u_long heapsize, u_long pagesize)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#gd65beaf18754ad1f85c479eaf9219042">xnheap_init</a> (xnheap_t *heap, void *heapaddr, u_long heapsize, u_long pagesize)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a memory heap.  <a href="#g0cafba0b8abdff03dc1d210932f2b394"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#gf33cea7788162687767ca7c8c149f6ab">xnheap_destroy</a> (xnheap_t *heap, void(*flushfn)(xnheap_t *heap, void *extaddr, u_long extsize, void *cookie), void *cookie)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a memory heap.  <a href="#gd65beaf18754ad1f85c479eaf9219042"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#g7ab506f024eda1d9030e1bf9494c0781">xnheap_destroy</a> (xnheap_t *heap, void(*flushfn)(xnheap_t *heap, void *extaddr, u_long extsize, void *cookie), void *cookie)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroys a memory heap.  <a href="#gf33cea7788162687767ca7c8c149f6ab"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#g3597e47e1e9752845db683d7e15b516f">xnheap_alloc</a> (xnheap_t *heap, u_long size)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroys a memory heap.  <a href="#g7ab506f024eda1d9030e1bf9494c0781"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#gaa8ae99881c9e6a4f8b56aa79f983bdb">xnheap_alloc</a> (xnheap_t *heap, u_long size)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a memory block from a memory heap.  <a href="#g3597e47e1e9752845db683d7e15b516f"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a memory block from a memory heap.  <a href="#gaa8ae99881c9e6a4f8b56aa79f983bdb"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#gcb0151aaff9d56134c7c217bfa67c816">xnheap_test_and_free</a> (xnheap_t *heap, void *block, int(*ckfn)(void *block))</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Test and release a memory block to a memory heap.  <a href="#gcb0151aaff9d56134c7c217bfa67c816"></a><br></td></tr>
@@ -76,18 +76,18 @@ The data structures hierarchy is as follows:<p>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#g4842cb75faa41b2cc3ce8e44cf0beade">xnheap_extend</a> (xnheap_t *heap, void *extaddr, u_long extsize)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Extend a memory heap.  <a href="#g4842cb75faa41b2cc3ce8e44cf0beade"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#g80c1118253d0ea05dda12cef37ef8d7c">xnheap_schedule_free</a> (xnheap_t *heap, void *block, xnholder_t *link)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#g548f69835e12bf259b6d417b11338a11">xnheap_schedule_free</a> (xnheap_t *heap, void *block, xnholder_t *link)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Schedule a memory block for release.  <a href="#g80c1118253d0ea05dda12cef37ef8d7c"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Schedule a memory block for release.  <a href="#g548f69835e12bf259b6d417b11338a11"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="g3597e47e1e9752845db683d7e15b516f"></a><!-- doxytag: member="heap.c::xnheap_alloc" ref="g3597e47e1e9752845db683d7e15b516f" args="(xnheap_t *heap, u_long size)" --><p>
+<a class="anchor" name="gaa8ae99881c9e6a4f8b56aa79f983bdb"></a><!-- doxytag: member="heap.c::xnheap_alloc" ref="gaa8ae99881c9e6a4f8b56aa79f983bdb" args="(xnheap_t *heap, u_long size)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void * xnheap_alloc           </td>
+          <td class="md" nowrap valign="top">void* xnheap_alloc           </td>
           <td class="md" valign="top">(&nbsp;</td>
           <td class="md" nowrap valign="top">xnheap_t *&nbsp;</td>
           <td class="mdname" nowrap> <em>heap</em>, </td>
@@ -133,13 +133,13 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="gf33cea7788162687767ca7c8c149f6ab"></a><!-- doxytag: member="heap.c::xnheap_destroy" ref="gf33cea7788162687767ca7c8c149f6ab" args="(xnheap_t *heap, void(*flushfn)(xnheap_t *heap, void *extaddr, u_long extsize, void *cookie), void *cookie)" --><p>
+<a class="anchor" name="g7ab506f024eda1d9030e1bf9494c0781"></a><!-- doxytag: member="heap.c::xnheap_destroy" ref="g7ab506f024eda1d9030e1bf9494c0781" args="(xnheap_t *heap, void(*flushfn)(xnheap_t *heap, void *extaddr, u_long extsize, void *cookie), void *cookie)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void xnheap_destroy           </td>
+          <td class="md" nowrap valign="top">int xnheap_destroy           </td>
           <td class="md" valign="top">(&nbsp;</td>
           <td class="md" nowrap valign="top">xnheap_t *&nbsp;</td>
           <td class="mdname" nowrap> <em>heap</em>, </td>
@@ -239,7 +239,7 @@ Add a new extent to an existing memory heap.<p>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>heap</em>&nbsp;</td><td>The descriptor address of the heap to add an extent to.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>extaddr</em>&nbsp;</td><td>The address of the extent memory.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>extsize</em>&nbsp;</td><td>The size of the extent memory (in bytes). In the current implementation, this size must match the one of the initial extent passed to <a class="el" href="group__heap.html#g0cafba0b8abdff03dc1d210932f2b394">xnheap_init()</a>.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>extsize</em>&nbsp;</td><td>The size of the extent memory (in bytes). In the current implementation, this size must match the one of the initial extent passed to <a class="el" href="group__heap.html#gd65beaf18754ad1f85c479eaf9219042">xnheap_init()</a>.</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success, or -EINVAL is returned if <em>extsize</em> differs from the initial extent's size.</dd></dl>
@@ -309,13 +309,13 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="g0cafba0b8abdff03dc1d210932f2b394"></a><!-- doxytag: member="heap.c::xnheap_init" ref="g0cafba0b8abdff03dc1d210932f2b394" args="(xnheap_t *heap, void *heapaddr, u_long heapsize, u_long pagesize)" --><p>
+<a class="anchor" name="gd65beaf18754ad1f85c479eaf9219042"></a><!-- doxytag: member="heap.c::xnheap_init" ref="gd65beaf18754ad1f85c479eaf9219042" args="(xnheap_t *heap, void *heapaddr, u_long heapsize, u_long pagesize)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">xnheap_init           </td>
+          <td class="md" nowrap valign="top">int xnheap_init           </td>
           <td class="md" valign="top">(&nbsp;</td>
           <td class="md" nowrap valign="top">xnheap_t *&nbsp;</td>
           <td class="mdname" nowrap> <em>heap</em>, </td>
@@ -380,13 +380,13 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="g80c1118253d0ea05dda12cef37ef8d7c"></a><!-- doxytag: member="heap.c::xnheap_schedule_free" ref="g80c1118253d0ea05dda12cef37ef8d7c" args="(xnheap_t *heap, void *block, xnholder_t *link)" --><p>
+<a class="anchor" name="g548f69835e12bf259b6d417b11338a11"></a><!-- doxytag: member="heap.c::xnheap_schedule_free" ref="g548f69835e12bf259b6d417b11338a11" args="(xnheap_t *heap, void *block, xnholder_t *link)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">int xnheap_schedule_free           </td>
+          <td class="md" nowrap valign="top">void xnheap_schedule_free           </td>
           <td class="md" valign="top">(&nbsp;</td>
           <td class="md" nowrap valign="top">xnheap_t *&nbsp;</td>
           <td class="mdname" nowrap> <em>heap</em>, </td>
@@ -497,7 +497,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 20:33:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

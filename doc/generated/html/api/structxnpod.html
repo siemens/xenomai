@@ -67,6 +67,8 @@ The source of all Xenomai magic.
 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#26e8700e411f5292fa5372aa2faa28f6">refcnt</a></td></tr>
 
+<tr><td class="memItemLeft" nowrap align="right" valign="top">atomic_counter_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#9a61219dd75a7b26024a79a73bce6540">timerlck</a></td></tr>
+
 <tr><td class="memItemLeft" nowrap>struct {</td></tr>
 
 <tr><td class="memItemLeft" nowrap>&nbsp;&nbsp;&nbsp;void(*&nbsp;&nbsp;&nbsp;<a class="el" href="structxnpod.html#160c040697a38ceaa31c92746a6d5f04">settime</a> )(xntbase_t *tbase, xnticks_t newtime)</td></tr>
@@ -401,6 +403,29 @@ All existing threads.     </td>
 Modification counter of threadq.     </td>
   </tr>
 </table>
+<a class="anchor" name="9a61219dd75a7b26024a79a73bce6540"></a><!-- doxytag: member="xnpod::timerlck" ref="9a61219dd75a7b26024a79a73bce6540" args="" --><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">atomic_counter_t <a class="el" href="structxnpod.html#9a61219dd75a7b26024a79a73bce6540">xnpod::timerlck</a>          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Timer lock depth.     </td>
+  </tr>
+</table>
 <a class="anchor" name="1bb945357ab40191bbd55252dc2218dc"></a><!-- doxytag: member="xnpod::tstartq" ref="1bb945357ab40191bbd55252dc2218dc" args="" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
@@ -472,7 +497,7 @@ Unloading hook.     </td>
 </table>
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>include/nucleus/<a class="el" href="pod_8h-source.html">pod.h</a></ul>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 20:33:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

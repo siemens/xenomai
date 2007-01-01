@@ -35,7 +35,7 @@ This program is free software; you can redistribute it and/or modify it under th
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
-<code>#include &lt;nucleus/timer.h&gt;</code><br>
+<code>#include &lt;<a class="el" href="include_2nucleus_2timer_8h-source.html">nucleus/timer.h</a>&gt;</code><br>
 <code>#include &lt;nucleus/synch.h&gt;</code><br>
 <code>#include &lt;<a class="el" href="native_2types_8h-source.html">native/types.h</a>&gt;</code><br>
 
@@ -43,12 +43,9 @@ You should have received a copy of the GNU General Public License along with thi
 <a href="alarm_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#g53e7f8400068253d2df58e6b4a7978ae">rt_alarm_create</a> (RT_ALARM *alarm, const char *name)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#g22353f79379121bbebfa0e72bbde5028">rt_alarm_create</a> (RT_ALARM *alarm, const char *name, rt_alarm_t handler, void *cookie)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create an alarm object from user-space.  <a href="group__alarm.html#g53e7f8400068253d2df58e6b4a7978ae"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#g6c0caadae03541db8a46751d290c0d76">rt_alarm_wait</a> (RT_ALARM *alarm)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next alarm shot.  <a href="group__alarm.html#g6c0caadae03541db8a46751d290c0d76"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create an alarm object from kernel space.  <a href="group__alarm.html#g22353f79379121bbebfa0e72bbde5028"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alarm.html#gf00e05b47b1183816480e270d326f9ac">rt_alarm_delete</a> (RT_ALARM *alarm)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete an alarm.  <a href="group__alarm.html#gf00e05b47b1183816480e270d326f9ac"></a><br></td></tr>
@@ -62,7 +59,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about an alarm.  <a href="group__alarm.html#g25c4556b6e2f6fa220a734bf83c4c374"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 20:33:17 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

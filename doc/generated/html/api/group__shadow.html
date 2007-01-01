@@ -224,7 +224,7 @@ Switch a shadow thread back to the Linux domain.
 <p>
 <p><b>For internal use only.</b></p>
 <p>
-This service yields the control of the running shadow back to Linux. This is obtained by suspending the shadow and scheduling a wake up call for the mated user task inside the Linux domain. The Linux task will resume on return from xnpod_suspend_thread() on behalf of the root thread.<p>
+This service yields the control of the running shadow back to Linux. This is obtained by suspending the shadow and scheduling a wake up call for the mated user task inside the Linux domain. The Linux task will resume on return from <a class="el" href="group__pod.html#g61d22a7f0c5fafc26971b19177ed4a03">xnpod_suspend_thread()</a> on behalf of the root thread.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>notify</em>&nbsp;</td><td>A boolean flag indicating whether threads monitored from secondary mode switches should be sent a SIGXCPU signal. For instance, some internal operations like task exit should not trigger such signal.</td></tr>
@@ -241,7 +241,7 @@ Rescheduling: always.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 20:33:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

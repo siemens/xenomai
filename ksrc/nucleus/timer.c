@@ -161,8 +161,7 @@ xnticks_t xntimer_get_raw_expiry_aperiodic(xntimer_t *timer)
  * @internal
  * \fn void xntimer_tick_aperiodic(void)
  *
- * \brief Process a timer tick in aperiodic mode for the master time
- * base.
+ * \brief Process a timer tick for the aperiodic master time base.
  *
  * This routine informs all active timers that the clock has been
  * updated by processing the outstanding timer list. Elapsed timer
@@ -314,19 +313,23 @@ static void xntimer_move_periodic(xntimer_t *timer)
 
 /*!
  * @internal
- * \fn void xntimer_tick_periodic(void)
+ * \fn void xntimer_tick_periodic(xntimer_t *mtimer)
  *
- * \brief Process a timer tick in periodic mode. The periodic timer
- * tick is cascaded from a software timer managed from the master
- * aperiodic time base; in other words, periodic timing is emulated by
- * software timers running in aperiodic timing mode. There may be
- * several concurrent periodic time bases (albeit a single aperiodic
- * time base - i.e. the master one called "nktbase" - may exist at any
- * point in time).
+ * \brief Process a timer tick for a slave periodic time base.
+ *
+ * The periodic timer tick is cascaded from a software timer managed
+ * from the master aperiodic time base; in other words, periodic
+ * timing is emulated by software timers running in aperiodic timing
+ * mode. There may be several concurrent periodic time bases (albeit a
+ * single aperiodic time base - i.e. the master one called "nktbase" -
+ * may exist at any point in time).
  *
  * This routine informs all active timers that the clock has been
  * updated by processing the timer wheel. Elapsed timer actions will
  * be fired.
+ *
+ * @param mtimer The address of the cascading timer running in the
+ * master time base which announced the tick.
  *
  * Environments:
  *
@@ -339,9 +342,9 @@ static void xntimer_move_periodic(xntimer_t *timer)
  * @note Only active timers are inserted into the timer wheel.
  */
 
-void xntimer_tick_periodic(xntimer_t *__timer)
+void xntimer_tick_periodic(xntimer_t *mtimer)
 {
-	xntslave_t *slave = timer2slave(__timer);
+	xntslave_t *slave = timer2slave(mtimer);
 	xnsched_t *sched = xnpod_current_sched();
 	xntbase_t *base = &slave->base;
 	xntlholder_t *holder;

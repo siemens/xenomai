@@ -96,7 +96,7 @@
 <a name="l00109"></a><a class="code" href="structrt__task__mcb.html#db07bafe0574adca45ef82f7c8d5a4d9">00109</a>     size_t <a class="code" href="structrt__task__mcb.html#db07bafe0574adca45ef82f7c8d5a4d9">size</a>;  
 <a name="l00111"></a>00111 } <a class="code" href="structrt__task__mcb.html">RT_TASK_MCB</a>;
 <a name="l00112"></a>00112 
-<a name="l00113"></a>00113 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_SIM__)</span>
+<a name="l00113"></a>00113 <span class="preprocessor">#if (defined(__KERNEL__) || defined(__XENO_SIM__)) &amp;&amp; !defined(DOXYGEN_CPP)</span>
 <a name="l00114"></a>00114 <span class="preprocessor"></span>
 <a name="l00115"></a>00115 <span class="preprocessor">#define XENO_TASK_MAGIC 0x55550101</span>
 <a name="l00116"></a>00116 <span class="preprocessor"></span>
@@ -310,7 +310,7 @@
 <a name="l00324"></a>00324 <span class="preprocessor">#endif</span>
 <a name="l00325"></a>00325 <span class="preprocessor"></span>
 <a name="l00326"></a>00326 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_TASK_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 20:33:17 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

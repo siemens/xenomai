@@ -47,7 +47,7 @@ typedef struct rt_event_placeholder {
     xnhandle_t opaque;
 } RT_EVENT_PLACEHOLDER;
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#if (defined(__KERNEL__) || defined(__XENO_SIM__)) && !defined(DOXYGEN_CPP)
 
 #define XENO_EVENT_MAGIC 0x55550404
 

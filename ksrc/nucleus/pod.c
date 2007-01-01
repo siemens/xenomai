@@ -3031,7 +3031,7 @@ int xnpod_trap_fault(void *fltinfo)
  * process of the associated slave time base, which eventually fires
  * the elapsed software timers controlled by the latter.
  *
- * Xenomai always controls the underlying timer hardware in a
+ * Xenomai always controls the underlying hardware timer in a
  * tick-less fashion, also known as the oneshot mode. The
  * xnpod_enable_timesource() service configures the timer chip as
  * needed, and activates the master time base.
@@ -3139,7 +3139,7 @@ int xnpod_enable_timesource(void)
  * \fn void xnpod_disable_timesource(void)
  * \brief Stop the core time source.
  *
- * Releases the timer hardware, and deactivates the master time base.
+ * Releases the hardware timer, and deactivates the master time base.
  *
  * Environments:
  *

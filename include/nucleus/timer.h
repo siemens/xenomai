@@ -1,5 +1,6 @@
-/*
- * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+/**
+ * @file
+ * @note Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -15,6 +16,8 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
+ *
+ * \ingroup timer
  */
 
 #ifndef _XENO_NUCLEUS_TIMER_H
@@ -307,9 +310,9 @@ void xntimer_destroy(xntimer_t *timer);
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 
 /*!
- * \fn void xntimer_start(xntimer_t *timer,xnticks_t value,xnticks_t interval,
+ * @fn void xntimer_start(xntimer_t *timer,xnticks_t value,xnticks_t interval,
  *                        int mode)
- * \brief Arm a timer.
+ * @brief Arm a timer.
  *
  * Activates a timer so that the associated timeout handler will be
  * fired after each expiration time. A timer can be either periodic or
@@ -318,8 +321,6 @@ void xntimer_destroy(xntimer_t *timer);
  * call to xntimer_init().
  *
  * @param timer The address of a valid timer descriptor.
- *
- * @param base The address of the related time base.
  *
  * @param value The date of the initial timer shot, expressed in clock ticks
  * (see note).

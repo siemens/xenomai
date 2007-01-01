@@ -60,7 +60,7 @@ Alarms are general watchdog timers. Any Xenomai task may create any number of al
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next alarm shot.  <a href="#g6c0caadae03541db8a46751d290c0d76"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="g53e7f8400068253d2df58e6b4a7978ae"></a><!-- doxytag: member="alarm.h::rt_alarm_create" ref="g53e7f8400068253d2df58e6b4a7978ae" args="(RT_ALARM *alarm, const char *name)" --><p>
+<a class="anchor" name="g53e7f8400068253d2df58e6b4a7978ae"></a><!-- doxytag: member="alarm.c::rt_alarm_create" ref="g53e7f8400068253d2df58e6b4a7978ae" args="(RT_ALARM *alarm, const char *name)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -227,7 +227,7 @@ Rescheduling: possible.<p>
 <p>
 Delete an alarm. 
 <p>
-Destroy an alarm. An alarm exists in the system since <a class="el" href="group__alarm.html#g53e7f8400068253d2df58e6b4a7978ae">rt_alarm_create()</a> has been called to create it, so this service must be called in order to destroy it afterwards.<p>
+Destroy an alarm. An alarm exists in the system since <a class="el" href="group__alarm.html#g22353f79379121bbebfa0e72bbde5028">rt_alarm_create()</a> has been called to create it, so this service must be called in order to destroy it afterwards.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>alarm</em>&nbsp;</td><td>The descriptor address of the affected alarm.</td></tr>
@@ -352,7 +352,7 @@ Rescheduling: never.     </td>
 <p>
 Start an alarm. 
 <p>
-Program the trigger date of an alarm object. An alarm can be either periodic or oneshot, depending on the reload value passed to this routine. The given alarm must have been previously created by a call to <a class="el" href="group__alarm.html#g53e7f8400068253d2df58e6b4a7978ae">rt_alarm_create()</a>.<p>
+Program the trigger date of an alarm object. An alarm can be either periodic or oneshot, depending on the reload value passed to this routine. The given alarm must have been previously created by a call to <a class="el" href="group__alarm.html#g22353f79379121bbebfa0e72bbde5028">rt_alarm_create()</a>.<p>
 Alarm handlers are always called on behalf of Xenomai's internal timer tick handler, so the Xenomai services which can be called from such handlers are restricted to the set of services available on behalf of any ISR.<p>
 This service overrides any previous setup of the expiry date and reload interval for the given alarm.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
@@ -424,7 +424,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="g6c0caadae03541db8a46751d290c0d76"></a><!-- doxytag: member="alarm.h::rt_alarm_wait" ref="g6c0caadae03541db8a46751d290c0d76" args="(RT_ALARM *alarm)" --><p>
+<a class="anchor" name="g6c0caadae03541db8a46751d290c0d76"></a><!-- doxytag: member="alarm.c::rt_alarm_wait" ref="g6c0caadae03541db8a46751d290c0d76" args="(RT_ALARM *alarm)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -478,7 +478,7 @@ This service can be called from:<p>
 Rescheduling: always.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 20:33:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

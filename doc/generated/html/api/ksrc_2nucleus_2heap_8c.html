@@ -40,18 +40,23 @@ You should have received a copy of the GNU General Public License along with Xen
 <code>#include &lt;nucleus/thread.h&gt;</code><br>
 <code>#include &lt;nucleus/heap.h&gt;</code><br>
 <code>#include &lt;asm/xenomai/bits/heap.h&gt;</code><br>
+<code>#include &lt;asm/io.h&gt;</code><br>
+<code>#include &lt;linux/miscdevice.h&gt;</code><br>
+<code>#include &lt;linux/device.h&gt;</code><br>
+<code>#include &lt;linux/vmalloc.h&gt;</code><br>
+<code>#include &lt;linux/mm.h&gt;</code><br>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#g0cafba0b8abdff03dc1d210932f2b394">xnheap_init</a> (xnheap_t *heap, void *heapaddr, u_long heapsize, u_long pagesize)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#gd65beaf18754ad1f85c479eaf9219042">xnheap_init</a> (xnheap_t *heap, void *heapaddr, u_long heapsize, u_long pagesize)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a memory heap.  <a href="group__heap.html#g0cafba0b8abdff03dc1d210932f2b394"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#gf33cea7788162687767ca7c8c149f6ab">xnheap_destroy</a> (xnheap_t *heap, void(*flushfn)(xnheap_t *heap, void *extaddr, u_long extsize, void *cookie), void *cookie)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a memory heap.  <a href="group__heap.html#gd65beaf18754ad1f85c479eaf9219042"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#g7ab506f024eda1d9030e1bf9494c0781">xnheap_destroy</a> (xnheap_t *heap, void(*flushfn)(xnheap_t *heap, void *extaddr, u_long extsize, void *cookie), void *cookie)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroys a memory heap.  <a href="group__heap.html#gf33cea7788162687767ca7c8c149f6ab"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#g3597e47e1e9752845db683d7e15b516f">xnheap_alloc</a> (xnheap_t *heap, u_long size)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroys a memory heap.  <a href="group__heap.html#g7ab506f024eda1d9030e1bf9494c0781"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#gaa8ae99881c9e6a4f8b56aa79f983bdb">xnheap_alloc</a> (xnheap_t *heap, u_long size)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a memory block from a memory heap.  <a href="group__heap.html#g3597e47e1e9752845db683d7e15b516f"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a memory block from a memory heap.  <a href="group__heap.html#gaa8ae99881c9e6a4f8b56aa79f983bdb"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#gcb0151aaff9d56134c7c217bfa67c816">xnheap_test_and_free</a> (xnheap_t *heap, void *block, int(*ckfn)(void *block))</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Test and release a memory block to a memory heap.  <a href="group__heap.html#gcb0151aaff9d56134c7c217bfa67c816"></a><br></td></tr>
@@ -61,11 +66,11 @@ You should have received a copy of the GNU General Public License along with Xen
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#g4842cb75faa41b2cc3ce8e44cf0beade">xnheap_extend</a> (xnheap_t *heap, void *extaddr, u_long extsize)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Extend a memory heap.  <a href="group__heap.html#g4842cb75faa41b2cc3ce8e44cf0beade"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#g80c1118253d0ea05dda12cef37ef8d7c">xnheap_schedule_free</a> (xnheap_t *heap, void *block, xnholder_t *link)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#g548f69835e12bf259b6d417b11338a11">xnheap_schedule_free</a> (xnheap_t *heap, void *block, xnholder_t *link)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Schedule a memory block for release.  <a href="group__heap.html#g80c1118253d0ea05dda12cef37ef8d7c"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Schedule a memory block for release.  <a href="group__heap.html#g548f69835e12bf259b6d417b11338a11"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 20:33:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

@@ -60,21 +60,21 @@ Xenomai tasks open their side of the pipe using the <a class="el" href="group__p
 <tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#gd8edc920499d2c5c5d821ee7b9fa2bcd">rt_pipe_stream</a> (RT_PIPE *pipe, const void *buf, size_t size)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stream bytes to a pipe.  <a href="#gd8edc920499d2c5c5d821ee7b9fa2bcd"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">RT_PIPE_MSG *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#g62bb4c8e2133cb028035c07e310f7e07">rt_pipe_alloc</a> (RT_PIPE *pipe, size_t size)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">RT_PIPE_MSG *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#g40f294bf6254d2e1b66b8b6b400fc2e5">rt_pipe_alloc</a> (RT_PIPE *pipe, size_t size)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a message pipe buffer.  <a href="#g62bb4c8e2133cb028035c07e310f7e07"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a message pipe buffer.  <a href="#g40f294bf6254d2e1b66b8b6b400fc2e5"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#g8face1c57df99cf43b029b3e3b6a05c6">rt_pipe_free</a> (RT_PIPE *pipe, RT_PIPE_MSG *msg)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free a message pipe buffer.  <a href="#g8face1c57df99cf43b029b3e3b6a05c6"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="g62bb4c8e2133cb028035c07e310f7e07"></a><!-- doxytag: member="pipe.c::rt_pipe_alloc" ref="g62bb4c8e2133cb028035c07e310f7e07" args="(RT_PIPE *pipe, size_t size)" --><p>
+<a class="anchor" name="g40f294bf6254d2e1b66b8b6b400fc2e5"></a><!-- doxytag: member="pipe.c::rt_pipe_alloc" ref="g40f294bf6254d2e1b66b8b6b400fc2e5" args="(RT_PIPE *pipe, size_t size)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">RT_PIPE_MSG * rt_pipe_alloc           </td>
+          <td class="md" nowrap valign="top">RT_PIPE_MSG* rt_pipe_alloc           </td>
           <td class="md" valign="top">(&nbsp;</td>
           <td class="md" nowrap valign="top">RT_PIPE *&nbsp;</td>
           <td class="mdname" nowrap> <em>pipe</em>, </td>
@@ -304,7 +304,7 @@ This service releases a message buffer returned by <a class="el" href="group__pi
     <tr><td valign="top"></td><td valign="top"><em>msg</em>&nbsp;</td><td>The address of the message buffer to free.</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success, or -EINVAL if <em>msg</em> is not a valid message buffer previously allocated by the <a class="el" href="group__pipe.html#g62bb4c8e2133cb028035c07e310f7e07">rt_pipe_alloc()</a> service.</dd></dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success, or -EINVAL if <em>msg</em> is not a valid message buffer previously allocated by the <a class="el" href="group__pipe.html#g40f294bf6254d2e1b66b8b6b400fc2e5">rt_pipe_alloc()</a> service.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -547,8 +547,8 @@ This service writes a complete message to be received from the associated specia
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>pipe</em>&nbsp;</td><td>The descriptor address of the pipe to send to.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>msg</em>&nbsp;</td><td>The address of the message to be sent. The message space must have been allocated using the <a class="el" href="group__pipe.html#g62bb4c8e2133cb028035c07e310f7e07">rt_pipe_alloc()</a> service. Once passed to <a class="el" href="group__pipe.html#gf40b20cad1dcd7bedcda72beaa16c057">rt_pipe_send()</a>, the memory pointed to by <em>msg</em> is no more under the control of the application code and thus should not be referenced by it anymore; deallocation of this memory will be automatically handled as needed. As a special exception, <em>msg</em> can be NULL and will not be dereferenced if <em>size</em> is zero.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>size</em>&nbsp;</td><td>The size in bytes of the message (payload data only). Zero is a valid value, in which case the service returns immediately without sending any message. This parameter allows you to actually send less data than you reserved using the <a class="el" href="group__pipe.html#g62bb4c8e2133cb028035c07e310f7e07">rt_pipe_alloc()</a> service, which may be the case if you did not know how much space you needed at the time of allocation. In all other cases it may be more convenient to just pass P_MSGSIZE(msg).</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>msg</em>&nbsp;</td><td>The address of the message to be sent. The message space must have been allocated using the <a class="el" href="group__pipe.html#g40f294bf6254d2e1b66b8b6b400fc2e5">rt_pipe_alloc()</a> service. Once passed to <a class="el" href="group__pipe.html#gf40b20cad1dcd7bedcda72beaa16c057">rt_pipe_send()</a>, the memory pointed to by <em>msg</em> is no more under the control of the application code and thus should not be referenced by it anymore; deallocation of this memory will be automatically handled as needed. As a special exception, <em>msg</em> can be NULL and will not be dereferenced if <em>size</em> is zero.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>size</em>&nbsp;</td><td>The size in bytes of the message (payload data only). Zero is a valid value, in which case the service returns immediately without sending any message. This parameter allows you to actually send less data than you reserved using the <a class="el" href="group__pipe.html#g40f294bf6254d2e1b66b8b6b400fc2e5">rt_pipe_alloc()</a> service, which may be the case if you did not know how much space you needed at the time of allocation. In all other cases it may be more convenient to just pass P_MSGSIZE(msg).</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>A set of flags affecting the operation:</td></tr>
   </table>
 </dl>
@@ -741,7 +741,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:19 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 20:33:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

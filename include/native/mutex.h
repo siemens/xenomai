@@ -41,7 +41,7 @@ typedef struct rt_mutex_placeholder {
 	xnhandle_t opaque;
 } RT_MUTEX_PLACEHOLDER;
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#if (defined(__KERNEL__) || defined(__XENO_SIM__)) && !defined(DOXYGEN_CPP)
 
 #define XENO_MUTEX_MAGIC 0x55550505
 
