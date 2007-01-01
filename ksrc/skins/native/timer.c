@@ -197,7 +197,7 @@ int rt_timer_inquire(RT_TIMER_INFO *info)
 
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 	if (period != TM_ONESHOT)
-		info->date = xnpod_get_time(__native_tbase);
+		info->date = xntbase_get_time(__native_tbase);
 	else
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 		/* In aperiodic mode, our idea of time is the same as the
@@ -233,7 +233,7 @@ int rt_timer_inquire(RT_TIMER_INFO *info)
 
 RTIME rt_timer_read(void)
 {
-	return xnpod_get_time(__native_tbase);
+	return xntbase_get_time(__native_tbase);
 }
 
 /*!

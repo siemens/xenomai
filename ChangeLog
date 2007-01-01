@@ -1,3 +1,9 @@
+2007-01-02  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/timebase.c (xntbase_set_time, xntbase_get_time):
+	Move former xnpod_set_time, xnpod_get_time routines to the time
+	base services class.
+
 2006-12-31  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc: Introduce time bases to allow skins to be clocked
@@ -3978,7 +3984,7 @@
 	* skins/posix/syscall.c, skins/posix/lib/clock.c: Allow
 	CLOCK_REALTIME to be used. Fix error handling.
 
-	* nucleus/pod.c (xnpod_set_time): Do not assume that
+	* nucleus/pod.c (xntbase_set_time): Do not assume that
 	nkpod->wallclock_offset is 0.
 
 2005-08-08  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
@@ -4089,7 +4095,7 @@
 
 	* nucleus/pod.c, nucleus/timer.c: Replace nkpod->wallclock with
 	nkpod->wallclock_offset initialiazed using Linux time base, so
-	that xnpod_get_time() use the same time base as Linux.
+	that xntbase_get_time() use the same time base as Linux.
 
 2005-07-31  Philippe Gerum  <rpm@xenomai.org>
 

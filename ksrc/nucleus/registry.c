@@ -699,7 +699,7 @@ int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	stime = xnpod_get_time(tbase);
+	stime = xntbase_get_time(tbase);
 
 	for (;;) {
 		object = registry_hash_find(key);
@@ -715,7 +715,7 @@ int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 		}
 
 		if (timeout != XN_INFINITE) {
-			xnticks_t now = xnpod_get_time(tbase);
+			xnticks_t now = xntbase_get_time(tbase);
 
 			if (stime + timeout >= now)
 				break;

@@ -301,7 +301,7 @@ u_long tm_evwhen(u_long date,
 	if (err != SUCCESS)
 		return err;
 
-	now = xnpod_get_time(psos_tbase);
+	now = xntbase_get_time(psos_tbase);
 
 	if (when <= now)
 		return ERR_TOOLATE;
@@ -325,7 +325,7 @@ u_long tm_wkwhen(u_long date, u_long time, u_long ticks)
 	if (err != SUCCESS)
 		return err;
 
-	now = xnpod_get_time(psos_tbase);
+	now = xntbase_get_time(psos_tbase);
 
 	if (when <= now)
 		return ERR_TOOLATE;
@@ -343,7 +343,7 @@ u_long tm_get(u_long *date, u_long *time, u_long *ticks)
 	if (!xntbase_timeset_p(psos_tbase))
 		return ERR_NOTIME;	/* Must call tm_set() first. */
 
-	tm_ticks_to_date(date, time, ticks, xnpod_get_time(psos_tbase));
+	tm_ticks_to_date(date, time, ticks, xntbase_get_time(psos_tbase));
 
 	return SUCCESS;
 }

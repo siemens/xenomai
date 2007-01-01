@@ -156,7 +156,7 @@ static inline xnticks_t ts2ticks_ceil(const struct timespec *ts)
 static inline xnticks_t clock_get_ticks(clockid_t clock_id)
 {
     if(clock_id == CLOCK_REALTIME)
-        return xnpod_get_time(pse51_tbase);
+        return xntbase_get_time(pse51_tbase);
     else
         return xntbase_ns2ticks(pse51_tbase, xnpod_get_cpu_time());
 }

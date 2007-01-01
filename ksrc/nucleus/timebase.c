@@ -53,6 +53,7 @@
 
 #include <nucleus/pod.h>
 #include <nucleus/timer.h>
+#include <nucleus/ltt.h>
 
 DECLARE_XNQUEUE(nktimebaseq);
 
@@ -66,8 +67,8 @@ DECLARE_XNQUEUE(nktimebaseq);
  * information to real-time skins, by which they may operate either in
  * aperiodic or periodic mode, possibly according to distinct clock
  * frequencies in the latter case. This abstraction is required in
- * order to support several RTOS emulator running concurrently, which
- * exhibit different clocking policies and/or period.
+ * order to support several RTOS emulators running concurrently, which
+ * may exhibit different clocking policies and/or period.
  *
  * Once allocated, a time base may be attached to all software timers
  * created directly or indirectly by a given skin, and influences all
@@ -106,6 +107,8 @@ DECLARE_XNQUEUE(nktimebaseq);
  * This service can be called from:
  *
  * - Kernel module initialization code
+ *
+ * Rescheduling: never.
  *
  * @note Any periodic time base allocated by a real-time skin must be
  * released by a call to xntbase_free() before the kernel module
@@ -166,6 +169,8 @@ int xntbase_alloc(const char *name, u_long period, xntbase_t **basep)
  *
  * - Kernel module initialization/cleanup code
  *
+ * Rescheduling: never.
+ *
  * @note Requests to free the master time base are silently caught and
  * discarded; in such a case, outstanding aperiodic timers are left
  * untouched.
@@ -210,6 +215,8 @@ void xntbase_free(xntbase_t *base)
  * - Kernel module initialization code
  * - Kernel-based task
  * - User-space task
+ *
+ * Rescheduling: never.
  *
  * @note Requests to update the master time base are silently caught
  * and discarded. The master time base has a fixed aperiodic policy
@@ -277,6 +284,8 @@ int xntbase_update(xntbase_t *base, u_long period)
  * This service can be called from:
  *
  * - Kernel module initialization code
+ *
+ * Rescheduling: never.
  */
 
 int xntbase_switch(const char *name, u_long period, xntbase_t **basep)
@@ -333,6 +342,8 @@ int xntbase_switch(const char *name, u_long period, xntbase_t **basep)
  * - Kernel-based task
  * - User-space task
  *
+ * Rescheduling: never.
+ *
  * @note Requests to enable the master time base are silently caught
  * and discarded; only the internal service xnpod_enable_timesource()
  * is allowed to start the latter. The master time base remains
@@ -357,6 +368,9 @@ void xntbase_start(xntbase_t *base)
  * Outstanding timers attached to the stopped time base are immediated
  * disarmed.
  *
+ * Stopping a time base also invalidates its clock
+ * setting. xntbase_set_time() should be called anew to reset it.
+ *
  * @param base The address of the time base descriptor to stop.
  *
  * Environments:
@@ -379,7 +393,7 @@ void xntbase_stop(xntbase_t *base)
 		return;
 
 	xntslave_stop(base2slave(base));
-	base->status &= ~XNTBRUN;
+	base->status &= ~(XNTBRUN | XNTBSET);
 }
 
 /*!
@@ -406,6 +420,8 @@ void xntbase_stop(xntbase_t *base)
  * This service can be called from:
  *
  * - Interrupt context only.
+ *
+ * Rescheduling: never.
  */
 
 void xntbase_tick(xntbase_t *base)
@@ -435,6 +451,42 @@ EXPORT_SYMBOL(xntbase_tick);
 
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
+/*! 
+ * \fn void xntbase_set_time(xntbase_t *base, xnticks_t newtime)
+ * \brief Set the clock time for a given time base.
+ *
+ * Each time base tracks the current time as a monotonously increasing
+ * count of ticks since the epoch. The epoch is initially the same as
+ * the underlying machine time. This service changes the epoch for the
+ * specified time base.
+ *
+ * @param base The address of the affected time base.
+ *
+ * @param newtime The new time to set for the specified time base.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: never.
+ */
+
+void xntbase_set_time(xntbase_t *base, xnticks_t newtime)
+{
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	base->wallclock_offset += newtime - xntbase_get_time(base);
+	__setbits(base->status, XNTBSET);
+	xnltt_log_event(xeno_ev_timeset, newtime);
+	xnlock_put_irqrestore(&nklock, s);
+}
+
 /* The master time base - the most precise one, aperiodic, always valid. */
 
 xntbase_t nktbase = {
@@ -448,6 +500,7 @@ xntbase_t nktbase = {
 	.name = "master"
 };
 
+EXPORT_SYMBOL(xntbase_set_time);
 EXPORT_SYMBOL(nktbase);
 
 /*@}*/

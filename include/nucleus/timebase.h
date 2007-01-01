@@ -1,4 +1,5 @@
-/*
+/**
+ * @file
  * @note Copyright (C) 2006,2007 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -227,6 +228,43 @@ static inline void xntbase_tick(xntbase_t *base)
 }
 
 #endif /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
+
+/*! 
+ * @fn xnticks_t xntbase_get_time(xntbase_t *base)
+ * @brief Get the clock time for a given time base.
+ *
+ * This service returns the (external) clock time as maintained by the
+ * specified time base. This value is adjusted with the wallclock
+ * offset as defined by xntbase_set_time().
+ *
+ * @param base The address of the time base to query.
+ *
+ * @return The current time (in jiffies) if the specified time base
+ * runs in periodic mode, or the machine time (converted to
+ * nanoseconds) as maintained by the hardware if @a base refers to the
+ * master time base.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: never.
+ */
+
+static inline xnticks_t xntbase_get_time(xntbase_t *base)
+{
+	/* Return an adjusted value of the monotonic time with the
+	   wallclock offset as defined in xntbase_set_time(). */
+	return xntbase_get_jiffies(base) + base->wallclock_offset;
+}
+
+void xntbase_set_time(xntbase_t *base,
+		      xnticks_t newtime);
 
 #ifdef __cplusplus
 }

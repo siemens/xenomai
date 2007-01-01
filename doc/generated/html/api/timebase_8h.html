@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
-<title>Xenomai API: ksrc/nucleus/timebase.c File Reference</title>
+<title>Xenomai API: include/nucleus/timebase.h File Reference</title>
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 <link href="tabs.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -27,16 +27,16 @@
     <li><a href="files.html"><span>File&nbsp;List</span></a></li>
     <li><a href="globals.html"><span>Globals</span></a></li>
   </ul></div>
-<h1>ksrc/nucleus/timebase.c File Reference</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
+<h1>include/nucleus/timebase.h File Reference</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 <dl compact><dt><b>Note:</b></dt><dd>Copyright (C) 2006,2007 Philippe Gerum &lt;<a href="mailto:rpm@xenomai.org">rpm@xenomai.org</a>&gt;.</dd></dl>
 Xenomai is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.<p>
 Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with Xenomai; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
-<code>#include &lt;<a class="el" href="pod_8h-source.html">nucleus/pod.h</a>&gt;</code><br>
-<code>#include &lt;<a class="el" href="include_2nucleus_2timer_8h-source.html">nucleus/timer.h</a>&gt;</code><br>
-<code>#include &lt;nucleus/ltt.h&gt;</code><br>
-<table border="0" cellpadding="0" cellspacing="0">
+<code>#include &lt;nucleus/queue.h&gt;</code><br>
+
+<p>
+<a href="timebase_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g44412f2f0a481d351695f540c1e4750a">xntbase_alloc</a> (const char *name, u_long period, xntbase_t **basep)</td></tr>
@@ -60,9 +60,55 @@ You should have received a copy of the GNU General Public License along with Xen
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g15896b6c498acdc5e2516ad0cc9df5ac">xntbase_tick</a> (xntbase_t *base)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Announce a clock tick to a time base.  <a href="group__timebase.html#g15896b6c498acdc5e2516ad0cc9df5ac"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static xnticks_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="timebase_8h.html#5246b53b5b2d1b11d4fab4312fd16fda">xntbase_get_time</a> (xntbase_t *base)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the clock time for a given time base.  <a href="#5246b53b5b2d1b11d4fab4312fd16fda"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g2429ebe0dcf2493211a93de41f154748">xntbase_set_time</a> (xntbase_t *base, xnticks_t newtime)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the clock time for a given time base.  <a href="group__timebase.html#g2429ebe0dcf2493211a93de41f154748"></a><br></td></tr>
+</table>
+<hr><h2>Function Documentation</h2>
+<a class="anchor" name="5246b53b5b2d1b11d4fab4312fd16fda"></a><!-- doxytag: member="timebase.h::xntbase_get_time" ref="5246b53b5b2d1b11d4fab4312fd16fda" args="(xntbase_t *base)" --><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">xnticks_t xntbase_get_time           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">xntbase_t *&nbsp;</td>
+          <td class="mdname1" valign="top" nowrap> <em>base</em>          </td>
+          <td class="md" valign="top">&nbsp;)&nbsp;</td>
+          <td class="md" nowrap><code> [inline, static]</code></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Get the clock time for a given time base. 
+<p>
+This service returns the (external) clock time as maintained by the specified time base. This value is adjusted with the wallclock offset as defined by <a class="el" href="group__timebase.html#g2429ebe0dcf2493211a93de41f154748">xntbase_set_time()</a>.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>base</em>&nbsp;</td><td>The address of the time base to query.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>The current time (in jiffies) if the specified time base runs in periodic mode, or the machine time (converted to nanoseconds) as maintained by the hardware if <em>base</em> refers to the master time base.</dd></dl>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
+<p>
+Rescheduling: never.     </td>
+  </tr>
 </table>
 <hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 00:09:06 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">

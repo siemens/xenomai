@@ -480,7 +480,7 @@ static inline void rtdm_context_unlock(struct rtdm_dev_context *context)
 /* --- clock services --- */
 static inline nanosecs_abs_t rtdm_clock_read(void)
 {
-    return xntbase_ticks2ns(rtdm_tbase, xnpod_get_time(rtdm_tbase));
+    return xntbase_ticks2ns(rtdm_tbase, xntbase_get_time(rtdm_tbase));
 }
 #endif /* !DOXYGEN_CPP */
 
@@ -920,7 +920,7 @@ typedef nanosecs_abs_t              rtdm_toseq_t;
 static inline void rtdm_toseq_init(rtdm_toseq_t *timeout_seq,
                                    nanosecs_rel_t timeout)
 {
-    *timeout_seq = xnpod_get_time(rtdm_tbase) + xntbase_ns2ticks(rtdm_tbase, timeout);
+    *timeout_seq = xntbase_get_time(rtdm_tbase) + xntbase_ns2ticks(rtdm_tbase, timeout);
 }
 #endif /* !DOXYGEN_CPP */
 
