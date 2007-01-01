@@ -246,7 +246,7 @@
 <a name="l00480"></a>00480 <span class="comment">/* --- clock services --- */</span>
 <a name="l00481"></a>00481 <span class="keyword">static</span> <span class="keyword">inline</span> <a class="code" href="group__rtdm.html#gd3b24c25feabadba465f8797d8c7fe27">nanosecs_abs_t</a> <a class="code" href="group__clock.html#g6cca1db0fd4c207ad92cdc9e9442afa5">rtdm_clock_read</a>(<span class="keywordtype">void</span>)
 <a name="l00482"></a>00482 {
-<a name="l00483"></a>00483     <span class="keywordflow">return</span> xnpod_ticks2ns(<a class="code" href="group__pod.html#gca4a7942f0e94d9f9cbd32b940cc2295">xnpod_get_time</a>());
+<a name="l00483"></a>00483     <span class="keywordflow">return</span> xntbase_ticks2ns(rtdm_tbase, <a class="code" href="group__pod.html#g928d7d13f1388f7ee26cdeaae97e75ab">xnpod_get_time</a>(rtdm_tbase));
 <a name="l00484"></a>00484 }
 <a name="l00485"></a>00485 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
 <a name="l00486"></a>00486 
@@ -396,7 +396,7 @@
 <a name="l00884"></a>00884     <span class="keywordflow">if</span> (period &lt; 0)
 <a name="l00885"></a>00885         period = 0;
 <a name="l00886"></a>00886     <span class="keywordflow">return</span> <a class="code" href="group__pod.html#ged5776a428e7c59b52b1da76f0d765fa">xnpod_set_thread_periodic</a>(task, XN_INFINITE,
-<a name="l00887"></a>00887                                      xnpod_ns2ticks(period));
+<a name="l00887"></a>00887                                      xntbase_ns2ticks(rtdm_tbase, period));
 <a name="l00888"></a>00888 }
 <a name="l00889"></a>00889 
 <a name="l00890"></a>00890 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#ge52cca97ebaf78eec2e31553a4dacd5e">rtdm_task_unblock</a>(rtdm_task_t *task)
@@ -432,7 +432,7 @@
 <a name="l00920"></a>00920 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g531ddf80690059302409f760bd7f14d4">rtdm_toseq_init</a>(rtdm_toseq_t *timeout_seq,
 <a name="l00921"></a>00921                                    <a class="code" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> timeout)
 <a name="l00922"></a>00922 {
-<a name="l00923"></a>00923     *timeout_seq = <a class="code" href="group__pod.html#gca4a7942f0e94d9f9cbd32b940cc2295">xnpod_get_time</a>() + xnpod_ns2ticks(timeout);
+<a name="l00923"></a>00923     *timeout_seq = <a class="code" href="group__pod.html#g928d7d13f1388f7ee26cdeaae97e75ab">xnpod_get_time</a>(rtdm_tbase) + xntbase_ns2ticks(rtdm_tbase, timeout);
 <a name="l00924"></a>00924 }
 <a name="l00925"></a>00925 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
 <a name="l00926"></a>00926 
@@ -634,7 +634,7 @@
 <a name="l01122"></a>01122                     rtdm_rt_handler_t handler);
 <a name="l01123"></a>01123 
 <a name="l01124"></a>01124 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DRIVER_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Dec 25 13:57:10 2006 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

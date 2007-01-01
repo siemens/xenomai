@@ -81,9 +81,9 @@ Generic Adeos-based hardware abstraction layer.
 
 <p>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#gc7888ef10953f2a7e9e5ed087047036d">rthal_timer_request</a> (void(*handler)(void), unsigned long nstick)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga0e33168157d12cd18c3ebf9d4014bca">rthal_timer_request</a> (void(*handler)(void))</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Grab the hardware timer.  <a href="#gc7888ef10953f2a7e9e5ed087047036d"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Grab the hardware timer.  <a href="#ga0e33168157d12cd18c3ebf9d4014bca"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#gf8da29c90939e5cffd640c240e79da3e">rthal_timer_release</a> (void)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release the hardware timer.  <a href="#gf8da29c90939e5cffd640c240e79da3e"></a><br></td></tr>
@@ -677,7 +677,7 @@ This service can be called from:<p>
 <p>
 Release the hardware timer. 
 <p>
-Releases the hardware timer, thus reverting the effect of a previous call to <a class="el" href="group__hal.html#gc7888ef10953f2a7e9e5ed087047036d">rthal_timer_request()</a>. In case the timer hardware is shared with Linux, a periodic setup suitable for the Linux kernel will be reset.<p>
+Releases the hardware timer, thus reverting the effect of a previous call to <a class="el" href="group__hal.html#ga0e33168157d12cd18c3ebf9d4014bca">rthal_timer_request()</a>. In case the timer hardware is shared with Linux, a periodic setup suitable for the Linux kernel will be reset.<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -685,7 +685,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="gc7888ef10953f2a7e9e5ed087047036d"></a><!-- doxytag: member="hal.c::rthal_timer_request" ref="gc7888ef10953f2a7e9e5ed087047036d" args="(void(*handler)(void), unsigned long nstick)" --><p>
+<a class="anchor" name="ga0e33168157d12cd18c3ebf9d4014bca"></a><!-- doxytag: member="hal.c::rthal_timer_request" ref="ga0e33168157d12cd18c3ebf9d4014bca" args="(void(*handler)(void))" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -694,18 +694,9 @@ This service can be called from:<p>
           <td class="md" nowrap valign="top">int rthal_timer_request           </td>
           <td class="md" valign="top">(&nbsp;</td>
           <td class="md" nowrap valign="top">void(*)(void)&nbsp;</td>
-          <td class="mdname" nowrap> <em>handler</em>, </td>
-        </tr>
-        <tr>
-          <td class="md" nowrap align="right"></td>
-          <td class="md"></td>
-          <td class="md" nowrap>unsigned long&nbsp;</td>
-          <td class="mdname" nowrap> <em>nstick</em></td>
-        </tr>
-        <tr>
-          <td class="md"></td>
-          <td class="md">)&nbsp;</td>
-          <td class="md" colspan="2"></td>
+          <td class="mdname1" valign="top" nowrap> <em>handler</em>          </td>
+          <td class="md" valign="top">&nbsp;)&nbsp;</td>
+          <td class="md" nowrap></td>
         </tr>
       </table>
     </td>
@@ -721,17 +712,16 @@ This service can be called from:<p>
 <p>
 Grab the hardware timer. 
 <p>
-<a class="el" href="group__hal.html#gc7888ef10953f2a7e9e5ed087047036d">rthal_timer_request()</a> grabs and tunes the hardware timer so that a user-defined routine is called according to a given frequency. On architectures that provide a oneshot-programmable time source, the hardware timer can operate either in aperiodic or periodic mode. Using the aperiodic mode still allows to run periodic timings over it: the underlying hardware simply needs to be reprogrammed after each tick using the appropriate interval value<p>
-The time interval that elapses between two consecutive invocations of the handler is called a tick. The user-supplied handler will always be invoked on behalf of the Xenomai domain for each incoming tick.<p>
+<a class="el" href="group__hal.html#ga0e33168157d12cd18c3ebf9d4014bca">rthal_timer_request()</a> grabs and tunes the hardware timer in oneshot mode in order to clock the master time base.<p>
+A user-defined routine is registered as the clock tick handler. This handler will always be invoked on behalf of the Xenomai domain for each incoming tick.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>handler</em>&nbsp;</td><td>The address of the tick handler which will process each incoming tick.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>nstick</em>&nbsp;</td><td>The timer period in nanoseconds. If this parameter is zero, the underlying hardware timer is set to operate in oneshot-programming mode. In this mode, timing accuracy is higher - since it is not rounded to a constant time slice - at the expense of a lesser efficicency due to the timer chip programming duties. On the other hand, the shorter the period, the higher the overhead induced by the periodic mode, since the handler will end up consuming a lot of CPU power to process useless ticks.</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned on success. Otherwise:</dd></dl>
 <ul>
-<li>-EBUSY is returned if the hardware timer has already been grabbed. <a class="el" href="group__hal.html#gc7888ef10953f2a7e9e5ed087047036d">rthal_timer_request()</a> must be issued before <a class="el" href="group__hal.html#gc7888ef10953f2a7e9e5ed087047036d">rthal_timer_request()</a> is called again.</li></ul>
+<li>-EBUSY is returned if the hardware timer has already been grabbed. <a class="el" href="group__hal.html#ga0e33168157d12cd18c3ebf9d4014bca">rthal_timer_request()</a> must be issued before <a class="el" href="group__hal.html#ga0e33168157d12cd18c3ebf9d4014bca">rthal_timer_request()</a> is called again.</li></ul>
 <p>
 Environments:<p>
 This service can be called from:<p>
@@ -781,7 +771,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 25 13:57:10 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

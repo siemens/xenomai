@@ -33,7 +33,7 @@ CLOCK_REALTIME maps to the nucleus system clock, keeping time as the amount of t
 CLOCK_MONOTONIC maps to an architecture-dependent high resolution counter, so is suitable for measuring short time intervals. However, when used for sleeping (with <a class="el" href="group__posix__time.html#g924d51d78cdcd9d7dee2613fb3a33cd1">clock_nanosleep()</a>), the CLOCK_MONOTONIC clock has a resolution of one system clock tick, like the CLOCK_REALTIME clock.<p>
 Setting any of the two clocks with <a class="el" href="group__posix__time.html#gb0dbabb3e47efe9483b81235fdd0c297">clock_settime()</a> is currently not supported.<p>
 Timer objects may be created with the <a class="el" href="group__posix__time.html#g8a24ab6b0901162bbbbbca4f5205abd0">timer_create()</a> service using either of the two clocks, but the resolution of these timers is one system clock tick, as is the case for <a class="el" href="group__posix__time.html#g924d51d78cdcd9d7dee2613fb3a33cd1">clock_nanosleep()</a>.<p>
-<dl compact><dt><b>Note:</b></dt><dd>The duration of the system clock tick depends on the settings of the nucleus system timer (configurable at compile-time with the constant <em>CONFIG_XENO_OPT_TIMING_PERIOD</em>, and at run-time with the <em>xeno_nucleus</em> module parameter <em>tick_arg</em>). When the system timer is set to aperiodic mode, the default, the system clock tick is one nanosecond.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>The duration of the POSIX clock tick depends on the active time base (configurable at compile-time with the constant <em>CONFIG_XENO_OPT_POSIX_PERIOD</em>, and at run-time with the <em>xeno_posix</em> module parameter <em>tick_arg</em>). When the time base is aperiodic (which is the default) the system clock tick is one nanosecond.</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05">Specification.</a> </dd></dl>
 
 <p>
@@ -639,7 +639,7 @@ Expiration date and reload value are rounded to an integer count of system clock
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 25 13:57:11 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:19 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

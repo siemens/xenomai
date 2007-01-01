@@ -119,93 +119,95 @@
 <a name="l00090"></a>00090 <span class="keyword">extern</span> <span class="keywordtype">int</span> pse51_muxid;
 <a name="l00091"></a>00091 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_PERVASIVE */</span>
 <a name="l00092"></a>00092 
-<a name="l00093"></a>00093 <span class="keyword">extern</span> pse51_kqueues_t pse51_global_kqueues;
+<a name="l00093"></a>00093 <span class="keyword">extern</span> xntbase_t *pse51_tbase;
 <a name="l00094"></a>00094 
-<a name="l00095"></a>00095 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_PERVASIVE)</span>
-<a name="l00096"></a>00096 <span class="preprocessor"></span><span class="keyword">static</span> <span class="keyword">inline</span> pse51_queues_t *pse51_queues(<span class="keywordtype">void</span>)
-<a name="l00097"></a>00097 {
-<a name="l00098"></a>00098         xnshadow_ppd_t *ppd;
-<a name="l00099"></a>00099         spl_t s;
-<a name="l00100"></a>00100 
-<a name="l00101"></a>00101         xnlock_get_irqsave(&amp;nklock, s);
+<a name="l00095"></a>00095 <span class="keyword">extern</span> pse51_kqueues_t pse51_global_kqueues;
+<a name="l00096"></a>00096 
+<a name="l00097"></a>00097 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_PERVASIVE)</span>
+<a name="l00098"></a>00098 <span class="preprocessor"></span><span class="keyword">static</span> <span class="keyword">inline</span> pse51_queues_t *pse51_queues(<span class="keywordtype">void</span>)
+<a name="l00099"></a>00099 {
+<a name="l00100"></a>00100         xnshadow_ppd_t *ppd;
+<a name="l00101"></a>00101         spl_t s;
 <a name="l00102"></a>00102 
-<a name="l00103"></a>00103         ppd = <a class="code" href="group__shadow.html#g14c8b586498491f886d7b5335f92c3b1">xnshadow_ppd_get</a>(pse51_muxid);
-<a name="l00104"></a>00104         
-<a name="l00105"></a>00105         xnlock_put_irqrestore(&amp;nklock, s);
-<a name="l00106"></a>00106 
-<a name="l00107"></a>00107         <span class="keywordflow">if</span> (!ppd)
-<a name="l00108"></a>00108                 <span class="keywordflow">return</span> NULL;
-<a name="l00109"></a>00109 
-<a name="l00110"></a>00110         <span class="keywordflow">return</span> ppd2queues(ppd);
-<a name="l00111"></a>00111 }
-<a name="l00112"></a>00112 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_PERVASIVE */</span>
-<a name="l00113"></a>00113 
-<a name="l00114"></a>00114 <span class="keyword">static</span> <span class="keyword">inline</span> pse51_kqueues_t *pse51_kqueues(<span class="keywordtype">int</span> pshared)
-<a name="l00115"></a>00115 {
-<a name="l00116"></a>00116 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_PERVASIVE)</span>
-<a name="l00117"></a>00117 <span class="preprocessor"></span>        xnshadow_ppd_t *ppd;
-<a name="l00118"></a>00118 
-<a name="l00119"></a>00119         <span class="keywordflow">if</span> (pshared || !(ppd = <a class="code" href="group__shadow.html#g14c8b586498491f886d7b5335f92c3b1">xnshadow_ppd_get</a>(pse51_muxid)))
-<a name="l00120"></a>00120                 <span class="keywordflow">return</span> &amp;pse51_global_kqueues;
-<a name="l00121"></a>00121 
-<a name="l00122"></a>00122         <span class="keywordflow">return</span> &amp;ppd2queues(ppd)-&gt;kqueues;
-<a name="l00123"></a>00123 <span class="preprocessor">#else </span><span class="comment">/* !__KERNEL__ || !CONFIG_XENO_OPT_PERVASIVE */</span>
-<a name="l00124"></a>00124         <span class="keywordflow">return</span> &amp;pse51_global_kqueues;
-<a name="l00125"></a>00125 <span class="preprocessor">#endif </span><span class="comment">/* !__KERNEL__ || !CONFIG_XENO_OPT_PERVASIVE */</span>
-<a name="l00126"></a>00126 }
-<a name="l00127"></a>00127 
-<a name="l00128"></a>00128 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> ticks2ts(<span class="keyword">struct</span> timespec *ts, xnticks_t ticks)
-<a name="l00129"></a>00129 {
-<a name="l00130"></a>00130     ts-&gt;tv_sec = xnarch_uldivrem(xnpod_ticks2ns(ticks),
-<a name="l00131"></a>00131                                  ONE_BILLION,
-<a name="l00132"></a>00132                                  &amp;ts-&gt;tv_nsec);
-<a name="l00133"></a>00133 }
-<a name="l00134"></a>00134 
-<a name="l00135"></a>00135 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t ts2ticks_floor(<span class="keyword">const</span> <span class="keyword">struct</span> timespec *ts)
-<a name="l00136"></a>00136 {
-<a name="l00137"></a>00137     xntime_t nsecs = ts-&gt;tv_nsec;
-<a name="l00138"></a>00138     <span class="keywordflow">if</span>(ts-&gt;tv_sec)
-<a name="l00139"></a>00139         nsecs += (xntime_t) ts-&gt;tv_sec * ONE_BILLION;
-<a name="l00140"></a>00140     <span class="keywordflow">return</span> xnpod_ns2ticks(nsecs);
-<a name="l00141"></a>00141 }
-<a name="l00142"></a>00142 
-<a name="l00143"></a>00143 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t ts2ticks_ceil(<span class="keyword">const</span> <span class="keyword">struct</span> timespec *ts)
-<a name="l00144"></a>00144 {
-<a name="l00145"></a>00145     xntime_t nsecs = ts-&gt;tv_nsec;
-<a name="l00146"></a>00146     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rem;
-<a name="l00147"></a>00147     xnticks_t ticks;
-<a name="l00148"></a>00148     <span class="keywordflow">if</span>(ts-&gt;tv_sec)
-<a name="l00149"></a>00149         nsecs += (xntime_t) ts-&gt;tv_sec * ONE_BILLION;
-<a name="l00150"></a>00150     ticks = xnarch_ulldiv(nsecs, xnpod_get_tickval(), &amp;rem);
-<a name="l00151"></a>00151     <span class="keywordflow">return</span> rem ? ticks+1 : ticks;
-<a name="l00152"></a>00152 }
-<a name="l00153"></a>00153 
-<a name="l00154"></a>00154 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t clock_get_ticks(clockid_t clock_id)
-<a name="l00155"></a>00155 {
-<a name="l00156"></a>00156     <span class="keywordflow">if</span>(clock_id == CLOCK_REALTIME)
-<a name="l00157"></a>00157         <span class="keywordflow">return</span> <a class="code" href="group__pod.html#gca4a7942f0e94d9f9cbd32b940cc2295">xnpod_get_time</a>();
-<a name="l00158"></a>00158     <span class="keywordflow">else</span>
-<a name="l00159"></a>00159         <span class="keywordflow">return</span> xnpod_ns2ticks(xnpod_get_cpu_time());
-<a name="l00160"></a>00160 }
-<a name="l00161"></a>00161 
-<a name="l00162"></a>00162 <span class="comment">/* Convert an absolute timeout for clock clock_id to a relative timeout. */</span>
-<a name="l00163"></a>00163 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> clock_adjust_timeout(xnticks_t *timeoutp, clockid_t clock_id)
-<a name="l00164"></a>00164 {
-<a name="l00165"></a>00165     xnsticks_t delay;
-<a name="l00166"></a>00166 
-<a name="l00167"></a>00167     <span class="keywordflow">if</span>(*timeoutp == XN_INFINITE)
-<a name="l00168"></a>00168         <span class="keywordflow">return</span> 0;
-<a name="l00169"></a>00169 
-<a name="l00170"></a>00170     delay = *timeoutp - clock_get_ticks(clock_id);
-<a name="l00171"></a>00171     <span class="keywordflow">if</span>(delay &lt;= 0)
-<a name="l00172"></a>00172         <span class="keywordflow">return</span> ETIMEDOUT;
-<a name="l00173"></a>00173 
-<a name="l00174"></a>00174     *timeoutp = delay;
-<a name="l00175"></a>00175     <span class="keywordflow">return</span> 0;
-<a name="l00176"></a>00176 }
-<a name="l00177"></a>00177 
-<a name="l00178"></a>00178 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_INTERNAL_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Dec 25 13:57:10 2006 for Xenomai API by&nbsp;
+<a name="l00103"></a>00103         xnlock_get_irqsave(&amp;nklock, s);
+<a name="l00104"></a>00104 
+<a name="l00105"></a>00105         ppd = <a class="code" href="group__shadow.html#g14c8b586498491f886d7b5335f92c3b1">xnshadow_ppd_get</a>(pse51_muxid);
+<a name="l00106"></a>00106         
+<a name="l00107"></a>00107         xnlock_put_irqrestore(&amp;nklock, s);
+<a name="l00108"></a>00108 
+<a name="l00109"></a>00109         <span class="keywordflow">if</span> (!ppd)
+<a name="l00110"></a>00110                 <span class="keywordflow">return</span> NULL;
+<a name="l00111"></a>00111 
+<a name="l00112"></a>00112         <span class="keywordflow">return</span> ppd2queues(ppd);
+<a name="l00113"></a>00113 }
+<a name="l00114"></a>00114 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_PERVASIVE */</span>
+<a name="l00115"></a>00115 
+<a name="l00116"></a>00116 <span class="keyword">static</span> <span class="keyword">inline</span> pse51_kqueues_t *pse51_kqueues(<span class="keywordtype">int</span> pshared)
+<a name="l00117"></a>00117 {
+<a name="l00118"></a>00118 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_PERVASIVE)</span>
+<a name="l00119"></a>00119 <span class="preprocessor"></span>        xnshadow_ppd_t *ppd;
+<a name="l00120"></a>00120 
+<a name="l00121"></a>00121         <span class="keywordflow">if</span> (pshared || !(ppd = <a class="code" href="group__shadow.html#g14c8b586498491f886d7b5335f92c3b1">xnshadow_ppd_get</a>(pse51_muxid)))
+<a name="l00122"></a>00122                 <span class="keywordflow">return</span> &amp;pse51_global_kqueues;
+<a name="l00123"></a>00123 
+<a name="l00124"></a>00124         <span class="keywordflow">return</span> &amp;ppd2queues(ppd)-&gt;kqueues;
+<a name="l00125"></a>00125 <span class="preprocessor">#else </span><span class="comment">/* !__KERNEL__ || !CONFIG_XENO_OPT_PERVASIVE */</span>
+<a name="l00126"></a>00126         <span class="keywordflow">return</span> &amp;pse51_global_kqueues;
+<a name="l00127"></a>00127 <span class="preprocessor">#endif </span><span class="comment">/* !__KERNEL__ || !CONFIG_XENO_OPT_PERVASIVE */</span>
+<a name="l00128"></a>00128 }
+<a name="l00129"></a>00129 
+<a name="l00130"></a>00130 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> ticks2ts(<span class="keyword">struct</span> timespec *ts, xnticks_t ticks)
+<a name="l00131"></a>00131 {
+<a name="l00132"></a>00132     ts-&gt;tv_sec = xnarch_uldivrem(xntbase_ticks2ns(pse51_tbase, ticks),
+<a name="l00133"></a>00133                                  ONE_BILLION,
+<a name="l00134"></a>00134                                  &amp;ts-&gt;tv_nsec);
+<a name="l00135"></a>00135 }
+<a name="l00136"></a>00136 
+<a name="l00137"></a>00137 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t ts2ticks_floor(<span class="keyword">const</span> <span class="keyword">struct</span> timespec *ts)
+<a name="l00138"></a>00138 {
+<a name="l00139"></a>00139     xntime_t nsecs = ts-&gt;tv_nsec;
+<a name="l00140"></a>00140     <span class="keywordflow">if</span>(ts-&gt;tv_sec)
+<a name="l00141"></a>00141         nsecs += (xntime_t) ts-&gt;tv_sec * ONE_BILLION;
+<a name="l00142"></a>00142     <span class="keywordflow">return</span> xntbase_ns2ticks(pse51_tbase, nsecs);
+<a name="l00143"></a>00143 }
+<a name="l00144"></a>00144 
+<a name="l00145"></a>00145 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t ts2ticks_ceil(<span class="keyword">const</span> <span class="keyword">struct</span> timespec *ts)
+<a name="l00146"></a>00146 {
+<a name="l00147"></a>00147     xntime_t nsecs = ts-&gt;tv_nsec;
+<a name="l00148"></a>00148     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rem;
+<a name="l00149"></a>00149     xnticks_t ticks;
+<a name="l00150"></a>00150     <span class="keywordflow">if</span>(ts-&gt;tv_sec)
+<a name="l00151"></a>00151         nsecs += (xntime_t) ts-&gt;tv_sec * ONE_BILLION;
+<a name="l00152"></a>00152     ticks = xnarch_ulldiv(nsecs, xntbase_get_tickval(pse51_tbase), &amp;rem);
+<a name="l00153"></a>00153     <span class="keywordflow">return</span> rem ? ticks+1 : ticks;
+<a name="l00154"></a>00154 }
+<a name="l00155"></a>00155 
+<a name="l00156"></a>00156 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t clock_get_ticks(clockid_t clock_id)
+<a name="l00157"></a>00157 {
+<a name="l00158"></a>00158     <span class="keywordflow">if</span>(clock_id == CLOCK_REALTIME)
+<a name="l00159"></a>00159         <span class="keywordflow">return</span> <a class="code" href="group__pod.html#g928d7d13f1388f7ee26cdeaae97e75ab">xnpod_get_time</a>(pse51_tbase);
+<a name="l00160"></a>00160     <span class="keywordflow">else</span>
+<a name="l00161"></a>00161         <span class="keywordflow">return</span> xntbase_ns2ticks(pse51_tbase, xnpod_get_cpu_time());
+<a name="l00162"></a>00162 }
+<a name="l00163"></a>00163 
+<a name="l00164"></a>00164 <span class="comment">/* Convert an absolute timeout for clock clock_id to a relative timeout. */</span>
+<a name="l00165"></a>00165 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> clock_adjust_timeout(xnticks_t *timeoutp, clockid_t clock_id)
+<a name="l00166"></a>00166 {
+<a name="l00167"></a>00167     xnsticks_t delay;
+<a name="l00168"></a>00168 
+<a name="l00169"></a>00169     <span class="keywordflow">if</span>(*timeoutp == XN_INFINITE)
+<a name="l00170"></a>00170         <span class="keywordflow">return</span> 0;
+<a name="l00171"></a>00171 
+<a name="l00172"></a>00172     delay = *timeoutp - clock_get_ticks(clock_id);
+<a name="l00173"></a>00173     <span class="keywordflow">if</span>(delay &lt;= 0)
+<a name="l00174"></a>00174         <span class="keywordflow">return</span> ETIMEDOUT;
+<a name="l00175"></a>00175 
+<a name="l00176"></a>00176     *timeoutp = delay;
+<a name="l00177"></a>00177     <span class="keywordflow">return</span> 0;
+<a name="l00178"></a>00178 }
+<a name="l00179"></a>00179 
+<a name="l00180"></a>00180 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_INTERNAL_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

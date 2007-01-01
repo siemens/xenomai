@@ -40,9 +40,9 @@ Thread synchronization services.
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#g9ba3d7a44aca6f7246ba1a5fa3f3251a">xnsynch_init</a> (xnsynch_t *synch, xnflags_t flags)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a synchronization object.  <a href="#g9ba3d7a44aca6f7246ba1a5fa3f3251a"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#g5bacbd2ab91caeaf39ade357c09abd58">xnsynch_sleep_on</a> (xnsynch_t *synch, xnticks_t timeout)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#g539e4d64105cd95dde9b157c451b46cb">xnsynch_sleep_on</a> (xnsynch_t *synch, xnticks_t timeout, int mode)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sleep on a synchronization object.  <a href="#g5bacbd2ab91caeaf39ade357c09abd58"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sleep on a synchronization object.  <a href="#g539e4d64105cd95dde9b157c451b46cb"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#g6651c0538a5984ee20547e159ad1bd30">xnsynch_clear_boost</a> (xnsynch_t *synch, xnthread_t *lastowner)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Clear the priority boost.  <a href="#g6651c0538a5984ee20547e159ad1bd30"></a><br></td></tr>
@@ -364,7 +364,7 @@ This service is used by the PIP code to update the pending priority of a sleepin
     </td>
   </tr>
 </table>
-<a class="anchor" name="g5bacbd2ab91caeaf39ade357c09abd58"></a><!-- doxytag: member="synch.c::xnsynch_sleep_on" ref="g5bacbd2ab91caeaf39ade357c09abd58" args="(xnsynch_t *synch, xnticks_t timeout)" --><p>
+<a class="anchor" name="g539e4d64105cd95dde9b157c451b46cb"></a><!-- doxytag: member="synch.c::xnsynch_sleep_on" ref="g539e4d64105cd95dde9b157c451b46cb" args="(xnsynch_t *synch, xnticks_t timeout, int mode)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -379,7 +379,13 @@ This service is used by the PIP code to update the pending priority of a sleepin
           <td class="md" nowrap align="right"></td>
           <td class="md"></td>
           <td class="md" nowrap>xnticks_t&nbsp;</td>
-          <td class="mdname" nowrap> <em>timeout</em></td>
+          <td class="mdname" nowrap> <em>timeout</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>int&nbsp;</td>
+          <td class="mdname" nowrap> <em>mode</em></td>
         </tr>
         <tr>
           <td class="md"></td>
@@ -405,7 +411,8 @@ This service should be called by upper interfaces wanting the current thread to 
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>synch</em>&nbsp;</td><td>The descriptor address of the synchronization object to sleep on.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>The timeout which may be used to limit the time the thread pends on the resource. This value is a count of ticks (see note). Passing XN_INFINITE specifies an unbounded wait. All other values are used to initialize a nucleus watchdog timer.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>The timeout which may be used to limit the time the thread pends on the resource. This value is a wait time given in ticks (see note). It can either be relative or absolute depending on <em>mode</em>. Passing XN_INFINITE <b>and</b> setting <em>mode</em> to XN_RELATIVE specifies an unbounded wait. All other values are used to initialize a watchdog timer.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>The mode of the <em>timeout</em> parameter. It can either be set to XN_RELATIVE or XN_ABSOLUTE.</td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -414,7 +421,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: always.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__pod.html#g2559408f64fdd09fd055bb85221ce485">xnpod_start_timer()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the current thread is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
     </td>
   </tr>
 </table>
@@ -528,7 +535,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 25 13:57:10 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

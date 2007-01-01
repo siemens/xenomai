@@ -132,7 +132,7 @@ This service can be called from:<p>
 <li>Kernel-based thread.</li></ul>
 <p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__pod.html#g2559408f64fdd09fd055bb85221ce485">xnpod_start_timer()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if <em>thread</em> is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
     </td>
   </tr>
 </table>
@@ -459,11 +459,11 @@ This service can be called from:<p>
 <li>Kernel-based thread.</li></ul>
 <p>
 Rescheduling: possible if the object to remove is currently locked and the calling context can sleep.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the <a class="el" href="group__pod.html#g2559408f64fdd09fd055bb85221ce485">xnpod_start_timer()</a> service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the current thread is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 25 13:57:10 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

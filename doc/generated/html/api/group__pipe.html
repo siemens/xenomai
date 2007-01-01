@@ -60,9 +60,6 @@ Xenomai tasks open their side of the pipe using the <a class="el" href="group__p
 <tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#gd8edc920499d2c5c5d821ee7b9fa2bcd">rt_pipe_stream</a> (RT_PIPE *pipe, const void *buf, size_t size)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stream bytes to a pipe.  <a href="#gd8edc920499d2c5c5d821ee7b9fa2bcd"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#g7215580f2da97a198cfa3b26d64498e6">rt_pipe_flush</a> (RT_PIPE *pipe)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Flush the pipe.  <a href="#g7215580f2da97a198cfa3b26d64498e6"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">RT_PIPE_MSG *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#g62bb4c8e2133cb028035c07e310f7e07">rt_pipe_alloc</a> (RT_PIPE *pipe, size_t size)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a message pipe buffer.  <a href="#g62bb4c8e2133cb028035c07e310f7e07"></a><br></td></tr>
@@ -264,62 +261,6 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<a class="anchor" name="g7215580f2da97a198cfa3b26d64498e6"></a><!-- doxytag: member="pipe.c::rt_pipe_flush" ref="g7215580f2da97a198cfa3b26d64498e6" args="(RT_PIPE *pipe)" --><p>
-<table class="mdTable" cellpadding="2" cellspacing="0">
-  <tr>
-    <td class="mdRow">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td class="md" nowrap valign="top">ssize_t rt_pipe_flush           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">RT_PIPE *&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap> <em>pipe</em>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap></td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table cellspacing="5" cellpadding="0" border="0">
-  <tr>
-    <td>
-      &nbsp;
-    </td>
-    <td>
-
-<p>
-Flush the pipe. 
-<p>
-This operation makes the data available for reading from the associated special device.<p>
-<dl compact><dt><b>Parameters:</b></dt><dd>
-  <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>pipe</em>&nbsp;</td><td>The descriptor address of the pipe to flush.</td></tr>
-  </table>
-</dl>
-<dl compact><dt><b>Returns:</b></dt><dd>Zero upon success. Otherwise:</dd></dl>
-<ul>
-<li>-EINVAL is returned if <em>pipe</em> is not a pipe descriptor.</li></ul>
-<p>
-<ul>
-<li>-EPIPE is returned if the associated special device is not yet open.</li></ul>
-<p>
-<ul>
-<li>-EIDRM is returned if <em>pipe</em> is a closed pipe descriptor.</li></ul>
-<p>
-<ul>
-<li>-ENODEV or -EBADF are returned if <em>pipe</em> is scrambled.</li></ul>
-<p>
-Environments:<p>
-This service can be called from:<p>
-<ul>
-<li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li></ul>
-<p>
-Rescheduling: possible.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is deprecated, since the streamed data is now immediately available to the receiving side. </dd></dl>
-    </td>
-  </tr>
-</table>
 <a class="anchor" name="g8face1c57df99cf43b029b3e3b6a05c6"></a><!-- doxytag: member="pipe.c::rt_pipe_free" ref="g8face1c57df99cf43b029b3e3b6a05c6" args="(RT_PIPE *pipe, RT_PIPE_MSG *msg)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
@@ -464,7 +405,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task (switches to primary mode)</li></ul>
 <p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD parameter. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
     </td>
   </tr>
 </table>
@@ -550,7 +491,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li></ul>
 <p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD parameter. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
     </td>
   </tr>
 </table>
@@ -800,7 +741,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 25 13:57:11 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:19 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

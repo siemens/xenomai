@@ -272,70 +272,77 @@
 <a name="l00261"></a>00261 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_handle(thread)            ((thread)-&gt;registry.handle)</span>
 <a name="l00262"></a>00262 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_set_magic(thread,m)       do { (thread)-&gt;magic = (m); } while(0)</span>
 <a name="l00263"></a>00263 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_get_magic(thread)         ((thread)-&gt;magic)</span>
-<a name="l00264"></a>00264 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_signaled_p(thread)        ((thread)-&gt;signals != 0)</span>
-<a name="l00265"></a>00265 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_user_task(thread)         xnarch_user_task(xnthread_archtcb(thread))</span>
-<a name="l00266"></a>00266 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_user_pid(thread) \</span>
-<a name="l00267"></a>00267 <span class="preprocessor">    (xnthread_test_state((thread),XNROOT) || !xnthread_user_task(thread) ? \</span>
-<a name="l00268"></a>00268 <span class="preprocessor">    0 : xnarch_user_pid(xnthread_archtcb(thread)))</span>
-<a name="l00269"></a>00269 <span class="preprocessor"></span>
-<a name="l00270"></a>00270 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00271"></a>00271 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-<a name="l00272"></a>00272 <span class="preprocessor">#endif</span>
-<a name="l00273"></a>00273 <span class="preprocessor"></span>
-<a name="l00274"></a>00274 <span class="keywordtype">int</span> xnthread_init(xnthread_t *thread,
-<a name="l00275"></a>00275                   <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
-<a name="l00276"></a>00276                   <span class="keywordtype">int</span> prio,
-<a name="l00277"></a>00277                   xnflags_t flags,
-<a name="l00278"></a>00278                   <span class="keywordtype">unsigned</span> stacksize);
-<a name="l00279"></a>00279 
-<a name="l00280"></a>00280 <span class="keywordtype">void</span> xnthread_cleanup_tcb(xnthread_t *thread);
-<a name="l00281"></a>00281 
-<a name="l00282"></a>00282 <span class="keywordtype">char</span> *xnthread_symbolic_status(xnflags_t status, <span class="keywordtype">char</span> *buf, <span class="keywordtype">int</span> size);
-<a name="l00283"></a>00283 
-<a name="l00284"></a>00284 <span class="keywordtype">int</span> *xnthread_get_errno_location(<span class="keywordtype">void</span>);
-<a name="l00285"></a>00285 
-<a name="l00286"></a>00286 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t now)
-<a name="l00287"></a>00287 {
-<a name="l00288"></a>00288     xnticks_t timeout;
-<a name="l00289"></a>00289 
-<a name="l00290"></a>00290     <span class="keywordflow">if</span> (!xnthread_test_state(thread,<a class="code" href="group__nucleus__state__flags.html#ga31d298d298eb696ccf840473b94912c">XNDELAY</a>))
-<a name="l00291"></a>00291         <span class="keywordflow">return</span> 0LL;
+<a name="l00264"></a>00264 <span class="preprocessor"></span><span class="preprocessor">#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC</span>
+<a name="l00265"></a>00265 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_time_base(thread)         ((thread)-&gt;rtimer.base)</span>
+<a name="l00266"></a>00266 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
+<a name="l00267"></a>00267 <span class="preprocessor">#define xnthread_time_base(thread)         (&amp;nktbase)</span>
+<a name="l00268"></a>00268 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
+<a name="l00269"></a>00269 <span class="preprocessor">#define xnthread_signaled_p(thread)        ((thread)-&gt;signals != 0)</span>
+<a name="l00270"></a>00270 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_timed_p(thread)              (!!testbits(xnthread_time_base(thread)-&gt;status, XNTBRUN))</span>
+<a name="l00271"></a>00271 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_user_task(thread)         xnarch_user_task(xnthread_archtcb(thread))</span>
+<a name="l00272"></a>00272 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_user_pid(thread) \</span>
+<a name="l00273"></a>00273 <span class="preprocessor">    (xnthread_test_state((thread),XNROOT) || !xnthread_user_task(thread) ? \</span>
+<a name="l00274"></a>00274 <span class="preprocessor">    0 : xnarch_user_pid(xnthread_archtcb(thread)))</span>
+<a name="l00275"></a>00275 <span class="preprocessor"></span>
+<a name="l00276"></a>00276 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00277"></a>00277 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+<a name="l00278"></a>00278 <span class="preprocessor">#endif</span>
+<a name="l00279"></a>00279 <span class="preprocessor"></span>
+<a name="l00280"></a>00280 <span class="keywordtype">int</span> xnthread_init(xnthread_t *thread,
+<a name="l00281"></a>00281                   xntbase_t *tbase,
+<a name="l00282"></a>00282                   <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
+<a name="l00283"></a>00283                   <span class="keywordtype">int</span> prio,
+<a name="l00284"></a>00284                   xnflags_t flags,
+<a name="l00285"></a>00285                   <span class="keywordtype">unsigned</span> stacksize);
+<a name="l00286"></a>00286 
+<a name="l00287"></a>00287 <span class="keywordtype">void</span> xnthread_cleanup_tcb(xnthread_t *thread);
+<a name="l00288"></a>00288 
+<a name="l00289"></a>00289 <span class="keywordtype">char</span> *xnthread_symbolic_status(xnflags_t status, <span class="keywordtype">char</span> *buf, <span class="keywordtype">int</span> size);
+<a name="l00290"></a>00290 
+<a name="l00291"></a>00291 <span class="keywordtype">int</span> *xnthread_get_errno_location(<span class="keywordtype">void</span>);
 <a name="l00292"></a>00292 
-<a name="l00293"></a>00293     timeout = (<a class="code" href="group__timer.html#ge87b875cf9f6831afffcfee8dabd67a8">xntimer_get_date</a>(&amp;thread-&gt;rtimer) ? : <a class="code" href="group__timer.html#ge87b875cf9f6831afffcfee8dabd67a8">xntimer_get_date</a>(&amp;thread-&gt;ptimer));
-<a name="l00294"></a>00294 
-<a name="l00295"></a>00295     <span class="keywordflow">if</span> (timeout &lt;= now)
-<a name="l00296"></a>00296         <span class="keywordflow">return</span> 1;
-<a name="l00297"></a>00297 
-<a name="l00298"></a>00298     <span class="keywordflow">return</span> timeout - now;
-<a name="l00299"></a>00299 }
-<a name="l00300"></a>00300 
-<a name="l00301"></a>00301 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t xnthread_get_period(xnthread_t *thread)
-<a name="l00302"></a>00302 {
-<a name="l00303"></a>00303     xnticks_t period = 0;
+<a name="l00293"></a>00293 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t now)
+<a name="l00294"></a>00294 {
+<a name="l00295"></a>00295     xnticks_t timeout;
+<a name="l00296"></a>00296 
+<a name="l00297"></a>00297     <span class="keywordflow">if</span> (!xnthread_test_state(thread,<a class="code" href="group__nucleus__state__flags.html#ga31d298d298eb696ccf840473b94912c">XNDELAY</a>))
+<a name="l00298"></a>00298         <span class="keywordflow">return</span> 0LL;
+<a name="l00299"></a>00299 
+<a name="l00300"></a>00300     timeout = (xntimer_get_date(&amp;thread-&gt;rtimer) ? : xntimer_get_date(&amp;thread-&gt;ptimer));
+<a name="l00301"></a>00301 
+<a name="l00302"></a>00302     <span class="keywordflow">if</span> (timeout &lt;= now)
+<a name="l00303"></a>00303         <span class="keywordflow">return</span> 1;
 <a name="l00304"></a>00304 
-<a name="l00305"></a>00305     <span class="comment">/*</span>
-<a name="l00306"></a>00306 <span class="comment">     * The current thread period might be:</span>
-<a name="l00307"></a>00307 <span class="comment">     * - the value of the timer interval for periodic threads (ns/ticks)</span>
-<a name="l00308"></a>00308 <span class="comment">     * - or, the value of the alloted round-robin quantum (ticks)</span>
-<a name="l00309"></a>00309 <span class="comment">     * - or zero, meaning "no periodic activity".</span>
-<a name="l00310"></a>00310 <span class="comment">     */</span>
-<a name="l00311"></a>00311        
-<a name="l00312"></a>00312     <span class="keywordflow">if</span> (xntimer_running_p(&amp;thread-&gt;ptimer))
-<a name="l00313"></a>00313         period = <a class="code" href="group__timer.html#gb0d00a02bf04fdd48987d5d4efa68190">xntimer_get_interval</a>(&amp;thread-&gt;ptimer);
-<a name="l00314"></a>00314     <span class="keywordflow">else</span> <span class="keywordflow">if</span> (xnthread_test_state(thread,<a class="code" href="group__nucleus__state__flags.html#g6f451131910f816dd01fe1ec1fb50fe9">XNRRB</a>))
-<a name="l00315"></a>00315         period = xnthread_time_slice(thread);
-<a name="l00316"></a>00316 
-<a name="l00317"></a>00317     <span class="keywordflow">return</span> period;
-<a name="l00318"></a>00318 }
-<a name="l00319"></a>00319 
-<a name="l00320"></a>00320 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00321"></a>00321 <span class="preprocessor"></span>}
-<a name="l00322"></a>00322 <span class="preprocessor">#endif</span>
-<a name="l00323"></a>00323 <span class="preprocessor"></span>
-<a name="l00324"></a>00324 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
-<a name="l00325"></a>00325 
-<a name="l00326"></a>00326 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_THREAD_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Dec 25 13:57:10 2006 for Xenomai API by&nbsp;
+<a name="l00305"></a>00305     <span class="keywordflow">return</span> timeout - now;
+<a name="l00306"></a>00306 }
+<a name="l00307"></a>00307 
+<a name="l00308"></a>00308 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t xnthread_get_period(xnthread_t *thread)
+<a name="l00309"></a>00309 {
+<a name="l00310"></a>00310     xnticks_t period = 0;
+<a name="l00311"></a>00311 
+<a name="l00312"></a>00312     <span class="comment">/*</span>
+<a name="l00313"></a>00313 <span class="comment">     * The current thread period might be:</span>
+<a name="l00314"></a>00314 <span class="comment">     * - the value of the timer interval for periodic threads (ns/ticks)</span>
+<a name="l00315"></a>00315 <span class="comment">     * - or, the value of the alloted round-robin quantum (ticks)</span>
+<a name="l00316"></a>00316 <span class="comment">     * - or zero, meaning "no periodic activity".</span>
+<a name="l00317"></a>00317 <span class="comment">     */</span>
+<a name="l00318"></a>00318        
+<a name="l00319"></a>00319     <span class="keywordflow">if</span> (xntimer_running_p(&amp;thread-&gt;ptimer))
+<a name="l00320"></a>00320         period = xntimer_get_interval(&amp;thread-&gt;ptimer);
+<a name="l00321"></a>00321     <span class="keywordflow">else</span> <span class="keywordflow">if</span> (xnthread_test_state(thread,<a class="code" href="group__nucleus__state__flags.html#g6f451131910f816dd01fe1ec1fb50fe9">XNRRB</a>))
+<a name="l00322"></a>00322         period = xnthread_time_slice(thread);
+<a name="l00323"></a>00323 
+<a name="l00324"></a>00324     <span class="keywordflow">return</span> period;
+<a name="l00325"></a>00325 }
+<a name="l00326"></a>00326 
+<a name="l00327"></a>00327 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00328"></a>00328 <span class="preprocessor"></span>}
+<a name="l00329"></a>00329 <span class="preprocessor">#endif</span>
+<a name="l00330"></a>00330 <span class="preprocessor"></span>
+<a name="l00331"></a>00331 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
+<a name="l00332"></a>00332 
+<a name="l00333"></a>00333 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_THREAD_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
