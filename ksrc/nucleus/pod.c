@@ -392,7 +392,7 @@ int xnpod_init(xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
 	xnarch_atomic_set(&pod->timerlck, 0);
 #endif /* __KERNEL__ */
 
-	pod->svctable.settime = &xnpod_set_time;
+	pod->svctable.settime = &xntbase_set_time;
 	pod->svctable.faulthandler = &xnpod_fault_handler;
 	pod->svctable.unload = NULL;
 #ifdef __XENO_SIM__
@@ -2733,74 +2733,6 @@ void xnpod_schedule_runnable(xnthread_t *thread, int flags)
 }
 
 /*! 
- * \fn void xnpod_set_time(xntbase_t *tbase, xnticks_t newtime)
- * \brief Set the nucleus idea of time for a given time base.
- *
- * The nucleus tracks the current time as a monotonously increasing
- * count of ticks announced by the timer source since the epoch. The
- * epoch is initially the same as the underlying architecture system
- * time. This service changes the epoch for the specified time base.
- *
- * @param tbase The address of the affected time base.
- *
- * @param newtime The new time to set for the specified time base.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-void xnpod_set_time(xntbase_t *tbase, xnticks_t newtime)
-{
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-	tbase->wallclock_offset += newtime - xnpod_get_time(tbase);
-	__setbits(tbase->status, XNTBSET);
-	xnltt_log_event(xeno_ev_timeset, newtime);
-	xnlock_put_irqrestore(&nklock, s);
-}
-
-/*! 
- * \fn xnticks_t xnpod_get_time(xntbase_t *tbase)
- * \brief Get the nucleus idea of time for a given time base.
- *
- * This service gets the nucleus (external) clock time.
- *
- * @param tbase The address of the affected time base.
- *
- * @return The current time (in jiffies) if the specified time base
- * runs in periodic mode, or the system time (converted to
- * nanoseconds) as maintained by the CPU if @a tbase refers to the
- * master time base.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-xnticks_t xnpod_get_time(xntbase_t *tbase)
-{
-	/* Return an adjusted value of the monotonic time with the
-	   wallclock offset as defined in xnpod_set_time(). */
-	return xntbase_get_jiffies(tbase) + tbase->wallclock_offset;
-}
-
-/*! 
  * \fn int xnpod_add_hook(int type,void (*routine)(xnthread_t *))
  * \brief Install a nucleus hook.
  *
@@ -3106,7 +3038,7 @@ int xnpod_enable_timesource(void)
 	wallclock = xntbase_ns2ticks(&nktbase, xnarch_get_sys_time());
 	/* Wallclock offset = ns2ticks(gettimeofday + elapsed portion of
 	   the current host period) */
-	xnpod_set_time(&nktbase, wallclock + XNARCH_HOST_TICK - delta);
+	xntbase_set_time(&nktbase, wallclock + XNARCH_HOST_TICK - delta);
 
 	if (delta == 0)
 		delta = XNARCH_HOST_TICK;
@@ -3452,7 +3384,6 @@ EXPORT_SYMBOL(xnpod_check_context);
 EXPORT_SYMBOL(xnpod_deactivate_rr);
 EXPORT_SYMBOL(xnpod_delete_thread);
 EXPORT_SYMBOL(xnpod_fatal_helper);
-EXPORT_SYMBOL(xnpod_get_time);
 EXPORT_SYMBOL(xnpod_init);
 EXPORT_SYMBOL(xnpod_init_thread);
 EXPORT_SYMBOL(xnpod_migrate_thread);
@@ -3465,7 +3396,6 @@ EXPORT_SYMBOL(xnpod_schedule);
 EXPORT_SYMBOL(xnpod_schedule_runnable);
 EXPORT_SYMBOL(xnpod_set_thread_mode);
 EXPORT_SYMBOL(xnpod_set_thread_periodic);
-EXPORT_SYMBOL(xnpod_set_time);
 EXPORT_SYMBOL(xnpod_shutdown);
 EXPORT_SYMBOL(xnpod_start_thread);
 EXPORT_SYMBOL(xnpod_enable_timesource);

@@ -245,7 +245,7 @@ int rt_task_make_periodic_relative_ns(RT_TASK *task,
 	}
 
 	idate =
-	    start_delay ? xntbase_ticks2ns(rtai_tbase, xnpod_get_time(rtai_tbase)) +
+	    start_delay ? xntbase_ticks2ns(rtai_tbase, xntbase_get_time(rtai_tbase)) +
 	    start_delay : XN_INFINITE;
 
 	err = xnpod_set_thread_periodic(&task->thread_base, idate, period);
@@ -276,7 +276,7 @@ int rt_task_make_periodic(RT_TASK *task, RTIME start_time, RTIME period)
 		goto unlock_and_exit;
 	}
 
-	if (start_time + period <= xntbase_ticks2ns(rtai_tbase, xnpod_get_time(rtai_tbase)))
+	if (start_time + period <= xntbase_ticks2ns(rtai_tbase, xntbase_get_time(rtai_tbase)))
 		start_time = XN_INFINITE;
 
 	err = xnpod_set_thread_periodic(&task->thread_base, start_time, period);

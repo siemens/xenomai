@@ -333,7 +333,7 @@ void xntimer_destroy(xntimer_t *timer);
  * @param mode The timer mode. It can be either XN_RELATIVE or
  * XN_ABSOLUTE to define if @a value shall be interpreted as a relative
  * or absolute date. Absolute dates are based on the nucleus time returned by
- * xnpod_get_time().
+ * xntbase_get_time().
  *
  * @return 0 is returned upon success, or -ETIMEDOUT if an absolute
  * date in the past has been given.

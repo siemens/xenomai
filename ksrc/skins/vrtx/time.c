@@ -33,7 +33,7 @@ void sc_gclock(struct timespec *timep, unsigned long *nsp, int *errp)
 	xnticks_t now;
 
 	*nsp = xntbase_get_tickval(vrtx_tbase);
-	now = xnpod_get_time(vrtx_tbase);
+	now = xntbase_get_time(vrtx_tbase);
 	timep->seconds = xnarch_uldivrem(now, 1000000000, &remain);
 	timep->nanoseconds = remain;
 	*errp = RET_OK;
@@ -54,19 +54,19 @@ void sc_sclock(struct timespec time, unsigned long ns, int *errp)
 			xntbase_start(vrtx_tbase);
 	}
 
-	xnpod_set_time(vrtx_tbase, time.seconds * TEN_POW_9 + time.nanoseconds);
+	xntbase_set_time(vrtx_tbase, time.seconds * TEN_POW_9 + time.nanoseconds);
 
 	*errp = RET_OK;
 }
 
 unsigned long sc_gtime(void)
 {
-	return (unsigned long)xnpod_get_time(vrtx_tbase);
+	return (unsigned long)xntbase_get_time(vrtx_tbase);
 }
 
 void sc_stime(unsigned long time)
 {
-	xnpod_set_time(vrtx_tbase, time);
+	xntbase_set_time(vrtx_tbase, time);
 }
 
 void sc_delay(long ticks)
@@ -91,7 +91,7 @@ void sc_adelay(struct timespec time, int *errp)
 	}
 
 	etime = time.seconds * TEN_POW_9 + time.nanoseconds;
-	now = xnpod_get_time(vrtx_tbase);
+	now = xntbase_get_time(vrtx_tbase);
 	*errp = RET_OK;
 
 	if (etime > now) {

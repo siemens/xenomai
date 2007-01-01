@@ -120,7 +120,7 @@ int clock_gettime(clockid_t clock_id, struct timespec *tp)
 
 	switch (clock_id) {
 	case CLOCK_REALTIME:
-		ticks2ts(tp, xnpod_get_time(pse51_tbase));
+		ticks2ts(tp, xntbase_get_time(pse51_tbase));
 		break;
 
 	case CLOCK_MONOTONIC:

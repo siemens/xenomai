@@ -58,7 +58,7 @@ void rt_sleep(RTIME delay)
 
 RTIME rt_get_time_ns(void)
 {
-	RTIME ticks = xnpod_get_time(rtai_tbase);
+	RTIME ticks = xntbase_get_time(rtai_tbase);
 	return xntbase_ticks2ns(rtai_tbase, ticks);
 }
 

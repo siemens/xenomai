@@ -993,7 +993,7 @@ int rt_task_sleep_until(RTIME date)
 	/* Calling the suspension service on behalf of the current task
 	   implicitely calls the rescheduling procedure. */
 
-	if (date > xnpod_get_time(__native_tbase)) {
+	if (date > xntbase_get_time(__native_tbase)) {
 		xnpod_suspend_thread(self, XNDELAY, date, XN_ABSOLUTE, NULL);
 
 		if (xnthread_test_info(self, XNBREAK))
