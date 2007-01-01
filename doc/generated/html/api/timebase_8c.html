@@ -34,11 +34,33 @@ Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRA
 You should have received a copy of the GNU General Public License along with Xenomai; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
 <code>#include &lt;<a class="el" href="pod_8h-source.html">nucleus/pod.h</a>&gt;</code><br>
-<code>#include &lt;nucleus/timer.h&gt;</code><br>
+<code>#include &lt;<a class="el" href="include_2nucleus_2timer_8h-source.html">nucleus/timer.h</a>&gt;</code><br>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
+<tr><td colspan="2"><br><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g44412f2f0a481d351695f540c1e4750a">xntbase_alloc</a> (const char *name, u_long period, xntbase_t **basep)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a time base.  <a href="group__timebase.html#g44412f2f0a481d351695f540c1e4750a"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#gf94b8dda1e4cc484c13cb004689a795e">xntbase_free</a> (xntbase_t *base)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free a time base.  <a href="group__timebase.html#gf94b8dda1e4cc484c13cb004689a795e"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g71112e6b362918b602e01d86d4c07654">xntbase_update</a> (xntbase_t *base, u_long period)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change the period of a time base.  <a href="group__timebase.html#g71112e6b362918b602e01d86d4c07654"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#gdf44dc347a2b8cb921cbc9f4e2768320">xntbase_switch</a> (const char *name, u_long period, xntbase_t **basep)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Replace a time base.  <a href="group__timebase.html#gdf44dc347a2b8cb921cbc9f4e2768320"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#ge596e43dbf89abb299aa29ae841ec8e0">xntbase_start</a> (xntbase_t *base)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start a time base.  <a href="group__timebase.html#ge596e43dbf89abb299aa29ae841ec8e0"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g23ae261bf7e2eaa09f05c4c6069a41e1">xntbase_stop</a> (xntbase_t *base)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stop a time base.  <a href="group__timebase.html#g23ae261bf7e2eaa09f05c4c6069a41e1"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g15896b6c498acdc5e2516ad0cc9df5ac">xntbase_tick</a> (xntbase_t *base)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Announce a clock tick to a time base.  <a href="group__timebase.html#g15896b6c498acdc5e2516ad0cc9df5ac"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 20:33:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

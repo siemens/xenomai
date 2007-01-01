@@ -56,7 +56,7 @@
 <a name="l00047"></a>00047     xnhandle_t opaque;
 <a name="l00048"></a>00048 } RT_EVENT_PLACEHOLDER;
 <a name="l00049"></a>00049 
-<a name="l00050"></a>00050 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_SIM__)</span>
+<a name="l00050"></a>00050 <span class="preprocessor">#if (defined(__KERNEL__) || defined(__XENO_SIM__)) &amp;&amp; !defined(DOXYGEN_CPP)</span>
 <a name="l00051"></a>00051 <span class="preprocessor"></span>
 <a name="l00052"></a>00052 <span class="preprocessor">#define XENO_EVENT_MAGIC 0x55550404</span>
 <a name="l00053"></a>00053 <span class="preprocessor"></span>
@@ -149,7 +149,7 @@
 <a name="l00140"></a>00140 <span class="preprocessor">#endif</span>
 <a name="l00141"></a>00141 <span class="preprocessor"></span>
 <a name="l00142"></a>00142 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_EVENT_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 20:33:17 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

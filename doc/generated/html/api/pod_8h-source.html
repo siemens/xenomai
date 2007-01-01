@@ -177,7 +177,7 @@
 <a name="l00201"></a><a class="code" href="structxnpod.html#a26df898217c8ed9e0a20259f0c4613b">00201</a>         <span class="keywordtype">int</span> <a class="code" href="structxnpod.html#a26df898217c8ed9e0a20259f0c4613b">root_prio_base</a>;     
 <a name="l00203"></a><a class="code" href="structxnpod.html#26e8700e411f5292fa5372aa2faa28f6">00203</a>         <span class="keywordtype">int</span> <a class="code" href="structxnpod.html#26e8700e411f5292fa5372aa2faa28f6">refcnt</a>;             
 <a name="l00205"></a>00205 <span class="preprocessor">#ifdef __KERNEL__</span>
-<a name="l00206"></a>00206 <span class="preprocessor"></span>        atomic_counter_t timerlck;      
+<a name="l00206"></a><a class="code" href="structxnpod.html#9a61219dd75a7b26024a79a73bce6540">00206</a> <span class="preprocessor"></span>        atomic_counter_t <a class="code" href="structxnpod.html#9a61219dd75a7b26024a79a73bce6540">timerlck</a>;      
 <a name="l00207"></a>00207 <span class="preprocessor">#endif  </span><span class="comment">/* __KERNEL__ */</span>
 <a name="l00208"></a>00208 
 <a name="l00209"></a>00209         <span class="keyword">struct </span>{
@@ -353,11 +353,11 @@
 <a name="l00380"></a>00380                                 xnflags_t clrmask,
 <a name="l00381"></a>00381                                 xnflags_t setmask);
 <a name="l00382"></a>00382 
-<a name="l00383"></a>00383 <span class="keywordtype">void</span> xnpod_suspend_thread(xnthread_t *thread,
+<a name="l00383"></a>00383 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#g61d22a7f0c5fafc26971b19177ed4a03">xnpod_suspend_thread</a>(xnthread_t *thread,
 <a name="l00384"></a>00384                           xnflags_t mask,
 <a name="l00385"></a>00385                           xnticks_t timeout,
 <a name="l00386"></a>00386                           <span class="keywordtype">int</span> mode,
-<a name="l00387"></a>00387                           <span class="keyword">struct</span> xnsynch *resource);
+<a name="l00387"></a>00387                           <span class="keyword">struct</span> xnsynch *wchan);
 <a name="l00388"></a>00388 
 <a name="l00389"></a>00389 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#gc3a7bf9e973782a8cfd6495a1786e812">xnpod_resume_thread</a>(xnthread_t *thread,
 <a name="l00390"></a>00390                          xnflags_t mask);
@@ -371,7 +371,7 @@
 <a name="l00398"></a>00398 
 <a name="l00399"></a>00399 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#g5cfbc7f9077204199320777f0a14dad3">xnpod_rotate_readyq</a>(<span class="keywordtype">int</span> prio);
 <a name="l00400"></a>00400 
-<a name="l00401"></a>00401 <span class="keywordtype">void</span> xnpod_do_rr(<span class="keywordtype">void</span>);
+<a name="l00401"></a>00401 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#g4c28197690c3372d6f272ee8fffa8c7f">xnpod_do_rr</a>(<span class="keywordtype">void</span>);
 <a name="l00402"></a>00402 
 <a name="l00403"></a>00403 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#gcf5b53f0405351327b89b0cc4976b962">xnpod_schedule</a>(<span class="keywordtype">void</span>);
 <a name="l00404"></a>00404 
@@ -403,7 +403,7 @@
 <a name="l00430"></a>00430         xnlock_put_irqrestore(&amp;nklock, s);
 <a name="l00431"></a>00431 }
 <a name="l00432"></a>00432 
-<a name="l00433"></a>00433 <span class="keywordtype">int</span> xnpod_announce_tick(<span class="keyword">struct</span> xnintr *intr);
+<a name="l00433"></a>00433 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#gb92a1830ac4e5aa503aa65553de8c102">xnpod_announce_tick</a>(<span class="keyword">struct</span> xnintr *intr);
 <a name="l00434"></a>00434 
 <a name="l00435"></a>00435 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#g072d9a7d5c9a369061786c8a5b05b7fc">xnpod_activate_rr</a>(xnticks_t quantum);
 <a name="l00436"></a>00436 
@@ -439,12 +439,12 @@
 <a name="l00466"></a>00466 
 <a name="l00467"></a>00467 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_delay(xnticks_t timeout)
 <a name="l00468"></a>00468 {
-<a name="l00469"></a>00469         xnpod_suspend_thread(xnpod_current_thread(), <a class="code" href="group__nucleus__state__flags.html#ga31d298d298eb696ccf840473b94912c">XNDELAY</a>, timeout, XN_RELATIVE, NULL);
+<a name="l00469"></a>00469         <a class="code" href="group__pod.html#g61d22a7f0c5fafc26971b19177ed4a03">xnpod_suspend_thread</a>(xnpod_current_thread(), <a class="code" href="group__nucleus__state__flags.html#ga31d298d298eb696ccf840473b94912c">XNDELAY</a>, timeout, XN_RELATIVE, NULL);
 <a name="l00470"></a>00470 }
 <a name="l00471"></a>00471 
 <a name="l00472"></a>00472 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_suspend_self(<span class="keywordtype">void</span>)
 <a name="l00473"></a>00473 {
-<a name="l00474"></a>00474         xnpod_suspend_thread(xnpod_current_thread(), <a class="code" href="group__nucleus__state__flags.html#g6b605ad2bb16ae2386821be8ce8d341b">XNSUSP</a>, XN_INFINITE, XN_RELATIVE, NULL);
+<a name="l00474"></a>00474         <a class="code" href="group__pod.html#g61d22a7f0c5fafc26971b19177ed4a03">xnpod_suspend_thread</a>(xnpod_current_thread(), <a class="code" href="group__nucleus__state__flags.html#g6b605ad2bb16ae2386821be8ce8d341b">XNSUSP</a>, XN_INFINITE, XN_RELATIVE, NULL);
 <a name="l00475"></a>00475 }
 <a name="l00476"></a>00476 
 <a name="l00477"></a>00477 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_delete_self(<span class="keywordtype">void</span>)
@@ -457,7 +457,7 @@
 <a name="l00484"></a>00484 <span class="preprocessor">#endif</span>
 <a name="l00485"></a>00485 <span class="preprocessor"></span>
 <a name="l00488"></a>00488 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_POD_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 20:33:17 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

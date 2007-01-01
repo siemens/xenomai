@@ -37,7 +37,7 @@ typedef struct rt_cond_placeholder {
     xnhandle_t opaque;
 } RT_COND_PLACEHOLDER;
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#if (defined(__KERNEL__) || defined(__XENO_SIM__)) && !defined(DOXYGEN_CPP)
 
 #define XENO_COND_MAGIC 0x55550606
 

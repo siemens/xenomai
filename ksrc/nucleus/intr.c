@@ -906,3 +906,5 @@ EXPORT_SYMBOL(xnintr_disable);
 EXPORT_SYMBOL(xnintr_enable);
 EXPORT_SYMBOL(xnintr_affinity);
 EXPORT_SYMBOL(xnintr_init);
+
+/*@}*/

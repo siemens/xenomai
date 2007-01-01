@@ -47,7 +47,7 @@ typedef struct rt_intr_placeholder {
     xnhandle_t opaque;
 } RT_INTR_PLACEHOLDER;
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#if (defined(__KERNEL__) || defined(__XENO_SIM__)) && !defined(DOXYGEN_CPP)
 
 #define XENO_INTR_MAGIC 0x55550a0a
 

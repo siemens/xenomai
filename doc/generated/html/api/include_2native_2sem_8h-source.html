@@ -53,7 +53,7 @@
 <a name="l00044"></a>00044     xnhandle_t opaque;
 <a name="l00045"></a>00045 } RT_SEM_PLACEHOLDER;
 <a name="l00046"></a>00046 
-<a name="l00047"></a>00047 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_SIM__)</span>
+<a name="l00047"></a>00047 <span class="preprocessor">#if (defined(__KERNEL__) || defined(__XENO_SIM__)) &amp;&amp; !defined(DOXYGEN_CPP)</span>
 <a name="l00048"></a>00048 <span class="preprocessor"></span>
 <a name="l00049"></a>00049 <span class="preprocessor">#define XENO_SEM_MAGIC 0x55550303</span>
 <a name="l00050"></a>00050 <span class="preprocessor"></span>
@@ -142,7 +142,7 @@
 <a name="l00133"></a>00133 <span class="preprocessor">#endif</span>
 <a name="l00134"></a>00134 <span class="preprocessor"></span>
 <a name="l00135"></a>00135 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_SEM_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 20:33:17 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

@@ -521,7 +521,7 @@
 <a name="l01009"></a>01009 {
 <a name="l01010"></a>01010     XENO_ASSERT(RTDM, !xnpod_asynch_p(), <span class="keywordflow">return</span>;);
 <a name="l01011"></a>01011 
-<a name="l01012"></a>01012     <span class="keywordflow">if</span> (unlikely(<a class="code" href="group__synch.html#g65ec2c8942136d7b743c712ed7697271">xnsynch_wakeup_one_sleeper</a>(&amp;mutex-&gt;synch_base) != NULL))
+<a name="l01012"></a>01012     <span class="keywordflow">if</span> (unlikely(<a class="code" href="group__synch.html#gc9926fd6af7a7fe01b9f8d02c1a62957">xnsynch_wakeup_one_sleeper</a>(&amp;mutex-&gt;synch_base) != NULL))
 <a name="l01013"></a>01013         <a class="code" href="group__pod.html#gcf5b53f0405351327b89b0cc4976b962">xnpod_schedule</a>();
 <a name="l01014"></a>01014 }
 <a name="l01015"></a>01015 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
@@ -634,7 +634,7 @@
 <a name="l01122"></a>01122                     rtdm_rt_handler_t handler);
 <a name="l01123"></a>01123 
 <a name="l01124"></a>01124 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DRIVER_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 20:33:17 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

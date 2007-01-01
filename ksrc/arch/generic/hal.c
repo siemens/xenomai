@@ -202,7 +202,7 @@ int rthal_irq_release(unsigned irq)
 }
 
 /**
- * @fn int rthal_irq_host_request (unsigned irq,irqreturn_t (*handler)(int irq,void *dev_id,struct pt_regs *regs),char *name,void *dev_id)
+ * @fn int rthal_irq_host_request(unsigned irq,rthal_irq_host_handler_t handler,char *name,void *dev_id)
  *                           
  * @brief Install a shared Linux interrupt handler.
  *

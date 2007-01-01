@@ -110,7 +110,7 @@ typedef struct rt_task_mcb {
 
 } RT_TASK_MCB;
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#if (defined(__KERNEL__) || defined(__XENO_SIM__)) && !defined(DOXYGEN_CPP)
 
 #define XENO_TASK_MAGIC 0x55550101
 
