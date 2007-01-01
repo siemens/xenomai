@@ -106,3 +106,7 @@ API emulation module:
 
 - "workspace_size_arg", size of VRTX workspace (in bytes).
   Defaults to 32k.
+
+- "tick_arg", duration of a base periodic tick. The VRTX skin
+  expresses all delays and timeouts as counts of ticks. This parameter
+  defines the duration of a VRTX clock tick expressed in microseconds.

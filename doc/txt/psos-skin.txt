@@ -91,7 +91,12 @@ The following parameters can be passed at startup to the pSOS+
 API emulation module:
 
 - "rn0_size_arg", size of region #0 (in bytes). Defaults to 32k.
+
 - "time_slice_arg", time slice period. Defaults to 10 clock ticks.
+
+- "tick_arg", duration of a base periodic tick. The pSOS skin
+  expresses all delays and timeouts as counts of ticks. This parameter
+  defines the duration of a pSOS clock tick expressed in microseconds.
 
 Limitations
 ===========

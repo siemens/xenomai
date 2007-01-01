@@ -57,6 +57,14 @@ stop_rt_timer
 rt_sleep
 rt_get_time_ns
 
+Module parameters
+=================
+
+- "tick_arg", duration of a base periodic tick.  The RTAI skin can
+  express all delays and timeouts either as counts of ticks
+  (i.e. jiffy-based), or directly in nanoseconds in a tick-less
+  fashion. This paramater defines the duration of the base period in
+  microseconds; a null value selects the tick-less mode.
 
 Known variations from RTAI v3.x
 ===============================
