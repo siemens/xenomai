@@ -2597,10 +2597,13 @@ void xnpod_schedule(void)
  * \fn void xnpod_schedule_runnable(xnthread_t *thread,int flags)
  * \brief Hidden rescheduling procedure.
  *
+ * xnpod_schedule_runnable() reinserts the given thread into the ready
+ * queue then switches to the highest priority runnable thread. It
+ * must be called with nklock locked, interrupts off.
+ *
  * This internal routine should NEVER be used directly by the upper
- * interfaces. It reinserts the given thread into the ready queue then
- * switches to the highest priority runnable thread. It must be called
- * with nklock locked, interrupts off.
+ * interfaces; xnpod_schedule() is the service to invoke normally for
+ * starting the rescheduling procedure.
  *
  * @param thread The descriptor address of the thread to reinsert into
  * the ready queue.
