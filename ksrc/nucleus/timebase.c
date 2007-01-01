@@ -82,7 +82,7 @@ DECLARE_XNQUEUE(nktimebaseq);
  * information is used to report status information when reading from
  * /proc/xenomai/timebases; it has currently no other usage.
  *
- * @param period The duration of clock tick for the new time base,
+ * @param period The duration of the clock tick for the new time base,
  * given as a count of nanoseconds. The special @a XN_APERIODIC_TICK
  * value may be used to retrieve the master - aperiodic - time base,
  * which is always up and running when a real-time skin has called the
@@ -193,9 +193,10 @@ void xntbase_free(xntbase_t *base)
  *
  * @param base The address of the time base descriptor to update.
  *
- * @param period The duration of clock tick for the time base, given
- * as a count of nanoseconds. This value is meant to define the new
- * clock rate of the affected periodic time base (i.e. 1e9 / period).
+ * @param period The duration of the clock tick for the time base,
+ * given as a count of nanoseconds. This value is meant to define the
+ * new clock rate of the affected periodic time base (i.e. 1e9 /
+ * period).
  *
  * @return 0 is returned on success. Otherwise:
  *
@@ -255,9 +256,9 @@ int xntbase_update(xntbase_t *base, u_long period)
  * information is used to report status information when reading from
  * /proc/xenomai/timebases; it has currently no other usage.
  *
- * @param period The duration of clock tick for the time base, given
- * as a count of nanoseconds. This value is meant to define the new
- * clock rate of the affected periodic time base (i.e. 1e9 / period).
+ * @param period The duration of the clock tick for the time base,
+ * given as a count of nanoseconds. This value is meant to define the
+ * new clock rate of the new periodic time base (i.e. 1e9 / period).
  *
  * @param basep A pointer to a memory location which will be first
  * read to pick the address of the original time base to be replaced,
@@ -276,8 +277,6 @@ int xntbase_update(xntbase_t *base, u_long period)
  * This service can be called from:
  *
  * - Kernel module initialization code
- * - Kernel-based task
- * - User-space task
  */
 
 int xntbase_switch(const char *name, u_long period, xntbase_t **basep)
