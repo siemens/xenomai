@@ -746,6 +746,10 @@ static inline void xnpod_switch_zombie(xnthread_t *threadout,
  * debugging GUI it provides. However, passing NULL here is always
  * legal and means "anonymous".
  *
+ * @param tbase The time base descriptor to refer to for all timed
+ * operations issued by the new thread. See xntbase_alloc() for
+ * detailed explanations about time bases.
+ *
  * @param prio The base priority of the new thread. This value must
  * range from [minpri .. maxpri] (inclusive) as specified when calling
  * the xnpod_init() service.
