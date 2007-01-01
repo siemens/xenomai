@@ -100,6 +100,11 @@ static inline int xntbase_enabled_p(xntbase_t *base)
 	return !!(base->status & XNTBRUN);
 }
 
+static inline const char *xntbase_name(xntbase_t *base)
+{
+	return base->name;
+}
+
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 
 static inline xntime_t xntbase_ticks2ns(xntbase_t *base, xnticks_t ticks)
