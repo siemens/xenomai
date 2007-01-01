@@ -2736,8 +2736,7 @@ void xnpod_schedule_runnable(xnthread_t *thread, int flags)
  * The nucleus tracks the current time as a monotonously increasing
  * count of ticks announced by the timer source since the epoch. The
  * epoch is initially the same as the underlying architecture system
- * time. This service changes the epoch. Running timers use a different
- * time base thus are not affected by this operation.
+ * time. This service changes the epoch for the specified time base.
  *
  * @param  The address of the affected time base.
  *
@@ -2774,10 +2773,10 @@ void xnpod_set_time(xntbase_t *tbase, xnticks_t newtime)
  *
  * @param  The address of the affected time base.
  *
- * @return The current nucleus time (in ticks) if the underlying time
- * source runs in periodic mode, or the system time (converted to
- * nanoseconds) as maintained by the CPU if aperiodic mode is in
- * effect, or no timer is running.
+ * @return The current time (in jiffies) if the specified time base
+ * runs in periodic mode, or the system time (converted to
+ * nanoseconds) as maintained by the CPU if @a tbase refers to the
+ * master time base.
  *
  * Environments:
  *
