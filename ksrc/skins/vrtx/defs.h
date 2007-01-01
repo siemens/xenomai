@@ -63,7 +63,7 @@ typedef struct vrtxidmap {
 
 /* The following macros return normalized or native priority values
    for the underlying pod. The core pod providing user-space support
-   uses an ascending [0-256] priority scale (include/nucleus/core.h),
+   uses an ascending [0-257] priority scale (include/nucleus/core.h),
    whilst the VRTX personality exhibits a decreasing scale
    [255-0]. Normalization is not needed when the underlying pod
    supporting the VRTX skin is standalone, i.e. pure kernel, or
@@ -71,11 +71,13 @@ typedef struct vrtxidmap {
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 #define vrtx_normalized_prio(prio)	(XNCORE_MAX_PRIO - (prio) - 1)
-#define vrtx_denormalized_prio(prio)	(255 - (prio))
+#define vrtx_denormalized_prio(prio)	(256 - (prio))
 #else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
 #define vrtx_normalized_prio(prio)	prio
 #define vrtx_denormalized_prio(prio)	prio
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+extern xntbase_t *vrtx_tbase;
 
 #ifdef __cplusplus
 extern "C" {

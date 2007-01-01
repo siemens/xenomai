@@ -28,12 +28,12 @@
  * The SCHED_OTHER policy is mainly useful for user-space non-realtime
  * activities that need to synchronize with real-time activities.
  *
- * The SCHED_RR policy is only effective if the system timer is started in
- * periodic mode (i.e. if configured with the compilation constant @a
- * CONFIG_XENO_OPT_TIMING_PERIOD or the @a xeno_nucleus module parameter @a
- * tick_arg set to a non null value). The SCHED_RR round-robin time slice is
- * configured with the @a xeno_posix module parameter @a time_slice, as a count
- * of system timer clock ticks.
+ * The SCHED_RR policy is only effective if the time base is periodic
+ * (i.e. if configured with the compilation constant @a
+ * CONFIG_XENO_OPT_POSIX_PERIOD or the @a xeno_nucleus module
+ * parameter @a tick_arg set to a non null value). The SCHED_RR
+ * round-robin time slice is configured with the @a xeno_posix module
+ * parameter @a time_slice, as a count of system timer clock ticks.
  *
  * The SCHED_SPORADIC policy is not supported.
  *

@@ -8,6 +8,32 @@ config XENO_SKIN_RTDM
 	light weight interface in kernel mode, but use them across all other
 	skins in both kernel and user mode.
 
+config XENO_OPT_RTDM_PERIOD
+	depends on XENO_OPT_TIMING_PERIODIC
+	int "Base period (us)"
+	default 0
+	help
+	Duration of the base periodic tick (in microseconds).
+
+	The RTDM skin can express all delays and timeouts either as
+	counts of ticks (i.e. jiffy-based), or directly in
+	nanoseconds in a tick-less fashion. This paramater defines the
+	duration of the base period in microseconds; a null value
+	selects the tick-less mode.
+
+	The base period can be overriden at runtime using the
+	"tick_arg" module parameter when loading the RTDM skin.
+
+	If in doubt, leave zero in this field.
+
+if XENO_OPT_TIMING_PERIODIC != y
+
+config XENO_OPT_RTDM_PERIOD
+	int
+	default 0
+
+endif
+
 config XENO_OPT_RTDM_FILDES
 	int "Maximum number of RTDM file descriptors"
 	depends on XENO_SKIN_RTDM

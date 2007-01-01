@@ -189,7 +189,7 @@ int rt_alarm_create(RT_ALARM *alarm,
 	if (xnpod_asynch_p())
 		return -EPERM;
 
-	xntimer_init(&alarm->timer_base, &__alarm_trampoline);
+	xntimer_init(&alarm->timer_base, __native_tbase, &__alarm_trampoline);
 	alarm->handle = 0;	/* i.e. (still) unregistered alarm. */
 	alarm->magic = XENO_ALARM_MAGIC;
 	alarm->expiries = 0;
@@ -339,11 +339,9 @@ int rt_alarm_delete(RT_ALARM *alarm)
  *
  * Rescheduling: never.
  *
- * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD
- * parameter. In periodic mode, clock ticks are interpreted as
- * periodic jiffies. In oneshot mode, clock ticks are interpreted as
- * nanoseconds.
+ * @note The initial @a value and @a interval will be interpreted as
+ * jiffies if the native skin is bound to a periodic time base (see
+ * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  */
 
 int rt_alarm_start(RT_ALARM *alarm, RTIME value, RTIME interval)

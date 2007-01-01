@@ -31,10 +31,19 @@
 #undef CONFIG_XENO_OPT_NATIVE_MUTEX
 
 /* config */
+#undef CONFIG_XENO_OPT_NATIVE_PERIOD
+
+/* config */
 #undef CONFIG_XENO_OPT_NATIVE_QUEUE
 
 /* config */
 #undef CONFIG_XENO_OPT_NATIVE_SEM
+
+/* config */
+#undef CONFIG_XENO_OPT_POSIX_PERIOD
+
+/* config */
+#undef CONFIG_XENO_OPT_PSOS_PERIOD
 
 /* config */
 #undef CONFIG_XENO_OPT_REGISTRY
@@ -43,7 +52,13 @@
 #undef CONFIG_XENO_OPT_REGISTRY_NRSLOTS
 
 /* config */
+#undef CONFIG_XENO_OPT_RTAI_PERIOD
+
+/* config */
 #undef CONFIG_XENO_OPT_RTAI_SEM
+
+/* config */
+#undef CONFIG_XENO_OPT_RTDM_PERIOD
 
 /* config */
 #undef CONFIG_XENO_OPT_SCALABLE_SCHED
@@ -52,10 +67,22 @@
 #undef CONFIG_XENO_OPT_SYS_HEAPSZ
 
 /* config */
-#undef CONFIG_XENO_OPT_TIMING_PERIOD
+#undef CONFIG_XENO_OPT_TIMER_HEAP
+
+/* config */
+#undef CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY
 
 /* config */
 #undef CONFIG_XENO_OPT_TIMING_PERIODIC
+
+/* config */
+#undef CONFIG_XENO_OPT_UITRON_PERIOD
+
+/* config */
+#undef CONFIG_XENO_OPT_VRTX_PERIOD
+
+/* config */
+#undef CONFIG_XENO_OPT_VXWORKS_PERIOD
 
 /* config */
 #undef CONFIG_XENO_OPT_WATCHDOG

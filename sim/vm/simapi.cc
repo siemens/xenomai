@@ -122,8 +122,8 @@ void mvm_switch (void)
     thread->bumpInto();
 }
 
-void mvm_sleep (unsigned long ticks) {
-
+void mvm_sleep (unsigned long ticks)
+{
     XenoThread::currentThread->delay((double)MvmManager::This->getMvmTick() * ticks);
 }
 

@@ -107,6 +107,7 @@ STATUS taskInit(WIND_TCB *pTcb,
 		sprintf(pTcb->name, "t%lu", pTcb->flow_id);
 
 	if (xnpod_init_thread(&pTcb->threadbase,
+			      wind_tbase,
 			      pTcb->name,
 			      wind_normalized_prio(prio), bflags,
 			      stacksize) != 0) {

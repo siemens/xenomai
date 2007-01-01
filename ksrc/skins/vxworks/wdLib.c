@@ -179,7 +179,7 @@ STATUS wdStart(WDOG_ID wdog_id, int timeout, wind_timer_t handler, long arg)
 	else
 		xntimer_stop(&wd->timerbase);
 
-	xntimer_init(&wd->timerbase, wind_wd_trampoline);
+	xntimer_init(&wd->timerbase, wind_tbase, wind_wd_trampoline);
 	wd->handler = handler;
 	wd->arg = arg;
 

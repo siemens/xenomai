@@ -27,7 +27,6 @@
 #include <linux/ptrace.h>
 #include <asm-generic/xenomai/system.h>
 
-#define XNARCH_DEFAULT_TICK          1000000 /* ns, i.e. 1ms */
 #ifdef CONFIG_X86_LOCAL_APIC
 /* When the local APIC is enabled, we do not need to relay the host
    tick since 8254 interrupts are already flowing normally to Linux

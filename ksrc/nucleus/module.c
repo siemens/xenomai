@@ -212,7 +212,7 @@ static int sched_seq_open(struct inode *inode, struct file *file)
 	}
 
 	iter->nentries = 0;
-	iter->start_time = xntimer_get_jiffies();
+	iter->start_time = xntbase_get_jiffies(&nktbase);
 
 	/* Take a snapshot element-wise, restart if something changes
 	   underneath us. */
@@ -590,24 +590,65 @@ static int timer_read_proc(char *page,
 			   char **start,
 			   off_t off, int count, int *eof, void *data)
 {
-	const char *tm_status = "off", *wd_status = "";
-	xnticks_t jiffies = 0, tickval = 0;
+	const char *tm_status, *wd_status = "";
 	int len;
 
-	if (nkpod && testbits(nkpod->status, XNTIMED)) {
-		tm_status = nktimer->get_type();
-		tickval = xnpod_get_tickval();
-		jiffies = xntimer_get_jiffies();
+	if (nkpod && xntbase_enabled_p(&nktbase)) {
+		tm_status = "on";
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 		wd_status = "+watchdog";
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
 	}
+	else
+		tm_status = "off";
 
 	len = sprintf(page,
-		      "status=%s%s:setup=%Lu:tickval=%Lu:jiffies=%Lu\n",
-		      tm_status, wd_status, xnarch_tsc_to_ns(nktimerlat), tickval, jiffies);
+		      "status=%s%s:setup=%Lu:clock=%Lu\n",
+		      tm_status, wd_status, xnarch_tsc_to_ns(nktimerlat),
+		      xntbase_get_rawclock(&nktbase));
 
 	len -= off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+static int timebase_read_proc(char *page,
+			      char **start,
+			      off_t off, int count, int *eof, void *data)
+{
+	xnholder_t *holder;
+	xntbase_t *tbase;
+	char *p = page;
+	int len = 0;
+
+	p += sprintf(p, "%-10s  %10s %10s  %s\n",
+		     "NAME", "PERIOD(us)", "JIFFIES", "STATUS");
+
+	for (holder = getheadq(&nktimebaseq);
+	     holder != NULL; holder = nextq(&nktimebaseq, holder)) {
+		tbase = link2tbase(holder);
+		if (xntbase_periodic_p(tbase))
+			p += sprintf(p, "%-10s %10lu %10Lu  %s\n",
+				     tbase->name,
+				     tbase->tickvalue / 1000,
+				     tbase->jiffies,
+				     xntbase_enabled_p(tbase) ? "enabled" : "disabled");
+		else
+			p += sprintf(p, "%-10s %10s %10s  %s\n",
+				     tbase->name,
+				     "n/a",
+				     "n/a",
+				     "enabled");
+	}
+
+	len = p - page - off;
 	if (len <= off + count)
 		*eof = 1;
 	*start = page + off;
@@ -809,6 +850,8 @@ void xnpod_init_proc(void)
 
 	add_proc_leaf("timer", &timer_read_proc, NULL, NULL, rthal_proc_root);
 
+	add_proc_leaf("timebases", &timebase_read_proc, NULL, NULL, rthal_proc_root);
+
 	add_proc_leaf("irq", &irq_read_proc, NULL, NULL, rthal_proc_root);
 
 	add_proc_leaf("heap", &heap_read_proc, NULL, NULL, rthal_proc_root);
@@ -838,6 +881,7 @@ void xnpod_delete_proc(void)
 	remove_proc_entry("heap", rthal_proc_root);
 	remove_proc_entry("irq", rthal_proc_root);
 	remove_proc_entry("timer", rthal_proc_root);
+	remove_proc_entry("timebases", rthal_proc_root);
 	remove_proc_entry("version", rthal_proc_root);
 	remove_proc_entry("latency", rthal_proc_root);
 	remove_proc_entry("sched", rthal_proc_root);
@@ -943,6 +987,8 @@ int __init __xeno_sys_init(void)
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 #endif /* __KERNEL__ */
 
+	xntbase_mount();
+
 	xnloginfo("real-time nucleus v%s (%s) loaded.\n",
 		  XENO_VERSION_STRING, XENO_VERSION_NAME);
 
@@ -953,8 +999,6 @@ int __init __xeno_sys_init(void)
 #ifdef __KERNEL__
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-
-	xncore_umount();
 
       cleanup_heap:
 
@@ -1019,6 +1063,8 @@ void __exit __xeno_sys_exit(void)
 	xnltt_umount();
 #endif /* CONFIG_LTT */
 #endif /* __KERNEL__ */
+
+	xntbase_umount();
 
 	if (nkmsgbuf)
 		xnarch_sysfree(nkmsgbuf, XNPOD_FATAL_BUFSZ);

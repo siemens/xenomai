@@ -26739,7 +26739,12 @@ _ACEOF
 
 
 cat >>confdefs.h <<_ACEOF
-#define CONFIG_XENO_OPT_TIMING_PERIOD 0
+#define CONFIG_XENO_OPT_TIMER_HEAP 1
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY 256
 _ACEOF
 
 
@@ -26803,6 +26808,48 @@ _ACEOF
 cat >>confdefs.h <<\_ACEOF
 #define CONFIG_XENO_OPT_RTAI_SEM 1
 _ACEOF
+
+
+
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_OPT_NATIVE_PERIOD 0
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_OPT_POSIX_PERIOD 0
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_OPT_RTDM_PERIOD 0
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_OPT_PSOS_PERIOD 1000
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_OPT_VXWORKS_PERIOD 1000
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_OPT_VRTX_PERIOD 1000
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_OPT_UITRON_PERIOD 1000
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_OPT_RTAI_PERIOD 0
+_ACEOF
+
 
 
 

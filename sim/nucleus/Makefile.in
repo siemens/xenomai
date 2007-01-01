@@ -58,9 +58,10 @@ LIBRARIES = $(lib_LIBRARIES)
 ARFLAGS = cru
 libnucleus_sim_a_AR = $(AR) $(ARFLAGS)
 libnucleus_sim_a_DEPENDENCIES = ../adapter/adapter.o
-nodist_libnucleus_sim_a_OBJECTS = heap.$(OBJEXT) intr.$(OBJEXT) \
-	module.$(OBJEXT) pod.$(OBJEXT) registry.$(OBJEXT) \
-	synch.$(OBJEXT) thread.$(OBJEXT) timer.$(OBJEXT)
+nodist_libnucleus_sim_a_OBJECTS = core.$(OBJEXT) heap.$(OBJEXT) \
+	intr.$(OBJEXT) module.$(OBJEXT) pod.$(OBJEXT) \
+	registry.$(OBJEXT) synch.$(OBJEXT) thread.$(OBJEXT) \
+	timebase.$(OBJEXT) timer.$(OBJEXT)
 libnucleus_sim_a_OBJECTS = $(nodist_libnucleus_sim_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
@@ -231,6 +232,7 @@ lib_LIBRARIES = libnucleus_sim.a
 # native simulation mode. Therefore, their respective files are not
 # included here.
 nodist_libnucleus_sim_a_SOURCES = \
+			core.c \
 			heap.c \
 			intr.c \
 			module.c \
@@ -238,6 +240,7 @@ nodist_libnucleus_sim_a_SOURCES = \
 			registry.c \
 			synch.c \
 			thread.c \
+			timebase.c \
 			timer.c
 
 AM_CPPFLAGS = \
@@ -322,6 +325,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/core.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module.Po@am__quote@
@@ -329,6 +333,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/registry.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/synch.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thread.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timebase.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timer.Po@am__quote@
 
 .c.o:

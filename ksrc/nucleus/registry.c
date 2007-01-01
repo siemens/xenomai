@@ -677,16 +677,16 @@ int xnregistry_enter(const char *key,
  * Rescheduling: always unless the request is immediately satisfied or
  * @a timeout specifies a non-blocking operation.
  *
- * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the xnpod_start_timer() service. In
- * periodic mode, clock ticks are interpreted as periodic jiffies. In
- * oneshot mode, clock ticks are interpreted as nanoseconds.
+ * @note The @a timeout value will be interpreted as jiffies if @a
+ * thread is bound to a periodic time base (see xnpod_init_thread), or
+ * nanoseconds otherwise.
  */
 
 int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 {
 	xnobject_t *object;
 	xnthread_t *thread;
+	xntbase_t *tbase;
 	xnticks_t stime;
 	int err = 0;
 	spl_t s;
@@ -694,9 +694,12 @@ int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 	if (!key)
 		return -EINVAL;
 
+	thread = xnpod_current_thread();
+	tbase = xnthread_time_base(thread);
+
 	xnlock_get_irqsave(&nklock, s);
 
-	stime = xnpod_get_time();
+	stime = xnpod_get_time(tbase);
 
 	for (;;) {
 		object = registry_hash_find(key);
@@ -712,7 +715,7 @@ int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 		}
 
 		if (timeout != XN_INFINITE) {
-			xnticks_t now = xnpod_get_time();
+			xnticks_t now = xnpod_get_time(tbase);
 
 			if (stime + timeout >= now)
 				break;
@@ -721,7 +724,6 @@ int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 			stime = now;
 		}
 
-		thread = xnpod_current_thread();
 		thread->registry.waitkey = key;
 		xnsynch_sleep_on(&registry_hash_synch, timeout, XN_RELATIVE);
 
@@ -832,8 +834,8 @@ int xnregistry_remove(xnhandle_t handle)
  * - -ESRCH is returned if @a handle does not reference a registered
  * object.
  *
- * - -EWOULDBLOCK is returned if @a timeout is equal to
- * XN_NONBLOCK and the object is locked on entry.
+ * - -EWOULDBLOCK is returned if @a timeout is equal to XN_NONBLOCK
+ * and the object is locked on entry.
  *
  * - -EBUSY is returned if @a handle refers to a locked object and the
  * caller could not sleep until it is unlocked.
@@ -857,10 +859,9 @@ int xnregistry_remove(xnhandle_t handle)
  * Rescheduling: possible if the object to remove is currently locked
  * and the calling context can sleep.
  *
- * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the xnpod_start_timer() service. In
- * periodic mode, clock ticks are interpreted as periodic jiffies. In
- * oneshot mode, clock ticks are interpreted as nanoseconds.
+ * @note The @a timeout value will be interpreted as jiffies if the
+ * current thread is bound to a periodic time base (see
+ * xnpod_init_thread), or nanoseconds otherwise.
  */
 
 int xnregistry_remove_safe(xnhandle_t handle, xnticks_t timeout)

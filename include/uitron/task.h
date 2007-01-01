@@ -76,6 +76,8 @@ typedef struct uitask {
 
 #define ui_current_task() thread2uitask(xnpod_current_thread())
 
+extern xntbase_t *uitbase;
+
 #ifdef __cplusplus
 extern "C" {
 #endif

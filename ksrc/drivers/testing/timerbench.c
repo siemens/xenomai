@@ -175,7 +175,7 @@ void timer_proc(xntimer_t *timer)
 
     ctx->start_time = rtdm_clock_read();
     /* FIXME: convert to RTDM timers */
-    xntimer_start(&ctx->timer, xnpod_ns2ticks(ctx->date),
+    xntimer_start(&ctx->timer, xntbase_ns2ticks(rtdm_tbase, ctx->date),
                   XN_INFINITE, XN_ABSOLUTE);
 
     if (++ctx->curr.test_loops < ctx->samples_per_sec)
@@ -308,7 +308,7 @@ int rt_tmbench_ioctl_nrt(struct rtdm_dev_context *context,
                 }
             } else {
                 /* FIXME: convert to RTDM timers */
-                xntimer_init(&ctx->timer, timer_proc);
+		xntimer_init(&ctx->timer, rtdm_tbase, timer_proc);
 
                 ctx->curr.test_loops = 0;
 
@@ -320,7 +320,7 @@ int rt_tmbench_ioctl_nrt(struct rtdm_dev_context *context,
                         ctx->date       = ctx->start_time + ctx->period;
 
                         /* FIXME: convert to RTDM timers */
-                        xntimer_start(&ctx->timer, xnpod_ns2ticks(ctx->date),
+                        xntimer_start(&ctx->timer, xntbase_ns2ticks(rtdm_tbase, ctx->date),
                                       XN_INFINITE, XN_ABSOLUTE);
                     );
                 }

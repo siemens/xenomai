@@ -27,9 +27,11 @@ MODULE_DESCRIPTION("VxWorks(R) virtual machine");
 MODULE_AUTHOR("gilles.chanteperdrix@laposte.net");
 MODULE_LICENSE("GPL");
 
-#if !defined(__KERNEL__) || !defined(CONFIG_XENO_OPT_PERVASIVE)
-static xnpod_t __vxworks_pod;
-#endif /* !__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+static u_long tick_arg = CONFIG_XENO_OPT_VXWORKS_PERIOD;
+module_param_named(tick_arg, tick_arg, ulong, 0444);
+MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us)");
+
+xntbase_t *wind_tbase;
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 xnptree_t __vxworks_ptree = {
@@ -44,35 +46,17 @@ int SKIN_INIT(vxworks)
 {
 	int err;
 
-#if CONFIG_XENO_OPT_TIMING_PERIOD == 0
-	nktickdef = 1000000;	/* Defaults to 1ms. */
-#endif
-
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	/* The VxWorks skin is stacked over the core pod. */
-	err = xncore_attach();
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-	/* The VxWorks skin is standalone. */
-	err = xnpod_init(&__vxworks_pod, 255, 0, XNREUSE);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+	err = xncore_attach(255, 0);
 
 	if (err != 0)
-		goto fail;
+		goto fail_core;
 
-	if (!testbits(nkpod->status, XNTMPER)) {
-		xnlogerr
-		    ("incompatible timer mode (aperiodic found, need periodic).\n");
-		err = -EBUSY;	/* Cannot work in aperiodic timing mode. */
-	} else
-		err = wind_sysclk_init(1000000000 / xnpod_get_tickval());
+	err = wind_sysclk_init(tick_arg * 1000);
 
 	if (err != 0) {
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 		xncore_detach(err);
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-		xnpod_shutdown(err);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-	      fail:
+
+	fail_core:
 		xnlogerr("VxWorks skin init failed, code %d.\n", err);
 		return err;
 	}
@@ -102,10 +86,8 @@ void SKIN_EXIT(vxworks)
 	wind_task_hooks_cleanup();
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	wind_syscall_cleanup();
-	xncore_detach(XNPOD_NORMAL_EXIT);
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+	xncore_detach(XNPOD_NORMAL_EXIT);
 }
 
 module_init(__vxworks_skin_init);

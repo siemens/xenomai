@@ -55,7 +55,7 @@ struct xnltt_evmap {
 #define xeno_ev_cpumigrate   17
 #define xeno_ev_sigdispatch  18
 #define xeno_ev_thrboot      19
-#define xeno_ev_tmtick       20
+#define xeno_ev_tstick       20
 #define xeno_ev_sleepon      21
 #define xeno_ev_wakeup1      22
 #define xeno_ev_wakeupx      23
@@ -80,8 +80,8 @@ struct xnltt_evmap {
 #define xeno_ev_remhook      42
 #define xeno_ev_thrperiodic  43
 #define xeno_ev_thrwait      44
-#define xeno_ev_tmstart      45
-#define xeno_ev_tmstop       46
+#define xeno_ev_tsenable     45
+#define xeno_ev_tsdisable    46
 #define xeno_ev_mark         47
 #define xeno_ev_watchdog     48
 

@@ -28,7 +28,6 @@
 #include <linux/ptrace.h>
 #include <asm-generic/xenomai/system.h>
 
-#define XNARCH_DEFAULT_TICK     1000000	/* ns, i.e. 1ms */
 #define XNARCH_HOST_TICK        (1000000000UL/HZ)
 
 #ifdef CONFIG_PPC64

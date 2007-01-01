@@ -42,14 +42,15 @@ static void xnthread_periodic_handler(xntimer_t *timer)
 }
 
 int xnthread_init(xnthread_t *thread,
+		  xntbase_t *tbase,
 		  const char *name,
 		  int prio, xnflags_t flags, unsigned stacksize)
 {
 	int err;
 
-	xntimer_init(&thread->rtimer, &xnthread_timeout_handler);
+	xntimer_init(&thread->rtimer, tbase, &xnthread_timeout_handler);
 	xntimer_set_priority(&thread->rtimer, XNTIMER_HIPRIO);
-	xntimer_init(&thread->ptimer, &xnthread_periodic_handler);
+	xntimer_init(&thread->ptimer, tbase, &xnthread_periodic_handler);
 	xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
 
 	/* Setup the TCB. */

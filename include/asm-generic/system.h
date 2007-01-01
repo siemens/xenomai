@@ -47,6 +47,9 @@
 #define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
 #endif
 
+/* Time base export */
+#define xnarch_declare_tbase(base)		do { } while(0)
+
 /* Tracer interface */
 #define xnarch_trace_max_begin(v)		rthal_trace_max_begin(v)
 #define xnarch_trace_max_end(v)		rthal_trace_max_end(v)
@@ -177,27 +180,27 @@ typedef struct xnarch_heapcb {
 extern "C" {
 #endif
 
-static inline long long xnarch_tsc_to_ns (long long ts)
+static inline long long xnarch_tsc_to_ns(long long ts)
 {
     return xnarch_llimd(ts,1000000000,RTHAL_CPU_FREQ);
 }
 
-static inline long long xnarch_ns_to_tsc (long long ns)
+static inline long long xnarch_ns_to_tsc(long long ns)
 {
     return xnarch_llimd(ns,RTHAL_CPU_FREQ,1000000000);
 }
 
-static inline unsigned long long xnarch_get_cpu_time (void)
+static inline unsigned long long xnarch_get_cpu_time(void)
 {
     return xnarch_tsc_to_ns(xnarch_get_cpu_tsc());
 }
 
-static inline unsigned long long xnarch_get_cpu_freq (void)
+static inline unsigned long long xnarch_get_cpu_freq(void)
 {
     return RTHAL_CPU_FREQ;
 }
 
-static inline unsigned xnarch_current_cpu (void)
+static inline unsigned xnarch_current_cpu(void)
 {
     return rthal_processor_id();
 }

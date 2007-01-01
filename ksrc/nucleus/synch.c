@@ -159,10 +159,9 @@ static inline void xnsynch_renice_thread(xnthread_t *thread, int prio)
  *
  * Rescheduling: always.
  *
- * @note This service is sensitive to the current operation mode of
- * the system timer, as defined by the xnpod_start_timer() service. In
- * periodic mode, clock ticks are interpreted as periodic jiffies. In
- * oneshot mode, clock ticks are interpreted as nanoseconds.
+ * @note The @a timeout value will be interpreted as jiffies if the
+ * current thread is bound to a periodic time base (see
+ * xnpod_init_thread), or nanoseconds otherwise.
  */
 
 void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout, int mode)

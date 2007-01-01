@@ -27,11 +27,13 @@
 extern "C" {
 #endif
 
-static inline RTIME nano2count(RTIME ns) {
+static inline RTIME nano2count(RTIME ns)
+{
     return ns;
 }
 
-static inline RTIME count2nano(RTIME count) {
+static inline RTIME count2nano(RTIME count)
+{
     return count;
 }
 

@@ -29,11 +29,6 @@
 
 #include <asm-generic/xenomai/system.h>
 
-#ifdef CONFIG_IA64_HP_SIM
-#define XNARCH_DEFAULT_TICK    31250000 /* ns, i.e. 31ms */
-#else
-#define XNARCH_DEFAULT_TICK    XNARCH_HOST_TICK
-#endif
 #define XNARCH_HOST_TICK       (1000000000UL/HZ)
 
 #define XNARCH_THREAD_STACKSZ  KERNEL_STACK_SIZE

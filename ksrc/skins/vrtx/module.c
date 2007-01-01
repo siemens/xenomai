@@ -32,6 +32,10 @@ MODULE_DESCRIPTION("VRTX(R) virtual machine");
 MODULE_AUTHOR("jpinon@idealx.com, rpm@xenomai.org");
 MODULE_LICENSE("GPL");
 
+static u_long tick_arg = CONFIG_XENO_OPT_VRTX_PERIOD;
+module_param_named(tick_arg, tick_arg, ulong, 0444);
+MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us)");
+
 static u_long workspace_size_arg = 32 * 1024;	/* Default size of VRTX workspace */
 module_param_named(workspace_size, workspace_size_arg, ulong, 0444);
 MODULE_PARM_DESC(workspace_size, "Size of VRTX workspace (in bytes)");
@@ -40,9 +44,7 @@ static u_long task_stacksize_arg = 4096;	/* Default size of VRTX tasks */
 module_param_named(task_stacksize, task_stacksize_arg, ulong, 0444);
 MODULE_PARM_DESC(task_stacksize, "Default size of VRTX task stack (in bytes)");
 
-#if !defined(__KERNEL__) || !defined(CONFIG_XENO_OPT_PERVASIVE)
-static xnpod_t __vrtx_pod;
-#endif /* !__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+xntbase_t *vrtx_tbase;
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 xnptree_t __vrtx_ptree = {
@@ -143,37 +145,17 @@ int SKIN_INIT(vrtx)
 {
 	int err;
 
-#if CONFIG_XENO_OPT_TIMING_PERIOD == 0
-	nktickdef = 1000000;	/* Defaults to 1ms. */
-#endif
-
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	/* The VRTX skin is stacked over the core pod. */
-	err = xncore_attach();
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-	/* The VRTX skin is standalone. */
-	err = xnpod_init(&__vrtx_pod, 255, 0, XNREUSE);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+	err = xncore_attach(255, 0);
 
 	if (err != 0)
 		goto fail;
 
-	if (!testbits(nkpod->status, XNTMPER)) {
-		xnlogerr
-		    ("incompatible timer mode (aperiodic found, need periodic).\n");
-		err = -EBUSY;	/* Cannot work in aperiodic timing mode. */
-	}
+	err = xntbase_alloc("vrtx", tick_arg * 1000, &vrtx_tbase);
 
-	if (err != 0) {
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-		xncore_detach(err);
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-		xnpod_shutdown(err);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-	      fail:
-		xnlogerr("VRTX skin init failed, code %d.\n", err);
-		return err;
-	}
+	if (err != 0)
+		goto fail_core;
+
+	xntbase_start(vrtx_tbase);
 
 	/* the VRTX workspace, or sysheap, is accessed (sc_halloc) with
 	 * hid #0.  We must ensure it is the first heap created, so
@@ -181,8 +163,14 @@ int SKIN_INIT(vrtx)
 	 */
 	err = vrtxheap_init(module_param_value(workspace_size_arg));
 
-	if (err != 0)
-		goto fail;
+	if (err != 0) {
+		xntbase_free(vrtx_tbase);
+	fail_core:
+		xncore_detach(err);
+	fail:
+		xnlogerr("VRTX skin init failed, code %d.\n", err);
+		return err;
+	}
 
 	vrtxevent_init();
 	vrtxsem_init();
@@ -214,10 +202,9 @@ void SKIN_EXIT(vrtx)
 	vrtxheap_cleanup();
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	vrtxsys_cleanup();
-	xncore_detach(XNPOD_NORMAL_EXIT);
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+	xntbase_free(vrtx_tbase);
+	xncore_detach(XNPOD_NORMAL_EXIT);
 }
 
 module_init(__vrtx_skin_init);

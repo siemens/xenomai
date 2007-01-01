@@ -144,3 +144,11 @@ ___________________________________________________________________
 
 	o Deprecate rt_pipe_flush() since the optimization of the data
 	streaming mode made it useless.
+___________________________________________________________________
+
+2.3 -> 2.4-rc1
+
+	o rt_timer_inquire() cannot return TM_UNSET anymore, since
+	the master time base is always valid when a skin is active.
+
+	o The deprecated service rt_pipe_flush() has been removed.

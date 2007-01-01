@@ -118,7 +118,7 @@ u_long t_create(char name[4],
 		   user-space. */
 		sprintf(task->name, "anon%lu", psos_task_ids++);
 
-	if (xnpod_init_thread(&task->threadbase,
+	if (xnpod_init_thread(&task->threadbase, psos_tbase,
 			      task->name, prio, bflags, ustack) != 0) {
 		xnfree(task);
 		return ERR_NOSTK;	/* Assume this is the only possible failure */

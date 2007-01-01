@@ -34,6 +34,7 @@
 
 struct xnthread;
 struct xnsynch;
+struct xntbase;
 struct XenoThread;
 struct mvm_displayctx;
 struct mvm_displayctl;
@@ -82,7 +83,6 @@ typedef unsigned long xnlock_t;
 /* Should be equal to the value used for creating the mvmtimer object (mvm_start_timer). */
 #define XNARCH_TIMER_IRQ	    1
 
-#define XNARCH_DEFAULT_TICK         10000000 /* ns, i.e. 10ms */
 #define XNARCH_HOST_TICK            0 /* No host ticking service. */
 
 #define XNARCH_THREAD_STACKSZ 0 /* Let the simulator choose. */
@@ -262,6 +262,8 @@ int mvm_run(void *tcbarg,
 	    void *faddr);
 
 void mvm_finalize_init(void);
+
+void mvm_declare_tbase(struct xntbase *base);
 
 void mvm_sleep(unsigned long ticks);
 
@@ -483,6 +485,9 @@ if (cond) \
 __mvm_breakable(mvm_post_graph)(&(obj)->__mvm_display_context,state); \
 while(0)
 
+/* Time base export */
+#define xnarch_declare_tbase(base)		mvm_declare_tbase(base)
+
 /* Tracer interface */
 #define xnarch_trace_max_begin(v)		({int err = -ENOSYS; err; })
 #define xnarch_trace_max_end(v)		({int err = -ENOSYS; err; })
@@ -538,11 +543,5 @@ static inline long IS_ERR(const void *ptr)
 {
 	return IS_ERR_VALUE((unsigned long)ptr);
 }
-
-/* Pre-set config switches. */
-
-#define CONFIG_XENO_OPT_TIMING_PERIODIC 1
-#define CONFIG_XENO_OPT_TIMER_HEAP 1
-#define CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY 256
 
 #endif /* !_XENO_ASM_SIM_SYSTEM_H */

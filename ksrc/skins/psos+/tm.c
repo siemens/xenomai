@@ -86,7 +86,7 @@ static u_long tm_start_event_timer(u_long ticks,
 	tm->owner = psos_current_task();
 	*tmid = (u_long)tm;
 
-	xntimer_init(&tm->timerbase, tm_evpost_handler);
+	xntimer_init(&tm->timerbase, psos_tbase, tm_evpost_handler);
 	tm->magic = PSOS_TM_MAGIC;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -144,7 +144,7 @@ static u_long tm_date_to_ticks(u_long date,
 	if (hour > 23 || min > 59 || sec > 59)
 		return ERR_ILLTIME;
 
-	if (ticks >= xnpod_get_ticks2sec())
+	if (ticks >= xntbase_get_ticks2sec(psos_tbase))
 		return ERR_ILLTICKS;
 
 	for (n = 0; n < year; n++)
@@ -164,7 +164,7 @@ static u_long tm_date_to_ticks(u_long date,
 	*count += min;
 	*count *= 60;
 	*count += sec;
-	*count *= xnpod_get_ticks2sec();
+	*count *= xntbase_get_ticks2sec(psos_tbase);
 	*count += ticks;
 
 	return SUCCESS;
@@ -175,7 +175,7 @@ static void tm_ticks_to_date(u_long *date,
 {
 	u_long year, month, day, hour, min, sec, allsecs, rem;
 
-	allsecs = (u_long)xnarch_ulldiv(count, xnpod_get_ticks2sec(), &rem);
+	allsecs = (u_long)xnarch_ulldiv(count, xntbase_get_ticks2sec(psos_tbase), &rem);
 
 	year = 0;
 
@@ -218,7 +218,7 @@ static void tm_ticks_to_date(u_long *date,
 
 	*date = (year << 16) | (month << 8) | day;
 	*time = (hour << 16) | (min << 8) | sec;
-	*ticks = xnarch_ullmod(count, xnpod_get_ticks2sec(), &rem);
+	*ticks = xnarch_ullmod(count, xntbase_get_ticks2sec(psos_tbase), &rem);
 }
 
 u_long tm_wkafter(u_long ticks)
@@ -293,7 +293,7 @@ u_long tm_evwhen(u_long date,
 	if (!xnpod_primary_p())
 		return -EPERM;
 
-	if (!xnpod_timeset_p())
+	if (!xntbase_timeset_p(psos_tbase))
 		return ERR_NOTIME;	/* Must call tm_set() first. */
 
 	err = tm_date_to_ticks(date, time, ticks, &when);
@@ -301,7 +301,7 @@ u_long tm_evwhen(u_long date,
 	if (err != SUCCESS)
 		return err;
 
-	now = xnpod_get_time();
+	now = xnpod_get_time(psos_tbase);
 
 	if (when <= now)
 		return ERR_TOOLATE;
@@ -317,7 +317,7 @@ u_long tm_wkwhen(u_long date, u_long time, u_long ticks)
 	if (xnpod_unblockable_p())
 		return -EPERM;
 
-	if (!xnpod_timeset_p())
+	if (!xntbase_timeset_p(psos_tbase))
 		return ERR_NOTIME;	/* Must call tm_set() first. */
 
 	err = tm_date_to_ticks(date, time, ticks, &when);
@@ -325,7 +325,7 @@ u_long tm_wkwhen(u_long date, u_long time, u_long ticks)
 	if (err != SUCCESS)
 		return err;
 
-	now = xnpod_get_time();
+	now = xnpod_get_time(psos_tbase);
 
 	if (when <= now)
 		return ERR_TOOLATE;
@@ -340,10 +340,10 @@ u_long tm_wkwhen(u_long date, u_long time, u_long ticks)
 
 u_long tm_get(u_long *date, u_long *time, u_long *ticks)
 {
-	if (!xnpod_timeset_p())
+	if (!xntbase_timeset_p(psos_tbase))
 		return ERR_NOTIME;	/* Must call tm_set() first. */
 
-	tm_ticks_to_date(date, time, ticks, xnpod_get_time());
+	tm_ticks_to_date(date, time, ticks, xnpod_get_time(psos_tbase));
 
 	return SUCCESS;
 }
@@ -356,7 +356,7 @@ u_long tm_set(u_long date, u_long time, u_long ticks)
 	err = tm_date_to_ticks(date, time, ticks, &when);
 
 	if (err == SUCCESS)
-		nkpod->svctable.settime(when);
+	    nkpod->svctable.settime(psos_tbase, when);
 
 	return err;
 }

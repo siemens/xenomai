@@ -25,7 +25,11 @@ MODULE_DESCRIPTION("uITRON interface");
 MODULE_AUTHOR("rpm@xenomai.org");
 MODULE_LICENSE("GPL");
 
-static xnpod_t pod;
+static u_long tick_arg = CONFIG_XENO_OPT_UITRON_PERIOD;
+module_param_named(tick_arg, tick_arg, ulong, 0444);
+MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us)");
+
+xntbase_t *uitbase;
 
 static void uitron_shutdown(int xtype)
 {
@@ -34,21 +38,28 @@ static void uitron_shutdown(int xtype)
 	uisem_cleanup();
 	uitask_cleanup();
 
-	xnpod_shutdown(xtype);
+	xntbase_free(uitbase);
+	xncore_detach(xtype);
 }
 
 int SKIN_INIT(uitron)
 {
 	int err;
 
-#if CONFIG_XENO_OPT_TIMING_PERIOD == 0
-	nktickdef = 1000000;	/* Defaults to 1ms. */
-#endif
-
-	err = xnpod_init(&pod, uITRON_MIN_PRI, uITRON_MAX_PRI, 0);
+	err = xncore_attach(uITRON_MIN_PRI, uITRON_MAX_PRI);
 
 	if (err != 0)
 		return err;
+
+	err = xntbase_alloc("uitron", tick_arg * 1000, &uitbase);
+
+	if (err != 0) {
+		xnlogerr("uITRON skin init failed, code %d.\n", err);
+		xncore_detach(err);
+		return err;
+	}
+
+	xntbase_start(uitbase);
 
 	uitask_init();
 	uisem_init();

@@ -25,7 +25,6 @@
 #include <nucleus/timer.h>
 #include <native/types.h>
 
-#define TM_UNSET   XN_NO_TICK
 #define TM_ONESHOT XN_APERIODIC_TICK
 
 typedef struct rt_timer_info {
@@ -35,6 +34,10 @@ typedef struct rt_timer_info {
     RTIME tsc;          /* !< Current tsc count. */
 
 } RT_TIMER_INFO;
+
+#if defined(__KERNEL__) || defined(__XENO_SIM__)
+extern xntbase_t *__native_tbase;
+#endif /* __KERNEL__ || __XENO_SIM__ */
 
 #ifdef __cplusplus
 extern "C" {

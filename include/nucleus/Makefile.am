@@ -20,6 +20,7 @@ include_HEADERS = \
 	synch.h \
 	system.h \
 	thread.h \
+	timebase.h \
 	timer.h \
 	trace.h \
 	types.h \

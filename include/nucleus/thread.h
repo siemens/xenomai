@@ -261,7 +261,13 @@ typedef struct xnhook {
 #define xnthread_handle(thread)            ((thread)->registry.handle)
 #define xnthread_set_magic(thread,m)       do { (thread)->magic = (m); } while(0)
 #define xnthread_get_magic(thread)         ((thread)->magic)
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
+#define xnthread_time_base(thread)         ((thread)->rtimer.base)
+#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
+#define xnthread_time_base(thread)         (&nktbase)
+#endif /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
 #define xnthread_signaled_p(thread)        ((thread)->signals != 0)
+#define xnthread_timed_p(thread)	      (!!testbits(xnthread_time_base(thread)->status, XNTBRUN))
 #define xnthread_user_task(thread)         xnarch_user_task(xnthread_archtcb(thread))
 #define xnthread_user_pid(thread) \
     (xnthread_test_state((thread),XNROOT) || !xnthread_user_task(thread) ? \
@@ -272,6 +278,7 @@ extern "C" {
 #endif
 
 int xnthread_init(xnthread_t *thread,
+		  xntbase_t *tbase,
 		  const char *name,
 		  int prio,
 		  xnflags_t flags,

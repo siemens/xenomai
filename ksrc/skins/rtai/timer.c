@@ -22,32 +22,29 @@
 #include <rtai/task.h>
 #include <rtai/timer.h>
 
-static int __rtai_oneshot;
-
 void rt_set_oneshot_mode(void)
 {
-	xnpod_stop_timer();
-	__rtai_oneshot = 1;
+	xntbase_switch("rtai", XN_APERIODIC_TICK, &rtai_tbase);
+	/* The master aperiodic time base is already (and always)
+	   started. */
 }
 
 void rt_set_periodic_mode(void)
 {
-	xnpod_stop_timer();
-	__rtai_oneshot = 0;
 }
 
 RTIME start_rt_timer(int period)
 {
 	/* count2nano() and nano2count() are no-ops, so we should have
-	   been passed nanoseconds, as xnpod_start_timer() expects. */
-	xnpod_start_timer(__rtai_oneshot ? XN_APERIODIC_TICK : period,
-			  XNPOD_DEFAULT_TICKHANDLER);
+	   been passed nanoseconds. */
+	xntbase_switch("rtai", period, &rtai_tbase);
+	xntbase_start(rtai_tbase);
 	return period;
 }
 
 void stop_rt_timer(void)
 {
-	xnpod_stop_timer();
+	xntbase_stop(rtai_tbase);
 }
 
 void rt_sleep(RTIME delay)
@@ -61,11 +58,8 @@ void rt_sleep(RTIME delay)
 
 RTIME rt_get_time_ns(void)
 {
-	RTIME ret;
-
-	ret = xnpod_get_time();
-
-	return __rtai_oneshot ? count2nano(ret) : ret;
+	RTIME ticks = xnpod_get_time(rtai_tbase);
+	return xntbase_ticks2ns(rtai_tbase, ticks);
 }
 
 EXPORT_SYMBOL(rt_set_oneshot_mode);

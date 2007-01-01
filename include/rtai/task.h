@@ -69,6 +69,8 @@ static inline RT_TASK *thread2rtask (xnthread_t *t)
 
 #define rtai_current_task() thread2rtask(xnpod_current_thread())
 
+extern xntbase_t *rtai_tbase;
+
 #ifdef __cplusplus
 extern "C" {
 #endif

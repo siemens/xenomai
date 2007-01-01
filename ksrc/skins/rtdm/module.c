@@ -44,10 +44,9 @@ MODULE_DESCRIPTION("Real-Time Driver Model");
 MODULE_AUTHOR("jan.kiszka@web.de");
 MODULE_LICENSE("GPL");
 
-#if !defined(__KERNEL__) || !defined(CONFIG_XENO_OPT_PERVASIVE)
-static xnpod_t __rtdm_pod;
-#endif /* !__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-
+static u_long tick_arg = CONFIG_XENO_OPT_RTDM_PERIOD;
+module_param_named(tick_arg, tick_arg, ulong, 0444);
+MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us), 0 for tick-less mode");
 
 static void __exit rtdm_skin_shutdown(int xtype)
 {
@@ -59,10 +58,9 @@ static void __exit rtdm_skin_shutdown(int xtype)
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
     rtdm_syscall_cleanup();
-    xncore_detach(xtype);
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-    xnpod_shutdown(xtype);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+    xntbase_free(rtdm_tbase);
+    xncore_detach(xtype);
 }
 
 
@@ -70,20 +68,20 @@ int __init SKIN_INIT(rtdm)
 {
     int err;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    /* The RTDM skin is stacked over the Xenomai pod. */
-    err = xncore_attach();
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-    /* The RTDM skin is standalone. */
-    err = xnpod_init(&__rtdm_pod, XNCORE_LOW_PRIO, XNCORE_HIGH_PRIO, XNREUSE);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+    err = xncore_attach(XNCORE_LOW_PRIO, XNCORE_HIGH_PRIO);
 
     if (err)
         goto fail;
 
+    err = xntbase_alloc("rtdm", tick_arg * 1000, &rtdm_tbase);
+    if (err)
+	goto cleanup_pod;
+
+    xntbase_start(rtdm_tbase);
+
     err = rtdm_dev_init();
     if (err)
-        goto cleanup_pod;
+        goto cleanup_tbase;
 
 #ifdef CONFIG_PROC_FS
     err = rtdm_proc_init();
@@ -117,12 +115,13 @@ int __init SKIN_INIT(rtdm)
 
     rtdm_dev_cleanup();
 
+  cleanup_tbase:
+
+    xntbase_free(rtdm_tbase);
+
   cleanup_pod:
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+
     xncore_detach(err);
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-    xnpod_shutdown(err);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
   fail:
 

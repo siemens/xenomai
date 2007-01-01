@@ -31,9 +31,11 @@ MODULE_DESCRIPTION("RTAI API emulator");
 MODULE_AUTHOR("rpm@xenomai.org");
 MODULE_LICENSE("GPL");
 
-#if !defined(__KERNEL__) || !defined(CONFIG_XENO_OPT_PERVASIVE)
-static xnpod_t __rtai_pod;
-#endif /* !__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+static u_long tick_arg = CONFIG_XENO_OPT_RTAI_PERIOD;
+module_param_named(tick_arg, tick_arg, ulong, 0444);
+MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us), 0 for tick-less mode");
+
+xntbase_t *rtai_tbase;
 
 static void rtai_shutdown(int xtype)
 {
@@ -53,31 +55,31 @@ static void rtai_shutdown(int xtype)
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	__rtai_syscall_cleanup();
-	xncore_detach(xtype);
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-	xnpod_shutdown(xtype);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+	xntbase_free(rtai_tbase);
+	xncore_detach(xtype);
 }
 
 int SKIN_INIT(rtai)
 {
 	int err;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	/* The RTAI emulator is stacked over the shared Xenomai pod. */
-	err = xncore_attach();
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-	/* The RTAI emulator is standalone. */
-	err = xnpod_init(&__rtai_pod, XNCORE_LOW_PRIO, XNCORE_HIGH_PRIO, 0);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+	err = xncore_attach(XNCORE_LOW_PRIO, XNCORE_HIGH_PRIO);
 
 	if (err)
 		goto fail;
 
-	err = __rtai_task_pkg_init();
+	err = xntbase_alloc("rtai", tick_arg * 1000, &rtai_tbase);
 
 	if (err)
 		goto cleanup_pod;
+
+	xntbase_start(rtai_tbase);
+
+	err = __rtai_task_pkg_init();
+
+	if (err)
+		goto cleanup_tbase;
 
 #ifdef CONFIG_XENO_OPT_RTAI_SEM
 	err = __rtai_sem_pkg_init();
@@ -135,14 +137,16 @@ int SKIN_INIT(rtai)
 
 	__rtai_task_pkg_cleanup();
 
+      cleanup_tbase:
+
+	xntbase_free(rtai_tbase);
+
       cleanup_pod:
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	__rtai_syscall_cleanup();
-	xncore_detach(XNPOD_NORMAL_EXIT);
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
-	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+	xncore_detach(XNPOD_NORMAL_EXIT);
 
       fail:
 

@@ -181,7 +181,7 @@ int pthread_create(pthread_t *tid,
 	if (!start)
 		flags |= XNSHADOW;	/* Note: no interrupt shield. */
 
-	if (xnpod_init_thread(&thread->threadbase,
+	if (xnpod_init_thread(&thread->threadbase, pse51_tbase,
 			      name, prio, flags, stacksize) != 0) {
 		xnfree(thread);
 		return EAGAIN;

@@ -128,13 +128,20 @@ int sc_tecreate_inner(vrtxtask_t *task,
 
 	sprintf(name, "t%.3d", tid);
 
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+	/* VRTX priority scale is inverted compared to the core pod's
+	   we are going to use for hosting our threads. */
+	bflags |= XNINVPS;
+
 	if (mode & 0x100)
 		bflags |= XNSHADOW;
+#endif /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
 
 	if (!(mode & 0x8))
 		bflags |= XNFPU;
 
 	if (xnpod_init_thread(&task->threadbase,
+			      vrtx_tbase,
 			      name,
 			      vrtx_normalized_prio(prio),
 			      bflags, user + sys) != 0) {
