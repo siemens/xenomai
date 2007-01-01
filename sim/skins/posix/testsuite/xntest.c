@@ -78,8 +78,8 @@ void xntest_start(void)
         xntest_verbose = module_param_value(xntest_verbose);
 
     xnlock_get_irqsave(&test_lock, s);
-    xntimer_init(&watchdog, interrupt_test);
-    xntimer_start(&watchdog, xnpod_ns2ticks(test_timeout * 1000000000ULL), XN_INFINITE, XN_RELATIVE);
+    xntimer_init(&watchdog, &nktbase, interrupt_test);
+    xntimer_start(&watchdog, xntbase_ns2ticks(&nktbase, test_timeout * 1000000000ULL), XN_INFINITE, XN_RELATIVE);
 
     initq(&marks_q);
     tests=0;
