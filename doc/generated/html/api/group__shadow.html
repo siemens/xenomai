@@ -131,7 +131,7 @@ Create a shadow thread context.
 This call maps a nucleus thread to the "current" Linux task. The priority of the Linux task is set to the priority of the shadow thread bounded to the [0..MAX_RT_PRIO-1] range, and its scheduling policy is set to either SCHED_FIFO for non-zero priority levels, or SCHED_NORMAL otherwise.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the new shadow thread to be mapped to "current". This descriptor must have been previously initialized by a call to <a class="el" href="group__pod.html#g505b1db26a7e9b4aeecc186100a646a5">xnpod_init_thread()</a>.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the new shadow thread to be mapped to "current". This descriptor must have been previously initialized by a call to <a class="el" href="group__pod.html#ga10002760c13e5b1b8d033926f15bcc9">xnpod_init_thread()</a>.</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Warning:</b></dt><dd>The thread must have been set the same magic number (i.e. xnthread_set_magic()) than the one used to register the skin it belongs to. Failing to do so might lead to unexpected results.</dd></dl>
@@ -241,7 +241,7 @@ Rescheduling: always.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 25 13:57:10 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

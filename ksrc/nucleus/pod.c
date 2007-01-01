@@ -2738,9 +2738,9 @@ void xnpod_schedule_runnable(xnthread_t *thread, int flags)
  * epoch is initially the same as the underlying architecture system
  * time. This service changes the epoch for the specified time base.
  *
- * @param  The address of the affected time base.
+ * @param tbase The address of the affected time base.
  *
- * @param  The new time to set for the specified time base.
+ * @param newtime The new time to set for the specified time base.
  *
  * Environments:
  *
@@ -2771,7 +2771,7 @@ void xnpod_set_time(xntbase_t *tbase, xnticks_t newtime)
  *
  * This service gets the nucleus (external) clock time.
  *
- * @param  The address of the affected time base.
+ * @param tbase The address of the affected time base.
  *
  * @return The current time (in jiffies) if the specified time base
  * runs in periodic mode, or the system time (converted to

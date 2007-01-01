@@ -43,10 +43,6 @@ The source of all Xenomai magic.
 <tr><td colspan="2"><br><h2>Data Fields</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">xnflags_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#7b0b15bd11482596b1affb73f4fe54ff">status</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">xnticks_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#99176c335c77a40b12f72d9dd2b39937">jiffies</a></td></tr>
-
-<tr><td class="memItemLeft" nowrap align="right" valign="top">xnticks_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#fb82b980cb8e70570e75e5f734669177">wallclock_offset</a></td></tr>
-
 <tr><td class="memItemLeft" nowrap align="right" valign="top">xntimer_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#f64fa4df8c8bca1313a706ab29a8af08">htimer</a></td></tr>
 
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structxnsched.html">xnsched_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#8f4d9384fc5c6b00d9e403d50c7f5b47">sched</a> [XNARCH_NR_CPUS]</td></tr>
@@ -69,15 +65,11 @@ The source of all Xenomai magic.
 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#a26df898217c8ed9e0a20259f0c4613b">root_prio_base</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">u_long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#12a6d3399dbb2283a52e66120e7a695d">tickvalue</a></td></tr>
-
-<tr><td class="memItemLeft" nowrap align="right" valign="top">u_long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#f647332ff4c94d26b4b87dadd2bb3474">ticks2sec</a></td></tr>
-
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#26e8700e411f5292fa5372aa2faa28f6">refcnt</a></td></tr>
 
 <tr><td class="memItemLeft" nowrap>struct {</td></tr>
 
-<tr><td class="memItemLeft" nowrap>&nbsp;&nbsp;&nbsp;void(*&nbsp;&nbsp;&nbsp;<a class="el" href="structxnpod.html#ea72ee8c9f8df9e2e755191745b972e9">settime</a> )(xnticks_t newtime)</td></tr>
+<tr><td class="memItemLeft" nowrap>&nbsp;&nbsp;&nbsp;void(*&nbsp;&nbsp;&nbsp;<a class="el" href="structxnpod.html#160c040697a38ceaa31c92746a6d5f04">settime</a> )(xntbase_t *tbase, xnticks_t newtime)</td></tr>
 
 <tr><td class="memItemLeft" nowrap>&nbsp;&nbsp;&nbsp;int(*&nbsp;&nbsp;&nbsp;<a class="el" href="structxnpod.html#395bfcfcb3910a2c21097c8f8ba05b37">faulthandler</a> )(xnarch_fltinfo_t *fltinfo)</td></tr>
 
@@ -131,29 +123,6 @@ Trap/exception handler.     </td>
 
 <p>
 Host timer.     </td>
-  </tr>
-</table>
-<a class="anchor" name="99176c335c77a40b12f72d9dd2b39937"></a><!-- doxytag: member="xnpod::jiffies" ref="99176c335c77a40b12f72d9dd2b39937" args="" --><p>
-<table class="mdTable" cellpadding="2" cellspacing="0">
-  <tr>
-    <td class="mdRow">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td class="md" nowrap valign="top">xnticks_t <a class="el" href="structxnpod.html#99176c335c77a40b12f72d9dd2b39937">xnpod::jiffies</a>          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table cellspacing="5" cellpadding="0" border="0">
-  <tr>
-    <td>
-      &nbsp;
-    </td>
-    <td>
-
-<p>
-Periodic ticks elapsed since boot.     </td>
   </tr>
 </table>
 <a class="anchor" name="5a7b25502edf7a7ef1ca097a766d0820"></a><!-- doxytag: member="xnpod::maxpri" ref="5a7b25502edf7a7ef1ca097a766d0820" args="" --><p>
@@ -294,13 +263,13 @@ Per-cpu scheduler slots.     </td>
 Scheduler lock count.     </td>
   </tr>
 </table>
-<a class="anchor" name="ea72ee8c9f8df9e2e755191745b972e9"></a><!-- doxytag: member="xnpod::settime" ref="ea72ee8c9f8df9e2e755191745b972e9" args=")(xnticks_t newtime)" --><p>
+<a class="anchor" name="160c040697a38ceaa31c92746a6d5f04"></a><!-- doxytag: member="xnpod::settime" ref="160c040697a38ceaa31c92746a6d5f04" args=")(xntbase_t *tbase, xnticks_t newtime)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">void(* <a class="el" href="structxnpod.html#ea72ee8c9f8df9e2e755191745b972e9">xnpod::settime</a>)(xnticks_t newtime)          </td>
+          <td class="md" nowrap valign="top">void(* <a class="el" href="structxnpod.html#160c040697a38ceaa31c92746a6d5f04">xnpod::settime</a>)(xntbase_t *tbase, xnticks_t newtime)          </td>
         </tr>
       </table>
     </td>
@@ -432,52 +401,6 @@ All existing threads.     </td>
 Modification counter of threadq.     </td>
   </tr>
 </table>
-<a class="anchor" name="f647332ff4c94d26b4b87dadd2bb3474"></a><!-- doxytag: member="xnpod::ticks2sec" ref="f647332ff4c94d26b4b87dadd2bb3474" args="" --><p>
-<table class="mdTable" cellpadding="2" cellspacing="0">
-  <tr>
-    <td class="mdRow">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td class="md" nowrap valign="top">u_long <a class="el" href="structxnpod.html#f647332ff4c94d26b4b87dadd2bb3474">xnpod::ticks2sec</a>          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table cellspacing="5" cellpadding="0" border="0">
-  <tr>
-    <td>
-      &nbsp;
-    </td>
-    <td>
-
-<p>
-Number of ticks per second (1e9 if aperiodic).     </td>
-  </tr>
-</table>
-<a class="anchor" name="12a6d3399dbb2283a52e66120e7a695d"></a><!-- doxytag: member="xnpod::tickvalue" ref="12a6d3399dbb2283a52e66120e7a695d" args="" --><p>
-<table class="mdTable" cellpadding="2" cellspacing="0">
-  <tr>
-    <td class="mdRow">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td class="md" nowrap valign="top">u_long <a class="el" href="structxnpod.html#12a6d3399dbb2283a52e66120e7a695d">xnpod::tickvalue</a>          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table cellspacing="5" cellpadding="0" border="0">
-  <tr>
-    <td>
-      &nbsp;
-    </td>
-    <td>
-
-<p>
-Tick duration (ns, 1 if aperiodic).     </td>
-  </tr>
-</table>
 <a class="anchor" name="1bb945357ab40191bbd55252dc2218dc"></a><!-- doxytag: member="xnpod::tstartq" ref="1bb945357ab40191bbd55252dc2218dc" args="" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
@@ -547,32 +470,9 @@ Thread switch hook queue.     </td>
 Unloading hook.     </td>
   </tr>
 </table>
-<a class="anchor" name="fb82b980cb8e70570e75e5f734669177"></a><!-- doxytag: member="xnpod::wallclock_offset" ref="fb82b980cb8e70570e75e5f734669177" args="" --><p>
-<table class="mdTable" cellpadding="2" cellspacing="0">
-  <tr>
-    <td class="mdRow">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td class="md" nowrap valign="top">xnticks_t <a class="el" href="structxnpod.html#fb82b980cb8e70570e75e5f734669177">xnpod::wallclock_offset</a>          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table cellspacing="5" cellpadding="0" border="0">
-  <tr>
-    <td>
-      &nbsp;
-    </td>
-    <td>
-
-<p>
-Difference between wallclock time and epoch in ticks.     </td>
-  </tr>
-</table>
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>include/nucleus/<a class="el" href="pod_8h-source.html">pod.h</a></ul>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 25 13:57:10 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

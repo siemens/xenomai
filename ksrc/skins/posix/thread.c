@@ -517,7 +517,7 @@ pthread_t pthread_self(void)
  * - ESRCH, @a thread is invalid;
  * - ETIMEDOUT, the start time has already passed.
  *
- * Rescheduling: always, until the @starttp start time has been reached.
+ * Rescheduling: always, until the @a starttp start time has been reached.
  */
 int pthread_make_periodic_np(pthread_t thread,
 			     struct timespec *starttp,

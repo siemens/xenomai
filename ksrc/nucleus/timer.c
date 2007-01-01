@@ -490,6 +490,10 @@ xntbops_t nktimer_ops_periodic = {
  * valid while the object is active therefore it must be allocated in
  * permanent memory.
  *
+ * @param base The descriptor address of the time base the new timer
+ * depends on. See xntbase_alloc() for detailed explanations about
+ * time bases.
+ *
  * @param handler The routine to call upon expiration of the timer.
  *
  * There is no limitation on the number of timers which can be

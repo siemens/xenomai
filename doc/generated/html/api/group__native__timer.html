@@ -229,7 +229,7 @@ Rescheduling: never.     </td>
 <p>
 Return the current system time. 
 <p>
-Return the current time maintained by the system timer.<p>
+Return the current time maintained by the master time base.<p>
 <dl compact><dt><b>Returns:</b></dt><dd>The current time expressed in clock ticks (see note).</dd></dl>
 Environments:<p>
 This service can be called from:<p>
@@ -237,7 +237,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never.<p>
-<dl compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the system timer, as defined by the CONFIG_XENO_OPT_TIMING_PERIOD parameter. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds. </dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>The value returned will represent a count of jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
     </td>
   </tr>
 </table>
@@ -268,11 +268,11 @@ Rescheduling: never.<p>
 <p>
 Set the system clock rate. 
 <p>
-This routine switches to periodic timing mode and sets the clock tick rate, or resets the current timing mode to aperiodic/oneshot mode depending on the value of the <em>nstick</em> parameter. Since the Xenomai nucleus automatically starts the system timer according to the configured policy and period when a real-time skin is loaded (see CONFIG_XENO_OPT_TIMING_PERIOD), calling <a class="el" href="group__native__timer.html#gffcb5eaef6c3a64a05445f6dafdbb155">rt_timer_set_mode()</a> is not required from applications unless the pre-defined mode and period need to be changed dynamically.<p>
-This service also sets the time unit which will be relevant when specifying time intervals to the services taking timeout or delays as input parameters. In periodic mode, clock ticks will represent periodic jiffies. In oneshot mode, clock ticks will represent nanoseconds.<p>
+This routine switches to periodic timing mode and sets the clock tick rate, or resets the current timing mode to aperiodic/oneshot mode depending on the value of the <em>nstick</em> parameter. Since the native skin automatically sets its time base according to the configured policy and period at load time (see CONFIG_XENO_OPT_NATIVE_PERIOD), calling <a class="el" href="group__native__timer.html#gffcb5eaef6c3a64a05445f6dafdbb155">rt_timer_set_mode()</a> is not required from applications unless the pre-defined mode and period need to be changed dynamically.<p>
+This service sets the time unit which will be relevant when specifying time intervals to the services taking timeout or delays as input parameters. In periodic mode, clock ticks will represent periodic jiffies. In oneshot mode, clock ticks will represent nanoseconds.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>nstick</em>&nbsp;</td><td>The timer period in nanoseconds. If this parameter is equal to the special TM_ONESHOT value, the timer is set to operate in oneshot-programmable mode. Other values are interpreted as the time between two consecutive clock ticks in periodic timing mode (i.e. clock HZ = 1e9 / nstick).</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>nstick</em>&nbsp;</td><td>The time base period in nanoseconds. If this parameter is equal to the special TM_ONESHOT value, the time base is set to operate in a tick-less fashion (i.e. oneshot mode). Other values are interpreted as the time between two consecutive clock ticks in periodic timing mode (i.e. clock HZ = 1e9 / nstick).</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned on success. Otherwise:</dd></dl>
@@ -450,7 +450,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 25 13:57:11 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Jan 1 13:42:19 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
