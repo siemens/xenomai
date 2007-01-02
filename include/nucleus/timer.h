@@ -317,8 +317,9 @@ void xntimer_destroy(xntimer_t *timer);
  * Activates a timer so that the associated timeout handler will be
  * fired after each expiration time. A timer can be either periodic or
  * single-shot, depending on the reload value passed to this
- * routine. The given timer must have been previously initialized by a
- * call to xntimer_init().
+ * routine. The given timer must have been previously initialized, and
+ * will be clocked according to the policy defined by the time base
+ * specified in xntimer_init().
  *
  * @param timer The address of a valid timer descriptor.
  *
@@ -331,9 +332,9 @@ void xntimer_destroy(xntimer_t *timer);
  * XN_INFINITE, the timer will not be reloaded after it has expired.
  *
  * @param mode The timer mode. It can be either XN_RELATIVE or
- * XN_ABSOLUTE to define if @a value shall be interpreted as a relative
- * or absolute date. Absolute dates are based on the nucleus time returned by
- * xntbase_get_time().
+ * XN_ABSOLUTE to define if @a value shall be interpreted as a
+ * relative or absolute date. Absolute dates are based on the clock
+ * value of the related time base returned by xntbase_get_time().
  *
  * @return 0 is returned upon success, or -ETIMEDOUT if an absolute
  * date in the past has been given.
