@@ -2750,10 +2750,10 @@ diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/ipipe.h
 +#include <asm/mach/irq.h>
 +#include <asm/percpu.h>
 +
-+#define IPIPE_ARCH_STRING	"1.5-03"
++#define IPIPE_ARCH_STRING	"1.5-04"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	5
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_PATCH_NUMBER	4
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
