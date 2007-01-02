@@ -251,13 +251,13 @@ Rescheduling: never.<p>
 <p>
 Arm a timer. 
 <p>
-Activates a timer so that the associated timeout handler will be fired after each expiration time. A timer can be either periodic or single-shot, depending on the reload value passed to this routine. The given timer must have been previously initialized by a call to <a class="el" href="group__timer.html#g834e46fb4c1ecaab949eea77b9dee284">xntimer_init()</a>.<p>
+Activates a timer so that the associated timeout handler will be fired after each expiration time. A timer can be either periodic or single-shot, depending on the reload value passed to this routine. The given timer must have been previously initialized, and will be clocked according to the policy defined by the time base specified in <a class="el" href="group__timer.html#g834e46fb4c1ecaab949eea77b9dee284">xntimer_init()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>timer</em>&nbsp;</td><td>The address of a valid timer descriptor.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>value</em>&nbsp;</td><td>The date of the initial timer shot, expressed in clock ticks (see note).</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>interval</em>&nbsp;</td><td>The reload value of the timer. It is a periodic interval value to be used for reprogramming the next timer shot, expressed in clock ticks (see note). If <em>interval</em> is equal to XN_INFINITE, the timer will not be reloaded after it has expired.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>The timer mode. It can be either XN_RELATIVE or XN_ABSOLUTE to define if <em>value</em> shall be interpreted as a relative or absolute date. Absolute dates are based on the nucleus time returned by <a class="el" href="timebase_8h.html#5246b53b5b2d1b11d4fab4312fd16fda">xntbase_get_time()</a>.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>The timer mode. It can be either XN_RELATIVE or XN_ABSOLUTE to define if <em>value</em> shall be interpreted as a relative or absolute date. Absolute dates are based on the clock value of the related time base returned by <a class="el" href="timebase_8h.html#5246b53b5b2d1b11d4fab4312fd16fda">xntbase_get_time()</a>.</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success, or -ETIMEDOUT if an absolute date in the past has been given.</dd></dl>
@@ -315,7 +315,7 @@ Rescheduling: never.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 00:09:06 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:29 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
