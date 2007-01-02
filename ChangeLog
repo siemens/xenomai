@@ -1,3 +1,11 @@
+2007-01-02    <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/arch/arm/patches: Upgrade to 2.6.{14,15}-1.5-04, preparing
+	support for the Atmel AT91 based platforms.
+
+	* ksrc/arch/arm/patches/at91: Add support for the Atmel AT91 based
+	platforms.
+
 2007-01-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/timebase.c (xntbase_set_time, xntbase_get_time):
