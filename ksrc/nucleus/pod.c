@@ -3150,9 +3150,6 @@ void xnpod_disable_timesource(void)
 
 int xnpod_announce_tick(xnintr_t *intr)
 {
-	if (!xnarch_timer_irq_p())
-		return XN_ISR_NONE | XN_ISR_NOENABLE | XN_ISR_PROPAGATE;
-	
 	xnlock_get(&nklock);
 
 	xnltt_log_event(xeno_ev_tstick, xnpod_current_thread()->name);

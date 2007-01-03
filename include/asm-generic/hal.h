@@ -716,15 +716,6 @@ static inline int rthal_trace_panic_dump(void)
 
 #endif /* CONFIG_IPIPE_TRACE */
 
-#ifdef ipipe_timer_irq_p
-/* Timer IRQ can be shared. */
-#define rthal_timer_irq_p()          ipipe_timer_irq_p()
-#define rthal_mark_root_timer_irq() ipipe_mark_root_timer_irq()
-#else /* !ipipe_timer_irq_p */
-#define rthal_timer_irq_p()          1
-#define rthal_mark_root_timer_irq() do { } while(0)
-#endif /* ipipe_timer_irq_p */
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
