@@ -1,4 +1,4 @@
-config XENO_SKIN_VXWORKS
+menuconfig XENO_SKIN_VXWORKS
 	depends on XENO_OPT_NUCLEUS
 	select XENO_OPT_TIMING_PERIODIC
 	tristate "VxWorks emulator"

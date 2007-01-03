@@ -1,4 +1,4 @@
-config XENO_SKIN_VRTX
+menuconfig XENO_SKIN_VRTX
 	depends on XENO_OPT_NUCLEUS
 	select XENO_OPT_TIMING_PERIODIC
 	tristate "VRTX emulator"
