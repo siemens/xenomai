@@ -186,11 +186,4 @@ endmenu
 endmenu
 
 source "kernel/xenomai/skins/Kconfig"
-
-menu "Drivers"
-
-depends on XENO_OPT_NUCLEUS
-
 source "drivers/xenomai/Kconfig"
-
-endmenu

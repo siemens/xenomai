@@ -1,8 +1,7 @@
-config XENO_SKIN_UITRON
+menuconfig XENO_SKIN_UITRON
 	depends on XENO_OPT_NUCLEUS
 	select XENO_OPT_TIMING_PERIODIC
 	tristate "uITRON API"
-	default n
 	help
 
 	This skin implements the uITRON API. 

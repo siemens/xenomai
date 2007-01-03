@@ -1,14 +1,14 @@
-config XENO_SKIN_RTAI
+menuconfig XENO_SKIN_RTAI
 	depends on XENO_OPT_NUCLEUS
 	tristate "RTAI emulator"
-	default n
 	help
 
 	An emulator of the RTAI system.
 
+if XENO_SKIN_RTAI
+
 config XENO_OPT_RTAI_PERIOD
-	depends on XENO_OPT_TIMING_PERIODIC && XENO_SKIN_RTAI
-	int "Base period (us)"
+	int "Base period (us)" if XENO_OPT_TIMING_PERIODIC
 	default 0
 	help
 	Duration of the base periodic tick (in microseconds).
@@ -24,37 +24,29 @@ config XENO_OPT_RTAI_PERIOD
 
 	If in doubt, leave zero in this field.
 
-if XENO_OPT_TIMING_PERIODIC != y
-
-config XENO_OPT_RTAI_PERIOD
-	int
-	default 0
-
-endif
-
 config XENO_OPT_RTAI_FIFO
 	bool "Fifos"
-	depends on XENO_OPT_PIPE && XENO_SKIN_RTAI
+	select XENO_OPT_PIPE
 	default y
 	help
-	
+
 	Fifos are uni-directional communication channels allowing data
 	exchange between real-time tasks in kernel-space and regular
 	user-space processes.
 
 config XENO_OPT_RTAI_SEM
 	bool "Semaphores"
-	depends on XENO_SKIN_RTAI
 	default y
 	help
-	
+
 	Semaphores are synchronization objects granting RTAI
 	tasks a concurrent access to a given number of resources.
 
 config XENO_OPT_RTAI_SHM
 	bool "Shared Memory"
-	depends on XENO_SKIN_RTAI
 	default y
 	help
-	
+
 	SHM are Shared Memory objects across RTAI tasks.
+
+endif

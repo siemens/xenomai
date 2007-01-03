@@ -1,4 +1,4 @@
-config XENO_SKIN_NATIVE
+menuconfig XENO_SKIN_NATIVE
 	depends on XENO_OPT_NUCLEUS
 	tristate "Native API"
 	default y
@@ -6,11 +6,10 @@ config XENO_SKIN_NATIVE
 
 	The native Xenomai API.
 
-if XENO_SKIN_NATIVE != n
+if XENO_SKIN_NATIVE
 
 config XENO_OPT_NATIVE_PERIOD
-	depends on XENO_OPT_TIMING_PERIODIC
-	int "Base period (us)"
+	int "Base period (us)" if XENO_OPT_TIMING_PERIODIC
 	default 0
 	help
 	Duration of the base periodic tick (in microseconds).
@@ -25,14 +24,6 @@ config XENO_OPT_NATIVE_PERIOD
 	"tick_arg" module parameter when loading the native skin.
 
 	If in doubt, leave zero in this field.
-
-if XENO_OPT_TIMING_PERIODIC != y
-
-config XENO_OPT_NATIVE_PERIOD
-	int
-	default 0
-
-endif
 
 config XENO_OPT_NATIVE_PIPE
 	bool "Message pipes"
@@ -91,7 +82,7 @@ config XENO_OPT_NATIVE_EVENT
 
 config XENO_OPT_NATIVE_MUTEX
 	bool "Mutexes"
-	default y if XENO_OPT_NATIVE_COND=y
+	default y if XENO_OPT_NATIVE_COND
 	help
 	
 	Mutexes are MUTual EXclusion objects, useful for protecting

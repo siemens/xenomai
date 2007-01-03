@@ -36,9 +36,4 @@ endmenu
 endmenu
 
 source "kernel/xenomai/skins/Kconfig"
-
-menu "Drivers"
-
 source "drivers/xenomai/Kconfig"
-
-endmenu
