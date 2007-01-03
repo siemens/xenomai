@@ -20,5 +20,6 @@ o Integrator/CP ARM 1136
 o PXA
 o SA1100-based
 o Freescale iMX21/csb535fs [see imx21/ directory]
+o Atmel AT91 (tested on CSB637) [see at91/ directory]
 
 [1] http://www.gna.org/projects/adeos/
