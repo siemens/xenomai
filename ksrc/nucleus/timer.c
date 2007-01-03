@@ -184,10 +184,10 @@ void xntimer_tick_aperiodic(void)
 	xntimer_t *timer;
 	xnticks_t now;
 
+	now = xnarch_get_cpu_tsc();
 	while ((holder = xntimerq_head(timerq)) != NULL) {
 		timer = aplink2timer(holder);
 
-		now = xnarch_get_cpu_tsc();
 		if (xntimerh_date(&timer->aplink) - nkschedlat > now)
 			/* No need to continue in aperiodic mode since timeout
 			   dates are ordered by increasing values. */
@@ -199,6 +199,7 @@ void xntimer_tick_aperiodic(void)
 			if (!testbits(nktbase.status, XNTBLCK)) {
 				timer->handler(timer);
 
+				now = xnarch_get_cpu_tsc();
 				if (timer->interval == XN_INFINITE ||
 				    !testbits(timer->status, XNTIMER_DEQUEUED)
 				    || testbits(timer->status, XNTIMER_KILLED))
@@ -221,8 +222,9 @@ void xntimer_tick_aperiodic(void)
 			   translates into precious microsecs on low-end hw. */
 			__setbits(sched->status, XNHTICK);
 
-		while ((xntimerh_date(&timer->aplink) += timer->interval) < now)
-		    ;
+		do {
+			xntimerh_date(&timer->aplink) += timer->interval;
+		} while (xntimerh_date(&timer->aplink) < now + nkschedlat);
 		xntimer_enqueue_aperiodic(timer);
 	}
 
