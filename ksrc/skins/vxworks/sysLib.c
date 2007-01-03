@@ -90,6 +90,8 @@ STATUS sysClkRateSet(int new_rate)
 {
 	int err;
 
+	error_check(!xnpod_secondary_p(), -EPERM, return ERROR);
+
 	if (new_rate <= 0) {
 		return ERROR;
 	}
