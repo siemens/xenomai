@@ -107,6 +107,7 @@ DECLARE_XNQUEUE(nktimebaseq);
  * This service can be called from:
  *
  * - Kernel module initialization code
+ * - User-space task in secondary mode
  *
  * Rescheduling: never.
  *
@@ -168,6 +169,7 @@ int xntbase_alloc(const char *name, u_long period, xntbase_t **basep)
  * This service can be called from:
  *
  * - Kernel module initialization/cleanup code
+ * - User-space task in secondary mode
  *
  * Rescheduling: never.
  *
@@ -284,6 +286,7 @@ int xntbase_update(xntbase_t *base, u_long period)
  * This service can be called from:
  *
  * - Kernel module initialization code
+ * - User-space task in secondary mode
  *
  * Rescheduling: never.
  */
