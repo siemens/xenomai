@@ -102,8 +102,8 @@ diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref
 +#endif /* CONFIG_IPIPE */
  }
 diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref/arch/arm/mach-at91rm9200/irq.c linux-2.6.15.7-at91-ipipe-1.5-01/arch/arm/mach-at91rm9200/irq.c
---- linux-2.6.15.7-at91-ipipe-1.5-01-ref/arch/arm/mach-at91rm9200/irq.c	2007-01-01 23:23:53.721502705 +0100
-+++ linux-2.6.15.7-at91-ipipe-1.5-01/arch/arm/mach-at91rm9200/irq.c	2007-01-01 23:23:19.830719107 +0100
+--- linux-2.6.15.7-at91-ipipe-1.5-01-ref/arch/arm/mach-at91rm9200/irq.c	2007-01-01 23:23:53.000000000 +0100
++++ linux-2.6.15.7-at91-ipipe-1.5-01/arch/arm/mach-at91rm9200/irq.c	2007-01-01 23:23:19.000000000 +0100
 @@ -41,6 +41,7 @@
   * The default interrupt priority levels (0 = lowest, 7 = highest).
   */
@@ -157,7 +157,7 @@ diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref
  
 diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref/arch/arm/mach-at91rm9200/time.c linux-2.6.15.7-at91-ipipe-1.5-01/arch/arm/mach-at91rm9200/time.c
 --- linux-2.6.15.7-at91-ipipe-1.5-01-ref/arch/arm/mach-at91rm9200/time.c	2006-11-05 15:31:59.000000000 +0100
-+++ linux-2.6.15.7-at91-ipipe-1.5-01/arch/arm/mach-at91rm9200/time.c	2007-01-01 23:06:49.900877736 +0100
++++ linux-2.6.15.7-at91-ipipe-1.5-01/arch/arm/mach-at91rm9200/time.c	2007-01-02 22:16:32.079656213 +0100
 @@ -25,12 +25,69 @@
  #include <linux/kernel.h>
  #include <linux/sched.h>
@@ -246,7 +246,7 @@ diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref
  /*
   * Returns number of microseconds since last timer interrupt.  Note that interrupts
   * will have been disabled by do_gettimeofday()
-@@ -85,9 +144,135 @@ static irqreturn_t at91rm9200_timer_inte
+@@ -85,9 +144,138 @@ static irqreturn_t at91rm9200_timer_inte
  		return IRQ_NONE;		/* not handled */
  }
  
@@ -353,9 +353,12 @@ diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref
 +{
 +	unsigned long flags;
 +
-+	local_irq_save_hw(flags);
-+	write_RC((read_CV() + delay) & AT91_TC_REG_MASK);
-+	local_irq_restore_hw(flags);
++	if (delay > 2) {
++		local_irq_save_hw(flags);
++		write_RC((read_CV() + delay) & AT91_TC_REG_MASK);
++		local_irq_restore_hw(flags);
++	} else
++		ipipe_trigger_irq(KERNEL_TIMER_IRQ_NUM);
 +}
 +EXPORT_SYMBOL(__ipipe_mach_set_dec);
 +
@@ -382,7 +385,7 @@ diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref
  	.handler	= at91rm9200_timer_interrupt
  };
  
-@@ -96,6 +281,7 @@ static struct irqaction at91rm9200_timer
+@@ -96,6 +284,7 @@ static struct irqaction at91rm9200_timer
   */
  void __init at91rm9200_timer_init(void)
  {
@@ -390,7 +393,7 @@ diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref
  	/* Disable all timer interrupts */
  	at91_sys_write(AT91_ST_IDR, AT91_ST_PITS | AT91_ST_WDOVF | AT91_ST_RTTINC | AT91_ST_ALMS);
  	(void) at91_sys_read(AT91_ST_SR);	/* Clear any pending interrupts */
-@@ -119,6 +305,49 @@ void __init at91rm9200_timer_init(void)
+@@ -119,6 +308,49 @@ void __init at91rm9200_timer_init(void)
  
  	/* Enable Period Interval Timer interrupt */
  	at91_sys_write(AT91_ST_IER, AT91_ST_PITS);
@@ -458,7 +461,7 @@ diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref
  #endif
 diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref/include/asm-arm/arch-at91rm9200/timex.h linux-2.6.15.7-at91-ipipe-1.5-01/include/asm-arm/arch-at91rm9200/timex.h
 --- linux-2.6.15.7-at91-ipipe-1.5-01-ref/include/asm-arm/arch-at91rm9200/timex.h	2006-11-05 15:31:59.000000000 +0100
-+++ linux-2.6.15.7-at91-ipipe-1.5-01/include/asm-arm/arch-at91rm9200/timex.h	2007-01-01 22:45:09.771628731 +0100
++++ linux-2.6.15.7-at91-ipipe-1.5-01/include/asm-arm/arch-at91rm9200/timex.h	2007-01-01 22:45:09.000000000 +0100
 @@ -23,6 +23,10 @@
  
  #include <asm/arch/hardware.h>
