@@ -27,7 +27,6 @@
 
 static inline void xnarch_relay_tick(void)
 {
-	rthal_mark_root_timer_irq();
 	rthal_irq_host_pend(RTHAL_TIMER_IRQ);
 }
 
