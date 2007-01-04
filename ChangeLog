@@ -1,3 +1,10 @@
+2007-01-04  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/timebase.h (xntbase_convert): Add time base
+	conversion call.
+
+	* ksrc/skins/psos+/syscall.c: Add missing tm_* calls.
+
 2007-01-03  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/*/Kconfig, ksrc/arch/*/Kconfig, ksrc/drivers/Kconfig:
@@ -13,7 +20,7 @@
 	* ksrc/nucleus/pod.c (xnpod_announce_tick): Remove support for
 	shared timer IRQ.
 
-2007-01-02    <gilles.chanteperdrix@laposte.net>
+2007-01-02  Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.{14,15}-1.5-04, preparing
 	support for the Atmel AT91 based platforms.
