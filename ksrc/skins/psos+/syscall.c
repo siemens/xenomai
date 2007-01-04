@@ -1065,6 +1065,79 @@ static int __tm_set(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
+ * u_long tm_evwhen(u_long date, u_long time, u_long ticks, u_long events, u_long *tmid_r)
+ */
+static int __tm_evwhen(struct task_struct *curr, struct pt_regs *regs)
+{
+	u_long date, time, ticks, events, tmid, err;
+	psostm_t *tm;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg5(regs), sizeof(tmid)))
+		return -EFAULT;
+
+	date = __xn_reg_arg1(regs);
+	time = __xn_reg_arg2(regs);
+	ticks = __xn_reg_arg3(regs);
+	events = __xn_reg_arg4(regs);
+
+	err = tm_evwhen(date, time, ticks, events, &tmid);
+
+	if (err == SUCCESS) {
+		tm = (psostm_t *)tmid;
+		/* Copy back the registry handle. */
+		tmid = tm->handle;
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg5(regs), &tmid,
+				  sizeof(tmid));
+	}
+
+	return err;
+}
+
+/*
+ * u_long tm_wkwhen(u_long date, u_long time, u_long ticks)
+ */
+static int __tm_wkwhen(struct task_struct *curr, struct pt_regs *regs)
+{
+	u_long date, time, ticks;
+
+	date = __xn_reg_arg1(regs);
+	time = __xn_reg_arg2(regs);
+	ticks = __xn_reg_arg3(regs);
+
+	return tm_wkwhen(date, time, ticks);
+}
+
+/*
+ * u_long tm_evevery(u_long ticks, u_long events, u_long *tmid_r)
+ */
+
+static int __tm_evevery(struct task_struct *curr, struct pt_regs *regs)
+{
+	u_long ticks, events, tmid, err;
+	psostm_t *tm;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(tmid)))
+		return -EFAULT;
+
+	ticks = __xn_reg_arg1(regs);
+	events = __xn_reg_arg2(regs);
+
+	err = tm_evevery(ticks, events, &tmid);
+
+	if (err == SUCCESS) {
+		tm = (psostm_t *)tmid;
+		/* Copy back the registry handle. */
+		tmid = tm->handle;
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs), &tmid,
+				  sizeof(tmid));
+	}
+
+	return err;
+}
+
+/*
  * u_long rn_create(char name[4], struct sizeopt *szp, struct rninfo *rnip)
  */
 
@@ -1316,6 +1389,9 @@ static xnsysent_t __systab[] = {
 	[__psos_tm_evafter] = {&__tm_evafter, __xn_exec_primary},
 	[__psos_tm_get] = {&__tm_get, __xn_exec_any},
 	[__psos_tm_set] = {&__tm_set, __xn_exec_any},
+	[__psos_tm_evwhen] = {&__tm_evwhen, __xn_exec_primary},
+	[__psos_tm_wkwhen] = {&__tm_wkwhen, __xn_exec_primary},
+	[__psos_tm_evevery] = {&__tm_evevery, __xn_exec_primary},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)

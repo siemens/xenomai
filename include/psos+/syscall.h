@@ -63,6 +63,9 @@
 #define __psos_tm_evafter   37
 #define __psos_tm_get       38
 #define __psos_tm_set       39
+#define __psos_tm_evwhen    40
+#define __psos_tm_wkwhen    41
+#define __psos_tm_evevery   42
 
 #ifdef __KERNEL__
 
