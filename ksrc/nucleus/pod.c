@@ -3095,7 +3095,7 @@ void xnpod_disable_timesource(void)
 	xnlock_get_irqsave(&nklock, s);
 
 	if (!nkpod || testbits(nkpod->status, XNPIDLE)
-	    || !testbits(nktbase.status, XNTBRUN)) {
+	    || !xntbase_enabled_p(&nktbase)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return;
 	}
