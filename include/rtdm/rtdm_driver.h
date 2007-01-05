@@ -884,7 +884,7 @@ static inline int rtdm_task_set_period(rtdm_task_t *task,
     if (period < 0)
         period = 0;
     return xnpod_set_thread_periodic(task, XN_INFINITE,
-                                     xntbase_ns2ticks(rtdm_tbase, period));
+                                     xntbase_ns2ticks(xnthread_time_base(task), period));
 }
 
 static inline int rtdm_task_unblock(rtdm_task_t *task)
