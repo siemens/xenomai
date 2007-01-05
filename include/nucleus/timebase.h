@@ -178,7 +178,7 @@ static inline int xntbase_periodic_p(xntbase_t *base)
 
 static inline xnticks_t xntbase_get_jiffies(xntbase_t *base)
 {
-	return xntbase_periodic_p(base) ? base->jiffies : xnarch_get_cpu_tsc();
+	return xntbase_periodic_p(base) ? base->jiffies : xnarch_get_cpu_time();
 }
 
 static inline xnticks_t xntbase_get_rawclock(xntbase_t *base)
