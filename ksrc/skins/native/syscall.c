@@ -39,8 +39,7 @@
 
 /* This file implements the Xenomai syscall wrappers;
  *
- * o Unchecked uaccesses are used to fetch args since the syslib is
- * trusted. We currently assume that the caller's memory is locked and
+ * o We currently assume that the caller's memory is locked and
  * committed.
  *
  * o All skin services (re-)check the object descriptor they are
