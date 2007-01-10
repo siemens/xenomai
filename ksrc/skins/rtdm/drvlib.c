@@ -1177,8 +1177,7 @@ EXPORT_SYMBOL(rtdm_mutex_timedlock);
  * @param[in] irq_no Line number of the addressed IRQ
  * @param[in] handler Interrupt handler
  * @param[in] flags Registration flags, see @ref RTDM_IRQTYPE_xxx for details
- * @param[in] device_name Optional device name to show up in real-time IRQ
- * lists (not yet implemented)
+ * @param[in] device_name Device name to show up in real-time IRQ lists
  * @param[in] arg Pointer to be passed to the interrupt handler on invocation
  *
  * @return 0 on success, otherwise:
