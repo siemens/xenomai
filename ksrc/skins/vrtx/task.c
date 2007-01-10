@@ -135,7 +135,7 @@ int sc_tecreate_inner(vrtxtask_t *task,
 
 	if (mode & 0x100)
 		bflags |= XNSHADOW;
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+#endif /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
 
 	if (!(mode & 0x8))
 		bflags |= XNFPU;
