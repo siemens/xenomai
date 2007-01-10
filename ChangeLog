@@ -1,3 +1,18 @@
+2007-01-04  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/psos+/syscall.c: Add missing tm_* calls.
+
+2006-12-30  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vrtx/task.c (sc_tecreate_inner): Set XNINVPS bit for
+	user-space tasks.
+
+	* include/nucleus/core.h (XNCORE_MAX_PRIO): Raise to 257.
+
+	* ksrc/skins/vrtx/defs.h (vrtx_normalized_prio),
+	ksrc/skins/vxworks/defs.h (wind_normalized_prio): Normalize
+	priorities in the 1-256 range.
+
 2006-12-26  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-generic/hal.h, ksrc/nucleus/shadow.c (xnshadow_map):
