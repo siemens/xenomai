@@ -44,3 +44,18 @@ u_long tm_set(u_long date, u_long time, u_long ticks)
 {
 	return XENOMAI_SKINCALL3(__psos_muxid, __psos_tm_set, date, time, ticks);
 }
+
+u_long tm_evwhen(u_long date, u_long time, u_long ticks, u_long events, u_long *tmid_r)
+{
+	return XENOMAI_SKINCALL5(__psos_muxid, __psos_tm_evwhen, date, time, ticks, events, tmid_r);
+}
+
+u_long tm_wkwhen(u_long date, u_long time, u_long ticks)
+{
+	return XENOMAI_SKINCALL3(__psos_muxid, __psos_tm_wkwhen, date, time, ticks);
+}
+
+u_long tm_evevery(u_long ticks, u_long events, u_long *tmid_r)
+{
+	return XENOMAI_SKINCALL3(__psos_muxid, __psos_tm_evwhen, ticks, events, tmid_r);
+}
