@@ -44,7 +44,7 @@ void root_thread_exit(void);
 
 #define MODULE_LICENSE(x)
 
-#define xnprintf printf
+#define xnarch_printf printf
 
 int main (int argc, char *argv[])
 {

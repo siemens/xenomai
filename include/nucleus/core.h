@@ -32,7 +32,7 @@
 
 /* Visible priority range supported by the core pod. */
 #define XNCORE_MIN_PRIO     0
-#define XNCORE_MAX_PRIO     256
+#define XNCORE_MAX_PRIO     257
 
 /* Total number of priority levels (including the hidden root one) */
 #define XNCORE_NR_PRIO      (XNCORE_MAX_PRIO - XNCORE_MIN_PRIO + 2)
