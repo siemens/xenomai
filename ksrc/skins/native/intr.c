@@ -235,6 +235,7 @@ static xnpnode_t __intr_pnode = {
  *
  * - Kernel module initialization/cleanup code
  * - Kernel-based task
+ * - User-space task
  *
  * Rescheduling: possible.
  *
@@ -253,8 +254,14 @@ int rt_intr_create(RT_INTR *intr,
 	if (xnpod_asynch_p())
 		return -EPERM;
 
-	xnintr_init(&intr->intr_base, name, irq, isr, iack, mode);
-	xnobject_copy_name(intr->name, name);
+	if (name)
+		xnobject_copy_name(intr->name, name);
+	else
+		/* Kernel-side "anonymous" objects (name == NULL) get unique names.
+		 * Nevertheless, they will not be exported via the registry. */
+		xnobject_create_name(intr->name, sizeof(intr->name), isr);
+
+	xnintr_init(&intr->intr_base, intr->name, irq, isr, iack, mode);
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	xnsynch_init(&intr->synch_base, XNSYNCH_PRIO);
 	intr->pending = 0;
@@ -274,11 +281,21 @@ int rt_intr_create(RT_INTR *intr,
 	/* <!> Since xnregister_enter() may reschedule, only register
 	   complete objects, so that the registry cannot return handles to
 	   half-baked objects... */
+	if (!err && name) {
+		xnpnode_t *pnode = &__intr_pnode;
 
-	if (!err)
-		err =
-		    xnregistry_enter(intr->name, intr, &intr->handle,
-				     &__intr_pnode);
+		if (!*name) {
+			/* Since this is an anonymous object (empty name on entry)
+			 * from user-space, it gets registered under an unique
+			 * internal name but is not exported through /proc. */
+			xnobject_create_name(intr->name, sizeof(intr->name),
+				(void *)intr);
+			pnode = NULL;
+		}
+
+		err = xnregistry_enter(intr->name, intr, &intr->handle, pnode);
+	}	
+	
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	if (err)
