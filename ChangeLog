@@ -1,3 +1,8 @@
+2007-01-10  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/intr.c (xnintr_init): Always set xnintr::name to
+	non-NULL content.
+ 
 2007-01-11  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
 
 	* ksrc/skins/native/intr.c (rt_intr_create): Allow defining
