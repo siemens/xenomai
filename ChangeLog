@@ -1,3 +1,8 @@
+2007-01-11  Dmitry Adamushko  <dmitry.adamushko@gmail.com>
+
+	* ksrc/skins/native/intr.c (rt_intr_create): Allow defining
+	anonymous interrupt objects from kernel space.
+
 2007-01-04  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/timebase.h (xntbase_convert): Add time base
