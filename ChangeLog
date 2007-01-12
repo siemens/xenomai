@@ -1,3 +1,11 @@
+2007-01-12  Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/arch/arm/patches: Upgrade to 2.6.{14,15}-1.5-04, preparing
+	support for the Atmel AT91 based platforms.
+
+	* ksrc/arch/arm/patches/at91: Add support for the Atmel AT91 based
+	platforms.
+
 2007-01-10  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus/intr.c (xnintr_init): Always set xnintr::name to
