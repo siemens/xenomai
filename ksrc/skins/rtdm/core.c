@@ -358,8 +358,8 @@ int _rtdm_close(rtdm_user_info_t *user_info, int fd, int forced)
 }
 
 
-#define MAJOR_FUNCTION_WRAPPER(operation, args...)                          \
-{                                                                           \
+#define MAJOR_FUNCTION_WRAPPER_TH(operation, args...)                       \
+do {                                                                        \
     struct rtdm_dev_context *context;                                       \
     struct rtdm_operations  *ops;                                           \
     int                     ret;                                            \
@@ -377,13 +377,20 @@ int _rtdm_close(rtdm_user_info_t *user_info, int fd, int forced)
     else                                                                    \
         ret = ops->operation##_nrt(context, user_info, args);               \
                                                                             \
-    XENO_ASSERT(RTDM, !rthal_local_irq_test(), rthal_local_irq_enable(););  \
-                                                                            \
+    XENO_ASSERT(RTDM, !rthal_local_irq_test(), rthal_local_irq_enable();)
+
+#define MAJOR_FUNCTION_WRAPPER_BH()                                         \
     rtdm_context_unlock(context);                                           \
                                                                             \
  err_out:                                                                   \
     return ret;                                                             \
-}
+} while (0)
+
+#define MAJOR_FUNCTION_WRAPPER(operation, args...)                          \
+do {                                                                        \
+    MAJOR_FUNCTION_WRAPPER_TH(operation, args);                             \
+    MAJOR_FUNCTION_WRAPPER_BH();                                            \
+} while (0)
 
 
 int _rtdm_ioctl(rtdm_user_info_t *user_info, int fd, int request, ...)
@@ -396,7 +403,22 @@ int _rtdm_ioctl(rtdm_user_info_t *user_info, int fd, int request, ...)
     arg = va_arg(args, void *);
     va_end(args);
 
-    MAJOR_FUNCTION_WRAPPER(ioctl, request, arg);
+    MAJOR_FUNCTION_WRAPPER_TH(ioctl, request, arg);
+
+    if (unlikely(ret < 0) && request == RTIOC_DEVICE_INFO) {
+        struct rtdm_device *dev = context->device;
+        struct rtdm_device_info dev_info;
+
+        dev_info.device_flags = dev->device_flags;
+        dev_info.device_class = dev->device_class;
+        dev_info.device_sub_class = dev->device_sub_class;
+        dev_info.profile_version = dev->profile_version;
+
+        ret = rtdm_safe_copy_to_user(user_info, arg, &dev_info,
+                                     sizeof(dev_info));
+    }
+
+    MAJOR_FUNCTION_WRAPPER_BH();
 }
 
 

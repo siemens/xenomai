@@ -487,6 +487,7 @@ static struct rtdm_device device = {
 
     device_class:       RTDM_CLASS_TESTING,
     device_sub_class:   RTDM_SUBCLASS_TIMERBENCH,
+    profile_version:    RTTST_PROFILE_VER,
     driver_name:        "xeno_timerbench",
     driver_version:     RTDM_DRIVER_VER(0, 2, 1),
     peripheral_name:    "Timer Latency Benchmark",
