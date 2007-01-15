@@ -105,7 +105,7 @@ struct rtdm_dev_context;
  * @{
  */
 /** Version of struct rtdm_device */
-#define RTDM_DEVICE_STRUCT_VER      3
+#define RTDM_DEVICE_STRUCT_VER      4
 
 /** Version of struct rtdm_dev_context */
 #define RTDM_CONTEXT_STRUCT_VER     3
@@ -410,6 +410,8 @@ struct rtdm_device {
     /** Device sub-class, see RTDM_SUBCLASS_xxx definition in the
      *  @ref profiles "Device Profiles" */
     int                             device_sub_class;
+    /** Supported device profile version */
+    int                             profile_version;
     /** Informational driver name (reported via /proc) */
     const char                      *driver_name;
     /** Driver version, see @ref drv_versioning "Driver Versioning" defines */

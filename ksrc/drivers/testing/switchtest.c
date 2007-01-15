@@ -564,6 +564,7 @@ static struct rtdm_device device = {
 
 	device_class: RTDM_CLASS_TESTING,
 	device_sub_class: RTDM_SUBCLASS_SWITCHTEST,
+	profile_version: RTTST_PROFILE_VER,
 	driver_name: "xeno_switchtest",
 	driver_version: RTDM_DRIVER_VER(0, 1, 1),
 	peripheral_name: "Context Switch Test",

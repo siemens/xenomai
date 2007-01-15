@@ -1019,7 +1019,8 @@ static struct rtdm_device rtcan_proto_raw_dev = {
     },
 
     device_class:       RTDM_CLASS_CAN,
-
+    device_sub_class:   RTDM_SUBCLASS_GENERIC,
+    profile_version:    RTCAN_PROFILE_VER,
 
     driver_name:        "xeno_can",
     driver_version:     RTDM_DRIVER_VER(RTCAN_MAJOR_VER, 

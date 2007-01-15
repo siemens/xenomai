@@ -27,9 +27,11 @@
  *
  * This group of devices is intended to provide in-kernel testing results.
  * Feel free to comment on this profile via the Xenomai mailing list
- * (xenomai-core@gna.org) or directly to the author (jan.kiszka@web.de). @n
- * @n
+ * (xenomai-core@gna.org) or directly to the author (jan.kiszka@web.de).
  *
+ * @b Profile @b Revision: 1
+ * @n
+ * @n
  * @par Device Characteristics
  * @ref rtdm_device.device_flags "Device Flags": @c RTDM_NAMED_DEVICE @n
  * @n
@@ -59,6 +61,8 @@
 
 #include <rtdm/rtdm.h>
 
+#define RTTST_PROFILE_VER           1
+
 typedef struct rttst_bench_res {
     long long               avg;
     long                    min;
@@ -81,8 +85,8 @@ typedef struct rttst_overall_bench_res {
 } rttst_overall_bench_res_t;
 
 
-#define RTTST_TMBENCH_TASK       0
-#define RTTST_TMBENCH_HANDLER    1
+#define RTTST_TMBENCH_TASK          0
+#define RTTST_TMBENCH_HANDLER       1
 
 typedef struct rttst_tmbench_config {
     int                     mode;

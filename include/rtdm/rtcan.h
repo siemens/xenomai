@@ -41,6 +41,9 @@
  * Feel free to report bugs and comments on this profile to the "Socketcan"
  * mailing list (Socketcan-core@lists.berlios.de) or directly to the authors
  * (wg@grandegger.com or Sebastian.Smolorz@stud.uni-hannover.de).
+ *
+ * @b Profile @b Revision: 1
+ * @n
  * @n
  * @par Device Characteristics
  * @n
@@ -248,6 +251,8 @@
 
 
 #include <rtdm/rtdm.h>
+
+#define RTCAN_PROFILE_VER           1
 
 #ifndef AF_CAN
 

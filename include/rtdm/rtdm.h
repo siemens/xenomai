@@ -78,7 +78,7 @@ extern struct xntbase               *rtdm_tbase;
  * @anchor api_versioning @name API Versioning
  * @{ */
 /** Common user and driver API version */
-#define RTDM_API_VER                5
+#define RTDM_API_VER                6
 
 /** Minimum API revision compatible with the current release */
 #define RTDM_API_MIN_COMPAT_VER     5
@@ -136,6 +136,8 @@ typedef int64_t                     nanosecs_rel_t;
 /** @} RTDM_CLASS_xxx */
 
 
+#define RTDM_SUBCLASS_GENERIC       (-1)
+
 #define RTIOC_TYPE_COMMON           0
 
 
@@ -146,6 +148,22 @@ typedef int64_t                     nanosecs_rel_t;
  */
 #define RTDM_MAX_DEVNAME_LEN        31
 /** @} Device Naming */
+
+
+/**
+ * Device information
+ */
+typedef struct rtdm_device_info {
+    /** Device flags, see @ref dev_flags "Device Flags" for details */
+    int device_flags;
+    /** Device class ID, see @ref RTDM_CLASS_xxx */
+    int device_class;
+    /** Device sub-class, either RTDM_SUBCLASS_GENERIC or a RTDM_SUBCLASS_xxx
+     *  definition of the related @ref profiles "Device Profile" */
+    int device_sub_class;
+    /** Supported device profile version */
+    int profile_version;
+} rtdm_device_info_t;
 
 
 /*!
@@ -159,9 +177,16 @@ typedef int64_t                     nanosecs_rel_t;
 
 /*!
  * @anchor common_IOCTLs    @name Common IOCTLs
- * The following IOCTLs shall be supported by any device profile if applicable
+ * The following IOCTLs are common to all device profiles.
  * @{
  */
+
+/**
+ * Retrieve information about a device or socket.
+ * @param[out] arg Pointer to information buffer (struct rtdm_device_info)
+ */
+#define RTIOC_DEVICE_INFO       \
+    _IOR(RTIOC_TYPE_COMMON, 0x00, struct rtdm_device_info)
 
 /**
  * Purge internal device or socket buffers.

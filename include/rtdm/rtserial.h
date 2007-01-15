@@ -25,14 +25,13 @@
  * @ingroup profiles
  * @defgroup rtserial Serial Devices
  *
- * This is a @b preliminary version of the common interface a RTDM-compliant
- * serial device has to provide. This revision may still change until the
- * final version. E.g., all definitions need to be reviewed if they do not
- * contain too much 16550A-specifics or if significant features are missing.
+ * This is the common interface a RTDM-compliant serial device has to provide.
  * Feel free to comment on this profile via the Xenomai mailing list
- * (Xenomai-help@gna.org) or directly to the author (jan.kiszka@web.de). @n
- * @n
+ * (Xenomai-core@gna.org) or directly to the author (jan.kiszka@web.de).
  *
+ * @b Profile @b Revision: 1
+ * @n
+ * @n
  * @par Device Characteristics
  * @ref rtdm_device.device_flags "Device Flags": @c RTDM_NAMED_DEVICE, @c RTDM_EXCLUSIVE @n
  * @n
@@ -79,6 +78,8 @@
 #define _RTSERIAL_H
 
 #include <rtdm/rtdm.h>
+
+#define RTSER_PROFILE_VER           1
 
 /*!
  * @anchor RTSER_DEF_BAUD   @name RTSER_DEF_BAUD
