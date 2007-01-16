@@ -1,3 +1,8 @@
+2007-01-16  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/wrappers.h, ksrc/arch/powerpc: Adapt to
+	2.6.19.
+
 2007-01-12  Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.{14,15}-1.5-04, preparing

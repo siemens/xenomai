@@ -55,7 +55,7 @@
 #define wrap_put_user(src,dstP)           __put_user(src,dstP)
 #define wrap_get_user(dst,srcP)           __get_user(dst,srcP)
 
-#else /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,15) */
+#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15) */
 
 /* from linux/include/asm-powerpc/uaccess.h */
 #define wrap_get_user(x, ptr)					\
@@ -81,10 +81,14 @@
 	__pu_err;						\
 })
 
-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,15) */
+#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15) */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
 typedef irqreturn_t (*rthal_irq_host_handler_t)(int irq,
 						void *dev_id,
 						struct pt_regs *regs);
+#else /* >= 2.6.19 */
+typedef irq_handler_t rthal_irq_host_handler_t;
+#endif
 
 #endif /* _XENO_ASM_POWERPC_WRAPPERS_H */
