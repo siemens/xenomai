@@ -981,8 +981,11 @@ void *xnregistry_get(xnhandle_t handle)
 	xnlock_get_irqsave(&nklock, s);
 
 	if (handle == XNOBJECT_SELF) {
-		objaddr = xnpod_primary_p()? xnpod_current_thread() : NULL;
-		goto unlock_and_exit;
+		if (!xnpod_primary_p()) {
+			objaddr = NULL;
+			goto unlock_and_exit;
+		}
+		handle = xnpod_current_thread()->registry.handle;
 	}
 
 	object = registry_validate(handle);
