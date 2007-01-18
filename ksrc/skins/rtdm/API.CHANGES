@@ -7,6 +7,10 @@ Scheduled modifications (unsorted):
  o Support for deferring IRQ line re-enabling from handler to thread context.
  o Support for user-space drivers.
 
+Revision 6:
+ o Added profile_version field to rtdm_device
+ o Requested IRQ lines are now enabled on return of rtdm_irq_request
+
 Revision 5:
  o Introduced generic time types nanosecs_abs_t and nanosecs_rel_t.
  o Switched the following functions parameters from unsigned to signed

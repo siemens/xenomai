@@ -732,7 +732,7 @@ int rtcan_sja1000_register(struct rtcan_device *dev)
     dev->state = CAN_STATE_ACTIVE;
     /* Enter reset mode */
     rtcan_sja_mode_stop(dev, NULL);
-    
+
     if ((chip->read_reg(dev, SJA_SR) &
 	 (SJA_SR_RBS | SJA_SR_DOS | SJA_SR_TBS)) != SJA_SR_TBS) {
 	printk("ERROR! No SJA1000 device found!\n");
@@ -753,7 +753,6 @@ int rtcan_sja1000_register(struct rtcan_device *dev)
 	printk("ERROR! IRQ %d busy or invalid (code=%d)!\n", chip->irq_num, ret);
 	return ret;
     }
-    rtdm_irq_enable(&dev->irq_handle);
 
     sja1000_chip_config(dev);
 

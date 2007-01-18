@@ -314,7 +314,6 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 					     config->port_irq,
 					     rt_irqbench_task_irq, 0,
 					     "irqbench", ctx);
-			rtdm_irq_enable(&ctx->irq_handle);
 			break;
 
 		case RTTST_IRQBENCH_KERNEL_TASK:
@@ -325,7 +324,6 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 					     "irqbench", ctx);
 			if (err)
 				break;
-			rtdm_irq_enable(&ctx->irq_handle);
 
 			err = rtdm_task_init(&ctx->irq_task, "irqbench",
 					     rt_irqbench_task, ctx,
@@ -340,7 +338,6 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 					     config->port_irq,
 					     rt_irqbench_direct_irq, 0,
 					     "irqbench", ctx);
-			rtdm_irq_enable(&ctx->irq_handle);
 			break;
 
 		case RTTST_IRQBENCH_HARD_IRQ:
