@@ -1162,8 +1162,6 @@ EXPORT_SYMBOL(rtdm_mutex_timedlock);
 /** @} Synchronisation services */
 
 
-#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
-
 /*!
  * @ingroup driverapi
  * @defgroup rtdmirq Interrupt Management Services
@@ -1172,6 +1170,9 @@ EXPORT_SYMBOL(rtdm_mutex_timedlock);
 
 /**
  * @brief Register an interrupt handler
+ *
+ * This function registers the provided handler with an IRQ line and enables
+ * the line.
  *
  * @param[in,out] irq_handle IRQ handle
  * @param[in] irq_no Line number of the addressed IRQ
@@ -1186,9 +1187,6 @@ EXPORT_SYMBOL(rtdm_mutex_timedlock);
  *
  * - -EBUSY is returned if the specified IRQ line is already in use.
  *
- * @note To receive interrupts on the requested line, you have to call
- * rtdm_irq_enable() after registering the handler.
- *
  * Environments:
  *
  * This service can be called from:
@@ -1201,8 +1199,26 @@ EXPORT_SYMBOL(rtdm_mutex_timedlock);
  */
 int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
                      rtdm_irq_handler_t handler, unsigned long flags,
-                     const char *device_name, void *arg);
+                     const char *device_name, void *arg)
+{
+    int err;
 
+    xnintr_init(irq_handle, device_name, irq_no, handler, NULL, flags);
+
+    err = xnintr_attach(irq_handle, arg);
+    if (err)
+        return err;
+
+    err = xnintr_enable(irq_handle);
+    if (err)
+        xnintr_detach(irq_handle);
+
+    return err;
+}
+
+EXPORT_SYMBOL(rtdm_irq_request);
+
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Release an interrupt handler
  *
@@ -1261,8 +1277,12 @@ int rtdm_irq_enable(rtdm_irq_t *irq_handle);
  * Rescheduling: never.
  */
 int rtdm_irq_disable(rtdm_irq_t *irq_handle);
+#endif /* DOXYGEN_CPP */
+
 /** @} Interrupt Management Services */
 
+
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 
 /*!
  * @ingroup driverapi

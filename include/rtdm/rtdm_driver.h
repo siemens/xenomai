@@ -751,18 +751,11 @@ typedef int (*rtdm_irq_handler_t)(rtdm_irq_t *irq_handle);
 #define rtdm_irq_get_arg(irq_handle, type)  ((type *)irq_handle->cookie)
 /** @} rtdmirq */
 
-#ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
-static inline int rtdm_irq_request(rtdm_irq_t *irq_handle,
-                                   unsigned int irq_no,
-                                   rtdm_irq_handler_t handler,
-                                   unsigned long flags,
-                                   const char *device_name,
-                                   void *arg)
-{
-    xnintr_init(irq_handle, device_name, irq_no, handler, NULL, flags);
-    return xnintr_attach(irq_handle, arg);
-}
+int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
+                     rtdm_irq_handler_t handler, unsigned long flags,
+                     const char *device_name, void *arg);
 
+#ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline int rtdm_irq_free(rtdm_irq_t *irq_handle)
 {
     return xnintr_detach(irq_handle);

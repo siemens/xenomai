@@ -487,7 +487,6 @@ int rt_16550_open(struct rtdm_dev_context *context,
 
         return err;
     }
-    rtdm_irq_enable(&ctx->irq_handle);
 
     rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
 

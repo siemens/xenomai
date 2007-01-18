@@ -31,7 +31,7 @@
  * RT/non-RT systems like Xenomai. RTDM conforms to POSIX
  * semantics (IEEE Std 1003.1) where available and applicable.
  *
- * @b API @b Revision: 5
+ * @b API @b Revision: 6
  */
 
 /*!
@@ -81,7 +81,7 @@ extern struct xntbase               *rtdm_tbase;
 #define RTDM_API_VER                6
 
 /** Minimum API revision compatible with the current release */
-#define RTDM_API_MIN_COMPAT_VER     5
+#define RTDM_API_MIN_COMPAT_VER     6
 /** @} API Versioning */
 
 
