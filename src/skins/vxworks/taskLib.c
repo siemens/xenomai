@@ -76,7 +76,7 @@ static void *wind_task_trampoline(void *cookie)
 	/* wind_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	signal(SIGCHLD, &wind_task_sigharden);
+	signal(SIGHARDEN, &wind_task_sigharden);
 
 	bulk.a1 = (u_long)iargs->name;
 	bulk.a2 = (u_long)iargs->prio;
