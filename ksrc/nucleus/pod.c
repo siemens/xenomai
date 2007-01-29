@@ -1450,24 +1450,26 @@ void xnpod_suspend_thread(xnthread_t *thread,
 		   just trigger the IPI. */
 		xnpod_schedule();
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	/* Ok, this one is an interesting corner case, which requires a
-	   bit of background first. Here, we handle the case of suspending
-	   a _relaxed_ shadow which is _not_ the current thread.  The net
-	   effect is that we are attempting to stop the shadow thread at
-	   the nucleus level, whilst this thread is actually running some
-	   code under the control of the Linux scheduler (i.e. it's
-	   relaxed).  To make this possible, we force the target Linux
-	   task to migrate back to the Xenomai domain by sending it a
-	   SIGCHLD signal the skin interface libraries trap for this
-	   specific internal purpose, whose handler is expected to call
-	   back the nucleus's migration service. By forcing this
-	   migration, we make sure that the real-time nucleus controls,
-	   hence properly stops, the target thread according to the
-	   requested suspension condition. Otherwise, the shadow thread in
-	   secondary mode would just keep running into the Linux domain,
-	   thus breaking the most common assumptions regarding suspended
-	   threads. We only care for threads that are not current, and for
-	   XNSUSP and XNDELAY conditions, because:
+	/* Ok, this one is an interesting corner case, which requires
+	   a bit of background first. Here, we handle the case of
+	   suspending a _relaxed_ shadow which is _not_ the current
+	   thread.  The net effect is that we are attempting to stop
+	   the shadow thread at the nucleus level, whilst this thread
+	   is actually running some code under the control of the
+	   Linux scheduler (i.e. it's relaxed).  To make this
+	   possible, we force the target Linux task to migrate back to
+	   the Xenomai domain by sending it a SIGHARDEN signal the
+	   skin interface libraries trap for this specific internal
+	   purpose, whose handler is expected to call back the
+	   nucleus's migration service. By forcing this migration, we
+	   make sure that the real-time nucleus controls, hence
+	   properly stops, the target thread according to the
+	   requested suspension condition. Otherwise, the shadow
+	   thread in secondary mode would just keep running into the
+	   Linux domain, thus breaking the most common assumptions
+	   regarding suspended threads. We only care for threads that
+	   are not current, and for XNSUSP and XNDELAY conditions,
+	   because:
 
 	   - skins are supposed to ask for primary mode switch when
 	   processing any syscall which may block the caller; IOW,

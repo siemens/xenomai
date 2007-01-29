@@ -1,4 +1,14 @@
+2007-01-29  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-generic/syscall.h: Introduce SIGHARDEN as an alias
+	to the mode switch request signal. Use SIGWINCH instead of SIGCHLD
+	as the mode switch signal to prevent undesirable side-effects from
+	exits of forked children.
+
 2007-01-16  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/registry.c (xnregistry_get): Fix XNOBJECT_SELF
+	case.
 
 	* include/asm-powerpc/wrappers.h, ksrc/arch/powerpc: Adapt to
 	2.6.19.
