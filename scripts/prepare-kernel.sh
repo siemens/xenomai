@@ -443,7 +443,7 @@ case $linux_VERSION.$linux_PATCHLEVEL in
     if ! grep -q CONFIG_XENO $linux_tree/Makefile; then
 	patch_ed Makefile <<EOF
 /DRIVERS := \$(DRIVERS-y)
-^r $xenomai_root/scripts/Modules.frag
+-1r $xenomai_root/scripts/Modules.frag
 
 .
 wq
