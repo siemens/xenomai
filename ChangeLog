@@ -1,3 +1,8 @@
+2007-01-29  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* scripts/prepare-kernel.sh: Work around sed regression wrt '^'
+	handling in regex in FC6.
+
 2007-01-29  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-generic/syscall.h: Introduce SIGHARDEN as an alias
