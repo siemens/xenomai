@@ -82,10 +82,6 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 
 #define RTHAL_TIMER_IRQ   __ipipe_mach_timerint
 
-extern spinlock_t irq_controller_lock;
-
-#define rthal_irq_descp(irq)	(&irq_desc[(irq)])
-
 #define rthal_grab_control()     do { } while(0)
 #define rthal_release_control()  do { } while(0)
 
@@ -129,8 +125,6 @@ typedef struct rthal_fpenv {
     union fp_state          fpstate;
     union vfp_state         vfpstate;
 } rthal_fpenv_t;
-
-extern void (*fp_init)(union fp_state *);
 
 static inline void rthal_init_fpu(rthal_fpenv_t *fpuenv)
 {
