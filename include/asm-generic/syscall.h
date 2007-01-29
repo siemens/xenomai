@@ -58,6 +58,8 @@ typedef struct xnsysinfo {
 
 } xnsysinfo_t;
 
+#define SIGHARDEN  SIGWINCH
+
 #ifdef __KERNEL__
 
 #include <linux/types.h>

@@ -55,7 +55,7 @@ static void *psos_task_trampoline(void *cookie)
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	signal(SIGCHLD, &psos_task_sigharden);
+	signal(SIGHARDEN, &psos_task_sigharden);
 
 	err = XENOMAI_SKINCALL5(__psos_muxid,
 				__psos_t_create,

@@ -44,7 +44,7 @@ int __wrap_pthread_setschedparam(pthread_t thread,
 		return __real_pthread_setschedparam(thread, policy, param);
 
 	if (!err && promoted) {
-		signal(SIGCHLD, &__pthread_sigharden_handler);
+		signal(SIGHARDEN, &__pthread_sigharden_handler);
 		if (policy != SCHED_OTHER)
 			XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 	}
@@ -87,7 +87,7 @@ static void *__pthread_trampoline(void *arg)
 	int policy;
 	long err;
 
-	signal(SIGCHLD, &__pthread_sigharden_handler);
+	signal(SIGHARDEN, &__pthread_sigharden_handler);
 
 	/* Broken pthread libs ignore some of the thread attribute specs
 	   passed to pthread_create(3), so we force the scheduling policy

@@ -67,7 +67,7 @@ static void *vrtx_task_trampoline(void *cookie)
 	/* vrtx_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	signal(SIGCHLD, &vrtx_task_sigharden);
+	signal(SIGHARDEN, &vrtx_task_sigharden);
 
 	bulk.a1 = (u_long)iargs->tid;
 	bulk.a2 = (u_long)iargs->prio;

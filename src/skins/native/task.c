@@ -63,7 +63,7 @@ static void *rt_task_trampoline(void *cookie)
 	/* rt_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	signal(SIGCHLD, &rt_task_sigharden);
+	signal(SIGHARDEN, &rt_task_sigharden);
 
 	bulk.a1 = (u_long)iargs->task;
 	bulk.a2 = (u_long)iargs->name;
@@ -157,7 +157,7 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	/* rt_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	signal(SIGCHLD, &rt_task_sigharden);
+	signal(SIGHARDEN, &rt_task_sigharden);
 
 	bulk.a1 = (u_long)task;
 	bulk.a2 = (u_long)name;

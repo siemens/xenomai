@@ -1015,7 +1015,7 @@ void xnshadow_suspend(xnthread_t *thread)
 {
 	/* Called with nklock locked, Xenomai interrupts off. */
 	struct task_struct *p = xnthread_archtcb(thread)->user_task;
-	schedule_linux_call(LO_SIGTHR_REQ, p, SIGCHLD);
+	schedule_linux_call(LO_SIGTHR_REQ, p, SIGHARDEN);
 }
 
 static int xnshadow_sys_migrate(struct task_struct *curr, struct pt_regs *regs)
@@ -1026,9 +1026,9 @@ static int xnshadow_sys_migrate(struct task_struct *curr, struct pt_regs *regs)
 				return -EPERM;
 
 			/* Paranoid: a corner case where the
-			   user-space side fiddles with SIGCHLD while
-			   the target thread is still waiting to be
-			   started. */
+			   user-space side fiddles with SIGHARDEN
+			   while the target thread is still waiting to
+			   be started. */
 			if (xnthread_test_state(xnshadow_thread(curr), XNDORMANT))
 				return 0;
 
