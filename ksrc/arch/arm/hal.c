@@ -117,14 +117,14 @@ int rthal_irq_host_request(unsigned irq,
     if (irq >= IPIPE_NR_XIRQS || !handler)
         return -EINVAL;
 
-    spin_lock_irqsave(&irq_controller_lock, flags);
+    spin_lock_irqsave(rthal_irq_desc_lock(irq), flags);
 
     if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action) {
         rthal_linux_irq[irq].flags = rthal_irq_descp(irq)->action->flags;
         rthal_irq_descp(irq)->action->flags |= SA_SHIRQ;
     }
 
-    spin_unlock_irqrestore(&irq_controller_lock, flags);
+    spin_unlock_irqrestore(rthal_irq_desc_lock(irq), flags);
 
     return request_irq(irq, handler, SA_SHIRQ, name, dev_id);
 }
@@ -138,12 +138,12 @@ int rthal_irq_host_release(unsigned irq, void *dev_id)
 
     free_irq(irq, dev_id);
 
-    spin_lock_irqsave(&irq_controller_lock, flags);
+    spin_lock_irqsave(rthal_irq_desc_lock(irq), flags);
 
     if (--rthal_linux_irq[irq].count == 0 && rthal_irq_descp(irq)->action)
         rthal_irq_descp(irq)->action->flags = rthal_linux_irq[irq].flags;
 
-    spin_unlock_irqrestore(&irq_controller_lock, flags);
+    spin_unlock_irqrestore(rthal_irq_desc_lock(irq), flags);
 
     return 0;
 }
@@ -155,10 +155,8 @@ int rthal_irq_enable(unsigned irq)
 
     /* We don't care of disable nesting level: real-time IRQ channels
        are not meant to be shared with the regular kernel. */
-    rthal_irq_descp(irq)->disable_depth = 0;
-    rthal_irq_descp(irq)->chip->unmask(irq);
-
-    return 0;
+    rthal_mark_irq_enabled(irq);
+    return rthal_irq_chip_enable(irq);
 }
 
 int rthal_irq_disable(unsigned irq)
@@ -166,15 +164,16 @@ int rthal_irq_disable(unsigned irq)
     if (irq >= IPIPE_NR_XIRQS)
         return -EINVAL;
 
-    rthal_irq_descp(irq)->chip->mask(irq);
-    rthal_irq_descp(irq)->disable_depth = 1;
-
-    return 0;
+    rthal_mark_irq_disabled(irq);
+    return rthal_irq_chip_disable(irq);
 }
 
 int rthal_irq_end(unsigned irq)
 {
-    return rthal_irq_enable(irq);
+    if (irq >= IPIPE_NR_XIRQS)
+        return -EINVAL;
+
+    return rthal_irq_chip_end(irq);
 }
 
 static inline int do_exception_event(unsigned event, unsigned domid, void *data)
