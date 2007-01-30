@@ -1,3 +1,8 @@
+2007-01-30  Philippe Gerum  <rpm@xenomai.org>
+
+	* sim/include/Makefile.am: Fix destination directory for
+	xeno_config.h to $(prefix)/asm-sim.
+
 2007-01-30  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* include/asm-arm/wrappers.h, ksrc/arch/arm: Adapt to 2.6.19.
