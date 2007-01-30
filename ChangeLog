@@ -1,3 +1,8 @@
+2007-01-30    <gilles.chanteperdrix@laposte.net>
+
+	* doc/doxygen/Doxyfile*.in: Only enable search engine for HTML
+	documentation.
+
 2007-01-29  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* scripts/prepare-kernel.sh: Work around sed regression wrt '^'
