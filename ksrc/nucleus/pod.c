@@ -360,7 +360,6 @@ int xnpod_init(xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
 	initq(&pod->tswitchq);
 	initq(&pod->tdeleteq);
 
-	pod->schedlck = 0;
 	pod->minpri = minpri;
 	pod->maxpri = maxpri;
 	pod->jiffies = 0;
@@ -854,7 +853,9 @@ int xnpod_init_thread(xnthread_t *thread,
  *
  * - XNLOCK causes the thread to lock the scheduler when it starts.
  * The target thread will have to call the xnpod_unlock_sched()
- * service to unlock the scheduler.
+ * service to unlock the scheduler. A non-preemptible thread may still
+ * block, in which case, the lock is reasserted when the thread is
+ * scheduled back in.
  *
  * - XNRRB causes the thread to be marked as undergoing the
  * round-robin scheduling policy at startup.  The contents of the
@@ -1061,7 +1062,7 @@ void xnpod_restart_thread(xnthread_t *thread)
 		/* Clear all sched locks held by the restarted thread. */
 		if (xnthread_test_state(thread, XNLOCK)) {
 			xnthread_clear_state(thread, XNLOCK);
-			nkpod->schedlck = 0;
+			xnthread_lock_count(thread) = 0;
 		}
 
 		xnthread_set_state(thread, XNRESTART);
@@ -1101,7 +1102,9 @@ void xnpod_restart_thread(xnthread_t *thread)
  *
  * - XNLOCK causes the thread to lock the scheduler.  The target
  * thread will have to call the xnpod_unlock_sched() service to unlock
- * the scheduler or clear the XNLOCK bit forcibly using this service.
+ * the scheduler or clear the XNLOCK bit forcibly using this
+ * service. A non-preemptible thread may still block, in which case,
+ * the lock is reasserted when the thread is scheduled back in.
  *
  * - XNRRB causes the thread to be marked as undergoing the
  * round-robin scheduling policy.  The contents of the thread.rrperiod
@@ -1164,7 +1167,7 @@ xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
 				/* Actually grab the scheduler lock. */
 				xnpod_lock_sched();
 		} else if (!xnthread_test_state(thread, XNLOCK))
-			nkpod->schedlck = 0;
+			xnthread_lock_count(thread) = 0;
 	}
 
 	if (!(oldmode & XNRRB) && xnthread_test_state(thread, XNRRB))
@@ -1248,14 +1251,6 @@ void xnpod_delete_thread(xnthread_t *thread)
 		xntimer_stop(&thread->rtimer);
 
 	xntimer_stop(&thread->ptimer);
-
-	/* Ensure the rescheduling can take place if the deleted thread is
-	   the running one. */
-
-	if (xnthread_test_state(thread, XNLOCK)) {
-		xnthread_clear_state(thread, XNLOCK);
-		nkpod->schedlck = 0;
-	}
 
 	if (xnthread_test_state(thread, XNPEND))
 		xnsynch_forget_sleeper(thread);
@@ -1385,15 +1380,8 @@ void xnpod_suspend_thread(xnthread_t *thread,
 
 	sched = thread->sched;
 
-	if (thread == sched->runthread) {
-#if XENO_DEBUG(NUCLEUS) || defined(__XENO_SIM__)
-		if (sched == xnpod_current_sched() && xnpod_locked_p())
-			xnpod_fatal
-			    ("suspensive call issued while the scheduler was locked");
-#endif /* XENO_DEBUG(NUCLEUS) || __XENO_SIM__ */
-
+	if (thread == sched->runthread)
 		xnsched_set_resched(sched);
-	}
 
 	/* We must make sure that we don't clear the wait channel if a
 	   thread is first blocked (wchan != NULL) then forcibly suspended
@@ -2288,9 +2276,10 @@ static inline void xnpod_preempt_current_thread(xnsched_t *sched)
  * therefore the caller does not need to explicitely issue
  * xnpod_schedule() after such operations.
  *
- * The rescheduling procedure always leads to a null-effect if the
- * scheduler is locked (XNLOCK bit set in the status mask of the
- * running thread), or if it is called on behalf of an ISR or callout.
+ * The rescheduling procedure always leads to a null-effect if it is
+ * called on behalf of an ISR or callout. Any outstanding scheduler
+ * lock held by the outgoing thread will be restored when the thread
+ * is scheduled back in.
  *
  * Calling this procedure with no applicable context switch pending is
  * harmless and simply leads to a null-effect.
@@ -2319,6 +2308,7 @@ static inline void xnpod_preempt_current_thread(xnsched_t *sched)
 void xnpod_schedule(void)
 {
 	xnthread_t *threadout, *threadin, *runthread;
+	xnpholder_t *pholder;
 	xnsched_t *sched;
 #if defined(CONFIG_SMP) || XENO_DEBUG(NUCLEUS)
 	int need_resched;
@@ -2373,18 +2363,18 @@ void xnpod_schedule(void)
 
 #endif /* CONFIG_SMP */
 
-	if (xnthread_test_state(runthread, XNLOCK))
-		/* The running thread has locked the scheduler and is still
-		   ready to run. Just check for (self-posted) pending signals,
-		   then exit the procedure without actually switching
-		   contexts. */
-		goto signal_unlock_and_exit;
-
 	/* Clear the rescheduling bit */
 	xnsched_clr_resched(sched);
 
 	if (!xnthread_test_state(runthread, XNTHREAD_BLOCK_BITS | XNZOMBIE)) {
-		xnpholder_t *pholder = sched_getheadpq(&sched->readyq);
+
+		/* Do not preempt the current thread if it holds the
+		 * scheduler lock. */
+
+		if (xnthread_test_state(runthread, XNLOCK))
+			goto signal_unlock_and_exit;
+
+		pholder = sched_getheadpq(&sched->readyq);
 
 		if (pholder) {
 			xnthread_t *head = link2thread(pholder, rlink);
@@ -2405,7 +2395,7 @@ void xnpod_schedule(void)
 		goto signal_unlock_and_exit;
 	}
 
-      do_switch:
+     do_switch:
 
 	threadout = runthread;
 	threadin = link2thread(sched_getpq(&sched->readyq), rlink);

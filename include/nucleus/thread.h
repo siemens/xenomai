@@ -152,6 +152,8 @@ typedef struct xnthread {
 
     int cprio;			/* Current priority */
 
+    u_long schedlck;		/*!< Scheduler lock count. */
+
     xnpholder_t rlink;		/* Thread holder in ready queue */
 
     xnpholder_t plink;		/* Thread holder in synchronization queue(s) */
@@ -248,6 +250,7 @@ typedef struct xnhook {
 #define xnthread_test_info(thread,flags)   testbits((thread)->info,flags)
 #define xnthread_set_info(thread,flags)    __setbits((thread)->info,flags)
 #define xnthread_clear_info(thread,flags)  __clrbits((thread)->info,flags)
+#define xnthread_lock_count(thread)        ((thread)->schedlck)
 #define xnthread_initial_priority(thread) ((thread)->iprio)
 #define xnthread_base_priority(thread)     ((thread)->bprio)
 #define xnthread_current_priority(thread) ((thread)->cprio)
