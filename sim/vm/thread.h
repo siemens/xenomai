@@ -120,7 +120,11 @@ private:
 
     virtual void body();
 
+#ifdef CONFIG_XENO_MVM_DEBUG
+public:
     static int globalTrace;
+    static void setGlobalTrace(int traceLevel);
+#endif // CONFIG_XENO_MVM_DEBUG
 
 protected:
 
@@ -137,8 +141,6 @@ public :
     static MvmThread *mainThread;
 
     static MvmScheduler runChain;
-
-    static void setGlobalTrace(int traceLevel);
 
     MvmThread(const char *name,
 	      int pflags =0,
