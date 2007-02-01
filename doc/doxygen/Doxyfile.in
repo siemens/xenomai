@@ -141,6 +141,15 @@ GENERATE_TREEVIEW      = YES
 TREEVIEW_WIDTH         = 250
 
 #---------------------------------------------------------------------------
+# Configuration::addtions related to the search engine   
+#---------------------------------------------------------------------------
+
+# The SEARCHENGINE tag specifies whether or not a search engine should be 
+# used. If set to NO the values of all tags below this one will be ignored.
+
+SEARCHENGINE           = YES
+
+#---------------------------------------------------------------------------
 # configuration options related to the LaTeX output
 #---------------------------------------------------------------------------
 

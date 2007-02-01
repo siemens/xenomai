@@ -1,3 +1,8 @@
+2007-01-31    <gilles.chanteperdrix@laposte.net>
+
+	* doc/doxygen/Doxyfile*.in: Only enable search engine for HTML
+	documentation.
+
 2007-01-31  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.19-1.6-06.
