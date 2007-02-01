@@ -335,7 +335,7 @@ A count of interrupt receipts is tracked into the interrupt descriptor, and rese
 Environments:<p>
 This service can be called from:<p>
 <ul>
-<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li></ul>
+<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible.<p>
 <dl compact><dt><b>Note:</b></dt><dd>The interrupt source associated to the interrupt descriptor remains masked upon creation. <a class="el" href="group__interrupt.html#gc712ee67f90d053a21bdb0041a63e17c">rt_intr_enable()</a> should be called for the new interrupt object to unmask it. </dd></dl>
@@ -656,7 +656,7 @@ Rescheduling: always, unless an interrupt is already pending on entry.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 25 13:57:10 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 1 19:18:34 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

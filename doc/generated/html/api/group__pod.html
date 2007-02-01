@@ -1057,7 +1057,7 @@ This is the central rescheduling routine which should be called to validate and 
 <p>
 The nucleus implements a lazy rescheduling scheme so that most of the services affecting the threads state MUST be followed by a call to the rescheduling procedure for the new scheduling state to be applied. In other words, multiple changes on the scheduler state can be done in a row, waking threads up, blocking others, without being immediately translated into the corresponding context switches, like it would be necessary would it appear that a higher priority thread than the current one became runnable for instance. When all changes have been applied, the rescheduling procedure is then called to consider those changes, and possibly replace the current thread by another one.<p>
 As a notable exception to the previous principle however, every action which ends up suspending or deleting the current thread begets an immediate call to the rescheduling procedure on behalf of the service causing the state transition. For instance, self-suspension, self-destruction, or sleeping on a synchronization object automatically leads to a call to the rescheduling procedure, therefore the caller does not need to explicitely issue <a class="el" href="group__pod.html#gcf5b53f0405351327b89b0cc4976b962">xnpod_schedule()</a> after such operations.<p>
-The rescheduling procedure always leads to a null-effect if the scheduler is locked (XNLOCK bit set in the status mask of the running thread), or if it is called on behalf of an ISR or callout.<p>
+The rescheduling procedure always leads to a null-effect if it is called on behalf of an ISR or callout. Any outstanding scheduler lock held by the outgoing thread will be restored when the thread is scheduled back in.<p>
 Calling this procedure with no applicable context switch pending is harmless and simply leads to a null-effect.<p>
 Side-effects:<p>
 <ul>
@@ -1177,7 +1177,7 @@ Change the control mode of a given thread. The control mode affects the behaviou
   </table>
 </dl>
 <ul>
-<li>XNLOCK causes the thread to lock the scheduler. The target thread will have to call the xnpod_unlock_sched() service to unlock the scheduler or clear the XNLOCK bit forcibly using this service.</li></ul>
+<li>XNLOCK causes the thread to lock the scheduler. The target thread will have to call the xnpod_unlock_sched() service to unlock the scheduler or clear the XNLOCK bit forcibly using this service. A non-preemptible thread may still block, in which case, the lock is reasserted when the thread is scheduled back in.</li></ul>
 <p>
 <ul>
 <li>XNRRB causes the thread to be marked as undergoing the round-robin scheduling policy. The contents of the thread.rrperiod field determines the time quantum (in ticks) allowed for its next slice. If the thread is already undergoing the round-robin scheduling policy at the time this service is called, the time quantum remains unchanged.</li></ul>
@@ -1415,7 +1415,7 @@ Starts a (newly) created thread, scheduling it for the first time. This call rel
   </table>
 </dl>
 <ul>
-<li>XNLOCK causes the thread to lock the scheduler when it starts. The target thread will have to call the xnpod_unlock_sched() service to unlock the scheduler.</li></ul>
+<li>XNLOCK causes the thread to lock the scheduler when it starts. The target thread will have to call the xnpod_unlock_sched() service to unlock the scheduler. A non-preemptible thread may still block, in which case, the lock is reasserted when the thread is scheduled back in.</li></ul>
 <p>
 <ul>
 <li>XNRRB causes the thread to be marked as undergoing the round-robin scheduling policy at startup. The contents of the thread.rrperiod field determines the time quantum (in ticks) allowed for its next slice.</li></ul>
@@ -1807,7 +1807,7 @@ Entered with nklock locked, irqs off. </p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon Dec 25 13:57:10 2006 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 1 19:18:34 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
