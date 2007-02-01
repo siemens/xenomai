@@ -794,10 +794,12 @@ void MvmThread::bumpInto ()
     do_restore(&context);
 }
 
+#ifdef CONFIG_XENO_MVM_DEBUG
 void MvmThread::setGlobalTrace (int traceLevel) {
 
     globalTrace = traceLevel;
 }
+#endif // CONFIG_XENO_MVM_DEBUG
 
 extern int _etext, _edata, _end;
 
