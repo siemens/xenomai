@@ -183,7 +183,7 @@ static inline xnticks_t xntbase_get_jiffies(xntbase_t *base)
 
 static inline xnticks_t xntbase_get_rawclock(xntbase_t *base)
 {
-	return xntbase_get_jiffies(base);
+	return xntbase_periodic_p(base) ? base->jiffies : xnarch_get_cpu_tsc();
 }
 
 int xntbase_alloc(const char *name,
