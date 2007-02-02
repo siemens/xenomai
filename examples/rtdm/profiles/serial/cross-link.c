@@ -223,7 +223,7 @@ void read_task_proc(void *arg)
 			       read_time - irq_time,
 			       read_time - write_time);
 			nr++;
-		} if (read < 0 ) {
+		} else if (read < 0 ) {
 			printf(RTASK_PREFIX "error on rt_dev_read, code %s\n",
 			       strerror(-err));
 			break;
