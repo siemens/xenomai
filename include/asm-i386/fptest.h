@@ -1,5 +1,5 @@
-#ifndef FPTEST_H
-#define FPTEST_H
+#ifndef _XENO_ASM_I386_FPTEST_H
+#define _XENO_ASM_I386_FPTEST_H
 
 #ifdef __KERNEL__
 #include <linux/module.h>
@@ -33,6 +33,4 @@ static inline unsigned fp_regs_check(unsigned val)
     return result;
 }
 
-
-
-#endif /* FPTEST_H */
+#endif /* _XENO_ASM_I386_FPTEST_H */
