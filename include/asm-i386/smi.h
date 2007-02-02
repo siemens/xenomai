@@ -2,6 +2,8 @@
  *   @ingroup hal
  *   @file
  *
+ *   Copyright &copy; 2005 Gilles Chanteperdrix.
+ *
  *   SMI workaround for x86.
  *
  *   This program is free software; you can redistribute it and/or modify
