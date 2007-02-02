@@ -1,3 +1,7 @@
+2007-02-02    <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/arch/arm/patches: Upgrade patches for IMX21 to 2.6.14-1.5-05.
+
 2007-01-31    <gilles.chanteperdrix@laposte.net>
 
 	* doc/doxygen/Doxyfile*.in: Only enable search engine for HTML

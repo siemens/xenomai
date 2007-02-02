@@ -1,6 +1,6 @@
-diff -uNrp 2.6.14-imx-orig/arch/arm/kernel/process.c 2.6.14-imx/arch/arm/kernel/process.c
---- 2.6.14-imx-orig/arch/arm/kernel/process.c	2006-09-10 19:13:17.000000000 +0200
-+++ 2.6.14-imx/arch/arm/kernel/process.c	2006-09-10 18:56:27.000000000 +0200
+diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp ipipe-2.6.14-arm-imx21/arch/arm/kernel/process.c ipipe-2.6.14-imx21/arch/arm/kernel/process.c
+--- ipipe-2.6.14-arm-imx21/arch/arm/kernel/process.c	2007-01-20 16:51:27.258746384 +0100
++++ ipipe-2.6.14-imx21/arch/arm/kernel/process.c	2007-01-20 15:58:52.570225827 +0100
 @@ -39,6 +39,10 @@ extern void setup_mm_for_reboot(char mod
  
  static volatile int hlt_counter;
@@ -40,7 +40,7 @@ diff -uNrp 2.6.14-imx-orig/arch/arm/kernel/process.c 2.6.14-imx/arch/arm/kernel/
  __setup("nohlt", nohlt_setup);
  __setup("hlt", hlt_setup);
  
-@@ -111,7 +136,18 @@ void cpu_idle(void)
+@@ -117,7 +142,18 @@ void cpu_idle(void)
  		preempt_disable();
  		leds_event(led_idle_start);
  		while (!need_resched())
@@ -59,9 +59,9 @@ diff -uNrp 2.6.14-imx-orig/arch/arm/kernel/process.c 2.6.14-imx/arch/arm/kernel/
  		leds_event(led_idle_end);
  		preempt_enable();
  		schedule();
-diff -uNrp 2.6.14-imx-orig/arch/arm/mach-imx21/irq.c 2.6.14-imx/arch/arm/mach-imx21/irq.c
---- 2.6.14-imx-orig/arch/arm/mach-imx21/irq.c	2006-09-10 19:12:58.000000000 +0200
-+++ 2.6.14-imx/arch/arm/mach-imx21/irq.c	2006-09-10 18:56:38.000000000 +0200
+diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp ipipe-2.6.14-arm-imx21/arch/arm/mach-imx21/irq.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/irq.c
+--- ipipe-2.6.14-arm-imx21/arch/arm/mach-imx21/irq.c	2007-01-20 16:57:08.564284059 +0100
++++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/irq.c	2007-01-20 16:45:17.557741430 +0100
 @@ -23,6 +23,12 @@
   *  03/03/2004   Sascha Hauer <sascha@saschahauer.de>
   *               Copied from the motorola bsp package and added gpio demux
@@ -82,7 +82,7 @@ diff -uNrp 2.6.14-imx-orig/arch/arm/mach-imx21/irq.c 2.6.14-imx/arch/arm/mach-im
 +#ifdef CONFIG_IPIPE
 +void __ipipe_mach_demux_irq(unsigned irq_unused, struct pt_regs *regs)
 +{
-+    struct irqdesc *desc_unused = irq_desc + irq_unused;
++    struct irqdesc *desc, *desc_unused = irq_desc + irq_unused;
 +    unsigned int mask;
 +    unsigned int port;
 +    unsigned int irq_base;
@@ -101,7 +101,7 @@ diff -uNrp 2.6.14-imx-orig/arch/arm/mach-imx21/irq.c 2.6.14-imx/arch/arm/mach-im
 +    while (mask) {
 +        if (mask & 1) {
 +            DEBUG_IRQ("handling irq %d (port %d)\n", irq, port);
-+	    __ipipe_handler_irq(irq + irq_base, regs);	    
++	    __ipipe_handle_irq(irq + irq_base, regs);	    
 +            ISR(port) = (1 << irq);
 +        }
 +        irq++;
@@ -133,10 +133,10 @@ diff -uNrp 2.6.14-imx-orig/arch/arm/mach-imx21/irq.c 2.6.14-imx/arch/arm/mach-im
  	for (irq = 0; irq < IMX21_IRQS; irq++) {
  		set_irq_chip(irq, &imx21_internal_chip);
  		set_irq_handler(irq, do_level_IRQ);
-diff -uNrp 2.6.14-imx-orig/arch/arm/mach-imx21/time.c 2.6.14-imx/arch/arm/mach-imx21/time.c
---- 2.6.14-imx-orig/arch/arm/mach-imx21/time.c	2006-09-10 19:12:58.000000000 +0200
-+++ 2.6.14-imx/arch/arm/mach-imx21/time.c	2006-09-10 18:56:27.000000000 +0200
-@@ -10,7 +10,16 @@
+diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp ipipe-2.6.14-arm-imx21/arch/arm/mach-imx21/time.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/time.c
+--- ipipe-2.6.14-arm-imx21/arch/arm/mach-imx21/time.c	2007-01-20 16:57:08.566283810 +0100
++++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/time.c	2007-01-20 16:49:29.274424987 +0100
+@@ -10,13 +10,23 @@
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of the GNU General Public License version 2 as
   * published by the Free Software Foundation.
@@ -153,7 +153,14 @@ diff -uNrp 2.6.14-imx-orig/arch/arm/mach-imx21/time.c 2.6.14-imx/arch/arm/mach-i
  #include <linux/config.h>
  #include <linux/kernel.h>
  #include <linux/sched.h>
-@@ -24,56 +33,165 @@
+ #include <linux/init.h>
+ #include <linux/interrupt.h>
+ #include <linux/time.h>
++#include <linux/module.h>
+ 
+ #include <asm/hardware.h>
+ #include <asm/io.h>
+@@ -24,56 +34,171 @@
  #include <asm/irq.h>
  #include <asm/mach/time.h>
  
@@ -170,20 +177,20 @@ diff -uNrp 2.6.14-imx-orig/arch/arm/mach-imx21/time.c 2.6.14-imx/arch/arm/mach-i
 +static DEFINE_SPINLOCK(timer_lock);
 +int __ipipe_mach_timerstolen = 0;
 +EXPORT_SYMBOL(__ipipe_mach_timerstolen);
-+/*
+ /*
+- * Returns number of us since last clock interrupt.  Note that interrupts
+- * will have been disabled by do_gettimeoffset()
 + * timer_frequency = 17'616'076,8 Hz
 + * ticks/jiffy = timer_freq / Hz
-+ */
+  */
+-static unsigned long imx21_gettimeoffset(void)
 +unsigned int __ipipe_mach_ticks_per_jiffy = CLKPERCLK1 / HZ;
 +EXPORT_SYMBOL(__ipipe_mach_ticks_per_jiffy);
 +#endif /* CONFIG_IPIPE */
 +
- /*
-- * Returns number of us since last clock interrupt.  Note that interrupts
-- * will have been disabled by do_gettimeoffset()
++/*
 + * Called with IRQ disabled from do_gettimeofday().
-  */
--static unsigned long imx21_gettimeoffset(void)
++ */
 +static inline unsigned long imx_getticksoffset(void)
  {
 -	unsigned long ticks;
@@ -259,6 +266,12 @@ diff -uNrp 2.6.14-imx-orig/arch/arm/mach-imx21/time.c 2.6.14-imx/arch/arm/mach-i
 +
 +}
 +EXPORT_SYMBOL(__ipipe_mach_set_dec);
++
++void __ipipe_mach_release_timer(void)
++{
++       __ipipe_mach_set_dec(__ipipe_mach_ticks_per_jiffy);
++}
++EXPORT_SYMBOL(__ipipe_mach_release_timer);
 +
 +unsigned long __ipipe_mach_get_dec(void)
 +{
@@ -344,7 +357,7 @@ diff -uNrp 2.6.14-imx-orig/arch/arm/mach-imx21/time.c 2.6.14-imx/arch/arm/mach-i
  	.handler	= imx21_timer_interrupt
  };
  
-@@ -82,21 +200,35 @@ static struct irqaction imx21_timer_irq 
+@@ -82,21 +207,35 @@ static struct irqaction imx21_timer_irq 
   */
  static void __init imx21_timer_init(void)
  {
@@ -383,9 +396,9 @@ diff -uNrp 2.6.14-imx-orig/arch/arm/mach-imx21/time.c 2.6.14-imx/arch/arm/mach-i
  };
 +
 +
-diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx/imx-regs.h 2.6.14-imx/include/asm-arm/arch-imx/imx-regs.h
---- 2.6.14-imx-orig/include/asm-arm/arch-imx/imx-regs.h	2005-10-28 02:02:08.000000000 +0200
-+++ 2.6.14-imx/include/asm-arm/arch-imx/imx-regs.h	2006-09-10 18:56:27.000000000 +0200
+diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp ipipe-2.6.14-arm-imx21/include/asm-arm/arch-imx/imx-regs.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx/imx-regs.h
+--- ipipe-2.6.14-arm-imx21/include/asm-arm/arch-imx/imx-regs.h	2005-10-28 02:02:08.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx/imx-regs.h	2007-01-20 15:58:52.573225454 +0100
 @@ -1,481 +1,618 @@
 -#ifndef _IMX_REGS_H
 -#define _IMX_REGS_H
@@ -467,23 +480,21 @@ diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx/imx-regs.h 2.6.14-imx/includ
 -#define IMX_MMA_BASE               (0x22000 + IMX_IO_BASE)
 -#define IMX_AITC_BASE              (0x23000 + IMX_IO_BASE)
 -#define IMX_CSI_BASE               (0x24000 + IMX_IO_BASE)
--
+ 
 -/* PLL registers */
 -#define CSCR   __REG(IMX_PLL_BASE)        /* Clock Source Control Register */
 -#define CSCR_SYSTEM_SEL (1<<16)
--
++/* TODO: Rename MX2ADS to processor specific name, not a board name */
+ 
 -#define MPCTL0 __REG(IMX_PLL_BASE + 0x4)  /* MCU PLL Control Register 0 */
 -#define MPCTL1 __REG(IMX_PLL_BASE + 0x8)  /* MCU PLL and System Clock Register 1 */
 -#define SPCTL0 __REG(IMX_PLL_BASE + 0xc)  /* System PLL Control Register 0 */
 -#define SPCTL1 __REG(IMX_PLL_BASE + 0x10) /* System PLL Control Register 1 */
 -#define PCDR   __REG(IMX_PLL_BASE + 0x20) /* Peripheral Clock Divider Register */
- 
--#define CSCR_MPLL_RESTART (1<<21)
-+/* TODO: Rename MX2ADS to processor specific name, not a board name */
-+
 +#define MX2ADS_AIPI1_BASE             (0x00000 + IMX21_IO_BASE)
 +#define MX2ADS_AIPI2_BASE             (0x20000 + IMX21_IO_BASE)
-+
+ 
+-#define CSCR_MPLL_RESTART (1<<21)
 +#define MX2ADS_DMA_BASE               (0x01000 + IMX21_IO_BASE)
 +#define MX2ADS_WDT_BASE               (0x02000 + IMX21_IO_BASE)
 +#define MX2ADS_GPT1_BASE              (0x03000 + IMX21_IO_BASE)
@@ -565,51 +576,119 @@ diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx/imx-regs.h 2.6.14-imx/includ
 -#define GPR(x)     __REG2(IMX_GPIO_BASE + 0x38, ((x) & 3) << 8)
 -#define SWR(x)     __REG2(IMX_GPIO_BASE + 0x3c, ((x) & 3) << 8)
 -#define PUEN(x)    __REG2(IMX_GPIO_BASE + 0x40, ((x) & 3) << 8)
--
++#define DDIR(x)    __REG2(MX2ADS_GPIO_BASE + 0x00, ((x) & 7) << 8)
++#define OCR1(x)    __REG2(MX2ADS_GPIO_BASE + 0x04, ((x) & 7) << 8)
++#define OCR2(x)    __REG2(MX2ADS_GPIO_BASE + 0x08, ((x) & 7) << 8)
++#define ICONFA1(x) __REG2(MX2ADS_GPIO_BASE + 0x0c, ((x) & 7) << 8)
++#define ICONFA2(x) __REG2(MX2ADS_GPIO_BASE + 0x10, ((x) & 7) << 8)
++#define ICONFB1(x) __REG2(MX2ADS_GPIO_BASE + 0x14, ((x) & 7) << 8)
++#define ICONFB2(x) __REG2(MX2ADS_GPIO_BASE + 0x18, ((x) & 7) << 8)
++#define DR(x)      __REG2(MX2ADS_GPIO_BASE + 0x1c, ((x) & 7) << 8)
++#define GIUS(x)    __REG2(MX2ADS_GPIO_BASE + 0x20, ((x) & 7) << 8)
++#define SSR(x)     __REG2(MX2ADS_GPIO_BASE + 0x24, ((x) & 7) << 8)
++#define ICR1(x)    __REG2(MX2ADS_GPIO_BASE + 0x28, ((x) & 7) << 8)
++#define ICR2(x)    __REG2(MX2ADS_GPIO_BASE + 0x2c, ((x) & 7) << 8)
++#define IMR(x)     __REG2(MX2ADS_GPIO_BASE + 0x30, ((x) & 7) << 8)
++#define ISR(x)     __REG2(MX2ADS_GPIO_BASE + 0x34, ((x) & 7) << 8)
++#define GPR(x)     __REG2(MX2ADS_GPIO_BASE + 0x38, ((x) & 7) << 8)
++#define SWR(x)     __REG2(MX2ADS_GPIO_BASE + 0x3c, ((x) & 7) << 8)
++#define PUEN(x)    __REG2(MX2ADS_GPIO_BASE + 0x40, ((x) & 7) << 8)
++#define PMASK      __REG(MX2ADS_GPIO_BASE + 0x600)
+ 
 -#define GPIO_PIN_MASK 0x1f
 -#define GPIO_PORT_MASK (0x3 << 5)
--
++/*  ethernet controller IRQ is tied to UART3_RTS */ 
++#define NET_IRQ_BIT		(1 << 11)
+ 
 -#define GPIO_PORT_SHIFT 5
 -#define GPIO_PORTA (0<<5)
 -#define GPIO_PORTB (1<<5)
 -#define GPIO_PORTC (2<<5)
 -#define GPIO_PORTD (3<<5)
--
++/*
++ *  GPIO Mode
++ *
++ *  The pin, port, data direction, pull-up enable, primary/alternate
++ *  function, output configuration, and input configuration are encoded in a 
++ *  single word as follows.
++ *
++ *  4:0 Pin (31-0)
++ *  7:5 Port (F-A)
++ *  8 Direction
++ *  9 PUEN
++ *  10:11 Primary Function,Alternate Function,GPIO
++ *  13:12 OCR
++ *  15:14 ICONF
++ * 
++ *  [ 15 14 | 13 12 | 11 10 | 9  |  8  | 7 6 5 | 4 3 2 1 0 ]
++ *  [ ICONF |  OCR  | P/A/G | PU | Dir | Port  |    Pin    ]
++ */
+ 
 -#define GPIO_OUT   (1<<7)
 -#define GPIO_IN    (0<<7)
 -#define GPIO_PUEN  (1<<8)
--
++#define GPIO_PIN_MASK		(0x1f<<0)
+ 
 -#define GPIO_PF    (0<<9)
 -#define GPIO_AF    (1<<9)
--
++#define GPIO_PORT_POS		5
++#define GPIO_PORT_MASK		(0x3 << GPIO_PORT_POS)
++#define GPIO_PORTA 		(0 << GPIO_PORT_POS)
++#define GPIO_PORTB		(1 << GPIO_PORT_POS)
++#define GPIO_PORTC		(2 << GPIO_PORT_POS)
++#define GPIO_PORTD		(3 << GPIO_PORT_POS)
++#define GPIO_PORTE		(4 << GPIO_PORT_POS)
++#define GPIO_PORTF		(5 << GPIO_PORT_POS)
+ 
 -#define GPIO_OCR_SHIFT 10
 -#define GPIO_OCR_MASK (3<<10)
 -#define GPIO_AIN   (0<<10)
 -#define GPIO_BIN   (1<<10)
 -#define GPIO_CIN   (2<<10)
 -#define GPIO_DR    (3<<10)
--
++#define GPIO_DIR_MASK		(1<<8)
++#define GPIO_IN			(0<<8)
++#define GPIO_OUT		(1<<8)
+ 
 -#define GPIO_AOUT_SHIFT 12
 -#define GPIO_AOUT_MASK (3<<12)
 -#define GPIO_AOUT     (0<<12)
 -#define GPIO_AOUT_ISR (1<<12)
 -#define GPIO_AOUT_0   (2<<12)
 -#define GPIO_AOUT_1   (3<<12)
--
++#define GPIO_PU_MASK		(1<<9)
++#define GPIO_PUDIS		(0<<9)
++#define GPIO_PUEN		(1<<9)
+ 
 -#define GPIO_BOUT_SHIFT 14
 -#define GPIO_BOUT_MASK (3<<14)
 -#define GPIO_BOUT      (0<<14)
 -#define GPIO_BOUT_ISR  (1<<14)
 -#define GPIO_BOUT_0    (2<<14)
 -#define GPIO_BOUT_1    (3<<14)
--
++#define GPIO_FUNC_MASK		(0x3<<10)
++#define GPIO_PF			(0<<10)
++#define GPIO_AF			(1<<10)
++#define GPIO_GP			(2<<10)
+ 
 -#define GPIO_GIUS      (1<<16)
--
++#define GPIO_OCR_POS		12
++#define GPIO_OCR_MASK		(0x3 << GPIO_OCR_POS)
++#define GPIO_AIN		(0 << GPIO_OCR_POS)
++#define GPIO_BIN		(1 << GPIO_OCR_POS)
++#define GPIO_CIN		(2 << GPIO_OCR_POS)
++#define GPIO_DR			(3 << GPIO_OCR_POS)
+ 
 -/* assignements for GPIO alternate/primary functions */
--
++#define GPIO_ICONF_MASK		(0x3<<14)
++#define GPIO_AOUT		(1<<14)
++#define GPIO_BOUT		(2<<14)
+ 
 -/* FIXME: This list is not completed. The correct directions are
 - * missing on some (many) pins
-- */
++/*
++ *  Freescale i.MX21 GPIO signal multiplexing mode defines
+  */
 -#define PA0_AIN_SPI2_CLK     ( GPIO_GIUS | GPIO_PORTA | GPIO_OUT | 0 )
 -#define PA0_AF_ETMTRACESYNC  ( GPIO_PORTA | GPIO_AF | 0 )
 -#define PA1_AOUT_SPI2_RXD    ( GPIO_GIUS | GPIO_PORTA | GPIO_IN | 1 )
@@ -741,15 +820,40 @@ diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx/imx-regs.h 2.6.14-imx/includ
 -#define PD30_PF_LD15         ( GPIO_PORTD | GPIO_OUT | GPIO_PF | 30 )
 -#define PD31_PF_TMR2OUT      ( GPIO_PORTD | GPIO_PF | 31 )
 -#define PD31_BIN_SPI2_TXD    ( GPIO_GIUS | GPIO_PORTD | GPIO_BIN | 31 )
--
--/*
+ 
+ /*
 - * PWM controller
-- */
++ *  The GPIO pin naming convention was developed by the original unknown author. 
++ *  Although using defines for variables is always a good idea for portability, 
++ *  in this case the names are as specific as the values, and thus loose their 
++ *  portability. Ultimately the pin names should be changed to reflect the signal
++ *  name only.  
++ *
++ *  The current naming convention is as follows.
++ *
++ *  P(port)(pin)_(function)_(signal)
++ *
++ *  port = (A-F)
++ *  pin = (0-31)
++ *  function = (PF|AF|AIN|BIN|CIN|DR|AOUT|BOUT)
++ *  signal = signal name from datasheet
++ *
++ *  Remember that when in GPIO mode, AIN, BIN, CIN, and DR are inputs to the GPIO
++ *  peripheral module and represent outputs to the pin. Similarly AOUT, and BOUT
++ *  are outputs from the GPIO peripheral module and represent inputs to the physical 
++ *  pin in question. Refer to the multiplexing table in the section titled "Signal 
++ *  Descriptions and Pin Assignments" in the reference manual.
+  */
 -#define PWMC	__REG(IMX_PWM_BASE + 0x00)	/* PWM Control Register		*/
 -#define PWMS	__REG(IMX_PWM_BASE + 0x04)	/* PWM Sample Register		*/
 -#define PWMP	__REG(IMX_PWM_BASE + 0x08)	/* PWM Period Register		*/
 -#define PWMCNT	__REG(IMX_PWM_BASE + 0x0C)	/* PWM Counter Register		*/
--
++   
++#define PE14_PF_UART1_CTS	( GPIO_PORTE | 14 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PE15_PF_UART1_RTS	( GPIO_PORTE | 15 | GPIO_PF | GPIO_IN | GPIO_PUDIS )
++#define PE12_PF_UART1_TXD	( GPIO_PORTE | 12 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PE13_PF_UART1_RXD	( GPIO_PORTE | 13 | GPIO_PF | GPIO_IN | GPIO_PUDIS )
+ 
 -#define PWMC_HCTR		(0x01<<18)		/* Halfword FIFO Data Swapping	*/
 -#define PWMC_BCTR		(0x01<<17)		/* Byte FIFO Data Swapping	*/
 -#define PWMC_SWR		(0x01<<16)		/* Software Reset		*/
@@ -761,14 +865,60 @@ diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx/imx-regs.h 2.6.14-imx/includ
 -#define PWMC_EN			(0x01<< 4)		/* Enables/Disables the PWM	*/
 -#define PWMC_REPEAT(x)		(((x) & 0x03) << 2)	/* Sample Repeats		*/
 -#define PWMC_CLKSEL(x)		(((x) & 0x03) << 0)	/* Clock Selection		*/
--
++#define PA5_PF_LSCLK		( GPIO_PORTA | 5 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA6_PF_LD0		( GPIO_PORTA | 6 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA7_PF_LD1		( GPIO_PORTA | 7 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA8_PF_LD2		( GPIO_PORTA | 8 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA9_PF_LD3		( GPIO_PORTA | 9 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA10_PF_LD4		( GPIO_PORTA | 10 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA11_PF_LD5		( GPIO_PORTA | 11 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA12_PF_LD6		( GPIO_PORTA | 12 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA13_PF_LD7		( GPIO_PORTA | 13 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA14_PF_LD8		( GPIO_PORTA | 14 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA15_PF_LD9		( GPIO_PORTA | 15 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA16_PF_LD10		( GPIO_PORTA | 16 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA17_PF_LD11		( GPIO_PORTA | 17 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA18_PF_LD12		( GPIO_PORTA | 18 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA19_PF_LD13		( GPIO_PORTA | 19 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA20_PF_LD14		( GPIO_PORTA | 20 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA21_PF_LD15		( GPIO_PORTA | 21 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA22_PF_LD16		( GPIO_PORTA | 22 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA23_PF_LD17		( GPIO_PORTA | 23 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA24_PF_REV		( GPIO_PORTA | 24 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA25_PF_CLS		( GPIO_PORTA | 25 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA26_PF_PS		( GPIO_PORTA | 26 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA27_PF_SPL_SPR		( GPIO_PORTA | 27 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA28_PF_HSYNC		( GPIO_PORTA | 28 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA29_PF_VSYNC		( GPIO_PORTA | 29 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA30_PF_CONTRAST	( GPIO_PORTA | 30 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
++#define PA31_PF_OE_ACD		( GPIO_PORTA | 31 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
+ 
 -#define PWMS_SAMPLE(x)		((x) & 0xFFFF)		/* Contains a two-sample word	*/
 -#define PWMP_PERIOD(x)		((x) & 0xFFFF)		/* Represents the PWM's period	*/
 -#define PWMC_COUNTER(x)		((x) & 0xFFFF)		/* Represents the current count value	*/
--
--/*
++/*
++ *  Freescale i.MX21 register defines
++ *
++ *  All register and field defines should conform to the following naming
++ *  convention, and preferably use the exact names from the corresponding
++ *  datasheets. 
++ *
++ *  #define <module>_<register>		<value>
++ *  #define <register>_<field><type>	<value>
++ *
++ *  Where <type> can be one of the following.
++ *
++ *  _POS = defines the field LSB bit position	
++ *  _MASK = defines the field mask
++ *  (x) = writes x to the field location
++ *
++ *  The POS and MASK entries will be defined on an as needed basis. 
++ */
+ 
+ /*
 - *  DMA Controller
-- */
++ *  Freescale i.MX21 clock controller registers
+  */
 -#define DCR     __REG(IMX_DMAC_BASE +0x00)	/* DMA Control Register */
 -#define DISR    __REG(IMX_DMAC_BASE +0x04)	/* DMA Interrupt status Register */
 -#define DIMR    __REG(IMX_DMAC_BASE +0x08)	/* DMA Interrupt mask Register */
@@ -791,7 +941,7 @@ diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx/imx-regs.h 2.6.14-imx/includ
 -#define BLR(x)  __REG2( IMX_DMAC_BASE + 0x94, (x) << 6)	/* Burst length Registers */
 -#define RTOR(x) __REG2( IMX_DMAC_BASE + 0x98, (x) << 6)	/* Request timeout Registers */
 -#define BUCR(x) __REG2( IMX_DMAC_BASE + 0x98, (x) << 6)	/* Bus Utilization Registers */
--
+ 
 -#define DCR_DRST           (1<<1)
 -#define DCR_DEN            (1<<0)
 -#define DBTOCR_EN          (1<<15)
@@ -820,179 +970,6 @@ diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx/imx-regs.h 2.6.14-imx/includ
 -#define RTOR_EN            (1<<15)
 -#define RTOR_CLK           (1<<14)
 -#define RTOR_PSC           (1<<13)
--
--/*
-- *  Interrupt controller
-- */
--
--#define IMX_INTCNTL        __REG(IMX_AITC_BASE+0x00)
--#define INTCNTL_FIAD       (1<<19)
--#define INTCNTL_NIAD       (1<<20)
--
--#define IMX_NIMASK         __REG(IMX_AITC_BASE+0x04)
--#define IMX_INTENNUM       __REG(IMX_AITC_BASE+0x08)
--#define IMX_INTDISNUM      __REG(IMX_AITC_BASE+0x0c)
--#define IMX_INTENABLEH     __REG(IMX_AITC_BASE+0x10)
--#define IMX_INTENABLEL     __REG(IMX_AITC_BASE+0x14)
-+#define DDIR(x)    __REG2(MX2ADS_GPIO_BASE + 0x00, ((x) & 7) << 8)
-+#define OCR1(x)    __REG2(MX2ADS_GPIO_BASE + 0x04, ((x) & 7) << 8)
-+#define OCR2(x)    __REG2(MX2ADS_GPIO_BASE + 0x08, ((x) & 7) << 8)
-+#define ICONFA1(x) __REG2(MX2ADS_GPIO_BASE + 0x0c, ((x) & 7) << 8)
-+#define ICONFA2(x) __REG2(MX2ADS_GPIO_BASE + 0x10, ((x) & 7) << 8)
-+#define ICONFB1(x) __REG2(MX2ADS_GPIO_BASE + 0x14, ((x) & 7) << 8)
-+#define ICONFB2(x) __REG2(MX2ADS_GPIO_BASE + 0x18, ((x) & 7) << 8)
-+#define DR(x)      __REG2(MX2ADS_GPIO_BASE + 0x1c, ((x) & 7) << 8)
-+#define GIUS(x)    __REG2(MX2ADS_GPIO_BASE + 0x20, ((x) & 7) << 8)
-+#define SSR(x)     __REG2(MX2ADS_GPIO_BASE + 0x24, ((x) & 7) << 8)
-+#define ICR1(x)    __REG2(MX2ADS_GPIO_BASE + 0x28, ((x) & 7) << 8)
-+#define ICR2(x)    __REG2(MX2ADS_GPIO_BASE + 0x2c, ((x) & 7) << 8)
-+#define IMR(x)     __REG2(MX2ADS_GPIO_BASE + 0x30, ((x) & 7) << 8)
-+#define ISR(x)     __REG2(MX2ADS_GPIO_BASE + 0x34, ((x) & 7) << 8)
-+#define GPR(x)     __REG2(MX2ADS_GPIO_BASE + 0x38, ((x) & 7) << 8)
-+#define SWR(x)     __REG2(MX2ADS_GPIO_BASE + 0x3c, ((x) & 7) << 8)
-+#define PUEN(x)    __REG2(MX2ADS_GPIO_BASE + 0x40, ((x) & 7) << 8)
-+#define PMASK      __REG(MX2ADS_GPIO_BASE + 0x600)
-+
-+/*  ethernet controller IRQ is tied to UART3_RTS */ 
-+#define NET_IRQ_BIT		(1 << 11)
-+
-+/*
-+ *  GPIO Mode
-+ *
-+ *  The pin, port, data direction, pull-up enable, primary/alternate
-+ *  function, output configuration, and input configuration are encoded in a 
-+ *  single word as follows.
-+ *
-+ *  4:0 Pin (31-0)
-+ *  7:5 Port (F-A)
-+ *  8 Direction
-+ *  9 PUEN
-+ *  10:11 Primary Function,Alternate Function,GPIO
-+ *  13:12 OCR
-+ *  15:14 ICONF
-+ * 
-+ *  [ 15 14 | 13 12 | 11 10 | 9  |  8  | 7 6 5 | 4 3 2 1 0 ]
-+ *  [ ICONF |  OCR  | P/A/G | PU | Dir | Port  |    Pin    ]
-+ */
-+
-+#define GPIO_PIN_MASK		(0x1f<<0)
-+
-+#define GPIO_PORT_POS		5
-+#define GPIO_PORT_MASK		(0x3 << GPIO_PORT_POS)
-+#define GPIO_PORTA 		(0 << GPIO_PORT_POS)
-+#define GPIO_PORTB		(1 << GPIO_PORT_POS)
-+#define GPIO_PORTC		(2 << GPIO_PORT_POS)
-+#define GPIO_PORTD		(3 << GPIO_PORT_POS)
-+#define GPIO_PORTE		(4 << GPIO_PORT_POS)
-+#define GPIO_PORTF		(5 << GPIO_PORT_POS)
-+
-+#define GPIO_DIR_MASK		(1<<8)
-+#define GPIO_IN			(0<<8)
-+#define GPIO_OUT		(1<<8)
-+
-+#define GPIO_PU_MASK		(1<<9)
-+#define GPIO_PUDIS		(0<<9)
-+#define GPIO_PUEN		(1<<9)
-+
-+#define GPIO_FUNC_MASK		(0x3<<10)
-+#define GPIO_PF			(0<<10)
-+#define GPIO_AF			(1<<10)
-+#define GPIO_GP			(2<<10)
-+
-+#define GPIO_OCR_POS		12
-+#define GPIO_OCR_MASK		(0x3 << GPIO_OCR_POS)
-+#define GPIO_AIN		(0 << GPIO_OCR_POS)
-+#define GPIO_BIN		(1 << GPIO_OCR_POS)
-+#define GPIO_CIN		(2 << GPIO_OCR_POS)
-+#define GPIO_DR			(3 << GPIO_OCR_POS)
-+
-+#define GPIO_ICONF_MASK		(0x3<<14)
-+#define GPIO_AOUT		(1<<14)
-+#define GPIO_BOUT		(2<<14)
-+
-+/*
-+ *  Freescale i.MX21 GPIO signal multiplexing mode defines
-+ */
-+
-+/*
-+ *  The GPIO pin naming convention was developed by the original unknown author. 
-+ *  Although using defines for variables is always a good idea for portability, 
-+ *  in this case the names are as specific as the values, and thus loose their 
-+ *  portability. Ultimately the pin names should be changed to reflect the signal
-+ *  name only.  
-+ *
-+ *  The current naming convention is as follows.
-+ *
-+ *  P(port)(pin)_(function)_(signal)
-+ *
-+ *  port = (A-F)
-+ *  pin = (0-31)
-+ *  function = (PF|AF|AIN|BIN|CIN|DR|AOUT|BOUT)
-+ *  signal = signal name from datasheet
-+ *
-+ *  Remember that when in GPIO mode, AIN, BIN, CIN, and DR are inputs to the GPIO
-+ *  peripheral module and represent outputs to the pin. Similarly AOUT, and BOUT
-+ *  are outputs from the GPIO peripheral module and represent inputs to the physical 
-+ *  pin in question. Refer to the multiplexing table in the section titled "Signal 
-+ *  Descriptions and Pin Assignments" in the reference manual.
-+ */
-+   
-+#define PE14_PF_UART1_CTS	( GPIO_PORTE | 14 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PE15_PF_UART1_RTS	( GPIO_PORTE | 15 | GPIO_PF | GPIO_IN | GPIO_PUDIS )
-+#define PE12_PF_UART1_TXD	( GPIO_PORTE | 12 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PE13_PF_UART1_RXD	( GPIO_PORTE | 13 | GPIO_PF | GPIO_IN | GPIO_PUDIS )
-+
-+#define PA5_PF_LSCLK		( GPIO_PORTA | 5 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA6_PF_LD0		( GPIO_PORTA | 6 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA7_PF_LD1		( GPIO_PORTA | 7 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA8_PF_LD2		( GPIO_PORTA | 8 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA9_PF_LD3		( GPIO_PORTA | 9 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA10_PF_LD4		( GPIO_PORTA | 10 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA11_PF_LD5		( GPIO_PORTA | 11 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA12_PF_LD6		( GPIO_PORTA | 12 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA13_PF_LD7		( GPIO_PORTA | 13 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA14_PF_LD8		( GPIO_PORTA | 14 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA15_PF_LD9		( GPIO_PORTA | 15 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA16_PF_LD10		( GPIO_PORTA | 16 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA17_PF_LD11		( GPIO_PORTA | 17 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA18_PF_LD12		( GPIO_PORTA | 18 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA19_PF_LD13		( GPIO_PORTA | 19 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA20_PF_LD14		( GPIO_PORTA | 20 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA21_PF_LD15		( GPIO_PORTA | 21 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA22_PF_LD16		( GPIO_PORTA | 22 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA23_PF_LD17		( GPIO_PORTA | 23 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA24_PF_REV		( GPIO_PORTA | 24 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA25_PF_CLS		( GPIO_PORTA | 25 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA26_PF_PS		( GPIO_PORTA | 26 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA27_PF_SPL_SPR		( GPIO_PORTA | 27 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA28_PF_HSYNC		( GPIO_PORTA | 28 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA29_PF_VSYNC		( GPIO_PORTA | 29 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA30_PF_CONTRAST	( GPIO_PORTA | 30 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+#define PA31_PF_OE_ACD		( GPIO_PORTA | 31 | GPIO_PF | GPIO_OUT | GPIO_PUDIS )
-+
-+/*
-+ *  Freescale i.MX21 register defines
-+ *
-+ *  All register and field defines should conform to the following naming
-+ *  convention, and preferably use the exact names from the corresponding
-+ *  datasheets. 
-+ *
-+ *  #define <module>_<register>		<value>
-+ *  #define <register>_<field><type>	<value>
-+ *
-+ *  Where <type> can be one of the following.
-+ *
-+ *  _POS = defines the field LSB bit position	
-+ *  _MASK = defines the field mask
-+ *  (x) = writes x to the field location
-+ *
-+ *  The POS and MASK entries will be defined on an as needed basis. 
-+ */
-+
-+/*
-+ *  Freescale i.MX21 clock controller registers
-+ */
-+
 +#define CRM_CSCR	__REG(MX2ADS_CRM_BASE + 0x0)
 +#define CSCR_PRESC_MASK		(0x7<<29)
 +#define CSCR_PRESC(x)		(((x) & 0x7) << 29)
@@ -1115,14 +1092,23 @@ diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx/imx-regs.h 2.6.14-imx/includ
 +	
 +#define CRM_WKGDCTL	__REG(MX2ADS_CRM_BASE + 0x34)
 +#define WKGDCTL_WKDG_EN		(1<<0)
-+
-+/*
+ 
+ /*
+- *  Interrupt controller
 + * LCD controller (LCDC) registers
-+ */
-+
+  */
+ 
+-#define IMX_INTCNTL        __REG(IMX_AITC_BASE+0x00)
+-#define INTCNTL_FIAD       (1<<19)
+-#define INTCNTL_NIAD       (1<<20)
 +#define LCDC_LSSAR	__REG(MX2ADS_LCDC_BASE + 0x0)
 +#define LSSAR_SSA(x)		(((x) & 0x3fffffff) << 2)
-+
+ 
+-#define IMX_NIMASK         __REG(IMX_AITC_BASE+0x04)
+-#define IMX_INTENNUM       __REG(IMX_AITC_BASE+0x08)
+-#define IMX_INTDISNUM      __REG(IMX_AITC_BASE+0x0c)
+-#define IMX_INTENABLEH     __REG(IMX_AITC_BASE+0x10)
+-#define IMX_INTENABLEL     __REG(IMX_AITC_BASE+0x14)
 +#define LCDC_LSR 	__REG(MX2ADS_LCDC_BASE + 0x4)
 +#define LSR_XMAX(x)		(((x) & 0x3f) << 20)
 +#define LSR_YMAX(x)		(((x) & 0x3ff) << 0)
@@ -1309,37 +1295,20 @@ diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx/imx-regs.h 2.6.14-imx/includ
 -#define IMX_TCR(x)         __REG( 0x0C + (x))
 -#define IMX_TCN(x)         __REG( 0x10 + (x))
 -#define IMX_TSTAT(x)       __REG( 0x14 + (x))
-+/*
+-#define TSTAT_CAPT         (1<<1)
+-#define TSTAT_COMP         (1<<0)
+-
+ /*
+- * LCD Controller
 + * Update with Xenomai patch for iMx21 plateform
-+ */
+  */
 +#define TCTL_OM		   (1<<9)
 +#define TCTL_CC            (1<<10)
 +#define TCTL_IRQ_COMP	   (1<<4)
 +#define TCTL_IRQ_CAPT	   (1<<5)
-+
-+#define IMX21_TPRER(x)       __REG( 0x04 + MX2ADS_GPT1_BASE + WHICH_TIMER(x))
-+#define IMX21_TCMP(x)        __REG( 0x08 + MX2ADS_GPT1_BASE + WHICH_TIMER(x))
-+#define IMX21_TCR(x)         __REG( 0x0C + MX2ADS_GPT1_BASE + WHICH_TIMER(x))
-+#define IMX21_TCN(x)         __REG( 0x10 + MX2ADS_GPT1_BASE + WHICH_TIMER(x))
-+#define IMX21_TSTAT(x)       __REG( 0x14 + MX2ADS_GPT1_BASE + WHICH_TIMER(x))
- #define TSTAT_CAPT         (1<<1)
- #define TSTAT_COMP         (1<<0)
- 
-+#define GPT1		0
-+#define GPT2		1
-+#define GPT3		2
-+
- /*
-- * LCD Controller
-+ *  Uart controller registers 
-  */
  
 -#define LCDC_SSA	__REG(IMX_LCDC_BASE+0x00)
-+#define UART_1  0
-+#define UART_2  1
-+#define UART_3  2
-+#define UART_4  3
- 
+-
 -#define LCDC_SIZE	__REG(IMX_LCDC_BASE+0x04)
 -#define SIZE_XMAX(x)	((((x) >> 4) & 0x3f) << 20)
 -#define SIZE_YMAX(y)    ( (y) & 0x1ff )
@@ -1420,20 +1389,37 @@ diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx/imx-regs.h 2.6.14-imx/includ
 -#define PWMR_SCR0       (1<<9)
 -#define PWMR_CC_EN      (1<<8)
 -#define PWMR_PW(x)      ((x) & 0xff)
--
++#define IMX21_TPRER(x)       __REG( 0x04 + MX2ADS_GPT1_BASE + WHICH_TIMER(x))
++#define IMX21_TCMP(x)        __REG( 0x08 + MX2ADS_GPT1_BASE + WHICH_TIMER(x))
++#define IMX21_TCR(x)         __REG( 0x0C + MX2ADS_GPT1_BASE + WHICH_TIMER(x))
++#define IMX21_TCN(x)         __REG( 0x10 + MX2ADS_GPT1_BASE + WHICH_TIMER(x))
++#define IMX21_TSTAT(x)       __REG( 0x14 + MX2ADS_GPT1_BASE + WHICH_TIMER(x))
++#define TSTAT_CAPT         (1<<1)
++#define TSTAT_COMP         (1<<0)
+ 
 -#define LCDC_DMACR	__REG(IMX_LCDC_BASE+0x30)
 -#define DMACR_BURST     (1<<31)
 -#define DMACR_HM(x)     (((x) & 0xf) << 16)
 -#define DMACR_TM(x)     ((x) &0xf)
--
++#define GPT1		0
++#define GPT2		1
++#define GPT3		2
+ 
 -#define LCDC_RMCR	__REG(IMX_LCDC_BASE+0x34)
 -#define RMCR_LCDC_EN		(1<<1)
 -#define RMCR_SELF_REF		(1<<0)
--
++/*
++ *  Uart controller registers 
++ */
+ 
 -#define LCDC_LCDICR	__REG(IMX_LCDC_BASE+0x38)
 -#define LCDICR_INT_SYN  (1<<2)
 -#define LCDICR_INT_CON  (1)
--
++#define UART_1  0
++#define UART_2  1
++#define UART_3  2
++#define UART_4  3
+ 
 -#define LCDC_LCDISR	__REG(IMX_LCDC_BASE+0x40)
 -#define LCDISR_UDR_ERR (1<<3)
 -#define LCDISR_ERR_RES (1<<2)
@@ -1578,9 +1564,9 @@ diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx/imx-regs.h 2.6.14-imx/includ
  
 -#endif				// _IMX_REGS_H
 +#endif				// _MX2ADS_REGS_H
-diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx21/csb535.h 2.6.14-imx/include/asm-arm/arch-imx21/csb535.h
---- 2.6.14-imx-orig/include/asm-arm/arch-imx21/csb535.h	2006-09-10 19:12:59.000000000 +0200
-+++ 2.6.14-imx/include/asm-arm/arch-imx21/csb535.h	2006-09-10 18:56:27.000000000 +0200
+diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp ipipe-2.6.14-arm-imx21/include/asm-arm/arch-imx21/csb535.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/csb535.h
+--- ipipe-2.6.14-arm-imx21/include/asm-arm/arch-imx21/csb535.h	2007-01-20 16:57:08.587281198 +0100
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/csb535.h	2007-01-20 15:58:52.573225454 +0100
 @@ -20,6 +20,16 @@
   * along with this program; if not, write to the Free Software
   * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -1611,9 +1597,9 @@ diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx21/csb535.h 2.6.14-imx/includ
  
  #define CSB535_ETH_VIRT IMX21_CS1_VIRT
  #define CSB535_ETH_PHYS IMX21_CS1_PHYS
-diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx21/imx-regs.h 2.6.14-imx/include/asm-arm/arch-imx21/imx-regs.h
---- 2.6.14-imx-orig/include/asm-arm/arch-imx21/imx-regs.h	2006-09-10 19:12:59.000000000 +0200
-+++ 2.6.14-imx/include/asm-arm/arch-imx21/imx-regs.h	2006-09-10 18:56:27.000000000 +0200
+diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp ipipe-2.6.14-arm-imx21/include/asm-arm/arch-imx21/imx-regs.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/imx-regs.h
+--- ipipe-2.6.14-arm-imx21/include/asm-arm/arch-imx21/imx-regs.h	2007-01-20 16:57:08.592280576 +0100
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/imx-regs.h	2007-01-20 15:58:52.573225454 +0100
 @@ -8,7 +8,13 @@
   * Copyright (C) 2005 TimeSys Corporation 
   *
@@ -1740,9 +1726,9 @@ diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx21/imx-regs.h 2.6.14-imx/incl
  #define IMX21_TPRER(x)       __REG( 0x04 + MX2ADS_GPT1_BASE + WHICH_TIMER(x))
  #define IMX21_TCMP(x)        __REG( 0x08 + MX2ADS_GPT1_BASE + WHICH_TIMER(x))
  #define IMX21_TCR(x)         __REG( 0x0C + MX2ADS_GPT1_BASE + WHICH_TIMER(x))
-diff -uNrp 2.6.14-imx-orig/include/asm-arm/arch-imx21/irqs.h 2.6.14-imx/include/asm-arm/arch-imx21/irqs.h
---- 2.6.14-imx-orig/include/asm-arm/arch-imx21/irqs.h	2006-09-10 19:12:59.000000000 +0200
-+++ 2.6.14-imx/include/asm-arm/arch-imx21/irqs.h	2006-09-10 18:56:38.000000000 +0200
+diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp ipipe-2.6.14-arm-imx21/include/asm-arm/arch-imx21/irqs.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/irqs.h
+--- ipipe-2.6.14-arm-imx21/include/asm-arm/arch-imx21/irqs.h	2007-01-20 16:57:08.594280327 +0100
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/irqs.h	2007-01-20 15:58:52.574225330 +0100
 @@ -125,3 +125,7 @@
  #define NR_IRQS (IRQ_GPIOF(32) + 1)
  #define IRQ_GPIO(x)
