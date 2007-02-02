@@ -309,6 +309,10 @@ while : ; do
       linux_arch=arm
       xenomai_arch=arm
       ;;
+   x86_64|amd64)
+      linux_arch=x86_64
+      xenomai_arch=x86_64
+      ;;
    *)
       echo "$me: unsupported architecture: $linux_arch" >&2
       linux_arch=

@@ -1,0 +1,127 @@
+/**
+ * @ingroup hal
+ * @file
+ *
+ * Copyright (C) 2007 Philippe Gerum <rpm@xenomai.org>.
+ *
+ * Xenomai is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * Xenomai is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Xenomai; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+ * 02111-1307, USA.
+ */
+
+#ifndef _XENO_ASM_X86_64_HAL_H
+#define _XENO_ASM_X86_64_HAL_H
+
+#include <asm/xenomai/wrappers.h>
+#include <asm-generic/xenomai/hal.h>    /* Read the generic bits. */
+
+typedef unsigned long rthal_time_t;
+
+static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
+{
+	__asm__("bsrq %1, %0":"=r"(ul):"rm"(ul));
+	return ul;
+}
+
+#ifndef __cplusplus
+#include <asm/system.h>
+#include <asm/io.h>
+#include <asm/timex.h>
+#include <asm/processor.h>
+#include <io_ports.h>
+#include <asm/fixmap.h>
+#include <asm/apic.h>
+#include <asm/msr.h>
+#include <asm/xenomai/atomic.h>
+#include <asm/xenomai/smi.h>
+
+#define RTHAL_APIC_TIMER_VECTOR		RTHAL_SERVICE_VECTOR3
+#define RTHAL_APIC_TIMER_IPI		RTHAL_SERVICE_IPI3
+#define RTHAL_APIC_ICOUNT		((RTHAL_TIMER_FREQ + HZ/2)/HZ)
+#define RTHAL_TIMER_IRQ			RTHAL_APIC_TIMER_IPI
+
+#define RTHAL_NMICLK_FREQ		RTHAL_CPU_FREQ
+
+static inline void rthal_grab_control(void)
+{
+	rthal_smi_init();
+	rthal_smi_disable();
+}
+
+static inline void rthal_release_control(void)
+{
+	rthal_smi_restore();
+}
+
+static inline unsigned long long rthal_rdtsc(void)
+{
+	unsigned long long t;
+	rthal_read_tsc(t);
+	return t;
+}
+
+static inline void rthal_timer_program_shot(unsigned long delay)
+{
+/* With head-optimization, callers are expected to have switched off
+   hard-IRQs already -- no need for additional protection in this
+   case. */
+#ifndef CONFIG_XENO_OPT_PIPELINE_HEAD
+	unsigned long flags;
+
+	rthal_local_irq_save_hw(flags);
+#endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
+	if (!delay) {
+		/* Kick the timer interrupt immediately. */
+	    rthal_trigger_irq(RTHAL_APIC_TIMER_IPI);
+	} else {
+		apic_read_around(APIC_LVTT);
+		apic_write_around(APIC_LVTT, RTHAL_APIC_TIMER_VECTOR);
+		apic_read_around(APIC_TMICT);
+		apic_write_around(APIC_TMICT,delay);
+	}
+#ifndef CONFIG_XENO_OPT_PIPELINE_HEAD
+	rthal_local_irq_restore_hw(flags);
+#endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
+}
+
+static const char *const rthal_fault_labels[] = {
+    [0] = "Divide error",
+    [1] = "Debug",
+    [2] = "",   /* NMI is not pipelined. */
+    [3] = "Int3",
+    [4] = "Overflow",
+    [5] = "Bounds",
+    [6] = "Invalid opcode",
+    [7] = "FPU not available",
+    [8] = "Double fault",
+    [9] = "FPU segment overrun",
+    [10] = "Invalid TSS",
+    [11] = "Segment not present",
+    [12] = "Stack segment",
+    [13] = "General protection",
+    [14] = "Page fault",
+    [15] = "Spurious interrupt",
+    [16] = "FPU error",
+    [17] = "Alignment check",
+    [18] = "Machine check",
+    [19] = "SIMD error",
+    [20] = NULL,
+};
+
+long rthal_strncpy_from_user(char *dst,
+			     const char __user *src,
+			     long count);
+#endif /* !__cplusplus */
+
+#endif /* !_XENO_ASM_X86_64_HAL_H */

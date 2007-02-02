@@ -89,6 +89,11 @@ case "$host" in
 	XENO_LINUX_INSTALL_TARGET=install_image
 	XENO_LINUX_IMAGE=arch/arm/boot/zImage
 	;;
+ x86_64-*|amd64-*)
+	XENO_TARGET_ARCH=x86_64
+        XENO_LINUX_ARCH=x86_64
+	XENO_LINUX_INSTALL_TARGET=install
+        ;;
  *) echo ""
    echo "*******************************************"
    echo "Still unsupported target: $host -- Sorry."
@@ -302,6 +307,7 @@ patch. Default is to infer the patch name from Linux kernel version.]),
               test x"$CONFIG_IA64" = xy && cfg_arch=ia64 || :
               test x"$CONFIG_PPC64" = xy && cfg_arch=ppc64 || :
               test x"$CONFIG_BLACKFIN" = xy && cfg_arch=blackfin || :
+              test x"$CONFIG_X86_64" = xy && cfg_arch=x86_64 || :
               if test $cfg_arch = $XENO_TARGET_ARCH ; then
                  cp $XENO_LINUX_SRCDIR/.config .xenomai.config
               fi
@@ -520,6 +526,9 @@ case $XENO_TARGET_ARCH in
  arm)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
         ;;
+ x86_64)
+	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -fstrict-aliasing $gcc_w_noalias"
+        ;;
 esac
 
 if test x$debug_symbols = xy; then
@@ -632,6 +641,8 @@ AC_CONFIG_FILES([ \
        	include/asm-ia64/bits/Makefile \
        	include/asm-arm/Makefile \
        	include/asm-arm/bits/Makefile \
+       	include/asm-x86_64/Makefile \
+       	include/asm-x86_64/bits/Makefile \
        	include/asm-sim/Makefile \
        	include/asm-sim/bits/Makefile \
        	include/native/Makefile \

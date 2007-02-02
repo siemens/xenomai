@@ -1,3 +1,21 @@
+2007-02-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/x86_64, include/asm-x86_64: x86_64 baseline.
+
+2007-02-02  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/nucleus/timebase.h (xntbase_get_rawclock): Fix return
+	value.
+
+2007-01-31  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.19-1.6-06.
+
+2007-01-30  Philippe Gerum  <rpm@xenomai.org>
+
+	* sim/include/Makefile.am: Fix destination directory for
+	xeno_config.h to $(prefix)/asm-sim.
+
 2007-01-30    <gilles.chanteperdrix@laposte.net>
 
 	* doc/doxygen/Doxyfile*.in: Only enable search engine for HTML

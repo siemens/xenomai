@@ -7,6 +7,7 @@ SUBDIRS = \
 	asm-ia64 \
 	asm-powerpc \
 	asm-arm \
+	asm-x86_64 \
 	asm-sim \
 	native \
 	nucleus \
