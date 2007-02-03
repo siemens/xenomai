@@ -189,8 +189,6 @@ struct xnpod {
 	xnqueue_t threadq;	/*!< All existing threads. */
 	int threadq_rev;	/*!< Modification counter of threadq. */
 
-	volatile u_long schedlck;	/*!< Scheduler lock count. */
-
 	xnqueue_t tstartq,	/*!< Thread start hook queue. */
 	 tswitchq,		/*!< Thread switch hook queue. */
 	 tdeleteq;		/*!< Thread delete hook queue. */
@@ -329,7 +327,7 @@ static inline void xnpod_renice_root(int prio)
     (!!xnthread_test_state(xnpod_current_thread(),XNLOCK))
 
 #define xnpod_unblockable_p() \
-    (xnpod_asynch_p() || xnthread_test_state(xnpod_current_thread(),XNLOCK|XNROOT))
+    (xnpod_asynch_p() || xnthread_test_state(xnpod_current_thread(),XNROOT))
 
 #define xnpod_root_p() \
     (!!xnthread_test_state(xnpod_current_thread(),XNROOT))
@@ -406,24 +404,26 @@ void xnpod_dispatch_signals(void);
 
 static inline void xnpod_lock_sched(void)
 {
+	xnthread_t *runthread = xnpod_current_sched()->runthread;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (nkpod->schedlck++ == 0)
-		xnthread_set_state(xnpod_current_sched()->runthread, XNLOCK);
+	if (xnthread_lock_count(runthread)++ == 0)
+		xnthread_set_state(runthread, XNLOCK);
 
 	xnlock_put_irqrestore(&nklock, s);
 }
 
 static inline void xnpod_unlock_sched(void)
 {
+	xnthread_t *runthread = xnpod_current_sched()->runthread;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (--nkpod->schedlck == 0) {
-		xnthread_clear_state(xnpod_current_sched()->runthread, XNLOCK);
+	if (--xnthread_lock_count(runthread) == 0) {
+		xnthread_clear_state(runthread, XNLOCK);
 		xnpod_schedule();
 	}
 
