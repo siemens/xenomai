@@ -133,6 +133,7 @@
 
 struct xnsched;
 struct xnsynch;
+struct xnrpi;
 
 typedef void (*xnasr_t)(xnsigmask_t sigs);
 
@@ -157,6 +158,12 @@ typedef struct xnthread {
     xnpholder_t rlink;		/* Thread holder in ready queue */
 
     xnpholder_t plink;		/* Thread holder in synchronization queue(s) */
+
+#if !defined(CONFIG_XENO_OPT_RPIDISABLE) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    xnpholder_t xlink;		/* Thread holder in the RPI queue (shadow only) */
+
+    struct xnrpi *rpi;		/* Backlink pointer to the RPI slot (shadow only) */
+#endif /* !CONFIG_XENO_OPT_RPIDISABLE && CONFIG_XENO_OPT_PERVASIVE */
 
     xnholder_t glink;		/* Thread holder in global queue */
 
