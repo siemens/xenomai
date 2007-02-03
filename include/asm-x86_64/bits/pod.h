@@ -37,11 +37,12 @@ static inline void xnarch_stop_timer(void)
 	rthal_timer_release();
 }
 
-static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
+static inline void xnarch_leave_root(xnarchtcb_t *rootcb)
 {
 	/* Remember the preempted Linux task pointer. */
 	rootcb->user_task = rootcb->active_task = current;
-	rootcb->ts_usedfpu = !!(task_thread_info(tsk)->status & TS_USEDFPU);
+	rootcb->tstructp = &current->thread;
+	rootcb->ts_usedfpu = !!(task_thread_info(current)->status & TS_USEDFPU);
 	rootcb->cr0_ts = (read_cr0() & 8) != 0;
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
 	rootcb->fpup = &rootcb->user_task->thread.i387;
@@ -78,8 +79,8 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 			enter_lazy_tlb(oldmm, next);
 	}
 
-	rthal_thread_switch(out_tcb, in_tcb, prev, next);
-
+	rthal_thread_switch(out_tcb->tstructp, in_tcb->tstructp,
+			    in_tcb->user_task == NULL);
 	stts();
 }
 
@@ -100,9 +101,7 @@ static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
 {
 	tcb->user_task = current;
 	tcb->active_task = NULL;
-	tcb->rsp = 0;
-	tcb->rspp = &tcb->rsp;
-	tcb->ripp = &tcb->rip;
+	tcb->tstructp = &tcb->tstruct;
 	tcb->fpup = NULL;
 	tcb->is_root = 1;
 }
@@ -125,19 +124,12 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 				      int imask,
 				      struct xnthread *thread, char *name)
 {
-	unsigned long **psp = (unsigned long **)&tcb->esp;
-
-	tcb->eip = (unsigned long)&xnarch_thread_redirect;
-	tcb->esp = (unsigned long)tcb->stackbase;
-	**psp = 0;		/* Commit bottom stack memory */
-	*psp =
-		(unsigned long *)(((unsigned long)*psp + tcb->stacksize - 0x10) &
-				  ~0xf);
-	*--(*psp) = (unsigned long)cookie;
-	*--(*psp) = (unsigned long)entry;
-	*--(*psp) = (unsigned long)imask;
-	*--(*psp) = (unsigned long)thread;
-	*--(*psp) = 0;
+	/* Prepare bootstrap stack. */
+	tcb->entry = entry;
+	tcb->cookie = cookie;
+	tcb->self = thread;
+	tcb->imask = imask;
+	tcb->name = name;
 }
 
 #ifdef CONFIG_XENO_HW_FPU
@@ -157,23 +149,43 @@ static inline void xnarch_init_fpu(xnarchtcb_t * tcb)
 	__asm__ __volatile__("ldmxcsr %0"::"m"(__mxcsr));
 
 	if (task) {
-		/* Real-time shadow FPU initialization: tell Linux that this
-		   thread initialized its FPU hardware. The fpu usage bit is
-		   necessary for xnarch_save_fpu to save the FPU state at next
-		   switch. */
+		/* Real-time shadow FPU initialization: tell Linux
+		   that this thread initialized its FPU hardware. The
+		   fpu usage bit is necessary for xnarch_save_fpu to
+		   save the FPU state at next switch. */
 		xnarch_set_fpu_init(task);
 		task_thread_info(task)->status |= TS_USEDFPU;
 	}
 }
 
-static inline void xnarch_save_fpu(xnarchtcb_t * tcb)
+static inline int __save_i387_checking(struct i387_fxsave_struct __user *fx) 
+{ 
+	int err;
+
+	asm volatile("1:  rex64/fxsave (%[fx])\n\t"
+		     "2:\n"
+		     ".section .fixup,\"ax\"\n"
+		     "3:  movl $-1,%[err]\n"
+		     "    jmp  2b\n"
+		     ".previous\n"
+		     ".section __ex_table,\"a\"\n"
+		     "   .align 8\n"
+		     "   .quad  1b,3b\n"
+		     ".previous"
+		     : [err] "=r" (err), "=m" (*fx)
+		     : [fx] "cdaSDb" (fx), "0" (0));
+
+	return err;
+} 
+
+static inline void xnarch_save_fpu(xnarchtcb_t *tcb)
 {
 	struct task_struct *task = tcb->user_task;
 
 	if (!tcb->is_root) {
 		if (task) {
 			/* fpu not used or already saved by __switch_to. */
-			if (!(task_thread_info(tsk)->status & TS_USEDFPU))
+			if (!(task_thread_info(task)->status & TS_USEDFPU))
 				return;
 
 			/* Tell Linux that we already saved the state
@@ -190,8 +202,28 @@ static inline void xnarch_save_fpu(xnarchtcb_t * tcb)
 
 	clts();
 
-	__asm__ __volatile__("fxsave %0; fnclex":"=m"(*tcb->fpup));
+	__save_i387_checking(&tcb->fpup->fxsave);
 }
+
+static inline int __restore_i387_checking(struct i387_fxsave_struct *fx)
+{ 
+	int err;
+
+	asm volatile("1:  rex64/fxrstor (%[fx])\n\t"
+		     "2:\n"
+		     ".section .fixup,\"ax\"\n"
+		     "3:  movl $-1,%[err]\n"
+		     "    jmp  2b\n"
+		     ".previous\n"
+		     ".section __ex_table,\"a\"\n"
+		     "   .align 8\n"
+		     "   .quad  1b,3b\n"
+		     ".previous"
+		     : [err] "=r" (err)
+		     : [fx] "cdaSDb" (fx), "m" (*fx), "0" (0));
+
+	return err;
+} 
 
 static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 {
@@ -223,7 +255,7 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 	   user-space or kernel thread. */
 	clts();
 
-	__asm__ __volatile__("fxrstor %0": /* no output */ :"m"(*tcb->fpup));
+	__restore_i387_checking(&tcb->fpup->fxsave);
 }
 
 static inline void xnarch_enable_fpu(xnarchtcb_t * tcb)

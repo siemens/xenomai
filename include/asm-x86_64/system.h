@@ -40,25 +40,27 @@ struct task_struct;
 
 typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
 
-    /* Kernel mode side */
-    union i387_union fpuenv __attribute__ ((aligned (16))); /* FPU backup area */
-    unsigned stacksize;         /* Aligned size of stack (bytes) */
-    unsigned long *stackbase;   /* Stack space */
-    unsigned long rsp;          /* Saved RSP for kernel-based threads */
-    unsigned long rip;          /* Saved RIP for kernel-based threads */
+	struct task_struct *user_task; /* Shadowed user-space task */
+	struct task_struct *active_task; /* Active user-space task */
+	struct thread_struct *tstructp; /* Active thread struct (&ts or &user->thread). */
+	union i387_union *fpup;	/* &ts.i387 or &user->thread.i387 */
 
-    /* User mode side */
-    struct task_struct *user_task;      /* Shadowed user-space task */
-    struct task_struct *active_task;    /* Active user-space task */
+	struct thread_struct tstruct; /* Holds kernel-based thread context. */
 
-    unsigned long *rspp;        /* Pointer to RSP backup area (&rsp or &user->thread.rsp) */
-    unsigned long *ripp;        /* Pointer to RIP backup area (&rip or &user->thread.rip) */
-    union i387_union *fpup;     /* Pointer to the FPU backup area (&fpuenv or &user->thread.i387.f[x]save */
+	/* FPU context bits for root thread. */
+	unsigned long is_root: 1;
+	unsigned long ts_usedfpu: 1;
+	unsigned long cr0_ts: 1;
 
-    /* FPU context bits for root thread. */
-    unsigned is_root: 1;
-    unsigned ts_usedfpu: 1;
-    unsigned cr0_ts: 1;
+	unsigned stacksize;         /* Aligned size of stack (bytes) */
+	unsigned long *stackbase;   /* Stack space */
+
+	/* Init block */
+	struct xnthread *self;
+	int imask;
+	const char *name;
+	void (*entry)(void *cookie);
+	void *cookie;
 
 } xnarchtcb_t;
 
@@ -101,11 +103,6 @@ static inline void xnarch_sysfree(void *chunk, u_long bytes)
 		vfree(chunk);
 	else
 		kfree(chunk);
-}
-
-static inline int xnarch_shadow_p(xnarchtcb_t *tcb, struct task_struct *task)
-{
-	return tcb->rspp == &task->thread.rsp;
 }
 
 #ifdef __cplusplus

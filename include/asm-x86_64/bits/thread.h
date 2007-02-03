@@ -28,9 +28,9 @@ static inline void xnarch_init_tcb(xnarchtcb_t * tcb)
 {
 	tcb->user_task = NULL;
 	tcb->active_task = NULL;
-	tcb->rspp = &tcb->rsp;
-	tcb->ripp = &tcb->rip;
-	tcb->fpup = &tcb->fpuenv;
+	tcb->tstructp = &tcb->tstruct;
+	memset(&tcb->tstruct, 0, sizeof(tcb->tstruct));
+	tcb->fpup = &tcb->tstruct.i387;
 	tcb->is_root = 0;
 	/* Must be followed by xnarch_init_thread(). */
 }

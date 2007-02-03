@@ -32,10 +32,13 @@ static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 
 	tcb->user_task = task;
 	tcb->active_task = NULL;
-	tcb->rsp = 0;
-	tcb->rspp = &task->thread.rsp;
-	tcb->ripp = &task->thread.rip;
+	tcb->tstructp = &task->thread;
 	tcb->fpup = &task->thread.i387;
+	tcb->entry = NULL;
+	tcb->cookie = NULL;
+	tcb->self = thread;
+	tcb->imask = 0;
+	tcb->name = name;
 }
 
 static inline void xnarch_grab_xirqs(rthal_irq_handler_t handler)
