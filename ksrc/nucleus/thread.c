@@ -70,6 +70,7 @@ int xnthread_init(xnthread_t *thread,
 
 	thread->state = flags;
 	thread->info = 0;
+	thread->schedlck = 0;
 	thread->signals = 0;
 	thread->asrmode = 0;
 	thread->asrimask = 0;

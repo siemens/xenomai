@@ -17,6 +17,10 @@
 
 2007-01-30  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/pod.c (xnpod_schedule): Allow threads to block
+	while holding the scheduler lock. Move the lock nesting count as a
+	per-thread data (instead of the former global pod attribute).
+
 	* sim/include/Makefile.am: Fix destination directory for
 	xeno_config.h to $(prefix)/asm-sim.
 
