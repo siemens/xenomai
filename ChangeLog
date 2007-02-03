@@ -1,3 +1,7 @@
+2007-02-03    <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/arch/arm/patches: Upgrade patches for IMX21 to 2.6.14-1.5-05.
+
 2007-02-03  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/x86_64, include/asm-x86_64: x86_64 baseline.
