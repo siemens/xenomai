@@ -44,16 +44,16 @@ struct timeval;
 
 struct xnskentry {
 
-    const char *name;
-    unsigned magic;
-    int nrcalls;
-    atomic_counter_t refcnt;
-    void *(*eventcb)(int, void *);
-    xnsysent_t *systab;
+	const char *name;
+	unsigned magic;
+	int nrcalls;
+	atomic_counter_t refcnt;
+	void *(*eventcb)(int, void *);
+	xnsysent_t *systab;
 #ifdef CONFIG_PROC_FS
-    struct proc_dir_entry *proc;
+	struct proc_dir_entry *proc;
 #endif /* CONFIG_PROC_FS */
-    struct module *module;
+	struct module *module;
 };
 
 int xnshadow_mount(void);

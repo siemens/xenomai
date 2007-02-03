@@ -1,4 +1,9 @@
-2007-02-03    <gilles.chanteperdrix@laposte.net>
+2007-02-03  Philippe Gerum  <rpm@xenomai.org>
+ 
+ 	* ksrc/nucleus/shadow.c: Rework RPI management to properly track
+ 	shadow priorities across domain migrations.
+ 
+2007-02-03  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/arch/arm/patches: Upgrade patches for IMX21 to 2.6.14-1.5-05.
 

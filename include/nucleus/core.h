@@ -44,6 +44,9 @@
 /* Priority of IRQ servers in user-space. */
 #define XNCORE_IRQ_PRIO     XNCORE_MAX_PRIO
 
+/* Base priority of the root thread for the core pod. */
+#define XNCORE_BASE_PRIO    -1
+
 #ifdef __KERNEL__
 
 #ifdef __cplusplus
