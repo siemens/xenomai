@@ -39,6 +39,7 @@ config XENO_OPT_ISHIELD
 config XENO_OPT_PRIOCPL
 	depends on XENO_OPT_PERVASIVE
 	bool "Priority coupling support"
+	default y
 	help
 
 	This option builds in the priority coupling support between
