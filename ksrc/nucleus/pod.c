@@ -1199,12 +1199,12 @@ xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
 
 	xnlock_put_irqrestore(&nklock, s);
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE) && defined(CONFIG_XENO_OPT_ISHIELD)
+#ifdef CONFIG_XENO_OPT_ISHIELD
 	if (runthread == thread &&
 	    xnthread_test_state(thread, XNSHADOW) &&
 	    ((clrmask | setmask) & XNSHIELD) != 0)
 		xnshadow_reset_shield();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_ISHIELD */
 
 	return oldmode;
 }
