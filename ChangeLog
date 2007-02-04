@@ -1,3 +1,8 @@
+2007-02-04  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c: Switch !CONFIG_XENO_OPT_RPIDISABLE to
+	CONFIG_XENO_OPT_PRIOCPL.
+
 2007-02-03  Philippe Gerum  <rpm@xenomai.org>
  
  	* ksrc/nucleus/shadow.c: Rework RPI management to properly track

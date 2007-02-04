@@ -119,7 +119,7 @@ void xnpod_declare_iface_proc(struct xnskentry *iface);
 
 void xnpod_discard_iface_proc(struct xnskentry *iface);
 
-#ifndef CONFIG_XENO_OPT_RPIDISABLE
+#ifdef CONFIG_XENO_OPT_PRIOCPL
 
 /*
  * Priority inheritance by the root thread (RPI) of some real-time
@@ -361,7 +361,7 @@ static inline void rpi_clear(void)
 		xnpod_renice_root(XNCORE_BASE_PRIO);
 }
 
-#else
+#else /* !CONFIG_XENO_OPT_PRIOCPL */
 
 #define rpi_init(gk)		do { } while(0)
 #define rpi_init_gk(gk)	do { } while(0)
@@ -372,7 +372,7 @@ static inline void rpi_clear(void)
 #define rpi_declare(t)	do { } while(0)
 #define rpi_switch(n)		do { } while(0)
 
-#endif /* !CONFIG_XENO_OPT_RPIDISABLE */
+#endif /* !CONFIG_XENO_OPT_PRIOCPL */
 
 union xnshadow_ppd_hkey {
 	struct mm_struct *mm;
