@@ -147,7 +147,6 @@ static void rpi_push(xnthread_t *thread)
 	struct __gatekeeper *gk;
 	xnthread_t *top;
 	int prio;
-	spl_t s;
 
 	gk = &gatekeeper[rthal_processor_id()];
 
@@ -160,7 +159,7 @@ static void rpi_push(xnthread_t *thread)
 
 	if (likely(xnthread_user_task(thread)->policy == SCHED_FIFO &&
 		   !xnthread_test_state(thread, XNRPIOFF))) {
-		xnlock_get_irqsave(&rpilock, s);
+		xnlock_get(&rpilock);
 
 		if (XENO_DEBUG(NUCLEUS) && rpi_p(thread))
 			xnpod_fatal("re-enqueuing a relaxed thread in the RPI queue");
@@ -169,7 +168,7 @@ static void rpi_push(xnthread_t *thread)
 		thread->rpi = &gk->rpislot;
 		top = link2thread(sched_getheadpq(&gk->rpislot.threadq), xlink);
 		prio = xnthread_current_priority(top);
-		xnlock_put_irqrestore(&rpilock, s);
+		xnlock_put(&rpilock);
 	} else
 		prio = XNCORE_BASE_PRIO;
 
@@ -274,7 +273,7 @@ static inline void rpi_switch(struct task_struct *next)
 		newprio = xnthread_current_priority(thread);
 	}
 	else {
-		xnlock_get_irqsave(&rpilock, s);
+		xnlock_get(&rpilock);
 
 		if (next == gk->server && !sched_emptypq_p(&gk->rpislot.threadq)) {
 			xnthread_t *top = link2thread(sched_getheadpq(&gk->rpislot.threadq), xlink);
@@ -282,7 +281,7 @@ static inline void rpi_switch(struct task_struct *next)
 		} else
 			newprio = XNCORE_BASE_PRIO;
 
-		xnlock_put_irqrestore(&rpilock, s);
+		xnlock_put(&rpilock);
 	}
 
 	if (newprio == oldprio)
