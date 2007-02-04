@@ -121,6 +121,63 @@ void xnpod_discard_iface_proc(struct xnskentry *iface);
 
 #ifndef CONFIG_XENO_OPT_RPIDISABLE
 
+/*
+ * Priority inheritance by the root thread (RPI) of some real-time
+ * priority is used to bind the Linux and Xenomai schedulers with
+ * respect to a given real-time thread, which migrates from primary to
+ * secondary execution mode. In effect, this means upgrading the root
+ * thread priority to the one of the migrating thread, so that the
+ * Linux kernel - as a whole - inherits the priority of the thread
+ * that leaves the Xenomai domain for a while, typically to perform
+ * regular Linux system calls, process Linux-originated signals and so
+ * on. This is what makes a real-time shadow able to access the Linux
+ * services seamlessly, from the application POV.
+ *
+ * To do that, we have to track real-time threads as they move to/from
+ * the Linux domain (see xnshadow_relax/xnshadow_harden), so that we
+ * always have a clear picture of which priority the root thread needs
+ * to be given at any point in time, in order to preserve the priority
+ * scheme consistent across both schedulers. In practice, this means
+ * that a real-time thread with a current priority of, say 27,
+ * Xenomai-wise (i.e. xnthread_current_priority(thread)) would cause
+ * the root thread to inherit the same priority value, so that any
+ * Xenomai thread below (or at) this level would not preempt the Linux
+ * kernel while running on behalf of the migrated thread. This mapping
+ * only concerns Xenomai threads underlaid by Linux tasks in the
+ * SCHED_FIFO class, some of them may operate in the
+ * SCHED_OTHER/SCHED_NORMAL class and as such are excluded from the
+ * RPI management.
+ *
+ * When the Xenomai priority value does not fit in the [1..99]
+ * SCHED_FIFO bounds exhibited by the Linux kernel, then such value is
+ * constrained to those respective bounds, so beware: a real-time
+ * thread with a Xenomai priority of 240 migrating to the secondary
+ * mode would have the same priority in the Linux scheduler than
+ * another thread with a priority of 239, i.e. SCHED_FIFO(99)
+ * Linux-wise. In contrast, everything in the [1..99] range
+ * Xenomai-wise perfectly maps to a distinct SCHED_FIFO priority
+ * level. On a more general note, Xenomai's RPI management is NOT
+ * meant to make the Linux kernel deterministic; threads operating in
+ * relaxed mode would still potentially incur priority inversions and
+ * unbounded execution times of the kernel code. But, it is meant to
+ * maintain a consistent priority scheme for real-time threads across
+ * domain migrations, which under a number of circumstances, is much
+ * better than losing the Xenomai priority entirely.
+ *
+ * Implementation-wise, a list of all the currently relaxed Xenomai
+ * threads (rpi_push) is maintained for each CPU in the corresponding
+ * gatekeeper slot (i.e. struct gatekeeper::rpislot.threadq). Threads
+ * are removed from this queue (rpi_pop) as they 1) go back to primary
+ * mode, or 2) exit.  Each time a relaxed Xenomai thread is scheduled
+ * in by the Linux scheduler, the root thread inherits its priority
+ * (rpi_switch). Each time the gatekeeper processes a request to move
+ * a relaxed thread back to primary mode, the latter thread is popped
+ * from the RPI list, and the root thread inherits the Xenomai
+ * priority of the thread leading the RPI list after the removal. If
+ * no other thread is currently relaxed, the root thread is given back
+ * its base priority, i.e. the lowest available level.
+ */
+
 #ifdef CONFIG_SMP
 static xnlock_t rpilock = XNARCH_LOCK_UNLOCKED;
 #endif /* CONFIG_SMP */
