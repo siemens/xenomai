@@ -1199,6 +1199,7 @@ void xnshadow_renice(xnthread_t *thread)
 	int prio =
 	    thread->cprio < MAX_RT_PRIO ? thread->cprio : MAX_RT_PRIO - 1;
 	schedule_linux_call(LO_RENICE_REQ, p, prio);
+	rpi_update(thread);
 }
 
 void xnshadow_suspend(xnthread_t *thread)
