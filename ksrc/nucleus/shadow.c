@@ -1081,6 +1081,14 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 	unsigned muxid, magic;
 	int mode, prio, err, cpu;
 
+#ifdef CONFIG_MMU
+	if (!(current->mm->def_flags & VM_LOCKED))
+		send_sig(SIGXCPU, current, 1);
+	else
+		if ((err = rthal_disable_ondemand_mappings(current)))
+			return err;
+#endif /* CONFIG_MMU */
+
 	/* Increment the interface reference count. */
 	magic = xnthread_get_magic(thread);
 
@@ -1106,13 +1114,6 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 	   intercept those events when they happen to be caused by
 	   plain (i.e. non-Xenomai) Linux tasks. */
 	current->flags |= PF_EVNOTIFY;
-
-#ifdef CONFIG_MMU
-	if (!(current->mm->def_flags & VM_LOCKED))
-		send_sig(SIGXCPU, current, 1);
-	else
-		rthal_disable_ondemand_mappings(current);
-#endif /* CONFIG_MMU */
 
 	current->cap_effective |=
 	    CAP_TO_MASK(CAP_IPC_LOCK) |
