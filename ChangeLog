@@ -1,7 +1,10 @@
 2007-02-04  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/i386/patches: Upgrade to 2.6.19-1.7-00.
+
 	* ksrc/nucleus/shadow.c: Switch !CONFIG_XENO_OPT_RPIDISABLE to
-	CONFIG_XENO_OPT_PRIOCPL.
+	CONFIG_XENO_OPT_PRIOCPL. Sanitize handling of
+	CONFIG_XENO_OPT_ISHIELD (remove #ifdef hell).
 
 2007-02-03  Philippe Gerum  <rpm@xenomai.org>
  
