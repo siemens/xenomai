@@ -309,7 +309,7 @@ static inline void clear_task_nowakeup(struct task_struct *p)
 #define rthal_disable_ondemand_mappings(tsk)   ipipe_disable_ondemand_mappings(tsk)
 #else /* !VM_PINNED */
 /* In case the I-pipe does not allow disabling ondemand mappings. */
-#define rthal_disable_ondemand_mappings(tsk)   do { } while(0)
+#define rthal_disable_ondemand_mappings(tsk)   (0)
 #endif	/* !VM_PINNED */
 
 #ifdef CONFIG_KGDB
