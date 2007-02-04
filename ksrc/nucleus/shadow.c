@@ -374,6 +374,159 @@ static inline void rpi_clear(void)
 
 #endif /* !CONFIG_XENO_OPT_PRIOCPL */
 
+#ifdef CONFIG_XENO_OPT_ISHIELD
+
+static rthal_pipeline_stage_t irq_shield;
+
+static cpumask_t shielded_cpus, unshielded_cpus;
+
+static rthal_rwlock_t shield_lock = RTHAL_RW_LOCK_UNLOCKED;
+
+static void engage_irq_shield(void)
+{
+	unsigned long flags;
+	rthal_declare_cpuid;
+
+	rthal_lock_cpu(flags);
+
+	if (xnarch_cpu_test_and_set(cpuid, shielded_cpus))
+		goto unmask_and_exit;
+
+	rthal_read_lock(&shield_lock);
+
+	xnarch_cpu_clear(cpuid, unshielded_cpus);
+
+	xnarch_lock_xirqs(&irq_shield, cpuid);
+
+	rthal_read_unlock(&shield_lock);
+
+      unmask_and_exit:
+
+	rthal_unlock_cpu(flags);
+}
+
+static void disengage_irq_shield(void)
+{
+	unsigned long flags;
+	rthal_declare_cpuid;
+
+	rthal_lock_cpu(flags);
+
+	if (xnarch_cpu_test_and_set(cpuid, unshielded_cpus))
+		goto unmask_and_exit;
+
+	rthal_write_lock(&shield_lock);
+
+	xnarch_cpu_clear(cpuid, shielded_cpus);
+
+	/* We want the shield to be either engaged on all CPUs (i.e. if at
+	   least one CPU asked for shielding), or disengaged on all
+	   (i.e. if no CPU asked for shielding). */
+
+	if (!cpus_empty(shielded_cpus)) {
+		rthal_write_unlock(&shield_lock);
+		goto unmask_and_exit;
+	}
+
+	/* At this point we know that we are the last CPU to disengage the
+	   shield, so we just unlock the external IRQs for all CPUs, and
+	   trigger an IPI on everyone but self to make sure that the
+	   remote interrupt logs will be played. We also forcibly unstall
+	   the shield stage on the local CPU in order to flush it the same
+	   way. */
+
+	xnarch_unlock_xirqs(&irq_shield, cpuid);
+
+#ifdef CONFIG_SMP
+	{
+		cpumask_t other_cpus = xnarch_cpu_online_map;
+		xnarch_cpu_clear(cpuid, other_cpus);
+		rthal_send_ipi(RTHAL_SERVICE_IPI1, other_cpus);
+	}
+#endif /* CONFIG_SMP */
+
+	rthal_write_unlock(&shield_lock);
+
+	rthal_stage_irq_enable(&irq_shield);
+
+      unmask_and_exit:
+
+	rthal_unlock_cpu(flags);
+}
+
+static void shield_handler(unsigned irq, void *cookie)
+{
+#ifdef CONFIG_SMP
+	if (irq != RTHAL_SERVICE_IPI1)
+#endif /* CONFIG_SMP */
+		rthal_propagate_irq(irq);
+}
+
+static inline void do_shield_domain_entry(void)
+{
+	xnarch_grab_xirqs(&shield_handler);
+}
+
+RTHAL_DECLARE_DOMAIN(shield_domain_entry);
+
+static inline int ishield_init(void)
+{
+	if (rthal_register_domain(&irq_shield,
+				  "IShield",
+				  0x53484c44,
+				  RTHAL_ROOT_PRIO + 50, &shield_domain_entry))
+		return -EBUSY;
+
+	shielded_cpus = CPU_MASK_NONE;
+	unshielded_cpus = xnarch_cpu_online_map;
+
+	return 0;
+}
+
+static inline void ishield_cleanup(void)
+{
+	rthal_unregister_domain(&irq_shield);
+}
+
+static inline void ishield_on(xnthread_t *thread)
+{
+	if (xnthread_test_state(thread, XNSHIELD))
+		engage_irq_shield();
+}
+
+static inline void ishield_off(void)
+{
+	disengage_irq_shield();
+}
+
+static inline void ishield_reset(xnthread_t *thread)
+{
+	if (xnthread_test_state(thread, XNSHIELD))
+		engage_irq_shield();
+	else
+		disengage_irq_shield();
+}
+
+void xnshadow_reset_shield(void)
+{
+	xnthread_t *thread = xnshadow_thread(current);
+
+	if (!thread)
+		return;
+
+	ishield_reset(thread);
+}
+
+#else /* !CONFIG_XENO_OPT_ISHIELD */
+
+#define ishield_init()	(0)
+#define ishield_cleanup()	do { } while(0)
+#define ishield_on(t)		do { } while(0)
+#define ishield_off()		do { } while(0)
+#define ishield_reset(t)	do { } while(0)
+
+#endif /* !CONFIG_XENO_OPT_ISHIELD */
+
 union xnshadow_ppd_hkey {
 	struct mm_struct *mm;
 	uint32_t val;
@@ -547,121 +700,6 @@ static inline void unlock_timers(void)
 		clrbits(nktbase.status, XNTBLCK);
 }
 
-#ifdef CONFIG_XENO_OPT_ISHIELD
-
-static rthal_pipeline_stage_t irq_shield;
-
-static cpumask_t shielded_cpus, unshielded_cpus;
-
-static rthal_rwlock_t shield_lock = RTHAL_RW_LOCK_UNLOCKED;
-
-static inline void engage_irq_shield(void)
-{
-	unsigned long flags;
-	rthal_declare_cpuid;
-
-	rthal_lock_cpu(flags);
-
-	if (xnarch_cpu_test_and_set(cpuid, shielded_cpus))
-		goto unmask_and_exit;
-
-	rthal_read_lock(&shield_lock);
-
-	xnarch_cpu_clear(cpuid, unshielded_cpus);
-
-	xnarch_lock_xirqs(&irq_shield, cpuid);
-
-	rthal_read_unlock(&shield_lock);
-
-      unmask_and_exit:
-
-	rthal_unlock_cpu(flags);
-}
-
-static void disengage_irq_shield(void)
-{
-	unsigned long flags;
-	rthal_declare_cpuid;
-
-	rthal_lock_cpu(flags);
-
-	if (xnarch_cpu_test_and_set(cpuid, unshielded_cpus))
-		goto unmask_and_exit;
-
-	rthal_write_lock(&shield_lock);
-
-	xnarch_cpu_clear(cpuid, shielded_cpus);
-
-	/* We want the shield to be either engaged on all CPUs (i.e. if at
-	   least one CPU asked for shielding), or disengaged on all
-	   (i.e. if no CPU asked for shielding). */
-
-	if (!cpus_empty(shielded_cpus)) {
-		rthal_write_unlock(&shield_lock);
-		goto unmask_and_exit;
-	}
-
-	/* At this point we know that we are the last CPU to disengage the
-	   shield, so we just unlock the external IRQs for all CPUs, and
-	   trigger an IPI on everyone but self to make sure that the
-	   remote interrupt logs will be played. We also forcibly unstall
-	   the shield stage on the local CPU in order to flush it the same
-	   way. */
-
-	xnarch_unlock_xirqs(&irq_shield, cpuid);
-
-#ifdef CONFIG_SMP
-	{
-		cpumask_t other_cpus = xnarch_cpu_online_map;
-		xnarch_cpu_clear(cpuid, other_cpus);
-		rthal_send_ipi(RTHAL_SERVICE_IPI1, other_cpus);
-	}
-#endif /* CONFIG_SMP */
-
-	rthal_write_unlock(&shield_lock);
-
-	rthal_stage_irq_enable(&irq_shield);
-
-      unmask_and_exit:
-
-	rthal_unlock_cpu(flags);
-}
-
-static inline void reset_shield(xnthread_t *thread)
-{
-	if (xnthread_test_state(thread, XNSHIELD))
-		engage_irq_shield();
-	else
-		disengage_irq_shield();
-}
-
-static void shield_handler(unsigned irq, void *cookie)
-{
-#ifdef CONFIG_SMP
-	if (irq != RTHAL_SERVICE_IPI1)
-#endif /* CONFIG_SMP */
-		rthal_propagate_irq(irq);
-}
-
-static inline void do_shield_domain_entry(void)
-{
-	xnarch_grab_xirqs(&shield_handler);
-}
-
-RTHAL_DECLARE_DOMAIN(shield_domain_entry);
-
-void xnshadow_reset_shield(void)
-{
-	xnthread_t *thread = xnshadow_thread(current);
-
-	if (!thread)
-		return;
-
-	reset_shield(thread);
-}
-
-#endif /* CONFIG_XENO_OPT_ISHIELD */
-
 static void lostage_handler(void *cookie)
 {
 	int cpuid = smp_processor_id(), reqnum, sig;
@@ -700,11 +738,8 @@ static void lostage_handler(void *cookie)
 			/* fall through */
 		case LO_START_REQ:
 
-#ifdef CONFIG_XENO_OPT_ISHIELD
-			if (xnshadow_thread(p) &&
-			    xnthread_test_state(xnshadow_thread(p), XNSHIELD))
-				engage_irq_shield();
-#endif /* CONFIG_XENO_OPT_ISHIELD */
+			if (xnshadow_thread(p))
+				ishield_on(xnshadow_thread(p));
 
 			wake_up_process(p);
 
@@ -806,9 +841,7 @@ static int gatekeeper_thread(void *data)
 #endif /* CONFIG_SMP */
 			xnpod_resume_thread(thread, XNRELAX);
 			rpi_pop(thread);
-#ifdef CONFIG_XENO_OPT_ISHIELD
-			disengage_irq_shield();
-#endif /* CONFIG_XENO_OPT_ISHIELD */
+			ishield_off();
 			xnpod_schedule();
 		}
 
@@ -948,10 +981,7 @@ void xnshadow_relax(int notify)
 
 	xnltt_log_event(xeno_ev_secondarysw, thread->name);
 
-#ifdef CONFIG_XENO_OPT_ISHIELD
-	if (xnthread_test_state(thread, XNSHIELD))
-		engage_irq_shield();
-#endif /* CONFIG_XENO_OPT_ISHIELD */
+	ishield_on(thread);
 
 	clear_task_nowakeup(current);
 
@@ -1968,14 +1998,9 @@ static inline void do_schedule_event(struct task_struct *next)
 			}
 		}
 
-#ifdef CONFIG_XENO_OPT_ISHIELD
-		reset_shield(threadin);
-#endif /* CONFIG_XENO_OPT_ISHIELD */
-	} else if (next != gatekeeper[cpuid].server) {
-#ifdef CONFIG_XENO_OPT_ISHIELD
-		disengage_irq_shield();
-#endif /* CONFIG_XENO_OPT_ISHIELD */
-	}
+		ishield_reset(threadin);
+	} else if (next != gatekeeper[cpuid].server)
+		ishield_off();
 
 	rpi_switch(next);
 }
@@ -2219,20 +2244,14 @@ void xnshadow_release_events(void)
 int xnshadow_mount(void)
 {
 	unsigned i, size;
-	int cpu;
+	int cpu, err;
 
 	nucleus_muxid = -1;
 
-#ifdef CONFIG_XENO_OPT_ISHIELD
-	if (rthal_register_domain(&irq_shield,
-				  "IShield",
-				  0x53484c44,
-				  RTHAL_ROOT_PRIO + 50, &shield_domain_entry))
-		return -EBUSY;
+	err = ishield_init();
 
-	shielded_cpus = CPU_MASK_NONE;
-	unshielded_cpus = xnarch_cpu_online_map;
-#endif /* CONFIG_XENO_OPT_ISHIELD */
+	if (err)
+		return err;
 
 	nkthrptd = rthal_alloc_ptdkey();
 	nkerrptd = rthal_alloc_ptdkey();
@@ -2325,9 +2344,7 @@ void xnshadow_cleanup(void)
 	rthal_apc_free(lostage_apc);
 	rthal_free_ptdkey(nkerrptd);
 	rthal_free_ptdkey(nkthrptd);
-#ifdef CONFIG_XENO_OPT_ISHIELD
-	rthal_unregister_domain(&irq_shield);
-#endif /* CONFIG_XENO_OPT_ISHIELD */
+	ishield_cleanup();
 }
 
 /*@}*/
