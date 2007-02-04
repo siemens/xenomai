@@ -106,10 +106,10 @@ int xnthread_init(xnthread_t *thread,
 	inith(&thread->glink);
 	initph(&thread->rlink);
 	initph(&thread->plink);
-#if !defined(CONFIG_XENO_OPT_RPIDISABLE) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PRIOCPL
 	initph(&thread->xlink);
 	thread->rpi = NULL;
-#endif /* !CONFIG_XENO_OPT_RPIDISABLE && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PRIOCPL */
 	initpq(&thread->claimq, xnpod_get_qdir(nkpod),
 	       xnpod_get_maxprio(nkpod, 0));
 
