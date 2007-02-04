@@ -245,7 +245,6 @@ static inline void rpi_switch(struct task_struct *next)
 	xnthread_t *thread = xnshadow_thread(next);
 	struct __gatekeeper *gk;
 	int oldprio, newprio;
-	spl_t s;
 
 	gk = &gatekeeper[rthal_processor_id()];
 
@@ -1036,7 +1035,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 	if (!(current->mm->def_flags & VM_LOCKED))
 		send_sig(SIGXCPU, current, 1);
 	else
-		current->mm->def_flags |= VM_NOCOW;
+		rthal_disable_ondemand_mappings(current);
 #endif /* CONFIG_MMU */
 
 	current->cap_effective |=

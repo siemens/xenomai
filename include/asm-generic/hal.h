@@ -296,7 +296,7 @@ static inline void clear_task_nowakeup(struct task_struct *p)
 #ifndef IPIPE_NOSTACK_FLAG
 /* In case the foreign stack marker is absent. */
 #define IPIPE_NOSTACK_FLAG 2
-#define ipipe_set_foreign_stack(ipd)	do { } while(0)
+#define ipipe_set_foreign_stack(ipd)		do { } while(0)
 #define ipipe_clear_foreign_stack(ipd)	do { } while(0)
 #endif /* !IPIPE_NOSTACK_FLAG */
 
@@ -305,13 +305,15 @@ static inline void clear_task_nowakeup(struct task_struct *p)
 #define PF_EVNOTIFY  0
 #endif	/* !PF_EVNOTIFY */
 
-#ifndef VM_NOCOW
-/* In case the I-pipe does not allow to disable COW. */
-#define VM_NOCOW  0
-#endif	/* !VM_NOCOW */
+#ifdef VM_PINNED
+#define rthal_disable_ondemand_mappings(tsk)   ipipe_disable_ondemand_mappings(tsk)
+#else /* !VM_PINNED */
+/* In case the I-pipe does not allow disabling ondemand mappings. */
+#define rthal_disable_ondemand_mappings(tsk)   do { } while(0)
+#endif	/* !VM_PINNED */
 
 #ifdef CONFIG_KGDB
-#define rthal_set_foreign_stack(ipd)	ipipe_set_foreign_stack(ipd)
+#define rthal_set_foreign_stack(ipd)   	ipipe_set_foreign_stack(ipd)
 #define rthal_clear_foreign_stack(ipd)	ipipe_clear_foreign_stack(ipd)
 #else /* !CONFIG_KGDB */
 /* No need to track foreign stacks unless KGDB is active. */
