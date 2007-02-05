@@ -204,19 +204,20 @@ static void rpi_push(xnthread_t *thread)
 	struct __gatekeeper *gk;
 	xnthread_t *top;
 	int prio;
+	spl_t s;
 
 	gk = &gatekeeper[rthal_processor_id()];
 
-	/* non-RT shadows and RT shadows which disabled RPI, cause the
-	   root priority to be lowered its base level. The purpose of
-	   the following code is to enqueue the just relaxed thread if
-	   it may involve RPI, and determine which priority to pick
-	   next for the root thread (i.e. the highest among RPI
-	   enabled threads, or the base level if none exist). */
+	/* non-RT shadows and RT shadows which disabled RPI cause the
+	   root priority to be lowered to its base level. The purpose
+	   of the following code is to enqueue the just thread
+	   whenever it involves RPI, and determine which priority to
+	   pick next for the root thread (i.e. the highest among RPI
+	   enabled threads, or the base level if none exists). */
 
 	if (likely(xnthread_user_task(thread)->policy == SCHED_FIFO &&
 		   !xnthread_test_state(thread, XNRPIOFF))) {
-		xnlock_get(&rpilock);
+		xnlock_get_irqsave(&rpilock, s);
 
 		if (XENO_DEBUG(NUCLEUS) && rpi_p(thread))
 			xnpod_fatal("re-enqueuing a relaxed thread in the RPI queue");
@@ -225,7 +226,7 @@ static void rpi_push(xnthread_t *thread)
 		thread->rpi = &gk->rpislot;
 		top = link2thread(sched_getheadpq(&gk->rpislot.threadq), xlink);
 		prio = xnthread_current_priority(top);
-		xnlock_put(&rpilock);
+		xnlock_put_irqrestore(&rpilock, s);
 	} else
 		prio = XNCORE_BASE_PRIO;
 
@@ -284,17 +285,8 @@ static inline void rpi_update(xnthread_t *thread)
 
 	sched_removepq(&thread->rpi->threadq, &thread->xlink);
 	rpi_none(thread);
-	xnlock_put_irqrestore(&rpilock, s);
 	rpi_push(thread);
-}
-
-static inline void rpi_declare(xnthread_t *thread)
-{
-	spl_t s;
-	xnlock_get_irqsave(&rpilock, s);
-	rpi_none(thread);
 	xnlock_put_irqrestore(&rpilock, s);
-	rpi_push(thread);
 }
 
 static inline void rpi_switch(struct task_struct *next)
@@ -302,6 +294,7 @@ static inline void rpi_switch(struct task_struct *next)
 	xnthread_t *thread = xnshadow_thread(next);
 	struct __gatekeeper *gk;
 	int oldprio, newprio;
+	spl_t s;
 
 	gk = &gatekeeper[rthal_processor_id()];
 
@@ -329,7 +322,7 @@ static inline void rpi_switch(struct task_struct *next)
 		newprio = xnthread_current_priority(thread);
 	}
 	else {
-		xnlock_get(&rpilock);
+		xnlock_get_irqsave(&rpilock, s);
 
 		if (next == gk->server && !sched_emptypq_p(&gk->rpislot.threadq)) {
 			xnthread_t *top = link2thread(sched_getheadpq(&gk->rpislot.threadq), xlink);
@@ -337,7 +330,7 @@ static inline void rpi_switch(struct task_struct *next)
 		} else
 			newprio = XNCORE_BASE_PRIO;
 
-		xnlock_put(&rpilock);
+		xnlock_put_irqrestore(&rpilock, s);
 	}
 
 	if (newprio == oldprio)
@@ -369,7 +362,6 @@ static inline void rpi_clear(void)
 #define rpi_push(t)		do { } while(0)
 #define rpi_pop(t)		do { } while(0)
 #define rpi_update(t)		do { } while(0)
-#define rpi_declare(t)	do { } while(0)
 #define rpi_switch(n)		do { } while(0)
 
 #endif /* !CONFIG_XENO_OPT_PRIOCPL */
@@ -971,7 +963,6 @@ void xnshadow_relax(int notify)
 {
 	xnthread_t *thread = xnpod_current_thread();
 	int cprio;
-	spl_t s;
 
 	XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNROOT));
 
@@ -987,13 +978,9 @@ void xnshadow_relax(int notify)
 
 	schedule_linux_call(LO_WAKEUP_REQ, current, 0);
 
-	splhigh(s);
-
-	rpi_declare(thread);
+	rpi_push(thread);
 
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
-
-	splexit(s);
 
 	if (XENO_DEBUG(NUCLEUS) && rthal_current_domain != rthal_root_domain)
 		xnpod_fatal("xnshadow_relax() failed for thread %s[%d]",
@@ -1147,7 +1134,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 
  	/* We are relaxed and still running, tell the RPI manager
  	   about us immediately. */
- 	rpi_declare(thread);
+ 	rpi_push(thread);
  
 	/* Nobody waits for us, so we may start the shadow immediately. */
 
@@ -1259,18 +1246,11 @@ int xnshadow_wait_barrier(struct pt_regs *regs)
 
 void xnshadow_start(xnthread_t *thread)
 {
-	struct task_struct *p;
-	spl_t s;
+	struct task_struct *p = xnthread_archtcb(thread)->user_task;
 
-	xnlock_get_irqsave(&nklock, s);
-
-	xnpod_resume_thread(thread, XNDORMANT);
-	/* A shadow always starts in relaxed mode. */
-	rpi_push(thread);
-	p = xnthread_archtcb(thread)->user_task;
+	rpi_push(thread);	/* A shadow always starts in relaxed mode. */
 	xnltt_log_event(xeno_ev_shadowstart, thread->name);
-
-	xnlock_put_irqrestore(&nklock, s);
+	xnpod_resume_thread(thread, XNDORMANT);
 
 	if (p->state == TASK_INTERRUPTIBLE)
 		/* Wakeup the Linux mate waiting on the barrier. */
@@ -1287,7 +1267,8 @@ void xnshadow_renice(xnthread_t *thread)
 	int prio =
 	    thread->cprio < MAX_RT_PRIO ? thread->cprio : MAX_RT_PRIO - 1;
 	schedule_linux_call(LO_RENICE_REQ, p, prio);
-	rpi_update(thread);
+	if (!xnthread_test_state(thread, XNDORMANT))
+		rpi_update(thread);
 }
 
 void xnshadow_suspend(xnthread_t *thread)
