@@ -1,3 +1,8 @@
+2007-02-05  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-generic/system.h (DECLARE_XNLOCK): Add helper to
+	declare SMP locks without resorting to '#ifdef CONFIG_SMP' tests.
+
 2007-02-04  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.19-1.7-00.

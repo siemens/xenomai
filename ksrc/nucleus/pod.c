@@ -56,9 +56,7 @@
 
 xnpod_t *nkpod = NULL;
 
-#ifdef CONFIG_SMP
-xnlock_t nklock = XNARCH_LOCK_UNLOCKED;
-#endif /* CONFIG_SMP */
+DECLARE_XNLOCK(nklock);
 
 u_long nkschedlat = 0;
 

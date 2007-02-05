@@ -110,9 +110,6 @@ do { \
 
 static struct task_struct *switch_lock_owner[XNARCH_NR_CPUS];
 
-static xnqueue_t *ppd_hash;
-#define PPD_HASH_SIZE 13
-
 static int nucleus_muxid = -1;
 
 void xnpod_declare_iface_proc(struct xnskentry *iface);
@@ -178,9 +175,7 @@ void xnpod_discard_iface_proc(struct xnskentry *iface);
  * its base priority, i.e. the lowest available level.
  */
 
-#ifdef CONFIG_SMP
-static xnlock_t rpilock = XNARCH_LOCK_UNLOCKED;
-#endif /* CONFIG_SMP */
+DECLARE_PRIVATE_XNLOCK(rpilock);
 
 #define rpi_p(t)	((t)->rpi != NULL)
 
@@ -519,6 +514,9 @@ void xnshadow_reset_shield(void)
 
 #endif /* !CONFIG_XENO_OPT_ISHIELD */
 
+static xnqueue_t *ppd_hash;
+#define PPD_HASH_SIZE 13
+
 union xnshadow_ppd_hkey {
 	struct mm_struct *mm;
 	uint32_t val;
@@ -527,9 +525,8 @@ union xnshadow_ppd_hkey {
 /* ppd holder with the same mm collide and are stored contiguously in the same
    bucket, so that they can all be destroyed with only one hash lookup by
    ppd_remove_mm. */
-static unsigned
-ppd_lookup_inner(xnqueue_t **pq,
-			  xnshadow_ppd_t ** pholder, xnshadow_ppd_key_t * pkey)
+static unsigned ppd_lookup_inner(xnqueue_t **pq,
+				 xnshadow_ppd_t ** pholder, xnshadow_ppd_key_t * pkey)
 {
 	union xnshadow_ppd_hkey key = {.mm = pkey->mm };
 	unsigned bucket = jhash2(&key.val, sizeof(key) / sizeof(uint32_t), 0);
