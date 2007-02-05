@@ -61,14 +61,14 @@ static xnsynch_t registry_hash_synch;
 
 extern struct proc_dir_entry *rthal_proc_root;
 
-static void registry_proc_callback(void *cookie);
+static DECLARE_WORK_FUNC(registry_proc_callback);
 
 static void registry_proc_schedule(void *cookie);
 
 static xnqueue_t registry_obj_procq;	/* Objects waiting for /proc handling. */
 
 #ifndef CONFIG_PREEMPT_RT
-static DECLARE_WORK(registry_proc_work, &registry_proc_callback, NULL);
+static DECLARE_WORK_NODATA(registry_proc_work, &registry_proc_callback);
 #endif /* !CONFIG_PREEMPT_RT */
 
 static struct proc_dir_entry *registry_proc_root;
@@ -259,7 +259,7 @@ static struct proc_dir_entry *add_proc_link(const char *name,
 	return entry;
 }
 
-static void registry_proc_callback(void *cookie)
+static DECLARE_WORK_FUNC(registry_proc_callback)
 {
 	struct proc_dir_entry *rdir, *dir, *entry;
 	const char *root, *type;
