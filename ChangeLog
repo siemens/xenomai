@@ -1,3 +1,9 @@
+2007-02-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/psos+/event.c (ev_receive): Return matching event
+	flags also when the task wakes up from xnsynch_sleep_on(). Issue
+	spotted by Markus Osterried <Markus.Osterried@marconi.com>.
+
 2007-02-05  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-generic/wrappers.h (DECLARE_WORK_NODATA): Adapt to
