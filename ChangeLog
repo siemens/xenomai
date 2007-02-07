@@ -1,5 +1,12 @@
 2007-02-07  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/shadow.c (rpi_switch): Move blocked Linux tasks out
+	of the RPI list. This fixes a bug introduced by the recent
+	RPI-related changes into the POSIX-based context switching test.
+	(xnshadow_map): Do not rpi_push() explicitely in the non-barrier
+	case; xnshadow_start() will do so on behalf of
+	xnpod_start_thread().
+
 	* ksrc/skins/psos+/event.c (ev_receive): Return matching event
 	flags also when the task wakes up from xnsynch_sleep_on(). Issue
 	spotted by Markus Osterried <Markus.Osterried@marconi.com>.
