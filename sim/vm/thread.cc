@@ -63,8 +63,6 @@ public:
 
 #endif
 
-int MvmThread::globalTrace = 0;
-
 MvmScheduler MvmThread::runChain;
 
 MvmThread *volatile MvmThread::currentThread = NULL;
@@ -795,6 +793,8 @@ void MvmThread::bumpInto ()
 }
 
 #ifdef CONFIG_XENO_MVM_DEBUG
+int MvmThread::globalTrace = 0;
+
 void MvmThread::setGlobalTrace (int traceLevel) {
 
     globalTrace = traceLevel;
