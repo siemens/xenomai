@@ -40,13 +40,13 @@
 #define XNZOMBIE  0x00000020 /**< Zombie thread in deletion process */
 #define XNRESTART 0x00000040 /**< Restarting thread */
 #define XNSTARTED 0x00000080 /**< Thread has been started */
-#define XNMAPPED  0x00000100 /**< Mapped to regular Linux task (shadow only) */
+#define XNMAPPED  0x00000100 /**< Mapped to a regular Linux task (shadow only) */
 #define XNRELAX   0x00000200 /**< Relaxed shadow thread (blocking bit) */
 #define XNHELD    0x00000400 /**< Held thread from suspended partition */
 
-#define XNBOOST   0x00000800 /**< Undergoes regular PIP boost */
-#define XNDEBUG   0x00001000 /**< Hit debugger breakpoint (shadow only) */
-#define XNLOCK    0x00002000 /**< Not preemptible */
+#define XNBOOST   0x00000800 /**< Undergoes a PIP boost */
+#define XNDEBUG   0x00001000 /**< Hit a debugger breakpoint (shadow only) */
+#define XNLOCK    0x00002000 /**< Holds the scheduler lock (i.e. not preemptible) */
 #define XNRRB     0x00004000 /**< Undergoes a round-robin scheduling */
 #define XNASDI    0x00008000 /**< ASR are disabled */
 #define XNSHIELD  0x00010000 /**< IRQ shield is enabled (shadow only) */
@@ -99,7 +99,7 @@
 
 /*! @ingroup nucleus 
   @defgroup nucleus_info_flags Thread information flags.
-  @brief Bits reporting events notified to thread.
+  @brief Bits reporting events notified to the thread.
   @{
 */
 
@@ -111,6 +111,7 @@
 #define XNKICKED  0x00000008 /**< Kicked upon Linux signal (shadow only) */
 #define XNWAKEN   0x00000010 /**< Thread waken up upon resource availability */
 #define XNROBBED  0x00000020 /**< Robbed from resource ownership */
+#define XNATOMIC  0x00000040 /**< In atomic switch from secondary to primary mode */
 
 /* These information flags are available to the real-time interfaces */
 #define XNTHREAD_INFO_SPARE0  0x10000000
