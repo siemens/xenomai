@@ -2238,7 +2238,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..95ffe2a
+index 0000000..492040a
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,294 @@
@@ -2271,10 +2271,10 @@ index 0000000..95ffe2a
 +#include <linux/threads.h>
 +#include <irq_vectors.h>
 +
-+#define IPIPE_ARCH_STRING	"1.7-00"
++#define IPIPE_ARCH_STRING	"1.7-01"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	7
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifdef CONFIG_X86_LOCAL_APIC
 +/* We want to cover the whole IRQ space when the APIC is enabled. */
@@ -2676,6 +2676,19 @@ index e1bdb97..ad58fe9 100644
  #endif /* __ASSEMBLY__ */
  
  /*
+diff --git a/include/asm-i386/mach-bigsmp/mach_ipi.h b/include/asm-i386/mach-bigsmp/mach_ipi.h
+index 9404c53..2e7f342 100644
+--- a/include/asm-i386/mach-bigsmp/mach_ipi.h
++++ b/include/asm-i386/mach-bigsmp/mach_ipi.h
+@@ -11,7 +11,7 @@ static inline void send_IPI_mask(cpumask_t mask, int vector)
+ static inline void send_IPI_allbutself(int vector)
+ {
+ 	cpumask_t mask = cpu_online_map;
+-	cpu_clear(smp_processor_id(), mask);
++	cpu_clear(smp_processor_id_hw(), mask);
+ 
+ 	if (!cpus_empty(mask))
+ 		send_IPI_mask(mask, vector);
 diff --git a/include/asm-i386/mach-default/do_timer.h b/include/asm-i386/mach-default/do_timer.h
 index 7d606e3..d550afe 100644
 --- a/include/asm-i386/mach-default/do_timer.h
@@ -2711,6 +2724,71 @@ index 7d606e3..d550afe 100644
  	
  	/* assumption about timer being IRQ0 */
  	if (i & 0x01) {
+diff --git a/include/asm-i386/mach-default/mach_ipi.h b/include/asm-i386/mach-default/mach_ipi.h
+index 0dba244..e5e72fa 100644
+--- a/include/asm-i386/mach-default/mach_ipi.h
++++ b/include/asm-i386/mach-default/mach_ipi.h
+@@ -19,7 +19,7 @@ static inline void __local_send_IPI_allbutself(int vector)
+ 	if (no_broadcast || vector == NMI_VECTOR) {
+ 		cpumask_t mask = cpu_online_map;
+ 
+-		cpu_clear(smp_processor_id(), mask);
++		cpu_clear(smp_processor_id_hw(), mask);
+ 		send_IPI_mask(mask, vector);
+ 	} else
+ 		__send_IPI_shortcut(APIC_DEST_ALLBUT, vector);
+diff --git a/include/asm-i386/mach-es7000/mach_apic.h b/include/asm-i386/mach-es7000/mach_apic.h
+index 2633368..06c6bcb 100644
+--- a/include/asm-i386/mach-es7000/mach_apic.h
++++ b/include/asm-i386/mach-es7000/mach_apic.h
+@@ -16,7 +16,7 @@ static inline cpumask_t target_cpus(void)
+ #if defined CONFIG_ES7000_CLUSTERED_APIC
+ 	return CPU_MASK_ALL;
+ #else
+-	return cpumask_of_cpu(smp_processor_id());
++	return cpumask_of_cpu(smp_processor_id_hw());
+ #endif
+ }
+ #define TARGET_CPUS	(target_cpus())
+diff --git a/include/asm-i386/mach-es7000/mach_ipi.h b/include/asm-i386/mach-es7000/mach_ipi.h
+index 5e61bd2..56f5283 100644
+--- a/include/asm-i386/mach-es7000/mach_ipi.h
++++ b/include/asm-i386/mach-es7000/mach_ipi.h
+@@ -11,7 +11,7 @@ static inline void send_IPI_mask(cpumask_t mask, int vector)
+ static inline void send_IPI_allbutself(int vector)
+ {
+ 	cpumask_t mask = cpu_online_map;
+-	cpu_clear(smp_processor_id(), mask);
++	cpu_clear(smp_processor_id_hw(), mask);
+ 	if (!cpus_empty(mask))
+ 		send_IPI_mask(mask, vector);
+ }
+diff --git a/include/asm-i386/mach-numaq/mach_ipi.h b/include/asm-i386/mach-numaq/mach_ipi.h
+index c604448..843fd5b 100644
+--- a/include/asm-i386/mach-numaq/mach_ipi.h
++++ b/include/asm-i386/mach-numaq/mach_ipi.h
+@@ -11,7 +11,7 @@ static inline void send_IPI_mask(cpumask_t mask, int vector)
+ static inline void send_IPI_allbutself(int vector)
+ {
+ 	cpumask_t mask = cpu_online_map;
+-	cpu_clear(smp_processor_id(), mask);
++	cpu_clear(smp_processor_id_hw(), mask);
+ 
+ 	if (!cpus_empty(mask))
+ 		send_IPI_mask(mask, vector);
+diff --git a/include/asm-i386/mach-summit/mach_ipi.h b/include/asm-i386/mach-summit/mach_ipi.h
+index 9404c53..2e7f342 100644
+--- a/include/asm-i386/mach-summit/mach_ipi.h
++++ b/include/asm-i386/mach-summit/mach_ipi.h
+@@ -11,7 +11,7 @@ static inline void send_IPI_mask(cpumask_t mask, int vector)
+ static inline void send_IPI_allbutself(int vector)
+ {
+ 	cpumask_t mask = cpu_online_map;
+-	cpu_clear(smp_processor_id(), mask);
++	cpu_clear(smp_processor_id_hw(), mask);
+ 
+ 	if (!cpus_empty(mask))
+ 		send_IPI_mask(mask, vector);
 diff --git a/include/asm-i386/mmu_context.h b/include/asm-i386/mmu_context.h
 index 62b7bf1..ffcc357 100644
 --- a/include/asm-i386/mmu_context.h
@@ -3670,7 +3748,7 @@ index d0926d6..2e3d40a 100644
  
  #else
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index eafe4a7..d66131c 100644
+index eafe4a7..2ecd0c4 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
 @@ -54,6 +54,7 @@ struct sched_param {
@@ -3700,7 +3778,7 @@ index eafe4a7..d66131c 100644
  	rwlock_t		ioctx_list_lock;
  	struct kioctx		*ioctx_list;
 +
-+#if CONFIG_IPIPE
++#ifdef CONFIG_IPIPE
 +	struct list_head pinned;
 +#endif /* CONFIG_IPIPE */
  };
@@ -7411,7 +7489,7 @@ index b6c4f89..1630479 100644
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
 diff --git a/mm/memory.c b/mm/memory.c
-index 156861f..e9f765e 100644
+index 156861f..1cfd310 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -50,6 +50,7 @@
@@ -7545,14 +7623,14 @@ index 156861f..e9f765e 100644
  /*
   * This routine handles present pages, when users try to write
   * to a shared page. It is done by copying the page to a new address
-@@ -2676,3 +2699,157 @@ int access_process_vm(struct task_struct *tsk, unsigned long addr, void *buf, in
+@@ -2676,3 +2699,152 @@ int access_process_vm(struct task_struct *tsk, unsigned long addr, void *buf, in
  
  	return buf - old_buf;
  }
 +
 +#ifdef CONFIG_IPIPE
 +static LIST_HEAD(pinned_mms);
-+static DEFINE_RWLOCK(pinned_mms_lock);
++static DECLARE_RWSEM(pinned_mms_sem);
 +
 +static inline int ipipe_pin_pte_range(struct mm_struct *mm, pmd_t *pmd,
 +				      struct vm_area_struct *vma,
@@ -7624,7 +7702,7 @@ index 156861f..e9f765e 100644
 +
 +	down_write(&mm->mmap_sem);
 +	if (mm->def_flags & VM_PINNED)
-+		goto up_mmap_sem_done;
++		goto done_mm;
 +
 +	for (vma = mm->mmap; vma; vma = vma->vm_next) {
 +		if (!is_cow_mapping(vma->vm_flags))
@@ -7638,17 +7716,13 @@ index 156861f..e9f765e 100644
 +			next = pgd_addr_end(addr, end);
 +			if (ipipe_pin_pud_range(mm, pgd, vma, addr, next)) {
 +				result = -ENOMEM;
-+			  up_mmap_sem_done:
-+				up_write(&mm->mmap_sem);
 +				goto done_mm;
 +			}
 +		} while (pgd++, addr = next, addr != end);
 +	}
 +	mm->def_flags |= VM_PINNED;
-+	up_write(&mm->mmap_sem);
 +
 +	read_lock(&vmlist_lock);
-+	down_write(&mm->mmap_sem);
 +	for (area = vmlist; area; area = area->next) {
 +		result =  __ipipe_pin_range_mapping(mm,
 +						    (unsigned long) area->addr,
@@ -7656,19 +7730,18 @@ index 156861f..e9f765e 100644
 +						    + area->size);
 +		if (result) {
 +			mm->def_flags &= ~VM_PINNED;
-+			up_write(&mm->mmap_sem);
-+			goto done_vmlist;
++			read_unlock(&vmlist_lock);
++			goto done_mm;
 +		}
 +	}
-+	up_write(&mm->mmap_sem);
 +
-+	write_lock(&pinned_mms_lock);
++	read_unlock(&vmlist_lock);
++	down_write(&pinned_mms_sem);
 +	list_add(&mm->pinned, &pinned_mms);
-+	write_unlock(&pinned_mms_lock);
++	up_write(&pinned_mms_sem);
 +
-+  done_vmlist:
-+	read_unlock(&vmlist_lock);	
 +  done_mm:
++	up_write(&mm->mmap_sem);
 +	mmput(mm);
 +	return result;
 +}
@@ -7680,7 +7753,7 @@ index 156861f..e9f765e 100644
 +	struct mm_struct *mm;
 +	int result = 0;
 +
-+	read_lock(&pinned_mms_lock);
++	down_read(&pinned_mms_sem);
 +	list_for_each_entry(mm, &pinned_mms, pinned) {
 +		down_write(&mm->mmap_sem);
 +		result = __ipipe_pin_range_mapping(mm, start, end);
@@ -7689,7 +7762,7 @@ index 156861f..e9f765e 100644
 +		if (result)
 +			break;
 +	}
-+	read_unlock(&pinned_mms_lock);
++	up_read(&pinned_mms_sem);
 +
 +	return result;
 +}
@@ -7697,9 +7770,9 @@ index 156861f..e9f765e 100644
 +void __ipipe_unlink_pinned_mm(struct mm_struct *mm)
 +{
 +	if (mm->def_flags & VM_PINNED) {
-+		write_lock(&pinned_mms_lock);
++		down_write(&pinned_mms_sem);
 +		list_del(&mm->pinned);
-+		write_unlock(&pinned_mms_lock);
++		up_write(&pinned_mms_sem);
 +	}
 +}
 +#endif
