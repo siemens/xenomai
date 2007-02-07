@@ -83,8 +83,8 @@
 	'S', 'W', 'D', 'R', 'U',	\
 	'.', '.', '.', '.', 'X',	\
 	'H', 'b', 'T', 'l', 'r',	\
-	'.', 's', 't', 'o', 'f',	\
-	'.', '.', '.',			\
+	'.', 's', 't', 'o', '.',	\
+	'f', '.', '.', '.',		\
 }
 
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNHELD)
