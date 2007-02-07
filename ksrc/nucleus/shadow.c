@@ -234,40 +234,71 @@ static inline void rpi_update(xnthread_t *thread)
 
 static inline void rpi_switch(struct task_struct *next)
 {
-	xnthread_t *thread = xnshadow_thread(next);
+	xnthread_t *threadin, *threadout;
 	struct __gatekeeper *gk;
 	int oldprio, newprio;
 	spl_t s;
 
+	threadout = xnshadow_thread(current);
+	threadin = xnshadow_thread(next);
 	gk = &gatekeeper[rthal_processor_id()];
-
 	oldprio = xnthread_current_priority(xnpod_current_root());
 
-	if (thread != NULL &&
-	    next->policy == SCHED_FIFO &&
-	    !xnthread_test_state(thread, XNRPIOFF)) {
-		/* Be careful about Linux task migration of a relaxed
-		 * shadow, in that case, we end up having a thread
-		 * linked to an RPI slot which is _not_ the current
-		 * gatekeeper's one (keep in mind that we don't care
-		 * about migrations handled by Xenomai in primary
-		 * mode, since the shadow would not be linked to any
-		 * RPI queue in the first place).  Since a migration
-		 * must happen while the task is off the CPU
-		 * Linux-wise, rpi_switch() will be called upon
-		 * resumption on the target CPU by the Linux
-		 * scheduler. At that point, we just need to update
-		 * the RPI information in case the RPI queue backlink
-		 * does not match the gatekeeper's RPI slot for the
-		 * current CPU. */
-		if (unlikely(thread->rpi != &gk->rpislot))
-			rpi_update(thread);
-		newprio = xnthread_current_priority(thread);
+	if (threadout &&
+	    current->state != TASK_RUNNING &&
+	    !xnthread_test_info(threadout, XNATOMIC)) {
+		/* A blocked Linux task must be removed from the RPI
+		 * list. Checking for XNATOMIC prevents from unlinking
+		 * a thread which is currently in flight to the
+		 * primary domain (see xnshadow_harden()); not doing
+		 * so would open a tiny window for priority
+		 * inversion. */
+		xnlock_get_irqsave(&rpilock, s);
+		if (threadout->rpi != NULL) {
+			sched_removepq(&gk->rpislot.threadq, &threadout->xlink);
+			rpi_none(threadout);
+		}
+		xnlock_put_irqrestore(&rpilock, s);
 	}
-	else {
+
+	if (threadin != NULL &&
+	    next->policy == SCHED_FIFO &&
+	    !xnthread_test_state(threadin, XNRPIOFF)) {
+		newprio = xnthread_current_priority(threadin);
+
+		/* Be careful about two issues affecting a task's RPI
+		 * state here:
+		 *
+		 * 1) A relaxed shadow awakes (Linux-wise) after a
+		 * blocked state, which caused it to be removed from
+		 * the RPI list while it was sleeping; we have to link
+		 * it back again as it resumes.
+		 *
+		 * 2) A relaxed shadow has migrated from another CPU,
+		 * in that case, we end up having a thread linked to
+		 * an RPI slot which is _not_ the current gatekeeper's
+		 * one (keep in mind that we don't care about
+		 * migrations handled by Xenomai in primary mode,
+		 * since the shadow would not be linked to any RPI
+		 * queue in the first place).  Since a migration must
+		 * happen while the task is off the CPU Linux-wise,
+		 * rpi_switch() will be called upon resumption on the
+		 * target CPU by the Linux scheduler. At that point,
+		 * we just need to update the RPI information in case
+		 * the RPI queue backlink does not match the
+		 * gatekeeper's RPI slot for the current CPU. */
+
+		if (unlikely(threadin->rpi == NULL)) {
+			xnlock_get_irqsave(&rpilock, s);
+			sched_insertpqf(&gk->rpislot.threadq, &threadin->xlink, newprio);
+			threadin->rpi = &gk->rpislot;
+			xnlock_put_irqrestore(&rpilock, s);
+		} else if (unlikely(threadin->rpi != &gk->rpislot))
+			rpi_update(threadin);
+	} else {
 		xnlock_get_irqsave(&rpilock, s);
 
-		if (next == gk->server && !sched_emptypq_p(&gk->rpislot.threadq)) {
+		if (!sched_emptypq_p(&gk->rpislot.threadq)) {
 			xnthread_t *top = link2thread(sched_getheadpq(&gk->rpislot.threadq), xlink);
 			newprio = xnthread_current_priority(top);
 		} else
@@ -704,6 +735,11 @@ static void schedule_linux_call(int type, struct task_struct *p, int arg)
 	rthal_apc_schedule(lostage_apc);
 }
 
+static inline int normalize_priority(int prio)
+{
+	return prio < MAX_RT_PRIO ? prio : MAX_RT_PRIO - 1;
+}
+
 static int gatekeeper_thread(void *data)
 {
 	struct __gatekeeper *gk = (struct __gatekeeper *)data;
@@ -814,10 +850,12 @@ int xnshadow_harden(void)
 	   provided by Adeos to Linux tasks. */
 
 	gk->thread = thread;
+	xnthread_set_info(thread, XNATOMIC);
 	preempt_disable();
 	set_current_state(TASK_INTERRUPTIBLE | TASK_ATOMICSWITCH);
 	wake_up_interruptible_sync(&gk->waitq);
 	schedule();
+	xnthread_clear_info(thread, XNATOMIC);
 
 	/* Rare case: we might have been awaken by a signal before the
 	   gatekeeper sent us to primary mode. Since TASK_UNINTERRUPTIBLE
@@ -883,7 +921,7 @@ int xnshadow_harden(void)
 void xnshadow_relax(int notify)
 {
 	xnthread_t *thread = xnpod_current_thread();
-	int cprio;
+	int prio;
 
 	XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNROOT));
 
@@ -910,9 +948,10 @@ void xnshadow_relax(int notify)
 		xnpod_fatal("xnshadow_relax() failed for thread %s[%d]",
 			    thread->name, xnthread_user_pid(thread));
 
-	cprio = thread->cprio < MAX_RT_PRIO ? thread->cprio : MAX_RT_PRIO - 1;
+	prio = normalize_priority(thread->cprio);
+
 	rthal_reenter_root(get_switch_lock_owner(),
-			   cprio ? SCHED_FIFO : SCHED_NORMAL, cprio);
+			   prio ? SCHED_FIFO : SCHED_NORMAL, prio);
 
 	xnstat_counter_inc(&thread->stat.ssw);	/* Account for secondary mode switch. */
 
@@ -1032,8 +1071,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 
 	xnarch_init_shadow_tcb(xnthread_archtcb(thread), thread,
 			       xnthread_name(thread));
-	prio = xnthread_base_priority(thread) <
-		MAX_RT_PRIO ? xnthread_base_priority(thread) : MAX_RT_PRIO - 1;
+	prio = normalize_priority(xnthread_base_priority(thread));
 	set_linux_task_priority(current, prio);
 	xnshadow_thrptd(current) = thread;
 	xnthread_set_state(thread, XNMAPPED);
@@ -1046,10 +1084,6 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 		xnshadow_signal_completion(u_completion, 0);
 		return 0;
 	}
-
-	/* We are relaxed and still running, tell the RPI manager
-	   about us immediately. */
-	rpi_push(thread);
 
 	/* Nobody waits for us, so we may start the shadow immediately
 	   after having forced the CPU affinity to the current
@@ -1183,8 +1217,7 @@ void xnshadow_renice(xnthread_t *thread)
 	/* We need to bound the priority values in the [1..MAX_RT_PRIO-1]
 	   range, since the core pod's priority scale is a superset of
 	   Linux's priority scale. */
-	int prio =
-	    thread->cprio < MAX_RT_PRIO ? thread->cprio : MAX_RT_PRIO - 1;
+	int prio = normalize_priority(thread->cprio);
 	schedule_linux_call(LO_RENICE_REQ, p, prio);
 	if (!xnthread_test_state(thread, XNDORMANT))
 		rpi_update(thread);
