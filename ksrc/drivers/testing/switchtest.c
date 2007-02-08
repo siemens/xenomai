@@ -460,9 +460,7 @@ static int rtswitch_ioctl_nrt(struct rtdm_dev_context *context,
 					    arg,
 					    sizeof(fromto));
 
-			rtswitch_to_nrt(ctx, fromto.from, fromto.to);
-
-			return 0;
+			return rtswitch_to_nrt(ctx, fromto.from, fromto.to);
 
 		case RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT:
 			if (!rtdm_rw_user_ok(user_info, arg, sizeof(count)))
@@ -523,9 +521,7 @@ static int rtswitch_ioctl_rt(struct rtdm_dev_context *context,
 					    arg,
 					    sizeof(fromto));
 
-			rtswitch_to_rt(ctx, fromto.from, fromto.to);
-
-			return 0;
+			return rtswitch_to_rt(ctx, fromto.from, fromto.to);
 
 		default:
 			return -ENOTTY;
