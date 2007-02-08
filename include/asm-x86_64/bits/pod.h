@@ -42,7 +42,7 @@ static inline void xnarch_leave_root(xnarchtcb_t *rootcb)
 {
 	/* Remember the preempted Linux task pointer. */
 	rootcb->user_task = rootcb->active_task = current;
-	rootcb->tstructp = &current->thread;
+	rootcb->rspp = &current->thread.rsp;
 	rootcb->ts_usedfpu = !!(task_thread_info(current)->status & TS_USEDFPU);
 	rootcb->cr0_ts = (read_cr0() & 8) != 0;
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
@@ -79,7 +79,7 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 			enter_lazy_tlb(oldmm, next);
 	}
 
-	rthal_switch_threads(prev, next, out_tcb->tstructp, in_tcb->tstructp);
+	rthal_switch_threads(prev, next, out_tcb->rspp, in_tcb->rspp);
 
 	stts();
 }
@@ -101,7 +101,7 @@ static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
 {
 	tcb->user_task = current;
 	tcb->active_task = NULL;
-	tcb->tstructp = &tcb->tstruct;
+	tcb->rspp = &tcb->rsp;
 	tcb->fpup = NULL;
 	tcb->entry = NULL;
 	tcb->cookie = NULL;
@@ -140,7 +140,7 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 	childregs->eflags = flags & ~X86_EFLAGS_IF;
 	childregs->rip = (unsigned long)&xnarch_thread_trampoline;
 	childregs->rdi = (unsigned long)tcb;
-	tcb->tstruct.rsp = (unsigned long)childregs;
+	tcb->rsp = (unsigned long)childregs;
 	tcb->entry = entry;
 	tcb->cookie = cookie;
 	tcb->self = thread;
