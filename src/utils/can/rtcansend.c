@@ -281,7 +281,7 @@ int main(int argc, char **argv)
 
     if (timeout) {
 	if (verbose)
-	    printf("Timeout: %lld ns\n", timeout);
+	    printf("Timeout: %lld ns\n", (long long)timeout);
 	ret = rt_dev_ioctl(s, RTCAN_RTIOC_SND_TIMEOUT, &timeout);
 	if (ret) {
 	    fprintf(stderr, "rt_dev_ioctl SND_TIMEOUT: %s\n", strerror(-ret));
