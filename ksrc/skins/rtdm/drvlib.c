@@ -501,9 +501,8 @@ int device_service_routine(...)
  *
  * This service can be called from:
  *
- * - Kernel module initialization/cleanup code
  * - Kernel-based task
- * - User-space task (RT, non-RT)
+ * - User-space task (RT)
  *
  * Rescheduling: never.
  */
@@ -1037,7 +1036,7 @@ void rtdm_mutex_destroy(rtdm_mutex_t *mutex);
  * This service can be called from:
  *
  * - Kernel-based task
- * - User-space task (RT, non-RT)
+ * - User-space task (RT)
  *
  * Rescheduling: possible.
  */
