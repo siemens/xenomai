@@ -175,13 +175,13 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout, int mode)
 
 	if (!testbits(synch->status, XNSYNCH_PRIO)) { /* i.e. FIFO */
 		appendpq(&synch->pendq, &thread->plink);
-		xnpod_suspend_thread(thread, XNPEND, timeout, XN_RELATIVE, synch);
+		xnpod_suspend_thread(thread, XNPEND, timeout, mode, synch);
 		goto unlock_and_exit;
 	}
 
 	if (!testbits(synch->status, XNSYNCH_PIP)) { /* i.e. no ownership */
 		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
-		xnpod_suspend_thread(thread, XNPEND, timeout, XN_RELATIVE, synch);
+		xnpod_suspend_thread(thread, XNPEND, timeout, mode, synch);
 		goto unlock_and_exit;
 	}
 
@@ -220,7 +220,7 @@ redo:
 	} else
 		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
 
-	xnpod_suspend_thread(thread, XNPEND, timeout, XN_RELATIVE, synch);
+	xnpod_suspend_thread(thread, XNPEND, timeout, mode, synch);
 
 	if (xnthread_test_info(thread, XNRMID | XNTIMEO | XNBREAK))
 		goto unlock_and_exit;
