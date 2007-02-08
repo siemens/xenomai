@@ -472,7 +472,7 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
     }
 
     case RTCAN_RTIOC_TAKE_TIMESTAMP: {
-	int timestamp_switch = (int)arg;
+	long timestamp_switch = (long)arg;
 	
 	if (timestamp_switch == RTCAN_TAKE_TIMESTAMPS)
 	    set_bit(RTCAN_GET_TIMESTAMP, &context->context_flags);
