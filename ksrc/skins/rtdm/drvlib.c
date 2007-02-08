@@ -458,7 +458,6 @@ EXPORT_SYMBOL(_rtdm_synch_flush);
  * @{
  */
 
-#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Initialise a timeout sequence
  *
@@ -508,8 +507,14 @@ int device_service_routine(...)
  *
  * Rescheduling: never.
  */
-void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout);
-#endif /* DOXYGEN_CPP */
+void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout)
+{
+    xntbase_t *base = xnthread_time_base(xnpod_current_thread());
+
+    *timeout_seq = xntbase_get_time(base) + xntbase_ns2ticks(base, timeout);
+}
+
+EXPORT_SYMBOL(rtdm_toseq_init);
 /** @} */
 
 /*!
