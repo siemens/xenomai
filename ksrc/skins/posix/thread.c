@@ -745,3 +745,5 @@ EXPORT_SYMBOL(pthread_join);
 EXPORT_SYMBOL(pthread_self);
 EXPORT_SYMBOL(pthread_make_periodic_np);
 EXPORT_SYMBOL(pthread_wait_np);
+EXPORT_SYMBOL(pthread_set_name_np);
+EXPORT_SYMBOL(pthread_set_mode_np);
