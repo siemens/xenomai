@@ -4,6 +4,8 @@
  *
  *   Adeos-based Real-Time Abstraction Layer for PowerPC.
  *
+ *   Copyright (C) 2004-2006 Philippe Gerum.
+ *
  *   64-bit PowerPC adoption
  *     copyright (C) 2005 Taneli Vähäkangas and Heikki Lindholm
  *
