@@ -309,7 +309,7 @@ while : ; do
       linux_arch=arm
       xenomai_arch=arm
       ;;
-   x86_64|amd64)
+   x86_64|x8664|amd64|emt64)
       linux_arch=x86_64
       xenomai_arch=x86_64
       ;;
