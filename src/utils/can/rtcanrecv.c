@@ -61,7 +61,6 @@ void cleanup(void)
     if (verbose)
 	printf("Cleaning up...\n");
 
-    usleep(100000);
     if (s >= 0) {
 	ret = rt_dev_close(s);
 	s = -1;
@@ -192,6 +191,7 @@ int main(int argc, char **argv)
 
 	case 'p':
 	    print = strtoul(optarg, NULL, 0);
+	    break;
 
 	case 'v':
 	    verbose = 1;
@@ -312,7 +312,7 @@ int main(int argc, char **argv)
     }
 
     snprintf(name, sizeof(name), "rtcanrecv-%d", getpid());
-    ret = rt_task_shadow(&rt_task_desc, name, 1, 0);
+    ret = rt_task_shadow(&rt_task_desc, name, 0, 0);
     if (ret) {
 	fprintf(stderr, "rt_task_shadow: %s\n", strerror(-ret));
 	goto failure;
