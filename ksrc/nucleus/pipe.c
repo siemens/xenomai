@@ -798,7 +798,15 @@ static ssize_t xnpipe_write(struct file *file,
 	inith(xnpipe_m_link(mh));
 	xnpipe_m_size(mh) = count;
 	xnpipe_m_rdoff(mh) = 0;
-	__copy_from_user(xnpipe_m_data(mh), buf, count);
+
+	if (copy_from_user(xnpipe_m_data(mh), buf, count)) {
+		if (alloc_handler == NULL)
+			xnfree(mh);
+		else if (input_handler != NULL)
+			state->input_handler(xnminor_from_state(state), mh,
+					     -EFAULT, state->cookie);
+		return -EFAULT;
+	}
 
 	xnlock_get_irqsave(&nklock, s);
 
