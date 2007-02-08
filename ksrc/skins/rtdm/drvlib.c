@@ -510,6 +510,8 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout)
 {
     xntbase_t *base = xnthread_time_base(xnpod_current_thread());
 
+    XENO_ASSERT(RTDM, !xnpod_unblockable_p(), /* only warn here */;);
+
     *timeout_seq = xntbase_get_time(base) + xntbase_ns2ticks(base, timeout);
 }
 
