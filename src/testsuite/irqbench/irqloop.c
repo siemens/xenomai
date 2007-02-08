@@ -30,7 +30,7 @@ static int terminate;
 
 void *irq_thread(void *arg)
 {
-    struct sched_param param = { .sched_priority = (int)arg };
+    struct sched_param param = { .sched_priority = (long)arg };
 
     pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
         pthread_attr_init(&attr);
         pthread_attr_setstacksize(&attr, PTHREAD_STACK_MIN);
 
-        pthread_create(&thr, &attr, irq_thread, (void *)config.priority);
+        pthread_create(&thr, &attr, irq_thread, (void *)(long)config.priority);
     }
 
     if (ioctl(benchdev, RTTST_RTIOC_IRQBENCH_START, &config)) {

@@ -127,10 +127,10 @@ void rt_task(void)
 	    printf("#%d: (%d) ", count, addr.can_ifindex);
 	    if (with_timestamp && msg.msg_controllen) {
 		if (timestamp_rel) {
-		    printf("%lldns ", timestamp - timestamp_prev);
+		printf("%lldns ", (long long)(timestamp - timestamp_prev));
 		    timestamp_prev = timestamp;
 		} else
-		    printf("%lldns ", timestamp);
+		    printf("%lldns ", (long long)timestamp);
 	    }
 	    if (frame.can_id & CAN_ERR_FLAG)
 		printf("!0x%08x!", frame.can_id & CAN_ERR_MASK);
@@ -295,7 +295,7 @@ int main(int argc, char **argv)
 
     if (timeout) {
 	if (verbose)
-	    printf("Timeout: %lld ns\n", timeout);
+	    printf("Timeout: %lld ns\n", (long long)timeout);
 	ret = rt_dev_ioctl(s, RTCAN_RTIOC_RCV_TIMEOUT, &timeout);
 	if (ret) {
 	    fprintf(stderr, "rt_dev_ioctl RCV_TIMEOUT: %s\n", strerror(-ret));
