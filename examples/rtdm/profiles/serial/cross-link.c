@@ -52,32 +52,25 @@ RT_TASK write_task;
 RT_TASK read_task;
 
 static const struct rtser_config read_config = {
-	0xFFFF,                     /* config_mask */
-	115200,                     /* baud_rate */
-	RTSER_DEF_PARITY,           /* parity */
-	RTSER_DEF_BITS,             /* data_bits */
-	RTSER_DEF_STOPB,            /* stop_bits */
-	RTSER_DEF_HAND,             /* handshake */
-	RTSER_DEF_FIFO_DEPTH,       /* fifo_depth*/
-	RTSER_DEF_TIMEOUT,          /* rx_timeout */
-	RTSER_DEF_TIMEOUT,          /* tx_timeout */
-	RTSER_DEF_TIMEOUT,          /* event_timeout */
-	RTSER_RX_TIMESTAMP_HISTORY, /* timestamp_history */
-	RTSER_EVENT_RXPEND          /* event mask */
+	.config_mask       = 0xFFFF,
+	.baud_rate         = 115200,
+	.parity            = RTSER_DEF_PARITY,
+	.data_bits         = RTSER_DEF_BITS,
+	.stop_bits         = RTSER_DEF_STOPB,
+	.handshake         = RTSER_DEF_HAND,
+	.fifo_depth        = RTSER_DEF_FIFO_DEPTH,
+	.rx_timeout        = RTSER_DEF_TIMEOUT,
+	.tx_timeout        = RTSER_DEF_TIMEOUT,
+	.event_timeout     = 1000000000, /* 1 s */
+	.timestamp_history = RTSER_RX_TIMESTAMP_HISTORY,
+	.event_mask        = RTSER_EVENT_RXPEND,
 };
 
 static const struct rtser_config write_config = {
-	0xFFFF,                     /* config_mask */
-	115200,                     /* baud_rate */
-	RTSER_DEF_PARITY,           /* parity */
-	RTSER_DEF_BITS,             /* data_bits */
-	RTSER_DEF_STOPB,            /* stop_bits */
-	RTSER_DEF_HAND,             /* handshake */
-	RTSER_DEF_FIFO_DEPTH,       /* fifo_depth*/
-	RTSER_DEF_TIMEOUT,          /* rx_timeout */
-	RTSER_DEF_TIMEOUT,          /* tx_timeout */
-	RTSER_DEF_TIMEOUT,          /* event_timeout */
-	RTSER_DEF_TIMESTAMP_HISTORY /* timestamp_history */
+	.config_mask       = RTSER_SET_BAUD | RTSER_SET_TIMESTAMP_HISTORY,
+	.baud_rate         = 115200,
+	.timestamp_history = RTSER_DEF_TIMESTAMP_HISTORY,
+	/* the rest implicitely remains default */
 };
 
 static int close_file( int fd, char *name)
@@ -211,9 +204,11 @@ void read_task_proc(void *arg)
 			printf(RTASK_PREFIX
 			       "error on RTSER_RTIOC_WAIT_EVENT, %s\n",
 			       strerror(-err));
+			if (err == -ETIMEDOUT)
+				continue;
 			break;
 		}
-	
+
 		irq_time = rx_event.rxpend_timestamp;
 		read = rt_dev_read(read_fd, &write_time, sz);
 		if (read == sz) {
