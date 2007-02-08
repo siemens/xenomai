@@ -22,6 +22,7 @@
 #define _XENO_ASM_X86_64_BITS_POD_H
 
 #include <asm-generic/xenomai/bits/pod.h>
+#include <asm/xenomai/switch.h>
 
 void xnpod_welcome_thread(struct xnthread *, int);
 
@@ -56,7 +57,6 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 {
 	struct task_struct *prev = out_tcb->active_task;
 	struct task_struct *next = in_tcb->user_task;
-	unsigned long fs, gs;
 
 	if (likely(next != NULL)) {
 		if (task_thread_info(prev)->status & TS_USEDFPU)
@@ -79,8 +79,8 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 			enter_lazy_tlb(oldmm, next);
 	}
 
-	rthal_thread_switch(out_tcb->tstructp, in_tcb->tstructp,
-			    in_tcb->user_task == NULL);
+	rthal_switch_threads(out_tcb->tstructp, in_tcb->tstructp,
+			     in_tcb->user_task == NULL);
 	stts();
 }
 
@@ -106,16 +106,13 @@ static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
 	tcb->is_root = 1;
 }
 
-asmlinkage static void xnarch_thread_redirect(struct xnthread *self,
-					      int imask,
-					      void (*entry) (void *),
-					      void *cookie)
+asmlinkage static void xnarch_thread_trampoline(xnarchtcb_t *tcb)
 {
 	/* xnpod_welcome_thread() will do clts() if needed. */
 	stts();
-	xnpod_welcome_thread(self, imask);
-	entry(cookie);
-	xnpod_delete_thread(self);
+	xnpod_welcome_thread(tcb->self, tcb->imask);
+	tcb->entry(tcb->cookie);
+	xnpod_delete_thread(tcb->self);
 }
 
 static inline void xnarch_init_thread(xnarchtcb_t * tcb,
@@ -124,7 +121,21 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 				      int imask,
 				      struct xnthread *thread, char *name)
 {
-	/* Prepare bootstrap stack. */
+	struct xnarch_x8664_swregs *childregs;
+	unsigned long *rsp, flags;
+
+	/* Prepare the bootstrap stack. */
+
+	rthal_local_irq_flags_hw(flags);
+
+	rsp = (unsigned long *)((unsigned long)tcb->stackbase + tcb->stacksize -
+				sizeof(struct xnarch_x8664_swregs) - 8);
+	childregs = (struct xnarch_x8664_swregs *)rsp;
+	memset(childregs, 0, sizeof(*childregs));
+	childregs->eflags = flags & ~X86_EFLAGS_IF;
+	childregs->rip = (unsigned long)&xnarch_thread_trampoline;
+	childregs->rdi = (unsigned long)tcb;
+	tcb->tstruct.rsp = (unsigned long)childregs;
 	tcb->entry = entry;
 	tcb->cookie = cookie;
 	tcb->self = thread;

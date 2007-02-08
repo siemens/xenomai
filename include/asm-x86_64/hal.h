@@ -39,7 +39,6 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #include <asm/io.h>
 #include <asm/timex.h>
 #include <asm/processor.h>
-#include <io_ports.h>
 #include <asm/fixmap.h>
 #include <asm/apic.h>
 #include <asm/msr.h>
@@ -50,8 +49,8 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #define RTHAL_APIC_TIMER_IPI		RTHAL_SERVICE_IPI3
 #define RTHAL_APIC_ICOUNT		((RTHAL_TIMER_FREQ + HZ/2)/HZ)
 #define RTHAL_TIMER_IRQ			RTHAL_APIC_TIMER_IPI
-
 #define RTHAL_NMICLK_FREQ		RTHAL_CPU_FREQ
+#define RTHAL_8254_IRQ			0
 
 static inline void rthal_grab_control(void)
 {
@@ -85,15 +84,19 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 		/* Kick the timer interrupt immediately. */
 	    rthal_trigger_irq(RTHAL_APIC_TIMER_IPI);
 	} else {
-		apic_read_around(APIC_LVTT);
-		apic_write_around(APIC_LVTT, RTHAL_APIC_TIMER_VECTOR);
-		apic_read_around(APIC_TMICT);
-		apic_write_around(APIC_TMICT,delay);
+		apic_read(APIC_LVTT);
+		apic_write(APIC_LVTT, RTHAL_APIC_TIMER_VECTOR);
+		apic_read(APIC_TMICT);
+		apic_write(APIC_TMICT,delay);
 	}
 #ifndef CONFIG_XENO_OPT_PIPELINE_HEAD
 	rthal_local_irq_restore_hw(flags);
 #endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
 }
+
+asmlinkage struct thread_struct *rthal_switch_threads(struct thread_struct *prev,
+						      struct thread_struct *next,
+						      int knext);
 
 static const char *const rthal_fault_labels[] = {
     [0] = "Divide error",

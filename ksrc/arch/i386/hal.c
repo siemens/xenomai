@@ -71,8 +71,6 @@ static void dummy_mksound (unsigned int hz, unsigned int ticks)
 }
 #endif /* Linux < 2.6 && !CONFIG_X86_TSC && CONFIG_VT */
 
-extern struct desc_struct idt_table[];
-
 static struct {
 
     unsigned long flags;
