@@ -1,3 +1,12 @@
+2007-02-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/drivers/can/rtcan_raw.c (rtcan_raw_ioctl,
+	RTCAN_RTIOC_TAKE_TIMESTAMP): Silence warning over 64bit archs by
+	using long type to collect cast argument.
+
+	* src/testsuite/irqbench/irqloop.c: Silence 32bit <-> 64bit cast
+	warnings.
+
 2001-02-08  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus/synch.c (xnsleep_sleep_on): Pass mode argument to
