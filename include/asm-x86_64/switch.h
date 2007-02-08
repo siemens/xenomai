@@ -54,6 +54,8 @@
 
 #else /* !__ASSEMBLY__ */
 
+#include <linux/linkage.h>
+
 struct 	xnarch_x8664_swregs {
 
 	unsigned long rbx;
@@ -73,6 +75,13 @@ struct 	xnarch_x8664_swregs {
 	unsigned long rip;
 };
 
+struct thread_struct;
+struct task_struct;
+
+asmlinkage struct task_struct *rthal_switch_threads(struct task_struct *prev,
+						    struct task_struct *next,
+						    struct thread_struct *prev_ts,
+						    struct thread_struct *next_ts);
 #endif /* !__ASSEMBLY__ */
 
 #endif /* !_XENO_ASM_X86_64_SWITCH_H */

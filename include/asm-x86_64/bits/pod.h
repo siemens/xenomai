@@ -79,8 +79,8 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 			enter_lazy_tlb(oldmm, next);
 	}
 
-	rthal_switch_threads(out_tcb->tstructp, in_tcb->tstructp,
-			     in_tcb->user_task == NULL);
+	rthal_switch_threads(prev, next, out_tcb->tstructp, in_tcb->tstructp);
+
 	stts();
 }
 
@@ -103,6 +103,11 @@ static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
 	tcb->active_task = NULL;
 	tcb->tstructp = &tcb->tstruct;
 	tcb->fpup = NULL;
+	tcb->entry = NULL;
+	tcb->cookie = NULL;
+	tcb->self = thread;
+	tcb->imask = 0;
+	tcb->name = name;
 	tcb->is_root = 1;
 }
 

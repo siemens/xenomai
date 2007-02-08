@@ -94,10 +94,6 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 #endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
 }
 
-asmlinkage struct thread_struct *rthal_switch_threads(struct thread_struct *prev,
-						      struct thread_struct *next,
-						      int knext);
-
 static const char *const rthal_fault_labels[] = {
     [0] = "Divide error",
     [1] = "Debug",
