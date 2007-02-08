@@ -911,13 +911,7 @@ void rtdm_task_busy_sleep(nanosecs_rel_t delay);
 
 typedef nanosecs_abs_t              rtdm_toseq_t;
 
-#ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
-static inline void rtdm_toseq_init(rtdm_toseq_t *timeout_seq,
-                                   nanosecs_rel_t timeout)
-{
-    *timeout_seq = xntbase_get_time(rtdm_tbase) + xntbase_ns2ticks(rtdm_tbase, timeout);
-}
-#endif /* !DOXYGEN_CPP */
+void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout);
 
 
 /* --- event services --- */
