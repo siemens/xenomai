@@ -32,7 +32,7 @@ static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 
 	tcb->user_task = task;
 	tcb->active_task = NULL;
-	tcb->tstructp = &task->thread;
+	tcb->rspp = &task->thread.rsp;
 	tcb->fpup = &task->thread.i387;
 	tcb->entry = NULL;
 	tcb->cookie = NULL;

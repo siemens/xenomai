@@ -1,5 +1,4 @@
 #include <linux/linkage.h>
-#include <asm/asm-offsets.h>
 #include <asm/xenomai/switch.h>
 
 	.code64
@@ -7,8 +6,8 @@
 /*
  * struct task_struct *rthal_thread_switch(struct thread_struct *prev,
  *					struct thread_struct *next,
- *					struct thread_struct *prev_ts,
- *					struct thread_struct *next_ts)
+ *					unsigned long *p_rsp,
+ *					unsigned long *n_rsp)
  */
 
 ENTRY(rthal_switch_threads)
@@ -17,8 +16,8 @@ ENTRY(rthal_switch_threads)
 	pushq	%rbp
 	movq	%rsi, %rbp
 	SAVE_SWITCH_REGS
-	movq	%rsp, 8(%rdx)
-	movq	8(%rcx), %rsp
+	movq	%rsp, (%rdx)
+	movq	(%rcx), %rsp
 	testq	%rsi, %rsi
 	jz	1f
 	cmpq	%rsi, %rsi
