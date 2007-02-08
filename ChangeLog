@@ -14,6 +14,7 @@
 
 	* ksrc/skins/rtdm/drvlib.c, include/rtdm/rtdm_driver.h: Uninline
 	rtdm_toseq_init() and let it use the caller thread's time base.
+	Fix its doc and warn on wrong caller context.
 
 	* src/utils/can/rtcanrecv.c: Lower task priority to 0, fix -p
 	parameter parsing, remove useless usleep on cleanup.
