@@ -15,6 +15,9 @@
 	* ksrc/skins/rtdm/drvlib.c, include/rtdm/rtdm_driver.h: Uninline
 	rtdm_toseq_init() and let it use the caller thread's time base.
 
+	* src/utils/can/rtcanrecv.c: Lower task priority to 0, fix -p
+	parameter parsing, remove useless usleep on cleanup.
+
 2007-02-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pipe.c (xnpipe_write): Use regular copy_from_user()
