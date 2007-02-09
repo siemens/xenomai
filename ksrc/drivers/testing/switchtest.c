@@ -389,7 +389,7 @@ static int rtswitch_close(struct rtdm_dev_context *context,
 
 static int rtswitch_ioctl_nrt(struct rtdm_dev_context *context,
                               rtdm_user_info_t *user_info,
-                              int request,
+                              unsigned int request,
                               void *arg)
 {
 	rtswitch_context_t *ctx = (rtswitch_context_t *) context->dev_private;
@@ -490,7 +490,7 @@ static int rtswitch_ioctl_nrt(struct rtdm_dev_context *context,
 
 static int rtswitch_ioctl_rt(struct rtdm_dev_context *context,
                              rtdm_user_info_t *user_info,
-                             int request,
+                             unsigned int request,
                              void *arg)
 {
 	rtswitch_context_t *ctx = (rtswitch_context_t *) context->dev_private;

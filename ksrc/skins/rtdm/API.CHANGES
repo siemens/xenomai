@@ -10,6 +10,8 @@ Scheduled modifications (unsorted):
 Revision 6:
  o Added profile_version field to rtdm_device
  o Requested IRQ lines are now enabled on return of rtdm_irq_request
+ o Converted request argument in IOCTL handler to unsigned int to fix issues
+   on 64-bit architectures
 
 Revision 5:
  o Introduced generic time types nanosecs_abs_t and nanosecs_rel_t.

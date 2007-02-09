@@ -403,9 +403,9 @@ int _rtdm_ioctl(rtdm_user_info_t *user_info, int fd, int request, ...)
     arg = va_arg(args, void *);
     va_end(args);
 
-    MAJOR_FUNCTION_WRAPPER_TH(ioctl, request, arg);
+    MAJOR_FUNCTION_WRAPPER_TH(ioctl, (unsigned int)request, arg);
 
-    if (unlikely(ret < 0) && request == RTIOC_DEVICE_INFO) {
+    if (unlikely(ret < 0) && (unsigned int)request == RTIOC_DEVICE_INFO) {
         struct rtdm_device *dev = context->device;
         struct rtdm_device_info dev_info;
 
