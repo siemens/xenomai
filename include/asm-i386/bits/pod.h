@@ -132,6 +132,11 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 		rthal_set_foreign_stack(&rthal_domain);
 	}
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
+	if (next)
+		next->fpu_counter = 0;
+#endif /* Linux version >= 2.6.20 */
+
 	if (next && next != prev) {
 		struct mm_struct *oldmm = prev->active_mm;
 
