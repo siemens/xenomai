@@ -198,7 +198,7 @@ typedef
 typedef
     int     (*rtdm_ioctl_handler_t)  (struct rtdm_dev_context   *context,
                                       rtdm_user_info_t          *user_info,
-                                      int                       request,
+                                      unsigned int              request,
                                       void                      *arg);
 
 /**

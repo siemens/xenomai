@@ -550,7 +550,8 @@ int rt_16550_close(struct rtdm_dev_context *context,
 
 
 int rt_16550_ioctl(struct rtdm_dev_context *context,
-                   rtdm_user_info_t *user_info, int request, void *arg)
+                   rtdm_user_info_t *user_info,
+                   unsigned int request, void *arg)
 {
     struct rt_16550_context *ctx;
     int                     err = 0;
