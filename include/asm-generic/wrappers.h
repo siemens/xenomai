@@ -257,8 +257,6 @@ unsigned long __va_to_kva(unsigned long va);
 					   &(p)->pending.signal, \
 					   &(p)->signal->shared_pending.signal)
 
-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
-
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20)
 #define DECLARE_WORK_NODATA(f, n)	DECLARE_WORK(f, n, NULL)
 #define DECLARE_WORK_FUNC(f)		void f(void *cookie)
@@ -266,5 +264,7 @@ unsigned long __va_to_kva(unsigned long va);
 #define DECLARE_WORK_NODATA(f, n)	DECLARE_WORK(f, n)
 #define DECLARE_WORK_FUNC(f)		void f(struct work_struct *work)
 #endif /* >= 2.6.20 */
+
+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
 
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */
