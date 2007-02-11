@@ -79,7 +79,7 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 			enter_lazy_tlb(oldmm, next);
 	}
 
-	rthal_switch_threads(prev, next, out_tcb->rspp, in_tcb->rspp);
+	xnarch_switch_threads(prev, next, prev, out_tcb->rspp, in_tcb->rspp);
 
 	stts();
 }
@@ -111,7 +111,7 @@ static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
 	tcb->is_root = 1;
 }
 
-asmlinkage static void xnarch_thread_trampoline(xnarchtcb_t *tcb)
+asmlinkage void xnarch_thread_trampoline(xnarchtcb_t *tcb)
 {
 	/* xnpod_welcome_thread() will do clts() if needed. */
 	stts();
@@ -136,10 +136,10 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 	rsp = (unsigned long *)((unsigned long)tcb->stackbase + tcb->stacksize -
 				sizeof(struct xnarch_x8664_swregs) - 8);
 	childregs = (struct xnarch_x8664_swregs *)rsp;
-	memset(childregs, 0, sizeof(*childregs));
+	childregs->rbp = 0;
 	childregs->eflags = flags & ~X86_EFLAGS_IF;
-	childregs->rip = (unsigned long)&xnarch_thread_trampoline;
-	childregs->rdi = (unsigned long)tcb;
+	childregs->i_arg = (unsigned long)tcb;
+
 	tcb->rsp = (unsigned long)childregs;
 	tcb->entry = entry;
 	tcb->cookie = cookie;

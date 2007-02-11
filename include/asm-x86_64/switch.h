@@ -20,67 +20,40 @@
 #ifndef _XENO_ASM_X86_64_SWITCH_H
 #define _XENO_ASM_X86_64_SWITCH_H
 
-#ifdef __ASSEMBLY__
-
-.macro SAVE_SWITCH_REGS
-	pushq	%r15
-	pushq	%r14
-	pushq	%r13
-	pushq	%r12
-	pushq	%r11
-	pushq	%r10
-	pushq	%r9
-	pushq	%r8
-	pushq	%rdi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbx
-.endm
-
-.macro RESTORE_SWITCH_REGS
-	popq	%rbx
-	popq	%rcx
-	popq	%rdx
-	popq	%rdi
-	popq	%r8
-	popq	%r9
-	popq	%r10
-	popq	%r11
-	popq	%r12
-	popq	%r13
-	popq	%r14
-	popq	%r15
-.endm
-
-#else /* !__ASSEMBLY__ */
-
-#include <linux/linkage.h>
-
 struct 	xnarch_x8664_swregs {
 
-	unsigned long rbx;
-	unsigned long rcx;
-	unsigned long rdx;
-	unsigned long rdi;
-	unsigned long r8;
-	unsigned long r9;
-	unsigned long r10;
-	unsigned long r11;
-	unsigned long r12;
-	unsigned long r13;
-	unsigned long r14;
-	unsigned long r15;
+	/* switch frame */
 	unsigned long rbp;
 	unsigned long eflags;
-	unsigned long rip;
+	/* thread entry data */
+	unsigned long i_arg;
 };
 
-struct task_struct;
+#define __SWITCH_CLOBBER_LIST  \
+	, "rbx", "r8","r9","r10","r11","r12","r13","r14","r15"
 
-asmlinkage struct task_struct *rthal_switch_threads(struct task_struct *prev,
-						    struct task_struct *next,
-						    unsigned long *p_rsp,
-						    unsigned long *n_rsp);
-#endif /* !__ASSEMBLY__ */
+#define xnarch_switch_threads(prev,next,last,p_rsp,n_rsp)		\
+	asm volatile("pushfq\n\t"					\
+		     "pushq	%%rbp\n\t"				\
+		     "movq	%%rsi, %%rbp\n\t"			\
+		     "movq	%%rsp, (%%rdx)\n\t"			\
+		     "movq	(%%rcx), %%rsp\n\t"			\
+		     "testq	%%rsi, %%rsi\n\t"			\
+		     "jz	1f\n\t"					\
+		     "cmpq	%%rdi, %%rsi\n\t"			\
+		     "jz	1f\n\t"					\
+		     "call	__switch_to\n\t"			\
+		     "1:\n\t"						\
+		     "movq	%%rbp, %%rsi\n\t"			\
+		     "popq	%%rbp\n\t"				\
+		     "popfq\n\t"					\
+		     "testq	%%rbp, %%rbp\n\t"			\
+		     "jnz	2f\n\t"					\
+		     "popq	%%rdi\n\t"				\
+		     "jmp	xnarch_thread_trampoline\n\t"		\
+		     "2:\n\t"						\
+		     : "=a" (last)					\
+		     : "S" (next), "D" (prev), "d" (p_rsp), "c" (n_rsp)	\
+		     : "memory", "cc" __SWITCH_CLOBBER_LIST)
 
 #endif /* !_XENO_ASM_X86_64_SWITCH_H */
