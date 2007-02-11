@@ -65,6 +65,7 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 			clts();
 		in_tcb->active_task = next;
 		rthal_clear_foreign_stack(&rthal_domain);
+		next->fpu_counter = 0;
 	} else {
 		in_tcb->active_task = prev;
 		rthal_set_foreign_stack(&rthal_domain);
