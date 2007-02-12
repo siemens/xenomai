@@ -931,6 +931,15 @@ int xnshadow_harden(void)
 	set_current_state(TASK_INTERRUPTIBLE | TASK_ATOMICSWITCH);
 	wake_up_interruptible_sync(&gk->waitq);
 	schedule();
+
+	/* Since we have two cooperating scheduling points
+	   (i.e. schedule() and xnpod_schedule()), we cannot guarantee
+	   that callee-saved registers would be preserved in case of a
+	   scheduler exchange. Therefore we tell GCC to consider those
+	   as clobbered, so that we don't spuriously reuse their
+	   values as saved by the converse scheduling head. */
+	xnarch_switch_clobber();
+
 	xnthread_clear_info(thread, XNATOMIC);
 
 	/* Rare case: we might have been awaken by a signal before the
@@ -1016,6 +1025,7 @@ void xnshadow_relax(int notify)
 	rpi_push(thread);
 
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
+	xnarch_switch_clobber(); /* scheduler exchange: clobber callee-saved regs. */
 
 	if (XENO_DEBUG(NUCLEUS) && rthal_current_domain != rthal_root_domain)
 		xnpod_fatal("xnshadow_relax() failed for thread %s[%d]",

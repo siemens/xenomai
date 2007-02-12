@@ -20,6 +20,10 @@
 #ifndef _XENO_ASM_X86_64_SWITCH_H
 #define _XENO_ASM_X86_64_SWITCH_H
 
+#ifndef __KERNEL__
+#error "Pure kernel header included from user-space!"
+#endif
+
 struct 	xnarch_x8664_swregs {
 
 	/* switch frame */
@@ -29,8 +33,7 @@ struct 	xnarch_x8664_swregs {
 	unsigned long i_arg;
 };
 
-#define __SWITCH_CLOBBER_LIST  \
-	, "rbx", "r8","r9","r10","r11","r12","r13","r14","r15"
+#define __SWITCH_CLOBBER_LIST  , "rbx", "r12", "r13", "r14", "r15"
 
 #define xnarch_switch_threads(prev,next,last,p_rsp,n_rsp)		\
 	asm volatile("pushfq\n\t"					\
@@ -55,5 +58,11 @@ struct 	xnarch_x8664_swregs {
 		     : "=a" (last)					\
 		     : "S" (next), "D" (prev), "d" (p_rsp), "c" (n_rsp)	\
 		     : "memory", "cc" __SWITCH_CLOBBER_LIST)
+
+#define xnarch_switch_clobber()		\
+	asm volatile(""				\
+		     : /* no output */		\
+		     : /* no input */		\
+		     : "cc", "memory" __SWITCH_CLOBBER_LIST)
 
 #endif /* !_XENO_ASM_X86_64_SWITCH_H */
