@@ -433,8 +433,7 @@ int rt_mutex_release(RT_MUTEX *mutex)
 	int err = 0;
 	spl_t s;
 
-	if (xnpod_asynch_p()
-	    || xnthread_test_state(xnpod_current_thread(), XNROOT))
+	if (xnpod_unblockable_p())
 		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);
