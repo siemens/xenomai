@@ -23,6 +23,7 @@
 #define _XENO_ASM_I386_BITS_POD_H
 
 #include <asm-generic/xenomai/bits/pod.h>
+#include <asm/xenomai/switch.h>
 
 void xnpod_welcome_thread(struct xnthread *, int);
 
@@ -50,68 +51,6 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 
 static inline void xnarch_enter_root(xnarchtcb_t * rootcb)
 {
-}
-
-static inline void __switch_threads(xnarchtcb_t * out_tcb,
-				    xnarchtcb_t * in_tcb,
-				    struct task_struct *outproc,
-				    struct task_struct *inproc)
-{
-#if __GNUC__ < 3 || __GNUC__ == 3 && __GNUC_MINOR__ < 2
-
-	__asm__ __volatile__("pushfl\n\t"
-			     "pushl %%ecx\n\t"
-			     "pushl %%edi\n\t"
-			     "pushl %%ebp\n\t"
-			     "movl %0,%%ecx\n\t"
-			     "movl %%esp,(%%ecx)\n\t"
-			     "movl %1,%%ecx\n\t"
-			     "movl $1f,(%%ecx)\n\t"
-			     "movl %2,%%ecx\n\t"
-			     "movl %3,%%edi\n\t"
-			     "movl (%%ecx),%%esp\n\t"
-			     "pushl (%%edi)\n\t"
-			     "testl %%edx,%%edx\n\t"
-			     "jne  __switch_to\n\t"
-			     "ret\n\t"
-			     "1:      popl %%ebp\n\t"
-			     "popl %%edi\n\t"
-			     "popl %%ecx\n\t"
-			     "popfl\n\t":	/* no output */
-			     :"m"(out_tcb->espp),
-			      "m"(out_tcb->eipp),
-			      "m"(in_tcb->espp),
-			      "m"(in_tcb->eipp),
-			      "b"(out_tcb),
-			      "S"(in_tcb), "a"(outproc), "d"(inproc));
-
-#else /* GCC version >= 3.2 */
-
-	long ebx_out, ecx_out, edi_out, esi_out;
-
-	__asm__ __volatile__("pushfl\n\t"
-			     "pushl %%ebp\n\t"
-			     "movl %6,%%ecx\n\t"
-			     "movl %%esp,(%%ecx)\n\t"
-			     "movl %7,%%ecx\n\t"
-			     "movl $1f,(%%ecx)\n\t"
-			     "movl %8,%%ecx\n\t"
-			     "movl %9,%%edi\n\t"
-			     "movl (%%ecx),%%esp\n\t"
-			     "pushl (%%edi)\n\t"
-			     "testl %%edx,%%edx\n\t"
-			     "jne  __switch_to\n\t"
-			     "ret\n\t"
-			     "1:      popl %%ebp\n\t"
-			     "popfl\n\t":"=b"(ebx_out),
-			     "=&c"(ecx_out),
-			     "=S"(esi_out),
-			     "=D"(edi_out), "+a"(outproc), "+d"(inproc)
-			     :"m"(out_tcb->espp),
-			      "m"(out_tcb->eipp),
-			      "m"(in_tcb->espp), "m"(in_tcb->eipp));
-
-#endif /* GCC version < 3.2 */
 }
 
 static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
@@ -154,7 +93,7 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 		asm volatile ("mov %%gs,%0":"=m" (gs));
 	}
 
-	__switch_threads(out_tcb, in_tcb, prev, next);
+	xnarch_switch_threads(out_tcb, in_tcb, prev, next);
 
 	if (xnarch_shadow_p(out_tcb, prev)) {
 

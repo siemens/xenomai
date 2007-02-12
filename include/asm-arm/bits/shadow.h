@@ -27,6 +27,8 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
+#include <asm-generic/xenomai/switch.h>
+
 static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 					  struct xnthread *thread,
 					  const char *name)
