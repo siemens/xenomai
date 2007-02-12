@@ -1410,13 +1410,6 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	if (thread == sched->runthread)
 		xnsched_set_resched(sched);
 
-	/* We must make sure that we don't clear the wait channel if a
-	   thread is first blocked (wchan != NULL) then forcibly suspended
-	   (wchan == NULL), since these are conjunctive conditions. */
-
-	if (wchan)
-		thread->wchan = wchan;
-
 	/* Is the thread ready to run? */
 
 	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS)) {
@@ -1429,35 +1422,41 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		if (xnthread_test_info(thread, XNKICKED)) {
 			xnthread_clear_info(thread, XNRMID | XNTIMEO);
 			xnthread_set_info(thread, XNBREAK);
-			if (wchan)
-				thread->wchan = NULL;
 			goto unlock_and_exit;
 		}
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
-		/* A newly created thread is not linked to the ready thread
-		   queue yet. */
-
-		if (xnthread_test_state(thread, XNREADY)) {
-			sched_removepq(&sched->readyq, &thread->rlink);
-			xnthread_clear_state(thread, XNREADY);
-		}
-
 		xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK | XNWAKEN | XNROBBED);
+	}
+
+	/* Don't start the timer for a thread indefinitely delayed by
+	   a call to xnpod_suspend_thread(thread,XNDELAY,XN_INFINITE,XN_RELATIVE,NULL). */
+
+	if (timeout != XN_INFINITE || mode == XN_ABSOLUTE) {
+		xntimer_set_sched(&thread->rtimer, thread->sched);
+		if (xntimer_start(&thread->rtimer, timeout, XN_INFINITE, mode)) {
+			/* (absolute) timeout value in the past, bail out. */
+			xnthread_set_info(thread, XNTIMEO);
+			goto unlock_and_exit;
+		}
+		xnthread_set_state(thread, XNDELAY);
+	}
+
+	if (xnthread_test_state(thread, XNREADY)) {
+		sched_removepq(&sched->readyq, &thread->rlink);
+		xnthread_clear_state(thread, XNREADY);
 	}
 
 	xnthread_set_state(thread, mask);
 
-	if (timeout != XN_INFINITE || mode == XN_ABSOLUTE) {
-		/* Don't start the timer for a thread indefinitely delayed by
-		   a call to xnpod_suspend_thread(thread,XNDELAY,XN_INFINITE,XN_RELATIVE,NULL). */
-		xnthread_set_state(thread, XNDELAY);
-		xntimer_set_sched(&thread->rtimer, thread->sched);
-		/* In case of preposterous absolute timer setting, the
-		 * thread is never going to wake up; assume that's
-		 * intended. */
-		xntimer_start(&thread->rtimer, timeout, XN_INFINITE, mode);
-	}
+	/* We must make sure that we don't clear the wait channel if a
+	   thread is first blocked (wchan != NULL) then forcibly
+	   suspended (wchan == NULL), since these are conjunctive
+	   conditions. */
+
+	if (wchan)
+		thread->wchan = wchan;
+
 #ifdef __XENO_SIM__
 	if (nkpod->schedhook)
 		nkpod->schedhook(thread, mask);
