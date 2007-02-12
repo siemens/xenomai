@@ -146,7 +146,7 @@ static int sched_seq_show(struct seq_file *seq, void *v)
 	char sbuf[64], pbuf[16];
 
 	if (v == SEQ_START_TOKEN)
-		seq_printf(seq, "%-3s  %-6s %-8s %-8s %-10s %-8s  %-10s %s\n",
+		seq_printf(seq, "%-3s  %-6s %-8s %-10s %-10s %-8s  %-10s %s\n",
 			   "CPU", "PID", "PRI", "PERIOD", "TIMEOUT", "TIMEBASE", "STAT", "NAME");
 	else {
 		struct sched_seq_info *p = (struct sched_seq_info *)v;
@@ -157,7 +157,7 @@ static int sched_seq_show(struct seq_file *seq, void *v)
 		else
 			snprintf(pbuf, sizeof(pbuf), "%3d", p->cprio);
 
-		seq_printf(seq, "%3u  %-6d %-8s %-8Lu %-10Lu %-8s  %-10s %s\n",
+		seq_printf(seq, "%3u  %-6d %-8s %-10Lu %-10Lu %-8s  %-10s %s\n",
 			   p->cpu,
 			   p->pid,
 			   pbuf,
