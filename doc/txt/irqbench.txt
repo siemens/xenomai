@@ -76,7 +76,9 @@ Mode 3 - In this mode, an additional I-pipe domain is registered on top of
          new domain. By pushing the handling above Xenomai, the IRQ reply
          latency can widely be decoupled from RT-application-related delays.
          The drawback is that no direct interaction with the Xenomai scheduler
-         is possible from the higher domain.
+         is possible from the higher domain. Note that the nucleus option
+         CONFIG_XENO_OPT_PIPELINE_HEAD has to be switched off to be able to
+         use this mode.
 
 
 4. Measuring
