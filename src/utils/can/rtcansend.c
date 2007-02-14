@@ -38,7 +38,8 @@ static void print_usage(char *prg)
 
 RT_TASK rt_task_desc;
 
-static int s=-1, dlc=0, rtr=0, extended=0, verbose=0, loops=1, delay=1000000;
+static int s=-1, dlc=0, rtr=0, extended=0, verbose=0, loops=1;
+static SRTIME delay=1000000;
 static int count=0, print=1, use_send=0, tx_loopback=-1;
 static nanosecs_rel_t timeout = 0;
 static struct can_frame frame;
@@ -77,7 +78,7 @@ void rt_task(void)
     int i, j, ret;
 
     for (i = 0; i < loops; i++) {
-        rt_task_sleep(delay);
+        rt_task_sleep(rt_timer_ns2ticks(delay));
 	if (count)
 	    memcpy(&frame.data[0], &i, sizeof(i));
 	/* Note: sendto avoids the definiton of a receive filter list */ 
@@ -181,7 +182,7 @@ int main(int argc, char **argv)
 	    break;
 
 	case 'd':
-	    delay = strtoul(optarg, NULL, 0) * 1000000;
+	    delay = strtoul(optarg, NULL, 0) * 1000000LL;
 	    break;
 
 	case 's':
@@ -189,7 +190,7 @@ int main(int argc, char **argv)
 	    break;
 
 	case 't':
-	    timeout = strtoul(optarg, NULL, 0) * 1000000;
+	    timeout = strtoul(optarg, NULL, 0) * 1000000LL;
 	    break;
 
 	case 'T':
