@@ -67,10 +67,4 @@ struct xnarch_x8664_initstack {
 
 asmlinkage void __thread_head(void);
 
-#define xnarch_switch_clobber()		\
-	asm volatile(""				\
-		     : /* no output */		\
-		     : /* no input */		\
-		     : "cc", "memory" __SWITCH_CLOBBER_LIST)
-
 #endif /* !_XENO_ASM_X86_64_SWITCH_H */
