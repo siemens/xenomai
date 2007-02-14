@@ -87,6 +87,4 @@ static inline void xnarch_switch_threads(xnarchtcb_t *out_tcb,
 #endif /* GCC version < 3.2 */
 }
 
-#define xnarch_switch_clobber()	do { } while(0)
-
 #endif /* !_XENO_ASM_I386_SWITCH_H */
