@@ -43,6 +43,7 @@ static inline void xnarch_leave_root(xnarchtcb_t *rootcb)
 	/* Remember the preempted Linux task pointer. */
 	rootcb->user_task = rootcb->active_task = current;
 	rootcb->rspp = &current->thread.rsp;
+	rootcb->ripp = &current->thread.rip;
 	rootcb->ts_usedfpu = !!(task_thread_info(current)->status & TS_USEDFPU);
 	rootcb->cr0_ts = (read_cr0() & 8) != 0;
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
@@ -80,7 +81,7 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 			enter_lazy_tlb(oldmm, next);
 	}
 
-	xnarch_switch_threads(prev, next, prev, out_tcb->rspp, in_tcb->rspp);
+	xnarch_switch_threads(prev, next, out_tcb->rspp, in_tcb->rspp, out_tcb->ripp, in_tcb->ripp);
 
 	stts();
 }
@@ -103,6 +104,7 @@ static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
 	tcb->user_task = current;
 	tcb->active_task = NULL;
 	tcb->rspp = &tcb->rsp;
+	tcb->ripp = &tcb->rip;
 	tcb->fpup = NULL;
 	tcb->entry = NULL;
 	tcb->cookie = NULL;
@@ -119,15 +121,17 @@ asmlinkage void xnarch_thread_trampoline(xnarchtcb_t *tcb)
 	xnpod_welcome_thread(tcb->self, tcb->imask);
 	tcb->entry(tcb->cookie);
 	xnpod_delete_thread(tcb->self);
+
+	xnarch_thread_head();
 }
 
-static inline void xnarch_init_thread(xnarchtcb_t * tcb,
-				      void (*entry) (void *),
+static inline void xnarch_init_thread(xnarchtcb_t *tcb,
+				      void (*entry)(void *),
 				      void *cookie,
 				      int imask,
 				      struct xnthread *thread, char *name)
 {
-	struct xnarch_x8664_swregs *childregs;
+	struct xnarch_x8664_initstack *childregs;
 	unsigned long *rsp, flags;
 
 	/* Prepare the bootstrap stack. */
@@ -135,13 +139,16 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 	rthal_local_irq_flags_hw(flags);
 
 	rsp = (unsigned long *)((unsigned long)tcb->stackbase + tcb->stacksize -
-				sizeof(struct xnarch_x8664_swregs) - 8);
-	childregs = (struct xnarch_x8664_swregs *)rsp;
+				sizeof(struct xnarch_x8664_initstack) - 8);
+
+	childregs = (struct xnarch_x8664_initstack *)rsp;
 	childregs->rbp = 0;
 	childregs->eflags = flags & ~X86_EFLAGS_IF;
-	childregs->i_arg = (unsigned long)tcb;
+	childregs->arg = (unsigned long)tcb;
+	childregs->entry = (unsigned long)&xnarch_thread_trampoline;
 
 	tcb->rsp = (unsigned long)childregs;
+	tcb->rip = (unsigned long)&__thread_head; /* Will branch there at startup. */
 	tcb->entry = entry;
 	tcb->cookie = cookie;
 	tcb->self = thread;

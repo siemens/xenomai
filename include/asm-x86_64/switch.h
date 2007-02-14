@@ -24,40 +24,48 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
-struct 	xnarch_x8664_swregs {
+struct xnarch_x8664_initstack {
 
-	/* switch frame */
 	unsigned long rbp;
 	unsigned long eflags;
-	/* thread entry data */
-	unsigned long i_arg;
+	unsigned long arg;
+	unsigned long entry;
 };
 
-#define __SWITCH_CLOBBER_LIST  , "rbx", "r12", "r13", "r14", "r15"
+#define __SWITCH_CLOBBER_LIST  , "r12", "r13", "r14", "r15"
 
-#define xnarch_switch_threads(prev,next,last,p_rsp,n_rsp)		\
+#define xnarch_switch_threads(prev,next,p_rsp,n_rsp,p_rip,n_rip)	\
 	asm volatile("pushfq\n\t"					\
 		     "pushq	%%rbp\n\t"				\
 		     "movq	%%rsi, %%rbp\n\t"			\
 		     "movq	%%rsp, (%%rdx)\n\t"			\
+		     "movq	$1f, (%%rax)\n\t"			\
 		     "movq	(%%rcx), %%rsp\n\t"			\
+		     "pushq	(%%rbx)\n\t"				\
 		     "testq	%%rsi, %%rsi\n\t"			\
-		     "jz	1f\n\t"					\
-		     "cmpq	%%rdi, %%rsi\n\t"			\
-		     "jz	1f\n\t"					\
-		     "call	__switch_to\n\t"			\
+		     "jnz	__switch_to\n\t"			\
+		     "ret\n\t"						\
 		     "1:\n\t"						\
 		     "movq	%%rbp, %%rsi\n\t"			\
 		     "popq	%%rbp\n\t"				\
 		     "popfq\n\t"					\
-		     "testq	%%rbp, %%rbp\n\t"			\
-		     "jnz	2f\n\t"					\
-		     "popq	%%rdi\n\t"				\
-		     "jmp	xnarch_thread_trampoline\n\t"		\
-		     "2:\n\t"						\
-		     : "=a" (last)					\
-		     : "S" (next), "D" (prev), "d" (p_rsp), "c" (n_rsp)	\
+		     : /* no output */					\
+		     : "S" (next), "D" (prev), "d" (p_rsp), "c" (n_rsp), \
+		       "a" (p_rip), "b" (n_rip)	\
 		     : "memory", "cc" __SWITCH_CLOBBER_LIST)
+
+#define xnarch_thread_head()						\
+	asm volatile(".globl __thread_head\n\t"				\
+		     "__thread_head:\n\t"				\
+		     "popq	%%rbp\n\t"				\
+		     "popfq\n\t"					\
+		     "popq	%%rdi\n\t"				\
+		     "ret\n\t"						\
+		     : /* no output */					\
+		     : /* no input */					\
+		     : "cc", "memory", "rdi")
+
+asmlinkage void __thread_head(void);
 
 #define xnarch_switch_clobber()		\
 	asm volatile(""				\

@@ -29,6 +29,7 @@ static inline void xnarch_init_tcb(xnarchtcb_t * tcb)
 	tcb->user_task = NULL;
 	tcb->active_task = NULL;
 	tcb->rspp = &tcb->rsp;
+	tcb->ripp = &tcb->rip;
 	tcb->fpup = &tcb->i387;
 	tcb->is_root = 0;
 	/* Must be followed by xnarch_init_thread(). */

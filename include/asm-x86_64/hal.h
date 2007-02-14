@@ -118,9 +118,10 @@ static const char *const rthal_fault_labels[] = {
     [20] = NULL,
 };
 
+#endif /* !__cplusplus */
+
 long rthal_strncpy_from_user(char *dst,
 			     const char __user *src,
 			     long count);
-#endif /* !__cplusplus */
 
 #endif /* !_XENO_ASM_X86_64_HAL_H */
