@@ -41,14 +41,16 @@ struct task_struct;
 
 typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
 
+	unsigned long *rspp;	/* Pointer to rsp backup (&rsp or &user->thread.rsp). */
+	unsigned long *ripp;	/* Pointer to rip backup (&rip or &user->thread.rip). */
 	struct task_struct *user_task; /* Shadowed user-space task */
 	struct task_struct *active_task; /* Active user-space task */
-	unsigned long *rspp;	/* Pointer to rsp backup (&rsp or &user->thread.tsp). */
 	union i387_union *fpup;	/* &i387 or &user->thread.i387 */
 
 	/* Private context for kernel threads. */
 	union i387_union i387;
 	unsigned long rsp;
+	unsigned long rip;
 
 	/* FPU context bits for the root thread. */
 	unsigned long is_root: 1;
