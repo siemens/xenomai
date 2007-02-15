@@ -2238,7 +2238,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..492040a
+index 0000000..121e5bf
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,294 @@
@@ -2271,10 +2271,10 @@ index 0000000..492040a
 +#include <linux/threads.h>
 +#include <irq_vectors.h>
 +
-+#define IPIPE_ARCH_STRING	"1.7-01"
++#define IPIPE_ARCH_STRING	"1.7-02"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	7
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +
 +#ifdef CONFIG_X86_LOCAL_APIC
 +/* We want to cover the whole IRQ space when the APIC is enabled. */
@@ -2867,10 +2867,10 @@ index 612472a..2b2574c 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..567fa8c
+index 0000000..79b8f13
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,719 @@
+@@ -0,0 +1,716 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -3208,11 +3208,9 @@ index 0000000..567fa8c
 +
 +void fastcall __ipipe_sync_stage(unsigned long syncmask);
 +
-+int __ipipe_update_all_pinned_mm(unsigned long start, unsigned long end);
++void __ipipe_pin_range_globally(unsigned long start, unsigned long end);
 +
 +struct mm_struct;
-+
-+void __ipipe_unlink_pinned_mm(struct mm_struct *mm);
 +
 +int __ipipe_pin_range_mapping(struct mm_struct *mm,
 +			      unsigned long start, unsigned long end);
@@ -3318,7 +3316,6 @@ index 0000000..567fa8c
 +{
 +	if (__ipipe_event_monitored_p(IPIPE_EVENT_CLEANUP))
 +		__ipipe_dispatch_event(IPIPE_EVENT_CLEANUP,mm);
-+	__ipipe_unlink_pinned_mm(mm);
 +}
 +
 +/* Public interface */
@@ -3748,7 +3745,7 @@ index d0926d6..2e3d40a 100644
  
  #else
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index eafe4a7..2ecd0c4 100644
+index eafe4a7..708ae77 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
 @@ -54,6 +54,7 @@ struct sched_param {
@@ -3773,18 +3770,7 @@ index eafe4a7..2ecd0c4 100644
  
  #define __set_task_state(tsk, state_value)		\
  	do { (tsk)->state = (state_value); } while (0)
-@@ -355,6 +363,10 @@ struct mm_struct {
- 	/* aio bits */
- 	rwlock_t		ioctx_list_lock;
- 	struct kioctx		*ioctx_list;
-+
-+#ifdef CONFIG_IPIPE
-+	struct list_head pinned;
-+#endif /* CONFIG_IPIPE */
- };
- 
- struct sighand_struct {
-@@ -1015,6 +1027,9 @@ struct task_struct {
+@@ -1015,6 +1023,9 @@ struct task_struct {
  
  	atomic_t fs_excl;	/* holding fs exclusive resources */
  	struct rcu_head rcu;
@@ -3794,7 +3780,7 @@ index eafe4a7..2ecd0c4 100644
  
  	/*
  	 * cache last used pipe for splice
-@@ -1115,6 +1130,11 @@ static inline void put_task_struct(struct task_struct *t)
+@@ -1115,6 +1126,11 @@ static inline void put_task_struct(struct task_struct *t)
  #define PF_SPREAD_SLAB	0x02000000	/* Spread some slab caches over cpuset */
  #define PF_MEMPOLICY	0x10000000	/* Non-default NUMA mempolicy */
  #define PF_MUTEX_TESTER	0x20000000	/* Thread belongs to the rt mutex tester */
@@ -5650,10 +5636,10 @@ index 0000000..87611d2
 +EXPORT_SYMBOL(__ipipe_schedule_irq);
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..d729e6a
+index 0000000..eedc764
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1265 @@
+@@ -0,0 +1,1263 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -5757,12 +5743,10 @@ index 0000000..d729e6a
 +
 +
 +#ifdef CONFIG_IPIPE_TRACE_VMALLOC
-+#define IPIPE_DEFAULT_TRACE_STATE   0
 +
 +static struct ipipe_trace_path *trace_paths[NR_CPUS];
 +
 +#else /* !CONFIG_IPIPE_TRACE_VMALLOC */
-+#define IPIPE_DEFAULT_TRACE_STATE   CONFIG_IPIPE_TRACE_ENABLE_VALUE
 +
 +static struct ipipe_trace_path trace_paths[NR_CPUS][IPIPE_TRACE_PATHS] =
 +	{ [0 ... NR_CPUS-1] =
@@ -5772,7 +5756,7 @@ index 0000000..d729e6a
 +	};
 +#endif /* CONFIG_IPIPE_TRACE_VMALLOC */
 +
-+int ipipe_trace_enable = IPIPE_DEFAULT_TRACE_STATE;
++int ipipe_trace_enable = 0;
 +
 +static int active_path[NR_CPUS] =
 +	{ [0 ... NR_CPUS-1] = IPIPE_DEFAULT_ACTIVE };
@@ -6865,7 +6849,7 @@ index 0000000..d729e6a
 +#ifdef CONFIG_IPIPE_TRACE_VMALLOC
 +	int cpu, path;
 +
-+	foreach_possible_cpu(cpu) {
++	for_each_possible_cpu(cpu) {
 +		trace_paths[cpu] = vmalloc(
 +			sizeof(struct ipipe_trace_path) * IPIPE_TRACE_PATHS);
 +		if (!trace_paths) {
@@ -6880,8 +6864,8 @@ index 0000000..d729e6a
 +			trace_paths[cpu][path].end   = -1;
 +		}
 +	}
-+	ipipe_trace_enable = CONFIG_IPIPE_TRACE_ENABLE_VALUE;
 +#endif /* CONFIG_IPIPE_TRACE_VMALLOC */
++	ipipe_trace_enable = CONFIG_IPIPE_TRACE_ENABLE_VALUE;
 +
 +	/* Calculate minimum overhead of __ipipe_trace() */
 +	local_irq_disable_hw();
@@ -7372,7 +7356,7 @@ index d367910..b23d293 100644
  	bool "Kernel debugging"
  	help
 diff --git a/lib/ioremap.c b/lib/ioremap.c
-index 99fa277..792d806 100644
+index 99fa277..f2cb123 100644
 --- a/lib/ioremap.c
 +++ b/lib/ioremap.c
 @@ -11,6 +11,7 @@
@@ -7389,7 +7373,7 @@ index 99fa277..792d806 100644
  	} while (pgd++, addr = next, addr != end);
 -
 -	flush_cache_vmap(start, end);
-+	__ipipe_update_all_pinned_mm(start, end);
++	__ipipe_pin_range_globally(start, end);
 + 	flush_cache_vmap(start, end);
  
  	return err;
@@ -7489,7 +7473,7 @@ index b6c4f89..1630479 100644
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
 diff --git a/mm/memory.c b/mm/memory.c
-index 156861f..1cfd310 100644
+index 156861f..9e98200 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -50,6 +50,7 @@
@@ -7623,14 +7607,12 @@ index 156861f..1cfd310 100644
  /*
   * This routine handles present pages, when users try to write
   * to a shared page. It is done by copying the page to a new address
-@@ -2676,3 +2699,152 @@ int access_process_vm(struct task_struct *tsk, unsigned long addr, void *buf, in
+@@ -2676,3 +2699,133 @@ int access_process_vm(struct task_struct *tsk, unsigned long addr, void *buf, in
  
  	return buf - old_buf;
  }
 +
 +#ifdef CONFIG_IPIPE
-+static LIST_HEAD(pinned_mms);
-+static DECLARE_RWSEM(pinned_mms_sem);
 +
 +static inline int ipipe_pin_pte_range(struct mm_struct *mm, pmd_t *pmd,
 +				      struct vm_area_struct *vma,
@@ -7736,9 +7718,6 @@ index 156861f..1cfd310 100644
 +	}
 +
 +	read_unlock(&vmlist_lock);
-+	down_write(&pinned_mms_sem);
-+	list_add(&mm->pinned, &pinned_mms);
-+	up_write(&pinned_mms_sem);
 +
 +  done_mm:
 +	up_write(&mm->mmap_sem);
@@ -7748,33 +7727,19 @@ index 156861f..1cfd310 100644
 +
 +EXPORT_SYMBOL(ipipe_disable_ondemand_mappings);
 +
-+int __ipipe_update_all_pinned_mm(unsigned long start, unsigned long end)
++void __ipipe_pin_range_globally(unsigned long start, unsigned long end)
 +{
-+	struct mm_struct *mm;
-+	int result = 0;
++	struct task_struct *p;
 +
-+	down_read(&pinned_mms_sem);
-+	list_for_each_entry(mm, &pinned_mms, pinned) {
-+		down_write(&mm->mmap_sem);
-+		result = __ipipe_pin_range_mapping(mm, start, end);
-+		up_write(&mm->mmap_sem);
++	read_lock(&tasklist_lock);
 +
-+		if (result)
-+			break;
-+	}
-+	up_read(&pinned_mms_sem);
++	for_each_process(p)
++		if (p->mm)
++			__ipipe_pin_range_mapping(p->mm, start, end);
 +
-+	return result;
++	read_unlock(&tasklist_lock);
 +}
 +
-+void __ipipe_unlink_pinned_mm(struct mm_struct *mm)
-+{
-+	if (mm->def_flags & VM_PINNED) {
-+		down_write(&pinned_mms_sem);
-+		list_del(&mm->pinned);
-+		up_write(&pinned_mms_sem);
-+	}
-+}
 +#endif
 diff --git a/mm/mlock.c b/mm/mlock.c
 index b90c595..5d26666 100644
@@ -7790,7 +7755,7 @@ index b90c595..5d26666 100644
  		goto out;
  
 diff --git a/mm/vmalloc.c b/mm/vmalloc.c
-index 86897ee..c1c3e78 100644
+index 86897ee..8bd2434 100644
 --- a/mm/vmalloc.c
 +++ b/mm/vmalloc.c
 @@ -19,6 +19,7 @@
@@ -7805,7 +7770,7 @@ index 86897ee..c1c3e78 100644
  		if (err)
  			break;
  	} while (pgd++, addr = next, addr != end);
-+	__ipipe_update_all_pinned_mm((unsigned long) area->addr, end);
++	__ipipe_pin_range_globally((unsigned long) area->addr, end);
  	flush_cache_vmap((unsigned long) area->addr, end);
  	return err;
  }
