@@ -313,6 +313,9 @@ int rt_queue_create(RT_QUEUE *q,
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
+ * - -EBUSY is returned if an attempt is made to delete a shared queue
+ * which is still bound to a process.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -924,7 +927,8 @@ ssize_t rt_queue_read(RT_QUEUE *q, void *buf, size_t size, RTIME timeout)
 	if (rsize < 0)
 		return rsize;
 
-	size = size < rsize ? size : rsize;
+	if (size > rsize)
+		size = rsize;
 
 	if (size > 0)
 		memcpy(buf, mbuf, size);
@@ -1071,7 +1075,9 @@ int rt_queue_inquire(RT_QUEUE *q, RT_QUEUE_INFO *info)
  *
  * @param q The address of a queue descriptor to unbind from.
  *
- * @return 0 is always returned.
+ * @return 0 is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a q is invalid or not bound.
  *
  * This service can be called from:
  *
