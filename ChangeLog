@@ -1,5 +1,10 @@
 2007-02-16  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/native/queue.c (rt_queue_delete): 
+	* ksrc/skins/native/heap.c (rt_heap_delete): Do not invalidate
+	objects in case of a failure to delete them (e.g. busy state
+	encountered).
+
 	* src/skins/native/queue.c (rt_queue_unbind): Fix return value in
 	case the queue is invalid or not bound.
 	(rt_queue_delete): Do not clear the descriptor upon failing
