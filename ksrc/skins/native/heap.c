@@ -346,7 +346,7 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 
 int rt_heap_delete(RT_HEAP *heap)
 {
-	int err = 0, rc;
+	int err = 0;
 	spl_t s;
 
 	if (!xnpod_root_p())
@@ -361,13 +361,6 @@ int rt_heap_delete(RT_HEAP *heap)
 		xnlock_put_irqrestore(&nklock, s);
 		return err;
 	}
-
-	rc = xnsynch_destroy(&heap->synch_base);
-
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	if (heap->handle)
-		xnregistry_remove(heap->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	xeno_mark_deleted(heap);
 
@@ -387,14 +380,27 @@ int rt_heap_delete(RT_HEAP *heap)
 		err = xnheap_destroy_mapped(&heap->heap_base);
 	else
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-		err =
-		    xnheap_destroy(&heap->heap_base, &__heap_flush_private,
-				   NULL);
+		err = xnheap_destroy(&heap->heap_base, &__heap_flush_private, NULL);
 
-	if (rc == XNSYNCH_RESCHED)
-		/* Some task has been woken up as a result of the deletion:
-		   reschedule now. */
-		xnpod_schedule();
+	xnlock_get_irqsave(&nklock, s);
+
+	if (!err) {
+#ifdef CONFIG_XENO_OPT_REGISTRY
+		if (heap->handle)
+			xnregistry_remove(heap->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
+		if (xnsynch_destroy(&heap->synch_base) == XNSYNCH_RESCHED)
+			/* Some task has been woken up as a result of
+			   the deletion: reschedule now. */
+			xnpod_schedule();
+	} else
+		/* Deletion failed, likely due to a busy state;
+		 * restore the magic word, to re-enable the
+		 * descriptor. */
+		heap->magic = XENO_HEAP_MAGIC;
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
 }

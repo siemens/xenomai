@@ -328,7 +328,7 @@ int rt_queue_create(RT_QUEUE *q,
 
 int rt_queue_delete(RT_QUEUE *q)
 {
-	int err = 0, rc;
+	int err = 0;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -343,13 +343,6 @@ int rt_queue_delete(RT_QUEUE *q)
 		xnlock_put_irqrestore(&nklock, s);
 		return err;
 	}
-
-	rc = xnsynch_destroy(&q->synch_base);
-
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	if (q->handle)
-		xnregistry_remove(q->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	xeno_mark_deleted(q);
 
@@ -370,10 +363,25 @@ int rt_queue_delete(RT_QUEUE *q)
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 		err = xnheap_destroy(&q->bufpool, &__queue_flush_private, NULL);
 
-	if (rc == XNSYNCH_RESCHED)
-		/* Some task has been woken up as a result of the deletion:
-		   reschedule now. */
-		xnpod_schedule();
+	xnlock_get_irqsave(&nklock, s);
+
+	if (!err) {
+#ifdef CONFIG_XENO_OPT_REGISTRY
+		if (q->handle)
+			xnregistry_remove(q->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
+		if (xnsynch_destroy(&q->synch_base) == XNSYNCH_RESCHED)
+			/* Some task has been woken up as a result of
+			   the deletion: reschedule now. */
+			xnpod_schedule();
+	} else
+		/* Deletion failed, likely due to a busy state;
+		 * restore the magic word, to re-enable the
+		 * descriptor. */
+		q->magic = XENO_QUEUE_MAGIC;
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
 }
