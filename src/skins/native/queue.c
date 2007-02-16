@@ -99,11 +99,14 @@ int rt_queue_unbind(RT_QUEUE *q)
 {
 	int err = munmap(q->mapbase, q->mapsize);
 
+	if (err)	/* Most likely already deleted or unbound. */
+		return -EINVAL;
+
 	q->opaque = XN_NO_HANDLE;
 	q->mapbase = NULL;
 	q->mapsize = 0;
 
-	return err;
+	return 0;
 }
 
 int rt_queue_delete(RT_QUEUE *q)
@@ -112,19 +115,19 @@ int rt_queue_delete(RT_QUEUE *q)
 
 	err = munmap(q->mapbase, q->mapsize);
 
-	if (!err)
-		err =
-		    XENOMAI_SKINCALL1(__native_muxid, __native_queue_delete, q);
+	if (err)
+		return -EINVAL;
 
-	/* If the deletion fails, there is likely something fishy about
-	   this queue descriptor, so we'd better clean it up anyway so
-	   that it could not be further used. */
+	err = XENOMAI_SKINCALL1(__native_muxid, __native_queue_delete, q);
+
+	if (err)
+		return err;
 
 	q->opaque = XN_NO_HANDLE;
 	q->mapbase = NULL;
 	q->mapsize = 0;
 
-	return err;
+	return 0;
 }
 
 void *rt_queue_alloc(RT_QUEUE *q, size_t size)

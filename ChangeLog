@@ -1,3 +1,10 @@
+2007-02-16  Philippe Gerum  <rpm@xenomai.org>
+
+	* src/skins/native/queue.c (rt_queue_unbind): Fix return value in
+	case the queue is invalid or not bound.
+	(rt_queue_delete): Do not clear the descriptor upon failing
+	deletion; the queue might be busy, thus still valid.
+
 2007-02-15  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.{19,20}-1.7-02.
