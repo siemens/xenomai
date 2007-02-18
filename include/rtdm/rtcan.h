@@ -503,7 +503,7 @@ typedef struct can_frame {
 
     /** CAN ID of the frame
      *
-     *  See @ref CAN_xxx_FLAG "CAN ID flags" for special bits. 
+     *  See @ref CAN_xxx_FLAG "CAN ID flags" for special bits.
      */
     can_id_t     can_id;
 

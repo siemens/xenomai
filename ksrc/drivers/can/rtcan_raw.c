@@ -86,10 +86,10 @@ static void rtcan_rcv_deliver(struct rtcan_recv *recv_listener,
     cpy_size = skb->rb_frame_size;
     /* Check if socket wants to receive a timestamp */
     if (test_bit(RTCAN_GET_TIMESTAMP, &context->context_flags)) {
-	cpy_size += TIMESTAMP_SIZE;
-	frame->can_dlc |= HAS_TIMESTAMP;
+	cpy_size += RTCAN_TIMESTAMP_SIZE;
+	frame->can_dlc |= RTCAN_HAS_TIMESTAMP;
     } else
-	frame->can_dlc &= HAS_NO_TIMESTAMP;
+	frame->can_dlc &= RTCAN_HAS_NO_TIMESTAMP;
 
     /* Calculate free size in the ring buffer */
     size_free = sock->recv_head - sock->recv_tail;
@@ -137,7 +137,7 @@ void rtcan_rcv(struct rtcan_device *dev, struct rtcan_skb *skb)
 
     /* Copy timestamp to skb */
     memcpy((void *)&skb->rb_frame + skb->rb_frame_size,
-	   &timestamp, TIMESTAMP_SIZE);
+	   &timestamp, RTCAN_TIMESTAMP_SIZE);
 
     if ((frame->can_id & CAN_ERR_FLAG)) {
 	dev->err_count++;
@@ -189,7 +189,7 @@ void rtcan_tx_loopback(struct rtcan_device *dev)
     struct rtcan_rb_frame *frame = &dev->tx_skb.rb_frame;
 
     memcpy((void *)&dev->tx_skb.rb_frame + dev->tx_skb.rb_frame_size,
-	   &timestamp, TIMESTAMP_SIZE);
+	   &timestamp, RTCAN_TIMESTAMP_SIZE);
 
     while (recv_listener != NULL) {
 	dev->rx_count++;
@@ -672,7 +672,7 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
     can_dlc = recv_buf[recv_buf_index];
     recv_buf_index = (recv_buf_index + 1) & (RTCAN_RXBUF_SIZE - 1);
 
-    frame.can_dlc = can_dlc & HAS_NO_TIMESTAMP;
+    frame.can_dlc = can_dlc & RTCAN_HAS_NO_TIMESTAMP;
     payload_size = (frame.can_dlc > 8) ? 8 : frame.can_dlc;
 
 
@@ -685,9 +685,9 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
 
 
     /* Is a timestamp available and is the caller actually interested? */
-    if (msg->msg_controllen && (can_dlc & HAS_TIMESTAMP)) {
+    if (msg->msg_controllen && (can_dlc & RTCAN_HAS_TIMESTAMP)) {
         /* Copy timestamp */
-        MEMCPY_FROM_RING_BUF(&timestamp, TIMESTAMP_SIZE);
+        MEMCPY_FROM_RING_BUF(&timestamp, RTCAN_TIMESTAMP_SIZE);
     }
 
 
@@ -741,12 +741,12 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
 
         /* Copy timestamp if existent and wanted */
         if (msg->msg_controllen) {
-            if (can_dlc & HAS_TIMESTAMP) {
+            if (can_dlc & RTCAN_HAS_TIMESTAMP) {
                 if (rtdm_copy_to_user(user_info, msg->msg_control,
-                                      &timestamp, TIMESTAMP_SIZE))
+                                      &timestamp, RTCAN_TIMESTAMP_SIZE))
                     return -EFAULT;
 
-                msg->msg_controllen = TIMESTAMP_SIZE;
+                msg->msg_controllen = RTCAN_TIMESTAMP_SIZE;
             } else
                 msg->msg_controllen = 0;
         }
@@ -768,9 +768,9 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
 
         /* Copy timestamp if existent and wanted */
         if (msg->msg_controllen) {
-            if (can_dlc & HAS_TIMESTAMP) {
-                memcpy(msg->msg_control, &timestamp, TIMESTAMP_SIZE);
-                msg->msg_controllen = TIMESTAMP_SIZE;
+            if (can_dlc & RTCAN_HAS_TIMESTAMP) {
+                memcpy(msg->msg_control, &timestamp, RTCAN_TIMESTAMP_SIZE);
+                msg->msg_controllen = RTCAN_TIMESTAMP_SIZE;
             } else
                 msg->msg_controllen = 0;
         }
