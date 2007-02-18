@@ -3,6 +3,9 @@
 	* include/rtdm/rtcan.h: Align can_frame::data appropriately to freeze
 	the structure layout.
 
+	* include/rtdm/rtdm_driver.h, ksrc/skins/rtdm/drvlib.c: Make RTDM IPC
+	object setup atomic in order to support in-place re-initialisation.
+
 2007-02-18  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* ksrc/drivers/can/rtcan_raw.c, ksrc/drivers/can/rtcan_raw_filter.c,
