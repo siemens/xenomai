@@ -499,7 +499,7 @@ typedef struct can_frame {
     uint8_t      can_dlc;
 
     /** Payload data bytes */
-    uint8_t      data[8];
+    uint8_t      data[8] __attribute__ ((aligned(8)));
 } can_frame_t;
 
 
