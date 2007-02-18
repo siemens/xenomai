@@ -405,11 +405,7 @@ RTHAL_DECLARE_DOMAIN(rthal_domain_entry);
 int rthal_arch_init(void)
 {
 #ifdef CONFIG_ALTIVEC
-#ifdef CONFIG_PPC64
-    if (!(cur_cpu_spec->cpu_features & CPU_FTR_ALTIVEC)) {
-#else /* !CONFIG_PPC64 */
-    if (!(cur_cpu_spec[0]->cpu_features & CPU_FTR_ALTIVEC)) {
-#endif /* CONFIG_PPC64 */
+    if (!cpu_has_feature(CPU_FTR_ALTIVEC)) {
         printk
             ("Xenomai: ALTIVEC support enabled in kernel but no hardware found.\n"
              "         Disable CONFIG_ALTIVEC in the kernel configuration.\n");
