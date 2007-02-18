@@ -1,5 +1,8 @@
 2007-02-18  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/arm/patches: Upgrade to 2.6.{14,15}-1.5-06, and
+	2.6.19-1.6-02.
+
 	* ksrc/arch/powerpc/hal.c (rthal_arch_init): Use cpu_has_feature()
 	instead of dereferencing cur_cpu_spec directly.
 
