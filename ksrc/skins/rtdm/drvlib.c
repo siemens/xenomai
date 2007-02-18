@@ -523,7 +523,6 @@ EXPORT_SYMBOL(rtdm_toseq_init);
  * @{
  */
 
-#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Initialise an event
  *
@@ -540,8 +539,25 @@ EXPORT_SYMBOL(rtdm_toseq_init);
  *
  * Rescheduling: never.
  */
-void rtdm_event_init(rtdm_event_t *event, unsigned long pending);
+void rtdm_event_init(rtdm_event_t *event, unsigned long pending)
+{
+    spl_t s;
 
+
+    /* Make atomic for re-initialisation support */
+    xnlock_get_irqsave(&nklock, s);
+
+    xnsynch_init(&event->synch_base, XNSYNCH_PRIO);
+    if (pending)
+        xnsynch_set_flags(&event->synch_base, RTDM_EVENT_PENDING);
+
+    xnlock_put_irqrestore(&nklock, s);
+}
+
+EXPORT_SYMBOL(rtdm_event_init);
+
+
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Destroy an event
  *
@@ -721,9 +737,9 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
             xnsynch_sleep_on(&event->synch_base, *timeout_seq, XN_ABSOLUTE);
         } else {
             /* infinite or relative timeout */
-		xnsynch_sleep_on(&event->synch_base,
-				 xntbase_ns2ticks(xnthread_time_base(thread), timeout),
-				 XN_RELATIVE);
+            xnsynch_sleep_on(&event->synch_base,
+                    xntbase_ns2ticks(xnthread_time_base(thread), timeout),
+                    XN_RELATIVE);
         }
 
         if (likely(!xnthread_test_info(thread, XNTIMEO|XNRMID|XNBREAK)))
@@ -783,7 +799,6 @@ EXPORT_SYMBOL(rtdm_event_clear);
  * @{
  */
 
-#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Initialise a semaphore
  *
@@ -800,8 +815,24 @@ EXPORT_SYMBOL(rtdm_event_clear);
  *
  * Rescheduling: never.
  */
-void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value);
+void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value)
+{
+    spl_t s;
 
+
+    /* Make atomic for re-initialisation support */
+    xnlock_get_irqsave(&nklock, s);
+
+    sem->value = value;
+    xnsynch_init(&sem->synch_base, XNSYNCH_PRIO);
+
+    xnlock_put_irqrestore(&nklock, s);
+}
+
+EXPORT_SYMBOL(rtdm_sem_init);
+
+
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Destroy a semaphore
  *
@@ -934,7 +965,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
         }
     }
 
-     xnlock_put_irqrestore(&nklock, s);
+    xnlock_put_irqrestore(&nklock, s);
 
     return err;
 }
@@ -986,7 +1017,6 @@ EXPORT_SYMBOL(rtdm_sem_up);
  * @{
  */
 
-#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Initialise a mutex
  *
@@ -1006,8 +1036,23 @@ EXPORT_SYMBOL(rtdm_sem_up);
  *
  * Rescheduling: never.
  */
-void rtdm_mutex_init(rtdm_mutex_t *mutex);
+void rtdm_mutex_init(rtdm_mutex_t *mutex)
+{
+    spl_t s;
 
+
+    /* Make atomic for re-initialisation support */
+    xnlock_get_irqsave(&nklock, s);
+
+    xnsynch_init(&mutex->synch_base, XNSYNCH_PRIO|XNSYNCH_PIP);
+
+    xnlock_put_irqrestore(&nklock, s);
+}
+
+EXPORT_SYMBOL(rtdm_mutex_init);
+
+
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Destroy a mutex
  *
