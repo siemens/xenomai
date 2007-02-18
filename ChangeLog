@@ -8,6 +8,11 @@
 	TX semaphore, the device specific start routine is only called when
 	the device is not operating.
 
+	* ksrc/drivers/can/rtcan_raw.c, ksrc/drivers/can/rtcan_socket.h: Add
+	prefix RTCAN_ to TIMESTAMP_SIZE, HAS_TIMESTAMP and HAS_NO_TIMESTAMP
+	to avoid name clashes, e.g. TIMESTAMP_SIZE is used by the kernel
+	starting with 2.6.20.
+
 2007-02-18  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/rtdm/rtcan.h: Align can_frame::data appropriately to freeze

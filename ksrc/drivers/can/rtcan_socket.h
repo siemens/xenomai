@@ -38,18 +38,17 @@
 
 
 /* This MUST BE 2^N */
-#define RTCAN_RXBUF_SIZE    CONFIG_XENO_DRIVERS_CAN_RXBUF_SIZE
+#define RTCAN_RXBUF_SIZE          CONFIG_XENO_DRIVERS_CAN_RXBUF_SIZE
 
 /* Size of timestamp */
-#define TIMESTAMP_SIZE      sizeof(nanosecs_abs_t)
-
+#define RTCAN_TIMESTAMP_SIZE      sizeof(nanosecs_abs_t)
 
 /* Bit in the can_dlc member of struct ring_buffer_frame used to indicate
  * whether a frame has got a timestamp or not */
-#define HAS_TIMESTAMP       0x80
+#define RTCAN_HAS_TIMESTAMP       0x80
 
-/* Mask for clearing bit HAS_TIMESTAMP */
-#define HAS_NO_TIMESTAMP    0x7F
+/* Mask for clearing bit RTCAN_HAS_TIMESTAMP */
+#define RTCAN_HAS_NO_TIMESTAMP    0x7F
 
 #define RTCAN_SOCK_UNBOUND        -1
 #define RTCAN_FLIST_NO_FILTER     (void *)-1
@@ -75,7 +74,7 @@ struct rtcan_rb_frame {
     unsigned char       can_ifindex;
 
     /* DLC (between 0 and 15) and mark if frame has got a timestamp. The
-     * existence of a timestamp is indicated by the HAS_TIMESTAMP 
+     * existence of a timestamp is indicated by the RTCAN_HAS_TIMESTAMP
      * bit. */
     unsigned char       can_dlc;
 
@@ -83,7 +82,7 @@ struct rtcan_rb_frame {
     uint8_t             data[8];
 
     /* High precision timestamp indicating when the frame was received.
-     * Exists when HAS_TIMESTAMP bit in can_dlc is set. */
+     * Exists when RTCAN_HAS_TIMESTAMP bit in can_dlc is set. */
     nanosecs_abs_t      timestamp;
 
 } __attribute__ ((packed));
@@ -91,7 +90,7 @@ struct rtcan_rb_frame {
 
 /* Size of struct rtcan_rb_frame without any data bytes and timestamp */
 #define EMPTY_RB_FRAME_SIZE \
-    sizeof(struct rtcan_rb_frame) - 8 - TIMESTAMP_SIZE
+    sizeof(struct rtcan_rb_frame) - 8 - RTCAN_TIMESTAMP_SIZE
 
 
 /*
