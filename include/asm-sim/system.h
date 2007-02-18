@@ -78,6 +78,9 @@ typedef unsigned long xnlock_t;
 #define xnlock_clear_irqoff(lock)      mvm_set_irqmask(-1)
 #define xnlock_clear_irqon(lock)       mvm_set_irqmask(0)
 
+#define DECLARE_XNLOCK(lock)
+#define DECLARE_PRIVATE_XNLOCK(lock)
+
 #define XNARCH_NR_CPUS              1
 
 /* Should be equal to the value used for creating the mvmtimer object (mvm_start_timer). */
