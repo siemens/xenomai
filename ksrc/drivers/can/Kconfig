@@ -18,7 +18,7 @@ config XENO_DRIVERS_CAN_DEBUG
 	getting started and analysing potential problems. For production
 	purposes, it should be switched off (for the sake of latency).
 
-config XENO_DRIVERS_CAN_TX_LOOPBACK
+config XENO_DRIVERS_CAN_LOOPBACK
 	depends on XENO_DRIVERS_CAN
 	bool "Enable TX loopback to local sockets"
 	default n

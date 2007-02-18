@@ -9,7 +9,7 @@ dep_tristate 'RT-Socket-CAN, CAN raw socket interface' CONFIG_XENO_DRIVERS_CAN $
 
 if [ "$CONFIG_XENO_DRIVERS_CAN" != "n" ]; then 
    bool 'Enable debug output' CONFIG_XENO_DRIVERS_CAN_DEBUG
-   bool 'Enable TX loopback to local sockets' CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK
+   bool 'Enable TX loopback to local sockets' CONFIG_XENO_DRIVERS_CAN_LOOPBACK
    int 'Size of receive ring buffers (must be 2^N)' CONFIG_XENO_DRIVERS_CAN_RXBUF_SIZE 1024
    int 'Maximum number of devices' CONFIG_XENO_DRIVERS_CAN_MAX_DEVICES 4
    int 'Maximum number of receive filters per device' CONFIG_XENO_DRIVERS_CAN_MAX_RECEIVERS 16

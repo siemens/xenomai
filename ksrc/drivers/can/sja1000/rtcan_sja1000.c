@@ -312,7 +312,7 @@ static int rtcan_sja_interrupt(rtdm_irq_t *irq_handle)
             /* Wake up a sender */
             rtdm_sem_up(&dev->tx_sem);
 
-	    if (rtcan_tx_loopback_pending(dev)) {
+	    if (rtcan_loopback_pending(dev)) {
 
 		if (recv_lock_free) {
 		    recv_lock_free = 0;
@@ -320,7 +320,7 @@ static int rtcan_sja_interrupt(rtdm_irq_t *irq_handle)
 		    rtdm_lock_get(&rtcan_socket_lock);
 		}
 
-		rtcan_tx_loopback(dev);
+		rtcan_loopback(dev);
 	    }
 	}
 

@@ -78,8 +78,8 @@ static int rtcan_virt_start_xmit(struct rtcan_device *tx_dev,
 			if (tx_dev != rx_dev) {
 				rx_frame->can_ifindex = rx_dev->ifindex;
 				rtcan_rcv(rx_dev, &skb);
-			} else if (rtcan_tx_loopback_pending(tx_dev))
-				rtcan_tx_loopback(tx_dev);
+			} else if (rtcan_loopback_pending(tx_dev))
+				rtcan_loopback(tx_dev);
 		}
 	}
 	rtdm_lock_put(&rtcan_socket_lock);

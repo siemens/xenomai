@@ -160,7 +160,7 @@ void rtcan_rcv(struct rtcan_device *dev, struct rtcan_skb *skb)
     }
 }
 
-#ifdef CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK
+#ifdef CONFIG_XENO_DRIVERS_CAN_LOOPBACK
 
 void rtcan_tx_push(struct rtcan_device *dev, struct rtcan_socket *sock,
 		   can_frame_t *frame)
@@ -181,7 +181,7 @@ void rtcan_tx_push(struct rtcan_device *dev, struct rtcan_socket *sock,
     dev->tx_socket = sock;
 }
 
-void rtcan_tx_loopback(struct rtcan_device *dev)
+void rtcan_loopback(struct rtcan_device *dev)
 {
     nanosecs_abs_t timestamp = rtdm_clock_read();
     /* Entry in reception list, begin with head */
@@ -203,9 +203,9 @@ void rtcan_tx_loopback(struct rtcan_device *dev)
     dev->tx_socket = NULL;
 }
 
-EXPORT_SYMBOL_GPL(rtcan_tx_loopback);
+EXPORT_SYMBOL_GPL(rtcan_loopback);
 
-#endif /* CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK */
+#endif /* CONFIG_XENO_DRIVERS_CAN_LOOPBACK */
 
 
 int rtcan_raw_socket(struct rtdm_dev_context *context,
@@ -383,7 +383,7 @@ static int rtcan_raw_setsockopt(struct rtdm_dev_context *context,
 
 	break;
 
-    case CAN_RAW_TX_LOOPBACK:
+    case CAN_RAW_LOOPBACK:
 
 	if (so->optlen != sizeof(int))
 	    return -EINVAL;
@@ -395,8 +395,8 @@ static int rtcan_raw_setsockopt(struct rtdm_dev_context *context,
 	} else
 	    memcpy(&val, so->optval, so->optlen);
 
-#ifdef CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK
-	sock->tx_loopback = val;
+#ifdef CONFIG_XENO_DRIVERS_CAN_LOOPBACK
+	sock->loopback = val;
 #else
 	if (val)
 	    return -EOPNOTSUPP;
@@ -957,7 +957,7 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
 
 
     /* Push message onto stack for loopback when TX done */
-    if (rtcan_tx_loopback_enabled(sock))
+    if (rtcan_loopback_enabled(sock))
 	rtcan_tx_push(dev, sock, frame);
 
     rtdm_lock_get_irqsave(&dev->device_lock, lock_ctx);

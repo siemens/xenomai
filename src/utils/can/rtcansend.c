@@ -28,7 +28,7 @@ static void print_usage(char *prg)
 	    " -d, --delay=MS        delay in ms (default = 1ms)\n"
 	    " -s, --send            use send instead of sendto\n"
 	    " -t, --timeout=MS      timeout in ms\n"
-	    " -T, --tx-loopback=0|1 switch TX loopback off or on\n"
+	    " -L, --loopback=0|1    switch local loopback off or on\n"
 	    " -v, --verbose         be verbose\n"
 	    " -p, --print=MODULO    print every MODULO message\n"
 	    " -h, --help            this help\n",
@@ -40,7 +40,7 @@ RT_TASK rt_task_desc;
 
 static int s=-1, dlc=0, rtr=0, extended=0, verbose=0, loops=1;
 static SRTIME delay=1000000;
-static int count=0, print=1, use_send=0, tx_loopback=-1;
+static int count=0, print=1, use_send=0, loopback=-1;
 static nanosecs_rel_t timeout = 0;
 static struct can_frame frame;
 static struct sockaddr_can to_addr;
@@ -81,7 +81,7 @@ void rt_task(void)
         rt_task_sleep(rt_timer_ns2ticks(delay));
 	if (count)
 	    memcpy(&frame.data[0], &i, sizeof(i));
-	/* Note: sendto avoids the definiton of a receive filter list */ 
+	/* Note: sendto avoids the definiton of a receive filter list */
 	if (use_send)
 	    ret = rt_dev_send(s, (void *)&frame, sizeof(can_frame_t), 0);
 	else
@@ -136,7 +136,7 @@ int main(int argc, char **argv)
 	{ "delay", required_argument, 0, 'd'},
 	{ "send", no_argument, 0, 's'},
 	{ "timeout", required_argument, 0, 't'},
-	{ "tx-loopbcak", required_argument, 0, 'T'},
+	{ "loopback", required_argument, 0, 'L'},
 	{ 0, 0, 0, 0},
     };
 
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
 
     frame.can_id = 1;
 
-    while ((opt = getopt_long(argc, argv, "hvi:l:red:t:cp:sT:",
+    while ((opt = getopt_long(argc, argv, "hvi:l:red:t:cp:sL:",
 			      long_options, NULL)) != -1) {
 	switch (opt) {
 	case 'h':
@@ -193,8 +193,8 @@ int main(int argc, char **argv)
 	    timeout = strtoul(optarg, NULL, 0) * 1000000LL;
 	    break;
 
-	case 'T':
-	    tx_loopback = strtoul(optarg, NULL, 0);
+	case 'L':
+	    loopback = strtoul(optarg, NULL, 0);
 	    break;
 
 	default:
@@ -223,15 +223,15 @@ int main(int argc, char **argv)
     }
     s = ret;
 
-    if (tx_loopback >= 0) {
-	ret = rt_dev_setsockopt(s, SOL_CAN_RAW, CAN_RAW_TX_LOOPBACK,
-				&tx_loopback, sizeof(tx_loopback));
+    if (loopback >= 0) {
+	ret = rt_dev_setsockopt(s, SOL_CAN_RAW, CAN_RAW_LOOPBACK,
+				&loopback, sizeof(loopback));
 	if (ret < 0) {
 	    fprintf(stderr, "rt_dev_setsockopt: %s\n", strerror(-ret));
 	    goto failure;
 	}
 	if (verbose)
-	    printf("Using tx_loopback=%d\n", tx_loopback);
+	    printf("Using loopback=%d\n", loopback);
     }
 
     strncpy(ifr.ifr_name, argv[optind], IFNAMSIZ);
