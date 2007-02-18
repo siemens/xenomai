@@ -1,3 +1,16 @@
+2007-02-18  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/rtdm/rtcan.h: Align can_frame::data appropriately to freeze
+	the structure layout.
+
+2007-02-18  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* ksrc/drivers/can/rtcan_raw.c, ksrc/drivers/can/rtcan_raw_filter.c,
+	ksrc/drivers/can/rtcan_module.c, include/rtdm/rtcan.h: The CAN filter
+	definition can now be inverted with the can_id flag CAN_INV_FILTER.
+	Use CAN_EFF_FLAG and CAN_RTR_FLAG transparently in filter ID and mask,
+	aligning with Linux Socket-CAN project.
+
 2007-02-18  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.{14,15}-1.5-06, and
@@ -24,7 +37,7 @@
 
 2007-02-14  Jan Kiszka  <jan.kiszka@web.de>
 
-	* src/utils/can/rtcansend.c: Fix delays in periodic mode, enhance                                                   
+	* src/utils/can/rtcansend.c: Fix delays in periodic mode, enhance
 	range of supported delays.
 
 2007-02-12  Philippe Gerum  <rpm@xenomai.org>
