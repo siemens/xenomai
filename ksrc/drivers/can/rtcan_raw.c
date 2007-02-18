@@ -67,7 +67,10 @@ static struct rtdm_device rtcan_proto_raw_dev;
 
 static inline int rtcan_accept_msg(uint32_t can_id, can_filter_t *filter)
 {
-    return ((can_id & filter->can_mask) == filter->can_id);
+    if ((filter->can_mask & CAN_INV_FILTER))
+	return ((can_id & filter->can_mask) != filter->can_id);
+    else
+	return ((can_id & filter->can_mask) == filter->can_id);
 }
 
 

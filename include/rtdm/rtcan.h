@@ -289,9 +289,15 @@ typedef can_id_t can_err_mask_t;
  * @anchor CAN_xxx_FLAG @name CAN ID flags
  * Flags within a CAN ID indicating special CAN frame attributes
  * @{ */
-#define CAN_EFF_FLAG  0x80000000 /**< extended frame           */
-#define CAN_RTR_FLAG  0x40000000 /**< remote transmission flag */
-#define CAN_ERR_FLAG  0x20000000 /**< error frame (see @ref Errors) */
+/** Extended frame */
+#define CAN_EFF_FLAG  0x80000000
+/** Remote transmission frame */
+#define CAN_RTR_FLAG  0x40000000
+/** Error frame (see @ref Errors), not valid in struct can_filter */
+#define CAN_ERR_FLAG  0x20000000
+/** Invert CAN filter definition, only valid in struct can_filter */
+#define CAN_INV_FILTER CAN_ERR_FLAG
+
 /** @} */
 
 
@@ -446,23 +452,30 @@ typedef enum CAN_STATE can_state_t;
  *
  * This filter works as follows:
  * A received CAN ID is AND'ed bitwise with @c can_mask and then compared to
- * @c can_id. If this comparison is true the message will be received by the
- * socket.
+ * @c can_id. This also includes the @ref CAN_EFF_FLAG and @ref CAN_RTR_FLAG
+ * of @ref CAN_xxx_FLAG. If this comparison is true, the message will be
+ * received by the socket. The logic can be inverted with the @c can_id flag
+ * @ref CAN_INV_FILTER :
  *
- * Multiple filters can be arranged in a filter list and set with 
- * @ref Sockopts. If one of these filters matches a CAN ID upon reception 
+ * @code
+ * if (can_id & CAN_INV_FILTER) {
+ *    if ((received_can_id & can_mask) != (can_id & ~CAN_INV_FILTER))
+ *       accept-message;
+ * } else {
+ *    if ((received_can_id & can_mask) == can_id)
+ *       accept-message;
+ * }
+ * @endcode
+ *
+ * Multiple filters can be arranged in a filter list and set with
+ * @ref Sockopts. If one of these filters matches a CAN ID upon reception
  * of a CAN frame, this frame is accepted.
  *
- * @note Only @ref CAN_EFF_FLAG of @ref CAN_xxx_FLAG "CAN ID flags" is
- * valid for @c can_id and none for @c can_mask. This means that the RTR bit
- * is not taken into account while filtering messages.
- *
- * Extended IDs are received only if @ref CAN_EFF_FLAG is set in
- * @c can_id. If it is cleared only standard IDs are accepted.
  */
 typedef struct can_filter {
 
-    /** CAN ID which must match with incoming IDs after passing the mask */
+    /** CAN ID which must match with incoming IDs after passing the mask.
+     *  The filter logic can be inverted with the flag @ref CAN_INV_FILTER. */
     uint32_t    can_id;
 
     /** Mask which is applied to incoming IDs. See @ref CAN_xxx_MASK
@@ -470,12 +483,11 @@ typedef struct can_filter {
     uint32_t    can_mask;
 } can_filter_t;
 
-
 /**
  * Socket address structure for the CAN address family
  */
 struct sockaddr_can {
-    /** CAN address family, must be @c AF_CAN */    
+    /** CAN address family, must be @c AF_CAN */
     sa_family_t  can_family;
     /** Interface index of CAN controller. See @ref SIOCGIFINDEX. */
     int          can_ifindex;
