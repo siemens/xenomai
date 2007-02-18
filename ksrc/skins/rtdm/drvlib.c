@@ -528,7 +528,6 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout);
  * @{
  */
 
-#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Initialise an event
  *
@@ -545,8 +544,25 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout);
  *
  * Rescheduling: never.
  */
-void rtdm_event_init(rtdm_event_t *event, unsigned long pending);
+void rtdm_event_init(rtdm_event_t *event, unsigned long pending)
+{
+    spl_t s;
 
+
+    /* Make atomic for re-initialisation support */
+    xnlock_get_irqsave(&nklock, s);
+
+    xnsynch_init(&event->synch_base, XNSYNCH_PRIO);
+    if (pending)
+        xnsynch_set_flags(&event->synch_base, RTDM_EVENT_PENDING);
+
+    xnlock_put_irqrestore(&nklock, s);
+}
+
+EXPORT_SYMBOL(rtdm_event_init);
+
+
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Destroy an event
  *
@@ -791,7 +807,6 @@ EXPORT_SYMBOL(rtdm_event_clear);
  * @{
  */
 
-#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Initialise a semaphore
  *
@@ -808,8 +823,24 @@ EXPORT_SYMBOL(rtdm_event_clear);
  *
  * Rescheduling: never.
  */
-void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value);
+void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value)
+{
+    spl_t s;
 
+
+    /* Make atomic for re-initialisation support */
+    xnlock_get_irqsave(&nklock, s);
+
+    sem->value = value;
+    xnsynch_init(&sem->synch_base, XNSYNCH_PRIO);
+
+    xnlock_put_irqrestore(&nklock, s);
+}
+
+EXPORT_SYMBOL(rtdm_sem_init);
+
+
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Destroy a semaphore
  *
@@ -998,7 +1029,6 @@ EXPORT_SYMBOL(rtdm_sem_up);
  * @{
  */
 
-#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Initialise a mutex
  *
@@ -1018,8 +1048,23 @@ EXPORT_SYMBOL(rtdm_sem_up);
  *
  * Rescheduling: never.
  */
-void rtdm_mutex_init(rtdm_mutex_t *mutex);
+void rtdm_mutex_init(rtdm_mutex_t *mutex)
+{
+    spl_t s;
 
+
+    /* Make atomic for re-initialisation support */
+    xnlock_get_irqsave(&nklock, s);
+
+    xnsynch_init(&mutex->synch_base, XNSYNCH_PRIO|XNSYNCH_PIP);
+
+    xnlock_put_irqrestore(&nklock, s);
+}
+
+EXPORT_SYMBOL(rtdm_mutex_init);
+
+
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Destroy a mutex
  *

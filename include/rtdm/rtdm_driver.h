@@ -933,33 +933,27 @@ typedef struct {
 
 #define RTDM_EVENT_PENDING          XNSYNCH_SPARE1
 
-#ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
-static inline void rtdm_event_init(rtdm_event_t *event, unsigned long pending)
-{
-    xnsynch_init(&event->synch_base, XNSYNCH_PRIO);
-    if (pending)
-        xnsynch_set_flags(&event->synch_base, RTDM_EVENT_PENDING);
-}
-
-void _rtdm_synch_flush(xnsynch_t *synch, unsigned long reason);
-
-static inline void rtdm_event_destroy(rtdm_event_t *event)
-{
-    _rtdm_synch_flush(&event->synch_base, XNRMID);
-}
-
-static inline void rtdm_event_pulse(rtdm_event_t *event)
-{
-    _rtdm_synch_flush(&event->synch_base, 0);
-}
-#endif /* !DOXYGEN_CPP */
-
+void rtdm_event_init(rtdm_event_t *event, unsigned long pending);
 int rtdm_event_wait(rtdm_event_t *event);
 int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
                          rtdm_toseq_t *timeout_seq);
 void rtdm_event_signal(rtdm_event_t *event);
 
 void rtdm_event_clear(rtdm_event_t *event);
+
+#ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
+void _rtdm_synch_flush(xnsynch_t *synch, unsigned long reason);
+
+static inline void rtdm_event_pulse(rtdm_event_t *event)
+{
+    _rtdm_synch_flush(&event->synch_base, 0);
+}
+
+static inline void rtdm_event_destroy(rtdm_event_t *event)
+{
+    _rtdm_synch_flush(&event->synch_base, XNRMID);
+}
+#endif /* !DOXYGEN_CPP */
 
 
 /* --- semaphore services --- */
@@ -969,23 +963,18 @@ typedef struct {
     xnsynch_t                       synch_base;
 } rtdm_sem_t;
 
-#ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
-static inline void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value)
-{
-    sem->value = value;
-    xnsynch_init(&sem->synch_base, XNSYNCH_PRIO);
-}
+void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value);
+int rtdm_sem_down(rtdm_sem_t *sem);
+int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
+                       rtdm_toseq_t *timeout_seq);
+void rtdm_sem_up(rtdm_sem_t *sem);
 
+#ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline void rtdm_sem_destroy(rtdm_sem_t *sem)
 {
     _rtdm_synch_flush(&sem->synch_base, XNRMID);
 }
 #endif /* !DOXYGEN_CPP */
-
-int rtdm_sem_down(rtdm_sem_t *sem);
-int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
-                       rtdm_toseq_t *timeout_seq);
-void rtdm_sem_up(rtdm_sem_t *sem);
 
 
 /* --- mutex services --- */
@@ -994,17 +983,12 @@ typedef struct {
     xnsynch_t                       synch_base;
 } rtdm_mutex_t;
 
+void rtdm_mutex_init(rtdm_mutex_t *mutex);
+int rtdm_mutex_lock(rtdm_mutex_t *mutex);
+int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
+                         rtdm_toseq_t *timeout_seq);
+
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
-static inline void rtdm_mutex_init(rtdm_mutex_t *mutex)
-{
-    xnsynch_init(&mutex->synch_base, XNSYNCH_PRIO|XNSYNCH_PIP);
-}
-
-static inline void rtdm_mutex_destroy(rtdm_mutex_t *mutex)
-{
-    _rtdm_synch_flush(&mutex->synch_base, XNRMID);
-}
-
 static inline void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
 {
     XENO_ASSERT(RTDM, !xnpod_asynch_p(), return;);
@@ -1012,11 +996,12 @@ static inline void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
     if (unlikely(xnsynch_wakeup_one_sleeper(&mutex->synch_base) != NULL))
         xnpod_schedule();
 }
-#endif /* !DOXYGEN_CPP */
 
-int rtdm_mutex_lock(rtdm_mutex_t *mutex);
-int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
-                         rtdm_toseq_t *timeout_seq);
+static inline void rtdm_mutex_destroy(rtdm_mutex_t *mutex)
+{
+    _rtdm_synch_flush(&mutex->synch_base, XNRMID);
+}
+#endif /* !DOXYGEN_CPP */
 
 
 /* --- utility functions --- */
