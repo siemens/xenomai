@@ -14,6 +14,14 @@
 	Use CAN_EFF_FLAG and CAN_RTR_FLAG transparently in filter ID and mask,
 	aligning with Linux Socket-CAN project.
 
+	* xenomai/ksrc/drivers/can/rtcan_raw.c,
+	xenomai/ksrc/drivers/can/rtcan_raw_dev.c
+	xenomai/ksrc/drivers/can/rtcan_virt.c: The TX semaphore must be in
+	a destroyed state for proper operation. This was not the case for
+	the "virt" driver. Furthermore, to avoid re-initialization of the
+	TX semaphore, the device specific start routine is only called when
+	the device is not operating.
+
 2007-02-18  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.{14,15}-1.5-06, and

@@ -74,8 +74,8 @@ static inline int rtcan_accept_msg(uint32_t can_id, can_filter_t *filter)
 }
 
 
-static void rtcan_rcv_deliver(struct rtcan_recv *recv_listener, 
-				     struct rtcan_skb *skb)
+static void rtcan_rcv_deliver(struct rtcan_recv *recv_listener,
+			      struct rtcan_skb *skb)
 {
     int size_free;
     size_t cpy_size, first_part_size;
@@ -90,22 +90,20 @@ static void rtcan_rcv_deliver(struct rtcan_recv *recv_listener,
 	frame->can_dlc |= HAS_TIMESTAMP;
     } else
 	frame->can_dlc &= HAS_NO_TIMESTAMP;
-    
+
     /* Calculate free size in the ring buffer */
     size_free = sock->recv_head - sock->recv_tail;
     if (size_free <= 0)
 	size_free += RTCAN_RXBUF_SIZE;
-    
-    
+
     /* Test if ring buffer has enough space. */
     if (size_free > cpy_size) {
-	
 	/* Check if we must wrap around the end of buffer */
 	if ((sock->recv_tail + cpy_size) > RTCAN_RXBUF_SIZE) {
 	    /* Wrap around: Two memcpy operations */
-	    
+
 	    first_part_size = RTCAN_RXBUF_SIZE - sock->recv_tail;
-	    
+
 	    memcpy(&sock->recv_buf[sock->recv_tail], (void *)frame,
 		   first_part_size);
 	    memcpy(&sock->recv_buf[0], (void *)frame +
@@ -113,12 +111,11 @@ static void rtcan_rcv_deliver(struct rtcan_recv *recv_listener,
 	} else
 	    memcpy(&sock->recv_buf[sock->recv_tail], (void *)frame,
 		   cpy_size);
-	
+
 	/* Adjust tail */
 	sock->recv_tail = (sock->recv_tail + cpy_size) &
 	    (RTCAN_RXBUF_SIZE - 1);
-	
-	
+
 	/*Notify the delivery of the message */
 	rtdm_sem_up(&sock->recv_sem);
 	
@@ -217,7 +214,7 @@ int rtcan_raw_socket(struct rtdm_dev_context *context,
     /* Only CAN_PROTO_RAW is supported */
     if (protocol != CAN_PROTO_RAW && protocol != 0)
         return -EPROTONOSUPPORT;
-    
+
     rtcan_socket_init(context);
 
     return 0;
@@ -434,7 +431,7 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
 		return -EFAULT;
 
 	    setaddr = &setaddr_buf;
-	    
+
 	    /* Check size */
 	    if (setaddr->addrlen != sizeof(struct sockaddr_can))
 		return -EINVAL;
@@ -967,20 +964,22 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
 
     /* Controller should be operating */
     if (!CAN_STATE_OPERATING(dev->state)) {
+	if (dev->state == CAN_STATE_SLEEPING) {
+	    ret = -ECOMM;
+	    rtdm_lock_put_irqrestore(&dev->device_lock, lock_ctx);
+	    rtdm_sem_up(&dev->tx_sem);
+	    goto send_out1;
+	}
         ret = -ENETDOWN;
-        goto send_out2;
-    } else if (dev->state == CAN_STATE_SLEEPING) {
-        ret = -ECOMM;
-        rtdm_sem_up(&dev->tx_sem);
         goto send_out2;
     }
 
     dev->tx_count++;
-    if ((ret = dev->hard_start_xmit(dev, frame)) != 0)
-	goto send_out2;
+    ret = dev->hard_start_xmit(dev, frame);
 
     /* Return number of bytes sent upon successful completion */
-    ret = sizeof(can_frame_t);
+    if (ret == 0)
+	ret = sizeof(can_frame_t);
 
  send_out2:
     rtdm_lock_put_irqrestore(&dev->device_lock, lock_ctx);
