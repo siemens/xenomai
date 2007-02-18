@@ -193,7 +193,8 @@ static inline int rtcan_raw_ioctl_dev_set(struct rtcan_device *dev,
     switch (request) {
     case SIOCSCANMODE:
 	mode = (can_mode_t *)&ifr->ifr_ifru;
-	if (dev->do_set_mode)
+	if (dev->do_set_mode &&
+	    !(*mode == CAN_MODE_START && CAN_STATE_OPERATING(dev->state)))
 	    ret = dev->do_set_mode(dev, *mode, &lock_ctx);
 	break;
 
