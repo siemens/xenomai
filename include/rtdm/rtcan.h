@@ -42,7 +42,7 @@
  * mailing list (Socketcan-core@lists.berlios.de) or directly to the authors
  * (wg@grandegger.com or Sebastian.Smolorz@stud.uni-hannover.de).
  *
- * @b Profile @b Revision: 1
+ * @b Profile @b Revision: 2
  * @n
  * @n
  * @par Device Characteristics
@@ -252,7 +252,7 @@
 
 #include <rtdm/rtdm.h>
 
-#define RTCAN_PROFILE_VER           1
+#define RTCAN_PROFILE_VER           2
 
 #ifndef AF_CAN
 
