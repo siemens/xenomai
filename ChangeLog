@@ -27,6 +27,11 @@
 	to avoid name clashes, e.g. TIMESTAMP_SIZE is used by the kernel
 	starting with 2.6.20.
 
+	* include/rtdm/rtcan.h, ksrc/drivers/can/*, src/utils/can/rtcansend.c:
+	Socket option CAN_RAW_TX_LOOPBACK has been renamed to CAN_RAW_LOOPBACK
+	to be compatible with the Socket-CAN implementation. Shortened all
+	"tx_loopback" substrings to "loopback".
+
 2007-02-18  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.{14,15}-1.5-06, and

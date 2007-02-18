@@ -200,7 +200,7 @@ static int rtcan_read_proc_sockets(char *buf, char **start, off_t offset,
 			      context->fd, name, sock->flistlen,
 			      sock->err_mask, rx_timeout, tx_timeout,
 			      sock->rx_buf_full,
-			      rtcan_tx_loopback_enabled(sock)))
+			      rtcan_loopback_enabled(sock)))
 	    break;
     }
 

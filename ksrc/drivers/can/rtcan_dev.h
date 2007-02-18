@@ -142,10 +142,10 @@ struct rtcan_device {
 #ifdef CONFIG_PROC_FS
     struct proc_dir_entry *proc_root;
 #endif
-#ifdef CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK
+#ifdef CONFIG_XENO_DRIVERS_CAN_LOOPBACK
     struct rtcan_skb tx_skb;
     struct rtcan_socket *tx_socket;
-#endif /* CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK */
+#endif /* CONFIG_XENO_DRIVERS_CAN_LOOPBACK */
 };
 
 

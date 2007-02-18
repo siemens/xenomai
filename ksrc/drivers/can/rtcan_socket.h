@@ -172,8 +172,8 @@ struct rtcan_socket {
 
     struct rtcan_filter_list *flist;
 
-#ifdef CONFIG_XENO_DRIVERS_CAN_TX_LOOPBACK
-    int tx_loopback;
+#ifdef CONFIG_XENO_DRIVERS_CAN_LOOPBACK
+    int loopback;
 #endif
 };
 
