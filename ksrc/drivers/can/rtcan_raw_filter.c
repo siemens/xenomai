@@ -55,11 +55,11 @@ void rtcan_raw_print_filter(struct rtcan_device *dev)
 static inline void rtcan_raw_mount_filter(can_filter_t *recv_filter,
 					  can_filter_t *filter)
 {
-   if (filter->can_id & CAN_EFF_FLAG)
-	recv_filter->can_mask = ((filter->can_mask & CAN_EFF_MASK) |
-				 CAN_EFF_FLAG);
+    if (filter->can_id & CAN_EFF_FLAG)
+	recv_filter->can_mask = filter->can_mask & CAN_EFF_MASK;
     else
-	recv_filter->can_mask = (filter->can_mask & CAN_SFF_MASK);
+	recv_filter->can_mask = filter->can_mask & CAN_SFF_MASK;
+    recv_filter->can_mask |= CAN_EFF_FLAG;
 
     recv_filter->can_id = filter->can_id & recv_filter->can_mask;
 }
