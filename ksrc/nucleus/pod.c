@@ -1510,9 +1510,9 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		 (XNSHADOW | XNRELAX) && (mask & (XNDELAY | XNSUSP | XNHELD)) != 0)
 		xnshadow_suspend(thread);
 
-      unlock_and_exit:
-
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+      unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 }
