@@ -120,11 +120,11 @@ static inline int xnarch_release_ipi (void)
 
 static inline void xnarch_notify_shutdown(void)
 {
-#ifdef CONFIG_SMP
+#if defined(CONFIG_SMP) && defined(MODULE)
     /* Make sure the shutdown sequence is kept on the same CPU when
        running as a module. */
     set_cpus_allowed(current,cpumask_of_cpu(0));
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_SMP && MODULE */
 #ifdef CONFIG_XENO_OPT_PERVASIVE
     xnshadow_release_events();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
