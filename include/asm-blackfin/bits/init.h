@@ -79,11 +79,11 @@ static inline int xnarch_init(void)
 	if (err)
 		return err;
 
-#ifdef CONFIG_SMP
+#if defined(CONFIG_SMP) && defined(MODULE)
 	/* Make sure the init sequence is kept on the same CPU when
 	   running as a module. */
 	set_cpus_allowed(current, cpumask_of_cpu(0));
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_SMP && MODULE */
 
 	err = xnarch_calibrate_sched();
 
