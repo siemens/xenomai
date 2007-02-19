@@ -221,7 +221,7 @@ int rtcan_raw_socket(struct rtdm_dev_context *context,
 static inline void rtcan_raw_unbind(struct rtcan_socket *sock)
 {
     rtcan_raw_remove_filter(sock);
-    if (!rtcan_flist_no_filter(sock) && sock->flist)
+    if (!rtcan_flist_no_filter(sock->flist) && sock->flist)
 	rtdm_free(sock->flist);
     sock->flist = NULL;
     sock->flistlen = RTCAN_SOCK_UNBOUND;
