@@ -18,6 +18,7 @@
  */
 
 #include <nucleus/shadow.h>
+#include <nucleus/ppd.h>
 #include <rtdm/rtdm_driver.h>
 #include <rtdm/syscall.h>
 
@@ -59,7 +60,7 @@ static int sys_rtdm_socket(struct task_struct *curr, struct pt_regs *regs)
 
 static int sys_rtdm_close(struct task_struct *curr, struct pt_regs *regs)
 {
-    return _rtdm_close(curr, __xn_reg_arg1(regs), 0);
+    return _rtdm_close(curr, __xn_reg_arg1(regs));
 }
 
 
@@ -125,6 +126,31 @@ static int sys_rtdm_sendmsg(struct task_struct *curr, struct pt_regs *regs)
 }
 
 
+static void *rtdm_skin_callback(int event, void *data)
+{
+    xnshadow_ppd_t *ppd;
+
+    switch(event) {
+        case XNSHADOW_CLIENT_ATTACH:
+            ppd = xnarch_sysalloc(sizeof(*ppd));
+            if (!ppd)
+                return ERR_PTR(-ENOSPC);
+
+            return ppd;
+
+        case XNSHADOW_CLIENT_DETACH:
+            ppd = data;
+
+            cleanup_owned_contexts(xnshadow_ppd_mm(ppd));
+
+            xnarch_sysfree(ppd, sizeof(*ppd));
+
+            break;
+    }
+    return NULL;
+}
+
+
 static xnsysent_t systab[] = {
     [__rtdm_fdcount] = { sys_rtdm_fdcount, __xn_exec_any },
     [__rtdm_open]    = { sys_rtdm_open,    __xn_exec_current|__xn_exec_adaptive },
@@ -142,7 +168,8 @@ int __init rtdm_syscall_init(void)
 {
     __rtdm_muxid = xnshadow_register_interface("rtdm", RTDM_SKIN_MAGIC,
                                                sizeof(systab) / sizeof(systab[0]),
-                                               systab, NULL, THIS_MODULE);
+                                               systab, rtdm_skin_callback,
+                                               THIS_MODULE);
     if (__rtdm_muxid < 0)
         return -ENOSYS;
 

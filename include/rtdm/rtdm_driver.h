@@ -89,10 +89,6 @@ struct rtdm_dev_context;
 /** Set by RTDM when the device is being closed. */
 #define RTDM_CLOSING                1
 
-/** Set by RTDM if the device has to be closed regardless of possible pending
- *  locks held by other users. */
-#define RTDM_FORCED_CLOSING         2
-
 /** Lowest bit number the driver developer can use freely */
 #define RTDM_USER_CONTEXT_FLAG      8   /* first user-definable flag */
 /** @} Context Flags */
@@ -330,6 +326,10 @@ struct rtdm_operations {
     /** @} Message-Oriented Device Operations */
 };
 
+struct rtdm_devctx_reserved {
+    void                            *owner;
+};
+
 /**
  * @brief Device context
  *
@@ -344,15 +344,23 @@ struct rtdm_operations {
 struct rtdm_dev_context {
     /** Context flags, see @ref ctx_flags "Context Flags" for details */
     unsigned long                   context_flags;
+
     /** Associated file descriptor */
     int                             fd;
+
     /** Lock counter of context, held while structure is referenced by an
      *  operation handler */
     atomic_t                        close_lock_count;
+
     /** Set of active device operation handlers */
     struct rtdm_operations          *ops;
+
     /** Reference to owning device */
     struct rtdm_device              *device;
+
+    /** Data stored by RTDM inside a device context (internal use only) */
+    struct rtdm_devctx_reserved     reserved;
+
     /** Begin of driver defined context data structure */
     char                            dev_private[0];
 };

@@ -37,4 +37,6 @@ struct rtdm_fildes {
 extern struct rtdm_fildes   fildes_table[];
 extern int                  open_fildes;
 
+void cleanup_owned_contexts(void *user_info);
+
 #endif /* _RTDM_CORE_H */

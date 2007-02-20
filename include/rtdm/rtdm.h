@@ -247,7 +247,7 @@ int     _rtdm_open   (rtdm_user_info_t *user_info, const char *path,
                       int oflag);
 int     _rtdm_socket (rtdm_user_info_t *user_info, int protocol_family,
                       int socket_type, int protocol);
-int     _rtdm_close  (rtdm_user_info_t *user_info, int fd, int forced);
+int     _rtdm_close  (rtdm_user_info_t *user_info, int fd);
 int     _rtdm_ioctl  (rtdm_user_info_t *user_info, int fd, int request, ...);
 ssize_t _rtdm_read   (rtdm_user_info_t *user_info, int fd, void *buf,
                       size_t nbyte);
@@ -273,7 +273,7 @@ ssize_t _rtdm_sendmsg(rtdm_user_info_t *user_info, int fd,
     _rtdm_socket(NULL, protocol_family, socket_type, protocol)
 
 #define rt_dev_close(fd)                                        \
-    _rtdm_close(NULL, fd, 0)
+    _rtdm_close(NULL, fd)
 
 #define rt_dev_ioctl(fd, request, ...)                          \
     _rtdm_ioctl(NULL, fd, request, __VA_ARGS__)

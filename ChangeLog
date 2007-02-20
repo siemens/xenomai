@@ -1,3 +1,10 @@
+2007-02-20  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/rtdm*.h, ksrc/skins/rtdm/{core.*,sycall.c,proc.c}: RTDM's
+	close now polls at 10 Hz if in non-RT mode while the file descriptor
+	is busy. Provide automatic cleanup of open file descriptors on
+	process termination. Kill RTDM_FORCED_CLOSING context flag.
+
 2007-02-19  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* ksrc/drivers/can/rtcan_raw.c (rtcan_raw_bind),
