@@ -26,7 +26,7 @@
  * @{
  */
 
-#include <linux/module.h>
+#include <linux/delay.h>
 
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
@@ -36,6 +36,8 @@
 #include "rtdm/core.h"
 #include "rtdm/device.h"
 
+
+#define CLOSURE_RETRY_PERIOD    100 /* ms */
 
 #define FD_BITMAP_SIZE  ((RTDM_FD_MAX + BITS_PER_LONG-1) / BITS_PER_LONG)
 
@@ -100,6 +102,7 @@ struct rtdm_dev_context *rtdm_context_get(int fd)
 static int create_instance(struct rtdm_device *device,
                            struct rtdm_dev_context **context_ptr,
                            struct rtdm_fildes **fildes_ptr,
+                           rtdm_user_info_t *user_info,
                            int nrt_mem)
 {
     struct rtdm_dev_context *context;
@@ -157,6 +160,12 @@ static int create_instance(struct rtdm_device *device,
     context->fd  = fd;
     context->ops = &device->ops;
     atomic_set(&context->close_lock_count, 0);
+#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    /* We use current->mm as cookie to identify the context owner */
+    context->reserved.owner = user_info ? user_info->mm : NULL;
+#else /* !__KERNEL__ || !CONFIG_XENO_OPT_PERVASIVE */
+    context->reserved.owner = NULL;
+#endif /* !__KERNEL__ || !CONFIG_XENO_OPT_PERVASIVE */
 
     return 0;
 }
@@ -207,7 +216,7 @@ int _rtdm_open(rtdm_user_info_t *user_info, const char *path, int oflag)
     if (!device)
         goto err_out;
 
-    ret = create_instance(device, &context, &fildes, nrt_mode);
+    ret = create_instance(device, &context, &fildes, user_info, nrt_mode);
     if (ret != 0)
         goto cleanup_out;
 
@@ -254,7 +263,7 @@ int _rtdm_socket(rtdm_user_info_t *user_info, int protocol_family,
     if (!device)
         goto err_out;
 
-    ret = create_instance(device, &context, &fildes, nrt_mode);
+    ret = create_instance(device, &context, &fildes, user_info, nrt_mode);
     if (ret != 0)
         goto cleanup_out;
 
@@ -285,7 +294,7 @@ int _rtdm_socket(rtdm_user_info_t *user_info, int protocol_family,
 }
 
 
-int _rtdm_close(rtdm_user_info_t *user_info, int fd, int forced)
+int _rtdm_close(rtdm_user_info_t *user_info, int fd)
 {
     struct rtdm_dev_context *context;
     spl_t                   s;
@@ -296,6 +305,7 @@ int _rtdm_close(rtdm_user_info_t *user_info, int fd, int forced)
     if (unlikely((unsigned int)fd >= RTDM_FD_MAX))
         goto err_out;
 
+ again:
     xnlock_get_irqsave(&rt_fildes_lock, s);
 
     context = fildes_table[fd].context;
@@ -306,8 +316,6 @@ int _rtdm_close(rtdm_user_info_t *user_info, int fd, int forced)
     }
 
     set_bit(RTDM_CLOSING, &context->context_flags);
-    if (forced)
-        set_bit(RTDM_FORCED_CLOSING, &context->context_flags);
     rtdm_context_lock(context);
 
     xnlock_put_irqrestore(&rt_fildes_lock, s);
@@ -332,15 +340,23 @@ int _rtdm_close(rtdm_user_info_t *user_info, int fd, int forced)
 
     XENO_ASSERT(RTDM, !rthal_local_irq_test(), rthal_local_irq_enable(););
 
-    if (unlikely(ret < 0))
+    if (unlikely(ret == -EAGAIN) && !rtdm_in_rt_context()) {
+        msleep(CLOSURE_RETRY_PERIOD);
+        goto again;
+    } else if (unlikely(ret < 0))
         goto unlock_out;
 
     xnlock_get_irqsave(&rt_fildes_lock, s);
 
-    if (unlikely((atomic_read(&context->close_lock_count) > 1) && !forced)) {
+    if (unlikely(atomic_read(&context->close_lock_count) > 1)) {
         xnlock_put_irqrestore(&rt_fildes_lock, s);
-        ret = -EAGAIN;
-        goto unlock_out;
+
+        if (rtdm_in_rt_context()) {
+            ret = -EAGAIN;
+            goto unlock_out;
+        }
+        msleep(CLOSURE_RETRY_PERIOD);
+        goto again;
     }
 
     cleanup_instance(context->device, context, &fildes_table[fd],
@@ -355,6 +371,31 @@ int _rtdm_close(rtdm_user_info_t *user_info, int fd, int forced)
 
   err_out:
     return ret;
+}
+
+
+void cleanup_owned_contexts(void *owner)
+{
+    struct rtdm_dev_context *context;
+    unsigned int            fd;
+    int                     ret;
+    spl_t                   s;
+
+
+    for (fd = 0; fd < RTDM_FD_MAX; fd++) {
+        xnlock_get_irqsave(&rt_fildes_lock, s);
+
+        context = fildes_table[fd].context;
+        if (context && context->reserved.owner != owner)
+            context = NULL;
+
+        xnlock_put_irqrestore(&rt_fildes_lock, s);
+
+        if (context) {
+            ret = _rtdm_close(NULL, fd);
+            XENO_ASSERT(RTDM, ret >= 0 || ret == -EBADF, ;);
+        }
+    }
 }
 
 

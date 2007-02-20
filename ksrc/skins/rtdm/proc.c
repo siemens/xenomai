@@ -178,7 +178,7 @@ static int proc_kill_open_fildes(struct file *file, const char __user *buffer,
     if (!sscanf(krnl_buf, "%d", &fd))
         return -EINVAL;
 
-    res = _rtdm_close(current, fd, 1);
+    res = _rtdm_close(current, fd);
     if (res < 0)
         return res;
 
