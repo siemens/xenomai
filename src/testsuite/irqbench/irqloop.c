@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     pthread_t thr;
     int ioaddr_set = 0;
     int irq_set = 0;
-    int c, err;
+    int c;
     int timeout = 10;
 
 
@@ -183,14 +183,10 @@ int main(int argc, char *argv[])
     ioctl(benchdev, RTTST_RTIOC_IRQBENCH_STOP);
 
   cleanup:
-    err = close(benchdev);
+    close(benchdev);
     if (config.mode == RTTST_IRQBENCH_USER_TASK) {
         pthread_cancel(thr);
         pthread_join(thr, NULL);
     }
-    /* device may have been busy, close again if previous call failed */
-    if (err)
-        close(benchdev);
-
     return 0;
 }
