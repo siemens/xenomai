@@ -32,7 +32,7 @@ struct xnarch_x8664_initstack {
 	unsigned long entry;
 };
 
-#define __SWITCH_CLOBBER_LIST  , "r12", "r13", "r14", "r15"
+#define __SWITCH_CLOBBER_LIST  , "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"
 
 #define xnarch_switch_threads(prev,next,p_rsp,n_rsp,p_rip,n_rip)	\
 	asm volatile("pushfq\n\t"					\
@@ -42,11 +42,12 @@ struct xnarch_x8664_initstack {
 		     "movq	$1f, (%%rax)\n\t"			\
 		     "movq	(%%rcx), %%rsp\n\t"			\
 		     "pushq	(%%rbx)\n\t"				\
+		     "cmpq	%%rsi, %%rdi\n\t"			\
+		     "jz	0f\n\t"					\
 		     "testq	%%rsi, %%rsi\n\t"			\
 		     "jnz	__switch_to\n\t"			\
-		     "ret\n\t"						\
-		     "1:\n\t"						\
-		     "movq	%%rbp, %%rsi\n\t"			\
+		     "0:ret\n\t"					\
+		     "1: movq	%%rbp, %%rsi\n\t"			\
 		     "popq	%%rbp\n\t"				\
 		     "popfq\n\t"					\
 		     : /* no output */					\
