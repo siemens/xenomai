@@ -1,3 +1,10 @@
+2007-02-21  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/rtdm/core.c (cleanup_owned_contexts): Report auto-close.
+
+	* src/testsuite/{irqbench/irqloop.c,switchtest/switchtest.c}:
+	Cleanup according to simplified device closure.
+
 2007-02-20  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/rtdm*.h, ksrc/skins/rtdm/{core.*,sycall.c,proc.c}: RTDM's
