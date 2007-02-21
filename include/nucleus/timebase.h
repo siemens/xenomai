@@ -23,6 +23,9 @@
 #ifndef _XENO_NUCLEUS_TIMEBASE_H
 #define _XENO_NUCLEUS_TIMEBASE_H
 
+/*! \addtogroup timebase
+ *@{*/
+
 #include <nucleus/queue.h>
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
@@ -335,5 +338,7 @@ static inline void xntbase_umount(void)
 }
 
 #endif /* __KERNEL__ || __XENO_SIM__ */
+
+/*@}*/
 
 #endif /* !_XENO_NUCLEUS_TIMEBASE_H */
