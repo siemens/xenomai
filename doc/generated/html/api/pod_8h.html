@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -36,8 +37,50 @@ Xenomai is free software; you can redistribute it and/or modify it under the ter
 Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with Xenomai; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
-<code>#include &lt;nucleus/thread.h&gt;</code><br>
-<code>#include &lt;nucleus/intr.h&gt;</code><br>
+
+<p>
+Include dependency graph for pod.h:<p><center><img src="pod_8h__incl.png" border="0" usemap="#include/nucleus/pod.h_map" alt=""></center>
+<map name="include/nucleus/pod.h_map">
+<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="209,32,329,56" alt="">
+<area href="include_2nucleus_2intr_8h-source.html" shape="rect" coords="218,80,320,104" alt="">
+<area href="include_2nucleus_2timer_8h.html" shape="rect" coords="380,8,492,32" alt="">
+<area href="stat_8h-source.html" shape="rect" coords="384,56,488,80" alt="">
+<area href="timebase_8h.html" shape="rect" coords="542,20,678,44" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="728,44,848,68" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="896,74,1010,98" alt="">
+</map>
+
+<p>
+This graph shows which files directly or indirectly include this file:<p><center><img src="pod_8h__dep__incl.png" border="0" usemap="#include/nucleus/pod.hdep_map" alt=""></center>
+<map name="include/nucleus/pod.hdep_map">
+<area href="xenomai_8h-source.html" shape="rect" coords="207,167,386,191" alt="">
+<area href="rtdm__driver_8h.html" shape="rect" coords="435,142,611,166" alt="">
+<area href="ksrc_2skins_2rtdm_2core_8c.html" shape="rect" coords="883,118,1035,142" alt="">
+<area href="ksrc_2skins_2rtdm_2core_8h-source.html" shape="rect" coords="667,93,819,117" alt="">
+<area href="device_8h-source.html" shape="rect" coords="661,203,826,227" alt="">
+<area href="skins_2rtdm_2module_8c.html" shape="rect" coords="875,235,1043,259" alt="">
+<area href="ksrc_2nucleus_2heap_8c.html" shape="rect" coords="227,317,366,341" alt="">
+<area href="ksrc_2nucleus_2intr_8c.html" shape="rect" coords="233,365,361,389" alt="">
+<area href="pod_8c.html" shape="rect" coords="230,413,363,437" alt="">
+<area href="nucleus_2registry_8c.html" shape="rect" coords="219,461,374,485" alt="">
+<area href="shadow_8c.html" shape="rect" coords="219,509,374,533" alt="">
+<area href="synch_8c.html" shape="rect" coords="225,557,369,581" alt="">
+<area href="timebase_8c.html" shape="rect" coords="214,605,379,629" alt="">
+<area href="ksrc_2nucleus_2timer_8c.html" shape="rect" coords="227,653,366,677" alt="">
+<area href="ksrc_2skins_2native_2alarm_8c.html" shape="rect" coords="213,701,381,725" alt="">
+<area href="ksrc_2skins_2native_2cond_8c.html" shape="rect" coords="215,749,378,773" alt="">
+<area href="ksrc_2skins_2native_2event_8c.html" shape="rect" coords="213,797,381,821" alt="">
+<area href="ksrc_2skins_2native_2heap_8c.html" shape="rect" coords="215,845,378,869" alt="">
+<area href="ksrc_2skins_2native_2intr_8c.html" shape="rect" coords="221,893,373,917" alt="">
+<area href="skins_2native_2module_8c.html" shape="rect" coords="207,941,386,965" alt="">
+<area href="ksrc_2skins_2native_2mutex_8c.html" shape="rect" coords="211,989,382,1013" alt="">
+<area href="ksrc_2skins_2native_2pipe_8c.html" shape="rect" coords="217,1037,377,1061" alt="">
+<area href="ksrc_2skins_2native_2queue_8c.html" shape="rect" coords="211,1085,382,1109" alt="">
+<area href="ksrc_2skins_2native_2sem_8c.html" shape="rect" coords="217,1133,377,1157" alt="">
+<area href="native_2syscall_8c.html" shape="rect" coords="210,1181,383,1205" alt="">
+<area href="ksrc_2skins_2native_2task_8c.html" shape="rect" coords="217,1229,377,1253" alt="">
+<area href="ksrc_2skins_2native_2timer_8c.html" shape="rect" coords="215,1277,378,1301" alt="">
+</map>
 
 <p>
 <a href="pod_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
@@ -134,7 +177,7 @@ typedef <a class="el" href="structxnsched.html">xnsched</a>&nbsp;</td><td class=
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Remove a nucleus hook.  <a href="group__pod.html#gce800481d23255eebe45f969e9434adf"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:29 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

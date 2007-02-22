@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -25,7 +26,13 @@
 <h1>Time base services.<br>
 <small>
 [<a class="el" href="group__nucleus.html">Xenomai nucleus.</a>]</small>
-</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1>
+<p>
+Collaboration diagram for Time base services.:<center><table><tr><td><img src="group__timebase.png" border="0" alt="" usemap="#group____timebase_map">
+<map name="group____timebase_map">
+<area href="group__nucleus.html" shape="rect" coords="9,8,137,32" alt="">
+</map></td></tr></table></center>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
 Xenomai implements the notion of time base, by which software timers that belong to different skins may be clocked separately according to distinct frequencies, or aperiodically. In the periodic case, delays and timeouts are given in counts of ticks; the duration of a tick is specified by the time base. In the aperiodic case, timings are directly specified in nanoseconds.<p>
 Only a single aperiodic (i.e. tick-less) time base may exist in the system, and the nucleus provides for it through the nktbase object. All skins depending on aperiodic timings should bind to the latter (see <a class="el" href="group__timebase.html#g44412f2f0a481d351695f540c1e4750a">xntbase_alloc()</a>), also known as the master time base.<p>
 Skins depending on periodic timings may create and bind to their own time base. Such a periodic time base is managed as a timed slave object of the master time base. A cascading software timer fired by the master time base according to the appropriate frequency, triggers in turn the update process of the associated timed slave, which eventually fires the elapsed software timers controlled by the periodic time base. In other words, Xenomai emulates periodic timing over an aperiodic policy.<p>
@@ -39,6 +46,9 @@ Xenomai always controls the underlying timer hardware in a tick-less fashion, al
 <tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="timebase_8c.html">timebase.c</a></td></tr>
 
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static xnticks_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g61ff1abcbe816dd7ce6be2e2c7f2e44b">xntbase_convert</a> (xntbase_t *srcbase, xnticks_t ticks, xntbase_t *dstbase)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert a clock value into another time base.  <a href="#g61ff1abcbe816dd7ce6be2e2c7f2e44b"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g44412f2f0a481d351695f540c1e4750a">xntbase_alloc</a> (const char *name, u_long period, xntbase_t **basep)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a time base.  <a href="#g44412f2f0a481d351695f540c1e4750a"></a><br></td></tr>
@@ -60,12 +70,15 @@ Xenomai always controls the underlying timer hardware in a tick-less fashion, al
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g15896b6c498acdc5e2516ad0cc9df5ac">xntbase_tick</a> (xntbase_t *base)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Announce a clock tick to a time base.  <a href="#g15896b6c498acdc5e2516ad0cc9df5ac"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static xnticks_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g5246b53b5b2d1b11d4fab4312fd16fda">xntbase_get_time</a> (xntbase_t *base)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the clock time for a given time base.  <a href="#g5246b53b5b2d1b11d4fab4312fd16fda"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g2429ebe0dcf2493211a93de41f154748">xntbase_set_time</a> (xntbase_t *base, xnticks_t newtime)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the clock time for a given time base.  <a href="#g2429ebe0dcf2493211a93de41f154748"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="g44412f2f0a481d351695f540c1e4750a"></a><!-- doxytag: member="timebase.c::xntbase_alloc" ref="g44412f2f0a481d351695f540c1e4750a" args="(const char *name, u_long period, xntbase_t **basep)" --><p>
+<a class="anchor" name="g44412f2f0a481d351695f540c1e4750a"></a><!-- doxytag: member="timebase.h::xntbase_alloc" ref="g44412f2f0a481d351695f540c1e4750a" args="(const char *name, u_long period, xntbase_t **basep)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -124,14 +137,72 @@ The <a class="el" href="group__timebase.html#g44412f2f0a481d351695f540c1e4750a">
 Environments:<p>
 This service can be called from:<p>
 <ul>
-<li>Kernel module initialization code</li></ul>
+<li>Kernel module initialization code</li><li>User-space task in secondary mode</li></ul>
 <p>
 Rescheduling: never.<p>
 <dl compact><dt><b>Note:</b></dt><dd>Any periodic time base allocated by a real-time skin must be released by a call to <a class="el" href="group__timebase.html#gf94b8dda1e4cc484c13cb004689a795e">xntbase_free()</a> before the kernel module implementing the skin may be unloaded. </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="gf94b8dda1e4cc484c13cb004689a795e"></a><!-- doxytag: member="timebase.c::xntbase_free" ref="gf94b8dda1e4cc484c13cb004689a795e" args="(xntbase_t *base)" --><p>
+<a class="anchor" name="g61ff1abcbe816dd7ce6be2e2c7f2e44b"></a><!-- doxytag: member="timebase.h::xntbase_convert" ref="g61ff1abcbe816dd7ce6be2e2c7f2e44b" args="(xntbase_t *srcbase, xnticks_t ticks, xntbase_t *dstbase)" --><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">xnticks_t xntbase_convert           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">xntbase_t *&nbsp;</td>
+          <td class="mdname" nowrap> <em>srcbase</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>xnticks_t&nbsp;</td>
+          <td class="mdname" nowrap> <em>ticks</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>xntbase_t *&nbsp;</td>
+          <td class="mdname" nowrap> <em>dstbase</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"><code> [inline, static]</code></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Convert a clock value into another time base. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>srcbase</em>&nbsp;</td><td>The descriptor address of the source time base.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>ticks</em>&nbsp;</td><td>The clock value expressed in the source time base to convert to the destination time base.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>dstbase</em>&nbsp;</td><td>The descriptor address of the destination time base.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>The converted count of ticks in the destination time base is returned.</dd></dl>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization code</li><li>Kernel-based task</li><li>User-space task</li></ul>
+<p>
+Rescheduling: never.     </td>
+  </tr>
+</table>
+<a class="anchor" name="gf94b8dda1e4cc484c13cb004689a795e"></a><!-- doxytag: member="timebase.h::xntbase_free" ref="gf94b8dda1e4cc484c13cb004689a795e" args="(xntbase_t *base)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -167,14 +238,56 @@ This service disarms all outstanding timers from the affected periodic time base
 Environments:<p>
 This service can be called from:<p>
 <ul>
-<li>Kernel module initialization/cleanup code</li></ul>
+<li>Kernel module initialization/cleanup code</li><li>User-space task in secondary mode</li></ul>
 <p>
 Rescheduling: never.<p>
 <dl compact><dt><b>Note:</b></dt><dd>Requests to free the master time base are silently caught and discarded; in such a case, outstanding aperiodic timers are left untouched. </dd></dl>
     </td>
   </tr>
 </table>
-<a class="anchor" name="g2429ebe0dcf2493211a93de41f154748"></a><!-- doxytag: member="timebase.c::xntbase_set_time" ref="g2429ebe0dcf2493211a93de41f154748" args="(xntbase_t *base, xnticks_t newtime)" --><p>
+<a class="anchor" name="g5246b53b5b2d1b11d4fab4312fd16fda"></a><!-- doxytag: member="timebase.h::xntbase_get_time" ref="g5246b53b5b2d1b11d4fab4312fd16fda" args="(xntbase_t *base)" --><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">xnticks_t xntbase_get_time           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">xntbase_t *&nbsp;</td>
+          <td class="mdname1" valign="top" nowrap> <em>base</em>          </td>
+          <td class="md" valign="top">&nbsp;)&nbsp;</td>
+          <td class="md" nowrap><code> [inline, static]</code></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Get the clock time for a given time base. 
+<p>
+This service returns the (external) clock time as maintained by the specified time base. This value is adjusted with the wallclock offset as defined by <a class="el" href="group__timebase.html#g2429ebe0dcf2493211a93de41f154748">xntbase_set_time()</a>.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>base</em>&nbsp;</td><td>The address of the time base to query.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Returns:</b></dt><dd>The current time (in jiffies) if the specified time base runs in periodic mode, or the machine time (converted to nanoseconds) as maintained by the hardware if <em>base</em> refers to the master time base.</dd></dl>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
+<p>
+Rescheduling: never.     </td>
+  </tr>
+</table>
+<a class="anchor" name="g2429ebe0dcf2493211a93de41f154748"></a><!-- doxytag: member="timebase.h::xntbase_set_time" ref="g2429ebe0dcf2493211a93de41f154748" args="(xntbase_t *base, xnticks_t newtime)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -225,7 +338,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="ge596e43dbf89abb299aa29ae841ec8e0"></a><!-- doxytag: member="timebase.c::xntbase_start" ref="ge596e43dbf89abb299aa29ae841ec8e0" args="(xntbase_t *base)" --><p>
+<a class="anchor" name="ge596e43dbf89abb299aa29ae841ec8e0"></a><!-- doxytag: member="timebase.h::xntbase_start" ref="ge596e43dbf89abb299aa29ae841ec8e0" args="(xntbase_t *base)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -268,7 +381,7 @@ Rescheduling: never.<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="g23ae261bf7e2eaa09f05c4c6069a41e1"></a><!-- doxytag: member="timebase.c::xntbase_stop" ref="g23ae261bf7e2eaa09f05c4c6069a41e1" args="(xntbase_t *base)" --><p>
+<a class="anchor" name="g23ae261bf7e2eaa09f05c4c6069a41e1"></a><!-- doxytag: member="timebase.h::xntbase_stop" ref="g23ae261bf7e2eaa09f05c4c6069a41e1" args="(xntbase_t *base)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -311,7 +424,7 @@ This service can be called from:<p>
     </td>
   </tr>
 </table>
-<a class="anchor" name="gdf44dc347a2b8cb921cbc9f4e2768320"></a><!-- doxytag: member="timebase.c::xntbase_switch" ref="gdf44dc347a2b8cb921cbc9f4e2768320" args="(const char *name, u_long period, xntbase_t **basep)" --><p>
+<a class="anchor" name="gdf44dc347a2b8cb921cbc9f4e2768320"></a><!-- doxytag: member="timebase.h::xntbase_switch" ref="gdf44dc347a2b8cb921cbc9f4e2768320" args="(const char *name, u_long period, xntbase_t **basep)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -369,12 +482,12 @@ This call handles all mode transitions and configuration changes carefully, i.e.
 Environments:<p>
 This service can be called from:<p>
 <ul>
-<li>Kernel module initialization code</li></ul>
+<li>Kernel module initialization code</li><li>User-space task in secondary mode</li></ul>
 <p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="g15896b6c498acdc5e2516ad0cc9df5ac"></a><!-- doxytag: member="timebase.c::xntbase_tick" ref="g15896b6c498acdc5e2516ad0cc9df5ac" args="(xntbase_t *base)" --><p>
+<a class="anchor" name="g15896b6c498acdc5e2516ad0cc9df5ac"></a><!-- doxytag: member="timebase.h::xntbase_tick" ref="g15896b6c498acdc5e2516ad0cc9df5ac" args="(xntbase_t *base)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -416,7 +529,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<a class="anchor" name="g71112e6b362918b602e01d86d4c07654"></a><!-- doxytag: member="timebase.c::xntbase_update" ref="g71112e6b362918b602e01d86d4c07654" args="(xntbase_t *base, u_long period)" --><p>
+<a class="anchor" name="g71112e6b362918b602e01d86d4c07654"></a><!-- doxytag: member="timebase.h::xntbase_update" ref="g71112e6b362918b602e01d86d4c07654" args="(xntbase_t *base, u_long period)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
@@ -472,7 +585,7 @@ Rescheduling: never.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:30 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:14 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

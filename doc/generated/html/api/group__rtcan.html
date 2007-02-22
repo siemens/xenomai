@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -25,8 +26,16 @@
 <h1>CAN Devices<br>
 <small>
 [<a class="el" href="group__profiles.html">Device Profiles</a>]</small>
-</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
-This is the common interface a RTDM-compliant CAN device has to provide. Feel free to report bugs and comments on this profile to the "Socketcan" mailing list (<a href="mailto:Socketcan-core@lists.berlios.de">Socketcan-core@lists.berlios.de</a>) or directly to the authors (<a href="mailto:wg@grandegger.com">wg@grandegger.com</a> or <a href="mailto:Sebastian.Smolorz@stud.uni-hannover.de">Sebastian.Smolorz@stud.uni-hannover.de</a>). <br>
+</h1>
+<p>
+Collaboration diagram for CAN Devices:<center><table><tr><td><img src="group__rtcan.png" border="0" alt="" usemap="#group____rtcan_map">
+<map name="group____rtcan_map">
+<area href="group__profiles.html" shape="rect" coords="9,8,118,32" alt="">
+</map></td></tr></table></center>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
+This is the common interface a RTDM-compliant CAN device has to provide. Feel free to report bugs and comments on this profile to the "Socketcan" mailing list (<a href="mailto:Socketcan-core@lists.berlios.de">Socketcan-core@lists.berlios.de</a>) or directly to the authors (<a href="mailto:wg@grandegger.com">wg@grandegger.com</a> or <a href="mailto:Sebastian.Smolorz@stud.uni-hannover.de">Sebastian.Smolorz@stud.uni-hannover.de</a>).<p>
+<b>Profile</b> <b>Revision:</b> 2 <br>
+ <br>
  <dl compact><dt><b>Device Characteristics</b></dt><dd><br>
  <a class="el" href="structrtdm__device.html#f459bf86f0d037c99bb669f627d78764">Device Flags</a>: <code>RTDM_PROTOCOL_DEVICE</code> <br>
  <br>
@@ -78,7 +87,7 @@ This is the common interface a RTDM-compliant CAN device has to provide. Feel fr
  Supported Levels and Options: <br>
 <ul>
 <li>Level <b>SOL_CAN_RAW</b> : CAN RAW protocol (see <a class="el" href="group__rtcan.html#ggc99a91b141113059bd5527bad8ddbf530f5142d42281775367eb973d8a0a62d3">CAN_PROTO_RAW</a>)<ul>
-<li>Option <a class="el" href="group__rtcan.html#g87313c6e632294aa4582899a3bbc89e4">CAN_RAW_FILTER</a> : CAN filter list</li><li>Option <a class="el" href="group__rtcan.html#g451ba35aa4d0bef48cb7b0416f5b4367">CAN_RAW_ERR_FILTER</a> : CAN error mask</li><li>Option <a class="el" href="group__rtcan.html#ga8aa773ff7721010e48129847af2c843">CAN_RAW_TX_LOOPBACK</a> : CAN TX loopback to local sockets</li></ul>
+<li>Option <a class="el" href="group__rtcan.html#g87313c6e632294aa4582899a3bbc89e4">CAN_RAW_FILTER</a> : CAN filter list</li><li>Option <a class="el" href="group__rtcan.html#g451ba35aa4d0bef48cb7b0416f5b4367">CAN_RAW_ERR_FILTER</a> : CAN error mask</li><li>Option <a class="el" href="group__rtcan.html#ga7eb7dc3aa940a0aca20d3a564a147d9">CAN_RAW_LOOPBACK</a> : CAN TX loopback to local sockets</li></ul>
 </li></ul>
 <br>
  Environments: non-RT (RT optional)<br>
@@ -164,15 +173,19 @@ Environments: RT (non-RT optional)<br>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g5ae55ab3741140024858bd7b8762ea42"></a><!-- doxytag: member="rtcan::CAN_EFF_FLAG" ref="g5ae55ab3741140024858bd7b8762ea42" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g5ae55ab3741140024858bd7b8762ea42">CAN_EFF_FLAG</a>&nbsp;&nbsp;&nbsp;0x80000000</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">extended frame <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Extended frame. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gf324d65226057755175038a15d9bbd75"></a><!-- doxytag: member="rtcan::CAN_RTR_FLAG" ref="gf324d65226057755175038a15d9bbd75" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#gf324d65226057755175038a15d9bbd75">CAN_RTR_FLAG</a>&nbsp;&nbsp;&nbsp;0x40000000</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">remote transmission flag <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Remote transmission frame. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g24df2eae50a2cef0f7f08c73a246a012"></a><!-- doxytag: member="rtcan::CAN_ERR_FLAG" ref="g24df2eae50a2cef0f7f08c73a246a012" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g24df2eae50a2cef0f7f08c73a246a012">CAN_ERR_FLAG</a>&nbsp;&nbsp;&nbsp;0x20000000</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">error frame (see <a class="el" href="group__rtcan.html#Errors">Errors</a>) <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Error frame (see <a class="el" href="group__rtcan.html#Errors">Errors</a>), not valid in struct <a class="el" href="structcan__filter.html">can_filter</a>. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g5cb484fa2d90489f6b4e7a77c254c59f"></a><!-- doxytag: member="rtcan::CAN_INV_FILTER" ref="g5cb484fa2d90489f6b4e7a77c254c59f" args="" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g5cb484fa2d90489f6b4e7a77c254c59f">CAN_INV_FILTER</a>&nbsp;&nbsp;&nbsp;CAN_ERR_FLAG</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Invert CAN filter definition, only valid in struct <a class="el" href="structcan__filter.html">can_filter</a>. <br></td></tr>
 <tr><td colspan="2"><br><h2>CAN controller modes</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="CAN_CTRLMODE"></a> Special CAN controllers modes, which can be or'ed together. <br><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ge4ba49824d17e7d06300cb8b4a4bff45"></a><!-- doxytag: member="rtcan::CAN_CTRLMODE_LISTENONLY" ref="ge4ba49824d17e7d06300cb8b4a4bff45" args="" -->
@@ -201,9 +214,9 @@ Environments: RT (non-RT optional)<br>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g451ba35aa4d0bef48cb7b0416f5b4367">CAN_RAW_ERR_FILTER</a>&nbsp;&nbsp;&nbsp;0x2</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN error mask.  <a href="#g451ba35aa4d0bef48cb7b0416f5b4367"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga8aa773ff7721010e48129847af2c843">CAN_RAW_TX_LOOPBACK</a>&nbsp;&nbsp;&nbsp;0x3</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga7eb7dc3aa940a0aca20d3a564a147d9">CAN_RAW_LOOPBACK</a>&nbsp;&nbsp;&nbsp;0x3</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN TX loopback.  <a href="#ga8aa773ff7721010e48129847af2c843"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN TX loopback.  <a href="#ga7eb7dc3aa940a0aca20d3a564a147d9"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>IOCTLs</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="IOCTLs"></a> CAN device IOCTLs <br><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#gee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_CAN, 0x00, struct ifreq)</td></tr>
@@ -596,7 +609,8 @@ Environments: non-RT (RT optional)<br>
  <br>
  Specific return values:<ul>
 <li>-EFAULT (It was not possible to access user space memory area at the specified address.)</li><li>-EINVAL (Invalid length "optlen")</li></ul>
-    </td>
+<dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcanrecv_8c-example.html#a129">rtcanrecv.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g87313c6e632294aa4582899a3bbc89e4"></a><!-- doxytag: member="rtcan.h::CAN_RAW_FILTER" ref="g87313c6e632294aa4582899a3bbc89e4" args="" --><p>
@@ -637,16 +651,17 @@ A CAN raw filter list with elements of struct <a class="el" href="structcan__fil
 </td></tr>
   </table>
 </dl>
-    </td>
+<dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcan__rtt_8c-example.html#a70">rtcan_rtt.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a130">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a150">rtcansend.c</a>.</dl>    </td>
   </tr>
 </table>
-<a class="anchor" name="ga8aa773ff7721010e48129847af2c843"></a><!-- doxytag: member="rtcan.h::CAN_RAW_TX_LOOPBACK" ref="ga8aa773ff7721010e48129847af2c843" args="" --><p>
+<a class="anchor" name="ga7eb7dc3aa940a0aca20d3a564a147d9"></a><!-- doxytag: member="rtcan.h::CAN_RAW_LOOPBACK" ref="ga7eb7dc3aa940a0aca20d3a564a147d9" args="" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">#define CAN_RAW_TX_LOOPBACK&nbsp;&nbsp;&nbsp;0x3          </td>
+          <td class="md" nowrap valign="top">#define CAN_RAW_LOOPBACK&nbsp;&nbsp;&nbsp;0x3          </td>
         </tr>
       </table>
     </td>
@@ -668,7 +683,7 @@ The TX loopback to other local sockets can be selected with this <code>setsockop
  <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>level</em>&nbsp;</td><td><b>SOL_CAN_RAW</b> </td></tr>
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>optname</em>&nbsp;</td><td><b>CAN_RAW_TX_LOOPBACK</b> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>optname</em>&nbsp;</td><td><b>CAN_RAW_LOOPBACK</b> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>optval</em>&nbsp;</td><td>Pointer to integer value.</td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>optlen</em>&nbsp;</td><td>Size of int: sizeof(int).</td></tr>
   </table>
@@ -677,7 +692,8 @@ Environments: non-RT (RT optional)<br>
  <br>
  Specific return values:<ul>
 <li>-EFAULT (It was not possible to access user space memory area at the specified address.)</li><li>-EINVAL (Invalid length "optlen")</li><li>-EOPNOTSUPP (not supported, check RT-Socket-CAN kernel parameters). </li></ul>
-    </td>
+<dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcansend_8c-example.html#a147">rtcansend.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="gd8af08ea3624e8e9c464ff143fcb66c0"></a><!-- doxytag: member="rtcan.h::RTCAN_RTIOC_RCV_TIMEOUT" ref="gd8af08ea3624e8e9c464ff143fcb66c0" args="" --><p>
@@ -718,7 +734,8 @@ This service can be called from:<p>
 <ul>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
 <p>
-Rescheduling: never.     </td>
+Rescheduling: never. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcanrecv_8c-example.html#a133">rtcanrecv.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="gd3758528585b2779e8949df671f1cf6c"></a><!-- doxytag: member="rtcan.h::RTCAN_RTIOC_SND_TIMEOUT" ref="gd3758528585b2779e8949df671f1cf6c" args="" --><p>
@@ -759,7 +776,8 @@ This service can be called from:<p>
 <ul>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
 <p>
-Rescheduling: never.     </td>
+Rescheduling: never. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcansend_8c-example.html#a152">rtcansend.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="gedd7bd75a1983735052fed62e101e5ce"></a><!-- doxytag: member="rtcan.h::RTCAN_RTIOC_TAKE_TIMESTAMP" ref="gedd7bd75a1983735052fed62e101e5ce" args="" --><p>
@@ -797,7 +815,8 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
 <p>
 <dl compact><dt><b>Note:</b></dt><dd>Activating taking timestamps only has an effect on newly received CAN messages from the bus. Frames that already are in the socket buffer do not have timestamps if it was deactivated before. See <a class="el" href="group__rtcan.html#Recv">Receive</a> for more details.</dd></dl>
-Rescheduling: never.     </td>
+Rescheduling: never. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcanrecv_8c-example.html#a134">rtcanrecv.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g9a3032f07b3a6a2f92eb2ba25a4ff8bf"></a><!-- doxytag: member="rtcan.h::SIOCGCANBAUDRATE" ref="g9a3032f07b3a6a2f92eb2ba25a4ff8bf" args="" --><p>
@@ -988,7 +1007,8 @@ This service can be called from:<p>
 <ul>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
 <p>
-Rescheduling: never.     </td>
+Rescheduling: never. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcan__rtt_8c-example.html#a67">rtcan_rtt.c</a>, <a class="el" href="rtcanconfig_8c-example.html#a93">rtcanconfig.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a128">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a148">rtcansend.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g7c070037c218b40de849ebf4d299f977"></a><!-- doxytag: member="rtcan.h::SIOCSCANBAUDRATE" ref="g7c070037c218b40de849ebf4d299f977" args="" --><p>
@@ -1028,7 +1048,8 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
 <p>
 <dl compact><dt><b>Note:</b></dt><dd>Setting the baud rate is a configuration task. It should be done deliberately or otherwise CAN messages will likely be lost.</dd></dl>
-Rescheduling: possible.     </td>
+Rescheduling: possible. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcanconfig_8c-example.html#a94">rtcanconfig.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g26fa69d2cded6e172b96b4a6dc3798df"></a><!-- doxytag: member="rtcan.h::SIOCSCANCTRLMODE" ref="g26fa69d2cded6e172b96b4a6dc3798df" args="" --><p>
@@ -1068,7 +1089,8 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
 <p>
 <dl compact><dt><b>Note:</b></dt><dd>Setting specia controlelr modes is a configuration task. It should be done deliberately or otherwise CAN messages will likely be lost.</dd></dl>
-Rescheduling: possible.     </td>
+Rescheduling: possible. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcanconfig_8c-example.html#a109">rtcanconfig.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g4e9547dcb608fd0b8d5cf57f926e5176"></a><!-- doxytag: member="rtcan.h::SIOCSCANCUSTOMBITTIME" ref="g4e9547dcb608fd0b8d5cf57f926e5176" args="" --><p>
@@ -1108,7 +1130,8 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
 <p>
 <dl compact><dt><b>Note:</b></dt><dd>Setting the bit-time is a configuration task. It should be done deliberately or otherwise CAN messages will likely be lost.</dd></dl>
-Rescheduling: possible.     </td>
+Rescheduling: possible. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcanconfig_8c-example.html#a108">rtcanconfig.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g72b56a34fe466bca858b1f5f401e1076"></a><!-- doxytag: member="rtcan.h::SIOCSCANMODE" ref="g72b56a34fe466bca858b1f5f401e1076" args="" --><p>
@@ -1149,7 +1172,8 @@ This service can be called from:<p>
 <p>
 <dl compact><dt><b>Note:</b></dt><dd>Setting a CAN controller into normal operation after a bus-off can take some time (128 occurrences of 11 consecutive recessive bits). In such a case, although this IOCTL will return immediately with success and <a class="el" href="group__rtcan.html#g5b5f750db08d56f40489679f22236ef4">SIOCGCANSTATE</a> will report <a class="el" href="group__rtcan.html#gg8680f5710e1a13d553067cc32c86226b7db2add3bd2ed5a01893a3d2a012ac67">CAN_STATE_ACTIVE</a>, bus-off recovery may still be in progress. <br>
  If a controller is bus-off, setting it into stop mode will return no error but the controller remains bus-off.</dd></dl>
-Rescheduling: possible.     </td>
+Rescheduling: possible. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcanconfig_8c-example.html#a110">rtcanconfig.c</a>.</dl>    </td>
   </tr>
 </table>
 <hr><h2>Typedef Documentation</h2>
@@ -1175,10 +1199,16 @@ Rescheduling: possible.     </td>
 <p>
 Filter for reception of CAN messages. 
 <p>
-This filter works as follows: A received CAN ID is AND'ed bitwise with <code>can_mask</code> and then compared to <code>can_id</code>. If this comparison is true the message will be received by the socket.<p>
-Multiple filters can be arranged in a filter list and set with <a class="el" href="group__rtcan.html#Sockopts">Sockopts</a>. If one of these filters matches a CAN ID upon reception of a CAN frame, this frame is accepted.<p>
-<dl compact><dt><b>Note:</b></dt><dd>Only <a class="el" href="group__rtcan.html#g5ae55ab3741140024858bd7b8762ea42">CAN_EFF_FLAG</a> of <a class="el" href="group__rtcan.html#CAN_xxx_FLAG">CAN ID flags</a> is valid for <code>can_id</code> and none for <code>can_mask</code>. This means that the RTR bit is not taken into account while filtering messages.</dd></dl>
-Extended IDs are received only if <a class="el" href="group__rtcan.html#g5ae55ab3741140024858bd7b8762ea42">CAN_EFF_FLAG</a> is set in <code>can_id</code>. If it is cleared only standard IDs are accepted.     </td>
+This filter works as follows: A received CAN ID is AND'ed bitwise with <code>can_mask</code> and then compared to <code>can_id</code>. This also includes the <a class="el" href="group__rtcan.html#g5ae55ab3741140024858bd7b8762ea42">CAN_EFF_FLAG</a> and <a class="el" href="group__rtcan.html#gf324d65226057755175038a15d9bbd75">CAN_RTR_FLAG</a> of <a class="el" href="group__rtcan.html#CAN_xxx_FLAG">CAN_xxx_FLAG</a>. If this comparison is true, the message will be received by the socket. The logic can be inverted with the <code>can_id</code> flag <a class="el" href="group__rtcan.html#g5cb484fa2d90489f6b4e7a77c254c59f">CAN_INV_FILTER</a> :<p>
+<div class="fragment"><pre class="fragment"> <span class="keywordflow">if</span> (can_id &amp; CAN_INV_FILTER) {
+    <span class="keywordflow">if</span> ((received_can_id &amp; can_mask) != (can_id &amp; ~CAN_INV_FILTER))
+       accept-message;
+ } <span class="keywordflow">else</span> {
+    <span class="keywordflow">if</span> ((received_can_id &amp; can_mask) == can_id)
+       accept-message;
+ }
+</pre></div><p>
+Multiple filters can be arranged in a filter list and set with <a class="el" href="group__rtcan.html#Sockopts">Sockopts</a>. If one of these filters matches a CAN ID upon reception of a CAN frame, this frame is accepted.     </td>
   </tr>
 </table>
 <a class="anchor" name="gce340cdd98cbfd2525c9d6b23cdd2188"></a><!-- doxytag: member="rtcan.h::can_frame_t" ref="gce340cdd98cbfd2525c9d6b23cdd2188" args="" --><p>
@@ -1347,7 +1377,7 @@ CAN controller is in Sleep mode. </td></tr>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:31 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

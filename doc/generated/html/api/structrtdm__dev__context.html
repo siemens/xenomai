@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li id="current"><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -31,9 +32,12 @@
 <h1>rtdm_dev_context Struct Reference<br>
 <small>
 [<a class="el" href="group__devregister.html">Device Registration Services</a>]</small>
-</h1><!-- doxytag: class="rtdm_dev_context" --><code>#include &lt;<a class="el" href="rtdm__driver_8h-source.html">rtdm_driver.h</a>&gt;</code>
-<p>
-<hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1><!-- doxytag: class="rtdm_dev_context" -->Collaboration diagram for rtdm_dev_context:<p><center><img src="structrtdm__dev__context__coll__graph.png" border="0" usemap="#rtdm__dev__context__coll__map" alt="Collaboration graph"></center>
+<map name="rtdm__dev__context__coll__map">
+<area href="structrtdm__operations.html" shape="rect" coords="25,9,142,33" alt="">
+<area href="structrtdm__device.html" shape="rect" coords="97,100,190,124" alt="">
+</map>
+<center><font size="2">[<a target="top" href="graph_legend.html">legend</a>]</font></center><hr><a name="_details"></a><h2>Detailed Description</h2>
 Device context. 
 <p>
 A device context structure is associated with every open device instance. RTDM takes care of its creation and destruction and passes it to the operation handlers when being invoked.<p>
@@ -62,6 +66,10 @@ atomic_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <a class="el" href="structrtdm__device.html">rtdm_device</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__dev__context.html#8fea6f19169a166aa183d2e9da09df51">device</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Reference to owning device. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="35602d44d821195ba42acb1e280a4851"></a><!-- doxytag: member="rtdm_dev_context::reserved" ref="35602d44d821195ba42acb1e280a4851" args="" -->
+rtdm_devctx_reserved&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__dev__context.html#35602d44d821195ba42acb1e280a4851">reserved</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Data stored by RTDM inside a device context (internal use only). <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="720bc9395d80f0dea40c7ac3e449ea25"></a><!-- doxytag: member="rtdm_dev_context::dev_private" ref="720bc9395d80f0dea40c7ac3e449ea25" args="[0]" -->
 char&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__dev__context.html#720bc9395d80f0dea40c7ac3e449ea25">dev_private</a> [0]</td></tr>
 
@@ -69,7 +77,7 @@ char&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="stru
 </table>
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>include/rtdm/<a class="el" href="rtdm__driver_8h-source.html">rtdm_driver.h</a></ul>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:30 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

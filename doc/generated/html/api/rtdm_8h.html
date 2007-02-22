@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -36,22 +37,40 @@ Xenomai is free software; you can redistribute it and/or modify it under the ter
 Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with Xenomai; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
-<code>#include &lt;linux/fcntl.h&gt;</code><br>
-<code>#include &lt;linux/ioctl.h&gt;</code><br>
-<code>#include &lt;linux/sched.h&gt;</code><br>
-<code>#include &lt;linux/socket.h&gt;</code><br>
+
+<p>
+Include dependency graph for rtdm.h:<p><center><img src="rtdm_8h__incl.png" border="0" usemap="#include/rtdm/rtdm.h_map" alt=""></center>
+
+<p>
+This graph shows which files directly or indirectly include this file:<p><center><img src="rtdm_8h__dep__incl.png" border="0" usemap="#include/rtdm/rtdm.hdep_map" alt=""></center>
+<map name="include/rtdm/rtdm.hdep_map">
+<area href="rtcan_8h.html" shape="rect" coords="214,34,353,58" alt="">
+<area href="rtdm__driver_8h.html" shape="rect" coords="195,82,371,106" alt="">
+<area href="rtserial_8h.html" shape="rect" coords="209,130,358,154" alt="">
+<area href="rttesting_8h.html" shape="rect" coords="205,178,362,202" alt="">
+<area href="ksrc_2skins_2rtdm_2core_8c.html" shape="rect" coords="643,58,795,82" alt="">
+<area href="ksrc_2skins_2rtdm_2core_8h-source.html" shape="rect" coords="427,58,579,82" alt="">
+<area href="device_8h-source.html" shape="rect" coords="421,106,586,130" alt="">
+<area href="drvlib_8c.html" shape="rect" coords="425,154,582,178" alt="">
+<area href="device_8c.html" shape="rect" coords="638,106,801,130" alt="">
+<area href="skins_2rtdm_2module_8c.html" shape="rect" coords="635,154,803,178" alt="">
+</map>
 
 <p>
 <a href="rtdm_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
+<tr><td colspan="2"><br><h2>Data Structures</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">struct &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device__info.html">rtdm_device_info</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Device information.  <a href="structrtdm__device__info.html#_details">More...</a><br></td></tr>
 <tr><td colspan="2"><br><h2>API Versioning</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="api_versioning"></a> <br><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gdd2020d36782ebb916b065d6554f2631"></a><!-- doxytag: member="rtdm.h::RTDM_API_VER" ref="gdd2020d36782ebb916b065d6554f2631" args="" -->
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#gdd2020d36782ebb916b065d6554f2631">RTDM_API_VER</a>&nbsp;&nbsp;&nbsp;5</td></tr>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#gdd2020d36782ebb916b065d6554f2631">RTDM_API_VER</a>&nbsp;&nbsp;&nbsp;6</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Common user and driver API version. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g29d0fb2c233815a4a1d99f6a19f50b97"></a><!-- doxytag: member="rtdm.h::RTDM_API_MIN_COMPAT_VER" ref="g29d0fb2c233815a4a1d99f6a19f50b97" args="" -->
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#g29d0fb2c233815a4a1d99f6a19f50b97">RTDM_API_MIN_COMPAT_VER</a>&nbsp;&nbsp;&nbsp;5</td></tr>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#g29d0fb2c233815a4a1d99f6a19f50b97">RTDM_API_MIN_COMPAT_VER</a>&nbsp;&nbsp;&nbsp;6</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Minimum API revision compatible with the current release. <br></td></tr>
 <tr><td colspan="2"><br><h2>RTDM_TIMEOUT_xxx</h2></td></tr>
@@ -104,7 +123,10 @@ You should have received a copy of the GNU General Public License along with Xen
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_PURGE_TX_BUFFER</b>&nbsp;&nbsp;&nbsp;0x0002</td></tr>
 
 <tr><td colspan="2"><br><h2>Common IOCTLs</h2></td></tr>
-<tr><td colspan="2"><a class="anchor" name="common_IOCTLs"></a> The following IOCTLs shall be supported by any device profile if applicable <br><br></td></tr>
+<tr><td colspan="2"><a class="anchor" name="common_IOCTLs"></a> The following IOCTLs are common to all device profiles. <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__profiles.html#gae7eb728c73b844eed0ee612940c19ae">RTIOC_DEVICE_INFO</a>&nbsp;&nbsp;&nbsp;_IOR(RTIOC_TYPE_COMMON, 0x00, struct rtdm_device_info)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Retrieve information about a device or socket.  <a href="group__profiles.html#gae7eb728c73b844eed0ee612940c19ae"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__profiles.html#gc6abf51719ec6aa6e31f98a237721e01">RTIOC_PURGE</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_COMMON, 0x10, int)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Purge internal device or socket buffers.  <a href="group__profiles.html#gc6abf51719ec6aa6e31f98a237721e01"></a><br></td></tr>
@@ -115,8 +137,12 @@ You should have received a copy of the GNU General Public License along with Xen
 <tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int64_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">RTDM type for representing relative intervals.  <a href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g0598828a5144ac01c24eb24262234ed1"></a><!-- doxytag: member="rtdm.h::rtdm_device_info_t" ref="g0598828a5144ac01c24eb24262234ed1" args="" -->
+typedef <a class="el" href="structrtdm__device__info.html">rtdm_device_info</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__profiles.html#g0598828a5144ac01c24eb24262234ed1">rtdm_device_info_t</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Device information. <br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:30 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

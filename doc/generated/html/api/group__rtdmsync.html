@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -26,6 +27,12 @@
 <small>
 [<a class="el" href="group__driverapi.html">Driver Development API</a>]</small>
 </h1>
+<p>
+Collaboration diagram for Synchronisation Services:<center><table><tr><td><img src="group__rtdmsync.png" border="0" alt="" usemap="#group____rtdmsync_map">
+<map name="group____rtdmsync_map">
+<area href="group__driverapi.html" shape="rect" coords="8,8,173,32" alt="">
+</map></td></tr></table></center>
+
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
@@ -1035,7 +1042,7 @@ This function releases the given mutex, waking up a potential waiter which was b
 Environments:<p>
 This service can be called from:<p>
 <ul>
-<li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
+<li>Kernel-based task</li><li>User-space task (RT)</li></ul>
 <p>
 Rescheduling: possible.     </td>
   </tr>
@@ -1360,12 +1367,12 @@ Application Scenario: <div class="fragment"><pre class="fragment"><span class="k
 Environments:<p>
 This service can be called from:<p>
 <ul>
-<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
+<li>Kernel-based task</li><li>User-space task (RT)</li></ul>
 <p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:31 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:20 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

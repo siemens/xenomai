@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -25,7 +26,13 @@
 <h1>Message queue services.<br>
 <small>
 [<a class="el" href="group__native.html">Native Xenomai API.</a>]</small>
-</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1>
+<p>
+Collaboration diagram for Message queue services.:<center><table><tr><td><img src="group__native__queue.png" border="0" alt="" usemap="#group____native____queue_map">
+<map name="group____native____queue_map">
+<area href="group__native.html" shape="rect" coords="9,8,153,32" alt="">
+</map></td></tr></table></center>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
 Queue services.<p>
 Message queueing is a method by which real-time tasks can exchange or pass data through a Xenomai-managed queue of messages. Messages can vary in length and be assigned different types or usages. A message queue can be created by one task and used by multiple tasks that send and/or receive messages to the queue.<p>
 This implementation is based on a zero-copy scheme for message buffers. Message buffer pools are built over the nucleus's heap objects, which in turn provide the needed support for exchanging messages between kernel and user-space using direct memory mapping. 
@@ -202,7 +209,8 @@ This service can be called from:<p>
 <p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
 <dl compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
-    </td>
+<dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="msg__queue_8c-example.html#a33">msg_queue.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="gacad717bbd6d75338fada8f5b4a67b3f"></a><!-- doxytag: member="queue.c::rt_queue_create" ref="gacad717bbd6d75338fada8f5b4a67b3f" args="(RT_QUEUE *q, const char *name, size_t poolsize, size_t qlimit, int mode)" --><p>
@@ -351,6 +359,9 @@ Destroy a message queue and release all the tasks currently pending on it. A que
 <p>
 <ul>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li></ul>
+<p>
+<ul>
+<li>-EBUSY is returned if an attempt is made to delete a shared queue which is still bound to a process.</li></ul>
 <p>
 Environments:<p>
 This service can be called from:<p>
@@ -759,12 +770,16 @@ Unbinding from a message queue when it is no more needed is especially important
     <tr><td valign="top"></td><td valign="top"><em>q</em>&nbsp;</td><td>The address of a queue descriptor to unbind from.</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Returns:</b></dt><dd>0 is always returned.</dd></dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
+<ul>
+<li>-EINVAL is returned if <em>q</em> is invalid or not bound.</li></ul>
+<p>
 This service can be called from:<p>
 <ul>
 <li>User-space task.</li></ul>
 <p>
-Rescheduling: never.     </td>
+Rescheduling: never. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="msg__queue_8c-example.html#a36">msg_queue.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g9ef8d1826bb13fe706a4566890972657"></a><!-- doxytag: member="queue.c::rt_queue_write" ref="g9ef8d1826bb13fe706a4566890972657" args="(RT_QUEUE *q, const void *buf, size_t size, int mode)" --><p>
@@ -851,7 +866,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:30 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:17 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

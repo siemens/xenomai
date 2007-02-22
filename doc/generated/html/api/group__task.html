@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -25,7 +26,13 @@
 <h1>Task management services.<br>
 <small>
 [<a class="el" href="group__native.html">Native Xenomai API.</a>]</small>
-</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1>
+<p>
+Collaboration diagram for Task management services.:<center><table><tr><td><img src="group__task.png" border="0" alt="" usemap="#group____task_map">
+<map name="group____task_map">
+<area href="group__native.html" shape="rect" coords="9,8,153,32" alt="">
+</map></td></tr></table></center>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
 Xenomai provides a set of multitasking mechanisms. The basic process object performing actions in Xenomai is a task, a logically complete path of application code. Each Xenomai task is an independent portion of the overall application code embodied in a C procedure, which executes on its own stack context.<p>
 The Xenomai scheduler ensures that concurrent tasks are run according to one of the supported scheduling policies. Currently, the Xenomai scheduler supports fixed priority-based FIFO and round-robin policies. 
 <p>
@@ -269,7 +276,8 @@ This service can be called from:<p>
 <p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
 <dl compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
-    </td>
+<dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="bound__task_8c-example.html#a0">bound_task.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g8e17be7a49ac32bbeb3085b3cd1a9915"></a><!-- doxytag: member="task.c::rt_task_catch" ref="g8e17be7a49ac32bbeb3085b3cd1a9915" args="(void(*handler)(rt_sigset_t))" --><p>
@@ -1399,7 +1407,8 @@ This service can be called from:<p>
 <ul>
 <li>User-space task (enters primary mode)</li></ul>
 <p>
-Rescheduling: possible.     </td>
+Rescheduling: possible. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcanrecv_8c-example.html#a136">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a153">rtcansend.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="gd5225e5fb8d583fbdfa5299f322b8366"></a><!-- doxytag: member="task.c::rt_task_sleep" ref="gd5225e5fb8d583fbdfa5299f322b8366" args="(RTIME delay)" --><p>
@@ -1997,7 +2006,7 @@ This service can be called from:<p>
 Rescheduling: always if a next equal-priority task is ready to run, otherwise, this service leads to a no-op.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:31 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:17 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

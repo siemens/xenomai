@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -185,7 +186,7 @@
 <a name="l00156"></a>00156 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t clock_get_ticks(clockid_t clock_id)
 <a name="l00157"></a>00157 {
 <a name="l00158"></a>00158     <span class="keywordflow">if</span>(clock_id == CLOCK_REALTIME)
-<a name="l00159"></a>00159         <span class="keywordflow">return</span> <a class="code" href="timebase_8h.html#5246b53b5b2d1b11d4fab4312fd16fda">xntbase_get_time</a>(pse51_tbase);
+<a name="l00159"></a>00159         <span class="keywordflow">return</span> <a class="code" href="group__timebase.html#g5246b53b5b2d1b11d4fab4312fd16fda">xntbase_get_time</a>(pse51_tbase);
 <a name="l00160"></a>00160     <span class="keywordflow">else</span>
 <a name="l00161"></a>00161         <span class="keywordflow">return</span> xntbase_ns2ticks(pse51_tbase, xnpod_get_cpu_time());
 <a name="l00162"></a>00162 }
@@ -207,7 +208,7 @@
 <a name="l00178"></a>00178 }
 <a name="l00179"></a>00179 
 <a name="l00180"></a>00180 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_INTERNAL_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:29 2007 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

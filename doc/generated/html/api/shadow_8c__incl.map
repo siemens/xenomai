@@ -1,0 +1,13 @@
+base referer
+rect $pod_8h.html 254,296 358,320
+rect $nucleus_2heap_8h-source.html 250,344 362,368
+rect $synch_8h-source.html 247,392 365,416
+rect $module_8h-source.html 243,440 369,464
+rect $shadow_8h-source.html 242,488 370,512
+rect $include_2nucleus_2core_8h-source.html 251,586 361,610
+rect $ltt_8h-source.html 259,634 353,658
+rect $jhash_8h-source.html 249,682 363,706
+rect $ppd_8h-source.html 254,730 358,754
+rect $trace_8h-source.html 250,778 362,802
+rect $stat_8h-source.html 254,826 358,850
+rect $assert_8h-source.html 246,970 366,994

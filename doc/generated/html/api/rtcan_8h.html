@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -40,10 +41,12 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
-<code>#include &lt;linux/net.h&gt;</code><br>
-<code>#include &lt;linux/socket.h&gt;</code><br>
-<code>#include &lt;linux/if.h&gt;</code><br>
-<code>#include &lt;<a class="el" href="rtdm_8h-source.html">rtdm/rtdm.h</a>&gt;</code><br>
+
+<p>
+Include dependency graph for rtcan.h:<p><center><img src="rtcan_8h__incl.png" border="0" usemap="#include/rtdm/rtcan.h_map" alt=""></center>
+<map name="include/rtdm/rtcan.h_map">
+<area href="rtdm_8h.html" shape="rect" coords="197,154,288,178" alt="">
+</map>
 
 <p>
 <a href="rtcan_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
@@ -82,15 +85,19 @@ You should have received a copy of the GNU General Public License along with thi
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g5ae55ab3741140024858bd7b8762ea42"></a><!-- doxytag: member="rtcan.h::CAN_EFF_FLAG" ref="g5ae55ab3741140024858bd7b8762ea42" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g5ae55ab3741140024858bd7b8762ea42">CAN_EFF_FLAG</a>&nbsp;&nbsp;&nbsp;0x80000000</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">extended frame <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Extended frame. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gf324d65226057755175038a15d9bbd75"></a><!-- doxytag: member="rtcan.h::CAN_RTR_FLAG" ref="gf324d65226057755175038a15d9bbd75" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#gf324d65226057755175038a15d9bbd75">CAN_RTR_FLAG</a>&nbsp;&nbsp;&nbsp;0x40000000</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">remote transmission flag <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Remote transmission frame. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g24df2eae50a2cef0f7f08c73a246a012"></a><!-- doxytag: member="rtcan.h::CAN_ERR_FLAG" ref="g24df2eae50a2cef0f7f08c73a246a012" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g24df2eae50a2cef0f7f08c73a246a012">CAN_ERR_FLAG</a>&nbsp;&nbsp;&nbsp;0x20000000</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">error frame (see <a class="el" href="group__rtcan.html#Errors">Errors</a>) <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Error frame (see <a class="el" href="group__rtcan.html#Errors">Errors</a>), not valid in struct <a class="el" href="structcan__filter.html">can_filter</a>. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g5cb484fa2d90489f6b4e7a77c254c59f"></a><!-- doxytag: member="rtcan.h::CAN_INV_FILTER" ref="g5cb484fa2d90489f6b4e7a77c254c59f" args="" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g5cb484fa2d90489f6b4e7a77c254c59f">CAN_INV_FILTER</a>&nbsp;&nbsp;&nbsp;CAN_ERR_FLAG</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Invert CAN filter definition, only valid in struct <a class="el" href="structcan__filter.html">can_filter</a>. <br></td></tr>
 <tr><td colspan="2"><br><h2>CAN controller modes</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="CAN_CTRLMODE"></a> Special CAN controllers modes, which can be or'ed together. <br><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ge4ba49824d17e7d06300cb8b4a4bff45"></a><!-- doxytag: member="rtcan.h::CAN_CTRLMODE_LISTENONLY" ref="ge4ba49824d17e7d06300cb8b4a4bff45" args="" -->
@@ -119,9 +126,9 @@ You should have received a copy of the GNU General Public License along with thi
 <tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g451ba35aa4d0bef48cb7b0416f5b4367">CAN_RAW_ERR_FILTER</a>&nbsp;&nbsp;&nbsp;0x2</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN error mask.  <a href="group__rtcan.html#g451ba35aa4d0bef48cb7b0416f5b4367"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga8aa773ff7721010e48129847af2c843">CAN_RAW_TX_LOOPBACK</a>&nbsp;&nbsp;&nbsp;0x3</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga7eb7dc3aa940a0aca20d3a564a147d9">CAN_RAW_LOOPBACK</a>&nbsp;&nbsp;&nbsp;0x3</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN TX loopback.  <a href="group__rtcan.html#ga8aa773ff7721010e48129847af2c843"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN TX loopback.  <a href="group__rtcan.html#ga7eb7dc3aa940a0aca20d3a564a147d9"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>IOCTLs</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="IOCTLs"></a> CAN device IOCTLs <br><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#gee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_CAN, 0x00, struct ifreq)</td></tr>
@@ -477,7 +484,7 @@ typedef enum <a class="el" href="group__rtcan.html#g8680f5710e1a13d553067cc32c86
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Supported CAN bit-time types.  <a href="group__rtcan.html#g42c4f551b57f47d4e004c02505a01f71">More...</a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:30 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -26,6 +27,12 @@
 <small>
 [<a class="el" href="group__driverapi.html">Driver Development API</a>]</small>
 </h1>
+<p>
+Collaboration diagram for Device Registration Services:<center><table><tr><td><img src="group__devregister.png" border="0" alt="" usemap="#group____devregister_map">
+<map name="group____devregister_map">
+<area href="group__driverapi.html" shape="rect" coords="8,8,173,32" alt="">
+</map></td></tr></table></center>
+
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
@@ -67,10 +74,6 @@
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#g24b993fed8dae26b6597ba37f3f92eac">RTDM_CLOSING</a>&nbsp;&nbsp;&nbsp;1</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set by RTDM when the device is being closed. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gc1bcd3a024d95d4db3a4970a6d37293b"></a><!-- doxytag: member="devregister::RTDM_FORCED_CLOSING" ref="gc1bcd3a024d95d4db3a4970a6d37293b" args="" -->
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#gc1bcd3a024d95d4db3a4970a6d37293b">RTDM_FORCED_CLOSING</a>&nbsp;&nbsp;&nbsp;2</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set by RTDM if the device has to be closed regardless of possible pending locks held by other users. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g187778f8d7b6e5f0b459a526e6323471"></a><!-- doxytag: member="devregister::RTDM_USER_CONTEXT_FLAG" ref="g187778f8d7b6e5f0b459a526e6323471" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#g187778f8d7b6e5f0b459a526e6323471">RTDM_USER_CONTEXT_FLAG</a>&nbsp;&nbsp;&nbsp;8</td></tr>
 
@@ -78,7 +81,7 @@
 <tr><td colspan="2"><br><h2>Driver Versioning</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="drv_versioning"></a> Current revisions of RTDM structures, encoding of driver versions. See <a class="el" href="group__rtdm.html#api_versioning">API Versioning</a> for the interface revision. <br><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gb0f99b00be17869d5c9cd844825766f4"></a><!-- doxytag: member="devregister::RTDM_DEVICE_STRUCT_VER" ref="gb0f99b00be17869d5c9cd844825766f4" args="" -->
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#gb0f99b00be17869d5c9cd844825766f4">RTDM_DEVICE_STRUCT_VER</a>&nbsp;&nbsp;&nbsp;3</td></tr>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#gb0f99b00be17869d5c9cd844825766f4">RTDM_DEVICE_STRUCT_VER</a>&nbsp;&nbsp;&nbsp;4</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Version of struct <a class="el" href="structrtdm__device.html">rtdm_device</a>. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gb127a755cab544c5b318d4f4a3578e9f"></a><!-- doxytag: member="devregister::RTDM_CONTEXT_STRUCT_VER" ref="gb127a755cab544c5b318d4f4a3578e9f" args="" -->
@@ -115,9 +118,9 @@
 <tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#g6bd6c0761590d59f67b2c1e87fdd8440">rtdm_close_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Close handler.  <a href="#g6bd6c0761590d59f67b2c1e87fdd8440"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#gad108ebc56902cba1210015c94918ce7">rtdm_ioctl_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int request, void *arg)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#gf06ae003f1806b776682b1376527cc4e">rtdm_ioctl_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, unsigned int request, void *arg)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">IOCTL handler.  <a href="#gad108ebc56902cba1210015c94918ce7"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">IOCTL handler.  <a href="#gf06ae003f1806b776682b1376527cc4e"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">typedef ssize_t(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#g1a2f92a5ebe9f4d46fb6722ed5da047c">rtdm_read_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, void *buf, size_t nbyte)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read handler.  <a href="#g1a2f92a5ebe9f4d46fb6722ed5da047c"></a><br></td></tr>
@@ -172,13 +175,13 @@ Close handler.
     </td>
   </tr>
 </table>
-<a class="anchor" name="gad108ebc56902cba1210015c94918ce7"></a><!-- doxytag: member="rtdm_driver.h::rtdm_ioctl_handler_t" ref="gad108ebc56902cba1210015c94918ce7" args=")(struct rtdm_dev_context *context, rtdm_user_info_t *user_info, int request, void *arg)" --><p>
+<a class="anchor" name="gf06ae003f1806b776682b1376527cc4e"></a><!-- doxytag: member="rtdm_driver.h::rtdm_ioctl_handler_t" ref="gf06ae003f1806b776682b1376527cc4e" args=")(struct rtdm_dev_context *context, rtdm_user_info_t *user_info, unsigned int request, void *arg)" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">typedef int(* <a class="el" href="group__devregister.html#gad108ebc56902cba1210015c94918ce7">rtdm_ioctl_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int request, void *arg)          </td>
+          <td class="md" nowrap valign="top">typedef int(* <a class="el" href="group__devregister.html#gf06ae003f1806b776682b1376527cc4e">rtdm_ioctl_handler_t</a>)(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, unsigned int request, void *arg)          </td>
         </tr>
       </table>
     </td>
@@ -526,7 +529,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:31 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:19 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

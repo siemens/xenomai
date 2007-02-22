@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -25,7 +26,13 @@
 <h1>Thread state flags.<br>
 <small>
 [<a class="el" href="group__nucleus.html">Xenomai nucleus.</a>]</small>
-</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1>
+<p>
+Collaboration diagram for Thread state flags.:<center><table><tr><td><img src="group__nucleus__state__flags.png" border="0" alt="" usemap="#group____nucleus____state____flags_map">
+<map name="group____nucleus____state____flags_map">
+<area href="group__nucleus.html" shape="rect" coords="9,8,137,32" alt="">
+</map></td></tr></table></center>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
 Bits reporting permanent or transient states of thread. 
 <p>
 
@@ -68,7 +75,7 @@ Bits reporting permanent or transient states of thread.
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gabc63b4b55fdf5db7469d4532ed35fd2"></a><!-- doxytag: member="nucleus_state_flags::XNMAPPED" ref="gabc63b4b55fdf5db7469d4532ed35fd2" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nucleus__state__flags.html#gabc63b4b55fdf5db7469d4532ed35fd2">XNMAPPED</a>&nbsp;&nbsp;&nbsp;0x00000100</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Mapped to regular Linux task (shadow only). <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Mapped to a regular Linux task (shadow only). <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gdf5508cd88c2678ae01dfaf5570c661c"></a><!-- doxytag: member="nucleus_state_flags::XNRELAX" ref="gdf5508cd88c2678ae01dfaf5570c661c" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nucleus__state__flags.html#gdf5508cd88c2678ae01dfaf5570c661c">XNRELAX</a>&nbsp;&nbsp;&nbsp;0x00000200</td></tr>
 
@@ -80,15 +87,14 @@ Bits reporting permanent or transient states of thread.
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gca3bcd5615c7331c73c3eadddb3d1b89"></a><!-- doxytag: member="nucleus_state_flags::XNBOOST" ref="gca3bcd5615c7331c73c3eadddb3d1b89" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nucleus__state__flags.html#gca3bcd5615c7331c73c3eadddb3d1b89">XNBOOST</a>&nbsp;&nbsp;&nbsp;0x00000800</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Undergoes regular PIP boost. <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Undergoes a PIP boost. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g7ef9d2163ec49bc03fb8cd9c75f31e84"></a><!-- doxytag: member="nucleus_state_flags::XNDEBUG" ref="g7ef9d2163ec49bc03fb8cd9c75f31e84" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nucleus__state__flags.html#g7ef9d2163ec49bc03fb8cd9c75f31e84">XNDEBUG</a>&nbsp;&nbsp;&nbsp;0x00001000</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Hit debugger breakpoint (shadow only). <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g2defcfb1f04f077baeac9881cbdda627"></a><!-- doxytag: member="nucleus_state_flags::XNLOCK" ref="g2defcfb1f04f077baeac9881cbdda627" args="" -->
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nucleus__state__flags.html#g2defcfb1f04f077baeac9881cbdda627">XNLOCK</a>&nbsp;&nbsp;&nbsp;0x00002000</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Hit a debugger breakpoint (shadow only). <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nucleus__state__flags.html#g2defcfb1f04f077baeac9881cbdda627">XNLOCK</a>&nbsp;&nbsp;&nbsp;0x00002000</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Not preemptible. <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Holds the scheduler lock (i.e.  <a href="#g2defcfb1f04f077baeac9881cbdda627"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g6f451131910f816dd01fe1ec1fb50fe9"></a><!-- doxytag: member="nucleus_state_flags::XNRRB" ref="g6f451131910f816dd01fe1ec1fb50fe9" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nucleus__state__flags.html#g6f451131910f816dd01fe1ec1fb50fe9">XNRRB</a>&nbsp;&nbsp;&nbsp;0x00004000</td></tr>
 
@@ -126,7 +132,33 @@ Bits reporting permanent or transient states of thread.
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Using inverted priority scale. <br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:30 2007 for Xenomai API by&nbsp;
+<hr><h2>Define Documentation</h2>
+<a class="anchor" name="g2defcfb1f04f077baeac9881cbdda627"></a><!-- doxytag: member="thread.h::XNLOCK" ref="g2defcfb1f04f077baeac9881cbdda627" args="" --><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">#define XNLOCK&nbsp;&nbsp;&nbsp;0x00002000          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Holds the scheduler lock (i.e. 
+<p>
+not preemptible)     </td>
+  </tr>
+</table>
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
