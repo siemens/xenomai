@@ -18,6 +18,13 @@ INPUT                  = \
         @top_srcdir@/ksrc/skins/rtdm \
         @top_srcdir@/doc/doxygen
 
+# The EXAMPLE_PATH tag can be used to specify one or more files or 
+# directories that contain example code fragments that are included (see 
+# the \include command).
+
+EXAMPLE_PATH           = @top_srcdir@/src/utils \
+			 @top_srcdir@/examples/rtdm
+
 #---------------------------------------------------------------------------
 # configuration options related to the HTML output
 #---------------------------------------------------------------------------

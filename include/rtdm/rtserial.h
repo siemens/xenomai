@@ -459,6 +459,12 @@ typedef struct rtser_event {
     _IOR(RTIOC_TYPE_SERIAL, 0x05, struct rtser_event)
 /** @} */
 
+/*!
+ * @anchor RTSERutils @name RT Serial example and utility programs
+ * @{ */
+/** @example cross-link.c */
+/** @} */
+
 /** @} */
 
 #endif /* _RTSERIAL_H */

@@ -38,6 +38,11 @@
  *
  *@{*/
 
+/** @example user_task.c */
+/** @example kernel_task.c */
+/** @example bound_task.c */
+/** @example sigxcpu.c */
+
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
 #include <nucleus/registry.h>

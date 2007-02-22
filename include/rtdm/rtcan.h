@@ -1163,6 +1163,15 @@ typedef struct can_frame {
 
 /** @} */
 
+/*!
+ * @anchor CANutils @name CAN example and utility programs
+ * @{ */
+/** @example rtcanconfig.c */
+/** @example rtcansend.c */
+/** @example rtcanrecv.c */
+/** @example rtcan_rtt.c */
+/** @} */
+
 /** @} */
 
 

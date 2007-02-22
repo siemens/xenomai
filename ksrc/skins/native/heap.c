@@ -41,6 +41,9 @@
  *
  *@{*/
 
+/** @example local_heap.c */
+/** @example shared_mem.c */
+
 #include <nucleus/pod.h>
 #include <nucleus/registry.h>
 #include <native/task.h>
