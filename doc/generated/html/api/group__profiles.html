@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -25,7 +26,16 @@
 <h1>Device Profiles<br>
 <small>
 [<a class="el" href="group__rtdm.html">Real-Time Driver Model</a>]</small>
-</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1>
+<p>
+Collaboration diagram for Device Profiles:<center><table><tr><td><img src="group__profiles.png" border="0" alt="" usemap="#group____profiles_map">
+<map name="group____profiles_map">
+<area href="group__rtcan.html" shape="rect" coords="386,8,488,32" alt="">
+<area href="group__rtserial.html" shape="rect" coords="384,56,490,80" alt="">
+<area href="group__rttesting.html" shape="rect" coords="378,104,496,128" alt="">
+<area href="group__rtdm.html" shape="rect" coords="8,56,170,80" alt="">
+</map></td></tr></table></center>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
 Device profiles define which operation handlers a driver of a certain class has to implement, which name or protocol it has to register, which IOCTLs it has to provide, and further details. Sub-classes can be defined in order to extend a device profile with more hardware-specific functions. 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
@@ -37,6 +47,10 @@ Device profiles define which operation handlers a driver of a certain class has 
 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rttesting.html">Testing Devices</a></td></tr>
 
+<tr><td colspan="2"><br><h2>Data Structures</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">struct &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device__info.html">rtdm_device_info</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Device information.  <a href="structrtdm__device__info.html#_details">More...</a><br></td></tr>
 <tr><td colspan="2"><br><h2>RTDM_CLASS_xxx</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="RTDM_CLASS_xxx"></a> Device classes <br><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="geec8d82754c2ff58064295a59d0d01a8"></a><!-- doxytag: member="profiles::RTDM_CLASS_PARPORT" ref="geec8d82754c2ff58064295a59d0d01a8" args="" -->
@@ -77,12 +91,50 @@ Device profiles define which operation handlers a driver of a certain class has 
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_PURGE_TX_BUFFER</b>&nbsp;&nbsp;&nbsp;0x0002</td></tr>
 
 <tr><td colspan="2"><br><h2>Common IOCTLs</h2></td></tr>
-<tr><td colspan="2"><a class="anchor" name="common_IOCTLs"></a> The following IOCTLs shall be supported by any device profile if applicable <br><br></td></tr>
+<tr><td colspan="2"><a class="anchor" name="common_IOCTLs"></a> The following IOCTLs are common to all device profiles. <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__profiles.html#gae7eb728c73b844eed0ee612940c19ae">RTIOC_DEVICE_INFO</a>&nbsp;&nbsp;&nbsp;_IOR(RTIOC_TYPE_COMMON, 0x00, struct rtdm_device_info)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Retrieve information about a device or socket.  <a href="#gae7eb728c73b844eed0ee612940c19ae"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__profiles.html#gc6abf51719ec6aa6e31f98a237721e01">RTIOC_PURGE</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_COMMON, 0x10, int)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Purge internal device or socket buffers.  <a href="#gc6abf51719ec6aa6e31f98a237721e01"></a><br></td></tr>
+<tr><td colspan="2"><br><h2>Typedefs</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g0598828a5144ac01c24eb24262234ed1"></a><!-- doxytag: member="profiles::rtdm_device_info_t" ref="g0598828a5144ac01c24eb24262234ed1" args="" -->
+typedef <a class="el" href="structrtdm__device__info.html">rtdm_device_info</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__profiles.html#g0598828a5144ac01c24eb24262234ed1">rtdm_device_info_t</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Device information. <br></td></tr>
 </table>
 <hr><h2>Define Documentation</h2>
+<a class="anchor" name="gae7eb728c73b844eed0ee612940c19ae"></a><!-- doxytag: member="rtdm.h::RTIOC_DEVICE_INFO" ref="gae7eb728c73b844eed0ee612940c19ae" args="" --><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">#define RTIOC_DEVICE_INFO&nbsp;&nbsp;&nbsp;_IOR(RTIOC_TYPE_COMMON, 0x00, struct rtdm_device_info)          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Retrieve information about a device or socket. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>arg</em>&nbsp;</td><td>Pointer to information buffer (struct <a class="el" href="structrtdm__device__info.html">rtdm_device_info</a>) </td></tr>
+  </table>
+</dl>
+    </td>
+  </tr>
+</table>
 <a class="anchor" name="gc6abf51719ec6aa6e31f98a237721e01"></a><!-- doxytag: member="rtdm.h::RTIOC_PURGE" ref="gc6abf51719ec6aa6e31f98a237721e01" args="" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
@@ -113,7 +165,7 @@ Purge internal device or socket buffers.
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:31 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:20 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -116,40 +117,46 @@
 <a name="l00087"></a>00087 
 <a name="l00088"></a>00088 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_STATS */</span>
 <a name="l00089"></a>00089 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnstat_runtime {
-<a name="l00090"></a>00090 } xnstat_runtime_t;
-<a name="l00091"></a>00091 
-<a name="l00092"></a>00092 <span class="preprocessor">#define xnstat_runtime_now()                                 0</span>
-<a name="l00093"></a>00093 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_runtime_update(sched, start)                  do { } while (0)</span>
-<a name="l00094"></a>00094 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_runtime_set_current(sched, new_account)       ({ NULL; })</span>
-<a name="l00095"></a>00095 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_runtime_get_current(sched)                    ({ NULL; })</span>
-<a name="l00096"></a>00096 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_runtime_finalize(sched, new_account)          do { } while (0)</span>
-<a name="l00097"></a>00097 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_runtime_reset_stats(account)                  do { } while (0)</span>
-<a name="l00098"></a>00098 <span class="preprocessor"></span>
-<a name="l00099"></a>00099 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnstat_counter {
-<a name="l00100"></a>00100 } xnstat_counter_t;
-<a name="l00101"></a>00101 
-<a name="l00102"></a>00102 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnstat_counter_inc(xnstat_counter_t *c) { <span class="keywordflow">return</span> 0; }
-<a name="l00103"></a>00103 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnstat_counter_get(xnstat_counter_t *c) { <span class="keywordflow">return</span> 0; }
-<a name="l00104"></a>00104 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_STATS */</span>
-<a name="l00105"></a>00105 
-<a name="l00106"></a>00106 <span class="comment">/* Account the runtime of the current account until now, switch to</span>
-<a name="l00107"></a>00107 <span class="comment">   new_account, and return the previous one. */</span>
-<a name="l00108"></a>00108 <span class="preprocessor">#define xnstat_runtime_switch(sched, new_account) \</span>
-<a name="l00109"></a>00109 <span class="preprocessor">({ \</span>
-<a name="l00110"></a>00110 <span class="preprocessor">        xnstat_runtime_update(sched, xnstat_runtime_now()); \</span>
-<a name="l00111"></a>00111 <span class="preprocessor">        xnstat_runtime_set_current(sched, new_account); \</span>
-<a name="l00112"></a>00112 <span class="preprocessor">})</span>
-<a name="l00113"></a>00113 <span class="preprocessor"></span>
-<a name="l00114"></a>00114 <span class="comment">/* Account the runtime of the current account until given start time, switch</span>
-<a name="l00115"></a>00115 <span class="comment">   to new_account, and return the previous one. */</span>
-<a name="l00116"></a>00116 <span class="preprocessor">#define xnstat_runtime_lazy_switch(sched, new_account, start) \</span>
-<a name="l00117"></a>00117 <span class="preprocessor">({ \</span>
-<a name="l00118"></a>00118 <span class="preprocessor">        xnstat_runtime_update(sched, start); \</span>
-<a name="l00119"></a>00119 <span class="preprocessor">        xnstat_runtime_set_current(sched, new_account); \</span>
-<a name="l00120"></a>00120 <span class="preprocessor">})</span>
-<a name="l00121"></a>00121 <span class="preprocessor"></span>
-<a name="l00122"></a>00122 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_STAT_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:29 2007 for Xenomai API by&nbsp;
+<a name="l00090"></a>00090 <span class="preprocessor">#ifdef __XENO_SIM__</span>
+<a name="l00091"></a>00091 <span class="preprocessor"></span>    <span class="keywordtype">int</span> dummy;
+<a name="l00092"></a>00092 <span class="preprocessor">#endif </span><span class="comment">/* __XENO_SIM__ */</span>
+<a name="l00093"></a>00093 } xnstat_runtime_t;
+<a name="l00094"></a>00094 
+<a name="l00095"></a>00095 <span class="preprocessor">#define xnstat_runtime_now()                                 0</span>
+<a name="l00096"></a>00096 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_runtime_update(sched, start)                  do { } while (0)</span>
+<a name="l00097"></a>00097 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_runtime_set_current(sched, new_account)       ({ NULL; })</span>
+<a name="l00098"></a>00098 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_runtime_get_current(sched)                    ({ NULL; })</span>
+<a name="l00099"></a>00099 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_runtime_finalize(sched, new_account)          do { } while (0)</span>
+<a name="l00100"></a>00100 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_runtime_reset_stats(account)                  do { } while (0)</span>
+<a name="l00101"></a>00101 <span class="preprocessor"></span>
+<a name="l00102"></a>00102 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnstat_counter {
+<a name="l00103"></a>00103 <span class="preprocessor">#ifdef __XENO_SIM__</span>
+<a name="l00104"></a>00104 <span class="preprocessor"></span>    <span class="keywordtype">int</span> dummy;
+<a name="l00105"></a>00105 <span class="preprocessor">#endif </span><span class="comment">/* __XENO_SIM__ */</span>
+<a name="l00106"></a>00106 } xnstat_counter_t;
+<a name="l00107"></a>00107 
+<a name="l00108"></a>00108 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnstat_counter_inc(xnstat_counter_t *c) { <span class="keywordflow">return</span> 0; }
+<a name="l00109"></a>00109 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnstat_counter_get(xnstat_counter_t *c) { <span class="keywordflow">return</span> 0; }
+<a name="l00110"></a>00110 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_STATS */</span>
+<a name="l00111"></a>00111 
+<a name="l00112"></a>00112 <span class="comment">/* Account the runtime of the current account until now, switch to</span>
+<a name="l00113"></a>00113 <span class="comment">   new_account, and return the previous one. */</span>
+<a name="l00114"></a>00114 <span class="preprocessor">#define xnstat_runtime_switch(sched, new_account) \</span>
+<a name="l00115"></a>00115 <span class="preprocessor">({ \</span>
+<a name="l00116"></a>00116 <span class="preprocessor">        xnstat_runtime_update(sched, xnstat_runtime_now()); \</span>
+<a name="l00117"></a>00117 <span class="preprocessor">        xnstat_runtime_set_current(sched, new_account); \</span>
+<a name="l00118"></a>00118 <span class="preprocessor">})</span>
+<a name="l00119"></a>00119 <span class="preprocessor"></span>
+<a name="l00120"></a>00120 <span class="comment">/* Account the runtime of the current account until given start time, switch</span>
+<a name="l00121"></a>00121 <span class="comment">   to new_account, and return the previous one. */</span>
+<a name="l00122"></a>00122 <span class="preprocessor">#define xnstat_runtime_lazy_switch(sched, new_account, start) \</span>
+<a name="l00123"></a>00123 <span class="preprocessor">({ \</span>
+<a name="l00124"></a>00124 <span class="preprocessor">        xnstat_runtime_update(sched, start); \</span>
+<a name="l00125"></a>00125 <span class="preprocessor">        xnstat_runtime_set_current(sched, new_account); \</span>
+<a name="l00126"></a>00126 <span class="preprocessor">})</span>
+<a name="l00127"></a>00127 <span class="preprocessor"></span>
+<a name="l00128"></a>00128 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_STAT_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

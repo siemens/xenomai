@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -36,18 +37,24 @@ Xenomai is free software; you can redistribute it and/or modify it under the ter
 Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with Xenomai; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
-<code>#include &lt;stdarg.h&gt;</code><br>
-<code>#include &lt;<a class="el" href="pod_8h-source.html">nucleus/pod.h</a>&gt;</code><br>
-<code>#include &lt;<a class="el" href="include_2nucleus_2timer_8h-source.html">nucleus/timer.h</a>&gt;</code><br>
-<code>#include &lt;nucleus/synch.h&gt;</code><br>
-<code>#include &lt;nucleus/heap.h&gt;</code><br>
-<code>#include &lt;nucleus/intr.h&gt;</code><br>
-<code>#include &lt;<a class="el" href="include_2nucleus_2registry_8h-source.html">nucleus/registry.h</a>&gt;</code><br>
-<code>#include &lt;nucleus/module.h&gt;</code><br>
-<code>#include &lt;nucleus/ltt.h&gt;</code><br>
-<code>#include &lt;nucleus/stat.h&gt;</code><br>
-<code>#include &lt;asm/xenomai/bits/pod.h&gt;</code><br>
-<code>#include &lt;nucleus/assert.h&gt;</code><br>
+
+<p>
+Include dependency graph for pod.c:<p><center><img src="pod_8c__incl.png" border="0" usemap="#ksrc/nucleus/pod.c_map" alt=""></center>
+<map name="ksrc/nucleus/pod.c_map">
+<area href="pod_8h.html" shape="rect" coords="218,157,322,181" alt="">
+<area href="include_2nucleus_2timer_8h.html" shape="rect" coords="580,58,692,82" alt="">
+<area href="stat_8h-source.html" shape="rect" coords="584,158,688,182" alt="">
+<area href="include_2nucleus_2intr_8h-source.html" shape="rect" coords="413,109,514,133" alt="">
+<area href="synch_8h-source.html" shape="rect" coords="405,306,522,330" alt="">
+<area href="assert_8h-source.html" shape="rect" coords="744,381,864,405" alt="">
+<area href="nucleus_2heap_8h-source.html" shape="rect" coords="408,405,520,429" alt="">
+<area href="include_2nucleus_2registry_8h.html" shape="rect" coords="208,255,333,279" alt="">
+<area href="module_8h-source.html" shape="rect" coords="401,355,526,379" alt="">
+<area href="ltt_8h-source.html" shape="rect" coords="757,455,850,479" alt="">
+<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="404,157,524,181" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="912,331,1026,355" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="576,355,696,379" alt="">
+</map>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
@@ -139,7 +146,7 @@ You should have received a copy of the GNU General Public License along with Xen
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next periodic release point.  <a href="group__pod.html#gf836996e4a3378928f2a9f93a4915cfa"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:30 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -25,7 +26,16 @@
 <h1>Threads management services.<br>
 <small>
 [<a class="el" href="group__posix.html">POSIX skin.</a>]</small>
-</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1>
+<p>
+Collaboration diagram for Threads management services.:<center><table><tr><td><img src="group__posix__thread.png" border="0" alt="" usemap="#group____posix____thread_map">
+<map name="group____posix____thread_map">
+<area href="group__posix__cancel.html" shape="rect" coords="437,8,578,32" alt="">
+<area href="group__posix__sched.html" shape="rect" coords="410,56,605,80" alt="">
+<area href="group__posix__threadattr.html" shape="rect" coords="418,104,597,128" alt="">
+<area href="group__posix.html" shape="rect" coords="9,56,102,80" alt="">
+</map></td></tr></table></center>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
 Threads management services. 
 <p>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_09.html#tag_02_09">Specification.</a> </dd></dl>
@@ -151,7 +161,8 @@ an error number if:<ul>
 <li>EINVAL, <em>attr</em> is invalid;</li><li>EAGAIN, insufficient memory exists in the system heap to create a new thread, increase CONFIG_XENO_OPT_SYS_HEAPSZ;</li><li>EINVAL, thread attribute <em>inheritsched</em> is set to PTHREAD_INHERIT_SCHED and the calling thread does not belong to the POSIX skin;</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_create.html">Specification.</a> </dd></dl>
-    </td>
+<dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcan__rtt_8c-example.html#a78">rtcan_rtt.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g7c275c509c26566b6dd95a2de1668a2f"></a><!-- doxytag: member="thread.c::pthread_detach" ref="g7c275c509c26566b6dd95a2de1668a2f" args="(pthread_t thread)" --><p>
@@ -337,7 +348,8 @@ an error number if:<ul>
 <li>Xenomai kernel-space thread;</li><li>kernel module initilization or cleanup routine;</li><li>Xenomai user-space thread (switches to primary mode).</li></ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_join.html">Specification.</a> </dd></dl>
-    </td>
+<dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcan__rtt_8c-example.html#a81">rtcan_rtt.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="gfe8deaa3c89e0a07e59f0e58f9ec1473"></a><!-- doxytag: member="thread.c::pthread_make_periodic_np" ref="gfe8deaa3c89e0a07e59f0e58f9ec1473" args="(pthread_t thread, struct timespec *starttp, struct timespec *periodtp)" --><p>
@@ -475,7 +487,8 @@ This service returns the identifier of the calling thread.<p>
 <dl compact><dt><b>Returns:</b></dt><dd>identifier of the calling thread; <p>
 NULL if the calling thread is not a POSIX skin thread.</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_self.html">Specification.</a> </dd></dl>
-    </td>
+<dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcan__rtt_8c-example.html#a59">rtcan_rtt.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g9dd3db5524fccb05a8868b7c33ccaa79"></a><!-- doxytag: member="thread.c::pthread_set_mode_np" ref="g9dd3db5524fccb05a8868b7c33ccaa79" args="(int clrmask, int setmask)" --><p>
@@ -628,7 +641,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:31 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:23 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -31,32 +32,28 @@
 Real-time shadow services. 
 <p>
 <dl compact><dt><b>Author:</b></dt><dd>Philippe Gerum</dd></dl>
-Copyright (C) 2001,2002,2003,2004,2005,2006 Philippe Gerum &lt;<a href="mailto:rpm@xenomai.org">rpm@xenomai.org</a>&gt;. Copyright (C) 2004 The RTAI project &lt;<a href="http://www.rtai.org">http://www.rtai.org</a>&gt; Copyright (C) 2004 The HYADES project &lt;<a href="http://www.hyades-itea.org">http://www.hyades-itea.org</a>&gt; Copyright (C) 2005 The Xenomai project &lt;<a href="http://www.xenomai.org">http://www.xenomai.org</a>&gt; Copyright (C) 2006 Gilles Chanteperdrix &lt;<a href="mailto:gilles.chanteperdrix@laposte.net">gilles.chanteperdrix@laposte.net</a>&gt;<p>
+Copyright (C) 2001-2007 Philippe Gerum &lt;<a href="mailto:rpm@xenomai.org">rpm@xenomai.org</a>&gt;. Copyright (C) 2004 The RTAI project &lt;<a href="http://www.rtai.org">http://www.rtai.org</a>&gt; Copyright (C) 2004 The HYADES project &lt;<a href="http://www.hyades-itea.org">http://www.hyades-itea.org</a>&gt; Copyright (C) 2005 The Xenomai project &lt;<a href="http://www.xenomai.org">http://www.xenomai.org</a>&gt; Copyright (C) 2006 Gilles Chanteperdrix &lt;<a href="mailto:gilles.chanteperdrix@laposte.net">gilles.chanteperdrix@laposte.net</a>&gt;<p>
 Xenomai is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.<p>
 Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with Xenomai; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
-<code>#include &lt;stdarg.h&gt;</code><br>
-<code>#include &lt;linux/unistd.h&gt;</code><br>
-<code>#include &lt;linux/wait.h&gt;</code><br>
-<code>#include &lt;linux/init.h&gt;</code><br>
-<code>#include &lt;linux/kthread.h&gt;</code><br>
-<code>#include &lt;asm/signal.h&gt;</code><br>
-<code>#include &lt;<a class="el" href="pod_8h-source.html">nucleus/pod.h</a>&gt;</code><br>
-<code>#include &lt;nucleus/heap.h&gt;</code><br>
-<code>#include &lt;nucleus/synch.h&gt;</code><br>
-<code>#include &lt;nucleus/module.h&gt;</code><br>
-<code>#include &lt;nucleus/shadow.h&gt;</code><br>
-<code>#include &lt;nucleus/core.h&gt;</code><br>
-<code>#include &lt;nucleus/ltt.h&gt;</code><br>
-<code>#include &lt;nucleus/jhash.h&gt;</code><br>
-<code>#include &lt;nucleus/ppd.h&gt;</code><br>
-<code>#include &lt;nucleus/trace.h&gt;</code><br>
-<code>#include &lt;nucleus/stat.h&gt;</code><br>
-<code>#include &lt;asm/xenomai/features.h&gt;</code><br>
-<code>#include &lt;asm/xenomai/syscall.h&gt;</code><br>
-<code>#include &lt;asm/xenomai/bits/shadow.h&gt;</code><br>
-<code>#include &lt;nucleus/assert.h&gt;</code><br>
+
+<p>
+Include dependency graph for shadow.c:<p><center><img src="shadow_8c__incl.png" border="0" usemap="#ksrc/nucleus/shadow.c_map" alt=""></center>
+<map name="ksrc/nucleus/shadow.c_map">
+<area href="pod_8h.html" shape="rect" coords="254,296,358,320" alt="">
+<area href="nucleus_2heap_8h-source.html" shape="rect" coords="250,344,362,368" alt="">
+<area href="synch_8h-source.html" shape="rect" coords="247,392,365,416" alt="">
+<area href="module_8h-source.html" shape="rect" coords="243,440,369,464" alt="">
+<area href="shadow_8h-source.html" shape="rect" coords="242,488,370,512" alt="">
+<area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="251,586,361,610" alt="">
+<area href="ltt_8h-source.html" shape="rect" coords="259,634,353,658" alt="">
+<area href="jhash_8h-source.html" shape="rect" coords="249,682,363,706" alt="">
+<area href="ppd_8h-source.html" shape="rect" coords="254,730,358,754" alt="">
+<area href="trace_8h-source.html" shape="rect" coords="250,778,362,802" alt="">
+<area href="stat_8h-source.html" shape="rect" coords="254,826,358,850" alt="">
+<area href="assert_8h-source.html" shape="rect" coords="246,970,366,994" alt="">
+</map>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
@@ -73,7 +70,7 @@ You should have received a copy of the GNU General Public License along with Xen
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the per-process data attached to the calling process.  <a href="group__shadow.html#g14c8b586498491f886d7b5335f92c3b1"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:30 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

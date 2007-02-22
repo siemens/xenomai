@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -36,13 +37,22 @@ Xenomai is free software; you can redistribute it and/or modify it under the ter
 Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with Xenomai; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
-<code>#include &lt;asm/page.h&gt;</code><br>
-<code>#include &lt;asm/io.h&gt;</code><br>
-<code>#include &lt;asm/pgtable.h&gt;</code><br>
-<code>#include &lt;linux/delay.h&gt;</code><br>
-<code>#include &lt;linux/mman.h&gt;</code><br>
-<code>#include &lt;linux/highmem.h&gt;</code><br>
-<code>#include &lt;<a class="el" href="rtdm__driver_8h-source.html">rtdm/rtdm_driver.h</a>&gt;</code><br>
+
+<p>
+Include dependency graph for drvlib.c:<p><center><img src="drvlib_8c__incl.png" border="0" usemap="#ksrc/skins/rtdm/drvlib.c_map" alt=""></center>
+<map name="ksrc/skins/rtdm/drvlib.c_map">
+<area href="rtdm__driver_8h.html" shape="rect" coords="214,296,345,320" alt="">
+<area href="xenomai_8h-source.html" shape="rect" coords="394,246,527,270" alt="">
+<area href="pod_8h.html" shape="rect" coords="587,104,691,128" alt="">
+<area href="synch_8h-source.html" shape="rect" coords="581,298,698,322" alt="">
+<area href="nucleus_2heap_8h-source.html" shape="rect" coords="583,346,695,370" alt="">
+<area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="406,396,515,420" alt="">
+<area href="rtdm_8h.html" shape="rect" coords="415,444,506,468" alt="">
+<area href="assert_8h-source.html" shape="rect" coords="401,492,521,516" alt="">
+<area href="include_2nucleus_2intr_8h-source.html" shape="rect" coords="751,129,853,153" alt="">
+<area href="module_8h-source.html" shape="rect" coords="577,202,702,226" alt="">
+<area href="version_8h-source.html" shape="rect" coords="577,250,702,274" alt="">
+</map>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Timeout Sequence Management</h2></td></tr>
@@ -204,7 +214,7 @@ You should have received a copy of the GNU General Public License along with Xen
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Test if running in a real-time task.  <a href="group__util.html#g8f9fcd0e274324096628dfede6fb10f2"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:30 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

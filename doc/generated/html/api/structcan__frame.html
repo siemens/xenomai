@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li id="current"><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -31,15 +32,21 @@
 <h1>can_frame Struct Reference<br>
 <small>
 [<a class="el" href="group__rtcan.html">CAN Devices</a>]</small>
-</h1><!-- doxytag: class="can_frame" --><code>#include &lt;<a class="el" href="rtcan_8h-source.html">rtcan.h</a>&gt;</code>
-<p>
-<hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1><!-- doxytag: class="can_frame" --><hr><a name="_details"></a><h2>Detailed Description</h2>
 Raw CAN frame. 
 <p>
-Central structure for receiving and sending CAN frames. 
+Central structure for receiving and sending CAN frames. <dl compact><dt><b>Examples: </b></dt><dd>
+
+<p>
+<a class="el" href="rtcan__rtt_8c-example.html#_a55">rtcan_rtt.c</a>, <a class="el" href="rtcanrecv_8c-example.html#_a116">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#_a138">rtcansend.c</a>.</dl>
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
+<tr><td colspan="2"><br><h2>Public Member Functions</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="f58d971323fd8fdd65fb4b1140bc0ee5"></a><!-- doxytag: member="can_frame::__attribute__" ref="f58d971323fd8fdd65fb4b1140bc0ee5" args="((aligned(8)))" -->
+uint8_t data[8]&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcan__frame.html#f58d971323fd8fdd65fb4b1140bc0ee5">__attribute__</a> ((aligned(8)))</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Payload data bytes. <br></td></tr>
 <tr><td colspan="2"><br><h2>Data Fields</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="group__rtcan.html#gd4cb716102402e9be0b5919cd2dd6ead">can_id_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcan__frame.html#0294f06f81a3ae0d155eb5fd14733d63">can_id</a></td></tr>
 
@@ -48,10 +55,6 @@ Central structure for receiving and sending CAN frames.
 uint8_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcan__frame.html#a055f09fd81b299201618396b7dc9314">can_dlc</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Size of the payload in bytes. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="de6eedeba6cc24ef2f7a2aa2ed452291"></a><!-- doxytag: member="can_frame::data" ref="de6eedeba6cc24ef2f7a2aa2ed452291" args="[8]" -->
-uint8_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcan__frame.html#de6eedeba6cc24ef2f7a2aa2ed452291">data</a> [8]</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Payload data bytes. <br></td></tr>
 </table>
 <hr><h2>Field Documentation</h2>
 <a class="anchor" name="0294f06f81a3ae0d155eb5fd14733d63"></a><!-- doxytag: member="can_frame::can_id" ref="0294f06f81a3ae0d155eb5fd14733d63" args="" --><p>
@@ -76,12 +79,13 @@ uint8_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="s
 <p>
 CAN ID of the frame. 
 <p>
-See <a class="el" href="group__rtcan.html#CAN_xxx_FLAG">CAN ID flags</a> for special bits.     </td>
+See <a class="el" href="group__rtcan.html#CAN_xxx_FLAG">CAN ID flags</a> for special bits. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcan__rtt_8c-example.html#a56">rtcan_rtt.c</a>.</dl>    </td>
   </tr>
 </table>
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>include/rtdm/<a class="el" href="rtcan_8h-source.html">rtcan.h</a></ul>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:30 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

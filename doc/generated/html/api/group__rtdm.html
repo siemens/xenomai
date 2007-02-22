@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -22,9 +23,17 @@
       </form>
     </li>
   </ul></div>
-<h1>Real-Time Driver Model</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
+<h1>Real-Time Driver Model</h1>
+<p>
+Collaboration diagram for Real-Time Driver Model:<center><table><tr><td><img src="group__rtdm.png" border="0" alt="" usemap="#group____rtdm_map">
+<map name="group____rtdm_map">
+<area href="group__profiles.html" shape="rect" coords="246,8,356,32" alt="">
+<area href="group__userapi.html" shape="rect" coords="264,56,338,80" alt="">
+<area href="group__driverapi.html" shape="rect" coords="218,104,384,128" alt="">
+</map></td></tr></table></center>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
 The Real-Time Driver Model (RTDM) provides a unified interface to both users and developers of real-time device drivers. Specifically, it addresses the constraints of mixed RT/non-RT systems like Xenomai. RTDM conforms to POSIX semantics (IEEE Std 1003.1) where available and applicable.<p>
-<b>API</b> <b>Revision:</b> 5 
+<b>API</b> <b>Revision:</b> 6 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
@@ -38,11 +47,11 @@ The Real-Time Driver Model (RTDM) provides a unified interface to both users and
 <tr><td colspan="2"><br><h2>API Versioning</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="api_versioning"></a> <br><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gdd2020d36782ebb916b065d6554f2631"></a><!-- doxytag: member="rtdm::RTDM_API_VER" ref="gdd2020d36782ebb916b065d6554f2631" args="" -->
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#gdd2020d36782ebb916b065d6554f2631">RTDM_API_VER</a>&nbsp;&nbsp;&nbsp;5</td></tr>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#gdd2020d36782ebb916b065d6554f2631">RTDM_API_VER</a>&nbsp;&nbsp;&nbsp;6</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Common user and driver API version. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g29d0fb2c233815a4a1d99f6a19f50b97"></a><!-- doxytag: member="rtdm::RTDM_API_MIN_COMPAT_VER" ref="g29d0fb2c233815a4a1d99f6a19f50b97" args="" -->
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#g29d0fb2c233815a4a1d99f6a19f50b97">RTDM_API_MIN_COMPAT_VER</a>&nbsp;&nbsp;&nbsp;5</td></tr>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm.html#g29d0fb2c233815a4a1d99f6a19f50b97">RTDM_API_MIN_COMPAT_VER</a>&nbsp;&nbsp;&nbsp;6</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Minimum API revision compatible with the current release. <br></td></tr>
 <tr><td colspan="2"><br><h2>RTDM_TIMEOUT_xxx</h2></td></tr>
@@ -86,7 +95,8 @@ The Real-Time Driver Model (RTDM) provides a unified interface to both users and
 <p>
 RTDM type for representing absolute dates. 
 <p>
-Its base type is a 64 bit unsigned integer. The unit is 1 nanosecond.     </td>
+Its base type is a 64 bit unsigned integer. The unit is 1 nanosecond. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcanrecv_8c-example.html#a117">rtcanrecv.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="gededf91e760e3268235351dcc9d9dcda"></a><!-- doxytag: member="rtdm.h::nanosecs_rel_t" ref="gededf91e760e3268235351dcc9d9dcda" args="" --><p>
@@ -111,10 +121,11 @@ Its base type is a 64 bit unsigned integer. The unit is 1 nanosecond.     </td>
 <p>
 RTDM type for representing relative intervals. 
 <p>
-Its base type is a 64 bit signed integer. The unit is 1 nanosecond. Relative intervals can also encode the special timeouts "infinite" and "non-blocking", see <a class="el" href="group__rtdm.html#RTDM_TIMEOUT_xxx">RTDM_TIMEOUT_xxx</a>.     </td>
+Its base type is a 64 bit signed integer. The unit is 1 nanosecond. Relative intervals can also encode the special timeouts "infinite" and "non-blocking", see <a class="el" href="group__rtdm.html#RTDM_TIMEOUT_xxx">RTDM_TIMEOUT_xxx</a>. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcanrecv_8c-example.html#a111">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a137">rtcansend.c</a>.</dl>    </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:31 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -25,11 +26,17 @@
 <h1>Serial Devices<br>
 <small>
 [<a class="el" href="group__profiles.html">Device Profiles</a>]</small>
-</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
-This is a <b>preliminary</b> version of the common interface a RTDM-compliant serial device has to provide. This revision may still change until the final version. E.g., all definitions need to be reviewed if they do not contain too much 16550A-specifics or if significant features are missing. Feel free to comment on this profile via the Xenomai mailing list (<a href="mailto:Xenomai-help@gna.org">Xenomai-help@gna.org</a>) or directly to the author (<a href="mailto:jan.kiszka@web.de">jan.kiszka@web.de</a>). <br>
- <br>
+</h1>
 <p>
-<dl compact><dt><b>Device Characteristics</b></dt><dd><a class="el" href="structrtdm__device.html#f459bf86f0d037c99bb669f627d78764">Device Flags</a>: <code>RTDM_NAMED_DEVICE</code>, <code>RTDM_EXCLUSIVE</code> <br>
+Collaboration diagram for Serial Devices:<center><table><tr><td><img src="group__rtserial.png" border="0" alt="" usemap="#group____rtserial_map">
+<map name="group____rtserial_map">
+<area href="group__profiles.html" shape="rect" coords="9,8,118,32" alt="">
+</map></td></tr></table></center>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
+This is the common interface a RTDM-compliant serial device has to provide. Feel free to comment on this profile via the Xenomai mailing list (<a href="mailto:Xenomai-core@gna.org">Xenomai-core@gna.org</a>) or directly to the author (<a href="mailto:jan.kiszka@web.de">jan.kiszka@web.de</a>).<p>
+<b>Profile</b> <b>Revision:</b> 1 <br>
+ <br>
+ <dl compact><dt><b>Device Characteristics</b></dt><dd><a class="el" href="structrtdm__device.html#f459bf86f0d037c99bb669f627d78764">Device Flags</a>: <code>RTDM_NAMED_DEVICE</code>, <code>RTDM_EXCLUSIVE</code> <br>
  <br>
  <a class="el" href="structrtdm__device.html#376a833e95ff75eb9c8033895bc5e102">Device Name</a>: <code>"rtser&lt;N&gt;"</code>, N &gt;= 0 <br>
  <br>
@@ -484,7 +491,8 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
 <p>
 <dl compact><dt><b>Note:</b></dt><dd>If <a class="el" href="structrtser__config.html">rtser_config</a> contains a valid timestamp_history and the addressed device has been opened in non-real-time context, this IOCTL must be issued in non-real-time context as well. Otherwise, this command will fail.</dd></dl>
-Rescheduling: never.     </td>
+Rescheduling: never. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="cross-link_8c-example.html#a19">cross-link.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g8a6b907b0537064f156ac0fcadacbb2b"></a><!-- doxytag: member="rtserial.h::RTSER_RTIOC_SET_CONTROL" ref="g8a6b907b0537064f156ac0fcadacbb2b" args="" --><p>
@@ -562,10 +570,11 @@ This service can be called from:<p>
 <ul>
 <li>Kernel-based task</li><li>User-space task (RT)</li></ul>
 <p>
-Rescheduling: possible.     </td>
+Rescheduling: possible. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="cross-link_8c-example.html#a17">cross-link.c</a>.</dl>    </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:31 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:18 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

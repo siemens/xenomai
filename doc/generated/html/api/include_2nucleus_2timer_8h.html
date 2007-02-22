@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -33,7 +34,38 @@ Xenomai is free software; you can redistribute it and/or modify it under the ter
 Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with Xenomai; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
-<code>#include &lt;<a class="el" href="timebase_8h-source.html">nucleus/timebase.h</a>&gt;</code><br>
+
+<p>
+Include dependency graph for timer.h:<p><center><img src="include_2nucleus_2timer_8h__incl.png" border="0" usemap="#include/nucleus/timer.h_map" alt=""></center>
+<map name="include/nucleus/timer.h_map">
+<area href="timebase_8h.html" shape="rect" coords="217,58,353,82" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="402,58,522,82" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="738,58,853,82" alt="">
+<area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="575,58,685,82" alt="">
+<area href="assert_8h-source.html" shape="rect" coords="570,106,690,130" alt="">
+</map>
+
+<p>
+This graph shows which files directly or indirectly include this file:<p><center><img src="include_2nucleus_2timer_8h__dep__incl.png" border="0" usemap="#include/nucleus/timer.hdep_map" alt=""></center>
+<map name="include/nucleus/timer.hdep_map">
+<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="217,312,382,336" alt="">
+<area href="pod_8c.html" shape="rect" coords="676,409,809,433" alt="">
+<area href="timebase_8c.html" shape="rect" coords="660,160,825,184" alt="">
+<area href="ksrc_2nucleus_2timer_8c.html" shape="rect" coords="673,110,812,134" alt="">
+<area href="alarm_8h.html" shape="rect" coords="442,554,594,578" alt="">
+<area href="include_2native_2timer_8h.html" shape="rect" coords="226,604,373,628" alt="">
+<area href="nucleus_2pipe_8h-source.html" shape="rect" coords="442,360,594,384" alt="">
+<area href="pod_8h.html" shape="rect" coords="444,312,593,336" alt="">
+<area href="ksrc_2nucleus_2heap_8c.html" shape="rect" coords="673,212,812,236" alt="">
+<area href="nucleus_2registry_8c.html" shape="rect" coords="665,312,820,336" alt="">
+<area href="synch_8c.html" shape="rect" coords="670,262,814,286" alt="">
+<area href="include_2nucleus_2registry_8h.html" shape="rect" coords="433,458,604,482" alt="">
+<area href="task_8h.html" shape="rect" coords="448,506,589,530" alt="">
+<area href="ksrc_2skins_2native_2alarm_8c.html" shape="rect" coords="658,458,826,482" alt="">
+<area href="skins_2native_2module_8c.html" shape="rect" coords="653,506,832,530" alt="">
+<area href="native_2syscall_8c.html" shape="rect" coords="656,554,829,578" alt="">
+<area href="ksrc_2skins_2native_2timer_8c.html" shape="rect" coords="661,654,824,678" alt="">
+</map>
 
 <p>
 <a href="include_2nucleus_2timer_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
@@ -257,7 +289,7 @@ Activates a timer so that the associated timeout handler will be fired after eac
     <tr><td valign="top"></td><td valign="top"><em>timer</em>&nbsp;</td><td>The address of a valid timer descriptor.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>value</em>&nbsp;</td><td>The date of the initial timer shot, expressed in clock ticks (see note).</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>interval</em>&nbsp;</td><td>The reload value of the timer. It is a periodic interval value to be used for reprogramming the next timer shot, expressed in clock ticks (see note). If <em>interval</em> is equal to XN_INFINITE, the timer will not be reloaded after it has expired.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>The timer mode. It can be either XN_RELATIVE or XN_ABSOLUTE to define if <em>value</em> shall be interpreted as a relative or absolute date. Absolute dates are based on the clock value of the related time base returned by <a class="el" href="timebase_8h.html#5246b53b5b2d1b11d4fab4312fd16fda">xntbase_get_time()</a>.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>The timer mode. It can be either XN_RELATIVE or XN_ABSOLUTE to define if <em>value</em> shall be interpreted as a relative or absolute date. Absolute dates are based on the clock value of the related time base returned by <a class="el" href="group__timebase.html#g5246b53b5b2d1b11d4fab4312fd16fda">xntbase_get_time()</a>.</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success, or -ETIMEDOUT if an absolute date in the past has been given.</dd></dl>
@@ -315,7 +347,7 @@ Rescheduling: never.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:29 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

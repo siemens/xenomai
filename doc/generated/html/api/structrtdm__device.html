@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li id="current"><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -31,9 +32,11 @@
 <h1>rtdm_device Struct Reference<br>
 <small>
 [<a class="el" href="group__devregister.html">Device Registration Services</a>]</small>
-</h1><!-- doxytag: class="rtdm_device" --><code>#include &lt;<a class="el" href="rtdm__driver_8h-source.html">rtdm_driver.h</a>&gt;</code>
-<p>
-<hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1><!-- doxytag: class="rtdm_device" -->Collaboration diagram for rtdm_device:<p><center><img src="structrtdm__device__coll__graph.png" border="0" usemap="#rtdm__device__coll__map" alt="Collaboration graph"></center>
+<map name="rtdm__device__coll__map">
+<area href="structrtdm__operations.html" shape="rect" coords="7,9,125,33" alt="">
+</map>
+<center><font size="2">[<a target="top" href="graph_legend.html">legend</a>]</font></center><hr><a name="_details"></a><h2>Detailed Description</h2>
 RTDM device. 
 <p>
 This structure specifies a RTDM device. As some fields, especially the reserved area, will be modified by RTDM during runtime, the structure must not reside in write-protected memory. 
@@ -93,6 +96,10 @@ int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#ece6c5135a6256dbb3636f66eb97cb40">device_sub_class</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Device sub-class, see RTDM_SUBCLASS_xxx definition in the <a class="el" href="group__profiles.html">Device Profiles</a>. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="157db58bb0025b832ca409bc40735ae9"></a><!-- doxytag: member="rtdm_device::profile_version" ref="157db58bb0025b832ca409bc40735ae9" args="" -->
+int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#157db58bb0025b832ca409bc40735ae9">profile_version</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Supported device profile version. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="55d676531831124ae7e8051addde3cdc"></a><!-- doxytag: member="rtdm_device::driver_name" ref="55d676531831124ae7e8051addde3cdc" args="" -->
 const char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#55d676531831124ae7e8051addde3cdc">driver_name</a></td></tr>
 
@@ -128,7 +135,7 @@ rtdm_dev_reserved&nbsp;</td><td class="memItemRight" valign="bottom"><a class="e
 </table>
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>include/rtdm/<a class="el" href="rtdm__driver_8h-source.html">rtdm_driver.h</a></ul>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:30 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

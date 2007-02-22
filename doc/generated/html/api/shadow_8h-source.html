@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -73,16 +74,16 @@
 <a name="l00044"></a>00044 
 <a name="l00045"></a>00045 <span class="keyword">struct </span>xnskentry {
 <a name="l00046"></a>00046 
-<a name="l00047"></a>00047     <span class="keyword">const</span> <span class="keywordtype">char</span> *name;
-<a name="l00048"></a>00048     <span class="keywordtype">unsigned</span> magic;
-<a name="l00049"></a>00049     <span class="keywordtype">int</span> nrcalls;
-<a name="l00050"></a>00050     atomic_counter_t refcnt;
-<a name="l00051"></a>00051     <span class="keywordtype">void</span> *(*eventcb)(int, <span class="keywordtype">void</span> *);
-<a name="l00052"></a>00052     xnsysent_t *systab;
+<a name="l00047"></a>00047         <span class="keyword">const</span> <span class="keywordtype">char</span> *name;
+<a name="l00048"></a>00048         <span class="keywordtype">unsigned</span> magic;
+<a name="l00049"></a>00049         <span class="keywordtype">int</span> nrcalls;
+<a name="l00050"></a>00050         atomic_counter_t refcnt;
+<a name="l00051"></a>00051         <span class="keywordtype">void</span> *(*eventcb)(int, <span class="keywordtype">void</span> *);
+<a name="l00052"></a>00052         xnsysent_t *systab;
 <a name="l00053"></a>00053 <span class="preprocessor">#ifdef CONFIG_PROC_FS</span>
-<a name="l00054"></a>00054 <span class="preprocessor"></span>    <span class="keyword">struct </span>proc_dir_entry *proc;
+<a name="l00054"></a>00054 <span class="preprocessor"></span>        <span class="keyword">struct </span>proc_dir_entry *proc;
 <a name="l00055"></a>00055 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_PROC_FS */</span>
-<a name="l00056"></a>00056     <span class="keyword">struct </span>module *module;
+<a name="l00056"></a>00056         <span class="keyword">struct </span>module *module;
 <a name="l00057"></a>00057 };
 <a name="l00058"></a>00058 
 <a name="l00059"></a>00059 <span class="keywordtype">int</span> xnshadow_mount(<span class="keywordtype">void</span>);
@@ -147,7 +148,7 @@
 <a name="l00118"></a>00118 <span class="preprocessor">#endif</span>
 <a name="l00119"></a>00119 <span class="preprocessor"></span>
 <a name="l00120"></a>00120 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SHADOW_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:29 2007 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

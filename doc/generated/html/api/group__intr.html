@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -25,7 +26,13 @@
 <h1>Interrupt management.<br>
 <small>
 [<a class="el" href="group__nucleus.html">Xenomai nucleus.</a>]</small>
-</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1>
+<p>
+Collaboration diagram for Interrupt management.:<center><table><tr><td><img src="group__intr.png" border="0" alt="" usemap="#group____intr_map">
+<map name="group____intr_map">
+<area href="group__nucleus.html" shape="rect" coords="9,8,137,32" alt="">
+</map></td></tr></table></center>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
 Interrupt management. 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
@@ -412,7 +419,7 @@ A count of interrupt receipts is tracked into the interrupt descriptor, and rese
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>intr</em>&nbsp;</td><td>The address of a interrupt object descriptor the nucleus will use to store the object-specific data. This descriptor must always be valid while the object is active therefore it must be allocated in permanent memory.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>An ASCII string standing for the symbolic name of the interrupt object.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>An ASCII string standing for the symbolic name of the interrupt object or NULL ("&lt;unknown&gt;" will be applied then).</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>irq</em>&nbsp;</td><td>The hardware interrupt channel associated with the interrupt object. This value is architecture-dependent. An interrupt object must then be attached to the hardware interrupt vector using the <a class="el" href="group__intr.html#g52a4435332aa1dbdc18edb58231c83f0">xnintr_attach()</a> service for the associated IRQs to be directed to this object.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>isr</em>&nbsp;</td><td>The address of a valid low-level interrupt service routine if this parameter is non-zero. This handler will be called each time the corresponding IRQ is delivered on behalf of an interrupt context. When called, the ISR is passed the descriptor address of the interrupt object.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>iack</em>&nbsp;</td><td>The address of an optional interrupt acknowledge routine, aimed at replacing the default one. Only very specific situations actually require to override the default setting for this parameter, like having to acknowledge non-standard PIC hardware. <em>iack</em> should return a non-zero value to indicate that the interrupt has been properly acknowledged. If <em>iack</em> is NULL, the default routine will be used instead.</td></tr>
@@ -434,7 +441,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:30 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:13 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

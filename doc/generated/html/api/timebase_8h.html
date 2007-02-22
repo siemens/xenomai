@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -33,12 +34,36 @@ Xenomai is free software; you can redistribute it and/or modify it under the ter
 Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with Xenomai; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
-<code>#include &lt;nucleus/queue.h&gt;</code><br>
+
+<p>
+Include dependency graph for timebase.h:<p><center><img src="timebase_8h__incl.png" border="0" usemap="#include/nucleus/timebase.h_map" alt=""></center>
+<map name="include/nucleus/timebase.h_map">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="240,58,360,82" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="576,58,690,82" alt="">
+<area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="413,58,522,82" alt="">
+<area href="assert_8h-source.html" shape="rect" coords="408,106,528,130" alt="">
+<area href="compiler_8h-source.html" shape="rect" coords="752,106,885,130" alt="">
+</map>
+
+<p>
+This graph shows which files directly or indirectly include this file:<p><center><img src="timebase_8h__dep__incl.png" border="0" usemap="#include/nucleus/timebase.hdep_map" alt=""></center>
+<map name="include/nucleus/timebase.hdep_map">
+<area href="include_2nucleus_2timer_8h.html" shape="rect" coords="241,130,398,154" alt="">
+<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="449,8,614,32" alt="">
+<area href="ksrc_2nucleus_2timer_8c.html" shape="rect" coords="665,33,803,57" alt="">
+<area href="pod_8c.html" shape="rect" coords="465,106,598,130" alt="">
+<area href="timebase_8c.html" shape="rect" coords="449,154,614,178" alt="">
+<area href="alarm_8h.html" shape="rect" coords="455,202,607,226" alt="">
+<area href="include_2native_2timer_8h.html" shape="rect" coords="458,250,605,274" alt="">
+</map>
 
 <p>
 <a href="timebase_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static xnticks_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g61ff1abcbe816dd7ce6be2e2c7f2e44b">xntbase_convert</a> (xntbase_t *srcbase, xnticks_t ticks, xntbase_t *dstbase)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert a clock value into another time base.  <a href="group__timebase.html#g61ff1abcbe816dd7ce6be2e2c7f2e44b"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g44412f2f0a481d351695f540c1e4750a">xntbase_alloc</a> (const char *name, u_long period, xntbase_t **basep)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a time base.  <a href="group__timebase.html#g44412f2f0a481d351695f540c1e4750a"></a><br></td></tr>
@@ -60,57 +85,14 @@ You should have received a copy of the GNU General Public License along with Xen
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g15896b6c498acdc5e2516ad0cc9df5ac">xntbase_tick</a> (xntbase_t *base)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Announce a clock tick to a time base.  <a href="group__timebase.html#g15896b6c498acdc5e2516ad0cc9df5ac"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static xnticks_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="timebase_8h.html#5246b53b5b2d1b11d4fab4312fd16fda">xntbase_get_time</a> (xntbase_t *base)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static xnticks_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g5246b53b5b2d1b11d4fab4312fd16fda">xntbase_get_time</a> (xntbase_t *base)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the clock time for a given time base.  <a href="#5246b53b5b2d1b11d4fab4312fd16fda"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the clock time for a given time base.  <a href="group__timebase.html#g5246b53b5b2d1b11d4fab4312fd16fda"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g2429ebe0dcf2493211a93de41f154748">xntbase_set_time</a> (xntbase_t *base, xnticks_t newtime)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the clock time for a given time base.  <a href="group__timebase.html#g2429ebe0dcf2493211a93de41f154748"></a><br></td></tr>
 </table>
-<hr><h2>Function Documentation</h2>
-<a class="anchor" name="5246b53b5b2d1b11d4fab4312fd16fda"></a><!-- doxytag: member="timebase.h::xntbase_get_time" ref="5246b53b5b2d1b11d4fab4312fd16fda" args="(xntbase_t *base)" --><p>
-<table class="mdTable" cellpadding="2" cellspacing="0">
-  <tr>
-    <td class="mdRow">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td class="md" nowrap valign="top">xnticks_t xntbase_get_time           </td>
-          <td class="md" valign="top">(&nbsp;</td>
-          <td class="md" nowrap valign="top">xntbase_t *&nbsp;</td>
-          <td class="mdname1" valign="top" nowrap> <em>base</em>          </td>
-          <td class="md" valign="top">&nbsp;)&nbsp;</td>
-          <td class="md" nowrap><code> [inline, static]</code></td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table cellspacing="5" cellpadding="0" border="0">
-  <tr>
-    <td>
-      &nbsp;
-    </td>
-    <td>
-
-<p>
-Get the clock time for a given time base. 
-<p>
-This service returns the (external) clock time as maintained by the specified time base. This value is adjusted with the wallclock offset as defined by <a class="el" href="group__timebase.html#g2429ebe0dcf2493211a93de41f154748">xntbase_set_time()</a>.<p>
-<dl compact><dt><b>Parameters:</b></dt><dd>
-  <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>base</em>&nbsp;</td><td>The address of the time base to query.</td></tr>
-  </table>
-</dl>
-<dl compact><dt><b>Returns:</b></dt><dd>The current time (in jiffies) if the specified time base runs in periodic mode, or the machine time (converted to nanoseconds) as maintained by the hardware if <em>base</em> refers to the master time base.</dd></dl>
-Environments:<p>
-This service can be called from:<p>
-<ul>
-<li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
-<p>
-Rescheduling: never.     </td>
-  </tr>
-</table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:29 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

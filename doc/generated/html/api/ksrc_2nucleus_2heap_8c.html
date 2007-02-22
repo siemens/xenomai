@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -36,15 +37,19 @@ Xenomai is free software; you can redistribute it and/or modify it under the ter
 Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with Xenomai; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
-<code>#include &lt;<a class="el" href="pod_8h-source.html">nucleus/pod.h</a>&gt;</code><br>
-<code>#include &lt;nucleus/thread.h&gt;</code><br>
-<code>#include &lt;nucleus/heap.h&gt;</code><br>
-<code>#include &lt;asm/xenomai/bits/heap.h&gt;</code><br>
-<code>#include &lt;asm/io.h&gt;</code><br>
-<code>#include &lt;linux/miscdevice.h&gt;</code><br>
-<code>#include &lt;linux/device.h&gt;</code><br>
-<code>#include &lt;linux/vmalloc.h&gt;</code><br>
-<code>#include &lt;linux/mm.h&gt;</code><br>
+
+<p>
+Include dependency graph for heap.c:<p><center><img src="ksrc_2nucleus_2heap_8c__incl.png" border="0" usemap="#ksrc/nucleus/heap.c_map" alt=""></center>
+<map name="ksrc/nucleus/heap.c_map">
+<area href="pod_8h.html" shape="rect" coords="230,58,334,82" alt="">
+<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="417,10,537,34" alt="">
+<area href="nucleus_2heap_8h-source.html" shape="rect" coords="226,106,338,130" alt="">
+<area href="include_2nucleus_2intr_8h-source.html" shape="rect" coords="426,58,527,82" alt="">
+<area href="include_2nucleus_2timer_8h.html" shape="rect" coords="587,10,699,34" alt="">
+<area href="stat_8h-source.html" shape="rect" coords="591,58,695,82" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="586,106,701,130" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="417,106,537,130" alt="">
+</map>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
@@ -70,7 +75,7 @@ You should have received a copy of the GNU General Public License along with Xen
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Schedule a memory block for release.  <a href="group__heap.html#g548f69835e12bf259b6d417b11338a11"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:30 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

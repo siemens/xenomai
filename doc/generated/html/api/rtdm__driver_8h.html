@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
         <table cellspacing="0" cellpadding="0" border="0">
@@ -36,15 +37,34 @@ Xenomai is free software; you can redistribute it and/or modify it under the ter
 Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with Xenomai; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
-<code>#include &lt;asm/atomic.h&gt;</code><br>
-<code>#include &lt;linux/list.h&gt;</code><br>
-<code>#include &lt;nucleus/xenomai.h&gt;</code><br>
-<code>#include &lt;nucleus/core.h&gt;</code><br>
-<code>#include &lt;nucleus/heap.h&gt;</code><br>
-<code>#include &lt;<a class="el" href="pod_8h-source.html">nucleus/pod.h</a>&gt;</code><br>
-<code>#include &lt;nucleus/synch.h&gt;</code><br>
-<code>#include &lt;<a class="el" href="rtdm_8h-source.html">rtdm/rtdm.h</a>&gt;</code><br>
-<code>#include &lt;nucleus/assert.h&gt;</code><br>
+
+<p>
+Include dependency graph for rtdm_driver.h:<p><center><img src="rtdm__driver_8h__incl.png" border="0" usemap="#include/rtdm/rtdm_driver.h_map" alt=""></center>
+<map name="include/rtdm/rtdm_driver.h_map">
+<area href="xenomai_8h-source.html" shape="rect" coords="234,273,368,297" alt="">
+<area href="pod_8h.html" shape="rect" coords="428,154,532,178" alt="">
+<area href="synch_8h-source.html" shape="rect" coords="421,349,538,373" alt="">
+<area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="768,313,877,337" alt="">
+<area href="assert_8h-source.html" shape="rect" coords="762,385,882,409" alt="">
+<area href="nucleus_2heap_8h-source.html" shape="rect" coords="424,397,536,421" alt="">
+<area href="rtdm_8h.html" shape="rect" coords="256,544,346,568" alt="">
+<area href="include_2nucleus_2intr_8h-source.html" shape="rect" coords="602,228,704,252" alt="">
+<area href="module_8h-source.html" shape="rect" coords="417,301,542,325" alt="">
+<area href="version_8h-source.html" shape="rect" coords="417,202,542,226" alt="">
+<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="593,154,713,178" alt="">
+<area href="nucleus_2queue_8h-source.html" shape="rect" coords="593,349,713,373" alt="">
+</map>
+
+<p>
+This graph shows which files directly or indirectly include this file:<p><center><img src="rtdm__driver_8h__dep__incl.png" border="0" usemap="#include/rtdm/rtdm_driver.hdep_map" alt=""></center>
+<map name="include/rtdm/rtdm_driver.hdep_map">
+<area href="ksrc_2skins_2rtdm_2core_8c.html" shape="rect" coords="457,58,609,82" alt="">
+<area href="ksrc_2skins_2rtdm_2core_8h-source.html" shape="rect" coords="241,58,393,82" alt="">
+<area href="device_8h-source.html" shape="rect" coords="234,106,400,130" alt="">
+<area href="drvlib_8c.html" shape="rect" coords="238,154,396,178" alt="">
+<area href="device_8c.html" shape="rect" coords="452,106,614,130" alt="">
+<area href="skins_2rtdm_2module_8c.html" shape="rect" coords="449,154,617,178" alt="">
+</map>
 
 <p>
 <a href="rtdm__driver_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
@@ -87,10 +107,6 @@ You should have received a copy of the GNU General Public License along with Xen
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#g24b993fed8dae26b6597ba37f3f92eac">RTDM_CLOSING</a>&nbsp;&nbsp;&nbsp;1</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set by RTDM when the device is being closed. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gc1bcd3a024d95d4db3a4970a6d37293b"></a><!-- doxytag: member="rtdm_driver.h::RTDM_FORCED_CLOSING" ref="gc1bcd3a024d95d4db3a4970a6d37293b" args="" -->
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#gc1bcd3a024d95d4db3a4970a6d37293b">RTDM_FORCED_CLOSING</a>&nbsp;&nbsp;&nbsp;2</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set by RTDM if the device has to be closed regardless of possible pending locks held by other users. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g187778f8d7b6e5f0b459a526e6323471"></a><!-- doxytag: member="rtdm_driver.h::RTDM_USER_CONTEXT_FLAG" ref="g187778f8d7b6e5f0b459a526e6323471" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#g187778f8d7b6e5f0b459a526e6323471">RTDM_USER_CONTEXT_FLAG</a>&nbsp;&nbsp;&nbsp;8</td></tr>
 
@@ -98,7 +114,7 @@ You should have received a copy of the GNU General Public License along with Xen
 <tr><td colspan="2"><br><h2>Driver Versioning</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="drv_versioning"></a> Current revisions of RTDM structures, encoding of driver versions. See <a class="el" href="group__rtdm.html#api_versioning">API Versioning</a> for the interface revision. <br><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gb0f99b00be17869d5c9cd844825766f4"></a><!-- doxytag: member="rtdm_driver.h::RTDM_DEVICE_STRUCT_VER" ref="gb0f99b00be17869d5c9cd844825766f4" args="" -->
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#gb0f99b00be17869d5c9cd844825766f4">RTDM_DEVICE_STRUCT_VER</a>&nbsp;&nbsp;&nbsp;3</td></tr>
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#gb0f99b00be17869d5c9cd844825766f4">RTDM_DEVICE_STRUCT_VER</a>&nbsp;&nbsp;&nbsp;4</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Version of struct <a class="el" href="structrtdm__device.html">rtdm_device</a>. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gb127a755cab544c5b318d4f4a3578e9f"></a><!-- doxytag: member="rtdm_driver.h::RTDM_CONTEXT_STRUCT_VER" ref="gb127a755cab544c5b318d4f4a3578e9f" args="" -->
@@ -209,9 +225,9 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#g6bd6c0761590d59f67b2c1e87fdd8440">rtdm_close_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Close handler.  <a href="group__devregister.html#g6bd6c0761590d59f67b2c1e87fdd8440"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#gad108ebc56902cba1210015c94918ce7">rtdm_ioctl_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, int request, void *arg)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#gf06ae003f1806b776682b1376527cc4e">rtdm_ioctl_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, unsigned int request, void *arg)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">IOCTL handler.  <a href="group__devregister.html#gad108ebc56902cba1210015c94918ce7"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">IOCTL handler.  <a href="group__devregister.html#gf06ae003f1806b776682b1376527cc4e"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">typedef ssize_t(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#g1a2f92a5ebe9f4d46fb6722ed5da047c">rtdm_read_handler_t</a> )(struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context, rtdm_user_info_t *user_info, void *buf, size_t nbyte)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read handler.  <a href="group__devregister.html#g1a2f92a5ebe9f4d46fb6722ed5da047c"></a><br></td></tr>
@@ -248,6 +264,9 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#g99e8509f4c8b404f0d5795b575d4c9cb">rtdm_context_get</a> (int fd)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Resolve file descriptor to device context.  <a href="group__interdrv.html#g99e8509f4c8b404f0d5795b575d4c9cb"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmirq.html#g9bb3d95218ac5261e4033fb0bf695073">rtdm_irq_request</a> (rtdm_irq_t *irq_handle, unsigned int irq_no, <a class="el" href="group__rtdmirq.html#gdabd8f3473098ae9128ef449a83fe3c2">rtdm_irq_handler_t</a> handler, unsigned long flags, const char *device_name, void *arg)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Register an interrupt handler.  <a href="group__rtdmirq.html#g9bb3d95218ac5261e4033fb0bf695073"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#g44b0701b6c28fa8035711f800fdcd371">rtdm_task_init</a> (rtdm_task_t *task, const char *name, <a class="el" href="group__rtdmtask.html#ga3cb481ab12462f5e54ff6fee12813e5">rtdm_task_proc_t</a> task_proc, void *arg, int priority, <a class="el" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> period)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Intialise and start a real-time task.  <a href="group__rtdmtask.html#g44b0701b6c28fa8035711f800fdcd371"></a><br></td></tr>
@@ -260,6 +279,12 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga3940cfff7cc72d7bc064a3e279d74ac">rtdm_task_busy_sleep</a> (<a class="el" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> delay)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Busy-wait a specified amount of time.  <a href="group__rtdmtask.html#ga3940cfff7cc72d7bc064a3e279d74ac"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g531ddf80690059302409f760bd7f14d4">rtdm_toseq_init</a> (rtdm_toseq_t *timeout_seq, <a class="el" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> timeout)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a timeout sequence.  <a href="group__rtdmsync.html#g531ddf80690059302409f760bd7f14d4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#gddf08d8ba5a44668bb360070a114fb19">rtdm_event_init</a> (rtdm_event_t *event, unsigned long pending)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise an event.  <a href="group__rtdmsync.html#gddf08d8ba5a44668bb360070a114fb19"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g1c433b50c53d49d164b084751861e855">rtdm_event_wait</a> (rtdm_event_t *event)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on event occurrence.  <a href="group__rtdmsync.html#g1c433b50c53d49d164b084751861e855"></a><br></td></tr>
@@ -272,6 +297,9 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g732fe3cf3370df0f296f06fc4ac7f925">rtdm_event_clear</a> (rtdm_event_t *event)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Clear event state.  <a href="group__rtdmsync.html#g732fe3cf3370df0f296f06fc4ac7f925"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ge1172824e463d7705ed3033e8aea133d">rtdm_sem_init</a> (rtdm_sem_t *sem, unsigned long value)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a semaphore.  <a href="group__rtdmsync.html#ge1172824e463d7705ed3033e8aea133d"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g59da1b60b7279c1fc4355e2e0b2cc77c">rtdm_sem_down</a> (rtdm_sem_t *sem)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement a semaphore.  <a href="group__rtdmsync.html#g59da1b60b7279c1fc4355e2e0b2cc77c"></a><br></td></tr>
@@ -281,6 +309,9 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g829dbd8c5709d798ed06947b27001fed">rtdm_sem_up</a> (rtdm_sem_t *sem)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Increment a semaphore.  <a href="group__rtdmsync.html#g829dbd8c5709d798ed06947b27001fed"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g8d58a144bf71df7b38bb887d036cbbb5">rtdm_mutex_init</a> (rtdm_mutex_t *mutex)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a mutex.  <a href="group__rtdmsync.html#g8d58a144bf71df7b38bb887d036cbbb5"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g67c8f85c844df1aeed806e343a1b6437">rtdm_mutex_lock</a> (rtdm_mutex_t *mutex)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex.  <a href="group__rtdmsync.html#g67c8f85c844df1aeed806e343a1b6437"></a><br></td></tr>
@@ -288,7 +319,7 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex with timeout.  <a href="group__rtdmsync.html#g0789968300701ba2a940f5fe8b1fd4d8"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Tue Jan 2 08:57:30 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
