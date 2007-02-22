@@ -19,6 +19,9 @@ KSRC ?= /lib/modules/$(shell uname -r)/build
 ###### USER SPACE BUILD (no change required normally) ######
 ifneq ($(APPLICATIONS),)
 
+### Default Xenomai installation path
+XENO ?= /usr/xenomai
+
 XENOCONFIG=$(shell PATH=$(XENO):$(XENO)/bin:$(PATH) which xeno-config 2>/dev/null)
 
 ### Sanity check
