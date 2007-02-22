@@ -45,6 +45,8 @@
  *
  *@{*/
 
+/** @example pipe.c */
+
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
 #include <nucleus/registry.h>

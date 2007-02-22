@@ -22,6 +22,14 @@ INPUT                  = \
         @top_srcdir@/ksrc/skins/native \
         @top_srcdir@/doc/doxygen
 
+# The EXAMPLE_PATH tag can be used to specify one or more files or 
+# directories that contain example code fragments that are included (see 
+# the \include command).
+
+EXAMPLE_PATH           = @top_srcdir@/ksrc/skins/native/snippets \
+		         @top_srcdir@/ksrc/skins/native/demos \
+			 @top_srcdir@/examples/native
+
 #---------------------------------------------------------------------------
 # configuration options related to the HTML output
 #---------------------------------------------------------------------------

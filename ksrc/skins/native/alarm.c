@@ -34,6 +34,8 @@
  *
  *@{*/
 
+/** @example user_alarm.c */
+
 #include <nucleus/pod.h>
 #include <nucleus/registry.h>
 #include <native/task.h>
