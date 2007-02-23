@@ -1,3 +1,8 @@
+2007-02-23  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* ksrc/drivers/can/rtcan_virt.c (rtcan_virt_exit): Bug fix, stop device
+	before unregistering it.
+
 2007-02-19  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* ksrc/drivers/can/rtcan_raw.c (rtcan_raw_bind),
