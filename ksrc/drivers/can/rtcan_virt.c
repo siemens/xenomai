@@ -185,6 +185,7 @@ static void __exit rtcan_virt_exit(void)
 
 		printk("Unloading %s device %s\n", RTCAN_DRV_NAME, dev->name);
 
+		rtcan_virt_set_mode(dev, CAN_MODE_STOP, NULL);
 		rtcan_dev_unregister(dev);
 		rtcan_dev_free(dev);
 	}
