@@ -9,9 +9,6 @@ APPLICATIONS = rtcan_rtt
 ### List of modules to be build
 MODULES =
 
-### Default to sources of currently running kernel
-KSRC ?= /lib/modules/$(shell uname -r)/build
-
 ### Note: to override the kernel source path, use "make KSRC=..."
 
 
@@ -38,6 +35,10 @@ CFLAGS=$(shell $(XENOCONFIG) --posix-cflags) $(MY_CFLAGS)
 
 LDFLAGS=$(shell $(XENOCONFIG) --posix-ldflags) $(MY_LDFLAGS) -lrtdm
 
+# This includes the library path of given Xenomai into the binary to make live
+# easier for beginners if Xenomai's libs are not in any default search path.
+LDFLAGS+=-Xlinker -rpath -Xlinker $(shell $(XENOCONFIG) --libdir)
+
 all:: $(APPLICATIONS)
 
 clean::
@@ -49,6 +50,9 @@ endif
 
 ###### KERNEL MODULE BUILD (no change required normally) ######
 ifneq ($(MODULES),)
+
+### Default to sources of currently running kernel
+KSRC ?= /lib/modules/$(shell uname -r)/build
 
 OBJS     := ${patsubst %, %.o, $(MODULES)}
 CLEANMOD := ${patsubst %, .%*, $(MODULES)}
@@ -79,7 +83,7 @@ modules:
 	@echo "$(CFLAGS)"
 
 clean::
-	$(RM) $(CLEANMOD) *.cmd *.o *.ko *.mod.c Module*.symvers
+	$(RM) $(CLEANMOD) *.o *.ko *.mod.c Module*.symvers
 	$(RM) -R .tmp*
 
 endif
