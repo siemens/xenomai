@@ -47,9 +47,7 @@ static unsigned long    used_fildes[FD_BITMAP_SIZE];
 int                     open_fildes;    /* amount of used descriptors */
 xntbase_t               *rtdm_tbase;
 
-#ifdef CONFIG_SMP
-xnlock_t                rt_fildes_lock = XNARCH_LOCK_UNLOCKED;
-#endif /* !CONFIG_SMP */
+DEFINE_XNLOCK(rt_fildes_lock);
 
 
 /**

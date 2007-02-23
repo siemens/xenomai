@@ -219,9 +219,7 @@ typedef struct xnpod xnpod_t;
 
 extern xnpod_t *nkpod;
 
-#ifdef CONFIG_SMP
-extern xnlock_t nklock;
-#endif /* CONFIG_SMP */
+DECLARE_EXTERN_XNLOCK(nklock);
 
 extern u_long nkschedlat;
 

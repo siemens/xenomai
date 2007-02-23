@@ -61,10 +61,7 @@ static int          name_hashkey_mask;
 static int          proto_hashkey_mask;
 
 DECLARE_MUTEX(nrt_dev_lock);
-
-#ifdef CONFIG_SMP
-xnlock_t            rt_dev_lock = XNARCH_LOCK_UNLOCKED;
-#endif /* CONFIG_SMP */
+DEFINE_PRIVATE_XNLOCK(rt_dev_lock);
 
 #ifndef MODULE
 int                 rtdm_initialised = 0;

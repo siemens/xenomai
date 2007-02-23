@@ -24,9 +24,7 @@
 #include <rtdm/rtdm_driver.h>
 
 
-#ifdef CONFIG_SMP
-extern xnlock_t             rt_fildes_lock;
-#endif /* CONFIG_SMP */
+DECLARE_EXTERN_XNLOCK(rt_fildes_lock);
 
 #define RTDM_FD_MAX         CONFIG_XENO_OPT_RTDM_FILDES
 

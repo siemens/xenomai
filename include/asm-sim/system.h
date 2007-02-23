@@ -79,7 +79,9 @@ typedef unsigned long xnlock_t;
 #define xnlock_clear_irqon(lock)       mvm_set_irqmask(0)
 
 #define DECLARE_XNLOCK(lock)
-#define DECLARE_PRIVATE_XNLOCK(lock)
+#define DECLARE_EXTERN_XNLOCK(lock)
+#define DEFINE_XNLOCK(lock)
+#define DEFINE_PRIVATE_XNLOCK(lock)
 
 #define XNARCH_NR_CPUS              1
 

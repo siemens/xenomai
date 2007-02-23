@@ -89,9 +89,7 @@ typedef struct xnheap {
 
 	xnqueue_t extents;
 
-#ifdef CONFIG_SMP
-	xnlock_t lock;
-#endif /* CONFIG_SMP */
+        DECLARE_XNLOCK(lock);
 
 	caddr_t buckets[XNHEAP_NBUCKETS];
 
