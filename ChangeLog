@@ -1,3 +1,9 @@
+2007-02-23  Andrew Dennison <andrewd.lists@gmail.com>
+
+	* ksrc/skins/rtai/task.c (rt_task_make_periodic): Properly compare
+	the start time to a count of ticks, which may not always represent
+	nanoseconds.
+
 2007-02-23  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* ksrc/drivers/can/rtcan_virt.c (rtcan_virt_exit): Bug fix, stop device

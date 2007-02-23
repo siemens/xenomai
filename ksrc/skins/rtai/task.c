@@ -276,7 +276,7 @@ int rt_task_make_periodic(RT_TASK *task, RTIME start_time, RTIME period)
 		goto unlock_and_exit;
 	}
 
-	if (start_time + period <= xnpod_ticks2ns(xnpod_get_time()))
+	if (start_time <= xnpod_get_time())
 		start_time = XN_INFINITE;
 
 	err = xnpod_set_thread_periodic(&task->thread_base, start_time, period);
