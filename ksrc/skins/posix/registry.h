@@ -90,9 +90,7 @@ int pse51_desc_destroy(pse51_desc_t *desc);
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 struct mm_struct;
 
-#ifdef CONFIG_SMP
-extern xnlock_t pse51_assoc_lock;
-#endif
+DECLARE_EXTERN_XNLOCK(pse51_assoc_lock);
 
 typedef xnqueue_t pse51_assocq_t;
 

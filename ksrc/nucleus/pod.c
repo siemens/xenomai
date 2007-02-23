@@ -56,7 +56,7 @@
 
 xnpod_t *nkpod = NULL;
 
-DECLARE_XNLOCK(nklock);
+DEFINE_XNLOCK(nklock);
 
 u_long nkschedlat = 0;
 

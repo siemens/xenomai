@@ -245,8 +245,10 @@ static inline void xnlock_init (xnlock_t *lock)
     *lock = XNARCH_LOCK_UNLOCKED;
 }
 
-#define DECLARE_XNLOCK(lock)		xnlock_t lock = XNARCH_LOCK_UNLOCKED
-#define DECLARE_PRIVATE_XNLOCK(lock) static DECLARE_XNLOCK(lock)
+#define DECLARE_XNLOCK(lock)		xnlock_t lock
+#define DECLARE_EXTERN_XNLOCK(lock)	extern xnlock_t lock
+#define DEFINE_XNLOCK(lock)		xnlock_t lock = XNARCH_LOCK_UNLOCKED
+#define DEFINE_PRIVATE_XNLOCK(lock)	static DEFINE_XNLOCK(lock)
 
 #if XENO_DEBUG(NUCLEUS)
 
@@ -386,7 +388,9 @@ static inline void xnlock_put_irqrestore (xnlock_t *lock, spl_t flags)
 #define xnlock_clear_irqon(lock)       rthal_local_irq_enable()
 
 #define DECLARE_XNLOCK(lock)
-#define DECLARE_PRIVATE_XNLOCK(lock)
+#define DECLARE_EXTERN_XNLOCK(lock)
+#define DEFINE_XNLOCK(lock)
+#define DEFINE_PRIVATE_XNLOCK(lock)
 
 #endif /* !CONFIG_SMP */
 

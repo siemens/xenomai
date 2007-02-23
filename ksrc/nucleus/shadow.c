@@ -175,7 +175,7 @@ void xnpod_discard_iface_proc(struct xnskentry *iface);
  * its base priority, i.e. the lowest available level.
  */
 
-DECLARE_PRIVATE_XNLOCK(rpilock);
+DEFINE_PRIVATE_XNLOCK(rpilock);
 
 #define rpi_p(t)	((t)->rpi != NULL)
 

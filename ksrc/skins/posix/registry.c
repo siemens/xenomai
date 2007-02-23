@@ -322,9 +322,7 @@ int pse51_desc_get(pse51_desc_t ** descp, int fd, unsigned magic)
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 
-#ifdef CONFIG_SMP
-xnlock_t pse51_assoc_lock;
-#endif
+DEFINE_XNLOCK(pse51_assoc_lock);
 
 static int pse51_assoc_lookup_inner(pse51_assocq_t * q,
 				    pse51_assoc_t ** passoc,
