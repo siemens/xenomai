@@ -35,25 +35,29 @@ struct xnarch_x8664_initstack {
 #define __SWITCH_CLOBBER_LIST  , "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"
 
 #define xnarch_switch_threads(prev,next,p_rsp,n_rsp,p_rip,n_rip)	\
-	asm volatile("pushfq\n\t"					\
-		     "pushq	%%rbp\n\t"				\
-		     "movq	%%rsi, %%rbp\n\t"			\
-		     "movq	%%rsp, (%%rdx)\n\t"			\
-		     "movq	$1f, (%%rax)\n\t"			\
-		     "movq	(%%rcx), %%rsp\n\t"			\
-		     "pushq	(%%rbx)\n\t"				\
-		     "cmpq	%%rsi, %%rdi\n\t"			\
-		     "jz	0f\n\t"					\
-		     "testq	%%rsi, %%rsi\n\t"			\
-		     "jnz	__switch_to\n\t"			\
-		     "0:ret\n\t"					\
-		     "1: movq	%%rbp, %%rsi\n\t"			\
-		     "popq	%%rbp\n\t"				\
-		     "popfq\n\t"					\
-		     : /* no output */					\
-		     : "S" (next), "D" (prev), "d" (p_rsp), "c" (n_rsp), \
-		       "a" (p_rip), "b" (n_rip)	\
-		     : "memory", "cc" __SWITCH_CLOBBER_LIST)
+	({								\
+		long __rdi, __rsi, __rax, __rbx, __rcx, __rdx;		\
+		asm volatile("pushfq\n\t"				\
+			     "pushq	%%rbp\n\t"			\
+			     "movq	%%rsi, %%rbp\n\t"		\
+			     "movq	%%rsp, (%%rdx)\n\t"		\
+			     "movq	$1f, (%%rax)\n\t"		\
+			     "movq	(%%rcx), %%rsp\n\t"		\
+			     "pushq	(%%rbx)\n\t"			\
+			     "cmpq	%%rsi, %%rdi\n\t"		\
+			     "jz	0f\n\t"				\
+			     "testq	%%rsi, %%rsi\n\t"		\
+			     "jnz	__switch_to\n\t"		\
+			     "0:ret\n\t"				\
+			     "1: movq	%%rbp, %%rsi\n\t"		\
+			     "popq	%%rbp\n\t"			\
+			     "popfq\n\t"				\
+			     : "=S" (__rsi), "=D" (__rdi), "=a"	(__rax), \
+			       "=b" (__rbx), "=c" (__rcx), "=d" (__rdx)	\
+			     : "0" (next), "1" (prev), "5" (p_rsp), "4" (n_rsp), \
+			       "2" (p_rip), "3" (n_rip)			\
+			     : "memory", "cc" __SWITCH_CLOBBER_LIST);	\
+	})
 
 #define xnarch_thread_head()						\
 	asm volatile(".globl __thread_head\n\t"				\
