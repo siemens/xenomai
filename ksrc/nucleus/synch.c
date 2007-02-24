@@ -371,12 +371,13 @@ void xnsynch_renice_sleeper(xnthread_t *thread)
 
 xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
 {
-	xnthread_t *thread = NULL, *lastowner = synch->owner;
+	xnthread_t *thread = NULL, *lastowner;
 	xnpholder_t *holder;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
+	lastowner = synch->owner;
 	holder = getpq(&synch->pendq);
 
 	if (holder) {
@@ -444,13 +445,15 @@ xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
 
 xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder)
 {
-	xnthread_t *thread, *lastowner = synch->owner;
+	xnthread_t *thread, *lastowner;
 	xnpholder_t *nholder;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
+	lastowner = synch->owner;
 	nholder = poppq(&synch->pendq, holder);
+
 	thread = link2thread(holder, plink);
 	thread->wchan = NULL;
 	synch->owner = thread;
