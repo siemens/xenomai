@@ -1,3 +1,8 @@
+2007-02-25  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (xnshadow_relax): Make scheduling state
+	changes for the Linux task atomic.
+
 2007-02-23  Jan Kiszka  <jan.kiszka@web.de>
 
 	* scripts/Kconfig.frags: Warn about CONFIG_HPET_TIMER being set.

@@ -922,6 +922,7 @@ void xnshadow_relax(int notify)
 {
 	xnthread_t *thread = xnpod_current_thread();
 	int prio;
+	spl_t s;
 
 	XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNROOT));
 
@@ -936,13 +937,17 @@ void xnshadow_relax(int notify)
 		engage_irq_shield();
 #endif /* CONFIG_XENO_OPT_ISHIELD */
 
-	clear_task_nowakeup(current);
+	splhigh(s);
 
 	schedule_linux_call(LO_WAKEUP_REQ, current, 0);
 
 	rpi_push(thread);
 
+	clear_task_nowakeup(current);
+
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, NULL);
+
+	splexit(s);
 
 	if (XENO_DEBUG(NUCLEUS) && rthal_current_domain != rthal_root_domain)
 		xnpod_fatal("xnshadow_relax() failed for thread %s[%d]",
