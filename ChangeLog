@@ -2,6 +2,12 @@
 
 	* scripts/Kconfig.frags: Warn about CONFIG_HPET_TIMER being set.
 
+2007-02-24  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-x86_64/switch.h (xnarch_switch_threads): Be even
+	more agressive regarding the hints given to gcc about register
+	clobbers.
+
 2007-02-23  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/asm-generic/system.h: Introduce DEFINE_XNLOCK.
