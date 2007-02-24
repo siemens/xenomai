@@ -1,3 +1,9 @@
+2007-02-23  Dmitry Adamushko <dmitry.adamushko@gmail.com>
+	
+	* ksrc/nucleus/synch.c (xnsynch_wakeup_one_sleeper,
+	xnsynch_wakeup_this_sleeper): Get an owner of the object only
+	after the nklock has been granted and interrupts off.
+
 2007-02-23  Jan Kiszka  <jan.kiszka@web.de>
 
 	* scripts/Kconfig.frags: Warn about CONFIG_HPET_TIMER being set.
