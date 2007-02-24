@@ -1,3 +1,9 @@
+2007-02-24  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* include/asm-x86_64/bits/pod.h (xnarch_enable_fpu): Fully reload
+	the FPU context for the root thread unless the preempted task used
+	the FPU during its last quantum.
+
 2007-02-23  Dmitry Adamushko <dmitry.adamushko@gmail.com>
 	
 	* ksrc/nucleus/synch.c (xnsynch_wakeup_one_sleeper,
