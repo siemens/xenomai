@@ -1,3 +1,8 @@
+2007-02-25  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/arch/i386/nmi.c, ksrc/drivers/can/rtcan_dev.h: Fix
+	!CONFIG_PROC_FS build.
+
 2007-02-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (xnshadow_relax): Make scheduling state

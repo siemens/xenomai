@@ -171,8 +171,16 @@ struct rtcan_device *rtcan_dev_get_by_index(int ifindex);
 #define rtcan_dev_dereference(dev)    do {} while(0)
 #endif
 
+#ifdef CONFIG_PROC_FS
 int rtcan_dev_create_proc(struct rtcan_device* dev);
 void rtcan_dev_remove_proc(struct rtcan_device* dev);
+#else /* !CONFIG_PROC_FS */
+static inline int rtcan_dev_create_proc(struct rtcan_device* dev)
+{
+	return 0;
+}
+static inline void rtcan_dev_remove_proc(struct rtcan_device* dev) { }
+#endif /* !CONFIG_PROC_FS */
 
 #endif  /* __KERNEL__ */
 
