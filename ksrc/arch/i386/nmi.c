@@ -169,6 +169,7 @@ static int rthal_nmi_watchdog_tick(struct pt_regs *regs, unsigned reason)
 	NMI_RETURN;
 }
 
+#ifdef CONFIG_PROC_FS
 static int earlyshots_read_proc(char *page,
 				char **start,
 				off_t off, int count, int *eof, void *data)
@@ -189,6 +190,7 @@ static int earlyshots_read_proc(char *page,
 
 	return len;
 }
+#endif /* CONFIG_PROC_FS */
 
 int rthal_nmi_request(void (*emergency) (struct pt_regs *))
 {
@@ -229,9 +231,11 @@ int rthal_nmi_request(void (*emergency) (struct pt_regs *))
 	wmb();
 	nmi_watchdog_tick = &rthal_nmi_watchdog_tick;
 
+#ifdef CONFIG_PROC_FS
 	__rthal_add_proc_leaf("nmi_early_shots",
 			      &earlyshots_read_proc,
 			      NULL, NULL, rthal_proc_root);
+#endif /* CONFIG_PROC_FS */
 
 	return 0;
 }
@@ -241,7 +245,9 @@ void rthal_nmi_release(void)
 	if (!rthal_linux_nmi_tick)
 		return;
 
+#ifdef CONFIG_PROC_FS
 	remove_proc_entry("nmi_early_shots", rthal_proc_root);
+#endif /* CONFIG_PROC_FS */
 
 	wrmsrl(rthal_nmi_perfctr_msr, 0 - RTHAL_CPU_FREQ);
 	touch_nmi_watchdog();
