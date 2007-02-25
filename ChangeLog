@@ -1,3 +1,13 @@
+2007-02-25  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* include/asm-i386/bits/pod.h (xnarch_enable_fpu): Adapt to the
+	new context switch routine.
+
+2007-02-25  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-i386/switch.h (xnarch_switch_threads): Avoid using
+	__switch_to when outproc == inproc.
+
 2007-02-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (xnshadow_relax): Make scheduling state
