@@ -23,6 +23,7 @@
 #include <rtdm/syscall.h>
 
 #include "rtdm/core.h"
+#include "rtdm/internal.h"
 
 
 int __rtdm_muxid;
@@ -128,22 +129,28 @@ static int sys_rtdm_sendmsg(struct task_struct *curr, struct pt_regs *regs)
 
 static void *rtdm_skin_callback(int event, void *data)
 {
-    xnshadow_ppd_t *ppd;
+    struct rtdm_process *process;
 
     switch(event) {
         case XNSHADOW_CLIENT_ATTACH:
-            ppd = xnarch_sysalloc(sizeof(*ppd));
-            if (!ppd)
+            process = xnarch_sysalloc(sizeof(*process));
+            if (!process)
                 return ERR_PTR(-ENOSPC);
 
-            return ppd;
+#ifdef CONFIG_PROC_FS
+            memcpy(process->name, current->comm, sizeof(process->name));
+            process->pid = current->pid;
+#endif /* CONFIG_PROC_FS */
+
+            return &process->ppd;
 
         case XNSHADOW_CLIENT_DETACH:
-            ppd = data;
+            process = container_of((xnshadow_ppd_t *)data,
+                                   struct rtdm_process, ppd);
 
-            cleanup_owned_contexts(xnshadow_ppd_mm(ppd));
+            cleanup_owned_contexts(process);
 
-            xnarch_sysfree(ppd, sizeof(*ppd));
+            xnarch_sysfree(process, sizeof(*process));
 
             break;
     }
