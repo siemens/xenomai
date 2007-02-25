@@ -29,12 +29,14 @@
 #include <linux/delay.h>
 
 #include <nucleus/pod.h>
+#include <nucleus/ppd.h>
 #include <nucleus/heap.h>
 #include <rtdm/syscall.h>
 #include <rtdm/rtdm_driver.h>
 
 #include "rtdm/core.h"
 #include "rtdm/device.h"
+#include "rtdm/internal.h"
 
 
 #define CLOSURE_RETRY_PERIOD    100 /* ms */
@@ -104,6 +106,7 @@ static int create_instance(struct rtdm_device *device,
                            int nrt_mem)
 {
     struct rtdm_dev_context *context;
+    xnshadow_ppd_t          *ppd = NULL;
     int                     fd;
     spl_t                   s;
 
@@ -158,12 +161,13 @@ static int create_instance(struct rtdm_device *device,
     context->fd  = fd;
     context->ops = &device->ops;
     atomic_set(&context->close_lock_count, 0);
+
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-    /* We use current->mm as cookie to identify the context owner */
-    context->reserved.owner = user_info ? user_info->mm : NULL;
-#else /* !__KERNEL__ || !CONFIG_XENO_OPT_PERVASIVE */
-    context->reserved.owner = NULL;
+    ppd = xnshadow_ppd_get(__rtdm_muxid);
 #endif /* !__KERNEL__ || !CONFIG_XENO_OPT_PERVASIVE */
+
+    context->reserved.owner =
+        ppd ? container_of(ppd, struct rtdm_process, ppd) : NULL;
 
     return 0;
 }
