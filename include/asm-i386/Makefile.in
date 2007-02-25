@@ -225,7 +225,7 @@ target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
 include_HEADERS = atomic.h calibration.h features.h \
-		hal.h smi.h syscall.h system.h wrappers.h fptest.h
+		hal.h smi.h switch.h syscall.h system.h wrappers.h fptest.h
 
 SUBDIRS = bits
 all: all-recursive
