@@ -250,7 +250,7 @@ int main(int argc, char* argv[])
 	write_fd = rt_dev_open( WRITE_FILE, 0);
 	if (write_fd < 0) {
 		printf(MAIN_PREFIX "can't open %s (write), %s\n", WRITE_FILE,
-		       strerror(-err));
+		       strerror(-write_fd));
 		goto error;
 	}
 	write_state |= STATE_FILE_OPENED;
@@ -269,7 +269,7 @@ int main(int argc, char* argv[])
 	read_fd = rt_dev_open( READ_FILE, 0 );
 	if (read_fd < 0) {
 		printf(MAIN_PREFIX "can't open %s (read), %s\n", READ_FILE,
-		       strerror(-err));
+		       strerror(-read_fd));
 		goto error;
 	}
 	read_state |= STATE_FILE_OPENED;
