@@ -17,9 +17,6 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <linux/proc_fs.h>
-#include "rtdm/core.h"
-#include "rtdm/device.h"
 #include "rtdm/internal.h"
 
 

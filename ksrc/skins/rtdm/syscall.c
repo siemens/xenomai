@@ -19,10 +19,8 @@
 
 #include <nucleus/shadow.h>
 #include <nucleus/ppd.h>
-#include <rtdm/rtdm_driver.h>
 #include <rtdm/syscall.h>
 
-#include "rtdm/core.h"
 #include "rtdm/internal.h"
 
 

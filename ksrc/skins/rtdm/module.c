@@ -36,8 +36,7 @@
 #include <rtdm/syscall.h>
 #endif /* __KERNEL__ */
 
-#include "rtdm/device.h"
-#include "rtdm/proc.h"
+#include "rtdm/internal.h"
 
 
 MODULE_DESCRIPTION("Real-Time Driver Model");
