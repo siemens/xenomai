@@ -32,10 +32,7 @@
 #include <nucleus/ppd.h>
 #include <nucleus/heap.h>
 #include <rtdm/syscall.h>
-#include <rtdm/rtdm_driver.h>
 
-#include "rtdm/core.h"
-#include "rtdm/device.h"
 #include "rtdm/internal.h"
 
 

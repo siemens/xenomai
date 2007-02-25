@@ -28,8 +28,7 @@
 #include <linux/module.h>
 #include <linux/delay.h>
 
-#include "rtdm/device.h"
-#include "rtdm/proc.h"
+#include "rtdm/internal.h"
 
 
 #define SET_DEFAULT_OP(device, operation)                               \

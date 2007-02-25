@@ -1,5 +1,11 @@
 2007-02-25  Jan Kiszka  <jan.kiszka@web.de>
 
+	* ksrc/skins/rtdm/{core.c,proc.c,syscall.c,internal.h}: Enhance
+	owner data that is stored with file descriptor context. Report
+	owning process of file descriptors via /proc.
+
+	* ksrc/skins/rtdm/*: Fold all private headers into internal.h.
+
 	* ksrc/arch/i386/nmi.c, ksrc/drivers/can/rtcan_dev.h: Fix
 	!CONFIG_PROC_FS build.
 
