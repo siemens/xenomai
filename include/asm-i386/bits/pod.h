@@ -293,6 +293,12 @@ static inline void xnarch_enable_fpu(xnarchtcb_t * tcb)
 		if (tcb->cr0_ts)
 			return;
 
+		if (wrap_test_fpu_used(task)) {
+			/* Fpu context was not even saved, do not restore */
+			clts();
+			return;
+		}
+		
 		xnarch_restore_fpu(tcb);
 		return;
 	}
