@@ -131,12 +131,19 @@ typedef irqreturn_t (*rthal_irq_host_handler_t)(int irq,
 						void *dev_id,
 						struct pt_regs *regs);
 
+#define DECLARE_LINUX_IRQ_HANDLER(fn, irq, dev_id)		\
+	irqreturn_t fn(int irq, void *dev_id, struct pt_regs *regs)
+
 #define rthal_irq_chip_end(irq)	rthal_irq_chip_enable(irq)
 #else /* >= 2.6.19 */
 #define rthal_irq_chip_enable(irq)   ({ rthal_irq_descp(irq)->chip->enable(irq); 0; })
 #define rthal_irq_chip_disable(irq)  ({ rthal_irq_descp(irq)->chip->disable(irq); 0; })
 #define rthal_irq_chip_end(irq)      ({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
 typedef irq_handler_t rthal_irq_host_handler_t;
+
+#define DECLARE_LINUX_IRQ_HANDLER(fn, irq, dev_id)	\
+	irqreturn_t fn(int irq, void *dev_id)
+
 #endif
 
 #endif /* _XENO_ASM_I386_WRAPPERS_H */
