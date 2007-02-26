@@ -48,6 +48,7 @@
 #include <asm/io_apic.h>
 #include <asm/apic.h>
 #include <asm/xenomai/hal.h>
+#include <mach_ipi.h>
 #include <stdarg.h>
 
 static struct {
@@ -99,14 +100,11 @@ static void rthal_critical_sync(void)
 
 irqreturn_t rthal_broadcast_to_local_timers(int irq, void *dev_id)
 {
-	unsigned long flags;
-
-	rthal_local_irq_save_hw(flags);
-	apic_wait_icr_idle();
-	apic_write(APIC_ICR,
-		   APIC_DM_FIXED | APIC_DEST_ALLINC | LOCAL_TIMER_VECTOR);
-	rthal_local_irq_restore_hw(flags);
-
+#ifdef CONFIG_SMP
+	send_IPI_all(LOCAL_TIMER_VECTOR);
+#else
+	rthal_trigger_irq(ipipe_apic_vector_irq(LOCAL_TIMER_VECTOR));
+#endif
 	return IRQ_HANDLED;
 }
 

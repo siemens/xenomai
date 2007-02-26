@@ -1,3 +1,9 @@
+2007-02-26  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/x86_64/hal.c, ksrc/arch/i386/hal.c
+	(rthal_broadcast_to_local_timers): Use the regular send_IPI_all()
+	routine in the SMP case, or ipipe_trigger_ipi() in UP mode.
+
 2007-02-25  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/rtdm/{core.c,proc.c,syscall.c,internal.h}: Enhance
