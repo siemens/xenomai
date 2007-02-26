@@ -119,23 +119,30 @@ static void rthal_critical_sync(void)
     }
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-irqreturn_t rthal_broadcast_to_local_timers(int irq,
-                                            void *dev_id, struct pt_regs *regs)
-#else /* >= 2.6.19 */
-irqreturn_t rthal_broadcast_to_local_timers(int irq,
-                                            void *dev_id)
-#endif
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+#include <asm/smpboot.h>
+static inline void send_IPI_all(int vector)
 {
-    unsigned long flags;
+	unsigned long flags;
 
-    rthal_local_irq_save_hw(flags);
-    apic_wait_icr_idle();
-    apic_write_around(APIC_ICR,
-                      APIC_DM_FIXED | APIC_DEST_ALLINC | LOCAL_TIMER_VECTOR);
-    rthal_local_irq_restore_hw(flags);
+	rthal_local_irq_save_hw(flags);
+	apic_wait_icr_idle();
+	apic_write_around(APIC_ICR,
+			  APIC_DM_FIXED | APIC_DEST_ALLINC | INT_DEST_ADDR_MODE | vector);
+	rthal_local_irq_restore_hw(flags);
+}
+#else
+#include <mach_ipi.h>
+#endif
 
-    return IRQ_HANDLED;
+DECLARE_LINUX_IRQ_HANDLER(rthal_broadcast_to_local_timers, irq, dev_id)
+{
+#ifdef CONFIG_SMP
+	send_IPI_all(LOCAL_TIMER_VECTOR);
+#else
+	rthal_trigger_irq(LOCAL_TIMER_VECTOR -  FIRST_EXTERNAL_VECTOR);
+#endif
+	return IRQ_HANDLED;
 }
 
 unsigned long rthal_timer_calibrate(void)
