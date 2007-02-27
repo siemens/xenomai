@@ -49,6 +49,8 @@
 
 #include <rtdm/rtcan.h>
 
+#define NSEC_PER_SEC 1000000000
+
 static unsigned int cycle = 10000; /* 10 ms */
 static can_id_t can_id = 0x1;
 
@@ -98,9 +100,9 @@ void *transmitter(void *arg)
 
     while(1) {
         next_period.tv_nsec += cycle * 1000;
-        if (next_period.tv_nsec >= 1000000000) {
-            next_period.tv_nsec = 0;
-            next_period.tv_sec++;
+        while (next_period.tv_nsec >= NSEC_PER_SEC) {
+                next_period.tv_nsec -= NSEC_PER_SEC;
+                next_period.tv_sec++;
         }
 
         clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &next_period, NULL);
@@ -111,7 +113,7 @@ void *transmitter(void *arg)
 	}
 
         clock_gettime(CLOCK_MONOTONIC, &time);
-	*rtt_time = time.tv_sec * 1000000000LL + time.tv_nsec;
+	*rtt_time = time.tv_sec * NSEC_PER_SEC + time.tv_nsec;
 
         /* Transmit the message containing the local time */
 	if (send(txsock, (void *)&frame, sizeof(can_frame_t), 0) < 0) {
@@ -237,7 +239,7 @@ int main(int argc, char *argv[])
     rxdev = argv[optind + 1];
 
     /* Create and configure RX socket */
-    if ((rxsock = socket(PF_CAN, SOCK_RAW, 0)) < 0) {
+    if ((rxsock = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
 	perror("RX socket failed");
 	return -1;
     }
