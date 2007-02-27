@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 	}
     }
 
-    can_fd = rt_dev_socket(PF_CAN, SOCK_RAW, 0);
+    can_fd = rt_dev_socket(PF_CAN, SOCK_RAW, CAN_RAW);
     if (can_fd < 0) {
 	fprintf(stderr, "Cannot open RTDM CAN socket. Maybe driver not loaded? \n");
 	return can_fd;
