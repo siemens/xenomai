@@ -1,3 +1,18 @@
+2007-02-27  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* include/rtdm/*.h, ksrc/skins/native/task.c: Improvements and
+	correction for doxygen generated documentation.
+
+	* include/rtdm/rtcan.h, src/utils/can/*.c: Add and use CAN_RAW
+	as particular CAN protocol to be compatible with Socket-CAN.
+
+	* examples/rtdm/profiles/can/rtcan_rtt.c (transmitter): fix timing
+	bug.
+
+	* ksrc/drivers/can/rtcan_version.h: update version of RT-Socket-CAN
+	to a more resonable value 0.90.0. The plan is to move to 1.0.0
+	with the next official releas of Xenomai.
+
 2007-02-26  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/x86_64/hal.c, ksrc/arch/i386/hal.c

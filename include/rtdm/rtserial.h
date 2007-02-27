@@ -50,8 +50,8 @@
  * Specific return values: none @n
  * @n
  * @b IOCTL @n
- * Mandatory Environments: see @ref IOCTLs "below" @n
- * Specific return values: see @ref IOCTLs "below" @n
+ * Mandatory Environments: see @ref SERIOCTLs "below" @n
+ * Specific return values: see @ref SERIOCTLs "below" @n
  * @n
  * @b Read @n
  * Environments: RT (non-RT optional)@n
@@ -312,7 +312,7 @@ typedef struct rtser_event {
 
 
 /*!
- * @anchor IOCTLs @name IOCTLs
+ * @anchor SERIOCTLs @name IOCTLs
  * Serial device IOCTLs
  * @{ */
 
@@ -460,7 +460,7 @@ typedef struct rtser_event {
 /** @} */
 
 /*!
- * @anchor RTSERutils @name RT Serial example and utility programs
+ * @anchor SERutils @name RT Serial example and utility programs
  * @{ */
 /** @example cross-link.c */
 /** @} */

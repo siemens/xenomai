@@ -78,8 +78,8 @@
  * @n
  * @n
  * @b IOCTL @n
- * Mandatory Environments: see @ref IOCTLs "below" @n
- * Specific return values: see @ref IOCTLs "below" @n
+ * Mandatory Environments: see @ref CANIOCTLs "below" @n
+ * Specific return values: see @ref CANIOCTLs "below" @n
  * @n
  * @n
  * @anchor Bind
@@ -252,7 +252,7 @@
 
 #include <rtdm/rtdm.h>
 
-#define RTCAN_PROFILE_VER           2
+#define RTCAN_PROFILE_VER  2
 
 #ifndef AF_CAN
 
@@ -263,6 +263,18 @@
 #define PF_CAN	AF_CAN
 
 #endif
+
+/** Particular CAN protocols
+ *
+ *  Currently only the RAW protocol is supported.
+ */
+#define CAN_RAW  0
+
+/** CAN socket levels
+ *
+ *  Used for @ref Sockopts for the particular protocols.
+ */
+#define SOL_CAN_RAW  103
 
 /** Type of CAN id (see @ref CAN_xxx_MASK and @ref CAN_xxx_FLAG) */
 typedef uint32_t can_id_t;
@@ -306,7 +318,7 @@ typedef can_id_t can_err_mask_t;
  * Possible protocols for PF_CAN protocol family
  * @{ */
 enum CAN_PROTO {
-    /** Raw protocol of @c PF_CAN, applicable to socket 
+    /** Raw protocol of @c PF_CAN, applicable to socket
 	type @c SOCK_RAW */
     CAN_PROTO_RAW,
     CAN_PROTO_MAX
@@ -527,9 +539,6 @@ typedef struct can_frame {
 
 #define RTIOC_TYPE_CAN              RTDM_CLASS_CAN
 
-
-#define SOL_CAN_RAW 103
-
 /*!
  * @anchor Rawsockopts @name RAW socket options
  * Setting and getting CAN RAW socket options.
@@ -631,7 +640,7 @@ typedef struct can_frame {
 /** @} */
 
 /*!
- * @anchor IOCTLs @name IOCTLs
+ * @anchor CANIOCTLs @name IOCTLs
  * CAN device IOCTLs
  * @{ */
 

@@ -21,7 +21,7 @@
 #define __RTCAN_VERSION_H_
 
 #define RTCAN_MAJOR_VER    0
-#define RTCAN_MINOR_VER   20
-#define RTCAN_BUGFIX_VER   2
+#define RTCAN_MINOR_VER   90
+#define RTCAN_BUGFIX_VER   0
 
 #endif /* __RTCAN_VERSION_H_ */

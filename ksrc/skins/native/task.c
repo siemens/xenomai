@@ -42,6 +42,7 @@
 /** @example kernel_task.c */
 /** @example bound_task.c */
 /** @example sigxcpu.c */
+/** @example trivial-periodic.c */
 
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>

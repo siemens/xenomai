@@ -50,8 +50,8 @@
  * Specific return values: none @n
  * @n
  * @b IOCTL @n
- * Mandatory Environments: see @ref IOCTLs below @n
- * Specific return values: see @ref IOCTLs below @n
+ * Mandatory Environments: see @ref TSTIOCTLs below @n
+ * Specific return values: see @ref TSTIOCTLs below @n
  *
  * @{
  */
@@ -153,7 +153,7 @@ struct rttst_swtest_error {
 
 
 /*!
- * @anchor IOCTLs @name IOCTLs
+ * @anchor TSTIOCTLs @name IOCTLs
  * Testing device IOCTLs
  * @{ */
 #define RTTST_RTIOC_INTERM_BENCH_RES \

@@ -236,7 +236,7 @@ int main(int argc, char **argv)
 	}
     }
 
-    ret = rt_dev_socket(PF_CAN, SOCK_RAW, 0);
+    ret = rt_dev_socket(PF_CAN, SOCK_RAW, CAN_RAW);
     if (ret < 0) {
 	fprintf(stderr, "rt_dev_socket: %s\n", strerror(-ret));
 	return -1;
