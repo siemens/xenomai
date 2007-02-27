@@ -2150,6 +2150,11 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
  * - T_CPU(cpuid) makes the new task affine to CPU # @b cpuid. CPU
  * identifiers range from 0 to RTHAL_NR_CPUS - 1 (inclusive).
  *
+ * - T_JOINABLE (user-space only) allows another task to wait on the
+ * termination of the new task. This implies that rt_task_join() is
+ * actually called for this task to clean up any user-space located
+ * resources after its termination.
+ *
  * Passing T_FPU|T_CPU(1) in the @a mode parameter thus creates a task
  * with FPU support enabled and which will be affine to CPU #1.
  *
