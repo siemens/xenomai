@@ -48,7 +48,7 @@
 #include <asm/io_apic.h>
 #include <asm/apic.h>
 #include <asm/xenomai/hal.h>
-#include <mach_ipi.h>
+#include <asm/mach_apic.h>
 #include <stdarg.h>
 
 static struct {
