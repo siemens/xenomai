@@ -85,7 +85,7 @@ static void *psos_task_trampoline(void *cookie)
 
 u_long t_create(char name[4],
 		u_long prio,
-		u_long sstack,	/* Ignored. */
+		u_long sstack,
 		u_long ustack,
 		u_long flags,
 		u_long *tid_r)
@@ -114,6 +114,8 @@ u_long t_create(char name[4],
 	iargs.completionp = &completion;
 
 	pthread_attr_init(&thattr);
+
+	ustack += sstack;
 
 	if (ustack == 0)
 		ustack = PTHREAD_STACK_MIN * 4;
