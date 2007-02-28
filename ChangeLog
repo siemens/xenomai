@@ -1,3 +1,8 @@
+2007-03-01  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/x86_64/patches: Add 2.6.19-1.0-06; this closes the
+	implementation phase of the x86_64 port.
+
 2007-02-28  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/rtdm/rtdm.h (rt_dev_sendto, rt_dev_recvfrom): Silence
