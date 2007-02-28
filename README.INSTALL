@@ -357,3 +357,19 @@ $ make install
 When "make install" is finished, you should find the patched kernel installed
 in /boot, its module under /lib/modules, and Xenomai user-space libraries
 and tools under /usr/xenomai.
+
+2.6 Building for x86_64
+-----------------------
+
+Here are the typical steps for building Xenomai on a x86_64 host
+running a 2.6.19 kernel, using the native toolchain:
+
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=x86_64 \
+  --adeos=$xenomai_root/ksrc/arch/x86_64/patches/adeos-ipipe-2.6.19-i386-X.Y-ZZ.patch \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ make xconfig/gconfig/menuconfig # select the kernel and Xenomai options
+$ make # then install as needed
+$ mkdir $build_root && cd $build_root
+$ $xenomai_root/configure
+$ make install
