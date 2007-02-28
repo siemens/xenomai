@@ -115,6 +115,8 @@ u_long t_create(char name[4],
 
 	pthread_attr_init(&thattr);
 
+	ustack += sstack;
+
 	if (ustack == 0)
 		ustack = PTHREAD_STACK_MIN * 4;
 	else if (ustack < PTHREAD_STACK_MIN)
