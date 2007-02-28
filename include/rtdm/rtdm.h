@@ -295,13 +295,22 @@ static inline ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags,
                                       struct sockaddr *from,
                                       socklen_t *fromlen)
 {
-    struct iovec    iov = {buf, len};
-    struct msghdr   msg =
-        {from, (from != NULL) ? *fromlen : 0, &iov, 1, NULL, 0};
-    int             ret;
+    struct iovec iov = {
+        .iov_base = buf,
+        .iov_len = len
+    };
+    struct msghdr msg = {
+        .msg_name = from,
+        .msg_namelen = from ? *fromlen : 0,
+        .msg_iov = &iov,
+        .msg_iovlen = 1,
+        .msg_control = NULL,
+        .msg_controllen = 0
+    };
+    int ret;
 
     ret = rt_dev_recvmsg(fd, &msg, flags);
-    if ((ret >= 0) && (from != NULL))
+    if (ret >= 0 && from)
         *fromlen = msg.msg_namelen;
     return ret;
 }
@@ -345,9 +354,18 @@ static inline ssize_t rt_dev_sendto(int fd, const void *buf, size_t len,
                                     int flags, const struct sockaddr *to,
                                     socklen_t tolen)
 {
-    struct iovec    iov = {(void *)buf, len};
-    struct msghdr   msg =
-        {(struct sockaddr *)to, tolen, &iov, 1, NULL, 0};
+    struct iovec iov = {
+        .iov_base = (void *)buf,
+        .iov_len = len
+    };
+    struct msghdr msg = {
+        .msg_name = (struct sockaddr *)to,
+        .msg_namelen = tolen,
+        .msg_iov = &iov,
+        .msg_iovlen = 1,
+        .msg_control = NULL, 
+        .msg_controllen = 0
+    };
 
     return rt_dev_sendmsg(fd, &msg, flags);
 }
