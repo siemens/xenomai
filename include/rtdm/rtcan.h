@@ -910,7 +910,7 @@ typedef struct can_frame {
  * - Kernel-based task
  * - User-space task (RT, non-RT)
  *
- * @note Setting specia controlelr modes is a configuration task. It should
+ * @note Setting special controller modes is a configuration task. It should
  * be done deliberately or otherwise CAN messages will likely be lost.
  *
  * Rescheduling: possible.
