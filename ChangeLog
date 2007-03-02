@@ -1,3 +1,13 @@
+2007-03-02  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* include/rtdm/rtcan.h: Document CAN controller modes and remove
+	definition of SIOCGIFINDEX to avoid potential conflicts with the
+	corresponding definition in kernel header files.
+
+	* ksrc/drivers/can/sja1000/rtcan_peak_dng.c: add plug-n-play
+	support to ensure that the parallel port device is powered on
+	and do proper cleanup.
+
 2007-03-01  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/x86_64/patches: Add 2.6.19-1.0-06; this closes the

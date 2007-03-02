@@ -392,7 +392,7 @@ struct can_bittime {
  * @{ */
 enum CAN_MODE {
 
-    /** Set controller in Stop mode (no reception / transmission possible) */
+    /*! Set controller in Stop mode (no reception / transmission possible) */
     CAN_MODE_STOP = 0,
 
     /*! Set controller into normal operation. @n
@@ -416,11 +416,27 @@ typedef enum CAN_MODE can_mode_t;
 /*!
  * @anchor CAN_CTRLMODE @name CAN controller modes
  * Special CAN controllers modes, which can be or'ed together.
+ *
+ * @note These modes are hardware-dependent. Please consult the hardware
+ * manual of the CAN controller for more detailed information.
+ *
  * @{ */
-/** Listen-Only mode */
+
+/*! Listen-Only mode
+ *
+ *  In this mode the CAN controller would give no acknowledge to the CAN-bus,
+ *  even if a message is received successfully and messages would not be
+ *  transmitted. This mode might be useful for bus-monitoring, hot-plugging
+ *  or throughput analysis. */
 #define CAN_CTRLMODE_LISTENONLY 0x1
-/** Loopback mode */
+
+/*! Loopback mode
+ *
+ * In this mode the CAN controller does an internal loop-back, a message is
+ * transmitted and simultaneously received. That mode can be used for self
+ * test operation. */
 #define CAN_CTRLMODE_LOOPBACK   0x2
+
 /** @} */
 
 /** See @ref CAN_CTRLMODE */
@@ -669,9 +685,8 @@ typedef struct can_frame {
  * Rescheduling: never.
  *
  */
-#ifndef SIOCGIFINDEX
-#define SIOCGIFINDEX \
-            _IOWR(RTIOC_TYPE_CAN, 0x00, struct ifreq)
+#ifdef DOXYGEN_CPP /* For Doxygen only, already defined by kernel headers */
+#define SIOCGIFINDEX defined_by_kernel_header_file
 #endif
 
 /**
