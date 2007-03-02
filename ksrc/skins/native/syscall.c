@@ -2951,7 +2951,7 @@ static int __rt_alarm_stop(struct task_struct *curr, struct pt_regs *regs)
 
 static int __rt_alarm_wait(struct task_struct *curr, struct pt_regs *regs)
 {
-	RT_TASK *task = xeno_current_task();
+	xnthread_t *thread = xnpod_current_thread();
 	RT_ALARM_PLACEHOLDER ph;
 	RT_ALARM *alarm;
 	int err = 0;
@@ -2974,15 +2974,15 @@ static int __rt_alarm_wait(struct task_struct *curr, struct pt_regs *regs)
 		goto unlock_and_exit;
 	}
 
-	if (xnthread_base_priority(&task->thread_base) != XNCORE_IRQ_PRIO)
+	if (xnthread_base_priority(thread) != XNCORE_IRQ_PRIO)
 		/* Renice the waiter above all regular tasks if needed. */
-		xnpod_renice_thread(&task->thread_base, XNCORE_IRQ_PRIO);
+		xnpod_renice_thread(thread, XNCORE_IRQ_PRIO);
 
 	xnsynch_sleep_on(&alarm->synch_base, XN_INFINITE, XN_RELATIVE);
 
-	if (xnthread_test_info(&task->thread_base, XNRMID))
+	if (xnthread_test_info(thread, XNRMID))
 		err = -EIDRM;	/* Alarm deleted while pending. */
-	else if (xnthread_test_info(&task->thread_base, XNBREAK))
+	else if (xnthread_test_info(thread, XNBREAK))
 		err = -EINTR;	/* Unblocked. */
 
       unlock_and_exit:
@@ -3179,9 +3179,9 @@ static int __rt_intr_delete(struct task_struct *curr, struct pt_regs *regs)
 static int __rt_intr_wait(struct task_struct *curr, struct pt_regs *regs)
 {
 	RT_INTR_PLACEHOLDER ph;
+	xnthread_t *thread;
 	RTIME timeout;
 	RT_INTR *intr;
-	RT_TASK *task;
 	int err = 0;
 	spl_t s;
 
@@ -3213,21 +3213,19 @@ static int __rt_intr_wait(struct task_struct *curr, struct pt_regs *regs)
 	}
 
 	if (!intr->pending) {
-		task = xeno_current_task();
+		thread = xnpod_current_thread();
 
-		if (xnthread_base_priority(&task->thread_base) !=
-		    XNCORE_IRQ_PRIO)
+		if (xnthread_base_priority(thread) != XNCORE_IRQ_PRIO)
 			/* Renice the waiter above all regular tasks if needed. */
-			xnpod_renice_thread(&task->thread_base,
-					    XNCORE_IRQ_PRIO);
+			xnpod_renice_thread(thread, XNCORE_IRQ_PRIO);
 
 		xnsynch_sleep_on(&intr->synch_base, timeout, XN_RELATIVE);
 
-		if (xnthread_test_info(&task->thread_base, XNRMID))
+		if (xnthread_test_info(thread, XNRMID))
 			err = -EIDRM;	/* Interrupt object deleted while pending. */
-		else if (xnthread_test_info(&task->thread_base, XNTIMEO))
+		else if (xnthread_test_info(thread, XNTIMEO))
 			err = -ETIMEDOUT;	/* Timeout. */
-		else if (xnthread_test_info(&task->thread_base, XNBREAK))
+		else if (xnthread_test_info(thread, XNBREAK))
 			err = -EINTR;	/* Unblocked. */
 		else
 			err = intr->pending;
