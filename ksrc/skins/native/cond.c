@@ -429,7 +429,7 @@ int rt_cond_broadcast(RT_COND *cond)
 
 int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 {
-	RT_TASK *task;
+	xnthread_t *thread;
 	int err;
 	spl_t s;
 
@@ -450,15 +450,15 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 	if (err)
 		goto unlock_and_exit;
 
-	task = xeno_current_task();
+	thread = xnpod_current_thread();
 
 	xnsynch_sleep_on(&cond->synch_base, timeout, XN_RELATIVE);
 
-	if (xnthread_test_info(&task->thread_base, XNRMID))
+	if (xnthread_test_info(thread, XNRMID))
 		err = -EIDRM;	/* Condvar deleted while pending. */
-	else if (xnthread_test_info(&task->thread_base, XNTIMEO))
+	else if (xnthread_test_info(thread, XNTIMEO))
 		err = -ETIMEDOUT;	/* Timeout. */
-	else if (xnthread_test_info(&task->thread_base, XNBREAK))
+	else if (xnthread_test_info(thread, XNBREAK))
 		err = -EINTR;	/* Unblocked. */
 
 	rt_mutex_acquire(mutex, TM_INFINITE);

@@ -375,15 +375,15 @@ int rt_sem_p(RT_SEM *sem, RTIME timeout)
 	if (sem->count > 0)
 		--sem->count;
 	else {
-		RT_TASK *task = xeno_current_task();
+		xnthread_t *thread = xnpod_current_thread();
 
 		xnsynch_sleep_on(&sem->synch_base, timeout, XN_RELATIVE);
 
-		if (xnthread_test_info(&task->thread_base, XNRMID))
+		if (xnthread_test_info(thread, XNRMID))
 			err = -EIDRM;	/* Semaphore deleted while pending. */
-		else if (xnthread_test_info(&task->thread_base, XNTIMEO))
+		else if (xnthread_test_info(thread, XNTIMEO))
 			err = -ETIMEDOUT;	/* Timeout. */
-		else if (xnthread_test_info(&task->thread_base, XNBREAK))
+		else if (xnthread_test_info(thread, XNBREAK))
 			err = -EINTR;	/* Unblocked. */
 	}
 

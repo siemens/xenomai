@@ -1,3 +1,11 @@
+2007-03-02  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/mutex.c: Get rid of the redundant mutex::owner
+	field.
+
+	* ksrc/skins/native/{mutex.c, cond.c, sem.c}: Allow cross-API
+	calls to blocking services.
+
 2007-03-02  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* include/rtdm/rtcan.h: Document CAN controller modes and remove
