@@ -1642,36 +1642,28 @@ void xnpod_resume_thread(xnthread_t *thread, xnflags_t mask)
 			   following code when the suspended thread is woken up
 			   while undergoing a simple delay. */
 			xnsynch_forget_sleeper(thread);
-	} else if (xnthread_test_state(thread, XNREADY)) {
+	} else if (xnthread_test_state(thread, XNREADY))
 		sched_removepq(&sched->readyq, &thread->rlink);
-		xnthread_clear_state(thread, XNREADY);
-	}
 
 	/* The readied thread is always put to the end of its priority
 	   group. */
 
 	sched_insertpqf(&sched->readyq, &thread->rlink, thread->cprio);
-
+	xnthread_set_state(thread, XNREADY);
 	xnsched_set_resched(sched);
 
-	if (thread == sched->runthread) {
-		xnthread_set_state(thread, XNREADY);
-
 #ifdef __XENO_SIM__
+	if (thread == sched->runthread) {
 		if (nkpod->schedhook &&
 		    sched_getheadpq(&sched->readyq) != &thread->rlink)
 			/* The running thread does no longer lead the ready
 			   queue. */
 			nkpod->schedhook(thread, XNREADY);
-#endif /* __XENO_SIM__ */
 	} else if (!xnthread_test_state(thread, XNREADY)) {
-		xnthread_set_state(thread, XNREADY);
-
-#ifdef __XENO_SIM__
 		if (nkpod->schedhook)
 			nkpod->schedhook(thread, XNREADY);
-#endif /* __XENO_SIM__ */
 	}
+#endif /* __XENO_SIM__ */
 
       unlock_and_exit:
 
