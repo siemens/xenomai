@@ -53,8 +53,6 @@ typedef struct __rt_mutex {
 
 	xnhandle_t handle;	/* !< Handle in registry -- zero if unregistered. */
 
-	struct rt_task *owner;	/* !< Current mutex owner. */
-
 	int lockcnt;		/* !< Lock nesting level (> 0 means "locked"). */
 	
 	char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
