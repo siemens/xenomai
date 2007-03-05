@@ -167,6 +167,7 @@ static void rpi_push(xnthread_t *thread)
 
 		sched_insertpqf(&gk->rpislot.threadq, &thread->xlink, xnthread_current_priority(thread));
 		thread->rpi = &gk->rpislot;
+
 		top = link2thread(sched_getheadpq(&gk->rpislot.threadq), xlink);
 		prio = xnthread_current_priority(top);
 		xnlock_put_irqrestore(&rpilock, s);
@@ -476,11 +477,14 @@ static inline void ppd_remove_mm(struct mm_struct *mm,
 }
 
 static inline void request_syscall_restart(xnthread_t *thread,
-					   struct pt_regs *regs)
+					   struct pt_regs *regs,
+					   int sysflags)
 {
 	if (xnthread_test_info(thread, XNKICKED)) {
 		if (__xn_interrupted_p(regs))
-			__xn_error_return(regs, -ERESTARTSYS);
+			__xn_error_return(regs,
+					  (sysflags & __xn_exec_norestart) ?
+					  -ERESTARTNOHAND : -ERESTARTSYS);
 
 		xnthread_clear_info(thread, XNKICKED);
 	}
@@ -1704,7 +1708,7 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	__xn_status_return(regs, err);
 
 	if (xnpod_shadow_p() && signal_pending(p))
-		request_syscall_restart(thread, regs);
+		request_syscall_restart(thread, regs, sysflags);
 	else if ((sysflags & __xn_exec_switchback) != 0 && switched)
 		xnshadow_harden();	/* -EPERM will be trapped later if needed. */
 
@@ -1837,7 +1841,7 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 
 	if (nkpod && !testbits(nkpod->status, XNPIDLE)
 	    && xnpod_shadow_p() && signal_pending(current))
-		request_syscall_restart(xnshadow_thread(current), regs);
+		request_syscall_restart(xnshadow_thread(current), regs, sysflags);
 	else if ((sysflags & __xn_exec_switchback) != 0 && switched)
 		xnshadow_relax(0);
 

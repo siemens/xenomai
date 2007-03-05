@@ -1,3 +1,9 @@
+2007-03-05  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-generic/syscall.h, ksrc/nucleus/shadow.c
+	(__xn_exec_norestart): Allow for non-restartable syscalls upon
+	signal receipt.
+
 2007-02-28  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/skins/psos+/task.c (t_create): Combine supervisor and user

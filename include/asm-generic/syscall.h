@@ -88,6 +88,8 @@ typedef struct _xnsysent {
 #define __xn_exec_conforming 0x20
 /* Attempt syscall restart in the opposite domain upon -ENOSYS. */
 #define __xn_exec_adaptive   0x40
+/* Do not restart syscall upon signal receipt. */
+#define __xn_exec_norestart  0x80
 /* Context-agnostic syscall. */
 #define __xn_exec_any        0x0
 /* Short-hand for shadow init syscall. */
