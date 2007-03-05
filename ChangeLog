@@ -1,3 +1,15 @@
+2007-03-05  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-generic/syscall.h, ksrc/nucleus/shadow.c
+	(__xn_exec_norestart): Allow for non-restartable syscalls upon
+	signal receipt.
+
+2007-03-02  Dmitry Adamushko <dmitry.adamushko@gmail.com>
+
+	* ksrc/nucleus/pod.c (xnpod_resume_thread): Make the simulator
+	bits more readable; avoid useless conditions when setting the
+	XNREADY bit.
+
 2007-03-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/mutex.c: Get rid of the redundant mutex::owner
