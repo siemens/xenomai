@@ -1,3 +1,10 @@
+2007-03-08  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* include/nucleus/bheap.h (__internal_bheap_delete): Fix binary
+	heaps implementation.
+	(bheap_ordered): Check binary heap integrity before each operation
+	when queues debugging is enabled.
+
 2007-03-05  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-generic/syscall.h, ksrc/nucleus/shadow.c
