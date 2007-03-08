@@ -59,7 +59,18 @@ typedef struct bheap {
         bheaph_t *elems[sz];                    \
     } name
 
-#define BHEAP_CHECK(heap)   XENO_BUGON(QUEUES, ((heap)->sz == 0))
+/* Check the binary heap invariant. */
+static inline int bheap_ordered(bheap_t *heap)
+{
+	unsigned i;
+	for (i = 2; i < heap->last; i++)
+		if (bheaph_lt(heap->elems[i], heap->elems[i / 2]))
+			return 0;
+	return 1;
+}
+
+#define BHEAP_CHECK(heap) \
+	XENO_BUGON(QUEUES, ((heap)->sz == 0) || !bheap_ordered(heap))
 
 #define bheap_gethead(heap)                     \
 ({                                              \
@@ -179,10 +190,14 @@ static inline int __internal_bheap_delete(bheap_t *heap, bheaph_t *holder)
 
     --heap->last;
     if (heap->last != bheaph_pos(holder)) {
+        bheaph_t *parent;
         lasth = heap->elems[heap->last];
         heap->elems[bheaph_pos(holder)] = lasth;
         bheaph_pos(lasth) = bheaph_pos(holder);
-        bheap_down(heap, lasth);
+	if ((parent = bheaph_parent(heap, lasth)) && bheaph_lt(lasth, parent))
+		bheap_up(heap, lasth);
+	else
+		bheap_down(heap, lasth);
     }
 
     return 0;
