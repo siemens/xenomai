@@ -4,7 +4,9 @@ SUDO=sudo
 
 SUBDIRS = src include config @XENO_MAYBE_DOCDIR@ scripts
 
-EXTRA_DIST = CREDITS README.INSTALL TROUBLESHOOTING ksrc examples
+EXTRA_DIST = CREDITS README.INSTALL TROUBLESHOOTING ksrc examples \
+            debian/changelog debian/control debian/copyright debian/rules \
+            debian/prepare-patch.sh debian/xenomai.postinst debian/xenomai.postrm
 
 dist-hook:
 	rm -fr `find $(distdir) -name '.svn' -o -name CVS  -o -name '.#*' \

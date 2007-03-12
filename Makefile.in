@@ -229,7 +229,10 @@ target_vendor = @target_vendor@
 ACLOCAL_AMFLAGS = -I config
 SUDO = sudo
 SUBDIRS = src include config @XENO_MAYBE_DOCDIR@ scripts
-EXTRA_DIST = CREDITS README.INSTALL TROUBLESHOOTING ksrc examples
+EXTRA_DIST = CREDITS README.INSTALL TROUBLESHOOTING ksrc examples \
+            debian/changelog debian/control debian/copyright debian/rules \
+            debian/prepare-patch.sh debian/xenomai.postinst debian/xenomai.postrm
+
 all: all-recursive
 
 .SUFFIXES:
@@ -412,7 +415,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/config $(distdir)/doc/docbook $(distdir)/doc/docbook/custom-stylesheets/xsl/html $(distdir)/doc/doxygen $(distdir)/doc/man $(distdir)/scripts
+	$(mkdir_p) $(distdir)/config $(distdir)/debian $(distdir)/doc/docbook $(distdir)/doc/docbook/custom-stylesheets/xsl/html $(distdir)/doc/doxygen $(distdir)/doc/man $(distdir)/scripts
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
