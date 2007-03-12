@@ -1,3 +1,9 @@
+2007-03-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/posix/syscall.c (__pthread_cond_wait_prologue),
+	* ksrc/skins/native/cond.c (rt_cond_wait): Properly reacquire the
+	mutex after a break due to a signal receipt.
+
 2007-03-08  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* include/nucleus/bheap.h (__internal_bheap_delete): Fix binary
