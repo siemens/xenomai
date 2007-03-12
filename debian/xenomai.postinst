@@ -1,0 +1,5 @@
+#!/bin/sh
+
+ln -s ../xenomai.rules /etc/udev/rules.d/xenomai.rules
+
+#DEBHELPER#

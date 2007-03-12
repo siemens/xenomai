@@ -1,0 +1,17 @@
+xenomai (2.3.50-02) unstable; urgency=low
+
+  * Apply patch to fix includedir bug - rules updated..
+  * debian/ contents added to EXTRA_DIST.
+
+ -- Paul Corner <paul_c@gna.org>  Wed,  7 Mar 2007 23:29:00 +0000
+
+xenomai (2.3.50-01) unstable; urgency=low
+
+  * Initial build.
+  * General notes: prepare-patch.sh generates a per-kernel/arch
+    for use with kernel-package - A single patch is needed for
+    apply/unapply steps. The scripts/prepare-kernel.sh appends a
+    few lines to some Makefiles which would cause problems on the
+    unapply stage.
+
+ -- Paul Corner <paul_c@gna.org>  Sat,  3 Mar 2007 12:00:00 +0000
