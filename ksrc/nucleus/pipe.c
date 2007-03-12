@@ -502,6 +502,57 @@ int xnpipe_inquire(int minor)
 	return xnpipe_states[minor].status;
 }
 
+int xnpipe_flush(int minor, int mode)
+{
+	xnpipe_state_t *state;
+	struct xnpipe_mh *mh;
+	xnholder_t *holder;
+	spl_t s;
+
+	if (minor < 0 || minor >= XNPIPE_NDEVS)
+		return -ENODEV;
+
+	state = &xnpipe_states[minor];
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (mode & XNPIPE_OFLUSH) {
+		ssize_t n = 0;
+
+		while ((holder = getq(&state->outq)) != NULL) {
+			xnlock_put_irqrestore(&nklock, s);
+
+			mh = link2mh(holder);
+			n += xnpipe_m_size(mh);
+
+			if (state->output_handler != NULL)
+				state->output_handler(xnminor_from_state(state),
+						      mh, 0, state->cookie);
+
+			xnlock_get_irqsave(&nklock, s);
+		}
+		state->ionrd -= n;
+	}
+
+	if (mode & XNPIPE_IFLUSH) {
+		while ((holder = getq(&state->inq)) != NULL) {
+			xnlock_put_irqrestore(&nklock, s);
+
+			if (state->input_handler != NULL)
+				state->input_handler(minor, link2mh(holder), -EPIPE,
+						     state->cookie);
+			else if (state->alloc_handler == NULL)
+				xnfree(link2mh(holder));
+
+			xnlock_get_irqsave(&nklock, s);
+		}
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
+}
+
 /*
  * Clear XNPIPE_USER_CONN flag and cleanup the associated data queues
  * in one atomic step.
@@ -1060,3 +1111,4 @@ EXPORT_SYMBOL(xnpipe_mfixup);
 EXPORT_SYMBOL(xnpipe_recv);
 EXPORT_SYMBOL(xnpipe_inquire);
 EXPORT_SYMBOL(xnpipe_setup);
+EXPORT_SYMBOL(xnpipe_flush);

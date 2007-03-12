@@ -31,6 +31,9 @@
 #define XNPIPE_NORMAL  0x0
 #define XNPIPE_URGENT  0x1
 
+#define XNPIPE_IFLUSH  0x1
+#define XNPIPE_OFLUSH  0x2
+
 #define XNPIPE_MINOR_AUTO  -1
 
 #ifdef __KERNEL__
@@ -140,6 +143,9 @@ ssize_t xnpipe_recv(int minor,
 		    xnticks_t timeout);
 
 int xnpipe_inquire(int minor);
+
+int xnpipe_flush(int minor,
+		 int mode);
 
 #ifdef __cplusplus
 }

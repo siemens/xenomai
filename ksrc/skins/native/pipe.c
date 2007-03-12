@@ -934,6 +934,71 @@ int rt_pipe_free(RT_PIPE *pipe, RT_PIPE_MSG *msg)
 	return xnheap_free(pipe->bufpool, msg);
 }
 
+/**
+ * @fn int rt_pipe_flush(RT_PIPE *pipe, int mode)
+ *
+ * @brief Flush the i/o queues associated with the kernel endpoint of
+ * a message pipe.
+ *
+ * This service flushes all data pending for consumption by the remote
+ * side in user-space for the given message pipe. Upon success, no
+ * data remains to be read from the remote side of the connection.
+ *
+ * The user-space equivalent is a call to:
+ * ioctl(pipefd, XNPIPEIOC_FLUSH, 0).
+ *
+ * @param pipe The descriptor address of the pipe to flush.
+ *
+ * @param mode A mask indicating which queues need to be flushed; the
+ * following flags may be combined in a single flush request:
+ *
+ * - XNPIPE_IFLUSH causes the input queue to be flushed (i.e. data
+ * coming from user-space to the kernel endpoint will be discarded).
+ *
+ * - XNPIPE_OFLUSH causes the output queue to be flushed (i.e. data
+ * going to user-space from the kernel endpoint will be discarded).
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a pipe is not a pipe descriptor.
+ *
+ * - -EIDRM is returned if @a pipe is a closed pipe descriptor.
+ *
+ * - -ENODEV or -EBADF are returned if @a pipe is scrambled.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ *
+ * Rescheduling: never.
+ */
+
+int rt_pipe_flush(RT_PIPE *pipe, int mode)
+{
+	int minor;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	pipe = xeno_h2obj_validate(pipe, XENO_PIPE_MAGIC, RT_PIPE);
+
+	if (!pipe) {
+		int err = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
+		xnlock_put_irqrestore(&nklock, s);
+		return err;
+	}
+
+	minor = pipe->minor;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return xnpipe_flush(minor, mode);
+}
+
 /*@}*/
 
 EXPORT_SYMBOL(rt_pipe_create);
@@ -945,3 +1010,4 @@ EXPORT_SYMBOL(rt_pipe_write);
 EXPORT_SYMBOL(rt_pipe_stream);
 EXPORT_SYMBOL(rt_pipe_alloc);
 EXPORT_SYMBOL(rt_pipe_free);
+EXPORT_SYMBOL(rt_pipe_flush);
