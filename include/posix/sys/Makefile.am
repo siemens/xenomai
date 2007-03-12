@@ -1,6 +1,6 @@
-includedir = $(prefix)/include/posix/sys
+includesubdir = $(includedir)/posix/sys
 
-include_HEADERS = \
+includesub_HEADERS = \
 	ioctl.h \
 	mman.h \
 	socket.h

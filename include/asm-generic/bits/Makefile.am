@@ -1,6 +1,6 @@
-includedir = $(prefix)/include/asm-generic/bits
+includesubdir = $(includedir)/asm-generic/bits
 
-include_HEADERS = \
+includesub_HEADERS = \
 	bind.h \
 	heap.h \
 	intr.h \

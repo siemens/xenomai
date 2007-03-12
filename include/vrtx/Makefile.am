@@ -1,3 +1,3 @@
-includedir = $(prefix)/include/vrtx
+includesubdir = $(includedir)/vrtx
 
-include_HEADERS = syscall.h vrtx.h
+includesub_HEADERS = syscall.h vrtx.h

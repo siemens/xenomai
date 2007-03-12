@@ -1,6 +1,6 @@
-includedir = $(prefix)/include/posix
+includesubdir = $(includedir)/posix
 
-include_HEADERS = \
+includesub_HEADERS = \
 	errno.h \
 	fcntl.h \
 	mqueue.h \

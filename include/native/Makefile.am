@@ -1,6 +1,6 @@
-includedir = $(prefix)/include/native
+includesubdir = $(includedir)/native
 
-include_HEADERS = \
+includesub_HEADERS = \
 	alarm.h \
 	cond.h \
 	event.h \
