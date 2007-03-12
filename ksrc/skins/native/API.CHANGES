@@ -151,4 +151,5 @@ ___________________________________________________________________
 	o rt_timer_inquire() cannot return TM_UNSET anymore, since
 	the master time base is always valid when a skin is active.
 
-	o The deprecated service rt_pipe_flush() has been removed.
+	o rt_pipe_flush() has been reinstated, allowing to flush the
+	kernel endpoint i/o queues of a message pipe.
