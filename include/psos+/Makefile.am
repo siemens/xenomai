@@ -1,6 +1,6 @@
-includedir = $(prefix)/include/psos+
+includesubdir = $(includedir)/psos+
 
-include_HEADERS = \
+includesub_HEADERS = \
 	asr.h \
 	defs.h \
 	event.h \

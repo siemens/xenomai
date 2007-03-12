@@ -1,16 +1,16 @@
-includedir = $(prefix)/include/asm-sim
+includesubdir = $(includedir)/asm-sim
 
-include_HEADERS = system.h
+includesub_HEADERS = system.h
 
 install-data-local:
-	$(mkinstalldirs) $(DESTDIR)$(includedir)
-	rm -f $(DESTDIR)$(includedir)/asm
-	$(LN_S) . $(DESTDIR)$(includedir)/asm
-	rm -f $(DESTDIR)$(includedir)/xenomai
-	$(LN_S) . $(DESTDIR)$(includedir)/xenomai
+	$(mkinstalldirs) $(DESTDIR)$(includesubdir)
+	rm -f $(DESTDIR)$(includesubdir)/asm
+	$(LN_S) . $(DESTDIR)$(includesubdir)/asm
+	rm -f $(DESTDIR)$(includesubdir)/xenomai
+	$(LN_S) . $(DESTDIR)$(includesubdir)/xenomai
 
 uninstall-local:
-	rm -f $(DESTDIR)$(includedir)/asm
-	rm -f $(DESTDIR)$(includedir)/xenomai
+	rm -f $(DESTDIR)$(includesubdir)/asm
+	rm -f $(DESTDIR)$(includesubdir)/xenomai
 
 SUBDIRS = bits

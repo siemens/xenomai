@@ -1,9 +1,9 @@
-includedir = $(prefix)/include/rtdm
+includesubdir = $(includedir)/rtdm
 
 noinst_HEADERS = \
 	syscall.h
 
-include_HEADERS = \
+includesub_HEADERS = \
 	rtdm.h \
 	rtdm_driver.h \
 	rtserial.h \

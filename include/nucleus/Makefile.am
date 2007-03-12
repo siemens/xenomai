@@ -1,6 +1,6 @@
-includedir = $(prefix)/include/nucleus
+includesubdir = $(includedir)/nucleus
 
-include_HEADERS = \
+includesub_HEADERS = \
 	assert.h \
 	bheap.h \
 	compiler.h \
