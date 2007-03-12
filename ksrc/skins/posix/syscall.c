@@ -1520,6 +1520,18 @@ static int __pthread_cond_wait_prologue(struct task_struct *curr,
 						    &count,
 						    XN_INFINITE);
 
+	if (err == EINTR) {
+		do {
+			xnthread_clear_info(cur, XNKICKED);
+			err = pse51_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
+							    &mx.shadow_mutex, count);
+		}
+		while (err == EINTR);
+		xnthread_set_info(cur, XNKICKED);
+		err = EINTR;
+	}
+
+
 	if (!err || err == EINTR)
 		__xn_copy_to_user(curr, (void __user *) __xn_reg_arg3(regs),
 				  &count, sizeof(count));

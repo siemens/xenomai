@@ -88,12 +88,11 @@ static void __pthread_cond_cleanup(void *data)
 {
 	struct pse51_cond_cleanup_t *c = (struct pse51_cond_cleanup_t *) data;
 
-	while (-EINTR == XENOMAI_SKINCALL3(__pse51_muxid,
-					   __pse51_cond_wait_epilogue,
-					   &c->cond->shadow_cond,
-					   &c->mutex->shadow_mutex,
-					   c->count))
-		;
+	XENOMAI_SKINCALL3(__pse51_muxid,
+			  __pse51_cond_wait_epilogue,
+			  &c->cond->shadow_cond,
+			  &c->mutex->shadow_mutex,
+			  c->count);
 }
 
 int __wrap_pthread_cond_wait(pthread_cond_t * cond, pthread_mutex_t * mutex)
@@ -112,7 +111,6 @@ int __wrap_pthread_cond_wait(pthread_cond_t * cond, pthread_mutex_t * mutex)
 				 __pse51_cond_wait_prologue,
 				 &c.cond->shadow_cond,
 				 &c.mutex->shadow_mutex, &c.count, 0, NULL);
-
 	if (err == EINTR)
 		err = 0;
 
@@ -146,7 +144,6 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
 				 __pse51_cond_wait_prologue,
 				 &c.cond->shadow_cond,
 				 &c.mutex->shadow_mutex, &c.count, 1, abstime);
-
 	if (err == EINTR)
 		err = 0;
 

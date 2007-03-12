@@ -429,8 +429,8 @@ int rt_cond_broadcast(RT_COND *cond)
 
 int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 {
+	int err, kicked = 0;
 	xnthread_t *thread;
-	int err;
 	spl_t s;
 
 	if (timeout == TM_NONBLOCK)
@@ -458,10 +458,15 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 		err = -EIDRM;	/* Condvar deleted while pending. */
 	else if (xnthread_test_info(thread, XNTIMEO))
 		err = -ETIMEDOUT;	/* Timeout. */
-	else if (xnthread_test_info(thread, XNBREAK))
+	else if (xnthread_test_info(thread, XNBREAK)) {
 		err = -EINTR;	/* Unblocked. */
+		kicked = xnthread_test_info(thread, XNKICKED);
+	}
 
 	rt_mutex_acquire(mutex, TM_INFINITE);
+
+	if (kicked)
+		xnthread_set_info(thread, XNKICKED);
 
       unlock_and_exit:
 
