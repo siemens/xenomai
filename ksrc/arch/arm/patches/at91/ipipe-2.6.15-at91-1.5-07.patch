@@ -1,10 +1,19 @@
-diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref/arch/arm/mach-at91rm9200/Kconfig linux-2.6.15.7-at91-ipipe-1.5-01/arch/arm/mach-at91rm9200/Kconfig
---- linux-2.6.15.7-at91-ipipe-1.5-01-ref/arch/arm/mach-at91rm9200/Kconfig	2006-11-21 00:53:59.000000000 +0100
-+++ linux-2.6.15.7-at91-ipipe-1.5-01/arch/arm/mach-at91rm9200/Kconfig	2007-01-01 20:55:59.000000000 +0100
-@@ -55,4 +55,15 @@ config AT91_PROGRAMMABLE_CLOCKS
+diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' ipipe-2.6.15-arm-at91/arch/arm/mach-at91rm9200/Kconfig ipipe-2.6.15-arm-at91-ipipe_at91/arch/arm/mach-at91rm9200/Kconfig
+--- ipipe-2.6.15-arm-at91/arch/arm/mach-at91rm9200/Kconfig	2007-03-02 01:43:13.000000000 +0100
++++ ipipe-2.6.15-arm-at91-ipipe_at91/arch/arm/mach-at91rm9200/Kconfig	2007-03-10 13:03:52.000000000 +0100
+@@ -55,6 +55,24 @@ config AT91_PROGRAMMABLE_CLOCKS
  	  Select this if you need to program one or more of the PCK0..PCK3
  	  programmable clock outputs.
  
++config IPIPE_AT91_TC
++	depends on IPIPE
++	int "AT91 TC used as time base"
++	default 0
++	help
++	When Adeos interrupt pipeline is enabled, TC0 is used by default
++	as time base, but you can use TC1 or TC2 by setting this variable to 1
++	or 2. This should only be needed to avoid conflicts with other drivers.
++
 +config IPIPE_AT91_MCK
 +	depends on IPIPE
 +	int "AT91 Master clock Frequency"
@@ -14,12 +23,57 @@ diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref
 +	the AT91 master clock, whose frequency need hence to be known at
 +	compilation time.
 +
-+endmenu
-+
+ endmenu
+ 
  endif
-diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref/arch/arm/mach-at91rm9200/gpio.c linux-2.6.15.7-at91-ipipe-1.5-01/arch/arm/mach-at91rm9200/gpio.c
---- linux-2.6.15.7-at91-ipipe-1.5-01-ref/arch/arm/mach-at91rm9200/gpio.c	2006-11-05 15:31:59.000000000 +0100
-+++ linux-2.6.15.7-at91-ipipe-1.5-01/arch/arm/mach-at91rm9200/gpio.c	2007-01-01 20:55:59.000000000 +0100
+diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' ipipe-2.6.15-arm-at91/arch/arm/mach-at91rm9200/clock.c ipipe-2.6.15-arm-at91-ipipe_at91/arch/arm/mach-at91rm9200/clock.c
+--- ipipe-2.6.15-arm-at91/arch/arm/mach-at91rm9200/clock.c	2007-03-10 13:25:02.000000000 +0100
++++ ipipe-2.6.15-arm-at91-ipipe_at91/arch/arm/mach-at91rm9200/clock.c	2007-03-10 13:24:48.000000000 +0100
+@@ -202,6 +202,29 @@ static struct clk ohci_clk = {
+ 	.mode		= pmc_periph_mode,
+ };
+ 
++#ifdef CONFIG_IPIPE
++static struct clk tc0 = {
++	.name		= "tc0",
++	.parent         = &mck,
++	.pmc_mask       = 1 << AT91_ID_TC0,
++	.mode           = pmc_periph_mode,
++};
++
++static struct clk tc1 = {
++	.name		= "tc1",
++	.parent         = &mck,
++	.pmc_mask       = 1 << AT91_ID_TC1,
++	.mode           = pmc_periph_mode,
++};
++
++static struct clk tc2 = {
++	.name		= "tc2",
++	.parent         = &mck,
++	.pmc_mask       = 1 << AT91_ID_TC2,
++	.mode           = pmc_periph_mode,
++};
++#endif /* CONFIG_IPIPE */
++
+ static struct clk *const clock_list[] = {
+ 	/* four primary clocks -- MUST BE FIRST! */
+ 	&clk32k,
+@@ -230,6 +253,11 @@ static struct clk *const clock_list[] = 
+ 	// spi
+ 	// ssc0..ssc2
+ 	// tc0..tc5
++#ifdef CONFIG_IPIPE
++	&tc0,
++	&tc1,
++	&tc2,
++#endif /* CONFIG_IPIPE */
+ 	&ohci_clk,
+ 	// ether
+ };
+diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' ipipe-2.6.15-arm-at91/arch/arm/mach-at91rm9200/gpio.c ipipe-2.6.15-arm-at91-ipipe_at91/arch/arm/mach-at91rm9200/gpio.c
+--- ipipe-2.6.15-arm-at91/arch/arm/mach-at91rm9200/gpio.c	2007-03-02 01:43:13.000000000 +0100
++++ ipipe-2.6.15-arm-at91-ipipe_at91/arch/arm/mach-at91rm9200/gpio.c	2007-03-10 13:32:54.000000000 +0100
 @@ -18,6 +18,11 @@
  #include <asm/mach/irq.h>
  #include <asm/arch/hardware.h>
@@ -101,111 +155,50 @@ diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref
 +	__ipipe_at91_gpio_banks = banks;
 +#endif /* CONFIG_IPIPE */
  }
-diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref/arch/arm/mach-at91rm9200/irq.c linux-2.6.15.7-at91-ipipe-1.5-01/arch/arm/mach-at91rm9200/irq.c
---- linux-2.6.15.7-at91-ipipe-1.5-01-ref/arch/arm/mach-at91rm9200/irq.c	2007-01-01 23:23:53.000000000 +0100
-+++ linux-2.6.15.7-at91-ipipe-1.5-01/arch/arm/mach-at91rm9200/irq.c	2007-01-01 23:23:19.000000000 +0100
-@@ -41,6 +41,7 @@
-  * The default interrupt priority levels (0 = lowest, 7 = highest).
-  */
- static unsigned int at91rm9200_default_irq_priority[NR_AIC_IRQS] __initdata = {
-+#ifndef CONFIG_IPIPE
- 	7,	/* Advanced Interrupt Controller */
- 	7,	/* System Peripheral */
- 	0,	/* Parallel IO Controller A */
-@@ -73,6 +74,42 @@ static unsigned int at91rm9200_default_i
- 	0,	/* Advanced Interrupt Controller */
- 	0,	/* Advanced Interrupt Controller */
- 	0	/* Advanced Interrupt Controller */
-+#else /* CONFIG_IPIPE */
-+/* Give the highest priority to TC, since they are used as timer interrupt by
-+   I-pipe. */
-+	7,	/* Advanced Interrupt Controller */
-+	6,	/* System Peripheral */
-+	0,	/* Parallel IO Controller A */
-+	0,	/* Parallel IO Controller B */
-+	0,	/* Parallel IO Controller C */
-+	0,	/* Parallel IO Controller D */
-+	5,	/* USART 0 */
-+	5,	/* USART 1 */
-+	5,	/* USART 2 */
-+	5,	/* USART 3 */
-+	0,	/* Multimedia Card Interface */
-+	3,	/* USB Device Port */
-+	0,	/* Two-Wire Interface */
-+	5,	/* Serial Peripheral Interface */
-+	4,	/* Serial Synchronous Controller */
-+	4,	/* Serial Synchronous Controller */
-+	4,	/* Serial Synchronous Controller */
-+	7,	/* Timer Counter 0 */
-+	7,	/* Timer Counter 1 */
-+	7,	/* Timer Counter 2 */
-+	0,	/* Timer Counter 3 */
-+	0,	/* Timer Counter 4 */
-+	0,	/* Timer Counter 5 */
-+	2,	/* USB Host port */
-+	2,	/* Ethernet MAC */
-+	0,	/* Advanced Interrupt Controller */
-+	0,	/* Advanced Interrupt Controller */
-+	0,	/* Advanced Interrupt Controller */
-+	0,	/* Advanced Interrupt Controller */
-+	0,	/* Advanced Interrupt Controller */
-+	0,	/* Advanced Interrupt Controller */
-+	0	/* Advanced Interrupt Controller */
-+#endif /*CONFIG_IPIPE */
- };
- 
- 
-diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref/arch/arm/mach-at91rm9200/time.c linux-2.6.15.7-at91-ipipe-1.5-01/arch/arm/mach-at91rm9200/time.c
---- linux-2.6.15.7-at91-ipipe-1.5-01-ref/arch/arm/mach-at91rm9200/time.c	2006-11-05 15:31:59.000000000 +0100
-+++ linux-2.6.15.7-at91-ipipe-1.5-01/arch/arm/mach-at91rm9200/time.c	2007-01-02 22:16:32.079656213 +0100
-@@ -25,12 +25,69 @@
- #include <linux/kernel.h>
- #include <linux/sched.h>
- #include <linux/time.h>
-+#include <linux/delay.h>
- 
- #include <asm/hardware.h>
- #include <asm/io.h>
+diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' ipipe-2.6.15-arm-at91/arch/arm/mach-at91rm9200/time.c ipipe-2.6.15-arm-at91-ipipe_at91/arch/arm/mach-at91rm9200/time.c
+--- ipipe-2.6.15-arm-at91/arch/arm/mach-at91rm9200/time.c	2007-03-02 01:43:13.000000000 +0100
++++ ipipe-2.6.15-arm-at91-ipipe_at91/arch/arm/mach-at91rm9200/time.c	2007-03-10 13:26:45.000000000 +0100
+@@ -31,6 +31,62 @@
  #include <asm/irq.h>
  #include <asm/mach/time.h>
  
 +#ifdef CONFIG_IPIPE
++#include <asm/hardware/clock.h>
++#include <linux/console.h>
 +#include <linux/module.h>
-+#include <asm/arch/board.h>	/* for at91_master_clock */
 +#include <asm/arch/at91rm9200_tc.h>
 +
 +#ifdef CONFIG_NO_IDLE_HZ
 +#error "dynamic tick timer not yet supported with IPIPE"
 +#endif /* CONFIG_NO_IDLE_HZ */
 +
-+#define KERNEL_TIMER 0
 +#define TCNXCNS(timer,v) ((v) << ((timer)<<1))
 +#define AT91_TC_REG_MASK (0xffff)
 +
-+#if (KERNEL_TIMER==0)
++#if (CONFIG_IPIPE_AT91_TC==0)
 +#   define KERNEL_TIMER_IRQ_NUM AT91_ID_TC0
-+#elif (KERNEL_TIMER==1)
++#elif (CONFIG_IPIPE_AT91_TC==1)
 +#   define KERNEL_TIMER_IRQ_NUM AT91_ID_TC1
-+#elif (KERNEL_TIMER==2)
++#elif (CONFIG_IPIPE_AT91_TC==2)
 +#   define KERNEL_TIMER_IRQ_NUM AT91_ID_TC2
 +#else
-+#error Weird -- KERNEL_TIMER is not defined or something....
++#error IPIPE_AT91_TC must be 0, 1 or 2.
 +#endif
 +
 +static inline unsigned int at91_tc_read(unsigned int reg_offset)
 +{
-+	void __iomem *addr =
-+		(void __iomem *)AT91_VA_BASE_TCB0 + 0x40 * KERNEL_TIMER;
++	unsigned long addr =
++		(AT91_VA_BASE_TCB0 + 0x40 * CONFIG_IPIPE_AT91_TC);
 +
-+	return readl(addr + reg_offset);
++	return readl((void __iomem *)(addr + reg_offset));
 +}
 +
 +static inline void at91_tc_write(unsigned int reg_offset, unsigned long value)
 +{
-+	void __iomem *addr =
-+		(void __iomem *)AT91_VA_BASE_TCB0 + 0x40 * KERNEL_TIMER;
++	unsigned long addr =
++		(AT91_VA_BASE_TCB0 + 0x40 * CONFIG_IPIPE_AT91_TC);
 +
-+	writel(value, addr + reg_offset);
++	writel(value, (void __iomem *)(addr + reg_offset));
 +}
 +
 +#define read_CV() at91_tc_read(AT91_TC_CV)
@@ -228,7 +221,7 @@ diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref
  /*
   * The ST_CRTR is updated asynchronously to the master clock.  It is therefore
   *  necessary to read it twice (with the same value) to ensure accuracy.
-@@ -38,14 +95,16 @@
+@@ -38,14 +94,16 @@
  static inline unsigned long read_CRTR(void) {
  	unsigned long x1, x2;
  
@@ -246,10 +239,11 @@ diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref
  /*
   * Returns number of microseconds since last timer interrupt.  Note that interrupts
   * will have been disabled by do_gettimeofday()
-@@ -85,9 +144,138 @@ static irqreturn_t at91rm9200_timer_inte
- 		return IRQ_NONE;		/* not handled */
- }
- 
+@@ -125,3 +183,199 @@ struct sys_timer at91rm9200_timer = {
+ 	.init		= at91rm9200_timer_init,
+ 	.offset		= at91rm9200_gettimeoffset,
+ };
++
 +#else /* CONFIG_IPIPE */
 +
 +/*
@@ -301,6 +295,22 @@ diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref
 +	write_sequnlock(&xtime_lock);
 +
 +	return IRQ_HANDLED;
++}
++
++static irqreturn_t at91rm9200_bad_freq(int irq, void *dev_id, struct pt_regs *regs)
++{
++	static int ticks = 0;
++
++	if (++ticks != HZ * 120) {
++		if (!console_drivers || try_acquire_console_sem())
++			return at91rm9200_timer_interrupt(irq, dev_id, regs);
++	
++		release_console_sem();
++	}
++
++	panic("AT91 clock rate incorrectly set.\n"
++	      "Please recompile with IPIPE_AT91_MCK set to %lu Hz.",
++	      clk_get_rate(clk_get(NULL, "mck")));
 +}
 +
 +notrace unsigned long long __ipipe_mach_get_tsc(void)
@@ -373,48 +383,31 @@ diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref
 +	return (read_RC() - read_CV()) & AT91_TC_REG_MASK;
 +}
 +
-+#endif /* CONFIG_IPIPE */
-+
- static struct irqaction at91rm9200_timer_irq = {
- 	.name		= "at91_tick",
-+#ifndef CONFIG_IPIPE
- 	.flags		= SA_SHIRQ | SA_INTERRUPT,
-+#else /* !CONFIG_IPIPE */
++static struct irqaction at91rm9200_timer_irq = {
++	.name		= "at91_tick",
 +	.flags		= SA_INTERRUPT,
-+#endif /* !CONFIG_IPIPE */
- 	.handler	= at91rm9200_timer_interrupt
- };
- 
-@@ -96,6 +284,7 @@ static struct irqaction at91rm9200_timer
-  */
- void __init at91rm9200_timer_init(void)
- {
-+#ifndef CONFIG_IPIPE
- 	/* Disable all timer interrupts */
- 	at91_sys_write(AT91_ST_IDR, AT91_ST_PITS | AT91_ST_WDOVF | AT91_ST_RTTINC | AT91_ST_ALMS);
- 	(void) at91_sys_read(AT91_ST_SR);	/* Clear any pending interrupts */
-@@ -119,6 +308,49 @@ void __init at91rm9200_timer_init(void)
- 
- 	/* Enable Period Interval Timer interrupt */
- 	at91_sys_write(AT91_ST_IER, AT91_ST_PITS);
-+#else /* CONFIG_IPIPE */
++	.handler	= &at91rm9200_timer_interrupt
++};
++
++void __init at91rm9200_timer_init(void)
++{
++	char clk_name[] = "tc%";
 +	unsigned long v;
++	
++	if (clk_get_rate(clk_get(NULL, "mck")) != CONFIG_IPIPE_AT91_MCK)
++		at91rm9200_timer_irq.handler = &at91rm9200_bad_freq;
 +
-+	if (at91_master_clock != CONFIG_IPIPE_AT91_MCK)
-+		panic("Please recompile the kernel with IPIPE_AT91_MCK"
-+		      " set to %lu Hz\n", at91_master_clock);
-+
-+	/* FIXME: there may well be a cleaner way to do this. */
-+	at91_sys_write(AT91_PMC_PCER, 1 << (KERNEL_TIMER + 6));
-+
++	snprintf(clk_name, sizeof(clk_name), "tc%d", CONFIG_IPIPE_AT91_TC);
++	clk_enable(clk_get(NULL, clk_name));
++	
 +	/* No Sync. */
 +	at91_tc_write(AT91_TC_BCR, 0);
 +
 +	/* program NO signal on XCN */
-+	v = readl((void __iomem *) AT91_VA_BASE_TCB0 + AT91_TC_BMR);
-+	v &= ~TCNXCNS(KERNEL_TIMER, 3);
-+	v |= TCNXCNS(KERNEL_TIMER, 1); /* AT91_TC_TCNXCNS_NONE */
-+	writel(v, (void __iomem *) AT91_VA_BASE_TCB0 + AT91_TC_BMR);
++	v = readl((void __iomem *) (AT91_VA_BASE_TCB0 + AT91_TC_BMR));
++	v &= ~TCNXCNS(CONFIG_IPIPE_AT91_TC, 3);
++	v |= TCNXCNS(CONFIG_IPIPE_AT91_TC, 1); /* AT91_TC_TCNXCNS_NONE */
++	writel(v, (void __iomem *) (AT91_VA_BASE_TCB0 + AT91_TC_BMR));
 +
 +	/* Disable the channel */
 +	at91_tc_write(AT91_TC_CCR, AT91_TC_CLKDIS);
@@ -439,13 +432,16 @@ diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref
 +	at91_tc_write(AT91_TC_CCR, AT91_TC_CLKEN | AT91_TC_SWTRG);
 +
 +	at91_timer_initialized = 1;
++}
++
++struct sys_timer at91rm9200_timer = {
++	.init		= at91rm9200_timer_init,
++	.offset		= at91rm9200_gettimeoffset,
++};
 +#endif /* CONFIG_IPIPE */
- }
- 
- struct sys_timer at91rm9200_timer = {
-diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref/include/asm-arm/arch-at91rm9200/irqs.h linux-2.6.15.7-at91-ipipe-1.5-01/include/asm-arm/arch-at91rm9200/irqs.h
---- linux-2.6.15.7-at91-ipipe-1.5-01-ref/include/asm-arm/arch-at91rm9200/irqs.h	2006-11-05 15:31:59.000000000 +0100
-+++ linux-2.6.15.7-at91-ipipe-1.5-01/include/asm-arm/arch-at91rm9200/irqs.h	2007-01-01 20:55:59.000000000 +0100
+diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' ipipe-2.6.15-arm-at91/include/asm-arm/arch-at91rm9200/irqs.h ipipe-2.6.15-arm-at91-ipipe_at91/include/asm-arm/arch-at91rm9200/irqs.h
+--- ipipe-2.6.15-arm-at91/include/asm-arm/arch-at91rm9200/irqs.h	2007-03-02 01:43:14.000000000 +0100
++++ ipipe-2.6.15-arm-at91-ipipe_at91/include/asm-arm/arch-at91rm9200/irqs.h	2007-03-10 13:01:17.000000000 +0100
 @@ -49,4 +49,12 @@
  extern void at91rm9200_init_irq(unsigned int priority[]);
  #endif
@@ -459,9 +455,9 @@ diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref
 +#endif /* CONFIG_IPIPE && !__ASSEMBLY__ */
 +
  #endif
-diff -x '*~' -x '*.orig' -x '*.rej' -Naurdp linux-2.6.15.7-at91-ipipe-1.5-01-ref/include/asm-arm/arch-at91rm9200/timex.h linux-2.6.15.7-at91-ipipe-1.5-01/include/asm-arm/arch-at91rm9200/timex.h
---- linux-2.6.15.7-at91-ipipe-1.5-01-ref/include/asm-arm/arch-at91rm9200/timex.h	2006-11-05 15:31:59.000000000 +0100
-+++ linux-2.6.15.7-at91-ipipe-1.5-01/include/asm-arm/arch-at91rm9200/timex.h	2007-01-01 22:45:09.000000000 +0100
+diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' ipipe-2.6.15-arm-at91/include/asm-arm/arch-at91rm9200/timex.h ipipe-2.6.15-arm-at91-ipipe_at91/include/asm-arm/arch-at91rm9200/timex.h
+--- ipipe-2.6.15-arm-at91/include/asm-arm/arch-at91rm9200/timex.h	2007-03-02 01:43:14.000000000 +0100
++++ ipipe-2.6.15-arm-at91-ipipe_at91/include/asm-arm/arch-at91rm9200/timex.h	2007-03-10 12:48:10.000000000 +0100
 @@ -23,6 +23,10 @@
  
  #include <asm/arch/hardware.h>

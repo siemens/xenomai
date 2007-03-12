@@ -1,3 +1,20 @@
+2007-03-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/arm/patches: Upgrade to 2.6.{14,15}-1.5-07, and
+	2.6.19-1.6-03.
+
+2007-03-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pipe.c (xnpipe_flush): Provide service for flushing
+	the i/o queues associated with the kernel endpoint of a message
+	pipe.
+
+2007-03-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/posix/syscall.c (__pthread_cond_wait_prologue),
+	* ksrc/skins/native/cond.c (rt_cond_wait): Properly reacquire the
+	mutex after a break due to a signal receipt.
+
 2007-03-08  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* include/nucleus/bheap.h (__internal_bheap_delete): Fix binary
