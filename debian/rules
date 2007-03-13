@@ -86,17 +86,26 @@ install: build
 #	test applications.
 	mkdir -p $(CURDIR)/debian/xenomai/usr/share
 	mv -f $(CURDIR)/debian/tmp/usr/share/xenomai $(CURDIR)/debian/xenomai/usr/share
-	mkdir -p $(CURDIR)/debian/xenomai/etc/udev
 #	install $(CURDIR)/ksrc/nucleus/udev/*.rules $(CURDIR)/debian/xenomai/etc/udev
+	mkdir -p $(CURDIR)/debian/xenomai/etc/udev
 	for f in $(CURDIR)/ksrc/nucleus/udev/*.rules ; do \
 	    cat $$f >> $(CURDIR)/debian/xenomai/etc/udev/xenomai.rules ; \
 	done
+#	Install examples in the dev package.
+	mkdir -p $(CURDIR)/debian/xenomai-dev/usr/share/xenomai
+	cp -fR $(CURDIR)/examples $(CURDIR)/debian/xenomai-dev/usr/share/xenomai
+#	 then kernel demos & snippets
+	cd $(CURDIR)/ksrc && find . -name demos -o  -name snippets | \
+	    while read d ; do \
+	        mkdir -p $(CURDIR)/debian/xenomai-dev/usr/share/xenomai/examples/kernel/$$d ; \
+	        install -m 0644 $$d/* $(CURDIR)/debian/xenomai-dev/usr/share/xenomai/examples/kernel/$$d ; \
+	    done ; \
+	cd $(CURDIR)
 #	The kernel patches get installed next..
 	dh_installkpatches
 
-
 # Build architecture-independent files here.
-binary-indep: build install
+binary-indep: install
 	dh_testdir
 	dh_testroot
 	dh_installdocs
@@ -110,6 +119,12 @@ binary-indep: build install
 	dh_shlibdeps -L xenomai -L xenomai-dev
 #	dh_shlibdeps
 	dh_gencontrol
+#	 Here follows a little hackery to insert the patch list        
+#	 into the control file for linux-patch-xenomai
+	cat $(CURDIR)/debian/linux-patch-xenomai.kpatches | \
+	    awk 'NR>4 {sub(/^/," ");print}' >> \
+	        $(CURDIR)/debian/linux-patch-xenomai/DEBIAN/control
+#	 End of hackery.
 	dh_md5sums
 	dh_builddeb
 

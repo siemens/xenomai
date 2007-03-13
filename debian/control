@@ -14,7 +14,12 @@ Description: Linux kernel patches for Xenomai
  Xenomai kernel patches - See www.xenomai.org
  .
  Patches for 2.6 series kernels - These are intended for use with kernel-package
- and a virgin linux source tree.
+ and a virgin linux source tree. Note: These patches include the base adeos-ipipe
+ patch along with all the additional material normally added by the prepare-kernel.sh
+ script.
+ .
+ This package contains the following patches:
+ .
 
 Package: xenomai
 Section: devel
@@ -37,6 +42,9 @@ Description: Headers and static libs for Xenomai
  .
  This package also contains the static libraries and scripts used
  to compile realtime applications.
+ .
+ User space and kernel examples can be found in /usr/share/xenomai
+ along with suitable make files.
 
 Package: xenomai-docs
 Section: devel

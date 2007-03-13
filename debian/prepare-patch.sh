@@ -64,8 +64,9 @@ echo " cp $xenomai_root/$target_dir/$f $temp_tree/$link_dir/$f"
 generate_patch() {
     (
     cd "$temp_tree"
+    find . -name demos -o -name snippets -exec rm -fR {} \+ &&
     find . -type f |
-    while read f; do
+    while read f ; do
         diff -Naurd "$linux_tree/$f" "$f" |
         sed -e "s,^--- ${linux_tree}/\.\(/.*\)$,--- linux\1," \
             -e "s,^+++ \.\(/.*\)$,+++ linux-patched\1,"
@@ -138,8 +139,6 @@ cd $xenomai_root
 echo "Patch-name: Xenomai realtime kernel patches" > $xenomai_root/debian/linux-patch-xenomai.kpatches
 echo "Patch-id: xenomai" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
 echo "Architecture: all" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
-
-echo "" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
 
 find $xenomai_root/ksrc/ -name "adeos-ipipe-2.6.*.patch" |
 while read f ; do
