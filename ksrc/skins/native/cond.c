@@ -460,13 +460,13 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 		err = -ETIMEDOUT;	/* Timeout. */
 	else if (xnthread_test_info(&task->thread_base, XNBREAK)) {
 		err = -EINTR;	/* Unblocked. */
-		kicked = xnthread_test_info(thread, XNKICKED);
+		kicked = xnthread_test_info(&task->thread_base, XNKICKED);
 	}
 
 	rt_mutex_acquire(mutex, TM_INFINITE);
 
 	if (kicked)
-		xnthread_set_info(thread, XNKICKED);
+		xnthread_set_info(&task->thread_base, XNKICKED);
 
       unlock_and_exit:
 
