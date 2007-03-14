@@ -1420,6 +1420,11 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		   the KICKED bit set, so that xnshadow_relax() is never
 		   prevented from blocking the current thread. */
 		if (xnthread_test_info(thread, XNKICKED)) {
+			XENO_ASSERT(NUCLEUS, (mask & XNRELAX) == 0,
+				    xnpod_fatal("Relaxing a kicked thread"
+						"(thread=%s, mask=%lx)?!",
+						thread->name, mask);
+				);
 			xnthread_clear_info(thread, XNRMID | XNTIMEO);
 			xnthread_set_info(thread, XNBREAK);
 			goto unlock_and_exit;
