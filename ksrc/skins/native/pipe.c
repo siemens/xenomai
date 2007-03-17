@@ -98,9 +98,14 @@ static int __pipe_output_handler(int bminor,
 	RT_PIPE *pipe = (RT_PIPE *)cookie;
 	
 	if (mh == pipe->buffer) {
+		spl_t s;
+
 		/* Reuse the streaming buffer. */
+		xnlock_get_irqsave(&nklock, s);
 		pipe->fillsz = 0;
 		__clear_bit(P_SYNCWAIT, &pipe->status);
+		__clear_bit(P_ATOMIC, &pipe->status);
+		xnlock_put_irqrestore(&nklock, s);
 	} else
 		/* Free memory from output/discarded message. */
 		xnheap_free(pipe->bufpool, mh);
@@ -834,6 +839,10 @@ ssize_t rt_pipe_stream(RT_PIPE *pipe, const void *buf, size_t size)
 		outbytes = size;
 
 	if (outbytes > 0) {
+repeat:
+		/* Mark a beginning of should-be-atomic section. */
+		__set_bit(P_ATOMIC, &pipe->status);
+
 		fillptr = pipe->fillsz;
 		pipe->fillsz += outbytes;
 
@@ -843,6 +852,10 @@ ssize_t rt_pipe_stream(RT_PIPE *pipe, const void *buf, size_t size)
 		       (caddr_t) buf, outbytes);
 
 		xnlock_get_irqsave(&nklock, s);
+
+		/* We haven't been atomic, let's try again. */
+		if (!__test_and_clear_bit(P_ATOMIC, &pipe->status))
+			goto repeat;
 
 		if (__test_and_set_bit(P_SYNCWAIT, &pipe->status))
 			outbytes = xnpipe_mfixup(pipe->minor, pipe->buffer, outbytes);
