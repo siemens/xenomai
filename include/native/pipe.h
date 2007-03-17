@@ -41,6 +41,7 @@ typedef struct rt_pipe_placeholder {
 #define XENO_PIPE_MAGIC  0x55550202
 
 #define P_SYNCWAIT  0
+#define P_ATOMIC    1
 
 typedef xnpipe_mh_t RT_PIPE_MSG;
 
