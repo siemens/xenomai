@@ -364,10 +364,20 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 	holder = getheadq(&nkpod->threadq);
 	thrq_rev = nkpod->threadq_rev;
 
-	count += xnintr_count * RTHAL_NR_CPUS;
-	intr_rev = xnintr_list_rev;
-
 	xnlock_put_irqrestore(&nklock, s);
+
+	/* The order is important here: first xnintr_list_rev then xnintr_count.
+	 * On the other hand, xnintr_attach/detach() update xnintr_count first
+	 * and then xnintr_list_rev.
+	 * This should guarantee that we can't get an up-to-date xnintr_list_rev
+	 * and old xnintr_count here. The other way around is not a problem as
+	 * xnintr_query() will notice this fact later.
+	 * Should xnintr_list_rev change later, xnintr_query() will trigger
+	 * an appropriate error below. */
+
+	intr_rev = xnintr_list_rev;
+	xnarch_memory_barrier();
+	count += xnintr_count * RTHAL_NR_CPUS;
 
 	if (iter)
 		kfree(iter);
@@ -444,7 +454,7 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 					   &stat_info->csw,
 					   &stat_info->runtime,
 					   &stat_info->account_period);
-			if (err == EAGAIN)
+			if (err == -EAGAIN)
 				goto restart;
 			if (err)
 				break; /* line unused or end of chain */

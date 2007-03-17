@@ -48,6 +48,27 @@ xnintr_t nkclock;
 #ifdef CONFIG_XENO_OPT_STATS
 int xnintr_count = 1;	/* Number of attached xnintr objects + nkclock */
 int xnintr_list_rev;	/* Modification counter of xnintr list */
+
+/* Both functions update xnintr_list_rev at the very end.
+ * This guarantees that module.c::stat_seq_open() won't get
+ * an up-to-date xnintr_list_rev and old xnintr_count. */
+
+static inline void xnintr_stat_counter_inc(void)
+{
+	xnintr_count++;
+	xnarch_memory_barrier();
+	xnintr_list_rev++;
+}
+
+static inline void xnintr_stat_counter_dec(void)
+{
+	xnintr_count--;
+	xnarch_memory_barrier();
+	xnintr_list_rev++;
+}
+#else
+static inline void xnintr_stat_counter_inc(void) {}
+static inline void xnintr_stat_counter_dec(void) {}
 #endif /* CONFIG_XENO_OPT_STATS */
 
 /*
@@ -411,7 +432,7 @@ int xnintr_mount(void)
 	for (i = 0; i < RTHAL_NR_IRQS; ++i) {
 		xnshirqs[i].handlers = NULL;
 #ifdef CONFIG_SMP
-		atomic_set(&xnshirqs[i].active, 0);
+		xnarch_atomic_set(&xnshirqs[i].active, 0);
 #endif
 	}
 	return 0;
@@ -625,20 +646,16 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 	spl_t s;
 
 	intr->cookie = cookie;
+	memset(&intr->stat, 0, sizeof(intr->stat));
 
 	xnlock_get_irqsave(&intrlock, s);
 
 	err = xnintr_irq_attach(intr);
 
+	if (!err)
+		xnintr_stat_counter_inc();
+	
 	xnlock_put_irqrestore(&intrlock, s);
-
-#ifdef CONFIG_XENO_OPT_STATS
-	if (!err) {
-		memset(&intr->stat, 0, sizeof(intr->stat));
-		xnintr_count++;
-		xnintr_list_rev++;
-	}
-#endif /* CONFIG_XENO_OPT_STATS */
 
 	return err;
 }
@@ -681,15 +698,10 @@ int xnintr_detach(xnintr_t *intr)
 
 	err = xnintr_irq_detach(intr);
 
+	if (!err)
+		xnintr_stat_counter_dec();
+
 	xnlock_put_irqrestore(&intrlock, s);
-
-#ifdef CONFIG_XENO_OPT_STATS
-	if (!err) {
-		xnintr_count--;
-		xnintr_list_rev++;
-	}
-#endif /* CONFIG_XENO_OPT_STATS */
-
 
 	/* The idea here is to keep a detached interrupt object valid as long
 	   as the corresponding irq handler is running. This is one of the
@@ -843,7 +855,7 @@ int xnintr_query(int irq, int *cpu, xnintr_t **prev, int revision, char *name,
 	head = snprintf(name, XNOBJECT_NAME_LEN, "IRQ%d: ", irq);
 	name += head;
 
-	xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&intrlock, s);
 
 	if (revision != xnintr_list_rev) {
 		err = -EAGAIN;
@@ -890,7 +902,7 @@ int xnintr_query(int irq, int *cpu, xnintr_t **prev, int revision, char *name,
 	*cpu = cpu_no;
 
      unlock_and_exit:
-	xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&intrlock, s);
 
 	return err;
 }

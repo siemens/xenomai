@@ -1,3 +1,15 @@
+2007-03-15  Dmitry Adamushko <dmitry.adamushko@gmail.com>
+
+ 	* include/native/pipe.h (P_ATOMIC),
+	* ksrc/skins/native/pipe.c (rt_pipe_stream):
+ 	Introduce an atomic transaction mechanism to handle
+ 	synchronization wrt concurrent read (xnpipe_read) and
+	flush (xnpipe_flush, ioctl(..,XNPIPEIOC_FLUSH)) operations.
+ 
+ 	* ksrc/nucleus/intr.c (xnintr_attach, xnintr_detach):
+ 	* ksrc/nucleus/modules.c (stat_seq_open): Fix synchronization
+ 	issues of accessing xnintr_list_rev and xnintr_count.
+
 2007-03-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.{14,15}-1.5-07, and
