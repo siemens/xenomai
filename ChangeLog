@@ -1,3 +1,7 @@
+2007-03-18  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.{19,20}-1.7-03.
+
 2007-03-15  Dmitry Adamushko <dmitry.adamushko@gmail.com>
 
 	* include/native/pipe.h (P_ATOMIC),
