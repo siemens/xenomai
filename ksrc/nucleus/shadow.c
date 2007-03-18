@@ -280,6 +280,39 @@ static inline void rpi_update(xnthread_t *thread)
 	}
 
 	sched_removepq(&thread->rpi->threadq, &thread->xlink);
+
+#ifdef CONFIG_SMP
+
+	/* Ok, this one is not trivial. Unless a relaxed shadow has
+	 * forced its CPU affibity, It may migrate to another CPU as a
+	 * result of Linux's load balancing strategy. If the last
+	 * relaxed Xenomai thread is moved while in a blocked state
+	 * from a CPU (i.e. != TASK_RUNNING), there is no way for
+	 * rpi_switch() to lower the root thread priority, since
+	 * do_schedule_event() is only called for incoming/outgoing
+	 * Xenomai shadows, and not for regular Linux tasks. This
+	 * would leave the Xenomai root thread for the source CPU with
+	 * a boosted priority, inherited from the last migrated
+	 * shadow. To prevent this, we send an IPI to the source CPU
+	 * when a migration is detected on the destination CPU, so
+	 * that it could adjust its root thread priority whenever no
+	 * other relaxed shadow is undergoing a RPI boost. */
+
+	if (sched_emptypq_p(&thread->rpi->threadq)) {
+		int rcpu = container_of(thread->rpi, struct __gatekeeper, rpislot) - gatekeeper;
+		if (rcpu != rthal_processor_id()) {
+			xnsched_t *rsched = xnpod_sched_slot(rcpu);
+			if (!testbits(rsched->status, XNRPICK)) {
+				xnarch_cpumask_t cpumask;
+				setbits(rsched->status, XNRPICK);
+				xnarch_cpus_clear(cpumask);
+				xnarch_cpu_set(rcpu, cpumask);
+				xnarch_send_ipi(cpumask);
+			}
+		}
+	}
+#endif
+
 	rpi_none(thread);
 	rpi_push(thread);
 	xnlock_put_irqrestore(&rpilock, s);
@@ -380,6 +413,27 @@ static inline void rpi_clear(void)
 	if (!xnshadow_thread(current))
 		xnpod_renice_root(XNCORE_BASE_PRIO);
 }
+
+#ifdef CONFIG_SMP
+
+void xnshadow_rpi_check(void)
+{
+	struct __gatekeeper *gk;
+	spl_t s;
+
+	gk = &gatekeeper[rthal_processor_id()];
+
+	xnlock_get_irqsave(&rpilock, s);
+
+	if (sched_emptypq_p(&gk->rpislot.threadq)) {
+		if (xnthread_current_priority(xnpod_current_root()) != XNCORE_BASE_PRIO)
+			xnpod_renice_root(XNCORE_BASE_PRIO);
+	}
+
+	xnlock_put_irqrestore(&rpilock, s);
+}
+
+#endif /* CONFIG_SMP */
 
 #else /* !CONFIG_XENO_OPT_PRIOCPL */
 
