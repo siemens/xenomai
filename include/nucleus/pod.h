@@ -49,6 +49,7 @@
 /* Sched status flags */
 #define XNKCOUT  0x80000000	/* Sched callout context */
 #define XNHTICK  0x40000000	/* Host tick pending  */
+#define XNRPICK  0x20000000	/* Check RPI state */
 
 /* These flags are available to the real-time interfaces */
 #define XNPOD_SPARE0  0x01000000
@@ -157,7 +158,7 @@ typedef struct xnsched {
 #define xnsched_cpu(__sched__)                  \
     ((__sched__) - &nkpod->sched[0])
 #else /* !CONFIG_SMP */
-#define xnsched_cpu(__sched__) (0)
+#define xnsched_cpu(__sched__) ({ (void)__sched__; 0; })
 #endif /* CONFIG_SMP */
 
 #define xnsched_resched_mask() \
