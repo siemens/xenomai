@@ -1,3 +1,8 @@
+2007-03-18  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/arm/patches: Upgrade to 2.6.{14,15}-1.5-08, and
+	2.6.19-1.6-04.
+
 2007-03-18  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* include/asm-arm/atomic.h (atomic*): Fix ldrex/strex syntax for
