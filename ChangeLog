@@ -5,6 +5,8 @@
 
 2007-03-18  Philippe Gerum  <rpm@xenomai.org>
 
+	* scripts/Kconfig.frag: Revert #2238.
+
 	* ksrc/nucleus/shadow.c (rpi_update): Fix lingering RPI boost
 	issue in case of shadow migration in the SMP case.
 
