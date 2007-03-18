@@ -40,9 +40,9 @@ static inline void atomic_set_mask(unsigned long mask, unsigned long *addr)
     unsigned long tmp, tmp2;
 
     __asm__ __volatile__("@ atomic_set_mask\n"
-"1: ldrex   %0, %2\n"
+"1: ldrex   %0, [%2]\n"
 "   orr     %0, %0, %3\n"
-"   strex   %1, %0, %2\n"
+"   strex   %1, %0, [%2]\n"
 "   teq     %1, #0\n"
 "   bne     1b"
     : "=&r" (tmp), "=&r" (tmp2)
@@ -170,9 +170,9 @@ static __inline__ void atomic_set_mask(unsigned long mask, unsigned long *addr)
     unsigned long tmp, tmp2;
 
     __asm__ __volatile__("@ atomic_set_mask\n"
-"1: ldrex   %0, %2\n"
+"1: ldrex   %0, [%2]\n"
 "   orr     %0, %0, %3\n"
-"   strex   %1, %0, %2\n"
+"   strex   %1, %0, [%2]\n"
 "   teq     %1, #0\n"
 "   bne     1b"
     : "=&r" (tmp), "=&r" (tmp2)
@@ -185,9 +185,9 @@ static __inline__ void atomic_clear_mask(unsigned long mask, unsigned long *addr
     unsigned long tmp, tmp2;
 
     __asm__ __volatile__("@ atomic_clear_mask\n"
-"1: ldrex   %0, %2\n"
+"1: ldrex   %0, [%2]\n"
 "   bic     %0, %0, %3\n"
-"   strex   %1, %0, %2\n"
+"   strex   %1, %0, [%2]\n"
 "   teq     %1, #0\n"
 "   bne     1b"
     : "=&r" (tmp), "=&r" (tmp2)
