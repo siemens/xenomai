@@ -11,13 +11,8 @@ comment "NOTE: Xenomai conflicts with PC speaker support."
 comment "(menu Device Drivers/Input device support/Miscellaneous devices)"
 	depends on !X86_TSC && X86 && INPUT_PCSPKR
 
-comment "NOTE: Xenomai currently conflicts with HPET support."
-       depends on HPET_TIMER
-comment "(menu Processor type and features)"
-       depends on HPET_TIMER
-
 config XENOMAI
-       depends on (X86_TSC || !X86 || !INPUT_PCSPKR) && !HPET_TIMER
+ 	depends on (X86_TSC || !X86 || !INPUT_PCSPKR)
 	bool "Xenomai"
 	default y
         select IPIPE
