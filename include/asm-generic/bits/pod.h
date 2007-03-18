@@ -27,11 +27,6 @@
 
 #ifdef CONFIG_SMP
 
-static inline int xnarch_send_ipi (xnarch_cpumask_t cpumask)
-{
-    return rthal_send_ipi(RTHAL_SERVICE_IPI0, cpumask);
-}
-
 static inline int xnarch_hook_ipi (void (*handler)(void))
 {
     return rthal_virtualize_irq(&rthal_domain,
@@ -98,11 +93,6 @@ static inline void xnarch_notify_halt(void)
 }
 
 #else /* !CONFIG_SMP */
-
-static inline int xnarch_send_ipi (xnarch_cpumask_t cpumask)
-{
-    return 0;
-}
 
 static inline int xnarch_hook_ipi (void (*handler)(void))
 {

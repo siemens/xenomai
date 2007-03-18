@@ -111,6 +111,8 @@ void xnshadow_send_sig(struct xnthread *thread,
 		       int sig,
 		       int specific);
 
+void xnshadow_rpi_check(void);
+
 extern struct xnskentry muxtable[];
 
 #ifdef __cplusplus

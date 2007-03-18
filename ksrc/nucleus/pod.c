@@ -254,10 +254,18 @@ static int xnpod_fault_handler(xnarch_fltinfo_t *fltinfo)
 	return 0;
 }
 
-void xnpod_schedule_handler(void)
+void xnpod_schedule_handler(void) /* Called with hw interrupts off. */
 {
+	xnsched_t *sched = xnpod_current_sched();
+
 	xnltt_log_event(xeno_ev_smpsched);
-	xnsched_set_resched(xnpod_current_sched());
+#if defined(CONFIG_SMP) && defined(CONFIG_XENO_OPT_PRIOCPL)
+	if (testbits(sched->status, XNRPICK)) {
+		clrbits(sched->status, XNRPICK);
+		xnshadow_rpi_check();
+	}
+#endif /* CONFIG_SMP && CONFIG_XENO_OPT_PRIOCPL */
+	xnsched_set_resched(sched);
 	xnpod_schedule();
 }
 
