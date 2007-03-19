@@ -284,7 +284,7 @@ static inline void rpi_update(xnthread_t *thread)
 #ifdef CONFIG_SMP
 
 	/* Ok, this one is not trivial. Unless a relaxed shadow has
-	 * forced its CPU affibity, It may migrate to another CPU as a
+	 * forced its CPU affinity, it may migrate to another CPU as a
 	 * result of Linux's load balancing strategy. If the last
 	 * relaxed Xenomai thread is moved while in a blocked state
 	 * from a CPU (i.e. != TASK_RUNNING), there is no way for
@@ -294,7 +294,7 @@ static inline void rpi_update(xnthread_t *thread)
 	 * would leave the Xenomai root thread for the source CPU with
 	 * a boosted priority, inherited from the last migrated
 	 * shadow. To prevent this, we send an IPI to the source CPU
-	 * when a migration is detected on the destination CPU, so
+	 * when a migration is detected from the destination CPU, so
 	 * that it could adjust its root thread priority whenever no
 	 * other relaxed shadow is undergoing a RPI boost. */
 
