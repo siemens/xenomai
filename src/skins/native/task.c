@@ -41,9 +41,15 @@ struct rt_task_iargs {
 	xncompletion_t *completionp;
 };
 
+static void (*old_sigharden_handler)(int sig);
+
 static void rt_task_sigharden(int sig)
 {
 	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
+
+	if (old_sigharden_handler &&
+	    old_sigharden_handler != &rt_task_sigharden)
+		old_sigharden_handler(sig);
 }
 
 static void *rt_task_trampoline(void *cookie)
@@ -63,7 +69,7 @@ static void *rt_task_trampoline(void *cookie)
 	/* rt_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	signal(SIGHARDEN, &rt_task_sigharden);
+	old_sigharden_handler = signal(SIGHARDEN, &rt_task_sigharden);
 
 	bulk.a1 = (u_long)iargs->task;
 	bulk.a2 = (u_long)iargs->name;
@@ -157,7 +163,7 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	/* rt_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	signal(SIGHARDEN, &rt_task_sigharden);
+	old_sigharden_handler = signal(SIGHARDEN, &rt_task_sigharden);
 
 	bulk.a1 = (u_long)task;
 	bulk.a2 = (u_long)name;

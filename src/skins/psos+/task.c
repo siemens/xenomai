@@ -36,9 +36,15 @@ struct psos_task_iargs {
 	xncompletion_t *completionp;
 };
 
+static void (*old_sigharden_handler)(int sig);
+
 static void psos_task_sigharden(int sig)
 {
 	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
+
+	if (old_sigharden_handler &&
+	    old_sigharden_handler != &psos_task_sigharden)
+		old_sigharden_handler(sig);
 }
 
 static void *psos_task_trampoline(void *cookie)
@@ -55,7 +61,7 @@ static void *psos_task_trampoline(void *cookie)
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	signal(SIGHARDEN, &psos_task_sigharden);
+	old_sigharden_handler = signal(SIGHARDEN, &psos_task_sigharden);
 
 	err = XENOMAI_SKINCALL5(__psos_muxid,
 				__psos_t_create,

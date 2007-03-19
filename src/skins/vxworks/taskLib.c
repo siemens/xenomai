@@ -53,9 +53,15 @@ struct wind_task_iargs {
 	xncompletion_t *completionp;
 };
 
+static void (*old_sigharden_handler)(int sig);
+
 static void wind_task_sigharden(int sig)
 {
 	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
+
+	if (old_sigharden_handler &&
+	    old_sigharden_handler != &wind_task_sigharden)
+		old_sigharden_handler(sig);
 }
 
 static void *wind_task_trampoline(void *cookie)
@@ -76,7 +82,7 @@ static void *wind_task_trampoline(void *cookie)
 	/* wind_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	signal(SIGHARDEN, &wind_task_sigharden);
+	old_sigharden_handler = signal(SIGHARDEN, &wind_task_sigharden);
 
 	bulk.a1 = (u_long)iargs->name;
 	bulk.a2 = (u_long)iargs->prio;
