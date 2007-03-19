@@ -26,8 +26,8 @@
 					    CONFIG_XENO_VERSION_MINOR, \
 					    CONFIG_XENO_REVISION_LEVEL)
 
-#define XENO_VERSION_NAME	"Baroque"
+#define XENO_VERSION_NAME	"One Robot's Dream"
 
-#define XENO_VERSION_STRING	"2.3"
+#define XENO_VERSION_STRING	"2.3.1"
 
 #endif /* _XENO_NUCLEUS_VERSION_H */
