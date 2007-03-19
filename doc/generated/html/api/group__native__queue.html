@@ -352,6 +352,9 @@ Destroy a message queue and release all the tasks currently pending on it. A que
 <ul>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li></ul>
 <p>
+<ul>
+<li>-EBUSY is returned if an attempt is made to delete a shared queue which is still bound to a process.</li></ul>
+<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -759,7 +762,10 @@ Unbinding from a message queue when it is no more needed is especially important
     <tr><td valign="top"></td><td valign="top"><em>q</em>&nbsp;</td><td>The address of a queue descriptor to unbind from.</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Returns:</b></dt><dd>0 is always returned.</dd></dl>
+<dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
+<ul>
+<li>-EINVAL is returned if <em>q</em> is invalid or not bound.</li></ul>
+<p>
 This service can be called from:<p>
 <ul>
 <li>User-space task.</li></ul>
@@ -851,7 +857,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 1 19:18:35 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Mar 19 17:20:29 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

@@ -1194,7 +1194,7 @@ Change the control mode of a given thread. The control mode affects the behaviou
 Environments:<p>
 This service can be called from:<p>
 <ul>
-<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
+<li>Kernel-based task</li><li>User-space task in primary mode.</li></ul>
 <p>
 Rescheduling: never, therefore, the caller should reschedule if XNLOCK has been passed into <em>clrmask</em>.     </td>
   </tr>
@@ -1807,7 +1807,7 @@ Entered with nklock locked, irqs off. </p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 1 19:18:34 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Mar 19 17:20:29 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

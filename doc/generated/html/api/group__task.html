@@ -1659,6 +1659,9 @@ Creates and immediately starts a real-time task, either running in a kernel modu
 <ul>
 <li>T_CPU(cpuid) makes the new task affine to CPU # <b>cpuid</b>. CPU identifiers range from 0 to RTHAL_NR_CPUS - 1 (inclusive).</li></ul>
 <p>
+<ul>
+<li>T_JOINABLE (user-space only) allows another task to wait on the termination of the new task. This implies that <a class="el" href="group__task.html#g8c77d57638578a126812e29429f61fe7">rt_task_join()</a> is actually called for this task to clean up any user-space located resources after its termination.</li></ul>
+<p>
 Passing T_FPU|T_CPU(1) in the <em>mode</em> parameter thus creates a task with FPU support enabled and which will be affine to CPU #1.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -1994,7 +1997,7 @@ This service can be called from:<p>
 Rescheduling: always if a next equal-priority task is ready to run, otherwise, this service leads to a no-op.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 1 19:18:35 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Mar 19 17:20:29 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

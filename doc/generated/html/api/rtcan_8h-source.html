@@ -165,7 +165,7 @@
 <a name="l00492"></a>00492 
 <a name="l00494"></a><a class="code" href="structcan__frame.html#a055f09fd81b299201618396b7dc9314">00494</a>     uint8_t      <a class="code" href="structcan__frame.html#a055f09fd81b299201618396b7dc9314">can_dlc</a>;
 <a name="l00495"></a>00495 
-<a name="l00497"></a><a class="code" href="structcan__frame.html#de6eedeba6cc24ef2f7a2aa2ed452291">00497</a>     uint8_t      <a class="code" href="structcan__frame.html#de6eedeba6cc24ef2f7a2aa2ed452291">data</a>[8];
+<a name="l00497"></a>00497     uint8_t      data[8] <a class="code" href="structcan__frame.html#f58d971323fd8fdd65fb4b1140bc0ee5">__attribute__</a> ((aligned(8)));
 <a name="l00498"></a>00498 } <a class="code" href="structcan__frame.html">can_frame_t</a>;
 <a name="l00499"></a>00499 
 <a name="l00500"></a>00500 
@@ -299,7 +299,7 @@
 <a name="l01145"></a>01145 <span class="preprocessor"></span><span class="comment">/* controller specific additional information / data[5..7] */</span>
 <a name="l01146"></a>01146 
 <a name="l01152"></a>01152 <span class="preprocessor">#endif </span><span class="comment">/* _RTCAN_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Feb 1 19:18:34 2007 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Mar 19 17:20:28 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

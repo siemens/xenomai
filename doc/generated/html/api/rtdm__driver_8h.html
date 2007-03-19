@@ -260,6 +260,9 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga3940cfff7cc72d7bc064a3e279d74ac">rtdm_task_busy_sleep</a> (<a class="el" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> delay)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Busy-wait a specified amount of time.  <a href="group__rtdmtask.html#ga3940cfff7cc72d7bc064a3e279d74ac"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#gddf08d8ba5a44668bb360070a114fb19">rtdm_event_init</a> (rtdm_event_t *event, unsigned long pending)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise an event.  <a href="group__rtdmsync.html#gddf08d8ba5a44668bb360070a114fb19"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g1c433b50c53d49d164b084751861e855">rtdm_event_wait</a> (rtdm_event_t *event)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on event occurrence.  <a href="group__rtdmsync.html#g1c433b50c53d49d164b084751861e855"></a><br></td></tr>
@@ -272,6 +275,9 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g732fe3cf3370df0f296f06fc4ac7f925">rtdm_event_clear</a> (rtdm_event_t *event)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Clear event state.  <a href="group__rtdmsync.html#g732fe3cf3370df0f296f06fc4ac7f925"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ge1172824e463d7705ed3033e8aea133d">rtdm_sem_init</a> (rtdm_sem_t *sem, unsigned long value)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a semaphore.  <a href="group__rtdmsync.html#ge1172824e463d7705ed3033e8aea133d"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g59da1b60b7279c1fc4355e2e0b2cc77c">rtdm_sem_down</a> (rtdm_sem_t *sem)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement a semaphore.  <a href="group__rtdmsync.html#g59da1b60b7279c1fc4355e2e0b2cc77c"></a><br></td></tr>
@@ -281,6 +287,9 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g829dbd8c5709d798ed06947b27001fed">rtdm_sem_up</a> (rtdm_sem_t *sem)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Increment a semaphore.  <a href="group__rtdmsync.html#g829dbd8c5709d798ed06947b27001fed"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g8d58a144bf71df7b38bb887d036cbbb5">rtdm_mutex_init</a> (rtdm_mutex_t *mutex)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a mutex.  <a href="group__rtdmsync.html#g8d58a144bf71df7b38bb887d036cbbb5"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g67c8f85c844df1aeed806e343a1b6437">rtdm_mutex_lock</a> (rtdm_mutex_t *mutex)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex.  <a href="group__rtdmsync.html#g67c8f85c844df1aeed806e343a1b6437"></a><br></td></tr>
@@ -288,7 +297,7 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex with timeout.  <a href="group__rtdmsync.html#g0789968300701ba2a940f5fe8b1fd4d8"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 1 19:18:34 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Mar 19 17:20:28 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
