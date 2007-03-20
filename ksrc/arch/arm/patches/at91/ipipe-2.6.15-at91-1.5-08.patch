@@ -155,6 +155,60 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' ipipe-2.6.15-arm-at91/
 +	__ipipe_at91_gpio_banks = banks;
 +#endif /* CONFIG_IPIPE */
  }
+diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' ipipe-2.6.15-arm-at91/arch/arm/mach-at91rm9200/irq.c ipipe-2.6.15-arm-at91-ipipe_at91/arch/arm/mach-at91rm9200/irq.c
+--- ipipe-2.6.15-arm-at91/arch/arm/mach-at91rm9200/irq.c	2007-03-20 20:43:02.000000000 +0100
++++ ipipe-2.6.15-arm-at91-ipipe_at91/arch/arm/mach-at91rm9200/irq.c	2007-03-20 20:42:35.000000000 +0100
+@@ -41,6 +41,7 @@
+  * The default interrupt priority levels (0 = lowest, 7 = highest).
+  */
+ static unsigned int at91rm9200_default_irq_priority[NR_AIC_IRQS] __initdata = {
++#ifndef CONFIG_IPIPE
+ 	7,	/* Advanced Interrupt Controller */
+ 	7,	/* System Peripheral */
+ 	0,	/* Parallel IO Controller A */
+@@ -73,6 +74,42 @@ static unsigned int at91rm9200_default_i
+ 	0,	/* Advanced Interrupt Controller */
+ 	0,	/* Advanced Interrupt Controller */
+ 	0	/* Advanced Interrupt Controller */
++#else /* CONFIG_IPIPE */
++/* Give the highest priority to TC, since they are used as timer interrupt by
++   I-pipe. */
++	7,	/* Advanced Interrupt Controller */
++	6,	/* System Peripheral */
++	0,	/* Parallel IO Controller A */
++	0,	/* Parallel IO Controller B */
++	0,	/* Parallel IO Controller C */
++	0,	/* Parallel IO Controller D */
++	5,	/* USART 0 */
++	5,	/* USART 1 */
++	5,	/* USART 2 */
++	5,	/* USART 3 */
++	0,	/* Multimedia Card Interface */
++	3,	/* USB Device Port */
++	0,	/* Two-Wire Interface */
++	5,	/* Serial Peripheral Interface */
++	4,	/* Serial Synchronous Controller */
++	4,	/* Serial Synchronous Controller */
++	4,	/* Serial Synchronous Controller */
++	7,	/* Timer Counter 0 */
++	7,	/* Timer Counter 1 */
++	7,	/* Timer Counter 2 */
++	0,	/* Timer Counter 3 */
++	0,	/* Timer Counter 4 */
++	0,	/* Timer Counter 5 */
++	2,	/* USB Host port */
++	2,	/* Ethernet MAC */
++	0,	/* Advanced Interrupt Controller */
++	0,	/* Advanced Interrupt Controller */
++	0,	/* Advanced Interrupt Controller */
++	0,	/* Advanced Interrupt Controller */
++	0,	/* Advanced Interrupt Controller */
++	0,	/* Advanced Interrupt Controller */
++	0	/* Advanced Interrupt Controller */
++#endif /*CONFIG_IPIPE */
+ };
+ 
+ 
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' ipipe-2.6.15-arm-at91/arch/arm/mach-at91rm9200/time.c ipipe-2.6.15-arm-at91-ipipe_at91/arch/arm/mach-at91rm9200/time.c
 --- ipipe-2.6.15-arm-at91/arch/arm/mach-at91rm9200/time.c	2007-03-02 01:43:13.000000000 +0100
 +++ ipipe-2.6.15-arm-at91-ipipe_at91/arch/arm/mach-at91rm9200/time.c	2007-03-10 13:26:45.000000000 +0100
