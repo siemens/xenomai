@@ -29,11 +29,11 @@ static void (*old_sigharden_handler)(int sig);
 
 static void __pthread_sigharden_handler(int sig)
 {
-	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
-
 	if (old_sigharden_handler &&
 	    old_sigharden_handler != &__pthread_sigharden_handler)
 		old_sigharden_handler(sig);
+
+	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 }
 
 int __wrap_pthread_setschedparam(pthread_t thread,
