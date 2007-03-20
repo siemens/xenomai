@@ -26,8 +26,8 @@
 					    CONFIG_XENO_VERSION_MINOR, \
 					    CONFIG_XENO_REVISION_LEVEL)
 
-#define XENO_VERSION_NAME	"Redshift Riders"
+#define XENO_VERSION_NAME	"Starry Night"
 
-#define XENO_VERSION_STRING	"2.2.5"
+#define XENO_VERSION_STRING	"2.2.6"
 
 #endif /* _XENO_NUCLEUS_VERSION_H */
