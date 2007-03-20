@@ -45,11 +45,11 @@ static void (*old_sigharden_handler)(int sig);
 
 static void rt_task_sigharden(int sig)
 {
-	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
-
 	if (old_sigharden_handler &&
 	    old_sigharden_handler != &rt_task_sigharden)
 		old_sigharden_handler(sig);
+
+	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 }
 
 static void *rt_task_trampoline(void *cookie)
