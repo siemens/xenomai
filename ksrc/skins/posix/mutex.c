@@ -65,8 +65,8 @@ static void pse51_mutex_destroy_internal(pse51_mutex_t *mutex,
  * Initialize a mutex.
  *
  * This services initializes the mutex @a mx, using the mutex attributes object
- * @a attr. If @a attr is @a NULL or this service is used from user-space,
- * default attributes are used (see pthread_mutexattr_init()).
+ * @a attr. If @a attr is @a NULL, default attributes are used (see
+ * pthread_mutexattr_init()).
  *
  * @param mx the mutex to be initialized;
  *
