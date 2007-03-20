@@ -1,5 +1,5 @@
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/Makefile ipipe-2.6.19-arm/Makefile
---- linux-2.6.19/Makefile	2007-01-04 22:04:12.000000000 +0100
+--- linux-2.6.19/Makefile	2007-03-20 20:32:01.000000000 +0100
 +++ ipipe-2.6.19-arm/Makefile	2007-03-02 18:41:52.000000000 +0100
 @@ -491,6 +491,10 @@ endif
  
@@ -13,7 +13,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/Makefile 
  CFLAGS		+= -fno-omit-frame-pointer $(call cc-option,-fno-optimize-sibling-calls,)
  else
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/Kconfig ipipe-2.6.19-arm/arch/arm/Kconfig
---- linux-2.6.19/arch/arm/Kconfig	2007-01-04 22:04:12.000000000 +0100
+--- linux-2.6.19/arch/arm/Kconfig	2007-03-20 20:32:01.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/Kconfig	2007-03-02 18:41:52.000000000 +0100
 @@ -487,6 +487,8 @@ config LOCAL_TIMERS
  	  accounting to be spread across the timer interval, preventing a
@@ -25,7 +25,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
  	bool "Preemptible Kernel (EXPERIMENTAL)"
  	depends on EXPERIMENTAL
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/boot/compressed/head.S ipipe-2.6.19-arm/arch/arm/boot/compressed/head.S
---- linux-2.6.19/arch/arm/boot/compressed/head.S	2007-01-04 22:04:12.000000000 +0100
+--- linux-2.6.19/arch/arm/boot/compressed/head.S	2007-03-20 20:32:01.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/boot/compressed/head.S	2007-03-02 18:41:52.000000000 +0100
 @@ -833,6 +833,16 @@ memdump:	mov	r12, r0
  		mov	pc, r10
@@ -57,7 +57,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
  obj-$(CONFIG_CRUNCH)		+= crunch.o crunch-bits.o
  AFLAGS_crunch-bits.o		:= -Wa,-mcpu=ep9312
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/kernel/entry-armv.S ipipe-2.6.19-arm/arch/arm/kernel/entry-armv.S
---- linux-2.6.19/arch/arm/kernel/entry-armv.S	2007-01-04 22:04:12.000000000 +0100
+--- linux-2.6.19/arch/arm/kernel/entry-armv.S	2007-03-20 20:32:02.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/kernel/entry-armv.S	2007-03-09 22:27:25.000000000 +0100
 @@ -4,6 +4,7 @@
   *  Copyright (C) 1996,1997,1998 Russell King.
@@ -1001,7 +1001,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
 +EXPORT_SYMBOL(mcount);
 +#endif /* CONFIG_IPIPE_TRACE_MCOUNT */
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/kernel/irq.c ipipe-2.6.19-arm/arch/arm/kernel/irq.c
---- linux-2.6.19/arch/arm/kernel/irq.c	2007-01-04 22:04:12.000000000 +0100
+--- linux-2.6.19/arch/arm/kernel/irq.c	2007-03-20 20:32:02.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/kernel/irq.c	2007-03-02 18:41:52.000000000 +0100
 @@ -125,8 +125,10 @@ asmlinkage void asm_do_IRQ(unsigned int 
  
@@ -1015,7 +1015,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
  	irq_exit();
  	set_irq_regs(old_regs);
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/kernel/process.c ipipe-2.6.19-arm/arch/arm/kernel/process.c
---- linux-2.6.19/arch/arm/kernel/process.c	2007-01-04 22:04:12.000000000 +0100
+--- linux-2.6.19/arch/arm/kernel/process.c	2007-03-20 20:32:02.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/kernel/process.c	2007-03-02 18:41:52.000000000 +0100
 @@ -125,6 +125,12 @@ static void default_idle(void)
  		local_irq_disable();
@@ -1053,7 +1053,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
  	return 0;
  }
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/kernel/traps.c ipipe-2.6.19-arm/arch/arm/kernel/traps.c
---- linux-2.6.19/arch/arm/kernel/traps.c	2007-01-04 22:04:12.000000000 +0100
+--- linux-2.6.19/arch/arm/kernel/traps.c	2007-03-20 20:32:02.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/kernel/traps.c	2007-03-02 18:41:52.000000000 +0100
 @@ -306,6 +306,9 @@ asmlinkage void do_undefinstr(struct pt_
  	}
@@ -1094,7 +1094,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
  
  # ----------------------------------------------------------
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/mach-at91rm9200/at91rm9200.c ipipe-2.6.19-arm/arch/arm/mach-at91rm9200/at91rm9200.c
---- linux-2.6.19/arch/arm/mach-at91rm9200/at91rm9200.c	2007-01-18 00:05:24.000000000 +0100
+--- linux-2.6.19/arch/arm/mach-at91rm9200/at91rm9200.c	2007-03-20 20:32:02.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/mach-at91rm9200/at91rm9200.c	2007-03-02 18:41:52.000000000 +0100
 @@ -51,6 +51,13 @@ static struct map_desc at91rm9200_io_des
  		.length		= SZ_16K,
@@ -1110,8 +1110,59 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
  		.virtual	= AT91_SRAM_VIRT_BASE,
  		.pfn		= __phys_to_pfn(AT91RM9200_SRAM_BASE),
  		.length		= AT91RM9200_SRAM_SIZE,
+@@ -249,6 +256,7 @@ void __init at91rm9200_initialize(unsign
+  * The default interrupt priority levels (0 = lowest, 7 = highest).
+  */
+ static unsigned int at91rm9200_default_irq_priority[NR_AIC_IRQS] __initdata = {
++#ifndef CONFIG_IPIPE
+ 	7,	/* Advanced Interrupt Controller (FIQ) */
+ 	7,	/* System Peripherals */
+ 	0,	/* Parallel IO Controller A */
+@@ -281,6 +289,42 @@ static unsigned int at91rm9200_default_i
+ 	0,	/* Advanced Interrupt Controller (IRQ4) */
+ 	0,	/* Advanced Interrupt Controller (IRQ5) */
+ 	0	/* Advanced Interrupt Controller (IRQ6) */
++#else /* CONFIG_IPIPE */
++/* Give the highest priority to TC, since they are used as timer interrupt by
++   I-pipe. */
++	7,	/* Advanced Interrupt Controller */
++	6,	/* System Peripheral */
++	0,	/* Parallel IO Controller A */
++	0,	/* Parallel IO Controller B */
++	0,	/* Parallel IO Controller C */
++	0,	/* Parallel IO Controller D */
++	5,	/* USART 0 */
++	5,	/* USART 1 */
++	5,	/* USART 2 */
++	5,	/* USART 3 */
++	0,	/* Multimedia Card Interface */
++	3,	/* USB Device Port */
++	0,	/* Two-Wire Interface */
++	5,	/* Serial Peripheral Interface */
++	4,	/* Serial Synchronous Controller */
++	4,	/* Serial Synchronous Controller */
++	4,	/* Serial Synchronous Controller */
++	7,	/* Timer Counter 0 */
++	7,	/* Timer Counter 1 */
++	7,	/* Timer Counter 2 */
++	0,	/* Timer Counter 3 */
++	0,	/* Timer Counter 4 */
++	0,	/* Timer Counter 5 */
++	2,	/* USB Host port */
++	2,	/* Ethernet MAC */
++	0,	/* Advanced Interrupt Controller */
++	0,	/* Advanced Interrupt Controller */
++	0,	/* Advanced Interrupt Controller */
++	0,	/* Advanced Interrupt Controller */
++	0,	/* Advanced Interrupt Controller */
++	0,	/* Advanced Interrupt Controller */
++	0	/* Advanced Interrupt Controller */
++#endif /*CONFIG_IPIPE */
+ };
+ 
+ void __init at91rm9200_init_interrupts(unsigned int priority[NR_AIC_IRQS])
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/mach-at91rm9200/at91rm9200_time.c ipipe-2.6.19-arm/arch/arm/mach-at91rm9200/at91rm9200_time.c
---- linux-2.6.19/arch/arm/mach-at91rm9200/at91rm9200_time.c	2007-01-04 22:04:12.000000000 +0100
+--- linux-2.6.19/arch/arm/mach-at91rm9200/at91rm9200_time.c	2007-03-20 20:32:02.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/mach-at91rm9200/at91rm9200_time.c	2007-03-02 18:41:52.000000000 +0100
 @@ -32,6 +32,62 @@
  
@@ -1405,7 +1456,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
 +};
 +#endif /* CONFIG_IPIPE */
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/mach-at91rm9200/gpio.c ipipe-2.6.19-arm/arch/arm/mach-at91rm9200/gpio.c
---- linux-2.6.19/arch/arm/mach-at91rm9200/gpio.c	2007-01-04 22:04:12.000000000 +0100
+--- linux-2.6.19/arch/arm/mach-at91rm9200/gpio.c	2007-03-20 20:32:02.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/mach-at91rm9200/gpio.c	2007-03-02 18:41:52.000000000 +0100
 @@ -20,6 +20,11 @@
  #include <asm/io.h>
@@ -1489,7 +1540,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
 +#endif /* CONFIG_IPIPE */
  }
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/mach-integrator/core.c ipipe-2.6.19-arm/arch/arm/mach-integrator/core.c
---- linux-2.6.19/arch/arm/mach-integrator/core.c	2007-01-04 22:04:12.000000000 +0100
+--- linux-2.6.19/arch/arm/mach-integrator/core.c	2007-03-20 20:32:02.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/mach-integrator/core.c	2007-03-02 18:41:52.000000000 +0100
 @@ -2,6 +2,7 @@
   *  linux/arch/arm/mach-integrator/core.c
@@ -1718,7 +1769,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
 +}
 +#endif /* CONFIG_IPIPE */
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/mach-integrator/integrator_cp.c ipipe-2.6.19-arm/arch/arm/mach-integrator/integrator_cp.c
---- linux-2.6.19/arch/arm/mach-integrator/integrator_cp.c	2007-01-04 22:04:12.000000000 +0100
+--- linux-2.6.19/arch/arm/mach-integrator/integrator_cp.c	2007-03-20 20:32:02.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/mach-integrator/integrator_cp.c	2007-03-02 18:41:52.000000000 +0100
 @@ -2,6 +2,7 @@
   *  linux/arch/arm/mach-integrator/integrator_cp.c
@@ -1785,7 +1836,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
  
  static struct sys_timer cp_timer = {
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/mach-pxa/irq.c ipipe-2.6.19-arm/arch/arm/mach-pxa/irq.c
---- linux-2.6.19/arch/arm/mach-pxa/irq.c	2007-01-04 22:04:12.000000000 +0100
+--- linux-2.6.19/arch/arm/mach-pxa/irq.c	2007-03-20 20:32:04.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/mach-pxa/irq.c	2007-03-02 18:41:52.000000000 +0100
 @@ -16,6 +16,7 @@
  #include <linux/module.h>
@@ -1839,7 +1890,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
  {
  	int gpio = irq - IRQ_GPIO(2) + 2;
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/mach-pxa/time.c ipipe-2.6.19-arm/arch/arm/mach-pxa/time.c
---- linux-2.6.19/arch/arm/mach-pxa/time.c	2007-01-04 22:04:12.000000000 +0100
+--- linux-2.6.19/arch/arm/mach-pxa/time.c	2007-03-20 20:32:04.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/mach-pxa/time.c	2007-03-02 18:41:52.000000000 +0100
 @@ -18,6 +18,7 @@
  #include <linux/signal.h>
@@ -2010,7 +2061,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
 +}
 +#endif /* CONFIG_IPIPE */
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/mach-s3c2410/irq.c ipipe-2.6.19-arm/arch/arm/mach-s3c2410/irq.c
---- linux-2.6.19/arch/arm/mach-s3c2410/irq.c	2007-01-04 22:04:13.000000000 +0100
+--- linux-2.6.19/arch/arm/mach-s3c2410/irq.c	2007-03-20 20:32:05.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/mach-s3c2410/irq.c	2007-03-02 18:41:52.000000000 +0100
 @@ -3,6 +3,8 @@
   * Copyright (c) 2003,2004 Simtec Electronics
@@ -2137,7 +2188,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
   *
   * Initialise S3C2410 IRQ system
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/mach-s3c2410/s3c2440-irq.c ipipe-2.6.19-arm/arch/arm/mach-s3c2410/s3c2440-irq.c
---- linux-2.6.19/arch/arm/mach-s3c2410/s3c2440-irq.c	2007-01-04 22:04:13.000000000 +0100
+--- linux-2.6.19/arch/arm/mach-s3c2410/s3c2440-irq.c	2007-03-20 20:32:05.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/mach-s3c2410/s3c2440-irq.c	2007-03-02 18:41:52.000000000 +0100
 @@ -3,6 +3,8 @@
   * Copyright (c) 2003,2004 Simtec Electronics
@@ -2192,7 +2243,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
  {
  	unsigned int irqno;
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/mach-s3c2410/time.c ipipe-2.6.19-arm/arch/arm/mach-s3c2410/time.c
---- linux-2.6.19/arch/arm/mach-s3c2410/time.c	2007-01-04 22:04:13.000000000 +0100
+--- linux-2.6.19/arch/arm/mach-s3c2410/time.c	2007-03-20 20:32:05.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/mach-s3c2410/time.c	2007-03-02 18:41:52.000000000 +0100
 @@ -3,6 +3,8 @@
   * Copyright (C) 2003-2005 Simtec Electronics
@@ -2496,7 +2547,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
 +}
 +#endif /* CONFIG_IPIPE */
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/mach-sa1100/irq.c ipipe-2.6.19-arm/arch/arm/mach-sa1100/irq.c
---- linux-2.6.19/arch/arm/mach-sa1100/irq.c	2007-01-04 22:04:13.000000000 +0100
+--- linux-2.6.19/arch/arm/mach-sa1100/irq.c	2007-03-20 20:32:05.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/mach-sa1100/irq.c	2007-03-02 18:41:52.000000000 +0100
 @@ -16,6 +16,7 @@
  #include <linux/ioport.h>
@@ -2545,7 +2596,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
   * Like GPIO0 to 10, GPIO11-27 IRQs need to be handled specially.
   * In addition, the IRQs are all collected up into one bit in the
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/mach-sa1100/time.c ipipe-2.6.19-arm/arch/arm/mach-sa1100/time.c
---- linux-2.6.19/arch/arm/mach-sa1100/time.c	2007-01-04 22:04:13.000000000 +0100
+--- linux-2.6.19/arch/arm/mach-sa1100/time.c	2007-03-20 20:32:05.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/mach-sa1100/time.c	2007-03-02 18:41:52.000000000 +0100
 @@ -14,6 +14,7 @@
  #include <linux/irq.h>
@@ -2711,7 +2762,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
 +}
 +#endif /* CONFIG_IPIPE */
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/mm/copypage-v4mc.c ipipe-2.6.19-arm/arch/arm/mm/copypage-v4mc.c
---- linux-2.6.19/arch/arm/mm/copypage-v4mc.c	2007-01-04 22:04:13.000000000 +0100
+--- linux-2.6.19/arch/arm/mm/copypage-v4mc.c	2007-03-20 20:32:05.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/mm/copypage-v4mc.c	2007-03-02 18:41:52.000000000 +0100
 @@ -43,7 +43,7 @@ static DEFINE_SPINLOCK(minicache_lock);
   * instruction.  If your processor does not supply this, you have to write your
@@ -2732,7 +2783,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
  {
  	asm volatile(
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/mm/copypage-xscale.c ipipe-2.6.19-arm/arch/arm/mm/copypage-xscale.c
---- linux-2.6.19/arch/arm/mm/copypage-xscale.c	2007-01-04 22:04:13.000000000 +0100
+--- linux-2.6.19/arch/arm/mm/copypage-xscale.c	2007-03-20 20:32:05.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/mm/copypage-xscale.c	2007-03-02 18:41:52.000000000 +0100
 @@ -41,7 +41,7 @@ static DEFINE_SPINLOCK(minicache_lock);
   * Dcache aliasing issue.  The writes will be forwarded to the write buffer,
@@ -2753,7 +2804,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
  {
  	asm volatile(
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/mm/fault.c ipipe-2.6.19-arm/arch/arm/mm/fault.c
---- linux-2.6.19/arch/arm/mm/fault.c	2007-01-04 22:04:13.000000000 +0100
+--- linux-2.6.19/arch/arm/mm/fault.c	2007-03-20 20:32:05.000000000 +0100
 +++ ipipe-2.6.19-arm/arch/arm/mm/fault.c	2007-03-02 18:41:52.000000000 +0100
 @@ -223,6 +223,9 @@ do_page_fault(unsigned long addr, unsign
  	struct mm_struct *mm;
@@ -2843,7 +2894,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/arch/arm/
 +}
 +#endif /* CONFIG_IPIPE */
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/drivers/pci/htirq.c ipipe-2.6.19-arm/drivers/pci/htirq.c
---- linux-2.6.19/drivers/pci/htirq.c	2007-01-04 22:04:37.000000000 +0100
+--- linux-2.6.19/drivers/pci/htirq.c	2007-03-20 20:32:26.000000000 +0100
 +++ ipipe-2.6.19-arm/drivers/pci/htirq.c	2007-03-02 18:41:52.000000000 +0100
 @@ -21,7 +21,7 @@
   * With multiple simultaneous hypertransport irq devices it might pay
@@ -2855,7 +2906,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/drivers/p
  struct ht_irq_cfg {
  	struct pci_dev *dev;
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/asm-arm/arch-at91rm9200/hardware.h ipipe-2.6.19-arm/include/asm-arm/arch-at91rm9200/hardware.h
---- linux-2.6.19/include/asm-arm/arch-at91rm9200/hardware.h	2007-01-04 22:05:06.000000000 +0100
+--- linux-2.6.19/include/asm-arm/arch-at91rm9200/hardware.h	2007-03-20 20:32:37.000000000 +0100
 +++ ipipe-2.6.19-arm/include/asm-arm/arch-at91rm9200/hardware.h	2007-03-02 18:41:52.000000000 +0100
 @@ -39,6 +39,9 @@
  #define AT91_VA_BASE_TWI	AT91_IO_P2V(AT91RM9200_BASE_TWI)
@@ -2868,7 +2919,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/a
   /* Internal SRAM is mapped below the IO devices */
  #define AT91_SRAM_VIRT_BASE	(AT91_IO_VIRT_BASE - AT91RM9200_SRAM_SIZE)
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/asm-arm/arch-at91rm9200/irqs.h ipipe-2.6.19-arm/include/asm-arm/arch-at91rm9200/irqs.h
---- linux-2.6.19/include/asm-arm/arch-at91rm9200/irqs.h	2007-01-04 22:05:06.000000000 +0100
+--- linux-2.6.19/include/asm-arm/arch-at91rm9200/irqs.h	2007-03-20 20:32:37.000000000 +0100
 +++ ipipe-2.6.19-arm/include/asm-arm/arch-at91rm9200/irqs.h	2007-03-02 18:41:52.000000000 +0100
 @@ -39,4 +39,12 @@
   */
@@ -2970,7 +3021,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/a
 -#define CLOCK_TICK_RATE		(50000000 / 16)
 +#define CLOCK_TICK_RATE		(1000000)
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/asm-arm/arch-pxa/irqs.h ipipe-2.6.19-arm/include/asm-arm/arch-pxa/irqs.h
---- linux-2.6.19/include/asm-arm/arch-pxa/irqs.h	2007-01-04 22:05:06.000000000 +0100
+--- linux-2.6.19/include/asm-arm/arch-pxa/irqs.h	2007-03-20 20:32:37.000000000 +0100
 +++ ipipe-2.6.19-arm/include/asm-arm/arch-pxa/irqs.h	2007-03-02 18:41:52.000000000 +0100
 @@ -72,6 +72,10 @@
  			((i) - IRQ_GPIO(2) + 2)
@@ -3037,7 +3088,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/a
   * Figure out the MAX IRQ number.
   *
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/asm-arm/atomic.h ipipe-2.6.19-arm/include/asm-arm/atomic.h
---- linux-2.6.19/include/asm-arm/atomic.h	2007-01-04 22:05:06.000000000 +0100
+--- linux-2.6.19/include/asm-arm/atomic.h	2007-03-20 20:32:37.000000000 +0100
 +++ ipipe-2.6.19-arm/include/asm-arm/atomic.h	2007-03-18 16:57:10.000000000 +0100
 @@ -103,9 +103,9 @@ static inline void atomic_clear_mask(uns
  	unsigned long tmp, tmp2;
@@ -3104,7 +3155,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/a
  
  #endif /* __LINUX_ARM_ARCH__ */
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/asm-arm/bitops.h ipipe-2.6.19-arm/include/asm-arm/bitops.h
---- linux-2.6.19/include/asm-arm/bitops.h	2007-01-04 22:05:06.000000000 +0100
+--- linux-2.6.19/include/asm-arm/bitops.h	2007-03-20 20:32:37.000000000 +0100
 +++ ipipe-2.6.19-arm/include/asm-arm/bitops.h	2007-03-02 18:41:52.000000000 +0100
 @@ -37,9 +37,9 @@ static inline void ____atomic_set_bit(un
  
@@ -3183,7 +3234,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/a
  }
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/asm-arm/ipipe.h ipipe-2.6.19-arm/include/asm-arm/ipipe.h
 --- linux-2.6.19/include/asm-arm/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.19-arm/include/asm-arm/ipipe.h	2007-03-18 16:48:09.000000000 +0100
++++ ipipe-2.6.19-arm/include/asm-arm/ipipe.h	2007-03-20 21:02:12.000000000 +0100
 @@ -0,0 +1,207 @@
 +/* -*- linux-c -*-
 + * include/asm-arm/ipipe.h
@@ -3215,10 +3266,10 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/a
 +#include <asm/irq.h>
 +#include <asm/percpu.h>
 +
-+#define IPIPE_ARCH_STRING	"1.6-04"
++#define IPIPE_ARCH_STRING	"1.6-05"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	6
-+#define IPIPE_PATCH_NUMBER	4
++#define IPIPE_PATCH_NUMBER	5
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
@@ -3393,7 +3444,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/a
 +
 +#endif	/* !__ARM_IPIPE_H */
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/asm-arm/irqflags.h ipipe-2.6.19-arm/include/asm-arm/irqflags.h
---- linux-2.6.19/include/asm-arm/irqflags.h	2007-01-04 22:05:06.000000000 +0100
+--- linux-2.6.19/include/asm-arm/irqflags.h	2007-03-20 20:32:37.000000000 +0100
 +++ ipipe-2.6.19-arm/include/asm-arm/irqflags.h	2007-03-18 16:48:57.000000000 +0100
 @@ -10,30 +10,30 @@
   */
@@ -3621,7 +3672,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/a
  #endif
  }
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/asm-arm/system.h ipipe-2.6.19-arm/include/asm-arm/system.h
---- linux-2.6.19/include/asm-arm/system.h	2007-01-04 22:05:06.000000000 +0100
+--- linux-2.6.19/include/asm-arm/system.h	2007-03-20 20:32:37.000000000 +0100
 +++ ipipe-2.6.19-arm/include/asm-arm/system.h	2007-03-02 18:41:52.000000000 +0100
 @@ -286,17 +286,17 @@ static inline unsigned long __xchg(unsig
  #error SMP is not supported on this platform
@@ -3646,7 +3697,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/a
  #else
  	case 1:
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/linux/hardirq.h ipipe-2.6.19-arm/include/linux/hardirq.h
---- linux-2.6.19/include/linux/hardirq.h	2007-01-04 22:05:12.000000000 +0100
+--- linux-2.6.19/include/linux/hardirq.h	2007-03-20 20:32:42.000000000 +0100
 +++ ipipe-2.6.19-arm/include/linux/hardirq.h	2007-03-02 18:41:52.000000000 +0100
 @@ -128,7 +128,7 @@ static inline void account_system_vtime(
   */
@@ -4427,7 +4478,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/l
 +
 +#endif	/* !__LINUX_IPIPE_H */
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/linux/irq.h ipipe-2.6.19-arm/include/linux/irq.h
---- linux-2.6.19/include/linux/irq.h	2007-01-04 22:05:12.000000000 +0100
+--- linux-2.6.19/include/linux/irq.h	2007-03-20 20:32:42.000000000 +0100
 +++ ipipe-2.6.19-arm/include/linux/irq.h	2007-03-02 18:41:52.000000000 +0100
 @@ -146,6 +146,12 @@ struct irq_chip {
   * Pad this out to 32 bytes for cache and indexing reasons.
@@ -4443,7 +4494,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/l
  	struct irq_chip		*chip;
  	void			*handler_data;
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/linux/linkage.h ipipe-2.6.19-arm/include/linux/linkage.h
---- linux-2.6.19/include/linux/linkage.h	2007-01-04 22:05:12.000000000 +0100
+--- linux-2.6.19/include/linux/linkage.h	2007-03-20 20:32:42.000000000 +0100
 +++ ipipe-2.6.19-arm/include/linux/linkage.h	2007-03-02 18:41:52.000000000 +0100
 @@ -64,4 +64,8 @@
  #define fastcall
@@ -4455,7 +4506,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/l
 +
  #endif
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/linux/mm.h ipipe-2.6.19-arm/include/linux/mm.h
---- linux-2.6.19/include/linux/mm.h	2007-01-04 22:05:12.000000000 +0100
+--- linux-2.6.19/include/linux/mm.h	2007-03-20 20:32:43.000000000 +0100
 +++ ipipe-2.6.19-arm/include/linux/mm.h	2007-03-02 18:41:52.000000000 +0100
 @@ -166,6 +166,7 @@ extern unsigned int kobjsize(const void 
  #define VM_NONLINEAR	0x00800000	/* Is non-linear (remap_file_pages) */
@@ -4530,7 +4581,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/l
  
  #else
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/linux/sched.h ipipe-2.6.19-arm/include/linux/sched.h
---- linux-2.6.19/include/linux/sched.h	2007-01-04 22:05:14.000000000 +0100
+--- linux-2.6.19/include/linux/sched.h	2007-03-20 20:32:43.000000000 +0100
 +++ ipipe-2.6.19-arm/include/linux/sched.h	2007-03-02 18:41:52.000000000 +0100
 @@ -54,6 +54,7 @@ struct sched_param {
  #include <linux/cpumask.h>
@@ -4577,7 +4628,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/l
  /*
   * Only the _current_ task can read/write to tsk->flags, but other
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/linux/spinlock.h ipipe-2.6.19-arm/include/linux/spinlock.h
---- linux-2.6.19/include/linux/spinlock.h	2007-01-04 22:05:14.000000000 +0100
+--- linux-2.6.19/include/linux/spinlock.h	2007-03-20 20:32:43.000000000 +0100
 +++ ipipe-2.6.19-arm/include/linux/spinlock.h	2007-03-02 18:41:52.000000000 +0100
 @@ -171,7 +171,97 @@ do {								\
  #define read_trylock(lock)		__cond_lock(lock, _read_trylock(lock))
@@ -4792,7 +4843,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/include/l
 +
  #endif /* __LINUX_SPINLOCK_TYPES_H */
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/init/Kconfig ipipe-2.6.19-arm/init/Kconfig
---- linux-2.6.19/init/Kconfig	2007-01-04 22:05:14.000000000 +0100
+--- linux-2.6.19/init/Kconfig	2007-03-20 20:32:45.000000000 +0100
 +++ ipipe-2.6.19-arm/init/Kconfig	2007-03-02 18:41:52.000000000 +0100
 @@ -67,6 +67,7 @@ menu "General setup"
  
@@ -4803,7 +4854,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/init/Kcon
  	  Append an extra string to the end of your kernel version.
  	  This will show up when you type uname, for example.
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/init/main.c ipipe-2.6.19-arm/init/main.c
---- linux-2.6.19/init/main.c	2007-01-04 22:05:14.000000000 +0100
+--- linux-2.6.19/init/main.c	2007-03-20 20:32:45.000000000 +0100
 +++ ipipe-2.6.19-arm/init/main.c	2007-03-02 18:41:52.000000000 +0100
 @@ -489,7 +489,7 @@ asmlinkage void __init start_kernel(void
  	unwind_init();
@@ -4835,7 +4886,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/init/main
  	do_initcalls();
  }
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/kernel/Makefile ipipe-2.6.19-arm/kernel/Makefile
---- linux-2.6.19/kernel/Makefile	2007-01-04 22:05:14.000000000 +0100
+--- linux-2.6.19/kernel/Makefile	2007-03-20 20:32:45.000000000 +0100
 +++ ipipe-2.6.19-arm/kernel/Makefile	2007-03-02 18:41:52.000000000 +0100
 @@ -48,6 +48,7 @@ obj-$(CONFIG_GENERIC_HARDIRQS) += irq/
  obj-$(CONFIG_SECCOMP) += seccomp.o
@@ -4846,7 +4897,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/kernel/Ma
  obj-$(CONFIG_TASK_DELAY_ACCT) += delayacct.o
  obj-$(CONFIG_TASKSTATS) += taskstats.o tsacct.o
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/kernel/exit.c ipipe-2.6.19-arm/kernel/exit.c
---- linux-2.6.19/kernel/exit.c	2007-01-04 22:05:14.000000000 +0100
+--- linux-2.6.19/kernel/exit.c	2007-03-20 20:32:45.000000000 +0100
 +++ ipipe-2.6.19-arm/kernel/exit.c	2007-03-02 18:41:52.000000000 +0100
 @@ -918,6 +918,7 @@ fastcall NORET_TYPE void do_exit(long co
  
@@ -4857,7 +4908,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/kernel/ex
  	__exit_files(tsk);
  	__exit_fs(tsk);
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/kernel/fork.c ipipe-2.6.19-arm/kernel/fork.c
---- linux-2.6.19/kernel/fork.c	2007-01-04 22:05:14.000000000 +0100
+--- linux-2.6.19/kernel/fork.c	2007-03-20 20:32:45.000000000 +0100
 +++ ipipe-2.6.19-arm/kernel/fork.c	2007-03-02 18:41:52.000000000 +0100
 @@ -384,6 +384,7 @@ void mmput(struct mm_struct *mm)
  	might_sleep();
@@ -7684,7 +7735,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/kernel/ip
 +	                              &ipipe_trace_enable);
 +}
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/kernel/irq/chip.c ipipe-2.6.19-arm/kernel/irq/chip.c
---- linux-2.6.19/kernel/irq/chip.c	2007-01-04 22:05:14.000000000 +0100
+--- linux-2.6.19/kernel/irq/chip.c	2007-03-20 20:32:45.000000000 +0100
 +++ ipipe-2.6.19-arm/kernel/irq/chip.c	2007-03-02 18:41:52.000000000 +0100
 @@ -308,7 +308,9 @@ handle_level_irq(unsigned int irq, struc
  	irqreturn_t action_ret;
@@ -7853,7 +7904,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/kernel/ir
  	desc->handle_irq = handle;
  	desc->name = name;
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/kernel/printk.c ipipe-2.6.19-arm/kernel/printk.c
---- linux-2.6.19/kernel/printk.c	2007-01-17 00:14:34.000000000 +0100
+--- linux-2.6.19/kernel/printk.c	2007-03-20 20:32:45.000000000 +0100
 +++ ipipe-2.6.19-arm/kernel/printk.c	2007-03-02 18:41:52.000000000 +0100
 @@ -489,6 +489,78 @@ static int have_callable_console(void)
   * printf(3)
@@ -7943,7 +7994,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/kernel/pr
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/kernel/sched.c ipipe-2.6.19-arm/kernel/sched.c
---- linux-2.6.19/kernel/sched.c	2007-01-04 22:05:15.000000000 +0100
+--- linux-2.6.19/kernel/sched.c	2007-03-20 20:32:45.000000000 +0100
 +++ ipipe-2.6.19-arm/kernel/sched.c	2007-03-02 18:41:52.000000000 +0100
 @@ -1391,7 +1391,7 @@ static int try_to_wake_up(struct task_st
  
@@ -8086,7 +8137,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/kernel/sc
 +
 +#endif /* CONFIG_IPIPE */
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/kernel/signal.c ipipe-2.6.19-arm/kernel/signal.c
---- linux-2.6.19/kernel/signal.c	2007-01-04 22:05:15.000000000 +0100
+--- linux-2.6.19/kernel/signal.c	2007-03-20 20:32:45.000000000 +0100
 +++ ipipe-2.6.19-arm/kernel/signal.c	2007-03-02 18:41:52.000000000 +0100
 @@ -504,6 +504,7 @@ void signal_wake_up(struct task_struct *
  	unsigned int mask;
@@ -8097,7 +8148,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/kernel/si
  	/*
  	 * For SIGKILL, we want to wake it up in the stopped/traced case.
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/kernel/spinlock.c ipipe-2.6.19-arm/kernel/spinlock.c
---- linux-2.6.19/kernel/spinlock.c	2007-01-04 22:05:15.000000000 +0100
+--- linux-2.6.19/kernel/spinlock.c	2007-03-20 20:32:45.000000000 +0100
 +++ ipipe-2.6.19-arm/kernel/spinlock.c	2007-03-02 18:41:52.000000000 +0100
 @@ -88,7 +88,7 @@ unsigned long __lockfunc _spin_lock_irqs
  	 * _raw_spin_lock_flags() code, because lockdep assumes
@@ -8118,7 +8169,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/kernel/sp
  #else
  	_raw_spin_lock_flags(lock, &flags);
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/lib/Kconfig.debug ipipe-2.6.19-arm/lib/Kconfig.debug
---- linux-2.6.19/lib/Kconfig.debug	2007-01-04 22:05:15.000000000 +0100
+--- linux-2.6.19/lib/Kconfig.debug	2007-03-20 20:32:45.000000000 +0100
 +++ ipipe-2.6.19-arm/lib/Kconfig.debug	2007-03-02 18:41:52.000000000 +0100
 @@ -46,6 +46,8 @@ config UNUSED_SYMBOLS
  	  you really need it, and what the merge plan to the mainline kernel for
@@ -8130,7 +8181,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/lib/Kconf
  	bool "Kernel debugging"
  	help
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/lib/ioremap.c ipipe-2.6.19-arm/lib/ioremap.c
---- linux-2.6.19/lib/ioremap.c	2007-01-04 22:05:15.000000000 +0100
+--- linux-2.6.19/lib/ioremap.c	2007-03-20 20:32:45.000000000 +0100
 +++ ipipe-2.6.19-arm/lib/ioremap.c	2007-03-02 18:41:52.000000000 +0100
 @@ -11,6 +11,7 @@
  
@@ -8167,7 +8218,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/lib/smp_p
  		goto out;
  
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/lib/spinlock_debug.c ipipe-2.6.19-arm/lib/spinlock_debug.c
---- linux-2.6.19/lib/spinlock_debug.c	2007-01-04 22:05:15.000000000 +0100
+--- linux-2.6.19/lib/spinlock_debug.c	2007-03-20 20:32:45.000000000 +0100
 +++ ipipe-2.6.19-arm/lib/spinlock_debug.c	2007-03-02 18:41:52.000000000 +0100
 @@ -129,6 +129,8 @@ void _raw_spin_lock(spinlock_t *lock)
  	debug_spin_lock_after(lock);
@@ -8244,7 +8295,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/lib/spinl
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/mm/memory.c ipipe-2.6.19-arm/mm/memory.c
---- linux-2.6.19/mm/memory.c	2007-01-04 22:05:15.000000000 +0100
+--- linux-2.6.19/mm/memory.c	2007-03-20 20:32:45.000000000 +0100
 +++ ipipe-2.6.19-arm/mm/memory.c	2007-03-02 19:00:16.000000000 +0100
 @@ -50,6 +50,7 @@
  #include <linux/delayacct.h>
@@ -8512,7 +8563,7 @@ diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/mm/mlock.
  	if (flags == MCL_FUTURE)
  		goto out;
 diff -Naurdp -x .gitignore -x '*~' -x '*.orig' -x '*.rej' linux-2.6.19/mm/vmalloc.c ipipe-2.6.19-arm/mm/vmalloc.c
---- linux-2.6.19/mm/vmalloc.c	2007-01-04 22:05:15.000000000 +0100
+--- linux-2.6.19/mm/vmalloc.c	2007-03-20 20:32:45.000000000 +0100
 +++ ipipe-2.6.19-arm/mm/vmalloc.c	2007-03-02 18:41:52.000000000 +0100
 @@ -19,6 +19,7 @@
  
