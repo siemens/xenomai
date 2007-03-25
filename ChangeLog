@@ -1,6 +1,9 @@
 2007-03-25  Philippe Gerum  <rpm@xenomai.org>
 
-        * ksrc/arch/powerpc/patches: Update 2.4.25-ppc-1.2-01 to Denx's
+	* ksrc/arch/x86_64/patches: Upgrade to 2.6.20-1.0-06. Contributed
+	by <trem@zarb.org>.
+
+	* ksrc/arch/powerpc/patches: Update 2.4.25-ppc-1.2-01 to Denx's
 	CVS as of 2007-03-25.
 
 2007-03-19  Philippe Gerum  <rpm@xenomai.org>
