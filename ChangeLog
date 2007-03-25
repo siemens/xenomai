@@ -1,3 +1,8 @@
+2007-03-25  Philippe Gerum  <rpm@xenomai.org>
+
+        * ksrc/arch/powerpc/patches: Update 2.4.25-ppc-1.2-01 to Denx's
+	CVS as of 2007-03-25.
+
 2007-03-19  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/skins: Relay SIGHARDEN signal to previous handler if any.
