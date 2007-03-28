@@ -39,8 +39,10 @@ int __wrap_shm_open(const char *name, int oflag, mode_t mode)
 	if (!err)
 		return fd;
 
+#ifdef HAVE_SHM_OPEN
 	if (err == ENOSYS)
 		return __real_shm_open(name, oflag, mode);
+#endif
 
 	close(fd);
 	errno = err;
@@ -55,8 +57,10 @@ int __wrap_shm_unlink(const char *name)
 	if (!err)
 		return 0;
 
+#ifdef HAVE_SHM_UNLINK
 	if (err == ENOSYS)
 		return __real_shm_unlink(name);
+#endif
 	
 	errno = err;
 	return -1;

@@ -1,3 +1,8 @@
+2007-03-28  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* src/skins/posix/shm.c (__wrap_shm_open, __wrap_shm_unlink): Only
+	call __real_shm_open and __real_shm_unlink if they exist.
+
 2007-03-25  Philippe Gerum  <rpm@xenomai.org>
 
         * ksrc/arch/powerpc/patches: Update 2.4.25-ppc-1.2-01 to Denx's
