@@ -576,6 +576,11 @@ if test x$CONFIG_XENO_POSIX_AUTO_MLOCKALL = xy; then
 	AC_DEFINE(CONFIG_XENO_POSIX_AUTO_MLOCKALL,1,[config])
 fi
 
+save_LIBS="$LIBS"
+LIBS="$LIBS -lrt"
+AC_CHECK_FUNCS([shm_open shm_unlink])
+LIBS="$save_LIBS"
+
 dnl
 dnl Build the Makefiles
 dnl
