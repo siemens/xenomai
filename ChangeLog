@@ -1,3 +1,8 @@
+2007-03-30  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/drivers/can/rtcan_raw.c (rtcan_raw_setsockopt): Fix
+	CAN_RAW_FILTER for in-kernel users.
+
 2007-03-28  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* src/skins/posix/shm.c (__wrap_shm_open, __wrap_shm_unlink): Only
