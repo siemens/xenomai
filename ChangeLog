@@ -1,3 +1,7 @@
+2007-03-31  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/queue.h (moveq): Fix source tail pointer.
+
 2007-03-30  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/can/rtcan_raw.c (rtcan_raw_setsockopt): Fix
@@ -10,7 +14,7 @@
 
 2007-03-25  Philippe Gerum  <rpm@xenomai.org>
 
-        * ksrc/arch/powerpc/patches: Update 2.4.25-ppc-1.2-01 to Denx's
+	* ksrc/arch/powerpc/patches: Update 2.4.25-ppc-1.2-01 to Denx's
 	CVS as of 2007-03-25.
 
 2007-03-20  Philippe Gerum  <rpm@xenomai.org>
