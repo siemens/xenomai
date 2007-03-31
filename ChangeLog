@@ -1,3 +1,7 @@
+2007-03-31  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/queue.h (moveq): Fix source tail pointer.
+
 2007-03-30  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/can/rtcan_raw.c (rtcan_raw_setsockopt): Fix
