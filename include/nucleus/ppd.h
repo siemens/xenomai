@@ -13,8 +13,7 @@ typedef struct xnshadow_ppd_key {
 typedef struct xnshadow_ppd_t {
     xnshadow_ppd_key_t key;
     xnholder_t link;
-#define link2ppd(laddr) \
-    (xnshadow_ppd_t *)((char *)(laddr) - offsetof(xnshadow_ppd_t, link))
+#define link2ppd(ln)	container_of(ln, xnshadow_ppd_t, link)
 } xnshadow_ppd_t;
 
 #define xnshadow_ppd_muxid(ppd) ((ppd)->key.muxid)

@@ -71,7 +71,7 @@ typedef struct xntbase {
 
 	xnholder_t link;
 
-#define link2tbase(ln)	container_of(ln, xntbase_t, link)
+#define link2tbase(ln)		container_of(ln, xntbase_t, link)
 
 } xntbase_t;
 

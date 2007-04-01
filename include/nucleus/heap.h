@@ -61,8 +61,7 @@ typedef struct xnextent {
 
 	xnholder_t link;
 
-#define link2extent(laddr) \
-((xnextent_t *)(((char *)laddr) - (int)(&((xnextent_t *)0)->link)))
+#define link2extent(ln)	container_of(ln, xnextent_t, link)
 
 	caddr_t membase,	/* Base address of the page array */
 		memlim,		/* Memory limit of page array */
@@ -76,8 +75,7 @@ typedef struct xnheap {
 
 	xnholder_t link;
 
-#define link2heap(laddr) \
-((xnheap_t *)(((char *)laddr) - (int)(&((xnheap_t *)0)->link)))
+#define link2heap(ln)		container_of(ln, xnheap_t, link)
 
 	u_long extentsize,
 		pagesize,
