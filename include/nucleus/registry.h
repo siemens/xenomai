@@ -42,8 +42,8 @@ struct xnpnode;
 typedef struct xnobject {
 
     xnholder_t link;
-#define link2xnobj(laddr) \
-((xnobject_t *)(((char *)laddr) - (int)(&((xnobject_t *)0)->link)))
+
+#define link2xnobj(ln)		container_of(ln, xnobject_t, link)
 
     void *objaddr;
 

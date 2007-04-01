@@ -64,9 +64,9 @@ typedef struct xnpipe_mh {
     
 } xnpipe_mh_t;
 
-static inline xnpipe_mh_t *link2mh (xnholder_t *laddr)
+static inline xnpipe_mh_t *link2mh(xnholder_t *ln)
 {
-    return laddr ? ((xnpipe_mh_t *)(((char *)laddr) - (int)(&((xnpipe_mh_t *)0)->link))) : 0;
+    return ln ? container_of(ln, xnpipe_mh_t, link) : NULL;
 }
 
 typedef int xnpipe_io_handler(int minor,
@@ -84,8 +84,7 @@ typedef struct xnpipe_state {
 
     xnholder_t slink;	/* Link on sleep queue */
     xnholder_t alink;	/* Link on async queue */
-#define link2xnpipe(laddr,link) \
-((struct xnpipe_state *)(((char *)laddr) - (int)(&((struct xnpipe_state *)0)->link)))
+#define link2xnpipe(ln, fld)	container_of(ln, xnpipe_state_t, fld)
 
     xnqueue_t inq;	/* From user-space to kernel */
     xnqueue_t outq;	/* From kernel to user-space */

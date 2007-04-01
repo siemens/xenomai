@@ -58,8 +58,7 @@ typedef struct xnsynch {
 
     xnpholder_t link;	/* Link in claim queues */
 
-#define link2synch(laddr) \
-((xnsynch_t *)(((char *)laddr) - (int)(&((xnsynch_t *)0)->link)))
+#define link2synch(ln)		container_of(ln, xnsynch_t, link)
 
     xnflags_t status;	/* Status word */
 
