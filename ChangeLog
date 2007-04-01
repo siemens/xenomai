@@ -1,3 +1,8 @@
+2007-04-01  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/alarm.c (rt_alarm_delete): Reschedule upon
+	timer deletion if needed.
+
 2007-03-31  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/queue.h (moveq): Fix source tail pointer.

@@ -262,7 +262,7 @@ int rt_alarm_create(RT_ALARM *alarm,
 
 int rt_alarm_delete(RT_ALARM *alarm)
 {
-	int err = 0;
+	int err = 0, rc = 0;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -280,7 +280,7 @@ int rt_alarm_delete(RT_ALARM *alarm)
 	xntimer_destroy(&alarm->timer_base);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	xnsynch_destroy(&alarm->synch_base);
+	rc = xnsynch_destroy(&alarm->synch_base);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
@@ -289,6 +289,11 @@ int rt_alarm_delete(RT_ALARM *alarm)
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	xeno_mark_deleted(alarm);
+
+	if (rc == XNSYNCH_RESCHED)
+		/* Some task has been woken up as a result of the deletion:
+		   reschedule now. */
+		xnpod_schedule();
 
       unlock_and_exit:
 
