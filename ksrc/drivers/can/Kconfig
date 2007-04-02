@@ -49,6 +49,19 @@ config XENO_DRIVERS_CAN_MAX_RECEIVERS
 
 	The driver maintains a receive filter list per device for fast access.
 
+config XENO_DRIVERS_CAN_BUS_ERR
+	depends on XENO_DRIVERS_CAN
+	bool
+	default n
+	help
+
+	To avoid unnecessary bus error interrupt flooding, this option enables
+	bus error interrupts when an application is calling a receive function
+	on a socket listening on bus errors. After one bus error has occured,
+	the interrupt will be disabled to allow the application time for error
+	processing. This option is automatically selected for CAN controllers
+	supporting bus error interrupts like the SJA1000.
+
 config XENO_DRIVERS_CAN_VIRT
 	depends on XENO_DRIVERS_CAN
 	tristate "Virtual CAN bus driver"

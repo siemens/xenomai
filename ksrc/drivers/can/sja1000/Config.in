@@ -4,6 +4,10 @@
 
 dep_tristate 'Philips SJA1000 CAN controller' CONFIG_XENO_DRIVERS_CAN_SJA1000 $CONFIG_XENO_DRIVERS_CAN
 
+if [ "$CONFIG_XENO_DRIVERS_CAN_SJA1000" != "n" ]; then
+	define_bool CONFIG_XENO_DRIVERS_CAN_BUS_ERR y
+fi
+
 dep_tristate '  Standard ISA controllers' CONFIG_XENO_DRIVERS_CAN_SJA1000_ISA $CONFIG_XENO_DRIVERS_CAN_SJA1000
 if [ "$CONFIG_XENO_DRIVERS_CAN_SJA1000_ISA" != "n" ]; then
 	int '    Maximum number of controllers' CONFIG_XENO_DRIVERS_CAN_SJA1000_ISA_MAX_DEV 4

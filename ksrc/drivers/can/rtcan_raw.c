@@ -624,6 +624,7 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
             return -EINVAL;
     }
 
+    rtcan_raw_enable_bus_err(sock);
 
     /* Set RX timeout */
     timeout = (flags & MSG_DONTWAIT) ? RTDM_TIMEOUT_NONE : sock->rx_timeout;

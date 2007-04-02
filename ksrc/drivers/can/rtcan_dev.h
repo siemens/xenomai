@@ -58,12 +58,12 @@ struct rtcan_device {
 
     char                name[IFNAMSIZ];
 
-    char                *ctrl_name; /* Name of CAN controller */ 
-    char                *board_name;/* Name of CAN board */ 
+    char                *ctrl_name; /* Name of CAN controller */
+    char                *board_name;/* Name of CAN board */
 
     unsigned long       base_addr;  /* device I/O address   */
     rtdm_irq_t          irq_handle; /* RTDM IRQ handle */
- 
+
     int                 ifindex;
 #ifdef RTCAN_USE_REFCOUNT
     atomic_t            refcount;
@@ -76,9 +76,9 @@ struct rtcan_device {
     struct semaphore    nrt_lock;   /* non-real-time locking        */
 
     /* Spinlock for all devices (but not for all attributes) and also for HW
-     * access to all CAN controllers 
+     * access to all CAN controllers
      */
-    rtdm_lock_t         device_lock;	
+    rtdm_lock_t         device_lock;
 
     /* Acts as a mutex allowing only one sender to write to the MSCAN
      * simultaneously. Created when the controller goes into operating mode,
@@ -89,12 +89,12 @@ struct rtcan_device {
      * structures. */
     unsigned int        can_sys_clock;
 
- 
+
     /* Baudrate of this device. Protected by device_lock in all device
      * structures. */
     can_baudrate_t      baudrate;
 
-    struct can_bittime  bit_time;  
+    struct can_bittime  bit_time;
 
     /* State which the controller is in. Protected by device_lock in all
      * device structures. */
@@ -112,12 +112,15 @@ struct rtcan_device {
     int                 (*hard_start_xmit)(struct rtcan_device *dev,
 					   struct can_frame *frame);
     int                 (*do_set_mode)(struct rtcan_device *dev,
-				       can_mode_t mode, 
+				       can_mode_t mode,
 				       rtdm_lockctx_t *lock_ctx);
     can_state_t         (*do_get_state)(struct rtcan_device *dev);
     int                 (*do_set_bit_time)(struct rtcan_device *dev,
 					   struct can_bittime *bit_time,
 					   rtdm_lockctx_t *lock_ctx);
+#ifdef CONFIG_XENO_DRIVERS_CAN_BUS_ERR
+    void                (*do_enable_bus_err)(struct rtcan_device *dev);
+#endif
 
     /* Reception list head. This list contains all filters which have been
      * registered via a bind call. */

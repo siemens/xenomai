@@ -41,6 +41,17 @@ void rtcan_loopback(struct rtcan_device *rtcandev);
 #define rtcan_loopback_pending(dev) (0)
 #endif /* CONFIG_XENO_DRIVERS_CAN_LOOPBACK */
 
+#ifdef CONFIG_XENO_DRIVERS_CAN_BUS_ERR
+void __rtcan_raw_enable_bus_err(struct rtcan_socket *sock);
+static inline void rtcan_raw_enable_bus_err(struct rtcan_socket *sock)
+{
+    if ((sock->err_mask & CAN_ERR_BUSERROR))
+	__rtcan_raw_enable_bus_err(sock);
+}
+#else
+#define rtcan_raw_enable_bus_err(sock)
+#endif
+
 int __init rtcan_raw_proto_register(void);
 void __exit rtcan_raw_proto_unregister(void);
 

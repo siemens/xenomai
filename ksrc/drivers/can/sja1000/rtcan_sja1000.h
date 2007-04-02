@@ -30,6 +30,7 @@ struct rtcan_sja1000 {
     unsigned short irq_flags;
     unsigned char ocr;
     unsigned char cdr;
+    char bus_err_on;
 };
 
 int rtcan_sja_create_proc(struct rtcan_device* dev);
