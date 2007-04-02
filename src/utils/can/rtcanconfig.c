@@ -41,7 +41,7 @@ static void print_usage(char *prg)
 	    "Options:\n"
 	    " -v, --verbose            be verbose\n"
 	    " -h, --help               this help\n"
-	    " -c, --ctrlmode=M1:M2:... listenonly or loopback mode\n"
+	    " -c, --ctrlmode=CTRLMODE  listenonly, loopback or none\n"
 	    " -b, --baudrate=BPS       baudrate in bits/sec\n"
 	    " -B, --bittime=BTR0:BTR1  BTR or standard bit-time\n"
 	    " -B, --bittime=BRP:PROP_SEG:PHASE_SEG1:PHASE_SEG2:SJW:SAM\n",
@@ -73,8 +73,10 @@ int string_to_ctrlmode(char *str)
 	return CAN_CTRLMODE_LISTENONLY;
     else if ( !strcmp(str, "loopback") )
 	return CAN_CTRLMODE_LOOPBACK;
+    else if ( !strcmp(str, "none") )
+	return 0;
 
-    return 0;
+    return -1;
 }
 
 int main(int argc, char *argv[])
@@ -137,7 +139,12 @@ int main(int argc, char *argv[])
 	    break;
 
 	case 'c':
-	    new_ctrlmode |= string_to_ctrlmode(optarg);
+	    ret = string_to_ctrlmode(optarg);
+	    if (ret == -1) {
+		print_usage(argv[0]);
+		exit(0);
+	    }
+	    new_ctrlmode |= ret;
 	    set_ctrlmode = 1;
 	    break;
 
