@@ -598,16 +598,16 @@ typedef struct can_frame {
 /**
  * CAN error mask
  *
- * A CAN error mask (see @ref Errors) can be set with @c setsockopt. This 
- * mask is then used to decided if error frames are send to this socket 
- * in case of error condidtions. The error frames are marked with the 
- * @ref CAN_ERR_FLAG of @ref CAN_xxx_FLAG and must be handled by the 
- * application properly. A detailed description of the error can be
- * found in the @c can_id and the @c data fields of struct can_frame 
- * (see @ref Errors for futher details). 
+ * A CAN error mask (see @ref Errors) can be set with @c setsockopt. This
+ * mask is then used to decide if error frames are delivered to this socket
+ * in case of error condidtions. The error frames are marked with the
+ * @ref CAN_ERR_FLAG of @ref CAN_xxx_FLAG and must be handled by the
+ * application properly. A detailed description of the errors can be
+ * found in the @c can_id and the @c data fields of struct can_frame
+ * (see @ref Errors for futher details).
  *
  * @n
- * @param [in] level @b SOL_CAN_RAW 
+ * @param [in] level @b SOL_CAN_RAW
  *
  * @param [in] optname @b CAN_RAW_ERR_FILTER
  *
@@ -1062,7 +1062,20 @@ typedef struct can_frame {
 /*!
  * @anchor Errors @name Error mask
  * Error class (mask) in @c can_id field of struct can_frame to
- * be used with @ref CAN_RAW_ERR_FILTER. 
+ * be used with @ref CAN_RAW_ERR_FILTER.
+ *
+ * @b Note: Error reporting is hardware dependent and most CAN controllers
+ * report less detailed error conditions than the SJA1000.
+ *
+ * @b Note: In case of a bus-off error condition (@ref CAN_ERR_BUSOFF), the
+ * CAN controller is @b not restarted automatically. It is the application's
+ * responsibility to react appropriately, e.g. calling @ref CAN_MODE_START.
+ *
+ * @b Note: Bus error interrupts (@ref CAN_ERR_BUSERROR) are enabled when an
+ * application is calling a @ref Recv function on a socket listening
+ * on bus errors (using @ref CAN_RAW_ERR_FILTER). After one bus error has
+ * occured, the interrupt will be disabled to allow the application time for
+ * error processing and to efficiently avoid bus error interrupt flooding.
  * @{ */
 
 /** TX timeout (netdevice driver) */
@@ -1074,7 +1087,7 @@ typedef struct can_frame {
 /** Controller problems (see @ref Error1 "data[1]") */
 #define CAN_ERR_CRTL         0x00000004U
 
-/** Protocol violations (see @ref Error2 "data[2]", 
+/** Protocol violations (see @ref Error2 "data[2]",
                              @ref Error3 "data[3]") */
 #define CAN_ERR_PROT         0x00000008U
 
@@ -1088,14 +1101,14 @@ typedef struct can_frame {
 #define CAN_ERR_BUSOFF       0x00000040U
 
 /** Bus error (may flood!) */
-#define CAN_ERR_BUSERROR     0x00000080U 
+#define CAN_ERR_BUSERROR     0x00000080U
 
 /** Controller restarted */
 #define CAN_ERR_RESTARTED    0x00000100U
 
 /** Omit EFF, RTR, ERR flags */
 #define CAN_ERR_MASK         0x1FFFFFFFU
- 
+
 /** @} */
 
 /*!
