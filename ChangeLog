@@ -1,3 +1,19 @@
+2007-04-02  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* ksrc/drivers/can/*: The option CONFIG_XENO_DRIVERS_CAN_BUS_ERR now
+	enables bus error interrupts when an application is calling a receive
+	function on a socket listening on bus errors. After one bus error has
+	occured, the interrupt will be disabled to allow the application time
+	for error processing and to efficiently avoid bus error interrupt
+	flooding. This option is automatically selected for CAN controllers
+	supporting bus error interrupts like the SJA1000.
+
+	* include/rtdm/rtcan.h: Add some doc on bus-off and bus-error error
+	conditions and the restart policy.
+
+	* src/utils/can/rtcanconfig.c: Controller mode settings and doc
+	has been corrected.
+
 2007-03-31  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/queue.h (moveq): Fix source tail pointer.

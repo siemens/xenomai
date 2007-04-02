@@ -1,6 +1,7 @@
 config XENO_DRIVERS_CAN_SJA1000
 	depends on XENO_DRIVERS_CAN
 	tristate "Philips SJA1000 CAN controller"
+	select XENO_DRIVERS_CAN_BUS_ERR
 
 config XENO_DRIVERS_CAN_SJA1000_ISA
 	depends on XENO_DRIVERS_CAN_SJA1000

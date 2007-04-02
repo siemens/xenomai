@@ -312,3 +312,33 @@ int rtcan_raw_ioctl_dev(struct rtdm_dev_context *context,
 
     return ret;
 }
+
+#ifdef CONFIG_XENO_DRIVERS_CAN_BUS_ERR
+void __rtcan_raw_enable_bus_err(struct rtcan_socket *sock)
+{
+    int i, begin, end;
+    struct rtcan_device *dev;
+    rtdm_lockctx_t lock_ctx;
+    int ifindex = atomic_read(&sock->ifindex);
+
+    if (ifindex) {
+	begin = ifindex;
+	end   = ifindex;
+    } else {
+	begin = 1;
+	end = RTCAN_MAX_DEVICES;
+    }
+
+    for (i = begin; i <= end; i++) {
+	if ((dev = rtcan_dev_get_by_index(i)) == NULL)
+	    continue;
+
+	if (dev->do_enable_bus_err) {
+	    rtdm_lock_get_irqsave(&dev->device_lock, lock_ctx);
+	    dev->do_enable_bus_err(dev);
+	    rtdm_lock_put_irqrestore(&dev->device_lock, lock_ctx);
+	}
+	rtcan_dev_dereference(dev);
+    }
+}
+#endif /* CONFIG_XENO_DRIVERS_CAN_BUS_ERR*/

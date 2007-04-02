@@ -293,18 +293,21 @@ static int rtcan_sja_interrupt(rtdm_irq_t *irq_handle)
             dev->state = dev->state_before_sleep;
 
 	/* Error Interrupt? */
-        if (irq_source & (SJA_IR_EI | SJA_IR_DOI | SJA_IR_EPI | 
+        if (irq_source & (SJA_IR_EI | SJA_IR_DOI | SJA_IR_EPI |
 			  SJA_IR_ALI | SJA_IR_BEI)) {
-	    /* Check error condition and fill error frame */
-	    rtcan_sja_err_interrupt(dev, chip, &skb, irq_source);
 
-	    if (recv_lock_free) {
-		recv_lock_free = 0;
-		rtdm_lock_get(&rtcan_recv_list_lock);
-		rtdm_lock_get(&rtcan_socket_lock);
+	    /* Check error condition and fill error frame */
+	    if (!((irq_source & SJA_IR_BEI) && (chip->bus_err_on-- < 2))) {
+		rtcan_sja_err_interrupt(dev, chip, &skb, irq_source);
+
+		if (recv_lock_free) {
+		    recv_lock_free = 0;
+		    rtdm_lock_get(&rtcan_recv_list_lock);
+		    rtdm_lock_get(&rtcan_socket_lock);
+		}
+		/* Pass error frame out to the sockets */
+		rtcan_rcv(dev, &skb);
 	    }
-	    /* Pass error frame out to the sockets */
-	    rtcan_rcv(dev, &skb);
 	}
 
         /* Transmit Interrupt? */
@@ -625,8 +628,16 @@ int rtcan_sja_set_bit_time(struct rtcan_device *dev,
     return 0;
 }
 
+void rtcan_sja_enable_bus_err(struct rtcan_device *dev)
+{
+    struct rtcan_sja1000 *chip = (struct rtcan_sja1000 *)dev->priv;
 
-
+    if (chip->bus_err_on < 2) {
+	if (chip->bus_err_on < 1)
+	    chip->read_reg(dev, SJA_ECC);
+	chip->bus_err_on = 2;
+    }
+}
 
 /*
  *  Start a transmission to a SJA1000 device
@@ -745,8 +756,10 @@ int rtcan_sja1000_register(struct rtcan_device *dev)
     dev->do_set_mode = rtcan_sja_set_mode;
     dev->do_get_state = rtcan_sja_get_state;
     dev->do_set_bit_time = rtcan_sja_set_bit_time;
+    dev->do_enable_bus_err = rtcan_sja_enable_bus_err;
+    chip->bus_err_on = 1;
 
-    ret = rtdm_irq_request(&dev->irq_handle, 
+    ret = rtdm_irq_request(&dev->irq_handle,
 			   chip->irq_num, rtcan_sja_interrupt,
 			   chip->irq_flags, sja_ctrl_name, dev);
     if (ret) {
