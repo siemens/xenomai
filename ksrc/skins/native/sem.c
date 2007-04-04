@@ -44,8 +44,10 @@
 
 #include <nucleus/pod.h>
 #include <nucleus/registry.h>
+#include <nucleus/heap.h>
 #include <native/task.h>
 #include <native/sem.h>
+#include <native/ppd.h>
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
@@ -172,6 +174,7 @@ static xnpnode_t __sem_pnode = {
 int rt_sem_create(RT_SEM *sem, const char *name, unsigned long icount, int mode)
 {
 	int err = 0;
+	spl_t s;
 
 	if (xnpod_asynch_p())
 		return -EPERM;
@@ -185,6 +188,11 @@ int rt_sem_create(RT_SEM *sem, const char *name, unsigned long icount, int mode)
 	sem->handle = 0;	/* i.e. (still) unregistered semaphore. */
 	sem->magic = XENO_SEM_MAGIC;
 	xnobject_copy_name(sem->name, name);
+	inith(&sem->rlink);
+	sem->rqueue = &xeno_get_rholder()->semq;
+	xnlock_get_irqsave(&nklock, s);
+	appendq(sem->rqueue, &sem->rlink);
+	xnlock_put_irqrestore(&nklock, s);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	sem->cpid = 0;
@@ -264,6 +272,8 @@ int rt_sem_delete(RT_SEM *sem)
 		err = xeno_handle_error(sem, XENO_SEM_MAGIC, RT_SEM);
 		goto unlock_and_exit;
 	}
+
+	removeq(sem->rqueue, &sem->rlink);
 
 	rc = xnsynch_destroy(&sem->synch_base);
 
@@ -637,6 +647,12 @@ int __native_sem_pkg_init(void)
 
 void __native_sem_pkg_cleanup(void)
 {
+	__native_sem_flush_rq(&__native_global_rholder.semq);
+}
+
+void __native_sem_flush_rq(xnqueue_t *rq)
+{
+	xeno_flush_rq(RT_SEM, rq, sem);
 }
 
 /*@}*/

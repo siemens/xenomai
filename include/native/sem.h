@@ -66,6 +66,12 @@ typedef struct rt_sem {
     pid_t cpid;			/* !< Creator's pid. */
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
+    xnholder_t rlink;		/* !< Link in resource queue. */
+
+#define rlink2sem(ln)		container_of(ln, RT_SEM, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
+
 } RT_SEM;
 
 #ifdef __cplusplus
@@ -75,6 +81,8 @@ extern "C" {
 int __native_sem_pkg_init(void);
 
 void __native_sem_pkg_cleanup(void);
+
+void __native_sem_flush_rq(xnqueue_t *rq);
 
 #ifdef __cplusplus
 }

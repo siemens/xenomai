@@ -59,12 +59,16 @@ typedef struct rt_alarm {
     unsigned long expiries;	/* !< Number of expiries. */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-
     pid_t cpid;			/* !< Creator's pid. */
 
     xnsynch_t synch_base;	/* !< Synch. base for user-space tasks. */
-
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+    xnholder_t rlink;		/* !< Link in resource queue. */
+
+#define rlink2alarm(ln)	container_of(ln, RT_ALARM, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 
@@ -77,6 +81,8 @@ extern "C" {
 int __native_alarm_pkg_init(void);
 
 void __native_alarm_pkg_cleanup(void);
+
+void __native_alarm_flush_rq(xnqueue_t *rq);
 
 int rt_alarm_create(RT_ALARM *alarm,
 		    const char *name,

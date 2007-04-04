@@ -34,7 +34,9 @@ typedef struct rt_cond_info {
 } RT_COND_INFO;
 
 typedef struct rt_cond_placeholder {
+
     xnhandle_t opaque;
+
 } RT_COND_PLACEHOLDER;
 
 #if (defined(__KERNEL__) || defined(__XENO_SIM__)) && !defined(DOXYGEN_CPP)
@@ -55,6 +57,12 @@ typedef struct rt_cond {
     pid_t cpid;			/* !< Creator's pid. */
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
+    xnholder_t rlink;		/* !< Link in resource queue. */
+
+#define rlink2cond(ln)		container_of(ln, RT_COND, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
+
 } RT_COND;
 
 #ifdef __cplusplus
@@ -64,6 +72,8 @@ extern "C" {
 int __native_cond_pkg_init(void);
 
 void __native_cond_pkg_cleanup(void);
+
+void __native_cond_flush_rq(xnqueue_t *rq);
 
 #ifdef __cplusplus
 }

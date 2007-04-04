@@ -67,6 +67,12 @@ typedef struct rt_event {
     pid_t cpid;			/* !< Creator's pid. */
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
+    xnholder_t rlink;		/* !< Link in resource queue. */
+
+#define rlink2event(ln)	container_of(ln, RT_EVENT, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
+
 } RT_EVENT;
 
 #ifdef __cplusplus
@@ -76,6 +82,8 @@ extern "C" {
 int __native_event_pkg_init(void);
 
 void __native_event_pkg_cleanup(void);
+
+void __native_event_flush_rq(xnqueue_t *rq);
 
 #ifdef __cplusplus
 }

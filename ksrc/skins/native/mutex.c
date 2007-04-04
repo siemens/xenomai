@@ -46,8 +46,10 @@
 
 #include <nucleus/pod.h>
 #include <nucleus/registry.h>
+#include <nucleus/heap.h>
 #include <native/task.h>
 #include <native/mutex.h>
+#include <native/ppd.h>
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
@@ -164,6 +166,7 @@ static xnpnode_t __mutex_pnode = {
 int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 {
 	int err = 0;
+	spl_t s;
 
 	if (xnpod_asynch_p())
 		return -EPERM;
@@ -173,6 +176,11 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 	mutex->magic = XENO_MUTEX_MAGIC;
 	mutex->lockcnt = 0;
 	xnobject_copy_name(mutex->name, name);
+	inith(&mutex->rlink);
+	mutex->rqueue = &xeno_get_rholder()->mutexq;
+	xnlock_get_irqsave(&nklock, s);
+	appendq(mutex->rqueue, &mutex->rlink);
+	xnlock_put_irqrestore(&nklock, s);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	mutex->cpid = 0;
@@ -254,6 +262,8 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 		err = xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
 		goto unlock_and_exit;
 	}
+
+	removeq(mutex->rqueue, &mutex->rlink);
 
 	rc = xnsynch_destroy(&mutex->synch_base);
 
@@ -602,6 +612,12 @@ int __native_mutex_pkg_init(void)
 
 void __native_mutex_pkg_cleanup(void)
 {
+	__native_mutex_flush_rq(&__native_global_rholder.mutexq);
+}
+
+void __native_mutex_flush_rq(xnqueue_t *rq)
+{
+	xeno_flush_rq(RT_MUTEX, rq, mutex);
 }
 
 /*@}*/

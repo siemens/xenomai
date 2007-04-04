@@ -61,6 +61,12 @@ typedef struct __rt_mutex {
 	pid_t cpid;		/* !< Creator's pid. */
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
+	xnholder_t rlink;	/* !< Link in resource queue. */
+
+#define rlink2mutex(ln)		container_of(ln, RT_MUTEX, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
+
 } RT_MUTEX;
 
 #ifdef __cplusplus
@@ -70,6 +76,8 @@ extern "C" {
 int __native_mutex_pkg_init(void);
 
 void __native_mutex_pkg_cleanup(void);
+
+void __native_mutex_flush_rq(xnqueue_t *rq);
 
 #ifdef __cplusplus
 }

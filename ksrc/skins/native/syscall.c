@@ -36,6 +36,7 @@
 #include <native/alarm.h>
 #include <native/intr.h>
 #include <native/pipe.h>
+#include <native/ppd.h>
 
 /* This file implements the Xenomai syscall wrappers;
  *
@@ -48,7 +49,9 @@
  * and the use of it in the actual syscall.
  */
 
-static int __muxid;
+int __native_muxid;
+
+xeno_rholder_t __native_global_rholder;
 
 static int __rt_bind_helper(struct task_struct *curr,
 			    struct pt_regs *regs,
@@ -3789,14 +3792,60 @@ static void __shadow_delete_hook(xnthread_t *thread)
 		xnshadow_unmap(thread);
 }
 
+static void *__shadow_eventcb(int event, void *data)
+{
+	struct xeno_resource_holder *rh;
+	switch(event) {
+
+	case XNSHADOW_CLIENT_ATTACH:
+
+		rh = (struct xeno_resource_holder *) xnarch_sysalloc(sizeof(*rh));
+		if (!rh)
+			return ERR_PTR(-ENOMEM);
+
+		initq(&rh->alarmq);
+		initq(&rh->condq);
+		initq(&rh->eventq);
+		initq(&rh->heapq);
+		initq(&rh->intrq);
+		initq(&rh->mutexq);
+		initq(&rh->pipeq);
+		initq(&rh->queueq);
+		initq(&rh->semq);
+
+		return &rh->ppd;
+
+	case XNSHADOW_CLIENT_DETACH:
+
+		rh = ppd2rholder((xnshadow_ppd_t *) data);
+		__native_alarm_flush_rq(&rh->alarmq);
+		__native_cond_flush_rq(&rh->condq);
+		__native_event_flush_rq(&rh->eventq);
+		__native_heap_flush_rq(&rh->heapq);
+		__native_intr_flush_rq(&rh->intrq);
+		__native_mutex_flush_rq(&rh->mutexq);
+		__native_pipe_flush_rq(&rh->pipeq);
+		__native_queue_flush_rq(&rh->queueq);
+		__native_sem_flush_rq(&rh->semq);
+
+		xnarch_sysfree(rh, sizeof(*rh));
+
+		return NULL;
+	}
+
+	return ERR_PTR(-EINVAL);
+}
+
 int __native_syscall_init(void)
 {
-	__muxid =
+	__native_muxid =
 	    xnshadow_register_interface("native",
 					XENO_SKIN_MAGIC,
 					sizeof(__systab) / sizeof(__systab[0]),
-					__systab, NULL, THIS_MODULE);
-	if (__muxid < 0)
+					__systab,
+					&__shadow_eventcb,
+					THIS_MODULE);
+	if (__native_muxid < 0)
 		return -ENOSYS;
 
 	xnpod_add_hook(XNHOOK_THREAD_DELETE, &__shadow_delete_hook);
@@ -3807,5 +3856,5 @@ int __native_syscall_init(void)
 void __native_syscall_cleanup(void)
 {
 	xnpod_remove_hook(XNHOOK_THREAD_DELETE, &__shadow_delete_hook);
-	xnshadow_unregister_interface(__muxid);
+	xnshadow_unregister_interface(__native_muxid);
 }

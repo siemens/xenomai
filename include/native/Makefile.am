@@ -9,6 +9,7 @@ includesub_HEADERS = \
 	misc.h \
 	mutex.h \
 	pipe.h \
+	ppd.h \
 	queue.h \
 	sem.h \
 	syscall.h \

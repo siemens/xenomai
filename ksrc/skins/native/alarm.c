@@ -38,8 +38,10 @@
 
 #include <nucleus/pod.h>
 #include <nucleus/registry.h>
+#include <nucleus/heap.h>
 #include <native/task.h>
 #include <native/alarm.h>
+#include <native/ppd.h>
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
@@ -117,6 +119,12 @@ int __native_alarm_pkg_init(void)
 
 void __native_alarm_pkg_cleanup(void)
 {
+	__native_alarm_flush_rq(&__native_global_rholder.alarmq);
+}
+
+void __native_alarm_flush_rq(xnqueue_t *rq)
+{
+	xeno_flush_rq(RT_ALARM, rq, alarm);
 }
 
 static void __alarm_trampoline(xntimer_t *timer)
@@ -187,6 +195,7 @@ int rt_alarm_create(RT_ALARM *alarm,
 		    const char *name, rt_alarm_t handler, void *cookie)
 {
 	int err = 0;
+	spl_t s;
 
 	if (xnpod_asynch_p())
 		return -EPERM;
@@ -198,6 +207,11 @@ int rt_alarm_create(RT_ALARM *alarm,
 	alarm->handler = handler;
 	alarm->cookie = cookie;
 	xnobject_copy_name(alarm->name, name);
+	inith(&alarm->rlink);
+	alarm->rqueue = &xeno_get_rholder()->alarmq;
+	xnlock_get_irqsave(&nklock, s);
+	appendq(alarm->rqueue, &alarm->rlink);
+	xnlock_put_irqrestore(&nklock, s);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	xnsynch_init(&alarm->synch_base, XNSYNCH_PRIO);
@@ -264,7 +278,7 @@ int rt_alarm_create(RT_ALARM *alarm,
 
 int rt_alarm_delete(RT_ALARM *alarm)
 {
-	int err = 0;
+	int err = 0, rc = 0;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -279,10 +293,12 @@ int rt_alarm_delete(RT_ALARM *alarm)
 		goto unlock_and_exit;
 	}
 
+	removeq(alarm->rqueue, &alarm->rlink);
+
 	xntimer_destroy(&alarm->timer_base);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	xnsynch_destroy(&alarm->synch_base);
+	rc = xnsynch_destroy(&alarm->synch_base);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
@@ -291,6 +307,11 @@ int rt_alarm_delete(RT_ALARM *alarm)
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	xeno_mark_deleted(alarm);
+
+	if (rc == XNSYNCH_RESCHED)
+		/* Some task has been woken up as a result of the deletion:
+		   reschedule now. */
+		xnpod_schedule();
 
       unlock_and_exit:
 

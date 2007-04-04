@@ -51,6 +51,7 @@
 #include <nucleus/heap.h>
 #include <nucleus/registry.h>
 #include <native/pipe.h>
+#include <native/ppd.h>
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
@@ -122,6 +123,12 @@ int __native_pipe_pkg_init(void)
 
 void __native_pipe_pkg_cleanup(void)
 {
+	__native_pipe_flush_rq(&__native_global_rholder.pipeq);
+}
+
+void __native_pipe_flush_rq(xnqueue_t *rq)
+{
+	xeno_flush_rq(RT_PIPE, rq, pipe);
 }
 
 /**
@@ -210,6 +217,7 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 {
 	void *poolmem;
 	int err = 0;
+	spl_t s;
 
 	if (!xnpod_root_p())
 		return -EPERM;
@@ -273,6 +281,11 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 		return minor;
 	}
 	pipe->minor = minor;
+	inith(&pipe->rlink);
+	pipe->rqueue = &xeno_get_rholder()->pipeq;
+	xnlock_get_irqsave(&nklock, s);
+	appendq(pipe->rqueue, &pipe->rlink);
+	xnlock_put_irqrestore(&nklock, s);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	pipe->cpid = 0;
@@ -354,6 +367,8 @@ int rt_pipe_delete(RT_PIPE *pipe)
 		xnlock_put_irqrestore(&nklock, s);
 		return err;
 	}
+
+	removeq(pipe->rqueue, &pipe->rlink);
 
 	err = xnpipe_disconnect(pipe->minor);
 
