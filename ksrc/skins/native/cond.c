@@ -43,9 +43,11 @@
 
 #include <nucleus/pod.h>
 #include <nucleus/registry.h>
+#include <nucleus/heap.h>
 #include <native/task.h>
 #include <native/mutex.h>
 #include <native/cond.h>
+#include <native/ppd.h>
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
@@ -154,6 +156,7 @@ static xnpnode_t __cond_pnode = {
 int rt_cond_create(RT_COND *cond, const char *name)
 {
 	int err = 0;
+	spl_t s;
 
 	if (xnpod_asynch_p())
 		return -EPERM;
@@ -162,6 +165,11 @@ int rt_cond_create(RT_COND *cond, const char *name)
 	cond->handle = 0;	/* i.e. (still) unregistered cond. */
 	cond->magic = XENO_COND_MAGIC;
 	xnobject_copy_name(cond->name, name);
+	inith(&cond->rlink);
+	cond->rqueue = &xeno_get_rholder()->condq;
+	xnlock_get_irqsave(&nklock, s);
+	appendq(cond->rqueue, &cond->rlink);
+	xnlock_put_irqrestore(&nklock, s);
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	cond->cpid = 0;
@@ -244,6 +252,8 @@ int rt_cond_delete(RT_COND *cond)
 		err = xeno_handle_error(cond, XENO_COND_MAGIC, RT_COND);
 		goto unlock_and_exit;
 	}
+
+	removeq(cond->rqueue, &cond->rlink);
 
 	rc = xnsynch_destroy(&cond->synch_base);
 
@@ -616,6 +626,12 @@ int __native_cond_pkg_init(void)
 
 void __native_cond_pkg_cleanup(void)
 {
+	__native_cond_flush_rq(&__native_global_rholder.condq);
+}
+
+void __native_cond_flush_rq(xnqueue_t *rq)
+{
+	xeno_flush_rq(RT_COND, rq, cond);
 }
 
 /*@}*/

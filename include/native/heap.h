@@ -84,6 +84,12 @@ typedef struct rt_heap {
     pid_t cpid;			/* !< Creator's pid. */
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
+    xnholder_t rlink;		/* !< Link in resource queue. */
+
+#define rlink2heap(ln)		container_of(ln, RT_HEAP, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
+
 } RT_HEAP;
 
 #ifdef __cplusplus
@@ -93,6 +99,8 @@ extern "C" {
 int __native_heap_pkg_init(void);
 
 void __native_heap_pkg_cleanup(void);
+
+void __native_heap_flush_rq(xnqueue_t *rq);
 
 #ifdef __cplusplus
 }

@@ -45,6 +45,7 @@
 #include <native/heap.h>
 #include <native/alarm.h>
 #include <native/intr.h>
+#include <native/ppd.h>
 
 MODULE_DESCRIPTION("Native skin");
 MODULE_AUTHOR("rpm@xenomai.org");
@@ -68,6 +69,16 @@ xnptree_t __native_ptree = {
 int SKIN_INIT(native)
 {
 	int err;
+
+	initq(&__native_global_rholder.alarmq);
+	initq(&__native_global_rholder.condq);
+	initq(&__native_global_rholder.eventq);
+	initq(&__native_global_rholder.heapq);
+	initq(&__native_global_rholder.intrq);
+	initq(&__native_global_rholder.mutexq);
+	initq(&__native_global_rholder.pipeq);
+	initq(&__native_global_rholder.queueq);
+	initq(&__native_global_rholder.semq);
 
 	err = xncore_attach(T_LOPRIO, T_HIPRIO);
 

@@ -64,32 +64,31 @@ typedef struct rt_intr_placeholder {
 
 typedef struct rt_intr {
 
-    unsigned magic;   /* !< Magic code - must be first */
+    unsigned magic;		/* !< Magic code - must be first */
 
-    xnholder_t link;	/* !< Link in global interrupt queue. */
+    xnintr_t intr_base;		/* !< Base interrupt object. */
 
-#define link2intr(laddr) \
-((RT_INTR *)(((char *)laddr) - (int)(&((RT_INTR *)0)->link)))
+    void *private_data;		/* !< Private user-defined data. */
 
-    xnintr_t intr_base;   /* !< Base interrupt object. */
-
-    void *private_data;	/* !< Private user-defined data. */
-
-    xnhandle_t handle;	/* !< Handle in registry -- zero if unregistered. */
+    xnhandle_t handle;		/* !< Handle in registry -- zero if unregistered. */
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+    int mode;			/* !< Interrupt control mode. */
 
-    int mode;		/* !< Interrupt control mode. */
+    int pending;		/* !< Pending hits to process. */
 
-    int pending;	/* !< Pending hits to process. */
+    xnsynch_t synch_base;	/* !< Base synchronization object. */
 
-    xnsynch_t synch_base; /* !< Base synchronization object. */
-
-    pid_t cpid;		/* !< Creator's pid. */
-
+    pid_t cpid;			/* !< Creator's pid. */
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+    xnholder_t rlink;		/* !< Link in resource queue. */
+
+#define rlink2intr(ln)		container_of(ln, RT_INTR, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
 
 } RT_INTR;
 
@@ -105,6 +104,8 @@ extern "C" {
 int __native_intr_pkg_init(void);
 
 void __native_intr_pkg_cleanup(void);
+
+void __native_intr_flush_rq(xnqueue_t *rq);
 
 int rt_intr_create(RT_INTR *intr,
 		   const char *name,

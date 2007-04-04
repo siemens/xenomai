@@ -31,10 +31,10 @@
 
 #include <nucleus/pod.h>
 #include <nucleus/registry.h>
+#include <nucleus/heap.h>
 #include <native/task.h>
 #include <native/intr.h>
-
-static DECLARE_XNQUEUE(__xeno_intr_q);
+#include <native/ppd.h>
 
 int __native_intr_pkg_init(void)
 {
@@ -43,10 +43,12 @@ int __native_intr_pkg_init(void)
 
 void __native_intr_pkg_cleanup(void)
 {
-	xnholder_t *holder;
+	__native_intr_flush_rq(&__native_global_rholder.intrq);
+}
 
-	while ((holder = getheadq(&__xeno_intr_q)) != NULL)
-		rt_intr_delete(link2intr(holder));
+void __native_intr_flush_rq(xnqueue_t *rq)
+{
+	xeno_flush_rq(RT_INTR, rq, intr);
 }
 
 static unsigned long __intr_get_hits(RT_INTR *intr)
@@ -272,9 +274,10 @@ int rt_intr_create(RT_INTR *intr,
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 	intr->magic = XENO_INTR_MAGIC;
 	intr->handle = 0;	/* i.e. (still) unregistered interrupt. */
-	inith(&intr->link);
+	inith(&intr->rlink);
+	intr->rqueue = &xeno_get_rholder()->intrq;
 	xnlock_get_irqsave(&nklock, s);
-	appendq(&__xeno_intr_q, &intr->link);
+	appendq(intr->rqueue, &intr->rlink);
 	xnlock_put_irqrestore(&nklock, s);
 
 	err = xnintr_attach(&intr->intr_base, intr);
@@ -360,7 +363,8 @@ int rt_intr_delete(RT_INTR *intr)
 		return err;
 	}
 
-	removeq(&__xeno_intr_q, &intr->link);
+	removeq(intr->rqueue, &intr->rlink);
+
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	rc = xnsynch_destroy(&intr->synch_base);
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */

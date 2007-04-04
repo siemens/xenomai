@@ -48,6 +48,7 @@
 #include <nucleus/registry.h>
 #include <native/task.h>
 #include <native/heap.h>
+#include <native/ppd.h>
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
@@ -234,6 +235,7 @@ static void __heap_flush_private(xnheap_t *heap,
 int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 {
 	int err;
+	spl_t s;
 
 	if (!xnpod_root_p())
 		return -EPERM;
@@ -288,6 +290,11 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 	heap->mode = mode;
 	heap->sba = NULL;
 	xnobject_copy_name(heap->name, name);
+	inith(&heap->rlink);
+	heap->rqueue = &xeno_get_rholder()->heapq;
+	xnlock_get_irqsave(&nklock, s);
+	appendq(heap->rqueue, &heap->rlink);
+	xnlock_put_irqrestore(&nklock, s);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	/* <!> Since xnregister_enter() may reschedule, only register
@@ -388,6 +395,8 @@ int rt_heap_delete(RT_HEAP *heap)
 	xnlock_get_irqsave(&nklock, s);
 
 	if (!err) {
+		removeq(heap->rqueue, &heap->rlink);
+
 #ifdef CONFIG_XENO_OPT_REGISTRY
 		if (heap->handle)
 			xnregistry_remove(heap->handle);
@@ -811,6 +820,12 @@ int __native_heap_pkg_init(void)
 
 void __native_heap_pkg_cleanup(void)
 {
+	__native_heap_flush_rq(&__native_global_rholder.heapq);
+}
+
+void __native_heap_flush_rq(xnqueue_t *rq)
+{
+	xeno_flush_rq(RT_HEAP, rq, heap);
 }
 
 /*@}*/

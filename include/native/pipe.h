@@ -54,8 +54,7 @@ typedef struct rt_pipe {
 
     xnholder_t link;		/* !< Link in flush queue. */
 
-#define link2rtpipe(laddr) \
-((RT_PIPE *)(((char *)laddr) - (int)(&((RT_PIPE *)0)->link)))
+#define link2rtpipe(ln)	container_of(ln, RT_PIPE, link)
 
     int minor;			/* !< Device minor number.  */
 
@@ -76,6 +75,12 @@ typedef struct rt_pipe {
 #ifdef CONFIG_XENO_OPT_PERVASIVE
     pid_t cpid;			/* !< Creator's pid. */
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
+
+    xnholder_t rlink;		/* !< Link in resource queue. */
+
+#define rlink2pipe(ln)		container_of(ln, RT_PIPE, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
 
 } RT_PIPE;
 
@@ -135,6 +140,8 @@ int rt_pipe_flush(RT_PIPE *pipe,
 int __native_pipe_pkg_init(void);
 
 void __native_pipe_pkg_cleanup(void);
+
+void __native_pipe_flush_rq(xnqueue_t *rq);
 
 #else /* !__KERNEL__ */
 

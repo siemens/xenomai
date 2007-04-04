@@ -46,6 +46,7 @@
 #include <nucleus/registry.h>
 #include <native/task.h>
 #include <native/queue.h>
+#include <native/ppd.h>
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
@@ -210,6 +211,7 @@ int rt_queue_create(RT_QUEUE *q,
 		    const char *name, size_t poolsize, size_t qlimit, int mode)
 {
 	int err;
+	spl_t s;
 
 	if (!xnpod_root_p())
 		return -EPERM;
@@ -266,6 +268,11 @@ int rt_queue_create(RT_QUEUE *q,
 	q->qlimit = qlimit;
 	q->mode = mode;
 	xnobject_copy_name(q->name, name);
+	inith(&q->rlink);
+	q->rqueue = &xeno_get_rholder()->queueq;
+	xnlock_get_irqsave(&nklock, s);
+	appendq(q->rqueue, &q->rlink);
+	xnlock_put_irqrestore(&nklock, s);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	/* <!> Since xnregister_enter() may reschedule, only register
@@ -368,6 +375,8 @@ int rt_queue_delete(RT_QUEUE *q)
 	xnlock_get_irqsave(&nklock, s);
 
 	if (!err) {
+		removeq(q->rqueue, &q->rlink);
+
 #ifdef CONFIG_XENO_OPT_REGISTRY
 		if (q->handle)
 			xnregistry_remove(q->handle);
@@ -1103,6 +1112,12 @@ int __native_queue_pkg_init(void)
 
 void __native_queue_pkg_cleanup(void)
 {
+	__native_queue_flush_rq(&__native_global_rholder.queueq);
+}
+
+void __native_queue_flush_rq(xnqueue_t *rq)
+{
+	xeno_flush_rq(RT_QUEUE, rq, queue);
 }
 
 /*@}*/

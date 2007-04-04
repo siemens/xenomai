@@ -143,4 +143,12 @@ config XENO_OPT_NATIVE_INTR
 	way of implementing generic drivers usable across all Xenomai
 	interfaces is defined by the Real-Time Driver Model (RTDM).
 
+config XENO_OPT_DEBUG_NATIVE
+	bool "Debugging support"
+	default y
+	help
+
+	When enabled, this option makes the skin warn about
+	auto-clean operations executed upon process termination.
+
 endif

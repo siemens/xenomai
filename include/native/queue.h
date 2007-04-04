@@ -95,6 +95,12 @@ typedef struct rt_queue {
     pid_t cpid;			/* !< Creator's pid. */
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
+    xnholder_t rlink;		/* !< Link in resource queue. */
+
+#define rlink2queue(ln)	container_of(ln, RT_QUEUE, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
+
 } RT_QUEUE;
 
 typedef struct rt_queue_msg {
@@ -105,8 +111,7 @@ typedef struct rt_queue_msg {
 
     xnholder_t link;
 
-#define link2rtmsg(laddr) \
-((rt_queue_msg_t *)(((char *)laddr) - (int)(&((rt_queue_msg_t *)0)->link)))
+#define link2rtmsg(ln)		container_of(ln, rt_queue_msg_t, link)
 
 } rt_queue_msg_t;
 
@@ -117,6 +122,8 @@ extern "C" {
 int __native_queue_pkg_init(void);
 
 void __native_queue_pkg_cleanup(void);
+
+void __native_queue_flush_rq(xnqueue_t *rq);
 
 #ifdef __cplusplus
 }
