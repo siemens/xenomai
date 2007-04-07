@@ -2317,7 +2317,7 @@ static inline void xnpod_preempt_current_thread(xnsched_t *sched)
 			   (obviously distinct from the running thread) safely. Note:
 			   this works because the simulator never uses multi-level
 			   queues for holding ready threads. --rpm */
-			thread = link2thread(thread->rlink.plink.next, rlink);
+			thread = link2thread(thread->rlink.plink.next, rlink.plink);
 			nkpod->schedhook(thread, XNREADY);
 		}
 	}
