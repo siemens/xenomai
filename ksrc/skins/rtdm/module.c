@@ -55,9 +55,9 @@ static void __exit rtdm_skin_shutdown(int xtype)
     rtdm_proc_cleanup();
 #endif /* CONFIG_PROC_FS */
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
     rtdm_syscall_cleanup();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
     xntbase_free(rtdm_tbase);
     xncore_detach(xtype);
 }
@@ -88,11 +88,11 @@ int __init SKIN_INIT(rtdm)
         goto cleanup_dev;
 #endif /* CONFIG_PROC_FS */
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
     err = rtdm_syscall_init();
     if (err)
         goto cleanup_proc;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 #ifndef MODULE
     rtdm_initialised = 1;
@@ -102,9 +102,9 @@ int __init SKIN_INIT(rtdm)
 
     return 0;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
   cleanup_proc:
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_PROC_FS
     rtdm_proc_cleanup();

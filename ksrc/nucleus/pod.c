@@ -677,9 +677,9 @@ static inline void xnpod_switch_zombie(xnthread_t *threadout,
 {
 	/* Must be called with nklock locked, interrupts off. */
 	xnsched_t *sched = xnpod_current_sched();
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	int shadow = xnthread_test_state(threadout, XNSHADOW);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	xnltt_log_event(xeno_ev_finalize, threadout->name, threadin->name);
 
@@ -709,7 +709,7 @@ static inline void xnpod_switch_zombie(xnthread_t *threadout,
 	xnarch_finalize_and_switch(xnthread_archtcb(threadout),
 				   xnthread_archtcb(threadin));
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	xnarch_trace_pid(xnthread_user_task(threadin) ?
 			 xnarch_user_pid(xnthread_archtcb(threadin)) : -1,
 			 xnthread_current_priority(threadin));
@@ -720,7 +720,7 @@ static inline void xnpod_switch_zombie(xnthread_t *threadout,
 		   last code location executed by the shadow. Remember
 		   that both sides use the Linux task's stack. */
 		xnshadow_exit();
-#endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	xnpod_fatal("zombie thread %s (%p) would not die...", threadout->name,
 		    threadout);
@@ -987,14 +987,14 @@ int xnpod_start_thread(xnthread_t *thread,
 
 	xnltt_log_event(xeno_ev_thrstart, thread->name);
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(thread, XNSHADOW)) {
 		xnlock_put_irqrestore(&nklock, s);
 		xnshadow_start(thread);
 		xnpod_schedule();
 		return 0;
 	}
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	/* Setup the initial stack frame. */
 
@@ -1421,7 +1421,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	/* Is the thread ready to run? */
 
 	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS)) {
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 		/* If attempting to suspend a runnable (shadow) thread which
 		   has received a Linux signal, just raise the break condition
 		   and return immediately. Note: a relaxed shadow never has
@@ -1437,7 +1437,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 			xnthread_set_info(thread, XNBREAK);
 			goto unlock_and_exit;
 		}
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 		xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK | XNWAKEN | XNROBBED);
 	}
@@ -1479,7 +1479,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		/* If "thread" is runnning on another CPU, xnpod_schedule will
 		   just trigger the IPI. */
 		xnpod_schedule();
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	/* Ok, this one is an interesting corner case, which requires
 	   a bit of background first. Here, we handle the case of
 	   suspending a _relaxed_ shadow which is _not_ the current
@@ -1522,8 +1522,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	else if (xnthread_test_state(thread, XNSHADOW | XNRELAX | XNDORMANT) ==
 		 (XNSHADOW | XNRELAX) && (mask & (XNDELAY | XNSUSP | XNHELD)) != 0)
 		xnshadow_suspend(thread);
-
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
       unlock_and_exit:
 
@@ -1848,10 +1847,10 @@ void xnpod_renice_thread_inner(xnthread_t *thread, int prio, int propagate)
 			   which prevents its preemption. */
 			xnpod_resume_thread(thread, 0);
 	}
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (propagate && xnthread_test_state(thread, XNRELAX))
 		xnshadow_renice(thread);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -2508,9 +2507,9 @@ void xnpod_schedule(void)
 
 	xnltt_log_event(xeno_ev_switch, threadout->name, threadin->name);
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	shadow = xnthread_test_state(threadout, XNSHADOW);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	if (xnthread_test_state(threadout, XNZOMBIE))
 		xnpod_switch_zombie(threadout, threadin);
@@ -2543,7 +2542,7 @@ void xnpod_schedule(void)
 			 xnarch_user_pid(xnthread_archtcb(runthread)) : -1,
 			 xnthread_current_priority(runthread));
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	/* Test whether we are relaxing a thread. In such a case, we are here the
 	   epilogue of Linux' schedule, and should skip xnpod_schedule epilogue. */
 	if (shadow && xnthread_test_state(runthread, XNROOT)) {
@@ -2561,7 +2560,7 @@ void xnpod_schedule(void)
 		xnlock_put_irqrestore(&nklock, s);
 		return;
 	}
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_HW_FPU
 	__xnpod_switch_fpu(sched);

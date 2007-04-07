@@ -47,7 +47,7 @@ extern xeno_rholder_t __native_global_rholder;
 
 extern int __native_muxid;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 
 static inline xeno_rholder_t *xeno_get_rholder(void)
 {
@@ -65,7 +65,7 @@ static inline xeno_rholder_t *xeno_get_rholder(void)
 			xnfree(obj);		\
 	} while(0)
 
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+#else /* !CONFIG_XENO_OPT_PERVASIVE */
 
 static inline xeno_rholder_t *xeno_get_rholder(void)
 {
@@ -74,7 +74,7 @@ static inline xeno_rholder_t *xeno_get_rholder(void)
 
 #define __xeno_release_obj(obj)
 
-#endif /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+#endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
 #if XENO_DEBUG(NATIVE)
 #define __xeno_trace_release(__name, __obj, __err)		\

@@ -3,7 +3,7 @@
 
 #include <posix/registry.h>     /* For associative lists. */
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 
 typedef struct {
     void *kaddr;
@@ -19,7 +19,8 @@ int pse51_xnheap_get(xnheap_t **pheap, void *addr);
 void pse51_shm_ufds_cleanup(pse51_queues_t *q);
 
 void pse51_shm_umaps_cleanup(pse51_queues_t *q);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 int pse51_shm_pkg_init(void);
 

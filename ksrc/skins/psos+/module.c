@@ -91,9 +91,9 @@ int SKIN_INIT(psos)
 	psosasr_init();
 	psostm_init();
 	psostask_init(module_param_value(time_slice_arg));
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	psos_syscall_init();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	xnprintf("starting pSOS+ services.\n");
 
@@ -111,9 +111,9 @@ void SKIN_EXIT(psos)
 	psosqueue_cleanup();
 	psossem_cleanup();
 	psosrn_cleanup();
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	psos_syscall_cleanup();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 	xntbase_free(psos_tbase);
 	xncore_detach(XNPOD_NORMAL_EXIT);
 }

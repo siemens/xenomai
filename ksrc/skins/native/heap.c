@@ -384,11 +384,11 @@ int rt_heap_delete(RT_HEAP *heap)
 	   calls of rt_heap_delete(), so now we can actually destroy
 	   it safely. */
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (heap->mode & H_MAPPABLE)
 		err = xnheap_destroy_mapped(&heap->heap_base);
 	else
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 		err = xnheap_destroy(&heap->heap_base, &__heap_flush_private, NULL);
 
 	xnlock_get_irqsave(&nklock, s);

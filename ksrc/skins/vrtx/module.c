@@ -179,9 +179,9 @@ int SKIN_INIT(vrtx)
 	vrtxmb_init();
 	vrtxmx_init();
 	vrtxtask_init(module_param_value(task_stacksize_arg));
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	vrtxsys_init();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	xnprintf("starting VRTX services.\n");
 
@@ -200,9 +200,9 @@ void SKIN_EXIT(vrtx)
 	vrtxsem_cleanup();
 	vrtxevent_cleanup();
 	vrtxheap_cleanup();
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	vrtxsys_cleanup();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 	xntbase_free(vrtx_tbase);
 	xncore_detach(XNPOD_NORMAL_EXIT);
 }

@@ -147,10 +147,10 @@ typedef struct wind_wd {
     char name[XNOBJECT_NAME_LEN];
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
     xnsynch_t synchbase;
     wind_wd_utarget_t wdt;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 } wind_wd_t;
 
@@ -171,13 +171,13 @@ typedef struct wind_wd {
    underlying pod supporting the VxWorks skin is standalone, i.e. pure
    kernel, or simulation modes. */
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 #define wind_normalized_prio(prio)	(XNCORE_MAX_PRIO - (prio) - 1)
 #define wind_denormalized_prio(prio)	(256 - (prio))
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+#else /* !CONFIG_XENO_OPT_PERVASIVE */
 #define wind_normalized_prio(prio)	prio
 #define wind_denormalized_prio(prio)	prio
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
 int *wind_errno_location(void);
 

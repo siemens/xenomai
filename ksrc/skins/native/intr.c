@@ -260,12 +260,12 @@ int rt_intr_create(RT_INTR *intr,
 		xnobject_create_name(intr->name, sizeof(intr->name), isr);
 
 	xnintr_init(&intr->intr_base, intr->name, irq, isr, iack, mode);
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	xnsynch_init(&intr->synch_base, XNSYNCH_PRIO);
 	intr->pending = 0;
 	intr->cpid = 0;
 	intr->mode = 0;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 	intr->magic = XENO_INTR_MAGIC;
 	intr->handle = 0;	/* i.e. (still) unregistered interrupt. */
 	inith(&intr->rlink);
@@ -359,9 +359,9 @@ int rt_intr_delete(RT_INTR *intr)
 
 	removeq(intr->rqueue, &intr->rlink);
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	rc = xnsynch_destroy(&intr->synch_base);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	if (intr->handle)

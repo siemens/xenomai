@@ -84,11 +84,11 @@ static void heap_destroy_internal(vrtxheap_t *heap)
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 	xnlock_clear_irqon(&nklock);
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnheap_mapped_p(&heap->sysheap))
 		xnheap_destroy_mapped(&heap->sysheap);
 	else
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 		xnheap_destroy(&heap->sysheap, NULL, NULL);
 	xnfree(heap);
 

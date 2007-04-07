@@ -40,12 +40,12 @@
    supporting the uITRON skin is standalone, i.e. pure kernel, or
    simulation modes. */
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 #define ui_normalized_prio(prio)	(XNCORE_MAX_PRIO - (prio) - 1)
 #define ui_denormalized_prio(prio)	(XNCORE_MAX_PRIO - (prio) - 1)
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+#else /* !CONFIG_XENO_OPT_PERVASIVE */
 #define ui_normalized_prio(prio)	prio
 #define ui_denormalized_prio(prio)	prio
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 #endif /* !_uITRON_defs_h */

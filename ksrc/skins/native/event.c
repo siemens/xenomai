@@ -194,9 +194,9 @@ int rt_event_create(RT_EVENT *event,
 	appendq(event->rqueue, &event->rlink);
 	xnlock_put_irqrestore(&nklock, s);
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	event->cpid = 0;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	/* <!> Since xnregister_enter() may reschedule, only register

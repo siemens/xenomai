@@ -364,11 +364,11 @@ int rt_queue_delete(RT_QUEUE *q)
 	   calls of rt_queue_delete(), so now we can actually destroy the
 	   associated heap safely. */
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (q->mode & Q_SHARED)
 		err = xnheap_destroy_mapped(&q->bufpool);
 	else
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 		err = xnheap_destroy(&q->bufpool, &__queue_flush_private, NULL);
 
 	xnlock_get_irqsave(&nklock, s);

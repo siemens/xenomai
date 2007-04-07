@@ -90,9 +90,9 @@ struct pse51_thread {
     /* For timers. */
     xnqueue_t timersq;
     
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
     struct pse51_hkey hkey;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 };
 
 #define PSE51_JOINED_DETACHED XNTHREAD_INFO_SPARE0

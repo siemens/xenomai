@@ -202,10 +202,10 @@ int *xnthread_get_errno_location(void)
 	if (unlikely(!nkpod))
 		goto fallback;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (likely(xnpod_userspace_p()))
 		return &xnshadow_errno(current);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	if (likely(xnpod_primary_p()))
 		return &xnpod_current_thread()->errcode;

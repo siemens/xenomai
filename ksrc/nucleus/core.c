@@ -22,7 +22,7 @@
 
 static xnpod_t __core_pod;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 
 static int xncore_unload_hook(void)
 {
@@ -37,13 +37,13 @@ static int xncore_unload_hook(void)
 	return 0;
 }
 
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 int xncore_attach(int minprio, int maxprio)
 {
 	int err = 0;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	/* We don't want to match any compatible pod, but exactely the
 	   core one, so we emulate XNREUSE even more strictly here. */
 	if (nkpod) {
@@ -57,7 +57,7 @@ int xncore_attach(int minprio, int maxprio)
 
 		__core_pod.svctable.unload = &xncore_unload_hook;
 	}
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+#else /* !CONFIG_XENO_OPT_PERVASIVE */
 	/* The skin is standalone, create a pod to attach to. */
 	xnpod_t *pod = xnarch_sysalloc(sizeof(*pod));
 
@@ -68,7 +68,7 @@ int xncore_attach(int minprio, int maxprio)
 		if (err)
 			xnarch_sysfree(pod, sizeof(*pod));
 	}
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
 	if (!err)
 		++nkpod->refcnt;

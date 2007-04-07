@@ -112,10 +112,10 @@ int pthread_intr_attach_np(pthread_intr_t * intrp,
 
 	xnintr_init(&intr->intr_base, NULL, irq, isr, iack, 0);
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	xnsynch_init(&intr->synch_base, XNSYNCH_PRIO);
 	intr->pending = 0;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 	intr->magic = PSE51_INTR_MAGIC;
 	inith(&intr->link);
 	xnlock_get_irqsave(&nklock, s);
@@ -147,9 +147,9 @@ int pse51_intr_detach_inner(pthread_intr_t intr, pse51_kqueues_t *q)
 		thread_set_errno(EINVAL);
 		return -1;
 	}
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	rc = xnsynch_destroy(&intr->synch_base);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	pse51_mark_deleted(intr);
 

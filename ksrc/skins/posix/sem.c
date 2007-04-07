@@ -61,7 +61,7 @@ typedef struct pse51_named_sem {
 	union __xeno_sem descriptor;
 } nsem_t;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 typedef struct pse51_uptr {
 	struct mm_struct *mm;
 	unsigned refcnt;
@@ -72,7 +72,7 @@ typedef struct pse51_uptr {
 #define link2uptr(laddr) \
     ((pse51_uptr_t *)((char *)(laddr) - offsetof(pse51_uptr_t, link)))
 } pse51_uptr_t;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 /* Called with nklock locked, irqs off. */
 static void sem_destroy_inner(pse51_sem_t * sem, pse51_kqueues_t *q)
@@ -753,7 +753,7 @@ int sem_getvalue(sem_t * sm, int *value)
 	return 0;
 }
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 static void usem_cleanup(pse51_assoc_t *assoc)
 {
 	struct pse51_sem *sem = (struct pse51_sem *) pse51_assoc_key(assoc);
@@ -771,7 +771,7 @@ void pse51_sem_usems_cleanup(pse51_queues_t *q)
 {
 	pse51_assocq_destroy(&q->usems, &usem_cleanup);
 }
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 void pse51_semq_cleanup(pse51_kqueues_t *q)
 {

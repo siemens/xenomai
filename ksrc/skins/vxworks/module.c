@@ -66,9 +66,9 @@ int SKIN_INIT(vxworks)
 	wind_sem_init();
 	wind_msgq_init();
 	wind_task_init();
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	wind_syscall_init();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	xnprintf("starting VxWorks services.\n");
 
@@ -84,9 +84,9 @@ void SKIN_EXIT(vxworks)
 	wind_sem_cleanup();
 	wind_wd_cleanup();
 	wind_task_hooks_cleanup();
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	wind_syscall_cleanup();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 	xncore_detach(XNPOD_NORMAL_EXIT);
 }
 

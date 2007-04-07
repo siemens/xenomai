@@ -104,14 +104,14 @@ int psosrn_init(u_long rn0size)
 	if (rn0size < 2048)
 		rn0size = 2048;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	rn0addr = NULL;	/* rn_create() will allocate a shared region. */
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+#else /* !CONFIG_XENO_OPT_PERVASIVE */
 	rn0addr = xnmalloc(rn0size);
 
 	if (!rn0addr)
 		return -ENOMEM;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
 	rn_create("RN#0", rn0addr, rn0size, 128, RN_FORCEDEL, &rn0id,
 		  &allocsize);
@@ -143,11 +143,11 @@ static int rn_destroy_internal(psosrn_t *rn)
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(rn->handle);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnheap_mapped_p(&rn->heapbase))
 		xnheap_destroy_mapped(&rn->heapbase);
 	else
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 		xnheap_destroy(&rn->heapbase, NULL, NULL);
 	xnfree(rn);
 

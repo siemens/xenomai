@@ -141,20 +141,16 @@ int SKIN_INIT(native)
 	if (err)
 		goto cleanup_alarm;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	err = __native_syscall_init();
 
 	if (err)
 		goto cleanup_intr;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 	xnprintf("starting native API services.\n");
 
 	return 0;		/* SUCCESS. */
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
       cleanup_intr:
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 	__native_intr_pkg_cleanup();
 
@@ -221,9 +217,7 @@ void SKIN_EXIT(native)
 	__native_event_pkg_cleanup();
 	__native_sem_pkg_cleanup();
 	__native_task_pkg_cleanup();
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	__native_syscall_cleanup();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
 
 	xntbase_free(__native_tbase);
 

@@ -320,7 +320,7 @@ int pse51_desc_get(pse51_desc_t ** descp, int fd, unsigned magic)
 	return 0;
 }
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 
 DEFINE_XNLOCK(pse51_assoc_lock);
 
@@ -431,7 +431,7 @@ void pse51_assocq_destroy(pse51_assocq_t * q, void (*destroy) (pse51_assoc_t *))
 	xnlock_put_irqrestore(&pse51_assoc_lock, s);
 }
 
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 pse51_kqueues_t pse51_global_kqueues;
 
@@ -474,9 +474,9 @@ int pse51_reg_pkg_init(unsigned buckets_count, unsigned maxfds)
 		pse51_reg.fdsmap[mapsize - 1] =
 		    (1 << (maxfds % BITS_PER_LONG)) - 1;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	xnlock_init(&pse51_assoc_lock);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 	return 0;
 }
 

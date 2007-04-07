@@ -61,7 +61,7 @@ static int __alarm_read_proc(char *page,
 		     rt_timer_tsc2ns(xntimer_interval(&alarm->timer_base)),
 		     alarm->expiries);
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	{
 		xnpholder_t *holder =
 		    getheadpq(xnsynch_wait_queue(&alarm->synch_base));
@@ -74,7 +74,7 @@ static int __alarm_read_proc(char *page,
 				   holder);
 		}
 	}
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -207,10 +207,10 @@ int rt_alarm_create(RT_ALARM *alarm,
 	appendq(alarm->rqueue, &alarm->rlink);
 	xnlock_put_irqrestore(&nklock, s);
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	xnsynch_init(&alarm->synch_base, XNSYNCH_PRIO);
 	alarm->cpid = 0;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	/* <!> Since xnregister_enter() may reschedule, only register
@@ -291,9 +291,9 @@ int rt_alarm_delete(RT_ALARM *alarm)
 
 	xntimer_destroy(&alarm->timer_base);
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	rc = xnsynch_destroy(&alarm->synch_base);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	if (alarm->handle)

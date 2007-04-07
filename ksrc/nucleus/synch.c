@@ -120,10 +120,10 @@ static inline void xnsynch_renice_thread(xnthread_t *thread, int prio)
 		   threads but the running one. */
 		xnpod_resume_thread(thread, 0);
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(thread, XNRELAX))
 		xnshadow_renice(thread);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 }
 
 /*! 

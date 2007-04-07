@@ -1123,7 +1123,7 @@ int mq_notify(mqd_t fd, const struct sigevent *evp)
 	return -1;
 }
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 static void uqd_cleanup(pse51_assoc_t *assoc)
 {
 	pse51_ufd_t *ufd = assoc2ufd(assoc);
@@ -1139,7 +1139,7 @@ void pse51_mq_uqds_cleanup(pse51_queues_t *q)
 {
 	pse51_assocq_destroy(&q->uqds, &uqd_cleanup);
 }
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 int pse51_mq_pkg_init(void)
 {
