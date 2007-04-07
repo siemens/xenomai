@@ -1,5 +1,7 @@
 2007-04-07  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc: Assume OPT_PERVASIVE implies __KERNEL__.
+
 	* ksrc/skins/native: Reduce #ifdef noise related to feature
 	selection.
 

@@ -46,9 +46,9 @@
  * 
  *@{*/
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 #include <nucleus/shadow.h>
-#endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 #include <asm/xenomai/system.h>	/* For xnlock. */
 #include <posix/timer.h>	/* For pse51_timer_notified. */
 #include <posix/sig.h>
@@ -68,7 +68,7 @@ static xnlock_t pse51_infos_lock = XNARCH_LOCK_UNLOCKED;
 #endif
 static xnpqueue_t pse51_infos_free_list;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 #define SIG_MAX_REQUESTS 64	/* Must be a ^2 */
 
 static int pse51_signals_apc;
@@ -93,7 +93,7 @@ static void pse51_signal_schedule_request(pthread_t thread)
 
 	rthal_apc_schedule(pse51_signals_apc);
 }
-#endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 static pse51_siginfo_t *pse51_new_siginfo(int sig, int code, union sigval value)
 {
@@ -352,10 +352,10 @@ void pse51_sigqueue_inner(pthread_t thread, pse51_siginfo_t * si)
 		thread->threadbase.signals = 1;
 	}
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (testbits(thread->threadbase.state, XNSHADOW))
 		pse51_signal_schedule_request(thread);
-#endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	if (thread == pse51_current_thread()
 	    || xnpod_unblock_thread(&thread->threadbase))
@@ -1081,7 +1081,7 @@ static void pse51_dispatch_signals(xnsigmask_t sigs)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 static void pse51_dispatch_shadow_signals(xnsigmask_t sigs)
 {
 	/* Migrate to secondary mode in order to get the signals delivered by
@@ -1133,7 +1133,7 @@ static void pse51_signal_handle_request(void *cookie)
 		xnlock_put_irqrestore(&nklock, s);
 	}
 }
-#endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 void pse51_signal_init_thread(pthread_t newthread, const pthread_t parent)
 {
@@ -1149,11 +1149,11 @@ void pse51_signal_init_thread(pthread_t newthread, const pthread_t parent)
 	else
 		emptyset(&newthread->sigmask);
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (testbits(newthread->threadbase.state, XNSHADOW))
 		newthread->threadbase.asr = &pse51_dispatch_shadow_signals;
 	else
-#endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 		newthread->threadbase.asr = &pse51_dispatch_signals;
 
 	newthread->threadbase.asrmode = 0;
@@ -1200,13 +1200,13 @@ void pse51_signal_pkg_init(void)
 		actions[i - 1].sa_flags = 0;
 	}
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	pse51_signals_apc = rthal_apc_alloc("posix_signals_handler",
 					    &pse51_signal_handle_request, NULL);
 
 	if (pse51_signals_apc < 0)
 		printk("Unable to allocate APC: %d !\n", pse51_signals_apc);
-#endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 }
 
 void pse51_signal_pkg_cleanup(void)
@@ -1220,9 +1220,9 @@ void pse51_signal_pkg_cleanup(void)
 				 "freeing now.\n", &pse51_infos_pool[i].info);
 #endif /* XENO_DEBUG(POSIX) */
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	rthal_apc_free(pse51_signals_apc);
-#endif /* __KERNEL__  && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 }
 
 static void pse51_default_handler(int sig)

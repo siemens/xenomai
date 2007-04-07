@@ -215,10 +215,10 @@ int pthread_create(pthread_t *tid,
 	appendq(thread->container, &thread->link);
 	xnlock_put_irqrestore(&nklock, s);
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	thread->hkey.u_tid = 0;
 	thread->hkey.mm = NULL;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	*tid = thread;		/* Must be done before the thread is started. */
 
@@ -627,10 +627,10 @@ int pthread_set_mode_np(int clrmask, int setmask)
 	xnflags_t valid_flags = XNLOCK;
 	int err;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(cur, XNSHADOW))
 		valid_flags |= XNTHREAD_STATE_SPARE1 | XNSHIELD | XNTRAPSW | XNRPIOFF;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	/* XNTHREAD_STATE_SPARE1 is used for primary mode switch. */
 
@@ -641,10 +641,10 @@ int pthread_set_mode_np(int clrmask, int setmask)
 				     clrmask & ~XNTHREAD_STATE_SPARE1,
 				     setmask & ~XNTHREAD_STATE_SPARE1);
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(cur, XNSHADOW) && (clrmask & XNTHREAD_STATE_SPARE1) != 0)
 		xnshadow_relax(0);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	return err;
 }

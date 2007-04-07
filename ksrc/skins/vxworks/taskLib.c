@@ -80,17 +80,17 @@ STATUS taskInit(WIND_TCB *pTcb,
 	/* VxWorks does not check for invalid option flags, so we
 	   neither. */
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	/* VxWorks priority scale is inverted compared to the core
 	   pod's we are going to use for hosting our threads. */
 	bflags |= XNINVPS;
 
 	if (flags & VX_SHADOW)
 		bflags |= XNSHADOW;
-#else /* !(__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+#else /* !CONFIG_XENO_OPT_PERVASIVE */
 	if (stacksize < 1024)
 		return ERROR;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	if (flags & VX_FP_TASK)
 		bflags |= XNFPU;
@@ -286,12 +286,12 @@ STATUS taskDelete(TASK_ID task_id)
 		goto error;
 	}
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_user_task(&task->threadbase) != NULL
 	    && !xnthread_test_state(&task->threadbase,XNDORMANT)
 	    && (!xnpod_primary_p() || task != wind_current_task()))
 		xnshadow_send_sig(&task->threadbase, SIGKILL, 1);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	xnpod_delete_thread(&task->threadbase);
 	xnlock_put_irqrestore(&nklock, s);

@@ -36,7 +36,7 @@ struct pse51_interrupt {
 #define link2intr(laddr) \
 ((struct pse51_interrupt *)(((char *)laddr) - (int)(&((struct pse51_interrupt *)0)->link)))
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 
     int mode;		/* !< Interrupt control mode. */
 
@@ -44,7 +44,7 @@ struct pse51_interrupt {
 
     xnsynch_t synch_base; /* !< Base synchronization object. */
 
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 };
 
 #ifdef __cplusplus

@@ -5,11 +5,11 @@
 
 #define PSE51_MQ_FSTORE_LIMIT 64
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 
 void pse51_mq_uqds_cleanup(pse51_queues_t *q);
 
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */    
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 int pse51_mq_pkg_init(void);
 

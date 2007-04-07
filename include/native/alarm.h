@@ -59,11 +59,11 @@ typedef struct rt_alarm {
 
     unsigned long expiries;	/* !< Number of expiries. */
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
     pid_t cpid;			/* !< Creator's pid. */
 
     xnsynch_t synch_base;	/* !< Synch. base for user-space tasks. */
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
     xnholder_t rlink;		/* !< Link in resource queue. */
 

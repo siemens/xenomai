@@ -816,7 +816,7 @@ int xnheap_check_block(xnheap_t *heap, void *block)
 	return err;
 }
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 
 #include <asm/io.h>
 #include <linux/miscdevice.h>
@@ -1148,7 +1148,7 @@ int xnheap_destroy_mapped(xnheap_t *heap)
 EXPORT_SYMBOL(xnheap_init_mapped);
 EXPORT_SYMBOL(xnheap_destroy_mapped);
 
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 /*@}*/
 

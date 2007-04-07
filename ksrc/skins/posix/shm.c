@@ -96,7 +96,7 @@ static void pse51_free_heap_extent(xnheap_t *heap,
 {
 	xnarch_sysfree(extent, size);
 }
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
 /* Must be called nklock locked, irq off. */
 static void pse51_shm_destroy(pse51_shm_t * shm, int force)
@@ -863,7 +863,7 @@ int munmap(void *addr, size_t len)
 	return -1;
 }
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 int pse51_xnheap_get(xnheap_t **pheap, void *addr)
 {
 	pse51_shm_t *shm;
@@ -909,7 +909,7 @@ void pse51_shm_umaps_cleanup(pse51_queues_t *q)
 	pse51_assocq_destroy(&q->umaps, &umap_cleanup);
 }
 
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 int pse51_shm_pkg_init(void)
 {

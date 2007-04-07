@@ -23,7 +23,7 @@
                                    pse51_thread_t definition. */
 #include <posix/registry.h>     /* For assocq */
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 
 typedef struct {
     u_long uaddr;
@@ -34,13 +34,9 @@ typedef struct {
     ((pse51_usem_t *)((unsigned long) (laddr) - offsetof(pse51_usem_t, assoc)))
 } pse51_usem_t;
 
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */    
-
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-
 void pse51_sem_usems_cleanup(pse51_queues_t *q);
 
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */    
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 void pse51_semq_cleanup(pse51_kqueues_t *q);
 

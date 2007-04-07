@@ -60,10 +60,10 @@ typedef struct vrtxheap {
 
     xnheap_t sysheap;	/* memory heap */
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
     struct mm_struct *mm;	/* !< Creator's mm. */
     caddr_t mapbase;		/* !< Heap mapping in creator's address space. */
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
     xnhandle_t handle;

@@ -99,10 +99,10 @@ u_long t_create(char name[4],
 	if (flags & T_FPU)
 	    bflags |= XNFPU;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (flags & T_SHADOW)
 		bflags |= XNSHADOW;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	ustack += sstack;
 
@@ -202,7 +202,7 @@ u_long t_start(u_long tid,
 
 	task->entry = startaddr;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(&task->threadbase, XNSHADOW))
 		/* The shadow will be returned the exact values passed
 		 * to t_start(), since the trampoline is performed at
@@ -213,7 +213,7 @@ u_long t_start(u_long tid,
 				   (int)((mode >> 8) & 0x7),
 				   XNPOD_ALL_CPUS, (void (*)(void *))startaddr, targs);
 	else
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 		xnpod_start_thread(&task->threadbase,
 				   xnmode,
 				   (int)((mode >> 8) & 0x7),
@@ -284,12 +284,12 @@ u_long t_delete(u_long tid)
 		goto unlock_and_exit;
 	}
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_user_task(&task->threadbase) != NULL
 	    && !xnthread_test_state(&task->threadbase,XNDORMANT)
 	    && (!xnpod_primary_p() || task != psos_current_task()))
 		xnshadow_send_sig(&task->threadbase, SIGKILL, 1);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	xnpod_delete_thread(&task->threadbase);
 

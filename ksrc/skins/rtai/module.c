@@ -53,9 +53,9 @@ static void rtai_shutdown(int xtype)
 
 	__rtai_task_pkg_cleanup();
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	__rtai_syscall_cleanup();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 	xntbase_free(rtai_tbase);
 	xncore_detach(xtype);
 }
@@ -102,20 +102,20 @@ int SKIN_INIT(rtai)
 		goto cleanup_fifo;
 #endif /* CONFIG_XENO_OPT_RTAI_SHM */
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	err = __rtai_syscall_init();
 
 	if (err)
 		goto cleanup_shm;
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	xnprintf("starting RTAI emulator.\n");
 
 	return 0;		/* SUCCESS. */
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
       cleanup_shm:
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_OPT_RTAI_SHM
 	__rtai_shm_pkg_cleanup();
@@ -143,9 +143,9 @@ int SKIN_INIT(rtai)
 
       cleanup_pod:
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	__rtai_syscall_cleanup();
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 	xncore_detach(XNPOD_NORMAL_EXIT);
 
       fail:

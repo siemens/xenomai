@@ -135,9 +135,18 @@ struct rt_arg_bulk {
 extern "C" {
 #endif
 
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+
 int __native_syscall_init(void);
 
 void __native_syscall_cleanup(void);
+
+#else /* !CONFIG_XENO_OPT_PERVASIVE */
+
+#define __native_syscall_init()	({ 0; })
+#define __native_syscall_cleanup()	do { } while(0)
+
+#endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef __cplusplus
 }
