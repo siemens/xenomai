@@ -24,6 +24,7 @@
 
 #include <nucleus/synch.h>
 #include <native/types.h>
+#include <native/ppd.h>
 
 struct rt_task;
 
@@ -73,11 +74,24 @@ typedef struct __rt_mutex {
 extern "C" {
 #endif
 
+#ifdef CONFIG_XENO_OPT_NATIVE_MUTEX
+
 int __native_mutex_pkg_init(void);
 
 void __native_mutex_pkg_cleanup(void);
 
-void __native_mutex_flush_rq(xnqueue_t *rq);
+static inline void __native_mutex_flush_rq(xnqueue_t *rq)
+{
+	xeno_flush_rq(RT_MUTEX, rq, mutex);
+}
+
+#else /* !CONFIG_XENO_OPT_NATIVE_MUTEX */
+
+#define __native_mutex_pkg_init()		({ 0; })
+#define __native_mutex_pkg_cleanup()		do { } while(0)
+#define __native_mutex_flush_rq(rq)		do { } while(0)
+
+#endif /* !CONFIG_XENO_OPT_NATIVE_MUTEX */
 
 #ifdef __cplusplus
 }

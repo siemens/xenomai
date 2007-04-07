@@ -41,7 +41,6 @@
 #include <nucleus/heap.h>
 #include <native/task.h>
 #include <native/alarm.h>
-#include <native/ppd.h>
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
@@ -120,11 +119,6 @@ int __native_alarm_pkg_init(void)
 void __native_alarm_pkg_cleanup(void)
 {
 	__native_alarm_flush_rq(&__native_global_rholder.alarmq);
-}
-
-void __native_alarm_flush_rq(xnqueue_t *rq)
-{
-	xeno_flush_rq(RT_ALARM, rq, alarm);
 }
 
 static void __alarm_trampoline(xntimer_t *timer)

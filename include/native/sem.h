@@ -24,6 +24,7 @@
 
 #include <nucleus/synch.h>
 #include <native/types.h>
+#include <native/ppd.h>
 
 /* Creation flags. */
 #define S_PRIO  XNSYNCH_PRIO	/* Pend by task priority order. */
@@ -78,11 +79,24 @@ typedef struct rt_sem {
 extern "C" {
 #endif
 
+#ifdef CONFIG_XENO_OPT_NATIVE_SEM
+
 int __native_sem_pkg_init(void);
 
 void __native_sem_pkg_cleanup(void);
 
-void __native_sem_flush_rq(xnqueue_t *rq);
+static inline void __native_sem_flush_rq(xnqueue_t *rq)
+{
+	xeno_flush_rq(RT_SEM, rq, sem);
+}
+
+#else /* !CONFIG_XENO_OPT_NATIVE_SEM */
+
+#define __native_sem_pkg_init()		({ 0; })
+#define __native_sem_pkg_cleanup()		do { } while(0)
+#define __native_sem_flush_rq(rq)		do { } while(0)
+
+#endif /* !CONFIG_XENO_OPT_NATIVE_SEM */
 
 #ifdef __cplusplus
 }

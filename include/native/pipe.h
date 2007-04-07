@@ -25,6 +25,7 @@
 #include <nucleus/pipe.h>
 #include <nucleus/heap.h>
 #include <native/types.h>
+#include <native/ppd.h>
 
 /* Operation flags. */
 #define P_NORMAL  XNPIPE_NORMAL
@@ -137,11 +138,24 @@ int rt_pipe_free(RT_PIPE *pipe,
 int rt_pipe_flush(RT_PIPE *pipe,
 		  int mode);
 
+#ifdef CONFIG_XENO_OPT_NATIVE_PIPE
+
 int __native_pipe_pkg_init(void);
 
 void __native_pipe_pkg_cleanup(void);
 
-void __native_pipe_flush_rq(xnqueue_t *rq);
+static inline void __native_pipe_flush_rq(xnqueue_t *rq)
+{
+	xeno_flush_rq(RT_PIPE, rq, pipe);
+}
+
+#else /* !CONFIG_XENO_OPT_NATIVE_PIPE */
+
+#define __native_pipe_pkg_init()		({ 0; })
+#define __native_pipe_pkg_cleanup()		do { } while(0)
+#define __native_pipe_flush_rq(rq)		do { } while(0)
+
+#endif /* !CONFIG_XENO_OPT_NATIVE_PIPE */
 
 #else /* !__KERNEL__ */
 

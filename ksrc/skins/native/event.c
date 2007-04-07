@@ -44,7 +44,6 @@
 #include <nucleus/heap.h>
 #include <native/task.h>
 #include <native/event.h>
-#include <native/ppd.h>
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
@@ -725,11 +724,6 @@ int __native_event_pkg_init(void)
 void __native_event_pkg_cleanup(void)
 {
 	__native_event_flush_rq(&__native_global_rholder.eventq);
-}
-
-void __native_event_flush_rq(xnqueue_t *rq)
-{
-	xeno_flush_rq(RT_EVENT, rq, event);
 }
 
 /*@}*/

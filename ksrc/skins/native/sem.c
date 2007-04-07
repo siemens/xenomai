@@ -47,7 +47,6 @@
 #include <nucleus/heap.h>
 #include <native/task.h>
 #include <native/sem.h>
-#include <native/ppd.h>
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
@@ -648,11 +647,6 @@ int __native_sem_pkg_init(void)
 void __native_sem_pkg_cleanup(void)
 {
 	__native_sem_flush_rq(&__native_global_rholder.semq);
-}
-
-void __native_sem_flush_rq(xnqueue_t *rq)
-{
-	xeno_flush_rq(RT_SEM, rq, sem);
 }
 
 /*@}*/
