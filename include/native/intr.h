@@ -25,6 +25,7 @@
 #include <nucleus/synch.h>
 #include <nucleus/intr.h>
 #include <native/types.h>
+#include <native/ppd.h>
 
 /* Creation flag. */
 #define I_NOAUTOENA  XN_ISR_NOENABLE  /* Do not auto-enable interrupt channel
@@ -101,11 +102,24 @@ typedef struct rt_intr {
 extern "C" {
 #endif
 
+#ifdef CONFIG_XENO_OPT_NATIVE_INTR
+
 int __native_intr_pkg_init(void);
 
 void __native_intr_pkg_cleanup(void);
 
-void __native_intr_flush_rq(xnqueue_t *rq);
+static inline void __native_intr_flush_rq(xnqueue_t *rq)
+{
+	xeno_flush_rq(RT_INTR, rq, intr);
+}
+
+#else /* !CONFIG_XENO_OPT_NATIVE_INTR */
+
+#define __native_intr_pkg_init()		({ 0; })
+#define __native_intr_pkg_cleanup()		do { } while(0)
+#define __native_intr_flush_rq(rq)		do { } while(0)
+
+#endif /* !CONFIG_XENO_OPT_NATIVE_INTR */
 
 int rt_intr_create(RT_INTR *intr,
 		   const char *name,

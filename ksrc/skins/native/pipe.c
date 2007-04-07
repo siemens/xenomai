@@ -51,7 +51,6 @@
 #include <nucleus/heap.h>
 #include <nucleus/registry.h>
 #include <native/pipe.h>
-#include <native/ppd.h>
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
@@ -124,11 +123,6 @@ int __native_pipe_pkg_init(void)
 void __native_pipe_pkg_cleanup(void)
 {
 	__native_pipe_flush_rq(&__native_global_rholder.pipeq);
-}
-
-void __native_pipe_flush_rq(xnqueue_t *rq)
-{
-	xeno_flush_rq(RT_PIPE, rq, pipe);
 }
 
 /**

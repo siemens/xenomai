@@ -36,7 +36,6 @@
 #include <native/alarm.h>
 #include <native/intr.h>
 #include <native/pipe.h>
-#include <native/ppd.h>
 
 /* This file implements the Xenomai syscall wrappers;
  *

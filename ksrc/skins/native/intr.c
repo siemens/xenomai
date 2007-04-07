@@ -34,7 +34,6 @@
 #include <nucleus/heap.h>
 #include <native/task.h>
 #include <native/intr.h>
-#include <native/ppd.h>
 
 int __native_intr_pkg_init(void)
 {
@@ -44,11 +43,6 @@ int __native_intr_pkg_init(void)
 void __native_intr_pkg_cleanup(void)
 {
 	__native_intr_flush_rq(&__native_global_rholder.intrq);
-}
-
-void __native_intr_flush_rq(xnqueue_t *rq)
-{
-	xeno_flush_rq(RT_INTR, rq, intr);
 }
 
 static unsigned long __intr_get_hits(RT_INTR *intr)

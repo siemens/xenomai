@@ -24,6 +24,7 @@
 
 #include <nucleus/synch.h>
 #include <native/mutex.h>
+#include <native/ppd.h>
 
 typedef struct rt_cond_info {
 
@@ -69,11 +70,24 @@ typedef struct rt_cond {
 extern "C" {
 #endif
 
+#ifdef CONFIG_XENO_OPT_NATIVE_COND
+
 int __native_cond_pkg_init(void);
 
 void __native_cond_pkg_cleanup(void);
 
-void __native_cond_flush_rq(xnqueue_t *rq);
+static inline void __native_cond_flush_rq(xnqueue_t *rq)
+{
+	xeno_flush_rq(RT_COND, rq, cond);
+}
+
+#else /* !CONFIG_XENO_OPT_NATIVE_COND */
+
+#define __native_cond_pkg_init()		({ 0; })
+#define __native_cond_pkg_cleanup()		do { } while(0)
+#define __native_cond_flush_rq(rq)		do { } while(0)
+
+#endif /* !CONFIG_XENO_OPT_NATIVE_COND */
 
 #ifdef __cplusplus
 }

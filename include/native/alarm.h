@@ -25,6 +25,7 @@
 #include <nucleus/timer.h>
 #include <nucleus/synch.h>
 #include <native/types.h>
+#include <native/ppd.h>
 
 typedef struct rt_alarm_info {
 
@@ -78,11 +79,24 @@ typedef struct rt_alarm {
 extern "C" {
 #endif
 
+#ifdef CONFIG_XENO_OPT_NATIVE_ALARM
+
 int __native_alarm_pkg_init(void);
 
 void __native_alarm_pkg_cleanup(void);
 
-void __native_alarm_flush_rq(xnqueue_t *rq);
+static inline void __native_alarm_flush_rq(xnqueue_t *rq)
+{
+	xeno_flush_rq(RT_ALARM, rq, alarm);
+}
+
+#else /* !CONFIG_XENO_OPT_NATIVE_ALARM */
+
+#define __native_alarm_pkg_init()		({ 0; })
+#define __native_alarm_pkg_cleanup()		do { } while(0)
+#define __native_alarm_flush_rq(rq)		do { } while(0)
+
+#endif /* !CONFIG_XENO_OPT_NATIVE_ALARM */
 
 int rt_alarm_create(RT_ALARM *alarm,
 		    const char *name,

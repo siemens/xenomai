@@ -25,6 +25,7 @@
 #include <nucleus/synch.h>
 #include <nucleus/heap.h>
 #include <native/types.h>
+#include <native/ppd.h>
 
 /* Creation flags. */
 #define H_PRIO     XNSYNCH_PRIO	/* Pend by task priority order. */
@@ -96,11 +97,24 @@ typedef struct rt_heap {
 extern "C" {
 #endif
 
+#ifdef CONFIG_XENO_OPT_NATIVE_HEAP
+
 int __native_heap_pkg_init(void);
 
 void __native_heap_pkg_cleanup(void);
 
-void __native_heap_flush_rq(xnqueue_t *rq);
+static inline void __native_heap_flush_rq(xnqueue_t *rq)
+{
+	xeno_flush_rq(RT_HEAP, rq, heap);
+}
+
+#else /* !CONFIG_XENO_OPT_NATIVE_HEAP */
+
+#define __native_heap_pkg_init()		({ 0; })
+#define __native_heap_pkg_cleanup()		do { } while(0)
+#define __native_heap_flush_rq(rq)		do { } while(0)
+
+#endif /* !CONFIG_XENO_OPT_NATIVE_HEAP */
 
 #ifdef __cplusplus
 }

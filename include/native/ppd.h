@@ -23,6 +23,7 @@
 #define _XENO_PPD_H
 
 #include <nucleus/ppd.h>
+#include <nucleus/heap.h>
 
 typedef struct xeno_resource_holder {
 
@@ -85,6 +86,7 @@ static inline xeno_rholder_t *xeno_get_rholder(void)
 
 #define xeno_flush_rq(__type, __rq, __name)				\
 	do {								\
+		int rt_##__name##_delete(__type *);			\
 		xnholder_t *holder, *nholder;				\
 		__type *obj;						\
 		int err;						\

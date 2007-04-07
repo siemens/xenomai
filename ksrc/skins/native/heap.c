@@ -48,7 +48,6 @@
 #include <nucleus/registry.h>
 #include <native/task.h>
 #include <native/heap.h>
-#include <native/ppd.h>
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
@@ -821,11 +820,6 @@ int __native_heap_pkg_init(void)
 void __native_heap_pkg_cleanup(void)
 {
 	__native_heap_flush_rq(&__native_global_rholder.heapq);
-}
-
-void __native_heap_flush_rq(xnqueue_t *rq)
-{
-	xeno_flush_rq(RT_HEAP, rq, heap);
 }
 
 /*@}*/

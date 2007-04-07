@@ -24,6 +24,7 @@
 
 #include <nucleus/synch.h>
 #include <native/types.h>
+#include <native/ppd.h>
 
 /* Creation flags. */
 #define EV_PRIO  XNSYNCH_PRIO	/* Pend by task priority order. */
@@ -79,11 +80,24 @@ typedef struct rt_event {
 extern "C" {
 #endif
 
+#ifdef CONFIG_XENO_OPT_NATIVE_EVENT
+
 int __native_event_pkg_init(void);
 
 void __native_event_pkg_cleanup(void);
 
-void __native_event_flush_rq(xnqueue_t *rq);
+static inline void __native_event_flush_rq(xnqueue_t *rq)
+{
+	xeno_flush_rq(RT_EVENT, rq, event);
+}
+
+#else /* !CONFIG_XENO_OPT_NATIVE_EVENT */
+
+#define __native_event_pkg_init()		({ 0; })
+#define __native_event_pkg_cleanup()		do { } while(0)
+#define __native_event_flush_rq(rq)		do { } while(0)
+
+#endif /* !CONFIG_XENO_OPT_NATIVE_EVENT */
 
 #ifdef __cplusplus
 }
