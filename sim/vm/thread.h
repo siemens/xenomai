@@ -106,7 +106,7 @@ private:
 
     MvmTimer *timer;
 
-    MvmSynchro *pendSynchro;	// explicitely pended synchro
+    MvmSynchro *pendSynchro;	// explicitly pended synchro
 
     MvmSynchro *sigSynchro;	// last signaled synchro
 

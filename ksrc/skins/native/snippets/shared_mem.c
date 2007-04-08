@@ -36,7 +36,7 @@ int main (int argc, char *argv[])
 void cleanup (void)
 
 {
-    /* We need to unbind explicitely from the heap in order to
+    /* We need to unbind explicitly from the heap in order to
        properly release the underlying memory mapping. Exiting the
        process unbinds all mappings automatically. */
     rt_heap_unbind(&heap_desc);

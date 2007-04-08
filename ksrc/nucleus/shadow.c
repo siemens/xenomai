@@ -2122,7 +2122,7 @@ static inline void do_sigwake_event(struct task_struct *p)
 	/* If we are kicking a shadow thread, make sure Linux won't
 	   schedule in its mate under our feet as a result of running
 	   signal_wake_up(). The Xenomai scheduler must remain in
-	   control for now, until we explicitely relax the shadow
+	   control for now, until we explicitly relax the shadow
 	   thread to allow for processing the pending signals. Make
 	   sure we keep the additional state flags unmodified so that
 	   we don't break any undergoing ptrace. */

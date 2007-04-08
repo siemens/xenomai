@@ -467,7 +467,7 @@
 		another thread or service routine while pending on a
 		synchronization resource (e.g. semaphore, message
 		queue). In such a case, the resource is dispatched to
-		it, but it remains suspended until explicitely resumed
+		it, but it remains suspended until explicitly resumed
 		by the proper nucleus service.</para>
 	      </listitem>
 

@@ -573,7 +573,7 @@ int rthal_apc_free(int apc)
  * domain gets back in control.
  *
  * When posted from the Linux domain, the APC handler is fired as soon
- * as the interrupt mask is explicitely cleared by some kernel
+ * as the interrupt mask is explicitly cleared by some kernel
  * code. When posted from the Xenomai domain, the APC handler is
  * fired as soon as the Linux domain is resumed, i.e. after Xenomai has
  * completed all its pending duties.

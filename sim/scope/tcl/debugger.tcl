@@ -1465,7 +1465,7 @@ proc Debugger:notifyBreak {context location} {
 
 	# If a break condition has been raised, ensure the display is
 	# in sync with the execution path, unless the current view
-	# as been explicitely locked on a given thread. To
+	# as been explicitly locked on a given thread. To
 	# achieve this, just switch the focus of the operating frame
 	# to "system".  Setting the focus to the destination value
 	# prior to pick the "system" entry from the focus combo

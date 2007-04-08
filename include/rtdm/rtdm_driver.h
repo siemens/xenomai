@@ -519,7 +519,7 @@ static inline nanosecs_abs_t rtdm_clock_read(void)
  *
  * @param code_block Commands to be executed atomically
  *
- * @note It is not allowed to leave the code block explicitely by using
+ * @note It is not allowed to leave the code block explicitly by using
  * @c break, @c return, @c goto, etc. This would leave the global lock held
  * during the code block execution in an inconsistent state. Moreover, do not
  * embed complex operations into the code bock. Consider that they will be

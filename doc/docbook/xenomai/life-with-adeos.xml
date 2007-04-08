@@ -540,7 +540,7 @@
 
       <para>In addition to being able to stall a domain entirely so
       that no interrupt could flow through it anymore until it is
-      explicitely unstalled, Adeos allows to selectively disable, and
+      explicitly unstalled, Adeos allows to selectively disable, and
       conversely re-enable, the actual source of interrupts, at
       hardware level.</para>
 

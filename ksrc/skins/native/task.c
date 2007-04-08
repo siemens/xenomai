@@ -178,7 +178,7 @@ void __native_task_pkg_cleanup(void)
  * platform. This flag is forced for user-space tasks.
  *
  * - T_SUSP causes the task to start in suspended mode. In such a
- * case, the thread will have to be explicitely resumed using the
+ * case, the thread will have to be explicitly resumed using the
  * rt_task_resume() service for its execution to actually begin.
  *
  * - T_CPU(cpuid) makes the new task affine to CPU # @b cpuid. CPU
@@ -2148,7 +2148,7 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
  * platform. This flag is forced for user-space tasks.
  *
  * - T_SUSP causes the task to start in suspended mode. In such a
- * case, the thread will have to be explicitely resumed using the
+ * case, the thread will have to be explicitly resumed using the
  * rt_task_resume() service for its execution to actually begin.
  *
  * - T_CPU(cpuid) makes the new task affine to CPU # @b cpuid. CPU
