@@ -1,3 +1,12 @@
+2007-04-08  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/drivers/serial/16550A.c, include/rtdm/rtserial.h: Add support
+	for RTSER_RTIOC_BREAK_CTL (break signal control).
+
+	* ksrc/drivers/serial, doc/txt/16550A-driver.txt: Add support for
+	memory-mapped hw access (configurable at compile-time or runtime),
+	refactor and lindent driver code.
+
 2007-04-07  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc: Assume OPT_PERVASIVE implies __KERNEL__.
