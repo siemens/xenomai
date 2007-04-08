@@ -553,6 +553,7 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
                    rtdm_user_info_t *user_info,
                    unsigned int request, void *arg)
 {
+    rtdm_lockctx_t          lock_ctx;
     struct rt_16550_context *ctx;
     int                     err = 0;
     int                     dev_id = context->device->device_id;
@@ -627,7 +628,6 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
         }
 
         case RTSER_RTIOC_GET_STATUS: {
-            rtdm_lockctx_t lock_ctx;
             int status;
 
             rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
@@ -665,12 +665,8 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 
             break;
 
-
         case RTSER_RTIOC_SET_CONTROL: {
-            long            new_mcr;
-            rtdm_lockctx_t  lock_ctx;
-
-            new_mcr = (long)arg;
+            int new_mcr = (long)arg;
 
             rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
             ctx->mcr_status = new_mcr;
@@ -681,7 +677,6 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 
         case RTSER_RTIOC_WAIT_EVENT: {
             struct rtser_event  ev = { rxpend_timestamp: 0 };
-            rtdm_lockctx_t      lock_ctx;
             rtdm_toseq_t        timeout_seq;
 
             if (!rtdm_in_rt_context())
@@ -739,9 +734,22 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
             break;
         }
 
+        case RTSER_RTIOC_BREAK_CTL: {
+            int lcr = ((long)arg & RTSER_BREAK_SET) << 6;
+
+            rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
+
+            lcr |= (ctx->config.parity << 3) | (ctx->config.stop_bits << 2) |
+                ctx->config.data_bits;
+
+            outb(lcr, LCR(dev_id));
+
+            rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
+            break;
+        }
+
         case RTIOC_PURGE: {
-            rtdm_lockctx_t  lock_ctx;
-            int             fcr = 0;
+            int fcr = 0;
 
             rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
             if ((long)arg & RTDM_PURGE_RX_BUFFER) {
