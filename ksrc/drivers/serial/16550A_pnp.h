@@ -16,7 +16,9 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0) && \
+    (defined(CONFIG_XENO_DRIVERS_16550A_PIO) || \
+     defined(CONFIG_XENO_DRIVERS_16550A_ANY))
 
 #include <linux/pnp.h>
 
@@ -348,7 +350,7 @@ static int rt_16550_pnp_probe(struct pnp_dev *dev,
 
 	for (i = 0; i < MAX_DEVICES; i++)
 		if (pnp_port_valid(dev, 0) &&
-		    pnp_port_start(dev, 0) == ioaddr[i]) {
+		    pnp_port_start(dev, 0) == io[i]) {
 			if (!irq[i])
 				irq[i] = pnp_irq(dev, 0);
 			return 0;
@@ -377,9 +379,9 @@ static inline void rt_16550_pnp_cleanup(void)
 		pnp_unregister_driver(&rt_16550_pnp_driver);
 }
 
-#else /* Linux < 2.6.0 */
+#else /* Linux < 2.6.0 || !(..._16550A_IO || ..._16550A_ANY) */
 
 #define rt_16550_pnp_init()	do { } while (0)
 #define rt_16550_pnp_cleanup()	do { } while (0)
 
-#endif /* Linux < 2.6.0 */
+#endif /* Linux < 2.6.0 || !(..._16550A_IO || ..._16550A_ANY) */
