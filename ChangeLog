@@ -1,3 +1,8 @@
+2007-03-12  Paul Corner <paul_c@tuxcnc.org>
+
+	* ksrc, include, doc, sim: Fix various spelling issues. Document
+	-EBUSY return case for rt_heap_delete().
+
 2007-04-08  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/serial/16550A.c, include/rtdm/rtserial.h: Add support

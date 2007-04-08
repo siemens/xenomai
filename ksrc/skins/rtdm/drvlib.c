@@ -318,7 +318,7 @@ EXPORT_SYMBOL(rtdm_task_join_nrt);
  * @return 0 on success, otherwise:
  *
  * - -EINTR is returned if calling task has been unblock by a signal or
- * explicitely via rtdm_task_unblock().
+ * explicitly via rtdm_task_unblock().
  *
  * - -EPERM @e may be returned if an illegal invocation environment is
  * detected.
@@ -360,7 +360,7 @@ EXPORT_SYMBOL(rtdm_task_sleep);
  * @return 0 on success, otherwise:
  *
  * - -EINTR is returned if calling task has been unblock by a signal or
- * explicitely via rtdm_task_unblock().
+ * explicitly via rtdm_task_unblock().
  *
  * - -EPERM @e may be returned if an illegal invocation environment is
  * detected.
@@ -647,7 +647,7 @@ EXPORT_SYMBOL(rtdm_event_signal);
  * @return 0 on success, otherwise:
  *
  * - -EINTR is returned if calling task has been unblock by a signal or
- * explicitely via rtdm_task_unblock().
+ * explicitly via rtdm_task_unblock().
  *
  * - -EIDRM is returned if @a event has been destroyed.
  *
@@ -690,7 +690,7 @@ EXPORT_SYMBOL(rtdm_event_wait);
  * within the specified amount of time.
  *
  * - -EINTR is returned if calling task has been unblock by a signal or
- * explicitely via rtdm_task_unblock().
+ * explicitly via rtdm_task_unblock().
  *
  * - -EIDRM is returned if @a event has been destroyed.
  *
@@ -862,7 +862,7 @@ void rtdm_sem_destroy(rtdm_sem_t *sem);
  * @return 0 on success, otherwise:
  *
  * - -EINTR is returned if calling task has been unblock by a signal or
- * explicitely via rtdm_task_unblock().
+ * explicitly via rtdm_task_unblock().
  *
  * - -EIDRM is returned if @a sem has been destroyed.
  *
@@ -908,7 +908,7 @@ EXPORT_SYMBOL(rtdm_sem_down);
  * value is currently not positive.
  *
  * - -EINTR is returned if calling task has been unblock by a signal or
- * explicitely via rtdm_task_unblock().
+ * explicitly via rtdm_task_unblock().
  *
  * - -EIDRM is returned if @a sem has been destroyed.
  *
@@ -1542,7 +1542,7 @@ static int rtdm_do_mmap(rtdm_user_info_t *user_info,
  * rtdm_iomap_to_user() instead.
  *
  * @note RTDM supports two models for unmapping the user memory range again.
- * One is explicite unmapping via rtdm_munmap(), either performed when the
+ * One is explicit unmapping via rtdm_munmap(), either performed when the
  * user requests it via an IOCTL etc. or when the related device is closed.
  * The other is automatic unmapping, triggered by the user invoking standard
  * munmap() or by the termination of the related process. To track release of
@@ -1607,7 +1607,7 @@ EXPORT_SYMBOL(rtdm_mmap_to_user);
  * detected.
  *
  * @note RTDM supports two models for unmapping the user memory range again.
- * One is explicite unmapping via rtdm_munmap(), either performed when the
+ * One is explicit unmapping via rtdm_munmap(), either performed when the
  * user requests it via an IOCTL etc. or when the related device is closed.
  * The other is automatic unmapping, triggered by the user invoking standard
  * munmap() or by the termination of the related process. To track release of

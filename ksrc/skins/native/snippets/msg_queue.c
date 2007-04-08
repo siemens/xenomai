@@ -41,7 +41,7 @@ void consumer (void *cookie)
 	rt_queue_free(&q_desc,msg);
 	}
 
-    /* We need to unbind explicitely from the queue in order to
+    /* We need to unbind explicitly from the queue in order to
        properly release the underlying memory mapping. Exiting the
        process unbinds all mappings automatically. */
 

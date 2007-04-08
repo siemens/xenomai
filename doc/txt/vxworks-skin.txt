@@ -94,7 +94,7 @@ list. Here are the known variations:
   sleep. This is for instance the case whenever the caller is not a
   VxWorks task, or the scheduler is locked.
 
-- In case the documented VxWorks API does not explicitely handle the
+- In case the documented VxWorks API does not explicitly handle the
   case, calling blocking services outside of any VxWorks task context or
   under scheduler lock, might return the POSIX error value "EPERM".
 

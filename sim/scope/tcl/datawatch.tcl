@@ -914,7 +914,7 @@ proc DataDisplay:updateLocalData {debugfrm tree {autofocus true}} {
 
     foreach expr $displayList {
 	if {[lsearch $hiddenList $expr] != -1} {
-	    # expr was explicitely undisplayed -- ignore it
+	    # expr was explicitly undisplayed -- ignore it
 	    continue
 	}
 

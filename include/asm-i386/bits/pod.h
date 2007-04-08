@@ -106,7 +106,7 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 		   thread which has previously requested I/O permissions. We
 		   don't want the unexpected latencies induced by lazy update
 		   from the GPF handler to bite shadow threads that
-		   explicitely told the kernel that they would need to perform
+		   explicitly told the kernel that they would need to perform
 		   raw I/O ops. */
 
 		wrap_switch_iobitmap(prev, rthal_processor_id());

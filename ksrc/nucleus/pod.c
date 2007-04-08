@@ -764,7 +764,7 @@ static inline void xnpod_switch_zombie(xnthread_t *threadout,
  * the nucleus behaviour regarding the created thread:
  *
  * - XNSUSP creates the thread in a suspended state. In such a case,
- * the thread will have to be explicitely resumed using the
+ * the thread will have to be explicitly resumed using the
  * xnpod_resume_thread() service for its execution to actually begin,
  * additionally to issuing xnpod_start_thread() for it. This flag can
  * also be specified when invoking xnpod_start_thread() as a starting
@@ -897,7 +897,7 @@ int xnpod_init_thread(xnthread_t *thread,
  * See xnpod_schedule() for more on this.
  *
  * - XNSUSP makes the thread start in a suspended state. In such a
- * case, the thread will have to be explicitely resumed using the
+ * case, the thread will have to be explicitly resumed using the
  * xnpod_resume_thread() service for its execution to actually begin.
  *
  * @param imask The interrupt mask that should be asserted when the
@@ -1074,7 +1074,7 @@ void xnpod_restart_thread(xnthread_t *thread)
 	/* Release all ownerships held by the thread on synch. objects */
 	xnsynch_release_all_ownerships(thread);
 
-	/* If the task has been explicitely suspended, resume it. */
+	/* If the task has been explicitly suspended, resume it. */
 	if (xnthread_test_state(thread, XNSUSP))
 		xnpod_resume_thread(thread, XNSUSP);
 
@@ -1835,7 +1835,7 @@ void xnpod_renice_thread_inner(xnthread_t *thread, int prio, int propagate)
 		    thread->wchan != NULL &&
 		    !testbits(thread->wchan->status, XNSYNCH_DREORD))
 			/* Renice the pending order of the thread inside its wait
-			   queue, unless this behaviour has been explicitely
+			   queue, unless this behaviour has been explicitly
 			   disabled for the pended synchronization object, or the
 			   requested priority has not changed, thus preventing
 			   spurious round-robin effects. */
@@ -2359,7 +2359,7 @@ static inline void xnpod_preempt_current_thread(xnsched_t *sched)
  * the service causing the state transition. For instance,
  * self-suspension, self-destruction, or sleeping on a synchronization
  * object automatically leads to a call to the rescheduling procedure,
- * therefore the caller does not need to explicitely issue
+ * therefore the caller does not need to explicitly issue
  * xnpod_schedule() after such operations.
  *
  * The rescheduling procedure always leads to a null-effect if it is

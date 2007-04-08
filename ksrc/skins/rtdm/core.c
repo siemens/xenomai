@@ -875,7 +875,7 @@ int rt_dev_socket(int protocol_family, int socket_type, int protocol);
  *
  * @note Killing a real-time task that is blocked on some device operation can
  * lead to stalled file descriptors. To avoid such scenarios, always close the
- * device before explicitely terminating any real-time task which may use it.
+ * device before explicitly terminating any real-time task which may use it.
  * To cleanup a stalled file descriptor, send its number to the @c open_fildes
  * /proc entry, e.g. via
  * @code #> echo 3 > /proc/xenomai/rtdm/open_fildes @endcode

@@ -399,7 +399,7 @@ ER chg_pri(ID tskid, PRI tskpri)
 	if (tskpri == TPRI_INI)
 		tskpri = ui_denormalized_prio(xnthread_initial_priority(&task->threadbase));
 
-	/* uITRON specs explicitely states: "If the priority specified is
+	/* uITRON specs explicitly states: "If the priority specified is
 	   the same as the current priority, the task will still be moved
 	   behind other tasks of the same priority". This allows for
 	   manual round-robin. Cool! :o) */
