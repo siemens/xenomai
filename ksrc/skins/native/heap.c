@@ -336,6 +336,9 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
  *
  * @return 0 is returned upon success. Otherwise:
  *
+ * - -EBUSY is returned if @a heap is in use by another process and the
+ * descriptor is not destroyed.
+ *
  * - -EINVAL is returned if @a heap is not a heap descriptor.
  *
  * - -EIDRM is returned if @a heap is a deleted heap descriptor.
@@ -797,7 +800,7 @@ int rt_heap_inquire(RT_HEAP *heap, RT_HEAP_INFO *info)
  * This user-space only service unbinds the calling task from the heap
  * object previously retrieved by a call to rt_heap_bind().
  *
- * Unbinding from a heap when it is no more needed is especially
+ * Unbinding from a heap when it is no longer needed is especially
  * important in order to properly release the mapping resources used
  * to attach the heap memory to the caller's address space.
  *
