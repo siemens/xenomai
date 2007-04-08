@@ -29,7 +29,7 @@
  * Feel free to comment on this profile via the Xenomai mailing list
  * (Xenomai-core@gna.org) or directly to the author (jan.kiszka@web.de).
  *
- * @b Profile @b Revision: 1
+ * @b Profile @b Revision: 2
  * @n
  * @n
  * @par Device Characteristics
@@ -79,7 +79,7 @@
 
 #include <rtdm/rtdm.h>
 
-#define RTSER_PROFILE_VER           1
+#define RTSER_PROFILE_VER           2
 
 /*!
  * @anchor RTSER_DEF_BAUD   @name RTSER_DEF_BAUD
@@ -228,6 +228,14 @@
 #define RTSER_MCR_OUT2              0x08
 #define RTSER_MCR_LOOP              0x10
 /** @} */
+
+
+/*!
+ * @anchor RTSER_BREAK_xxx   @name RTSER_BREAK_xxx
+ * Break control
+ * @{ */
+#define RTSER_BREAK_CLR             0x00
+#define RTSER_BREAK_SET             0x01
 
 
 /**
@@ -457,6 +465,30 @@ typedef struct rtser_event {
  */
 #define RTSER_RTIOC_WAIT_EVENT      \
     _IOR(RTIOC_TYPE_SERIAL, 0x05, struct rtser_event)
+/** @} */
+
+/**
+ * Set or clear break on UART output line
+ *
+ * @param[in] arg @c RTSER_BREAK_SET or @c RTSER_BREAK_CLR (int)
+ *
+ * @return 0 on success, otherwise negative error code
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task (RT, non-RT)
+ *
+ * @note A set break condition may also be cleared on UART line
+ * reconfiguration.
+ *
+ * Rescheduling: never.
+ */
+#define RTSER_RTIOC_BREAK_CTL      \
+    _IOR(RTIOC_TYPE_SERIAL, 0x06, int)
 /** @} */
 
 /*!
