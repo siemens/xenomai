@@ -327,22 +327,28 @@ $ make install
 The Blackfin is an MMU-less, DSP-type architecture running uClinux.
 
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=blackfin \
-  --adeos=$xenomai_root/ksrc/arch/blackfin/patches/adeos-ipipe-2.6.12-bf533-X.Y-ZZ.patch \
+  --adeos=$xenomai_root/ksrc/arch/blackfin/patches/adeos-ipipe-bf53x-*.patch \
   --linux=$linux_tree
 $ cd $linux_tree
-$ make ARCH=bfinnommu CROSS_COMPILE=bfin-uclinux- xconfig/gconfig/menuconfig # select the kernel and Xenomai options
-$ make ARCH=bfinnommu CROSS_COMPILE=bfin-uclinux- bzImage modules # then install as needed
+  # select the kernel and Xenomai options
+$ make ARCH=blackfin CROSS_COMPILE=bfin-uclinux- xconfig/gconfig/menuconfig
+  # compile
+$ make linux image
+  # then install as needed
+$ cp images/linux /tftpboot/...
+  # build the user-space support
 $ mkdir $build_root && cd $build_root
-$ $xenomai_root/configure --build=i686-pc-linux-gnu --host=bfinnommu-unknown-linux-gnu CC=bfin-uclinux-gcc CXX=bfin-uclinux-gcc AR=bfin-uclinux-ar LD=bfin-uclinux-ld
+$ $xenomai_root/configure --build=i686-pc-linux-gnu --host=blackfin-unknown-linux-gnu CC=bfin-linux-uclibc-gcc CXX=bfin-linux-uclibc-gcc AR=bfin-linux-uclibc-ar LD=bfin-linux-uclibc-ld
 $ make install
 
 You may also want to have a look at this hands-on description about
 configuring and building a Xenomai system for the Blackfin
 architecture: http://docs.blackfin.uclinux.org/doku.php?id=adeos
 
-NOTE: Xenomai uses the FDPIC shared library format. In case of problem
-running the testsuite, try restarting the last two build steps,
-passing the --disable-shared option to the "configure" script.
+NOTE: Xenomai uses the FDPIC shared library format on this
+architecture. In case of problem running the testsuite, try restarting
+the last two build steps, passing the --disable-shared option to the
+"configure" script.
 
 2.5 Building for x86 with the --enable-linux-build option
 ---------------------------------------------------------
