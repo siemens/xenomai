@@ -1,3 +1,14 @@
+2007-04-10  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-blackfin/wrappers.h: Adapt to 2.6.19.
+	
+	* include/asm-blackfin/calibration.h: Reduce calibration value for
+	the bf537 board; we made quite a lot of progress there compared to
+	v2.3.x, it seems.
+	
+	* ksrc/arch/blackfin/patches: Upgrade to bf53x-R0701RC3-1.6-01
+	(2.6.19-based).
+
 2007-03-12  Paul Corner <paul_c@tuxcnc.org>
 
 	* ksrc, include, doc, sim: Fix various spelling issues. Document
