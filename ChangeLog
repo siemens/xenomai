@@ -1,3 +1,10 @@
+2007-04-10  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-blackfin/wrappers.h: Adapt to 2.6.19.
+	
+	* ksrc/arch/blackfin/patches: Upgrade to bf53x-R0701RC3-1.6-01
+	(2.6.19-based).
+
 2007-04-01  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/alarm.c (rt_alarm_delete): Reschedule upon
