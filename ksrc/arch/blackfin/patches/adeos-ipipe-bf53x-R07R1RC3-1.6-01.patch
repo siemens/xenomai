@@ -1,7 +1,7 @@
-diff -uNrp linux-orig/Makefile linux-ipipe/Makefile
---- linux-orig/Makefile	2006-11-01 08:25:12.000000000 +0100
-+++ linux-ipipe/Makefile	2006-12-03 18:20:54.000000000 +0100
-@@ -485,6 +485,10 @@ endif
+diff -uNrp --exclude .svn linux-orig/Makefile linux-ipipe/Makefile
+--- linux-orig/Makefile	2007-02-06 07:35:03.000000000 +0100
++++ linux-ipipe/Makefile	2007-04-09 18:40:23.000000000 +0200
+@@ -491,6 +491,10 @@ endif
  
  include $(srctree)/arch/$(ARCH)/Makefile
  
@@ -12,10 +12,46 @@ diff -uNrp linux-orig/Makefile linux-ipipe/Makefile
  ifdef CONFIG_FRAME_POINTER
  CFLAGS		+= -fno-omit-frame-pointer $(call cc-option,-fno-optimize-sibling-calls,)
  else
-diff -uNrp linux-orig/arch/blackfin/Kconfig linux-ipipe/arch/blackfin/Kconfig
---- linux-orig/arch/blackfin/Kconfig	2006-11-24 10:54:27.000000000 +0100
-+++ linux-ipipe/arch/blackfin/Kconfig	2006-12-03 22:25:50.000000000 +0100
-@@ -251,6 +251,8 @@ source "arch/blackfin/mach-bf533/Kconfig
+diff -uNrp --exclude .svn linux-orig/arch/blackfin/Kconfig linux-ipipe/arch/blackfin/Kconfig
+--- linux-orig/arch/blackfin/Kconfig	2007-02-26 14:16:45.000000000 +0100
++++ linux-ipipe/arch/blackfin/Kconfig	2007-04-09 18:40:23.000000000 +0200
+@@ -21,10 +21,6 @@ config RWSEM_XCHGADD_ALGORITHM
+ 	bool
+ 	default n
+ 
+-config BLACKFIN
+-	bool
+-	default y
+-
+ config BFIN
+ 	bool
+ 	default y
+@@ -144,14 +140,21 @@ config BF_REV_0_5
+ 
+ endchoice
+ 
+-config BFIN_DUAL_CORE
++config BLACKFIN
+ 	bool
+-	depends on (BF561)
++	depends on (BF537 || BF536 \
++		|| BF534 || BF561 || BF535 || BF533 || BF532 || BF531)
+ 	default y
+ 
+ config BFIN_SINGLE_CORE
+ 	bool
+-	depends on !BFIN_DUAL_CORE
++	depends on (BF537 || BF536 \
++		|| BF534 || BF535 || BF533 || BF532 || BF531)
++	default y
++
++config BFIN_DUAL_CORE
++	bool
++	depends on (BF561)
+ 	default y
+ 
+ choice
+@@ -254,6 +257,8 @@ source "arch/blackfin/mach-bf533/Kconfig
  source "arch/blackfin/mach-bf561/Kconfig"
  source "arch/blackfin/mach-bf537/Kconfig"
  
@@ -24,9 +60,9 @@ diff -uNrp linux-orig/arch/blackfin/Kconfig linux-ipipe/arch/blackfin/Kconfig
  menu "Board customizations"
  
  comment "Board Setup"
-diff -uNrp linux-orig/arch/blackfin/kernel/Makefile linux-ipipe/arch/blackfin/kernel/Makefile
---- linux-orig/arch/blackfin/kernel/Makefile	2006-10-23 17:32:33.000000000 +0200
-+++ linux-ipipe/arch/blackfin/kernel/Makefile	2006-12-16 01:23:34.000000000 +0100
+diff -uNrp --exclude .svn linux-orig/arch/blackfin/kernel/Makefile linux-ipipe/arch/blackfin/kernel/Makefile
+--- linux-orig/arch/blackfin/kernel/Makefile	2006-10-23 17:32:56.000000000 +0200
++++ linux-ipipe/arch/blackfin/kernel/Makefile	2007-04-09 18:40:23.000000000 +0200
 @@ -10,4 +10,6 @@ obj-y := \
  
  obj-$(CONFIG_MODULES)                += module.o
@@ -34,65 +70,195 @@ diff -uNrp linux-orig/arch/blackfin/kernel/Makefile linux-ipipe/arch/blackfin/ke
 +obj-$(CONFIG_IPIPE)                  += ipipe.o
 +obj-$(CONFIG_IPIPE_TRACE_MCOUNT)     += mcount.o
  obj-$(CONFIG_DUAL_CORE_TEST_MODULE)  += dualcore_test.o
-diff -uNrp linux-orig/arch/blackfin/kernel/bfin_gpio.c linux-ipipe/arch/blackfin/kernel/bfin_gpio.c
---- linux-orig/arch/blackfin/kernel/bfin_gpio.c	2006-11-28 15:52:03.000000000 +0100
-+++ linux-ipipe/arch/blackfin/kernel/bfin_gpio.c	2006-12-03 22:21:44.000000000 +0100
-@@ -221,13 +221,13 @@ set_gpio_ ## name (unsigned short gpio, 
+diff -uNrp --exclude .svn linux-orig/arch/blackfin/kernel/bfin_gpio.c linux-ipipe/arch/blackfin/kernel/bfin_gpio.c
+--- linux-orig/arch/blackfin/kernel/bfin_gpio.c	2007-03-29 13:46:37.000000000 +0200
++++ linux-ipipe/arch/blackfin/kernel/bfin_gpio.c	2007-04-09 18:43:05.000000000 +0200
+@@ -238,12 +238,12 @@ void set_gpio_ ## name(unsigned short gp
  { \
-   unsigned long flags;\
-   assert(reserved_map[gpio_bank(gpio)] & gpio_bit(gpio));\
--  local_irq_save(flags);\
-+  local_irq_save_hw(flags);\
- 	if(arg) {\
- 	  gpio_bankb[gpio_bank(gpio)]->name |= gpio_bit(gpio);\
- 		} else {\
- 	  gpio_bankb[gpio_bank(gpio)]->name &= ~gpio_bit(gpio);\
- 	}\
--  local_irq_restore(flags);\
-+  local_irq_restore_hw(flags);\
+ 	unsigned long flags; \
+ 	assert(reserved_map[gpio_bank(gpio)] & gpio_bit(gpio)); \
+-	local_irq_save(flags); \
++	local_irq_save_hw(flags); \
+ 	if (arg) \
+ 		gpio_bankb[gpio_bank(gpio)]->name |= gpio_bit(gpio); \
+ 	else \
+ 		gpio_bankb[gpio_bank(gpio)]->name &= ~gpio_bit(gpio); \
+-	local_irq_restore(flags); \
++	local_irq_restore_hw(flags); \
  } \
  EXPORT_SYMBOL(set_gpio_ ## name);
  
-@@ -377,10 +377,10 @@ void gpio_direction_input(unsigned short
- 
-   assert(reserved_map[gpio_bank(gpio)] & gpio_bit(gpio));
- 
--  local_irq_save(flags);
-+  local_irq_save_hw(flags);
- 	  gpio_bankb[gpio_bank(gpio)]->dir &= ~gpio_bit(gpio);
- 	  gpio_bankb[gpio_bank(gpio)]->inen |= gpio_bit(gpio);
--  local_irq_restore(flags);
-+  local_irq_restore_hw(flags);
+@@ -273,13 +273,13 @@ void set_gpio_data(unsigned short gpio, 
+ {
+ 	unsigned long flags;
+ 	assert(reserved_map[gpio_bank(gpio)] & gpio_bit(gpio));
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 	if (arg)
+ 		gpio_bankb[gpio_bank(gpio)]->data_set = gpio_bit(gpio);
+ 	else
+ 		gpio_bankb[gpio_bank(gpio)]->data_clear = gpio_bit(gpio);
+ 	bfin_read_CHIPID();
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
  }
- 
- 
-@@ -390,10 +390,10 @@ void gpio_direction_output(unsigned shor
- 
-   assert(reserved_map[gpio_bank(gpio)] & gpio_bit(gpio));
- 
--  local_irq_save(flags);
-+  local_irq_save_hw(flags);
- 	  gpio_bankb[gpio_bank(gpio)]->inen &= ~gpio_bit(gpio);
- 	  gpio_bankb[gpio_bank(gpio)]->dir |= gpio_bit(gpio);
--  local_irq_restore(flags);
-+  local_irq_restore_hw(flags);
+ EXPORT_SYMBOL(set_gpio_data);
+ #else
+@@ -292,10 +292,10 @@ void set_gpio_toggle(unsigned short gpio
+ {
+ 	unsigned long flags;
+ 	assert(reserved_map[gpio_bank(gpio)] & gpio_bit(gpio));
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 	gpio_bankb[gpio_bank(gpio)]->toggle = gpio_bit(gpio);
+ 	bfin_read_CHIPID();
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
  }
+ #else
+ void set_gpio_toggle(unsigned short gpio)
+@@ -330,10 +330,10 @@ void set_gpiop_data(unsigned short gpio,
+ {
+ 	unsigned long flags;
+ 	assert(reserved_map[gpio_bank(gpio)] & gpio_bit(gpio));
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 	gpio_bankb[gpio_bank(gpio)]->data = arg;
+ 	bfin_read_CHIPID();
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ }
+ EXPORT_SYMBOL(set_gpiop_data);
+ #else
+@@ -366,10 +366,10 @@ unsigned short get_gpio_data(unsigned sh
+ 	unsigned long flags;
+ 	unsigned short ret;
+ 	assert(reserved_map[gpio_bank(gpio)] & gpio_bit(gpio));
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 	ret = 0x01 & (gpio_bankb[gpio_bank(gpio)]->data >> gpio_sub_n(gpio));
+ 	bfin_read_CHIPID();
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ 	return ret;
+ }
+ EXPORT_SYMBOL(get_gpio_data);
+@@ -400,10 +400,10 @@ unsigned short get_gpiop_data(unsigned s
+ 	unsigned long flags;
+ 	unsigned short ret;
+ 	assert(reserved_map[gpio_bank(gpio)] & gpio_bit(gpio));
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 	ret = gpio_bankb[gpio_bank(gpio)]->data;
+ 	bfin_read_CHIPID();
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ 	return ret;
+ }
+ EXPORT_SYMBOL(get_gpiop_data);
+@@ -438,11 +438,11 @@ int gpio_pm_wakeup_request(unsigned shor
+ 	if ((check_gpio(gpio) < 0) || !type)
+ 		return -EINVAL;
  
- EXPORT_SYMBOL(gpio_request);
-diff -uNrp linux-orig/arch/blackfin/kernel/entry.S linux-ipipe/arch/blackfin/kernel/entry.S
---- linux-orig/arch/blackfin/kernel/entry.S	2006-11-01 05:47:41.000000000 +0100
-+++ linux-ipipe/arch/blackfin/kernel/entry.S	2006-12-17 15:52:38.000000000 +0100
-@@ -6,7 +6,7 @@
-  * Created:
-  * Description:
-  *
-- * Rev:          $Id: entry.S,v 1.26 2006-11-01 04:47:41 magicyang Exp $
-+ * Rev:          $Id: entry.S,v 1.26 2006/11/01 04:47:41 magicyang Exp $
-  *
-  * Modified:
-  *               Copyright 2004-2006 Analog Devices Inc.
-@@ -37,6 +37,10 @@
- .text
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 
+ 	wakeup_map[gpio_bank(gpio)] |= gpio_bit(gpio);
+ 	wakeup_flags_map[gpio] = type;
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ 
+ 	return 0;
+ }
+@@ -455,11 +455,11 @@ void gpio_pm_wakeup_free(unsigned short 
+ 	if (check_gpio(gpio) < 0)
+ 		return;
+ 
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 
+ 	wakeup_map[gpio_bank(gpio)] &= ~gpio_bit(gpio);
+ 
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ }
+ EXPORT_SYMBOL(gpio_pm_wakeup_free);
+ 
+@@ -581,17 +581,17 @@ int gpio_request(unsigned short gpio, co
+ 	if (check_gpio(gpio) < 0)
+ 		return -EINVAL;
+ 
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 
+ 	if (unlikely(reserved_map[gpio_bank(gpio)] & gpio_bit(gpio))) {
++		local_irq_restore_hw(flags);
+ 		printk(KERN_ERR "bfin-gpio: GPIO %d is already reserved!\n", gpio);
+ 		dump_stack();
+-		local_irq_restore(flags);
+ 		return -EBUSY;
+ 	}
+ 	reserved_map[gpio_bank(gpio)] |= gpio_bit(gpio);
+ 
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ 	port_setup(gpio, GPIO_USAGE);
+ 
+ 	return 0;
+@@ -606,12 +606,12 @@ void gpio_free(unsigned short gpio)
+ 	if (check_gpio(gpio) < 0)
+ 		return;
+ 
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 
+ 	if (unlikely(!(reserved_map[gpio_bank(gpio)] & gpio_bit(gpio)))) {
++		local_irq_restore_hw(flags);
+ 		printk(KERN_ERR "bfin-gpio: GPIO %d wasn't reserved!\n", gpio);
+ 		dump_stack();
+-		local_irq_restore(flags);
+ 		return;
+ 	}
+ 
+@@ -619,7 +619,7 @@ void gpio_free(unsigned short gpio)
+ 
+ 	reserved_map[gpio_bank(gpio)] &= ~gpio_bit(gpio);
+ 
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ }
+ EXPORT_SYMBOL(gpio_free);
+ 
+@@ -630,10 +630,10 @@ void gpio_direction_input(unsigned short
+ 
+ 	assert(reserved_map[gpio_bank(gpio)] & gpio_bit(gpio));
+ 
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 	gpio_bankb[gpio_bank(gpio)]->dir &= ~gpio_bit(gpio);
+ 	gpio_bankb[gpio_bank(gpio)]->inen |= gpio_bit(gpio);
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ }
+ EXPORT_SYMBOL(gpio_direction_input);
+ 
+@@ -643,9 +643,9 @@ void gpio_direction_output(unsigned shor
+ 
+ 	assert(reserved_map[gpio_bank(gpio)] & gpio_bit(gpio));
+ 
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 	gpio_bankb[gpio_bank(gpio)]->inen &= ~gpio_bit(gpio);
+ 	gpio_bankb[gpio_bank(gpio)]->dir |= gpio_bit(gpio);
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ }
+ EXPORT_SYMBOL(gpio_direction_output);
+diff -uNrp --exclude .svn linux-orig/arch/blackfin/kernel/entry.S linux-ipipe/arch/blackfin/kernel/entry.S
+--- linux-orig/arch/blackfin/kernel/entry.S	2007-02-19 17:45:53.000000000 +0100
++++ linux-ipipe/arch/blackfin/kernel/entry.S	2007-04-09 18:40:23.000000000 +0200
+@@ -43,6 +43,10 @@
+ #endif
  
  ENTRY(_ret_from_fork)
 +#ifdef CONFIG_IPIPE
@@ -102,10 +268,10 @@ diff -uNrp linux-orig/arch/blackfin/kernel/entry.S linux-ipipe/arch/blackfin/ker
  	SP += -12;
  	call _schedule_tail;
  	SP += 12;
-diff -uNrp linux-orig/arch/blackfin/kernel/ipipe.c linux-ipipe/arch/blackfin/kernel/ipipe.c
+diff -uNrp --exclude .svn linux-orig/arch/blackfin/kernel/ipipe.c linux-ipipe/arch/blackfin/kernel/ipipe.c
 --- linux-orig/arch/blackfin/kernel/ipipe.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-ipipe/arch/blackfin/kernel/ipipe.c	2006-12-24 19:47:10.000000000 +0100
-@@ -0,0 +1,450 @@
++++ linux-ipipe/arch/blackfin/kernel/ipipe.c	2007-04-10 11:12:18.000000000 +0200
+@@ -0,0 +1,449 @@
 +/* -*- linux-c -*-
 + * linux/arch/blackfin/kernel/ipipe.c
 + *
@@ -129,7 +295,6 @@ diff -uNrp linux-orig/arch/blackfin/kernel/ipipe.c linux-ipipe/arch/blackfin/ker
 + * Architecture-dependent I-pipe support for the Blackfin.
 + */
 +
-+#include <linux/config.h>
 +#include <linux/kernel.h>
 +#include <linux/sched.h>
 +#include <linux/module.h>
@@ -146,7 +311,7 @@ diff -uNrp linux-orig/arch/blackfin/kernel/ipipe.c linux-ipipe/arch/blackfin/ker
 +
 +extern struct irq_desc irq_desc[];
 +
-+struct pt_regs __ipipe_tick_regs[IPIPE_NR_CPUS];
++struct pt_regs __ipipe_irq_regs[IPIPE_NR_CPUS];
 +
 +static void __ipipe_no_irqtail(void);
 +
@@ -160,12 +325,12 @@ diff -uNrp linux-orig/arch/blackfin/kernel/ipipe.c linux-ipipe/arch/blackfin/ker
 +
 +unsigned long __ipipe_irq_lvmask = __all_masked_irq_flags;
 +
-+static int __ipipe_ack_irq(unsigned irq, struct pt_regs *regs)
++static int __ipipe_ack_irq(unsigned irq)
 +{
 +	struct irq_desc *desc = irq_desc + irq;
 +
 +	if (irq != IRQ_SYSTMR)
-+		desc->ipipe_ack(irq, desc, regs);
++		desc->ipipe_ack(irq, desc);
 +
 +	return 1;
 +}
@@ -199,8 +364,8 @@ diff -uNrp linux-orig/arch/blackfin/kernel/ipipe.c linux-ipipe/arch/blackfin/ker
 + */
 +void __ipipe_handle_irq(unsigned irq, struct pt_regs *regs)
 +{
-+	int (*ackfn)(unsigned int irq, struct pt_regs *regs);
 +	struct ipipe_domain *this_domain, *next_domain;
++	int (*ackfn)(unsigned int irq);
 +	struct list_head *head, *pos;
 +	ipipe_declare_cpuid;
 +	int m_ack, s = -1;
@@ -214,7 +379,7 @@ diff -uNrp linux-orig/arch/blackfin/kernel/ipipe.c linux-ipipe/arch/blackfin/ker
 +	if (likely(test_bit(IPIPE_WIRED_FLAG, &next_domain->irqs[irq].control))) {
 +		ackfn = (typeof(ackfn))next_domain->irqs[irq].acknowledge;
 +		if (!m_ack && ackfn != NULL)
-+			ackfn(irq, regs);
++			ackfn(irq);
 +		if (test_bit(IPIPE_ROOTLOCK_FLAG, &ipipe_root_domain->flags))
 +			s = __test_and_set_bit(IPIPE_STALL_FLAG,
 +					       &ipipe_root_domain->cpudata[cpuid].status);
@@ -255,7 +420,7 @@ diff -uNrp linux-orig/arch/blackfin/kernel/ipipe.c linux-ipipe/arch/blackfin/ker
 +			ackfn = (typeof(ackfn))next_domain->irqs[irq].acknowledge;
 +
 +			if (!m_ack && ackfn != NULL)
-+				m_ack = ackfn(irq, regs);
++				m_ack = ackfn(irq);
 +		}
 +
 +		/*
@@ -556,45 +721,35 @@ diff -uNrp linux-orig/arch/blackfin/kernel/ipipe.c linux-ipipe/arch/blackfin/ker
 +void notrace _mcount(void);
 +EXPORT_SYMBOL(_mcount);
 +#endif /* CONFIG_IPIPE_TRACE_MCOUNT */
-diff -uNrp linux-orig/arch/blackfin/kernel/irqchip.c linux-ipipe/arch/blackfin/kernel/irqchip.c
---- linux-orig/arch/blackfin/kernel/irqchip.c	2006-11-01 05:47:41.000000000 +0100
-+++ linux-ipipe/arch/blackfin/kernel/irqchip.c	2006-12-03 18:32:50.000000000 +0100
-@@ -6,7 +6,7 @@
-  * Created:
-  * Description:  This file contains the simple DMA Implementation for Blackfin
-  *
-- * Rev:          $Id: irqchip.c,v 1.23 2006-11-01 04:47:41 magicyang Exp $
-+ * Rev:          $Id: irqchip.c,v 1.23 2006/11/01 04:47:41 magicyang Exp $
-  *
-  * Modified:
-  *               Copyright 2004-2006 Analog Devices Inc.
-@@ -115,6 +115,7 @@ asmlinkage void asm_do_IRQ(unsigned int 
+diff -uNrp --exclude .svn linux-orig/arch/blackfin/kernel/irqchip.c linux-ipipe/arch/blackfin/kernel/irqchip.c
+--- linux-orig/arch/blackfin/kernel/irqchip.c	2007-03-05 06:27:47.000000000 +0100
++++ linux-ipipe/arch/blackfin/kernel/irqchip.c	2007-04-09 18:40:23.000000000 +0200
+@@ -121,6 +121,7 @@ asmlinkage void asm_do_IRQ(unsigned int 
  
- 	generic_handle_irq(irq, regs);
+ 	generic_handle_irq(irq);
  
 +#ifndef CONFIG_IPIPE	/* Useless and bugous over the I-pipe: IRQs are threaded. */
  	/* If we're the only interrupt running (ignoring IRQ15 which is for
  	   syscalls), lower our priority to IRQ14 so that softirqs run at
  	   that level.  If there's another, lower-level interrupt, irq_exit
-@@ -124,6 +125,7 @@ asmlinkage void asm_do_IRQ(unsigned int 
+@@ -130,6 +131,7 @@ asmlinkage void asm_do_IRQ(unsigned int 
  	other_ints = pending & (pending - 1);
  	if (other_ints == 0)
  		lower_to_irq14();
 +#endif /* !CONFIG_IPIPE */
  	irq_exit();
- }
  
-diff -uNrp linux-orig/arch/blackfin/kernel/mcount.S linux-ipipe/arch/blackfin/kernel/mcount.S
+ 	set_irq_regs(old_regs);
+diff -uNrp --exclude .svn linux-orig/arch/blackfin/kernel/mcount.S linux-ipipe/arch/blackfin/kernel/mcount.S
 --- linux-orig/arch/blackfin/kernel/mcount.S	1970-01-01 01:00:00.000000000 +0100
-+++ linux-ipipe/arch/blackfin/kernel/mcount.S	2006-12-16 01:26:00.000000000 +0100
-@@ -0,0 +1,35 @@
++++ linux-ipipe/arch/blackfin/kernel/mcount.S	2007-04-10 12:14:01.000000000 +0200
+@@ -0,0 +1,34 @@
 +/*
 + * linux/arch/blackfin/mcount.S
 + *
 + * Copyright (C) 2006 Analog Devices Inc.
 + */
 +
-+#include <linux/config.h>
 +#include <linux/linkage.h>
 +#include <asm/blackfin.h>
 +
@@ -623,19 +778,10 @@ diff -uNrp linux-orig/arch/blackfin/kernel/mcount.S linux-ipipe/arch/blackfin/ke
 +	ASTAT = [sp++];
 +	( r7:0, p5:0 ) = [sp++];
 +	rts;
-diff -uNrp linux-orig/arch/blackfin/kernel/process.c linux-ipipe/arch/blackfin/kernel/process.c
---- linux-orig/arch/blackfin/kernel/process.c	2006-11-01 05:47:42.000000000 +0100
-+++ linux-ipipe/arch/blackfin/kernel/process.c	2006-12-15 23:35:58.000000000 +0100
-@@ -6,7 +6,7 @@
-  * Created:
-  * Description:  Blackfin architecture-dependent process handling.
-  *
-- * Rev:          $Id: process.c,v 1.44 2006-11-01 04:47:42 magicyang Exp $
-+ * Rev:          $Id: process.c,v 1.44 2006/11/01 04:47:42 magicyang Exp $
-  *
-  * Modified:
-  *               Copyright 2004-2006 Analog Devices Inc.
-@@ -101,10 +101,11 @@ static inline void default_idle(void)
+diff -uNrp --exclude .svn linux-orig/arch/blackfin/kernel/process.c linux-ipipe/arch/blackfin/kernel/process.c
+--- linux-orig/arch/blackfin/kernel/process.c	2007-03-05 06:27:47.000000000 +0100
++++ linux-ipipe/arch/blackfin/kernel/process.c	2007-04-09 18:40:23.000000000 +0200
+@@ -106,10 +106,11 @@ static inline void default_idle(void)
  {
  	while (!need_resched()) {
  		leds_switch(LED_OFF);
@@ -649,21 +795,12 @@ diff -uNrp linux-orig/arch/blackfin/kernel/process.c linux-ipipe/arch/blackfin/k
  		leds_switch(LED_ON);
  	}
  }
-diff -uNrp linux-orig/arch/blackfin/kernel/time.c linux-ipipe/arch/blackfin/kernel/time.c
---- linux-orig/arch/blackfin/kernel/time.c	2006-11-01 05:47:43.000000000 +0100
-+++ linux-ipipe/arch/blackfin/kernel/time.c	2006-12-23 18:13:25.000000000 +0100
-@@ -7,7 +7,7 @@
-  * Description:  This file contains the bfin-specific time handling details.
-  *               Most of the stuff is located in the machine specific files.
-  *
-- * Rev:          $Id: time.c,v 1.45 2006-11-01 04:47:43 magicyang Exp $
-+ * Rev:          $Id: time.c,v 1.45 2006/11/01 04:47:43 magicyang Exp $
-  *
-  * Modified:
-  *               Copyright 2004-2006 Analog Devices Inc.
+diff -uNrp --exclude .svn linux-orig/arch/blackfin/kernel/time.c linux-ipipe/arch/blackfin/kernel/time.c
+--- linux-orig/arch/blackfin/kernel/time.c	2007-03-07 11:36:43.000000000 +0100
++++ linux-ipipe/arch/blackfin/kernel/time.c	2007-04-09 22:56:57.000000000 +0200
 @@ -139,6 +139,27 @@ static struct irqaction bfin_timer_irq =
  static void
- time_sched_init(irqreturn_t(*timer_routine) (int, void *, struct pt_regs *))
+ time_sched_init(irqreturn_t(*timer_routine) (int, void *))
  {
 +#ifdef CONFIG_IPIPE
 +	/* Use builtin TIMER0 for time source instead of the high
@@ -689,24 +826,23 @@ diff -uNrp linux-orig/arch/blackfin/kernel/time.c linux-ipipe/arch/blackfin/kern
  	u32 tcount;
  
  	/* power up the timer, but don't enable it just yet */
-@@ -158,12 +179,11 @@ time_sched_init(irqreturn_t(*timer_routi
- 	__builtin_bfin_csync();
+@@ -158,12 +179,14 @@ time_sched_init(irqreturn_t(*timer_routi
+ 	CSYNC();
  
  	bfin_write_TCNTL(7);
--
-+#endif /* CONFIG_IPIPE */
- 	bfin_timer_irq.handler = timer_routine;
--	/* call setup_irq instead of request_irq because request_irq calls
--	 * kmalloc which has not been initialized yet
--	 */
++#endif  /* CONFIG_IPIPE */
+ 
+ 	bfin_timer_irq.handler = (irq_handler_t)timer_routine;
+ 	/* call setup_irq instead of request_irq because request_irq calls
+ 	 * kmalloc which has not been initialized yet
+ 	 */
 -	setup_irq(IRQ_CORETMR, &bfin_timer_irq);
-+	/* call setup_irq instead of request_irq because request_irq
-+	   calls kmalloc which has not been initialized yet */
++	//setup_irq(IRQ_CORETMR, &bfin_timer_irq);
 +	setup_irq(IRQ_SYSTMR, &bfin_timer_irq);
  }
  
  /*
-@@ -174,17 +194,21 @@ static unsigned long gettimeoffset(void)
+@@ -174,17 +197,21 @@ static unsigned long gettimeoffset(void)
  	unsigned long offset;
  	unsigned long clocks_per_jiffy;
  
@@ -733,10 +869,10 @@ diff -uNrp linux-orig/arch/blackfin/kernel/time.c linux-ipipe/arch/blackfin/kern
  	return offset;
  }
  
-diff -uNrp linux-orig/arch/blackfin/kernel/traps.c linux-ipipe/arch/blackfin/kernel/traps.c
---- linux-orig/arch/blackfin/kernel/traps.c	2006-11-01 05:47:44.000000000 +0100
-+++ linux-ipipe/arch/blackfin/kernel/traps.c	2006-12-16 01:19:59.000000000 +0100
-@@ -362,6 +362,9 @@ asmlinkage void trap_c(struct pt_regs *f
+diff -uNrp --exclude .svn linux-orig/arch/blackfin/kernel/traps.c linux-ipipe/arch/blackfin/kernel/traps.c
+--- linux-orig/arch/blackfin/kernel/traps.c	2007-03-30 21:58:54.000000000 +0200
++++ linux-ipipe/arch/blackfin/kernel/traps.c	2007-04-09 18:40:23.000000000 +0200
+@@ -391,6 +391,9 @@ asmlinkage void trap_c(struct pt_regs *f
  		break;
  	}
  
@@ -746,7 +882,7 @@ diff -uNrp linux-orig/arch/blackfin/kernel/traps.c linux-ipipe/arch/blackfin/ker
  	info.si_signo = sig;
  	info.si_errno = 0;
  	info.si_addr = (void *)fp->pc;
-@@ -391,7 +394,7 @@ asmlinkage void trap_c(struct pt_regs *f
+@@ -420,7 +423,7 @@ asmlinkage void trap_c(struct pt_regs *f
  			panic("Help - I've fallen and can't get up\n");
  		}
  	}
@@ -755,51 +891,43 @@ diff -uNrp linux-orig/arch/blackfin/kernel/traps.c linux-ipipe/arch/blackfin/ker
  	trace_buffer_restore(j);
  	return;
  }
-diff -uNrp linux-orig/arch/blackfin/lib/ins.S linux-ipipe/arch/blackfin/lib/ins.S
---- linux-orig/arch/blackfin/lib/ins.S	2006-11-01 05:47:47.000000000 +0100
-+++ linux-ipipe/arch/blackfin/lib/ins.S	2006-12-24 13:38:01.000000000 +0100
-@@ -6,7 +6,7 @@
-  * Created:      Tue Mar 22 15:27:24 CEST 2005
-  * Description:  Implementation of ins{bwl} for BlackFin processors using zero overhead loops.
-  *
-- * Rev:          $Id: ins.S,v 1.11 2006-11-01 04:47:47 magicyang Exp $
-+ * Rev:          $Id: ins.S,v 1.11 2006/11/01 04:47:47 magicyang Exp $
-  *
-  * Modified:
-  *               Copyright 2004-2006 Analog Devices Inc.
-@@ -38,7 +38,16 @@ ENTRY(_insl)
+diff -uNrp --exclude .svn linux-orig/arch/blackfin/lib/ins.S linux-ipipe/arch/blackfin/lib/ins.S
+--- linux-orig/arch/blackfin/lib/ins.S	2007-02-06 10:44:26.000000000 +0100
++++ linux-ipipe/arch/blackfin/lib/ins.S	2007-04-09 18:40:23.000000000 +0200
+@@ -36,36 +36,84 @@
+ 
+ ENTRY(_insl)
  	P0 = R0;	/* P0 = port */
+-	cli R3;
  	P1 = R1;	/* P1 = address */
  	P2 = R2;	/* P2 = count */
 +#ifdef CONFIG_IPIPE
-+	[--sp] = rets
-+	[--sp] = (P5:0);
-+	sp += -12
-+	call ___ipipe_stall_root_raw
-+	sp += 12
-+	(P5:0) = [sp++];
++        [--sp] = rets
++        [--sp] = (P5:0);
++        sp += -12
++        call ___ipipe_stall_root_raw
++        sp += 12
++       (P5:0) = [sp++];
 +#else /* !CONFIG_IPIPE */
- 	cli R2;
-+#endif /* CONFIG_IPIPE */
- 	NOP;
- 	NOP;
- 
-@@ -46,14 +55,30 @@ ENTRY(_insl)
++	cli R3;
++#endif
+ 	SSYNC;
+ 	LSETUP( .Llong_loop_s, .Llong_loop_e) LC0 = P2;
  .Llong_loop_s: R0 = [P0];
  .Llong_loop_e: [P1++] = R0;
- 
 +#ifdef CONFIG_IPIPE
-+	sp += -12
-+	call ___ipipe_unstall_root_raw
-+	sp += 12
-+	rets = [sp++]
++        sp += -12
++        call ___ipipe_unstall_root_raw
++        sp += 12
++        rets = [sp++]
 +#else /* !CONFIG_IPIPE */
- 	sti R2;
+ 	sti R3;
 +#endif /* CONFIG_IPIPE */
  	RTS;
  
  ENTRY(_insw)
  	P0 = R0;	/* P0 = port */
+-	cli R3;
  	P1 = R1;	/* P1 = address */
  	P2 = R2;	/* P2 = count */
 +#ifdef CONFIG_IPIPE
@@ -810,27 +938,25 @@ diff -uNrp linux-orig/arch/blackfin/lib/ins.S linux-ipipe/arch/blackfin/lib/ins.
 +	sp += 12
 +	(P5:0) = [sp++];
 +#else /* !CONFIG_IPIPE */
- 	cli R2;
++	cli R3;
 +#endif
- 	NOP;
- 	NOP;
- 
-@@ -61,19 +86,42 @@ ENTRY(_insw)
+ 	SSYNC;
+ 	LSETUP( .Lword_loop_s, .Lword_loop_e) LC0 = P2;
  .Lword_loop_s: R0 = W[P0];
  .Lword_loop_e: W[P1++] = R0;
- 
 +#ifdef CONFIG_IPIPE
 +	sp += -12
 +	call ___ipipe_unstall_root_raw
 +	sp += 12
 +	rets = [sp++]
 +#else /* !CONFIG_IPIPE */
- 	sti R2;
+ 	sti R3;
 +#endif /* CONFIG_IPIPE */
  	RTS;
  
  ENTRY(_insb)
  	P0 = R0;	/* P0 = port */
+-	cli R3;
  	P1 = R1;	/* P1 = address */
  	P2 = R2;	/* P2 = count */
 +#ifdef CONFIG_IPIPE
@@ -841,11 +967,9 @@ diff -uNrp linux-orig/arch/blackfin/lib/ins.S linux-ipipe/arch/blackfin/lib/ins.
 +	sp += 12
 +	(P5:0) = [sp++];
 +#else		
- 	cli R2;
++	cli R3;
 +#endif	
- 	NOP;
- 	NOP;
- 
+ 	SSYNC;
  	LSETUP( .Lbyte_loop_s, .Lbyte_loop_e) LC0 = P2;
  .Lbyte_loop_s: R0 = B[P0];
  .Lbyte_loop_e: B[P1++] = R0;
@@ -855,12 +979,12 @@ diff -uNrp linux-orig/arch/blackfin/lib/ins.S linux-ipipe/arch/blackfin/lib/ins.
 +	sp += 12
 +	rets = [sp++]
 +#else		
- 	sti R2;
+ 	sti R3;
 +#endif	
  	RTS;
-diff -uNrp linux-orig/arch/blackfin/mach-bf533/Kconfig linux-ipipe/arch/blackfin/mach-bf533/Kconfig
---- linux-orig/arch/blackfin/mach-bf533/Kconfig	2006-09-26 00:45:03.000000000 +0200
-+++ linux-ipipe/arch/blackfin/mach-bf533/Kconfig	2006-12-25 13:00:34.000000000 +0100
+diff -uNrp --exclude .svn linux-orig/arch/blackfin/mach-bf533/Kconfig linux-ipipe/arch/blackfin/mach-bf533/Kconfig
+--- linux-orig/arch/blackfin/mach-bf533/Kconfig	2007-01-24 08:40:57.000000000 +0100
++++ linux-ipipe/arch/blackfin/mach-bf533/Kconfig	2007-04-09 18:40:23.000000000 +0200
 @@ -57,7 +57,7 @@ config DMA7_UARTTX
  	default 10
  config TIMER0
@@ -870,9 +994,9 @@ diff -uNrp linux-orig/arch/blackfin/mach-bf533/Kconfig linux-ipipe/arch/blackfin
  config TIMER1
  	int "TIMER1"
  	default 11
-diff -uNrp linux-orig/arch/blackfin/mach-bf537/Kconfig linux-ipipe/arch/blackfin/mach-bf537/Kconfig
---- linux-orig/arch/blackfin/mach-bf537/Kconfig	2006-09-26 00:45:04.000000000 +0200
-+++ linux-ipipe/arch/blackfin/mach-bf537/Kconfig	2006-12-25 13:00:51.000000000 +0100
+diff -uNrp --exclude .svn linux-orig/arch/blackfin/mach-bf537/Kconfig linux-ipipe/arch/blackfin/mach-bf537/Kconfig
+--- linux-orig/arch/blackfin/mach-bf537/Kconfig	2007-01-24 08:40:57.000000000 +0100
++++ linux-ipipe/arch/blackfin/mach-bf537/Kconfig	2007-04-09 18:40:23.000000000 +0200
 @@ -91,7 +91,7 @@ config IRQ_MAC_TX
  	default 11
  config IRQ_TMR0
@@ -882,10 +1006,10 @@ diff -uNrp linux-orig/arch/blackfin/mach-bf537/Kconfig linux-ipipe/arch/blackfin
  config IRQ_TMR1
  	int "IRQ_TMR1"
  	default 12
-diff -uNrp linux-orig/arch/blackfin/mach-common/entry.S linux-ipipe/arch/blackfin/mach-common/entry.S
---- linux-orig/arch/blackfin/mach-common/entry.S	2006-11-29 08:45:23.000000000 +0100
-+++ linux-ipipe/arch/blackfin/mach-common/entry.S	2006-12-15 23:30:36.000000000 +0100
-@@ -405,6 +405,19 @@ ENTRY(_system_call)
+diff -uNrp --exclude .svn linux-orig/arch/blackfin/mach-common/entry.S linux-ipipe/arch/blackfin/mach-common/entry.S
+--- linux-orig/arch/blackfin/mach-common/entry.S	2007-03-02 03:04:31.000000000 +0100
++++ linux-ipipe/arch/blackfin/mach-common/entry.S	2007-04-09 18:40:23.000000000 +0200
+@@ -413,6 +413,19 @@ ENTRY(_system_call)
  	p2 = [p2];
  
  	[p2+(TASK_THREAD+THREAD_KSP)] = sp;
@@ -905,7 +1029,7 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/entry.S linux-ipipe/arch/blackfi
  
  	/* Check the System Call */
  	r7 = __NR_syscall;
-@@ -488,6 +501,11 @@ ENTRY(_system_call)
+@@ -496,6 +509,11 @@ ENTRY(_system_call)
  	SP += 12;
  
  .Lsyscall_really_exit:
@@ -917,7 +1041,7 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/entry.S linux-ipipe/arch/blackfi
  	r5 = [sp + PT_RESERVED];
  	rets = r5;
  	rts;
-@@ -570,6 +588,16 @@ _new_old_task:
+@@ -578,6 +596,16 @@ _new_old_task:
  	rts;
  
  ENTRY(_ret_from_exception)
@@ -934,7 +1058,7 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/entry.S linux-ipipe/arch/blackfi
  	p2.l = lo(IPEND);
  	p2.h = hi(IPEND);
  
-@@ -669,7 +697,7 @@ ENTRY(_return_from_int)
+@@ -677,7 +705,7 @@ ENTRY(_return_from_int)
  2:
  	rts;
  
@@ -943,19 +1067,10 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/entry.S linux-ipipe/arch/blackfi
  #if defined(ANOMALY_05000281)
  	r0.l = lo(CONFIG_BOOT_LOAD);
  	r0.h = hi(CONFIG_BOOT_LOAD);
-diff -uNrp linux-orig/arch/blackfin/mach-common/interrupt.S linux-ipipe/arch/blackfin/mach-common/interrupt.S
---- linux-orig/arch/blackfin/mach-common/interrupt.S	2006-11-01 05:48:12.000000000 +0100
-+++ linux-ipipe/arch/blackfin/mach-common/interrupt.S	2006-12-24 13:34:01.000000000 +0100
-@@ -7,7 +7,7 @@
-  * Created:      ?
-  * Description:  Interrupt Entries
-  *
-- * Rev:          $Id: interrupt.S,v 1.34 2006-11-01 04:48:12 magicyang Exp $
-+ * Rev:          $Id: interrupt.S,v 1.34 2006/11/01 04:48:12 magicyang Exp $
-  *
-  * Modified:
-  *               Copyright 2004-2006 Analog Devices Inc.
-@@ -148,8 +148,15 @@ __common_int_entry:
+diff -uNrp --exclude .svn linux-orig/arch/blackfin/mach-common/interrupt.S linux-ipipe/arch/blackfin/mach-common/interrupt.S
+--- linux-orig/arch/blackfin/mach-common/interrupt.S	2007-01-30 11:21:44.000000000 +0100
++++ linux-ipipe/arch/blackfin/mach-common/interrupt.S	2007-04-09 18:40:23.000000000 +0200
+@@ -150,8 +150,15 @@ __common_int_entry:
  #endif
  	r1 =  sp;
  	SP += -12;
@@ -971,7 +1086,7 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/interrupt.S linux-ipipe/arch/bla
  	call _return_from_int;
  .Lcommon_restore_context:
  	RESTORE_CONTEXT
-@@ -251,3 +258,58 @@ ENTRY(_evt_system_call)
+@@ -253,3 +260,58 @@ ENTRY(_evt_system_call)
  #endif
  	call _system_call;
  	jump .Lcommon_restore_context;
@@ -1030,10 +1145,10 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/interrupt.S linux-ipipe/arch/bla
 +	rts;
 +
 +#endif /* CONFIG_IPIPE */
-diff -uNrp linux-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-ipipe/arch/blackfin/mach-common/ints-priority-sc.c
---- linux-orig/arch/blackfin/mach-common/ints-priority-sc.c	2006-11-28 15:52:25.000000000 +0100
-+++ linux-ipipe/arch/blackfin/mach-common/ints-priority-sc.c	2006-12-25 13:00:21.000000000 +0100
-@@ -121,6 +121,111 @@ static void __init search_IAR(void)
+diff -uNrp --exclude .svn linux-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-ipipe/arch/blackfin/mach-common/ints-priority-sc.c
+--- linux-orig/arch/blackfin/mach-common/ints-priority-sc.c	2007-03-29 13:46:37.000000000 +0200
++++ linux-ipipe/arch/blackfin/mach-common/ints-priority-sc.c	2007-04-10 11:18:10.000000000 +0200
+@@ -124,6 +124,112 @@ static void __init search_IAR(void)
  	}
  }
  
@@ -1085,7 +1200,7 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-ipipe/a
 +		if (--per_cpu(pending_irq_count[thrprio], cpu) == 0)
 +			per_cpu(pending_irqthread_mask, cpu) &= ~thrmask;
 +		desc->status &= ~IRQ_SCHEDULED;
-+		desc->thr_handler(irq, &__ipipe_tick_regs[cpu]);
++		desc->thr_handler(irq, get_irq_regs());
 +		local_irq_enable();
 +	}
 +	__set_current_state(TASK_RUNNING);
@@ -1103,6 +1218,7 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-ipipe/a
 +		desc->status |= IRQ_SCHEDULED;
 +		per_cpu(pending_irqthread_mask, cpu) |= thrmask;
 +		++per_cpu(pending_irq_count[thrprio], cpu);
++		set_irq_regs((struct pt_regs *)cookie);
 +		wake_up_process(desc->thread);
 +	}
 +}
@@ -1121,7 +1237,7 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-ipipe/a
 +
 +	wake_up_process(desc->thread);
 +
-+	desc->thr_handler = (void (*)(unsigned,struct pt_regs *))ipipe_root_domain->irqs[irq].handler;
++	desc->thr_handler = ipipe_root_domain->irqs[irq].handler;
 +	ipipe_root_domain->irqs[irq].handler = &kick_irqd;
 +
 +	return 0;
@@ -1145,7 +1261,7 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-ipipe/a
  /*
   * This is for BF533 internal IRQs
   */
-@@ -133,8 +238,8 @@ static void ack_noop(unsigned int irq)
+@@ -136,8 +242,8 @@ static void ack_noop(unsigned int irq)
  static void bfin_core_mask_irq(unsigned int irq)
  {
  	irq_flags &= ~(1 << irq);
@@ -1156,7 +1272,7 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-ipipe/a
  }
  
  static void bfin_core_unmask_irq(unsigned int irq)
-@@ -149,8 +254,8 @@ static void bfin_core_unmask_irq(unsigne
+@@ -152,8 +258,8 @@ static void bfin_core_unmask_irq(unsigne
  	 * local_irq_enable just does "STI irq_flags", so it's exactly
  	 * what we need.
  	 */
@@ -1167,7 +1283,7 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-ipipe/a
  	return;
  }
  
-@@ -193,23 +298,23 @@ static void bfin_generic_error_mask_irq(
+@@ -196,23 +302,23 @@ static void bfin_generic_error_mask_irq(
  	error_int_mask &= ~(1L << (irq - IRQ_PPI_ERROR));
  
  	if (!error_int_mask) {
@@ -1177,7 +1293,7 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-ipipe/a
  				     ~(1 <<
  				       (IRQ_GENERIC_ERROR -
  					(IRQ_CORETMR + 1))));
- 		__builtin_bfin_ssync();
+ 		SSYNC();
 -		local_irq_enable();
 +		local_irq_enable_hw();
  	}
@@ -1189,39 +1305,43 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-ipipe/a
 +	local_irq_disable_hw();
  	bfin_write_SIC_IMASK(bfin_read_SIC_IMASK() | 1 <<
  			     (IRQ_GENERIC_ERROR - (IRQ_CORETMR + 1)));
- 	__builtin_bfin_ssync();
+ 	SSYNC();
 -	local_irq_enable();
 +	local_irq_enable_hw();
  
  	error_int_mask |= 1L << (irq - IRQ_PPI_ERROR);
  }
-@@ -252,8 +357,12 @@ static void bfin_demux_error_irq(unsigne
+@@ -254,8 +360,12 @@ static void bfin_demux_error_irq(unsigne
  
  	if (irq) {
  		if (error_int_mask & (1L << (irq - IRQ_PPI_ERROR))) {
+-			struct irq_desc *desc = irq_desc + irq;
+-			desc->handle_irq(irq, desc);
 +#ifdef CONFIG_IPIPE
-+			__ipipe_handle_irq(irq, regs);
++			__ipipe_handle_irq(irq, get_irq_regs());
 +#else /* !CONFIG_IPIPE */
- 			struct irq_desc *desc = irq_desc + irq;
- 			desc->handle_irq(irq, desc, regs);
++                        struct irq_desc *desc = irq_desc + irq;
++                        desc->handle_irq(irq, desc);
 +#endif  /* !CONFIG_IPIPE */
  		} else {
  
  			switch (irq) {
-@@ -434,8 +543,12 @@ static void bfin_demux_gpio_irq(unsigned
+@@ -459,8 +569,12 @@ static void bfin_demux_gpio_irq(unsigned
  
  		while (mask) {
  			if (mask & 1) {
+-				struct irq_desc *desc = irq_desc + irq;
+-				desc->handle_irq(irq, desc);
 +#ifdef CONFIG_IPIPE
-+				__ipipe_handle_irq(irq, regs);
++				__ipipe_handle_irq(irq, get_irq_regs());
 +#else /* !CONFIG_IPIPE */
- 				struct irq_desc *desc = irq_desc + irq;
- 				desc->handle_irq(irq, desc, regs);
++                                struct irq_desc *desc = irq_desc + irq;
++                                desc->handle_irq(irq, desc);
 +#endif /* !CONFIG_IPIPE */
  			}
  			irq++;
  			mask >>= 1;
-@@ -452,12 +565,12 @@ static void bfin_demux_gpio_irq(unsigned
+@@ -477,12 +591,12 @@ static void bfin_demux_gpio_irq(unsigned
  int __init init_arch_irq(void)
  {
  	int irq;
@@ -1229,14 +1349,15 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-ipipe/a
 +	unsigned long ilat = 0, flags;
  	/*  Disable all the peripheral intrs  - page 4-29 HW Ref manual */
  	bfin_write_SIC_IMASK(SIC_UNMASK_ALL);
- 	__builtin_bfin_ssync();
- 
+ 	SSYNC();
+-
 -	local_irq_disable();
-+	local_irq_save(flags);
++        local_irq_save(flags);
++	//local_irq_disable();
  
  #ifndef CONFIG_KGDB
  	bfin_write_EVT0(evt_emulation);
-@@ -493,17 +606,35 @@ int __init init_arch_irq(void)
+@@ -518,17 +632,35 @@ int __init init_arch_irq(void)
  # endif
  			    ) {
  #endif
@@ -1254,7 +1375,7 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-ipipe/a
  #ifdef CONFIG_IRQCHIP_DEMUX_GPIO
  			} else {
 +#ifdef CONFIG_IPIPE
-+				__set_irq_demux_handler(irq, bfin_demux_gpio_irq, 1);
++				__set_irq_demux_handler(irq, bfin_demux_gpio_irq, 1, "GPIO demux");
 +#else /* !CONFIG_IPIPE */
  				set_irq_chained_handler(irq,
  							bfin_demux_gpio_irq);
@@ -1265,33 +1386,32 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-ipipe/a
  #ifdef BF537_GENERIC_ERROR_INT_DEMUX
  		} else {
 +#ifdef CONFIG_IPIPE
-+			__set_irq_demux_handler(irq, bfin_demux_error_irq, 0);
++			__set_irq_demux_handler(irq, bfin_demux_error_irq, 0, "ERROR demux");
 +#else /* !CONFIG_IPIPE */
  			set_irq_handler(irq, bfin_demux_error_irq);
 +#endif /* !CONFIG_IPIPE */
  		}
  #endif
  	}
-@@ -545,7 +676,15 @@ int __init init_arch_irq(void)
- 	bfin_write_IMASK(irq_flags);
- 	__builtin_bfin_csync();
+@@ -568,6 +700,15 @@ int __init init_arch_irq(void)
+ 	    IMASK_IVG10 | IMASK_IVG9 | IMASK_IVG8 | IMASK_IVG7 |
+ 	    IMASK_IVGHW;
  
--	local_irq_enable();
 +#ifdef CONFIG_IPIPE
-+	for (irq = 0; irq < NR_IRQS; irq++) {
-+		struct irq_desc *desc = irq_desc + irq;
-+		desc->ic_prio = __ipipe_get_irq_priority(irq);
-+		desc->thr_prio = __ipipe_get_irqthread_priority(irq);
-+	}
++       for (irq = 0; irq < NR_IRQS; irq++) {
++               struct irq_desc *desc = irq_desc + irq;
++               desc->ic_prio = __ipipe_get_irq_priority(irq);
++               desc->thr_prio = __ipipe_get_irqthread_priority(irq);
++       }
 +#endif /* CONFIG_IPIPE */
 +
-+	local_irq_restore(flags);
++        local_irq_restore(flags);
  	return 0;
  }
  
-@@ -572,3 +711,116 @@ void do_irq(int vec, struct pt_regs *fp)
- 	}
- 	asm_do_IRQ(vec, fp);
+@@ -602,3 +743,121 @@ void do_irq(int vec, struct pt_regs *fp)
+ 	kgdb_process_breakpoint();
+ #endif
  }
 +
 +#ifdef CONFIG_IPIPE
@@ -1355,6 +1475,10 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-ipipe/a
 +
 +/* Hw interrupts are disabled on entry (check SAVE_CONTEXT). */
 +
++#ifdef CONFIG_DO_IRQ_L1
++asmlinkage int __ipipe_grab_irq(int vec, struct pt_regs *regs) __attribute__((l1_text));
++#endif
++
 +asmlinkage int __ipipe_grab_irq(int vec, struct pt_regs *regs)
 +{
 +	struct ivgx *ivg_stop = ivg7_13[vec-IVG7].istop;
@@ -1384,11 +1508,12 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-ipipe/a
 +
 +	ipipe_load_cpuid();
 +
-+	if (irq == IRQ_SYSTMR) {
++	if (irq == IRQ_SYSTMR)
 +	    bfin_write_TIMER_STATUS(1); /* Latch TIMIL0 */
-+	    /* for update_process_times() */
-+	    __ipipe_tick_regs[cpuid].ipend = regs->ipend;
-+	}
++
++	/* This is basically what we need from the register frame. */
++	__ipipe_irq_regs[cpuid].ipend = regs->ipend;
++	__ipipe_irq_regs[cpuid].pc = regs->pc;
 +
 +handle_irq:
 +
@@ -1406,11 +1531,11 @@ diff -uNrp linux-orig/arch/blackfin/mach-common/ints-priority-sc.c linux-ipipe/a
 +}
 +
 +#endif /* CONFIG_IPIPE */
-diff -uNrp linux-orig/drivers/serial/bfin_5xx.c linux-ipipe/drivers/serial/bfin_5xx.c
---- linux-orig/drivers/serial/bfin_5xx.c	2006-11-29 10:37:00.000000000 +0100
-+++ linux-ipipe/drivers/serial/bfin_5xx.c	2006-12-22 19:47:21.000000000 +0100
-@@ -750,6 +750,50 @@ bfin_serial_console_write(struct console
- 	local_irq_restore(flags);
+diff -uNrp --exclude .svn linux-orig/drivers/serial/bfin_5xx.c linux-ipipe/drivers/serial/bfin_5xx.c
+--- linux-orig/drivers/serial/bfin_5xx.c	2007-03-13 11:46:09.000000000 +0100
++++ linux-ipipe/drivers/serial/bfin_5xx.c	2007-04-09 18:40:23.000000000 +0200
+@@ -792,6 +792,50 @@ bfin_serial_console_write(struct console
+ 
  }
  
 +#ifdef CONFIG_IPIPE
@@ -1460,9 +1585,9 @@ diff -uNrp linux-orig/drivers/serial/bfin_5xx.c linux-ipipe/drivers/serial/bfin_
  /*
   * If the port was already initialised (eg, by a boot loader),
   * try to determine the current setup.
-diff -uNrp linux-orig/include/asm-blackfin/atomic.h linux-ipipe/include/asm-blackfin/atomic.h
---- linux-orig/include/asm-blackfin/atomic.h	2006-11-01 06:27:21.000000000 +0100
-+++ linux-ipipe/include/asm-blackfin/atomic.h	2006-12-24 18:37:53.000000000 +0100
+diff -uNrp --exclude .svn linux-orig/include/asm-blackfin/atomic.h linux-ipipe/include/asm-blackfin/atomic.h
+--- linux-orig/include/asm-blackfin/atomic.h	2006-11-01 06:32:21.000000000 +0100
++++ linux-ipipe/include/asm-blackfin/atomic.h	2007-04-09 18:40:24.000000000 +0200
 @@ -25,18 +25,18 @@ static __inline__ void atomic_add(int i,
  {
  	long flags;
@@ -1558,9 +1683,9 @@ diff -uNrp linux-orig/include/asm-blackfin/atomic.h linux-ipipe/include/asm-blac
  }
  
  /* Atomic operations are already serializing */
-diff -uNrp linux-orig/include/asm-blackfin/bitops.h linux-ipipe/include/asm-blackfin/bitops.h
---- linux-orig/include/asm-blackfin/bitops.h	2006-11-01 06:27:27.000000000 +0100
-+++ linux-ipipe/include/asm-blackfin/bitops.h	2006-12-15 17:49:01.000000000 +0100
+diff -uNrp --exclude .svn linux-orig/include/asm-blackfin/bitops.h linux-ipipe/include/asm-blackfin/bitops.h
+--- linux-orig/include/asm-blackfin/bitops.h	2006-11-01 06:32:21.000000000 +0100
++++ linux-ipipe/include/asm-blackfin/bitops.h	2007-04-09 18:40:24.000000000 +0200
 @@ -24,9 +24,9 @@ static __inline__ void set_bit(int nr, v
  
  	a += nr >> 5;
@@ -1636,9 +1761,9 @@ diff -uNrp linux-orig/include/asm-blackfin/bitops.h linux-ipipe/include/asm-blac
  	return retval;
  }
  
-diff -uNrp linux-orig/include/asm-blackfin/entry.h linux-ipipe/include/asm-blackfin/entry.h
---- linux-orig/include/asm-blackfin/entry.h	2006-11-01 06:27:33.000000000 +0100
-+++ linux-ipipe/include/asm-blackfin/entry.h	2006-12-15 23:24:59.000000000 +0100
+diff -uNrp --exclude .svn linux-orig/include/asm-blackfin/entry.h linux-ipipe/include/asm-blackfin/entry.h
+--- linux-orig/include/asm-blackfin/entry.h	2007-01-30 11:21:44.000000000 +0100
++++ linux-ipipe/include/asm-blackfin/entry.h	2007-04-09 18:40:24.000000000 +0200
 @@ -22,6 +22,7 @@
  #define SAVE_ALL_SYS		save_context_no_interrupts
  /* This is used for all normal interrupts.  It saves a minimum of registers
@@ -1668,10 +1793,10 @@ diff -uNrp linux-orig/include/asm-blackfin/entry.h linux-ipipe/include/asm-black
  
  /* For timer interrupts, we need to save IPEND, since the user_mode
  	   macro accesses it to determine where to account time.  */
-diff -uNrp linux-orig/include/asm-blackfin/ipipe.h linux-ipipe/include/asm-blackfin/ipipe.h
+diff -uNrp --exclude .svn linux-orig/include/asm-blackfin/ipipe.h linux-ipipe/include/asm-blackfin/ipipe.h
 --- linux-orig/include/asm-blackfin/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-ipipe/include/asm-blackfin/ipipe.h	2006-12-24 19:26:16.000000000 +0100
-@@ -0,0 +1,296 @@
++++ linux-ipipe/include/asm-blackfin/ipipe.h	2007-04-10 13:05:55.000000000 +0200
+@@ -0,0 +1,293 @@
 +/*   -*- linux-c -*-
 + *   include/asm-blackfin/ipipe.h
 + *
@@ -1696,8 +1821,6 @@ diff -uNrp linux-orig/include/asm-blackfin/ipipe.h linux-ipipe/include/asm-black
 +#ifndef __BLACKFIN_IPIPE_H
 +#define __BLACKFIN_IPIPE_H
 +
-+#include <linux/config.h>
-+
 +#ifdef CONFIG_IPIPE
 +
 +#include <linux/cpumask.h>
@@ -1710,10 +1833,10 @@ diff -uNrp linux-orig/include/asm-blackfin/ipipe.h linux-ipipe/include/asm-black
 +#include <asm/atomic.h>
 +#include <asm/traps.h>
 +
-+#define IPIPE_ARCH_STRING     "1.6-00"
++#define IPIPE_ARCH_STRING     "1.6-01"
 +#define IPIPE_MAJOR_NUMBER    1
 +#define IPIPE_MINOR_NUMBER    6
-+#define IPIPE_PATCH_NUMBER    0
++#define IPIPE_PATCH_NUMBER    1
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 2^5 for 32bits arch. */
@@ -1865,7 +1988,7 @@ diff -uNrp linux-orig/include/asm-blackfin/ipipe.h linux-ipipe/include/asm-black
 +void __ipipe_serial_debug(const char *fmt,
 +			  ...);
 +
-+extern struct pt_regs __ipipe_tick_regs[];
++extern struct pt_regs __ipipe_irq_regs[];
 +
 +extern unsigned long __ipipe_core_clock;
 +
@@ -1929,8 +2052,7 @@ diff -uNrp linux-orig/include/asm-blackfin/ipipe.h linux-ipipe/include/asm-black
 +			   thread wakeup code. Which in turn means	\
 +			   that no irqtail condition could be pending	\
 +			   for domains above Linux in the pipeline. */	\
-+			((void (*)(unsigned, struct pt_regs *))		\
-+			 ipd->irqs[irq].handler) (irq, __ipipe_tick_regs + cpuid); \
++			ipd->irqs[irq].handler(irq, __ipipe_irq_regs + cpuid);	\
 +	} else {							\
 +		__clear_bit(IPIPE_SYNC_FLAG, &cpudata->status);		\
 +		local_irq_enable_nohead(ipd);				\
@@ -1968,18 +2090,9 @@ diff -uNrp linux-orig/include/asm-blackfin/ipipe.h linux-ipipe/include/asm-black
 +#endif /* CONFIG_IPIPE */
 +
 +#endif	/* !__BLACKFIN_IPIPE_H */
-diff -uNrp linux-orig/include/asm-blackfin/system.h linux-ipipe/include/asm-blackfin/system.h
---- linux-orig/include/asm-blackfin/system.h	2006-11-01 06:27:46.000000000 +0100
-+++ linux-ipipe/include/asm-blackfin/system.h	2006-12-25 13:45:26.000000000 +0100
-@@ -9,7 +9,7 @@
-  * Created:     25Jan2001 - Tony Kou
-  * Description: system.h include file
-  *
-- * Rev:       $Id: system.h,v 1.26 2006-11-01 05:27:46 magicyang Exp $
-+ * Rev:       $Id: system.h,v 1.26 2006/11/01 05:27:46 magicyang Exp $
-  *
-  * Modified:     22Sep2006 - Robin Getz
-  *                - move include blackfin.h down, so I can get access to
+diff -uNrp --exclude .svn linux-orig/include/asm-blackfin/system.h linux-ipipe/include/asm-blackfin/system.h
+--- linux-orig/include/asm-blackfin/system.h	2006-11-01 06:32:21.000000000 +0100
++++ linux-ipipe/include/asm-blackfin/system.h	2007-04-09 18:40:24.000000000 +0200
 @@ -46,6 +46,150 @@
  
  extern unsigned long irq_flags;
@@ -2222,10 +2335,10 @@ diff -uNrp linux-orig/include/asm-blackfin/system.h linux-ipipe/include/asm-blac
  	return tmp;
  }
  
-diff -uNrp linux-orig/include/linux/hardirq.h linux-ipipe/include/linux/hardirq.h
---- linux-orig/include/linux/hardirq.h	2006-11-02 11:28:00.000000000 +0100
-+++ linux-ipipe/include/linux/hardirq.h	2006-12-03 18:20:54.000000000 +0100
-@@ -123,7 +123,7 @@ static inline void account_system_vtime(
+diff -uNrp --exclude .svn linux-orig/include/linux/hardirq.h linux-ipipe/include/linux/hardirq.h
+--- linux-orig/include/linux/hardirq.h	2007-01-10 09:32:17.000000000 +0100
++++ linux-ipipe/include/linux/hardirq.h	2007-04-09 18:40:24.000000000 +0200
+@@ -128,7 +128,7 @@ static inline void account_system_vtime(
   */
  extern void irq_exit(void);
  
@@ -2235,10 +2348,10 @@ diff -uNrp linux-orig/include/linux/hardirq.h linux-ipipe/include/linux/hardirq.
 +#define nmi_exit()		do { if (ipipe_root_domain_p) { __irq_exit(); lockdep_on(); } } while (0)
  
  #endif /* LINUX_HARDIRQ_H */
-diff -uNrp linux-orig/include/linux/ipipe.h linux-ipipe/include/linux/ipipe.h
+diff -uNrp --exclude .svn linux-orig/include/linux/ipipe.h linux-ipipe/include/linux/ipipe.h
 --- linux-orig/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-ipipe/include/linux/ipipe.h	2006-12-15 16:31:14.000000000 +0100
-@@ -0,0 +1,710 @@
++++ linux-ipipe/include/linux/ipipe.h	2007-04-10 12:05:59.000000000 +0200
+@@ -0,0 +1,708 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -2526,8 +2639,6 @@ diff -uNrp linux-orig/include/linux/ipipe.h linux-ipipe/include/linux/ipipe.h
 +extern unsigned long __ipipe_virtual_irq_map;
 +
 +extern struct list_head __ipipe_pipeline;
-+
-+extern ipipe_spinlock_t __ipipe_pipelock;
 +
 +extern int __ipipe_event_monitors[];
 +
@@ -2949,9 +3060,9 @@ diff -uNrp linux-orig/include/linux/ipipe.h linux-ipipe/include/linux/ipipe.h
 +#endif	/* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_H */
-diff -uNrp linux-orig/include/linux/ipipe_trace.h linux-ipipe/include/linux/ipipe_trace.h
+diff -uNrp --exclude .svn linux-orig/include/linux/ipipe_trace.h linux-ipipe/include/linux/ipipe_trace.h
 --- linux-orig/include/linux/ipipe_trace.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-ipipe/include/linux/ipipe_trace.h	2006-12-15 16:31:18.000000000 +0100
++++ linux-ipipe/include/linux/ipipe_trace.h	2007-04-09 18:40:24.000000000 +0200
 @@ -0,0 +1,44 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_trace.h
@@ -2997,60 +3108,58 @@ diff -uNrp linux-orig/include/linux/ipipe_trace.h linux-ipipe/include/linux/ipip
 +#endif /* CONFIG_IPIPE_TRACE */
 +
 +#endif	/* !__LINUX_IPIPE_H */
-diff -uNrp linux-orig/include/linux/irq.h linux-ipipe/include/linux/irq.h
---- linux-orig/include/linux/irq.h	2006-11-02 11:29:30.000000000 +0100
-+++ linux-ipipe/include/linux/irq.h	2006-12-24 17:14:02.000000000 +0100
-@@ -59,6 +59,7 @@
- #define IRQ_NOAUTOEN		0x08000000	/* IRQ will not be enabled on request irq */
+diff -uNrp --exclude .svn linux-orig/include/linux/irq.h linux-ipipe/include/linux/irq.h
+--- linux-orig/include/linux/irq.h	2007-01-10 09:32:17.000000000 +0100
++++ linux-ipipe/include/linux/irq.h	2007-04-10 09:54:03.000000000 +0200
+@@ -66,6 +66,8 @@ typedef	void fastcall (*irq_flow_handler
  #define IRQ_DELAYED_DISABLE	0x10000000	/* IRQ disable (masking) happens delayed. */
  #define IRQ_WAKEUP		0x20000000	/* IRQ triggers system wakeup */
-+#define IRQ_SCHEDULED		0x40000000	/* IRQ thread is scheduled (I-pipe) */
+ #define IRQ_MOVE_PENDING	0x40000000	/* need to re-target IRQ destination */
++#define IRQ_SCHEDULED           0x80000000      /* IRQ thread is scheduled (I-pipe) */
++
  
  struct proc_dir_entry;
  
-@@ -138,7 +139,23 @@ struct irq_chip {
+@@ -145,7 +147,20 @@ struct irq_chip {
   *
   * Pad this out to 32 bytes for cache and indexing reasons.
   */
 +struct task_struct;
  struct irq_desc {
 +#ifdef CONFIG_IPIPE
-+	void			fastcall (*ipipe_ack)(unsigned int irq,
-+						      struct irq_desc *desc,
-+						      struct pt_regs *regs);
-+	void			fastcall (*ipipe_demux)(unsigned int irq,
-+							struct irq_desc *desc,
-+							struct pt_regs *regs);
-+	void			fastcall (*ipipe_end)(unsigned int irq,
-+						      struct irq_desc *desc);
-+	struct task_struct	*thread;
-+	void			(*thr_handler)(unsigned irq,
-+					       struct pt_regs *);
-+	int			thr_prio;
-+	int			ic_prio;
++	void fastcall (*ipipe_ack)(unsigned int irq,
++				   struct irq_desc *desc);
++	void fastcall (*ipipe_demux)(unsigned int irq,
++				     struct irq_desc *desc);
++	void  fastcall (*ipipe_end)(unsigned int irq,
++				    struct irq_desc *desc);
++	struct task_struct      *thread;
++	void                    (*thr_handler)(unsigned irq, void *);
++	int                     thr_prio;
++	int                     ic_prio;
 +#endif /* CONFIG_IPIPE */
- 	void fastcall		(*handle_irq)(unsigned int irq,
- 					      struct irq_desc *desc,
- 					      struct pt_regs *regs);
-@@ -369,6 +386,14 @@ __set_irq_handler(unsigned int irq,
- 					  struct pt_regs *),
- 		  int is_chained);
+ 	irq_flow_handler_t	handle_irq;
+ 	struct irq_chip		*chip;
+ 	void			*handler_data;
+@@ -341,6 +356,14 @@ set_irq_handler(unsigned int irq, irq_fl
+ 	__set_irq_handler(irq, handle, 0, NULL);
+ }
  
 +#ifdef CONFIG_IPIPE
 +extern void
 +__set_irq_demux_handler(unsigned int irq,
-+			void fastcall (*decode)(unsigned int, struct irq_desc *,
-+						struct pt_regs *),
-+			int is_chained);
++			void fastcall (*decode)(unsigned int, struct irq_desc *),
++			int is_chained,
++			const char *name);
 +#endif /* CONFIG_IPIPE */
 +
  /*
-  * Set a highlevel flow handler for a given IRQ:
-  */
-diff -uNrp linux-orig/include/linux/linkage.h linux-ipipe/include/linux/linkage.h
---- linux-orig/include/linux/linkage.h	2006-11-02 11:30:25.000000000 +0100
-+++ linux-ipipe/include/linux/linkage.h	2006-12-03 18:20:54.000000000 +0100
-@@ -60,4 +60,8 @@
+  * Set a highlevel chained flow handler for a given IRQ.
+  * (a chained handler is automatically enabled and set to
+diff -uNrp --exclude .svn linux-orig/include/linux/linkage.h linux-ipipe/include/linux/linkage.h
+--- linux-orig/include/linux/linkage.h	2007-01-10 09:32:17.000000000 +0100
++++ linux-ipipe/include/linux/linkage.h	2007-04-09 18:40:24.000000000 +0200
+@@ -64,4 +64,8 @@
  #define fastcall
  #endif
  
@@ -3059,9 +3168,9 @@ diff -uNrp linux-orig/include/linux/linkage.h linux-ipipe/include/linux/linkage.
 +#endif
 +
  #endif
-diff -uNrp linux-orig/include/linux/preempt.h linux-ipipe/include/linux/preempt.h
---- linux-orig/include/linux/preempt.h	2006-11-02 11:32:31.000000000 +0100
-+++ linux-ipipe/include/linux/preempt.h	2006-12-03 18:20:54.000000000 +0100
+diff -uNrp --exclude .svn linux-orig/include/linux/preempt.h linux-ipipe/include/linux/preempt.h
+--- linux-orig/include/linux/preempt.h	2006-11-02 11:51:58.000000000 +0100
++++ linux-ipipe/include/linux/preempt.h	2007-04-09 18:40:24.000000000 +0200
 @@ -26,29 +26,44 @@
  
  asmlinkage void preempt_schedule(void);
@@ -3123,10 +3232,10 @@ diff -uNrp linux-orig/include/linux/preempt.h linux-ipipe/include/linux/preempt.
  } while (0)
  
  #else
-diff -uNrp linux-orig/include/linux/sched.h linux-ipipe/include/linux/sched.h
---- linux-orig/include/linux/sched.h	2006-11-02 11:33:13.000000000 +0100
-+++ linux-ipipe/include/linux/sched.h	2006-12-03 18:22:44.000000000 +0100
-@@ -52,6 +52,7 @@ struct sched_param {
+diff -uNrp --exclude .svn linux-orig/include/linux/sched.h linux-ipipe/include/linux/sched.h
+--- linux-orig/include/linux/sched.h	2007-01-10 09:32:17.000000000 +0100
++++ linux-ipipe/include/linux/sched.h	2007-04-09 18:40:24.000000000 +0200
+@@ -54,6 +54,7 @@ struct sched_param {
  #include <linux/cpumask.h>
  #include <linux/errno.h>
  #include <linux/nodemask.h>
@@ -3134,21 +3243,23 @@ diff -uNrp linux-orig/include/linux/sched.h linux-ipipe/include/linux/sched.h
  
  #include <asm/system.h>
  #include <asm/semaphore.h>
-@@ -148,6 +149,13 @@ extern unsigned long weighted_cpuload(co
+@@ -149,6 +150,15 @@ extern unsigned long weighted_cpuload(co
  #define EXIT_DEAD		32
  /* in tsk->state again */
  #define TASK_NONINTERACTIVE	64
++
 +#ifdef CONFIG_IPIPE
-+#define TASK_ATOMICSWITCH	512
-+#define TASK_NOWAKEUP          1024
++#define TASK_ATOMICSWITCH       512
++#define TASK_NOWAKEUP           1024
 +#else  /* !CONFIG_IPIPE */
-+#define TASK_ATOMICSWITCH	0
-+#define TASK_NOWAKEUP          0
++#define TASK_ATOMICSWITCH       0
++#define TASK_NOWAKEUP           0
 +#endif /* CONFIG_IPIPE */
++
+ #define TASK_DEAD		128
  
  #define __set_task_state(tsk, state_value)		\
- 	do { (tsk)->state = (state_value); } while (0)
-@@ -988,6 +996,9 @@ struct task_struct {
+@@ -1015,6 +1025,9 @@ struct task_struct {
  
  	atomic_t fs_excl;	/* holding fs exclusive resources */
  	struct rcu_head rcu;
@@ -3158,7 +3269,7 @@ diff -uNrp linux-orig/include/linux/sched.h linux-ipipe/include/linux/sched.h
  
  	/*
  	 * cache last used pipe for splice
-@@ -1056,6 +1067,11 @@ static inline void put_task_struct(struc
+@@ -1115,6 +1128,11 @@ static inline void put_task_struct(struc
  #define PF_SPREAD_SLAB	0x02000000	/* Spread some slab caches over cpuset */
  #define PF_MEMPOLICY	0x10000000	/* Non-default NUMA mempolicy */
  #define PF_MUTEX_TESTER	0x20000000	/* Thread belongs to the rt mutex tester */
@@ -3170,12 +3281,12 @@ diff -uNrp linux-orig/include/linux/sched.h linux-ipipe/include/linux/sched.h
  
  /*
   * Only the _current_ task can read/write to tsk->flags, but other
-diff -uNrp linux-orig/include/linux/spinlock.h linux-ipipe/include/linux/spinlock.h
---- linux-orig/include/linux/spinlock.h	2006-11-02 11:33:50.000000000 +0100
-+++ linux-ipipe/include/linux/spinlock.h	2006-12-21 19:16:44.000000000 +0100
-@@ -171,7 +171,97 @@ do {								\
- #define read_trylock(lock)		__cond_lock(_read_trylock(lock))
- #define write_trylock(lock)		__cond_lock(_write_trylock(lock))
+diff -uNrp --exclude .svn linux-orig/include/linux/spinlock.h linux-ipipe/include/linux/spinlock.h
+--- linux-orig/include/linux/spinlock.h	2007-01-12 11:09:28.000000000 +0100
++++ linux-ipipe/include/linux/spinlock.h	2007-04-09 18:40:24.000000000 +0200
+@@ -172,7 +172,97 @@ do {								\
+ #define read_trylock(lock)		__cond_lock(lock, _read_trylock(lock))
+ #define write_trylock(lock)		__cond_lock(lock, _write_trylock(lock))
  
 -#define spin_lock(lock)			_spin_lock(lock)
 +#undef TYPE_EQUAL
@@ -3272,19 +3383,26 @@ diff -uNrp linux-orig/include/linux/spinlock.h linux-ipipe/include/linux/spinloc
  
  #ifdef CONFIG_DEBUG_LOCK_ALLOC
  # define spin_lock_nested(lock, subclass) _spin_lock_nested(lock, subclass)
-@@ -183,16 +273,16 @@ do {								\
- #define read_lock(lock)			_read_lock(lock)
+@@ -185,7 +275,7 @@ do {								\
  
  #if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
+ 
 -#define spin_lock_irqsave(lock, flags)	flags = _spin_lock_irqsave(lock)
 +#define spin_lock_irqsave(lock, flags)	PICK_SPINLOCK_IRQSAVE(lock, flags)
  #define read_lock_irqsave(lock, flags)	flags = _read_lock_irqsave(lock)
  #define write_lock_irqsave(lock, flags)	flags = _write_lock_irqsave(lock)
+ 
+@@ -199,7 +289,7 @@ do {								\
+ 
  #else
+ 
 -#define spin_lock_irqsave(lock, flags)	_spin_lock_irqsave(lock, flags)
 +#define spin_lock_irqsave(lock, flags)	PICK_SPINLOCK_IRQSAVE(lock, flags)
  #define read_lock_irqsave(lock, flags)	_read_lock_irqsave(lock, flags)
  #define write_lock_irqsave(lock, flags)	_write_lock_irqsave(lock, flags)
+ #define spin_lock_irqsave_nested(lock, flags, subclass)	\
+@@ -207,7 +297,7 @@ do {								\
+ 
  #endif
  
 -#define spin_lock_irq(lock)		_spin_lock_irq(lock)
@@ -3292,7 +3410,7 @@ diff -uNrp linux-orig/include/linux/spinlock.h linux-ipipe/include/linux/spinloc
  #define spin_lock_bh(lock)		_spin_lock_bh(lock)
  
  #define read_lock_irq(lock)		_read_lock_irq(lock)
-@@ -206,18 +296,17 @@ do {								\
+@@ -221,18 +311,17 @@ do {								\
   */
  #if defined(CONFIG_DEBUG_SPINLOCK) || defined(CONFIG_PREEMPT) || \
  	!defined(CONFIG_SMP)
@@ -3317,7 +3435,7 @@ diff -uNrp linux-orig/include/linux/spinlock.h linux-ipipe/include/linux/spinloc
  # define read_unlock_irq(lock) \
      do { __raw_read_unlock(&(lock)->raw_lock); local_irq_enable(); } while (0)
  # define write_unlock_irq(lock) \
-@@ -225,7 +314,7 @@ do {								\
+@@ -240,7 +329,7 @@ do {								\
  #endif
  
  #define spin_unlock_irqrestore(lock, flags) \
@@ -3326,7 +3444,7 @@ diff -uNrp linux-orig/include/linux/spinlock.h linux-ipipe/include/linux/spinloc
  #define spin_unlock_bh(lock)		_spin_unlock_bh(lock)
  
  #define read_unlock_irqrestore(lock, flags) \
-@@ -272,4 +361,16 @@ extern int _atomic_dec_and_lock(atomic_t
+@@ -287,4 +376,16 @@ extern int _atomic_dec_and_lock(atomic_t
   */
  #define spin_can_lock(lock)	(!spin_is_locked(lock))
  
@@ -3343,9 +3461,9 @@ diff -uNrp linux-orig/include/linux/spinlock.h linux-ipipe/include/linux/spinloc
 +#endif
 +
  #endif /* __LINUX_SPINLOCK_H */
-diff -uNrp linux-orig/include/linux/spinlock_types.h linux-ipipe/include/linux/spinlock_types.h
---- linux-orig/include/linux/spinlock_types.h	2006-11-02 11:33:52.000000000 +0100
-+++ linux-ipipe/include/linux/spinlock_types.h	2006-12-21 19:16:44.000000000 +0100
+diff -uNrp --exclude .svn linux-orig/include/linux/spinlock_types.h linux-ipipe/include/linux/spinlock_types.h
+--- linux-orig/include/linux/spinlock_types.h	2006-11-02 11:51:58.000000000 +0100
++++ linux-ipipe/include/linux/spinlock_types.h	2007-04-09 18:40:24.000000000 +0200
 @@ -31,6 +31,10 @@ typedef struct {
  #endif
  } spinlock_t;
@@ -3377,10 +3495,10 @@ diff -uNrp linux-orig/include/linux/spinlock_types.h linux-ipipe/include/linux/s
 +#endif
 +
  #endif /* __LINUX_SPINLOCK_TYPES_H */
-diff -uNrp linux-orig/init/Kconfig linux-ipipe/init/Kconfig
---- linux-orig/init/Kconfig	2006-11-01 05:54:15.000000000 +0100
-+++ linux-ipipe/init/Kconfig	2006-12-25 00:30:41.000000000 +0100
-@@ -66,6 +66,7 @@ menu "General setup"
+diff -uNrp --exclude .svn linux-orig/init/Kconfig linux-ipipe/init/Kconfig
+--- linux-orig/init/Kconfig	2007-02-07 15:59:38.000000000 +0100
++++ linux-ipipe/init/Kconfig	2007-04-09 18:40:24.000000000 +0200
+@@ -67,6 +67,7 @@ menu "General setup"
  
  config LOCALVERSION
  	string "Local version - append to kernel release"
@@ -3388,11 +3506,11 @@ diff -uNrp linux-orig/init/Kconfig linux-ipipe/init/Kconfig
  	help
  	  Append an extra string to the end of your kernel version.
  	  This will show up when you type uname, for example.
-diff -uNrp linux-orig/init/main.c linux-ipipe/init/main.c
---- linux-orig/init/main.c	2006-11-01 05:54:16.000000000 +0100
-+++ linux-ipipe/init/main.c	2006-12-22 16:02:48.000000000 +0100
-@@ -466,7 +466,7 @@ asmlinkage void __init start_kernel(void
- 	 */
+diff -uNrp --exclude .svn linux-orig/init/main.c linux-ipipe/init/main.c
+--- linux-orig/init/main.c	2007-02-06 07:35:03.000000000 +0100
++++ linux-ipipe/init/main.c	2007-04-09 18:40:24.000000000 +0200
+@@ -489,7 +489,7 @@ asmlinkage void __init start_kernel(void
+ 	unwind_init();
  	lockdep_init();
  
 -	local_irq_disable();
@@ -3400,7 +3518,7 @@ diff -uNrp linux-orig/init/main.c linux-ipipe/init/main.c
  	early_boot_irqs_off();
  	early_init_irq_lock_class();
  
-@@ -512,6 +512,11 @@ asmlinkage void __init start_kernel(void
+@@ -540,6 +540,11 @@ asmlinkage void __init start_kernel(void
  	softirq_init();
  	timekeeping_init();
  	time_init();
@@ -3412,7 +3530,7 @@ diff -uNrp linux-orig/init/main.c linux-ipipe/init/main.c
  	profile_init();
  	if (!irqs_disabled())
  		printk("start_kernel(): bug: interrupts were enabled early\n");
-@@ -660,6 +665,7 @@ static void __init do_basic_setup(void)
+@@ -688,6 +693,7 @@ static void __init do_basic_setup(void)
  #ifdef CONFIG_SYSCTL
  	sysctl_init();
  #endif
@@ -3420,7 +3538,7 @@ diff -uNrp linux-orig/init/main.c linux-ipipe/init/main.c
  
  	do_initcalls();
  }
-@@ -701,6 +707,8 @@ static int init(void * unused)
+@@ -731,6 +737,8 @@ static int init(void * unused)
  
  	smp_prepare_cpus(max_cpus);
  
@@ -3429,9 +3547,9 @@ diff -uNrp linux-orig/init/main.c linux-ipipe/init/main.c
  	do_pre_smp_initcalls();
  
  	smp_init();
-diff -uNrp linux-orig/kernel/Makefile linux-ipipe/kernel/Makefile
---- linux-orig/kernel/Makefile	2006-11-01 06:31:17.000000000 +0100
-+++ linux-ipipe/kernel/Makefile	2006-12-25 00:30:49.000000000 +0100
+diff -uNrp --exclude .svn linux-orig/kernel/Makefile linux-ipipe/kernel/Makefile
+--- linux-orig/kernel/Makefile	2007-01-10 09:32:17.000000000 +0100
++++ linux-ipipe/kernel/Makefile	2007-04-09 18:40:24.000000000 +0200
 @@ -45,6 +45,7 @@ obj-$(CONFIG_KPROBES) += kprobes.o
  obj-$(CONFIG_SYSFS) += ksysfs.o
  obj-$(CONFIG_DETECT_SOFTLOCKUP) += softlockup.o
@@ -3440,10 +3558,10 @@ diff -uNrp linux-orig/kernel/Makefile linux-ipipe/kernel/Makefile
  obj-$(CONFIG_SECCOMP) += seccomp.o
  obj-$(CONFIG_RCU_TORTURE_TEST) += rcutorture.o
  obj-$(CONFIG_RELAY) += relay.o
-diff -uNrp linux-orig/kernel/exit.c linux-ipipe/kernel/exit.c
---- linux-orig/kernel/exit.c	2006-11-01 06:31:17.000000000 +0100
-+++ linux-ipipe/kernel/exit.c	2006-12-03 18:22:09.000000000 +0100
-@@ -913,6 +913,7 @@ fastcall NORET_TYPE void do_exit(long co
+diff -uNrp --exclude .svn linux-orig/kernel/exit.c linux-ipipe/kernel/exit.c
+--- linux-orig/kernel/exit.c	2007-02-06 07:35:03.000000000 +0100
++++ linux-ipipe/kernel/exit.c	2007-04-09 18:40:24.000000000 +0200
+@@ -925,6 +925,7 @@ fastcall NORET_TYPE void do_exit(long co
  
  	if (group_dead)
  		acct_process();
@@ -3451,10 +3569,10 @@ diff -uNrp linux-orig/kernel/exit.c linux-ipipe/kernel/exit.c
  	exit_sem(tsk);
  	__exit_files(tsk);
  	__exit_fs(tsk);
-diff -uNrp linux-orig/kernel/fork.c linux-ipipe/kernel/fork.c
---- linux-orig/kernel/fork.c	2006-11-01 06:31:17.000000000 +0100
-+++ linux-ipipe/kernel/fork.c	2006-12-03 18:22:09.000000000 +0100
-@@ -375,6 +375,7 @@ void mmput(struct mm_struct *mm)
+diff -uNrp --exclude .svn linux-orig/kernel/fork.c linux-ipipe/kernel/fork.c
+--- linux-orig/kernel/fork.c	2007-01-10 09:32:17.000000000 +0100
++++ linux-ipipe/kernel/fork.c	2007-04-09 18:40:24.000000000 +0200
+@@ -384,6 +384,7 @@ void mmput(struct mm_struct *mm)
  	might_sleep();
  
  	if (atomic_dec_and_test(&mm->mm_users)) {
@@ -3462,7 +3580,7 @@ diff -uNrp linux-orig/kernel/fork.c linux-ipipe/kernel/fork.c
  		exit_aio(mm);
  		exit_mmap(mm);
  		if (!list_empty(&mm->mmlist)) {
-@@ -906,7 +907,7 @@ static inline void copy_flags(unsigned l
+@@ -914,7 +915,7 @@ static inline void copy_flags(unsigned l
  {
  	unsigned long new_flags = p->flags;
  
@@ -3471,7 +3589,7 @@ diff -uNrp linux-orig/kernel/fork.c linux-ipipe/kernel/fork.c
  	new_flags |= PF_FORKNOEXEC;
  	if (!(clone_flags & CLONE_PTRACE))
  		p->ptrace = 0;
-@@ -1249,6 +1250,14 @@ static struct task_struct *copy_process(
+@@ -1258,6 +1259,14 @@ static struct task_struct *copy_process(
  	spin_unlock(&current->sighand->siglock);
  	write_unlock_irq(&tasklist_lock);
  	proc_fork_connector(p);
@@ -3485,10 +3603,10 @@ diff -uNrp linux-orig/kernel/fork.c linux-ipipe/kernel/fork.c
 +#endif /* CONFIG_IPIPE */
  	return p;
  
- bad_fork_cleanup_namespace:
-diff -uNrp linux-orig/kernel/ipipe/Kconfig linux-ipipe/kernel/ipipe/Kconfig
+ bad_fork_cleanup_namespaces:
+diff -uNrp --exclude .svn linux-orig/kernel/ipipe/Kconfig linux-ipipe/kernel/ipipe/Kconfig
 --- linux-orig/kernel/ipipe/Kconfig	1970-01-01 01:00:00.000000000 +0100
-+++ linux-ipipe/kernel/ipipe/Kconfig	2006-12-03 18:20:54.000000000 +0100
++++ linux-ipipe/kernel/ipipe/Kconfig	2007-04-09 18:40:24.000000000 +0200
 @@ -0,0 +1,6 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
@@ -3496,9 +3614,9 @@ diff -uNrp linux-orig/kernel/ipipe/Kconfig linux-ipipe/kernel/ipipe/Kconfig
 +	---help---
 +	  Activate this option if you want the interrupt pipeline to be
 +	  compiled in.
-diff -uNrp linux-orig/kernel/ipipe/Kconfig.debug linux-ipipe/kernel/ipipe/Kconfig.debug
+diff -uNrp --exclude .svn linux-orig/kernel/ipipe/Kconfig.debug linux-ipipe/kernel/ipipe/Kconfig.debug
 --- linux-orig/kernel/ipipe/Kconfig.debug	1970-01-01 01:00:00.000000000 +0100
-+++ linux-ipipe/kernel/ipipe/Kconfig.debug	2006-12-03 18:20:54.000000000 +0100
++++ linux-ipipe/kernel/ipipe/Kconfig.debug	2007-04-10 12:29:50.000000000 +0200
 @@ -0,0 +1,69 @@
 +config IPIPE_DEBUG
 +	bool "I-pipe debugging"
@@ -3521,7 +3639,7 @@ diff -uNrp linux-orig/kernel/ipipe/Kconfig.debug linux-ipipe/kernel/ipipe/Kconfi
 +config IPIPE_TRACE_ENABLE
 +	bool "Enable tracing on boot"
 +	depends on IPIPE_TRACE
-+	default y
++	default n
 +	---help---
 +	  Disable this option if you want to arm the tracer after booting
 +	  manually ("echo 1 > /proc/ipipe/tracer/enable"). This can reduce
@@ -3569,17 +3687,17 @@ diff -uNrp linux-orig/kernel/ipipe/Kconfig.debug linux-ipipe/kernel/ipipe/Kconfi
 +	int
 +	default 0 if !IPIPE_TRACE_ENABLE
 +	default 1 if IPIPE_TRACE_ENABLE
-diff -uNrp linux-orig/kernel/ipipe/Makefile linux-ipipe/kernel/ipipe/Makefile
+diff -uNrp --exclude .svn linux-orig/kernel/ipipe/Makefile linux-ipipe/kernel/ipipe/Makefile
 --- linux-orig/kernel/ipipe/Makefile	1970-01-01 01:00:00.000000000 +0100
-+++ linux-ipipe/kernel/ipipe/Makefile	2006-12-03 18:20:54.000000000 +0100
++++ linux-ipipe/kernel/ipipe/Makefile	2007-04-09 18:40:24.000000000 +0200
 @@ -0,0 +1,3 @@
 +
 +obj-$(CONFIG_IPIPE)	+= core.o
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
-diff -uNrp linux-orig/kernel/ipipe/core.c linux-ipipe/kernel/ipipe/core.c
+diff -uNrp --exclude .svn linux-orig/kernel/ipipe/core.c linux-ipipe/kernel/ipipe/core.c
 --- linux-orig/kernel/ipipe/core.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-ipipe/kernel/ipipe/core.c	2006-12-24 19:39:37.000000000 +0100
-@@ -0,0 +1,1437 @@
++++ linux-ipipe/kernel/ipipe/core.c	2007-04-10 12:04:11.000000000 +0200
+@@ -0,0 +1,1425 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -3613,6 +3731,7 @@ diff -uNrp linux-orig/kernel/ipipe/core.c linux-ipipe/kernel/ipipe/core.c
 +#include <linux/interrupt.h>
 +#ifdef CONFIG_PROC_FS
 +#include <linux/proc_fs.h>
++#include <linux/seq_file.h>
 +#endif	/* CONFIG_PROC_FS */
 +
 +MODULE_DESCRIPTION("I-pipe");
@@ -3629,7 +3748,7 @@ diff -uNrp linux-orig/kernel/ipipe/core.c linux-ipipe/kernel/ipipe/core.c
 +DEFINE_PER_CPU(struct ipipe_domain *, ipipe_percpu_domain) =
 +	{ &ipipe_root };
 +
-+ipipe_spinlock_t __ipipe_pipelock = IPIPE_SPIN_LOCK_UNLOCKED;
++static IPIPE_DEFINE_SPINLOCK(__ipipe_pipelock);
 +
 +LIST_HEAD(__ipipe_pipeline);
 +
@@ -3717,8 +3836,6 @@ diff -uNrp linux-orig/kernel/ipipe/core.c linux-ipipe/kernel/ipipe/core.c
 +
 +void __ipipe_cleanup_domain(struct ipipe_domain *ipd)
 +{
-+	unsigned irq;
-+
 +	ipipe_unstall_pipeline_from(ipd);
 +
 +#ifdef CONFIG_SMP
@@ -3731,10 +3848,6 @@ diff -uNrp linux-orig/kernel/ipipe/core.c linux-ipipe/kernel/ipipe/core.c
 +		}
 +	}
 +#endif	/* CONFIG_SMP */
-+
-+	for (irq = 0; irq < NR_IRQS; irq++)
-+		if (!ipipe_virtual_irq_p(irq) && ipd->irqs[irq].handler != NULL)
-+			__ipipe_disable_irqdesc(ipd, irq);
 +}
 +
 +void __ipipe_stall_root(void)
@@ -4815,8 +4928,6 @@ diff -uNrp linux-orig/kernel/ipipe/core.c linux-ipipe/kernel/ipipe/core.c
 +
 +#ifdef CONFIG_PROC_FS
 +
-+#include <linux/proc_fs.h>
-+
 +struct proc_dir_entry *ipipe_proc_root;
 +
 +static int __ipipe_version_info_proc(char *page,
@@ -4841,22 +4952,20 @@ diff -uNrp linux-orig/kernel/ipipe/core.c linux-ipipe/kernel/ipipe/core.c
 +	return len;
 +}
 +
-+static int __ipipe_common_info_proc(char *page,
-+				    char **start,
-+				    off_t off, int count, int *eof, void *data)
++static int __ipipe_common_info_show(struct seq_file *p, void *data)
 +{
-+	char *p = page, handling, stickiness, lockbit, exclusive, virtuality;
-+	struct ipipe_domain *ipd = (struct ipipe_domain *)data;
++	struct ipipe_domain *ipd = (struct ipipe_domain *)p->private;
++	char handling, stickiness, lockbit, exclusive, virtuality;
++
 +	unsigned long ctlbits;
 +	unsigned irq;
-+	int len;
 +
-+	p += sprintf(p, "       +----- Handling ([A]ccepted, [G]rabbed, [W]ired, [D]iscarded)\n");
-+	p += sprintf(p, "       |+---- Sticky\n");
-+	p += sprintf(p, "       ||+--- Locked\n");
-+	p += sprintf(p, "       |||+-- Exclusive\n");
-+	p += sprintf(p, "       ||||+- Virtual\n");
-+	p += sprintf(p, "[IRQ]  |||||\n");
++	seq_printf(p, "       +----- Handling ([A]ccepted, [G]rabbed, [W]ired, [D]iscarded)\n");
++	seq_printf(p, "       |+---- Sticky\n");
++	seq_printf(p, "       ||+--- Locked\n");
++	seq_printf(p, "       |||+-- Exclusive\n");
++	seq_printf(p, "       ||||+- Virtual\n");
++	seq_printf(p, "[IRQ]  |||||\n");
 +
 +	mutex_lock(&ipd->mutex);
 +
@@ -4926,42 +5035,44 @@ diff -uNrp linux-orig/kernel/ipipe/core.c linux-ipipe/kernel/ipipe/core.c
 +		else
 +			virtuality = '.';
 +
-+		p += sprintf(p, " %3u:  %c%c%c%c%c\n",
++		seq_printf(p, " %3u:  %c%c%c%c%c\n",
 +			     irq, handling, stickiness, lockbit, exclusive, virtuality);
 +	}
 +
-+	p += sprintf(p, "[Domain info]\n");
++	seq_printf(p, "[Domain info]\n");
 +
-+	p += sprintf(p, "id=0x%.8x\n", ipd->domid);
++	seq_printf(p, "id=0x%.8x\n", ipd->domid);
 +
 +	if (test_bit(IPIPE_AHEAD_FLAG,&ipd->flags))
-+		p += sprintf(p, "priority=topmost\n");
++		seq_printf(p, "priority=topmost\n");
 +	else
-+		p += sprintf(p, "priority=%d\n", ipd->priority);
++		seq_printf(p, "priority=%d\n", ipd->priority);
 +
 +	mutex_unlock(&ipd->mutex);
 +
-+	len = p - page;
-+
-+	if (len <= off + count)
-+		*eof = 1;
-+
-+	*start = page + off;
-+
-+	len -= off;
-+
-+	if (len > count)
-+		len = count;
-+
-+	if (len < 0)
-+		len = 0;
-+
-+	return len;
++	return 0;
 +}
++
++static int __ipipe_common_info_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, __ipipe_common_info_show, PROC_I(inode)->pde->data);
++}
++
++static struct file_operations __ipipe_info_proc_ops = {
++	.owner		= THIS_MODULE,
++	.open		= __ipipe_common_info_open,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++	.release	= single_release,
++};
 +
 +void __ipipe_add_domain_proc(struct ipipe_domain *ipd)
 +{
-+	create_proc_read_entry(ipd->name,0444,ipipe_proc_root,&__ipipe_common_info_proc,ipd);
++	struct proc_dir_entry *e = create_proc_entry(ipd->name, 0444, ipipe_proc_root);
++	if (e) {
++		e->proc_fops = &__ipipe_info_proc_ops;
++		e->data = (void*) ipd;
++	}
 +}
 +
 +void __ipipe_remove_domain_proc(struct ipipe_domain *ipd)
@@ -4969,7 +5080,7 @@ diff -uNrp linux-orig/kernel/ipipe/core.c linux-ipipe/kernel/ipipe/core.c
 +	remove_proc_entry(ipd->name,ipipe_proc_root);
 +}
 +
-+void ipipe_init_proc(void)
++void __init ipipe_init_proc(void)
 +{
 +	ipipe_proc_root = create_proc_entry("ipipe",S_IFDIR, 0);
 +	create_proc_read_entry("version",0444,ipipe_proc_root,&__ipipe_version_info_proc,NULL);
@@ -4999,12 +5110,7 @@ diff -uNrp linux-orig/kernel/ipipe/core.c linux-ipipe/kernel/ipipe/core.c
 +EXPORT_SYMBOL(__ipipe_test_and_stall_root);
 +EXPORT_SYMBOL(__ipipe_test_root);
 +EXPORT_SYMBOL(__ipipe_dispatch_event);
-+EXPORT_SYMBOL(__ipipe_dispatch_wired);
-+EXPORT_SYMBOL(__ipipe_sync_stage);
 +EXPORT_SYMBOL(__ipipe_pipeline);
-+EXPORT_SYMBOL(__ipipe_pipelock);
-+EXPORT_SYMBOL(__ipipe_virtual_irq_map);
-+
 +EXPORT_SYMBOL(ipipe_register_domain);
 +EXPORT_SYMBOL(ipipe_unregister_domain);
 +EXPORT_SYMBOL(ipipe_free_virq);
@@ -5017,10 +5123,10 @@ diff -uNrp linux-orig/kernel/ipipe/core.c linux-ipipe/kernel/ipipe/core.c
 +EXPORT_SYMBOL(ipipe_set_irq_affinity);
 +EXPORT_SYMBOL(ipipe_send_ipi);
 +EXPORT_SYMBOL(__ipipe_schedule_irq);
-diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
+diff -uNrp --exclude .svn linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 --- linux-orig/kernel/ipipe/tracer.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-ipipe/kernel/ipipe/tracer.c	2006-12-15 16:42:51.000000000 +0100
-@@ -0,0 +1,1244 @@
++++ linux-ipipe/kernel/ipipe/tracer.c	2007-04-10 12:05:12.000000000 +0200
+@@ -0,0 +1,1275 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -5124,12 +5230,10 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +
 +
 +#ifdef CONFIG_IPIPE_TRACE_VMALLOC
-+#define IPIPE_DEFAULT_TRACE_STATE   0
 +
 +static struct ipipe_trace_path *trace_paths[NR_CPUS];
 +
 +#else /* !CONFIG_IPIPE_TRACE_VMALLOC */
-+#define IPIPE_DEFAULT_TRACE_STATE   CONFIG_IPIPE_TRACE_ENABLE_VALUE
 +
 +static struct ipipe_trace_path trace_paths[NR_CPUS][IPIPE_TRACE_PATHS] =
 +	{ [0 ... NR_CPUS-1] =
@@ -5139,7 +5243,7 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +	};
 +#endif /* CONFIG_IPIPE_TRACE_VMALLOC */
 +
-+int ipipe_trace_enable = IPIPE_DEFAULT_TRACE_STATE;
++int ipipe_trace_enable = 0;
 +
 +static int active_path[NR_CPUS] =
 +	{ [0 ... NR_CPUS-1] = IPIPE_DEFAULT_ACTIVE };
@@ -5151,9 +5255,10 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +static int pre_trace = IPIPE_DEFAULT_PRE_TRACE;
 +static int post_trace = IPIPE_DEFAULT_POST_TRACE;
 +static int back_trace = IPIPE_DEFAULT_BACK_TRACE;
-+static int verbose_trace = 0;
++static int verbose_trace;
++static unsigned long trace_overhead;
 +
-+static DECLARE_MUTEX(out_mutex);
++static DEFINE_MUTEX(out_mutex);
 +static struct ipipe_trace_path *print_path;
 +static struct ipipe_trace_path *panic_path;
 +static int print_pre_trace;
@@ -5646,6 +5751,18 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +		struct ipipe_trace_point *point = &panic_path->point[pos];
 +		long time;
 +		char buf[16];
++	       int i;
++
++	       printk(" %c", (point->flags & IPIPE_TFLG_HWIRQ_OFF) ?
++			      '|' : ' ');
++
++	       for (i = IPIPE_TFLG_DOMSTATE_BITS; i >= 0; i--)
++		       printk("%c",
++			      (IPIPE_TFLG_CURRENT_DOMAIN(point) == i) ?
++			      (IPIPE_TFLG_DOMAIN_STALLED(point, i) ?
++				       '#' : '+') :
++			       (IPIPE_TFLG_DOMAIN_STALLED(point, i) ?
++				       '*' : ' '));
 +
 +		if (!point->eip)
 +			printk("-<invalid>-\n");
@@ -5660,7 +5777,7 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +
 +				case IPIPE_TRACE_PID:
 +					__ipipe_get_task_info(task_info,
-+					                      point, 1);
++							      point, 1);
 +					printk(task_info);
 +					break;
 +
@@ -5847,6 +5964,9 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +
 +static void __ipipe_print_headline(struct seq_file *m)
 +{
++	seq_printf(m, "Calibrated minimum trace-point overhead: %lu.%03lu "
++		   "us\n\n", trace_overhead/1000, trace_overhead%1000);
++
 +	if (verbose_trace) {
 +		const char *name[4] = { [0 ... 3] = "<unused>" };
 +		struct list_head *pos;
@@ -5892,7 +6012,7 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +{
 +	loff_t n = *pos;
 +
-+	down(&out_mutex);
++	mutex_lock(&out_mutex);
 +
 +	if (!n) {
 +		struct ipipe_trace_path *path;
@@ -5940,7 +6060,7 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +			UTS_RELEASE, IPIPE_ARCH_STRING);
 +		__ipipe_print_dbgwarning(m);
 +		seq_printf(m, "Begin: %lld cycles, Trace Points: %d (-%d/+%d), "
-+			"Length: %lu us\n\n",
++			"Length: %lu us\n",
 +			print_path->point[print_path->begin].timestamp,
 +			points, print_pre_trace, print_post_trace, length_usecs);
 +		__ipipe_print_headline(m);
@@ -5974,7 +6094,7 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +{
 +	if (print_path)
 +		print_path->dump_lock = 0;
-+	up(&out_mutex);
++	mutex_unlock(&out_mutex);
 +}
 +
 +static int __ipipe_prtrace_show(struct seq_file *m, void *p)
@@ -6035,9 +6155,9 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +__ipipe_max_reset(struct file *file, const char __user *pbuffer,
 +                  size_t count, loff_t *data)
 +{
-+	down(&out_mutex);
++	mutex_lock(&out_mutex);
 +	ipipe_trace_max_reset();
-+	up(&out_mutex);
++	mutex_unlock(&out_mutex);
 +
 +	return count;
 +}
@@ -6054,7 +6174,7 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +{
 +	loff_t n = *pos;
 +
-+	down(&out_mutex);
++	mutex_lock(&out_mutex);
 +
 +	if (!n) {
 +		struct ipipe_trace_path *path;
@@ -6096,7 +6216,7 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +			"------\n",
 +			UTS_RELEASE, IPIPE_ARCH_STRING);
 +		__ipipe_print_dbgwarning(m);
-+		seq_printf(m, "Freeze: %lld cycles, Trace Points: %d (+%d)\n\n",
++		seq_printf(m, "Freeze: %lld cycles, Trace Points: %d (+%d)\n",
 +			print_path->point[print_path->begin].timestamp,
 +			print_pre_trace+1, print_post_trace);
 +		__ipipe_print_headline(m);
@@ -6142,11 +6262,11 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +	if (((*end != '\0') && !isspace(*end)) || (val < 0))
 +		return -EINVAL;
 +
-+	down(&out_mutex);
++	mutex_lock(&out_mutex);
 +	ipipe_trace_frozen_reset();
 +	if (val > 0)
 +		ipipe_trace_freeze(-1);
-+	up(&out_mutex);
++	mutex_unlock(&out_mutex);
 +
 +	return count;
 +}
@@ -6195,9 +6315,9 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +	if (((*end != '\0') && !isspace(*end)) || (val < 0))
 +		return -EINVAL;
 +
-+	down(&out_mutex);
++	mutex_lock(&out_mutex);
 +	*(int *)data = val;
-+	up(&out_mutex);
++	mutex_unlock(&out_mutex);
 +
 +	return count;
 +}
@@ -6223,10 +6343,12 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +{
 +	struct proc_dir_entry *trace_dir;
 +	struct proc_dir_entry *entry;
++	unsigned long long start, end, min = ULLONG_MAX;
++	int i;
 +#ifdef CONFIG_IPIPE_TRACE_VMALLOC
 +	int cpu, path;
 +
-+	for (cpu = 0; cpu < NR_CPUS; cpu++) {
++	for_each_possible_cpu(cpu) {
 +		trace_paths[cpu] = vmalloc(
 +			sizeof(struct ipipe_trace_path) * IPIPE_TRACE_PATHS);
 +		if (!trace_paths) {
@@ -6241,8 +6363,23 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +			trace_paths[cpu][path].end   = -1;
 +		}
 +	}
-+	ipipe_trace_enable = CONFIG_IPIPE_TRACE_ENABLE_VALUE;
 +#endif /* CONFIG_IPIPE_TRACE_VMALLOC */
++	ipipe_trace_enable = CONFIG_IPIPE_TRACE_ENABLE_VALUE;
++
++	/* Calculate minimum overhead of __ipipe_trace() */
++	local_irq_disable_hw();
++	for (i = 0; i < 100; i++) {
++		ipipe_read_tsc(start);
++		__ipipe_trace(IPIPE_TRACE_FUNC, __BUILTIN_RETURN_ADDRESS0,
++			      __BUILTIN_RETURN_ADDRESS1, 0);
++		ipipe_read_tsc(end);
++
++		end -= start;
++		if (end < min)
++			min = end;
++	}
++	local_irq_enable_hw();
++	trace_overhead = ipipe_tsc2ns(min);
 +
 +	trace_dir = create_proc_entry("trace", S_IFDIR, ipipe_proc_root);
 +
@@ -6265,10 +6402,10 @@ diff -uNrp linux-orig/kernel/ipipe/tracer.c linux-ipipe/kernel/ipipe/tracer.c
 +	__ipipe_create_trace_proc_val(trace_dir, "enable",
 +	                              &ipipe_trace_enable);
 +}
-diff -uNrp linux-orig/kernel/irq/chip.c linux-ipipe/kernel/irq/chip.c
---- linux-orig/kernel/irq/chip.c	2006-11-02 06:49:07.000000000 +0100
-+++ linux-ipipe/kernel/irq/chip.c	2006-12-23 18:34:40.000000000 +0100
-@@ -249,7 +249,9 @@ handle_level_irq(unsigned int irq, struc
+diff -uNrp --exclude .svn linux-orig/kernel/irq/chip.c linux-ipipe/kernel/irq/chip.c
+--- linux-orig/kernel/irq/chip.c	2007-01-10 09:32:17.000000000 +0100
++++ linux-ipipe/kernel/irq/chip.c	2007-04-09 18:40:24.000000000 +0200
+@@ -308,7 +308,9 @@ handle_level_irq(unsigned int irq, struc
  	irqreturn_t action_ret;
  
  	spin_lock(&desc->lock);
@@ -6278,7 +6415,7 @@ diff -uNrp linux-orig/kernel/irq/chip.c linux-ipipe/kernel/irq/chip.c
  
  	if (unlikely(desc->status & IRQ_INPROGRESS))
  		goto out_unlock;
-@@ -375,8 +377,10 @@ handle_edge_irq(unsigned int irq, struct
+@@ -431,8 +433,10 @@ handle_edge_irq(unsigned int irq, struct
  
  	kstat_cpu(cpu).irqs[irq]++;
  
@@ -6289,14 +6426,13 @@ diff -uNrp linux-orig/kernel/irq/chip.c linux-ipipe/kernel/irq/chip.c
  
  	/* Mark the IRQ currently in progress.*/
  	desc->status |= IRQ_INPROGRESS;
-@@ -416,6 +420,105 @@ out_unlock:
+@@ -472,6 +476,99 @@ out_unlock:
  	spin_unlock(&desc->lock);
  }
  
 +#ifdef CONFIG_IPIPE
 +
-+void fastcall __ipipe_ack_simple_irq(unsigned irq, struct irq_desc *desc,
-+				     struct pt_regs *regs)
++void fastcall __ipipe_ack_simple_irq(unsigned irq, struct irq_desc *desc)
 +{
 +}
 +
@@ -6304,8 +6440,7 @@ diff -uNrp linux-orig/kernel/irq/chip.c linux-ipipe/kernel/irq/chip.c
 +{
 +}
 +
-+void fastcall __ipipe_ack_level_irq(unsigned irq, struct irq_desc *desc,
-+				    struct pt_regs *regs)
++void fastcall __ipipe_ack_level_irq(unsigned irq, struct irq_desc *desc)
 +{
 +	mask_ack_irq(desc, irq);
 +}
@@ -6316,8 +6451,7 @@ diff -uNrp linux-orig/kernel/irq/chip.c linux-ipipe/kernel/irq/chip.c
 +		desc->chip->unmask(irq);
 +}
 +
-+void fastcall __ipipe_ack_fasteoi_irq(unsigned irq, struct irq_desc *desc,
-+				      struct pt_regs *regs)
++void fastcall __ipipe_ack_fasteoi_irq(unsigned irq, struct irq_desc *desc)
 +{
 +}
 +
@@ -6326,8 +6460,7 @@ diff -uNrp linux-orig/kernel/irq/chip.c linux-ipipe/kernel/irq/chip.c
 +	desc->chip->eoi(irq);
 +}
 +
-+void fastcall __ipipe_ack_edge_irq(unsigned irq, struct irq_desc *desc,
-+				   struct pt_regs *regs)
++void fastcall __ipipe_ack_edge_irq(unsigned irq, struct irq_desc *desc)
 +{
 +	desc->chip->ack(irq);
 +}
@@ -6336,8 +6469,7 @@ diff -uNrp linux-orig/kernel/irq/chip.c linux-ipipe/kernel/irq/chip.c
 +{
 +}
 +
-+void fastcall __ipipe_ack_demux_irq(unsigned irq, struct irq_desc *desc,
-+				    struct pt_regs *regs)
++void fastcall __ipipe_ack_demux_irq(unsigned irq, struct irq_desc *desc)
 +{
 +	/* Handling is delegated to some demultiplexer routine,
 +	 * e.g. GPIO. We mask_ack it, then call back into the demux
@@ -6345,7 +6477,7 @@ diff -uNrp linux-orig/kernel/irq/chip.c linux-ipipe/kernel/irq/chip.c
 +	 * pipeline as needed. */
 +	if (desc->chip->mask)
 +		desc->chip->mask(irq);
-+	desc->ipipe_demux(irq, desc, regs);
++	desc->ipipe_demux(irq, desc);
 +}
 +
 +void fastcall __ipipe_end_demux_irq(unsigned irq, struct irq_desc *desc)
@@ -6355,7 +6487,7 @@ diff -uNrp linux-orig/kernel/irq/chip.c linux-ipipe/kernel/irq/chip.c
 +}
 +
 +void fastcall
-+handle_demux_irq(unsigned int irq, struct irq_desc *desc, struct pt_regs *regs)
++handle_demux_irq(unsigned int irq, struct irq_desc *desc)
 +{
 +    /* The regular IRQ handler will run last of all GPIO handlers, to
 +       unmask the demux IRQ. */
@@ -6363,21 +6495,20 @@ diff -uNrp linux-orig/kernel/irq/chip.c linux-ipipe/kernel/irq/chip.c
 +}
 +
 +void __set_irq_demux_handler(unsigned int irq,
-+			     void fastcall (*decode)(unsigned int, struct irq_desc *,
-+						     struct pt_regs *),
-+			     int is_chained)
++			     void fastcall (*decode)(unsigned int, struct irq_desc *),
++			     int is_chained,
++			     const char *name)
 +{
 +	struct irq_desc *desc = irq_desc + irq;
-+	__set_irq_handler(irq, &handle_demux_irq, is_chained);
++	__set_irq_handler(irq, &handle_demux_irq, is_chained, name);
 +	desc->ipipe_demux = decode;
 +}
 +
-+void fastcall __ipipe_ack_bad_irq(unsigned irq, struct irq_desc *desc,
-+				     struct pt_regs *regs)
++void fastcall __ipipe_ack_bad_irq(unsigned irq, struct irq_desc *desc)
 +{
 +	static int done;
 +
-+	handle_bad_irq(irq, desc, NULL);
++	handle_bad_irq(irq, desc);
 +
 +	if (!done) {
 +		printk(KERN_WARNING "%s: unknown flow handler for IRQ %d\n",
@@ -6395,7 +6526,7 @@ diff -uNrp linux-orig/kernel/irq/chip.c linux-ipipe/kernel/irq/chip.c
  #ifdef CONFIG_SMP
  /**
   *	handle_percpu_IRQ - Per CPU local irq handler
-@@ -432,8 +535,10 @@ handle_percpu_irq(unsigned int irq, stru
+@@ -487,8 +584,10 @@ handle_percpu_irq(unsigned int irq, stru
  
  	kstat_this_cpu.irqs[irq]++;
  
@@ -6404,9 +6535,9 @@ diff -uNrp linux-orig/kernel/irq/chip.c linux-ipipe/kernel/irq/chip.c
  		desc->chip->ack(irq);
 +#endif /* CONFIG_IPIPE */
  
- 	action_ret = handle_IRQ_event(irq, regs, desc->action);
+ 	action_ret = handle_IRQ_event(irq, desc->action);
  	if (!noirqdebug)
-@@ -443,6 +548,22 @@ handle_percpu_irq(unsigned int irq, stru
+@@ -498,6 +597,22 @@ handle_percpu_irq(unsigned int irq, stru
  		desc->chip->eoi(irq);
  }
  
@@ -6429,7 +6560,7 @@ diff -uNrp linux-orig/kernel/irq/chip.c linux-ipipe/kernel/irq/chip.c
  #endif /* CONFIG_SMP */
  
  void
-@@ -464,6 +585,38 @@ __set_irq_handler(unsigned int irq,
+@@ -517,6 +632,38 @@ __set_irq_handler(unsigned int irq, irq_
  
  	if (!handle)
  		handle = handle_bad_irq;
@@ -6468,7 +6599,7 @@ diff -uNrp linux-orig/kernel/irq/chip.c linux-ipipe/kernel/irq/chip.c
  
  	if (desc->chip == &no_irq_chip) {
  		printk(KERN_WARNING "Trying to install %sinterrupt handler "
-@@ -488,6 +641,10 @@ __set_irq_handler(unsigned int irq,
+@@ -541,6 +688,10 @@ __set_irq_handler(unsigned int irq, irq_
  		}
  		desc->status |= IRQ_DISABLED;
  		desc->depth = 1;
@@ -6478,11 +6609,11 @@ diff -uNrp linux-orig/kernel/irq/chip.c linux-ipipe/kernel/irq/chip.c
 +#endif /* CONFIG_IPIPE */
  	}
  	desc->handle_irq = handle;
- 
-diff -uNrp linux-orig/kernel/irq/manage.c linux-ipipe/kernel/irq/manage.c
---- linux-orig/kernel/irq/manage.c	2006-11-01 06:31:27.000000000 +0100
-+++ linux-ipipe/kernel/irq/manage.c	2006-12-21 18:28:58.000000000 +0100
-@@ -319,7 +319,7 @@ int setup_irq(unsigned int irq, struct i
+ 	desc->name = name;
+diff -uNrp --exclude .svn linux-orig/kernel/irq/manage.c linux-ipipe/kernel/irq/manage.c
+--- linux-orig/kernel/irq/manage.c	2007-01-10 09:32:17.000000000 +0100
++++ linux-ipipe/kernel/irq/manage.c	2007-04-09 18:40:24.000000000 +0200
+@@ -322,7 +322,7 @@ int setup_irq(unsigned int irq, struct i
  	new->dir = NULL;
  	register_handler_proc(irq, new);
  
@@ -6490,11 +6621,11 @@ diff -uNrp linux-orig/kernel/irq/manage.c linux-ipipe/kernel/irq/manage.c
 +	return ipipe_start_irq_thread(irq, desc);
  
  mismatch:
- 	spin_unlock_irqrestore(&desc->lock, flags);
-diff -uNrp linux-orig/kernel/printk.c linux-ipipe/kernel/printk.c
---- linux-orig/kernel/printk.c	2006-11-01 06:31:17.000000000 +0100
-+++ linux-ipipe/kernel/printk.c	2006-12-17 15:53:17.000000000 +0100
-@@ -488,6 +488,78 @@ static int have_callable_console(void)
+ 	if (!(new->flags & IRQF_PROBE_SHARED)) {
+diff -uNrp --exclude .svn linux-orig/kernel/printk.c linux-ipipe/kernel/printk.c
+--- linux-orig/kernel/printk.c	2007-01-10 09:32:17.000000000 +0100
++++ linux-ipipe/kernel/printk.c	2007-04-09 18:40:24.000000000 +0200
+@@ -489,6 +489,78 @@ static int have_callable_console(void)
   * printf(3)
   */
  
@@ -6573,7 +6704,7 @@ diff -uNrp linux-orig/kernel/printk.c linux-ipipe/kernel/printk.c
  asmlinkage int printk(const char *fmt, ...)
  {
  	va_list args;
-@@ -499,6 +571,7 @@ asmlinkage int printk(const char *fmt, .
+@@ -500,6 +572,7 @@ asmlinkage int printk(const char *fmt, .
  
  	return r;
  }
@@ -6581,10 +6712,10 @@ diff -uNrp linux-orig/kernel/printk.c linux-ipipe/kernel/printk.c
  
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
-diff -uNrp linux-orig/kernel/sched.c linux-ipipe/kernel/sched.c
---- linux-orig/kernel/sched.c	2006-11-01 06:31:17.000000000 +0100
-+++ linux-ipipe/kernel/sched.c	2006-12-16 00:06:24.000000000 +0100
-@@ -1373,7 +1373,7 @@ static int try_to_wake_up(struct task_st
+diff -uNrp --exclude .svn linux-orig/kernel/sched.c linux-ipipe/kernel/sched.c
+--- linux-orig/kernel/sched.c	2007-02-21 14:58:44.000000000 +0100
++++ linux-ipipe/kernel/sched.c	2007-04-09 18:40:24.000000000 +0200
+@@ -1391,7 +1391,7 @@ static int try_to_wake_up(struct task_st
  
  	rq = task_rq_lock(p, &flags);
  	old_state = p->state;
@@ -6593,7 +6724,7 @@ diff -uNrp linux-orig/kernel/sched.c linux-ipipe/kernel/sched.c
  		goto out;
  
  	if (p->array)
-@@ -1791,6 +1791,8 @@ asmlinkage void schedule_tail(struct tas
+@@ -1809,6 +1809,8 @@ asmlinkage void schedule_tail(struct tas
  #endif
  	if (current->set_child_tid)
  		put_user(current->pid, current->set_child_tid);
@@ -6602,7 +6733,7 @@ diff -uNrp linux-orig/kernel/sched.c linux-ipipe/kernel/sched.c
  }
  
  /*
-@@ -3265,12 +3267,17 @@ asmlinkage void __sched schedule(void)
+@@ -3330,12 +3332,17 @@ asmlinkage void __sched schedule(void)
  	long *switch_count;
  	struct rq *rq;
  
@@ -6621,7 +6752,7 @@ diff -uNrp linux-orig/kernel/sched.c linux-ipipe/kernel/sched.c
  		printk(KERN_ERR "BUG: scheduling while atomic: "
  			"%s/0x%08x/%d\n",
  			current->comm, preempt_count(), current->pid);
-@@ -3278,8 +3285,13 @@ asmlinkage void __sched schedule(void)
+@@ -3343,8 +3350,13 @@ asmlinkage void __sched schedule(void)
  	}
  	profile_hit(SCHED_PROFILING, __builtin_return_address(0));
  
@@ -6635,7 +6766,7 @@ diff -uNrp linux-orig/kernel/sched.c linux-ipipe/kernel/sched.c
  	prev = current;
  	release_kernel_lock(prev);
  need_resched_nonpreemptible:
-@@ -3400,6 +3412,8 @@ switch_tasks:
+@@ -3462,6 +3474,8 @@ switch_tasks:
  		prepare_task_switch(rq, next);
  		prev = context_switch(rq, prev, next);
  		barrier();
@@ -6644,16 +6775,16 @@ diff -uNrp linux-orig/kernel/sched.c linux-ipipe/kernel/sched.c
  		/*
  		 * this_rq must be evaluated again because prev may have moved
  		 * CPUs since it called schedule(), thus the 'rq' on its stack
-@@ -3413,7 +3427,7 @@ switch_tasks:
+@@ -3475,7 +3489,7 @@ switch_tasks:
  	if (unlikely(reacquire_kernel_lock(prev) < 0))
  		goto need_resched_nonpreemptible;
  	preempt_enable_no_resched();
 -	if (unlikely(test_thread_flag(TIF_NEED_RESCHED)))
 +	if (unlikely(test_thread_flag(TIF_NEED_RESCHED) && ipipe_root_domain_p))
  		goto need_resched;
- }
- EXPORT_SYMBOL(schedule);
-@@ -3431,6 +3445,11 @@ asmlinkage void __sched preempt_schedule
+ 
+ #ifdef CONFIG_SCHEDULE_L1
+@@ -3498,6 +3512,11 @@ asmlinkage void __sched preempt_schedule
  	struct task_struct *task = current;
  	int saved_lock_depth;
  #endif
@@ -6665,7 +6796,7 @@ diff -uNrp linux-orig/kernel/sched.c linux-ipipe/kernel/sched.c
  	/*
  	 * If there is a non-zero preempt_count or interrupts are disabled,
  	 * we do not want to preempt the current task.  Just return..
-@@ -4123,6 +4142,7 @@ recheck:
+@@ -4196,6 +4215,7 @@ recheck:
  		deactivate_task(p, rq);
  	oldprio = p->prio;
  	__setscheduler(p, policy, param->sched_priority);
@@ -6673,7 +6804,7 @@ diff -uNrp linux-orig/kernel/sched.c linux-ipipe/kernel/sched.c
  	if (array) {
  		__activate_task(p, rq);
  		/*
-@@ -6882,3 +6902,50 @@ void set_curr_task(int cpu, struct task_
+@@ -6958,3 +6978,50 @@ void set_curr_task(int cpu, struct task_
  }
  
  #endif
@@ -6724,10 +6855,10 @@ diff -uNrp linux-orig/kernel/sched.c linux-ipipe/kernel/sched.c
 +EXPORT_SYMBOL(ipipe_reenter_root);
 +
 +#endif /* CONFIG_IPIPE */
-diff -uNrp linux-orig/kernel/signal.c linux-ipipe/kernel/signal.c
---- linux-orig/kernel/signal.c	2006-11-01 06:31:17.000000000 +0100
-+++ linux-ipipe/kernel/signal.c	2006-12-03 18:22:09.000000000 +0100
-@@ -499,6 +499,7 @@ void signal_wake_up(struct task_struct *
+diff -uNrp --exclude .svn linux-orig/kernel/signal.c linux-ipipe/kernel/signal.c
+--- linux-orig/kernel/signal.c	2007-01-10 09:32:17.000000000 +0100
++++ linux-ipipe/kernel/signal.c	2007-04-09 18:40:24.000000000 +0200
+@@ -504,6 +504,7 @@ void signal_wake_up(struct task_struct *
  	unsigned int mask;
  
  	set_tsk_thread_flag(t, TIF_SIGPENDING);
@@ -6735,10 +6866,10 @@ diff -uNrp linux-orig/kernel/signal.c linux-ipipe/kernel/signal.c
  
  	/*
  	 * For SIGKILL, we want to wake it up in the stopped/traced case.
-diff -uNrp linux-orig/kernel/spinlock.c linux-ipipe/kernel/spinlock.c
---- linux-orig/kernel/spinlock.c	2006-11-01 06:31:17.000000000 +0100
-+++ linux-ipipe/kernel/spinlock.c	2006-12-15 16:46:01.000000000 +0100
-@@ -94,7 +94,7 @@ unsigned long __lockfunc _spin_lock_irqs
+diff -uNrp --exclude .svn linux-orig/kernel/spinlock.c linux-ipipe/kernel/spinlock.c
+--- linux-orig/kernel/spinlock.c	2007-01-10 09:32:17.000000000 +0100
++++ linux-ipipe/kernel/spinlock.c	2007-04-09 18:40:24.000000000 +0200
+@@ -88,7 +88,7 @@ unsigned long __lockfunc _spin_lock_irqs
  	 * _raw_spin_lock_flags() code, because lockdep assumes
  	 * that interrupts are not re-enabled during lock-acquire:
  	 */
@@ -6747,10 +6878,10 @@ diff -uNrp linux-orig/kernel/spinlock.c linux-ipipe/kernel/spinlock.c
  	_raw_spin_lock(lock);
  #else
  	_raw_spin_lock_flags(lock, &flags);
-diff -uNrp linux-orig/lib/Kconfig.debug linux-ipipe/lib/Kconfig.debug
---- linux-orig/lib/Kconfig.debug	2006-11-01 06:52:10.000000000 +0100
-+++ linux-ipipe/lib/Kconfig.debug	2006-12-03 18:20:54.000000000 +0100
-@@ -39,6 +39,8 @@ config UNUSED_SYMBOLS
+diff -uNrp --exclude .svn linux-orig/lib/Kconfig.debug linux-ipipe/lib/Kconfig.debug
+--- linux-orig/lib/Kconfig.debug	2007-01-11 13:13:09.000000000 +0100
++++ linux-ipipe/lib/Kconfig.debug	2007-04-09 18:40:24.000000000 +0200
+@@ -46,6 +46,8 @@ config UNUSED_SYMBOLS
  	  you really need it, and what the merge plan to the mainline kernel for
  	  your module is.
  
@@ -6759,9 +6890,9 @@ diff -uNrp linux-orig/lib/Kconfig.debug linux-ipipe/lib/Kconfig.debug
  config DEBUG_KERNEL
  	bool "Kernel debugging"
  	help
-diff -uNrp linux-orig/lib/smp_processor_id.c linux-ipipe/lib/smp_processor_id.c
---- linux-orig/lib/smp_processor_id.c	2006-03-22 03:37:51.000000000 +0100
-+++ linux-ipipe/lib/smp_processor_id.c	2006-12-03 18:24:40.000000000 +0100
+diff -uNrp --exclude .svn linux-orig/lib/smp_processor_id.c linux-ipipe/lib/smp_processor_id.c
+--- linux-orig/lib/smp_processor_id.c	2006-03-22 03:42:44.000000000 +0100
++++ linux-ipipe/lib/smp_processor_id.c	2007-04-09 18:40:24.000000000 +0200
 @@ -13,6 +13,11 @@ unsigned int debug_smp_processor_id(void
  	int this_cpu = raw_smp_processor_id();
  	cpumask_t this_mask;
@@ -6774,10 +6905,10 @@ diff -uNrp linux-orig/lib/smp_processor_id.c linux-ipipe/lib/smp_processor_id.c
  	if (likely(preempt_count))
  		goto out;
  
-diff -uNrp linux-orig/lib/spinlock_debug.c linux-ipipe/lib/spinlock_debug.c
---- linux-orig/lib/spinlock_debug.c	2006-11-01 06:52:10.000000000 +0100
-+++ linux-ipipe/lib/spinlock_debug.c	2006-12-03 18:24:40.000000000 +0100
-@@ -128,6 +128,8 @@ void _raw_spin_lock(spinlock_t *lock)
+diff -uNrp --exclude .svn linux-orig/lib/spinlock_debug.c linux-ipipe/lib/spinlock_debug.c
+--- linux-orig/lib/spinlock_debug.c	2007-01-10 09:32:17.000000000 +0100
++++ linux-ipipe/lib/spinlock_debug.c	2007-04-09 18:40:24.000000000 +0200
+@@ -129,6 +129,8 @@ void _raw_spin_lock(spinlock_t *lock)
  	debug_spin_lock_after(lock);
  }
  
@@ -6786,7 +6917,7 @@ diff -uNrp linux-orig/lib/spinlock_debug.c linux-ipipe/lib/spinlock_debug.c
  int _raw_spin_trylock(spinlock_t *lock)
  {
  	int ret = __raw_spin_trylock(&lock->raw_lock);
-@@ -143,12 +145,16 @@ int _raw_spin_trylock(spinlock_t *lock)
+@@ -144,12 +146,16 @@ int _raw_spin_trylock(spinlock_t *lock)
  	return ret;
  }
  
@@ -6803,7 +6934,7 @@ diff -uNrp linux-orig/lib/spinlock_debug.c linux-ipipe/lib/spinlock_debug.c
  static void rwlock_bug(rwlock_t *lock, const char *msg)
  {
  	if (!debug_locks_off())
-@@ -193,6 +199,8 @@ void _raw_read_lock(rwlock_t *lock)
+@@ -195,6 +201,8 @@ void _raw_read_lock(rwlock_t *lock)
  	__raw_read_lock(&lock->raw_lock);
  }
  
@@ -6812,7 +6943,7 @@ diff -uNrp linux-orig/lib/spinlock_debug.c linux-ipipe/lib/spinlock_debug.c
  int _raw_read_trylock(rwlock_t *lock)
  {
  	int ret = __raw_read_trylock(&lock->raw_lock);
-@@ -206,12 +214,16 @@ int _raw_read_trylock(rwlock_t *lock)
+@@ -208,12 +216,16 @@ int _raw_read_trylock(rwlock_t *lock)
  	return ret;
  }
  
@@ -6829,7 +6960,7 @@ diff -uNrp linux-orig/lib/spinlock_debug.c linux-ipipe/lib/spinlock_debug.c
  static inline void debug_write_lock_before(rwlock_t *lock)
  {
  	RWLOCK_BUG_ON(lock->magic != RWLOCK_MAGIC, lock, "bad magic");
-@@ -268,6 +280,8 @@ void _raw_write_lock(rwlock_t *lock)
+@@ -271,6 +283,8 @@ void _raw_write_lock(rwlock_t *lock)
  	debug_write_lock_after(lock);
  }
  
@@ -6838,7 +6969,7 @@ diff -uNrp linux-orig/lib/spinlock_debug.c linux-ipipe/lib/spinlock_debug.c
  int _raw_write_trylock(rwlock_t *lock)
  {
  	int ret = __raw_write_trylock(&lock->raw_lock);
-@@ -283,8 +297,12 @@ int _raw_write_trylock(rwlock_t *lock)
+@@ -286,8 +300,12 @@ int _raw_write_trylock(rwlock_t *lock)
  	return ret;
  }
  
