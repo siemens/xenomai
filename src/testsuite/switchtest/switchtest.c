@@ -23,7 +23,9 @@
 #ifdef HAVE_OLD_SETAFFINITY
 #define do_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,mask)
 #else /* !HAVE_OLD_SETAFFINITY */
+#ifndef __cpu_set_t_defined
 typedef unsigned long cpu_set_t;
+#endif
 #define do_sched_setaffinity(pid,len,mask) 0
 #define	 CPU_ZERO(set)		do { *(set) = 0; } while(0)
 #define	 CPU_SET(n,set) 	do { *(set) |= (1 << n); } while(0)
