@@ -1,3 +1,8 @@
+2007-04-12  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/rtdm/core.c: Update rt_dev_close doc, we do automatic
+	file descriptor cleanup now.
+
 2007-04-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/blackfin/patches: Upgrade to bf53x-R0701RC3-1.6-02.
