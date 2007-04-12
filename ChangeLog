@@ -1,3 +1,7 @@
+2007-04-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/blackfin/patches: Upgrade to bf53x-R0701RC3-1.6-02.
+
 2007-04-10  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-blackfin/wrappers.h: Adapt to 2.6.19.
