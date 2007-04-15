@@ -259,6 +259,18 @@
 
 #endif
 
+/** Particular CAN protocols
+ *
+ *  Currently only the RAW protocol is supported.
+ */
+#define CAN_RAW  0
+
+/** CAN socket levels
+ *
+ *  Used for @ref Sockopts for the particular protocols.
+ */
+#define SOL_CAN_RAW 103
+
 /** Type of CAN id (see @ref CAN_xxx_MASK and @ref CAN_xxx_FLAG) */
 typedef uint32_t can_id_t;
 typedef uint32_t canid_t;
@@ -510,8 +522,6 @@ typedef struct can_frame {
 
 #define RTIOC_TYPE_CAN              RTDM_CLASS_CAN
 
-
-#define SOL_CAN_RAW 103
 
 /*!
  * @anchor Rawsockopts @name RAW socket options

@@ -1,3 +1,8 @@
+2007-04-15  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* include/rtdm/rtcan.h: Add macro definition CAN_RAW to be compatible
+	with the trunk and Socket-CAN.
+
 2007-04-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/blackfin/patches: Upgrade to bf53x-R0701RC3-1.6-02.
