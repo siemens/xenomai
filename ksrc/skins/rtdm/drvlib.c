@@ -268,7 +268,9 @@ rtdm_task_t *rtdm_task_current(void);
  * @brief Wait on a real-time task to terminate
  *
  * @param[in,out] task Task handle as returned by rtdm_task_init()
- * @param[in] poll_delay Polling delay in milliseconds
+ * @param[in] poll_delay Delay in milliseconds between periodic tests for the
+ * state of the real-time task. This parameter is ignored if the termination
+ * is internally realised without polling.
  *
  * @note Passing the same task handle to RTDM services after the completion of
  * this function is not allowed.
