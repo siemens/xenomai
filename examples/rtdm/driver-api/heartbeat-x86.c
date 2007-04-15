@@ -53,6 +53,7 @@ void heartbeat(void *cookie)
 		if (state > 6)
 			state = 0;
 	}
+	set_leds(0);
 }
 
 int init_module(void)
@@ -65,5 +66,4 @@ void cleanup_module(void)
 {
 	end = 1;
 	rtdm_task_join_nrt(&heartbeat_task, 100);
-	set_leds(0);
 }
