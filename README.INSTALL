@@ -164,6 +164,8 @@ NAME                DESCRIPTION                      [BINDING,]DEFAULT(*)
 --enable-arm-sa1100 Enable SA1100 specific           strong,disabled
                     workarounds
 
+--enable-arm-eabi   Enable ARM EABI interface        weak,disabled
+
 (*) Each option enabled by default can be forcibly disabled by passing
 --disable-<option> to the configure script.
 

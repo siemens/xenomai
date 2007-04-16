@@ -164,6 +164,7 @@ if test $XENO_TARGET_ARCH = arm ; then
   AC_MSG_CHECKING(for ARM architecture version)
   CONFIG_XENO_ARM_ARCH=4
   CONFIG_XENO_ARM_SA1100=
+  CONFIX_XENO_ARM_EABI=
   AC_ARG_ENABLE(arm-arch,
     AS_HELP_STRING([--enable-arm-arch=<version>], [Select ARM architecture version]),
     [
@@ -183,6 +184,14 @@ if test $XENO_TARGET_ARCH = arm ; then
 	*) unset CONFIG_XENO_ARM_SA1100 ;;
 	esac])
   AC_MSG_RESULT(${CONFIG_XENO_ARM_SA1100:-no})
+  AC_MSG_CHECKING(for ARM EABI interface)
+  AC_ARG_ENABLE(arm-eabi,
+	AS_HELP_STRING([--enable-arm-eabi], [Enable ARM EABI interface]),
+	[case "$enableval" in
+	y | yes) CONFIG_XENO_ARM_EABI=y ;;
+	*) unset CONFIG_XENO_ARM_EABI ;;
+	esac])
+  AC_MSG_RESULT(${CONFIG_XENO_ARM_EABI:-no})
 fi
 
 dnl Flags for building Linux in Xenomai build tree.
@@ -424,6 +433,7 @@ test x$CONFIG_SMP = xy && AC_DEFINE(CONFIG_SMP,1,[config])
 test x$CONFIG_X86_TSC = xy && AC_DEFINE(CONFIG_X86_TSC,1,[config])
 test -n "$CONFIG_XENO_ARM_ARCH" && AC_DEFINE_UNQUOTED(CONFIG_XENO_ARM_ARCH,$CONFIG_XENO_ARM_ARCH,[config])
 test x$CONFIG_XENO_ARM_SA1100 = xy && AC_DEFINE(CONFIG_XENO_ARM_SA1100,1,[config])
+test x$CONFIG_XENO_ARM_EABI = xy && AC_DEFINE(CONFIG_XENO_ARM_EABI,1,[config])
 
 dnl CAUTION: We need to have the CONFIG_XENO_XX symbols always
 dnl defined when the configuration header is read, but we want the

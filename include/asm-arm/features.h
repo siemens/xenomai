@@ -30,12 +30,17 @@
 #define CONFIG_XENO_ARM_SA1000	1
 #endif
 
+#ifdef CONFIG_AEABI
+#define CONFIG_XENO_ARM_EABI    1
+#endif
+
 #else /* !__KERNEL__ */
 #define __LINUX_ARM_ARCH__  CONFIG_XENO_ARM_ARCH
 #endif /* __KERNEL__ */
 
 #define __xn_feat_arm_atomic_xchg	0x00000001
 #define __xn_feat_arm_atomic_atomic	0x00000002
+#define __xn_feat_arm_eabi          0x00000004
 
 /* The ABI revision level we use on this arch. */
 #define XENOMAI_ABI_REV   1UL
@@ -53,10 +58,12 @@
 #endif
 #define __xn_feat_arm_atomic_atomic_mask	0
 #endif
+#define __xn_feat_arm_eabi_mask	__xn_feat_arm_eabi
 
-#define XENOMAI_FEAT_DEP  ( __xn_feat_generic_mask | \
-			    __xn_feat_arm_atomic_xchg_mask |		\
-			    __xn_feat_arm_atomic_atomic_mask)
+#define XENOMAI_FEAT_DEP  ( __xn_feat_generic_mask              | \
+                            __xn_feat_arm_atomic_xchg_mask      | \
+                            __xn_feat_arm_atomic_atomic_mask    | \
+                            __xn_feat_arm_eabi_mask )
 
 #define XENOMAI_FEAT_MAN  0
 
@@ -72,6 +79,8 @@ static inline const char *get_feature_label (unsigned feature)
 	    return "sa1100";
 	case __xn_feat_arm_atomic_atomic:
 	    return "v6";
+    case __xn_feat_arm_eabi:
+        return "eabi";
     default:
 	    return get_generic_feature_label(feature);
     }
