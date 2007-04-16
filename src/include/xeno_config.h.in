@@ -10,6 +10,9 @@
 #undef CONFIG_XENO_ARM_ARCH
 
 /* config */
+#undef CONFIG_XENO_ARM_EABI
+
+/* config */
 #undef CONFIG_XENO_ARM_SA1100
 
 /* Build system alias */
