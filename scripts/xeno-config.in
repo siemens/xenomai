@@ -4,6 +4,7 @@ staging=${DESTDIR}
 prefix="@prefix@"
 exec_prefix="@exec_prefix@"
 libdir="@libdir@"
+datarootdir="@datarootdir@"
 datadir="@datadir@"
 pkgdatadir="${datadir}/@PACKAGE@"
 includedir="@includedir@"
@@ -20,7 +21,7 @@ XENO_POSIX_WRAPPERS="${staging}${libdir}/posix.wrappers"
 XENO_POSIX_FAST_WRAPPING="@LD_FILE_OPTION@"
 XENO_LIBRARY_DIR="${staging}${libdir}"
 
-unset prefix exec_prefix libdir datadir pkgdatadir includedir
+unset prefix exec_prefix libdir datadir datarootdir pkgdatadir includedir
 
 usage ()
 {
