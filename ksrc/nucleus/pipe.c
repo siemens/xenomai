@@ -66,11 +66,11 @@ static inline int xnpipe_minor_alloc(int minor)
 
 	if (minor == XNPIPE_NDEVS ||
 	    testbits(xnpipe_bitmap[minor / BITS_PER_LONG],
-		     1 << (minor % BITS_PER_LONG)))
+		     1UL << (minor % BITS_PER_LONG)))
 		minor = -EBUSY;
 	else
 		__setbits(xnpipe_bitmap[minor / BITS_PER_LONG],
-			  1 << (minor % BITS_PER_LONG));
+			  1UL << (minor % BITS_PER_LONG));
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -83,7 +83,7 @@ static inline void xnpipe_minor_free(int minor)
 		return;
 
 	__clrbits(xnpipe_bitmap[minor / BITS_PER_LONG],
-		  1 << (minor % BITS_PER_LONG));
+		  1UL << (minor % BITS_PER_LONG));
 }
 
 static inline void xnpipe_enqueue_read(xnpipe_state_t *state)
