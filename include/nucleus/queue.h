@@ -684,8 +684,8 @@ static inline void addmlq(xnmlqueue_t *mlqslot,
         appendq(queue, &holder->plink);
 
     mlqslot->elems++;
-    __setbits(mlqslot->himap,1 << hi);
-    __setbits(mlqslot->lomap[hi],1 << lo);
+    __setbits(mlqslot->himap,1UL << hi);
+    __setbits(mlqslot->lomap[hi],1UL << lo);
 }
 
 static inline void insertmlql(xnmlqueue_t *mlqslot,
@@ -731,9 +731,9 @@ static inline void removemlq(xnmlqueue_t *mlqslot,
     if (emptyq_p(queue)) {
         int hi = idx / BITS_PER_LONG;
         int lo = idx % BITS_PER_LONG;
-        __clrbits(mlqslot->lomap[hi],1 << lo);
+        __clrbits(mlqslot->lomap[hi],1UL << lo);
 	if (mlqslot->lomap[hi] == 0)
-	    __clrbits(mlqslot->himap,1 << hi);
+	    __clrbits(mlqslot->himap,1UL << hi);
     }
 }
 
@@ -781,9 +781,9 @@ static inline xnpholder_t *getmlq(xnmlqueue_t *mlqslot)
     mlqslot->elems--;    
 
     if (emptyq_p(queue)) {
-        __clrbits(mlqslot->lomap[hi],1 << lo);
+        __clrbits(mlqslot->lomap[hi],1UL << lo);
 	if (mlqslot->lomap[hi] == 0)
-	    __clrbits(mlqslot->himap,1 << hi);
+	    __clrbits(mlqslot->himap,1UL << hi);
     }
 
     return (xnpholder_t *)holder;

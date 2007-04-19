@@ -1,8 +1,8 @@
 2007-04-19  Philippe Gerum  <rpm@xenomai.org>
  
- 	* ksrc/skins/vrtx/module.c, ksrc/nucleus/pipe.c: Ensure that shift
-	expressions which rhs depend on BITS_PER_LONG are applied against
-	long lhs values.
+	* ksrc/skins/vrtx/module.c, ksrc/nucleus/pipe.c,
+	include/nucleus/queue.h: Ensure that shift expressions which rhs
+	depend on BITS_PER_LONG are applied against long lhs values.
  
 2007-04-15  Wolfgang Grandegger  <wg@grandegger.com>
 
