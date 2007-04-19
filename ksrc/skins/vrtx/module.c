@@ -107,10 +107,10 @@ int vrtx_get_id(vrtxidmap_t * map, int id, void *objaddr)
 		id = hi * BITS_PER_LONG + lo;
 		++map->usedids;
 
-		__clrbits(map->lomap[hi], 1 << lo);
+		__clrbits(map->lomap[hi], 1UL << lo);
 
 		if (map->lomap[hi] == 0)
-			__clrbits(map->himap, 1 << hi);
+			__clrbits(map->himap, 1UL << hi);
 	}
 
 	map->objarray[id] = objaddr;
@@ -130,8 +130,8 @@ void vrtx_put_id(vrtxidmap_t * map, int id)
 
 	xnlock_get_irqsave(&nklock, s);
 	map->objarray[id] = NULL;
-	__setbits(map->himap, 1 << hi);
-	__setbits(map->lomap[hi], 1 << lo);
+	__setbits(map->himap, 1UL << hi);
+	__setbits(map->lomap[hi], 1UL << lo);
 	--map->usedids;
 	xnlock_put_irqrestore(&nklock, s);
 }

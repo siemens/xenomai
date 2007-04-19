@@ -1,3 +1,9 @@
+2007-04-19  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vrtx/module.c, ksrc/nucleus/pipe.c: Ensure that shift
+	expressions which rhs depend on BITS_PER_LONG are applied against
+	long lhs values.
+
 2007-04-12  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/rtdm/core.c: Update rt_dev_close doc, we do automatic
