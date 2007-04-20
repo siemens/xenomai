@@ -148,7 +148,8 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #else
 #define __SYS_REG
 #define __SYS_REG_LIST
-#define __syscall "swi\t" __sys1(XENO_ARM_SYSCALL) ""
+#define __NR_OABI_SYSCALL_BASE	0x900000
+#define __syscall "swi\t" __sys1(__NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) ""
 #endif
 
 #define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)	\
