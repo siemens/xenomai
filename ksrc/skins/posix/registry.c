@@ -19,13 +19,15 @@
 #include <posix/registry.h>
 #include <posix/thread.h>
 
+#define BITS_PER_INT 32
+
 struct {
 	pse51_node_t **node_buckets;
 	unsigned buckets_count;
 
 	pse51_desc_t **descs;
 	unsigned maxfds;
-	unsigned long *fdsmap;
+	unsigned *fdsmap;
 	unsigned mapsz;
 } pse51_reg;
 
@@ -240,7 +242,7 @@ static int pse51_reg_fd_get(void)
 			int fd = ffnz(pse51_reg.fdsmap[i]);
 
 			pse51_reg.fdsmap[i] &= ~(1 << fd);
-			return fd + BITS_PER_LONG * i;
+			return fd + BITS_PER_INT * i;
 		}
 
 	return -1;
@@ -250,8 +252,8 @@ static void pse51_reg_fd_put(int fd)
 {
 	unsigned i, bit;
 
-	i = fd / BITS_PER_LONG;
-	bit = 1 << (fd % BITS_PER_LONG);
+	i = fd / BITS_PER_INT;
+	bit = 1 << (fd % BITS_PER_INT);
 
 	pse51_reg.fdsmap[i] |= bit;
 	pse51_reg.descs[fd] = NULL;
@@ -264,8 +266,8 @@ static int pse51_reg_fd_lookup(pse51_desc_t ** descp, int fd)
 	if (fd > pse51_reg.maxfds)
 		return EBADF;
 
-	i = fd / BITS_PER_LONG;
-	bit = 1 << (fd % BITS_PER_LONG);
+	i = fd / BITS_PER_INT;
+	bit = 1 << (fd % BITS_PER_INT);
 
 	if ((pse51_reg.fdsmap[i] & bit))
 		return EBADF;
@@ -443,12 +445,12 @@ int pse51_reg_pkg_init(unsigned buckets_count, unsigned maxfds)
 	char *chunk;
 	unsigned i;
 
-	mapsize = maxfds / BITS_PER_LONG;
-	if (maxfds % BITS_PER_LONG)
+	mapsize = maxfds / BITS_PER_INT;
+	if (maxfds % BITS_PER_INT)
 		++mapsize;
 
 	size = sizeof(pse51_node_t) * buckets_count +
-	    sizeof(pse51_desc_t) * maxfds + sizeof(long) * mapsize;
+		sizeof(pse51_desc_t) * maxfds + sizeof(unsigned) * mapsize;
 
 	chunk = (char *)xnarch_sysalloc(size);
 	if (!chunk)
@@ -465,16 +467,16 @@ int pse51_reg_pkg_init(unsigned buckets_count, unsigned maxfds)
 		pse51_reg.descs[i] = NULL;
 
 	chunk += sizeof(pse51_desc_t) * maxfds;
-	pse51_reg.fdsmap = (unsigned long *)chunk;
+	pse51_reg.fdsmap = (unsigned *)chunk;
 	pse51_reg.maxfds = maxfds;
 	pse51_reg.mapsz = mapsize;
 
 	/* Initialize fds map. Bit set means "descriptor free". */
-	for (i = 0; i < maxfds / BITS_PER_LONG; i++)
+	for (i = 0; i < maxfds / BITS_PER_INT; i++)
 		pse51_reg.fdsmap[i] = ~0;
-	if (maxfds % BITS_PER_LONG)
+	if (maxfds % BITS_PER_INT)
 		pse51_reg.fdsmap[mapsize - 1] =
-		    (1 << (maxfds % BITS_PER_LONG)) - 1;
+		    (1 << (maxfds % BITS_PER_INT)) - 1;
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	xnlock_init(&pse51_assoc_lock);
@@ -506,7 +508,7 @@ void pse51_reg_pkg_cleanup(void)
 
 	size = sizeof(pse51_node_t) * pse51_reg.buckets_count
 		+ sizeof(pse51_desc_t) * pse51_reg.maxfds
-		+ sizeof(long) * pse51_reg.mapsz;
+		+ sizeof(unsigned) * pse51_reg.mapsz;
 
 	xnarch_sysfree(pse51_reg.node_buckets, size);
 }
