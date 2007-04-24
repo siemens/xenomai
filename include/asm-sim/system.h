@@ -160,9 +160,9 @@ static inline unsigned long long xnarch_ullmul(unsigned long m1,
     return (unsigned long long) m1 * m2;
 }
 
-static inline unsigned long long xnarch_ulldiv (unsigned long long ull,
-						unsigned long uld,
-						unsigned long *rem)
+static inline unsigned long long xnarch_ulldiv(unsigned long long ull,
+					       unsigned long uld,
+					       unsigned long *rem)
 {
     if (rem)
 	*rem = ull % uld;
@@ -170,9 +170,9 @@ static inline unsigned long long xnarch_ulldiv (unsigned long long ull,
     return ull / uld;
 }
 
-static inline unsigned long ffnz (unsigned long word)
+static inline unsigned long ffnz(unsigned long word)
 {
-    return ffs((int)word) - 1;
+    return ffsl(word) - 1;
 }
 
 #define xnarch_stack_size(tcb)    0
