@@ -30,7 +30,7 @@ typedef unsigned long rthal_time_t;
 
 static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 {
-	__asm__("bsrq %1, %0":"=r"(ul):"rm"(ul));
+        __asm__("bsfq %1, %0":"=r"(ul):"rm"(ul));
 	return ul;
 }
 
