@@ -23,12 +23,6 @@
 #include <memory.h>
 #include <string.h>
 #include <asm/param.h>
-
-static inline unsigned long ffnz (unsigned long ul)
-{
-    return ffs((int)ul) - 1;
-}
-
 #include <asm/xenomai/atomic.h>
 #include <nucleus/core.h>
 #include <nucleus/trace.h>
