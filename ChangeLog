@@ -6,11 +6,6 @@
 	* include/nucleus/system.h: Remove unused (and bogus for 64bit
 	archs) ffnz wrapper.
 	
-2007-04-20  Philippe Gerum  <rpm@xenomai.org>
-
-	* ksrc/nucleus/shadow.c (xnshadow_map): Postpone the VM checks
-	after the skin magic has been validated.
-
 2007-04-19  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/vrtx/module.c, ksrc/nucleus/pipe.c,
