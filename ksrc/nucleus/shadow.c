@@ -1167,6 +1167,14 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 	unsigned muxid, magic;
 	int mode, prio, err, cpu;
 
+#ifdef CONFIG_MMU
+	if (!(current->mm->def_flags & VM_LOCKED))
+		send_sig(SIGXCPU, current, 1);
+	else
+		if ((err = rthal_disable_ondemand_mappings(current)))
+			return err;
+#endif /* CONFIG_MMU */
+
 	/* Increment the interface reference count. */
 	magic = xnthread_get_magic(thread);
 
@@ -1180,14 +1188,6 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 			break;
 		}
 	}
-
-#ifdef CONFIG_MMU
-	if (!(current->mm->def_flags & VM_LOCKED))
-		send_sig(SIGXCPU, current, 1);
-	else
-		if ((err = rthal_disable_ondemand_mappings(current)))
-			return err;
-#endif /* CONFIG_MMU */
 
 	xnltt_log_event(xeno_ev_shadowmap,
 			thread->name, current->pid,
