@@ -25,7 +25,6 @@
 #include <nucleus/synch.h>
 #include <nucleus/heap.h>
 #include <native/types.h>
-#include <native/ppd.h>
 
 /* Creation flags. */
 #define Q_PRIO   XNSYNCH_PRIO	/* Pend by task priority order. */
@@ -71,6 +70,8 @@ typedef struct rt_queue_placeholder {
 } RT_QUEUE_PLACEHOLDER;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
+
+#include <native/ppd.h>
 
 #define XENO_QUEUE_MAGIC 0x55550707
 

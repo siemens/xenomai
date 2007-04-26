@@ -48,6 +48,7 @@
 #include <nucleus/heap.h>
 #include <nucleus/registry.h>
 #include <native/task.h>
+#include <native/timer.h>
 
 static DECLARE_XNQUEUE(__xeno_task_q);
 

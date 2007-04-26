@@ -22,7 +22,6 @@
 #ifndef _XENO_TIMER_H
 #define _XENO_TIMER_H
 
-#include <nucleus/timer.h>
 #include <native/types.h>
 
 #define TM_ONESHOT XN_APERIODIC_TICK
@@ -36,7 +35,11 @@ typedef struct rt_timer_info {
 } RT_TIMER_INFO;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
+
+#include <nucleus/timer.h>
+
 extern xntbase_t *__native_tbase;
+
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
 #ifdef __cplusplus

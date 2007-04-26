@@ -22,6 +22,7 @@
 #ifndef _XENO_PPD_H
 #define _XENO_PPD_H
 
+#include <nucleus/pod.h>
 #include <nucleus/ppd.h>
 #include <nucleus/heap.h>
 

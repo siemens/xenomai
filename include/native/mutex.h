@@ -22,9 +22,7 @@
 #ifndef _XENO_MUTEX_H
 #define _XENO_MUTEX_H
 
-#include <nucleus/synch.h>
 #include <native/types.h>
-#include <native/ppd.h>
 
 struct rt_task;
 
@@ -43,6 +41,9 @@ typedef struct rt_mutex_placeholder {
 } RT_MUTEX_PLACEHOLDER;
 
 #if (defined(__KERNEL__) || defined(__XENO_SIM__)) && !defined(DOXYGEN_CPP)
+
+#include <nucleus/synch.h>
+#include <native/ppd.h>
 
 #define XENO_MUTEX_MAGIC 0x55550505
 

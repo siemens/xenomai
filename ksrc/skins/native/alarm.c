@@ -41,10 +41,9 @@
 #include <nucleus/heap.h>
 #include <native/task.h>
 #include <native/alarm.h>
+#include <native/timer.h>
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
-
-#include <native/timer.h>
 
 static int __alarm_read_proc(char *page,
 			     char **start,
