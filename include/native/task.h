@@ -24,8 +24,7 @@
 
 #include <nucleus/core.h>
 #include <nucleus/thread.h>
-#include <nucleus/synch.h>
-#include <native/timer.h>
+#include <native/types.h>
 
 /* Creation flags. */
 #define T_FPU     XNFPU
@@ -111,6 +110,8 @@ typedef struct rt_task_mcb {
 } RT_TASK_MCB;
 
 #if (defined(__KERNEL__) || defined(__XENO_SIM__)) && !defined(DOXYGEN_CPP)
+
+#include <nucleus/synch.h>
 
 #define XENO_TASK_MAGIC 0x55550101
 

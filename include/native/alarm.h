@@ -22,10 +22,7 @@
 #ifndef _XENO_ALARM_H
 #define _XENO_ALARM_H
 
-#include <nucleus/timer.h>
-#include <nucleus/synch.h>
 #include <native/types.h>
-#include <native/ppd.h>
 
 typedef struct rt_alarm_info {
 
@@ -42,6 +39,10 @@ typedef struct rt_alarm_placeholder {
 } RT_ALARM_PLACEHOLDER;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
+
+#include <nucleus/timer.h>
+#include <nucleus/synch.h>
+#include <native/ppd.h>
 
 #define XENO_ALARM_MAGIC 0x55550909
 

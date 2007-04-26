@@ -22,9 +22,7 @@
 #ifndef _XENO_COND_H
 #define _XENO_COND_H
 
-#include <nucleus/synch.h>
 #include <native/mutex.h>
-#include <native/ppd.h>
 
 typedef struct rt_cond_info {
 
@@ -41,6 +39,9 @@ typedef struct rt_cond_placeholder {
 } RT_COND_PLACEHOLDER;
 
 #if (defined(__KERNEL__) || defined(__XENO_SIM__)) && !defined(DOXYGEN_CPP)
+
+#include <nucleus/synch.h>
+#include <native/ppd.h>
 
 #define XENO_COND_MAGIC 0x55550606
 

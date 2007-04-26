@@ -25,7 +25,6 @@
 #include <nucleus/pipe.h>
 #include <nucleus/heap.h>
 #include <native/types.h>
-#include <native/ppd.h>
 
 /* Operation flags. */
 #define P_NORMAL  XNPIPE_NORMAL
@@ -38,6 +37,8 @@ typedef struct rt_pipe_placeholder {
 } RT_PIPE_PLACEHOLDER;
 
 #ifdef __KERNEL__
+
+#include <native/ppd.h>
 
 #define XENO_PIPE_MAGIC  0x55550202
 

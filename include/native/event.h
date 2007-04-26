@@ -24,7 +24,6 @@
 
 #include <nucleus/synch.h>
 #include <native/types.h>
-#include <native/ppd.h>
 
 /* Creation flags. */
 #define EV_PRIO  XNSYNCH_PRIO	/* Pend by task priority order. */
@@ -49,6 +48,8 @@ typedef struct rt_event_placeholder {
 } RT_EVENT_PLACEHOLDER;
 
 #if (defined(__KERNEL__) || defined(__XENO_SIM__)) && !defined(DOXYGEN_CPP)
+
+#include <native/ppd.h>
 
 #define XENO_EVENT_MAGIC 0x55550404
 

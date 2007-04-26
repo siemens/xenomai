@@ -22,10 +22,8 @@
 #ifndef _XENO_INTR_H
 #define _XENO_INTR_H
 
-#include <nucleus/synch.h>
 #include <nucleus/intr.h>
 #include <native/types.h>
-#include <native/ppd.h>
 
 /* Creation flag. */
 #define I_NOAUTOENA  XN_ISR_NOENABLE  /* Do not auto-enable interrupt channel
@@ -49,6 +47,9 @@ typedef struct rt_intr_placeholder {
 } RT_INTR_PLACEHOLDER;
 
 #if (defined(__KERNEL__) || defined(__XENO_SIM__)) && !defined(DOXYGEN_CPP)
+
+#include <nucleus/synch.h>
+#include <native/ppd.h>
 
 #define XENO_INTR_MAGIC 0x55550a0a
 
