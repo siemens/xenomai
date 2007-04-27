@@ -1,3 +1,8 @@
+2007-04-27  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/rtdm/drvlib.c (rtdm_mutex_timedlock): Add assertion
+	to detect deadlocks due to re-acquisition.
+
 2007-04-26  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/native: Cleanup inclusions.

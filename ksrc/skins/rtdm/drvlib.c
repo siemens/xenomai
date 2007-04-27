@@ -1162,7 +1162,7 @@ EXPORT_SYMBOL(rtdm_mutex_lock);
 int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
                          rtdm_toseq_t *timeout_seq)
 {
-    xnthread_t  *thread = xnpod_current_thread();
+    xnthread_t  *curr_thread = xnpod_current_thread();
     spl_t       s;
     int         err = 0;
 
@@ -1174,8 +1174,12 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
     if (unlikely(testbits(mutex->synch_base.status, RTDM_SYNCH_DELETED)))
         err = -EIDRM;
     else if (likely(xnsynch_owner(&mutex->synch_base) == NULL))
-        xnsynch_set_owner(&mutex->synch_base, thread);
+        xnsynch_set_owner(&mutex->synch_base, curr_thread);
     else {
+        #define mutex_owner xnsynch_owner(&mutex->synch_base)
+        XENO_ASSERT(RTDM, mutex_owner != curr_thread,
+                    err = -EDEADLK; goto unlock_out;);
+
         /* non-blocking mode */
         if (timeout < 0) {
             err = -EWOULDBLOCK;
@@ -1188,15 +1192,16 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
             xnsynch_sleep_on(&mutex->synch_base, *timeout_seq, XN_ABSOLUTE);
         } else {
             /* infinite or relative timeout */
-		xnsynch_sleep_on(&mutex->synch_base,
-				 xntbase_ns2ticks(xnthread_time_base(thread), timeout),
-				 XN_RELATIVE);
+            xnsynch_sleep_on(&mutex->synch_base,
+                xntbase_ns2ticks(xnthread_time_base(curr_thread), timeout),
+                XN_RELATIVE);
         }
 
-        if (unlikely(xnthread_test_info(thread, XNTIMEO|XNRMID|XNBREAK))) {
-            if (xnthread_test_info(thread, XNTIMEO))
+        if (unlikely(xnthread_test_info(curr_thread,
+                                        XNTIMEO|XNRMID|XNBREAK))) {
+            if (xnthread_test_info(curr_thread, XNTIMEO))
                 err = -ETIMEDOUT;
-            else if (xnthread_test_info(thread, XNRMID))
+            else if (xnthread_test_info(curr_thread, XNRMID))
                 err = -EIDRM;
             else /*  XNBREAK */
                 goto restart;
