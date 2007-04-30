@@ -140,7 +140,7 @@ DECLARE_LINUX_IRQ_HANDLER(rthal_broadcast_to_local_timers, irq, dev_id)
 #ifdef CONFIG_SMP
 	send_IPI_all(LOCAL_TIMER_VECTOR);
 #else
-	rthal_trigger_irq(LOCAL_TIMER_VECTOR -  FIRST_EXTERNAL_VECTOR);
+	rthal_trigger_irq(ipipe_apic_vector_irq(LOCAL_TIMER_VECTOR));
 #endif
 	return IRQ_HANDLED;
 }

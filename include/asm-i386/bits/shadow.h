@@ -56,9 +56,9 @@ static inline void xnarch_lock_xirqs(rthal_pipeline_stage_t * ipd, int cpuid)
 		switch (irq) {
 #ifdef CONFIG_SMP
 		case RTHAL_CRITICAL_IPI:
-		case INVALIDATE_TLB_VECTOR - FIRST_EXTERNAL_VECTOR:
-		case CALL_FUNCTION_VECTOR - FIRST_EXTERNAL_VECTOR:
-		case RESCHEDULE_VECTOR - FIRST_EXTERNAL_VECTOR:
+		case ipipe_apic_vector_irq(INVALIDATE_TLB_VECTOR):
+		case ipipe_apic_vector_irq(CALL_FUNCTION_VECTOR):
+		case ipipe_apic_vector_irq(RESCHEDULE_VECTOR):
 
 			/* Never lock out these ones. */
 			continue;
@@ -79,9 +79,9 @@ static inline void xnarch_unlock_xirqs(rthal_pipeline_stage_t * ipd, int cpuid)
 		switch (irq) {
 #ifdef CONFIG_SMP
 		case RTHAL_CRITICAL_IPI:
-		case INVALIDATE_TLB_VECTOR - FIRST_EXTERNAL_VECTOR:
-		case CALL_FUNCTION_VECTOR - FIRST_EXTERNAL_VECTOR:
-		case RESCHEDULE_VECTOR - FIRST_EXTERNAL_VECTOR:
+		case ipipe_apic_vector_irq(INVALIDATE_TLB_VECTOR):
+		case ipipe_apic_vector_irq(CALL_FUNCTION_VECTOR):
+		case ipipe_apic_vector_irq(RESCHEDULE_VECTOR):
 
 			continue;
 #endif /* CONFIG_SMP */
