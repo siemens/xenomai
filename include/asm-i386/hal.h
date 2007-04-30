@@ -142,6 +142,11 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #define RTHAL_APIC_TIMER_IPI       RTHAL_SERVICE_IPI3
 #define RTHAL_APIC_ICOUNT          ((RTHAL_TIMER_FREQ + HZ/2)/HZ)
 #define RTHAL_TIMER_IRQ 	   RTHAL_APIC_TIMER_IPI
+#ifndef ipipe_apic_vector_irq
+/* Older I-pipe versions do not differentiate the normal IRQ space
+   from the system IRQ range, which is wrong... */
+#define ipipe_apic_vector_irq(vec) (vec - FIRST_EXTERNAL_VECTOR)
+#endif
 #else  /* !CONFIG_X86_LOCAL_APIC */
 #define RTHAL_TIMER_IRQ		   RTHAL_8254_IRQ
 #endif /* CONFIG_X86_LOCAL_APIC */

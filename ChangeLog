@@ -1,3 +1,8 @@
+2007-04-30  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-i386/hal.h, ksrc/arch/i386/hal.c: Adapt to
+	the I-pipe/x86 1.8 series.
+
 2007-04-27  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/rtdm/drvlib.c (rtdm_mutex_timedlock): Add assertion
