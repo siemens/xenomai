@@ -1,3 +1,8 @@
+2007-04-30  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-i386/hal.h, ksrc/arch/i386/hal.c: Adapt to
+	the I-pipe/x86 1.8 series.
+
 2007-04-19  Philippe Gerum  <rpm@xenomai.org>
  
 	* ksrc/skins/vrtx/module.c, ksrc/nucleus/pipe.c,
