@@ -15,6 +15,10 @@
 	* include/nucleus/system.h: Remove unused (and bogus for 64bit
 	archs) ffnz wrapper.
 	
+2007-04-20  Stelian Pop  <stelian.pop@openwide.fr>
+
+	* include/asm-arm/syscall.h: Add EABI support.
+
 2007-04-19  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/vrtx/module.c, ksrc/nucleus/pipe.c,
