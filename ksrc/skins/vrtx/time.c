@@ -24,7 +24,7 @@
 
 void ui_timer(void)
 {
-	xnpod_announce_tick(&nkclock);
+	xntbase_tick(vrtx_tbase);
 }
 
 void sc_gclock(struct timespec *timep, unsigned long *nsp, int *errp)

@@ -279,8 +279,7 @@ u_long tm_cancel(u_long tmid)
 
 u_long tm_tick(void)
 {
-
-	xnpod_announce_tick(&nkclock);
+	xntbase_tick(psos_tbase);
 	return SUCCESS;
 }
 

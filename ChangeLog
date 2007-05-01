@@ -1,3 +1,8 @@
+2007-05-01  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/psos+/tm.c (tm_tick), ksrc/skins/vrtx/time.c
+	(ui_timer): Call xntbase_tick() instead of xnpod_announce_tick().
+
 2007-04-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-i386/hal.h, ksrc/arch/i386/hal.c: Adapt to
