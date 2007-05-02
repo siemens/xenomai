@@ -29,6 +29,7 @@ int         end = 0;
 
 void set_leds(int mask)
 {
+#ifdef CONFIG_X86
 	while (inb(0x64) & 2);
 	outb(0xED, 0x60);
 	while (!(inb(0x64) & 1));
@@ -37,6 +38,9 @@ void set_leds(int mask)
 	outb(mask, 0x60);
 	while (!(inb(0x64) & 1));
 	inb(0x60);
+#else
+#warning Sorry, no lighty on x86 hardware :(
+#endif
 }
 
 void heartbeat(void *cookie)
