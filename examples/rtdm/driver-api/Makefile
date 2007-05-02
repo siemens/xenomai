@@ -14,6 +14,7 @@ MODULES = heartbeat-x86
 
 
 ###### USER SPACE BUILD (no change required normally) ######
+ifeq ($(KERNELRELEASE),)
 ifneq ($(APPLICATIONS),)
 
 ### Default Xenomai installation path
@@ -44,6 +45,7 @@ all:: $(APPLICATIONS)
 clean::
 	$(RM) $(APPLICATIONS) *.o
 
+endif
 endif
 
 
