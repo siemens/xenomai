@@ -39,7 +39,7 @@ void set_leds(int mask)
 	while (!(inb(0x64) & 1));
 	inb(0x60);
 #else
-#warning Sorry, no lighty on x86 hardware :(
+#warning Sorry, no lights on non-x86 hardware :(
 #endif
 }
 
