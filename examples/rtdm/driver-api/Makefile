@@ -1,13 +1,13 @@
 ###### CONFIGURATION ######
 
 ### List of applications to be build
-APPLICATIONS =
+APPLICATIONS = tut01-skeleton-app
 
 ### Note: to override the search path for the xeno-config script, use "make XENO=..."
 
 
 ### List of modules to be build
-MODULES = heartbeat-x86
+MODULES = heartbeat-x86 tut01-skeleton-drv
 
 ### Note: to override the kernel source path, use "make KSRC=..."
 
