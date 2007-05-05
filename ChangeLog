@@ -1,3 +1,7 @@
+2007-05-05  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.8-00.
+
 2007-04-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-i386/hal.h, ksrc/arch/i386/hal.c: Adapt to
