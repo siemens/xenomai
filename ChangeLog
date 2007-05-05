@@ -1,3 +1,7 @@
+2007-05-05  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.8-00.
+
 2007-05-01  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/psos+/tm.c (tm_tick), ksrc/skins/vrtx/time.c
@@ -1240,7 +1244,7 @@
 
 2006-09-28  Philippe Gerum  <rpm@xenomai.org>
 
- 	* ksrc/nucleus/pod.c (xnpod_watchdog_handler): Rework the watchdog
+	* ksrc/nucleus/pod.c (xnpod_watchdog_handler): Rework the watchdog
  	support so that it does _not_ depend on xnpod_announce_tick()
  	being called: the latter does not happen whenever host ticks are
  	attached to another IRQ channel than the nucleus timer one
