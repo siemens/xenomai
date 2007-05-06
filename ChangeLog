@@ -1,3 +1,9 @@
+2007-05-06  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/native/syscall.c: Move __native_global_rholder to
+	module.c to solve a build error without
+	CONFIG_XENO_OPT_PERVASIVE.
+
 2007-05-05  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.8-00.
