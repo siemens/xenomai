@@ -33,7 +33,7 @@ struct pse51_timer {
 
 	unsigned queued;
 	unsigned overruns;
-	unsigned last_overruns;
+	xnticks_t pexpect;
 
 	xnholder_t link; /* link in process or global timers queue. */
 
@@ -57,12 +57,8 @@ static void pse51_base_timer_handler(xntimer_t *xntimer)
 	struct pse51_timer *timer =
 		container_of(xntimer, struct pse51_timer, timerbase);
 
-	if (timer->queued) {
-		if (timer->overruns < DELAYTIMER_MAX)
-			++timer->overruns;
-	} else {
+	if (!timer->queued) {
 		timer->queued = 1;
-		timer->overruns = 0;
 		pse51_sigqueue_inner(timer->owner, &timer->si);
 	}
 }
@@ -71,6 +67,7 @@ static void pse51_base_timer_handler(xntimer_t *xntimer)
 void pse51_timer_notified(pse51_siginfo_t * si)
 {
 	struct pse51_timer *timer = link2tm(si, si);
+	xnticks_t period, now;
 
 	timer->queued = 0;
 	/* We need this two staged overruns count. The overruns count returned by
@@ -81,7 +78,37 @@ void pse51_timer_notified(pse51_siginfo_t * si)
 	   called (i.e. the signal is accepted by the application), the signal shall
 	   be queued again, and later overruns should count for that new
 	   notification, not the one the application is currently handling. */
-	timer->last_overruns = timer->overruns;
+
+	period = xntimer_interval(&timer->timerbase);
+
+	if (!period) {
+		timer->overruns = 0;
+		return;
+	}
+
+	now = xntbase_get_rawclock(pse51_tbase);
+
+	if (unlikely(now >= timer->pexpect + period)) {
+		xnsticks_t missed = now - timer->pexpect;
+#if BITS_PER_LONG < 64 && defined(__KERNEL__)
+		/* Slow (error) path, without resorting to 64 bit divide in
+		   kernel space unless the period fits in 32 bit. */
+		if (likely(period <= 0xffffffffLL))
+			timer->overruns = xnarch_uldiv(missed, period);
+		else {
+			timer->overruns = 0;
+		      divide:
+			++timer->overruns;
+			missed -= period;
+			if (missed >= period)
+				goto divide;
+		}
+#else /* BITS_PER_LONG >= 64 */
+		timer->overruns = missed / period;
+#endif /* BITS_PER_LONG < 64 */
+		timer->pexpect += period * timer->overruns;
+	}
+	timer->pexpect += period;
 }
 
 /**
@@ -375,6 +402,7 @@ int timer_settime(timer_t timerid,
 		xntimer_start(&timer->timerbase,
 			      start, ts2ticks_ceil(&value->it_interval),
 			      XN_RELATIVE);
+		timer->pexpect = xntbase_get_rawclock(pse51_tbase) + start;
 		timer->owner = cur;
 		inith(&timer->tlink);
 		appendq(&timer->owner->timersq, &timer->tlink);
@@ -481,7 +509,7 @@ int timer_getoverrun(timer_t timerid)
 	if (!xntimer_active_p(&timer->timerbase))
 		goto unlock_and_einval;
 
-	overruns = timer->last_overruns;
+	overruns = timer->overruns;
 
 	xnlock_put_irqrestore(&nklock, s);
 
