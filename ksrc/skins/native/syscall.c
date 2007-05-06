@@ -50,8 +50,6 @@
 
 int __native_muxid;
 
-xeno_rholder_t __native_global_rholder;
-
 static int __rt_bind_helper(struct task_struct *curr,
 			    struct pt_regs *regs,
 			    xnhandle_t *handlep,

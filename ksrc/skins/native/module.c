@@ -56,6 +56,8 @@ MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us), 0 for tick-less mode");
 
 xntbase_t *__native_tbase;
 
+xeno_rholder_t __native_global_rholder;
+
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 xnptree_t __native_ptree = {
 
