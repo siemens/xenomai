@@ -197,13 +197,11 @@ u_long t_start(u_long tid,
 
 	xnmode = psos_mode_to_xeno(mode);
 
-	for (n = 0; n < 4; n++)
-		task->args[n] = targs ? targs[n] : 0;
-
 	task->entry = startaddr;
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	if (xnthread_test_state(&task->threadbase, XNSHADOW))
+	if (xnthread_test_state(&task->threadbase, XNSHADOW)) {
+		memset(task->args, 0, sizeof(task->args));
 		/* The shadow will be returned the exact values passed
 		 * to t_start(), since the trampoline is performed at
 		 * user-space level. We just relay the information
@@ -212,12 +210,18 @@ u_long t_start(u_long tid,
 				   xnmode,
 				   (int)((mode >> 8) & 0x7),
 				   XNPOD_ALL_CPUS, (void (*)(void *))startaddr, targs);
+	}
 	else
 #endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
+	{
+		for (n = 0; n < 4; n++)
+			task->args[n] = targs ? targs[n] : 0;
+
 		xnpod_start_thread(&task->threadbase,
 				   xnmode,
 				   (int)((mode >> 8) & 0x7),
 				   XNPOD_ALL_CPUS, &psostask_trampoline, task);
+	}
 
       unlock_and_exit:
 

@@ -1,3 +1,8 @@
+2007-05-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/psos+/task.c (t_start): Never dereference the
+	user-space args when starting a shadow.
+
 2007-05-05  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.8-00.
