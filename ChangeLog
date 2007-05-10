@@ -1,5 +1,8 @@
 2007-05-10  Jan Kiszka  <jan.kiszka@web.de>
 
+	* ksrc/drivers/testing/irqbench.c: Remove MODULE_DEVICE_TABLE to
+	avoid auto-loading of the test driver.
+
 	* include/rtdm/rtdm_driver.h, ksrc/drivers/testing/switchtest.c:
 	Add custom argument to rtdm_nrtsig handlers. Update users.
 
