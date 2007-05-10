@@ -500,8 +500,6 @@ static const struct pnp_device_id irqbench_pnp_tbl[] = {
 	{ }
 };
 
-MODULE_DEVICE_TABLE(pnp, irqbench_pnp_tbl);
-
 static int irqbench_pnp_probe(struct pnp_dev *dev,
 			      const struct pnp_device_id *id)
 {
