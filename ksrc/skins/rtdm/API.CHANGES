@@ -12,6 +12,7 @@ Revision 6:
  o Requested IRQ lines are now enabled on return of rtdm_irq_request
  o Converted request argument in IOCTL handler to unsigned int to fix issues
    on 64-bit architectures
+ o Added custom argument to rtdm_nrtsig handler
 
 Revision 5:
  o Introduced generic time types nanosecs_abs_t and nanosecs_rel_t.
