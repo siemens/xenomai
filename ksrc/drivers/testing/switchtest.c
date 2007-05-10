@@ -568,7 +568,7 @@ static struct rtdm_device device = {
 	proc_name: device.device_name,
 };
 
-void rtswitch_utask_waker(rtdm_nrtsig_t sig)
+void rtswitch_utask_waker(rtdm_nrtsig_t sig, void *arg)
 {
 	up(&rtswitch_utask[xnarch_current_cpu()]->nrt_synch);
 }
@@ -577,8 +577,8 @@ int __init __switchtest_init(void)
 {
 	int err;
 
-	err = rtdm_nrtsig_init(&rtswitch_wake_utask, rtswitch_utask_waker);
-
+	err = rtdm_nrtsig_init(&rtswitch_wake_utask,
+			       rtswitch_utask_waker, NULL);
 	if (err)
 		return err;
 

@@ -2,7 +2,7 @@
  * @file
  * Real-Time Driver Model for Xenomai, driver API header
  *
- * @note Copyright (C) 2005, 2006 Jan Kiszka <jan.kiszka@web.de>
+ * @note Copyright (C) 2005-2007 Jan Kiszka <jan.kiszka@web.de>
  * @note Copyright (C) 2005 Joerg Langenberg <joerg.langenberg@gmx.net>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
@@ -799,20 +799,20 @@ typedef unsigned                    rtdm_nrtsig_t;
  * subsystem. Note the implications of this context, e.g. no invocation of
  * blocking operations.
  */
-typedef void (*rtdm_nrtsig_handler_t)(rtdm_nrtsig_t nrt_sig);
+typedef void (*rtdm_nrtsig_handler_t)(rtdm_nrtsig_t nrt_sig, void *arg);
 /** @} nrtsignal */
 
 
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline int rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig,
-                                   rtdm_nrtsig_handler_t handler)
+                                   rtdm_nrtsig_handler_t handler, void *arg)
 {
     *nrt_sig = rthal_alloc_virq();
 
     if (*nrt_sig == 0)
         return -EAGAIN;
 
-    rthal_virtualize_irq(rthal_root_domain, *nrt_sig, (rthal_irq_handler_t)handler, NULL, NULL,
+    rthal_virtualize_irq(rthal_root_domain, *nrt_sig, handler, arg, NULL,
                          IPIPE_HANDLE_MASK);
     return 0;
 }
