@@ -46,7 +46,7 @@ static void vrtxtask_delete_hook(xnthread_t *thread)
 
 	vrtx_mark_deleted(task);
 
-	xnfreesafe(&task->threadbase, task, &task->link);
+	xnheap_schedule_free(&kheap, task, &task->link);
 }
 
 int vrtxtask_init(u_long stacksize)

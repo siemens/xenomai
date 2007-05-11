@@ -83,7 +83,7 @@ static void __task_delete_hook(xnthread_t *thread)
 	xeno_mark_deleted(task);
 
 	if (xnthread_test_state(&task->thread_base, XNSHADOW))
-		xnfreesafe(&task->thread_base, task, &task->link);
+		xnheap_schedule_free(&kheap, task, &task->link);
 }
 
 void __native_task_safe(RT_TASK *task)

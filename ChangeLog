@@ -1,3 +1,17 @@
+2007-05-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/heap.h (xnfreesafe): Use xnpod_current_p() when
+	checking for deferral.
+
+	* include/nucleus/pod.h (xnpod_current_p): Give exec mode
+	awareness to this predicate, checking for primary/secondary mode
+	of shadows.
+
+2007-05-11  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins: Always defer thread memory release in deletion hook
+	by calling xnheap_schedule_free() instead of xnfreesafe().
+
 2007-05-10  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/testing/irqbench.c: Remove MODULE_DEVICE_TABLE to
