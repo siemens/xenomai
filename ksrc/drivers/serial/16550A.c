@@ -302,20 +302,20 @@ static int rt_16550_set_config(struct rt_16550_context *ctx,
 	rtdm_lockctx_t lock_ctx;
 	unsigned long base = ctx->base_addr;
 	int mode = rt_16550_io_mode_from_ctx(ctx);
-	int dev_id;
 	int err = 0;
-	int baud_div = 0;
 
 	/* make line configuration atomic and IRQ-safe */
 	rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
 
 	if (testbits(config->config_mask, RTSER_SET_BAUD)) {
-		dev_id = container_of(((void *)ctx), struct rtdm_dev_context,
-				      dev_private)->device->device_id;
+		int dev_id = container_of(((void *)ctx),
+					  struct rtdm_dev_context,
+					  dev_private)->device->device_id;
+		int baud_div;
 
 		ctx->config.baud_rate = config->baud_rate;
-		baud_div = (baud_base[dev_id] + (ctx->config.baud_rate >> 1)) /
-		    ctx->config.baud_rate;
+		baud_div = (baud_base[dev_id] + (ctx->config.baud_rate>>1)) /
+			ctx->config.baud_rate;
 		rt_16550_reg_out(mode, base, LCR, LCR_DLAB);
 		rt_16550_reg_out(mode, base, DLL, baud_div & 0xff);
 		rt_16550_reg_out(mode, base, DLM, baud_div >> 8);
@@ -595,10 +595,10 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 
 		if (testbits(config->config_mask, RTSER_SET_BAUD) &&
 		    (config->baud_rate >
-		     baud_base[context->device->device_id])) {
-			/* the baudrate is to high for this port */
+		     baud_base[context->device->device_id] ||
+		     config->baud_rate <= 0))
+			/* invalid baudrate for this port */
 			return -EINVAL;
-		}
 
 		if (testbits(config->config_mask,
 			     RTSER_SET_TIMESTAMP_HISTORY)) {
