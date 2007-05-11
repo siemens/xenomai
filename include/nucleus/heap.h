@@ -116,12 +116,12 @@ extern xnheap_t kheap;
 #define xnmalloc(size)     xnheap_alloc(&kheap,size)
 #define xnfree(ptr)        xnheap_free(&kheap,ptr)
 #define xnfreesync()       xnheap_finalize_free(&kheap)
-#define xnfreesafe(thread,ptr,ln) \
-do { \
-    if (xnpod_current_thread() == thread) \
-	xnheap_schedule_free(&kheap,ptr,ln); \
-    else \
-	xnheap_free(&kheap,ptr); \
+#define xnfreesafe(thread,ptr,ln)		\
+    do {					\
+    if (xnpod_current_p(thread))		\
+	xnheap_schedule_free(&kheap,ptr,ln);	\
+    else					\
+	xnheap_free(&kheap,ptr);		\
 } while(0)
 
 static inline size_t xnheap_rounded_size (size_t hsize, size_t psize)
