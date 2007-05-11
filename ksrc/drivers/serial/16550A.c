@@ -582,8 +582,9 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
             }
 
             if (testbits(config->config_mask, RTSER_SET_BAUD) &&
-                (config->baud_rate > baud_base[dev_id])) {
-                /* the baudrate is to high for this port */
+                (config->baud_rate > baud_base[dev_id] ||
+                 config->baud_rate <= 0)) {
+                /* invalid baudrate for this port */
                 return -EINVAL;
             }
 
@@ -1071,7 +1072,7 @@ static const struct rtdm_device __initdata device_tmpl = {
     device_class:       RTDM_CLASS_SERIAL,
     device_sub_class:   RTDM_SUBCLASS_16550A,
     driver_name:        "xeno_16550A",
-    driver_version:     RTDM_DRIVER_VER(1, 4, 0),
+    driver_version:     RTDM_DRIVER_VER(1, 4, 1),
     peripheral_name:    "UART 16550A",
     provider_name:      "Jan Kiszka",
 };

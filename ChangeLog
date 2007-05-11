@@ -1,3 +1,7 @@
+2007-05-11  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/drivers/serial/16550A.c: Catch baud_rate==0.
+
 2007-05-11  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/heap.h (xnfreesafe): Use xnpod_current_p() when
