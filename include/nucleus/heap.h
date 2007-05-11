@@ -120,7 +120,7 @@ extern xnheap_t kheap;
 #define xnfreesync()       xnheap_finalize_free(&kheap)
 #define xnfreesafe(thread,ptr,ln) \
 do { \
-    if (xnpod_current_thread() == thread) \
+    if (xnpod_current_p(thread))	     \
 	xnheap_schedule_free(&kheap,ptr,ln); \
     else \
 	xnheap_free(&kheap,ptr); \

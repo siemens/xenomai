@@ -52,7 +52,7 @@ static void psostask_delete_hook(xnthread_t *thread)
 	xnarch_delete_display(&task->threadbase);
 	psos_mark_deleted(task);
 
-	xnfreesafe(&task->threadbase, task, &task->link);
+	xnheap_schedule_free(&kheap, task, &task->link);
 }
 
 void psostask_init(u_long rrperiod)

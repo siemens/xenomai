@@ -45,7 +45,7 @@ static void thread_destroy(pthread_t thread)
 	   called from pse51_thread_pkg_cleanup, hence the absence of
 	   xnpod_schedule(). */
 	xnsynch_destroy(&thread->join_synch);
-	xnfree(thread);
+	xnheap_schedule_free(&kheap, thread, &thread->link);
 }
 
 static void thread_trampoline(void *cookie)

@@ -605,7 +605,7 @@ static void wind_task_delete_hook(xnthread_t *thread)
 	wind_mark_deleted(task);
 
 	if (task->auto_delete)
-		xnfreesafe(&task->threadbase, task, &task->link);
+		xnheap_schedule_free(&kheap, task, &task->link);
 }
 
 static void wind_task_trampoline(void *cookie)

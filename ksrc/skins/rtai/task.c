@@ -40,7 +40,7 @@ static void __task_delete_hook(xnthread_t *thread)
 	rtai_mark_deleted(task);
 
 	if (xnthread_test_state(&task->thread_base, XNSHADOW))
-		xnfreesafe(&task->thread_base, task, &task->link);
+		xnheap_schedule_free(&kheap, task, &task->link);
 }
 
 static void __task_switch_hook(xnthread_t *thread)
