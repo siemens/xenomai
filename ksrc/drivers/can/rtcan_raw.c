@@ -211,8 +211,8 @@ EXPORT_SYMBOL_GPL(rtcan_loopback);
 int rtcan_raw_socket(struct rtdm_dev_context *context,
 		     rtdm_user_info_t *user_info, int protocol)
 {
-    /* Only CAN_PROTO_RAW is supported */
-    if (protocol != CAN_PROTO_RAW && protocol != 0)
+    /* Only protocol CAN_RAW is supported */
+    if (protocol != CAN_RAW && protocol != 0)
         return -EPROTONOSUPPORT;
 
     rtcan_socket_init(context);
