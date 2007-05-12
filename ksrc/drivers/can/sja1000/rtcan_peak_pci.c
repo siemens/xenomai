@@ -273,8 +273,9 @@ static int __devinit peak_pci_init_one (struct pci_dev *pdev,
     u16 sub_sys_id;
     struct rtcan_device *master_dev = NULL;
 
-    printk("Initializing device %04x:%04x\n", pdev->vendor, pdev->device);
-	
+    printk("%s: initializing device %04x:%04x\n",
+	   RTCAN_DRV_NAME,  pdev->vendor, pdev->device);
+
     if ((ret = pci_enable_device (pdev)))
 	goto failure;
 
@@ -303,9 +304,9 @@ static int __devinit peak_pci_init_one (struct pci_dev *pdev,
 	printk("Shared interrupts not enabled, using single channel!\n");
 #endif
     } else {
-	if ((ret = rtcan_peak_pci_add_chan(pdev, CHANNEL_SINGLE, 0)))
+	if ((ret = rtcan_peak_pci_add_chan(pdev, CHANNEL_SINGLE,
+					   &master_dev)))
 	    goto failure_cleanup;
-	ret = rtcan_peak_pci_add_chan(pdev, CHANNEL_SINGLE, 0);
     }
 
     pci_set_drvdata(pdev, master_dev);

@@ -1,3 +1,8 @@
+2007-05-12  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* ksrc/drivers/can/sja1000/rtcan_peak_pci.c (peak_pci_init_one): Bug
+	fix for single channel PEAK PCI cards.
+
 2007-05-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-powerpc/wrappers.h, ksrc/arch/powerpc/hal.c: Adapt
