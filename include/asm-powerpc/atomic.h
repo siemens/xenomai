@@ -60,7 +60,7 @@ static __inline__ void atomic_set_mask(unsigned long mask,
 	: "r5", "cc", "memory");
 }
 #else /* !CONFIG_PPC64 */
- /* These are defined in arch/ppc/kernel/misc.S on 32-bit PowerPC */
+ /* These are defined in arch/{ppc,powerpc}/kernel/misc[_32].S on 32-bit PowerPC */
 void atomic_set_mask(unsigned long mask, unsigned long *ptr);
 void atomic_clear_mask(unsigned long mask, unsigned long *ptr);
 #endif /* CONFIG_PPC64 */
