@@ -1,5 +1,11 @@
 2007-05-12  Wolfgang Grandegger  <wg@grandegger.com>
 
+	* include/rtdm/rtcan.h, ksrc/drivers/can/rtcan_raw.c: Replace the CAN
+	protocol definition CAN_PROTO_RAW with CAN_RAW to be compatible with
+	Socket-CAN.
+
+2007-05-12  Wolfgang Grandegger  <wg@grandegger.com>
+
 	* ksrc/drivers/can/sja1000/rtcan_peak_pci.c (peak_pci_init_one): Bug
 	fix for single channel PEAK PCI cards.
 

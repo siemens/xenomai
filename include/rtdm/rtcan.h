@@ -120,7 +120,7 @@
  * @n
  * Supported Levels and Options:
  * @n
- * - Level @b SOL_CAN_RAW : CAN RAW protocol (see @ref CAN_PROTO_RAW)
+ * - Level @b SOL_CAN_RAW : CAN RAW protocol (see @ref CAN_RAW)
  *   - Option @ref CAN_RAW_FILTER : CAN filter list
  *   - Option @ref CAN_RAW_ERR_FILTER : CAN error mask
  *   - Option @ref CAN_RAW_LOOPBACK : CAN TX loopback to local sockets
@@ -264,12 +264,6 @@
 
 #endif
 
-/** Particular CAN protocols
- *
- *  Currently only the RAW protocol is supported.
- */
-#define CAN_RAW  0
-
 /** CAN socket levels
  *
  *  Used for @ref Sockopts for the particular protocols.
@@ -314,16 +308,15 @@ typedef can_id_t can_err_mask_t;
 
 
 /*!
- * @anchor CAN_PROTO @name CAN protocols
- * Possible protocols for PF_CAN protocol family
+ * @anchor CAN_PROTO @name Particular CAN protocols
+ * Possible protocols for the PF_CAN protocol family
+ *
+ * Currently only the RAW protocol is supported.
  * @{ */
-enum CAN_PROTO {
-    /** Raw protocol of @c PF_CAN, applicable to socket
-	type @c SOCK_RAW */
-    CAN_PROTO_RAW,
-    CAN_PROTO_MAX
-};
+/** Raw protocol of @c PF_CAN, applicable to socket type @c SOCK_RAW */
+#define CAN_RAW  1
 /** @} */
+
 
 #define CAN_BAUDRATE_UNKNOWN       ((uint32_t)-1)
 #define CAN_BAUDRATE_UNCONFIGURED  0
