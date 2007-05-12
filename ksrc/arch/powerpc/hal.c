@@ -323,51 +323,31 @@ int rthal_irq_host_release(unsigned irq, void *dev_id)
 
 int rthal_irq_enable(unsigned irq)
 {
-    if (irq >= IPIPE_NR_XIRQS)
+    if (irq >= NR_IRQS)
         return -EINVAL;
 
-    if (rthal_irq_handlerp(irq) == NULL ||
-        rthal_irq_handlerp(irq)->enable == NULL)
-        return -ENODEV;
+    rthal_irq_desc_status(irq) &= ~IRQ_DISABLED;
 
-    rthal_irq_descp(irq)->status &= ~IRQ_DISABLED;
-    rthal_irq_handlerp(irq)->enable(irq);
-
-    return 0;
+    return rthal_irq_chip_enable(irq);
 }
 
 int rthal_irq_disable(unsigned irq)
 {
 
-    if (irq >= IPIPE_NR_XIRQS)
+    if (irq >= NR_IRQS)
         return -EINVAL;
 
-    if (rthal_irq_handlerp(irq) == NULL ||
-        rthal_irq_handlerp(irq)->disable == NULL)
-        return -ENODEV;
+    rthal_irq_desc_status(irq) |= IRQ_DISABLED;
 
-    rthal_irq_handlerp(irq)->disable(irq);
-    rthal_irq_descp(irq)->status |= IRQ_DISABLED;
-
-    return 0;
+    return rthal_irq_chip_disable(irq);
 }
 
 int rthal_irq_end(unsigned irq)
 {
-    if (irq >= IPIPE_NR_XIRQS)
+    if (irq >= NR_IRQS)
         return -EINVAL;
 
-    if (rthal_irq_handlerp(irq) != NULL) {
-        if (rthal_irq_handlerp(irq)->end != NULL)
-            rthal_irq_handlerp(irq)->end(irq);
-        else if (rthal_irq_handlerp(irq)->enable != NULL)
-            rthal_irq_handlerp(irq)->enable(irq);
-        else
-            return -ENODEV;
-    } else
-        return -ENODEV;
-
-    return 0;
+    return rthal_irq_chip_end(irq);
 }
 
 static inline int do_exception_event(unsigned event, unsigned domid, void *data)

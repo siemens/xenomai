@@ -83,12 +83,61 @@
 
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15) */
 
+#define rthal_irq_descp(irq)		(irq_desc + irq)
+#define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
+#define rthal_irq_handlerp(irq) rthal_irq_descp(irq)->handler
+#else
+#define rthal_irq_handlerp(irq) rthal_irq_descp(irq)->chip
+#endif
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
 typedef irqreturn_t (*rthal_irq_host_handler_t)(int irq,
 						void *dev_id,
 						struct pt_regs *regs);
-#else /* >= 2.6.19 */
+#else
 typedef irq_handler_t rthal_irq_host_handler_t;
+#endif
+
+
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,19)
+#define rthal_irq_chip_enable(irq)					\
+	({								\
+		int __err__ = 0;					\
+		if (rthal_irq_handlerp(irq) == NULL ||			\
+		    rthal_irq_handlerp(irq)->enable == NULL)		\
+			__err__ = -ENODEV;				\
+		else							\
+			rthal_irq_handlerp(irq)->enable(irq);		\
+		__err__;						\
+	})
+#define rthal_irq_chip_disable(irq)					\
+	({								\
+		int __err__ = 0;					\
+		if (rthal_irq_handlerp(irq) == NULL ||			\
+		    rthal_irq_handlerp(irq)->disable == NULL)		\
+			__err__ = -ENODEV;				\
+		else							\
+			rthal_irq_handlerp(irq)->disable(irq);		\
+		__err__;						\
+	})
+#define rthal_irq_chip_end(irq)						\
+	({									\
+		int __err__ = 0;						\
+		if (rthal_irq_handlerp(irq) != NULL) {				\
+			if (rthal_irq_handlerp(irq)->end != NULL)		\
+				rthal_irq_handlerp(irq)->end(irq); 		\
+			else if	(rthal_irq_handlerp(irq)->enable != NULL) 	\
+				rthal_irq_handlerp(irq)->enable(irq); 		\
+		} else								\
+			__err__ = -ENODEV;					\
+		__err__;							\
+	})
+#else /* > 2.6.19 */
+#define rthal_irq_chip_enable(irq)   ({ rthal_irq_handlerp(irq)->unmask(irq); 0; })
+#define rthal_irq_chip_disable(irq)  ({ rthal_irq_handlerp(irq)->mask(irq); 0; })
+#define rthal_irq_chip_end(irq)      ({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
 #endif
 
 #endif /* _XENO_ASM_POWERPC_WRAPPERS_H */

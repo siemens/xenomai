@@ -1,8 +1,12 @@
-2007-05-11  Jan Kiszka  <jan.kiszka@web.de>
+2007-05-12  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/drivers/serial/16550A.c: Catch baud_rate==0.
+	* include/asm-powerpc/wrappers.h, ksrc/arch/powerpc/hal.c: Adapt
+	to 2.6.21.
 
 2007-05-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/hal.h: Add cache locking and kernel FP
+	unavailable exception labels.
 
 	* include/nucleus/heap.h (xnfreesafe): Use xnpod_current_p() when
 	checking for deferral.
@@ -10,6 +14,10 @@
 	* include/nucleus/pod.h (xnpod_current_p): Give exec mode
 	awareness to this predicate, checking for primary/secondary mode
 	of shadows.
+
+2007-05-11  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/drivers/serial/16550A.c: Catch baud_rate==0.
 
 2007-05-11  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
