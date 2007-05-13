@@ -43,6 +43,7 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 {
 	/* Remember the preempted Linux task pointer. */
 	rootcb->user_task = rootcb->active_task = current;
+	rootcb->mm = rootcb->active_mm = rthal_get_active_mm();
 	rootcb->tip = current->thread_info;
 #ifdef CONFIG_XENO_HW_FPU
 	rootcb->user_fpu_owner = rthal_get_fpu_owner(rootcb->user_task);
@@ -56,28 +57,35 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 
 static inline void xnarch_enter_root(xnarchtcb_t * rootcb)
 {
+#ifdef TIF_MMSWITCH_INT
+	if (!rootcb->mm)
+		set_ti_thread_flag(rootcb->tip, TIF_MMSWITCH_INT);
+#endif /* TIF_MMSWITCH_INT */
 }
 
 static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 {
 	struct task_struct *prev = out_tcb->active_task;
+	struct mm_struct *prev_mm = out_tcb->active_mm;
 	struct task_struct *next = in_tcb->user_task;
+
 
 	if (likely(next != NULL)) {
 		in_tcb->active_task = next;
+		in_tcb->active_mm = in_tcb->mm;
 		rthal_clear_foreign_stack(&rthal_domain);
 	} else {
 		in_tcb->active_task = prev;
+		in_tcb->active_mm = prev_mm;
 		rthal_set_foreign_stack(&rthal_domain);
 	}
 
-	if (next && next != prev) {
+	if (prev_mm != in_tcb->active_mm) {
 		/* Switch to new user-space thread? */
-		struct mm_struct *oldmm = prev->active_mm;
-		if (next->active_mm)
-			switch_mm(oldmm, next->active_mm, next);
+		if (in_tcb->active_mm)
+			switch_mm(prev_mm, in_tcb->active_mm, next);
 		if (!next->mm)
-			enter_lazy_tlb(oldmm, next);
+			enter_lazy_tlb(prev_mm, next);
 	}
 
 	/* Kernel-to-kernel context switch. */
@@ -101,6 +109,8 @@ static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
 {
 	tcb->user_task = current;
 	tcb->active_task = NULL;
+	tcb->mm = current->mm;
+	tcb->active_mm = NULL;
 	tcb->tip = &tcb->ti;
 #ifdef CONFIG_XENO_HW_FPU
 	tcb->user_fpu_owner = NULL;

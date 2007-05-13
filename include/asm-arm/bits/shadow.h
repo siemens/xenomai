@@ -35,6 +35,8 @@ static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 
 	tcb->user_task = task;
 	tcb->active_task = NULL;
+	tcb->mm = task->mm;
+	tcb->active_mm = NULL;
 	tcb->tip = task->thread_info;
 #ifdef CONFIG_XENO_HW_FPU
 	tcb->user_fpu_owner = task;

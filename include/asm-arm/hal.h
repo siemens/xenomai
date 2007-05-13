@@ -105,6 +105,15 @@ static inline void rthal_timer_program_shot (unsigned long delay)
 	__ipipe_mach_set_dec(delay);
 }
 
+static inline struct mm_struct *rthal_get_active_mm(void)
+{
+#ifdef TIF_MMSWITCH_INT
+	return per_cpu(ipipe_active_mm, smp_processor_id());
+#else /* !TIF_MMSWITCH_INT */
+	return current->active_mm;
+#endif /* !TIF_MMSWITCH_INT */
+}
+
     /* Private interface -- Internal use only */
 
 asmlinkage void rthal_thread_switch(struct task_struct *prev, struct thread_info *out, struct thread_info *in);
