@@ -64,6 +64,8 @@ typedef struct xnarchtcb {  /* Per-thread arch-dependent block */
     /* User mode side */
     struct task_struct *user_task;      /* Shadowed user-space task */
     struct task_struct *active_task;    /* Active user-space task */
+    struct mm_struct *mm;
+    struct mm_struct *active_mm;
     struct thread_info ti;              /* Holds kernel-based thread info */
     struct thread_info *tip;            /* Pointer to the active thread info (ti or user->thread_info). */
 
