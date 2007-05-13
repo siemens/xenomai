@@ -14,9 +14,18 @@ index 7e2750f..055ab06 100644
  CFLAGS		+= -fno-omit-frame-pointer $(call cc-option,-fno-optimize-sibling-calls,)
  else
 diff --git a/arch/i386/Kconfig b/arch/i386/Kconfig
-index 0dfee81..c319009 100644
+index 0dfee81..ae49e20 100644
 --- a/arch/i386/Kconfig
 +++ b/arch/i386/Kconfig
+@@ -190,7 +190,7 @@ endchoice
+ config PARAVIRT
+ 	bool "Paravirtualization support (EXPERIMENTAL)"
+ 	depends on EXPERIMENTAL
+-	depends on !(X86_VISWS || X86_VOYAGER)
++	depends on !(X86_VISWS || X86_VOYAGER || IPIPE)
+ 	help
+ 	  Paravirtualization is a way of running multiple instances of
+ 	  Linux on the same machine, under a hypervisor.  This option
 @@ -277,6 +277,8 @@ config SCHED_MC
  
  source "kernel/Kconfig.preempt"
@@ -837,10 +846,10 @@ index 6a3875f..463daa3 100644
  static struct irq_chip lapic_chip __read_mostly = {
 diff --git a/arch/i386/kernel/ipipe.c b/arch/i386/kernel/ipipe.c
 new file mode 100644
-index 0000000..b195570
+index 0000000..d83d9e1
 --- /dev/null
 +++ b/arch/i386/kernel/ipipe.c
-@@ -0,0 +1,913 @@
+@@ -0,0 +1,881 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/i386/kernel/ipipe.c
 + *
@@ -905,26 +914,6 @@ index 0000000..b195570
 +static atomic_t __ipipe_critical_count = ATOMIC_INIT(0);
 +
 +static void (*__ipipe_cpu_sync) (void);
-+
-+u8 __ipipe_apicid_2_cpu[IPIPE_NR_CPUS];
-+
-+static notrace int __ipipe_boot_cpuid(void)
-+{
-+	return 0;
-+}
-+
-+int (*__ipipe_logical_cpuid)(void) = &__ipipe_boot_cpuid;
-+
-+static notrace int __ipipe_hard_cpuid(void)
-+{
-+	unsigned long flags;
-+	int cpu;
-+
-+	local_irq_save_hw_notrace(flags);
-+	cpu = __ipipe_apicid_2_cpu[GET_APIC_ID(apic_read(APIC_ID))];
-+	local_irq_restore_hw_notrace(flags);
-+	return cpu;
-+}
 +
 +#endif /* CONFIG_SMP */
 +
@@ -1138,17 +1127,6 @@ index 0000000..b195570
 +			     &__ipipe_ack_apic,
 +			     IPIPE_STDROOT_MASK);
 +
-+	/* Some guest O/S may run tasks over non-Linux stacks, so we
-+	 * cannot rely on the regular definition of smp_processor_id()
-+	 * on x86 to fetch the logical cpu id. We fix this by using
-+	 * our own private physical apicid -> logicial cpuid mapping
-+	 * as soon as the pipeline is enabled, so that
-+	 * ipipe_processor_id() always do the right thing, regardless
-+	 * of the current stack setup. Also note that the pipeline is
-+	 * enabled after the APIC space has been mapped in
-+	 * trap_init(), so it's safe to use it. */
-+
-+	__ipipe_logical_cpuid = &__ipipe_hard_cpuid;
 +#endif	/* CONFIG_SMP */
 +
 +	/* Finally, virtualize the remaining ISA and IO-APIC
@@ -1216,7 +1194,7 @@ index 0000000..b195570
 +	cpu_clear(cpuid,cpumask);
 +
 +	if (!cpus_empty(cpumask))
-+		send_IPI_mask(cpumask,ipi + FIRST_EXTERNAL_VECTOR);
++		send_IPI_mask(cpumask,ipipe_apic_irq_vector(ipi));
 +
 +	if (self)
 +		ipipe_trigger_irq(ipi);
@@ -1746,7 +1724,6 @@ index 0000000..b195570
 +EXPORT_SYMBOL(tasklist_lock);
 +#endif /* CONFIG_SMP || CONFIG_DEBUG_SPINLOCK */
 +#ifdef CONFIG_SMP
-+EXPORT_SYMBOL(__ipipe_logical_cpuid);
 +EXPORT_PER_CPU_SYMBOL_GPL(cpu_tlbstate);
 +#endif /* CONFIG_SMP */
 +
@@ -1968,26 +1945,10 @@ index 5285aff..b519c49 100644
  		flush_tlb_others(cpu_mask, mm, va);
  
 diff --git a/arch/i386/kernel/smpboot.c b/arch/i386/kernel/smpboot.c
-index 8c6c8c5..de6d4ee 100644
+index 8c6c8c5..c10a685 100644
 --- a/arch/i386/kernel/smpboot.c
 +++ b/arch/i386/kernel/smpboot.c
-@@ -971,6 +971,7 @@ static int __cpuinit do_boot_cpu(int apicid, int cpu)
- 	start_eip = setup_trampoline();
- 
- 	++cpucount;
-+	ipipe_note_apicid(apicid, cpu);
- 	alternatives_smp_switch(1);
- 
- 	/* So we see what's up   */
-@@ -1170,6 +1171,7 @@ static void __init smp_boot_cpus(unsigned int max_cpus)
- 	boot_cpu_physical_apicid = GET_APIC_ID(apic_read(APIC_ID));
- 	boot_cpu_logical_apicid = logical_smp_processor_id();
- 	x86_cpu_to_apicid[0] = boot_cpu_physical_apicid;
-+	ipipe_note_apicid(boot_cpu_physical_apicid,0);
- 
- 	current_thread_info()->cpu = 0;
- 	smp_tune_scheduling();
-@@ -1508,6 +1510,11 @@ void __init smp_intr_init(void)
+@@ -1508,6 +1508,11 @@ void __init smp_intr_init(void)
  
  	/* IPI for generic function call */
  	set_intr_gate(CALL_FUNCTION_VECTOR, call_function_interrupt);
@@ -2254,6 +2215,19 @@ index 41a4431..79427b9 100644
  {
  	/*
  	 * ack_APIC_irq() actually gets compiled as a single instruction:
+diff --git a/include/asm-i386/desc.h b/include/asm-i386/desc.h
+index f398cc4..812779a 100644
+--- a/include/asm-i386/desc.h
++++ b/include/asm-i386/desc.h
+@@ -101,7 +101,7 @@ static inline fastcall void native_set_ldt(const void *addr,
+ 	if (likely(entries == 0))
+ 		__asm__ __volatile__("lldt %w0"::"q" (0));
+ 	else {
+-		unsigned cpu = smp_processor_id();
++		unsigned cpu = smp_processor_id_hw();
+ 		__u32 a, b;
+ 
+ 		pack_descriptor(&a, &b, (unsigned long)addr,
 diff --git a/include/asm-i386/hw_irq.h b/include/asm-i386/hw_irq.h
 index 0bedbdf..b1f1bf0 100644
 --- a/include/asm-i386/hw_irq.h
@@ -2319,10 +2293,10 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..0569b15
+index 0000000..876fae9
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
-@@ -0,0 +1,292 @@
+@@ -0,0 +1,267 @@
 +/*   -*- linux-c -*-
 + *   include/asm-i386/ipipe.h
 + *
@@ -2352,10 +2326,10 @@ index 0000000..0569b15
 +#include <linux/threads.h>
 +#include <irq_vectors.h>
 +
-+#define IPIPE_ARCH_STRING	"1.8-00"
++#define IPIPE_ARCH_STRING	"1.8-01"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	8
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifdef CONFIG_X86_LOCAL_APIC
 +/* System interrupts are mapped beyond the last defined external IRQ
@@ -2411,30 +2385,7 @@ index 0000000..0569b15
 +#include <linux/threads.h>
 +#include <asm/ptrace.h>
 +
-+#ifdef CONFIG_SMP
-+
-+#include <asm/fixmap.h>
-+#include <asm/mpspec.h>
-+#include <mach_apicdef.h>
-+#include <linux/thread_info.h>
-+
-+extern int (*__ipipe_logical_cpuid)(void);
-+
-+#define ipipe_processor_id()  __ipipe_logical_cpuid()
-+
-+extern u8 __ipipe_apicid_2_cpu[];
-+
-+#define ipipe_note_apicid(apicid,cpu)  \
-+do {	\
-+	__ipipe_apicid_2_cpu[apicid] = cpu; \
-+} while(0)
-+
-+#else	/* !CONFIG_SMP */
-+
-+#define ipipe_note_apicid(apicid,cpu)  do { } while(0)
-+#define ipipe_processor_id()    0
-+
-+#endif	/* !CONFIG_SMP */
++#define ipipe_processor_id()   raw_smp_processor_id()
 +
 +#define prepare_arch_switch(next)		\
 +do {						\
@@ -2609,8 +2560,6 @@ index 0000000..0569b15
 +#else /* !CONFIG_IPIPE */
 +
 +#define task_hijacked(p)	0
-+
-+#define ipipe_note_apicid(apicid,cpu)  do { } while(0)
 +
 +#endif /* CONFIG_IPIPE */
 +
@@ -2970,6 +2919,19 @@ index b04333e..cb799e4 100644
  
  extern atomic_t nmi_active;
  extern unsigned int nmi_watchdog;
+diff --git a/include/asm-i386/processor.h b/include/asm-i386/processor.h
+index 359f10b..36f3cce 100644
+--- a/include/asm-i386/processor.h
++++ b/include/asm-i386/processor.h
+@@ -104,7 +104,7 @@ DECLARE_PER_CPU(struct tss_struct, init_tss);
+ 
+ #ifdef CONFIG_SMP
+ extern struct cpuinfo_x86 cpu_data[];
+-#define current_cpu_data cpu_data[smp_processor_id()]
++#define current_cpu_data cpu_data[smp_processor_id_hw()]
+ #else
+ #define cpu_data (&boot_cpu_data)
+ #define current_cpu_data boot_cpu_data
 diff --git a/include/asm-i386/spinlock.h b/include/asm-i386/spinlock.h
 index d3bcebe..1ce1b6c 100644
 --- a/include/asm-i386/spinlock.h
@@ -3700,10 +3662,10 @@ index 0000000..3967254
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
 new file mode 100644
-index 0000000..5b55ce6
+index 0000000..d0ddf3f
 --- /dev/null
 +++ b/include/linux/ipipe_base.h
-@@ -0,0 +1,86 @@
+@@ -0,0 +1,88 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_base.h
 + *
@@ -3787,6 +3749,8 @@ index 0000000..5b55ce6
 +static inline void ipipe_check_context(struct ipipe_domain *border_ipd) { }
 +#endif /* !CONFIG_IPIPE_DEBUG_CONTEXT */
 +
++#else /* !CONFIG_IPIPE */
++#define ipipe_check_context(ipd)  do { } while(0)
 +#endif	/* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_BASE_H */
@@ -4012,7 +3976,7 @@ index 4463735..6c689d9 100644
  /*
   * Only the _current_ task can read/write to tsk->flags, but other
 diff --git a/include/linux/smp.h b/include/linux/smp.h
-index 7ba23ec..75afc98 100644
+index 7ba23ec..39bf056 100644
 --- a/include/linux/smp.h
 +++ b/include/linux/smp.h
 @@ -109,6 +109,8 @@ static inline int smp_call_function_single(int cpuid, void (*func) (void *info),
@@ -4024,16 +3988,9 @@ index 7ba23ec..75afc98 100644
  /*
   * smp_processor_id(): get the current CPU ID.
   *
-@@ -126,9 +128,17 @@ static inline int smp_call_function_single(int cpuid, void (*func) (void *info),
-  */
- #ifdef CONFIG_DEBUG_PREEMPT
+@@ -128,7 +130,11 @@ static inline int smp_call_function_single(int cpuid, void (*func) (void *info),
    extern unsigned int debug_smp_processor_id(void);
--# define smp_processor_id() debug_smp_processor_id()
-+# define smp_processor_id()				\
-+	({						\
-+		ipipe_check_context(ipipe_root_domain);	\
-+		debug_smp_processor_id();		\
-+	})
+ # define smp_processor_id() debug_smp_processor_id()
  #else
 -# define smp_processor_id() raw_smp_processor_id()
 +# define smp_processor_id()				\
@@ -4380,10 +4337,10 @@ index 0000000..1f46f07
 +	  compiled in.
 diff --git a/kernel/ipipe/Kconfig.debug b/kernel/ipipe/Kconfig.debug
 new file mode 100644
-index 0000000..82006ed
+index 0000000..d36272e
 --- /dev/null
 +++ b/kernel/ipipe/Kconfig.debug
-@@ -0,0 +1,78 @@
+@@ -0,0 +1,80 @@
 +config IPIPE_DEBUG
 +	bool "I-pipe debugging"
 +	depends on IPIPE
@@ -4391,6 +4348,7 @@ index 0000000..82006ed
 +config IPIPE_DEBUG_CONTEXT
 +	bool "Check for illicit cross-domain calls"
 +	depends on IPIPE_DEBUG
++	default y
 +	---help---
 +	  Enable this feature to arm checkpoints in the kernel that
 +	  verify the correct invocation context. On entry of critical
@@ -4451,6 +4409,7 @@ index 0000000..82006ed
 +config IPIPE_TRACE_VMALLOC
 +	bool "Use vmalloc'ed trace buffer"
 +	depends on IPIPE_TRACE
++	default y if EMBEDDED
 +	---help---
 +	  Instead of reserving static kernel data, the required buffer
 +	  is allocated via vmalloc during boot-up when this option is
@@ -7482,7 +7441,7 @@ index c770e1a..6b49827 100644
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
 diff --git a/kernel/sched.c b/kernel/sched.c
-index cca93cc..850fe75 100644
+index cca93cc..26f9c28 100644
 --- a/kernel/sched.c
 +++ b/kernel/sched.c
 @@ -1409,7 +1409,7 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state, int sync)
@@ -7503,14 +7462,12 @@ index cca93cc..850fe75 100644
  }
  
  /*
-@@ -3420,12 +3422,17 @@ asmlinkage void __sched schedule(void)
+@@ -3420,12 +3422,15 @@ asmlinkage void __sched schedule(void)
  	long *switch_count;
  	struct rq *rq;
  
-+#ifdef CONFIG_IPIPE
-+	if (unlikely(!ipipe_root_domain_p))
-+		return;
-+#endif /* CONFIG_IPIPE */
++	ipipe_check_context(ipipe_root_domain);
++
  	/*
  	 * Test if we are atomic.  Since do_exit() needs to call into
  	 * schedule() atomically, we ignore that path for now.
@@ -7522,7 +7479,7 @@ index cca93cc..850fe75 100644
  		printk(KERN_ERR "BUG: scheduling while atomic: "
  			"%s/0x%08x/%d\n",
  			current->comm, preempt_count(), current->pid);
-@@ -3436,8 +3443,13 @@ asmlinkage void __sched schedule(void)
+@@ -3436,8 +3441,13 @@ asmlinkage void __sched schedule(void)
  	}
  	profile_hit(SCHED_PROFILING, __builtin_return_address(0));
  
@@ -7536,7 +7493,7 @@ index cca93cc..850fe75 100644
  	prev = current;
  	release_kernel_lock(prev);
  need_resched_nonpreemptible:
-@@ -3555,6 +3567,8 @@ switch_tasks:
+@@ -3555,6 +3565,8 @@ switch_tasks:
  		prepare_task_switch(rq, next);
  		prev = context_switch(rq, prev, next);
  		barrier();
@@ -7545,7 +7502,7 @@ index cca93cc..850fe75 100644
  		/*
  		 * this_rq must be evaluated again because prev may have moved
  		 * CPUs since it called schedule(), thus the 'rq' on its stack
-@@ -3568,7 +3582,7 @@ switch_tasks:
+@@ -3568,7 +3580,7 @@ switch_tasks:
  	if (unlikely(reacquire_kernel_lock(prev) < 0))
  		goto need_resched_nonpreemptible;
  	preempt_enable_no_resched();
@@ -7554,19 +7511,15 @@ index cca93cc..850fe75 100644
  		goto need_resched;
  }
  EXPORT_SYMBOL(schedule);
-@@ -3586,6 +3600,11 @@ asmlinkage void __sched preempt_schedule(void)
+@@ -3586,6 +3598,7 @@ asmlinkage void __sched preempt_schedule(void)
  	struct task_struct *task = current;
  	int saved_lock_depth;
  #endif
-+#ifdef CONFIG_IPIPE
-+	/* Do not reschedule over non-Linux domains. */
-+	if (unlikely(!ipipe_root_domain_p))
-+		return;
-+#endif /* CONFIG_IPIPE */
++	ipipe_check_context(ipipe_root_domain);
  	/*
  	 * If there is a non-zero preempt_count or interrupts are disabled,
  	 * we do not want to preempt the current task.  Just return..
-@@ -4284,6 +4303,7 @@ recheck:
+@@ -4284,6 +4297,7 @@ recheck:
  		deactivate_task(p, rq);
  	oldprio = p->prio;
  	__setscheduler(p, policy, param->sched_priority);
@@ -7574,7 +7527,7 @@ index cca93cc..850fe75 100644
  	if (array) {
  		__activate_task(p, rq);
  		/*
-@@ -7057,3 +7077,50 @@ void set_curr_task(int cpu, struct task_struct *p)
+@@ -7057,3 +7071,50 @@ void set_curr_task(int cpu, struct task_struct *p)
  }
  
  #endif
@@ -7673,18 +7626,10 @@ index 5c26818..36cd9ec 100644
  	bool "Kernel debugging"
  	help
 diff --git a/lib/ioremap.c b/lib/ioremap.c
-index a9e4415..10be74c 100644
+index a9e4415..52d1787 100644
 --- a/lib/ioremap.c
 +++ b/lib/ioremap.c
-@@ -10,6 +10,7 @@
- 
- #include <asm/cacheflush.h>
- #include <asm/pgtable.h>
-+#include <asm/pgalloc.h>
- 
- static int ioremap_pte_range(pmd_t *pmd, unsigned long addr,
- 		unsigned long end, unsigned long phys_addr, pgprot_t prot)
-@@ -84,8 +85,8 @@ int ioremap_page_range(unsigned long addr,
+@@ -84,8 +84,8 @@ int ioremap_page_range(unsigned long addr,
  		if (err)
  			break;
  	} while (pgd++, addr = next, addr != end);
@@ -7696,17 +7641,14 @@ index a9e4415..10be74c 100644
  	return err;
  }
 diff --git a/lib/smp_processor_id.c b/lib/smp_processor_id.c
-index eddc9b3..48948e7 100644
+index eddc9b3..72e2fdd 100644
 --- a/lib/smp_processor_id.c
 +++ b/lib/smp_processor_id.c
-@@ -13,6 +13,11 @@ unsigned int debug_smp_processor_id(void)
+@@ -13,6 +13,8 @@ unsigned int debug_smp_processor_id(void)
  	int this_cpu = raw_smp_processor_id();
  	cpumask_t this_mask;
  
-+#ifdef CONFIG_IPIPE
-+ 	if (ipipe_current_domain != ipipe_root_domain)
-+	    return this_cpu;
-+#endif /* CONFIG_IPIPE */
++	ipipe_check_context(ipipe_root_domain);
 +
  	if (likely(preempt_count))
  		goto out;
@@ -7790,7 +7732,7 @@ index 479fd46..5e135ef 100644
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
 diff --git a/mm/memory.c b/mm/memory.c
-index ef09f0a..b6b99d3 100644
+index ef09f0a..bb4cff1 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -50,6 +50,7 @@
@@ -7889,86 +7831,16 @@ index ef09f0a..b6b99d3 100644
  		progress += 8;
  	} while (dst_pte++, src_pte++, addr += PAGE_SIZE, addr != end);
  
-@@ -1110,29 +1161,23 @@ static int zeromap_pte_range(struct mm_struct *mm, pmd_t *pmd,
- {
- 	pte_t *pte;
- 	spinlock_t *ptl;
--	int err = 0;
- 
- 	pte = pte_alloc_map_lock(mm, pmd, addr, &ptl);
- 	if (!pte)
--		return -EAGAIN;
-+		return -ENOMEM;
- 	arch_enter_lazy_mmu_mode();
- 	do {
- 		struct page *page = ZERO_PAGE(addr);
- 		pte_t zero_pte = pte_wrprotect(mk_pte(page, prot));
--
--		if (unlikely(!pte_none(*pte))) {
--			err = -EEXIST;
--			pte++;
--			break;
--		}
- 		page_cache_get(page);
- 		page_add_file_rmap(page);
- 		inc_mm_counter(mm, file_rss);
-+		BUG_ON(!pte_none(*pte));
- 		set_pte_at(mm, addr, pte, zero_pte);
- 	} while (pte++, addr += PAGE_SIZE, addr != end);
- 	arch_leave_lazy_mmu_mode();
- 	pte_unmap_unlock(pte - 1, ptl);
--	return err;
-+	return 0;
- }
- 
- static inline int zeromap_pmd_range(struct mm_struct *mm, pud_t *pud,
-@@ -1140,18 +1185,16 @@ static inline int zeromap_pmd_range(struct mm_struct *mm, pud_t *pud,
- {
- 	pmd_t *pmd;
- 	unsigned long next;
--	int err;
- 
- 	pmd = pmd_alloc(mm, pud, addr);
- 	if (!pmd)
--		return -EAGAIN;
-+		return -ENOMEM;
- 	do {
- 		next = pmd_addr_end(addr, end);
--		err = zeromap_pte_range(mm, pmd, addr, next, prot);
--		if (err)
--			break;
-+		if (zeromap_pte_range(mm, pmd, addr, next, prot))
-+			return -ENOMEM;
- 	} while (pmd++, addr = next, addr != end);
--	return err;
-+	return 0;
- }
- 
- static inline int zeromap_pud_range(struct mm_struct *mm, pgd_t *pgd,
-@@ -1159,18 +1202,16 @@ static inline int zeromap_pud_range(struct mm_struct *mm, pgd_t *pgd,
- {
- 	pud_t *pud;
- 	unsigned long next;
--	int err;
- 
- 	pud = pud_alloc(mm, pgd, addr);
- 	if (!pud)
--		return -EAGAIN;
-+		return -ENOMEM;
- 	do {
- 		next = pud_addr_end(addr, end);
--		err = zeromap_pmd_range(mm, pud, addr, next, prot);
--		if (err)
--			break;
-+		if (zeromap_pmd_range(mm, pud, addr, next, prot))
-+			return -ENOMEM;
+@@ -1170,7 +1221,7 @@ static inline int zeromap_pud_range(struct mm_struct *mm, pgd_t *pgd,
+ 		if (err)
+ 			break;
  	} while (pud++, addr = next, addr != end);
 -	return err;
 +	return 0;
  }
  
  int zeromap_page_range(struct vm_area_struct *vma,
-@@ -1441,34 +1482,6 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
+@@ -1441,34 +1492,6 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
  	return pte;
  }
  
@@ -8003,49 +7875,7 @@ index ef09f0a..b6b99d3 100644
  /*
   * This routine handles present pages, when users try to write
   * to a shared page. It is done by copying the page to a new address
-@@ -1912,6 +1925,7 @@ int vmtruncate_range(struct inode *inode, loff_t offset, loff_t end)
- 
- 	return 0;
- }
-+EXPORT_UNUSED_SYMBOL(vmtruncate_range);  /*  June 2006  */
- 
- /**
-  * swapin_readahead - swap in pages in hope we need them soon
-@@ -2000,7 +2014,6 @@ static int do_swap_page(struct mm_struct *mm, struct vm_area_struct *vma,
- 	delayacct_set_flag(DELAYACCT_PF_SWAPIN);
- 	page = lookup_swap_cache(entry);
- 	if (!page) {
--		grab_swap_token(); /* Contend for token _before_ read-in */
-  		swapin_readahead(entry, address, vma);
-  		page = read_swap_cache_async(entry, vma, address);
- 		if (!page) {
-@@ -2018,6 +2031,7 @@ static int do_swap_page(struct mm_struct *mm, struct vm_area_struct *vma,
- 		/* Had to read the page from swap area: Major fault */
- 		ret = VM_FAULT_MAJOR;
- 		count_vm_event(PGMAJFAULT);
-+		grab_swap_token();
- 	}
- 
- 	delayacct_clear_flag(DELAYACCT_PF_SWAPIN);
-@@ -2606,15 +2620,8 @@ static int __init gate_vma_init(void)
- 	gate_vma.vm_mm = NULL;
- 	gate_vma.vm_start = FIXADDR_USER_START;
- 	gate_vma.vm_end = FIXADDR_USER_END;
--	gate_vma.vm_flags = VM_READ | VM_MAYREAD | VM_EXEC | VM_MAYEXEC;
--	gate_vma.vm_page_prot = __P101;
--	/*
--	 * Make sure the vDSO gets into every core dump.
--	 * Dumping its contents makes post-mortem fully interpretable later
--	 * without matching up the same kernel and hardware config to see
--	 * what PC values meant.
--	 */
--	gate_vma.vm_flags |= VM_ALWAYSDUMP;
-+	gate_vma.vm_page_prot = PAGE_READONLY;
-+	gate_vma.vm_flags = 0;
- 	return 0;
- }
- __initcall(gate_vma_init);
-@@ -2692,3 +2699,117 @@ int access_process_vm(struct task_struct *tsk, unsigned long addr, void *buf, in
+@@ -2692,3 +2715,117 @@ int access_process_vm(struct task_struct *tsk, unsigned long addr, void *buf, in
  
  	return buf - old_buf;
  }
@@ -8181,18 +8011,10 @@ index 3446b7e..c67382d 100644
  	if (flags == MCL_FUTURE)
  		goto out;
 diff --git a/mm/vmalloc.c b/mm/vmalloc.c
-index 86897ee..8bd2434 100644
+index 86897ee..c6076ff 100644
 --- a/mm/vmalloc.c
 +++ b/mm/vmalloc.c
-@@ -19,6 +19,7 @@
- 
- #include <asm/uaccess.h>
- #include <asm/tlbflush.h>
-+#include <asm/pgalloc.h>
- 
- 
- DEFINE_RWLOCK(vmlist_lock);
-@@ -156,6 +157,7 @@ int map_vm_area(struct vm_struct *area, pgprot_t prot, struct page ***pages)
+@@ -156,6 +156,7 @@ int map_vm_area(struct vm_struct *area, pgprot_t prot, struct page ***pages)
  		if (err)
  			break;
  	} while (pgd++, addr = next, addr != end);
