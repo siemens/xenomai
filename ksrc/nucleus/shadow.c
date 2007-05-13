@@ -849,7 +849,7 @@ static void lostage_handler(void *cookie)
 static void schedule_linux_call(int type, struct task_struct *p, int arg)
 {
 	/* Do _not_ use smp_processor_id() here so we don't trigger Linux
-	   preemption debug traps inadvertently (see lib/kernel_lock.c). */
+	   preemption debug traps inadvertently (see lib/smp_processor_id.c). */
 	int cpuid = rthal_processor_id(), reqnum;
 	struct __lostagerq *rq = &lostagerq[cpuid];
 	spl_t s;
