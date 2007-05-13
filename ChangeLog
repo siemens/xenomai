@@ -1,3 +1,7 @@
+2007-05-13  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.8-01.
+
 2007-05-12  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* ksrc/drivers/can/sja1000/rtcan_peak_pci.c (peak_pci_init_one): Bug
