@@ -39,6 +39,8 @@ static inline void xnarch_init_tcb(xnarchtcb_t * tcb)
 
 	tcb->user_task = NULL;
 	tcb->active_task = NULL;
+	tcb->mm = NULL;
+	tcb->active_mm = NULL;
 	tcb->tip = &tcb->ti;
 	tcb->ti.tp_value = 0;
 	tcb->ti.cpu_domain = xnarch_current_domain_access_control();
