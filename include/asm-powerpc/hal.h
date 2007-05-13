@@ -183,7 +183,9 @@ static const char *const rthal_fault_labels[] = {
 	[10] = "System reset exception",
 	[11] = "Kernel FP unavailable",
 	[12] = "Performance monitor",
-	[13] = NULL
+	[13] = "", /* No cache locking exception */
+	[14] = "Kernel FP unavailable",
+	[15] = NULL
 #else /* !CONFIG_PPC64 */
 	[0] = "Data or instruction access",
 	[1] = "Alignment",
@@ -201,7 +203,7 @@ static const char *const rthal_fault_labels[] = {
 	[13] = "Altivec assist",
 	[14] = "Cache-locking exception",
 	[15] = "Kernel FP unavailable",
-	[14] = NULL
+	[16] = NULL
 #endif /* CONFIG_PPC64 */
 };
 
