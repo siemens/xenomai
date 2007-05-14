@@ -1904,6 +1904,7 @@ static int __mq_timedsend(struct task_struct *curr, struct pt_regs *regs)
 	return err ? -thread_get_errno() : 0;
 }
 
+/* mq_receive(qd, buffer, &len, &prio)*/
 static int __mq_receive(struct task_struct *curr, struct pt_regs *regs)
 {
 	char tmp_buf[PSE51_MQ_FSTORE_LIMIT];
@@ -1929,8 +1930,9 @@ static int __mq_receive(struct task_struct *curr, struct pt_regs *regs)
 	__xn_copy_from_user(curr, &len, (ssize_t *) __xn_reg_arg3(regs),
 			    sizeof(len));
 
-	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(prio)))
+	if (__xn_reg_arg4(regs)
+	    && !__xn_access_ok(curr, VERIFY_WRITE,
+			       __xn_reg_arg4(regs), sizeof(prio)))
 		return -EFAULT;
 
 	if (len > 0) {
@@ -1962,6 +1964,11 @@ static int __mq_receive(struct task_struct *curr, struct pt_regs *regs)
 			  (void __user *)__xn_reg_arg3(regs),
 			  &len, sizeof(len));
 
+	if (__xn_reg_arg4(regs))
+		__xn_copy_to_user(curr,
+				  (void __user *)__xn_reg_arg4(regs),
+				  &prio, sizeof(prio));
+
 	if (len > 0)
 		__xn_copy_to_user(curr,
 				  (void __user *)__xn_reg_arg2(regs),
@@ -1973,6 +1980,7 @@ static int __mq_receive(struct task_struct *curr, struct pt_regs *regs)
 	return 0;
 }
 
+/* mq_timedreceive(qd, buffer, &len, &prio, timeout) */
 static int __mq_timedreceive(struct task_struct *curr, struct pt_regs *regs)
 {
 	struct timespec timeout, *timeoutp;
@@ -1999,8 +2007,9 @@ static int __mq_timedreceive(struct task_struct *curr, struct pt_regs *regs)
 	__xn_copy_from_user(curr, &len, (ssize_t *) __xn_reg_arg3(regs),
 			    sizeof(len));
 
-	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(prio)))
+	if (__xn_reg_arg4(regs)
+	    && !__xn_access_ok(curr, VERIFY_WRITE,
+			       __xn_reg_arg4(regs), sizeof(prio)))
 		return -EFAULT;
 
 	if (__xn_reg_arg5(regs) &&
@@ -2045,6 +2054,11 @@ static int __mq_timedreceive(struct task_struct *curr, struct pt_regs *regs)
 	__xn_copy_to_user(curr,
 			  (void __user *)__xn_reg_arg3(regs),
 			  &len, sizeof(len));
+
+	if (__xn_reg_arg4(regs))
+		__xn_copy_to_user(curr,
+				  (void __user *)__xn_reg_arg4(regs),
+				  &prio, sizeof(prio));
 
 	if (len > 0)
 		__xn_copy_to_user(curr,
