@@ -1,3 +1,8 @@
+2007-05-14  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/posix/syscall.c (__mq_receive, __mq_timedreceive):
+	Copy to user-space the priority of the received message.
+
 2007-05-14  Jan Kiszka  <jan.kiszka@web.de>
 
 	* src/testsuite/clocktest: Added test for clock drift and inter-CPU
