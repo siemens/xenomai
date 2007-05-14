@@ -1,3 +1,8 @@
+2007-05-14  Jan Kiszka  <jan.kiszka@web.de>
+
+	* src/testsuite/clocktest: Added test for clock drift and inter-CPU
+	consistency.
+
 2007-05-13  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.8-01.
@@ -41,10 +46,6 @@
 	* include/nucleus/pod.h (xnpod_current_p): Give exec mode
 	awareness to this predicate, checking for primary/secondary mode
 	of shadows.
-
-2007-05-11  Jan Kiszka  <jan.kiszka@web.de>
-
-	* ksrc/drivers/serial/16550A.c: Catch baud_rate==0.
 
 2007-05-11  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
