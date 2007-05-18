@@ -230,8 +230,8 @@ target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
 includesubdir = $(includedir)/asm-x86_64
-includesub_HEADERS = atomic.h smi.h switch.h calibration.h features.h \
-		hal.h syscall.h system.h wrappers.h fptest.h
+includesub_HEADERS = arith.h atomic.h calibration.h features.h fptest.h \
+		hal.h smi.h switch.h syscall.h system.h wrappers.h
 
 SUBDIRS = bits
 all: all-recursive
