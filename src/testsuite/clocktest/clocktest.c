@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 {
     int cpus = sysconf(_SC_NPROCESSORS_ONLN);
     int i;
-    char c;
+    int c;
 
     while ((c = getopt(argc,argv,"C:T:")) != EOF)
         switch (c) {

@@ -1,3 +1,11 @@
+2007-05-18  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* src/skins/posix/clock.c, src/skins/native/timer.c: Missing system
+	header files added to get it built for Linux 2.4.
+
+	* src/testsuite/clocktest/clocktest.c (main): Fix problem with
+	using getopt() and checking EOF.
+
 2007-05-18  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* src/skins/posix/clock.c (__wrap_clock_gettime): Access TSC
