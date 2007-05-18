@@ -30,6 +30,7 @@
 pthread_key_t __native_tskey;
 
 int __native_muxid = -1;
+void native_timer_init(int);
 
 static void __flush_tsd(void *tsd)
 {
@@ -42,6 +43,12 @@ void __init_xeno_interface(void)
 {
 	__native_muxid =
 	    xeno_bind_skin(XENO_SKIN_MAGIC, "native", "xeno_native");
+
+#ifdef CONFIG_XENO_HW_DIRECT_TSC
+	native_timer_init(__native_muxid);
+#endif /* CONFIG_XENO_HW_DIRECT_TSC */
+	
+	__native_muxid = __xn_mux_shifted_id(__native_muxid);
 
 	/* Allocate a TSD key for indexing self task pointers. */
 

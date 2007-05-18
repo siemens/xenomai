@@ -43,6 +43,7 @@ void __init_xeno_interface(void)
 
 	__vrtx_muxid =
 	    xeno_bind_skin(VRTX_SKIN_MAGIC, "vrtx", "xeno_vrtx");
+	__vrtx_muxid = __xn_mux_shifted_id(__vrtx_muxid);
 
 	/* Allocate a TSD key for indexing self task pointers. */
 

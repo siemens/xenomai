@@ -30,4 +30,5 @@ void __init_rtai_interface(void)
 {
 	__rtai_muxid =
 	    xeno_bind_skin(RTAI_SKIN_MAGIC, "RTAI", "xeno_rtai");
+	__rtai_muxid = __xn_mux_shifted_id(__rtai_muxid);
 }

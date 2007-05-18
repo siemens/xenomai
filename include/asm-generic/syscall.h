@@ -55,7 +55,6 @@ typedef struct xnsysinfo {
 
     unsigned long long cpufreq;	/* CPU frequency */
     unsigned long tickval;	/* Tick duration (ns) */
-
 } xnsysinfo_t;
 
 #define SIGHARDEN  SIGWINCH

@@ -18,8 +18,23 @@
 
 #include <native/syscall.h>
 #include <native/timer.h>
+#include <asm/xenomai/arith.h>
 
 extern int __native_muxid;
+
+#ifdef CONFIG_XENO_HW_DIRECT_TSC
+static xnsysinfo_t sysinfo;
+
+void native_timer_init(int muxid)
+{
+	int err = XENOMAI_SYSCALL2(__xn_sys_info, muxid, &sysinfo);
+	if (err) {
+		fprintf(stderr, "Native skin init: "
+			"sys_info: %s\n", strerror(-err));
+		exit(EXIT_FAILURE);
+	}
+}
+#endif /* CONFIG_XENO_HW_DIRECT_TSC */
 
 int rt_timer_set_mode(RTIME tickval)
 {
@@ -68,7 +83,11 @@ SRTIME rt_timer_ns2tsc(SRTIME ns)
 {
 	RTIME ticks;
 
+#ifdef CONFIG_XENO_HW_DIRECT_TSC
+	ticks = xnarch_llimd(ns, sysinfo.cpufreq, 1000000000);
+#else /* !CONFIG_XENO_HW_DIRECT_TSC */
 	XENOMAI_SKINCALL2(__native_muxid, __native_timer_ns2tsc, &ticks, &ns);
+#endif /* !CONFIG_XENO_HW_DIRECT_TSC */
 	return ticks;
 }
 
@@ -76,7 +95,11 @@ SRTIME rt_timer_tsc2ns(SRTIME ticks)
 {
 	SRTIME ns;
 
+#ifdef CONFIG_XENO_HW_DIRECT_TSC
+	ns = xnarch_llimd(ticks, 1000000000, sysinfo.cpufreq);
+#else /* !CONFIG_XENO_HW_DIRECT_TSC */
 	XENOMAI_SKINCALL2(__native_muxid, __native_timer_tsc2ns, &ns, &ticks);
+#endif /* !CONFIG_XENO_HW_DIRECT_TSC */
 	return ns;
 }
 

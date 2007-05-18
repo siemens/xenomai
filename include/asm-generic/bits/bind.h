@@ -62,7 +62,7 @@ xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
 	sa.sa_flags = 0;
 	sigaction(SIGXCPU, &sa, NULL);
 
-	return __xn_mux_shifted_id(muxid);
+	return muxid;
 }
 
 static inline int
@@ -105,7 +105,7 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 		exit(1);
 	}
 
-	return __xn_mux_shifted_id(muxid);
+	return muxid;
 }
 
 #endif /* _XENO_ASM_GENERIC_BITS_BIND_H */

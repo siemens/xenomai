@@ -1,3 +1,12 @@
+2007-05-18  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* src/skins/posix/clock.c (__wrap_clock_gettime): Access TSC
+	directly when available and use arithmetic routines in
+	user-space.
+
+	* include/asm-*/arith.h: Move arithmetic/conversion routines to
+	asm/arith.h which can be #included from user-space.
+
 2007-05-14  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/syscall.c (__mq_receive, __mq_timedreceive):
