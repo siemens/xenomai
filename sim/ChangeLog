@@ -1,3 +1,8 @@
+2007-05-21  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* configure.in: Fix libpng detection to work with recent versions
+	of libpng.
+
 2007-02-01  Jim Huang  <jserv.tw@gmail.com>
 
 	* sim/vm/thread.cc, sim/vm/thread.h: Fix compilation w/ gcc-4.x.
