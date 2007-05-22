@@ -59,13 +59,12 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 	int err;
 #ifdef CONFIG_XENO_HW_DIRECT_TSC
 	if (clock_id == CLOCK_MONOTONIC) {
-		unsigned long long tsc, ns;
+		unsigned long long tsc;
 		unsigned long rem;
 
 		tsc = __xn_rdtsc();
-		ns = xnarch_llimd(tsc, 1000000000, sysinfo.cpufreq);
-		tp->tv_sec = xnarch_ulldiv(ns, 1000000000, &rem);
-		tp->tv_nsec = rem;
+		tp->tv_sec = xnarch_ulldiv(tsc, sysinfo.cpufreq, &rem);
+		tp->tv_nsec = xnarch_imuldiv(rem, 1000000000, sysinfo.cpufreq);
 		return 0;
 	}
 #endif /* CONFIG_XENO_HW_DIRECT_TSC */
