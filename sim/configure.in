@@ -328,7 +328,10 @@ AC_CHECK_LIB(nsl, gethostbyname,
 AC_CHECK_LIB(socket, connect,
 	[MVM_LDADD="$MVM_LDADD -lsocket" ; AC_DEFINE(HAVE_LIBSOCKET,1,[config])]
 )
-AC_CHECK_LIB(png, png_read_init, [LIBPNG_OK=1],
+AC_CHECK_HEADER(png.h,,
+	AC_MSG_ERROR([Cannot find png.h (part of libpng development version) on this system])
+)
+AC_CHECK_LIB(png, png_get_io_ptr, [LIBPNG_OK=1],
 	AC_MSG_ERROR([Cannot find libpng (development version) on this system])
 )
 AC_CHECK_LIB(z, deflate, [LIBZ_OK=1],

@@ -2891,7 +2891,7 @@ static void *pse51_eventcb(int event, void *data)
 
 		return NULL;
 	}
-	
+
 	return ERR_PTR(-EINVAL);
 }
 

@@ -37,8 +37,8 @@
 #include <linux/kallsyms.h>
 #include <linux/init.h>
 #include <asm/byteorder.h>
-#include <asm/div64.h>
 #include <asm/xenomai/wrappers.h>
+#include <asm/xenomai/arith.h>
 
 #define RTHAL_DOMAIN_ID		0x58454e4f
 
@@ -384,121 +384,6 @@ do {  \
 } while(0)
 
 #define rthal_printk	printk
-
-#ifdef __BIG_ENDIAN
-#define endianstruct struct { unsigned _h; unsigned _l; } _s
-#else /* __LITTLE_ENDIAN */
-#define endianstruct struct { unsigned _l; unsigned _h; } _s
-#endif
-
-#ifndef __rthal_u64tou32
-#define __rthal_u64tou32(ull, h, l) ({          \
-    union { unsigned long long _ull;            \
-    endianstruct;                               \
-    } _u;                                       \
-    _u._ull = (ull);                            \
-    (h) = _u._s._h;                             \
-    (l) = _u._s._l;                             \
-})
-#endif /* !__rthal_u64tou32 */
-
-#ifndef __rthal_u64fromu32
-#define __rthal_u64fromu32(h, l) ({             \
-    union { unsigned long long _ull;            \
-    endianstruct;                               \
-    } _u;                                       \
-    _u._s._h = (h);                             \
-    _u._s._l = (l);                             \
-    _u._ull;                                    \
-})
-#endif /* !__rthal_u64fromu32 */
-
-#ifndef rthal_ullmul
-static inline __attribute_const__ unsigned long long
-__rthal_generic_ullmul(const unsigned m0, const unsigned m1)
-{
-    return (unsigned long long) m0 * m1;
-}
-#define rthal_ullmul(m0,m1) __rthal_generic_ullmul((m0),(m1))
-#endif /* !rthal_ullmul */
-
-#ifndef rthal_ulldiv
-static inline unsigned long long __rthal_generic_ulldiv (unsigned long long ull,
-                                                         const unsigned uld,
-                                                         unsigned long *const rp)
-{
-    const unsigned r = do_div(ull, uld);
-
-    if (rp)
-        *rp = r;
-
-    return ull;
-}
-#define rthal_ulldiv(ull,uld,rp) __rthal_generic_ulldiv((ull),(uld),(rp))
-#endif /* !rthal_ulldiv */
-
-#ifndef rthal_uldivrem
-#define rthal_uldivrem(ull,ul,rp) ((unsigned) rthal_ulldiv((ull),(ul),(rp)))
-#endif /* !rthal_uldivrem */
-
-#ifndef rthal_imuldiv
-static inline __attribute_const__ int __rthal_generic_imuldiv (int i,
-                                                               int mult,
-                                                               int div)
-{
-    /* Returns (int)i = (unsigned long long)i*(unsigned)(mult)/(unsigned)div. */
-    const unsigned long long ull = rthal_ullmul(i, mult);
-    return rthal_uldivrem(ull, div, NULL);
-}
-#define rthal_imuldiv(i,m,d) __rthal_generic_imuldiv((i),(m),(d))
-#endif /* !rthal_imuldiv */
-
-#ifndef rthal_llimd
-/* Division of an unsigned 96 bits ((h << 32) + l) by an unsigned 32 bits. 
-   Building block for llimd. Without const qualifiers, gcc reload registers
-   after each call to uldivrem. */
-static inline unsigned long long
-__rthal_generic_div96by32 (const unsigned long long h,
-                           const unsigned l,
-                           const unsigned d,
-                           unsigned long *const rp)
-{
-    unsigned long rh;
-    const unsigned qh = rthal_uldivrem(h, d, &rh);
-    const unsigned long long t = __rthal_u64fromu32(rh, l);
-    const unsigned ql = rthal_uldivrem(t, d, rp);
-
-    return __rthal_u64fromu32(qh, ql);
-}
-
-static inline __attribute_const__
-unsigned long long __rthal_generic_ullimd (const unsigned long long op,
-                                           const unsigned m,
-                                           const unsigned d)
-{
-    unsigned oph, opl, tlh, tll;
-    unsigned long long th, tl;
-
-    __rthal_u64tou32(op, oph, opl);
-    tl = rthal_ullmul(opl, m);
-    __rthal_u64tou32(tl, tlh, tll);
-    th = rthal_ullmul(oph, m);
-    th += tlh;
-
-    return __rthal_generic_div96by32(th, tll, d, NULL);
-}
-
-static inline __attribute_const__ long long __rthal_generic_llimd (long long op,
-                                                                   unsigned m,
-                                                                   unsigned d)
-{
-
-    if(op < 0LL)
-        return -__rthal_generic_ullimd(-op, m, d);
-    return __rthal_generic_ullimd(op, m, d);
-}
-#define rthal_llimd(ll,m,d) __rthal_generic_llimd((ll),(m),(d))
-#endif /* !rthal_llimd */
 
 typedef ipipe_irq_handler_t rthal_irq_handler_t;
 typedef ipipe_irq_ackfn_t   rthal_irq_ackfn_t;

@@ -1,3 +1,22 @@
+2007-05-23  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* include/*: Comply with the --includedir option when passed to
+	the configure script.
+
+2007-05-23  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* src/skins/posix/clock.c, src/skins/native/timer.c: Missing system
+	header files added to get it built for Linux 2.4.
+
+2007-05-23  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* src/skins/posix/clock.c (__wrap_clock_gettime): Access TSC
+	directly when available and use arithmetic routines in
+	user-space.
+
+	* include/asm-*/arith.h: Move arithmetic/conversion routines to
+	asm/arith.h which can be #included from user-space.
+
 2007-05-14  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/posix/syscall.c (__mq_receive, __mq_timedreceive):

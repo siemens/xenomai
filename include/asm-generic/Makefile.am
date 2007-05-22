@@ -1,5 +1,5 @@
-includedir = $(prefix)/include/asm-generic
+includesubdir = $(includedir)/asm-generic
 
-include_HEADERS = features.h hal.h syscall.h system.h wrappers.h
+includesub_HEADERS = arith.h features.h hal.h syscall.h system.h wrappers.h
 
 SUBDIRS = bits

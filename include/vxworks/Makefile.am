@@ -1,3 +1,3 @@
-includedir = $(prefix)/include/vxworks
+includesubdir = $(includedir)/vxworks
 
-include_HEADERS = syscall.h vxworks.h
+includesub_HEADERS = syscall.h vxworks.h

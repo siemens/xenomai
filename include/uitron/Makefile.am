@@ -1,6 +1,6 @@
-includedir = $(prefix)/include/uitron
+includesubdir = $(includedir)/uitron
 
-include_HEADERS = \
+includesub_HEADERS = \
 	defs.h \
 	flag.h \
 	mbx.h \

@@ -1,5 +1,6 @@
-includedir = $(prefix)/include/asm-ia64
+includesubdir = $(includedir)/asm-ia64
 
-include_HEADERS = atomic.h calibration.h features.h hal.h syscall.h system.h wrappers.h fptest.h
+includesub_HEADERS = arith.h atomic.h calibration.h features.h fptest.h \
+		hal.h syscall.h system.h wrappers.h
 
 SUBDIRS = bits
