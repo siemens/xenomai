@@ -1,3 +1,16 @@
+2007-05-24  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.8-03.
+
+	* ksrc/arch/arm/patches: Upgrade to 2.6.20-1.7-02.
+
+	* ksrc/arch/x86_64/patches: Upgrade to 2.6.20-1.0-07.
+
+2007-05-24  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/shadow.c (schedule_linux_call): Add debug check for
+	APC queue overflow.
+
 2007-05-23  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* include/*: Comply with the --includedir option when passed to
