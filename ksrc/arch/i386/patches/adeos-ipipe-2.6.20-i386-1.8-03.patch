@@ -628,7 +628,7 @@ index 5e47683..5b65ffe 100644
  	jmp error_code
  	CFI_ENDPROC
 diff --git a/arch/i386/kernel/i8253.c b/arch/i386/kernel/i8253.c
-index 9a0060b..62f305e 100644
+index 9a0060b..dad53b6 100644
 --- a/arch/i386/kernel/i8253.c
 +++ b/arch/i386/kernel/i8253.c
 @@ -16,7 +16,7 @@
@@ -640,13 +640,14 @@ index 9a0060b..62f305e 100644
  EXPORT_SYMBOL(i8253_lock);
  
  void setup_pit_timer(void)
-@@ -45,6 +45,11 @@ static cycle_t pit_read(void)
+@@ -45,6 +45,12 @@ static cycle_t pit_read(void)
  	static int old_count;
  	static u32 old_jifs;
  
 +#ifdef CONFIG_IPIPE
 +	if (!__ipipe_pipeline_head_p(ipipe_root_domain))
-+		return 0;	/* We don't really own the PIT. */
++		/* We don't really own the PIT. */
++		return (cycle_t)(jiffies * LATCH) + (LATCH - 1) - old_count;
 +#endif /* CONFIG_IPIPE */
 +
  	spin_lock_irqsave(&i8253_lock, flags);
@@ -2293,7 +2294,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..876fae9
+index 0000000..3cb0c29
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,267 @@
@@ -2326,10 +2327,10 @@ index 0000000..876fae9
 +#include <linux/threads.h>
 +#include <irq_vectors.h>
 +
-+#define IPIPE_ARCH_STRING	"1.8-01"
++#define IPIPE_ARCH_STRING	"1.8-03"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	8
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	3
 +
 +#ifdef CONFIG_X86_LOCAL_APIC
 +/* System interrupts are mapped beyond the last defined external IRQ
@@ -3976,7 +3977,7 @@ index 4463735..6c689d9 100644
  /*
   * Only the _current_ task can read/write to tsk->flags, but other
 diff --git a/include/linux/smp.h b/include/linux/smp.h
-index 7ba23ec..39bf056 100644
+index 7ba23ec..e128dcf 100644
 --- a/include/linux/smp.h
 +++ b/include/linux/smp.h
 @@ -109,6 +109,8 @@ static inline int smp_call_function_single(int cpuid, void (*func) (void *info),
@@ -3988,19 +3989,6 @@ index 7ba23ec..39bf056 100644
  /*
   * smp_processor_id(): get the current CPU ID.
   *
-@@ -128,7 +130,11 @@ static inline int smp_call_function_single(int cpuid, void (*func) (void *info),
-   extern unsigned int debug_smp_processor_id(void);
- # define smp_processor_id() debug_smp_processor_id()
- #else
--# define smp_processor_id() raw_smp_processor_id()
-+# define smp_processor_id()				\
-+	({						\
-+		ipipe_check_context(ipipe_root_domain);	\
-+		raw_smp_processor_id();			\
-+	})
- #endif
- 
- #define get_cpu()		({ preempt_disable(); smp_processor_id(); })
 diff --git a/include/linux/spinlock.h b/include/linux/spinlock.h
 index 94b767d..513471e 100644
 --- a/include/linux/spinlock.h
@@ -5881,10 +5869,10 @@ index 0000000..e9a16e0
 +EXPORT_SYMBOL(__ipipe_schedule_irq);
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..97f43b2
+index 0000000..642933a
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1276 @@
+@@ -0,0 +1,1284 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -6453,6 +6441,9 @@ index 0000000..97f43b2
 +	unsigned long flags;
 +	int cpu_id;
 +
++	if (!ipipe_trace_enable)
++		return;
++
 +	ipipe_trace_enable = 0;
 +	local_irq_save_hw_notrace(flags);
 +
@@ -6501,6 +6492,9 @@ index 0000000..97f43b2
 +	int cnt = back_trace;
 +	int start, pos;
 +	char task_info[12];
++
++	if (!panic_path)
++		return;
 +
 +	printk("I-pipe tracer log (%d points):\n", cnt);
 +
@@ -6555,6 +6549,8 @@ index 0000000..97f43b2
 +		}
 +		pos = WRAP_POINT_NO(pos - 1);
 +	}
++
++	panic_path = NULL;
 +}
 +EXPORT_SYMBOL(ipipe_trace_panic_dump);
 +
@@ -7612,6 +7608,24 @@ index 2c6c2bf..14fda25 100644
  	_raw_spin_lock(lock);
  #else
  	_raw_spin_lock_flags(lock, &flags);
+diff --git a/kernel/sys.c b/kernel/sys.c
+index 6e2101d..70dd5f2 100644
+--- a/kernel/sys.c
++++ b/kernel/sys.c
+@@ -227,9 +227,11 @@ int __kprobes atomic_notifier_call_chain(struct atomic_notifier_head *nh,
+ {
+ 	int ret;
+ 
+-	rcu_read_lock();
++	if (ipipe_root_domain_p)
++		rcu_read_lock();
+ 	ret = notifier_call_chain(&nh->head, val, v);
+-	rcu_read_unlock();
++	if (ipipe_root_domain_p)
++		rcu_read_unlock();
+ 	return ret;
+ }
+ 
 diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
 index 5c26818..36cd9ec 100644
 --- a/lib/Kconfig.debug
@@ -7641,14 +7655,15 @@ index a9e4415..52d1787 100644
  	return err;
  }
 diff --git a/lib/smp_processor_id.c b/lib/smp_processor_id.c
-index eddc9b3..72e2fdd 100644
+index eddc9b3..7078cd0 100644
 --- a/lib/smp_processor_id.c
 +++ b/lib/smp_processor_id.c
-@@ -13,6 +13,8 @@ unsigned int debug_smp_processor_id(void)
+@@ -13,6 +13,9 @@ unsigned int debug_smp_processor_id(void)
  	int this_cpu = raw_smp_processor_id();
  	cpumask_t this_mask;
  
-+	ipipe_check_context(ipipe_root_domain);
++	if (!ipipe_root_domain_p)
++		goto out;
 +
  	if (likely(preempt_count))
  		goto out;
