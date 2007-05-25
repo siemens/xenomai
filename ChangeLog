@@ -1,3 +1,8 @@
+2007-05-25  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (do_sigwake_event): Replace silent sanity
+	check by assertion.
+
 2007-05-24  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.8-03.
