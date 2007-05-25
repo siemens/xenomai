@@ -224,7 +224,7 @@ int __init rtcan_peak_dng_init_one(int idx)
     else if (strncmp(type[idx], "epp", 3) == 0)
 	dtype = DONGLE_TYPE_EPP;
     else {
-	printk("%s: type %s is invalid, use \"sp\" or \"sp\".",
+	printk("%s: type %s is invalid, use \"sp\" or \"epp\".",
 	       RTCAN_DRV_NAME, type[idx]);
 	return -EINVAL;
     }
@@ -329,8 +329,6 @@ static const struct pnp_device_id rtcan_peak_dng_pnp_tbl[] = {
     { }
 };
 
-MODULE_DEVICE_TABLE(pnp, rtcan_peak_dng_pnp_tbl);
-
 static int rtcan_peak_dng_pnp_probe(struct pnp_dev *dev,
 				    const struct pnp_device_id *id)
 {
@@ -378,7 +376,7 @@ static int __init rtcan_peak_dng_init(void)
 	 i++) {
 
 	if ((ret = rtcan_peak_dng_init_one(i)) != 0) {
-	    printk("Init failed with %d\n", ret);
+	    printk(KERN_ERR "%s: Init failed with %d\n", RTCAN_DRV_NAME, ret);
 	    goto cleanup;
 	}
 	done++;
@@ -386,7 +384,8 @@ static int __init rtcan_peak_dng_init(void)
     if (done)
 	return 0;
 
-    printk("Please specify type=epp or type=sp\n");
+    printk(KERN_ERR "%s: Please specify type=epp or type=sp\n",
+	   RTCAN_DRV_NAME);
 
 cleanup:
     rtcan_peak_dng_exit();
