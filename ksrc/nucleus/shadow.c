@@ -861,19 +861,11 @@ static void schedule_linux_call(int type, struct task_struct *p, int arg)
 		);
 
 	splhigh(s);
-
 	reqnum = rq->in;
-
-	if (XENO_DEBUG(NUCLEUS) &&
-	    ((reqnum + 1) & (LO_MAX_REQUESTS - 1)) == rq->out)
-	    xnpod_fatal("lostage queue overflow on CPU %d! "
-			"Increase LO_MAX_REQUESTS", cpuid);
-
 	rq->req[reqnum].type = type;
 	rq->req[reqnum].task = p;
 	rq->req[reqnum].arg = arg;
 	rq->in = (reqnum + 1) & (LO_MAX_REQUESTS - 1);
-	
 	splexit(s);
 
 	rthal_apc_schedule(lostage_apc);

@@ -1,3 +1,8 @@
+2007-05-25  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/drivers/can/sja1000/rtcan_peak_dng.c: Remove PnP device
+	table to avoid autoloading. Fix driver error messages.
+
 2007-05-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (do_sigwake_event): Replace silent sanity
