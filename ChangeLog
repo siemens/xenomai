@@ -7,6 +7,8 @@
 
 	* ksrc/nucleus/shadow.c (do_sigwake_event): Replace silent sanity
 	check by assertion.
+	(engage_irq_shield): Do not depend on rwlocks for manipulating the
+	I-shield anymore.
 
 2007-05-24  Philippe Gerum  <rpm@xenomai.org>
 
