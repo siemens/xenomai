@@ -577,9 +577,9 @@ static rthal_pipeline_stage_t irq_shield;
 
 static cpumask_t shielded_cpus, unshielded_cpus;
 
-static rthal_rwlock_t shield_lock = RTHAL_RW_LOCK_UNLOCKED;
+static unsigned long shield_sync;
 
-static inline void engage_irq_shield(void)
+static void engage_irq_shield(void)
 {
 	unsigned long flags;
 	rthal_declare_cpuid;
@@ -589,13 +589,14 @@ static inline void engage_irq_shield(void)
 	if (xnarch_cpu_test_and_set(cpuid, shielded_cpus))
 		goto unmask_and_exit;
 
-	rthal_read_lock(&shield_lock);
+	while (test_bit(0, &shield_sync))
+		/* We don't want to defer the actual shielding for too
+		 * long, so we spin IRQS off. */
+		cpu_relax();
 
 	xnarch_cpu_clear(cpuid, unshielded_cpus);
 
 	xnarch_lock_xirqs(&irq_shield, cpuid);
-
-	rthal_read_unlock(&shield_lock);
 
       unmask_and_exit:
 
@@ -612,18 +613,19 @@ static void disengage_irq_shield(void)
 	if (xnarch_cpu_test_and_set(cpuid, unshielded_cpus))
 		goto unmask_and_exit;
 
-	rthal_write_lock(&shield_lock);
+	/* Prevent other CPUs from engaging the shield while we
+	   attempt to disengage. */
+	set_bit(0, &shield_sync);
 
+	/* Ok, this one is now unshielded. */
 	xnarch_cpu_clear(cpuid, shielded_cpus);
 
 	/* We want the shield to be either engaged on all CPUs (i.e. if at
 	   least one CPU asked for shielding), or disengaged on all
 	   (i.e. if no CPU asked for shielding). */
 
-	if (!cpus_empty(shielded_cpus)) {
-		rthal_write_unlock(&shield_lock);
-		goto unmask_and_exit;
-	}
+	if (!xnarch_cpus_empty(shielded_cpus))
+		goto clear_sync;
 
 	/* At this point we know that we are the last CPU to disengage the
 	   shield, so we just unlock the external IRQs for all CPUs, and
@@ -642,11 +644,13 @@ static void disengage_irq_shield(void)
 	}
 #endif /* CONFIG_SMP */
 
-	rthal_write_unlock(&shield_lock);
-
 	rthal_stage_irq_enable(&irq_shield);
 
-      unmask_and_exit:
+clear_sync:
+
+	clear_bit(0, &shield_sync);
+
+unmask_and_exit:
 
 	rthal_unlock_cpu(flags);
 }
