@@ -496,6 +496,8 @@ static void disengage_irq_shield(void)
 	/* Ok, this one is now unshielded. */
 	xnarch_cpu_clear(cpuid, shielded_cpus);
 
+	smp_mb__after_clear_bit();
+
 	/* We want the shield to be either engaged on all CPUs (i.e. if at
 	   least one CPU asked for shielding), or disengaged on all
 	   (i.e. if no CPU asked for shielding). */
@@ -525,6 +527,8 @@ static void disengage_irq_shield(void)
 clear_sync:
 
 	clear_bit(0, &shield_sync);
+
+	smp_mb__after_clear_bit();
 
 unmask_and_exit:
 
