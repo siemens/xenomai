@@ -82,28 +82,28 @@
 
 #ifdef CONFIG_XENO_OPT_SCALABLE_SCHED
 typedef xnmlqueue_t xnsched_queue_t;
-#define sched_initpq    initmlq
-#define sched_emptypq_p emptymlq_p
-#define sched_insertpql insertmlql
-#define sched_insertpqf insertmlqf
-#define sched_appendpq  appendmlq
-#define sched_prependpq prependmlq
-#define sched_removepq  removemlq
-#define sched_getheadpq getheadmlq
-#define sched_getpq     getmlq
-#define sched_findpqh   findmlqh
+#define sched_initpq		initmlq
+#define sched_emptypq_p		emptymlq_p
+#define sched_insertpql		insertmlql
+#define sched_insertpqf		insertmlqf
+#define sched_appendpq		appendmlq
+#define sched_prependpq		prependmlq
+#define sched_removepq		removemlq
+#define sched_getheadpq		getheadmlq
+#define sched_getpq		getmlq
+#define sched_findpqh		findmlqh
 #else /* ! CONFIG_XENO_OPT_SCALABLE_SCHED */
 typedef xnpqueue_t xnsched_queue_t;
-#define sched_initpq    initpq
-#define sched_emptypq_p emptypq_p
-#define sched_insertpql insertpql
-#define sched_insertpqf insertpqf
-#define sched_appendpq  appendpq
-#define sched_prependpq prependpq
-#define sched_removepq  removepq
-#define sched_getheadpq getheadpq
-#define sched_getpq     getpq
-#define sched_findpqh   findpqh
+#define sched_initpq(pqslot, qdir, minp, maxp)	initpq(pqslot, qdir)
+#define sched_emptypq_p		emptypq_p
+#define sched_insertpql		insertpql
+#define sched_insertpqf		insertpqf
+#define sched_appendpq		appendpq
+#define sched_prependpq		prependpq
+#define sched_removepq		removepq
+#define sched_getheadpq		getheadpq
+#define sched_getpq		getpq
+#define sched_findpqh		findpqh
 #endif /* !CONFIG_XENO_OPT_SCALABLE_SCHED */
 
 #define XNPOD_FATAL_BUFSZ  16384
@@ -194,8 +194,8 @@ struct xnpod {
 	 tswitchq,		/*!< Thread switch hook queue. */
 	 tdeleteq;		/*!< Thread delete hook queue. */
 
-	int minpri,		/*!< Minimum priority value. */
-	 maxpri;		/*!< Maximum priority value. */
+	int loprio,		/*!< Minimum priority value. */
+	 hiprio;		/*!< Maximum priority value. */
 
 	int root_prio_base;	/*!< Base priority of ROOT thread. */
 
@@ -327,18 +327,6 @@ static inline int xnpod_get_qdir(xnpod_t *pod)
 	return testbits(pod->status, XNRPRIO) ? xnqueue_up : xnqueue_down;
 }
 
-static inline int xnpod_get_minprio(xnpod_t *pod, int incr)
-{
-	return xnpod_get_qdir(pod) == xnqueue_up ?
-	    pod->minpri + incr : pod->minpri - incr;
-}
-
-static inline int xnpod_get_maxprio(xnpod_t *pod, int incr)
-{
-	return xnpod_get_qdir(pod) == xnqueue_up ?
-	    pod->maxpri - incr : pod->maxpri + incr;
-}
-
 static inline int xnpod_compare_prio(int inprio, int outprio)
 {
 	/* Returns a negative, null or positive value whether inprio is
@@ -350,12 +338,12 @@ static inline int xnpod_compare_prio(int inprio, int outprio)
 static inline int xnpod_rescale_prio(int prio)
 {
 	return xnpod_get_qdir(nkpod) == xnqueue_up ?
-	    nkpod->minpri - prio : nkpod->maxpri - prio - 1;
+	    nkpod->loprio - prio : nkpod->hiprio - prio - 1;
 }
 
 int xnpod_init(xnpod_t *pod,
-	       int minpri,
-	       int maxpri,
+	       int loprio,
+	       int hiprio,
 	       xnflags_t flags);
 
 int xnpod_enable_timesource(void);

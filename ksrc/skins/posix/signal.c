@@ -1138,10 +1138,9 @@ static void pse51_signal_handle_request(void *cookie)
 void pse51_signal_init_thread(pthread_t newthread, const pthread_t parent)
 {
 	emptyset(&newthread->blocked_received.mask);
-	initpq(&newthread->blocked_received.list, xnqueue_up,
-	       SIGRTMAX + SIGRTMIN);
+	initpq(&newthread->blocked_received.list, xnqueue_up);
 	emptyset(&newthread->pending.mask);
-	initpq(&newthread->pending.list, xnqueue_up, SIGRTMAX + SIGRTMIN);
+	initpq(&newthread->pending.list, xnqueue_up);
 
 	/* parent may be NULL if pthread_create is not called from a pse51 thread. */
 	if (parent)
@@ -1190,7 +1189,7 @@ void pse51_signal_pkg_init(void)
 	int i;
 
 	/* Fill the pool. */
-	initpq(&pse51_infos_free_list, xnqueue_up, 1);
+	initpq(&pse51_infos_free_list, xnqueue_up);
 	for (i = 0; i < PSE51_SIGQUEUE_MAX; i++)
 		pse51_delete_siginfo(&pse51_infos_pool[i]);
 

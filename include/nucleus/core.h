@@ -57,8 +57,7 @@ int xncore_mount(void);
 
 int xncore_umount(void);
 
-int xncore_attach(int minprio,
-		  int maxprio);
+int xncore_attach(int loprio, int hiprio);
 
 void xncore_detach(int xtype);
 
