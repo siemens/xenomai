@@ -26,13 +26,7 @@
 <h1>Message queue services.<br>
 <small>
 [<a class="el" href="group__native.html">Native Xenomai API.</a>]</small>
-</h1>
-<p>
-Collaboration diagram for Message queue services.:<center><table><tr><td><img src="group__native__queue.png" border="0" alt="" usemap="#group____native____queue_map">
-<map name="group____native____queue_map">
-<area href="group__native.html" shape="rect" coords="9,8,153,32" alt="">
-</map></td></tr></table></center>
-<hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 Queue services.<p>
 Message queueing is a method by which real-time tasks can exchange or pass data through a Xenomai-managed queue of messages. Messages can vary in length and be assigned different types or usages. A message queue can be created by one task and used by multiple tasks that send and/or receive messages to the queue.<p>
 This implementation is based on a zero-copy scheme for message buffers. Message buffer pools are built over the nucleus's heap objects, which in turn provide the needed support for exchanging messages between kernel and user-space using direct memory mapping. 
@@ -866,7 +860,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:17 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:01 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

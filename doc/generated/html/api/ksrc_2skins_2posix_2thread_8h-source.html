@@ -120,9 +120,9 @@
 <a name="l00090"></a>00090     <span class="comment">/* For timers. */</span>
 <a name="l00091"></a>00091     xnqueue_t timersq;
 <a name="l00092"></a>00092     
-<a name="l00093"></a>00093 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_PERVASIVE)</span>
+<a name="l00093"></a>00093 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_PERVASIVE</span>
 <a name="l00094"></a>00094 <span class="preprocessor"></span>    <span class="keyword">struct </span>pse51_hkey hkey;
-<a name="l00095"></a>00095 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_PERVASIVE */</span>
+<a name="l00095"></a>00095 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE */</span>
 <a name="l00096"></a>00096 };
 <a name="l00097"></a>00097 
 <a name="l00098"></a>00098 <span class="preprocessor">#define PSE51_JOINED_DETACHED XNTHREAD_INFO_SPARE0</span>
@@ -186,7 +186,7 @@
 <a name="l00156"></a>00156 <span class="keyword">extern</span> xnticks_t pse51_time_slice;
 <a name="l00157"></a>00157 
 <a name="l00158"></a>00158 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_THREAD_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:00 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

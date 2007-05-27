@@ -26,13 +26,7 @@
 <h1>Task management services.<br>
 <small>
 [<a class="el" href="group__native.html">Native Xenomai API.</a>]</small>
-</h1>
-<p>
-Collaboration diagram for Task management services.:<center><table><tr><td><img src="group__task.png" border="0" alt="" usemap="#group____task_map">
-<map name="group____task_map">
-<area href="group__native.html" shape="rect" coords="9,8,153,32" alt="">
-</map></td></tr></table></center>
-<hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 Xenomai provides a set of multitasking mechanisms. The basic process object performing actions in Xenomai is a task, a logically complete path of application code. Each Xenomai task is an independent portion of the overall application code embodied in a C procedure, which executes on its own stack context.<p>
 The Xenomai scheduler ensures that concurrent tasks are run according to one of the supported scheduling policies. Currently, the Xenomai scheduler supports fixed priority-based FIFO and round-robin policies. 
 <p>
@@ -399,7 +393,7 @@ The task is left in an innocuous state until it is actually started by <a class=
 <li>T_FPU allows the task to use the FPU whenever available on the platform. This flag is forced for user-space tasks.</li></ul>
 <p>
 <ul>
-<li>T_SUSP causes the task to start in suspended mode. In such a case, the thread will have to be explicitely resumed using the <a class="el" href="group__task.html#g1fab1aa24ef6f199546fd9669ae711be">rt_task_resume()</a> service for its execution to actually begin.</li></ul>
+<li>T_SUSP causes the task to start in suspended mode. In such a case, the thread will have to be explicitly resumed using the <a class="el" href="group__task.html#g1fab1aa24ef6f199546fd9669ae711be">rt_task_resume()</a> service for its execution to actually begin.</li></ul>
 <p>
 <ul>
 <li>T_CPU(cpuid) makes the new task affine to CPU # <b>cpuid</b>. CPU identifiers range from 0 to RTHAL_NR_CPUS - 1 (inclusive).</li></ul>
@@ -1408,7 +1402,7 @@ This service can be called from:<p>
 <li>User-space task (enters primary mode)</li></ul>
 <p>
 Rescheduling: possible. <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="rtcanrecv_8c-example.html#a136">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a153">rtcansend.c</a>.</dl>    </td>
+<a class="el" href="rtcanrecv_8c-example.html#a141">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a160">rtcansend.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="gd5225e5fb8d583fbdfa5299f322b8366"></a><!-- doxytag: member="task.c::rt_task_sleep" ref="gd5225e5fb8d583fbdfa5299f322b8366" args="(RTIME delay)" --><p>
@@ -1666,10 +1660,13 @@ Creates and immediately starts a real-time task, either running in a kernel modu
 <li>T_FPU allows the task to use the FPU whenever available on the platform. This flag is forced for user-space tasks.</li></ul>
 <p>
 <ul>
-<li>T_SUSP causes the task to start in suspended mode. In such a case, the thread will have to be explicitely resumed using the <a class="el" href="group__task.html#g1fab1aa24ef6f199546fd9669ae711be">rt_task_resume()</a> service for its execution to actually begin.</li></ul>
+<li>T_SUSP causes the task to start in suspended mode. In such a case, the thread will have to be explicitly resumed using the <a class="el" href="group__task.html#g1fab1aa24ef6f199546fd9669ae711be">rt_task_resume()</a> service for its execution to actually begin.</li></ul>
 <p>
 <ul>
 <li>T_CPU(cpuid) makes the new task affine to CPU # <b>cpuid</b>. CPU identifiers range from 0 to RTHAL_NR_CPUS - 1 (inclusive).</li></ul>
+<p>
+<ul>
+<li>T_JOINABLE (user-space only) allows another task to wait on the termination of the new task. This implies that <a class="el" href="group__task.html#g8c77d57638578a126812e29429f61fe7">rt_task_join()</a> is actually called for this task to clean up any user-space located resources after its termination.</li></ul>
 <p>
 Passing T_FPU|T_CPU(1) in the <em>mode</em> parameter thus creates a task with FPU support enabled and which will be affine to CPU #1.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
@@ -2006,7 +2003,7 @@ This service can be called from:<p>
 Rescheduling: always if a next equal-priority task is ready to run, otherwise, this service leads to a no-op.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:17 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:01 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

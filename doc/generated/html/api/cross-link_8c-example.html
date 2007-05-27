@@ -275,7 +275,7 @@
 <a name="l00250"></a>00250         write_fd = rt_dev_open( WRITE_FILE, 0);
 <a name="l00251"></a>00251         <span class="keywordflow">if</span> (write_fd &lt; 0) {
 <a name="l00252"></a>00252                 printf(MAIN_PREFIX <span class="stringliteral">"can't open %s (write), %s\n"</span>, WRITE_FILE,
-<a name="l00253"></a>00253                        strerror(-err));
+<a name="l00253"></a>00253                        strerror(-write_fd));
 <a name="l00254"></a>00254                 <span class="keywordflow">goto</span> error;
 <a name="l00255"></a>00255         }
 <a name="l00256"></a>00256         write_state |= STATE_FILE_OPENED;
@@ -294,7 +294,7 @@
 <a name="l00269"></a>00269         read_fd = rt_dev_open( READ_FILE, 0 );
 <a name="l00270"></a>00270         <span class="keywordflow">if</span> (read_fd &lt; 0) {
 <a name="l00271"></a>00271                 printf(MAIN_PREFIX <span class="stringliteral">"can't open %s (read), %s\n"</span>, READ_FILE,
-<a name="l00272"></a>00272                        strerror(-err));
+<a name="l00272"></a>00272                        strerror(-read_fd));
 <a name="l00273"></a>00273                 <span class="keywordflow">goto</span> error;
 <a name="l00274"></a>00274         }
 <a name="l00275"></a>00275         read_state |= STATE_FILE_OPENED;
@@ -354,7 +354,7 @@
 <a name="l00329"></a>00329         cleanup_all();
 <a name="l00330"></a>00330         <span class="keywordflow">return</span> err;
 <a name="l00331"></a>00331 }
-</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
+</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:00 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

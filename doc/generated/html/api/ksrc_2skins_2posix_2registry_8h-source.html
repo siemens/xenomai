@@ -117,51 +117,49 @@
 <a name="l00087"></a>00087 
 <a name="l00088"></a>00088 <span class="comment">/* Associative lists, used for association of user-space to kernel-space</span>
 <a name="l00089"></a>00089 <span class="comment">   objects. */</span>
-<a name="l00090"></a>00090 <span class="preprocessor">#if defined(__KERNEL__) &amp;&amp; defined(CONFIG_XENO_OPT_PERVASIVE)</span>
+<a name="l00090"></a>00090 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_PERVASIVE</span>
 <a name="l00091"></a>00091 <span class="preprocessor"></span><span class="keyword">struct </span>mm_struct;
 <a name="l00092"></a>00092 
-<a name="l00093"></a>00093 <span class="preprocessor">#ifdef CONFIG_SMP</span>
-<a name="l00094"></a>00094 <span class="preprocessor"></span><span class="keyword">extern</span> xnlock_t pse51_assoc_lock;
-<a name="l00095"></a>00095 <span class="preprocessor">#endif</span>
-<a name="l00096"></a>00096 <span class="preprocessor"></span>
-<a name="l00097"></a>00097 <span class="keyword">typedef</span> xnqueue_t pse51_assocq_t;
-<a name="l00098"></a>00098 
-<a name="l00099"></a>00099 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
-<a name="l00100"></a>00100     u_long key;
-<a name="l00101"></a>00101     xnholder_t link;
-<a name="l00102"></a>00102 
-<a name="l00103"></a>00103 <span class="preprocessor">#define link2assoc(laddr) \</span>
-<a name="l00104"></a>00104 <span class="preprocessor">    ((pse51_assoc_t *)((unsigned long)(laddr) - offsetof(pse51_assoc_t, link)))</span>
-<a name="l00105"></a>00105 <span class="preprocessor"></span>
-<a name="l00106"></a>00106 } pse51_assoc_t;
-<a name="l00107"></a>00107 
-<a name="l00108"></a>00108 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
-<a name="l00109"></a>00109     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> kfd;
-<a name="l00110"></a>00110     pse51_assoc_t assoc;
-<a name="l00111"></a>00111     
-<a name="l00112"></a>00112 <span class="preprocessor">#define assoc2ufd(laddr) \</span>
-<a name="l00113"></a>00113 <span class="preprocessor">    ((pse51_ufd_t *)((unsigned long) (laddr) - offsetof(pse51_ufd_t, assoc)))</span>
-<a name="l00114"></a>00114 <span class="preprocessor"></span>} pse51_ufd_t;
-<a name="l00115"></a>00115 
-<a name="l00116"></a>00116 <span class="preprocessor">#define pse51_assocq_init(q) (initq(q))</span>
+<a name="l00093"></a>00093 DECLARE_EXTERN_XNLOCK(pse51_assoc_lock);
+<a name="l00094"></a>00094 
+<a name="l00095"></a>00095 <span class="keyword">typedef</span> xnqueue_t pse51_assocq_t;
+<a name="l00096"></a>00096 
+<a name="l00097"></a>00097 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
+<a name="l00098"></a>00098     u_long key;
+<a name="l00099"></a>00099     xnholder_t link;
+<a name="l00100"></a>00100 
+<a name="l00101"></a>00101 <span class="preprocessor">#define link2assoc(laddr) \</span>
+<a name="l00102"></a>00102 <span class="preprocessor">    ((pse51_assoc_t *)((unsigned long)(laddr) - offsetof(pse51_assoc_t, link)))</span>
+<a name="l00103"></a>00103 <span class="preprocessor"></span>
+<a name="l00104"></a>00104 } pse51_assoc_t;
+<a name="l00105"></a>00105 
+<a name="l00106"></a>00106 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
+<a name="l00107"></a>00107     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> kfd;
+<a name="l00108"></a>00108     pse51_assoc_t assoc;
+<a name="l00109"></a>00109     
+<a name="l00110"></a>00110 <span class="preprocessor">#define assoc2ufd(laddr) \</span>
+<a name="l00111"></a>00111 <span class="preprocessor">    ((pse51_ufd_t *)((unsigned long) (laddr) - offsetof(pse51_ufd_t, assoc)))</span>
+<a name="l00112"></a>00112 <span class="preprocessor"></span>} pse51_ufd_t;
+<a name="l00113"></a>00113 
+<a name="l00114"></a>00114 <span class="preprocessor">#define pse51_assocq_init(q) (initq(q))</span>
+<a name="l00115"></a>00115 <span class="preprocessor"></span>
+<a name="l00116"></a>00116 <span class="preprocessor">#define pse51_assoc_key(assoc) ((assoc)-&gt;key)</span>
 <a name="l00117"></a>00117 <span class="preprocessor"></span>
-<a name="l00118"></a>00118 <span class="preprocessor">#define pse51_assoc_key(assoc) ((assoc)-&gt;key)</span>
-<a name="l00119"></a>00119 <span class="preprocessor"></span>
-<a name="l00120"></a>00120 <span class="keywordtype">void</span> pse51_assocq_destroy(pse51_assocq_t *q, <span class="keywordtype">void</span> (*destroy)(pse51_assoc_t *));
-<a name="l00121"></a>00121 
-<a name="l00122"></a>00122 <span class="keywordtype">int</span> pse51_assoc_insert(pse51_assocq_t *q,
-<a name="l00123"></a>00123                        pse51_assoc_t *assoc,
-<a name="l00124"></a>00124                        u_long key);
-<a name="l00125"></a>00125 
-<a name="l00126"></a>00126 pse51_assoc_t *pse51_assoc_lookup(pse51_assocq_t *q,
-<a name="l00127"></a>00127                                   u_long key);
-<a name="l00128"></a>00128 
-<a name="l00129"></a>00129 pse51_assoc_t *pse51_assoc_remove(pse51_assocq_t *q,
-<a name="l00130"></a>00130                                   u_long key);
-<a name="l00131"></a>00131 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ &amp;&amp; CONFIG_XENO_OPT_PERVASIVE */</span>    
-<a name="l00132"></a>00132 
-<a name="l00133"></a>00133 <span class="preprocessor">#endif </span><span class="comment">/* PSE51_REGISTRY_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
+<a name="l00118"></a>00118 <span class="keywordtype">void</span> pse51_assocq_destroy(pse51_assocq_t *q, <span class="keywordtype">void</span> (*destroy)(pse51_assoc_t *));
+<a name="l00119"></a>00119 
+<a name="l00120"></a>00120 <span class="keywordtype">int</span> pse51_assoc_insert(pse51_assocq_t *q,
+<a name="l00121"></a>00121                        pse51_assoc_t *assoc,
+<a name="l00122"></a>00122                        u_long key);
+<a name="l00123"></a>00123 
+<a name="l00124"></a>00124 pse51_assoc_t *pse51_assoc_lookup(pse51_assocq_t *q,
+<a name="l00125"></a>00125                                   u_long key);
+<a name="l00126"></a>00126 
+<a name="l00127"></a>00127 pse51_assoc_t *pse51_assoc_remove(pse51_assocq_t *q,
+<a name="l00128"></a>00128                                   u_long key);
+<a name="l00129"></a>00129 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE */</span>
+<a name="l00130"></a>00130 
+<a name="l00131"></a>00131 <span class="preprocessor">#endif </span><span class="comment">/* PSE51_REGISTRY_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:00 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

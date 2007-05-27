@@ -26,13 +26,7 @@
 <h1>CAN Devices<br>
 <small>
 [<a class="el" href="group__profiles.html">Device Profiles</a>]</small>
-</h1>
-<p>
-Collaboration diagram for CAN Devices:<center><table><tr><td><img src="group__rtcan.png" border="0" alt="" usemap="#group____rtcan_map">
-<map name="group____rtcan_map">
-<area href="group__profiles.html" shape="rect" coords="9,8,118,32" alt="">
-</map></td></tr></table></center>
-<hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 This is the common interface a RTDM-compliant CAN device has to provide. Feel free to report bugs and comments on this profile to the "Socketcan" mailing list (<a href="mailto:Socketcan-core@lists.berlios.de">Socketcan-core@lists.berlios.de</a>) or directly to the authors (<a href="mailto:wg@grandegger.com">wg@grandegger.com</a> or <a href="mailto:Sebastian.Smolorz@stud.uni-hannover.de">Sebastian.Smolorz@stud.uni-hannover.de</a>).<p>
 <b>Profile</b> <b>Revision:</b> 2 <br>
  <br>
@@ -63,8 +57,8 @@ This is the common interface a RTDM-compliant CAN device has to provide. Feel fr
  <br>
  <br>
  <b>IOCTL</b> <br>
- Mandatory Environments: see <a class="el" href="group__rttesting.html#IOCTLs">below</a> <br>
- Specific return values: see <a class="el" href="group__rttesting.html#IOCTLs">below</a> <br>
+ Mandatory Environments: see <a class="el" href="group__rtcan.html#CANIOCTLs">below</a> <br>
+ Specific return values: see <a class="el" href="group__rtcan.html#CANIOCTLs">below</a> <br>
  <br>
  <br>
  <a class="anchor" name="Bind"></a> <b>Bind</b> <br>
@@ -86,7 +80,7 @@ This is the common interface a RTDM-compliant CAN device has to provide. Feel fr
  <br>
  Supported Levels and Options: <br>
 <ul>
-<li>Level <b>SOL_CAN_RAW</b> : CAN RAW protocol (see <a class="el" href="group__rtcan.html#ggc99a91b141113059bd5527bad8ddbf530f5142d42281775367eb973d8a0a62d3">CAN_PROTO_RAW</a>)<ul>
+<li>Level <b>SOL_CAN_RAW</b> : CAN RAW protocol (see <a class="el" href="group__rtcan.html#g57682d9a1e4f4d90943dbaa683582bf5">CAN_RAW</a>)<ul>
 <li>Option <a class="el" href="group__rtcan.html#g87313c6e632294aa4582899a3bbc89e4">CAN_RAW_FILTER</a> : CAN filter list</li><li>Option <a class="el" href="group__rtcan.html#g451ba35aa4d0bef48cb7b0416f5b4367">CAN_RAW_ERR_FILTER</a> : CAN error mask</li><li>Option <a class="el" href="group__rtcan.html#ga7eb7dc3aa940a0aca20d3a564a147d9">CAN_RAW_LOOPBACK</a> : CAN TX loopback to local sockets</li></ul>
 </li></ul>
 <br>
@@ -186,16 +180,21 @@ Environments: RT (non-RT optional)<br>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g5cb484fa2d90489f6b4e7a77c254c59f">CAN_INV_FILTER</a>&nbsp;&nbsp;&nbsp;CAN_ERR_FLAG</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Invert CAN filter definition, only valid in struct <a class="el" href="structcan__filter.html">can_filter</a>. <br></td></tr>
+<tr><td colspan="2"><br><h2>Particular CAN protocols</h2></td></tr>
+<tr><td colspan="2"><a class="anchor" name="CAN_PROTO"></a> Possible protocols for the PF_CAN protocol family<p>
+Currently only the RAW protocol is supported. <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g57682d9a1e4f4d90943dbaa683582bf5"></a><!-- doxytag: member="rtcan::CAN_RAW" ref="g57682d9a1e4f4d90943dbaa683582bf5" args="" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g57682d9a1e4f4d90943dbaa683582bf5">CAN_RAW</a>&nbsp;&nbsp;&nbsp;1</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Raw protocol of <code>PF_CAN</code>, applicable to socket type <code>SOCK_RAW</code>. <br></td></tr>
 <tr><td colspan="2"><br><h2>CAN controller modes</h2></td></tr>
-<tr><td colspan="2"><a class="anchor" name="CAN_CTRLMODE"></a> Special CAN controllers modes, which can be or'ed together. <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ge4ba49824d17e7d06300cb8b4a4bff45"></a><!-- doxytag: member="rtcan::CAN_CTRLMODE_LISTENONLY" ref="ge4ba49824d17e7d06300cb8b4a4bff45" args="" -->
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ge4ba49824d17e7d06300cb8b4a4bff45">CAN_CTRLMODE_LISTENONLY</a>&nbsp;&nbsp;&nbsp;0x1</td></tr>
+<tr><td colspan="2"><a class="anchor" name="CAN_CTRLMODE"></a> Special CAN controllers modes, which can be or'ed together.<p>
+<dl compact><dt><b>Note:</b></dt><dd>These modes are hardware-dependent. Please consult the hardware manual of the CAN controller for more detailed information. </dd></dl>
+<br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ge4ba49824d17e7d06300cb8b4a4bff45">CAN_CTRLMODE_LISTENONLY</a>&nbsp;&nbsp;&nbsp;0x1</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Listen-Only mode. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g19ec0cc4379e80c32cbd333cf7c145e9"></a><!-- doxytag: member="rtcan::CAN_CTRLMODE_LOOPBACK" ref="g19ec0cc4379e80c32cbd333cf7c145e9" args="" -->
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g19ec0cc4379e80c32cbd333cf7c145e9">CAN_CTRLMODE_LOOPBACK</a>&nbsp;&nbsp;&nbsp;0x2</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g19ec0cc4379e80c32cbd333cf7c145e9">CAN_CTRLMODE_LOOPBACK</a>&nbsp;&nbsp;&nbsp;0x2</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Loopback mode. <br></td></tr>
 <tr><td colspan="2"><br><h2>Timestamp switches</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="RTCAN_TIMESTAMPS"></a> Arguments to pass to <a class="el" href="group__rtcan.html#gedd7bd75a1983735052fed62e101e5ce">RTCAN_RTIOC_TAKE_TIMESTAMP</a> <br><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ge06ad16f505d1ec6c1e55d82ac82ef89"></a><!-- doxytag: member="rtcan::RTCAN_TAKE_NO_TIMESTAMPS" ref="ge06ad16f505d1ec6c1e55d82ac82ef89" args="" -->
@@ -218,8 +217,8 @@ Environments: RT (non-RT optional)<br>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN TX loopback.  <a href="#ga7eb7dc3aa940a0aca20d3a564a147d9"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>IOCTLs</h2></td></tr>
-<tr><td colspan="2"><a class="anchor" name="IOCTLs"></a> CAN device IOCTLs <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#gee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_CAN, 0x00, struct ifreq)</td></tr>
+<tr><td colspan="2"><a class="anchor" name="CANIOCTLs"></a> CAN device IOCTLs <br><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#gee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>&nbsp;&nbsp;&nbsp;defined_by_kernel_header_file</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get CAN interface index by name.  <a href="#gee74ae50c8ea0a6aee277c6f124a3866"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g7c070037c218b40de849ebf4d299f977">SIOCSCANBAUDRATE</a>&nbsp;&nbsp;&nbsp;_IOW(RTIOC_TYPE_CAN, 0x01, struct ifreq)</td></tr>
@@ -256,7 +255,10 @@ Environments: RT (non-RT optional)<br>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Specify a transmission timeout for a socket.  <a href="#gd3758528585b2779e8949df671f1cf6c"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>Error mask</h2></td></tr>
-<tr><td colspan="2"><a class="anchor" name="Errors"></a> Error class (mask) in <code>can_id</code> field of struct <a class="el" href="structcan__frame.html">can_frame</a> to be used with <a class="el" href="group__rtcan.html#g451ba35aa4d0bef48cb7b0416f5b4367">CAN_RAW_ERR_FILTER</a>. <br><br></td></tr>
+<tr><td colspan="2"><a class="anchor" name="Errors"></a> Error class (mask) in <code>can_id</code> field of struct <a class="el" href="structcan__frame.html">can_frame</a> to be used with <a class="el" href="group__rtcan.html#g451ba35aa4d0bef48cb7b0416f5b4367">CAN_RAW_ERR_FILTER</a>.<p>
+<b>Note:</b> Error reporting is hardware dependent and most CAN controllers report less detailed error conditions than the SJA1000.<p>
+<b>Note:</b> In case of a bus-off error condition (<a class="el" href="group__rtcan.html#g8b0903e35c75de100b97a7b3e368b269">CAN_ERR_BUSOFF</a>), the CAN controller is <b>not</b> restarted automatically. It is the application's responsibility to react appropriately, e.g. calling <a class="el" href="group__rtcan.html#ggc0d6cdda2cf4abb51116b86bc99acf99f9c617b6b198770017f6e7198bfb50b6">CAN_MODE_START</a>.<p>
+<b>Note:</b> Bus error interrupts (<a class="el" href="group__rtcan.html#g0b068b1221129441b89967ee2ddb9f44">CAN_ERR_BUSERROR</a>) are enabled when an application is calling a <a class="el" href="group__rtcan.html#Recv">Recv</a> function on a socket listening on bus errors (using <a class="el" href="group__rtcan.html#g451ba35aa4d0bef48cb7b0416f5b4367">CAN_RAW_ERR_FILTER</a>). After one bus error has occured, the interrupt will be disabled to allow the application time for error processing and to efficiently avoid bus error interrupt flooding. <br><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g168d1c5d468bad5e52ccbd70c5f37986"></a><!-- doxytag: member="rtcan::CAN_ERR_TX_TIMEOUT" ref="g168d1c5d468bad5e52ccbd70c5f37986" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g168d1c5d468bad5e52ccbd70c5f37986">CAN_ERR_TX_TIMEOUT</a>&nbsp;&nbsp;&nbsp;0x00000001U</td></tr>
 
@@ -495,11 +497,6 @@ Environments: RT (non-RT optional)<br>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#gaed57dcbd07a56050c8915fcd8bd5ba8">CAN_ERR_TRX_CANL_SHORT_TO_CANH</a>&nbsp;&nbsp;&nbsp;0x80</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">1000 0000 <br></td></tr>
-<tr><td colspan="2"><br><h2>CAN protocols</h2></td></tr>
-<tr><td colspan="2"><a class="anchor" name="CAN_PROTO"></a> Possible protocols for PF_CAN protocol family <br><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#gc99a91b141113059bd5527bad8ddbf53">CAN_PROTO</a> { <a class="el" href="group__rtcan.html#ggc99a91b141113059bd5527bad8ddbf530f5142d42281775367eb973d8a0a62d3">CAN_PROTO_RAW</a>
- }</td></tr>
-
 <tr><td colspan="2"><br><h2>CAN operation modes</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="CAN_MODE"></a> Modes into which CAN controllers can be set <br><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#gc0d6cdda2cf4abb51116b86bc99acf99">CAN_MODE</a> { <a class="el" href="group__rtcan.html#ggc0d6cdda2cf4abb51116b86bc99acf9904f549e87bf7ddf764c563062dd76790">CAN_MODE_STOP</a> =  0, 
@@ -530,6 +527,9 @@ Environments: RT (non-RT optional)<br>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#geac0c3db7a1e021f17987bcc76893849">PF_CAN</a>&nbsp;&nbsp;&nbsp;AF_CAN</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN protocol family. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#gd981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>&nbsp;&nbsp;&nbsp;103</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN socket levels.  <a href="#gd981aa82a29d828882a2fb4c35c1cdd7"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>Typedefs</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gd4cb716102402e9be0b5919cd2dd6ead"></a><!-- doxytag: member="rtcan::can_id_t" ref="gd4cb716102402e9be0b5919cd2dd6ead" args="" -->
 typedef uint32_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#gd4cb716102402e9be0b5919cd2dd6ead">can_id_t</a></td></tr>
@@ -573,6 +573,56 @@ typedef enum <a class="el" href="group__rtcan.html#g8680f5710e1a13d553067cc32c86
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Supported CAN bit-time types.  <a href="group__rtcan.html#g42c4f551b57f47d4e004c02505a01f71">More...</a><br></td></tr>
 </table>
 <hr><h2>Define Documentation</h2>
+<a class="anchor" name="ge4ba49824d17e7d06300cb8b4a4bff45"></a><!-- doxytag: member="rtcan.h::CAN_CTRLMODE_LISTENONLY" ref="ge4ba49824d17e7d06300cb8b4a4bff45" args="" --><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">#define CAN_CTRLMODE_LISTENONLY&nbsp;&nbsp;&nbsp;0x1          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Listen-Only mode<p>
+In this mode the CAN controller would give no acknowledge to the CAN-bus, even if a message is received successfully and messages would not be transmitted. This mode might be useful for bus-monitoring, hot-plugging or throughput analysis. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcanconfig_8c-example.html#a89">rtcanconfig.c</a>.</dl>    </td>
+  </tr>
+</table>
+<a class="anchor" name="g19ec0cc4379e80c32cbd333cf7c145e9"></a><!-- doxytag: member="rtcan.h::CAN_CTRLMODE_LOOPBACK" ref="g19ec0cc4379e80c32cbd333cf7c145e9" args="" --><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">#define CAN_CTRLMODE_LOOPBACK&nbsp;&nbsp;&nbsp;0x2          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Loopback mode<p>
+In this mode the CAN controller does an internal loop-back, a message is transmitted and simultaneously received. That mode can be used for self test operation. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcanconfig_8c-example.html#a90">rtcanconfig.c</a>.</dl>    </td>
+  </tr>
+</table>
 <a class="anchor" name="g451ba35aa4d0bef48cb7b0416f5b4367"></a><!-- doxytag: member="rtcan.h::CAN_RAW_ERR_FILTER" ref="g451ba35aa4d0bef48cb7b0416f5b4367" args="" --><p>
 <table class="mdTable" cellpadding="2" cellspacing="0">
   <tr>
@@ -595,7 +645,7 @@ typedef enum <a class="el" href="group__rtcan.html#g8680f5710e1a13d553067cc32c86
 <p>
 CAN error mask. 
 <p>
-A CAN error mask (see <a class="el" href="group__rtcan.html#Errors">Errors</a>) can be set with <code>setsockopt</code>. This mask is then used to decided if error frames are send to this socket in case of error condidtions. The error frames are marked with the <a class="el" href="group__rtcan.html#g24df2eae50a2cef0f7f08c73a246a012">CAN_ERR_FLAG</a> of <a class="el" href="group__rtcan.html#CAN_xxx_FLAG">CAN_xxx_FLAG</a> and must be handled by the application properly. A detailed description of the error can be found in the <code>can_id</code> and the <code>data</code> fields of struct <a class="el" href="structcan__frame.html">can_frame</a> (see <a class="el" href="group__rtcan.html#Errors">Errors</a> for futher details).<p>
+A CAN error mask (see <a class="el" href="group__rtcan.html#Errors">Errors</a>) can be set with <code>setsockopt</code>. This mask is then used to decide if error frames are delivered to this socket in case of error condidtions. The error frames are marked with the <a class="el" href="group__rtcan.html#g24df2eae50a2cef0f7f08c73a246a012">CAN_ERR_FLAG</a> of <a class="el" href="group__rtcan.html#CAN_xxx_FLAG">CAN_xxx_FLAG</a> and must be handled by the application properly. A detailed description of the errors can be found in the <code>can_id</code> and the <code>data</code> fields of struct <a class="el" href="structcan__frame.html">can_frame</a> (see <a class="el" href="group__rtcan.html#Errors">Errors</a> for futher details).<p>
 <br>
  <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -610,7 +660,7 @@ Environments: non-RT (RT optional)<br>
  Specific return values:<ul>
 <li>-EFAULT (It was not possible to access user space memory area at the specified address.)</li><li>-EINVAL (Invalid length "optlen")</li></ul>
 <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="rtcanrecv_8c-example.html#a129">rtcanrecv.c</a>.</dl>    </td>
+<a class="el" href="rtcanrecv_8c-example.html#a134">rtcanrecv.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g87313c6e632294aa4582899a3bbc89e4"></a><!-- doxytag: member="rtcan.h::CAN_RAW_FILTER" ref="g87313c6e632294aa4582899a3bbc89e4" args="" --><p>
@@ -652,7 +702,7 @@ A CAN raw filter list with elements of struct <a class="el" href="structcan__fil
   </table>
 </dl>
 <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="rtcan__rtt_8c-example.html#a70">rtcan_rtt.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a130">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a150">rtcansend.c</a>.</dl>    </td>
+<a class="el" href="rtcan__rtt_8c-example.html#a72">rtcan_rtt.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a135">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a157">rtcansend.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="ga7eb7dc3aa940a0aca20d3a564a147d9"></a><!-- doxytag: member="rtcan.h::CAN_RAW_LOOPBACK" ref="ga7eb7dc3aa940a0aca20d3a564a147d9" args="" --><p>
@@ -693,7 +743,7 @@ Environments: non-RT (RT optional)<br>
  Specific return values:<ul>
 <li>-EFAULT (It was not possible to access user space memory area at the specified address.)</li><li>-EINVAL (Invalid length "optlen")</li><li>-EOPNOTSUPP (not supported, check RT-Socket-CAN kernel parameters). </li></ul>
 <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="rtcansend_8c-example.html#a147">rtcansend.c</a>.</dl>    </td>
+<a class="el" href="rtcansend_8c-example.html#a154">rtcansend.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="gd8af08ea3624e8e9c464ff143fcb66c0"></a><!-- doxytag: member="rtcan.h::RTCAN_RTIOC_RCV_TIMEOUT" ref="gd8af08ea3624e8e9c464ff143fcb66c0" args="" --><p>
@@ -735,7 +785,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
 <p>
 Rescheduling: never. <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="rtcanrecv_8c-example.html#a133">rtcanrecv.c</a>.</dl>    </td>
+<a class="el" href="rtcanrecv_8c-example.html#a138">rtcanrecv.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="gd3758528585b2779e8949df671f1cf6c"></a><!-- doxytag: member="rtcan.h::RTCAN_RTIOC_SND_TIMEOUT" ref="gd3758528585b2779e8949df671f1cf6c" args="" --><p>
@@ -777,7 +827,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
 <p>
 Rescheduling: never. <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="rtcansend_8c-example.html#a152">rtcansend.c</a>.</dl>    </td>
+<a class="el" href="rtcansend_8c-example.html#a159">rtcansend.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="gedd7bd75a1983735052fed62e101e5ce"></a><!-- doxytag: member="rtcan.h::RTCAN_RTIOC_TAKE_TIMESTAMP" ref="gedd7bd75a1983735052fed62e101e5ce" args="" --><p>
@@ -816,7 +866,7 @@ This service can be called from:<p>
 <p>
 <dl compact><dt><b>Note:</b></dt><dd>Activating taking timestamps only has an effect on newly received CAN messages from the bus. Frames that already are in the socket buffer do not have timestamps if it was deactivated before. See <a class="el" href="group__rtcan.html#Recv">Receive</a> for more details.</dd></dl>
 Rescheduling: never. <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="rtcanrecv_8c-example.html#a134">rtcanrecv.c</a>.</dl>    </td>
+<a class="el" href="rtcanrecv_8c-example.html#a139">rtcanrecv.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g9a3032f07b3a6a2f92eb2ba25a4ff8bf"></a><!-- doxytag: member="rtcan.h::SIOCGCANBAUDRATE" ref="g9a3032f07b3a6a2f92eb2ba25a4ff8bf" args="" --><p>
@@ -978,7 +1028,7 @@ Rescheduling: possible.     </td>
     <td class="mdRow">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td class="md" nowrap valign="top">#define SIOCGIFINDEX&nbsp;&nbsp;&nbsp;_IOWR(RTIOC_TYPE_CAN, 0x00, struct ifreq)          </td>
+          <td class="md" nowrap valign="top">#define SIOCGIFINDEX&nbsp;&nbsp;&nbsp;defined_by_kernel_header_file          </td>
         </tr>
       </table>
     </td>
@@ -1008,7 +1058,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
 <p>
 Rescheduling: never. <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="rtcan__rtt_8c-example.html#a67">rtcan_rtt.c</a>, <a class="el" href="rtcanconfig_8c-example.html#a93">rtcanconfig.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a128">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a148">rtcansend.c</a>.</dl>    </td>
+<a class="el" href="rtcan__rtt_8c-example.html#a68">rtcan_rtt.c</a>, <a class="el" href="rtcanconfig_8c-example.html#a96">rtcanconfig.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a132">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a155">rtcansend.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g7c070037c218b40de849ebf4d299f977"></a><!-- doxytag: member="rtcan.h::SIOCSCANBAUDRATE" ref="g7c070037c218b40de849ebf4d299f977" args="" --><p>
@@ -1049,7 +1099,7 @@ This service can be called from:<p>
 <p>
 <dl compact><dt><b>Note:</b></dt><dd>Setting the baud rate is a configuration task. It should be done deliberately or otherwise CAN messages will likely be lost.</dd></dl>
 Rescheduling: possible. <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="rtcanconfig_8c-example.html#a94">rtcanconfig.c</a>.</dl>    </td>
+<a class="el" href="rtcanconfig_8c-example.html#a97">rtcanconfig.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g26fa69d2cded6e172b96b4a6dc3798df"></a><!-- doxytag: member="rtcan.h::SIOCSCANCTRLMODE" ref="g26fa69d2cded6e172b96b4a6dc3798df" args="" --><p>
@@ -1088,9 +1138,9 @@ This service can be called from:<p>
 <ul>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
 <p>
-<dl compact><dt><b>Note:</b></dt><dd>Setting specia controlelr modes is a configuration task. It should be done deliberately or otherwise CAN messages will likely be lost.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>Setting special controller modes is a configuration task. It should be done deliberately or otherwise CAN messages will likely be lost.</dd></dl>
 Rescheduling: possible. <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="rtcanconfig_8c-example.html#a109">rtcanconfig.c</a>.</dl>    </td>
+<a class="el" href="rtcanconfig_8c-example.html#a112">rtcanconfig.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g4e9547dcb608fd0b8d5cf57f926e5176"></a><!-- doxytag: member="rtcan.h::SIOCSCANCUSTOMBITTIME" ref="g4e9547dcb608fd0b8d5cf57f926e5176" args="" --><p>
@@ -1131,7 +1181,7 @@ This service can be called from:<p>
 <p>
 <dl compact><dt><b>Note:</b></dt><dd>Setting the bit-time is a configuration task. It should be done deliberately or otherwise CAN messages will likely be lost.</dd></dl>
 Rescheduling: possible. <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="rtcanconfig_8c-example.html#a108">rtcanconfig.c</a>.</dl>    </td>
+<a class="el" href="rtcanconfig_8c-example.html#a111">rtcanconfig.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g72b56a34fe466bca858b1f5f401e1076"></a><!-- doxytag: member="rtcan.h::SIOCSCANMODE" ref="g72b56a34fe466bca858b1f5f401e1076" args="" --><p>
@@ -1173,7 +1223,33 @@ This service can be called from:<p>
 <dl compact><dt><b>Note:</b></dt><dd>Setting a CAN controller into normal operation after a bus-off can take some time (128 occurrences of 11 consecutive recessive bits). In such a case, although this IOCTL will return immediately with success and <a class="el" href="group__rtcan.html#g5b5f750db08d56f40489679f22236ef4">SIOCGCANSTATE</a> will report <a class="el" href="group__rtcan.html#gg8680f5710e1a13d553067cc32c86226b7db2add3bd2ed5a01893a3d2a012ac67">CAN_STATE_ACTIVE</a>, bus-off recovery may still be in progress. <br>
  If a controller is bus-off, setting it into stop mode will return no error but the controller remains bus-off.</dd></dl>
 Rescheduling: possible. <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="rtcanconfig_8c-example.html#a110">rtcanconfig.c</a>.</dl>    </td>
+<a class="el" href="rtcanconfig_8c-example.html#a113">rtcanconfig.c</a>.</dl>    </td>
+  </tr>
+</table>
+<a class="anchor" name="gd981aa82a29d828882a2fb4c35c1cdd7"></a><!-- doxytag: member="rtcan.h::SOL_CAN_RAW" ref="gd981aa82a29d828882a2fb4c35c1cdd7" args="" --><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">#define SOL_CAN_RAW&nbsp;&nbsp;&nbsp;103          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+CAN socket levels. 
+<p>
+Used for <a class="el" href="group__rtcan.html#Sockopts">Sockopts</a> for the particular protocols. <dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="rtcan__rtt_8c-example.html#a71">rtcan_rtt.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a133">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a153">rtcansend.c</a>.</dl>    </td>
   </tr>
 </table>
 <hr><h2>Typedef Documentation</h2>
@@ -1293,7 +1369,7 @@ Hardware-specific BTR bit-time definition. </td></tr>
 <dl compact><dt><b>Enumerator: </b></dt><dd>
 <table border="0" cellspacing="2" cellpadding="0">
 <tr><td valign="top"><em><a class="anchor" name="ggc0d6cdda2cf4abb51116b86bc99acf9904f549e87bf7ddf764c563062dd76790"></a><!-- doxytag: member="CAN_MODE_STOP" ref="ggc0d6cdda2cf4abb51116b86bc99acf9904f549e87bf7ddf764c563062dd76790" args="" -->CAN_MODE_STOP</em>&nbsp;</td><td>
-Set controller in Stop mode (no reception / transmission possible). </td></tr>
+Set controller in Stop mode (no reception / transmission possible) </td></tr>
 <tr><td valign="top"><em><a class="anchor" name="ggc0d6cdda2cf4abb51116b86bc99acf99f9c617b6b198770017f6e7198bfb50b6"></a><!-- doxytag: member="CAN_MODE_START" ref="ggc0d6cdda2cf4abb51116b86bc99acf99f9c617b6b198770017f6e7198bfb50b6" args="" -->CAN_MODE_START</em>&nbsp;</td><td>
 Set controller into normal operation. <br>
  Coming from stopped mode or bus off, the controller begins with no errors in <a class="el" href="group__rtcan.html#gg8680f5710e1a13d553067cc32c86226b7db2add3bd2ed5a01893a3d2a012ac67">CAN_STATE_ACTIVE</a>. </td></tr>
@@ -1302,35 +1378,6 @@ Set controller into Sleep mode. <br>
  This is only possible if the controller is not stopped or bus-off. <br>
  Notice that sleep mode will only be entered when there is no bus activity. If the controller detects bus activity while "sleeping" it will go into operating mode again. <br>
  To actively leave sleep mode again trigger <code>CAN_MODE_START</code>. </td></tr>
-</table>
-</dl>
-    </td>
-  </tr>
-</table>
-<a class="anchor" name="gc99a91b141113059bd5527bad8ddbf53"></a><!-- doxytag: member="rtcan.h::CAN_PROTO" ref="gc99a91b141113059bd5527bad8ddbf53" args="" --><p>
-<table class="mdTable" cellpadding="2" cellspacing="0">
-  <tr>
-    <td class="mdRow">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td class="md" nowrap valign="top">enum <a class="el" href="group__rtcan.html#gc99a91b141113059bd5527bad8ddbf53">CAN_PROTO</a>          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-<table cellspacing="5" cellpadding="0" border="0">
-  <tr>
-    <td>
-      &nbsp;
-    </td>
-    <td>
-
-<p>
-<dl compact><dt><b>Enumerator: </b></dt><dd>
-<table border="0" cellspacing="2" cellpadding="0">
-<tr><td valign="top"><em><a class="anchor" name="ggc99a91b141113059bd5527bad8ddbf530f5142d42281775367eb973d8a0a62d3"></a><!-- doxytag: member="CAN_PROTO_RAW" ref="ggc99a91b141113059bd5527bad8ddbf530f5142d42281775367eb973d8a0a62d3" args="" -->CAN_PROTO_RAW</em>&nbsp;</td><td>
-Raw protocol of <code>PF_CAN</code>, applicable to socket type <code>SOCK_RAW</code>. </td></tr>
 </table>
 </dl>
     </td>
@@ -1377,7 +1424,7 @@ CAN controller is in Sleep mode. </td></tr>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:18 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:01 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

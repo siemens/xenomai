@@ -26,13 +26,7 @@
 <h1>Memory heap services.<br>
 <small>
 [<a class="el" href="group__native.html">Native Xenomai API.</a>]</small>
-</h1>
-<p>
-Collaboration diagram for Memory heap services.:<center><table><tr><td><img src="group__native__heap.png" border="0" alt="" usemap="#group____native____heap_map">
-<map name="group____native____heap_map">
-<area href="group__native.html" shape="rect" coords="9,8,153,32" alt="">
-</map></td></tr></table></center>
-<hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 Memory heaps are regions of memory used for dynamic memory allocation in a time-bounded fashion. Blocks of memory are allocated and freed in an arbitrary order and the pattern of allocation and size of blocks is not known until run time.<p>
 The implementation of the memory allocator follows the algorithm described in a USENIX 1988 paper called "Design of a General Purpose Memory Allocator for the 4.3BSD Unix Kernel" by Marshall K. McKusick and Michael J. Karels.<p>
 Xenomai memory heaps are built over the nucleus's heap objects, which in turn provide the needed support for sharing a memory area between kernel and user-space using direct memory mapping. 
@@ -234,7 +228,7 @@ This service can be called from:<p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
 <dl compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="shared__mem_8c-example.html#a158">shared_mem.c</a>.</dl>    </td>
+<a class="el" href="shared__mem_8c-example.html#a165">shared_mem.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g1d19ad24dc9f94b969aa0f574170bdc4"></a><!-- doxytag: member="heap.c::rt_heap_create" ref="g1d19ad24dc9f94b969aa0f574170bdc4" args="(RT_HEAP *heap, const char *name, size_t heapsize, int mode)" --><p>
@@ -374,6 +368,9 @@ Destroy a heap and release all the tasks currently pending on it. A heap exists 
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
+<ul>
+<li>-EBUSY is returned if <em>heap</em> is in use by another process and the descriptor is not destroyed.</li></ul>
+<p>
 <ul>
 <li>-EINVAL is returned if <em>heap</em> is not a heap descriptor.</li></ul>
 <p>
@@ -530,7 +527,7 @@ Rescheduling: never.     </td>
 Unbind from a mappable heap. 
 <p>
 This user-space only service unbinds the calling task from the heap object previously retrieved by a call to <a class="el" href="group__native__heap.html#ge17a8784a83d2eec94089a86a831a833">rt_heap_bind()</a>.<p>
-Unbinding from a heap when it is no more needed is especially important in order to properly release the mapping resources used to attach the heap memory to the caller's address space.<p>
+Unbinding from a heap when it is no longer needed is especially important in order to properly release the mapping resources used to attach the heap memory to the caller's address space.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>heap</em>&nbsp;</td><td>The address of a heap descriptor to unbind from.</td></tr>
@@ -542,10 +539,10 @@ This service can be called from:<p>
 <li>User-space task.</li></ul>
 <p>
 Rescheduling: never. <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="shared__mem_8c-example.html#a160">shared_mem.c</a>.</dl>    </td>
+<a class="el" href="shared__mem_8c-example.html#a167">shared_mem.c</a>.</dl>    </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:15 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:01 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

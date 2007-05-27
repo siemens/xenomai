@@ -36,24 +36,10 @@ This program is free software; you can redistribute it and/or modify it under th
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
-
-<p>
-Include dependency graph for pipe.c:<p><center><img src="ksrc_2skins_2native_2pipe_8c__incl.png" border="0" usemap="#ksrc/skins/native/pipe.c_map" alt=""></center>
-<map name="ksrc/skins/native/pipe.c_map">
-<area href="pod_8h.html" shape="rect" coords="374,110,478,134" alt="">
-<area href="nucleus_2heap_8h-source.html" shape="rect" coords="370,307,482,331" alt="">
-<area href="include_2nucleus_2registry_8h.html" shape="rect" coords="364,159,489,183" alt="">
-<area href="native_2pipe_8h.html" shape="rect" coords="217,222,313,246" alt="">
-<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="540,110,660,134" alt="">
-<area href="include_2nucleus_2intr_8h-source.html" shape="rect" coords="549,62,650,86" alt="">
-<area href="include_2nucleus_2timer_8h.html" shape="rect" coords="713,110,825,134" alt="">
-<area href="stat_8h-source.html" shape="rect" coords="717,62,821,86" alt="">
-<area href="nucleus_2types_8h-source.html" shape="rect" coords="877,185,992,209" alt="">
-<area href="nucleus_2queue_8h-source.html" shape="rect" coords="709,331,829,355" alt="">
-<area href="synch_8h-source.html" shape="rect" coords="541,259,658,283" alt="">
-<area href="nucleus_2pipe_8h-source.html" shape="rect" coords="373,259,480,283" alt="">
-<area href="native_2types_8h.html" shape="rect" coords="717,210,821,234" alt="">
-</map>
+<code>#include &lt;<a class="el" href="pod_8h-source.html">nucleus/pod.h</a>&gt;</code><br>
+<code>#include &lt;nucleus/heap.h&gt;</code><br>
+<code>#include &lt;<a class="el" href="include_2nucleus_2registry_8h-source.html">nucleus/registry.h</a>&gt;</code><br>
+<code>#include &lt;<a class="el" href="native_2pipe_8h-source.html">native/pipe.h</a>&gt;</code><br>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
@@ -84,8 +70,11 @@ Include dependency graph for pipe.c:<p><center><img src="ksrc_2skins_2native_2pi
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#g8face1c57df99cf43b029b3e3b6a05c6">rt_pipe_free</a> (RT_PIPE *pipe, RT_PIPE_MSG *msg)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free a message pipe buffer.  <a href="group__pipe.html#g8face1c57df99cf43b029b3e3b6a05c6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#gb4d85ecda7675a75611500070c28b22e">rt_pipe_flush</a> (RT_PIPE *pipe, int mode)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Flush the i/o queues associated with the kernel endpoint of a message pipe.  <a href="group__pipe.html#gb4d85ecda7675a75611500070c28b22e"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:00 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

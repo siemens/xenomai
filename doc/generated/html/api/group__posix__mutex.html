@@ -26,13 +26,7 @@
 <h1>Mutex services.<br>
 <small>
 [<a class="el" href="group__posix.html">POSIX skin.</a>]</small>
-</h1>
-<p>
-Collaboration diagram for Mutex services.:<center><table><tr><td><img src="group__posix__mutex.png" border="0" alt="" usemap="#group____posix____mutex_map">
-<map name="group____posix____mutex_map">
-<area href="group__posix.html" shape="rect" coords="9,8,102,32" alt="">
-</map></td></tr></table></center>
-<hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 Mutex services. 
 <p>
 A mutex is a MUTual EXclusion device, and is useful for protecting shared data structures from concurrent modifications, and implementing critical sections and monitors.<p>
@@ -165,7 +159,7 @@ an error number if:<ul>
 <p>
 Initialize a mutex. 
 <p>
-This services initializes the mutex <em>mx</em>, using the mutex attributes object <em>attr</em>. If <em>attr</em> is <em>NULL</em> or this service is used from user-space, default attributes are used (see <a class="el" href="group__posix__mutex.html#gf98f6b6c483077a39d1400b1de1577b8">pthread_mutexattr_init()</a>).<p>
+This services initializes the mutex <em>mx</em>, using the mutex attributes object <em>attr</em>. If <em>attr</em> is <em>NULL</em>, default attributes are used (see <a class="el" href="group__posix__mutex.html#gf98f6b6c483077a39d1400b1de1577b8">pthread_mutexattr_init()</a>).<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>mx</em>&nbsp;</td><td>the mutex to be initialized;</td></tr>
@@ -770,7 +764,7 @@ an error number if:<ul>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:22 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:02 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

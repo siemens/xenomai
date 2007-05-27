@@ -26,13 +26,7 @@
 <h1>Time base services.<br>
 <small>
 [<a class="el" href="group__nucleus.html">Xenomai nucleus.</a>]</small>
-</h1>
-<p>
-Collaboration diagram for Time base services.:<center><table><tr><td><img src="group__timebase.png" border="0" alt="" usemap="#group____timebase_map">
-<map name="group____timebase_map">
-<area href="group__nucleus.html" shape="rect" coords="9,8,137,32" alt="">
-</map></td></tr></table></center>
-<hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 Xenomai implements the notion of time base, by which software timers that belong to different skins may be clocked separately according to distinct frequencies, or aperiodically. In the periodic case, delays and timeouts are given in counts of ticks; the duration of a tick is specified by the time base. In the aperiodic case, timings are directly specified in nanoseconds.<p>
 Only a single aperiodic (i.e. tick-less) time base may exist in the system, and the nucleus provides for it through the nktbase object. All skins depending on aperiodic timings should bind to the latter (see <a class="el" href="group__timebase.html#g44412f2f0a481d351695f540c1e4750a">xntbase_alloc()</a>), also known as the master time base.<p>
 Skins depending on periodic timings may create and bind to their own time base. Such a periodic time base is managed as a timed slave object of the master time base. A cascading software timer fired by the master time base according to the appropriate frequency, triggers in turn the update process of the associated timed slave, which eventually fires the elapsed software timers controlled by the periodic time base. In other words, Xenomai emulates periodic timing over an aperiodic policy.<p>
@@ -126,7 +120,7 @@ The <a class="el" href="group__timebase.html#g44412f2f0a481d351695f540c1e4750a">
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>The symbolic name of the new time base. This information is used to report status information when reading from /proc/xenomai/timebases; it has currently no other usage.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>period</em>&nbsp;</td><td>The duration of the clock tick for the new time base, given as a count of nanoseconds. The special <em>XN_APERIODIC_TICK</em> value may be used to retrieve the master - aperiodic - time base, which is always up and running when a real-time skin has called the <a class="el" href="group__pod.html#g4da4ab0694f26b794629e568221b04f0">xnpod_init()</a> service. All other values are meant to define the clock rate of a periodic time base. For instance, passing 1000000 (ns) in the <em>period</em> parameter will create a periodic time base clocked at a frequency of 1Khz.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>period</em>&nbsp;</td><td>The duration of the clock tick for the new time base, given as a count of nanoseconds. The special <em>XN_APERIODIC_TICK</em> value may be used to retrieve the master - aperiodic - time base, which is always up and running when a real-time skin has called the <a class="el" href="group__pod.html#g167bb3b4251ac8b8a3e7f358d236908a">xnpod_init()</a> service. All other values are meant to define the clock rate of a periodic time base. For instance, passing 1000000 (ns) in the <em>period</em> parameter will create a periodic time base clocked at a frequency of 1Khz.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>basep</em>&nbsp;</td><td>A pointer to a memory location which will be written upon success with the address of the allocated time base. If <em>period</em> equals XN_APERIODIC_TICK, the address of the built-in master time base descriptor will be copied back to this location.</td></tr>
   </table>
 </dl>
@@ -585,7 +579,7 @@ Rescheduling: never.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:14 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:01 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

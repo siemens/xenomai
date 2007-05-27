@@ -31,40 +31,21 @@
 <h1>include/rtdm/rtdm_driver.h File Reference</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 Real-Time Driver Model for Xenomai, driver API header. 
 <p>
-<dl compact><dt><b>Note:</b></dt><dd>Copyright (C) 2005, 2006 Jan Kiszka &lt;<a href="mailto:jan.kiszka@web.de">jan.kiszka@web.de</a>&gt; <p>
+<dl compact><dt><b>Note:</b></dt><dd>Copyright (C) 2005-2007 Jan Kiszka &lt;<a href="mailto:jan.kiszka@web.de">jan.kiszka@web.de</a>&gt; <p>
 Copyright (C) 2005 Joerg Langenberg &lt;<a href="mailto:joerg.langenberg@gmx.net">joerg.langenberg@gmx.net</a>&gt;</dd></dl>
 Xenomai is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.<p>
 Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with Xenomai; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
-
-<p>
-Include dependency graph for rtdm_driver.h:<p><center><img src="rtdm__driver_8h__incl.png" border="0" usemap="#include/rtdm/rtdm_driver.h_map" alt=""></center>
-<map name="include/rtdm/rtdm_driver.h_map">
-<area href="xenomai_8h-source.html" shape="rect" coords="234,273,368,297" alt="">
-<area href="pod_8h.html" shape="rect" coords="428,154,532,178" alt="">
-<area href="synch_8h-source.html" shape="rect" coords="421,349,538,373" alt="">
-<area href="include_2nucleus_2core_8h-source.html" shape="rect" coords="768,313,877,337" alt="">
-<area href="assert_8h-source.html" shape="rect" coords="762,385,882,409" alt="">
-<area href="nucleus_2heap_8h-source.html" shape="rect" coords="424,397,536,421" alt="">
-<area href="rtdm_8h.html" shape="rect" coords="256,544,346,568" alt="">
-<area href="include_2nucleus_2intr_8h-source.html" shape="rect" coords="602,228,704,252" alt="">
-<area href="module_8h-source.html" shape="rect" coords="417,301,542,325" alt="">
-<area href="version_8h-source.html" shape="rect" coords="417,202,542,226" alt="">
-<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="593,154,713,178" alt="">
-<area href="nucleus_2queue_8h-source.html" shape="rect" coords="593,349,713,373" alt="">
-</map>
-
-<p>
-This graph shows which files directly or indirectly include this file:<p><center><img src="rtdm__driver_8h__dep__incl.png" border="0" usemap="#include/rtdm/rtdm_driver.hdep_map" alt=""></center>
-<map name="include/rtdm/rtdm_driver.hdep_map">
-<area href="ksrc_2skins_2rtdm_2core_8c.html" shape="rect" coords="457,58,609,82" alt="">
-<area href="ksrc_2skins_2rtdm_2core_8h-source.html" shape="rect" coords="241,58,393,82" alt="">
-<area href="device_8h-source.html" shape="rect" coords="234,106,400,130" alt="">
-<area href="drvlib_8c.html" shape="rect" coords="238,154,396,178" alt="">
-<area href="device_8c.html" shape="rect" coords="452,106,614,130" alt="">
-<area href="skins_2rtdm_2module_8c.html" shape="rect" coords="449,154,617,178" alt="">
-</map>
+<code>#include &lt;asm/atomic.h&gt;</code><br>
+<code>#include &lt;linux/list.h&gt;</code><br>
+<code>#include &lt;nucleus/xenomai.h&gt;</code><br>
+<code>#include &lt;nucleus/core.h&gt;</code><br>
+<code>#include &lt;nucleus/heap.h&gt;</code><br>
+<code>#include &lt;<a class="el" href="pod_8h-source.html">nucleus/pod.h</a>&gt;</code><br>
+<code>#include &lt;nucleus/synch.h&gt;</code><br>
+<code>#include &lt;<a class="el" href="rtdm_8h-source.html">rtdm/rtdm.h</a>&gt;</code><br>
+<code>#include &lt;nucleus/assert.h&gt;</code><br>
 
 <p>
 <a href="rtdm__driver_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
@@ -248,9 +229,9 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top">typedef int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmirq.html#gdabd8f3473098ae9128ef449a83fe3c2">rtdm_irq_handler_t</a> )(rtdm_irq_t *irq_handle)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Interrupt handler.  <a href="group__rtdmirq.html#gdabd8f3473098ae9128ef449a83fe3c2"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef void(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nrtsignal.html#gfb4f5fef3b8d8fc7daab1332815586bb">rtdm_nrtsig_handler_t</a> )(rtdm_nrtsig_t nrt_sig)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">typedef void(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nrtsignal.html#g3c72df92865ad7decadab7c94fa75d0a">rtdm_nrtsig_handler_t</a> )(rtdm_nrtsig_t nrt_sig, void *arg)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Non-real-time signal handler.  <a href="group__nrtsignal.html#gfb4f5fef3b8d8fc7daab1332815586bb"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Non-real-time signal handler.  <a href="group__nrtsignal.html#g3c72df92865ad7decadab7c94fa75d0a"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">typedef void(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga3cb481ab12462f5e54ff6fee12813e5">rtdm_task_proc_t</a> )(void *arg)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Real-time task procedure.  <a href="group__rtdmtask.html#ga3cb481ab12462f5e54ff6fee12813e5"></a><br></td></tr>
@@ -319,7 +300,7 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Request a mutex with timeout.  <a href="group__rtdmsync.html#g0789968300701ba2a940f5fe8b1fd4d8"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:00 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

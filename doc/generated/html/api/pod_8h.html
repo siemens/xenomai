@@ -37,50 +37,8 @@ Xenomai is free software; you can redistribute it and/or modify it under the ter
 Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with Xenomai; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
-
-<p>
-Include dependency graph for pod.h:<p><center><img src="pod_8h__incl.png" border="0" usemap="#include/nucleus/pod.h_map" alt=""></center>
-<map name="include/nucleus/pod.h_map">
-<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="209,32,329,56" alt="">
-<area href="include_2nucleus_2intr_8h-source.html" shape="rect" coords="218,80,320,104" alt="">
-<area href="include_2nucleus_2timer_8h.html" shape="rect" coords="380,8,492,32" alt="">
-<area href="stat_8h-source.html" shape="rect" coords="384,56,488,80" alt="">
-<area href="timebase_8h.html" shape="rect" coords="542,20,678,44" alt="">
-<area href="nucleus_2queue_8h-source.html" shape="rect" coords="728,44,848,68" alt="">
-<area href="nucleus_2types_8h-source.html" shape="rect" coords="896,74,1010,98" alt="">
-</map>
-
-<p>
-This graph shows which files directly or indirectly include this file:<p><center><img src="pod_8h__dep__incl.png" border="0" usemap="#include/nucleus/pod.hdep_map" alt=""></center>
-<map name="include/nucleus/pod.hdep_map">
-<area href="xenomai_8h-source.html" shape="rect" coords="207,167,386,191" alt="">
-<area href="rtdm__driver_8h.html" shape="rect" coords="435,142,611,166" alt="">
-<area href="ksrc_2skins_2rtdm_2core_8c.html" shape="rect" coords="883,118,1035,142" alt="">
-<area href="ksrc_2skins_2rtdm_2core_8h-source.html" shape="rect" coords="667,93,819,117" alt="">
-<area href="device_8h-source.html" shape="rect" coords="661,203,826,227" alt="">
-<area href="skins_2rtdm_2module_8c.html" shape="rect" coords="875,235,1043,259" alt="">
-<area href="ksrc_2nucleus_2heap_8c.html" shape="rect" coords="227,317,366,341" alt="">
-<area href="ksrc_2nucleus_2intr_8c.html" shape="rect" coords="233,365,361,389" alt="">
-<area href="pod_8c.html" shape="rect" coords="230,413,363,437" alt="">
-<area href="nucleus_2registry_8c.html" shape="rect" coords="219,461,374,485" alt="">
-<area href="shadow_8c.html" shape="rect" coords="219,509,374,533" alt="">
-<area href="synch_8c.html" shape="rect" coords="225,557,369,581" alt="">
-<area href="timebase_8c.html" shape="rect" coords="214,605,379,629" alt="">
-<area href="ksrc_2nucleus_2timer_8c.html" shape="rect" coords="227,653,366,677" alt="">
-<area href="ksrc_2skins_2native_2alarm_8c.html" shape="rect" coords="213,701,381,725" alt="">
-<area href="ksrc_2skins_2native_2cond_8c.html" shape="rect" coords="215,749,378,773" alt="">
-<area href="ksrc_2skins_2native_2event_8c.html" shape="rect" coords="213,797,381,821" alt="">
-<area href="ksrc_2skins_2native_2heap_8c.html" shape="rect" coords="215,845,378,869" alt="">
-<area href="ksrc_2skins_2native_2intr_8c.html" shape="rect" coords="221,893,373,917" alt="">
-<area href="skins_2native_2module_8c.html" shape="rect" coords="207,941,386,965" alt="">
-<area href="ksrc_2skins_2native_2mutex_8c.html" shape="rect" coords="211,989,382,1013" alt="">
-<area href="ksrc_2skins_2native_2pipe_8c.html" shape="rect" coords="217,1037,377,1061" alt="">
-<area href="ksrc_2skins_2native_2queue_8c.html" shape="rect" coords="211,1085,382,1109" alt="">
-<area href="ksrc_2skins_2native_2sem_8c.html" shape="rect" coords="217,1133,377,1157" alt="">
-<area href="native_2syscall_8c.html" shape="rect" coords="210,1181,383,1205" alt="">
-<area href="ksrc_2skins_2native_2task_8c.html" shape="rect" coords="217,1229,377,1253" alt="">
-<area href="ksrc_2skins_2native_2timer_8c.html" shape="rect" coords="215,1277,378,1301" alt="">
-</map>
+<code>#include &lt;nucleus/thread.h&gt;</code><br>
+<code>#include &lt;nucleus/intr.h&gt;</code><br>
 
 <p>
 <a href="pod_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
@@ -101,9 +59,9 @@ typedef <a class="el" href="structxnsched.html">xnsched</a>&nbsp;</td><td class=
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gc7a3941274759d17b822d6e996662a05">xnpod_schedule_runnable</a> (xnthread_t *thread, int flags)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Hidden rescheduling procedure.  <a href="group__pod.html#gc7a3941274759d17b822d6e996662a05"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g4da4ab0694f26b794629e568221b04f0">xnpod_init</a> (<a class="el" href="structxnpod.html">xnpod_t</a> *pod, int minpri, int maxpri, xnflags_t flags)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g167bb3b4251ac8b8a3e7f358d236908a">xnpod_init</a> (void)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a new pod.  <a href="group__pod.html#g4da4ab0694f26b794629e568221b04f0"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize the core pod.  <a href="group__pod.html#g167bb3b4251ac8b8a3e7f358d236908a"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g10d3c13efa3ab06ac23017710b13314e">xnpod_enable_timesource</a> (void)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Activate the core time source.  <a href="group__pod.html#g10d3c13efa3ab06ac23017710b13314e"></a><br></td></tr>
@@ -113,9 +71,9 @@ typedef <a class="el" href="structxnsched.html">xnsched</a>&nbsp;</td><td class=
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g824dc22468666c9f14da1842f0184b84">xnpod_shutdown</a> (int xtype)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Shutdown the current pod.  <a href="group__pod.html#g824dc22468666c9f14da1842f0184b84"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga10002760c13e5b1b8d033926f15bcc9">xnpod_init_thread</a> (xnthread_t *thread, xntbase_t *tbase, const char *name, int prio, xnflags_t flags, unsigned stacksize)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g3f58282d6373a9d47da258f26181365d">xnpod_init_thread</a> (xnthread_t *thread, xntbase_t *tbase, const char *name, int prio, xnflags_t flags, unsigned stacksize, xnthrops_t *ops)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a new thread.  <a href="group__pod.html#ga10002760c13e5b1b8d033926f15bcc9"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a new thread.  <a href="group__pod.html#g3f58282d6373a9d47da258f26181365d"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g0717d8705635fe0f30455f37e8d0e280">xnpod_start_thread</a> (xnthread_t *thread, xnflags_t mode, int imask, xnarch_cpumask_t affinity, void(*entry)(void *cookie), void *cookie)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initial start of a newly created thread.  <a href="group__pod.html#g0717d8705635fe0f30455f37e8d0e280"></a><br></td></tr>
@@ -177,7 +135,7 @@ typedef <a class="el" href="structxnsched.html">xnsched</a>&nbsp;</td><td class=
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Remove a nucleus hook.  <a href="group__pod.html#gce800481d23255eebe45f969e9434adf"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:00 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

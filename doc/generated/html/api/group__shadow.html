@@ -26,13 +26,7 @@
 <h1>Real-time shadow services.<br>
 <small>
 [<a class="el" href="group__nucleus.html">Xenomai nucleus.</a>]</small>
-</h1>
-<p>
-Collaboration diagram for Real-time shadow services.:<center><table><tr><td><img src="group__shadow.png" border="0" alt="" usemap="#group____shadow_map">
-<map name="group____shadow_map">
-<area href="group__nucleus.html" shape="rect" coords="9,8,137,32" alt="">
-</map></td></tr></table></center>
-<hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 Real-time shadow services. 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
@@ -138,12 +132,7 @@ Create a shadow thread context.
 This call maps a nucleus thread to the "current" Linux task. The priority of the Linux task is set to the priority of the shadow thread bounded to the [0..MAX_RT_PRIO-1] range, and its scheduling policy is set to either SCHED_FIFO for non-zero priority levels, or SCHED_NORMAL otherwise.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the new shadow thread to be mapped to "current". This descriptor must have been previously initialized by a call to <a class="el" href="group__pod.html#ga10002760c13e5b1b8d033926f15bcc9">xnpod_init_thread()</a>.</td></tr>
-  </table>
-</dl>
-<dl compact><dt><b>Warning:</b></dt><dd>The thread must have been set the same magic number (i.e. xnthread_set_magic()) than the one used to register the skin it belongs to. Failing to do so might lead to unexpected results.</dd></dl>
-<dl compact><dt><b>Parameters:</b></dt><dd>
-  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the new shadow thread to be mapped to "current". This descriptor must have been previously initialized by a call to <a class="el" href="group__pod.html#g3f58282d6373a9d47da258f26181365d">xnpod_init_thread()</a>.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>u_completion</em>&nbsp;</td><td>is the address of an optional completion descriptor aimed at synchronizing our parent thread with us. If non-NULL, the information <a class="el" href="group__shadow.html#gebde4656862d491a42b9fd623dae36c2">xnshadow_map()</a> will store into the completion block will be later used to wake up the parent thread when the current shadow has been initialized. In the latter case, the new shadow thread is left in a dormant state (XNDORMANT) after its creation, leading to the suspension of "current" in the Linux domain, only processing signals. Otherwise, the shadow thread is immediately started and "current" immediately resumes in the Xenomai domain from this service.</td></tr>
   </table>
 </dl>
@@ -248,7 +237,7 @@ Rescheduling: always.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:14 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:01 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
