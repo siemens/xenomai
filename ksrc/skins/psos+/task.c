@@ -27,6 +27,21 @@ static u_long psos_time_slice;
 
 static u_long psos_task_ids;
 
+static int psos_get_denormalized_prio(xnthread_t *thread)
+{
+	return xnthread_current_priority(thread);
+}
+
+static unsigned psos_get_magic(void)
+{
+	return PSOS_SKIN_MAGIC;
+}
+
+static xnthrops_t psos_task_ops = {
+	.get_denormalized_prio = &psos_get_denormalized_prio,
+	.get_magic = &psos_get_magic,
+};
+
 static void psostask_delete_hook(xnthread_t *thread)
 {
 	/* The scheduler is locked while hooks are running */
@@ -119,12 +134,11 @@ u_long t_create(char name[4],
 		sprintf(task->name, "anon%lu", psos_task_ids++);
 
 	if (xnpod_init_thread(&task->threadbase, psos_tbase,
-			      task->name, prio, bflags, ustack) != 0) {
+			      task->name, prio, bflags, ustack, &psos_task_ops) != 0) {
 		xnfree(task);
 		return ERR_NOSTK;	/* Assume this is the only possible failure */
 	}
 
-	xnthread_set_magic(&task->threadbase, PSOS_SKIN_MAGIC);
 	xnthread_time_slice(&task->threadbase) = psos_time_slice;
 
 	ev_init(&task->evgroup);
@@ -136,8 +150,7 @@ u_long t_create(char name[4],
 	initgq(&task->alarmq,
 	       &xnmod_glink_queue,
 	       xnmod_alloc_glinks,
-	       XNMOD_GHOLDER_THRESHOLD,
-	       xnpod_get_qdir(nkpod));
+	       XNMOD_GHOLDER_THRESHOLD);
 
 	task->magic = PSOS_TASK_MAGIC;
 

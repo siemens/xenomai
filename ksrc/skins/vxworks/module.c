@@ -46,7 +46,7 @@ int SKIN_INIT(vxworks)
 {
 	int err;
 
-	err = xncore_attach(255, 0);
+	err = xnpod_init();
 
 	if (err != 0)
 		goto fail_core;
@@ -54,7 +54,7 @@ int SKIN_INIT(vxworks)
 	err = wind_sysclk_init(tick_arg * 1000);
 
 	if (err != 0) {
-		xncore_detach(err);
+		xnpod_shutdown(err);
 
 	fail_core:
 		xnlogerr("VxWorks skin init failed, code %d.\n", err);
@@ -87,7 +87,7 @@ void SKIN_EXIT(vxworks)
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	wind_syscall_cleanup();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
-	xncore_detach(XNPOD_NORMAL_EXIT);
+	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 }
 
 module_init(__vxworks_skin_init);

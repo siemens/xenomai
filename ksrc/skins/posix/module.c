@@ -98,7 +98,7 @@ static void pse51_shutdown(int xtype)
 	pse51_syscall_cleanup();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 	xntbase_free(pse51_tbase);
-	xncore_detach(xtype);
+	xnpod_shutdown(xtype);
 }
 
 int SKIN_INIT(posix)
@@ -107,7 +107,7 @@ int SKIN_INIT(posix)
 
 	xnprintf("starting POSIX services.\n");
 
-	err = xncore_attach(PSE51_MIN_PRIORITY, PSE51_MAX_PRIORITY);
+	err = xnpod_init();
 
 	if (err != 0) {
 	fail:
@@ -128,7 +128,7 @@ int SKIN_INIT(posix)
 
 	if (err != 0) {
 		xntbase_free(pse51_tbase);
-		xncore_detach(err);
+		xnpod_shutdown(err);
 		xnlogerr("POSIX skin init failed, code %d.\n", err);
 		return err;
 	}

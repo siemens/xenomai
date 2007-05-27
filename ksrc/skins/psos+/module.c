@@ -64,7 +64,7 @@ int SKIN_INIT(psos)
 {
 	int err;
 
-	err = xncore_attach(1, 255);
+	err = xnpod_init();
 
 	if (err != 0)
 		return err;
@@ -80,7 +80,7 @@ int SKIN_INIT(psos)
 
 	if (err != 0) {
 	fail:
-		xncore_detach(err);
+		xnpod_shutdown(err);
 		xnlogerr("pSOS skin init failed, code %d.\n", err);
 		return err;
 	}
@@ -115,7 +115,7 @@ void SKIN_EXIT(psos)
 	psos_syscall_cleanup();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 	xntbase_free(psos_tbase);
-	xncore_detach(XNPOD_NORMAL_EXIT);
+	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 }
 
 module_init(__psos_skin_init);

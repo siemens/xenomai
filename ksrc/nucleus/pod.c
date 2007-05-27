@@ -54,6 +54,8 @@
 /* NOTE: We need to initialize the globals; remember that this code
    also runs over the simulator in user-space. */
 
+static xnpod_t nkpod_struct;
+
 xnpod_t *nkpod = NULL;
 
 DEFINE_XNLOCK(nklock);
@@ -100,18 +102,21 @@ const char *xnpod_fatal_helper(const char *format, ...)
 
 		while (holder) {
 			xnthread_t *thread = link2thread(holder, glink);
+			int dnprio;
+
 			holder = nextq(&nkpod->threadq, holder);
 
 			if (thread->sched != sched)
 				continue;
 
-			if (xnthread_test_state(thread, XNINVPS))
+			dnprio = xnthread_get_denormalized_prio(thread);
+
+			if (dnprio != xnthread_current_priority(thread))
 				snprintf(pbuf, sizeof(pbuf), "%3d(%d)",
-					 thread->cprio,
-					 xnpod_rescale_prio(thread->cprio));
+					 xnthread_current_priority(thread),
+					 dnprio);
 			else
-				snprintf(pbuf, sizeof(pbuf), "%3d",
-					 thread->cprio);
+				snprintf(pbuf, sizeof(pbuf), "%3d", dnprio);
 
 			p += snprintf(p, XNPOD_FATAL_BUFSZ - (p - nkmsgbuf),
 				      "%c%3u  %-6d %-8s %-8Lu %.8lx  %s\n",
@@ -286,44 +291,17 @@ static void xnpod_flush_heap(xnheap_t *heap,
 }
 
 /*! 
- * \fn int xnpod_init(xnpod_t *pod,int loprio,int hiprio,xnflags_t flags)
- * \brief Initialize a new pod.
+ * \fn int xnpod_init(void)
+ * \brief Initialize the core pod.
  *
- * Initializes a new pod which can subsequently be used to start
- * real-time activities. Once a pod is active, real-time APIs can be
- * stacked over. There can only be a single pod active in the host
- * environment. Such environment can be confined to a process
- * (e.g. simulator or UVM), or expand machine-wide (e.g. Adeos).
- *
- * @param pod The address of a pod descriptor the nucleus will use to
- * store the pod-specific data.  This descriptor must always be valid
- * while the pod is active therefore it must be allocated in permanent
- * memory.
- *
- * @param loprio The value of the lowest priority level which is valid
- * for threads created on behalf of this pod.
- *
- * @param hiprio The value of the highest priority level which is
- * valid for threads created on behalf of this pod.
- *
- * @param flags A set of creation flags affecting the operation.  The
- * only defined flag is XNREUSE, which tells the nucleus that a
- * pre-existing pod exhibiting the same properties as the one which is
- * being registered may be reused. In such a case, the call returns
- * successfully, keeping the active pod unmodified.
- *
- * loprio may be numerically greater than hiprio if the client
- * real-time interface exhibits a reverse priority scheme. For
- * instance, some APIs may define a range like loprio=255, hiprio=0
- * specifying that thread priorities increase as the priority level
- * decreases numerically.
+ * Initializes the core interface pod which can subsequently be used
+ * to start real-time activities. Once the core pod is active,
+ * real-time skins can be stacked over. There can only be a single
+ * core pod active in the host environment. Such environment can be
+ * confined to a process (e.g. simulator), or expand machine-wide
+ * (e.g. I-pipe).
  *
  * @return 0 is returned on success. Otherwise:
- *
- * - -EBUSY is returned if a pod already exists. As a special
- * exception, if the Xenomai pod is currently loaded with no active
- * attachment onto it, it is forcibly unloaded and replaced by the new
- * pod.
  *
  * - -ENOMEM is returned if the memory manager fails to initialize.
  *
@@ -334,10 +312,11 @@ static void xnpod_flush_heap(xnheap_t *heap,
  * - Kernel module initialization code
  *
  * @note No initialization code called by this routine may refer to
- * the global "nkpod" pointer.
+ * the global "nkpod" pointer which refers to the core pod being
+ * brought up.
  */
 
-int xnpod_init(xnpod_t *pod, int loprio, int hiprio, xnflags_t flags)
+int xnpod_init(void)
 {
 	extern int xeno_nucleus_status;
 
@@ -345,7 +324,8 @@ int xnpod_init(xnpod_t *pod, int loprio, int hiprio, xnflags_t flags)
 	char root_name[16];
 	xnsched_t *sched;
 	void *heapaddr;
-	int err, qdir;
+	xnpod_t *pod;
+	int err;
 	spl_t s;
 
 	if (xeno_nucleus_status < 0)
@@ -355,40 +335,14 @@ int xnpod_init(xnpod_t *pod, int loprio, int hiprio, xnflags_t flags)
 	xnlock_get_irqsave(&nklock, s);
 
 	if (nkpod != NULL) {
-		/* If requested, try to reuse the existing pod if it has the
-		   same properties. */
-		if (testbits(flags, XNREUSE) &&
-		    !testbits(nkpod->status, XNPIDLE) &&
-		    (nkpod == pod ||
-		     (loprio == nkpod->loprio && hiprio == nkpod->hiprio))) {
-			++nkpod->refcnt;
-			xnlock_put_irqrestore(&nklock, s);
-			return 0;
-		}
-
-		/* Don't attempt to shutdown an already idle pod. */
-		if (!testbits(nkpod->status, XNPIDLE) ||
-		    /* In case a pod is already active, ask for removal via a call
-		       to the unload hook if any. Otherwise, the operation has
-		       failed. */
-		    !nkpod->svctable.unload || nkpod->svctable.unload() <= 0) {
-			xnlock_put_irqrestore(&nklock, s);
-			return -EBUSY;
-		}
+		++nkpod->refcnt;
+		xnlock_put_irqrestore(&nklock, s);
+		return 0;
 	}
 
-	if (loprio > hiprio) {
-		/* The lower the value, the higher the priority */
-		flags |= XNRPRIO;
-		qdir = xnqueue_up;
-		pod->root_prio_base = loprio + 1;
-	} else {
-		pod->root_prio_base = loprio - 1;
-		qdir = xnqueue_down;
-	}
-
-	/* Flags must be set before xnpod_get_qdir() is called */
-	pod->status = (flags & XNRPRIO) | XNPIDLE;
+	pod = &nkpod_struct;
+	pod->status = XNPIDLE;
+	pod->refcnt = 1;
 
 	initq(&xnmod_glink_queue);
 	initq(&pod->threadq);
@@ -396,23 +350,19 @@ int xnpod_init(xnpod_t *pod, int loprio, int hiprio, xnflags_t flags)
 	initq(&pod->tswitchq);
 	initq(&pod->tdeleteq);
 
-	pod->loprio = loprio;
-	pod->hiprio = hiprio;
-	pod->refcnt = 1;
 #ifdef __KERNEL__
 	xnarch_atomic_set(&pod->timerlck, 0);
 #endif /* __KERNEL__ */
 
 	pod->svctable.settime = &xntbase_set_time;
 	pod->svctable.faulthandler = &xnpod_fault_handler;
-	pod->svctable.unload = NULL;
 #ifdef __XENO_SIM__
 	pod->schedhook = NULL;
 #endif /* __XENO_SIM__ */
 
 	for (cpu = 0; cpu < nr_cpus; ++cpu) {
 		sched = &pod->sched[cpu];
-		sched_initpq(&sched->readyq, qdir, pod->root_prio_base, hiprio);
+		sched_initpq(&sched->readyq, XNCORE_IDLE_PRIO, XNCORE_MAX_PRIO);
 		sched->status = 0;
 		sched->inesting = 0;
 		sched->runthread = NULL;
@@ -510,14 +460,15 @@ int xnpod_init(xnpod_t *pod, int loprio, int hiprio, xnflags_t flags)
 
 		err = xnthread_init(&sched->rootcb,
 				    &nktbase,
-				    root_name, XNPOD_ROOT_PRIO_BASE,
+				    root_name, XNCORE_IDLE_PRIO,
 				    XNROOT | XNSTARTED
 #ifdef CONFIG_XENO_HW_FPU
 				    /* If the host environment has a FPU, the root
 				       thread must care for the FPU context. */
 				    | XNFPU
 #endif /* CONFIG_XENO_HW_FPU */
-				    , XNARCH_ROOT_STACKSZ);
+				    , XNARCH_ROOT_STACKSZ,
+				    NULL);
 
 		if (err) {
 		      fail:
@@ -730,7 +681,7 @@ static inline void xnpod_switch_zombie(xnthread_t *threadout,
 }
 
 /*! 
- * \fn void xnpod_init_thread(xnthread_t *thread,xntbase_t *tbase,const char *name,int prio,xnflags_t flags,unsigned stacksize)
+ * \fn void xnpod_init_thread(xnthread_t *thread,xntbase_t *tbase,const char *name,int prio,xnflags_t flags,unsigned stacksize, xnthrops_t *ops)
  * \brief Initialize a new thread.
  *
  * Initializes a new thread attached to the active pod. The thread is
@@ -782,32 +733,14 @@ static inline void xnpod_switch_zombie(xnthread_t *threadout,
  * real-time control layer since the FPU management is always active
  * if present.
  *
- * - XNINVPS tells the nucleus that the new thread will use an
- * inverted priority scale with respect to the one enforced by the
- * current pod. This means that the calling skin will still have to
- * normalize the priority levels passed to the nucleus routines so
- * that they conform to the pod's priority scale, but the nucleus will
- * automatically rescale those values when displaying the priority
- * information (e.g. /proc/xenomai/sched output). This bit must not be
- * confused with the XNRPRIO bit, which is internally set by the
- * nucleus during pod initialization when the low priority level is
- * found to be numerically higher than the high priority bound. Having
- * the XNINVPS bit set for a thread running on a pod with XNRPRIO
- * unset means that the skin emulates a decreasing priority scale
- * using the pod's increasing priority scale. This is typically the
- * case for skins running over the core pod (see
- * include/nucleus/core.h).
- *
  * @param stacksize The size of the stack (in bytes) for the new
  * thread. If zero is passed, the nucleus will use a reasonable
  * pre-defined size depending on the underlying real-time control
  * layer.
  *
- * After creation, the new thread can be set a magic cookie by skins
- * using xnthread_set_magic() to unambiguously identify threads
- * created in their realm. This value will be copied as-is to the @a
- * magic field of the thread struct. 0 is a conventional value for "no
- * magic".
+ * @param ops A pointer to a structure defining the class-level
+ * operations available for this thread. Fields from this structure
+ * must have been set appropriately by the caller.
  *
  * @return 0 is returned on success. Otherwise, one of the following
  * error codes indicates the cause of the failure:
@@ -833,12 +766,13 @@ static inline void xnpod_switch_zombie(xnthread_t *threadout,
 int xnpod_init_thread(xnthread_t *thread,
 		      xntbase_t *tbase,
 		      const char *name,
-		      int prio, xnflags_t flags, unsigned stacksize)
+		      int prio, xnflags_t flags, unsigned stacksize,
+		      xnthrops_t *ops)
 {
 	spl_t s;
 	int err;
 
-	if (flags & ~(XNFPU | XNSHADOW | XNSHIELD | XNSUSP | XNINVPS))
+	if (flags & ~(XNFPU | XNSHADOW | XNSHIELD | XNSUSP))
 		return -EINVAL;
 
 #ifndef CONFIG_XENO_OPT_ISHIELD
@@ -850,7 +784,7 @@ int xnpod_init_thread(xnthread_t *thread,
 
 	/* Exclude XNSUSP, so that xnpod_suspend_thread() will actually do
 	   the suspension work for the thread. */
-	err = xnthread_init(thread, tbase, name, prio, flags & ~XNSUSP, stacksize);
+	err = xnthread_init(thread, tbase, name, prio, flags & ~XNSUSP, stacksize, ops);
 
 	if (err)
 		return err;
@@ -1830,10 +1764,8 @@ void xnpod_renice_thread_inner(xnthread_t *thread, int prio, int propagate)
 	   scheme, we must take care of never lowering the target thread's
 	   priority level if it is undergoing a PIP boost. */
 
-	if (!xnthread_test_state(thread, XNBOOST) ||
-	    xnpod_compare_prio(prio, oldprio) > 0) {
+	if (!xnthread_test_state(thread, XNBOOST) || prio > oldprio) {
 		thread->cprio = prio;
-
 		if (prio != oldprio &&
 		    thread->wchan != NULL &&
 		    !testbits(thread->wchan->status, XNSYNCH_DREORD))
@@ -1987,7 +1919,7 @@ void xnpod_rotate_readyq(int prio)
 
 	xnltt_log_event(xeno_ev_rdrotate, sched->runthread, prio);
 
-	/* There is _always_ a regular thread, ultimately the root
+	/* There is _always_ a running thread, ultimately the root
 	   one. Use the base priority, not the priority boost. */
 
 	if (prio == XNPOD_RUNPRIO ||
@@ -2470,8 +2402,7 @@ void xnpod_schedule(void)
 
 			if (head == runthread)
 				goto do_switch;
-			else if (xnpod_compare_prio
-				 (head->cprio, runthread->cprio) > 0) {
+			else if (head->cprio > runthread->cprio) {
 				if (!xnthread_test_state(runthread, XNREADY))
 					/* Preempt the running thread */
 					xnpod_preempt_current_thread(sched);

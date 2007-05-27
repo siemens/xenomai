@@ -38,6 +38,21 @@ xnticks_t pse51_time_slice;
 
 static pthread_attr_t default_attr;
 
+static int pse51_get_denormalized_prio(xnthread_t *thread)
+{
+	return xnthread_current_priority(thread);
+}
+
+static unsigned pse51_get_magic(void)
+{
+	return PSE51_SKIN_MAGIC;
+}
+
+static xnthrops_t pse51_thread_ops = {
+	.get_denormalized_prio = &pse51_get_denormalized_prio,
+	.get_magic = &pse51_get_magic,
+};
+
 static void thread_destroy(pthread_t thread)
 {
 	removeq(thread->container, &thread->link);
@@ -182,12 +197,10 @@ int pthread_create(pthread_t *tid,
 		flags |= XNSHADOW;	/* Note: no interrupt shield. */
 
 	if (xnpod_init_thread(&thread->threadbase, pse51_tbase,
-			      name, prio, flags, stacksize) != 0) {
+			      name, prio, flags, stacksize, &pse51_thread_ops) != 0) {
 		xnfree(thread);
 		return EAGAIN;
 	}
-
-	xnthread_set_magic(&thread->threadbase, PSE51_SKIN_MAGIC);
 
 	thread->attr.name = xnthread_name(&thread->threadbase);
 

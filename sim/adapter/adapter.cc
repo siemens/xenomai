@@ -62,9 +62,9 @@ static const char *mvm_get_thread_mode (void *tcbarg)
 	modeString.append("asr");
 
     if (kthread->state & XNBOOST)
-	modeString.append(CString().format("boost=%d",kthread->cprio));
+	modeString.append(CString().format("boost=%d",kthread->ops->get_denormalized_prio(kthread)));
     else
-	modeString.append(CString().format("prio=%d",kthread->cprio));
+	modeString.append(CString().format("prio=%d",kthread->ops->get_denormalized_prio(kthread)));
 
     return modeString;
 }

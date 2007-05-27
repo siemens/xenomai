@@ -54,6 +54,21 @@ static DECLARE_XNQUEUE(__xeno_task_q);
 
 static u_long __xeno_task_stamp;
 
+static int __task_get_denormalized_prio(xnthread_t *thread)
+{
+	return xnthread_current_priority(thread);
+}
+
+static unsigned __task_get_magic(void)
+{
+	return XENO_SKIN_MAGIC;
+}
+
+static xnthrops_t __xeno_task_ops = {
+	.get_denormalized_prio = &__task_get_denormalized_prio,
+	.get_magic = &__task_get_magic,
+};
+
 static void __task_delete_hook(xnthread_t *thread)
 {
 	/* The scheduler is locked while hooks are running. */
@@ -242,11 +257,9 @@ int rt_task_create(RT_TASK *task,
 	}
 
 	if (xnpod_init_thread(&task->thread_base, __native_tbase,
-			      name, prio, bflags, stksize) != 0)
+			      name, prio, bflags, stksize, &__xeno_task_ops) != 0)
 		/* Assume this is the only possible failure. */
 		return -ENOMEM;
-
-	xnthread_set_magic(&task->thread_base, XENO_SKIN_MAGIC);
 
 	inith(&task->link);
 	task->suspend_depth = (bflags & XNSUSP) ? 1 : 0;

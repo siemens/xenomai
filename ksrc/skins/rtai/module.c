@@ -57,14 +57,14 @@ static void rtai_shutdown(int xtype)
 	__rtai_syscall_cleanup();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 	xntbase_free(rtai_tbase);
-	xncore_detach(xtype);
+	xnpod_shutdown(xtype);
 }
 
 int SKIN_INIT(rtai)
 {
 	int err;
 
-	err = xncore_attach(XNCORE_LOW_PRIO, XNCORE_HIGH_PRIO);
+	err = xnpod_init();
 
 	if (err)
 		goto fail;
@@ -146,7 +146,7 @@ int SKIN_INIT(rtai)
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	__rtai_syscall_cleanup();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
-	xncore_detach(XNPOD_NORMAL_EXIT);
+	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 
       fail:
 

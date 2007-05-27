@@ -95,7 +95,7 @@ void xnsynch_init(xnsynch_t *synch, xnflags_t flags)
 	synch->status = flags & ~XNSYNCH_CLAIMED;
 	synch->owner = NULL;
 	synch->cleanup = NULL;	/* Only works for PIP-enabled objects. */
-	initpq(&synch->pendq, xnpod_get_qdir(nkpod));
+	initpq(&synch->pendq);
 	xnarch_init_display_context(synch);
 }
 
@@ -193,7 +193,7 @@ redo:
 		goto unlock_and_exit;
 	}
 
-	if (xnpod_compare_prio(thread->cprio, owner->cprio) > 0) {
+	if (thread->cprio > owner->cprio) {
 
 		if (xnthread_test_info(owner, XNWAKEN)) {
 			/* Ownership is still pending, steal the resource. */
@@ -274,7 +274,7 @@ static void xnsynch_clear_boost(xnsynch_t *synch, xnthread_t *lastowner)
 		/* Find the highest priority needed to enforce the PIP. */
 		int rprio = getheadpq(&lastowner->claimq)->prio;
 
-		if (xnpod_compare_prio(rprio, downprio) > 0)
+		if (rprio > downprio)
 			downprio = rprio;
 	}
 
@@ -307,7 +307,7 @@ void xnsynch_renice_sleeper(xnthread_t *thread)
 	insertpqf(&synch->pendq, &thread->plink, thread->cprio);
 	owner = synch->owner;
 
-	if (owner != NULL && xnpod_compare_prio(thread->cprio, owner->cprio) > 0) {
+	if (owner != NULL && thread->cprio > owner->cprio) {
 		/* The new priority of the sleeping thread is higher
 		 * than the priority of the current owner of the
 		 * resource: we need to update the PI state. */
@@ -599,7 +599,7 @@ void xnsynch_forget_sleeper(xnthread_t *thread)
 
 			rprio = getheadpq(&owner->claimq)->prio;
 
-			if (xnpod_compare_prio(rprio, owner->cprio) < 0)
+			if (rprio < owner->cprio)
 				xnsynch_renice_thread(owner, rprio);
 		}
 	}

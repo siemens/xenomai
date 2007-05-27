@@ -81,7 +81,7 @@ int SKIN_INIT(native)
 	initq(&__native_global_rholder.queueq);
 	initq(&__native_global_rholder.semq);
 
-	err = xncore_attach(T_LOPRIO, T_HIPRIO);
+	err = xnpod_init();
 
 	if (err)
 		goto fail;
@@ -196,7 +196,7 @@ int SKIN_INIT(native)
 
 	xntbase_free(__native_tbase);
 
-	xncore_detach(err);
+	xnpod_shutdown(err);
 
       fail:
 
@@ -223,7 +223,7 @@ void SKIN_EXIT(native)
 
 	xntbase_free(__native_tbase);
 
-	xncore_detach(XNPOD_NORMAL_EXIT);
+	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 }
 
 module_init(__native_skin_init);

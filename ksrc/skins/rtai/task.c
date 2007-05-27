@@ -26,6 +26,21 @@ static DECLARE_XNQUEUE(__rtai_task_q);
 
 static int __rtai_task_sig;
 
+static int __task_get_denormalized_prio(xnthread_t *thread)
+{
+	return XNCORE_HIGH_PRIO - xnthread_current_priority(thread) + 1;
+}
+
+static unsigned __task_get_magic(void)
+{
+	return RTAI_SKIN_MAGIC;
+}
+
+static xnthrops_t __rtai_task_ops = {
+	.get_denormalized_prio = &__task_get_denormalized_prio,
+	.get_magic = &__task_get_magic,
+};
+
 static void __task_delete_hook(xnthread_t *thread)
 {
 	RT_TASK *task;
@@ -94,7 +109,7 @@ int rt_task_init(RT_TASK *task,
 	    priority > XNCORE_HIGH_PRIO || task->magic == RTAI_TASK_MAGIC)
 		return -EINVAL;
 
-	priority = XNCORE_HIGH_PRIO - priority + 1;
+	priority = XNCORE_HIGH_PRIO - priority + 1; /* Normalize. */
 
 	if (uses_fpu)
 #ifdef CONFIG_XENO_HW_FPU
@@ -103,12 +118,10 @@ int rt_task_init(RT_TASK *task,
 		return -EINVAL;
 #endif /* CONFIG_XENO_HW_FPU */
 
-		if (xnpod_init_thread(&task->thread_base, rtai_tbase,
-				      NULL, priority, bflags, stack_size) != 0)
+	if (xnpod_init_thread(&task->thread_base, rtai_tbase,
+			      NULL, priority, bflags, stack_size, &__rtai_task_ops) != 0)
 		/* Assume this is the only possible failure. */
 		return -ENOMEM;
-
-	xnthread_set_magic(&task->thread_base, RTAI_SKIN_MAGIC);
 
 	xnarch_cpus_clear(task->affinity);
 	inith(&task->link);

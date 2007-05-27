@@ -58,10 +58,10 @@ LIBRARIES = $(lib_LIBRARIES)
 ARFLAGS = cru
 libnucleus_sim_a_AR = $(AR) $(ARFLAGS)
 libnucleus_sim_a_DEPENDENCIES = ../adapter/adapter.o
-nodist_libnucleus_sim_a_OBJECTS = core.$(OBJEXT) heap.$(OBJEXT) \
-	intr.$(OBJEXT) module.$(OBJEXT) pod.$(OBJEXT) \
-	registry.$(OBJEXT) synch.$(OBJEXT) thread.$(OBJEXT) \
-	timebase.$(OBJEXT) timer.$(OBJEXT)
+nodist_libnucleus_sim_a_OBJECTS = heap.$(OBJEXT) intr.$(OBJEXT) \
+	module.$(OBJEXT) pod.$(OBJEXT) registry.$(OBJEXT) \
+	synch.$(OBJEXT) thread.$(OBJEXT) timebase.$(OBJEXT) \
+	timer.$(OBJEXT)
 libnucleus_sim_a_OBJECTS = $(nodist_libnucleus_sim_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
@@ -113,7 +113,6 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
-GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -178,14 +177,16 @@ TK_LIB_SPEC = @TK_LIB_SPEC@
 TK_SRC_DIR = @TK_SRC_DIR@
 VERSION = @VERSION@
 X11_LIBS = @X11_LIBS@
-XMKMF = @XMKMF@
 X_CFLAGS = @X_CFLAGS@
 X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_LIBS = @X_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_RANLIB = @ac_ct_RANLIB@
+ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -202,30 +203,23 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
-datarootdir = @datarootdir@
-docdir = @docdir@
-dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
-htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
-localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
-pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
-psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 subdirs = @subdirs@
@@ -238,7 +232,6 @@ lib_LIBRARIES = libnucleus_sim.a
 # native simulation mode. Therefore, their respective files are not
 # included here.
 nodist_libnucleus_sim_a_SOURCES = \
-			core.c \
 			heap.c \
 			intr.c \
 			module.c \
@@ -331,7 +324,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/core.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module.Po@am__quote@
