@@ -264,7 +264,7 @@ static void xnpod_flush_heap(xnheap_t *heap,
 }
 
 /*! 
- * \fn int xnpod_init(xnpod_t *pod,int minpri,int maxpri,xnflags_t flags)
+ * \fn int xnpod_init(xnpod_t *pod,int loprio,int hiprio,xnflags_t flags)
  * \brief Initialize a new pod.
  *
  * Initializes a new pod which can subsequently be used to start
@@ -278,10 +278,10 @@ static void xnpod_flush_heap(xnheap_t *heap,
  * while the pod is active therefore it must be allocated in permanent
  * memory.
  *
- * @param minpri The value of the lowest priority level which is valid
+ * @param loprio The value of the lowest priority level which is valid
  * for threads created on behalf of this pod.
  *
- * @param maxpri The value of the highest priority level which is
+ * @param hiprio The value of the highest priority level which is
  * valid for threads created on behalf of this pod.
  *
  * @param flags A set of creation flags affecting the operation.  The
@@ -290,9 +290,9 @@ static void xnpod_flush_heap(xnheap_t *heap,
  * being registered may be reused. In such a case, the call returns
  * successfully, keeping the active pod unmodified.
  *
- * minpri might be numerically higher than maxpri if the upper
+ * loprio may be numerically greater than hiprio if the client
  * real-time interface exhibits a reverse priority scheme. For
- * instance, some APIs may define a range like minpri=255, maxpri=0
+ * instance, some APIs may define a range like loprio=255, hiprio=0
  * specifying that thread priorities increase as the priority level
  * decreases numerically.
  *
@@ -315,7 +315,7 @@ static void xnpod_flush_heap(xnheap_t *heap,
  * the global "nkpod" pointer.
  */
 
-int xnpod_init(xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
+int xnpod_init(xnpod_t *pod, int loprio, int hiprio, xnflags_t flags)
 {
 	extern int xeno_nucleus_status;
 
@@ -323,7 +323,7 @@ int xnpod_init(xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
 	char root_name[16];
 	xnsched_t *sched;
 	void *heapaddr;
-	int err;
+	int err, qdir;
 	spl_t s;
 
 	if (xeno_nucleus_status < 0)
@@ -338,7 +338,7 @@ int xnpod_init(xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
 		if (testbits(flags, XNREUSE) &&
 		    !testbits(nkpod->status, XNPIDLE) &&
 		    (nkpod == pod ||
-		     (minpri == nkpod->minpri && maxpri == nkpod->maxpri))) {
+		     (loprio == nkpod->loprio && hiprio == nkpod->hiprio))) {
 			++nkpod->refcnt;
 			xnlock_put_irqrestore(&nklock, s);
 			return 0;
@@ -355,9 +355,15 @@ int xnpod_init(xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
 		}
 	}
 
-	if (minpri > maxpri)
+	if (loprio > hiprio) {
 		/* The lower the value, the higher the priority */
 		flags |= XNRPRIO;
+		qdir = xnqueue_up;
+		pod->root_prio_base = loprio + 1;
+	} else {
+		pod->root_prio_base = loprio - 1;
+		qdir = xnqueue_down;
+	}
 
 	/* Flags must be set before xnpod_get_qdir() is called */
 	pod->status = (flags & XNRPRIO) | XNPIDLE;
@@ -368,8 +374,8 @@ int xnpod_init(xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
 	initq(&pod->tswitchq);
 	initq(&pod->tdeleteq);
 
-	pod->minpri = minpri;
-	pod->maxpri = maxpri;
+	pod->loprio = loprio;
+	pod->hiprio = hiprio;
 	pod->jiffies = 0;
 	pod->wallclock_offset = 0;
 	pod->tickvalue = XNARCH_DEFAULT_TICK;
@@ -388,14 +394,11 @@ int xnpod_init(xnpod_t *pod, int minpri, int maxpri, xnflags_t flags)
 
 	for (cpu = 0; cpu < nr_cpus; ++cpu) {
 		sched = &pod->sched[cpu];
-		sched_initpq(&sched->readyq, xnpod_get_qdir(pod),
-			     xnpod_get_maxprio(pod, 0));
+		sched_initpq(&sched->readyq, qdir, pod->root_prio_base, hiprio);
 		sched->status = 0;
 		sched->inesting = 0;
 		sched->runthread = NULL;
 	}
-
-	pod->root_prio_base = xnpod_get_minprio(pod, 1);
 
 	/* The global "nkpod" pointer must be valid in order to perform
 	   the remaining operations. */
@@ -734,7 +737,7 @@ static inline void xnpod_switch_zombie(xnthread_t *threadout,
  * legal and means "anonymous".
  *
  * @param prio The base priority of the new thread. This value must
- * range from [minpri .. maxpri] (inclusive) as specified when calling
+ * range from [loprio .. hiprio] (inclusive) as specified when calling
  * the xnpod_init() service.
  *
  * @param flags A set of creation flags affecting the operation. The
@@ -1327,7 +1330,7 @@ void xnpod_delete_thread(xnthread_t *thread)
  * - XNPEND. This flag denotes a wait for a synchronization object to
  * be signaled. The wchan argument must points to this object. A
  * timeout value can be passed to bound the wait. This suspending mode
- * should not be used directly by the upper interface, but rather
+ * should not be used directly by the client interface, but rather
  * through the xnsynch_sleep_on() call.
  *
  * @param timeout The timeout which may be used to limit the time the
@@ -2515,7 +2518,7 @@ void xnpod_schedule(void)
  * \fn void xnpod_schedule_runnable(xnthread_t *thread,int flags)
  * \brief Hidden rescheduling procedure.
  *
- * This internal routine should NEVER be used directly by the upper
+ * This internal routine should NEVER be used directly by the client
  * interfaces. It reinserts the given thread into the ready queue then
  * switches to the highest priority runnable thread. It must be called
  * with nklock locked, interrupts off.

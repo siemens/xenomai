@@ -135,7 +135,7 @@ static int pse51_mq_init(pse51_mq_t * mq, const struct mq_attr *attr)
 		return ENOSPC;
 
 	mq->memsize = memsize;
-	initpq(&mq->queued, xnqueue_down, MQ_PRIO_MAX);
+	initpq(&mq->queued, xnqueue_down);
 	xnsynch_init(&mq->receivers, XNSYNCH_PRIO | XNSYNCH_NOPIP);
 	xnsynch_init(&mq->senders, XNSYNCH_PRIO | XNSYNCH_NOPIP);
 	mq->mem = mem;

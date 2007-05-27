@@ -109,8 +109,7 @@ int xnthread_init(xnthread_t *thread,
 	initph(&thread->xlink);
 	thread->rpi = NULL;
 #endif /* !CONFIG_XENO_OPT_RPIDISABLE && CONFIG_XENO_OPT_PERVASIVE */
-	initpq(&thread->claimq, xnpod_get_qdir(nkpod),
-	       xnpod_get_maxprio(nkpod, 0));
+	initpq(&thread->claimq, xnpod_get_qdir(nkpod));
 
 	xnarch_init_display_context(thread);
 

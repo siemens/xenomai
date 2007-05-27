@@ -134,7 +134,8 @@ static inline void rpi_init(void)
 
 static inline void rpi_init_gk(struct __gatekeeper *gk)
 {
-	sched_initpq(&gk->rpislot.threadq, xnqueue_down, XNCORE_NR_PRIO);
+	sched_initpq(&gk->rpislot.threadq, xnqueue_down,
+		     XNCORE_MIN_PRIO, XNCORE_MAX_PRIO);
 }
 
 static inline void rpi_none(xnthread_t *thread)
