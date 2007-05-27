@@ -847,10 +847,10 @@ index 6a3875f..463daa3 100644
  static struct irq_chip lapic_chip __read_mostly = {
 diff --git a/arch/i386/kernel/ipipe.c b/arch/i386/kernel/ipipe.c
 new file mode 100644
-index 0000000..d83d9e1
+index 0000000..b776457
 --- /dev/null
 +++ b/arch/i386/kernel/ipipe.c
-@@ -0,0 +1,881 @@
+@@ -0,0 +1,886 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/i386/kernel/ipipe.c
 + *
@@ -1533,8 +1533,13 @@ index 0000000..d83d9e1
 +	/* Track the hw interrupt state before calling the Linux
 +	 * exception handler, replicating it into the virtual mask. */
 +
-+	if (irqs_disabled_hw())
-+		local_irq_disable();
++	if (irqs_disabled_hw()) {
++		/* Do not trigger the alarm in ipipe_check_context() by using
++		 * plain local_irq_disable(). */
++		__ipipe_stall_root();
++		trace_hardirqs_off();
++		barrier();
++	}
 +
 +#ifdef CONFIG_KGDB
 +	/* catch exception KGDB is interested in over non-root domains */
@@ -1771,7 +1776,7 @@ index 0000000..ffc501a
 +out:
 +	ret
 diff --git a/arch/i386/kernel/nmi.c b/arch/i386/kernel/nmi.c
-index 1a6f8bb..d483a7c 100644
+index 1a6f8bb..88137b6 100644
 --- a/arch/i386/kernel/nmi.c
 +++ b/arch/i386/kernel/nmi.c
 @@ -75,6 +75,10 @@ static int unknown_nmi_panic_callback(struct pt_regs *regs, int cpu);
@@ -1796,15 +1801,6 @@ index 1a6f8bb..d483a7c 100644
  {
  
  	/*
-@@ -894,7 +896,7 @@ __kprobes int nmi_watchdog_tick(struct pt_regs * regs, unsigned reason)
- 	 */
- 	unsigned int sum;
- 	int touched = 0;
--	int cpu = smp_processor_id();
-+	int cpu = smp_processor_id_hw();
- 	struct nmi_watchdog_ctlblk *wd = &__get_cpu_var(nmi_watchdog_ctlblk);
- 	u64 dummy;
- 	int rc=0;
 diff --git a/arch/i386/kernel/process.c b/arch/i386/kernel/process.c
 index c641056..699becc 100644
 --- a/arch/i386/kernel/process.c
@@ -1981,7 +1977,7 @@ index c505b16..5b1b786 100644
  #endif
  
 diff --git a/arch/i386/kernel/traps.c b/arch/i386/kernel/traps.c
-index 0efad8a..cb94a0c 100644
+index 0efad8a..7687fbc 100644
 --- a/arch/i386/kernel/traps.c
 +++ b/arch/i386/kernel/traps.c
 @@ -315,6 +315,11 @@ void show_registers(struct pt_regs *regs)
@@ -1996,7 +1992,7 @@ index 0efad8a..cb94a0c 100644
  	printk(KERN_EMERG "Process %.*s (pid: %d, ti=%p task=%p task.ti=%p)",
  		TASK_COMM_LEN, current->comm, current->pid,
  		current_thread_info(), current, current->thread_info);
-@@ -713,12 +718,14 @@ void __kprobes die_nmi(struct pt_regs *regs, const char *msg)
+@@ -713,6 +718,8 @@ void __kprobes die_nmi(struct pt_regs *regs, const char *msg)
  	do_exit(SIGSEGV);
  }
  
@@ -2005,13 +2001,6 @@ index 0efad8a..cb94a0c 100644
  static __kprobes void default_do_nmi(struct pt_regs * regs)
  {
  	unsigned char reason = 0;
- 
- 	/* Only the BSP gets external NMIs from the system.  */
--	if (!smp_processor_id())
-+	if (!smp_processor_id_hw())
- 		reason = get_nmi_reason();
-  
- 	if (!(reason & 0xc0)) {
 @@ -757,7 +764,11 @@ fastcall __kprobes void do_nmi(struct pt_regs * regs, long error_code)
  
  	nmi_enter();
@@ -2154,10 +2143,32 @@ index 8fe7e45..0f83d8f 100644
  	}
  #ifdef CONFIG_SMP
 diff --git a/arch/i386/mm/fault.c b/arch/i386/mm/fault.c
-index aaaa4d2..19014b1 100644
+index aaaa4d2..6e55200 100644
 --- a/arch/i386/mm/fault.c
 +++ b/arch/i386/mm/fault.c
-@@ -333,6 +333,8 @@ fastcall void __kprobes do_page_fault(struct pt_regs *regs,
+@@ -23,6 +23,7 @@
+ #include <linux/module.h>
+ #include <linux/kprobes.h>
+ #include <linux/uaccess.h>
++#include <linux/ipipe_trace.h>
+ 
+ #include <asm/system.h>
+ #include <asm/desc.h>
+@@ -68,9 +69,13 @@ void bust_spinlocks(int yes)
+ 	int loglevel_save = console_loglevel;
+ 
+ 	if (yes) {
++		ipipe_trace_panic_freeze();
+ 		oops_in_progress = 1;
+ 		return;
+ 	}
++
++	ipipe_trace_panic_dump();
++
+ #ifdef CONFIG_VT
+ 	unblank_screen();
+ #endif
+@@ -333,6 +338,8 @@ fastcall void __kprobes do_page_fault(struct pt_regs *regs,
  	/* get the address */
          address = read_cr2();
  
@@ -2166,7 +2177,7 @@ index aaaa4d2..19014b1 100644
  	tsk = current;
  
  	si_code = SEGV_MAPERR;
-@@ -652,3 +654,18 @@ void vmalloc_sync_all(void)
+@@ -652,3 +659,18 @@ void vmalloc_sync_all(void)
  	}
  }
  #endif
@@ -2216,19 +2227,6 @@ index 41a4431..79427b9 100644
  {
  	/*
  	 * ack_APIC_irq() actually gets compiled as a single instruction:
-diff --git a/include/asm-i386/desc.h b/include/asm-i386/desc.h
-index f398cc4..812779a 100644
---- a/include/asm-i386/desc.h
-+++ b/include/asm-i386/desc.h
-@@ -101,7 +101,7 @@ static inline fastcall void native_set_ldt(const void *addr,
- 	if (likely(entries == 0))
- 		__asm__ __volatile__("lldt %w0"::"q" (0));
- 	else {
--		unsigned cpu = smp_processor_id();
-+		unsigned cpu = smp_processor_id_hw();
- 		__u32 a, b;
- 
- 		pack_descriptor(&a, &b, (unsigned long)addr,
 diff --git a/include/asm-i386/hw_irq.h b/include/asm-i386/hw_irq.h
 index 0bedbdf..b1f1bf0 100644
 --- a/include/asm-i386/hw_irq.h
@@ -2294,7 +2292,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..3cb0c29
+index 0000000..2fbe024
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,267 @@
@@ -2327,10 +2325,10 @@ index 0000000..3cb0c29
 +#include <linux/threads.h>
 +#include <irq_vectors.h>
 +
-+#define IPIPE_ARCH_STRING	"1.8-03"
++#define IPIPE_ARCH_STRING	"1.8-04"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	8
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_PATCH_NUMBER	4
 +
 +#ifdef CONFIG_X86_LOCAL_APIC
 +/* System interrupts are mapped beyond the last defined external IRQ
@@ -2758,19 +2756,6 @@ index 17b18cf..2019eb3 100644
  #endif /* __ASSEMBLY__ */
  
  /*
-diff --git a/include/asm-i386/mach-bigsmp/mach_ipi.h b/include/asm-i386/mach-bigsmp/mach_ipi.h
-index 9404c53..2e7f342 100644
---- a/include/asm-i386/mach-bigsmp/mach_ipi.h
-+++ b/include/asm-i386/mach-bigsmp/mach_ipi.h
-@@ -11,7 +11,7 @@ static inline void send_IPI_mask(cpumask_t mask, int vector)
- static inline void send_IPI_allbutself(int vector)
- {
- 	cpumask_t mask = cpu_online_map;
--	cpu_clear(smp_processor_id(), mask);
-+	cpu_clear(smp_processor_id_hw(), mask);
- 
- 	if (!cpus_empty(mask))
- 		send_IPI_mask(mask, vector);
 diff --git a/include/asm-i386/mach-default/do_timer.h b/include/asm-i386/mach-default/do_timer.h
 index 7d606e3..d550afe 100644
 --- a/include/asm-i386/mach-default/do_timer.h
@@ -2806,93 +2791,10 @@ index 7d606e3..d550afe 100644
  	
  	/* assumption about timer being IRQ0 */
  	if (i & 0x01) {
-diff --git a/include/asm-i386/mach-default/mach_ipi.h b/include/asm-i386/mach-default/mach_ipi.h
-index 0dba244..e5e72fa 100644
---- a/include/asm-i386/mach-default/mach_ipi.h
-+++ b/include/asm-i386/mach-default/mach_ipi.h
-@@ -19,7 +19,7 @@ static inline void __local_send_IPI_allbutself(int vector)
- 	if (no_broadcast || vector == NMI_VECTOR) {
- 		cpumask_t mask = cpu_online_map;
- 
--		cpu_clear(smp_processor_id(), mask);
-+		cpu_clear(smp_processor_id_hw(), mask);
- 		send_IPI_mask(mask, vector);
- 	} else
- 		__send_IPI_shortcut(APIC_DEST_ALLBUT, vector);
-diff --git a/include/asm-i386/mach-es7000/mach_apic.h b/include/asm-i386/mach-es7000/mach_apic.h
-index 2633368..06c6bcb 100644
---- a/include/asm-i386/mach-es7000/mach_apic.h
-+++ b/include/asm-i386/mach-es7000/mach_apic.h
-@@ -16,7 +16,7 @@ static inline cpumask_t target_cpus(void)
- #if defined CONFIG_ES7000_CLUSTERED_APIC
- 	return CPU_MASK_ALL;
- #else
--	return cpumask_of_cpu(smp_processor_id());
-+	return cpumask_of_cpu(smp_processor_id_hw());
- #endif
- }
- #define TARGET_CPUS	(target_cpus())
-diff --git a/include/asm-i386/mach-es7000/mach_ipi.h b/include/asm-i386/mach-es7000/mach_ipi.h
-index 5e61bd2..56f5283 100644
---- a/include/asm-i386/mach-es7000/mach_ipi.h
-+++ b/include/asm-i386/mach-es7000/mach_ipi.h
-@@ -11,7 +11,7 @@ static inline void send_IPI_mask(cpumask_t mask, int vector)
- static inline void send_IPI_allbutself(int vector)
- {
- 	cpumask_t mask = cpu_online_map;
--	cpu_clear(smp_processor_id(), mask);
-+	cpu_clear(smp_processor_id_hw(), mask);
- 	if (!cpus_empty(mask))
- 		send_IPI_mask(mask, vector);
- }
-diff --git a/include/asm-i386/mach-numaq/mach_ipi.h b/include/asm-i386/mach-numaq/mach_ipi.h
-index c604448..843fd5b 100644
---- a/include/asm-i386/mach-numaq/mach_ipi.h
-+++ b/include/asm-i386/mach-numaq/mach_ipi.h
-@@ -11,7 +11,7 @@ static inline void send_IPI_mask(cpumask_t mask, int vector)
- static inline void send_IPI_allbutself(int vector)
- {
- 	cpumask_t mask = cpu_online_map;
--	cpu_clear(smp_processor_id(), mask);
-+	cpu_clear(smp_processor_id_hw(), mask);
- 
- 	if (!cpus_empty(mask))
- 		send_IPI_mask(mask, vector);
-diff --git a/include/asm-i386/mach-summit/mach_ipi.h b/include/asm-i386/mach-summit/mach_ipi.h
-index 9404c53..2e7f342 100644
---- a/include/asm-i386/mach-summit/mach_ipi.h
-+++ b/include/asm-i386/mach-summit/mach_ipi.h
-@@ -11,7 +11,7 @@ static inline void send_IPI_mask(cpumask_t mask, int vector)
- static inline void send_IPI_allbutself(int vector)
- {
- 	cpumask_t mask = cpu_online_map;
--	cpu_clear(smp_processor_id(), mask);
-+	cpu_clear(smp_processor_id_hw(), mask);
- 
- 	if (!cpus_empty(mask))
- 		send_IPI_mask(mask, vector);
 diff --git a/include/asm-i386/mmu_context.h b/include/asm-i386/mmu_context.h
-index 68ff102..a67d28f 100644
+index 68ff102..c30b9d7 100644
 --- a/include/asm-i386/mmu_context.h
 +++ b/include/asm-i386/mmu_context.h
-@@ -16,7 +16,7 @@ void destroy_context(struct mm_struct *mm);
- static inline void enter_lazy_tlb(struct mm_struct *mm, struct task_struct *tsk)
- {
- #ifdef CONFIG_SMP
--	unsigned cpu = smp_processor_id();
-+	unsigned cpu = smp_processor_id_hw();
- 	if (per_cpu(cpu_tlbstate, cpu).state == TLBSTATE_OK)
- 		per_cpu(cpu_tlbstate, cpu).state = TLBSTATE_LAZY;
- #endif
-@@ -26,7 +26,7 @@ static inline void switch_mm(struct mm_struct *prev,
- 			     struct mm_struct *next,
- 			     struct task_struct *tsk)
- {
--	int cpu = smp_processor_id();
-+	int cpu = smp_processor_id_hw();
- 
- 	if (likely(prev != next)) {
- 		/* stop flush ipis for the previous mm */
 @@ -66,6 +66,11 @@ static inline void switch_mm(struct mm_struct *prev,
  	asm("movl %0,%%fs": :"r" (0));
  
@@ -2920,19 +2822,6 @@ index b04333e..cb799e4 100644
  
  extern atomic_t nmi_active;
  extern unsigned int nmi_watchdog;
-diff --git a/include/asm-i386/processor.h b/include/asm-i386/processor.h
-index 359f10b..36f3cce 100644
---- a/include/asm-i386/processor.h
-+++ b/include/asm-i386/processor.h
-@@ -104,7 +104,7 @@ DECLARE_PER_CPU(struct tss_struct, init_tss);
- 
- #ifdef CONFIG_SMP
- extern struct cpuinfo_x86 cpu_data[];
--#define current_cpu_data cpu_data[smp_processor_id()]
-+#define current_cpu_data cpu_data[smp_processor_id_hw()]
- #else
- #define cpu_data (&boot_cpu_data)
- #define current_cpu_data boot_cpu_data
 diff --git a/include/asm-i386/spinlock.h b/include/asm-i386/spinlock.h
 index d3bcebe..1ce1b6c 100644
 --- a/include/asm-i386/spinlock.h
@@ -2962,10 +2851,10 @@ index 612472a..2b2574c 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..3967254
+index 0000000..7282176
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,695 @@
+@@ -0,0 +1,692 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -3613,8 +3502,6 @@ index 0000000..3967254
 +			local_irq_disable_hw();		\
 +	} while(0)
 +
-+#define smp_processor_id_hw()				ipipe_processor_id()
-+
 +#define ipipe_irq_lock(irq)						\
 +	do {								\
 +		ipipe_declare_cpuid;					\
@@ -3648,7 +3535,6 @@ index 0000000..3967254
 +#define local_irq_disable_hw_cond()		do { } while(0)
 +#define local_irq_save_hw_cond(flags)	do { (void)(flags); } while(0)
 +#define local_irq_restore_hw_cond(flags)	do { } while(0)
-+#define smp_processor_id_hw()			smp_processor_id()
 +
 +#define ipipe_irq_lock(irq)		do { } while(0)
 +#define ipipe_irq_unlock(irq)		do { } while(0)
@@ -3757,7 +3643,7 @@ index 0000000..d0ddf3f
 +#endif	/* !__LINUX_IPIPE_BASE_H */
 diff --git a/include/linux/ipipe_trace.h b/include/linux/ipipe_trace.h
 new file mode 100644
-index 0000000..6f5e7bc
+index 0000000..c7c6ebd
 --- /dev/null
 +++ b/include/linux/ipipe_trace.h
 @@ -0,0 +1,49 @@
@@ -3765,7 +3651,7 @@ index 0000000..6f5e7bc
 + * include/linux/ipipe_trace.h
 + *
 + * Copyright (C) 2005 Luotao Fu.
-+ *               2005, 2006 Jan Kiszka.
++ *               2005-2007 Jan Kiszka.
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published by
@@ -3786,8 +3672,6 @@ index 0000000..6f5e7bc
 +#ifndef _LINUX_IPIPE_TRACE_H
 +#define _LINUX_IPIPE_TRACE_H
 +
-+#ifdef CONFIG_IPIPE_TRACE
-+
 +#include <linux/types.h>
 +
 +void ipipe_trace_begin(unsigned long v);
@@ -3799,15 +3683,17 @@ index 0000000..6f5e7bc
 +int ipipe_trace_max_reset(void);
 +int ipipe_trace_frozen_reset(void);
 +
++#ifdef CONFIG_IPIPE_TRACE_PANIC
++
 +void ipipe_trace_panic_freeze(void);
 +void ipipe_trace_panic_dump(void);
 +
-+#else /* !CONFIG_IPIPE_TRACE */
++#else /* !CONFIG_IPIPE_TRACE_PANIC */
 +
 +static inline void ipipe_trace_panic_freeze(void) { }
 +static inline void ipipe_trace_panic_dump(void) { }
 +
-+#endif /* !CONFIG_IPIPE_TRACE */
++#endif /* !CONFIG_IPIPE_TRACE_PANIC */
 +
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/irq.h b/include/linux/irq.h
@@ -4325,10 +4211,10 @@ index 0000000..1f46f07
 +	  compiled in.
 diff --git a/kernel/ipipe/Kconfig.debug b/kernel/ipipe/Kconfig.debug
 new file mode 100644
-index 0000000..d36272e
+index 0000000..64a692c
 --- /dev/null
 +++ b/kernel/ipipe/Kconfig.debug
-@@ -0,0 +1,80 @@
+@@ -0,0 +1,88 @@
 +config IPIPE_DEBUG
 +	bool "I-pipe debugging"
 +	depends on IPIPE
@@ -4357,9 +4243,10 @@ index 0000000..d36272e
 +	  in-kernel tracing API. The collected data and runtime control
 +	  is available via /proc/ipipe/trace/*.
 +
++if IPIPE_TRACE
++
 +config IPIPE_TRACE_ENABLE
 +	bool "Enable tracing on boot"
-+	depends on IPIPE_TRACE
 +	default y
 +	---help---
 +	  Disable this option if you want to arm the tracer after booting
@@ -4368,7 +4255,6 @@ index 0000000..d36272e
 +
 +config IPIPE_TRACE_MCOUNT
 +	bool "Instrument function entries"
-+	depends on IPIPE_TRACE
 +	default y
 +	---help---
 +	  When enabled, records every kernel function entry in the tracer
@@ -4379,7 +4265,6 @@ index 0000000..d36272e
 +
 +config IPIPE_TRACE_IRQSOFF
 +	bool "Trace IRQs-off times"
-+	depends on IPIPE_TRACE
 +	default y
 +	---help---
 +	  Activate this option if I-pipe shall trace the longest path
@@ -4389,14 +4274,12 @@ index 0000000..d36272e
 +	int "Depth of trace log (14 => 16Kpoints, 15 => 32Kpoints)"
 +	range 10 18
 +	default 14
-+	depends on IPIPE_TRACE
 +	---help---
 +	  The number of trace points to hold tracing data for each
 +	  trace path, as a power of 2.
 +
 +config IPIPE_TRACE_VMALLOC
 +	bool "Use vmalloc'ed trace buffer"
-+	depends on IPIPE_TRACE
 +	default y if EMBEDDED
 +	---help---
 +	  Instead of reserving static kernel data, the required buffer
@@ -4405,10 +4288,21 @@ index 0000000..d36272e
 +	  but it slightly degrades overall performance. Try this option
 +	  when a traced kernel hangs unexpectedly at boot time.
 +
++config IPIPE_TRACE_PANIC
++	bool "Enable panic back traces"
++	default y
++	---help---
++	  Provides services to freeze and dump a back trace on panic
++	  situations. This is used on IPIPE_DEBUG_CONTEXT exceptions
++	  as well as ordinary kernel oopses. You can control the number
++	  of printed back trace points via /proc/ipipe/trace.
++
 +config IPIPE_TRACE_ENABLE_VALUE
 +	int
 +	default 0 if !IPIPE_TRACE_ENABLE
 +	default 1 if IPIPE_TRACE_ENABLE
++
++endif
 diff --git a/kernel/ipipe/Makefile b/kernel/ipipe/Makefile
 new file mode 100644
 index 0000000..6257dfa
@@ -5869,10 +5763,10 @@ index 0000000..e9a16e0
 +EXPORT_SYMBOL(__ipipe_schedule_irq);
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..642933a
+index 0000000..de08cb1
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1284 @@
+@@ -0,0 +1,1291 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -6007,7 +5901,9 @@ index 0000000..642933a
 +
 +static DEFINE_MUTEX(out_mutex);
 +static struct ipipe_trace_path *print_path;
++#ifdef CONFIG_IPIPE_TRACE_PANIC
 +static struct ipipe_trace_path *panic_path;
++#endif /* CONFIG_IPIPE_TRACE_PANIC */
 +static int print_pre_trace;
 +static int print_post_trace;
 +
@@ -6436,25 +6332,6 @@ index 0000000..642933a
 +}
 +EXPORT_SYMBOL(ipipe_trace_frozen_reset);
 +
-+void ipipe_trace_panic_freeze(void)
-+{
-+	unsigned long flags;
-+	int cpu_id;
-+
-+	if (!ipipe_trace_enable)
-+		return;
-+
-+	ipipe_trace_enable = 0;
-+	local_irq_save_hw_notrace(flags);
-+
-+	cpu_id = ipipe_processor_id();
-+
-+	panic_path = &trace_paths[cpu_id][active_path[cpu_id]];
-+
-+	local_irq_restore_hw(flags);
-+}
-+EXPORT_SYMBOL(ipipe_trace_panic_freeze);
-+
 +static void
 +__ipipe_get_task_info(char *task_info, struct ipipe_trace_point *point,
 +                      int trylock)
@@ -6464,9 +6341,10 @@ index 0000000..642933a
 +	int i;
 +	int locked = 1;
 +
-+	if (trylock && !read_trylock(&tasklist_lock))
-+		locked = 0;
-+	else
++	if (trylock) {
++		if (!read_trylock(&tasklist_lock))
++			locked = 0;
++	} else
 +		read_lock(&tasklist_lock);
 +
 +	if (locked)
@@ -6486,6 +6364,26 @@ index 0000000..642933a
 +	sprintf(buf, " %d ", point->type >> IPIPE_TYPE_BITS);
 +	strcpy(task_info + (11 - strlen(buf)), buf);
 +}
++
++#ifdef CONFIG_IPIPE_TRACE_PANIC
++void ipipe_trace_panic_freeze(void)
++{
++	unsigned long flags;
++	int cpu_id;
++
++	if (!ipipe_trace_enable)
++		return;
++
++	ipipe_trace_enable = 0;
++	local_irq_save_hw_notrace(flags);
++
++	cpu_id = ipipe_processor_id();
++
++	panic_path = &trace_paths[cpu_id][active_path[cpu_id]];
++
++	local_irq_restore_hw(flags);
++}
++EXPORT_SYMBOL(ipipe_trace_panic_freeze);
 +
 +void ipipe_trace_panic_dump(void)
 +{
@@ -6553,6 +6451,7 @@ index 0000000..642933a
 +	panic_path = NULL;
 +}
 +EXPORT_SYMBOL(ipipe_trace_panic_dump);
++#endif /* CONFIG_IPIPE_TRACE_PANIC */
 +
 +
 +/* --- /proc output --- */
@@ -6675,8 +6574,17 @@ index 0000000..642933a
 +
 +	sym_name = kallsyms_lookup(eip, &size, &offset, &modname, namebuf);
 +
-+	/* printing to /proc? */
-+	if (m) {
++#ifdef CONFIG_IPIPE_TRACE_PANIC
++	if (!m) {
++		/* panic dump */
++		if (sym_name) {
++			printk("%s+0x%lx", sym_name, offset);
++			if (modname)
++				printk(" [%s]", modname);
++		}
++	} else
++#endif /* CONFIG_IPIPE_TRACE_PANIC */
++	{
 +		if (sym_name) {
 +			if (verbose_trace) {
 +				seq_printf(m, "%s+0x%lx", sym_name, offset);
@@ -6686,13 +6594,6 @@ index 0000000..642933a
 +				seq_puts(m, sym_name);
 +		} else
 +			seq_printf(m, "<%08lx>", eip);
-+	} else {
-+		/* panic dump */
-+		if (sym_name) {
-+			printk("%s+0x%lx", sym_name, offset);
-+			if (modname)
-+				printk(" [%s]", modname);
-+		}
 +	}
 +}
 +
@@ -7639,6 +7540,30 @@ index 5c26818..36cd9ec 100644
  config DEBUG_KERNEL
  	bool "Kernel debugging"
  	help
+diff --git a/lib/bust_spinlocks.c b/lib/bust_spinlocks.c
+index a2055bc..a49201f 100644
+--- a/lib/bust_spinlocks.c
++++ b/lib/bust_spinlocks.c
+@@ -12,14 +12,19 @@
+ #include <linux/tty.h>
+ #include <linux/wait.h>
+ #include <linux/vt_kern.h>
++#include <linux/ipipe_trace.h>
+ 
+ 
+ void bust_spinlocks(int yes)
+ {
+ 	if (yes) {
++		ipipe_trace_panic_freeze();
+ 		oops_in_progress = 1;
+ 	} else {
+ 		int loglevel_save = console_loglevel;
++
++		ipipe_trace_panic_dump();
++
+ #ifdef CONFIG_VT
+ 		unblank_screen();
+ #endif
 diff --git a/lib/ioremap.c b/lib/ioremap.c
 index a9e4415..52d1787 100644
 --- a/lib/ioremap.c

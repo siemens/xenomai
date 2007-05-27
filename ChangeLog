@@ -1,5 +1,7 @@
 2007-05-27  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.8-04.
+
 	* include/nucleus/queue.h, ksrc/nucleus/pod.c: Properly normalize
 	priority ranges in the multi-level queue implementation. Sanitize
 	priority scales handling.
