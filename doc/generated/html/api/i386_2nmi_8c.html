@@ -37,13 +37,16 @@ This program is free software; you can redistribute it and/or modify it under th
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
 <p>
-
-<p>
-Include dependency graph for nmi.c:<p><center><img src="i386_2nmi_8c__incl.png" border="0" usemap="#ksrc/arch/i386/nmi.c_map" alt=""></center>
+<code>#include &lt;linux/module.h&gt;</code><br>
+<code>#include &lt;linux/version.h&gt;</code><br>
+<code>#include &lt;linux/nmi.h&gt;</code><br>
+<code>#include &lt;asm/nmi.h&gt;</code><br>
+<code>#include &lt;asm/msr.h&gt;</code><br>
+<code>#include &lt;asm/xenomai/hal.h&gt;</code><br>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:00 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

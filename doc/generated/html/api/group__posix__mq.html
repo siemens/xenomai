@@ -26,13 +26,7 @@
 <h1>Message queues services.<br>
 <small>
 [<a class="el" href="group__posix.html">POSIX skin.</a>]</small>
-</h1>
-<p>
-Collaboration diagram for Message queues services.:<center><table><tr><td><img src="group__posix__mq.png" border="0" alt="" usemap="#group____posix____mq_map">
-<map name="group____posix____mq_map">
-<area href="group__posix.html" shape="rect" coords="9,8,102,32" alt="">
-</map></td></tr></table></center>
-<hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 Message queues services. 
 <p>
 A message queue allow exchanging data between real-time threads. For a POSIX message queue, maximum message length and maximum number of messages are fixed when it is created with <a class="el" href="group__posix__mq.html#g6e6c4881ac0fd3ad18d733b96d088b8b">mq_open()</a>. 
@@ -311,7 +305,7 @@ The following arguments of the <b>mq_attr</b> structure at the address <em>attr<
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_open.html">Specification.</a> </dd></dl>
 <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="rtcan__rtt_8c-example.html#a74">rtcan_rtt.c</a>.</dl>    </td>
+<a class="el" href="rtcan__rtt_8c-example.html#a76">rtcan_rtt.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g6370a6bb8f2b87e52ec4fcf340939128"></a><!-- doxytag: member="mq.c::mq_receive" ref="g6370a6bb8f2b87e52ec4fcf340939128" args="(mqd_t fd, char *buffer, size_t len, unsigned *priop)" --><p>
@@ -381,7 +375,7 @@ If the queue is empty and the flag <em>O_NONBLOCK</em> is not set for the descri
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_receive.html">Specification.</a> </dd></dl>
 <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="rtcan__rtt_8c-example.html#a79">rtcan_rtt.c</a>.</dl>    </td>
+<a class="el" href="rtcan__rtt_8c-example.html#a81">rtcan_rtt.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="ge3d8e022fcc1114c0cd4b30ccd1f15e4"></a><!-- doxytag: member="mq.c::mq_send" ref="ge3d8e022fcc1114c0cd4b30ccd1f15e4" args="(mqd_t fd, const char *buffer, size_t len, unsigned prio)" --><p>
@@ -716,7 +710,7 @@ This service unlinks the message queue named <em>name</em>. The message queue is
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:22 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:02 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

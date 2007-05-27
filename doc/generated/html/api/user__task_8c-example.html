@@ -49,13 +49,13 @@
 <a name="l00024"></a>00024 
 <a name="l00025"></a>00025     <span class="comment">/* ... */</span>
 <a name="l00026"></a>00026 
-<a name="l00027"></a>00027     err = <a name="a179"></a><a class="code" href="group__task.html#g03387550693c21d0223f739570ccd992">rt_task_create</a>(&amp;task_desc,
+<a name="l00027"></a>00027     err = <a name="a192"></a><a class="code" href="group__task.html#g03387550693c21d0223f739570ccd992">rt_task_create</a>(&amp;task_desc,
 <a name="l00028"></a>00028                          <span class="stringliteral">"MyTaskName"</span>,
 <a name="l00029"></a>00029                          TASK_STKSZ,
 <a name="l00030"></a>00030                          TASK_PRIO,
 <a name="l00031"></a>00031                          TASK_MODE);
 <a name="l00032"></a>00032     <span class="keywordflow">if</span> (!err)
-<a name="l00033"></a>00033         <a name="a180"></a><a class="code" href="group__task.html#gc9638918b8310a430088f5c9a04d2bb7">rt_task_start</a>(&amp;task_desc,&amp;task_body,NULL);
+<a name="l00033"></a>00033         <a name="a193"></a><a class="code" href="group__task.html#gc9638918b8310a430088f5c9a04d2bb7">rt_task_start</a>(&amp;task_desc,&amp;task_body,NULL);
 <a name="l00034"></a>00034 
 <a name="l00035"></a>00035     <span class="comment">/* ... */</span>
 <a name="l00036"></a>00036 }
@@ -63,9 +63,9 @@
 <a name="l00038"></a>00038 <span class="keywordtype">void</span> cleanup (<span class="keywordtype">void</span>)
 <a name="l00039"></a>00039 
 <a name="l00040"></a>00040 {
-<a name="l00041"></a>00041     <a name="a181"></a><a class="code" href="group__task.html#gb6e0d411830710e8cc82d77b9df19510">rt_task_delete</a>(&amp;task_desc);
+<a name="l00041"></a>00041     <a name="a194"></a><a class="code" href="group__task.html#gb6e0d411830710e8cc82d77b9df19510">rt_task_delete</a>(&amp;task_desc);
 <a name="l00042"></a>00042 }
-</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
+</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:00 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

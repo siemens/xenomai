@@ -28,12 +28,6 @@
 [<a class="el" href="group__driverapi.html">Driver Development API</a>]</small>
 </h1>
 <p>
-Collaboration diagram for Synchronisation Services:<center><table><tr><td><img src="group__rtdmsync.png" border="0" alt="" usemap="#group____rtdmsync_map">
-<map name="group____rtdmsync_map">
-<area href="group__driverapi.html" shape="rect" coords="8,8,173,32" alt="">
-</map></td></tr></table></center>
-
-<p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Global Lock across Scheduler Invocation</h2></td></tr>
@@ -174,7 +168,7 @@ Generally, it is illegal to suspend the current task by calling <a class="el" hr
     <tr><td valign="top"></td><td valign="top"><em>code_block</em>&nbsp;</td><td>Commands to be executed atomically</td></tr>
   </table>
 </dl>
-<dl compact><dt><b>Note:</b></dt><dd>It is not allowed to leave the code block explicitely by using <code>break</code>, <code>return</code>, <code>goto</code>, etc. This would leave the global lock held during the code block execution in an inconsistent state. Moreover, do not embed complex operations into the code bock. Consider that they will be executed under preemption lock with interrupts switched-off. Also note that invocation of rescheduling calls may break the atomicity until the task gains the CPU again.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>It is not allowed to leave the code block explicitly by using <code>break</code>, <code>return</code>, <code>goto</code>, etc. This would leave the global lock held during the code block execution in an inconsistent state. Moreover, do not embed complex operations into the code bock. Consider that they will be executed under preemption lock with interrupts switched-off. Also note that invocation of rescheduling calls may break the atomicity until the task gains the CPU again.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -739,7 +733,7 @@ This function waits or tests for the occurence of the given event, taking the pr
 <li>-ETIMEDOUT is returned if the if the request has not been satisfied within the specified amount of time.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ge52cca97ebaf78eec2e31553a4dacd5e">rtdm_task_unblock()</a>.</li></ul>
+<li>-EINTR is returned if calling task has been unblock by a signal or explicitly via <a class="el" href="group__rtdmtask.html#ge52cca97ebaf78eec2e31553a4dacd5e">rtdm_task_unblock()</a>.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>event</em> has been destroyed.</li></ul>
@@ -790,7 +784,7 @@ This is the light-weight version of <a class="el" href="group__rtdmsync.html#gf7
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
 <ul>
-<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ge52cca97ebaf78eec2e31553a4dacd5e">rtdm_task_unblock()</a>.</li></ul>
+<li>-EINTR is returned if calling task has been unblock by a signal or explicitly via <a class="el" href="group__rtdmtask.html#ge52cca97ebaf78eec2e31553a4dacd5e">rtdm_task_unblock()</a>.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>event</em> has been destroyed.</li></ul>
@@ -1122,7 +1116,7 @@ This is the light-weight version of <a class="el" href="group__rtdmsync.html#g8a
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
 <ul>
-<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ge52cca97ebaf78eec2e31553a4dacd5e">rtdm_task_unblock()</a>.</li></ul>
+<li>-EINTR is returned if calling task has been unblock by a signal or explicitly via <a class="el" href="group__rtdmtask.html#ge52cca97ebaf78eec2e31553a4dacd5e">rtdm_task_unblock()</a>.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>sem</em> has been destroyed.</li></ul>
@@ -1246,7 +1240,7 @@ This function tries to decrement the given semphore's value if it is positive on
 <li>-EWOULDBLOCK is returned if <em>timeout</em> is negative and the semaphore value is currently not positive.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if calling task has been unblock by a signal or explicitely via <a class="el" href="group__rtdmtask.html#ge52cca97ebaf78eec2e31553a4dacd5e">rtdm_task_unblock()</a>.</li></ul>
+<li>-EINTR is returned if calling task has been unblock by a signal or explicitly via <a class="el" href="group__rtdmtask.html#ge52cca97ebaf78eec2e31553a4dacd5e">rtdm_task_unblock()</a>.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>sem</em> has been destroyed.</li></ul>
@@ -1372,7 +1366,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:20 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:01 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

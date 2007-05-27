@@ -1,9 +1,0 @@
-base referer
-rect $pod_8h.html 586,60 690,84
-rect $include_2nucleus_2core_8h-source.html 584,157 693,181
-rect $rtdm_2syscall_8h-source.html 226,256 330,280
-rect $device_8h-source.html 228,133 329,157
-rect $proc_8h-source.html 233,304 324,328
-rect $include_2nucleus_2thread_8h-source.html 742,36 862,60
-rect $include_2nucleus_2intr_8h-source.html 752,84 853,108
-rect $rtdm__driver_8h.html 392,109 522,133

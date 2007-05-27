@@ -28,12 +28,6 @@
 [<a class="el" href="group__driverapi.html">Driver Development API</a>]</small>
 </h1>
 <p>
-Collaboration diagram for Utility Services:<center><table><tr><td><img src="group__util.png" border="0" alt="" usemap="#group____util_map">
-<map name="group____util_map">
-<area href="group__driverapi.html" shape="rect" coords="8,8,173,32" alt="">
-</map></td></tr></table></center>
-
-<p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
@@ -385,7 +379,7 @@ Map an I/O memory range into the address space of the user.
 <ul>
 <li>-EPERM <em>may</em> be returned if an illegal invocation environment is detected.</li></ul>
 <p>
-<dl compact><dt><b>Note:</b></dt><dd>RTDM supports two models for unmapping the user memory range again. One is explicite unmapping via <a class="el" href="group__util.html#ga6a363aa6e2e017d3493a9c175755fa5">rtdm_munmap()</a>, either performed when the user requests it via an IOCTL etc. or when the related device is closed. The other is automatic unmapping, triggered by the user invoking standard <a class="el" href="group__posix__shm.html#g01ff21bc70401bee9b80c350763087f7">munmap()</a> or by the termination of the related process. To track release of the mapping and therefore relinquishment of the referenced physical memory, the caller of <a class="el" href="group__util.html#gd3cd99bd0049763a4bf4c41edb249785">rtdm_iomap_to_user()</a> can pass a vm_operations_struct on invocation, defining a close handler for the vm_area. See Linux documentaion (e.g. Linux Device Drivers book) on virtual memory management for details.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>RTDM supports two models for unmapping the user memory range again. One is explicit unmapping via <a class="el" href="group__util.html#ga6a363aa6e2e017d3493a9c175755fa5">rtdm_munmap()</a>, either performed when the user requests it via an IOCTL etc. or when the related device is closed. The other is automatic unmapping, triggered by the user invoking standard <a class="el" href="group__posix__shm.html#g01ff21bc70401bee9b80c350763087f7">munmap()</a> or by the termination of the related process. To track release of the mapping and therefore relinquishment of the referenced physical memory, the caller of <a class="el" href="group__util.html#gd3cd99bd0049763a4bf4c41edb249785">rtdm_iomap_to_user()</a> can pass a vm_operations_struct on invocation, defining a close handler for the vm_area. See Linux documentaion (e.g. Linux Device Drivers book) on virtual memory management for details.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -526,7 +520,7 @@ Map a kernel memory range into the address space of the user.
 <li>-EPERM <em>may</em> be returned if an illegal invocation environment is detected.</li></ul>
 <p>
 <dl compact><dt><b>Note:</b></dt><dd>This service only works on memory regions allocated via kmalloc() or vmalloc(). To map physical I/O memory to user-space use <a class="el" href="group__util.html#gd3cd99bd0049763a4bf4c41edb249785">rtdm_iomap_to_user()</a> instead.<p>
-RTDM supports two models for unmapping the user memory range again. One is explicite unmapping via <a class="el" href="group__util.html#ga6a363aa6e2e017d3493a9c175755fa5">rtdm_munmap()</a>, either performed when the user requests it via an IOCTL etc. or when the related device is closed. The other is automatic unmapping, triggered by the user invoking standard <a class="el" href="group__posix__shm.html#g01ff21bc70401bee9b80c350763087f7">munmap()</a> or by the termination of the related process. To track release of the mapping and therefore relinquishment of the referenced physical memory, the caller of <a class="el" href="group__util.html#gdf5ddcdee106f1eaf4b93b2d633da441">rtdm_mmap_to_user()</a> can pass a vm_operations_struct on invocation, defining a close handler for the vm_area. See Linux documentaion (e.g. Linux Device Drivers book) on virtual memory management for details.</dd></dl>
+RTDM supports two models for unmapping the user memory range again. One is explicit unmapping via <a class="el" href="group__util.html#ga6a363aa6e2e017d3493a9c175755fa5">rtdm_munmap()</a>, either performed when the user requests it via an IOCTL etc. or when the related device is closed. The other is automatic unmapping, triggered by the user invoking standard <a class="el" href="group__posix__shm.html#g01ff21bc70401bee9b80c350763087f7">munmap()</a> or by the termination of the related process. To track release of the mapping and therefore relinquishment of the referenced physical memory, the caller of <a class="el" href="group__util.html#gdf5ddcdee106f1eaf4b93b2d633da441">rtdm_mmap_to_user()</a> can pass a vm_operations_struct on invocation, defining a close handler for the vm_area. See Linux documentaion (e.g. Linux Device Drivers book) on virtual memory management for details.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -973,7 +967,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:20 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:02 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

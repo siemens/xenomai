@@ -26,13 +26,7 @@
 <h1>Event flag group services.<br>
 <small>
 [<a class="el" href="group__native.html">Native Xenomai API.</a>]</small>
-</h1>
-<p>
-Collaboration diagram for Event flag group services.:<center><table><tr><td><img src="group__event.png" border="0" alt="" usemap="#group____event_map">
-<map name="group____event_map">
-<area href="group__native.html" shape="rect" coords="9,8,153,32" alt="">
-</map></td></tr></table></center>
-<hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 An event flag group is a synchronization object represented by a long-word structure; every available bit in such word can be used to map a user-defined event flag. When a flag is set, the associated event is said to have occurred. Xenomai tasks and interrupt handlers can use event flags to signal the occurrence of events to other tasks; those tasks can either wait for the events to occur in a conjunctive manner (all awaited events must have occurred to wake up), or in a disjunctive way (at least one of the awaited events must have occurred to wake up). 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
@@ -605,7 +599,7 @@ Rescheduling: always unless the request is immediately satisfied or <em>timeout<
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:15 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:01 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

@@ -26,13 +26,7 @@
 <h1>User API<br>
 <small>
 [<a class="el" href="group__rtdm.html">Real-Time Driver Model</a>]</small>
-</h1>
-<p>
-Collaboration diagram for User API:<center><table><tr><td><img src="group__userapi.png" border="0" alt="" usemap="#group____userapi_map">
-<map name="group____userapi_map">
-<area href="group__rtdm.html" shape="rect" coords="8,8,170,32" alt="">
-</map></td></tr></table></center>
-<hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 This is the upper interface of RTDM provided to application programs both in kernel and user space. Note that certain functions may not be implemented by every device. Refer to the <a class="el" href="group__profiles.html">Device Profiles</a> for precise information. 
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
@@ -256,9 +250,7 @@ Close a device or socket.
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise a negative error code.</dd></dl>
-<dl compact><dt><b>Note:</b></dt><dd>If the matching rt_dev_open() or rt_dev_socket() call took place in non-real-time context, rt_dev_close() must be issued within non-real-time as well. Otherwise, the call will fail.<p>
-Killing a real-time task that is blocked on some device operation can lead to stalled file descriptors. To avoid such scenarios, always close the device before explicitely terminating any real-time task which may use it. To cleanup a stalled file descriptor, send its number to the <code>open_fildes</code> /proc entry, e.g. via <div class="fragment"><pre class="fragment"><span class="preprocessor"> #&gt; echo 3 &gt; /proc/xenomai/rtdm/open_fildes </span>
-</pre></div></dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>If the matching rt_dev_open() or rt_dev_socket() call took place in non-real-time context, rt_dev_close() must be issued within non-real-time as well. Otherwise, the call will fail.</dd></dl>
 Environments:<p>
 Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.<p>
 Rescheduling: possible.<p>
@@ -1362,7 +1354,7 @@ Rescheduling: possible.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:18 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:01 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

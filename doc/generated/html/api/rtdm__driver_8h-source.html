@@ -337,17 +337,17 @@
 <a name="l00785"></a>00785 
 <a name="l00791"></a>00791 <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span>                    rtdm_nrtsig_t;
 <a name="l00792"></a>00792 
-<a name="l00802"></a><a class="code" href="group__nrtsignal.html#gfb4f5fef3b8d8fc7daab1332815586bb">00802</a> <span class="keyword">typedef</span> void (*<a class="code" href="group__nrtsignal.html#gfb4f5fef3b8d8fc7daab1332815586bb">rtdm_nrtsig_handler_t</a>)(rtdm_nrtsig_t nrt_sig);
+<a name="l00802"></a><a class="code" href="group__nrtsignal.html#g3c72df92865ad7decadab7c94fa75d0a">00802</a> <span class="keyword">typedef</span> void (*<a class="code" href="group__nrtsignal.html#g3c72df92865ad7decadab7c94fa75d0a">rtdm_nrtsig_handler_t</a>)(rtdm_nrtsig_t nrt_sig, <span class="keywordtype">void</span> *arg);
 <a name="l00806"></a>00806 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
 <a name="l00807"></a>00807 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__nrtsignal.html#g1e92ac4d8d5645c10584037a6c296e39">rtdm_nrtsig_init</a>(rtdm_nrtsig_t *nrt_sig,
-<a name="l00808"></a>00808                                    <a class="code" href="group__nrtsignal.html#gfb4f5fef3b8d8fc7daab1332815586bb">rtdm_nrtsig_handler_t</a> handler)
+<a name="l00808"></a>00808                                    <a class="code" href="group__nrtsignal.html#g3c72df92865ad7decadab7c94fa75d0a">rtdm_nrtsig_handler_t</a> handler, <span class="keywordtype">void</span> *arg)
 <a name="l00809"></a>00809 {
 <a name="l00810"></a>00810     *nrt_sig = rthal_alloc_virq();
 <a name="l00811"></a>00811 
 <a name="l00812"></a>00812     <span class="keywordflow">if</span> (*nrt_sig == 0)
 <a name="l00813"></a>00813         <span class="keywordflow">return</span> -EAGAIN;
 <a name="l00814"></a>00814 
-<a name="l00815"></a>00815     rthal_virtualize_irq(rthal_root_domain, *nrt_sig, (rthal_irq_handler_t)handler, NULL, NULL,
+<a name="l00815"></a>00815     rthal_virtualize_irq(rthal_root_domain, *nrt_sig, handler, arg, NULL,
 <a name="l00816"></a>00816                          IPIPE_HANDLE_MASK);
 <a name="l00817"></a>00817     <span class="keywordflow">return</span> 0;
 <a name="l00818"></a>00818 }
@@ -617,7 +617,7 @@
 <a name="l01104"></a>01104                     rtdm_rt_handler_t handler);
 <a name="l01105"></a>01105 
 <a name="l01106"></a>01106 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DRIVER_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:12 2007 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:00 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

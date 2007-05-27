@@ -26,13 +26,7 @@
 <h1>Message pipe services.<br>
 <small>
 [<a class="el" href="group__native.html">Native Xenomai API.</a>]</small>
-</h1>
-<p>
-Collaboration diagram for Message pipe services.:<center><table><tr><td><img src="group__pipe.png" border="0" alt="" usemap="#group____pipe_map">
-<map name="group____pipe_map">
-<area href="group__native.html" shape="rect" coords="9,8,153,32" alt="">
-</map></td></tr></table></center>
-<hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 Message pipe services.<p>
 A message pipe is a two-way communication channel between Xenomai tasks and standard Linux processes using regular file I/O operations on a pseudo-device. Pipes can be operated in a message-oriented fashion so that message boundaries are preserved, and also in byte streaming mode from real-time to standard Linux processes for optimal throughput.<p>
 Xenomai tasks open their side of the pipe using the <a class="el" href="group__pipe.html#g29521cc898afa0069963964955167aa5">rt_pipe_create()</a> service; standard Linux processes do the same by opening one of the /dev/rtpN special devices, where N is the minor number agreed upon between both ends of each pipe. Additionally, named pipes are available through the registry support, which automatically creates a symbolic link from entries under /proc/xenomai/registry/native/pipes/ to the corresponding special device file. 
@@ -73,6 +67,9 @@ Xenomai tasks open their side of the pipe using the <a class="el" href="group__p
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#g8face1c57df99cf43b029b3e3b6a05c6">rt_pipe_free</a> (RT_PIPE *pipe, RT_PIPE_MSG *msg)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free a message pipe buffer.  <a href="#g8face1c57df99cf43b029b3e3b6a05c6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pipe.html#gb4d85ecda7675a75611500070c28b22e">rt_pipe_flush</a> (RT_PIPE *pipe, int mode)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Flush the i/o queues associated with the kernel endpoint of a message pipe.  <a href="#gb4d85ecda7675a75611500070c28b22e"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
 <a class="anchor" name="g40f294bf6254d2e1b66b8b6b400fc2e5"></a><!-- doxytag: member="pipe.c::rt_pipe_alloc" ref="g40f294bf6254d2e1b66b8b6b400fc2e5" args="(RT_PIPE *pipe, size_t size)" --><p>
@@ -266,6 +263,74 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible.     </td>
+  </tr>
+</table>
+<a class="anchor" name="gb4d85ecda7675a75611500070c28b22e"></a><!-- doxytag: member="pipe.c::rt_pipe_flush" ref="gb4d85ecda7675a75611500070c28b22e" args="(RT_PIPE *pipe, int mode)" --><p>
+<table class="mdTable" cellpadding="2" cellspacing="0">
+  <tr>
+    <td class="mdRow">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="md" nowrap valign="top">int rt_pipe_flush           </td>
+          <td class="md" valign="top">(&nbsp;</td>
+          <td class="md" nowrap valign="top">RT_PIPE *&nbsp;</td>
+          <td class="mdname" nowrap> <em>pipe</em>, </td>
+        </tr>
+        <tr>
+          <td class="md" nowrap align="right"></td>
+          <td class="md"></td>
+          <td class="md" nowrap>int&nbsp;</td>
+          <td class="mdname" nowrap> <em>mode</em></td>
+        </tr>
+        <tr>
+          <td class="md"></td>
+          <td class="md">)&nbsp;</td>
+          <td class="md" colspan="2"></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellspacing="5" cellpadding="0" border="0">
+  <tr>
+    <td>
+      &nbsp;
+    </td>
+    <td>
+
+<p>
+Flush the i/o queues associated with the kernel endpoint of a message pipe. 
+<p>
+This service flushes all data pending for consumption by the remote side in user-space for the given message pipe. Upon success, no data remains to be read from the remote side of the connection.<p>
+The user-space equivalent is a call to: ioctl(pipefd, XNPIPEIOC_FLUSH, 0).<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>pipe</em>&nbsp;</td><td>The descriptor address of the pipe to flush.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>A mask indicating which queues need to be flushed; the following flags may be combined in a single flush request:</td></tr>
+  </table>
+</dl>
+<ul>
+<li>XNPIPE_IFLUSH causes the input queue to be flushed (i.e. data coming from user-space to the kernel endpoint will be discarded).</li></ul>
+<p>
+<ul>
+<li>XNPIPE_OFLUSH causes the output queue to be flushed (i.e. data going to user-space from the kernel endpoint will be discarded).</li></ul>
+<p>
+<dl compact><dt><b>Returns:</b></dt><dd>Zero is returned upon success. Otherwise:</dd></dl>
+<ul>
+<li>-EINVAL is returned if <em>pipe</em> is not a pipe descriptor.</li></ul>
+<p>
+<ul>
+<li>-EIDRM is returned if <em>pipe</em> is a closed pipe descriptor.</li></ul>
+<p>
+<ul>
+<li>-ENODEV or -EBADF are returned if <em>pipe</em> is scrambled.</li></ul>
+<p>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li></ul>
+<p>
+Rescheduling: never.     </td>
   </tr>
 </table>
 <a class="anchor" name="g8face1c57df99cf43b029b3e3b6a05c6"></a><!-- doxytag: member="pipe.c::rt_pipe_free" ref="g8face1c57df99cf43b029b3e3b6a05c6" args="(RT_PIPE *pipe, RT_PIPE_MSG *msg)" --><p>
@@ -748,7 +813,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Thu Feb 22 20:32:16 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:01 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
