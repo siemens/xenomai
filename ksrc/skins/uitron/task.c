@@ -24,6 +24,21 @@ static uitask_t *uitaskmap[uITRON_MAX_TASKID];
 
 static int uicpulck;
 
+static int uitask_get_denormalized_prio(xnthread_t *thread)
+{
+	return ui_denormalized_prio(xnthread_current_priority(thread));
+}
+
+static unsigned uitask_get_magic(void)
+{
+	return uITRON_SKIN_MAGIC;
+}
+
+static xnthrops_t uitask_ops = {
+	.get_denormalized_prio = &uitask_get_denormalized_prio,
+	.get_magic = &uitask_get_magic,
+};
+
 static void uitask_delete_hook(xnthread_t *thread)
 {
 	uitask_t *task;
@@ -99,22 +114,15 @@ ER cre_tsk(ID tskid, T_CTSK * pk_ctsk)
 
 	sprintf(aname, "t%d", tskid);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	/* uITRON priority scale is inverted compared to the core
-	   pod's we are going to use for hosting our threads. */
-	bflags |= XNINVPS;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-
 	if (xnpod_init_thread(&task->threadbase,
 			      uitbase,
 			      aname,
-			      ui_normalized_prio(pk_ctsk->itskpri), bflags, pk_ctsk->stksz) != 0) {
+			      ui_normalized_prio(pk_ctsk->itskpri), bflags,
+			      pk_ctsk->stksz, &uitask_ops) != 0) {
 		uitaskmap[tskid - 1] = NULL;
 		xnfree(task);
 		return E_NOMEM;
 	}
-
-	xnthread_set_magic(&task->threadbase, uITRON_SKIN_MAGIC);
 
 	inith(&task->link);
 	task->tskid = tskid;
@@ -413,17 +421,22 @@ ER chg_pri(ID tskid, PRI tskpri)
 ER rot_rdq(PRI tskpri)
 {
 	if (tskpri != TPRI_RUN) {
-		/* uITRON uses a (rather widespread) reverse priority scheme: the
-		   lower the value, the higher the priority. */
+		/* uITRON uses a reverse priority scheme: the lower
+		   the value, the higher the priority. */
 		if (tskpri < uITRON_MAX_PRI || tskpri > uITRON_MIN_PRI)
 			return E_PAR;
-	} else if (xnpod_asynch_p())
-		tskpri = XNPOD_RUNPRIO;
+	} else if (xnpod_asynch_p()) {
+		xnpod_rotate_readyq(XNPOD_RUNPRIO);
+		goto schedule_and_exit;
+	}
 	else
 		tskpri =
 			ui_denormalized_prio(xnthread_current_priority(&ui_current_task()->threadbase));
 
 	xnpod_rotate_readyq(ui_normalized_prio(tskpri));
+
+schedule_and_exit:
+
 	xnpod_schedule();
 
 	return E_OK;
