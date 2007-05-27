@@ -137,7 +137,7 @@ u_long t_create(char name[4],
 	       &xnmod_glink_queue,
 	       xnmod_alloc_glinks,
 	       XNMOD_GHOLDER_THRESHOLD,
-	       xnpod_get_qdir(nkpod), xnpod_get_maxprio(nkpod, 0));
+	       xnpod_get_qdir(nkpod));
 
 	task->magic = PSOS_TASK_MAGIC;
 

@@ -39,7 +39,7 @@ static int xncore_unload_hook(void)
 
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-int xncore_attach(int minprio, int maxprio)
+int xncore_attach(int loprio, int hiprio)
 {
 	int err = 0;
 
@@ -64,7 +64,7 @@ int xncore_attach(int minprio, int maxprio)
 	if (!pod)
 		err = -ENOMEM;
 	else {
-		err =  xnpod_init(pod, minprio, maxprio, XNREUSE);
+		err =  xnpod_init(pod, loprio, hiprio, XNREUSE);
 		if (err)
 			xnarch_sysfree(pod, sizeof(*pod));
 	}

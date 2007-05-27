@@ -95,8 +95,7 @@ void xnsynch_init(xnsynch_t *synch, xnflags_t flags)
 	synch->status = flags & ~XNSYNCH_CLAIMED;
 	synch->owner = NULL;
 	synch->cleanup = NULL;	/* Only works for PIP-enabled objects. */
-	initpq(&synch->pendq, xnpod_get_qdir(nkpod),
-	       xnpod_get_maxprio(nkpod, 0));
+	initpq(&synch->pendq, xnpod_get_qdir(nkpod));
 	xnarch_init_display_context(synch);
 }
 
