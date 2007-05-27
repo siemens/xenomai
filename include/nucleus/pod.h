@@ -34,13 +34,9 @@
 #include <nucleus/thread.h>
 #include <nucleus/intr.h>
 
-/* Creation flags */
-#define XNREUSE  0x00000001	/* Reuse pod with identical properties */
-
 /* Pod status flags */
-#define XNRPRIO  0x00000002	/* Reverse priority scheme */
-#define XNFATAL  0x00000004	/* Pod encountered a fatal error */
-#define XNPIDLE  0x00000008	/* Pod is unavailable (initializing/shutting down) */
+#define XNFATAL  0x00000001	/* Pod encountered a fatal error */
+#define XNPIDLE  0x00000002	/* Pod is unavailable (initializing/shutting down) */
 
 /* Sched status flags */
 #define XNKCOUT  0x80000000	/* Sched callout context */
@@ -77,9 +73,6 @@
 #define XNPOD_SCHEDLIFO 0x1
 #define XNPOD_NOSWITCH  0x2
 
-/* Normal root thread priority == min_std_prio - 1 */
-#define XNPOD_ROOT_PRIO_BASE   ((nkpod)->root_prio_base)
-
 #ifdef CONFIG_XENO_OPT_SCALABLE_SCHED
 typedef xnmlqueue_t xnsched_queue_t;
 #define sched_initpq		initmlq
@@ -94,7 +87,7 @@ typedef xnmlqueue_t xnsched_queue_t;
 #define sched_findpqh		findmlqh
 #else /* ! CONFIG_XENO_OPT_SCALABLE_SCHED */
 typedef xnpqueue_t xnsched_queue_t;
-#define sched_initpq(pqslot, qdir, minp, maxp)	initpq(pqslot, qdir)
+#define sched_initpq(pqslot, minp, maxp)	initpq(pqslot)
 #define sched_emptypq_p		emptypq_p
 #define sched_insertpql		insertpql
 #define sched_insertpqf		insertpqf
@@ -194,11 +187,6 @@ struct xnpod {
 	 tswitchq,		/*!< Thread switch hook queue. */
 	 tdeleteq;		/*!< Thread delete hook queue. */
 
-	int loprio,		/*!< Minimum priority value. */
-	 hiprio;		/*!< Maximum priority value. */
-
-	int root_prio_base;	/*!< Base priority of ROOT thread. */
-
 	int refcnt;		/*!< Reference count.  */
 
 #ifdef __KERNEL__
@@ -206,9 +194,8 @@ struct xnpod {
 #endif	/* __KERNEL__ */
 
 	struct {
-		void (*settime) (xntbase_t *tbase, xnticks_t newtime); /*!< Clock setting hook. */
-		int (*faulthandler) (xnarch_fltinfo_t *fltinfo);	/*!< Trap/exception handler. */
-		int (*unload) (void);	/*!< Unloading hook. */
+		void (*settime)(xntbase_t *tbase, xnticks_t newtime); /*!< Clock setting hook. */
+		int (*faulthandler)(xnarch_fltinfo_t *fltinfo);	/*!< Trap/exception handler. */
 	} svctable;		/*!< Table of overridable service entry points. */
 
 #ifdef __XENO_SIM__
@@ -321,30 +308,7 @@ static inline void xnpod_renice_root(int prio)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-static inline int xnpod_get_qdir(xnpod_t *pod)
-{
-	/* Returns the queuing direction of threads for a given pod */
-	return testbits(pod->status, XNRPRIO) ? xnqueue_up : xnqueue_down;
-}
-
-static inline int xnpod_compare_prio(int inprio, int outprio)
-{
-	/* Returns a negative, null or positive value whether inprio is
-	   lower than, equal to or greater than outprio. */
-	int delta = inprio - outprio;
-	return testbits(nkpod->status, XNRPRIO) ? -delta : delta;
-}
-
-static inline int xnpod_rescale_prio(int prio)
-{
-	return xnpod_get_qdir(nkpod) == xnqueue_up ?
-	    nkpod->loprio - prio : nkpod->hiprio - prio - 1;
-}
-
-int xnpod_init(xnpod_t *pod,
-	       int loprio,
-	       int hiprio,
-	       xnflags_t flags);
+int xnpod_init(void);
 
 int xnpod_enable_timesource(void);
 
@@ -357,7 +321,8 @@ int xnpod_init_thread(xnthread_t *thread,
 		      const char *name,
 		      int prio,
 		      xnflags_t flags,
-		      unsigned stacksize);
+		      unsigned stacksize,
+		      xnthrops_t *ops);
 
 int xnpod_start_thread(xnthread_t *thread,
 		       xnflags_t mode,

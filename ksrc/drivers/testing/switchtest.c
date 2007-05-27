@@ -328,7 +328,7 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 	   the created task. */
 	set_cpus_allowed(current, cpumask_of_cpu(ctx->cpu));
 
-	err = xnpod_init_thread(&task->ktask, rtdm_tbase, name, 1, init_flags, 0);
+	err = xnpod_init_thread(&task->ktask, rtdm_tbase, name, 1, init_flags, 0, NULL);
 
 	if (!err)
 		err = xnpod_start_thread(&task->ktask,

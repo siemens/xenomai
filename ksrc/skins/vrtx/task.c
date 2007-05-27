@@ -28,6 +28,21 @@ static u_long vrtx_default_stacksz;
 
 static TCB vrtx_idle_tcb;
 
+static int vrtx_get_denormalized_prio(xnthread_t *thread)
+{
+	return vrtx_denormalized_prio(xnthread_current_priority(thread));
+}
+
+static unsigned vrtx_get_magic(void)
+{
+	return VRTX_SKIN_MAGIC;
+}
+
+static xnthrops_t vrtxtask_ops = {
+	.get_denormalized_prio = &vrtx_get_denormalized_prio,
+	.get_magic = &vrtx_get_magic,
+};
+
 static void vrtxtask_delete_hook(xnthread_t *thread)
 {
 	vrtxtask_t *task;
@@ -129,10 +144,6 @@ int sc_tecreate_inner(vrtxtask_t *task,
 	sprintf(name, "t%.3d", tid);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	/* VRTX priority scale is inverted compared to the core pod's
-	   we are going to use for hosting our threads. */
-	bflags |= XNINVPS;
-
 	if (mode & 0x100)
 		bflags |= XNSHADOW;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
@@ -144,7 +155,7 @@ int sc_tecreate_inner(vrtxtask_t *task,
 			      vrtx_tbase,
 			      name,
 			      vrtx_normalized_prio(prio),
-			      bflags, user + sys) != 0) {
+			      bflags, user + sys, &vrtxtask_ops) != 0) {
 		if (_paddr)
 			xnfree(_paddr);
 
@@ -152,8 +163,6 @@ int sc_tecreate_inner(vrtxtask_t *task,
 		*errp = ER_MEM;
 		return -1;
 	}
-
-	xnthread_set_magic(&task->threadbase, VRTX_SKIN_MAGIC);
 
 	inith(&task->link);
 	task->tid = tid;

@@ -39,14 +39,14 @@ static void uitron_shutdown(int xtype)
 	uitask_cleanup();
 
 	xntbase_free(uitbase);
-	xncore_detach(xtype);
+	xnpod_shutdown(xtype);
 }
 
 int SKIN_INIT(uitron)
 {
 	int err;
 
-	err = xncore_attach(uITRON_MIN_PRI, uITRON_MAX_PRI);
+	err = xnpod_init();
 
 	if (err != 0)
 		return err;
@@ -55,7 +55,7 @@ int SKIN_INIT(uitron)
 
 	if (err != 0) {
 		xnlogerr("uITRON skin init failed, code %d.\n", err);
-		xncore_detach(err);
+		xnpod_shutdown(err);
 		return err;
 	}
 

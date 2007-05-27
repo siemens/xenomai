@@ -56,7 +56,6 @@
 #define XNFPU     0x00100000 /**< Thread uses FPU */
 #define XNSHADOW  0x00200000 /**< Shadow thread */
 #define XNROOT    0x00400000 /**< Root thread (that is, Linux/IDLE) */
-#define XNINVPS   0x00800000 /**< Using inverted priority scale */
 
 /*! @} */ /* Ends doxygen comment group: nucleus_state_flags */
 
@@ -84,7 +83,7 @@
 	'.', '.', '.', '.', 'X',	\
 	'H', 'b', 'T', 'l', 'r',	\
 	'.', 's', 't', 'o', '.',	\
-	'f', '.', '.', '.',		\
+	'f', '.', '.',			\
 }
 
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNHELD)
@@ -134,9 +133,17 @@
 
 #define XNTHREAD_INVALID_ASR  ((void (*)(xnsigmask_t))0)
 
+struct xnthread;
 struct xnsched;
 struct xnsynch;
 struct xnrpi;
+
+typedef struct xnthrops {
+
+	int (*get_denormalized_prio)(struct xnthread *);
+	unsigned (*get_magic)(void);
+
+} xnthrops_t;
 
 typedef void (*xnasr_t)(xnsigmask_t sigs);
 
@@ -218,7 +225,7 @@ typedef struct xnthread {
     } registry;
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-    unsigned magic;		/* Skin magic. */
+    xnthrops_t *ops;		/* Thread class operations. */
 
     char name[XNOBJECT_NAME_LEN]; /* Symbolic name of thread */
 
@@ -239,7 +246,6 @@ typedef struct xnthread {
 typedef struct xnhook {
 
     xnholder_t link;
-
 #define link2hook(ln)		container_of(ln, xnhook_t, link)
 
     void (*routine)(xnthread_t *thread);
@@ -269,8 +275,6 @@ typedef struct xnhook {
 #define xnthread_timeout(thread)           xntimer_get_timeout(&(thread)->rtimer)
 #define xnthread_stack_size(thread)        xnarch_stack_size(xnthread_archtcb(thread))
 #define xnthread_handle(thread)            ((thread)->registry.handle)
-#define xnthread_set_magic(thread,m)       do { (thread)->magic = (m); } while(0)
-#define xnthread_get_magic(thread)         ((thread)->magic)
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 #define xnthread_time_base(thread)         ((thread)->rtimer.base)
 #else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
@@ -283,6 +287,17 @@ typedef struct xnhook {
     (xnthread_test_state((thread),XNROOT) || !xnthread_user_task(thread) ? \
     0 : xnarch_user_pid(xnthread_archtcb(thread)))
 
+/* Class-level operations for threads. */
+static inline int xnthread_get_denormalized_prio(xnthread_t *t)
+{
+	return t->ops ? t->ops->get_denormalized_prio(t) : xnthread_current_priority(t);
+}
+
+static inline unsigned xnthread_get_magic(xnthread_t *t)
+{
+	return t->ops ? t->ops->get_magic() : 0;
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -292,7 +307,8 @@ int xnthread_init(xnthread_t *thread,
 		  const char *name,
 		  int prio,
 		  xnflags_t flags,
-		  unsigned stacksize);
+		  unsigned stacksize,
+		  xnthrops_t *ops);
 
 void xnthread_cleanup_tcb(xnthread_t *thread);
 

@@ -30,6 +30,21 @@ static int testSafe(wind_task_t *task);
 static void wind_task_delete_hook(xnthread_t *xnthread);
 static void wind_task_trampoline(void *cookie);
 
+static int wind_task_get_denormalized_prio(xnthread_t *thread)
+{
+	return wind_denormalized_prio(xnthread_current_priority(thread));
+}
+
+static unsigned wind_task_get_magic(void)
+{
+	return VXWORKS_SKIN_MAGIC;
+}
+
+static xnthrops_t windtask_ops = {
+	.get_denormalized_prio = &wind_task_get_denormalized_prio,
+	.get_magic = &wind_task_get_magic,
+};
+
 void wind_task_init(void)
 {
 	initq(&wind_tasks_q);
@@ -81,10 +96,6 @@ STATUS taskInit(WIND_TCB *pTcb,
 	   neither. */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	/* VxWorks priority scale is inverted compared to the core
-	   pod's we are going to use for hosting our threads. */
-	bflags |= XNINVPS;
-
 	if (flags & VX_SHADOW)
 		bflags |= XNSHADOW;
 #else /* !CONFIG_XENO_OPT_PERVASIVE */
@@ -110,13 +121,11 @@ STATUS taskInit(WIND_TCB *pTcb,
 			      wind_tbase,
 			      pTcb->name,
 			      wind_normalized_prio(prio), bflags,
-			      stacksize) != 0) {
+			      stacksize, &windtask_ops) != 0) {
 		/* Assume this is the only possible failure. */
 		wind_errnoset(S_memLib_NOT_ENOUGH_MEMORY);
 		return ERROR;
 	}
-
-	xnthread_set_magic(&pTcb->threadbase, VXWORKS_SKIN_MAGIC);
 
 	/* finally set the Tcb after error conditions checking */
 	pTcb->magic = WIND_TASK_MAGIC;

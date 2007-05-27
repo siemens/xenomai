@@ -1,5 +1,16 @@
 2007-05-27  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus, ksrc/skins, include/nucleus/queue.h: Let the
+	nucleus create the core pod for the whole system. Have skins
+	normalize their respective priority ranges on the core one when
+	passing priority values to the nucleus services. Simplify and
+	sanitize the queue implementation on this basis, i.e. make
+	descending queuing order (formerly xnqueue_down) the common one,
+	since the core pod does follow this scheme.
+
+	* ksrc/skins/uitron/task.c (rot_rdq): Fix priority level in the
+	async case.
+
 	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.8-04.
 
 	* ksrc/arch/x86_64/patches: Upgrade to 2.6.20-1.0-08.

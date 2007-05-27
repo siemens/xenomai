@@ -34,18 +34,9 @@
    for the underlying pod. The core pod providing user-space support
    uses an ascending [0..257] priority scale (include/nucleus/core.h),
    whilst the uITRON personality exhibits a decreasing scale
-   [8..1]. We normalize to the range [92..99] on purpose, so that
-   xnpod_rescale_prio() properly scales values back to
-   [8..1]. Normalization is not needed when the underlying pod
-   supporting the uITRON skin is standalone, i.e. pure kernel, or
-   simulation modes. */
+   [8..1]. We normalize to the range [92..99]. */
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 #define ui_normalized_prio(prio)	(XNCORE_HIGH_PRIO - (prio) + 1)
 #define ui_denormalized_prio(prio)	(uITRON_MAX_PRI - (XNCORE_HIGH_PRIO - prio))
-#else /* !CONFIG_XENO_OPT_PERVASIVE */
-#define ui_normalized_prio(prio)	prio
-#define ui_denormalized_prio(prio)	prio
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 #endif /* !_uITRON_defs_h */

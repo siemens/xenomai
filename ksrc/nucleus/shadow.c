@@ -186,8 +186,7 @@ static inline void rpi_init(void)
 
 static inline void rpi_init_gk(struct __gatekeeper *gk)
 {
-	sched_initpq(&gk->rpislot.threadq, xnqueue_down,
-		     XNCORE_MIN_PRIO, XNCORE_MAX_PRIO);
+	sched_initpq(&gk->rpislot.threadq, XNCORE_MIN_PRIO, XNCORE_MAX_PRIO);
 }
 
 static inline void rpi_none(xnthread_t *thread)
@@ -225,7 +224,7 @@ static void rpi_push(xnthread_t *thread)
 		prio = xnthread_current_priority(top);
 		xnlock_put_irqrestore(&rpilock, s);
 	} else
-		prio = XNCORE_BASE_PRIO;
+		prio = XNCORE_IDLE_PRIO;
 
 	xnpod_renice_root(prio);
 }
@@ -252,7 +251,7 @@ static void rpi_pop(xnthread_t *thread)
 	rpi_none(thread);
 
 	if (likely(sched_emptypq_p(&gk->rpislot.threadq)))
-		prio = XNCORE_BASE_PRIO;
+		prio = XNCORE_IDLE_PRIO;
 	else {
 		xnthread_t *top = link2thread(sched_getheadpq(&gk->rpislot.threadq), xlink);
 		prio = xnthread_current_priority(top);
@@ -389,7 +388,7 @@ static inline void rpi_switch(struct task_struct *next)
 			xnthread_t *top = link2thread(sched_getheadpq(&gk->rpislot.threadq), xlink);
 			newprio = xnthread_current_priority(top);
 		} else
-			newprio = XNCORE_BASE_PRIO;
+			newprio = XNCORE_IDLE_PRIO;
 
 		xnlock_put_irqrestore(&rpilock, s);
 	}
@@ -399,7 +398,7 @@ static inline void rpi_switch(struct task_struct *next)
 
 	xnpod_renice_root(newprio);
 
-	if (xnpod_compare_prio(newprio, oldprio) < 0)
+	if (newprio < oldprio)
 		/* Subtle: by downgrading the root thread priority,
 		   some higher priority thread might well become
 		   eligible for execution instead of us. Since
@@ -412,7 +411,7 @@ static inline void rpi_switch(struct task_struct *next)
 static inline void rpi_clear(void)
 {
 	if (!xnshadow_thread(current))
-		xnpod_renice_root(XNCORE_BASE_PRIO);
+		xnpod_renice_root(XNCORE_IDLE_PRIO);
 }
 
 #ifdef CONFIG_SMP
@@ -427,8 +426,8 @@ void xnshadow_rpi_check(void)
 	xnlock_get_irqsave(&rpilock, s);
 
 	if (sched_emptypq_p(&gk->rpislot.threadq)) {
-		if (xnthread_current_priority(xnpod_current_root()) != XNCORE_BASE_PRIO)
-			xnpod_renice_root(XNCORE_BASE_PRIO);
+		if (xnthread_current_priority(xnpod_current_root()) != XNCORE_IDLE_PRIO)
+			xnpod_renice_root(XNCORE_IDLE_PRIO);
 	}
 
 	xnlock_put_irqrestore(&rpilock, s);
@@ -1140,10 +1139,6 @@ void xnshadow_exit(void)
  * @param thread The descriptor address of the new shadow thread to be
  * mapped to "current". This descriptor must have been previously
  * initialized by a call to xnpod_init_thread().
- *
- * @warning The thread must have been set the same magic number
- * (i.e. xnthread_set_magic()) than the one used to register the skin
- * it belongs to. Failing to do so might lead to unexpected results.
  *
  * @param u_completion is the address of an optional completion
  * descriptor aimed at synchronizing our parent thread with us. If

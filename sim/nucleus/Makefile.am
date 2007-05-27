@@ -15,7 +15,6 @@ lib_LIBRARIES = libnucleus_sim.a
 # included here.
 
 nodist_libnucleus_sim_a_SOURCES = \
-			core.c \
 			heap.c \
 			intr.c \
 			module.c \

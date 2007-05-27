@@ -44,7 +44,8 @@ static void xnthread_periodic_handler(xntimer_t *timer)
 int xnthread_init(xnthread_t *thread,
 		  xntbase_t *tbase,
 		  const char *name,
-		  int prio, xnflags_t flags, unsigned stacksize)
+		  int prio, xnflags_t flags, unsigned stacksize,
+		  xnthrops_t *ops)
 {
 	int err;
 
@@ -83,7 +84,6 @@ int xnthread_init(xnthread_t *thread,
 	thread->rrperiod = XN_INFINITE;
 	thread->rrcredit = XN_INFINITE;
 	thread->wchan = NULL;
-	thread->magic = 0;
 	thread->errcode = 0;
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	thread->registry.handle = XN_NO_HANDLE;
@@ -97,6 +97,7 @@ int xnthread_init(xnthread_t *thread,
 	thread->entry = NULL;
 	thread->cookie = 0;
 	thread->stime = 0;
+	thread->ops = ops;
 
 	if (name)
 		xnobject_copy_name(thread->name, name);
@@ -110,7 +111,7 @@ int xnthread_init(xnthread_t *thread,
 	initph(&thread->xlink);
 	thread->rpi = NULL;
 #endif /* CONFIG_XENO_OPT_PRIOCPL */
-	initpq(&thread->claimq, xnpod_get_qdir(nkpod));
+	initpq(&thread->claimq);
 
 	xnarch_init_display_context(thread);
 
@@ -126,7 +127,6 @@ void xnthread_cleanup_tcb(xnthread_t *thread)
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	thread->registry.handle = XN_NO_HANDLE;
 #endif /* CONFIG_XENO_OPT_REGISTRY */
-	thread->magic = 0;
 }
 
 char *xnthread_symbolic_status(xnflags_t status, char *buf, int size)

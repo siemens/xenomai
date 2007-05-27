@@ -101,6 +101,7 @@ struct sched_seq_iterator {
 		char name[XNOBJECT_NAME_LEN];
 		char timebase[XNOBJECT_NAME_LEN];
 		int cprio;
+		int dnprio;
 		xnticks_t period;
 		xnticks_t timeout;
 		xnflags_t state;
@@ -151,9 +152,9 @@ static int sched_seq_show(struct seq_file *seq, void *v)
 	else {
 		struct sched_seq_info *p = (struct sched_seq_info *)v;
 
-		if (p->state & XNINVPS)
+		if (p->cprio != p->dnprio)
 			snprintf(pbuf, sizeof(pbuf), "%3d(%d)",
-				 p->cprio, xnpod_rescale_prio(p->cprio));
+				 p->cprio, p->dnprio);
 		else
 			snprintf(pbuf, sizeof(pbuf), "%3d", p->cprio);
 
@@ -236,6 +237,7 @@ static int sched_seq_open(struct inode *inode, struct file *file)
 		iter->sched_info[n].pid = xnthread_user_pid(thread);
 		memcpy(iter->sched_info[n].name, thread->name, sizeof(iter->sched_info[n].name));
 		iter->sched_info[n].cprio = thread->cprio;
+		iter->sched_info[n].dnprio = xnthread_get_denormalized_prio(thread);
 		iter->sched_info[n].period = xnthread_get_period(thread);
 		iter->sched_info[n].timeout = xnthread_get_timeout(thread, iter->start_time);
 		iter->sched_info[n].state = xnthread_state_flags(thread);
@@ -993,11 +995,6 @@ int __init __xeno_sys_init(void)
 
 	if (err)
 		goto cleanup_shadow;
-
-	err = xncore_mount();
-
-	if (err)
-		goto cleanup_heap;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 #endif /* __KERNEL__ */
 
@@ -1013,10 +1010,6 @@ int __init __xeno_sys_init(void)
 #ifdef __KERNEL__
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-
-      cleanup_heap:
-
-	xnheap_umount();
 
       cleanup_shadow:
 
@@ -1067,7 +1060,6 @@ void __exit __xeno_sys_exit(void)
 
 #ifdef __KERNEL__
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	xncore_umount();
 	xnheap_umount();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 #ifdef CONFIG_XENO_OPT_PIPE

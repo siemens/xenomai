@@ -117,7 +117,7 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
     int res;
 
 
-    res = xnpod_init_thread(task, rtdm_tbase, name, priority, 0, 0);
+    res = xnpod_init_thread(task, rtdm_tbase, name, priority, 0, 0, NULL);
     if (res)
         goto error_out;
 

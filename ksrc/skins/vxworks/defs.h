@@ -163,21 +163,14 @@ typedef struct wind_wd {
 #define wind_current_task() (thread2wind_task(xnpod_current_thread()))
 
 /* The following macros return normalized or native priority values
-   for the underlying pod. The core pod providing user-space support
-   uses an ascending [0-257] priority scale (include/nucleus/core.h),
-   whilst the VxWorks personality exhibits a decreasing scale [255-0];
-   normalization is done in the [1-256] range so that priority 0 is
-   kept for non-realtime shadows. Normalization is not needed when the
-   underlying pod supporting the VxWorks skin is standalone, i.e. pure
-   kernel, or simulation modes. */
+   for the underlying pod. The core pod uses an ascending [0-257]
+   priority scale (include/nucleus/core.h), whilst the VxWorks
+   personality exhibits a decreasing scale [255-0]; normalization is
+   done in the [1-256] range so that priority 0 is kept for
+   non-realtime shadows. */
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 #define wind_normalized_prio(prio)	(XNCORE_MAX_PRIO - (prio) - 1)
 #define wind_denormalized_prio(prio)	(256 - (prio))
-#else /* !CONFIG_XENO_OPT_PERVASIVE */
-#define wind_normalized_prio(prio)	prio
-#define wind_denormalized_prio(prio)	prio
-#endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
 int *wind_errno_location(void);
 

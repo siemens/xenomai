@@ -145,7 +145,7 @@ int SKIN_INIT(vrtx)
 {
 	int err;
 
-	err = xncore_attach(255, 0);
+	err = xnpod_init();
 
 	if (err != 0)
 		goto fail;
@@ -166,7 +166,7 @@ int SKIN_INIT(vrtx)
 	if (err != 0) {
 		xntbase_free(vrtx_tbase);
 	fail_core:
-		xncore_detach(err);
+		xnpod_shutdown(err);
 	fail:
 		xnlogerr("VRTX skin init failed, code %d.\n", err);
 		return err;
@@ -204,7 +204,7 @@ void SKIN_EXIT(vrtx)
 	vrtxsys_cleanup();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 	xntbase_free(vrtx_tbase);
-	xncore_detach(XNPOD_NORMAL_EXIT);
+	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 }
 
 module_init(__vrtx_skin_init);

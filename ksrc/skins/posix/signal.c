@@ -124,7 +124,7 @@ static void pse51_delete_siginfo(pse51_siginfo_t * si)
 	si->info.si_signo = 0;	/* Used for debugging. */
 
 	xnlock_get_irqsave(&pse51_infos_lock, s);
-	insertpql(&pse51_infos_free_list, &si->link, 0);
+	insertpqlr(&pse51_infos_free_list, &si->link, 0);
 	xnlock_put_irqrestore(&pse51_infos_lock, s);
 }
 
@@ -345,10 +345,10 @@ void pse51_sigqueue_inner(pthread_t thread, pse51_siginfo_t * si)
 
 	if (ismember(&thread->sigmask, signum)) {
 		addset(&thread->blocked_received.mask, signum);
-		insertpqf(&thread->blocked_received.list, &si->link, prio);
+		insertpqfr(&thread->blocked_received.list, &si->link, prio);
 	} else {
 		addset(&thread->pending.mask, signum);
-		insertpqf(&thread->pending.list, &si->link, prio);
+		insertpqfr(&thread->pending.list, &si->link, prio);
 		thread->threadbase.signals = 1;
 	}
 
@@ -780,7 +780,7 @@ int pthread_sigmask(int how, const sigset_t * set, sigset_t * oset)
 
 			prio = sig < SIGRTMIN ? sig + SIGRTMAX : sig;
 			addset(&cur->pending.mask, si->info.si_signo);
-			insertpqf(&cur->pending.list, &si->link, prio);
+			insertpqfr(&cur->pending.list, &si->link, prio);
 			cur->threadbase.signals = 1;
 
 			if (!next)
@@ -1138,9 +1138,9 @@ static void pse51_signal_handle_request(void *cookie)
 void pse51_signal_init_thread(pthread_t newthread, const pthread_t parent)
 {
 	emptyset(&newthread->blocked_received.mask);
-	initpq(&newthread->blocked_received.list, xnqueue_up);
+	initpq(&newthread->blocked_received.list);
 	emptyset(&newthread->pending.mask);
-	initpq(&newthread->pending.list, xnqueue_up);
+	initpq(&newthread->pending.list);
 
 	/* parent may be NULL if pthread_create is not called from a pse51 thread. */
 	if (parent)
@@ -1189,7 +1189,7 @@ void pse51_signal_pkg_init(void)
 	int i;
 
 	/* Fill the pool. */
-	initpq(&pse51_infos_free_list, xnqueue_up);
+	initpq(&pse51_infos_free_list);
 	for (i = 0; i < PSE51_SIGQUEUE_MAX; i++)
 		pse51_delete_siginfo(&pse51_infos_pool[i]);
 
