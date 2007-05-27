@@ -1972,10 +1972,29 @@ index 55e586d..60d51ff 100644
  	CFI_STARTPROC
  	SAVE_ARGS
 diff --git a/arch/x86_64/mm/fault.c b/arch/x86_64/mm/fault.c
-index a65fc6f..e6cded8 100644
+index a65fc6f..418c486 100644
 --- a/arch/x86_64/mm/fault.c
 +++ b/arch/x86_64/mm/fault.c
-@@ -322,6 +322,25 @@ static int vmalloc_fault(unsigned long address)
+@@ -24,6 +24,7 @@
+ #include <linux/module.h>
+ #include <linux/kprobes.h>
+ #include <linux/uaccess.h>
++#include <linux/ipipe_trace.h>
+ 
+ #include <asm/system.h>
+ #include <asm/pgalloc.h>
+@@ -73,8 +74,10 @@ void bust_spinlocks(int yes)
+ {
+ 	int loglevel_save = console_loglevel;
+ 	if (yes) {
++		ipipe_trace_panic_freeze();
+ 		oops_in_progress = 1;
+ 	} else {
++		ipipe_trace_panic_dump();
+ #ifdef CONFIG_VT
+ 		unblank_screen();
+ #endif
+@@ -322,6 +325,25 @@ static int vmalloc_fault(unsigned long address)
  	return 0;
  }
  
@@ -2001,7 +2020,7 @@ index a65fc6f..e6cded8 100644
  int page_fault_trace = 0;
  int exception_trace = 1;
  
-@@ -349,6 +368,8 @@ asmlinkage void __kprobes do_page_fault(struct pt_regs *regs,
+@@ -349,6 +371,8 @@ asmlinkage void __kprobes do_page_fault(struct pt_regs *regs,
  	/* get the address */
  	__asm__("movq %%cr2,%0":"=r" (address));
  
@@ -2183,7 +2202,7 @@ index 2a5c162..cfaff42 100644
  #endif /* __ASM_IPI_H */
 diff --git a/include/asm-x86_64/ipipe.h b/include/asm-x86_64/ipipe.h
 new file mode 100644
-index 0000000..89bd3f3
+index 0000000..f978aea
 --- /dev/null
 +++ b/include/asm-x86_64/ipipe.h
 @@ -0,0 +1,239 @@
@@ -2215,10 +2234,10 @@ index 0000000..89bd3f3
 +
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.0-07"
++#define IPIPE_ARCH_STRING	"1.0-08"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	0
-+#define IPIPE_PATCH_NUMBER	7
++#define IPIPE_PATCH_NUMBER	8
 +
 +/* Local APIC is always compiled in on x86_64.  Reserve 32 IRQs for
 +   APIC interrupts, we don't want them to mess with the normally
@@ -2703,10 +2722,10 @@ index 612472a..2b2574c 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..ccff397
+index 0000000..c0a0d5e
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,696 @@
+@@ -0,0 +1,693 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -3355,8 +3374,6 @@ index 0000000..ccff397
 +			local_irq_disable_hw();		\
 +	} while(0)
 +
-+#define smp_processor_id_hw()				ipipe_processor_id()
-+
 +#define ipipe_irq_lock(irq)						\
 +	do {								\
 +		ipipe_declare_cpuid;					\
@@ -3390,7 +3407,6 @@ index 0000000..ccff397
 +#define local_irq_disable_hw_cond()		do { } while(0)
 +#define local_irq_save_hw_cond(flags)	do { (void)(flags); } while(0)
 +#define local_irq_restore_hw_cond(flags)	do { } while(0)
-+#define smp_processor_id_hw()			smp_processor_id()
 +
 +#define ipipe_irq_lock(irq)		do { } while(0)
 +#define ipipe_irq_unlock(irq)		do { } while(0)
@@ -3499,7 +3515,7 @@ index 0000000..d0ddf3f
 +#endif	/* !__LINUX_IPIPE_BASE_H */
 diff --git a/include/linux/ipipe_trace.h b/include/linux/ipipe_trace.h
 new file mode 100644
-index 0000000..6f5e7bc
+index 0000000..c7c6ebd
 --- /dev/null
 +++ b/include/linux/ipipe_trace.h
 @@ -0,0 +1,49 @@
@@ -3507,7 +3523,7 @@ index 0000000..6f5e7bc
 + * include/linux/ipipe_trace.h
 + *
 + * Copyright (C) 2005 Luotao Fu.
-+ *               2005, 2006 Jan Kiszka.
++ *               2005-2007 Jan Kiszka.
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published by
@@ -3528,8 +3544,6 @@ index 0000000..6f5e7bc
 +#ifndef _LINUX_IPIPE_TRACE_H
 +#define _LINUX_IPIPE_TRACE_H
 +
-+#ifdef CONFIG_IPIPE_TRACE
-+
 +#include <linux/types.h>
 +
 +void ipipe_trace_begin(unsigned long v);
@@ -3541,15 +3555,17 @@ index 0000000..6f5e7bc
 +int ipipe_trace_max_reset(void);
 +int ipipe_trace_frozen_reset(void);
 +
++#ifdef CONFIG_IPIPE_TRACE_PANIC
++
 +void ipipe_trace_panic_freeze(void);
 +void ipipe_trace_panic_dump(void);
 +
-+#else /* !CONFIG_IPIPE_TRACE */
++#else /* !CONFIG_IPIPE_TRACE_PANIC */
 +
 +static inline void ipipe_trace_panic_freeze(void) { }
 +static inline void ipipe_trace_panic_dump(void) { }
 +
-+#endif /* !CONFIG_IPIPE_TRACE */
++#endif /* !CONFIG_IPIPE_TRACE_PANIC */
 +
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/irq.h b/include/linux/irq.h
@@ -4067,10 +4083,10 @@ index 0000000..1f46f07
 +	  compiled in.
 diff --git a/kernel/ipipe/Kconfig.debug b/kernel/ipipe/Kconfig.debug
 new file mode 100644
-index 0000000..d36272e
+index 0000000..64a692c
 --- /dev/null
 +++ b/kernel/ipipe/Kconfig.debug
-@@ -0,0 +1,80 @@
+@@ -0,0 +1,88 @@
 +config IPIPE_DEBUG
 +	bool "I-pipe debugging"
 +	depends on IPIPE
@@ -4099,9 +4115,10 @@ index 0000000..d36272e
 +	  in-kernel tracing API. The collected data and runtime control
 +	  is available via /proc/ipipe/trace/*.
 +
++if IPIPE_TRACE
++
 +config IPIPE_TRACE_ENABLE
 +	bool "Enable tracing on boot"
-+	depends on IPIPE_TRACE
 +	default y
 +	---help---
 +	  Disable this option if you want to arm the tracer after booting
@@ -4110,7 +4127,6 @@ index 0000000..d36272e
 +
 +config IPIPE_TRACE_MCOUNT
 +	bool "Instrument function entries"
-+	depends on IPIPE_TRACE
 +	default y
 +	---help---
 +	  When enabled, records every kernel function entry in the tracer
@@ -4121,7 +4137,6 @@ index 0000000..d36272e
 +
 +config IPIPE_TRACE_IRQSOFF
 +	bool "Trace IRQs-off times"
-+	depends on IPIPE_TRACE
 +	default y
 +	---help---
 +	  Activate this option if I-pipe shall trace the longest path
@@ -4131,14 +4146,12 @@ index 0000000..d36272e
 +	int "Depth of trace log (14 => 16Kpoints, 15 => 32Kpoints)"
 +	range 10 18
 +	default 14
-+	depends on IPIPE_TRACE
 +	---help---
 +	  The number of trace points to hold tracing data for each
 +	  trace path, as a power of 2.
 +
 +config IPIPE_TRACE_VMALLOC
 +	bool "Use vmalloc'ed trace buffer"
-+	depends on IPIPE_TRACE
 +	default y if EMBEDDED
 +	---help---
 +	  Instead of reserving static kernel data, the required buffer
@@ -4147,10 +4160,21 @@ index 0000000..d36272e
 +	  but it slightly degrades overall performance. Try this option
 +	  when a traced kernel hangs unexpectedly at boot time.
 +
++config IPIPE_TRACE_PANIC
++	bool "Enable panic back traces"
++	default y
++	---help---
++	  Provides services to freeze and dump a back trace on panic
++	  situations. This is used on IPIPE_DEBUG_CONTEXT exceptions
++	  as well as ordinary kernel oopses. You can control the number
++	  of printed back trace points via /proc/ipipe/trace.
++
 +config IPIPE_TRACE_ENABLE_VALUE
 +	int
 +	default 0 if !IPIPE_TRACE_ENABLE
 +	default 1 if IPIPE_TRACE_ENABLE
++
++endif
 diff --git a/kernel/ipipe/Makefile b/kernel/ipipe/Makefile
 new file mode 100644
 index 0000000..6257dfa
@@ -5611,10 +5635,10 @@ index 0000000..4fb052a
 +EXPORT_SYMBOL(__ipipe_schedule_irq);
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..642933a
+index 0000000..de08cb1
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1284 @@
+@@ -0,0 +1,1291 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -5749,7 +5773,9 @@ index 0000000..642933a
 +
 +static DEFINE_MUTEX(out_mutex);
 +static struct ipipe_trace_path *print_path;
++#ifdef CONFIG_IPIPE_TRACE_PANIC
 +static struct ipipe_trace_path *panic_path;
++#endif /* CONFIG_IPIPE_TRACE_PANIC */
 +static int print_pre_trace;
 +static int print_post_trace;
 +
@@ -6178,25 +6204,6 @@ index 0000000..642933a
 +}
 +EXPORT_SYMBOL(ipipe_trace_frozen_reset);
 +
-+void ipipe_trace_panic_freeze(void)
-+{
-+	unsigned long flags;
-+	int cpu_id;
-+
-+	if (!ipipe_trace_enable)
-+		return;
-+
-+	ipipe_trace_enable = 0;
-+	local_irq_save_hw_notrace(flags);
-+
-+	cpu_id = ipipe_processor_id();
-+
-+	panic_path = &trace_paths[cpu_id][active_path[cpu_id]];
-+
-+	local_irq_restore_hw(flags);
-+}
-+EXPORT_SYMBOL(ipipe_trace_panic_freeze);
-+
 +static void
 +__ipipe_get_task_info(char *task_info, struct ipipe_trace_point *point,
 +                      int trylock)
@@ -6206,9 +6213,10 @@ index 0000000..642933a
 +	int i;
 +	int locked = 1;
 +
-+	if (trylock && !read_trylock(&tasklist_lock))
-+		locked = 0;
-+	else
++	if (trylock) {
++		if (!read_trylock(&tasklist_lock))
++			locked = 0;
++	} else
 +		read_lock(&tasklist_lock);
 +
 +	if (locked)
@@ -6228,6 +6236,26 @@ index 0000000..642933a
 +	sprintf(buf, " %d ", point->type >> IPIPE_TYPE_BITS);
 +	strcpy(task_info + (11 - strlen(buf)), buf);
 +}
++
++#ifdef CONFIG_IPIPE_TRACE_PANIC
++void ipipe_trace_panic_freeze(void)
++{
++	unsigned long flags;
++	int cpu_id;
++
++	if (!ipipe_trace_enable)
++		return;
++
++	ipipe_trace_enable = 0;
++	local_irq_save_hw_notrace(flags);
++
++	cpu_id = ipipe_processor_id();
++
++	panic_path = &trace_paths[cpu_id][active_path[cpu_id]];
++
++	local_irq_restore_hw(flags);
++}
++EXPORT_SYMBOL(ipipe_trace_panic_freeze);
 +
 +void ipipe_trace_panic_dump(void)
 +{
@@ -6295,6 +6323,7 @@ index 0000000..642933a
 +	panic_path = NULL;
 +}
 +EXPORT_SYMBOL(ipipe_trace_panic_dump);
++#endif /* CONFIG_IPIPE_TRACE_PANIC */
 +
 +
 +/* --- /proc output --- */
@@ -6417,8 +6446,17 @@ index 0000000..642933a
 +
 +	sym_name = kallsyms_lookup(eip, &size, &offset, &modname, namebuf);
 +
-+	/* printing to /proc? */
-+	if (m) {
++#ifdef CONFIG_IPIPE_TRACE_PANIC
++	if (!m) {
++		/* panic dump */
++		if (sym_name) {
++			printk("%s+0x%lx", sym_name, offset);
++			if (modname)
++				printk(" [%s]", modname);
++		}
++	} else
++#endif /* CONFIG_IPIPE_TRACE_PANIC */
++	{
 +		if (sym_name) {
 +			if (verbose_trace) {
 +				seq_printf(m, "%s+0x%lx", sym_name, offset);
@@ -6428,13 +6466,6 @@ index 0000000..642933a
 +				seq_puts(m, sym_name);
 +		} else
 +			seq_printf(m, "<%08lx>", eip);
-+	} else {
-+		/* panic dump */
-+		if (sym_name) {
-+			printk("%s+0x%lx", sym_name, offset);
-+			if (modname)
-+				printk(" [%s]", modname);
-+		}
 +	}
 +}
 +
@@ -7381,6 +7412,30 @@ index 5c26818..36cd9ec 100644
  config DEBUG_KERNEL
  	bool "Kernel debugging"
  	help
+diff --git a/lib/bust_spinlocks.c b/lib/bust_spinlocks.c
+index a2055bc..a49201f 100644
+--- a/lib/bust_spinlocks.c
++++ b/lib/bust_spinlocks.c
+@@ -12,14 +12,19 @@
+ #include <linux/tty.h>
+ #include <linux/wait.h>
+ #include <linux/vt_kern.h>
++#include <linux/ipipe_trace.h>
+ 
+ 
+ void bust_spinlocks(int yes)
+ {
+ 	if (yes) {
++		ipipe_trace_panic_freeze();
+ 		oops_in_progress = 1;
+ 	} else {
+ 		int loglevel_save = console_loglevel;
++
++		ipipe_trace_panic_dump();
++
+ #ifdef CONFIG_VT
+ 		unblank_screen();
+ #endif
 diff --git a/lib/ioremap.c b/lib/ioremap.c
 index a9e4415..52d1787 100644
 --- a/lib/ioremap.c
