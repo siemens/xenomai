@@ -2938,12 +2938,11 @@ int xnpod_enable_timesource(void)
 
 	xnltt_log_event(xeno_ev_tsenable);
 
-	/* The clock interrupt does not need to be attached since the
-	   timer service will handle the arch-dependent setup. The IRQ
-	   source will be attached directly by the arch-dependent layer
-	   (xnarch_start_timer). */
-
-	xnintr_init(&nkclock, "[timer]", XNARCH_TIMER_IRQ, &xnpod_announce_tick, NULL, 0);
+#ifdef CONFIG_XENO_OPT_STATS
+	/* Only for statistical purpose, the clock interrupt will be attached
+	   directly by the arch-dependent layer (xnarch_start_timer). */
+	xnintr_init(&nkclock, "[timer]", XNARCH_TIMER_IRQ, NULL, NULL, 0);
+#endif /* CONFIG_XENO_OPT_STATS */
 
 	nktbase.status = XNTBRUN;
 
@@ -3043,51 +3042,7 @@ void xnpod_disable_timesource(void)
 	   resource is associated with this object. */
 }
 
-/*! 
- * \fn int xnpod_announce_tick(xnintr_t *intr)
- *
- * \brief Announce a new clock tick.
- *
- * This is the default service routine for clock ticks which performs
- * the necessary housekeeping chores for time-related services managed
- * by the nucleus. In a way or another, this routine must be called
- * to announce each incoming clock tick to the nucleus.
- *
- * @param intr The descriptor address of the interrupt object
- * associated to the timer interrupt.
- *
- * Side-effect: Since this routine manages the round-robin scheduling,
- * the running thread (which has been preempted by the timer
- * interrupt) can be switched out as a result of its time credit being
- * exhausted. The nucleus always calls the rescheduling procedure
- * after the outer interrupt has been processed.
- *
- * @return XN_ISR_HANDLED|XN_ISR_NOENABLE is always returned.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Interrupt service routine, must be called with interrupts off.
- *
- * Rescheduling: possible.
- *
- */
-
-int xnpod_announce_tick(xnintr_t *intr)
-{
-	xnlock_get(&nklock);
-
-	xnltt_log_event(xeno_ev_tstick, xnpod_current_thread()->name);
-
-	xntimer_tick_aperiodic(); /* Update the master time base. */
-
-	xnlock_put(&nklock);
-
-	return XN_ISR_HANDLED | XN_ISR_NOENABLE;
-}
-
-/*! 
+/*!
  * \fn int xnpod_set_thread_periodic(xnthread_t *thread,xnticks_t idate,xnticks_t period)
  * \brief Make a thread periodic.
  *
@@ -3302,7 +3257,6 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 
 EXPORT_SYMBOL(xnpod_activate_rr);
 EXPORT_SYMBOL(xnpod_add_hook);
-EXPORT_SYMBOL(xnpod_announce_tick);
 EXPORT_SYMBOL(xnpod_check_context);
 EXPORT_SYMBOL(xnpod_deactivate_rr);
 EXPORT_SYMBOL(xnpod_delete_thread);
@@ -3329,7 +3283,6 @@ EXPORT_SYMBOL(xnpod_unblock_thread);
 EXPORT_SYMBOL(xnpod_wait_thread_period);
 EXPORT_SYMBOL(xnpod_welcome_thread);
 
-EXPORT_SYMBOL(nkclock);
 EXPORT_SYMBOL(nkpod);
 
 #ifdef CONFIG_SMP

@@ -433,6 +433,9 @@ void xntbase_tick(xntbase_t *base)
 
 	xnlock_get_irqsave(&nklock, s);
 
+	xnltt_log_event(xeno_ev_tstick, base->name,
+			xnpod_current_thread()->name);
+
 	if (base == &nktbase)
 		xntimer_tick_aperiodic();
 	else {
