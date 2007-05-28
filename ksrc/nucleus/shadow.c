@@ -92,6 +92,7 @@ static struct __lostagerq {
 #define LO_RENICE_REQ 2
 #define LO_SIGGRP_REQ 3
 #define LO_SIGTHR_REQ 4
+#define LO_UNMAP_REQ  5
 		int type;
 		struct task_struct *task;
 		int arg;
@@ -786,6 +787,28 @@ static inline void unlock_timers(void)
 		clrbits(nktbase.status, XNTBLCK);
 }
 
+static void xnshadow_dereference_skin(unsigned magic)
+{
+	unsigned muxid;
+
+	for (muxid = 0; muxid < XENOMAI_MUX_NR; muxid++) {
+		if (muxtable[muxid].magic == magic) {
+			if (xnarch_atomic_dec_and_test(&muxtable[0].refcnt))
+				xnarch_atomic_dec(&muxtable[0].refcnt);
+			if (xnarch_atomic_dec_and_test(&muxtable[muxid].refcnt))
+
+				/* We were the last thread, decrement the counter,
+				   since it was incremented by the xn_sys_bind
+				   operation. */
+				xnarch_atomic_dec(&muxtable[muxid].refcnt);
+			if (muxtable[muxid].module)
+				module_put(muxtable[muxid].module);
+
+			break;
+		}
+	}
+}
+
 static void lostage_handler(void *cookie)
 {
 	int cpuid = smp_processor_id(), reqnum, sig;
@@ -798,6 +821,12 @@ static void lostage_handler(void *cookie)
 		xnltt_log_event(xeno_ev_lohandler, reqnum, p->comm, p->pid);
 
 		switch (rq->req[reqnum].type) {
+		case LO_UNMAP_REQ:
+
+			xnshadow_dereference_skin(
+				(unsigned)rq->req[reqnum].arg);
+
+			/* fall through */
 		case LO_WAKEUP_REQ:
 
 #ifdef CONFIG_SMP
@@ -1260,32 +1289,12 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 void xnshadow_unmap(xnthread_t *thread)
 {
 	struct task_struct *p;
-	unsigned muxid, magic;
 
 	if (XENO_DEBUG(NUCLEUS) &&
 	    !testbits(xnpod_current_sched()->status, XNKCOUT))
 		xnpod_fatal("xnshadow_unmap() called from invalid context");
 
 	p = xnthread_archtcb(thread)->user_task;	/* May be != current */
-
-	magic = xnthread_get_magic(thread);
-
-	for (muxid = 0; muxid < XENOMAI_MUX_NR; muxid++) {
-		if (muxtable[muxid].magic == magic) {
-			if (xnarch_atomic_dec_and_test(&muxtable[0].refcnt))
-				xnarch_atomic_dec(&muxtable[0].refcnt);
-			if (xnarch_atomic_dec_and_test(&muxtable[muxid].refcnt))
-
-				/* We were the last thread, decrement the counter,
-				   since it was incremented by the xn_sys_bind
-				   operation. */
-				xnarch_atomic_dec(&muxtable[muxid].refcnt);
-			if (muxtable[muxid].module)
-				module_put(muxtable[muxid].module);
-
-			break;
-		}
-	}
 
 	xnthread_clear_state(thread, XNMAPPED);
 	rpi_pop(thread);
@@ -1297,13 +1306,7 @@ void xnshadow_unmap(xnthread_t *thread)
 
 	xnshadow_thrptd(p) = NULL;
 
-	if (p->state != TASK_RUNNING)
-		/* If the shadow is being unmapped in primary mode or blocked
-		   in secondary mode, the associated Linux task should also
-		   die. In the former case, the zombie Linux side returning to
-		   user-space will be trapped and exited inside the pod's
-		   rescheduling routines. */
-		schedule_linux_call(LO_WAKEUP_REQ, p, 0);
+	schedule_linux_call(LO_UNMAP_REQ, p, xnthread_get_magic(thread));
 }
 
 int xnshadow_wait_barrier(struct pt_regs *regs)
@@ -1996,6 +1999,7 @@ RTHAL_DECLARE_EVENT(losyscall_event);
 static inline void do_taskexit_event(struct task_struct *p)
 {
 	xnthread_t *thread = xnshadow_thread(p); /* p == current */
+	unsigned magic;
 	spl_t s;
 
 	if (!thread)
@@ -2003,6 +2007,8 @@ static inline void do_taskexit_event(struct task_struct *p)
 
 	if (xnpod_shadow_p())
 		xnshadow_relax(0);
+
+	magic = xnthread_get_magic(thread);
 
 	xnlock_get_irqsave(&nklock, s);
 	/* Prevent wakeup call from xnshadow_unmap(). */
@@ -2014,6 +2020,7 @@ static inline void do_taskexit_event(struct task_struct *p)
 	xnlock_put_irqrestore(&nklock, s);
 	xnpod_schedule();
 
+	xnshadow_dereference_skin(magic);
 	xnltt_log_event(xeno_ev_shadowexit, thread->name);
 }
 
