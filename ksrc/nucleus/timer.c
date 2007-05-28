@@ -54,14 +54,16 @@ static inline void xntimer_dequeue_aperiodic(xntimer_t *timer)
 	__setbits(timer->status, XNTIMER_DEQUEUED);
 }
 
-static inline void xntimer_next_local_shot(xnsched_t *this_sched)
+static void xntimer_next_local_shot(xnsched_t *this_sched)
 {
 	xntimerh_t *holder = xntimerq_head(&this_sched->timerqueue);
 	xnticks_t now, delay, xdate;
 	xntimer_t *timer;
 
-	if (!holder)
-		return;		/* No pending timer. */
+	/* Do not reprogram locally when inside the tick handler - will be
+	   done on exit anyway. Also exit if there is no pending timer. */
+	if (testbits(this_sched->status, XNINTCK) || !holder)
+		return;
 
 	timer = aplink2timer(holder);
 
@@ -190,6 +192,11 @@ void xntimer_tick_aperiodic(void)
 	xntimer_t *timer;
 	xnticks_t now;
 
+	/* Optimisation: any local timer reprogramming triggered by invoked
+	   timer handlers can wait until we leave the tick handler. Use this
+	   status flag as hint to xntimer_start_aperiodic. */
+	__setbits(sched->status, XNINTCK);
+
 	now = xnarch_get_cpu_tsc();
 	while ((holder = xntimerq_head(timerq)) != NULL) {
 		timer = aplink2timer(holder);
@@ -233,6 +240,8 @@ void xntimer_tick_aperiodic(void)
 		} while (xntimerh_date(&timer->aplink) < now + nkschedlat);
 		xntimer_enqueue_aperiodic(timer);
 	}
+
+	__clrbits(sched->status, XNINTCK);
 
 	xntimer_next_local_shot(sched);
 }

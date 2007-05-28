@@ -42,6 +42,7 @@
 #define XNKCOUT  0x80000000	/* Sched callout context */
 #define XNHTICK  0x40000000	/* Host tick pending  */
 #define XNRPICK  0x20000000	/* Check RPI state */
+#define XNINTCK  0x10000000	/* In master tick handler context */
 
 /* These flags are available to the real-time interfaces */
 #define XNPOD_SPARE0  0x01000000
