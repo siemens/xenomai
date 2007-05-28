@@ -2,11 +2,13 @@
 
 	* ksrc/nucleus: Flatten timer IRQ handling path.
 	
-	* ksrc/nucleus/timer.c: Don't reprogram the timer chip for the
-	next shot uselessly, until the tick handler has run.
+	* ksrc/nucleus/timer.c: Optimize handling of periodic timers.
 	
 	* include/asm-generic/hal.h: Get rid of rwlock compatibility
 	macros. We don't use rwlocks anymore.
+	
+	* ksrc/nucleus/timer.c: Don't reprogram the timer chip for the
+	next shot uselessly, until the tick handler has run.
 	
 2007-05-27  Philippe Gerum  <rpm@xenomai.org>
 
