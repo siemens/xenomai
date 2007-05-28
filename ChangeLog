@@ -6,6 +6,11 @@
 	priority ranges in the multi-level queue implementation. Sanitize
 	priority scales handling.
 
+2007-05-24  Jan Kiszka  <jan.kiszka@web.de>
+
+       * ksrc/nucleus/shadow.c (rpi_init_gk): Fix initialisation that
+       caused faults with XENO_OPT_SCALABLE_SCHED enabled.
+
 2007-05-26  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.14-1.5-03.
