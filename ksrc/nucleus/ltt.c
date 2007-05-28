@@ -123,8 +123,8 @@ struct xnltt_evmap xnltt_evtable[] = {
 	    {"Xenomai sigdispatch", "thread=%s, sigpend=0x%x", -1, xeno_evall},
 	[xeno_ev_thrboot] =
 	    {"Xenomai thread begin", "thread=%s", -1, xeno_evthr},
-	[xeno_ev_tstick] =
-	    {"Xenomai time source tick", "runthread=%s", -1, xeno_evirq},
+	[xeno_ev_tstick] = {"Xenomai time source tick",
+			    "base=%s, runthread=%s", -1, xeno_evirq},
 	[xeno_ev_sleepon] =
 	    {"Xenomai sleepon", "thread=%s, sync=%p", -1, xeno_evthr},
 	[xeno_ev_wakeup1] =

@@ -391,8 +391,6 @@ static inline void xnpod_unlock_sched(void)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-int xnpod_announce_tick(struct xnintr *intr);
-
 void xnpod_activate_rr(xnticks_t quantum);
 
 void xnpod_deactivate_rr(void);

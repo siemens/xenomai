@@ -41,9 +41,8 @@
 
 DEFINE_PRIVATE_XNLOCK(intrlock);
 
-xnintr_t nkclock;
-
 #ifdef CONFIG_XENO_OPT_STATS
+xnintr_t nkclock;	/* Only for statistics */
 int xnintr_count = 1;	/* Number of attached xnintr objects + nkclock */
 int xnintr_list_rev;	/* Modification counter of xnintr list */
 
@@ -113,6 +112,42 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	if (--sched->inesting == 0 && xnsched_resched_p())
 		xnpod_schedule();
 
+	xnltt_log_event(xeno_ev_iexit, irq);
+	xnstat_runtime_switch(sched, prev);
+}
+
+/* Low-level clock irq handler. */
+
+void xnintr_clock_handler(void)
+{
+	xnsched_t *sched = xnpod_current_sched();
+	xnstat_runtime_t *prev;
+	xnticks_t start;
+
+	xnarch_memory_barrier();
+
+	prev  = xnstat_runtime_get_current(sched);
+	start = xnstat_runtime_now();
+
+	xnarch_announce_tick();
+
+	xnltt_log_event(xeno_ev_ienter, XNARCH_TIMER_IRQ);
+	xnltt_log_event(xeno_ev_tstick, nktbase.name,
+			xnpod_current_thread()->name);
+
+	++sched->inesting;
+
+	xnlock_get(&nklock);
+	xntimer_tick_aperiodic();
+	xnlock_put(&nklock);
+
+	xnstat_counter_inc(&nkclock.stat[xnsched_cpu(sched)].hits);
+	xnstat_runtime_lazy_switch(sched,
+		&nkclock.stat[xnsched_cpu(sched)].account, start);
+
+	if (--sched->inesting == 0 && xnsched_resched_p())
+		xnpod_schedule();
+
 	/* Since the host tick is low priority, we can wait for returning
 	   from the rescheduling procedure before actually calling the
 	   propagation service, if it is pending. */
@@ -122,16 +157,8 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 		xnarch_relay_tick();
 	}
 
-	xnltt_log_event(xeno_ev_iexit, irq);
+	xnltt_log_event(xeno_ev_iexit, XNARCH_TIMER_IRQ);
 	xnstat_runtime_switch(sched, prev);
-}
-
-/* Low-level clock irq handler. */
-
-void xnintr_clock_handler(void)
-{
-	xnarch_announce_tick();
-	xnintr_irq_handler(nkclock.irq, &nkclock);
 }
 
 /* Optional support for shared interrupts. */
@@ -809,7 +836,7 @@ int xnintr_irq_proc(unsigned int irq, char *str)
 		p += sprintf(p, "         [virtual]");
 		return p - str;
 	} else if (irq == XNARCH_TIMER_IRQ) {
-		p += sprintf(p, "         %s", nkclock.name);
+		p += sprintf(p, "         [timer]");
 		return p - str;
 	}
 
