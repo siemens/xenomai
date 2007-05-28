@@ -84,24 +84,18 @@
 
 typedef struct ipipe_domain rthal_pipeline_stage_t;
 
-#ifdef IPIPE_RW_LOCK_UNLOCKED
+#ifdef IPIPE_SPIN_LOCK_UNLOCKED
 typedef ipipe_spinlock_t rthal_spinlock_t;
 #define RTHAL_SPIN_LOCK_UNLOCKED IPIPE_SPIN_LOCK_UNLOCKED
-typedef ipipe_rwlock_t rthal_rwlock_t;
-#define RTHAL_RW_LOCK_UNLOCKED   IPIPE_RW_LOCK_UNLOCKED
-#else /* !IPIPE_RW_LOCK_UNLOCKED */
-#ifdef RAW_RW_LOCK_UNLOCKED
+#else /* !IPIPE_SPIN_LOCK_UNLOCKED */
+#ifdef RAW_SPIN_LOCK_UNLOCKED
 typedef raw_spinlock_t rthal_spinlock_t;
 #define RTHAL_SPIN_LOCK_UNLOCKED RAW_SPIN_LOCK_UNLOCKED
-typedef raw_rwlock_t rthal_rwlock_t;
-#define RTHAL_RW_LOCK_UNLOCKED RAW_RW_LOCK_UNLOCKED
-#else /* !RAW_RW_LOCK_UNLOCKED */
+#else /* !RAW_SPIN_LOCK_UNLOCKED */
 typedef spinlock_t rthal_spinlock_t;
 #define RTHAL_SPIN_LOCK_UNLOCKED SPIN_LOCK_UNLOCKED
-typedef rwlock_t rthal_rwlock_t;
-#define RTHAL_RW_LOCK_UNLOCKED RW_LOCK_UNLOCKED
-#endif /* RAW_RW_LOCK_UNLOCKED */
-#endif /* IPIPE_RW_LOCK_UNLOCKED */
+#endif /* !RAW_SPIN_LOCK_UNLOCKED */
+#endif /* !IPIPE_SPIN_LOCK_UNLOCKED */
 
 #define rthal_irq_cookie(ipd,irq)	__ipipe_irq_cookie(ipd,irq)
 #define rthal_irq_handler(ipd,irq)	__ipipe_irq_handler(ipd,irq)
@@ -130,11 +124,6 @@ typedef rwlock_t rthal_rwlock_t;
 #define rthal_local_irq_enable_hw()	local_irq_enable_hw()
 #define rthal_local_irq_disable_hw()	local_irq_disable_hw()
 #define rthal_local_irq_flags_hw(x)	local_save_flags_hw(x)
-
-#define rthal_write_lock(lock)	write_lock_hw(lock)
-#define rthal_write_unlock(lock)	write_unlock_hw(lock)
-#define rthal_read_lock(lock)		read_lock_hw(lock)
-#define rthal_read_unlock(lock)	read_unlock_hw(lock)
 
 #ifdef spin_lock_hw
 #define rthal_spin_lock_init(lock)	spin_lock_init(lock)

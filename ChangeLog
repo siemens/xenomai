@@ -5,6 +5,9 @@
 	* ksrc/nucleus/timer.c: Don't reprogram the timer chip for the
 	next shot uselessly, until the tick handler has run.
 	
+	* include/asm-generic/hal.h: Get rid of rwlock compatibility
+	macros. We don't use rwlocks anymore.
+	
 2007-05-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus, ksrc/skins, include/nucleus/queue.h: Let the
