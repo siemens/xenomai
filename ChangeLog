@@ -12,6 +12,9 @@
 
 	* ksrc/skins/native/timer.c: Inline services.
 	
+	* ksrc/nucleus/shadow.c: Postpone module_put() to the lo-stage
+	APC handler.
+	
 2007-05-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus, ksrc/skins, include/nucleus/queue.h: Let the
