@@ -664,7 +664,7 @@ static inline void initmlq(xnmlqueue_t *mlqslot, int loprio, int hiprio)
 		initq(&mlqslot->queue[prio]);
 
 	XENO_ASSERT(NUCLEUS, 
-		    hiprio - lowprio < XNCORE_NR_PRIO,
+		    hiprio - loprio < XNCORE_NR_PRIO,
 		    xnpod_fatal("priority range [%d..%d] is beyond multi-level "
 				"queue indexing capabilities",
 				loprio, hiprio));
