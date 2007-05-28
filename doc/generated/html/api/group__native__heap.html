@@ -26,7 +26,13 @@
 <h1>Memory heap services.<br>
 <small>
 [<a class="el" href="group__native.html">Native Xenomai API.</a>]</small>
-</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1>
+<p>
+Collaboration diagram for Memory heap services.:<center><table><tr><td><img src="group__native__heap.png" border="0" alt="" usemap="#group____native____heap_map">
+<map name="group____native____heap_map">
+<area href="group__native.html" shape="rect" coords="9,8,153,32" alt="">
+</map></td></tr></table></center>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
 Memory heaps are regions of memory used for dynamic memory allocation in a time-bounded fashion. Blocks of memory are allocated and freed in an arbitrary order and the pattern of allocation and size of blocks is not known until run time.<p>
 The implementation of the memory allocator follows the algorithm described in a USENIX 1988 paper called "Design of a General Purpose Memory Allocator for the 4.3BSD Unix Kernel" by Marshall K. McKusick and Michael J. Karels.<p>
 Xenomai memory heaps are built over the nucleus's heap objects, which in turn provide the needed support for sharing a memory area between kernel and user-space using direct memory mapping. 
@@ -542,7 +548,7 @@ Rescheduling: never. <dl compact><dt><b>Examples: </b></dt><dd>
 <a class="el" href="shared__mem_8c-example.html#a167">shared_mem.c</a>.</dl>    </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:01 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:35:03 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

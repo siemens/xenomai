@@ -1,0 +1,15 @@
+base referer
+rect $pod_8h.html 235,110 339,134
+rect $include_2nucleus_2registry_8h.html 225,160 350,184
+rect $nucleus_2heap_8h-source.html 405,358 517,382
+rect $task_8h.html 239,257 335,281
+rect $event_8h.html 235,209 339,233
+rect $include_2nucleus_2thread_8h-source.html 401,110 521,134
+rect $include_2nucleus_2intr_8h-source.html 411,62 510,86
+rect $include_2nucleus_2timer_8h.html 574,110 686,134
+rect $stat_8h-source.html 578,62 682,86
+rect $nucleus_2types_8h-source.html 738,185 853,209
+rect $synch_8h-source.html 402,209 519,233
+rect $nucleus_2queue_8h-source.html 570,260 690,284
+rect $core_8h-source.html 741,284 850,308
+rect $native_2types_8h.html 409,257 513,281

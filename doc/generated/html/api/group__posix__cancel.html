@@ -26,7 +26,13 @@
 <h1>Thread cancellation.<br>
 <small>
 [<a class="el" href="group__posix__thread.html">Threads management services.</a>]</small>
-</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1>
+<p>
+Collaboration diagram for Thread cancellation.:<center><table><tr><td><img src="group__posix__cancel.png" border="0" alt="" usemap="#group____posix____cancel_map">
+<map name="group____posix____cancel_map">
+<area href="group__posix__thread.html" shape="rect" coords="9,8,217,32" alt="">
+</map></td></tr></table></center>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
 Thread cancellation. 
 <p>
 Cancellation is the mechanism by which a thread can terminate the execution of a Xenomai POSIX skin thread (created with <a class="el" href="group__posix__thread.html#ge6e819ed048e4c4a4ee96fa6f426852c">pthread_create()</a>). More precisely, a thread can send a cancellation request to a Xenomai POSIX skin thread and depending on its cancelability type (see <a class="el" href="group__posix__cancel.html#g636480bad96654729ecf18017c2820cd">pthread_setcanceltype()</a>) and state (see <a class="el" href="group__posix__cancel.html#ge377201f61fae5f551dfd7eb6de75873">pthread_setcancelstate()</a>), the target thread can then either ignore the request, honor it immediately, or defer it till it reaches a cancellation point. When threads are first created by <a class="el" href="group__posix__thread.html#ge6e819ed048e4c4a4ee96fa6f426852c">pthread_create()</a>, they always defer cancellation requests.<p>
@@ -339,7 +345,7 @@ This function is a cancellation point. It has no effect if cancellation is disab
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:02 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:35:08 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
