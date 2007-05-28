@@ -106,7 +106,13 @@ int xntimer_start_aperiodic(xntimer_t *timer,
 	}
 
 	xntimerh_date(&timer->aplink) = date;
-	timer->interval = xnarch_ns_to_tsc(interval);
+	if (interval == XN_INFINITE) {
+		timer->interval = XN_INFINITE;
+		__clrbits(timer->status, XNTIMER_PERIODIC);
+	} else {
+		timer->interval = xnarch_ns_to_tsc(interval);
+		__setbits(timer->status, XNTIMER_PERIODIC);
+	}
 
 	xntimer_enqueue_aperiodic(timer);
 	if (xntimer_heading_p(timer)) {
@@ -200,17 +206,17 @@ void xntimer_tick_aperiodic(void)
 				timer->handler(timer);
 
 				now = xnarch_get_cpu_tsc();
-				if (timer->interval == XN_INFINITE ||
-				    !testbits(timer->status, XNTIMER_DEQUEUED)
-				    || testbits(timer->status, XNTIMER_KILLED))
-					/* The elapsed timer has no reload value, or has
-					   been re-enqueued likely as a result of a call
-					   to xntimer_start() from the timeout handler, or
-					   has been killed by the handler. In all cases,
-					   don't attempt to re-enqueue it for the next
-					   shot. */
+
+				/* If the elapsed timer has no reload value,
+				   or has been re-enqueued likely as a result
+				   of a call to xntimer_start() from the
+				   timeout handler, or has been killed by the
+				   handler. In all cases, don't attempt to
+				   re-enqueue it for the next shot. */
+				if (!xntimer_reload_p(timer))
 					continue;
-			} else if (timer->interval == XN_INFINITE) {
+			} else if (!testbits(timer->status,
+					     XNTIMER_PERIODIC)) {
 				xntimerh_date(&timer->aplink) +=
 				    nkpod->htimer.interval;
 				continue;
@@ -277,6 +283,10 @@ static int xntimer_start_periodic(xntimer_t *timer,
 
 	xntlholder_date(&timer->plink) = value;
 	timer->interval = interval;
+	if (interval != XN_INFINITE)
+		__setbits(timer->status, XNTIMER_PERIODIC);
+	else
+		__clrbits(timer->status, XNTIMER_PERIODIC);
 
 	xntimer_enqueue_periodic(timer);
 
@@ -371,9 +381,7 @@ void xntimer_tick_periodic(xntimer_t *mtimer)
 
 		timer->handler(timer);
 
-		if (timer->interval == XN_INFINITE ||
-		    !testbits(timer->status, XNTIMER_DEQUEUED)
-		    || testbits(timer->status, XNTIMER_KILLED))
+		if (!xntimer_reload_p(timer))
 			continue;
 
 		xntlholder_date(&timer->plink) = base->jiffies + timer->interval;

@@ -33,6 +33,7 @@
 /* Timer status */
 #define XNTIMER_DEQUEUED  0x00000001
 #define XNTIMER_KILLED    0x00000002
+#define XNTIMER_PERIODIC  0x00000004
 
 /* These flags are available to the real-time interfaces */
 #define XNTIMER_SPARE0  0x01000000
@@ -289,6 +290,13 @@ static inline int xntimer_active_p (xntimer_t *timer)
 static inline int xntimer_running_p (xntimer_t *timer)
 {
 	return !testbits(timer->status,XNTIMER_DEQUEUED);
+}
+
+static inline int xntimer_reload_p(xntimer_t *timer)
+{
+	return testbits(timer->status,
+			XNTIMER_PERIODIC|XNTIMER_DEQUEUED|XNTIMER_KILLED) ==
+		(XNTIMER_PERIODIC|XNTIMER_DEQUEUED);
 }
 
 #ifdef __cplusplus
