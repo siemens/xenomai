@@ -30,11 +30,12 @@ endif
 ifeq ($(DEB_BUILD_ARCH), arm)
 	CONFIG_OPTS =
 endif
+	CONFIG_OPTS += --prefix=/usr \
+	            --includedir=/usr/include/xenomai \
+	            --mandir=/usr/share/man
 
 build: build-stamp
-	./configure $(CONFIG_OPTS) --prefix=/usr \
-	                    --includedir=/usr/include/xenomai \
-	                    --mandir=/usr/share/man
+	./configure $(CONFIG_OPTS)
 	$(MAKE)
 #	The kernel patches get generated next - Likely to involve some
 #	additional scripting..
@@ -68,8 +69,10 @@ install: build
 	mkdir -p $(CURDIR)/debian/xenomai-dev/usr/lib
 	mv -f $(CURDIR)/debian/tmp/usr/lib/*.a $(CURDIR)/debian/xenomai-dev/usr/lib
 	mv -f $(CURDIR)/debian/tmp/usr/include $(CURDIR)/debian/xenomai-dev/usr/
-	mkdir -p $(CURDIR)/debian/xenomai-dev/usr/bin
+#	Need posix.wrappers for xeno-config
+	mv -f $(CURDIR)/debian/tmp/usr/lib/posix.wrappers $(CURDIR)/debian/xenomai-dev/usr/lib
 #	The xeno-config only makes sense with headers & stuff.
+	mkdir -p $(CURDIR)/debian/xenomai-dev/usr/bin
 	mv -f $(CURDIR)/debian/tmp/usr/bin/xeno-config $(CURDIR)/debian/xenomai-dev/usr/bin
 #	Now for the documentation.
 	mkdir -p $(CURDIR)/debian/xenomai-docs/usr/share/
@@ -103,6 +106,13 @@ install: build
 	cd $(CURDIR)
 #	The kernel patches get installed next..
 	dh_installkpatches
+#	Add CREDITS, ChangeLog, and READMEs to all packages.
+	for p in linux-patch-xenomai xenomai xenomai-dev xenomai-docs ; do \
+	    mkdir -p $(CURDIR)/debian/$$p/usr/share/doc/$$p ; \
+	    for f in CREDITS ChangeLog README.INSTALL TROUBLESHOOTING ; do \
+	        install -m 0644 $$f $(CURDIR)/debian/$$p/usr/share/doc/$$p/ ; \
+	    done ; \
+	done
 
 # Build architecture-independent files here.
 binary-indep: install
@@ -124,6 +134,12 @@ binary-indep: install
 	cat $(CURDIR)/debian/linux-patch-xenomai.kpatches | \
 	    awk 'NR>4 {sub(/^/," ");print}' >> \
 	        $(CURDIR)/debian/linux-patch-xenomai/DEBIAN/control
+#	 Echo config options to control.
+	echo " ." >> $(CURDIR)/debian/xenomai/DEBIAN/control
+	echo " Compiled with the following options." >> \
+	        $(CURDIR)/debian/xenomai/DEBIAN/control
+	echo "$(CONFIG_OPTS)" | awk '{ for ( i=1 ; i<=NF ; i++ ) print "   "$$i }' >> \
+	        $(CURDIR)/debian/xenomai/DEBIAN/control
 #	 End of hackery.
 	dh_md5sums
 	dh_builddeb

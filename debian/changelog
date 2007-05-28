@@ -1,3 +1,10 @@
+xenomai (2.3.50-05+r2299) unstable; urgency=low
+
+  * Add top level ChangeLog and CREDITS to each package.
+  * rebuilt from SVN tag 2299
+
+ -- Paul Corner <paul_c@gna.org>  Thu, 15 Mar 2007 11:03:14 +0000
+
 xenomai (2.3.50-04) unstable; urgency=low
 
   * Remove demo & snippets from the patches - Installed in xenomai-dev
