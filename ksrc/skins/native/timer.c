@@ -33,118 +33,6 @@
 #include <nucleus/pod.h>
 #include <native/timer.h>
 
-/**
- * @fn SRTIME rt_timer_ns2ticks(SRTIME ns)
- * @brief Convert nanoseconds to internal clock ticks.
- *
- * Convert a count of nanoseconds to internal clock ticks.
- * This routine operates on signed nanosecond values.
- *
- * @param ns The count of nanoseconds to convert.
- *
- * @return The corresponding value expressed in internal clock ticks.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-SRTIME rt_timer_ns2ticks(SRTIME ns)
-{
-	return xntbase_ns2ticks(__native_tbase, ns);
-}
-
-/**
- * @fn SRTIME rt_timer_ns2tsc(SRTIME ns)
- * @brief Convert nanoseconds to local CPU clock ticks.
- *
- * Convert a count of nanoseconds to local CPU clock ticks.
- * This routine operates on signed nanosecond values.
- *
- * @param ns The count of nanoseconds to convert.
- *
- * @return The corresponding value expressed in CPU clock ticks.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-SRTIME rt_timer_ns2tsc(SRTIME ns)
-{
-	return xnarch_ns_to_tsc(ns);
-}
-
-/*!
- * @fn SRTIME rt_timer_ticks2ns(SRTIME ticks)
- * @brief Convert internal clock ticks to nanoseconds.
- *
- * Convert a count of internal clock ticks to nanoseconds.
- * This routine operates on signed tick values.
- *
- * @param ticks The count of internal clock ticks to convert.
- *
- * @return The corresponding value expressed in nanoseconds.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-SRTIME rt_timer_ticks2ns(SRTIME ticks)
-{
-	return xntbase_ticks2ns(__native_tbase, ticks);
-}
-
-/*!
- * @fn SRTIME rt_timer_tsc2ns(SRTIME ticks)
- * @brief Convert local CPU clock ticks to nanoseconds.
- *
- * Convert a local CPU clock ticks to nanoseconds.
- * This routine operates on signed tick values.
- *
- * @param ticks The count of local CPU clock ticks to convert.
- *
- * @return The corresponding value expressed in nanoseconds.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-SRTIME rt_timer_tsc2ns(SRTIME ticks)
-{
-	return xnarch_tsc_to_ns(ticks);
-}
-
 /*!
  * @fn int rt_timer_inquire(RT_TIMER_INFO *info)
  * @brief Inquire about the timer.
@@ -205,61 +93,6 @@ int rt_timer_inquire(RT_TIMER_INFO *info)
 		info->date = xnarch_tsc_to_ns(tsc) + __native_tbase->wallclock_offset;
 
 	return 0;
-}
-
-/*!
- * @fn RTIME rt_timer_read(void)
- * @brief Return the current system time.
- *
- * Return the current time maintained by the master time base.
- *
- * @return The current time expressed in clock ticks (see note).
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- *
- * @note The value returned will represent a count of jiffies if the
- * native skin is bound to a periodic time base (see
- * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
- */
-
-RTIME rt_timer_read(void)
-{
-	return xntbase_get_time(__native_tbase);
-}
-
-/*!
- * @fn RTIME rt_timer_tsc(void)
- * @brief Return the current TSC value.
- *
- * Return the value of the time stamp counter (TSC) maintained by the
- * CPU of the underlying architecture.
- *
- * @return The current value of the TSC.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-RTIME rt_timer_tsc(void)
-{
-	return xnarch_get_cpu_tsc();
 }
 
 /**
@@ -346,10 +179,7 @@ int rt_timer_set_mode(RTIME nstick)
 
 EXPORT_SYMBOL(rt_timer_ns2ticks);
 EXPORT_SYMBOL(rt_timer_ticks2ns);
-EXPORT_SYMBOL(rt_timer_ns2tsc);
-EXPORT_SYMBOL(rt_timer_tsc2ns);
 EXPORT_SYMBOL(rt_timer_inquire);
-EXPORT_SYMBOL(rt_timer_read);
-EXPORT_SYMBOL(rt_timer_tsc);
 EXPORT_SYMBOL(rt_timer_spin);
 EXPORT_SYMBOL(rt_timer_set_mode);
+EXPORT_SYMBOL(__native_tbase);

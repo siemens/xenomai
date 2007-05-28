@@ -9,6 +9,8 @@
 	
 	* ksrc/nucleus/timer.c: Don't reprogram the timer chip for the
 	next shot uselessly, until the tick handler has run.
+
+	* ksrc/skins/native/timer.c: Inline services.
 	
 2007-05-27  Philippe Gerum  <rpm@xenomai.org>
 
