@@ -1,0 +1,11 @@
+base referer
+rect $alarm_8h.html 198,56 350,80
+rect $native_2heap_8h.html 201,152 348,176
+rect $native_2pipe_8h.html 204,104 345,128
+rect $native_2queue_8h.html 197,200 352,224
+rect $ksrc_2skins_2native_2alarm_8c.html 405,8 573,32
+rect $skins_2native_2module_8c.html 400,104 578,128
+rect $native_2syscall_8c.html 402,152 576,176
+rect $ksrc_2skins_2native_2heap_8c.html 408,200 570,224
+rect $ksrc_2skins_2native_2pipe_8c.html 409,56 569,80
+rect $ksrc_2skins_2native_2queue_8c.html 404,248 574,272

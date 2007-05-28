@@ -26,7 +26,13 @@
 <h1>Counting semaphore services.<br>
 <small>
 [<a class="el" href="group__native.html">Native Xenomai API.</a>]</small>
-</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1>
+<p>
+Collaboration diagram for Counting semaphore services.:<center><table><tr><td><img src="group__semaphore.png" border="0" alt="" usemap="#group____semaphore_map">
+<map name="group____semaphore_map">
+<area href="group__native.html" shape="rect" coords="9,8,153,32" alt="">
+</map></td></tr></table></center>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
 A counting semaphore is a synchronization object granting Xenomai tasks a concurrent access to a given number of resources maintained in an internal counter variable. The semaphore is used through the P ("Proberen", from the Dutch "test and decrement") and V ("Verhogen", increment) operations. The P operation waits for a unit to become available from the count, and the V operation releases a resource by incrementing the unit count by one.<p>
 If no more than a single resource is made available at any point in time, the semaphore enforces mutual exclusion and thus can be used to serialize access to a critical section. However, mutexes should be used instead in order to prevent priority inversions. 
 <p>
@@ -548,7 +554,7 @@ This service can be called from:<p>
 Rescheduling: possible.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:01 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:35:04 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

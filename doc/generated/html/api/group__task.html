@@ -26,7 +26,13 @@
 <h1>Task management services.<br>
 <small>
 [<a class="el" href="group__native.html">Native Xenomai API.</a>]</small>
-</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1>
+<p>
+Collaboration diagram for Task management services.:<center><table><tr><td><img src="group__task.png" border="0" alt="" usemap="#group____task_map">
+<map name="group____task_map">
+<area href="group__native.html" shape="rect" coords="9,8,153,32" alt="">
+</map></td></tr></table></center>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
 Xenomai provides a set of multitasking mechanisms. The basic process object performing actions in Xenomai is a task, a logically complete path of application code. Each Xenomai task is an independent portion of the overall application code embodied in a C procedure, which executes on its own stack context.<p>
 The Xenomai scheduler ensures that concurrent tasks are run according to one of the supported scheduling policies. Currently, the Xenomai scheduler supports fixed priority-based FIFO and round-robin policies. 
 <p>
@@ -2003,7 +2009,7 @@ This service can be called from:<p>
 Rescheduling: always if a next equal-priority task is ready to run, otherwise, this service leads to a no-op.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:01 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:35:05 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

@@ -1,0 +1,12 @@
+base referer
+rect $jhash_8h-source.html 254,56 369,80
+rect $nucleus_2ppd_8h-source.html 260,104 364,128
+rect $ksrc_2skins_2posix_2thread_8h-source.html 448,396 554,420
+rect $ksrc_2skins_2posix_2mutex_8h-source.html 260,445 364,469
+rect $ksrc_2skins_2posix_2cond_8h-source.html 453,592 549,616
+rect $mq_8h-source.html 269,298 354,322
+rect $ksrc_2skins_2posix_2registry_8h-source.html 445,298 557,322
+rect $ksrc_2skins_2posix_2intr_8h-source.html 269,493 354,517
+rect $ksrc_2skins_2posix_2sem_8h-source.html 265,346 358,370
+rect $shm_8h-source.html 265,250 358,274
+rect $ksrc_2skins_2posix_2timer_8h-source.html 264,642 360,666

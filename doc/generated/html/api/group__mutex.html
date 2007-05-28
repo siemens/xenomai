@@ -26,7 +26,13 @@
 <h1>Mutex services.<br>
 <small>
 [<a class="el" href="group__native.html">Native Xenomai API.</a>]</small>
-</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1>
+<p>
+Collaboration diagram for Mutex services.:<center><table><tr><td><img src="group__mutex.png" border="0" alt="" usemap="#group____mutex_map">
+<map name="group____mutex_map">
+<area href="group__native.html" shape="rect" coords="9,8,153,32" alt="">
+</map></td></tr></table></center>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
 Mutex services.<p>
 A mutex is a MUTual EXclusion object, and is useful for protecting shared data structures from concurrent modifications, and implementing critical sections and monitors.<p>
 A mutex has two possible states: unlocked (not owned by any task), and locked (owned by one task). A mutex can never be owned by two different tasks simultaneously. A task attempting to lock a mutex that is already locked by another task is blocked until the latter unlocks the mutex first.<p>
@@ -476,7 +482,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:01 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:35:04 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

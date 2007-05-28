@@ -26,7 +26,13 @@
 <h1>Timer services.<br>
 <small>
 [<a class="el" href="group__nucleus.html">Xenomai nucleus.</a>]</small>
-</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
+</h1>
+<p>
+Collaboration diagram for Timer services.:<center><table><tr><td><img src="group__timer.png" border="0" alt="" usemap="#group____timer_map">
+<map name="group____timer_map">
+<area href="group__nucleus.html" shape="rect" coords="9,8,137,32" alt="">
+</map></td></tr></table></center>
+<hr><a name="_details"></a><h2>Detailed Description</h2>
 The Xenomai timer facility always operate the timer hardware in oneshot mode, regardless of the time base in effect. Periodic timing is obtained through a software emulation, using cascading timers.<p>
 Depending on the time base used, the timer object stores time values either as count of jiffies (periodic), or as count of CPU ticks (aperiodic). 
 <p>
@@ -280,7 +286,7 @@ Rescheduling: never.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Sun May 27 23:16:01 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:35:02 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

@@ -1,0 +1,6 @@
+base referer
+rect $ksrc_2skins_2native_2alarm_8c.html 207,8 375,32
+rect $skins_2native_2module_8c.html 202,56 381,80
+rect $native_2syscall_8c.html 205,104 378,128
+rect $ksrc_2skins_2native_2task_8c.html 213,152 370,176
+rect $ksrc_2skins_2native_2timer_8c.html 210,200 373,224
