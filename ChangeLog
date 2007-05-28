@@ -2,6 +2,9 @@
 
 	* ksrc/nucleus: Flatten timer IRQ handling path.
 	
+	* ksrc/nucleus/timer.c: Don't reprogram the timer chip for the
+	next shot uselessly, until the tick handler has run.
+	
 2007-05-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus, ksrc/skins, include/nucleus/queue.h: Let the
