@@ -1,3 +1,10 @@
+2007-05-30  Jan Kiszka  <jan.kiszka@web.de>
+
+	* configure.in: Check for pthread_spin_*.
+
+	* src/testsuite/clocktest/clocktest.c: Fall back to mutexes if
+	spinlocks are lacking.
+
 2007-05-27  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus: Flatten timer IRQ handling path.
