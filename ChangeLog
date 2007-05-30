@@ -1,7 +1,5 @@
 2007-05-30  Jan Kiszka  <jan.kiszka@web.de>
 
-	* configure.in: Check for pthread_spin_*.
-
 	* src/testsuite/clocktest/clocktest.c: Fall back to mutexes if
 	spinlocks are lacking.
 
@@ -44,6 +42,9 @@
 	priority scales handling.
 
 2007-05-25  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/shadow.c (rpi_init_gk): Fix initialisation that
+	caused faults with XENO_OPT_SCALABLE_SCHED enabled.
 
 	* ksrc/drivers/can/sja1000/rtcan_peak_dng.c: Remove PnP device
 	table to avoid autoloading. Fix driver error messages.

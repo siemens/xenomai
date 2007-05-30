@@ -491,22 +491,6 @@ AC_CACHE_VAL(ac_cv_sched_setaffinity,
  fi
  CFLAGS="$save_CFLAGS")
 
-AC_MSG_CHECKING([for pthread_spin_lock])
-AC_CACHE_VAL(ac_cv_pthread_spin_lock,
- save_CFLAGS="$CFLAGS"
- CFLAGS="-Wimplicit-function-declaration -Werror -D_GNU_SOURCE"
- [AC_TRY_COMPILE([#include <pthread.h>],
- [pthread_spinlock_t lock; pthread_spin_init(&lock, 0);],
- [ac_cv_pthread_spin_lock=yes],
- [ac_cv_pthread_spin_lock=no])]
- if test $ac_cv_pthread_spin_lock = yes ; then
-     AC_MSG_RESULT(ok)
-     AC_DEFINE(HAVE_PTHREAD_SPIN_LOCK,1,[config])
- else
-     AC_MSG_RESULT(no)
- fi
- CFLAGS="$save_CFLAGS")
-
 AC_MSG_CHECKING([for specific GCC switches])
 AC_CACHE_VAL(ac_cv_gcc_wnoalias,
 AC_LANG_SAVE

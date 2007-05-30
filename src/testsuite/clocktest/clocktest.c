@@ -40,7 +40,7 @@ typedef unsigned long cpu_set_t;
 #endif /* !HAVE_OLD_SETAFFINITY */
 #endif /* !HAVE_RECENT_SETAFFINITY */
 
-#ifdef HAVE_PTHREAD_SPIN_LOCK
+#ifdef _POSIX_SPIN_LOCKS
 pthread_spinlock_t lock;
 #define init_lock(lock)				pthread_spin_init(lock, 0)
 #define acquire_lock(lock)			pthread_spin_lock(lock)
