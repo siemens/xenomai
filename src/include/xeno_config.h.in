@@ -57,6 +57,9 @@
 #undef HAVE_OLD_SETAFFINITY
 
 /* config */
+#undef HAVE_PTHREAD_SPIN_LOCK
+
+/* config */
 #undef HAVE_RECENT_SETAFFINITY
 
 /* Define to 1 if you have the `shm_open' function. */
