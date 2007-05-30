@@ -40,7 +40,17 @@ typedef unsigned long cpu_set_t;
 #endif /* !HAVE_OLD_SETAFFINITY */
 #endif /* !HAVE_RECENT_SETAFFINITY */
 
+#ifdef HAVE_PTHREAD_SPIN_LOCK
 pthread_spinlock_t lock;
+#define init_lock(lock)				pthread_spin_init(lock, 0)
+#define acquire_lock(lock)			pthread_spin_lock(lock)
+#define release_lock(lock)			pthread_spin_unlock(lock)
+#else
+pthread_mutex_t lock;
+#define init_lock(lock)				pthread_mutex_init(lock, NULL)
+#define acquire_lock(lock)			pthread_mutex_lock(lock)
+#define release_lock(lock)			pthread_mutex_unlock(lock)
+#endif
 unsigned long long last_common = 0;
 clockid_t clock_id = CLOCK_REALTIME;
 
@@ -112,11 +122,11 @@ void check_time_warps(struct per_cpu_data *per_cpu_data)
     long long incr;
 
     for (i = 0; i < 100; i++) {
-        pthread_spin_lock(&lock);
+        acquire_lock(&lock);
         now = read_clock(clock_id);
         last = last_common;
         last_common = now;
-        pthread_spin_unlock(&lock);
+        release_lock(&lock);
 
         incr = now - last;
         if (incr < 0) {
@@ -184,7 +194,7 @@ int main(int argc, char *argv[])
 
     signal(SIGALRM, sighand);
 
-    pthread_spin_init(&lock, 0);
+    init_lock(&lock);
 
     per_cpu_data = malloc(sizeof(*per_cpu_data) * cpus);
     if (!per_cpu_data) {
