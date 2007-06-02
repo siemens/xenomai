@@ -19,10 +19,60 @@
  */
 
 #include <nucleus/pod.h>
+#include <nucleus/registry.h>
 #include <nucleus/heap.h>
 #include <rtai/fifo.h>
 
 static RT_FIFO __fifo_table[CONFIG_XENO_OPT_PIPE_NRDEV];
+
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
+
+extern xnptree_t __rtai_ptree;
+
+static int __fifo_read_proc(char *page,
+			    char **start,
+			    off_t off, int count, int *eof, void *data)
+{
+	RT_FIFO *p = data;
+	char *ptrW = page;
+	int len;
+
+	ptrW += sprintf(ptrW, "Size     - Written  - F - Handler  - Ref\n");
+
+	/* Output buffer:  xnpipe_mh_t *buffer; */
+	ptrW += sprintf(ptrW, "%08X - %08X - %p - %i\n",
+			p->bufsz, p->fillsz, p->handler, p->refcnt);
+
+	len = ptrW - page - off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+static xnpnode_t __fifo_pnode = {
+
+	.dir = NULL,
+	.type = "fifo",
+	.entries = 0,
+	.read_proc = &__fifo_read_proc,
+	.write_proc = NULL,
+	.root = &__rtai_ptree,
+};
+
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
+
+static xnpnode_t __fifo_pnode = {
+
+	.type = "fifo"
+};
+
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 #define X_FIFO_HANDLER2(handler) ((int (*)(int, ...))(handler))
 
@@ -99,7 +149,7 @@ int rtf_create(unsigned minor, int size)
 			     &__fifo_exec_handler, NULL, fifo);
 
 	if (err < 0 && err != -EBUSY)
-	    return err;
+		return err;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -112,19 +162,19 @@ int rtf_create(unsigned minor, int size)
 		buffer = fifo->buffer;
 		oldsize = fifo->bufsz;
 
-		if (buffer == NULL) /* Conflicting create/resize requests. */
-			goto unlock_and_exit;
+		if (buffer == NULL)	/* Conflicting create/resize requests. */
+			goto fail;
 
 		if (oldsize == size) {
 			err = minor;
-			goto unlock_and_exit; /* Same size, nop. */
+			goto fail;	/* Same size, nop. */
 		}
 
 		fifo->buffer = NULL;
 		/* We must not keep the nucleus lock while running
 		 * Linux services. */
 		xnlock_put_irqrestore(&nklock, s);
-		xnarch_sysfree(buffer, oldsize);
+		xnarch_sysfree(buffer, oldsize + sizeof(xnpipe_mh_t));
 		xnlock_get_irqsave(&nklock, s);
 	} else
 		fifo->buffer = NULL;
@@ -143,10 +193,9 @@ int rtf_create(unsigned minor, int size)
 
 		--fifo->refcnt;
 		err = -ENOMEM;
-		goto unlock_and_exit;
+		goto fail;
 	}
 
-	err = minor;
 	fifo->buffer = buffer;
 	fifo->bufsz = size;
 	fifo->fillsz = 0;
@@ -154,7 +203,19 @@ int rtf_create(unsigned minor, int size)
 	fifo->minor = minor;
 	fifo->handler = NULL;
 
-      unlock_and_exit:
+	xnlock_put_irqrestore(&nklock, s);
+
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	{
+		fifo->handle = 0;
+		snprintf(fifo->name, sizeof(fifo->name), "rtf%u", minor);
+		xnregistry_enter(fifo->name, fifo, &fifo->handle, &__fifo_pnode);
+	}
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
+	return minor;
+
+fail:
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -187,15 +248,19 @@ int rtf_destroy(unsigned minor)
 			buffer = fifo->buffer;
 			oldsize = fifo->bufsz;
 
-			if (buffer == NULL) { /* Fifo under (re-)construction. */
+			if (buffer == NULL) {	/* Fifo under (re-)construction. */
 				err = -EBUSY;
 				goto unlock_and_exit;
 			}
 
+#ifdef CONFIG_XENO_OPT_REGISTRY
+			if (fifo->handle)
+				xnregistry_remove(fifo->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 			xnpipe_disconnect(minor);
 			fifo->refcnt = 0;
 			xnlock_put_irqrestore(&nklock, s);
-			xnarch_sysfree(buffer, oldsize);
+			xnarch_sysfree(buffer, oldsize + sizeof(xnpipe_mh_t));
 
 			return 0;
 		}
@@ -203,7 +268,7 @@ int rtf_destroy(unsigned minor)
 		fifo->refcnt = refcnt;
 	}
 
-unlock_and_exit:
+      unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -252,7 +317,7 @@ int rtf_get(unsigned minor, void *buf, int count)
 	   user-space in a single call to write(). */
 
 	if (count < xnpipe_m_size(msg))
-		nbytes = -ENOBUFS;
+		nbytes = -ENOSPC;
 	else if (xnpipe_m_size(msg) > 0)
 		memcpy(buf, xnpipe_m_data(msg), xnpipe_m_size(msg));
 
@@ -309,10 +374,12 @@ int rtf_put(unsigned minor, const void *buf, int count)
 		xnlock_get_irqsave(&nklock, s);
 
 		if (__test_and_set_bit(RTFIFO_SYNCWAIT, &fifo->status))
-			outbytes = xnpipe_mfixup(fifo->minor, fifo->buffer, outbytes);
+			outbytes =
+			    xnpipe_mfixup(fifo->minor, fifo->buffer, outbytes);
 		else {
 			outbytes = xnpipe_send(fifo->minor, fifo->buffer,
-					       outbytes + sizeof(xnpipe_mh_t), XNPIPE_NORMAL);
+					       outbytes + sizeof(xnpipe_mh_t),
+					       XNPIPE_NORMAL);
 			if (outbytes > 0)
 				outbytes -= sizeof(xnpipe_mh_t);
 		}

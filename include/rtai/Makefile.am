@@ -12,6 +12,7 @@ includesub_HEADERS = \
 	rtai_sched.h \
 	rtai_sem.h \
 	rtai_shm.h \
+	rtai_timer.h \
 	rtai_types.h \
 	sem.h \
 	shm.h \

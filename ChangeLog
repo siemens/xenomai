@@ -1,3 +1,9 @@
+2007-06-02  Stephane Fillod  <stephane.fillod@thomson.net>
+
+	* ksrc/skins/rtai: Add rt_heap_open() and rt_heap_close() to the
+	RTAI skin, along with their userland interface (still no pervasive
+	mode for RTAI tasks though).
+
 2007-06-02  Jan Kiszka  <jan.kiszka@web.de>, Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-generic/system.h, include/asm-generic/bits/pod.h:

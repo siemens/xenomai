@@ -27,6 +27,10 @@ typedef struct rt_sem_placeholder {
     xnhandle_t opaque;
 } RT_SEM_PLACEHOLDER;
 
+#define BIN_SEM  0x1
+#define CNT_SEM  0x2
+#define RES_SEM  0x3
+
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #define RTAI_SEM_MAGIC 0x17170202
@@ -34,10 +38,6 @@ typedef struct rt_sem_placeholder {
 #define PRIO_Q   0x0
 #define RES_Q    0x3
 #define FIFO_Q   0x4
-
-#define BIN_SEM  0x1
-#define CNT_SEM  0x2
-#define RES_SEM  0x3
 
 #define SEM_TIMOUT  0xfffe
 #define SEM_ERR     0xffff

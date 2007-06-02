@@ -49,6 +49,12 @@ typedef struct rt_fifo {
 
     int (*handler)(unsigned minor); /* !< Input handler. */
 
+#ifdef CONFIG_XENO_OPT_REGISTRY
+    char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
+
+    xnhandle_t handle;		/* !< Handle in registry. */
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
 } RT_FIFO;
 
 #ifdef __cplusplus
