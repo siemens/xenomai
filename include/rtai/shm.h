@@ -37,6 +37,9 @@
 #define rtai_kfree(name) \
 	rt_shm_free(name)  // legacy
 
+#define rt_heap_close(name, adr)  \
+	rt_shm_free(name)
+
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
@@ -57,6 +60,10 @@ void __rtai_shm_pkg_cleanup(void);
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+void *rt_heap_open(unsigned long name,
+		   int size,
+		   int suprt);
 
 void *rt_shm_alloc(unsigned long name,
 		   int size,

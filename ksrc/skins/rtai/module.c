@@ -19,6 +19,7 @@
  */
 
 #include <nucleus/pod.h>
+#include <nucleus/registry.h>
 #ifdef __KERNEL__
 #include <rtai/syscall.h>
 #include <rtai/fifo.h>
@@ -36,6 +37,15 @@ module_param_named(tick_arg, tick_arg, ulong, 0444);
 MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us), 0 for tick-less mode");
 
 xntbase_t *rtai_tbase;
+
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
+xnptree_t __rtai_ptree = {
+
+	.dir = NULL,
+	.name = "rtai",
+	.entries = 0,
+};
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 static void rtai_shutdown(int xtype)
 {
