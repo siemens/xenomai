@@ -1552,9 +1552,12 @@ Optional Features:
   --enable-smp            Enable SMP support
   --enable-x86-sep        Enable x86 SEP instructions for issuing syscalls
   --enable-x86-tsc        Enable x86 TSC for timings
+  --enable-arm-mach       Select for which machine we are compiling. Valid
+                          machines are at91, integrator, ixp4xx, pxa, s3c2410,
+                          sa1100.
   --enable-arm-arch=<version>
                           Select ARM architecture version
-  --enable-arm-sa1100     Enable ARM SA1100 specifics
+  --enable-arm-tsc        Enable TSC emulation in user-space
   --enable-linux-build=<linux-src-dir>
                           Build Linux in Xenomai build tree, copying sources
                           from <linux-src-dir>. If no source directory is
@@ -5663,7 +5666,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5666 "configure"' > conftest.$ac_ext
+  echo '#line 5669 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8165,11 +8168,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8168: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8171: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8172: \$? = $ac_status" >&5
+   echo "$as_me:8175: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8433,11 +8436,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8436: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8439: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8440: \$? = $ac_status" >&5
+   echo "$as_me:8443: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8537,11 +8540,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8540: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8543: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8544: \$? = $ac_status" >&5
+   echo "$as_me:8547: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -10834,7 +10837,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10837 "configure"
+#line 10840 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10934,7 +10937,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10937 "configure"
+#line 10940 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13270,11 +13273,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13273: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13276: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13277: \$? = $ac_status" >&5
+   echo "$as_me:13280: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -13374,11 +13377,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13377: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13380: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13381: \$? = $ac_status" >&5
+   echo "$as_me:13384: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -14935,11 +14938,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14938: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14941: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14942: \$? = $ac_status" >&5
+   echo "$as_me:14945: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -15039,11 +15042,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15042: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15045: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:15046: \$? = $ac_status" >&5
+   echo "$as_me:15049: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -17226,11 +17229,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17229: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17232: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17233: \$? = $ac_status" >&5
+   echo "$as_me:17236: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17494,11 +17497,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17497: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17500: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17501: \$? = $ac_status" >&5
+   echo "$as_me:17504: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17598,11 +17601,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17601: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17604: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:17605: \$? = $ac_status" >&5
+   echo "$as_me:17608: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -20587,38 +20590,92 @@ fi
 
 
 if test $XENO_TARGET_ARCH = arm ; then
-  { echo "$as_me:$LINENO: checking for ARM architecture version" >&5
-echo $ECHO_N "checking for ARM architecture version... $ECHO_C" >&6; }
   CONFIG_XENO_ARM_ARCH=4
   CONFIG_XENO_ARM_SA1100=
-  # Check whether --enable-arm-arch was given.
+
+  unset CONFIG_XENO_ARM_SA1100
+  unset tsc_type
+  unset CONFIG_XENO_ARM_HW_DIRECT_TSC
+
+  { echo "$as_me:$LINENO: checking for ARM machine" >&5
+echo $ECHO_N "checking for ARM machine... $ECHO_C" >&6; }
+  # Check whether --enable-arm-mach was given.
+if test "${enable_arm_mach+set}" = set; then
+  enableval=$enable_arm_mach; case "$enableval" in
+	at91)   	arch=4
+	        	tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	integrator) 	arch=choose;;
+
+	ixp4xx|pxa) 	arch=5
+	      		tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	s3c2410) 	arch=4;;
+
+	sa1100) 	arch=4
+			CONFIG_XENO_ARM_SA1100=y
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	*){ { echo "$as_me:$LINENO: error: Invalid machine selected: \"$enableval\"" >&5
+echo "$as_me: error: Invalid machine selected: \"$enableval\"" >&2;}
+   { (exit 1); exit 1; }; };;
+	esac
+else
+  { { echo "$as_me:$LINENO: error: Selecting a machine with --enable-arm-mach is mandatory" >&5
+echo "$as_me: error: Selecting a machine with --enable-arm-mach is mandatory" >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+  { echo "$as_me:$LINENO: result: ${enable_arm_mach:-no}" >&5
+echo "${ECHO_T}${enable_arm_mach:-no}" >&6; }
+
+  { echo "$as_me:$LINENO: checking for ARM architecture version" >&5
+echo $ECHO_N "checking for ARM architecture version... $ECHO_C" >&6; }
+  if test $arch = choose; then
+  	# Check whether --enable-arm-arch was given.
 if test "${enable_arm_arch+set}" = set; then
   enableval=$enable_arm_arch;
-	case "$enableval" in
-	"" | y | ye | yes | n | no)
-	    { { echo "$as_me:$LINENO: error: You must supply an argument to --enable-arm-arch." >&5
+		case "$enableval" in
+		"" | y | ye | yes | n | no)
+	    	{ { echo "$as_me:$LINENO: error: You must supply an argument to --enable-arm-arch." >&5
 echo "$as_me: error: You must supply an argument to --enable-arm-arch." >&2;}
    { (exit 1); exit 1; }; }
-	  ;;
-	esac
-	CONFIG_XENO_ARM_ARCH="$enableval"
+	  	;;
+		esac
+		CONFIG_XENO_ARM_ARCH="$enableval"
 
 fi
 
+  else
+	CONFIG_XENO_ARM_ARCH=$arch
+  fi
   { echo "$as_me:$LINENO: result: $CONFIG_XENO_ARM_ARCH" >&5
 echo "${ECHO_T}$CONFIG_XENO_ARM_ARCH" >&6; }
+
   { echo "$as_me:$LINENO: checking for ARM SA1100 architecture" >&5
 echo $ECHO_N "checking for ARM SA1100 architecture... $ECHO_C" >&6; }
-  # Check whether --enable-arm-sa1100 was given.
-if test "${enable_arm_sa1100+set}" = set; then
-  enableval=$enable_arm_sa1100; case "$enableval" in
-	y | yes) CONFIG_XENO_ARM_SA1100=y ;;
-	*) unset CONFIG_XENO_ARM_SA1100 ;;
+  { echo "$as_me:$LINENO: result: ${CONFIG_XENO_ARM_SA1100:-no}" >&5
+echo "${ECHO_T}${CONFIG_XENO_ARM_SA1100:-no}" >&6; }
+
+  { echo "$as_me:$LINENO: checking for TSC emulation in user-space." >&5
+echo $ECHO_N "checking for TSC emulation in user-space.... $ECHO_C" >&6; }
+  if test $tsc_type; then
+	# Check whether --enable-arm-tsc was given.
+if test "${enable_arm_tsc+set}" = set; then
+  enableval=$enable_arm_tsc; case "$enableval" in
+	y | yes) CONFIG_XENO_ARM_HW_DIRECT_TSC=$tsc_type ;;
+	*) unset CONFIG_XENO_ARM_HW_DIRECT_TSC ;;
 	esac
 fi
 
-  { echo "$as_me:$LINENO: result: ${CONFIG_XENO_ARM_SA1100:-no}" >&5
-echo "${ECHO_T}${CONFIG_XENO_ARM_SA1100:-no}" >&6; }
+	{ echo "$as_me:$LINENO: result: ${enable_arm_tsc:-no}" >&5
+echo "${ECHO_T}${enable_arm_tsc:-no}" >&6; }
+  else
+	{ echo "$as_me:$LINENO: result: not supported by this board" >&5
+echo "${ECHO_T}not supported by this board" >&6; }
+  fi
+
 fi
 
 { echo "$as_me:$LINENO: checking whether building Linux in Xenomai build tree" >&5
@@ -21370,9 +21427,15 @@ cat >>confdefs.h <<_ACEOF
 #define CONFIG_XENO_ARM_ARCH $CONFIG_XENO_ARM_ARCH
 _ACEOF
 
+
 test x$CONFIG_XENO_ARM_SA1100 = xy &&
 cat >>confdefs.h <<\_ACEOF
 #define CONFIG_XENO_ARM_SA1100 1
+_ACEOF
+
+test $CONFIG_XENO_ARM_HW_DIRECT_TSC &&
+cat >>confdefs.h <<_ACEOF
+#define CONFIG_XENO_ARM_HW_DIRECT_TSC $CONFIG_XENO_ARM_HW_DIRECT_TSC
 _ACEOF
 
 
@@ -21603,7 +21666,7 @@ case $XENO_TARGET_ARCH in
 	XENO_USER_LDFLAGS="$XENO_USER_CFLAGS -mfdpic"
         ;;
  arm)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
+	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -march=armv$CONFIG_XENO_ARM_ARCH"
         ;;
 esac
 
