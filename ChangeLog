@@ -1,3 +1,8 @@
+2007-06-02  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* include/asm-arm/syscall.h (__xn_rdtsc): Add user-space access to
+	tsc emulation.
+
 2007-05-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.8-04.

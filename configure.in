@@ -156,28 +156,72 @@ fi
 dnl ARCH support for ARM (default: 4)
 
 if test $XENO_TARGET_ARCH = arm ; then
-  AC_MSG_CHECKING(for ARM architecture version)
   CONFIG_XENO_ARM_ARCH=4
   CONFIG_XENO_ARM_SA1100=
-  AC_ARG_ENABLE(arm-arch,
-    AS_HELP_STRING([--enable-arm-arch=<version>], [Select ARM architecture version]),
-    [
-	case "$enableval" in
-	"" | y | ye | yes | n | no)
-	    AC_MSG_ERROR([You must supply an argument to --enable-arm-arch.])
-	  ;;
-	esac
-	CONFIG_XENO_ARM_ARCH="$enableval"
-    ])
-  AC_MSG_RESULT($CONFIG_XENO_ARM_ARCH)
-  AC_MSG_CHECKING(for ARM SA1100 architecture)
-  AC_ARG_ENABLE(arm-sa1100,
-	AS_HELP_STRING([--enable-arm-sa1100], [Enable ARM SA1100 specifics]),
+
+  unset CONFIG_XENO_ARM_SA1100
+  unset tsc_type
+  unset CONFIG_XENO_ARM_HW_DIRECT_TSC
+
+  AC_MSG_CHECKING(for ARM machine)
+  AC_ARG_ENABLE(arm-mach,
+	AS_HELP_STRING([--enable-arm-mach], [Select for which machine we are
+compiling. Valid machines are at91, integrator, ixp4xx, pxa, s3c2410, sa1100.]),
 	[case "$enableval" in
-	y | yes) CONFIG_XENO_ARM_SA1100=y ;;
-	*) unset CONFIG_XENO_ARM_SA1100 ;;
-	esac])
+	at91)   	arch=4
+	        	tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	integrator) 	arch=choose;;
+	
+	ixp4xx|pxa) 	arch=5
+	      		tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	s3c2410) 	arch=4;;
+
+	sa1100) 	arch=4
+			CONFIG_XENO_ARM_SA1100=y
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	*)AC_MSG_ERROR([Invalid machine selected: "$enableval"]);;
+	esac],
+	[AC_MSG_ERROR([Selecting a machine with --enable-arm-mach is mandatory])
+	])
+  AC_MSG_RESULT(${enable_arm_mach:-no})
+
+  AC_MSG_CHECKING(for ARM architecture version)
+  if test $arch = choose; then
+  	AC_ARG_ENABLE(arm-arch,
+    	AS_HELP_STRING([--enable-arm-arch=<version>], [Select ARM architecture version]),
+    	[
+		case "$enableval" in
+		"" | y | ye | yes | n | no)
+	    	AC_MSG_ERROR([You must supply an argument to --enable-arm-arch.])
+	  	;;
+		esac
+		CONFIG_XENO_ARM_ARCH="$enableval"
+    	])
+  else
+	CONFIG_XENO_ARM_ARCH=$arch
+  fi
+  AC_MSG_RESULT($CONFIG_XENO_ARM_ARCH)
+
+  AC_MSG_CHECKING(for ARM SA1100 architecture)
   AC_MSG_RESULT(${CONFIG_XENO_ARM_SA1100:-no})
+
+  AC_MSG_CHECKING(for TSC emulation in user-space.)
+  if test $tsc_type; then
+	AC_ARG_ENABLE(arm-tsc,
+		AS_HELP_STRING([--enable-arm-tsc], [Enable TSC emulation in 
+user-space]),
+	[case "$enableval" in
+	y | yes) CONFIG_XENO_ARM_HW_DIRECT_TSC=$tsc_type ;;
+	*) unset CONFIG_XENO_ARM_HW_DIRECT_TSC ;;
+	esac])
+	AC_MSG_RESULT(${enable_arm_tsc:-no})
+  else
+	AC_MSG_RESULT(not supported by this board)
+  fi
+
 fi
 
 dnl Flags for building Linux in Xenomai build tree.
@@ -417,7 +461,9 @@ test x$CONFIG_XENO_X86_SEP = xy && AC_DEFINE(CONFIG_XENO_X86_SEP,1,[config])
 test x$CONFIG_SMP = xy && AC_DEFINE(CONFIG_SMP,1,[config])
 test x$CONFIG_X86_TSC = xy && AC_DEFINE(CONFIG_X86_TSC,1,[config])
 test -n "$CONFIG_XENO_ARM_ARCH" && AC_DEFINE_UNQUOTED(CONFIG_XENO_ARM_ARCH,$CONFIG_XENO_ARM_ARCH,[config])
+
 test x$CONFIG_XENO_ARM_SA1100 = xy && AC_DEFINE(CONFIG_XENO_ARM_SA1100,1,[config])
+test $CONFIG_XENO_ARM_HW_DIRECT_TSC && AC_DEFINE_UNQUOTED(CONFIG_XENO_ARM_HW_DIRECT_TSC,$CONFIG_XENO_ARM_HW_DIRECT_TSC,[config])
 
 dnl CAUTION: We need to have the CONFIG_XENO_XX symbols always
 dnl defined when the configuration header is read, but we want the
@@ -518,7 +564,7 @@ case $XENO_TARGET_ARCH in
 	XENO_USER_LDFLAGS="$XENO_USER_CFLAGS -mfdpic"
         ;;
  arm)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
+	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -march=armv$CONFIG_XENO_ARM_ARCH"
         ;;
 esac
 
