@@ -19,6 +19,7 @@
  */
 
 #include <nucleus/pod.h>
+#include <nucleus/registry.h>
 #ifdef __KERNEL__
 #include <rtai/syscall.h>
 #include <rtai/fifo.h>
@@ -34,6 +35,15 @@ MODULE_LICENSE("GPL");
 #if !defined(__KERNEL__) || !defined(CONFIG_XENO_OPT_PERVASIVE)
 static xnpod_t __rtai_pod;
 #endif /* !__KERNEL__ && CONFIG_XENO_OPT_PERVASIVE) */
+
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
+xnptree_t __rtai_ptree = {
+
+	.dir = NULL,
+	.name = "rtai",
+	.entries = 0,
+};
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
 static void rtai_shutdown(int xtype)
 {

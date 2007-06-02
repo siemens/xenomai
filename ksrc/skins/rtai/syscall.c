@@ -21,6 +21,24 @@
 #include <nucleus/heap.h>
 #include <nucleus/shadow.h>
 #include <rtai/syscall.h>
+#include <rtai/task.h>
+#include <rtai/timer.h>
+#include <rtai/sem.h>
+#include <rtai/shm.h>
+#include <rtai/intr.h>
+#include <rtai/fifo.h>
+
+/* This file implements the Xenomai syscall wrappers;
+ *
+ * o Unchecked uaccesses are used to fetch args since the syslib is
+ * trusted. We currently assume that the caller's memory is locked and
+ * committed.
+ *
+ * o All skin services (re-)check the object descriptor they are
+ * passed; so there is no race between a call to rt_registry_fetch()
+ * where the user-space handle is converted to a descriptor pointer,
+ * and the use of it in the actual syscall.
+ */
 
 static int __rtai_muxid;
 
@@ -31,8 +49,101 @@ static void __shadow_delete_hook(xnthread_t *thread)
 		xnshadow_unmap(thread);
 }
 
+#ifdef CONFIG_XENO_OPT_RTAI_SHM
+
+/*
+ * int __rtai_shm_heap_open(unsigned long name,
+ *                      int *size,
+ *                      int suprt,
+ *                      int in_kheap,
+ *                      unsigned long *off)
+ *
+ * returns "opaque" on success
+ */
+
+static int __rt_shm_heap_open(struct task_struct *curr, struct pt_regs *regs)
+{
+	unsigned long name;
+	int size;
+	int suprt, in_kheap;
+
+	unsigned long off;
+	unsigned long opaque;
+	void *ret;
+	extern void *_shm_alloc(unsigned long name, int size, int suprt,
+				int in_kheap, unsigned long *opaque);
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(size))
+	    || !__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg5(regs),
+			       sizeof(off)))
+		return 0;
+
+	name = (unsigned long)__xn_reg_arg1(regs);
+	/* Size of heap space. */
+	__xn_copy_from_user(curr, &size, (void __user *)__xn_reg_arg2(regs),
+			    sizeof(size));
+	/* Creation mode. */
+	suprt = (int)__xn_reg_arg3(regs);
+	in_kheap = (int)__xn_reg_arg4(regs);
+
+	ret = _shm_alloc(name, size, suprt, in_kheap, &opaque);
+
+	if (!ret)
+		goto free_and_fail;
+
+	off = xnheap_mapped_offset((xnheap_t *)opaque, ret);
+
+	size = (int)((xnheap_t *)opaque)->extentsize;
+	__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &size,
+			  sizeof(size));
+	__xn_copy_to_user(curr, (void __user *)__xn_reg_arg5(regs), &off,
+			  sizeof(off));
+
+	return (int)opaque;
+
+      free_and_fail:
+
+	return 0;
+}
+
+/*
+ * int __rt_shm_heap_close(unsigned long name)
+ */
+static int __rt_shm_heap_close(struct task_struct *curr, struct pt_regs *regs)
+{
+	unsigned long name;
+	int err = 0;
+	spl_t s;
+
+	// => Not an address, no need to check
+	name = (unsigned long)__xn_reg_arg1(regs);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	err = rt_shm_free(name);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+
+#else /* CONFIG_XENO_OPT_RTAI_SHM */
+
+#define __rt_shm_heap_open    __rtai_call_not_available
+#define __rt_shm_heap_close	__rtai_call_not_available
+
+#endif /* CONFIG_XENO_OPT_RTAI_SHM */
+
+static __attribute__ ((unused))
+int __rtai_call_not_available(struct task_struct *curr, struct pt_regs *regs)
+{
+	return -ENOSYS;
+}
+
 static xnsysent_t __systab[] = {
-	[0] = {NULL, 0},
+	[__rtai_shm_heap_open] = {&__rt_shm_heap_open, __xn_exec_lostage},
+	[__rtai_shm_heap_close] = {&__rt_shm_heap_close, __xn_exec_any},
 };
 
 int __rtai_syscall_init(void)
