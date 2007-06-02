@@ -1,5 +1,3 @@
-diff --git a/Makefile b/Makefile
-index 7e2750f..055ab06 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -490,6 +490,10 @@ endif
@@ -61,7 +59,7 @@ index ab06a86..e0e820d 100644
  obj-$(CONFIG_CRUNCH)		+= crunch.o crunch-bits.o
  AFLAGS_crunch-bits.o		:= -Wa,-mcpu=ep9312
 diff --git a/arch/arm/kernel/entry-armv.S b/arch/arm/kernel/entry-armv.S
-index 8517c3c..2c57bdb 100644
+index 8517c3c..bffabf4 100644
 --- a/arch/arm/kernel/entry-armv.S
 +++ b/arch/arm/kernel/entry-armv.S
 @@ -4,6 +4,7 @@
@@ -282,6 +280,25 @@ index 8517c3c..2c57bdb 100644
  	get_thread_info tsk
  	mov	why, #0
  	b	ret_to_user
+@@ -642,6 +724,18 @@ ENTRY(__switch_to)
+  * purpose.
+  */
+ 
++#ifdef CONFIG_IPIPE
++/* We use the same mechanism as Linux user helpers to store variables related to
++   TSC emulation, so that they can be used in user-space. */
++	.align 5
++	.globl  __ipipe_tsc_area_start
++
++__ipipe_tsc_area_start:	
++	.rep	8
++	.word	0
++	.endr
++#endif /* CONFIG_IPIPE */
++
+ 	.macro	usr_ret, reg
+ #ifdef CONFIG_ARM_THUMB
+ 	bx	\reg
 diff --git a/arch/arm/kernel/entry-common.S b/arch/arm/kernel/entry-common.S
 index 6f5e7c5..0c36fd0 100644
 --- a/arch/arm/kernel/entry-common.S
@@ -475,10 +492,10 @@ index 0000000..ce61e0c
 +#endif
 diff --git a/arch/arm/kernel/ipipe.c b/arch/arm/kernel/ipipe.c
 new file mode 100644
-index 0000000..4c1377f
+index 0000000..b4c4526
 --- /dev/null
 +++ b/arch/arm/kernel/ipipe.c
-@@ -0,0 +1,535 @@
+@@ -0,0 +1,536 @@
 +/* -*- linux-c -*-
 + * linux/arch/arm/kernel/ipipe.c
 + *
@@ -612,6 +629,7 @@ index 0000000..4c1377f
 +	info->cpufreq = ipipe_cpu_freq();
 +	info->archdep.tmirq = __ipipe_mach_timerint;
 +	info->archdep.tmfreq = info->cpufreq;
++        __ipipe_mach_get_tscinfo(&info->archdep.tsc);
 +
 +	return 0;
 +}
@@ -1070,7 +1088,7 @@ index 9254ba2..27b22fe 100644
  	return 0;
  }
 diff --git a/arch/arm/kernel/traps.c b/arch/arm/kernel/traps.c
-index 9089156..091340d 100644
+index 9089156..ba021d2 100644
 --- a/arch/arm/kernel/traps.c
 +++ b/arch/arm/kernel/traps.c
 @@ -307,6 +307,9 @@ asmlinkage void do_undefinstr(struct pt_regs *regs)
@@ -1083,6 +1101,43 @@ index 9089156..091340d 100644
  #ifdef CONFIG_DEBUG_USER
  	if (user_debug & UDBG_UNDEFINED) {
  		printk(KERN_INFO "%s (%d): undefined instruction: pc=%p\n",
+@@ -680,13 +683,22 @@ void abort(void)
+ }
+ EXPORT_SYMBOL(abort);
+ 
++#ifdef CONFIG_IPIPE
++void *__ipipe_tsc_area;
++#endif /* CONFIG_IPIPE */
++
+ void __init trap_init(void)
+ {
+ 	unsigned long vectors = CONFIG_VECTORS_BASE;
+ 	extern char __stubs_start[], __stubs_end[];
+ 	extern char __vectors_start[], __vectors_end[];
++#ifndef CONFIG_IPIPE
+ 	extern char __kuser_helper_start[], __kuser_helper_end[];
+ 	int kuser_sz = __kuser_helper_end - __kuser_helper_start;
++#else /* !CONFIG_IPIPE */
++	extern char __ipipe_tsc_area_start[], __kuser_helper_end[];
++	int kuser_sz = __kuser_helper_end - __ipipe_tsc_area_start;
++#endif /* !CONFIG_IPIPE */
+ 
+ 	/*
+ 	 * Copy the vectors, stubs and kuser helpers (in entry-armv.S)
+@@ -695,7 +707,13 @@ void __init trap_init(void)
+ 	 */
+ 	memcpy((void *)vectors, __vectors_start, __vectors_end - __vectors_start);
+ 	memcpy((void *)vectors + 0x200, __stubs_start, __stubs_end - __stubs_start);
++#ifndef CONFIG_IPIPE
+ 	memcpy((void *)vectors + 0x1000 - kuser_sz, __kuser_helper_start, kuser_sz);
++#else /* !CONFIG_IPIPE */
++	BUG_ON(0x1000 - kuser_sz < 0x200 + __stubs_end - __stubs_start);
++	memcpy((void *)vectors + 0x1000 - kuser_sz, __ipipe_tsc_area_start, kuser_sz);
++	__ipipe_tsc_area = (void *)vectors + 0x1000 - kuser_sz;
++#endif /* !CONFIG_IPIPE */
+ 
+ 	/*
+ 	 * Copy signal return handlers into the vector page, and
 diff --git a/arch/arm/mach-at91rm9200/Kconfig b/arch/arm/mach-at91rm9200/Kconfig
 index 9f11db8..1816652 100644
 --- a/arch/arm/mach-at91rm9200/Kconfig
@@ -1189,7 +1244,7 @@ index a92e9a4..db25e51 100644
  
  void __init at91rm9200_init_interrupts(unsigned int priority[NR_AIC_IRQS])
 diff --git a/arch/arm/mach-at91rm9200/at91rm9200_time.c b/arch/arm/mach-at91rm9200/at91rm9200_time.c
-index b999e19..1859ebc 100644
+index b999e19..f751bd5 100644
 --- a/arch/arm/mach-at91rm9200/at91rm9200_time.c
 +++ b/arch/arm/mach-at91rm9200/at91rm9200_time.c
 @@ -34,6 +34,62 @@
@@ -1273,7 +1328,7 @@ index b999e19..1859ebc 100644
  /*
   * Returns number of microseconds since last timer interrupt.  Note that interrupts
   * will have been disabled by do_gettimeofday()
-@@ -144,3 +202,209 @@ struct sys_timer at91rm9200_timer = {
+@@ -144,3 +202,238 @@ struct sys_timer at91rm9200_timer = {
  	.resume		= at91rm9200_timer_reset,
  };
  
@@ -1346,26 +1401,50 @@ index b999e19..1859ebc 100644
 +	      clk_get_rate(clk_get(NULL, "mck")));
 +}
 +
++union tsc_reg {
++#ifdef __BIG_ENDIAN
++	struct {
++		unsigned long high;
++		unsigned short mid;
++		unsigned short low;
++	};
++#else /* __LITTLE_ENDIAN */
++	struct {
++		unsigned short low;
++		unsigned short mid;
++		unsigned long high;
++	};
++#endif /* __LITTLE_ENDIAN */
++	unsigned long long full;
++};
++
++#ifdef CONFIG_SMP
++static union tsc_reg tsc[NR_CPUS];
++
++void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info)
++{
++	info->type = IPIPE_TSC_TYPE_NONE;
++}
++
++#else /* !CONFIG_SMP */
++static union tsc_reg *tsc;
++
++void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info)
++{
++	info->type = IPIPE_TSC_TYPE_FREERUNNING;
++	info->u.fr.counter =
++		(unsigned *)
++		(AT91_BASE_TCB0 + 0x40 * CONFIG_IPIPE_AT91_TC + AT91_TC_CV);
++	info->u.fr.mask = AT91_TC_REG_MASK;
++	info->u.fr.tsc = &tsc->full;
++}
++#endif /* !CONFIG_SMP */
++
 +notrace unsigned long long __ipipe_mach_get_tsc(void)
 +{
 +	if (likely(at91_timer_initialized)) {
-+		static union {
-+#ifdef __BIG_ENDIAN
-+			struct {
-+				unsigned long high;
-+				unsigned short mid;
-+				unsigned short low;
-+			};
-+#else /* __LITTLE_ENDIAN */
-+			struct {
-+				unsigned short low;
-+				unsigned short mid;
-+				unsigned long high;
-+			};
-+#endif /* __LITTLE_ENDIAN */
-+			unsigned long long full;
-+		} tsc[NR_CPUS], *local_tsc;
 +		unsigned long long result;
++		union tsc_reg *local_tsc;
 +		unsigned short stamp;
 +		unsigned long flags;
 +
@@ -1472,6 +1551,11 @@ index b999e19..1859ebc 100644
 +
 +	/* Enable the channel. */
 +	at91_tc_write(AT91_TC_CCR, AT91_TC_CLKEN | AT91_TC_SWTRG);
++
++#ifndef CONFIG_SMP
++	tsc = (union tsc_reg *) __ipipe_tsc_area;
++	barrier();
++#endif /* CONFIG_SMP */
 +
 +	at91_timer_initialized = 1;
 +}
@@ -1622,7 +1706,7 @@ index d242bb8..038eafe 100644
  
  void __init at91sam9261_init_interrupts(unsigned int priority[NR_AIC_IRQS])
 diff --git a/arch/arm/mach-at91rm9200/at91sam926x_time.c b/arch/arm/mach-at91rm9200/at91sam926x_time.c
-index 99df5f6..23e1ad1 100644
+index 99df5f6..e4c4440 100644
 --- a/arch/arm/mach-at91rm9200/at91sam926x_time.c
 +++ b/arch/arm/mach-at91rm9200/at91sam926x_time.c
 @@ -22,10 +22,87 @@
@@ -1713,7 +1797,7 @@ index 99df5f6..23e1ad1 100644
  /*
   * Returns number of microseconds since last timer interrupt.  Note that interrupts
   * will have been disabled by do_gettimeofday()
-@@ -112,3 +189,209 @@ struct sys_timer at91sam926x_timer = {
+@@ -112,3 +189,238 @@ struct sys_timer at91sam926x_timer = {
  	.resume		= at91sam926x_timer_reset,
  };
  
@@ -1786,25 +1870,49 @@ index 99df5f6..23e1ad1 100644
 +	      clk_get_rate(clk_get(NULL, "mck")));
 +}
 +
++union tsc_reg {
++#ifdef __BIG_ENDIAN
++	struct {
++		unsigned long high;
++		unsigned short mid;
++		unsigned short low;
++	};
++#else /* __LITTLE_ENDIAN */
++	struct {
++		unsigned short low;
++		unsigned short mid;
++		unsigned long high;
++	};
++#endif /* __LITTLE_ENDIAN */
++	unsigned long long full;
++};
++
++#ifdef CONFIG_SMP
++static union tsc_reg tsc[NR_CPUS];
++
++void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info)
++{
++	info->type = IPIPE_TSC_TYPE_NONE;
++}
++
++#else /* !CONFIG_SMP */
++static union tsc_reg *tsc;
++
++void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info)
++{
++	info->type = IPIPE_TSC_TYPE_FREERUNNING;
++	info->u.fr.counter =
++		(unsigned *)
++		(AT91_BASE_TCB0 + 0x40 * CONFIG_IPIPE_AT91_TC + AT91_TC_CV);
++	info->u.fr.mask = AT91_TC_REG_MASK;
++	info->u.fr.tsc = &tsc->full;
++}
++#endif /* !CONFIG_SMP */
++
 +notrace unsigned long long __ipipe_mach_get_tsc(void)
 +{
 +	if (likely(at91_timer_initialized)) {
-+		static union {
-+#ifdef __BIG_ENDIAN
-+			struct {
-+				unsigned long high;
-+				unsigned short mid;
-+				unsigned short low;
-+			};
-+#else /* __LITTLE_ENDIAN */
-+			struct {
-+				unsigned short low;
-+				unsigned short mid;
-+				unsigned long high;
-+			};
-+#endif /* __LITTLE_ENDIAN */
-+			unsigned long long full;
-+		} tsc[NR_CPUS], *local_tsc;
++		union tsc_reg *local_tsc;
 +		unsigned long long result;
 +		unsigned short stamp;
 +		unsigned long flags;
@@ -1913,6 +2021,11 @@ index 99df5f6..23e1ad1 100644
 +	/* Enable the channel. */
 +	at91_tc_write(AT91_TC_CCR, AT91_TC_CLKEN | AT91_TC_SWTRG);
 +
++#ifndef CONFIG_SMP
++	tsc = (union tsc_reg *) __ipipe_tsc_area;
++	barrier();
++#endif /* CONFIG_SMP */
++
 +	at91_timer_initialized = 1;
 +}
 +
@@ -2009,7 +2122,7 @@ index af22659..9469464 100644
 +#endif /* CONFIG_IPIPE */
  }
 diff --git a/arch/arm/mach-integrator/core.c b/arch/arm/mach-integrator/core.c
-index 8d880cb..9bd6bb0 100644
+index 8d880cb..4573a4e 100644
 --- a/arch/arm/mach-integrator/core.c
 +++ b/arch/arm/mach-integrator/core.c
 @@ -2,6 +2,7 @@
@@ -2020,7 +2133,7 @@ index 8d880cb..9bd6bb0 100644
   *
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of the GNU General Public License version 2, as
-@@ -195,53 +196,57 @@ EXPORT_SYMBOL(cm_control);
+@@ -195,53 +196,62 @@ EXPORT_SYMBOL(cm_control);
  /*
   * How long is the timer interval?
   */
@@ -2045,6 +2158,11 @@ index 8d880cb..9bd6bb0 100644
 +
 +int __ipipe_mach_timerstolen = 0;
 +EXPORT_SYMBOL(__ipipe_mach_timerstolen);
++
++void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info)
++{
++	info->type = IPIPE_TSC_TYPE_NONE;
++}
 +#endif
  
  /*
@@ -2111,7 +2229,7 @@ index 8d880cb..9bd6bb0 100644
  }
  
  /*
-@@ -252,10 +257,22 @@ integrator_timer_interrupt(int irq, void *dev_id)
+@@ -252,10 +262,22 @@ integrator_timer_interrupt(int irq, void *dev_id)
  {
  	write_seqlock(&xtime_lock);
  
@@ -2136,7 +2254,7 @@ index 8d880cb..9bd6bb0 100644
  
  	/*
  	 * the clock tick routines are only processed on the
-@@ -286,24 +303,30 @@ static struct irqaction integrator_timer_irq = {
+@@ -286,24 +308,30 @@ static struct irqaction integrator_timer_irq = {
  	.handler	= integrator_timer_interrupt,
  };
  
@@ -2177,7 +2295,7 @@ index 8d880cb..9bd6bb0 100644
  	/*
  	 * Initialise to a known state (all timers off)
  	 */
-@@ -311,12 +334,59 @@ void __init integrator_time_init(unsigned long reload, unsigned int ctrl)
+@@ -311,12 +339,60 @@ void __init integrator_time_init(unsigned long reload, unsigned int ctrl)
  	writel(0, TIMER1_VA_BASE + TIMER_CTRL);
  	writel(0, TIMER2_VA_BASE + TIMER_CTRL);
  
@@ -2195,6 +2313,7 @@ index 8d880cb..9bd6bb0 100644
 +}
 +
 +#ifdef CONFIG_IPIPE
++
 +void __ipipe_mach_acktimer(void)
 +{
 +	writel(1, TIMER1_VA_BASE + TIMER_INTCLR);
@@ -2309,10 +2428,10 @@ index 913f64b..e1741de 100644
  
  static struct sys_timer cp_timer = {
 diff --git a/arch/arm/mach-ixp4xx/common.c b/arch/arm/mach-ixp4xx/common.c
-index 2ec9a9e..fab5815 100644
+index 2ec9a9e..cab3bb9 100644
 --- a/arch/arm/mach-ixp4xx/common.c
 +++ b/arch/arm/mach-ixp4xx/common.c
-@@ -42,6 +42,30 @@
+@@ -42,6 +42,69 @@
  
  static int __init ixp4xx_clocksource_init(void);
  
@@ -2338,12 +2457,51 @@ index 2ec9a9e..fab5815 100644
 +
 +#define ONE_SHOT_ENABLE (IXP4XX_OST_ENABLE|IXP4XX_OST_ONE_SHOT)
 +
++union tsc_reg {
++#ifdef __BIG_ENDIAN
++	struct {
++		unsigned long high;
++		unsigned short mid;
++		unsigned short low;
++	};
++#else /* __LITTLE_ENDIAN */
++	struct {
++		unsigned short low;
++		unsigned short mid;
++		unsigned long high;
++	};
++#endif /* __LITTLE_ENDIAN */
++	unsigned long long full;
++};
++
++#ifdef CONFIG_SMP
++static union tsc_reg tsc[NR_CPUS];
++
++void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info)
++{
++	info->type = IPIPE_TSC_TYPE_NONE;
++}
++
++#else /* !CONFIG_SMP */
++static union tsc_reg *tsc;
++
++void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info)
++{
++	info->type = IPIPE_TSC_TYPE_FREERUNNING;
++	info->u.fr.counter =
++		(unsigned *)
++		(IXP4XX_TIMER_BASE_PHYS + IXP4XX_OSTS_OFFSET);
++	info->u.fr.mask = 0xffffffff;
++	info->u.fr.tsc = &tsc->full;
++}
++#endif /* !CONFIG_SMP */
++
 +#endif /* CONFIG_IPIPE */
 +
  /*************************************************************************
   * IXP4xx chipset I/O mapping
   *************************************************************************/
-@@ -243,6 +267,37 @@ static unsigned volatile last_jiffy_time;
+@@ -243,6 +306,37 @@ static unsigned volatile last_jiffy_time;
  
  #define CLOCK_TICKS_PER_USEC	((CLOCK_TICK_RATE + USEC_PER_SEC/2) / USEC_PER_SEC)
  
@@ -2381,7 +2539,7 @@ index 2ec9a9e..fab5815 100644
  static irqreturn_t ixp4xx_timer_interrupt(int irq, void *dev_id)
  {
  	write_seqlock(&xtime_lock);
-@@ -263,6 +318,8 @@ static irqreturn_t ixp4xx_timer_interrupt(int irq, void *dev_id)
+@@ -263,6 +357,8 @@ static irqreturn_t ixp4xx_timer_interrupt(int irq, void *dev_id)
  	return IRQ_HANDLED;
  }
  
@@ -2390,26 +2548,31 @@ index 2ec9a9e..fab5815 100644
  static struct irqaction ixp4xx_timer_irq = {
  	.name		= "IXP4xx Timer Tick",
  	.flags		= IRQF_DISABLED | IRQF_TIMER,
-@@ -275,7 +332,12 @@ static void __init ixp4xx_timer_init(void)
+@@ -275,7 +371,18 @@ static void __init ixp4xx_timer_init(void)
  	*IXP4XX_OSST = IXP4XX_OSST_TIMER_1_PEND;
  
  	/* Setup the Timer counter value */
 +#ifdef CONFIG_IPIPE
-+	ixp4xx_timer_initialized = 1;
 +	*IXP4XX_OSRT1 = LATCH | ONE_SHOT_ENABLE;
++
++#ifndef CONFIG_SMP
++	tsc = (union tsc_reg *) __ipipe_tsc_area;
++	barrier();
++#endif /* CONFIG_SMP */
++
++	ixp4xx_timer_initialized = 1;
 +#else
  	*IXP4XX_OSRT1 = (LATCH & ~IXP4XX_OST_RELOAD_MASK) | IXP4XX_OST_ENABLE;
 +#endif
  
  	/* Reset time-stamp counter */
  	*IXP4XX_OSTS = 0;
-@@ -408,3 +470,94 @@ static int __init ixp4xx_clocksource_init(void)
+@@ -408,3 +515,80 @@ static int __init ixp4xx_clocksource_init(void)
  
  	return 0;
  }
 +
 +#ifdef CONFIG_IPIPE
-+
 +void __ipipe_mach_acktimer(void)
 +{
 +	/* Clear Pending Interrupt by writing '1' to it */
@@ -2421,20 +2584,7 @@ index 2ec9a9e..fab5815 100644
 +notrace unsigned long long __ipipe_mach_get_tsc(void)
 +{
 +	if (likely(ixp4xx_timer_initialized)) {
-+		static union {
-+#ifdef __BIG_ENDIAN
-+			struct {
-+				unsigned long high;
-+				unsigned long low;
-+			};
-+#else /* __LITTLE_ENDIAN */
-+			struct {
-+				unsigned long low;
-+				unsigned long high;
-+			};
-+#endif /* __LITTLE_ENDIAN */
-+			unsigned long long full;
-+		} tsc[NR_CPUS], *local_tsc;
++		union tsc_reg *local_tsc;
 +		unsigned long stamp, flags;
 +		unsigned long long result;
 +
@@ -2602,7 +2752,7 @@ index 2271d20..614f391 100644
  #include <asm/hardware.h>
  #include <asm/system.h>
 diff --git a/arch/arm/mach-pxa/time.c b/arch/arm/mach-pxa/time.c
-index ee2beb4..95cc19e 100644
+index ee2beb4..429ed20 100644
 --- a/arch/arm/mach-pxa/time.c
 +++ b/arch/arm/mach-pxa/time.c
 @@ -19,6 +19,7 @@
@@ -2613,7 +2763,7 @@ index ee2beb4..95cc19e 100644
  
  #include <asm/system.h>
  #include <asm/hardware.h>
-@@ -30,6 +31,23 @@
+@@ -30,6 +31,60 @@
  #include <asm/arch/pxa-regs.h>
  
  
@@ -2632,12 +2782,49 @@ index ee2beb4..95cc19e 100644
 +
 +static int pxa_timer_initialized;
 +static unsigned long last_jiffy_time;
++
++union tsc_reg {
++#ifdef __BIG_ENDIAN
++	struct {
++		unsigned long high;
++		unsigned short mid;
++		unsigned short low;
++	};
++#else /* __LITTLE_ENDIAN */
++	struct {
++		unsigned short low;
++		unsigned short mid;
++		unsigned long high;
++	};
++#endif /* __LITTLE_ENDIAN */
++	unsigned long long full;
++};
++
++#ifdef CONFIG_SMP
++static union tsc_reg tsc[NR_CPUS];
++
++void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info)
++{
++	info->type = IPIPE_TSC_TYPE_NONE;
++}
++
++#else /* !CONFIG_SMP */
++static union tsc_reg *tsc;
++
++void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info)
++{
++	info->type = IPIPE_TSC_TYPE_FREERUNNING;
++	info->u.fr.counter = (unsigned *) 0x40A00010;
++	info->u.fr.mask = 0xffffffff;
++	info->u.fr.tsc = &tsc->full;
++}
++#endif /* !CONFIG_SMP */
 +#endif /* CONFIG_IPIPE */
 +
  static inline unsigned long pxa_get_rtc_time(void)
  {
  	return RCNR;
-@@ -84,9 +102,27 @@ pxa_timer_interrupt(int irq, void *dev_id)
+@@ -84,9 +139,27 @@ pxa_timer_interrupt(int irq, void *dev_id)
  	 * affect things only when the timer IRQ has been delayed by nearly
  	 * exactly one tick period which should be a pretty rare event.
  	 */
@@ -2665,17 +2852,22 @@ index ee2beb4..95cc19e 100644
  		next_match = (OSMR0 += LATCH);
  	} while( (signed long)(next_match - OSCR) <= 8 );
  
-@@ -141,6 +177,9 @@ static void __init pxa_timer_init(void)
+@@ -141,6 +214,14 @@ static void __init pxa_timer_init(void)
  	clocksource_pxa.mult =
  		clocksource_hz2mult(CLOCK_TICK_RATE, clocksource_pxa.shift);
  	clocksource_register(&clocksource_pxa);
 +#ifdef CONFIG_IPIPE
++#ifndef CONFIG_SMP
++	tsc = (union tsc_reg *) __ipipe_tsc_area;
++	barrier();
++#endif /* CONFIG_SMP */
++
 +	pxa_timer_initialized = 1;
 +#endif /* CONFIG_IPIPE */
  }
  
  #ifdef CONFIG_NO_IDLE_HZ
-@@ -217,3 +256,75 @@ struct sys_timer pxa_timer = {
+@@ -217,3 +298,62 @@ struct sys_timer pxa_timer = {
  	.dyn_tick	= &pxa_dyn_tick,
  #endif
  };
@@ -2689,20 +2881,7 @@ index ee2beb4..95cc19e 100644
 +notrace unsigned long long __ipipe_mach_get_tsc(void)
 +{
 +	if (likely(pxa_timer_initialized)) {
-+		static union {
-+#ifdef __BIG_ENDIAN
-+			struct {
-+				unsigned long high;
-+				unsigned long low;
-+			};
-+#else /* __LITTLE_ENDIAN */
-+			struct {
-+				unsigned long low;
-+				unsigned long high;
-+			};
-+#endif /* __LITTLE_ENDIAN */
-+			unsigned long long full;
-+		} tsc[NR_CPUS], *local_tsc;
++		union tsc_reg *local_tsc;
 +		unsigned long stamp, flags;
 +		unsigned long long result;
 +
@@ -2936,7 +3115,7 @@ index 1ba19b2..da74c73 100644
  {
  	unsigned int irqno;
 diff --git a/arch/arm/mach-s3c2410/time.c b/arch/arm/mach-s3c2410/time.c
-index 9910bf0..9df39f2 100644
+index 9910bf0..e7b3d00 100644
 --- a/arch/arm/mach-s3c2410/time.c
 +++ b/arch/arm/mach-s3c2410/time.c
 @@ -3,6 +3,8 @@
@@ -2964,7 +3143,7 @@ index 9910bf0..9df39f2 100644
  static unsigned long timer_usec_ticks;
  
  #define TIMER_USEC_SHIFT 16
-@@ -55,6 +57,24 @@ static unsigned long timer_usec_ticks;
+@@ -55,6 +57,29 @@ static unsigned long timer_usec_ticks;
   * Original patch by Dimitry Andric, updated by Ben Dooks
  */
  
@@ -2985,11 +3164,16 @@ index 9910bf0..9df39f2 100644
 +
 +int __ipipe_mach_timerstolen = 0;
 +EXPORT_SYMBOL(__ipipe_mach_timerstolen);
++
++void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info)
++{
++	info->type = IPIPE_TSC_TYPE_NONE;
++}
 +#endif /* CONFIG_IPIPE */
  
  /* timer_mask_usec_ticks
   *
-@@ -85,44 +105,46 @@ static inline unsigned long timer_ticks_to_usec(unsigned long ticks)
+@@ -85,44 +110,46 @@ static inline unsigned long timer_ticks_to_usec(unsigned long ticks)
  	return res >> TIMER_USEC_SHIFT;
  }
  
@@ -3064,7 +3248,7 @@ index 9910bf0..9df39f2 100644
  
  /*
   * IRQ handler for the timer
-@@ -131,6 +153,14 @@ static irqreturn_t
+@@ -131,6 +158,14 @@ static irqreturn_t
  s3c2410_timer_interrupt(int irq, void *dev_id)
  {
  	write_seqlock(&xtime_lock);
@@ -3079,7 +3263,7 @@ index 9910bf0..9df39f2 100644
  	timer_tick();
  	write_sequnlock(&xtime_lock);
  	return IRQ_HANDLED;
-@@ -149,10 +179,10 @@ static struct irqaction s3c2410_timer_irq = {
+@@ -149,10 +184,10 @@ static struct irqaction s3c2410_timer_irq = {
  	machine_is_osiris() )
  
  /*
@@ -3093,7 +3277,7 @@ index 9910bf0..9df39f2 100644
   */
  static void s3c2410_timer_setup (void)
  {
-@@ -160,6 +190,7 @@ static void s3c2410_timer_setup (void)
+@@ -160,6 +195,7 @@ static void s3c2410_timer_setup (void)
  	unsigned long tcnt;
  	unsigned long tcfg1;
  	unsigned long tcfg0;
@@ -3101,7 +3285,7 @@ index 9910bf0..9df39f2 100644
  
  	tcnt = 0xffff;  /* default value for tcnt */
  
-@@ -176,8 +207,8 @@ static void s3c2410_timer_setup (void)
+@@ -176,8 +212,8 @@ static void s3c2410_timer_setup (void)
  		timer_usec_ticks = timer_mask_usec_ticks(1, 12000000);
  		tcnt = 12000000 / HZ;
  
@@ -3112,7 +3296,7 @@ index 9910bf0..9df39f2 100644
  	} else {
  		unsigned long pclk;
  		struct clk *clk;
-@@ -205,8 +236,8 @@ static void s3c2410_timer_setup (void)
+@@ -205,8 +241,8 @@ static void s3c2410_timer_setup (void)
  
  		timer_usec_ticks = timer_mask_usec_ticks(6, pclk);
  
@@ -3123,7 +3307,7 @@ index 9910bf0..9df39f2 100644
  
  		tcfg0 &= ~S3C2410_TCFG_PRESCALER1_MASK;
  		tcfg0 |= ((6 - 1) / 2) << S3C2410_TCFG_PRESCALER1_SHIFT;
-@@ -214,6 +245,10 @@ static void s3c2410_timer_setup (void)
+@@ -214,6 +250,10 @@ static void s3c2410_timer_setup (void)
  		tcnt = (pclk / 6) / HZ;
  	}
  
@@ -3134,7 +3318,7 @@ index 9910bf0..9df39f2 100644
  	/* timers reload after counting zero, so reduce the count by 1 */
  
  	tcnt--;
-@@ -230,23 +265,37 @@ static void s3c2410_timer_setup (void)
+@@ -230,23 +270,37 @@ static void s3c2410_timer_setup (void)
  	__raw_writel(tcfg1, S3C2410_TCFG1);
  	__raw_writel(tcfg0, S3C2410_TCFG0);
  
@@ -3163,13 +3347,13 @@ index 9910bf0..9df39f2 100644
 +
 +	/* Set base tcon value for later programming of timer 4 by Xenomai. */
 +	free_running_tcon = tcon |  S3C2410_TCON_T3RELOAD | S3C2410_TCON_T3START;
++
++	/* Set auto reloads for both timers. */
++	tcon |= S3C2410_TCON_T3RELOAD | S3C2410_TCON_T4RELOAD;
  
 -	/* start the timer running */
 -	tcon |= S3C2410_TCON_T4START;
 -	tcon &= ~S3C2410_TCON_T4MANUALUPD;
-+	/* Set auto reloads for both timers. */
-+	tcon |= S3C2410_TCON_T3RELOAD | S3C2410_TCON_T4RELOAD;
-+
 +	/* Manual update */
 +	__raw_writel(tcon | S3C2410_TCON_T3MANUALUPD
 +			  | S3C2410_TCON_T4MANUALUPD, S3C2410_TCON);
@@ -3183,7 +3367,7 @@ index 9910bf0..9df39f2 100644
  }
  
  static void __init s3c2410_timer_init (void)
-@@ -260,3 +309,58 @@ struct sys_timer s3c24xx_timer = {
+@@ -260,3 +314,58 @@ struct sys_timer s3c24xx_timer = {
  	.offset		= s3c2410_gettimeoffset,
  	.resume		= s3c2410_timer_setup
  };
@@ -3365,7 +3549,7 @@ index def090a..6ed3032 100644
  #include <asm/hardware.h>
  #include <asm/leds.h>
 diff --git a/arch/arm/mach-sa1100/time.c b/arch/arm/mach-sa1100/time.c
-index 29c89f9..4aeb594 100644
+index 29c89f9..5502254 100644
 --- a/arch/arm/mach-sa1100/time.c
 +++ b/arch/arm/mach-sa1100/time.c
 @@ -14,6 +14,7 @@
@@ -3376,7 +3560,7 @@ index 29c89f9..4aeb594 100644
  
  #include <asm/mach/time.h>
  #include <asm/hardware.h>
-@@ -21,6 +22,23 @@
+@@ -21,6 +22,60 @@
  #define RTC_DEF_DIVIDER		(32768 - 1)
  #define RTC_DEF_TRIM            0
  
@@ -3395,12 +3579,49 @@ index 29c89f9..4aeb594 100644
 +
 +static int sa1100_timer_initialized;
 +static unsigned long last_jiffy_time;
++
++union tsc_reg {
++#ifdef __BIG_ENDIAN
++	struct {
++		unsigned long high;
++		unsigned short mid;
++		unsigned short low;
++	};
++#else /* __LITTLE_ENDIAN */
++	struct {
++		unsigned short low;
++		unsigned short mid;
++		unsigned long high;
++	};
++#endif /* __LITTLE_ENDIAN */
++	unsigned long long full;
++};
++
++#ifdef CONFIG_SMP
++static union tsc_reg tsc[NR_CPUS];
++
++void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info)
++{
++	info->type = IPIPE_TSC_TYPE_NONE;
++}
++
++#else /* !CONFIG_SMP */
++static union tsc_reg *tsc;
++
++void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info)
++{
++	info->type = IPIPE_TSC_TYPE_FREERUNNING;
++	info->u.fr.counter = (unsigned *)0x90000010;
++	info->u.fr.mask = 0xffffffff;
++	info->u.fr.tsc = &tsc->full;
++}
++#endif /* !CONFIG_SMP */
 +#endif /* CONFIG_IPIPE */
 +
  static unsigned long __init sa1100_get_rtc_time(void)
  {
  	/*
-@@ -59,11 +77,18 @@ static unsigned long sa1100_gettimeoffset (void)
+@@ -59,11 +114,18 @@ static unsigned long sa1100_gettimeoffset (void)
  {
  	unsigned long ticks_to_match, elapsed, usec;
  
@@ -3419,7 +3640,7 @@ index 29c89f9..4aeb594 100644
  
  	/* Now convert them to usec */
  	usec = (unsigned long)(elapsed * (tick_nsec / 1000))/LATCH;
-@@ -98,9 +123,27 @@ sa1100_timer_interrupt(int irq, void *dev_id)
+@@ -98,9 +160,27 @@ sa1100_timer_interrupt(int irq, void *dev_id)
  	 * ensured, hence we can use do_gettimeofday() from interrupt
  	 * handlers.
  	 */
@@ -3447,17 +3668,22 @@ index 29c89f9..4aeb594 100644
  		next_match = (OSMR0 += LATCH);
  	} while ((signed long)(next_match - OSCR) <= 0);
  
-@@ -133,6 +176,9 @@ static void __init sa1100_timer_init(void)
+@@ -133,6 +213,14 @@ static void __init sa1100_timer_init(void)
  	OIER = OIER_E0;		/* enable match on timer 0 to cause interrupts */
  	OSMR0 = OSCR + LATCH;	/* set initial match */
  	local_irq_restore(flags);
 +#ifdef CONFIG_IPIPE
++#ifndef CONFIG_SMP
++	tsc = (union tsc_reg *) __ipipe_tsc_area;
++	barrier();
++#endif /* CONFIG_SMP */
++
 +	sa1100_timer_initialized = 1;
 +#endif /* CONFIG_IPIPE */
  }
  
  #ifdef CONFIG_NO_IDLE_HZ
-@@ -211,3 +257,72 @@ struct sys_timer sa1100_timer = {
+@@ -211,3 +299,59 @@ struct sys_timer sa1100_timer = {
  	.dyn_tick	= &sa1100_dyn_tick,
  #endif
  };
@@ -3471,20 +3697,7 @@ index 29c89f9..4aeb594 100644
 +notrace unsigned long long __ipipe_mach_get_tsc(void)
 +{
 +	if (likely(sa1100_timer_initialized)) {
-+		static union {
-+#ifdef __BIG_ENDIAN
-+			struct {
-+				unsigned long high;
-+				unsigned long low;
-+			};
-+#else /* __LITTLE_ENDIAN */
-+			struct {
-+				unsigned long low;
-+				unsigned long high;
-+			};
-+#endif /* __LITTLE_ENDIAN */
-+			unsigned long long full;
-+		} tsc[NR_CPUS], *local_tsc;
++		union tsc_reg *local_tsc;
 +		unsigned long stamp, flags;
 +		unsigned long long result;
 +
@@ -3679,21 +3892,22 @@ index 279c940..daabf90 100644
  struct ht_irq_cfg {
  	struct pci_dev *dev;
 diff --git a/include/asm-arm/arch-at91rm9200/hardware.h b/include/asm-arm/arch-at91rm9200/hardware.h
-index 9ea5bfe..5cea661 100644
+index 9ea5bfe..30187c8 100644
 --- a/include/asm-arm/arch-at91rm9200/hardware.h
 +++ b/include/asm-arm/arch-at91rm9200/hardware.h
-@@ -44,6 +44,16 @@
+@@ -44,6 +44,17 @@
  #define AT91_VA_BASE_SYS	AT91_IO_P2V(AT91_BASE_SYS)
  #define AT91_VA_BASE_EMAC	AT91_IO_P2V(AT91RM9200_BASE_EMAC)
  
 +#ifdef CONFIG_IPIPE
 +#if defined(CONFIG_ARCH_AT91RM9200)
-+#define AT91_VA_BASE_TCB0       AT91_IO_P2V(AT91RM9200_BASE_TCB0)
++#define AT91_BASE_TCB0       AT91RM9200_BASE_TCB0
 +#elif defined(CONFIG_ARCH_AT91SAM9260)
-+#define AT91_VA_BASE_TCB0       AT91_IO_P2V(AT91SAM9260_BASE_TCB0)
++#define AT91_BASE_TCB0       AT91SAM9260_BASE_TCB0
 +#elif defined(CONFIG_ARCH_AT91SAM9261)
-+#define AT91_VA_BASE_TCB0       AT91_IO_P2V(AT91SAM9261_BASE_TCB0)
++#define AT91_BASE_TCB0       AT91SAM9261_BASE_TCB0
 +#endif /* CONFIG_ARCH_AT91SAM9261 */
++#define AT91_VA_BASE_TCB0    AT91_IO_P2V(AT91_BASE_TCB0)
 +#endif /* CONFIG_IPIPE */
 +
   /* Internal SRAM is mapped below the IO devices */
@@ -4063,10 +4277,10 @@ index b41831b..46b169e 100644
  }
 diff --git a/include/asm-arm/ipipe.h b/include/asm-arm/ipipe.h
 new file mode 100644
-index 0000000..a0fbe88
+index 0000000..b3d62bf
 --- /dev/null
 +++ b/include/asm-arm/ipipe.h
-@@ -0,0 +1,207 @@
+@@ -0,0 +1,231 @@
 +/* -*- linux-c -*-
 + * include/asm-arm/ipipe.h
 + *
@@ -4097,10 +4311,10 @@ index 0000000..a0fbe88
 +#include <asm/irq.h>
 +#include <asm/percpu.h>
 +
-+#define IPIPE_ARCH_STRING	"1.7-02"
++#define IPIPE_ARCH_STRING	"1.7-03"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	7
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
@@ -4111,6 +4325,8 @@ index 0000000..a0fbe88
 +#else /* !CONFIG_SMP */
 +#define ipipe_processor_id()	0
 +#endif	/* CONFIG_SMP */
++
++#define smp_processor_id_hw() ipipe_processor_id()
 +
 +#define prepare_arch_switch(next)				\
 +do {								\
@@ -4157,6 +4373,23 @@ index 0000000..a0fbe88
 +
 +struct ipipe_domain;
 +
++#define IPIPE_TSC_TYPE_NONE        0
++#define IPIPE_TSC_TYPE_FREERUNNING 1
++#define IPIPE_TSC_TYPE_DECREMENTER 2
++
++struct __ipipe_tscinfo {
++        unsigned type;
++        union {
++                struct {
++                        unsigned *counter; /* Hw counter physical address */
++                        unsigned mask; /* Significant bits in the hw counter. */
++                        unsigned long long *tsc; /* 64 bits tsc value. */
++                } fr;
++                struct {
++                } dec;
++        } u;
++};
++
 +struct ipipe_sysinfo {
 +
 +	int ncpus;		/* Number of CPUs on board */
@@ -4167,11 +4400,13 @@ index 0000000..a0fbe88
 +	struct {
 +		unsigned tmirq;	/* Timer tick IRQ */
 +		u64 tmfreq;	/* Timer frequency */
++                struct __ipipe_tscinfo tsc; /* exported data for u.s. tsc */
 +	} archdep;
 +};
 +
 +DECLARE_PER_CPU(struct mm_struct *,ipipe_active_mm);
 +/* arch specific stuff */
++extern void *__ipipe_tsc_area;
 +extern int __ipipe_mach_timerint;
 +extern int __ipipe_mach_timerstolen;
 +extern unsigned int __ipipe_mach_ticks_per_jiffy;
@@ -4181,6 +4416,7 @@ index 0000000..a0fbe88
 +extern void __ipipe_mach_release_timer(void);
 +extern unsigned long __ipipe_mach_get_dec(void);
 +extern void __ipipe_mach_demux_irq(unsigned irq, struct pt_regs *regs);
++void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info);
 +
 +#define ipipe_read_tsc(t)		do { t = __ipipe_mach_get_tsc(); } while (0)
 +#define __ipipe_read_timebase()		__ipipe_mach_get_tsc()
@@ -4269,7 +4505,9 @@ index 0000000..a0fbe88
 +
 +#else /* !CONFIG_IPIPE */
 +
-+#define task_hijacked(p)	0
++#define task_hijacked(p)		0
++
++#define smp_processor_id_hw()		smp_processor_id()
 +
 +#endif /* CONFIG_IPIPE */
 +
@@ -4588,10 +4826,10 @@ index 612472a..2b2574c 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..3967254
+index 0000000..7282176
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,695 @@
+@@ -0,0 +1,692 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -5239,8 +5477,6 @@ index 0000000..3967254
 +			local_irq_disable_hw();		\
 +	} while(0)
 +
-+#define smp_processor_id_hw()				ipipe_processor_id()
-+
 +#define ipipe_irq_lock(irq)						\
 +	do {								\
 +		ipipe_declare_cpuid;					\
@@ -5274,7 +5510,6 @@ index 0000000..3967254
 +#define local_irq_disable_hw_cond()		do { } while(0)
 +#define local_irq_save_hw_cond(flags)	do { (void)(flags); } while(0)
 +#define local_irq_restore_hw_cond(flags)	do { } while(0)
-+#define smp_processor_id_hw()			smp_processor_id()
 +
 +#define ipipe_irq_lock(irq)		do { } while(0)
 +#define ipipe_irq_unlock(irq)		do { } while(0)
@@ -5383,7 +5618,7 @@ index 0000000..d0ddf3f
 +#endif	/* !__LINUX_IPIPE_BASE_H */
 diff --git a/include/linux/ipipe_trace.h b/include/linux/ipipe_trace.h
 new file mode 100644
-index 0000000..6f5e7bc
+index 0000000..c7c6ebd
 --- /dev/null
 +++ b/include/linux/ipipe_trace.h
 @@ -0,0 +1,49 @@
@@ -5391,7 +5626,7 @@ index 0000000..6f5e7bc
 + * include/linux/ipipe_trace.h
 + *
 + * Copyright (C) 2005 Luotao Fu.
-+ *               2005, 2006 Jan Kiszka.
++ *               2005-2007 Jan Kiszka.
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published by
@@ -5412,8 +5647,6 @@ index 0000000..6f5e7bc
 +#ifndef _LINUX_IPIPE_TRACE_H
 +#define _LINUX_IPIPE_TRACE_H
 +
-+#ifdef CONFIG_IPIPE_TRACE
-+
 +#include <linux/types.h>
 +
 +void ipipe_trace_begin(unsigned long v);
@@ -5425,15 +5658,17 @@ index 0000000..6f5e7bc
 +int ipipe_trace_max_reset(void);
 +int ipipe_trace_frozen_reset(void);
 +
++#ifdef CONFIG_IPIPE_TRACE_PANIC
++
 +void ipipe_trace_panic_freeze(void);
 +void ipipe_trace_panic_dump(void);
 +
-+#else /* !CONFIG_IPIPE_TRACE */
++#else /* !CONFIG_IPIPE_TRACE_PANIC */
 +
 +static inline void ipipe_trace_panic_freeze(void) { }
 +static inline void ipipe_trace_panic_dump(void) { }
 +
-+#endif /* !CONFIG_IPIPE_TRACE */
++#endif /* !CONFIG_IPIPE_TRACE_PANIC */
 +
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/irq.h b/include/linux/irq.h
@@ -5951,10 +6186,10 @@ index 0000000..1f46f07
 +	  compiled in.
 diff --git a/kernel/ipipe/Kconfig.debug b/kernel/ipipe/Kconfig.debug
 new file mode 100644
-index 0000000..d36272e
+index 0000000..64a692c
 --- /dev/null
 +++ b/kernel/ipipe/Kconfig.debug
-@@ -0,0 +1,80 @@
+@@ -0,0 +1,88 @@
 +config IPIPE_DEBUG
 +	bool "I-pipe debugging"
 +	depends on IPIPE
@@ -5983,9 +6218,10 @@ index 0000000..d36272e
 +	  in-kernel tracing API. The collected data and runtime control
 +	  is available via /proc/ipipe/trace/*.
 +
++if IPIPE_TRACE
++
 +config IPIPE_TRACE_ENABLE
 +	bool "Enable tracing on boot"
-+	depends on IPIPE_TRACE
 +	default y
 +	---help---
 +	  Disable this option if you want to arm the tracer after booting
@@ -5994,7 +6230,6 @@ index 0000000..d36272e
 +
 +config IPIPE_TRACE_MCOUNT
 +	bool "Instrument function entries"
-+	depends on IPIPE_TRACE
 +	default y
 +	---help---
 +	  When enabled, records every kernel function entry in the tracer
@@ -6005,7 +6240,6 @@ index 0000000..d36272e
 +
 +config IPIPE_TRACE_IRQSOFF
 +	bool "Trace IRQs-off times"
-+	depends on IPIPE_TRACE
 +	default y
 +	---help---
 +	  Activate this option if I-pipe shall trace the longest path
@@ -6015,14 +6249,12 @@ index 0000000..d36272e
 +	int "Depth of trace log (14 => 16Kpoints, 15 => 32Kpoints)"
 +	range 10 18
 +	default 14
-+	depends on IPIPE_TRACE
 +	---help---
 +	  The number of trace points to hold tracing data for each
 +	  trace path, as a power of 2.
 +
 +config IPIPE_TRACE_VMALLOC
 +	bool "Use vmalloc'ed trace buffer"
-+	depends on IPIPE_TRACE
 +	default y if EMBEDDED
 +	---help---
 +	  Instead of reserving static kernel data, the required buffer
@@ -6031,10 +6263,21 @@ index 0000000..d36272e
 +	  but it slightly degrades overall performance. Try this option
 +	  when a traced kernel hangs unexpectedly at boot time.
 +
++config IPIPE_TRACE_PANIC
++	bool "Enable panic back traces"
++	default y
++	---help---
++	  Provides services to freeze and dump a back trace on panic
++	  situations. This is used on IPIPE_DEBUG_CONTEXT exceptions
++	  as well as ordinary kernel oopses. You can control the number
++	  of printed back trace points via /proc/ipipe/trace.
++
 +config IPIPE_TRACE_ENABLE_VALUE
 +	int
 +	default 0 if !IPIPE_TRACE_ENABLE
 +	default 1 if IPIPE_TRACE_ENABLE
++
++endif
 diff --git a/kernel/ipipe/Makefile b/kernel/ipipe/Makefile
 new file mode 100644
 index 0000000..6257dfa
@@ -7497,10 +7740,10 @@ index 0000000..2e7463d
 +EXPORT_SYMBOL(__ipipe_schedule_irq);
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..642933a
+index 0000000..de08cb1
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1284 @@
+@@ -0,0 +1,1291 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -7635,7 +7878,9 @@ index 0000000..642933a
 +
 +static DEFINE_MUTEX(out_mutex);
 +static struct ipipe_trace_path *print_path;
++#ifdef CONFIG_IPIPE_TRACE_PANIC
 +static struct ipipe_trace_path *panic_path;
++#endif /* CONFIG_IPIPE_TRACE_PANIC */
 +static int print_pre_trace;
 +static int print_post_trace;
 +
@@ -8064,25 +8309,6 @@ index 0000000..642933a
 +}
 +EXPORT_SYMBOL(ipipe_trace_frozen_reset);
 +
-+void ipipe_trace_panic_freeze(void)
-+{
-+	unsigned long flags;
-+	int cpu_id;
-+
-+	if (!ipipe_trace_enable)
-+		return;
-+
-+	ipipe_trace_enable = 0;
-+	local_irq_save_hw_notrace(flags);
-+
-+	cpu_id = ipipe_processor_id();
-+
-+	panic_path = &trace_paths[cpu_id][active_path[cpu_id]];
-+
-+	local_irq_restore_hw(flags);
-+}
-+EXPORT_SYMBOL(ipipe_trace_panic_freeze);
-+
 +static void
 +__ipipe_get_task_info(char *task_info, struct ipipe_trace_point *point,
 +                      int trylock)
@@ -8092,9 +8318,10 @@ index 0000000..642933a
 +	int i;
 +	int locked = 1;
 +
-+	if (trylock && !read_trylock(&tasklist_lock))
-+		locked = 0;
-+	else
++	if (trylock) {
++		if (!read_trylock(&tasklist_lock))
++			locked = 0;
++	} else
 +		read_lock(&tasklist_lock);
 +
 +	if (locked)
@@ -8114,6 +8341,26 @@ index 0000000..642933a
 +	sprintf(buf, " %d ", point->type >> IPIPE_TYPE_BITS);
 +	strcpy(task_info + (11 - strlen(buf)), buf);
 +}
++
++#ifdef CONFIG_IPIPE_TRACE_PANIC
++void ipipe_trace_panic_freeze(void)
++{
++	unsigned long flags;
++	int cpu_id;
++
++	if (!ipipe_trace_enable)
++		return;
++
++	ipipe_trace_enable = 0;
++	local_irq_save_hw_notrace(flags);
++
++	cpu_id = ipipe_processor_id();
++
++	panic_path = &trace_paths[cpu_id][active_path[cpu_id]];
++
++	local_irq_restore_hw(flags);
++}
++EXPORT_SYMBOL(ipipe_trace_panic_freeze);
 +
 +void ipipe_trace_panic_dump(void)
 +{
@@ -8181,6 +8428,7 @@ index 0000000..642933a
 +	panic_path = NULL;
 +}
 +EXPORT_SYMBOL(ipipe_trace_panic_dump);
++#endif /* CONFIG_IPIPE_TRACE_PANIC */
 +
 +
 +/* --- /proc output --- */
@@ -8303,8 +8551,17 @@ index 0000000..642933a
 +
 +	sym_name = kallsyms_lookup(eip, &size, &offset, &modname, namebuf);
 +
-+	/* printing to /proc? */
-+	if (m) {
++#ifdef CONFIG_IPIPE_TRACE_PANIC
++	if (!m) {
++		/* panic dump */
++		if (sym_name) {
++			printk("%s+0x%lx", sym_name, offset);
++			if (modname)
++				printk(" [%s]", modname);
++		}
++	} else
++#endif /* CONFIG_IPIPE_TRACE_PANIC */
++	{
 +		if (sym_name) {
 +			if (verbose_trace) {
 +				seq_printf(m, "%s+0x%lx", sym_name, offset);
@@ -8314,13 +8571,6 @@ index 0000000..642933a
 +				seq_puts(m, sym_name);
 +		} else
 +			seq_printf(m, "<%08lx>", eip);
-+	} else {
-+		/* panic dump */
-+		if (sym_name) {
-+			printk("%s+0x%lx", sym_name, offset);
-+			if (modname)
-+				printk(" [%s]", modname);
-+		}
 +	}
 +}
 +
@@ -8974,12 +9224,12 @@ index d27b258..67e4bf9 100644
  	desc->handle_irq = handle;
  	desc->name = name;
 diff --git a/kernel/printk.c b/kernel/printk.c
-index c770e1a..6b49827 100644
+index c770e1a..a50b8ea 100644
 --- a/kernel/printk.c
 +++ b/kernel/printk.c
-@@ -499,6 +499,78 @@ static int have_callable_console(void)
-  * printf(3)
-  */
+@@ -479,6 +479,41 @@ static int have_callable_console(void)
+ 	return 0;
+ }
  
 +#ifdef CONFIG_IPIPE
 +
@@ -9016,8 +9266,13 @@ index c770e1a..6b49827 100644
 +	spin_unlock_irqrestore(&__ipipe_printk_lock, flags);
 +}
 +
-+asmlinkage int printk(const char *fmt, ...)
-+{
+ /**
+  * printk - print a kernel message
+  * @fmt: format string
+@@ -501,6 +536,43 @@ static int have_callable_console(void)
+ 
+ asmlinkage int printk(const char *fmt, ...)
+ {
 +	int r, fbytes, oldcount;
 +    	unsigned long flags;
 +	va_list args;
@@ -9053,9 +9308,11 @@ index c770e1a..6b49827 100644
 +	return r;
 +}
 +#else /* !CONFIG_IPIPE */
- asmlinkage int printk(const char *fmt, ...)
- {
++asmlinkage int printk(const char *fmt, ...)
++{
  	va_list args;
+ 	int r;
+ 
 @@ -510,6 +582,7 @@ asmlinkage int printk(const char *fmt, ...)
  
  	return r;
@@ -9267,6 +9524,30 @@ index 5c26818..36cd9ec 100644
  config DEBUG_KERNEL
  	bool "Kernel debugging"
  	help
+diff --git a/lib/bust_spinlocks.c b/lib/bust_spinlocks.c
+index a2055bc..a49201f 100644
+--- a/lib/bust_spinlocks.c
++++ b/lib/bust_spinlocks.c
+@@ -12,14 +12,19 @@
+ #include <linux/tty.h>
+ #include <linux/wait.h>
+ #include <linux/vt_kern.h>
++#include <linux/ipipe_trace.h>
+ 
+ 
+ void bust_spinlocks(int yes)
+ {
+ 	if (yes) {
++		ipipe_trace_panic_freeze();
+ 		oops_in_progress = 1;
+ 	} else {
+ 		int loglevel_save = console_loglevel;
++
++		ipipe_trace_panic_dump();
++
+ #ifdef CONFIG_VT
+ 		unblank_screen();
+ #endif
 diff --git a/lib/ioremap.c b/lib/ioremap.c
 index a9e4415..52d1787 100644
 --- a/lib/ioremap.c
