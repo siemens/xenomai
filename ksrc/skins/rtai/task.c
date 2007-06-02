@@ -109,7 +109,7 @@ int rt_task_init(RT_TASK *task,
 	    priority > XNCORE_HIGH_PRIO || task->magic == RTAI_TASK_MAGIC)
 		return -EINVAL;
 
-	priority = XNCORE_HIGH_PRIO - priority + 1; /* Normalize. */
+	priority = XNCORE_HIGH_PRIO - priority + 1;	/* Normalize. */
 
 	if (uses_fpu)
 #ifdef CONFIG_XENO_HW_FPU
@@ -119,7 +119,8 @@ int rt_task_init(RT_TASK *task,
 #endif /* CONFIG_XENO_HW_FPU */
 
 	if (xnpod_init_thread(&task->thread_base, rtai_tbase,
-			      NULL, priority, bflags, stack_size, &__rtai_task_ops) != 0)
+			      NULL, priority, bflags, stack_size,
+			      &__rtai_task_ops) != 0)
 		/* Assume this is the only possible failure. */
 		return -ENOMEM;
 
@@ -204,7 +205,7 @@ int __rtai_task_suspend(RT_TASK *task)
 		xnpod_suspend_thread(&task->thread_base,
 				     XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
 		if (xnthread_test_info(&task->thread_base, XNBREAK))
-		    err = -EINTR;
+			err = -EINTR;
 	}
 
       unlock_and_exit:
@@ -258,7 +259,8 @@ int rt_task_make_periodic_relative_ns(RT_TASK *task,
 	}
 
 	idate =
-	    start_delay ? xntbase_ticks2ns(rtai_tbase, xntbase_get_time(rtai_tbase)) +
+	    start_delay ? xntbase_ticks2ns(rtai_tbase,
+					   xntbase_get_time(rtai_tbase)) +
 	    start_delay : XN_INFINITE;
 
 	err = xnpod_set_thread_periodic(&task->thread_base, idate, period);
