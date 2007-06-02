@@ -311,8 +311,8 @@ $ make DESTDIR=$staging_dir install
 A typical cross-compilation setup, in order to build Xenomai for an
 ia64 system:
 
-$ $xenomai_root/scripts/prepare-kernel.sh --arch=powerpc \
-  --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-ipipe-2.6.15-ia64-X.Y-ZZ.patch \
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=ia64 \
+  --adeos=$xenomai_root/ksrc/arch/ia64/patches/adeos-ipipe-2.6.15-ia64-X.Y-ZZ.patch \
   --linux=$linux_tree
 $ cd $linux_tree
 $ make ARCH=ia64 CROSS_COMPILE=ia64-linux- xconfig/gconfig/menuconfig # select the kernel and Xenomai options
