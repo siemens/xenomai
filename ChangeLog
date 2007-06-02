@@ -1,3 +1,9 @@
+2007-06-02  Jan Kiszka  <jan.kiszka@web.de>, Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-generic/system.h, include/asm-generic/bits/pod.h:
+	Un-inline xnarch_ns_to_tsc, xnarch_tsc_to_ns, xnarch_get_sys_time,
+	and xnarch_get_cpu_time.
+
 2007-06-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.20-1.7-03.

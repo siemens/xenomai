@@ -132,11 +132,34 @@ static void xnarch_notify_ready (void)
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 }
 
-static inline unsigned long long xnarch_get_sys_time(void)
+unsigned long long xnarch_get_sys_time(void)
 {
     struct timeval tv;
     do_gettimeofday(&tv);
     return tv.tv_sec * 1000000000ULL + tv.tv_usec * 1000;
 }
+
+EXPORT_SYMBOL(xnarch_get_sys_time);
+
+long long xnarch_tsc_to_ns(long long ts)
+{
+    return xnarch_llimd(ts,1000000000,RTHAL_CPU_FREQ);
+}
+
+EXPORT_SYMBOL(xnarch_tsc_to_ns);
+
+long long xnarch_ns_to_tsc(long long ns)
+{
+    return xnarch_llimd(ns,RTHAL_CPU_FREQ,1000000000);
+}
+
+EXPORT_SYMBOL(xnarch_ns_to_tsc);
+
+unsigned long long xnarch_get_cpu_time(void)
+{
+    return xnarch_tsc_to_ns(xnarch_get_cpu_tsc());
+}
+
+EXPORT_SYMBOL(xnarch_get_cpu_time);
 
 #endif /* !_XENO_ASM_GENERIC_BITS_POD_H */
