@@ -104,7 +104,7 @@ void psossem_cleanup(void)
 		sm_destroy_internal(link2psossem(holder));
 }
 
-u_long sm_create(char name[4], u_long icount, u_long flags, u_long *smid)
+u_long sm_create(const char name[4], u_long icount, u_long flags, u_long *smid)
 {
 	psossem_t *sem;
 	int bflags = 0;
@@ -197,7 +197,7 @@ u_long sm_delete(u_long smid)
 	return err;
 }
 
-u_long sm_ident(char name[4], u_long node, u_long *smid)
+u_long sm_ident(const char name[4], u_long node, u_long *smid)
 {
 	u_long err = SUCCESS;
 	xnholder_t *holder;

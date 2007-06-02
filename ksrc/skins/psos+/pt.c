@@ -35,7 +35,7 @@ void psospt_cleanup(void)
 		psos_mark_deleted(link2psospt(holder));
 }
 
-u_long pt_create(char name[4], void *paddr, void *laddr,	/* unused */
+u_long pt_create(const char name[4], void *paddr, void *laddr,	/* unused */
 		 u_long psize,
 		 u_long bsize, u_long flags, u_long *ptid, u_long *nbuf)
 {
@@ -207,7 +207,7 @@ u_long pt_retbuf(u_long ptid, void *buf)
 	return err;
 }
 
-u_long pt_ident(char name[4], u_long node, u_long *ptid)
+u_long pt_ident(const char name[4], u_long node, u_long *ptid)
 {
 	u_long err = SUCCESS;
 	xnholder_t *holder;

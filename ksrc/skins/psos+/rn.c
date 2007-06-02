@@ -154,7 +154,7 @@ static int rn_destroy_internal(psosrn_t *rn)
 	return rc;
 }
 
-u_long rn_create(char name[4],
+u_long rn_create(const char name[4],
 		 void *rnaddr,
 		 u_long rnsize,
 		 u_long usize, u_long flags, u_long *rnid, u_long *allocsize)
@@ -338,7 +338,7 @@ u_long rn_getseg(u_long rnid,
 	return err;
 }
 
-u_long rn_ident(char name[4], u_long *rnid)
+u_long rn_ident(const char name[4], u_long *rnid)
 {
 	u_long err = SUCCESS;
 	xnholder_t *holder;

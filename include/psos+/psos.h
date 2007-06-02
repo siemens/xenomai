@@ -209,7 +209,7 @@ u_long ev_receive(u_long events,
 u_long ev_send(u_long tid,
 	       u_long events);
 
-u_long pt_create(char name[4],
+u_long pt_create(const char name[4],
 		 void *paddr,
 		 void *laddr,
 		 u_long psize,
@@ -223,7 +223,7 @@ u_long pt_delete(u_long tid);
 u_long pt_getbuf(u_long tid,
 		 void **bufaddr);
 
-u_long pt_ident(char name[4],
+u_long pt_ident(const char name[4],
 		u_long node,
 		u_long *tid_r);
 
@@ -234,14 +234,14 @@ u_long q_broadcast(u_long qid,
 		   u_long msgbuf[4],
 		   u_long *count_r);
 
-u_long q_create(char name[4],
+u_long q_create(const char name[4],
 		u_long maxnum,
 		u_long flags,
 		u_long *qid_r);
 
 u_long q_delete(u_long qid);
 
-u_long q_ident(char name[4],
+u_long q_ident(const char name[4],
 	       u_long node,
 	       u_long *qid_r);
 
@@ -256,7 +256,7 @@ u_long q_send(u_long qid,
 u_long q_urgent(u_long qid,
 		u_long msgbuf[4]);
 
-u_long q_vcreate(char name[4],
+u_long q_vcreate(const char name[4],
 		 u_long flags,
 		 u_long maxnum,
 		 u_long maxlen,
@@ -264,7 +264,7 @@ u_long q_vcreate(char name[4],
 
 u_long q_vdelete(u_long qid);
 
-u_long q_vident(char name[4],
+u_long q_vident(const char name[4],
 		u_long node,
 		u_long *qid_r);
 
@@ -288,7 +288,7 @@ u_long q_vbroadcast(u_long qid,
 		    u_long msglen,
 		    u_long *count_r);
 
-u_long rn_create(char name[4],
+u_long rn_create(const char name[4],
 		 void *rnaddr,
 		 u_long rnsize,
 		 u_long usize,
@@ -304,20 +304,20 @@ u_long rn_getseg(u_long rnid,
 		 u_long timeout,
 		 void **segaddr);
 
-u_long rn_ident(char name[4],
+u_long rn_ident(const char name[4],
 		u_long *rnid_r);
 
 u_long rn_retseg(u_long rnid,
 		 void *segaddr);
 
-u_long sm_create(char name[4],
+u_long sm_create(const char name[4],
 		 u_long icount,
 		 u_long flags,
 		 u_long *smid_r);
 
 u_long sm_delete(u_long smid);
 
-u_long sm_ident(char name[4],
+u_long sm_ident(const char name[4],
 		u_long node,
 		u_long *smid_r);
 
@@ -327,7 +327,7 @@ u_long sm_p(u_long smid,
 
 u_long sm_v(u_long smid);
 
-u_long t_create(char name[4],
+u_long t_create(const char name[4],
 		u_long prio,
 		u_long sstack,
 		u_long ustack,
@@ -340,7 +340,7 @@ u_long t_getreg(u_long tid,
 		u_long regnum,
 		u_long *regvalue_r);
 
-u_long t_ident(char name[4],
+u_long t_ident(const char name[4],
 	       u_long node,
 	       u_long *tid_r);
 
