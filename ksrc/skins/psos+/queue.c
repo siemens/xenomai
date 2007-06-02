@@ -181,7 +181,7 @@ static psosmbuf_t *get_mbuf(psosqueue_t *queue, u_long msglen)
 	return mbuf;
 }
 
-static u_long q_create_internal(char name[4],
+static u_long q_create_internal(const char name[4],
 				u_long maxnum,
 				u_long maxlen, u_long flags, u_long *qid)
 {
@@ -632,7 +632,7 @@ static u_long q_broadcast_internal(u_long qid,
 	return err;
 }
 
-static u_long q_ident_internal(char name[4],
+static u_long q_ident_internal(const char name[4],
 			       u_long flags, u_long node, u_long *qid)
 {
 	u_long err = SUCCESS;
@@ -674,14 +674,14 @@ static u_long q_ident_internal(char name[4],
 	return err;
 }
 
-u_long q_create(char name[4], u_long maxnum, u_long flags, u_long *qid)
+u_long q_create(const char name[4], u_long maxnum, u_long flags, u_long *qid)
 {
 	return q_create_internal(name,
 				 maxnum,
 				 sizeof(u_long[4]), flags & ~Q_VARIABLE, qid);
 }
 
-u_long q_vcreate(char name[4],
+u_long q_vcreate(const char name[4],
 		 u_long flags, u_long maxnum, u_long maxlen, u_long *qid)
 {
 	return q_create_internal(name, maxnum, maxlen, flags | Q_VARIABLE, qid);
@@ -697,12 +697,12 @@ u_long q_vdelete(u_long qid)
 	return q_delete_internal(qid, Q_VARIABLE);
 }
 
-u_long q_ident(char name[4], u_long node, u_long *qid)
+u_long q_ident(const char name[4], u_long node, u_long *qid)
 {
 	return q_ident_internal(name, 0, node, qid);
 }
 
-u_long q_vident(char name[4], u_long node, u_long *qid)
+u_long q_vident(const char name[4], u_long node, u_long *qid)
 {
 	return q_ident_internal(name, Q_VARIABLE, node, qid);
 }

@@ -54,7 +54,7 @@ static psostask_t *__psos_task_current(struct task_struct *curr)
 }
 
 /*
- * int __t_create(char name[4],
+ * int __t_create(const char name[4],
  *                u_long prio,
  *                u_long flags,
  *                u_long *tid_r,
@@ -208,7 +208,7 @@ static int __t_resume(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
- * int __t_ident(char name[4], u_long *tid_r)
+ * int __t_ident(const char name[4], u_long *tid_r)
  */
 
 static int __t_ident(struct task_struct *curr, struct pt_regs *regs)
@@ -356,7 +356,7 @@ static int __ev_receive(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
- * int __q_create(char name[4], u_long maxnum, u_long flags, u_long *qid_r)
+ * int __q_create(const char name[4], u_long maxnum, u_long flags, u_long *qid_r)
  */
 
 static int __q_create(struct task_struct *curr, struct pt_regs *regs)
@@ -413,7 +413,7 @@ static int __q_delete(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
- * int __q_ident(char name[4], u_long *qid_r)
+ * int __q_ident(const char name[4], u_long *qid_r)
  */
 
 static int __q_ident(struct task_struct *curr, struct pt_regs *regs)
@@ -568,7 +568,7 @@ static int __q_broadcast(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
- * int __q_vcreate(char name[4], u_long maxnum, u_long maxlen, u_long flags, u_long *qid_r)
+ * int __q_vcreate(const char name[4], u_long maxnum, u_long maxlen, u_long flags, u_long *qid_r)
  */
 
 static int __q_vcreate(struct task_struct *curr, struct pt_regs *regs)
@@ -627,7 +627,7 @@ static int __q_vdelete(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
- * int __q_vident(char name[4], u_long *qid_r)
+ * int __q_vident(const char name[4], u_long *qid_r)
  */
 
 static int __q_vident(struct task_struct *curr, struct pt_regs *regs)
@@ -864,7 +864,7 @@ static int __q_vbroadcast(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
- * int __sm_create(char name[4], u_long icount, u_long flags, u_long *smid_r)
+ * int __sm_create(const char name[4], u_long icount, u_long flags, u_long *smid_r)
  */
 
 static int __sm_create(struct task_struct *curr, struct pt_regs *regs)
@@ -1138,7 +1138,7 @@ static int __tm_evevery(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
- * u_long rn_create(char name[4], struct sizeopt *szp, struct rninfo *rnip)
+ * u_long rn_create(const char name[4], struct sizeopt *szp, struct rninfo *rnip)
  */
 
 static int __rn_create(struct task_struct *curr, struct pt_regs *regs)
@@ -1213,7 +1213,7 @@ static int __rn_delete(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
- * int __rn_ident(char name[4], u_long *rnid_r)
+ * int __rn_ident(const char name[4], u_long *rnid_r)
  */
 
 static int __rn_ident(struct task_struct *curr, struct pt_regs *regs)

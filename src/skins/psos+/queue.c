@@ -20,7 +20,7 @@
 
 extern int __psos_muxid;
 
-u_long q_create(char name[4], u_long maxnum, u_long flags, u_long *qid_r)
+u_long q_create(const char name[4], u_long maxnum, u_long flags, u_long *qid_r)
 {
 	return XENOMAI_SKINCALL4(__psos_muxid, __psos_q_create,
 				 name, maxnum, flags, qid_r);
@@ -31,7 +31,7 @@ u_long q_delete(u_long qid)
 	return XENOMAI_SKINCALL1(__psos_muxid, __psos_q_delete, qid);
 }
 
-u_long q_ident(char name[4], u_long nodeno, u_long *qid_r)
+u_long q_ident(const char name[4], u_long nodeno, u_long *qid_r)
 {
 	return XENOMAI_SKINCALL2(__psos_muxid, __psos_q_ident, name, qid_r);
 }
@@ -58,7 +58,7 @@ u_long q_broadcast(u_long qid, u_long msgbuf[4], u_long *count_r)
 				 msgbuf, count_r);
 }
 
-u_long q_vcreate(char name[4], u_long flags, u_long maxnum,
+u_long q_vcreate(const char name[4], u_long flags, u_long maxnum,
 		 u_long maxlen, u_long *qid_r)
 {
 	return XENOMAI_SKINCALL5(__psos_muxid, __psos_q_vcreate,
@@ -70,7 +70,7 @@ u_long q_vdelete(u_long qid)
 	return XENOMAI_SKINCALL1(__psos_muxid, __psos_q_vdelete, qid);
 }
 
-u_long q_vident(char name[4], u_long node, u_long *qid_r)
+u_long q_vident(const char name[4], u_long node, u_long *qid_r)
 {
 	return XENOMAI_SKINCALL2(__psos_muxid, __psos_q_vident, name, qid_r);
 }

@@ -89,7 +89,7 @@ static void *psos_task_trampoline(void *cookie)
 	pthread_exit((void *)err);
 }
 
-u_long t_create(char name[4],
+u_long t_create(const char name[4],
 		u_long prio,
 		u_long sstack,	/* Ignored. */
 		u_long ustack,
@@ -174,7 +174,7 @@ u_long t_resume(u_long tid)
 	return XENOMAI_SKINCALL1(__psos_muxid, __psos_t_resume, tid);
 }
 
-u_long t_ident(char name[4], u_long nodeno, u_long *tid_r)
+u_long t_ident(const char name[4], u_long nodeno, u_long *tid_r)
 {
 	return XENOMAI_SKINCALL2(__psos_muxid, __psos_t_ident, name, tid_r);
 }

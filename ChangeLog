@@ -1,3 +1,8 @@
+2007-06-02  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/psos+, src/skins/psos+, include/psos+/psos.h: Add
+	constness to name character arrays.
+
 2007-06-02  Stephane Fillod  <stephane.fillod@thomson.net>
 
 	* ksrc/skins/rtai: Add rt_heap_open() and rt_heap_close() to the

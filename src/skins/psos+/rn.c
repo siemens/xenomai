@@ -72,7 +72,7 @@ static int __map_heap_memory(const struct rninfo *rnip)
 	return err;
 }
 
-u_long rn_create(char name[4],
+u_long rn_create(const char name[4],
 		 void *rnaddr,
 		 u_long rnsize,
 		 u_long usize, u_long flags, u_long *rnid, u_long *allocsz)
@@ -131,7 +131,7 @@ u_long rn_retseg(u_long rnid, void *chunk)
 				 rnid, chunk);
 }
 
-u_long rn_ident(char name[4], u_long *rnid_r)
+u_long rn_ident(const char name[4], u_long *rnid_r)
 {
 	return XENOMAI_SKINCALL2(__psos_muxid, __psos_rn_ident, name, rnid_r);
 }

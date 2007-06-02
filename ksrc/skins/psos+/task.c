@@ -87,7 +87,7 @@ void psostask_cleanup(void)
 	xnpod_remove_hook(XNHOOK_THREAD_DELETE, psostask_delete_hook);
 }
 
-u_long t_create(char name[4],
+u_long t_create(const char name[4],
 		u_long prio,
 		u_long sstack, u_long ustack, u_long flags, u_long *tid_r)
 {
@@ -317,7 +317,7 @@ u_long t_delete(u_long tid)
 	return err;
 }
 
-u_long t_ident(char name[4], u_long node, u_long *tid_r)
+u_long t_ident(const char name[4], u_long node, u_long *tid_r)
 {
 	u_long err = SUCCESS;
 	xnholder_t *holder;
