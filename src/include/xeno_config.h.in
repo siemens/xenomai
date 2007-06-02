@@ -13,6 +13,9 @@
 #undef CONFIG_XENO_ARM_EABI
 
 /* config */
+#undef CONFIG_XENO_ARM_HW_DIRECT_TSC
+
+/* config */
 #undef CONFIG_XENO_ARM_SA1100
 
 /* Build system alias */

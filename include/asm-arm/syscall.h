@@ -184,7 +184,9 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,id,op,a1,a2,a3,a4)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
 
-#undef CONFIG_XENO_HW_DIRECT_TSC
+#ifdef CONFIG_XENO_ARM_HW_DIRECT_TSC
+#define CONFIG_XENO_HW_DIRECT_TSC
+#endif /* CONFIG_XENO_ARM_HW_DIRECT_TSC */
 
 #endif /* __KERNEL__ */
 
@@ -192,6 +194,126 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SYSARCH_ATOMIC_SET_MASK		1
 #define XENOMAI_SYSARCH_ATOMIC_CLEAR_MASK	2
 #define XENOMAI_SYSARCH_XCHG			3
+
+struct __xn_tscinfo {
+        unsigned type;
+        union {
+                struct {
+                        volatile unsigned *counter;
+                        unsigned mask;
+                        volatile unsigned long long *tsc;
+                } fr;
+                struct {
+                } dec;
+        } u;
+};
+#define __XN_TSC_TYPE_NONE        0
+#define __XN_TSC_TYPE_FREERUNNING 1
+#define __XN_TSC_TYPE_DECREMENTER 2
+
+#define XENOMAI_SYSARCH_TSCINFO                 4
+
+#ifndef __KERNEL__
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <limits.h>
+
+__attribute__((weak)) struct __xn_tscinfo __xn_tscinfo = {
+	.type = -1
+};
+
+static inline unsigned long long __xn_rdtsc(void)
+{
+#if CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING
+	const unsigned long long mask = __xn_tscinfo.u.fr.mask;
+	static unsigned long long after = 0;
+	unsigned long long before;
+	unsigned counter;
+
+	do {
+		before = after;
+		counter = *__xn_tscinfo.u.fr.counter;
+		/* compiler barrier. */
+		asm("" : /* */ : /* */ : "memory");
+		
+		after = *__xn_tscinfo.u.fr.tsc;
+	} while ((after & ~mask) != (before & ~mask));
+	
+	if ((counter & mask) < (before & mask))
+		before += mask + 1;
+	return (before & ~mask) | (counter & mask);
+#endif /* CONFIG_XENO_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING */
+}
+
+static inline void xeno_arm_features_check(void)
+{
+#ifdef CONFIG_XENO_ARM_HW_DIRECT_TSC
+	unsigned page_size;
+	int err, fd;
+	void *addr;
+
+	if (__xn_tscinfo.type != -1)
+		return;
+
+	err = XENOMAI_SYSCALL2(__xn_sys_arch,
+			       XENOMAI_SYSARCH_TSCINFO, &__xn_tscinfo);
+	if (err) {
+	  error:
+		fprintf(stderr, "Xenomai: Your board/configuration does not"
+			" allow tsc emulation in user-space: %d\n", err);
+		exit(EXIT_FAILURE);
+	}
+
+	fd = open("/dev/mem", O_RDONLY | O_SYNC);
+	if (fd == -1) {
+		perror("Xenomai init: open(/dev/mem)");
+		exit(EXIT_FAILURE);
+	}
+
+	page_size = sysconf(_SC_PAGESIZE);
+
+	switch(__xn_tscinfo.type) {
+#if CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING
+	case __XN_TSC_TYPE_FREERUNNING:{
+		unsigned long phys_addr;
+
+		phys_addr = (unsigned long) __xn_tscinfo.u.fr.counter;
+		addr = mmap(NULL, page_size, PROT_READ, MAP_SHARED,
+			    fd, phys_addr & ~(page_size - 1));
+		if (addr == MAP_FAILED) {
+			perror("Xenomai init: mmap(/dev/mem)");
+			exit(EXIT_FAILURE);
+		}
+
+		__xn_tscinfo.u.fr.counter = 
+			((volatile unsigned *)
+			 ((char *) addr + (phys_addr & (page_size - 1))));
+		break;
+	}
+#endif /* CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING */
+	case __XN_TSC_TYPE_NONE:
+		goto error;
+		
+	default:
+		fprintf(stderr,
+			"Xenomai: kernel/user tsc emulation mismatch.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (close(fd)) {
+		perror("Xenomai init: close(/dev/mem)");
+		exit(EXIT_FAILURE);
+	}
+#endif /* CONFIG_XENO_ARM_HW_DIRECT_TSC */
+}
+#define xeno_arch_features_check() xeno_arm_features_check()
+
+#endif /* !__KERNEL__ */
 
 #endif /* !_XENO_ASM_ARM_SYSCALL_H */
 
