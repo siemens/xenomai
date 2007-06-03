@@ -832,10 +832,9 @@ void xnpod_declare_iface_proc(struct xnskentry *iface)
 				    iface_proc_root);
 }
 
-void xnpod_discard_iface_proc(struct xnskentry *iface)
+void xnpod_discard_iface_proc(const char *iface_name)
 {
-	remove_proc_entry(iface->name, iface_proc_root);
-	iface->proc = NULL;
+	remove_proc_entry(iface_name, iface_proc_root);
 }
 
 #endif /* CONFIG_XENO_OPT_PERVASIVE */

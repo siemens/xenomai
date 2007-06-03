@@ -117,7 +117,7 @@ static int nucleus_muxid = -1;
 
 void xnpod_declare_iface_proc(struct xnskentry *iface);
 
-void xnpod_discard_iface_proc(struct xnskentry *iface);
+void xnpod_discard_iface_proc(const char *iface);
 
 #ifndef CONFIG_XENO_OPT_RPIDISABLE
 
@@ -2187,7 +2187,7 @@ int xnshadow_register_interface(const char *name,
 }
 
 /*
- * xnshadow_unregister_interface() -- Unregister a new skin/interface.
+ * xnshadow_unregister_interface() -- Unregister a skin/interface.
  * NOTE: an interface can be unregistered without its pod being
  * necessarily active.
  */
@@ -2208,7 +2208,15 @@ int xnshadow_unregister_interface(int muxid)
 		muxtable[muxid].magic = 0;
 		xnarch_atomic_set(&muxtable[muxid].refcnt, -1);
 #ifdef CONFIG_PROC_FS
-		xnpod_discard_iface_proc(muxtable + muxid);
+		{
+			const char *name = muxtable[muxid].name;
+			muxtable[muxid].proc = NULL;
+			xnlock_put_irqrestore(&nklock, s);
+
+			xnpod_discard_iface_proc(name);
+
+			return 0;
+		}
 #endif /* CONFIG_PROC_FS */
 	} else
 		err = -EBUSY;

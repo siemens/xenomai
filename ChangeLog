@@ -1,3 +1,8 @@
+2007-06-03  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/{module.c, shadow.c}: Move remove_proc_entry out of
+	nklock.
+
 2007-06-02  Stephane Fillod  <stephane.fillod@thomson.net>
 
 	* ksrc/skins/rtai: Add rt_heap_open() and rt_heap_close() to the
