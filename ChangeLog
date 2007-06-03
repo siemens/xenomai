@@ -9,6 +9,9 @@
 	* ksrc/skins/rtdm/device.c (rtdm_dev_register): Unconditinally
 	check if mandatory close_nrt is provided.
 
+	* ksrc/nucleus/{module.c, shadow.c}: Move remove_proc_entry out of
+	nklock.
+
 2007-06-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/psos+, src/skins/psos+, include/psos+/psos.h: Add
