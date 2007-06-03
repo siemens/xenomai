@@ -228,7 +228,7 @@ redo:
 		/* Somebody stole us the ownership while we were ready
 		   to run, waiting for the CPU: we need to wait again
 		   for the resource. */
-		if (timeout == XN_INFINITE)
+		if (mode == XN_ABSOLUTE || timeout == XN_INFINITE)
 			goto redo;
 		timeout = xnthread_timeout(thread);
 		if (timeout > 1) /* Otherwise, it's too late. */

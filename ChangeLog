@@ -12,6 +12,9 @@
 	* ksrc/nucleus/{module.c, shadow.c}: Move remove_proc_entry out of
 	nklock.
 
+	* ksrc/nucleus/synch.c (xnsynch_sleep_on): Fix timeout restart
+	if resource was robbed.
+
 2007-06-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/psos+, src/skins/psos+, include/psos+/psos.h: Add
