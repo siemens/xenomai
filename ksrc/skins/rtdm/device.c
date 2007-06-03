@@ -222,7 +222,7 @@ int rtdm_dev_register(struct rtdm_device* device)
         case RTDM_NAMED_DEVICE:
             /* Sanity check: any open handler? */
             XENO_ASSERT(RTDM, ANY_HANDLER(*device, open),
-                xnlogerr("RTDM: no open handler\n");
+                xnlogerr("RTDM: missing open handler\n");
                 return -EINVAL;
             );
             SET_DEFAULT_OP_IF_NULL(*device, open);
@@ -232,7 +232,7 @@ int rtdm_dev_register(struct rtdm_device* device)
         case RTDM_PROTOCOL_DEVICE:
             /* Sanity check: any socket handler? */
             XENO_ASSERT(RTDM, ANY_HANDLER(*device, socket),
-                xnlogerr("RTDM: no socket handler\n");
+                xnlogerr("RTDM: missing socket handler\n");
                 return -EINVAL;
             );
             SET_DEFAULT_OP_IF_NULL(*device, socket);
@@ -245,12 +245,13 @@ int rtdm_dev_register(struct rtdm_device* device)
 
     /* Sanity check: non-RT close handler?
      * (Always required for forced cleanup) */
-    XENO_ASSERT(RTDM, (device->ops.close_nrt),
-        xnlogerr("RTDM: no non-RT close handler\n");
+    if (!device->ops.close_nrt) {
+        xnlogerr("RTDM: missing non-RT close handler\n");
         return -EINVAL;
-    );
+    }
+    if (!device->ops.close_rt)
+        device->ops.close_rt = (void *)rtdm_no_support;
 
-    SET_DEFAULT_OP_IF_NULL(device->ops, close);
     SET_DEFAULT_OP_IF_NULL(device->ops, ioctl);
     SET_DEFAULT_OP_IF_NULL(device->ops, read);
     SET_DEFAULT_OP_IF_NULL(device->ops, write);

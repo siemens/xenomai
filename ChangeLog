@@ -1,3 +1,8 @@
+2007-06-03  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/rtdm/device.c (rtdm_dev_register): Unconditinally
+	check if mandatory close_nrt is provided.
+
 2007-06-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/psos+, src/skins/psos+, include/psos+/psos.h: Add
