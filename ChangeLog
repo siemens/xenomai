@@ -15,6 +15,9 @@
 	* ksrc/nucleus/synch.c (xnsynch_sleep_on): Fix timeout restart
 	if resource was robbed.
 
+	* ksrc/nucleus/module.c: Fix locking on restart of sched and stat
+	iteration for proc output.
+
 2007-06-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/psos+, src/skins/psos+, include/psos+/psos.h: Add
