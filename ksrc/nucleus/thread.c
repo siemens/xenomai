@@ -198,7 +198,7 @@ int *xnthread_get_errno_location(void)
 {
 	static int fallback_errno;
 
-	if (unlikely(!nkpod))
+	if (unlikely(!xnpod_active_p()))
 		goto fallback;
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE

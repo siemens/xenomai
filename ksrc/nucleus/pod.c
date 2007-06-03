@@ -54,9 +54,7 @@
 /* NOTE: We need to initialize the globals; remember that this code
    also runs over the simulator in user-space. */
 
-static xnpod_t nkpod_struct;
-
-xnpod_t *nkpod = NULL;
+xnpod_t nkpod_struct;
 
 DEFINE_XNLOCK(nklock);
 
@@ -84,7 +82,7 @@ const char *xnpod_fatal_helper(const char *format, ...)
 	p += vsnprintf(p, XNPOD_FATAL_BUFSZ, format, ap);
 	va_end(ap);
 
-	if (!nkpod || testbits(nkpod->status, XNFATAL | XNPIDLE))
+	if (!xnpod_active_p() || xnpod_fatal_p())
 		goto out;
 
 	__setbits(nkpod->status, XNFATAL);
@@ -278,7 +276,7 @@ void xnpod_schedule_handler(void) /* Called with hw interrupts off. */
 
 void xnpod_schedule_deferred(void)
 {
-	if (nkpod && xnsched_resched_p())
+	if (xnpod_active_p() && xnsched_resched_p())
 		xnpod_schedule();
 }
 
@@ -310,10 +308,6 @@ static void xnpod_flush_heap(xnheap_t *heap,
  * This service can be called from:
  *
  * - Kernel module initialization code
- *
- * @note No initialization code called by this routine may refer to
- * the global "nkpod" pointer which refers to the core pod being
- * brought up.
  */
 
 int xnpod_init(void)
@@ -334,14 +328,16 @@ int xnpod_init(void)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (nkpod != NULL) {
+	if (xnpod_active_p()) {
+		/* Another skin has initialized the global pod
+		 * already; just increment the reference count. */
 		++nkpod->refcnt;
 		xnlock_put_irqrestore(&nklock, s);
 		return 0;
 	}
 
 	pod = &nkpod_struct;
-	pod->status = XNPIDLE;
+	pod->status = 0;
 	pod->refcnt = 1;
 
 	initq(&xnmod_glink_queue);
@@ -367,11 +363,6 @@ int xnpod_init(void)
 		sched->inesting = 0;
 		sched->runthread = NULL;
 	}
-
-	/* The global "nkpod" pointer must be valid in order to perform
-	   the remaining operations. */
-
-	nkpod = pod;
 
 	/* No direct handler here since the host timer processing is
 	   postponed to xnintr_irq_handler(), as part of the interrupt
@@ -453,10 +444,9 @@ int xnpod_init(void)
 
 		xnsched_clr_mask(sched);
 
-		/* Create the root thread -- it might be a placeholder for the
-		   current context or a real thread, it depends on the real-time
-		   layer. If the root thread needs to allocate stack memory, it
-		   must not rely on the validity of "nkpod" when doing so. */
+		/* Create the root thread -- it might be a placeholder
+		   for the current context or a real thread, it
+		   depends on the real-time layer. */
 
 		err = xnthread_init(&sched->rootcb,
 				    &nktbase,
@@ -472,7 +462,6 @@ int xnpod_init(void)
 
 		if (err) {
 		      fail:
-			nkpod = NULL;
 			return err;
 		}
 
@@ -501,7 +490,7 @@ int xnpod_init(void)
 	xnregistry_init();
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-	__clrbits(pod->status, XNPIDLE);
+	__setbits(pod->status, XNPEXEC);
 
 	xnarch_memory_barrier();
 
@@ -550,7 +539,7 @@ void xnpod_shutdown(int xtype)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!nkpod || testbits(nkpod->status, XNPIDLE) || --nkpod->refcnt != 0)
+	if (!xnpod_active_p() || --nkpod->refcnt != 0)
 		goto unlock_and_exit;	/* No-op */
 
 	/* FIXME: We must release the lock before disabling the time
@@ -581,7 +570,7 @@ void xnpod_shutdown(int xtype)
 
 	xnpod_schedule();
 
-	__setbits(nkpod->status, XNPIDLE);
+	__clrbits(nkpod->status, XNPEXEC);
 
 	for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++)
 		xntimerq_destroy(&nkpod->sched[cpu].timerqueue);
@@ -597,8 +586,6 @@ void xnpod_shutdown(int xtype)
 	xnlock_get_irqsave(&nklock, s);
 
 	xnheap_destroy(&kheap, &xnpod_flush_heap, NULL);
-
-	nkpod = NULL;
 
       unlock_and_exit:
 
@@ -2864,7 +2851,8 @@ void xnpod_check_context(int mask)
 
 int xnpod_trap_fault(void *fltinfo)
 {
-	if (nkpod == NULL || (!xnpod_interrupt_p() && xnpod_idle_p()))
+	if (!xnpod_active_p() ||
+	    (!xnpod_interrupt_p() && xnpod_idle_p()))
 		return 0;
 
 	return nkpod->svctable.faulthandler(fltinfo);
@@ -2930,7 +2918,7 @@ int xnpod_enable_timesource(void)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!nkpod || testbits(nkpod->status, XNPIDLE)) {
+	if (!xnpod_active_p()) {
 		err = -ENOSYS;
 		xnlock_put_irqrestore(&nklock, s);
 		return err;
@@ -3019,8 +3007,7 @@ void xnpod_disable_timesource(void)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!nkpod || testbits(nkpod->status, XNPIDLE)
-	    || !xntbase_enabled_p(&nktbase)) {
+	if (!xnpod_active_p() || !xntbase_enabled_p(&nktbase)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return;
 	}
@@ -3283,7 +3270,7 @@ EXPORT_SYMBOL(xnpod_unblock_thread);
 EXPORT_SYMBOL(xnpod_wait_thread_period);
 EXPORT_SYMBOL(xnpod_welcome_thread);
 
-EXPORT_SYMBOL(nkpod);
+EXPORT_SYMBOL(nkpod_struct);
 
 #ifdef CONFIG_SMP
 EXPORT_SYMBOL(nklock);

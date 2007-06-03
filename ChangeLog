@@ -1,3 +1,9 @@
+2007-06-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/{thread.c, pod.c, shadow.c, module.c},
+	include/nucleus/pod.h: Get rid of nkpod as a pointer; make direct
+	references to nkpod_struct.
+
 2007-06-03  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/rtdm/device.c (rtdm_dev_register): Unconditinally
