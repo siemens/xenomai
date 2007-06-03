@@ -829,8 +829,9 @@ int xnpod_init_thread(xnthread_t *thread,
  * given value when the thread starts running. The interpretation of
  * this value might be different across real-time layers, but a
  * non-zero value should always mark an interrupt masking in effect
- * (e.g. cli()). Conversely, a zero value should always mark a fully
- * preemptible state regarding interrupts (i.e. sti()).
+ * (e.g. local_irq_disable()). Conversely, a zero value should always
+ * mark a fully preemptible state regarding interrupts
+ * (e.g. local_irq_enable()).
  *
  * @param affinity The processor affinity of this thread. Passing
  * XNPOD_ALL_CPUS or an empty affinity set means "any cpu".
