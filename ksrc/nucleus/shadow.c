@@ -1547,9 +1547,11 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 	}
 
       eventcb_done:
-	if (!nkpod || testbits(nkpod->status, XNPIDLE)) {
-		/* Ok mate, but you really ought to create some pod in a way
-		   or another if you want me to be of some help here... */
+
+	if (!xnpod_active_p()) {
+		/* Ok mate, but you really ought to call xnpod_init()
+		   at some point if you want me to be of some help
+		   here... */
 		if (muxtable[muxid].eventcb && ppd) {
 			ppd_remove(ppd);
 			muxtable[muxid].eventcb(XNSHADOW_CLIENT_DETACH, ppd);
@@ -1745,7 +1747,7 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	xnthread_t *thread;
 	u_long sysflags;
 
-	if (!nkpod || testbits(nkpod->status, XNPIDLE))
+	if (!xnpod_active_p())
 		goto no_skin;
 
 	if (xnsched_resched_p())
@@ -1943,7 +1945,7 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 	muxop = __xn_mux_op(regs);
 
 	xnltt_log_event(xeno_ev_syscall,
-			nkpod ? xnpod_current_thread()->name : "<system>",
+			xnpod_active_p() ? xnpod_current_thread()->name : "<system>",
 			muxid, muxop);
 
 	/* Processing a real-time skin syscall. */
@@ -1985,8 +1987,7 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 
 	__xn_status_return(regs, err);
 
-	if (nkpod && !testbits(nkpod->status, XNPIDLE)
-	    && xnpod_shadow_p() && signal_pending(current))
+	if (xnpod_active_p() && xnpod_shadow_p() && signal_pending(current))
 		request_syscall_restart(xnshadow_thread(current), regs, sysflags);
 	else if ((sysflags & __xn_exec_switchback) != 0 && switched)
 		xnshadow_relax(0);
@@ -2032,7 +2033,7 @@ static inline void do_schedule_event(struct task_struct *next)
 	xnthread_t *threadin;
 	rthal_declare_cpuid;
 
-	if (!nkpod || testbits(nkpod->status, XNPIDLE))
+	if (!xnpod_active_p())
 		return;
 
 	prev = current;

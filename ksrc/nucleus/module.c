@@ -187,7 +187,7 @@ static int sched_seq_open(struct inode *inode, struct file *file)
 	int err, count, rev;
 	spl_t s;
 
-	if (!nkpod)
+	if (!xnpod_active_p())
 		return -ESRCH;
 
       restart:
@@ -360,7 +360,7 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 	int err, count, thrq_rev, intr_rev, irq;
 	spl_t s;
 
-	if (!nkpod)
+	if (!xnpod_active_p())
 		return -ESRCH;
 
       restart:
@@ -725,7 +725,7 @@ static int heap_read_proc(char *page,
 {
 	int len;
 
-	if (!nkpod)
+	if (!xnpod_active_p())
 		return -ESRCH;
 
 	len = sprintf(page, "size=%lu:used=%lu:pagesz=%lu\n",

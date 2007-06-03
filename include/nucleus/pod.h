@@ -35,8 +35,8 @@
 #include <nucleus/intr.h>
 
 /* Pod status flags */
-#define XNFATAL  0x00000001	/* Pod encountered a fatal error */
-#define XNPIDLE  0x00000002	/* Pod is unavailable (initializing/shutting down) */
+#define XNFATAL  0x00000001	/* Fatal error in progress */
+#define XNPEXEC  0x00000002	/* Pod is active (a skin is attached) */
 
 /* Sched status flags */
 #define XNKCOUT  0x80000000	/* Sched callout context */
@@ -139,6 +139,8 @@ typedef struct xnsched {
 
 } xnsched_t;
 
+#define nkpod (&nkpod_struct)
+
 #ifdef CONFIG_SMP
 #define xnsched_cpu(__sched__)                  \
     ((__sched__) - &nkpod->sched[0])
@@ -206,8 +208,6 @@ struct xnpod {
 
 typedef struct xnpod xnpod_t;
 
-extern xnpod_t *nkpod;
-
 DECLARE_EXTERN_XNLOCK(nklock);
 
 extern u_long nkschedlat;
@@ -217,6 +217,8 @@ extern u_long nktimerlat;
 extern char *nkmsgbuf;
 
 extern xnarch_cpumask_t nkaffinity;
+
+extern xnpod_t nkpod_struct;
 
 #ifdef __cplusplus
 extern "C" {
@@ -248,6 +250,12 @@ static inline void xnpod_reset_watchdog(xnsched_t *sched)
 
 #define xnpod_current_sched() \
     xnpod_sched_slot(xnarch_current_cpu())
+
+#define xnpod_active_p() \
+    (!!testbits(nkpod->status, XNPEXEC))
+
+#define xnpod_fatal_p() \
+    (!!testbits(nkpod->status, XNFATAL))
 
 #define xnpod_interrupt_p() \
     (xnpod_current_sched()->inesting > 0)
