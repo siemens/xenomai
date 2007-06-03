@@ -1,5 +1,9 @@
 2007-06-03  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/asm-i386/calibration.h (__sched_latency): We definitely
+	made progress latency-wise: reduce default calibration values for
+	all configurations.
+
 	* ksrc/nucleus/{thread.c, pod.c, shadow.c, module.c},
 	include/nucleus/pod.h: Get rid of nkpod as a pointer; make direct
 	references to nkpod_struct.
