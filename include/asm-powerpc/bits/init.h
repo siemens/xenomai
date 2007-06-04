@@ -48,13 +48,9 @@ static int xnarch_trap_fault(unsigned event, unsigned domid, void *data)
 
 unsigned long xnarch_calibrate_timer(void)
 {
-#if CONFIG_XENO_OPT_TIMING_TIMERLAT != 0
-	return xnarch_ns_to_tsc(CONFIG_XENO_OPT_TIMING_TIMERLAT) ? : 1;
-#else /* CONFIG_XENO_OPT_TIMING_TIMERLAT unspecified. */
 	/* Compute the time needed to program the decrementer in aperiodic
 	   mode. The return value is expressed in timebase ticks. */
 	return xnarch_ns_to_tsc(rthal_timer_calibrate())? : 1;
-#endif /* CONFIG_XENO_OPT_TIMING_TIMERLAT != 0 */
 }
 
 int xnarch_calibrate_sched(void)
@@ -64,7 +60,7 @@ int xnarch_calibrate_sched(void)
 	if (!nktimerlat)
 		return -ENODEV;
 
-	nkschedlat = xnarch_ns_to_tsc(xnarch_get_sched_latency());
+	nklatency = xnarch_ns_to_tsc(xnarch_get_sched_latency()) + nktimerlat;
 
 	return 0;
 }

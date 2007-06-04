@@ -68,7 +68,7 @@ static void xntimer_next_local_shot(xnsched_t *this_sched)
 	timer = aplink2timer(holder);
 
 	now = xnarch_get_cpu_tsc();
-	xdate = now + nkschedlat + nktimerlat;
+	xdate = now + nklatency;
 
 	if (xdate >= xntimerh_date(&timer->aplink))
 		delay = 0;
@@ -201,7 +201,7 @@ void xntimer_tick_aperiodic(void)
 	while ((holder = xntimerq_head(timerq)) != NULL) {
 		timer = aplink2timer(holder);
 
-		if (xntimerh_date(&timer->aplink) - nkschedlat > now)
+		if (xntimerh_date(&timer->aplink) - nklatency > now)
 			/* No need to continue in aperiodic mode since timeout
 			   dates are ordered by increasing values. */
 			break;
@@ -237,7 +237,7 @@ void xntimer_tick_aperiodic(void)
 
 		do {
 			xntimerh_date(&timer->aplink) += timer->interval;
-		} while (xntimerh_date(&timer->aplink) < now + nkschedlat);
+		} while (xntimerh_date(&timer->aplink) < now + nklatency);
 		xntimer_enqueue_aperiodic(timer);
 	}
 

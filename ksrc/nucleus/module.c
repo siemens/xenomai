@@ -547,7 +547,7 @@ static int latency_read_proc(char *page,
 {
 	int len;
 
-	len = sprintf(page, "%Lu\n", xnarch_tsc_to_ns(nkschedlat));
+	len = sprintf(page, "%Lu\n", xnarch_tsc_to_ns(nklatency));
 	len -= off;
 	if (len <= off + count)
 		*eof = 1;
@@ -579,7 +579,7 @@ static int latency_write_proc(struct file *file,
 	if ((*end != '\0' && !isspace(*end)) || ns < 0)
 		return -EINVAL;
 
-	nkschedlat = xnarch_ns_to_tsc(ns);
+	nklatency = xnarch_ns_to_tsc(ns);
 
 	return count;
 }
