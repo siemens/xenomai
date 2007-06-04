@@ -58,8 +58,9 @@ xnpod_t nkpod_struct;
 
 DEFINE_XNLOCK(nklock);
 
-u_long nkschedlat = 0;
+u_long nklatency = 0;
 
+/* Already accounted for in nklatency, kept separately for user information. */
 u_long nktimerlat = 0;
 
 char *nkmsgbuf = NULL;
@@ -3100,7 +3101,7 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
 			xntimer_stop(&thread->ptimer);
 
 		goto unlock_and_exit;
-	} else if (xntbase_periodic_p(xnthread_time_base(thread)) && period < nkschedlat) {
+	} else if (xntbase_periodic_p(xnthread_time_base(thread)) && period < nklatency) {
 		/* LART: detect periods which are shorter than the
 		 * intrinsic latency figure; this must be a joke... */
 		err = -EINVAL;

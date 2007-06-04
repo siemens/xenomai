@@ -1,3 +1,9 @@
+2007-06-04  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/Kconfig: Remove user configuration for the timer
+	latency which is calibrated dynamically, and merge the timer
+	latency value with the global latency figure.
+
 2007-06-03  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-i386/calibration.h (__sched_latency): We definitely

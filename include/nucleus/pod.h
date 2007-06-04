@@ -210,7 +210,7 @@ typedef struct xnpod xnpod_t;
 
 DECLARE_EXTERN_XNLOCK(nklock);
 
-extern u_long nkschedlat;
+extern u_long nklatency;
 
 extern u_long nktimerlat;
 

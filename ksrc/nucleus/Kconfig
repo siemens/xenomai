@@ -226,19 +226,6 @@ config XENO_OPT_TIMING_PERIODIC
 	modes. Periodic threads needing high timing accuracy will even
 	likely prefer using aperiodic timing.
 
-config XENO_OPT_TIMING_TIMERLAT
-	int "Timer tuning latency (ns)"
-	default 0
-	help
-	This parameter accounts for the time (in nanoseconds) needed
-	to program the underlying timer hardware in aperiodic
-	(one-shot) timing mode.
-
-	This value will be used to reduce the scheduling jitter induced
-	by the time needed to setup the timer for its next shot. A
-	default value of 0 (recommended) will cause this value to be
-	estimated by the nucleus at startup.
-
 config XENO_OPT_TIMING_SCHEDLAT
 	int "Scheduling latency (ns)"
 	default 0
