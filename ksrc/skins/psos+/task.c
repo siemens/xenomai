@@ -97,7 +97,12 @@ u_long t_create(const char name[4],
 	spl_t s;
 	int n;
 
-	if (prio < 1 || prio > 255)
+	/* Xenomai extension: we accept priority level #0 for creating
+	   non-RT tasks (i.e. underlaid by SCHED_NORMAL pthreads),
+	   which are allowed to call into the pSOS emulator, usually
+	   for synchronization services. */
+
+	if (prio < 0 || prio > 255)
 		return ERR_PRIOR;
 
 	aname[0] = name[0];

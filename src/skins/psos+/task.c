@@ -55,9 +55,11 @@ static void *psos_task_trampoline(void *cookie)
 	struct sched_param param;
 	long err;
 
-	/* Ok, this looks like weird, but we need this. */
-	param.sched_priority = sched_get_priority_max(SCHED_FIFO);
-	pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+	if (iargs->prio > 0) {
+		/* Ok, this looks like weird, but we need this. */
+		param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+		pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+	}
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
@@ -130,9 +132,12 @@ u_long t_create(const char name[4],
 
 	pthread_attr_setstacksize(&thattr, ustack);
 	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
-	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
-	param.sched_priority = sched_get_priority_max(SCHED_FIFO);
-	pthread_attr_setschedparam(&thattr, &param);
+
+	if (prio > 0) {
+		pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
+		param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+		pthread_attr_setschedparam(&thattr, &param);
+	}
 
 	err = pthread_create(&thid, &thattr, &psos_task_trampoline, &iargs);
 
@@ -145,6 +150,21 @@ u_long t_create(const char name[4],
 	/* Sync with psos_task_trampoline() then return.*/
 
 	return XENOMAI_SYSCALL1(__xn_sys_completion, &completion);
+}
+
+u_long t_shadow(const char name[4],
+		u_long prio,
+		u_long flags,
+		u_long *tid_r)
+{
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
+	old_sigharden_handler = signal(SIGHARDEN, &psos_task_sigharden);
+
+	return XENOMAI_SKINCALL5(__psos_muxid,
+				 __psos_t_create,
+				 name, prio, flags,
+				 tid_r, NULL);
 }
 
 u_long t_start(u_long tid,
