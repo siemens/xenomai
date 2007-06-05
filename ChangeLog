@@ -1,5 +1,8 @@
 2007-06-04  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/psos+/task.c, src/skins/psos+/task.c (t_create,
+	t_shadow): Allow for creating non-RT tasks at priority level #0.
+
 	* ksrc/nucleus/Kconfig: Remove user configuration for the timer
 	latency which is calibrated dynamically, and merge the timer
 	latency value with the global latency figure.

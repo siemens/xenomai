@@ -100,7 +100,7 @@ static int __t_create(struct task_struct *curr, struct pt_regs *regs)
 		tid = xnthread_handle(&task->threadbase);
 		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg4(regs), &tid,
 				  sizeof(tid));
-		err = xnshadow_map(&task->threadbase, u_completion);
+		err = xnshadow_map(&task->threadbase, u_completion); /* May be NULL */
 	} else {
 		/* Unblock and pass back error code. */
 

@@ -334,6 +334,11 @@ u_long t_create(const char name[4],
 		u_long flags,
 		u_long *tid_r);
 
+u_long t_shadow(const char name[4], /* Xenomai extension. */
+		u_long prio,
+		u_long flags,
+		u_long *tid_r);
+
 u_long t_delete(u_long tid);
 
 u_long t_getreg(u_long tid,
