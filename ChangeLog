@@ -1,3 +1,8 @@
+2007-06-06  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+
+	* ksrc/skins/rtdm/core.c (_rtdm_close): Restore reference counter
+	when retrying to close a busy fd.
+
 2007-06-04  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/psos+/task.c, src/skins/psos+/task.c (t_create,
