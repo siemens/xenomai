@@ -340,6 +340,7 @@ int _rtdm_close(rtdm_user_info_t *user_info, int fd)
     XENO_ASSERT(RTDM, !rthal_local_irq_test(), rthal_local_irq_enable(););
 
     if (unlikely(ret == -EAGAIN) && !rtdm_in_rt_context()) {
+        rtdm_context_unlock(context);
         msleep(CLOSURE_RETRY_PERIOD);
         goto again;
     } else if (unlikely(ret < 0))
@@ -354,6 +355,7 @@ int _rtdm_close(rtdm_user_info_t *user_info, int fd)
             ret = -EAGAIN;
             goto unlock_out;
         }
+        rtdm_context_unlock(context);
         msleep(CLOSURE_RETRY_PERIOD);
         goto again;
     }
