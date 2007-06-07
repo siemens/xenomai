@@ -199,6 +199,9 @@ u_long t_start(u_long tid,
 	spl_t s;
 	int n;
 
+	/* We have no error case here: just clear out any unwanted bit. */
+	mode &= ~T_START_MASK;
+
 	xnlock_get_irqsave(&nklock, s);
 
 	task = psos_h2obj_active(tid, PSOS_TASK_MAGIC, psostask_t);
@@ -369,6 +372,10 @@ u_long t_mode(u_long clrmask, u_long setmask, u_long *oldmode)
 
 	if (!xnpod_primary_p())
 		return -EPERM;
+
+	/* We have no error case here: just clear out any unwanted bit. */
+	clrmask &= ~T_MODE_MASK;
+	setmask &= ~T_MODE_MASK;
 
 	task = psos_current_task();
 

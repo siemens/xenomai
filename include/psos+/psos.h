@@ -58,6 +58,9 @@
 #define T_FPU         0x0002
 #define T_SHADOW      0x8000
 
+#define T_START_MASK   (T_NOPREEMPT|T_SLICE|T_NOASR|T_SUPV|T_NOISR|T_LEVELMASK7)
+#define T_MODE_MASK    (T_NOPREEMPT|T_SLICE|T_NOASR|T_NOISR|T_LEVELMASK7)
+
 #define RN_PRIOR      0x0002
 #define RN_FIFO       0x0000
 #define RN_DEL        0x0004
