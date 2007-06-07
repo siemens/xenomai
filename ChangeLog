@@ -1,3 +1,7 @@
+2007-06-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* scripts/xeno-config.in: Add missing -D__XENO__ to base CFLAGS.
+
 2007-06-03  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus/{module.c, shadow.c}: Move remove_proc_entry out of
