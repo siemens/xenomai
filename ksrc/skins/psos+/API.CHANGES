@@ -33,3 +33,7 @@ ___________________________________________________________________
 	script makes the pSOS skin automatically issue the mlockall()
 	request for the entire application before the main() routine
 	is called.
+
+	o Round-robin scheduling is no more activated by default for
+	pSOS tasks whether they run in kernel or user-space (this was
+	unintended in the first place).
