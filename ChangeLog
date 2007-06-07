@@ -1,5 +1,14 @@
 2007-06-07  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/shadow.c (xnshadow_map): Do NOT arm the round-robin
+	mode when the time_slice is non-zero for the mapped thread: RR
+	activation must be done from xnpod_start_thread() or
+	xnpod_set_thread_mode().
+
+	* ksrc/skins/psos+/task.c (t_start, t_mode): Clear out any bits we
+	won't consider from the pSOS mode mask before converting the
+	latter to a nucleus mode mask.
+
 	* configure.in: Provide --enable-psos-auto-mlockall, designed
 	after --enable-posix-auto-mlockall.
 

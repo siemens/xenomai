@@ -1206,7 +1206,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 {
 	xnarch_cpumask_t affinity;
 	unsigned muxid, magic;
-	int mode, prio, err, cpu;
+	int prio, err, cpu;
 
 #ifdef CONFIG_MMU
 	if (!(current->mm->def_flags & VM_LOCKED))
@@ -1272,8 +1272,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 	}
 
 	/* Nobody waits for us, so we may start the shadow immediately. */
-	mode = thread->rrperiod != XN_INFINITE ? XNRRB : 0;
-	err = xnpod_start_thread(thread, mode, 0, affinity, NULL, NULL);
+	err = xnpod_start_thread(thread, 0, 0, affinity, NULL, NULL);
 
 	if (err)
 		return err;
