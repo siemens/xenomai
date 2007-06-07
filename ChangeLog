@@ -1,5 +1,9 @@
 2007-06-07  Philippe Gerum  <rpm@xenomai.org>
 
+	* src/skins/psos+/tm.c (tm_set): Make the pSOS emulator clock
+	inherit the Linux wall clock time whenever a null triplet is
+	passed.
+
 	* ksrc/nucleus/shadow.c (xnshadow_map): Do NOT arm the round-robin
 	mode when the time_slice is non-zero for the mapped thread: RR
 	activation must be done from xnpod_start_thread() or
