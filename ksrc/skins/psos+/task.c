@@ -102,7 +102,7 @@ u_long t_create(const char name[4],
 	   which are allowed to call into the pSOS emulator, usually
 	   for synchronization services. */
 
-	if (prio < 0 || prio > 255)
+	if (prio > 255)
 		return ERR_PRIOR;
 
 	aname[0] = name[0];
