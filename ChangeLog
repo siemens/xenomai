@@ -1,3 +1,13 @@
+2007-06-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* configure.in: Provide --enable-psos-auto-mlockall, designed
+	after --enable-posix-auto-mlockall.
+
+	* src/skins/psos+/init.c (__init_xeno_interface): Automatically
+	shadow the main thread.
+
+	* scripts/xeno-config.in: Add missing -D__XENO__ to base CFLAGS.
+
 2007-06-06  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/skins/rtdm/core.c (_rtdm_close): Restore reference counter
