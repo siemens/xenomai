@@ -16,9 +16,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#include <time.h>
 #include <psos+/psos.h>
 
 extern int __psos_muxid;
+
+extern xnsysinfo_t __psos_sysinfo;
 
 u_long tm_wkafter(u_long ticks)
 {
@@ -42,6 +45,16 @@ u_long tm_get(u_long *date_r, u_long *time_r, u_long *ticks_r)
 
 u_long tm_set(u_long date, u_long time, u_long ticks)
 {
+	if (date == 0 && time == 0 && ticks == 0) {
+		struct timeval tv;
+		struct tm tm;
+		gettimeofday(&tv, NULL);
+		localtime_r(&tv.tv_sec, &tm);
+		date = (tm.tm_year << 16)|((tm.tm_mon + 1) << 8)|tm.tm_mday;
+		time = (tm.tm_hour << 16)|(tm.tm_min << 8)|tm.tm_sec;
+		ticks = tv.tv_usec / ((__psos_sysinfo.tickval ?: 1) / 1000);
+	}
+
 	return XENOMAI_SKINCALL3(__psos_muxid, __psos_tm_set, date, time, ticks);
 }
 

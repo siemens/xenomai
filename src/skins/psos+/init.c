@@ -25,6 +25,8 @@
 
 int __psos_muxid = -1;
 
+xnsysinfo_t __psos_sysinfo;
+
 static __attribute__ ((constructor))
 void __init_xeno_interface(void)
 {
@@ -54,6 +56,13 @@ void __init_xeno_interface(void)
 		exit(EXIT_FAILURE);
 	}
 #endif /* !CONFIG_XENO_PSOS_AUTO_MLOCKALL */
+
+	err = XENOMAI_SYSCALL2(__xn_sys_info, __psos_muxid, &__psos_sysinfo);
+
+	if (err) {
+		fprintf(stderr, "Xenomai pSOS skin init: cannot retrieve sysinfo, status %ld", err);
+		exit(EXIT_FAILURE);
+	}
 }
 
 void k_fatal(u_long err_code, u_long flags)
