@@ -12,13 +12,13 @@ ___________________________________________________________________
 	(0). In addition, assigning priority level 0 to pSOS tasks is
 	now allowed. The only way to create pSOS tasks with earlier
 	Xenomai versions would have been to call the t_create()
-	service. Note: promoting a non real-time pSOS task
-	(0-priority) to a real-time one (priority in the 1-255 range)
-	is not allowed; for this reason, the behaviour of t_setpri()
-	does not change in the 0-priority case (i.e. passing 0 as the
-	new priority value still does not affect the target task, but
-	may only be used to retrieve the current priority level for
-	that task).
+	service. Note: demoting a real-time pSOS task (priority in the
+	1-255 range) to a non real-time one (0-priority) is not
+	allowed; for this reason, the behaviour of t_setpri() does not
+	change in the 0-priority case (i.e. passing 0 as the new
+	priority value still does not affect the target task, but may
+	only be used to retrieve the current priority level for that
+	task).
 
 	o The main thread of a Xenomai application in user-space is
 	now automatically converted to a pSOS task of the lowest
