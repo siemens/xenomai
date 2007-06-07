@@ -1109,7 +1109,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 {
 	xnarch_cpumask_t affinity;
 	unsigned muxid, magic;
-	int mode, prio, err;
+	int prio, err;
 
 #ifdef CONFIG_MMU
 	if (!(current->mm->def_flags & VM_LOCKED))
@@ -1174,8 +1174,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 	affinity = xnarch_cpumask_of_cpu(rthal_processor_id());
 	set_cpus_allowed(current, affinity);
 
-	mode = thread->rrperiod != XN_INFINITE ? XNRRB : 0;
-	xnpod_start_thread(thread, mode, 0, affinity, NULL, NULL);
+	xnpod_start_thread(thread, 0, 0, affinity, NULL, NULL);
 
 	err = xnshadow_harden();
 

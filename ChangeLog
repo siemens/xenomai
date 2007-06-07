@@ -1,5 +1,10 @@
 2007-06-07  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/shadow.c (xnshadow_map): Do NOT arm the round-robin
+	mode when the time_slice is non-zero for the mapped thread: RR
+	activation must be done from xnpod_start_thread() or
+	xnpod_set_thread_mode().
+
 	* scripts/xeno-config.in: Add missing -D__XENO__ to base CFLAGS.
 
 2007-06-03  Jan Kiszka  <jan.kiszka@web.de>
