@@ -157,8 +157,8 @@ static inline int xntbase_master_p(xntbase_t *base)
 static inline xnticks_t xntbase_convert(xntbase_t *srcbase, xnticks_t ticks, xntbase_t *dstbase)
 {
 	/* Twisted, but tries hard not to rescale to nanoseconds *
-	 before converting, so that we could save a 64bit multiply in
-	 the common cases (i.e. converting to/from master). */
+	   before converting, so that we could save a 64bit multiply
+	   in the common cases (i.e. converting to/from master). */
 
 	if (dstbase->tickvalue == srcbase->tickvalue)
 		return ticks;
