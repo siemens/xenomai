@@ -209,6 +209,16 @@ void __native_pipe_pkg_cleanup(void)
 
 int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 {
+#if CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ > 0
+	/* XNCORE_PAGE_SIZE is guaranteed to be significantly greater
+	 * than sizeof(RT_PIPE_MSG), so that we could store a message
+	 * header along with a useful buffer space into the local
+	 * pool. */
+	size_t streamsz = CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ < XNCORE_PAGE_SIZE ?
+		XNCORE_PAGE_SIZE : CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ;
+#else
+#define streamsz  0
+#endif
 	void *poolmem;
 	int err = 0;
 	spl_t s;
@@ -228,9 +238,7 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 		/* Make sure we won't hit trivial argument errors when calling
 		   xnheap_init(). */
 
-#if CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ > 0
-		poolsize += CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ + sizeof(RT_PIPE_MSG);
-#endif
+		poolsize += streamsz;
 
 		if (poolsize < 2 * XNCORE_PAGE_SIZE)
 			poolsize = 2 * XNCORE_PAGE_SIZE;
@@ -255,8 +263,7 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 	}
 
 #if CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ > 0
-	pipe->buffer = xnheap_alloc(pipe->bufpool,
-				    CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ + sizeof(RT_PIPE_MSG));
+	pipe->buffer = xnheap_alloc(pipe->bufpool, streamsz);
 	if (pipe->buffer == NULL) {
 		if (pipe->bufpool == &pipe->privpool)
 			xnheap_destroy(&pipe->privpool, __pipe_flush_pool,
@@ -264,7 +271,7 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 		return -ENOMEM;
 	}
 	inith(&pipe->buffer->link);
-	pipe->buffer->size = CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ;
+	pipe->buffer->size = streamsz - sizeof(RT_PIPE_MSG);
 #endif /* CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ > 0 */
 
 	minor = xnpipe_connect(minor,
