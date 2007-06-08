@@ -152,7 +152,7 @@ u_long t_create(const char name[4],
 	return XENOMAI_SYSCALL1(__xn_sys_completion, &completion);
 }
 
-u_long t_shadow(const char name[4],
+u_long t_shadow(const char name[4], /* Xenomai extension. */
 		u_long prio,
 		u_long flags,
 		u_long *tid_r)
