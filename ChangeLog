@@ -1,5 +1,8 @@
 2007-06-08  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/shadow.c (xnshadow_sys_info): Return the tick value
+	for the specified skin's timebase.
+
 	* ksrc/nucleus/{shadow, module}.c, include/nucleus/shadow.h: Group
 	invariant skin properties into a single structure passed by
 	reference to xnshadow_register_interface().
