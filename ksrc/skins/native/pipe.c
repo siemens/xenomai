@@ -228,20 +228,24 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 		/* Make sure we won't hit trivial argument errors when calling
 		   xnheap_init(). */
 
-		if (poolsize < 2 * PAGE_SIZE)
-			poolsize = 2 * PAGE_SIZE;
+#if CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ > 0
+		poolsize += CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ + sizeof(RT_PIPE_MSG);
+#endif
+
+		if (poolsize < 2 * XNCORE_PAGE_SIZE)
+			poolsize = 2 * XNCORE_PAGE_SIZE;
 
 		/* Account for the overhead so that the actual free space is large
 		   enough to match the requested size. */
 
-		poolsize = xnheap_rounded_size(poolsize, PAGE_SIZE);
+		poolsize = xnheap_rounded_size(poolsize, XNCORE_PAGE_SIZE);
 		poolmem = xnarch_sysalloc(poolsize);
 
 		if (!poolmem)
 			return -ENOMEM;
 
 		/* Use natural page size */
-		err = xnheap_init(&pipe->privpool, poolmem, poolsize, PAGE_SIZE);
+		err = xnheap_init(&pipe->privpool, poolmem, poolsize, XNCORE_PAGE_SIZE);
 		if (err) {
 			xnarch_sysfree(poolmem, poolsize);
 			return err;

@@ -75,6 +75,9 @@ error status when given.
 * tm_evafter() may return ERR_NOSEG since dynamic memory is allocated
 for an internal timer from the nucleus heap.
 
+* rn_create() requires the region size to be a multiple of
+  XNCORE_PAGE_SIZE (512).
+
 * rn_retseg() does not check for the ERR_SEGFREE condition.
 
 * pSOS system calls invoked from user-space might return negative

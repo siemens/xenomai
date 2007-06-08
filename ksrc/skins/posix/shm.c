@@ -540,7 +540,7 @@ int ftruncate(int fd, off_t len)
 					err =
 					    -xnheap_init(&shm->heapbase,
 							 heapaddr, len,
-							 PAGE_SIZE);
+							 XNCORE_PAGE_SIZE);
 				else
 					err = ENOMEM;
 

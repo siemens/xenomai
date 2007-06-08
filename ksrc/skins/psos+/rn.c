@@ -200,7 +200,7 @@ u_long rn_create(const char name[4],
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 	} else
 #endif /* __KERNEL__ */
-		if (xnheap_init(&rn->heapbase, rnaddr, rnsize, PAGE_SIZE) != 0)
+		if (xnheap_init(&rn->heapbase, rnaddr, rnsize, XNCORE_PAGE_SIZE) != 0)
 			return ERR_TINYRN;
 
 	inith(&rn->link);

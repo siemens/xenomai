@@ -46,4 +46,8 @@
 /* Priority of IRQ servers in user-space. */
 #define XNCORE_IRQ_PRIO     XNCORE_MAX_PRIO
 
+#define XNCORE_PAGE_SIZE		512 /* A reasonable value for the xnheap page size */
+#define XNCORE_PAGE_MASK  		(~(XNCORE_PAGE_SIZE-1))
+#define XNCORE_PAGE_ALIGN(addr)	(((addr)+XNCORE_PAGE_SIZE-1)&XNCORE_PAGE_MASK)
+
 #endif /* !_XENO_NUCLEUS_CORE_H */

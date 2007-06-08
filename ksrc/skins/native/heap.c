@@ -245,12 +245,12 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 	/* Make sure we won't hit trivial argument errors when calling
 	   xnheap_init(). */
 
-	if (heapsize < 2 * PAGE_SIZE)
-		heapsize = 2 * PAGE_SIZE;
+	if (heapsize < 2 * XNCORE_PAGE_SIZE)
+		heapsize = 2 * XNCORE_PAGE_SIZE;
 
 	heap->csize = heapsize;	/* Record this for SBA management and inquiry. */
 
-	heapsize = xnheap_rounded_size(heapsize, PAGE_SIZE);
+	heapsize = xnheap_rounded_size(heapsize, XNCORE_PAGE_SIZE);
 
 #ifdef __KERNEL__
 	if (mode & H_MAPPABLE) {
@@ -276,7 +276,7 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 		if (!heapmem)
 			return -ENOMEM;
 
-		err = xnheap_init(&heap->heap_base, heapmem, heapsize, PAGE_SIZE);	/* Use natural page size */
+		err = xnheap_init(&heap->heap_base, heapmem, heapsize, XNCORE_PAGE_SIZE);
 		if (err) {
 			xnarch_sysfree(heapmem, heapsize);
 			return err;
