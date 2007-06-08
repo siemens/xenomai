@@ -406,6 +406,8 @@ u_long tm_wkwhen(u_long date,
 		 u_long time,
 		 u_long ticks);
 
+u_long tm_getm(unsigned long long *ns_r); /* Xenomai extension. */
+
 #ifdef __cplusplus
 };
 #endif /* __cplusplus */

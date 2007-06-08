@@ -66,6 +66,7 @@
 #define __psos_tm_evwhen    40
 #define __psos_tm_wkwhen    41
 #define __psos_tm_evevery   42
+#define __psos_tm_getm      43	/* Xenomai extension: get monotonic time (ns) */
 
 #ifdef __KERNEL__
 
