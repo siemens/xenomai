@@ -61,6 +61,8 @@ static void *__map_shm_heap_memory(unsigned long opaque, int mapsize)
 	return mapbase;
 }
 
+#if 0
+
 static int __unmap_shm_heap_memory(unsigned long opaque, void *mapbase,
 				   int mapsize)
 {
@@ -87,6 +89,8 @@ static int __unmap_shm_heap_memory(unsigned long opaque, void *mapbase,
 
 	return err;
 }
+
+#endif
 
 static void *_compat_shm_alloc(unsigned long name, int size, int suprt,
 			       int isheap)
