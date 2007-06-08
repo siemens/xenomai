@@ -1573,15 +1573,27 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 
 static int xnshadow_sys_info(struct task_struct *curr, struct pt_regs *regs)
 {
-	/* UNUSED int muxid = __xn_reg_arg1(regs); */
+	int muxid = __xn_reg_arg1(regs);
 	u_long infarg = __xn_reg_arg2(regs);
+	xntbase_t **timebasep;
 	xnsysinfo_t info;
+	spl_t s;
 
 	if (!__xn_access_ok(curr, VERIFY_WRITE, infarg, sizeof(info)))
 		return -EFAULT;
 
+	xnlock_get_irqsave(&nklock, s);
+
+	if (muxid < 0 || muxid > XENOMAI_MUX_NR ||
+	    muxtable[muxid].props == NULL) {
+		xnlock_put_irqrestore(&nklock, s);
+		return -EINVAL;
+	}
+
+	timebasep = muxtable[muxid].props->timebasep;
+	info.tickval = xntbase_get_tickval(timebasep ? *timebasep : &nktbase);
+	xnlock_put_irqrestore(&nklock, s);
 	info.cpufreq = xnarch_get_cpu_freq();
-	info.tickval = xntbase_get_tickval(&nktbase);
 	__xn_copy_to_user(curr, (void *)infarg, &info, sizeof(info));
 
 	return 0;
