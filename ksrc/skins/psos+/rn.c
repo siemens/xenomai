@@ -261,8 +261,10 @@ u_long rn_delete(u_long rnid)
 		goto unlock_and_exit;
 	}
 
-	if (rn_destroy_internal(rn) == XNSYNCH_RESCHED)
+	if (rn_destroy_internal(rn) == XNSYNCH_RESCHED) {
+		err = ERR_TATRNDEL;
 		xnpod_schedule();
+	}
 
       unlock_and_exit:
 

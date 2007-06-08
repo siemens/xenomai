@@ -1,3 +1,11 @@
+2007-06-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/psos+/rn.c (rn_delete): Return ERR_TATRNDEL after
+	deletion while waiters were still pending.
+
+	* ksrc/skins/psos+/sem.c (sm_delete): Return ERR_TATSDEL after
+	deletion while waiters were still pending.
+
 2007-06-07  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (xnshadow_map): Do NOT arm the round-robin
