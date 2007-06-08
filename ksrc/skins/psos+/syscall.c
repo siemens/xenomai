@@ -1178,7 +1178,7 @@ static int __rn_create(struct task_struct *curr, struct pt_regs *regs)
 			       sizeof(sizeopt));
 
 	err = rn_create(name, NULL,
-			xnheap_rounded_size(sizeopt.rnsize, PAGE_SIZE),
+			xnheap_rounded_size(sizeopt.rnsize, XNCORE_PAGE_SIZE),
 			sizeopt.usize, sizeopt.flags,
 			&rninfo.rnid, &rninfo.allocsz);
 

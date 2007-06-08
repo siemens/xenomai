@@ -221,13 +221,13 @@ int rt_queue_create(RT_QUEUE *q,
 	/* Make sure we won't hit trivial argument errors when calling
 	   xnheap_init(). */
 
-	if (poolsize < 2 * PAGE_SIZE)
-		poolsize = 2 * PAGE_SIZE;
+	if (poolsize < 2 * XNCORE_PAGE_SIZE)
+		poolsize = 2 * XNCORE_PAGE_SIZE;
 
 	/* Account for the overhead so that the actual free space is large
 	   enough to match the requested size. */
 
-	poolsize = xnheap_rounded_size(poolsize, PAGE_SIZE);
+	poolsize = xnheap_rounded_size(poolsize, XNCORE_PAGE_SIZE);
 
 #ifdef __KERNEL__
 	if (mode & Q_SHARED) {
@@ -253,7 +253,7 @@ int rt_queue_create(RT_QUEUE *q,
 		if (!poolmem)
 			return -ENOMEM;
 
-		err = xnheap_init(&q->bufpool, poolmem, poolsize, PAGE_SIZE);	/* Use natural page size */
+		err = xnheap_init(&q->bufpool, poolmem, poolsize, XNCORE_PAGE_SIZE);
 		if (err) {
 			xnarch_sysfree(poolmem, poolsize);
 			return err;

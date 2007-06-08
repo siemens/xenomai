@@ -1145,6 +1145,8 @@ static int __sc_pcreate(struct task_struct *curr, struct pt_regs *regs)
 	pid = __xn_reg_arg1(regs);
 	/* Size of partition space -- account for the heap mgmt overhead. */
 	ptsize = __xn_reg_arg2(regs);
+	/* We will manage the heap as a single memory block, so ask
+	   for a larger page size than XNCORE_PAGE_SIZE. */
 	ptsize = xnheap_rounded_size(ptsize, PAGE_SIZE);
 	/* Block size. */
 	bsize = __xn_reg_arg3(regs);
