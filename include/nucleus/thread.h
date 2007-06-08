@@ -245,10 +245,10 @@ typedef struct xnthread {
 
 typedef struct xnhook {
 
-    xnholder_t link;
+	xnholder_t link;
 #define link2hook(ln)		container_of(ln, xnhook_t, link)
 
-    void (*routine)(xnthread_t *thread);
+	void (*routine)(xnthread_t *thread);
 
 } xnhook_t;
 
@@ -316,38 +316,61 @@ char *xnthread_symbolic_status(xnflags_t status, char *buf, int size);
 
 int *xnthread_get_errno_location(void);
 
-static inline xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t now)
+static inline xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t tsc)
 {
-    xnticks_t timeout;
+	xnticks_t timeout;
+	xntimer_t *timer;
 
-    if (!xnthread_test_state(thread,XNDELAY))
-	return 0LL;
+	if (!xnthread_test_state(thread,XNDELAY))
+		return 0LL;
 
-    timeout = (xntimer_get_date(&thread->rtimer) ? : xntimer_get_date(&thread->ptimer));
+	if (xntimer_running_p(&thread->rtimer))
+		timer = &thread->rtimer;
+	else if (xntimer_running_p(&thread->ptimer))
+		timer = &thread->ptimer;
+	else
+		return 0LL;
 
-    if (timeout <= now)
-	return 1;
+	/*
+	 * The caller should have masked IRQs while collecting the
+	 * timeout(s), so no tick could be announced in the meantime,
+	 * and all timeouts would always use the same epoch
+	 * value. Obviously, this can't be a valid assumption for
+	 * aperiodic timers, which values are based on the hardware
+	 * TSC, and as such the current time will change regardless of
+	 * the interrupt state; for this reason, we use the "tsc"
+	 * input parameter the caller has passed us as the epoch value
+	 * instead.
+	 */
 
-    return timeout - now;
+	if (xntbase_periodic_p(xnthread_time_base(thread)))
+		return xntimer_get_timeout(timer);
+
+	timeout = xntimer_get_date(timer);
+
+	if (timeout <= tsc)
+		return 1;
+
+	return timeout - tsc;
 }
 
 static inline xnticks_t xnthread_get_period(xnthread_t *thread)
 {
-    xnticks_t period = 0;
+	xnticks_t period = 0;
 
-    /*
-     * The current thread period might be:
-     * - the value of the timer interval for periodic threads (ns/ticks)
-     * - or, the value of the alloted round-robin quantum (ticks)
-     * - or zero, meaning "no periodic activity".
-     */
+	/*
+	 * The current thread period might be:
+	 * - the value of the timer interval for periodic threads (ns/ticks)
+	 * - or, the value of the alloted round-robin quantum (ticks)
+	 * - or zero, meaning "no periodic activity".
+	 */
        
-    if (xntimer_running_p(&thread->ptimer))
-	period = xntimer_get_interval(&thread->ptimer);
-    else if (xnthread_test_state(thread,XNRRB))
-	period = xnthread_time_slice(thread);
+	if (xntimer_running_p(&thread->ptimer))
+		period = xntimer_get_interval(&thread->ptimer);
+	else if (xnthread_test_state(thread,XNRRB))
+		period = xnthread_time_slice(thread);
 
-    return period;
+	return period;
 }
 
 #ifdef __cplusplus
