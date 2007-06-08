@@ -66,7 +66,7 @@ int nkthrptd;
 
 int nkerrptd;
 
-struct xnskentry muxtable[XENOMAI_MUX_NR];
+struct xnskin_slot muxtable[XENOMAI_MUX_NR];
 
 static struct __gatekeeper {
 
@@ -113,7 +113,7 @@ static struct task_struct *switch_lock_owner[XNARCH_NR_CPUS];
 
 static int nucleus_muxid = -1;
 
-void xnpod_declare_iface_proc(struct xnskentry *iface);
+void xnpod_declare_iface_proc(struct xnskin_slot *iface);
 
 void xnpod_discard_iface_proc(const char *iface);
 
@@ -792,7 +792,7 @@ static void xnshadow_dereference_skin(unsigned magic)
 	unsigned muxid;
 
 	for (muxid = 0; muxid < XENOMAI_MUX_NR; muxid++) {
-		if (muxtable[muxid].magic == magic) {
+		if (muxtable[muxid].props && muxtable[muxid].props->magic == magic) {
 			if (xnarch_atomic_dec_and_test(&muxtable[0].refcnt))
 				xnarch_atomic_dec(&muxtable[0].refcnt);
 			if (xnarch_atomic_dec_and_test(&muxtable[muxid].refcnt))
@@ -801,8 +801,8 @@ static void xnshadow_dereference_skin(unsigned magic)
 				   since it was incremented by the xn_sys_bind
 				   operation. */
 				xnarch_atomic_dec(&muxtable[muxid].refcnt);
-			if (muxtable[muxid].module)
-				module_put(muxtable[muxid].module);
+			if (muxtable[muxid].props->module)
+				module_put(muxtable[muxid].props->module);
 
 			break;
 		}
@@ -1220,11 +1220,11 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
 	magic = xnthread_get_magic(thread);
 
 	for (muxid = 0; muxid < XENOMAI_MUX_NR; muxid++) {
-		if (muxtable[muxid].magic == magic) {
+		if (muxtable[muxid].props && muxtable[muxid].props->magic == magic) {
 			xnarch_atomic_inc(&muxtable[muxid].refcnt);
 			xnarch_atomic_inc(&muxtable[0].refcnt);
-			if (muxtable[muxid].module
-			    && !try_module_get(muxtable[muxid].module))
+			if (muxtable[muxid].props->module
+			    && !try_module_get(muxtable[muxid].props->module))
 				return -ENOSYS;
 			break;
 		}
@@ -1483,7 +1483,7 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 	xnlock_get_irqsave(&nklock, s);
 
 	for (muxid = 1; muxid < XENOMAI_MUX_NR; muxid++)
-		if (muxtable[muxid].magic == magic)
+		if (muxtable[muxid].props && muxtable[muxid].props->magic == magic)
 			goto do_bind;
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -1507,7 +1507,7 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 	   earlier than that, do not refer to nkpod until the latter had a
 	   chance to call xnpod_init(). */
 
-	if (!muxtable[muxid].eventcb)
+	if (!muxtable[muxid].props->eventcb)
 		goto eventcb_done;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -1518,8 +1518,8 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 	if (ppd)
 		goto eventcb_done;
 
-	ppd = (xnshadow_ppd_t *) muxtable[muxid].eventcb(XNSHADOW_CLIENT_ATTACH,
-							 curr);
+	ppd = (xnshadow_ppd_t *) muxtable[muxid].props->eventcb(XNSHADOW_CLIENT_ATTACH,
+							       curr);
 
 	if (IS_ERR(ppd)) {
 		err = PTR_ERR(ppd);
@@ -1535,12 +1535,12 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 	if (ppd_insert(ppd) == -EBUSY) {
 		/* In case of concurrent binding (which can not happen with
 		   Xenomai libraries), detach right away the second ppd. */
-		muxtable[muxid].eventcb(XNSHADOW_CLIENT_DETACH, ppd);
+		muxtable[muxid].props->eventcb(XNSHADOW_CLIENT_DETACH, ppd);
 		ppd = NULL;
 		goto eventcb_done;
 	}
 
-	if (muxtable[muxid].module && !try_module_get(muxtable[muxid].module)) {
+	if (muxtable[muxid].props->module && !try_module_get(muxtable[muxid].props->module)) {
 		err = -ESRCH;
 		goto fail;
 	}
@@ -1551,11 +1551,11 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 		/* Ok mate, but you really ought to call xnpod_init()
 		   at some point if you want me to be of some help
 		   here... */
-		if (muxtable[muxid].eventcb && ppd) {
+		if (muxtable[muxid].props->eventcb && ppd) {
 			ppd_remove(ppd);
-			muxtable[muxid].eventcb(XNSHADOW_CLIENT_DETACH, ppd);
-			if (muxtable[muxid].module)
-				module_put(muxtable[muxid].module);
+			muxtable[muxid].props->eventcb(XNSHADOW_CLIENT_DETACH, ppd);
+			if (muxtable[muxid].props->module)
+				module_put(muxtable[muxid].props->module);
 		}
 
 		err = -ENOSYS;
@@ -1715,7 +1715,7 @@ static int xnshadow_sys_trace(struct task_struct *curr, struct pt_regs *regs)
 	return err;
 }
 
-static xnsysent_t xnshadow_systab[] = {
+static xnsysent_t __systab[] = {
 	[__xn_sys_migrate] = {&xnshadow_sys_migrate, __xn_exec_current},
 	[__xn_sys_arch] = {&xnshadow_sys_arch, __xn_exec_any},
 	[__xn_sys_bind] = {&xnshadow_sys_bind, __xn_exec_lostage},
@@ -1723,6 +1723,17 @@ static xnsysent_t xnshadow_systab[] = {
 	[__xn_sys_completion] = {&xnshadow_sys_completion, __xn_exec_lostage},
 	[__xn_sys_barrier] = {&xnshadow_sys_barrier, __xn_exec_lostage},
 	[__xn_sys_trace] = {&xnshadow_sys_trace, __xn_exec_any},
+};
+
+
+static struct xnskin_props __props = {
+	.name = "sys",
+	.magic = 0x434F5245,
+	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
+	.systab = __systab,
+	.eventcb = NULL,
+	.timebasep = NULL,
+	.module = NULL
 };
 
 static inline int substitute_linux_syscall(struct task_struct *curr,
@@ -1771,12 +1782,12 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	xnltt_log_event(xeno_ev_syscall, thread->name, muxid, muxop);
 
 	if (muxid < 0 || muxid > XENOMAI_MUX_NR ||
-	    muxop < 0 || muxop >= muxtable[muxid].nrcalls) {
+	    muxop < 0 || muxop >= muxtable[muxid].props->nrcalls) {
 		__xn_error_return(regs, -ENOSYS);
 		return RTHAL_EVENT_STOP;
 	}
 
-	sysflags = muxtable[muxid].systab[muxop].flags;
+	sysflags = muxtable[muxid].props->systab[muxop].flags;
 
 	if ((sysflags & __xn_exec_shadow) != 0 && !thread) {
 		__xn_error_return(regs, -EPERM);
@@ -1834,7 +1845,7 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 		   immediately. */
 	}
 
-	err = muxtable[muxid].systab[muxop].svc(p, regs);
+	err = muxtable[muxid].props->systab[muxop].svc(p, regs);
 
 	if (err == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
 		if (switched) {
@@ -1949,7 +1960,7 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 
 	/* Processing a real-time skin syscall. */
 
-	sysflags = muxtable[muxid].systab[muxop].flags;
+	sysflags = muxtable[muxid].props->systab[muxop].flags;
 
 	if ((sysflags & __xn_exec_conforming) != 0)
 		sysflags |= (thread ? __xn_exec_histage : __xn_exec_lostage);
@@ -1970,7 +1981,7 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 	} else			/* We want to run the syscall in the Linux domain.  */
 		switched = 0;
 
-	err = muxtable[muxid].systab[muxop].svc(current, regs);
+	err = muxtable[muxid].props->systab[muxop].svc(current, regs);
 
 	if (err == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
 		if (switched) {
@@ -2188,9 +2199,9 @@ RTHAL_DECLARE_SETSCHED_EVENT(setsched_event);
 static void detach_ppd(xnshadow_ppd_t * ppd)
 {
 	unsigned muxid = xnshadow_ppd_muxid(ppd);
-	muxtable[muxid].eventcb(XNSHADOW_CLIENT_DETACH, ppd);
-	if (muxtable[muxid].module)
-		module_put(muxtable[muxid].module);
+	muxtable[muxid].props->eventcb(XNSHADOW_CLIENT_DETACH, ppd);
+	if (muxtable[muxid].props->module)
+		module_put(muxtable[muxid].props->module);
 }
 
 static inline void do_cleanup_event(struct mm_struct *mm)
@@ -2222,12 +2233,7 @@ RTHAL_DECLARE_CLEANUP_EVENT(cleanup_event);
  *   being the pointer to the per-process data attached to the dying process.
  */
 
-int xnshadow_register_interface(const char *name,
-				unsigned magic,
-				int nrcalls,
-				xnsysent_t *systab,
-				void *(*eventcb) (int, void *),
-				struct module *module)
+int xnshadow_register_interface(struct xnskin_props *props)
 {
 	int muxid;
 	spl_t s;
@@ -2235,21 +2241,15 @@ int xnshadow_register_interface(const char *name,
 	/* We can only handle up to 256 syscalls per skin, check for over-
 	   and underflow (MKL). */
 
-	if (XENOMAI_MAX_SYSENT < nrcalls || 0 > nrcalls)
+	if (XENOMAI_MAX_SYSENT < props->nrcalls || 0 > props->nrcalls)
 		return -EINVAL;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	for (muxid = 0; muxid < XENOMAI_MUX_NR; muxid++) {
-		if (muxtable[muxid].systab == NULL) {
-			muxtable[muxid].name = name;
-			muxtable[muxid].systab = systab;
-			muxtable[muxid].nrcalls = nrcalls;
-			muxtable[muxid].magic = magic;
+		if (muxtable[muxid].props == NULL) {
+			muxtable[muxid].props = props;
 			xnarch_atomic_set(&muxtable[muxid].refcnt, -1);
-			muxtable[muxid].eventcb = eventcb;
-			muxtable[muxid].module = module;
-
 			xnlock_put_irqrestore(&nklock, s);
 
 #ifdef CONFIG_PROC_FS
@@ -2282,18 +2282,16 @@ int xnshadow_unregister_interface(int muxid)
 	xnlock_get_irqsave(&nklock, s);
 
 	if (xnarch_atomic_get(&muxtable[muxid].refcnt) <= 0) {
-		muxtable[muxid].systab = NULL;
-		muxtable[muxid].nrcalls = 0;
-		muxtable[muxid].magic = 0;
+#ifdef CONFIG_PROC_FS
+		const char *name = muxtable[muxid].props->name;
+#endif /* CONFIG_PROC_FS */
+		muxtable[muxid].props = NULL;
 		xnarch_atomic_set(&muxtable[muxid].refcnt, -1);
 #ifdef CONFIG_PROC_FS
 		{
-			const char *name = muxtable[muxid].name;
 			muxtable[muxid].proc = NULL;
 			xnlock_put_irqrestore(&nklock, s);
-
 			xnpod_discard_iface_proc(name);
-
 			return 0;
 		}
 #endif /* CONFIG_PROC_FS */
@@ -2400,12 +2398,7 @@ int xnshadow_mount(void)
 	for (i = 0; i < PPD_HASH_SIZE; i++)
 		initq(&ppd_hash[i]);
 
-	nucleus_muxid =
-	    xnshadow_register_interface("sys",
-					0x434F5245,
-					sizeof(xnshadow_systab) /
-					sizeof(xnsysent_t), xnshadow_systab,
-					NULL, NULL);
+	nucleus_muxid = xnshadow_register_interface(&__props);
 
 	if (nucleus_muxid != 0) {
 		if (nucleus_muxid > 0) {

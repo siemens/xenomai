@@ -1394,6 +1394,18 @@ static xnsysent_t __systab[] = {
 	[__psos_tm_evevery] = {&__tm_evevery, __xn_exec_primary},
 };
 
+extern xntbase_t *psos_tbase;
+
+static struct xnskin_props __props = {
+	.name = "psos",
+	.magic = PSOS_SKIN_MAGIC,
+	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
+	.systab = __systab,
+	.eventcb = NULL,
+	.timebasep = &psos_tbase,
+	.module = THIS_MODULE
+};
+
 static void __shadow_delete_hook(xnthread_t *thread)
 {
 	if (xnthread_get_magic(thread) == PSOS_SKIN_MAGIC &&
@@ -1403,11 +1415,8 @@ static void __shadow_delete_hook(xnthread_t *thread)
 
 int psos_syscall_init(void)
 {
-	__muxid =
-	    xnshadow_register_interface("psos",
-					PSOS_SKIN_MAGIC,
-					sizeof(__systab) / sizeof(__systab[0]),
-					__systab, NULL, THIS_MODULE);
+	__muxid = xnshadow_register_interface(&__props);
+
 	if (__muxid < 0)
 		return -ENOSYS;
 

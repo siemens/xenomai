@@ -1,3 +1,15 @@
+2007-06-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/{shadow, module}.c, include/nucleus/shadow.h: Group
+	invariant skin properties into a single structure passed by
+	reference to xnshadow_register_interface().
+
+	* ksrc/nucleus/registry.c (xnregistry_enter, xnregistry_remove):
+	Add registry debugging tracepoints.
+
+	* include/nucleus/core.h, ksrc/skins: Define and use a smaller
+	page size for callers of xnheap_init().
+
 2007-06-07  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/skins/psos+/tm.c (tm_set): Make the pSOS emulator clock

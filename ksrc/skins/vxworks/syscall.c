@@ -1249,6 +1249,18 @@ static xnsysent_t __systab[] = {
 	[__vxworks_int_context] = {&__wind_int_context, __xn_exec_any},
 };
 
+extern xntbase_t *wind_tbase;
+
+static struct xnskin_props __props = {
+	.name = "vxworks",
+	.magic = VXWORKS_SKIN_MAGIC,
+	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
+	.systab = __systab,
+	.eventcb = NULL,
+	.timebasep = &wind_tbase,
+	.module = THIS_MODULE
+};
+
 static void __shadow_delete_hook(xnthread_t *thread)
 {
 	if (xnthread_get_magic(thread) == VXWORKS_SKIN_MAGIC &&
@@ -1258,11 +1270,8 @@ static void __shadow_delete_hook(xnthread_t *thread)
 
 int wind_syscall_init(void)
 {
-	__muxid =
-	    xnshadow_register_interface("vxworks",
-					VXWORKS_SKIN_MAGIC,
-					sizeof(__systab) / sizeof(__systab[0]),
-					__systab, NULL, THIS_MODULE);
+	__muxid = xnshadow_register_interface(&__props);
+
 	if (__muxid < 0)
 		return -ENOSYS;
 

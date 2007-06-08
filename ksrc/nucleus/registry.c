@@ -40,6 +40,11 @@
 #include <nucleus/heap.h>
 #include <nucleus/registry.h>
 #include <nucleus/thread.h>
+#include <nucleus/assert.h>
+
+#ifndef CONFIG_XENO_OPT_DEBUG_REGISTRY
+#define CONFIG_XENO_OPT_DEBUG_REGISTRY  0
+#endif
 
 static xnobject_t registry_obj_slots[CONFIG_XENO_OPT_REGISTRY_NRSLOTS];
 
@@ -621,6 +626,20 @@ int xnregistry_enter(const char *key,
 
 	xnlock_put_irqrestore(&nklock, s);
 
+#if XENO_DEBUG(REGISTRY)
+	if (err)
+		xnlogerr("FAILED to register object %s (%s, %s), status %d\n",
+			 key,
+			 pnode ? pnode->root->name : "unexported",
+			 pnode ? pnode->type : "no type",
+			 err);
+	else
+		xnloginfo("registered object %s (%s, %s)\n",
+			  key,
+			  pnode ? pnode->root->name : "unexported",
+			  pnode ? pnode->type : "no type");
+#endif
+
 	return err;
 }
 
@@ -740,6 +759,19 @@ int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 
       unlock_and_exit:
 
+#if XENO_DEBUG(REGISTRY)
+	if (err)
+		xnlogerr("FAILED to bind to object %s (%s, %s), status %d\n",
+			 key, object->pnode ? object->pnode->type : "no type",
+			 object->pnode ? object->pnode->root->name : "unexported",
+			 err);
+	else
+		xnloginfo("bound to object %s (%s, %s)\n",
+			  key,
+			  object->pnode ? object->pnode->root->name : "unexported",
+			  object->pnode ? object->pnode->type : "no type");
+#endif
+
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
@@ -785,12 +817,20 @@ int xnregistry_remove(xnhandle_t handle)
 		goto unlock_and_exit;
 	}
 
+#if XENO_DEBUG(REGISTRY)
+	/* We must keep the lock and report early, when the object
+	 * slot is still valid. */
+	xnloginfo("unregistered object %s (%s, %s)\n",
+		  object->key,
+		  object->pnode ? object->pnode->root->name : "unexported",
+		  object->pnode ? object->pnode->type : "no type");
+#endif
+
 	registry_hash_remove(object);
 	object->objaddr = NULL;
 	object->cstamp = 0;
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
-
 	if (object->pnode) {
 		registry_proc_unexport(object);
 

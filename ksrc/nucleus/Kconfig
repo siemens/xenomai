@@ -187,6 +187,15 @@ config XENO_OPT_DEBUG_QUEUES
 	operations of the Xenomai core. It adds heavy runtime overhead,
 	use with care.
 
+config XENO_OPT_DEBUG_REGISTRY
+	bool "Registry Debugging support"
+	depends on XENO_OPT_DEBUG
+	help
+
+	This option activates debugging output for key registry
+	operations performed by the Xenomai core. This option is
+	useful to detect the source of object naming conflicts.
+
 config XENO_OPT_WATCHDOG
 	bool "Watchdog support"
 	depends on XENO_OPT_DEBUG

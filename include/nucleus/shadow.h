@@ -41,19 +41,26 @@ struct xnmutex;
 struct pt_regs;
 struct timespec;
 struct timeval;
+struct xntbase;
 
-struct xnskentry {
+struct xnskin_props {
 
 	const char *name;
 	unsigned magic;
 	int nrcalls;
-	atomic_counter_t refcnt;
 	void *(*eventcb)(int, void *);
 	xnsysent_t *systab;
+	struct xntbase **timebasep;
+	struct module *module;
+};
+
+struct xnskin_slot {
+
+	struct xnskin_props *props;
+	atomic_counter_t refcnt;
 #ifdef CONFIG_PROC_FS
 	struct proc_dir_entry *proc;
 #endif /* CONFIG_PROC_FS */
-	struct module *module;
 };
 
 int xnshadow_mount(void);
@@ -86,24 +93,9 @@ void xnshadow_signal_completion(xncompletion_t __user *u_completion,
 
 void xnshadow_exit(void);
 
-int xnshadow_register_interface(const char *name,
-				unsigned magic,
-				int nrcalls,
-				xnsysent_t *systab,
-				void *(*eventcb)(int event, void *data),
-				struct module *module);
+int xnshadow_register_interface(struct xnskin_props *props);
 
 int xnshadow_unregister_interface(int muxid);
-
-unsigned long long xnshadow_ts2ticks(const struct timespec *v);
-
-void xnshadow_ticks2ts(unsigned long long,
-		       struct timespec *v);
-
-unsigned long long xnshadow_tv2ticks(const struct timeval *v);
-
-void xnshadow_ticks2tv(unsigned long long ticks,
-		       struct timeval *v);
 
 void xnshadow_reset_shield(void);
 
@@ -113,7 +105,7 @@ void xnshadow_send_sig(struct xnthread *thread,
 
 void xnshadow_rpi_check(void);
 
-extern struct xnskentry muxtable[];
+extern struct xnskin_slot muxtable[];
 
 #ifdef __cplusplus
 }

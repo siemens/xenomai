@@ -888,8 +888,8 @@ void xnpod_delete_proc(void)
 	int muxid;
 
 	for (muxid = 0; muxid < XENOMAI_MUX_NR; muxid++)
-		if (muxtable[muxid].proc)
-			remove_proc_entry(muxtable[muxid].name,
+		if (muxtable[muxid].props && muxtable[muxid].proc)
+			remove_proc_entry(muxtable[muxid].props->name,
 					  iface_proc_root);
 
 	remove_proc_entry("interfaces", rthal_proc_root);
@@ -916,7 +916,7 @@ static int iface_read_proc(char *page,
 			   char **start,
 			   off_t off, int count, int *eof, void *data)
 {
-	struct xnskentry *iface = (struct xnskentry *)data;
+	struct xnskin_slot *iface = (struct xnskin_slot *)data;
 	int len, refcnt = xnarch_atomic_get(&iface->refcnt);
 
 	len = sprintf(page, "%d\n", refcnt < 0 ? 0 : refcnt);
@@ -933,9 +933,9 @@ static int iface_read_proc(char *page,
 	return len;
 }
 
-void xnpod_declare_iface_proc(struct xnskentry *iface)
+void xnpod_declare_iface_proc(struct xnskin_slot *iface)
 {
-	iface->proc = add_proc_leaf(iface->name,
+	iface->proc = add_proc_leaf(iface->props->name,
 				    &iface_read_proc, NULL, iface,
 				    iface_proc_root);
 }
