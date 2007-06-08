@@ -2655,85 +2655,6 @@ int __pse51_call_not_available(struct task_struct *curr, struct pt_regs *regs)
 	return -ENOSYS;
 }
 
-#if 0
-int __itimer_set(struct task_struct *curr, struct pt_regs *regs)
-{
-	pthread_t thread = pse51_current_thread();
-	xnticks_t delay, interval;
-	struct itimerval itv;
-
-	if (__xn_reg_arg1(regs)) {
-		if (!__xn_access_ok
-		    (curr, VERIFY_READ, (void *)__xn_reg_arg1(regs),
-		     sizeof(itv)))
-			return -EFAULT;
-
-		__xn_copy_from_user(curr, &itv, (void *)__xn_reg_arg1(regs),
-				    sizeof(itv));
-	} else
-		memset(&itv, 0, sizeof(itv));
-
-	if (__xn_reg_arg2(regs) &&
-	    !__xn_access_ok(curr, VERIFY_WRITE, (void *)__xn_reg_arg2(regs),
-			    sizeof(itv)))
-		return -EFAULT;
-
-	xntimer_stop(&thread->itimer);
-
-	delay = xnshadow_tv2ticks(&itv.it_value);
-	interval = xnshadow_tv2ticks(&itv.it_interval);
-
-	if (delay > 0)
-		xntimer_start(&thread->itimer, delay, interval);
-
-	if (__xn_reg_arg2(regs)) {
-		interval = xntimer_interval(&thread->itimer);
-
-		if (xntimer_running_p(&thread->itimer)) {
-			delay = xntimer_get_timeout(&thread->itimer);
-
-			if (delay == 0)
-				delay = 1;
-		} else
-			delay = 0;
-
-		xnshadow_ticks2tv(delay, &itv.it_value);
-		xnshadow_ticks2tv(interval, &itv.it_interval);
-		__xn_copy_to_user(curr, (void *)__xn_reg_arg2(regs), &itv,
-				  sizeof(itv));
-	}
-
-	return 0;
-}
-
-int __itimer_get(struct task_struct *curr, struct pt_regs *regs)
-{
-	pthread_t thread = pse51_current_thread();
-	xnticks_t delay, interval;
-	struct itimerval itv;
-
-	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void *)__xn_reg_arg1(regs), sizeof(itv)))
-		return -EFAULT;
-
-	interval = xntimer_interval(&thread->itimer);
-
-	if (xntimer_running_p(&thread->itimer)) {
-		delay = xntimer_get_timeout(&thread->itimer);
-
-		if (delay == 0)	/* Cannot be negative in this context. */
-			delay = 1;
-	} else
-		delay = 0;
-
-	xnshadow_ticks2tv(delay, &itv.it_value);
-	xnshadow_ticks2tv(interval, &itv.it_interval);
-	__xn_copy_to_user(curr, (void *)__xn_reg_arg1(regs), &itv, sizeof(itv));
-
-	return 0;
-}
-#endif
-
 static xnsysent_t __systab[] = {
 	[__pse51_thread_create] = {&__pthread_create, __xn_exec_init},
 	[__pse51_thread_detach] = {&__pthread_detach, __xn_exec_any},
@@ -2895,15 +2816,22 @@ static void *pse51_eventcb(int event, void *data)
 	return ERR_PTR(-EINVAL);
 }
 
+extern xntbase_t *pse51_tbase;
+
+static struct xnskin_props __props = {
+	.name = "posix",
+	.magic = PSE51_SKIN_MAGIC,
+	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
+	.systab = __systab,
+	.eventcb = &pse51_eventcb,
+	.timebasep = &pse51_tbase,
+	.module = THIS_MODULE
+};
+
 int pse51_syscall_init(void)
 {
-	pse51_muxid =
-		xnshadow_register_interface("posix",
-					    PSE51_SKIN_MAGIC,
-					    sizeof(__systab)/sizeof(__systab[0]),
-					    __systab,
-					    pse51_eventcb,
-					    THIS_MODULE);
+	pse51_muxid = xnshadow_register_interface(&__props);
+
 	if (pse51_muxid < 0)
 		return -ENOSYS;
 	

@@ -156,7 +156,7 @@ static void *rtdm_skin_callback(int event, void *data)
 }
 
 
-static xnsysent_t systab[] = {
+static xnsysent_t __systab[] = {
     [__rtdm_fdcount] = { sys_rtdm_fdcount, __xn_exec_any },
     [__rtdm_open]    = { sys_rtdm_open,    __xn_exec_current|__xn_exec_adaptive },
     [__rtdm_socket]  = { sys_rtdm_socket,  __xn_exec_current|__xn_exec_adaptive },
@@ -168,13 +168,21 @@ static xnsysent_t systab[] = {
     [__rtdm_sendmsg] = { sys_rtdm_sendmsg, __xn_exec_current|__xn_exec_adaptive },
 };
 
+static struct xnskin_props __props = {
+	.name = "rtdm",
+	.magic = RTDM_SKIN_MAGIC,
+	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
+	.systab = __systab,
+	.eventcb = &rtdm_skin_callback,
+	.timebasep = NULL,
+	.module = THIS_MODULE
+};
+
 
 int __init rtdm_syscall_init(void)
 {
-    __rtdm_muxid = xnshadow_register_interface("rtdm", RTDM_SKIN_MAGIC,
-                                               sizeof(systab) / sizeof(systab[0]),
-                                               systab, rtdm_skin_callback,
-                                               THIS_MODULE);
+    __rtdm_muxid = xnshadow_register_interface(&__props);
+
     if (__rtdm_muxid < 0)
         return -ENOSYS;
 

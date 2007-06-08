@@ -3677,6 +3677,57 @@ int __rt_call_not_available(struct task_struct *curr, struct pt_regs *regs)
 	return -ENOSYS;
 }
 
+static void __shadow_delete_hook(xnthread_t *thread)
+{
+	if (xnthread_get_magic(thread) == XENO_SKIN_MAGIC &&
+	    xnthread_test_state(thread, XNMAPPED))
+		xnshadow_unmap(thread);
+}
+
+static void *__shadow_eventcb(int event, void *data)
+{
+	struct xeno_resource_holder *rh;
+	switch(event) {
+
+	case XNSHADOW_CLIENT_ATTACH:
+
+		rh = (struct xeno_resource_holder *) xnarch_sysalloc(sizeof(*rh));
+		if (!rh)
+			return ERR_PTR(-ENOMEM);
+
+		initq(&rh->alarmq);
+		initq(&rh->condq);
+		initq(&rh->eventq);
+		initq(&rh->heapq);
+		initq(&rh->intrq);
+		initq(&rh->mutexq);
+		initq(&rh->pipeq);
+		initq(&rh->queueq);
+		initq(&rh->semq);
+
+		return &rh->ppd;
+
+	case XNSHADOW_CLIENT_DETACH:
+
+		rh = ppd2rholder((xnshadow_ppd_t *) data);
+		__native_alarm_flush_rq(&rh->alarmq);
+		__native_cond_flush_rq(&rh->condq);
+		__native_event_flush_rq(&rh->eventq);
+		__native_heap_flush_rq(&rh->heapq);
+		__native_intr_flush_rq(&rh->intrq);
+		__native_mutex_flush_rq(&rh->mutexq);
+		__native_pipe_flush_rq(&rh->pipeq);
+		__native_queue_flush_rq(&rh->queueq);
+		__native_sem_flush_rq(&rh->semq);
+
+		xnarch_sysfree(rh, sizeof(*rh));
+
+		return NULL;
+	}
+
+	return ERR_PTR(-EINVAL);
+}
+
 static xnsysent_t __systab[] = {
 	[__native_task_create] = {&__rt_task_create, __xn_exec_init},
 	[__native_task_bind] = {&__rt_task_bind, __xn_exec_conforming},
@@ -3782,66 +3833,22 @@ static xnsysent_t __systab[] = {
 	[__native_timer_tsc2ns] = {&__rt_timer_tsc2ns, __xn_exec_any},
 };
 
-static void __shadow_delete_hook(xnthread_t *thread)
-{
-	if (xnthread_get_magic(thread) == XENO_SKIN_MAGIC &&
-	    xnthread_test_state(thread, XNMAPPED))
-		xnshadow_unmap(thread);
-}
+extern xntbase_t *__native_tbase;
 
-static void *__shadow_eventcb(int event, void *data)
-{
-	struct xeno_resource_holder *rh;
-	switch(event) {
-
-	case XNSHADOW_CLIENT_ATTACH:
-
-		rh = (struct xeno_resource_holder *) xnarch_sysalloc(sizeof(*rh));
-		if (!rh)
-			return ERR_PTR(-ENOMEM);
-
-		initq(&rh->alarmq);
-		initq(&rh->condq);
-		initq(&rh->eventq);
-		initq(&rh->heapq);
-		initq(&rh->intrq);
-		initq(&rh->mutexq);
-		initq(&rh->pipeq);
-		initq(&rh->queueq);
-		initq(&rh->semq);
-
-		return &rh->ppd;
-
-	case XNSHADOW_CLIENT_DETACH:
-
-		rh = ppd2rholder((xnshadow_ppd_t *) data);
-		__native_alarm_flush_rq(&rh->alarmq);
-		__native_cond_flush_rq(&rh->condq);
-		__native_event_flush_rq(&rh->eventq);
-		__native_heap_flush_rq(&rh->heapq);
-		__native_intr_flush_rq(&rh->intrq);
-		__native_mutex_flush_rq(&rh->mutexq);
-		__native_pipe_flush_rq(&rh->pipeq);
-		__native_queue_flush_rq(&rh->queueq);
-		__native_sem_flush_rq(&rh->semq);
-
-		xnarch_sysfree(rh, sizeof(*rh));
-
-		return NULL;
-	}
-
-	return ERR_PTR(-EINVAL);
-}
+static struct xnskin_props __props = {
+	.name = "native",
+	.magic = XENO_SKIN_MAGIC,
+	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
+	.systab = __systab,
+	.eventcb = &__shadow_eventcb,
+	.timebasep = &__native_tbase,
+	.module = THIS_MODULE
+};
 
 int __native_syscall_init(void)
 {
-	__native_muxid =
-	    xnshadow_register_interface("native",
-					XENO_SKIN_MAGIC,
-					sizeof(__systab) / sizeof(__systab[0]),
-					__systab,
-					&__shadow_eventcb,
-					THIS_MODULE);
+	__native_muxid = xnshadow_register_interface(&__props);
+
 	if (__native_muxid < 0)
 		return -ENOSYS;
 

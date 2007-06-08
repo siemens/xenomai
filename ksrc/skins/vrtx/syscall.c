@@ -1407,6 +1407,18 @@ static xnsysent_t __systab[] = {
 	[__vrtx_pinquiry] = {&__sc_pinquiry, __xn_exec_any},
 };
 
+extern xntbase_t *vrtx_tbase;
+
+static struct xnskin_props __props = {
+	.name = "vrtx",
+	.magic = VRTX_SKIN_MAGIC,
+	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
+	.systab = __systab,
+	.eventcb = NULL,
+	.timebasep = &vrtx_tbase,
+	.module = THIS_MODULE
+};
+
 static void __shadow_delete_hook(xnthread_t *thread)
 {
 	if (xnthread_get_magic(thread) == VRTX_SKIN_MAGIC &&
@@ -1416,11 +1428,8 @@ static void __shadow_delete_hook(xnthread_t *thread)
 
 int vrtxsys_init(void)
 {
-	__muxid =
-	    xnshadow_register_interface("vrtx",
-					VRTX_SKIN_MAGIC,
-					sizeof(__systab) / sizeof(__systab[0]),
-					__systab, NULL, THIS_MODULE);
+	__muxid = xnshadow_register_interface(&__props);
+
 	if (__muxid < 0)
 		return -ENOSYS;
 

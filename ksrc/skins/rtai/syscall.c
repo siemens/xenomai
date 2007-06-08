@@ -146,13 +146,22 @@ static xnsysent_t __systab[] = {
 	[__rtai_shm_heap_close] = {&__rt_shm_heap_close, __xn_exec_any},
 };
 
+extern xntbase_t *rtai_tbase;
+
+static struct xnskin_props __props = {
+	.name = "rtai",
+	.magic = RTAI_SKIN_MAGIC,
+	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
+	.systab = __systab,
+	.eventcb = NULL,
+	.timebasep = &rtai_tbase,
+	.module = THIS_MODULE
+};
+
 int __rtai_syscall_init(void)
 {
-	__rtai_muxid =
-	    xnshadow_register_interface("rtai",
-					RTAI_SKIN_MAGIC,
-					sizeof(__systab) / sizeof(__systab[0]),
-					__systab, NULL, THIS_MODULE);
+	__rtai_muxid = xnshadow_register_interface(&__props);
+
 	if (__rtai_muxid < 0)
 		return -ENOSYS;
 
