@@ -51,7 +51,7 @@ u_long tm_set(u_long date, u_long time, u_long ticks)
 		struct tm tm;
 		gettimeofday(&tv, NULL);
 		localtime_r(&tv.tv_sec, &tm);
-		date = (tm.tm_year << 16)|((tm.tm_mon + 1) << 8)|tm.tm_mday;
+		date = ((tm.tm_year + 1900) << 16)|((tm.tm_mon + 1) << 8)|tm.tm_mday;
 		time = (tm.tm_hour << 16)|(tm.tm_min << 8)|tm.tm_sec;
 		ticks = tv.tv_usec / ((__psos_sysinfo.tickval ?: 1) / 1000);
 	}
