@@ -632,10 +632,9 @@ int xnregistry_enter(const char *key,
 			 key,
 			 pnode ? pnode->type : "unknown type",
 			 err);
-	else
-		xnloginfo("registered object %s (%s)\n",
-			  key,
-			  pnode ? pnode->type : "unknown type");
+	else if (pnode)
+		xnloginfo("registered exported object %s (%s)\n",
+			  key, pnode->type);
 #endif
 
 	return err;
@@ -762,10 +761,9 @@ int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 		xnlogerr("FAILED to bind to object %s (%s), status %d\n",
 			 key, object->pnode ? object->pnode->type : "unknown type",
 			 err);
-	else
-		xnloginfo("bound to object %s (%s)\n",
-			  key,
-			  object->pnode ? object->pnode->type : "unknown type");
+	else if (object->pnode)
+		xnloginfo("bound to exported object %s (%s)\n",
+			  key, object->pnode->type);
 #endif
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -815,10 +813,12 @@ int xnregistry_remove(xnhandle_t handle)
 
 #if XENO_DEBUG(REGISTRY)
 	/* We must keep the lock and report early, when the object
-	 * slot is still valid. */
-	xnloginfo("unregistered object %s (%s)\n",
-		  object->key,
-		  object->pnode ? object->pnode->type : "unknown type");
+	 * slot is still valid. Note: we only report about exported
+	 * objects. */
+	if (object->pnode)
+		xnloginfo("unregistered exported object %s (%s)\n",
+			  object->key,
+			  object->pnode->type);
 #endif
 
 	registry_hash_remove(object);
