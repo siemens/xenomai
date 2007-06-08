@@ -1,5 +1,9 @@
 2007-06-08  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/psos+/syscalls.c: Add non-standard tm_getm() service
+	to retrieve the value of the monotonic clock (pure Xenomai
+	extension to ease portability of legacy code).
+
 	* ksrc/skins/psos+/rn.c (rn_delete): Return ERR_TATRNDEL after
 	deletion while waiters were still pending.
 

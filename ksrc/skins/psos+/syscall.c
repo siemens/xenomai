@@ -1050,6 +1050,26 @@ static int __tm_get(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
+ * u_long tm_getm(u_long_long *ns_r)
+ */
+
+static int __tm_getm(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnticks_t ns;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(ns)))
+		return -EFAULT;
+
+	ns = xntbase_get_jiffies(&nktbase); /* TSC converted to nanoseconds */
+
+	__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &ns,
+			  sizeof(ns));
+
+	return 0;
+}
+
+/*
  * u_long tm_set(u_long date, u_long time, u_long ticks)
  */
 
@@ -1392,6 +1412,7 @@ static xnsysent_t __systab[] = {
 	[__psos_tm_evwhen] = {&__tm_evwhen, __xn_exec_primary},
 	[__psos_tm_wkwhen] = {&__tm_wkwhen, __xn_exec_primary},
 	[__psos_tm_evevery] = {&__tm_evevery, __xn_exec_primary},
+	[__psos_tm_getm] = {&__tm_getm, __xn_exec_any},
 };
 
 extern xntbase_t *psos_tbase;
