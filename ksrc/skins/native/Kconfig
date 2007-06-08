@@ -44,7 +44,7 @@ config XENO_OPT_NATIVE_PIPE
 config XENO_OPT_NATIVE_PIPE_BUFSZ
 	int "Bytes in buffer space"
 	depends on XENO_OPT_NATIVE_PIPE
-	default 4096
+	default 1024
 	help
 	
 	This option sets the memory size available for per-pipe
