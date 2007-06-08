@@ -316,7 +316,7 @@ char *xnthread_symbolic_status(xnflags_t status, char *buf, int size);
 
 int *xnthread_get_errno_location(void);
 
-static inline xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t tsc)
+static inline xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t tsc_ns)
 {
 	xnticks_t timeout;
 	xntimer_t *timer;
@@ -338,9 +338,9 @@ static inline xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t tsc)
 	 * value. Obviously, this can't be a valid assumption for
 	 * aperiodic timers, which values are based on the hardware
 	 * TSC, and as such the current time will change regardless of
-	 * the interrupt state; for this reason, we use the "tsc"
-	 * input parameter the caller has passed us as the epoch value
-	 * instead.
+	 * the interrupt state; for this reason, we use the "tsc_ns"
+	 * input parameter (TSC converted to nanoseconds) the caller
+	 * has passed us as the epoch value instead.
 	 */
 
 	if (xntbase_periodic_p(xnthread_time_base(thread)))
@@ -348,10 +348,10 @@ static inline xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t tsc)
 
 	timeout = xntimer_get_date(timer);
 
-	if (timeout <= tsc)
+	if (timeout <= tsc_ns)
 		return 1;
 
-	return timeout - tsc;
+	return timeout - tsc_ns;
 }
 
 static inline xnticks_t xnthread_get_period(xnthread_t *thread)
