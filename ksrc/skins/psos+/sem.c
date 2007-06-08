@@ -187,8 +187,10 @@ u_long sm_delete(u_long smid)
 		goto unlock_and_exit;
 	}
 
-	if (sm_destroy_internal(sem) == XNSYNCH_RESCHED)
+	if (sm_destroy_internal(sem) == XNSYNCH_RESCHED) {
+		err = ERR_TATSDEL;
 		xnpod_schedule();
+	}
 
       unlock_and_exit:
 
