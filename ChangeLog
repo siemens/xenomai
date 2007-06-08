@@ -1,4 +1,15 @@
+2007-06-09  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/pipe.c (rt_pipe_create): Keep the
+	original alignment of the bytestreaming buffer size.
+
+	* ksrc/skins/native/Kconfig: Reduce the default value for
+	XENO_OPT_NATIVE_PIPE_BUFSZ from 4k to 1k.
+
 2007-06-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/thread.h (xnthread_get_timeout): Fix computation
+	when the target thread uses a periodic time base.
 
 	* ksrc/skins/psos+/syscalls.c: Add non-standard tm_getm() service
 	to retrieve the value of the monotonic clock (pure Xenomai
