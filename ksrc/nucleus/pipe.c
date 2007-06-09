@@ -1010,12 +1010,13 @@ static unsigned xnpipe_poll(struct file *file, poll_table * pt)
 
 	if (!emptyq_p(&state->outq))
 		r_mask |= (POLLIN | POLLRDNORM);
-
-	if (!r_mask)
-		/* Procs which have issued a timed out poll req will remain
-		   linked to the sleepers queue, and will be silently unlinked
-		   the next time the real-time kernel side kicks
-		   xnpipe_wakeup_proc. */
+	else
+		/*
+		 * Procs which have issued a timed out poll req will
+		 * remain linked to the sleepers queue, and will be
+		 * silently unlinked the next time the real-time
+		 * kernel side kicks xnpipe_wakeup_proc.
+		 */
 		xnpipe_enqueue_read(state);
 
 	/* a descriptor is always ready for writing with the current
