@@ -101,7 +101,7 @@ typedef struct rt_queue {
 
 #define rlink2queue(ln)	container_of(ln, RT_QUEUE, rlink)
 
-    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
 
 } RT_QUEUE;
 

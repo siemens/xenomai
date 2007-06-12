@@ -73,7 +73,7 @@ typedef struct rt_event {
 
 #define rlink2event(ln)	container_of(ln, RT_EVENT, rlink)
 
-    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
 
 } RT_EVENT;
 

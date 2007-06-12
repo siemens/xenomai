@@ -82,7 +82,7 @@ typedef struct rt_pipe {
 
 #define rlink2pipe(ln)		container_of(ln, RT_PIPE, rlink)
 
-    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
 
 } RT_PIPE;
 

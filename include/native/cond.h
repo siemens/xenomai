@@ -63,7 +63,7 @@ typedef struct rt_cond {
 
 #define rlink2cond(ln)		container_of(ln, RT_COND, rlink)
 
-    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
 
 } RT_COND;
 

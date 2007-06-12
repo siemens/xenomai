@@ -67,7 +67,7 @@ typedef struct __rt_mutex {
 
 #define rlink2mutex(ln)		container_of(ln, RT_MUTEX, rlink)
 
-    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
 
 } RT_MUTEX;
 

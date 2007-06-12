@@ -72,7 +72,7 @@ typedef struct rt_sem {
 
 #define rlink2sem(ln)		container_of(ln, RT_SEM, rlink)
 
-    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
 
 } RT_SEM;
 
