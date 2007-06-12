@@ -107,8 +107,7 @@ void psosqueue_cleanup(void)
 {
 	xnholder_t *holder;
 
-	while ((holder = getheadq(&psosqueueq)) != NULL)
-		q_destroy_internal(link2psosqueue(holder));
+	psos_queue_flush_rq(&__psos_global_rholder.qq);
 
 	while ((holder = getq(&psoschunkq)) != NULL)
 		xnfree(holder);
@@ -181,7 +180,7 @@ static psosmbuf_t *get_mbuf(psosqueue_t *queue, u_long msglen)
 	return mbuf;
 }
 
-static u_long q_create_internal(const char name[4],
+static u_long q_create_internal(const char *name,
 				u_long maxnum,
 				u_long maxlen, u_long flags, u_long *qid)
 {
@@ -263,13 +262,12 @@ static u_long q_create_internal(const char name[4],
 	xnsynch_init(&queue->synchbase, bflags);
 
 	queue->magic = PSOS_QUEUE_MAGIC;
-	queue->name[0] = name[0];
-	queue->name[1] = name[1];
-	queue->name[2] = name[2];
-	queue->name[3] = name[3];
-	queue->name[4] = '\0';
+	xnobject_copy_name(queue->name, name);
 
+	inith(&queue->rlink);
+	queue->rqueue = &psos_get_rholder()->qq;
 	xnlock_get_irqsave(&nklock, s);
+	appendq(queue->rqueue, &queue->rlink);
 	appendq(&psosqueueq, &queue->link);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -279,8 +277,7 @@ static u_long q_create_internal(const char name[4],
 		u_long err;
 
 		if (!*name)
-			/* > 4 bytes: won't be reachable by q_ident() on purpose. */
-			sprintf(queue->name, "anon%lu", msgq_ids++);
+			sprintf(queue->name, "anon_q%lu", msgq_ids++);
 
 		err = xnregistry_enter(queue->name, queue, &queue->handle, &msgq_pnode);
 
@@ -314,11 +311,13 @@ static u_long q_destroy_internal(psosqueue_t *queue)
 		err = SUCCESS;
 
 	flags = queue->synchbase.status;
+	removeq(queue->rqueue, &queue->rlink);
 	psos_mark_deleted(queue);
 	xnsynch_destroy(&queue->synchbase);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
-	xnregistry_remove(queue->handle);
+	if (queue->handle)
+		xnregistry_remove(queue->handle);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	if (testbits(flags, Q_NOCACHE)) {
@@ -632,7 +631,7 @@ static u_long q_broadcast_internal(u_long qid,
 	return err;
 }
 
-static u_long q_ident_internal(const char name[4],
+static u_long q_ident_internal(const char *name,
 			       u_long flags, u_long node, u_long *qid)
 {
 	u_long err = SUCCESS;
@@ -652,9 +651,7 @@ static u_long q_ident_internal(const char name[4],
 	     holder; holder = nextq(&psosqueueq, holder)) {
 		queue = link2psosqueue(holder);
 
-		if (queue->name[0] == name[0] &&
-		    queue->name[1] == name[1] &&
-		    queue->name[2] == name[2] && queue->name[3] == name[3]) {
+		if (!strcmp(queue->name, name)) {
 			if (((flags & Q_VARIABLE) &&
 			     testbits(queue->synchbase.status, Q_VARIABLE)) ||
 			    (!(flags & Q_VARIABLE) &&
@@ -674,14 +671,14 @@ static u_long q_ident_internal(const char name[4],
 	return err;
 }
 
-u_long q_create(const char name[4], u_long maxnum, u_long flags, u_long *qid)
+u_long q_create(const char *name, u_long maxnum, u_long flags, u_long *qid)
 {
 	return q_create_internal(name,
 				 maxnum,
 				 sizeof(u_long[4]), flags & ~Q_VARIABLE, qid);
 }
 
-u_long q_vcreate(const char name[4],
+u_long q_vcreate(const char *name,
 		 u_long flags, u_long maxnum, u_long maxlen, u_long *qid)
 {
 	return q_create_internal(name, maxnum, maxlen, flags | Q_VARIABLE, qid);
@@ -697,12 +694,12 @@ u_long q_vdelete(u_long qid)
 	return q_delete_internal(qid, Q_VARIABLE);
 }
 
-u_long q_ident(const char name[4], u_long node, u_long *qid)
+u_long q_ident(const char *name, u_long node, u_long *qid)
 {
 	return q_ident_internal(name, 0, node, qid);
 }
 
-u_long q_vident(const char name[4], u_long node, u_long *qid)
+u_long q_vident(const char *name, u_long node, u_long *qid)
 {
 	return q_ident_internal(name, Q_VARIABLE, node, qid);
 }

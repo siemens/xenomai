@@ -20,8 +20,9 @@
 #ifndef _psos_rn_h
 #define _psos_rn_h
 
-#include "psos+/defs.h"
-#include "psos+/psos.h"
+#include <psos+/defs.h>
+#include <psos+/psos.h>
+#include <psos+/ppd.h>
 
 #define PSOS_RN_MAGIC 0x81810505
 
@@ -32,9 +33,9 @@
 
 typedef struct psosrn {
 
-    unsigned magic;   /* Magic code - must be first */
+    unsigned magic;		/* Magic code - must be first */
 
-    xnholder_t link;  /* Link in psosrnq */
+    xnholder_t link;		/* Link in psosrnq */
 
 #define link2psosrn(laddr) \
 ((psosrn_t *)(((char *)laddr) - (int)(&((psosrn_t *)0)->link)))
@@ -50,13 +51,19 @@ typedef struct psosrn {
     caddr_t mapbase;		/* !< Region mapping in creator's address space. */
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-    u_long rnsize;	/* Adjusted region size */
+    u_long rnsize;		/* Adjusted region size */
 
-    u_long usize;	/* Aligned allocation unit size */
+    u_long usize;		/* Aligned allocation unit size */
 
-    xnsynch_t synchbase; /* Synchronization object to pend on */
+    xnsynch_t synchbase;	/* Synchronization object to pend on */
 
-    xnheap_t heapbase;	/* Nucleus heap */
+    xnheap_t heapbase;		/* Nucleus heap */
+
+    xnholder_t rlink;		/* !< Link in resource queue. */
+
+#define rlink2rn(ln)		container_of(ln, psosrn_t, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
 
 } psosrn_t;
 
@@ -67,6 +74,11 @@ extern "C" {
 int psosrn_init(u_long rn0size);
 
 void psosrn_cleanup(void);
+
+static inline void psos_rn_flush_rq(xnqueue_t *rq)
+{
+	psos_flush_rq(psosrn_t, rq, rn);
+}
 
 #ifdef __cplusplus
 }

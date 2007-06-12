@@ -53,7 +53,7 @@ static void psostask_delete_hook(xnthread_t *thread)
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	if (xnthread_handle(thread) != XN_NO_HANDLE)
-	    xnregistry_remove(xnthread_handle(thread));
+		xnregistry_remove(xnthread_handle(thread));
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	task = thread2psostask(thread);
@@ -87,13 +87,12 @@ void psostask_cleanup(void)
 	xnpod_remove_hook(XNHOOK_THREAD_DELETE, psostask_delete_hook);
 }
 
-u_long t_create(const char name[4],
+u_long t_create(const char *name,
 		u_long prio,
 		u_long sstack, u_long ustack, u_long flags, u_long *tid_r)
 {
 	xnflags_t bflags = 0;
 	psostask_t *task;
-	char aname[5];
 	spl_t s;
 	int n;
 
@@ -105,19 +104,13 @@ u_long t_create(const char name[4],
 	if (prio > 255)
 		return ERR_PRIOR;
 
-	aname[0] = name[0];
-	aname[1] = name[1];
-	aname[2] = name[2];
-	aname[3] = name[3];
-	aname[4] = '\0';
-
 	task = (psostask_t *)xnmalloc(sizeof(*task));
 
 	if (!task)
 		return ERR_NOTCB;
 
 	if (flags & T_FPU)
-	    bflags |= XNFPU;
+		bflags |= XNFPU;
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (flags & T_SHADOW)
@@ -131,12 +124,12 @@ u_long t_create(const char name[4],
 		return ERR_TINYSTK;
 	}
 
-	if (*aname)
-		xnobject_copy_name(task->name, aname);
+	if (name && *name)
+		xnobject_copy_name(task->name, name);
 	else
 		/* i.e. Anonymous object which must be accessible from
 		   user-space. */
-		sprintf(task->name, "anon%lu", psos_task_ids++);
+		sprintf(task->name, "anon_task%lu", psos_task_ids++);
 
 	if (xnpod_init_thread(&task->threadbase, psos_tbase,
 			      task->name, prio, bflags, ustack, &psos_task_ops) != 0) {
@@ -175,7 +168,7 @@ u_long t_create(const char name[4],
 	}
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-	xnarch_create_display(&task->threadbase, aname, psostask);
+	xnarch_create_display(&task->threadbase, task->name, psostask);
 
 	return SUCCESS;
 }
@@ -244,7 +237,7 @@ u_long t_start(u_long tid,
 				   XNPOD_ALL_CPUS, &psostask_trampoline, task);
 	}
 
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -284,7 +277,7 @@ u_long t_restart(u_long tid, u_long targs[])
 
 	xnpod_restart_thread(&task->threadbase);
 
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -318,14 +311,14 @@ u_long t_delete(u_long tid)
 
 	xnpod_delete_thread(&task->threadbase);
 
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
 }
 
-u_long t_ident(const char name[4], u_long node, u_long *tid_r)
+u_long t_ident(const char *name, u_long node, u_long *tid_r)
 {
 	u_long err = SUCCESS;
 	xnholder_t *holder;
@@ -348,10 +341,7 @@ u_long t_ident(const char name[4], u_long node, u_long *tid_r)
 	     holder; holder = nextq(&psostaskq, holder)) {
 		task = link2psostask(holder);
 
-		if (task->threadbase.name[0] == name[0] &&
-		    task->threadbase.name[1] == name[1] &&
-		    task->threadbase.name[2] == name[2] &&
-		    task->threadbase.name[3] == name[3]) {
+		if (!strcmp(task->name, name)) {
 			*tid_r = (u_long)task;
 			goto unlock_and_exit;
 		}
@@ -359,7 +349,7 @@ u_long t_ident(const char name[4], u_long node, u_long *tid_r)
 
 	err = ERR_OBJNF;
 
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -380,10 +370,10 @@ u_long t_mode(u_long clrmask, u_long setmask, u_long *oldmode)
 	task = psos_current_task();
 
 	*oldmode =
-	    xeno_mode_to_psos(xnpod_set_thread_mode
-			      (&task->threadbase,
-			       psos_mode_to_xeno(clrmask),
-			       psos_mode_to_xeno(setmask)));
+		xeno_mode_to_psos(xnpod_set_thread_mode
+				  (&task->threadbase,
+				   psos_mode_to_xeno(clrmask),
+				   psos_mode_to_xeno(setmask)));
 	*oldmode |= ((task->threadbase.imask & 0x7) << 8);
 
 	/* Reschedule in case the scheduler has been unlocked. */
@@ -418,7 +408,7 @@ u_long t_getreg(u_long tid, u_long regnum, u_long *regvalue)
 
 	*regvalue = task->notepad[regnum];
 
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -461,7 +451,7 @@ u_long t_resume(u_long tid)
 	xnpod_resume_thread(&task->threadbase, XNSUSP);
 	xnpod_schedule();
 
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -481,7 +471,7 @@ u_long t_suspend(u_long tid)
 		xnpod_suspend_self();
 
 		if (xnthread_test_info(&psos_current_task()->threadbase, XNBREAK))
-		    return -EINTR;
+			return -EINTR;
 
 		return SUCCESS;
 	}
@@ -505,7 +495,7 @@ u_long t_suspend(u_long tid)
 	if (xnthread_test_info(&task->threadbase, XNBREAK))
 		err = -EINTR;
 
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -530,7 +520,7 @@ u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio)
 
 		if (!task) {
 			err =
-			    psos_handle_error(tid, PSOS_TASK_MAGIC, psostask_t);
+				psos_handle_error(tid, PSOS_TASK_MAGIC, psostask_t);
 			goto unlock_and_exit;
 		}
 	}
@@ -549,7 +539,7 @@ u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio)
 		}
 	}
 
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -586,7 +576,7 @@ u_long t_setreg(u_long tid, u_long regnum, u_long regvalue)
 
 	task->notepad[regnum] = regvalue;
 
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 

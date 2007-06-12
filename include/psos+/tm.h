@@ -20,8 +20,8 @@
 #ifndef _psos_tm_h
 #define _psos_tm_h
 
-#include "psos+/defs.h"
-#include "psos+/psos.h"
+#include <psos+/defs.h>
+#include <psos+/psos.h>
 
 #define PSOS_TM_MAGIC 0x81810505
 

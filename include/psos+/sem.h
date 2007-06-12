@@ -20,16 +20,17 @@
 #ifndef _psos_sem_h
 #define _psos_sem_h
 
-#include "psos+/defs.h"
-#include "psos+/psos.h"
+#include <psos+/defs.h>
+#include <psos+/psos.h>
+#include <psos+/ppd.h>
 
 #define PSOS_SEM_MAGIC 0x81810202
 
 typedef struct psossem {
 
-    unsigned magic;   /* Magic code - must be first */
+    unsigned magic;		/* Magic code - must be first */
 
-    xnholder_t link;  /* Link in psossemq */
+    xnholder_t link;		/* Link in psossemq */
 
 #define link2psossem(laddr) \
 ((psossem_t *)(((char *)laddr) - (int)(&((psossem_t *)0)->link)))
@@ -42,7 +43,13 @@ typedef struct psossem {
 
     xnsynch_t synchbase;
 
-    unsigned count;   /* Available resource count */
+    unsigned count;		/* Available resource count */
+
+    xnholder_t rlink;		/* !< Link in resource queue. */
+
+#define rlink2sm(ln)		container_of(ln, psossem_t, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
 
 } psossem_t;
 
@@ -53,6 +60,11 @@ extern "C" {
 void psossem_init(void);
 
 void psossem_cleanup(void);
+
+static inline void psos_sem_flush_rq(xnqueue_t *rq)
+{
+	psos_flush_rq(psossem_t, rq, sm);
+}
 
 #ifdef __cplusplus
 }

@@ -21,8 +21,6 @@
 #include <psos+/task.h>
 #include <psos+/tm.h>
 
-static xnqueue_t psostimerq;
-
 static const u_long tm_secbyday = 24 * 60 * 60;
 
 static const u_long tm_secbyhour = 60 * 60;
@@ -31,30 +29,27 @@ static const u_long tm_secbymin = 60;
 
 void psostm_init(void)
 {
-	initq(&psostimerq);
 }
 
 void psostm_cleanup(void)
 {
-
-	xnholder_t *holder;
-
-	while ((holder = getheadq(&psostimerq)) != NULL)
-		tm_destroy_internal(link2psostm(holder));
 }
 
 void tm_destroy_internal(psostm_t *tm)
 {
 	spl_t s;
 
+	/* Internal timers are automatically removed by exiting tasks,
+	 * so we don't need any resource cleanup handling here. */
+
 	xnlock_get_irqsave(&nklock, s);
 	removegq(&tm->owner->alarmq, tm);
 	xntimer_destroy(&tm->timerbase);
 #ifdef CONFIG_XENO_OPT_REGISTRY
-	xnregistry_remove(tm->handle);
+	if (tm->handle)
+		xnregistry_remove(tm->handle);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 	psos_mark_deleted(tm);
-	removeq(&psostimerq, &tm->link);
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnfree(tm);
@@ -90,7 +85,6 @@ static u_long tm_start_event_timer(u_long ticks,
 	tm->magic = PSOS_TM_MAGIC;
 
 	xnlock_get_irqsave(&nklock, s);
-	appendq(&psostimerq, &tm->link);
 	appendgq(&tm->owner->alarmq, tm);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -99,7 +93,7 @@ static u_long tm_start_event_timer(u_long ticks,
 		static unsigned long tm_ids;
 		u_long err;
 
-		sprintf(tm->name, "anon%lu", tm_ids++);
+		sprintf(tm->name, "anon_tm%lu", tm_ids++);
 
 		err = xnregistry_enter(tm->name, tm, &tm->handle, 0);
 
@@ -229,7 +223,7 @@ u_long tm_wkafter(u_long ticks)
 	if (ticks > 0) {
 		xnpod_delay(ticks);
 		if (xnthread_test_info(&psos_current_task()->threadbase, XNBREAK))
-		    return -EINTR;
+			return -EINTR;
 	}
 	else
 		xnpod_yield();	/* Perform manual round-robin */
@@ -270,7 +264,7 @@ u_long tm_cancel(u_long tmid)
 
 	tm_destroy_internal(tm);
 
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -332,7 +326,7 @@ u_long tm_wkwhen(u_long date, u_long time, u_long ticks)
 	xnpod_delay(when - now);
 
 	if (xnthread_test_info(&psos_current_task()->threadbase, XNBREAK))
-	    return -EINTR;
+		return -EINTR;
 
 	return SUCCESS;
 }
@@ -355,7 +349,7 @@ u_long tm_set(u_long date, u_long time, u_long ticks)
 	err = tm_date_to_ticks(date, time, ticks, &when);
 
 	if (err == SUCCESS)
-	    nkpod->svctable.settime(psos_tbase, when);
+		nkpod->svctable.settime(psos_tbase, when);
 
 	return err;
 }

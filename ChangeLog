@@ -1,3 +1,22 @@
+2007-06-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* Makefile.am (sudo): Try to better guess what the user can really
+	do as a sudoer when installing.
+
+	* ksrc/skins/psos+: Add auto-cleanup support (automatic orphan
+	resource/object reclaiming upon task/module exit).
+
+	* ksrc/skins/psos+: Lift the limitation on name length for pSOS
+	objects. Enforcing silly things is definitely not part of a proper
+	emulation.
+	
+2007-06-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.19-1.5-02.
+
+	* ksrc/skins/psos+/Kconfig: Select XENO_OPT_REGISTRY if
+	XENO_OPT_PERVASIVE.
+
 2007-06-09  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/pipe.c (rt_pipe_create): Keep the

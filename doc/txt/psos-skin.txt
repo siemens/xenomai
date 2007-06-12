@@ -80,6 +80,12 @@ for an internal timer from the nucleus heap.
 
 * rn_retseg() does not check for the ERR_SEGFREE condition.
 
+* The original 4-byte length limitation for pSOS object names have
+been lifted by the emulator. Named pSOS objects may be given longer
+names. For this reason, routine prototypes for object creation have
+been changed to reflect the fact that arbitrary long names may be
+passed.
+
 * pSOS system calls invoked from user-space might return negative
 POSIX error codes under certain conditions, along with the standard
 positive pSOS codes. Make sure to always check error status codes
