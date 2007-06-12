@@ -22,6 +22,7 @@
 
 #include <psos+/defs.h>
 #include <psos+/psos.h>
+#include <psos+/ppd.h>
 
 #define PSOS_QUEUE_MAGIC 0x81810303
 
@@ -73,8 +74,14 @@ typedef struct psosqueue {
     u_long maxnum,
 	   maxlen;
 
-    xnqueue_t inq,	/* Incoming message queue */
-	      freeq;	/* Free (cache) message queue */
+    xnqueue_t inq,		/* Incoming message queue */
+	      freeq;		/* Free (cache) message queue */
+
+    xnholder_t rlink;		/* !< Link in resource queue. */
+
+#define rlink2q(ln)		container_of(ln, psosqueue_t, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
 
 } psosqueue_t;
 
@@ -85,6 +92,11 @@ extern "C" {
 void psosqueue_init(void);
 
 void psosqueue_cleanup(void);
+
+static inline void psos_queue_flush_rq(xnqueue_t *rq)
+{
+	psos_flush_rq(psosqueue_t, rq, q);
+}
 
 #ifdef __cplusplus
 }

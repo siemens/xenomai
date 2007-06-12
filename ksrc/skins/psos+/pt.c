@@ -28,14 +28,10 @@ void psospt_init(void)
 
 void psospt_cleanup(void)
 {
-
-	xnholder_t *holder;
-
-	while ((holder = getq(&psosptq)) != NULL)
-		psos_mark_deleted(link2psospt(holder));
+	psos_pt_flush_rq(&__psos_global_rholder.ptq);
 }
 
-u_long pt_create(const char name[4], void *paddr, void *laddr,	/* unused */
+u_long pt_create(const char *name, void *paddr, void *laddr,	/* unused */
 		 u_long psize,
 		 u_long bsize, u_long flags, u_long *ptid, u_long *nbuf)
 {
@@ -61,11 +57,7 @@ u_long pt_create(const char name[4], void *paddr, void *laddr,	/* unused */
 	pt = (psospt_t *)paddr;
 	inith(&pt->link);
 
-	pt->name[0] = name[0];
-	pt->name[1] = name[1];
-	pt->name[2] = name[2];
-	pt->name[3] = name[3];
-	pt->name[4] = '\0';
+	xnobject_copy_name(pt->name, name);
 	pt->flags = flags;
 	pt->bsize = (bsize + pt_align_mask) & ~pt_align_mask;
 
@@ -94,7 +86,10 @@ u_long pt_create(const char name[4], void *paddr, void *laddr,	/* unused */
 
 	pt->magic = PSOS_PT_MAGIC;
 
+	inith(&pt->rlink);
+	pt->rqueue = &psos_get_rholder()->ptq;
 	xnlock_get_irqsave(&nklock, s);
+	appendq(pt->rqueue, &pt->rlink);
 	appendq(&psosptq, &pt->link);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -124,6 +119,7 @@ u_long pt_delete(u_long ptid)
 		goto unlock_and_exit;
 	}
 
+	removeq(pt->rqueue, &pt->rlink);
 	psos_mark_deleted(pt);
 	removeq(&psosptq, &pt->link);
 
@@ -207,7 +203,7 @@ u_long pt_retbuf(u_long ptid, void *buf)
 	return err;
 }
 
-u_long pt_ident(const char name[4], u_long node, u_long *ptid)
+u_long pt_ident(const char *name, u_long node, u_long *ptid)
 {
 	u_long err = SUCCESS;
 	xnholder_t *holder;
@@ -223,9 +219,7 @@ u_long pt_ident(const char name[4], u_long node, u_long *ptid)
 	     holder = nextq(&psosptq, holder)) {
 		pt = link2psospt(holder);
 
-		if (pt->name[0] == name[0] &&
-		    pt->name[1] == name[1] &&
-		    pt->name[2] == name[2] && pt->name[3] == name[3]) {
+		if (!strcmp(pt->name, name)) {
 			*ptid = (u_long)pt;
 			goto unlock_and_exit;
 		}

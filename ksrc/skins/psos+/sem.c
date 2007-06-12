@@ -97,14 +97,10 @@ void psossem_init(void)
 
 void psossem_cleanup(void)
 {
-
-	xnholder_t *holder;
-
-	while ((holder = getheadq(&psossemq)) != NULL)
-		sm_destroy_internal(link2psossem(holder));
+	psos_sem_flush_rq(&__psos_global_rholder.smq);
 }
 
-u_long sm_create(const char name[4], u_long icount, u_long flags, u_long *smid)
+u_long sm_create(const char *name, u_long icount, u_long flags, u_long *smid)
 {
 	psossem_t *sem;
 	int bflags = 0;
@@ -123,13 +119,12 @@ u_long sm_create(const char name[4], u_long icount, u_long flags, u_long *smid)
 	inith(&sem->link);
 	sem->count = icount;
 	sem->magic = PSOS_SEM_MAGIC;
-	sem->name[0] = name[0];
-	sem->name[1] = name[1];
-	sem->name[2] = name[2];
-	sem->name[3] = name[3];
-	sem->name[4] = '\0';
+	xnobject_copy_name(sem->name, name);
 
+	inith(&sem->rlink);
+	sem->rqueue = &psos_get_rholder()->smq;
 	xnlock_get_irqsave(&nklock, s);
+	appendq(sem->rqueue, &sem->rlink);
 	appendq(&psossemq, &sem->link);
 	xnlock_put_irqrestore(&nklock, s);
 #ifdef CONFIG_XENO_OPT_REGISTRY
@@ -138,8 +133,7 @@ u_long sm_create(const char name[4], u_long icount, u_long flags, u_long *smid)
 		u_long err;
 
 		if (!*name)
-			/* > 4 bytes: won't be reachable by sm_ident() on purpose. */
-			sprintf(sem->name, "anon%lu", sem_ids++);
+			sprintf(sem->name, "anon_sem%lu", sem_ids++);
 
 		err = xnregistry_enter(sem->name, sem, &sem->handle, &sem_pnode);
 
@@ -160,10 +154,12 @@ static int sm_destroy_internal(psossem_t *sem)
 {
 	int rc;
 
+	removeq(sem->rqueue, &sem->rlink);
 	removeq(&psossemq, &sem->link);
 	rc = xnsynch_destroy(&sem->synchbase);
 #ifdef CONFIG_XENO_OPT_REGISTRY
-	xnregistry_remove(sem->handle);
+	if (sem->handle)
+		xnregistry_remove(sem->handle);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 	psos_mark_deleted(sem);
 
@@ -199,7 +195,7 @@ u_long sm_delete(u_long smid)
 	return err;
 }
 
-u_long sm_ident(const char name[4], u_long node, u_long *smid)
+u_long sm_ident(const char *name, u_long node, u_long *smid)
 {
 	u_long err = SUCCESS;
 	xnholder_t *holder;
@@ -215,9 +211,7 @@ u_long sm_ident(const char name[4], u_long node, u_long *smid)
 	     holder; holder = nextq(&psossemq, holder)) {
 		sem = link2psossem(holder);
 
-		if (sem->name[0] == name[0] &&
-		    sem->name[1] == name[1] &&
-		    sem->name[2] == name[2] && sem->name[3] == name[3]) {
+		if (!strcmp(sem->name, name)) {
 			*smid = (u_long)sem;
 			goto unlock_and_exit;
 		}

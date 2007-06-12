@@ -4,6 +4,7 @@ includesub_HEADERS = \
 	asr.h \
 	defs.h \
 	event.h \
+	ppd.h \
 	psos.h \
 	pt.h \
 	queue.h \

@@ -123,11 +123,7 @@ int psosrn_init(u_long rn0size)
 
 void psosrn_cleanup(void)
 {
-
-	xnholder_t *holder;
-
-	while ((holder = getheadq(&psosrnq)) != NULL)
-		rn_destroy_internal(link2psosrn(holder));
+	psos_rn_flush_rq(&__psos_global_rholder.rnq);
 
 	if (rn0addr)
 		xnfree(rn0addr);
@@ -137,11 +133,13 @@ static int rn_destroy_internal(psosrn_t *rn)
 {
 	int rc;
 
+	removeq(rn->rqueue, &rn->rlink);
 	removeq(&psosrnq, &rn->link);
 	rc = xnsynch_destroy(&rn->synchbase);
 	psos_mark_deleted(rn);
 #ifdef CONFIG_XENO_OPT_REGISTRY
-	xnregistry_remove(rn->handle);
+	if (rn->handle)
+		xnregistry_remove(rn->handle);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnheap_mapped_p(&rn->heapbase))
@@ -149,12 +147,13 @@ static int rn_destroy_internal(psosrn_t *rn)
 	else
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 		xnheap_destroy(&rn->heapbase, NULL, NULL);
+
 	xnfree(rn);
 
 	return rc;
 }
 
-u_long rn_create(const char name[4],
+u_long rn_create(const char *name,
 		 void *rnaddr,
 		 u_long rnsize,
 		 u_long usize, u_long flags, u_long *rnid, u_long *allocsize)
@@ -206,16 +205,15 @@ u_long rn_create(const char name[4],
 	inith(&rn->link);
 	rn->rnsize = rnsize;
 	rn->usize = usize;
-	rn->name[0] = name[0];
-	rn->name[1] = name[1];
-	rn->name[2] = name[2];
-	rn->name[3] = name[3];
-	rn->name[4] = '\0';
+	xnobject_copy_name(rn->name, name);
 
 	xnsynch_init(&rn->synchbase, bflags);
 	rn->magic = PSOS_RN_MAGIC;
 
+	inith(&rn->rlink);
+	rn->rqueue = &psos_get_rholder()->rnq;
 	xnlock_get_irqsave(&nklock, s);
+	appendq(rn->rqueue, &rn->rlink);
 	appendq(&psosrnq, &rn->link);
 	xnlock_put_irqrestore(&nklock, s);
 #ifdef CONFIG_XENO_OPT_REGISTRY
@@ -224,8 +222,7 @@ u_long rn_create(const char name[4],
 		u_long err;
 
 		if (!*name)
-			/* > 4 bytes: won't be reachable by rn_ident() on purpose. */
-			sprintf(rn->name, "anon%lu", rn_ids++);
+			sprintf(rn->name, "anon_rn%lu", rn_ids++);
 
 		err = xnregistry_enter(rn->name, rn, &rn->handle, &rn_pnode);
 
@@ -340,7 +337,7 @@ u_long rn_getseg(u_long rnid,
 	return err;
 }
 
-u_long rn_ident(const char name[4], u_long *rnid)
+u_long rn_ident(const char *name, u_long *rnid)
 {
 	u_long err = SUCCESS;
 	xnholder_t *holder;
@@ -353,9 +350,7 @@ u_long rn_ident(const char name[4], u_long *rnid)
 	     holder = nextq(&psosrnq, holder)) {
 		rn = link2psosrn(holder);
 
-		if (rn->name[0] == name[0] &&
-		    rn->name[1] == name[1] &&
-		    rn->name[2] == name[2] && rn->name[3] == name[3]) {
+		if (!strcmp(rn->name, name)) {
 			*rnid = (u_long)rn;
 			goto unlock_and_exit;
 		}

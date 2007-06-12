@@ -20,8 +20,9 @@
 #ifndef _psos_pt_h
 #define _psos_pt_h
 
-#include "psos+/defs.h"
-#include "psos+/psos.h"
+#include <psos+/defs.h>
+#include <psos+/psos.h>
+#include <psos+/ppd.h>
 
 #define PSOS_PT_MAGIC 0x81810404
 
@@ -55,19 +56,25 @@ typedef struct psospt {
 
     u_long flags;
 
-    u_long bsize;	/* (Aligned) Block size */
+    u_long bsize;		/* (Aligned) Block size */
 
-    u_long psize;	/* Size of storage space */
+    u_long psize;		/* Size of storage space */
 
-    u_long nblks;	/* Number of data blocks */
+    u_long nblks;		/* Number of data blocks */
 
-    u_long ublks;	/* Number of used blocks */
+    u_long ublks;		/* Number of used blocks */
 
-    void *freelist;	/* Free block list head */
+    void *freelist;		/* Free block list head */
 
-    char *data;		/* Pointer to the user space behind the bitmap */
+    char *data;			/* Pointer to the user space behind the bitmap */
 
-    u_long bitmap[1];	/* Start of bitmap -- keeps alignment */
+    u_long bitmap[1];		/* Start of bitmap -- keeps alignment */
+
+    xnholder_t rlink;		/* !< Link in resource queue. */
+
+#define rlink2pt(ln)		container_of(ln, psospt_t, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
 
 } psospt_t;
 
@@ -78,6 +85,11 @@ extern "C" {
 void psospt_init(void);
 
 void psospt_cleanup(void);
+
+static inline void psos_pt_flush_rq(xnqueue_t *rq)
+{
+	psos_flush_rq(psospt_t, rq, pt);
+}
 
 #ifdef __cplusplus
 }

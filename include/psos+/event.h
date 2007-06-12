@@ -20,8 +20,8 @@
 #ifndef _psos_event_h
 #define _psos_event_h
 
-#include "psos+/defs.h"
-#include "psos+/psos.h"
+#include <psos+/defs.h>
+#include <psos+/psos.h>
 
 typedef struct psosevent {
 

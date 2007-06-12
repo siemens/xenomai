@@ -46,6 +46,8 @@ MODULE_PARM_DESC(time_slice, "Default time slice (in ticks)");
 
 xntbase_t *psos_tbase;
 
+psos_rholder_t __psos_global_rholder;
+
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 xnptree_t __psos_ptree = {
 
@@ -63,6 +65,11 @@ void k_fatal(u_long err_code, u_long flags)
 int SKIN_INIT(psos)
 {
 	int err;
+
+	initq(&__psos_global_rholder.smq);
+	initq(&__psos_global_rholder.qq);
+	initq(&__psos_global_rholder.ptq);
+	initq(&__psos_global_rholder.rnq);
 
 	err = xnpod_init();
 
