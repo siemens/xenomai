@@ -1,7 +1,21 @@
-+ diff -u linux-2.6.19/arch/powerpc/kernel/idle.c.ORIG linux-2.6.19/arch/powerpc/kernel/idle.c
---- linux-2.6.19/arch/powerpc/kernel/idle.c.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/powerpc/kernel/idle.c	2006-12-13 14:01:45.577981740 +0100
-@@ -51,6 +51,7 @@
+diff -uNrp ../vanilla/linux-2.6.19/Makefile 2.6.19-ppc-1.5-02/Makefile
+--- ../vanilla/linux-2.6.19/Makefile	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/Makefile	2007-06-11 17:15:47.000000000 +0200
+@@ -491,6 +491,10 @@ endif
+ 
+ include $(srctree)/arch/$(ARCH)/Makefile
+ 
++ifdef CONFIG_IPIPE_TRACE_MCOUNT
++CFLAGS          += -pg
++endif
++
+ ifdef CONFIG_FRAME_POINTER
+ CFLAGS		+= -fno-omit-frame-pointer $(call cc-option,-fno-optimize-sibling-calls,)
+ else
+diff -uNrp ../vanilla/linux-2.6.19/arch/powerpc/kernel/idle.c 2.6.19-ppc-1.5-02/arch/powerpc/kernel/idle.c
+--- ../vanilla/linux-2.6.19/arch/powerpc/kernel/idle.c	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/powerpc/kernel/idle.c	2007-06-11 17:15:47.000000000 +0200
+@@ -51,6 +51,7 @@ void cpu_idle(void)
  	while (1) {
  		while (!need_resched() && !cpu_should_die()) {
  			ppc64_runlatch_off();
@@ -9,7 +23,7 @@
  
  			if (ppc_md.power_save) {
  				clear_thread_flag(TIF_POLLING_NRFLAG);
-@@ -59,13 +60,21 @@
+@@ -59,13 +60,21 @@ void cpu_idle(void)
  				 * is ordered w.r.t. need_resched() test.
  				 */
  				smp_mb();
@@ -31,9 +45,9 @@
  				set_thread_flag(TIF_POLLING_NRFLAG);
  
  			} else {
-+ diff -u linux-2.6.19/arch/powerpc/kernel/irq.c.ORIG linux-2.6.19/arch/powerpc/kernel/irq.c
---- linux-2.6.19/arch/powerpc/kernel/irq.c.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/powerpc/kernel/irq.c	2006-12-13 14:01:45.582981152 +0100
+diff -uNrp ../vanilla/linux-2.6.19/arch/powerpc/kernel/irq.c 2.6.19-ppc-1.5-02/arch/powerpc/kernel/irq.c
+--- ../vanilla/linux-2.6.19/arch/powerpc/kernel/irq.c	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/powerpc/kernel/irq.c	2007-06-11 17:15:47.000000000 +0200
 @@ -69,7 +69,11 @@
  #endif
  
@@ -46,9 +60,21 @@
  
  #ifdef CONFIG_PPC32
  EXPORT_SYMBOL(__irq_offset_value);
-+ diff -u linux-2.6.19/arch/ppc/boot/Makefile.ORIG linux-2.6.19/arch/ppc/boot/Makefile
---- linux-2.6.19/arch/ppc/boot/Makefile.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/ppc/boot/Makefile	2006-12-13 14:01:45.586980682 +0100
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/Kconfig 2.6.19-ppc-1.5-02/arch/ppc/Kconfig
+--- ../vanilla/linux-2.6.19/arch/ppc/Kconfig	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/Kconfig	2007-06-11 17:15:47.000000000 +0200
+@@ -950,6 +950,8 @@ config NR_CPUS
+ 	depends on SMP
+ 	default "4"
+ 
++source "kernel/ipipe/Kconfig"
++
+ config HIGHMEM
+ 	bool "High memory support"
+ 
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/boot/Makefile 2.6.19-ppc-1.5-02/arch/ppc/boot/Makefile
+--- ../vanilla/linux-2.6.19/arch/ppc/boot/Makefile	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/boot/Makefile	2007-06-11 17:15:47.000000000 +0200
 @@ -16,6 +16,14 @@
  CFLAGS	 	+= -fno-builtin -D__BOOTER__ -Iarch/$(ARCH)/boot/include
  HOSTCFLAGS	+= -Iarch/$(ARCH)/boot/include
@@ -64,22 +90,22 @@
  BOOT_TARGETS	= zImage zImage.initrd znetboot znetboot.initrd
  
  bootdir-y			:= simple
-+ diff -u linux-2.6.19/arch/ppc/Kconfig.ORIG linux-2.6.19/arch/ppc/Kconfig
---- linux-2.6.19/arch/ppc/Kconfig.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/ppc/Kconfig	2006-12-13 14:01:45.591980094 +0100
-@@ -950,6 +950,8 @@
- 	depends on SMP
- 	default "4"
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/kernel/Makefile 2.6.19-ppc-1.5-02/arch/ppc/kernel/Makefile
+--- ../vanilla/linux-2.6.19/arch/ppc/kernel/Makefile	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/kernel/Makefile	2007-06-11 17:15:47.000000000 +0200
+@@ -17,6 +17,8 @@ obj-$(CONFIG_PCI)		+= pci.o
+ obj-$(CONFIG_RAPIDIO)		+= rio.o
+ obj-$(CONFIG_KGDB)		+= ppc-stub.o
+ obj-$(CONFIG_SMP)		+= smp.o smp-tbsync.o
++obj-$(CONFIG_IPIPE)		+= ipipe-core.o ipipe-root.o
++obj-$(CONFIG_IPIPE_TRACE_MCOUNT)	+= ipipe-mcount.o
+ obj-$(CONFIG_KEXEC)		+= machine_kexec.o relocate_kernel.o
  
-+source "kernel/ipipe/Kconfig"
-+
- config HIGHMEM
- 	bool "High memory support"
- 
-+ diff -u linux-2.6.19/arch/ppc/kernel/entry.S.ORIG linux-2.6.19/arch/ppc/kernel/entry.S
---- linux-2.6.19/arch/ppc/kernel/entry.S.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/ppc/kernel/entry.S	2006-12-13 14:01:45.596979506 +0100
-@@ -132,8 +132,23 @@
+ ifndef CONFIG_MATH_EMULATION
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/kernel/entry.S 2.6.19-ppc-1.5-02/arch/ppc/kernel/entry.S
+--- ../vanilla/linux-2.6.19/arch/ppc/kernel/entry.S	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/kernel/entry.S	2007-06-11 17:15:47.000000000 +0200
+@@ -132,8 +132,23 @@ transfer_to_handler:
           * check for stack overflow
           */
  	lwz	r9,THREAD_INFO-THREAD(r12)
@@ -103,7 +129,7 @@
  5:
  #ifdef CONFIG_6xx
  	tophys(r9,r9)			/* check local flags */
-@@ -198,6 +213,21 @@
+@@ -198,6 +213,21 @@ _GLOBAL(DoSyscall)
  	lwz	r11,_CCR(r1)	/* Clear SO bit in CR */
  	rlwinm	r11,r11,0,4,2
  	stw	r11,_CCR(r1)
@@ -125,7 +151,7 @@
  #ifdef SHOW_SYSCALLS
  	bl	do_show_syscall
  #endif /* SHOW_SYSCALLS */
-@@ -260,11 +290,34 @@
+@@ -260,11 +290,34 @@ syscall_exit_cont:
  	SYNC
  	RFI
  
@@ -160,7 +186,7 @@
  	REST_NVGPRS(r1)
  	bl	schedule_tail
  	li	r3,0
-@@ -630,6 +683,12 @@
+@@ -630,6 +683,12 @@ ret_from_except:
  	SYNC			/* Some chip revs have problems here... */
  	MTMSRD(r10)		/* disable interrupts */
  
@@ -173,7 +199,7 @@
  	lwz	r3,_MSR(r1)	/* Returning to user mode? */
  	andi.	r0,r3,MSR_PR
  	beq	resume_kernel
-@@ -665,11 +724,37 @@
+@@ -665,11 +724,37 @@ resume_kernel:
  	beq+	restore
  	andi.	r0,r3,MSR_EE	/* interrupts off? */
  	beq	restore		/* don't schedule if so */
@@ -211,7 +237,7 @@
  #else
  resume_kernel:
  #endif /* CONFIG_PREEMPT */
-@@ -928,3 +1013,10 @@
+@@ -928,3 +1013,10 @@ END_FTR_SECTION_IFSET(CPU_FTR_601)
  	b	4b
  
  	.comm	ee_restarts,4
@@ -222,10 +248,50 @@
 +        bne+ ret_from_except
 +        b restore
 +#endif /* CONFIG_IPIPE */
-+ diff -u linux-2.6.19/arch/ppc/kernel/head_44x.S.ORIG linux-2.6.19/arch/ppc/kernel/head_44x.S
---- linux-2.6.19/arch/ppc/kernel/head_44x.S.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/ppc/kernel/head_44x.S	2006-12-13 14:01:45.602978801 +0100
-@@ -427,7 +427,11 @@
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/kernel/head.S 2.6.19-ppc-1.5-02/arch/ppc/kernel/head.S
+--- ../vanilla/linux-2.6.19/arch/ppc/kernel/head.S	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/kernel/head.S	2007-06-11 17:15:47.000000000 +0200
+@@ -295,6 +295,12 @@ i##n:								\
+ 	EXC_XFER_TEMPLATE(n, hdlr, n, NOCOPY, transfer_to_handler_full,	\
+ 			  ret_from_except_full)
+ 
++#ifdef CONFIG_IPIPE
++#define EXC_XFER_IPIPE(n, hdlr)		\
++	EXC_XFER_TEMPLATE(n, hdlr, n+1, NOCOPY, transfer_to_handler, \
++			  __ipipe_ret_from_except)
++#endif /* CONFIG_IPIPE */
++
+ #define EXC_XFER_LITE(n, hdlr)		\
+ 	EXC_XFER_TEMPLATE(n, hdlr, n+1, NOCOPY, transfer_to_handler, \
+ 			  ret_from_except)
+@@ -356,7 +362,11 @@ InstructionAccess:
+ 	EXC_XFER_EE_LITE(0x400, handle_page_fault)
+ 
+ /* External interrupt */
++#ifdef CONFIG_IPIPE
++	EXCEPTION(0x500, HardwareInterrupt, __ipipe_grab_irq, EXC_XFER_IPIPE)
++#else /* !CONFIG_IPIPE */
+ 	EXCEPTION(0x500, HardwareInterrupt, do_IRQ, EXC_XFER_LITE)
++#endif /* CONFIG_IPIPE */
+ 
+ /* Alignment exception */
+ 	. = 0x600
+@@ -381,7 +391,11 @@ FPUnavailable:
+ 	EXC_XFER_EE_LITE(0x800, kernel_fp_unavailable_exception)
+ 
+ /* Decrementer */
++#ifdef CONFIG_IPIPE
++	EXCEPTION(0x900, Decrementer, __ipipe_grab_timer, EXC_XFER_IPIPE)
++#else /* !CONFIG_IPIPE */
+ 	EXCEPTION(0x900, Decrementer, timer_interrupt, EXC_XFER_LITE)
++#endif /* CONFIG_IPIPE */
+ 
+ 	EXCEPTION(0xa00, Trap_0a, unknown_exception, EXC_XFER_EE)
+ 	EXCEPTION(0xb00, Trap_0b, unknown_exception, EXC_XFER_EE)
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/kernel/head_44x.S 2.6.19-ppc-1.5-02/arch/ppc/kernel/head_44x.S
+--- ../vanilla/linux-2.6.19/arch/ppc/kernel/head_44x.S	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/kernel/head_44x.S	2007-06-11 17:15:47.000000000 +0200
+@@ -427,7 +427,11 @@ interrupt_base:
  	INSTRUCTION_STORAGE_EXCEPTION
  
  	/* External Input Interrupt */
@@ -238,10 +304,10 @@
  
  	/* Alignment Interrupt */
  	ALIGNMENT_EXCEPTION
-+ diff -u linux-2.6.19/arch/ppc/kernel/head_4xx.S.ORIG linux-2.6.19/arch/ppc/kernel/head_4xx.S
---- linux-2.6.19/arch/ppc/kernel/head_4xx.S.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/ppc/kernel/head_4xx.S	2006-12-13 14:01:45.607978213 +0100
-@@ -228,6 +228,12 @@
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/kernel/head_4xx.S 2.6.19-ppc-1.5-02/arch/ppc/kernel/head_4xx.S
+--- ../vanilla/linux-2.6.19/arch/ppc/kernel/head_4xx.S	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/kernel/head_4xx.S	2007-06-11 17:15:47.000000000 +0200
+@@ -228,6 +228,12 @@ label:
  	EXC_XFER_TEMPLATE(hdlr, n, MSR_KERNEL, NOCOPY, transfer_to_handler_full, \
  			  ret_from_except_full)
  
@@ -254,7 +320,7 @@
  #define EXC_XFER_LITE(n, hdlr)		\
  	EXC_XFER_TEMPLATE(hdlr, n+1, MSR_KERNEL, NOCOPY, transfer_to_handler, \
  			  ret_from_except)
-@@ -396,7 +402,11 @@
+@@ -396,7 +402,11 @@ label:
  	EXC_XFER_EE_LITE(0x400, handle_page_fault)
  
  /* 0x0500 - External Interrupt Exception */
@@ -266,7 +332,7 @@
  
  /* 0x0600 - Alignment Exception */
  	START_EXCEPTION(0x0600, Alignment)
-@@ -434,7 +444,11 @@
+@@ -434,7 +444,11 @@ label:
  	lis	r0,TSR_PIS@h
  	mtspr	SPRN_TSR,r0		/* Clear the PIT exception */
  	addi	r3,r1,STACK_FRAME_OVERHEAD
@@ -278,10 +344,10 @@
  
  #if 0
  /* NOTE:
-+ diff -u linux-2.6.19/arch/ppc/kernel/head_8xx.S.ORIG linux-2.6.19/arch/ppc/kernel/head_8xx.S
---- linux-2.6.19/arch/ppc/kernel/head_8xx.S.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/ppc/kernel/head_8xx.S	2006-12-13 14:01:45.613977508 +0100
-@@ -186,6 +186,11 @@
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/kernel/head_8xx.S 2.6.19-ppc-1.5-02/arch/ppc/kernel/head_8xx.S
+--- ../vanilla/linux-2.6.19/arch/ppc/kernel/head_8xx.S	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/kernel/head_8xx.S	2007-06-11 17:15:47.000000000 +0200
+@@ -186,6 +186,11 @@ i##n:								\
  #define EXC_XFER_STD(n, hdlr)		\
  	EXC_XFER_TEMPLATE(n, hdlr, n, NOCOPY, transfer_to_handler_full,	\
  			  ret_from_except_full)
@@ -293,7 +359,7 @@
  
  #define EXC_XFER_LITE(n, hdlr)		\
  	EXC_XFER_TEMPLATE(n, hdlr, n+1, NOCOPY, transfer_to_handler, \
-@@ -238,7 +243,11 @@
+@@ -238,7 +243,11 @@ InstructionAccess:
  	EXC_XFER_EE_LITE(0x400, handle_page_fault)
  
  /* External interrupt */
@@ -305,7 +371,7 @@
  
  /* Alignment exception */
  	. = 0x600
-@@ -259,7 +268,11 @@
+@@ -259,7 +268,11 @@ Alignment:
  	EXCEPTION(0x800, FPUnavailable, unknown_exception, EXC_XFER_STD)
  
  /* Decrementer */
@@ -317,10 +383,10 @@
  
  	EXCEPTION(0xa00, Trap_0a, unknown_exception, EXC_XFER_EE)
  	EXCEPTION(0xb00, Trap_0b, unknown_exception, EXC_XFER_EE)
-+ diff -u linux-2.6.19/arch/ppc/kernel/head_booke.h.ORIG linux-2.6.19/arch/ppc/kernel/head_booke.h
---- linux-2.6.19/arch/ppc/kernel/head_booke.h.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/ppc/kernel/head_booke.h	2006-12-13 14:01:45.618976920 +0100
-@@ -187,6 +187,12 @@
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/kernel/head_booke.h 2.6.19-ppc-1.5-02/arch/ppc/kernel/head_booke.h
+--- ../vanilla/linux-2.6.19/arch/ppc/kernel/head_booke.h	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/kernel/head_booke.h	2007-06-11 17:15:48.000000000 +0200
+@@ -187,6 +187,12 @@ label:
  	EXC_XFER_TEMPLATE(hdlr, n, MSR_KERNEL, NOCOPY, transfer_to_handler_full, \
  			  ret_from_except_full)
  
@@ -333,7 +399,7 @@
  #define EXC_XFER_LITE(n, hdlr)		\
  	EXC_XFER_TEMPLATE(hdlr, n+1, MSR_KERNEL, NOCOPY, transfer_to_handler, \
  			  ret_from_except)
-@@ -345,6 +351,15 @@
+@@ -345,6 +351,15 @@ label:
  	addi	r3,r1,STACK_FRAME_OVERHEAD;				      \
  	EXC_XFER_STD(0x0700, program_check_exception)
  
@@ -349,7 +415,7 @@
  #define DECREMENTER_EXCEPTION						      \
  	START_EXCEPTION(Decrementer)					      \
  	NORMAL_EXCEPTION_PROLOG;					      \
-@@ -352,6 +367,7 @@
+@@ -352,6 +367,7 @@ label:
  	mtspr   SPRN_TSR,r0;		/* Clear the DEC interrupt */	      \
  	addi    r3,r1,STACK_FRAME_OVERHEAD;				      \
  	EXC_XFER_LITE(0x0900, timer_interrupt)
@@ -357,10 +423,10 @@
  
  #define FP_UNAVAILABLE_EXCEPTION					      \
  	START_EXCEPTION(FloatingPointUnavailable)			      \
-+ diff -u linux-2.6.19/arch/ppc/kernel/head_fsl_booke.S.ORIG linux-2.6.19/arch/ppc/kernel/head_fsl_booke.S
---- linux-2.6.19/arch/ppc/kernel/head_fsl_booke.S.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/ppc/kernel/head_fsl_booke.S	2006-12-13 14:01:45.624976215 +0100
-@@ -526,7 +526,11 @@
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/kernel/head_fsl_booke.S 2.6.19-ppc-1.5-02/arch/ppc/kernel/head_fsl_booke.S
+--- ../vanilla/linux-2.6.19/arch/ppc/kernel/head_fsl_booke.S	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/kernel/head_fsl_booke.S	2007-06-11 17:15:48.000000000 +0200
+@@ -526,7 +526,11 @@ interrupt_base:
  	INSTRUCTION_STORAGE_EXCEPTION
  
  	/* External Input Interrupt */
@@ -372,49 +438,9 @@
  
  	/* Alignment Interrupt */
  	ALIGNMENT_EXCEPTION
-+ diff -u linux-2.6.19/arch/ppc/kernel/head.S.ORIG linux-2.6.19/arch/ppc/kernel/head.S
---- linux-2.6.19/arch/ppc/kernel/head.S.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/ppc/kernel/head.S	2006-12-13 14:01:45.628975745 +0100
-@@ -295,6 +295,12 @@
- 	EXC_XFER_TEMPLATE(n, hdlr, n, NOCOPY, transfer_to_handler_full,	\
- 			  ret_from_except_full)
- 
-+#ifdef CONFIG_IPIPE
-+#define EXC_XFER_IPIPE(n, hdlr)		\
-+	EXC_XFER_TEMPLATE(n, hdlr, n+1, NOCOPY, transfer_to_handler, \
-+			  __ipipe_ret_from_except)
-+#endif /* CONFIG_IPIPE */
-+
- #define EXC_XFER_LITE(n, hdlr)		\
- 	EXC_XFER_TEMPLATE(n, hdlr, n+1, NOCOPY, transfer_to_handler, \
- 			  ret_from_except)
-@@ -356,7 +362,11 @@
- 	EXC_XFER_EE_LITE(0x400, handle_page_fault)
- 
- /* External interrupt */
-+#ifdef CONFIG_IPIPE
-+	EXCEPTION(0x500, HardwareInterrupt, __ipipe_grab_irq, EXC_XFER_IPIPE)
-+#else /* !CONFIG_IPIPE */
- 	EXCEPTION(0x500, HardwareInterrupt, do_IRQ, EXC_XFER_LITE)
-+#endif /* CONFIG_IPIPE */
- 
- /* Alignment exception */
- 	. = 0x600
-@@ -381,7 +391,11 @@
- 	EXC_XFER_EE_LITE(0x800, kernel_fp_unavailable_exception)
- 
- /* Decrementer */
-+#ifdef CONFIG_IPIPE
-+	EXCEPTION(0x900, Decrementer, __ipipe_grab_timer, EXC_XFER_IPIPE)
-+#else /* !CONFIG_IPIPE */
- 	EXCEPTION(0x900, Decrementer, timer_interrupt, EXC_XFER_LITE)
-+#endif /* CONFIG_IPIPE */
- 
- 	EXCEPTION(0xa00, Trap_0a, unknown_exception, EXC_XFER_EE)
- 	EXCEPTION(0xb00, Trap_0b, unknown_exception, EXC_XFER_EE)
-+ diff -u linux-2.6.19/arch/ppc/kernel/ipipe-core.c.ORIG linux-2.6.19/arch/ppc/kernel/ipipe-core.c
---- linux-2.6.19/arch/ppc/kernel/ipipe-core.c.ORIG	2006-12-13 14:01:45.633975157 +0100
-+++ linux-2.6.19/arch/ppc/kernel/ipipe-core.c	2006-12-13 14:01:45.634975039 +0100
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/kernel/ipipe-core.c 2.6.19-ppc-1.5-02/arch/ppc/kernel/ipipe-core.c
+--- ../vanilla/linux-2.6.19/arch/ppc/kernel/ipipe-core.c	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/kernel/ipipe-core.c	2007-06-11 17:15:48.000000000 +0200
 @@ -0,0 +1,264 @@
 +/* -*- linux-c -*-
 + * linux/arch/ppc/kernel/ipipe-core.c
@@ -680,9 +706,9 @@
 +EXPORT_SYMBOL(ipipe_trigger_irq);
 +EXPORT_SYMBOL(ipipe_get_sysinfo);
 +EXPORT_SYMBOL(ipipe_tune_timer);
-+ diff -u linux-2.6.19/arch/ppc/kernel/ipipe-mcount.S.ORIG linux-2.6.19/arch/ppc/kernel/ipipe-mcount.S
---- linux-2.6.19/arch/ppc/kernel/ipipe-mcount.S.ORIG	2006-12-13 14:01:45.639974452 +0100
-+++ linux-2.6.19/arch/ppc/kernel/ipipe-mcount.S	2006-12-13 14:01:45.640974334 +0100
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/kernel/ipipe-mcount.S 2.6.19-ppc-1.5-02/arch/ppc/kernel/ipipe-mcount.S
+--- ../vanilla/linux-2.6.19/arch/ppc/kernel/ipipe-mcount.S	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/kernel/ipipe-mcount.S	2007-06-11 17:15:48.000000000 +0200
 @@ -0,0 +1,76 @@
 +/*
 + *  linux/arch/ppc/kernel/ipipe-mcount.S
@@ -760,9 +786,9 @@
 + /* ...unwind the stack frame, and return to your usual programming.  */
 +	addi	r1,r1,48
 +	bctr
-+ diff -u linux-2.6.19/arch/ppc/kernel/ipipe-root.c.ORIG linux-2.6.19/arch/ppc/kernel/ipipe-root.c
---- linux-2.6.19/arch/ppc/kernel/ipipe-root.c.ORIG	2006-12-13 14:01:45.647973511 +0100
-+++ linux-2.6.19/arch/ppc/kernel/ipipe-root.c	2006-12-13 14:01:45.648973394 +0100
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/kernel/ipipe-root.c 2.6.19-ppc-1.5-02/arch/ppc/kernel/ipipe-root.c
+--- ../vanilla/linux-2.6.19/arch/ppc/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/kernel/ipipe-root.c	2007-06-11 17:15:48.000000000 +0200
 @@ -0,0 +1,488 @@
 +/* -*- linux-c -*-
 + * linux/arch/ppc/kernel/ipipe-root.c
@@ -1252,22 +1278,10 @@
 +void notrace _mcount(void);
 +EXPORT_SYMBOL(_mcount);
 +#endif /* CONFIG_IPIPE_TRACE_MCOUNT */
-+ diff -u linux-2.6.19/arch/ppc/kernel/Makefile.ORIG linux-2.6.19/arch/ppc/kernel/Makefile
---- linux-2.6.19/arch/ppc/kernel/Makefile.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/ppc/kernel/Makefile	2006-12-13 14:01:45.653972806 +0100
-@@ -17,6 +17,8 @@
- obj-$(CONFIG_RAPIDIO)		+= rio.o
- obj-$(CONFIG_KGDB)		+= ppc-stub.o
- obj-$(CONFIG_SMP)		+= smp.o smp-tbsync.o
-+obj-$(CONFIG_IPIPE)		+= ipipe-core.o ipipe-root.o
-+obj-$(CONFIG_IPIPE_TRACE_MCOUNT)	+= ipipe-mcount.o
- obj-$(CONFIG_KEXEC)		+= machine_kexec.o relocate_kernel.o
- 
- ifndef CONFIG_MATH_EMULATION
-+ diff -u linux-2.6.19/arch/ppc/kernel/setup.c.ORIG linux-2.6.19/arch/ppc/kernel/setup.c
---- linux-2.6.19/arch/ppc/kernel/setup.c.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/ppc/kernel/setup.c	2006-12-13 14:01:45.657972336 +0100
-@@ -295,7 +295,7 @@
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/kernel/setup.c 2.6.19-ppc-1.5-02/arch/ppc/kernel/setup.c
+--- ../vanilla/linux-2.6.19/arch/ppc/kernel/setup.c	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/kernel/setup.c	2007-06-11 17:15:48.000000000 +0200
+@@ -295,7 +295,7 @@ struct seq_operations cpuinfo_op = {
   * to access static data (including strings).  -- paulus
   */
  __init
@@ -1276,10 +1290,18 @@
  early_init(int r3, int r4, int r5)
  {
   	unsigned long phys;
-+ diff -u linux-2.6.19/arch/ppc/kernel/time.c.ORIG linux-2.6.19/arch/ppc/kernel/time.c
---- linux-2.6.19/arch/ppc/kernel/time.c.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/ppc/kernel/time.c	2006-12-13 14:01:45.660971983 +0100
-@@ -146,7 +146,11 @@
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/kernel/time.c 2.6.19-ppc-1.5-02/arch/ppc/kernel/time.c
+--- ../vanilla/linux-2.6.19/arch/ppc/kernel/time.c	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/kernel/time.c	2007-06-11 17:15:48.000000000 +0200
+@@ -140,13 +140,19 @@ void timer_interrupt(struct pt_regs * re
+ 		do_IRQ(regs);
+ 
+ 	old_regs = set_irq_regs(regs);
++#ifndef CONFIG_IPIPE
+ 	irq_enter();
++#endif
+ 
+ 	while ((next_dec = tb_ticks_per_jiffy - tb_delta(&jiffy_stamp)) <= 0) {
  		jiffy_stamp += tb_ticks_per_jiffy;
  		
  		profile_tick(CPU_PROFILING);
@@ -1291,10 +1313,20 @@
  
  	  	if (smp_processor_id())
  			continue;
-+ diff -u linux-2.6.19/arch/ppc/kernel/traps.c.ORIG linux-2.6.19/arch/ppc/kernel/traps.c
---- linux-2.6.19/arch/ppc/kernel/traps.c.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/ppc/kernel/traps.c	2006-12-13 14:01:45.665971395 +0100
-@@ -233,6 +233,9 @@
+@@ -190,7 +196,9 @@ void timer_interrupt(struct pt_regs * re
+ 	if (ppc_md.heartbeat && !ppc_md.heartbeat_count--)
+ 		ppc_md.heartbeat();
+ 
++#ifndef CONFIG_IPIPE
+ 	irq_exit();
++#endif
+ 	set_irq_regs(old_regs);
+ }
+ 
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/kernel/traps.c 2.6.19-ppc-1.5-02/arch/ppc/kernel/traps.c
+--- ../vanilla/linux-2.6.19/arch/ppc/kernel/traps.c	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/kernel/traps.c	2007-06-11 17:15:48.000000000 +0200
+@@ -233,6 +233,9 @@ void machine_check_exception(struct pt_r
  {
  	unsigned long reason = get_mc_reason(regs);
  
@@ -1304,7 +1336,7 @@
  	if (user_mode(regs)) {
  		regs->msr |= MSR_RI;
  		_exception(SIGBUS, regs, BUS_ADRERR, regs->nip);
-@@ -392,6 +395,8 @@
+@@ -392,6 +395,8 @@ void SMIException(struct pt_regs *regs)
  
  void unknown_exception(struct pt_regs *regs)
  {
@@ -1313,7 +1345,7 @@
  	printk("Bad trap at PC: %lx, MSR: %lx, vector=%lx    %s\n",
  	       regs->nip, regs->msr, regs->trap, print_tainted());
  	_exception(SIGTRAP, regs, 0, 0);
-@@ -399,6 +404,8 @@
+@@ -399,6 +404,8 @@ void unknown_exception(struct pt_regs *r
  
  void instruction_breakpoint_exception(struct pt_regs *regs)
  {
@@ -1322,7 +1354,7 @@
  	if (debugger_iabr_match(regs))
  		return;
  	_exception(SIGTRAP, regs, TRAP_BRKPT, 0);
-@@ -406,6 +413,8 @@
+@@ -406,6 +413,8 @@ void instruction_breakpoint_exception(st
  
  void RunModeException(struct pt_regs *regs)
  {
@@ -1331,7 +1363,7 @@
  	_exception(SIGTRAP, regs, 0, 0);
  }
  
-@@ -555,6 +564,8 @@
+@@ -555,6 +564,8 @@ static void emulate_single_step(struct p
  {
  	if (single_stepping(regs)) {
  		clear_single_step(regs);
@@ -1340,7 +1372,7 @@
  		_exception(SIGTRAP, regs, TRAP_TRACE, 0);
  	}
  }
-@@ -624,6 +635,9 @@
+@@ -624,6 +635,9 @@ void program_check_exception(struct pt_r
  	unsigned int reason = get_reason(regs);
  	extern int do_mathemu(struct pt_regs *regs);
  
@@ -1350,7 +1382,7 @@
  #ifdef CONFIG_MATH_EMULATION
  	/* (reason & REASON_ILLEGAL) would be the obvious thing here,
  	 * but there seems to be a hardware bug on the 405GP (RevD)
-@@ -701,6 +715,8 @@
+@@ -701,6 +715,8 @@ void program_check_exception(struct pt_r
  void single_step_exception(struct pt_regs *regs)
  {
  	regs->msr &= ~(MSR_SE | MSR_BE);  /* Turn off 'trace' bits */
@@ -1359,7 +1391,7 @@
  	if (debugger_sstep(regs))
  		return;
  	_exception(SIGTRAP, regs, TRAP_TRACE, 0);
-@@ -716,6 +732,8 @@
+@@ -716,6 +732,8 @@ void alignment_exception(struct pt_regs 
  		emulate_single_step(regs);
  		return;
  	}
@@ -1368,7 +1400,7 @@
  	if (fixed == -EFAULT) {
  		sig = SIGSEGV;
  		code = SEGV_ACCERR;
-@@ -740,6 +758,8 @@
+@@ -740,6 +758,8 @@ void StackOverflow(struct pt_regs *regs)
  
  void nonrecoverable_exception(struct pt_regs *regs)
  {
@@ -1377,7 +1409,7 @@
  	printk(KERN_ERR "Non-recoverable exception at PC=%lx MSR=%lx\n",
  	       regs->nip, regs->msr);
  	debugger(regs);
-@@ -760,6 +780,9 @@
+@@ -760,6 +780,9 @@ void SoftwareEmulation(struct pt_regs *r
  	extern int Soft_emulate_8xx(struct pt_regs *);
  	int errcode;
  
@@ -1387,7 +1419,7 @@
  	CHECK_FULL_REGS(regs);
  
  	if (!user_mode(regs)) {
-@@ -788,6 +811,8 @@
+@@ -788,6 +811,8 @@ void SoftwareEmulation(struct pt_regs *r
  
  void DebugException(struct pt_regs *regs, unsigned long debug_status)
  {
@@ -1396,7 +1428,7 @@
  	if (debug_status & DBSR_IC) {	/* instruction completion */
  		regs->msr &= ~MSR_DE;
  		if (user_mode(regs)) {
-@@ -828,6 +853,9 @@
+@@ -828,6 +853,9 @@ void altivec_unavailable_exception(struc
  {
  	static int kernel_altivec_count;
  
@@ -1406,7 +1438,7 @@
  #ifndef CONFIG_ALTIVEC
  	if (user_mode(regs)) {
  		/* A user program has executed an altivec instruction,
-@@ -849,6 +877,8 @@
+@@ -849,6 +877,8 @@ void altivec_assist_exception(struct pt_
  {
  	int err;
  
@@ -1415,7 +1447,7 @@
  	preempt_disable();
  	if (regs->msr & MSR_VEC)
  		giveup_altivec(current);
-@@ -909,6 +939,9 @@
+@@ -909,6 +939,9 @@ void SPEFloatingPointException(struct pt
  	int fpexc_mode;
  	int code = 0;
  
@@ -1425,10 +1457,10 @@
  	spefscr = current->thread.spefscr;
  	fpexc_mode = current->thread.fpexc_mode;
  
-+ diff -u linux-2.6.19/arch/ppc/mm/fault.c.ORIG linux-2.6.19/arch/ppc/mm/fault.c
---- linux-2.6.19/arch/ppc/mm/fault.c.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/ppc/mm/fault.c	2006-12-13 14:01:45.670970808 +0100
-@@ -113,6 +113,9 @@
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/mm/fault.c 2.6.19-ppc-1.5-02/arch/ppc/mm/fault.c
+--- ../vanilla/linux-2.6.19/arch/ppc/mm/fault.c	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/mm/fault.c	2007-06-11 17:15:48.000000000 +0200
+@@ -113,6 +113,9 @@ int do_page_fault(struct pt_regs *regs, 
  		is_write = error_code & 0x02000000;
  #endif /* CONFIG_4xx || CONFIG_BOOKE */
  
@@ -1438,9 +1470,9 @@
  #if defined(CONFIG_XMON) || defined(CONFIG_KGDB)
  	if (debugger_fault_handler && TRAP(regs) == 0x300) {
  		debugger_fault_handler(regs);
-+ diff -u linux-2.6.19/arch/ppc/platforms/85xx/sbc85xx.h.ORIG linux-2.6.19/arch/ppc/platforms/85xx/sbc85xx.h
---- linux-2.6.19/arch/ppc/platforms/85xx/sbc85xx.h.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/ppc/platforms/85xx/sbc85xx.h	2006-12-13 14:01:45.675970220 +0100
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/platforms/85xx/sbc85xx.h 2.6.19-ppc-1.5-02/arch/ppc/platforms/85xx/sbc85xx.h
+--- ../vanilla/linux-2.6.19/arch/ppc/platforms/85xx/sbc85xx.h	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/platforms/85xx/sbc85xx.h	2007-06-11 17:15:48.000000000 +0200
 @@ -15,7 +15,6 @@
  #define __PLATFORMS_85XX_SBC85XX_H__
  
@@ -1449,10 +1481,10 @@
  #include <asm/ppcboot.h>
  
  #define BOARD_CCSRBAR		((uint)0xff700000)
-+ diff -u linux-2.6.19/arch/ppc/syslib/open_pic.c.ORIG linux-2.6.19/arch/ppc/syslib/open_pic.c
---- linux-2.6.19/arch/ppc/syslib/open_pic.c.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/arch/ppc/syslib/open_pic.c	2006-12-13 14:01:45.696967751 +0100
-@@ -821,7 +821,7 @@
+diff -uNrp ../vanilla/linux-2.6.19/arch/ppc/syslib/open_pic.c 2.6.19-ppc-1.5-02/arch/ppc/syslib/open_pic.c
+--- ../vanilla/linux-2.6.19/arch/ppc/syslib/open_pic.c	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/arch/ppc/syslib/open_pic.c	2007-06-11 17:15:48.000000000 +0200
+@@ -821,7 +821,7 @@ static void openpic_set_sense(u_int irq,
   */
  static void openpic_ack_irq(unsigned int irq_nr)
  {
@@ -1461,18 +1493,21 @@
  	openpic_disable_irq(irq_nr);
  	openpic_eoi();
  #else
-@@ -832,7 +832,7 @@
+@@ -832,9 +832,9 @@ static void openpic_ack_irq(unsigned int
  
  static void openpic_end_irq(unsigned int irq_nr)
  {
 -#ifdef __SLOW_VERSION__
 +#if defined(__SLOW_VERSION__) || defined(CONFIG_IPIPE)
  	if (!(irq_desc[irq_nr].status & (IRQ_DISABLED|IRQ_INPROGRESS))
- 	    && irq_desc[irq_nr].action)
+-	    && irq_desc[irq_nr].action)
++	    && (!ipipe_root_domain_p || irq_desc[irq_nr].action))
  		openpic_enable_irq(irq_nr);
-+ diff -u linux-2.6.19/include/asm-powerpc/hw_irq.h.ORIG linux-2.6.19/include/asm-powerpc/hw_irq.h
---- linux-2.6.19/include/asm-powerpc/hw_irq.h.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/include/asm-powerpc/hw_irq.h	2006-12-13 14:01:45.714965635 +0100
+ #else
+ 	if ((irq_desc[irq_nr].status & IRQ_LEVEL) != 0)
+diff -uNrp ../vanilla/linux-2.6.19/include/asm-powerpc/hw_irq.h 2.6.19-ppc-1.5-02/include/asm-powerpc/hw_irq.h
+--- ../vanilla/linux-2.6.19/include/asm-powerpc/hw_irq.h	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/include/asm-powerpc/hw_irq.h	2007-06-11 17:15:48.000000000 +0200
 @@ -12,6 +12,166 @@
  
  extern void timer_interrupt(struct pt_regs *);
@@ -1640,7 +1675,7 @@
  #ifdef CONFIG_PPC_ISERIES
  
  extern unsigned long local_get_flags(void);
-@@ -83,6 +243,8 @@
+@@ -83,6 +243,8 @@ static inline void local_irq_save_ptr(un
  
  #endif /* CONFIG_PPC_ISERIES */
  
@@ -1649,9 +1684,9 @@
  #define mask_irq(irq)						\
  	({							\
  	 	irq_desc_t *desc = get_irq_desc(irq);		\
-+ diff -u linux-2.6.19/include/asm-powerpc/irq.h.ORIG linux-2.6.19/include/asm-powerpc/irq.h
---- linux-2.6.19/include/asm-powerpc/irq.h.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/include/asm-powerpc/irq.h	2006-12-13 14:01:45.722964695 +0100
+diff -uNrp ../vanilla/linux-2.6.19/include/asm-powerpc/irq.h 2.6.19-ppc-1.5-02/include/asm-powerpc/irq.h
+--- ../vanilla/linux-2.6.19/include/asm-powerpc/irq.h	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/include/asm-powerpc/irq.h	2007-06-11 17:15:48.000000000 +0200
 @@ -11,7 +11,9 @@
  
  #include <linux/threads.h>
@@ -1662,10 +1697,10 @@
  
  #include <asm/types.h>
  #include <asm/atomic.h>
-+ diff -u linux-2.6.19/include/asm-ppc/ipipe.h.ORIG linux-2.6.19/include/asm-ppc/ipipe.h
---- linux-2.6.19/include/asm-ppc/ipipe.h.ORIG	2006-12-13 14:01:45.726964225 +0100
-+++ linux-2.6.19/include/asm-ppc/ipipe.h	2006-12-13 14:01:45.727964107 +0100
-@@ -0,0 +1,220 @@
+diff -uNrp ../vanilla/linux-2.6.19/include/asm-ppc/ipipe.h 2.6.19-ppc-1.5-02/include/asm-ppc/ipipe.h
+--- ../vanilla/linux-2.6.19/include/asm-ppc/ipipe.h	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.19-ppc-1.5-02/include/asm-ppc/ipipe.h	2007-06-11 18:01:35.000000000 +0200
+@@ -0,0 +1,226 @@
 +/* -*- linux-c -*-
 + * include/asm-ppc/ipipe.h
 + *
@@ -1705,10 +1740,10 @@
 +#include <linux/cpumask.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"1.5-00"
++#define IPIPE_ARCH_STRING	"1.5-02"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	5
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	2
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
@@ -1866,8 +1901,14 @@
 +do {					 	\
 +	local_irq_enable_nohead(ipd);		\
 +	if (ipd == ipipe_root_domain) {		\
-+		((void (*)(unsigned, struct pt_regs *))			\
-+		 ipd->irqs[irq].handler) (irq, __ipipe_tick_regs + cpuid); \
++		if (likely(!ipipe_virtual_irq_p(irq)))			\
++			((void (*)(unsigned, struct pt_regs *))		\
++			 ipd->irqs[irq].handler) (irq, __ipipe_tick_regs + cpuid); \
++		else {							\
++			irq_enter();					\
++			ipd->irqs[irq].handler(irq, __ipipe_tick_regs + cpuid);\
++			irq_exit();					\
++		}							\
 +	} else {							\
 +		__clear_bit(IPIPE_SYNC_FLAG, &cpudata->status);		\
 +		ipd->irqs[irq].handler(irq,ipd->irqs[irq].cookie);	\
@@ -1886,10 +1927,10 @@
 +#endif /* CONFIG_IPIPE */
 +
 +#endif	/* !__PPC_IPIPE_H */
-+ diff -u linux-2.6.19/include/asm-ppc/mmu_context.h.ORIG linux-2.6.19/include/asm-ppc/mmu_context.h
---- linux-2.6.19/include/asm-ppc/mmu_context.h.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/include/asm-ppc/mmu_context.h	2006-12-13 14:01:45.732963519 +0100
-@@ -153,7 +153,10 @@
+diff -uNrp ../vanilla/linux-2.6.19/include/asm-ppc/mmu_context.h 2.6.19-ppc-1.5-02/include/asm-ppc/mmu_context.h
+--- ../vanilla/linux-2.6.19/include/asm-ppc/mmu_context.h	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/include/asm-ppc/mmu_context.h	2007-06-11 17:15:48.000000000 +0200
+@@ -153,7 +153,10 @@ static inline int init_new_context(struc
   */
  static inline void destroy_context(struct mm_struct *mm)
  {
@@ -1900,7 +1941,7 @@
  	if (mm->context.id != NO_CONTEXT) {
  		clear_bit(mm->context.id, context_map);
  		mm->context.id = NO_CONTEXT;
-@@ -161,6 +164,7 @@
+@@ -161,6 +164,7 @@ static inline void destroy_context(struc
  		atomic_inc(&nr_free_contexts);
  #endif
  	}
@@ -1908,7 +1949,7 @@
  	preempt_enable();
  }
  
-@@ -193,7 +197,13 @@
+@@ -193,7 +197,13 @@ static inline void switch_mm(struct mm_s
   * After we have set current->mm to a new value, this activates
   * the context for the new mm so we see the new mappings.
   */
@@ -1923,10 +1964,10 @@
  
  extern void mmu_context_init(void);
  
-+ diff -u linux-2.6.19/include/asm-ppc/mv64x60.h.ORIG linux-2.6.19/include/asm-ppc/mv64x60.h
---- linux-2.6.19/include/asm-ppc/mv64x60.h.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/include/asm-ppc/mv64x60.h	2006-12-13 14:01:59.298368685 +0100
-@@ -255,9 +255,9 @@
+diff -uNrp ../vanilla/linux-2.6.19/include/asm-ppc/mv64x60.h 2.6.19-ppc-1.5-02/include/asm-ppc/mv64x60.h
+--- ../vanilla/linux-2.6.19/include/asm-ppc/mv64x60.h	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/include/asm-ppc/mv64x60.h	2007-06-11 17:15:48.000000000 +0200
+@@ -255,9 +255,9 @@ extern inline void
  mv64x60_write(struct mv64x60_handle *bh, u32 offset, u32 val) {
  	ulong	flags;
  
@@ -1938,7 +1979,7 @@
  }
  
  extern inline u32
-@@ -265,9 +265,9 @@
+@@ -265,9 +265,9 @@ mv64x60_read(struct mv64x60_handle *bh, 
  	ulong	flags;
  	u32     reg;
  
@@ -1950,7 +1991,7 @@
  	return reg;
  }
  
-@@ -277,11 +277,11 @@
+@@ -277,11 +277,11 @@ mv64x60_modify(struct mv64x60_handle *bh
  	u32	reg;
  	ulong	flags;
  
@@ -1964,10 +2005,10 @@
  }
  
  #define	mv64x60_set_bits(bh, offs, bits) mv64x60_modify(bh, offs, ~0, bits)
-+ diff -u linux-2.6.19/include/asm-ppc/pgalloc.h.ORIG linux-2.6.19/include/asm-ppc/pgalloc.h
---- linux-2.6.19/include/asm-ppc/pgalloc.h.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/include/asm-ppc/pgalloc.h	2006-12-13 14:01:45.737962932 +0100
-@@ -39,5 +39,10 @@
+diff -uNrp ../vanilla/linux-2.6.19/include/asm-ppc/pgalloc.h 2.6.19-ppc-1.5-02/include/asm-ppc/pgalloc.h
+--- ../vanilla/linux-2.6.19/include/asm-ppc/pgalloc.h	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/include/asm-ppc/pgalloc.h	2007-06-11 17:15:48.000000000 +0200
+@@ -39,5 +39,10 @@ extern void pte_free(struct page *pte);
  
  #define check_pgt_cache()	do { } while (0)
  
@@ -1978,10 +2019,10 @@
 +
  #endif /* _PPC_PGALLOC_H */
  #endif /* __KERNEL__ */
-+ diff -u linux-2.6.19/include/linux/hardirq.h.ORIG linux-2.6.19/include/linux/hardirq.h
---- linux-2.6.19/include/linux/hardirq.h.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/include/linux/hardirq.h	2006-12-13 14:01:45.751961286 +0100
-@@ -128,7 +128,20 @@
+diff -uNrp ../vanilla/linux-2.6.19/include/linux/hardirq.h 2.6.19-ppc-1.5-02/include/linux/hardirq.h
+--- ../vanilla/linux-2.6.19/include/linux/hardirq.h	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/include/linux/hardirq.h	2007-06-11 17:15:48.000000000 +0200
+@@ -128,7 +128,20 @@ static inline void account_system_vtime(
   */
  extern void irq_exit(void);
  
@@ -2002,9 +2043,9 @@
 +#endif /* CONFIG_IPIPE */
  
  #endif /* LINUX_HARDIRQ_H */
-+ diff -u linux-2.6.19/include/linux/ipipe.h.ORIG linux-2.6.19/include/linux/ipipe.h
---- linux-2.6.19/include/linux/ipipe.h.ORIG	2006-12-13 14:01:45.763959875 +0100
-+++ linux-2.6.19/include/linux/ipipe.h	2006-12-13 14:01:45.764959758 +0100
+diff -uNrp ../vanilla/linux-2.6.19/include/linux/ipipe.h 2.6.19-ppc-1.5-02/include/linux/ipipe.h
+--- ../vanilla/linux-2.6.19/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.19-ppc-1.5-02/include/linux/ipipe.h	2007-06-11 17:15:48.000000000 +0200
 @@ -0,0 +1,769 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
@@ -2775,9 +2816,9 @@
 +#endif	/* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_H */
-+ diff -u linux-2.6.19/include/linux/ipipe_trace.h.ORIG linux-2.6.19/include/linux/ipipe_trace.h
---- linux-2.6.19/include/linux/ipipe_trace.h.ORIG	2006-12-13 14:01:45.778958112 +0100
-+++ linux-2.6.19/include/linux/ipipe_trace.h	2006-12-13 14:01:45.779957994 +0100
+diff -uNrp ../vanilla/linux-2.6.19/include/linux/ipipe_trace.h 2.6.19-ppc-1.5-02/include/linux/ipipe_trace.h
+--- ../vanilla/linux-2.6.19/include/linux/ipipe_trace.h	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.19-ppc-1.5-02/include/linux/ipipe_trace.h	2007-06-11 17:15:48.000000000 +0200
 @@ -0,0 +1,40 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_trace.h
@@ -2819,9 +2860,9 @@
 +void ipipe_trace_panic_dump(void);
 +
 +#endif	/* !__LINUX_IPIPE_H */
-+ diff -u linux-2.6.19/include/linux/linkage.h.ORIG linux-2.6.19/include/linux/linkage.h
---- linux-2.6.19/include/linux/linkage.h.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/include/linux/linkage.h	2006-12-13 14:01:45.792956466 +0100
+diff -uNrp ../vanilla/linux-2.6.19/include/linux/linkage.h 2.6.19-ppc-1.5-02/include/linux/linkage.h
+--- ../vanilla/linux-2.6.19/include/linux/linkage.h	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/include/linux/linkage.h	2007-06-11 17:15:48.000000000 +0200
 @@ -64,4 +64,8 @@
  #define fastcall
  #endif
@@ -2831,15 +2872,16 @@
 +#endif
 +
  #endif
-+ diff -u linux-2.6.19/include/linux/preempt.h.ORIG linux-2.6.19/include/linux/preempt.h
---- linux-2.6.19/include/linux/preempt.h.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/include/linux/preempt.h	2006-12-13 14:01:45.806954820 +0100
-@@ -26,22 +26,37 @@
+diff -uNrp ../vanilla/linux-2.6.19/include/linux/preempt.h 2.6.19-ppc-1.5-02/include/linux/preempt.h
+--- ../vanilla/linux-2.6.19/include/linux/preempt.h	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/include/linux/preempt.h	2007-06-11 17:15:48.000000000 +0200
+@@ -26,22 +26,38 @@
  
  asmlinkage void preempt_schedule(void);
  
 +#ifdef CONFIG_IPIPE
 +#include <asm/ipipe.h>
++#include <asm/percpu.h>
 +DECLARE_PER_CPU(struct ipipe_domain *, ipipe_percpu_domain);
 +extern struct ipipe_domain ipipe_root;
 +#define ipipe_preempt_guard() (per_cpu(ipipe_percpu_domain, ipipe_processor_id()) == &ipipe_root)
@@ -2878,10 +2920,10 @@
  } while (0)
  
  #define preempt_enable() \
-+ diff -u linux-2.6.19/include/linux/sched.h.ORIG linux-2.6.19/include/linux/sched.h
---- linux-2.6.19/include/linux/sched.h.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/include/linux/sched.h	2006-12-13 14:01:45.821953057 +0100
-@@ -43,6 +43,7 @@
+diff -uNrp ../vanilla/linux-2.6.19/include/linux/sched.h 2.6.19-ppc-1.5-02/include/linux/sched.h
+--- ../vanilla/linux-2.6.19/include/linux/sched.h	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/include/linux/sched.h	2007-06-11 17:15:48.000000000 +0200
+@@ -43,6 +43,7 @@ struct sched_param {
  
  #include <asm/param.h>	/* for HZ */
  
@@ -2889,7 +2931,7 @@
  #include <linux/capability.h>
  #include <linux/threads.h>
  #include <linux/kernel.h>
-@@ -150,6 +151,14 @@
+@@ -150,6 +151,14 @@ extern unsigned long weighted_cpuload(co
  /* in tsk->state again */
  #define TASK_NONINTERACTIVE	64
  #define TASK_DEAD		128
@@ -2904,7 +2946,7 @@
  
  #define __set_task_state(tsk, state_value)		\
  	do { (tsk)->state = (state_value); } while (0)
-@@ -1023,6 +1032,9 @@
+@@ -1023,6 +1032,9 @@ struct task_struct {
  #ifdef	CONFIG_TASK_DELAY_ACCT
  	struct task_delay_info *delays;
  #endif
@@ -2914,7 +2956,7 @@
  };
  
  static inline pid_t process_group(struct task_struct *tsk)
-@@ -1115,6 +1127,11 @@
+@@ -1115,6 +1127,11 @@ static inline void put_task_struct(struc
  #define PF_SPREAD_SLAB	0x02000000	/* Spread some slab caches over cpuset */
  #define PF_MEMPOLICY	0x10000000	/* Non-default NUMA mempolicy */
  #define PF_MUTEX_TESTER	0x20000000	/* Thread belongs to the rt mutex tester */
@@ -2926,10 +2968,10 @@
  
  /*
   * Only the _current_ task can read/write to tsk->flags, but other
-+ diff -u linux-2.6.19/init/Kconfig.ORIG linux-2.6.19/init/Kconfig
---- linux-2.6.19/init/Kconfig.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/init/Kconfig	2006-12-13 14:01:45.826952469 +0100
-@@ -67,6 +67,7 @@
+diff -uNrp ../vanilla/linux-2.6.19/init/Kconfig 2.6.19-ppc-1.5-02/init/Kconfig
+--- ../vanilla/linux-2.6.19/init/Kconfig	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/init/Kconfig	2007-06-11 17:15:48.000000000 +0200
+@@ -67,6 +67,7 @@ menu "General setup"
  
  config LOCALVERSION
  	string "Local version - append to kernel release"
@@ -2937,42 +2979,10 @@
  	help
  	  Append an extra string to the end of your kernel version.
  	  This will show up when you type uname, for example.
-@@ -543,3 +544,31 @@
- menu "Block layer"
- source "block/Kconfig"
- endmenu
-+
-+menu "Real-time sub-system"
-+
-+comment "WARNING! You enabled APM, CPU Frequency scaling or ACPI 'processor'"
-+	depends on APM || CPU_FREQ || ACPI_PROCESSOR
-+comment "option. These options are known to cause troubles with Xenomai."
-+	depends on APM || CPU_FREQ || ACPI_PROCESSOR
-+
-+comment "NOTE: Xenomai conflicts with PC speaker support."
-+	depends on !X86_TSC && X86 && INPUT_PCSPKR
-+comment "(menu Device Drivers/Input device support/Miscellaneous devices)"
-+	depends on !X86_TSC && X86 && INPUT_PCSPKR
-+
-+config XENOMAI
-+	depends on X86_TSC || !X86 || !INPUT_PCSPKR
-+	bool "Xenomai"
-+	default y
-+        select IPIPE
-+
-+        help
-+          Xenomai is a real-time extension to the Linux kernel. Note 
-+          that Xenomai relies on Adeos interrupt pipeline (CONFIG_IPIPE 
-+          option) to be enabled, so enabling this option selects the
-+          CONFIG_IPIPE option.
-+
-+source "arch/ppc/xenomai/Kconfig"
-+
-+endmenu
-+ diff -u linux-2.6.19/init/main.c.ORIG linux-2.6.19/init/main.c
---- linux-2.6.19/init/main.c.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/init/main.c	2006-12-13 14:01:45.830951999 +0100
-@@ -535,6 +535,11 @@
+diff -uNrp ../vanilla/linux-2.6.19/init/main.c 2.6.19-ppc-1.5-02/init/main.c
+--- ../vanilla/linux-2.6.19/init/main.c	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/init/main.c	2007-06-11 17:15:48.000000000 +0200
+@@ -535,6 +535,11 @@ asmlinkage void __init start_kernel(void
  	softirq_init();
  	timekeeping_init();
  	time_init();
@@ -2984,7 +2994,7 @@
  	profile_init();
  	if (!irqs_disabled())
  		printk("start_kernel(): bug: interrupts were enabled early\n");
-@@ -683,6 +688,7 @@
+@@ -683,6 +688,7 @@ static void __init do_basic_setup(void)
  #ifdef CONFIG_SYSCTL
  	sysctl_init();
  #endif
@@ -2992,10 +3002,21 @@
  
  	do_initcalls();
  }
-+ diff -u linux-2.6.19/kernel/exit.c.ORIG linux-2.6.19/kernel/exit.c
---- linux-2.6.19/kernel/exit.c.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/kernel/exit.c	2006-12-13 14:01:45.836951294 +0100
-@@ -914,6 +914,7 @@
+diff -uNrp ../vanilla/linux-2.6.19/kernel/Makefile 2.6.19-ppc-1.5-02/kernel/Makefile
+--- ../vanilla/linux-2.6.19/kernel/Makefile	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/kernel/Makefile	2007-06-11 17:15:48.000000000 +0200
+@@ -48,6 +48,7 @@ obj-$(CONFIG_GENERIC_HARDIRQS) += irq/
+ obj-$(CONFIG_SECCOMP) += seccomp.o
+ obj-$(CONFIG_RCU_TORTURE_TEST) += rcutorture.o
+ obj-$(CONFIG_RELAY) += relay.o
++obj-$(CONFIG_IPIPE) += ipipe/
+ obj-$(CONFIG_UTS_NS) += utsname.o
+ obj-$(CONFIG_TASK_DELAY_ACCT) += delayacct.o
+ obj-$(CONFIG_TASKSTATS) += taskstats.o tsacct.o
+diff -uNrp ../vanilla/linux-2.6.19/kernel/exit.c 2.6.19-ppc-1.5-02/kernel/exit.c
+--- ../vanilla/linux-2.6.19/kernel/exit.c	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/kernel/exit.c	2007-06-11 17:15:48.000000000 +0200
+@@ -914,6 +914,7 @@ fastcall NORET_TYPE void do_exit(long co
  	taskstats_exit_send(tsk, tidstats, group_dead, mycpu);
  	taskstats_exit_free(tidstats);
  
@@ -3003,10 +3024,10 @@
  	exit_mm(tsk);
  
  	if (group_dead)
-+ diff -u linux-2.6.19/kernel/fork.c.ORIG linux-2.6.19/kernel/fork.c
---- linux-2.6.19/kernel/fork.c.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/kernel/fork.c	2006-12-13 14:01:45.841950706 +0100
-@@ -384,6 +384,7 @@
+diff -uNrp ../vanilla/linux-2.6.19/kernel/fork.c 2.6.19-ppc-1.5-02/kernel/fork.c
+--- ../vanilla/linux-2.6.19/kernel/fork.c	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/kernel/fork.c	2007-06-11 17:15:48.000000000 +0200
+@@ -384,6 +384,7 @@ void mmput(struct mm_struct *mm)
  	might_sleep();
  
  	if (atomic_dec_and_test(&mm->mm_users)) {
@@ -3014,7 +3035,7 @@
  		exit_aio(mm);
  		exit_mmap(mm);
  		if (!list_empty(&mm->mmlist)) {
-@@ -914,7 +915,7 @@
+@@ -914,7 +915,7 @@ static inline void copy_flags(unsigned l
  {
  	unsigned long new_flags = p->flags;
  
@@ -3023,7 +3044,7 @@
  	new_flags |= PF_FORKNOEXEC;
  	if (!(clone_flags & CLONE_PTRACE))
  		p->ptrace = 0;
-@@ -1258,6 +1259,15 @@
+@@ -1258,6 +1259,15 @@ static struct task_struct *copy_process(
  	spin_unlock(&current->sighand->siglock);
  	write_unlock_irq(&tasklist_lock);
  	proc_fork_connector(p);
@@ -3039,9 +3060,99 @@
  	return p;
  
  bad_fork_cleanup_namespaces:
-+ diff -u linux-2.6.19/kernel/ipipe/core.c.ORIG linux-2.6.19/kernel/ipipe/core.c
---- linux-2.6.19/kernel/ipipe/core.c.ORIG	2006-12-13 14:01:45.845950236 +0100
-+++ linux-2.6.19/kernel/ipipe/core.c	2006-12-13 14:01:45.846950118 +0100
+diff -uNrp ../vanilla/linux-2.6.19/kernel/ipipe/Kconfig 2.6.19-ppc-1.5-02/kernel/ipipe/Kconfig
+--- ../vanilla/linux-2.6.19/kernel/ipipe/Kconfig	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.19-ppc-1.5-02/kernel/ipipe/Kconfig	2007-06-11 17:15:48.000000000 +0200
+@@ -0,0 +1,6 @@
++config IPIPE
++	bool "Interrupt pipeline"
++	default y
++	---help---
++	  Activate this option if you want the interrupt pipeline to be
++	  compiled in.
+diff -uNrp ../vanilla/linux-2.6.19/kernel/ipipe/Kconfig.debug 2.6.19-ppc-1.5-02/kernel/ipipe/Kconfig.debug
+--- ../vanilla/linux-2.6.19/kernel/ipipe/Kconfig.debug	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.19-ppc-1.5-02/kernel/ipipe/Kconfig.debug	2007-06-11 17:15:48.000000000 +0200
+@@ -0,0 +1,69 @@
++config IPIPE_DEBUG
++	bool "I-pipe debugging"
++	depends on IPIPE
++
++config IPIPE_TRACE
++	bool "Latency tracing"
++	depends on IPIPE_DEBUG
++	select FRAME_POINTER
++	select KALLSYMS
++	select PROC_FS
++	---help---
++	  Activate this option if you want to use per-function tracing of
++	  the kernel. The tracer will collect data via instrumentation
++	  features like the one below or with the help of explicite calls
++	  of ipipe_trace_xxx(). See include/linux/ipipe_trace.h for the
++	  in-kernel tracing API. The collected data and runtime control
++	  is available via /proc/ipipe/trace/*.
++
++config IPIPE_TRACE_ENABLE
++	bool "Enable tracing on boot"
++	depends on IPIPE_TRACE
++	default y
++	---help---
++	  Disable this option if you want to arm the tracer after booting
++	  manually ("echo 1 > /proc/ipipe/tracer/enable"). This can reduce
++	  boot time on slow embedded devices due to the tracer overhead.
++
++config IPIPE_TRACE_MCOUNT
++	bool "Instrument function entries"
++	depends on IPIPE_TRACE
++	default y
++	---help---
++	  When enabled, records every kernel function entry in the tracer
++	  log. While this slows down the system noticeably, it provides
++	  the highest level of information about the flow of events.
++	  However, it can be switch off in order to record only explicit
++	  I-pipe trace points.
++
++config IPIPE_TRACE_IRQSOFF
++	bool "Trace IRQs-off times"
++	depends on IPIPE_TRACE
++	default y
++	---help---
++	  Activate this option if I-pipe shall trace the longest path
++	  with hard-IRQs switched off.
++
++config IPIPE_TRACE_SHIFT
++	int "Depth of trace log (14 => 16Kpoints, 15 => 32Kpoints)"
++	range 10 18
++	default 14
++	depends on IPIPE_TRACE
++	---help---
++	  The number of trace points to hold tracing data for each
++	  trace path, as a power of 2.
++
++config IPIPE_TRACE_VMALLOC
++	bool "Use vmalloc'ed trace buffer"
++	depends on IPIPE_TRACE
++	---help---
++	  Instead of reserving static kernel data, the required buffer
++	  is allocated via vmalloc during boot-up when this option is
++	  enabled. This can help to start systems that are low on memory,
++	  but it slightly degrades overall performance. Try this option
++	  when a traced kernel hangs unexpectedly at boot time.
++
++config IPIPE_TRACE_ENABLE_VALUE
++	int
++	default 0 if !IPIPE_TRACE_ENABLE
++	default 1 if IPIPE_TRACE_ENABLE
+diff -uNrp ../vanilla/linux-2.6.19/kernel/ipipe/Makefile 2.6.19-ppc-1.5-02/kernel/ipipe/Makefile
+--- ../vanilla/linux-2.6.19/kernel/ipipe/Makefile	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.19-ppc-1.5-02/kernel/ipipe/Makefile	2007-06-11 17:15:48.000000000 +0200
+@@ -0,0 +1,3 @@
++
++obj-$(CONFIG_IPIPE)	+= core.o generic.o
++obj-$(CONFIG_IPIPE_TRACE) += tracer.o
+diff -uNrp ../vanilla/linux-2.6.19/kernel/ipipe/core.c 2.6.19-ppc-1.5-02/kernel/ipipe/core.c
+--- ../vanilla/linux-2.6.19/kernel/ipipe/core.c	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.19-ppc-1.5-02/kernel/ipipe/core.c	2007-06-11 17:15:48.000000000 +0200
 @@ -0,0 +1,1049 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
@@ -4092,9 +4203,9 @@
 +EXPORT_SYMBOL(__ipipe_pipeline);
 +EXPORT_SYMBOL(__ipipe_pipelock);
 +EXPORT_SYMBOL(__ipipe_virtual_irq_map);
-+ diff -u linux-2.6.19/kernel/ipipe/generic.c.ORIG linux-2.6.19/kernel/ipipe/generic.c
---- linux-2.6.19/kernel/ipipe/generic.c.ORIG	2006-12-13 14:01:45.849949766 +0100
-+++ linux-2.6.19/kernel/ipipe/generic.c	2006-12-13 14:01:45.850949648 +0100
+diff -uNrp ../vanilla/linux-2.6.19/kernel/ipipe/generic.c 2.6.19-ppc-1.5-02/kernel/ipipe/generic.c
+--- ../vanilla/linux-2.6.19/kernel/ipipe/generic.c	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.19-ppc-1.5-02/kernel/ipipe/generic.c	2007-06-11 17:15:48.000000000 +0200
 @@ -0,0 +1,424 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/generic.c
@@ -4520,99 +4631,9 @@
 +EXPORT_SYMBOL(ipipe_set_irq_affinity);
 +EXPORT_SYMBOL(ipipe_send_ipi);
 +EXPORT_SYMBOL(__ipipe_schedule_irq);
-+ diff -u linux-2.6.19/kernel/ipipe/Kconfig.debug.ORIG linux-2.6.19/kernel/ipipe/Kconfig.debug
---- linux-2.6.19/kernel/ipipe/Kconfig.debug.ORIG	2006-12-13 14:01:45.854949178 +0100
-+++ linux-2.6.19/kernel/ipipe/Kconfig.debug	2006-12-13 14:01:45.855949060 +0100
-@@ -0,0 +1,69 @@
-+config IPIPE_DEBUG
-+	bool "I-pipe debugging"
-+	depends on IPIPE
-+
-+config IPIPE_TRACE
-+	bool "Latency tracing"
-+	depends on IPIPE_DEBUG
-+	select FRAME_POINTER
-+	select KALLSYMS
-+	select PROC_FS
-+	---help---
-+	  Activate this option if you want to use per-function tracing of
-+	  the kernel. The tracer will collect data via instrumentation
-+	  features like the one below or with the help of explicite calls
-+	  of ipipe_trace_xxx(). See include/linux/ipipe_trace.h for the
-+	  in-kernel tracing API. The collected data and runtime control
-+	  is available via /proc/ipipe/trace/*.
-+
-+config IPIPE_TRACE_ENABLE
-+	bool "Enable tracing on boot"
-+	depends on IPIPE_TRACE
-+	default y
-+	---help---
-+	  Disable this option if you want to arm the tracer after booting
-+	  manually ("echo 1 > /proc/ipipe/tracer/enable"). This can reduce
-+	  boot time on slow embedded devices due to the tracer overhead.
-+
-+config IPIPE_TRACE_MCOUNT
-+	bool "Instrument function entries"
-+	depends on IPIPE_TRACE
-+	default y
-+	---help---
-+	  When enabled, records every kernel function entry in the tracer
-+	  log. While this slows down the system noticeably, it provides
-+	  the highest level of information about the flow of events.
-+	  However, it can be switch off in order to record only explicit
-+	  I-pipe trace points.
-+
-+config IPIPE_TRACE_IRQSOFF
-+	bool "Trace IRQs-off times"
-+	depends on IPIPE_TRACE
-+	default y
-+	---help---
-+	  Activate this option if I-pipe shall trace the longest path
-+	  with hard-IRQs switched off.
-+
-+config IPIPE_TRACE_SHIFT
-+	int "Depth of trace log (14 => 16Kpoints, 15 => 32Kpoints)"
-+	range 10 18
-+	default 14
-+	depends on IPIPE_TRACE
-+	---help---
-+	  The number of trace points to hold tracing data for each
-+	  trace path, as a power of 2.
-+
-+config IPIPE_TRACE_VMALLOC
-+	bool "Use vmalloc'ed trace buffer"
-+	depends on IPIPE_TRACE
-+	---help---
-+	  Instead of reserving static kernel data, the required buffer
-+	  is allocated via vmalloc during boot-up when this option is
-+	  enabled. This can help to start systems that are low on memory,
-+	  but it slightly degrades overall performance. Try this option
-+	  when a traced kernel hangs unexpectedly at boot time.
-+
-+config IPIPE_TRACE_ENABLE_VALUE
-+	int
-+	default 0 if !IPIPE_TRACE_ENABLE
-+	default 1 if IPIPE_TRACE_ENABLE
-+ diff -u linux-2.6.19/kernel/ipipe/Kconfig.ORIG linux-2.6.19/kernel/ipipe/Kconfig
---- linux-2.6.19/kernel/ipipe/Kconfig.ORIG	2006-12-13 14:01:45.858948708 +0100
-+++ linux-2.6.19/kernel/ipipe/Kconfig	2006-12-13 14:01:45.859948590 +0100
-@@ -0,0 +1,6 @@
-+config IPIPE
-+	bool "Interrupt pipeline"
-+	default y
-+	---help---
-+	  Activate this option if you want the interrupt pipeline to be
-+	  compiled in.
-+ diff -u linux-2.6.19/kernel/ipipe/Makefile.ORIG linux-2.6.19/kernel/ipipe/Makefile
---- linux-2.6.19/kernel/ipipe/Makefile.ORIG	2006-12-13 14:01:45.862948237 +0100
-+++ linux-2.6.19/kernel/ipipe/Makefile	2006-12-13 14:01:45.863948120 +0100
-@@ -0,0 +1,3 @@
-+
-+obj-$(CONFIG_IPIPE)	+= core.o generic.o
-+obj-$(CONFIG_IPIPE_TRACE) += tracer.o
-+ diff -u linux-2.6.19/kernel/ipipe/tracer.c.ORIG linux-2.6.19/kernel/ipipe/tracer.c
---- linux-2.6.19/kernel/ipipe/tracer.c.ORIG	2006-12-13 14:01:45.867947650 +0100
-+++ linux-2.6.19/kernel/ipipe/tracer.c	2006-12-13 14:01:45.868947532 +0100
+diff -uNrp ../vanilla/linux-2.6.19/kernel/ipipe/tracer.c 2.6.19-ppc-1.5-02/kernel/ipipe/tracer.c
+--- ../vanilla/linux-2.6.19/kernel/ipipe/tracer.c	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.19-ppc-1.5-02/kernel/ipipe/tracer.c	2007-06-11 17:15:48.000000000 +0200
 @@ -0,0 +1,1245 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
@@ -5859,10 +5880,10 @@
 +	__ipipe_create_trace_proc_val(trace_dir, "enable",
 +	                              &ipipe_trace_enable);
 +}
-+ diff -u linux-2.6.19/kernel/irq/handle.c.ORIG linux-2.6.19/kernel/irq/handle.c
---- linux-2.6.19/kernel/irq/handle.c.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/kernel/irq/handle.c	2006-12-13 14:01:45.874946827 +0100
-@@ -177,16 +177,21 @@
+diff -uNrp ../vanilla/linux-2.6.19/kernel/irq/handle.c 2.6.19-ppc-1.5-02/kernel/irq/handle.c
+--- ../vanilla/linux-2.6.19/kernel/irq/handle.c	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/kernel/irq/handle.c	2007-06-11 17:15:48.000000000 +0200
+@@ -177,16 +177,21 @@ fastcall unsigned int __do_IRQ(unsigned 
  		/*
  		 * No locking required for CPU-local interrupts:
  		 */
@@ -5884,27 +5905,10 @@
  	/*
  	 * REPLAY is when Linux resends an IRQ that was dropped earlier
  	 * WAITING is used by probe to mark irqs that are being tested
-+ diff -u linux-2.6.19/kernel/Makefile.ORIG linux-2.6.19/kernel/Makefile
---- linux-2.6.19/kernel/Makefile.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/kernel/Makefile	2006-12-13 14:01:45.878946357 +0100
-@@ -51,6 +51,7 @@
- obj-$(CONFIG_UTS_NS) += utsname.o
- obj-$(CONFIG_TASK_DELAY_ACCT) += delayacct.o
- obj-$(CONFIG_TASKSTATS) += taskstats.o tsacct.o
-+obj-$(CONFIG_IPIPE) += ipipe/
- 
- ifneq ($(CONFIG_SCHED_NO_NO_OMIT_FRAME_POINTER),y)
- # According to Alan Modra <alan@linuxcare.com.au>, the -fno-omit-frame-pointer is
-@@ -74,3 +75,5 @@
- targets += config_data.h
- $(obj)/config_data.h: $(obj)/config_data.gz FORCE
- 	$(call if_changed,ikconfiggz)
-+
-+obj-$(CONFIG_XENOMAI) += xenomai/
-+ diff -u linux-2.6.19/kernel/printk.c.ORIG linux-2.6.19/kernel/printk.c
---- linux-2.6.19/kernel/printk.c.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/kernel/printk.c	2006-12-13 14:01:45.883945769 +0100
-@@ -489,6 +489,78 @@
+diff -uNrp ../vanilla/linux-2.6.19/kernel/printk.c 2.6.19-ppc-1.5-02/kernel/printk.c
+--- ../vanilla/linux-2.6.19/kernel/printk.c	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/kernel/printk.c	2007-06-11 17:15:48.000000000 +0200
+@@ -489,6 +489,78 @@ static int have_callable_console(void)
   * printf(3)
   */
  
@@ -5983,7 +5987,7 @@
  asmlinkage int printk(const char *fmt, ...)
  {
  	va_list args;
-@@ -500,6 +572,7 @@
+@@ -500,6 +572,7 @@ asmlinkage int printk(const char *fmt, .
  
  	return r;
  }
@@ -5991,10 +5995,10 @@
  
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
-+ diff -u linux-2.6.19/kernel/sched.c.ORIG linux-2.6.19/kernel/sched.c
---- linux-2.6.19/kernel/sched.c.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/kernel/sched.c	2006-12-13 14:01:45.893944593 +0100
-@@ -1391,7 +1391,7 @@
+diff -uNrp ../vanilla/linux-2.6.19/kernel/sched.c 2.6.19-ppc-1.5-02/kernel/sched.c
+--- ../vanilla/linux-2.6.19/kernel/sched.c	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/kernel/sched.c	2007-06-11 17:15:48.000000000 +0200
+@@ -1391,7 +1391,7 @@ static int try_to_wake_up(struct task_st
  
  	rq = task_rq_lock(p, &flags);
  	old_state = p->state;
@@ -6003,7 +6007,7 @@
  		goto out;
  
  	if (p->array)
-@@ -1809,6 +1809,8 @@
+@@ -1809,6 +1809,8 @@ asmlinkage void schedule_tail(struct tas
  #endif
  	if (current->set_child_tid)
  		put_user(current->pid, current->set_child_tid);
@@ -6012,7 +6016,7 @@
  }
  
  /*
-@@ -3324,12 +3326,16 @@
+@@ -3324,12 +3326,16 @@ asmlinkage void __sched schedule(void)
  	long *switch_count;
  	struct rq *rq;
  
@@ -6030,7 +6034,7 @@
  		printk(KERN_ERR "BUG: scheduling while atomic: "
  			"%s/0x%08x/%d\n",
  			current->comm, preempt_count(), current->pid);
-@@ -3337,8 +3343,13 @@
+@@ -3337,8 +3343,13 @@ asmlinkage void __sched schedule(void)
  	}
  	profile_hit(SCHED_PROFILING, __builtin_return_address(0));
  
@@ -6044,7 +6048,7 @@
  	prev = current;
  	release_kernel_lock(prev);
  need_resched_nonpreemptible:
-@@ -3456,6 +3467,8 @@
+@@ -3456,6 +3467,8 @@ switch_tasks:
  		prepare_task_switch(rq, next);
  		prev = context_switch(rq, prev, next);
  		barrier();
@@ -6053,7 +6057,7 @@
  		/*
  		 * this_rq must be evaluated again because prev may have moved
  		 * CPUs since it called schedule(), thus the 'rq' on its stack
-@@ -3469,7 +3482,7 @@
+@@ -3469,7 +3482,7 @@ switch_tasks:
  	if (unlikely(reacquire_kernel_lock(prev) < 0))
  		goto need_resched_nonpreemptible;
  	preempt_enable_no_resched();
@@ -6062,7 +6066,7 @@
  		goto need_resched;
  }
  EXPORT_SYMBOL(schedule);
-@@ -3487,6 +3500,11 @@
+@@ -3487,6 +3500,11 @@ asmlinkage void __sched preempt_schedule
  	struct task_struct *task = current;
  	int saved_lock_depth;
  #endif
@@ -6074,7 +6078,7 @@
  	/*
  	 * If there is a non-zero preempt_count or interrupts are disabled,
  	 * we do not want to preempt the current task.  Just return..
-@@ -4185,6 +4203,7 @@
+@@ -4185,6 +4203,7 @@ recheck:
  		deactivate_task(p, rq);
  	oldprio = p->prio;
  	__setscheduler(p, policy, param->sched_priority);
@@ -6082,7 +6086,7 @@
  	if (array) {
  		__activate_task(p, rq);
  		/*
-@@ -6950,3 +6969,50 @@
+@@ -6950,3 +6969,50 @@ void set_curr_task(int cpu, struct task_
  }
  
  #endif
@@ -6133,10 +6137,10 @@
 +EXPORT_SYMBOL(ipipe_reenter_root);
 +
 +#endif /* CONFIG_IPIPE */
-+ diff -u linux-2.6.19/kernel/signal.c.ORIG linux-2.6.19/kernel/signal.c
---- linux-2.6.19/kernel/signal.c.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/kernel/signal.c	2006-12-13 14:01:45.899943888 +0100
-@@ -504,6 +504,7 @@
+diff -uNrp ../vanilla/linux-2.6.19/kernel/signal.c 2.6.19-ppc-1.5-02/kernel/signal.c
+--- ../vanilla/linux-2.6.19/kernel/signal.c	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/kernel/signal.c	2007-06-11 17:15:48.000000000 +0200
+@@ -504,6 +504,7 @@ void signal_wake_up(struct task_struct *
  	unsigned int mask;
  
  	set_tsk_thread_flag(t, TIF_SIGPENDING);
@@ -6144,10 +6148,10 @@
  
  	/*
  	 * For SIGKILL, we want to wake it up in the stopped/traced case.
-+ diff -u linux-2.6.19/lib/Kconfig.debug.ORIG linux-2.6.19/lib/Kconfig.debug
---- linux-2.6.19/lib/Kconfig.debug.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/lib/Kconfig.debug	2006-12-13 14:01:45.905943183 +0100
-@@ -46,6 +46,8 @@
+diff -uNrp ../vanilla/linux-2.6.19/lib/Kconfig.debug 2.6.19-ppc-1.5-02/lib/Kconfig.debug
+--- ../vanilla/linux-2.6.19/lib/Kconfig.debug	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/lib/Kconfig.debug	2007-06-11 17:15:48.000000000 +0200
+@@ -46,6 +46,8 @@ config UNUSED_SYMBOLS
  	  you really need it, and what the merge plan to the mainline kernel for
  	  your module is.
  
@@ -6156,10 +6160,10 @@
  config DEBUG_KERNEL
  	bool "Kernel debugging"
  	help
-+ diff -u linux-2.6.19/lib/smp_processor_id.c.ORIG linux-2.6.19/lib/smp_processor_id.c
---- linux-2.6.19/lib/smp_processor_id.c.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/lib/smp_processor_id.c	2006-12-13 14:01:45.929940361 +0100
-@@ -13,6 +13,11 @@
+diff -uNrp ../vanilla/linux-2.6.19/lib/smp_processor_id.c 2.6.19-ppc-1.5-02/lib/smp_processor_id.c
+--- ../vanilla/linux-2.6.19/lib/smp_processor_id.c	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/lib/smp_processor_id.c	2007-06-11 17:15:48.000000000 +0200
+@@ -13,6 +13,11 @@ unsigned int debug_smp_processor_id(void
  	int this_cpu = raw_smp_processor_id();
  	cpumask_t this_mask;
  
@@ -6171,23 +6175,9 @@
  	if (likely(preempt_count))
  		goto out;
  
-+ diff -u linux-2.6.19/Makefile.ORIG linux-2.6.19/Makefile
---- linux-2.6.19/Makefile.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/Makefile	2006-12-13 14:01:45.935939656 +0100
-@@ -491,6 +491,10 @@
- 
- include $(srctree)/arch/$(ARCH)/Makefile
- 
-+ifdef CONFIG_IPIPE_TRACE_MCOUNT
-+CFLAGS          += -pg
-+endif
-+
- ifdef CONFIG_FRAME_POINTER
- CFLAGS		+= -fno-omit-frame-pointer $(call cc-option,-fno-optimize-sibling-calls,)
- else
-+ diff -u linux-2.6.19/mm/vmalloc.c.ORIG linux-2.6.19/mm/vmalloc.c
---- linux-2.6.19/mm/vmalloc.c.ORIG	2006-11-29 22:57:37.000000000 +0100
-+++ linux-2.6.19/mm/vmalloc.c	2006-12-13 14:01:45.941938951 +0100
+diff -uNrp ../vanilla/linux-2.6.19/mm/vmalloc.c 2.6.19-ppc-1.5-02/mm/vmalloc.c
+--- ../vanilla/linux-2.6.19/mm/vmalloc.c	2006-11-29 22:57:37.000000000 +0100
++++ 2.6.19-ppc-1.5-02/mm/vmalloc.c	2007-06-11 17:15:48.000000000 +0200
 @@ -19,6 +19,7 @@
  
  #include <asm/uaccess.h>
@@ -6196,7 +6186,7 @@
  
  
  DEFINE_RWLOCK(vmlist_lock);
-@@ -151,10 +152,14 @@
+@@ -151,10 +152,14 @@ int map_vm_area(struct vm_struct *area, 
  	BUG_ON(addr >= end);
  	pgd = pgd_offset_k(addr);
  	do {
