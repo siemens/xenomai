@@ -90,7 +90,7 @@ typedef struct rt_intr {
 
 #define rlink2intr(ln)		container_of(ln, RT_INTR, rlink)
 
-    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
 
 } RT_INTR;
 

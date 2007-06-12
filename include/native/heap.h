@@ -90,7 +90,7 @@ typedef struct rt_heap {
 
 #define rlink2heap(ln)		container_of(ln, RT_HEAP, rlink)
 
-    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
 
 } RT_HEAP;
 

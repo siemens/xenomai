@@ -70,7 +70,7 @@ typedef struct rt_alarm {
 
 #define rlink2alarm(ln)	container_of(ln, RT_ALARM, rlink)
 
-    xnqueue_t *rqueue;		/* !< Backpinter to resource queue. */
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 

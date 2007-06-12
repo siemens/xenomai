@@ -46,9 +46,9 @@ typedef struct xeno_resource_holder {
 
 extern xeno_rholder_t __native_global_rholder;
 
-extern int __native_muxid;
-
 #ifdef CONFIG_XENO_OPT_PERVASIVE
+
+extern int __native_muxid;
 
 static inline xeno_rholder_t *xeno_get_rholder(void)
 {
