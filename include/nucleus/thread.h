@@ -49,6 +49,11 @@
 #define XNLOCK    0x00002000 /**< Holds the scheduler lock (i.e. not preemptible) */
 #define XNRRB     0x00004000 /**< Undergoes a round-robin scheduling */
 #define XNASDI    0x00008000 /**< ASR are disabled */
+
+/* Some skins may depend on the following fields to live in the high
+   16-bit word, in order to be combined with the emulated RTOS flags
+   which use the low one, so don't change them carelessly. */
+
 #define XNSHIELD  0x00010000 /**< IRQ shield is enabled (shadow only) */
 #define XNTRAPSW  0x00020000 /**< Trap execution mode switches */
 #define XNRPIOFF  0x00040000 /**< Stop priority coupling (shadow only) */
