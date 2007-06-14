@@ -49,12 +49,14 @@
 #define XNPIPE_USER_SIGIO        0x4
 #define XNPIPE_USER_WREAD        0x8
 #define XNPIPE_USER_WREAD_READY  0x10
+#define XNPIPE_USER_WSYNC        0x20
+#define XNPIPE_USER_WSYNC_READY  0x40
 
-#define XNPIPE_USER_WMASK \
-(XNPIPE_USER_WREAD)
+#define XNPIPE_USER_ALL_WAIT \
+(XNPIPE_USER_WREAD|XNPIPE_USER_WSYNC)
 
-#define XNPIPE_USER_WREADY \
-(XNPIPE_USER_WREAD_READY)
+#define XNPIPE_USER_ALL_READY \
+(XNPIPE_USER_WREAD_READY|XNPIPE_USER_WSYNC_READY)
 
 typedef struct xnpipe_mh {
 
@@ -97,8 +99,9 @@ typedef struct xnpipe_state {
     /* Linux kernel part */
     xnflags_t status;
     struct fasync_struct *asyncq;
-    wait_queue_head_t readq;		/* read waiters and an open waiter */
-    unsigned int readw;
+    wait_queue_head_t readq;		/* open/read/poll waiters */
+    wait_queue_head_t syncq;		/* sync waiters */
+    unsigned int nwait;
     size_t ionrd;
 
 } xnpipe_state_t;
