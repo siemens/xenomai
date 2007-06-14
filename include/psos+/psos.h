@@ -25,7 +25,7 @@
 #ifndef _XENO_SKIN_PSOS_H
 #define _XENO_SKIN_PSOS_H
 
-#include <nucleus/types.h>
+#include <nucleus/thread.h>
 
 #define PSOS_SKIN_MAGIC     0x50534F53
 #define PSOS_SKIN_VERSION   5
@@ -56,10 +56,16 @@
 #define T_LOCAL       0x0000
 #define T_NOFPU       0x0000
 #define T_FPU         0x0002
+
+/* Those bits are Xenomai-specific. */
 #define T_SHADOW      0x8000
+#define  T_SHIELD      XNSHIELD
+#define  T_TRAPSW      XNTRAPSW
+#define  T_RPIOFF      XNRPIOFF
 
 #define T_START_MASK   (T_NOPREEMPT|T_TSLICE|T_NOASR|T_SUPV|T_NOISR|T_LEVELMASK7)
-#define T_MODE_MASK    (T_NOPREEMPT|T_TSLICE|T_NOASR|T_NOISR|T_LEVELMASK7)
+#define T_MODE_MASK    (T_NOPREEMPT|T_TSLICE|T_NOASR|T_NOISR| \
+			T_LEVELMASK7|T_SHIELD|T_TRAPSW|T_RPIOFF)
 
 #define RN_PRIOR      0x0002
 #define RN_FIFO       0x0000
@@ -407,6 +413,11 @@ u_long tm_wkwhen(u_long date,
 		 u_long ticks);
 
 u_long tm_getm(unsigned long long *ns_r); /* Xenomai extension. */
+
+u_long tm_signal(u_long value,	/* Xenomai extension. */
+		 u_long interval,
+		 int signo,
+		 u_long *tmid_r);
 
 #ifdef __cplusplus
 };
