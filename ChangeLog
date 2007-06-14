@@ -1,3 +1,24 @@
+2007-06-14  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/psos+/task.c (t_mode): Add support for T_SHIELD,
+	T_WARNSW and T_RPIOFF.
+
+2007-06-13  Philippe Gerum  <rpm@xenomai.org>
+
+	* src/skins/psos+/tm.c: Add tm_signal() Xenomai extension to
+	emulate the POSIX timer_settime() service a pSOSish way.
+
+	* ksrc/skins/psos+/asr.c (as_send): Send SIGRTxx signals to
+	userland receivers.
+
+	* src/skins/psos+/asr.c: Add as_send() support.
+
+	* ksrc/nucleus/pipe.c (xnpipe_wakeup_proc): Fix deadly bug
+	refreshing the head queue pointer for the asyncq in the SMP case.
+	(xnpipe_open): Add synchronous open mode (O_SYNC), which causes
+	all Linux writes to the message pipe to block until the Xenomai
+	side has consumed all the messages from its input queue.
+
 2007-06-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* Makefile.am (sudo): Try to better guess what the user can really

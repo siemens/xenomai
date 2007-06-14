@@ -58,9 +58,9 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libpsos_la_LIBADD =
-am_libpsos_la_OBJECTS = libpsos_la-init.lo libpsos_la-queue.lo \
-	libpsos_la-rn.lo libpsos_la-sem.lo libpsos_la-task.lo \
-	libpsos_la-tm.lo
+am_libpsos_la_OBJECTS = libpsos_la-asr.lo libpsos_la-init.lo \
+	libpsos_la-queue.lo libpsos_la-rn.lo libpsos_la-sem.lo \
+	libpsos_la-task.lo libpsos_la-tm.lo
 libpsos_la_OBJECTS = $(am_libpsos_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/src/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
@@ -235,6 +235,7 @@ target_vendor = @target_vendor@
 lib_LTLIBRARIES = libpsos.la
 libpsos_la_LDFLAGS = -version-info 0:0:0 -lpthread
 libpsos_la_SOURCES = \
+	asr.c \
 	init.c \
 	queue.c \
 	rn.c \
@@ -315,6 +316,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpsos_la-asr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpsos_la-init.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpsos_la-queue.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpsos_la-rn.Plo@am__quote@
@@ -342,6 +344,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+libpsos_la-asr.lo: asr.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpsos_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpsos_la-asr.lo -MD -MP -MF "$(DEPDIR)/libpsos_la-asr.Tpo" -c -o libpsos_la-asr.lo `test -f 'asr.c' || echo '$(srcdir)/'`asr.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpsos_la-asr.Tpo" "$(DEPDIR)/libpsos_la-asr.Plo"; else rm -f "$(DEPDIR)/libpsos_la-asr.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='asr.c' object='libpsos_la-asr.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpsos_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpsos_la-asr.lo `test -f 'asr.c' || echo '$(srcdir)/'`asr.c
 
 libpsos_la-init.lo: init.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpsos_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpsos_la-init.lo -MD -MP -MF "$(DEPDIR)/libpsos_la-init.Tpo" -c -o libpsos_la-init.lo `test -f 'init.c' || echo '$(srcdir)/'`init.c; \
