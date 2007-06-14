@@ -664,7 +664,8 @@ dev devices:
            sudo= ; \
         else if test \! "x`type $(SUDO)`" = x ; then \
            echo "sudo found (sudo is $(SUDO)), testing it..." ; \
-           $(SUDO) true && sudo="$(SUDO)" || { \
+           $(SUDO) sh -c "( mknod $(DESTDIR)/dev/dummy c 150 0 && rm -f $(DESTDIR)/dev/dummy )" && \
+           sudo="$(SUDO)" || { \
 echo '*** Warning: you are not super-user and sudo does not work, real-time\
 devices' ; \
 echo '*** nodes will not be created.' ; \
