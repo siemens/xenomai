@@ -91,6 +91,8 @@ static inline xnflags_t psos_mode_to_xeno (u_long mode)
     if (mode & T_NOASR)
 	xnmode |= XNASDI;
 
+    xnmode |= (mode & (T_SHIELD|T_TRAPSW|T_RPIOFF));
+
     return xnmode;
 }
 
@@ -106,6 +108,8 @@ static inline u_long xeno_mode_to_psos (xnflags_t xnmode)
 
     if (xnmode & XNASDI)
 	mode |= T_NOASR;
+
+    mode |= (xnmode & (XNSHIELD|XNTRAPSW|XNRPIOFF));
 
     return mode;
 }
