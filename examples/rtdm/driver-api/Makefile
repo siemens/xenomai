@@ -7,7 +7,7 @@ APPLICATIONS = tut01-skeleton-app tut02-skeleton-app
 
 
 ### List of modules to be build
-MODULES = heartbeat-x86 tut01-skeleton-drv tut02-skeleton-drv
+MODULES = heartbeat tut01-skeleton-drv tut02-skeleton-drv
 
 ### Note: to override the kernel source path, use "make KSRC=..."
 
