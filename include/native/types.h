@@ -32,6 +32,10 @@
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
+#ifndef CONFIG_XENO_OPT_DEBUG_NATIVE
+#define CONFIG_XENO_OPT_DEBUG_NATIVE  0
+#endif
+
 typedef xnticks_t RTIME;
 
 typedef xnsticks_t SRTIME;

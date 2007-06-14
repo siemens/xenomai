@@ -40,10 +40,6 @@
 #include <nucleus/compiler.h>
 #include <nucleus/assert.h>
 
-#ifndef CONFIG_XENO_OPT_DEBUG_NATIVE
-#define CONFIG_XENO_OPT_DEBUG_NATIVE  0
-#endif
-
 typedef unsigned long xnsigmask_t;
 
 typedef unsigned long long xnticks_t;
