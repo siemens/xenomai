@@ -24,6 +24,7 @@ config XENO_OPT_PSOS_PERIOD
 
 config XENO_OPT_DEBUG_PSOS
 	bool "Debugging support"
+	depends on XENO_OPT_DEBUG
 	default y
 	help
 
