@@ -66,7 +66,11 @@
 #define __psos_tm_evwhen    40
 #define __psos_tm_wkwhen    41
 #define __psos_tm_evevery   42
-#define __psos_tm_getm      43	/* Xenomai extension: get monotonic time (ns) */
+/* Xenomai extension: get monotonic time (ns) */
+#define __psos_tm_getm      43
+/* Xenomai extension: send a Linux signal after a specified time */
+#define __psos_tm_signal    44
+#define __psos_as_send      45
 
 #ifdef __KERNEL__
 
