@@ -86,69 +86,68 @@ static inline void xnpipe_minor_free(int minor)
 		  1UL << (minor % BITS_PER_LONG));
 }
 
-static inline void xnpipe_enqueue_read(xnpipe_state_t *state)
+static inline void xnpipe_enqueue_wait(xnpipe_state_t *state, int mask)
 {
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!testbits(state->status, XNPIPE_USER_WREAD)) {
+	if (!testbits(state->status, mask)) {
 		appendq(&xnpipe_sleepq, &state->slink);
-		__setbits(state->status, XNPIPE_USER_WREAD);
+		__setbits(state->status, mask);
 	}
 
-	(state->readw)++;
+	state->nwait++;
 
 	xnlock_put_irqrestore(&nklock, s);
 }
 
 /* Must be entered with nklock held. */
 
-static inline int xnpipe_read_wait(xnpipe_state_t *state, spl_t s)
+static inline int xnpipe_wait(xnpipe_state_t *state, int mask, spl_t s)
 {
+	wait_queue_head_t *waitq;
 	DEFINE_WAIT(wait);
 	int sigpending;
 
-	xnpipe_enqueue_read(state);
+	if (mask & XNPIPE_USER_WREAD)
+		waitq = &state->readq;
+	else
+		waitq = &state->syncq;
+
+	xnpipe_enqueue_wait(state, mask);
 	xnlock_put_irqrestore(&nklock, s);
 
-	prepare_to_wait_exclusive(&(state)->readq, &wait, TASK_INTERRUPTIBLE);
+	prepare_to_wait_exclusive(waitq, &wait, TASK_INTERRUPTIBLE);
 	schedule();
-	finish_wait(&(state)->readq, &wait);
+	finish_wait(waitq, &wait);
 	sigpending = signal_pending(current);
 
-	/* We do not pass "s" back to the caller, we just restore the
-	   entry state here. */
+	/* Restore the interrupt state initially set by the caller. */
 	xnlock_get_irqsave(&nklock, s);
 
 	return sigpending;
 }
 
-static inline void xnpipe_dequeue_read(xnpipe_state_t *state)
+static inline void xnpipe_dequeue_wait(xnpipe_state_t *state, int mask)
 {
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!--(state->readw)) {
-		__clrbits(state->status, XNPIPE_USER_WREAD);
+	if (--state->nwait == 0) {
+		__clrbits(state->status, mask);
 		removeq(&xnpipe_sleepq, &state->slink);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-/*
- * Attempt to wake up Linux-side sleepers upon pipe
- * availability/readability conditions.  This routine is
- * asynchronously kicked from kernel space and only deals with
- * Linux-related variables.
- */
-
 static void xnpipe_wakeup_proc(void *cookie)
 {
 	xnholder_t *holder, *nholder;
 	xnpipe_state_t *state;
+	u_long rbits;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -158,32 +157,35 @@ static void xnpipe_wakeup_proc(void *cookie)
 	while ((holder = nholder) != NULL) {
 		nholder = nextq(&xnpipe_sleepq, holder);
 		state = link2xnpipe(holder, slink);
-
-		/* Wake up the sleepers whose ready flag is set. */
-
-		if (testbits(state->status, XNPIPE_USER_WREAD_READY)) {
-			__clrbits(state->status, XNPIPE_USER_WREAD_READY);
-
-			/* PREEMPT_RT kernels could schedule us out as a
-			   result of up()'ing the semaphore, so we need to do
-			   the housekeeping and release the spinlock early
-			   on. */
-			if (waitqueue_active(&state->readq)) {
-				xnpipe_dequeue_read(state);
-				xnlock_put_irqrestore(&nklock, s);
-				wake_up_interruptible(&state->readq);
-			} else
-				/* just in case of bogus XNPIPE_USER_WREAD_READY */
-				continue;
-
-			xnlock_get_irqsave(&nklock, s);
-
+		if ((rbits = testbits(state->status, XNPIPE_USER_ALL_READY)) != 0) {
+			__clrbits(state->status, rbits);
+			/* PREEMPT_RT kernels could schedule us out as
+			   a result of waking up a waiter, so we need
+			   the housekeeping and release the nklock
+			   before calling wake_up_interruptible(). */
+			if ((rbits & XNPIPE_USER_WREAD_READY) != 0) {
+				if (waitqueue_active(&state->readq)) {
+					xnpipe_dequeue_wait(state, XNPIPE_USER_WREAD);
+					xnlock_put_irqrestore(&nklock, s);
+					wake_up_interruptible(&state->readq);
+					rbits &= ~XNPIPE_USER_WREAD_READY;
+					xnlock_get_irqsave(&nklock, s);
+				}
+			}
+			if ((rbits & XNPIPE_USER_WSYNC_READY) != 0) {
+				if (waitqueue_active(&state->syncq)) {
+					xnpipe_dequeue_wait(state, XNPIPE_USER_WSYNC);
+					xnlock_put_irqrestore(&nklock, s);
+					wake_up_interruptible(&state->syncq);
+					rbits &= ~XNPIPE_USER_WSYNC_READY;
+					xnlock_get_irqsave(&nklock, s);
+				}
+			}
 			/* On PREEMPT_RT kernels, __wake_up() might sleep, so we
 			   need to refetch the sleep queue head just to be safe;
 			   for the very same reason, livelocking inside this loop
 			   cannot happen. On regular kernel variants, we just keep
 			   processing the entire loop in a row. */
-
 #if defined(CONFIG_PREEMPT_RT) || defined (CONFIG_SMP)
 			nholder = getheadq(&xnpipe_sleepq);
 #endif /* CONFIG_PREEMPT_RT || CONFIG_SMP */
@@ -209,7 +211,7 @@ static void xnpipe_wakeup_proc(void *cookie)
 			   for the sleep queue */
 
 #if defined(CONFIG_PREEMPT_RT) || defined (CONFIG_SMP)
-			nholder = getheadq(&xnpipe_sleepq);
+			nholder = getheadq(&xnpipe_asyncq);
 #endif /* CONFIG_PREEMPT_RT || CONFIG_SMP */
 		}
 	}
@@ -263,8 +265,8 @@ int xnpipe_connect(int minor,
 
 	if (testbits(state->status, XNPIPE_USER_CONN)) {
 		if (testbits(state->status, XNPIPE_USER_WREAD)) {
-			/* Wake up the userland thread waiting for the nucleus
-			   side to connect (open). */
+			/* Wake up the regular Linux task waiting for
+			   the nucleus side to connect (open). */
 			__setbits(state->status, XNPIPE_USER_WREAD_READY);
 			need_sched = 1;
 		}
@@ -323,11 +325,12 @@ int xnpipe_disconnect(int minor)
 		if (xnsynch_destroy(&state->synchbase) == XNSYNCH_RESCHED)
 			xnpod_schedule();
 
-		if (testbits(state->status, XNPIPE_USER_WMASK)) {
-			__setbits(state->status, XNPIPE_USER_WREADY);
+		if (testbits(state->status, XNPIPE_USER_WREAD)) {
+			__setbits(state->status, XNPIPE_USER_WREAD_READY);
 
-			/* Wake up the userland thread waiting for some operation
-			   from the kernel side (read/write or poll). */
+			/* Wake up the regular Linux task waiting for
+			   some operation from the Xenomai side
+			   (read/write or poll). */
 			need_sched = 1;
 		}
 
@@ -384,8 +387,8 @@ ssize_t xnpipe_send(int minor, struct xnpipe_mh *mh, size_t size, int flags)
 	}
 
 	if (testbits(state->status, XNPIPE_USER_WREAD)) {
-		/* Wake up the userland thread waiting for input
-		   from the kernel side. */
+		/* Wake up the regular Linux task waiting for input
+		   from the Xenomai side. */
 		__setbits(state->status, XNPIPE_USER_WREAD_READY);
 		need_sched = 1;
 	}
@@ -487,6 +490,16 @@ ssize_t xnpipe_recv(int minor, struct xnpipe_mh **pmh, xnticks_t timeout)
 
 	ret = (ssize_t) xnpipe_m_size(*pmh);
 
+	if (testbits(state->status, XNPIPE_USER_WSYNC)) {
+		if (emptyq_p(&state->inq)) {
+			/* Wake up the regular Linux task waiting for
+			   the nucleus side to consume all messages
+			   (O_SYNC). */
+			__setbits(state->status, XNPIPE_USER_WSYNC_READY);
+			xnpipe_schedule_request();
+		}
+	}
+
       unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -545,6 +558,13 @@ int xnpipe_flush(int minor, int mode)
 				xnfree(link2mh(holder));
 
 			xnlock_get_irqsave(&nklock, s);
+		}
+		if (testbits(state->status, XNPIPE_USER_WSYNC)) {
+			/* We obviously have no more messages pending
+			 * on the RT side, so wake up the regular
+			 * Linux task. */
+			__setbits(state->status, XNPIPE_USER_WSYNC_READY);
+			xnpipe_schedule_request();
 		}
 	}
 
@@ -614,10 +634,11 @@ static int xnpipe_open(struct inode *inode, struct file *file)
 
 	file->private_data = state;
 	init_waitqueue_head(&state->readq);
-	state->readw = 0;
+	init_waitqueue_head(&state->syncq);
+	state->nwait = 0;
 
 	__clrbits(state->status,
-		  XNPIPE_USER_WMASK | XNPIPE_USER_WREADY | XNPIPE_USER_SIGIO);
+		  XNPIPE_USER_ALL_WAIT | XNPIPE_USER_ALL_READY | XNPIPE_USER_SIGIO);
 
 	if (!testbits(state->status, XNPIPE_KERN_CONN)) {
 		if (xnpipe_open_handler) {
@@ -644,7 +665,7 @@ static int xnpipe_open(struct inode *inode, struct file *file)
 			return -EWOULDBLOCK;
 		}
 
-		sigpending = xnpipe_read_wait(state, s);
+		sigpending = xnpipe_wait(state, XNPIPE_USER_WREAD, s);
 
 		if (sigpending && !testbits(state->status, XNPIPE_KERN_CONN)) {
 			xnpipe_cleanup_user_conn(state);
@@ -678,16 +699,17 @@ static int xnpipe_release(struct inode *inode, struct file *file)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (testbits(state->status, XNPIPE_USER_WMASK))
-		removeq(&xnpipe_sleepq, &state->slink);
+	if (testbits(state->status, XNPIPE_USER_WREAD))
+		xnpipe_dequeue_wait(state, XNPIPE_USER_WREAD);
 
-	__clrbits(state->status, XNPIPE_USER_WMASK);
+	if (testbits(state->status, XNPIPE_USER_WSYNC))
+		xnpipe_dequeue_wait(state, XNPIPE_USER_WSYNC);
 
 	if (testbits(state->status, XNPIPE_KERN_CONN)) {
 		int minor = xnminor_from_state(state);
 
-		/* If a real-time kernel thread is waiting on this object,
-		   wake it up now. */
+		/* If a Xenomai thread is waiting on this object, wake
+		   it up now. */
 
 		if (xnsynch_nsleepers(&state->synchbase) > 0) {
 			xnsynch_flush(&state->synchbase, XNBREAK);
@@ -709,7 +731,6 @@ static int xnpipe_release(struct inode *inode, struct file *file)
 		fasync_helper(-1, file, 0, &state->asyncq);
 	}
 
-	/* Free the state object. Since that time it can be open by someone else */
 	xnpipe_cleanup_user_conn(state);
 
 	return err;
@@ -737,7 +758,7 @@ static ssize_t xnpipe_read(struct file *file,
 	}
 
 	/* Queue probe and proc enqueuing must be seen atomically,
-	   including from the real-time kernel side. */
+	   including from the Xenomai side. */
 
 	holder = getq(&state->outq);
 	mh = link2mh(holder);
@@ -748,7 +769,7 @@ static ssize_t xnpipe_read(struct file *file,
 			return -EAGAIN;
 		}
 
-		sigpending = xnpipe_read_wait(state, s);
+		sigpending = xnpipe_wait(state, XNPIPE_USER_WREAD, s);
 		holder = getq(&state->outq);
 		mh = link2mh(holder);
 
@@ -812,7 +833,6 @@ static ssize_t xnpipe_write(struct file *file,
 	xnpipe_alloc_handler *alloc_handler;
 	xnpipe_io_handler *input_handler;
 	struct xnpipe_mh *mh;
-	xnthread_t *sleeper;
 	void *cookie;
 	spl_t s;
 
@@ -863,13 +883,12 @@ static ssize_t xnpipe_write(struct file *file,
 
 	appendq(&state->inq, &mh->link);
 
-	/* If a real-time kernel thread is waiting on this input queue,
-	   wake it up now. */
+	/* If a Xenomai thread is waiting on this input queue, wake it
+	   up now. */
 
-	if (xnsynch_nsleepers(&state->synchbase) > 0) {
-		sleeper = xnsynch_wakeup_one_sleeper(&state->synchbase);
+	if (xnsynch_nsleepers(&state->synchbase) > 0 &&
+	    xnsynch_wakeup_one_sleeper(&state->synchbase) != NULL)
 		xnpod_schedule();
-	}
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -881,6 +900,15 @@ static ssize_t xnpipe_write(struct file *file,
 			count = (size_t) err;
 	}
 
+	if (file->f_flags & O_SYNC) {
+		xnlock_get_irqsave(&nklock, s);
+		if (!emptyq_p(&state->inq)) {
+			if (xnpipe_wait(state, XNPIPE_USER_WSYNC, s))
+				count = -ERESTARTSYS;
+		}
+		xnlock_put_irqrestore(&nklock, s);
+	}
+		
 	return (ssize_t) count;
 }
 
@@ -905,15 +933,16 @@ static int xnpipe_ioctl(struct inode *inode,
 
 	case XNPIPEIOC_FLUSH:
 
-		/* Theoretically, a flush request could be prevented from
-		   ending by a real-time sender perpetually feeding its
-		   output queue, and doing so fast enough for the current
-		   Linux task to be stuck inside the flush loop. However,
-		   the way it is coded also reduces the interrupt-free
-		   section to a bare minimum, so it's definitely better
-		   latency-wise. Additionally, such jamming behaviour from
-		   the kernel side would be the sign of some design
-		   problem anyway. */
+		/* Theoretically, a flush request could be prevented
+		   from ending by a real-time sender perpetually
+		   feeding its output queue, and doing so fast enough
+		   for the current Linux task to be stuck inside the
+		   flush loop. However, the way it is coded also
+		   reduces the interrupt-free section to a bare
+		   minimum, so it's definitely better
+		   latency-wise. Additionally, such jamming behaviour
+		   from the Xenomai side would be the sign of some
+		   design problem anyway. */
 
 		n = 0;
 		xnlock_get_irqsave(&nklock, s);
@@ -1014,14 +1043,16 @@ static unsigned xnpipe_poll(struct file *file, poll_table * pt)
 		/*
 		 * Procs which have issued a timed out poll req will
 		 * remain linked to the sleepers queue, and will be
-		 * silently unlinked the next time the real-time
-		 * kernel side kicks xnpipe_wakeup_proc.
+		 * silently unlinked the next time the Xenomai side
+		 * kicks xnpipe_wakeup_proc.
 		 */
-		xnpipe_enqueue_read(state);
+		xnpipe_enqueue_wait(state, XNPIPE_USER_WREAD);
 
-	/* a descriptor is always ready for writing with the current
-	   implementation, so there is no need to have/handle the writeq
-	   queue so far */
+	/*
+	 * A descriptor is always ready for writing with the current
+	 * implementation, so there is no need to have/handle the
+	 * writeq queue so far.
+	 */
 
 	return r_mask | w_mask;
 }
