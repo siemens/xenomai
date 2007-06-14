@@ -1071,12 +1071,44 @@ static int __tm_getm(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
+ * u_long tm_signal(u_long value, u_long interval, int signo, u_long *tmid_r)
+ */
+
+static int __tm_signal(struct task_struct *curr, struct pt_regs *regs)
+{
+	u_long value = __xn_reg_arg1(regs);
+	u_long interval = __xn_reg_arg2(regs);
+	int signo = __xn_reg_arg3(regs);
+	u_long err, tmid;
+	psostm_t *tm;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(tmid)))
+		return -EFAULT;
+
+	if (value == 0)
+		return 0;
+
+	err = tm_start_signal_timer(value, interval, signo, &tmid);
+
+	if (err == SUCCESS) {
+		tm = (psostm_t *)tmid;
+		/* Copy back the registry handle. */
+		tmid = tm->handle;
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg4(regs), &tmid,
+				  sizeof(tmid));
+	}
+
+	return err;
+}
+
+/*
  * u_long tm_set(u_long date, u_long time, u_long ticks)
  */
 
 static int __tm_set(struct task_struct *curr, struct pt_regs *regs)
 {
-	u_long	date, time, ticks;
+	u_long date, time, ticks;
 
 	date = __xn_reg_arg1(regs);
 	time = __xn_reg_arg2(regs);
@@ -1370,6 +1402,27 @@ static int __rn_bind(struct task_struct *curr, struct pt_regs *regs)
 	return err;
 }
 
+/*
+ * u_long __as_send(u_long tid, u_long signals)
+ */
+
+static int __as_send(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	u_long signals = __xn_reg_arg2(regs);
+	psostask_t *task;
+
+	if (handle)
+		task = (psostask_t *)xnregistry_fetch(handle);
+	else
+		task = __psos_task_current(curr);
+
+	if (!task)
+		return ERR_OBJID;
+
+	return as_send((u_long)task, signals);
+}
+
 static void *psos_shadow_eventcb(int event, void *data)
 {
 	struct psos_resource_holder *rh;
@@ -1448,6 +1501,8 @@ static xnsysent_t __systab[] = {
 	[__psos_tm_wkwhen] = {&__tm_wkwhen, __xn_exec_primary},
 	[__psos_tm_evevery] = {&__tm_evevery, __xn_exec_primary},
 	[__psos_tm_getm] = {&__tm_getm, __xn_exec_any},
+	[__psos_tm_signal] = {&__tm_signal, __xn_exec_primary},
+	[__psos_as_send] = {&__as_send, __xn_exec_conforming},
 };
 
 extern xntbase_t *psos_tbase;
