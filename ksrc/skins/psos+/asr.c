@@ -17,8 +17,11 @@
  * 02111-1307, USA.
  */
 
-#include "psos+/task.h"
-#include "psos+/asr.h"
+#include <psos+/task.h>
+#include <psos+/asr.h>
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+#include <asm/signal.h>
+#endif
 
 void psosasr_init(void)
 {
@@ -70,6 +73,22 @@ u_long as_send(u_long tid, u_long signals)
 	}
 
 	if (signals > 0) {
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+		/* In case of a user-space receiver, we try to deliver
+		 * a Linux signal instead of arming the signal bits in
+		 * the TCB. The least significant bit from the signal
+		 * mask is used to determine the value of the Linux
+		 * signal to send, which will be within the [SIGRTMIN
+		 * .. SIGRTMAX - 1] range. Any failure doing so only
+		 * results in falling back to the normal procedure. */
+		if (xnthread_user_task(&task->threadbase) != NULL) {
+			int signo = SIGRTMIN + ffnz(signals);
+			if (signo < SIGRTMAX) {
+				xnshadow_send_sig(&task->threadbase, signo, 1);
+				goto unlock_and_exit;
+			}
+		}
+#endif
 		task->threadbase.signals |= signals;
 
 		if (xnpod_current_thread() == &task->threadbase)
