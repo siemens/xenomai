@@ -59,7 +59,7 @@ static void tm_evpost_handler(xntimer_t *timer)
 {
 	psostm_t *tm = container_of(timer, psostm_t, timerbase);
 
-	ev_send((u_long)tm->owner, tm->events);
+	ev_send((u_long)tm->owner, tm->data);
 
 	if (xntimer_interval(&tm->timerbase) == XN_INFINITE)
 		tm_destroy_internal(tm);
@@ -77,7 +77,7 @@ static u_long tm_start_event_timer(u_long ticks,
 		return ERR_NOSEG;
 
 	inith(&tm->link);
-	tm->events = events;
+	tm->data = events;
 	tm->owner = psos_current_task();
 	*tmid = (u_long)tm;
 
@@ -93,7 +93,7 @@ static u_long tm_start_event_timer(u_long ticks,
 		static unsigned long tm_ids;
 		u_long err;
 
-		sprintf(tm->name, "anon_tm%lu", tm_ids++);
+		sprintf(tm->name, "anon_evtm%lu", tm_ids++);
 
 		err = xnregistry_enter(tm->name, tm, &tm->handle, 0);
 
@@ -111,6 +111,62 @@ static u_long tm_start_event_timer(u_long ticks,
 
 	return SUCCESS;
 }
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+
+static void tm_sigpost_handler(xntimer_t *timer)
+{
+	psostm_t *tm = container_of(timer, psostm_t, timerbase);
+
+	xnshadow_send_sig(&tm->owner->threadbase, tm->data, 1);
+
+	if (xntimer_interval(&tm->timerbase) == XN_INFINITE)
+		tm_destroy_internal(tm);
+}
+
+u_long tm_start_signal_timer(u_long ticks,
+			     u_long interval, int signo, u_long *tmid)
+{
+	static unsigned long tm_ids;
+	psostm_t *tm;
+	u_long err;
+	spl_t s;
+
+	tm = (psostm_t *)xnmalloc(sizeof(*tm));
+
+	if (!tm)
+		return ERR_NOSEG;
+
+	inith(&tm->link);
+	tm->data = signo;
+	tm->owner = psos_current_task();
+	*tmid = (u_long)tm;
+
+	xntimer_init(&tm->timerbase, psos_tbase, tm_sigpost_handler);
+	tm->magic = PSOS_TM_MAGIC;
+
+	xnlock_get_irqsave(&nklock, s);
+	appendgq(&tm->owner->alarmq, tm);
+	xnlock_put_irqrestore(&nklock, s);
+
+	sprintf(tm->name, "anon_sigtm%lu", tm_ids++);
+
+	err = xnregistry_enter(tm->name, tm, &tm->handle, 0);
+
+	if (err) {
+		tm->handle = XN_NO_HANDLE;
+		tm_cancel((u_long)tm);
+		return err;
+	}
+
+	xnlock_get_irqsave(&nklock, s);
+	xntimer_start(&tm->timerbase, ticks, interval, XN_RELATIVE);
+	xnlock_put_irqrestore(&nklock, s);
+
+	return SUCCESS;
+}
+
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 static const int tm_month_sizes[] = {
 	31, 28, 31, 30, 31, 30,
