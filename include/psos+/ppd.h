@@ -26,6 +26,10 @@
 #include <nucleus/ppd.h>
 #include <nucleus/heap.h>
 
+#ifndef CONFIG_XENO_OPT_DEBUG_PSOS
+#define CONFIG_XENO_OPT_DEBUG_PSOS  0
+#endif
+
 typedef struct psos_resource_holder {
 
 	xnshadow_ppd_t ppd;
