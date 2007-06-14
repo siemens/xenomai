@@ -36,7 +36,7 @@ typedef struct psostm {
 #define link2psostm(laddr) \
 ((psostm_t *)(((char *)laddr) - (int)(&((psostm_t *)0)->link)))
 
-    u_long events;	/* Event flags */
+    u_long data;	/* Event flags or signal */
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
     xnhandle_t handle;
@@ -61,6 +61,10 @@ void psostm_cleanup(void);
 
 void tm_destroy_internal(psostm_t *tm);
 
+u_long tm_start_signal_timer(u_long ticks,
+			     u_long interval,
+			     int signo,
+			     u_long *tmid);
 #ifdef __cplusplus
 }
 #endif
