@@ -174,7 +174,7 @@ __rthal_generic_llimd (long long op, unsigned m, unsigned d)
 	unsigned _s = (s);			\
 	_l >>= _s;				\
 	_m >>= s;				\
-	_l |= (_m << (32 - s));			\
+	_l |= ((m) << (32 - s));		\
 	_m |= ((h) << (32 - s));		\
         __rthal_u64fromu32(_m, _l);		\
 })
