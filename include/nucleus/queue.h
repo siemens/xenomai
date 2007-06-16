@@ -75,10 +75,12 @@ typedef struct xnqueue {
 } xnqueue_t;
 
 #if XENO_DEBUG(QUEUES) && defined(CONFIG_SMP)
-#define DECLARE_XNQUEUE(q) xnqueue_t q = { { &(q).head, &(q).head }, 0, XNARCH_LOCK_UNLOCKED }
+#define XNQUEUE_INITIALIZER(q) { { &(q).head, &(q).head }, 0, XNARCH_LOCK_UNLOCKED }
 #else /* !(XENO_DEBUG(QUEUES) && CONFIG_SMP) */
-#define DECLARE_XNQUEUE(q) xnqueue_t q = { { &(q).head, &(q).head }, 0 }
+#define XNQUEUE_INITIALIZER(q) { { &(q).head, &(q).head }, 0 }
 #endif /* XENO_DEBUG(QUEUES) && CONFIG_SMP */
+
+#define DEFINE_XNQUEUE(q) xnqueue_t q = XNQUEUE_INITIALIZER(q)
 
 static inline void initq(xnqueue_t *qslot)
 {

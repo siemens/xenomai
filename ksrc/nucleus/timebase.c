@@ -54,8 +54,9 @@
 #include <nucleus/pod.h>
 #include <nucleus/timer.h>
 #include <nucleus/ltt.h>
+#include <nucleus/module.h>
 
-DECLARE_XNQUEUE(nktimebaseq);
+DEFINE_XNQUEUE(nktimebaseq);
 
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 
@@ -145,6 +146,10 @@ int xntbase_alloc(const char *name, u_long period, xntbase_t **basep)
 	xntslave_init(slave);
 	base->status = 0;	/* Not running, no time set, unlocked. */
 	*basep = base;
+#ifdef CONFIG_XENO_OPT_STATS
+	initq(&base->timerq);
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
+	xnpod_declare_tbase_proc(base);
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&nktimebaseq, &base->link);
 	xnlock_put_irqrestore(&nklock, s);
@@ -186,6 +191,7 @@ void xntbase_free(xntbase_t *base)
 		return;
 
 	xntslave_destroy(base2slave(base));
+	xnpod_discard_tbase_proc(base);
 
 	xnlock_get_irqsave(&nklock, s);
 	removeq(&nktimebaseq, &base->link);
@@ -503,7 +509,10 @@ xntbase_t nktbase = {
 	.tickvalue = 1,
 	.ticks2sec = 1000000000UL,
 	.status = 0,
-	.name = "master"
+	.name = "master",
+#ifdef CONFIG_XENO_OPT_STATS
+	.timerq = XNQUEUE_INITIALIZER(nktbase.timerq),
+#endif /* CONFIG_XENO_OPT_STATS */
 };
 
 EXPORT_SYMBOL(xntbase_set_time);

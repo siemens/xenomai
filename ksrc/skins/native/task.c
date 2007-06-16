@@ -50,7 +50,7 @@
 #include <native/task.h>
 #include <native/timer.h>
 
-static DECLARE_XNQUEUE(__xeno_task_q);
+static DEFINE_XNQUEUE(__xeno_task_q);
 
 static u_long __xeno_task_stamp;
 
