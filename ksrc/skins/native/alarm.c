@@ -193,7 +193,7 @@ int rt_alarm_create(RT_ALARM *alarm,
 	if (xnpod_asynch_p())
 		return -EPERM;
 
-	xntimer_init(&alarm->timer_base, __native_tbase, &__alarm_trampoline);
+	xntimer_init(&alarm->timer_base, __native_tbase, __alarm_trampoline);
 	alarm->handle = 0;	/* i.e. (still) unregistered alarm. */
 	alarm->magic = XENO_ALARM_MAGIC;
 	alarm->expiries = 0;
@@ -211,12 +211,12 @@ int rt_alarm_create(RT_ALARM *alarm,
 	alarm->cpid = 0;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	/* <!> Since xnregister_enter() may reschedule, only register
-	   complete objects, so that the registry cannot return handles to
-	   half-baked objects... */
-
 	if (name) {
+#ifdef CONFIG_XENO_OPT_REGISTRY
+		/* <!> Since xnregister_enter() may reschedule, only register
+		   complete objects, so that the registry cannot return
+		   handles to half-baked objects... */
+
 		xnpnode_t *pnode = &__alarm_pnode;
 
 		if (!*name) {
@@ -233,8 +233,10 @@ int rt_alarm_create(RT_ALARM *alarm,
 
 		if (err)
 			rt_alarm_delete(alarm);
-	}
 #endif /* CONFIG_XENO_OPT_REGISTRY */
+
+		xntimer_set_name(&alarm->timer_base, alarm->name);
+	}
 
 	return err;
 }

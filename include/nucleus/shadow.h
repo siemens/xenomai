@@ -58,9 +58,6 @@ struct xnskin_slot {
 
 	struct xnskin_props *props;
 	atomic_counter_t refcnt;
-#ifdef CONFIG_PROC_FS
-	struct proc_dir_entry *proc;
-#endif /* CONFIG_PROC_FS */
 };
 
 int xnshadow_mount(void);

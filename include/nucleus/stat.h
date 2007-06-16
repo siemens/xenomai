@@ -77,12 +77,19 @@ typedef struct xnstat_counter {
 	int counter;
 } xnstat_counter_t;
 
-static inline int xnstat_counter_inc(xnstat_counter_t *c) {
+static inline int xnstat_counter_inc(xnstat_counter_t *c)
+{
 	return c->counter++;
 }
 
-static inline int xnstat_counter_get(xnstat_counter_t *c) {
+static inline int xnstat_counter_get(xnstat_counter_t *c)
+{
 	return c->counter;
+}
+
+static inline void xnstat_counter_set(xnstat_counter_t *c, int value)
+{
+	c->counter = value;
 }
 
 #else /* !CONFIG_XENO_OPT_STATS */
@@ -92,12 +99,12 @@ typedef struct xnstat_runtime {
 #endif /* __XENO_SIM__ */
 } xnstat_runtime_t;
 
-#define xnstat_runtime_now()                                 0
-#define xnstat_runtime_update(sched, start)                  do { } while (0)
-#define xnstat_runtime_set_current(sched, new_account)       ({ NULL; })
-#define xnstat_runtime_get_current(sched)                    ({ NULL; })
-#define xnstat_runtime_finalize(sched, new_account)          do { } while (0)
-#define xnstat_runtime_reset_stats(account)                  do { } while (0)
+#define xnstat_runtime_now()					0
+#define xnstat_runtime_update(sched, start)			do { } while (0)
+#define xnstat_runtime_set_current(sched, new_account)	({ (void)sched; NULL; })
+#define xnstat_runtime_get_current(sched)			({ (void)sched; NULL; })
+#define xnstat_runtime_finalize(sched, new_account)		do { } while (0)
+#define xnstat_runtime_reset_stats(account)			do { } while (0)
 
 typedef struct xnstat_counter {
 #ifdef __XENO_SIM__
@@ -107,6 +114,7 @@ typedef struct xnstat_counter {
 
 static inline int xnstat_counter_inc(xnstat_counter_t *c) { return 0; }
 static inline int xnstat_counter_get(xnstat_counter_t *c) { return 0; }
+static inline void xnstat_counter_set(xnstat_counter_t *c, int value) { }
 #endif /* CONFIG_XENO_OPT_STATS */
 
 /* Account the runtime of the current account until now, switch to

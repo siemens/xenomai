@@ -24,6 +24,7 @@
 #define _XENO_NUCLEUS_TIMER_H
 
 #include <nucleus/timebase.h>
+#include <nucleus/stat.h>
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
@@ -34,6 +35,7 @@
 #define XNTIMER_DEQUEUED  0x00000001
 #define XNTIMER_KILLED    0x00000002
 #define XNTIMER_PERIODIC  0x00000004
+#define XNTIMER_MONOTONIC 0x00000008
 
 /* These flags are available to the real-time interfaces */
 #define XNTIMER_SPARE0  0x01000000
@@ -241,6 +243,20 @@ typedef struct xntimer {
 
 	void (*handler)(struct xntimer *timer); /* !< Timeout handler. */
 
+#ifdef CONFIG_XENO_OPT_STATS
+	char name[XNOBJECT_NAME_LEN]; /* !< Timer name to be displayed. */
+
+	const char *handler_name; /* !< Handler name to be displayed. */
+
+	xnholder_t tblink;	/* !< Timer holder in timebase. */
+
+#define tblink2timer(ln)	container_of(ln, xntimer_t, tblink)
+#endif /* CONFIG_XENO_OPT_STATS */
+
+	xnstat_counter_t scheduled; /* !< Number of timer schedules. */
+
+	xnstat_counter_t fired; /* !< Number of timer events. */
+
 	XNARCH_DECL_DISPLAY_CONTEXT();
 
 } xntimer_t;
@@ -262,14 +278,19 @@ typedef struct xntimed_slave {
 } xntslave_t;
 
 #ifdef CONFIG_SMP
-#define xntimer_sched(t)          ((t)->sched)
+#define xntimer_sched(t)	((t)->sched)
 #else /* !CONFIG_SMP */
-#define xntimer_sched(t)          xnpod_current_sched()
+#define xntimer_sched(t)	xnpod_current_sched()
 #endif /* !CONFIG_SMP */
-#define xntimer_interval(t)       ((t)->interval)
-#define xntimer_set_cookie(t,c)   ((t)->cookie = (c))
+#define xntimer_interval(t)	((t)->interval)
+#define xntimer_set_cookie(t,c)	((t)->cookie = (c))
+#define xntimer_set_monotonic(t) \
+	__setbits((t)->status, XNTIMER_MONOTONIC)
+#define xntimer_set_realtime(t) \
+	__clrbits((t)->status, XNTIMER_MONOTONIC)
 
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
+#define xntimer_base(t)		((t)->base)
 #define xntimer_set_priority(t,p)				\
 	({							\
 		xntimer_t *_t = (t);				\
@@ -278,6 +299,7 @@ typedef struct xntimed_slave {
 		xntlholder_prio(&(_t)->plink) = prio;		\
 	})
 #else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
+#define xntimer_base(t)		(&nktbase)
 #define xntimer_set_priority(t,p)				\
 	do { xntimerh_prio(&(t)->aplink) = (p); } while(0)
 #endif /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
@@ -306,11 +328,28 @@ extern "C" {
 extern xntbops_t nktimer_ops_aperiodic,
 		 nktimer_ops_periodic;
 
-void xntimer_init(xntimer_t *timer,
+#ifdef CONFIG_XENO_OPT_STATS
+#define xntimer_init(timer, base, handler)		\
+	do {						\
+		__xntimer_init(timer, base, handler);	\
+		(timer)->handler_name = #handler;	\
+	} while (0)
+#else /* !CONFIG_XENO_OPT_STATS */
+#define xntimer_init	__xntimer_init
+#endif /* !CONFIG_XENO_OPT_STATS */
+
+void __xntimer_init(xntimer_t *timer,
 		  xntbase_t *base,
 		  void (*handler)(xntimer_t *timer));
 
 void xntimer_destroy(xntimer_t *timer);
+
+static inline void xntimer_set_name(xntimer_t *timer, const char *name)
+{
+#ifdef CONFIG_XENO_OPT_STATS
+	strncpy(timer->name, name, sizeof(timer->name));
+#endif /* CONFIG_XENO_OPT_STATS */
+}
 
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 

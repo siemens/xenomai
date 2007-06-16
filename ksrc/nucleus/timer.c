@@ -46,6 +46,7 @@ static inline void xntimer_enqueue_aperiodic(xntimer_t *timer)
 	xntimerq_t *q = &timer->sched->timerqueue;
 	xntimerq_insert(q, &timer->aplink);
 	__clrbits(timer->status, XNTIMER_DEQUEUED);
+	xnstat_counter_inc(&timer->scheduled);
 }
 
 static inline void xntimer_dequeue_aperiodic(xntimer_t *timer)
@@ -102,7 +103,9 @@ int xntimer_start_aperiodic(xntimer_t *timer,
 	if (mode == XN_RELATIVE)
 		date = xnarch_ns_to_tsc(value) + now;
 	else {
-		date = xnarch_ns_to_tsc(value - nktbase.wallclock_offset);
+		if (!testbits(timer->status, XNTIMER_MONOTONIC))
+			value -= nktbase.wallclock_offset;
+		date = xnarch_ns_to_tsc(value);
 		if (date <= now)
 			return -ETIMEDOUT;
 	}
@@ -157,7 +160,7 @@ xnticks_t xntimer_get_timeout_aperiodic(xntimer_t *timer)
 
 xnticks_t xntimer_get_interval_aperiodic(xntimer_t *timer)
 {
-	return xnarch_tsc_to_ns(timer->interval);
+	return xnarch_tsc_to_ns_rounded(timer->interval);
 }
 
 xnticks_t xntimer_get_raw_expiry_aperiodic(xntimer_t *timer)
@@ -207,6 +210,7 @@ void xntimer_tick_aperiodic(void)
 			break;
 
 		xntimer_dequeue_aperiodic(timer);
+		xnstat_counter_inc(&timer->fired);
 
 		if (timer != &nkpod->htimer) {
 			if (!testbits(nktbase.status, XNTBLCK)) {
@@ -264,6 +268,7 @@ static inline void xntimer_enqueue_periodic(xntimer_t *timer)
 	/* Just prepend the new timer to the proper slot. */
 	xntlist_insert(&pc->wheel[slot], &timer->plink);
 	__clrbits(timer->status, XNTIMER_DEQUEUED);
+	xnstat_counter_inc(&timer->scheduled);
 }
 
 static inline void xntimer_dequeue_periodic(xntimer_t *timer)
@@ -285,7 +290,8 @@ static int xntimer_start_periodic(xntimer_t *timer,
 	if (mode == XN_RELATIVE)
 		value += timer->base->jiffies;
 	else {
-		value -= timer->base->wallclock_offset;
+		if (!testbits(timer->status, XNTIMER_MONOTONIC))
+			value -= timer->base->wallclock_offset;
 		if (value <= timer->base->jiffies)
 			return -ETIMEDOUT;
 	}
@@ -387,6 +393,7 @@ void xntimer_tick_periodic(xntimer_t *mtimer)
 			break;
 
 		xntimer_dequeue_periodic(timer);
+		xnstat_counter_inc(&timer->fired);
 
 		timer->handler(timer);
 
@@ -416,7 +423,8 @@ void xntslave_init(xntslave_t *slave)
 
 		/* Slave periodic time bases are cascaded from the
 		 * master aperiodic time base. */
-		xntimer_init(&pc->timer, &nktbase, &xntimer_tick_periodic);
+		xntimer_init(&pc->timer, &nktbase, xntimer_tick_periodic);
+		xntimer_set_name(&pc->timer, slave->base.name);
 		xntimer_set_priority(&pc->timer, XNTIMER_HIPRIO);
 		xntimer_set_sched(&pc->timer, xnpod_sched_slot(cpu));
 	}
@@ -533,7 +541,8 @@ xntbops_t nktimer_ops_periodic = {
  * Rescheduling: never.
  */
 
-void xntimer_init(xntimer_t *timer, xntbase_t *base, void (*handler) (xntimer_t *timer))
+void __xntimer_init(xntimer_t *timer, xntbase_t *base,
+		    void (*handler) (xntimer_t *timer))
 {
 	/* CAUTION: Setup from xntimer_init() must not depend on the
 	   periodic/aperiodic timing mode. */
@@ -550,6 +559,27 @@ void xntimer_init(xntimer_t *timer, xntbase_t *base, void (*handler) (xntimer_t 
 	timer->handler = handler;
 	timer->interval = 0;
 	timer->sched = xnpod_current_sched();
+
+#ifdef CONFIG_XENO_OPT_STATS
+	{
+		spl_t s;
+
+		if (!xnpod_current_thread() || xnpod_shadow_p())
+			snprintf(timer->name, XNOBJECT_NAME_LEN, "%d/%s",
+				 current->pid, current->comm);
+		else
+			xnobject_copy_name(timer->name, xnpod_current_thread()->name);
+
+		inith(&timer->tblink);
+		xnstat_counter_set(&timer->scheduled, 0);
+		xnstat_counter_set(&timer->fired, 0);
+
+		xnlock_get_irqsave(&nklock, s);
+		appendq(&base->timerq, &timer->tblink);
+		base->timerq_rev++;
+		xnlock_put_irqrestore(&nklock, s);
+	}
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
 	xnarch_init_display_context(timer);
 }
@@ -585,6 +615,10 @@ void xntimer_destroy(xntimer_t *timer)
 	xntimer_stop(timer);
 	__setbits(timer->status, XNTIMER_KILLED);
 	timer->sched = NULL;
+#ifdef CONFIG_XENO_OPT_STATS
+	removeq(&xntimer_base(timer)->timerq, &timer->tblink);
+	xntimer_base(timer)->timerq_rev++;
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 	xnlock_put_irqrestore(&nklock, s);
 }
 
@@ -718,7 +752,7 @@ EXPORT_SYMBOL(xntimer_get_date_aperiodic);
 EXPORT_SYMBOL(xntimer_get_timeout_aperiodic);
 EXPORT_SYMBOL(xntimer_get_interval_aperiodic);
 EXPORT_SYMBOL(xntimer_get_raw_expiry_aperiodic);
-EXPORT_SYMBOL(xntimer_init);
+EXPORT_SYMBOL(__xntimer_init);
 EXPORT_SYMBOL(xntimer_destroy);
 EXPORT_SYMBOL(xntimer_freeze);
 EXPORT_SYMBOL(xntimer_get_date);

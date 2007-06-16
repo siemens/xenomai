@@ -30,6 +30,10 @@
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
+#ifdef CONFIG_PROC_FS
+#include <linux/proc_fs.h>
+#endif /* CONFIG_PROC_FS */
+
 struct xntimer;
 
 typedef struct xntbops {
@@ -72,6 +76,12 @@ typedef struct xntbase {
 	xnholder_t link;
 
 #define link2tbase(ln)		container_of(ln, xntbase_t, link)
+
+#ifdef CONFIG_XENO_OPT_STATS
+	xnqueue_t timerq;	/* !< Timer holder in timebase. */
+
+	int timerq_rev;		/* !< Revision (for non-atomic list walks). */
+#endif /* CONFIG_XENO_OPT_STATS */
 
 } xntbase_t;
 
@@ -326,16 +336,18 @@ xnticks_t xntbase_convert(xntbase_t *srcbase,
 }
 #endif
 
-static inline void xntbase_mount(void)
-{
-	inith(&nktbase.link);
-	appendq(&nktimebaseq, &nktbase.link);
-}
+#define xntbase_mount() \
+do {						\
+	inith(&nktbase.link);			\
+	appendq(&nktimebaseq, &nktbase.link);	\
+	xnpod_declare_tbase_proc(&nktbase);	\
+} while (0)
 
-static inline void xntbase_umount(void)
-{
-	removeq(&nktimebaseq, &nktbase.link);
-}
+#define xntbase_umount()			\
+do {						\
+	xnpod_declare_tbase_proc(&nktbase);	\
+	removeq(&nktimebaseq, &nktbase.link);	\
+} while (0)
 
 #endif /* __KERNEL__ || __XENO_SIM__ */
 

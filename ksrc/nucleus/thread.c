@@ -49,9 +49,16 @@ int xnthread_init(xnthread_t *thread,
 {
 	int err;
 
-	xntimer_init(&thread->rtimer, tbase, &xnthread_timeout_handler);
+	if (name)
+		xnobject_copy_name(thread->name, name);
+	else
+		snprintf(thread->name, sizeof(thread->name), "%p", thread);
+
+	xntimer_init(&thread->rtimer, tbase, xnthread_timeout_handler);
+	xntimer_set_name(&thread->rtimer, thread->name);
 	xntimer_set_priority(&thread->rtimer, XNTIMER_HIPRIO);
-	xntimer_init(&thread->ptimer, tbase, &xnthread_periodic_handler);
+	xntimer_init(&thread->ptimer, tbase, xnthread_periodic_handler);
+	xntimer_set_name(&thread->ptimer, thread->name);
 	xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
 
 	/* Setup the TCB. */
@@ -98,11 +105,6 @@ int xnthread_init(xnthread_t *thread,
 	thread->cookie = 0;
 	thread->stime = 0;
 	thread->ops = ops;
-
-	if (name)
-		xnobject_copy_name(thread->name, name);
-	else
-		snprintf(thread->name, sizeof(thread->name), "%p", thread);
 
 	inith(&thread->glink);
 	initph(&thread->rlink);

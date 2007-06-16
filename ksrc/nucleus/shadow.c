@@ -2301,7 +2301,6 @@ int xnshadow_unregister_interface(int muxid)
 		xnarch_atomic_set(&muxtable[muxid].refcnt, -1);
 #ifdef CONFIG_PROC_FS
 		{
-			muxtable[muxid].proc = NULL;
 			xnlock_put_irqrestore(&nklock, s);
 			xnpod_discard_iface_proc(name);
 			return 0;
