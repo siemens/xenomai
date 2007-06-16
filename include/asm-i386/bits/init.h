@@ -72,6 +72,7 @@ int xnarch_calibrate_sched(void)
 
 static inline int xnarch_init(void)
 {
+	extern unsigned xnarch_tsc_scale, xnarch_tsc_shift;
 	int err;
 
 	err = rthal_init();
@@ -84,6 +85,9 @@ static inline int xnarch_init(void)
 	   running as a module. */
 	set_cpus_allowed(current, cpumask_of_cpu(0));
 #endif /* CONFIG_SMP && MODULE */
+
+	xnarch_init_llmulshft(1000000000, RTHAL_CPU_FREQ,
+			      &xnarch_tsc_scale, &xnarch_tsc_shift);
 
 	err = xnarch_calibrate_sched();
 

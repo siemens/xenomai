@@ -141,17 +141,23 @@ unsigned long long xnarch_get_sys_time(void)
 
 EXPORT_SYMBOL(xnarch_get_sys_time);
 
+#ifndef xnarch_tsc_to_ns
 long long xnarch_tsc_to_ns(long long ts)
 {
     return xnarch_llimd(ts,1000000000,RTHAL_CPU_FREQ);
 }
+#define xnarch_tsc_to_ns	xnarch_tsc_to_ns
+#endif /* !xnarch_tsc_to_ns */
 
 EXPORT_SYMBOL(xnarch_tsc_to_ns);
 
+#ifndef xnarch_ns_to_tsc
 long long xnarch_ns_to_tsc(long long ns)
 {
     return xnarch_llimd(ns,RTHAL_CPU_FREQ,1000000000);
 }
+#define xnarch_ns_to_tsc	xnarch_ns_to_tsc
+#endif /* !xnarch_ns_to_tsc */
 
 EXPORT_SYMBOL(xnarch_ns_to_tsc);
 

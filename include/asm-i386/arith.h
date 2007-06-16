@@ -102,6 +102,38 @@ __rthal_i386_ulldiv (const unsigned long long ull,
 }
 #define rthal_ulldiv(ull,d,rp) __rthal_i386_ulldiv((ull),(d),(rp))
 
+/* Fast scaled-math-based replacement for long long multiply-divide */
+#define rthal_llmulshft(ll, m, s)					\
+({									\
+	long long __ret;						\
+	unsigned __lo, __hi;						\
+									\
+	__asm__ (							\
+		/* HI = HIWORD(ll) * m */				\
+		"mov  %%eax,%%ecx\n\t"					\
+		"mov  %%edx,%%eax\n\t"					\
+		"imull %[__m]\n\t"					\
+		"mov  %%eax,%[__lo]\n\t"				\
+		"mov  %%edx,%[__hi]\n\t"				\
+									\
+		/* LO = LOWORD(ll) * m */				\
+		"mov  %%ecx,%%eax\n\t"					\
+		"mull %[__m]\n\t"					\
+									\
+		/* ret = (HI << 32) + LO */				\
+		"add  %[__lo],%%edx\n\t"				\
+		"adc  $0,%[__hi]\n\t"					\
+									\
+		/* ret = ret >> s */					\
+		"mov  %[__s],%%ecx\n\t"					\
+		"shrd %%cl,%%edx,%%eax\n\t"				\
+		"shrd %%cl,%[__hi],%%edx\n\t"				\
+		: "=A" (__ret), [__lo] "=r" (__lo), [__hi] "=r" (__hi)	\
+		: "A" (ll), [__m] "m" (m), [__s] "m" (s)		\
+		: "ecx");						\
+	__ret;								\
+})
+
 #include <asm-generic/xenomai/arith.h>
 
 #endif /* _XENO_ASM_I386_ARITH_H */

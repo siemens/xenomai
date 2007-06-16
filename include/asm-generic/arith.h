@@ -167,6 +167,65 @@ __rthal_generic_llimd (long long op, unsigned m, unsigned d)
 #define rthal_llimd(ll,m,d) __rthal_generic_llimd((ll),(m),(d))
 #endif /* !rthal_llimd */
 
+#ifndef __rthal_u96shift
+#define __rthal_u96shift(h, m, l, s) ({		\
+	unsigned _l = (l);			\
+	unsigned _m = (m);			\
+	unsigned _s = (s);			\
+	_l >>= _s;				\
+	_m >>= s;				\
+	_l |= (_m << (32 - s));			\
+	_m |= ((h) << (32 - s));		\
+        __rthal_u64fromu32(_m, _l);		\
+})
+#endif /* !__rthal_u96shift */
+
+static inline long long rthal_llmi(int i, int j)
+{
+	/* Signed fast 32x32->64 multiplication */
+	return (long long) i * j;
+}
+
+#ifndef rthal_llmulshft
+/* Fast scaled-math-based replacement for long long multiply-divide */
+static inline long long
+__rthal_generic_llmulshft(const long long op,
+			  const unsigned m,
+			  const unsigned s)
+{
+	unsigned oph, opl, tlh, tll, thh, thl;
+	unsigned long long th, tl;
+
+	__rthal_u64tou32(op, oph, opl);
+	tl = rthal_ullmul(opl, m);
+	__rthal_u64tou32(tl, tlh, tll);
+	th = rthal_llmi(oph, m);
+	th += tlh;
+	__rthal_u64tou32(th, thh, thl);
+
+	return __rthal_u96shift(thh, thl, tll, s);
+}
+#define rthal_llmulshft(ll, m, s) __rthal_generic_llmulshft((ll), (m), (s))
+#endif /* !rthal_llmulshft */
+
+static inline void xnarch_init_llmulshft(const unsigned m_in,
+					 const unsigned d_in,
+					 unsigned *m_out,
+					 unsigned *s_out)
+{
+	unsigned long long mult;
+
+	*s_out = 31;
+	while (1) {
+		mult = ((unsigned long long)m_in) << *s_out;
+		do_div(mult, d_in);
+		if (mult <= 0x7FFFFFFF)
+			break;
+		(*s_out)--;
+	}
+	*m_out = (unsigned)mult;
+}
+
 #define xnarch_ullmod(ull,uld,rem)   ({ xnarch_ulldiv(ull,uld,rem); (*rem); })
 #define xnarch_uldiv(ull, d)         rthal_uldivrem(ull, d, NULL)
 #define xnarch_ulmod(ull, d)         ({ u_long _rem;                    \
@@ -177,6 +236,7 @@ __rthal_generic_llimd (long long op, unsigned m, unsigned d)
 #define xnarch_ulldiv                rthal_ulldiv
 #define xnarch_imuldiv               rthal_imuldiv
 #define xnarch_llimd                 rthal_llimd
+#define xnarch_llmulshft             rthal_llmulshft
 #define xnarch_get_cpu_tsc           rthal_rdtsc
 
 /*@}*/

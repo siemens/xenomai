@@ -21,6 +21,15 @@
 #ifndef _XENO_ASM_X86_64_BITS_POD_H
 #define _XENO_ASM_X86_64_BITS_POD_H
 
+unsigned xnarch_tsc_scale;
+unsigned xnarch_tsc_shift;
+
+long long xnarch_tsc_to_ns(long long ts)
+{
+	return xnarch_llmulshft(ts, xnarch_tsc_scale, xnarch_tsc_shift);
+}
+#define xnarch_tsc_to_ns	xnarch_tsc_to_ns
+
 #include <asm-generic/xenomai/bits/pod.h>
 #include <asm/xenomai/switch.h>
 
