@@ -22,7 +22,7 @@
 #include <nucleus/heap.h>
 #include <rtai/task.h>
 
-static DECLARE_XNQUEUE(__rtai_task_q);
+static DEFINE_XNQUEUE(__rtai_task_q);
 
 static int __rtai_task_sig;
 
