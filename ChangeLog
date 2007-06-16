@@ -1,3 +1,9 @@
+2007-06-15  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/arch/*/hal.c: Use IRQF_SHARED when applicable to comply
+	with 2.6.22 and above; alias deprecated SA_SHIRQ for supporting
+	older kernel versions.
+	
 2007-06-14  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/psos+/task.c (t_mode): Add support for T_SHIELD,
@@ -19,6 +25,12 @@
 	all Linux writes to the message pipe to block until the Xenomai
 	side has consumed all the messages from its input queue.
 
+2007-06-12  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/asm-blackfin/syscall.h (__xn_rdtsc): Assure that CC only
+	works on data registers. Otherwise, bfin's as may pick a pointer reg
+	and crash during user land build (toolchain bug #3332).
+
 2007-06-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* Makefile.am (sudo): Try to better guess what the user can really
@@ -37,6 +49,29 @@
 
 	* ksrc/skins/psos+/Kconfig: Select XENO_OPT_REGISTRY if
 	XENO_OPT_PERVASIVE.
+
+2007-06-09  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/timer.c, include/nucleus/timer.h: Add
+	XNTIMER_MONOTONIC init mode.
+
+	* ksrc/nucleus, include/nucleus: Add per-timebase statistics.
+
+	* include/asm-x86_64/arith.h: Add x86_64-optimised rthal_llimd.
+
+	* include/asm-*/bits/{init.h, pod.h}, include/asm-*/arith.h:
+	Optimize tsc-to-ns conversions.
+
+	* ksrc/nucleus/pod.c (xnpod_delete_thread): Destroy thread timers
+	on xnthread clean-up.
+
+	* include/nucleus/shadow.h, ksrc/nucleus/{module.c, shadow.c}:
+	Remove xnskentry::proc, track proc registration via xnskentry::name.
+	Clean up redundant typecasts. Remove unneeded code in *_seq_next().
+
+	* include/nucleus/queue.h, ksrc/nucleus/{heap.c, timebase.c},
+	ksrc/skins/{native/task.c, rtai/task.c}: Refactor DECLARE_XNQUEUE
+	to DEFINE_XNQUEUE. Break out XNQUEUE_INITIALIZER.
 
 2007-06-09  Philippe Gerum  <rpm@xenomai.org>
 
