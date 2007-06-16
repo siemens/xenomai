@@ -568,7 +568,8 @@ void __xntimer_init(xntimer_t *timer, xntbase_t *base,
 			snprintf(timer->name, XNOBJECT_NAME_LEN, "%d/%s",
 				 current->pid, current->comm);
 		else
-			xnobject_copy_name(timer->name, xnpod_current_thread()->name);
+			xnobject_copy_name(timer->name,
+					   xnpod_current_thread()->name);
 
 		inith(&timer->tblink);
 		xnstat_counter_set(&timer->scheduled, 0);
