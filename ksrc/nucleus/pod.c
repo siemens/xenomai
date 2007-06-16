@@ -369,6 +369,7 @@ int xnpod_init(void)
 	   postponed to xnintr_irq_handler(), as part of the interrupt
 	   exit code. */
 	xntimer_init(&pod->htimer, &nktbase, NULL);
+	xntimer_set_name(&pod->htimer, "[host tick]");
 	xntimer_set_priority(&pod->htimer, XNTIMER_LOPRIO);
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -428,7 +429,9 @@ int xnpod_init(void)
 	for (cpu = 0; cpu < nr_cpus; cpu++) {
 		sched = xnpod_sched_slot(cpu);
 #ifdef CONFIG_XENO_OPT_WATCHDOG
-		xntimer_init(&sched->wdtimer, &nktbase, &xnpod_watchdog_handler);
+		xntimer_init(&sched->wdtimer, &nktbase,
+			     xnpod_watchdog_handler);
+		xntimer_set_name(&sched->wdtimer, "[watchdog]");
 		xntimer_set_priority(&sched->wdtimer, XNTIMER_LOPRIO);
 		xntimer_set_sched(&sched->wdtimer, sched);
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
@@ -1203,10 +1206,10 @@ void xnpod_delete_thread(xnthread_t *thread)
 			sched_removepq(&sched->readyq, &thread->rlink);
 			xnthread_clear_state(thread, XNREADY);
 		}
-	} else if (xnthread_test_state(thread, XNDELAY))
-		xntimer_stop(&thread->rtimer);
+	}
 
-	xntimer_stop(&thread->ptimer);
+	xntimer_destroy(&thread->rtimer);
+	xntimer_destroy(&thread->ptimer);
 
 	if (xnthread_test_state(thread, XNPEND))
 		xnsynch_forget_sleeper(thread);

@@ -123,6 +123,8 @@ WDOG_ID wdCreate(void)
 	xnsynch_init(&wd->synchbase, XNSYNCH_PRIO);
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
+	xntimer_init(&wd->timerbase, wind_tbase, wind_wd_trampoline);
+
 	xnlock_get_irqsave(&nklock, s);
 	__setbits(wd->timerbase.status, WIND_WD_INITIALIZED);
 	appendq(&wind_wd_q, &wd->link);
@@ -179,7 +181,6 @@ STATUS wdStart(WDOG_ID wdog_id, int timeout, wind_timer_t handler, long arg)
 	else
 		xntimer_stop(&wd->timerbase);
 
-	xntimer_init(&wd->timerbase, wind_tbase, wind_wd_trampoline);
 	wd->handler = handler;
 	wd->arg = arg;
 

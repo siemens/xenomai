@@ -55,10 +55,8 @@ void xnmod_alloc_glinks(xnqueue_t *freehq)
 {
 	xngholder_t *sholder, *eholder;
 
-	sholder =
-	    (xngholder_t *) xnheap_alloc(&kheap,
-					 sizeof(xngholder_t) *
-					 XNMOD_GHOLDER_REALLOC);
+	sholder = xnheap_alloc(&kheap,
+			       sizeof(xngholder_t) * XNMOD_GHOLDER_REALLOC);
 
 	if (!sholder) {
 		/* If we are running out of memory but still have some free
@@ -88,6 +86,10 @@ void xnmod_alloc_glinks(xnqueue_t *freehq)
 
 extern struct proc_dir_entry *rthal_proc_root;
 
+#ifdef CONFIG_XENO_OPT_STATS
+static struct proc_dir_entry *tmstat_proc_root;
+#endif /* CONFIG_XENO_OPT_STATS */
+
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 static struct proc_dir_entry *iface_proc_root;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
@@ -110,8 +112,7 @@ struct sched_seq_iterator {
 
 static void *sched_seq_start(struct seq_file *seq, loff_t *pos)
 {
-	struct sched_seq_iterator *iter =
-	    (struct sched_seq_iterator *)seq->private;
+	struct sched_seq_iterator *iter = seq->private;
 
 	if (*pos > iter->nentries)
 		return NULL;
@@ -124,13 +125,9 @@ static void *sched_seq_start(struct seq_file *seq, loff_t *pos)
 
 static void *sched_seq_next(struct seq_file *seq, void *v, loff_t *pos)
 {
-	struct sched_seq_iterator *iter =
-	    (struct sched_seq_iterator *)seq->private;
+	struct sched_seq_iterator *iter = seq->private;
 
 	++*pos;
-
-	if (v == SEQ_START_TOKEN)
-		return &iter->sched_info[0];
 
 	if (*pos > iter->nentries)
 		return NULL;
@@ -150,7 +147,7 @@ static int sched_seq_show(struct seq_file *seq, void *v)
 		seq_printf(seq, "%-3s  %-6s %-8s %-10s %-10s %-8s  %-10s %s\n",
 			   "CPU", "PID", "PRI", "PERIOD", "TIMEOUT", "TIMEBASE", "STAT", "NAME");
 	else {
-		struct sched_seq_info *p = (struct sched_seq_info *)v;
+		struct sched_seq_info *p = v;
 
 		if (p->cprio != p->dnprio)
 			snprintf(pbuf, sizeof(pbuf), "%3d(%d)",
@@ -249,7 +246,7 @@ static int sched_seq_open(struct inode *inode, struct file *file)
 		xnlock_put_irqrestore(&nklock, s);
 	}
 
-	seq = (struct seq_file *)file->private_data;
+	seq = file->private_data;
 	seq->private = iter;
 
 	return 0;
@@ -282,8 +279,7 @@ struct stat_seq_iterator {
 
 static void *stat_seq_start(struct seq_file *seq, loff_t *pos)
 {
-	struct stat_seq_iterator *iter =
-	    (struct stat_seq_iterator *)seq->private;
+	struct stat_seq_iterator *iter = seq->private;
 
 	if (*pos > iter->nentries)
 		return NULL;
@@ -296,13 +292,9 @@ static void *stat_seq_start(struct seq_file *seq, loff_t *pos)
 
 static void *stat_seq_next(struct seq_file *seq, void *v, loff_t *pos)
 {
-	struct stat_seq_iterator *iter =
-	    (struct stat_seq_iterator *)seq->private;
+	struct stat_seq_iterator *iter = seq->private;
 
 	++*pos;
-
-	if (v == SEQ_START_TOKEN)
-		return &iter->stat_info[0];
 
 	if (*pos > iter->nentries)
 		return NULL;
@@ -322,7 +314,7 @@ static int stat_seq_show(struct seq_file *seq, void *v)
 			   "CPU", "PID", "MSW", "CSW", "PF", "STAT", "%CPU",
 			   "NAME");
 	else {
-		struct stat_seq_info *p = (struct stat_seq_info *)v;
+		struct stat_seq_info *p = v;
 		int usage = 0;
 
 		if (p->account_period) {
@@ -475,7 +467,7 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 		};
 	}
 
-	seq = (struct seq_file *)file->private_data;
+	seq = file->private_data;
 	seq->private = iter;
 
 	return 0;
@@ -488,6 +480,187 @@ static struct file_operations stat_seq_operations = {
 	.llseek = seq_lseek,
 	.release = seq_release_private,
 };
+
+struct tmstat_seq_iterator {
+	int nentries;
+	struct tmstat_seq_info {
+		int cpu;
+		unsigned int scheduled;
+		unsigned int fired;
+		xnticks_t timeout;
+		xnticks_t interval;
+		xnflags_t status;
+		char handler[12];
+		char name[XNOBJECT_NAME_LEN];
+	} stat_info[1];
+};
+
+static void *tmstat_seq_start(struct seq_file *seq, loff_t *pos)
+{
+	struct tmstat_seq_iterator *iter = seq->private;
+
+	if (*pos > iter->nentries)
+		return NULL;
+
+	if (*pos == 0)
+		return SEQ_START_TOKEN;
+
+	return iter->stat_info + *pos - 1;
+}
+
+static void *tmstat_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+{
+	struct tmstat_seq_iterator *iter = seq->private;
+
+	++*pos;
+
+	if (*pos > iter->nentries)
+		return NULL;
+
+	return iter->stat_info + *pos - 1;
+}
+
+static int tmstat_seq_show(struct seq_file *seq, void *v)
+{
+	if (v == SEQ_START_TOKEN)
+		seq_printf(seq,
+			   "%-3s  %-10s  %-10s  %-9s  %-9s  %-11s  %-15s\n",
+			   "CPU", "SCHEDULED", "FIRED", "TIMEOUT",
+			   "INTERVAL", "HANDLER", "NAME");
+	else {
+		struct tmstat_seq_info *p = v;
+		char timeout_buf[21]  = "-        ";
+		char interval_buf[21] = "-        ";
+
+		if (!testbits(p->status, XNTIMER_DEQUEUED))
+			snprintf(timeout_buf, sizeof(timeout_buf), "%-9llu",
+				 p->timeout);
+		if (testbits(p->status, XNTIMER_PERIODIC))
+			snprintf(interval_buf, sizeof(interval_buf), "%-9llu",
+				 p->interval);
+		seq_printf(seq,
+			   "%-3u  %-10u  %-10u  %s  %s  %-11s  %-15s\n",
+			   p->cpu, p->scheduled, p->fired, timeout_buf,
+			   interval_buf, p->handler, p->name);
+	}
+
+	return 0;
+}
+
+static struct seq_operations tmstat_op = {
+	.start = &tmstat_seq_start,
+	.next = &tmstat_seq_next,
+	.stop = &stat_seq_stop,
+	.show = &tmstat_seq_show
+};
+
+static int tmstat_seq_open(struct inode *inode, struct file *file)
+{
+	xntbase_t *base = PDE(inode)->data;
+	struct tmstat_seq_iterator *iter = NULL;
+	struct seq_file *seq;
+	xnholder_t *holder;
+	struct tmstat_seq_info *stat_info;
+	int err, count, tmq_rev;
+	spl_t s;
+
+	if (!xnpod_active_p())
+		return -ESRCH;
+
+	xnlock_get_irqsave(&nklock, s);
+
+      restart:
+	count = countq(&base->timerq);
+	holder = getheadq(&base->timerq);
+	tmq_rev = base->timerq_rev;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (iter)
+		kfree(iter);
+	iter = kmalloc(sizeof(*iter)
+		       + (count - 1) * sizeof(struct tmstat_seq_info),
+		       GFP_KERNEL);
+	if (!iter)
+		return -ENOMEM;
+
+	err = seq_open(file, &tmstat_op);
+
+	if (err) {
+		kfree(iter);
+		return err;
+	}
+
+	iter->nentries = 0;
+
+	/* Take a snapshot element-wise, restart if something changes
+	   underneath us. */
+
+	while (holder) {
+		xntimer_t *timer;
+
+		xnlock_get_irqsave(&nklock, s);
+
+		if (base->timerq_rev != tmq_rev)
+			goto restart;
+
+		timer = tblink2timer(holder);
+		/* Skip inactive timers */
+		if (xnstat_counter_get(&timer->scheduled) == 0)
+			goto skip;
+
+		stat_info = &iter->stat_info[iter->nentries++];
+
+		stat_info->cpu = xnsched_cpu(xntimer_sched(timer));
+		stat_info->scheduled = xnstat_counter_get(&timer->scheduled);
+		stat_info->fired = xnstat_counter_get(&timer->fired);
+		stat_info->timeout = xntimer_get_timeout(timer);
+		stat_info->interval = xntimer_get_interval(timer);
+		stat_info->status = timer->status;
+		memcpy(stat_info->handler, timer->handler_name,
+		       sizeof(stat_info->handler)-1);
+		stat_info->handler[sizeof(stat_info->handler)-1] = 0;
+		xnobject_copy_name(stat_info->name, timer->name);
+
+	      skip:
+		holder = nextq(&base->timerq, holder);
+
+		xnlock_put_irqrestore(&nklock, s);
+	}
+
+	seq = file->private_data;
+	seq->private = iter;
+
+	return 0;
+}
+
+static struct file_operations tmstat_seq_operations = {
+	.owner = THIS_MODULE,
+	.open = tmstat_seq_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = seq_release_private,
+};
+
+static struct proc_dir_entry *add_proc_fops(const char *name,
+					    struct file_operations *fops,
+					    size_t size,
+					    struct proc_dir_entry *parent);
+
+void xnpod_declare_tbase_proc(xntbase_t *base)
+{
+	struct proc_dir_entry *entry;
+
+	entry = add_proc_fops(base->name, &tmstat_seq_operations, 0,
+			      tmstat_proc_root);
+	if (entry)
+		entry->data = base;
+}
+
+void xnpod_discard_tbase_proc(xntbase_t *base)
+{
+	remove_proc_entry(base->name, tmstat_proc_root);
+}
 
 #endif /* CONFIG_XENO_OPT_STATS */
 
@@ -610,7 +783,7 @@ static int timer_read_proc(char *page,
 	const char *tm_status, *wd_status = "";
 	int len;
 
-	if (nkpod && xntbase_enabled_p(&nktbase)) {
+	if (xnpod_active_p() && xntbase_enabled_p(&nktbase)) {
 		tm_status = "on";
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 		wd_status = "+watchdog";
@@ -852,6 +1025,9 @@ void xnpod_init_proc(void)
 
 #ifdef CONFIG_XENO_OPT_STATS
 	add_proc_fops("stat", &stat_seq_operations, 0, rthal_proc_root);
+
+	tmstat_proc_root =
+		create_proc_entry("timerstat", S_IFDIR, rthal_proc_root);
 #endif /* CONFIG_XENO_OPT_STATS */
 
 #if defined(CONFIG_SMP) && XENO_DEBUG(NUCLEUS)
@@ -888,7 +1064,7 @@ void xnpod_delete_proc(void)
 	int muxid;
 
 	for (muxid = 0; muxid < XENOMAI_MUX_NR; muxid++)
-		if (muxtable[muxid].props && muxtable[muxid].proc)
+		if (muxtable[muxid].props && muxtable[muxid].props->name)
 			remove_proc_entry(muxtable[muxid].props->name,
 					  iface_proc_root);
 
@@ -903,7 +1079,18 @@ void xnpod_delete_proc(void)
 	remove_proc_entry("latency", rthal_proc_root);
 	remove_proc_entry("sched", rthal_proc_root);
 #ifdef CONFIG_XENO_OPT_STATS
-	remove_proc_entry("stat", rthal_proc_root);
+	{
+		xnholder_t *holder;
+		xntbase_t *tbase;
+
+		for (holder = getheadq(&nktimebaseq);
+		     holder != NULL; holder = nextq(&nktimebaseq, holder)) {
+			tbase = link2tbase(holder);
+			remove_proc_entry(tbase->name, tmstat_proc_root);
+		}
+		remove_proc_entry("timerstat", rthal_proc_root);
+		remove_proc_entry("stat", rthal_proc_root);
+	}
 #endif /* CONFIG_XENO_OPT_STATS */
 #if defined(CONFIG_SMP) && XENO_DEBUG(NUCLEUS)
 	remove_proc_entry("lock", rthal_proc_root);
@@ -916,7 +1103,7 @@ static int iface_read_proc(char *page,
 			   char **start,
 			   off_t off, int count, int *eof, void *data)
 {
-	struct xnskin_slot *iface = (struct xnskin_slot *)data;
+	struct xnskin_slot *iface = data;
 	int len, refcnt = xnarch_atomic_get(&iface->refcnt);
 
 	len = sprintf(page, "%d\n", refcnt < 0 ? 0 : refcnt);
@@ -935,9 +1122,9 @@ static int iface_read_proc(char *page,
 
 void xnpod_declare_iface_proc(struct xnskin_slot *iface)
 {
-	iface->proc = add_proc_leaf(iface->props->name,
-				    &iface_read_proc, NULL, iface,
-				    iface_proc_root);
+	add_proc_leaf(iface->props->name,
+		      &iface_read_proc, NULL, iface,
+		      iface_proc_root);
 }
 
 void xnpod_discard_iface_proc(const char *iface_name)

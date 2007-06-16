@@ -38,7 +38,7 @@
 #define VRTX_MAX_IDS     512 /* # of available ids per object type. */
 
 #if BITS_PER_LONG * BITS_PER_LONG < VRTX_MAX_IDS
-#error "Internal bitmap cannot hold so many priority levels"
+#error "Internal bitmap cannot hold so many identifiers"
 #endif
 
 #define vrtx_h2obj_active(h,m,t) \
