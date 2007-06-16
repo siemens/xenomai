@@ -195,7 +195,7 @@ int timer_create(clockid_t clockid,
 	}
 
 	xntimer_init(&timer->timerbase, pse51_tbase,
-		     &pse51_base_timer_handler);
+		     pse51_base_timer_handler);
 
 	timer->overruns = 0;
 	timer->owner = NULL;
