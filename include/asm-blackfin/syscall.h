@@ -249,9 +249,9 @@ static inline unsigned long long __xn_rdtsc (void)
 				"%2 = CYCLES2\n"
 				"CC = %2 == %0\n"
 				"if !cc jump 1b\n"
-				:"=r" (u.s.h),
-				"=r" (u.s.l),
-				"=r" (cy2)
+				:"=d" (u.s.h),
+				"=d" (u.s.l),
+				"=d" (cy2)
 				: /*no input*/ : "cc");
     return u.t;
 }
