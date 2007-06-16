@@ -24,7 +24,6 @@
 
 #include <nucleus/pod.h>
 #include <nucleus/ppd.h>
-#include <nucleus/heap.h>
 
 #ifndef CONFIG_XENO_OPT_DEBUG_PSOS
 #define CONFIG_XENO_OPT_DEBUG_PSOS  0
@@ -81,7 +80,7 @@ static inline psos_rholder_t *psos_get_rholder(void)
 		u_long __name##_delete(u_long id);			\
 		xnholder_t *holder, *nholder;				\
 		__type *obj;						\
-		int err;						\
+		u_long err;						\
 		spl_t s;						\
 		xnlock_get_irqsave(&nklock, s);				\
 		nholder = getheadq(__rq);				\
