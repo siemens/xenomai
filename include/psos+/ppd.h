@@ -69,7 +69,7 @@ static inline psos_rholder_t *psos_get_rholder(void)
 
 #if XENO_DEBUG(PSOS)
 #define __psos_trace_release(__name, __obj, __err)			\
-	xnprintf("pSOS: cleaning up %s \"%s\" (ret=%d).\n",		\
+	xnprintf("pSOS: cleaning up %s \"%s\" (ret=%lu).\n",		\
 		 __name, (__obj)->name, __err)
 #else /* !XENO_DEBUG(NATIVE) */
 #define __psos_trace_release(__name, __obj, __err)
