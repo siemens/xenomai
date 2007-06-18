@@ -540,6 +540,10 @@ xntbops_t nktimer_ops_periodic = {
  *
  * Rescheduling: never.
  */
+#ifdef DOXYGEN_CPP
+void xntimer_init(xntimer_t *timer, xntbase_t *base,
+		  void (*handler)(xntimer_t *timer));
+#endif
 
 void __xntimer_init(xntimer_t *timer, xntbase_t *base,
 		    void (*handler) (xntimer_t *timer))
