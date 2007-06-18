@@ -351,6 +351,10 @@ static inline void xntimer_set_name(xntimer_t *timer, const char *name)
 #endif /* CONFIG_XENO_OPT_STATS */
 }
 
+/*!
+ * \addtogroup timer
+ *@{ */
+
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 
 /*!
@@ -637,6 +641,8 @@ static inline xnticks_t xntimer_get_raw_expiry (xntimer_t *timer)
 }
 
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
+
+/*@}*/
 
 void xntimer_freeze(void);
 
