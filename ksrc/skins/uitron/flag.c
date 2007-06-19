@@ -132,7 +132,7 @@ ER cre_flg(ID flgid, T_CFLG *pk_cflg)
 	sprintf(flag->name, "flg%d", flgid);
 	xnregistry_enter(flag->name, flag, &flag->handle, &__flag_pnode);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
-	smp_mb();
+	xnarch_memory_barrier();
 	flag->magic = uITRON_FLAG_MAGIC;
 
 	return E_OK;

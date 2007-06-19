@@ -139,7 +139,7 @@ ER cre_sem(ID semid, T_CSEM * pk_csem)
 	sprintf(sem->name, "sem%d", semid);
 	xnregistry_enter(sem->name, sem, &sem->handle, &__sem_pnode);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
-	smp_mb();
+	xnarch_memory_barrier();
 	sem->magic = uITRON_SEM_MAGIC;
 
 	return E_OK;
