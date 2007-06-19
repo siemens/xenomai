@@ -200,10 +200,10 @@ int rthal_irq_host_request(unsigned irq,
 	if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action) {
 		rthal_linux_irq[irq].flags =
 		    rthal_irq_descp(irq)->action->flags;
-		rthal_irq_descp(irq)->action->flags |= SA_SHIRQ;
+		rthal_irq_descp(irq)->action->flags |= IRQF_SHARED;
 	}
 
-	return request_irq(irq, handler, SA_SHIRQ, name, dev_id);
+	return request_irq(irq, handler, IRQF_SHARED, name, dev_id);
 }
 
 int rthal_irq_host_release(unsigned irq, void *dev_id)
