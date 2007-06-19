@@ -1,3 +1,12 @@
+2007-06-19  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/map.c, include/nucleus/map.h: Add lightweight
+	key-to-object mapping service.
+
+2007-06-17  Jan Kiszka  <jan.kiszka@web.de>, Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vrtx/time.c (sc_sclock): Fix call to xntbase_set_time().
+
 2007-06-15  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/arch/*/hal.c: Use IRQF_SHARED when applicable to comply
