@@ -72,12 +72,13 @@ typedef struct xnsynch {
 
 } xnsynch_t;
 
-#define xnsynch_test_flags(synch,flags)  testbits((synch)->status,flags)
-#define xnsynch_set_flags(synch,flags)   setbits((synch)->status,flags)
-#define xnsynch_clear_flags(synch,flags) clrbits((synch)->status,flags)
-#define xnsynch_wait_queue(synch)        (&((synch)->pendq))
-#define xnsynch_nsleepers(synch)         countpq(&((synch)->pendq))
-#define xnsynch_owner(synch)             ((synch)->owner)
+#define xnsynch_test_flags(synch,flags)	testbits((synch)->status,flags)
+#define xnsynch_set_flags(synch,flags)	setbits((synch)->status,flags)
+#define xnsynch_clear_flags(synch,flags)	clrbits((synch)->status,flags)
+#define xnsynch_wait_queue(synch)		(&((synch)->pendq))
+#define xnsynch_nsleepers(synch)		countpq(&((synch)->pendq))
+#define xnsynch_pended_p(synch)		(!emptypq_p(&((synch)->pendq)))
+#define xnsynch_owner(synch)		((synch)->owner)
 
 #ifdef __cplusplus
 extern "C" {
