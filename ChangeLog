@@ -1,5 +1,8 @@
 2007-06-19  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/vrtx/defs.h, ksrc/skins/vxworks/defs.h: Fix priority
+	normalization.
+
 	* ksrc/skins/uitron: Refactor and sanitize, adding registry
 	support.
 

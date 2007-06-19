@@ -47,13 +47,16 @@
 
 #define vrtx_mark_deleted(t) ((t)->magic = ~(t)->magic)
 
-/* The following macros return normalized or native priority values
-   for the underlying pod. The core pod uses an ascending [0-257]
-   priority scale (include/nucleus/core.h), whilst the VRTX
-   personality exhibits a decreasing scale [255-0]. */
+/* The following macros return normalized or native VRTX priority
+   values. The core pod uses an ascending [0-257] priority scale
+   (include/nucleus/core.h), whilst the VRTX personality exhibits a
+   decreasing scale [255-0]; normalization is done in the [1-256]
+   range so that priority 0 is kept for non-realtime shadows. */
 
-#define vrtx_normalized_prio(prio)	(XNCORE_MAX_PRIO - (prio) - 1)
-#define vrtx_denormalized_prio(prio)	(256 - (prio))
+#define vrtx_normalized_prio(prio)  \
+  ({ int __p = (prio) ? XNCORE_MAX_PRIO - (prio) - 1 : 0; __p; })
+#define vrtx_denormalized_prio(prio) \
+  ({ int __p = (prio) ? 256 - (prio) : 0; __p; })
 
 extern xntbase_t *vrtx_tbase;
 
