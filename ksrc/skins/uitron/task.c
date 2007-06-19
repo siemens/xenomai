@@ -114,7 +114,7 @@ ER cre_tsk(ID tskid, T_CTSK * pk_ctsk)
 	sprintf(aname, "tsk%d", tskid);
 
 	if (xnpod_init_thread(&task->threadbase,
-			      uitbase,
+			      ui_tbase,
 			      aname,
 			      ui_normalized_prio(pk_ctsk->itskpri), bflags,
 			      pk_ctsk->stksz, &uitask_ops) != 0) {

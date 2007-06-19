@@ -16,8 +16,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _uITRON_flag_h
-#define _uITRON_flag_h
+#ifndef _UITRON_FLAG_H
+#define _UITRON_FLAG_H
 
 #include <nucleus/synch.h>
 #include <uitron/uitron.h>
@@ -71,4 +71,4 @@ static inline void ui_flag_flush_rq(xnqueue_t *rq)
 }
 #endif
 
-#endif /* !_uITRON_flag_h */
+#endif /* !_UITRON_FLAG_H */

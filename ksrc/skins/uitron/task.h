@@ -16,8 +16,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _uITRON_task_h
-#define _uITRON_task_h
+#ifndef _UITRON_TASK_H
+#define _UITRON_TASK_H
 
 #include <nucleus/thread.h>
 #include <uitron/uitron.h>
@@ -90,4 +90,4 @@ void uitask_cleanup(void);
 }
 #endif
 
-#endif /* !_uITRON_task_h */
+#endif /* !_UITRON_TASK_H */

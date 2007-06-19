@@ -16,8 +16,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _uITRON_sem_h
-#define _uITRON_sem_h
+#ifndef _UITRON_SEM_H
+#define _UITRON_SEM_H
 
 #include <nucleus/synch.h>
 #include <uitron/uitron.h>
@@ -73,4 +73,4 @@ static inline void ui_sem_flush_rq(xnqueue_t *rq)
 }
 #endif
 
-#endif /* !_uITRON_sem_h */
+#endif /* !_UITRON_SEM_H */

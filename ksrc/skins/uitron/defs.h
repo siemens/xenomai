@@ -16,8 +16,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _uITRON_defs_h
-#define _uITRON_defs_h
+#ifndef _UITRON_DEFS_H
+#define _UITRON_DEFS_H
 
 #include <nucleus/map.h>
 
@@ -49,4 +49,4 @@
 #define ui_normalized_prio(prio)	(XNCORE_HIGH_PRIO - (prio) + 1)
 #define ui_denormalized_prio(prio)	(uITRON_MAX_PRI - (XNCORE_HIGH_PRIO - prio))
 
-#endif /* !_uITRON_defs_h */
+#endif /* !_UITRON_DEFS_H */

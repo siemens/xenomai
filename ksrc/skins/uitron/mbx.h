@@ -16,8 +16,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _uITRON_mbx_h
-#define _uITRON_mbx_h
+#ifndef _UITRON_MBX_H
+#define _UITRON_MBX_H
 
 #include <nucleus/synch.h>
 #include <uitron/uitron.h>
@@ -79,4 +79,4 @@ static inline void ui_mbx_flush_rq(xnqueue_t *rq)
 }
 #endif
 
-#endif /* !_uITRON_mbx_h */
+#endif /* !_UITRON_MBX_H */

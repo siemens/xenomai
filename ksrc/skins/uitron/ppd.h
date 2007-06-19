@@ -19,8 +19,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _uITRON_ppd_h
-#define _uITRON_ppd_h
+#ifndef _UITRON_PPD_H
+#define _UITRON_PPD_H
 
 #include <nucleus/pod.h>
 #include <nucleus/ppd.h>
@@ -102,4 +102,4 @@ static inline ui_rholder_t *ui_get_rholder(void)
 		xnlock_put_irqrestore(&nklock, s);			\
 	} while(0)
 
-#endif /* !_uITRON_ppd_h */
+#endif /* !_UITRON_PPD_H */
