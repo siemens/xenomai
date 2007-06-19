@@ -20,7 +20,7 @@
 
 #include <vrtx/pt.h>
 
-vrtxidmap_t *vrtx_pt_idmap;
+xnmap_t *vrtx_pt_idmap;
 
 static xnqueue_t vrtx_pt_q;
 
@@ -76,7 +76,7 @@ static void vrtxpt_delete_internal(vrtxpt_t *pt)
 
 	xnlock_get_irqsave(&nklock, s);
 	removeq(&vrtx_pt_q, &pt->link);
-	vrtx_put_id(vrtx_pt_idmap, pt->pid);
+	xnmap_remove(vrtx_pt_idmap, pt->pid);
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(pt->handle);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
@@ -96,7 +96,7 @@ static void vrtxpt_delete_internal(vrtxpt_t *pt)
 int vrtxpt_init(void)
 {
 	initq(&vrtx_pt_q);
-	vrtx_pt_idmap = vrtx_alloc_idmap(VRTX_MAX_PTS, 1);
+	vrtx_pt_idmap = xnmap_create(VRTX_MAX_PTS, VRTX_MAX_PTS / 2, 0);
 	return vrtx_pt_idmap ? 0 : -ENOMEM;
 }
 
@@ -110,7 +110,7 @@ void vrtxpt_cleanup(void)
 		vrtxpt_delete_internal(pt);
 	}
 
-	vrtx_free_idmap(vrtx_pt_idmap);
+	xnmap_delete(vrtx_pt_idmap);
 }
 
 static int vrtxpt_add_extent(vrtxpt_t *pt, char *extaddr, long extsize)
@@ -192,7 +192,7 @@ int sc_pcreate(int pid, char *paddr, long psize, long bsize, int *errp)
 	if (*errp != RET_OK)
 		return -1;
 
-	pid = vrtx_get_id(vrtx_pt_idmap, pid, pt);
+	pid = xnmap_enter(vrtx_pt_idmap, pid, pt);
 
 	if (pid < 0) {
 		*errp = ER_PID;
@@ -225,7 +225,7 @@ void sc_pdelete(int pid, int opt, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+	pt = xnmap_fetch(vrtx_pt_idmap, pid);
 
 	if (pt == NULL) {
 		*errp = ER_PID;
@@ -252,7 +252,7 @@ char *sc_gblock(int pid, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+	pt = xnmap_fetch(vrtx_pt_idmap, pid);
 
 	if (pt == NULL) {
 		*errp = ER_PID;
@@ -292,7 +292,7 @@ void sc_rblock(int pid, char *buf, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+	pt = xnmap_fetch(vrtx_pt_idmap, pid);
 
 	if (pt == NULL) {
 		*errp = ER_PID;
@@ -347,7 +347,7 @@ void sc_pextend(int pid, char *extaddr, long extsize, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+	pt = xnmap_fetch(vrtx_pt_idmap, pid);
 
 	if (pt == NULL) {
 		*errp = ER_PID;
@@ -368,7 +368,7 @@ void sc_pinquiry(unsigned long info[3], int pid, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+	pt = xnmap_fetch(vrtx_pt_idmap, pid);
 
 	if (pt == NULL) {
 		*errp = ER_PID;

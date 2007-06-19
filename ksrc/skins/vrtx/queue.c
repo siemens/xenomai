@@ -21,7 +21,7 @@
 #include <vrtx/task.h>
 #include <vrtx/queue.h>
 
-static vrtxidmap_t *vrtx_queue_idmap;
+static xnmap_t *vrtx_queue_idmap;
 
 static xnqueue_t vrtx_queue_q;
 
@@ -96,7 +96,7 @@ int queue_destroy_internal(vrtxqueue_t * queue)
 
 	removeq(&vrtx_queue_q, &queue->link);
 	s = xnsynch_destroy(&queue->synchbase);
-	vrtx_put_id(vrtx_queue_idmap, queue->qid);
+	xnmap_remove(vrtx_queue_idmap, queue->qid);
 	xnfree(queue->messages);
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(queue->handle);
@@ -110,7 +110,7 @@ int queue_destroy_internal(vrtxqueue_t * queue)
 int vrtxqueue_init(void)
 {
 	initq(&vrtx_queue_q);
-	vrtx_queue_idmap = vrtx_alloc_idmap(VRTX_MAX_QUEUES, 1);
+	vrtx_queue_idmap = xnmap_create(VRTX_MAX_QUEUES, VRTX_MAX_QUEUES / 2, 0);
 	return vrtx_queue_idmap ? 0 : -ENOMEM;
 }
 
@@ -121,7 +121,7 @@ void vrtxqueue_cleanup(void)
 	while ((holder = getheadq(&vrtx_queue_q)) != NULL)
 		queue_destroy_internal(link2vrtxqueue(holder));
 
-	vrtx_free_idmap(vrtx_queue_idmap);
+	xnmap_delete(vrtx_queue_idmap);
 }
 
 int sc_qecreate(int qid, int qsize, int opt, int *errp)
@@ -150,7 +150,7 @@ int sc_qecreate(int qid, int qsize, int opt, int *errp)
 		return -1;
 	}
 
-	qid = vrtx_get_id(vrtx_queue_idmap, qid, queue);
+	qid = xnmap_enter(vrtx_queue_idmap, qid, queue);
 
 	if (qid < 0) {
 		xnfree(queue->messages);
@@ -203,7 +203,7 @@ void sc_qdelete(int qid, int opt, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	queue = (vrtxqueue_t *) vrtx_get_object(vrtx_queue_idmap, qid);
+	queue = xnmap_fetch(vrtx_queue_idmap, qid);
 
 	if (queue == NULL) {
 		*errp = ER_QID;
@@ -235,7 +235,7 @@ static void sc_qpost_inner(int qid, char *msg, int *errp, int jammed)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	queue = (vrtxqueue_t *) vrtx_get_object(vrtx_queue_idmap, qid);
+	queue = xnmap_fetch(vrtx_queue_idmap, qid);
 
 	if (queue == NULL) {
 		*errp = ER_QID;
@@ -292,7 +292,7 @@ char *sc_qpend(int qid, long timeout, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	queue = (vrtxqueue_t *) vrtx_get_object(vrtx_queue_idmap, qid);
+	queue = xnmap_fetch(vrtx_queue_idmap, qid);
 
 	if (queue == NULL) {
 		*errp = ER_QID;
@@ -353,7 +353,7 @@ char *sc_qaccept(int qid, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	queue = (vrtxqueue_t *) vrtx_get_object(vrtx_queue_idmap, qid);
+	queue = xnmap_fetch(vrtx_queue_idmap, qid);
 
 	if (queue == NULL) {
 		*errp = ER_QID;
@@ -386,7 +386,7 @@ void sc_qbrdcst(int qid, char *msg, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	queue = (vrtxqueue_t *) vrtx_get_object(vrtx_queue_idmap, qid);
+	queue = xnmap_fetch(vrtx_queue_idmap, qid);
 
 	if (queue == NULL) {
 		*errp = ER_QID;
@@ -413,7 +413,7 @@ char *sc_qinquiry(int qid, int *countp, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	queue = (vrtxqueue_t *) vrtx_get_object(vrtx_queue_idmap, qid);
+	queue = xnmap_fetch(vrtx_queue_idmap, qid);
 
 	if (queue == NULL) {
 		msg = NULL;
