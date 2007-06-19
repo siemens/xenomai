@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2007 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -19,20 +19,18 @@
 #ifndef _uITRON_sem_h
 #define _uITRON_sem_h
 
-#include "uitron/defs.h"
+#include <nucleus/synch.h>
+#include <uitron/uitron.h>
+#include <uitron/defs.h>
+#include <uitron/ppd.h>
 
 #define uITRON_SEM_MAGIC 0x85850202
 
 typedef struct uisem {
 
-    unsigned magic;   /* Magic code - must be first */
+    unsigned magic;		/* Magic code - must be first */
 
-    xnholder_t link;	/* Link in uisemq */
-
-#define link2uisem(laddr) \
-((uisem_t *)(((char *)laddr) - (int)(&((uisem_t *)0)->link)))
-
-    ID semid;
+    ID id;
 
     VP exinf;
 
@@ -44,15 +42,32 @@ typedef struct uisem {
 
     xnsynch_t synchbase;
 
+    xnholder_t rlink;		/* !< Link in resource queue. */
+
+#define rlink2sem(ln)		container_of(ln, struct uisem, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+    char name[XNOBJECT_NAME_LEN];
+
+    xnhandle_t handle;
+#endif
+
 } uisem_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void uisem_init(void);
+int uisem_init(void);
 
 void uisem_cleanup(void);
+
+static inline void ui_sem_flush_rq(xnqueue_t *rq)
+{
+	ui_flush_rq(uisem_t, rq, sem);
+}
 
 #ifdef __cplusplus
 }

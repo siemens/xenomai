@@ -16,22 +16,13 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_SKIN_UITRON_H
-#define _XENO_SKIN_UITRON_H
+#ifndef _uITRON_UITRON_H
+#define _uITRON_UITRON_H
 
-#include <nucleus/xenomai.h>
-
-#define uITRON_SKIN_VERSION_CODE     0x00000002
-#define uITRON_SKIN_MAGIC            0x54524F4E
+#define uITRON_SKIN_MAGIC   0x54524F4E
 
 #define uITRON_MIN_PRI  8
 #define uITRON_MAX_PRI  1
-
-#define uITRON_MAX_TASKID 64	/* i.e. available range: 1..64 */
-#define uITRON_MAX_SEMID  32	/* i.e. available range: 1..32 */
-#define uITRON_MAX_FLAGID 32	/* i.e. available range: 1..32 */
-#define uITRON_MAX_MBXID  32	/* i.e. available range: 1..32 */
-#define uITRON_MAX_MBFID  32	/* i.e. available range: 1..32 */
 
 /*
  * Common Constants and Data Structure Packet Formats
@@ -779,4 +770,4 @@ ER def_exc(UINT exckind,
 }
 #endif
 
-#endif /* !_XENO_SKIN_UITRON_H */
+#endif /* !_uITRON_UITRON_H */
