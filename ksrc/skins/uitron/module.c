@@ -16,10 +16,12 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "uitron/task.h"
-#include "uitron/sem.h"
-#include "uitron/flag.h"
-#include "uitron/mbx.h"
+#include <nucleus/pod.h>
+#include <nucleus/registry.h>
+#include <uitron/task.h>
+#include <uitron/sem.h>
+#include <uitron/flag.h>
+#include <uitron/mbx.h>
 
 MODULE_DESCRIPTION("uITRON interface");
 MODULE_AUTHOR("rpm@xenomai.org");
@@ -31,50 +33,98 @@ MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us)");
 
 xntbase_t *uitbase;
 
-static void uitron_shutdown(int xtype)
+ui_rholder_t __ui_global_rholder;
+
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
+xnptree_t __uitron_ptree = {
+
+	.dir = NULL,
+	.name = "uitron",
+	.entries = 0,
+};
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+
+int SKIN_INIT(uitron)
 {
+	int err;
+
+	initq(&__ui_global_rholder.flgq);
+	initq(&__ui_global_rholder.mbxq);
+	initq(&__ui_global_rholder.semq);
+
+	err = xnpod_init();
+
+	if (err)
+		goto fail;
+
+	err = xntbase_alloc("uitron", tick_arg * 1000, &uitbase);
+
+	if (err)
+		goto cleanup_pod;
+
+	xntbase_start(uitbase);
+
+	err = uitask_init();
+
+	if (err)
+		goto cleanup_tbase;
+
+	err = uisem_init();
+
+	if (err)
+		goto cleanup_task;
+		
+	err = uiflag_init();
+
+	if (err)
+		goto cleanup_sem;
+		
+	err = uimbx_init();
+
+	if (err)
+		goto cleanup_flag;
+		
+	xnprintf("starting uITRON services.\n");
+
+	return 0;
+
+cleanup_flag:
+
+	uiflag_cleanup();
+
+cleanup_sem:
+
+	uisem_cleanup();
+
+cleanup_task:
+
+	uitask_cleanup();
+
+cleanup_tbase:
+
+	xntbase_free(uitbase);
+
+cleanup_pod:
+
+	xnpod_shutdown(err);
+
+fail:
+
+	xnlogerr("uITRON skin init failed, code %d.\n", err);
+
+	return err;
+}
+
+void SKIN_EXIT(uitron)
+{
+	xnprintf("stopping uITRON services.\n");
 	uimbx_cleanup();
 	uiflag_cleanup();
 	uisem_cleanup();
 	uitask_cleanup();
 
 	xntbase_free(uitbase);
-	xnpod_shutdown(xtype);
-}
-
-int SKIN_INIT(uitron)
-{
-	int err;
-
-	err = xnpod_init();
-
-	if (err != 0)
-		return err;
-
-	err = xntbase_alloc("uitron", tick_arg * 1000, &uitbase);
-
-	if (err != 0) {
-		xnlogerr("uITRON skin init failed, code %d.\n", err);
-		xnpod_shutdown(err);
-		return err;
-	}
-
-	xntbase_start(uitbase);
-
-	uitask_init();
-	uisem_init();
-	uiflag_init();
-	uimbx_init();
-
-	xnprintf("starting uITRON services.\n");
-
-	return 0;
-}
-
-void SKIN_EXIT(uitron)
-{
-	xnprintf("stopping uITRON services.\n");
-	uitron_shutdown(XNPOD_NORMAL_EXIT);
+	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 }
 
 module_init(__uitron_skin_init);

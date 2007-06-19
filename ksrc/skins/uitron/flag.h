@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2007 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -19,20 +19,16 @@
 #ifndef _uITRON_flag_h
 #define _uITRON_flag_h
 
-#include "uitron/defs.h"
+#include <nucleus/synch.h>
+#include <uitron/uitron.h>
+#include <uitron/defs.h>
+#include <uitron/ppd.h>
 
 #define uITRON_FLAG_MAGIC 0x85850303
 
 typedef struct uiflag {
 
-    unsigned magic;   /* Magic code - must be first */
-
-    xnholder_t link;	/* Link in uiflagq */
-
-#define link2uiflag(laddr) \
-((uiflag_t *)(((char *)laddr) - (int)(&((uiflag_t *)0)->link)))
-
-    ID flgid;
+    unsigned magic;		/* !< Magic code - must be first. */
 
     VP exinf;
 
@@ -40,7 +36,21 @@ typedef struct uiflag {
 
     UINT flgvalue;
 
+    ID id;
+
     xnsynch_t synchbase;
+
+    xnholder_t rlink;		/* !< Link in resource queue. */
+
+#define rlink2flg(ln)		container_of(ln, struct uiflag, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+    char name[XNOBJECT_NAME_LEN];
+
+    xnhandle_t handle;
+#endif
 
 } uiflag_t;
 
@@ -48,9 +58,14 @@ typedef struct uiflag {
 extern "C" {
 #endif
 
-void uiflag_init(void);
+int uiflag_init(void);
 
 void uiflag_cleanup(void);
+
+static inline void ui_flag_flush_rq(xnqueue_t *rq)
+{
+	ui_flush_rq(uiflag_t, rq, flg);
+}
 
 #ifdef __cplusplus
 }

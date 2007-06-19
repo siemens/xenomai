@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2007 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -16,75 +16,131 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "uitron/task.h"
-#include "uitron/flag.h"
+#include <nucleus/registry.h>
+#include <nucleus/map.h>
+#include <nucleus/heap.h>
+#include <uitron/task.h>
+#include <uitron/flag.h>
 
-static xnqueue_t uiflagq;
+static xnmap_t *ui_flag_idmap;
 
-static uiflag_t *uiflagmap[uITRON_MAX_FLAGID];
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 
-void uiflag_init(void)
+static int __flag_read_proc(char *page,
+			    char **start,
+			    off_t off, int count, int *eof, void *data)
 {
-	initq(&uiflagq);
+	uiflag_t *flag = (uiflag_t *)data;
+	char *p = page;
+	int len;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	p += sprintf(p, "=0x%x, attr=%s\n", flag->flgvalue,
+		     flag->flgatr & TA_WMUL ? "TA_WMUL" : "TA_WSGL");
+
+	if (xnsynch_nsleepers(&flag->synchbase) > 0) {
+		xnpholder_t *holder;
+
+		/* Pended flag -- dump waiters. */
+
+		holder = getheadpq(xnsynch_wait_queue(&flag->synchbase));
+
+		while (holder) {
+			xnthread_t *sleeper = link2thread(holder, plink);
+			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
+			holder = nextpq(xnsynch_wait_queue(&flag->synchbase), holder);
+		}
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	len = (p - page) - off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+extern xnptree_t __uitron_ptree;
+
+static xnpnode_t __flag_pnode = {
+
+	.dir = NULL,
+	.type = "flags",
+	.entries = 0,
+	.read_proc = &__flag_read_proc,
+	.write_proc = NULL,
+	.root = &__uitron_ptree,
+};
+
+#elif defined(CONFIG_XENO_OPT_REGISTRY)
+
+static xnpnode_t __flag_pnode = {
+
+	.type = "flags"
+};
+
+#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+
+int uiflag_init(void)
+{
+	ui_flag_idmap = xnmap_create(uITRON_MAX_FLAGID, uITRON_MAX_FLAGID, 1);
+	return ui_flag_idmap ? 0 : -ENOMEM;
 }
 
 void uiflag_cleanup(void)
 {
-	xnholder_t *holder;
-
-	while ((holder = getheadq(&uiflagq)) != NULL)
-		del_flg(link2uiflag(holder)->flgid);
+	ui_flag_flush_rq(&__ui_global_rholder.flgq);
+	xnmap_delete(ui_flag_idmap);
 }
 
-ER cre_flg(ID flgid, T_CFLG * pk_cflg)
+ER cre_flg(ID flgid, T_CFLG *pk_cflg)
 {
-	uiflag_t *flg;
-	spl_t s;
+	uiflag_t *flag;
 
 	if (xnpod_asynch_p())
 		return EN_CTXID;
 
-	if (flgid <= 0 || flgid > uITRON_MAX_FLAGID)
+	if (flgid <= 0 || flgid > uITRON_MAX_MBXID)
 		return E_ID;
 
-	xnlock_get_irqsave(&nklock, s);
+	flag = xnmalloc(sizeof(*flag));
 
-	if (uiflagmap[flgid - 1] != NULL) {
-		xnlock_put_irqrestore(&nklock, s);
+	if (!flag)
+		return E_NOMEM;
+
+	flgid = xnmap_enter(ui_flag_idmap, flgid, flag);
+
+	if (flgid <= 0) {
+		xnfree(flag);
 		return E_OBJ;
 	}
 
-	uiflagmap[flgid - 1] = (uiflag_t *) 1;	/* Reserve slot */
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	flg = (uiflag_t *) xnmalloc(sizeof(*flg));
-
-	if (!flg) {
-		uiflagmap[flgid - 1] = NULL;
-		return E_NOMEM;
-	}
-
-	xnsynch_init(&flg->synchbase, XNSYNCH_FIFO);
-
-	inith(&flg->link);
-	flg->flgid = flgid;
-	flg->exinf = pk_cflg->exinf;
-	flg->flgatr = pk_cflg->flgatr;
-	flg->flgvalue = pk_cflg->iflgptn;
-	flg->magic = uITRON_FLAG_MAGIC;
-
-	xnlock_get_irqsave(&nklock, s);
-	uiflagmap[flgid - 1] = flg;
-	appendq(&uiflagq, &flg->link);
-	xnlock_put_irqrestore(&nklock, s);
+	xnsynch_init(&flag->synchbase, XNSYNCH_FIFO);
+	flag->id = flgid;
+	flag->exinf = pk_cflg->exinf;
+	flag->flgatr = pk_cflg->flgatr;
+	flag->flgvalue = pk_cflg->iflgptn;
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	sprintf(flag->name, "flg%d", flgid);
+	xnregistry_enter(flag->name, flag, &flag->handle, &__flag_pnode);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+	smp_mb();
+	flag->magic = uITRON_FLAG_MAGIC;
 
 	return E_OK;
 }
 
 ER del_flg(ID flgid)
 {
-	uiflag_t *flg;
+	uiflag_t *flag;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -95,23 +151,25 @@ ER del_flg(ID flgid)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	flg = uiflagmap[flgid - 1];
+	flag = xnmap_fetch(ui_flag_idmap, flgid);
 
-	if (!flg) {
+	if (!flag) {
 		xnlock_put_irqrestore(&nklock, s);
 		return E_NOEXS;
 	}
 
-	uiflagmap[flgid - 1] = NULL;
+	xnmap_remove(ui_flag_idmap, flag->id);
+	ui_mark_deleted(flag);
 
-	ui_mark_deleted(flg);
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	xnregistry_remove(flag->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+	xnfree(flag);
 
-	if (xnsynch_destroy(&flg->synchbase) == XNSYNCH_RESCHED)
+	if (xnsynch_destroy(&flag->synchbase) == XNSYNCH_RESCHED)
 		xnpod_schedule();
 
 	xnlock_put_irqrestore(&nklock, s);
-
-	xnfree(flg);
 
 	return E_OK;
 }
@@ -119,7 +177,8 @@ ER del_flg(ID flgid)
 ER set_flg(ID flgid, UINT setptn)
 {
 	xnpholder_t *holder, *nholder;
-	uiflag_t *flg;
+	uiflag_t *flag;
+	ER err = E_OK;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -128,56 +187,55 @@ ER set_flg(ID flgid, UINT setptn)
 	if (flgid <= 0 || flgid > uITRON_MAX_FLAGID)
 		return E_ID;
 
-	if (setptn == 0)
-		return E_OK;
-
 	xnlock_get_irqsave(&nklock, s);
 
-	flg = uiflagmap[flgid - 1];
+	flag = xnmap_fetch(ui_flag_idmap, flgid);
 
-	if (!flg) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_NOEXS;
+	if (!flag) {
+		err = E_NOEXS;
+		goto unlock_and_exit;
 	}
 
-	flg->flgvalue |= setptn;
+	if (setptn == 0)
+		goto unlock_and_exit;
 
-	if (xnsynch_nsleepers(&flg->synchbase) > 0) {
-		for (holder = getheadpq(xnsynch_wait_queue(&flg->synchbase));
-		     holder; holder = nholder) {
-			uitask_t *sleeper =
-			    thread2uitask(link2thread(holder, plink));
-			UINT wfmode = sleeper->wargs.flag.wfmode;
-			UINT waiptn = sleeper->wargs.flag.waiptn;
+	flag->flgvalue |= setptn;
 
-			if (((wfmode & TWF_ORW)
-			     && (waiptn & flg->flgvalue) != 0)
-			    || (!(wfmode & TWF_ORW)
-				&& ((waiptn & flg->flgvalue) == waiptn))) {
-				nholder =
-				    xnsynch_wakeup_this_sleeper(&flg->synchbase,
-								holder);
-				sleeper->wargs.flag.waiptn = flg->flgvalue;
+	if (!xnsynch_pended_p(&flag->synchbase))
+		goto unlock_and_exit;
 
-				if (wfmode & TWF_CLR)
-					flg->flgvalue = 0;
-			} else
-				nholder =
-				    nextpq(xnsynch_wait_queue(&flg->synchbase),
-					   holder);
-		}
+	nholder = getheadpq(xnsynch_wait_queue(&flag->synchbase));
 
-		xnpod_schedule();
+	while ((holder = nholder) != NULL) {
+		uitask_t *sleeper = thread2uitask(link2thread(holder, plink));
+		UINT wfmode = sleeper->wargs.flag.wfmode;
+		UINT waiptn = sleeper->wargs.flag.waiptn;
+
+		if (((wfmode & TWF_ORW) && (waiptn & flag->flgvalue) != 0)
+		    || (!(wfmode & TWF_ORW) && ((waiptn & flag->flgvalue) == waiptn))) {
+			nholder = xnsynch_wakeup_this_sleeper(&flag->synchbase, holder);
+			sleeper->wargs.flag.waiptn = flag->flgvalue;
+
+			if (wfmode & TWF_CLR)
+				flag->flgvalue = 0;
+		} else
+			nholder = nextpq(xnsynch_wait_queue(&flag->synchbase), holder);
 	}
+
+	xnpod_schedule();
+
+
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return E_OK;
+	return err;
 }
 
 ER clr_flg(ID flgid, UINT clrptn)
 {
-	uiflag_t *flg;
+	uiflag_t *flag;
+	ER err = E_OK;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -188,18 +246,20 @@ ER clr_flg(ID flgid, UINT clrptn)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	flg = uiflagmap[flgid - 1];
+	flag = xnmap_fetch(ui_flag_idmap, flgid);
 
-	if (!flg) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_NOEXS;
+	if (!flag) {
+		err = E_NOEXS;
+		goto unlock_and_exit;
 	}
 
-	flg->flgvalue &= clrptn;
+	flag->flgvalue &= clrptn;
+
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return E_OK;
+	return err;
 }
 
 static ER wai_flg_helper(UINT *p_flgptn,
@@ -207,12 +267,15 @@ static ER wai_flg_helper(UINT *p_flgptn,
 {
 	xnticks_t timeout;
 	uitask_t *task;
-	uiflag_t *flg;
-	int err;
+	uiflag_t *flag;
+	ER err = E_OK;
 	spl_t s;
 
 	if (xnpod_unblockable_p())
 		return E_CTX;
+
+	if (flgid <= 0 || flgid > uITRON_MAX_FLAGID)
+		return E_ID;
 
 	if (waiptn == 0)
 		return E_PAR;
@@ -226,45 +289,49 @@ static ER wai_flg_helper(UINT *p_flgptn,
 	else
 		timeout = (xnticks_t)tmout;
 
-	if (flgid <= 0 || flgid > uITRON_MAX_FLAGID)
-		return E_ID;
-
 	xnlock_get_irqsave(&nklock, s);
 
-	flg = uiflagmap[flgid - 1];
+	flag = xnmap_fetch(ui_flag_idmap, flgid);
 
-	if (!flg) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_NOEXS;
+	if (!flag) {
+		err = E_NOEXS;
+		goto unlock_and_exit;
 	}
 
-	err = E_OK;
-
-	if (((wfmode & TWF_ORW) && (waiptn & flg->flgvalue) != 0) ||
-	    (!(wfmode & TWF_ORW) && ((waiptn & flg->flgvalue) == waiptn))) {
-		*p_flgptn = flg->flgvalue;
+	if (((wfmode & TWF_ORW) && (waiptn & flag->flgvalue) != 0) ||
+	    (!(wfmode & TWF_ORW) && ((waiptn & flag->flgvalue) == waiptn))) {
+		*p_flgptn = flag->flgvalue;
 
 		if (wfmode & TWF_CLR)
-			flg->flgvalue = 0;
-	} else if (timeout == XN_NONBLOCK)
-		err = E_TMOUT;
-	else if (xnsynch_nsleepers(&flg->synchbase) > 0 &&
-		 !(flg->flgatr & TA_WMUL))
-		err = E_OBJ;
-	else {
-		task = ui_current_task();
+			flag->flgvalue = 0;
 
-		xnsynch_sleep_on(&flg->synchbase, timeout, XN_RELATIVE);
-
-		if (xnthread_test_info(&task->threadbase, XNRMID))
-			err = E_DLT;	/* Flag deleted while pending. */
-		else if (xnthread_test_info(&task->threadbase, XNTIMEO))
-			err = E_TMOUT;	/* Timeout. */
-		else if (xnthread_test_info(&task->threadbase, XNBREAK))
-			err = E_RLWAI;	/* rel_wai() received while waiting. */
-		else
-			*p_flgptn = task->wargs.flag.waiptn;
+		goto unlock_and_exit;
 	}
+
+	if (timeout == XN_NONBLOCK) {
+		err = E_TMOUT;
+		goto unlock_and_exit;
+	}
+
+	else if (xnsynch_pended_p(&flag->synchbase) && !(flag->flgatr & TA_WMUL)) {
+		err = E_OBJ;
+		goto unlock_and_exit;
+	}
+
+	task = ui_current_task();
+
+	xnsynch_sleep_on(&flag->synchbase, timeout, XN_RELATIVE);
+
+	if (xnthread_test_info(&task->threadbase, XNRMID))
+		err = E_DLT;	/* Flag deleted while pending. */
+	else if (xnthread_test_info(&task->threadbase, XNTIMEO))
+		err = E_TMOUT;	/* Timeout. */
+	else if (xnthread_test_info(&task->threadbase, XNBREAK))
+		err = E_RLWAI;	/* rel_wai() received while waiting. */
+	else
+		*p_flgptn = task->wargs.flag.waiptn;
+
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -292,7 +359,8 @@ ER twai_flg(UINT *p_flgptn, ID flgid, UINT waiptn, UINT wfmode, TMO tmout)
 ER ref_flg(T_RFLG * pk_rflg, ID flgid)
 {
 	uitask_t *sleeper;
-	uiflag_t *flg;
+	uiflag_t *flag;
+	ER err = E_OK;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -303,22 +371,27 @@ ER ref_flg(T_RFLG * pk_rflg, ID flgid)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	flg = uiflagmap[flgid - 1];
+	flag = xnmap_fetch(ui_flag_idmap, flgid);
 
-	if (!flg) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_NOEXS;
+	if (!flag) {
+		err = E_NOEXS;
+		goto unlock_and_exit;
 	}
 
-	sleeper =
-	    thread2uitask(link2thread
-			  (getheadpq(xnsynch_wait_queue(&flg->synchbase)),
-			   plink));
-	pk_rflg->exinf = flg->exinf;
-	pk_rflg->flgptn = flg->flgvalue;
-	pk_rflg->wtsk = sleeper ? sleeper->tskid : FALSE;
+	if (xnsynch_pended_p(&flag->synchbase)) {
+		xnpholder_t *holder = getheadpq(xnsynch_wait_queue(&flag->synchbase));
+		xnthread_t *thread = link2thread(holder, plink);
+		sleeper = thread2uitask(thread);
+		pk_rflg->wtsk = sleeper->id;
+	} else
+		pk_rflg->wtsk = FALSE;
+
+	pk_rflg->exinf = flag->exinf;
+	pk_rflg->flgptn = flag->flgvalue;
+
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return E_OK;
+	return err;
 }

@@ -6,7 +6,7 @@ obj-$(CONFIG_XENO_SKIN_UITRON) += xeno_uitron.o
 
 xeno_uitron-y := flag.o mbx.o module.o sem.o task.o
 
-EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai -I$(src)/..
 
 else
 
@@ -22,7 +22,7 @@ xeno_uitron-objs := flag.o mbx.o module.o sem.o task.o
 
 export-objs := $(xeno_uitron-objs)
 
-EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat -I..
 
 include $(TOPDIR)/Rules.make
 

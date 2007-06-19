@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2007 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -19,7 +19,9 @@
 #ifndef _uITRON_task_h
 #define _uITRON_task_h
 
-#include "uitron/defs.h"
+#include <nucleus/thread.h>
+#include <uitron/uitron.h>
+#include <uitron/defs.h>
 
 #define uITRON_TASK_MAGIC 0x85850101
 
@@ -30,15 +32,11 @@ typedef struct uitask {
 
     unsigned magic;   /* Magic code - must be first */
 
+    ID id;
+
     xnholder_t link;	/* Link in uitaskq */
 
-#define link2uitask(laddr) \
-((uitask_t *)(((char *)laddr) - (int)(&((uitask_t *)0)->link)))
-
-#define thread2uitask(taddr) \
-((taddr) ? ((uitask_t *)(((char *)(taddr)) - (int)(&((uitask_t *)0)->threadbase))) : NULL)
-
-    ID tskid;
+#define link2uitask(a)	container_of(a, struct uitask, link)
 
     FPTR entry;
 
@@ -72,6 +70,8 @@ typedef struct uitask {
 
     xnthread_t threadbase;
 
+#define thread2uitask(a)	container_of(a, struct uitask, threadbase)
+
 } uitask_t;
 
 #define ui_current_task() thread2uitask(xnpod_current_thread())
@@ -82,7 +82,7 @@ extern xntbase_t *uitbase;
 extern "C" {
 #endif
 
-void uitask_init(void);
+int uitask_init(void);
 
 void uitask_cleanup(void);
 

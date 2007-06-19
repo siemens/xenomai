@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2007 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -19,8 +19,18 @@
 #ifndef _uITRON_defs_h
 #define _uITRON_defs_h
 
-#include "nucleus/xenomai.h"
-#include "uitron/uitron.h"
+#include <nucleus/map.h>
+
+#define uITRON_MAX_TASKID 64	/* [1..64] */
+#define uITRON_MAX_SEMID  32	/* [1..32] */
+#define uITRON_MAX_FLAGID 32	/* [1..32] */
+#define uITRON_MAX_MBXID  32	/* [1..32] */
+#define uITRON_MAX_MBFID  32	/* [1..32] */
+#define uITRON_MAX_IDS    64
+
+#if XNMAP_MAX_KEYS < uITRON_MAX_IDS
+#error "Internal map cannot hold so many identifiers"
+#endif
 
 #define ui_h2obj(h,m,t) \
 ((h) && ((t *)(h))->magic == (m) ? ((t *)(h)) : NULL)

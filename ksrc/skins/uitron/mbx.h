@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2007 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -19,20 +19,18 @@
 #ifndef _uITRON_mbx_h
 #define _uITRON_mbx_h
 
-#include "uitron/defs.h"
+#include <nucleus/synch.h>
+#include <uitron/uitron.h>
+#include <uitron/defs.h>
+#include <uitron/ppd.h>
 
 #define uITRON_MBX_MAGIC 0x85850404
 
 typedef struct uimbx {
 
-    unsigned magic;   /* Magic code - must be first */
+    unsigned magic;		/* !< Magic code - must be first. */
 
-    xnholder_t link;	/* Link in uimbxq */
-
-#define link2uimbx(laddr) \
-((uimbx_t *)(((char *)laddr) - (int)(&((uimbx_t *)0)->link)))
-
-    ID mbxid;
+    ID id;
 
     VP exinf;
 
@@ -50,15 +48,32 @@ typedef struct uimbx {
 
     xnsynch_t synchbase;
 
+    xnholder_t rlink;		/* !< Link in resource queue. */
+
+#define rlink2mbx(ln)		container_of(ln, struct uimbx, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+    char name[XNOBJECT_NAME_LEN];
+
+    xnhandle_t handle;
+#endif
+
 } uimbx_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void uimbx_init(void);
+int uimbx_init(void);
 
 void uimbx_cleanup(void);
+
+static inline void ui_mbx_flush_rq(xnqueue_t *rq)
+{
+	ui_flush_rq(uimbx_t, rq, mbx);
+}
 
 #ifdef __cplusplus
 }

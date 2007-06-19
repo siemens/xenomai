@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2007 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -16,13 +16,17 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "uitron/task.h"
+#include <nucleus/registry.h>
+#include <nucleus/pod.h>
+#include <nucleus/map.h>
+#include <nucleus/heap.h>
+#include <uitron/task.h>
 
-static xnqueue_t uitaskq;
-
-static uitask_t *uitaskmap[uITRON_MAX_TASKID];
+static xnmap_t *ui_task_idmap;
 
 static int uicpulck;
+
+static xnqueue_t uitaskq;
 
 static int uitask_get_denormalized_prio(xnthread_t *thread)
 {
@@ -47,19 +51,19 @@ static void uitask_delete_hook(xnthread_t *thread)
 		return;
 
 	task = thread2uitask(thread);
-
 	removeq(&uitaskq, &task->link);
-#if 0
-	xnarch_delete_display(&task->threadbase);
-#endif
 	ui_mark_deleted(task);
 	xnfree(task);
 }
 
-void uitask_init(void)
+int uitask_init(void)
 {
 	initq(&uitaskq);
+	ui_task_idmap = xnmap_create(uITRON_MAX_TASKID, uITRON_MAX_TASKID, 1);
+	if (!ui_task_idmap)
+		return -ENOMEM;
 	xnpod_add_hook(XNHOOK_THREAD_DELETE, uitask_delete_hook);
+	return 0;
 }
 
 void uitask_cleanup(void)
@@ -67,23 +71,24 @@ void uitask_cleanup(void)
 	xnholder_t *holder;
 
 	while ((holder = getheadq(&uitaskq)) != NULL)
-		del_tsk(link2uitask(holder)->tskid);
+		del_tsk(link2uitask(holder)->id);
 
 	xnpod_remove_hook(XNHOOK_THREAD_DELETE, uitask_delete_hook);
+	xnmap_delete(ui_task_idmap);
 }
 
 ER cre_tsk(ID tskid, T_CTSK * pk_ctsk)
 {
 	int bflags = XNFPU;
 	uitask_t *task;
-	char aname[16];
+	char aname[32];
 	spl_t s;
 
 	if (xnpod_asynch_p())
 		return EN_CTXID;
 
-	/* uITRON uses a (rather widespread) reverse priority scheme: the
-	   lower the value, the higher the priority. */
+	/* uITRON uses a reverse priority scheme: the lower the value,
+	   the higher the priority. */
 	if (pk_ctsk->itskpri < uITRON_MAX_PRI ||
 	    pk_ctsk->itskpri > uITRON_MIN_PRI)
 		return E_PAR;
@@ -94,54 +99,42 @@ ER cre_tsk(ID tskid, T_CTSK * pk_ctsk)
 	if (tskid <= 0 || tskid > uITRON_MAX_TASKID)
 		return E_ID;
 
-	xnlock_get_irqsave(&nklock, s);
+	task = xnmalloc(sizeof(*task));
 
-	if (uitaskmap[tskid - 1] != NULL) {
-		xnlock_put_irqrestore(&nklock, s);
+	if (!task)
+		return E_NOMEM;
+
+	tskid = xnmap_enter(ui_task_idmap, tskid, task);
+
+	if (tskid <= 0) {
+		xnfree(task);
 		return E_OBJ;
 	}
 
-	uitaskmap[tskid - 1] = (uitask_t *) 1;	/* Reserve slot */
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	task = (uitask_t *) xnmalloc(sizeof(*task));
-
-	if (!task) {
-		uitaskmap[tskid - 1] = NULL;
-		return E_NOMEM;
-	}
-
-	sprintf(aname, "t%d", tskid);
+	sprintf(aname, "tsk%d", tskid);
 
 	if (xnpod_init_thread(&task->threadbase,
 			      uitbase,
 			      aname,
 			      ui_normalized_prio(pk_ctsk->itskpri), bflags,
 			      pk_ctsk->stksz, &uitask_ops) != 0) {
-		uitaskmap[tskid - 1] = NULL;
+		xnmap_remove(ui_task_idmap, tskid);
 		xnfree(task);
 		return E_NOMEM;
 	}
 
 	inith(&task->link);
-	task->tskid = tskid;
+	task->id = tskid;
 	task->entry = pk_ctsk->task;
 	task->exinf = pk_ctsk->exinf;
 	task->tskatr = pk_ctsk->tskatr;
 	task->suspcnt = 0;
 	task->wkupcnt = 0;
 	task->waitinfo = 0;
-	task->magic = uITRON_TASK_MAGIC;
-
 	xnlock_get_irqsave(&nklock, s);
-	uitaskmap[tskid - 1] = task;
 	appendq(&uitaskq, &task->link);
 	xnlock_put_irqrestore(&nklock, s);
-
-#if 0
-	xnarch_create_display(&task->threadbase, aname, uitask);
-#endif
+	task->magic = uITRON_TASK_MAGIC;
 
 	return E_OK;
 }
@@ -149,6 +142,7 @@ ER cre_tsk(ID tskid, T_CTSK * pk_ctsk)
 ER del_tsk(ID tskid)
 {
 	uitask_t *task;
+	ER err = E_OK;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -159,21 +153,22 @@ ER del_tsk(ID tskid)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	task = uitaskmap[tskid - 1];
+	task = xnmap_fetch(ui_task_idmap, tskid);
 
 	if (!task) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_NOEXS;
+		err = E_NOEXS;
+		goto unlock_and_exit;
 	}
 
 	if (!xnthread_test_state(&task->threadbase, XNDORMANT)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_OBJ;
+		err = E_OBJ;
+		goto unlock_and_exit;
 	}
 
-	uitaskmap[tskid - 1] = NULL;
-
+	xnmap_remove(ui_task_idmap, task->id);
 	xnpod_delete_thread(&task->threadbase);
+
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -191,6 +186,7 @@ static void uitask_trampoline(void *cookie)
 ER sta_tsk(ID tskid, INT stacd)
 {
 	uitask_t *task;
+	ER err = E_OK;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -201,16 +197,16 @@ ER sta_tsk(ID tskid, INT stacd)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	task = uitaskmap[tskid - 1];
+	task = xnmap_fetch(ui_task_idmap, tskid);
 
 	if (!task) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_NOEXS;
+		err = E_NOEXS;
+		goto unlock_and_exit;
 	}
 
 	if (!xnthread_test_state(&task->threadbase, XNDORMANT)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_OBJ;
+		err = E_OBJ;
+		goto unlock_and_exit;
 	}
 
 	task->suspcnt = 0;
@@ -218,26 +214,27 @@ ER sta_tsk(ID tskid, INT stacd)
 	task->waitinfo = 0;
 	task->stacd = stacd;
 
-	xnlock_put_irqrestore(&nklock, s);
-
 	xnpod_start_thread(&task->threadbase,
 			   0, 0, XNPOD_ALL_CPUS, uitask_trampoline, task);
 
 	xnpod_resume_thread(&task->threadbase, XNDORMANT);
 
-	return E_OK;
+unlock_and_exit:
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
 }
 
 void ext_tsk(void)
 {
 	if (xnpod_asynch_p()) {
-		xnpod_fatal("ext_tsk() not called on behalf of a task");
+		xnlogwarn("ext_tsk() not called on behalf of a task");
 		return;
 	}
 
 	if (xnpod_locked_p()) {
-		xnpod_fatal
-		    ("ext_tsk() called while in dispatch-disabled state");
+		xnlogwarn("ext_tsk() called while in dispatch-disabled state");
 		return;
 	}
 
@@ -251,19 +248,18 @@ void exd_tsk(void)
 	spl_t s;
 
 	if (xnpod_asynch_p()) {
-		xnpod_fatal("exd_tsk() not called on behalf of a task");
+		xnlogwarn("exd_tsk() not called on behalf of a task");
 		return;
 	}
 
 	if (xnpod_locked_p()) {
-		xnpod_fatal
-		    ("exd_tsk() called while in dispatch-disabled state");
+		xnlogwarn("exd_tsk() called while in dispatch-disabled state");
 		return;
 	}
 
 	task = ui_current_task();
 	xnlock_get_irqsave(&nklock, s);
-	uitaskmap[task->tskid - 1] = NULL;
+	xnmap_remove(ui_task_idmap, task->id);
 	xnpod_delete_thread(&task->threadbase);
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -286,12 +282,14 @@ static void ter_tsk_helper(uitask_t * task)
 	xnpod_unblock_thread(&task->threadbase);
 
 	xnpod_suspend_thread(&task->threadbase, XNDORMANT, XN_INFINITE, XN_RELATIVE, NULL);
+
 	xnlock_put_irqrestore(&nklock, s);
 }
 
 ER ter_tsk(ID tskid)
 {
 	uitask_t *task;
+	ER err = E_OK;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -300,38 +298,41 @@ ER ter_tsk(ID tskid)
 	if (tskid <= 0 || tskid > uITRON_MAX_TASKID)
 		return E_ID;
 
-	if (tskid == ui_current_task()->tskid)
+	if (tskid == ui_current_task()->id)
 		return E_OBJ;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	task = uitaskmap[tskid - 1];
+	task = xnmap_fetch(ui_task_idmap, tskid);
 
 	if (!task) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_NOEXS;
+		err = E_NOEXS;
+		goto unlock_and_exit;
 	}
 
 	if (xnthread_test_state(&task->threadbase, XNDORMANT)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_OBJ;
+		err = E_OBJ;
+		goto unlock_and_exit;
 	}
 
 	if (xnthread_test_state(&task->threadbase, XNLOCK)) {
-		/* We must be running on behalf of an IST here, so we only
-		   mark the target task as held for termination. The actual
-		   termination code will be applied by the task itself when it
-		   re-enables dispatching. */
-		xnlock_put_irqrestore(&nklock, s);
+		/* We must be running on behalf of an IST here, so we
+		   only mark the target task as held for
+		   termination. The actual termination code will be
+		   applied by the task itself when it re-enables
+		   dispatching. */
 		xnthread_set_state(&task->threadbase, uITRON_TERM_HOLD);
-		return E_OK;
+		goto unlock_and_exit;
+
 	}
 
 	ter_tsk_helper(task);
 
+unlock_and_exit:
+
 	xnlock_put_irqrestore(&nklock, s);
 
-	return E_OK;
+	return err;
 }
 
 ER dis_dsp(void)
@@ -391,7 +392,7 @@ ER chg_pri(ID tskid, PRI tskpri)
 
 		xnlock_get_irqsave(&nklock, s);
 
-		task = uitaskmap[tskid - 1];
+		task = xnmap_fetch(ui_task_idmap, tskid);
 
 		if (!task) {
 			xnlock_put_irqrestore(&nklock, s);
@@ -407,10 +408,10 @@ ER chg_pri(ID tskid, PRI tskpri)
 	if (tskpri == TPRI_INI)
 		tskpri = ui_denormalized_prio(xnthread_initial_priority(&task->threadbase));
 
-	/* uITRON specs explicitly states: "If the priority specified is
-	   the same as the current priority, the task will still be moved
-	   behind other tasks of the same priority". This allows for
-	   manual round-robin. Cool! :o) */
+	/* uITRON specs explicitly states: "If the priority specified
+	   is the same as the current priority, the task will still be
+	   moved behind other tasks of the same priority", so this
+	   allows for manual round-robin. */
 	xnpod_renice_thread(&task->threadbase, ui_normalized_prio(tskpri));
 	xnpod_schedule();
 	xnlock_put_irqrestore(&nklock, s);
@@ -445,6 +446,7 @@ schedule_and_exit:
 ER rel_wai(ID tskid)
 {
 	uitask_t *task;
+	ER err = E_OK;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -453,28 +455,31 @@ ER rel_wai(ID tskid)
 	if (tskid <= 0 || tskid > uITRON_MAX_TASKID)
 		return E_ID;
 
-	if (tskid == ui_current_task()->tskid)
+	if (tskid == ui_current_task()->id)
 		return E_OBJ;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	task = uitaskmap[tskid - 1];
+	task = xnmap_fetch(ui_task_idmap, tskid);
 
 	if (!task) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_NOEXS;
+		err = E_NOEXS;
+		goto unlock_and_exit;
 	}
 
 	if (xnthread_test_state(&task->threadbase, XNDORMANT)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_OBJ;
+		err = E_OBJ;
+		goto unlock_and_exit;
 	}
 
 	xnpod_unblock_thread(&task->threadbase);
 	xnpod_schedule();
+
+unlock_and_exit:
+
 	xnlock_put_irqrestore(&nklock, s);
 
-	return E_OK;
+	return err;
 }
 
 ER get_tid(ID *p_tskid)
@@ -482,7 +487,7 @@ ER get_tid(ID *p_tskid)
 	if (xnpod_asynch_p())
 		*p_tskid = FALSE;
 	else
-		*p_tskid = ui_current_task()->tskid;
+		*p_tskid = ui_current_task()->id;
 
 	return E_OK;
 }
@@ -505,7 +510,7 @@ ER ref_tsk(T_RTSK * pk_rtsk, ID tskid)
 
 		xnlock_get_irqsave(&nklock, s);
 
-		task = uitaskmap[tskid - 1];
+		task = xnmap_fetch(ui_task_idmap, tskid);
 
 		if (!task) {
 			xnlock_put_irqrestore(&nklock, s);
@@ -546,6 +551,7 @@ ER ref_tsk(T_RTSK * pk_rtsk, ID tskid)
 ER sus_tsk(ID tskid)
 {
 	uitask_t *task;
+	ER err = E_OK;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -554,39 +560,43 @@ ER sus_tsk(ID tskid)
 	if (tskid <= 0 || tskid > uITRON_MAX_TASKID)
 		return E_ID;
 
-	if (tskid == ui_current_task()->tskid)
+	if (tskid == ui_current_task()->id)
 		return E_OBJ;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	task = uitaskmap[tskid - 1];
+	task = xnmap_fetch(ui_task_idmap, tskid);
 
 	if (!task) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_NOEXS;
+		err = E_NOEXS;
+		goto unlock_and_exit;
 	}
 
 	if (xnthread_test_state(&task->threadbase, XNDORMANT)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_OBJ;
+		err = E_OBJ;
+		goto unlock_and_exit;
 	}
 
 	if (task->suspcnt >= 0x7fffffff) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_QOVR;
+		err = E_QOVR;
+		goto unlock_and_exit;
 	}
 
 	if (task->suspcnt++ == 0)
 		xnpod_suspend_thread(&task->threadbase,
 				     XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
+
+unlock_and_exit:
+
 	xnlock_put_irqrestore(&nklock, s);
 
-	return E_OK;
+	return err;
 }
 
 static ER rsm_tsk_helper(ID tskid, int force)
 {
 	uitask_t *task;
+	ER err = E_OK;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -595,22 +605,22 @@ static ER rsm_tsk_helper(ID tskid, int force)
 	if (tskid <= 0 || tskid > uITRON_MAX_TASKID)
 		return E_ID;
 
-	if (tskid == ui_current_task()->tskid)
+	if (tskid == ui_current_task()->id)
 		return E_OBJ;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	task = uitaskmap[tskid - 1];
+	task = xnmap_fetch(ui_task_idmap, tskid);
 
 	if (!task) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_NOEXS;
+		err = E_NOEXS;
+		goto unlock_and_exit;
 	}
 
 	if (task->suspcnt == 0 ||
 	    xnthread_test_state(&task->threadbase, XNDORMANT)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_OBJ;
+		err = E_OBJ;
+		goto unlock_and_exit;
 	}
 
 	if (force || --task->suspcnt == 0) {
@@ -619,9 +629,11 @@ static ER rsm_tsk_helper(ID tskid, int force)
 		xnpod_schedule();
 	}
 
+unlock_and_exit:
+
 	xnlock_put_irqrestore(&nklock, s);
 
-	return E_OK;
+	return err;
 }
 
 ER rsm_tsk(ID tskid)
@@ -713,6 +725,7 @@ ER tslp_tsk(TMO tmout)
 ER wup_tsk(ID tskid)
 {
 	uitask_t *task;
+	ER err = E_OK;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -721,43 +734,45 @@ ER wup_tsk(ID tskid)
 	if (tskid <= 0 || tskid > uITRON_MAX_TASKID)
 		return E_ID;
 
-	if (tskid == ui_current_task()->tskid)
+	if (tskid == ui_current_task()->id)
 		return E_OBJ;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	task = uitaskmap[tskid - 1];
+	task = xnmap_fetch(ui_task_idmap, tskid);
 
 	if (!task) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_NOEXS;
+		err = E_NOEXS;
+		goto unlock_and_exit;
 	}
 
 	if (xnthread_test_state(&task->threadbase, XNDORMANT)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return E_OBJ;
+		err = E_OBJ;
+		goto unlock_and_exit;
 	}
 
 	if (!xnthread_test_state(&task->threadbase, uITRON_TASK_SLEEP)) {
 		if (task->wkupcnt >= 0x7fffffff) {
-			xnlock_put_irqrestore(&nklock, s);
-			return E_QOVR;
+			err = E_QOVR;
+			goto unlock_and_exit;
 		}
-
 		task->wkupcnt++;
 	} else {
 		xnpod_resume_thread(&task->threadbase, XNDELAY);
 		xnpod_schedule();
 	}
 
+unlock_and_exit:
+
 	xnlock_put_irqrestore(&nklock, s);
 
-	return E_OK;
+	return err;
 }
 
 ER can_wup(INT *p_wupcnt, ID tskid)
 {
 	uitask_t *task;
+	ER err = E_OK;
 	spl_t s;
 
 	if (tskid == TSK_SELF) {
@@ -772,23 +787,25 @@ ER can_wup(INT *p_wupcnt, ID tskid)
 
 		xnlock_get_irqsave(&nklock, s);
 
-		task = uitaskmap[tskid - 1];
+		task = xnmap_fetch(ui_task_idmap, tskid);
 
 		if (!task) {
-			xnlock_put_irqrestore(&nklock, s);
-			return E_NOEXS;
+			err = E_NOEXS;
+			goto unlock_and_exit;
 		}
 
 		if (xnthread_test_state(&task->threadbase, XNDORMANT)) {
-			xnlock_put_irqrestore(&nklock, s);
-			return E_OBJ;
+			err = E_OBJ;
+			goto unlock_and_exit;
 		}
 	}
 
 	*p_wupcnt = task->wkupcnt;
 	task->wkupcnt = 0;
 
+unlock_and_exit:
+
 	xnlock_put_irqrestore(&nklock, s);
 
-	return E_OK;
+	return err;
 }

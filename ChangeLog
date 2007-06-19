@@ -1,5 +1,8 @@
 2007-06-19  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/uitron: Refactor and sanitize, adding registry
+	support.
+
 	* ksrc/nucleus/map.c, include/nucleus/map.h: Add lightweight
 	key-to-object mapping service.
 
