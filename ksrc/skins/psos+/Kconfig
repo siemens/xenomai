@@ -1,6 +1,7 @@
 config XENO_SKIN_PSOS
 	depends on XENO_OPT_NUCLEUS
 	tristate "pSOS+ emulator"
+	select XENO_OPT_REGISTRY if XENO_OPT_PERVASIVE
 	default n
 	help
 
