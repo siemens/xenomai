@@ -1,6 +1,7 @@
 menuconfig XENO_SKIN_VRTX
 	depends on XENO_OPT_NUCLEUS
 	select XENO_OPT_TIMING_PERIODIC
+	select XENO_OPT_MAP
 	tristate "VRTX emulator"
 	select XENO_OPT_REGISTRY if XENO_OPT_PERVASIVE
 	help
