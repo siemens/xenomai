@@ -105,6 +105,9 @@ config XENO_OPT_PIPELINE_HEAD
 config XENO_OPT_PIPE
 	bool
 
+config XENO_OPT_MAP
+	bool
+
 config XENO_OPT_PIPE_NRDEV
 	int "Number of pipe devices"
 	depends on XENO_OPT_PIPE

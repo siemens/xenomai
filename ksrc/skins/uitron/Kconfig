@@ -1,6 +1,7 @@
 menuconfig XENO_SKIN_UITRON
 	depends on XENO_OPT_NUCLEUS
 	select XENO_OPT_TIMING_PERIODIC
+	select XENO_OPT_MAP
 	tristate "uITRON API"
 	help
 
