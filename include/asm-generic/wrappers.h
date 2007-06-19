@@ -267,4 +267,8 @@ unsigned long __va_to_kva(unsigned long va);
 
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
+#define IRQF_SHARED			SA_SHIRQ
+#endif /* < 2.6.18 */
+
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */
