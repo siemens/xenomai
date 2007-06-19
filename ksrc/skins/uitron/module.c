@@ -31,7 +31,7 @@ static u_long tick_arg = CONFIG_XENO_OPT_UITRON_PERIOD;
 module_param_named(tick_arg, tick_arg, ulong, 0444);
 MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us)");
 
-xntbase_t *uitbase;
+xntbase_t *ui_tbase;
 
 ui_rholder_t __ui_global_rholder;
 
@@ -57,12 +57,12 @@ int SKIN_INIT(uitron)
 	if (err)
 		goto fail;
 
-	err = xntbase_alloc("uitron", tick_arg * 1000, &uitbase);
+	err = xntbase_alloc("uitron", tick_arg * 1000, &ui_tbase);
 
 	if (err)
 		goto cleanup_pod;
 
-	xntbase_start(uitbase);
+	xntbase_start(ui_tbase);
 
 	err = uitask_init();
 
@@ -84,6 +84,10 @@ int SKIN_INIT(uitron)
 	if (err)
 		goto cleanup_flag;
 		
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	ui_syscall_init();
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+
 	xnprintf("starting uITRON services.\n");
 
 	return 0;
@@ -102,7 +106,7 @@ cleanup_task:
 
 cleanup_tbase:
 
-	xntbase_free(uitbase);
+	xntbase_free(ui_tbase);
 
 cleanup_pod:
 
@@ -123,7 +127,10 @@ void SKIN_EXIT(uitron)
 	uisem_cleanup();
 	uitask_cleanup();
 
-	xntbase_free(uitbase);
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	ui_syscall_cleanup();
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+	xntbase_free(ui_tbase);
 	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 }
 
