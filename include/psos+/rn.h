@@ -17,8 +17,8 @@
  * 02111-1307, USA.
  */
 
-#ifndef _psos_rn_h
-#define _psos_rn_h
+#ifndef _PSOS_RN_H
+#define _PSOS_RN_H
 
 #include <psos+/defs.h>
 #include <psos+/psos.h>
@@ -84,4 +84,4 @@ static inline void psos_rn_flush_rq(xnqueue_t *rq)
 }
 #endif
 
-#endif /* !_psos_rn_h */
+#endif /* !_PSOS_RN_H */

@@ -17,8 +17,8 @@
  * 02111-1307, USA.
  */
 
-#ifndef _psos_asr_h
-#define _psos_asr_h
+#ifndef _PSOS_ASR_H
+#define _PSOS_ASR_H
 
 #include <psos+/defs.h>
 #include <psos+/psos.h>
@@ -35,4 +35,4 @@ void psosasr_cleanup(void);
 }
 #endif
 
-#endif /* !_psos_asr_h */
+#endif /* !_PSOS_ASR_ */

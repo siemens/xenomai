@@ -17,8 +17,8 @@
  * 02111-1307, USA.
  */
 
-#ifndef _psos_task_h
-#define _psos_task_h
+#ifndef _PSOS_TASK_H
+#define _PSOS_TASK_H
 
 #include <psos+/event.h>
 
@@ -122,4 +122,4 @@ void psostask_cleanup(void);
 }
 #endif
 
-#endif /* !_psos_task_h */
+#endif /* !_PSOS_TASK_H */

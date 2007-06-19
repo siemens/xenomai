@@ -16,8 +16,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_PSOS_SYSCALL_H
-#define _XENO_PSOS_SYSCALL_H
+#ifndef _PSOS_SYSCALL_H
+#define _PSOS_SYSCALL_H
 
 #ifndef __XENO_SIM__
 #include <asm/xenomai/syscall.h>
@@ -88,4 +88,4 @@ void psos_syscall_cleanup(void);
 
 #endif /* __KERNEL__ */
 
-#endif /* _XENO_PSOS_SYSCALL_H */
+#endif /* _PSOS_SYSCALL_H */

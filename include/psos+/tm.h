@@ -17,8 +17,8 @@
  * 02111-1307, USA.
  */
 
-#ifndef _psos_tm_h
-#define _psos_tm_h
+#ifndef _PSOS_TM_H
+#define _PSOS_TM_H
 
 #include <psos+/defs.h>
 #include <psos+/psos.h>
@@ -69,4 +69,4 @@ u_long tm_start_signal_timer(u_long ticks,
 }
 #endif
 
-#endif /* !_psos_tm_h */
+#endif /* !_PSOS_TM_H */
