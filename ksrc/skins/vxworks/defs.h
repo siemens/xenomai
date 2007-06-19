@@ -155,22 +155,23 @@ typedef struct wind_wd {
 } wind_wd_t;
 
 /* Internal flag marking a user-space task. */
-#define VX_SHADOW (0x8000)
+#define VX_SHADOW 0x8000
 
 #define WIND_TASK_OPTIONS_MASK \
 (VX_FP_TASK|VX_PRIVATE_ENV|VX_NO_STACK_FILL|VX_UNBREAKABLE|VX_SHADOW) 
 
 #define wind_current_task() (thread2wind_task(xnpod_current_thread()))
 
-/* The following macros return normalized or native priority values
-   for the underlying pod. The core pod uses an ascending [0-257]
-   priority scale (include/nucleus/core.h), whilst the VxWorks
-   personality exhibits a decreasing scale [255-0]; normalization is
-   done in the [1-256] range so that priority 0 is kept for
-   non-realtime shadows. */
+/* The following macros return normalized or native VxWorks priority
+   values. The core pod uses an ascending [0-257] priority scale
+   (include/nucleus/core.h), whilst the VxWorks personality exhibits a
+   decreasing scale [255-0]; normalization is done in the [1-256]
+   range so that priority 0 is kept for non-realtime shadows. */
 
-#define wind_normalized_prio(prio)	(XNCORE_MAX_PRIO - (prio) - 1)
-#define wind_denormalized_prio(prio)	(256 - (prio))
+#define wind_normalized_prio(prio)  \
+  ({ int __p = (prio) ? XNCORE_MAX_PRIO - (prio) - 1 : 0; __p; })
+#define wind_denormalized_prio(prio) \
+  ({ int __p = (prio) ? 256 - (prio) : 0; __p; })
 
 int *wind_errno_location(void);
 
