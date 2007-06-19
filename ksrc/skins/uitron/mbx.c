@@ -153,7 +153,7 @@ ER cre_mbx(ID mbxid, T_CMBX *pk_cmbx)
 	sprintf(mbx->name, "mbx%d", mbxid);
 	xnregistry_enter(mbx->name, mbx, &mbx->handle, &__mbx_pnode);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
-	smp_mb();
+	xnarch_memory_barrier();
 	mbx->magic = uITRON_MBX_MAGIC;
 
 	return E_OK;
