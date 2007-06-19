@@ -1,3 +1,27 @@
+2007-06-15  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/arch/*/hal.c: Use IRQF_SHARED when applicable to comply
+	with 2.6.22 and above; alias deprecated SA_SHIRQ for supporting
+	older kernel versions.
+	
+2007-06-13  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pipe.c (xnpipe_wakeup_proc): Fix deadly bug
+	refreshing the head queue pointer for the asyncq in the SMP case.
+
+2007-06-12  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/asm-blackfin/syscall.h (__xn_rdtsc): Assure that CC only
+	works on data registers. Otherwise, bfin's as may pick a pointer reg
+	and crash during user land build (toolchain bug #3332).
+
+2007-06-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.19-1.5-02.
+
+	* ksrc/skins/psos+/Kconfig: Select XENO_OPT_REGISTRY if
+	XENO_OPT_PERVASIVE.
+
 2007-06-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/psos+/rn.c (rn_delete): Return ERR_TATRNDEL after
