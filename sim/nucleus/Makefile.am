@@ -17,6 +17,7 @@ lib_LIBRARIES = libnucleus_sim.a
 nodist_libnucleus_sim_a_SOURCES = \
 			heap.c \
 			intr.c \
+			map.c \
 			module.c \
 			pod.c \
 			registry.c \
