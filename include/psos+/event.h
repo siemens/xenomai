@@ -17,8 +17,8 @@
  * 02111-1307, USA.
  */
 
-#ifndef _psos_event_h
-#define _psos_event_h
+#ifndef _PSOS_EVENT_H
+#define _PSOS_EVENT_H
 
 #include <psos+/defs.h>
 #include <psos+/psos.h>
@@ -43,4 +43,4 @@ void ev_destroy(psosevent_t *evgroup);
 }
 #endif
 
-#endif /* !_psos_event_h */
+#endif /* !_PSOS_EVENT_H */

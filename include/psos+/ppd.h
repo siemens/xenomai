@@ -19,8 +19,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _psos_ppd_h
-#define _psos_ppd_h
+#ifndef _PSOS_PPD_H
+#define _PSOS_PPD_H
 
 #include <nucleus/pod.h>
 #include <nucleus/ppd.h>
@@ -103,4 +103,4 @@ static inline psos_rholder_t *psos_get_rholder(void)
 		xnlock_put_irqrestore(&nklock, s);			\
 	} while(0)
 
-#endif /* !_psos_ppd_h */
+#endif /* !_PSOS_PPD_H */

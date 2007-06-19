@@ -22,8 +22,8 @@
  * pSOS and pSOS+ are registered trademarks of Wind River Systems, Inc.
  */
 
-#ifndef _XENO_SKIN_PSOS_H
-#define _XENO_SKIN_PSOS_H
+#ifndef _PSOS_PSOS_H
+#define _PSOS_PSOS_H
 
 #include <nucleus/thread.h>
 
@@ -423,4 +423,4 @@ u_long tm_signal(u_long value,	/* Xenomai extension. */
 };
 #endif /* __cplusplus */
 
-#endif /* !_XENO_SKIN_PSOS_H */
+#endif /* !_PSOS_PSOS_H */
