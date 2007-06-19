@@ -209,7 +209,7 @@ static void xnpipe_wakeup_proc(void *cookie)
 			   for the sleep queue */
 
 #if defined(CONFIG_PREEMPT_RT) || defined (CONFIG_SMP)
-			nholder = getheadq(&xnpipe_sleepq);
+			nholder = getheadq(&xnpipe_asyncq);
 #endif /* CONFIG_PREEMPT_RT || CONFIG_SMP */
 		}
 	}
@@ -658,7 +658,6 @@ static int xnpipe_release(struct inode *inode, struct file *file)
 		fasync_helper(-1, file, 0, &state->asyncq);
 	}
 
-	/* Free the state object. Since that time it can be open by someone else */
 	xnpipe_cleanup_user_conn(state);
 
 	return err;
