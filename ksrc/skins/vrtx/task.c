@@ -18,9 +18,9 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "vrtx/task.h"
+#include <vrtx/task.h>
 
-static vrtxidmap_t *vrtx_task_idmap;
+static xnmap_t *vrtx_task_idmap;
 
 static xnqueue_t vrtx_task_q;
 
@@ -57,7 +57,7 @@ static void vrtxtask_delete_hook(xnthread_t *thread)
 		xnfree(task->param);
 
 	if (task->tid)
-		vrtx_put_id(vrtx_task_idmap, task->tid);
+		xnmap_remove(vrtx_task_idmap, task->tid);
 
 	vrtx_mark_deleted(task);
 
@@ -68,12 +68,11 @@ int vrtxtask_init(u_long stacksize)
 {
 	initq(&vrtx_task_q);
 	vrtx_default_stacksz = stacksize;
-	vrtx_task_idmap = vrtx_alloc_idmap(VRTX_MAX_NTASKS, 1);
+	vrtx_task_idmap = xnmap_create(VRTX_MAX_NTASKS, VRTX_MAX_NTASKS / 2, 1);
 
 	if (!vrtx_task_idmap)
 		return -ENOMEM;
 
-	vrtx_get_id(vrtx_task_idmap, 0, NULL);	/* Reserve slot #0 */
 	xnpod_add_hook(XNHOOK_THREAD_DELETE, vrtxtask_delete_hook);
 
 	return 0;
@@ -87,7 +86,7 @@ void vrtxtask_cleanup(void)
 		xnpod_delete_thread(&link2vrtxtask(holder)->threadbase);
 
 	xnpod_remove_hook(XNHOOK_THREAD_DELETE, vrtxtask_delete_hook);
-	vrtx_free_idmap(vrtx_task_idmap);
+	xnmap_delete(vrtx_task_idmap);
 }
 
 static void vrtxtask_trampoline(void *cookie)
@@ -115,13 +114,14 @@ int sc_tecreate_inner(vrtxtask_t *task,
 	if (user == 0)
 		user = vrtx_default_stacksz;
 
-	if (prio < 0 || prio > 255 || tid < -1 || tid > 255 || (!(mode & 0x100) && user + sys < 1024)) {	/* Tiny kernel stack */
+	if (prio < 0 || prio > 255 || tid < -1 || tid > 255 ||
+	    (!(mode & 0x100) && user + sys < 1024)) {	/* Tiny kernel stack */
 		*errp = ER_IIP;
 		return -1;
 	}
 
 	if (tid != 0)
-		tid = vrtx_get_id(vrtx_task_idmap, tid, task);
+		tid = xnmap_enter(vrtx_task_idmap, tid, task);
 
 	if (tid < 0) {
 		*errp = ER_TID;
@@ -132,7 +132,7 @@ int sc_tecreate_inner(vrtxtask_t *task,
 		_paddr = xnmalloc(psize);
 
 		if (!_paddr) {
-			vrtx_put_id(vrtx_task_idmap, tid);
+			xnmap_remove(vrtx_task_idmap, tid);
 			*errp = ER_MEM;
 			return -1;
 		}
@@ -159,7 +159,7 @@ int sc_tecreate_inner(vrtxtask_t *task,
 		if (_paddr)
 			xnfree(_paddr);
 
-		vrtx_put_id(vrtx_task_idmap, tid);
+		xnmap_remove(vrtx_task_idmap, tid);
 		*errp = ER_MEM;
 		return -1;
 	}
@@ -273,7 +273,7 @@ void sc_tdelete(int tid, int opt, int *errp)
 	if (tid == 0)
 		task = vrtx_current_task();
 	else {
-		task = (vrtxtask_t *)vrtx_get_object(vrtx_task_idmap, tid);
+		task = xnmap_fetch(vrtx_task_idmap, tid);
 
 		if (!task) {
 			*errp = ER_TID;
@@ -305,7 +305,7 @@ void sc_tpriority(int tid, int prio, int *errp)
 	if (tid == 0)
 		task = vrtx_current_task();
 	else {
-		task = (vrtxtask_t *)vrtx_get_object(vrtx_task_idmap, tid);
+		task = xnmap_fetch(vrtx_task_idmap, tid);
 
 		if (!task) {
 			*errp = ER_TID;
@@ -382,7 +382,7 @@ void sc_tresume(int tid, int opt, int *errp)
 	if (tid == 0)
 		task = vrtx_current_task();
 	else {
-		task = (vrtxtask_t *)vrtx_get_object(vrtx_task_idmap, tid);
+		task = xnmap_fetch(vrtx_task_idmap, tid);
 
 		if (!task) {
 			*errp = ER_TID;
@@ -458,7 +458,7 @@ void sc_tsuspend(int tid, int opt, int *errp)
 	if (tid == 0)
 		task = vrtx_current_task();
 	else {
-		task = (vrtxtask_t *)vrtx_get_object(vrtx_task_idmap, tid);
+		task = xnmap_fetch(vrtx_task_idmap, tid);
 
 		if (!task) {
 			*errp = ER_TID;
@@ -518,7 +518,7 @@ TCB *sc_tinquiry(int pinfo[], int tid, int *errp)
 
 		task = vrtx_current_task();
 	} else {
-		task = (vrtxtask_t *)vrtx_get_object(vrtx_task_idmap, tid);
+		task = xnmap_fetch(vrtx_task_idmap, tid);
 
 		if (!task) {
 			tcb = NULL;

@@ -21,7 +21,7 @@
 #include <vrtx/task.h>
 #include <vrtx/sem.h>
 
-static vrtxidmap_t *vrtx_sem_idmap;
+static xnmap_t *vrtx_sem_idmap;
 
 static xnqueue_t vrtx_sem_q;
 
@@ -95,7 +95,7 @@ static int sem_destroy_internal(vrtxsem_t *sem)
 	int s;
 
 	removeq(&vrtx_sem_q, &sem->link);
-	vrtx_put_id(vrtx_sem_idmap, sem->semid);
+	xnmap_remove(vrtx_sem_idmap, sem->semid);
 	s = xnsynch_destroy(&sem->synchbase);
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(sem->handle);
@@ -109,7 +109,7 @@ static int sem_destroy_internal(vrtxsem_t *sem)
 int vrtxsem_init(void)
 {
 	initq(&vrtx_sem_q);
-	vrtx_sem_idmap = vrtx_alloc_idmap(VRTX_MAX_SEMS, 0);
+	vrtx_sem_idmap = xnmap_create(VRTX_MAX_SEMS, 0, 0);
 	return vrtx_sem_idmap ? 0 : -ENOMEM;
 }
 
@@ -121,7 +121,7 @@ void vrtxsem_cleanup(void)
 	while ((holder = getheadq(&vrtx_sem_q)) != NULL)
 		sem_destroy_internal(link2vrtxsem(holder));
 
-	vrtx_free_idmap(vrtx_sem_idmap);
+	xnmap_delete(vrtx_sem_idmap);
 }
 
 int sc_screate(unsigned initval, int opt, int *errp)
@@ -142,7 +142,7 @@ int sc_screate(unsigned initval, int opt, int *errp)
 		return -1;
 	}
 
-	semid = vrtx_get_id(vrtx_sem_idmap, -1, sem);
+	semid = xnmap_enter(vrtx_sem_idmap, -1, sem);
 
 	if (semid < 0) {
 		*errp = ER_NOCB;
@@ -187,7 +187,7 @@ void sc_sdelete(int semid, int opt, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	sem = (vrtxsem_t *)vrtx_get_object(vrtx_sem_idmap, semid);
+	sem = xnmap_fetch(vrtx_sem_idmap, semid);
 
 	if (sem == NULL) {
 		*errp = ER_ID;
@@ -218,7 +218,7 @@ void sc_spend(int semid, long timeout, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	sem = (vrtxsem_t *)vrtx_get_object(vrtx_sem_idmap, semid);
+	sem = xnmap_fetch(vrtx_sem_idmap, semid);
 
 	if (sem == NULL) {
 		*errp = ER_ID;
@@ -264,7 +264,7 @@ void sc_saccept(int semid, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	sem = (vrtxsem_t *)vrtx_get_object(vrtx_sem_idmap, semid);
+	sem = xnmap_fetch(vrtx_sem_idmap, semid);
 
 	if (sem == NULL) {
 		*errp = ER_ID;
@@ -289,7 +289,7 @@ void sc_spost(int semid, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	sem = (vrtxsem_t *)vrtx_get_object(vrtx_sem_idmap, semid);
+	sem = xnmap_fetch(vrtx_sem_idmap, semid);
 
 	if (sem == NULL) {
 		*errp = ER_ID;
@@ -318,7 +318,7 @@ int sc_sinquiry(int semid, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	sem = (vrtxsem_t *)vrtx_get_object(vrtx_sem_idmap, semid);
+	sem = xnmap_fetch(vrtx_sem_idmap, semid);
 
 	if (sem == NULL) {
 		*errp = ER_ID;

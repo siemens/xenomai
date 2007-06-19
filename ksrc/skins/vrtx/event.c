@@ -21,7 +21,7 @@
 #include <vrtx/task.h>
 #include <vrtx/event.h>
 
-static vrtxidmap_t *vrtx_event_idmap;
+static xnmap_t *vrtx_event_idmap;
 
 static xnqueue_t vrtx_event_q;
 
@@ -103,7 +103,7 @@ static int event_destroy_internal(vrtxevent_t *evgroup)
 
 	removeq(&vrtx_event_q, &evgroup->link);
 	s = xnsynch_destroy(&evgroup->synchbase);
-	vrtx_put_id(vrtx_event_idmap, evgroup->evid);
+	xnmap_remove(vrtx_event_idmap, evgroup->evid);
 	vrtx_mark_deleted(evgroup);
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(evgroup->handle);
@@ -116,7 +116,7 @@ static int event_destroy_internal(vrtxevent_t *evgroup)
 int vrtxevent_init(void)
 {
 	initq(&vrtx_event_q);
-	vrtx_event_idmap = vrtx_alloc_idmap(VRTX_MAX_EVENTS, 0);
+	vrtx_event_idmap = xnmap_create(VRTX_MAX_EVENTS, 0, 0);
 	return vrtx_event_idmap ? 0 : -ENOMEM;
 }
 
@@ -127,7 +127,7 @@ void vrtxevent_cleanup(void)
 	while ((holder = getheadq(&vrtx_event_q)) != NULL)
 		event_destroy_internal(link2vrtxevent(holder));
 
-	vrtx_free_idmap(vrtx_event_idmap);
+	xnmap_delete(vrtx_event_idmap);
 }
 
 int sc_fcreate(int *errp)
@@ -144,7 +144,7 @@ int sc_fcreate(int *errp)
 		return -1;
 	}
 
-	evid = vrtx_get_id(vrtx_event_idmap, -1, evgroup);
+	evid = xnmap_enter(vrtx_event_idmap, -1, evgroup);
 
 	if (evid < 0) {
 		xnfree(evgroup);
@@ -183,7 +183,7 @@ void sc_fdelete(int evid, int opt, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	evgroup = (vrtxevent_t *)vrtx_get_object(vrtx_event_idmap, evid);
+	evgroup = xnmap_fetch(vrtx_event_idmap, evid);
 
 	if (evgroup == NULL) {
 		*errp = ER_ID;
@@ -221,7 +221,7 @@ int sc_fpend(int evid, long timeout, int mask, int opt, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	evgroup = (vrtxevent_t *)vrtx_get_object(vrtx_event_idmap, evid);
+	evgroup = xnmap_fetch(vrtx_event_idmap, evid);
 
 	if (evgroup == NULL) {
 		*errp = ER_ID;
@@ -279,7 +279,7 @@ void sc_fpost(int evid, int mask, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	evgroup = (vrtxevent_t *)vrtx_get_object(vrtx_event_idmap, evid);
+	evgroup = xnmap_fetch(vrtx_event_idmap, evid);
 
 	if (evgroup == NULL) {
 		*errp = ER_ID;
@@ -331,7 +331,7 @@ int sc_fclear(int evid, int mask, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	evgroup = (vrtxevent_t *)vrtx_get_object(vrtx_event_idmap, evid);
+	evgroup = xnmap_fetch(vrtx_event_idmap, evid);
 
 	if (evgroup == NULL) {
 		*errp = ER_ID;
@@ -355,7 +355,7 @@ int sc_finquiry(int evid, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	evgroup = (vrtxevent_t *)vrtx_get_object(vrtx_event_idmap, evid);
+	evgroup = xnmap_fetch(vrtx_event_idmap, evid);
 
 	if (evgroup == NULL) {
 		*errp = ER_ID;

@@ -21,7 +21,7 @@
 #include <vrtx/task.h>
 #include <vrtx/mx.h>
 
-static vrtxidmap_t *vrtx_mx_idmap;
+static xnmap_t *vrtx_mx_idmap;
 
 static xnqueue_t vrtx_mx_q;
 
@@ -97,7 +97,7 @@ static xnpnode_t __mutex_pnode = {
 int mx_destroy_internal(vrtxmx_t *mx)
 {
 	int s = xnsynch_destroy(&mx->synchbase);
-	vrtx_put_id(vrtx_mx_idmap, mx->mid);
+	xnmap_remove(vrtx_mx_idmap, mx->mid);
 	removeq(&vrtx_mx_q, &mx->link);
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(mx->handle);
@@ -109,7 +109,7 @@ int mx_destroy_internal(vrtxmx_t *mx)
 int vrtxmx_init(void)
 {
 	initq(&vrtx_mx_q);
-	vrtx_mx_idmap = vrtx_alloc_idmap(VRTX_MAX_MUTEXES, 0);
+	vrtx_mx_idmap = xnmap_create(VRTX_MAX_MUTEXES, 0, 0);
 	return vrtx_mx_idmap ? 0 : -ENOMEM;
 }
 
@@ -120,7 +120,7 @@ void vrtxmx_cleanup(void)
 	while ((holder = getheadq(&vrtx_mx_q)) != NULL)
 		mx_destroy_internal(link2vrtxmx(holder));
 
-	vrtx_free_idmap(vrtx_mx_idmap);
+	xnmap_delete(vrtx_mx_idmap);
 }
 
 int sc_mcreate(unsigned int opt, int *errp)
@@ -151,7 +151,7 @@ int sc_mcreate(unsigned int opt, int *errp)
 		return -1;
 	}
 
-	mid = vrtx_get_id(vrtx_mx_idmap, -1, mx);
+	mid = xnmap_enter(vrtx_mx_idmap, -1, mx);
 
 	if (mid < 0) {
 		xnfree(mx);
@@ -184,7 +184,7 @@ void sc_mpost(int mid, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	mx = (vrtxmx_t *)vrtx_get_object(vrtx_mx_idmap, mid);
+	mx = xnmap_fetch(vrtx_mx_idmap, mid);
 
 	if (mx == NULL || mx->owner == NULL) {
 		*errp = ER_ID;
@@ -216,7 +216,7 @@ void sc_mdelete(int mid, int opt, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	mx = (vrtxmx_t *)vrtx_get_object(vrtx_mx_idmap, mid);
+	mx = xnmap_fetch(vrtx_mx_idmap, mid);
 
 	if (mx == NULL) {
 		*errp = ER_ID;
@@ -251,7 +251,7 @@ void sc_mpend(int mid, unsigned long timeout, int *errp)
 		goto unlock_and_exit;
 	}
 
-	mx = (vrtxmx_t *)vrtx_get_object(vrtx_mx_idmap, mid);
+	mx = xnmap_fetch(vrtx_mx_idmap, mid);
 
 	if (mx == NULL) {
 		*errp = ER_ID;
@@ -302,7 +302,7 @@ void sc_maccept(int mid, int *errp)
 		goto unlock_and_exit;
 	}
 
-	mx = (vrtxmx_t *)vrtx_get_object(vrtx_mx_idmap, mid);
+	mx = xnmap_fetch(vrtx_mx_idmap, mid);
 
 	if (mx == NULL) {
 		*errp = ER_ID;
@@ -328,7 +328,7 @@ int sc_minquiry(int mid, int *errp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	mx = (vrtxmx_t *)vrtx_get_object(vrtx_mx_idmap, mid);
+	mx = xnmap_fetch(vrtx_mx_idmap, mid);
 
 	if (mx == NULL) {
 		*errp = ER_ID;

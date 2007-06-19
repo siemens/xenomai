@@ -26,9 +26,9 @@
 #include <vrtx/pt.h>
 #include <vrtx/syscall.h>
 
-extern vrtxidmap_t *vrtx_heap_idmap;
+extern xnmap_t *vrtx_heap_idmap;
 
-extern vrtxidmap_t *vrtx_pt_idmap;
+extern xnmap_t *vrtx_pt_idmap;
 
 /*
  * By convention, error codes are passed back through the syscall
@@ -945,7 +945,7 @@ static int __sc_hcreate(struct task_struct *curr, struct pt_regs *regs)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	heap = (vrtxheap_t *)vrtx_get_object(vrtx_heap_idmap, hid);
+	heap = xnmap_fetch(vrtx_heap_idmap, hid);
 
 	if (heap) {		/* Paranoid. */
 		heap->mm = curr->mm;
@@ -978,7 +978,7 @@ static int __sc_hbind(struct task_struct *curr, struct pt_regs *regs)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	heap = (vrtxheap_t *)vrtx_get_object(vrtx_heap_idmap, hid);
+	heap = xnmap_fetch(vrtx_heap_idmap, hid);
 
 	if (heap && heap->mm == curr->mm)
 		heap->mapbase = mapbase;
@@ -1026,7 +1026,7 @@ static int __sc_halloc(struct task_struct *curr, struct pt_regs *regs)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	heap = (vrtxheap_t *)vrtx_get_object(vrtx_heap_idmap, hid);
+	heap = xnmap_fetch(vrtx_heap_idmap, hid);
 
 	if (!heap || heap->mm != curr->mm) {
 		/* Allocation requests must be issued from the same
@@ -1069,7 +1069,7 @@ static int __sc_hfree(struct task_struct *curr, struct pt_regs *regs)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	heap = (vrtxheap_t *)vrtx_get_object(vrtx_heap_idmap, hid);
+	heap = xnmap_fetch(vrtx_heap_idmap, hid);
 
 	if (!heap || heap->mm != curr->mm) {
 		/* Deallocation requests must be issued from the same
@@ -1165,7 +1165,7 @@ static int __sc_pcreate(struct task_struct *curr, struct pt_regs *regs)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+	pt = xnmap_fetch(vrtx_pt_idmap, pid);
 
 	if (pt) {		/* Paranoid. */
 		pt->mm = curr->mm;
@@ -1209,7 +1209,7 @@ static int __sc_pbind(struct task_struct *curr, struct pt_regs *regs)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+	pt = xnmap_fetch(vrtx_pt_idmap, pid);
 
 	if (pt && pt->mm == curr->mm)
 		pt->mapbase = mapbase;
@@ -1255,7 +1255,7 @@ static int __sc_gblock(struct task_struct *curr, struct pt_regs *regs)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+	pt = xnmap_fetch(vrtx_pt_idmap, pid);
 
 	if (!pt || pt->mm != curr->mm) {
 		/* Allocation requests must be issued from the same
@@ -1298,7 +1298,7 @@ static int __sc_rblock(struct task_struct *curr, struct pt_regs *regs)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	pt = (vrtxpt_t *)vrtx_get_object(vrtx_pt_idmap, pid);
+	pt = xnmap_fetch(vrtx_pt_idmap, pid);
 
 	if (!pt || pt->mm != curr->mm) {
 		/* Deallocation requests must be issued from the same

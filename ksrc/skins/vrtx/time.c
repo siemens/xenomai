@@ -41,21 +41,21 @@ void sc_gclock(struct timespec *timep, unsigned long *nsp, int *errp)
 
 void sc_sclock(struct timespec time, unsigned long ns, int *errp)
 {
-	if ((ns > 1000000000) ||
-	    ((time.nanoseconds < 0) || (time.nanoseconds > 999999999))) {
+	if (ns > 1000000000 ||
+	    time.nanoseconds < 0 || time.nanoseconds > 999999999) {
 		*errp = ER_IIP;
 		return;
 	}
 
-	if ((ns != xntbase_get_tickval(vrtx_tbase))) {
+	if (ns != xntbase_get_tickval(vrtx_tbase)) {
 		xntbase_switch("vrtx", ns, &vrtx_tbase);
 
 		if (ns != 0)
 			xntbase_start(vrtx_tbase);
 	}
 
-	xntbase_set_time(vrtx_tbase, time.seconds * TEN_POW_9 + time.nanoseconds);
-
+	xntbase_set_time(vrtx_tbase, xntbase_ns2ticks(vrtx_tbase,
+						      time.seconds * TEN_POW_9 + time.nanoseconds));
 	*errp = RET_OK;
 }
 
