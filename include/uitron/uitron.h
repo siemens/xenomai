@@ -16,8 +16,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _uITRON_UITRON_H
-#define _uITRON_UITRON_H
+#ifndef _UITRON_UITRON_H
+#define _UITRON_UITRON_H
 
 #define uITRON_SKIN_MAGIC   0x54524F4E
 
@@ -770,4 +770,4 @@ ER def_exc(UINT exckind,
 }
 #endif
 
-#endif /* !_uITRON_UITRON_H */
+#endif /* !_UITRON_UITRON_H */
