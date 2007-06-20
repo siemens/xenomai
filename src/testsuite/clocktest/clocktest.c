@@ -207,7 +207,7 @@ int main(int argc, char *argv[])
     for (i = 0; i < cpus; i++) {
         per_cpu_data[i].first_round = 1;
         pthread_create(&per_cpu_data[i].thread, NULL, cpu_thread,
-                    (void *)i);
+		       (void *)(long)i);
     }
 
     printf("== Tested clock: %d (", clock_id);
