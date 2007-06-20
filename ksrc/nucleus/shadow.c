@@ -1193,7 +1193,7 @@ void xnshadow_exit(void)
  * Xenomai resource remains attached to it.
  *
  * - -EINVAL is returned if the thread control block does not bear the
- * XNSHADOW bit.
+ * XNSHADOW bit, or if the thread has already been mapped.
  *
  * Environments:
  *
@@ -1212,6 +1212,9 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion)
 	int prio, err, cpu;
 
 	if (!xnthread_test_state(thread, XNSHADOW))
+		return -EINVAL;
+
+	if (xnthread_test_state(thread, XNMAPPED))
 		return -EINVAL;
 
 #ifdef CONFIG_MMU
