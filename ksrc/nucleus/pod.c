@@ -1868,21 +1868,20 @@ int xnpod_migrate_thread(int cpu)
  * \fn void xnpod_rotate_readyq(int prio)
  * \brief Rotate a priority level in the ready queue.
  *
- * The thread at the head of the ready queue of the given priority
- * level is moved to the end of this queue. Therefore, the execution
- * of threads having the same priority is switched.  Round-robin
- * scheduling policies may be implemented by periodically issuing this
- * call in a given period of time. It should be noted that the
- * nucleus already provides a built-in round-robin mode though (see
+ * The thread at the head of the ready queue is moved to the end of
+ * its priority group.  Round-robin scheduling policies may be
+ * implemented by periodically issuing this call. It should be noted
+ * that the nucleus already provides a built-in round-robin mode (see
  * xnpod_activate_rr()).
  *
  * @param prio The priority level to rotate. if XNPOD_RUNPRIO is
- * given, the running thread priority is used to rotate the queue.
+ * given, the priority of the currently running thread is used to
+ * rotate the queue.
  *
  * The priority level which is considered is always the base priority
  * of a thread, not the possibly PIP-boosted current priority
- * value. Specifying a priority level with no thread on it is harmless,
- * and will simply lead to a null-effect.
+ * value. Specifying a priority level with no thread on it is
+ * harmless, and will simply lead to a null-effect.
  *
  * Environments:
  *
