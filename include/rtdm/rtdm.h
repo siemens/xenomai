@@ -56,8 +56,6 @@
 
 typedef size_t                      socklen_t;
 typedef struct task_struct          rtdm_user_info_t;
-struct xntbase;
-extern struct xntbase               *rtdm_tbase;
 
 #else  /* !__KERNEL__ */
 
