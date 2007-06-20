@@ -4,7 +4,7 @@ Overview
 
 The pSOS (R) emulation module on top of Xenomai is currently available
 to kernel-based applications, and to user-space applications through a
-direct call interface to the module. The VRTX module can also be used
+direct call interface to the module. The pSOS module can also be used
 over the event-driven simulation engine.
 
  xeno_psos.ko: pSOS+ emulator in kernel space.
