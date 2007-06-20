@@ -75,8 +75,7 @@
  * offset - 1 ]. Negative offsets are valid.
  *
  * @return the address of the new map is returned on success;
- * otherwise, NULL is returned if either @a nkeys or @a reserve are
- * invalid.
+ * otherwise, NULL is returned if @a nkeys is invalid.
  *
  * Environments:
  *
@@ -94,8 +93,7 @@ xnmap_t *xnmap_create(int nkeys, int reserve, int offset)
 	xnmap_t *map;
 	int mapsize;
 
-	if (nkeys <= 0 || (nkeys & (nkeys - 1)) != 0
-	    || reserve >= BITS_PER_LONG)
+	if (nkeys <= 0 || (nkeys & (nkeys - 1)) != 0)
 		return NULL;
 
 	mapsize = sizeof(*map) + (nkeys - 1) * sizeof(map->objarray[0]);
