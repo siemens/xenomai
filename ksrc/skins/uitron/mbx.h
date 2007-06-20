@@ -54,7 +54,7 @@ typedef struct uimbx {
 
     xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifdef CONFIG_XENO_OPT_REGISTRY
     char name[XNOBJECT_NAME_LEN];
 
     xnhandle_t handle;

@@ -14,7 +14,8 @@ AM_CPPFLAGS = \
 	--skin-code \
 	$(atomic_core) \
 	-I$(srcdir)/../include \
-	-I$(top_srcdir)/../include
+	-I$(top_srcdir)/../include \
+	-I$(top_srcdir)/../ksrc/skins/
 
 lib_LIBRARIES = libuitron_sim.a
 
