@@ -17,7 +17,6 @@
  */
 
 #include <nucleus/registry.h>
-#include <nucleus/map.h>
 #include <nucleus/heap.h>
 #include <uitron/task.h>
 #include <uitron/sem.h>
@@ -101,7 +100,7 @@ void uisem_cleanup(void)
 	xnmap_delete(ui_sem_idmap);
 }
 
-ER cre_sem(ID semid, T_CSEM * pk_csem)
+ER cre_sem(ID semid, T_CSEM *pk_csem)
 {
 	uisem_t *sem;
 
@@ -265,6 +264,8 @@ static ER wai_sem_helper(ID semid, TMO tmout)
 
 	task = ui_current_task();
 
+	xnthread_clear_info(&task->threadbase, uITRON_TASK_RLWAIT);
+
 	xnsynch_sleep_on(&sem->synchbase, timeout, XN_RELATIVE);
 
 	if (xnthread_test_info(&task->threadbase, XNRMID))
@@ -272,7 +273,7 @@ static ER wai_sem_helper(ID semid, TMO tmout)
 	else if (xnthread_test_info(&task->threadbase, XNTIMEO))
 		err = E_TMOUT;	/* Timeout. */
 	else if (xnthread_test_info(&task->threadbase, XNBREAK))
-		err = E_RLWAI;	/* rel_wai() received while waiting. */
+		err = E_RLWAI;	/* rel_wai() or signal received while waiting. */
 
 unlock_and_exit:
 

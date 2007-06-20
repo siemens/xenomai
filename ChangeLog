@@ -1,5 +1,7 @@
 2007-06-20  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/uitron, src/skins/uitron: Add user-space support.
+
 	* ksrc/nucleus/shadow.c (xnshadow_map): Check for XNSHADOW on entry.
 
 2007-06-19  Philippe Gerum  <rpm@xenomai.org>

@@ -18,13 +18,10 @@
 
 #include <nucleus/registry.h>
 #include <nucleus/pod.h>
-#include <nucleus/map.h>
 #include <nucleus/heap.h>
 #include <uitron/task.h>
 
-static xnmap_t *ui_task_idmap;
-
-static int uicpulck;
+xnmap_t *ui_task_idmap;
 
 static xnqueue_t uitaskq;
 
@@ -77,7 +74,7 @@ void uitask_cleanup(void)
 	xnmap_delete(ui_task_idmap);
 }
 
-ER cre_tsk(ID tskid, T_CTSK * pk_ctsk)
+ER cre_tsk(ID tskid, T_CTSK *pk_ctsk)
 {
 	int bflags = XNFPU;
 	uitask_t *task;
@@ -88,13 +85,23 @@ ER cre_tsk(ID tskid, T_CTSK * pk_ctsk)
 		return EN_CTXID;
 
 	/* uITRON uses a reverse priority scheme: the lower the value,
-	   the higher the priority. */
-	if (pk_ctsk->itskpri < uITRON_MAX_PRI ||
-	    pk_ctsk->itskpri > uITRON_MIN_PRI)
+	   the higher the priority. Level 0 is kept for creating non
+	   real-time shadows. */
+
+	if (pk_ctsk->itskpri < 0 ||
+	    pk_ctsk->itskpri > 8)
 		return E_PAR;
 
 	if (pk_ctsk->stksz < 1024)
 		return E_PAR;
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	if (pk_ctsk->tskatr & TA_SHADOW)
+		bflags |= XNSHADOW;
+	else if (pk_ctsk->itskpri == 0)
+		/* Only shadows may have a non-RT priority. */
+		return E_PAR;
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	if (tskid <= 0 || tskid > uITRON_MAX_TASKID)
 		return E_ID;
@@ -214,8 +221,15 @@ ER sta_tsk(ID tskid, INT stacd)
 	task->waitinfo = 0;
 	task->stacd = stacd;
 
-	xnpod_start_thread(&task->threadbase,
-			   0, 0, XNPOD_ALL_CPUS, uitask_trampoline, task);
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	if (xnthread_test_state(&task->threadbase, XNSHADOW))
+		xnpod_start_thread(&task->threadbase,
+				   0, 0, XNPOD_ALL_CPUS,
+				   (void(*)(void *))task->entry, (void *)(long)stacd);
+	else
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+		xnpod_start_thread(&task->threadbase,
+				   0, 0, XNPOD_ALL_CPUS, uitask_trampoline, task);
 
 	xnpod_resume_thread(&task->threadbase, XNDORMANT);
 
@@ -228,8 +242,8 @@ unlock_and_exit:
 
 void ext_tsk(void)
 {
-	if (xnpod_asynch_p()) {
-		xnlogwarn("ext_tsk() not called on behalf of a task");
+	if (xnpod_unblockable_p()) {
+		xnlogwarn("ext_tsk() not called on behalf of a uITRON task");
 		return;
 	}
 
@@ -247,8 +261,8 @@ void exd_tsk(void)
 	uitask_t *task;
 	spl_t s;
 
-	if (xnpod_asynch_p()) {
-		xnlogwarn("exd_tsk() not called on behalf of a task");
+	if (xnpod_unblockable_p()) {
+		xnlogwarn("exd_tsk() not called on behalf of a uITRON task");
 		return;
 	}
 
@@ -274,7 +288,7 @@ static void ter_tsk_helper(uitask_t * task)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnthread_clear_state(&task->threadbase, uITRON_TERM_HOLD);
+	xnthread_clear_info(&task->threadbase, uITRON_TASK_HOLD);
 
 	if (xnthread_test_state(&task->threadbase, XNSUSP))
 		xnpod_resume_thread(&task->threadbase, XNSUSP);
@@ -292,7 +306,7 @@ ER ter_tsk(ID tskid)
 	ER err = E_OK;
 	spl_t s;
 
-	if (xnpod_asynch_p())
+	if (xnpod_unblockable_p())
 		return EN_CTXID;
 
 	if (tskid <= 0 || tskid > uITRON_MAX_TASKID)
@@ -321,7 +335,7 @@ ER ter_tsk(ID tskid)
 		   termination. The actual termination code will be
 		   applied by the task itself when it re-enables
 		   dispatching. */
-		xnthread_set_state(&task->threadbase, uITRON_TERM_HOLD);
+		xnthread_set_info(&task->threadbase, uITRON_TASK_HOLD);
 		goto unlock_and_exit;
 
 	}
@@ -337,31 +351,25 @@ unlock_and_exit:
 
 ER dis_dsp(void)
 {
-	spl_t s;
-
-	if (xnpod_asynch_p() || uicpulck)
+	if (xnpod_asynch_p())
 		return E_CTX;
-
-	xnlock_get_irqsave(&nklock, s);
 
 	if (!xnpod_locked_p())
 		xnpod_lock_sched();
-
-	xnlock_put_irqrestore(&nklock, s);
 
 	return E_OK;
 }
 
 ER ena_dsp(void)
 {
-	if (xnpod_asynch_p() || uicpulck)
+	if (xnpod_asynch_p())
 		return E_CTX;
 
 	if (xnpod_locked_p()) {
 		xnpod_unlock_sched();
 
-		if (xnthread_test_state(&ui_current_task()->threadbase,
-					uITRON_TERM_HOLD))
+		if (xnthread_test_info(&ui_current_task()->threadbase,
+				       uITRON_TASK_HOLD))
 			ter_tsk_helper(ui_current_task());
 	}
 
@@ -374,14 +382,12 @@ ER chg_pri(ID tskid, PRI tskpri)
 	spl_t s;
 
 	if (tskpri != TPRI_INI) {
-		/* uITRON uses a (rather widespread) reverse priority scheme: the
-		   lower the value, the higher the priority. */
-		if (tskpri < uITRON_MAX_PRI || tskpri > uITRON_MIN_PRI)
+		if (tskpri < 1 || tskpri > 8)
 			return E_PAR;
 	}
 
 	if (tskid == TSK_SELF) {
-		if (xnpod_asynch_p())
+		if (!xnpod_primary_p())
 			return E_ID;
 
 		task = ui_current_task();
@@ -422,21 +428,11 @@ ER chg_pri(ID tskid, PRI tskpri)
 ER rot_rdq(PRI tskpri)
 {
 	if (tskpri != TPRI_RUN) {
-		/* uITRON uses a reverse priority scheme: the lower
-		   the value, the higher the priority. */
-		if (tskpri < uITRON_MAX_PRI || tskpri > uITRON_MIN_PRI)
+		if (tskpri < 1 || tskpri > 8)
 			return E_PAR;
-	} else if (xnpod_asynch_p()) {
+		xnpod_rotate_readyq(ui_normalized_prio(tskpri));
+	} else
 		xnpod_rotate_readyq(XNPOD_RUNPRIO);
-		goto schedule_and_exit;
-	}
-	else
-		tskpri =
-			ui_denormalized_prio(xnthread_current_priority(&ui_current_task()->threadbase));
-
-	xnpod_rotate_readyq(ui_normalized_prio(tskpri));
-
-schedule_and_exit:
 
 	xnpod_schedule();
 
@@ -455,7 +451,7 @@ ER rel_wai(ID tskid)
 	if (tskid <= 0 || tskid > uITRON_MAX_TASKID)
 		return E_ID;
 
-	if (tskid == ui_current_task()->id)
+	if (xnpod_primary_p() && tskid == ui_current_task()->id)
 		return E_OBJ;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -472,6 +468,7 @@ ER rel_wai(ID tskid)
 		goto unlock_and_exit;
 	}
 
+	xnthread_set_info(&task->threadbase, uITRON_TASK_RLWAIT);
 	xnpod_unblock_thread(&task->threadbase);
 	xnpod_schedule();
 
@@ -484,7 +481,7 @@ unlock_and_exit:
 
 ER get_tid(ID *p_tskid)
 {
-	if (xnpod_asynch_p())
+	if (!xnpod_primary_p())
 		*p_tskid = FALSE;
 	else
 		*p_tskid = ui_current_task()->id;
@@ -492,14 +489,14 @@ ER get_tid(ID *p_tskid)
 	return E_OK;
 }
 
-ER ref_tsk(T_RTSK * pk_rtsk, ID tskid)
+ER ref_tsk(T_RTSK *pk_rtsk, ID tskid)
 {
 	UINT tskstat = 0;
 	uitask_t *task;
 	spl_t s;
 
 	if (tskid == TSK_SELF) {
-		if (xnpod_asynch_p())
+		if (!xnpod_primary_p())
 			return E_ID;
 
 		task = ui_current_task();
@@ -554,7 +551,7 @@ ER sus_tsk(ID tskid)
 	ER err = E_OK;
 	spl_t s;
 
-	if (xnpod_asynch_p())
+	if (xnpod_unblockable_p())
 		return EN_CTXID;
 
 	if (tskid <= 0 || tskid > uITRON_MAX_TASKID)
@@ -605,7 +602,7 @@ static ER rsm_tsk_helper(ID tskid, int force)
 	if (tskid <= 0 || tskid > uITRON_MAX_TASKID)
 		return E_ID;
 
-	if (tskid == ui_current_task()->id)
+	if (xnpod_primary_p() && tskid == ui_current_task()->id)
 		return E_OBJ;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -649,6 +646,7 @@ ER frsm_tsk(ID tskid)
 ER slp_tsk(void)
 {
 	uitask_t *task;
+	ER err = E_OK;
 	spl_t s;
 
 	if (xnpod_unblockable_p())
@@ -660,27 +658,31 @@ ER slp_tsk(void)
 
 	if (task->wkupcnt > 0) {
 		task->wkupcnt--;
-		xnlock_put_irqrestore(&nklock, s);
-		return E_OK;
+		goto unlock_and_exit;
 	}
 
-	xnthread_set_state(&task->threadbase, uITRON_TASK_SLEEP);
+	xnthread_set_info(&task->threadbase, uITRON_TASK_SLEEP);
+
+	xnthread_clear_info(&task->threadbase, uITRON_TASK_RLWAIT);
 
 	xnpod_suspend_thread(&task->threadbase, XNDELAY, XN_INFINITE, XN_RELATIVE, NULL);
 
-	xnthread_clear_state(&task->threadbase, uITRON_TASK_SLEEP);
+	xnthread_clear_info(&task->threadbase, uITRON_TASK_SLEEP);
+
+	if (xnthread_test_info(&task->threadbase, XNBREAK))
+		err = E_RLWAI;
+
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (xnthread_test_info(&task->threadbase, XNBREAK))
-		return E_RLWAI;
-
-	return E_OK;
+	return err;
 }
 
 ER tslp_tsk(TMO tmout)
 {
 	uitask_t *task;
+	ER err = E_OK;
 	spl_t s;
 
 	if (xnpod_unblockable_p())
@@ -698,28 +700,30 @@ ER tslp_tsk(TMO tmout)
 
 	if (task->wkupcnt > 0) {
 		task->wkupcnt--;
-		xnlock_put_irqrestore(&nklock, s);
-		return E_OK;
+		goto unlock_and_exit;
 	}
 
 	if (tmout == TMO_FEVR)
 		tmout = XN_INFINITE;
 
-	xnthread_set_state(&task->threadbase, uITRON_TASK_SLEEP);
+	xnthread_set_info(&task->threadbase, uITRON_TASK_SLEEP);
+
+	xnthread_clear_info(&task->threadbase, uITRON_TASK_RLWAIT);
 
 	xnpod_suspend_thread(&task->threadbase, XNDELAY, tmout, XN_RELATIVE, NULL);
 
-	xnthread_clear_state(&task->threadbase, uITRON_TASK_SLEEP);
+	xnthread_clear_info(&task->threadbase, uITRON_TASK_SLEEP);
+
+	if (xnthread_test_info(&task->threadbase, XNBREAK))
+		err = E_RLWAI;
+	else if (xnthread_test_info(&task->threadbase, XNTIMEO))
+		err = E_TMOUT;
+
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (xnthread_test_info(&task->threadbase, XNBREAK))
-		return E_RLWAI;
-
-	if (xnthread_test_info(&task->threadbase, XNTIMEO))
-		return E_TMOUT;
-
-	return E_OK;
+	return err;
 }
 
 ER wup_tsk(ID tskid)
@@ -734,7 +738,7 @@ ER wup_tsk(ID tskid)
 	if (tskid <= 0 || tskid > uITRON_MAX_TASKID)
 		return E_ID;
 
-	if (tskid == ui_current_task()->id)
+	if (xnpod_primary_p() && tskid == ui_current_task()->id)
 		return E_OBJ;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -751,7 +755,7 @@ ER wup_tsk(ID tskid)
 		goto unlock_and_exit;
 	}
 
-	if (!xnthread_test_state(&task->threadbase, uITRON_TASK_SLEEP)) {
+	if (!xnthread_test_info(&task->threadbase, uITRON_TASK_SLEEP)) {
 		if (task->wkupcnt >= 0x7fffffff) {
 			err = E_QOVR;
 			goto unlock_and_exit;
@@ -776,7 +780,7 @@ ER can_wup(INT *p_wupcnt, ID tskid)
 	spl_t s;
 
 	if (tskid == TSK_SELF) {
-		if (xnpod_asynch_p())
+		if (!xnpod_primary_p())
 			return E_ID;
 
 		task = ui_current_task();

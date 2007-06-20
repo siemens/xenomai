@@ -44,9 +44,11 @@
    for the underlying pod. The core pod providing user-space support
    uses an ascending [0..257] priority scale (include/nucleus/core.h),
    whilst the uITRON personality exhibits a decreasing scale
-   [8..1]. We normalize to the range [92..99]. */
+   [8..1]. We normalize to the range [92..99], leaving 0 unchanged. */
 
-#define ui_normalized_prio(prio)	(XNCORE_HIGH_PRIO - (prio) + 1)
-#define ui_denormalized_prio(prio)	(uITRON_MAX_PRI - (XNCORE_HIGH_PRIO - prio))
+#define ui_normalized_prio(prio)	({ int __p = (prio) ? XNCORE_HIGH_PRIO - (prio) + 1 : 0; __p; })
+#define ui_denormalized_prio(prio)	ui_normalized_prio(prio)
+
+extern xntbase_t *ui_tbase;
 
 #endif /* !_UITRON_DEFS_H */

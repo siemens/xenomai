@@ -22,6 +22,7 @@
 #include <uitron/sem.h>
 #include <uitron/flag.h>
 #include <uitron/mbx.h>
+#include <uitron/syscall.h>
 
 MODULE_DESCRIPTION("uITRON interface");
 MODULE_AUTHOR("rpm@xenomai.org");

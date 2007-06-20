@@ -37,6 +37,9 @@
 #undef CONFIG_XENO_REVISION_LEVEL
 
 /* config */
+#undef CONFIG_XENO_UITRON_AUTO_MLOCKALL
+
+/* config */
 #undef CONFIG_XENO_VERSION_MAJOR
 
 /* config */

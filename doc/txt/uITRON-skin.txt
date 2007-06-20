@@ -2,10 +2,12 @@ Overview
 ========
 
 The uITRON emulation module on top of Xenomai is currently available
-to kernel-based applications. The uITRON module can also be used over
-the event-driven simulation engine.
+to kernel-based applications, and to user-space applications through a
+direct call interface to the module. The uITRON module can also be
+used over the event-driven simulation engine.
 
  xeno_uitron.ko: uITRON emulator in kernel space.
+libuitron.so: System call interface from user-space.
 libuitron_sim.a: uITRON emulation over the event-driven simulator.
 
 Known variations from the uITRON 3.02 specification
