@@ -17,7 +17,6 @@
  */
 
 #include <nucleus/registry.h>
-#include <nucleus/map.h>
 #include <nucleus/heap.h>
 #include <uitron/task.h>
 #include <uitron/flag.h>
@@ -320,6 +319,8 @@ static ER wai_flg_helper(UINT *p_flgptn,
 
 	task = ui_current_task();
 
+	xnthread_clear_info(&task->threadbase, uITRON_TASK_RLWAIT);
+
 	xnsynch_sleep_on(&flag->synchbase, timeout, XN_RELATIVE);
 
 	if (xnthread_test_info(&task->threadbase, XNRMID))
@@ -327,7 +328,7 @@ static ER wai_flg_helper(UINT *p_flgptn,
 	else if (xnthread_test_info(&task->threadbase, XNTIMEO))
 		err = E_TMOUT;	/* Timeout. */
 	else if (xnthread_test_info(&task->threadbase, XNBREAK))
-		err = E_RLWAI;	/* rel_wai() received while waiting. */
+		err = E_RLWAI;	/* rel_wai() or signal received while waiting. */
 	else
 		*p_flgptn = task->wargs.flag.waiptn;
 
@@ -340,23 +341,20 @@ unlock_and_exit:
 
 ER wai_flg(UINT *p_flgptn, ID flgid, UINT waiptn, UINT wfmode)
 {
-
 	return wai_flg_helper(p_flgptn, flgid, waiptn, wfmode, TMO_FEVR);
 }
 
 ER pol_flg(UINT *p_flgptn, ID flgid, UINT waiptn, UINT wfmode)
 {
-
 	return wai_flg_helper(p_flgptn, flgid, waiptn, wfmode, 0);
 }
 
 ER twai_flg(UINT *p_flgptn, ID flgid, UINT waiptn, UINT wfmode, TMO tmout)
 {
-
 	return wai_flg_helper(p_flgptn, flgid, waiptn, wfmode, tmout);
 }
 
-ER ref_flg(T_RFLG * pk_rflg, ID flgid)
+ER ref_flg(T_RFLG *pk_rflg, ID flgid)
 {
 	uitask_t *sleeper;
 	uiflag_t *flag;

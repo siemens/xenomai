@@ -19,10 +19,9 @@
 #ifndef _UITRON_UITRON_H
 #define _UITRON_UITRON_H
 
-#define uITRON_SKIN_MAGIC   0x54524F4E
+#include <uitron/syscall.h>
 
-#define uITRON_MIN_PRI  8
-#define uITRON_MAX_PRI  1
+#define uITRON_SKIN_MAGIC   0x54524F4E
 
 /*
  * Common Constants and Data Structure Packet Formats
@@ -79,16 +78,17 @@ typedef struct t_ctsk {
 
 } T_CTSK;
 
-#define TA_ASM   0x0      /* program written in assembly language */
-#define TA_HLNG  0x1      /* program written in high-level language */
-#define TA_COP0  0x8000   /* uses coprocessor having ID = 0 */
-#define TA_COP1  0x4000   /* uses coprocessor having ID = 1 */
-#define TA_COP2  0x2000   /* uses coprocessor having ID = 2 */
-#define TA_COP3  0x1000   /* uses coprocessor having ID = 3 */
-#define TA_COP4  0x0800   /* uses coprocessor having ID = 4 */
-#define TA_COP5  0x0400   /* uses coprocessor having ID = 5 */
-#define TA_COP6  0x0200   /* uses coprocessor having ID = 6 */
-#define TA_COP7  0x0100   /* uses coprocessor having ID = 7 */
+#define TA_ASM    0x0      /* program written in assembly language */
+#define TA_HLNG   0x1      /* program written in high-level language */
+#define TA_COP0   0x8000   /* uses coprocessor having ID = 0 */
+#define TA_COP1   0x4000   /* uses coprocessor having ID = 1 */
+#define TA_COP2   0x2000   /* uses coprocessor having ID = 2 */
+#define TA_COP3   0x1000   /* uses coprocessor having ID = 3 */
+#define TA_COP4   0x0800   /* uses coprocessor having ID = 4 */
+#define TA_COP5   0x0400   /* uses coprocessor having ID = 5 */
+#define TA_COP6   0x0200   /* uses coprocessor having ID = 6 */
+#define TA_COP7   0x0100   /* uses coprocessor having ID = 7 */
+#define TA_SHADOW 0x1000   /* shadow task (Xenomai user-space task) */
 
 #define TSK_SELF  0   /* task specifies itself */
 
@@ -457,6 +457,9 @@ extern "C" {
 /* Task Management Functions */
 
 ER cre_tsk(ID tskid,
+	   T_CTSK *pk_ctsk);
+
+ER shd_tsk(ID tskid, /* Shadow task - Xenomai extension. */
 	   T_CTSK *pk_ctsk);
 
 ER del_tsk(ID tskid);

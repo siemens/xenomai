@@ -17,7 +17,6 @@
  */
 
 #include <nucleus/registry.h>
-#include <nucleus/map.h>
 #include <nucleus/heap.h>
 #include <uitron/task.h>
 #include <uitron/mbx.h>
@@ -195,7 +194,7 @@ ER del_mbx(ID mbxid)
 	return E_OK;
 }
 
-ER snd_msg(ID mbxid, T_MSG * pk_msg)
+ER snd_msg(ID mbxid, T_MSG *pk_msg)
 {
 	uitask_t *sleeper;
 	ER err = E_OK;
@@ -286,6 +285,8 @@ static ER rcv_msg_helper(T_MSG ** ppk_msg, ID mbxid, TMO tmout)
 
 	task = ui_current_task();
 
+	xnthread_clear_info(&task->threadbase, uITRON_TASK_RLWAIT);
+
 	xnsynch_sleep_on(&mbx->synchbase, timeout, XN_RELATIVE);
 
 	if (xnthread_test_info(&task->threadbase, XNRMID))
@@ -293,7 +294,7 @@ static ER rcv_msg_helper(T_MSG ** ppk_msg, ID mbxid, TMO tmout)
 	else if (xnthread_test_info(&task->threadbase, XNTIMEO))
 		err = E_TMOUT;	/* Timeout. */
 	else if (xnthread_test_info(&task->threadbase, XNBREAK))
-		err = E_RLWAI;	/* rel_wai() received while waiting. */
+		err = E_RLWAI;	/* rel_wai() or signal received while waiting. */
 	else
 		*ppk_msg = task->wargs.msg;
 

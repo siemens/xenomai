@@ -25,8 +25,9 @@
 
 #define uITRON_TASK_MAGIC 0x85850101
 
-#define uITRON_TERM_HOLD  XNTHREAD_STATE_SPARE0
-#define uITRON_TASK_SLEEP XNTHREAD_STATE_SPARE1
+#define uITRON_TASK_HOLD   XNTHREAD_INFO_SPARE0
+#define uITRON_TASK_SLEEP  XNTHREAD_INFO_SPARE1
+#define uITRON_TASK_RLWAIT XNTHREAD_INFO_SPARE2
 
 typedef struct uitask {
 
@@ -72,11 +73,15 @@ typedef struct uitask {
 
 #define thread2uitask(a)	container_of(a, struct uitask, threadbase)
 
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+    char name[XNOBJECT_NAME_LEN];
+#endif
+
 } uitask_t;
 
 #define ui_current_task() thread2uitask(xnpod_current_thread())
 
-extern xntbase_t *uitbase;
+extern xnmap_t *ui_task_idmap;
 
 #ifdef __cplusplus
 extern "C" {
