@@ -112,9 +112,9 @@ typedef struct xnstat_counter {
 #endif /* __XENO_SIM__ */
 } xnstat_counter_t;
 
-static inline int xnstat_counter_inc(xnstat_counter_t *c) { return 0; }
-static inline int xnstat_counter_get(xnstat_counter_t *c) { return 0; }
-static inline void xnstat_counter_set(xnstat_counter_t *c, int value) { }
+#define xnstat_counter_inc(c) (0)
+#define xnstat_counter_get(c) (0)
+#define xnstat_counter_set(c, value) do { } while (0)
 #endif /* CONFIG_XENO_OPT_STATS */
 
 /* Account the runtime of the current account until now, switch to
