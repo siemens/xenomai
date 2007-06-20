@@ -488,6 +488,9 @@ static inline void rtdm_context_unlock(struct rtdm_dev_context *context)
 
 
 /* --- clock services --- */
+struct xntbase;
+extern struct xntbase               *rtdm_tbase;
+
 static inline nanosecs_abs_t rtdm_clock_read(void)
 {
     return xntbase_ticks2ns(rtdm_tbase, xntbase_get_time(rtdm_tbase));

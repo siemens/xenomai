@@ -123,7 +123,7 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 
     if (period > 0) {
         res = xnpod_set_thread_periodic(task, XN_INFINITE,
-                                        xntbase_ns2ticks(xnthread_time_base(task), period));
+                                        xntbase_ns2ticks(rtdm_tbase, period));
         if (res)
             goto cleanup_out;
     }
