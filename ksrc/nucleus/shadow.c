@@ -1192,6 +1192,9 @@ void xnshadow_exit(void)
  * case, the real-time mapping operation has failed globally, and no
  * Xenomai resource remains attached to it.
  *
+ * - -EINVAL is returned if the thread control block does not bear the
+ * XNSHADOW bit.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -1202,11 +1205,14 @@ void xnshadow_exit(void)
  *
  */
 
-int xnshadow_map(xnthread_t *thread, xncompletion_t __user * u_completion)
+int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion)
 {
 	xnarch_cpumask_t affinity;
 	unsigned muxid, magic;
 	int prio, err, cpu;
+
+	if (!xnthread_test_state(thread, XNSHADOW))
+		return -EINVAL;
 
 #ifdef CONFIG_MMU
 	if (!(current->mm->def_flags & VM_LOCKED))
