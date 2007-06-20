@@ -1787,12 +1787,12 @@ static int __mq_setattr(struct task_struct *curr, struct pt_regs *regs)
 
 static int __mq_send(struct task_struct *curr, struct pt_regs *regs)
 {
-	char tmp_buf[PSE51_MQ_FSTORE_LIMIT];
+	pse51_direct_msg_t msg;
 	pse51_assoc_t *assoc;
 	pse51_ufd_t *ufd;
-	caddr_t tmp_area;
 	unsigned prio;
 	size_t len;
+	spl_t s;
 	int err;
 
 	len = (size_t) __xn_reg_arg3(regs);
@@ -1807,48 +1807,38 @@ static int __mq_send(struct task_struct *curr, struct pt_regs *regs)
 
 	ufd = assoc2ufd(assoc);
 
-	if (len > 0) {
-		if (!__xn_access_ok
-		    (curr, VERIFY_READ, __xn_reg_arg2(regs), len))
-			return -EFAULT;
+	if (len > 0 && !__xn_access_ok
+	    (curr, VERIFY_READ, __xn_reg_arg2(regs), len))
+		return -EFAULT;
 
-		/* Try optimizing a bit here: if the message size can fit into
-		   our local buffer, use the latter; otherwise, take the slow
-		   path and fetch a larger buffer from the system heap. Most
-		   messages are expected to be short enough to fit on the
-		   stack anyway. */
+	xnlock_get_irqsave(&nklock, s);
+	err = pse51_mq_timedsend_inner(&msg, ufd->kfd, len, NULL);
+	if (err) {
+		xnlock_put_irqrestore(&nklock, s);
 
-		if (len <= sizeof(tmp_buf))
-			tmp_area = tmp_buf;
-		else {
-			tmp_area = xnmalloc(len);
+		return -err;
+	}
 
-			if (!tmp_area)
-				return -ENOMEM;
-		}
-
-		__xn_copy_from_user(curr, tmp_area,
-				    (void __user *)__xn_reg_arg2(regs), len);
-	} else
-		tmp_area = NULL;
-
-	err = mq_send(ufd->kfd, tmp_area, len, prio);
-
-	if (tmp_area && tmp_area != tmp_buf)
-		xnfree(tmp_area);
-
-	return err ? -thread_get_errno() : 0;
+	__xn_copy_from_user(curr, msg.buf,
+			    (void __user *)__xn_reg_arg2(regs), len);
+	*(msg.lenp) = len;
+	*(msg.priop) = prio;
+	
+	pse51_mq_finish_send(ufd->kfd, &msg);
+	xnlock_put_irqrestore(&nklock, s);
+		
+	return 0;
 }
 
 static int __mq_timedsend(struct task_struct *curr, struct pt_regs *regs)
 {
 	struct timespec timeout, *timeoutp;
-	char tmp_buf[PSE51_MQ_FSTORE_LIMIT];
+	pse51_direct_msg_t msg;
 	pse51_assoc_t *assoc;
 	pse51_ufd_t *ufd;
-	caddr_t tmp_area;
 	unsigned prio;
 	size_t len;
+	spl_t s;
 	int err;
 
 	len = (size_t) __xn_reg_arg3(regs);
@@ -1868,24 +1858,9 @@ static int __mq_timedsend(struct task_struct *curr, struct pt_regs *regs)
 			    sizeof(timeout)))
 		return -EFAULT;
 
-	if (len > 0) {
-		if (!__xn_access_ok
-		    (curr, VERIFY_READ, __xn_reg_arg2(regs), len))
-			return -EFAULT;
-
-		if (len <= sizeof(tmp_buf))
-			tmp_area = tmp_buf;
-		else {
-			tmp_area = xnmalloc(len);
-
-			if (!tmp_area)
-				return -ENOMEM;
-		}
-
-		__xn_copy_from_user(curr, tmp_area,
-				    (void __user *)__xn_reg_arg2(regs), len);
-	} else
-		tmp_area = NULL;
+	if (len > 0 && !__xn_access_ok
+	    (curr, VERIFY_READ, __xn_reg_arg2(regs), len))
+		return -EFAULT;
 
 	if (__xn_reg_arg5(regs)) {
 		__xn_copy_from_user(curr,
@@ -1896,28 +1871,37 @@ static int __mq_timedsend(struct task_struct *curr, struct pt_regs *regs)
 	} else
 		timeoutp = NULL;
 
-	err = mq_timedsend(ufd->kfd, tmp_area, len, prio, timeoutp);
+	xnlock_get_irqsave(&nklock, s);
+	err = pse51_mq_timedsend_inner(&msg, ufd->kfd, len, timeoutp);
+	if (err) {
+		xnlock_put_irqrestore(&nklock, s);
 
-	if (tmp_area && tmp_area != tmp_buf)
-		xnfree(tmp_area);
+		return -err;
+	}
 
-	return err ? -thread_get_errno() : 0;
+	__xn_copy_from_user(curr, msg.buf,
+			    (void __user *) __xn_reg_arg5(regs), len);
+	*(msg.lenp) = len;
+	*(msg.priop) = prio;
+	
+	pse51_mq_finish_send(ufd->kfd, &msg);
+	xnlock_put_irqrestore(&nklock, s);
+	return 0;
 }
 
 /* mq_receive(qd, buffer, &len, &prio)*/
 static int __mq_receive(struct task_struct *curr, struct pt_regs *regs)
 {
-	char tmp_buf[PSE51_MQ_FSTORE_LIMIT];
+	pse51_direct_msg_t msg;
 	pse51_assoc_t *assoc;
 	pse51_ufd_t *ufd;
-	caddr_t tmp_area;
 	unsigned prio;
 	ssize_t len;
+	spl_t s;
+	int err;
 
-	assoc =
-	    pse51_assoc_lookup(&pse51_queues()->uqds,
-			       (u_long)__xn_reg_arg1(regs));
-
+	assoc = pse51_assoc_lookup(&pse51_queues()->uqds,
+				   (u_long)__xn_reg_arg1(regs));
 	if (!assoc)
 		return -EBADF;
 
@@ -1935,30 +1919,27 @@ static int __mq_receive(struct task_struct *curr, struct pt_regs *regs)
 			       __xn_reg_arg4(regs), sizeof(prio)))
 		return -EFAULT;
 
-	if (len > 0) {
-		if (!__xn_access_ok
-		    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), len))
-			return -EFAULT;
+	if (len > 0 && !__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), len))
+		return -EFAULT;
 
-		if (len <= sizeof(tmp_buf))
-			tmp_area = tmp_buf;
-		else {
-			tmp_area = xnmalloc(len);
+	xnlock_get_irqsave(&nklock, s);
+	err = pse51_mq_timedrcv_inner(&msg, ufd->kfd, len, NULL);
+	if (err) {
+		xnlock_put_irqrestore(&nklock, s);
 
-			if (!tmp_area)
-				return -ENOMEM;
-		}
-	} else
-		tmp_area = NULL;
-
-	len = mq_receive(ufd->kfd, tmp_area, len, &prio);
-
-	if (len == -1) {
-		if (tmp_area && tmp_area != tmp_buf)
-			xnfree(tmp_area);
-
-		return -thread_get_errno();
+		return -err;
 	}
+
+	if (!(msg.flags & PSE51_MSG_DIRECT)) {
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
+				  msg.buf, *(msg.lenp));
+		len = *(msg.lenp);
+		prio = *(msg.priop);
+	} else
+		BUG();
+	pse51_mq_finish_rcv(ufd->kfd, &msg);
+	xnlock_put_irqrestore(&nklock, s);
 
 	__xn_copy_to_user(curr,
 			  (void __user *)__xn_reg_arg3(regs),
@@ -1968,14 +1949,6 @@ static int __mq_receive(struct task_struct *curr, struct pt_regs *regs)
 		__xn_copy_to_user(curr,
 				  (void __user *)__xn_reg_arg4(regs),
 				  &prio, sizeof(prio));
-
-	if (len > 0)
-		__xn_copy_to_user(curr,
-				  (void __user *)__xn_reg_arg2(regs),
-				  tmp_area, len);
-
-	if (tmp_area && tmp_area != tmp_buf)
-		xnfree(tmp_area);
 
 	return 0;
 }
@@ -1984,17 +1957,16 @@ static int __mq_receive(struct task_struct *curr, struct pt_regs *regs)
 static int __mq_timedreceive(struct task_struct *curr, struct pt_regs *regs)
 {
 	struct timespec timeout, *timeoutp;
-	char tmp_buf[PSE51_MQ_FSTORE_LIMIT];
+	pse51_direct_msg_t msg;
 	pse51_assoc_t *assoc;
 	pse51_ufd_t *ufd;
-	caddr_t tmp_area;
 	unsigned prio;
 	ssize_t len;
+	spl_t s;
+	int err;
 
-	assoc =
-	    pse51_assoc_lookup(&pse51_queues()->uqds,
-			       (u_long)__xn_reg_arg1(regs));
-
+	assoc = pse51_assoc_lookup(&pse51_queues()->uqds,
+				   (u_long)__xn_reg_arg1(regs));
 	if (!assoc)
 		return -EBADF;
 
@@ -2017,21 +1989,9 @@ static int __mq_timedreceive(struct task_struct *curr, struct pt_regs *regs)
 			    sizeof(timeout)))
 		return -EFAULT;
 
-	if (len > 0) {
-		if (!__xn_access_ok
-		    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), len))
-			return -EFAULT;
-
-		if (len <= sizeof(tmp_buf))
-			tmp_area = tmp_buf;
-		else {
-			tmp_area = xnmalloc(len);
-
-			if (!tmp_area)
-				return -ENOMEM;
-		}
-	} else
-		tmp_area = NULL;
+	if (len > 0 && !__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), len))
+		return -EFAULT;
 
 	if (__xn_reg_arg5(regs)) {
 		__xn_copy_from_user(curr,
@@ -2042,14 +2002,23 @@ static int __mq_timedreceive(struct task_struct *curr, struct pt_regs *regs)
 	} else
 		timeoutp = NULL;
 
-	len = mq_timedreceive(ufd->kfd, tmp_area, len, &prio, timeoutp);
+	xnlock_get_irqsave(&nklock, s);
+	err = pse51_mq_timedrcv_inner(&msg, ufd->kfd, len, timeoutp);
+	if (err) {
+		xnlock_put_irqrestore(&nklock, s);
 
-	if (len == -1) {
-		if (tmp_area && tmp_area != tmp_buf)
-			xnfree(tmp_area);
-
-		return -thread_get_errno();
+		return -err;
 	}
+
+	if (!(msg.flags & PSE51_MSG_DIRECT)) {
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
+				  msg.buf, *(msg.lenp));
+		len = *(msg.lenp);
+		prio = *(msg.priop);
+	} else
+		BUG();
+	pse51_mq_finish_rcv(ufd->kfd, &msg);
+	xnlock_put_irqrestore(&nklock, s);
 
 	__xn_copy_to_user(curr,
 			  (void __user *)__xn_reg_arg3(regs),
@@ -2059,14 +2028,6 @@ static int __mq_timedreceive(struct task_struct *curr, struct pt_regs *regs)
 		__xn_copy_to_user(curr,
 				  (void __user *)__xn_reg_arg4(regs),
 				  &prio, sizeof(prio));
-
-	if (len > 0)
-		__xn_copy_to_user(curr,
-				  (void __user *)__xn_reg_arg2(regs),
-				  tmp_area, len);
-
-	if (tmp_area && tmp_area != tmp_buf)
-		xnfree(tmp_area);
 
 	return 0;
 }
