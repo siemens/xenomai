@@ -1,3 +1,8 @@
+2007-06-21  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/drivers/can/sja1000/rtcan_{ixxat,peak}_pci.c: Switch to
+	pci_register_driver.
+
 2007-06-21  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-*/system.h (xnarch_sysalloc, xnarch_sysfree): Rename
