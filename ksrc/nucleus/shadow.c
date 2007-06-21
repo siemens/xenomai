@@ -2407,7 +2407,7 @@ int xnshadow_mount(void)
 	rthal_catch_hisyscall(&hisyscall_event);
 
 	size = sizeof(xnqueue_t) * PPD_HASH_SIZE;
-	ppd_hash = (xnqueue_t *)xnarch_sysalloc(size);
+	ppd_hash = (xnqueue_t *)xnarch_alloc_host_mem(size);
 	if (!ppd_hash) {
 		xnshadow_cleanup();
 		printk(KERN_WARNING
@@ -2446,7 +2446,7 @@ void xnshadow_cleanup(void)
 	nucleus_muxid = -1;
 
 	if (ppd_hash)
-		xnarch_sysfree(ppd_hash,
+		xnarch_free_host_mem(ppd_hash,
 			       sizeof(xnqueue_t) * PPD_HASH_SIZE);
 	ppd_hash = NULL;
 

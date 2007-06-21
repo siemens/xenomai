@@ -94,7 +94,7 @@ static void pse51_shm_init(pse51_shm_t * shm)
 static void pse51_free_heap_extent(xnheap_t *heap,
 				   void *extent, u_long size, void *cookie)
 {
-	xnarch_sysfree(extent, size);
+	xnarch_free_host_mem(extent, size);
 }
 #endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
@@ -508,7 +508,7 @@ int ftruncate(int fd, off_t len)
 
 		if (shm->addr) {
 			size = shm->size;
-			addr = xnarch_sysalloc(size);
+			addr = xnarch_alloc_host_mem(size);
 			if (!addr) {
 				err = ENOMEM;
 				goto err_up;
@@ -534,7 +534,7 @@ int ftruncate(int fd, off_t len)
 			err = -xnheap_init_mapped(&shm->heapbase, len, flags);
 #else /* !CONFIG_XENO_OPT_PERVASIVE. */
 			{
-				void *heapaddr = xnarch_sysalloc(len);
+				void *heapaddr = xnarch_alloc_host_mem(len);
 
 				if (heapaddr)
 					err =
@@ -562,7 +562,7 @@ int ftruncate(int fd, off_t len)
 		}
 
 		if (addr)
-			xnarch_sysfree(addr, size);
+			xnarch_free_host_mem(addr, size);
 	} else if (len != xnheap_extentsize(&shm->heapbase))
 		err = EBUSY;
 

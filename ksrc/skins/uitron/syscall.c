@@ -770,7 +770,7 @@ static void *ui_shadow_eventcb(int event, void *data)
 
 	case XNSHADOW_CLIENT_ATTACH:
 
-		rh = xnarch_sysalloc(sizeof(*rh));
+		rh = xnarch_alloc_host_mem(sizeof(*rh));
 		if (!rh)
 			return ERR_PTR(-ENOMEM);
 
@@ -787,7 +787,7 @@ static void *ui_shadow_eventcb(int event, void *data)
 		ui_flag_flush_rq(&rh->flgq);
 		ui_mbx_flush_rq(&rh->mbxq);
 
-		xnarch_sysfree(rh, sizeof(*rh));
+		xnarch_free_host_mem(rh, sizeof(*rh));
 
 		return NULL;
 	}

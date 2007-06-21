@@ -92,7 +92,7 @@ typedef struct xnarch_fltinfo {
 extern "C" {
 #endif
 
-static inline void *xnarch_sysalloc (u_long bytes)
+static inline void *xnarch_alloc_host_mem (u_long bytes)
 
 {
     if (bytes > 128*1024)
@@ -101,7 +101,7 @@ static inline void *xnarch_sysalloc (u_long bytes)
     return kmalloc(bytes,GFP_KERNEL);
 }
 
-static inline void xnarch_sysfree (void *chunk, u_long bytes)
+static inline void xnarch_free_host_mem (void *chunk, u_long bytes)
 
 {
     if (bytes > 128*1024)

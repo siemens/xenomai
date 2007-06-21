@@ -3691,7 +3691,7 @@ static void *__shadow_eventcb(int event, void *data)
 
 	case XNSHADOW_CLIENT_ATTACH:
 
-		rh = (struct xeno_resource_holder *) xnarch_sysalloc(sizeof(*rh));
+		rh = (struct xeno_resource_holder *) xnarch_alloc_host_mem(sizeof(*rh));
 		if (!rh)
 			return ERR_PTR(-ENOMEM);
 
@@ -3720,7 +3720,7 @@ static void *__shadow_eventcb(int event, void *data)
 		__native_queue_flush_rq(&rh->queueq);
 		__native_sem_flush_rq(&rh->semq);
 
-		xnarch_sysfree(rh, sizeof(*rh));
+		xnarch_free_host_mem(rh, sizeof(*rh));
 
 		return NULL;
 	}

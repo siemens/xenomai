@@ -450,7 +450,7 @@ int pse51_reg_pkg_init(unsigned buckets_count, unsigned maxfds)
 	size = sizeof(pse51_node_t) * buckets_count +
 		sizeof(pse51_desc_t) * maxfds + sizeof(unsigned) * mapsize;
 
-	chunk = (char *)xnarch_sysalloc(size);
+	chunk = (char *)xnarch_alloc_host_mem(size);
 	if (!chunk)
 		return ENOMEM;
 
@@ -508,5 +508,5 @@ void pse51_reg_pkg_cleanup(void)
 		+ sizeof(pse51_desc_t) * pse51_reg.maxfds
 		+ sizeof(unsigned) * pse51_reg.mapsz;
 
-	xnarch_sysfree(pse51_reg.node_buckets, size);
+	xnarch_free_host_mem(pse51_reg.node_buckets, size);
 }

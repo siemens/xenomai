@@ -1,5 +1,8 @@
 2007-06-21  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/asm-*/system.h (xnarch_sysalloc, xnarch_sysfree): Rename
+	to xnarch_alloc_host_mem(), xnarch_free_host_mem().
+
 	* include/asm-generic/system.h (xnarch_get_sys_time): Rename to
 	xnarch_get_host_time().
 

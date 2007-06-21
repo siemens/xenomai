@@ -83,7 +83,7 @@ static xnpnode_t __pipe_pnode = {
 static void __pipe_flush_pool(xnheap_t *heap,
 			      void *poolmem, u_long poolsize, void *cookie)
 {
-	xnarch_sysfree(poolmem, poolsize);
+	xnarch_free_host_mem(poolmem, poolsize);
 }
 
 static void *__pipe_alloc_handler(int bminor, size_t size, void *cookie)
@@ -247,7 +247,7 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 		   enough to match the requested size. */
 
 		poolsize = xnheap_rounded_size(poolsize, XNCORE_PAGE_SIZE);
-		poolmem = xnarch_sysalloc(poolsize);
+		poolmem = xnarch_alloc_host_mem(poolsize);
 
 		if (!poolmem)
 			return -ENOMEM;
@@ -255,7 +255,7 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 		/* Use natural page size */
 		err = xnheap_init(&pipe->privpool, poolmem, poolsize, XNCORE_PAGE_SIZE);
 		if (err) {
-			xnarch_sysfree(poolmem, poolsize);
+			xnarch_free_host_mem(poolmem, poolsize);
 			return err;
 		}
 

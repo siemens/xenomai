@@ -131,7 +131,7 @@ static void *rtdm_skin_callback(int event, void *data)
 
     switch(event) {
         case XNSHADOW_CLIENT_ATTACH:
-            process = xnarch_sysalloc(sizeof(*process));
+            process = xnarch_alloc_host_mem(sizeof(*process));
             if (!process)
                 return ERR_PTR(-ENOSPC);
 
@@ -148,7 +148,7 @@ static void *rtdm_skin_callback(int event, void *data)
 
             cleanup_owned_contexts(process);
 
-            xnarch_sysfree(process, sizeof(*process));
+            xnarch_free_host_mem(process, sizeof(*process));
 
             break;
     }

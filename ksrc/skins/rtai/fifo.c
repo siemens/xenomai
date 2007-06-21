@@ -174,13 +174,13 @@ int rtf_create(unsigned minor, int size)
 		/* We must not keep the nucleus lock while running
 		 * Linux services. */
 		xnlock_put_irqrestore(&nklock, s);
-		xnarch_sysfree(buffer, oldsize + sizeof(xnpipe_mh_t));
+		xnarch_free_host_mem(buffer, oldsize + sizeof(xnpipe_mh_t));
 		xnlock_get_irqsave(&nklock, s);
 	} else
 		fifo->buffer = NULL;
 
 	xnlock_put_irqrestore(&nklock, s);
-	buffer = xnarch_sysalloc(size + sizeof(xnpipe_mh_t));
+	buffer = xnarch_alloc_host_mem(size + sizeof(xnpipe_mh_t));
 	xnlock_get_irqsave(&nklock, s);
 
 	if (buffer == NULL) {
@@ -260,7 +260,7 @@ int rtf_destroy(unsigned minor)
 			xnpipe_disconnect(minor);
 			fifo->refcnt = 0;
 			xnlock_put_irqrestore(&nklock, s);
-			xnarch_sysfree(buffer, oldsize + sizeof(xnpipe_mh_t));
+			xnarch_free_host_mem(buffer, oldsize + sizeof(xnpipe_mh_t));
 
 			return 0;
 		}
