@@ -346,7 +346,7 @@ static struct pci_driver rtcan_peak_pci_driver = {
 
 static int __init rtcan_peak_pci_init(void)
 {
-    return pci_module_init(&rtcan_peak_pci_driver);
+    return pci_register_driver(&rtcan_peak_pci_driver);
 }
 
 

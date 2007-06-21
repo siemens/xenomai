@@ -307,7 +307,7 @@ static struct pci_driver rtcan_ixxat_pci_driver = {
 
 static int __init rtcan_ixxat_pci_init(void)
 {
-    return pci_module_init(&rtcan_ixxat_pci_driver);
+    return pci_register_driver(&rtcan_ixxat_pci_driver);
 }
 
 
