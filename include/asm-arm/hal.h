@@ -116,7 +116,9 @@ static inline struct mm_struct *rthal_get_active_mm(void)
 
     /* Private interface -- Internal use only */
 
-asmlinkage void rthal_thread_switch(struct task_struct *prev, struct thread_info *out, struct thread_info *in);
+asmlinkage void rthal_thread_switch(struct task_struct *prev,
+				    struct thread_info *out,
+				    struct thread_info *in);
 
 asmlinkage void rthal_thread_trampoline(void);
 
@@ -153,15 +155,15 @@ static inline void rthal_restore_fpu(rthal_fpenv_t *fpuenv)
 
 #define rthal_get_fpu_owner(cur) ({                                         \
     struct task_struct * _cur = (cur);                                      \
-    (((_cur)->thread_info->used_cp[1] | (_cur)->thread_info->used_cp[2])    \
+    ((task_thread_info(_cur)->used_cp[1] | task_thread_info(_cur)->used_cp[2])    \
         ? _cur : NULL);                                                     \
 })
 
 #define rthal_disable_fpu() \
-    current->thread_info->used_cp[1] = current->thread_info->used_cp[2] = 0;
+	task_thread_info(current)->used_cp[1] = task_thread_info(current)->used_cp[2] = 0;
 
 #define rthal_enable_fpu() \
-    current->thread_info->used_cp[1] = current->thread_info->used_cp[2] = 1;
+	task_thread_info(current)->used_cp[1] = task_thread_info(current)->used_cp[2] = 1;
 
 #endif /* CONFIG_XENO_HW_FPU */
 

@@ -61,18 +61,18 @@ do {				  \
 	unsigned long flag,sum; \
 	asm("addl %3,%1 ; sbbl %0,%0; cmpl %1,%4; sbbl $0,%0" \
 		:"=&r" (flag), "=r" (sum) \
-	        :"1" (addr),"g" ((int)(size)),"g" ((task)->thread_info->addr_limit.seg)); \
+	        :"1" (addr),"g" ((int)(size)),"g" (task_thread_info(task)->addr_limit.seg)); \
 	flag == 0; })
 
 #define wrap_test_fpu_used(task)  \
-   ((task)->thread_info->status & TS_USEDFPU)
+   (task_thread_info(task)->status & TS_USEDFPU)
 #define wrap_set_fpu_used(task)   \
 do { \
-   (task)->thread_info->status |= TS_USEDFPU; \
+   task_thread_info(task)->status |= TS_USEDFPU; \
 } while(0)
 #define wrap_clear_fpu_used(task) \
 do { \
-   (task)->thread_info->status &= ~TS_USEDFPU; \
+   task_thread_info(task)->status &= ~TS_USEDFPU; \
 } while(0)
 
 static inline void wrap_switch_iobitmap (struct task_struct *p, int cpu)

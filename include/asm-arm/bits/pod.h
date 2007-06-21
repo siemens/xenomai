@@ -53,13 +53,12 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 	/* Remember the preempted Linux task pointer. */
 	rootcb->user_task = rootcb->active_task = current;
 	rootcb->mm = rootcb->active_mm = rthal_get_active_mm();
-	rootcb->tip = current->thread_info;
+	rootcb->tip = task_thread_info(current);
 #ifdef CONFIG_XENO_HW_FPU
 	rootcb->user_fpu_owner = rthal_get_fpu_owner(rootcb->user_task);
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
 	rootcb->fpup = (rootcb->user_fpu_owner
-			? (rthal_fpenv_t *) & rootcb->user_fpu_owner->
-			thread_info->used_cp[0]
+			? (rthal_fpenv_t *) & task_thread_info(rootcb->user_fpu_owner)->used_cp[0]
 			: NULL);
 #endif /* CONFIG_XENO_HW_FPU */
 }
@@ -194,9 +193,9 @@ static inline void xnarch_save_fpu(xnarchtcb_t * tcb)
 	if (tcb->fpup) {
 		rthal_save_fpu(tcb->fpup);
 
-		if (tcb->user_fpu_owner && tcb->user_fpu_owner->thread_info) {
-			tcb->user_fpu_owner->thread_info->used_cp[1] = 0;
-			tcb->user_fpu_owner->thread_info->used_cp[2] = 0;
+		if (tcb->user_fpu_owner && task_thread_info(tcb->user_fpu_owner)) {
+			task_thread_info(tcb->user_fpu_owner)->used_cp[1] = 0;
+			task_thread_info(tcb->user_fpu_owner)->used_cp[2] = 0;
 		}
 	}
 #endif /* CONFIG_XENO_HW_FPU */
@@ -209,9 +208,9 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 	if (tcb->fpup) {
 		rthal_restore_fpu(tcb->fpup);
 
-		if (tcb->user_fpu_owner && tcb->user_fpu_owner->thread_info) {
-			tcb->user_fpu_owner->thread_info->used_cp[1] = 1;
-			tcb->user_fpu_owner->thread_info->used_cp[2] = 1;
+		if (tcb->user_fpu_owner && task_thread_info(tcb->user_fpu_owner)) {
+			task_thread_info(tcb->user_fpu_owner)->used_cp[1] = 1;
+			task_thread_info(tcb->user_fpu_owner)->used_cp[2] = 1;
 		}
 	}
 

@@ -61,7 +61,7 @@
 	unsigned long flag,sum; \
 	asm("addq %3,%1 ; sbbq %0,%0; cmpq %1,%4; sbbq $0,%0" \
 		:"=&r" (flag), "=r" (sum) \
-	        :"1" (addr),"g" ((long)(size)),"g" ((task)->thread_info->addr_limit.seg)); \
+	        :"1" (addr),"g" ((long)(size)),"g" (task_thread_info(task)->addr_limit.seg)); \
 	flag == 0; })
 
 #define __xn_access_ok(task,type,addr,size)	(__xn_range_ok(task,addr,size))
