@@ -2952,7 +2952,7 @@ int xnpod_enable_timesource(void)
 	if (delta < 0)
 		return -ENODEV;
 
-	wallclock = xntbase_ns2ticks(&nktbase, xnarch_get_sys_time());
+	wallclock = xntbase_ns2ticks(&nktbase, xnarch_get_host_time());
 	/* Wallclock offset = ns2ticks(gettimeofday + elapsed portion of
 	   the current host period) */
 	xntbase_set_time(&nktbase, wallclock + XNARCH_HOST_TICK - delta);

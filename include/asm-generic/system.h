@@ -168,7 +168,7 @@ typedef struct xnarch_heapcb {
 extern "C" {
 #endif
 
-unsigned long long xnarch_get_sys_time(void);
+unsigned long long xnarch_get_host_time(void);
 
 long long xnarch_tsc_to_ns(long long ts);
 

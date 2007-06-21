@@ -132,14 +132,14 @@ static void xnarch_notify_ready (void)
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 }
 
-unsigned long long xnarch_get_sys_time(void)
+unsigned long long xnarch_get_host_time(void)
 {
     struct timeval tv;
     do_gettimeofday(&tv);
     return tv.tv_sec * 1000000000ULL + tv.tv_usec * 1000;
 }
 
-EXPORT_SYMBOL(xnarch_get_sys_time);
+EXPORT_SYMBOL(xnarch_get_host_time);
 
 #ifndef xnarch_tsc_to_ns
 long long xnarch_tsc_to_ns(long long ts)
