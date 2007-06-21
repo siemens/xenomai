@@ -380,6 +380,11 @@ static inline unsigned long long xnarch_tsc_to_ns (unsigned long long ts)
     return ts;
 }
 
+static inline unsigned long long xnarch_tsc_to_ns_rounded (unsigned long long ts)
+{
+    return ts;
+}
+
 static inline unsigned long long xnarch_ns_to_tsc (unsigned long long ns)
 {
     return ns;
