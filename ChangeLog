@@ -11,6 +11,11 @@
 	* include/asm-generic/system.h (xnarch_get_sys_time): Rename to
 	xnarch_get_host_time().
 
+2007-06-20  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/skins/posix/mq.c, mq.h, syscall.c: Rework posix message
+	queues to reduce the number of message copies.
+
 2007-06-20  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/uitron, src/skins/uitron: Add user-space support.
