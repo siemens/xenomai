@@ -159,7 +159,7 @@ static xnshm_a_t *create_new_heap(unsigned long name, int heapsize, int suprt)
 				 suprt == USE_GFP_KERNEL ? GFP_KERNEL : 0);
 #else /* !CONFIG_XENO_OPT_PERVASIVE */
 	{
-		void *heapmem = xnarch_sysalloc(heapsize);
+		void *heapmem = xnarch_alloc_host_mem(heapsize);
 
 		if (!heapmem) {
 			err = -ENOMEM;
@@ -167,7 +167,7 @@ static xnshm_a_t *create_new_heap(unsigned long name, int heapsize, int suprt)
 
 			err = xnheap_init(p->heap, heapmem, heapsize, XNCORE_PAGE_SIZE);
 			if (err) {
-				xnarch_sysfree(heapmem, heapsize);
+				xnarch_free_host_mem(heapmem, heapsize);
 			}
 		}
 	}
@@ -269,7 +269,7 @@ void *rt_heap_open(unsigned long name, int size, int suprt)
 static void __heap_flush_private(xnheap_t *heap,
 				 void *heapmem, u_long heapsize, void *cookie)
 {
-	xnarch_sysfree(heapmem, heapsize);
+	xnarch_free_host_mem(heapmem, heapsize);
 }
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 

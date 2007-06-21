@@ -127,7 +127,7 @@ int xnregistry_init(void)
 	registry_hash_entries =
 	    primes[obj_hash_max(CONFIG_XENO_OPT_REGISTRY_NRSLOTS / 100)];
 	registry_hash_table =
-	    (xnobjhash_t **) xnarch_sysalloc(sizeof(xnobjhash_t *) *
+	    (xnobjhash_t **) xnarch_alloc_host_mem(sizeof(xnobjhash_t *) *
 					     registry_hash_entries);
 
 	if (!registry_hash_table) {
@@ -185,7 +185,7 @@ void xnregistry_cleanup(void)
 		}
 	}
 
-	xnarch_sysfree(registry_hash_table,
+	xnarch_free_host_mem(registry_hash_table,
 		       sizeof(xnobjhash_t *) * registry_hash_entries);
 
 	xnsynch_destroy(&registry_hash_synch);

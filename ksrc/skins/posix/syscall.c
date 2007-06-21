@@ -2730,7 +2730,7 @@ static void *pse51_eventcb(int event, void *data)
 	switch(event) {
 	case XNSHADOW_CLIENT_ATTACH:
 
-		q = (pse51_queues_t *) xnarch_sysalloc(sizeof(*q));
+		q = (pse51_queues_t *) xnarch_alloc_host_mem(sizeof(*q));
 		if (!q)
 			return ERR_PTR(-ENOSPC);
 
@@ -2769,7 +2769,7 @@ static void *pse51_eventcb(int event, void *data)
 #endif /* CONFIG_XENO_OPT_POSIX_INTR */
 		pse51_condq_cleanup(&q->kqueues);
 		
-		xnarch_sysfree(q, sizeof(*q));
+		xnarch_free_host_mem(q, sizeof(*q));
 
 		return NULL;
 	}

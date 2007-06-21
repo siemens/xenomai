@@ -405,7 +405,7 @@ static inline void xnarch_halt (const char *emsg)
     __mvm_breakable(mvm_fatal)("%s",emsg);
 }
 
-static inline void *xnarch_sysalloc (u_long bytes)
+static inline void *xnarch_alloc_host_mem (u_long bytes)
 {
     void *chunk = malloc(bytes);
     if (chunk)
@@ -413,7 +413,7 @@ static inline void *xnarch_sysalloc (u_long bytes)
     return chunk;
 }
 
-static inline void xnarch_sysfree (void *chunk, u_long bytes)
+static inline void xnarch_free_host_mem (void *chunk, u_long bytes)
 {
     memset(chunk, 0xdb, bytes);
     free(chunk);

@@ -286,7 +286,7 @@ void xnpod_schedule_deferred(void)
 static void xnpod_flush_heap(xnheap_t *heap,
 			     void *extaddr, u_long extsize, void *cookie)
 {
-	xnarch_sysfree(extaddr, extsize);
+	xnarch_free_host_mem(extaddr, extsize);
 }
 
 /*! 
@@ -382,7 +382,7 @@ int xnpod_init(void)
 		    XNARCH_SCATTER_HEAPSZ;
 
 		do {
-			heapaddr = xnarch_sysalloc(XNARCH_SCATTER_HEAPSZ);
+			heapaddr = xnarch_alloc_host_mem(XNARCH_SCATTER_HEAPSZ);
 
 			if (!heapaddr) {
 				err = -ENOMEM;
@@ -416,7 +416,7 @@ int xnpod_init(void)
 		while (++nblk < blkcnt);
 	}
 #else /* !XNARCH_SCATTER_HEAPSZ */
-	heapaddr = xnarch_sysalloc(xnmod_sysheap_size);
+	heapaddr = xnarch_alloc_host_mem(xnmod_sysheap_size);
 
 	if (!heapaddr ||
 	    xnheap_init(&kheap, heapaddr, xnmod_sysheap_size,

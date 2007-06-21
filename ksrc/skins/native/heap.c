@@ -124,7 +124,7 @@ static xnpnode_t __heap_pnode = {
 static void __heap_flush_private(xnheap_t *heap,
 				 void *heapmem, u_long heapsize, void *cookie)
 {
-	xnarch_sysfree(heapmem, heapsize);
+	xnarch_free_host_mem(heapmem, heapsize);
 }
 
 /*! 
@@ -271,14 +271,14 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 	} else
 #endif /* __KERNEL__ */
 	{
-		void *heapmem = xnarch_sysalloc(heapsize);
+		void *heapmem = xnarch_alloc_host_mem(heapsize);
 
 		if (!heapmem)
 			return -ENOMEM;
 
 		err = xnheap_init(&heap->heap_base, heapmem, heapsize, XNCORE_PAGE_SIZE);
 		if (err) {
-			xnarch_sysfree(heapmem, heapsize);
+			xnarch_free_host_mem(heapmem, heapsize);
 			return err;
 		}
 	}

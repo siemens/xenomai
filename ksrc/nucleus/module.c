@@ -1142,7 +1142,7 @@ int __init __xeno_sys_init(void)
 
 	xnmod_sysheap_size = module_param_value(sysheap_size_arg) * 1024;
 
-	nkmsgbuf = xnarch_sysalloc(XNPOD_FATAL_BUFSZ);
+	nkmsgbuf = xnarch_alloc_host_mem(XNPOD_FATAL_BUFSZ);
 
 	if (!nkmsgbuf) {
 		err = -ENOMEM;
@@ -1260,7 +1260,7 @@ void __exit __xeno_sys_exit(void)
 	xntbase_umount();
 
 	if (nkmsgbuf)
-		xnarch_sysfree(nkmsgbuf, XNPOD_FATAL_BUFSZ);
+		xnarch_free_host_mem(nkmsgbuf, XNPOD_FATAL_BUFSZ);
 
 	xnloginfo("real-time nucleus unloaded.\n");
 }

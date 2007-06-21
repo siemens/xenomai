@@ -129,7 +129,7 @@ int xntbase_alloc(const char *name, u_long period, xntbase_t **basep)
 		return 0;
 	}
 
-	slave = (xntslave_t *)xnarch_sysalloc(sizeof(*slave));
+	slave = (xntslave_t *)xnarch_alloc_host_mem(sizeof(*slave));
 
 	if (!slave)
 		return -ENOMEM;
@@ -197,7 +197,7 @@ void xntbase_free(xntbase_t *base)
 	removeq(&nktimebaseq, &base->link);
 	xnlock_put_irqrestore(&nklock, s);
 
-	xnarch_sysfree(base, sizeof(*base));
+	xnarch_free_host_mem(base, sizeof(*base));
 }
 
 /*!

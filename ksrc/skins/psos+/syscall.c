@@ -1430,7 +1430,7 @@ static void *psos_shadow_eventcb(int event, void *data)
 
 	case XNSHADOW_CLIENT_ATTACH:
 
-		rh = (struct psos_resource_holder *) xnarch_sysalloc(sizeof(*rh));
+		rh = (struct psos_resource_holder *) xnarch_alloc_host_mem(sizeof(*rh));
 		if (!rh)
 			return ERR_PTR(-ENOMEM);
 
@@ -1449,7 +1449,7 @@ static void *psos_shadow_eventcb(int event, void *data)
 		psos_pt_flush_rq(&rh->ptq);
 		psos_rn_flush_rq(&rh->rnq);
 
-		xnarch_sysfree(rh, sizeof(*rh));
+		xnarch_free_host_mem(rh, sizeof(*rh));
 
 		return NULL;
 	}

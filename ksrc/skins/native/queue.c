@@ -118,7 +118,7 @@ static xnpnode_t __queue_pnode = {
 static void __queue_flush_private(xnheap_t *heap,
 				  void *poolmem, u_long poolsize, void *cookie)
 {
-	xnarch_sysfree(poolmem, poolsize);
+	xnarch_free_host_mem(poolmem, poolsize);
 }
 
 /**
@@ -248,14 +248,14 @@ int rt_queue_create(RT_QUEUE *q,
 	} else
 #endif /* __KERNEL__ */
 	{
-		void *poolmem = xnarch_sysalloc(poolsize);
+		void *poolmem = xnarch_alloc_host_mem(poolsize);
 
 		if (!poolmem)
 			return -ENOMEM;
 
 		err = xnheap_init(&q->bufpool, poolmem, poolsize, XNCORE_PAGE_SIZE);
 		if (err) {
-			xnarch_sysfree(poolmem, poolsize);
+			xnarch_free_host_mem(poolmem, poolsize);
 			return err;
 		}
 	}

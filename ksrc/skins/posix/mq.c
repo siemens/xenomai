@@ -125,7 +125,7 @@ static int pse51_mq_init(pse51_mq_t * mq, const struct mq_attr *attr)
 	memsize = msgsize * attr->mq_maxmsg;
 	memsize = PAGE_ALIGN(memsize);
 
-	mem = (char *)xnarch_sysalloc(memsize);
+	mem = (char *)xnarch_alloc_host_mem(memsize);
 
 	if (!mem)
 		return ENOSPC;
@@ -160,7 +160,7 @@ static void pse51_mq_destroy(pse51_mq_t * mq)
 	    (xnsynch_destroy(&mq->senders) == XNSYNCH_RESCHED) || need_resched;
 	removeq(&pse51_mqq, &mq->link);
 	xnlock_put_irqrestore(&nklock, s);
-	xnarch_sysfree(mq->mem, mq->memsize);
+	xnarch_free_host_mem(mq->mem, mq->memsize);
 
 	if (need_resched)
 		xnpod_schedule();
