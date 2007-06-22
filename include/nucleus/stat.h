@@ -99,7 +99,7 @@ typedef struct xnstat_runtime {
 #endif /* __XENO_SIM__ */
 } xnstat_runtime_t;
 
-#define xnstat_runtime_now()					0
+#define xnstat_runtime_now()					({ 0; })
 #define xnstat_runtime_update(sched, start)			do { } while (0)
 #define xnstat_runtime_set_current(sched, new_account)	({ (void)sched; NULL; })
 #define xnstat_runtime_get_current(sched)			({ (void)sched; NULL; })
@@ -112,8 +112,8 @@ typedef struct xnstat_counter {
 #endif /* __XENO_SIM__ */
 } xnstat_counter_t;
 
-#define xnstat_counter_inc(c) (0)
-#define xnstat_counter_get(c) (0)
+#define xnstat_counter_inc(c) ({ 0; })
+#define xnstat_counter_get(c) ({ 0; )}
 #define xnstat_counter_set(c, value) do { } while (0)
 #endif /* CONFIG_XENO_OPT_STATS */
 
