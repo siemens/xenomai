@@ -401,13 +401,18 @@ u_long tm_set(u_long date, u_long time, u_long ticks)
 {
 	xnticks_t when;
 	u_long err;
+	spl_t s;
 
 	err = tm_date_to_ticks(date, time, ticks, &when);
 
-	if (err == SUCCESS)
-		nkpod->svctable.settime(psos_tbase, when);
+	if (err != SUCCESS)
+		return err;
 
-	return err;
+	xnlock_get_irqsave(&nklock, s);
+	xntbase_adjust_time(psos_tbase, when - xntbase_get_time(psos_tbase));
+	xnlock_put_irqrestore(&nklock, s);
+
+	return SUCCESS;
 }
 
 /*

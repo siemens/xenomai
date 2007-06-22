@@ -177,87 +177,6 @@ void xnpod_watchdog_handler(xntimer_t *timer)
 
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
 
-/*
- * xnpod_fault_handler -- The default fault handler.
- */
-
-static int xnpod_fault_handler(xnarch_fltinfo_t *fltinfo)
-{
-	xnthread_t *thread = xnpod_current_thread();
-
-	xnltt_log_event(xeno_ev_fault,
-			thread->name,
-			xnarch_fault_pc(fltinfo), xnarch_fault_trap(fltinfo));
-
-#ifdef __KERNEL__
-	if (xnarch_fault_fpu_p(fltinfo)) {
-#if defined(CONFIG_XENO_OPT_PERVASIVE) && defined(CONFIG_XENO_HW_FPU)
-		xnarchtcb_t *tcb = xnthread_archtcb(thread);
-
-		if (xnpod_shadow_p() && !xnarch_fpu_init_p(tcb->user_task)) {
-			/* The faulting task is a shadow using the FPU for the
-			   first time, initialize its FPU. Of course if Xenomai is
-			   not compiled with support for FPU, such use of the FPU
-			   is an error. */
-			xnarch_init_fpu(tcb);
-			return 1;
-		}
-#endif /* OPT_PERVASIVE && HW_FPU */
-
-		print_symbol("invalid use of FPU in Xenomai context at %s\n",
-			     xnarch_fault_pc(fltinfo));
-	}
-
-	if (!xnpod_userspace_p()) {
-		xnprintf
-		    ("suspending kernel thread %p ('%s') at 0x%lx after exception #%u\n",
-		     thread, thread->name, xnarch_fault_pc(fltinfo),
-		     xnarch_fault_trap(fltinfo));
-
-		xnpod_suspend_thread(thread, XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
-		return 1;
-	}
-
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	/* If we experienced a trap on behalf of a shadow thread, just
-	   move the second to the Linux domain, so that the host O/S
-	   (e.g. Linux) can attempt to process the exception. This is
-	   especially useful in order to handle user-space errors or debug
-	   stepping properly. */
-
-	if (xnpod_shadow_p()) {
-#if XENO_DEBUG(NUCLEUS)
-		if (!xnarch_fault_um(fltinfo)) {
-			xnarch_trace_panic_freeze();
-			xnprintf
-			    ("Switching %s to secondary mode after exception #%u in "
-			     "kernel-space at 0x%lx (pid %d)\n", thread->name,
-			     xnarch_fault_trap(fltinfo),
-			     xnarch_fault_pc(fltinfo),
-			     xnthread_user_pid(thread));
-			xnarch_trace_panic_dump();
-		} else if (xnarch_fault_notify(fltinfo))	/* Don't report debug traps */
-			xnprintf
-			    ("Switching %s to secondary mode after exception #%u from "
-			     "user-space at 0x%lx (pid %d)\n", thread->name,
-			     xnarch_fault_trap(fltinfo),
-			     xnarch_fault_pc(fltinfo),
-			     xnthread_user_pid(thread));
-#endif /* XENO_DEBUG(NUCLEUS) */
-		if (xnarch_fault_pf_p(fltinfo))
-			/* The page fault counter is not SMP-safe, but it's a
-			   simple indicator that something went wrong wrt memory
-			   locking anyway. */
-			xnstat_counter_inc(&thread->stat.pf);
-
-		xnshadow_relax(xnarch_fault_notify(fltinfo));
-	}
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-#endif /* __KERNEL__ */
-
-	return 0;
-}
-
 void xnpod_schedule_handler(void) /* Called with hw interrupts off. */
 {
 	xnsched_t *sched = xnpod_current_sched();
@@ -351,8 +270,6 @@ int xnpod_init(void)
 	xnarch_atomic_set(&pod->timerlck, 0);
 #endif /* __KERNEL__ */
 
-	pod->svctable.settime = &xntbase_set_time;
-	pod->svctable.faulthandler = &xnpod_fault_handler;
 #ifdef __XENO_SIM__
 	pod->schedhook = NULL;
 #endif /* __XENO_SIM__ */
@@ -2837,15 +2754,13 @@ void xnpod_check_context(int mask)
 }
 
 /*! 
- * \fn void xnpod_trap_fault(void *fltinfo);
+ * \fn void xnpod_trap_fault(xnarch_fltinfo_t *fltinfo);
  * \brief Default fault handler.
  *
- * This is the default handler which is called whenever an
- * uncontrolled exception or fault is caught. If the fault is caught
- * on behalf of a real-time thread, the fault handler stored into the
- * service table (svctable.faulthandler) is invoked and the fault is
- * not propagated to the host system. Otherwise, the fault is
- * unhandled by the nucleus and simply propagated.
+ * This is the default handler which is called whenever an uncontrolled
+ * exception or fault is caught. If the fault is caught on behalf of a
+ * real-time thread, the fault is not propagated to the host system.
+ * Otherwise, the fault is unhandled by the nucleus and simply propagated.
  *
  * @param fltinfo An opaque pointer to the arch-specific buffer
  * describing the fault. The actual layout is defined by the
@@ -2853,13 +2768,87 @@ void xnpod_check_context(int mask)
  *
  */
 
-int xnpod_trap_fault(void *fltinfo)
+int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 {
+	xnthread_t *thread;
+
 	if (!xnpod_active_p() ||
 	    (!xnpod_interrupt_p() && xnpod_idle_p()))
 		return 0;
 
-	return nkpod->svctable.faulthandler(fltinfo);
+	thread = xnpod_current_thread();
+
+	xnltt_log_event(xeno_ev_fault,
+			thread->name,
+			xnarch_fault_pc(fltinfo), xnarch_fault_trap(fltinfo));
+
+#ifdef __KERNEL__
+	if (xnarch_fault_fpu_p(fltinfo)) {
+#if defined(CONFIG_XENO_OPT_PERVASIVE) && defined(CONFIG_XENO_HW_FPU)
+		xnarchtcb_t *tcb = xnthread_archtcb(thread);
+
+		if (xnpod_shadow_p() && !xnarch_fpu_init_p(tcb->user_task)) {
+			/* The faulting task is a shadow using the FPU for the
+			   first time, initialize its FPU. Of course if Xenomai is
+			   not compiled with support for FPU, such use of the FPU
+			   is an error. */
+			xnarch_init_fpu(tcb);
+			return 1;
+		}
+#endif /* OPT_PERVASIVE && HW_FPU */
+
+		print_symbol("invalid use of FPU in Xenomai context at %s\n",
+			     xnarch_fault_pc(fltinfo));
+	}
+
+	if (!xnpod_userspace_p()) {
+		xnprintf
+		    ("suspending kernel thread %p ('%s') at 0x%lx after exception #%u\n",
+		     thread, thread->name, xnarch_fault_pc(fltinfo),
+		     xnarch_fault_trap(fltinfo));
+
+		xnpod_suspend_thread(thread, XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
+		return 1;
+	}
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	/* If we experienced a trap on behalf of a shadow thread, just
+	   move the second to the Linux domain, so that the host O/S
+	   (e.g. Linux) can attempt to process the exception. This is
+	   especially useful in order to handle user-space errors or debug
+	   stepping properly. */
+
+	if (xnpod_shadow_p()) {
+#if XENO_DEBUG(NUCLEUS)
+		if (!xnarch_fault_um(fltinfo)) {
+			xnarch_trace_panic_freeze();
+			xnprintf
+			    ("Switching %s to secondary mode after exception #%u in "
+			     "kernel-space at 0x%lx (pid %d)\n", thread->name,
+			     xnarch_fault_trap(fltinfo),
+			     xnarch_fault_pc(fltinfo),
+			     xnthread_user_pid(thread));
+			xnarch_trace_panic_dump();
+		} else if (xnarch_fault_notify(fltinfo))	/* Don't report debug traps */
+			xnprintf
+			    ("Switching %s to secondary mode after exception #%u from "
+			     "user-space at 0x%lx (pid %d)\n", thread->name,
+			     xnarch_fault_trap(fltinfo),
+			     xnarch_fault_pc(fltinfo),
+			     xnthread_user_pid(thread));
+#endif /* XENO_DEBUG(NUCLEUS) */
+		if (xnarch_fault_pf_p(fltinfo))
+			/* The page fault counter is not SMP-safe, but it's a
+			   simple indicator that something went wrong wrt memory
+			   locking anyway. */
+			xnstat_counter_inc(&thread->stat.pf);
+
+		xnshadow_relax(xnarch_fault_notify(fltinfo));
+	}
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* __KERNEL__ */
+
+	return 0;
 }
 
 /*! 
@@ -2916,7 +2905,6 @@ int xnpod_trap_fault(void *fltinfo)
 
 int xnpod_enable_timesource(void)
 {
-	xnticks_t wallclock;
 	int err, delta;
 	spl_t s;
 
@@ -2940,25 +2928,18 @@ int xnpod_enable_timesource(void)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	/* The following service should return the remaining time before
-	   the next host jiffy elapses, expressed in internal clock
-	   ticks. Returning zero is always valid and means to use a full
-	   tick duration; in such a case, the elapsed portion of the
-	   current tick would be lost, but this is not that critical.
-	   Negative values are for errors. */
-
+	/* The following service should return the time since the last host
+	   host tick, expressed in nanoseconds. Returning zero is always
+	   valid and means no compensation is needed or available (and will
+	   be standard soon due to the declining relevance of the jiffies
+	   clocksource), negative values are for errors. */
 	delta = xnarch_start_timer(&xnintr_clock_handler);
 
 	if (delta < 0)
 		return -ENODEV;
 
-	wallclock = xntbase_ns2ticks(&nktbase, xnarch_get_host_time());
-	/* Wallclock offset = ns2ticks(gettimeofday + elapsed portion of
-	   the current host period) */
-	xntbase_set_time(&nktbase, wallclock + XNARCH_HOST_TICK - delta);
-
-	if (delta == 0)
-		delta = XNARCH_HOST_TICK;
+	nktbase.wallclock_offset =
+		xnarch_get_host_time() + delta - xnarch_get_cpu_time();
 
 	/* CAUTION: kernel timers over aperiodic mode may be started
 	   by xntimer_start() only _after_ the hw timer has been set

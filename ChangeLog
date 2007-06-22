@@ -1,3 +1,12 @@
+2007-06-22  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/timer.c, ksrc/nucleus/pod.c,
+	ksrc/nucleus/timebase.c, ksrc/skins, ksrc/include/nucleus,
+	include/asm-ia64/bits/pod.h: Introduce global wallclock shared by
+	all timebases.
+
+	* include/nucleus/pod.h, ksrc/nucleus/pod.c: Remove svctable.
+	
 2007-06-21  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/can/sja1000/rtcan_{ixxat,peak}_pci.c: Switch to
