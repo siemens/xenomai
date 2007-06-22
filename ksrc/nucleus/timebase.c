@@ -338,8 +338,8 @@ int xntbase_switch(const char *name, u_long period, xntbase_t **basep)
  *
  * This service enables a time base, using a cascading timer running
  * in the master time base as the source of periodic clock
- * ticks. Timers attached to the started time base are immediated
- * armed.
+ * ticks. The time base is synchronised on the Xenomai system clock.
+ * Timers attached to the started time base are immediated armed.
  *
  * @param base The address of the time base descriptor to start.
  *
@@ -361,10 +361,21 @@ int xntbase_switch(const char *name, u_long period, xntbase_t **basep)
 
 void xntbase_start(xntbase_t *base)
 {
+	xnticks_t start_date;
+	spl_t s;
+
 	if (base == &nktbase || (base->status & XNTBRUN) != 0)
 		return;
 
-	xntslave_start(base2slave(base), base->tickvalue);
+	xnlock_get_irqsave(&nklock, s);
+
+	start_date = xnarch_get_cpu_time() + nktbase.wallclock_offset;
+	base->wallclock_offset = xntbase_ns2ticks(base, start_date);
+	start_date += base->tickvalue;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	xntslave_start(base2slave(base), start_date, base->tickvalue);
 	base->status |= XNTBRUN;
 }
 
@@ -377,8 +388,7 @@ void xntbase_start(xntbase_t *base)
  * Outstanding timers attached to the stopped time base are immediated
  * disarmed.
  *
- * Stopping a time base also invalidates its clock
- * setting. xntbase_set_time() should be called anew to reset it.
+ * Stopping a time base also invalidates its clock setting.
  *
  * @param base The address of the time base descriptor to stop.
  *
@@ -464,17 +474,23 @@ EXPORT_SYMBOL(xntbase_tick);
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
 /*! 
- * \fn void xntbase_set_time(xntbase_t *base, xnticks_t newtime)
- * \brief Set the clock time for a given time base.
+ * \fn void xntbase_adjust_time(xntbase_t *base, xnticks_t delta)
+ * \brief Adjust the clock time for the system.
  *
- * Each time base tracks the current time as a monotonously increasing
- * count of ticks since the epoch. The epoch is initially the same as
- * the underlying machine time. This service changes the epoch for the
+ * Xenomai tracks the current time as a monotonously increasing count of ticks
+ * since the epoch. The epoch is initially the same as the underlying machine
+ * time, and it is always synchronised across all active time bases.
+ *
+ * This service changes the epoch for the system by applying the specified
+ * tick delta on the master's wallclock offset and resynchronizing all other
+ * time bases.
+ *
+ * @param base The address of the initiating time base.
+ *
+ * @param delta The adjustment of the system time expressed in ticks of the
  * specified time base.
  *
- * @param base The address of the affected time base.
- *
- * @param newtime The new time to set for the specified time base.
+ * @note This routine must be entered nklock locked, interrupts off.
  *
  * Environments:
  *
@@ -488,15 +504,28 @@ EXPORT_SYMBOL(xntbase_tick);
  * Rescheduling: never.
  */
 
-void xntbase_set_time(xntbase_t *base, xnticks_t newtime)
+void xntbase_adjust_time(xntbase_t *base, xnticks_t delta)
 {
-	spl_t s;
+	xnticks_t now;
+	xnholder_t *holder;
+	xntbase_t *tbase;
 
-	xnlock_get_irqsave(&nklock, s);
-	base->wallclock_offset += newtime - xntbase_get_time(base);
+	nktbase.wallclock_offset += xntbase_ticks2ns(base, delta);
+	now = xnarch_get_cpu_time() + nktbase.wallclock_offset;
+
+	for (holder = getheadq(&nktimebaseq);
+	     holder != NULL; holder = nextq(&nktimebaseq, holder)) {
+		tbase = link2tbase(holder);
+		if (tbase == &nktbase)
+			continue;
+
+		tbase->wallclock_offset = xntbase_ns2ticks(tbase, now) -
+			xntbase_get_jiffies(tbase);
+	}
+	/* TODO: (Re-)define semantic of XNTBSET */
 	__setbits(base->status, XNTBSET);
-	xnltt_log_event(xeno_ev_timeset, newtime);
-	xnlock_put_irqrestore(&nklock, s);
+
+	/* xnltt_log_event(xeno_ev_timeadjust, base->name, delta); */
 }
 
 /* The master time base - the most precise one, aperiodic, always valid. */
@@ -515,7 +544,7 @@ xntbase_t nktbase = {
 #endif /* CONFIG_XENO_OPT_STATS */
 };
 
-EXPORT_SYMBOL(xntbase_set_time);
+EXPORT_SYMBOL(xntbase_adjust_time);
 EXPORT_SYMBOL(nktbase);
 
 /*@}*/

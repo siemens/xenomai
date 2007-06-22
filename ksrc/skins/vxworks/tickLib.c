@@ -27,5 +27,9 @@ ULONG tickGet(void)
 
 void tickSet(ULONG newtime)
 {
-	xntbase_set_time(wind_tbase, newtime);
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	xntbase_adjust_time(wind_tbase, newtime - tickGet());
+	xnlock_put_irqrestore(&nklock, s);
 }

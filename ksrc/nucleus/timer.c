@@ -467,7 +467,7 @@ void xntslave_update(xntslave_t *slave, xnticks_t interval)
 	}
 }
 
-void xntslave_start(xntslave_t *slave, xnticks_t interval)
+void xntslave_start(xntslave_t *slave, xnticks_t start, xnticks_t interval)
 {
 	int nr_cpus, cpu;
 	spl_t s;
@@ -476,7 +476,10 @@ void xntslave_start(xntslave_t *slave, xnticks_t interval)
 
 		struct percpu_cascade *pc = &slave->cascade[cpu];
 		xnlock_get_irqsave(&nklock, s);
-		xntimer_start(&pc->timer, interval, interval, XN_RELATIVE);
+		/* Spread ticks by timer latency to avoid too much nklock
+		   contention and impose some servicing order. */
+		xntimer_start(&pc->timer, start + cpu * nklatency,
+			      interval, XN_ABSOLUTE);
 		xnlock_put_irqrestore(&nklock, s);
 	}
 }

@@ -580,6 +580,7 @@ void xntslave_update(xntslave_t *slave,
 		     xnticks_t interval);
 
 void xntslave_start(xntslave_t *slave,
+		    xnticks_t start,
 		    xnticks_t interval);
 
 void xntslave_stop(xntslave_t *slave);

@@ -298,7 +298,7 @@ static inline void xntbase_tick(xntbase_t *base)
  *
  * This service returns the (external) clock time as maintained by the
  * specified time base. This value is adjusted with the wallclock
- * offset as defined by xntbase_set_time().
+ * offset as defined by xntbase_adjust_time().
  *
  * @param base The address of the time base to query.
  *
@@ -322,16 +322,12 @@ static inline void xntbase_tick(xntbase_t *base)
 static inline xnticks_t xntbase_get_time(xntbase_t *base)
 {
 	/* Return an adjusted value of the monotonic time with the
-	   wallclock offset as defined in xntbase_set_time(). */
+	   translated system wallclock offset. */
 	return xntbase_get_jiffies(base) + base->wallclock_offset;
 }
 
-void xntbase_set_time(xntbase_t *base,
-		      xnticks_t newtime);
+void xntbase_adjust_time(xntbase_t *base, xnticks_t newtime);
 
-xnticks_t xntbase_convert(xntbase_t *srcbase,
-			  xnticks_t ticks,
-			  xntbase_t *dstbase);
 #ifdef __cplusplus
 }
 #endif

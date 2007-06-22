@@ -196,11 +196,6 @@ struct xnpod {
 	atomic_counter_t timerlck;	/*!< Timer lock depth.  */
 #endif	/* __KERNEL__ */
 
-	struct {
-		void (*settime)(xntbase_t *tbase, xnticks_t newtime); /*!< Clock setting hook. */
-		int (*faulthandler)(xnarch_fltinfo_t *fltinfo);	/*!< Trap/exception handler. */
-	} svctable;		/*!< Table of overridable service entry points. */
-
 #ifdef __XENO_SIM__
 	void (*schedhook) (xnthread_t *thread, xnflags_t mask);	/*!< Internal scheduling hook. */
 #endif	/* __XENO_SIM__ */

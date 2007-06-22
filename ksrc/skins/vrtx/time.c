@@ -41,6 +41,8 @@ void sc_gclock(struct timespec *timep, unsigned long *nsp, int *errp)
 
 void sc_sclock(struct timespec time, unsigned long ns, int *errp)
 {
+ 	spl_t s;
+ 
 	if (ns > 1000000000 ||
 	    time.nanoseconds < 0 || time.nanoseconds > 999999999) {
 		*errp = ER_IIP;
@@ -54,8 +56,12 @@ void sc_sclock(struct timespec time, unsigned long ns, int *errp)
 			xntbase_start(vrtx_tbase);
 	}
 
-	xntbase_set_time(vrtx_tbase, xntbase_ns2ticks(vrtx_tbase,
-						      time.seconds * TEN_POW_9 + time.nanoseconds));
+	xnlock_get_irqsave(&nklock, s);
+	xntbase_adjust_time(&nktbase,
+			    time.seconds * TEN_POW_9 + time.nanoseconds -
+			    xntbase_get_time(&nktbase));
+	xnlock_put_irqrestore(&nklock, s);
+
 	*errp = RET_OK;
 }
 
@@ -66,7 +72,11 @@ unsigned long sc_gtime(void)
 
 void sc_stime(unsigned long time)
 {
-	xntbase_set_time(vrtx_tbase, time);
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	xntbase_adjust_time(vrtx_tbase, time - sc_gtime());
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 void sc_delay(long ticks)

@@ -38,8 +38,10 @@ static inline int xnarch_start_timer(void (*tickhandler) (void))
 
 	rthal_load_cpuid();
 	delta = rthal_itm_next[cpuid] - ia64_get_itc();
-
-	return delta < 0LL ? 0LL : xnarch_tsc_to_ns(delta);
+	if (delta > 0)
+		return XNARCH_HOST_TICK - xnarch_tsc_to_ns(delta);
+	else
+		return XNARCH_HOST_TICK + xnarch_tsc_to_ns(-delta);
 }
 
 static inline void xnarch_stop_timer(void)
