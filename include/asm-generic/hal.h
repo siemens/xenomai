@@ -152,8 +152,6 @@ typedef spinlock_t rthal_spinlock_t;
 #define rthal_send_ipi(irq,cpus)	ipipe_send_ipi(irq,cpus)
 #define rthal_lock_irq(dom,cpu,irq)	__ipipe_lock_irq(dom,cpu,irq)
 #define rthal_unlock_irq(dom,irq)	__ipipe_unlock_irq(dom,irq)
-#define rthal_set_timer()		ipipe_tune_timer(0, IPIPE_GRAB_TIMER)
-#define rthal_reset_timer()		ipipe_tune_timer(0, IPIPE_RESET_TIMER)
 
 #define rthal_lock_cpu(x)		ipipe_lock_cpu(x)
 #define rthal_unlock_cpu(x)		ipipe_unlock_cpu(x)
@@ -225,10 +223,6 @@ static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
     do_##hdlr(mm);                                   \
     return RTHAL_EVENT_PROPAGATE; \
 }
-
-#ifndef IPIPE_GRAB_TIMER
-#define IPIPE_GRAB_TIMER  0
-#endif /* IPIPE_GRAB_TIMER */
 
 #ifndef TASK_ATOMICSWITCH
 #ifdef CONFIG_PREEMPT

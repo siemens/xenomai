@@ -83,7 +83,7 @@ int rthal_timer_request(void (*handler) (void))
 
     rthal_irq_release(RTHAL_TIMER_IRQ);
 
-    rthal_set_timer();
+    ipipe_tune_timer(0, IPIPE_GRAB_TIMER);
 
     if (rthal_irq_request(RTHAL_TIMER_IRQ,
                           (rthal_irq_handler_t) handler, NULL, NULL) < 0) {
@@ -109,7 +109,7 @@ void rthal_timer_release(void)
     unsigned long flags;
 
     rthal_timer_set_irq(RTHAL_HOST_TIMER_IRQ);
-    rthal_reset_timer();
+    ipipe_tune_timer(0, IPIPE_RESET_TIMER);
     flags = rthal_critical_enter(NULL);
     rthal_irq_release(RTHAL_TIMER_IRQ);
     rthal_irq_release(RTHAL_HOST_TIMER_IRQ);
