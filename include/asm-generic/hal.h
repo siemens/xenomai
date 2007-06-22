@@ -59,15 +59,6 @@
 #define RTHAL_NR_IRQS		IPIPE_NR_IRQS
 #define RTHAL_VIRQ_BASE		IPIPE_VIRQ_BASE
 
-/* I-pipe domain priorities. If the invariant pipeline head feature is
-   enabled for Xenomai, use it. */
-#define RTHAL_ROOT_PRIO		IPIPE_ROOT_PRIO
-#ifdef CONFIG_XENO_OPT_PIPELINE_HEAD
-#define RTHAL_XENO_PRIO		IPIPE_HEAD_PRIORITY
-#else /* !CONFIG_XENO_OPT_PIPELINE_HEAD */
-#define RTHAL_XENO_PRIO		(RTHAL_ROOT_PRIO + 100)
-#endif /* !CONFIG_XENO_OPT_PIPELINE_HEAD */
-
 #define rthal_virtual_irq_p(irq)	((irq) >= RTHAL_VIRQ_BASE && \
 					(irq) < RTHAL_NR_IRQS)
 
@@ -101,12 +92,18 @@ typedef spinlock_t rthal_spinlock_t;
 
 #define rthal_cpudata_irq_hits(ipd,cpu,irq)	__ipipe_cpudata_irq_hits(ipd,cpu,irq)
 
+/* I-pipe domain priorities and virtual interrupt mask handling. If
+   the invariant pipeline head feature is enabled for Xenomai, use
+   it. */
+#define RTHAL_ROOT_PRIO			IPIPE_ROOT_PRIO
 #ifdef CONFIG_XENO_OPT_PIPELINE_HEAD
+#define RTHAL_XENO_PRIO			IPIPE_HEAD_PRIORITY
 #define rthal_local_irq_disable()	ipipe_stall_pipeline_head()
 #define rthal_local_irq_enable()	ipipe_unstall_pipeline_head()
 #define rthal_local_irq_save(x)		((x) = ipipe_test_and_stall_pipeline_head() & 1)
 #define rthal_local_irq_restore(x)	ipipe_restore_pipeline_head(x)
 #else /* !CONFIG_XENO_OPT_PIPELINE_HEAD */
+#define RTHAL_XENO_PRIO			(RTHAL_ROOT_PRIO + 100)
 #define rthal_local_irq_disable()	ipipe_stall_pipeline_from(&rthal_domain)
 #define rthal_local_irq_enable()	ipipe_unstall_pipeline_from(&rthal_domain)
 #define rthal_local_irq_save(x)		((x) = ipipe_test_and_stall_pipeline_from(&rthal_domain) & 1)
