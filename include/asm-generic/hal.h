@@ -60,14 +60,13 @@
 #define RTHAL_VIRQ_BASE		IPIPE_VIRQ_BASE
 
 /* I-pipe domain priorities. If the invariant pipeline head feature is
-   available from the I-pipe support and enabled for Xenomai, use
-   it. */
+   enabled for Xenomai, use it. */
 #define RTHAL_ROOT_PRIO		IPIPE_ROOT_PRIO
-#if defined(CONFIG_XENO_OPT_PIPELINE_HEAD) && defined(IPIPE_HEAD_PRIORITY)
+#ifdef CONFIG_XENO_OPT_PIPELINE_HEAD
 #define RTHAL_XENO_PRIO		IPIPE_HEAD_PRIORITY
-#else /* !(CONFIG_XENO_OPT_PIPELINE_HEAD && IPIPE_HEAD_PRIORITY) */
+#else /* !CONFIG_XENO_OPT_PIPELINE_HEAD */
 #define RTHAL_XENO_PRIO		(RTHAL_ROOT_PRIO + 100)
-#endif /* CONFIG_XENO_OPT_PIPELINE_HEAD && IPIPE_HEAD_PRIORITY */
+#endif /* !CONFIG_XENO_OPT_PIPELINE_HEAD */
 
 #define rthal_virtual_irq_p(irq)	((irq) >= RTHAL_VIRQ_BASE && \
 					(irq) < RTHAL_NR_IRQS)
