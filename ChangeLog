@@ -1,3 +1,7 @@
+2007-06-22  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/intr.c (xnintr_*handler): Remove useless membars.
+
 2007-06-22  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus/timer.c, ksrc/nucleus/pod.c,
