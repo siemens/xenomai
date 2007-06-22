@@ -1,3 +1,7 @@
+2007-06-22  Dmitry Adamushko <dmitry.adamushko@gmail.com>, Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/intr.c: Fix shared interrupt locking scheme.
+
 2007-06-15  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/arch/*/hal.c: Use IRQF_SHARED when applicable to comply

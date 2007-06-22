@@ -145,38 +145,12 @@ typedef struct xnintr_shirq {
 	xnintr_t *handlers;
 	int unhandled;
 #ifdef CONFIG_SMP
-	atomic_counter_t active;
+	xnlock_t lock;
 #endif
 
 } xnintr_shirq_t;
 
 static xnintr_shirq_t xnshirqs[RTHAL_NR_IRQS];
-
-static inline void xnintr_shirq_lock(xnintr_shirq_t *shirq)
-{
-#ifdef CONFIG_SMP
-	xnarch_atomic_inc(&shirq->active);
-	xnarch_memory_barrier();
-#endif
-}
-
-static inline void xnintr_shirq_unlock(xnintr_shirq_t *shirq)
-{
-#ifdef CONFIG_SMP
-	xnarch_memory_barrier();
-	xnarch_atomic_dec(&shirq->active);
-#endif
-}
-
-void xnintr_synchronize(xnintr_t *intr)
-{
-#ifdef CONFIG_SMP
-	xnintr_shirq_t *shirq = &xnshirqs[intr->irq];
-
-	while (xnarch_atomic_get(&shirq->active))
-		cpu_relax();
-#endif
-}
 
 #if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL)
 /*
@@ -201,7 +175,7 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 
 	++sched->inesting;
 
-	xnintr_shirq_lock(shirq);
+	xnlock_get(&shirq->lock);
 	intr = shirq->handlers;
 
 	while (intr) {
@@ -222,7 +196,7 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 		intr = intr->next;
 	}
 
-	xnintr_shirq_unlock(shirq);
+	xnlock_put(&shirq->lock);
 
 	if (unlikely(s == XN_ISR_NONE)) {
 		if (++shirq->unhandled == XNINTR_MAX_UNHANDLED) {
@@ -272,7 +246,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 
 	++sched->inesting;
 
-	xnintr_shirq_lock(shirq);
+	xnlock_get(&shirq->lock);
 	intr = shirq->handlers;
 
 	while (intr != end) {
@@ -303,7 +277,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 			intr = shirq->handlers;
 	}
 
-	xnintr_shirq_unlock(shirq);
+	xnlock_put(&shirq->lock);
 
 	if (counter > MAX_EDGEIRQ_COUNTER)
 		xnlogerr
@@ -386,9 +360,12 @@ static inline int xnintr_irq_attach(xnintr_t *intr)
 
 	__setbits(intr->flags, XN_ISR_ATTACHED);
 
-	/* Add a given interrupt object. */
 	intr->next = NULL;
+
+	/* Add a given interrupt object. */
+	xnlock_get(&shirq->lock);
 	*p = intr;
+	xnlock_put(&shirq->lock);
 
 	return 0;
 }
@@ -409,8 +386,10 @@ static inline int xnintr_irq_detach(xnintr_t *intr)
 
 	while ((e = *p) != NULL) {
 		if (e == intr) {
-			/* Remove a given interrupt object from the list. */
+			/* Remove the given interrupt object from the list. */
+			xnlock_get(&shirq->lock);
 			*p = e->next;
+			xnlock_put(&shirq->lock);
 
 			/* Release the IRQ line if this was the last user */
 			if (shirq->handlers == NULL)
@@ -429,12 +408,8 @@ static inline int xnintr_irq_detach(xnintr_t *intr)
 int xnintr_mount(void)
 {
 	int i;
-	for (i = 0; i < RTHAL_NR_IRQS; ++i) {
-		xnshirqs[i].handlers = NULL;
-#ifdef CONFIG_SMP
-		xnarch_atomic_set(&xnshirqs[i].active, 0);
-#endif
-	}
+	for (i = 0; i < RTHAL_NR_IRQS; ++i)
+		xnlock_init(&xnshirqs[i].lock);
 	return 0;
 }
 
@@ -450,7 +425,6 @@ static inline int xnintr_irq_detach(xnintr_t *intr)
 	return xnarch_release_irq(intr->irq);
 }
 
-void xnintr_synchronize(xnintr_t *intr) {}
 int xnintr_mount(void) { return 0; }
 
 #endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */
@@ -626,6 +600,9 @@ int xnintr_destroy(xnintr_t *intr)
  * a low-level error occurred while attaching the interrupt. -EBUSY is
  * specifically returned if the interrupt object was already attached.
  *
+ * @note The caller <b>must not</b> hold nklock when invoking this service,
+ * this would cause deadlocks.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -654,7 +631,7 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 
 	if (!err)
 		xnintr_stat_counter_inc();
-	
+
 	xnlock_put_irqrestore(&intrlock, s);
 
 	return err;
@@ -677,6 +654,9 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
  * a low-level error occurred while detaching the interrupt. Detaching
  * a non-attached interrupt object leads to a null-effect and returns
  * 0.
+ *
+ * @note The caller <b>must not</b> hold nklock when invoking this service,
+ * this would cause deadlocks.
  *
  * Environments:
  *
@@ -702,12 +682,6 @@ int xnintr_detach(xnintr_t *intr)
 		xnintr_stat_counter_dec();
 
 	xnlock_put_irqrestore(&intrlock, s);
-
-	/* The idea here is to keep a detached interrupt object valid as long
-	   as the corresponding irq handler is running. This is one of the
-	   requirements to iterate over the xnintr_shirq_t::handlers list in
-	   xnintr_irq_handler() in a lockless way. */
-	xnintr_synchronize(intr);
 
 	return err;
 }
