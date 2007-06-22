@@ -170,55 +170,55 @@ static inline unsigned long rthal_get_cpufreq(void)
 
 static inline unsigned long rthal_get_timerfreq(void)
 {
-    struct ipipe_sysinfo sysinfo;
-    rthal_get_sysinfo(&sysinfo);
-    return (unsigned long)sysinfo.archdep.tmfreq;
+	struct ipipe_sysinfo sysinfo;
+	rthal_get_sysinfo(&sysinfo);
+	return (unsigned long)sysinfo.archdep.tmfreq;
 }
 
-#define RTHAL_DECLARE_EVENT(hdlr) \
+#define RTHAL_DECLARE_EVENT(hdlr)				       \
 static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
-{ \
-    return do_##hdlr(event,ipd->domid,data); \
+{								       \
+	return do_##hdlr(event,ipd->domid,data);		       \
 }
 
-#define RTHAL_DECLARE_SCHEDULE_EVENT(hdlr) \
+#define RTHAL_DECLARE_SCHEDULE_EVENT(hdlr)			       \
 static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
-{ \
-    struct task_struct *p = (struct task_struct *)data; \
-    do_##hdlr(p);					\
-    return RTHAL_EVENT_PROPAGATE; \
+{								       \
+	struct task_struct *p = (struct task_struct *)data;	       \
+	do_##hdlr(p);						       \
+	return RTHAL_EVENT_PROPAGATE;				       \
 }
 
-#define RTHAL_DECLARE_SETSCHED_EVENT(hdlr) \
+#define RTHAL_DECLARE_SETSCHED_EVENT(hdlr)			       \
 static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
-{ \
-    struct task_struct *p = (struct task_struct *)data; \
-    do_##hdlr(p,p->rt_priority);			\
-    return RTHAL_EVENT_PROPAGATE; \
+{									\
+	struct task_struct *p = (struct task_struct *)data;		\
+	do_##hdlr(p,p->rt_priority);					\
+	return RTHAL_EVENT_PROPAGATE;					\
 }
 
-#define RTHAL_DECLARE_SIGWAKE_EVENT(hdlr) \
+#define RTHAL_DECLARE_SIGWAKE_EVENT(hdlr)			       \
 static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
-{ \
-    struct task_struct *p = (struct task_struct *)data; \
-    do_##hdlr(p);					\
-    return RTHAL_EVENT_PROPAGATE; \
+{								       \
+	struct task_struct *p = (struct task_struct *)data;	       \
+	do_##hdlr(p);						       \
+	return RTHAL_EVENT_PROPAGATE;				       \
 }
 
-#define RTHAL_DECLARE_EXIT_EVENT(hdlr) \
+#define RTHAL_DECLARE_EXIT_EVENT(hdlr)				       \
 static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
-{ \
-    struct task_struct *p = (struct task_struct *)data; \
-    do_##hdlr(p);					\
-    return RTHAL_EVENT_PROPAGATE; \
+{								       \
+	struct task_struct *p = (struct task_struct *)data;	       \
+	do_##hdlr(p);						       \
+	return RTHAL_EVENT_PROPAGATE;				       \
 }
 
-#define RTHAL_DECLARE_CLEANUP_EVENT(hdlr) \
+#define RTHAL_DECLARE_CLEANUP_EVENT(hdlr)			       \
 static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
-{ \
-    struct mm_struct *mm = (struct mm_struct *)data; \
-    do_##hdlr(mm);                                   \
-    return RTHAL_EVENT_PROPAGATE; \
+{								       \
+	struct mm_struct *mm = (struct mm_struct *)data;	       \
+	do_##hdlr(mm);						       \
+	return RTHAL_EVENT_PROPAGATE;				       \
 }
 
 #ifndef TASK_ATOMICSWITCH
@@ -279,49 +279,49 @@ static inline void clear_task_nowakeup(struct task_struct *p)
     ipipe_catch_event(&rthal_domain,ex|IPIPE_EVENT_SELF,hdlr)
 
 #define rthal_register_domain(_dom,_name,_id,_prio,_entry)	\
- ({	\
-    struct ipipe_domain_attr attr; \
-    ipipe_init_attr(&attr); \
-    attr.name = _name;	    \
-    attr.entry = _entry;   \
-    attr.domid = _id;	    \
-    attr.priority = _prio; \
-    ipipe_register_domain(_dom,&attr); \
- })
+({								\
+	struct ipipe_domain_attr attr;				\
+	ipipe_init_attr(&attr);					\
+	attr.name = _name;					\
+	attr.entry = _entry;					\
+	attr.domid = _id;					\
+	attr.priority = _prio;					\
+	ipipe_register_domain(_dom,&attr);			\
+})
 
 #define rthal_unregister_domain(dom)	ipipe_unregister_domain(dom)
 
-#define RTHAL_DECLARE_DOMAIN(entry)	\
-void entry (void)	\
-{				\
-    do_##entry();		\
-}
+#define RTHAL_DECLARE_DOMAIN(entry)		\
+	void entry (void)			\
+	{					\
+		do_##entry();			\
+	}
 
 extern void rthal_domain_entry(void);
 
-#define rthal_spin_lock_irq(lock) \
-do {  \
-    rthal_local_irq_disable(); \
-    rthal_spin_lock(lock); \
-} while(0)
+#define rthal_spin_lock_irq(lock)		\
+	do {					\
+		rthal_local_irq_disable();	\
+		rthal_spin_lock(lock);		\
+	} while(0)
 
-#define rthal_spin_unlock_irq(lock) \
-do {  \
-    rthal_spin_unlock(lock); \
-    rthal_local_irq_enable(); \
-} while(0)
+#define rthal_spin_unlock_irq(lock)		\
+	do {					\
+		rthal_spin_unlock(lock);	\
+		rthal_local_irq_enable();	\
+	} while(0)
 
-#define rthal_spin_lock_irqsave(lock,x) \
-do {  \
-    rthal_local_irq_save(x); \
-    rthal_spin_lock(lock); \
-} while(0)
+#define rthal_spin_lock_irqsave(lock,x)		\
+	do {					\
+		rthal_local_irq_save(x);	\
+		rthal_spin_lock(lock);		\
+	} while(0)
 
-#define rthal_spin_unlock_irqrestore(lock,x) \
-do {  \
-    rthal_spin_unlock(lock); \
-    rthal_local_irq_restore(x); \
-} while(0)
+#define rthal_spin_unlock_irqrestore(lock,x)	\
+	do {					\
+		rthal_spin_unlock(lock);	\
+		rthal_local_irq_restore(x);	\
+	} while(0)
 
 #define rthal_printk	printk
 
@@ -530,13 +530,13 @@ static inline int rthal_trace_panic_dump(void)
 #else /* !CONFIG_IPIPE_TRACE */
 
 #define rthal_trace_max_begin(v)		({int err = -ENOSYS; err; })
-#define rthal_trace_max_end(v)		({int err = -ENOSYS; err; })
+#define rthal_trace_max_end(v)			({int err = -ENOSYS; err; })
 #define rthal_trace_max_reset(v)		({int err = -ENOSYS; err; })
 #define rthal_trace_user_start()		({int err = -ENOSYS; err; })
 #define rthal_trace_user_stop(v)		({int err = -ENOSYS; err; })
 #define rthal_trace_user_freeze(v, once)	({int err = -ENOSYS; err; })
 #define rthal_trace_special(id, v)		({int err = -ENOSYS; err; })
-#define rthal_trace_special_u64(id, v)	({int err = -ENOSYS; err; })
+#define rthal_trace_special_u64(id, v)		({int err = -ENOSYS; err; })
 #define rthal_trace_pid(pid, prio)		({int err = -ENOSYS; err; })
 #define rthal_trace_panic_freeze()		({int err = -ENOSYS; err; })
 #define rthal_trace_panic_dump()		({int err = -ENOSYS; err; })
