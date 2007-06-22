@@ -250,11 +250,6 @@ static inline void clear_task_nowakeup(struct task_struct *p)
 	set_task_state(p, p->state & ~TASK_NOWAKEUP);
 }
 
-#ifndef PF_EVNOTIFY
-/* In case the I-pipe does not provide per-task event filter. */
-#define PF_EVNOTIFY  0
-#endif	/* !PF_EVNOTIFY */
-
 #ifdef VM_PINNED
 #define rthal_disable_ondemand_mappings(tsk)   ipipe_disable_ondemand_mappings(tsk)
 #else /* !VM_PINNED */
