@@ -250,11 +250,6 @@ static inline void clear_task_nowakeup(struct task_struct *p)
 	set_task_state(p, p->state & ~TASK_NOWAKEUP);
 }
 
-#ifndef IPIPE_WIRED_MASK
-/* In case wired interrupt support is not available. */
-#define IPIPE_WIRED_MASK  0
-#endif /* !IPIPE_WIRED_MASK */
-
 #ifndef IPIPE_NOSTACK_FLAG
 /* In case the foreign stack marker is absent. */
 #define IPIPE_NOSTACK_FLAG 2
