@@ -1,7 +1,14 @@
 2007-06-22  Philippe Gerum  <rpm@xenomai.org>
 
-	* include/asm-generic/hal.h: Assume all I-pipe patches have
-	invariant head optimization by now.
+	* include/asm-generic/hal.h: Assume all I-pipe patches usable with
+	this release have the following features by now:
+
+	- Invariant head optimization,
+	- Filter on self-originated domain events (IPIPE_EVENT_SELF),
+	- TASK_NOWAKEUP mode bit,
+	- Wired interrupt support,
+	- Foreign stack marker (IPIPE_NOSTACK),
+	- Per-task event filter (PF_EVNOTIFY).
 
 	* ksrc/nucleus/intr.c (xnintr_*handler): Remove useless membars.
 
