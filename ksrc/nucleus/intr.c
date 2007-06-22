@@ -81,8 +81,6 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	xnticks_t start;
 	int s;
 
-	xnarch_memory_barrier();
-
 	prev  = xnstat_runtime_get_current(sched);
 	start = xnstat_runtime_now();
 	xnltt_log_event(xeno_ev_ienter, irq);
@@ -123,8 +121,6 @@ void xnintr_clock_handler(void)
 	xnsched_t *sched = xnpod_current_sched();
 	xnstat_runtime_t *prev;
 	xnticks_t start;
-
-	xnarch_memory_barrier();
 
 	prev  = xnstat_runtime_get_current(sched);
 	start = xnstat_runtime_now();
@@ -191,8 +187,6 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 	xnintr_shirq_t *shirq = &xnshirqs[irq];
 	xnintr_t *intr;
 	int s = 0;
-
-	xnarch_memory_barrier();
 
 	prev  = xnstat_runtime_get_current(sched);
 	start = xnstat_runtime_now();
@@ -262,8 +256,6 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	xnintr_shirq_t *shirq = &xnshirqs[irq];
 	xnintr_t *intr, *end = NULL;
 	int s = 0, counter = 0;
-
-	xnarch_memory_barrier();
 
 	prev  = xnstat_runtime_get_current(sched);
 	start = xnstat_runtime_now();
