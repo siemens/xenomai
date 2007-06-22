@@ -1,5 +1,8 @@
 2007-06-22  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/asm-generic/hal.h: Assume all I-pipe patches have
+	invariant head optimization by now.
+
 	* ksrc/nucleus/intr.c (xnintr_*handler): Remove useless membars.
 
 2007-06-22  Jan Kiszka  <jan.kiszka@web.de>
