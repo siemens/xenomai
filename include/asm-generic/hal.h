@@ -250,13 +250,6 @@ static inline void clear_task_nowakeup(struct task_struct *p)
 	set_task_state(p, p->state & ~TASK_NOWAKEUP);
 }
 
-#ifndef IPIPE_NOSTACK_FLAG
-/* In case the foreign stack marker is absent. */
-#define IPIPE_NOSTACK_FLAG 2
-#define ipipe_set_foreign_stack(ipd)	do { } while(0)
-#define ipipe_clear_foreign_stack(ipd)	do { } while(0)
-#endif /* !IPIPE_NOSTACK_FLAG */
-
 #ifndef PF_EVNOTIFY
 /* In case the I-pipe does not provide per-task event filter. */
 #define PF_EVNOTIFY  0
