@@ -1,5 +1,10 @@
 2007-06-22  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/asm-generic/hal.h, ksrc/arch/ia64/hal.c
+	(rthal_timer_request, rthal_timer_release): Move references to
+	ipipe_tune_timer() to the the last place it is still used,
+	i.e. ia64 arch-dep support.
+
 	* include/asm-generic/hal.h: Assume all I-pipe patches usable with
 	this release have the following features by now:
 
