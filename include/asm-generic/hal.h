@@ -231,12 +231,16 @@ static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
 #endif /* IPIPE_GRAB_TIMER */
 
 #ifndef TASK_ATOMICSWITCH
-/* Early I-pipe versions don't have this either. */
-#define TASK_ATOMICSWITCH  0
 #ifdef CONFIG_PREEMPT
+/* We want this feature for preemptible kernels, or the behaviour when
+   switching execution modes between Xenomai and Linux domains would
+   be unreliable. */
 #error "Adeos: atomic task switch support is missing; upgrading\n" \
        "     to a recent I-pipe version is required."
 #endif /* CONFIG_PREEMPT */
+/* I-pipe releases for 2.4 kernels don't have this task mode bit
+   defined, so fake it. */
+#define TASK_ATOMICSWITCH  0
 #endif /* !TASK_ATOMICSWITCH */
 
 static inline void set_task_nowakeup(struct task_struct *p)
