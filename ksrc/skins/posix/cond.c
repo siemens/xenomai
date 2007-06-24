@@ -105,15 +105,20 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 	pse51_cond_t *cond;
 	xnqueue_t *condq;
 	spl_t s;
+	int err;
 
 	if (!attr)
 		attr = &default_cond_attr;
 
+	cond = (pse51_cond_t *) xnmalloc(sizeof(*cond));
+	if (!cond)
+		return ENOMEM;
+
 	xnlock_get_irqsave(&nklock, s);
 
 	if (attr->magic != PSE51_COND_ATTR_MAGIC) {
-		xnlock_put_irqrestore(&nklock, s);
-		return EINVAL;
+		err = EINVAL;
+		goto error;
 	}
 
 	condq = &pse51_kqueues(attr->pshared)->condq;
@@ -124,15 +129,9 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 		     holder = nextq(condq, holder))
 			if (holder == &shadow->cond->link) {
 				/* cond is already in the queue. */
-				xnlock_put_irqrestore(&nklock, s);
-				return EBUSY;
+				err = EBUSY;
+				goto error;
 			}
-	}
-
-	cond = (pse51_cond_t *) xnmalloc(sizeof(*cond));
-	if (!cond) {
-		xnlock_put_irqrestore(&nklock, s);
-		return ENOMEM;
 	}
 
 	shadow->magic = PSE51_COND_MAGIC;
@@ -148,6 +147,10 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
+
+  error:
+	xnlock_put_irqrestore(&nklock, s);
+	return err;
 }
 
 /**

@@ -276,22 +276,30 @@ static int pse51_reg_fd_lookup(pse51_desc_t ** descp, int fd)
 	return 0;
 }
 
-int pse51_desc_create(pse51_desc_t ** descp, pse51_node_t * node)
+int pse51_desc_create(pse51_desc_t ** descp, pse51_node_t * node, long flags)
 {
-	int fd = pse51_reg_fd_get();
 	pse51_desc_t *desc;
-
-	if (fd == -1)
-		return EMFILE;
+	spl_t s;
+	int fd;
 
 	desc = (pse51_desc_t *) xnmalloc(sizeof(*desc));
-
 	if (!desc)
 		return ENOSPC;
+
+	xnlock_get_irqsave(&nklock, s);
+	fd = pse51_reg_fd_get();
+	if (fd == -1) {
+		xnlock_put_irqrestore(&nklock, s);
+		xnfree(desc);
+		return EMFILE;
+	}
 
 	pse51_reg.descs[fd] = desc;
 	desc->node = node;
 	desc->fd = fd;
+	desc->flags = flags;
+	xnlock_put_irqrestore(&nklock, s);
+
 	*descp = desc;
 	return 0;
 }

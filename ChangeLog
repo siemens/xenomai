@@ -1,3 +1,8 @@
+2007-06-24  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/skins/posix/*.c (*_init, *_create, *_open): Do not call
+	xnmalloc while holding the nklock.
+
 2007-06-22  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-generic/hal.h, ksrc/arch/ia64/hal.c

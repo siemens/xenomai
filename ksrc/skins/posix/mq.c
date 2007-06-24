@@ -245,9 +245,8 @@ mqd_t mq_open(const char *name, int oflags, ...)
 	int err;
 
 	xnlock_get_irqsave(&nklock, s);
-
 	err = pse51_node_get(&node, name, PSE51_MQ_MAGIC, oflags);
-
+	xnlock_put_irqrestore(&nklock, s);
 	if (err)
 		goto error;
 
@@ -258,17 +257,29 @@ mqd_t mq_open(const char *name, int oflags, ...)
 
 	/* Here, we know that we must create a message queue. */
 	mq = (pse51_mq_t *) xnmalloc(sizeof(*mq));
-
 	if (!mq) {
 		err = ENOSPC;
 		goto error;
+	}
+
+	xnlock_get_irqsave(&nklock, s);
+	err = pse51_node_get(&node, name, PSE51_MQ_MAGIC, oflags);
+	if (err)
+		goto err_free_mq;
+
+	if (node) {
+		/* The same mq was created in the meantime, rollback. */
+		xnlock_put_irqrestore(&nklock, s);
+		xnfree(mq);
+		mq = node2mq(node);
+		goto got_mq;
 	}
 
 	err =
 	    pse51_node_add_start(&mq->nodebase, name, PSE51_MQ_MAGIC,
 				 &done_synch);
 	if (err)
-		goto error;
+		goto err_unlock;
 	xnlock_clear_irqon(&nklock);
 
 	/* Release the global lock while creating the message queue. */
@@ -281,41 +292,38 @@ mqd_t mq_open(const char *name, int oflags, ...)
 
 	xnlock_get_irqsave(&nklock, ignored);
 	pse51_node_add_finished(&mq->nodebase, err);
-	if (err) {
-		xnlock_put_irqrestore(&nklock, s);
+	if (err)
 		goto err_free_mq;
-	}
 
 	inith(&mq->link);
 	appendq(&pse51_mqq, &mq->link);
 
 	/* Whether found or created, here we have a valid message queue. */
-      got_mq:
-	err = pse51_desc_create(&desc, &mq->nodebase);
+	xnlock_put_irqrestore(&nklock, s);
 
+  got_mq:
+	err = pse51_desc_create(&desc, &mq->nodebase,
+				oflags & (O_NONBLOCK | PSE51_PERMS_MASK));
 	if (err)
 		goto err_put_mq;
-
-	pse51_desc_setflags(desc, oflags & (O_NONBLOCK | PSE51_PERMS_MASK));
-
-	xnlock_put_irqrestore(&nklock, s);
 
 	return (mqd_t) pse51_desc_fd(desc);
 
       err_put_mq:
+	xnlock_get_irqsave(&nklock, s);
 	pse51_node_put(&mq->nodebase);
 
 	if (pse51_node_removed_p(&mq->nodebase)) {
 		/* mq is no longer referenced, we may destroy it. */
-		xnlock_put_irqrestore(&nklock, s);
 
 		pse51_mq_destroy(mq);
-	      err_free_mq:
+	  err_free_mq:
+		xnlock_put_irqrestore(&nklock, s);
 		xnfree(mq);
 	} else
-	      error:
+  err_unlock:
 		xnlock_put_irqrestore(&nklock, s);
-
+  error:
 	thread_set_errno(err);
 
 	return (mqd_t) - 1;

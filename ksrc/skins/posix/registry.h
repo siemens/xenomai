@@ -68,7 +68,7 @@ typedef struct pse51_desc {
     int fd;
 } pse51_desc_t;
 
-int pse51_desc_create(pse51_desc_t **descp, pse51_node_t *node);
+int pse51_desc_create(pse51_desc_t **descp, pse51_node_t *node, long flags);
 
 int pse51_desc_get(pse51_desc_t **descp, int fd, unsigned magic);
 

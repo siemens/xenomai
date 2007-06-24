@@ -247,38 +247,53 @@ int shm_open(const char *name, int oflags, mode_t mode)
 	}
 
 	xnlock_get_irqsave(&nklock, s);
-
 	err = pse51_node_get(&node, name, PSE51_SHM_MAGIC, oflags);
+	xnlock_put_irqrestore(&nklock, s);
 	if (err)
 		goto error;
 
-	if (!node) {
-		/* We must create the shared memory object, not yet allocated. */
-		shm = (pse51_shm_t *) xnmalloc(sizeof(*shm));
-
-		if (!shm) {
-			err = ENOSPC;
-			goto error;
-		}
-
-		err = pse51_node_add(&shm->nodebase, name, PSE51_SHM_MAGIC);
-		if (err) {
-			xnfree(shm);
-			goto error;
-		}
-
-		pse51_shm_init(shm);
-	} else
+	if (node) {
 		shm = node2shm(node);
+		goto got_shm;
+	}
 
-	err = pse51_desc_create(&desc, &shm->nodebase);
+	/* We must create the shared memory object, not yet allocated. */
+	shm = (pse51_shm_t *) xnmalloc(sizeof(*shm));
+
+	if (!shm) {
+		err = ENOSPC;
+		goto error;
+	}
+
+	xnlock_get_irqsave(&nklock, s);
+	err = pse51_node_get(&node, name, PSE51_SHM_MAGIC, oflags);
+	if (err)
+		goto err_unlock;
+	
+	if (node) {
+		/* same shm was created in the mean time, rollback. */
+		xnlock_put_irqrestore(&nklock, s);
+		xnfree(shm);
+		shm = node2shm(node);
+		goto got_shm;
+	}
+
+	err = pse51_node_add(&shm->nodebase, name, PSE51_SHM_MAGIC);
+	if (err) {
+		xnfree(shm);
+		goto err_unlock;
+	}
+
+	pse51_shm_init(shm);
+	xnlock_put_irqrestore(&nklock, s);
+
+  got_shm:
+	err = pse51_desc_create(&desc, &shm->nodebase,
+				oflags & PSE51_PERMS_MASK);
 	if (err)
 		goto err_shm_put;
 
-	pse51_desc_setflags(desc, oflags & PSE51_PERMS_MASK);
-
 	fd = pse51_desc_fd(desc);
-	xnlock_put_irqrestore(&nklock, s);
 
 	if ((oflags & O_TRUNC) && ftruncate(fd, 0)) {
 		close(fd);
@@ -287,11 +302,13 @@ int shm_open(const char *name, int oflags, mode_t mode)
 
 	return fd;
 
-      err_shm_put:
+  err_shm_put:
+	xnlock_get_irqsave(&nklock, s);
 	pse51_shm_put(shm, 1);
 
-      error:
+  err_unlock:
 	xnlock_put_irqrestore(&nklock, s);
+  error:
 	thread_set_errno(err);
 	return -1;
 }
@@ -691,21 +708,21 @@ void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 		goto err_shm_put;
 	}
 
+	map = (pse51_shm_map_t *) xnmalloc(sizeof(*map));
+	if (!map) {
+		err = EAGAIN;
+		goto err_shm_put;
+	}
+
 	if (down_interruptible(&shm->maplock)) {
 		err = EINTR;
-		goto err_shm_put;
+		goto err_free_map;
 	}
 
 	if (!shm->addr || off + len > shm->size) {
 		err = ENXIO;
-		goto err_put_lock;
-	}
-
-	map = (pse51_shm_map_t *) xnmalloc(sizeof(*map));
-
-	if (!map) {
-		err = EAGAIN;
-		goto err_put_lock;
+		up(&shm->maplock);
+		goto err_free_map;
 	}
 
 	/* Align the heap address on a page boundary. */
@@ -718,11 +735,11 @@ void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 
 	return result;
 
-      err_put_lock:
-	up(&shm->maplock);
-      err_shm_put:
+  err_free_map:
+	xnfree(map);
+  err_shm_put:
 	pse51_shm_put(shm, 1);
-      error:
+  error:
 	thread_set_errno(err);
 	return MAP_FAILED;
 }
