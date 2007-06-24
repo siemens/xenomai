@@ -54,10 +54,15 @@ static pthread_mutexattr_t default_attr;
 static void pse51_mutex_destroy_internal(pse51_mutex_t *mutex,
 					 pse51_kqueues_t *q)
 {
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
 	removeq(&q->mutexq, &mutex->link);
 	/* synchbase wait queue may not be empty only when this function is called
 	   from pse51_mutex_pkg_cleanup, hence the absence of xnpod_schedule(). */
 	xnsynch_destroy(&mutex->synchbase);
+	xnlock_put_irqrestore(&nklock, s);
+
 	xnfree(mutex);
 }
 
@@ -186,10 +191,10 @@ int pthread_mutex_destroy(pthread_mutex_t * mx)
 	}
 
 	pse51_mark_deleted(shadow);
-	pse51_mutex_destroy_internal(mutex, pse51_kqueues(mutex->attr.pshared));
-
 	xnlock_put_irqrestore(&nklock, s);
 
+	pse51_mutex_destroy_internal(mutex, pse51_kqueues(mutex->attr.pshared));
+	
 	return 0;
 }
 
@@ -506,8 +511,8 @@ void pse51_mutexq_cleanup(pse51_kqueues_t *q)
 	xnlock_get_irqsave(&nklock, s);
 
 	while ((holder = getheadq(&q->mutexq)) != NULL) {
-		pse51_mutex_destroy_internal(link2mutex(holder), q);
 		xnlock_put_irqrestore(&nklock, s);
+		pse51_mutex_destroy_internal(link2mutex(holder), q);
 #if XENO_DEBUG(POSIX)
 		xnprintf("Posix: destroying mutex %p.\n", link2mutex(holder));
 #endif /* XENO_DEBUG(POSIX) */

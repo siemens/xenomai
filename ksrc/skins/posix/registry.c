@@ -31,8 +31,6 @@ struct {
 	unsigned mapsz;
 } pse51_reg;
 
-#define PSE51_NODE_PARTIAL_INIT 1
-
 static unsigned pse51_reg_crunch(const char *key)
 {
 	unsigned h = 0, g;
@@ -102,7 +100,6 @@ int pse51_node_add(pse51_node_t * node, const char *name, unsigned magic)
 	node->magic = magic;
 	node->flags = 0;
 	node->refcount = 1;
-	node->completion_synch = NULL;
 
 	/* Insertion in hash table. */
 	node->next = NULL;
@@ -152,85 +149,24 @@ int pse51_node_get(pse51_node_t ** nodep,
 	pse51_node_t *node, **node_link;
 	int err;
 
-	do {
-		err = pse51_node_lookup(&node_link, name, magic);
-
-		if (err)
-			return err;
-
-		node = *node_link;
-
-		if (node && (oflags & (O_CREAT | O_EXCL)) == (O_CREAT | O_EXCL))
-			return EEXIST;
-
-		if (!node && !(oflags & O_CREAT))
-			return ENOENT;
-
-		*nodep = node;
-
-		if (!node)
-			return 0;
-
-		++node->refcount;
-
-		while (node->flags & PSE51_NODE_PARTIAL_INIT) {
-			xnthread_t *cur;
-
-			if (xnpod_unblockable_p()) {
-				pse51_node_put(node);
-				return EPERM;
-			}
-
-			xnsynch_sleep_on(node->completion_synch, XN_INFINITE, XN_RELATIVE);
-
-			cur = xnpod_current_thread();
-
-			if (xnthread_test_info(cur, XNRMID)) {
-				err = EAGAIN;
-				break;
-			}
-
-			if (xnthread_test_info(cur, XNBREAK)) {
-				pse51_node_put(node);
-				return EINTR;
-			}
-		}
-	} while (err == EAGAIN);
-
-	return err;
-}
-
-/* Add a partially built object. */
-int pse51_node_add_start(pse51_node_t * node,
-			 const char *name,
-			 unsigned magic, xnsynch_t *completion_synch)
-{
-	int err;
-
-	err = pse51_node_add(node, name, magic);
-
+	err = pse51_node_lookup(&node_link, name, magic);
 	if (err)
 		return err;
+	
+	node = *node_link;
+	if (node && (oflags & (O_CREAT | O_EXCL)) == (O_CREAT | O_EXCL))
+		return EEXIST;
 
-	xnsynch_init(completion_synch, XNSYNCH_PRIO);
-	node->completion_synch = completion_synch;
-	node->flags |= PSE51_NODE_PARTIAL_INIT;
+	if (!node && !(oflags & O_CREAT))
+		return ENOENT;
+
+	*nodep = node;
+	if (!node)
+		return 0;
+
+	++node->refcount;
+
 	return 0;
-}
-
-void pse51_node_add_finished(pse51_node_t * node, int error)
-{
-	if (error) {
-		node->refcount = 0;
-		pse51_node_unbind(node);
-	}
-
-	if (xnsynch_flush(node->completion_synch,
-			  error ? XNRMID : 0) == XNSYNCH_RESCHED)
-		xnpod_schedule();
-
-	node->flags &= ~PSE51_NODE_PARTIAL_INIT;
-	node->completion_synch = NULL;
 }
 
 static int pse51_reg_fd_get(void)
@@ -306,7 +242,11 @@ int pse51_desc_create(pse51_desc_t ** descp, pse51_node_t * node, long flags)
 
 int pse51_desc_destroy(pse51_desc_t * desc)
 {
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
 	pse51_reg_fd_put(desc->fd);
+	xnlock_put_irqrestore(&nklock, s);
 	xnfree(desc);
 	return 0;
 }

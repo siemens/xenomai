@@ -77,10 +77,14 @@ typedef struct pse51_uptr {
 /* Called with nklock locked, irqs off. */
 static void sem_destroy_inner(pse51_sem_t * sem, pse51_kqueues_t *q)
 {
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
 	removeq(&q->semq, &sem->link);
 	if (xnsynch_destroy(&sem->synchbase) == XNSYNCH_RESCHED)
 		xnpod_schedule();
-
+	xnlock_put_irqrestore(&nklock, s);
+	
 	if (sem->is_named)
 		xnfree(sem2named_sem(sem));
 	else
@@ -208,17 +212,16 @@ int sem_destroy(sem_t * sm)
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-
 	if (shadow->magic != PSE51_SEM_MAGIC) {
 		thread_set_errno(EINVAL);
 		goto error;
 	}
 
-	sem_destroy_inner(shadow->sem, pse51_kqueues(shadow->sem->pshared));
 	pse51_mark_deleted(shadow);
-
 	xnlock_put_irqrestore(&nklock, s);
 
+	sem_destroy_inner(shadow->sem, pse51_kqueues(shadow->sem->pshared));
+	
 	return 0;
 
       error:
@@ -306,25 +309,29 @@ sem_t *sem_open(const char *name, int oflags, ...)
 	value = va_arg(ap, unsigned);
 	va_end(ap);
 
-	err = pse51_sem_init_inner(&named_sem->sembase, 1, value);
-	if (err)
-		goto err_free_sem;
-
 	xnlock_get_irqsave(&nklock, s);
-	err = pse51_node_get(&node, name, PSE51_NAMED_SEM_MAGIC, oflags);
-	if (err)
-		goto err_put_lock;
-
-	if (node) {
+	err = pse51_sem_init_inner(&named_sem->sembase, 1, value);
+	if (err) {
 		xnlock_put_irqrestore(&nklock, s);
 		xnfree(named_sem);
-		named_sem = node2sem(node);
-		goto got_sem;
+		goto error;
 	}
 
 	err = pse51_node_add(&named_sem->nodebase, name, PSE51_NAMED_SEM_MAGIC);
-	if (err)
+	if (err && err != EEXIST)
 		goto err_put_lock;
+	
+	if (err == EEXIST) {
+		err = pse51_node_get(&node, name, PSE51_NAMED_SEM_MAGIC, oflags);
+		if (err)
+			goto err_put_lock;
+
+		xnlock_put_irqrestore(&nklock, s);
+		sem_destroy_inner(&named_sem->sembase,
+				  pse51_kqueues(named_sem->sembase.pshared));
+		named_sem = node2sem(node);
+		goto got_sem;
+	}
 	xnlock_put_irqrestore(&nklock, s);
 
   got_sem:
@@ -336,8 +343,8 @@ sem_t *sem_open(const char *name, int oflags, ...)
 
   err_put_lock:
 	xnlock_put_irqrestore(&nklock, s);
-  err_free_sem:
-	xnfree(named_sem);
+	sem_destroy_inner(&named_sem->sembase,
+			  pse51_kqueues(named_sem->sembase.pshared));
   error:
 	thread_set_errno(err);
 	return SEM_FAILED;
@@ -390,13 +397,16 @@ int sem_close(sem_t * sm)
 
 	if (pse51_node_removed_p(&named_sem->nodebase)) {
 		/* unlink was called, and this semaphore is no longer referenced. */
-		sem_destroy_inner(&named_sem->sembase, pse51_kqueues(1));
 		pse51_mark_deleted(shadow);
-	} else if (!pse51_node_ref_p(&named_sem->nodebase))
+		xnlock_put_irqrestore(&nklock, s);
+
+		sem_destroy_inner(&named_sem->sembase, pse51_kqueues(1));
+	} else if (!pse51_node_ref_p(&named_sem->nodebase)) {
 		/* this semaphore is no longer referenced, but not unlinked. */
 		pse51_mark_deleted(shadow);
-
-	xnlock_put_irqrestore(&nklock, s);
+		xnlock_put_irqrestore(&nklock, s);
+	} else
+		xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
 
@@ -448,10 +458,12 @@ int sem_unlink(const char *name)
 
 	named_sem = node2sem(node);
 
-	if (pse51_node_removed_p(&named_sem->nodebase))
+	if (pse51_node_removed_p(&named_sem->nodebase)) {
+		xnlock_put_irqrestore(&nklock, s);
+		
 		sem_destroy_inner(&named_sem->sembase, pse51_kqueues(1));
-
-	xnlock_put_irqrestore(&nklock, s);
+	} else
+		xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
 
@@ -799,7 +811,9 @@ void pse51_semq_cleanup(pse51_kqueues_t *q)
 			pse51_node_remove(&node,
 					  sem2named_sem(sem)->nodebase.name,
 					  PSE51_NAMED_SEM_MAGIC);
+		xnlock_put_irqrestore(&nklock, s);
 		sem_destroy_inner(sem, q);
+		xnlock_get_irqsave(&nklock, s);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);

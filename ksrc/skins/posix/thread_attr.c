@@ -99,6 +99,7 @@ int pthread_attr_init(pthread_attr_t * attr)
  */
 int pthread_attr_destroy(pthread_attr_t * attr)
 {
+	char *name;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -108,12 +109,12 @@ int pthread_attr_destroy(pthread_attr_t * attr)
 		return EINVAL;
 	}
 
-	if (attr->name)
-		xnfree(attr->name);
-
+	name = attr->name;
 	pse51_mark_deleted(attr);
-
 	xnlock_put_irqrestore(&nklock, s);
+
+	if (name)
+		xnfree(name);
 
 	return 0;
 }
