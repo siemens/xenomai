@@ -92,15 +92,20 @@ int pthread_mutex_init(pthread_mutex_t * mx, const pthread_mutexattr_t * attr)
 	pse51_mutex_t *mutex;
 	xnqueue_t *mutexq;
 	spl_t s;
+	int err;
 
 	if (!attr)
 		attr = &default_attr;
 
+	mutex = (pse51_mutex_t *) xnmalloc(sizeof(*mutex));
+	if (!mutex)
+		return ENOMEM;
+
 	xnlock_get_irqsave(&nklock, s);
 
 	if (attr->magic != PSE51_MUTEX_ATTR_MAGIC) {
-		xnlock_put_irqrestore(&nklock, s);
-		return EINVAL;
+		err = EINVAL;
+		goto error;
 	}
 
 	mutexq = &pse51_kqueues(attr->pshared)->mutexq;
@@ -111,15 +116,9 @@ int pthread_mutex_init(pthread_mutex_t * mx, const pthread_mutexattr_t * attr)
 		     holder = nextq(mutexq, holder))
 			if (holder == &shadow->mutex->link) {
 				/* mutex is already in the queue. */
-				xnlock_put_irqrestore(&nklock, s);
-				return EBUSY;
+				err = EBUSY;
+				goto error;
 			}
-	}
-
-	mutex = (pse51_mutex_t *) xnmalloc(sizeof(*mutex));
-	if (!mutex) {
-		xnlock_put_irqrestore(&nklock, s);
-		return ENOMEM;
 	}
 
 	shadow->magic = PSE51_MUTEX_MAGIC;
@@ -139,6 +138,11 @@ int pthread_mutex_init(pthread_mutex_t * mx, const pthread_mutexattr_t * attr)
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
+
+  error:
+	xnlock_put_irqrestore(&nklock, s);
+	xnfree(mutex);
+	return err;
 }
 
 /**

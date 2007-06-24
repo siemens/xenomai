@@ -101,9 +101,26 @@ int pthread_key_create(pthread_key_t *key, void (*destructor) (void *))
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (allocated_keys == PTHREAD_KEYS_MAX) {
-		result = link2key(getq(&free_keys));
+	if (allocated_keys < PTHREAD_KEYS_MAX) {
+		xnlock_put_irqrestore(&nklock, s);
 
+		result = xnmalloc(sizeof(*result));
+		if (!result)
+			return ENOMEM;
+
+		xnlock_get_irqsave(&nklock, s);
+		if (allocated_keys == PTHREAD_KEYS_MAX) {
+			xnlock_put_irqrestore(&nklock, s);
+			xnfree(result);
+			xnlock_get_irqsave(&nklock, s);
+			goto all_allocated;
+		}
+
+		result->key = allocated_keys++;
+	} else {
+	  all_allocated:
+
+		result = link2key(getq(&free_keys));
 		if (!result) {
 			xnlock_put_irqrestore(&nklock, s);
 			return EAGAIN;
@@ -117,15 +134,6 @@ int pthread_key_create(pthread_key_t *key, void (*destructor) (void *))
 		for (holder = getheadq(&pse51_global_kqueues.threadq); holder;
 		     holder = nextq(&pse51_global_kqueues.threadq, holder))
 			thread_settsd(link2pthread(holder), result->key, NULL);
-	} else {
-		result = xnmalloc(sizeof(*result));
-
-		if (!result) {
-			xnlock_put_irqrestore(&nklock, s);
-			return ENOMEM;
-		}
-
-		result->key = allocated_keys++;
 	}
 
 	result->magic = PSE51_KEY_MAGIC;

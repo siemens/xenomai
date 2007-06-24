@@ -139,6 +139,12 @@ int sem_init(sem_t * sm, int pshared, unsigned value)
 	int err;
 	spl_t s;
 
+	sem = (pse51_sem_t *) xnmalloc(sizeof(pse51_sem_t));
+	if (!sem) {
+		err = ENOSPC;
+		goto error;
+	}
+
 	xnlock_get_irqsave(&nklock, s);
 
 	semq = &pse51_kqueues(pshared)->semq;
@@ -152,21 +158,13 @@ int sem_init(sem_t * sm, int pshared, unsigned value)
 		     holder = nextq(semq, holder))
 			if (holder == &shadow->sem->link) {
 				err = EBUSY;
-				goto error;
+				goto err_lock_put;
 			}
 	}
 
-	sem = (pse51_sem_t *) xnmalloc(sizeof(pse51_sem_t));
-	if (!sem) {
-		err = ENOSPC;
-		goto error;
-	}
-
 	err = pse51_sem_init_inner(sem, pshared, value);
-	if (err) {
-		xnfree(sem);
-		goto error;
-	}
+	if (err)
+		goto err_lock_put;
 
 	shadow->magic = PSE51_SEM_MAGIC;
 	shadow->sem = sem;
@@ -174,8 +172,10 @@ int sem_init(sem_t * sm, int pshared, unsigned value)
 
 	return 0;
 
-      error:
+  err_lock_put:
 	xnlock_put_irqrestore(&nklock, s);
+	xnfree(sem);
+  error:
 	thread_set_errno(err);
 
 	return -1;
@@ -273,70 +273,73 @@ int sem_destroy(sem_t * sm)
  */
 sem_t *sem_open(const char *name, int oflags, ...)
 {
-	nsem_t *named_sem;
 	pse51_node_t *node;
+	nsem_t *named_sem;
+	unsigned value;
+	mode_t mode;
+	va_list ap;
 	spl_t s;
 	int err;
 
 	xnlock_get_irqsave(&nklock, s);
-
 	err = pse51_node_get(&node, name, PSE51_NAMED_SEM_MAGIC, oflags);
+	xnlock_put_irqrestore(&nklock, s);
 
 	if (err)
 		goto error;
 
-	if (!node) {
-		unsigned value;
-		mode_t mode;
-		va_list ap;
-
-		named_sem = (nsem_t *) xnmalloc(sizeof(*named_sem));
-
-		if (!named_sem) {
-			err = ENOSPC;
-			goto error;
-		}
-
-		va_start(ap, oflags);
-		mode = va_arg(ap, int);	/* unused */
-		value = va_arg(ap, unsigned);
-		va_end(ap);
-
-		err = pse51_sem_init_inner(&named_sem->sembase, 1, value);
-
-		if (err) {
-			xnfree(named_sem);
-			goto error;
-		}
-
-		err =
-		    pse51_node_add(&named_sem->nodebase, name,
-				   PSE51_NAMED_SEM_MAGIC);
-
-		if (err) {
-			xnfree(named_sem);
-			goto error;
-		}
-
-		named_sem->sembase.is_named = 1;
-		named_sem->descriptor.shadow_sem.sem = &named_sem->sembase;
-	} else
+	if (node) {
 		named_sem = node2sem(node);
+		goto got_sem;
+	}
+	
+	named_sem = (nsem_t *) xnmalloc(sizeof(*named_sem));
+	if (!named_sem) {
+		err = ENOSPC;
+		goto error;
+	}
+	named_sem->sembase.is_named = 1;
+	named_sem->descriptor.shadow_sem.sem = &named_sem->sembase;
 
+	va_start(ap, oflags);
+	mode = va_arg(ap, int);	/* unused */
+	value = va_arg(ap, unsigned);
+	va_end(ap);
+
+	err = pse51_sem_init_inner(&named_sem->sembase, 1, value);
+	if (err)
+		goto err_free_sem;
+
+	xnlock_get_irqsave(&nklock, s);
+	err = pse51_node_get(&node, name, PSE51_NAMED_SEM_MAGIC, oflags);
+	if (err)
+		goto err_put_lock;
+
+	if (node) {
+		xnlock_put_irqrestore(&nklock, s);
+		xnfree(named_sem);
+		named_sem = node2sem(node);
+		goto got_sem;
+	}
+
+	err = pse51_node_add(&named_sem->nodebase, name, PSE51_NAMED_SEM_MAGIC);
+	if (err)
+		goto err_put_lock;
+	xnlock_put_irqrestore(&nklock, s);
+
+  got_sem:
 	/* Set the magic, needed both at creation and when re-opening a semaphore
 	   that was closed but not unlinked. */
 	named_sem->descriptor.shadow_sem.magic = PSE51_NAMED_SEM_MAGIC;
 
-	xnlock_put_irqrestore(&nklock, s);
-
 	return &named_sem->descriptor.native_sem;
 
-      error:
-
+  err_put_lock:
 	xnlock_put_irqrestore(&nklock, s);
-
+  err_free_sem:
+	xnfree(named_sem);
+  error:
 	thread_set_errno(err);
-
 	return SEM_FAILED;
 }
 

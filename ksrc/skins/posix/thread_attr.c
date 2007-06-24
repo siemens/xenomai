@@ -756,32 +756,35 @@ int pthread_attr_getname_np(const pthread_attr_t * attr, const char **name)
  */
 int pthread_attr_setname_np(pthread_attr_t * attr, const char *name)
 {
-	int err = 0;
+	char *old_name, *new_name;
 	spl_t s;
+
+	if (name) {
+		new_name = xnmalloc(strlen(name) + 1);
+		if (!new_name)
+			return ENOMEM;
+
+		strcpy(new_name, name);
+	} else
+		new_name = NULL;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
+		if (name)
+			xnfree(new_name);
 		return EINVAL;
 	}
 
-	if (attr->name)
-		xnfree(attr->name);
-
-	if (name) {
-		attr->name = xnmalloc(strlen(name) + 1);
-
-		if (attr->name)
-			strcpy(attr->name, name);
-		else
-			err = ENOMEM;
-	} else
-		attr->name = NULL;
-
+	old_name = attr->name;
+	attr->name = new_name;
 	xnlock_put_irqrestore(&nklock, s);
 
-	return err;
+	if (old_name)
+		xnfree(old_name);
+
+	return 0;
 }
 
 /**

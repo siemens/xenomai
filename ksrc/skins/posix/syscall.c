@@ -626,32 +626,47 @@ static int __sem_open(struct task_struct *curr, struct pt_regs *regs)
 		return -thread_get_errno();
 
 	xnlock_get_irqsave(&pse51_assoc_lock, s);
+	assoc = pse51_assoc_lookup(&pse51_queues()->usems,
+				   (u_long)sm->shadow_sem.sem);
 
+	if (assoc) {
+		usm = assoc2usem(assoc);
+		++usm->refcnt;
+		xnlock_put_irqrestore(&nklock, s);
+		goto got_usm;
+	}
+	
+	xnlock_put_irqrestore(&pse51_assoc_lock, s);
+
+	usm = (pse51_usem_t *) xnmalloc(sizeof(*usm));
+
+	if (!usm) {
+		sem_close(&sm->native_sem);
+		return -ENOSPC;
+	}
+
+	usm->uaddr = uaddr;
+	usm->refcnt = 1;
+
+	xnlock_get_irqsave(&pse51_assoc_lock, s);
 	assoc =
 		pse51_assoc_lookup(&pse51_queues()->usems,
 				   (u_long)sm->shadow_sem.sem);
 
-	if (!assoc) {
-		usm = (pse51_usem_t *) xnmalloc(sizeof(*usm));
-
-		if (!usm) {
-			sem_close(&sm->native_sem);
-			xnlock_put_irqrestore(&pse51_assoc_lock, s);
-			return -ENOSPC;
-		}
-
-		usm->uaddr = uaddr;
-		usm->refcnt = 1;
-
-		pse51_assoc_insert(&pse51_queues()->usems,
-				   &usm->assoc,
-				   (u_long)sm->shadow_sem.sem);
-	} else {
+	if (assoc) {
+		assoc2usem(assoc)->refcnt++;
+		xnlock_put_irqrestore(&nklock, s);
+		xnfree(usm);
 		usm = assoc2usem(assoc);
-		++usm->refcnt;
+		goto got_usm;
 	}
-
+	
+	pse51_assoc_insert(&pse51_queues()->usems,
+			   &usm->assoc,
+			   (u_long)sm->shadow_sem.sem);
 	xnlock_put_irqrestore(&pse51_assoc_lock, s);
+
+got_usm:
 
 	if (usm->uaddr == uaddr)
 		/* First binding by this process. */
