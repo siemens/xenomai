@@ -1,5 +1,11 @@
 2007-06-24  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
+	* ksrc/skins/posix/registry.c (pse51_node_get): Get rid of
+	partially initialized nodes addition.
+
+	* ksrc/skins/posix/*.c: (*_destroy, *_close, *_unlink): Do not
+	call xnfree while holding the nklock.
+
 	* ksrc/skins/posix/*.c (*_init, *_create, *_open): Do not call
 	xnmalloc while holding the nklock.
 

@@ -235,13 +235,12 @@ static void pse51_mq_destroy(pse51_mq_t * mq)
 mqd_t mq_open(const char *name, int oflags, ...)
 {
 	struct mq_attr *attr;
-	xnsynch_t done_synch;
 	pse51_node_t *node;
 	pse51_desc_t *desc;
-	spl_t s, ignored;
 	pse51_mq_t *mq;
 	mode_t mode;
 	va_list ap;
+	spl_t s;
 	int err;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -262,66 +261,62 @@ mqd_t mq_open(const char *name, int oflags, ...)
 		goto error;
 	}
 
-	xnlock_get_irqsave(&nklock, s);
-	err = pse51_node_get(&node, name, PSE51_MQ_MAGIC, oflags);
-	if (err)
-		goto err_free_mq;
-
-	if (node) {
-		/* The same mq was created in the meantime, rollback. */
-		xnlock_put_irqrestore(&nklock, s);
-		xnfree(mq);
-		mq = node2mq(node);
-		goto got_mq;
-	}
-
-	err =
-	    pse51_node_add_start(&mq->nodebase, name, PSE51_MQ_MAGIC,
-				 &done_synch);
-	if (err)
-		goto err_unlock;
-	xnlock_clear_irqon(&nklock);
-
-	/* Release the global lock while creating the message queue. */
 	va_start(ap, oflags);
 	mode = va_arg(ap, int);	/* unused */
 	attr = va_arg(ap, struct mq_attr *);
 	va_end(ap);
 
 	err = pse51_mq_init(mq, attr);
-
-	xnlock_get_irqsave(&nklock, ignored);
-	pse51_node_add_finished(&mq->nodebase, err);
 	if (err)
 		goto err_free_mq;
 
 	inith(&mq->link);
+
+	xnlock_get_irqsave(&nklock, s);
+
 	appendq(&pse51_mqq, &mq->link);
 
-	/* Whether found or created, here we have a valid message queue. */
+	err = pse51_node_add(&mq->nodebase, name, PSE51_MQ_MAGIC);
+	if (err && err != EEXIST)
+		goto err_put_mq;
+
+	if (err == EEXIST) {
+		err = pse51_node_get(&node, name, PSE51_MQ_MAGIC, oflags);
+		if (err)
+			goto err_put_mq;
+
+		/* The same mq was created in the meantime, rollback. */
+		xnlock_put_irqrestore(&nklock, s);
+		pse51_mq_destroy(mq);
+		xnfree(mq);
+		mq = node2mq(node);
+		goto got_mq;
+	}
+
 	xnlock_put_irqrestore(&nklock, s);
 
+	/* Whether found or created, here we have a valid message queue. */
   got_mq:
 	err = pse51_desc_create(&desc, &mq->nodebase,
 				oflags & (O_NONBLOCK | PSE51_PERMS_MASK));
 	if (err)
-		goto err_put_mq;
+		goto err_lock_put_mq;
 
 	return (mqd_t) pse51_desc_fd(desc);
 
-      err_put_mq:
+  err_lock_put_mq:
 	xnlock_get_irqsave(&nklock, s);
+  err_put_mq:
 	pse51_node_put(&mq->nodebase);
 
 	if (pse51_node_removed_p(&mq->nodebase)) {
 		/* mq is no longer referenced, we may destroy it. */
 
+		xnlock_put_irqrestore(&nklock, s);
 		pse51_mq_destroy(mq);
 	  err_free_mq:
-		xnlock_put_irqrestore(&nklock, s);
 		xnfree(mq);
 	} else
-  err_unlock:
 		xnlock_put_irqrestore(&nklock, s);
   error:
 	thread_set_errno(err);
@@ -375,11 +370,6 @@ int mq_close(mqd_t fd)
 
 	mq = node2mq(pse51_desc_node(desc));
 
-	err = pse51_desc_destroy(desc);
-
-	if (err)
-		goto err_unlock;
-
 	err = pse51_node_put(&mq->nodebase);
 
 	if (err)
@@ -392,6 +382,11 @@ int mq_close(mqd_t fd)
 		xnfree(mq);
 	} else
 		xnlock_put_irqrestore(&nklock, s);
+
+	err = pse51_desc_destroy(desc);
+
+	if (err)
+		goto error;
 
 	return 0;
 

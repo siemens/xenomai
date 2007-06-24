@@ -125,8 +125,9 @@ static void pse51_shm_destroy(pse51_shm_t * shm, int force)
 		xnholder_t *holder;
 
 		while ((holder = getq(&shm->mappings))) {
-			pse51_shm_map_t *mapping = link2map(holder);
-			xnfree(mapping);
+			up(&shm->maplock);
+			xnfree(link2map(holder));
+			down(&shm->maplock);
 		}
 	}
 
@@ -168,11 +169,11 @@ static void pse51_shm_put(pse51_shm_t * shm, unsigned dec)
 		pse51_node_put(&shm->nodebase);
 
 	if (pse51_node_removed_p(&shm->nodebase)) {
+		xnlock_put_irqrestore(&nklock, s);
 		pse51_shm_destroy(shm, 0);
 		xnfree(shm);
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
+	} else
+		xnlock_put_irqrestore(&nklock, s);
 }
 
 /**
@@ -259,29 +260,27 @@ int shm_open(const char *name, int oflags, mode_t mode)
 
 	/* We must create the shared memory object, not yet allocated. */
 	shm = (pse51_shm_t *) xnmalloc(sizeof(*shm));
-
 	if (!shm) {
 		err = ENOSPC;
 		goto error;
 	}
 
 	xnlock_get_irqsave(&nklock, s);
-	err = pse51_node_get(&node, name, PSE51_SHM_MAGIC, oflags);
-	if (err)
+	err = pse51_node_add(&shm->nodebase, name, PSE51_SHM_MAGIC);
+	if (err && err != EEXIST)
 		goto err_unlock;
-	
-	if (node) {
+
+	if (err == EEXIST) {
 		/* same shm was created in the mean time, rollback. */
+		err = pse51_node_get(&node, name, PSE51_SHM_MAGIC, oflags);
+	  err_unlock:
 		xnlock_put_irqrestore(&nklock, s);
 		xnfree(shm);
+		if (err)
+			goto error;
+
 		shm = node2shm(node);
 		goto got_shm;
-	}
-
-	err = pse51_node_add(&shm->nodebase, name, PSE51_SHM_MAGIC);
-	if (err) {
-		xnfree(shm);
-		goto err_unlock;
 	}
 
 	pse51_shm_init(shm);
@@ -303,11 +302,7 @@ int shm_open(const char *name, int oflags, mode_t mode)
 	return fd;
 
   err_shm_put:
-	xnlock_get_irqsave(&nklock, s);
 	pse51_shm_put(shm, 1);
-
-  err_unlock:
-	xnlock_put_irqrestore(&nklock, s);
   error:
 	thread_set_errno(err);
 	return -1;
@@ -354,25 +349,26 @@ int close(int fd)
 
 	if (IS_ERR(shm)) {
 		err = -PTR_ERR(shm);
-		goto error;
+		goto err_put;
 	}
 
 	if (xnpod_interrupt_p() || !xnpod_root_p()) {
 		err = EPERM;
-		goto error;
+		goto err_put;
 	}
-
-	err = pse51_desc_destroy(desc);
-
-	if (err)
-		goto error;
 
 	pse51_shm_put(shm, 1);
 	xnlock_put_irqrestore(&nklock, s);
+
+	err = pse51_desc_destroy(desc);
+	if (err)
+		goto error;
+
 	return 0;
 
-      error:
+  err_put:
 	xnlock_put_irqrestore(&nklock, s);
+  error:
 	thread_set_errno(err);
 	return -1;
 }

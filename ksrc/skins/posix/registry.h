@@ -14,7 +14,6 @@ typedef struct pse51_node {
     unsigned magic;
     unsigned flags;             /* PSE51_NODE_PARTIAL_INIT. */
     unsigned refcount;
-    xnsynch_t *completion_synch;
     /* pse51_unlink_t *dest_hook; */
 
     struct pse51_node *next;
@@ -28,23 +27,14 @@ void pse51_reg_pkg_cleanup(void);
 
 /* Get an existing node: oflags are POSIX open style flags.
    If 0 is returned and (*nodep) is NULL, then a new node should be added
-   with node_add*. */
+   with node_add. */
 int pse51_node_get(pse51_node_t **nodep,
                    const char *name,
                    unsigned long magic,
                    long oflags);
 
-/* bind a node : use node_add for simple objects (eg. sem_open), node_add_start
-   and node_add_finished for objects which need to be initialized outside of any
-   critical sections (eg. mq_open). */
+/* bind a node. */
 int pse51_node_add(pse51_node_t *node, const char *name, unsigned magic);
-
-int pse51_node_add_start(pse51_node_t *node,
-                         const char *name,
-                         unsigned magic,
-                         xnsynch_t *competion_synch);
-
-void pse51_node_add_finished(pse51_node_t *node, int error);
 
 /* Any successful call to node_get or node_add need to be paired with a call
    node_put before a node may be unlinked. */
@@ -54,7 +44,7 @@ int pse51_node_put(pse51_node_t *node);
    real destruction is deferred until the last call to node_put. */
 int pse51_node_remove(pse51_node_t **nodep, const char *name, unsigned magic);
 
-#define PSE51_NODE_REMOVED 2
+#define PSE51_NODE_REMOVED 1
 
 #define pse51_node_ref_p(node) ((node)->refcount)
 
