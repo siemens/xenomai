@@ -1,3 +1,8 @@
+2007-06-25  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/syscall.c (__rt_task_set_mode): Force
+	T_PRIMARY into the returned mask.
+
 2007-06-22  Dmitry Adamushko <dmitry.adamushko@gmail.com>, Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus/intr.c: Fix shared interrupt locking scheme.

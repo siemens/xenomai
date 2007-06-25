@@ -569,12 +569,14 @@ static int __rt_task_set_mode(struct task_struct *curr, struct pt_regs *regs)
 	if (err)
 		return err;
 
+	if ((clrmask & T_PRIMARY) != 0)
+		xnshadow_relax(0);
+	else
+		mode_r |= T_PRIMARY;
+
 	if (__xn_reg_arg3(regs))
 		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs),
 				  &mode_r, sizeof(mode_r));
-
-	if ((clrmask & T_PRIMARY) != 0)
-		xnshadow_relax(0);
 
 	return 0;
 }
