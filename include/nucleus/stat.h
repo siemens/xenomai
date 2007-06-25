@@ -38,11 +38,11 @@ typedef struct xnstat_runtime {
 #define xnstat_runtime_now() xnarch_get_cpu_tsc()
 
 /* Accumulate runtime of the current account until the given date. */
-#define xnstat_runtime_update(sched, start) \
+#define xnstat_runtime_update(sched, date) \
 do { \
 	(sched)->current_account->total += \
-		start - (sched)->last_account_switch; \
-	(sched)->last_account_switch = start; \
+		date - (sched)->last_account_switch; \
+	(sched)->last_account_switch = date; \
 } while (0)
 
 /* Update the current account reference, returning the previous one. */
@@ -100,7 +100,7 @@ typedef struct xnstat_runtime {
 } xnstat_runtime_t;
 
 #define xnstat_runtime_now()					({ 0; })
-#define xnstat_runtime_update(sched, start)			do { } while (0)
+#define xnstat_runtime_update(sched, date)			do { } while (0)
 #define xnstat_runtime_set_current(sched, new_account)	({ (void)sched; NULL; })
 #define xnstat_runtime_get_current(sched)			({ (void)sched; NULL; })
 #define xnstat_runtime_finalize(sched, new_account)		do { } while (0)
@@ -127,9 +127,9 @@ typedef struct xnstat_counter {
 
 /* Account the runtime of the current account until given start time, switch
    to new_account, and return the previous one. */
-#define xnstat_runtime_lazy_switch(sched, new_account, start) \
+#define xnstat_runtime_lazy_switch(sched, new_account, date) \
 ({ \
-	xnstat_runtime_update(sched, start); \
+	xnstat_runtime_update(sched, date); \
 	xnstat_runtime_set_current(sched, new_account); \
 })
 
