@@ -541,14 +541,23 @@ static inline nanosecs_abs_t rtdm_clock_read(void)
  *
  * Rescheduling: possible, depends on functions called within @a code_block.
  */
-#define RTDM_EXECUTE_ATOMICALLY(code_block)                                 \
-{                                                                           \
-    spl_t   s;                                                              \
-                                                                            \
-    xnlock_get_irqsave(&nklock, s);                                         \
-    code_block;                                                             \
-    xnlock_put_irqrestore(&nklock, s);                                      \
+#ifdef DOXYGEN_CPP /* Beautify doxygen output */
+#define RTDM_EXECUTE_ATOMICALLY(code_block)     \
+{                                               \
+    <ENTER_ATOMIC_SECTION>                      \
+    code_block;                                 \
+    <LEAVE_ATOMIC_SECTION>                      \
 }
+#else /* This is how it really works */
+#define RTDM_EXECUTE_ATOMICALLY(code_block)     \
+{                                               \
+    spl_t   s;                                  \
+                                                \
+    xnlock_get_irqsave(&nklock, s);             \
+    code_block;                                 \
+    xnlock_put_irqrestore(&nklock, s);          \
+}
+#endif
 /** @} Global Lock across Scheduler Invocation */
 
 /*!
