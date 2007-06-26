@@ -2,7 +2,7 @@
  * @file
  * Real-Time Driver Model for Xenomai, driver library
  *
- * @note Copyright (C) 2005 Jan Kiszka <jan.kiszka@web.de>
+ * @note Copyright (C) 2005-2007 Jan Kiszka <jan.kiszka@web.de>
  * @note Copyright (C) 2005 Joerg Langenberg <joerg.langenberg@gmx.net>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
@@ -95,7 +95,7 @@ nanosecs_abs_t rtdm_clock_read(void);
  * @param[in] arg Custom argument passed to @c task_proc() on entry
  * @param[in] priority Priority of the task, see also
  * @ref taskprio "Task Priority Range"
- * @param[in] period Period in nanosecons of a cyclic task, 0 for non-cyclic
+ * @param[in] period Period in nanoseconds of a cyclic task, 0 for non-cyclic
  * mode
  *
  * @return 0 on success, otherwise negative error code
@@ -190,7 +190,7 @@ void rtdm_task_set_priority(rtdm_task_t *task, int priority);
  * @brief Adjust real-time task period
  *
  * @param[in,out] task Task handle as returned by rtdm_task_init()
- * @param[in] period New period in nanosecons of a cyclic task, 0 for
+ * @param[in] period New period in nanoseconds of a cyclic task, 0 for
  * non-cyclic mode
  *
  * Environments:
@@ -684,7 +684,7 @@ EXPORT_SYMBOL(rtdm_event_wait);
  * @param[in] timeout Relative timeout in nanoseconds, see
  * @ref RTDM_TIMEOUT_xxx for special values
  * @param[in,out] timeout_seq Handle of a timeout sequence as returned by
- * rtdm_toseq_init() or rtdm_toseq_absinit(), or NULL
+ * rtdm_toseq_init() or NULL
  *
  * @return 0 on success, otherwise:
  *
@@ -899,7 +899,7 @@ EXPORT_SYMBOL(rtdm_sem_down);
  * @param[in] timeout Relative timeout in nanoseconds, see
  * @ref RTDM_TIMEOUT_xxx for special values
  * @param[in,out] timeout_seq Handle of a timeout sequence as returned by
- * rtdm_toseq_init() or rtdm_toseq_absinit(), or NULL
+ * rtdm_toseq_init() or NULL
  *
  * @return 0 on success, otherwise:
  *
@@ -1135,7 +1135,7 @@ EXPORT_SYMBOL(rtdm_mutex_lock);
  * @param[in] timeout Relative timeout in nanoseconds, see
  * @ref RTDM_TIMEOUT_xxx for special values
  * @param[in,out] timeout_seq Handle of a timeout sequence as returned by
- * rtdm_toseq_init() or rtdm_toseq_absinit(), or NULL
+ * rtdm_toseq_init() or NULL
  *
  * @return 0 on success, otherwise:
  *
