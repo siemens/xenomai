@@ -29,8 +29,6 @@
 
 #include <asm-generic/xenomai/system.h>
 
-#define XNARCH_HOST_TICK       (1000000000UL/HZ)
-
 #define XNARCH_THREAD_STACKSZ  KERNEL_STACK_SIZE
 
 #define xnarch_stack_size(tcb)  ((tcb)->stacksize)

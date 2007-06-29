@@ -234,8 +234,8 @@ int xnpod_init(void)
 {
 	extern int xeno_nucleus_status;
 
+	char root_name[XNOBJECT_NAME_LEN], htimer_name[XNOBJECT_NAME_LEN];
 	unsigned cpu, nr_cpus = xnarch_num_online_cpus();
-	char root_name[16];
 	xnsched_t *sched;
 	void *heapaddr;
 	xnpod_t *pod;
@@ -280,14 +280,19 @@ int xnpod_init(void)
 		sched->status = 0;
 		sched->inesting = 0;
 		sched->runthread = NULL;
+		/* No direct handler here since the host timer
+		   processing is postponed to xnintr_irq_handler(), as
+		   part of the interrupt exit code. */
+		xntimer_init(&sched->htimer, &nktbase, NULL);
+		xntimer_set_priority(&sched->htimer, XNTIMER_LOPRIO);
+#ifdef CONFIG_SMP
+		sprintf(htimer_name, "[host-timer/%u]", cpu);
+#else /* !CONFIG_SMP */
+		strcpy(htimer_name, "[host-timer]");
+#endif /* CONFIG_SMP */
+		xntimer_set_name(&sched->htimer, htimer_name);
+		xntimer_set_sched(&sched->htimer, sched);
 	}
-
-	/* No direct handler here since the host timer processing is
-	   postponed to xnintr_irq_handler(), as part of the interrupt
-	   exit code. */
-	xntimer_init(&pod->htimer, &nktbase, NULL);
-	xntimer_set_name(&pod->htimer, "[host tick]");
-	xntimer_set_priority(&pod->htimer, XNTIMER_LOPRIO);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -360,7 +365,7 @@ int xnpod_init(void)
 #ifdef CONFIG_SMP
 		sprintf(root_name, "ROOT/%u", cpu);
 #else /* !CONFIG_SMP */
-		sprintf(root_name, "ROOT");
+		strcpy(root_name, "ROOT");
 #endif /* CONFIG_SMP */
 
 		xnsched_clr_mask(sched);
@@ -476,8 +481,6 @@ void xnpod_shutdown(int xtype)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xntimer_destroy(&nkpod->htimer);
-
 	nholder = getheadq(&nkpod->threadq);
 
 	while ((holder = nholder) != NULL) {
@@ -493,8 +496,11 @@ void xnpod_shutdown(int xtype)
 
 	__clrbits(nkpod->status, XNPEXEC);
 
-	for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++)
-		xntimerq_destroy(&nkpod->sched[cpu].timerqueue);
+	for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++) {
+		xnsched_t *sched = xnpod_sched_slot(cpu);
+		xntimer_destroy(&sched->htimer);
+		xntimerq_destroy(&sched->timerqueue);
+	}
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -2905,7 +2911,8 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 
 int xnpod_enable_timesource(void)
 {
-	int err, delta;
+	int err,  htickval, cpu;
+	xnsched_t *sched;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -2919,8 +2926,11 @@ int xnpod_enable_timesource(void)
 	xnltt_log_event(xeno_ev_tsenable);
 
 #ifdef CONFIG_XENO_OPT_STATS
-	/* Only for statistical purpose, the clock interrupt will be attached
-	   directly by the arch-dependent layer (xnarch_start_timer). */
+	/*
+	 * Only for statistical purpose, the clock interrupt will be
+	 * attached directly by the arch-dependent layer
+	 * (xnarch_start_timer).
+	 */
 	xnintr_init(&nkclock, "[timer]", XNARCH_TIMER_IRQ, NULL, NULL, 0);
 #endif /* CONFIG_XENO_OPT_STATS */
 
@@ -2928,42 +2938,56 @@ int xnpod_enable_timesource(void)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	/* The following service should return the time since the last host
-	   host tick, expressed in nanoseconds. Returning zero is always
-	   valid and means no compensation is needed or available (and will
-	   be standard soon due to the declining relevance of the jiffies
-	   clocksource), negative values are for errors. */
-	delta = xnarch_start_timer(&xnintr_clock_handler);
-
-	if (delta < 0)
-		return -ENODEV;
-
 	nktbase.wallclock_offset =
-		xnarch_get_host_time() + delta - xnarch_get_cpu_time();
+		xnarch_get_host_time() + xnarch_get_cpu_time();
 
-	/* CAUTION: kernel timers over aperiodic mode may be started
-	   by xntimer_start() only _after_ the hw timer has been set
-	   up through xnarch_start_timer(). */
+	for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++) {
 
-	xntimer_set_sched(&nkpod->htimer, xnpod_sched_slot(XNTIMER_KEEPER_ID));
-	if (XNARCH_HOST_TICK) {
+		sched = xnpod_sched_slot(cpu);
+
+		htickval = xnarch_start_timer(&xnintr_clock_handler, cpu);
+
+		if (htickval < 0) {
+			while (--cpu >= 0)
+				xnarch_stop_timer(cpu);
+
+			return htickval;
+		}
+
 		xnlock_get_irqsave(&nklock, s);
-		xntimer_start(&nkpod->htimer, delta, XNARCH_HOST_TICK, XN_RELATIVE);
-		xnlock_put_irqrestore(&nklock, s);
-	}
+
+		/* If the current tick device for the target CPU is
+		 * periodic, we won't be called back for host tick
+		 * emulation. Therefore, we need to start a periodic
+		 * nucleus timer which will emulate the ticking for
+		 * that CPU, since we are going to hijack the hw clock
+		 * chip for managing our own system timer.
+		 *
+		 * CAUTION:
+		 *
+		 * - nucleus timers may be started only _after_ the hw
+		 * timer has been set up for the target CPU through a
+		 * call to xnarch_start_timer().
+		 *
+		 * - we don't compensate for the elapsed portion of
+		 * the current host tick, since we cannot get this
+		 * information easily for all CPUs except the current
+		 * one, and also because of the declining relevance of
+		 * the jiffies clocksource anyway.
+		 *
+		 * - we must not hold the nklock across calls to
+		 * xnarch_start_timer().
+		 */
+
+		if (htickval)
+			xntimer_start(&sched->htimer, htickval, htickval, XN_RELATIVE);
 
 #if defined(CONFIG_XENO_OPT_WATCHDOG)
-	{
-		unsigned cpu;
-		for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++) {
-			xnsched_t *sched = xnpod_sched_slot(cpu);
-			xnlock_get_irqsave(&nklock, s);
-			xntimer_start(&sched->wdtimer, 1000000000UL, 1000000000UL, XN_RELATIVE);
-			xnpod_reset_watchdog(sched);
-			xnlock_put_irqrestore(&nklock, s);
-		}
-	}
+		xntimer_start(&sched->wdtimer, 1000000000UL, 1000000000UL, XN_RELATIVE);
+		xnpod_reset_watchdog(sched);
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
+		xnlock_put_irqrestore(&nklock, s);
+	}
 
 	return 0;
 }
@@ -2987,6 +3011,7 @@ int xnpod_enable_timesource(void)
 void xnpod_disable_timesource(void)
 {
 	spl_t s;
+	int cpu;
 
 	xnltt_log_event(xeno_ev_tsdisable);
 
@@ -3004,7 +3029,8 @@ void xnpod_disable_timesource(void)
 	/* We must not hold the nklock while stopping the hardware
 	   timer, since this could cause deadlock situations to arise
 	   on SMP systems. */
-	xnarch_stop_timer();
+	for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++)
+		xnarch_stop_timer(cpu);
 
 	xntimer_freeze();
 

@@ -27,8 +27,6 @@
 #include <linux/ptrace.h>
 #include <asm-generic/xenomai/system.h>
 
-#define XNARCH_HOST_TICK	0
-
 #define XNARCH_THREAD_STACKSZ	4096
 
 #define xnarch_stack_size(tcb)  ((tcb)->stacksize)

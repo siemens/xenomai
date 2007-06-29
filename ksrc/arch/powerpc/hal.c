@@ -134,11 +134,14 @@ static void rthal_smp_relay_tick(unsigned irq, void *cookie)
 }
 #endif /* CONFIG_SMP */
 
-int rthal_timer_request(void (*handler) (void))
+int rthal_timer_request(void (*handler)(void), int cpu)
 {
     unsigned long flags;
-    int err = 0;
     rthal_declare_cpuid;
+    int err = 0;
+
+    if (cpu > 0)
+	    goto done;
 
     flags = rthal_critical_enter(&rthal_critical_sync);
 
@@ -178,7 +181,7 @@ int rthal_timer_request(void (*handler) (void))
 
     disarm_decr[cpuid] = 1;
 
-  out:
+out:
     if (err) {
         rthal_sync_op = 3;
         __ipipe_decr_ticks = tb_ticks_per_jiffy;
@@ -186,13 +189,18 @@ int rthal_timer_request(void (*handler) (void))
     }
     rthal_critical_exit(flags);
 
+done:
+
     return err;
 }
 
-void rthal_timer_release(void)
+void rthal_timer_release(int cpu)
 {
     unsigned long flags;
     rthal_declare_cpuid;
+
+    if (cpu > 0)
+	    return;
 
     flags = rthal_critical_enter(&rthal_critical_sync);
 

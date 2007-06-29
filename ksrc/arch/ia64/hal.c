@@ -75,9 +75,12 @@ static void rthal_timer_set_irq(unsigned tick_irq)
     rthal_critical_exit(flags);
 }
 
-int rthal_timer_request(void (*handler) (void))
+int rthal_timer_request(void (*handler) (void), int cpu)
 {
     unsigned long flags;
+
+    if (cpu > 0)
+	    goto out;
 
     flags = rthal_critical_enter(NULL);
 
@@ -101,12 +104,17 @@ int rthal_timer_request(void (*handler) (void))
 
     rthal_timer_set_irq(RTHAL_TIMER_IRQ);
 
+out:
+
     return 0;
 }
 
-void rthal_timer_release(void)
+void rthal_timer_release(int cpu)
 {
     unsigned long flags;
+
+    if (cpu > 0)
+	    return;
 
     rthal_timer_set_irq(RTHAL_HOST_TIMER_IRQ);
     ipipe_tune_timer(0, IPIPE_RESET_TIMER);

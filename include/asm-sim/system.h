@@ -88,8 +88,6 @@ typedef unsigned long xnlock_t;
 /* Should be equal to the value used for creating the mvmtimer object (mvm_start_timer). */
 #define XNARCH_TIMER_IRQ	    1
 
-#define XNARCH_HOST_TICK            0 /* No host ticking service. */
-
 #define XNARCH_THREAD_STACKSZ 0 /* Let the simulator choose. */
 #define XNARCH_ROOT_STACKSZ   0	/* Only a placeholder -- no stack */
 

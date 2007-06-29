@@ -137,6 +137,8 @@ typedef struct xnsched {
 	xnstat_runtime_t *current_account;	/*!< Currently active account */
 #endif	/* CONFIG_XENO_OPT_STATS */
 
+	xntimer_t htimer;	/*!< Host timer. */
+
 } xnsched_t;
 
 #define nkpod (&nkpod_struct)
@@ -178,8 +180,6 @@ struct xnintr;
 struct xnpod {
 
 	xnflags_t status;	/*!< Status bitmask. */
-
-	xntimer_t htimer;	/*!< Host timer. */
 
 	xnsched_t sched[XNARCH_NR_CPUS];	/*!< Per-cpu scheduler slots. */
 

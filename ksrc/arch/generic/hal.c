@@ -34,8 +34,12 @@
 #include <linux/module.h>
 #include <linux/console.h>
 #include <linux/kallsyms.h>
-#include <asm/system.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+#include <linux/hardirq.h>
+#else
 #include <asm/hardirq.h>
+#endif
+#include <asm/system.h>
 #include <asm/irq.h>
 #include <asm/uaccess.h>
 #include <asm/unistd.h>
@@ -962,7 +966,7 @@ void rthal_exit(void)
  */
 
 /*! 
- * \fn int rthal_timer_request(void (*handler)(void))
+ * \fn int rthal_timer_request(void (*tick_handler) (void), void (*mode_emul)(int mode, void *tdev), int (*tick_emul)(unsigned long delay, void *tdev), int cpu)
  * \brief Grab the hardware timer.
  *
  * rthal_timer_request() grabs and tunes the hardware timer in oneshot
@@ -972,10 +976,33 @@ void rthal_exit(void)
  * This handler will always be invoked on behalf of the Xenomai domain
  * for each incoming tick.
  *
- * @param handler The address of the tick handler which will process
- * each incoming tick.
+ * Hooks for emulating oneshot mode for the tick device are accepted
+ * when CONFIG_GENERIC_CLOCKEVENTS is defined for the host
+ * kernel. Hist tick emulation is a way to share the clockchip
+ * hardware between Linux and Xenomai, when the former provides
+ * support for oneshot timing (i.e. high resolution timers and no-HZ
+ * scheduler ticking).
  *
- * @return 0 is returned on success. Otherwise:
+ * @param tick_handler The address of the Xenomai tick handler which will
+ * process each incoming tick.
+ *
+ * @param mode_emul The optional address of a callback to be invoked
+ * upon mode switch of the host tick device, notified by the Linux
+ * kernel. This parameter is only considered whenever
+ * CONFIG_GENERIC_CLOCKEVENTS is defined.
+ *
+ * @param tick_emul The optional address of a callback to be invoked
+ * upon setup of the next shot date for the host tick device, notified
+ * by the Linux kernel. This parameter is only considered whenever
+ * CONFIG_GENERIC_CLOCKEVENTS is defined.
+ *
+ * @param cpu The CPU number to grab the timer from.
+ *
+ * @return a positive value is returned on success, representing the
+ * duration of a Linux periodic tick expressed as a count of
+ * nanoseconds; zero should be returned when the Linux kernel does not
+ * undergo periodic timing on the given CPU (e.g. oneshot
+ * mode). Otherwise:
  *
  * - -EBUSY is returned if the hardware timer has already been
  * grabbed.  rthal_timer_request() must be issued before

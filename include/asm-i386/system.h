@@ -27,16 +27,6 @@
 #include <linux/ptrace.h>
 #include <asm-generic/xenomai/system.h>
 
-#ifdef CONFIG_X86_LOCAL_APIC
-/* When the local APIC is enabled, we do not need to relay the host
-   tick since 8254 interrupts are already flowing normally to Linux
-   (i.e. the nucleus does not intercept them, but uses a dedicated
-   APIC-based timer interrupt instead, i.e. RTHAL_APIC_TIMER_IPI). */
-#define XNARCH_HOST_TICK             0
-#else /* CONFIG_X86_LOCAL_APIC */
-#define XNARCH_HOST_TICK             (1000000000UL/HZ)
-#endif /* CONFIG_X86_LOCAL_APIC */
-
 #define XNARCH_THREAD_STACKSZ 4096
 
 #define xnarch_stack_size(tcb)  ((tcb)->stacksize)

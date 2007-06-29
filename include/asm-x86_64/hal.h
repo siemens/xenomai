@@ -80,15 +80,11 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 
 	rthal_local_irq_save_hw(flags);
 #endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
-	if (!delay) {
-		/* Kick the timer interrupt immediately. */
-	    rthal_trigger_irq(RTHAL_APIC_TIMER_IPI);
-	} else {
-		apic_read(APIC_LVTT);
-		apic_write(APIC_LVTT, RTHAL_APIC_TIMER_VECTOR);
-		apic_read(APIC_TMICT);
+	if (likely(delay))
 		apic_write(APIC_TMICT,delay);
-	}
+	else
+		/* Kick the timer interrupt immediately. */
+		rthal_trigger_irq(RTHAL_APIC_TIMER_IPI);
 #ifndef CONFIG_XENO_OPT_PIPELINE_HEAD
 	rthal_local_irq_restore_hw(flags);
 #endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */

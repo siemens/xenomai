@@ -79,7 +79,7 @@ static void rthal_latency_above_max(struct pt_regs *regs)
 
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX */
 
-int rthal_timer_request(void (*handler) (void))
+int rthal_timer_request(void (*handler) (void), int cpu)
 {
 	unsigned long flags;
 	int err;
@@ -112,7 +112,7 @@ int rthal_timer_request(void (*handler) (void))
 	return 0;
 }
 
-void rthal_timer_release(void)
+void rthal_timer_release(int cpu)
 {
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
 	rthal_nmi_release();

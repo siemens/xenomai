@@ -27,11 +27,6 @@
 #include <asm/system.h>
 #include <asm/processor.h>
 
-/* The I-pipe frees the Blackfin core timer for us, therefore we don't
-   need any host tick relay service since the regular Linux time
-   source is still ticking in parallel at the normal pace through
-   TIMER0. */
-#define XNARCH_HOST_TICK        0
 #define XNARCH_THREAD_STACKSZ   8192
 
 #define xnarch_stack_size(tcb)  ((tcb)->stacksize)

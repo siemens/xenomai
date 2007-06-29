@@ -38,15 +38,15 @@ void xnpod_welcome_thread(struct xnthread *, int);
 
 void xnpod_delete_thread(struct xnthread *);
 
-static inline int xnarch_start_timer(void (*tickhandler) (void))
-{
-	return rthal_timer_request(tickhandler);
-}
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+#define xnarch_start_timer(tick_handler, cpu)	\
+	rthal_timer_request(tick_handler, xnarch_switch_htick_mode, xnarch_next_htick_shot, cpu)
+#else
+#define xnarch_start_timer(tick_handler, cpu)	\
+	rthal_timer_request(tick_handler, cpu)
+#endif
 
-static inline void xnarch_stop_timer(void)
-{
-	rthal_timer_release();
-}
+#define xnarch_stop_timer(cpu)	rthal_timer_release(cpu)
 
 static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 {
@@ -58,9 +58,7 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 	rootcb->fpup = &rootcb->user_task->thread.i387;
 }
 
-static inline void xnarch_enter_root(xnarchtcb_t * rootcb)
-{
-}
+#define xnarch_enter_root(rootcb)  do { } while(0)
 
 static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 {

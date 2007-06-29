@@ -39,7 +39,7 @@
 
 #include <asm/xenomai/wrappers.h>
 
-#include <asm-generic/xenomai/hal.h>    /* Read the generic bits. */
+#include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 
 #ifndef CONFIG_X86_WP_WORKS_OK
 #error "Xenomai has to rely on the WP bit, CONFIG_M486 or better required"
@@ -47,13 +47,12 @@
 
 typedef unsigned long long rthal_time_t;
 
-static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
+static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 {
-    /* Derived from bitops.h's ffs() */
-    __asm__("bsfl %1, %0"
-            : "=r,r" (ul)
-            : "r,?m"  (ul));
-    return ul;
+	/* Derived from bitops.h's ffs() */
+      __asm__("bsfl %1, %0":"=r,r"(ul)
+      :	"r,?m"(ul));
+	return ul;
 }
 
 #ifndef __cplusplus
@@ -70,111 +69,108 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #include <asm/xenomai/atomic.h>
 #include <asm/xenomai/smi.h>
 
-#define RTHAL_8254_IRQ    0
-
 #ifdef CONFIG_X86_LOCAL_APIC
-#define RTHAL_APIC_TIMER_VECTOR    RTHAL_SERVICE_VECTOR3
-#define RTHAL_APIC_TIMER_IPI       RTHAL_SERVICE_IPI3
-#define RTHAL_APIC_ICOUNT          ((RTHAL_TIMER_FREQ + HZ/2)/HZ)
-#define RTHAL_TIMER_IRQ 	   RTHAL_APIC_TIMER_IPI
+#define RTHAL_APIC_TIMER_VECTOR	RTHAL_SERVICE_VECTOR3
+#define RTHAL_APIC_TIMER_IPI	RTHAL_SERVICE_IPI3
+#define RTHAL_APIC_ICOUNT	((RTHAL_TIMER_FREQ + HZ/2)/HZ)
+#define RTHAL_TIMER_IRQ		RTHAL_APIC_TIMER_IPI
+#define RTHAL_HOST_TICK_IRQ	ipipe_apic_vector_irq(LOCAL_TIMER_VECTOR)
 #ifndef ipipe_apic_vector_irq
 /* Older I-pipe versions do not differentiate the normal IRQ space
    from the system IRQ range, which is wrong... */
 #define ipipe_apic_vector_irq(vec) (vec - FIRST_EXTERNAL_VECTOR)
 #endif
-#else  /* !CONFIG_X86_LOCAL_APIC */
-#define RTHAL_TIMER_IRQ		   RTHAL_8254_IRQ
+#else /* !CONFIG_X86_LOCAL_APIC */
+#define RTHAL_TIMER_IRQ		0	/* i8253 PIT interrupt. */
+#define RTHAL_HOST_TICK_IRQ	0	/* Host tick is emulated by Xenomai. */
 #endif /* CONFIG_X86_LOCAL_APIC */
 
 #define RTHAL_NMICLK_FREQ	RTHAL_CPU_FREQ
 
 static inline void rthal_grab_control(void)
 {
-    rthal_smi_init();
-    rthal_smi_disable();
+	rthal_smi_init();
+	rthal_smi_disable();
 }
 
 static inline void rthal_release_control(void)
 {
-    rthal_smi_restore();
+	rthal_smi_restore();
 }
 
 #ifdef CONFIG_X86_TSC
-static inline unsigned long long rthal_rdtsc (void)
+static inline unsigned long long rthal_rdtsc(void)
 {
-    unsigned long long t;
-    rthal_read_tsc(t);
-    return t;
+	unsigned long long t;
+	rthal_read_tsc(t);
+	return t;
 }
-#else  /* !CONFIG_X86_TSC */
+#else /* !CONFIG_X86_TSC */
 #define RTHAL_8254_COUNT2LATCH  0xfffe
 void rthal_setup_8254_tsc(void);
 rthal_time_t rthal_get_8254_tsc(void);
 #define rthal_rdtsc() rthal_get_8254_tsc()
 #endif /* CONFIG_X86_TSC */
 
-static inline void rthal_timer_program_shot (unsigned long delay)
+static inline void rthal_timer_program_shot(unsigned long delay)
 {
 /* With head-optimization, callers are expected to have switched off
    hard-IRQs already -- no need for additional protection in this case. */
 #ifndef CONFIG_XENO_OPT_PIPELINE_HEAD
-    unsigned long flags;
+	unsigned long flags;
 
-    rthal_local_irq_save_hw(flags);
+	rthal_local_irq_save_hw(flags);
 #endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
 #ifdef CONFIG_X86_LOCAL_APIC
-    if (!delay) {
-        /* Kick the timer interrupt immediately. */
-    	rthal_trigger_irq(RTHAL_APIC_TIMER_IPI);
-    } else {
-    /* Note: reading before writing just to work around the Pentium
-       APIC double write bug. apic_read_around() expands to nil
-       whenever CONFIG_X86_GOOD_APIC is set. --rpm */
-    apic_read_around(APIC_LVTT);
-    apic_write_around(APIC_LVTT,RTHAL_APIC_TIMER_VECTOR);
-    apic_read_around(APIC_TMICT);
-    apic_write_around(APIC_TMICT,delay);
-    }
+	if (!delay) {
+		/* Kick the timer interrupt immediately. */
+		rthal_trigger_irq(RTHAL_APIC_TIMER_IPI);
+	} else {
+		/* Note: reading before writing just to work around the Pentium
+		   APIC double write bug. apic_read_around() expands to nil
+		   whenever CONFIG_X86_GOOD_APIC is set. --rpm */
+		apic_read_around(APIC_TMICT);
+		apic_write_around(APIC_TMICT, delay);
+	}
 #else /* !CONFIG_X86_LOCAL_APIC */
-    if (!delay)
-	rthal_trigger_irq(RTHAL_8254_IRQ);
-    else {
-    	outb(delay & 0xff,0x40);
-	outb(delay >> 8,0x40);
-    }
+	if (!delay)
+		rthal_trigger_irq(RTHAL_TIMER_IRQ);
+	else {
+		outb(delay & 0xff, 0x40);
+		outb(delay >> 8, 0x40);
+	}
 #endif /* CONFIG_X86_LOCAL_APIC */
 #ifndef CONFIG_XENO_OPT_PIPELINE_HEAD
-    rthal_local_irq_restore_hw(flags);
+	rthal_local_irq_restore_hw(flags);
 #endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
 }
 
 static const char *const rthal_fault_labels[] = {
-    [0] = "Divide error",
-    [1] = "Debug",
-    [2] = "",   /* NMI is not pipelined. */
-    [3] = "Int3",
-    [4] = "Overflow",
-    [5] = "Bounds",
-    [6] = "Invalid opcode",
-    [7] = "FPU not available",
-    [8] = "Double fault",
-    [9] = "FPU segment overrun",
-    [10] = "Invalid TSS",
-    [11] = "Segment not present",
-    [12] = "Stack segment",
-    [13] = "General protection",
-    [14] = "Page fault",
-    [15] = "Spurious interrupt",
-    [16] = "FPU error",
-    [17] = "Alignment check",
-    [18] = "Machine check",
-    [19] = "SIMD error",
-    [20] = NULL,
+	[0] = "Divide error",
+	[1] = "Debug",
+	[2] = "",		/* NMI is not pipelined. */
+	[3] = "Int3",
+	[4] = "Overflow",
+	[5] = "Bounds",
+	[6] = "Invalid opcode",
+	[7] = "FPU not available",
+	[8] = "Double fault",
+	[9] = "FPU segment overrun",
+	[10] = "Invalid TSS",
+	[11] = "Segment not present",
+	[12] = "Stack segment",
+	[13] = "General protection",
+	[14] = "Page fault",
+	[15] = "Spurious interrupt",
+	[16] = "FPU error",
+	[17] = "Alignment check",
+	[18] = "Machine check",
+	[19] = "SIMD error",
+	[20] = NULL,
 };
 
-long rthal_strncpy_from_user(char *dst,
-			     const char __user *src,
-			     long count);
+long rthal_strncpy_from_user(char *dst, const char __user * src, long count);
+
 #endif /* !__cplusplus */
 
 #endif /* !_XENO_ASM_I386_HAL_H */
