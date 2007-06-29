@@ -40,7 +40,7 @@ static inline unsigned long xnarch_get_sched_latency(void)
 #ifdef CONFIG_PPC64
 #define __sched_latency 1000
 #else
-#define __sched_latency 9500
+#define __sched_latency 7500
 #endif
 
 #endif /* CONFIG_XENO_OPT_TIMING_SCHEDLAT */
