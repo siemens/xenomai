@@ -75,6 +75,13 @@ do { \
    task_thread_info(task)->status &= ~TS_USEDFPU; \
 } while(0)
 
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
+#define wrap_iobitmap_base(tss)  (tss)->io_bitmap_base
+#else
+#define wrap_iobitmap_base(tss)  (tss)->x86_tss.io_bitmap_base
+#endif
+
 static inline void wrap_switch_iobitmap (struct task_struct *p, int cpu)
 {
     struct thread_struct *thread = &p->thread;
@@ -83,9 +90,9 @@ static inline void wrap_switch_iobitmap (struct task_struct *p, int cpu)
 
     	struct tss_struct *tss = &per_cpu(init_tss, cpu);
 
-	if (tss->io_bitmap_base == INVALID_IO_BITMAP_OFFSET_LAZY) {
+	if (wrap_iobitmap_base(tss) == INVALID_IO_BITMAP_OFFSET_LAZY) {
                 
-		memcpy(tss->io_bitmap, thread->io_bitmap_ptr,thread->io_bitmap_max);
+		memcpy(tss->io_bitmap, thread->io_bitmap_ptr, thread->io_bitmap_max);
 
 		if (thread->io_bitmap_max < tss->io_bitmap_max)
 		    memset((char *) tss->io_bitmap +
@@ -93,7 +100,7 @@ static inline void wrap_switch_iobitmap (struct task_struct *p, int cpu)
 			   tss->io_bitmap_max - thread->io_bitmap_max);
 	
 		tss->io_bitmap_max = thread->io_bitmap_max;
-		tss->io_bitmap_base = IO_BITMAP_OFFSET;
+		wrap_iobitmap_base(tss) = IO_BITMAP_OFFSET;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15)
 		tss->io_bitmap_owner = thread;
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15) */
