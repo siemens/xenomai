@@ -1,3 +1,42 @@
+2007-06-29  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.22-rc6-1.9-00.
+
+	* include/asm-powerpc/calibration.h (__sched_latency): Reduce
+	default calibration value for ppc32.
+
+	* ksrc/arch/{i386,x86_64}/hal.c (rthal_timer_request): Discard
+	obsolete introductory check for
+	LAPIC-compiled-module-over-PIT-compiled-kernel configuration: the
+	HAL has to be statically bound to the kernel, so no discrepancy of
+	such kind could ever exist anymore.
+	(rthal_setup_oneshot_apic, rthal_setup_periodic_apic): Do not set
+	the TMIC register uselessly. Remove useless work-around for P5
+	double-write bug.
+
+2007-06-26  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-arm/syscall.h (__xn_strncpy_from_user): Silence
+	warn_unused_result.
+
+	* ksrc/nucleus/pod.c, include/nucleus/pod.h,
+	include/asm-*/bits/pod.h: Add support for tick emulation through
+	kernel callbacks, making the host timer a per-cpu thing.
+
+	* include/asm-i386/wrappers.h (wrap_switch_iobitmap): Wrap access
+	to io_bitmap_base starting from 2.6.22.
+
+	* ksrc/arch/{i386,x86_64}/hal.c (rthal_timer_calibrate): Account
+	for the additional write to the LVTT register.
+
+	* include/asm-{i386,x86_64}/hal.h (rthal_timer_program_shot): No
+	need to reset the LVTT register since we own the APIC timer.
+
+2007-06-25  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/syscall.c (__rt_task_set_mode): Force
+	T_PRIMARY into the returned mask.
+
 2007-06-24  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/skins/posix/registry.c (pse51_node_get): Get rid of
