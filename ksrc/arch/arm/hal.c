@@ -53,7 +53,7 @@ static struct {
     int count;
 } rthal_linux_irq[IPIPE_NR_XIRQS];
 
-int rthal_timer_request(void (*handler)(void))
+int rthal_timer_request(void (*handler)(void), int cpu)
 {
     unsigned long flags;
     int err;
@@ -74,7 +74,7 @@ int rthal_timer_request(void (*handler)(void))
     return err;
 }
 
-void rthal_timer_release(void)
+void rthal_timer_release(int cpu)
 {
     unsigned long flags;
 

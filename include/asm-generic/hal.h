@@ -39,6 +39,9 @@
 #include <asm/byteorder.h>
 #include <asm/xenomai/wrappers.h>
 #include <asm/xenomai/arith.h>
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+#include <linux/ipipe_tickdev.h>
+#endif
 
 #define RTHAL_DOMAIN_ID		0x58454e4f
 
@@ -48,11 +51,6 @@
 
 #define RTHAL_EVENT_PROPAGATE   0
 #define RTHAL_EVENT_STOP        1
-
-#ifndef CONFIG_IPIPE
-#error "Adeos kernel support is required to run this software."
-#error "See http://download.gna.org/adeos/patches/"
-#endif /* !CONFIG_IPIPE */
 
 #define RTHAL_NR_CPUS		IPIPE_NR_CPUS
 #define RTHAL_NR_FAULTS		IPIPE_NR_FAULTS
@@ -433,13 +431,18 @@ int rthal_irq_affinity(unsigned irq,
 		       cpumask_t cpumask,
 		       cpumask_t *oldmask);
 
-int rthal_timer_request(void (*handler)(void));
-
-void rthal_timer_release(void);
-
 rthal_trap_handler_t rthal_trap_catch(rthal_trap_handler_t handler);
 
 unsigned long rthal_timer_calibrate(void);
+
+int rthal_timer_request(void (*tick_handler)(void),
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+			void (*mode_emul)(enum clock_event_mode mode, struct ipipe_tick_device *tdev),
+			int (*tick_emul) (unsigned long delay, struct ipipe_tick_device *tdev),
+#endif
+			int cpu);
+
+void rthal_timer_release(int cpu);
 
 #ifdef CONFIG_PROC_FS
 #include <linux/proc_fs.h>

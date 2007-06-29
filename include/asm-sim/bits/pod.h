@@ -23,25 +23,14 @@
 #include <time.h>
 #include <xeno_config.h>
 
-static inline int xnarch_start_timer(void (*tickhandler)(void))
-{
-    return mvm_start_timer(0, tickhandler);
-}
+#define xnarch_start_timer(tick_handler, cpu)	\
+  ({ mvm_start_timer(0, tick_handler); 0; })
 
-static inline void xnarch_stop_timer(void)
-{
-    mvm_stop_timer();
-}
+#define xnarch_stop_timer(cpu)	mvm_stop_timer()
 
-static inline void xnarch_leave_root(xnarchtcb_t *rootcb)
-{
-    /* Empty */
-}
+#define xnarch_leave_root(rootcb)  do { } while(0)
 
-static inline void xnarch_enter_root(xnarchtcb_t *rootcb)
-{
-    /* Empty */
-}
+#define xnarch_enter_root(rootcb)  do { } while(0)
 
 static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
 				     xnarchtcb_t *in_tcb)

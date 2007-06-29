@@ -27,27 +27,11 @@ void xnpod_welcome_thread(struct xnthread *, int);
 
 void xnpod_delete_thread(struct xnthread *);
 
-static inline int xnarch_start_timer(void (*tickhandler) (void))
-{
-	int err = rthal_timer_request(tickhandler);
-	rthal_declare_cpuid;
-	long long delta;
+#define xnarch_start_timer(tick_handler, cpu)	\
+	({ int __tickval = rthal_timer_request(tick_handler, cpu) ?: \
+			(1000000000UL/HZ); __tickval; })
 
-	if (err)
-		return err;
-
-	rthal_load_cpuid();
-	delta = rthal_itm_next[cpuid] - ia64_get_itc();
-	if (delta > 0)
-		return XNARCH_HOST_TICK - xnarch_tsc_to_ns(delta);
-	else
-		return XNARCH_HOST_TICK + xnarch_tsc_to_ns(-delta);
-}
-
-static inline void xnarch_stop_timer(void)
-{
-	rthal_timer_release();
-}
+#define xnarch_stop_timer(cpu)	rthal_timer_release(cpu)
 
 static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 {

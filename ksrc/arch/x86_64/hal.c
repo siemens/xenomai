@@ -60,20 +60,15 @@ static struct {
 
 static long long rthal_timers_sync_time;
 
-static inline void rthal_setup_periodic_apic(unsigned count, unsigned vector)
+static inline void rthal_setup_periodic_apic(int count, int vector)
 {
-	apic_read(APIC_LVTT);
 	apic_write(APIC_LVTT, APIC_LVT_TIMER_PERIODIC | vector);
-	apic_read(APIC_TMICT);
 	apic_write(APIC_TMICT, count);
 }
 
-static inline void rthal_setup_oneshot_apic(unsigned count, unsigned vector)
+static inline void rthal_setup_oneshot_apic(int vector)
 {
-	apic_read(APIC_LVTT);
 	apic_write(APIC_LVTT, vector);
-	apic_read(APIC_TMICT);
-	apic_write(APIC_TMICT, count);
 }
 
 static void rthal_critical_sync(void)
@@ -86,8 +81,7 @@ static void rthal_critical_sync(void)
 
 		while (rthal_rdtsc() < sync_time) ;
 
-		rthal_setup_oneshot_apic(RTHAL_APIC_ICOUNT,
-					 RTHAL_APIC_TIMER_VECTOR);
+		rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
 		break;
 
 	case 2:
@@ -119,14 +113,12 @@ unsigned long rthal_timer_calibrate(void)
 	t = rthal_rdtsc();
 
 	for (i = 0; i < 10000; i++) {
-		apic_read(APIC_LVTT);
 		apic_write(APIC_LVTT,
 			   APIC_LVT_TIMER_PERIODIC | LOCAL_TIMER_VECTOR);
-		apic_read(APIC_TMICT);
 		apic_write(APIC_TMICT, RTHAL_APIC_ICOUNT);
 	}
 
-	dt = rthal_rdtsc() - t;
+	dt = (rthal_rdtsc() - t) / 2;
 
 	rthal_critical_exit(flags);
 
@@ -138,13 +130,13 @@ unsigned long rthal_timer_calibrate(void)
 	return rthal_imuldiv(dt, 100000, RTHAL_CPU_FREQ);
 }
 
-int rthal_timer_request(void (*handler) (void))
+int rthal_timer_request(void (*handler)(void), int cpu)
 {
 	long long sync_time;
 	unsigned long flags;
 
-	if (rthal_irq_release(RTHAL_APIC_TIMER_IPI) < 0)
-		return -EINVAL;
+	if (cpu > 0)
+		goto out;
 
 	flags = rthal_critical_enter(rthal_critical_sync);
 
@@ -157,7 +149,7 @@ int rthal_timer_request(void (*handler) (void))
 
 	while (rthal_rdtsc() < sync_time) ;
 
-	rthal_setup_oneshot_apic(RTHAL_APIC_ICOUNT, RTHAL_APIC_TIMER_VECTOR);
+	rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
 
 	rthal_irq_request(RTHAL_APIC_TIMER_IPI,
 			  (rthal_irq_handler_t) handler, NULL, NULL);
@@ -168,12 +160,16 @@ int rthal_timer_request(void (*handler) (void))
 			       &rthal_broadcast_to_local_timers,
 			       "rthal_broadcast_timer",
 			       &rthal_broadcast_to_local_timers);
+out:
 	return 0;
 }
 
-void rthal_timer_release(void)
+void rthal_timer_release(int cpu)
 {
 	unsigned long flags;
+
+	if (cpu > 0)
+		return;
 
 	rthal_irq_host_release(RTHAL_8254_IRQ,
 			       &rthal_broadcast_to_local_timers);

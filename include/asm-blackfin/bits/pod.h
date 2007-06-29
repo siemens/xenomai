@@ -35,15 +35,16 @@ void xnpod_welcome_thread(struct xnthread *, int);
 
 void xnpod_delete_thread(struct xnthread *);
 
-static inline int xnarch_start_timer(void (*tickhandler) (void))
-{
-	return rthal_timer_request(tickhandler);
-}
+/*
+ * The I-pipe frees the Blackfin core timer for us, therefore we don't
+ * need any host tick relay service since the regular Linux time
+ * source is still ticking in parallel at the normal pace through
+ * TIMER0.
+ */
+#define xnarch_start_timer(tick_handler, cpu)	\
+	({ int __tickval = rthal_timer_request(tick_handler, cpu); __tickval; })
 
-static inline void xnarch_stop_timer(void)
-{
-	rthal_timer_release();
-}
+#define xnarch_stop_timer(cpu)	rthal_timer_release(cpu)
 
 static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 {

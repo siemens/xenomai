@@ -25,6 +25,137 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+
+#include <linux/ipipe_tickdev.h>
+
+/*!
+ * @internal
+ * \fn void xnarch_next_htick_shot(unsigned long delay, struct ipipe_tick_device *tdev)
+ *
+ * \brief Next tick setup emulation callback.
+ *
+ * Program the next shot for the host tick on the current CPU.
+ * Emulation is done using a nucleus timer attached to the master
+ * timebase.
+ *
+ * @param delay The time delta from the current date to the next tick,
+ * expressed as a count of nanoseconds.
+ *
+ * @param tdev An pointer to the tick device which notifies us.
+ *
+ * Environment:
+ *
+ * This routine is a callback invoked from the kernel's clock event
+ * handlers.
+ *
+ * @note Only Linux kernel releases which support clock event devices
+ * (CONFIG_GENERIC_CLOCKEVENTS) would call this routine when the
+ * latter are programmed in oneshot mode. Otherwise, periodic host
+ * tick emulation is directly handled by the nucleus, and does not
+ * involve any callback mechanism from the Linux kernel.
+ *
+ * Rescheduling: never.
+ */
+
+static int xnarch_next_htick_shot(unsigned long delay, struct ipipe_tick_device *tdev)
+{
+	xnsched_t *sched = xnpod_current_sched();
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	xntimer_start(&sched->htimer, delay, XN_INFINITE, XN_RELATIVE);
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
+}
+
+/*!
+ * @internal
+ * \fn void xnarch_switch_htick_mode(enum clock_event_mode mode, struct ipipe_tick_device *tdev)
+ *
+ * \brief Tick mode switch emulation callback.
+ *
+ * Changes the host tick mode for the tick device of the current CPU.
+ *
+ * @param mode The new mode to switch to. The possible values are:
+ *
+ * - CLOCK_EVT_MODE_ONESHOT, for a switch to oneshot mode.
+ *
+ * - CLOCK_EVT_MODE_PERIODIC, for a switch to periodic mode. The current
+ * implementation for the generic clockevent layer Linux exhibits
+ * should never downgrade from a oneshot to a periodic tick mode, so
+ * this mode should not be encountered. This said, the associated code
+ * is provided, basically for illustration purposes.
+ *
+ * - CLOCK_EVT_MODE_SHUTDOWN, indicates the removal of the current
+ * tick device. Normally, the HAL code only interposes on tick devices
+ * which should never be shut down, so this mode should not be
+ * encountered.
+ *
+ * @param tdev An opaque pointer to the tick device which notifies us.
+ *
+ * Environment:
+ *
+ * This routine is a callback invoked from the kernel's clock event
+ * handlers.
+ *
+ * @note Only Linux kernel releases which support clock event devices
+ * (CONFIG_GENERIC_CLOCKEVENTS) would call this routine. Otherwise,
+ * host tick mode is always periodic, and does not involve any
+ * callback mechanism from the Linux kernel.
+ *
+ * Rescheduling: never.
+ */
+
+static void xnarch_switch_htick_mode(enum clock_event_mode mode, struct ipipe_tick_device *tdev)
+{
+	xnsched_t *sched;
+	xnticks_t tickval;
+	spl_t s;
+
+	if (mode == CLOCK_EVT_MODE_ONESHOT) {
+		/* xntimer_next_htick_shot() will override any
+		 * previous setting of the host timer for the current
+		 * CPU, so we don't have anything to take care of when
+		 * switching to oneshot mode. */
+#if XENO_DEBUG(TIMERS)
+		xnloginfo("host tick: switching to oneshot mode\n");
+#endif
+		return;
+	}
+
+	sched = xnpod_current_sched();
+
+	xnlock_get_irqsave(&nklock, s);
+
+	switch (mode) {
+	case CLOCK_EVT_MODE_PERIODIC:
+#if XENO_DEBUG(TIMERS)
+		xnloginfo("host tick: switching to periodic mode\n");
+#endif
+		tickval = 1000000000UL / HZ;
+		xntimer_start(&sched->htimer, tickval, tickval, XN_RELATIVE);
+		break;
+
+	case CLOCK_EVT_MODE_SHUTDOWN:
+#if XENO_DEBUG(TIMERS)
+		xnloginfo("host tick: shutting down tick device\n");
+#endif
+		xntimer_stop(&sched->htimer);
+
+	default:
+#if XENO_DEBUG(TIMERS)
+		xnlogerr("host tick: invalid mode `%d'?\n", mode);
+#endif
+		;
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+}
+
+#endif /* CONFIG_GENERIC_CLOCKEVENTS */
+
 #ifdef CONFIG_SMP
 
 static inline int xnarch_hook_ipi (void (*handler)(void))
