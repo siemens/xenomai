@@ -200,6 +200,14 @@ config XENO_OPT_DEBUG_REGISTRY
 	operations performed by the Xenomai core. This option is
 	useful to detect the source of object naming conflicts.
 
+config XENO_OPT_DEBUG_TIMERS
+	bool "Timer Debugging support"
+	depends on XENO_OPT_DEBUG
+	help
+
+	This option activates debugging output for critical
+	timer-related operations performed by the Xenomai core.
+
 config XENO_OPT_WATCHDOG
 	bool "Watchdog support"
 	depends on XENO_OPT_DEBUG
