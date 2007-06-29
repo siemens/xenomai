@@ -28,6 +28,10 @@
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
+#ifndef CONFIG_XENO_OPT_DEBUG_TIMERS
+#define CONFIG_XENO_OPT_DEBUG_TIMERS  0
+#endif
+
 #define XNTIMER_WHEELSIZE 64
 #define XNTIMER_WHEELMASK (XNTIMER_WHEELSIZE - 1)
 
