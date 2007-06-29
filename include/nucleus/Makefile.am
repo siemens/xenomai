@@ -9,6 +9,7 @@ includesub_HEADERS = \
 	intr.h \
 	jhash.h \
 	ltt.h \
+	map.h \
 	module.h \
 	pipe.h \
 	pod.h \
