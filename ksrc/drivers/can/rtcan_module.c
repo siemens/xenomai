@@ -115,7 +115,7 @@ static void rtcan_get_timeout_name(nanosecs_rel_t timeout,
     if (timeout == RTDM_TIMEOUT_INFINITE) 
 	strncpy(name, "infinite", max_len);
     else
-	sprintf(name, "%lld", timeout);
+        sprintf(name, "%lld", (long long)timeout);
 }
 
 static int rtcan_read_proc_devices(char *buf, char **start, off_t offset,
