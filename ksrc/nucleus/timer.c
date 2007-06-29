@@ -212,32 +212,33 @@ void xntimer_tick_aperiodic(void)
 		xntimer_dequeue_aperiodic(timer);
 		xnstat_counter_inc(&timer->fired);
 
-		if (timer != &nkpod->htimer) {
-			if (!testbits(nktbase.status, XNTBLCK)) {
+		if (likely(timer != &sched->htimer)) {
+			if (likely(!testbits(nktbase.status, XNTBLCK))) {
 				timer->handler(timer);
-
 				now = xnarch_get_cpu_tsc();
-
-				/* If the elapsed timer has no reload value,
-				   or has been re-enqueued likely as a result
-				   of a call to xntimer_start() from the
-				   timeout handler, or has been killed by the
-				   handler. In all cases, don't attempt to
-				   re-enqueue it for the next shot. */
+				/* If the elapsed timer has no reload value, or has
+				   been re-enqueued likely as a result of a call to
+				   xntimer_start() from the timeout handler, or has
+				   been killed by the handler. In all cases, don't
+				   attempt to re-enqueue it for the next shot. */
 				if (!xntimer_reload_p(timer))
 					continue;
-			} else if (!testbits(timer->status,
-					     XNTIMER_PERIODIC)) {
-				xntimerh_date(&timer->aplink) +=
-				    nkpod->htimer.interval;
+			} else if (likely(!testbits(timer->status, XNTIMER_PERIODIC))) {
+				/* Postpone the next tick to a reasonable date in
+				   the future, waiting for the timebase to be unlocked
+				   at some point. */
+				xntimerh_date(&timer->aplink) = xntimerh_date(&sched->htimer.aplink);
 				continue;
 			}
-		} else
+		} else {
 			/* By postponing the propagation of the low-priority host
 			   tick to the interrupt epilogue (see
 			   xnintr_irq_handler()), we save some I-cache, which
 			   translates into precious microsecs on low-end hw. */
 			__setbits(sched->status, XNHTICK);
+			if (!testbits(timer->status, XNTIMER_PERIODIC))
+				goto out;
+		}
 
 		do {
 			xntimerh_date(&timer->aplink) += timer->interval;
@@ -245,6 +246,7 @@ void xntimer_tick_aperiodic(void)
 		xntimer_enqueue_aperiodic(timer);
 	}
 
+out:
 	__clrbits(sched->status, XNINTCK);
 
 	xntimer_next_local_shot(sched);
