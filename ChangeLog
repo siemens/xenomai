@@ -1,3 +1,14 @@
+2007-06-30  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (xnshadow_relax): Resync CPU affinity of
+	the Linux task with its real-time shadow's.
+	(lostage_handler): Remove pointless (and spurious in a
+	non-preemptible context) attempt to move the target Linux task to
+	the current CPU.
+
+	* include/nucleus/thread.h: Add accessors to the CPU affinity
+	data.
+
 2007-06-29  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.22-rc6-1.9-00.
