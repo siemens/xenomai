@@ -242,12 +242,12 @@ int rthal_timer_request(
 {
 	long long sync_time;
 	unsigned long flags;
-	int err, tickval;
+	int tickval;
 
 	/* This code works both for UP+LAPIC and SMP configurations. */
 
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
-	err = ipipe_request_tickdev("lapic", mode_emul, tick_emu, cpu);
+	int err = ipipe_request_tickdev("lapic", mode_emul, tick_emul, cpu);
 
 	switch (err) {
 	case CLOCK_EVT_MODE_PERIODIC:
