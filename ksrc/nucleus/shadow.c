@@ -1131,7 +1131,9 @@ void xnshadow_relax(int notify)
 #ifdef CONFIG_SMP
 	/* If the shadow thread changed its CPU affinity while in
 	   primary mode, reset the CPU affinity of its Linux
-	   counter-part when returning to secondary mode. */
+	   counter-part when returning to secondary mode. [Actually,
+	   there is no service changing the CPU affinity from primary
+	   mode available from the nucleus --rpm]. */
 	if (xnthread_test_info(thread, XNAFFSET)) {
 		xnthread_clear_info(thread, XNAFFSET);
 		set_cpus_allowed(current, xnthread_affinity(thread));
