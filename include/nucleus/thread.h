@@ -116,7 +116,7 @@
 #define XNWAKEN   0x00000010 /**< Thread waken up upon resource availability */
 #define XNROBBED  0x00000020 /**< Robbed from resource ownership */
 #define XNATOMIC  0x00000040 /**< In atomic switch from secondary to primary mode */
-#define XNMIGRAT  0x00000080 /**< CPU migration occurred from primary mode */
+#define XNAFFSET  0x00000080 /**< CPU affinity changed from primary mode */
 
 /* These information flags are available to the real-time interfaces */
 #define XNTHREAD_INFO_SPARE0  0x10000000

@@ -1775,8 +1775,6 @@ int xnpod_migrate_thread(int cpu)
 	/* Put thread in the ready queue of the destination CPU's scheduler. */
 	xnpod_resume_thread(thread, 0);
 
-	xnthread_set_info(thread, XNMIGRAT);
-
 	xnpod_schedule();
 
 	/* Reset execution time stats due to unsync'ed TSCs */

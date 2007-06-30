@@ -1129,11 +1129,11 @@ void xnshadow_relax(int notify)
 		send_sig(SIGXCPU, current, 1);
 
 #ifdef CONFIG_SMP
-	/* If the shadow thread made changed its CPU affinity while in
+	/* If the shadow thread changed its CPU affinity while in
 	   primary mode, reset the CPU affinity of its Linux
 	   counter-part when returning to secondary mode. */
-	if (xnthread_test_info(thread, XNMIGRAT)) {
-		xnthread_clear_info(thread, XNMIGRAT);
+	if (xnthread_test_info(thread, XNAFFSET)) {
+		xnthread_clear_info(thread, XNAFFSET);
 		set_cpus_allowed(current, xnthread_affinity(thread));
 	}
 #endif /* CONFIG_SMP */
