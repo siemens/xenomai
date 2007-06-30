@@ -823,22 +823,10 @@ static void lostage_handler(void *cookie)
 		switch (rq->req[reqnum].type) {
 		case LO_UNMAP_REQ:
 
-			xnshadow_dereference_skin(
-				(unsigned)rq->req[reqnum].arg);
+			xnshadow_dereference_skin(rq->req[reqnum].arg);
 
 			/* fall through */
 		case LO_WAKEUP_REQ:
-
-#ifdef CONFIG_SMP
-			/* If the shadow thread changed its CPU while
-			   in primary mode, change the CPU of its
-			   Linux counter-part (this is a cheap
-			   operation, since the said Linux
-			   counter-part is suspended from Linux
-			   POV). */
-			if (!xnarch_cpu_isset(cpuid, p->cpus_allowed))
-				set_cpus_allowed(p, cpumask_of_cpu(cpuid));
-#endif /* CONFIG_SMP */
 
 			/* We need to downgrade the root thread
 			   priority whenever the APC runs over a
@@ -1139,6 +1127,16 @@ void xnshadow_relax(int notify)
 	if (notify && xnthread_test_state(thread, XNTRAPSW))
 		/* Help debugging spurious relaxes. */
 		send_sig(SIGXCPU, current, 1);
+
+#ifdef CONFIG_SMP
+	/* If the shadow thread made changed its CPU affinity while in
+	   primary mode, reset the CPU affinity of its Linux
+	   counter-part when returning to secondary mode. */
+	if (xnthread_test_info(thread, XNMIGRAT)) {
+		xnthread_clear_info(thread, XNMIGRAT);
+		set_cpus_allowed(current, xnthread_affinity(thread));
+	}
+#endif /* CONFIG_SMP */
 
 	/* "current" is now running into the Linux domain on behalf of the
 	   root thread. */

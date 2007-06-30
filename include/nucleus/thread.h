@@ -116,6 +116,7 @@
 #define XNWAKEN   0x00000010 /**< Thread waken up upon resource availability */
 #define XNROBBED  0x00000020 /**< Robbed from resource ownership */
 #define XNATOMIC  0x00000040 /**< In atomic switch from secondary to primary mode */
+#define XNMIGRAT  0x00000080 /**< CPU migration occurred from primary mode */
 
 /* These information flags are available to the real-time interfaces */
 #define XNTHREAD_INFO_SPARE0  0x10000000
@@ -291,6 +292,8 @@ typedef struct xnhook {
 #define xnthread_user_pid(thread) \
     (xnthread_test_state((thread),XNROOT) || !xnthread_user_task(thread) ? \
     0 : xnarch_user_pid(xnthread_archtcb(thread)))
+#define xnthread_affinity(thread)          ((thread)->affinity)
+#define xnthread_affine_p(thread, cpu)     xnarch_cpu_isset(cpu, (thread)->affinity)
 
 /* Class-level operations for threads. */
 static inline int xnthread_get_denormalized_prio(xnthread_t *t)
