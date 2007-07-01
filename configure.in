@@ -500,12 +500,12 @@ AC_MSG_CHECKING([for sched_setaffinity])
 AC_CACHE_VAL(ac_cv_sched_setaffinity,
  save_CFLAGS="$CFLAGS"
  CFLAGS="-Wimplicit-function-declaration -Werror -D_GNU_SOURCE"
- [AC_TRY_COMPILE([#include <sched.h>],
+ [AC_TRY_LINK([#include <sched.h>],
  [cpu_set_t cpu_set; sched_setaffinity(0, sizeof(cpu_set), &cpu_set);],
  [ac_cv_sched_setaffinity=new],
  [ac_cv_sched_setaffinity=bad])]
  if test $ac_cv_sched_setaffinity = bad ; then
-   [AC_TRY_COMPILE([#include <sched.h>],
+   [AC_TRY_LINK([#include <sched.h>],
    [cpu_set_t cpu_set; sched_setaffinity(0, &cpu_set);],
    [ac_cv_sched_setaffinity=old],
    [ac_cv_sched_setaffinity=no])]
