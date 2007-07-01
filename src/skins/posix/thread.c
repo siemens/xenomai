@@ -132,6 +132,7 @@ int __wrap_pthread_create(pthread_t *tid,
 			  void *(*start) (void *), void *arg)
 {
 	struct pthread_iargs iargs;
+	pthread_attr_t iattr;
 	int inherit, policy, err;
 	struct sched_param param;
 	pthread_t ltid;
@@ -148,6 +149,13 @@ int __wrap_pthread_create(pthread_t *tid,
 			/* inherit == PTHREAD_INHERIT_SCHED */
 			__wrap_pthread_getschedparam(pthread_self(),
 						     &policy, &param);
+
+		/* Work around linuxthreads shortcoming: it doesn't believe
+		   that it could have RT power as non-root and fails the
+		   thread creation overeagerly. */
+		memcpy(&iattr, attr, sizeof(pthread_attr_t));
+		pthread_attr_setschedpolicy(&iattr, SCHED_OTHER);
+		attr = &iattr;
 	}
 
 	/* First start a native POSIX thread, then associate a Xenomai shadow to
@@ -160,7 +168,7 @@ int __wrap_pthread_create(pthread_t *tid,
 	iargs.ret = EAGAIN;
 	__real_sem_init(&iargs.sync, 0, 0);
 
-	err = __real_pthread_create(&ltid, attr, &__pthread_trampoline, &iargs);
+	err = __real_pthread_create(&ltid, &iattr, &__pthread_trampoline, &iargs);
 	if (!err)
 		while (__real_sem_wait(&iargs.sync) && errno == EINTR) ;
 	__real_sem_destroy(&iargs.sync);

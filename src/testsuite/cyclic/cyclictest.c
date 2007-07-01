@@ -453,10 +453,12 @@ int main(int argc, char **argv)
 	pthread_attr_t thattr;
 	int i, ret = -1;
 
+#ifndef __XENO__
 	if (geteuid()) {
 		printf("need to run as root!\n");
 		exit(-1);
 	}
+#endif
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 

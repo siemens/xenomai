@@ -62,6 +62,10 @@
 #define CONFIG_XENO_OPT_DEBUG_NUCLEUS  0
 #endif
 
+static int xn_gid_arg = -1;
+module_param_named(xenomai_gid, xn_gid_arg, int, 0644);
+MODULE_PARM_DESC(xenomai_gid, "GID of the group with access to Xenomai services");
+
 int nkthrptd;
 
 int nkerrptd;
@@ -1251,10 +1255,6 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion)
 	   plain (i.e. non-Xenomai) Linux tasks. */
 	current->flags |= PF_EVNOTIFY;
 
-	current->cap_effective |=
-	    CAP_TO_MASK(CAP_IPC_LOCK) |
-	    CAP_TO_MASK(CAP_SYS_RAWIO) | CAP_TO_MASK(CAP_SYS_NICE);
-
 	xnarch_init_shadow_tcb(xnthread_archtcb(thread), thread,
 			       xnthread_name(thread));
 	prio = normalize_priority(xnthread_base_priority(thread));
@@ -1488,6 +1488,15 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 
 	if (!check_abi_revision(abirev))
 		return -ENOEXEC;
+
+	if (!cap_raised(current->cap_effective, CAP_SYS_NICE) &&
+	    (xn_gid_arg == -1 || !in_group_p(xn_gid_arg)))
+		return -EPERM;
+
+	/* Raise capabilities for the caller in case they are lacking yet. */
+	cap_raise(current->cap_effective, CAP_SYS_NICE);
+	cap_raise(current->cap_effective, CAP_IPC_LOCK);
+	cap_raise(current->cap_effective, CAP_SYS_RAWIO);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1790,12 +1799,13 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	if (!__xn_reg_mux_p(regs))
 		goto linux_syscall;
 
-#ifdef CONFIG_XENO_OPT_SECURITY_ACCESS
-	if (unlikely(!cap_raised(p->cap_effective, CAP_SYS_NICE))) {
+	/* Executing Xenomai services requires CAP_SYS_NICE, except for
+	   __xn_sys_bind which does its own checks. */
+	if (unlikely(!cap_raised(p->cap_effective, CAP_SYS_NICE)) &&
+	    __xn_reg_mux(regs) != __xn_mux_code(0, __xn_sys_bind)) {
 		__xn_error_return(regs, -EPERM);
 		return RTHAL_EVENT_STOP;
 	}
-#endif /* CONFIG_XENO_OPT_SECURITY_ACCESS */
 
 	muxid = __xn_mux_id(regs);
 	muxop = __xn_mux_op(regs);

@@ -104,7 +104,6 @@ int rt_task_create(RT_TASK *task,
 {
 	struct rt_task_iargs iargs;
 	xncompletion_t completion;
-	struct sched_param param;
 	pthread_attr_t thattr;
 	pthread_t thid;
 	int err;
@@ -135,11 +134,6 @@ int rt_task_create(RT_TASK *task,
 	pthread_attr_setstacksize(&thattr, stksize);
 	if (!(mode & T_JOINABLE))
 		pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
-	if (prio > 0) {
-		pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
-		param.sched_priority = sched_get_priority_max(SCHED_FIFO);
-	}
-	pthread_attr_setschedparam(&thattr, &param);
 
 	err = pthread_create(&thid, &thattr, &rt_task_trampoline, &iargs);
 
