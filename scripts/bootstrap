@@ -14,16 +14,6 @@ rm -Rf autom4te.cache
 if [ "$?" != "0" ]; then die "removing autom4te.cache"; fi
 echo "done"
 
-echo -n "running autoheader..."
-autoheader
-if [ "$?" != "0" ]; then die "running autoheader"; fi
-echo "done"
-
-echo -n "running libtoolize..."
-libtoolize -c --automake
-if [ "$?" != "0" ]; then die "running libtoolize"; fi
-echo "done"
-
 echo -n "running aclocal..."
 if test -r acinclude.m4; then
    touch acinclude.m4
@@ -32,6 +22,16 @@ else
    aclocal-1.9 -I config
 fi
 if [ "$?" != "0" ]; then die "running aclocal"; fi
+echo "done"
+
+echo -n "running autoheader..."
+autoheader
+if [ "$?" != "0" ]; then die "running autoheader"; fi
+echo "done"
+
+echo -n "running libtoolize..."
+libtoolize -c --automake
+if [ "$?" != "0" ]; then die "running libtoolize"; fi
 echo "done"
 
 echo -n "running autoconf..."
