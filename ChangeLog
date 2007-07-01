@@ -43,6 +43,12 @@
 	* include/asm-{i386,x86_64}/hal.h (rthal_timer_program_shot): No
 	need to reset the LVTT register since we own the APIC timer.
 
+2007-06-25  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/{pod.c, timer.c}, ksrc/skins/rtdm/drvlib.c,
+	ksrc/skins/native/timer.c: Handle clock wrap-around in timeout
+	calculations.
+
 2007-06-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/syscall.c (__rt_task_set_mode): Force
