@@ -18,6 +18,7 @@
 
 #include <errno.h>
 #include <pthread.h>
+#include <sched.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,8 +36,10 @@
 typedef unsigned long cpu_set_t;
 #endif
 #define sched_setaffinity(pid, len, mask)	do { } while (0)
+#ifndef CPU_ZERO
 #define CPU_ZERO(set)				memset(set, 0, sizeof(*set))
 #define CPU_SET(n, set)				do { } while (0)
+#endif
 #endif /* !HAVE_OLD_SETAFFINITY */
 #endif /* !HAVE_RECENT_SETAFFINITY */
 

@@ -27,8 +27,10 @@
 typedef unsigned long cpu_set_t;
 #endif
 #define do_sched_setaffinity(pid,len,mask) 0
+#ifndef CPU_ZERO
 #define	 CPU_ZERO(set)		do { *(set) = 0; } while(0)
 #define	 CPU_SET(n,set) 	do { *(set) |= (1 << n); } while(0)
+#endif
 #endif /* HAVE_OLD_SETAFFINITY */
 #endif /* HAVE_RECENT_SETAFFINITY */
 

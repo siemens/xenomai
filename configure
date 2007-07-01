@@ -21630,14 +21630,14 @@ cpu_set_t cpu_set; sched_setaffinity(0, sizeof(cpu_set), &cpu_set);
   return 0;
 }
 _ACEOF
-rm -f conftest.$ac_objext
-if { (ac_try="$ac_compile"
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
 case "(($ac_try" in
   *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
   *) ac_try_echo=$ac_try;;
 esac
 eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_compile") 2>conftest.er1
+  (eval "$ac_link") 2>conftest.er1
   ac_status=$?
   grep -v '^ *+' conftest.er1 >conftest.err
   rm -f conftest.er1
@@ -21646,7 +21646,8 @@ eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
   (exit $ac_status); } && {
 	 test -z "$ac_c_werror_flag" ||
 	 test ! -s conftest.err
-       } && test -s conftest.$ac_objext; then
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
   ac_cv_sched_setaffinity=new
 else
   echo "$as_me: failed program was:" >&5
@@ -21655,7 +21656,8 @@ sed 's/^/| /' conftest.$ac_ext >&5
 	ac_cv_sched_setaffinity=bad
 fi
 
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
  if test $ac_cv_sched_setaffinity = bad ; then
    cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
@@ -21672,14 +21674,14 @@ cpu_set_t cpu_set; sched_setaffinity(0, &cpu_set);
   return 0;
 }
 _ACEOF
-rm -f conftest.$ac_objext
-if { (ac_try="$ac_compile"
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
 case "(($ac_try" in
   *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
   *) ac_try_echo=$ac_try;;
 esac
 eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_compile") 2>conftest.er1
+  (eval "$ac_link") 2>conftest.er1
   ac_status=$?
   grep -v '^ *+' conftest.er1 >conftest.err
   rm -f conftest.er1
@@ -21688,7 +21690,8 @@ eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
   (exit $ac_status); } && {
 	 test -z "$ac_c_werror_flag" ||
 	 test ! -s conftest.err
-       } && test -s conftest.$ac_objext; then
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
   ac_cv_sched_setaffinity=old
 else
   echo "$as_me: failed program was:" >&5
@@ -21697,7 +21700,8 @@ sed 's/^/| /' conftest.$ac_ext >&5
 	ac_cv_sched_setaffinity=no
 fi
 
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
  fi
  if test $ac_cv_sched_setaffinity = old ; then
      { echo "$as_me:$LINENO: result: old" >&5
