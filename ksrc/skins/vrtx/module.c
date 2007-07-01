@@ -36,6 +36,10 @@ static u_long tick_arg = CONFIG_XENO_OPT_VRTX_PERIOD;
 module_param_named(tick_arg, tick_arg, ulong, 0444);
 MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us)");
 
+static u_long sync_time;
+module_param_named(sync_time, sync_time, ulong, 0444);
+MODULE_PARM_DESC(sync_time, "Set non-zero to synchronize on master time base");
+
 static u_long workspace_size_arg = 32 * 1024;	/* Default size of VRTX workspace */
 module_param_named(workspace_size, workspace_size_arg, ulong, 0444);
 MODULE_PARM_DESC(workspace_size, "Size of VRTX workspace (in bytes)");
@@ -69,7 +73,8 @@ int SKIN_INIT(vrtx)
 	if (err != 0)
 		goto fail;
 
-	err = xntbase_alloc("vrtx", tick_arg * 1000, &vrtx_tbase);
+	err = xntbase_alloc("vrtx", tick_arg * 1000, sync_time ? 0 : XNTBISO,
+			    &vrtx_tbase);
 
 	if (err != 0)
 		goto fail_core;

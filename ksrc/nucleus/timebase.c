@@ -117,11 +117,15 @@ DEFINE_XNQUEUE(nktimebaseq);
  * implementing the skin may be unloaded.
  */
 
-int xntbase_alloc(const char *name, u_long period, xntbase_t **basep)
+int xntbase_alloc(const char *name, u_long period, u_long flags,
+		  xntbase_t **basep)
 {
 	xntslave_t *slave;
 	xntbase_t *base;
 	spl_t s;
+
+	if (flags & ~XNTBISO)
+		return -EINVAL;
 
 	if (period == XN_APERIODIC_TICK) {
 		*basep = &nktbase;
@@ -144,7 +148,11 @@ int xntbase_alloc(const char *name, u_long period, xntbase_t **basep)
 	base->name = name;
 	inith(&base->link);
 	xntslave_init(slave);
-	base->status = 0;	/* Not running, no time set, unlocked. */
+
+	/* Set initial status:
+	   Not running, no time set, unlocked, isolated if requested. */
+	base->status = flags;
+
 	*basep = base;
 #ifdef CONFIG_XENO_OPT_STATS
 	initq(&base->timerq);
@@ -311,14 +319,14 @@ int xntbase_switch(const char *name, u_long period, xntbase_t **basep)
 	if (period == XN_APERIODIC_TICK) {
 		if (xntbase_periodic_p(oldbase)) {
 			/* The following call cannot fail. */
-			xntbase_alloc(name, XN_APERIODIC_TICK, basep);
+			xntbase_alloc(name, XN_APERIODIC_TICK, 0, basep);
 			xntbase_free(oldbase);
 		}
 	} else {
 		if (xntbase_periodic_p(oldbase))
 			xntbase_update(oldbase, period);
 		else {
-			err = xntbase_alloc(name, period, &newbase);
+			err = xntbase_alloc(name, period, 0, &newbase);
 			if (!err) {
 				int enabled = xntbase_enabled_p(oldbase);
 				*basep = newbase;
@@ -364,19 +372,25 @@ void xntbase_start(xntbase_t *base)
 	xnticks_t start_date;
 	spl_t s;
 
-	if (base == &nktbase || (base->status & XNTBRUN) != 0)
+ 	if (base == &nktbase || xntbase_enabled_p(base))
 		return;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	start_date = xnarch_get_cpu_time() + nktbase.wallclock_offset;
-	base->wallclock_offset = xntbase_ns2ticks(base, start_date);
+  	start_date = xnarch_get_cpu_time();
+
+ 	/* Only synchronise non-isolated time bases on the master base. */
+ 	if (!xntbase_isolated_p(base)) {
+ 		base->wallclock_offset = xntbase_ns2ticks(base,
+ 			start_date + nktbase.wallclock_offset);
+ 		__setbits(base->status, XNTBSET);
+ 	}
+
 	start_date += base->tickvalue;
 
 	xnlock_put_irqrestore(&nklock, s);
 
 	xntslave_start(base2slave(base), start_date, base->tickvalue);
-	base->status |= XNTBRUN;
 }
 
 /*!
@@ -408,11 +422,11 @@ void xntbase_start(xntbase_t *base)
 
 void xntbase_stop(xntbase_t *base)
 {
-	if (base == &nktbase || (base->status & XNTBRUN) == 0)
+	if (base == &nktbase || !xntbase_enabled_p(base))
 		return;
 
 	xntslave_stop(base2slave(base));
-	base->status &= ~(XNTBRUN | XNTBSET);
+	__clrbits(base->status, XNTBRUN | XNTBSET);
 }
 
 /*!
@@ -510,20 +524,26 @@ void xntbase_adjust_time(xntbase_t *base, xnticks_t delta)
 	xnholder_t *holder;
 	xntbase_t *tbase;
 
-	nktbase.wallclock_offset += xntbase_ticks2ns(base, delta);
-	now = xnarch_get_cpu_time() + nktbase.wallclock_offset;
+	if (xntbase_isolated_p(base)) {
+		/* Only update the specified isolated base. */
+		base->wallclock_offset += delta;
+		__setbits(base->status, XNTBSET);
+	} else {
+		/* Update all non-isolated bases in the system. */
+		nktbase.wallclock_offset += xntbase_ticks2ns(base, delta);
+		now = xnarch_get_cpu_time() + nktbase.wallclock_offset;
 
-	for (holder = getheadq(&nktimebaseq);
-	     holder != NULL; holder = nextq(&nktimebaseq, holder)) {
-		tbase = link2tbase(holder);
-		if (tbase == &nktbase)
-			continue;
+		for (holder = getheadq(&nktimebaseq);
+		     holder != NULL; holder = nextq(&nktimebaseq, holder)) {
+			tbase = link2tbase(holder);
+			if (tbase == &nktbase || xntbase_isolated_p(tbase))
+				continue;
 
-		tbase->wallclock_offset = xntbase_ns2ticks(tbase, now) -
-			xntbase_get_jiffies(tbase);
+			tbase->wallclock_offset =
+				xntbase_ns2ticks(tbase, now) -
+				xntbase_get_jiffies(tbase);
+		}
 	}
-	/* TODO: (Re-)define semantic of XNTBSET */
-	__setbits(base->status, XNTBSET);
 
 	/* xnltt_log_event(xeno_ev_timeadjust, base->name, delta); */
 }

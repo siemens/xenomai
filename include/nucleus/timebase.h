@@ -54,6 +54,7 @@ typedef struct xntbops {
 #define XNTBRUN  0x00000001	/* Time base is running. */
 #define XNTBSET  0x00000002	/* Time set in time base. */
 #define XNTBLCK  0x00000004	/* Time base is locked. */
+#define XNTBISO  0x00000008	/* Time base uses private wallclock offset */
 
 typedef struct xntbase {
 
@@ -85,8 +86,6 @@ typedef struct xntbase {
 
 } xntbase_t;
 
-#define xntbase_timeset_p(base)	(!!testbits((base)->status,XNTBSET))
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -111,9 +110,19 @@ static inline void xntbase_set_hook(xntbase_t *base, void (*hook)(void))
 	base->hook = hook;
 }
 
+static inline int xntbase_timeset_p(xntbase_t *base)
+{
+	return !!testbits(base->status, XNTBSET);
+}
+
 static inline int xntbase_enabled_p(xntbase_t *base)
 {
-	return !!(base->status & XNTBRUN);
+	return !!testbits(base->status, XNTBRUN);
+}
+
+static inline int xntbase_isolated_p(xntbase_t *base)
+{
+	return !!testbits(base->status, XNTBISO);
 }
 
 static inline const char *xntbase_name(xntbase_t *base)
@@ -201,6 +210,7 @@ static inline xnticks_t xntbase_get_rawclock(xntbase_t *base)
 
 int xntbase_alloc(const char *name,
 		  u_long period,
+		  u_long flags,
 		  xntbase_t **basep);
 
 void xntbase_free(xntbase_t *base);

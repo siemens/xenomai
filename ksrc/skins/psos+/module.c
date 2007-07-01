@@ -36,6 +36,10 @@ static u_long tick_arg = CONFIG_XENO_OPT_PSOS_PERIOD;
 module_param_named(tick_arg, tick_arg, ulong, 0444);
 MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us)");
 
+static u_long sync_time;
+module_param_named(sync_time, sync_time, ulong, 0444);
+MODULE_PARM_DESC(sync_time, "Set non-zero to synchronize on master time base");
+
 static u_long rn0_size_arg = 32 * 1024;	/* Default size of region #0 */
 module_param_named(rn0_size, rn0_size_arg, ulong, 0444);
 MODULE_PARM_DESC(rn0_size, "Size of pSOS+ region #0 (in bytes)");
@@ -76,7 +80,8 @@ int SKIN_INIT(psos)
 	if (err != 0)
 		return err;
 
-	err = xntbase_alloc("psos", tick_arg * 1000, &psos_tbase);
+	err = xntbase_alloc("psos", tick_arg * 1000, sync_time ? 0 : XNTBISO,
+			    &psos_tbase);
 
 	if (err != 0)
 		goto fail;
