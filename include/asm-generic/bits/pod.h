@@ -115,9 +115,9 @@ static void xnarch_switch_htick_mode(enum clock_event_mode mode, struct ipipe_ti
 	spl_t s;
 
 	if (mode == CLOCK_EVT_MODE_ONESHOT) {
-		/* xntimer_next_htick_shot() will override any
-		 * previous setting of the host timer for the current
-		 * CPU, so we don't have anything to take care of when
+		/* xnarch_next_htick_shot() will override any previous
+		 * setting of the host timer for the current CPU, so
+		 * we don't have anything to take care of when
 		 * switching to oneshot mode. */
 #if XENO_DEBUG(TIMERS)
 		xnloginfo("host tick: switching to oneshot mode\n");
@@ -143,6 +143,7 @@ static void xnarch_switch_htick_mode(enum clock_event_mode mode, struct ipipe_ti
 		xnloginfo("host tick: shutting down tick device\n");
 #endif
 		xntimer_stop(&sched->htimer);
+		break;
 
 	default:
 #if XENO_DEBUG(TIMERS)
