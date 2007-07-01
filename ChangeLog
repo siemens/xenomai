@@ -15,6 +15,7 @@
 	definitions of CPU_ZERO().
 
 	* scripts/prepare-kernel.sh: Fix default patch election.
+	default preparation option.
 
 2007-06-25  Philippe Gerum  <rpm@xenomai.org>
 
