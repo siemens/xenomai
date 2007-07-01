@@ -38,10 +38,12 @@ void wind_sysclk_hook(void)
 
 int wind_sysclk_init(u_long period)
 {
+	extern u_long sync_time;
 	u_long init_rate = ONE_BILLION / period;
 	int err;
 
-	err = xntbase_alloc("vxworks", period, &wind_tbase);
+	err = xntbase_alloc("vxworks", period, sync_time ? 0 : XNTBISO,
+			    &wind_tbase);
 	if (err)
 		return err;
 

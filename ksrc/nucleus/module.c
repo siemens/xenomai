@@ -825,17 +825,19 @@ static int timebase_read_proc(char *page,
 	     holder != NULL; holder = nextq(&nktimebaseq, holder)) {
 		tbase = link2tbase(holder);
 		if (xntbase_periodic_p(tbase))
-			p += sprintf(p, "%-10s %10lu  %10Lu   %s\n",
+			p += sprintf(p, "%-10s %10lu  %10Lu   %s%s%s\n",
 				     tbase->name,
 				     tbase->tickvalue,
 				     tbase->jiffies,
-				     xntbase_enabled_p(tbase) ? "enabled" : "disabled");
+				     xntbase_enabled_p(tbase) ? "enabled" : "disabled",
+				     xntbase_timeset_p(tbase) ? ",set" : ",unset",
+				     xntbase_isolated_p(tbase) ? ",isolated" : "");
 		else
 			p += sprintf(p, "%-10s %10s  %10s   %s\n",
 				     tbase->name,
 				     "1",
 				     "n/a",
-				     "enabled");
+				     "enabled,set");
 	}
 
 	len = p - page - off;

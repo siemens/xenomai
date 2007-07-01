@@ -71,6 +71,10 @@
 
 	* ksrc/nucleus/shadow.c: Handle RT capability group.
 
+	* ksrc/nucleus/{timebase.c, module.c}, include/nucleus/timebase.h:
+	ksrc/skins: Provide for isolated timebases, which are not involved
+	in global wallclock offset updates (xntbase_adjust_time()).
+
 2007-06-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/syscall.c (__rt_task_set_mode): Force

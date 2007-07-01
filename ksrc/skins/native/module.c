@@ -86,7 +86,7 @@ int SKIN_INIT(native)
 	if (err)
 		goto fail;
 
-	err = xntbase_alloc("native", tick_arg * 1000, &__native_tbase);
+	err = xntbase_alloc("native", tick_arg * 1000, 0, &__native_tbase);
 
 	if (err)
 		goto fail;

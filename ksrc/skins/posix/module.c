@@ -115,7 +115,7 @@ int SKIN_INIT(posix)
 		return err;
 	}
 
-	err = xntbase_alloc("posix", tick_arg * 1000, &pse51_tbase);
+	err = xntbase_alloc("posix", tick_arg * 1000, 0, &pse51_tbase);
 
 	if (err)
 	    goto fail;

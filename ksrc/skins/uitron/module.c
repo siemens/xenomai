@@ -32,6 +32,10 @@ static u_long tick_arg = CONFIG_XENO_OPT_UITRON_PERIOD;
 module_param_named(tick_arg, tick_arg, ulong, 0444);
 MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us)");
 
+static u_long sync_time;
+module_param_named(sync_time, sync_time, ulong, 0444);
+MODULE_PARM_DESC(sync_time, "Set non-zero to synchronize on master time base");
+
 xntbase_t *ui_tbase;
 
 ui_rholder_t __ui_global_rholder;
@@ -58,7 +62,8 @@ int SKIN_INIT(uitron)
 	if (err)
 		goto fail;
 
-	err = xntbase_alloc("uitron", tick_arg * 1000, &ui_tbase);
+	err = xntbase_alloc("uitron", tick_arg * 1000,
+			    sync_time ? 0 : XNTBISO, &ui_tbase);
 
 	if (err)
 		goto cleanup_pod;

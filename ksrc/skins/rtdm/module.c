@@ -72,7 +72,7 @@ int __init SKIN_INIT(rtdm)
     if (err)
         goto fail;
 
-    err = xntbase_alloc("rtdm", tick_arg * 1000, &rtdm_tbase);
+    err = xntbase_alloc("rtdm", tick_arg * 1000, 0, &rtdm_tbase);
     if (err)
 	goto cleanup_pod;
 
