@@ -61,7 +61,7 @@ DEFINE_XNQUEUE(nktimebaseq);
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 
 /*!
- * \fn int xntbase_alloc(const char *name,u_long period,xntbase_t **basep)
+ * \fn int xntbase_alloc(const char *name,u_long period,u_long flags,xntbase_t **basep)
  * \brief Allocate a time base.
  *
  * A time base is an abstraction used to provide private clocking
@@ -92,6 +92,12 @@ DEFINE_XNQUEUE(nktimebaseq);
  * clock rate of a periodic time base. For instance, passing 1000000
  * (ns) in the @a period parameter will create a periodic time base
  * clocked at a frequency of 1Khz.
+ *
+ * @param flags A bitmask composed as follows:
+ *
+ *        - XNTBISO causes the target timebase to be isolated from
+ *        global wallclock offset updates as performed by
+ *        xntbase_adjust_time().
  *
  * @param basep A pointer to a memory location which will be written
  * upon success with the address of the allocated time base. If @a
@@ -491,18 +497,19 @@ EXPORT_SYMBOL(xntbase_tick);
  * \fn void xntbase_adjust_time(xntbase_t *base, xnticks_t delta)
  * \brief Adjust the clock time for the system.
  *
- * Xenomai tracks the current time as a monotonously increasing count of ticks
- * since the epoch. The epoch is initially the same as the underlying machine
- * time, and it is always synchronised across all active time bases.
+ * Xenomai tracks the current time as a monotonously increasing count
+ * of ticks since the epoch. The epoch is initially the same as the
+ * underlying machine time, and it is always synchronised across all
+ * active time bases.
  *
- * This service changes the epoch for the system by applying the specified
- * tick delta on the master's wallclock offset and resynchronizing all other
- * time bases.
+ * This service changes the epoch for the system by applying the
+ * specified tick delta on the master's wallclock offset and
+ * resynchronizing all other time bases.
  *
  * @param base The address of the initiating time base.
  *
- * @param delta The adjustment of the system time expressed in ticks of the
- * specified time base.
+ * @param delta The adjustment of the system time expressed in ticks
+ * of the specified time base.
  *
  * @note This routine must be entered nklock locked, interrupts off.
  *
