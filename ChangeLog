@@ -1,3 +1,9 @@
+2007-07-01  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (lostage_handler, LO_WAKEUP_REQ): Do not
+	change CPU affinity pointlessly and from an atomic context
+	(LO_START_REQ is still wrong in this respect).
+
 2007-06-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/syscall.c (__rt_task_set_mode): Force

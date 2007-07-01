@@ -721,17 +721,6 @@ static void lostage_handler(void *cookie)
 
 		case LO_WAKEUP_REQ:
 
-#ifdef CONFIG_SMP
-			/* If the shadow thread changed its CPU while
-			   in primary mode, change the CPU of its
-			   Linux counter-part (this is a cheap
-			   operation, since the said Linux
-			   counter-part is suspended from Linux
-			   POV). */
-			if (!xnarch_cpu_isset(cpuid, p->cpus_allowed))
-				set_cpus_allowed(p, cpumask_of_cpu(cpuid));
-#endif /* CONFIG_SMP */
-
 			/* We need to downgrade the root thread
 			   priority whenever the APC runs over a
 			   non-shadow, so that the temporary boost we
