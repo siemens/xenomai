@@ -75,6 +75,7 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #define RTHAL_APIC_ICOUNT	((RTHAL_TIMER_FREQ + HZ/2)/HZ)
 #define RTHAL_TIMER_IRQ		RTHAL_APIC_TIMER_IPI
 #define RTHAL_HOST_TICK_IRQ	ipipe_apic_vector_irq(LOCAL_TIMER_VECTOR)
+#define RTHAL_BCAST_TICK_IRQ	0	/* Tick broadcasting interrupt. */
 #ifndef ipipe_apic_vector_irq
 /* Older I-pipe versions do not differentiate the normal IRQ space
    from the system IRQ range, which is wrong... */

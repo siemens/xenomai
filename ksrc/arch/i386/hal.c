@@ -303,7 +303,7 @@ int rthal_timer_request(
 	rthal_critical_exit(flags);
 
 #ifndef CONFIG_GENERIC_CLOCKEVENTS
-	rthal_irq_host_request(RTHAL_HOST_TICK_IRQ,
+	rthal_irq_host_request(RTHAL_BCAST_TICK_IRQ,
 			       &rthal_broadcast_to_local_timers,
 			       "rthal_broadcast_timer",
 			       &rthal_broadcast_to_local_timers);
@@ -321,7 +321,7 @@ void rthal_timer_release(int cpu)
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
 	ipipe_release_tickdev(cpu);
 #else
-	rthal_irq_host_release(RTHAL_HOST_TICK_IRQ,
+	rthal_irq_host_release(RTHAL_BCAST_TICK_IRQ,
 			       &rthal_broadcast_to_local_timers);
 #endif
 

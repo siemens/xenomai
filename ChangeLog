@@ -1,3 +1,9 @@
+2007-06-30  Jan Kiszka  <jan.kiszka@web.de>, Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/hal.c (rthal_timer_request, rthal_timer_release):
+	Dissociate host tick and tick broadcasting interrupt definitions
+	when generic clock event devices are not available.
+	
 2007-06-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (xnshadow_relax): Resync CPU affinity of
