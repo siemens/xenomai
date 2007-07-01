@@ -357,7 +357,7 @@ elif test -r $linux_tree/include/linux/adeos.h; then
    exit 2
 else
    if test x$adeos_patch = x; then
-      default_adeos_patch=`( ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-ipipe-$linux_VERSION.$linux_PATCHLEVEL*|sort -r ) 2>/dev/null | head -n1`
+      default_adeos_patch=`( ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-ipipe-$linux_VERSION.$linux_PATCHLEVEL.$linux_SUBLEVEL*|sort -r ) 2>/dev/null | head -n1`
    fi
    if test x$default_adeos_patch = x; then
       default_adeos_patch=/dev/null
