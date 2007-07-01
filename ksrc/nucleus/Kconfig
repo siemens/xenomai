@@ -70,20 +70,6 @@ config XENO_OPT_PRIOCPL
 
 	If in doubt, say Y.
 
-config XENO_OPT_SECURITY_ACCESS
-	bool "Enforce syscall access control"
-	depends on XENO_OPT_PERVASIVE
-	default y
-	help
-
-	When enabled, the nucleus requires applications running in
-	user-space to have the CAP_SYS_NICE capability turned on for
-	executing Xenomai syscalls, such as skin services.
-
-	Disabling this option means that *any* user from the system
-	could invoke Xenomai services without permission. Therefore,
-	think twice before switching this off.
-
 config XENO_OPT_PIPELINE_HEAD
 	bool "Optimize as pipeline head"
 	default y

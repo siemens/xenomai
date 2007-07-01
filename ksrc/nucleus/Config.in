@@ -12,7 +12,6 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	bool 'Pervasive real-time support in user-space' CONFIG_XENO_OPT_PERVASIVE
 	if [ "$CONFIG_XENO_OPT_PERVASIVE" != "n" ]; then
 		bool 'Priority coupling support' CONFIG_XENO_OPT_PRIOCPL
-		bool 'Enforce syscall access control' CONFIG_XENO_OPT_SECURITY_ACCESS
 	fi
 	bool 'Message pipes' CONFIG_XENO_OPT_PIPE
 	if [ "$CONFIG_XENO_OPT_PIPE" != "n" ]; then
