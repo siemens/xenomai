@@ -168,7 +168,7 @@ generate_patch() {
 }
 
 
-usage='usage: prepare-kernel --linux=<linux-tree> --adeos=<adeos-patch> [--arch=<arch>] [--outpatch=<file> <tempdir> [--filterkvers=y|n] [--filterarch=y|n]] [--forcelink]'
+usage='usage: prepare-kernel --linux=<linux-tree> --adeos=<adeos-patch> [--arch=<arch>] [--outpatch=<file> <tempdir> [--filterkvers=y|n] [--filterarch=y|n]] [--forcelink] [--default] [--verbose]'
 me=`basename $0`
 
 while test $# -gt 0; do
@@ -198,6 +198,9 @@ while test $# -gt 0; do
     --forcelink)
         forcelink=1
         ;;
+    --default)
+        usedefault=1
+        ;;
     --verbose)
 	verbose=1
 	;;
@@ -226,8 +229,10 @@ xenomai_root=`cd $xenomai_root && pwd`
 default_linux_tree=/lib/modules/`uname -r`/source
 
 while test x$linux_tree = x; do
-   echo -n "Linux tree [default $default_linux_tree]: "
-   read linux_tree
+   if test x$usedefault = x; then
+      echo -n "Linux tree [default $default_linux_tree]: "
+      read linux_tree
+   fi
    if test x$linux_tree = x; then
       linux_tree=$default_linux_tree
    fi
@@ -274,8 +279,10 @@ fi
 
 while : ; do
    if test x$linux_arch = x; then
-      echo -n "Target architecture [default $default_linux_arch]: "
-      read linux_arch
+      if test x$usedefault = x; then
+         echo -n "Target architecture [default $default_linux_arch]: "
+         read linux_arch
+      fi
       if test x$linux_arch = x; then
          linux_arch=$default_linux_arch
       fi
@@ -363,8 +370,10 @@ else
       default_adeos_patch=/dev/null
    fi
    while test x$adeos_patch = x; do
-      echo -n "Adeos patch [default $default_adeos_patch]: "
-      read adeos_patch
+      if test x$usedefault = x; then
+         echo -n "Adeos patch [default $default_adeos_patch]: "
+         read adeos_patch
+      fi
       if test x$adeos_patch = x; then
          adeos_patch=$default_adeos_patch
       fi
