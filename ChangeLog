@@ -49,6 +49,15 @@
 	ksrc/skins/native/timer.c: Handle clock wrap-around in timeout
 	calculations.
 
+	* scripts/bootstrap: Fix calling order between aclocal and
+	autoheader.
+
+	* configure.in: Link stage check for sched_setaffinity().
+
+	* src/testsuite/switchtest/switchtest.c,
+	src/testsuite/clocktest/clocktest.c: Guard against multiple
+	definitions of CPU_ZERO().
+
 2007-06-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/syscall.c (__rt_task_set_mode): Force
