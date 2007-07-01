@@ -58,7 +58,8 @@
 	src/testsuite/clocktest/clocktest.c: Guard against multiple
 	definitions of CPU_ZERO().
 
-	* scripts/prepare-kernel.sh: Fix default patch election.
+	* scripts/prepare-kernel.sh: Fix default patch election. Add
+	default preparation option.
 
 2007-06-25  Philippe Gerum  <rpm@xenomai.org>
 
