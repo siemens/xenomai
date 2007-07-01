@@ -17,6 +17,16 @@
 	* scripts/prepare-kernel.sh: Fix default patch election.
 	default preparation option.
 
+	* src/skins/posix/thread.c, src/skins/native/task.c: Do not
+	pthread_create() SCHED_FIFO threads, but rather wait for the
+	trampoline to promote them to the real-time scheduling class
+	(works around old glibc's overeager euid checks).
+
+	* ksrc/nucleus/{Kconfig, Config.n}, scripts/defconfig.frag: Remove
+	XENO_OPT_SECURITY_ACCESS (superseded by RT capability group).
+
+	* ksrc/nucleus/shadow.c: Handle RT capability group.
+
 2007-06-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/syscall.c (__rt_task_set_mode): Force

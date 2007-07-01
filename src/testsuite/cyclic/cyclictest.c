@@ -453,11 +453,6 @@ int main(int argc, char **argv)
 	pthread_attr_t thattr;
 	int i, ret = -1;
 
-	if (geteuid()) {
-		printf("need to run as root!\n");
-		exit(-1);
-	}
-
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	process_options(argc, argv);
