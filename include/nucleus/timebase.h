@@ -267,7 +267,7 @@ static inline xnticks_t xntbase_get_rawclock(xntbase_t *base)
 	return xnarch_get_cpu_tsc();
 }
 
-static inline int xntbase_alloc(const char *name, u_long period, xntbase_t **basep)
+static inline int xntbase_alloc(const char *name, u_long period, u_long flags, xntbase_t **basep)
 {
 	*basep = &nktbase;
 	return 0;
