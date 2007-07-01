@@ -58,7 +58,7 @@ static inline void xntimer_dequeue_aperiodic(xntimer_t *timer)
 static void xntimer_next_local_shot(xnsched_t *this_sched)
 {
 	xntimerh_t *holder = xntimerq_head(&this_sched->timerqueue);
-	xnticks_t now, delay, xdate;
+	xnsticks_t delay;
 	xntimer_t *timer;
 
 	/* Do not reprogram locally when inside the tick handler - will be
@@ -68,15 +68,15 @@ static void xntimer_next_local_shot(xnsched_t *this_sched)
 
 	timer = aplink2timer(holder);
 
-	now = xnarch_get_cpu_tsc();
-	xdate = now + nklatency;
+	delay = xntimerh_date(&timer->aplink) -
+		(xnarch_get_cpu_tsc() + nklatency);
 
-	if (xdate >= xntimerh_date(&timer->aplink))
+	if (delay < 0)
 		delay = 0;
-	else
-		delay = xntimerh_date(&timer->aplink) - xdate;
+	else if (delay > ULONG_MAX)
+		delay = ULONG_MAX;
 
-	xnarch_program_timer_shot(delay <= ULONG_MAX ? delay : ULONG_MAX);
+	xnarch_program_timer_shot(delay);
 }
 
 static inline int xntimer_heading_p(xntimer_t *timer)
@@ -106,7 +106,7 @@ int xntimer_start_aperiodic(xntimer_t *timer,
 		if (!testbits(timer->status, XNTIMER_MONOTONIC))
 			value -= nktbase.wallclock_offset;
 		date = xnarch_ns_to_tsc(value);
-		if (date <= now)
+		if ((xnsticks_t)(date - now) <= 0)
 			return -ETIMEDOUT;
 	}
 
@@ -294,7 +294,7 @@ static int xntimer_start_periodic(xntimer_t *timer,
 	else {
 		if (!testbits(timer->status, XNTIMER_MONOTONIC))
 			value -= timer->base->wallclock_offset;
-		if (value <= timer->base->jiffies)
+		if ((xnsticks_t)(value - timer->base->jiffies) <= 0)
 			return -ETIMEDOUT;
 	}
 

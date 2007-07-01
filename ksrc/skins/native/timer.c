@@ -125,7 +125,7 @@ void rt_timer_spin(RTIME ns)
 {
 	RTIME etime = xnarch_get_cpu_tsc() + xnarch_ns_to_tsc(ns);
 
-	while (xnarch_get_cpu_tsc() < etime)
+	while ((SRTIME)(xnarch_get_cpu_tsc() - etime) < 0)
 		cpu_relax();
 }
 

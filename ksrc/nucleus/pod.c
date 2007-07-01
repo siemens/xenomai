@@ -3183,7 +3183,8 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
 
 int xnpod_wait_thread_period(unsigned long *overruns_r)
 {
-	xnticks_t now, missed, period;
+	xnticks_t now, period;
+	xnsticks_t delta;
 	unsigned long overruns = 0;
 	xnthread_t *thread;
 	xntbase_t *tbase;
@@ -3205,7 +3206,7 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 	tbase = xnthread_time_base(thread);
 	now = xntbase_get_rawclock(tbase);
 
-	if (likely(now < thread->pexpect)) {
+	if (likely((xnsticks_t)(now - thread->pexpect) < 0)) {
 		xnpod_suspend_thread(thread, XNDELAY, XN_INFINITE, XN_RELATIVE, NULL);
 
 		if (unlikely(xnthread_test_info(thread, XNBREAK))) {
@@ -3218,22 +3219,22 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 
 	period = xntimer_interval(&thread->ptimer);
 
-	if (unlikely(now >= thread->pexpect + period)) {
-		missed = now - thread->pexpect;
+	delta = now - thread->pexpect;
+	if (unlikely(delta >= (xnsticks_t)period)) {
 #if BITS_PER_LONG < 64 && defined(__KERNEL__)
 		/* Slow (error) path, without resorting to 64 bit divide in
 		   kernel space unless the period fits in 32 bit. */
 		if (likely(period <= 0xffffffffLL))
-			overruns = xnarch_uldiv(missed, period);
+			overruns = xnarch_uldiv(delta, period);
 		else {
 		      divide:
 			++overruns;
-			missed -= period;
-			if (missed >= period)
+			delta -= period;
+			if (delta >= period)
 				goto divide;
 		}
 #else /* BITS_PER_LONG >= 64 */
-		overruns = missed / period;
+		overruns = delta / period;
 #endif /* BITS_PER_LONG < 64 */
 		thread->pexpect += period * overruns;
 		err = -ETIMEDOUT;
