@@ -28,6 +28,6 @@
 
 #define XENO_VERSION_NAME	"One Robot's Dream"
 
-#define XENO_VERSION_STRING	"2.3.1"
+#define XENO_VERSION_STRING	"2.3.2"
 
 #endif /* _XENO_NUCLEUS_VERSION_H */

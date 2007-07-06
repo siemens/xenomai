@@ -1,3 +1,22 @@
+2007-07-06  Philippe Gerum  <rpm@xenomai.org>
+
+	* RELEASE: Xenomai 2.3.2 (The Forgotten)
+
+2007-07-06  Philippe Gerum  <rpm@xenomai.org>
+
+	* pipe.c (xnpipe_write): Check return from copy_from_user().
+
+	* ksrc/nucleus/pod.c (xnpod_schedule_handler): Make RPI check
+	depend on XENO_OPT_PERVASIVE.
+
+	* scripts/prepare-kernel.sh: Prevent infinite loop while
+	determining the location of the Linux tree in presence of an
+	invalid --default setup.
+
+2007-07-06  Jan Kiszka  <jan.kiszka@web.de>, Dmitry Adamushko <dmitry.adamushko@gmail.com>
+
+	* ksrc/nucleus/intr.c: Fix interrupt locking scheme. Again.
+
 2007-07-01  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (lostage_handler, LO_WAKEUP_REQ): Do not
