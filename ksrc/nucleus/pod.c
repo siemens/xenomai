@@ -237,12 +237,12 @@ void xnpod_schedule_handler(void) /* Called with hw interrupts off. */
 	xnsched_t *sched = xnpod_current_sched();
 
 	xnltt_log_event(xeno_ev_smpsched);
-#if defined(CONFIG_SMP) && !defined(CONFIG_XENO_OPT_RPIDISABLE)
+#if defined(CONFIG_SMP) && !defined(CONFIG_XENO_OPT_RPIDISABLE) && defined(CONFIG_XENO_OPT_PERVASIVE)
 	if (testbits(sched->status, XNRPICK)) {
 		clrbits(sched->status, XNRPICK);
 		xnshadow_rpi_check();
 	}
-#endif /* CONFIG_SMP && !CONFIG_XENO_OPT_RPIDISABLE */
+#endif /* CONFIG_SMP && !CONFIG_XENO_OPT_RPIDISABLE && defined(CONFIG_XENO_OPT_PERVASIVE) */
 	xnsched_set_resched(sched);
 	xnpod_schedule();
 }
