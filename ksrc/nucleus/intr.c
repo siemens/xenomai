@@ -45,31 +45,19 @@ xnlock_t intrlock = XNARCH_LOCK_UNLOCKED;
 
 xnintr_t nkclock;
 
-#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
-
 typedef struct xnintr_irq {
 
 #ifdef CONFIG_SMP
 	xnlock_t lock;
 #endif /* CONFIG_SMP */
+
+#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
 	xnintr_t *handlers;
 	int unhandled;
-
+#endif
 } ____cacheline_aligned_in_smp xnintr_irq_t;
 
 static xnintr_irq_t xnirqs[RTHAL_NR_IRQS];
-
-#define lock_shirq(irq)		xnlock_get(&xnirqs[irq].lock)
-#define unlock_shirq(irq)	xnlock_put(&xnirqs[irq].lock)
-#define shlock_init(irq)	xnlock_init(&xnirqs[irq].lock)
-
-#else
-
-#define lock_shirq(irq)		do { } while(0)
-#define unlock_shirq(irq)	do { } while(0)
-#define shlock_init(irq)	do { } while(0)
-
-#endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE  */
 
 #ifdef CONFIG_XENO_OPT_STATS
 int xnintr_count = 1;	/* Number of attached xnintr objects + nkclock */
@@ -132,7 +120,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 
 	++sched->inesting;
 
-	lock_shirq(irq);
+	xnlock_get(&xnirqs[irq].lock);
 
 #ifdef CONFIG_SMP
 	/* In SMP case, we have to reload the cookie under the per-IRQ lock
@@ -165,7 +153,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 #ifdef CONFIG_SMP
  unlock_and_exit:
 #endif
-	unlock_shirq(irq);
+	xnlock_put(&xnirqs[irq].lock);
 
 	if (s & XN_ISR_PROPAGATE)
 		xnarch_chain_irq(irq);
@@ -463,9 +451,11 @@ static inline int xnintr_irq_attach(xnintr_t *intr)
 
 static inline int xnintr_irq_detach(xnintr_t *intr)
 {
-	int err;
-
-	err = xnarch_release_irq(intr->irq);
+	int irq = intr->irq, err;
+ 
+	xnlock_get(&xnirqs[irq].lock);
+ 	err = xnarch_release_irq(irq);
+	xnlock_put(&xnirqs[irq].lock);
 
 	xnintr_sync_stat_references(intr);
 
@@ -478,7 +468,7 @@ int xnintr_mount(void)
 {
 	int i;
 	for (i = 0; i < RTHAL_NR_IRQS; ++i)
-		shlock_init(i);
+		xnlock_init(&xnirqs[i].lock);
 	return 0;
 }
 
