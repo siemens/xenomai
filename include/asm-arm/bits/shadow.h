@@ -187,8 +187,6 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 				  &info, sizeof(info));
 		break;
 	}
-#else
-		#error "foobar!"
 #endif /* IPIPE_TSC_TYPE_NONE */
 
 	default:
