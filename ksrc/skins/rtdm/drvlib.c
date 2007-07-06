@@ -72,6 +72,32 @@
  * Rescheduling: never.
  */
 nanosecs_abs_t rtdm_clock_read(void);
+
+/**
+ * @brief Get monotonic time
+ *
+ * @return The monotonic time in nanoseconds is returned
+ *
+ * @note The resolution of this service depends on the system timer. In
+ * particular, if the system timer is running in periodic mode, the return
+ * value will be limited to multiples of the timer tick period.
+ *
+ * @note The system timer may have to be started to obtain valid results.
+ * Whether this happens automatically (as on Xenomai) or is controlled by the
+ * application depends on the RTDM host environment.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task (RT, non-RT)
+ *
+ * Rescheduling: never.
+ */
+nanosecs_abs_t rtdm_clock_read_monotonic(void);
 #endif /* DOXYGEN_CPP */
 /** @} */
 
@@ -261,7 +287,104 @@ int rtdm_task_unblock(rtdm_task_t *task);
  * Rescheduling: never.
  */
 rtdm_task_t *rtdm_task_current(void);
+
+/**
+ * @brief Sleep a specified amount of time
+ *
+ * @param[in] delay Delay in nanoseconds, see @ref RTDM_TIMEOUT_xxx for
+ * special values.
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EINTR is returned if calling task has been unblock by a signal or
+ * explicitly via rtdm_task_unblock().
+ *
+ * - -EPERM @e may be returned if an illegal invocation environment is
+ * detected.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel-based task
+ * - User-space task (RT)
+ *
+ * Rescheduling: always.
+ */
+int rtdm_task_sleep(nanosecs_rel_t delay);
+
+/**
+ * @brief Sleep until a specified absolute time
+ *
+ * @deprecated Use rtdm_task_sleep_abs instead!
+ *
+ * @param[in] wakeup_time Absolute timeout in nanoseconds
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EINTR is returned if calling task has been unblock by a signal or
+ * explicitly via rtdm_task_unblock().
+ *
+ * - -EPERM @e may be returned if an illegal invocation environment is
+ * detected.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel-based task
+ * - User-space task (RT)
+ *
+ * Rescheduling: always, unless the specified time already passed.
+ */
+int rtdm_task_sleep_until(nanosecs_abs_t wakeup_time);
+
+/**
+ * @brief Sleep until a specified absolute time
+ *
+ * @param[in] wakeup_time Absolute timeout in nanoseconds
+ * @param[in] mode Selects the timer mode, see RTDM_TIMERMODE_xxx for details
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EINTR is returned if calling task has been unblock by a signal or
+ * explicitly via rtdm_task_unblock().
+ *
+ * - -EPERM @e may be returned if an illegal invocation environment is
+ * detected.
+ *
+ * - -EINVAL is returned if an invalid parameter was passed.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel-based task
+ * - User-space task (RT)
+ *
+ * Rescheduling: always, unless the specified time already passed.
+ */
+int rtdm_task_sleep_abs(nanosecs_abs_t wakeup_time,
+                        enum rtdm_timer_mode mode);
+
 #endif /* DOXYGEN_CPP */
+
+
+int __rtdm_task_sleep(xnticks_t timeout, xntmode_t mode)
+{
+    xnthread_t  *thread = xnpod_current_thread();
+
+
+    XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
+
+    xnpod_suspend_thread(thread, XNDELAY,
+                         xntbase_ns2ticks(xnthread_time_base(thread), timeout),
+                         mode, NULL);
+
+    return xnthread_test_info(thread, XNBREAK) ? -EINTR : 0;
+}
+
+EXPORT_SYMBOL(__rtdm_task_sleep);
 
 
 /**
@@ -312,87 +435,6 @@ EXPORT_SYMBOL(rtdm_task_join_nrt);
 
 
 /**
- * @brief Sleep a specified amount of time
- *
- * @param[in] delay Delay in nanoseconds, see @ref RTDM_TIMEOUT_xxx for
- * special values.
- *
- * @return 0 on success, otherwise:
- *
- * - -EINTR is returned if calling task has been unblock by a signal or
- * explicitly via rtdm_task_unblock().
- *
- * - -EPERM @e may be returned if an illegal invocation environment is
- * detected.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT)
- *
- * Rescheduling: always.
- */
-int rtdm_task_sleep(nanosecs_rel_t delay)
-{
-    xnthread_t  *thread = xnpod_current_thread();
-
-
-    XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
-
-    if (delay < 0)
-        return 0;
-
-    xnpod_suspend_thread(thread, XNDELAY,
-			 xntbase_ns2ticks(xnthread_time_base(thread), delay),
-			 XN_RELATIVE, NULL);
-
-    return xnthread_test_info(thread, XNBREAK) ? -EINTR : 0;
-}
-
-EXPORT_SYMBOL(rtdm_task_sleep);
-
-
-/**
- * @brief Sleep until a specified absolute time
- *
- * @param[in] wakeup_time Absolute timeout in nanoseconds
- *
- * @return 0 on success, otherwise:
- *
- * - -EINTR is returned if calling task has been unblock by a signal or
- * explicitly via rtdm_task_unblock().
- *
- * - -EPERM @e may be returned if an illegal invocation environment is
- * detected.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT)
- *
- * Rescheduling: always, unless the specified time already passed.
- */
-int rtdm_task_sleep_until(nanosecs_abs_t wakeup_time)
-{
-    xnthread_t  *thread = xnpod_current_thread();
-
-    XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
-
-    xnpod_suspend_thread(thread, XNDELAY,
-			 xntbase_ns2ticks(xnthread_time_base(thread), wakeup_time),
-                         XN_REALTIME, NULL);
- 
-    return xnthread_test_info(thread, XNBREAK) ? -EINTR : 0;
-}
-
-EXPORT_SYMBOL(rtdm_task_sleep_until);
-
-
-/**
  * @brief Busy-wait a specified amount of time
  *
  * @param[in] delay Delay in nanoseconds. Note that a zero delay does @b not
@@ -421,6 +463,187 @@ void rtdm_task_busy_sleep(nanosecs_rel_t delay)
 }
 
 EXPORT_SYMBOL(rtdm_task_busy_sleep);
+/** @} */
+
+
+
+/*!
+ * @ingroup driverapi
+ * @defgroup rtdmtimer Timer Services
+ * @{
+ */
+
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
+/**
+ * @brief Initialise a timer
+ *
+ * @param[in,out] timer Timer handle
+ * @param[in] handler Handler to be called on timer expiry
+ * @param[in] name Optional timer name
+ *
+ * @return 0 on success, otherwise negative error code
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task (RT, non-RT)
+ *
+ * Rescheduling: never.
+ */
+int rtdm_timer_init(rtdm_timer_t *timer, rtdm_timer_handler_t handler,
+                    const char *name);
+#endif /* DOXYGEN_CPP */
+
+
+/**
+ * @brief Destroy a timer
+ *
+ * @param[in,out] timer Timer handle as returned by rtdm_timer_init()
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task (RT, non-RT)
+ *
+ * Rescheduling: never.
+ */
+void rtdm_timer_destroy(rtdm_timer_t *timer)
+{
+    spl_t s;
+
+
+    xnlock_get_irqsave(&nklock,s);
+    xntimer_destroy(timer);
+    xnlock_put_irqrestore(&nklock,s);
+}
+
+EXPORT_SYMBOL(rtdm_timer_destroy);
+
+
+/**
+ * @brief Start a timer
+ *
+ * @param[in,out] timer Timer handle as returned by rtdm_timer_init()
+ * @param[in] expiry Firing time of the timer, @c mode defines if relative or
+ * absolute
+ * @param[in] interval Relative reload value, > 0 if the timer shall work in
+ * periodic mode with the specific interval, 0 for one-shot timers
+ * @param[in] mode Defines the operation mode, see @ref RTDM_TIMERMODE_xxx for
+ * possible values
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -ETIMEDOUT is returned if @c expiry describes an absolute date in the
+ * past.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task (RT, non-RT)
+ *
+ * Rescheduling: never.
+ */
+int rtdm_timer_start(rtdm_timer_t *timer, nanosecs_abs_t expiry,
+                      nanosecs_rel_t interval, enum rtdm_timer_mode mode)
+{
+    spl_t s;
+    int err;
+
+
+    xnlock_get_irqsave(&nklock,s);
+    err = xntimer_start(timer, xntbase_ns2ticks(rtdm_tbase, expiry),
+                        xntbase_ns2ticks(rtdm_tbase, interval), mode);
+    xnlock_put_irqrestore(&nklock,s);
+
+    return err;
+}
+
+EXPORT_SYMBOL(rtdm_timer_start);
+
+
+/**
+ * @brief Stop a timer
+ *
+ * @param[in,out] timer Timer handle as returned by rtdm_timer_init()
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task (RT, non-RT)
+ *
+ * Rescheduling: never.
+ */
+void rtdm_timer_stop(rtdm_timer_t *timer)
+{
+    spl_t s;
+
+
+    xnlock_get_irqsave(&nklock,s);
+    xntimer_stop(timer);
+    xnlock_put_irqrestore(&nklock,s);
+}
+
+EXPORT_SYMBOL(rtdm_timer_stop);
+
+
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
+/**
+ * @brief Start a timer from inside a timer handler
+ *
+ * @param[in,out] timer Timer handle as returned by rtdm_timer_init()
+ * @param[in] expiry Firing time of the timer, @c mode defines if relative or
+ * absolute
+ * @param[in] interval Relative reload value, > 0 if the timer shall work in
+ * periodic mode with the specific interval, 0 for one-shot timers
+ * @param[in] mode Defines the operation mode, see @ref RTDM_TIMERMODE_xxx for
+ * possible values
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -ETIMEDOUT is returned if @c expiry describes an absolute date in the
+ * past.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Timer handler
+ *
+ * Rescheduling: never.
+ */
+int rtdm_timer_start_in_handler(rtdm_timer_t *timer, nanosecs_abs_t expiry,
+                                nanosecs_rel_t interval,
+                                enum rtdm_timer_mode mode);
+
+/**
+ * @brief Stop a timer from inside a timer handler
+ *
+ * @param[in,out] timer Timer handle as returned by rtdm_timer_init()
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Timer handler
+ *
+ * Rescheduling: never.
+ */
+void rtdm_timer_stop_in_handler(rtdm_timer_t *timer);
+#endif /* DOXYGEN_CPP */
 /** @} */
 
 

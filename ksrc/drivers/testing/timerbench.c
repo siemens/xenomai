@@ -39,7 +39,7 @@ struct rt_tmbench_context {
 
     rtdm_task_t                     timer_task;
 
-    xntimer_t                       timer;
+    rtdm_timer_t                    timer;
     int                             warmup;
     uint64_t                        start_time;
     uint64_t                        date;
@@ -138,45 +138,44 @@ void eval_outer_loop(struct rt_tmbench_context *ctx)
 
 void timer_task_proc(void *arg)
 {
-    struct rt_tmbench_context   *ctx = (struct rt_tmbench_context *)arg;
+    struct rt_tmbench_context   *ctx = arg;
     int                         count;
 
 
-    /* start time: one millisecond from now. */
-    ctx->date = rtdm_clock_read() + 1000000;
+    /* first event: one millisecond from now. */
+    ctx->date = rtdm_clock_read_monotonic() + 1000000;
 
     while (1) {
         int err;
 
-
         for (count = 0; count < ctx->samples_per_sec; count++) {
             RTDM_EXECUTE_ATOMICALLY(
-                ctx->start_time = rtdm_clock_read();
-                err = rtdm_task_sleep_until(ctx->date);
+                ctx->start_time = rtdm_clock_read_monotonic();
+                err = rtdm_task_sleep_abs(ctx->date, RTDM_TIMERMODE_ABSOLUTE);
             );
 
             if (err)
                 return;
 
-            eval_inner_loop(ctx, (long)(rtdm_clock_read() - ctx->date));
+            eval_inner_loop(ctx,
+                            (long)(rtdm_clock_read_monotonic() - ctx->date));
         }
         eval_outer_loop(ctx);
     }
 }
 
 
-void timer_proc(xntimer_t *timer)
+void timer_proc(rtdm_timer_t *timer)
 {
     struct rt_tmbench_context   *ctx =
         container_of(timer, struct rt_tmbench_context, timer);
 
 
-    eval_inner_loop(ctx, (long)(rtdm_clock_read() - ctx->date));
+    eval_inner_loop(ctx, (long)(rtdm_clock_read_monotonic() - ctx->date));
 
-    ctx->start_time = rtdm_clock_read();
-    /* FIXME: convert to RTDM timers */
-    xntimer_start(&ctx->timer, xntbase_ns2ticks(rtdm_tbase, ctx->date),
-                  XN_INFINITE, XN_REALTIME);
+    ctx->start_time = rtdm_clock_read_monotonic();
+    rtdm_timer_start_in_handler(&ctx->timer, ctx->date, 0,
+                                RTDM_TIMERMODE_ABSOLUTE);
 
     if (++ctx->curr.test_loops < ctx->samples_per_sec)
         return;
@@ -215,8 +214,7 @@ int rt_tmbench_close(struct rtdm_dev_context *context,
         if (ctx->mode == RTTST_TMBENCH_TASK)
             rtdm_task_destroy(&ctx->timer_task);
         else
-            /* FIXME: convert to RTDM timers */
-            xntimer_destroy(&ctx->timer);
+            rtdm_timer_destroy(&ctx->timer);
 
         rtdm_event_destroy(&ctx->result_event);
 
@@ -308,21 +306,21 @@ int rt_tmbench_ioctl_nrt(struct rtdm_dev_context *context,
                                          config->priority, 0);
                 }
             } else {
-                /* FIXME: convert to RTDM timers */
-		xntimer_init(&ctx->timer, rtdm_tbase, timer_proc);
+                rtdm_timer_init(&ctx->timer, timer_proc,
+                                context->device->device_name);
 
                 ctx->curr.test_loops = 0;
 
                 if (!test_bit(RTDM_CLOSING, &context->context_flags)) {
                     ctx->mode = RTTST_TMBENCH_HANDLER;
-                    RTDM_EXECUTE_ATOMICALLY(
-                        /* start time: one millisecond from now. */
-                        ctx->start_time = rtdm_clock_read() + 1000000;
-                        ctx->date       = ctx->start_time + ctx->period;
 
-                        /* FIXME: convert to RTDM timers */
-                        xntimer_start(&ctx->timer, xntbase_ns2ticks(rtdm_tbase, ctx->date),
-                                      XN_INFINITE, XN_REALTIME);
+                    /* first event: one millisecond from now. */
+                    ctx->date = rtdm_clock_read_monotonic() + 1000000;
+
+                    RTDM_EXECUTE_ATOMICALLY(
+                        ctx->start_time = rtdm_clock_read_monotonic();
+                        rtdm_timer_start(&ctx->timer, ctx->date, 0,
+                                         RTDM_TIMERMODE_ABSOLUTE);
                     );
                 }
             }
@@ -348,8 +346,7 @@ int rt_tmbench_ioctl_nrt(struct rtdm_dev_context *context,
             if (ctx->mode == RTTST_TMBENCH_TASK)
                 rtdm_task_destroy(&ctx->timer_task);
             else
-                /* FIXME: convert to RTDM timers */
-                xntimer_destroy(&ctx->timer);
+                rtdm_timer_destroy(&ctx->timer);
 
             rtdm_event_destroy(&ctx->result_event);
 

@@ -495,6 +495,11 @@ static inline nanosecs_abs_t rtdm_clock_read(void)
 {
     return xntbase_ticks2ns(rtdm_tbase, xntbase_get_time(rtdm_tbase));
 }
+
+static inline nanosecs_abs_t rtdm_clock_read_monotonic(void)
+{
+    return xntbase_ticks2ns(rtdm_tbase, xntbase_get_jiffies(rtdm_tbase));
+}
 #endif /* !DOXYGEN_CPP */
 
 
@@ -841,7 +846,73 @@ static inline void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig)
 #endif /* !DOXYGEN_CPP */
 
 
-/* --- task and timing services --- */
+/* --- timer services --- */
+
+/*!
+ * @addtogroup rtdmtimer
+ * @{
+ */
+
+typedef xntimer_t                   rtdm_timer_t;
+
+/**
+ * Timer handler
+ *
+ * @param[in] timer Timer handle as returned by rtdm_timer_init()
+ */
+typedef void (*rtdm_timer_handler_t)(rtdm_timer_t *timer);
+
+/*!
+ * @anchor RTDM_TIMERMODE_xxx   @name RTDM_TIMERMODE_xxx
+ * Timer operation modes
+ * @{
+ */
+enum rtdm_timer_mode {
+    /** Monotonic timer with relative timeout */
+    RTDM_TIMERMODE_RELATIVE = XN_RELATIVE,
+    /** Monotonic timer with absolute timeout */
+    RTDM_TIMERMODE_ABSOLUTE = XN_ABSOLUTE,
+    /** Adjustable timer with absolute timeout */
+    RTDM_TIMERMODE_REALTIME = XN_REALTIME
+};
+/** @} RTDM_TIMERMODE_xxx */
+
+/** @} rtdmtimer */
+
+#ifndef DOXYGEN_CPP /* Avoid broken doxygen output */
+#define rtdm_timer_init(timer, handler, name) \
+({ \
+    xntimer_init((timer), rtdm_tbase, handler); \
+    xntimer_set_name((timer), (name)); \
+    0; \
+})
+#endif /* !DOXYGEN_CPP */
+
+void rtdm_timer_destroy(rtdm_timer_t *timer);
+
+int rtdm_timer_start(rtdm_timer_t *timer, nanosecs_abs_t expiry,
+                     nanosecs_rel_t interval, enum rtdm_timer_mode mode);
+
+void rtdm_timer_stop(rtdm_timer_t *timer);
+
+#ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
+static inline int rtdm_timer_start_in_handler(rtdm_timer_t *timer,
+                                              nanosecs_abs_t expiry,
+                                              nanosecs_rel_t interval,
+                                              enum rtdm_timer_mode mode)
+{
+    return xntimer_start(timer, xntbase_ns2ticks(rtdm_tbase, expiry),
+                         xntbase_ns2ticks(rtdm_tbase, interval), mode);
+}
+
+static inline void rtdm_timer_stop_in_handler(rtdm_timer_t *timer)
+{
+    xntimer_stop(timer);
+}
+#endif /* !DOXYGEN_CPP */
+
+
+/* --- task services --- */
 /*!
  * @addtogroup rtdmtask
  * @{
@@ -878,6 +949,8 @@ typedef void (*rtdm_task_proc_t)(void *arg);
 int rtdm_task_init(rtdm_task_t *task, const char *name,
                    rtdm_task_proc_t task_proc, void *arg,
                    int priority, nanosecs_rel_t period);
+int __rtdm_task_sleep(xnticks_t timeout, xntmode_t mode);
+void rtdm_task_busy_sleep(nanosecs_rel_t delay);
 
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline void rtdm_task_destroy(rtdm_task_t *task)
@@ -899,7 +972,7 @@ static inline int rtdm_task_set_period(rtdm_task_t *task,
     if (period < 0)
         period = 0;
     return xnpod_set_thread_periodic(task, XN_INFINITE,
-                                     xntbase_ns2ticks(xnthread_time_base(task), period));
+        xntbase_ns2ticks(xnthread_time_base(task), period));
 }
 
 static inline int rtdm_task_unblock(rtdm_task_t *task)
@@ -920,11 +993,28 @@ static inline int rtdm_task_wait_period(void)
     XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
     return xnpod_wait_thread_period(NULL);
 }
-#endif /* !DOXYGEN_CPP */
 
-int rtdm_task_sleep(nanosecs_rel_t delay);
-int rtdm_task_sleep_until(nanosecs_abs_t wakeup_time);
-void rtdm_task_busy_sleep(nanosecs_rel_t delay);
+static inline int rtdm_task_sleep(nanosecs_rel_t delay)
+{
+    return __rtdm_task_sleep(delay, XN_RELATIVE);
+}
+
+static inline int
+rtdm_task_sleep_abs(nanosecs_abs_t wakeup_date, enum rtdm_timer_mode mode)
+{
+    /* For the sake of a consistent API usage... */
+    if (mode != RTDM_TIMERMODE_ABSOLUTE && mode != RTDM_TIMERMODE_REALTIME)
+        return -EINVAL;
+    return __rtdm_task_sleep(wakeup_date, mode);
+}
+
+/* rtdm_task_sleep_abs shall be used instead */
+static inline int __deprecated
+rtdm_task_sleep_until(nanosecs_abs_t wakeup_time)
+{
+    return __rtdm_task_sleep(wakeup_time, XN_REALTIME);
+}
+#endif /* !DOXYGEN_CPP */
 
 
 /* --- timeout sequences */
