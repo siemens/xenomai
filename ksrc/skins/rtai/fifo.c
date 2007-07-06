@@ -40,7 +40,7 @@ static int __fifo_read_proc(char *page,
 	ptrW += sprintf(ptrW, "Size     - Written  - F - Handler  - Ref\n");
 
 	/* Output buffer:  xnpipe_mh_t *buffer; */
-	ptrW += sprintf(ptrW, "%08X - %08X - %p - %i\n",
+	ptrW += sprintf(ptrW, "%08zX - %08zX - %p - %i\n",
 			p->bufsz, p->fillsz, p->handler, p->refcnt);
 
 	len = ptrW - page - off;
