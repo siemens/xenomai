@@ -1,3 +1,27 @@
+2007-07-06  Philippe Gerum  <rpm@xenomai.org>
+
+	* scripts/prepare-kernel.sh: Prevent infinite loop while
+	determining the location of the Linux tree in presence of an
+	invalid --default setup.
+
+2007-07-06  Jan Kiszka  <jan.kiszka@web.de>, Dmitry Adamushko <dmitry.adamushko@gmail.com>
+
+	* ksrc/nucleus/intr.c: Fix interrupt locking scheme. Again.
+
+2007-07-06  Jan Kiszka  <jan.kiszka@web.de>
+	
+	* ksrc/nucleus/timebase.c: Static init of master time base flags.
+
+	* ksrc/nucleus: Refactor timer modes (relative, absolute,
+	real-time).
+
+	* ksrc/skins/rtdm/drvlib.c, include/rtdm/rtdm_driver.h,
+	ksrc/drivers/testing/timerbench.c: Add timer interface.
+
+	* src/skins: Set SCHED_FIFO scheduling policy only from
+	task/thread creation trampolines - remove setting from scheduling
+	parameters passed to pthread_create() calls.
+
 2007-06-30  Jan Kiszka  <jan.kiszka@web.de>, Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/hal.c (rthal_timer_request, rthal_timer_release):
