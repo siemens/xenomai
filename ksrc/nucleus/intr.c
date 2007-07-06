@@ -45,6 +45,32 @@ xnlock_t intrlock = XNARCH_LOCK_UNLOCKED;
 
 xnintr_t nkclock;
 
+#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
+
+typedef struct xnintr_irq {
+
+#ifdef CONFIG_SMP
+	xnlock_t lock;
+#endif /* CONFIG_SMP */
+	xnintr_t *handlers;
+	int unhandled;
+
+} ____cacheline_aligned_in_smp xnintr_irq_t;
+
+static xnintr_irq_t xnirqs[RTHAL_NR_IRQS];
+
+#define lock_shirq(irq)		xnlock_get(&xnirqs[irq].lock)
+#define unlock_shirq(irq)	xnlock_put(&xnirqs[irq].lock)
+#define shlock_init(irq)	xnlock_init(&xnirqs[irq].lock)
+
+#else
+
+#define lock_shirq(irq)		do { } while(0)
+#define unlock_shirq(irq)	do { } while(0)
+#define shlock_init(irq)	do { } while(0)
+
+#endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE  */
+
 #ifdef CONFIG_XENO_OPT_STATS
 int xnintr_count = 1;	/* Number of attached xnintr objects + nkclock */
 int xnintr_list_rev;	/* Modification counter of xnintr list */
@@ -66,9 +92,23 @@ static inline void xnintr_stat_counter_dec(void)
 	xnarch_memory_barrier();
 	xnintr_list_rev++;
 }
+
+static inline void xnintr_sync_stat_references(xnintr_t *intr)
+{
+	int cpu;
+
+	for_each_online_cpu(cpu) {
+		xnsched_t *sched = xnpod_sched_slot(cpu);
+
+		/* Synchronize on all dangling references to go away. */
+		while (sched->current_account == &intr->stat[cpu].account)
+			cpu_relax();
+	}
+}
 #else
 static inline void xnintr_stat_counter_inc(void) {}
 static inline void xnintr_stat_counter_dec(void) {}
+static inline void xnintr_sync_stat_references(xnintr_t *intr) {}
 #endif /* CONFIG_XENO_OPT_STATS */
 
 /*
@@ -79,7 +119,7 @@ static inline void xnintr_stat_counter_dec(void) {}
 static void xnintr_irq_handler(unsigned irq, void *cookie)
 {
 	xnsched_t *sched = xnpod_current_sched();
-	xnintr_t *intr = (xnintr_t *)cookie;
+	xnintr_t *intr;
 	xnstat_runtime_t *prev;
 	xnticks_t start;
 	int s;
@@ -91,6 +131,21 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	xnltt_log_event(xeno_ev_ienter, irq);
 
 	++sched->inesting;
+
+	lock_shirq(irq);
+
+#ifdef CONFIG_SMP
+	/* In SMP case, we have to reload the cookie under the per-IRQ lock
+	   to avoid racing with xnintr_detach. */
+	intr = rthal_irq_cookie(&rthal_domain, irq);
+	if (unlikely(!intr)) {
+		s = 0;
+		goto unlock_and_exit;
+	}
+#else
+	/* cookie always valid, attach/detach happens with IRQs disabled */
+	intr = cookie;
+#endif
 	s = intr->isr(intr);
 
 	if (unlikely(s == XN_ISR_NONE)) {
@@ -106,6 +161,11 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 			start);
 		intr->unhandled = 0;
 	}
+
+#ifdef CONFIG_SMP
+ unlock_and_exit:
+#endif
+	unlock_shirq(irq);
 
 	if (s & XN_ISR_PROPAGATE)
 		xnarch_chain_irq(irq);
@@ -140,18 +200,6 @@ void xnintr_clock_handler(void)
 
 #if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
 
-typedef struct xnintr_shirq {
-
-	xnintr_t *handlers;
-	int unhandled;
-#ifdef CONFIG_SMP
-	xnlock_t lock;
-#endif
-
-} xnintr_shirq_t;
-
-static xnintr_shirq_t xnshirqs[RTHAL_NR_IRQS];
-
 #if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL)
 /*
  * Low-level interrupt handler dispatching the user-defined ISRs for
@@ -163,7 +211,7 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 	xnsched_t *sched = xnpod_current_sched();
 	xnstat_runtime_t *prev;
 	xnticks_t start;
-	xnintr_shirq_t *shirq = &xnshirqs[irq];
+	xnintr_irq_t *shirq = &xnirqs[irq];
 	xnintr_t *intr;
 	int s = 0;
 
@@ -234,7 +282,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	xnsched_t *sched = xnpod_current_sched();
 	xnstat_runtime_t *prev;
 	xnticks_t start;
-	xnintr_shirq_t *shirq = &xnshirqs[irq];
+	xnintr_irq_t *shirq = &xnirqs[irq];
 	xnintr_t *intr, *end = NULL;
 	int s = 0, counter = 0;
 
@@ -260,15 +308,15 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 		s |= ret;
 
 		if (code == XN_ISR_HANDLED) {
-			end = NULL;
+			if (!(end = (intr->next)))
+				end = shirq->handlers;
 			xnstat_counter_inc(
 				&intr->stat[xnsched_cpu(sched)].hits);
 			xnstat_runtime_lazy_switch(sched,
 				&intr->stat[xnsched_cpu(sched)].account,
 				start);
 			start = xnstat_runtime_now();
-		} else if (code == XN_ISR_NONE && end == NULL)
-			end = intr;
+		}
 
 		if (counter++ > MAX_EDGEIRQ_COUNTER)
 			break;
@@ -309,7 +357,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 
 static inline int xnintr_irq_attach(xnintr_t *intr)
 {
-	xnintr_shirq_t *shirq = &xnshirqs[intr->irq];
+	xnintr_irq_t *shirq = &xnirqs[intr->irq];
 	xnintr_t *prev, **p = &shirq->handlers;
 	int err;
 
@@ -362,17 +410,16 @@ static inline int xnintr_irq_attach(xnintr_t *intr)
 
 	intr->next = NULL;
 
-	/* Add a given interrupt object. */
-	xnlock_get(&shirq->lock);
+	/* Add the given interrupt object. No need to synchronise with the IRQ
+	   handler, we are only extending the chain. */
 	*p = intr;
-	xnlock_put(&shirq->lock);
 
 	return 0;
 }
 
 static inline int xnintr_irq_detach(xnintr_t *intr)
 {
-	xnintr_shirq_t *shirq = &xnshirqs[intr->irq];
+	xnintr_irq_t *shirq = &xnirqs[intr->irq];
 	xnintr_t *e, **p = &shirq->handlers;
 	int err = 0;
 
@@ -391,6 +438,8 @@ static inline int xnintr_irq_detach(xnintr_t *intr)
 			*p = e->next;
 			xnlock_put(&shirq->lock);
 
+			xnintr_sync_stat_references(intr);
+
 			/* Release the IRQ line if this was the last user */
 			if (shirq->handlers == NULL)
 				err = xnarch_release_irq(intr->irq);
@@ -405,14 +454,6 @@ static inline int xnintr_irq_detach(xnintr_t *intr)
 	return err;
 }
 
-int xnintr_mount(void)
-{
-	int i;
-	for (i = 0; i < RTHAL_NR_IRQS; ++i)
-		xnlock_init(&xnshirqs[i].lock);
-	return 0;
-}
-
 #else /* !CONFIG_XENO_OPT_SHIRQ_LEVEL && !CONFIG_XENO_OPT_SHIRQ_EDGE */
 
 static inline int xnintr_irq_attach(xnintr_t *intr)
@@ -422,12 +463,24 @@ static inline int xnintr_irq_attach(xnintr_t *intr)
 
 static inline int xnintr_irq_detach(xnintr_t *intr)
 {
-	return xnarch_release_irq(intr->irq);
+	int err;
+
+	err = xnarch_release_irq(intr->irq);
+
+	xnintr_sync_stat_references(intr);
+
+	return err;
 }
 
-int xnintr_mount(void) { return 0; }
-
 #endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */
+
+int xnintr_mount(void)
+{
+	int i;
+	for (i = 0; i < RTHAL_NR_IRQS; ++i)
+		shlock_init(i);
+	return 0;
+}
 
 /*!
  * \fn int xnintr_init (xnintr_t *intr,const char *name,unsigned irq,xnisr_t isr,xniack_t iack,xnflags_t flags)
@@ -789,7 +842,7 @@ int xnintr_irq_proc(unsigned int irq, char *str)
 	xnlock_get_irqsave(&intrlock, s);
 
 #if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
-	intr = xnshirqs[irq].handlers;
+	intr = xnirqs[irq].handlers;
 	if (intr) {
 		strcpy(p, "        "); p += 8;
 
@@ -842,7 +895,7 @@ int xnintr_query(int irq, int *cpu, xnintr_t **prev, int revision, char *name,
 	else if (irq == XNARCH_TIMER_IRQ)
 		intr = &nkclock;
 	else
-		intr = xnshirqs[irq].handlers;
+		intr = xnirqs[irq].handlers;
 #else /* !CONFIG_XENO_OPT_SHIRQ_LEVEL && !CONFIG_XENO_OPT_SHIRQ_EDGE */
 	if (*prev)
 		intr = NULL;
