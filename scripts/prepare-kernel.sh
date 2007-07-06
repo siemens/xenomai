@@ -239,6 +239,8 @@ while test x$linux_tree = x; do
    if test \! -x "$linux_tree"; then
       echo "$me: cannot access Linux tree in $linux_tree"
       linux_tree=
+      usedefault=
+      default_linux_tree=/usr/src
    else
       break
    fi
