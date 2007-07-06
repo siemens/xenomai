@@ -41,19 +41,19 @@
 
 DEFINE_PRIVATE_XNLOCK(intrlock);
 
+#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
+
 typedef struct xnintr_irq {
 
 	DECLARE_XNLOCK(lock);
-
-#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
 	xnintr_t *handlers;
 	int unhandled;
-#endif
+
 } ____cacheline_aligned_in_smp xnintr_irq_t;
 
-#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
 static xnintr_irq_t xnirqs[RTHAL_NR_IRQS];
-#endif
+
+#endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE  */
 
 #ifdef CONFIG_XENO_OPT_STATS
 xnintr_t nkclock;	/* Only for statistics */
