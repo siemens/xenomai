@@ -130,8 +130,6 @@ static inline void rthal_timer_program_shot (unsigned long delay)
     /* Note: reading before writing just to work around the Pentium
        APIC double write bug. apic_read_around() expands to nil
        whenever CONFIG_X86_GOOD_APIC is set. --rpm */
-    apic_read_around(APIC_LVTT);
-    apic_write_around(APIC_LVTT,RTHAL_APIC_TIMER_VECTOR);
     apic_read_around(APIC_TMICT);
     apic_write_around(APIC_TMICT,delay);
     }
