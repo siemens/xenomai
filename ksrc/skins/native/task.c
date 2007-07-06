@@ -1014,7 +1014,7 @@ int rt_task_sleep_until(RTIME date)
 	   implicitely calls the rescheduling procedure. */
 
 	if (date > xntbase_get_time(__native_tbase)) {
-		xnpod_suspend_thread(self, XNDELAY, date, XN_ABSOLUTE, NULL);
+		xnpod_suspend_thread(self, XNDELAY, date, XN_REALTIME, NULL);
 
 		if (xnthread_test_info(self, XNBREAK))
 			err = -EINTR;

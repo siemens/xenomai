@@ -346,7 +346,7 @@ xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
 void xnpod_suspend_thread(xnthread_t *thread,
 			  xnflags_t mask,
 			  xnticks_t timeout,
-			  int mode,
+			  xntmode_t timeout_mode,
 			  struct xnsynch *wchan);
 
 void xnpod_resume_thread(xnthread_t *thread,

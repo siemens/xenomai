@@ -39,7 +39,7 @@
 #define XNTIMER_DEQUEUED  0x00000001
 #define XNTIMER_KILLED    0x00000002
 #define XNTIMER_PERIODIC  0x00000004
-#define XNTIMER_MONOTONIC 0x00000008
+#define XNTIMER_REALTIME  0x00000008
 
 /* These flags are available to the real-time interfaces */
 #define XNTIMER_SPARE0  0x01000000
@@ -51,6 +51,7 @@
 #define XNTIMER_SPARE6  0x40000000
 #define XNTIMER_SPARE7  0x80000000
 
+/* Timer priorities */
 #define XNTIMER_LOPRIO  (-999999999)
 #define XNTIMER_STDPRIO 0
 #define XNTIMER_HIPRIO  999999999
@@ -288,10 +289,6 @@ typedef struct xntimed_slave {
 #endif /* !CONFIG_SMP */
 #define xntimer_interval(t)	((t)->interval)
 #define xntimer_set_cookie(t,c)	((t)->cookie = (c))
-#define xntimer_set_monotonic(t) \
-	__setbits((t)->status, XNTIMER_MONOTONIC)
-#define xntimer_set_realtime(t) \
-	__clrbits((t)->status, XNTIMER_MONOTONIC)
 
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 #define xntimer_base(t)		((t)->base)
@@ -359,11 +356,11 @@ static inline void xntimer_set_name(xntimer_t *timer, const char *name)
  * \addtogroup timer
  *@{ */
 
-#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
+#if defined(CONFIG_XENO_OPT_TIMING_PERIODIC) || defined(DOXYGEN_CPP)
 
 /*!
  * @fn void xntimer_start(xntimer_t *timer,xnticks_t value,xnticks_t interval,
- *                        int mode)
+ *                        xntmode_t mode)
  * @brief Arm a timer.
  *
  * Activates a timer so that the associated timeout handler will be
@@ -383,10 +380,12 @@ static inline void xntimer_set_name(xntimer_t *timer, const char *name)
  * expressed in clock ticks (see note). If @a interval is equal to
  * XN_INFINITE, the timer will not be reloaded after it has expired.
  *
- * @param mode The timer mode. It can be either XN_RELATIVE or
- * XN_ABSOLUTE to define if @a value shall be interpreted as a
- * relative or absolute date. Absolute dates are based on the clock
- * value of the related time base returned by xntbase_get_time().
+ * @param mode The timer mode. It can be XN_RELATIVE if @a value shall
+ * be interpreted as a relative date, XN_ABSOLUTE for an absolute date
+ * based on the monotonic clock of the related time base (as returned
+ * my xntbase_get_jiffies()), or XN_REALTIME if the absolute date is
+ * based on the adjustable real-time clock of the time base (as returned
+ * by xntbase_get_time().
  *
  * @return 0 is returned upon success, or -ETIMEDOUT if an absolute
  * date in the past has been given.
@@ -413,7 +412,7 @@ static inline void xntimer_set_name(xntimer_t *timer, const char *name)
 
 static inline int xntimer_start(xntimer_t *timer,
 				xnticks_t value, xnticks_t interval,
-				int mode)
+				xntmode_t mode)
 {
 	return timer->base->ops->start_timer(timer, value, interval, mode);
 }
@@ -594,7 +593,7 @@ void xntslave_stop(xntslave_t *slave);
 int xntimer_start_aperiodic(xntimer_t *timer,
 			    xnticks_t value,
 			    xnticks_t interval,
-			    int mode);
+			    xntmode_t mode);
 
 void xntimer_stop_aperiodic(xntimer_t *timer);
 
@@ -608,7 +607,7 @@ xnticks_t xntimer_get_raw_expiry_aperiodic(xntimer_t *timer);
 
 static inline int xntimer_start(xntimer_t *timer,
 				xnticks_t value, xnticks_t interval,
-				int mode)
+				xntmode_t mode)
 {
 	return xntimer_start_aperiodic(timer, value, interval, mode);
 }

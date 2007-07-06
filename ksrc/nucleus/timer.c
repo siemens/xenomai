@@ -91,7 +91,7 @@ static inline void xntimer_next_remote_shot(xnsched_t *sched)
 
 int xntimer_start_aperiodic(xntimer_t *timer,
 			    xnticks_t value, xnticks_t interval,
-			    int mode)
+			    xntmode_t mode)
 {
 	xnticks_t date, now;
 
@@ -100,14 +100,22 @@ int xntimer_start_aperiodic(xntimer_t *timer,
 
 	now = xnarch_get_cpu_tsc();
 
-	if (mode == XN_RELATIVE)
+	switch (mode) {
+	case XN_RELATIVE:
+		if ((xnsticks_t)value < 0)
+			return -ETIMEDOUT;
 		date = xnarch_ns_to_tsc(value) + now;
-	else {
-		if (!testbits(timer->status, XNTIMER_MONOTONIC))
-			value -= nktbase.wallclock_offset;
+		__clrbits(timer->status, XNTIMER_REALTIME);
+		break;
+	case XN_REALTIME:
+		value -= nktbase.wallclock_offset;
+		/* fall through */
+	default: /* XN_ABSOLUTE || XN_REALTIME */
 		date = xnarch_ns_to_tsc(value);
 		if ((xnsticks_t)(date - now) <= 0)
 			return -ETIMEDOUT;
+		__setbits(timer->status, XNTIMER_REALTIME);
+		break;
 	}
 
 	xntimerh_date(&timer->aplink) = date;
@@ -284,18 +292,26 @@ static inline void xntimer_dequeue_periodic(xntimer_t *timer)
 
 static int xntimer_start_periodic(xntimer_t *timer,
 				  xnticks_t value, xnticks_t interval,
-				  int mode)
+				  xntmode_t mode)
 {
 	if (!testbits(timer->status, XNTIMER_DEQUEUED))
 		xntimer_dequeue_periodic(timer);
 
-	if (mode == XN_RELATIVE)
+	switch (mode) {
+	case XN_RELATIVE:
+		if ((xnsticks_t)value < 0)
+			return -ETIMEDOUT;
 		value += timer->base->jiffies;
-	else {
-		if (!testbits(timer->status, XNTIMER_MONOTONIC))
-			value -= timer->base->wallclock_offset;
+		__clrbits(timer->status, XNTIMER_REALTIME);
+		break;
+	case XN_REALTIME:
+		value -= timer->base->wallclock_offset;
+		/* fall through */
+	default: /* XN_ABSOLUTE || XN_REALTIME */
 		if ((xnsticks_t)(value - timer->base->jiffies) <= 0)
 			return -ETIMEDOUT;
+		__setbits(timer->status, XNTIMER_REALTIME);
+		break;
 	}
 
 	xntlholder_date(&timer->plink) = value;
