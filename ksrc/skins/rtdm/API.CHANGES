@@ -1,6 +1,4 @@
 Scheduled modifications (unsorted):
- o Timer API. This will allow to execute timed operations with lower jitter
-   inside the timer IRQ context.
  o Packet pool management (generalised variant of RTnet's and RT-Firerwire's
    buffer pools).
  o Threaded IRQ handlers.
@@ -8,11 +6,17 @@ Scheduled modifications (unsorted):
  o Support for user-space drivers.
 
 Revision 6:
- o Added profile_version field to rtdm_device
- o Requested IRQ lines are now enabled on return of rtdm_irq_request
+ o Added profile_version field to rtdm_device.
+ o Requested IRQ lines are now enabled on return of rtdm_irq_request.
  o Converted request argument in IOCTL handler to unsigned int to fix issues
-   on 64-bit architectures
- o Added custom argument to rtdm_nrtsig handler
+   on 64-bit architectures.
+ o Added custom argument to rtdm_nrtsig handler.
+ o Introduced Timer API.
+ o Introduced monotonic time base:
+    - obtainable via rtdm_clock_read_monotonic
+    - usable via new rtdm_task_sleep_abs or the timer API
+ o Deprecated rtdm_task_sleep_until, users shall migrate to
+   rtdm_task_sleep_abs(..., RTDM_TIMERMODE_REALTIME).
 
 Revision 5:
  o Introduced generic time types nanosecs_abs_t and nanosecs_rel_t.
