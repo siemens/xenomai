@@ -126,7 +126,9 @@ static inline void xnsynch_renice_thread(xnthread_t *thread, int prio)
 }
 
 /*! 
- * \fn void xnsynch_sleep_on(xnsynch_t *synch,xnticks_t timeout,int mode)
+ * \fn void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout,
+ *                           xntmode_t timeout_mode)
+ *
  * \brief Sleep on a synchronization object.
  *
  * Makes the calling thread sleep on the specified synchronization
@@ -140,13 +142,14 @@ static inline void xnsynch_renice_thread(xnthread_t *thread, int prio)
  *
  * @param timeout The timeout which may be used to limit the time the
  * thread pends on the resource. This value is a wait time given in
- * ticks (see note). It can either be relative or absolute depending
- * on @a mode. Passing XN_INFINITE @b and setting @a mode to
- * XN_RELATIVE specifies an unbounded wait. All other values are used
- * to initialize a watchdog timer.
+ * ticks (see note). It can either be relative, absolute monotonic, or
+ * absolute adjustable depending on @a timeout_mode. Passing XN_INFINITE
+ * @b and setting @a mode to XN_RELATIVE specifies an unbounded wait. All
+ * other values are used to initialize a watchdog timer.
  *
- * @param mode The mode of the @a timeout parameter. It can either be
- * set to XN_RELATIVE or XN_ABSOLUTE.
+ * @param timeout_mode The mode of the @a timeout parameter. It can
+ * either be set to XN_RELATIVE, XN_ABSOLUTE, or XN_REALTIME (see also
+ * xntimer_start()).
  *
  * Environments:
  *
@@ -163,7 +166,8 @@ static inline void xnsynch_renice_thread(xnthread_t *thread, int prio)
  * xnpod_init_thread), or nanoseconds otherwise.
  */
 
-void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout, int mode)
+void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout,
+		      xntmode_t timeout_mode)
 {
 	xnthread_t *thread = xnpod_current_thread(), *owner;
 	spl_t s;
@@ -174,13 +178,13 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout, int mode)
 
 	if (!testbits(synch->status, XNSYNCH_PRIO)) { /* i.e. FIFO */
 		appendpq(&synch->pendq, &thread->plink);
-		xnpod_suspend_thread(thread, XNPEND, timeout, mode, synch);
+		xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
 		goto unlock_and_exit;
 	}
 
 	if (!testbits(synch->status, XNSYNCH_PIP)) { /* i.e. no ownership */
 		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
-		xnpod_suspend_thread(thread, XNPEND, timeout, mode, synch);
+		xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
 		goto unlock_and_exit;
 	}
 
@@ -219,7 +223,7 @@ redo:
 	} else
 		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
 
-	xnpod_suspend_thread(thread, XNPEND, timeout, mode, synch);
+	xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
 
 	if (xnthread_test_info(thread, XNRMID | XNTIMEO | XNBREAK))
 		goto unlock_and_exit;
@@ -228,7 +232,7 @@ redo:
 		/* Somebody stole us the ownership while we were ready
 		   to run, waiting for the CPU: we need to wait again
 		   for the resource. */
-		if (mode == XN_ABSOLUTE || timeout == XN_INFINITE)
+		if (timeout_mode != XN_RELATIVE || timeout == XN_INFINITE)
 			goto redo;
 		timeout = xnthread_timeout(thread);
 		if (timeout > 1) /* Otherwise, it's too late. */

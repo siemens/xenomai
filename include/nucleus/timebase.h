@@ -41,7 +41,7 @@ typedef struct xntbops {
     int (*start_timer)(struct xntimer *timer,
 		       xnticks_t value,
 		       xnticks_t interval,
-		       int mode);
+		       xntmode_t mode);
     void (*stop_timer)(struct xntimer *timer);
     xnticks_t (*get_timer_date)(struct xntimer *timer);
     xnticks_t (*get_timer_timeout)(struct xntimer *timer);
@@ -103,6 +103,11 @@ static inline u_long xntbase_get_tickval(xntbase_t *base)
 {
 	/* Returns the duration of a tick in nanoseconds */
 	return base->tickvalue;
+}
+
+static inline xnticks_t xntbase_get_wallclock_offset(xntbase_t *base)
+{
+	return base->wallclock_offset;
 }
 
 static inline void xntbase_set_hook(xntbase_t *base, void (*hook)(void))

@@ -1175,7 +1175,9 @@ void xnpod_delete_thread(xnthread_t *thread)
 }
 
 /*!
- * \fn void xnpod_suspend_thread(xnthread_t *thread,xnflags_t mask,xnticks_t timeout,int mode, xnsynch_t *wchan)
+ * \fn void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
+ *                               xnticks_t timeout, xntmode_t timeout_mode,
+ *                               xnsynch_t *wchan)
  *
  * \brief Suspend a thread.
  *
@@ -1207,16 +1209,17 @@ void xnpod_delete_thread(xnthread_t *thread)
  *
  * @param timeout The timeout which may be used to limit the time the
  * thread pends on a resource. This value is a wait time given in
- * ticks (see note). It can either be relative or absolute depending
- * on @a mode. Passing XN_INFINITE @b and setting @a mode to
- * XNTIMER_RELATIVE specifies an unbounded wait. All other values are
- * used to initialize a watchdog timer. If the current operation mode
- * of the system timer is oneshot and @a timeout elapses before
- * xnpod_suspend_thread() has completed, then the target thread will
- * not be suspended, and this routine leads to a null effect.
+ * ticks (see note). It can either be relative, absolute monotonic, or
+ * absolute adjustable depending on @a timeout_mode. Passing XN_INFINITE
+ * @b and setting @a timeout_mode to XN_RELATIVE specifies an unbounded
+ * wait. All other values are used to initialize a watchdog timer. If the
+ * current operation mode of the system timer is oneshot and @a timeout
+ * elapses before xnpod_suspend_thread() has completed, then the target
+ * thread will not be suspended, and this routine leads to a null effect.
  *
- * @param mode The mode of the @a timeout parameter. It can either
- * be set to XNTIMER_RELATIVE or XNTIMER_ABSOLUTE.
+ * @param timeout_mode The mode of the @a timeout parameter. It can
+ * either be set to XN_RELATIVE, XN_ABSOLUTE, or XN_REALTIME (see also
+ * xntimer_start()).
  *
  * @param wchan The address of a pended resource. This parameter is
  * used internally by the synchronization object implementation code
@@ -1246,7 +1249,7 @@ void xnpod_delete_thread(xnthread_t *thread)
  */
 
 void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
-			  xnticks_t timeout, int mode,
+			  xnticks_t timeout, xntmode_t timeout_mode,
 			  xnsynch_t *wchan)
 {
 	xnsched_t *sched;
@@ -1297,9 +1300,10 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	/* Don't start the timer for a thread indefinitely delayed by
 	   a call to xnpod_suspend_thread(thread,XNDELAY,XN_INFINITE,XN_RELATIVE,NULL). */
 
-	if (timeout != XN_INFINITE || mode == XN_ABSOLUTE) {
+	if (timeout != XN_INFINITE || timeout_mode != XN_RELATIVE) {
 		xntimer_set_sched(&thread->rtimer, thread->sched);
-		if (xntimer_start(&thread->rtimer, timeout, XN_INFINITE, mode)) {
+		if (xntimer_start(&thread->rtimer, timeout, XN_INFINITE,
+				  timeout_mode)) {
 			/* (absolute) timeout value in the past, bail out. */
 			xnthread_set_info(thread, XNTIMEO);
 			goto unlock_and_exit;
@@ -3123,13 +3127,18 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
 		xntimer_start(&thread->ptimer, period, period, XN_RELATIVE);
 		thread->pexpect = xntimer_get_raw_expiry(&thread->ptimer)
 		    + xntimer_interval(&thread->ptimer);
-	} else if (xntimer_start(&thread->ptimer, idate, period, XN_ABSOLUTE))
-			err = -ETIMEDOUT;
-	else {
-		thread->pexpect =
-			xntimer_get_raw_expiry(&thread->ptimer)
-			+ xntimer_interval(&thread->ptimer);
-		xnpod_suspend_thread(thread, XNDELAY, XN_INFINITE, XN_RELATIVE, NULL);
+	} else {
+		idate -= xntbase_get_wallclock_offset(
+			xntimer_base(&thread->ptimer));
+		err = xntimer_start(&thread->ptimer, idate, period,
+				    XN_ABSOLUTE);
+		if (err)
+			goto unlock_and_exit;
+
+		thread->pexpect = xntimer_get_raw_expiry(&thread->ptimer) +
+			xntimer_interval(&thread->ptimer);
+		xnpod_suspend_thread(thread, XNDELAY, XN_INFINITE,
+				     XN_RELATIVE, NULL);
 	}
 
       unlock_and_exit:

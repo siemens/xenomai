@@ -62,8 +62,13 @@ typedef int (*xniack_t)(unsigned irq);
 
 #define XN_INFINITE   (0)
 #define XN_NONBLOCK   ((xnticks_t)-1)
-#define XN_RELATIVE   0
-#define XN_ABSOLUTE   1
+
+/* Timer modes */
+typedef enum xntmode {
+	XN_RELATIVE,
+	XN_ABSOLUTE,
+	XN_REALTIME
+} xntmode_t;
 
 #define XN_APERIODIC_TICK  0
 #define XN_NO_TICK         ((xnticks_t)-1)

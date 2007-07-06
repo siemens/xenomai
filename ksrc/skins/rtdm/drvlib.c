@@ -384,7 +384,7 @@ int rtdm_task_sleep_until(nanosecs_abs_t wakeup_time)
 
     xnpod_suspend_thread(thread, XNDELAY,
 			 xntbase_ns2ticks(xnthread_time_base(thread), wakeup_time),
-                         XN_ABSOLUTE, NULL);
+                         XN_REALTIME, NULL);
  
     return xnthread_test_info(thread, XNBREAK) ? -EINTR : 0;
 }
@@ -514,7 +514,7 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout)
 
     XENO_ASSERT(RTDM, !xnpod_unblockable_p(), /* only warn here */;);
 
-    *timeout_seq = xntbase_get_time(base) + xntbase_ns2ticks(base, timeout);
+    *timeout_seq = xntbase_get_jiffies(base) + xntbase_ns2ticks(base, timeout);
 }
 
 EXPORT_SYMBOL(rtdm_toseq_init);
