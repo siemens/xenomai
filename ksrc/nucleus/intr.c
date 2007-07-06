@@ -493,7 +493,7 @@ int xnintr_mount(void)
 {
 	int i;
 	for (i = 0; i < RTHAL_NR_IRQS; ++i)
-		shlock_init(&xnirqs[i].lock);
+		shlock_init(i);
 	return 0;
 }
 
