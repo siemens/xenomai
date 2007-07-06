@@ -56,7 +56,8 @@ static void *psos_task_trampoline(void *cookie)
 	long err;
 
 	if (iargs->prio > 0) {
-		/* Ok, this looks like weird, but we need this. */
+		/* Apply sched params here as some libpthread implementions
+		   fail doing this via pthread_create. */
 		param.sched_priority = sched_get_priority_max(SCHED_FIFO);
 		pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 	}
@@ -100,7 +101,6 @@ u_long t_create(const char *name,
 {
 	struct psos_task_iargs iargs;
 	xncompletion_t completion;
-	struct sched_param param;
 	pthread_attr_t thattr;
 	pthread_t thid;
 	long err;
@@ -132,12 +132,6 @@ u_long t_create(const char *name,
 
 	pthread_attr_setstacksize(&thattr, ustack);
 	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
-
-	if (prio > 0) {
-		pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
-		param.sched_priority = sched_get_priority_max(SCHED_FIFO);
-		pthread_attr_setschedparam(&thattr, &param);
-	}
 
 	err = pthread_create(&thid, &thattr, &psos_task_trampoline, &iargs);
 

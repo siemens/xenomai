@@ -75,7 +75,8 @@ static void *wind_task_trampoline(void *cookie)
 	/* Backup the arg struct, it might vanish after completion. */
 	memcpy(&_iargs, iargs, sizeof(_iargs));
 
-	/* Ok, this looks like weird, but we need this. */
+	/* Apply sched params here as some libpthread implementions fail
+	   doing this via pthread_create. */
 	param.sched_priority = sched_get_priority_max(SCHED_FIFO);
 	pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 
@@ -124,7 +125,6 @@ STATUS taskInit(WIND_TCB *pTcb,
 {
 	struct wind_task_iargs iargs;
 	xncompletion_t completion;
-	struct sched_param param;
 	pthread_attr_t thattr;
 	pthread_t thid;
 	int err;
@@ -165,9 +165,6 @@ STATUS taskInit(WIND_TCB *pTcb,
 
 	pthread_attr_setstacksize(&thattr, stacksize);
 	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
-	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
-	param.sched_priority = sched_get_priority_max(SCHED_FIFO);
-	pthread_attr_setschedparam(&thattr, &param);
 
 	err = pthread_create(&thid, &thattr, &wind_task_trampoline, &iargs);
 

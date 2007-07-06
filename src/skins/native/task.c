@@ -61,7 +61,8 @@ static void *rt_task_trampoline(void *cookie)
 	long err;
 
 	if (iargs->prio > 0) {
-		/* Ok, this looks like weird, but we need this. */
+		/* Apply sched params here as some libpthread implementions
+		   fail doing this via pthread_create. */
 		param.sched_priority = sched_get_priority_max(SCHED_FIFO);
 		pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 	}

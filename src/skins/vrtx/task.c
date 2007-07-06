@@ -66,7 +66,8 @@ static void *vrtx_task_trampoline(void *cookie)
 	/* Backup the arg struct, it might vanish after completion. */
 	memcpy(&_iargs, iargs, sizeof(_iargs));
 
-	/* Ok, this looks like weird, but we need this. */
+	/* Apply sched params here as some libpthread implementions fail
+	   doing this via pthread_create. */
 	param.sched_priority = sched_get_priority_max(SCHED_FIFO);
 	pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 
@@ -111,7 +112,6 @@ int sc_tecreate(void (*entry) (void *),
 {
 	struct vrtx_task_iargs iargs;
 	xncompletion_t completion;
-	struct sched_param param;
 	pthread_attr_t thattr;
 	pthread_t thid;
 	int err, tid_r;
@@ -143,9 +143,6 @@ int sc_tecreate(void (*entry) (void *),
 
 	pthread_attr_setstacksize(&thattr, ustacksz);
 	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
-	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
-	param.sched_priority = sched_get_priority_max(SCHED_FIFO);
-	pthread_attr_setschedparam(&thattr, &param);
 
 	err = pthread_create(&thid, &thattr, &vrtx_task_trampoline, &iargs);
 

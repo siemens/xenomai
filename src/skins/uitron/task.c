@@ -52,6 +52,8 @@ static void *uitron_task_trampoline(void *cookie)
 	long err;
 	INT arg;
 
+	/* Apply sched params here as some libpthread implementions fail
+	   doing this via pthread_create. */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	old_sigharden_handler = signal(SIGHARDEN, &uitron_task_sigharden);
 
@@ -82,7 +84,6 @@ ER cre_tsk(ID tskid, T_CTSK *pk_ctsk)
 {
 	struct uitron_task_iargs iargs;
 	xncompletion_t completion;
-	struct sched_param param;
 	pthread_attr_t thattr;
 	pthread_t thid;
 	long err;
@@ -105,9 +106,6 @@ ER cre_tsk(ID tskid, T_CTSK *pk_ctsk)
 
 	pthread_attr_setstacksize(&thattr, pk_ctsk->stksz);
 	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
-	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
-	param.sched_priority = sched_get_priority_max(SCHED_FIFO);
-	pthread_attr_setschedparam(&thattr, &param);
 	err = pthread_create(&thid, &thattr, &uitron_task_trampoline, &iargs);
 
 	if (err)
