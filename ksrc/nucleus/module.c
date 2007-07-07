@@ -438,7 +438,7 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 	}
 
 	/* Iterate over all IRQ numbers, ... */
-	for (irq = 0; irq < RTHAL_NR_IRQS; irq++) {
+	for (irq = 0; irq < XNARCH_NR_IRQS; irq++) {
 		xnintr_t *prev = NULL;
 		int cpu = 0;
 		int err;
@@ -865,7 +865,7 @@ static int irq_read_proc(char *page,
 		p += sprintf(p, "        CPU%d", cpu);
 	}
 
-	for (irq = 0; irq < RTHAL_NR_IRQS; irq++) {
+	for (irq = 0; irq < XNARCH_NR_IRQS; irq++) {
 
 		if (rthal_irq_handler(&rthal_domain, irq) == NULL)
 			continue;
