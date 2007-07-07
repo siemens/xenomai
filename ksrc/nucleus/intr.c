@@ -107,8 +107,8 @@ static inline void xnintr_sync_stat_references(xnintr_t *intr) {}
 static void xnintr_irq_handler(unsigned irq, void *cookie)
 {
 	xnsched_t *sched = xnpod_current_sched();
-	xnintr_t *intr;
 	xnstat_runtime_t *prev;
+	xnintr_t *intr;
 	xnticks_t start;
 	int s;
 
@@ -125,7 +125,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 #ifdef CONFIG_SMP
 	/* In SMP case, we have to reload the cookie under the per-IRQ lock
 	   to avoid racing with xnintr_detach. */
-	intr = rthal_irq_cookie(&rthal_domain, irq);
+	intr = cookie == &nkclock ? &nkclock : rthal_irq_cookie(&rthal_domain, irq);
 	if (unlikely(!intr)) {
 		s = 0;
 		goto unlock_and_exit;
