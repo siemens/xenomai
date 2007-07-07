@@ -57,7 +57,7 @@ typedef struct xnintr_irq {
 #endif
 } ____cacheline_aligned_in_smp xnintr_irq_t;
 
-static xnintr_irq_t xnirqs[RTHAL_NR_IRQS];
+static xnintr_irq_t xnirqs[XNARCH_NR_IRQS];
 
 #ifdef CONFIG_XENO_OPT_STATS
 int xnintr_count = 1;	/* Number of attached xnintr objects + nkclock */
@@ -349,7 +349,7 @@ static inline int xnintr_irq_attach(xnintr_t *intr)
 	xnintr_t *prev, **p = &shirq->handlers;
 	int err;
 
-	if (intr->irq >= RTHAL_NR_IRQS)
+	if (intr->irq >= XNARCH_NR_IRQS)
 		return -EINVAL;
 
 	if (__testbits(intr->flags, XN_ISR_ATTACHED))
@@ -411,7 +411,7 @@ static inline int xnintr_irq_detach(xnintr_t *intr)
 	xnintr_t *e, **p = &shirq->handlers;
 	int err = 0;
 
-	if (intr->irq >= RTHAL_NR_IRQS)
+	if (intr->irq >= XNARCH_NR_IRQS)
 		return -EINVAL;
 
 	if (!__testbits(intr->flags, XN_ISR_ATTACHED))
@@ -467,7 +467,7 @@ static inline int xnintr_irq_detach(xnintr_t *intr)
 int xnintr_mount(void)
 {
 	int i;
-	for (i = 0; i < RTHAL_NR_IRQS; ++i)
+	for (i = 0; i < XNARCH_NR_IRQS; ++i)
 		xnlock_init(&xnirqs[i].lock);
 	return 0;
 }
