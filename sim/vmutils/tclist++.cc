@@ -1329,6 +1329,7 @@ const char *TclList::appendx (long n)
 
 { return MvmTcl_DStringAppendElement(&tclString,CString().format("0x%lx",n)); }
 
+#if __WORDSIZE < 64
 const char *TclList::append (u_gnuquad_t n)
 
 { return MvmTcl_DStringAppendElement(&tclString,CString(n)); }
@@ -1336,7 +1337,7 @@ const char *TclList::append (u_gnuquad_t n)
 const char *TclList::appendx (u_gnuquad_t n)
 
 { return MvmTcl_DStringAppendElement(&tclString,CString().format("0x%llx",n)); }
-
+p
 const char *TclList::append (gnuquad_t n)
 
 { return MvmTcl_DStringAppendElement(&tclString,CString(n)); }
@@ -1344,6 +1345,7 @@ const char *TclList::append (gnuquad_t n)
 const char *TclList::appendx (gnuquad_t n)
 
 { return MvmTcl_DStringAppendElement(&tclString,CString().format("0x%llx",n)); }
+#endif
 
 const char *TclList::append (void *ptr)
 

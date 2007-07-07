@@ -36,6 +36,7 @@
 #endif // __GNUG__ && !__OBSCAN__
 
 #include <sys/types.h>
+#include <stdint.h>
 
 class TclListParser;
 
@@ -86,6 +87,7 @@ public:
 
     const char *appendx(long n);
 
+#if __WORDSIZE < 64
     const char *append(u_gnuquad_t n);
 
     const char *appendx(u_gnuquad_t n);
@@ -93,6 +95,7 @@ public:
     const char *append(gnuquad_t n);
 
     const char *appendx(gnuquad_t n);
+#endif
 
     const char *append(void *);
 
