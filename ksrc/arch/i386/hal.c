@@ -98,7 +98,7 @@ static inline void rthal_setup_periodic_apic(int count, int vector)
 	apic_write_around(APIC_TMICT, count);
 }
 
-static inline void rthal_setup_oneshot_apic(int count, int vector)
+static inline void rthal_setup_oneshot_apic(int vector)
 {
 	apic_read(APIC_LVTT);
 	apic_write_around(APIC_LVTT, rthal_set_apic_base(vector));
@@ -114,8 +114,7 @@ static void rthal_critical_sync(void)
 
 		while (rthal_rdtsc() < sync_time) ;
 
-		rthal_setup_oneshot_apic(RTHAL_APIC_ICOUNT,
-					 RTHAL_APIC_TIMER_VECTOR);
+		rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
 		break;
 
 	case 2:
@@ -295,7 +294,7 @@ int rthal_timer_request(
 	while (rthal_rdtsc() < sync_time)
 		;
 
-	rthal_setup_oneshot_apic(RTHAL_APIC_ICOUNT, RTHAL_APIC_TIMER_VECTOR);
+	rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
 
 	rthal_irq_request(RTHAL_APIC_TIMER_IPI,
 			  (rthal_irq_handler_t) tick_handler, NULL, NULL);
