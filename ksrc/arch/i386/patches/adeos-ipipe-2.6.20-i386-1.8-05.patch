@@ -2325,10 +2325,10 @@ index 0000000..2fbe024
 +#include <linux/threads.h>
 +#include <irq_vectors.h>
 +
-+#define IPIPE_ARCH_STRING	"1.8-04"
++#define IPIPE_ARCH_STRING	"1.8-05"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	8
-+#define IPIPE_PATCH_NUMBER	4
++#define IPIPE_PATCH_NUMBER	5
 +
 +#ifdef CONFIG_X86_LOCAL_APIC
 +/* System interrupts are mapped beyond the last defined external IRQ
@@ -2564,7 +2564,7 @@ index 0000000..2fbe024
 +
 +#endif	/* !__I386_IPIPE_H */
 diff --git a/include/asm-i386/irqflags.h b/include/asm-i386/irqflags.h
-index 17b18cf..2019eb3 100644
+index 17b18cf..cf9ffa8 100644
 --- a/include/asm-i386/irqflags.h
 +++ b/include/asm-i386/irqflags.h
 @@ -15,37 +15,61 @@
@@ -2699,10 +2699,24 @@ index 17b18cf..2019eb3 100644
  
  static inline int raw_irqs_disabled_flags(unsigned long flags)
  {
-@@ -105,6 +161,56 @@ static inline int raw_irqs_disabled(void)
+@@ -105,6 +161,70 @@ static inline int raw_irqs_disabled(void)
  
  	return raw_irqs_disabled_flags(flags);
  }
++
++static inline unsigned long raw_mangle_irq_bits(int virt, unsigned long real)
++{
++	/* Merge virtual and real interrupt mask bits into a single
++	   32bit word. */
++	return real | (virt << 31);
++}
++
++static inline int raw_demangle_irq_bits(unsigned long *x)
++{
++	int virt = (*x & (1 << 31)) != 0;
++	*x &= ~(1L << 31);
++	return virt;
++}
 +
 +#define local_irq_disable_hw_notrace() \
 +	__asm__ __volatile__("cli": : :"memory")
