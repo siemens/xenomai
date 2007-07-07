@@ -1,4 +1,14 @@
+2007-07-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.8-05.
+
+	* ksrc/arch/i386/hal.c (rthal_setup_oneshot_apic): Discard useless
+	count argument.
+
 2007-07-06  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/stat.h (xnstat_counter_get): Fix typo in the
+	!CONFIG_XENO_OPT_STATS case.
 
 	* scripts/prepare-kernel.sh: Prevent infinite loop while
 	determining the location of the Linux tree in presence of an
@@ -72,6 +82,9 @@
 
 	* include/asm-{i386,x86_64}/hal.h (rthal_timer_program_shot): No
 	need to reset the LVTT register since we own the APIC timer.
+
+	* ksrc/arch/i386/hal.c (rthal_setup_periodic_apic): Check for
+	non-integrated LAPIC.
 
 2007-06-25  Jan Kiszka  <jan.kiszka@web.de>
 
