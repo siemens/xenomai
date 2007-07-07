@@ -92,20 +92,26 @@ struct rthal_apic_data {
 
 static struct rthal_apic_data rthal_timer_mode[RTHAL_NR_CPUS];
 
-static inline void rthal_setup_periodic_apic(unsigned count, unsigned vector)
+static inline int rthal_set_apic_base(int lvtt_value)
 {
-    apic_read(APIC_LVTT);
-    apic_write_around(APIC_LVTT, APIC_LVT_TIMER_PERIODIC | vector);
-    apic_read(APIC_TMICT);
-    apic_write_around(APIC_TMICT, count);
+	if (APIC_INTEGRATED(GET_APIC_VERSION(apic_read(APIC_LVR))))
+		lvtt_value |= SET_APIC_TIMER_BASE(APIC_TIMER_BASE_DIV);
+
+	return lvtt_value;
 }
 
-static inline void rthal_setup_oneshot_apic(unsigned count, unsigned vector)
+static inline void rthal_setup_periodic_apic(int count, int vector)
 {
-    apic_read(APIC_LVTT);
-    apic_write_around(APIC_LVTT, vector);
-    apic_read(APIC_TMICT);
-    apic_write_around(APIC_TMICT, count);
+	apic_read(APIC_LVTT);
+	apic_write_around(APIC_LVTT, rthal_set_apic_base(APIC_LVT_TIMER_PERIODIC | vector));
+	apic_read(APIC_TMICT);
+	apic_write_around(APIC_TMICT, count);
+}
+
+static inline void rthal_setup_oneshot_apic(int vector)
+{
+	apic_read(APIC_LVTT);
+	apic_write_around(APIC_LVTT, rthal_set_apic_base(vector));
 }
 
 static void rthal_critical_sync(void)
@@ -133,7 +139,7 @@ static void rthal_critical_sync(void)
             if (p->mode)
                 rthal_setup_periodic_apic(p->count, RTHAL_APIC_TIMER_VECTOR);
             else
-                rthal_setup_oneshot_apic(p->count, RTHAL_APIC_TIMER_VECTOR);
+                rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
 
             break;
 
@@ -188,7 +194,7 @@ unsigned long rthal_timer_calibrate(void)
         apic_write_around(APIC_TMICT, RTHAL_APIC_ICOUNT);
     }
 
-    dt = rthal_rdtsc() - t;
+    dt = (rthal_rdtsc() - t) / 2;
 
     rthal_critical_exit(flags);
 
@@ -283,8 +289,6 @@ int rthal_timer_request(void (*handler) (void), unsigned long nstick)
 
         if (p->mode)
             p->count = rthal_imuldiv(p->count, RTHAL_TIMER_FREQ, 1000000000);
-        else
-            p->count = RTHAL_APIC_ICOUNT;
     }
 
     rthal_load_cpuid();
@@ -301,7 +305,7 @@ int rthal_timer_request(void (*handler) (void), unsigned long nstick)
     if (p->mode)
         rthal_setup_periodic_apic(p->count, RTHAL_APIC_TIMER_VECTOR);
     else
-        rthal_setup_oneshot_apic(p->count, RTHAL_APIC_TIMER_VECTOR);
+        rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
 
     rthal_irq_request(RTHAL_APIC_TIMER_IPI,
                       (rthal_irq_handler_t) handler, NULL, NULL);
