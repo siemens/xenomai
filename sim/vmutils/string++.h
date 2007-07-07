@@ -37,6 +37,7 @@
 
 #include <stdarg.h>
 #include <string.h>
+#include <stdint.h>
 #include <ctype.h>
 #include <malloc.h>
 #include "vmutils/list++.h"
@@ -101,9 +102,11 @@ public:
 
     CString(unsigned long ul);
 
+#if __WORDSIZE < 64
     CString(gnuquad_t ll);
 
     CString(u_gnuquad_t ull);
+#endif
 
     CString(void *ptr);
 

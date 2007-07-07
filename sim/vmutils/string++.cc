@@ -160,6 +160,7 @@ CString::CString(unsigned long n) : theString(0)
     allocate(formatBuf);
 }
 
+#if __WORDSIZE < 64
 CString::CString(gnuquad_t n) : theString(0)
 {
     sprintf(formatBuf,"%lld",n);
@@ -171,6 +172,7 @@ CString::CString(u_gnuquad_t n) : theString(0)
     sprintf(formatBuf,"%llu",n);
     allocate(formatBuf);
 }
+#endif
 
 CString::CString(void *ptr) : theString(0)
 
