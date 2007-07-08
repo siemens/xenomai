@@ -45,9 +45,9 @@
 
 typedef struct xnintr {
 
-#if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
+#ifdef CONFIG_XENO_OPT_SHIRQ
     struct xnintr *next; /* !< Next object in the IRQ-sharing chain. */
-#endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */
+#endif /* CONFIG_XENO_OPT_SHIRQ */
 
     unsigned unhandled;	/* !< Number of consequent unhandled interrupts */
 

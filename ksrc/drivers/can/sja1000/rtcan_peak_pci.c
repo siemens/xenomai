@@ -230,11 +230,7 @@ static int rtcan_peak_pci_add_chan(struct pci_dev *pdev, int channel,
     strncpy(dev->name, RTCAN_DEV_NAME, IFNAMSIZ);
 
     /* Register and setup interrupt handling */
-#ifdef CONFIG_XENO_OPT_SHIRQ_LEVEL
     chip->irq_flags = RTDM_IRQTYPE_SHARED;
-#else
-    chip->irq_flags = 0;
-#endif
     chip->irq_num = pdev->irq;
     pita_icr_high = readw(board->conf_addr + PITA_ICR + 2);
     if (channel == CHANNEL_SLAVE) {
