@@ -26,8 +26,13 @@ noinst_HEADERS = \
 	toolshop.h \
 	version.h
 
-libmvmutils_la_CPPFLAGS = \
+libmvmutils_la_CXXFLAGS = \
 	@MVM_CXXFLAGS@ \
+	-D__XENO_SIM__ \
+	-I$(srcdir)/..
+
+libmvmutils_la_CFLAGS = \
+	@MVM_CFLAGS@ \
 	-D__XENO_SIM__ \
 	-I$(srcdir)/..
 
