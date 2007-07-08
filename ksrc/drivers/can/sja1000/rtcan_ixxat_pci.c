@@ -176,11 +176,7 @@ static int rtcan_ixxat_pci_add_chan(struct pci_dev *pdev,
     outb(intcsr, board->conf_addr + IXXAT_INTCSR_OFFSET);
 
     /* Register and setup interrupt handling */
-#ifdef CONFIG_XENO_OPT_SHIRQ_LEVEL
     chip->irq_flags = RTDM_IRQTYPE_SHARED;
-#else
-    chip->irq_flags = 0;
-#endif
     chip->irq_num = pdev->irq;
 
     RTCAN_DBG("%s: base_addr=0x%p conf_addr=%#x irq=%d ocr=%#x cdr=%#x\n",

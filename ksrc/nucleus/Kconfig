@@ -208,6 +208,15 @@ config XENO_OPT_WATCHDOG
 	behalf of the timer tick handler, thus is only active after
 	the timer has been started.
 
+config XENO_OPT_SHIRQ
+	bool "Shared interrupts"
+	help
+
+	Enables support for both level- and edge-triggered shared
+	interrupts, so that multiple real-time interrupt handlers
+	are allowed to control dedicated hardware devices which are
+	configured to share the same interrupt line.
+
 menu "Timing"
 
 config XENO_OPT_TIMING_PERIODIC
@@ -316,29 +325,6 @@ config XENO_OPT_TIMER_WHEEL_STEP
 
 	Set the duration in ns of a timer wheel step. At each step, 
 	the timer wheel use the next hash bucket.
-
-endmenu
-
-
-menu "Shared interrupts"
-
-config XENO_OPT_SHIRQ_LEVEL
-	bool "Level-triggered interrupts"
-	help
-
-	Enables support for shared level-triggered interrupts, so that
-	multiple real-time interrupt handlers are allowed to control
-	dedicated hardware devices which are configured to share
-	the same interrupt channel.
-
-config XENO_OPT_SHIRQ_EDGE
-	bool "Edge-triggered interrupts"
-	help
-
-	Enables support for shared edge-triggered interrupts, so that
-	multiple real-time interrupt handlers are allowed to control
-	dedicated hardware devices which are configured to share
-	the same interrupt channel.
 
 endmenu
 

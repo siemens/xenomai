@@ -36,6 +36,8 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 		bool 'Watchdog support' CONFIG_XENO_OPT_WATCHDOG
 	fi
 
+	bool 'Shared interrupts' CONFIG_XENO_OPT_SHIRQ
+
 	bool 'Enable periodic timing' CONFIG_XENO_OPT_TIMING_PERIODIC
 	int 'Timer tuning latency (ns)' CONFIG_XENO_OPT_TIMING_TIMERLAT 0
 	int 'Scheduling latency (ns)' CONFIG_XENO_OPT_TIMING_SCHEDLAT 0
@@ -53,12 +55,6 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	if [ "$CONFIG_XENO_OPT_TIMER_WHEEL" = "y" ]; then
 		int 'Timer wheel step (ns)' CONFIG_XENO_OPT_TIMER_WHEEL_STEP 100000
 	fi
-	endmenu
-
-	mainmenu_option next_comment
-	comment 'Shared interrupts'
-		bool 'Level-triggered interrupts' CONFIG_XENO_OPT_SHIRQ_LEVEL
-		bool 'Edge-triggered interrupts' CONFIG_XENO_OPT_SHIRQ_EDGE
 	endmenu
 
 	if [ "$CONFIG_LTT" != "n" ]; then
