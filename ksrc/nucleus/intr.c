@@ -452,7 +452,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 #ifdef CONFIG_SMP
 	/* In SMP case, we have to reload the cookie under the per-IRQ lock
 	   to avoid racing with xnintr_detach. */
-	intr = rthal_irq_cookie(&rthal_domain, irq);
+	intr = xnarch_get_irq_cookie(irq);
 	if (unlikely(!intr)) {
 		s = 0;
 		goto unlock_and_exit;
