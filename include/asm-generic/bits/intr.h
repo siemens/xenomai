@@ -63,4 +63,9 @@ static inline xnarch_cpumask_t xnarch_set_irq_affinity (unsigned irq,
     return rthal_set_irq_affinity(irq,affinity);
 }
 
+static inline void *xnarch_get_irq_cookie(unsigned irq)
+{
+	return rthal_irq_cookie(&rthal_domain, irq);
+}
+
 #endif /* !_XENO_ASM_GENERIC_BITS_INTR_H */
