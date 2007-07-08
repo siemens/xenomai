@@ -28,48 +28,53 @@ static inline int xnarch_hook_irq (unsigned irq,
 				   rthal_irq_ackfn_t ackfn, /* Ignored. */
 				   void *cookie)
 {
-    return mvm_hook_irq(irq,handler,cookie);
+	return mvm_hook_irq(irq,handler,cookie);
 }
 
 static inline int xnarch_release_irq (unsigned irq)
 {
-    return mvm_release_irq(irq);
+	return mvm_release_irq(irq);
 }
 
 static inline int xnarch_enable_irq (unsigned irq)
 {
-    return mvm_enable_irq(irq);
+	return mvm_enable_irq(irq);
 }
 
 static inline int xnarch_disable_irq (unsigned irq)
 {
-    return mvm_disable_irq(irq);
+	return mvm_disable_irq(irq);
 }
 
 static inline int xnarch_end_irq (unsigned irq)
 {
-    return mvm_enable_irq(irq);
+	return mvm_enable_irq(irq);
 }
                                                                                 
 static inline void xnarch_chain_irq (unsigned irq)
 {
-    /* empty */
+	/* empty */
 }
 
 static inline unsigned long xnarch_set_irq_affinity (unsigned irq,
 						     unsigned long affinity)
 {
-    return 0;
+	return 0;
 }
 
 static inline void xnarch_relay_tick(void)
 {
-    /* empty */
+	/* empty */
 }
 
 static inline void xnarch_announce_tick(void)
 {
-    /* empty */
+	/* empty */
+}
+
+static inline void *xnarch_get_irq_cookie(unsigned irq)
+{
+	return NULL;		/* Unsupported. */
 }
 
 #endif /* !_XENO_ASM_SIM_BITS_INTR_H */

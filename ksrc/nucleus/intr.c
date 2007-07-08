@@ -401,7 +401,7 @@ static xnintr_irq_t xnirqs[XNARCH_NR_IRQS];
 
 static inline xnintr_t *xnintr_shirq_first(unsigned irq)
 {
-	return rthal_irq_cookie(&rthal_domain, irq);
+	return xnarch_get_irq_cookie(irq);
 }
 
 static inline xnintr_t *xnintr_shirq_next(xnintr_t *prev)
