@@ -37,7 +37,7 @@ DIST_COMMON = README $(am__configure_deps) \
 	$(srcdir)/../config/config.sub $(srcdir)/../config/install-sh \
 	$(srcdir)/../config/ltmain.sh $(srcdir)/../config/missing \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(top_srcdir)/configure ../config/INSTALL ../config/compile \
+	$(top_srcdir)/configure ../config/INSTALL \
 	../config/config.guess ../config/config.sub ../config/depcomp \
 	../config/install-sh ../config/ltmain.sh ../config/missing \
 	../config/ylwrap COPYING ChangeLog

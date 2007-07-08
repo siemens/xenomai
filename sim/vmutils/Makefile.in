@@ -64,8 +64,9 @@ am_libmvmutils_la_OBJECTS = libmvmutils_la-clock.lo \
 	libmvmutils_la-utils.lo
 libmvmutils_la_OBJECTS = $(am_libmvmutils_la_OBJECTS)
 libmvmutils_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
-	$(CXXFLAGS) $(libmvmutils_la_LDFLAGS) $(LDFLAGS) -o $@
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) \
+	$(libmvmutils_la_LDFLAGS) $(LDFLAGS) -o $@
 PROGRAMS = $(noinst_PROGRAMS)
 am_tclpack_OBJECTS = tclpack.$(OBJEXT)
 tclpack_OBJECTS = $(am_tclpack_OBJECTS)
@@ -278,8 +279,13 @@ noinst_HEADERS = \
 	toolshop.h \
 	version.h
 
-libmvmutils_la_CPPFLAGS = \
+libmvmutils_la_CXXFLAGS = \
 	@MVM_CXXFLAGS@ \
+	-D__XENO_SIM__ \
+	-I$(srcdir)/..
+
+libmvmutils_la_CFLAGS = \
+	@MVM_CFLAGS@ \
 	-D__XENO_SIM__ \
 	-I$(srcdir)/..
 
@@ -398,18 +404,18 @@ distclean-compile:
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
 libmvmutils_la-elf.lo: elf.c
-@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmvmutils_la-elf.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-elf.Tpo -c -o libmvmutils_la-elf.lo `test -f 'elf.c' || echo '$(srcdir)/'`elf.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CFLAGS) $(CFLAGS) -MT libmvmutils_la-elf.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-elf.Tpo -c -o libmvmutils_la-elf.lo `test -f 'elf.c' || echo '$(srcdir)/'`elf.c
 @am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libmvmutils_la-elf.Tpo $(DEPDIR)/libmvmutils_la-elf.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='elf.c' object='libmvmutils_la-elf.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmvmutils_la-elf.lo `test -f 'elf.c' || echo '$(srcdir)/'`elf.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CFLAGS) $(CFLAGS) -c -o libmvmutils_la-elf.lo `test -f 'elf.c' || echo '$(srcdir)/'`elf.c
 
 libmvmutils_la-utils.lo: utils.c
-@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmvmutils_la-utils.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-utils.Tpo -c -o libmvmutils_la-utils.lo `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CFLAGS) $(CFLAGS) -MT libmvmutils_la-utils.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-utils.Tpo -c -o libmvmutils_la-utils.lo `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
 @am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libmvmutils_la-utils.Tpo $(DEPDIR)/libmvmutils_la-utils.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='utils.c' object='libmvmutils_la-utils.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmvmutils_la-utils.lo `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CFLAGS) $(CFLAGS) -c -o libmvmutils_la-utils.lo `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
 
 .cc.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -433,60 +439,60 @@ libmvmutils_la-utils.lo: utils.c
 @am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
 
 libmvmutils_la-clock.lo: clock.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libmvmutils_la-clock.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-clock.Tpo -c -o libmvmutils_la-clock.lo `test -f 'clock.cc' || echo '$(srcdir)/'`clock.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) -MT libmvmutils_la-clock.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-clock.Tpo -c -o libmvmutils_la-clock.lo `test -f 'clock.cc' || echo '$(srcdir)/'`clock.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libmvmutils_la-clock.Tpo $(DEPDIR)/libmvmutils_la-clock.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='clock.cc' object='libmvmutils_la-clock.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libmvmutils_la-clock.lo `test -f 'clock.cc' || echo '$(srcdir)/'`clock.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) -c -o libmvmutils_la-clock.lo `test -f 'clock.cc' || echo '$(srcdir)/'`clock.cc
 
 libmvmutils_la-hash++.lo: hash++.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libmvmutils_la-hash++.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-hash++.Tpo -c -o libmvmutils_la-hash++.lo `test -f 'hash++.cc' || echo '$(srcdir)/'`hash++.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) -MT libmvmutils_la-hash++.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-hash++.Tpo -c -o libmvmutils_la-hash++.lo `test -f 'hash++.cc' || echo '$(srcdir)/'`hash++.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libmvmutils_la-hash++.Tpo $(DEPDIR)/libmvmutils_la-hash++.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='hash++.cc' object='libmvmutils_la-hash++.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libmvmutils_la-hash++.lo `test -f 'hash++.cc' || echo '$(srcdir)/'`hash++.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) -c -o libmvmutils_la-hash++.lo `test -f 'hash++.cc' || echo '$(srcdir)/'`hash++.cc
 
 libmvmutils_la-interface.lo: interface.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libmvmutils_la-interface.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-interface.Tpo -c -o libmvmutils_la-interface.lo `test -f 'interface.cc' || echo '$(srcdir)/'`interface.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) -MT libmvmutils_la-interface.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-interface.Tpo -c -o libmvmutils_la-interface.lo `test -f 'interface.cc' || echo '$(srcdir)/'`interface.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libmvmutils_la-interface.Tpo $(DEPDIR)/libmvmutils_la-interface.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='interface.cc' object='libmvmutils_la-interface.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libmvmutils_la-interface.lo `test -f 'interface.cc' || echo '$(srcdir)/'`interface.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) -c -o libmvmutils_la-interface.lo `test -f 'interface.cc' || echo '$(srcdir)/'`interface.cc
 
 libmvmutils_la-list++.lo: list++.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libmvmutils_la-list++.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-list++.Tpo -c -o libmvmutils_la-list++.lo `test -f 'list++.cc' || echo '$(srcdir)/'`list++.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) -MT libmvmutils_la-list++.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-list++.Tpo -c -o libmvmutils_la-list++.lo `test -f 'list++.cc' || echo '$(srcdir)/'`list++.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libmvmutils_la-list++.Tpo $(DEPDIR)/libmvmutils_la-list++.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='list++.cc' object='libmvmutils_la-list++.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libmvmutils_la-list++.lo `test -f 'list++.cc' || echo '$(srcdir)/'`list++.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) -c -o libmvmutils_la-list++.lo `test -f 'list++.cc' || echo '$(srcdir)/'`list++.cc
 
 libmvmutils_la-object.lo: object.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libmvmutils_la-object.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-object.Tpo -c -o libmvmutils_la-object.lo `test -f 'object.cc' || echo '$(srcdir)/'`object.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) -MT libmvmutils_la-object.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-object.Tpo -c -o libmvmutils_la-object.lo `test -f 'object.cc' || echo '$(srcdir)/'`object.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libmvmutils_la-object.Tpo $(DEPDIR)/libmvmutils_la-object.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='object.cc' object='libmvmutils_la-object.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libmvmutils_la-object.lo `test -f 'object.cc' || echo '$(srcdir)/'`object.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) -c -o libmvmutils_la-object.lo `test -f 'object.cc' || echo '$(srcdir)/'`object.cc
 
 libmvmutils_la-statobj.lo: statobj.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libmvmutils_la-statobj.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-statobj.Tpo -c -o libmvmutils_la-statobj.lo `test -f 'statobj.cc' || echo '$(srcdir)/'`statobj.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) -MT libmvmutils_la-statobj.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-statobj.Tpo -c -o libmvmutils_la-statobj.lo `test -f 'statobj.cc' || echo '$(srcdir)/'`statobj.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libmvmutils_la-statobj.Tpo $(DEPDIR)/libmvmutils_la-statobj.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='statobj.cc' object='libmvmutils_la-statobj.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libmvmutils_la-statobj.lo `test -f 'statobj.cc' || echo '$(srcdir)/'`statobj.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) -c -o libmvmutils_la-statobj.lo `test -f 'statobj.cc' || echo '$(srcdir)/'`statobj.cc
 
 libmvmutils_la-string++.lo: string++.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libmvmutils_la-string++.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-string++.Tpo -c -o libmvmutils_la-string++.lo `test -f 'string++.cc' || echo '$(srcdir)/'`string++.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) -MT libmvmutils_la-string++.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-string++.Tpo -c -o libmvmutils_la-string++.lo `test -f 'string++.cc' || echo '$(srcdir)/'`string++.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libmvmutils_la-string++.Tpo $(DEPDIR)/libmvmutils_la-string++.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='string++.cc' object='libmvmutils_la-string++.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libmvmutils_la-string++.lo `test -f 'string++.cc' || echo '$(srcdir)/'`string++.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) -c -o libmvmutils_la-string++.lo `test -f 'string++.cc' || echo '$(srcdir)/'`string++.cc
 
 libmvmutils_la-tclist++.lo: tclist++.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libmvmutils_la-tclist++.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-tclist++.Tpo -c -o libmvmutils_la-tclist++.lo `test -f 'tclist++.cc' || echo '$(srcdir)/'`tclist++.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) -MT libmvmutils_la-tclist++.lo -MD -MP -MF $(DEPDIR)/libmvmutils_la-tclist++.Tpo -c -o libmvmutils_la-tclist++.lo `test -f 'tclist++.cc' || echo '$(srcdir)/'`tclist++.cc
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/libmvmutils_la-tclist++.Tpo $(DEPDIR)/libmvmutils_la-tclist++.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tclist++.cc' object='libmvmutils_la-tclist++.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmvmutils_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libmvmutils_la-tclist++.lo `test -f 'tclist++.cc' || echo '$(srcdir)/'`tclist++.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmvmutils_la_CXXFLAGS) $(CXXFLAGS) -c -o libmvmutils_la-tclist++.lo `test -f 'tclist++.cc' || echo '$(srcdir)/'`tclist++.cc
 
 .l.c:
 	$(am__skiplex) $(SHELL) $(YLWRAP) $< $(LEX_OUTPUT_ROOT).c $@ -- $(LEXCOMPILE)

@@ -1,6 +1,11 @@
-2007-07-07  Philippe Gerum  <rpm@xenomai.org>
+2007-07-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* RELEASE: Xenomai 2.3.2 (The Forgotten)
+
+2007-07-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* xenomai: Upgrade to autoconf 2.61, automake 1.10, libtool
+	1.5.22.
 
 2007-07-07  Philippe Gerum  <rpm@xenomai.org>
 
