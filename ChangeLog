@@ -1,3 +1,13 @@
+2007-07-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* xenomai: Upgrade to autoconf 2.61, automake 1.10, libtool
+	1.5.22.
+
+2007-07-06  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/intr.c: Fix regression when dumping
+	/proc/xenomai/stat. Reduce #ifdef hell.
+	
 2007-07-07  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.8-05.
