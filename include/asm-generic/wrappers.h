@@ -179,6 +179,8 @@ void show_stack(struct task_struct *task,
 
 #define atomic_cmpxchg(v, old, new) ((int)cmpxchg(&((v)->counter), old, new))
 
+#define __deprecated  __attribute__((deprecated))
+
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0) */
 
 #define compat_module_param_array(name, type, count, perm) \
