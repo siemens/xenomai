@@ -1,3 +1,7 @@
+2007-07-09  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* include/asm-generic/wrappers.h: add  __deprecated for Linux 2.4.
+
 2007-07-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* xenomai: Upgrade to autoconf 2.61, automake 1.10, libtool
