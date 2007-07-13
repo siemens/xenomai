@@ -1,5 +1,6 @@
---- linux-2.6.22-rc6/Makefile	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/Makefile	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/Makefile 2.6.22-ipipe/Makefile
+--- 2.6.22/Makefile	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/Makefile	2007-07-10 23:12:25.000000000 +0200
 @@ -490,6 +490,10 @@ endif
  
  include $(srctree)/arch/$(ARCH)/Makefile
@@ -11,9 +12,9 @@
  ifdef CONFIG_FRAME_POINTER
  CFLAGS		+= -fno-omit-frame-pointer $(call cc-option,-fno-optimize-sibling-calls,)
  else
-diff -uNrp linux-2.6.22-rc6/arch/i386/Kconfig linux-2.6.22-rc6-ipipe/arch/i386/Kconfig
---- linux-2.6.22-rc6/arch/i386/Kconfig	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/Kconfig	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/Kconfig 2.6.22-ipipe/arch/i386/Kconfig
+--- 2.6.22/arch/i386/Kconfig	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/Kconfig	2007-07-10 23:12:25.000000000 +0200
 @@ -213,7 +213,7 @@ endchoice
  config PARAVIRT
  	bool "Paravirtualization support (EXPERIMENTAL)"
@@ -32,9 +33,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/Kconfig linux-2.6.22-rc6-ipipe/arch/i386/K
  config X86_UP_APIC
  	bool "Local APIC support on uniprocessors"
  	depends on !SMP && !(X86_VISWS || X86_VOYAGER || X86_GENERICARCH)
-diff -uNrp linux-2.6.22-rc6/arch/i386/boot/compressed/Makefile linux-2.6.22-rc6-ipipe/arch/i386/boot/compressed/Makefile
---- linux-2.6.22-rc6/arch/i386/boot/compressed/Makefile	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/boot/compressed/Makefile	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/boot/compressed/Makefile 2.6.22-ipipe/arch/i386/boot/compressed/Makefile
+--- 2.6.22/arch/i386/boot/compressed/Makefile	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/boot/compressed/Makefile	2007-07-10 23:12:25.000000000 +0200
 @@ -9,6 +9,7 @@ targets		:= vmlinux vmlinux.bin vmlinux.
  EXTRA_AFLAGS	:= -traditional
  
@@ -43,9 +44,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/boot/compressed/Makefile linux-2.6.22-rc6-
  CFLAGS_misc.o += -fPIC
  hostprogs-y	:= relocs
  
-diff -uNrp linux-2.6.22-rc6/arch/i386/boot/compressed/misc.c linux-2.6.22-rc6-ipipe/arch/i386/boot/compressed/misc.c
---- linux-2.6.22-rc6/arch/i386/boot/compressed/misc.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/boot/compressed/misc.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/boot/compressed/misc.c 2.6.22-ipipe/arch/i386/boot/compressed/misc.c
+--- 2.6.22/arch/i386/boot/compressed/misc.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/boot/compressed/misc.c	2007-07-10 23:12:25.000000000 +0200
 @@ -23,6 +23,12 @@
   * This means that it is not safe to place pointers in static structures.
   */
@@ -59,9 +60,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/boot/compressed/misc.c linux-2.6.22-rc6-ip
  /*
   * Getting to provable safe in place decompression is hard.
   * Worst case behaviours need to be analized.
-diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/Makefile linux-2.6.22-rc6-ipipe/arch/i386/kernel/Makefile
---- linux-2.6.22-rc6/arch/i386/kernel/Makefile	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/kernel/Makefile	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/kernel/Makefile 2.6.22-ipipe/arch/i386/kernel/Makefile
+--- 2.6.22/arch/i386/kernel/Makefile	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/kernel/Makefile	2007-07-10 23:12:25.000000000 +0200
 @@ -32,6 +32,8 @@ obj-$(CONFIG_X86_SUMMIT_NUMA)	+= summit.
  obj-$(CONFIG_KPROBES)		+= kprobes.o
  obj-$(CONFIG_MODULES)		+= module.o
@@ -71,9 +72,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/Makefile linux-2.6.22-rc6-ipipe/arc
  obj-$(CONFIG_ACPI_SRAT) 	+= srat.o
  obj-$(CONFIG_EFI) 		+= efi.o efi_stub.o
  obj-$(CONFIG_DOUBLEFAULT) 	+= doublefault.o
-diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/apic.c linux-2.6.22-rc6-ipipe/arch/i386/kernel/apic.c
---- linux-2.6.22-rc6/arch/i386/kernel/apic.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/kernel/apic.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/kernel/apic.c 2.6.22-ipipe/arch/i386/kernel/apic.c
+--- 2.6.22/arch/i386/kernel/apic.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/kernel/apic.c	2007-07-10 23:12:25.000000000 +0200
 @@ -249,7 +249,7 @@ static void lapic_timer_setup(enum clock
  	if (!local_apic_timer_verify_ok)
  		return;
@@ -160,9 +161,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/apic.c linux-2.6.22-rc6-ipipe/arch/
  	return 0;
  }
  
-diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/entry.S linux-2.6.22-rc6-ipipe/arch/i386/kernel/entry.S
---- linux-2.6.22-rc6/arch/i386/kernel/entry.S	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/kernel/entry.S	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/kernel/entry.S 2.6.22-ipipe/arch/i386/kernel/entry.S
+--- 2.6.22/arch/i386/kernel/entry.S	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/kernel/entry.S	2007-07-10 23:15:08.000000000 +0200
 @@ -44,6 +44,7 @@
  #include <linux/linkage.h>
  #include <asm/thread_info.h>
@@ -308,9 +309,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/entry.S linux-2.6.22-rc6-ipipe/arch
  	SAVE_ALL
  	GET_THREAD_INFO(%ebp)
 + 	CATCH_ROOT_SYSCALL(syscall_exit,restore_nocheck_notrace)
- 	testl $TF_MASK,PT_EFLAGS(%esp)
- 	jz no_singlestep
- 	orl $_TIF_SINGLESTEP,TI_flags(%ebp)
+ 					# system call tracing in operation / emulation
+ 	/* Note, _TIF_SECCOMP is bit number 8, and so it needs testw and not testb */
+ 	testw $(_TIF_SYSCALL_EMU|_TIF_SYSCALL_TRACE|_TIF_SECCOMP|_TIF_SYSCALL_AUDIT),TI_flags(%ebp)
 @@ -401,7 +461,11 @@ restore_all:
  	CFI_REMEMBER_STATE
  	je ldt_ss			# returning to user-space with LDT SS
@@ -575,9 +576,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/entry.S linux-2.6.22-rc6-ipipe/arch
  	CFI_ADJUST_CFA_OFFSET 4
  	jmp error_code
  	CFI_ENDPROC
-diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/i8253.c linux-2.6.22-rc6-ipipe/arch/i386/kernel/i8253.c
---- linux-2.6.22-rc6/arch/i386/kernel/i8253.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/kernel/i8253.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/kernel/i8253.c 2.6.22-ipipe/arch/i386/kernel/i8253.c
+--- 2.6.22/arch/i386/kernel/i8253.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/kernel/i8253.c	2007-07-10 23:12:25.000000000 +0200
 @@ -8,6 +8,7 @@
  #include <linux/sysdev.h>
  #include <linux/module.h>
@@ -608,9 +609,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/i8253.c linux-2.6.22-rc6-ipipe/arch
  	spin_lock_irqsave(&i8253_lock, flags);
  	/*
  	 * Although our caller may have the read side of xtime_lock,
-diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/i8259.c linux-2.6.22-rc6-ipipe/arch/i386/kernel/i8259.c
---- linux-2.6.22-rc6/arch/i386/kernel/i8259.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/kernel/i8259.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/kernel/i8259.c 2.6.22-ipipe/arch/i386/kernel/i8259.c
+--- 2.6.22/arch/i386/kernel/i8259.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/kernel/i8259.c	2007-07-10 23:12:26.000000000 +0200
 @@ -34,7 +34,7 @@
   */
  
@@ -669,9 +670,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/i8259.c linux-2.6.22-rc6-ipipe/arch
  	cached_irq_mask |= irqmask;
  
  handle_real_irq:
-diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/io_apic.c linux-2.6.22-rc6-ipipe/arch/i386/kernel/io_apic.c
---- linux-2.6.22-rc6/arch/i386/kernel/io_apic.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/kernel/io_apic.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/kernel/io_apic.c 2.6.22-ipipe/arch/i386/kernel/io_apic.c
+--- 2.6.22/arch/i386/kernel/io_apic.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/kernel/io_apic.c	2007-07-10 23:12:26.000000000 +0200
 @@ -56,8 +56,8 @@ atomic_t irq_mis_count;
  /* Where if anywhere is the i8259 connect in external int mode */
  static struct { int pin, apic; } ioapic_i8259 = { -1, -1 };
@@ -798,9 +799,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/io_apic.c linux-2.6.22-rc6-ipipe/ar
  }
  
  static struct irq_chip lapic_chip __read_mostly = {
-diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/ipipe.c linux-2.6.22-rc6-ipipe/arch/i386/kernel/ipipe.c
---- linux-2.6.22-rc6/arch/i386/kernel/ipipe.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.22-rc6-ipipe/arch/i386/kernel/ipipe.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/kernel/ipipe.c 2.6.22-ipipe/arch/i386/kernel/ipipe.c
+--- 2.6.22/arch/i386/kernel/ipipe.c	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.22-ipipe/arch/i386/kernel/ipipe.c	2007-07-10 23:12:26.000000000 +0200
 @@ -0,0 +1,860 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/i386/kernel/ipipe.c
@@ -1662,9 +1663,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/ipipe.c linux-2.6.22-rc6-ipipe/arch
 +void notrace mcount(void);
 +EXPORT_SYMBOL(mcount);
 +#endif /* CONFIG_IPIPE_TRACE_MCOUNT */
-diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/mcount.S linux-2.6.22-rc6-ipipe/arch/i386/kernel/mcount.S
---- linux-2.6.22-rc6/arch/i386/kernel/mcount.S	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.22-rc6-ipipe/arch/i386/kernel/mcount.S	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/kernel/mcount.S 2.6.22-ipipe/arch/i386/kernel/mcount.S
+--- 2.6.22/arch/i386/kernel/mcount.S	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.22-ipipe/arch/i386/kernel/mcount.S	2007-07-10 23:12:26.000000000 +0200
 @@ -0,0 +1,32 @@
 +/*
 + *  linux/arch/i386/mcount.S
@@ -1698,9 +1699,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/mcount.S linux-2.6.22-rc6-ipipe/arc
 +	popl %ebp
 +out:
 +	ret
-diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/nmi.c linux-2.6.22-rc6-ipipe/arch/i386/kernel/nmi.c
---- linux-2.6.22-rc6/arch/i386/kernel/nmi.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/kernel/nmi.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/kernel/nmi.c 2.6.22-ipipe/arch/i386/kernel/nmi.c
+--- 2.6.22/arch/i386/kernel/nmi.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/kernel/nmi.c	2007-07-10 23:12:26.000000000 +0200
 @@ -48,6 +48,10 @@ static unsigned int nmi_hz = HZ;
  
  static DEFINE_PER_CPU(short, wd_enabled);
@@ -1723,9 +1724,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/nmi.c linux-2.6.22-rc6-ipipe/arch/i
  {
  
  	/*
-diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/process.c linux-2.6.22-rc6-ipipe/arch/i386/kernel/process.c
---- linux-2.6.22-rc6/arch/i386/kernel/process.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/kernel/process.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/kernel/process.c 2.6.22-ipipe/arch/i386/kernel/process.c
+--- 2.6.22/arch/i386/kernel/process.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/kernel/process.c	2007-07-10 23:12:26.000000000 +0200
 @@ -197,6 +197,7 @@ void cpu_idle(void)
  				play_dead();
  
@@ -1743,9 +1744,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/process.c linux-2.6.22-rc6-ipipe/ar
  	struct tss_struct *tss = &per_cpu(init_tss, cpu);
  
  	/* never put a printk in __switch_to... printk() calls wake_up*() indirectly */
-diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/smp.c linux-2.6.22-rc6-ipipe/arch/i386/kernel/smp.c
---- linux-2.6.22-rc6/arch/i386/kernel/smp.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/kernel/smp.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/kernel/smp.c 2.6.22-ipipe/arch/i386/kernel/smp.c
+--- 2.6.22/arch/i386/kernel/smp.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/kernel/smp.c	2007-07-10 23:12:26.000000000 +0200
 @@ -141,6 +141,9 @@ void __send_IPI_shortcut(unsigned int sh
  	 * to the APIC.
  	 */
@@ -1862,9 +1863,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/smp.c linux-2.6.22-rc6-ipipe/arch/i
  	/*
  	 * Remove this CPU:
  	 */
-diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/smpboot.c linux-2.6.22-rc6-ipipe/arch/i386/kernel/smpboot.c
---- linux-2.6.22-rc6/arch/i386/kernel/smpboot.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/kernel/smpboot.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/kernel/smpboot.c 2.6.22-ipipe/arch/i386/kernel/smpboot.c
+--- 2.6.22/arch/i386/kernel/smpboot.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/kernel/smpboot.c	2007-07-10 23:12:26.000000000 +0200
 @@ -1320,6 +1320,11 @@ void __init smp_intr_init(void)
  
  	/* IPI for generic function call */
@@ -1877,9 +1878,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/smpboot.c linux-2.6.22-rc6-ipipe/ar
  }
  
  /*
-diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/time.c linux-2.6.22-rc6-ipipe/arch/i386/kernel/time.c
---- linux-2.6.22-rc6/arch/i386/kernel/time.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/kernel/time.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/kernel/time.c 2.6.22-ipipe/arch/i386/kernel/time.c
+--- 2.6.22/arch/i386/kernel/time.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/kernel/time.c	2007-07-10 23:12:26.000000000 +0200
 @@ -165,11 +165,12 @@ irqreturn_t timer_interrupt(int irq, voi
  		 * This will also deassert NMI lines for the watchdog if run
  		 * on an 82489DX-based system.
@@ -1895,15 +1896,15 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/time.c linux-2.6.22-rc6-ipipe/arch/
  	}
  #endif
  
-diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/traps.c linux-2.6.22-rc6-ipipe/arch/i386/kernel/traps.c
---- linux-2.6.22-rc6/arch/i386/kernel/traps.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/kernel/traps.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/kernel/traps.c 2.6.22-ipipe/arch/i386/kernel/traps.c
+--- 2.6.22/arch/i386/kernel/traps.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/kernel/traps.c	2007-07-10 23:12:26.000000000 +0200
 @@ -306,6 +306,9 @@ void show_registers(struct pt_regs *regs
  	printk(KERN_EMERG "Process %.*s (pid: %d, ti=%p task=%p task.ti=%p)",
  		TASK_COMM_LEN, current->comm, current->pid,
  		current_thread_info(), current, task_thread_info(current));
 +#ifdef CONFIG_IPIPE
-+	printk("I-pipe domain %s", ipipe_current_domain->name);
++	printk(KERN_EMERG "\nI-pipe domain %s", ipipe_current_domain->name);
 +#endif /* CONFIG_IPIPE */
  	/*
  	 * When in-kernel, we also print out the stack and code at the
@@ -1957,9 +1958,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/kernel/traps.c linux-2.6.22-rc6-ipipe/arch
  }
  
  #ifndef CONFIG_MATH_EMULATION
-diff -uNrp linux-2.6.22-rc6/arch/i386/lib/mmx.c linux-2.6.22-rc6-ipipe/arch/i386/lib/mmx.c
---- linux-2.6.22-rc6/arch/i386/lib/mmx.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/lib/mmx.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/lib/mmx.c 2.6.22-ipipe/arch/i386/lib/mmx.c
+--- 2.6.22/arch/i386/lib/mmx.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/lib/mmx.c	2007-07-10 23:12:26.000000000 +0200
 @@ -31,7 +31,7 @@ void *_mmx_memcpy(void *to, const void *
  	void *p;
  	int i;
@@ -1969,9 +1970,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/lib/mmx.c linux-2.6.22-rc6-ipipe/arch/i386
  		return __memcpy(to, from, len);
  
  	p = to;
-diff -uNrp linux-2.6.22-rc6/arch/i386/mach-generic/bigsmp.c linux-2.6.22-rc6-ipipe/arch/i386/mach-generic/bigsmp.c
---- linux-2.6.22-rc6/arch/i386/mach-generic/bigsmp.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/mach-generic/bigsmp.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/mach-generic/bigsmp.c 2.6.22-ipipe/arch/i386/mach-generic/bigsmp.c
+--- 2.6.22/arch/i386/mach-generic/bigsmp.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/mach-generic/bigsmp.c	2007-07-10 23:12:26.000000000 +0200
 @@ -14,6 +14,7 @@
  #include <linux/smp.h>
  #include <linux/init.h>
@@ -1980,9 +1981,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/mach-generic/bigsmp.c linux-2.6.22-rc6-ipi
  #include <asm/mach-bigsmp/mach_apic.h>
  #include <asm/mach-bigsmp/mach_apicdef.h>
  #include <asm/mach-bigsmp/mach_ipi.h>
-diff -uNrp linux-2.6.22-rc6/arch/i386/mach-generic/default.c linux-2.6.22-rc6-ipipe/arch/i386/mach-generic/default.c
---- linux-2.6.22-rc6/arch/i386/mach-generic/default.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/mach-generic/default.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/mach-generic/default.c 2.6.22-ipipe/arch/i386/mach-generic/default.c
+--- 2.6.22/arch/i386/mach-generic/default.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/mach-generic/default.c	2007-07-10 23:12:26.000000000 +0200
 @@ -13,6 +13,7 @@
  #include <linux/string.h>
  #include <linux/smp.h>
@@ -1991,9 +1992,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/mach-generic/default.c linux-2.6.22-rc6-ip
  #include <asm/mach-default/mach_apic.h>
  #include <asm/mach-default/mach_ipi.h>
  #include <asm/mach-default/mach_mpparse.h>
-diff -uNrp linux-2.6.22-rc6/arch/i386/mach-generic/es7000.c linux-2.6.22-rc6-ipipe/arch/i386/mach-generic/es7000.c
---- linux-2.6.22-rc6/arch/i386/mach-generic/es7000.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/mach-generic/es7000.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/mach-generic/es7000.c 2.6.22-ipipe/arch/i386/mach-generic/es7000.c
+--- 2.6.22/arch/i386/mach-generic/es7000.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/mach-generic/es7000.c	2007-07-10 23:12:26.000000000 +0200
 @@ -13,6 +13,7 @@
  #include <linux/string.h>
  #include <linux/smp.h>
@@ -2002,9 +2003,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/mach-generic/es7000.c linux-2.6.22-rc6-ipi
  #include <asm/mach-es7000/mach_apicdef.h>
  #include <asm/mach-es7000/mach_apic.h>
  #include <asm/mach-es7000/mach_ipi.h>
-diff -uNrp linux-2.6.22-rc6/arch/i386/mach-generic/summit.c linux-2.6.22-rc6-ipipe/arch/i386/mach-generic/summit.c
---- linux-2.6.22-rc6/arch/i386/mach-generic/summit.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/mach-generic/summit.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/mach-generic/summit.c 2.6.22-ipipe/arch/i386/mach-generic/summit.c
+--- 2.6.22/arch/i386/mach-generic/summit.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/mach-generic/summit.c	2007-07-10 23:12:26.000000000 +0200
 @@ -13,6 +13,7 @@
  #include <linux/string.h>
  #include <linux/smp.h>
@@ -2013,9 +2014,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/mach-generic/summit.c linux-2.6.22-rc6-ipi
  #include <asm/mach-summit/mach_apic.h>
  #include <asm/mach-summit/mach_apicdef.h>
  #include <asm/mach-summit/mach_ipi.h>
-diff -uNrp linux-2.6.22-rc6/arch/i386/mach-visws/visws_apic.c linux-2.6.22-rc6-ipipe/arch/i386/mach-visws/visws_apic.c
---- linux-2.6.22-rc6/arch/i386/mach-visws/visws_apic.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/mach-visws/visws_apic.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/mach-visws/visws_apic.c 2.6.22-ipipe/arch/i386/mach-visws/visws_apic.c
+--- 2.6.22/arch/i386/mach-visws/visws_apic.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/mach-visws/visws_apic.c	2007-07-10 23:12:26.000000000 +0200
 @@ -28,7 +28,7 @@
  #include "irq_vectors.h"
  
@@ -2033,9 +2034,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/mach-visws/visws_apic.c linux-2.6.22-rc6-i
  /*
   * This is the PIIX4-based 8259 that is wired up indirectly to Cobalt
   * -- not the manner expected by the code in i8259.c.
-diff -uNrp linux-2.6.22-rc6/arch/i386/mach-voyager/voyager_basic.c linux-2.6.22-rc6-ipipe/arch/i386/mach-voyager/voyager_basic.c
---- linux-2.6.22-rc6/arch/i386/mach-voyager/voyager_basic.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/mach-voyager/voyager_basic.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/mach-voyager/voyager_basic.c 2.6.22-ipipe/arch/i386/mach-voyager/voyager_basic.c
+--- 2.6.22/arch/i386/mach-voyager/voyager_basic.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/mach-voyager/voyager_basic.c	2007-07-10 23:12:26.000000000 +0200
 @@ -185,20 +185,20 @@ voyager_timer_interrupt(void)
  		 * pointy.  */
  		__u16 val;
@@ -2061,9 +2062,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/mach-voyager/voyager_basic.c linux-2.6.22-
  		}
  	}
  #ifdef CONFIG_SMP
-diff -uNrp linux-2.6.22-rc6/arch/i386/mm/fault.c linux-2.6.22-rc6-ipipe/arch/i386/mm/fault.c
---- linux-2.6.22-rc6/arch/i386/mm/fault.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/arch/i386/mm/fault.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/arch/i386/mm/fault.c 2.6.22-ipipe/arch/i386/mm/fault.c
+--- 2.6.22/arch/i386/mm/fault.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/arch/i386/mm/fault.c	2007-07-10 23:12:26.000000000 +0200
 @@ -307,6 +307,8 @@ fastcall void __kprobes do_page_fault(st
  	/* get the address */
          address = read_cr2();
@@ -2092,9 +2093,9 @@ diff -uNrp linux-2.6.22-rc6/arch/i386/mm/fault.c linux-2.6.22-rc6-ipipe/arch/i38
 +	return 0;
 +}
 +#endif /* CONFIG_IPIPE */
-diff -uNrp linux-2.6.22-rc6/drivers/pci/htirq.c linux-2.6.22-rc6-ipipe/drivers/pci/htirq.c
---- linux-2.6.22-rc6/drivers/pci/htirq.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/drivers/pci/htirq.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/drivers/pci/htirq.c 2.6.22-ipipe/drivers/pci/htirq.c
+--- 2.6.22/drivers/pci/htirq.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/drivers/pci/htirq.c	2007-07-10 23:12:26.000000000 +0200
 @@ -21,7 +21,7 @@
   * With multiple simultaneous hypertransport irq devices it might pay
   * to make this more fine grained.  But start with simple, stupid, and correct.
@@ -2104,9 +2105,9 @@ diff -uNrp linux-2.6.22-rc6/drivers/pci/htirq.c linux-2.6.22-rc6-ipipe/drivers/p
  
  struct ht_irq_cfg {
  	struct pci_dev *dev;
-diff -uNrp linux-2.6.22-rc6/include/asm-i386/apic.h linux-2.6.22-rc6-ipipe/include/asm-i386/apic.h
---- linux-2.6.22-rc6/include/asm-i386/apic.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/asm-i386/apic.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/asm-i386/apic.h 2.6.22-ipipe/include/asm-i386/apic.h
+--- 2.6.22/include/asm-i386/apic.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/asm-i386/apic.h	2007-07-10 23:12:26.000000000 +0200
 @@ -79,7 +79,13 @@ int get_physical_broadcast(void);
  # define apic_write_around(x,y) apic_write_atomic((x),(y))
  #endif
@@ -2121,9 +2122,9 @@ diff -uNrp linux-2.6.22-rc6/include/asm-i386/apic.h linux-2.6.22-rc6-ipipe/inclu
  {
  	/*
  	 * ack_APIC_irq() actually gets compiled as a single instruction:
-diff -uNrp linux-2.6.22-rc6/include/asm-i386/hw_irq.h linux-2.6.22-rc6-ipipe/include/asm-i386/hw_irq.h
---- linux-2.6.22-rc6/include/asm-i386/hw_irq.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/asm-i386/hw_irq.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/asm-i386/hw_irq.h 2.6.22-ipipe/include/asm-i386/hw_irq.h
+--- 2.6.22/include/asm-i386/hw_irq.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/asm-i386/hw_irq.h	2007-07-10 23:12:26.000000000 +0200
 @@ -40,6 +40,13 @@ fastcall void error_interrupt(void);
  fastcall void spurious_interrupt(void);
  fastcall void thermal_interrupt(void);
@@ -2138,9 +2139,9 @@ diff -uNrp linux-2.6.22-rc6/include/asm-i386/hw_irq.h linux-2.6.22-rc6-ipipe/inc
  #endif
  
  void disable_8259A_irq(unsigned int irq);
-diff -uNrp linux-2.6.22-rc6/include/asm-i386/i8253.h linux-2.6.22-rc6-ipipe/include/asm-i386/i8253.h
---- linux-2.6.22-rc6/include/asm-i386/i8253.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/asm-i386/i8253.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/asm-i386/i8253.h 2.6.22-ipipe/include/asm-i386/i8253.h
+--- 2.6.22/include/asm-i386/i8253.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/asm-i386/i8253.h	2007-07-10 23:12:26.000000000 +0200
 @@ -3,7 +3,7 @@
  
  #include <linux/clockchips.h>
@@ -2150,9 +2151,9 @@ diff -uNrp linux-2.6.22-rc6/include/asm-i386/i8253.h linux-2.6.22-rc6-ipipe/incl
  
  extern struct clock_event_device *global_clock_event;
  
-diff -uNrp linux-2.6.22-rc6/include/asm-i386/i8259.h linux-2.6.22-rc6-ipipe/include/asm-i386/i8259.h
---- linux-2.6.22-rc6/include/asm-i386/i8259.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/asm-i386/i8259.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/asm-i386/i8259.h 2.6.22-ipipe/include/asm-i386/i8259.h
+--- 2.6.22/include/asm-i386/i8259.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/asm-i386/i8259.h	2007-07-10 23:12:26.000000000 +0200
 @@ -7,7 +7,7 @@ extern unsigned int cached_irq_mask;
  #define cached_master_mask	(__byte(0, cached_irq_mask))
  #define cached_slave_mask	(__byte(1, cached_irq_mask))
@@ -2162,9 +2163,9 @@ diff -uNrp linux-2.6.22-rc6/include/asm-i386/i8259.h linux-2.6.22-rc6-ipipe/incl
  
  extern void init_8259A(int auto_eoi);
  extern void enable_8259A_irq(unsigned int irq);
-diff -uNrp linux-2.6.22-rc6/include/asm-i386/ipipe.h linux-2.6.22-rc6-ipipe/include/asm-i386/ipipe.h
---- linux-2.6.22-rc6/include/asm-i386/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.22-rc6-ipipe/include/asm-i386/ipipe.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/asm-i386/ipipe.h 2.6.22-ipipe/include/asm-i386/ipipe.h
+--- 2.6.22/include/asm-i386/ipipe.h	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.22-ipipe/include/asm-i386/ipipe.h	2007-07-10 23:12:26.000000000 +0200
 @@ -0,0 +1,267 @@
 +/*   -*- linux-c -*-
 + *   include/asm-i386/ipipe.h
@@ -2433,9 +2434,9 @@ diff -uNrp linux-2.6.22-rc6/include/asm-i386/ipipe.h linux-2.6.22-rc6-ipipe/incl
 +#endif /* CONFIG_IPIPE */
 +
 +#endif	/* !__I386_IPIPE_H */
-diff -uNrp linux-2.6.22-rc6/include/asm-i386/irqflags.h linux-2.6.22-rc6-ipipe/include/asm-i386/irqflags.h
---- linux-2.6.22-rc6/include/asm-i386/irqflags.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/asm-i386/irqflags.h	2007-06-29 14:07:02.000000000 +0200
+diff -uNrp 2.6.22/include/asm-i386/irqflags.h 2.6.22-ipipe/include/asm-i386/irqflags.h
+--- 2.6.22/include/asm-i386/irqflags.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/asm-i386/irqflags.h	2007-07-10 23:12:26.000000000 +0200
 @@ -12,32 +12,62 @@
  #include <asm/processor-flags.h>
  
@@ -2630,9 +2631,9 @@ diff -uNrp linux-2.6.22-rc6/include/asm-i386/irqflags.h linux-2.6.22-rc6-ipipe/i
  #endif /* __ASSEMBLY__ */
  
  /*
-diff -uNrp linux-2.6.22-rc6/include/asm-i386/mmu_context.h linux-2.6.22-rc6-ipipe/include/asm-i386/mmu_context.h
---- linux-2.6.22-rc6/include/asm-i386/mmu_context.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/asm-i386/mmu_context.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/asm-i386/mmu_context.h 2.6.22-ipipe/include/asm-i386/mmu_context.h
+--- 2.6.22/include/asm-i386/mmu_context.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/asm-i386/mmu_context.h	2007-07-10 23:12:26.000000000 +0200
 @@ -77,8 +77,11 @@ static inline void switch_mm(struct mm_s
  
  #define activate_mm(prev, next)				\
@@ -2645,9 +2646,9 @@ diff -uNrp linux-2.6.22-rc6/include/asm-i386/mmu_context.h linux-2.6.22-rc6-ipip
  	} while(0);
  
  #endif
-diff -uNrp linux-2.6.22-rc6/include/asm-i386/nmi.h linux-2.6.22-rc6-ipipe/include/asm-i386/nmi.h
---- linux-2.6.22-rc6/include/asm-i386/nmi.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/asm-i386/nmi.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/asm-i386/nmi.h 2.6.22-ipipe/include/asm-i386/nmi.h
+--- 2.6.22/include/asm-i386/nmi.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/asm-i386/nmi.h	2007-07-10 23:12:26.000000000 +0200
 @@ -29,7 +29,8 @@ extern void setup_apic_nmi_watchdog (voi
  extern void stop_apic_nmi_watchdog (void *);
  extern void disable_timer_nmi_watchdog(void);
@@ -2658,9 +2659,9 @@ diff -uNrp linux-2.6.22-rc6/include/asm-i386/nmi.h linux-2.6.22-rc6-ipipe/includ
  
  extern atomic_t nmi_active;
  extern unsigned int nmi_watchdog;
-diff -uNrp linux-2.6.22-rc6/include/asm-i386/spinlock.h linux-2.6.22-rc6-ipipe/include/asm-i386/spinlock.h
---- linux-2.6.22-rc6/include/asm-i386/spinlock.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/asm-i386/spinlock.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/asm-i386/spinlock.h 2.6.22-ipipe/include/asm-i386/spinlock.h
+--- 2.6.22/include/asm-i386/spinlock.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/asm-i386/spinlock.h	2007-07-10 23:12:26.000000000 +0200
 @@ -54,7 +54,7 @@ static inline void __raw_spin_lock(raw_s
   * NOTE: there's an irqs-on section here, which normally would have to be
   * irq-traced, but on CONFIG_TRACE_IRQFLAGS we never use this variant.
@@ -2670,9 +2671,9 @@ diff -uNrp linux-2.6.22-rc6/include/asm-i386/spinlock.h linux-2.6.22-rc6-ipipe/i
  static inline void __raw_spin_lock_flags(raw_spinlock_t *lock, unsigned long flags)
  {
  	asm volatile(
-diff -uNrp linux-2.6.22-rc6/include/linux/clockchips.h linux-2.6.22-rc6-ipipe/include/linux/clockchips.h
---- linux-2.6.22-rc6/include/linux/clockchips.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/linux/clockchips.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/linux/clockchips.h 2.6.22-ipipe/include/linux/clockchips.h
+--- 2.6.22/include/linux/clockchips.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/linux/clockchips.h	2007-07-10 23:12:27.000000000 +0200
 @@ -90,6 +90,7 @@ struct clock_event_device {
  	struct list_head	list;
  	enum clock_event_mode	mode;
@@ -2681,9 +2682,9 @@ diff -uNrp linux-2.6.22-rc6/include/linux/clockchips.h linux-2.6.22-rc6-ipipe/in
  };
  
  /*
-diff -uNrp linux-2.6.22-rc6/include/linux/hardirq.h linux-2.6.22-rc6-ipipe/include/linux/hardirq.h
---- linux-2.6.22-rc6/include/linux/hardirq.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/linux/hardirq.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/linux/hardirq.h 2.6.22-ipipe/include/linux/hardirq.h
+--- 2.6.22/include/linux/hardirq.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/linux/hardirq.h	2007-07-10 23:12:27.000000000 +0200
 @@ -133,7 +133,7 @@ extern void irq_enter(void);
   */
  extern void irq_exit(void);
@@ -2694,9 +2695,9 @@ diff -uNrp linux-2.6.22-rc6/include/linux/hardirq.h linux-2.6.22-rc6-ipipe/inclu
 +#define nmi_exit()		do { if (ipipe_root_domain_p) { __irq_exit(); lockdep_on(); } } while (0)
  
  #endif /* LINUX_HARDIRQ_H */
-diff -uNrp linux-2.6.22-rc6/include/linux/ipipe.h linux-2.6.22-rc6-ipipe/include/linux/ipipe.h
---- linux-2.6.22-rc6/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.22-rc6-ipipe/include/linux/ipipe.h	2007-06-29 17:24:47.000000000 +0200
+diff -uNrp 2.6.22/include/linux/ipipe.h 2.6.22-ipipe/include/linux/ipipe.h
+--- 2.6.22/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.22-ipipe/include/linux/ipipe.h	2007-07-10 23:12:27.000000000 +0200
 @@ -0,0 +1,682 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
@@ -3380,9 +3381,9 @@ diff -uNrp linux-2.6.22-rc6/include/linux/ipipe.h linux-2.6.22-rc6-ipipe/include
 +#endif	/* !CONFIG_IPIPE_DEBUG_CONTEXT */
 +
 +#endif	/* !__LINUX_IPIPE_H */
-diff -uNrp linux-2.6.22-rc6/include/linux/ipipe_base.h linux-2.6.22-rc6-ipipe/include/linux/ipipe_base.h
---- linux-2.6.22-rc6/include/linux/ipipe_base.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.22-rc6-ipipe/include/linux/ipipe_base.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/linux/ipipe_base.h 2.6.22-ipipe/include/linux/ipipe_base.h
+--- 2.6.22/include/linux/ipipe_base.h	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.22-ipipe/include/linux/ipipe_base.h	2007-07-10 23:12:27.000000000 +0200
 @@ -0,0 +1,96 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_base.h
@@ -3480,9 +3481,9 @@ diff -uNrp linux-2.6.22-rc6/include/linux/ipipe_base.h linux-2.6.22-rc6-ipipe/in
 +#endif	/* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_BASE_H */
-diff -uNrp linux-2.6.22-rc6/include/linux/ipipe_tickdev.h linux-2.6.22-rc6-ipipe/include/linux/ipipe_tickdev.h
---- linux-2.6.22-rc6/include/linux/ipipe_tickdev.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.22-rc6-ipipe/include/linux/ipipe_tickdev.h	2007-06-29 12:32:34.000000000 +0200
+diff -uNrp 2.6.22/include/linux/ipipe_tickdev.h 2.6.22-ipipe/include/linux/ipipe_tickdev.h
+--- 2.6.22/include/linux/ipipe_tickdev.h	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.22-ipipe/include/linux/ipipe_tickdev.h	2007-07-10 23:12:27.000000000 +0200
 @@ -0,0 +1,55 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_tickdev.h
@@ -3539,9 +3540,9 @@ diff -uNrp linux-2.6.22-rc6/include/linux/ipipe_tickdev.h linux-2.6.22-rc6-ipipe
 +#endif /* CONFIG_IPIPE && CONFIG_GENERIC_CLOCKEVENTS */
 +
 +#endif /* !__LINUX_IPIPE_TICKDEV_H */
-diff -uNrp linux-2.6.22-rc6/include/linux/ipipe_trace.h linux-2.6.22-rc6-ipipe/include/linux/ipipe_trace.h
---- linux-2.6.22-rc6/include/linux/ipipe_trace.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.22-rc6-ipipe/include/linux/ipipe_trace.h	2007-06-29 14:07:35.000000000 +0200
+diff -uNrp 2.6.22/include/linux/ipipe_trace.h 2.6.22-ipipe/include/linux/ipipe_trace.h
+--- 2.6.22/include/linux/ipipe_trace.h	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.22-ipipe/include/linux/ipipe_trace.h	2007-07-10 23:12:27.000000000 +0200
 @@ -0,0 +1,53 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_trace.h
@@ -3596,9 +3597,9 @@ diff -uNrp linux-2.6.22-rc6/include/linux/ipipe_trace.h linux-2.6.22-rc6-ipipe/i
 +#endif /* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_H */
-diff -uNrp linux-2.6.22-rc6/include/linux/irq.h linux-2.6.22-rc6-ipipe/include/linux/irq.h
---- linux-2.6.22-rc6/include/linux/irq.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/linux/irq.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/linux/irq.h 2.6.22-ipipe/include/linux/irq.h
+--- 2.6.22/include/linux/irq.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/linux/irq.h	2007-07-10 23:12:27.000000000 +0200
 @@ -149,6 +149,12 @@ struct irq_chip {
   * @name:		flow handler name for /proc/interrupts output
   */
@@ -3612,9 +3613,9 @@ diff -uNrp linux-2.6.22-rc6/include/linux/irq.h linux-2.6.22-rc6-ipipe/include/l
  	irq_flow_handler_t	handle_irq;
  	struct irq_chip		*chip;
  	struct msi_desc		*msi_desc;
-diff -uNrp linux-2.6.22-rc6/include/linux/kernel.h linux-2.6.22-rc6-ipipe/include/linux/kernel.h
---- linux-2.6.22-rc6/include/linux/kernel.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/linux/kernel.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/linux/kernel.h 2.6.22-ipipe/include/linux/kernel.h
+--- 2.6.22/include/linux/kernel.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/linux/kernel.h	2007-07-10 23:12:27.000000000 +0200
 @@ -14,6 +14,7 @@
  #include <linux/compiler.h>
  #include <linux/bitops.h>
@@ -3638,9 +3639,9 @@ diff -uNrp linux-2.6.22-rc6/include/linux/kernel.h linux-2.6.22-rc6-ipipe/includ
  #endif
  
  #ifdef CONFIG_DEBUG_SPINLOCK_SLEEP
-diff -uNrp linux-2.6.22-rc6/include/linux/linkage.h linux-2.6.22-rc6-ipipe/include/linux/linkage.h
---- linux-2.6.22-rc6/include/linux/linkage.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/linux/linkage.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/linux/linkage.h 2.6.22-ipipe/include/linux/linkage.h
+--- 2.6.22/include/linux/linkage.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/linux/linkage.h	2007-07-10 23:12:27.000000000 +0200
 @@ -64,4 +64,8 @@
  #define fastcall
  #endif
@@ -3650,9 +3651,9 @@ diff -uNrp linux-2.6.22-rc6/include/linux/linkage.h linux-2.6.22-rc6-ipipe/inclu
 +#endif
 +
  #endif
-diff -uNrp linux-2.6.22-rc6/include/linux/mm.h linux-2.6.22-rc6-ipipe/include/linux/mm.h
---- linux-2.6.22-rc6/include/linux/mm.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/linux/mm.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/linux/mm.h 2.6.22-ipipe/include/linux/mm.h
+--- 2.6.22/include/linux/mm.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/linux/mm.h	2007-07-10 23:12:28.000000000 +0200
 @@ -169,6 +169,7 @@ extern unsigned int kobjsize(const void 
  #define VM_MAPPED_COPY	0x01000000	/* T if mapped copy of data (nommu mmap) */
  #define VM_INSERTPAGE	0x02000000	/* The vma has had "vm_insert_page()" done on it */
@@ -3661,9 +3662,9 @@ diff -uNrp linux-2.6.22-rc6/include/linux/mm.h linux-2.6.22-rc6-ipipe/include/li
  
  #ifndef VM_STACK_DEFAULT_FLAGS		/* arch can override this */
  #define VM_STACK_DEFAULT_FLAGS VM_DATA_DEFAULT_FLAGS
-diff -uNrp linux-2.6.22-rc6/include/linux/preempt.h linux-2.6.22-rc6-ipipe/include/linux/preempt.h
---- linux-2.6.22-rc6/include/linux/preempt.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/linux/preempt.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/linux/preempt.h 2.6.22-ipipe/include/linux/preempt.h
+--- 2.6.22/include/linux/preempt.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/linux/preempt.h	2007-07-10 23:12:28.000000000 +0200
 @@ -8,6 +8,7 @@
  
  #include <linux/thread_info.h>
@@ -3709,9 +3710,9 @@ diff -uNrp linux-2.6.22-rc6/include/linux/preempt.h linux-2.6.22-rc6-ipipe/inclu
  
  #endif
  
-diff -uNrp linux-2.6.22-rc6/include/linux/sched.h linux-2.6.22-rc6-ipipe/include/linux/sched.h
---- linux-2.6.22-rc6/include/linux/sched.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/linux/sched.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/linux/sched.h 2.6.22-ipipe/include/linux/sched.h
+--- 2.6.22/include/linux/sched.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/linux/sched.h	2007-07-10 23:12:28.000000000 +0200
 @@ -54,6 +54,7 @@ struct sched_param {
  #include <linux/cpumask.h>
  #include <linux/errno.h>
@@ -3756,9 +3757,9 @@ diff -uNrp linux-2.6.22-rc6/include/linux/sched.h linux-2.6.22-rc6-ipipe/include
  
  /*
   * Only the _current_ task can read/write to tsk->flags, but other
-diff -uNrp linux-2.6.22-rc6/include/linux/smp.h linux-2.6.22-rc6-ipipe/include/linux/smp.h
---- linux-2.6.22-rc6/include/linux/smp.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/linux/smp.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/linux/smp.h 2.6.22-ipipe/include/linux/smp.h
+--- 2.6.22/include/linux/smp.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/linux/smp.h	2007-07-10 23:12:28.000000000 +0200
 @@ -107,6 +107,8 @@ static inline int smp_call_function_sing
  
  #endif /* !SMP */
@@ -3768,9 +3769,9 @@ diff -uNrp linux-2.6.22-rc6/include/linux/smp.h linux-2.6.22-rc6-ipipe/include/l
  /*
   * smp_processor_id(): get the current CPU ID.
   *
-diff -uNrp linux-2.6.22-rc6/include/linux/spinlock.h linux-2.6.22-rc6-ipipe/include/linux/spinlock.h
---- linux-2.6.22-rc6/include/linux/spinlock.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/linux/spinlock.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/linux/spinlock.h 2.6.22-ipipe/include/linux/spinlock.h
+--- 2.6.22/include/linux/spinlock.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/linux/spinlock.h	2007-07-10 23:12:28.000000000 +0200
 @@ -172,7 +172,90 @@ do {								\
  #define read_trylock(lock)		__cond_lock(lock, _read_trylock(lock))
  #define write_trylock(lock)		__cond_lock(lock, _write_trylock(lock))
@@ -3922,15 +3923,15 @@ diff -uNrp linux-2.6.22-rc6/include/linux/spinlock.h linux-2.6.22-rc6-ipipe/incl
 +# define read_unlock(lock)			\
 +do {						\
 +	__raw_read_unlock(&(lock)->raw_lock);	\
++	__release(lock);			\
++} while (0)
++# define write_unlock(lock)			\
++do {						\
++	__raw_write_unlock(&(lock)->raw_lock);	\
  	__release(lock);			\
 -	local_irq_enable();			\
  } while (0)
 -# define read_unlock_irq(lock)			\
-+# define write_unlock(lock)			\
-+do {						\
-+	__raw_write_unlock(&(lock)->raw_lock);	\
-+	__release(lock);			\
-+} while (0)
 +# define spin_unlock_irq(lock)		\
 +do {						\
 +	PICK_SPINUNLOCK_IRQ_RAW(lock);		\
@@ -3958,18 +3959,16 @@ diff -uNrp linux-2.6.22-rc6/include/linux/spinlock.h linux-2.6.22-rc6-ipipe/incl
  #define spin_unlock_bh(lock)		_spin_unlock_bh(lock)
  
  #define read_unlock_irqrestore(lock, flags) \
-@@ -339,4 +430,27 @@ extern int _atomic_dec_and_lock(atomic_t
+@@ -339,4 +430,25 @@ extern int _atomic_dec_and_lock(atomic_t
   */
  #define spin_can_lock(lock)	(!spin_is_locked(lock))
  
 +#ifdef CONFIG_IPIPE
-+
 +void fastcall __ipipe_spin_lock_irq(raw_spinlock_t *lock);
 +void fastcall __ipipe_spin_unlock_irq(raw_spinlock_t *lock);
 +unsigned long fastcall __ipipe_spin_lock_irqsave(raw_spinlock_t *lock);
 +void fastcall __ipipe_spin_unlock_irqrestore(raw_spinlock_t *lock,
 +					     unsigned long x);
-+
 +#define spin_lock_irqsave_cond(lock, flags) \
 +	spin_lock_irqsave(lock, flags)
 +#define spin_unlock_irqrestore_cond(lock, flags) \
@@ -3986,9 +3985,9 @@ diff -uNrp linux-2.6.22-rc6/include/linux/spinlock.h linux-2.6.22-rc6-ipipe/incl
 +#endif
 +
  #endif /* __LINUX_SPINLOCK_H */
-diff -uNrp linux-2.6.22-rc6/include/linux/spinlock_types.h linux-2.6.22-rc6-ipipe/include/linux/spinlock_types.h
---- linux-2.6.22-rc6/include/linux/spinlock_types.h	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/include/linux/spinlock_types.h	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/include/linux/spinlock_types.h 2.6.22-ipipe/include/linux/spinlock_types.h
+--- 2.6.22/include/linux/spinlock_types.h	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/include/linux/spinlock_types.h	2007-07-10 23:12:28.000000000 +0200
 @@ -31,6 +31,10 @@ typedef struct {
  #endif
  } spinlock_t;
@@ -4020,9 +4019,9 @@ diff -uNrp linux-2.6.22-rc6/include/linux/spinlock_types.h linux-2.6.22-rc6-ipip
 +#endif
 +
  #endif /* __LINUX_SPINLOCK_TYPES_H */
-diff -uNrp linux-2.6.22-rc6/init/Kconfig linux-2.6.22-rc6-ipipe/init/Kconfig
---- linux-2.6.22-rc6/init/Kconfig	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/init/Kconfig	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/init/Kconfig 2.6.22-ipipe/init/Kconfig
+--- 2.6.22/init/Kconfig	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/init/Kconfig	2007-07-10 23:12:28.000000000 +0200
 @@ -67,6 +67,7 @@ menu "General setup"
  
  config LOCALVERSION
@@ -4031,9 +4030,9 @@ diff -uNrp linux-2.6.22-rc6/init/Kconfig linux-2.6.22-rc6-ipipe/init/Kconfig
  	help
  	  Append an extra string to the end of your kernel version.
  	  This will show up when you type uname, for example.
-diff -uNrp linux-2.6.22-rc6/init/main.c linux-2.6.22-rc6-ipipe/init/main.c
---- linux-2.6.22-rc6/init/main.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/init/main.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/init/main.c 2.6.22-ipipe/init/main.c
+--- 2.6.22/init/main.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/init/main.c	2007-07-10 23:12:29.000000000 +0200
 @@ -508,7 +508,7 @@ asmlinkage void __init start_kernel(void
  	unwind_init();
  	lockdep_init();
@@ -4063,9 +4062,9 @@ diff -uNrp linux-2.6.22-rc6/init/main.c linux-2.6.22-rc6-ipipe/init/main.c
  	do_initcalls();
  }
  
-diff -uNrp linux-2.6.22-rc6/kernel/Makefile linux-2.6.22-rc6-ipipe/kernel/Makefile
---- linux-2.6.22-rc6/kernel/Makefile	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/kernel/Makefile	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/kernel/Makefile 2.6.22-ipipe/kernel/Makefile
+--- 2.6.22/kernel/Makefile	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/kernel/Makefile	2007-07-10 23:12:29.000000000 +0200
 @@ -47,6 +47,7 @@ obj-$(CONFIG_GENERIC_HARDIRQS) += irq/
  obj-$(CONFIG_SECCOMP) += seccomp.o
  obj-$(CONFIG_RCU_TORTURE_TEST) += rcutorture.o
@@ -4074,9 +4073,9 @@ diff -uNrp linux-2.6.22-rc6/kernel/Makefile linux-2.6.22-rc6-ipipe/kernel/Makefi
  obj-$(CONFIG_SYSCTL) += utsname_sysctl.o
  obj-$(CONFIG_UTS_NS) += utsname.o
  obj-$(CONFIG_TASK_DELAY_ACCT) += delayacct.o
-diff -uNrp linux-2.6.22-rc6/kernel/exit.c linux-2.6.22-rc6-ipipe/kernel/exit.c
---- linux-2.6.22-rc6/kernel/exit.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/kernel/exit.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/kernel/exit.c 2.6.22-ipipe/kernel/exit.c
+--- 2.6.22/kernel/exit.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/kernel/exit.c	2007-07-10 23:12:29.000000000 +0200
 @@ -947,6 +947,7 @@ fastcall NORET_TYPE void do_exit(long co
  
  	if (group_dead)
@@ -4085,9 +4084,9 @@ diff -uNrp linux-2.6.22-rc6/kernel/exit.c linux-2.6.22-rc6-ipipe/kernel/exit.c
  	exit_sem(tsk);
  	__exit_files(tsk);
  	__exit_fs(tsk);
-diff -uNrp linux-2.6.22-rc6/kernel/fork.c linux-2.6.22-rc6-ipipe/kernel/fork.c
---- linux-2.6.22-rc6/kernel/fork.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/kernel/fork.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/kernel/fork.c 2.6.22-ipipe/kernel/fork.c
+--- 2.6.22/kernel/fork.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/kernel/fork.c	2007-07-10 23:12:29.000000000 +0200
 @@ -389,6 +389,7 @@ void mmput(struct mm_struct *mm)
  	if (atomic_dec_and_test(&mm->mm_users)) {
  		exit_aio(mm);
@@ -4120,9 +4119,9 @@ diff -uNrp linux-2.6.22-rc6/kernel/fork.c linux-2.6.22-rc6-ipipe/kernel/fork.c
  	return p;
  
  bad_fork_cleanup_namespaces:
-diff -uNrp linux-2.6.22-rc6/kernel/ipipe/Kconfig linux-2.6.22-rc6-ipipe/kernel/ipipe/Kconfig
---- linux-2.6.22-rc6/kernel/ipipe/Kconfig	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.22-rc6-ipipe/kernel/ipipe/Kconfig	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/kernel/ipipe/Kconfig 2.6.22-ipipe/kernel/ipipe/Kconfig
+--- 2.6.22/kernel/ipipe/Kconfig	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.22-ipipe/kernel/ipipe/Kconfig	2007-07-10 23:12:29.000000000 +0200
 @@ -0,0 +1,6 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
@@ -4130,9 +4129,9 @@ diff -uNrp linux-2.6.22-rc6/kernel/ipipe/Kconfig linux-2.6.22-rc6-ipipe/kernel/i
 +	---help---
 +	  Activate this option if you want the interrupt pipeline to be
 +	  compiled in.
-diff -uNrp linux-2.6.22-rc6/kernel/ipipe/Kconfig.debug linux-2.6.22-rc6-ipipe/kernel/ipipe/Kconfig.debug
---- linux-2.6.22-rc6/kernel/ipipe/Kconfig.debug	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.22-rc6-ipipe/kernel/ipipe/Kconfig.debug	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/kernel/ipipe/Kconfig.debug 2.6.22-ipipe/kernel/ipipe/Kconfig.debug
+--- 2.6.22/kernel/ipipe/Kconfig.debug	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.22-ipipe/kernel/ipipe/Kconfig.debug	2007-07-10 23:12:29.000000000 +0200
 @@ -0,0 +1,88 @@
 +config IPIPE_DEBUG
 +	bool "I-pipe debugging"
@@ -4222,16 +4221,16 @@ diff -uNrp linux-2.6.22-rc6/kernel/ipipe/Kconfig.debug linux-2.6.22-rc6-ipipe/ke
 +	default 1 if IPIPE_TRACE_ENABLE
 +
 +endif
-diff -uNrp linux-2.6.22-rc6/kernel/ipipe/Makefile linux-2.6.22-rc6-ipipe/kernel/ipipe/Makefile
---- linux-2.6.22-rc6/kernel/ipipe/Makefile	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.22-rc6-ipipe/kernel/ipipe/Makefile	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/kernel/ipipe/Makefile 2.6.22-ipipe/kernel/ipipe/Makefile
+--- 2.6.22/kernel/ipipe/Makefile	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.22-ipipe/kernel/ipipe/Makefile	2007-07-10 23:12:29.000000000 +0200
 @@ -0,0 +1,3 @@
 +
 +obj-$(CONFIG_IPIPE)	+= core.o
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
-diff -uNrp linux-2.6.22-rc6/kernel/ipipe/core.c linux-2.6.22-rc6-ipipe/kernel/ipipe/core.c
---- linux-2.6.22-rc6/kernel/ipipe/core.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.22-rc6-ipipe/kernel/ipipe/core.c	2007-06-29 12:35:32.000000000 +0200
+diff -uNrp 2.6.22/kernel/ipipe/core.c 2.6.22-ipipe/kernel/ipipe/core.c
+--- 2.6.22/kernel/ipipe/core.c	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.22-ipipe/kernel/ipipe/core.c	2007-07-10 23:12:29.000000000 +0200
 @@ -0,0 +1,1616 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
@@ -5849,9 +5848,9 @@ diff -uNrp linux-2.6.22-rc6/kernel/ipipe/core.c linux-2.6.22-rc6-ipipe/kernel/ip
 +EXPORT_SYMBOL(ipipe_request_tickdev);
 +EXPORT_SYMBOL(ipipe_release_tickdev);
 +#endif
-diff -uNrp linux-2.6.22-rc6/kernel/ipipe/tracer.c linux-2.6.22-rc6-ipipe/kernel/ipipe/tracer.c
---- linux-2.6.22-rc6/kernel/ipipe/tracer.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.22-rc6-ipipe/kernel/ipipe/tracer.c	2007-06-29 20:04:46.000000000 +0200
+diff -uNrp 2.6.22/kernel/ipipe/tracer.c 2.6.22-ipipe/kernel/ipipe/tracer.c
+--- 2.6.22/kernel/ipipe/tracer.c	1970-01-01 01:00:00.000000000 +0100
++++ 2.6.22-ipipe/kernel/ipipe/tracer.c	2007-07-10 23:12:29.000000000 +0200
 @@ -0,0 +1,1294 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
@@ -7147,9 +7146,9 @@ diff -uNrp linux-2.6.22-rc6/kernel/ipipe/tracer.c linux-2.6.22-rc6-ipipe/kernel/
 +	__ipipe_create_trace_proc_val(trace_dir, "enable",
 +	                              &ipipe_trace_enable);
 +}
-diff -uNrp linux-2.6.22-rc6/kernel/irq/chip.c linux-2.6.22-rc6-ipipe/kernel/irq/chip.c
---- linux-2.6.22-rc6/kernel/irq/chip.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/kernel/irq/chip.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/kernel/irq/chip.c 2.6.22-ipipe/kernel/irq/chip.c
+--- 2.6.22/kernel/irq/chip.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/kernel/irq/chip.c	2007-07-10 23:12:29.000000000 +0200
 @@ -340,7 +340,9 @@ handle_level_irq(unsigned int irq, struc
  	irqreturn_t action_ret;
  
@@ -7334,9 +7333,9 @@ diff -uNrp linux-2.6.22-rc6/kernel/irq/chip.c linux-2.6.22-rc6-ipipe/kernel/irq/
  	}
  	desc->handle_irq = handle;
  	desc->name = name;
-diff -uNrp linux-2.6.22-rc6/kernel/printk.c linux-2.6.22-rc6-ipipe/kernel/printk.c
---- linux-2.6.22-rc6/kernel/printk.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/kernel/printk.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/kernel/printk.c 2.6.22-ipipe/kernel/printk.c
+--- 2.6.22/kernel/printk.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/kernel/printk.c	2007-07-10 23:12:29.000000000 +0200
 @@ -498,6 +498,78 @@ static int have_callable_console(void)
   * printf(3)
   */
@@ -7424,9 +7423,9 @@ diff -uNrp linux-2.6.22-rc6/kernel/printk.c linux-2.6.22-rc6-ipipe/kernel/printk
  
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
-diff -uNrp linux-2.6.22-rc6/kernel/sched.c linux-2.6.22-rc6-ipipe/kernel/sched.c
---- linux-2.6.22-rc6/kernel/sched.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/kernel/sched.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/kernel/sched.c 2.6.22-ipipe/kernel/sched.c
+--- 2.6.22/kernel/sched.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/kernel/sched.c	2007-07-10 23:12:30.000000000 +0200
 @@ -1518,7 +1518,7 @@ static int try_to_wake_up(struct task_st
  
  	rq = task_rq_lock(p, &flags);
@@ -7565,9 +7564,9 @@ diff -uNrp linux-2.6.22-rc6/kernel/sched.c linux-2.6.22-rc6-ipipe/kernel/sched.c
 +EXPORT_SYMBOL(ipipe_reenter_root);
 +
 +#endif /* CONFIG_IPIPE */
-diff -uNrp linux-2.6.22-rc6/kernel/signal.c linux-2.6.22-rc6-ipipe/kernel/signal.c
---- linux-2.6.22-rc6/kernel/signal.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/kernel/signal.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/kernel/signal.c 2.6.22-ipipe/kernel/signal.c
+--- 2.6.22/kernel/signal.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/kernel/signal.c	2007-07-10 23:12:30.000000000 +0200
 @@ -447,6 +447,7 @@ void signal_wake_up(struct task_struct *
  	unsigned int mask;
  
@@ -7576,9 +7575,9 @@ diff -uNrp linux-2.6.22-rc6/kernel/signal.c linux-2.6.22-rc6-ipipe/kernel/signal
  
  	/*
  	 * For SIGKILL, we want to wake it up in the stopped/traced case.
-diff -uNrp linux-2.6.22-rc6/kernel/spinlock.c linux-2.6.22-rc6-ipipe/kernel/spinlock.c
---- linux-2.6.22-rc6/kernel/spinlock.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/kernel/spinlock.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/kernel/spinlock.c 2.6.22-ipipe/kernel/spinlock.c
+--- 2.6.22/kernel/spinlock.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/kernel/spinlock.c	2007-07-10 23:12:30.000000000 +0200
 @@ -88,7 +88,7 @@ unsigned long __lockfunc _spin_lock_irqs
  	 * _raw_spin_lock_flags() code, because lockdep assumes
  	 * that interrupts are not re-enabled during lock-acquire:
@@ -7597,9 +7596,9 @@ diff -uNrp linux-2.6.22-rc6/kernel/spinlock.c linux-2.6.22-rc6-ipipe/kernel/spin
  	_raw_spin_lock(lock);
  #else
  	_raw_spin_lock_flags(lock, &flags);
-diff -uNrp linux-2.6.22-rc6/kernel/time/clockevents.c linux-2.6.22-rc6-ipipe/kernel/time/clockevents.c
---- linux-2.6.22-rc6/kernel/time/clockevents.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/kernel/time/clockevents.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/kernel/time/clockevents.c 2.6.22-ipipe/kernel/time/clockevents.c
+--- 2.6.22/kernel/time/clockevents.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/kernel/time/clockevents.c	2007-07-10 23:12:30.000000000 +0200
 @@ -84,6 +84,7 @@ int clockevents_program_event(struct clo
  		return -ETIME;
  
@@ -7608,9 +7607,9 @@ diff -uNrp linux-2.6.22-rc6/kernel/time/clockevents.c linux-2.6.22-rc6-ipipe/ker
  
  	if (dev->mode == CLOCK_EVT_MODE_SHUTDOWN)
  		return 0;
-diff -uNrp linux-2.6.22-rc6/lib/Kconfig.debug linux-2.6.22-rc6-ipipe/lib/Kconfig.debug
---- linux-2.6.22-rc6/lib/Kconfig.debug	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/lib/Kconfig.debug	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/lib/Kconfig.debug 2.6.22-ipipe/lib/Kconfig.debug
+--- 2.6.22/lib/Kconfig.debug	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/lib/Kconfig.debug	2007-07-10 23:12:30.000000000 +0200
 @@ -71,6 +71,8 @@ config HEADERS_CHECK
  	  exported to $(INSTALL_HDR_PATH) (usually 'usr/include' in
  	  your build tree), to make sure they're suitable.
@@ -7620,9 +7619,9 @@ diff -uNrp linux-2.6.22-rc6/lib/Kconfig.debug linux-2.6.22-rc6-ipipe/lib/Kconfig
  config DEBUG_KERNEL
  	bool "Kernel debugging"
  	help
-diff -uNrp linux-2.6.22-rc6/lib/bust_spinlocks.c linux-2.6.22-rc6-ipipe/lib/bust_spinlocks.c
---- linux-2.6.22-rc6/lib/bust_spinlocks.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/lib/bust_spinlocks.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/lib/bust_spinlocks.c 2.6.22-ipipe/lib/bust_spinlocks.c
+--- 2.6.22/lib/bust_spinlocks.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/lib/bust_spinlocks.c	2007-07-10 23:12:31.000000000 +0200
 @@ -12,16 +12,19 @@
  #include <linux/tty.h>
  #include <linux/wait.h>
@@ -7643,9 +7642,9 @@ diff -uNrp linux-2.6.22-rc6/lib/bust_spinlocks.c linux-2.6.22-rc6-ipipe/lib/bust
  		oops_in_progress = 0;
  		wake_up_klogd();
  	}
-diff -uNrp linux-2.6.22-rc6/lib/ioremap.c linux-2.6.22-rc6-ipipe/lib/ioremap.c
---- linux-2.6.22-rc6/lib/ioremap.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/lib/ioremap.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/lib/ioremap.c 2.6.22-ipipe/lib/ioremap.c
+--- 2.6.22/lib/ioremap.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/lib/ioremap.c	2007-07-10 23:12:31.000000000 +0200
 @@ -84,8 +84,8 @@ int ioremap_page_range(unsigned long add
  		if (err)
  			break;
@@ -7657,9 +7656,9 @@ diff -uNrp linux-2.6.22-rc6/lib/ioremap.c linux-2.6.22-rc6-ipipe/lib/ioremap.c
  
  	return err;
  }
-diff -uNrp linux-2.6.22-rc6/lib/smp_processor_id.c linux-2.6.22-rc6-ipipe/lib/smp_processor_id.c
---- linux-2.6.22-rc6/lib/smp_processor_id.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/lib/smp_processor_id.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/lib/smp_processor_id.c 2.6.22-ipipe/lib/smp_processor_id.c
+--- 2.6.22/lib/smp_processor_id.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/lib/smp_processor_id.c	2007-07-10 23:12:31.000000000 +0200
 @@ -13,6 +13,9 @@ unsigned int debug_smp_processor_id(void
  	int this_cpu = raw_smp_processor_id();
  	cpumask_t this_mask;
@@ -7670,9 +7669,9 @@ diff -uNrp linux-2.6.22-rc6/lib/smp_processor_id.c linux-2.6.22-rc6-ipipe/lib/sm
  	if (likely(preempt_count))
  		goto out;
  
-diff -uNrp linux-2.6.22-rc6/lib/spinlock_debug.c linux-2.6.22-rc6-ipipe/lib/spinlock_debug.c
---- linux-2.6.22-rc6/lib/spinlock_debug.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/lib/spinlock_debug.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/lib/spinlock_debug.c 2.6.22-ipipe/lib/spinlock_debug.c
+--- 2.6.22/lib/spinlock_debug.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/lib/spinlock_debug.c	2007-07-10 23:12:31.000000000 +0200
 @@ -133,6 +133,8 @@ void _raw_spin_lock(spinlock_t *lock)
  	debug_spin_lock_after(lock);
  }
@@ -7747,9 +7746,9 @@ diff -uNrp linux-2.6.22-rc6/lib/spinlock_debug.c linux-2.6.22-rc6-ipipe/lib/spin
  }
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
-diff -uNrp linux-2.6.22-rc6/mm/memory.c linux-2.6.22-rc6-ipipe/mm/memory.c
---- linux-2.6.22-rc6/mm/memory.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/mm/memory.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/mm/memory.c 2.6.22-ipipe/mm/memory.c
+--- 2.6.22/mm/memory.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/mm/memory.c	2007-07-10 23:12:31.000000000 +0200
 @@ -50,6 +50,7 @@
  #include <linux/delayacct.h>
  #include <linux/init.h>
@@ -8008,9 +8007,9 @@ diff -uNrp linux-2.6.22-rc6/mm/memory.c linux-2.6.22-rc6-ipipe/mm/memory.c
 +}
 +
 +#endif
-diff -uNrp linux-2.6.22-rc6/mm/mlock.c linux-2.6.22-rc6-ipipe/mm/mlock.c
---- linux-2.6.22-rc6/mm/mlock.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/mm/mlock.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/mm/mlock.c 2.6.22-ipipe/mm/mlock.c
+--- 2.6.22/mm/mlock.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/mm/mlock.c	2007-07-10 23:12:31.000000000 +0200
 @@ -173,10 +173,10 @@ asmlinkage long sys_munlock(unsigned lon
  static int do_mlockall(int flags)
  {
@@ -8024,9 +8023,9 @@ diff -uNrp linux-2.6.22-rc6/mm/mlock.c linux-2.6.22-rc6-ipipe/mm/mlock.c
  	current->mm->def_flags = def_flags;
  	if (flags == MCL_FUTURE)
  		goto out;
-diff -uNrp linux-2.6.22-rc6/mm/vmalloc.c linux-2.6.22-rc6-ipipe/mm/vmalloc.c
---- linux-2.6.22-rc6/mm/vmalloc.c	2007-06-25 01:21:48.000000000 +0200
-+++ linux-2.6.22-rc6-ipipe/mm/vmalloc.c	2007-06-28 18:55:28.000000000 +0200
+diff -uNrp 2.6.22/mm/vmalloc.c 2.6.22-ipipe/mm/vmalloc.c
+--- 2.6.22/mm/vmalloc.c	2007-07-09 01:32:17.000000000 +0200
++++ 2.6.22-ipipe/mm/vmalloc.c	2007-07-10 23:12:31.000000000 +0200
 @@ -156,6 +156,7 @@ int map_vm_area(struct vm_struct *area, 
  		if (err)
  			break;
