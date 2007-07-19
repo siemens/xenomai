@@ -245,7 +245,7 @@ void xntimer_tick_aperiodic(void)
 			   translates into precious microsecs on low-end hw. */
 			__setbits(sched->status, XNHTICK);
 			if (!testbits(timer->status, XNTIMER_PERIODIC))
-				goto out;
+				continue;
 		}
 
 		do {
@@ -254,7 +254,6 @@ void xntimer_tick_aperiodic(void)
 		xntimer_enqueue_aperiodic(timer);
 	}
 
-out:
 	__clrbits(sched->status, XNINTCK);
 
 	xntimer_next_local_shot(sched);
